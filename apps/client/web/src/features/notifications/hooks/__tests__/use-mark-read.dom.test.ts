@@ -7,9 +7,11 @@ import {
   notificationKeys,
   unreadNotificationCountQueryOptions,
 } from '@vp/queries';
+import { ToastProvider } from '@vp/ui';
 import { api, apiServer, mockEndpoint, problemReply } from '@vp/web-testing';
 import { heldReply, runMutation } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
+import { createElement, type PropsWithChildren } from 'react';
 import { AppProviders } from '#app/__tests__/providers';
 import {
   NOTIFICATION_ID,
@@ -54,8 +56,19 @@ function cached(client: QueryClient) {
   };
 }
 
-const markRead = (client: QueryClient, read: NotificationReadScope) =>
-  runMutation(client, useMarkRead, read, AppProviders);
+function markRead(client: QueryClient, read: NotificationReadScope) {
+  const toasted: string[] = [];
+  const toaster = {
+    show: ({ title }: { title: string }) => {
+      toasted.push(title);
+      return () => undefined;
+    },
+    subscribe: () => () => undefined,
+  };
+  const Providers = ({ children }: PropsWithChildren) =>
+    createElement(AppProviders, null, createElement(ToastProvider, { toaster }, children));
+  return { running: runMutation(client, useMarkRead, read, Providers), toasted };
+}
 
 describe('apps/client/web: useMarkRead', () => {
   it.each<{
@@ -84,7 +97,7 @@ describe('apps/client/web: useMarkRead', () => {
     apiServer.use(mockEndpoint(markNotificationsRead, held.answer));
     const client = seeded();
 
-    const running = markRead(client, row.read);
+    const { running } = markRead(client, row.read);
     await vi.waitFor(() => expect(cached(client).count).toBe(row.count));
 
     expect(cached(client)).toEqual({ count: row.count, all: row.all, mentions: row.mentions });
@@ -103,27 +116,28 @@ describe('apps/client/web: useMarkRead', () => {
     );
     const client = seeded();
 
-    await markRead(client, { scope: 'ids', ids: [NOTIFICATION_ID] });
-    await markRead(client, { scope: 'all' });
+    await markRead(client, { scope: 'ids', ids: [NOTIFICATION_ID] }).running;
+    await markRead(client, { scope: 'all' }).running;
 
     expect(bodies).toEqual([{ ids: [NOTIFICATION_ID] }, { all: true }]);
   });
 
-  it('puts the rows and the badge back when the request fails', async () => {
+  it('puts the rows and the badge back and toasts when the request fails', async () => {
     apiServer.use(mockEndpoint(markNotificationsRead, () => problemReply(ErrorCodes.INTERNAL)));
     const client = seeded();
 
-    const settled = await markRead(client, { scope: 'all' });
+    const { running, toasted } = markRead(client, { scope: 'all' });
 
-    expect(settled.status).toBe('rejected');
+    expect((await running).status).toBe('rejected');
     expect(cached(client)).toEqual({ count: 5, all: [], mentions: [] });
+    expect(toasted).toEqual(['Could not mark notifications as read']);
   });
 
   it('marks every list stale once settled', async () => {
     apiServer.use(mockEndpoint(markNotificationsRead, () => HttpResponse.json({ unreadCount: 0 })));
     const client = seeded();
 
-    await markRead(client, { scope: 'all' });
+    await markRead(client, { scope: 'all' }).running;
 
     expect(client.getQueryState(allKey)?.isInvalidated).toBe(true);
     expect(client.getQueryState(mentionsKey)?.isInvalidated).toBe(true);

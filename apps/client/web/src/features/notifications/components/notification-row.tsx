@@ -1,8 +1,7 @@
 import { Link } from '@tanstack/react-router';
 import type { Notification } from '@vp/api-contracts';
 import { publishedAt } from '@vp/intl';
-import { useFormat, useT } from '@vp/intl-react';
-import { useFailureToast } from '@vp/queries';
+import { useFormat } from '@vp/intl-react';
 import { unwrapOr } from '@vp/result';
 import {
   NotificationCentre,
@@ -21,10 +20,8 @@ export interface NotificationRowProps {
 export function NotificationRow({ notification }: NotificationRowProps) {
   const { setOpen } = useNotificationCentre('NotificationRow');
   const { format } = useFormat();
-  const { tOr } = useT();
   const textOf = useNotificationText();
   const markRead = useMarkRead();
-  const showFailure = useFailureToast();
 
   const { headline, detail } = textOf(notification);
   const target = notificationTarget(notification);
@@ -36,10 +33,7 @@ export function NotificationRow({ notification }: NotificationRowProps) {
       return;
     }
 
-    markRead.mutate(
-      { scope: 'ids', ids: [notification.id] },
-      { onError: (error) => showFailure(tOr('notifications.markReadFailed', {}, ''), error) }
-    );
+    markRead.mutate({ scope: 'ids', ids: [notification.id] });
   };
 
   const words = (

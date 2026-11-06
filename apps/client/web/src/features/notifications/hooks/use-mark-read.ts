@@ -2,11 +2,13 @@ import { type InfiniteData, mutationOptions, useMutation } from '@tanstack/react
 import type { ApiClient } from '@vp/api-client';
 import type { Notification } from '@vp/api-contracts';
 import type { NotificationReadScope } from '@vp/domain';
+import { useT } from '@vp/intl-react';
 import {
   notificationKeys,
   setUnreadCount,
   unreadNotificationCountQueryOptions,
   useApi,
+  useFailureToast,
 } from '@vp/queries';
 import { assertNever } from '@vp/result';
 import { restoreQueryData } from '#app/integrations/query/restore-query-data';
@@ -38,7 +40,7 @@ function markPages(pages: NotificationPages, read: NotificationReadScope): Notif
   };
 }
 
-function markReadMutationOptions(api: ApiClient) {
+function markReadMutationOptions(api: ApiClient, failed: (error: Error) => void) {
   const countKey = unreadNotificationCountQueryOptions(api).queryKey;
   const lists = { queryKey: notificationKeys.lists() };
 
@@ -66,18 +68,28 @@ function markReadMutationOptions(api: ApiClient) {
     },
     onSuccess: ({ unreadCount }, _read, _snapshot, { client }) =>
       setUnreadCount(client, unreadCount),
-    onError: (_error, _read, snapshot, { client }) => {
+    onError: (error, _read, snapshot, { client }) => {
       for (const [key, pages] of snapshot?.previousLists ?? []) {
         client.setQueryData(key, pages);
       }
       restoreQueryData(client, countKey, snapshot?.previousCount);
+      failed(error);
     },
     onSettled: (_data, _error, _read, _snapshot, { client }) => client.invalidateQueries(lists),
   });
 }
 
-/** Marks some notifications, or all of them, read: the rows and the badge change before the answer. */
+/**
+ * Marks some notifications, or all of them, read: the rows and the badge change before the answer.
+ * The failure toast is options-level, so it still shows after the row that asked has closed.
+ */
 export function useMarkRead() {
   const api = useApi();
-  return useMutation(markReadMutationOptions(api));
+  const { tOr } = useT();
+  const showFailure = useFailureToast();
+  return useMutation(
+    markReadMutationOptions(api, (error) =>
+      showFailure(tOr('notifications.markReadFailed', {}, ''), error)
+    )
+  );
 }

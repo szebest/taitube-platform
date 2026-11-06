@@ -15,12 +15,18 @@ import { LazyNotificationPanel } from './notification-panel.lazy';
 const POPOVER_FITS = '(min-width: 600px)';
 const MOST_SHOWN = 9;
 
+interface Announcement {
+  text: string;
+  count: number;
+}
+
 /**
  * What a notification arriving with the centre closed does: a reply or a mention gets a toast that
- * opens it, the rest a polite announcement, which this returns for the caller's live region.
+ * opens it, the rest a polite announcement, which this returns for the caller's live region. `count`
+ * keys the line, so a second identical arrival is a new node a screen reader announces again.
  */
-function useArrivals(open: boolean): string {
-  const [announcement, setAnnouncement] = useState('');
+function useArrivals(open: boolean): Announcement {
+  const [announcement, setAnnouncement] = useState<Announcement>({ text: '', count: 0 });
   const { tOr } = useT();
   const navigate = useNavigate();
   const showToast = useToast();
@@ -42,7 +48,7 @@ function useArrivals(open: boolean): string {
 
     const { headline, detail } = textOf(notification);
     if (notification.kind !== 'reply' && notification.kind !== 'mention') {
-      setAnnouncement(headline);
+      setAnnouncement(({ count }) => ({ text: headline, count: count + 1 }));
       return;
     }
     showToast({
@@ -90,7 +96,7 @@ export function HeaderNotificationCentre() {
         </NotificationCentre.Panel>
       </NotificationCentre.Root>
       <span role="status" className="sr-only">
-        {announcement}
+        <span key={announcement.count}>{announcement.text}</span>
       </span>
     </>
   );

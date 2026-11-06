@@ -3,7 +3,7 @@ import { Link } from '@tanstack/react-router';
 import { EmptyState, NoNotificationsIllustration, SectionError } from '@vp/components';
 import { NOTIFICATION_FILTERS, type NotificationFilter } from '@vp/domain';
 import { useFormat, useT } from '@vp/intl-react';
-import { unreadNotificationCountQueryOptions, useApi, useFailureToast } from '@vp/queries';
+import { unreadNotificationCountQueryOptions, useApi } from '@vp/queries';
 import { unwrapOr } from '@vp/result';
 import { Tabs } from '@vp/ui';
 import { useState } from 'react';
@@ -110,19 +110,11 @@ export function NotificationPanel() {
   const api = useApi();
   const { tOr } = useT();
   const online = useOnlineStatus();
-  const showFailure = useFailureToast();
   const [filter, setFilter] = useState<NotificationFilter>('all');
   const { data: count } = useQuery(unreadNotificationCountQueryOptions(api));
   const markRead = useMarkRead();
 
-  const markAllRead = () =>
-    markRead.mutate(
-      { scope: 'all' },
-      {
-        onError: (error) =>
-          showFailure(tOr('notifications.markReadFailed', {}, ''), error, markAllRead),
-      }
-    );
+  const markAllRead = () => markRead.mutate({ scope: 'all' });
   const chooseFilter = (value: string) => {
     if (!isFilter(value)) {
       return;

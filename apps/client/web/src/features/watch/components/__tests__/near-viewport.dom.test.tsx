@@ -2,12 +2,16 @@ import { render, screen } from '@testing-library/react';
 import { RecordingObserver } from '#app/features/watch/__tests__/recording-observer';
 import { NearViewport, type NearViewportProps } from '../near-viewport';
 
-const renderSection = (props: Partial<NearViewportProps> = {}) =>
-  render(
-    <NearViewport fallback={<p>Placeholder</p>} {...props}>
-      <p>Loaded</p>
-    </NearViewport>
-  );
+const section = (props: Partial<NearViewportProps>) => (
+  <NearViewport fallback={<p>Placeholder</p>} {...props}>
+    <p>Loaded</p>
+  </NearViewport>
+);
+
+function renderSection(props: Partial<NearViewportProps> = {}) {
+  const view = render(section(props));
+  return { update: (next: Partial<NearViewportProps>) => view.rerender(section(next)) };
+}
 
 describe('apps/client/web: near viewport', () => {
   beforeEach(() => {
@@ -29,5 +33,15 @@ describe('apps/client/web: near viewport', () => {
 
     expect(screen.getByText('Loaded')).toBeInTheDocument();
     expect(screen.queryByText('Placeholder')).not.toBeInTheDocument();
+  });
+
+  it('mounts the children once eager turns on, and keeps them after it turns off', () => {
+    const { update } = renderSection();
+
+    update({ eager: true });
+    expect(screen.getByText('Loaded')).toBeInTheDocument();
+
+    update({ eager: false });
+    expect(screen.getByText('Loaded')).toBeInTheDocument();
   });
 });

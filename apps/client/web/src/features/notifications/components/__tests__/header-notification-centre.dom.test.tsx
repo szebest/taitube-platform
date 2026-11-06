@@ -1,4 +1,4 @@
-import { act, screen, within } from '@testing-library/react';
+import { act, screen, waitFor, within } from '@testing-library/react';
 import { getUnreadNotificationCount } from '@vp/api-contracts';
 import { settleSession } from '@vp/queries';
 import { account, apiServer, mockEndpoint } from '@vp/web-testing';
@@ -64,6 +64,16 @@ describe('apps/client/web: header notification centre', () => {
       'Night Kitchen uploaded a video'
     );
     expect(screen.queryByRole('button', { name: 'View' })).not.toBeInTheDocument();
+  });
+
+  it('announces a second identical arrival again', async () => {
+    const { push } = await renderBell();
+
+    push(arrival(notification()));
+    const first = await screen.findByText('Night Kitchen uploaded a video');
+    push(arrival(notification()));
+
+    await waitFor(() => expect(screen.getByText('Night Kitchen uploaded a video')).not.toBe(first));
   });
 
   it('refetches the open list and announces nothing when one arrives while it is open', async () => {
