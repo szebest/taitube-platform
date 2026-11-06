@@ -1,6 +1,7 @@
 import type { CaptionTrackView } from '@vp/api-contracts';
 import { PLAYBACK_SETTINGS } from '@vp/domain/settings';
 import { createContext, useContext, useEffect, useState, useSyncExternalStore } from 'react';
+import { useBrowserLanguages } from '../hooks/use-browser-languages';
 import { pickCaptionTrack } from '../playback-defaults';
 import type {
   PlayerCaptionStyle,
@@ -27,8 +28,6 @@ export interface Captions {
 
 const NO_TRACKS: readonly PlayerCaptionTrack[] = [];
 
-const NO_LANGUAGES: readonly string[] = [];
-
 const noop = () => undefined;
 
 export const CaptionsContext = createContext<Captions>({
@@ -52,20 +51,6 @@ export function useCaptionsContext(): Captions {
 function toPlayerTracks(tracks: readonly CaptionTrackView[]): readonly PlayerCaptionTrack[] {
   return tracks.flatMap(({ id, language, kind, status, url }) =>
     status === 'ready' && url !== null ? [{ id, language, kind, src: url }] : []
-  );
-}
-
-const subscribeLanguages = (listener: () => void) => {
-  window.addEventListener('languagechange', listener);
-  return () => window.removeEventListener('languagechange', listener);
-};
-
-/** The browser's languages; none on the server, so the server never picks captions by them. */
-function useBrowserLanguages(): readonly string[] {
-  return useSyncExternalStore(
-    subscribeLanguages,
-    () => navigator.languages,
-    () => NO_LANGUAGES
   );
 }
 

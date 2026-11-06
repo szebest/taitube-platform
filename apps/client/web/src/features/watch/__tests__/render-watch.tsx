@@ -24,7 +24,7 @@ interface WatchOptions {
   handlers?: HttpHandler[];
 }
 
-/** The watch page of a video with a channel, as a guest or as `viewer`, with the player stood in for. */
+/** The watch page of a video with a channel, as a guest or as `viewer`, once its player is on the page. */
 export async function renderWatch({
   video: overrides = {},
   viewer,
@@ -60,7 +60,7 @@ export async function renderWatch({
       ...loaderApi(),
     ],
   });
-  await screen.findByTestId('player');
+  await screen.findByRole('group', { name: 'Media player' });
   return rendered;
 }
 

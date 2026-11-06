@@ -9,6 +9,7 @@ import { WatchLayout } from './watch-layout';
 import { WatchLinerNotes } from './watch-liner-notes';
 import { WatchQueue } from './watch-queue';
 import { WatchStage } from './watch-stage';
+import { WatchTranscript } from './watch-transcript';
 
 /** `/watch/$videoId`: the stage, the title, the engagement bar, the notes and the discussion beside the queue. */
 export function WatchPage() {
@@ -34,7 +35,12 @@ export function WatchPage() {
         </>
       }
       discussion={<WatchCommentThread videoId={video.id} />}
-      aside={<WatchQueue key={video.id} />}
+      aside={
+        <>
+          <WatchTranscript videoId={video.id} />
+          <WatchQueue key={video.id} />
+        </>
+      }
     />
   );
 }

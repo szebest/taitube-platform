@@ -9,7 +9,7 @@ const SIZE_CLASSES: Record<PlayerCaptionStyle['size'], string> = {
 };
 
 const BACKGROUND_CLASSES: Record<PlayerCaptionStyle['background'], string> = {
-  none: '[text-shadow:0_0_0.25em_var(--color-scrim)]',
+  none: '[text-shadow:0_0_0.25em_var(--scrim)]',
   translucent: 'bg-scrim',
   solid: 'bg-bg',
 };
@@ -20,9 +20,7 @@ export function CaptionOverlay() {
   const { size, background } = usePlayerState((state) => state.captionStyle);
 
   return (
-    <div
-      className="pointer-events-none absolute inset-x-0 bottom-16 flex justify-center px-6"
-    >
+    <div className="pointer-events-none absolute inset-x-0 bottom-16 flex justify-center px-6">
       {cues !== '' && (
         <p
           data-caption-size={size}

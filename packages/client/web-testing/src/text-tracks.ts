@@ -19,7 +19,7 @@ class ShimCue {
 class ShimTextTrack extends EventTarget {
   readonly #element: HTMLTrackElement;
   mode: TextTrackMode = 'disabled';
-  activeCues: readonly ShimCue[] | null = null;
+  #activeCues: readonly ShimCue[] | null = null;
 
   constructor(element: HTMLTrackElement) {
     super();
@@ -41,19 +41,15 @@ class ShimTextTrack extends EventTarget {
   get label() {
     return this.#element.label;
   }
-}
 
-const tracksOfElement = new WeakMap<HTMLTrackElement, ShimTextTrack>();
-
-function trackOf(element: HTMLTrackElement): ShimTextTrack {
-  const known = tracksOfElement.get(element);
-  if (known) {
-    return known;
+  get activeCues() {
+    return this.#activeCues;
   }
 
-  const created = new ShimTextTrack(element);
-  tracksOfElement.set(element, created);
-  return created;
+  showCues(texts: readonly string[]) {
+    this.#activeCues = texts.map((text, index) => new ShimCue(index, index + 1, text));
+    this.dispatchEvent(new Event('cuechange'));
+  }
 }
 
 const INDEX = /^\d+$/;
@@ -61,18 +57,20 @@ const INDEX = /^\d+$/;
 /** The text tracks of a media element's `<track>` children, announcing each one added as the browser does. */
 class ShimTextTrackList extends EventTarget {
   private readonly media: HTMLMediaElement;
+  private readonly trackOf: (element: HTMLTrackElement) => ShimTextTrack;
   private readonly announced = new WeakSet<HTMLTrackElement>();
 
-  constructor(media: HTMLMediaElement) {
+  constructor(media: HTMLMediaElement, trackOf: (element: HTMLTrackElement) => ShimTextTrack) {
     super();
     this.media = media;
+    this.trackOf = trackOf;
     const observer = new MutationObserver(() => this.announce());
     observer.observe(media, { childList: true });
     this.announce();
   }
 
   tracks(): ShimTextTrack[] {
-    return [...this.media.querySelectorAll('track')].map(trackOf);
+    return [...this.media.querySelectorAll('track')].map(this.trackOf);
   }
 
   private announce() {
@@ -98,8 +96,11 @@ class ShimTextTrackList extends EventTarget {
 }
 
 /** The list a browser gives, which also reads by index. */
-function indexedTextTrackList(media: HTMLMediaElement): ShimTextTrackList {
-  return new Proxy(new ShimTextTrackList(media), {
+function indexedTextTrackList(
+  media: HTMLMediaElement,
+  trackOf: (element: HTMLTrackElement) => ShimTextTrack
+): ShimTextTrackList {
+  return new Proxy(new ShimTextTrackList(media, trackOf), {
     get: (target, property) => {
       if (typeof property === 'string' && INDEX.test(property)) {
         return target.tracks()[Number(property)];
@@ -111,23 +112,34 @@ function indexedTextTrackList(media: HTMLMediaElement): ShimTextTrackList {
   });
 }
 
-const listsOfMedia = new WeakMap<HTMLMediaElement, ShimTextTrackList>();
-
 /**
  * jsdom has no text tracks: this gives every media element a list of its `<track>` children and
  * `VTTCue`, so a spec drives captions the way a browser would.
  */
 export function installTextTracks(): void {
+  const tracks = new WeakMap<HTMLTrackElement, ShimTextTrack>();
+  const lists = new WeakMap<HTMLMediaElement, ShimTextTrackList>();
+  const trackOf = (element: HTMLTrackElement) => {
+    const known = tracks.get(element);
+    if (known) {
+      return known;
+    }
+
+    const created = new ShimTextTrack(element);
+    tracks.set(element, created);
+    return created;
+  };
+
   Object.defineProperty(HTMLMediaElement.prototype, 'textTracks', {
     configurable: true,
     get(this: HTMLMediaElement) {
-      const known = listsOfMedia.get(this);
+      const known = lists.get(this);
       if (known) {
         return known;
       }
 
-      const created = indexedTextTrackList(this);
-      listsOfMedia.set(this, created);
+      const created = indexedTextTrackList(this, trackOf);
+      lists.set(this, created);
       return created;
     },
   });
@@ -147,7 +159,10 @@ export function showCues(media: HTMLMediaElement, id: string, texts: readonly st
     throw new Error(`no <track id="${id}"> in the media element`);
   }
 
-  const track = trackOf(element);
-  track.activeCues = texts.map((text, index) => new ShimCue(index, index + 1, text));
-  track.dispatchEvent(new Event('cuechange'));
+  const { track } = element;
+  if (!(track instanceof ShimTextTrack)) {
+    throw new TypeError('text tracks are not installed: run installTextTracks() first');
+  }
+
+  track.showCues(texts);
 }

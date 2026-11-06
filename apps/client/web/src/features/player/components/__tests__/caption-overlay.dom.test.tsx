@@ -52,7 +52,7 @@ describe('apps/client/web: the caption overlay', () => {
     {
       captionsSize: 'small',
       captionsBackground: 'none',
-      classes: ['text-body-sm', '[text-shadow:0_0_0.25em_var(--color-scrim)]'],
+      classes: ['text-body-sm', '[text-shadow:0_0_0.25em_var(--scrim)]'],
     },
     {
       captionsSize: 'medium',

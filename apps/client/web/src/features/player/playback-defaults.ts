@@ -19,9 +19,11 @@ export function findDefaultRendition(
     .at(0)?.id;
 }
 
+type CaptionChoice = Pick<PlayerCaptionTrack, 'language' | 'kind'>;
+
 const primaryLanguage = (tag: string) => tag.toLowerCase().split('-')[0];
 
-function findInLanguage<Track extends PlayerCaptionTrack>(
+function findInLanguage<Track extends CaptionChoice>(
   tracks: readonly Track[],
   language: string
 ): Track | undefined {
@@ -40,7 +42,7 @@ function findInLanguage<Track extends PlayerCaptionTrack>(
  * languages a track has, then the language the video was detected in (its generated track), then
  * the first track. Each language match takes another region of it.
  */
-export function pickCaptionTrack<Track extends PlayerCaptionTrack>(
+export function pickCaptionTrack<Track extends CaptionChoice>(
   tracks: readonly Track[],
   chosenLanguage: string | null,
   browserLanguages: readonly string[]

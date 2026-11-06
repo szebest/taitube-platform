@@ -93,7 +93,13 @@ describe('apps/client/web: pickCaptionTrack', () => {
       browser: [],
       picked: SV,
     },
-    { scenario: 'nothing with no tracks', tracks: [], chosen: 'en', browser: ['en'], picked: undefined },
+    {
+      scenario: 'nothing with no tracks',
+      tracks: [],
+      chosen: 'en',
+      browser: ['en'],
+      picked: undefined,
+    },
   ])('picks $scenario', ({ tracks, chosen, browser, picked }) => {
     expect(pickCaptionTrack(tracks, chosen, browser)).toBe(picked);
   });

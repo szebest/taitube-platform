@@ -148,3 +148,8 @@ export function usePlayerTheater(): boolean {
 export function usePlayerFullscreen(): boolean {
   return useChannelValue((channel) => channel.fullscreen(), false);
 }
+
+/** The id of the caption track the player shows; `null` with captions off or no provider. */
+export function usePlayerCaptionTrack(): string | null {
+  return useChannelValue((channel) => channel.captionTrack(), null);
+}

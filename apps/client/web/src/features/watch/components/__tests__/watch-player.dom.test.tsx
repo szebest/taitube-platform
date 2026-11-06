@@ -8,6 +8,8 @@ import { renderWatch } from '#app/features/watch/__tests__/render-watch';
 vi.mock(import('#app/features/player/taitube-player'), async () => ({
   TaitubePlayer: (props) => (
     <div
+      role="group"
+      aria-label="Media player"
       data-testid="player"
       data-defaults={JSON.stringify(props.defaults)}
       data-caption-tracks={JSON.stringify(props.captionTracks ?? [])}

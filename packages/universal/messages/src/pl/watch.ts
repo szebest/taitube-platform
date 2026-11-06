@@ -32,4 +32,8 @@ export const watch = {
   addToQueue: dt('Dodaj do kolejki'),
   closeNowPlaying: dt('Zatrzymaj odtwarzanie'),
   nowPlayingProgress: dt('{played} z {total}'),
+  transcript: dt('Transkrypcja'),
+  transcriptSearch: dt('Szukaj w transkrypcji'),
+  transcriptNoMatches: dt('Nic w transkrypcji nie pasuje do {query}'),
+  transcriptFailed: dt('Nie udało się wczytać transkrypcji'),
 } as const;
