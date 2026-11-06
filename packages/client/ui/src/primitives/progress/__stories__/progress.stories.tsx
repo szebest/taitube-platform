@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { variantNames } from '../../lib/variant-names';
-import { Progress } from './progress';
-import { progressStyles } from './progress.variants';
+import { variantNames } from '../../../lib/variant-names';
+import { Progress } from '../progress';
+import { progressStyles } from '../progress.variants';
 
 const meta = {
   title: 'Primitives/Progress',

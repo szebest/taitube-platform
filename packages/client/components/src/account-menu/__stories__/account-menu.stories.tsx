@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { AccountMenu } from '.';
-import { AccountMenuTrigger } from './account-menu';
+import { AccountMenu } from '..';
+import { AccountMenuTrigger } from '../account-menu';
 
 const meta = {
   title: 'Components/AccountMenu',

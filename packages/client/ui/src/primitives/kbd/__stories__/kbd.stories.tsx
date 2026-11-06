@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { variantNames } from '../../lib/variant-names';
-import { Kbd } from './kbd';
-import { kbdStyles } from './kbd.variants';
+import { variantNames } from '../../../lib/variant-names';
+import { Kbd } from '../kbd';
+import { kbdStyles } from '../kbd.variants';
 
 const meta = {
   title: 'Primitives/Kbd',

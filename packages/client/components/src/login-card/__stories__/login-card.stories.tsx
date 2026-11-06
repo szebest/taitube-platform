@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Button } from '@vp/ui';
-import { LoginCard } from '.';
-import { LoginCardRoot } from './login-card';
+import { LoginCard } from '..';
+import { LoginCardRoot } from '../login-card';
 
 const meta = {
   title: 'Components/LoginCard',

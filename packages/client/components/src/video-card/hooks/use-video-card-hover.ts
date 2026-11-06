@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { VideoCardHover } from './types';
+import type { VideoCardHover } from '../types';
 
 const EXPAND_DELAY_MS = 500;
 

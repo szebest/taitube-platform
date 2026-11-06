@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { variantNames } from '../../lib/variant-names';
-import { Spinner } from './spinner';
-import { spinnerStyles } from './spinner.variants';
+import { variantNames } from '../../../lib/variant-names';
+import { Spinner } from '../spinner';
+import { spinnerStyles } from '../spinner.variants';
 
 const meta = {
   title: 'Primitives/Spinner',

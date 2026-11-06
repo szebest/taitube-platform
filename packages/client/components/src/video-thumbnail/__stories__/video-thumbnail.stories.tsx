@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Badge } from '@vp/ui';
-import { VideoThumbnail, VideoThumbnailSkeleton } from '.';
-import { VideoThumbnailRoot } from './video-thumbnail';
+import { VideoThumbnail, VideoThumbnailSkeleton } from '..';
+import { VideoThumbnailRoot } from '../video-thumbnail';
 
 const frame = (from: string, to: string, width = 320, height = 180) =>
   `data:image/svg+xml,${encodeURIComponent(

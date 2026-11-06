@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { StartHereShelf, StartHereShelfSkeleton, type StartHereSource } from '.';
-import { Shelf } from '../shelf';
-import { SectionError } from '../states/section-error';
-import { VideoCard, type VideoCardVariant } from '../video-card';
-import { StartHereShelfRoot } from './start-here-shelf';
+import { StartHereShelf, StartHereShelfSkeleton, type StartHereSource } from '..';
+import { Shelf } from '../../shelf';
+import { SectionError } from '../../states/section-error';
+import { VideoCard, type VideoCardVariant } from '../../video-card';
+import { StartHereShelfRoot } from '../start-here-shelf';
 
 const POSTER = `data:image/svg+xml,${encodeURIComponent(
   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 9"><defs><linearGradient id="g" x2="1" y2="1"><stop offset="0" stop-color="peru"/><stop offset="1" stop-color="midnightblue"/></linearGradient></defs><rect width="16" height="9" fill="url(#g)"/></svg>'

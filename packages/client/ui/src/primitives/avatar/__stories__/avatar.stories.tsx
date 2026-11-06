@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { variantNames } from '../../lib/variant-names';
-import { AvatarFallback, AvatarRoot } from './avatar';
-import { avatarStyles } from './avatar.variants';
+import { variantNames } from '../../../lib/variant-names';
+import { AvatarFallback, AvatarRoot } from '../avatar';
+import { avatarStyles } from '../avatar.variants';
 
 const meta = {
   title: 'Primitives/Avatar',

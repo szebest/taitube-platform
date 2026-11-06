@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Switch } from '.';
-import { variantNames } from '../../lib/variant-names';
-import { switchStyles } from './switch.variants';
+import { Switch } from '..';
+import { variantNames } from '../../../lib/variant-names';
+import { switchStyles } from '../switch.variants';
 
 const meta = {
   title: 'Primitives/Switch',

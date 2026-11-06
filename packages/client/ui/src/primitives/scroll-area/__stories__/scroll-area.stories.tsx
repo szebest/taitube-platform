@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { variantNames } from '../../lib/variant-names';
-import { ScrollArea } from './scroll-area';
-import { scrollAreaStyles } from './scroll-area.variants';
+import { variantNames } from '../../../lib/variant-names';
+import { ScrollArea } from '../scroll-area';
+import { scrollAreaStyles } from '../scroll-area.variants';
 
 const meta = {
   title: 'Primitives/ScrollArea',

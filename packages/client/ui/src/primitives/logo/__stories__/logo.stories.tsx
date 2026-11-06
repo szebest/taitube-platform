@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { variantNames } from '../../lib/variant-names';
-import { Logo } from './logo';
-import { logoStyles } from './logo.variants';
+import { variantNames } from '../../../lib/variant-names';
+import { Logo } from '../logo';
+import { logoStyles } from '../logo.variants';
 
 const meta = {
   title: 'Primitives/Logo',

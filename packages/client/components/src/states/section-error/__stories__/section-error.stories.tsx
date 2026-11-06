@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { variantNames } from '@vp/ui';
-import { SectionError, sectionErrorStyles } from '.';
-import { SectionErrorRoot } from './section-error';
+import { SectionError, sectionErrorStyles } from '..';
+import { SectionErrorRoot } from '../section-error';
 
 const meta = {
   title: 'Components/SectionError',

@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Input, InputGroup } from '.';
-import { variantNames } from '../../lib/variant-names';
-import { Icon } from '../icon';
-import { IconButton } from '../icon-button';
-import { inputStyles } from './input.variants';
+import { Input, InputGroup } from '..';
+import { variantNames } from '../../../lib/variant-names';
+import { Icon } from '../../icon';
+import { IconButton } from '../../icon-button';
+import { inputStyles } from '../input.variants';
 
 const meta = {
   title: 'Primitives/Input',

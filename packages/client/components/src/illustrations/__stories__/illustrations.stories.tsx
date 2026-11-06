@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import * as illustrations from '.';
+import * as illustrations from '..';
 
 const meta = {
   title: 'Components/Illustrations',

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { ContextMenu } from '.';
-import { ContextMenuContent } from './context-menu';
+import { ContextMenu } from '..';
+import { ContextMenuContent } from '../context-menu';
 
 const meta = {
   title: 'Primitives/ContextMenu',

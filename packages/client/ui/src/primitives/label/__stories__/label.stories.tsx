@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { variantNames } from '../../lib/variant-names';
-import { Label } from './label';
-import { labelStyles } from './label.variants';
+import { variantNames } from '../../../lib/variant-names';
+import { Label } from '../label';
+import { labelStyles } from '../label.variants';
 
 const meta = {
   title: 'Primitives/Label',

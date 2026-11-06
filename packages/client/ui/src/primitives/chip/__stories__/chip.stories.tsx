@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Chip, ChipGroup } from '.';
-import { variantNames } from '../../lib/variant-names';
-import { Icon } from '../icon';
-import { chipStyles } from './chip.variants';
+import { Chip, ChipGroup } from '..';
+import { variantNames } from '../../../lib/variant-names';
+import { Icon } from '../../icon';
+import { chipStyles } from '../chip.variants';
 
 const meta = {
   title: 'Primitives/Chip',

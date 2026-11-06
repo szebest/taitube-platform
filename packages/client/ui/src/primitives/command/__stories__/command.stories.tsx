@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Command } from '.';
-import { Kbd } from '../kbd';
-import { CommandRoot } from './command';
+import { Command } from '..';
+import { Kbd } from '../../kbd';
+import { CommandRoot } from '../command';
 
 const meta = {
   title: 'Primitives/Command',

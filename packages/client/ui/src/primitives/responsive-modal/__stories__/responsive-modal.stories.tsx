@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { ResponsiveModal } from '.';
-import { Button } from '../button';
-import { ResponsiveModalRoot } from './responsive-modal';
+import { ResponsiveModal } from '..';
+import { Button } from '../../button';
+import { ResponsiveModalRoot } from '../responsive-modal';
 
 const meta = {
   title: 'Primitives/ResponsiveModal',

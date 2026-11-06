@@ -1,7 +1,7 @@
 import type { ComponentPropsWithRef } from 'react';
-import { VideoThumbnail } from '../video-thumbnail';
-import { useVideoCard } from './video-card.context';
-import { videoCardStyles } from './video-card.variants';
+import { VideoThumbnail } from '../../../video-thumbnail';
+import { useVideoCard } from '../../video-card.context';
+import { videoCardStyles } from '../../video-card.variants';
 
 export interface VideoCardThumbProps extends ComponentPropsWithRef<'div'> {
   src?: string;

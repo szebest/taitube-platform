@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { variantNames } from '../../lib/variant-names';
-import { Separator } from './separator';
-import { separatorStyles } from './separator.variants';
+import { variantNames } from '../../../lib/variant-names';
+import { Separator } from '../separator';
+import { separatorStyles } from '../separator.variants';
 
 const meta = {
   title: 'Primitives/Separator',

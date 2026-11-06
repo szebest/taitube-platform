@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Textarea } from '.';
-import { variantNames } from '../../lib/variant-names';
-import { textareaStyles } from './textarea.variants';
+import { Textarea } from '..';
+import { variantNames } from '../../../lib/variant-names';
+import { textareaStyles } from '../textarea.variants';
 
 const meta = {
   title: 'Primitives/Textarea',

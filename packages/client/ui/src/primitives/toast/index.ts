@@ -18,6 +18,10 @@ export const Toast = {
 export type { ToastIconProps, ToastRootProps } from './toast';
 export { useToastItem } from './toast.context';
 export { toastStyles } from './toast.variants';
-export type { Toaster, ToastMessage, ToastProviderProps } from './toast-provider';
-export { createToaster, ToastProvider, useToast } from './toast-provider';
+export type {
+  Toaster,
+  ToastMessage,
+  ToastProviderProps,
+} from './components/toast-provider/toast-provider';
+export { createToaster, ToastProvider, useToast } from './components/toast-provider/toast-provider';
 export type { ToastTone } from './types';

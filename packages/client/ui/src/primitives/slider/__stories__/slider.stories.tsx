@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Slider } from '.';
-import { variantNames } from '../../lib/variant-names';
-import { SliderRoot } from './slider';
-import { sliderStyles } from './slider.variants';
+import { Slider } from '..';
+import { variantNames } from '../../../lib/variant-names';
+import { SliderRoot } from '../slider';
+import { sliderStyles } from '../slider.variants';
 
 const meta = {
   title: 'Primitives/Slider',

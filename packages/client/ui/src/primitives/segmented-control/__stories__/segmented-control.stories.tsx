@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { SegmentedControl } from '.';
-import { variantNames } from '../../lib/variant-names';
-import { SegmentedControlRoot } from './segmented-control';
-import { segmentedControlStyles } from './segmented-control.variants';
+import { SegmentedControl } from '..';
+import { variantNames } from '../../../lib/variant-names';
+import { SegmentedControlRoot } from '../segmented-control';
+import { segmentedControlStyles } from '../segmented-control.variants';
 
 const meta = {
   title: 'Primitives/SegmentedControl',

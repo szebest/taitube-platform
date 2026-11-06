@@ -1,7 +1,7 @@
 import { screen } from '@testing-library/react';
-import { renderWithCopy } from '../../__tests__/render-with-copy';
+import { renderWithCopy } from '../../../../__tests__/render-with-copy';
+import { VideoCardContext } from '../../../video-card.context';
 import { VideoCardThumb } from '../video-card-thumb';
-import { VideoCardContext } from '../video-card.context';
 
 const renderThumb = (
   shared: { state?: 'rest' | 'live' | 'unavailable'; expanded?: boolean } = {},

@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Tooltip } from '.';
-import type { Side } from '../../types';
-import { Icon } from '../icon';
-import { IconButton } from '../icon-button';
-import { Kbd } from '../kbd';
-import { TooltipContent } from './tooltip';
+import { Tooltip } from '..';
+import type { Side } from '../../../types';
+import { Icon } from '../../icon';
+import { IconButton } from '../../icon-button';
+import { Kbd } from '../../kbd';
+import { TooltipContent } from '../tooltip';
 
 const meta = {
   title: 'Primitives/Tooltip',

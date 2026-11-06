@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { variantNames } from '../../lib/variant-names';
-import { Icon } from '../icon';
-import { Badge } from './badge';
-import { badgeStyles } from './badge.variants';
+import { variantNames } from '../../../lib/variant-names';
+import { Icon } from '../../icon';
+import { Badge } from '../badge';
+import { badgeStyles } from '../badge.variants';
 
 const meta = {
   title: 'Primitives/Badge',

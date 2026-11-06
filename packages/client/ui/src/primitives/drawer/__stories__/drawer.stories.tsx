@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Drawer } from '.';
-import { Button } from '../button';
-import { DrawerContent } from './drawer';
+import { Drawer } from '..';
+import { Button } from '../../button';
+import { DrawerContent } from '../drawer';
 
 const meta = {
   title: 'Primitives/Drawer',

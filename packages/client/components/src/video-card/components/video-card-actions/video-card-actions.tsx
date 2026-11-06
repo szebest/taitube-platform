@@ -1,7 +1,7 @@
 import { Button, DropdownMenu, Icon, IconButton, useUiCopy } from '@vp/ui';
 import type { ReactNode } from 'react';
-import { useVideoCard } from './video-card.context';
-import { videoCardStyles } from './video-card.variants';
+import { useVideoCard } from '../../video-card.context';
+import { videoCardStyles } from '../../video-card.variants';
 
 export interface VideoCardActionsProps {
   onSave?: () => void;

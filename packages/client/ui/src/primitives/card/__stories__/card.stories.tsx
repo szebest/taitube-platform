@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Card } from '.';
-import { variantNames } from '../../lib/variant-names';
-import { Button } from '../button';
-import { CardRoot } from './card';
-import { cardStyles } from './card.variants';
+import { Card } from '..';
+import { variantNames } from '../../../lib/variant-names';
+import { Button } from '../../button';
+import { CardRoot } from '../card';
+import { cardStyles } from '../card.variants';
 
 const meta = {
   title: 'Primitives/Card',

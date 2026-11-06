@@ -1,11 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { DropdownMenu } from '.';
-import { variantNames } from '../../lib/variant-names';
-import { Icon } from '../icon';
-import { IconButton } from '../icon-button';
-import { Kbd } from '../kbd';
-import { DropdownMenuContent } from './dropdown-menu';
-import { menuStyles } from './dropdown-menu.variants';
+import { DropdownMenu } from '..';
+import { variantNames } from '../../../lib/variant-names';
+import { Icon } from '../../icon';
+import { IconButton } from '../../icon-button';
+import { Kbd } from '../../kbd';
+import { DropdownMenuContent } from '../dropdown-menu';
+import { menuStyles } from '../dropdown-menu.variants';
 
 const meta = {
   title: 'Primitives/DropdownMenu',

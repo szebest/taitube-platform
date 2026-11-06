@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { HoverCard } from '.';
-import { HoverCardContent } from './hover-card';
+import { HoverCard } from '..';
+import { HoverCardContent } from '../hover-card';
 
 const meta = {
   title: 'Primitives/HoverCard',

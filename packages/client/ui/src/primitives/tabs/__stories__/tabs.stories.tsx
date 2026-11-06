@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Tabs } from '.';
-import { variantNames } from '../../lib/variant-names';
-import { TabsRoot } from './tabs';
-import { tabsStyles } from './tabs.variants';
+import { Tabs } from '..';
+import { variantNames } from '../../../lib/variant-names';
+import { TabsRoot } from '../tabs';
+import { tabsStyles } from '../tabs.variants';
 
 const meta = {
   title: 'Primitives/Tabs',

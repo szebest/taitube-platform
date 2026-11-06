@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { ToggleGroup } from '.';
-import { variantNames } from '../../lib/variant-names';
-import { Icon } from '../icon';
-import { ToggleGroupRoot } from './toggle-group';
-import { toggleGroupStyles } from './toggle-group.variants';
+import { ToggleGroup } from '..';
+import { variantNames } from '../../../lib/variant-names';
+import { Icon } from '../../icon';
+import { ToggleGroupRoot } from '../toggle-group';
+import { toggleGroupStyles } from '../toggle-group.variants';
 
 const meta = {
   title: 'Primitives/ToggleGroup',

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { ErrorState } from '.';
-import { ErrorStateRoot } from './error-state';
+import { ErrorState } from '..';
+import { ErrorStateRoot } from '../error-state';
 
 const meta = {
   title: 'Components/ErrorState',

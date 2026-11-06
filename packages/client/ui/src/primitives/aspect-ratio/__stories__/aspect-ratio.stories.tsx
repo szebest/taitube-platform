@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Skeleton } from '../skeleton';
-import { AspectRatio } from './aspect-ratio';
-import type { MediaShape } from './types';
+import { Skeleton } from '../../skeleton';
+import { AspectRatio } from '../aspect-ratio';
+import type { MediaShape } from '../types';
 
 const meta = {
   title: 'Primitives/AspectRatio',

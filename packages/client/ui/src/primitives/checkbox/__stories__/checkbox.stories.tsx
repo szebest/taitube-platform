@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Checkbox } from '.';
-import { variantNames } from '../../lib/variant-names';
-import { checkboxStyles } from './checkbox.variants';
+import { Checkbox } from '..';
+import { variantNames } from '../../../lib/variant-names';
+import { checkboxStyles } from '../checkbox.variants';
 
 const meta = {
   title: 'Primitives/Checkbox',

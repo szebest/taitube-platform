@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Select } from '.';
-import { variantNames } from '../../lib/variant-names';
-import { selectStyles } from './select.variants';
+import { Select } from '..';
+import { variantNames } from '../../../lib/variant-names';
+import { selectStyles } from '../select.variants';
 
 const meta = {
   title: 'Primitives/Select',

@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Callout } from '.';
-import { variantNames } from '../../lib/variant-names';
-import { Button } from '../button';
-import { CalloutRoot } from './callout';
-import { calloutStyles } from './callout.variants';
+import { Callout } from '..';
+import { variantNames } from '../../../lib/variant-names';
+import { Button } from '../../button';
+import { CalloutRoot } from '../callout';
+import { calloutStyles } from '../callout.variants';
 
 const meta = {
   title: 'Primitives/Callout',

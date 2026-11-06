@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { variantNames } from '../../lib/variant-names';
-import { buttonStyles } from '../button';
-import { Icon } from '../icon';
-import { IconButton } from './icon-button';
+import { variantNames } from '../../../lib/variant-names';
+import { buttonStyles } from '../../button';
+import { Icon } from '../../icon';
+import { IconButton } from '../icon-button';
 
 const meta = {
   title: 'Primitives/IconButton',

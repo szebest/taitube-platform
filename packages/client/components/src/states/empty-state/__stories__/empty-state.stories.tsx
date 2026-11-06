@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { variantNames } from '@vp/ui';
-import { EmptyState, emptyStateStyles } from '.';
-import { EmptyLibraryIllustration, NoResultsIllustration } from '../../illustrations';
-import { EmptyStateRoot } from './empty-state';
+import { EmptyState, emptyStateStyles } from '..';
+import { EmptyLibraryIllustration, NoResultsIllustration } from '../../../illustrations';
+import { EmptyStateRoot } from '../empty-state';
 
 const meta = {
   title: 'Components/EmptyState',

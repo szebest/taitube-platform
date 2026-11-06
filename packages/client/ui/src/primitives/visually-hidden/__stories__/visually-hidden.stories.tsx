@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Icon } from '../icon';
-import { VisuallyHidden } from './visually-hidden';
+import { Icon } from '../../icon';
+import { VisuallyHidden } from '../visually-hidden';
 
 const meta = {
   title: 'Primitives/VisuallyHidden',

@@ -8,7 +8,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { Button } from '../button';
+import { Button } from '../../../button';
 import {
   ToastAction,
   ToastClose,
@@ -16,9 +16,9 @@ import {
   ToastIcon,
   ToastRoot,
   ToastTitle,
-} from './toast';
-import { toastStyles } from './toast.variants';
-import type { ToastTone } from './types';
+} from '../../toast';
+import { toastStyles } from '../../toast.variants';
+import type { ToastTone } from '../../types';
 
 const MAX_SHOWN = 3;
 const DURATION_MS = 5000;
