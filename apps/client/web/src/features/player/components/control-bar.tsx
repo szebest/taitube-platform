@@ -15,7 +15,13 @@ import {
   VolumeX,
 } from 'lucide-react';
 import { type ChangeEvent, useRef } from 'react';
-import { LiveEdgeButton, usePlayerCommands, usePlayerState } from '../engine/video-js-engine';
+import { fromClipTime, toClipPlayhead } from '../clip-playhead';
+import {
+  LiveEdgeButton,
+  usePlaybackRange,
+  usePlayerCommands,
+  usePlayerState,
+} from '../engine/video-js-engine';
 import { useOfferedPlayerChannel, usePlayerTheater } from '../player-channel';
 import { CaptionsButton } from './captions-button';
 import { SettingsMenu } from './settings-menu';
@@ -63,9 +69,17 @@ export function ControlBar({ live = false, onPrevious, onNext }: ControlBarProps
   );
 }
 
-function SeekBar() {
+function useClipPlayhead() {
+  const range = usePlaybackRange();
   const currentTime = usePlayerState((state) => state.currentTime);
   const duration = usePlayerState((state) => state.duration);
+
+  return { range, ...toClipPlayhead(range, { currentTime, duration }) };
+}
+
+function SeekBar() {
+  const { range, currentTime, duration } = useClipPlayhead();
+  const videoDurationSeconds = usePlayerState((state) => state.duration);
 
   const { seek } = usePlayerCommands();
   const { tOr } = useT();
@@ -80,7 +94,9 @@ function SeekBar() {
       max={duration}
       step="any"
       value={currentTime}
-      onChange={({ currentTarget }) => seek(currentTarget.valueAsNumber)}
+      onChange={({ currentTarget }) =>
+        seek(fromClipTime(range, currentTarget.valueAsNumber, videoDurationSeconds))
+      }
       className="block w-full cursor-pointer accent-accent"
     />
   );
@@ -182,8 +198,7 @@ function VolumeIcon({ position }: { position: number }) {
 }
 
 function ElapsedTime() {
-  const currentTime = usePlayerState((state) => state.currentTime);
-  const duration = usePlayerState((state) => state.duration);
+  const { currentTime, duration } = useClipPlayhead();
 
   return (
     <span className="px-2 text-label whitespace-nowrap tabular-nums">

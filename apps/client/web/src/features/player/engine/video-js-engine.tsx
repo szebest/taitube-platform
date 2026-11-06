@@ -2,7 +2,15 @@ import { liveFeature, videoFeatures } from '@videojs/core/dom';
 import { Container, createPlayer, Gesture, LiveButton, Poster, useContainer } from '@videojs/react';
 import { HlsJsVideo } from '@videojs/react/media/hlsjs-video';
 import { fromPromise, isOk } from '@vp/result';
-import { type ReactNode, type SyntheticEvent, useEffect, useEffectEvent, useRef } from 'react';
+import {
+  createContext,
+  type ReactNode,
+  type SyntheticEvent,
+  use,
+  useEffect,
+  useEffectEvent,
+  useRef,
+} from 'react';
 import { findDefaultRendition } from '../playback-defaults';
 import { useOfferedPlayerChannel } from '../player-channel';
 import type { PlayerCommands, PlayerState } from '../player-port';
@@ -21,6 +29,8 @@ const { Player: VideoPlayer, usePlayer } = createPlayer({
   features: [...videoFeatures, liveFeature],
   displayName: 'TaitubeVideoPlayer',
 });
+
+const PlaybackRangeContext = createContext<PlaybackRange | undefined>(undefined);
 
 const MS_PER_SECOND = 1000;
 const SEEK_TOLERANCE_SECONDS = 0.5;
@@ -150,7 +160,7 @@ export function VideoJsEngine({
             <Poster.Image className="size-full object-cover" />
           </Poster.Root>
           {!vertical && <Gesture type="tap" action="togglePaused" pointer="mouse" />}
-          {children}
+          <PlaybackRangeContext value={range}>{children}</PlaybackRangeContext>
         </Container>
         {control && <PlaybackSync {...control} />}
         {defaults && <StartAtDefaultQuality key={playbackUrl} quality={defaults.quality} />}
@@ -327,6 +337,11 @@ export function usePlayerCommands(): PlayerCommands {
     requestControlsLock,
     ...commands,
   };
+}
+
+/** The range a clip plays, or `undefined` for a whole video. */
+export function usePlaybackRange(): PlaybackRange | undefined {
+  return use(PlaybackRangeContext);
 }
 
 /** The element that goes fullscreen: a menu portals into it, or fullscreen hides the menu. */
