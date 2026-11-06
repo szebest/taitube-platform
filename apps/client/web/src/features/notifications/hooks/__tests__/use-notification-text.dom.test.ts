@@ -1,7 +1,7 @@
 import { renderHook } from '@testing-library/react';
 import type { Notification } from '@vp/api-contracts';
 import { AppProviders } from '#app/__tests__/providers';
-import { notification } from '../../__tests__/notification-fixtures';
+import { notification } from '#app/features/notifications/__tests__/notification-fixtures';
 import { useNotificationText } from '../use-notification-text';
 
 const textOf = (shown: Notification) =>

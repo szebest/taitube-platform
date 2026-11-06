@@ -15,7 +15,7 @@ import {
   NOTIFICATION_ID,
   notification,
   SECOND_NOTIFICATION_ID,
-} from '../../__tests__/notification-fixtures';
+} from '#app/features/notifications/__tests__/notification-fixtures';
 import { useMarkRead } from '../use-mark-read';
 
 type Pages = InfiniteData<{ items: Notification[]; nextCursor: string | null }>;
