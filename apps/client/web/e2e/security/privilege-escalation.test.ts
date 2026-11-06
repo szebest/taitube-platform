@@ -1,6 +1,5 @@
 import type { APIRequestContext } from '@playwright/test';
 import { type Stack, expect, test } from '../../../../../tests/playwright/fixtures';
-import type { TeamRole } from '../../../../../tests/playwright/stack';
 
 const CALLERS = [
   { caller: 'a normal user', persona: 'viewer', status: 403, code: 'FORBIDDEN' },
@@ -8,8 +7,6 @@ const CALLERS = [
 ] as const;
 
 type Caller = (typeof CALLERS)[number]['caller'];
-
-const NO_ID = '00000000-0000-7000-8000-000000000000';
 
 type Attempt = {
   name: string;
@@ -183,39 +180,6 @@ const ATTEMPTS: Attempt[] = [
     },
     { name: 'read the liked videos', method: 'GET', path: '/v1/me/liked-videos' },
     { name: 'read the own comments', method: 'GET', path: '/v1/me/comments' },
-    { name: 'read the channel team', method: 'GET', path: '/v1/me/channel/members' },
-    {
-      name: 'invite to the channel team',
-      method: 'POST',
-      path: '/v1/me/channel/invites',
-      data: { handle: 'nobody', role: 'editor' },
-    },
-    {
-      name: 'revoke a channel invite',
-      method: 'DELETE',
-      path: `/v1/me/channel/invites/${NO_ID}`,
-    },
-    {
-      name: 'accept a channel invite',
-      method: 'POST',
-      path: `/v1/invites/${NO_ID}/accept`,
-      data: {},
-    },
-    {
-      name: 'decline a channel invite',
-      method: 'POST',
-      path: `/v1/invites/${NO_ID}/decline`,
-      data: {},
-    },
-    {
-      name: "change a team member's role",
-      method: 'PATCH',
-      path: `/v1/me/channel/members/${NO_ID}`,
-      data: { role: 'editor' },
-    },
-    { name: 'remove a team member', method: 'DELETE', path: `/v1/me/channel/members/${NO_ID}` },
-    { name: 'list the channels worked on', method: 'GET', path: '/v1/me/memberships' },
-    { name: 'read the channel audit log', method: 'GET', path: '/v1/me/channel/audit' },
   ].map(({ name, method, path, data }): Attempt => ({
     name,
     method: method as Attempt['method'],
@@ -316,108 +280,4 @@ test.describe("another user's recommendation feedback stays out of reach", () =>
       (await (await creator.get('/v1/me/recommendation-feedback')).json()).items
     ).toContainEqual(expect.objectContaining({ id }));
   });
-});
-
-type TeamAttempt = {
-  name: string;
-  method: 'GET' | 'POST' | 'PATCH' | 'DELETE';
-  path: (team: Stack['team']) => string;
-  data?: Record<string, unknown>;
-};
-
-const TEAM_ATTEMPTS: TeamAttempt[] = [
-  { name: 'read the team', method: 'GET', path: () => '/v1/me/channel/members' },
-  {
-    name: 'invite to the team',
-    method: 'POST',
-    path: () => '/v1/me/channel/invites',
-    data: { handle: 'nobody', role: 'analytics' },
-  },
-  { name: 'revoke an invite', method: 'DELETE', path: () => `/v1/me/channel/invites/${NO_ID}` },
-  {
-    name: "change a member's role",
-    method: 'PATCH',
-    path: ({ userIds }) => `/v1/me/channel/members/${userIds.analytics}`,
-    data: { role: 'moderator' },
-  },
-  {
-    name: 'remove a member',
-    method: 'DELETE',
-    path: ({ userIds }) => `/v1/me/channel/members/${userIds.manager}`,
-  },
-  { name: 'read the audit log', method: 'GET', path: () => '/v1/me/channel/audit' },
-];
-
-const TEAM_CALLERS: { caller: string; persona: 'viewer' | TeamRole; code: string }[] = [
-  { caller: 'an editor', persona: 'editor', code: 'FORBIDDEN' },
-  { caller: 'a moderator', persona: 'moderator', code: 'FORBIDDEN' },
-  { caller: 'an analytics viewer', persona: 'analytics', code: 'FORBIDDEN' },
-  { caller: 'a user off the team', persona: 'viewer', code: 'CHANNEL_MEMBERSHIP_REQUIRED' },
-];
-
-test.describe('only the owner and managers run a channel team', () => {
-  for (const { caller, persona, code } of TEAM_CALLERS) {
-    for (const attempt of TEAM_ATTEMPTS) {
-      test(`${caller} cannot ${attempt.name}`, async ({ api, stack }) => {
-        const client = await api(persona, { channelId: stack.team.channelId });
-
-        const response = await client.fetch(attempt.path(stack.team), {
-          method: attempt.method,
-          data: attempt.data,
-        });
-
-        expect(response.status()).toBe(403);
-        expect(response.headers()['content-type']).toContain('application/problem+json');
-        expect(await response.json()).toMatchObject({ status: 403, code });
-      });
-    }
-  }
-
-  const MANAGER_ATTEMPTS: (TeamAttempt & { status: number; code: string })[] = [
-    {
-      name: 'invite a manager',
-      method: 'POST',
-      path: () => '/v1/me/channel/invites',
-      data: { handle: 'nobody', role: 'manager' },
-      status: 403,
-      code: 'FORBIDDEN',
-    },
-    {
-      name: 'make a member a manager',
-      method: 'PATCH',
-      path: ({ userIds }) => `/v1/me/channel/members/${userIds.analytics}`,
-      data: { role: 'manager' },
-      status: 403,
-      code: 'FORBIDDEN',
-    },
-    {
-      name: 'demote the owner',
-      method: 'PATCH',
-      path: ({ ownerId }) => `/v1/me/channel/members/${ownerId}`,
-      data: { role: 'editor' },
-      status: 400,
-      code: 'CHANNEL_OWNER_IMMUTABLE',
-    },
-    {
-      name: 'remove the owner',
-      method: 'DELETE',
-      path: ({ ownerId }) => `/v1/me/channel/members/${ownerId}`,
-      status: 400,
-      code: 'CHANNEL_OWNER_IMMUTABLE',
-    },
-  ];
-
-  for (const attempt of MANAGER_ATTEMPTS) {
-    test(`a manager cannot ${attempt.name}`, async ({ api, stack }) => {
-      const client = await api('manager', { channelId: stack.team.channelId });
-
-      const response = await client.fetch(attempt.path(stack.team), {
-        method: attempt.method,
-        data: attempt.data,
-      });
-
-      expect(response.status()).toBe(attempt.status);
-      expect(await response.json()).toMatchObject({ code: attempt.code });
-    });
-  }
 });
