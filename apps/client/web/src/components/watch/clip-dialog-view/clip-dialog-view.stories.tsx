@@ -60,7 +60,7 @@ function Dialog({
         <ClipDialogView.Form>
           <ResponsiveModal.Body>
             <ClipEditor.Root durationMs={120_000} range={range} onRangeChange={setRange}>
-              <ClipEditor.Preview />
+              <ClipEditor.Preview className="aspect-auto h-20" />
               <ClipEditor.Range
                 aria-label="Clip range"
                 sprite={SPRITE}
