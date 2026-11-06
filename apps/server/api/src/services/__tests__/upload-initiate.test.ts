@@ -3,9 +3,10 @@ import type { UserContext } from '@vp/permissions';
 import { SEEDED } from '@vp/testing';
 import { expectOk } from '@vp/testing/result';
 import { UploadService } from '../upload-service';
-import { uploadContext } from './service-deps';
+import { ownerActing, uploadContext } from './service-deps';
 
 const OWNER: UserContext = { id: SEEDED.userId, role: 'CREATOR' };
+const OWNER_ACTING = ownerActing(OWNER.id, '00000000-0000-7000-8000-00000000c0c1');
 const MB = 1024 * 1024;
 
 describe('apps/server/api/services: initiate upload', () => {
@@ -20,7 +21,7 @@ describe('apps/server/api/services: initiate upload', () => {
 
   it('issues a single presigned PUT below the multipart threshold', async () => {
     const result = expectOk(
-      await service.initiate(OWNER, {
+      await service.initiate(OWNER, OWNER_ACTING, {
         filename: 'sample.mp4',
         sizeBytes: 5 * MB,
         contentType: 'video/mp4',
@@ -45,7 +46,7 @@ describe('apps/server/api/services: initiate upload', () => {
     ['forced to single', 20 * MB, 'single', 'single'],
   ] as const)('picks %s -> %s', async (_label, sizeBytes, strategy, expected) => {
     const result = expectOk(
-      await service.initiate(OWNER, {
+      await service.initiate(OWNER, OWNER_ACTING, {
         filename: 'sample.mp4',
         sizeBytes,
         contentType: 'video/mp4',
@@ -58,7 +59,7 @@ describe('apps/server/api/services: initiate upload', () => {
 
   it('hands back the first batch of part URLs for a multipart upload', async () => {
     const result = expectOk(
-      await service.initiate(OWNER, {
+      await service.initiate(OWNER, OWNER_ACTING, {
         filename: 'big.mp4',
         sizeBytes: 50 * MB,
         contentType: 'video/mp4',
@@ -74,7 +75,7 @@ describe('apps/server/api/services: initiate upload', () => {
     ['honours the requested visibility', 'public', 'public'],
   ] as const)('%s', async (_label, visibility, expected) => {
     const result = expectOk(
-      await service.initiate(OWNER, {
+      await service.initiate(OWNER, OWNER_ACTING, {
         filename: 'sample.mp4',
         sizeBytes: MB,
         contentType: 'video/mp4',
@@ -89,7 +90,7 @@ describe('apps/server/api/services: initiate upload', () => {
 
   it('titles the video after the filename when no title is given', async () => {
     const result = expectOk(
-      await service.initiate(OWNER, {
+      await service.initiate(OWNER, OWNER_ACTING, {
         filename: 'holiday.mov',
         sizeBytes: MB,
         contentType: 'video/quicktime',
@@ -104,7 +105,7 @@ describe('apps/server/api/services: initiate upload', () => {
 
   it('records the initiation as a video event', async () => {
     const result = expectOk(
-      await service.initiate(OWNER, {
+      await service.initiate(OWNER, OWNER_ACTING, {
         filename: 'sample.mp4',
         sizeBytes: MB,
         contentType: 'video/mp4',
@@ -115,6 +116,7 @@ describe('apps/server/api/services: initiate upload', () => {
     expect(events.find((event) => event.type === 'upload.initiated')?.payload).toMatchObject({
       uploadId: result.uploadId,
       strategy: 'single',
+      uploadedBy: OWNER.id,
     });
   });
 });

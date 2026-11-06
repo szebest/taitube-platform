@@ -1,5 +1,6 @@
-import { type EndpointContract, problemResponse } from '@vp/api-contracts';
-import type { z } from 'zod';
+import { CHANNEL_HEADER, type EndpointContract, problemResponse } from '@vp/api-contracts';
+import { ErrorCodes } from '@vp/errors';
+import { z } from 'zod';
 
 export interface ContractSchemaOptions {
   hide?: boolean;
@@ -11,6 +12,7 @@ export interface ContractSchema {
   summary: string;
   description: string;
   response: Record<number, z.ZodType>;
+  headers?: z.ZodType;
   security?: never[];
   hide?: boolean;
 }
@@ -30,7 +32,7 @@ export function contractSchema(
     ...options.responses,
   };
 
-  for (const [status, codes] of Object.entries(contract.errors)) {
+  for (const [status, codes] of Object.entries(errorsOf(contract))) {
     response[Number(status)] = problemResponse(codes);
   }
 
@@ -39,9 +41,21 @@ export function contractSchema(
     summary: contract.summary,
     description: contract.description,
     response,
+    ...(contract.channelScoped ? { headers: CHANNEL_HEADERS } : {}),
     ...(contract.anonymous ? { security: [] } : {}),
     ...(options.hide || contract.internal ? { hide: true } : {}),
   };
+}
+
+/** Loose, because Fastify replaces the request headers with what the schema lets through. */
+const CHANNEL_HEADERS = z.looseObject({ [CHANNEL_HEADER]: z.uuid().optional() });
+
+const CHANNEL_REFUSALS = [ErrorCodes.CHANNEL_MEMBERSHIP_REQUIRED, ErrorCodes.FORBIDDEN] as const;
+
+function errorsOf(contract: EndpointContract): EndpointContract['errors'] {
+  if (!contract.channelScoped) return contract.errors;
+  const forbidden = new Set([...(contract.errors[403] ?? []), ...CHANNEL_REFUSALS]);
+  return { ...contract.errors, 403: [...forbidden] };
 }
 
 export interface ContractPath {

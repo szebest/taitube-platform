@@ -39,16 +39,13 @@ describe('housekeeping: createHousekeepingProcessor', () => {
     viewBuffer = new InMemoryViewBuffer();
   });
 
-  it('dispatches reconcile-uploads to the upload reconciler', async () => {
-    expect(await run('reconcile-uploads')).toEqual({ abandonedCount: 0, reenqueuedCount: 0 });
-  });
-
-  it('dispatches reconcile-captions to the captions reconciler', async () => {
-    expect(await run('reconcile-captions')).toEqual({ requeued: 0 });
-  });
-
-  it('dispatches purge-search-history to the search history purge', async () => {
-    expect(await run('purge-search-history')).toEqual({ purgedCount: 0 });
+  it.each([
+    { task: 'reconcile-uploads', result: { abandonedCount: 0, reenqueuedCount: 0 } },
+    { task: 'reconcile-captions', result: { requeued: 0 } },
+    { task: 'purge-search-history', result: { purgedCount: 0 } },
+    { task: 'purge-channel-audit', result: { purgedCount: 0 } },
+  ] as const)('dispatches $task to its task', async ({ task, result }) => {
+    expect(await run(task)).toEqual(result);
   });
 
   it('dispatches reconcile-reaction-counters to the counter reconciler', async () => {

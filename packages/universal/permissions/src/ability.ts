@@ -2,6 +2,7 @@ import { AbilityBuilder, createMongoAbility } from '@casl/ability';
 import { defineAdminRules } from './rules/admin.rules';
 import { defineAnalyticsRules } from './rules/analytics.rules';
 import { defineCaptionRules } from './rules/caption.rules';
+import { defineChannelTeamRules } from './rules/channel-team.rules';
 import { defineChannelRules } from './rules/channel.rules';
 import { defineClipRules } from './rules/clip.rules';
 import { defineCommentRules } from './rules/comment.rules';
@@ -21,6 +22,7 @@ export function getUserPermissions(user: UserContext | null): AppAbility {
   defineVideoRules(user, builder);
   defineCommentRules(user, builder);
   defineChannelRules(user, builder);
+  defineChannelTeamRules(user, builder);
   defineUploadRules(user, builder);
   defineAnalyticsRules(user, builder);
   definePlaylistRules(user, builder);

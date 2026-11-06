@@ -83,4 +83,5 @@ export const errors = {
   liveChatSubscribersOnly: dt('Teraz mogą pisać na czacie tylko subskrybenci.'),
   liveChatClosed: dt('Czat jest zamknięty, bo transmisja nie trwa.'),
   liveChatTicketInvalid: dt('Sesja czatu wygasła. Połącz się ponownie, aby dalej pisać.'),
+  channelMembershipRequired: dt('Nie należysz już do zespołu tego kanału.'),
 } as const;

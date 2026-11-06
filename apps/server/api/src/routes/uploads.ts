@@ -9,7 +9,7 @@ import { isErr, map } from '@vp/result';
 import { ALLOWED_CONTENT_TYPES, type UploadLimits, validateStartUpload } from '@vp/validation';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
-import { requireAuth } from '../plugins/auth';
+import { requireActingChannel, requireAuth } from '../plugins/auth';
 import { contractPaths, contractSchema } from './contract-schema';
 import { sendResult } from './send-result';
 
@@ -41,14 +41,14 @@ export async function uploadsRoutes(app: FastifyInstance): Promise<void> {
         },
       },
       async (request, reply) => {
-        const user = requireAuth(request);
+        const { user, acting } = requireActingChannel(request);
         const { filename, sizeBytes, contentType, strategy, sha256, title, visibility } =
           request.body;
 
         const validated = validateStartUpload({ filename, sizeBytes, contentType, title }, limits);
         if (isErr(validated)) return sendResult(reply, request, validated);
 
-        const result = await uploadService.initiate(user, {
+        const result = await uploadService.initiate(user, acting, {
           filename,
           sizeBytes,
           contentType,

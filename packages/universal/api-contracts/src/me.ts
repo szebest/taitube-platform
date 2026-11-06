@@ -73,6 +73,7 @@ export const getAccount = defineEndpoint({
 export const updateMyChannel = defineEndpoint({
   method: 'PATCH',
   path: '/v1/me/channel',
+  channelScoped: true,
   tag: 'Account',
   summary: 'Update authenticated user channel profile',
   description:
@@ -92,6 +93,7 @@ export const updateMyChannel = defineEndpoint({
 export const issueChannelImageUpload = defineEndpoint({
   method: 'POST',
   path: '/v1/me/channel/images',
+  channelScoped: true,
   tag: 'Account',
   summary: 'Presign an avatar or banner upload',
   description:

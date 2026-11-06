@@ -11,6 +11,7 @@ import {
   canCreateComment,
   canDeleteComment,
   canHeartComment,
+  canModerateComments,
   canPinComment,
   canReportComment,
   canUpdateComment,
@@ -27,6 +28,8 @@ const CHECKS = {
   pin: (user: UserContext | null) => canPinComment({ user, videoOwnerId: VIDEO_OWNER_ID }),
   heart: (user: UserContext | null) => canHeartComment({ user, videoOwnerId: VIDEO_OWNER_ID }),
   report: (user: UserContext | null) => canReportComment({ user }),
+  moderate: (user: UserContext | null) =>
+    canModerateComments({ user, videoOwnerId: VIDEO_OWNER_ID }),
 };
 
 type Action = keyof typeof CHECKS;
@@ -61,6 +64,19 @@ describe('helpers/comments: who may do what to a comment', () => {
     { scenario: 'an anonymous caller hearts', user: guestUser, action: 'heart', expected: false },
     { scenario: 'a signed-in user reports', user: STRANGER, action: 'report', expected: true },
     { scenario: 'an anonymous caller reports', user: guestUser, action: 'report', expected: false },
+    {
+      scenario: 'the video owner moderates',
+      user: creatorUser,
+      action: 'moderate',
+      expected: true,
+    },
+    { scenario: 'a stranger moderates', user: STRANGER, action: 'moderate', expected: false },
+    {
+      scenario: 'an anonymous caller moderates',
+      user: guestUser,
+      action: 'moderate',
+      expected: false,
+    },
   ])('$scenario: $expected', ({ user, action, expected }) => {
     expect(CHECKS[action](user)).toBe(expected);
   });

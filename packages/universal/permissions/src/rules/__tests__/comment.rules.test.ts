@@ -9,6 +9,7 @@ import {
 import type { AppAction, AppSubjects, UserContext } from '../../types/index';
 import { defineCommentRules } from '../comment.rules';
 import { buildAbility } from './build-ability';
+import { matrixCells } from './channel-matrix';
 
 const comment = subject('Comment', sampleComment);
 
@@ -107,4 +108,11 @@ describe('rules/comment.rules: Declarative Comment Ability Rules', () => {
   ])('$scenario: $expected', ({ user, action, target, expected }) => {
     expect(buildAbility(defineCommentRules, user).can(action, target)).toBe(expected);
   });
+
+  it.each(matrixCells('Comment'))(
+    'the channel matrix: $persona holding $capability may $action: $expected',
+    ({ user, action, target, expected }) => {
+      expect(buildAbility(defineCommentRules, user).can(action, target)).toBe(expected);
+    }
+  );
 });

@@ -1,8 +1,15 @@
 import type { StorageClient } from '@vp/core/ports';
 import type { ChannelRepositoryPort } from '@vp/core/repositories';
-import { type ChannelNotFound, channelNotFound } from '@vp/domain-rules';
+import type { ActingChannel } from '@vp/domain';
+import {
+  type AuthorizationFailure,
+  type ChannelNotFound,
+  channelNotFound,
+  decideChannelTask,
+} from '@vp/domain-rules';
 import type { CdnBase } from '@vp/env-schema';
 import type { DatabaseUnavailable, StorageUnavailable } from '@vp/errors';
+import type { UserContext } from '@vp/permissions';
 import { andThen, err, isErr, ok, type Result } from '@vp/result';
 import { channelImageKey, channelImagePrefix } from '@vp/storage';
 import {
@@ -33,6 +40,7 @@ export interface ChannelImageUpload {
 }
 
 export type IssueChannelImageFailure =
+  | AuthorizationFailure
   | InvalidChannelImage
   | ChannelNotFound
   | DatabaseUnavailable
@@ -59,17 +67,21 @@ export class ChannelImageService {
   constructor(private readonly deps: ChannelImageServiceDeps) {}
 
   async issueUpload(
-    userId: string,
+    user: UserContext,
+    acting: ActingChannel,
     input: ChannelImageInput
   ): Promise<Result<ChannelImageUpload, IssueChannelImageFailure>> {
     const { channels, storage, publicBucket, presignedUrlTtlSeconds } = this.deps;
 
+    const allowed = decideChannelTask({ user, acting, task: 'edit-channel' });
+    if (isErr(allowed)) return allowed;
+
     const checked = validateChannelImage(input);
     if (isErr(checked)) return checked;
 
-    const channel = await channels.findByUserId(userId);
+    const channel = await channels.findById(acting.channelId);
     if (isErr(channel)) return channel;
-    if (!channel.value) return err(channelNotFound(userId));
+    if (!channel.value) return err(channelNotFound(acting.channelId));
 
     const { kind, contentType, sizeBytes } = checked.value;
     const key = channelImageKey(

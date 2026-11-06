@@ -97,7 +97,7 @@ export async function composeApp(options: BuildAppOptions): Promise<ComposedApp>
   await app.register(registerAccessLog);
 
   await app.register(registerAuth, {
-    channelService: services.channelService,
+    identity: container.get(Services.RequestIdentity),
     verifier: container.get(Adapters.TokenVerifier),
     auth: config.auth,
   });

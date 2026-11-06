@@ -1,5 +1,6 @@
 import type { AbilityBuilder } from '@casl/ability';
 import { type AppAbility, type UserContext, isSignedInRole } from '../types/index';
+import { channelsWith } from './memberships';
 
 export function defineChannelRules(
   user: UserContext | null,
@@ -26,4 +27,7 @@ export function defineChannelRules(
     can('manage', 'Channel', { ownerId: user.id });
     can('manage', 'Channel', { userId: user.id });
   }
+
+  const editable = channelsWith(user, 'channel.edit');
+  if (editable) can('update', 'Channel', { id: editable });
 }

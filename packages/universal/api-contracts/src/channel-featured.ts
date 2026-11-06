@@ -45,6 +45,7 @@ export const getChannelFeatured = defineEndpoint({
 export const setChannelFeatured = defineEndpoint({
   method: 'PUT',
   path: '/v1/me/channel/featured',
+  channelScoped: true,
   tag: 'Channels',
   summary: "Replace the caller's Start here shelf",
   description:

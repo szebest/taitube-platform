@@ -6,7 +6,7 @@ import { expectErr, expectOk } from '@vp/testing/result';
 import { seedVideo } from '../../__tests__/test-app';
 import { ChannelFeaturedService } from '../channel-featured-service';
 import { VideoService } from '../video-service';
-import { videoServiceDeps } from './service-deps';
+import { ownerActing, videoServiceDeps } from './service-deps';
 
 const OWNER: UserContext = { id: '00000000-0000-7000-8000-00000000f001', role: 'CREATOR' };
 const STRANGER: UserContext = { id: '00000000-0000-7000-8000-00000000f002', role: 'USER' };
@@ -19,7 +19,8 @@ describe('apps/server/api/services: ChannelFeaturedService', () => {
   let service: ChannelFeaturedService;
 
   const itemIds = (view: { items: { id: string }[] }) => view.items.map((item) => item.id);
-  const pin = async (ids: string[], caller = OWNER) => service.replace(caller, ids);
+  const pin = async (ids: string[], caller = OWNER, channelId = CHANNEL) =>
+    service.replace(caller, ownerActing(caller.id, channelId), ids);
   const read = async () => expectOk(await service.get('@owner'));
 
   beforeEach(async () => {
@@ -126,7 +127,7 @@ describe('apps/server/api/services: ChannelFeaturedService', () => {
     it('answers CHANNEL_NOT_FOUND for a caller without a channel', async () => {
       const nobody: UserContext = { id: '00000000-0000-7000-8000-00000000f0ee', role: 'USER' };
 
-      expect(expectErr(await pin([], nobody)).code).toBe(ErrorCodes.CHANNEL_NOT_FOUND);
+      expect(expectErr(await pin([], nobody, ABSENT)).code).toBe(ErrorCodes.CHANNEL_NOT_FOUND);
     });
   });
 

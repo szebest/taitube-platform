@@ -113,6 +113,7 @@ export function describeNotificationJobsContract(makeSubject: MakeRepositoriesSu
         await subject.repositories.videoStudio.updateMetadata({
           videoId: VIDEO_IDS.a,
           userId: OWNER_ID,
+          auditFields: [],
           expectedVersion: seeded.version,
           patch: { visibility: to },
         })
