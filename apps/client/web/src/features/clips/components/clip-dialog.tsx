@@ -5,8 +5,12 @@ import { useAppForm } from '@vp/forms';
 import { videoDuration } from '@vp/intl';
 import { useFormat, useT } from '@vp/intl-react';
 import { fromPromise, isOk, unwrapOr } from '@vp/result';
-import { Button, Field, Input, ResponsiveModal, useToast, useUiCopy } from '@vp/ui';
+import { ResponsiveModal, useToast } from '@vp/ui';
 import { Suspense, useState } from 'react';
+import {
+  ClipDialogView,
+  type ClipDialogViewRootProps,
+} from '#app/components/watch/clip-dialog-view';
 import { ClipEditor } from '#app/components/watch/clip-editor';
 import { PlayerChannelProvider } from '#app/features/player';
 import { LazyTaitubePreview } from '#app/features/player/taitube-preview.lazy';
@@ -31,7 +35,6 @@ function ClipDialogBody({ video, startAt, onSaved }: ClipDialogBodyProps) {
   const showToast = useToast();
   const { tOr } = useT();
   const { format } = useFormat();
-  const { cancel } = useUiCopy();
   const { validateTitle, findRangeError } = useClipValidators();
   const createClip = useCreateClip(video.id);
   const [range, setRange] = useState(() => initialClipRange(startAt, video.durationMs));
@@ -69,13 +72,7 @@ function ClipDialogBody({ video, startAt, onSaved }: ClipDialogBodyProps) {
   });
 
   return (
-    <form
-      className="flex flex-col gap-stack"
-      onSubmit={(event) => {
-        event.preventDefault();
-        void form.handleSubmit();
-      }}
-    >
+    <ClipDialogView.Form onSubmit={() => void form.handleSubmit()}>
       <ResponsiveModal.Body>
         <ClipEditor.Root durationMs={video.durationMs} range={range} onRangeChange={setRange}>
           {video.playbackUrl && (
@@ -119,39 +116,28 @@ function ClipDialogBody({ video, startAt, onSaved }: ClipDialogBodyProps) {
             const error = field.state.meta.isTouched ? field.state.meta.errors[0] : undefined;
 
             return (
-              <Field.Root invalid={error !== undefined} className="mt-stack">
-                <Field.Label>{tOr('clips.titleLabel', {}, '')}</Field.Label>
-                <Input
-                  name={field.name}
-                  value={field.state.value}
-                  onChange={(event) => field.handleChange(event.target.value)}
-                  onBlur={field.handleBlur}
-                />
-                {typeof error === 'string' && <Field.Error>{error}</Field.Error>}
-              </Field.Root>
+              <ClipDialogView.TitleField
+                label={tOr('clips.titleLabel', {}, '')}
+                name={field.name}
+                value={field.state.value}
+                onValueChange={field.handleChange}
+                onBlur={field.handleBlur}
+                error={typeof error === 'string' ? error : undefined}
+              />
             );
           }}
         </form.AppField>
       </ResponsiveModal.Body>
-      <ResponsiveModal.Footer>
-        <ResponsiveModal.Close asChild>
-          <Button variant="ghost">{cancel}</Button>
-        </ResponsiveModal.Close>
-        <form.Subscribe selector={(state) => state.canSubmit}>
-          {(canSubmit) => (
-            <Button
-              type="submit"
-              variant="solid"
-              tone="accent"
-              loading={createClip.isPending}
-              disabled={!canSubmit || rangeError !== undefined}
-            >
-              {tOr('clips.save', {}, '')}
-            </Button>
-          )}
-        </form.Subscribe>
-      </ResponsiveModal.Footer>
-    </form>
+      <form.Subscribe selector={(state) => state.canSubmit}>
+        {(canSubmit) => (
+          <ClipDialogView.Footer
+            saveLabel={tOr('clips.save', {}, '')}
+            saving={createClip.isPending}
+            canSave={canSubmit && rangeError === undefined}
+          />
+        )}
+      </form.Subscribe>
+    </ClipDialogView.Form>
   );
 }
 
@@ -161,25 +147,33 @@ export interface ClipDialogProps {
   startAt: number;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Where focus goes when the dialog closes: the control that opened it. */
+  onCloseAutoFocus?: ClipDialogViewRootProps['onCloseAutoFocus'];
 }
 
 /** The dialog that clips a stretch of a video: its range over the video's frames, a preview, a title. */
-export function ClipDialog({ video, startAt, open, onOpenChange }: ClipDialogProps) {
+export function ClipDialog({
+  video,
+  startAt,
+  open,
+  onOpenChange,
+  onCloseAutoFocus,
+}: ClipDialogProps) {
   const { tOr } = useT();
 
   return (
-    <ResponsiveModal.Root open={open} onOpenChange={onOpenChange}>
-      <ResponsiveModal.Content size="lg">
-        <ResponsiveModal.Title>{tOr('clips.dialogTitle', {}, '')}</ResponsiveModal.Title>
-        <ResponsiveModal.Description>
-          {tOr(
-            'clips.dialogDescription',
-            { min: CLIP_MIN_MS / MS_PER_SECOND, max: CLIP_MAX_MS / MS_PER_SECOND },
-            ''
-          )}
-        </ResponsiveModal.Description>
-        <ClipDialogBody video={video} startAt={startAt} onSaved={() => onOpenChange(false)} />
-      </ResponsiveModal.Content>
-    </ResponsiveModal.Root>
+    <ClipDialogView.Root
+      open={open}
+      onOpenChange={onOpenChange}
+      onCloseAutoFocus={onCloseAutoFocus}
+      title={tOr('clips.dialogTitle', {}, '')}
+      description={tOr(
+        'clips.dialogDescription',
+        { min: CLIP_MIN_MS / MS_PER_SECOND, max: CLIP_MAX_MS / MS_PER_SECOND },
+        ''
+      )}
+    >
+      <ClipDialogBody video={video} startAt={startAt} onSaved={() => onOpenChange(false)} />
+    </ClipDialogView.Root>
   );
 }
