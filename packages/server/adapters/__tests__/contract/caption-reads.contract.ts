@@ -79,7 +79,9 @@ export function describeCaptionReadsContract(makeSubject: MakeRepositoriesSubjec
         })
       );
 
+      expect(expectOk(await ctx.captions.channelDefault(OWNER_ID))).toBe(false);
       expect(expectOk(await ctx.captions.setChannelDefault(OWNER_ID, true))).toBe(true);
+      expect(expectOk(await ctx.captions.channelDefault(OWNER_ID))).toBe(true);
       expect(expectOk(await ctx.captions.settings(VIDEO_IDS.a))).toMatchObject({
         channelDefault: true,
       });

@@ -72,6 +72,10 @@ export class InMemoryCaptionRepository extends CaptionRepository {
     return ok(true);
   }
 
+  async channelDefault(ownerId: string): Promise<Result<boolean, DatabaseUnavailable>> {
+    return ok(this.channelDefaults.get(ownerId) ?? false);
+  }
+
   async setChannelDefault(
     ownerId: string,
     enabled: boolean

@@ -80,6 +80,8 @@ export abstract class CaptionRepository {
     autoCaptions: boolean | null
   ): Promise<Result<boolean, DatabaseUnavailable>>;
   /** `false` when the owner has no channel. */
+  abstract channelDefault(ownerId: string): Promise<Result<boolean, DatabaseUnavailable>>;
+  /** `false` when the owner has no channel. */
   abstract setChannelDefault(
     ownerId: string,
     enabled: boolean

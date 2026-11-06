@@ -1,7 +1,6 @@
 import type {
   Account,
   CaptionTrackView,
-  Channel,
   ClipView,
   CurrentPickView,
   LiveChatMessageView,

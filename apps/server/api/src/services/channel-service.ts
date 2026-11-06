@@ -1,5 +1,6 @@
-import type { Account, ChannelPlaylistView } from '@vp/api-contracts';
+import type { Account, ChannelPlaylistView, OwnerChannel } from '@vp/api-contracts';
 import type {
+  CaptionRepository,
   ChannelRepositoryPort,
   LiveStreamRepositoryPort,
   PlaylistRepositoryPort,
@@ -31,6 +32,7 @@ import type { ListVideosFailure, VideoService, VideoSummaryView } from './video-
 export interface ChannelServiceDeps {
   users: UserRepository;
   channels: ChannelRepositoryPort;
+  captions: Pick<CaptionRepository, 'channelDefault'>;
   liveStreams: Pick<LiveStreamRepositoryPort, 'findOpenByChannel'>;
   playlists: PlaylistRepositoryPort;
   videoService: VideoService;
@@ -101,7 +103,7 @@ export class ChannelService {
       createdAt: user.value.createdAt.toISOString(),
     };
 
-    const view = await this.channelView(channel.value);
+    const view = await this.ownerChannelView(channel.value);
     if (isErr(view)) return view;
 
     return ok({ ...account, role: caller.role, user: account, channel: view.value });
@@ -110,7 +112,7 @@ export class ChannelService {
   async updateChannel(
     userId: string,
     input: UpdateChannelCommand
-  ): Promise<Result<ChannelView, UpdateChannelFailure>> {
+  ): Promise<Result<OwnerChannel, UpdateChannelFailure>> {
     const existing = await this.deps.channels.findByUserId(userId);
     if (isErr(existing)) return existing;
     if (!existing.value) return err(channelNotFound(userId));
@@ -157,7 +159,9 @@ export class ChannelService {
     });
     if (isErr(updated)) return updated;
 
-    return updated.value ? await this.channelView(updated.value) : err(channelNotFound(userId));
+    return updated.value
+      ? await this.ownerChannelView(updated.value)
+      : err(channelNotFound(userId));
   }
 
   async getPublicChannel(
@@ -217,6 +221,17 @@ export class ChannelService {
     return map(await this.deps.liveStreams.findOpenByChannel(channel.id), (stream) =>
       toChannelView(channel, stats.value, stream)
     );
+  }
+
+  private async ownerChannelView(
+    channel: Channel
+  ): Promise<Result<OwnerChannel, DatabaseUnavailable>> {
+    const view = await this.channelView(channel);
+    if (isErr(view)) return view;
+    return map(await this.deps.captions.channelDefault(channel.userId), (autoCaptionsDefault) => ({
+      ...view.value,
+      autoCaptionsDefault,
+    }));
   }
 
   /**

@@ -75,6 +75,7 @@ export function channelServiceDeps(
   return {
     users: repositories.users,
     channels: repositories.channels,
+    captions: repositories.captions,
     liveStreams: repositories.liveStreams,
     playlists: repositories.playlists,
     videoService: new VideoService(

@@ -1,5 +1,6 @@
 import { dt } from '../define';
 import { studioAdmin } from './studio-admin';
+import { studioCaptions } from './studio-captions';
 import { studioLive } from './studio-live';
 import { studioPicks } from './studio-picks';
 
@@ -68,6 +69,7 @@ export const studio = {
   videoAnalytics: dt('Statystyki'),
   watchOnWeb: dt('Obejrzyj w Taitube'),
   ...studioAdmin,
+  ...studioCaptions,
   ...studioLive,
   ...studioPicks,
   deleteVideo: dt('Usuń'),

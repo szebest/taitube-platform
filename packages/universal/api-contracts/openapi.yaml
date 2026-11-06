@@ -14384,6 +14384,9 @@ paths:
                         type: string
                       updatedAt:
                         type: string
+                      autoCaptionsDefault:
+                        type: boolean
+                        description: Whether videos uploaded from now on get generated captions; shown to the owner only
                     required:
                       - id
                       - userId
@@ -14400,6 +14403,7 @@ paths:
                       - live
                       - createdAt
                       - updatedAt
+                      - autoCaptionsDefault
                     additionalProperties: false
                 required:
                   - id
@@ -14625,6 +14629,9 @@ paths:
                     type: string
                   updatedAt:
                     type: string
+                  autoCaptionsDefault:
+                    type: boolean
+                    description: Whether videos uploaded from now on get generated captions; shown to the owner only
                 required:
                   - id
                   - userId
@@ -14641,6 +14648,7 @@ paths:
                   - live
                   - createdAt
                   - updatedAt
+                  - autoCaptionsDefault
                 additionalProperties: false
         '400':
           description: Problem Details (RFC 9457)
