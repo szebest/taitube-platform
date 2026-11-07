@@ -78,6 +78,14 @@ describe('apps/server/worker/stages: notify-team-invite', () => {
     ]);
   });
 
+  it('tells the invitee once when the job is delivered again', async () => {
+    await setUp();
+    await notify();
+
+    expect(await notify()).toEqual({ inviteId: INVITE, recorded: false });
+    expect(await notificationsOf(repositories, INVITEE)).toHaveLength(1);
+  });
+
   it.each([
     {
       scenario: 'the invite is gone',

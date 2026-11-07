@@ -40,7 +40,7 @@ export function createNotifyTeamInviteProcessor(deps: NotifyTeamInviteDeps) {
       actorChannelId: id,
       videoId: null,
       commentId: null,
-      groupKey: null,
+      groupKey: `team_invite:${inviteId}`,
       payload: {
         actor: { handle, displayName, avatarUrl },
         videoTitle: null,
