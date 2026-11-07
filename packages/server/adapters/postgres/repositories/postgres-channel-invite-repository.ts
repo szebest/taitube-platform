@@ -7,9 +7,11 @@ import type {
 import * as schema from '@vp/db';
 import type { ChannelInvite, NewChannelAuditEntry } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
+import { teamInviteOutbox } from '@vp/job-contracts';
 import { fromPromise, type Result } from '@vp/result';
 import { and, asc, eq, gt, lte, sql } from 'drizzle-orm';
 import { appendChannelAudit } from './channel-audit-writes';
+import { enqueueNotificationJobs } from './notification-jobs';
 import type { PostgresDatabase } from './types';
 
 const { channelInvites: i, channelMembers: m } = schema;
@@ -58,6 +60,7 @@ export class PostgresChannelInviteRepository implements ChannelInviteRepositoryP
           if (!created) return { type: 'already-pending' };
 
           await appendChannelAudit(tx, audit);
+          await enqueueNotificationJobs(tx, [teamInviteOutbox({ inviteId: created.id })]);
           return { type: 'created', invite: created };
         }),
       databaseUnavailable.during('createChannelInvite')

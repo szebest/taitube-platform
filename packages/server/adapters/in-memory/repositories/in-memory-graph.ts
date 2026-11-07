@@ -64,6 +64,7 @@ export function graph(): Container {
         new InMemoryChannelInviteRepository({
           members: c.get(Repo.channelMembers),
           audit: c.get(Repo.channelAudit),
+          outbox: c.get(Repo.outbox),
         })
     )
     .provide(

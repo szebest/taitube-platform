@@ -33,6 +33,13 @@ describe('rules/channel-team.rules: who runs a channel team', () => {
       expected: false,
     },
     {
+      scenario: 'a manager gives an editor the manager role',
+      user: manager,
+      action: 'update',
+      target: memberWith('editor-2', 'manager'),
+      expected: false,
+    },
+    {
       scenario: 'a manager removes another manager',
       user: manager,
       action: 'delete',

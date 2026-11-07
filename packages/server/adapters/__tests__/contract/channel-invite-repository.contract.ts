@@ -35,6 +35,13 @@ export function describeChannelInviteRepositoryContract(
         .map((entry) => entry.action)
         .sort();
 
+    const notifications = async () =>
+      expectOk(await subject.repositories.outbox.claimBatch(50)).flatMap((row) =>
+        row.kind === 'notification' && row.payload.type === 'queue'
+          ? [{ name: row.payload.job.name, data: row.payload.job.data }]
+          : []
+      );
+
     beforeAll(async () => {
       subject = await makeSubject();
     });
@@ -50,19 +57,23 @@ export function describeChannelInviteRepositoryContract(
       channel = await seedTeam(repositories);
     });
 
-    it('creates a pending invite and audits it', async () => {
+    it('creates a pending invite, audits it and tells the invitee', async () => {
       expect(await create(1)).toMatchObject({
         type: 'created',
         invite: { id: inviteId(1), status: 'pending', role: 'editor' },
       });
       expect(await auditActions()).toEqual(['invite.created']);
+      expect(await notifications()).toEqual([
+        { name: 'notify-team-invite', data: { inviteId: inviteId(1) } },
+      ]);
     });
 
-    it('refuses a second pending invite for the same invitee, and audits nothing for it', async () => {
+    it('refuses a second pending invite for the same invitee, and audits or tells nothing for it', async () => {
       await create(1);
 
       expect(await create(2)).toEqual({ type: 'already-pending' });
       expect(await auditActions()).toEqual(['invite.created']);
+      expect(await notifications()).toHaveLength(1);
     });
 
     it('closes an expired invite so a new one can be sent', async () => {
