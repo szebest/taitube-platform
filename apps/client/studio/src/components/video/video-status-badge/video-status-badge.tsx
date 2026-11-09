@@ -15,6 +15,7 @@ const STATUS_LOOK = {
   ABANDONED: { tone: 'warning', icon: 'alert' },
   DELETED: { tone: 'neutral', icon: 'trash' },
   LIVE: { tone: 'live', icon: 'live' },
+  HELD: { tone: 'warning', icon: 'shield' },
 } as const satisfies Record<VideoStatus, { tone: BadgeTone; icon: IconId }>;
 
 export function VideoStatusBadge({ status }: { status: VideoStatus }) {

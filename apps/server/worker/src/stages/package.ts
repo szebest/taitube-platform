@@ -132,6 +132,8 @@ export function createPackageProcessor(deps: PackageProcessorDeps) {
         case 'thumbnail':
           thumbResult = child.data;
           break;
+        case 'screen':
+          break;
         default:
           return assertNever(child.data, 'package child result');
       }
