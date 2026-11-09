@@ -73,6 +73,8 @@ describe('announce', () => {
       {
         channel: expect.stringContaining(ROOM_ID),
         memberKey: toMemberKey,
+        audience: null,
+        except: null,
         frame: { type: 'kicked' },
       },
     ]);

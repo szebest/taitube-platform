@@ -7,11 +7,7 @@ import {
   InMemoryWatchPartyGate,
   InMemoryWatchPartyPresence,
 } from '@vp/adapters/in-memory';
-import type {
-  CreateWatchPartyBody,
-  WatchPartyServerFrame,
-  WatchPartyView,
-} from '@vp/api-contracts';
+import type { CreateWatchPartyBody, WatchPartyView } from '@vp/api-contracts';
 import type { PartyGuestSession } from '@vp/core/ports';
 import { type AppConfigOverrides, asCdnBase, inProcessAppConfig } from '@vp/env-schema';
 import { createLogger } from '@vp/logger';
@@ -19,7 +15,7 @@ import type { UserContext } from '@vp/permissions';
 import { captureLog } from '@vp/testing/log-capture';
 import { expectOk } from '@vp/testing/result';
 import type { PartyCaller } from '../party-caller';
-import { WatchPartyBroadcaster } from '../watch-party-broadcaster';
+import { type RoomEnvelope, WatchPartyBroadcaster } from '../watch-party-broadcaster';
 import { WatchPartyContextLoader } from '../watch-party-context';
 import type { WatchPartyDeps, WatchPartySecrets } from '../watch-party-deps';
 import { WatchPartyService } from '../watch-party-service';
@@ -49,10 +45,8 @@ export function watchPartyTestConfig(overrides: AppConfigOverrides = {}) {
   });
 }
 
-export interface PublishedFrame {
+export interface PublishedFrame extends RoomEnvelope {
   readonly channel: string;
-  readonly memberKey: string | null;
-  readonly frame: WatchPartyServerFrame;
 }
 
 export interface WatchPartyTestOptions {
@@ -118,7 +112,7 @@ export function watchPartyTestDeps({ config, secrets }: WatchPartyTestOptions = 
   const frames = (): PublishedFrame[] =>
     cache.publishedMessages.map(({ channel, message }) => ({
       channel,
-      ...(JSON.parse(message) as Pick<PublishedFrame, 'memberKey' | 'frame'>),
+      ...(JSON.parse(message) as RoomEnvelope),
     }));
 
   return { deps, repositories, gate, presence, guestSessions, cache, clock, log, frames };

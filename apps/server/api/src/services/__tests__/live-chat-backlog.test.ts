@@ -1,6 +1,6 @@
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { expectOk } from '@vp/testing/result';
-import { readLiveChatBacklog } from '../live-chat-backlog';
+import { readChatBacklog } from '../live-chat-backlog';
 import { STARTED, STREAM_ID, VIEWER } from './live-harness';
 
 const lineId = (n: number) => `00000000-0000-7000-8000-00000000000${n}`;
@@ -25,12 +25,12 @@ async function backlog(after: number | null, removals: [line: number, atSecond: 
     expectOk(await liveChat.remove(STREAM_ID, lineId(n), secondsIn(at)));
 
   const read = expectOk(
-    await readLiveChatBacklog(liveChat, STREAM_ID, after === null ? null : lineId(after), 2)
+    await readChatBacklog(liveChat, STREAM_ID, after === null ? null : lineId(after), 2)
   );
   return { ...read, lines: read.lines.map((line) => line.message) };
 }
 
-describe('apps/server/api/services: readLiveChatBacklog', () => {
+describe('apps/server/api/services: readChatBacklog', () => {
   it.each([
     { scenario: 'no cursor', after: null, resume: 'fresh', lines: ['line 3', 'line 4'] },
     {

@@ -1,7 +1,7 @@
 import { ErrorCodes, watchPartyClosed } from '@vp/errors';
 import { ok, type Result } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
-import { actingAsMember } from '../watch-party-seated-actions';
+import { actingAsMember, loadSeated } from '../watch-party-seated-actions';
 import { keyOf, ROOM_ID, seatUser, seedRoom } from './watch-party-moderation-fixture';
 import {
   ANONYMOUS,
@@ -67,5 +67,36 @@ describe('actingAsMember', () => {
     expect(act).toHaveBeenCalledTimes(ran ? 1 : 0);
     expect(result.ok).toBe(ran);
     if (!ran) expect(expectErr(result).code).toBe(ErrorCodes.WATCH_PARTY_CLOSED);
+  });
+});
+
+describe('loadSeated', () => {
+  it('hands a seated caller the room and their member key', async () => {
+    const { deps } = await setUpRoom();
+
+    const seated = expectOk(await loadSeated(deps.context, ROOM_ID, userCaller(MEMBER)));
+
+    expect([seated.memberKey, seated.context.room.id]).toEqual([keyOf(MEMBER), ROOM_ID]);
+  });
+
+  it.each([
+    {
+      scenario: 'a stranger',
+      caller: userCaller(OTHER),
+      closed: false,
+      code: ErrorCodes.WATCH_PARTY_NOT_FOUND,
+    },
+    {
+      scenario: 'a member of a closed room',
+      caller: userCaller(MEMBER),
+      closed: true,
+      code: ErrorCodes.WATCH_PARTY_CLOSED,
+    },
+  ])('refuses $scenario', async ({ caller, closed, code }) => {
+    const { deps, repositories } = await setUpRoom();
+    if (closed)
+      expectOk(await repositories.watchPartyRooms.close(ROOM_ID, 'owner', null, deps.now()));
+
+    expect(expectErr(await loadSeated(deps.context, ROOM_ID, caller)).code).toBe(code);
   });
 });

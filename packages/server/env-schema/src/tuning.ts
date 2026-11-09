@@ -209,6 +209,7 @@ export const WATCH_PARTY = {
     password: { limit: 5, windowSeconds: 15 * SECONDS_PER_MINUTE },
   },
   frameMaxBytes: 4096,
+  socket: { pingIntervalMs: 30 * MS_PER_SECOND, maxBufferedBytes: 1024 * 1024 },
   chatBacklog: 200,
   inviteCandidates: 20,
   reactionsFoldMs: 250,

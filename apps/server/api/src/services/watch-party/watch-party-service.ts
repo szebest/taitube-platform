@@ -4,7 +4,7 @@ import type {
   WatchPartyPreviewView,
   WatchPartyView,
 } from '@vp/api-contracts';
-import { memberKeyOf, type RosterEntry, type RosterPreview, rosterFor } from '@vp/domain';
+import { memberKeyOf, type RosterEntry, type RosterPreview } from '@vp/domain';
 import { type AuthorizationFailure, authorize } from '@vp/domain-rules';
 import { MS_PER_SECOND } from '@vp/domain/time';
 import {
@@ -17,14 +17,12 @@ import {
   watchPartyClosed,
   watchPartyNotFound,
 } from '@vp/errors';
-import { canInRoom } from '@vp/permissions';
-import { all, err, isErr, ok, type Result } from '@vp/result';
+import { all, err, isErr, map, ok, type Result } from '@vp/result';
 import type { PartyCaller } from './party-caller';
 import { isRoomMember } from './watch-party-admission';
 import { createRoom } from './watch-party-create';
 import type { WatchPartyDeps } from './watch-party-deps';
 import { type JoinWatchPartyInput, joinRoom, leaveRoom } from './watch-party-join';
-import { resolvePeople } from './watch-party-names';
 import {
   type PreviewFailure,
   previewRoom,
@@ -32,9 +30,9 @@ import {
   rosterPreviewOf,
 } from './watch-party-preview';
 import { ipHashOf, requirePrincipal, type Unauthenticated } from './watch-party-principals';
+import { seatedRoster } from './watch-party-room-snapshot';
 import { presentRooms } from './watch-party-room-views';
 import { closeRoom, updateRoom } from './watch-party-settings';
-import { heldRoleIds, toRosterEntry } from './watch-party-views';
 
 type RosterResult =
   | { readonly view: 'members'; readonly entries: RosterEntry[]; readonly guests: number }
@@ -106,25 +104,8 @@ export class WatchPartyService {
       return isErr(preview) ? preview : ok({ view: 'preview' as const, preview: preview.value });
     }
 
-    const seated = await deps.repositories.watchPartyMembers.listSeated(room.id);
-    if (isErr(seated)) return seated;
-    const people = await resolvePeople(
-      deps.repositories.channels,
-      seated.value.map(({ memberKey }) => memberKey),
-      new Map(seated.value.map((seat) => [seat.memberKey, seat]))
-    );
-    if (isErr(people)) return people;
-    const now = deps.now();
-    const entries = seated.value.map((seat) =>
-      toRosterEntry(
-        seat,
-        people.value(seat.memberKey),
-        heldRoleIds(context.assignments, seat.memberKey, now),
-        room
-      )
-    );
-    const shown = rosterFor(entries, canInRoom(context.ability, 'members.kick'));
-    return ok({ view: 'members' as const, entries: [...shown.entries], guests: shown.guests });
+    const roster = await seatedRoster(deps, context);
+    return map(roster, ({ entries, guests }) => ({ view: 'members' as const, entries, guests }));
   }
 
   async listMine(

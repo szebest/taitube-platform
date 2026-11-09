@@ -8,7 +8,7 @@ import type { AppConfigOverrides } from '@vp/env-schema';
 import { SEEDED } from '@vp/testing';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
-import { bearer, buildTestApp, TOKENS } from '../../__tests__/test-app';
+import { bearer, buildTestApp, type TestApp, TOKENS } from '../../__tests__/test-app';
 import { watchPartyTestConfig } from '../../services/watch-party/__tests__/watch-party-test-deps';
 
 const AS = {
@@ -29,9 +29,14 @@ interface Call {
 
 export const QUICK_PARTY = { visibility: 'unlisted', preset: 'friends', hostAs: 'user' } as const;
 
-/** The in-process app with watch parties on a cheap hash, and a caller of each kind. */
-export async function buildWatchPartyApp(config: AppConfigOverrides = {}) {
-  const test = await buildTestApp({ config: watchPartyTestConfig(config) });
+type Shared = Pick<TestApp, 'repositories' | 'cache'>;
+
+/**
+ * The in-process app with watch parties on a cheap hash, and a caller of each kind. Handed another
+ * app's stores, it is a second pod of the same deployment.
+ */
+export async function buildWatchPartyApp(config: AppConfigOverrides = {}, shared?: Shared) {
+  const test = await buildTestApp({ config: watchPartyTestConfig(config), adapters: shared });
   const { app, container } = test;
 
   const call = (who: Who, method: Method, url: string, { payload, headers }: Call = {}) =>

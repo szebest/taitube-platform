@@ -84,6 +84,7 @@ describe('apps/server/api/composition: services module', () => {
       'watchPartyQueueService',
       'watchPartyRoleService',
       'watchPartyService',
+      'watchPartySocketService',
       'webVitalsService',
       'webhookService',
     ]);

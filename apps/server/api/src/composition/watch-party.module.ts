@@ -1,8 +1,15 @@
 import { createHash, createHmac, randomBytes } from 'node:crypto';
 import { Adapters } from '@vp/adapters/composition';
 import type { Container } from '@vp/composition';
+import { WATCH_PARTY_WILDCARD_CHANNEL, roomIdOfWatchParty } from '@vp/events';
 import { uuidv7 } from 'uuidv7';
 import {
+  BufferingWait,
+  flushReactions,
+  flushRoster,
+  OwnerGrace,
+  RoomBatcher,
+  RoomEnvelopeSchema,
   WatchPartyBroadcaster,
   WatchPartyContextLoader,
   WatchPartyControlsService,
@@ -14,7 +21,9 @@ import {
   WatchPartyRoleService,
   type WatchPartySecrets,
   WatchPartyService,
+  WatchPartySocketService,
 } from '../services/index';
+import { PatternHub } from '../services/pattern-hub';
 import { Services } from './service-tokens';
 
 const TOKEN_BYTES = 32;
@@ -74,5 +83,51 @@ export function registerWatchPartyServices(c: Container): Container {
     .provide(Services.WatchPartyMemberService, (c) => new WatchPartyMemberService(deps(c)))
     .provide(Services.WatchPartyQueueService, (c) => new WatchPartyQueueService(deps(c)))
     .provide(Services.WatchPartyInviteService, (c) => new WatchPartyInviteService(deps(c)))
-    .provide(Services.WatchPartyControlsService, (c) => new WatchPartyControlsService(deps(c)));
+    .provide(Services.WatchPartyControlsService, (c) => new WatchPartyControlsService(deps(c)))
+    .provide(
+      Services.WatchPartyHub,
+      (c) =>
+        new PatternHub({
+          cache: c.get(Adapters.Cache),
+          logger: c.get(Services.Logger),
+          pattern: WATCH_PARTY_WILDCARD_CHANNEL,
+          keyOf: roomIdOfWatchParty,
+          schema: RoomEnvelopeSchema,
+        }),
+      { start: (hub) => hub.init(), dispose: (hub) => hub.close() }
+    )
+    .provide(
+      Services.WatchPartyReactions,
+      (c) =>
+        new RoomBatcher({
+          windowMs: deps(c).config.reactionsFoldMs,
+          flush: flushReactions(deps(c)),
+        }),
+      { dispose: (batcher) => batcher.close() }
+    )
+    .provide(
+      Services.WatchPartyRoster,
+      (c) =>
+        new RoomBatcher({ windowMs: deps(c).config.rosterBatchMs, flush: flushRoster(deps(c)) }),
+      { dispose: (batcher) => batcher.close() }
+    )
+    .provide(Services.WatchPartyBuffering, (c) => new BufferingWait(deps(c)), {
+      dispose: (wait) => wait.close(),
+    })
+    .provide(Services.WatchPartyOwnerGrace, (c) => new OwnerGrace(deps(c)), {
+      dispose: (grace) => grace.close(),
+    })
+    .provide(
+      Services.WatchPartySocketService,
+      (c) =>
+        new WatchPartySocketService({
+          ...deps(c),
+          hub: c.get(Services.WatchPartyHub),
+          allowedOrigins: c.get(Adapters.Config).http.corsOrigins,
+          reactions: c.get(Services.WatchPartyReactions),
+          roster: c.get(Services.WatchPartyRoster),
+          buffering: c.get(Services.WatchPartyBuffering),
+          ownerGrace: c.get(Services.WatchPartyOwnerGrace),
+        })
+    );
 }

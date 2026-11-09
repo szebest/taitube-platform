@@ -50,6 +50,7 @@ export function resolveBackground(c: Container): void {
   c.get(Services.MetricsServer);
   c.get(Services.SseHub);
   c.get(Services.LiveChatHub);
+  c.get(Services.WatchPartyHub);
   c.get(Services.LiveViewerHeartbeat);
   c.get(Services.QueuePoller);
   c.get(Services.SqlPoller);

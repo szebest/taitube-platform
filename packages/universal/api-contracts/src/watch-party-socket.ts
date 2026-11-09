@@ -161,7 +161,7 @@ const DirectFrameSchemas = [
   z.object({ type: z.literal('superseded') }),
 ] as const;
 
-const WatchPartyServerFrameSchema = z
+export const WatchPartyServerFrameSchema = z
   .discriminatedUnion('type', [...DirectFrameSchemas, ...WatchPartyBroadcastSchema.options])
   .describe(
     'WebSocket text frames, each one JSON object: hello first, the chat backlog as chat.message frames, then live ones'
@@ -205,7 +205,7 @@ export const watchPartySocket = defineEndpoint({
   result: WatchPartyServerFrameSchema,
   errors: {
     401: [ErrorCodes.WATCH_PARTY_TICKET_INVALID],
-    403: [ErrorCodes.WATCH_PARTY_BANNED],
+    403: [ErrorCodes.WATCH_PARTY_BANNED, ErrorCodes.FORBIDDEN],
     404: [ErrorCodes.WATCH_PARTY_NOT_FOUND],
     409: [ErrorCodes.WATCH_PARTY_FULL],
     410: [ErrorCodes.WATCH_PARTY_CLOSED],

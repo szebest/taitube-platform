@@ -1,6 +1,7 @@
 import type { WatchPartyPreviewView } from '@vp/api-contracts';
 import {
   type MemberKind,
+  PENDING_ENFORCEMENT,
   type RosterPreview,
   type RosterPreviewMember,
   toRosterPreview,
@@ -172,7 +173,7 @@ export async function previewRoom(
 
   return ok({
     ...view.value,
-    features: { voice: false },
+    features: { voice: PENDING_ENFORCEMENT.length === 0 },
     roster: { ...roster.value, faces: [...roster.value.faces] },
     viewer: {
       memberKey: context.memberKey,

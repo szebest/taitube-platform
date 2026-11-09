@@ -36,7 +36,7 @@ import {
 } from '@vp/validation';
 import { uuidv7 } from 'uuidv7';
 import { type LiveAccessDeps, type ReadLiveFailure, readLive } from './live-access';
-import { readLiveChatBacklog } from './live-chat-backlog';
+import { readChatBacklog } from './live-chat-backlog';
 import { type LiveChatHub, publishLiveChat } from './live-chat-hub';
 import { liveChatMode, toLiveChatMessageView } from './live-views';
 
@@ -156,7 +156,7 @@ export class LiveChatService {
       else held.push(event);
     });
 
-    const backlog = await readLiveChatBacklog(
+    const backlog = await readChatBacklog(
       liveChat,
       session.liveStreamId,
       after,

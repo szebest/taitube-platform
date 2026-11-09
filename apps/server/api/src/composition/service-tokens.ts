@@ -54,12 +54,20 @@ import type {
   WatchHistoryService,
   WebVitalsService,
 } from '../services/index';
+import type { PatternHub } from '../services/pattern-hub';
 import type { Poller } from '../services/poller';
 import type { ReadinessService } from '../services/readiness-service';
 import type { ViewerProgress } from '../services/viewer-progress';
 import type {
+  BufferingWait,
+  OwnerGrace,
+  Reaction,
+  RoomBatcher,
+  RoomEnvelope,
+  RosterChange,
   WatchPartyBroadcaster,
   WatchPartyContextLoader,
+  WatchPartySocketService,
   WatchPartyService,
   WatchPartyGuestService,
   WatchPartyRoleService,
@@ -124,6 +132,7 @@ export interface ServiceSet {
   watchPartyQueueService: WatchPartyQueueService;
   watchPartyInviteService: WatchPartyInviteService;
   watchPartyControlsService: WatchPartyControlsService;
+  watchPartySocketService: WatchPartySocketService;
 }
 
 export const Services = {
@@ -197,4 +206,10 @@ export const Services = {
   WatchPartyQueueService: token<WatchPartyQueueService>('WatchPartyQueueService'),
   WatchPartyInviteService: token<WatchPartyInviteService>('WatchPartyInviteService'),
   WatchPartyControlsService: token<WatchPartyControlsService>('WatchPartyControlsService'),
+  WatchPartyHub: token<PatternHub<RoomEnvelope>>('WatchPartyHub'),
+  WatchPartyReactions: token<RoomBatcher<Reaction>>('WatchPartyReactions'),
+  WatchPartyRoster: token<RoomBatcher<RosterChange>>('WatchPartyRoster'),
+  WatchPartyBuffering: token<BufferingWait>('WatchPartyBuffering'),
+  WatchPartyOwnerGrace: token<OwnerGrace>('WatchPartyOwnerGrace'),
+  WatchPartySocketService: token<WatchPartySocketService>('WatchPartySocketService'),
 } as const;

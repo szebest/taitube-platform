@@ -58,5 +58,6 @@ export function registerServiceSet(c: Container): Container {
     watchPartyQueueService: c.get(Services.WatchPartyQueueService),
     watchPartyInviteService: c.get(Services.WatchPartyInviteService),
     watchPartyControlsService: c.get(Services.WatchPartyControlsService),
+    watchPartySocketService: c.get(Services.WatchPartySocketService),
   }));
 }

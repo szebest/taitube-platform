@@ -22,6 +22,8 @@ interface WatchPartyTuning {
     password: Budget;
   };
   frameMaxBytes: number;
+  /** The keepalive ping and the unsent bytes past which a slow socket is dropped. */
+  socket: { pingIntervalMs: number; maxBufferedBytes: number };
   chatBacklog: number;
   inviteCandidates: number;
   reactionsFoldMs: number;

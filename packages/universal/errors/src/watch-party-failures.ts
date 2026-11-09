@@ -26,7 +26,7 @@ export type WatchPartyPasswordLocked = Failure<
   { retryAfterSeconds: number }
 >;
 
-type WatchPartySlowMode = Failure<
+export type WatchPartySlowMode = Failure<
   typeof ErrorCodes.WATCH_PARTY_SLOW_MODE,
   { retryAfterSeconds: number }
 >;
@@ -66,7 +66,7 @@ export type WatchPartyRoleNotFound = Failure<
 >;
 
 /** Unknown, spent or expired: a one-time socket token answers once, inside its time to live. */
-type WatchPartyTicketInvalid = Failure<typeof ErrorCodes.WATCH_PARTY_TICKET_INVALID>;
+export type WatchPartyTicketInvalid = Failure<typeof ErrorCodes.WATCH_PARTY_TICKET_INVALID>;
 /** A party credential that resolves to nothing: expired, revoked or never issued. */
 export type WatchPartyCredentialInvalid = Failure<typeof ErrorCodes.WATCH_PARTY_CREDENTIAL_INVALID>;
 

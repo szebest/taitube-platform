@@ -113,7 +113,7 @@ export function toMembershipView(
 }
 
 export function toRosterEntry(
-  seat: WatchPartyMember,
+  seat: Pick<WatchPartyMember, 'memberKey' | 'kind'>,
   person: PartyPerson,
   roleIds: readonly string[],
   room: Pick<WatchPartyRoom, 'phase'>
