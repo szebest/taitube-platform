@@ -16,7 +16,7 @@ import { PagedFooter } from '#app/features/library/components/paged-footer/paged
 import { notificationsQueryOptions } from '#app/features/notifications/api/notification-queries';
 import { useMarkRead } from '#app/features/notifications/hooks/use-mark-read';
 import { groupByDay } from '#app/features/notifications/utils/group-by-day';
-import { useOnlineStatus } from '#app/features/offline/hooks/use-online-status';
+import { useOnlineStatus } from '#app/hooks/use-online-status';
 import { NotificationRow } from '../notification-row/notification-row';
 
 function isFilter(value: string): value is NotificationFilter {

@@ -3,7 +3,6 @@ export {
   likedVideosQueryOptions,
   myCommentsQueryOptions,
   myPlaylistsQueryOptions,
-  playlistQueryOptions,
   searchHistoryQueryOptions,
   uploadsShelfQueryOptions,
   watchHistoryQueryOptions,

@@ -1,7 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { ensureFound, parseParam } from '@vp/queries';
 import { z } from 'zod';
-import { PlaylistPage, PlaylistPageSkeleton, playlistQueryOptions } from '#app/features/library';
+import { PlaylistPage, PlaylistPageSkeleton } from '#app/features/library';
+import { playlistQueryOptions } from '#app/lib/query-keys/library-keys';
 import { urlModals } from '#app/lib/url-modal/registry';
 
 const PlaylistIdSchema = z.uuid();

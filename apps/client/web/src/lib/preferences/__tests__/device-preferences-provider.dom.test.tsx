@@ -1,15 +1,15 @@
 import { act, renderHook } from '@testing-library/react';
 import { writeCookie } from '@vp/ui';
 import type { PropsWithChildren } from 'react';
-import { DEFAULT_DEVICE_PREFERENCES } from '#app/features/account/__tests__/device-preferences-fixtures';
-import { PreferencesSyncContext } from '#app/features/account/components/preferences-sync/preferences-sync.context';
-import { requestDevicePreferences } from '#app/features/account/utils/device-preferences';
+import { DEFAULT_DEVICE_PREFERENCES } from '#app/__tests__/device-preferences-fixtures';
+import { requestDevicePreferences } from '../device-preferences';
 import {
   DevicePreferencesProvider,
   useDevicePreferences,
   useLocalePreference,
   usePlaybackPreference,
 } from '../device-preferences-provider';
+import { PreferencesSyncContext } from '../preferences-sync.context';
 
 const save = vi.fn();
 

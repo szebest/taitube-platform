@@ -8,15 +8,15 @@ import {
   writeCookie,
 } from '@vp/ui';
 import type { PropsWithChildren } from 'react';
+import { DEFAULT_DEVICE_PREFERENCES } from '#app/__tests__/device-preferences-fixtures';
 import { preferencesView } from '#app/__tests__/preferences-fixtures';
-import { DEFAULT_DEVICE_PREFERENCES } from '#app/features/account/__tests__/device-preferences-fixtures';
 import type { MergeState } from '#app/features/account/api/identity-reset';
+import { MergeStateContext } from '#app/features/account/components/preferences-sync/merge-state.context';
 import {
   DevicePreferencesProvider,
   useDevicePreferences,
-} from '#app/features/account/components/device-preferences-provider/device-preferences-provider';
-import { MergeStateContext } from '#app/features/account/components/preferences-sync/merge-state.context';
-import { PreferencesSyncContext } from '#app/features/account/components/preferences-sync/preferences-sync.context';
+} from '#app/lib/preferences/device-preferences-provider';
+import { PreferencesSyncContext } from '#app/lib/preferences/preferences-sync.context';
 import { useResetIdentity } from '../use-reset-identity';
 
 const GUEST_PLAYBACK = { ...DEFAULT_PREFERENCES.playback, speed: 1.5 } as const;

@@ -4,8 +4,8 @@ import type { RecordWatchProgressBody } from '@vp/api-contracts';
 import { useAccount, useApi } from '@vp/queries';
 import { useRef } from 'react';
 import type { PlaybackEnd, PlaybackProgress } from '#app/components/player/taitube-player';
-import { useAccountPreference } from '#app/features/account/hooks/use-account-preference';
-import { libraryKeys } from '../api/library-queries';
+import { libraryKeys } from '#app/lib/query-keys/library-keys';
+import { useAccountPreference } from './use-account-preference';
 
 const HEARTBEAT_EVERY_SECONDS = 10;
 

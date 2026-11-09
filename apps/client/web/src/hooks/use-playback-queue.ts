@@ -1,7 +1,7 @@
 import type { VideoSummary } from '@vp/api-contracts';
 import { use } from 'react';
-import { PlaybackSessionContext } from '../components/playback-session-provider/playback-session.context';
-import { nextVideo, previousVideo } from '../utils/playback-session';
+import { nextVideo, previousVideo } from '../lib/playback-session/playback-session';
+import { PlaybackSessionContext } from '../lib/playback-session/playback-session.context';
 
 export function usePlaybackSession() {
   const value = use(PlaybackSessionContext);

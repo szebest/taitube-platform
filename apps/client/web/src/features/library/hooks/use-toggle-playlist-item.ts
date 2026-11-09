@@ -2,7 +2,8 @@ import type { ApiClient } from '@vp/api-client';
 import { useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
 import { useToast } from '@vp/ui';
-import { libraryKeys, saveTargetsQueryOptions } from '../api/library-queries';
+import { libraryKeys } from '#app/lib/query-keys/library-keys';
+import { saveTargetsQueryOptions } from '../api/library-queries';
 import { queryMutationOptions } from '../api/query-mutation';
 import { useListMutation } from './use-list-mutation';
 

@@ -4,7 +4,7 @@ import { LIST, renderPlaylist } from '#app/features/library/__tests__/render-pla
 
 const modes = vi.hoisted(() => ({ set: vi.fn() }));
 
-vi.mock(import('#app/features/watch/hooks/use-playback-queue'), async (importOriginal) => {
+vi.mock(import('#app/hooks/use-playback-queue'), async (importOriginal) => {
   const original = await importOriginal();
   return {
     ...original,

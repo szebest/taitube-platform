@@ -7,10 +7,10 @@ import { read, trackedFiles } from './repo-files';
 type PerApp = Readonly<Record<string, number>>;
 
 /** Import sites from one feature into another, source and spec; each break lowers its app's number. */
-const CROSS_FEATURE: PerApp = { studio: 0, web: 89 };
+const CROSS_FEATURE: PerApp = { studio: 0, web: 64 };
 
 /** Import sites from `components/`, `hooks/`, `utils/`, `lib/` or `integrations/` into a feature. */
-const INTO_FEATURE: PerApp = { studio: 0, web: 4 };
+const INTO_FEATURE: PerApp = { studio: 0, web: 1 };
 
 /** Features whose folder has no `index.ts` yet. */
 const WITHOUT_INDEX: PerApp = { studio: 0, web: 3 };

@@ -3,9 +3,9 @@ import { VideoIdParamSchema } from '@vp/api-contracts';
 import { ensureFound, parseParam, videoQueryOptions } from '@vp/queries';
 import { z } from 'zod';
 import { channelQueryOptions } from '#app/features/channel';
-import { playlistQueryOptions } from '#app/features/library';
 import { relatedQueryOptions, WatchPage, WatchPending } from '#app/features/watch';
 import { WEB_URL } from '#app/lib/config';
+import { playlistQueryOptions } from '#app/lib/query-keys/library-keys';
 import { headWords } from '#app/lib/seo/head-words';
 import { videoHead } from '#app/lib/seo/video-head';
 

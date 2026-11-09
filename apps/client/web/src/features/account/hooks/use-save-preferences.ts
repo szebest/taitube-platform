@@ -5,8 +5,8 @@ import type { PreferencesView } from '@vp/api-contracts';
 import { useApi } from '@vp/queries';
 import { fromPromise, isOk } from '@vp/result';
 import { restoreQueryData } from '#app/integrations/query/restore-query-data';
-import { applyChange, type PreferencesChange } from '../api/preferences-change';
-import { preferencesQueryOptions } from '../api/preferences-queries';
+import { applyChange, type PreferencesChange } from '#app/lib/preferences/preferences-change';
+import { preferencesQueryOptions } from '#app/lib/preferences/preferences-queries';
 
 const CONFLICT = 409;
 

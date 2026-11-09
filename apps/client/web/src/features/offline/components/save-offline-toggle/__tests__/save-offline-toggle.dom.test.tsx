@@ -5,7 +5,7 @@ import { renderWatch } from '#app/__tests__/render-watch';
 import { cdnHandlers, LOW_URL, savableVideo } from '#app/features/offline/__tests__/saved-fixtures';
 import { CACHE_NAMES } from '#app/integrations/service-worker/cache-names';
 
-vi.mock(import('#app/features/pwa/utils/register-service-worker'), () => ({
+vi.mock(import('#app/integrations/service-worker-client/register-service-worker'), () => ({
   registerServiceWorker: () => () => {},
 }));
 vi.mock(import('#app/components/player/taitube-player/taitube-player'), async () => ({

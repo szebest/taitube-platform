@@ -4,10 +4,8 @@ import { Shelf } from '@vp/components';
 import { useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
 import { FeedVideoCard } from '#app/features/browse/components/feed-video-card/feed-video-card';
-import {
-  myPlaylistsQueryOptions,
-  playlistQueryOptions,
-} from '#app/features/library/api/library-queries';
+import { myPlaylistsQueryOptions } from '#app/features/library/api/library-queries';
+import { playlistQueryOptions } from '#app/lib/query-keys/library-keys';
 import { YouShelf } from '../you-shelf/you-shelf';
 
 const NO_PLAYLIST = '';

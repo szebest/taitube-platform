@@ -4,11 +4,11 @@ import { z } from 'zod';
 import {
   historyShelfQueryOptions,
   myPlaylistsQueryOptions,
-  playlistQueryOptions,
   uploadsShelfQueryOptions,
   YouPage,
   YouPageSkeleton,
 } from '#app/features/library';
+import { playlistQueryOptions } from '#app/lib/query-keys/library-keys';
 
 export const Route = createFileRoute('/_authed/feed/you')({
   validateSearch: z.object({}),

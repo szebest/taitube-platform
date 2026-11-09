@@ -10,9 +10,9 @@ import {
 import {
   historyShelfQueryOptions,
   myPlaylistsQueryOptions,
-  playlistQueryOptions,
   uploadsShelfQueryOptions,
 } from '#app/features/library/api/library-queries';
+import { playlistQueryOptions } from '#app/lib/query-keys/library-keys';
 
 export const WATCH_LATER = ownedPlaylist(0, {
   id: WATCH_LATER_ID,

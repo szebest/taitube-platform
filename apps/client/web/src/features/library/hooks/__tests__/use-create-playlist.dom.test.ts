@@ -3,7 +3,7 @@ import { createQueryClient } from '@vp/queries';
 import { apiServer, mockEndpoint } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
 import { playlistDetail, uuid } from '#app/__tests__/library-fixtures';
-import { libraryKeys } from '#app/features/library/api/library-queries';
+import { libraryKeys } from '#app/lib/query-keys/library-keys';
 import { useCreatePlaylist } from '../use-create-playlist';
 import { renderWithToasts } from './toast-harness';
 

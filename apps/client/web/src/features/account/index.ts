@@ -4,7 +4,7 @@ export { AppearanceSettings } from './components/appearance-settings/appearance-
 export { AutoplayNextRow } from './components/autoplay-next-row/autoplay-next-row';
 export { ChannelLevels } from './components/channel-levels/channel-levels';
 export { ClearHistoryRow } from './components/clear-history-row/clear-history-row';
-export { DevicePreferencesProvider } from './components/device-preferences-provider/device-preferences-provider';
+export { DevicePreferencesProvider } from '#app/lib/preferences/device-preferences-provider';
 export { HiddenRecommendationsRow } from './components/hidden-recommendations-row/hidden-recommendations-row';
 export { LanguageRow } from './components/language-row/language-row';
 export { LoginPage } from './components/login-page/login-page';
@@ -29,4 +29,4 @@ export {
 export { SettingsLayout } from './components/settings-layout/settings-layout';
 export { SettingsOverview } from './components/settings-overview/settings-overview';
 export { SettingsSectionPage } from './components/settings-section-page/settings-section-page';
-export { requestDevicePreferences } from './utils/device-preferences';
+export { requestDevicePreferences } from '#app/lib/preferences/device-preferences';

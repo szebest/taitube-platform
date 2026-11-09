@@ -12,7 +12,7 @@ import {
   type SentSave,
 } from '#app/__tests__/preferences-fixtures';
 import { signInBrowser } from '#app/__tests__/providers';
-import { requestDevicePreferences } from '#app/features/account/utils/device-preferences';
+import { requestDevicePreferences } from '#app/lib/preferences/device-preferences';
 import { getRouter } from '#app/router';
 
 const renderPlayback = (handlers: HttpHandler[] = []) =>

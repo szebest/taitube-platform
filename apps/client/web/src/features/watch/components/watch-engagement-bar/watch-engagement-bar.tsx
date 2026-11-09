@@ -7,7 +7,6 @@ import { SectionBoundary, useApi, useFailureToast } from '@vp/queries';
 import { unwrapOr } from '@vp/result';
 import { BrandScope, useUiCopy } from '@vp/ui';
 import { EngagementBar } from '#app/components/watch/engagement-bar';
-import { useSignIn } from '#app/features/account/hooks/use-sign-in';
 import { channelQueryOptions } from '#app/features/channel/api/channel-queries';
 import { ClipAction } from '#app/features/clips/components/clip-action/clip-action';
 import { subscriptionStatusQueryOptions } from '#app/features/library/api/subscription-queries';
@@ -15,6 +14,7 @@ import { useSetSubscription } from '#app/features/library/hooks/use-set-subscrip
 import { SaveOfflineToggle } from '#app/features/offline/components/save-offline-toggle/save-offline-toggle';
 import { useReaction } from '#app/features/reactions/hooks/use-reaction';
 import { toSummary } from '#app/features/watch/utils/to-summary';
+import { useSignIn } from '#app/hooks/use-sign-in';
 import { useVideoActions } from '#app/hooks/use-video-actions';
 import { ShareDialog } from '../share-dialog/share-dialog';
 

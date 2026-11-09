@@ -3,7 +3,7 @@ import { useT } from '@vp/intl-react';
 import { type PropsWithChildren, type ReactNode, useEffect, useRef } from 'react';
 import { SettingRow } from '#app/components/settings/setting-row';
 import type { SettingRowId } from '#app/features/account/utils/settings-index';
-import { useNotSaved } from '../preferences-sync/preferences-sync.context';
+import { useNotSaved } from '#app/lib/preferences/preferences-sync.context';
 
 export type SettingItemProps = PropsWithChildren<{
   /** The id the row has in the settings index, which is also its URL hash. */

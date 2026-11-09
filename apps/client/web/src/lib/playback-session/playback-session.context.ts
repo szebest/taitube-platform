@@ -1,5 +1,5 @@
 import { createContext, type Dispatch } from 'react';
-import type { PlaybackAction, PlaybackSession } from '#app/features/watch/utils/playback-session';
+import type { PlaybackAction, PlaybackSession } from './playback-session';
 
 export interface PlaybackSessionValue {
   session: PlaybackSession;

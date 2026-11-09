@@ -6,8 +6,8 @@ import {
 } from '@tanstack/react-router';
 import { act, render } from '@testing-library/react';
 import { videoSummary } from '@vp/web-testing';
+import { PlaybackSessionStub } from '#app/__tests__/playback-session-stub';
 import { AppProviders } from '#app/__tests__/providers';
-import { PlaybackSessionProvider } from '#app/features/watch/components/playback-session-provider/playback-session-provider';
 import { usePlaybackQueue } from '../use-playback-queue';
 
 const first = videoSummary({ id: '0190c3a0-5e1d-7000-8000-00000000c001', title: 'a' });
@@ -22,9 +22,9 @@ async function renderQueue() {
   const router = createRouter({
     routeTree: createRootRoute({
       component: () => (
-        <PlaybackSessionProvider>
+        <PlaybackSessionStub>
           <Probe />
-        </PlaybackSessionProvider>
+        </PlaybackSessionStub>
       ),
     }),
     history: createMemoryHistory({ initialEntries: ['/'] }),

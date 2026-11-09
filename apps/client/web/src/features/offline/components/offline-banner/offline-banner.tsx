@@ -2,9 +2,9 @@ import { useT } from '@vp/intl-react';
 import { useToast } from '@vp/ui';
 import { useEffect, useEffectEvent, useState } from 'react';
 import { OfflineState } from '#app/components/states/offline-state';
-import { useOnlineStatus } from '#app/features/offline/hooks/use-online-status';
 import { useQueuedChanges } from '#app/features/offline/hooks/use-queued-changes';
 import { connectionIsBack } from '#app/features/offline/utils/check-connection';
+import { useOnlineStatus } from '#app/hooks/use-online-status';
 
 async function checkConnection() {
   await connectionIsBack();

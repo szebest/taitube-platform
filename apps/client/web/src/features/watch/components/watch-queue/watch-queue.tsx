@@ -5,11 +5,11 @@ import { useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
 import { usePlayerTheater } from '#app/components/player/taitube-player';
 import { Queue } from '#app/components/watch/queue';
-import { usePlaybackPreference } from '#app/features/account/components/device-preferences-provider/device-preferences-provider';
 import { relatedQueryOptions } from '#app/features/watch/api/related-queries';
 import { useAutoplayNext } from '#app/features/watch/hooks/use-autoplay-next';
-import { usePlaybackQueue } from '#app/features/watch/hooks/use-playback-queue';
 import { useQueueNavigation } from '#app/features/watch/hooks/use-queue-navigation';
+import { usePlaybackQueue } from '#app/hooks/use-playback-queue';
+import { usePlaybackPreference } from '#app/lib/preferences/device-preferences-provider';
 import { QueueVideoRow } from '../queue-video-row/queue-video-row';
 
 /** The viewer's queue with its modes and "More like this" below it; the queue is a playlist's when the page was opened from one. */

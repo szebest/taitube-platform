@@ -12,8 +12,8 @@ import {
   type DevicePreferences,
   saveDevicePreferences,
   takeLegacyLocale,
-} from '#app/features/account/utils/device-preferences';
-import { usePreferencesSync } from '../preferences-sync/preferences-sync.context';
+} from './device-preferences';
+import { usePreferencesSync } from './preferences-sync.context';
 
 type DeviceStore = Readonly<{
   preferences: DevicePreferences;

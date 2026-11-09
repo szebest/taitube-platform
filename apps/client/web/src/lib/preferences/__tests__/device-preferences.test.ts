@@ -1,5 +1,5 @@
 import { requestHandler } from '@tanstack/react-start/server';
-import { DEFAULT_DEVICE_PREFERENCES } from '#app/features/account/__tests__/device-preferences-fixtures';
+import { DEFAULT_DEVICE_PREFERENCES } from '#app/__tests__/device-preferences-fixtures';
 import {
   type DevicePreferences,
   requestDevicePreferences,
