@@ -14,7 +14,6 @@ import type {
   ChannelFeaturedService,
   ChannelIdentityService,
   ChannelImagePipelineService,
-  ChannelImageService,
   ChannelSpotlightService,
   ChannelAuditService,
   ChannelInviteService,
@@ -77,7 +76,6 @@ export interface ServiceSet {
   recommendationFeedbackService: RecommendationFeedbackService;
   categoryService: CategoryService;
   channelService: ChannelService;
-  channelImageService: ChannelImageService;
   channelIdentityService: ChannelIdentityService;
   channelImagePipelineService: ChannelImagePipelineService;
   channelSpotlightService: ChannelSpotlightService;
@@ -141,7 +139,6 @@ export const Services = {
   CategoryService: token<CategoryService>('CategoryService'),
   ChannelService: token<ChannelService>('ChannelService'),
   RequestIdentity: token<RequestIdentity>('RequestIdentity'),
-  ChannelImageService: token<ChannelImageService>('ChannelImageService'),
   ChannelIdentityService: token<ChannelIdentityService>('ChannelIdentityService'),
   ChannelImagePipelineService: token<ChannelImagePipelineService>('ChannelImagePipelineService'),
   ChannelSpotlightService: token<ChannelSpotlightService>('ChannelSpotlightService'),

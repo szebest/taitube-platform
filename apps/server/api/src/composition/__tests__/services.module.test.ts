@@ -41,7 +41,6 @@ describe('apps/server/api/composition: services module', () => {
       'channelFeaturedService',
       'channelIdentityService',
       'channelImagePipelineService',
-      'channelImageService',
       'channelInviteService',
       'channelMemberService',
       'channelService',

@@ -6,7 +6,6 @@ import {
   InMemoryJobQueue,
   InMemoryMultipartStorage,
   type InMemoryRepositories,
-  InMemoryStorageClient,
   InMemoryVideoRepository,
 } from '@vp/adapters/in-memory';
 import { RedisReactionCacheAdapter } from '@vp/adapters/redis/redis-reaction-cache.adapter';
@@ -21,7 +20,6 @@ import {
   ChannelIdentityService,
   type ChannelIdentityServiceDeps,
 } from '../channel-identity-service';
-import { ChannelImageService, type ChannelImageServiceDeps } from '../channel-image-service';
 import type { ChannelServiceDeps } from '../channel-service';
 import type { SseServiceDeps } from '../sse-service';
 import type { UploadContext } from '../upload-context';
@@ -63,23 +61,6 @@ export function ownerActing(ownerId: string, channelId: string): ActingChannel {
   return { channelId, ownerId, role: 'owner' };
 }
 
-export const TEST_PUBLIC_BUCKET = 'public';
-
-/** Channel images over one repositories bundle and an in-memory public bucket. */
-export function channelImageServiceDeps(
-  repositories: InMemoryRepositories,
-  overrides: Partial<ChannelImageServiceDeps> = {}
-): ChannelImageServiceDeps {
-  return {
-    channels: repositories.channels,
-    storage: new InMemoryStorageClient(),
-    publicBucket: TEST_PUBLIC_BUCKET,
-    cdn: TEST_CDN,
-    presignedUrlTtlSeconds: 900,
-    ...overrides,
-  };
-}
-
 export const TEST_NOW = Date.parse('2026-03-10T00:00:00.000Z');
 
 /** The channel identity rules over one repositories bundle, at a fixed clock. */
@@ -112,7 +93,6 @@ export function channelServiceDeps(
     ),
     paginator: new Paginator(),
     cdn: TEST_CDN,
-    images: new ChannelImageService(channelImageServiceDeps(repositories)),
     identity: new ChannelIdentityService(channelIdentityServiceDeps(repositories)),
     pages: repositories.channelPages,
     now: () => TEST_NOW,

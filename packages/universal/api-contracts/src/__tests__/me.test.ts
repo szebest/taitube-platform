@@ -1,4 +1,4 @@
-import { getAccount, issueChannelImageUpload, updateMyChannel } from '../me';
+import { getAccount, updateMyChannel } from '../me';
 
 const channel = {
   id: '00000000-0000-7000-8000-0000000000a1',
@@ -70,30 +70,19 @@ describe('packages/api-contracts: me', () => {
     expect(updateMyChannel.body.safeParse({ links }).success).toBe(ok);
   });
 
-  it('takes the keys of uploaded images in a channel edit', () => {
-    expect(
-      updateMyChannel.body.safeParse({ avatarKey: 'channels/c/avatar/i.png', bannerKey: 'k' })
-        .success
-    ).toBe(true);
-  });
-
   it.each([
     {
-      name: 'an avatar of a known size',
-      body: { kind: 'avatar', contentType: 'image/png', sizeBytes: 10 },
+      name: 'an external picture address',
+      body: { avatarUrl: 'https://img.example.com/a.png' },
       ok: true,
     },
-    {
-      name: 'a kind that is neither',
-      body: { kind: 'logo', contentType: 'image/png', sizeBytes: 10 },
-      ok: false,
-    },
-    {
-      name: 'an empty file',
-      body: { kind: 'banner', contentType: 'image/png', sizeBytes: 0 },
-      ok: false,
-    },
-  ])('takes $name as an image upload request', ({ body, ok }) => {
-    expect(issueChannelImageUpload.body.safeParse(body).success).toBe(ok);
+    { name: 'null to remove the banner', body: { bannerUrl: null }, ok: true },
+    { name: 'a picture that is not an address', body: { avatarUrl: 'a.png' }, ok: false },
+  ])('takes $name in a channel edit', ({ body, ok }) => {
+    expect(updateMyChannel.body.safeParse(body).success).toBe(ok);
+  });
+
+  it.each(['avatarKey', 'bannerKey'])('drops %s, which no edit takes any more', (field) => {
+    expect(updateMyChannel.body.parse({ [field]: 'channels/c/avatar/i.png' })).toEqual({});
   });
 });

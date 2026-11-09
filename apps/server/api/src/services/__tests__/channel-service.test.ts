@@ -1,16 +1,9 @@
-import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
+import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { expectErr, expectOk } from '@vp/testing/result';
-import { ChannelImageService } from '../channel-image-service';
 import { ChannelService, type UpdateChannelCommand } from '../channel-service';
-import {
-  channelImageServiceDeps,
-  channelServiceDeps,
-  ownerActing,
-  TEST_CDN,
-  TEST_PUBLIC_BUCKET,
-} from './service-deps';
+import { channelServiceDeps, ownerActing } from './service-deps';
 
 const LOCALES = ['en'];
 
@@ -111,35 +104,28 @@ describe('ChannelService', () => {
   });
 
   describe('updateChannel', () => {
-    it('stores the public address of an uploaded banner in place of its key', async () => {
-      const storage = new InMemoryStorageClient();
-      const images = new ChannelImageService(channelImageServiceDeps(repositories, { storage }));
-      const withImages = new ChannelService(channelServiceDeps(repositories, { images }));
-      const key = `channels/${CHANNEL_ID}/banner/b1.jpg`;
-      await storage.uploadObject({
-        bucket: TEST_PUBLIC_BUCKET,
-        key,
-        body: Buffer.from('x'),
-        contentType: 'image/jpeg',
-      });
+    it.each([
+      {
+        name: 'an external picture address',
+        change: { avatarUrl: 'https://img.example.com/a.png' },
+      },
+      {
+        name: 'an external banner address',
+        change: { bannerUrl: 'https://img.example.com/b.png' },
+      },
+    ])('stores $name as sent', async ({ change }) => {
+      const updated = expectOk(await update(change));
 
-      const updated = expectOk(await withImages.updateChannel(USER, ACTING, { bannerKey: key }));
-
-      expect(updated.bannerUrl).toBe(`${TEST_CDN}/${key}`);
+      expect(updated).toMatchObject(change);
     });
 
-    it('refuses a banner key that names nothing and keeps the banner it has', async () => {
-      const failure = expectErr(
-        await update({
-          bannerKey: `channels/${CHANNEL_ID}/banner/none.jpg`,
-        })
-      );
+    it('clears the banner when its address is null and leaves the picture alone', async () => {
+      expectOk(await update({ avatarUrl: 'https://img.example.com/a.png' }));
 
-      expect(failure.code).toBe(ErrorCodes.VALIDATION_FAILED);
-      expect(
-        expectOk(await channelService.getAccount({ id: USER_ID, role: 'CREATOR' })).channel
-          .bannerUrl
-      ).toBe('https://cdn.example.com/banner.png');
+      const updated = expectOk(await update({ bannerUrl: null }));
+
+      expect(updated.bannerUrl).toBeNull();
+      expect(updated.avatarUrl).toBe('https://img.example.com/a.png');
     });
 
     it('updates channel metadata successfully', async () => {

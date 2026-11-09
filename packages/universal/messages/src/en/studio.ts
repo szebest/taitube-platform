@@ -2,6 +2,7 @@ import { dt } from '../define';
 import { studioAdmin } from './studio-admin';
 import { studioCaptions } from './studio-captions';
 import { studioComments } from './studio-comments';
+import { studioImages } from './studio-images';
 import { studioLive } from './studio-live';
 import { studioPicks } from './studio-picks';
 import { studioTeam } from './studio-team';
@@ -73,6 +74,7 @@ export const studio = {
   ...studioAdmin,
   ...studioCaptions,
   ...studioComments,
+  ...studioImages,
   ...studioLive,
   ...studioPicks,
   ...studioTeam,
@@ -195,18 +197,6 @@ export const studio = {
   linkUrlLabel: dt('Link address {position}'),
   addLink: dt('Add a link'),
   removeLink: dt('Remove link {position}'),
-  brandingTitle: dt('Picture and banner'),
-  brandingDescription: dt(
-    'Upload a JPEG, PNG or WebP image: up to 5 MB for the picture and 10 MB for the banner.'
-  ),
-  avatarDrop: dt('Drop a picture here, or click to choose one'),
-  bannerDrop: dt('Drop a banner here, or click to choose one'),
-  avatarRemove: dt('Remove picture'),
-  bannerRemove: dt('Remove banner'),
-  avatarPreview: dt('Picture preview'),
-  bannerPreview: dt('Banner preview'),
-  avatarSafeZone: dt('Shown as a circle: keep faces and text inside the guide.'),
-  bannerSafeZone: dt('Phones show only the centre band: keep text inside the guide.'),
   brandTitle: dt('Brand colour'),
   brandDescription: dt('Buttons, links and highlights on your channel page take this colour.'),
   brandLabel: dt('Colour'),

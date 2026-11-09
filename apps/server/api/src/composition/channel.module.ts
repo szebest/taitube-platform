@@ -5,7 +5,6 @@ import {
   ChannelFeaturedService,
   ChannelIdentityService,
   ChannelImagePipelineService,
-  ChannelImageService,
   ChannelSpotlightService,
   ChannelService,
   RequestIdentity,
@@ -15,17 +14,6 @@ import { registerTeamServices } from './team.module';
 
 export function registerChannelServices(c: Container): Container {
   return registerTeamServices(c)
-    .provide(
-      Services.ChannelImageService,
-      (c) =>
-        new ChannelImageService({
-          channels: c.get(Adapters.Repositories).channels,
-          storage: c.get(Adapters.Storage),
-          publicBucket: c.get(Adapters.Config).buckets.public,
-          cdn: c.get(Adapters.Config).cdn,
-          presignedUrlTtlSeconds: c.get(Adapters.Config).limits.presignTtlSeconds,
-        })
-    )
     .provide(
       Services.ChannelIdentityService,
       (c) =>
@@ -74,7 +62,6 @@ export function registerChannelServices(c: Container): Container {
           videoService: c.get(Services.VideoService),
           paginator: c.get(Services.Paginator),
           cdn: c.get(Adapters.Config).cdn,
-          images: c.get(Services.ChannelImageService),
           identity: c.get(Services.ChannelIdentityService),
           pages: c.get(Adapters.Repositories).channelPages,
           now: Date.now,

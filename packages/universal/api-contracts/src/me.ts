@@ -1,7 +1,6 @@
 import { COUNTRIES } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import { ROLES } from '@vp/permissions';
-import { CHANNEL_IMAGE_KINDS } from '@vp/validation';
 import { z } from 'zod';
 import { BannerLinkSchema } from './channel-images';
 import { ChannelLinkSchema, OwnerChannelSchema } from './channels';
@@ -25,14 +24,6 @@ const UpdateChannelSchema = z.object({
   handle: z.string().optional(),
   avatarUrl: z.url().nullable().optional(),
   bannerUrl: z.url().nullable().optional(),
-  avatarKey: z
-    .string()
-    .optional()
-    .describe('An uploaded avatar, as `issueChannelImageUpload` returned it; replaces avatarUrl'),
-  bannerKey: z
-    .string()
-    .optional()
-    .describe('An uploaded banner, as `issueChannelImageUpload` returned it; replaces bannerUrl'),
   brandColor: z
     .string()
     .nullable()
@@ -55,19 +46,6 @@ const UpdateChannelSchema = z.object({
     .optional()
     .describe('Shown to a signed-in visitor on request only; null clears it'),
   bannerLink: BannerLinkSchema.nullable().optional().describe('null clears it'),
-});
-
-const ChannelImageUploadRequestSchema = z.object({
-  kind: z.enum(CHANNEL_IMAGE_KINDS),
-  contentType: z.string().min(1),
-  sizeBytes: z.number().int().positive(),
-});
-
-const ChannelImageUploadSchema = z.object({
-  key: z.string(),
-  uploadUrl: z.url(),
-  headers: z.record(z.string(), z.string()),
-  expiresAt: z.string(),
 });
 
 export const getAccount = defineEndpoint({
@@ -123,25 +101,6 @@ export const getMyChannel = defineEndpoint({
     401: [ErrorCodes.UNAUTHORIZED],
     403: [ErrorCodes.FORBIDDEN],
     404: [ErrorCodes.CHANNEL_NOT_FOUND],
-  },
-});
-
-export const issueChannelImageUpload = defineEndpoint({
-  method: 'POST',
-  path: '/v1/me/channel/images',
-  channelScoped: true,
-  tag: 'Account',
-  summary: 'Presign an avatar or banner upload',
-  description:
-    'Returns a presigned PUT to the public bucket for an image of the authenticated user channel (jpeg, png or webp; 5 MB for an avatar, 10 MB for a banner). Send the key back in `PATCH /v1/me/channel` once the upload is done.',
-  body: ChannelImageUploadRequestSchema,
-  status: 201,
-  result: ChannelImageUploadSchema,
-  errors: {
-    400: [ErrorCodes.VALIDATION_FAILED],
-    401: [ErrorCodes.UNAUTHORIZED],
-    404: [ErrorCodes.CHANNEL_NOT_FOUND],
-    422: [ErrorCodes.UPLOAD_TOO_LARGE, ErrorCodes.UNSUPPORTED_CONTENT_TYPE],
   },
 });
 

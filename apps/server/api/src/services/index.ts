@@ -14,7 +14,6 @@ export * from './related-service';
 export * from './http-cache';
 export * from './channel-identity-service';
 export * from './channel-image-pipeline-service';
-export * from './channel-image-service';
 export * from './channel-spotlight-service';
 export * from './channel-service';
 export * from './request-identity';

@@ -2,6 +2,7 @@ import { dt } from '../define';
 import { studioAdmin } from './studio-admin';
 import { studioCaptions } from './studio-captions';
 import { studioComments } from './studio-comments';
+import { studioImages } from './studio-images';
 import { studioLive } from './studio-live';
 import { studioPicks } from './studio-picks';
 import { studioTeam } from './studio-team';
@@ -73,6 +74,7 @@ export const studio = {
   ...studioAdmin,
   ...studioCaptions,
   ...studioComments,
+  ...studioImages,
   ...studioLive,
   ...studioPicks,
   ...studioTeam,
@@ -214,18 +216,6 @@ export const studio = {
   linkUrlLabel: dt('Adres linku {position}'),
   addLink: dt('Dodaj link'),
   removeLink: dt('Usuń link {position}'),
-  brandingTitle: dt('Zdjęcie i baner'),
-  brandingDescription: dt(
-    'Prześlij obraz JPEG, PNG lub WebP: do 5 MB dla zdjęcia i do 10 MB dla banera.'
-  ),
-  avatarDrop: dt('Upuść tutaj zdjęcie albo kliknij, aby je wybrać'),
-  bannerDrop: dt('Upuść tutaj baner albo kliknij, aby go wybrać'),
-  avatarRemove: dt('Usuń zdjęcie'),
-  bannerRemove: dt('Usuń baner'),
-  avatarPreview: dt('Podgląd zdjęcia'),
-  bannerPreview: dt('Podgląd banera'),
-  avatarSafeZone: dt('Wyświetlane jako koło: twarze i tekst trzymaj wewnątrz prowadnicy.'),
-  bannerSafeZone: dt('Telefony pokazują tylko środkowy pas: tekst trzymaj wewnątrz prowadnicy.'),
   brandTitle: dt('Kolor marki'),
   brandDescription: dt('Przyciski, linki i wyróżnienia na stronie Twojego kanału mają ten kolor.'),
   brandLabel: dt('Kolor'),

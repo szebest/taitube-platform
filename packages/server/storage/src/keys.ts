@@ -103,10 +103,6 @@ export function channelImagePrefix(channelId: string, kind: string): string {
   return `channels/${channelId}/${kind}/`;
 }
 
-export function channelImageKey(channelId: string, kind: string, id: string, ext: string): string {
-  return `${channelImagePrefix(channelId, kind)}${id}.${ext}`;
-}
-
 /** Raw bucket: the file a creator uploaded for an avatar or banner, until the job has cut its variants. */
 export function channelImageUploadKey(channelId: string, kind: string, uploadId: string): string {
   return `channel-images/${channelId}/${kind}/${uploadId}`;

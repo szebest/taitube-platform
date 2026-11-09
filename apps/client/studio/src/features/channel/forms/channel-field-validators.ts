@@ -6,7 +6,7 @@ import { ok } from '@vp/result';
 import {
   type ChannelImageKind,
   type ChannelLinkInput,
-  validateChannelImage,
+  validateChannelImageUploadRequest,
   validateChannelLinks,
   validateHandle,
 } from '@vp/validation';
@@ -25,7 +25,9 @@ export const validateLinksField = validateWith((links: readonly ChannelLinkInput
 
 export const validateChannelImageFile = (kind: ChannelImageKind) =>
   validateWith(([file]: File[]) =>
-    file ? validateChannelImage({ kind, contentType: file.type, sizeBytes: file.size }) : ok(file)
+    file
+      ? validateChannelImageUploadRequest({ kind, contentType: file.type, sizeBytes: file.size })
+      : ok(file)
   );
 
 /** The checks the API runs on the fields no shared rule covers, answering this viewer's words. */

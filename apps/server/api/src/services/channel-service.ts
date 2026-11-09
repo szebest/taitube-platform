@@ -28,7 +28,6 @@ import type { InvalidCursor, Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
 import { type Result, err, isErr, map, ok } from '@vp/result';
 import type { ChannelIdentityService, IdentityFailure } from './channel-identity-service';
-import type { ChannelImageService, ResolveChannelImageFailure } from './channel-image-service';
 import { type ProvisionFailure, findChannelByIdOrHandle, provisionAccount } from './channel-lookup';
 import { type ChannelView, toChannelView, toOwnerExtras } from './channel-views';
 import { decodeCreatedAtCursor, createdAtCursorPayload } from './cursor';
@@ -44,7 +43,6 @@ export interface ChannelServiceDeps {
   videoService: VideoService;
   paginator: Paginator;
   cdn: CdnBase;
-  images: ChannelImageService;
   identity: ChannelIdentityService;
   pages: Pick<ChannelPageRepositoryPort, 'listLocalizations'>;
   now: () => number;
@@ -54,12 +52,7 @@ export type { ChannelView } from './channel-views';
 
 export type PublicChannelView = ChannelView & { redirectedFrom: string | null };
 
-/** An uploaded image's key replaces the address of the same field. */
-export type UpdateChannelCommand = ChannelFieldsPatch & {
-  handle?: string;
-  avatarKey?: string;
-  bannerKey?: string;
-};
+export type UpdateChannelCommand = ChannelFieldsPatch & { handle?: string };
 
 export type UserAccountView = Account;
 
@@ -69,7 +62,6 @@ export type GetAccountFailure = AccountNotFound | ChannelNotFound | DatabaseUnav
 export type UpdateChannelFailure =
   | AuthorizationFailure
   | ChannelNotFound
-  | ResolveChannelImageFailure
   | IdentityFailure
   | DatabaseUnavailable;
 export type GetOwnerChannelFailure = AuthorizationFailure | ChannelNotFound | DatabaseUnavailable;
@@ -135,14 +127,11 @@ export class ChannelService {
     const identity = await this.deps.identity.decide(existing.value, input);
     if (isErr(identity)) return identity;
 
-    const images = await this.deps.images.addressesOf(existing.value.id, input);
-    if (isErr(images)) return images;
-
     const updated = await this.deps.channels.update(existing.value.id, {
       ...identity.value,
       displayName: input.displayName,
-      avatarUrl: images.value.avatarUrl,
-      bannerUrl: images.value.bannerUrl,
+      avatarUrl: input.avatarUrl,
+      bannerUrl: input.bannerUrl,
       bio: input.bio,
     });
     if (isErr(updated)) return updated;
