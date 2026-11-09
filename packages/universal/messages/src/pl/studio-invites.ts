@@ -1,0 +1,35 @@
+import { dt } from '../define';
+
+export const studioInvites = {
+  invitesNav: dt('Zaproszenia'),
+  invitesNavBadge: dt('{count:number}'),
+  invitesTitle: dt('Zaproszenia do zespołów'),
+  invitesDescription: dt('Kanały, które zapraszają Cię do swojego zespołu.'),
+  invitesList: dt('Oczekujące zaproszenia'),
+  invitesEmptyTitle: dt('Brak zaproszeń'),
+  invitesEmptyDescription: dt('Gdy kanał zaprosi Cię do zespołu, zaproszenie pojawi się tutaj.'),
+  invitesFailed: dt('Nie udało się wczytać zaproszeń.'),
+  invitesNoAccessTitle: dt('Zaloguj się, aby zobaczyć zaproszenia'),
+  invitesNoAccessDescription: dt('Zaproszenia należą do Twojego konta.'),
+  invitesInvitedBy: dt('Zaprasza: {name}'),
+  invitesInvitedByUnknown: dt('Zaprasza dawny członek zespołu'),
+  invitesExpires: dt('Wygasa'),
+  invitesAccept: dt('Przyjmij'),
+  invitesAcceptLabel: dt('Przyjmij zaproszenie od: {name}'),
+  invitesDecline: dt('Odrzuć'),
+  invitesDeclineLabel: dt('Odrzuć zaproszenie od: {name}'),
+  invitesAccepted: dt('Dołączono do: {name}'),
+  invitesDeclined: dt('Odrzucono zaproszenie od: {name}'),
+  invitesAcceptFailed: dt('Nie udało się przyjąć zaproszenia.'),
+  invitesDeclineFailed: dt('Nie udało się odrzucić zaproszenia.'),
+  invitesClosed: dt('To zaproszenie zostało cofnięte, zamknięte lub wygasło.'),
+  invitesGone: dt('To zaproszenie już nie istnieje.'),
+  teamLeave: dt('Opuść ten zespół'),
+  teamLeaveTitle: dt('Opuścić zespół: {name}?'),
+  teamLeaveDescription: dt(
+    'Od razu tracisz dostęp do studia tego kanału. Aby wrócić, ktoś z zespołu musi zaprosić Cię ponownie.'
+  ),
+  teamLeaveConfirm: dt('Opuść zespół'),
+  teamLeft: dt('Opuszczono zespół: {name}'),
+  teamLeaveFailed: dt('Nie udało się opuścić zespołu.'),
+} as const;
