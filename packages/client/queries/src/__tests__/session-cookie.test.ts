@@ -1,9 +1,5 @@
-import {
-  SESSION_COOKIE,
-  clearSessionCookie,
-  readSessionToken,
-  writeSessionCookie,
-} from '../session-cookie';
+import { SESSION_COOKIE } from '../session-config';
+import { clearSessionCookie, readSessionToken, writeSessionCookie } from '../session-cookie';
 import { inRequest } from './in-request';
 
 describe('@vp/queries: session cookie', () => {

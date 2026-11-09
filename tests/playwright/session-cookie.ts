@@ -1,4 +1,4 @@
-import { SESSION_COOKIE } from '../../packages/client/queries/src/session-cookie';
+import { SESSION_COOKIE } from '../../packages/client/queries/src/session-config';
 
 /** The session cookie the apps' sign-in sets, for a browser `token` signed in at `url`. */
 export function sessionCookie(token: string, url: string) {
