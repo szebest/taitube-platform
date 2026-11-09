@@ -2,7 +2,7 @@ import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createToaster, ToastProvider } from '@vp/ui';
 import { AppProviders } from '#app/__tests__/providers';
-import * as registration from '#app/features/pwa/utils/register-service-worker';
+import * as registration from '#app/integrations/service-worker-client/register-service-worker';
 import { UpdatePrompt } from '../update-prompt';
 
 function renderPrompt() {

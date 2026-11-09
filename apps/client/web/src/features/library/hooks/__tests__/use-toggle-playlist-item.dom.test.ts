@@ -3,11 +3,7 @@ import { createQueryClient } from '@vp/queries';
 import { api, apiServer, mockEndpoint } from '@vp/web-testing';
 import { heldReply } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
-import {
-  ownedPlaylist,
-  playlistDetail,
-  uuid,
-} from '#app/features/library/__tests__/library-fixtures';
+import { ownedPlaylist, playlistDetail, uuid } from '#app/__tests__/library-fixtures';
 import { saveTargetsQueryOptions } from '#app/features/library/api/library-queries';
 import { useTogglePlaylistItem } from '../use-toggle-playlist-item';
 import { renderWithToasts } from './toast-harness';

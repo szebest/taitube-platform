@@ -1,10 +1,10 @@
 import { screen } from '@testing-library/react';
-import { uuid } from '#app/features/library/__tests__/library-fixtures';
+import { uuid } from '#app/__tests__/library-fixtures';
 import { LIST, renderPlaylist } from '#app/features/library/__tests__/render-playlist';
 
 const modes = vi.hoisted(() => ({ set: vi.fn() }));
 
-vi.mock(import('#app/features/watch/hooks/use-playback-queue'), async (importOriginal) => {
+vi.mock(import('#app/hooks/use-playback-queue'), async (importOriginal) => {
   const original = await importOriginal();
   return {
     ...original,

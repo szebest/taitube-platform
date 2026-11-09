@@ -1,13 +1,18 @@
 import { PageHeader, ShelfSkeleton } from '@vp/components';
 import { useT } from '@vp/intl-react';
-import { ClipsShelf } from '#app/features/clips/components/clips-shelf/clips-shelf';
+import type { ReactNode } from 'react';
 import { HistoryShelf } from '../history-shelf/history-shelf';
 import { PlaylistsShelf } from '../playlists-shelf/playlists-shelf';
 import { UploadsShelf } from '../uploads-shelf/uploads-shelf';
 import { WatchLaterShelf } from '../watch-later-shelf/watch-later-shelf';
 
 /** `/feed/you`: a shelf each for History, Watch later, Playlists, the viewer's own videos and their clips. */
-export function YouPage() {
+export interface YouPageProps {
+  /** The viewer's clips shelf, which a route composes in. */
+  clips: ReactNode;
+}
+
+export function YouPage({ clips }: YouPageProps) {
   const { tOr } = useT();
 
   return (
@@ -21,7 +26,7 @@ export function YouPage() {
       <WatchLaterShelf />
       <PlaylistsShelf />
       <UploadsShelf />
-      <ClipsShelf />
+      {clips}
     </div>
   );
 }

@@ -14,7 +14,7 @@ describe('apps/client/web: search history queries', () => {
     });
 
     const options = recentSearchesQueryOptions(api);
-    const { items } = await createQueryClient().fetchQuery(options);
+    const { items } = await createQueryClient().query(options);
 
     expect(items).toEqual([expect.objectContaining({ id: ENTRY_ID, query: 'lofi' })]);
     expect(limit).toBe('8');

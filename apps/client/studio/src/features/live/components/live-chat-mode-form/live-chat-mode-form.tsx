@@ -2,7 +2,7 @@ import type { LiveStreamView } from '@vp/api-contracts';
 import { useT } from '@vp/intl-react';
 import { useFailureToast } from '@vp/queries';
 import { Button, Card, Field, Select, Switch, useToast } from '@vp/ui';
-import { type FormEvent, useState } from 'react';
+import { type SubmitEvent, useState } from 'react';
 import { useUpdateLiveStream } from '#app/features/live/hooks/use-update-live-stream';
 
 const SLOW_MODE_SECONDS = [0, 5, 10, 30, 60, 120, 300] as const;
@@ -24,7 +24,7 @@ export function LiveChatModeForm({ stream }: LiveChatModeFormProps) {
     slowModeSeconds !== stream.chat.slowModeSeconds ||
     subscribersOnly !== stream.chat.subscribersOnly;
 
-  const save = (event: FormEvent) => {
+  const save = (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
     update.mutate(
       { chatSlowModeSeconds: slowModeSeconds, chatSubscribersOnly: subscribersOnly },

@@ -6,7 +6,7 @@ import { HttpResponse } from 'msw/http';
 import { renderClip } from '#app/features/clips/__tests__/render-clip';
 
 vi.mock(import('#app/components/player/taitube-player/taitube-player'), async () => ({
-  TaitubePlayer: (await import('#app/features/watch/__tests__/stub-player')).StubPlayer,
+  TaitubePlayer: (await import('#app/__tests__/stub-player')).StubPlayer,
 }));
 
 async function askToDelete(handler: ReturnType<typeof mockEndpoint>) {

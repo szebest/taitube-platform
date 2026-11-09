@@ -2,8 +2,12 @@ import { listCommentReplies, listVideoComments } from '@vp/api-contracts';
 import { createQueryClient, KEYSET_PAGE_SIZE } from '@vp/queries';
 import { api, apiServer, mockEndpoint, VIDEO_ID } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
-import { COMMENT_ID, comment } from '#app/features/watch/__tests__/comment-fixtures';
-import { commentKeys, commentsQueryOptions, repliesQueryOptions } from '../comment-queries';
+import { COMMENT_ID, comment } from '#app/__tests__/comment-fixtures';
+import {
+  commentKeys,
+  commentsQueryOptions,
+  repliesQueryOptions,
+} from '#app/lib/query-keys/comment-keys';
 
 describe('apps/client/web: comment queries', () => {
   it('reads the comments of a video in the chosen order, a page at a time', async () => {
@@ -17,7 +21,7 @@ describe('apps/client/web: comment queries', () => {
 
     const client = createQueryClient();
     const options = commentsQueryOptions(api, VIDEO_ID, 'newest');
-    await client.fetchInfiniteQuery(options);
+    await client.infiniteQuery(options);
 
     expect(asked[0]?.pathname).toBe(`/v1/videos/${VIDEO_ID}/comments`);
     expect(Object.fromEntries(asked[0]?.searchParams ?? [])).toEqual({
@@ -38,7 +42,7 @@ describe('apps/client/web: comment queries', () => {
       })
     );
 
-    await createQueryClient().fetchInfiniteQuery(repliesQueryOptions(api, COMMENT_ID));
+    await createQueryClient().infiniteQuery(repliesQueryOptions(api, COMMENT_ID));
 
     expect(asked).toEqual([COMMENT_ID]);
   });

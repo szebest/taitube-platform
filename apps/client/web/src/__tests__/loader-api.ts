@@ -32,8 +32,8 @@ import {
   videoSummary,
 } from '@vp/web-testing';
 import { type HttpHandler, HttpResponse } from 'msw/http';
-import { preferencesView } from '#app/features/account/__tests__/preferences-fixtures';
-import { SHORTS } from '#app/features/shorts/__tests__/short-fixtures';
+import { preferencesView } from './preferences-fixtures';
+import { SHORTS } from './short-fixtures';
 
 const RELATED_ID = '0190c3a0-5e1d-7000-8000-00000000a009';
 

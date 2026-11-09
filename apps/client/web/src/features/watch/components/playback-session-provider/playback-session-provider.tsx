@@ -1,9 +1,9 @@
 import { useAccount } from '@vp/queries';
 import { type PropsWithChildren, useEffect, useReducer, useState } from 'react';
 import { PlayerChannelProvider } from '#app/components/player/taitube-player';
-import { EMPTY_SESSION, playbackReducer } from '#app/features/watch/utils/playback-session';
+import { EMPTY_SESSION, playbackReducer } from '#app/lib/playback-session/playback-session';
+import { PlaybackSessionContext } from '#app/lib/playback-session/playback-session.context';
 import { PersistentPlayer } from '../persistent-player/persistent-player';
-import { PlaybackSessionContext } from './playback-session.context';
 
 function createHost() {
   if (typeof document === 'undefined') {

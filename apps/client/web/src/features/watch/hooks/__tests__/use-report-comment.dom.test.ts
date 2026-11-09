@@ -3,8 +3,8 @@ import { createQueryClient } from '@vp/queries';
 import { apiServer, mockEndpoint } from '@vp/web-testing';
 import { runMutation } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
+import { COMMENT_ID } from '#app/__tests__/comment-fixtures';
 import { AppProviders } from '#app/__tests__/providers';
-import { COMMENT_ID } from '#app/features/watch/__tests__/comment-fixtures';
 import { useReportComment } from '../use-report-comment';
 
 describe('apps/client/web: useReportComment', () => {

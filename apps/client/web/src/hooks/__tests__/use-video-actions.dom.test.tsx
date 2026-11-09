@@ -7,9 +7,9 @@ import {
 import { act, render } from '@testing-library/react';
 import { VIDEO_ID, videoSummary } from '@vp/web-testing';
 import type { ComponentType, PropsWithChildren } from 'react';
+import { PlaybackSessionStub } from '#app/__tests__/playback-session-stub';
 import { AppProviders, signedIn } from '#app/__tests__/providers';
-import { PlaybackSessionProvider } from '#app/features/watch/components/playback-session-provider/playback-session-provider';
-import { usePlaybackQueue } from '#app/features/watch/hooks/use-playback-queue';
+import { usePlaybackQueue } from '../use-playback-queue';
 import { useVideoActions, type VideoActions } from '../use-video-actions';
 
 async function renderActions(
@@ -25,9 +25,9 @@ async function renderActions(
   const router = createRouter({
     routeTree: createRootRoute({
       component: () => (
-        <PlaybackSessionProvider>
+        <PlaybackSessionStub>
           <Probe />
-        </PlaybackSessionProvider>
+        </PlaybackSessionStub>
       ),
     }),
     history: createMemoryHistory({ initialEntries: ['/'] }),

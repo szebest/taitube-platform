@@ -4,8 +4,8 @@ import { assertNever } from '@vp/result';
 import { Icon, type IconId, useAppearance } from '@vp/ui';
 import { CommandPalette } from '#app/components/shell/command-palette';
 import type { CommandAction } from '#app/features/search/utils/command-actions';
+import { useCommandPaletteStore } from '#app/lib/command-palette/command-palette-store';
 import { STUDIO_URL } from '#app/lib/config';
-import { useCommandPaletteStore } from '../command-palette-store/command-palette-store';
 
 const ICONS: Record<CommandAction['kind'], IconId> = {
   theme: 'moon',

@@ -19,7 +19,7 @@ describe('apps/client/web: live queries', () => {
         })
       );
 
-      const replay = await createQueryClient().fetchQuery(
+      const replay = await createQueryClient().query(
         chatReplayQueryOptions(api, LIVE_STREAM_ID, window)
       );
 
@@ -45,9 +45,7 @@ describe('apps/client/web: live queries', () => {
       })
     );
 
-    const replay = await createQueryClient().fetchQuery(
-      chatReplayQueryOptions(api, LIVE_STREAM_ID, 0)
-    );
+    const replay = await createQueryClient().query(chatReplayQueryOptions(api, LIVE_STREAM_ID, 0));
 
     expect(asked).toEqual(['0', '4990']);
     expect(replay.map(({ id }) => id)).toEqual(lines.map(({ id }) => id));

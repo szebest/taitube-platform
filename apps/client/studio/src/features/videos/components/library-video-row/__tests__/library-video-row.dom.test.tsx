@@ -11,8 +11,8 @@ import { createQueryClient } from '@vp/queries';
 import { account, VIDEO_ID } from '@vp/web-testing';
 import { axeViolations } from '@vp/web-testing/dom';
 import type { ComponentType, PropsWithChildren } from 'react';
+import { creatorVideo } from '#app/__tests__/creator-video.fixture';
 import { signedIn } from '#app/__tests__/providers';
-import { creatorVideo } from '#app/features/videos/__tests__/creator-video.fixture';
 import { type CreatorVideo, LibraryVideoRow } from '../library-video-row';
 
 const STRANGER_ID = '0190c3a0-5e1d-7000-8000-00000000b009';

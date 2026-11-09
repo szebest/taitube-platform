@@ -11,13 +11,13 @@ import type {
 } from '#app/features/account/api/identity-reset';
 import { planMerge } from '#app/features/account/api/merge-account';
 import { createPatchBatch, type PatchBatch } from '#app/features/account/api/patch-batch';
-import { changedPaths, type PreferencesChange } from '#app/features/account/api/preferences-change';
-import { preferencesQueryOptions } from '#app/features/account/api/preferences-queries';
 import { useSavePreferences } from '#app/features/account/hooks/use-save-preferences';
-import { useDevicePreferences } from '../device-preferences-provider/device-preferences-provider';
+import { useDevicePreferences } from '#app/lib/preferences/device-preferences-provider';
+import { changedPaths, type PreferencesChange } from '#app/lib/preferences/preferences-change';
+import { preferencesQueryOptions } from '#app/lib/preferences/preferences-queries';
+import { PreferencesSyncContext } from '#app/lib/preferences/preferences-sync.context';
 import { IdentityReset } from '../identity-reset/identity-reset';
 import { MergeStateContext } from './merge-state.context';
-import { PreferencesSyncContext } from './preferences-sync.context';
 
 const SAVE_DELAY_MS = 400;
 

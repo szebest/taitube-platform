@@ -2,9 +2,9 @@ import { type OwnerChannel, updateMyChannel } from '@vp/api-contracts';
 import { account, channel, mockEndpoint } from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
 import { type HttpHandler, HttpResponse } from 'msw/http';
+import { featuredApi } from '#app/__tests__/featured-api.fixture';
 import { signInBrowser } from '#app/__tests__/providers';
 import { getRouter } from '#app/router';
-import { featuredApi } from './featured-api.fixture';
 
 /** `/customization` for a signed-in creator whose channel is `own`, with `handlers` answering the API first. */
 export function renderCustomization(own: Partial<OwnerChannel> = {}, handlers: HttpHandler[] = []) {

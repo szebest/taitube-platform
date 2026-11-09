@@ -2,8 +2,8 @@ import { useSuspenseQuery } from '@tanstack/react-query';
 import { EmptyLibraryIllustration, EmptyState, PageHeader } from '@vp/components';
 import { useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
-import { ChannelRow } from '#app/features/channel/components/channel-row/channel-row';
-import { mySubscriptionsQueryOptions } from '#app/features/library/api/subscription-queries';
+import { ChannelRow } from '#app/components/channel/channel-row';
+import { mySubscriptionsQueryOptions } from '#app/lib/query-keys/subscription-keys';
 
 export function SubscriptionsPage() {
   const api = useApi();

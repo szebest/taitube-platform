@@ -12,6 +12,6 @@ describe('apps/client/studio: adminCategoriesQueryOptions', () => {
     const options = adminCategoriesQueryOptions(api);
 
     expect(options.queryKey).toEqual(['admin', 'categories']);
-    await expect(createQueryClient().fetchQuery(options)).resolves.toEqual([category]);
+    await expect(createQueryClient().query(options)).resolves.toEqual([category]);
   });
 });

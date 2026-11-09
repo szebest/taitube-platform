@@ -2,7 +2,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { act, renderHook } from '@testing-library/react';
 import { createQueryClient } from '@vp/queries';
 import type { PropsWithChildren } from 'react';
-import { homeKeys } from '#app/features/browse/api/home-queries';
+import { homeKeys } from '#app/lib/query-keys/home-keys';
 import { usePickWindow } from '../use-pick-window';
 
 const NOW = Date.parse('2026-10-30T10:00:00.000Z');

@@ -2,14 +2,14 @@ import { screen, waitFor } from '@testing-library/react';
 import { DEFAULT_PREFERENCES } from '@vp/domain/settings';
 import { renderRoute } from '@vp/web-testing/dom';
 import type { HttpHandler } from 'msw/http';
-import { signInBrowser } from '#app/__tests__/providers';
 import {
   acceptsSaves,
   holds,
   preferencesView,
   type SentSave,
-} from '#app/features/account/__tests__/preferences-fixtures';
-import { nothingHidden } from '#app/features/recommendations/__tests__/recommendation-fixtures';
+} from '#app/__tests__/preferences-fixtures';
+import { signInBrowser } from '#app/__tests__/providers';
+import { nothingHidden } from '#app/__tests__/recommendation-fixtures';
 import { getRouter } from '#app/router';
 
 const PAUSED = { ...DEFAULT_PREFERENCES.privacy, historyPaused: true };

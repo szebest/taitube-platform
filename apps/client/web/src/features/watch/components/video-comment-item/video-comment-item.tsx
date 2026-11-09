@@ -23,11 +23,11 @@ import { Suspense, useEffect, useEffectEvent, useState } from 'react';
 import { CommentItem, CommentItemSkeleton } from '#app/components/discussion/comment-item';
 import { usePlayerSeek } from '#app/components/player/taitube-player';
 import { CommentThread } from '#app/components/watch/comment-thread';
-import { repliesQueryOptions } from '#app/features/watch/api/comment-queries';
 import { useDeleteComment } from '#app/features/watch/hooks/use-delete-comment';
 import { useEditComment } from '#app/features/watch/hooks/use-edit-comment';
 import { usePostComment } from '#app/features/watch/hooks/use-post-comment';
 import { type DescriptionToken, tokenizeDescription } from '#app/features/watch/utils/timecodes';
+import { repliesQueryOptions } from '#app/lib/query-keys/comment-keys';
 import { CommentEditor } from '../comment-editor/comment-editor';
 import { LazyReportCommentDialog } from '../report-comment-dialog/report-comment-dialog.lazy';
 

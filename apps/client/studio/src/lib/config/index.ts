@@ -1,37 +1,23 @@
-import { EnvHostnameSchema, EnvUrlSchema, resolveApiBaseUrl } from '@vp/queries';
-import { z } from 'zod';
-
-const DEFAULT_API_BASE_URL = 'http://localhost:3000';
-const DEFAULT_WEB_URL = 'http://localhost:5173';
+import { parseClientEnv } from '@vp/queries';
 
 declare const process: { env: Record<string, string | undefined> };
 
-const BuildEnvSchema = z.object({
-  VITE_API_BASE_URL: EnvUrlSchema,
-  VITE_API_PUBLIC_URL: EnvUrlSchema,
-  VITE_WEB_URL: EnvUrlSchema,
-  VITE_COOKIE_DOMAIN: EnvHostnameSchema,
-  VITE_OTEL_TRACES_URL: EnvUrlSchema,
-});
-
-const buildEnv = BuildEnvSchema.parse(import.meta.env);
-
-/** Where this app's server reaches the API; the browser calls this origin's `/api` instead. */
-export const API_BASE_URL = resolveApiBaseUrl({
-  built: buildEnv.VITE_API_BASE_URL ?? DEFAULT_API_BASE_URL,
+const env = parseClientEnv({
+  env: import.meta.env,
   serverEnv: import.meta.env.SSR ? process.env : {},
 });
 
+export const API_BASE_URL = env.apiBaseUrl;
+
 /** The API's address as the browser reaches it, for what the `/api` proxy cannot carry: the chat socket, Bull Board. */
-export const API_PUBLIC_URL = buildEnv.VITE_API_PUBLIC_URL ?? DEFAULT_API_BASE_URL;
+export const API_PUBLIC_URL = env.apiPublicUrl;
 
 /** Bull Board, which the API serves; a link the browser follows, so the public address, never the server's own. */
 export const BULL_BOARD_URL = `${API_PUBLIC_URL}/admin/queues`;
 
 /** Where the viewer-facing app is: the studio links back to it, and to the videos it publishes. */
-export const WEB_URL = buildEnv.VITE_WEB_URL ?? DEFAULT_WEB_URL;
+export const WEB_URL = env.webUrl;
 
-/** The parent domain both apps share, so theme and session follow the viewer; unset locally. */
-export const COOKIE_DOMAIN = buildEnv.VITE_COOKIE_DOMAIN;
+export const COOKIE_DOMAIN = env.cookieDomain;
 
-export const OTEL_TRACES_URL = buildEnv.VITE_OTEL_TRACES_URL;
+export const OTEL_TRACES_URL = env.tracesUrl;

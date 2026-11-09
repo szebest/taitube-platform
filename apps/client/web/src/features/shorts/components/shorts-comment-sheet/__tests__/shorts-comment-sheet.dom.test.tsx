@@ -2,9 +2,9 @@ import { screen, within } from '@testing-library/react';
 import { listVideoComments } from '@vp/api-contracts';
 import { mockEndpoint } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
+import { comment } from '#app/__tests__/comment-fixtures';
+import { RecordingObserver } from '#app/__tests__/recording-observer';
 import { renderShorts } from '#app/features/shorts/__tests__/render-shorts';
-import { comment } from '#app/features/watch/__tests__/comment-fixtures';
-import { RecordingObserver } from '#app/features/watch/__tests__/recording-observer';
 
 vi.mock(import('#app/components/player/taitube-player/taitube-player'), async () => ({
   TaitubePlayer: (await import('#app/features/shorts/__tests__/stub-short-player')).StubShortPlayer,

@@ -1,8 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { StartHereShelf } from '@vp/components';
 import { useApi } from '@vp/queries';
-import { FeedVideoCard } from '#app/features/browse/components/feed-video-card/feed-video-card';
-import { channelStartHereQueryOptions } from '#app/features/channel/api/channel-queries';
+import { FeedVideoCard } from '#app/components/video/feed-video-card';
+import { channelStartHereQueryOptions } from '#app/lib/query-keys/channel-keys';
 
 /** The shelf that opens a channel: the creator's pins in their order, else the most-watched uploads. */
 export function ChannelStartHere({ channelId }: { channelId: string }) {

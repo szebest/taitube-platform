@@ -12,6 +12,6 @@ describe('apps/client/studio: adminPicksQueryOptions', () => {
     const options = adminPicksQueryOptions(api);
 
     expect(options.queryKey).toEqual(['admin', 'picks']);
-    await expect(createQueryClient().fetchQuery(options)).resolves.toEqual([pick]);
+    await expect(createQueryClient().query(options)).resolves.toEqual([pick]);
   });
 });

@@ -1,4 +1,4 @@
-import { useAccountPreference } from '#app/features/account/hooks/use-account-preference';
+import { useAccountPreference } from '#app/hooks/use-account-preference';
 import { SettingSwitchRow } from '../setting-switch-row/setting-switch-row';
 
 export function SubscriptionUploadsRow() {

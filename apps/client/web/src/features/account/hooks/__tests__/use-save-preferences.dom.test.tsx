@@ -4,11 +4,8 @@ import { ErrorCodes } from '@vp/errors';
 import { apiServer, mockEndpoint, problemReply } from '@vp/web-testing';
 import { runMutation } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
+import { preferencesView, SAVED_PLAYBACK } from '#app/__tests__/preferences-fixtures';
 import { signedIn } from '#app/__tests__/providers';
-import {
-  preferencesView,
-  SAVED_PLAYBACK,
-} from '#app/features/account/__tests__/preferences-fixtures';
 import { useSavePreferences } from '../use-save-preferences';
 
 const PREFERENCES_KEY = ['preferences'];

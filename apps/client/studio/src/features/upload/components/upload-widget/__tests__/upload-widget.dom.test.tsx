@@ -1,6 +1,6 @@
 import { screen, within } from '@testing-library/react';
 import { VIDEO_ID, apiServer } from '@vp/web-testing';
-import { serveCaptions } from '#app/features/captions/__tests__/captions-api.fixture';
+import { serveCaptions } from '#app/__tests__/captions-api.fixture';
 import {
   UPLOAD_ID,
   renderStudio,

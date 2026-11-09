@@ -4,11 +4,17 @@ import { useT } from '@vp/intl-react';
 import { canManageCaptions } from '@vp/permissions';
 import { Can } from '@vp/permissions-react';
 import { useApi, videoQueryOptions } from '@vp/queries';
-import { LazyCaptionsSection } from '#app/features/captions/components/captions-section/captions-section.lazy';
+import type { ReactNode } from 'react';
 import { EditVideoForm } from '../edit-video-form/edit-video-form';
 import { VideoProcessingStatus } from '../video-processing-status/video-processing-status';
 
-export function EditVideoPage({ videoId }: { videoId: string }) {
+export type EditVideoPageProps = {
+  videoId: string;
+  /** The video's captions, shown to whoever may manage them. */
+  captions: ReactNode;
+};
+
+export function EditVideoPage({ videoId, captions }: EditVideoPageProps) {
   const api = useApi();
   const { data: video } = useSuspenseQuery(videoQueryOptions(api, videoId));
   const { tOr } = useT();
@@ -29,7 +35,7 @@ export function EditVideoPage({ videoId }: { videoId: string }) {
           caption: { videoId, ownerId: video.ownerId, visibility: video.visibility },
         }}
       >
-        <LazyCaptionsSection videoId={videoId} />
+        {captions}
       </Can>
     </div>
   );

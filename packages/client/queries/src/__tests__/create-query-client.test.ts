@@ -54,9 +54,7 @@ describe('@vp/queries: createQueryClient', () => {
       })
     );
 
-    await expect(
-      createQueryClient().fetchQuery(videoQueryOptions(api, VIDEO_ID))
-    ).rejects.toThrow();
+    await expect(createQueryClient().query(videoQueryOptions(api, VIDEO_ID))).rejects.toThrow();
 
     expect(asked).toBe(1);
   });
