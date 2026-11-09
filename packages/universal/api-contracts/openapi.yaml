@@ -32040,6 +32040,501 @@ paths:
                   - instance
                 additionalProperties: false
                 description: Problem Details (RFC 9457)
+  /v1/comments/{id}/moderate:
+    post:
+      summary: Hold, approve, hide, unhide or remove a comment
+      tags:
+        - Comment moderation
+      description: 'One endpoint for every comment action, decided by the caller permission on that action: the video owner, and members whose role moderates comments. A visible hold, hide or remove needs a reason and tells the author; a silent one tells nobody. Records the action in the channel audit log with the disclosure used. Remove deletes the comment and its replies.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - type: object
+                  properties:
+                    action:
+                      type: string
+                      enum:
+                        - hold
+                    disclosure:
+                      description: 'Overrides the channel''s default for this action: what the comment''s author is told'
+                      type: string
+                      enum:
+                        - silent
+                        - visible
+                    reason:
+                      description: Required when the action is visible
+                      type: string
+                      enum:
+                        - spam
+                        - harassment
+                        - hate
+                        - misinformation
+                        - other
+                        - off_topic
+                    note:
+                      type: string
+                      maxLength: 200
+                  required:
+                    - action
+                - type: object
+                  properties:
+                    action:
+                      type: string
+                      enum:
+                        - approve
+                  required:
+                    - action
+                - type: object
+                  properties:
+                    action:
+                      type: string
+                      enum:
+                        - hide
+                    disclosure:
+                      description: 'Overrides the channel''s default for this action: what the comment''s author is told'
+                      type: string
+                      enum:
+                        - silent
+                        - visible
+                    reason:
+                      description: Required when the action is visible
+                      type: string
+                      enum:
+                        - spam
+                        - harassment
+                        - hate
+                        - misinformation
+                        - other
+                        - off_topic
+                    note:
+                      type: string
+                      maxLength: 200
+                  required:
+                    - action
+                - type: object
+                  properties:
+                    action:
+                      type: string
+                      enum:
+                        - unhide
+                  required:
+                    - action
+                - type: object
+                  properties:
+                    action:
+                      type: string
+                      enum:
+                        - remove
+                    disclosure:
+                      description: 'Overrides the channel''s default for this action: what the comment''s author is told'
+                      type: string
+                      enum:
+                        - silent
+                        - visible
+                    reason:
+                      description: Required when the action is visible
+                      type: string
+                      enum:
+                        - spam
+                        - harassment
+                        - hate
+                        - misinformation
+                        - other
+                        - off_topic
+                    note:
+                      type: string
+                      maxLength: 200
+                  required:
+                    - action
+              description: One action on a comment; approve and unhide restore, so they carry no disclosure
+        description: One action on a comment; approve and unhide restore, so they carry no disclosure
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+          in: path
+          name: id
+          required: true
+      responses:
+        '200':
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  state:
+                    type: string
+                    enum:
+                      - published
+                      - held
+                      - hidden
+                      - removed
+                  comment:
+                    anyOf:
+                      - type: object
+                        properties:
+                          id:
+                            type: string
+                            format: uuid
+                            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                          videoId:
+                            type: string
+                            format: uuid
+                            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                          parentId:
+                            anyOf:
+                              - type: string
+                                format: uuid
+                                pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                              - type: 'null'
+                            description: The root comment of a reply, null for a root
+                          content:
+                            type: string
+                          isPinned:
+                            type: boolean
+                          isEdited:
+                            type: boolean
+                          likeCount:
+                            type: integer
+                            minimum: 0
+                            maximum: 9007199254740991
+                          heartedByCreator:
+                            type: boolean
+                            description: The video owner hearted the comment
+                          replyCount:
+                            type: integer
+                            minimum: 0
+                            maximum: 9007199254740991
+                          status:
+                            type: string
+                            enum:
+                              - published
+                              - held
+                              - hidden
+                            description: published unless the reader is the author of a visibly moderated comment or a moderator
+                          moderation:
+                            anyOf:
+                              - type: object
+                                properties:
+                                  state:
+                                    type: string
+                                    enum:
+                                      - held
+                                      - hidden
+                                  reason:
+                                    anyOf:
+                                      - type: string
+                                        enum:
+                                          - spam
+                                          - harassment
+                                          - hate
+                                          - misinformation
+                                          - other
+                                          - off_topic
+                                      - type: 'null'
+                                  disclosure:
+                                    anyOf:
+                                      - type: string
+                                        enum:
+                                          - silent
+                                          - visible
+                                      - type: 'null'
+                                  heldReason:
+                                    anyOf:
+                                      - type: string
+                                        enum:
+                                          - review_all
+                                          - link
+                                          - blocked_word
+                                      - type: 'null'
+                                  by:
+                                    anyOf:
+                                      - type: string
+                                        format: uuid
+                                        pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                      - type: 'null'
+                                  at:
+                                    anyOf:
+                                      - type: string
+                                        format: date-time
+                                        pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+                                      - type: 'null'
+                                required:
+                                  - state
+                                additionalProperties: false
+                                description: 'What the reader may know of a moderated comment: the state and the reason for its author when it was done visibly, everything for a moderator'
+                              - type: 'null'
+                            description: Null for a published comment and for a silently moderated one, which looks published to its author
+                          author:
+                            type: object
+                            properties:
+                              userId:
+                                type: string
+                                format: uuid
+                                pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                              channelId:
+                                anyOf:
+                                  - type: string
+                                    format: uuid
+                                    pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                  - type: 'null'
+                                description: Null for an author without a channel
+                              handle:
+                                type:
+                                  - string
+                                  - 'null'
+                              displayName:
+                                type:
+                                  - string
+                                  - 'null'
+                              avatarUrl:
+                                type:
+                                  - string
+                                  - 'null'
+                              isCreator:
+                                type: boolean
+                                description: The author owns the video, shown as a creator badge
+                            required:
+                              - userId
+                              - channelId
+                              - handle
+                              - displayName
+                              - avatarUrl
+                              - isCreator
+                            additionalProperties: false
+                          createdAt:
+                            type: string
+                            description: ISO 8601 creation timestamp
+                          updatedAt:
+                            type: string
+                            description: ISO 8601 last update timestamp
+                        required:
+                          - id
+                          - videoId
+                          - parentId
+                          - content
+                          - isPinned
+                          - isEdited
+                          - likeCount
+                          - heartedByCreator
+                          - replyCount
+                          - status
+                          - moderation
+                          - author
+                          - createdAt
+                          - updatedAt
+                        additionalProperties: false
+                      - type: 'null'
+                    description: Null once the comment is removed
+                required:
+                  - state
+                  - comment
+                additionalProperties: false
+        '400':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_FAILED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '401':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '403':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - FORBIDDEN
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '404':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - COMMENT_NOT_FOUND
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '409':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - MODERATION_NOT_APPLICABLE
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
   /v1/me/channel/comment-settings:
     get:
       summary: Read the comment settings of the channel

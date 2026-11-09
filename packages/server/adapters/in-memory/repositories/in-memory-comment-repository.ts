@@ -12,17 +12,22 @@ import type {
 import {
   type AuthoredComment,
   type Comment,
+  type CommentRemoval,
   type CommentThread,
   type CreatorInboxComment,
+  type NewChannelAuditEntry,
   type NewCommentInput,
+  type NewCommentRemoval,
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { commentOutbox, heartOutbox } from '@vp/job-contracts';
+import { commentOutbox } from '@vp/job-contracts';
 import type { UserContext } from '@vp/permissions';
 import { isErr, ok, type Result, unwrapOr } from '@vp/result';
 import { announceCreated } from './comment-announce';
 import { listAuthored } from './comment-authored';
-import { inboxPage } from './comment-inbox-filter';
+import { applyHeart } from './comment-heart';
+import { creatorInbox } from './comment-inbox-filter';
+import { recordModeration } from './comment-moderation-record';
 import { commentSortKey, compareKeys, rowKey, threadPage } from './comment-order';
 import { newStoredComment, toThreadOf } from './comment-projections';
 import {
@@ -33,6 +38,7 @@ import {
   publicScopeOf,
 } from './comment-public-scope';
 import { repliesOf, standing, type StoredComment } from './comment-visibility';
+import type { InMemoryChannelAuditRepository } from './in-memory-channel-audit-repository';
 import type { InMemoryChannelRepository } from './in-memory-channel-repository';
 import type { InMemoryChannelUserRestrictionRepository } from './in-memory-channel-user-restriction-repository';
 import type { InMemoryCommentReportRepository } from './in-memory-comment-report-repository';
@@ -42,6 +48,7 @@ export interface InMemoryCommentRepositoryOptions {
   channelsRepo: InMemoryChannelRepository;
   videosRepo: InMemoryVideoRepository;
   outboxRepo: OutboxRepository;
+  auditRepo: Pick<InMemoryChannelAuditRepository, 'append'>;
   reportsRepo: InMemoryCommentReportRepository;
   userEventsRepo: UserEventRepository;
   restrictionsRepo: Pick<InMemoryChannelUserRestrictionRepository, 'shadowedUserIds'>;
@@ -52,11 +59,12 @@ export interface InMemoryCommentRepositoryOptions {
  * the video counter the way the Postgres transaction does, with no half-step to observe.
  */
 export class InMemoryCommentRepository implements CommentRepositoryPort {
-  private readonly comments = new Map<string, StoredComment>();
+  readonly comments = new Map<string, StoredComment>();
+  readonly removals = new Map<string, CommentRemoval>();
   constructor(private readonly deps: InMemoryCommentRepositoryOptions) {}
 
   async findById(id: string): Promise<Result<Comment | null, DatabaseUnavailable>> {
-    return ok(this.live().find((comment) => comment.id === id) ?? null);
+    return ok(this.liveById(id) ?? null);
   }
 
   async findVisible(
@@ -148,7 +156,10 @@ export class InMemoryCommentRepository implements CommentRepositoryPort {
     return ok(await this.toThread(comment, ownOrPublicTo({ id: comment.authorId }, scope)));
   }
 
-  async remove(target: CommentLocator): Promise<Result<number, DatabaseUnavailable>> {
+  async remove(
+    target: CommentLocator,
+    record?: { audit: NewChannelAuditEntry; removal?: NewCommentRemoval }
+  ): Promise<Result<number, DatabaseUnavailable>> {
     const video = unwrapOr(await this.deps.videosRepo.findById(target.videoId), null);
     const scope = await this.scope([target.videoId]);
     const comment = this.liveById(target.id);
@@ -160,13 +171,14 @@ export class InMemoryCommentRepository implements CommentRepositoryPort {
     const now = new Date();
     for (const row of removed) Object.assign(row, { deletedAt: now, isPinned: false });
     if (video) video.commentsCount = (video.commentsCount ?? 0) - counted;
-
-    return ok(removed.length);
+    const recorded = await recordModeration(this.deps.auditRepo, this.removals, record, now);
+    return isErr(recorded) ? recorded : ok(removed.length);
   }
 
   async setPinned(
     target: CommentLocator,
-    pinned: boolean
+    pinned: boolean,
+    audit?: NewChannelAuditEntry
   ): Promise<Result<CommentThread | null, DatabaseUnavailable>> {
     const comment = this.liveById(target.id);
     if (!comment) return ok(null);
@@ -178,6 +190,8 @@ export class InMemoryCommentRepository implements CommentRepositoryPort {
       }
     }
     Object.assign(comment, { isPinned: pinned, updatedAt: new Date() });
+    const recorded = await recordModeration(this.deps.auditRepo, this.removals, audit && { audit });
+    if (isErr(recorded)) return recorded;
     return ok(await this.toThread(comment, ownOrPublicTo(null, scope)));
   }
 
@@ -189,15 +203,8 @@ export class InMemoryCommentRepository implements CommentRepositoryPort {
     if (!comment || comment.videoId !== target.videoId) return ok(null);
 
     const scope = await this.scope([target.videoId]);
-    if (!hearted) comment.heartedAt = null;
-    else if (comment.heartedAt === null) {
-      comment.heartedAt = new Date();
-      const enqueued = await this.deps.outboxRepo.enqueue(
-        heartOutbox({ videoId: target.videoId, commentId: target.id })
-      );
-      if (isErr(enqueued)) return enqueued;
-    }
-    return ok(await this.toThread(comment, ownOrPublicTo(null, scope)));
+    const heart = await applyHeart(this.deps.outboxRepo, comment, hearted);
+    return isErr(heart) ? heart : ok(await this.toThread(comment, ownOrPublicTo(null, scope)));
   }
 
   async listByAuthor(
@@ -209,27 +216,12 @@ export class InMemoryCommentRepository implements CommentRepositoryPort {
 
   async listForOwner(
     ownerId: string,
-    { filter, cursor, limit }: ListCreatorInboxOptions
+    options: ListCreatorInboxOptions
   ): Promise<Result<CreatorInboxComment[], DatabaseUnavailable>> {
-    const videos = new Map(
-      this.deps.videosRepo
-        .getAllVideos()
-        .filter((video) => video.ownerId === ownerId && !video.deletedAt)
-        .map((video) => [video.id, video])
-    );
-    const page = inboxPage(
-      this.live(),
-      videos,
-      ownerId,
-      { filter, cursor, limit },
-      this.deps.reportsRepo
-    );
-    const rows = await this.threadsOf(page, () => true);
     return ok(
-      rows.map((row) => ({
-        ...row,
-        video: { id: row.videoId, title: videos.get(row.videoId)?.title ?? '' },
-      }))
+      await creatorInbox(this.deps, this.live(), ownerId, options, (rows) =>
+        this.threadsOf(rows, () => true)
+      )
     );
   }
 
@@ -242,6 +234,7 @@ export class InMemoryCommentRepository implements CommentRepositoryPort {
 
   clear(): void {
     this.comments.clear();
+    this.removals.clear();
   }
 
   private live(): StoredComment[] {

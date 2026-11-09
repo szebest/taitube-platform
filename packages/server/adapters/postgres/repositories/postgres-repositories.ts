@@ -12,6 +12,7 @@ import { PostgresChannelMemberRepository } from './postgres-channel-member-repos
 import { PostgresChannelRepository } from './postgres-channel-repository';
 import { PostgresChannelUserRestrictionRepository } from './postgres-channel-user-restriction-repository';
 import { PostgresClipRepository } from './postgres-clip-repository';
+import { PostgresCommentModerationRepository } from './postgres-comment-moderation-repository';
 import { PostgresCommentReportRepository } from './postgres-comment-report-repository';
 import { PostgresCommentRepository } from './postgres-comment-repository';
 import { PostgresCommentSettingsRepository } from './postgres-comment-settings-repository';
@@ -73,6 +74,7 @@ export class PostgresRepositories implements Repositories {
   readonly subscriptions: PostgresSubscriptionRepository;
   readonly videoViews: PostgresVideoViewRepository;
   readonly comments: PostgresCommentRepository;
+  readonly commentModeration: PostgresCommentModerationRepository;
   readonly commentReports: PostgresCommentReportRepository;
   readonly playlists: PostgresPlaylistRepository;
   readonly watchHistory: PostgresWatchHistoryRepository;
@@ -119,6 +121,7 @@ export class PostgresRepositories implements Repositories {
     this.subscriptions = new PostgresSubscriptionRepository(db);
     this.videoViews = new PostgresVideoViewRepository(db);
     this.comments = new PostgresCommentRepository(db);
+    this.commentModeration = new PostgresCommentModerationRepository(db);
     this.commentReports = new PostgresCommentReportRepository(db);
     this.playlists = new PostgresPlaylistRepository(db);
     this.watchHistory = new PostgresWatchHistoryRepository(db);

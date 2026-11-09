@@ -21,6 +21,7 @@ import { type DatabaseUnavailable, ErrorCodes } from '@vp/errors';
 import type { InvalidCursor, Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
 import { type Result, err, ignore, isErr, map, ok } from '@vp/result';
+import { deletionAudit, pinAudit } from './comment-audit';
 import {
   type CommentCreateDeps,
   type CreateCommentServiceFailure,
@@ -173,8 +174,14 @@ export class CommentService {
 
     const decided = decideCommentDelete({ actor, commentId, ...found.value });
     if (isErr(decided)) return decided;
+    const { video } = found.value;
 
-    const removed = await this.deps.comments.remove(decided.value);
+    const channelId = await this.channelIdOf(video);
+    if (isErr(channelId)) return channelId;
+    const removed = await this.deps.comments.remove(
+      decided.value,
+      deletionAudit(channelId.value, actor, decided.value)
+    );
     if (isErr(removed)) return removed;
 
     await this.purge(decided.value.videoId);
@@ -193,7 +200,13 @@ export class CommentService {
     const decided = decideCommentPin({ actor, commentId, ...found.value });
     if (isErr(decided)) return decided;
 
-    const updated = await this.deps.comments.setPinned(decided.value, pinned);
+    const channelId = await this.channelIdOf(video);
+    if (isErr(channelId)) return channelId;
+    const updated = await this.deps.comments.setPinned(
+      decided.value,
+      pinned,
+      pinAudit(channelId.value, actor, decided.value, pinned)
+    );
     return await this.settled(updated, commentId, video, actor);
   }
 
@@ -211,6 +224,13 @@ export class CommentService {
 
     const updated = await this.deps.comments.setHearted(decided.value, hearted);
     return await this.settled(updated, commentId, video, actor);
+  }
+
+  private async channelIdOf(
+    video: Video | null
+  ): Promise<Result<string | undefined, DatabaseUnavailable>> {
+    if (!video) return ok(undefined);
+    return map(await this.deps.channels.findByUserId(video.ownerId), (channel) => channel?.id);
   }
 
   private threadsRequest(query: ListCommentsQuery) {

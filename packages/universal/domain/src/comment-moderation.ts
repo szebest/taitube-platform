@@ -1,3 +1,4 @@
+import type { NewChannelAuditEntry } from './channel-team';
 import { COMMENT_REPORT_REASONS } from './comment-report';
 import type { Disclosure } from './comment-settings';
 
@@ -59,3 +60,39 @@ type UserModerationAction =
   | { action: 'lift' };
 
 export type ModerationAction = CommentModerationAction | UserModerationAction;
+
+/** What a comment's moderation columns hold after an action; `removed` is no stored state. */
+export interface ModerationOutcome {
+  readonly state: ModerationState | 'removed';
+  readonly disclosure: Disclosure | null;
+  readonly reason: CommentModerationReason | null;
+  readonly note: string | null;
+}
+
+const COMMENT_AUDIT_ACTIONS = {
+  hold: 'comment.held',
+  approve: 'comment.approved',
+  hide: 'comment.hidden',
+  unhide: 'comment.unhidden',
+  remove: 'comment.removed',
+} as const satisfies Record<CommentModerationAction['action'], string>;
+
+/** The audit row of a comment action: the disclosure the author was given, never the reason text. */
+export function commentModerationAudit(entry: {
+  channelId: string;
+  actorUserId: string;
+  action: CommentModerationAction['action'];
+  commentId: string;
+  videoId: string;
+  disclosure: Disclosure;
+}): NewChannelAuditEntry {
+  const { channelId, actorUserId, action, commentId, videoId, disclosure } = entry;
+  return {
+    channelId,
+    actorUserId,
+    action: COMMENT_AUDIT_ACTIONS[action],
+    targetType: 'comment',
+    targetId: commentId,
+    meta: { videoId, disclosure },
+  };
+}

@@ -7,6 +7,8 @@ import type { RepositoriesSubject } from './subjects';
 export interface CommentContractContext {
   readonly subject: RepositoriesSubject;
   readonly comments: CommentRepositoryPort;
+  /** Who writes the seeded comments. */
+  readonly authorId: string;
 }
 
 export const CHANNEL_ID = '00000000-0000-7000-8000-000000000901';
@@ -53,7 +55,7 @@ export async function seedComment(
     await ctx.comments.create({
       id,
       videoId: options.videoId ?? VIDEO_IDS.a,
-      authorId: OTHER_OWNER_ID,
+      authorId: ctx.authorId,
       parentId: options.parentId ?? null,
       content: `comment ${id.slice(-2)}`,
       moderation: options.moderation,

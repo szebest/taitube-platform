@@ -8,6 +8,7 @@ import type { InMemoryChannelMemberRepository } from './in-memory-channel-member
 import type { InMemoryChannelRepository } from './in-memory-channel-repository';
 import type { InMemoryChannelUserRestrictionRepository } from './in-memory-channel-user-restriction-repository';
 import type { InMemoryClipRepository } from './in-memory-clip-repository';
+import type { InMemoryCommentModerationRepository } from './in-memory-comment-moderation-repository';
 import type { InMemoryCommentReportRepository } from './in-memory-comment-report-repository';
 import type { InMemoryCommentRepository } from './in-memory-comment-repository';
 import type { InMemoryCommentSettingsRepository } from './in-memory-comment-settings-repository';
@@ -63,6 +64,7 @@ export const Repo = {
   subscriptions: token<InMemorySubscriptionRepository>('subscriptions'),
   videoViews: token<InMemoryVideoViewRepository>('videoViews'),
   comments: token<InMemoryCommentRepository>('comments'),
+  commentModeration: token<InMemoryCommentModerationRepository>('commentModeration'),
   commentReports: token<InMemoryCommentReportRepository>('commentReports'),
   playlists: token<InMemoryPlaylistRepository>('playlists'),
   watchHistory: token<InMemoryWatchHistoryRepository>('watchHistory'),

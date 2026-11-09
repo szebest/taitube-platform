@@ -13,13 +13,15 @@ import {
   type Comment,
   type CommentThread,
   type CreatorInboxComment,
+  type NewChannelAuditEntry,
   type NewCommentInput,
+  type NewCommentRemoval,
 } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { heartOutbox } from '@vp/job-contracts';
 import type { UserContext } from '@vp/permissions';
 import { fromPromise, map, type Result } from '@vp/result';
-import { and, eq, ne, not, or, sql } from 'drizzle-orm';
+import { eq, not, sql } from 'drizzle-orm';
 import { drizzleWhere, notDeletedScope, publicCommentScope } from '../scopes/index';
 import { toCreatorInboxComment } from './comment-inbox-query';
 import {
@@ -38,7 +40,7 @@ import {
   threadById,
   toCommentThread,
 } from './comment-thread-query';
-import { countedAmong, insertComment, isLive, lockVideo } from './comment-writes';
+import { insertComment, pinComment, removeComment } from './comment-writes';
 import { enqueueNotificationJobs } from './notification-jobs';
 import type { PostgresDatabase } from './types';
 
@@ -170,55 +172,23 @@ export class PostgresCommentRepository implements CommentRepositoryPort {
     );
   }
 
-  async remove(target: CommentLocator): Promise<Result<number, DatabaseUnavailable>> {
+  async remove(
+    target: CommentLocator,
+    record?: { audit: NewChannelAuditEntry; removal?: NewCommentRemoval }
+  ): Promise<Result<number, DatabaseUnavailable>> {
     return await fromPromise(
-      () =>
-        this.db.transaction(async (tx) => {
-          await lockVideo(tx, target.videoId);
-          const taken = and(
-            eq(c.videoId, target.videoId),
-            or(eq(c.id, target.id), eq(c.parentId, target.id))
-          );
-          const counted = await countedAmong(tx, taken);
-          const removed = await tx
-            .update(c)
-            .set({ deletedAt: new Date(), isPinned: false })
-            .where(drizzleWhere(taken, notDeletedScope(c)))
-            .returning({ id: c.id });
-          if (counted > 0) {
-            await tx
-              .update(v)
-              .set({ commentsCount: sql`${v.commentsCount} - ${counted}` })
-              .where(eq(v.id, target.videoId));
-          }
-          return removed.length;
-        }),
+      () => this.db.transaction((tx) => removeComment(tx, target, record)),
       databaseUnavailable.during('removeComment')
     );
   }
 
   async setPinned(
     target: CommentLocator,
-    pinned: boolean
+    pinned: boolean,
+    audit?: NewChannelAuditEntry
   ): Promise<Result<CommentThread | null, DatabaseUnavailable>> {
     return await fromPromise(
-      () =>
-        this.db.transaction(async (tx) => {
-          await lockVideo(tx, target.videoId);
-          if (!(await isLive(tx, target.id))) return null;
-          if (pinned) {
-            await tx
-              .update(c)
-              .set({ isPinned: false })
-              .where(and(eq(c.videoId, target.videoId), eq(c.isPinned, true), ne(c.id, target.id)));
-          }
-          const [updated] = await tx
-            .update(c)
-            .set({ isPinned: pinned, updatedAt: new Date() })
-            .where(drizzleWhere(eq(c.id, target.id), notDeletedScope(c)))
-            .returning({ id: c.id });
-          return updated ? threadById(tx, target.id, null) : null;
-        }),
+      () => this.db.transaction((tx) => pinComment(tx, target, pinned, audit)),
       databaseUnavailable.during('pinComment')
     );
   }

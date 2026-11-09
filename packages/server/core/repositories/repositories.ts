@@ -7,6 +7,7 @@ import type { ChannelMemberRepositoryPort } from './channel-member-repository';
 import type { ChannelRepositoryPort } from './channel-repository';
 import type { ChannelUserRestrictionRepositoryPort } from './channel-user-restriction-repository';
 import type { ClipRepositoryPort } from './clip-repository';
+import type { CommentModerationRepositoryPort } from './comment-moderation-repository';
 import type { CommentReportRepositoryPort } from './comment-report-repository';
 import type { CommentRepositoryPort } from './comment-repository';
 import type { CommentSettingsRepositoryPort } from './comment-settings-repository';
@@ -58,6 +59,7 @@ export interface Repositories {
   subscriptions: SubscriptionRepositoryPort;
   videoViews: VideoViewRepositoryPort;
   comments: CommentRepositoryPort;
+  commentModeration: CommentModerationRepositoryPort;
   commentReports: CommentReportRepositoryPort;
   commentSettings: CommentSettingsRepositoryPort;
   channelUserRestrictions: ChannelUserRestrictionRepositoryPort;

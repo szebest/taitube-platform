@@ -11,3 +11,22 @@ export const UNMODERATED = {
   heldReason: null,
   looksLikeQuestion: false,
 } as const satisfies Partial<StoredComment>;
+
+export function aStoredComment(overrides: Partial<StoredComment> = {}): StoredComment {
+  return {
+    id: 'comment-1',
+    parentId: null,
+    deletedAt: null,
+    videoId: 'video-1',
+    authorId: 'author-1',
+    content: 'hello',
+    isPinned: false,
+    isEdited: false,
+    likeCount: 0,
+    heartedAt: null,
+    createdAt: new Date(0),
+    updatedAt: new Date(0),
+    ...UNMODERATED,
+    ...overrides,
+  };
+}

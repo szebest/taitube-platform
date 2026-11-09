@@ -73,6 +73,15 @@ export function mayHearAbout(video: NotifiableVideo, userId: string): boolean {
   return video.visibility === 'public' && video.status === 'READY';
 }
 
+/** The ids of notifications grouped by the user they belong to, users in id order. */
+export function notificationIdsByUser(
+  rows: readonly { id: string; userId: string }[]
+): [string, string[]][] {
+  const byUser = new Map<string, string[]>();
+  for (const { id, userId } of rows) byUser.set(userId, [...(byUser.get(userId) ?? []), id]);
+  return [...byUser].sort(([a], [b]) => a.localeCompare(b));
+}
+
 export interface NotificationActor {
   handle: string;
   displayName: string;

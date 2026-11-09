@@ -7,6 +7,7 @@ export * from './in-memory-channel-member-repository';
 export * from './in-memory-channel-repository';
 export * from './in-memory-channel-user-restriction-repository';
 export * from './in-memory-clip-repository';
+export * from './in-memory-comment-moderation-repository';
 export * from './in-memory-comment-repository';
 export * from './in-memory-comment-settings-repository';
 export * from './in-memory-dlq-repository';

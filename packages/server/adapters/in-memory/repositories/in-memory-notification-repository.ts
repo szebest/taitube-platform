@@ -12,6 +12,7 @@ import {
   type Notification,
   type NotificationReadScope,
   notificationCreated,
+  notificationIdsByUser,
   notificationRead,
   toNotificationView,
 } from '@vp/domain';
@@ -94,6 +95,27 @@ export class InMemoryNotificationRepository implements NotificationRepositoryPor
       ...notificationRead(scope.scope === 'all' ? scope : { ...scope, ids: read }, unreadCount),
     });
     return isErr(announced) ? announced : ok({ read, unreadCount });
+  }
+
+  async withdrawUnread(
+    commentIds: readonly string[]
+  ): Promise<Result<number, DatabaseUnavailable>> {
+    const withdrawn = [...this.notifications.values()].filter(
+      (notification) =>
+        !notification.readAt &&
+        notification.commentId &&
+        commentIds.includes(notification.commentId)
+    );
+    for (const { id } of withdrawn) this.notifications.delete(id);
+
+    for (const [userId, ids] of notificationIdsByUser(withdrawn)) {
+      const announced = await this.userEvents.append({
+        userId,
+        ...notificationRead({ scope: 'ids', ids }, this.unreadOf(userId)),
+      });
+      if (isErr(announced)) return announced;
+    }
+    return ok(withdrawn.length);
   }
 
   async prune(retentionDays: number): Promise<Result<number, DatabaseUnavailable>> {

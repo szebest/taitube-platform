@@ -8,6 +8,7 @@ import type { InMemoryChannelMemberRepository } from './in-memory-channel-member
 import type { InMemoryChannelRepository } from './in-memory-channel-repository';
 import type { InMemoryChannelUserRestrictionRepository } from './in-memory-channel-user-restriction-repository';
 import type { InMemoryClipRepository } from './in-memory-clip-repository';
+import type { InMemoryCommentModerationRepository } from './in-memory-comment-moderation-repository';
 import type { InMemoryCommentReportRepository } from './in-memory-comment-report-repository';
 import type { InMemoryCommentRepository } from './in-memory-comment-repository';
 import type { InMemoryCommentSettingsRepository } from './in-memory-comment-settings-repository';
@@ -64,6 +65,7 @@ export class InMemoryRepositories implements Repositories {
   readonly subscriptions: InMemorySubscriptionRepository;
   readonly videoViews: InMemoryVideoViewRepository;
   readonly comments: InMemoryCommentRepository;
+  readonly commentModeration: InMemoryCommentModerationRepository;
   readonly commentReports: InMemoryCommentReportRepository;
   readonly playlists: InMemoryPlaylistRepository;
   readonly watchHistory: InMemoryWatchHistoryRepository;
@@ -106,6 +108,7 @@ export class InMemoryRepositories implements Repositories {
     this.subscriptions = c.get(Repo.subscriptions);
     this.videoViews = c.get(Repo.videoViews);
     this.comments = c.get(Repo.comments);
+    this.commentModeration = c.get(Repo.commentModeration);
     this.commentReports = c.get(Repo.commentReports);
     this.playlists = c.get(Repo.playlists);
     this.watchHistory = c.get(Repo.watchHistory);

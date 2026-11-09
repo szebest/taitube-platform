@@ -17,6 +17,7 @@ export * from './channel-audit-repository';
 export * from './video-reaction-repository';
 export * from './subscription-repository';
 export * from './video-view-repository';
+export * from './comment-moderation-repository';
 export * from './comment-repository';
 export * from './comment-report-repository';
 export * from './comment-settings-repository';

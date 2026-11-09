@@ -7,6 +7,7 @@ export * from './postgres-channel-member-repository';
 export * from './postgres-channel-repository';
 export * from './postgres-channel-user-restriction-repository';
 export * from './postgres-clip-repository';
+export * from './postgres-comment-moderation-repository';
 export * from './postgres-comment-repository';
 export * from './postgres-comment-settings-repository';
 export * from './postgres-dlq-repository';

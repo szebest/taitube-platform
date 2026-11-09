@@ -8,6 +8,7 @@ import { InMemoryChannelMemberRepository } from './in-memory-channel-member-repo
 import { InMemoryChannelRepository } from './in-memory-channel-repository';
 import { InMemoryChannelUserRestrictionRepository } from './in-memory-channel-user-restriction-repository';
 import { InMemoryClipRepository } from './in-memory-clip-repository';
+import { InMemoryCommentModerationRepository } from './in-memory-comment-moderation-repository';
 import { InMemoryCommentReportRepository } from './in-memory-comment-report-repository';
 import { InMemoryCommentRepository } from './in-memory-comment-repository';
 import { InMemoryCommentSettingsRepository } from './in-memory-comment-settings-repository';
@@ -132,9 +133,23 @@ export function graph(): Container {
           channelsRepo: c.get(Repo.channels),
           videosRepo: c.get(Repo.videos),
           outboxRepo: c.get(Repo.outbox),
+          auditRepo: c.get(Repo.channelAudit),
           reportsRepo: c.get(Repo.commentReports),
           userEventsRepo: c.get(Repo.userEvents),
           restrictionsRepo: c.get(Repo.channelUserRestrictions),
+        })
+    )
+    .provide(
+      Repo.commentModeration,
+      (c) =>
+        new InMemoryCommentModerationRepository({
+          commentsRepo: c.get(Repo.comments),
+          videosRepo: c.get(Repo.videos),
+          channelsRepo: c.get(Repo.channels),
+          restrictionsRepo: c.get(Repo.channelUserRestrictions),
+          auditRepo: c.get(Repo.channelAudit),
+          outboxRepo: c.get(Repo.outbox),
+          userEventsRepo: c.get(Repo.userEvents),
         })
     )
     .provide(

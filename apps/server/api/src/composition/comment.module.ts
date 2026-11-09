@@ -2,6 +2,7 @@ import { Adapters } from '@vp/adapters/composition';
 import type { Container } from '@vp/composition';
 import { Singleflight } from '@vp/concurrency';
 import {
+  CommentModerationService,
   CommentReportService,
   CommentService,
   CommentSettingsService,
@@ -31,6 +32,19 @@ export function registerCommentServices(c: Container): Container {
           commentCache: c.get(Adapters.CommentCache),
           singleflight: new Singleflight(),
           paginator: c.get(Services.Paginator),
+        })
+    )
+    .provide(
+      Services.CommentModerationService,
+      (c) =>
+        new CommentModerationService({
+          comments: repositories().comments,
+          videos: repositories().videos,
+          channels: repositories().channels,
+          settings: repositories().commentSettings,
+          moderation: repositories().commentModeration,
+          notifications: repositories().notifications,
+          commentCache: c.get(Adapters.CommentCache),
         })
     )
     .provide(

@@ -6,6 +6,7 @@ export * from './channel-team';
 export * from './clip';
 export * from './comment';
 export * from './comment-moderation';
+export * from './comment-removal';
 export * from './comment-report';
 export * from './comment-settings';
 export * from './creator-library';

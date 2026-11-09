@@ -1,8 +1,14 @@
 import type { ListCreatorInboxOptions } from '@vp/core/repositories';
-import type { CreatorInboxFilter, ModerationState } from '@vp/domain';
+import type {
+  CommentThread,
+  CreatorInboxComment,
+  CreatorInboxFilter,
+  ModerationState,
+} from '@vp/domain';
 import { assertNever } from '@vp/result';
 import { compareKeys, newestAfter, rowKey } from './comment-order';
 import type { StoredComment } from './comment-visibility';
+import type { InMemoryVideoRepository } from './in-memory-video-repository';
 
 interface InboxRow {
   id: string;
@@ -48,8 +54,7 @@ export function matchesInbox(
   }
 }
 
-/** One inbox page, up to one row past the limit: comments on the owner's videos, newest first. */
-export function inboxPage(
+function inboxPage(
   live: readonly StoredComment[],
   ownerVideos: ReadonlyMap<string, unknown>,
   ownerId: string,
@@ -61,4 +66,30 @@ export function inboxPage(
     .filter((comment) => matchesInbox(comment, filter, ownerId, live, reports))
     .sort((a, b) => compareKeys(rowKey(b), rowKey(a)));
   return newestAfter(mine, cursor).slice(0, limit + 1);
+}
+
+interface CreatorInboxDeps {
+  videosRepo: Pick<InMemoryVideoRepository, 'getAllVideos'>;
+  reportsRepo: { hasOpenReport(commentId: string): boolean };
+}
+
+/** One inbox page, up to one row past the limit: comments on the owner's videos, newest first. */
+export async function creatorInbox(
+  { videosRepo, reportsRepo }: CreatorInboxDeps,
+  live: readonly StoredComment[],
+  ownerId: string,
+  options: ListCreatorInboxOptions,
+  toThreads: (rows: readonly StoredComment[]) => Promise<CommentThread[]>
+): Promise<CreatorInboxComment[]> {
+  const videos = new Map(
+    videosRepo
+      .getAllVideos()
+      .filter((video) => video.ownerId === ownerId && !video.deletedAt)
+      .map((video) => [video.id, video])
+  );
+  const rows = await toThreads(inboxPage(live, videos, ownerId, options, reportsRepo));
+  return rows.map((row) => ({
+    ...row,
+    video: { id: row.videoId, title: videos.get(row.videoId)?.title ?? '' },
+  }));
 }

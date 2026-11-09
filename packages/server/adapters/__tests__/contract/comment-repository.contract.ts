@@ -27,6 +27,7 @@ export function describeCommentRepositoryContract(makeSubject: MakeRepositoriesS
       get comments() {
         return comments;
       },
+      authorId: OTHER_OWNER_ID,
     };
 
     beforeAll(async () => {

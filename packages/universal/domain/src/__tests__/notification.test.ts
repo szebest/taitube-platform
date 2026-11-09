@@ -4,6 +4,7 @@ import {
   levelAllows,
   mayHearAbout,
   mentionedHandles,
+  notificationIdsByUser,
   type NewNotificationInput,
   NOTIFICATION_KINDS,
   type Notification,
@@ -159,5 +160,24 @@ describe('domain: notification', () => {
     ])('$scenario: $heard', ({ changes, userId, heard }) => {
       expect(mayHearAbout({ ...video, ...changes }, userId)).toBe(heard);
     });
+  });
+});
+
+describe('@vp/domain: notificationIdsByUser', () => {
+  it('groups ids by user, users in id order and ids in the order given', () => {
+    expect(
+      notificationIdsByUser([
+        { id: 'n1', userId: 'u2' },
+        { id: 'n2', userId: 'u1' },
+        { id: 'n3', userId: 'u2' },
+      ])
+    ).toEqual([
+      ['u1', ['n2']],
+      ['u2', ['n1', 'n3']],
+    ]);
+  });
+
+  it('is empty for no notifications', () => {
+    expect(notificationIdsByUser([])).toEqual([]);
   });
 });

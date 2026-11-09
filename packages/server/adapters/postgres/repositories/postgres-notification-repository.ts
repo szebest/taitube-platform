@@ -12,6 +12,7 @@ import {
   type Notification,
   type NotificationReadScope,
   notificationCreated,
+  notificationIdsByUser,
   notificationRead,
   toNotificationView,
 } from '@vp/domain';
@@ -172,6 +173,32 @@ export class PostgresNotificationRepository implements NotificationRepositoryPor
           return { read, unreadCount };
         }),
       databaseUnavailable.during('markNotificationsRead')
+    );
+  }
+
+  async withdrawUnread(
+    commentIds: readonly string[]
+  ): Promise<Result<number, DatabaseUnavailable>> {
+    if (commentIds.length === 0) return ok(0);
+
+    return fromPromise(
+      () =>
+        this.db.transaction(async (tx) => {
+          const deleted = await tx
+            .delete(n)
+            .where(and(isNull(n.readAt), inArray(n.commentId, [...commentIds])))
+            .returning({ id: n.id, userId: n.userId });
+
+          for (const [userId, ids] of notificationIdsByUser(deleted)) {
+            await lockUserEvents(tx, userId);
+            await appendUserEvent(tx, {
+              userId,
+              ...notificationRead({ scope: 'ids', ids }, await unreadCountOf(tx, userId)),
+            });
+          }
+          return deleted.length;
+        }),
+      databaseUnavailable.during('withdrawNotifications')
     );
   }
 

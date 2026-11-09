@@ -4,6 +4,7 @@ export * from './comment-gate.rule';
 export * from './create-comment.rule';
 export * from './update-comment.rule';
 export * from './moderate-comment.rule';
+export * from './moderation-decision.rule';
 export * from './read-comment-thread.rule';
 export * from './heart-comment.rule';
 export * from './report-comment.rule';

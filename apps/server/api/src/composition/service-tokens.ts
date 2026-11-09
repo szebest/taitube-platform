@@ -21,6 +21,7 @@ import type {
   ClipService,
   OEmbedService,
   WebhookService,
+  CommentModerationService,
   CommentReportService,
   CommentService,
   CommentSettingsService,
@@ -94,6 +95,7 @@ export interface ServiceSet {
   reactionService: ReactionService;
   subscriptionService: SubscriptionService;
   commentService: CommentService;
+  commentModerationService: CommentModerationService;
   commentSettingsService: CommentSettingsService;
   commentReportService: CommentReportService;
   creatorCommentService: CreatorCommentService;
@@ -158,6 +160,7 @@ export const Services = {
   ReactionService: token<ReactionService>('ReactionService'),
   SubscriptionService: token<SubscriptionService>('SubscriptionService'),
   CommentService: token<CommentService>('CommentService'),
+  CommentModerationService: token<CommentModerationService>('CommentModerationService'),
   CommentSettingsService: token<CommentSettingsService>('CommentSettingsService'),
   CommentReportService: token<CommentReportService>('CommentReportService'),
   CreatorCommentService: token<CreatorCommentService>('CreatorCommentService'),

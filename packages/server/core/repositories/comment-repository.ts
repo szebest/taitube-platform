@@ -5,7 +5,9 @@ import type {
   CommentThread,
   CreatorInboxComment,
   CreatorInboxFilter,
+  NewChannelAuditEntry,
   NewCommentInput,
+  NewCommentRemoval,
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
@@ -98,12 +100,20 @@ export interface CommentRepositoryPort {
     id: string,
     content: string
   ): Promise<Result<CommentThread | null, DatabaseUnavailable>>;
-  /** Removes the comment and, for a root, its replies; answers how many were removed. */
-  remove(comment: CommentLocator): Promise<Result<number, DatabaseUnavailable>>;
-  /** Pinning unpins whichever comment held the video's one pinned slot. */
+  /**
+   * Removes the comment and, for a root, its replies; answers how many were removed. A moderator's
+   * removal records its `audit` row, and a visible one its `removal` for the author's list, in the
+   * same transaction.
+   */
+  remove(
+    comment: CommentLocator,
+    record?: { audit: NewChannelAuditEntry; removal?: NewCommentRemoval }
+  ): Promise<Result<number, DatabaseUnavailable>>;
+  /** Pinning unpins whichever comment held the video's one pinned slot, and records `audit`. */
   setPinned(
     comment: CommentLocator,
-    pinned: boolean
+    pinned: boolean,
+    audit?: NewChannelAuditEntry
   ): Promise<Result<CommentThread | null, DatabaseUnavailable>>;
   /**
    * Hearting is idempotent and answers null when the comment was removed meanwhile. The first heart

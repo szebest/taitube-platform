@@ -2,18 +2,11 @@ import type {
   CommentModerationAction,
   CommentModerationReason,
   Disclosure,
+  ModerationOutcome,
   ModerationState,
 } from '@vp/domain';
 import { type Result, assertNever, err, ok } from '@vp/result';
 import { type ModerationNotApplicable, moderationNotApplicable } from './failures';
-
-/** What a comment's moderation columns hold after the action; `removed` is no stored state. */
-export interface ModerationOutcome {
-  readonly state: ModerationState | 'removed';
-  readonly disclosure: Disclosure | null;
-  readonly reason: CommentModerationReason | null;
-  readonly note: string | null;
-}
 
 const PUBLISHED: ModerationOutcome = {
   state: 'published',

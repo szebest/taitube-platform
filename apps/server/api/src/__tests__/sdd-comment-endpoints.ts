@@ -97,6 +97,14 @@ export const SDD_COMMENT_ENDPOINTS: SddEndpointContract[] = [
     hasPathParams: true,
   },
   {
+    path: '/v1/comments/{id}/moderate',
+    method: 'post',
+    expectedStatuses: [200, 400, 401, 403, 404, 409],
+    expectedErrorCodes: [...MODERATED, ErrorCodes.MODERATION_NOT_APPLICABLE],
+    hasBody: true,
+    hasPathParams: true,
+  },
+  {
     path: '/v1/me/channel/comment-settings',
     method: 'get',
     expectedStatuses: [200, 401, 403],
