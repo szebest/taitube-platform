@@ -129,7 +129,10 @@ export class InMemoryRepositories implements Repositories {
     this.watchPartyMessages = new InMemoryWatchPartyMessageRepository(this.watchParties);
     this.watchPartyInvites = new InMemoryWatchPartyInviteRepository(this.watchParties, this.outbox);
     this.watchPartyInviteLinks = new InMemoryWatchPartyInviteLinkRepository(this.watchParties);
-    this.watchPartyControls = new InMemoryWatchPartyPersonalControlRepository(this.watchParties);
+    this.watchPartyControls = new InMemoryWatchPartyPersonalControlRepository(
+      this.watchParties,
+      this.userEvents
+    );
   }
 
   clear(): void {

@@ -11,7 +11,7 @@ import * as schema from '@vp/db';
 import { renumberPositions, type WatchPartyCloseReason, type WatchPartyRoom } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { andThen, err, fromPromise, map, ok, type Result } from '@vp/result';
-import { and, eq, sql } from 'drizzle-orm';
+import { and, desc, eq, sql } from 'drizzle-orm';
 import type { PostgresDatabase } from './types';
 import { replacePermissions, type RolePermissions } from './watch-party-role-permissions';
 import { insertSystemLine } from './watch-party-writes';
@@ -102,6 +102,19 @@ export class PostgresWatchPartyRoomRepository implements WatchPartyRoomRepositor
       databaseUnavailable.during('countOpenWatchPartyRooms')
     );
     return map(rows, ([row]) => row?.count ?? 0);
+  }
+
+  async listOpenOwnedBy(ownerKey: string): Promise<Result<WatchPartyRoom[], DatabaseUnavailable>> {
+    const found = await fromPromise(
+      () =>
+        this.db
+          .select()
+          .from(rooms)
+          .where(and(eq(rooms.ownerKey, ownerKey), eq(rooms.status, 'open')))
+          .orderBy(desc(rooms.createdAt), desc(rooms.id)),
+      databaseUnavailable.during('listOpenWatchPartyRooms')
+    );
+    return map(found, (rows) => rows.map(toRoom));
   }
 
   async updateSettings(

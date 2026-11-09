@@ -56,4 +56,13 @@ export interface WatchPartyMemberRepositoryPort {
   moveSeat(move: SeatMove): Promise<Result<WatchPartyMember | null, DatabaseUnavailable>>;
   /** Open rooms an account holds a seat in. */
   openRoomIdsOf(userId: string): Promise<Result<string[], DatabaseUnavailable>>;
+  /**
+   * Other accounts who took a seat since `since` in a room this account held one in, whether or
+   * not either has left: the most recently seated first, each once, at most `limit`.
+   */
+  coWatchersOf(
+    userId: string,
+    since: Date,
+    limit: number
+  ): Promise<Result<string[], DatabaseUnavailable>>;
 }

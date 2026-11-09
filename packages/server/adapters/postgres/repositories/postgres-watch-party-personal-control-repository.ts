@@ -1,9 +1,10 @@
 import type { WatchPartyPersonalControlRepositoryPort } from '@vp/core/repositories';
 import * as schema from '@vp/db';
-import { isNoPersonalControl, type PersonalControlRecord } from '@vp/domain';
+import { isNoPersonalControl, type PersonalControlRecord, partyControlsUpdated } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { fromPromise, map, ok, type Result } from '@vp/result';
 import { and, eq, inArray, isNull, or } from 'drizzle-orm';
+import { appendUserEvent } from './postgres-user-event-repository';
 import type { PostgresDatabase } from './types';
 
 const { watchPartyPersonalControls: pc } = schema;
@@ -29,28 +30,27 @@ export class PostgresWatchPartyPersonalControlRepository implements WatchPartyPe
 
   async put(record: PersonalControlRecord): Promise<Result<void, DatabaseUnavailable>> {
     const { userId, targetKey, roomId, ...values } = record;
-    if (isNoPersonalControl(record)) {
-      const deleted = await fromPromise(
-        () =>
-          this.db
-            .delete(pc)
-            .where(
-              and(
-                eq(pc.userId, userId),
-                eq(pc.targetKey, targetKey),
-                roomId === null ? isNull(pc.roomId) : eq(pc.roomId, roomId)
-              )
-            ),
-        databaseUnavailable.during('clearWatchPartyPersonalControl')
-      );
-      return map(deleted, () => undefined);
-    }
     const written = await fromPromise(
       () =>
-        this.db
-          .insert(pc)
-          .values(record)
-          .onConflictDoUpdate({ target: [pc.userId, pc.targetKey, pc.roomId], set: values }),
+        this.db.transaction(async (tx) => {
+          if (isNoPersonalControl(record)) {
+            await tx
+              .delete(pc)
+              .where(
+                and(
+                  eq(pc.userId, userId),
+                  eq(pc.targetKey, targetKey),
+                  roomId === null ? isNull(pc.roomId) : eq(pc.roomId, roomId)
+                )
+              );
+          } else {
+            await tx
+              .insert(pc)
+              .values(record)
+              .onConflictDoUpdate({ target: [pc.userId, pc.targetKey, pc.roomId], set: values });
+          }
+          await appendUserEvent(tx, { userId, ...partyControlsUpdated(targetKey, roomId) });
+        }),
       databaseUnavailable.during('putWatchPartyPersonalControl')
     );
     return map(written, () => undefined);

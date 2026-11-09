@@ -1,5 +1,6 @@
 import { expectOk } from '@vp/testing/result';
 import type { MakeRepositoriesSubject } from './subjects';
+import { describeWatchPartyCoWatchersContract } from './watch-party-co-watchers.contract';
 import {
   assignment,
   GUEST_KEY,
@@ -166,6 +167,7 @@ export function describeWatchPartyMemberRepositoryContract(
       });
     });
 
+    describeWatchPartyCoWatchersContract(makeSubject);
     describeWatchPartySeatMovesContract(makeSubject);
   });
 }

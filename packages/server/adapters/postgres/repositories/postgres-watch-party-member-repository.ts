@@ -8,7 +8,8 @@ import * as schema from '@vp/db';
 import type { WatchPartyBan, WatchPartyMember } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { andThen, err, fromPromise, map, ok, type Result } from '@vp/result';
-import { and, asc, eq, isNull, or } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, isNotNull, isNull, max, ne, or } from 'drizzle-orm';
+import { alias } from 'drizzle-orm/pg-core';
 import type { PostgresDatabase } from './types';
 import { insertSystemLine } from './watch-party-writes';
 
@@ -18,6 +19,8 @@ const {
   watchPartyBans: bans,
   watchPartyRooms: rooms,
 } = schema;
+
+const mine = alias(members, 'mine');
 
 export class PostgresWatchPartyMemberRepository implements WatchPartyMemberRepositoryPort {
   constructor(private readonly db: PostgresDatabase) {}
@@ -277,5 +280,28 @@ export class PostgresWatchPartyMemberRepository implements WatchPartyMemberRepos
       databaseUnavailable.during('listOpenWatchPartyRoomsOf')
     );
     return map(rows, (found) => found.map(({ roomId }) => roomId));
+  }
+
+  async coWatchersOf(
+    userId: string,
+    since: Date,
+    limit: number
+  ): Promise<Result<string[], DatabaseUnavailable>> {
+    const seatedAt = max(members.joinedAt);
+    const rows = await fromPromise(
+      () =>
+        this.db
+          .select({ userId: members.userId })
+          .from(members)
+          .innerJoin(mine, and(eq(mine.roomId, members.roomId), eq(mine.userId, userId)))
+          .where(
+            and(isNotNull(members.userId), ne(members.userId, userId), gte(members.joinedAt, since))
+          )
+          .groupBy(members.userId)
+          .orderBy(desc(seatedAt), asc(members.userId))
+          .limit(limit),
+      databaseUnavailable.during('listWatchPartyCoWatchers')
+    );
+    return map(rows, (found) => found.flatMap((row) => (row.userId === null ? [] : [row.userId])));
   }
 }

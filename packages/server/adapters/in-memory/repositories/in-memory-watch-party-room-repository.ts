@@ -92,6 +92,13 @@ export class InMemoryWatchPartyRoomRepository implements WatchPartyRoomRepositor
     return ok(open.length);
   }
 
+  async listOpenOwnedBy(ownerKey: string): Promise<Result<WatchPartyRoom[], DatabaseUnavailable>> {
+    const open = [...this.store.rooms.values()]
+      .filter((room) => room.ownerKey === ownerKey && room.status === 'open')
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime() || (a.id < b.id ? 1 : -1));
+    return ok(open.map(copyOf));
+  }
+
   async updateSettings(
     id: string,
     patch: SettingsPatch,

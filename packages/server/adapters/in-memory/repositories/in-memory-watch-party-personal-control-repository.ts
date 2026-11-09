@@ -1,11 +1,17 @@
-import type { WatchPartyPersonalControlRepositoryPort } from '@vp/core/repositories';
-import { isNoPersonalControl, type PersonalControlRecord } from '@vp/domain';
+import type {
+  UserEventRepository,
+  WatchPartyPersonalControlRepositoryPort,
+} from '@vp/core/repositories';
+import { isNoPersonalControl, type PersonalControlRecord, partyControlsUpdated } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { ok, type Result } from '@vp/result';
+import { map, ok, type Result } from '@vp/result';
 import { controlKey, type InMemoryWatchPartyStore } from './in-memory-watch-party-store';
 
 export class InMemoryWatchPartyPersonalControlRepository implements WatchPartyPersonalControlRepositoryPort {
-  constructor(private readonly store: InMemoryWatchPartyStore) {}
+  constructor(
+    private readonly store: InMemoryWatchPartyStore,
+    private readonly userEvents: Pick<UserEventRepository, 'append'>
+  ) {}
 
   async list(
     userId: string,
@@ -20,10 +26,16 @@ export class InMemoryWatchPartyPersonalControlRepository implements WatchPartyPe
   }
 
   async put(record: PersonalControlRecord): Promise<Result<void, DatabaseUnavailable>> {
-    const key = controlKey(record.userId, record.targetKey, record.roomId);
-    if (isNoPersonalControl(record)) this.store.controls.delete(key);
-    else this.store.controls.set(key, { ...record });
-    return ok(undefined);
+    const { userId, targetKey, roomId } = record;
+    const announced = await this.userEvents.append({
+      userId,
+      ...partyControlsUpdated(targetKey, roomId),
+    });
+    return map(announced, () => {
+      const key = controlKey(userId, targetKey, roomId);
+      if (isNoPersonalControl(record)) this.store.controls.delete(key);
+      else this.store.controls.set(key, { ...record });
+    });
   }
 
   async blockingInvitesFrom(

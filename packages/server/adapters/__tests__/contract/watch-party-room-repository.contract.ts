@@ -62,13 +62,19 @@ export function describeWatchPartyRoomRepositoryContract(
       ]);
     });
 
-    it('counts only the owner’s open rooms', async () => {
+    it('counts and lists only the owner’s open rooms, newest first', async () => {
+      const newest = '00000000-0000-7000-8000-00000000e004';
       await party.createRoom();
       await party.createRoom({ id: OTHER_ROOM_ID });
+      await party.createRoom({ id: newest });
       await party.createRoom({ id: '00000000-0000-7000-8000-00000000e003', ownerKey: OTHER_KEY });
       expectOk(await rooms().close(OTHER_ROOM_ID, 'owner', null, AT));
 
-      expect(expectOk(await rooms().countOpenOwnedBy(OWNER_KEY))).toBe(1);
+      expect(expectOk(await rooms().countOpenOwnedBy(OWNER_KEY))).toBe(2);
+      expect(expectOk(await rooms().listOpenOwnedBy(OWNER_KEY)).map(({ id }) => id)).toEqual([
+        newest,
+        ROOM_ID,
+      ]);
       expect(expectOk(await rooms().findById('00000000-0000-7000-8000-00000000e0ff'))).toBeNull();
     });
 

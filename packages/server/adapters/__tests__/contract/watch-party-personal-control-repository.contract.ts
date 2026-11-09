@@ -95,6 +95,23 @@ export function describeWatchPartyPersonalControlRepositoryContract(
       expect(await list(ROOM_ID)).toEqual([control()]);
     });
 
+    it.each([
+      { change: 'a stored control', record: control({ roomId: ROOM_ID }) },
+      { change: 'a control that chooses nothing', record: control({ ...NO_PERSONAL_CONTROL }) },
+    ])('announces $change as one party.controls.updated event of its owner', async ({ record }) => {
+      await put(record);
+
+      const events = expectOk(await subject.repositories.userEvents.listFrom(OWNER_ID, 1, 10));
+
+      expect(events.map(({ userId, type, payload }) => ({ userId, type, payload }))).toEqual([
+        {
+          userId: OWNER_ID,
+          type: 'party.controls.updated',
+          payload: { targetKey: INVITER_KEY, roomId: record.roomId },
+        },
+      ]);
+    });
+
     it('answers who blocks invites from an inviter everywhere', async () => {
       const blocker = accountId(4);
       const roomOnly = accountId(5);

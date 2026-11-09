@@ -80,6 +80,8 @@ export interface WatchPartyRoomRepositoryPort {
   create(seed: WatchPartyRoomSeed): Promise<Result<WatchPartyRoom, DatabaseUnavailable>>;
   findById(id: string): Promise<Result<WatchPartyRoom | null, DatabaseUnavailable>>;
   countOpenOwnedBy(ownerKey: string): Promise<Result<number, DatabaseUnavailable>>;
+  /** The owner's open rooms, newest first. */
+  listOpenOwnedBy(ownerKey: string): Promise<Result<WatchPartyRoom[], DatabaseUnavailable>>;
   /** Optimistic on `version`: a stale one is `stale` with the current room. */
   updateSettings(
     id: string,

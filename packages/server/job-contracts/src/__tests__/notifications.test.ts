@@ -6,12 +6,15 @@ import {
   heartOutbox,
   NOTIFY_COMMENT,
   NOTIFY_HEART,
+  NOTIFY_PARTY_INVITE,
   NOTIFY_PROCESSING,
   NOTIFY_SUBSCRIBERS,
   NotifyCommentJob,
   NotifyHeartJob,
+  NotifyPartyInviteJob,
   NotifyProcessingJob,
   NotifySubscribersJob,
+  partyInviteOutbox,
   subscribersOutbox,
   transitionNotificationJobs,
   visibilityNotificationJobs,
@@ -20,6 +23,7 @@ import { defaultJobOptions, stagePolicies } from '../policies';
 
 const VIDEO_ID = '00000000-0000-7000-8000-0000000000a1';
 const COMMENT_ID = '00000000-0000-7000-8000-0000000000b1';
+const INVITE_ID = '00000000-0000-7000-8000-0000000000d1';
 const AFTER = '00000000-0000-7000-8000-0000000000c1';
 
 describe('job-contracts: notification jobs', () => {
@@ -27,6 +31,7 @@ describe('job-contracts: notification jobs', () => {
     { schema: NotifySubscribersJob, valid: { kind: 'live', videoId: VIDEO_ID } },
     { schema: NotifyCommentJob, valid: { videoId: VIDEO_ID, commentId: COMMENT_ID } },
     { schema: NotifyHeartJob, valid: { videoId: VIDEO_ID, commentId: COMMENT_ID } },
+    { schema: NotifyPartyInviteJob, valid: { inviteId: INVITE_ID } },
     { schema: NotifyProcessingJob, valid: { videoId: VIDEO_ID, outcome: 'failed' } },
     { schema: AnnounceLiveJob, valid: { liveStreamId: VIDEO_ID, after: AFTER } },
   ])('reads a well-formed payload', ({ schema, valid }) => {
@@ -70,6 +75,12 @@ describe('job-contracts: notification jobs', () => {
       outbox: heartOutbox({ videoId: VIDEO_ID, commentId: COMMENT_ID }),
       name: NOTIFY_HEART,
       jobId: `${COMMENT_ID}--notify-heart`,
+    },
+    {
+      scenario: 'a party invite',
+      outbox: partyInviteOutbox({ inviteId: INVITE_ID }),
+      name: NOTIFY_PARTY_INVITE,
+      jobId: `${INVITE_ID}--notify-party-invite`,
     },
     {
       scenario: 'a finished upload',

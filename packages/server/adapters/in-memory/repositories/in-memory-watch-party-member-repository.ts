@@ -152,6 +152,25 @@ export class InMemoryWatchPartyMemberRepository implements WatchPartyMemberRepos
     return ok(roomIds.sort());
   }
 
+  async coWatchersOf(
+    userId: string,
+    since: Date,
+    limit: number
+  ): Promise<Result<string[], DatabaseUnavailable>> {
+    const seats = [...this.store.members.values()];
+    const sharedRooms = new Set(
+      seats.filter((seat) => seat.userId === userId).map((s) => s.roomId)
+    );
+    const latest = new Map<string, number>();
+    for (const { roomId, userId: other, joinedAt } of seats) {
+      if (other === null || other === userId || !sharedRooms.has(roomId)) continue;
+      if (joinedAt >= since)
+        latest.set(other, Math.max(latest.get(other) ?? 0, joinedAt.getTime()));
+    }
+    const ordered = [...latest].sort(([a, at], [b, bt]) => bt - at || (a < b ? -1 : 1));
+    return ok(ordered.slice(0, limit).map(([other]) => other));
+  }
+
   clear(): void {
     this.store.clear();
   }
