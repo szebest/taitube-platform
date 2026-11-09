@@ -16,7 +16,7 @@ export const joinWatchPartyAsGuest = defineEndpoint({
     'Issues a guest party credential, set as the httpOnly vp.party-guest cookie, and its seat in one step, where the room allows guests. The nickname is generated. 5 credentials per IP an hour, 30 guest joins per room a minute.',
   anonymous: true,
   params: WatchPartyIdParamSchema,
-  body: z.object({ invite: z.string().max(128).optional() }).optional(),
+  body: z.object({ invite: z.string().max(128).optional() }).nullish(),
   status: 201,
   result: z.object({
     membership: MembershipSchema,

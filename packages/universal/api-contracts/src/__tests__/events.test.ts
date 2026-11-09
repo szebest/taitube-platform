@@ -72,6 +72,17 @@ describe('packages/api-contracts: events', () => {
       { type: 'notification.read', payload: { scope: 'ids', ids: [VIDEO_ID], unreadCount: 1 } },
     ],
     [
+      'a personal control change in a room',
+      {
+        type: 'party.controls.updated',
+        payload: { targetKey: `user:${VIDEO_ID}`, roomId: VIDEO_ID },
+      },
+    ],
+    [
+      'a personal control change everywhere',
+      { type: 'party.controls.updated', payload: { targetKey: `user:${VIDEO_ID}`, roomId: null } },
+    ],
+    [
       'every notification read',
       { type: 'notification.read', payload: { scope: 'all', unreadCount: 0 } },
     ],

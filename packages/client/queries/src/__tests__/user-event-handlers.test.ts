@@ -198,4 +198,16 @@ describe('@vp/queries: user event handlers', () => {
       true,
     ]);
   });
+
+  it('refetches the personal controls when another device changed one', () => {
+    const queryClient = createQueryClient();
+    queryClient.setQueryData(['watch-party-controls'], { items: [] });
+
+    applyUserEvent(queryClient, {
+      type: 'party.controls.updated',
+      payload: { targetKey: `user:${VIDEO_ID}`, roomId: null },
+    });
+
+    expect(queryClient.getQueryState(['watch-party-controls'])?.isInvalidated).toBe(true);
+  });
 });

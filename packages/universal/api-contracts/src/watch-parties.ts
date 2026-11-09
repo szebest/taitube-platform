@@ -148,7 +148,7 @@ export const closeWatchParty = defineEndpoint({
   summary: 'Close a watch party',
   description: 'Ends the room for everyone (room.close). Sockets get closed and are closed.',
   params: WatchPartyIdParamSchema,
-  body: z.object({ reason: z.string().max(200).optional() }).optional(),
+  body: z.object({ reason: z.string().max(200).optional() }).nullish(),
   status: 200,
   result: WatchPartySchema,
   errors: {
@@ -167,7 +167,7 @@ const JoinBodySchema = z
       .optional(),
     invite: z.string().max(128).optional().describe('An invite id or an invite link token'),
   })
-  .optional();
+  .nullish();
 
 export const joinWatchParty = defineEndpoint({
   method: 'POST',
