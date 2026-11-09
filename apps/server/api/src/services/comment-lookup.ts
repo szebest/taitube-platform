@@ -1,6 +1,9 @@
 import type { CommentRepositoryPort, VideoRepository } from '@vp/core/repositories';
 import type { Comment, Video } from '@vp/domain';
-import { isErr, map, ok } from '@vp/result';
+import { decideVideoRead, publicReadFailure } from '@vp/domain-rules';
+import type { DatabaseUnavailable } from '@vp/errors';
+import type { UserContext } from '@vp/permissions';
+import { type Result, err, isErr, map, ok } from '@vp/result';
 
 export interface CommentLookupDeps {
   comments: CommentRepositoryPort;
@@ -18,4 +21,18 @@ export async function commentWithVideo(deps: CommentLookupDeps, commentId: strin
     comment: comment.value,
     video: found,
   }));
+}
+
+export type PublicReadFailure = ReturnType<typeof publicReadFailure>;
+
+export async function readableVideo(
+  deps: Pick<CommentLookupDeps, 'videos'>,
+  viewer: UserContext | null,
+  videoId: string
+): Promise<Result<Video, DatabaseUnavailable | PublicReadFailure>> {
+  const found = await deps.videos.findById(videoId);
+  if (isErr(found)) return found;
+
+  const decided = decideVideoRead({ viewer, video: found.value, videoId });
+  return isErr(decided) ? err(publicReadFailure(decided.error)) : decided;
 }

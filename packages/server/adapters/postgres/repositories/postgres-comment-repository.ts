@@ -12,11 +12,10 @@ import {
   type Comment,
   type CommentThread,
   type CreatorInboxComment,
-  commentCreated,
   type NewCommentInput,
 } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
-import { commentOutbox, heartOutbox } from '@vp/job-contracts';
+import { heartOutbox } from '@vp/job-contracts';
 import type { UserContext } from '@vp/permissions';
 import { fromPromise, map, type Result } from '@vp/result';
 import { and, eq, ne, or, sql } from 'drizzle-orm';
@@ -30,18 +29,19 @@ import {
 import {
   commentReplyCursorScope,
   commentReplyOrderBy,
-  commentThreadColumns,
   commentThreadCursorScope,
   commentThreadOrderBy,
   commentWindowBounds,
   toComment,
+  selectThreads,
+  threadById,
   toCommentThread,
 } from './comment-thread-query';
+import { insertComment, isLive, lockVideo } from './comment-writes';
 import { enqueueNotificationJobs } from './notification-jobs';
-import { appendUserEvent } from './postgres-user-event-repository';
 import type { PostgresDatabase } from './types';
 
-const { videoComments: c, channels: ch, videos: v } = schema;
+const { videoComments: c, videos: v } = schema;
 
 export class PostgresCommentRepository implements CommentRepositoryPort {
   constructor(private readonly db: PostgresDatabase) {}
@@ -65,7 +65,7 @@ export class PostgresCommentRepository implements CommentRepositoryPort {
     const { cursor, offset } = commentWindowBounds(window);
     const rows = await fromPromise(
       () =>
-        this.threads(this.db)
+        selectThreads(this.db)
           .where(
             drizzleWhere(
               eq(c.videoId, videoId),
@@ -88,7 +88,7 @@ export class PostgresCommentRepository implements CommentRepositoryPort {
   ): Promise<Result<CommentThread[], DatabaseUnavailable>> {
     const rows = await fromPromise(
       () =>
-        this.threads(this.db)
+        selectThreads(this.db)
           .where(
             drizzleWhere(
               eq(c.videoId, root.videoId),
@@ -106,29 +106,7 @@ export class PostgresCommentRepository implements CommentRepositoryPort {
 
   async create(input: NewCommentInput): Promise<Result<CommentThread | null, DatabaseUnavailable>> {
     return await fromPromise(
-      () =>
-        this.db.transaction(async (tx) => {
-          const video = await this.lockVideo(tx, input.videoId);
-          if (input.parentId !== null && !(await this.isLive(tx, input.parentId))) return null;
-
-          const now = new Date();
-          await tx.insert(c).values({ ...input, createdAt: now, updatedAt: now });
-          await tx
-            .update(v)
-            .set({ commentsCount: sql`${v.commentsCount} + 1` })
-            .where(eq(v.id, input.videoId));
-          await enqueueNotificationJobs(tx, [
-            commentOutbox({ videoId: input.videoId, commentId: input.id }),
-          ]);
-          const created = await this.threadById(tx, input.id);
-          if (created && video && video.ownerId !== input.authorId) {
-            await appendUserEvent(tx, {
-              userId: video.ownerId,
-              ...commentCreated(created, { id: input.videoId, title: video.title }),
-            });
-          }
-          return created;
-        }),
+      () => this.db.transaction((tx) => insertComment(tx, input)),
       databaseUnavailable.during('createComment')
     );
   }
@@ -145,7 +123,7 @@ export class PostgresCommentRepository implements CommentRepositoryPort {
             .set({ content, isEdited: true, updatedAt: new Date() })
             .where(drizzleWhere(eq(c.id, id), notDeletedScope(c)))
             .returning({ id: c.id });
-          return updated ? this.threadById(tx, id) : null;
+          return updated ? threadById(tx, id) : null;
         }),
       databaseUnavailable.during('updateComment')
     );
@@ -155,7 +133,7 @@ export class PostgresCommentRepository implements CommentRepositoryPort {
     return await fromPromise(
       () =>
         this.db.transaction(async (tx) => {
-          await this.lockVideo(tx, target.videoId);
+          await lockVideo(tx, target.videoId);
           const removed = await tx
             .update(c)
             .set({ deletedAt: new Date(), isPinned: false })
@@ -186,8 +164,8 @@ export class PostgresCommentRepository implements CommentRepositoryPort {
     return await fromPromise(
       () =>
         this.db.transaction(async (tx) => {
-          await this.lockVideo(tx, target.videoId);
-          if (!(await this.isLive(tx, target.id))) return null;
+          await lockVideo(tx, target.videoId);
+          if (!(await isLive(tx, target.id))) return null;
           if (pinned) {
             await tx
               .update(c)
@@ -199,7 +177,7 @@ export class PostgresCommentRepository implements CommentRepositoryPort {
             .set({ isPinned: pinned, updatedAt: new Date() })
             .where(drizzleWhere(eq(c.id, target.id), notDeletedScope(c)))
             .returning({ id: c.id });
-          return updated ? this.threadById(tx, target.id) : null;
+          return updated ? threadById(tx, target.id) : null;
         }),
       databaseUnavailable.during('pinComment')
     );
@@ -233,7 +211,7 @@ export class PostgresCommentRepository implements CommentRepositoryPort {
               heartOutbox({ videoId: target.videoId, commentId: target.id }),
             ]);
           }
-          return this.threadById(tx, target.id);
+          return threadById(tx, target.id);
         }),
       databaseUnavailable.during('heartComment')
     );
@@ -259,43 +237,5 @@ export class PostgresCommentRepository implements CommentRepositoryPort {
       databaseUnavailable.during('listAuthoredComments')
     );
     return map(rows, (found) => found.map(toAuthoredComment));
-  }
-
-  /**
-   * Every write that adds, removes or pins a comment takes the video row first, so a reply cannot
-   * commit under a root whose removal is already running, and two pins cannot interleave.
-   */
-  private async lockVideo(
-    tx: PostgresDatabase,
-    videoId: string
-  ): Promise<{ ownerId: string; title: string } | undefined> {
-    const [video] = await tx
-      .select({ ownerId: v.ownerId, title: v.title })
-      .from(v)
-      .where(eq(v.id, videoId))
-      .for('update');
-    return video;
-  }
-
-  private async isLive(tx: PostgresDatabase, id: string): Promise<boolean> {
-    const [row] = await tx
-      .select({ id: c.id })
-      .from(c)
-      .where(drizzleWhere(eq(c.id, id), notDeletedScope(c)))
-      .for('update');
-    return Boolean(row);
-  }
-
-  private threads(db: PostgresDatabase) {
-    return db
-      .select(commentThreadColumns)
-      .from(c)
-      .leftJoin(ch, eq(ch.userId, c.authorId))
-      .$dynamic();
-  }
-
-  private async threadById(db: PostgresDatabase, id: string): Promise<CommentThread | null> {
-    const [row] = await this.threads(db).where(eq(c.id, id));
-    return row ? toCommentThread(row) : null;
   }
 }

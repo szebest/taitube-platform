@@ -22,14 +22,12 @@ import type { UserContext } from '@vp/permissions';
 import { assertNever, isErr, ok, type Result, unwrapOr } from '@vp/result';
 import { matchesInbox } from './comment-inbox-filter';
 import { commentSortKey, compareKeys, rowKey } from './comment-order';
+import { toAuthoredCommentOf, toThreadOf } from './comment-projections';
+import { repliesOf, standing, type StoredComment } from './comment-visibility';
 import type { InMemoryChannelRepository } from './in-memory-channel-repository';
 import type { InMemoryCommentReportRepository } from './in-memory-comment-report-repository';
 import type { InMemoryVideoRepository } from './in-memory-video-repository';
 import { keepWatchable } from './watchable-video';
-
-interface StoredComment extends Comment {
-  deletedAt: Date | null;
-}
 
 export interface InMemoryCommentRepositoryOptions {
   channelsRepo: InMemoryChannelRepository;
@@ -206,16 +204,7 @@ export class InMemoryCommentRepository implements CommentRepositoryPort {
 
     const lookups = { videosRepo: this.videosRepo, channelsRepo: this.channelsRepo };
     const kept = await keepWatchable(lookups, viewer, mine, limit);
-    return ok(
-      kept.map(({ id, content, createdAt, parentId, likeCount, video }) => ({
-        id,
-        content,
-        createdAt,
-        parentId,
-        likeCount,
-        video: { id: video.id, title: video.title ?? '' },
-      }))
-    );
+    return ok(kept.map(({ video, ...comment }) => toAuthoredCommentOf(comment, video)));
   }
 
   async listForOwner(
@@ -260,7 +249,7 @@ export class InMemoryCommentRepository implements CommentRepositoryPort {
   }
 
   private live(): StoredComment[] {
-    return Array.from(this.comments.values()).filter((comment) => comment.deletedAt === null);
+    return standing(this.comments.values());
   }
 
   private liveById(id: string): StoredComment | undefined {
@@ -268,22 +257,11 @@ export class InMemoryCommentRepository implements CommentRepositoryPort {
   }
 
   private repliesOf(rootId: string): StoredComment[] {
-    return this.live().filter((comment) => comment.parentId === rootId);
+    return repliesOf(this.comments.values(), rootId);
   }
 
   private async toThread(stored: StoredComment): Promise<CommentThread> {
-    const { deletedAt: _deletedAt, ...comment } = stored;
-    const channel = unwrapOr(await this.channelsRepo.findByUserId(comment.authorId), null);
-    return {
-      ...comment,
-      author: {
-        userId: comment.authorId,
-        channelId: channel?.id ?? null,
-        handle: channel?.handle ?? null,
-        displayName: channel?.displayName ?? null,
-        avatarUrl: channel?.avatarUrl ?? null,
-      },
-      replyCount: this.repliesOf(comment.id).length,
-    };
+    const channel = unwrapOr(await this.channelsRepo.findByUserId(stored.authorId), null);
+    return toThreadOf(stored, channel, this.repliesOf(stored.id).length);
   }
 }

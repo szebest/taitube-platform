@@ -5,27 +5,24 @@ import type { CommentRepositoryPort, CommentWindow, VideoRepository } from '@vp/
 import type { CommentSort, CommentThread, Video } from '@vp/domain';
 import {
   type CommentNotFound,
-  type CreateCommentFailure,
   type DeleteCommentFailure,
   type HeartCommentFailure,
   type PinCommentFailure,
   type UpdateCommentFailure,
   commentNotFound,
-  decideCommentCreate,
   decideCommentDelete,
   decideCommentHeart,
   decideCommentPin,
   decideCommentThreadRead,
   decideCommentUpdate,
-  decideVideoRead,
   publicReadFailure,
 } from '@vp/domain-rules';
 import { type DatabaseUnavailable, ErrorCodes } from '@vp/errors';
 import type { InvalidCursor, Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
 import { type Result, err, ignore, isErr, map, ok } from '@vp/result';
-import { uuidv7 } from 'uuidv7';
-import { commentWithVideo } from './comment-lookup';
+import { type CreateCommentServiceFailure, createComment } from './comment-create';
+import { type PublicReadFailure, commentWithVideo, readableVideo } from './comment-lookup';
 import { toCommentView } from './comment-views';
 import {
   commentThreadCursorPayload,
@@ -47,14 +44,8 @@ export interface CommentPage {
   nextCursor: string | null;
 }
 
-type PublicReadFailure = ReturnType<typeof publicReadFailure>;
-
 export type ListCommentsFailure = PublicReadFailure | InvalidCursor | DatabaseUnavailable;
 export type ListRepliesFailure = ListCommentsFailure | CommentNotFound;
-export type CreateCommentServiceFailure =
-  | CreateCommentFailure
-  | PublicReadFailure
-  | DatabaseUnavailable;
 export type UpdateCommentServiceFailure = UpdateCommentFailure | DatabaseUnavailable;
 export type DeleteCommentServiceFailure = DeleteCommentFailure | DatabaseUnavailable;
 export type PinCommentServiceFailure = PinCommentFailure | DatabaseUnavailable;
@@ -77,7 +68,7 @@ export class CommentService {
     videoId: string,
     query: ListCommentsQuery
   ): Promise<Result<CommentPage & { total: number }, ListCommentsFailure>> {
-    const video = await this.readableVideo(viewer, videoId);
+    const video = await readableVideo(this.deps, viewer, videoId);
     if (isErr(video)) return video;
 
     const request = this.threadsRequest(query);
@@ -128,34 +119,9 @@ export class CommentService {
     videoId: string,
     body: { content: string; parentId?: string }
   ): Promise<Result<CommentView, CreateCommentServiceFailure>> {
-    const video = await this.readableVideo(author, videoId);
-    if (isErr(video)) return video;
-    const parentId = body.parentId ?? null;
-    const parent = parentId ? await this.deps.comments.findById(parentId) : ok(null);
-    if (isErr(parent)) return parent;
-
-    const decided = decideCommentCreate({
-      author,
-      video: video.value,
-      videoId,
-      parent: parent.value,
-      parentId,
-      content: body.content,
-    });
-    if (isErr(decided)) return decided;
-
-    const created = await this.deps.comments.create({
-      id: uuidv7(),
-      videoId,
-      authorId: author.id,
-      parentId: decided.value.parentId,
-      content: decided.value.content,
-    });
-    if (isErr(created)) return created;
-    if (!created.value) return err(commentNotFound(parentId ?? videoId));
-
-    await this.purge(videoId);
-    return ok(toCommentView(created.value, decided.value.video.ownerId));
+    const created = await createComment(this.deps, author, videoId, body);
+    if (!isErr(created)) await this.purge(videoId);
+    return created;
   }
 
   async update(
@@ -221,17 +187,6 @@ export class CommentService {
 
     const updated = await this.deps.comments.setHearted(decided.value, hearted);
     return await this.settled(updated, commentId, video);
-  }
-
-  private async readableVideo(
-    viewer: UserContext | null,
-    videoId: string
-  ): Promise<Result<Video, DatabaseUnavailable | PublicReadFailure>> {
-    const found = await this.deps.videos.findById(videoId);
-    if (isErr(found)) return found;
-
-    const decided = decideVideoRead({ viewer, video: found.value, videoId });
-    return isErr(decided) ? err(publicReadFailure(decided.error)) : decided;
   }
 
   private threadsRequest(query: ListCommentsQuery) {
