@@ -1,10 +1,8 @@
-import { Link, useLocation } from '@tanstack/react-router';
 import { AccountMenu as Menu } from '@vp/components';
 import { useT } from '@vp/intl-react';
 import { canAccessAdmin } from '@vp/permissions';
 import { Can } from '@vp/permissions-react';
-import { useAccount, useSignOut } from '@vp/queries';
-import { Button } from '@vp/ui';
+import { SignInButton, useAccount, useSignOut } from '@vp/queries';
 import { clearQueuedChanges } from '#app/integrations/service-worker-client/clear-queued-changes';
 import { STUDIO_URL } from '#app/lib/config';
 
@@ -12,17 +10,10 @@ import { STUDIO_URL } from '#app/lib/config';
 export function AccountMenu() {
   const account = useAccount();
   const signOut = useSignOut();
-  const href = useLocation({ select: (location) => location.href });
   const { tOr } = useT();
 
   if (!account) {
-    return (
-      <Button asChild variant="outline">
-        <Link to="/login" search={{ redirect: href }}>
-          {tOr('auth.signIn', {}, '')}
-        </Link>
-      </Button>
-    );
+    return <SignInButton />;
   }
 
   return (
