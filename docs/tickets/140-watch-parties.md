@@ -1164,6 +1164,13 @@ One stack, `feat/140-watch-parties`, three slices (`slice/140a-…` to `slice/14
 - [ ] `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm --filter @vp/web test`, `pnpm test:architecture` green, with
       output in the PR.
 
+**Decided while building the party page (140b core):**
+
+- "Join with Discord" stays out of the preview until 78's integration owns its handler; the panel renders the button only when a handler is passed.
+- A signed-in guest's "Sign in to chat" upgrades the seat in place; a signed-out guest goes to `/login` and back to the room.
+- The player refusing unmuted autoplay is detected as still paused one check after `play`; the driver then mutes, plays and offers "Tap for sound".
+- Compact keeps the same Chat, People, Queue tabs as the larger layouts; the room controls are a bar under the stage until the player's own control bar speaks to the room.
+
 ### 140c: Discovery, schedules and the hand-off
 
 - [ ] `/parties` is in the rail after Live, in the You hub on compact and in the command palette, and its filters
