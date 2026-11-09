@@ -2,9 +2,9 @@ import { MS_PER_SECOND } from './time';
 import type { WatchPartyPhase } from './watch-party';
 
 export const WATCH_PARTY_RATES = [0.5, 0.75, 1, 1.25, 1.5, 2] as const;
-export type WatchPartyRate = (typeof WATCH_PARTY_RATES)[number];
+type WatchPartyRate = (typeof WATCH_PARTY_RATES)[number];
 
-export const WATCH_PARTY_CLOCK = {
+const WATCH_PARTY_CLOCK = {
   /** Start puts the anchor this far ahead, so everyone sees the same countdown. */
   countdownMs: 3 * MS_PER_SECOND,
   pingIntervalMs: 30 * MS_PER_SECOND,

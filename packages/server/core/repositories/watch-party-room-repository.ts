@@ -20,7 +20,7 @@ export interface NewSystemLine {
   readonly createdAt: Date;
 }
 
-export type NewWatchPartyRoom = Pick<
+type NewWatchPartyRoom = Pick<
   WatchPartyRoom,
   | 'id'
   | 'ownerKey'

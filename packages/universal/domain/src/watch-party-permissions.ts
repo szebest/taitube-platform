@@ -1,6 +1,6 @@
 import type { WatchPartyPreset } from './watch-party-roles';
 
-export const WATCH_PARTY_PERMISSION_GROUPS = [
+const WATCH_PARTY_PERMISSION_GROUPS = [
   'playback',
   'queue',
   'chat',
@@ -9,10 +9,10 @@ export const WATCH_PARTY_PERMISSION_GROUPS = [
   'room',
   'roles',
 ] as const;
-export type WatchPartyPermissionGroup = (typeof WATCH_PARTY_PERMISSION_GROUPS)[number];
+type WatchPartyPermissionGroup = (typeof WATCH_PARTY_PERMISSION_GROUPS)[number];
 
 /** The built-in roles whose defaults a registry entry names; Owner and Spectator take every entry. */
-export type DefaultingRoleKey =
+type DefaultingRoleKey =
   | 'cohost'
   | 'moderator'
   | 'chat_muted'

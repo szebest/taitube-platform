@@ -13,7 +13,7 @@ export function rateLimited(retryAfterSeconds: number): RateLimited {
   return { code: ErrorCodes.RATE_LIMITED, message: 'Too many requests', retryAfterSeconds };
 }
 
-export function admissionResult(admission: GateAdmission): Result<void, RateLimited> {
+function admissionResult(admission: GateAdmission): Result<void, RateLimited> {
   switch (admission.type) {
     case 'admitted':
       return ok();

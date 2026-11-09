@@ -1,8 +1,4 @@
-import {
-  type CandidatePerson,
-  INVITE_CANDIDATES,
-  pickCandidates,
-} from '../watch-party-invite-candidates';
+import { type CandidatePerson, pickCandidates } from '../watch-party-invite-candidates';
 
 const person = (n: number, overrides: Partial<CandidatePerson> = {}): CandidatePerson => ({
   userId: `user-${n}`,
@@ -15,6 +11,7 @@ const person = (n: number, overrides: Partial<CandidatePerson> = {}): CandidateP
 const pick = (sources: Partial<Parameters<typeof pickCandidates>[0]> = {}) =>
   pickCandidates({
     selfId: 'user-0',
+    limit: 20,
     prefix: null,
     coWatchers: [],
     subscriptions: [],
@@ -75,6 +72,7 @@ describe('pickCandidates', () => {
   it('flags who is in the room and who is invited', () => {
     const [candidate] = pickCandidates({
       selfId: 'user-0',
+      limit: 20,
       prefix: null,
       coWatchers: [person(1)],
       subscriptions: [],
@@ -87,8 +85,8 @@ describe('pickCandidates', () => {
   });
 
   it('answers no more than the limit', () => {
-    const many = Array.from({ length: INVITE_CANDIDATES + 5 }, (_, n) => person(n + 1));
+    const many = Array.from({ length: 25 }, (_, n) => person(n + 1));
 
-    expect(pick({ matches: many })).toHaveLength(INVITE_CANDIDATES);
+    expect(pick({ matches: many })).toHaveLength(20);
   });
 });

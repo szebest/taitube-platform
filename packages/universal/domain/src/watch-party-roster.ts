@@ -2,10 +2,10 @@ import type { WatchPartyVisibility } from './watch-party';
 import type { MemberKind } from './watch-party-principal';
 
 export const ROSTER_SOURCES = ['app', 'activity', 'discord_chat'] as const;
-export type RosterSource = (typeof ROSTER_SOURCES)[number];
+type RosterSource = (typeof ROSTER_SOURCES)[number];
 
 export const ROSTER_SYNC_STATES = ['lobby', 'in_sync', 'catching_up', 'buffering'] as const;
-export type RosterSyncState = (typeof ROSTER_SYNC_STATES)[number];
+type RosterSyncState = (typeof ROSTER_SYNC_STATES)[number];
 
 export const ROSTER_VOICE_STATES = [
   'off',
@@ -14,7 +14,7 @@ export const ROSTER_VOICE_STATES = [
   'self_muted',
   'server_muted',
 ] as const;
-export type RosterVoiceState = (typeof ROSTER_VOICE_STATES)[number];
+type RosterVoiceState = (typeof ROSTER_VOICE_STATES)[number];
 
 /** One person in the party, whatever path they came by. */
 export interface RosterEntry {
@@ -63,8 +63,8 @@ export interface RosterPreview {
   readonly total: number;
 }
 
-export const ROSTER_PREVIEW_FACES = 5;
-export const INVITE_PREVIEW_NAMES = 2;
+const ROSTER_PREVIEW_FACES = 5;
+const INVITE_PREVIEW_NAMES = 2;
 
 function faceLimit(visibility: WatchPartyVisibility, surface: RosterPreviewSurface): number {
   if (surface === 'invite') return INVITE_PREVIEW_NAMES;

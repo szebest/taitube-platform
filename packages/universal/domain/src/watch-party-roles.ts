@@ -86,7 +86,7 @@ export interface RoomRole {
   readonly permissions: readonly WatchPartyPermission[];
 }
 
-export interface RoleAssignment {
+interface RoleAssignment {
   readonly roleId: string;
   readonly expiresAt: Date | null;
 }

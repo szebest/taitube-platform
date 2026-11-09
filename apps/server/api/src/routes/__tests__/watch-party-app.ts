@@ -7,12 +7,11 @@ import { MS_PER_HOUR } from '@vp/domain/time';
 import type { AppConfigOverrides } from '@vp/env-schema';
 import { SEEDED } from '@vp/testing';
 import { expectOk } from '@vp/testing/result';
-import type { LightMyRequestResponse } from 'fastify';
 import { uuidv7 } from 'uuidv7';
 import { bearer, buildTestApp, TOKENS } from '../../__tests__/test-app';
 import { watchPartyTestConfig } from '../../services/watch-party/__tests__/watch-party-test-deps';
 
-export const AS = {
+const AS = {
   owner: bearer(TOKENS.user),
   other: bearer(TOKENS.otherUser),
   admin: bearer(TOKENS.admin),
@@ -125,7 +124,3 @@ export async function buildWatchPartyApp(config: AppConfigOverrides = {}) {
 }
 
 export type WatchPartyApp = Awaited<ReturnType<typeof buildWatchPartyApp>>;
-
-export function problemOf(response: LightMyRequestResponse): { code: string; status: number } {
-  return response.json();
-}

@@ -62,7 +62,6 @@ export const WATCH_PARTY_STATE_REASONS = [
   'skip',
   'system',
 ] as const;
-export type WatchPartyStateReason = (typeof WATCH_PARTY_STATE_REASONS)[number];
 
 /** The preview's answer to "can I join": a seat already, yes, or why not. */
 export const WATCH_PARTY_JOIN_STATES = [
@@ -80,9 +79,8 @@ export const WATCH_PARTY_PREVIEW_ACTIONS = ['guest', 'discord', 'sign_in'] as co
 export type WatchPartyPreviewAction = (typeof WATCH_PARTY_PREVIEW_ACTIONS)[number];
 
 export const WATCH_PARTY_REQUEST_KINDS = ['seek', 'skip', 'start'] as const;
-export type WatchPartyRequestKind = (typeof WATCH_PARTY_REQUEST_KINDS)[number];
 
-export const WATCH_PARTY_INVITE_STATUSES = ['pending', 'joined', 'declined', 'revoked'] as const;
+const WATCH_PARTY_INVITE_STATUSES = ['pending', 'joined', 'declined', 'revoked'] as const;
 export type WatchPartyInviteStatus = (typeof WATCH_PARTY_INVITE_STATUSES)[number];
 
 export const WATCH_PARTY_INVITE_LINK_TTLS = ['1h', '24h', '7d'] as const;
@@ -90,7 +88,6 @@ export type WatchPartyInviteLinkTtl = (typeof WATCH_PARTY_INVITE_LINK_TTLS)[numb
 
 /** The fixed reaction palette: a reaction names one of these, never free text. */
 export const WATCH_PARTY_REACTIONS = ['😂', '😮', '😍', '👏', '🔥', '😢', '😱', '🎉'] as const;
-export type WatchPartyReaction = (typeof WATCH_PARTY_REACTIONS)[number];
 
 export const WATCH_PARTY_LIMITS = {
   queueItems: 200,

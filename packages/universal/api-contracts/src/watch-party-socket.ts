@@ -68,7 +68,7 @@ const YouSchema = z.object({
 const ChatModeSchema = z.object({ enabled: z.boolean(), slowModeSeconds: z.number().int() });
 
 /** What every socket in the room hears, from whichever pod the change happened on. */
-export const WatchPartyBroadcastSchema = z.discriminatedUnion('type', [
+const WatchPartyBroadcastSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('state'),
     playback: WatchPartyPlaybackSchema,
@@ -214,5 +214,4 @@ export const watchPartySocket = defineEndpoint({
 });
 
 export type WatchPartyClientFrame = z.infer<typeof WatchPartyClientFrameSchema>;
-export type WatchPartyBroadcast = z.infer<typeof WatchPartyBroadcastSchema>;
 export type WatchPartyServerFrame = z.infer<typeof WatchPartyServerFrameSchema>;

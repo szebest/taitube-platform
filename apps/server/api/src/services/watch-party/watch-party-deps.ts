@@ -10,7 +10,7 @@ import type { Logger } from '@vp/logger';
 import type { WatchPartyBroadcaster } from './watch-party-broadcaster';
 import type { WatchPartyContextLoader } from './watch-party-context';
 
-export type WatchPartyRepositories = Pick<
+type WatchPartyRepositories = Pick<
   Repositories,
   | 'watchPartyRooms'
   | 'watchPartyRoles'

@@ -21,7 +21,7 @@ import { OTHER_OWNER_ID, OWNER_ID, publicVideo, seedOwners, VIDEO_IDS } from './
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
 export const AT = new Date('2026-03-01T12:00:00.000Z');
-export const MINUTE_MS = 60_000;
+const MINUTE_MS = 60_000;
 
 export const ROOM_ID = '00000000-0000-7000-8000-00000000e001';
 export const OTHER_ROOM_ID = '00000000-0000-7000-8000-00000000e002';

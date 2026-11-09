@@ -54,7 +54,7 @@ export const WatchPartyPlaybackSchema = z
       'The room clock: while playing, the position at t is positionMs + (t - anchorAt) * rate',
   });
 
-export const PartyVideoSchema = z.object({
+const PartyVideoSchema = z.object({
   id: z.uuid(),
   title: z.string().nullable(),
   durationMs: z.number().int().nonnegative().nullable(),
@@ -152,7 +152,7 @@ export const MembershipSchema = z.object({
   permissions: z.array(WatchPartyPermissionSchema),
 });
 
-export const QueueItemSchema = z.object({
+const QueueItemSchema = z.object({
   id: z.uuid(),
   video: PartyVideoSchema,
   addedBy: MemberKeySchema,
@@ -188,5 +188,4 @@ export const PartyChatMessageSchema = z
 
 export type WatchPartyView = z.infer<typeof WatchPartySchema>;
 export type WatchPartyRoleView = z.infer<typeof WatchPartyRoleSchema>;
-export type PartyChatMessageView = z.infer<typeof PartyChatMessageSchema>;
 export type PartyQueueView = z.infer<typeof PartyQueueSchema>;

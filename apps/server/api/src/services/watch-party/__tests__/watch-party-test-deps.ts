@@ -24,7 +24,7 @@ import { WatchPartyContextLoader } from '../watch-party-context';
 import type { WatchPartyDeps, WatchPartySecrets } from '../watch-party-deps';
 import { WatchPartyService } from '../watch-party-service';
 
-export const TEST_SCRYPT = { N: 16, r: 8, p: 1, keyLength: 32, saltLength: 16 } as const;
+const TEST_SCRYPT = { N: 16, r: 8, p: 1, keyLength: 32, saltLength: 16 } as const;
 
 export const START = Date.parse('2026-03-01T12:00:00.000Z');
 
@@ -47,11 +47,6 @@ export function watchPartyTestConfig(overrides: AppConfigOverrides = {}) {
     ...rest,
     watchParties: { ...watchParties, scrypt: { ...TEST_SCRYPT } },
   });
-}
-
-export interface TestClock {
-  nowMs: number;
-  advance(ms: number): void;
 }
 
 export interface PublishedFrame {
@@ -85,9 +80,9 @@ function deterministicSecrets(guestSalt: string | undefined): WatchPartySecrets 
  */
 export function watchPartyTestDeps({ config, secrets }: WatchPartyTestOptions = {}) {
   const appConfig = watchPartyTestConfig(config);
-  const clock: TestClock = {
+  const clock = {
     nowMs: START,
-    advance(ms) {
+    advance(ms: number) {
       this.nowMs += ms;
     },
   };

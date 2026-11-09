@@ -28,20 +28,20 @@ export interface WatchPartyMemberSubject {
   readonly kind: MemberKind;
 }
 
-export interface WatchPartyPermissionSubject {
+interface WatchPartyPermissionSubject {
   readonly id: WatchPartyPermission;
 }
 
 export type WatchPartyRoleAction = 'assign' | 'revoke' | 'create' | 'update' | 'delete' | 'move';
 export type WatchPartyMemberAction = 'kick' | 'ban' | 'mute' | 'assign';
 
-export type WatchPartyAction =
+type WatchPartyAction =
   | WatchPartyPermission
   | WatchPartyRoleAction
   | WatchPartyMemberAction
   | 'grant';
 
-export type WatchPartySubjects =
+type WatchPartySubjects =
   | InferSubjects<
       | (WatchPartyRoleSubject & ForcedSubject<'WatchPartyRole'>)
       | (WatchPartyMemberSubject & ForcedSubject<'WatchPartyMember'>)

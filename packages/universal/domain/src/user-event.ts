@@ -45,7 +45,7 @@ export type UserEvent =
   | { type: 'party.controls.updated'; payload: PartyControlsUpdatedPayload };
 
 /** The target and scope of a personal control that changed; `roomId` is `null` for everywhere. */
-export interface PartyControlsUpdatedPayload {
+interface PartyControlsUpdatedPayload {
   targetKey: string;
   roomId: string | null;
 }

@@ -1,4 +1,4 @@
-export const PERSONAL_CONTROL_FLAGS = [
+const PERSONAL_CONTROL_FLAGS = [
   'voiceMuted',
   'hideMessages',
   'hideReactions',
@@ -7,7 +7,7 @@ export const PERSONAL_CONTROL_FLAGS = [
   'blockInvites',
   'favourite',
 ] as const;
-export type PersonalControlFlag = (typeof PERSONAL_CONTROL_FLAGS)[number];
+type PersonalControlFlag = (typeof PERSONAL_CONTROL_FLAGS)[number];
 
 export const PERSONAL_VOLUME = { min: 0, max: 200, default: 100 } as const;
 

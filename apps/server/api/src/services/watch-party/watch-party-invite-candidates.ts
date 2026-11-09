@@ -13,8 +13,6 @@ import { actingAsMember } from './watch-party-seated-actions';
 type InviteCandidateView = z.output<typeof listWatchPartyInviteCandidates.result>['items'][number];
 
 const CO_WATCHER_WINDOW_MS = 30 * MS_PER_DAY;
-export const INVITE_CANDIDATES = 20;
-const POOL = 2 * INVITE_CANDIDATES;
 
 type Reason = InviteCandidateView['reason'];
 
@@ -27,6 +25,7 @@ export interface CandidatePerson {
 
 export interface CandidateSources {
   readonly selfId: string;
+  readonly limit: number;
   readonly prefix: string | null;
   readonly coWatchers: readonly CandidatePerson[];
   readonly subscriptions: readonly CandidatePerson[];
@@ -70,28 +69,30 @@ export function pickCandidates(sources: CandidateSources): InviteCandidateView[]
       });
     }
   }
-  return picked.slice(0, INVITE_CANDIDATES);
+  return picked.slice(0, sources.limit);
 }
 
 function isInvited(invite: WatchPartyInvite, now: Date): boolean {
   return invite.status === 'joined' || invite.expiresAt > now;
 }
 
-type CandidateDeps = Pick<WatchPartyDeps, 'repositories' | 'context' | 'now'>;
+type CandidateDeps = Pick<WatchPartyDeps, 'repositories' | 'context' | 'now' | 'config'>;
 
 async function gatherSources(
-  { repositories, now }: CandidateDeps,
+  { repositories, now, config }: CandidateDeps,
   roomId: string,
   userId: string,
   prefix: string | null
 ): Promise<Result<CandidateSources, DatabaseUnavailable>> {
   const { watchPartyMembers, watchPartyInvites, channels, subscriptions, search } = repositories;
   const at = now();
+  const limit = config.inviteCandidates;
+  const pool = 2 * limit;
   const since = new Date(at.getTime() - CO_WATCHER_WINDOW_MS);
   const [coWatcherIds, subscribed, matches, seated, invites] = await Promise.all([
-    watchPartyMembers.coWatchersOf(userId, since, POOL),
-    subscriptions.listUserSubscriptions(userId, { limit: POOL }),
-    prefix === null ? ok([]) : search.suggestChannels(prefix, POOL),
+    watchPartyMembers.coWatchersOf(userId, since, pool),
+    subscriptions.listUserSubscriptions(userId, { limit: pool }),
+    prefix === null ? ok([]) : search.suggestChannels(prefix, pool),
     watchPartyMembers.listSeated(roomId),
     watchPartyInvites.listForRoom(roomId),
   ]);
@@ -106,6 +107,7 @@ async function gatherSources(
   const rank = new Map(coWatcherIds.value.map((id, index) => [id, index]));
   return ok({
     selfId: userId,
+    limit,
     prefix,
     coWatchers: [...coWatchers.value].sort(
       (a, b) => (rank.get(a.userId) ?? 0) - (rank.get(b.userId) ?? 0)

@@ -5,7 +5,7 @@ interface Budget {
   windowSeconds: number;
 }
 
-export interface WatchPartyTuning {
+interface WatchPartyTuning {
   ticketTtlSeconds: number;
   guestCredentialTtlSeconds: number;
   presence: { keepaliveMs: number; staleAfterMs: number; keyTtlSeconds: number };
@@ -23,6 +23,7 @@ export interface WatchPartyTuning {
   };
   frameMaxBytes: number;
   chatBacklog: number;
+  inviteCandidates: number;
   reactionsFoldMs: number;
   rosterBatchMs: number;
   buffering: { waitAfterMs: number; maxWaitMs: number; maxRoomSize: number };

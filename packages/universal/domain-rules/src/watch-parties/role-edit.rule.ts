@@ -20,7 +20,7 @@ import { andThen, err, ok, type Result } from '@vp/result';
 import { type InvalidField, invalidField } from '@vp/validation';
 import { requireRoomPermission } from './permission.rule';
 
-export type InvalidRolePosition = InvalidField<{ min: number; max: number }>;
+type InvalidRolePosition = InvalidField<{ min: number; max: number }>;
 
 export type RoleEditFailure =
   | WatchPartyPermissionMissing

@@ -7,7 +7,7 @@ import { type PartyVideoView, toPartyVideoView } from './watch-party-views';
 
 type QueueViewDeps = Pick<WatchPartyDeps, 'repositories' | 'cdn'>;
 
-function unavailable(videoId: string): PartyVideoView {
+function missingVideo(videoId: string): PartyVideoView {
   return { id: videoId, title: null, durationMs: null, thumbnailUrl: null };
 }
 
@@ -28,7 +28,7 @@ export async function presentQueue(
         const video = byId.get(item.videoId);
         return {
           id: item.id,
-          video: video === undefined ? unavailable(item.videoId) : toPartyVideoView(video, cdn),
+          video: video === undefined ? missingVideo(item.videoId) : toPartyVideoView(video, cdn),
           addedBy: item.addedBy,
           startMs: item.startMs,
           playedAt: item.playedAt?.toISOString() ?? null,

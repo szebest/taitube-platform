@@ -1,6 +1,6 @@
 import { choice, defineSection, flag, type SectionValues } from './define';
 
-export const WATCH_PARTY_INVITE_SOURCES = ['everyone', 'subscriptions', 'nobody'] as const;
+const WATCH_PARTY_INVITE_SOURCES = ['everyone', 'subscriptions', 'nobody'] as const;
 
 /** Account only: the notification producers read them before they enqueue. */
 export const NOTIFICATION_SETTINGS = defineSection({

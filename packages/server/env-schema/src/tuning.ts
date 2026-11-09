@@ -210,6 +210,7 @@ export const WATCH_PARTY = {
   },
   frameMaxBytes: 4096,
   chatBacklog: 200,
+  inviteCandidates: 20,
   reactionsFoldMs: 250,
   rosterBatchMs: 500,
   buffering: { waitAfterMs: 1500, maxWaitMs: 10 * MS_PER_SECOND, maxRoomSize: 12 },
