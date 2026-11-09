@@ -126,13 +126,21 @@ function whisperRun(values: {
   }
 }
 
+export function parseSpan(span: string): { window: string; end: number } {
+  const [start, end] = span.split(',').map((time) => Date.parse(time) / 1000);
+  if (start === undefined || end === undefined || !(end > start)) {
+    throw new Error(`${span} is not <start>,<end> as ISO times`);
+  }
+  return { window: `${Math.round(end - start)}s`, end };
+}
+
 async function cluster(values: {
   prometheus: string;
   pods: string;
-  window: string;
+  span: string;
 }): Promise<boolean> {
-  const queries = promQueries(values.window);
-  const now = Math.floor(Date.now() / 1000);
+  const { window, end: now } = parseSpan(values.span);
+  const queries = promQueries(window);
   const pods = Number(values.pods);
   if (pods !== 1 && pods !== 3) throw new Error('--pods is 1 or 3');
 
@@ -154,11 +162,8 @@ async function cluster(values: {
 }
 
 async function p95Over(prometheus: string, span: string): Promise<number> {
-  const [start, end] = span.split(',').map((time) => Date.parse(time) / 1000);
-  if (start === undefined || end === undefined || !(end > start)) {
-    throw new Error(`${span} is not <start>,<end> as ISO times`);
-  }
-  return queryScalar(prometheus, promQueries(`${Math.round(end - start)}s`).transcodeP95, end);
+  const { window, end } = parseSpan(span);
+  return queryScalar(prometheus, promQueries(window).transcodeP95, end);
 }
 
 async function isolation(values: {
@@ -205,7 +210,7 @@ async function main(): Promise<void> {
         default: process.env.PROMETHEUS_URL ?? 'http://localhost:9090',
       },
       pods: { type: 'string', default: '3' },
-      window: { type: 'string', default: '1h' },
+      span: { type: 'string', default: '' },
       running: { type: 'string', default: '' },
       paused: { type: 'string', default: '' },
     },
@@ -220,7 +225,9 @@ async function main(): Promise<void> {
           ? await isolation(values)
           : undefined;
   if (passes === undefined) {
-    process.stderr.write('usage: measure-captions.ts whisper | cluster | isolation\n');
+    process.stderr.write(
+      'usage: measure-captions.ts whisper | cluster --span <start>,<end> | isolation --running <start>,<end> --paused <start>,<end>\n'
+    );
     process.exit(2);
   }
   process.exit(passes ? 0 : 1);

@@ -32,7 +32,8 @@ The numbers go in the PR body, with the Grafana panel or query each came from.
 - Whisper on one machine, CPU only at 4 threads: `pnpm gen:speech-fixture` (macOS `say`) then
   `pnpm measure:captions whisper --truth tests/fixtures/c12.truth.json`; `--seconds N` limits the audio.
 - Cluster, after uploading the 10-minute fixture with 3 caption pods (then with 1):
-  `pnpm measure:captions cluster --prometheus <url> --pods 3 --window 30m`.
+  `pnpm measure:captions cluster --prometheus <url> --pods 3 --span <start>,<end>` (ISO times of that run; repeat with
+  `--pods 1` over the 1-pod run's own span).
 - Isolation, two runs of the same upload load, the second with the `captions` queue paused:
   `pnpm measure:captions isolation --prometheus <url> --running <start>,<end> --paused <start>,<end>` (ISO times).
 - Cue offsets against the media, on a running stack:
@@ -73,7 +74,7 @@ Measured on an M3 Pro, not on a pod, so these numbers say nothing about the clus
 Not measured:
 
 - Time to ready, 10-minute fixture, 3 caption pods and then 1: not measured, needs cluster / Prometheus.
-  `pnpm measure:captions cluster --prometheus <url> --pods 3 --window 30m` (then `--pods 1`).
+  `pnpm measure:captions cluster --prometheus <url> --pods 3 --span <start>,<end>` (then `--pods 1` over its own span).
 - Transcode p95 with captions at full load against the `captions` queue paused: not measured, needs cluster /
   Prometheus. `pnpm measure:captions isolation --prometheus <url> --running <start>,<end> --paused <start>,<end>`.
 - Cue offsets in the browser: not measured, needs a running stack.

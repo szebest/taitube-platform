@@ -1,5 +1,6 @@
 import {
   isolationVerdict,
+  parseSpan,
   promQueries,
   queryScalar,
   readyVerdict,
@@ -63,6 +64,22 @@ describe('promQueries', () => {
       'histogram_quantile(0.95, sum(rate(job_duration_seconds_bucket{queue="transcode-720p"}[30m])) by (le))'
     );
   });
+});
+
+describe('parseSpan', () => {
+  it('reads the span as a window ending at its end time', () => {
+    expect(parseSpan('2026-01-01T10:00:00Z,2026-01-01T10:30:00Z')).toEqual({
+      window: '1800s',
+      end: Date.parse('2026-01-01T10:30:00Z') / 1000,
+    });
+  });
+
+  it.each(['', 'nope', '2026-01-01T10:30:00Z,2026-01-01T10:00:00Z', '2026-01-01T10:00:00Z'])(
+    'rejects %j',
+    (span) => {
+      expect(() => parseSpan(span)).toThrow('as ISO times');
+    }
+  );
 });
 
 describe('queryScalar', () => {
