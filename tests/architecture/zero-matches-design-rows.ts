@@ -88,6 +88,14 @@ export const DESIGN_ROWS: readonly Row[] = [
     passes: '<div className="z-behind z-stage-hud group-data-open:z-modal" />',
   },
   {
+    name: 'data-theme set to a mode (dark, light, oled), which is not a theme id: a surface that must be dark sets data-mode="dark"',
+    pattern: /data-theme=["'{]*(?:dark|light|oled)\b/g,
+    scope: CLIENT_SOURCE,
+    expected: 0,
+    fires: '<Container data-theme="dark" className="bg-bg" />',
+    passes: '<Container data-mode="dark" className="bg-media" />',
+  },
+  {
     name: 'a Tailwind palette class, which the generated theme wipes, so it draws nothing',
     pattern: new RegExp(
       `${UTILITY}(?:bg|text|border(?:-[xytblrse])?|ring|ring-offset|outline|fill|stroke|from|via|to|decoration|divide|placeholder|caret|accent|shadow)-(?:black|white|(?:${PALETTE})-\\d{2,3})\\b`,

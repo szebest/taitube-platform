@@ -103,6 +103,25 @@ works around the lock: overriding that margin moves the content by the scrollbar
 in each app's `e2e/` opens every locking primitive over a page with a 15 px classic scrollbar and holds the content's
 box and `scrollY` where they were, open and closed.
 
+## Surface roles
+
+Every ground is one role of the colour map; a component picks the role of what it is, never a nearby value.
+
+| Role | Used for |
+|---|---|
+| `bg` | the page, `html` and `body` (set once in `base.css`), sticking chrome (header, chip bar, page header, tab bar), the rail |
+| `surface` | content: cards, tables, panels, settings tiles |
+| `raised` | what floats over content: menus, popovers, dialogs, drawers, toasts, the now-playing bar |
+| `media` | what shows a picture or a video: thumbnails, posters, the player frame (always black) |
+| `tint` | hover |
+| `tint-strong` | pressed |
+| `accent-soft` | selected |
+
+In the light modes `raised` and `surface` are the same value: a floating layer is told from a card by its border
+and shadow, not by a lighter ground, and no shade lighter than white exists. The player container sets
+`data-mode="dark"` so its native controls and scrollbars draw dark, and `bg-media` so the letterbox is black in
+every theme; `data-theme` carries a theme id only. `surface-roles.test.ts` holds the page ground and the player.
+
 ## Selectable text
 
 One `@layer base` rule in `base.css` sets `user-select: none` on every control (`button`, `summary`, `kbd`, nav

@@ -191,14 +191,19 @@ html {
     border-color: var(--border);
   }
 
+  html,
   body {
-    margin: 0;
     background: var(--bg);
     color: var(--fg);
+  }
+
+  body {
+    margin: 0;
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
   }
 
+  html:has([data-obs-overlay]),
   body:has([data-obs-overlay]) {
     background: transparent;
   }

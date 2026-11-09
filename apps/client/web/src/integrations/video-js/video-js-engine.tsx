@@ -115,11 +115,11 @@ export function VideoJsEngine({
     <VideoPlayer title={title} poster={posterUrl}>
       <CaptionsContext value={captions}>
         <Container
-          data-theme="dark"
+          data-mode="dark"
           className={
             vertical || fill
-              ? 'relative size-full overflow-hidden bg-bg font-sans text-fg'
-              : 'relative aspect-video w-full overflow-hidden rounded-thumb bg-bg font-sans text-fg not-data-controls-visible:cursor-none [&:fullscreen]:rounded-none'
+              ? 'relative size-full overflow-hidden bg-media font-sans text-on-live'
+              : 'relative aspect-video w-full overflow-hidden rounded-thumb bg-media font-sans text-on-live not-data-controls-visible:cursor-none [&:fullscreen]:rounded-none'
           }
         >
           <HlsJsVideo
