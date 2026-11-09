@@ -49,6 +49,7 @@ export function registerWatchPartyServices(c: Container): Container {
       config: config.watchParties,
       secrets: secrets(config.watchParties.guestSalt),
       webUrl: config.webUrl,
+      cdn: config.cdn,
       logger: c.get(Services.Logger),
       now: () => new Date(),
     };
