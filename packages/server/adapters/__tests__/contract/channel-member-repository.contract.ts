@@ -1,7 +1,15 @@
 import type { Repositories } from '@vp/core/repositories';
 import type { Channel, ChannelRole } from '@vp/domain';
 import { expectOk } from '@vp/testing/result';
-import { INVITEE_ID, memberAudit, seedMember, seedTeam } from './channel-team-fixtures';
+import {
+  INVITEE_ID,
+  auditOf,
+  invite,
+  inviteId,
+  memberAudit,
+  seedMember,
+  seedTeam,
+} from './channel-team-fixtures';
 import { OTHER_OWNER_ID, OWNER_ID, seedOwners } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
@@ -77,6 +85,60 @@ export function describeChannelMemberRepositoryContract(
       expect(expectOk(await repositories.channelMembers.membershipsOf(INVITEE_ID))).toEqual([]);
       expect((await auditActions()).filter((action) => action === 'member.removed')).toHaveLength(
         1
+      );
+    });
+
+    it.each([
+      {
+        scenario: 'removed',
+        act: async () => expectOk(await removal('manager')),
+        actor: OTHER_OWNER_ID,
+      },
+      {
+        scenario: 'made an editor',
+        act: async () => expectOk(await roleChange('manager', 'editor')),
+        actor: OWNER_ID,
+      },
+    ])(
+      'revokes the invites a manager sent once they are $scenario, auditing each',
+      async ({ act, actor }) => {
+        expectOk(await roleChange('editor', 'manager'));
+        expectOk(
+          await repositories.channelInvites.create(
+            invite(channel, 1, { inviteeUserId: OTHER_OWNER_ID, invitedBy: INVITEE_ID }),
+            auditOf(channel, 'invite.created', 1, INVITEE_ID)
+          )
+        );
+
+        await act();
+
+        expect(expectOk(await repositories.channelInvites.findById(inviteId(1)))?.status).toBe(
+          'revoked'
+        );
+        const [revoked] = expectOk(
+          await repositories.channelAudit.list(channel.id, {
+            cursor: null,
+            limit: 50,
+            action: 'invite.revoked',
+          })
+        );
+        expect(revoked).toMatchObject({ targetId: inviteId(1), actorUserId: actor });
+      }
+    );
+
+    it('keeps the invites of a manager who stays one', async () => {
+      expectOk(await roleChange('editor', 'manager'));
+      expectOk(
+        await repositories.channelInvites.create(
+          invite(channel, 1, { inviteeUserId: OTHER_OWNER_ID, invitedBy: INVITEE_ID }),
+          auditOf(channel, 'invite.created', 1, INVITEE_ID)
+        )
+      );
+
+      expectOk(await roleChange('manager', 'manager'));
+
+      expect(expectOk(await repositories.channelInvites.findById(inviteId(1)))?.status).toBe(
+        'pending'
       );
     });
 

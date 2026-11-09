@@ -24,6 +24,7 @@ export const notifications = {
   mention: dt('{name} mentioned you'),
   comment: dt('{name} commented on your video'),
   heart: dt('{name} hearted your comment'),
+  teamInvite: dt('{name} invited you to join their team'),
   processingReady: dt('Your video is ready to watch'),
   processingFailed: dt('Your video could not be processed'),
   loadFailed: dt('Notifications could not load'),

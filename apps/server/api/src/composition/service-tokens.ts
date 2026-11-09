@@ -13,6 +13,9 @@ import type {
   CategoryService,
   ChannelFeaturedService,
   ChannelImageService,
+  ChannelAuditService,
+  ChannelInviteService,
+  ChannelMemberService,
   ChannelService,
   RequestIdentity,
   ClipService,
@@ -73,6 +76,9 @@ export interface ServiceSet {
   channelService: ChannelService;
   channelImageService: ChannelImageService;
   channelFeaturedService: ChannelFeaturedService;
+  channelInviteService: ChannelInviteService;
+  channelMemberService: ChannelMemberService;
+  channelAuditService: ChannelAuditService;
   clipService: ClipService;
   oembedService: OEmbedService;
   webhookService: WebhookService;
@@ -131,6 +137,9 @@ export const Services = {
   RequestIdentity: token<RequestIdentity>('RequestIdentity'),
   ChannelImageService: token<ChannelImageService>('ChannelImageService'),
   ChannelFeaturedService: token<ChannelFeaturedService>('ChannelFeaturedService'),
+  ChannelInviteService: token<ChannelInviteService>('ChannelInviteService'),
+  ChannelMemberService: token<ChannelMemberService>('ChannelMemberService'),
+  ChannelAuditService: token<ChannelAuditService>('ChannelAuditService'),
   ClipService: token<ClipService>('ClipService'),
   OEmbedService: token<OEmbedService>('OEmbedService'),
   WebhookService: token<WebhookService>('WebhookService'),

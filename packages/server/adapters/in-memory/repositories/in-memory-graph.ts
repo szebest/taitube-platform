@@ -56,6 +56,7 @@ export function graph(): Container {
         new InMemoryChannelMemberRepository({
           channels: c.get(Repo.channels),
           audit: c.get(Repo.channelAudit),
+          invites: { revokeSentBy: (sent) => c.get(Repo.channelInvites).revokeSentBy(sent) },
         })
     )
     .provide(
@@ -63,7 +64,9 @@ export function graph(): Container {
       (c) =>
         new InMemoryChannelInviteRepository({
           members: c.get(Repo.channelMembers),
+          channels: c.get(Repo.channels),
           audit: c.get(Repo.channelAudit),
+          outbox: c.get(Repo.outbox),
         })
     )
     .provide(

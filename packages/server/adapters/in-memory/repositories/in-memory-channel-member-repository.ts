@@ -3,10 +3,17 @@ import type {
   ChannelRoleChange,
   HeldMembership,
 } from '@vp/core/repositories';
-import type { ChannelMembership, MemberChannel, NewChannelAuditEntry } from '@vp/domain';
+import {
+  type ChannelMembership,
+  type ChannelRole,
+  type MemberChannel,
+  type NewChannelAuditEntry,
+  roleHas,
+} from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { isErr, map, ok, type Result } from '@vp/result';
+import { andThenAsync, isErr, map, ok, type Result } from '@vp/result';
 import type { InMemoryChannelAuditRepository } from './in-memory-channel-audit-repository';
+import type { InMemoryChannelInviteRepository } from './in-memory-channel-invite-repository';
 import type { InMemoryChannelRepository } from './in-memory-channel-repository';
 
 const keyOf = (channelId: string, userId: string) => `${channelId}:${userId}`;
@@ -14,6 +21,7 @@ const keyOf = (channelId: string, userId: string) => `${channelId}:${userId}`;
 export interface InMemoryChannelMemberRepositoryOptions {
   channels: Pick<InMemoryChannelRepository, 'findById'>;
   audit: Pick<InMemoryChannelAuditRepository, 'append'>;
+  invites: Pick<InMemoryChannelInviteRepository, 'revokeSentBy'>;
 }
 
 export class InMemoryChannelMemberRepository implements ChannelMemberRepositoryPort {
@@ -53,7 +61,12 @@ export class InMemoryChannelMemberRepository implements ChannelMemberRepositoryP
     if (row?.role !== from) return ok(null);
 
     row.role = to;
-    return map(await this.deps.audit.append(audit), () => ({ ...row }));
+    const changed = { ...row };
+    return andThenAsync(await this.deps.audit.append(audit), async () =>
+      roleHas(to, 'team.manage')
+        ? ok(changed)
+        : map(await this.revokeSentBy(channelId, userId, audit), () => changed)
+    );
   }
 
   async remove(
@@ -63,7 +76,21 @@ export class InMemoryChannelMemberRepository implements ChannelMemberRepositoryP
     const key = keyOf(channelId, userId);
     if (this.rows.get(key)?.role !== role) return ok(false);
     this.rows.delete(key);
-    return map(await this.deps.audit.append(audit), () => true);
+    return andThenAsync(await this.deps.audit.append(audit), async () =>
+      map(await this.revokeSentBy(channelId, userId, audit), () => true)
+    );
+  }
+
+  roleOf(channelId: string, userId: string): ChannelRole | undefined {
+    return this.rows.get(keyOf(channelId, userId))?.role;
+  }
+
+  private revokeSentBy(
+    channelId: string,
+    inviterId: string,
+    { actorUserId }: NewChannelAuditEntry
+  ) {
+    return this.deps.invites.revokeSentBy({ channelId, inviterId, actorUserId });
   }
 
   /** The member half of an accepted invite; an existing membership is kept as it is. */

@@ -7,9 +7,10 @@ import {
   RequestIdentity,
 } from '../services/index';
 import { Services } from './service-tokens';
+import { registerTeamServices } from './team.module';
 
 export function registerChannelServices(c: Container): Container {
-  return c
+  return registerTeamServices(c)
     .provide(
       Services.ChannelImageService,
       (c) =>
