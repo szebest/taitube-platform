@@ -2,7 +2,7 @@ import { Registry } from 'prom-client';
 import { createWatchPartyMetrics } from '../watch-party-metrics';
 
 describe('createWatchPartyMetrics', () => {
-  it('exposes every watch party series of SDD section 17 under its name and labels', async () => {
+  it('exposes every watch party series of SDD §10.7 under its name and labels', async () => {
     const registry = new Registry();
     const metrics = createWatchPartyMetrics(registry);
 

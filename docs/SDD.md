@@ -841,7 +841,7 @@ costs a translation in the same change, which the parity test enforces.
 | Rank | Option | Status | Reason |
 |---|---|---|---|
 | 1 | SSE for every server-to-client stream, one typed `GET /v1/me/events` per signed-in user | **Accepted** | The events are one way; `SseHub`, the Redis fan-out and `Last-Event-ID` replay already exist (ADR-10, §10); plain HTTP through the tunnel and proxies, multiplexed on HTTP/2 |
-| 2 | WebSocket | Only where the client also sends often | A second protocol stack with its own auth, heartbeats and replay; it earns that for live chat (76) and watch-together (78), not for a notification badge |
+| 2 | WebSocket | Only where the client also sends often | A second protocol stack with its own auth, heartbeats and replay; it earns that for live chat (76) and watch parties (140), not for a notification badge |
 | 3 | Polling | Rejected | Late and wasteful, and a gap between polls loses what a replay would have carried |
 | 4 | One stream per feature | Rejected | Every feature would pay for its own connection, auth and replay; a new event type is a member of one union instead |
 
@@ -1044,6 +1044,29 @@ points `core.hooksPath`, which every worktree of a clone shares, at a dispatcher
 `pre-commit` shim in the shared hooks directory (`git rev-parse --git-common-dir`): it runs the checked-out
 branch's `.vite-hooks/pre-commit` from the worktree top level, and the hook it replaced (kept as
 `pre-commit.previous`) on a branch without one; it unsets a `core.hooksPath` that `vp config` wrote.
+
+### ADR-31 — Watch parties: a server-authoritative room clock, room roles and party principals on one socket
+
+| Rank | Option | Status | Reason |
+|---|---|---|---|
+| 1 | One WebSocket per member per room; the room clock in Postgres behind a compare-and-set on `playback_version` and `roles_version`; fan-out through Redis pub/sub; room roles from a closed registry enforced by a room-scoped CASL ability; guests and Discord members as party principals | **Accepted** | One ordering for sync, chat and role changes; no room state lives in a pod, so a pod dying loses nothing |
+| 2 | 98's user stream for room traffic | Rejected | One way, per user, with up to a second of outbox relay latency, for members who send constantly |
+| 3 | A second socket for chat | Rejected | Two tickets and no shared ordering, so a "now playing" line and the state change could arrive out of order |
+| 4 | Fixed control modes (host only, everyone) instead of roles | Rejected | A room needs a moderator who cannot close it and a DJ who cannot kick; a mode cannot say that |
+
+**Context.** Ticket [140](tickets/140-watch-parties.md): people watch the same video in step, with chat and roles, joining with an account, as a Discord member or as an anonymous guest.
+
+**Decision.**
+
+- **Transport.** `GET /v1/watch-parties/:id/socket?ticket=&after=` (§10.7), the mechanics of live chat's (§10.6); the hub is the shared `pattern-hub.ts`.
+- **The clock.** Postgres holds the room state; a command carries the versions it saw and a stale one is refused. Redis holds only short-lived state: tickets, presence, party credentials, budgets, votes. Pod wall clocks are the time source, with a skew metric rather than a clock service.
+- **Capacity.** Counted over present sockets of every kind by one Redis script; the ceiling is `WATCH_PARTY_MAX_MEMBERS`.
+- **Roles.** A versioned registry of room permissions, eleven built-in roles and custom ones with positions; nobody grants what they lack or touches what sits at or above their position, and a guest is clamped to `GUEST_CEILING` after every role and row.
+- **Principals and the credential boundary.** A member key (`user:`, `discord:`, `guest:`) keys everything per person. A guest's or a Discord member's party credential is read only on routes whose contract says `partyGuest: true` (§11).
+- **The sweep lives in the API.** Idle close, owner hand-over, the room gauges and the purge run on a `Poller` in every API pod, not in the worker's housekeeping stage (§9.8): the hand-over announces `owner` and `closed` frames defined in `@vp/api-contracts`, which the worker does not depend on, and the presence it reads belongs to the API. Each write is a compare-and-set, so running on every pod is safe.
+- **Passwords** are scrypt through `node:crypto` behind `PasswordHasherPort`, not argon2.
+
+**Consequences.** The API pods hold the sockets, so HPA scale-down closes them and clients reconnect with a fresh ticket. Four limits are recorded and open in §10.7: the transport-wide `maxPayload`, buffering that counts only its own pod's members, a `hello` roster without other pods' ready, sync and away flags, and a seat upgrade that applies the platform role at the next ticket.
 
 ## 5. Domain Model & Database Schema
 
@@ -1775,6 +1798,28 @@ WHERE v.status = 'UPLOADED' AND v.updated_at < now() - interval '5 minutes' AND 
 FOR UPDATE SKIP LOCKED LIMIT 100;
 ```
 
+### 5.4 Watch parties (ticket 140)
+
+One migration, `0033_watch_parties`, holds every table of ticket [140](tickets/140-watch-parties.md), including the two discovery tables slice 140c fills. Drizzle lives in `watch-parties-schema.ts` (the room, its seats, roles and bans) and `watch-party-activity-schema.ts` (invites, queue, chat, personal controls, interest, reports). The room search vector and its GIN and trigram indexes are SQL only, as 47's are.
+
+| Table | Holds | Keys and notes |
+|---|---|---|
+| `watch_party_rooms` | The room: `owner_key` (a member key, never a guest's), `name`, `visibility` (`public`, `unlisted`, `private`), `password_hash` (`scrypt$...`), `capacity`, `allow_guests`, chat settings, `buffer_policy`, `autoplay`, `skip_vote_percent`, `idle_close`, `language`, `accent`, `scheduled_for`, `phase`, the room clock in `playback` (jsonb) beside its indexed copy `phase`, `playback_version`, `roles_version`, `permissions_version`, `queue_length`, `queue_version`, `current_video_id`, `present_count`, `status` (`open`, `closed`), `closed_reason`, `version` (settings), timestamps | `capacity >= 2`; `(owner_key) WHERE status = 'open'` serves the open-rooms limit |
+| `watch_party_members` | One seat: `member_key`, `kind` (`user`, `discord`, `guest`), `user_id` for accounts, snapshots of name and avatar for the other two kinds, `joined_via`, `joined_at`, `left_at` | PK `(room_id, member_key)` |
+| `watch_party_roles` / `watch_party_role_permissions` | A role (`key` for a built-in one, `kind` grant or restrict, `name`, `colour`, `position`) and its permission ids | unique `(room_id, position)`; permission ids are checked against the registry on write and carry no `CHECK`, so a new permission needs no migration |
+| `watch_party_member_roles` | A role held by a member, with `granted_by` and an optional `expires_at` | PK `(room_id, member_key, role_id)`; Owner, Member and Guest are never rows |
+| `watch_party_bans` | A ban for the room's life; a guest's row also keeps a salted IP hash | PK `(room_id, member_key)` |
+| `watch_party_invites` / `watch_party_invite_links` | A per-account invite with its `watching` snapshot, and a bearer link stored as a SHA-256 `token_hash` with `max_uses`, `uses` and `revoked_at` | unique `(room_id, invitee_id)` |
+| `watch_party_queue_items` | The shared queue, ordered by a sparse `position` | `removed_at` and `played_at` instead of deletes |
+| `watch_party_messages` | Chat lines and system lines, with `video_id` and `position_ms` as to where the room was | UUIDv7 ids, so `id > after` is the replay; one pinned line per room; kept 7 days |
+| `watch_party_personal_controls` | What one account muted or hid about one member key, for one room or everywhere | unique `(user_id, target_key, room_id)`, nulls not distinct |
+| `watch_party_interest`, `watch_party_reports` | "Interested" on a scheduled room, and reports | written by 140c |
+| `notifications` | gains `watch_party_id` (FK, `ON DELETE CASCADE`) | |
+
+**The room clock.** `playback` is `{ itemId, phase, positionMs, rate, anchorAt }`. The expected position at server time `t` is `positionMs + (t - anchorAt) * rate` while `playing`, else `positionMs`. Every change is one compare-and-set on `playback_version` and `roles_version` together, so a command sent against an older state, or by a member whose permission was revoked since, is refused as stale and re-checked against the new roles. There is no row per seek. Settings are optimistic on `version`, like video edits (`VERSION_CONFLICT`).
+
+**Lifecycle.** A room is `open` until its owner or a holder of `room.close` closes it, a platform moderator closes it, or the sweep (§10.7) closes it for idleness. A closed room keeps its row 30 days, its chat lines 7 days (`WATCH_PARTY.closedRoomRetentionDays`, `messageRetentionDays`); room-scoped personal controls and guest ban hashes go with the room.
+
 ---
 
 ## 6. API Contract
@@ -2379,6 +2424,8 @@ Rules:
 
 BullMQ 6 Job Schedulers (`queue.upsertJobScheduler(id, { pattern }, template)`) replace legacy repeatables — the API upserts them on boot, so restarting the API is safe.
 
+The watch party sweep (idle close, owner hand-over, purge) is not a scheduler: it runs on a `Poller` in every API pod (§10.7, ADR-31).
+
 | Scheduler ID | Cron | Action |
 |---|---|---|
 | `reconcile-uploads` | `*/15 * * * *` | Abort `UPLOADING > 24h` (→ `ABANDONED`); re-enqueue `UPLOADED` with no probe step > 5 min; release admission-held videos. |
@@ -2482,7 +2529,9 @@ The bell is `notifications` rows, written by jobs on the `notify` queue and anno
   `VideoStudioRepository.updateMetadata` writes `notify-subscribers` when a `READY` video becomes `public`;
   `CommentRepository.create` writes `notify-comment`; `CommentRepository.setHearted` writes `notify-heart` on a
   comment's first heart. `LiveStreamRepository.goLive` writes `notify-subscribers` (kind `live`) when a public
-  stream goes live (ADR-29).
+  stream goes live (ADR-29). `WatchPartyInviteRepository.create` writes `notify-party-invite` (kind `party_invite`,
+  job id `<inviteId>--notify-party-invite`); `party_starting` joins the kinds now and gets its producer, the
+  reminders of a scheduled room, in 140c (§10.7).
 - **The job id names the cause** (`<videoId>--notify-subscribers--upload`), so a repeated enqueue inside the queue's
   24 hour completed-job retention is dropped by BullMQ.
 - **Who gets one.** `notify-subscribers` walks the channel's subscribers in batches of 500 by subscriber id, each
@@ -2503,7 +2552,14 @@ The bell is `notifications` rows, written by jobs on the `notify` queue and anno
   of the list. The same subject again (same video and comment) in the group inside the hour, read or not, changes
   nothing, so a retried job never counts twice.
   Group keys: `upload:<channelId>`, `live:<channelId>`, `reply:<parentCommentId>`, `comment:<videoId>`,
-  `mention:<commentId>`, `heart:<videoId>`, `processing:<videoId>`. A read row is never folded into.
+  `mention:<commentId>`, `heart:<videoId>`, `processing:<videoId>`, `party_invite:<roomId>`,
+  `party_starting:<roomId>`. A read row is never folded into.
+- **Party invites.** `notify-party-invite` tells one invitee while the invite still stands: a revoked, declined or
+  expired invite, a closed room and an invitee who switched `preferences.notifications.watchParties` off say nothing.
+  `watchPartyInvites` (`everyone`, `subscriptions`, `nobody`) and the invitee's `block_invites` control are applied
+  when the invite is sent, where the refusal is reported to the inviter without a reason. The row carries
+  `payload.party` (`roomId`, `name`, `videoTitle`, `scheduledFor`, `inviteId`, `expiresAt`, `watching`), a snapshot
+  taken at send time, and the video title only when the invitee may hear about that video (`mayHearAbout`).
 - **Announcing.** Every `record` appends `notification.created` and every `markRead` that changed a row appends
   `notification.read` in the same transaction.
 - **Retention.** `purge-deleted` drops notifications older than 90 days (`housekeeping.notificationRetentionDays`).
@@ -2576,6 +2632,69 @@ flowchart LR
   player.
 - **Load**: one pattern subscription per pod; fan-out is O(sockets on the stream on that pod).
 
+### 10.7 Watch parties
+
+A room is a shared playback state, a roster, roles and a chat that every member sees at once. Every member sends often (commands, clock pings, chat, reactions, ready, buffering and away flags), so it is a WebSocket per member per room, like live chat (§10.6) and not the one-way user stream (ADR-27, ADR-31). Slice 140a builds the server side; the party page that drives it is 140b.
+
+```mermaid
+flowchart LR
+    B[browser] -- "POST /v1/watch-parties/:id/socket-ticket" --> A1[api pod 1]
+    B -- "WS /v1/watch-parties/:id/socket?ticket=&after=" --> A2[api pod 2<br/>room hub]
+    A2 -- "CAS watch_party_rooms, INSERT watch_party_messages" --> P[(Postgres)]
+    A2 -- "PUBLISH watch-party:{roomId}" --> R[(Redis Pub/Sub)]
+    R -- "PSUBSCRIBE watch-party:*" --> A1
+    R --> A2
+```
+
+- **One socket per member per room.** A second one for the same member key (another tab or device) supersedes the first, which gets `superseded` and closes. The pattern-subscribing hub is `services/pattern-hub.ts`, shared with `LiveChatHub`; each pod holds one `watch-party:*` subscription and writes to the sockets it holds, so there are no sticky sessions.
+- **Tickets and the origin rule are §10.6's.** `POST /v1/watch-parties/:id/socket-ticket` returns a one-time ticket valid 30 s (`WATCH_PARTY.ticketTtlSeconds`) for an account, a guest or a Discord member alike; the grant carries the member key and the account's platform role. A browser `Origin` outside `CORS_ORIGINS` is refused, and a refusal before the upgrade is an HTTP Problem.
+- **Order on connect**: redeem the ticket, check the seat, the ban and the phase, admit to presence (capacity), join the hub, read the chat backlog after `?after=`, then write `hello` (room, roles and `rolesVersion`, `you`, the room clock with `serverNow`, the queue, the roster, the chat mode and the pinned line), the backlog, and what arrived meanwhile, each once. `hello` is a full snapshot, so a reconnect replays only chat (the latest 200 lines, or everything after `?after=`).
+- **Frames.** Client to server: `clock`, `play`, `pause`, `seek`, `rate`, `next`, `start`, `ended`, `ready`, `buffering`, `away`, `skipVote`, `request`, `chat.send`, `chat.remove`, `chat.pin`, `react`, `stats`. Server to client: `hello`, `you`, `clock`, `state`, `countdown`, `queue`, `votes`, `chat.message`, `chat.removed`, `chat.pinned`, `chat.mode`, `reactions`, `roster.patch`, `settings`, `roles`, `member.roles`, `owner`, `request`, `closed`, `ack`, `error`, `kicked`, `superseded`. They are typed once in `@vp/api-contracts` (`watch-party-socket.ts`). A frame over `WATCH_PARTY.frameMaxBytes` (4 KB), an unknown type and a malformed frame are `error` frames carrying a Problem and the frame's `ref`, never a crash.
+- **The clock.** The server's playback state is `{ itemId, phase, positionMs, rate, anchorAt, version }` (§5.4), and the time source is the pod's wall clock. A client sends `clock { t0 }` on connect and every 30 s, the server answers with `serverNow`, and the client keeps the offset of the lowest round trip of its last 8 samples. `watch_party_clock_skew_seconds` (each pod against Postgres `clock_timestamp()`, sampled by the sweep every minute) shows when pod clocks stop agreeing.
+- **Commands** (`playback.control`): `play`, `pause`, `seek`, `rate` (0.5 to 2), `next`, `start` (lobby to playing after a 3 s countdown). Each carries the `version` and `rolesVersion` the sender saw; the pod applies it as one compare-and-set and publishes `state { playback, version, by, reason }`, and the sender gets `ack`. A stale version is `WATCH_PARTY_STATE_STALE` with the current state; a missing permission is `WATCH_PARTY_PERMISSION_MISSING` naming it. Commands are budgeted per member across pods by `WatchPartyGatePort` (6 in 5 s, with the other budgets in `WATCH_PARTY.budgets`).
+- **Drift** (`watch-party-drift.ts`, `WATCH_PARTY_DRIFT`): under 250 ms nothing, up to 2 s a 5 percent rate nudge until within 100 ms, above 2 s a hard seek then 3 s without correction. The client runs it once a second (140b); the server only records the `stats { driftMs, hardSeeks }` frame a client sends every 30 s.
+- **Buffering.** With `buffer_policy = wait` and at most 12 present, a member buffering for 1.5 s makes the room pause with `reason: buffering`; it resumes when nobody buffers or after 10 s, and only from the pause this pod wrote. A guest never pauses the room. The wait is tracked on the pod that holds the buffering sockets (see the open items below).
+- **Capacity.** `WatchPartyPresencePort` admits a member with one Lua script over a sorted set by last touch, so two pods admitting the last spot admit exactly one. A seat that misses three keepalives (`keepaliveMs` 15 s, `staleAfterMs` 45 s) stops counting, so a dead pod frees its seats. The count is every kind of present socket; the owner is never refused, `members.joinWhenFull` holders pass `capacity` but not `WATCH_PARTY_MAX_MEMBERS`, and lowering `capacity` kicks nobody.
+- **Fan-out and batching.** A pod batches what it hears per room: reactions fold into one `reactions` frame per 250 ms, and roster changes into one `roster.patch` per 500 ms. Each frame is published on `watch-party:{roomId}`; `watch_party_fanout_seconds` is the time from publish to the write on a pod.
+- **Roles and principals.** The permission registry (`WATCH_PARTY_PERMISSIONS`, versioned by `WATCH_PARTY_PERMISSIONS_VERSION`) is closed; eleven built-in roles (Owner, Co-host, Moderator, Chat muted, Voice muted, Spectator, DJ, Speaker, VIP, Member, Guest) and up to 14 custom ones are rows of `watch_party_roles`. `effectivePermissions` derives what a member may do now from the roles held, ignoring an expired mute, clamping a guest to `GUEST_CEILING` and never restricting the owner. `upgradeRoomRoles` adds a registry entry added at a later version to every room on load, so extending the registry needs no migration. A principal is `user:<uuid>`, `discord:<snowflake>` or `guest:<id>`, and that member key keys every seat, role, ban, budget and personal-control target. Every REST and socket action is checked against the room-scoped CASL ability (`getWatchPartyPermissions` in `@vp/permissions`), and nobody grants what they lack or touches a role or member at or above their own position (`WATCH_PARTY_ROLE_ESCALATION`, `WATCH_PARTY_ROLE_PROTECTED`), proven by the tables in `privilege-escalation.test.ts`. A platform MODERATOR can kick, ban, mute and close in any room and cannot touch roles.
+- **Live role changes.** A role or assignment change publishes `roles` or `member.roles` in the same broadcast, and bumps `roles_version`, so a command sent with the pre-change versions is refused as stale and then re-checked. A mute carries its own expiry, evaluated on read, so it lifts with no job running.
+- **Ownership.** An owner whose socket closes keeps the room for `ownerGraceMs` (60 s). After it, the present non-guest member with the highest position becomes owner as one compare-and-set, with an `owner` frame and a system line, and the previous owner holds Co-host. The pod that saw the close times the grace; the sweep catches a pod that died.
+- **The roster and its privacy projection.** One roster whatever path a member came by, with source, roles, `ready`, `sync` and `away`. Members who hold `members.kick` see guests as entries; everyone else sees them as a count. Outside the room only `toRosterPreview` is used: at most 5 faces, only of accounts with `showInParties` on, Discord members and guests counted by source, and no faces for a private room.
+- **Personal controls.** `watch_party_personal_controls` is per account, per target member key, for one room or everywhere. A change is announced to the account's other devices as `party.controls.updated` on the user stream (§10.3) and applied by the client, so the target is never told and no control is visible in any response to them. It never touches moderation or roles.
+- **Chat, reactions and requests.** A line is validated by `validateChatMessage` (shared with live chat), checked against `chat.post`, slow mode and the per-member budget, and stored before it is published. `react` is limited to the room's emoji set. `request` (`seek`, `skip`, `start`) lets a member without `playback.control` ask whoever holds it.
+- **The sweep.** `WatchPartySweep` (`services/watch-party/watch-party-sweep.ts`) runs once a minute on every API pod, on a `Poller`, and each of its writes is a compare-and-set, so concurrent pods are safe. It reads each open room's presence, records `present_count`, closes a room nobody was in for its `idle_close` (a scheduled room is exempt until an hour past `scheduled_for`), hands over an owner absent past the grace, publishes the room gauges and the clock skew, and purges closed rooms after 30 days and chat lines after 7. It lives in the API and not in the worker's housekeeping stage (§9.8) because the owner hand-over announces `owner` and `closed` frames in `@vp/api-contracts`, which the worker does not depend on, and because the presence it reads is the API's.
+- **Invites.** `POST /v1/watch-parties/:id/invites` writes one `watch_party_invites` row per account and a `notify-party-invite` outbox row in the same transaction (§10.4), so a rollback notifies nobody. The worker's `notify-party-invite` stage writes the bell row and 98's `notification.created` follows. An invite or invite link skips the password and never the capacity.
+
+#### Metrics, traces and logs
+
+`createWatchPartyMetrics` (`packages/server/observability/src/watch-party-metrics.ts`) registers these on the API's registry. They are not in the §13.1 table: `metrics.test.ts` diffs that table against `createMetricsRegistry` and fails on a name found in one and not the other.
+
+| Metric | Type | Labels | Source |
+|---|---|---|---|
+| `watch_party_rooms` | gauge | `phase` | sweep, every minute |
+| `watch_party_present_members` | gauge | `kind` (`user`, `discord`, `guest`) | sweep |
+| `watch_party_sockets` | gauge | none | API, per pod |
+| `watch_party_joins_total` | counter | `kind`, `outcome` (`joined`, `full`, `guests_off`, `password_required`, `password_invalid`, `locked`, `banned`, `closed`, `not_found`) | API |
+| `watch_party_seat_upgrades_total` | counter | `to` (`user`, `discord`) | API |
+| `watch_party_commands_total` | counter | `command`, `result` (`applied`, `stale`, `forbidden`, `refused`) | API |
+| `watch_party_permission_denials_total` | counter | `permission`, `kind` | API |
+| `watch_party_role_changes_total` | counter | `action`, `result` (`applied`, `escalation`) | API |
+| `watch_party_drift_seconds` | histogram | none | API, from `stats` frames (buckets 0.05 to 5 s) |
+| `watch_party_hard_seeks_total` | counter | none | API, from `stats` frames |
+| `watch_party_fanout_seconds` | histogram | none | API, publish to socket write |
+| `watch_party_chat_messages_total` | counter | `source`, `outcome` (`sent`, `refused`) | API |
+| `watch_party_invites_total` | counter | `outcome` (`sent`, `folded`, `refused`) | API |
+| `watch_party_clock_skew_seconds` | gauge | none | sweep (pod clock minus Postgres `clock_timestamp()`) |
+
+`watch_party.join`, `watch_party.command`, `watch_party.roles` and `watch_party.seat_upgrade` spans carry the room, the action and the result. A create, close, ownership transfer, seat upgrade, role change or moderation action logs one line with the room and actor keys; refusals count in the metrics and are not logged one by one, and personal controls are never logged. The dashboard, alerts and S8 land with 140c.
+
+#### Open items after 140a
+
+- **Global WebSocket `maxPayload`.** `@fastify/websocket` is registered once, with live chat's `maxFrameBytes` as the transport limit, so the room's 4 KB frame cap is enforced on the parsed frame and not by the transport.
+- **Buffering across pods.** The room-size check reads presence across pods, but the stalls and the resume are tracked per pod, from the buffering flags of the sockets that pod holds: in a room spread over pods, the pod that paused it resumes it once its own members stop buffering, whatever a member on another pod is doing.
+- **The `hello` roster across pods.** The roster in `hello` is built from seats and roles, so the `ready`, `sync` and `away` flags of members on other pods read as defaults until their next `roster.patch`.
+- **Seat upgrade and the platform role.** A guest who signs in keeps the open socket, which holds the grant it opened with, so the account's platform role (a MODERATOR's room powers) applies from its next ticket, not at the upgrade.
+
 ---
 
 ## 11. Security
@@ -2594,6 +2713,7 @@ flowchart LR
 | Secrets | Env only; `.env` git-ignored; no secrets in images. The cloud overlay holds no credential at all: an `ExternalSecret` (External Secrets Operator, `ClusterSecretStore` `vp-secret-store`) materialises `vp-secrets`, and the overlay deletes the base's local Secret. **No secret-shaped key has a default.** `SECRET_KEYS` (`DATABASE_URL`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `REDIS_PASSWORD`) are required under `NODE_ENV=production`, and every secret and every `*_URL` key is refused there if it holds a credential this repo ships for local use (`vp`, `minioadmin`, `admin`, `change-me*`, bare or as URL userinfo). No schema default and no production literal carries URL userinfo. `production-secrets.test.ts` renders the base and the cloud overlay with kustomize and holds both; `no-defaulted-secrets.test.ts` holds the schema. |
 | Containers | Non-root user (uid 10001), `runAsNonRoot` and `readOnlyRootFilesystem` in the k8s base, `/tmp/vp` on an `emptyDir` (8 Gi for transcode) or compose `tmpfs`, `resources.limits` on every pod. The API runs on `node:24-slim`; the worker on `oven/bun:1.4-slim` (default) or `node:24-slim`, with Debian's `ffmpeg` package. Both images remove npm and corepack and start under `tini`. |
 | Redis | `requirepass` everywhere; a cluster-internal Service in k8s (compose publishes 6379 to the host for local tools); `noeviction`, set in compose and the k3d chart and Redis's own default in the cloud overlay. |
+| Watch party credentials | A guest or a Discord member holds an opaque, Redis-backed party credential (`PartyGuestSessionsPort`), set as the httpOnly `vp.party-guest` cookie and sent as `x-party-credential`. The auth plugin resolves it only on a route whose contract says `partyGuest: true`, so on every other route it is never read and the caller is anonymous; one that resolves to nothing is `WATCH_PARTY_CREDENTIAL_INVALID` rather than dropped. `tests/architecture/party-guest-confined.test.ts` fails on `partyGuest: true` outside the watch party contracts. A guest IP is only ever stored as a salted hash (`WATCH_PARTY_GUEST_SALT`), for a ban, and the password hasher is scrypt behind `PasswordHasherPort`. |
 | Supply chain | Renovate (`renovate.json`); `pnpm install --frozen-lockfile` in CI; images built in CI and scanned with Trivy (`images.yml`); MinIO images pinned by digest (`minio-images-pinned.test.ts`). The app images are referenced by tag (`latest`), not digest, in the k8s manifests. |
 | Privacy | No PII beyond email. `@vp/logger` redacts the `authorization`, `cookie` and `x-admin-token` headers wherever a headers object is logged, and the access log records the route template, never the URL. |
 
@@ -3303,6 +3423,9 @@ The two bucket keys are the only spelling: every reader in both apps takes them 
 | `WHISPER_PATH` | `whisper-cli` | whisper.cpp binary, built from the tag pinned in `apps/server/worker/assets.lock` into the worker image |
 | `CAPTIONS_MODEL_PATH` / `CAPTIONS_VAD_MODEL_PATH` | `.models/ggml-small-q5_1.bin` / `.models/ggml-silero-v5.1.2.bin` | baked into the image at `/opt/whisper/` at build, SHA-256 checked; `pnpm models:fetch` fills `.models/` for a run outside Docker. The model file names the run (`small-q5_1`) |
 | `CAPTIONS_THREADS` | `4` | = the captions container CPU limit |
+| `WATCH_PARTY_MAX_MEMBERS` | `200` | the ceiling on a room's capacity (at least 2); a room with none set holds this many, and a larger `capacity` is `VALIDATION_FAILED` |
+| `WATCH_PARTY_MAX_OPEN_PER_USER` | `3` | open rooms one owner key holds before a create is `WATCH_PARTY_LIMIT_REACHED` |
+| `WATCH_PARTY_GUEST_SALT` 🔒 | none; `.env.example` ships `change-me-party-salt` | keys the guest IP hash kept for a ban (§10.7); unset, `loadEnv` fails, and production refuses the local value |
 | `LIVE_HOOK_SECRET` 🔒 | none; `.env.example` ships `change-me-live-hook` | MediaMTX sends it on every auth call (ADR-29) and the live worker reads with it; unset refuses every publisher; production refuses the shipped value |
 | `LIVE_INGEST_URL` | `rtsp://localhost:8554` | where the live worker reads a publisher |
 | `LIVE_GATEWAY_API_URL` | `http://localhost:9997` | MediaMTX's control API: who is publishing, and the kick |

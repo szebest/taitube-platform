@@ -1,6 +1,6 @@
 import { Counter, Gauge, Histogram, type Registry } from 'prom-client';
 
-/** Watch party rooms, watched from the API pods that hold their sockets (SDD §17). */
+/** Watch party rooms, watched from the API pods that hold their sockets (SDD §10.7). */
 export interface WatchPartyMetrics {
   watchPartyRooms: Gauge<string>;
   watchPartyPresentMembers: Gauge<string>;

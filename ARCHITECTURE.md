@@ -119,8 +119,9 @@ answer with a `HeadBucket` on the raw bucket.
 - **`OutboxRepository`**: `enqueue`, `claimBatch`, `markPublished`, `recordAttempt`, `prune`, `findById`.
 - **`CategoryRepositoryPort`**, **`ChannelRepositoryPort`**, **`VideoReactionRepositoryPort`**, **`SubscriptionRepositoryPort`**: category taxonomy, channel identity, reactions with their counters, and subscriptions with the subscription feed.
 - **`LiveStreamRepositoryPort`**: `ensureIdle`, `findById`, `findByKey`, `findOpenByChannel`, `findByVideoId`, `goLive` (`IDLE -> LIVE` with its `LIVE` video, the video event and the outbox rows in one transaction), `end` (`LIVE -> ENDED`, handing the stream key to the next `IDLE` row), `update` (SDD ADR-29).
+- **`WatchPartyRoomRepositoryPort`** and its eight siblings (`WatchPartyRoleRepositoryPort`, `WatchPartyMemberRepositoryPort`, `WatchPartyQueueRepositoryPort`, `WatchPartyMessageRepositoryPort`, `WatchPartyInviteRepositoryPort`, `WatchPartyInviteLinkRepositoryPort`, `WatchPartyPersonalControlRepositoryPort`, `WatchPartyHousekeepingRepositoryPort`): rooms with the room clock's compare-and-set on `playback_version` and `roles_version`, roles and their assignments, seats and bans, the shared queue, chat lines, invites and invite links, personal controls, and the sweep's reads and purges (SDD §5.4, §10.7, ADR-31).
 - **`SearchRepositoryPort`**: `search` (one ranked, keyset-paged list over videos, channels and playlists, lexical or trigram) and `suggestChannels`.
-- **`Repositories`**: the aggregate the composition roots hand around (`videos`, `videoStudio`, `uploads`, `steps`, `renditions`, `events`, `users`, `userEvents`, `dlq`, `outbox`, `categories`, `channels`, `videoReactions`, `subscriptions`, `videoViews`, `comments`, `playlists`, `watchHistory`, `searchHistory`, `recommendationFeedback`, `rising`, `clips`, `channelFeatured`, `search`, `liveStreams`).
+- **`Repositories`**: the aggregate the composition roots hand around (`videos`, `videoStudio`, `uploads`, `steps`, `renditions`, `events`, `users`, `userEvents`, `dlq`, `outbox`, `categories`, `channels`, `videoReactions`, `subscriptions`, `videoViews`, `comments`, `playlists`, `watchHistory`, `searchHistory`, `recommendationFeedback`, `rising`, `clips`, `channelFeatured`, `search`, `liveStreams`, `watchPartyRooms`, `watchPartyRoles`, `watchPartyMembers`, `watchPartyQueue`, `watchPartyMessages`, `watchPartyInvites`, `watchPartyInviteLinks`, `watchPartyControls`, `watchPartyHousekeeping`).
 
 ### `AuthorizationPort`
 Abstracts user authorization and declarative rule evaluation. It answers the verdict; the refusal is a
@@ -128,6 +129,8 @@ rule's, through `authorize(actor, allowed, context)` in `@vp/domain-rules` (ADR-
 - `getAbility()`: returns the active `@casl/ability` instance.
 - `can(action, subject)` / `can(helper, params)`: evaluates if an action is permitted.
 - `forUser(user)`: returns a new `AuthorizationPort` instance scoped to the target user.
+
+A watch party room is authorised apart from this port: `getWatchPartyPermissions(user, viewer)` in `@vp/permissions` builds a room-scoped ability from the viewer's roles in the room (the closed registry of SDD §10.7), a guest clamped to its ceiling and a platform MODERATOR or ADMIN given the moderation extras. Every REST route and socket frame of a room asks that ability, never a user id or a role inline.
 
 ### `TokenVerifier`
 `verify(token)` answers `Result<Principal, AuthFailure>`. The JWKS adapter checks the signature, `iss`,
@@ -151,6 +154,13 @@ Key-value caching and Pub/Sub: `get`, `set`, `del`, `ping`, `publish`, `subscrib
 The ingest gateway's control plane (MediaMTX, SDD ADR-29), addressed by the path a publisher sends on:
 `isPublishing(path)` and `kick(path)`, both answering `LiveGatewayUnavailable` when it cannot be reached.
 
+### `WatchPartyGatePort`, `WatchPartyPresencePort`, `PartyGuestSessionsPort` & `PasswordHasherPort`
+The short-lived, cross-pod state of a watch party (SDD §10.7, ADR-31), each over Redis and each with an in-memory double:
+- `WatchPartyGatePort`: `issueTicket` / `redeemTicket` (the one-time socket ticket, a second redeem answers `null`), `consume` / `check` / `reset` (the per-key budgets every pod counts against) and the slow-mode, roles-version and skip-vote keys.
+- `WatchPartyPresencePort`: `admit` (capacity, one Lua script), `touch`, `leave`, `members`; a member that misses three keepalives stops counting.
+- `PartyGuestSessionsPort`: `issue`, `resolve`, `revoke` for the opaque party credential of a guest or a Discord member, read only on `partyGuest` routes (SDD §11).
+- `PasswordHasherPort`: `hash` and `verify`, scrypt through `node:crypto` (`HashingFailed` on failure).
+
 ### `JobQueue` & `FlowProducerPort`
 - `JobQueue`: `add`, `process`, `getName`, `getJobState`, `isPaused`, `pause`, `resume`, `getJobCounts`
   (over `QUEUE_JOB_STATES`), `getJobs`, `upsertJobScheduler`, `getJobSchedulers`, `close`, plus the
@@ -173,6 +183,10 @@ The ingest gateway's control plane (MediaMTX, SDD ADR-29), addressed by the path
 | `JobQueue` | `BullMqJobQueue` | `InMemoryJobQueue` |
 | `FlowProducerPort` | `BullMqFlowProducer` | `InMemoryFlowProducer` |
 | `LiveGatewayPort` | `MediaMtxLiveGateway` | `InMemoryLiveGateway` |
+| `WatchPartyGatePort` | `RedisWatchPartyGateAdapter` | `InMemoryWatchPartyGate` |
+| `WatchPartyPresencePort` | `RedisWatchPartyPresenceAdapter` | `InMemoryWatchPartyPresence` |
+| `PartyGuestSessionsPort` | `RedisPartyGuestSessionsAdapter` | `InMemoryPartyGuestSessions` |
+| `PasswordHasherPort` | `ScryptPasswordHasher` | `ScryptPasswordHasher` (no I/O, shared) |
 
 Both families wrap storage in `MeteredStorageClient` / `MeteredMultipartStorage`, and share
 `CaslAuthorizationAdapter`, the token verifier (`JwksTokenVerifier` or `DevTokenVerifier`, chosen by
