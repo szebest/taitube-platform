@@ -4,14 +4,17 @@ import { useAccount } from '@vp/queries';
 import { useActiveChannel } from '#app/features/team';
 import { UploadToolbarButton } from '#app/features/upload';
 
-/** The toolbar's upload button, for a signed-in viewer whose role on the acting channel may upload. */
-export function ActingUploadAction() {
-  const signedIn = Boolean(useAccount());
+function SignedInUploadAction() {
   const { ownerId } = useActiveChannel();
 
-  return signedIn ? (
+  return (
     <Can type="rule" I={canUpdateVideo} this={{ video: { ownerId } }}>
       <UploadToolbarButton />
     </Can>
-  ) : null;
+  );
+}
+
+/** The toolbar's upload button, for a signed-in viewer whose role on the acting channel may upload. */
+export function ActingUploadAction() {
+  return useAccount() ? <SignedInUploadAction /> : null;
 }
