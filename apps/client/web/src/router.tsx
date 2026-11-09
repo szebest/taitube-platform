@@ -1,5 +1,4 @@
-import { type AppRouterOptions, createAppRouter } from '@vp/queries';
-import { RoutePending } from '#app/components/states/route-fallbacks/route-fallbacks';
+import { type AppRouterOptions, createAppRouter, RoutePending } from '@vp/queries';
 import { shouldPrefetch } from '#app/integrations/network/should-prefetch';
 import { API_BASE_URL } from '#app/lib/config';
 import { routeTree } from '#app/routeTree.gen';

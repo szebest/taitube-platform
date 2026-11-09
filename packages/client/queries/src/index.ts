@@ -17,6 +17,7 @@ export * from './request-locale';
 export * from './retry-policy';
 export * from './route-errors';
 export * from './route-guards';
+export * from './route-pending';
 export * from './section-boundary';
 export * from './session';
 export * from './session-changes';
