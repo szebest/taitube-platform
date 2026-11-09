@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | Phase | 5 - Developer experience & growth |
-| Size | XL (4 stacks, 12 slices) |
+| Size | XL (one PR, 12 work items as commits) |
 | Blocked by | 68 - PWA and service worker - 73 - Playlists and library - 102 - Shorts - 131 - Front-end folder structure (which waits on 110 - Oxc and Vite+) |
 | Blocks | — |
 | Spec | [95 design system 2](95-design-system-2.md) - [design foundations, motion](../design/foundations/motion.md) - [72 settings](72-frontend-settings-customization-system.md) - [97 account preferences](97-account-preferences-api.md) - [57 player](57-production-video-player-hls-streaming-controls.md) - [docs/standards/authorization.md](../standards/authorization.md) |
@@ -319,9 +319,9 @@ lands before d2 (Shorts), because Shorts needs the engine to outlive a route cha
 Every slice ends the same way: the app launched and clicked through in a real browser (acceptance criterion 1), the
 before and after table in the PR, and the architecture or lint check for its rule with a fixture proving it fires.
 
-**Branches.** Twelve slices at three per stack is the fewest stacks, so four. Each stack is one feature branch and one
-feature PR into `main`, run one at a time in one worktree: `feat/136a-foundations` with `slice/136a1-demo-login`,
-`slice/136a2-layers`, `slice/136a3-tokens-and-overlay-motion`; B, C and D the same with `136b1` to `136d3`.
+**Branches.** One PR for the whole ticket (the owner's rule): `feat/136a-foundations` into `main`, a plain branch, no stack.
+The 12 slices below are work items, built in this order as separate commits, each with its own click-through and
+check; they are not PRs. A second PR is cut only if the diff proves unreviewable, and then as one stacked pair.
 
 ### Stack A: `feat/136a-foundations` (root fixes, so the rest builds on them)
 
