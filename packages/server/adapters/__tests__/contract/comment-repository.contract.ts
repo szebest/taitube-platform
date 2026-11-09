@@ -12,6 +12,7 @@ import {
 } from './comment-contract-context';
 import { describeCommentInboxContract } from './comment-inbox.contract';
 import { describeCommentListingContract } from './comment-listing.contract';
+import { describeCommentPublicScopeContract } from './comment-public-scope.contract';
 import { OTHER_OWNER_ID, OWNER_ID, VIDEO_IDS, idsOf, publicVideo, seedOwners } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
@@ -175,7 +176,13 @@ export function describeCommentRepositoryContract(makeSubject: MakeRepositoriesS
       expect(expectOk(await comments.updateContent(C.liked, 'too late'))).toBeNull();
       expect(
         idsOf(
-          expectOk(await comments.listThreads(VIDEO_IDS.a, { sort: 'top', window: keyset(10) }))
+          expectOk(
+            await comments.listThreads(VIDEO_IDS.a, {
+              viewer: null,
+              sort: 'top',
+              window: keyset(10),
+            })
+          )
         )
       ).toEqual([C.old, C.fresh]);
     });
@@ -187,7 +194,7 @@ export function describeCommentRepositoryContract(makeSubject: MakeRepositoriesS
       expect(expectOk(await comments.remove({ id: C.reply1, videoId: VIDEO_IDS.a }))).toBe(0);
 
       const [liked] = expectOk(
-        await comments.listThreads(VIDEO_IDS.a, { sort: 'top', window: keyset(1) })
+        await comments.listThreads(VIDEO_IDS.a, { viewer: null, sort: 'top', window: keyset(1) })
       );
       expect(liked).toMatchObject({ id: C.liked, replyCount: 1 });
       expect(await commentsCount(ctx, VIDEO_IDS.a)).toBe(4);
@@ -226,5 +233,6 @@ export function describeCommentRepositoryContract(makeSubject: MakeRepositoriesS
     describeCommentListingContract(ctx);
     describeCommentInboxContract(ctx);
     describeAuthoredCommentsContract(ctx);
+    describeCommentPublicScopeContract(ctx);
   });
 }

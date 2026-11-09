@@ -3,9 +3,17 @@ import type { CommentThread, CreatorInboxComment } from '@vp/domain';
 
 /** `isCreator` is a badge on the wire, never a permission; moderation asks `@vp/permissions`. */
 export function toCommentView(thread: CommentThread, videoOwnerId: string): CommentView {
-  const { authorId: _authorId, author, heartedAt, createdAt, updatedAt, ...comment } = thread;
+  const { id, videoId, parentId, content, isPinned, isEdited, likeCount, replyCount } = thread;
+  const { author, heartedAt, createdAt, updatedAt } = thread;
   return {
-    ...comment,
+    id,
+    videoId,
+    parentId,
+    content,
+    isPinned,
+    isEdited,
+    likeCount,
+    replyCount,
     heartedByCreator: heartedAt !== null,
     author: { ...author, isCreator: author.userId === videoOwnerId },
     createdAt: createdAt.toISOString(),

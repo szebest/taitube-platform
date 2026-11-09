@@ -1,5 +1,6 @@
 import type {
   CommentLocator,
+  CommentViewer,
   CommentRepositoryPort,
   ListCommentRepliesOptions,
   ListAuthoredCommentsOptions,
@@ -19,7 +20,7 @@ import { heartOutbox } from '@vp/job-contracts';
 import type { UserContext } from '@vp/permissions';
 import { fromPromise, map, type Result } from '@vp/result';
 import { and, eq, ne, or, sql } from 'drizzle-orm';
-import { drizzleWhere, notDeletedScope } from '../scopes/index';
+import { drizzleWhere, notDeletedScope, publicCommentScope } from '../scopes/index';
 import { toCreatorInboxComment } from './comment-inbox-query';
 import {
   authoredCommentsQuery,
@@ -37,7 +38,7 @@ import {
   threadById,
   toCommentThread,
 } from './comment-thread-query';
-import { insertComment, isLive, lockVideo } from './comment-writes';
+import { countedAmong, insertComment, isLive, lockVideo } from './comment-writes';
 import { enqueueNotificationJobs } from './notification-jobs';
 import type { PostgresDatabase } from './types';
 
@@ -58,19 +59,35 @@ export class PostgresCommentRepository implements CommentRepositoryPort {
     return map(rows, ([row]) => (row ? toComment(row) : null));
   }
 
+  async findVisible(
+    viewer: CommentViewer,
+    id: string
+  ): Promise<Result<Comment | null, DatabaseUnavailable>> {
+    const rows = await fromPromise(
+      () =>
+        this.db
+          .select()
+          .from(c)
+          .where(drizzleWhere(eq(c.id, id), notDeletedScope(c), publicCommentScope(viewer))),
+      databaseUnavailable.during('findVisibleComment')
+    );
+    return map(rows, ([row]) => (row ? toComment(row) : null));
+  }
+
   async listThreads(
     videoId: string,
-    { sort, window }: ListCommentThreadsOptions
+    { viewer, sort, window }: ListCommentThreadsOptions
   ): Promise<Result<CommentThread[], DatabaseUnavailable>> {
     const { cursor, offset } = commentWindowBounds(window);
     const rows = await fromPromise(
       () =>
-        selectThreads(this.db)
+        selectThreads(this.db, viewer)
           .where(
             drizzleWhere(
               eq(c.videoId, videoId),
               sql`${c.parentId} IS NULL`,
               notDeletedScope(c),
+              publicCommentScope(viewer),
               commentThreadCursorScope(sort, cursor)
             )
           )
@@ -84,16 +101,17 @@ export class PostgresCommentRepository implements CommentRepositoryPort {
 
   async listReplies(
     root: CommentLocator,
-    { cursor, limit }: ListCommentRepliesOptions
+    { viewer, cursor, limit }: ListCommentRepliesOptions
   ): Promise<Result<CommentThread[], DatabaseUnavailable>> {
     const rows = await fromPromise(
       () =>
-        selectThreads(this.db)
+        selectThreads(this.db, viewer)
           .where(
             drizzleWhere(
               eq(c.videoId, root.videoId),
               eq(c.parentId, root.id),
               notDeletedScope(c),
+              publicCommentScope(viewer),
               commentReplyCursorScope(cursor)
             )
           )
@@ -122,8 +140,8 @@ export class PostgresCommentRepository implements CommentRepositoryPort {
             .update(c)
             .set({ content, isEdited: true, updatedAt: new Date() })
             .where(drizzleWhere(eq(c.id, id), notDeletedScope(c)))
-            .returning({ id: c.id });
-          return updated ? threadById(tx, id) : null;
+            .returning({ authorId: c.authorId });
+          return updated ? threadById(tx, id, { id: updated.authorId }) : null;
         }),
       databaseUnavailable.during('updateComment')
     );
@@ -134,21 +152,20 @@ export class PostgresCommentRepository implements CommentRepositoryPort {
       () =>
         this.db.transaction(async (tx) => {
           await lockVideo(tx, target.videoId);
+          const taken = and(
+            eq(c.videoId, target.videoId),
+            or(eq(c.id, target.id), eq(c.parentId, target.id))
+          );
+          const counted = await countedAmong(tx, taken);
           const removed = await tx
             .update(c)
             .set({ deletedAt: new Date(), isPinned: false })
-            .where(
-              drizzleWhere(
-                eq(c.videoId, target.videoId),
-                or(eq(c.id, target.id), eq(c.parentId, target.id)),
-                notDeletedScope(c)
-              )
-            )
+            .where(drizzleWhere(taken, notDeletedScope(c)))
             .returning({ id: c.id });
-          if (removed.length > 0) {
+          if (counted > 0) {
             await tx
               .update(v)
-              .set({ commentsCount: sql`GREATEST(0, ${v.commentsCount} - ${removed.length})` })
+              .set({ commentsCount: sql`${v.commentsCount} - ${counted}` })
               .where(eq(v.id, target.videoId));
           }
           return removed.length;
@@ -177,7 +194,7 @@ export class PostgresCommentRepository implements CommentRepositoryPort {
             .set({ isPinned: pinned, updatedAt: new Date() })
             .where(drizzleWhere(eq(c.id, target.id), notDeletedScope(c)))
             .returning({ id: c.id });
-          return updated ? threadById(tx, target.id) : null;
+          return updated ? threadById(tx, target.id, null) : null;
         }),
       databaseUnavailable.during('pinComment')
     );
@@ -211,7 +228,7 @@ export class PostgresCommentRepository implements CommentRepositoryPort {
               heartOutbox({ videoId: target.videoId, commentId: target.id }),
             ]);
           }
-          return threadById(tx, target.id);
+          return threadById(tx, target.id, null);
         }),
       databaseUnavailable.during('heartComment')
     );

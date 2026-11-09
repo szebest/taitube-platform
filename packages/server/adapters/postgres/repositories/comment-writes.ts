@@ -1,8 +1,13 @@
 import * as schema from '@vp/db';
-import { type CommentThread, commentCreated, type NewCommentInput } from '@vp/domain';
+import {
+  type CommentThread,
+  commentCreated,
+  type NewCommentInput,
+  PUBLISHED_AT_CREATION,
+} from '@vp/domain';
 import { commentOutbox } from '@vp/job-contracts';
-import { eq, sql } from 'drizzle-orm';
-import { drizzleWhere, notDeletedScope } from '../scopes/index';
+import { type SQL, eq, sql } from 'drizzle-orm';
+import { drizzleWhere, notDeletedScope, publicCommentScope } from '../scopes/index';
 import { threadById } from './comment-thread-query';
 import { enqueueNotificationJobs } from './notification-jobs';
 import { appendUserEvent } from './postgres-user-event-repository';
@@ -35,6 +40,27 @@ export async function isLive(tx: PostgresDatabase, id: string): Promise<boolean>
   return Boolean(row);
 }
 
+/** Whether the comment is in `comments_count`: what an anonymous reader would see of it. */
+async function isCounted(tx: PostgresDatabase, id: string): Promise<boolean> {
+  const [row] = await tx
+    .select({ id: c.id })
+    .from(c)
+    .where(drizzleWhere(eq(c.id, id), notDeletedScope(c), publicCommentScope(null)));
+  return Boolean(row);
+}
+
+/**
+ * Of the comments a removal takes, how many were counted: a root and its public replies leave the
+ * count, a held or hidden one never entered it.
+ */
+export async function countedAmong(tx: PostgresDatabase, where: SQL | undefined): Promise<number> {
+  const rows = await tx
+    .select({ id: c.id })
+    .from(c)
+    .where(drizzleWhere(where, notDeletedScope(c), publicCommentScope(null)));
+  return rows.length;
+}
+
 export async function insertComment(
   tx: PostgresDatabase,
   input: NewCommentInput
@@ -43,16 +69,25 @@ export async function insertComment(
   if (input.parentId !== null && !(await isLive(tx, input.parentId))) return null;
 
   const now = new Date();
-  await tx.insert(c).values({ ...input, createdAt: now, updatedAt: now });
-  await tx
-    .update(v)
-    .set({ commentsCount: sql`${v.commentsCount} + 1` })
-    .where(eq(v.id, input.videoId));
-  await enqueueNotificationJobs(tx, [
-    commentOutbox({ videoId: input.videoId, commentId: input.id }),
-  ]);
-  const created = await threadById(tx, input.id);
-  if (created && video && video.ownerId !== input.authorId) {
+  const { moderation, ...fields } = input;
+  await tx.insert(c).values({
+    ...fields,
+    ...(moderation ?? PUBLISHED_AT_CREATION),
+    createdAt: now,
+    updatedAt: now,
+  });
+  const counted = await isCounted(tx, input.id);
+  if (counted) {
+    await tx
+      .update(v)
+      .set({ commentsCount: sql`${v.commentsCount} + 1` })
+      .where(eq(v.id, input.videoId));
+    await enqueueNotificationJobs(tx, [
+      commentOutbox({ videoId: input.videoId, commentId: input.id }),
+    ]);
+  }
+  const created = await threadById(tx, input.id, { id: input.authorId });
+  if (counted && created && video && video.ownerId !== input.authorId) {
     await appendUserEvent(tx, {
       userId: video.ownerId,
       ...commentCreated(created, { id: input.videoId, title: video.title }),

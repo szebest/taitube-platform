@@ -131,6 +131,7 @@ export function graph(): Container {
           outboxRepo: c.get(Repo.outbox),
           reportsRepo: c.get(Repo.commentReports),
           userEventsRepo: c.get(Repo.userEvents),
+          restrictionsRepo: c.get(Repo.channelUserRestrictions),
         })
     )
     .provide(

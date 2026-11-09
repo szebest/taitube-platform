@@ -29,12 +29,17 @@ export type CommentWindow =
   | { type: 'keyset'; cursor: CommentThreadCursor | null; limit: number }
   | { type: 'offset'; offset: number; limit: number };
 
+/** Who is reading: anonymous is `null`. A viewer sees the public comments and their own. */
+export type CommentViewer = Pick<UserContext, 'id'> | null;
+
 export interface ListCommentThreadsOptions {
+  viewer: CommentViewer;
   sort: CommentSort;
   window: CommentWindow;
 }
 
 export interface ListCommentRepliesOptions {
+  viewer: CommentViewer;
   cursor: CommentReplyCursor | null;
   limit: number;
 }
@@ -55,10 +60,19 @@ export type CommentLocator = Pick<Comment, 'id' | 'videoId'>;
 /**
  * Reads never return a deleted comment. Listings return up to `limit + 1` rows so the caller can
  * tell a further page exists. Every write that adds or removes comments moves
- * `videos.comments_count` in the same transaction.
+ * `videos.comments_count` in the same transaction, and counts only what is public: a published
+ * comment of an author who is not shadow banned, under a root that is public too.
+ *
+ * Every read a viewer makes goes through the public scope. `findById` is the one exception: it
+ * answers a comment in any moderation state, for the writes that act on it and for the worker.
  */
 export interface CommentRepositoryPort {
   findById(id: string): Promise<Result<Comment | null, DatabaseUnavailable>>;
+  /** Null for a comment the viewer may not see, which reads the same as one that is not there. */
+  findVisible(
+    viewer: CommentViewer,
+    id: string
+  ): Promise<Result<Comment | null, DatabaseUnavailable>>;
   listThreads(
     videoId: string,
     options: ListCommentThreadsOptions
@@ -67,7 +81,10 @@ export interface CommentRepositoryPort {
     root: CommentLocator,
     options: ListCommentRepliesOptions
   ): Promise<Result<CommentThread[], DatabaseUnavailable>>;
-  /** Answers null, and writes nothing, when the parent was removed before the reply landed. */
+  /**
+   * Answers null, and writes nothing, when the parent was removed before the reply landed. The
+   * thread counts the replies its author may see.
+   */
   create(input: NewCommentInput): Promise<Result<CommentThread | null, DatabaseUnavailable>>;
   updateContent(
     id: string,

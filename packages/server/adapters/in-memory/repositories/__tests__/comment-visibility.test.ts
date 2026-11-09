@@ -1,5 +1,6 @@
 import type { StoredComment } from '../comment-visibility';
 import { repliesOf, standing } from '../comment-visibility';
+import { UNMODERATED } from './stored-comment';
 
 const comment = (id: string, parentId: string | null, deletedAt: Date | null): StoredComment => ({
   id,
@@ -14,6 +15,7 @@ const comment = (id: string, parentId: string | null, deletedAt: Date | null): S
   heartedAt: null,
   createdAt: new Date(0),
   updatedAt: new Date(0),
+  ...UNMODERATED,
 });
 
 const root = comment('root', null, null);

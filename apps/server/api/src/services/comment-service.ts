@@ -22,7 +22,12 @@ import type { InvalidCursor, Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
 import { type Result, err, ignore, isErr, map, ok } from '@vp/result';
 import { type CreateCommentServiceFailure, createComment } from './comment-create';
-import { type PublicReadFailure, commentWithVideo, readableVideo } from './comment-lookup';
+import {
+  type PublicReadFailure,
+  commentWithVideo,
+  readableVideo,
+  visibleCommentWithVideo,
+} from './comment-lookup';
 import { toCommentView } from './comment-views';
 import {
   commentThreadCursorPayload,
@@ -74,7 +79,7 @@ export class CommentService {
     const request = this.threadsRequest(query);
     if (isErr(request)) return request;
 
-    const hot = await this.threads(video.value, request.value);
+    const hot = await this.threads(viewer, video.value, request.value);
     return map(hot, ({ threads, total }) => ({
       ...this.deps.paginator.paginate(threads, request.value.window.limit, {
         cursorOf: commentThreadCursorPayload,
@@ -89,7 +94,7 @@ export class CommentService {
     commentId: string,
     options: { cursor?: string; limit?: number }
   ): Promise<Result<CommentPage, ListRepliesFailure>> {
-    const found = await commentWithVideo(this.deps, commentId);
+    const found = await visibleCommentWithVideo(this.deps, viewer, commentId);
     if (isErr(found)) return found;
 
     const thread = decideCommentThreadRead({ viewer, commentId, ...found.value });
@@ -105,7 +110,11 @@ export class CommentService {
     if (isErr(cursor)) return cursor;
 
     const { comment, video } = thread.value;
-    const rows = await this.deps.comments.listReplies(comment, { cursor: cursor.value, limit });
+    const rows = await this.deps.comments.listReplies(comment, {
+      viewer,
+      cursor: cursor.value,
+      limit,
+    });
     return map(rows, (replies): CommentPage =>
       this.deps.paginator.paginate(replies, limit, {
         cursorOf: createdAtCursorPayload,
@@ -206,13 +215,18 @@ export class CommentService {
     }));
   }
 
-  private async threads(video: Video, { sort, window }: ThreadsRequest) {
-    const fetch = () =>
+  /** The shared hot page holds public comments only, so it is read and filled as no one in particular. */
+  private async threads(
+    viewer: UserContext | null,
+    video: Video,
+    { sort, window }: ThreadsRequest
+  ) {
+    const fetchFor = (reader: UserContext | null) => () =>
       this.deps.singleflight.do(
-        `comments:${video.id}:${sort}:${JSON.stringify(window)}`,
+        `comments:${video.id}:${reader?.id ?? 'public'}:${sort}:${JSON.stringify(window)}`,
         async () =>
           map(
-            await this.deps.comments.listThreads(video.id, { sort, window }),
+            await this.deps.comments.listThreads(video.id, { viewer: reader, sort, window }),
             (threads): HotComments => ({ threads, total: video.commentsCount ?? 0 })
           )
       );
@@ -223,7 +237,9 @@ export class CommentService {
       window.cursor === null &&
       window.limit === this.deps.paginator.defaults.defaultLimit;
 
-    return isHotPage ? await this.deps.commentCache.getHot(video.id, fetch) : await fetch();
+    return isHotPage
+      ? await this.deps.commentCache.getHot(video.id, fetchFor(null))
+      : await fetchFor(viewer)();
   }
 
   private async settled(

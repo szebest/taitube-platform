@@ -13,6 +13,14 @@ const THREAD: CommentThread = {
   isEdited: true,
   likeCount: 3,
   heartedAt: null,
+  moderationState: 'held',
+  moderationDisclosure: 'silent',
+  moderationReason: 'spam',
+  moderationNote: 'a note',
+  moderatedBy: 'moderator-1',
+  moderatedAt: AT,
+  heldReason: 'blocked_word',
+  looksLikeQuestion: true,
   createdAt: AT,
   updatedAt: AT,
   author: { userId: 'u-1', channelId: 'ch-1', handle: 'u1', displayName: 'U1', avatarUrl: null },
@@ -20,7 +28,7 @@ const THREAD: CommentThread = {
 };
 
 describe('apps/server/api/services: comment views', () => {
-  it('renders dates as ISO strings and keeps the author under author', () => {
+  it('renders dates as ISO strings and keeps the author under author, with no moderation field on the wire', () => {
     expect(toCommentView(THREAD, 'owner-1')).toEqual({
       id: 'c-1',
       videoId: 'v-1',

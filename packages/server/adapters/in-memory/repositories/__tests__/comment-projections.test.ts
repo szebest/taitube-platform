@@ -1,6 +1,7 @@
 import type { Channel } from '@vp/domain';
-import { toAuthoredCommentOf, toThreadOf } from '../comment-projections';
+import { newStoredComment, toAuthoredCommentOf, toThreadOf } from '../comment-projections';
 import type { StoredComment } from '../comment-visibility';
+import { UNMODERATED } from './stored-comment';
 
 const stored: StoredComment = {
   id: 'c1',
@@ -15,6 +16,7 @@ const stored: StoredComment = {
   createdAt: new Date(10),
   updatedAt: new Date(20),
   deletedAt: null,
+  ...UNMODERATED,
 };
 
 const channel = {
@@ -60,6 +62,51 @@ describe('adapters/in-memory: comment projections', () => {
       parentId: 'root',
       likeCount: 3,
       video: { id: 'v1', title: expected },
+    });
+  });
+
+  describe('newStoredComment', () => {
+    const input = { id: 'c9', videoId: 'v1', authorId: 'u1', parentId: null, content: 'hi' };
+    const now = new Date(5);
+
+    it('starts a comment published, unmoderated and unliked', () => {
+      expect(newStoredComment(input, now)).toEqual({
+        ...input,
+        ...UNMODERATED,
+        isPinned: false,
+        isEdited: false,
+        likeCount: 0,
+        heartedAt: null,
+        createdAt: now,
+        updatedAt: now,
+        deletedAt: null,
+      });
+    });
+
+    it('stores what the gate decided and nothing a moderator has yet set', () => {
+      const held = newStoredComment(
+        {
+          ...input,
+          moderation: {
+            moderationState: 'held',
+            moderationDisclosure: 'visible',
+            heldReason: 'link',
+            looksLikeQuestion: true,
+          },
+        },
+        now
+      );
+
+      expect(held).toMatchObject({
+        moderationState: 'held',
+        moderationDisclosure: 'visible',
+        heldReason: 'link',
+        looksLikeQuestion: true,
+        moderatedBy: null,
+        moderatedAt: null,
+        moderationReason: null,
+      });
+      expect(held).not.toHaveProperty('moderation');
     });
   });
 });

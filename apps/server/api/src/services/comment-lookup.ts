@@ -1,4 +1,4 @@
-import type { CommentRepositoryPort, VideoRepository } from '@vp/core/repositories';
+import type { CommentRepositoryPort, CommentViewer, VideoRepository } from '@vp/core/repositories';
 import type { Comment, Video } from '@vp/domain';
 import { decideVideoRead, publicReadFailure } from '@vp/domain-rules';
 import type { DatabaseUnavailable } from '@vp/errors';
@@ -12,7 +12,22 @@ export interface CommentLookupDeps {
 
 /** A live comment with the video it sits under; either is null once it is gone. */
 export async function commentWithVideo(deps: CommentLookupDeps, commentId: string) {
-  const comment = await deps.comments.findById(commentId);
+  return withVideo(deps, await deps.comments.findById(commentId));
+}
+
+/** The same lookup for a reader: a comment the viewer may not see is null, as if it were gone. */
+export async function visibleCommentWithVideo(
+  deps: CommentLookupDeps,
+  viewer: CommentViewer,
+  commentId: string
+) {
+  return withVideo(deps, await deps.comments.findVisible(viewer, commentId));
+}
+
+async function withVideo(
+  deps: CommentLookupDeps,
+  comment: Result<Comment | null, DatabaseUnavailable>
+) {
   if (isErr(comment)) return comment;
   if (!comment.value) return ok({ comment: null, video: null });
 

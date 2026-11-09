@@ -22,7 +22,7 @@ export async function createComment(
   const video = await readableVideo(deps, author, videoId);
   if (isErr(video)) return video;
   const parentId = body.parentId ?? null;
-  const parent = parentId ? await deps.comments.findById(parentId) : ok(null);
+  const parent = parentId ? await deps.comments.findVisible(author, parentId) : ok(null);
   if (isErr(parent)) return parent;
 
   const decided = decideCommentCreate({

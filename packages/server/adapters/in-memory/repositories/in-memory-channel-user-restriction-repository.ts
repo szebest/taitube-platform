@@ -67,6 +67,15 @@ export class InMemoryChannelUserRestrictionRepository implements ChannelUserRest
     return ok(ended.length);
   }
 
+  /** The users a shadow ban hides on the channel; it never expires. */
+  shadowedUserIds(channelId: string): Set<string> {
+    return new Set(
+      [...this.rows.values()]
+        .filter((row) => row.channelId === channelId && row.kind === 'shadow')
+        .map((row) => row.userId)
+    );
+  }
+
   clear(): void {
     this.rows.clear();
   }

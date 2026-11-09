@@ -1,8 +1,10 @@
+import type { CommentModerationFields, NewCommentModeration } from './comment-moderation';
+
 export const COMMENT_SORTS = ['top', 'newest'] as const;
 
 export type CommentSort = (typeof COMMENT_SORTS)[number];
 
-export interface Comment {
+export interface Comment extends CommentModerationFields {
   id: string;
   videoId: string;
   authorId: string;
@@ -49,6 +51,8 @@ export interface NewCommentInput {
   authorId: string;
   parentId: string | null;
   content: string;
+  /** Published when absent; the gate sets it for a comment it holds. */
+  moderation?: NewCommentModeration;
 }
 
 /**

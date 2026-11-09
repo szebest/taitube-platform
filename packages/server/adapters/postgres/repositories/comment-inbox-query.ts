@@ -2,12 +2,12 @@ import * as schema from '@vp/db';
 import type { CreatorInboxComment, CreatorInboxFilter } from '@vp/domain';
 import { assertNever } from '@vp/result';
 import { type SQL, sql } from 'drizzle-orm';
-import { commentThreadColumns, toCommentThread } from './comment-thread-query';
+import { moderatedThreadColumns, toCommentThread } from './comment-thread-query';
 
 const { videoComments: c, videos: v, commentReports: r } = schema;
 
 /** The thread columns plus the title of the video the comment sits under. */
-export const creatorInboxColumns = { ...commentThreadColumns, videoTitle: v.title };
+export const creatorInboxColumns = { ...moderatedThreadColumns, videoTitle: v.title };
 
 type InboxRow = Parameters<typeof toCommentThread>[0] & { videoTitle: string };
 

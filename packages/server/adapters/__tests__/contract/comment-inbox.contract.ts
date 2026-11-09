@@ -46,6 +46,7 @@ export function describeCommentInboxContract(ctx: CommentContractContext): void 
 
       const [thread] = expectOk(
         await ctx.comments.listThreads(VIDEO_IDS.a, {
+          viewer: null,
           sort: 'top',
           window: { type: 'keyset', cursor: null, limit: 5 },
         })

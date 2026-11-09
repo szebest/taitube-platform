@@ -14,6 +14,31 @@ export const HELD_REASONS = ['review_all', 'link', 'blocked_word'] as const;
 
 export type HeldReason = (typeof HELD_REASONS)[number];
 
+/** The moderation columns a comment row carries, which only a moderator or the author may see. */
+export interface CommentModerationFields {
+  moderationState: ModerationState;
+  moderationDisclosure: Disclosure | null;
+  moderationReason: CommentModerationReason | null;
+  moderationNote: string | null;
+  moderatedBy: string | null;
+  moderatedAt: Date | null;
+  heldReason: HeldReason | null;
+  looksLikeQuestion: boolean;
+}
+
+/** What the gate decided for a new comment, written with it. */
+export type NewCommentModeration = Pick<
+  CommentModerationFields,
+  'moderationState' | 'moderationDisclosure' | 'heldReason' | 'looksLikeQuestion'
+>;
+
+export const PUBLISHED_AT_CREATION: NewCommentModeration = {
+  moderationState: 'published',
+  moderationDisclosure: null,
+  heldReason: null,
+  looksLikeQuestion: false,
+};
+
 interface Moderated {
   disclosure: Disclosure;
   reason?: CommentModerationReason;

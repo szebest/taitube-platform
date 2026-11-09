@@ -1,4 +1,10 @@
-import type { AuthoredComment, Channel, CommentThread } from '@vp/domain';
+import {
+  type AuthoredComment,
+  type Channel,
+  type CommentThread,
+  type NewCommentInput,
+  PUBLISHED_AT_CREATION,
+} from '@vp/domain';
 import type { StoredComment } from './comment-visibility';
 
 export function toThreadOf(
@@ -31,5 +37,24 @@ export function toAuthoredCommentOf(
     parentId,
     likeCount,
     video: { id: video.id, title: video.title ?? '' },
+  };
+}
+
+export function newStoredComment(input: NewCommentInput, now: Date): StoredComment {
+  const { moderation, ...fields } = input;
+  return {
+    ...fields,
+    ...(moderation ?? PUBLISHED_AT_CREATION),
+    moderationReason: null,
+    moderationNote: null,
+    moderatedBy: null,
+    moderatedAt: null,
+    isPinned: false,
+    isEdited: false,
+    likeCount: 0,
+    heartedAt: null,
+    createdAt: now,
+    updatedAt: now,
+    deletedAt: null,
   };
 }
