@@ -32,6 +32,12 @@ describeOverlayExit('/settings/language', 'viewer', [
     close: escape,
     surface: (page) => page.locator('[data-slot="select-content"]'),
   },
+  {
+    name: 'a select once an option is chosen',
+    open: (page) => page.getByRole('combobox').click(),
+    close: (page) => page.getByRole('option', { selected: true }).click(),
+    surface: (page) => page.locator('[data-slot="select-content"]'),
+  },
 ]);
 
 describeOverlayExit((stack) => `/watch/${stack.videos.watchable.id}`, 'viewer', [

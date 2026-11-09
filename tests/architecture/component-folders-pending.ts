@@ -11,6 +11,5 @@ export const PENDING = [
     (name) =>
       `apps/client/web/src/components/${name}/: no __stories__/${posix.basename(name)}.stories.tsx`
   ),
-  'apps/client/web/src/components/player/control-bar/: no index.ts',
   'apps/client/web/src/components/player/taitube-preview/: no index.ts',
 ];
