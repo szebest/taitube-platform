@@ -9,11 +9,9 @@ import { useCommandActions } from '#app/features/search/hooks/use-command-action
 import { useSearchSuggestions } from '#app/features/search/hooks/use-search-suggestions';
 import { matchedTerms } from '#app/features/search/utils/matched-terms';
 import { type PaletteResult, paletteResultKey } from '#app/features/search/utils/palette-results';
-import {
-  useOpenDestination,
-  useShellDestinations,
-} from '#app/features/shell/components/shell-destinations/shell-destinations';
-import { useCommandPaletteStore } from '../command-palette-store/command-palette-store';
+import { useOpenDestination } from '#app/hooks/use-open-destination';
+import { useShellDestinations } from '#app/hooks/use-shell-destinations';
+import { useCommandPaletteStore } from '#app/lib/command-palette/command-palette-store';
 import { PaletteActionItem } from '../palette-action-item/palette-action-item';
 import { PaletteResultItem } from '../palette-result-item/palette-result-item';
 import { RecentSearchGroup } from '../recent-search-group/recent-search-group';

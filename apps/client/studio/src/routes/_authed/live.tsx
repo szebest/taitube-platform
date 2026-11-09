@@ -1,13 +1,12 @@
 import { createFileRoute } from '@tanstack/react-router';
+import { prefetched } from '@vp/queries';
 import { z } from 'zod';
-import { myLiveStreamQueryOptions } from '#app/features/live/api/live-queries';
-import { LiveDashboardSkeleton } from '#app/features/live/components/live-dashboard-skeleton/live-dashboard-skeleton';
-import { LiveDashboard } from '#app/features/live/components/live-dashboard/live-dashboard';
+import { LiveDashboard, LiveDashboardSkeleton, myLiveStreamQueryOptions } from '#app/features/live';
 
 export const Route = createFileRoute('/_authed/live')({
   validateSearch: z.object({}),
   loader: ({ context: { queryClient, api } }) =>
-    queryClient.prefetchQuery(myLiveStreamQueryOptions(api)),
+    prefetched(queryClient.query(myLiveStreamQueryOptions(api))),
   pendingComponent: LiveDashboardSkeleton,
   component: LiveDashboard,
 });

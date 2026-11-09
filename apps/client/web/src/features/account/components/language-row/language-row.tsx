@@ -2,7 +2,7 @@ import { useRouteContext, useRouter } from '@tanstack/react-router';
 import { useT } from '@vp/intl-react';
 import { LOCALE_DETAILS, SUPPORTED_LOCALES } from '@vp/messages';
 import { Select } from '@vp/ui';
-import { useLocalePreference } from '../device-preferences-provider/device-preferences-provider';
+import { useLocalePreference } from '#app/lib/preferences/device-preferences-provider';
 import { SettingItem } from '../setting-item/setting-item';
 
 const BROWSER = 'auto';

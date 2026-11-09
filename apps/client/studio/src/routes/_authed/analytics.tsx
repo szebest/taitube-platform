@@ -1,12 +1,15 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { analyticsQueryOptions } from '#app/features/analytics/api/analytics-queries';
-import { AnalyticsSearchSchema } from '#app/features/analytics/api/analytics-search';
-import { AnalyticsPage } from '#app/features/analytics/components/analytics-page/analytics-page';
+import { prefetched } from '@vp/queries';
+import {
+  AnalyticsPage,
+  analyticsQueryOptions,
+  AnalyticsSearchSchema,
+} from '#app/features/analytics';
 
 export const Route = createFileRoute('/_authed/analytics')({
   validateSearch: AnalyticsSearchSchema,
   loaderDeps: ({ search: { range } }) => ({ range }),
   loader: ({ context: { queryClient, api }, deps: { range } }) =>
-    queryClient.prefetchQuery(analyticsQueryOptions(api, { kind: 'channel' }, range)),
+    prefetched(queryClient.query(analyticsQueryOptions(api, { kind: 'channel' }, range))),
   component: AnalyticsPage,
 });

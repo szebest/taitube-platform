@@ -313,12 +313,24 @@ search shell shorts watch` stay. Studio: `auth` -> `account`; `content` -> `vide
 - Deprecated swaps in their own commit; `import/no-cycle`; every ratchet at 0.
 - ACs: no feature imports a feature, routes through `index.ts`; no deprecated API; duplicates; placement.
 
-### c. `slice/131c-enforce-docs`: enforce and document
+### c. `slice/131c-extract`: extraction pass
+
+- Every component, feature, route and kit file in both apps to the component folder shape: pure helpers to the
+  component's `utils/<verb-first>.ts` (or the feature's, or the app's `utils/` when two features use one), stateful
+  blocks of more than a few lines to `hooks/use-x.ts` on the same ladder, module-level constants to `constants.ts`,
+  types shared beyond one file to `types.ts`, a component used only inside another to `components/<name>/` under it.
+  Each new file gets its 1:1 spec. `integrations/` when it touches a third-party package or a browser API at its edge,
+  else `lib/`.
+- Commits per app, studio first, separate from b's edge breaks and swaps.
+- AC: no helper, hook or constant defined inside a component file outside its component.
+
+### d. `slice/131d-enforce-docs`: enforce and document
 
 - Oxlint `no-restricted-imports` overrides for every client folder, `unicorn/filename-case`, `typescript/no-deprecated`
   if the installed tsgolint has it; ratchet constants deleted.
 - `docs/standards/frontend-structure.md`, the `AGENTS.md` pointers, `architecture.md` section 4, `git-workflow.md`,
   ARCHITECTURE section 6.
+- `frontend-folder-shape` enforces what can be enforced of c: no non-component export from a `<name>.tsx`.
 - ACs: lint, docs, rules scoped to both apps at 0.
 
 ## What to build
@@ -534,6 +546,7 @@ extended, not replaced. The `no-process-comments` and `file-ceiling` suites are 
       Each edited `AGENTS.md` follows `writing-for-agents`: a pointer that names its trigger, the rule written once
       in the standard, no second copy to drift.
 - [ ] `pnpm gen:component` produces the new shape and its spec passes.
+- [ ] `frontend-folder-shape` enforces what can be enforced of c: no non-component export from a `<name>.tsx`.
 - [ ] `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:bun`, `pnpm test:architecture`, `pnpm boundaries`,
       `pnpm knip`, `make smoke-offline` green, with output in each PR.
 

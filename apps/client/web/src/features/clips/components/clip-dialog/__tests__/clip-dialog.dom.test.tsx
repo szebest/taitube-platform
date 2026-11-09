@@ -4,15 +4,15 @@ import { ErrorCodes } from '@vp/errors';
 import { account, CLIP_ID, clip, mockEndpoint, problemReply, VIDEO_ID } from '@vp/web-testing';
 import { axeViolations } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
-import { renderWatch } from '#app/features/watch/__tests__/render-watch';
+import { renderWatch } from '#app/__tests__/render-watch';
 import { LazyClipDialog } from '../clip-dialog.lazy';
 
 vi.mock(import('#app/components/player/taitube-player/taitube-player'), async () => ({
-  TaitubePlayer: (await import('#app/features/watch/__tests__/stub-player')).StubPlayer,
+  TaitubePlayer: (await import('#app/__tests__/stub-player')).StubPlayer,
 }));
 
 vi.mock(import('#app/components/player/taitube-preview/taitube-preview'), async () => ({
-  TaitubePreview: (await import('#app/features/watch/__tests__/stub-player')).StubPlayer,
+  TaitubePreview: (await import('#app/__tests__/stub-player')).StubPlayer,
 }));
 
 beforeAll(() => LazyClipDialog.preload());

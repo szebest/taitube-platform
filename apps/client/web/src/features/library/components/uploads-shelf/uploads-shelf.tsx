@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Shelf } from '@vp/components';
 import { useT } from '@vp/intl-react';
 import { useAccount, useApi } from '@vp/queries';
-import { FeedVideoCard } from '#app/features/browse/components/feed-video-card/feed-video-card';
+import { FeedVideoCard } from '#app/components/video/feed-video-card';
 import { uploadsShelfQueryOptions } from '#app/features/library/api/library-queries';
 import { STUDIO_URL } from '#app/lib/config';
 import { YouShelf } from '../you-shelf/you-shelf';

@@ -1,5 +1,4 @@
-import { type AppRouterOptions, createAppRouter } from '@vp/queries';
-import { RoutePending } from './components/states/route-fallbacks/route-fallbacks';
+import { type AppRouterOptions, createAppRouter, RoutePending } from '@vp/queries';
 import { API_BASE_URL } from './lib/config';
 import { routeTree } from './routeTree.gen';
 

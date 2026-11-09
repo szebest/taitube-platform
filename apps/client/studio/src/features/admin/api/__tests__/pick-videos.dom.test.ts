@@ -20,7 +20,7 @@ describe('apps/client/studio: pickableVideosQueryOptions', () => {
     );
 
     await expect(
-      createQueryClient().fetchQuery(pickableVideosQueryOptions(api, typed))
+      createQueryClient().query(pickableVideosQueryOptions(api, typed))
     ).resolves.toEqual([video]);
 
     expect(asked[0]?.get('visibility')).toBe('public');

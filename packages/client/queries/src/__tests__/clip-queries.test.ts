@@ -35,7 +35,7 @@ describe('@vp/queries: clip queries', () => {
       mockEndpoint(getClip, ({ params }) => HttpResponse.json(clip(String(params.id))))
     );
 
-    const loaded = await createQueryClient().fetchQuery(clipQueryOptions(api, CLIP_ID));
+    const loaded = await createQueryClient().query(clipQueryOptions(api, CLIP_ID));
 
     expect(loaded).toMatchObject({ id: CLIP_ID, startMs: 10_000, endMs: 30_000 });
   });
@@ -54,7 +54,7 @@ describe('@vp/queries: clip queries', () => {
       })
     );
 
-    const pages = await createQueryClient().fetchInfiniteQuery({
+    const pages = await createQueryClient().infiniteQuery({
       ...myClipsQueryOptions(api),
       pages: 2,
     });

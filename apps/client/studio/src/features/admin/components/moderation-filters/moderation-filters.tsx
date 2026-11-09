@@ -1,7 +1,7 @@
 import { getRouteApi } from '@tanstack/react-router';
 import { useT } from '@vp/intl-react';
 import { Button, Field, Input } from '@vp/ui';
-import type { FormEvent } from 'react';
+import type { SubmitEvent } from 'react';
 import { STATUS_OPTIONS, VISIBILITY_OPTIONS } from '#app/features/admin/api/moderation-search';
 import { useAdminCategories } from '#app/features/admin/hooks/use-admin-categories';
 import { FilterSelect } from '../filter-select/filter-select';
@@ -18,7 +18,7 @@ export function ModerationFilters() {
   const filter = (changes: Partial<typeof search>) =>
     navigate({ search: (previous) => ({ ...previous, ...changes }) });
 
-  const searchTitles = (event: FormEvent<HTMLFormElement>) => {
+  const searchTitles = (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
     const typed = new FormData(event.currentTarget).get('q');
     filter({ q: typeof typed === 'string' ? typed.trim() || undefined : undefined });

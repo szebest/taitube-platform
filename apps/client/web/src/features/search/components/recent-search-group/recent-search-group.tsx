@@ -6,7 +6,7 @@ import { Icon, IconButton } from '@vp/ui';
 import { CommandPalette, keepEnterFromTheList } from '#app/components/shell/command-palette';
 import { recentSearchesQueryOptions } from '#app/features/search/api/search-history-queries';
 import { useRemoveRecentSearch } from '#app/features/search/hooks/use-remove-recent-search';
-import { useCommandPaletteStore } from '../command-palette-store/command-palette-store';
+import { useCommandPaletteStore } from '#app/lib/command-palette/command-palette-store';
 
 /** The viewer's newest searches, each runnable and removable; nothing renders when there are none. */
 export function RecentSearchGroup() {

@@ -6,7 +6,7 @@ import {
   VIDEO_FILE_ACCEPT,
   validateVideoFile,
   videoTitleValidators,
-} from '#app/features/videos/forms/video-field-validators';
+} from '#app/utils/video-field-validators';
 import { type UploadStart, useUploadDock } from '../upload-dock/upload-dock';
 
 const EMPTY_UPLOAD = {

@@ -1,7 +1,7 @@
 import { mutationOptions, useMutation } from '@tanstack/react-query';
 import type { ApiClient } from '@vp/api-client';
 import { useApi } from '@vp/queries';
-import { commentKeys } from '../api/comment-queries';
+import { commentKeys } from '#app/lib/query-keys/comment-keys';
 
 function editCommentMutationOptions(api: ApiClient, commentId: string) {
   return mutationOptions({

@@ -5,14 +5,14 @@ import { DEFAULT_APPEARANCE, writeCookie } from '@vp/ui';
 import { account, apiServer } from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
 import type { HttpHandler } from 'msw/http';
-import { signInBrowser } from '#app/__tests__/providers';
 import {
   acceptsSaves,
   holds,
   preferencesView,
   SAVED_PLAYBACK,
   type SentSave,
-} from '#app/features/account/__tests__/preferences-fixtures';
+} from '#app/__tests__/preferences-fixtures';
+import { signInBrowser } from '#app/__tests__/providers';
 import { getRouter } from '#app/router';
 
 const renderSettings = (handlers: HttpHandler[]) =>

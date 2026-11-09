@@ -1,6 +1,6 @@
 import type { ApiClient } from '@vp/api-client';
 import { useApi, videoQueryOptions } from '@vp/queries';
-import { myReactionQueryOptions } from '#app/features/reactions/api/reaction-queries';
+import { myReactionQueryOptions } from '#app/lib/query-keys/reaction-keys';
 import { likedVideosQueryOptions } from '../api/library-queries';
 import { dropItems } from '../api/paged-list';
 import { queryMutationOptions } from '../api/query-mutation';

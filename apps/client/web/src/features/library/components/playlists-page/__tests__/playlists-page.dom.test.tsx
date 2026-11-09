@@ -1,9 +1,5 @@
 import { screen, within } from '@testing-library/react';
-import {
-  ownedPlaylist,
-  uuid,
-  WATCH_LATER_ID,
-} from '#app/features/library/__tests__/library-fixtures';
+import { ownedPlaylist, uuid, WATCH_LATER_ID } from '#app/__tests__/library-fixtures';
 import { renderLibrary } from '#app/features/library/__tests__/render-library';
 
 describe('apps/client/web: /feed/playlists', () => {

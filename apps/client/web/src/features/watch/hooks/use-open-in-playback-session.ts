@@ -2,9 +2,9 @@ import { useQuery } from '@tanstack/react-query';
 import type { Video } from '@vp/api-contracts';
 import { useApi } from '@vp/queries';
 import { useEffect } from 'react';
-import { playlistQueryOptions } from '#app/features/library/api/library-queries';
+import { usePlaybackSession } from '#app/hooks/use-playback-queue';
+import { playlistQueryOptions } from '#app/lib/query-keys/library-keys';
 import { toSummary } from '../utils/to-summary';
-import { usePlaybackSession } from './use-playback-queue';
 
 export interface OpenInPlaybackSession {
   video: Video;

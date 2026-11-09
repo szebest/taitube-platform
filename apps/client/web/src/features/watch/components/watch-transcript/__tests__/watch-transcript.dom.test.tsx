@@ -4,7 +4,7 @@ import { videoKeys } from '@vp/queries';
 import { writeCookie } from '@vp/ui';
 import { CAPTION_ID, VIDEO_ID, captionTrack, mockEndpoint, transcript } from '@vp/web-testing';
 import { HttpResponse, http } from 'msw/http';
-import { renderWatch } from '#app/features/watch/__tests__/render-watch';
+import { renderWatch } from '#app/__tests__/render-watch';
 
 /**
  * The watch page, with the real player, of a video whose captions are `tracks` until `ready` swaps

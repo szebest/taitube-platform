@@ -1,8 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { ensureFound } from '@vp/queries';
 import { z } from 'zod';
-import { liveOverlayQueryOptions } from '#app/features/live/api/live-queries';
-import { LiveOverlayPage } from '#app/features/live/components/live-overlay-page/live-overlay-page';
+import { LiveOverlayPage, liveOverlayQueryOptions } from '#app/features/live';
 
 declare module '@tanstack/react-router' {
   interface StaticDataRouteOption {

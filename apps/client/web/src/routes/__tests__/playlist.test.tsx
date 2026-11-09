@@ -2,13 +2,9 @@ import { getPlaylist } from '@vp/api-contracts';
 import { mockEndpoint } from '@vp/web-testing';
 import { serverRender } from '@vp/web-testing/server';
 import { HttpResponse } from 'msw/http';
+import { libraryVideo, playlistDetail, uuid } from '#app/__tests__/library-fixtures';
 import { loaderApi } from '#app/__tests__/loader-api';
 import { SESSION } from '#app/__tests__/providers';
-import {
-  libraryVideo,
-  playlistDetail,
-  uuid,
-} from '#app/features/library/__tests__/library-fixtures';
 import { getRouter } from '#app/router';
 
 const LIST = uuid(4100);

@@ -49,7 +49,7 @@ describe('@vp/queries: video queries', () => {
       )
     );
 
-    const loaded = await createQueryClient().fetchQuery(videoQueryOptions(api, VIDEO_ID));
+    const loaded = await createQueryClient().query(videoQueryOptions(api, VIDEO_ID));
 
     expect(loaded).toMatchObject({ id: VIDEO_ID, title: 'Launch day' });
   });
@@ -62,7 +62,7 @@ describe('@vp/queries: video queries', () => {
       )
     );
 
-    const loaded = await createQueryClient().fetchQuery(videoRetentionQueryOptions(api, VIDEO_ID));
+    const loaded = await createQueryClient().query(videoRetentionQueryOptions(api, VIDEO_ID));
 
     expect(loaded).toEqual({ videoId: VIDEO_ID, curve });
   });
@@ -80,7 +80,7 @@ describe('@vp/queries: video queries', () => {
     const tracks = [captionTrack()];
     apiServer.use(mockEndpoint(listCaptions, () => HttpResponse.json({ tracks })));
 
-    const loaded = await createQueryClient().fetchQuery(captionsQueryOptions(api, VIDEO_ID));
+    const loaded = await createQueryClient().query(captionsQueryOptions(api, VIDEO_ID));
 
     expect(loaded).toEqual({ tracks });
   });
@@ -98,7 +98,7 @@ describe('@vp/queries: video queries', () => {
       })
     );
 
-    await createQueryClient().fetchQuery(transcriptQueryOptions(api, VIDEO_ID, language, search));
+    await createQueryClient().query(transcriptQueryOptions(api, VIDEO_ID, language, search));
 
     expect(asked).toEqual([{ lang, q }]);
   });
@@ -117,7 +117,7 @@ describe('@vp/queries: video queries', () => {
       })
     );
 
-    const pages = await createQueryClient().fetchInfiniteQuery({
+    const pages = await createQueryClient().infiniteQuery({
       ...myVideosQueryOptions(api),
       pages: 2,
     });

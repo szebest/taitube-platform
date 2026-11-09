@@ -25,7 +25,7 @@ describe('apps/client/web: search queries', () => {
       )
     );
 
-    await createQueryClient().fetchInfiniteQuery({
+    await createQueryClient().infiniteQuery({
       ...searchQueryOptions(api, { query: 'lofi', type: 'channel', sort: 'date' }),
       pages: 2,
     });
@@ -46,7 +46,7 @@ describe('apps/client/web: search queries', () => {
     const asked: string[] = [];
     apiServer.use(searchReply(() => page([]), asked));
 
-    await createQueryClient().fetchQuery(palettePreviewQueryOptions(api, 'lofi'));
+    await createQueryClient().query(palettePreviewQueryOptions(api, 'lofi'));
 
     expect(asked).toEqual(['q=lofi&type=all&limit=5&record=false']);
   });
@@ -55,9 +55,7 @@ describe('apps/client/web: search queries', () => {
     const asked: string[] = [];
     apiServer.use(suggestionsReply([{ type: 'query', text: 'lofi beats' }], asked));
 
-    const { items } = await createQueryClient().fetchQuery(
-      searchSuggestionsQueryOptions(api, 'lofi')
-    );
+    const { items } = await createQueryClient().query(searchSuggestionsQueryOptions(api, 'lofi'));
 
     expect(asked).toEqual(['lofi']);
     expect(items).toEqual([{ type: 'query', text: 'lofi beats' }]);
@@ -66,6 +64,6 @@ describe('apps/client/web: search queries', () => {
   it('lists the categories as the topics to start from', async () => {
     apiServer.use(mockEndpoint(listCategories, () => HttpResponse.json([])));
 
-    await expect(createQueryClient().fetchQuery(topicsQueryOptions(api))).resolves.toEqual([]);
+    await expect(createQueryClient().query(topicsQueryOptions(api))).resolves.toEqual([]);
   });
 });

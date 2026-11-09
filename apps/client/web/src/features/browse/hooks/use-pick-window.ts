@@ -1,6 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useSyncExternalStore } from 'react';
-import { homeKeys } from '../api/home-queries';
+import { homeKeys } from '#app/lib/query-keys/home-keys';
 
 const MINUTE_MS = 60_000;
 

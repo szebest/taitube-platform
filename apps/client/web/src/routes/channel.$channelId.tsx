@@ -1,13 +1,13 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { ChannelIdParamSchema } from '@vp/api-contracts';
-import { ensureFound, parseParam } from '@vp/queries';
+import { ensureFound, parseParam, prefetched } from '@vp/queries';
 import { z } from 'zod';
+import { ChannelPage } from '#app/features/channel';
+import { WEB_URL } from '#app/lib/config';
 import {
   channelQueryOptions,
   channelStartHereQueryOptions,
-} from '#app/features/channel/api/channel-queries';
-import { ChannelPage } from '#app/features/channel/components/channel-page/channel-page';
-import { WEB_URL } from '#app/lib/config';
+} from '#app/lib/query-keys/channel-keys';
 import { channelHead } from '#app/lib/seo/channel-head';
 import { headWords } from '#app/lib/seo/head-words';
 
@@ -20,7 +20,7 @@ export const Route = createFileRoute('/channel/$channelId')({
   loader: async ({ context: { queryClient, api }, params: { channelId } }) => {
     const startHereOptions = channelStartHereQueryOptions(api, channelId);
     const channel = await ensureFound(queryClient, channelQueryOptions(api, channelId));
-    await queryClient.prefetchQuery(startHereOptions);
+    await prefetched(queryClient.query(startHereOptions));
     return { channel, videos: queryClient.getQueryData(startHereOptions.queryKey)?.items ?? [] };
   },
   head: ({ loaderData, match }) =>

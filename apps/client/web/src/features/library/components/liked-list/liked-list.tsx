@@ -1,9 +1,9 @@
 import { useApi } from '@vp/queries';
+import { PagedFooter } from '#app/components/feed/paged-footer';
 import { likedVideosQueryOptions } from '#app/features/library/api/library-queries';
 import { usePagedItems } from '#app/features/library/hooks/use-paged-items';
 import { LibraryEmpty } from '../library-empty/library-empty';
 import { LikedVideoRow } from '../liked-video-row/liked-video-row';
-import { PagedFooter } from '../paged-footer/paged-footer';
 
 /** The videos the viewer liked, newest like first. */
 export function LikedList() {

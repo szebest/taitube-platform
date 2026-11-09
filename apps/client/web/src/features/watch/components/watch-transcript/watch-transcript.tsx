@@ -5,7 +5,7 @@ import {
   useBrowserLanguages,
   usePlayerCaptionTrack,
 } from '#app/components/player/taitube-player';
-import { usePlaybackPreference } from '#app/features/account/components/device-preferences-provider/device-preferences-provider';
+import { usePlaybackPreference } from '#app/lib/preferences/device-preferences-provider';
 import { LazyTranscriptPanel } from '../transcript-panel/transcript-panel.lazy';
 
 export interface WatchTranscriptProps {

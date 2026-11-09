@@ -1,9 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { ensureFound, parseParam } from '@vp/queries';
 import { z } from 'zod';
-import { playlistQueryOptions } from '#app/features/library/api/library-queries';
-import { PlaylistPageSkeleton } from '#app/features/library/components/playlist-page-skeleton/playlist-page-skeleton';
-import { PlaylistPage } from '#app/features/library/components/playlist-page/playlist-page';
+import { PlaylistPage, PlaylistPageSkeleton } from '#app/features/library';
+import { playlistQueryOptions } from '#app/lib/query-keys/library-keys';
 import { urlModals } from '#app/lib/url-modal/registry';
 
 const PlaylistIdSchema = z.uuid();

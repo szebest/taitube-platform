@@ -1,7 +1,7 @@
 import { screen, waitFor, within } from '@testing-library/react';
-import { historyItem } from '#app/features/library/__tests__/library-fixtures';
+import { historyItem } from '#app/__tests__/library-fixtures';
+import { RecordingObserver } from '#app/__tests__/recording-observer';
 import { renderLibrary, useLibraryClock } from '#app/features/library/__tests__/render-library';
-import { RecordingObserver } from '#app/features/watch/__tests__/recording-observer';
 
 const HISTORY = [
   historyItem(1, { title: 'Tram ride' }),

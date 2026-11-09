@@ -1,6 +1,6 @@
 import type { AppearancePreference } from '@vp/ui';
 import { accountAppearance } from '@vp/ui';
-import type { PreferencesChange } from './preferences-change';
+import type { PreferencesChange } from '#app/lib/preferences/preferences-change';
 
 type Appearance = NonNullable<PreferencesChange['appearance']>;
 

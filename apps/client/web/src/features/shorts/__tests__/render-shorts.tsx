@@ -11,8 +11,8 @@ import { renderRoute } from '@vp/web-testing/dom';
 import { type HttpHandler, HttpResponse } from 'msw/http';
 import { loaderApi } from '#app/__tests__/loader-api';
 import { signInBrowser } from '#app/__tests__/providers';
+import { SHORTS } from '#app/__tests__/short-fixtures';
 import { getRouter } from '#app/router';
-import { SHORTS } from './short-fixtures';
 
 interface ShortsOptions {
   shorts?: VideoSummary[];

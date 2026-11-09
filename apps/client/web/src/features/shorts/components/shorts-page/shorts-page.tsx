@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router';
 import { EmptyLibraryIllustration, EmptyState } from '@vp/components';
 import { useT } from '@vp/intl-react';
+import type { ReactNode } from 'react';
 import { PlayerChannelProvider } from '#app/components/player/taitube-player';
 import { useShortsNavigation } from '#app/features/shorts/hooks/use-shorts-navigation';
 import { ShortsFeedFrame } from '../shorts-feed-frame/shorts-feed-frame';
@@ -25,7 +26,11 @@ function ShortsEmpty() {
 }
 
 /** `/shorts`: the Short the URL names in its frame, with the posters of the next two already on their way. */
-export function ShortsPage() {
+export interface ShortsPageProps {
+  renderComments: (videoId: string) => ReactNode;
+}
+
+export function ShortsPage({ renderComments }: ShortsPageProps) {
   const { current, upcoming } = useShortsNavigation();
 
   if (!current) {
@@ -38,7 +43,7 @@ export function ShortsPage() {
         ({ id, posterUrl }) =>
           posterUrl && <link key={id} rel="preload" as="image" href={posterUrl} />
       )}
-      <ShortsFeedFrame short={current} />
+      <ShortsFeedFrame short={current} renderComments={renderComments} />
     </PlayerChannelProvider>
   );
 }

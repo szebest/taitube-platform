@@ -14,7 +14,7 @@ const PER_APP_ENTRIES: ReadonlySet<string> = new Set([
 ]);
 
 /** Pairs of files at one path in two apps that differ by fewer than `NEAR_LINES` lines, per app. */
-const NEAR_DUPLICATES: Readonly<Record<string, number>> = { studio: 5, web: 5 };
+const NEAR_DUPLICATES: Readonly<Record<string, number>> = { studio: 3, web: 3 };
 
 const NEAR_LINES = 10;
 

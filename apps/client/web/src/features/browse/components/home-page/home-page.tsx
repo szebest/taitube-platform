@@ -3,16 +3,19 @@ import { ClientOnly, Link, useLocation } from '@tanstack/react-router';
 import { EmptyLibraryIllustration, EmptyState, ShelfSkeleton } from '@vp/components';
 import { useT } from '@vp/intl-react';
 import { useAccount, useApi } from '@vp/queries';
-import { Suspense } from 'react';
+import { type ReactNode, Suspense } from 'react';
 import { PickOfTheDaySkeleton } from '#app/components/discovery/pick-of-the-day';
 import { SignedOutSection } from '#app/components/states/signed-out-section';
-import { homeQueryOptions } from '#app/features/browse/api/home-queries';
-import { LiveNowShelf } from '#app/features/browse/components/live-now-shelf/live-now-shelf';
-import { ShortsShelf } from '#app/features/browse/components/shorts-shelf/shorts-shelf';
+import { homeQueryOptions } from '#app/lib/query-keys/home-keys';
 import { HomePick } from '../home-pick/home-pick';
 import { HomeShelf } from '../home-shelf/home-shelf';
 
-export function HomePage() {
+export interface HomePageProps {
+  /** Shelves of other features, each rendered in the browser only, after the API's own. */
+  clientShelves?: Readonly<Record<string, ReactNode>>;
+}
+
+export function HomePage({ clientShelves = {} }: HomePageProps) {
   const api = useApi();
   const account = useAccount();
   const href = useLocation({ select: (location) => location.href });
@@ -37,16 +40,11 @@ export function HomePage() {
       {data.shelves.map((shelf) => (
         <HomeShelf key={`${shelf.kind}:${shelf.subject?.id ?? ''}`} shelf={shelf} />
       ))}
-      <ClientOnly>
-        <Suspense fallback={null}>
-          <ShortsShelf />
-        </Suspense>
-      </ClientOnly>
-      <ClientOnly>
-        <Suspense fallback={null}>
-          <LiveNowShelf />
-        </Suspense>
-      </ClientOnly>
+      {Object.entries(clientShelves).map(([name, shelf]) => (
+        <ClientOnly key={name}>
+          <Suspense fallback={null}>{shelf}</Suspense>
+        </ClientOnly>
+      ))}
       {!account && (
         <SignedOutSection.Root>
           <SignedOutSection.Line>

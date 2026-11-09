@@ -3,13 +3,13 @@ import { listMySubscriptions } from '@vp/api-contracts';
 import { mockEndpoint } from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
-import { signInBrowser } from '#app/__tests__/providers';
 import {
   acceptsSaves,
   holds,
   preferencesView,
   type SentSave,
-} from '#app/features/account/__tests__/preferences-fixtures';
+} from '#app/__tests__/preferences-fixtures';
+import { signInBrowser } from '#app/__tests__/providers';
 import { getRouter } from '#app/router';
 
 describe('apps/client/web: the notification rows', () => {

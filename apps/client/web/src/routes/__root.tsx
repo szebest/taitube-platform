@@ -1,29 +1,16 @@
-import { createRootRouteWithContext, Outlet, useRouterState } from '@tanstack/react-router';
-import {
-  ApiProvider,
-  type AppRouterContext,
-  ensureSession,
-  requestLocale,
-  SessionProvider,
-  UserEventStream,
-} from '@vp/queries';
-import { requestAppearancePreference, ThemedDocument, ToastProvider, Tooltip } from '@vp/ui';
+import { createRootRouteWithContext, useRouterState } from '@tanstack/react-router';
+import { type AppRouterContext, ensureSession, requestLocale } from '@vp/queries';
+import { requestAppearancePreference } from '@vp/ui';
 import uiStyles from '@vp/ui/styles.css?url';
-import { useWebTelemetry } from '@vp/web-telemetry';
-import { type ReactNode, Suspense } from 'react';
 import { AppShellSkeleton } from '#app/components/shell/app-shell';
-import { DevicePreferencesProvider } from '#app/features/account/components/device-preferences-provider/device-preferences-provider';
-import { PreferencesSync } from '#app/features/account/components/preferences-sync/preferences-sync';
-import { requestDevicePreferences } from '#app/features/account/utils/device-preferences';
-import { isEmbedPath } from '#app/features/embed/utils/embed-path';
-import { ThemeColorMeta } from '#app/features/pwa/components/theme-color-meta/theme-color-meta';
-import { RootShell } from '#app/features/shell/components/root-shell/root-shell';
-import { requestSidebarState } from '#app/features/shell/utils/sidebar-state';
-import { PlaybackSessionProvider } from '#app/features/watch/components/playback-session-provider/playback-session-provider';
-import { LazyDevtools } from '#app/integrations/devtools/devtools.lazy';
-import { API_BASE_URL, COOKIE_DOMAIN, OTEL_TRACES_URL } from '#app/lib/config';
+import { isEmbedPath } from '#app/features/embed';
+import { requestSidebarState } from '#app/features/shell';
+import { requestDevicePreferences } from '#app/lib/preferences/device-preferences';
 import { headWords } from '#app/lib/seo/head-words';
 import { urlModals } from '#app/lib/url-modal/registry';
+import { AppLayout } from './-components/app-layout/app-layout';
+import { EmbedLayout } from './-components/embed-layout/embed-layout';
+import { RootDocument } from './-components/root-document/root-document';
 
 export const Route = createRootRouteWithContext<AppRouterContext>()({
   beforeLoad: async ({ context, location }) => {
@@ -64,63 +51,8 @@ export const Route = createRootRouteWithContext<AppRouterContext>()({
   component: RootLayout,
 });
 
-function RootDocument({ children }: { children: ReactNode }) {
-  const { appearance, locale, direction } = Route.useRouteContext();
-
-  return (
-    <ThemedDocument stored={appearance} lang={locale} dir={direction} cookieDomain={COOKIE_DOMAIN}>
-      <ThemeColorMeta />
-      {children}
-    </ThemedDocument>
-  );
-}
-
 function RootLayout() {
   const embedded = useRouterState({ select: ({ location }) => isEmbedPath(location.pathname) });
 
   return embedded ? <EmbedLayout /> : <AppLayout />;
-}
-
-/** A third-party page frames this: the player and the API client it reads from, nothing of the app. */
-function EmbedLayout() {
-  const { api } = Route.useRouteContext();
-
-  return (
-    <ApiProvider api={api}>
-      <Tooltip.Provider>
-        <Outlet />
-      </Tooltip.Provider>
-    </ApiProvider>
-  );
-}
-
-function AppLayout() {
-  const { api, toaster, sidebarState, auth, devicePreferences } = Route.useRouteContext();
-
-  useWebTelemetry({ app: 'web', apiBaseUrl: API_BASE_URL, tracesUrl: OTEL_TRACES_URL });
-
-  return (
-    <>
-      <ApiProvider api={api}>
-        <SessionProvider session={auth}>
-          <UserEventStream>
-            <Tooltip.Provider>
-              <ToastProvider toaster={toaster}>
-                <DevicePreferencesProvider initial={devicePreferences}>
-                  <PreferencesSync>
-                    <PlaybackSessionProvider>
-                      <RootShell sidebar={sidebarState} />
-                    </PlaybackSessionProvider>
-                  </PreferencesSync>
-                </DevicePreferencesProvider>
-              </ToastProvider>
-            </Tooltip.Provider>
-          </UserEventStream>
-        </SessionProvider>
-      </ApiProvider>
-      <Suspense>
-        <LazyDevtools />
-      </Suspense>
-    </>
-  );
 }

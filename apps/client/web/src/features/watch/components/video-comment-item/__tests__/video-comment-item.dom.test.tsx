@@ -19,11 +19,11 @@ import {
   OTHER_ID,
   REPLY_ID,
   viewerAccount,
-} from '#app/features/watch/__tests__/comment-fixtures';
+} from '#app/__tests__/comment-fixtures';
 import { renderDiscussion } from '#app/features/watch/__tests__/render-discussion';
 
 vi.mock(import('#app/components/player/taitube-player/taitube-player'), async () => ({
-  TaitubePlayer: (await import('#app/features/watch/__tests__/stub-player')).StubPlayer,
+  TaitubePlayer: (await import('#app/__tests__/stub-player')).StubPlayer,
 }));
 
 const reply = comment({ id: REPLY_ID, parentId: COMMENT_ID, content: 'Same here' });
