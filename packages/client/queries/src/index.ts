@@ -10,6 +10,7 @@ export * from './ensure-found';
 export * from './keyset-paging';
 export * from './notification-queries';
 export type { LiveChatLine } from './live-chat-state';
+export * from './parse-client-env';
 export * from './parse-param';
 export * from './prefetched';
 export * from './present-failure';
