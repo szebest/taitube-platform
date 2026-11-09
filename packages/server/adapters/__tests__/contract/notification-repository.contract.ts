@@ -10,6 +10,7 @@ import { MS_PER_DAY } from '@vp/domain/time';
 import { expectOk } from '@vp/testing/result';
 import { HOUR_MS, OTHER_OWNER_ID, OWNER_ID, publicVideo, seedOwners, VIDEO_IDS } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
+import { createRoom, ROOM_ID } from './watch-party-activity-fixtures';
 
 const CHANNEL_ID = '00000000-0000-7000-8000-000000000901';
 const ACTOR = { handle: 'night-kitchen', displayName: 'Night Kitchen', avatarUrl: null };
@@ -89,6 +90,57 @@ export function describeNotificationRepositoryContract(makeSubject: MakeReposito
         payload: { count: 1, videoTitle: 'Video a' },
       });
       expect(await announced()).toEqual([notificationCreated(toNotificationView(stored), 1)]);
+    });
+
+    describe('party invites', () => {
+      const invite = (inviteId: string): NewNotificationInput => ({
+        ...upload(VIDEO_IDS.a),
+        kind: 'party_invite',
+        videoId: null,
+        watchPartyId: ROOM_ID,
+        groupKey: `party_invite:${ROOM_ID}`,
+        payload: {
+          actor: ACTOR,
+          videoTitle: null,
+          excerpt: null,
+          outcome: null,
+          party: {
+            roomId: ROOM_ID,
+            name: 'Movie night',
+            videoTitle: null,
+            scheduledFor: null,
+            inviteId,
+            expiresAt: '2026-03-02T12:00:00.000Z',
+            watching: { names: ['Ana'], count: 1 },
+          },
+        },
+      });
+      const INVITE_A = '00000000-0000-7000-8000-00000000e101';
+      const INVITE_B = '00000000-0000-7000-8000-00000000e102';
+
+      beforeEach(async () => {
+        await createRoom(subject, ROOM_ID);
+      });
+
+      it('keeps the room and the invite on the row and in the view', async () => {
+        const stored = await record(invite(INVITE_A));
+
+        expect(stored).toMatchObject({
+          watchPartyId: ROOM_ID,
+          payload: { party: { inviteId: INVITE_A } },
+        });
+        expect(toNotificationView(stored).payload.party).toMatchObject({ roomId: ROOM_ID });
+      });
+
+      it('folds a different invite to the room into the row and counts a repeat of one once', async () => {
+        await record(invite(INVITE_A));
+        expect(await tryRecord(invite(INVITE_A))).toBeNull();
+        const folded = await record(invite(INVITE_B));
+
+        expect(await list()).toMatchObject([
+          { id: folded.id, payload: { count: 2, party: { inviteId: INVITE_B } } },
+        ]);
+      });
     });
 
     it('folds the events of one group inside an hour into one row with a count', async () => {

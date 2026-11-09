@@ -93,7 +93,14 @@ describe('@vp/queries: user event handlers', () => {
       actorChannelId: null,
       videoId: VIDEO_ID,
       commentId: null,
-      payload: { count: 1, actor: null, videoTitle: null, excerpt: null, outcome: null },
+      payload: {
+        count: 1,
+        actor: null,
+        videoTitle: null,
+        excerpt: null,
+        outcome: null,
+        party: null,
+      },
       read: false,
       createdAt: '2026-01-02T03:04:05.000Z',
     } as const;

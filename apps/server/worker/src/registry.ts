@@ -22,11 +22,13 @@ import {
   LiveJob,
   NOTIFY_COMMENT,
   NOTIFY_HEART,
+  NOTIFY_PARTY_INVITE,
   NOTIFY_PROCESSING,
   NOTIFY_SUBSCRIBERS,
   NotifyCommentJob,
   NotifyHeartJob,
   NotifyJob,
+  NotifyPartyInviteJob,
   NotifyProcessingJob,
   NotifySubscribersJob,
   PackageJob,
@@ -48,6 +50,7 @@ import { createLiveStage } from './stages/live/live-stage';
 import { createAnnounceLiveProcessor } from './stages/notifications/announce-live';
 import { createNotifyCommentProcessor } from './stages/notifications/notify-comment';
 import { createNotifyHeartProcessor } from './stages/notifications/notify-heart';
+import { createNotifyPartyInviteProcessor } from './stages/notifications/notify-party-invite';
 import { createNotifyProcessingProcessor } from './stages/notifications/notify-processing';
 import { createNotifySubscribersProcessor } from './stages/notifications/notify-subscribers';
 import { createNotifyProcessor } from './stages/notify';
@@ -117,6 +120,10 @@ const notify = (d: StageDeps): StageProcessor => {
       createNotifyCommentProcessor({ repositories, logger })
     ),
     [NOTIFY_HEART]: consuming(NotifyHeartJob, createNotifyHeartProcessor({ repositories, logger })),
+    [NOTIFY_PARTY_INVITE]: consuming(
+      NotifyPartyInviteJob,
+      createNotifyPartyInviteProcessor({ repositories, logger, now: d.now })
+    ),
     [NOTIFY_PROCESSING]: consuming(
       NotifyProcessingJob,
       createNotifyProcessingProcessor({ repositories, logger })

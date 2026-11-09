@@ -59,6 +59,7 @@ describe('packages/api-contracts: events', () => {
               videoTitle: 'Dinner',
               excerpt: null,
               outcome: null,
+              party: null,
             },
             read: false,
             createdAt: '2026-01-02T03:04:05.000Z',
