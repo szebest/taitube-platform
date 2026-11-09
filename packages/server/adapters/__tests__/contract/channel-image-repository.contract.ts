@@ -103,7 +103,7 @@ export function describeChannelImageRepositoryContract(makeSubject: MakeReposito
           status: 'queued',
           width: 2560,
           height: 1440,
-          crops: BANNER_CROPS,
+          crops: { kind: 'banner', crops: BANNER_CROPS },
           version: 1,
         });
         expect(await queue(SECOND)).toMatchObject({ version: 2 });
