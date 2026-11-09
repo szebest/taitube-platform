@@ -28,6 +28,8 @@ describe('@vp/domain-rules: decideChannelTask', () => {
     ['edit-channel', ['owner', 'manager', 'editor']],
     ['pin-content', ['owner', 'manager', 'editor']],
     ['upload', ['owner', 'manager', 'editor']],
+    ['read-team', ['owner', 'manager']],
+    ['read-audit', ['owner', 'manager']],
   ])('%s is open to %j and refused to the rest', (task, allowed) => {
     const verdicts = (['owner', 'manager', 'editor', 'moderator', 'analytics'] as const).filter(
       (role) => decideChannelTask({ ...actingAs(role), task }).ok

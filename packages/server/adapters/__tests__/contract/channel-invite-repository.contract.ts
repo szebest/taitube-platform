@@ -1,8 +1,8 @@
 import type { Repositories } from '@vp/core/repositories';
-import type { Channel } from '@vp/domain';
+import type { Channel, ChannelRole } from '@vp/domain';
 import { expectOk } from '@vp/testing/result';
 import { INVITEE_ID, auditOf, expired, invite, inviteId, seedTeam } from './channel-team-fixtures';
-import { OWNER_ID, seedOwners } from './fixtures';
+import { OTHER_OWNER_ID, OWNER_ID, seedOwners } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
 export function describeChannelInviteRepositoryContract(
@@ -35,6 +35,13 @@ export function describeChannelInviteRepositoryContract(
         .map((entry) => entry.action)
         .sort();
 
+    const notifications = async () =>
+      expectOk(await subject.repositories.outbox.claimBatch(50)).flatMap((row) =>
+        row.kind === 'notification' && row.payload.type === 'queue'
+          ? [{ name: row.payload.job.name, data: row.payload.job.data }]
+          : []
+      );
+
     beforeAll(async () => {
       subject = await makeSubject();
     });
@@ -50,19 +57,23 @@ export function describeChannelInviteRepositoryContract(
       channel = await seedTeam(repositories);
     });
 
-    it('creates a pending invite and audits it', async () => {
+    it('creates a pending invite, audits it and tells the invitee', async () => {
       expect(await create(1)).toMatchObject({
         type: 'created',
         invite: { id: inviteId(1), status: 'pending', role: 'editor' },
       });
       expect(await auditActions()).toEqual(['invite.created']);
+      expect(await notifications()).toEqual([
+        { name: 'notify-team-invite', data: { inviteId: inviteId(1) } },
+      ]);
     });
 
-    it('refuses a second pending invite for the same invitee, and audits nothing for it', async () => {
+    it('refuses a second pending invite for the same invitee, and audits or tells nothing for it', async () => {
       await create(1);
 
       expect(await create(2)).toEqual({ type: 'already-pending' });
       expect(await auditActions()).toEqual(['invite.created']);
+      expect(await notifications()).toHaveLength(1);
     });
 
     it('closes an expired invite so a new one can be sent', async () => {
@@ -136,6 +147,33 @@ export function describeChannelInviteRepositoryContract(
       await setup(1);
 
       expect(await accept(1)).toEqual({ type: 'not-pending' });
+    });
+
+    const joinAs = async (role: ChannelRole) => {
+      expectOk(
+        await repositories.channelInvites.create(
+          invite(channel, 80, { inviteeUserId: OTHER_OWNER_ID, role }),
+          auditOf(channel, 'invite.created', 80)
+        )
+      );
+      expect(await accept(80, OTHER_OWNER_ID)).toMatchObject({ type: 'accepted' });
+    };
+
+    it.each<{ scenario: string; inviter: ChannelRole | 'outsider' | 'deleted'; accepted: boolean }>(
+      [
+        { scenario: 'a manager', inviter: 'manager', accepted: true },
+        { scenario: 'an editor', inviter: 'editor', accepted: false },
+        { scenario: 'someone off the team', inviter: 'outsider', accepted: false },
+        { scenario: 'a deleted account', inviter: 'deleted', accepted: false },
+      ]
+    )('accepts an invite sent by $scenario: $accepted', async ({ inviter, accepted }) => {
+      if (inviter !== 'outsider' && inviter !== 'deleted') await joinAs(inviter);
+      await create(1, { invitedBy: inviter === 'deleted' ? null : OTHER_OWNER_ID });
+
+      expect((await accept(1)).type).toBe(accepted ? 'accepted' : 'not-pending');
+      expect(expectOk(await repositories.channelInvites.findById(inviteId(1)))?.status).toBe(
+        accepted ? 'accepted' : 'pending'
+      );
     });
 
     it('lets only the invitee accept', async () => {
