@@ -92,13 +92,29 @@ describe('GET /v1/me/invites', () => {
   });
 
   it('does not list an expired invite', async () => {
-    await invite();
-    vi.useFakeTimers({ toFake: ['Date'], now: Date.now() + 15 * 86_400_000 });
-    try {
-      expect((await mine()).json().items).toEqual([]);
-    } finally {
-      vi.useRealTimers();
-    }
+    const id = '00000000-0000-7000-8000-0000000017e2';
+    expectOk(
+      await repositories.channelInvites.create(
+        {
+          id,
+          channelId: owner.id,
+          inviteeUserId: INVITEE_ID,
+          role: 'editor',
+          invitedBy: SEEDED.userId,
+          expiresAt: new Date(Date.now() - 1000),
+        },
+        {
+          channelId: owner.id,
+          actorUserId: SEEDED.userId,
+          action: 'invite.created',
+          targetType: 'invite',
+          targetId: id,
+          meta: { inviteeUserId: INVITEE_ID, role: 'editor' },
+        }
+      )
+    );
+
+    expect((await mine()).json().items).toEqual([]);
   });
 
   it.each([
