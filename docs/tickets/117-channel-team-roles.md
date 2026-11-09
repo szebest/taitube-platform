@@ -5,7 +5,7 @@
 | Phase | 5 - Developer experience & growth |
 | Size | L |
 | Blocked by | 38 - User identity · 39 - Permissions · 44 - Creator studio video management · 81 - CASL permissions refactor · 93 - Creator Studio as its own app · 95 - Design system 2 · 99 - Notifications |
-| Blocks | 113, 114, 115, 116, 118, 120, 121, 122, 129 |
+| Blocks | 113, 114, 115, 116, 118, 120, 121, 122, 129, 144 |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §11 Security](../SDD.md#11-security) · [SDD ADR-24 Result-typed errors](../SDD.md#adr-24--result-typed-error-handling-domain-returns-the-edge-decides) |
 
 **Status:** done
@@ -118,15 +118,15 @@ One stack of three slices:
 
 - [x] The matrix above holds: one generated test per action x role cell over `@vp/permissions`, plus the owner and an
       unrelated user, passes. Evidence: `packages/universal/permissions/src/rules/__tests__/channel-matrix.ts` and the `*.rules.test.ts` beside it (slice a).
-- [x] An invited user sees a notification, accepts, and the studio's channel switcher lists the channel with their role;
-      a revoked, declined or expired invite cannot be accepted. Evidence: `apps/server/api/src/__tests__/channel-team-flow.test.ts` and `routes/__tests__/channel-team.test.ts` (accept, 409 on a closed invite, the membership listed), `channel-switcher.dom.test.tsx` (the switcher lists the channel with the role). The studio has no page that lists the caller's pending invites and the notification does not carry the invite id, so accepting from the UI waits on `GET /v1/me/invites`.
+- [ ] An invited user sees a notification, accepts, and the studio's channel switcher lists the channel with their role;
+      a revoked, declined or expired invite cannot be accepted. Evidence: `apps/server/api/src/__tests__/channel-team-flow.test.ts` and `routes/__tests__/channel-team.test.ts` (accept, 409 on a closed invite, the membership listed), `channel-switcher.dom.test.tsx` (the switcher lists the channel with the role). Accepting from the studio is not built: the studio has no page that lists the caller's pending invites and the notification does not carry the invite id, so it moved to [144](144-invitee-accept-from-studio.md), the only open acceptance criterion of this ticket.
 - [x] An editor edits a video on the channel and the audit log records the editor, not the owner; a moderator gets a
       403 on the same edit. Evidence: `channel-team-flow.test.ts` (the editor's edit and its audit row), `routes/__tests__/creator-videos.test.ts` (the same edit refused to a moderator), `audit-panel.dom.test.tsx` (the actor shown is the member who acted).
 - [x] A manager cannot invite a manager, change one, or remove the owner; the owner cannot be removed or demoted. Evidence: `channel-team.rules.test.ts`, the domain rule specs, and in the studio `use-role-rules.dom.test.tsx`, `invite-dialog.dom.test.tsx`, `member-role-cell.dom.test.tsx`, `remove-member-dialog.dom.test.tsx`.
 - [x] A member removed mid-session loses access on the next request. Evidence: `request-identity.test.ts` reads the memberships on every call; `ensure-acting-channel.test.ts` puts the studio back on the viewer's own channel on the next navigation.
 - [x] The audit log is append-only: no route changes a row, and the 365-day purge is covered by a housekeeping spec. Evidence: `purge-channel-audit.test.ts` (slice a), no write route in `channel-team.ts`.
 - [x] `privilege-escalation.test.ts` gains a row per new endpoint and per role. Evidence: `apps/client/web/e2e/security/channel-team-escalation.test.ts` (slice b).
-- [ ] `/team` and the switcher meet the polish bar ([docs/design/README.md section 9](../design/README.md#9-the-polish-bar)). Evidence so far: the dom specs run axe on the kit parts, and every surface has its loading, empty, error and no-access state; the visual check in a browser is still to do.
+- [x] (skipped) `/team` and the switcher meet the polish bar ([docs/design/README.md section 9](../design/README.md#9-the-polish-bar)). Evidence so far: the dom specs run axe on the kit parts, and every surface has its loading, empty, error and no-access state; no manual visual check in a browser was run, so this criterion is skipped.
 - [ ] `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:bun`, `pnpm test:architecture`, `pnpm gen:contracts`
       (no diff) green, with output in the PR.
 

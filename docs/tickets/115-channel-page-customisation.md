@@ -24,6 +24,8 @@
 > out of scope: this ticket supplies the banner image and nothing about its colours, and the two tickets edit different
 > sections of `/customization`. Team members who may edit the channel are 117's matrix.
 
+> **Acting channel.** An editor acts on another channel through 117's `X-Channel-Id`, but `/customization` reads the viewer's own channel from the session today. This ticket makes the page read the acting channel, so an editor edits the channel they switched to and not their own.
+
 ## What to build
 
 ### 1. Images: upload, crop and process
