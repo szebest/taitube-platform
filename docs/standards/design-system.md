@@ -91,6 +91,14 @@ Each row has a fixture proving it fires; the list is [ARCHITECTURE.md section 6]
 - `@vp/components` exports are each imported by both apps.
 - `docs/design/lib/` and `tt-` classes stay in the docs.
 
+## Scroll lock
+
+Radix locks `body` for a Dialog, Drawer, Menu and Select, and gives the scrollbar's width back with a `margin-right`
+of its own. `base.css` holds the one rule, `html { scrollbar-gutter: stable }`, and no primitive pads, overrides or
+works around the lock: overriding that margin moves the content by the scrollbar's width. `layout-stability.test.ts`
+in each app's `e2e/` opens every locking primitive over a page with a 15 px classic scrollbar and holds the content's
+box and `scrollY` where they were, open and closed.
+
 ## Motion
 
 Use the `animate-*` utilities and the motion tokens (`duration-fast|base`, `ease-enter|exit|settle`); never a literal
