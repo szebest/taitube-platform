@@ -48,8 +48,8 @@ repo.
   command below. `.storybook/vitest.config.ts` runs every story as a test in Chromium (the vitest addon), its
   a11y checks failing it; it sits in `.storybook/` so the root run never picks it up.
 - The visual jobs' ceiling: about 80 s a shard outside the shots, about 0.45 s a shot on two workers, 6 shots
-  a story plus the `motion`, `text` and `translated` extras, under the 4 minute budget. There are 10 shards, and each also
-  runs its share of the story tests (`--shard=x/10`); add shards as stories grow.
+  a story plus the `motion`, `text` and `translated` extras, under the 4 minute budget. There are 12 shards, and each also
+  runs its share of the story tests (`--shard=x/12`); add shards as stories grow.
 
 ## Rules
 
