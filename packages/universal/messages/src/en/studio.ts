@@ -4,6 +4,7 @@ import { studioCaptions } from './studio-captions';
 import { studioComments } from './studio-comments';
 import { studioLive } from './studio-live';
 import { studioPicks } from './studio-picks';
+import { studioTeam } from './studio-team';
 
 export const studio = {
   title: dt('Creator Studio'),
@@ -74,6 +75,7 @@ export const studio = {
   ...studioComments,
   ...studioLive,
   ...studioPicks,
+  ...studioTeam,
   deleteVideo: dt('Delete'),
   setVisibility: dt('Visibility'),
   deleteConfirmTitle: dt('{count:plural}', {

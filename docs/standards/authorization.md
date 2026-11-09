@@ -42,7 +42,9 @@ The permission engine is a pure domain package (`packages/universal/permissions`
 
 ### Strict Typing & Boundary Role Parsing
 - **`Role`**: Strictly typed union `'GUEST' | 'USER' | 'CREATOR' | 'MODERATOR' | 'ADMIN'`. Zero `any`, zero loose string fallbacks.
-- **`UserContext`**: `{ readonly id: string; readonly role: Role; readonly email?: string; }`.
+- **`UserContext`**: `{ readonly id: string; readonly role: Role; readonly email?: string; readonly memberships?: Readonly<Record<channelId, { role: ChannelRole; ownerId: string }>> }`.
+  `memberships` is the caller's channel team roles, loaded by the API's auth hook once per request (never from the
+  token), so a member removed mid-session loses access on the next request.
 - **`parseRole(value: unknown): Role`**: Sanitizes external JWT/HTTP inputs at the boundary. Internal domain code never uses defensive role fallbacks.
 
 ### Pure Functional Ability Builders
@@ -55,6 +57,8 @@ The permission engine is a pure domain package (`packages/universal/permissions`
   - `rules/preferences.rules.ts`: A signed-in caller reads and saves their own preferences (`read` and `update Preferences { ownerId }`).
   - `rules/recommendation-feedback.rules.ts`: A signed-in caller reads, creates and deletes their own recommendation feedback (`read`, `create` and `delete RecommendationFeedback { ownerId }`).
   - `rules/caption.rules.ts`: A video's captions are read where the video is and managed by its owner (`read` and `manage Caption { videoId, ownerId, visibility }`).
+  - `rules/channel-team.rules.ts`: The channel owner manages `ChannelMember` and `ChannelInvite` and reads `ChannelAudit`; a manager does the same on rows whose `role` is not `manager`; a member deletes their own `ChannelMember` row (leaves); an invitee updates their own `ChannelInvite` (answers).
+  - Channel team roles: `CHANNEL_ROLES` in `@vp/domain` maps each role to its capabilities, and `rules/memberships.ts` turns the caller's memberships into `{ $in }` conditions (`ownersWith` on the channel owner's user id for videos, comments, analytics, captions and uploads; `channelsWith` on the channel id for `Channel`). Each rule file adds its member rules beside its owner rules, and `rules/__tests__/channel-matrix.ts` generates one cell per capability, action and persona for every rule spec.
   - `rules/admin.rules.ts`: Superuser global bypass (`can('manage', 'all')`), except the creator's heart: an admin hearts only on a video they own.
 - Global builder `getUserPermissions(user: UserContext | null): AppAbility` compiles rules into an immutable `MongoAbility` with zero class inheritance.
 

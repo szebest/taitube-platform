@@ -2,7 +2,7 @@ import type { Repositories } from '@vp/core/repositories';
 import { KIND_SWITCH, type NotificationKind } from '@vp/domain';
 import { DEFAULT_PREFERENCES } from '@vp/domain/settings';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { type Result, map } from '@vp/result';
+import { type Result, map, ok } from '@vp/result';
 
 /** The users, among `userIds`, whose account switch lets `kind` through; an unsaved account is on defaults. */
 export async function usersSwitchedOn(
@@ -11,6 +11,7 @@ export async function usersSwitchedOn(
   kind: NotificationKind
 ): Promise<Result<Set<string>, DatabaseUnavailable>> {
   const key = KIND_SWITCH[kind];
+  if (key === null) return ok(new Set(userIds));
   const saved = await repositories.userPreferences.findMany(userIds);
 
   return map(saved, (documents) => {

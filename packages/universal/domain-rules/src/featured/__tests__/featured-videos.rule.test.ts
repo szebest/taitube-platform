@@ -1,5 +1,6 @@
 import type { Video } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
+import type { UserContext } from '@vp/permissions';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { ADMIN, aVideo, OWNER, STRANGER } from '../../__tests__/entities';
 import { decideFeaturedVideos, isFeaturable } from '../featured-videos.rule';
@@ -9,23 +10,31 @@ const B = aVideo({ id: 'b' });
 
 const catalogue = (...videos: Video[]) => new Map(videos.map((video) => [video.id, video]));
 
+const decide = (
+  viewer: UserContext | null,
+  videoIds: readonly string[],
+  videos: ReadonlyMap<string, Video>,
+  shelfOwnerId = viewer?.id ?? OWNER.id
+) => decideFeaturedVideos({ viewer, shelfOwnerId, videoIds, videos });
+
+const EDITOR: UserContext = {
+  id: 'editor-1',
+  role: 'USER',
+  memberships: {
+    'chan-owner': { role: 'editor', ownerId: OWNER.id },
+    'chan-other': { role: 'editor', ownerId: STRANGER.id },
+  },
+};
+
 describe('@vp/domain-rules: decideFeaturedVideos', () => {
   it('answers the ids in the order given', () => {
-    const decided = decideFeaturedVideos({
-      viewer: OWNER,
-      videoIds: ['b', 'a'],
-      videos: catalogue(A, B),
-    });
+    const decided = decide(OWNER, ['b', 'a'], catalogue(A, B));
 
     expect(expectOk(decided)).toEqual(['b', 'a']);
   });
 
   it('accepts an empty list', () => {
-    const decided = decideFeaturedVideos({
-      viewer: OWNER,
-      videoIds: [],
-      videos: catalogue(),
-    });
+    const decided = decide(OWNER, [], catalogue());
 
     expect(expectOk(decided)).toEqual([]);
   });
@@ -86,21 +95,28 @@ describe('@vp/domain-rules: decideFeaturedVideos', () => {
       code: ErrorCodes.VALIDATION_FAILED,
     },
   ])('refuses $scenario with $code', ({ viewer, videos, code }) => {
-    const decided = decideFeaturedVideos({
-      viewer,
-      videoIds: ['a'],
-      videos,
-    });
+    const decided = decide(viewer, ['a'], videos);
 
     expect(expectErr(decided).code).toBe(code);
   });
 
+  it.each([
+    { scenario: "pins the owner's video on the owner's shelf", shelf: OWNER.id, ok: true },
+    {
+      scenario: "pins the owner's video on another channel's shelf",
+      shelf: STRANGER.id,
+      ok: false,
+    },
+  ])('an editor of two channels $scenario: $ok', ({ shelf, ok }) => {
+    expect(decide(EDITOR, ['a'], catalogue(A), shelf).ok).toBe(ok);
+  });
+
   it('names the first video that fails, not the later ones', () => {
-    const decided = decideFeaturedVideos({
-      viewer: OWNER,
-      videoIds: ['a', 'b', 'c'],
-      videos: catalogue(A, aVideo({ id: 'b', visibility: 'private' })),
-    });
+    const decided = decide(
+      OWNER,
+      ['a', 'b', 'c'],
+      catalogue(A, aVideo({ id: 'b', visibility: 'private' }))
+    );
 
     expect(expectErr(decided)).toMatchObject({ code: ErrorCodes.VALIDATION_FAILED, videoId: 'b' });
   });

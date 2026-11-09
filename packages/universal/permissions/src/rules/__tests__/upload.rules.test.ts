@@ -3,6 +3,7 @@ import { creatorUser, foreignUpload, guestUser, sampleUpload } from '../../__moc
 import type { AppAction, AppSubjects, UserContext } from '../../types/index';
 import { defineUploadRules } from '../upload.rules';
 import { buildAbility } from './build-ability';
+import { matrixCells } from './channel-matrix';
 
 describe('rules/upload.rules: Declarative Upload Ability Rules', () => {
   it.each<{
@@ -50,4 +51,11 @@ describe('rules/upload.rules: Declarative Upload Ability Rules', () => {
   ])('$scenario: $expected', ({ user, action, target, expected }) => {
     expect(buildAbility(defineUploadRules, user).can(action, target)).toBe(expected);
   });
+
+  it.each(matrixCells('Upload'))(
+    'the channel matrix: $persona holding $capability may $action: $expected',
+    ({ user, action, target, expected }) => {
+      expect(buildAbility(defineUploadRules, user).can(action, target)).toBe(expected);
+    }
+  );
 });

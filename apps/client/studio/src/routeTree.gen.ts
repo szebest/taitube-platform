@@ -17,6 +17,7 @@ import { Route as AuthedAnalyticsRouteImport } from './routes/_authed/analytics'
 import { Route as AuthedCommentsRouteImport } from './routes/_authed/comments';
 import { Route as AuthedCustomizationRouteImport } from './routes/_authed/customization';
 import { Route as AuthedLiveRouteImport } from './routes/_authed/live';
+import { Route as AuthedTeamRouteImport } from './routes/_authed/team';
 import { Route as AuthedAdminIndexRouteImport } from './routes/_authed/admin/index';
 import { Route as AuthedAdminCategoriesRouteImport } from './routes/_authed/admin/categories';
 import { Route as AuthedAdminCurationRouteImport } from './routes/_authed/admin/curation';
@@ -66,6 +67,11 @@ const AuthedCustomizationRoute = AuthedCustomizationRouteImport.update({
 const AuthedLiveRoute = AuthedLiveRouteImport.update({
   id: '/live',
   path: '/live',
+  getParentRoute: () => AuthedRoute,
+} as any);
+const AuthedTeamRoute = AuthedTeamRouteImport.update({
+  id: '/team',
+  path: '/team',
   getParentRoute: () => AuthedRoute,
 } as any);
 const AuthedAdminIndexRoute = AuthedAdminIndexRouteImport.update({
@@ -133,6 +139,7 @@ export interface FileRoutesByFullPath {
   '/comments': typeof AuthedCommentsRoute;
   '/customization': typeof AuthedCustomizationRoute;
   '/live': typeof AuthedLiveRoute;
+  '/team': typeof AuthedTeamRoute;
   '/admin/categories': typeof AuthedAdminCategoriesRoute;
   '/admin/curation': typeof AuthedAdminCurationRoute;
   '/admin/moderation': typeof AuthedAdminModerationRoute;
@@ -152,6 +159,7 @@ export interface FileRoutesByTo {
   '/comments': typeof AuthedCommentsRoute;
   '/customization': typeof AuthedCustomizationRoute;
   '/live': typeof AuthedLiveRoute;
+  '/team': typeof AuthedTeamRoute;
   '/admin/categories': typeof AuthedAdminCategoriesRoute;
   '/admin/curation': typeof AuthedAdminCurationRoute;
   '/admin/moderation': typeof AuthedAdminModerationRoute;
@@ -174,6 +182,7 @@ export interface FileRoutesById {
   '/_authed/comments': typeof AuthedCommentsRoute;
   '/_authed/customization': typeof AuthedCustomizationRoute;
   '/_authed/live': typeof AuthedLiveRoute;
+  '/_authed/team': typeof AuthedTeamRoute;
   '/_authed/admin/categories': typeof AuthedAdminCategoriesRoute;
   '/_authed/admin/curation': typeof AuthedAdminCurationRoute;
   '/_authed/admin/moderation': typeof AuthedAdminModerationRoute;
@@ -196,6 +205,7 @@ export interface FileRouteTypes {
     | '/comments'
     | '/customization'
     | '/live'
+    | '/team'
     | '/admin/categories'
     | '/admin/curation'
     | '/admin/moderation'
@@ -215,6 +225,7 @@ export interface FileRouteTypes {
     | '/comments'
     | '/customization'
     | '/live'
+    | '/team'
     | '/admin/categories'
     | '/admin/curation'
     | '/admin/moderation'
@@ -236,6 +247,7 @@ export interface FileRouteTypes {
     | '/_authed/comments'
     | '/_authed/customization'
     | '/_authed/live'
+    | '/_authed/team'
     | '/_authed/admin/categories'
     | '/_authed/admin/curation'
     | '/_authed/admin/moderation'
@@ -312,6 +324,13 @@ declare module '@tanstack/react-router' {
       path: '/live';
       fullPath: '/live';
       preLoaderRoute: typeof AuthedLiveRouteImport;
+      parentRoute: typeof AuthedRoute;
+    };
+    '/_authed/team': {
+      id: '/_authed/team';
+      path: '/team';
+      fullPath: '/team';
+      preLoaderRoute: typeof AuthedTeamRouteImport;
       parentRoute: typeof AuthedRoute;
     };
     '/_authed/admin/': {
@@ -420,6 +439,7 @@ interface AuthedRouteChildren {
   AuthedCommentsRoute: typeof AuthedCommentsRoute;
   AuthedCustomizationRoute: typeof AuthedCustomizationRoute;
   AuthedLiveRoute: typeof AuthedLiveRoute;
+  AuthedTeamRoute: typeof AuthedTeamRoute;
   AuthedUploadIndexRoute: typeof AuthedUploadIndexRoute;
   AuthedVideosIndexRoute: typeof AuthedVideosIndexRoute;
   AuthedUploadEditVideoIdRoute: typeof AuthedUploadEditVideoIdRoute;
@@ -433,6 +453,7 @@ const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedCommentsRoute: AuthedCommentsRoute,
   AuthedCustomizationRoute: AuthedCustomizationRoute,
   AuthedLiveRoute: AuthedLiveRoute,
+  AuthedTeamRoute: AuthedTeamRoute,
   AuthedUploadIndexRoute: AuthedUploadIndexRoute,
   AuthedVideosIndexRoute: AuthedVideosIndexRoute,
   AuthedUploadEditVideoIdRoute: AuthedUploadEditVideoIdRoute,
