@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { VideoIdParamSchema } from '@vp/api-contracts';
-import { ensureFound, parseParam, videoQueryOptions } from '@vp/queries';
+import { ensureFound, parseParam, videoQueryOptions, prefetched } from '@vp/queries';
 import { z } from 'zod';
 import { LazyCaptionsSection } from '#app/features/captions';
 import { categoriesQueryOptions, EditVideoPage } from '#app/features/videos';
@@ -14,7 +14,7 @@ export const Route = createFileRoute('/_authed/videos/$videoId/edit')({
   loader: async ({ context: { queryClient, api }, params: { videoId } }) => {
     await Promise.all([
       ensureFound(queryClient, videoQueryOptions(api, videoId)),
-      queryClient.prefetchQuery(categoriesQueryOptions(api)),
+      prefetched(queryClient.query(categoriesQueryOptions(api))),
     ]);
   },
   component: EditRoute,

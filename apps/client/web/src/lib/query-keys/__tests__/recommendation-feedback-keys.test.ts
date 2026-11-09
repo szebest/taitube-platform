@@ -18,7 +18,7 @@ describe('apps/client/web: recommendation feedback queries', () => {
     const client = createQueryClient();
     const options = hiddenRecommendationsQueryOptions(api);
 
-    await client.fetchInfiniteQuery({ ...options, pages: 2 });
+    await client.infiniteQuery({ ...options, pages: 2 });
 
     expect(asked).toEqual([null, 'next']);
   });

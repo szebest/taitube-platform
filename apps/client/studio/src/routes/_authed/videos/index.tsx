@@ -10,7 +10,7 @@ export const Route = createFileRoute('/_authed/videos/')({
   validateSearch: LibrarySearchSchema,
   loaderDeps: ({ search: { sort, page, q } }) => ({ sort, page, q }),
   loader: ({ context: { queryClient, api }, deps }) =>
-    queryClient.ensureQueryData(libraryQueryOptions(api, deps)),
+    queryClient.query({ ...libraryQueryOptions(api, deps), staleTime: 'static' }),
   pendingComponent: LibraryPageSkeleton,
   component: LibraryPage,
 });

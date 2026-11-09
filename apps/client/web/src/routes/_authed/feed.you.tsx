@@ -18,15 +18,22 @@ function You() {
 export const Route = createFileRoute('/_authed/feed/you')({
   validateSearch: z.object({}),
   loader: async ({ context: { queryClient, api, auth } }) => {
-    const playlists = await queryClient.ensureQueryData(myPlaylistsQueryOptions(api));
+    const playlists = await queryClient.query({
+      ...myPlaylistsQueryOptions(api),
+      staleTime: 'static',
+    });
     const watchLater = playlists.items.find(({ isSystem }) => isSystem);
 
     await Promise.all([
-      queryClient.ensureQueryData(historyShelfQueryOptions(api)),
-      watchLater && queryClient.ensureQueryData(playlistQueryOptions(api, watchLater.id)),
-      queryClient.ensureInfiniteQueryData(myClipsQueryOptions(api)),
+      queryClient.query({ ...historyShelfQueryOptions(api), staleTime: 'static' }),
+      watchLater &&
+        queryClient.query({ ...playlistQueryOptions(api, watchLater.id), staleTime: 'static' }),
+      queryClient.infiniteQuery({ ...myClipsQueryOptions(api), staleTime: 'static' }),
       auth.status === 'signed-in' &&
-        queryClient.ensureQueryData(uploadsShelfQueryOptions(api, auth.account.channel.id)),
+        queryClient.query({
+          ...uploadsShelfQueryOptions(api, auth.account.channel.id),
+          staleTime: 'static',
+        }),
     ]);
   },
   pendingComponent: YouPageSkeleton,

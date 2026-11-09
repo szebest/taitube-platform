@@ -1,5 +1,5 @@
 import { Icon, IconButton, Textarea, useUiCopy } from '@vp/ui';
-import { type ComponentPropsWithRef, type FormEvent, type KeyboardEvent, useState } from 'react';
+import { type ComponentPropsWithRef, type SubmitEvent, type KeyboardEvent, useState } from 'react';
 import { useLiveChat } from '#app/components/live/live-chat/live-chat.context';
 import { liveChatStyles } from '#app/components/live/live-chat/live-chat.variants';
 
@@ -36,7 +36,7 @@ export function LiveChatComposer({
     setText('');
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
     submit();
   };

@@ -1,4 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
+import { prefetched } from '@vp/queries';
 import { z } from 'zod';
 import { HomePage, HomePageSkeleton } from '#app/features/browse';
 import { LiveNowShelf } from '#app/features/live';
@@ -9,8 +10,8 @@ export const Route = createFileRoute('/')({
   validateSearch: z.object({}),
   loader: async ({ context: { queryClient, api } }) => {
     await Promise.all([
-      queryClient.ensureQueryData(homeQueryOptions(api)),
-      queryClient.prefetchQuery(currentPickQueryOptions(api)),
+      queryClient.query({ ...homeQueryOptions(api), staleTime: 'static' }),
+      prefetched(queryClient.query(currentPickQueryOptions(api))),
     ]);
   },
   pendingComponent: HomePageSkeleton,

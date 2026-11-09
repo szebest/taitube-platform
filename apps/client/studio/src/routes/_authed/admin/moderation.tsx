@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useT } from '@vp/intl-react';
+import { prefetched } from '@vp/queries';
 import { useId } from 'react';
 import {
   adminCategoriesQueryOptions,
@@ -37,8 +38,8 @@ export const Route = createFileRoute('/_authed/admin/moderation')({
   loaderDeps: ({ search }) => search,
   loader: async ({ context: { queryClient, api }, deps }) => {
     await Promise.all([
-      queryClient.prefetchInfiniteQuery(adminVideosQueryOptions(api, deps)),
-      queryClient.prefetchQuery(adminCategoriesQueryOptions(api)),
+      prefetched(queryClient.infiniteQuery(adminVideosQueryOptions(api, deps))),
+      prefetched(queryClient.query(adminCategoriesQueryOptions(api))),
     ]);
   },
   component: ModerationPage,

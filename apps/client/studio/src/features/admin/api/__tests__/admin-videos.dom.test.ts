@@ -17,7 +17,7 @@ describe('apps/client/studio: adminVideosQueryOptions', () => {
     );
     const options = adminVideosQueryOptions(api, { status: 'READY', sort: 'views' });
 
-    const data = await createQueryClient().fetchInfiniteQuery(options);
+    const data = await createQueryClient().infiniteQuery(options);
 
     expect(options.queryKey).toEqual(['admin', 'videos', { status: 'READY', sort: 'views' }]);
     expect(Object.fromEntries(queries[0] ?? [])).toEqual({

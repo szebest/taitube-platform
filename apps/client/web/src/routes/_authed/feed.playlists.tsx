@@ -10,7 +10,7 @@ export const Route = createFileRoute('/_authed/feed/playlists')({
   validateSearch: urlModals.searchSchema,
   search: { middlewares: [urlModals.retainUrlModal] },
   loader: ({ context: { queryClient, api } }) =>
-    queryClient.ensureQueryData(myPlaylistsQueryOptions(api)),
+    queryClient.query({ ...myPlaylistsQueryOptions(api), staleTime: 'static' }),
   pendingComponent: PlaylistsPageSkeleton,
   component: PlaylistsPage,
 });

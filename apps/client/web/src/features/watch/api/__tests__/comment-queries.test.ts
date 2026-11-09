@@ -21,7 +21,7 @@ describe('apps/client/web: comment queries', () => {
 
     const client = createQueryClient();
     const options = commentsQueryOptions(api, VIDEO_ID, 'newest');
-    await client.fetchInfiniteQuery(options);
+    await client.infiniteQuery(options);
 
     expect(asked[0]?.pathname).toBe(`/v1/videos/${VIDEO_ID}/comments`);
     expect(Object.fromEntries(asked[0]?.searchParams ?? [])).toEqual({
@@ -42,7 +42,7 @@ describe('apps/client/web: comment queries', () => {
       })
     );
 
-    await createQueryClient().fetchInfiniteQuery(repliesQueryOptions(api, COMMENT_ID));
+    await createQueryClient().infiniteQuery(repliesQueryOptions(api, COMMENT_ID));
 
     expect(asked).toEqual([COMMENT_ID]);
   });

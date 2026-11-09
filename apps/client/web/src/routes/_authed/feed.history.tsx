@@ -18,16 +18,16 @@ export const Route = createFileRoute('/_authed/feed/history')({
   loader: async ({ context: { queryClient, api }, deps: { tab } }) => {
     switch (tab) {
       case 'history':
-        await queryClient.ensureInfiniteQueryData(watchHistoryQueryOptions(api));
+        await queryClient.infiniteQuery({ ...watchHistoryQueryOptions(api), staleTime: 'static' });
         return;
       case 'searches':
-        await queryClient.ensureInfiniteQueryData(searchHistoryQueryOptions(api));
+        await queryClient.infiniteQuery({ ...searchHistoryQueryOptions(api), staleTime: 'static' });
         return;
       case 'liked':
-        await queryClient.ensureInfiniteQueryData(likedVideosQueryOptions(api));
+        await queryClient.infiniteQuery({ ...likedVideosQueryOptions(api), staleTime: 'static' });
         return;
       case 'comments':
-        await queryClient.ensureInfiniteQueryData(myCommentsQueryOptions(api));
+        await queryClient.infiniteQuery({ ...myCommentsQueryOptions(api), staleTime: 'static' });
         return;
       default:
         assertNever(tab, 'library tab');

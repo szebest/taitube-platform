@@ -17,7 +17,7 @@ describe('apps/client/studio: adminDlqQueryOptions', () => {
     apiServer.use(dlqList([dlqEntry(), replayed], queries));
     const options = adminDlqQueryOptions(api, 'REPLAYED');
 
-    const data = await createQueryClient().fetchInfiniteQuery(options);
+    const data = await createQueryClient().infiniteQuery(options);
 
     expect(options.queryKey).toEqual(['admin', 'dlq', 'list', 'REPLAYED']);
     expect(queries[0]?.get('status')).toBe('REPLAYED');
@@ -38,7 +38,7 @@ describe('apps/client/studio: parkedDlqQueryOptions', () => {
       })
     );
 
-    const result = await createQueryClient().fetchQuery(parkedDlqQueryOptions(api));
+    const result = await createQueryClient().query(parkedDlqQueryOptions(api));
 
     expect(queries[0]?.get('status')).toBe('PARKED');
     expect(result).toEqual({ count: 2, more });

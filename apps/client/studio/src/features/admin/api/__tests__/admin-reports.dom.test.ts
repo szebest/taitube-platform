@@ -15,7 +15,7 @@ describe('apps/client/studio: adminReportsQueryOptions', () => {
     );
     const options = adminReportsQueryOptions(api);
 
-    const data = await createQueryClient().fetchInfiniteQuery(options);
+    const data = await createQueryClient().infiniteQuery(options);
 
     expect(options.queryKey).toEqual(['admin', 'reports']);
     expect(data.pages[0]?.items).toEqual([report]);

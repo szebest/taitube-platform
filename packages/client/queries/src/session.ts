@@ -36,13 +36,14 @@ async function loadSession(api: ApiClient): Promise<Session> {
  * reaches. A token the API refuses signs the viewer out.
  */
 export function ensureSession({ queryClient, api }: { queryClient: QueryClient; api: ApiClient }) {
-  return queryClient.ensureQueryData(
-    queryOptions({
+  return queryClient.query({
+    ...queryOptions({
       queryKey: SESSION_KEY,
       queryFn: () => loadSession(api),
       staleTime: Number.POSITIVE_INFINITY,
-    })
-  );
+    }),
+    staleTime: 'static',
+  });
 }
 
 /** Who `@vp/permissions` decides for: the account's user and the role its token carries. */

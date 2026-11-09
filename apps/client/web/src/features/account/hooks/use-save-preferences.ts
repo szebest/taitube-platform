@@ -21,7 +21,7 @@ async function sendChange(api: ApiClient, client: QueryClient, change: Preferenc
   if (isOk(first)) return first.value;
   if (!(first.error instanceof ApiError && first.error.status === CONFLICT)) throw first.error;
 
-  await client.fetchQuery({ ...preferencesQueryOptions(api), staleTime: 0 });
+  await client.query({ ...preferencesQueryOptions(api), staleTime: 0 });
   return attempt();
 }
 

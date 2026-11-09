@@ -14,7 +14,7 @@ const PAGES = [
 }));
 
 const loadLibrary = (sort: 'newest' | 'views', page: number) =>
-  createQueryClient().fetchQuery(libraryQueryOptions(api, { sort, page }));
+  createQueryClient().query(libraryQueryOptions(api, { sort, page }));
 
 describe('apps/client/studio: library queries', () => {
   it.each([
@@ -44,13 +44,13 @@ describe('apps/client/studio: library queries', () => {
     async ({ visited, target, cursors }) => {
       const client = createQueryClient();
       const requests = serveLibrary(PAGES);
-      await client.fetchQuery(libraryQueryOptions(api, { sort: 'views', page: visited }));
+      await client.query(libraryQueryOptions(api, { sort: 'views', page: visited }));
       requests.length = 0;
       client.removeQueries({
         queryKey: libraryQueryOptions(api, { sort: 'views', page: target }).queryKey,
       });
 
-      await client.fetchQuery(libraryQueryOptions(api, { sort: 'views', page: target }));
+      await client.query(libraryQueryOptions(api, { sort: 'views', page: target }));
 
       expect(requests.map(({ cursor }) => cursor)).toEqual(cursors);
     }
@@ -70,7 +70,7 @@ describe('apps/client/studio: library queries', () => {
   it('asks the API for the title filter on every page it follows', async () => {
     const requests = serveLibrary(PAGES.map((page) => ({ ...page, q: 'night' })));
 
-    await createQueryClient().fetchQuery(
+    await createQueryClient().query(
       libraryQueryOptions(api, { sort: 'newest', page: 2, q: 'night' })
     );
 

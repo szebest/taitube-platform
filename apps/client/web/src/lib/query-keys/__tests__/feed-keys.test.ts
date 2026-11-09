@@ -32,7 +32,7 @@ describe('apps/client/web: feed queries', () => {
     const searches: string[] = [];
     apiServer.use(pagedFeed(searches));
 
-    await createQueryClient().fetchInfiniteQuery(
+    await createQueryClient().infiniteQuery(
       publicFeedQueryOptions(api, { sort: 'trending', categoryId: CATEGORY_ID })
     );
 
@@ -48,7 +48,7 @@ describe('apps/client/web: feed queries', () => {
       })
     );
 
-    await createQueryClient().fetchInfiniteQuery(subscriptionFeedQueryOptions(api));
+    await createQueryClient().infiniteQuery(subscriptionFeedQueryOptions(api));
 
     expect(searches).toEqual(['limit=30']);
   });
@@ -57,7 +57,7 @@ describe('apps/client/web: feed queries', () => {
     const searches: string[] = [];
     apiServer.use(pagedFeed(searches));
 
-    const feed = await createQueryClient().fetchInfiniteQuery({
+    const feed = await createQueryClient().infiniteQuery({
       ...publicFeedQueryOptions(api, { sort: 'recent' }),
       pages: 2,
     });
@@ -79,7 +79,7 @@ describe('apps/client/web: feed queries', () => {
       })
     );
 
-    await createQueryClient().fetchInfiniteQuery({ ...shortsFeedQueryOptions(api), pages: 2 });
+    await createQueryClient().infiniteQuery({ ...shortsFeedQueryOptions(api), pages: 2 });
 
     expect(searches).toEqual(['limit=30', 'limit=30&cursor=next']);
   });

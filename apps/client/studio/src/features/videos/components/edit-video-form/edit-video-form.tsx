@@ -59,8 +59,7 @@ export function EditVideoForm({ video }: { video: Video }) {
     onSubmit: ({ value }) => save(value, loadedVersion),
   });
 
-  const latest = () =>
-    queryClient.fetchQuery({ ...videoQueryOptions(api, video.id), staleTime: 0 });
+  const latest = () => queryClient.query({ ...videoQueryOptions(api, video.id), staleTime: 0 });
 
   const reload = async () => {
     const reloaded = await latest();

@@ -9,7 +9,7 @@ describe('apps/client/web: home queries', () => {
   it('reads the home shelves', async () => {
     apiServer.use(mockEndpoint(getHome, () => HttpResponse.json({ shelves: [] })));
 
-    await expect(createQueryClient().fetchQuery(homeQueryOptions(api))).resolves.toEqual({
+    await expect(createQueryClient().query(homeQueryOptions(api))).resolves.toEqual({
       shelves: [],
     });
   });
@@ -17,7 +17,7 @@ describe('apps/client/web: home queries', () => {
   it('reads the current pick', async () => {
     apiServer.use(mockEndpoint(getCurrentPick, () => HttpResponse.json(fallbackPick())));
 
-    await expect(createQueryClient().fetchQuery(currentPickQueryOptions(api))).resolves.toEqual(
+    await expect(createQueryClient().query(currentPickQueryOptions(api))).resolves.toEqual(
       fallbackPick()
     );
   });
@@ -25,13 +25,13 @@ describe('apps/client/web: home queries', () => {
   it('reads nothing scheduled and nothing trending as no pick', async () => {
     apiServer.use(mockEndpoint(getCurrentPick, () => problemReply(ErrorCodes.VIDEO_NOT_FOUND)));
 
-    await expect(createQueryClient().fetchQuery(currentPickQueryOptions(api))).resolves.toBeNull();
+    await expect(createQueryClient().query(currentPickQueryOptions(api))).resolves.toBeNull();
   });
 
   it('fails on any other error', async () => {
     apiServer.use(mockEndpoint(getCurrentPick, () => problemReply(ErrorCodes.INTERNAL)));
 
-    await expect(createQueryClient().fetchQuery(currentPickQueryOptions(api))).rejects.toThrow();
+    await expect(createQueryClient().query(currentPickQueryOptions(api))).rejects.toThrow();
   });
 
   it.each([

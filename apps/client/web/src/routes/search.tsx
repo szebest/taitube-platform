@@ -31,7 +31,10 @@ export const Route = createFileRoute('/search')({
       return;
     }
 
-    await queryClient.ensureInfiniteQueryData(searchQueryOptions(api, { query, type, sort }));
+    await queryClient.infiniteQuery({
+      ...searchQueryOptions(api, { query, type, sort }),
+      staleTime: 'static',
+    });
   },
   pendingComponent: SearchPageSkeleton,
   component: SearchPage,

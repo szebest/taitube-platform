@@ -11,6 +11,7 @@ export * from './keyset-paging';
 export * from './notification-queries';
 export type { LiveChatLine } from './live-chat-state';
 export * from './parse-param';
+export * from './prefetched';
 export * from './present-failure';
 export * from './request-locale';
 export * from './retry-policy';

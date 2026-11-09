@@ -12,7 +12,10 @@ export const Route = createFileRoute('/shorts/$videoId')({
   },
   validateSearch: z.object({}),
   loader: async ({ context: { queryClient, api }, params: { videoId } }) => {
-    const feed = await queryClient.ensureInfiniteQueryData(shortsFeedQueryOptions(api));
+    const feed = await queryClient.infiniteQuery({
+      ...shortsFeedQueryOptions(api),
+      staleTime: 'static',
+    });
     const served = feed.pages.some(({ items }) => items.some(({ id }) => id === videoId));
     if (!served) {
       await ensureFound(queryClient, videoQueryOptions(api, videoId));

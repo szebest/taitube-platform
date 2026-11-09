@@ -16,7 +16,7 @@ function Shorts() {
 export const Route = createFileRoute('/shorts')({
   validateSearch: z.object({}),
   loader: async ({ context: { queryClient, api } }) => {
-    await queryClient.ensureInfiniteQueryData(shortsFeedQueryOptions(api));
+    await queryClient.infiniteQuery({ ...shortsFeedQueryOptions(api), staleTime: 'static' });
   },
   head: () => ({ meta: [{ title: 'Shorts - Taitube' }] }),
   pendingComponent: ShortsPlayerFrameSkeleton,

@@ -14,7 +14,7 @@ describe('apps/client/web: subscription queries', () => {
     const list = { items: [subscribedChannel()], nextCursor: null };
     apiServer.use(mockEndpoint(listMySubscriptions, () => HttpResponse.json(list)));
 
-    const loaded = await createQueryClient().fetchQuery(mySubscriptionsQueryOptions(api));
+    const loaded = await createQueryClient().query(mySubscriptionsQueryOptions(api));
 
     expect(loaded.items.map(({ id }) => id)).toEqual([CHANNEL_ID]);
   });
@@ -26,9 +26,7 @@ describe('apps/client/web: subscription queries', () => {
       )
     );
 
-    const loaded = await createQueryClient().fetchQuery(
-      subscriptionStatusQueryOptions(api, CHANNEL_ID)
-    );
+    const loaded = await createQueryClient().query(subscriptionStatusQueryOptions(api, CHANNEL_ID));
 
     expect(loaded).toEqual({ channelId: CHANNEL_ID, subscribed: true });
   });

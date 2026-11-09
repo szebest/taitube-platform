@@ -12,7 +12,7 @@ const MintedSchema = z.object({ token: z.string() });
 
 /** Signs in as a dev persona with a token minted on this machine. */
 export const signInAsPersona = createServerFn({ method: 'POST' })
-  .inputValidator(z.object({ persona: z.enum(PERSONAS) }))
+  .validator(z.object({ persona: z.enum(PERSONAS) }))
   .handler(async ({ data }) => {
     const minted = await fetch(`${DEV_TOKEN_URL}/token?persona=${data.persona}`);
     if (!minted.ok) {

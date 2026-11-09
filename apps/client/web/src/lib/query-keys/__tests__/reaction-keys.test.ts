@@ -12,7 +12,7 @@ describe('apps/client/web: reaction queries', () => {
       )
     );
 
-    const loaded = await createQueryClient().fetchQuery(myReactionQueryOptions(api, VIDEO_ID));
+    const loaded = await createQueryClient().query(myReactionQueryOptions(api, VIDEO_ID));
 
     expect(loaded).toEqual({ videoId: VIDEO_ID, reaction: 'LIKE' });
   });

@@ -6,6 +6,6 @@ import { mySubscriptionsQueryOptions } from '#app/lib/query-keys/subscription-ke
 export const Route = createFileRoute('/_authed/subscriptions/')({
   validateSearch: z.object({}),
   loader: ({ context: { queryClient, api } }) =>
-    queryClient.ensureQueryData(mySubscriptionsQueryOptions(api)),
+    queryClient.query({ ...mySubscriptionsQueryOptions(api), staleTime: 'static' }),
   component: SubscriptionsPage,
 });

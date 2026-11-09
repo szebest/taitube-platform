@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useT } from '@vp/intl-react';
+import { prefetched } from '@vp/queries';
 import { Button } from '@vp/ui';
 import { useId } from 'react';
 import {
@@ -41,7 +42,7 @@ export const Route = createFileRoute('/_authed/admin/queues')({
   validateSearch: DlqSearchSchema,
   loaderDeps: ({ search: { status } }) => ({ status }),
   loader: async ({ context: { queryClient, api }, deps: { status } }) => {
-    await queryClient.prefetchInfiniteQuery(adminDlqQueryOptions(api, status));
+    await prefetched(queryClient.infiniteQuery(adminDlqQueryOptions(api, status)));
   },
   component: QueuesPage,
 });

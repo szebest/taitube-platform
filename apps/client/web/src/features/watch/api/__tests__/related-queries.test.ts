@@ -14,7 +14,7 @@ describe('apps/client/web: related queries', () => {
       })
     );
 
-    await createQueryClient().fetchQuery(relatedQueryOptions(api, VIDEO_ID));
+    await createQueryClient().query(relatedQueryOptions(api, VIDEO_ID));
 
     expect(asked).toEqual([VIDEO_ID]);
   });

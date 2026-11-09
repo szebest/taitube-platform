@@ -68,7 +68,7 @@ export function CueEditorDialog({
   };
 
   const latestVersion = async () => {
-    const list = await queryClient.fetchQuery({
+    const list = await queryClient.query({
       ...captionsQueryOptions(api, videoId),
       staleTime: 0,
     });

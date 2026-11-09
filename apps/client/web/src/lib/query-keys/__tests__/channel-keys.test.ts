@@ -18,7 +18,7 @@ describe('apps/client/web: channel queries', () => {
       )
     );
 
-    const loaded = await createQueryClient().fetchQuery(channelQueryOptions(api, CHANNEL_ID));
+    const loaded = await createQueryClient().query(channelQueryOptions(api, CHANNEL_ID));
 
     expect(loaded).toMatchObject({ id: CHANNEL_ID, displayName: 'Studio' });
   });
@@ -34,7 +34,7 @@ describe('apps/client/web: channel queries', () => {
     );
 
     const options = channelStartHereQueryOptions(api, CHANNEL_ID);
-    const loaded = await createQueryClient().fetchQuery(options);
+    const loaded = await createQueryClient().query(options);
 
     expect(loaded).toMatchObject({ source: 'pinned', items: [{ title: CHANNEL_ID }] });
     expect(options.queryKey).not.toEqual(channelQueryOptions(api, CHANNEL_ID).queryKey);

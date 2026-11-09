@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { VideoIdParamSchema } from '@vp/api-contracts';
-import { parseParam, videoRetentionQueryOptions } from '@vp/queries';
+import { parseParam, videoRetentionQueryOptions, prefetched } from '@vp/queries';
 import {
   analyticsQueryOptions,
   AnalyticsSearchSchema,
@@ -16,8 +16,8 @@ export const Route = createFileRoute('/_authed/videos/$videoId/analytics')({
   loaderDeps: ({ search: { range } }) => ({ range }),
   loader: ({ context: { queryClient, api }, params: { videoId }, deps: { range } }) =>
     Promise.all([
-      queryClient.prefetchQuery(analyticsQueryOptions(api, { kind: 'video', videoId }, range)),
-      queryClient.prefetchQuery(videoRetentionQueryOptions(api, videoId)),
+      prefetched(queryClient.query(analyticsQueryOptions(api, { kind: 'video', videoId }, range))),
+      prefetched(queryClient.query(videoRetentionQueryOptions(api, videoId))),
     ]),
   component: VideoAnalyticsPage,
 });

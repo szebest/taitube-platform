@@ -9,9 +9,10 @@ import { headWords } from '#app/lib/seo/head-words';
 export const Route = createFileRoute('/feed/trending')({
   validateSearch: z.object({}),
   loader: async ({ context: { queryClient, api } }) => {
-    const feed = await queryClient.ensureInfiniteQueryData(
-      publicFeedQueryOptions(api, { sort: 'trending' })
-    );
+    const feed = await queryClient.infiniteQuery({
+      ...publicFeedQueryOptions(api, { sort: 'trending' }),
+      staleTime: 'static',
+    });
     return feed.pages[0]?.items ?? [];
   },
   head: ({ loaderData, match }) => {
