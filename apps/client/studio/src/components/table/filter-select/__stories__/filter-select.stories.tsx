@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { AppWords } from '@vp/queries';
+import { FALLBACK_ACTIVE_LOCALE, IntlProvider } from '@vp/intl-react';
 import { FilterSelect } from '../filter-select';
 
 const meta = {
@@ -16,9 +16,13 @@ const meta = {
   },
   decorators: [
     (Story) => (
-      <AppWords>
+      <IntlProvider
+        locale={FALLBACK_ACTIVE_LOCALE.locale}
+        catalogues={FALLBACK_ACTIVE_LOCALE.catalogues}
+        timeZone="UTC"
+      >
         <Story />
-      </AppWords>
+      </IntlProvider>
     ),
   ],
 } satisfies Meta<typeof FilterSelect<string>>;
