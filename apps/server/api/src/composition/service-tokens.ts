@@ -207,6 +207,7 @@ export const Services = {
   WatchPartyInviteService: token<WatchPartyInviteService>('WatchPartyInviteService'),
   WatchPartyControlsService: token<WatchPartyControlsService>('WatchPartyControlsService'),
   WatchPartyHub: token<PatternHub<RoomEnvelope>>('WatchPartyHub'),
+  WatchPartySweep: token<Poller>('WatchPartySweep'),
   WatchPartyReactions: token<RoomBatcher<Reaction>>('WatchPartyReactions'),
   WatchPartyRoster: token<RoomBatcher<RosterChange>>('WatchPartyRoster'),
   WatchPartyBuffering: token<BufferingWait>('WatchPartyBuffering'),

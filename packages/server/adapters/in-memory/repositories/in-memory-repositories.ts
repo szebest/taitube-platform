@@ -32,6 +32,7 @@ import type { InMemoryVideoRepository } from './in-memory-video-repository';
 import type { InMemoryVideoStudioRepository } from './in-memory-video-studio-repository';
 import type { InMemoryVideoViewRepository } from './in-memory-video-view-repository';
 import type { InMemoryWatchHistoryRepository } from './in-memory-watch-history-repository';
+import { InMemoryWatchPartyHousekeepingRepository } from './in-memory-watch-party-housekeeping-repository';
 import { InMemoryWatchPartyInviteLinkRepository } from './in-memory-watch-party-invite-link-repository';
 import { InMemoryWatchPartyInviteRepository } from './in-memory-watch-party-invite-repository';
 import { InMemoryWatchPartyMemberRepository } from './in-memory-watch-party-member-repository';
@@ -85,6 +86,7 @@ export class InMemoryRepositories implements Repositories {
   readonly watchPartyInvites: InMemoryWatchPartyInviteRepository;
   readonly watchPartyInviteLinks: InMemoryWatchPartyInviteLinkRepository;
   readonly watchPartyControls: InMemoryWatchPartyPersonalControlRepository;
+  readonly watchPartyHousekeeping: InMemoryWatchPartyHousekeepingRepository;
   private readonly watchParties = new InMemoryWatchPartyStore();
 
   constructor() {
@@ -133,6 +135,7 @@ export class InMemoryRepositories implements Repositories {
       this.watchParties,
       this.userEvents
     );
+    this.watchPartyHousekeeping = new InMemoryWatchPartyHousekeepingRepository(this.watchParties);
   }
 
   clear(): void {

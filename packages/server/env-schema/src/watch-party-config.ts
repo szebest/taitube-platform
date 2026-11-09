@@ -32,6 +32,8 @@ interface WatchPartyTuning {
   scrypt: { N: number; r: number; p: number; keyLength: number; saltLength: number };
   messageRetentionDays: number;
   closedRoomRetentionDays: number;
+  /** The sweep of open rooms: how often, how many rooms a page, and how long a scheduled room may start late. */
+  sweep: { intervalMs: number; batchSize: number; scheduledStartGraceMs: number };
 }
 
 export interface WatchPartyConfig extends WatchPartyTuning {

@@ -35,6 +35,7 @@ import { PostgresVideoRepository } from './postgres-video-repository';
 import { PostgresVideoStudioRepository } from './postgres-video-studio-repository';
 import { PostgresVideoViewRepository } from './postgres-video-view-repository';
 import { PostgresWatchHistoryRepository } from './postgres-watch-history-repository';
+import { PostgresWatchPartyHousekeepingRepository } from './postgres-watch-party-housekeeping-repository';
 import { PostgresWatchPartyInviteLinkRepository } from './postgres-watch-party-invite-link-repository';
 import { PostgresWatchPartyInviteRepository } from './postgres-watch-party-invite-repository';
 import { PostgresWatchPartyMemberRepository } from './postgres-watch-party-member-repository';
@@ -94,6 +95,7 @@ export class PostgresRepositories implements Repositories {
   readonly watchPartyInvites: PostgresWatchPartyInviteRepository;
   readonly watchPartyInviteLinks: PostgresWatchPartyInviteLinkRepository;
   readonly watchPartyControls: PostgresWatchPartyPersonalControlRepository;
+  readonly watchPartyHousekeeping: PostgresWatchPartyHousekeepingRepository;
 
   private readonly ownedPool: Sql | undefined;
 
@@ -142,6 +144,7 @@ export class PostgresRepositories implements Repositories {
     this.watchPartyInvites = new PostgresWatchPartyInviteRepository(db);
     this.watchPartyInviteLinks = new PostgresWatchPartyInviteLinkRepository(db);
     this.watchPartyControls = new PostgresWatchPartyPersonalControlRepository(db);
+    this.watchPartyHousekeeping = new PostgresWatchPartyHousekeepingRepository(db);
   }
 
   private static connect(config: PostgresRepositoriesConfig): {

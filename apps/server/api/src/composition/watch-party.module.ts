@@ -22,8 +22,10 @@ import {
   type WatchPartySecrets,
   WatchPartyService,
   WatchPartySocketService,
+  WatchPartySweep,
 } from '../services/index';
 import { PatternHub } from '../services/pattern-hub';
+import { Poller } from '../services/poller';
 import { Services } from './service-tokens';
 
 const TOKEN_BYTES = 32;
@@ -110,6 +112,18 @@ export function registerWatchPartyServices(c: Container): Container {
       (c) =>
         new RoomBatcher({ windowMs: deps(c).config.rosterBatchMs, flush: flushRoster(deps(c)) }),
       { dispose: (batcher) => batcher.close() }
+    )
+    .provide(
+      Services.WatchPartySweep,
+      (c) => {
+        const sweepDeps = deps(c);
+        const sweep = new WatchPartySweep(sweepDeps);
+        return new Poller(async () => {
+          const swept = await sweep.run();
+          if (!swept.ok) sweepDeps.logger.warn({ err: swept.error }, 'watch party sweep failed');
+        }, sweepDeps.config.sweep.intervalMs);
+      },
+      { start: (poller) => poller.start(), dispose: (poller) => poller.stop() }
     )
     .provide(Services.WatchPartyBuffering, (c) => new BufferingWait(deps(c)), {
       dispose: (wait) => wait.close(),

@@ -10,8 +10,12 @@ import { MEMBER, OWNER } from './watch-party-test-deps';
 const EVERYONE = { memberKey: null, audience: null, except: null } as const;
 const COUNTDOWN: WatchPartyServerFrame = { type: 'countdown', startsAt: 1 };
 
-async function connected(user: UserContext = MEMBER) {
+async function connected(
+  user: UserContext = MEMBER,
+  beforeConnect: (party: Awaited<ReturnType<typeof socketRoom>>) => void = () => undefined
+) {
   const party = await socketRoom();
+  beforeConnect(party);
   const service = new WatchPartySocketService(party.socketDeps);
   expectOk(
     await party.gate.issueTicket(
@@ -105,6 +109,18 @@ describe('RoomConnection', () => {
     connection.deliver({ ...EVERYONE, memberKey: account, frame: COUNTDOWN });
 
     expect(sent.map(({ type }) => type)).toEqual(['you', 'countdown']);
+  });
+
+  it.each([
+    { scenario: 'a member arriving', user: MEMBER, method: 'recheck' as const },
+    { scenario: 'the owner arriving', user: OWNER, method: 'cancel' as const },
+  ])('settles the owner’s absence when $scenario', async ({ user, method }) => {
+    let spy = vi.fn();
+    await connected(user, ({ socketDeps }) => {
+      spy = vi.spyOn(socketDeps.ownerGrace, method).mockImplementation(() => undefined);
+    });
+
+    expect(spy).toHaveBeenCalledWith(ROOM_ID);
   });
 
   it('starts the owner’s grace and frees the spot when the owner’s socket closes', async () => {

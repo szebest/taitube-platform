@@ -37,6 +37,7 @@ export * from './watch-party-role-repository';
 export * from './watch-party-member-repository';
 export * from './watch-party-queue-repository';
 export * from './watch-party-message-repository';
+export * from './watch-party-housekeeping-repository';
 export * from './watch-party-invite-repository';
 export * from './watch-party-invite-link-repository';
 export * from './watch-party-personal-control-repository';

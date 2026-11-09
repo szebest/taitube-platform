@@ -30,6 +30,7 @@ import type { VideoRepository } from './video-repository';
 import type { VideoStudioRepository } from './video-studio-repository';
 import type { VideoViewRepositoryPort } from './video-view-repository';
 import type { WatchHistoryRepositoryPort } from './watch-history-repository';
+import type { WatchPartyHousekeepingRepositoryPort } from './watch-party-housekeeping-repository';
 import type { WatchPartyInviteLinkRepositoryPort } from './watch-party-invite-link-repository';
 import type { WatchPartyInviteRepositoryPort } from './watch-party-invite-repository';
 import type { WatchPartyMemberRepositoryPort } from './watch-party-member-repository';
@@ -82,4 +83,5 @@ export interface Repositories {
   watchPartyInvites: WatchPartyInviteRepositoryPort;
   watchPartyInviteLinks: WatchPartyInviteLinkRepositoryPort;
   watchPartyControls: WatchPartyPersonalControlRepositoryPort;
+  watchPartyHousekeeping: WatchPartyHousekeepingRepositoryPort;
 }

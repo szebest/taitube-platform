@@ -89,6 +89,7 @@ export async function handOverAbsentOwner(
 /** The pod that saw the owner's socket close holds the timer; a reconnect here cancels it. */
 export class OwnerGrace {
   private readonly timers = new Map<string, ReturnType<typeof setTimeout>>();
+  private readonly waiting = new Set<string>();
 
   constructor(private readonly deps: GraceDeps) {}
 
@@ -103,11 +104,18 @@ export class OwnerGrace {
   cancel(roomId: string): void {
     clearTimeout(this.timers.get(roomId));
     this.timers.delete(roomId);
+    this.waiting.delete(roomId);
+  }
+
+  /** A room whose grace ran out with only guests to inherit tries again when a non-guest arrives. */
+  recheck(roomId: string): void {
+    if (this.waiting.has(roomId)) void this.expire(roomId);
   }
 
   close(): void {
     for (const timer of this.timers.values()) clearTimeout(timer);
     this.timers.clear();
+    this.waiting.clear();
   }
 
   private async expire(roomId: string): Promise<void> {
@@ -115,6 +123,9 @@ export class OwnerGrace {
     const handed = await handOverAbsentOwner(this.deps, roomId);
     if (!handed.ok) {
       this.deps.logger.warn({ err: handed.error, roomId }, 'ownership not handed over');
+      return;
     }
+    if (handed.value === 'waiting') this.waiting.add(roomId);
+    else this.waiting.delete(roomId);
   }
 }

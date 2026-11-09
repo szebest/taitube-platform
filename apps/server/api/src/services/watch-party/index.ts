@@ -15,3 +15,4 @@ export * from './watch-party-roster-feed';
 export * from './watch-party-service';
 export * from './watch-party-signals';
 export * from './watch-party-socket-service';
+export * from './watch-party-sweep';

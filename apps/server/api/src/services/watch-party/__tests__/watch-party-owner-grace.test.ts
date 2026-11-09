@@ -2,7 +2,7 @@ import type { UserContext } from '@vp/permissions';
 import { expectOk } from '@vp/testing/result';
 import { handOverAbsentOwner, OwnerGrace } from '../watch-party-owner-grace';
 import { GUEST_KEY, keyOf, ROOM_ID, roleIdsOf, seatGuest } from './watch-party-moderation-fixture';
-import { elapse, fakeTimers, socketRoom } from './watch-party-socket-fixture';
+import { drainMicrotasks, elapse, fakeTimers, socketRoom } from './watch-party-socket-fixture';
 import { MEMBER, OTHER, OWNER } from './watch-party-test-deps';
 
 type Party = Awaited<ReturnType<typeof socketRoom>>;
@@ -83,6 +83,38 @@ describe('the owner’s grace', () => {
     await present(party, GUEST_KEY);
 
     expect(expectOk(await handOverAbsentOwner(party.deps, ROOM_ID))).toBe('waiting');
+  });
+
+  describe('while it waits for someone to inherit', () => {
+    it('hands over when a non-guest arrives, and not before', async () => {
+      const party = await socketRoom();
+      await seatGuest(party.repositories, party.deps.now());
+      await present(party, GUEST_KEY);
+      const grace = new OwnerGrace(party.deps);
+      fakeTimers();
+      grace.begin(ROOM_ID);
+      await elapse(party.deps.config.ownerGraceMs);
+      grace.recheck(ROOM_ID);
+      await drainMicrotasks();
+      expect((await party.room()).ownerKey).toBe(keyOf(OWNER));
+
+      await present(party, keyOf(MEMBER));
+      grace.recheck(ROOM_ID);
+      await drainMicrotasks();
+      vi.useRealTimers();
+
+      expect((await party.room()).ownerKey).toBe(keyOf(MEMBER));
+    });
+
+    it('does nothing for a room whose owner is within the grace', async () => {
+      const party = await socketRoom();
+      await present(party, keyOf(MEMBER));
+
+      new OwnerGrace(party.deps).recheck(ROOM_ID);
+      await Promise.resolve();
+
+      expect((await party.room()).ownerKey).toBe(keyOf(OWNER));
+    });
   });
 
   describe('its timer', () => {

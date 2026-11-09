@@ -20,6 +20,7 @@ type WatchPartyRepositories = Pick<
   | 'watchPartyInvites'
   | 'watchPartyInviteLinks'
   | 'watchPartyControls'
+  | 'watchPartyHousekeeping'
   | 'videos'
   | 'channels'
   | 'playlists'

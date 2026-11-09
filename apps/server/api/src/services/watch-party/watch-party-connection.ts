@@ -104,6 +104,7 @@ export class RoomConnection {
       leaveHub
     );
     if (context.isOwner) deps.ownerGrace.cancel(roomId);
+    else if (session.kind !== 'guest') deps.ownerGrace.recheck(roomId);
     deps.roster.add(roomId, { type: 'upsert', entry });
     const claimed = await deps.broadcaster.supersede(roomId, memberKey, id);
     if (isErr(claimed)) deps.logger.warn({ err: claimed.error, roomId }, 'older socket kept');

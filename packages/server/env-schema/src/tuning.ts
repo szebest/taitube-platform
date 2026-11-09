@@ -218,4 +218,5 @@ export const WATCH_PARTY = {
   scrypt: { N: 2 ** 17, r: 8, p: 1, keyLength: 32, saltLength: 16 },
   messageRetentionDays: 7,
   closedRoomRetentionDays: 30,
+  sweep: { intervalMs: MS_PER_MINUTE, batchSize: 200, scheduledStartGraceMs: MS_PER_HOUR },
 } as const;
