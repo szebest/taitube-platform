@@ -1,4 +1,6 @@
 export * from './failures';
+export * from './apply-moderation.rule';
+export * from './comment-gate.rule';
 export * from './create-comment.rule';
 export * from './update-comment.rule';
 export * from './moderate-comment.rule';

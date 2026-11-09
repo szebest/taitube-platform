@@ -7,6 +7,7 @@ import {
   canReadAnalytics,
   canReadChannelAudit,
   canReadChannelTeam,
+  canUpdateCommentSettings,
   canUpdateChannel,
   canUpdateVideo,
 } from '@vp/permissions';
@@ -21,7 +22,8 @@ type ChannelTask =
   | 'pin-content'
   | 'upload'
   | 'read-team'
-  | 'read-audit';
+  | 'read-audit'
+  | 'edit-comment-settings';
 
 export interface ChannelTaskInput {
   readonly user: UserContext | null;
@@ -51,6 +53,8 @@ function allows(
       return canReadChannelTeam({ user, channel: { channelId, ownerId } });
     case 'read-audit':
       return canReadChannelAudit({ user, channel: { channelId, ownerId } });
+    case 'edit-comment-settings':
+      return canUpdateCommentSettings({ user, channel: { channelId, ownerId } });
     default:
       return assertNever(task, 'ChannelTask');
   }

@@ -3,6 +3,11 @@ import {
   commentAlreadyReported,
   commentNotFound,
   commentNotPinnable,
+  commentsAccountTooNew,
+  commentsBanned,
+  commentsDisabled,
+  commentsSubscribersOnly,
+  moderationNotApplicable,
   reportAlreadyResolved,
   reportNotFound,
 } from '../failures';
@@ -34,6 +39,50 @@ describe('@vp/domain-rules: comment failures', () => {
     },
   ])('$name carries $code and the report id, off the wire', ({ failure, code }) => {
     expect(failure).toMatchObject({ code, reportId: 'r1' });
+    expect(isInputFailure(failure)).toBe(false);
+  });
+});
+
+describe('@vp/domain-rules: comment moderation failures', () => {
+  it.each([
+    {
+      name: 'commentsBanned',
+      failure: commentsBanned({ reason: 'spam', expiresAt: new Date('2026-02-01T00:00:00.000Z') }),
+      code: ErrorCodes.COMMENTS_BANNED,
+      payload: { reason: 'spam', expiresAt: '2026-02-01T00:00:00.000Z' },
+    },
+    {
+      name: 'commentsBanned without an end',
+      failure: commentsBanned({ reason: null, expiresAt: null }),
+      code: ErrorCodes.COMMENTS_BANNED,
+      payload: { reason: null, expiresAt: null },
+    },
+    {
+      name: 'commentsDisabled',
+      failure: commentsDisabled('v1'),
+      code: ErrorCodes.COMMENTS_DISABLED,
+      payload: { videoId: 'v1' },
+    },
+    {
+      name: 'commentsSubscribersOnly',
+      failure: commentsSubscribersOnly('ch1'),
+      code: ErrorCodes.COMMENTS_SUBSCRIBERS_ONLY,
+      payload: { channelId: 'ch1' },
+    },
+    {
+      name: 'commentsAccountTooNew',
+      failure: commentsAccountTooNew(new Date('2026-03-01T00:00:00.000Z')),
+      code: ErrorCodes.COMMENTS_ACCOUNT_TOO_NEW,
+      payload: { opensAt: '2026-03-01T00:00:00.000Z' },
+    },
+    {
+      name: 'moderationNotApplicable',
+      failure: moderationNotApplicable('hide', 'held', 'state'),
+      code: ErrorCodes.MODERATION_NOT_APPLICABLE,
+      payload: { action: 'hide', state: 'held', why: 'state' },
+    },
+  ])('$name carries $code and its payload, off the wire', ({ failure, code, payload }) => {
+    expect(failure).toMatchObject({ code, ...payload });
     expect(isInputFailure(failure)).toBe(false);
   });
 });
