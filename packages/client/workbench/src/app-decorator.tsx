@@ -55,11 +55,17 @@ export const VIEWER: Account = {
 
 const StoryContext = createContext<ReactNode>(null);
 
+type ActiveWords = Parameters<typeof AppWords>[0]['active'];
+
+const ActiveContext = createContext<ActiveWords | undefined>(undefined);
+
 const PATHS = ['/', '/login', '/channel/$channelId', '/watch/$videoId'];
 
-function createStoryRouter(Providers: (props: PropsWithChildren) => ReactNode) {
+function createStoryRouter(
+  Providers: (props: PropsWithChildren<{ active: ActiveWords | undefined }>) => ReactNode
+) {
   function Stage() {
-    return <Providers>{use(StoryContext)}</Providers>;
+    return <Providers active={use(ActiveContext)}>{use(StoryContext)}</Providers>;
   }
   const root = createRootRoute({ component: Stage });
   const routeTree = root.addChildren(
@@ -74,7 +80,7 @@ function StoryApp({
   children,
 }: {
   parameters: AppParameters;
-  active: Parameters<typeof AppWords>[0]['active'];
+  active: ActiveWords;
   children: ReactNode;
 }) {
   const [client] = useState(
@@ -88,8 +94,8 @@ function StoryApp({
   const session: Session =
     parameters.session === 'signed-in' ? { status: 'signed-in', account: VIEWER } : GUEST;
   const [router] = useState(() =>
-    createStoryRouter(({ children: story }) => (
-      <AppWords active={active}>
+    createStoryRouter(({ active: words, children: story }) => (
+      <AppWords active={words}>
         <ApiProvider api={api}>
           <SessionProvider session={session}>
             <Tooltip.Provider>
@@ -105,9 +111,11 @@ function StoryApp({
 
   return (
     <QueryClientProvider client={client}>
-      <StoryContext value={children}>
-        <RouterProvider router={router} />
-      </StoryContext>
+      <ActiveContext value={active}>
+        <StoryContext value={children}>
+          <RouterProvider router={router} />
+        </StoryContext>
+      </ActiveContext>
     </QueryClientProvider>
   );
 }

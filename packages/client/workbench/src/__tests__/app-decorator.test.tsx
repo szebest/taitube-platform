@@ -83,6 +83,23 @@ describe('@vp/workbench: withApp', () => {
     expect(await screen.findByText('Zobacz kanał')).toBeInTheDocument();
   });
 
+  it('rewords the story when the toolbar locale changes', async () => {
+    const words = async (locale: string) => ({
+      locale,
+      loaded: await loadCatalogue({ globals: { locale } } as never),
+    });
+    const en = await words('en');
+    const pl = await words('pl');
+    const Harness = ({ locale, loaded }: typeof en) =>
+      withApp(() => <Probe />, { parameters: { app: {} }, globals: { locale }, loaded } as never);
+    const view = render(<Harness {...en} />);
+    expect(await screen.findByText('View channel')).toBeInTheDocument();
+
+    view.rerender(<Harness {...pl} />);
+
+    expect(await screen.findByText('Zobacz kanał')).toBeInTheDocument();
+  });
+
   it('leaves a story that asks for no app bare', async () => {
     const Story = composeStory(
       { render: () => <p>bare</p> },

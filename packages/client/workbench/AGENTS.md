@@ -29,7 +29,9 @@ repo.
   client (no retries), the API client over `src/in-memory-api.ts` (`inMemoryFetch` answers the contracts in the
   replies and a 404 for anything else, so a story never leaves the page), the session, the locale's words, the
   toaster, the tooltip provider and `src/web-providers.tsx` (the web app's device preferences, their sync and the
-  player channel) around it. A kit component that reads the router, the cache or the API is shown through it; no
+  player channel) around it. `web-providers.tsx` is the one file in the repo allowed to import the web app's source by
+  relative path (`packages/AGENTS.md` section 6): the workbench already reads the apps' sources, and those providers
+  are not a package. No other file here reaches into `apps/`. A kit component that reads the router, the cache or the API is shown through it; no
   story builds its own provider tree. `.storybook/tanstack-start.ts` stubs the server-only exports `@vp/queries`
   imports so it bundles.
 
