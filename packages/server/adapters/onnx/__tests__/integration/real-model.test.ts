@@ -20,7 +20,7 @@ function gradient(size: number): { width: number; height: number; data: Uint8Arr
   return { width: size, height: size, data };
 }
 
-const { model } = screeningConfig({ modelPath: MODEL });
+const { model } = screeningConfig({ enabled: true, modelPath: MODEL });
 
 describe('OnnxFrameClassifier: the pinned model', () => {
   it('loads against its lock-file checksum and scores a neutral frame well under the hold threshold', async () => {

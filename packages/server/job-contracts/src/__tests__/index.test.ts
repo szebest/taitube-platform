@@ -1,4 +1,14 @@
-import { CaptionsJob, ChildResult, ids, ProbeJob, QUEUES, ScreenJob, ScreenResult } from '../index';
+import {
+  CANONICAL_LADDER,
+  CaptionsJob,
+  ChildResult,
+  ids,
+  PackageJob,
+  ProbeJob,
+  QUEUES,
+  ScreenJob,
+  ScreenResult,
+} from '../index';
 
 describe('@vp/job-contracts smoke test', () => {
   it('builds deterministic job IDs with -- separator', () => {
@@ -52,6 +62,7 @@ describe('@vp/job-contracts smoke test', () => {
       traceparent: '',
       sourceKey: `raw/${videoId}/source.mp4`,
       durationMs: 600_000,
+      hasAudio: true,
     });
     const result = {
       type: 'screen',
@@ -61,7 +72,7 @@ describe('@vp/job-contracts smoke test', () => {
       reasons: ['DUPLICATE'],
     };
 
-    expect(job.durationMs).toBe(600_000);
+    expect(job).toMatchObject({ durationMs: 600_000, hasAudio: true });
     expect(ScreenResult.parse(result)).toEqual(result);
     expect(ChildResult.parse(result)).toEqual(result);
   });
@@ -83,12 +94,28 @@ describe('@vp/job-contracts smoke test', () => {
     expect(ScreenResult.safeParse(result).success).toBe(false);
   });
 
+  it.each([{ screened: undefined }, { screened: false }, { screened: true }])(
+    'reads a package job with screened $screened',
+    ({ screened }) => {
+      const job = PackageJob.parse({
+        videoId: '11111111-1111-7111-8111-111111111111',
+        generation: 1,
+        traceparent: '',
+        ladder: [CANONICAL_LADDER[0]],
+        screened,
+      });
+
+      expect(job.screened).toBe(screened);
+    }
+  );
+
   it('includes all required queues', () => {
     expect(QUEUES).toContain('probe');
     expect(QUEUES).toContain('transcode-1080p');
     expect(QUEUES).toContain('transcode-720p');
     expect(QUEUES).toContain('transcode-480p');
     expect(QUEUES).toContain('thumbnail');
+    expect(QUEUES).toContain('screen');
     expect(QUEUES).toContain('package');
     expect(QUEUES).toContain('notify');
     expect(QUEUES).toContain('housekeeping');

@@ -284,7 +284,10 @@ export function toAppConfig(env: AppEnv): AppConfig {
       vadModelPath: env.CAPTIONS_VAD_MODEL_PATH,
       threads: env.CAPTIONS_THREADS,
     }),
-    screening: screeningConfig({ modelPath: env.SCREENING_MODEL_PATH }),
+    screening: screeningConfig({
+      enabled: env.SCREENING_ENABLED,
+      modelPath: env.SCREENING_MODEL_PATH,
+    }),
     live: liveConfig({
       hookSecret: env.LIVE_HOOK_SECRET,
       ingestUrl: env.LIVE_INGEST_URL,

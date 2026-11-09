@@ -12,20 +12,20 @@ import {
 } from '@vp/errors';
 import { generateMasterPlaylist } from '@vp/ffmpeg';
 import {
-  ChildResult,
   type NotifyJob,
   type PackageJob,
-  type ThumbnailResult,
   defaultJobOptions,
   ids,
   stagePolicies,
 } from '@vp/job-contracts';
 import type { Logger } from '@vp/logger';
 import type { PipelineMetrics } from '@vp/observability';
-import { type Result, assertNever, err, isErr, ok, unwrapOr } from '@vp/result';
+import { type Result, err, isErr, ok, unwrapOr } from '@vp/result';
 import { getHeaderMapping, masterPlaylistKey, renditionPlaylistKey } from '@vp/storage';
 import { uuidv7 } from 'uuidv7';
 import { durationBucket } from './duration-bucket';
+import { readChildren } from './package-children';
+import { screeningGate } from './package-screening';
 
 export interface PackageProcessorDeps {
   repositories: Repositories;
@@ -37,12 +37,15 @@ export interface PackageProcessorDeps {
   logger: Logger;
   now: () => number;
   getQueue?: (name: string) => JobQueue;
+  /** Names the thresholds a held-for-error result was made under, since no screen stage ran to say. */
+  screeningThresholdVersion: string;
 }
 
 export interface PackageStageResult {
   videoId: string;
-  masterKey: string;
-  playbackUrl: string;
+  /** Both `null` when the video was held, so no master was written. */
+  masterKey: string | null;
+  playbackUrl: string | null;
 }
 
 export type PackageStageFailure =
@@ -70,6 +73,21 @@ export function createPackageProcessor(deps: PackageProcessorDeps) {
     });
 
     log.info({ ladder: ladder.map((r) => r.name) }, 'package job started');
+
+    const children = readChildren(job.getChildrenValues ? await job.getChildrenValues() : {});
+    const gate = await screeningGate({
+      repositories,
+      videoId,
+      generation,
+      screened: job.data.screened,
+      screen: children.screen,
+      thresholdVersion: deps.screeningThresholdVersion,
+    });
+    if (isErr(gate)) return gate;
+    if (gate.value === 'held') {
+      log.warn({ videoId }, 'video held by screening; no master written');
+      return ok({ videoId, masterKey: null, playbackUrl: null });
+    }
 
     const lockToken = uuidv7();
     const claim = await repositories.steps.claim({
@@ -112,33 +130,6 @@ export function createPackageProcessor(deps: PackageProcessorDeps) {
       return isErr(recorded) ? recorded : err(failure);
     };
 
-    const children = job.getChildrenValues ? await job.getChildrenValues() : {};
-    const measuredResults: Record<
-      string,
-      { bytes?: number; durationMs?: number; avgBitrateBps?: number }
-    > = {};
-    let thumbResult: ThumbnailResult | undefined;
-
-    for (const value of Object.values(children ?? {})) {
-      const child = ChildResult.safeParse(value);
-      if (!child.success) continue;
-
-      switch (child.data.type) {
-        case 'transcode': {
-          const { rendition, bytes, durationMs, avgBitrateBps } = child.data;
-          measuredResults[rendition] = { bytes, durationMs, avgBitrateBps };
-          break;
-        }
-        case 'thumbnail':
-          thumbResult = child.data;
-          break;
-        case 'screen':
-          break;
-        default:
-          return assertNever(child.data, 'package child result');
-      }
-    }
-
     for (const r of ladder) {
       const rendKey = renditionPlaylistKey(videoId, r.name, generation);
       const head = await storage.headObject(publicBucket, rendKey);
@@ -161,7 +152,11 @@ export function createPackageProcessor(deps: PackageProcessorDeps) {
     const video = videoResult.value;
     const fps = video?.fps ?? undefined;
 
-    const masterContent = generateMasterPlaylist({ ladder, fps, measuredResults });
+    const masterContent = generateMasterPlaylist({
+      ladder,
+      fps,
+      measuredResults: children.measured,
+    });
     const masterKey = masterPlaylistKey(videoId, generation);
     const headers = getHeaderMapping('master.m3u8');
 
@@ -199,11 +194,11 @@ export function createPackageProcessor(deps: PackageProcessorDeps) {
       masterPlaylistKey: masterKey,
       readyAt: new Date(now()),
     };
-    if (thumbResult?.posterKey) {
-      patch['posterKey'] = thumbResult.posterKey;
+    if (children.thumbnail?.posterKey) {
+      patch['posterKey'] = children.thumbnail.posterKey;
     }
-    if (thumbResult?.spriteKey) {
-      patch['spriteKey'] = thumbResult.spriteKey;
+    if (children.thumbnail?.spriteKey) {
+      patch['spriteKey'] = children.thumbnail.spriteKey;
     }
 
     const notifyJobId = ids.notify(videoId, 'video.ready', 1);

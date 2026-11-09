@@ -25,6 +25,7 @@ describe('housekeeping worker runner', () => {
       logContext: new LogContext(),
       media: STAGE_SETTINGS.media,
       speech: STAGE_SETTINGS.speech,
+      fingerprint: STAGE_SETTINGS.fingerprint,
       workerId: STAGE_SETTINGS.workerId,
     });
 

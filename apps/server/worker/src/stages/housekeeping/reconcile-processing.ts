@@ -25,6 +25,7 @@ const ACTIVE_PROCESSING_QUEUES: QueueName[] = [
   'transcode-720p',
   'transcode-480p',
   'thumbnail',
+  'screen',
   'package',
 ];
 

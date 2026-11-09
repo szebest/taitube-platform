@@ -779,6 +779,9 @@ importers:
       '@vp/ffmpeg':
         specifier: workspace:*
         version: link:../../../packages/server/ffmpeg
+      '@vp/fingerprint':
+        specifier: workspace:*
+        version: link:../../../packages/server/fingerprint
       '@vp/job-contracts':
         specifier: workspace:*
         version: link:../../../packages/server/job-contracts

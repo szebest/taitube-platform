@@ -8,7 +8,7 @@ import {
   SECONDS_PER_HOUR,
   SECONDS_PER_MINUTE,
 } from '@vp/domain/time';
-import type { ScreeningModelTuning } from './screening-config';
+import type { ScreeningModelTuning, ScreeningProcessTuning } from './screening-config';
 
 /**
  * Tuning with no environment key of its own, declared once here so no service, stage or adapter holds
@@ -181,6 +181,25 @@ export const SCREENING_MODEL = {
   intraOpThreads: 2,
   batchSize: 4,
 } as const satisfies ScreeningModelTuning;
+
+/**
+ * How the `screen` stage runs its processes: the hash sampling and the audio fingerprint stop after
+ * `timeoutFactor` times the video's length (at least `minTimeoutMs`), one classifier frame after
+ * `frameTimeoutMs`. A moderator sees up to `evidenceFrames` JPEGs of `evidenceWidthPixels` and the `maxMatches` strongest overlaps; the step's lease is renewed every `leaseRenewMs` while the processes run. A video carries no
+ * language, so its text is read as each of `metadataLocales`.
+ */
+export const SCREENING_PROCESS = {
+  timeoutFactor: 2,
+  minTimeoutMs: 2 * MS_PER_MINUTE,
+  frameTimeoutMs: 30 * MS_PER_SECOND,
+  decodeConcurrency: 2,
+  evidenceFrames: 6,
+  evidenceWidthPixels: 320,
+  metadataLocales: ['en', 'pl'],
+  recentTitleCount: 20,
+  maxMatches: 3,
+  leaseRenewMs: 30 * MS_PER_SECOND,
+} as const satisfies ScreeningProcessTuning;
 
 /** `infra/k8s` liveness allows three missed beats, so this sets how fast a hung worker is restarted. */
 export const WORKER_HEARTBEAT_INTERVAL_MS = 15 * MS_PER_SECOND;

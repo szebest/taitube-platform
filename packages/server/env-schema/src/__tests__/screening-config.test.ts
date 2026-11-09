@@ -1,7 +1,12 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { screeningConfig } from '../screening-config';
-import { SCREENING_MODEL } from '../tuning';
+import {
+  SCREENING_MODEL,
+  SCREENING_PROCESS,
+  SCREENING_SAMPLING,
+  SCREENING_THRESHOLDS,
+} from '../tuning';
 
 const LOCK = resolve(import.meta.dirname, '../../../../../apps/server/worker/assets.lock');
 
@@ -13,15 +18,19 @@ function lockValue(key: string): string | undefined {
 }
 
 describe('packages/env-schema: screening config', () => {
-  it('hands the path it was given beside the model tuning', () => {
-    expect(screeningConfig({ modelPath: '/opt/screening/model.onnx' })).toEqual({
+  it('hands the switch and the path it was given beside the tuning the screening runs by', () => {
+    expect(screeningConfig({ enabled: false, modelPath: '/opt/screening/model.onnx' })).toEqual({
+      enabled: false,
       modelPath: '/opt/screening/model.onnx',
       model: SCREENING_MODEL,
+      thresholds: SCREENING_THRESHOLDS,
+      sampling: SCREENING_SAMPLING,
+      process: SCREENING_PROCESS,
     });
   });
 
   it('pins the checksum the lock file carries, so the image and the adapter name one file', () => {
-    const { model } = screeningConfig({ modelPath: 'model.onnx' });
+    const { model } = screeningConfig({ enabled: true, modelPath: 'model.onnx' });
 
     expect(model.sha256).toBe(lockValue('SCREENING_MODEL_SHA256'));
   });

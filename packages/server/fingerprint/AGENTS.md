@@ -25,6 +25,13 @@ never a verdict.
   and `parseFpcalcOutput` reads the Chromaprint terms as signed 32-bit integers. `audioIndexTerms` keeps
   every `audioIndexStride`th term for the index; a lookup queries every term of the new video, because
   only the stored side is a subsample.
+- **Classifier frames:** `classifierTimestamps` picks a moment every `classifyIntervalSeconds`, at most
+  `classifyMaxFrames`, plus the first, middle and last; `sampleClassifierFrames` decodes each as a square RGB frame
+  of the model's size, one single-threaded ffmpeg per frame, and `extractEvidenceFrame` writes a small JPEG of a
+  moment for a moderator.
+- **`fingerprintTools`:** the four processes the `screen` stage spawns (`sampleFrames`, `runFpcalc`,
+  `sampleClassifierFrames`, `extractEvidenceFrame`) as one value the composition root hands it, like
+  `MediaTools`, so a spec fails the stage by handing it a double.
 - **Matching:** `voteOffset` lets each matched pair vote for `matchIdx - queryIdx` (neighbours within one
   sample vote together) and `longestRun` finds the longest stretch, one missed sample allowed.
   `matchFrames` gives `coverage` and `longestRunSeconds`, `verifyAudio` a bit-error-rate over the longest

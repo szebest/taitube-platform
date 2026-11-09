@@ -15,6 +15,7 @@ export const QUEUES = [
   'transcode-720p',
   'transcode-480p',
   'thumbnail',
+  'screen',
   'package',
   'notify',
   'housekeeping',
@@ -57,11 +58,15 @@ export type ThumbnailJob = z.infer<typeof ThumbnailJob>;
 export const ScreenJob = Base.extend({
   sourceKey: z.string(),
   durationMs: z.number().int().positive(),
+  /** Whether probe found an audio stream, so the stage fingerprints the audio only when there is one. */
+  hasAudio: z.boolean(),
 });
 export type ScreenJob = z.infer<typeof ScreenJob>;
 
 export const PackageJob = Base.extend({
   ladder: z.array(LadderEntry).min(1),
+  /** Probe added a `screen` child: a package that finds no result from it holds the video, never publishes it. */
+  screened: z.boolean().optional(),
 });
 export type PackageJob = z.infer<typeof PackageJob>;
 

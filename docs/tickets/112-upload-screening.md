@@ -55,11 +55,11 @@ hide, while the model runner is an SDK and belongs behind a port in the adapters
   and costs no extra latency while it stays under the 480p transcode time. A video is screened before it can go public,
   because `READY` (the master) is the moment it becomes watchable; a transcript is only available after `READY`, so text
   from 111 can raise a flag but not a hold (see 5).
-- **Contract.** `ScreenJob` in `@vp/job-contracts` (`Base` plus `sourceKey` and `durationMs`), `ids.screen(videoId,
+- **Contract.** `ScreenJob` in `@vp/job-contracts` (`Base` plus `sourceKey`, `durationMs` and `hasAudio`, which probe sets from the audio stream it found), `ids.screen(videoId,
   generation)`, `QUEUES`, `stagePolicies.screen` (`attempts: 4`, exponential 10 s), `WorkerStageName`, `registry.ts`. It
   returns a `ScreenResult` that `package` reads like it reads `ThumbnailResult`.
 - **Fencing.** The stage claims a `screen` step row with a lock token and commits fenced (rule 6); a re-run is idempotent
-  because the result row is keyed by video and source checksum.
+  because the result row is keyed by video and source checksum, the source object's ETag. `package` gets `screened` on its job when probe added the child, so a missing result from a screened flow holds the video and a flow without the child publishes as before.
 - **Retry classes (rule 7).** `PermanentError`: corrupt stream the probe let through, model checksum mismatch.
   `TransientError`: storage, database, queue, worker killed. When retries are exhausted the video is held with reason
   `SCREEN_ERROR` (fail closed): a broken model must not wave uploads through. `SCREENING_ENABLED=false` skips the child

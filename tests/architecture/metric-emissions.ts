@@ -18,6 +18,7 @@ const METRICS_MODULES = [
   'packages/server/observability/src/web-vitals-metrics.ts',
   'packages/server/observability/src/playback-metrics.ts',
   'packages/server/observability/src/captions-metrics.ts',
+  'packages/server/observability/src/screening-metrics.ts',
 ];
 const HISTOGRAM_SERIES = ['_bucket', '_count', '_sum'];
 const RECORDING_METHODS = new Set(['inc', 'dec', 'set', 'observe']);

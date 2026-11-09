@@ -1,4 +1,10 @@
-import { SCREENING_MODEL } from './tuning';
+import type { ScreeningThresholds } from '@vp/domain';
+import {
+  SCREENING_MODEL,
+  SCREENING_PROCESS,
+  SCREENING_SAMPLING,
+  SCREENING_THRESHOLDS,
+} from './tuning';
 
 export interface ScreeningModelTuning {
   /** Names the model in each stored result. */
@@ -17,11 +23,44 @@ export interface ScreeningModelTuning {
   batchSize: number;
 }
 
-export interface ScreeningConfig {
-  modelPath: string;
-  model: ScreeningModelTuning;
+interface ScreeningSampling {
+  hashIntervalSeconds: number;
+  classifyIntervalSeconds: number;
+  classifyMaxFrames: number;
+  audioIndexStride: number;
 }
 
-export function screeningConfig(keys: Pick<ScreeningConfig, 'modelPath'>): ScreeningConfig {
-  return { ...keys, model: SCREENING_MODEL };
+export interface ScreeningProcessTuning {
+  timeoutFactor: number;
+  minTimeoutMs: number;
+  frameTimeoutMs: number;
+  decodeConcurrency: number;
+  evidenceFrames: number;
+  evidenceWidthPixels: number;
+  metadataLocales: readonly string[];
+  recentTitleCount: number;
+  maxMatches: number;
+  leaseRenewMs: number;
+}
+
+export interface ScreeningConfig {
+  /** The operator's way out of fail-closed screening: off, probe adds no `screen` child. */
+  enabled: boolean;
+  modelPath: string;
+  model: ScreeningModelTuning;
+  thresholds: ScreeningThresholds;
+  sampling: ScreeningSampling;
+  process: ScreeningProcessTuning;
+}
+
+export function screeningConfig(
+  keys: Pick<ScreeningConfig, 'enabled' | 'modelPath'>
+): ScreeningConfig {
+  return {
+    ...keys,
+    model: SCREENING_MODEL,
+    thresholds: SCREENING_THRESHOLDS,
+    sampling: SCREENING_SAMPLING,
+    process: SCREENING_PROCESS,
+  };
 }

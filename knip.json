@@ -36,6 +36,7 @@
     },
     "apps/server/worker": {
       "entry": ["src/main.ts!", "src/instrument.ts!"],
+      "vitest": ["vitest.config.ts", "integration.config.ts"],
       "project": [
         "src/**/*.ts!",
         "!src/**/__tests__/**!",

@@ -40,6 +40,7 @@ export function inProcessAppConfig(overrides: AppConfigOverrides = {}): AppConfi
       ADAPTER_FAMILY: 'in-memory',
       DATABASE_URL: 'postgres://localhost:5432/vp',
       METRICS_PORT: 0,
+      SCREENING_ENABLED: 'false',
     })
   );
 

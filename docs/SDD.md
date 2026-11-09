@@ -138,7 +138,7 @@ flowchart LR
 | Component | Runtime | Responsibility | Scales |
 |---|---|---|---|
 | `apps/server/api` | Node.js 24 LTS · Fastify 5 | Auth, upload orchestration (presign / multipart / complete / verify), video CRUD, SSE hub, admin (Bull Board, DLQ replay), `/metrics`, `/healthz`, `/readyz`. Stateless. | Horizontally, on CPU/RPS (HPA). Long-running, so cold start is irrelevant. |
-| `apps/server/worker` | Bun 1.4 · one image | `main.ts` reads `WORKER_STAGE` and boots exactly one BullMQ `Worker` for that queue. Stages: `probe`, `transcode-1080p`, `transcode-720p`, `transcode-480p`, `thumbnail`, `package`, `notify`, `housekeeping`, `captions`, `live`. | Per stage, on queue depth (KEDA), 0 → N. |
+| `apps/server/worker` | Bun 1.4 · one image | `main.ts` reads `WORKER_STAGE` and boots exactly one BullMQ `Worker` for that queue. Stages: `probe`, `transcode-1080p`, `transcode-720p`, `transcode-480p`, `thumbnail`, `screen`, `package`, `notify`, `housekeeping`, `captions`, `live`. | Per stage, on queue depth (KEDA), 0 → N. |
 | PostgreSQL 18 | Neon (cloud) / container (local) | Source of truth: users, videos, uploads, renditions, processing steps, append-only `video_events`, DLQ mirror. | Vertical; read replicas out of scope. |
 | Redis 8 / Valkey 8 | container / same VPS | BullMQ queues (`noeviction`), Pub/Sub for SSE fan-out, small caches (presign throttles, idempotency keys). | Single node; persistence AOF `everysec`. |
 | Object storage | MinIO (local) / Cloudflare R2 (cloud) | `raw` bucket (private, sources, 7-day lifecycle) and `public` bucket (HLS, thumbnails, CDN-fronted). | Managed. |
@@ -206,6 +206,7 @@ sequenceDiagram
     participant P as probe worker
     participant T as transcode-{1080p,720p,480p} workers
     participant TH as thumbnail worker
+    participant SC as screen worker
     participant PK as package worker
     participant N as notify worker
     participant PG as Postgres
@@ -218,7 +219,7 @@ sequenceDiagram
     P->>P: validate (duration ≤ 60min, codec allowlist, sane dims) → else throw UnrecoverableError(code)
     P->>P: compute ladder: renditions with height ≤ source height (min 1)
     P->>PG: UPDATE videos SET duration_ms, width, height, format, fps, ladder · status=PROCESSING · INSERT renditions(PENDING)
-    P->>Q: FlowProducer.add({ name:"package", queue:"package", jobId:`${videoId}--package`, children:[transcode-1080p, transcode-720p, transcode-480p, thumbnail] })
+    P->>Q: FlowProducer.add({ name:"package", queue:"package", jobId:`${videoId}--package`, children:[transcode-1080p, transcode-720p, transcode-480p, thumbnail, screen] })
     P->>PS: PUBLISH video:{id} {status:PROCESSING, ladder}
 
     par each rendition, independent queue & worker pool
@@ -230,11 +231,14 @@ sequenceDiagram
         T->>PG: renditions.status=DONE, segment_count, bytes, ms  · steps DONE (fencing token check)
     and thumbnails
         Q->>TH: thumbnail job → poster.jpg, sprite.jpg, sprite.vtt → S3 public
+    and screening
+        Q->>SC: screen job → fingerprints, frame scores, text rules → PG video_screenings (PASS | HOLD)
     end
 
     Note over Q,PK: parent "package" leaves waiting-children only when ALL children completed
     Q->>PK: package job
     PK->>S3: HEAD every rendition index.m3u8 + sample segments · read children results via getChildrenValues()
+    PK->>PG: screen result HOLD (or none) → CAS videos PROCESSING→HELD, no master written
     PK->>S3: PUT videos/{id}/hls/master.m3u8 (BANDWIDTH, RESOLUTION, CODECS, FRAME-RATE)
     PK->>PG: CAS videos PROCESSING→READY, master_playlist_key, ready_at  · INSERT video_events(video.ready)
     PK->>Q: add("notify", {videoId, event:"video.ready"})
@@ -242,6 +246,8 @@ sequenceDiagram
 ```
 
 Failure path (any child): BullMQ retries with backoff; when attempts are exhausted or an `UnrecoverableError` is thrown, the `failed` handler moves the job to `dlq`, marks the rendition `FAILED`, and — because `failParentOnFailure: true` is set on children — the parent `package` job fails too, which flips the video to `FAILED` with the first child error as `errorCode`. See §9.6.
+
+**Screening branch.** Unless `SCREENING_ENABLED` is off, probe adds a `screen` child to the flow, a sibling of the transcodes and the thumbnail: it reads the source only, so it overlaps the transcodes. The stage samples a 9x8 frame every 2 s and hashes it, fingerprints the audio with `fpcalc` when probe found an audio stream, looks the video up against every other stored video (§7 of ticket 112, `@vp/fingerprint`), scores a frame every 10 s (at most 120, plus the first, middle and last) with the pinned ONNX classifier, and runs the profanity, spam and blank-picture rules; `decideScreening` turns the findings into `PASS` or `HOLD` with ordered reasons, and the result is stored by video and source checksum, so a re-process of the same source reuses it. The child is `ignoreDependencyOnFailure`, and `package` fails closed: a `HOLD` result, or no result because the stage spent its retries, moves the video `PROCESSING → HELD` (reason `SCREEN_ERROR` for the second) before any master is written, so nothing plays. A video a moderator approved is not held again. A match with a video of the same owner and a partial match are flags for the moderation queue, never a hold.
 
 **Captions branch.** When captions are on for the video (its `auto_captions` switch, else its channel's `auto_captions_default`, and `CAPTIONS_ENABLED`) and probe found an audio stream, probe creates the `pending` generated row in `video_captions` and puts one more flow in the outbox, committed with `PROBING → PROCESSING`: a `captions` job on the `captions` queue alone, or for a source over 300 s a `captions` merge parent over one window child per 180 s (`captionsFlow` in `@vp/job-contracts`). It is never a child of `package`, so `READY` never waits for it and a captions failure never touches `videos.status` or `videos.version`. A window extracts its slice of the raw source with ffmpeg (`-ss` before `-i`, mono 16 kHz PCM) plus a 5 s lead-in and tail, runs `whisper-cli` under `nice -n 19` with Silero VAD, keeps the cues that start in its own span and writes them to the raw bucket; the merge joins them in order, writes `captions/{lang}/captions.vtt`, the cue rows and `ready` in one compare-and-set on the track, and publishes `captions.ready` to the owner (`captions.failed` when a run spends its last attempt). A source without audio gets a `disabled` row and no job.
 
@@ -283,6 +289,10 @@ stateDiagram-v2
     PROBING --> PROCESSING: probe ok, flow created
     PROBING --> FAILED: UnrecoverableError
     PROCESSING --> READY: package ok
+    PROCESSING --> HELD: screening result HOLD, or none
+    HELD --> PROCESSING: moderator approves, package re-enqueued
+    HELD --> REJECTED: moderator rejects
+    REJECTED --> HELD: creator appeals a screening rejection
     PROCESSING --> FAILED: child exhausted retries / unrecoverable
     FAILED --> PROBING: admin re-process
     READY --> DELETED: soft delete + purge job
@@ -2064,9 +2074,10 @@ To maintain strict modularity, testability, and separation of concerns, the API 
 Two buckets, deterministic keys, no per-request randomness — this is what makes re-running any step safe.
 
 ```
-raw/                                   (private; lifecycle: expire objects after 7 days; abort incomplete multipart after 1 day)
+raw/                                   (private; lifecycle on this prefix: expire objects after 7 days; abort incomplete multipart after 1 day)
 └── {videoId}/
     └── source.{ext}                   ← original upload
+evidence/{videoId}/frame-{n}.jpg       ← small JPEGs of the frames that held or flagged a video; private, outside the 7-day rule
 tmp/captions/{videoId}/{modelVersion}/v{captionVersion}/w{n}.json   ← a captions window's cues, purged by its merge
 
 public/                                (private bucket, public read via CDN custom domain; lifecycle: none)
@@ -2203,6 +2214,7 @@ BullMQ has no exchanges; a *queue* is the routing unit and Redis key prefix. One
 | `transcode-720p` | probe | `transcode-720p` | 1 | 4 | exp 10 s | 120 s | 0.5–12 min |
 | `transcode-480p` | probe | `transcode-480p` | 1 (or 2) | 4 | exp 10 s | 120 s | 0.3–6 min |
 | `thumbnail` | probe | `thumbnail` | 2 | 4 | exp 5 s | 60 s | 5–60 s |
+| `screen` | probe (Flow child of `package`) | `screen` | 2 | 4 | exp 10 s, jitter 0.5 | 120 s | 10–60 s for 10 min of 1080p |
 | `package` | probe (Flow parent) | `package` | 4 | 5 | exp 5 s | 60 s | 1–5 s |
 | `notify` | package, failure handler | `notify` | 8, **rate limit 100/10 s** | 8 | exp 2 s | 30 s | < 1 s |
 | `housekeeping` | Job Schedulers (cron) | `housekeeping` | 1 | 3 | fixed 60 s | 300 s | seconds–minutes |
@@ -2227,6 +2239,7 @@ export const stagePolicies = {
   'transcode-720p': { attempts: 4, backoff: { type: 'exponential', delay: 10_000, jitter: 0.5 } },
   'transcode-480p': { attempts: 4, backoff: { type: 'exponential', delay: 10_000, jitter: 0.5 } },
   'thumbnail':      { attempts: 4, backoff: { type: 'exponential', delay: 5_000,  jitter: 0.5 } },
+  'screen':         { attempts: 4, backoff: { type: 'exponential', delay: 10_000, jitter: 0.5 } },
   'package':        { attempts: 5, backoff: { type: 'exponential', delay: 5_000,  jitter: 0.5 } },
   'notify':         { attempts: 8, backoff: { type: 'exponential', delay: 2_000,  jitter: 0.3 } },
   'captions':       { attempts: 3, backoff: { type: 'exponential', delay: 30_000, jitter: 0.5 }, priority: 1_000_000 },
@@ -2246,7 +2259,8 @@ Deterministic IDs are the first line of idempotency: BullMQ ignores an `add()` w
 | probe | `${videoId}--probe--g${generation}` | `{ videoId, sourceKey, generation, traceparent }` |
 | transcode | `${videoId}--transcode--720p--g${generation}` | `{ videoId, sourceKey, generation, rendition: LadderEntry, fps, durationMs, chunkIndex?, chunkCount?, traceparent }` |
 | thumbnail | `${videoId}--thumbnail--g${generation}` | `{ videoId, sourceKey, generation, durationMs, traceparent }` |
-| package | `${videoId}--package--g${generation}` | `{ videoId, generation, ladder, traceparent }` |
+| screen | `${videoId}--screen--g${generation}` | `{ videoId, sourceKey, generation, durationMs, hasAudio, traceparent }` |
+| package | `${videoId}--package--g${generation}` | `{ videoId, generation, ladder, screened?, traceparent }` |
 | captions | `${videoId}--captions--${modelVersion}--v${captionVersion}`, a window `…--w${n}` | `{ videoId, captionId, captionVersion, sourceKey, durationMs, modelVersion, language, plan: single \| merge(windowCount) \| window(index, windowCount), traceparent }` |
 | notify | `${videoId}--notify--${event}--${eventSeq}` | `{ videoId, userId, event, payload, traceparent }` |
 | dlq | `${originQueue}--${originJobId}--a${attemptsMade}` | `{ originQueue, originJobId, payload, error, attemptsMade, workerId, failedAt }` |
@@ -2279,6 +2293,12 @@ await flowProducer.add({
       data: ThumbnailJob.parse({ videoId, sourceKey, generation, durationMs, traceparent }),
       opts: { jobId: ids.thumbnail(videoId, generation), ...stagePolicies.thumbnail, ...defaultJobOptions,
               failParentOnFailure: false, ignoreDependencyOnFailure: true },   // a missing sprite must not block READY
+    },
+    {
+      name: 'screen', queueName: 'screen',                       // only when SCREENING_ENABLED
+      data: ScreenJob.parse({ videoId, sourceKey, generation, durationMs, hasAudio, traceparent }),
+      opts: { jobId: ids.screen(videoId, generation), ...stagePolicies.screen, ...defaultJobOptions,
+              failParentOnFailure: false, ignoreDependencyOnFailure: true },   // `package` holds a video with no screen result
     },
   ],
 });
@@ -2693,6 +2713,10 @@ services:
     <<: *worker
     environment: { WORKER_STAGE: transcode-480p, FFMPEG_THREADS: "1" }
   worker-thumbnail:      { <<: *worker, environment: { WORKER_STAGE: thumbnail } }
+  worker-screen:
+    <<: *worker
+    environment: { WORKER_STAGE: screen, FFMPEG_THREADS: "2" }
+    deploy: { resources: { limits: { cpus: "2", memory: 1500m } } }
   worker-package:        { <<: *worker, environment: { WORKER_STAGE: package } }
   worker-notify:         { <<: *worker, environment: { WORKER_STAGE: notify } }
   worker-housekeeping:   { <<: *worker, environment: { WORKER_STAGE: housekeeping } }
@@ -2890,6 +2914,8 @@ Exposed by `packages/server/observability` (`prom-client` registry; API on `:946
 | `captions_realtime_factor` | histogram | `model` | captions | audio-seconds per whisper wall-second (>1 = faster than realtime) |
 | `captions_time_to_ready_seconds` | histogram | — | captions | from the generated track being asked for at probe to `ready` |
 | `captions_jobs_total` | counter | `outcome ∈ {ready, failed, disabled}` | captions | how runs end; queue age is `bullmq_queue_oldest_waiting_age_seconds{queue="captions"}` |
+| `screen_seconds` | histogram | `outcome ∈ {PASS, HOLD}` | screen | seconds the stage takes for one video; the target is under 60 s for 10 minutes of 1080p |
+| `screening_outcomes_total` | counter | `outcome, reason` | screen | videos by outcome and strongest reason (`none` for a pass); the hold rate is `HOLD` over the total |
 
 ### 13.2 KEDA ScaledObject (Prometheus scaler, primary)
 
@@ -2957,6 +2983,7 @@ Alert rules (`infra/observability/alerts/video-pipeline-alerts.yaml`, a Promethe
 | `R2ClassABudget` | `predict_linear(storage_ops_total{op="put"}[1d], 30*86400) > 900000` | 1h | info |
 | `APILatencyHigh` | `histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket[5m]))) > 0.2` | 10m | warning |
 | `WorkerTmpDiskHigh` | `worker_tmp_bytes / 8e9 > 0.8` | 5m | warning |
+| `ScreeningHoldRateHigh` | `sum(increase(screening_outcomes_total{outcome="HOLD"}[24h])) / sum(increase(screening_outcomes_total[24h])) > 0.2`, with at least 20 screened | 1h | warning |
 
 The compose Alertmanager (`infra/compose/alertmanager/alertmanager.yml`) routes by severity to placeholder webhooks on `http://localhost:5001`; no chat or paging receiver is configured, locally or in cloud.
 
@@ -3285,7 +3312,7 @@ The two bucket keys are the only spelling: every reader in both apps takes them 
 
 | Variable | Default | Notes |
 |---|---|---|
-| `WORKER_STAGE` | `probe` | `probe` · `transcode-1080p` · `transcode-720p` · `transcode-480p` · `thumbnail` · `package` · `notify` · `housekeeping` · `captions` · `live` |
+| `WORKER_STAGE` | `probe` | `probe` · `transcode-1080p` · `transcode-720p` · `transcode-480p` · `thumbnail` · `screen` · `package` · `notify` · `housekeeping` · `captions` · `live` |
 | `WORKER_CONCURRENCY` | empty = the stage's registry value | override |
 | `FFMPEG_PATH` / `FFPROBE_PATH` | `ffmpeg` / `ffprobe` | the binaries the stages spawn |
 | `FPCALC_PATH` | `fpcalc` | the Chromaprint binary the `screen` stage runs for the audio fingerprint, `libchromaprint-tools` in the worker image |
@@ -3307,6 +3334,7 @@ The two bucket keys are the only spelling: every reader in both apps takes them 
 | `WHISPER_PATH` | `whisper-cli` | whisper.cpp binary, built from the tag pinned in `apps/server/worker/assets.lock` into the worker image |
 | `CAPTIONS_MODEL_PATH` / `CAPTIONS_VAD_MODEL_PATH` | `.models/ggml-small-q5_1.bin` / `.models/ggml-silero-v5.1.2.bin` | baked into the image at `/opt/whisper/` at build, SHA-256 checked; `pnpm models:fetch` fills `.models/` for a run outside Docker. The model file names the run (`small-q5_1`) |
 | `CAPTIONS_THREADS` | `4` | = the captions container CPU limit |
+| `SCREENING_ENABLED` | `true` | platform kill switch for upload screening; off, probe adds no `screen` child and nothing is held |
 | `SCREENING_MODEL_PATH` | `.models/vit-base-nsfw-detector-int8.onnx` | the upload-screening classifier, baked into the image at `/opt/screening/` at build, SHA-256 checked against `assets.lock`; the adapter checks it again at start and refuses a file that is not the pinned one. `pnpm models:fetch` fills `.models/` for a run outside Docker |
 | `LIVE_HOOK_SECRET` 🔒 | none; `.env.example` ships `change-me-live-hook` | MediaMTX sends it on every auth call (ADR-29) and the live worker reads with it; unset refuses every publisher; production refuses the shipped value |
 | `LIVE_INGEST_URL` | `rtsp://localhost:8554` | where the live worker reads a publisher |
@@ -3314,6 +3342,20 @@ The two bucket keys are the only spelling: every reader in both apps takes them 
 | `LIVE_RTMP_PUBLIC_URL` / `LIVE_WHIP_PUBLIC_URL` | `rtmp://localhost:1935/live` / `http://localhost:8889/live` | what `POST /v1/me/live` hands a creator for OBS and the browser |
 
 The upload content types are a typed constant in `@vp/validation` that the browser shares, not configuration.
+
+The screening numbers are constants, not keys (the schema is closed, and an operator does not tune a Hamming distance): `SCREENING_THRESHOLDS`, `SCREENING_SAMPLING`, `SCREENING_PROCESS` and `SCREENING_MODEL` in `packages/server/env-schema/src/tuning.ts`, reaching the stage as `AppConfig.screening`. Each stored result names the `version` of the thresholds it was decided under, so a change is a new version and never rewrites a decided case.
+
+| Constant | Value | Meaning |
+|---|---|---|
+| `frameMaxHamming` | `3` | two frame hashes this close are the same frame; the four 16-bit bands make the lookup four index hits |
+| `duplicateCoverage` | `0.9` | a match covering this much of the new video holds it as `DUPLICATE` (or `KNOWN_REJECTED`) |
+| `partialCoverage` / `partialRunSeconds` | `0.3` / `30` | a smaller overlap is a `PARTIAL_MATCH` flag, never a hold |
+| `audioMaxBitErrorRate` | `0.35` | the audio fingerprint's agreement bar |
+| `nsfwFrameThreshold` / `nsfwShareThreshold` | `0.85` / `0.1` | a hold needs a frame over the first and this share of frames over it |
+| `blankFrameShare` | `0.95` | share of frames within `blankMaxHamming` 2 and `blankMaxLumaRange` 8 of the first |
+| `hashIntervalSeconds`, `classifyIntervalSeconds`, `classifyMaxFrames` | `2`, `10`, `120` | one hashed frame every 2 s; one classified frame every 10 s, at most 120, plus first, middle and last |
+| `audioIndexStride` | `8` | every 8th Chromaprint term is indexed, about 3 600 rows per hour of video |
+
 
 ### 16.7 Observability
 
@@ -3437,7 +3479,7 @@ Open issues carried from PRD §12: auth provider, public vs signed playback, sou
 import { z } from 'zod';
 
 export const QUEUES = ['probe', 'transcode-1080p', 'transcode-720p', 'transcode-480p',
-  'thumbnail', 'package', 'notify', 'housekeeping', 'captions', 'dlq'] as const;
+  'thumbnail', 'screen', 'package', 'notify', 'housekeeping', 'captions', 'dlq'] as const;
 export type QueueName = (typeof QUEUES)[number];
 export const RENDITIONS = ['1080p', '720p', '480p'] as const;
 export type RenditionName = (typeof RENDITIONS)[number];
@@ -3497,6 +3539,7 @@ export const ids = {
   probe:     (v: string, g: number) => `${v}--probe--g${g}`,
   transcode: (v: string, r: RenditionName, g: number) => `${v}--transcode--${r}--g${g}`,
   thumbnail: (v: string, g: number) => `${v}--thumbnail--g${g}`,
+  screen:    (v: string, g: number) => `${v}--screen--g${g}`,
   package:   (v: string, g: number) => `${v}--package--g${g}`,
   notify:    (v: string, e: string, seq: number) => `${v}--notify--${e}--${seq}`,
   dlq:       (q: string, j: string, a: number) => `${q}--${j}--a${a}`,

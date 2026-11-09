@@ -8,6 +8,7 @@ import { loadEnv } from '@vp/config';
 import { toAppConfig } from '@vp/env-schema';
 import { asThrowable } from '@vp/errors';
 import { mediaTools } from '@vp/ffmpeg';
+import { fingerprintTools } from '@vp/fingerprint';
 import { LogContext, type Logger, createLogger } from '@vp/logger';
 import { registeredTracing } from '@vp/observability';
 import { fromPromise, ignore, isErr } from '@vp/result';
@@ -39,6 +40,7 @@ async function start(host: ProcessHost): Promise<WorkerProcess> {
     logContext,
     media: mediaTools,
     speech: speechTools,
+    fingerprint: fingerprintTools,
     workerId: `worker-${process.pid}`,
   });
 

@@ -9,6 +9,7 @@ import {
 import { mintToken } from '@vp/dev-token';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { mediaTools } from '@vp/ffmpeg';
+import { fingerprintTools } from '@vp/fingerprint';
 import { LogContext, createLogger } from '@vp/logger';
 import { captureLog } from '@vp/testing/log-capture';
 import { expectOk } from '@vp/testing/result';
@@ -49,6 +50,7 @@ describe('in-process: one request id from the API into the worker', () => {
       logContext,
       media: mediaTools,
       speech: speechTools,
+      fingerprint: fingerprintTools,
       workerId: 'correlation-spec',
     });
     expectOk(await worker.start());

@@ -109,7 +109,7 @@ live-smoke: ## Broadcast a test pattern through MediaMTX and check the LL-HLS pl
 smoke-infra: ## Run infrastructure smoke tests
 	bash infra/compose/test.sh
 
-smoke-offline: ## Run the smoke against every app, web and studio included, captions transcribing too, on an internal network with zero internet egress
+smoke-offline: ## Run the smoke against every app, web and studio included, captions transcribing and screening running too, on an internal network with zero internet egress
 	pnpm --silent preflight
 	$(STACK) down --file $(COMPOSE_FILE) --file $(OFFLINE_FILE) || true
 	sudo sysctl -w net.ipv4.conf.all.route_localnet=1 2>/dev/null || true
@@ -117,6 +117,7 @@ smoke-offline: ## Run the smoke against every app, web and studio included, capt
 	$(STACK) up all --file $(COMPOSE_FILE) --file $(OFFLINE_FILE)
 	bash scripts/assert-no-egress.sh $(COMPOSE_FILE) $(OFFLINE_FILE)
 	bash scripts/captions-smoke.sh $(COMPOSE_FILE) $(OFFLINE_FILE)
+	bash scripts/screening-smoke.sh $(COMPOSE_FILE) $(OFFLINE_FILE)
 	API_URL=http://127.0.0.1:3000 bash scripts/e2e-smoke.sh
 	pnpm test:browser
 	pnpm --silent test:live --file $(COMPOSE_FILE) --file $(OFFLINE_FILE)

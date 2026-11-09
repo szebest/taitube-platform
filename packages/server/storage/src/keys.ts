@@ -11,6 +11,15 @@ export function rawSourceKey(videoId: string, ext = 'mp4'): string {
   return `${rawPrefix(videoId)}source.${cleanExt}`;
 }
 
+/** Evidence for a held or flagged video, in the raw bucket under a prefix its 7 day lifecycle does not cover. */
+export function evidencePrefix(videoId: string): string {
+  return `evidence/${videoId}/`;
+}
+
+export function evidenceFrameKey(videoId: string, index: number): string {
+  return `${evidencePrefix(videoId)}frame-${index}.jpg`;
+}
+
 export function videoPrefix(videoId: string): string {
   return `videos/${videoId}/`;
 }

@@ -13,8 +13,8 @@ schemas, stage retry policies and the rendition ladder. Tier `server`, `vp.layer
 are in [package.json](package.json).
 
 - **Queue names (`QUEUES`):** `probe`, `transcode-1080p`, `transcode-720p`, `transcode-480p`, `thumbnail`,
-  `package`, `notify`, `housekeeping`, `dlq`.
-- **Payloads:** `ProbeJob`, `TranscodeJob`, `ThumbnailJob`, `ScreenJob`, `PackageJob`, `NotifyJob`, `HousekeepingJob`,
+  `screen`, `package`, `notify`, `housekeeping`, `dlq`.
+- **Payloads:** `ProbeJob`, `TranscodeJob`, `ThumbnailJob`, `ScreenJob` (with `hasAudio`, from the probe's audio stream), `PackageJob` (with `screened`, set when probe added a `screen` child), `NotifyJob`, `HousekeepingJob`,
   `DlqJob`. Results: `TranscodeResult`, `ThumbnailResult` and `ScreenResult`, told apart by `type` in the
   `ChildResult` discriminated union a package job reads back from its flow children.
 - **Deterministic job ids (`ids`):** probe, thumbnail, screen and package are `<videoId>--<stage>--g<generation>`, a

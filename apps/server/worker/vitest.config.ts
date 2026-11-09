@@ -1,4 +1,5 @@
 ﻿import { definePackageTestConfig } from '@vp/testing';
+import { configDefaults } from 'vite-plus';
 
 // Several stage tests shell out to real FFmpeg, which takes every core it can get. Under
 // the full suite's parallelism they contend with every other worker, so they need the same
@@ -6,6 +7,7 @@
 export default definePackageTestConfig({
   test: {
     globalSetup: ['../../../tests/ensure-fixtures.ts'],
+    exclude: [...configDefaults.exclude, '**/__tests__/integration/**'],
     testTimeout: 60_000,
     hookTimeout: 60_000,
   },

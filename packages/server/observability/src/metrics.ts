@@ -1,9 +1,11 @@
 import { Counter, Gauge, Histogram, Registry, collectDefaultMetrics } from 'prom-client';
 import { type CaptionsMetrics, createCaptionsMetrics } from './captions-metrics';
 import { type PlaybackMetrics, createPlaybackMetrics } from './playback-metrics';
+import { type ScreeningMetrics, createScreeningMetrics } from './screening-metrics';
 import { type WebVitalsMetrics, createWebVitalsMetrics } from './web-vitals-metrics';
 
-export interface PipelineMetrics extends WebVitalsMetrics, PlaybackMetrics, CaptionsMetrics {
+export interface PipelineMetrics
+  extends WebVitalsMetrics, PlaybackMetrics, CaptionsMetrics, ScreeningMetrics {
   registry: Registry;
 
   httpRequestDuration: Histogram<string>;
@@ -261,5 +263,6 @@ export function createMetricsRegistry(): PipelineMetrics {
     ...createWebVitalsMetrics(registry),
     ...createPlaybackMetrics(registry),
     ...createCaptionsMetrics(registry),
+    ...createScreeningMetrics(registry),
   };
 }

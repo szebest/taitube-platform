@@ -10,6 +10,7 @@ import type {
 import type { Repositories } from '@vp/core/repositories';
 import type { AppConfig } from '@vp/env-schema';
 import type { MediaTools } from '@vp/ffmpeg';
+import type { FingerprintTools } from '@vp/fingerprint';
 import type { LogContext, Logger } from '@vp/logger';
 import type { PipelineMetrics } from '@vp/observability';
 import { type Result, isErr, ok } from '@vp/result';
@@ -34,6 +35,7 @@ export interface WorkerRunnerOptions {
   logContext: LogContext;
   media: MediaTools;
   speech: SpeechTools;
+  fingerprint: FingerprintTools;
   workerId: string;
   adapters?: WorkerAdapterOverrides;
   disableOutboxRelay?: boolean;
@@ -81,6 +83,7 @@ export async function composeWorker(options: WorkerRunnerOptions): Promise<Worke
     workerId: options.workerId,
     media: options.media,
     speech: options.speech,
+    fingerprint: options.fingerprint,
     outboxRelay: { enabled: !options.disableOutboxRelay },
   });
   resolveStartOrder(container);
