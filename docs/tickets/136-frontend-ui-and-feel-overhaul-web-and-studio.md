@@ -8,7 +8,7 @@
 | Blocks | — |
 | Spec | [95 design system 2](95-design-system-2.md) - [design foundations, motion](../design/foundations/motion.md) - [72 settings](72-frontend-settings-customization-system.md) - [97 account preferences](97-account-preferences-api.md) - [57 player](57-production-video-player-hls-streaming-controls.md) - [docs/standards/authorization.md](../standards/authorization.md) |
 
-**Status:** ready
+**Status:** in-progress
 
 > **Why.** The owner clicked through the running app and found the same classes of defect on every page: the page
 > jumps when an overlay opens or closes, chrome text is selectable, tab bars lock up or lose their counts, a modal
@@ -318,6 +318,10 @@ lands before d2 (Shorts), because Shorts needs the engine to outlive a route cha
 
 Every slice ends the same way: the app launched and clicked through in a real browser (acceptance criterion 1), the
 before and after table in the PR, and the architecture or lint check for its rule with a fixture proving it fires.
+
+**Branches.** Twelve slices at three per stack is the fewest stacks, so four. Each stack is one feature branch and one
+feature PR into `main`, run one at a time in one worktree: `feat/136a-foundations` with `slice/136a1-demo-login`,
+`slice/136a2-layers`, `slice/136a3-tokens-and-overlay-motion`; B, C and D the same with `136b1` to `136d3`.
 
 ### Stack A: `feat/136a-foundations` (root fixes, so the rest builds on them)
 
