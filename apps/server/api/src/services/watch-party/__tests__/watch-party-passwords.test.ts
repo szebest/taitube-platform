@@ -72,6 +72,19 @@ describe('apps/server/api/services: checkPassword', () => {
     }
   });
 
+  it('lets only the allowed attempts reach the hash when they arrive in parallel', async () => {
+    const { check, deps } = await setUpPasswords();
+    const verify = vi.spyOn(deps.hasher, 'verify');
+
+    const results = await Promise.all(
+      Array.from({ length: 20 }, () => check({ password: 'wrong' }))
+    );
+
+    expect(verify).toHaveBeenCalledTimes(5);
+    expect(results.filter((result) => result.ok && result.value === 'invalid')).toHaveLength(5);
+    expect(results.filter((result) => !result.ok)).toHaveLength(15);
+  });
+
   it('lets the lock go when the window ends', async () => {
     const { check, clock } = await setUpPasswords();
     for (let wrong = 0; wrong < 5; wrong += 1) await check({ password: 'wrong' });

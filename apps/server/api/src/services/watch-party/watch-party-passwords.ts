@@ -20,8 +20,9 @@ type PasswordFailure = WatchPartyPasswordLocked | HashingFailed | CacheUnavailab
 
 /**
  * One member key and one address each get their own count per room, so neither rotating keys nor
- * rotating addresses beats the limit. The budget is read before the password is hashed, so a
- * locked caller costs the server no scrypt.
+ * rotating addresses beats the limit. The attempt is counted before the password is hashed, in one
+ * atomic step, so parallel guesses cannot all slip under the limit and a locked caller costs the
+ * server no scrypt. The right password clears the member key and gives the address its attempt back.
  */
 export async function checkPassword(
   { gate, hasher, config }: Pick<WatchPartyDeps, 'gate' | 'hasher' | 'config'>,
@@ -30,24 +31,21 @@ export async function checkPassword(
   const rule = config.budgets.password;
   const [byMember, byAddress] = [`${roomId}:${memberKey}`, `${roomId}:${ip}`];
 
-  const checks = all(
-    await Promise.all([byMember, byAddress].map((scope) => gate.check('password', scope, rule)))
+  const charges = all(
+    await Promise.all([byMember, byAddress].map((scope) => gate.consume('password', scope, rule)))
   );
-  if (isErr(checks)) return checks;
-  const refusals = checks.value.flatMap((admission) =>
+  if (isErr(charges)) return charges;
+  const refusals = charges.value.flatMap((admission) =>
     admission.type === 'refused' ? [admission.retryAfterSeconds] : []
   );
   if (refusals.length > 0) return err(watchPartyPasswordLocked(Math.max(...refusals)));
 
   const verified = await hasher.verify(password, passwordHash);
   if (isErr(verified)) return verified;
+  if (!verified.value) return ok('invalid');
 
-  if (verified.value) {
-    const cleared = await gate.reset('password', byMember);
-    return isErr(cleared) ? cleared : ok('valid');
-  }
-  const counted = all(
-    await Promise.all([byMember, byAddress].map((scope) => gate.consume('password', scope, rule)))
+  const cleared = all(
+    await Promise.all([gate.reset('password', byMember), gate.release('password', byAddress)])
   );
-  return isErr(counted) ? counted : ok('invalid');
+  return isErr(cleared) ? cleared : ok('valid');
 }

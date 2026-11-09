@@ -1,4 +1,5 @@
 import type { Redis } from 'ioredis';
+import { WATCH_PARTY_GATE_RELEASE_SCRIPT } from '../redis-watch-party-gate.adapter';
 import { WATCH_PARTY_PRESENCE_SCRIPTS } from '../redis-watch-party-presence.adapter';
 import { FakeLiveRedis } from './fake-live-redis';
 import { ranked } from './fake-sorted-set';
@@ -33,6 +34,8 @@ export class FakeWatchPartyRedis extends FakeLiveRedis {
     const argv = args.slice(numKeys).map(String);
 
     switch (script) {
+      case WATCH_PARTY_GATE_RELEASE_SCRIPT:
+        return this.release(keys);
       case WATCH_PARTY_PRESENCE_SCRIPTS.admit:
         return this.admitPresence(keys, argv);
       case WATCH_PARTY_PRESENCE_SCRIPTS.members:
@@ -40,6 +43,13 @@ export class FakeWatchPartyRedis extends FakeLiveRedis {
       default:
         return super.eval(script, numKeys, ...args);
     }
+  }
+
+  private release([key = '']: string[]): number {
+    const count = Number(this.strings.get(key));
+    if (!(count > 0)) return 0;
+    this.strings.set(key, String(count - 1));
+    return count - 1;
   }
 
   private prune(keys: string[], staleBefore: string): Map<string, number> {

@@ -64,15 +64,10 @@ export class InMemoryWatchPartyGate implements WatchPartyGatePort {
     return ok(window.count > rule.limit ? refusedUntil(window.endsAtMs, nowMs) : ADMITTED);
   }
 
-  async check(
-    budget: WatchPartyBudget,
-    scope: string,
-    rule: BudgetRule
-  ): Promise<Result<GateAdmission, CacheUnavailable>> {
-    const nowMs = this.now();
-    const open = this.openWindow(`${budget}:${scope}`, nowMs);
-
-    return ok(open && open.count >= rule.limit ? refusedUntil(open.endsAtMs, nowMs) : ADMITTED);
+  async release(budget: WatchPartyBudget, scope: string): Promise<Result<void, CacheUnavailable>> {
+    const open = this.openWindow(`${budget}:${scope}`, this.now());
+    if (open) open.count = Math.max(0, open.count - 1);
+    return ok();
   }
 
   async reset(budget: WatchPartyBudget, scope: string): Promise<Result<void, CacheUnavailable>> {

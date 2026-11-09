@@ -50,12 +50,8 @@ export interface WatchPartyGatePort {
     scope: string,
     rule: BudgetRule
   ): Promise<Result<GateAdmission, CacheUnavailable>>;
-  /** Whether the budget is spent, counting nothing: a password is checked before it is hashed. */
-  check(
-    budget: WatchPartyBudget,
-    scope: string,
-    rule: BudgetRule
-  ): Promise<Result<GateAdmission, CacheUnavailable>>;
+  /** Gives one counted attempt back, never below nothing spent: a password that proved right. */
+  release(budget: WatchPartyBudget, scope: string): Promise<Result<void, CacheUnavailable>>;
   reset(budget: WatchPartyBudget, scope: string): Promise<Result<void, CacheUnavailable>>;
   /** Claims the member's next line in `seconds`; refused while the last one's wait runs. */
   slowMode(

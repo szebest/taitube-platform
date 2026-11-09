@@ -30,8 +30,6 @@ export function describeWatchPartyGateContract(makeSubject: () => Promise<WatchP
 
     const consume = async (budget: WatchPartyBudget = 'chat', useScope = scope) =>
       expectOk(await subject.gate.consume(budget, useScope, RULE));
-    const check = async (budget: WatchPartyBudget = 'chat') =>
-      expectOk(await subject.gate.check(budget, scope, RULE));
     const spend = async (times: number, budget: WatchPartyBudget = 'chat') => {
       for (let i = 0; i < times; i += 1) await consume(budget);
     };
@@ -82,21 +80,26 @@ export function describeWatchPartyGateContract(makeSubject: () => Promise<WatchP
       expect(await consume('command')).toEqual({ type: 'admitted' });
     });
 
-    it('counts nothing when it checks, and refuses once the limit is spent', async () => {
-      for (const _ of [1, 2, 3, 4, 5]) expect(await check()).toEqual({ type: 'admitted' });
-
+    it('gives one attempt back on release, and never goes below nothing spent', async () => {
       await spend(3);
+      expectOk(await subject.gate.release('chat', scope));
 
-      expect(await check()).toMatchObject({ type: 'refused' });
+      expect(await consume()).toEqual({ type: 'admitted' });
+      expect(await consume()).toMatchObject({ type: 'refused' });
+
+      const untouched = randomUUID();
+      expectOk(await subject.gate.release('chat', untouched));
+      for (const _ of [1, 2, 3])
+        expect(await consume('chat', untouched)).toEqual({ type: 'admitted' });
+      expect(await consume('chat', untouched)).toMatchObject({ type: 'refused' });
     });
 
     it('admits again after a reset', async () => {
       await spend(4);
-      expect(await check()).toMatchObject({ type: 'refused' });
+      expect(await consume()).toMatchObject({ type: 'refused' });
 
       expectOk(await subject.gate.reset('chat', scope));
 
-      expect(await check()).toEqual({ type: 'admitted' });
       expect(await consume()).toEqual({ type: 'admitted' });
     });
 

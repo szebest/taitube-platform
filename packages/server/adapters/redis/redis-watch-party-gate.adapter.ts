@@ -21,6 +21,12 @@ const TicketGrantSchema = z.object({
 
 const ADMITTED: GateAdmission = { type: 'admitted' };
 
+/** @internal Exported so the in-memory Redis fake can answer the same script. */
+export const WATCH_PARTY_GATE_RELEASE_SCRIPT = `
+local count = tonumber(redis.call('GET', KEYS[1]))
+if count and count > 0 then return redis.call('DECR', KEYS[1]) end
+return 0`;
+
 const refusedFor = (ttlSeconds: number): GateAdmission => ({
   type: 'refused',
   retryAfterSeconds: Math.max(1, ttlSeconds),
@@ -81,19 +87,17 @@ export class RedisWatchPartyGateAdapter implements WatchPartyGatePort {
     );
   }
 
-  async check(
-    budget: WatchPartyBudget,
-    scope: string,
-    rule: BudgetRule
-  ): Promise<Result<GateAdmission, CacheUnavailable>> {
-    const key = CacheKeys.watchPartyBudget(budget, scope);
-    const raw = await fromPromise(
-      () => this.redis.get(key),
-      cacheUnavailable.during('checkWatchPartyBudget')
+  async release(budget: WatchPartyBudget, scope: string): Promise<Result<void, CacheUnavailable>> {
+    const released = await fromPromise(
+      () =>
+        this.redis.eval(
+          WATCH_PARTY_GATE_RELEASE_SCRIPT,
+          1,
+          CacheKeys.watchPartyBudget(budget, scope)
+        ),
+      cacheUnavailable.during('releaseWatchPartyBudget')
     );
-    return andThenAsync(raw, async (value) =>
-      Number(value ?? 0) >= rule.limit ? this.refusedUntilExpiry(key) : ok(ADMITTED)
-    );
+    return map(released, () => undefined);
   }
 
   async reset(budget: WatchPartyBudget, scope: string): Promise<Result<void, CacheUnavailable>> {
