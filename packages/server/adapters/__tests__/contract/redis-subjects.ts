@@ -6,6 +6,7 @@ import { FakeLiveRedis } from '../../redis/__tests__/fake-live-redis';
 import { FakeRedis } from '../../redis/__tests__/fake-redis';
 import { RedisCacheClient } from '../../redis/redis-cache-client';
 import { RedisCategoryCacheAdapter } from '../../redis/redis-category-cache.adapter';
+import { RedisCommentSlowModeAdapter } from '../../redis/redis-comment-slow-mode.adapter';
 import { RedisLiveChatGateAdapter } from '../../redis/redis-live-chat-gate.adapter';
 import { RedisLivePresenceAdapter } from '../../redis/redis-live-presence.adapter';
 import { RedisSearchSuggestionIndexAdapter } from '../../redis/redis-search-suggestion-index.adapter';
@@ -13,6 +14,7 @@ import { RedisSubscriptionCacheAdapter } from '../../redis/redis-subscription-ca
 import { RedisViewBufferAdapter } from '../../redis/redis-view-buffer.adapter';
 import type { CacheClientSubject } from './cache-client.contract';
 import type { CategoryCacheSubject } from './category-cache.contract';
+import type { CommentSlowModeSubject } from './comment-slow-mode.contract';
 import { inMemoryCacheClientSubject } from './in-memory-port-subjects';
 import type { LiveChatGateSubject } from './live-chat-gate.contract';
 import type { LivePresenceSubject } from './live-presence.contract';
@@ -122,6 +124,17 @@ export async function redisLiveChatGateSubject(): Promise<LiveChatGateSubject> {
   const redis = fakeOrRealRedis();
   return {
     gate: new RedisLiveChatGateAdapter(redis),
+    close: async () => {
+      await redis.quit();
+    },
+  };
+}
+
+/** The adapter over `FakeRedis` in `unit` and under `bun test`, over the real Redis otherwise. */
+export async function redisCommentSlowModeSubject(): Promise<CommentSlowModeSubject> {
+  const redis = fakeOrRealRedis();
+  return {
+    slowMode: new RedisCommentSlowModeAdapter(redis),
     close: async () => {
       await redis.quit();
     },

@@ -2,6 +2,7 @@ import { type Container, closeOnDispose, token } from '@vp/composition';
 import { SEARCH_SUGGESTIONS } from '@vp/domain';
 import { portBoardQueues } from '../bullmq/port-board-queues';
 import { InMemoryCacheClient } from '../in-memory/in-memory-cache-client';
+import { InMemoryCommentSlowMode } from '../in-memory/in-memory-comment-slow-mode';
 import { InMemoryDatabaseClient } from '../in-memory/in-memory-database-client';
 import { InMemoryFlowProducer } from '../in-memory/in-memory-flow-producer';
 import { InMemoryJobQueue } from '../in-memory/in-memory-job-queue';
@@ -62,6 +63,7 @@ export function registerFamily(c: Container): void {
     .provide(Adapters.ViewBuffer, () => new InMemoryViewBuffer())
     .provide(Adapters.WebhookDispatcher, () => new InMemoryWebhookDispatcher())
     .provide(Adapters.LiveGateway, () => new InMemoryLiveGateway())
+    .provide(Adapters.CommentSlowMode, () => new InMemoryCommentSlowMode())
     .provide(Adapters.LiveChatGate, () => new InMemoryLiveChatGate())
     .provide(Adapters.LivePresence, () => new InMemoryLivePresence())
     .provide(Adapters.BoardQueues, () => portBoardQueues);

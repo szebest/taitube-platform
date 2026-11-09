@@ -30,6 +30,8 @@ export const CacheKeys = {
     `${NAMESPACE}:retention:session:${videoId}:${sessionId}`,
   viewSession: (videoId: string, sessionId: string) =>
     `${NAMESPACE}:views:session:${videoId}:${sessionId}`,
+  commentSlowMode: (channelId: string, userId: string) =>
+    `${NAMESPACE}:comments:slow:${channelId}:${userId}`,
   liveChatTicket: (ticket: string) => `${NAMESPACE}:live:chat:ticket:${ticket}`,
   liveChatSlowMode: (liveStreamId: string, userId: string) =>
     `${NAMESPACE}:live:${liveStreamId}:chat:slow:${userId}`,
