@@ -2,7 +2,7 @@ import { expectOk } from '@vp/testing/result';
 import { advanceRoom, commitState, pausedNow, stateFrame } from '../watch-party-playback';
 import { ROOM_ID } from './watch-party-moderation-fixture';
 import { socketRoom } from './watch-party-socket-fixture';
-import { VIDEO_B } from './watch-party-test-deps';
+import { deleteVideo, VIDEO_A, VIDEO_B } from './watch-party-test-deps';
 
 describe('the room clock’s commits', () => {
   it('publishes an applied change as state, with the countdown of a start', async () => {
@@ -58,6 +58,33 @@ describe('the room clock’s commits', () => {
     );
     expect(lines.at(-1)?.system).toMatchObject({ event: 'now_playing', detail: VIDEO_B });
     expect(party.systemLines().at(-1)).toMatchObject({ event: 'now_playing', detail: VIDEO_B });
+  });
+
+  it('drops a queued video that is no longer available, with a system line', async () => {
+    const party = await socketRoom();
+    const room = await party.play();
+    await deleteVideo(party, VIDEO_B);
+
+    expectOk(await advanceRoom(party.deps, room, null, 'advance'));
+
+    expect((await party.room()).phase).toBe('finished');
+    expect(party.systemLines()).toContainEqual(
+      expect.objectContaining({ event: 'video_unavailable', detail: VIDEO_B })
+    );
+    expect(expectOk(await party.repositories.watchPartyQueue.list(ROOM_ID)).items).toHaveLength(1);
+  });
+
+  it('moves off a current video that is no longer available', async () => {
+    const party = await socketRoom();
+    const room = await party.play();
+    await deleteVideo(party, VIDEO_A);
+
+    expectOk(await advanceRoom(party.deps, room, null, 'advance'));
+
+    expect((await party.room()).playback.itemId).toBe(party.items[1]?.id);
+    expect(party.systemLines()).toContainEqual(
+      expect.objectContaining({ event: 'video_unavailable', detail: VIDEO_A })
+    );
   });
 
   it('finishes the room once the queue has run out', async () => {

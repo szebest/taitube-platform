@@ -1,5 +1,5 @@
 import type { WatchPartyServerFrame } from '@vp/api-contracts';
-import type { NewSystemLine, RoomWrite } from '@vp/core/repositories';
+import type { NewSystemLine, QueueSnapshot, RoomWrite } from '@vp/core/repositories';
 import {
   advancePlayback,
   expectedPositionMs,
@@ -8,6 +8,7 @@ import {
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { isErr, type Result } from '@vp/result';
+import { dropUnavailable } from './watch-party-availability';
 import type { WatchPartyDeps } from './watch-party-deps';
 import { announce, announceLine } from './watch-party-moderation-effects';
 import { presentQueue } from './watch-party-queue-views';
@@ -78,10 +79,10 @@ export async function advanceRoom(
   reason: StateReason
 ): Promise<Result<RoomWrite, DatabaseUnavailable>> {
   const { repositories, now } = deps;
-  const queue = await repositories.watchPartyQueue.list(room.id);
-  if (isErr(queue)) return queue;
+  const checked = await dropUnavailable(deps, room);
+  if (isErr(checked)) return checked;
 
-  const { items } = queue.value;
+  const { items } = checked.value.queue;
   const current = room.playback.itemId;
   const from = items.findIndex(({ id }) => id === current);
   const next = items
@@ -116,9 +117,17 @@ export async function advanceRoom(
     if (isErr(cleared)) deps.logger.warn({ err: cleared.error, roomId: room.id }, 'votes kept');
   }
   const after = await repositories.watchPartyQueue.list(room.id);
-  const view = isErr(after) ? after : await presentQueue(deps, after.value);
-  if (!isErr(view)) await announce(deps, room.id, { type: 'queue', ...view.value });
+  if (!isErr(after)) await announceQueue(deps, room.id, after.value);
   return written;
+}
+
+export async function announceQueue(
+  deps: PlaybackDeps,
+  roomId: string,
+  snapshot: QueueSnapshot
+): Promise<void> {
+  const view = await presentQueue(deps, snapshot);
+  if (!isErr(view)) await announce(deps, roomId, { type: 'queue', ...view.value });
 }
 
 /** Holds the room where it is now, as the system: the buffering wait's pause. */

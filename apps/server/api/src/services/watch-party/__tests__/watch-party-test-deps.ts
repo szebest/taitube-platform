@@ -201,6 +201,22 @@ export async function seedParty({ repositories }: WatchPartyTest): Promise<void>
   }
 }
 
+/** The video as the platform deletes it: soft, so the room finds it missing. */
+export async function deleteVideo(
+  { repositories }: Pick<WatchPartyTest, 'repositories'>,
+  videoId: string
+): Promise<void> {
+  expectOk(
+    await repositories.videos.transition({
+      videoId,
+      from: 'READY',
+      to: 'DELETED',
+      eventType: 'video.deleted',
+      patch: { deletedAt: new Date() },
+    })
+  );
+}
+
 export type PartyBodyOverrides = Partial<CreateWatchPartyBody>;
 
 export function partyBody(overrides: PartyBodyOverrides = {}): CreateWatchPartyBody {

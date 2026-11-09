@@ -2,14 +2,25 @@ import { IDLE_CLOSE_MS, type WatchPartyCloseReason, type WatchPartyRoom } from '
 import { MS_PER_DAY, MS_PER_SECOND } from '@vp/domain/time';
 import type { CacheUnavailable, DatabaseUnavailable } from '@vp/errors';
 import { isErr, ok, type Result } from '@vp/result';
+import { dropUnavailable } from './watch-party-availability';
 import type { WatchPartyDeps } from './watch-party-deps';
 import { announce, logChange } from './watch-party-moderation-effects';
 import { handOverAbsentOwner } from './watch-party-owner-grace';
+import { advanceRoom, announceQueue } from './watch-party-playback';
 import { addToTally, emptyTally, publishTally, type SweepTally } from './watch-party-sweep-gauges';
 
 type SweepDeps = Pick<
   WatchPartyDeps,
-  'repositories' | 'presence' | 'broadcaster' | 'logger' | 'metrics' | 'config' | 'now' | 'secrets'
+  | 'repositories'
+  | 'presence'
+  | 'broadcaster'
+  | 'logger'
+  | 'metrics'
+  | 'config'
+  | 'now'
+  | 'secrets'
+  | 'cdn'
+  | 'gate'
 >;
 
 type SweepFailure = DatabaseUnavailable | CacheUnavailable;
@@ -74,7 +85,10 @@ export class WatchPartySweep {
       for (const room of page.value) {
         seen.add(room.id);
         const swept = await this.sweepRoom(room, at, gauges);
-        if (isErr(swept)) return swept;
+        if (isErr(swept)) {
+          this.deps.logger.warn({ err: swept.error, roomId: room.id }, 'room not swept');
+          continue;
+        }
         totals.rooms += 1;
         totals.closed += swept.value === 'closed' ? 1 : 0;
         totals.handedOver += swept.value === 'handed over' ? 1 : 0;
@@ -118,6 +132,9 @@ export class WatchPartySweep {
     if (isErr(recorded)) return recorded;
     addToTally(gauges, room, present.value);
 
+    const available = await this.skipUnavailable(room);
+    if (isErr(available)) return available;
+
     if (present.value.length === 0) {
       this.ownerAbsentSince.delete(room.id);
       return this.closeIfIdle(room, nowMs);
@@ -127,6 +144,22 @@ export class WatchPartySweep {
       return ok('kept');
     }
     return this.handOverIfAbsent(room.id, nowMs);
+  }
+
+  private async skipUnavailable(room: WatchPartyRoom): Promise<Result<void, DatabaseUnavailable>> {
+    const checked = await dropUnavailable(this.deps, room);
+    if (isErr(checked)) return checked;
+
+    const { queue, removed } = checked.value;
+    const { itemId } = room.playback;
+    const lostCurrent =
+      itemId !== null && room.phase !== 'finished' && !queue.items.some(({ id }) => id === itemId);
+    if (lostCurrent) {
+      const advanced = await advanceRoom(this.deps, room, null, 'system');
+      return isErr(advanced) ? advanced : ok();
+    }
+    if (removed > 0) await announceQueue(this.deps, room.id, queue);
+    return ok();
   }
 
   private async closeIfIdle(

@@ -1,10 +1,20 @@
 import type { WatchPartyRoom } from '@vp/domain';
 import { MS_PER_DAY, MS_PER_MINUTE } from '@vp/domain/time';
+import { cacheUnavailable } from '@vp/errors';
+import { err } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import { idleCloseReason, WatchPartySweep } from '../watch-party-sweep';
 import { GUEST_KEY, keyOf, ROOM_ID } from './watch-party-moderation-fixture';
 import { socketRoom } from './watch-party-socket-fixture';
-import { MEMBER, OWNER, reading, START } from './watch-party-test-deps';
+import {
+  deleteVideo,
+  MEMBER,
+  OWNER,
+  reading,
+  START,
+  VIDEO_A,
+  VIDEO_B,
+} from './watch-party-test-deps';
 
 type Party = Awaited<ReturnType<typeof socketRoom>>;
 
@@ -122,6 +132,41 @@ describe('the watch party sweep', () => {
 
     expect(expectOk(await sweep.run())).toMatchObject({ handedOver: 0 });
     expect((await party.room()).ownerKey).toBe(keyOf(OWNER));
+  });
+
+  it('skips a room off a video that is no longer available within a sweep', async () => {
+    const party = await socketRoom();
+    await present(party, keyOf(OWNER));
+    await party.play();
+    await deleteVideo(party, VIDEO_A);
+
+    expectOk(await sweepOf(party).run());
+
+    expect((await party.room()).playback.itemId).toBe(party.items[1]?.id);
+    expect(party.systemLines()).toContainEqual(
+      expect.objectContaining({ event: 'video_unavailable', detail: VIDEO_A })
+    );
+  });
+
+  it('drops a queued video that is no longer available without moving the room', async () => {
+    const party = await socketRoom();
+    await present(party, keyOf(OWNER));
+    const playing = await party.play();
+    await deleteVideo(party, VIDEO_B);
+
+    expectOk(await sweepOf(party).run());
+
+    expect((await party.room()).playbackVersion).toBe(playing.playbackVersion);
+    expect(party.published('queue').at(-1)?.items).toHaveLength(1);
+  });
+
+  it('keeps sweeping when one room fails', async () => {
+    const party = await socketRoom();
+    vi.spyOn(party.presence, 'members').mockResolvedValueOnce(err(cacheUnavailable('down')));
+
+    const outcome = expectOk(await sweepOf(party).run());
+
+    expect(outcome).toMatchObject({ rooms: 0 });
   });
 
   it('drops the rooms closed past their retention', async () => {
