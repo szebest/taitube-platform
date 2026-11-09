@@ -1,4 +1,4 @@
-import { compareCues } from '../cue-alignment';
+import { compareCues, describeAlignment } from '../cue-alignment';
 
 const utterances = [
   { startMs: 3000, endMs: 7000 },
@@ -7,12 +7,12 @@ const utterances = [
 ];
 
 describe('compareCues', () => {
-  it('passes cues that start and end with speech, one per utterance or one across several, and reports the worst offsets', () => {
+  it('passes a track whose first start and last end sit on the speech, and reports per-cue deviations without failing them', () => {
     const report = compareCues(
       utterances,
       [
-        { startMs: 3040, endMs: 14_090 },
-        { startMs: 19_920, endMs: 24_000 },
+        { startMs: 3040, endMs: 9000 },
+        { startMs: 12_000, endMs: 24_050 },
       ],
       100
     );
@@ -20,36 +20,40 @@ describe('compareCues', () => {
     expect(report).toEqual({
       cues: 2,
       utterances: 3,
-      maxStartDeviationMs: 80,
-      maxEndDeviationMs: 90,
+      startOffsetMs: 40,
+      endOffsetMs: 50,
+      driftMs: 10,
+      maxStartDeviationMs: 2000,
+      maxEndDeviationMs: 2000,
       failures: [],
     });
   });
 
   it.each([
     {
-      name: 'a start away from every speech onset',
+      name: 'a first cue start off the first speech start',
       cues: [
         { startMs: 3500, endMs: 14_000 },
         { startMs: 20_000, endMs: 24_000 },
       ],
-      failure: 'cue 0 starts at 3500 ms, 500 ms from the nearest speech start at 3000 ms',
+      failure: 'the first cue starts at 3500 ms, 500 ms from the first speech start at 3000 ms',
     },
     {
-      name: 'an end away from every speech offset',
+      name: 'a last cue end off the last speech end',
       cues: [
         { startMs: 3000, endMs: 14_000 },
         { startMs: 20_000, endMs: 25_000 },
       ],
-      failure: 'cue 1 ends at 25000 ms, 1000 ms from the nearest speech end at 24000 ms',
+      failure: 'the last cue ends at 25000 ms, 1000 ms from the last speech end at 24000 ms',
     },
     {
-      name: 'an utterance no cue covers',
+      name: 'an offset that drifts although both ends are within tolerance',
       cues: [
-        { startMs: 3000, endMs: 7000 },
-        { startMs: 20_000, endMs: 24_000 },
+        { startMs: 2920, endMs: 14_000 },
+        { startMs: 20_000, endMs: 24_090 },
       ],
-      failure: 'utterance 1 (10000-14000 ms) is not covered by a cue',
+      failure:
+        'the offset drifts by 170 ms across the file, from -80 ms at the start to 90 ms at the end',
     },
     {
       name: 'a cue over silence',
@@ -63,12 +67,28 @@ describe('compareCues', () => {
     {
       name: 'cues out of order',
       cues: [
-        { startMs: 20_000, endMs: 24_000 },
         { startMs: 3000, endMs: 14_000 },
+        { startMs: 20_000, endMs: 24_000 },
+        { startMs: 10_000, endMs: 14_000 },
       ],
-      failure: 'cue 1 starts at 3000 ms, before cue 0 at 20000 ms',
+      failure: 'cue 2 starts at 10000 ms, before cue 1 at 20000 ms',
+    },
+    {
+      name: 'no cues',
+      cues: [],
+      failure: 'there are no cues or no speech spans to compare',
     },
   ])('fails on $name', ({ cues, failure }) => {
     expect(compareCues(utterances, cues, 100).failures).toContain(failure);
+  });
+});
+
+describe('describeAlignment', () => {
+  it('prints the offsets, the drift and the per-cue deviations as information', () => {
+    const report = compareCues(utterances, [{ startMs: 3020, endMs: 24_038 }], 100);
+
+    expect(describeAlignment(report, 100)).toBe(
+      '1 cues over 3 utterances, first cue start 20 ms off, last cue end 38 ms off, drift 18 ms (tolerance 100 ms); per-cue edges up to 20 ms (start) and 38 ms (end) off, information only'
+    );
   });
 });

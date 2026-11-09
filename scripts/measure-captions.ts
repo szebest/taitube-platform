@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { buildWhisperArgs } from '../packages/server/whisper/src/whisper-args';
-import { compareCues, type Span } from './cue-alignment';
+import { compareCues, describeAlignment, type Span } from './cue-alignment';
 
 const ROOT = resolve(import.meta.dirname, '..');
 const READY_LIMIT_SECONDS = { 3: 360, 1: 720 } as const;
@@ -118,10 +118,7 @@ function whisperRun(values: {
       (span) => span.endMs <= audioMs
     );
     const report = compareCues(truth, cues, Number(values['tolerance-ms']));
-    line(
-      'cue alignment',
-      `${report.cues} cues over ${report.utterances} utterances, max start ${report.maxStartDeviationMs} ms, max end ${report.maxEndDeviationMs} ms, tolerance ${values['tolerance-ms']} ms`
-    );
+    line('cue alignment', describeAlignment(report, Number(values['tolerance-ms'])));
     for (const failure of report.failures) line('  misaligned', failure);
     return factor >= 1 && report.failures.length === 0;
   } finally {

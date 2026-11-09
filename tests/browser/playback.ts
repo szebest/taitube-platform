@@ -5,7 +5,7 @@ import { resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { chromium } from 'playwright-core';
 import { mintToken } from '../../packages/server/dev-token/src/index';
-import { compareCues, type Span } from '../../scripts/cue-alignment';
+import { compareCues, describeAlignment, type Span } from '../../scripts/cue-alignment';
 import { sessionCookie } from '../playwright/session-cookie';
 
 const { values } = parseArgs({
@@ -244,9 +244,7 @@ try {
       return loaded?.length ? loaded : undefined;
     });
     const report = compareCues(utterances, cues, Number(values['tolerance-ms']));
-    step(
-      `${cues.length} cues against ${report.utterances} utterances: max start ${report.maxStartDeviationMs} ms, max end ${report.maxEndDeviationMs} ms, tolerance ${values['tolerance-ms']} ms`
-    );
+    step(describeAlignment(report, Number(values['tolerance-ms'])));
     if (report.failures.length > 0) {
       throw new Error(`cues do not match the media:\n${report.failures.join('\n')}`);
     }
