@@ -23,6 +23,15 @@ repo.
   appearance, `dir` and `lang` on `<html>` through `applyAppearance`, the attributes `ThemedDocument` renders
   in the apps, with the `ui` words of the toolbar locale's catalogue as its `UiCopy` (`loadCatalogue`, a
   loader, fetches it before the story renders, as the apps load it before they hydrate).
+- `src/app-decorator.tsx`: `withApp`, for a story that sets `parameters.app` (`session`: `'guest'` or
+  `'signed-in'`, `api`: a function returning the replies it wants, built once per story render so a closure over
+  it is that render's own state; a story without it renders bare). It stands a memory-history router, a query
+  client (no retries), the API client over `src/in-memory-api.ts` (`inMemoryFetch` answers the contracts in the
+  replies and a 404 for anything else, so a story never leaves the page), the session, the locale's words, the
+  toaster, the tooltip provider and `src/web-providers.tsx` (the web app's device preferences, their sync and the
+  player channel) around it. A kit component that reads the router, the cache or the API is shown through it; no
+  story builds its own provider tree. `.storybook/tanstack-start.ts` stubs the server-only exports `@vp/queries`
+  imports so it bundles.
 
 - `visual/`: the visual suite. `visual.test.ts` reads the built `storybook-static/index.json` and shoots
   each story at every registered theme and every shown mode: on main every story, on a pull request only the
