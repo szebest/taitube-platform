@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { RoleBadge } from '../../role-badge';
+import { RoleBadge } from '#app/components/team/role-badge';
 import { AuditLogListRoot } from '../audit-log-list';
 import { AuditLogList } from '../index';
 

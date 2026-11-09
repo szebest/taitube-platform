@@ -2,7 +2,7 @@ import { createIsomorphicFn } from '@tanstack/react-start';
 import { ONE_YEAR_S, readCookie, writeCookie } from '@vp/ui';
 
 /** The channel the studio last acted on, host-only: a preference the API checks against the caller's memberships on every call. */
-export const ACTING_CHANNEL_COOKIE = 'vp.channel';
+const ACTING_CHANNEL_COOKIE = 'vp.channel';
 
 export type ActingChannelStore = {
   /** The channel the next channel-scoped call names; `undefined` is the caller's own. */

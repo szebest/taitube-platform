@@ -1,5 +1,6 @@
-import { ACTING_CHANNEL_COOKIE, createActingChannelStore } from '../acting-channel';
+import { createActingChannelStore } from '../acting-channel';
 
+const COOKIE = 'vp.channel';
 const CHANNEL = '00000000-0000-7000-8000-0000000000c1';
 
 describe('@vp/queries: acting channel store in the browser', () => {
@@ -10,7 +11,7 @@ describe('@vp/queries: acting channel store in the browser', () => {
   it('keeps the selected channel in a cookie the next page load starts from', () => {
     createActingChannelStore().select(CHANNEL);
 
-    expect(document.cookie).toContain(`${ACTING_CHANNEL_COOKIE}=${CHANNEL}`);
+    expect(document.cookie).toContain(`${COOKIE}=${CHANNEL}`);
     expect(createActingChannelStore().read()).toBe(CHANNEL);
   });
 

@@ -16,17 +16,17 @@ import {
 } from '@vp/api-contracts';
 import type { ChannelRole } from '@vp/domain';
 import { type ErrorCode, ErrorCodes } from '@vp/errors';
-import { ACTING_CHANNEL_COOKIE } from '@vp/queries';
-import { CHANNEL_ID, channel, mockEndpoint, OWNER_ID, problemReply } from '@vp/web-testing';
+import { createActingChannelStore } from '@vp/queries';
+import { channel, mockEndpoint, OWNER_ID, problemReply } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
 
 export const OTHER_CHANNEL_ID = '0190c3a0-5e1d-7000-8000-0000000cc002';
-export const OTHER_OWNER_ID = '0190c3a0-5e1d-7000-8000-0000000bb002';
+const OTHER_OWNER_ID = '0190c3a0-5e1d-7000-8000-0000000bb002';
 export const EDITOR_ID = '0190c3a0-5e1d-7000-8000-0000000bb003';
 export const MODERATOR_ID = '0190c3a0-5e1d-7000-8000-0000000bb004';
 export const MANAGER_ID = '0190c3a0-5e1d-7000-8000-0000000bb005';
 export const INVITE_ID = '0190c3a0-5e1d-7000-8000-0000000dd001';
-export const NEW_CHANNEL_ID = '0190c3a0-5e1d-7000-8000-0000000cc003';
+const NEW_CHANNEL_ID = '0190c3a0-5e1d-7000-8000-0000000cc003';
 
 const CREATED_AT = '2026-01-01T00:00:00.000Z';
 const profile = (handle: string, displayName: string) => ({ handle, displayName, avatarUrl: null });
@@ -84,7 +84,7 @@ export interface TeamState {
   memberships: ChannelMembershipView[];
 }
 
-export interface TeamRequests {
+interface TeamRequests {
   teamChannels: (string | null)[];
   changes: { userId: string; role: unknown }[];
   removed: string[];
@@ -171,14 +171,12 @@ export function serveTeam(initial: Partial<TeamState> = {}, inviteFailure?: Erro
   return { state, requests, handlers };
 }
 
-/** The studio browser acting on `channelId`, as its cookie says; cleared when the test ends. */
+/** The studio browser acting on `channelId`, as its cookie says. */
 export function actOn(channelId: string) {
-  // oxlint-disable-next-line unicorn/no-document-cookie -- jsdom's jar is where the acting channel lives.
-  document.cookie = `${ACTING_CHANNEL_COOKIE}=${channelId}; path=/`;
-  onTestFinished(() => {
-    // oxlint-disable-next-line unicorn/no-document-cookie -- the same jar.
-    document.cookie = `${ACTING_CHANNEL_COOKIE}=; path=/; max-age=0`;
-  });
+  createActingChannelStore().select(channelId);
 }
 
-export { CHANNEL_ID };
+/** A browser that has chosen no channel, for the next test. */
+export function forgetActingChannel() {
+  createActingChannelStore().select(undefined);
+}

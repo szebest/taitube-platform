@@ -8,9 +8,7 @@ import { useState } from 'react';
 import { StudioWorkspace } from '#app/components/workspace/studio-workspace';
 import { SelectedVideoContext } from '#app/features/shell/hooks/selected-video';
 import { useAccessDeniedToast } from '#app/features/shell/hooks/use-access-denied-toast';
-import { ActingNavItems } from '#app/features/team/components/acting-nav-items/acting-nav-items';
-import { ActiveChannelProvider } from '#app/features/team/components/active-channel-provider/active-channel-provider';
-import { useActiveChannel } from '#app/features/team/hooks/use-active-channel';
+import { ActingNavItems, ActiveChannelProvider, useActiveChannel } from '#app/features/team';
 import { UploadDialog } from '#app/features/upload/components/upload-dialog/upload-dialog';
 import {
   UploadDockProvider,
