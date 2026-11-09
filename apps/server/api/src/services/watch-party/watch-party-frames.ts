@@ -9,7 +9,13 @@ import type { WatchPartyAbility } from '@vp/permissions';
 import { assertNever, err, isErr, map, ok, parseJson, type Result } from '@vp/result';
 import { type InvalidField, invalidField } from '@vp/validation';
 import type { PartyCaller } from './party-caller';
-import { pinChat, removeChat, type SendFailure, sendChat } from './watch-party-chat';
+import {
+  pinChat,
+  type RemoveFailure,
+  removeChat,
+  type SendFailure,
+  sendChat,
+} from './watch-party-chat';
 import { type CommandFailure, runCommand } from './watch-party-commands';
 import { react, requestPlayback, type SignalFailure, voteSkip } from './watch-party-signals';
 import type { RoomSocketDeps } from './watch-party-socket-service';
@@ -17,7 +23,12 @@ import { countCommand, countDenial, inSpan } from './watch-party-telemetry';
 
 type Unreadable = InvalidField<{ reason: 'unreadable' }>;
 
-export type FrameFailure = Unreadable | CommandFailure | SendFailure | SignalFailure;
+export type FrameFailure =
+  | Unreadable
+  | CommandFailure
+  | SendFailure
+  | RemoveFailure
+  | SignalFailure;
 
 /** The sender as the frame's handlers need it, and the two things a frame may change on it. */
 export interface FrameSender {

@@ -76,6 +76,23 @@ async function chatLine(party: Party) {
   return expectOk(await sendChat(party.deps, ROOM_ID, userCaller(OWNER), 'a line'));
 }
 
+async function otherLine(party: Party) {
+  const at = party.deps.now();
+  const line = await party.repositories.watchPartyMessages.append({
+    id: party.deps.secrets.newId(),
+    roomId: ROOM_ID,
+    authorKey: keyOf(OTHER),
+    source: 'app',
+    kind: 'text',
+    body: 'a line',
+    system: null,
+    videoId: null,
+    positionMs: null,
+    createdAt: at,
+  });
+  return expectOk(line).id;
+}
+
 async function abilityOf(party: Party, caller: PartyCaller) {
   return expectOk(await party.deps.context.load(ROOM_ID, caller)).ability;
 }
@@ -146,7 +163,7 @@ const ENFORCEMENT: Readonly<Partial<Record<WatchPartyPermission, Enforcement>>> 
   },
   'chat.moderate': {
     attempt: async (party, caller) =>
-      outcomeOf(await removeChat(party.deps, ROOM_ID, caller, await chatLine(party))),
+      outcomeOf(await removeChat(party.deps, ROOM_ID, caller, await otherLine(party))),
   },
   'chat.bypassSlowMode': {
     alongside: ['chat.post'],

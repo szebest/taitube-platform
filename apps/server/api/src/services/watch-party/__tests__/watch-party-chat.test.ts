@@ -3,7 +3,7 @@ import { expectErr, expectOk } from '@vp/testing/result';
 import { pinChat, readRoomChat, removeChat, sendChat } from '../watch-party-chat';
 import { keyOf, ROOM_ID, roleIdsOf } from './watch-party-moderation-fixture';
 import { socketRoom } from './watch-party-socket-fixture';
-import { MEMBER, OWNER, userCaller } from './watch-party-test-deps';
+import { MEMBER, OTHER, OWNER, userCaller } from './watch-party-test-deps';
 
 type Party = Awaited<ReturnType<typeof socketRoom>>;
 
@@ -128,6 +128,51 @@ describe('room chat', () => {
       event: 'message_removed',
       detail: id,
     });
+  });
+
+  it('lets a moderator remove a member’s line but not the owner’s', async () => {
+    const party = await socketRoom({ members: [MEMBER, OTHER] });
+    const roles = await roleIdsOf(party.repositories, party.deps.now());
+    expectOk(
+      await party.repositories.watchPartyRoles.assign(
+        {
+          roomId: ROOM_ID,
+          memberKey: keyOf(MEMBER),
+          roleId: roles.moderator,
+          grantedBy: keyOf(OWNER),
+          expiresAt: null,
+          createdAt: party.deps.now(),
+        },
+        {
+          line: {
+            id: party.deps.secrets.newId(),
+            line: { event: 'role_assigned', actorKey: null, targetKey: null, detail: null },
+            videoId: null,
+            positionMs: null,
+            createdAt: party.deps.now(),
+          },
+          at: party.deps.now(),
+        }
+      )
+    );
+    const theirs = expectOk(await say(party, 'rude', OTHER));
+    const owners = expectOk(await say(party, 'house rule', OWNER));
+
+    expect(expectErr(await removeChat(party.deps, ROOM_ID, userCaller(MEMBER), owners)).code).toBe(
+      ErrorCodes.WATCH_PARTY_ROLE_ESCALATION
+    );
+    expectOk(await removeChat(party.deps, ROOM_ID, userCaller(MEMBER), theirs));
+
+    expect(party.published('chat.removed')).toEqual([{ type: 'chat.removed', id: theirs }]);
+  });
+
+  it('lets the owner remove their own line', async () => {
+    const party = await socketRoom();
+    const id = expectOk(await say(party, 'oops', OWNER));
+
+    expectOk(await removeChat(party.deps, ROOM_ID, userCaller(OWNER), id));
+
+    expect(party.published('chat.removed')).toEqual([{ type: 'chat.removed', id }]);
   });
 
   it('pins one line and unpins it, publishing each', async () => {

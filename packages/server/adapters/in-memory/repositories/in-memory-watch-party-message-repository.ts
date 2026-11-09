@@ -46,6 +46,14 @@ export class InMemoryWatchPartyMessageRepository implements WatchPartyMessageRep
     return ok(removed.map((row) => row.id));
   }
 
+  async find(
+    roomId: string,
+    messageId: string
+  ): Promise<Result<WatchPartyMessage | null, DatabaseUnavailable>> {
+    const row = this.store.messages.get(messageId);
+    return ok(row?.roomId === roomId && row.removedAt === null ? { ...row } : null);
+  }
+
   async remove(
     roomId: string,
     messageId: string,

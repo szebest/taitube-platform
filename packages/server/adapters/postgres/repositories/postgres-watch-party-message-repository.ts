@@ -56,6 +56,22 @@ export class PostgresWatchPartyMessageRepository implements WatchPartyMessageRep
     return map(rows, (found) => found.map(({ id }) => id));
   }
 
+  async find(
+    roomId: string,
+    messageId: string
+  ): Promise<Result<WatchPartyMessage | null, DatabaseUnavailable>> {
+    const rows = await fromPromise(
+      () =>
+        this.db
+          .select()
+          .from(m)
+          .where(and(eq(m.id, messageId), eq(m.roomId, roomId), isNull(m.removedAt)))
+          .limit(1),
+      databaseUnavailable.during('findWatchPartyMessage')
+    );
+    return map(rows, ([row]) => row ?? null);
+  }
+
   async remove(
     roomId: string,
     messageId: string,

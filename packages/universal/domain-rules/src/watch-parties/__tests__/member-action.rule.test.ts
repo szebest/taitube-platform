@@ -54,6 +54,27 @@ describe('@vp/domain-rules: decideMemberAction', () => {
       target: memberAt(600, { memberKey: SELF }),
       code: ErrorCodes.WATCH_PARTY_ROLE_ESCALATION,
     },
+    {
+      scenario: 'a moderator moderates a guest',
+      holder: 'moderator',
+      action: 'moderate',
+      target: memberAt(0, { kind: 'guest' }),
+      code: null,
+    },
+    {
+      scenario: 'a moderator moderates the owner',
+      holder: 'moderator',
+      action: 'moderate',
+      target: memberAt(1000, { isOwner: true }),
+      code: ErrorCodes.WATCH_PARTY_ROLE_ESCALATION,
+    },
+    {
+      scenario: 'a member moderates a member',
+      holder: 'member',
+      action: 'moderate',
+      target: memberAt(0),
+      code: ErrorCodes.WATCH_PARTY_PERMISSION_MISSING,
+    },
   ])('$scenario: $code', ({ holder, action, target, code }) => {
     const result = decideMemberAction({
       ability: seatOf(holder).ability,

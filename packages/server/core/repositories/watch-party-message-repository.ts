@@ -19,6 +19,11 @@ export interface WatchPartyMessageRepositoryPort {
     afterId: string,
     limit: number
   ): Promise<Result<string[], DatabaseUnavailable>>;
+  /** A line of the room that is not removed. */
+  find(
+    roomId: string,
+    messageId: string
+  ): Promise<Result<WatchPartyMessage | null, DatabaseUnavailable>>;
   remove(
     roomId: string,
     messageId: string,

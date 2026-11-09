@@ -112,6 +112,19 @@ export function describeWatchPartyMessageRepositoryContract(
       expect(removed).toEqual([messageId(2), messageId(3)]);
     });
 
+    it('finds a live line of the room, and none that is removed or another room’s', async () => {
+      await createRoom(subject, OTHER_ROOM_ID);
+      await appendAll([text(1), text(2), text(3, { roomId: OTHER_ROOM_ID })]);
+      expectOk(await messages().remove(ROOM_ID, messageId(2), AT));
+
+      expect(expectOk(await messages().find(ROOM_ID, messageId(1)))).toMatchObject({
+        id: messageId(1),
+        authorKey: userKey(accountId(3)),
+      });
+      expect(expectOk(await messages().find(ROOM_ID, messageId(2)))).toBeNull();
+      expect(expectOk(await messages().find(ROOM_ID, messageId(3)))).toBeNull();
+    });
+
     it('removes a line of the room once', async () => {
       await createRoom(subject, OTHER_ROOM_ID);
       await appendAll([text(1), text(2, { roomId: OTHER_ROOM_ID })]);

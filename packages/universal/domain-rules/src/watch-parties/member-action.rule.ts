@@ -12,16 +12,17 @@ import {
 import { andThen, err, ok, type Result } from '@vp/result';
 import { requireRoomPermission } from './permission.rule';
 
-export type MemberAction = 'kick' | 'ban';
+export type MemberAction = 'kick' | 'ban' | 'moderate';
 
 type Target = WatchPartyMemberSubject & { readonly memberKey: string };
 
 const GOVERNING: Readonly<Record<MemberAction, WatchPartyPermission>> = {
   kick: 'members.kick',
   ban: 'members.ban',
+  moderate: 'chat.moderate',
 };
 
-/** Kicking or banning: never oneself, the owner, or anyone at or above one's own position. */
+/** Kicking, banning or removing the chat of a member: never oneself, the owner, or anyone at or above one's own position. */
 export function decideMemberAction(input: {
   readonly ability: WatchPartyAbility;
   readonly actorKey: string;

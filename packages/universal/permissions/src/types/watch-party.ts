@@ -33,7 +33,7 @@ interface WatchPartyPermissionSubject {
 }
 
 export type WatchPartyRoleAction = 'assign' | 'revoke' | 'create' | 'update' | 'delete' | 'move';
-export type WatchPartyMemberAction = 'kick' | 'ban' | 'mute' | 'assign';
+export type WatchPartyMemberAction = 'kick' | 'ban' | 'mute' | 'assign' | 'moderate';
 
 type WatchPartyAction =
   | WatchPartyPermission

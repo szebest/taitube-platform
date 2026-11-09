@@ -119,7 +119,7 @@ describe('helpers/watch-parties: the room-scoped ability', () => {
 
   it.each<{
     holder: Holder;
-    action: 'kick' | 'ban' | 'mute' | 'assign';
+    action: 'kick' | 'ban' | 'mute' | 'assign' | 'moderate';
     member: WatchPartyMemberSubject;
     allowed: boolean;
   }>([
@@ -137,6 +137,21 @@ describe('helpers/watch-parties: the room-scoped ability', () => {
     { holder: 'owner', action: 'mute', member: memberAt(0, { kind: 'guest' }), allowed: false },
     { holder: 'cohost', action: 'kick', member: memberAt(1000, { isOwner: true }), allowed: false },
     { holder: 'member', action: 'kick', member: memberAt(1), allowed: false },
+    { holder: 'moderator', action: 'moderate', member: memberAt(400), allowed: true },
+    {
+      holder: 'moderator',
+      action: 'moderate',
+      member: memberAt(0, { kind: 'guest' }),
+      allowed: true,
+    },
+    { holder: 'moderator', action: 'moderate', member: memberAt(800), allowed: false },
+    {
+      holder: 'cohost',
+      action: 'moderate',
+      member: memberAt(1000, { isOwner: true }),
+      allowed: false,
+    },
+    { holder: 'member', action: 'moderate', member: memberAt(1), allowed: false },
   ])(
     '$holder may $action a member at $member.topPosition: $allowed',
     ({ holder, action, member, allowed }) => {
@@ -168,6 +183,8 @@ describe('helpers/watch-parties: the room-scoped ability', () => {
     it.each([
       { action: 'kick' as const, member: memberAt(800), allowed: true },
       { action: 'mute' as const, member: memberAt(800), allowed: true },
+      { action: 'moderate' as const, member: memberAt(800), allowed: true },
+      { action: 'moderate' as const, member: memberAt(1000, { isOwner: true }), allowed: false },
       { action: 'ban' as const, member: memberAt(1000, { isOwner: true }), allowed: false },
     ])('may $action a member at $member.topPosition: $allowed', ({ action, member, allowed }) => {
       expect(canActOnMember(staff, action, member)).toBe(allowed);

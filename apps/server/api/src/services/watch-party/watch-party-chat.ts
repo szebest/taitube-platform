@@ -1,13 +1,19 @@
 import type { WatchPartyServerFrame } from '@vp/api-contracts';
 import { expectedPositionMs, type WatchPartyMessage } from '@vp/domain';
-import { decideWatchPartyChatPost, requireRoomPermission } from '@vp/domain-rules';
+import {
+  decideMemberAction,
+  decideWatchPartyChatPost,
+  requireRoomPermission,
+} from '@vp/domain-rules';
 import {
   type CacheUnavailable,
   type DatabaseUnavailable,
+  ErrorCodes,
   type WatchPartyChatOff,
   type WatchPartyClosed,
   type WatchPartyNotFound,
   type WatchPartyPermissionMissing,
+  type WatchPartyRoleEscalation,
   type WatchPartySlowMode,
   watchPartySlowMode,
 } from '@vp/errors';
@@ -16,7 +22,9 @@ import { type InvalidChatMessage, validateChatMessage } from '@vp/validation';
 import { readChatBacklog } from '../live-chat-backlog';
 import type { PartyCaller } from './party-caller';
 import { consumeBudget, type RateLimited } from './watch-party-budgets';
+import type { RoomContext } from './watch-party-context';
 import type { WatchPartyDeps } from './watch-party-deps';
+import { resolveTarget } from './watch-party-member-targets';
 import { announce, systemLineFor } from './watch-party-moderation-effects';
 import { type PersonOf, resolvePeople } from './watch-party-names';
 import { loadSeated } from './watch-party-seated-actions';
@@ -25,6 +33,7 @@ type ChatMessageView = Extract<WatchPartyServerFrame, { type: 'chat.message' }>[
 type ChatDeps = Pick<WatchPartyDeps, 'repositories' | 'broadcaster' | 'logger'>;
 type SeatedFailure = WatchPartyNotFound | WatchPartyClosed | DatabaseUnavailable;
 type ModerateFailure = SeatedFailure | WatchPartyPermissionMissing;
+export type RemoveFailure = ModerateFailure | WatchPartyRoleEscalation;
 export type SendFailure =
   | ModerateFailure
   | InvalidChatMessage
@@ -132,18 +141,42 @@ export async function sendChat(
   return ok(appended.value.id);
 }
 
+async function mayRemove(
+  deps: WatchPartyDeps,
+  context: RoomContext,
+  actorKey: string,
+  authorKey: string | null
+): Promise<Result<void, RemoveFailure>> {
+  const held = requireRoomPermission(context.ability, 'chat.moderate');
+  if (isErr(held)) return held;
+  if (authorKey === null || authorKey === actorKey) return ok();
+  const author = await resolveTarget(deps, context, authorKey, 'any');
+  if (isErr(author)) {
+    return author.error.code === ErrorCodes.WATCH_PARTY_NOT_FOUND ? ok() : author;
+  }
+  const decided = decideMemberAction({
+    ability: context.ability,
+    actorKey,
+    action: 'moderate',
+    target: author.value.subject,
+  });
+  return isErr(decided) ? decided : ok();
+}
+
 export async function removeChat(
   deps: WatchPartyDeps,
   roomId: string,
   caller: PartyCaller,
   id: string
-): Promise<Result<string, ModerateFailure>> {
+): Promise<Result<string, RemoveFailure>> {
   const seated = await loadSeated(deps.context, roomId, caller);
   if (isErr(seated)) return seated;
   const { context, memberKey } = seated.value;
-  const held = requireRoomPermission(context.ability, 'chat.moderate');
-  if (isErr(held)) return held;
   const { watchPartyMessages } = deps.repositories;
+  const found = await watchPartyMessages.find(roomId, id);
+  if (isErr(found)) return found;
+  const allowed = await mayRemove(deps, context, memberKey, found.value?.authorKey ?? null);
+  if (isErr(allowed)) return allowed;
   const removed = await watchPartyMessages.remove(roomId, id, deps.now());
   if (isErr(removed)) return removed;
   if (!removed.value) return ok(id);
