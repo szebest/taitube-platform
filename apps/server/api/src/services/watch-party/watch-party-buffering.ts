@@ -20,6 +20,8 @@ interface RoomWait {
   readonly stalls: Map<string, ReturnType<typeof setTimeout>>;
   /** The playback version this pod's pause wrote, and the timer that gives up waiting. */
   paused: { readonly version: number; readonly giveUp: ReturnType<typeof setTimeout> } | null;
+  /** A pause is being written: the entry stays until it settles, so a stop in between finds it. */
+  settling: boolean;
 }
 
 /**
@@ -47,7 +49,7 @@ export class BufferingWait {
     clearTimeout(wait.stalls.get(memberKey));
     wait.stalls.delete(memberKey);
     if (wait.stalls.size === 0 && wait.paused !== null) void this.report(this.resume(roomId));
-    else if (wait.stalls.size === 0) this.rooms.delete(roomId);
+    else if (wait.stalls.size === 0 && !wait.settling) this.rooms.delete(roomId);
   }
 
   close(): void {
@@ -61,15 +63,27 @@ export class BufferingWait {
   private waitOf(roomId: string): RoomWait {
     const known = this.rooms.get(roomId);
     if (known) return known;
-    const created: RoomWait = { stalls: new Map(), paused: null };
+    const created: RoomWait = { stalls: new Map(), paused: null, settling: false };
     this.rooms.set(roomId, created);
     return created;
   }
 
   private async stall(roomId: string) {
-    const { repositories, presence, config, now } = this.deps;
     const wait = this.rooms.get(roomId);
-    if (!wait || wait.paused !== null) return ok();
+    if (!wait || wait.paused !== null || wait.settling) return ok();
+    wait.settling = true;
+    try {
+      return await this.pause(roomId, wait);
+    } finally {
+      wait.settling = false;
+      if (wait.paused === null && wait.stalls.size === 0 && this.rooms.get(roomId) === wait) {
+        this.rooms.delete(roomId);
+      }
+    }
+  }
+
+  private async pause(roomId: string, wait: RoomWait) {
+    const { repositories, presence, config, now } = this.deps;
     const found = await repositories.watchPartyRooms.findById(roomId);
     if (isErr(found)) return found;
     const room = found.value;
@@ -89,7 +103,7 @@ export class BufferingWait {
       version: written.value.room.playbackVersion,
       giveUp: setTimeout(() => void this.report(this.resume(roomId)), config.buffering.maxWaitMs),
     };
-    return ok();
+    return wait.stalls.size === 0 ? this.resume(roomId) : ok();
   }
 
   /** Plays on only from the pause this pod wrote: anyone who moved the room since has the say. */

@@ -64,6 +64,17 @@ describe('BufferingWait', () => {
     expect(reasons(party)).toEqual(['buffering:paused', 'buffering:playing']);
   });
 
+  it('plays on when the member stops while the pause is still being written', async () => {
+    const { party, wait } = await bufferingRoom();
+
+    wait.start(ROOM_ID, keyOf(MEMBER));
+    vi.advanceTimersByTime(1_500);
+    wait.stop(ROOM_ID, keyOf(MEMBER));
+    await elapse(0);
+
+    expect(reasons(party)).toEqual(['buffering:paused', 'buffering:playing']);
+  });
+
   it('plays on after 10 s whoever still buffers', async () => {
     const { party, wait } = await bufferingRoom();
 
