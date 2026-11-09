@@ -42,6 +42,39 @@ export function describeChannelInviteRepositoryContract(
           : []
       );
 
+    const closedInvites = [
+      { scenario: 'an expired invite', setup: (n: number) => create(n, expired) },
+      {
+        scenario: 'a revoked invite',
+        setup: async (n: number) => {
+          await create(n);
+          await repositories.channelInvites.close(
+            inviteId(n),
+            'revoked',
+            auditOf(channel, 'invite.revoked', n)
+          );
+        },
+      },
+      {
+        scenario: 'a declined invite',
+        setup: async (n: number) => {
+          await create(n);
+          await repositories.channelInvites.close(
+            inviteId(n),
+            'declined',
+            auditOf(channel, 'invite.declined', n, INVITEE_ID)
+          );
+        },
+      },
+      {
+        scenario: 'an accepted invite',
+        setup: async (n: number) => {
+          await create(n);
+          await accept(n);
+        },
+      },
+    ];
+
     beforeAll(async () => {
       subject = await makeSubject();
     });
@@ -112,38 +145,7 @@ export function describeChannelInviteRepositoryContract(
       expect(await auditActions()).toEqual(['invite.accepted', 'invite.created']);
     });
 
-    it.each([
-      { scenario: 'an expired invite', setup: (n: number) => create(n, expired) },
-      {
-        scenario: 'a revoked invite',
-        setup: async (n: number) => {
-          await create(n);
-          await repositories.channelInvites.close(
-            inviteId(n),
-            'revoked',
-            auditOf(channel, 'invite.revoked', n)
-          );
-        },
-      },
-      {
-        scenario: 'a declined invite',
-        setup: async (n: number) => {
-          await create(n);
-          await repositories.channelInvites.close(
-            inviteId(n),
-            'declined',
-            auditOf(channel, 'invite.declined', n, INVITEE_ID)
-          );
-        },
-      },
-      {
-        scenario: 'an accepted invite',
-        setup: async (n: number) => {
-          await create(n);
-          await accept(n);
-        },
-      },
-    ])('cannot accept $scenario', async ({ setup }) => {
+    it.each(closedInvites)('cannot accept $scenario', async ({ setup }) => {
       await setup(1);
 
       expect(await accept(1)).toEqual({ type: 'not-pending' });
@@ -207,42 +209,8 @@ export function describeChannelInviteRepositoryContract(
         expect(await pendingIds()).toEqual([inviteId(2), inviteId(1)]);
       });
 
-      it.each([
-        {
-          scenario: 'an expired invite',
-          close: async (n: number) => create(n, expired),
-        },
-        {
-          scenario: 'a revoked invite',
-          close: async (n: number) => {
-            await create(n);
-            await repositories.channelInvites.close(
-              inviteId(n),
-              'revoked',
-              auditOf(channel, 'invite.revoked', n)
-            );
-          },
-        },
-        {
-          scenario: 'a declined invite',
-          close: async (n: number) => {
-            await create(n);
-            await repositories.channelInvites.close(
-              inviteId(n),
-              'declined',
-              auditOf(channel, 'invite.declined', n, INVITEE_ID)
-            );
-          },
-        },
-        {
-          scenario: 'an accepted invite',
-          close: async (n: number) => {
-            await create(n);
-            await accept(n);
-          },
-        },
-      ])('leaves out $scenario', async ({ close }) => {
-        await close(1);
+      it.each(closedInvites)('leaves out $scenario', async ({ setup }) => {
+        await setup(1);
 
         expect(await pendingIds()).toEqual([]);
       });

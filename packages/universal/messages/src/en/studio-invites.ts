@@ -1,0 +1,35 @@
+import { dt } from '../define';
+
+export const studioInvites = {
+  invitesNav: dt('Invites'),
+  invitesNavBadge: dt('{count:number}'),
+  invitesTitle: dt('Team invites'),
+  invitesDescription: dt('Channels that asked you to work on their team.'),
+  invitesList: dt('Pending invites'),
+  invitesEmptyTitle: dt('No invites'),
+  invitesEmptyDescription: dt('When a channel invites you to its team, the invite waits here.'),
+  invitesFailed: dt('Your invites did not load.'),
+  invitesNoAccessTitle: dt('Sign in to see your invites'),
+  invitesNoAccessDescription: dt('Invites belong to your account.'),
+  invitesInvitedBy: dt('Invited by {name}'),
+  invitesInvitedByUnknown: dt('Invited by a former member'),
+  invitesExpires: dt('Expires'),
+  invitesAccept: dt('Accept'),
+  invitesAcceptLabel: dt('Accept the invite to {name}'),
+  invitesDecline: dt('Decline'),
+  invitesDeclineLabel: dt('Decline the invite to {name}'),
+  invitesAccepted: dt('You joined {name}'),
+  invitesDeclined: dt('You declined the invite to {name}'),
+  invitesAcceptFailed: dt('The invite was not accepted.'),
+  invitesDeclineFailed: dt('The invite was not declined.'),
+  invitesClosed: dt('This invite was revoked, answered or has expired.'),
+  invitesGone: dt('This invite no longer exists.'),
+  teamLeave: dt('Leave this team'),
+  teamLeaveTitle: dt('Leave {name}?'),
+  teamLeaveDescription: dt(
+    'You lose access to the studio of this channel at once. To come back, someone on its team has to invite you again.'
+  ),
+  teamLeaveConfirm: dt('Leave team'),
+  teamLeft: dt('You left {name}'),
+  teamLeaveFailed: dt('You did not leave the team.'),
+} as const;

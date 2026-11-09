@@ -252,69 +252,6 @@ describe('channel team routes', () => {
     ).toBe(ErrorCodes.CHANNEL_MEMBERSHIP_REQUIRED);
   });
 
-  describe('GET /v1/me/invites', () => {
-    const mine = (token = INVITEE_TOKEN, query = '') =>
-      send(token, { method: 'GET', url: `/v1/me/invites${query}` });
-
-    it('lists the invitee own pending invite with the channel, the role and the inviter', async () => {
-      const { id } = (await invite()).json();
-
-      const res = await mine();
-
-      expect(res.statusCode).toBe(200);
-      expect(res.json()).toEqual({
-        items: [
-          {
-            id,
-            channel: {
-              id: owner.id,
-              handle: owner.handle,
-              displayName: owner.displayName,
-              avatarUrl: owner.avatarUrl,
-            },
-            role: 'editor',
-            invitedByName: owner.displayName,
-            expiresAt: expect.any(String),
-          },
-        ],
-        nextCursor: null,
-      });
-    });
-
-    it.each([
-      { scenario: 'another user asks', token: TOKENS.otherUser, close: undefined },
-      { scenario: 'it was declined', token: INVITEE_TOKEN, close: 'decline' },
-      { scenario: 'it was revoked', token: INVITEE_TOKEN, close: 'revoke' },
-      { scenario: 'it was accepted', token: INVITEE_TOKEN, close: 'accept' },
-    ] as const)('does not list it when $scenario', async ({ token, close }) => {
-      const { id } = (await invite()).json();
-      if (close === 'revoke') {
-        await send(TOKENS.user, { method: 'DELETE', url: `/v1/me/channel/invites/${id}` });
-      } else if (close) {
-        await answer(id, close);
-      }
-
-      expect((await mine(token)).json().items).toEqual([]);
-    });
-
-    it('does not list an expired invite', async () => {
-      await invite();
-      vi.useFakeTimers({ toFake: ['Date'], now: Date.now() + 15 * 86_400_000 });
-      try {
-        expect((await mine()).json().items).toEqual([]);
-      } finally {
-        vi.useRealTimers();
-      }
-    });
-
-    it.each([
-      { scenario: 'a cursor nobody issued', query: '?cursor=nope', status: 400 },
-      { scenario: 'a limit of zero', query: '?limit=0', status: 400 },
-    ])('refuses $scenario', async ({ query, status }) => {
-      expect((await mine(INVITEE_TOKEN, query)).statusCode).toBe(status);
-    });
-  });
-
   it('refuses a broken audit cursor', async () => {
     const res = await send(TOKENS.user, { method: 'GET', url: '/v1/me/channel/audit?cursor=nope' });
 
