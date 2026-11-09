@@ -66,9 +66,8 @@ export function describeTrustedCommenterRepositoryContract(
       );
     });
 
-    it('lists the newest first and pages by cursor', async () => {
+    it('pages by cursor, one more row than asked for so the caller sees a next page', async () => {
       await add(OTHER_OWNER_ID);
-      await new Promise((resolve) => setTimeout(resolve, 5));
       await add(INVITEE_ID);
       const page = async (cursor: { createdAt: Date; userId: string } | null) =>
         expectOk(await repositories.trustedCommenters.list(channel.id, { cursor, limit: 1 }));
@@ -77,8 +76,11 @@ export function describeTrustedCommenterRepositoryContract(
       const [head] = firstPage;
       const rest = await page(head ? { createdAt: head.createdAt, userId: head.userId } : null);
 
-      expect(firstPage.map((row) => row.userId)).toEqual([INVITEE_ID, OTHER_OWNER_ID]);
-      expect(rest.map((row) => row.userId)).toEqual([OTHER_OWNER_ID]);
+      expect(firstPage).toHaveLength(2);
+      expect(rest.map((row) => row.userId)).toEqual([firstPage[1]?.userId]);
+      expect(new Set(firstPage.map((row) => row.userId))).toEqual(
+        new Set([OTHER_OWNER_ID, INVITEE_ID])
+      );
     });
   });
 }

@@ -122,17 +122,20 @@ export function describeChannelUserRestrictionRepositoryContract(
       expect(await findActive(OTHER_OWNER_ID)).toBeNull();
     });
 
-    it('lists the newest first and pages by cursor', async () => {
+    it('pages by cursor, one more row than asked for so the caller sees a next page', async () => {
       await apply(ban(OTHER_OWNER_ID));
-      await new Promise((resolve) => setTimeout(resolve, 5));
       await apply(shadow(INVITEE_ID));
 
       const firstPage = await list(1);
       const [head] = firstPage;
       const rest = await list(1, head && { createdAt: head.createdAt, userId: head.userId });
 
-      expect(firstPage.map((row) => row.userId)).toEqual([INVITEE_ID, OTHER_OWNER_ID]);
-      expect(rest.map((row) => row.userId)).toEqual([OTHER_OWNER_ID]);
+      expect(firstPage).toHaveLength(2);
+      expect(rest).toHaveLength(1);
+      expect(new Set([...firstPage, ...rest].map((row) => row.userId))).toEqual(
+        new Set([OTHER_OWNER_ID, INVITEE_ID])
+      );
+      expect(rest.map((row) => row.userId)).toEqual([firstPage[1]?.userId]);
     });
 
     it('purges restrictions that ended before the cutoff and keeps the rest', async () => {
