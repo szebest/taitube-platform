@@ -1,6 +1,7 @@
 export * from './captions';
 export * from './category';
 export * from './channel';
+export * from './channel-team';
 export * from './clip';
 export * from './comment';
 export * from './comment-report';

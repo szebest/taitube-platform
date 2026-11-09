@@ -29,8 +29,11 @@ function kindOf(code: ErrorCode): ErrorStateKind {
     case ErrorCodes.PICK_NOT_FOUND:
     case ErrorCodes.WEBHOOK_NOT_FOUND:
     case ErrorCodes.LIVE_STREAM_NOT_FOUND:
+    case ErrorCodes.CHANNEL_INVITE_NOT_FOUND:
+    case ErrorCodes.CHANNEL_MEMBER_NOT_FOUND:
       return 'not-found';
     case ErrorCodes.FORBIDDEN:
+    case ErrorCodes.CHANNEL_MEMBERSHIP_REQUIRED:
     case ErrorCodes.LIVE_CHAT_SUBSCRIBERS_ONLY:
       return 'forbidden';
     case ErrorCodes.UNAUTHORIZED:
@@ -96,6 +99,10 @@ function kindOf(code: ErrorCode): ErrorStateKind {
     case ErrorCodes.OEMBED_FORMAT_UNSUPPORTED:
     case ErrorCodes.LIVE_STREAM_NOT_LIVE:
     case ErrorCodes.LIVE_CHAT_CLOSED:
+    case ErrorCodes.CHANNEL_INVITE_NOT_PENDING:
+    case ErrorCodes.CHANNEL_INVITE_ALREADY_PENDING:
+    case ErrorCodes.CHANNEL_MEMBER_EXISTS:
+    case ErrorCodes.CHANNEL_OWNER_IMMUTABLE:
       return 'generic';
     default:
       return assertNever(code, 'kindOf');

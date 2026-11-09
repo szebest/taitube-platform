@@ -2,6 +2,7 @@ import type {
   CreatorLibraryCursor,
   LibrarySort,
   SortOrder,
+  VideoAuditField,
   VideoStatus,
   VideoVisibility,
 } from '@vp/domain';
@@ -23,6 +24,8 @@ export interface UpdateStudioMetadataOptions {
   expectedVersion: number;
   patch: StudioMetadataPatch;
   userId: string;
+  /** Audited as `video.updated` by `userId` on the channel of the video owner, in the edit transaction. */
+  auditFields: VideoAuditField[];
 }
 
 /** Absence is an answer, not a failure: the service decides which error each one becomes. */

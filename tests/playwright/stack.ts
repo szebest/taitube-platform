@@ -1,10 +1,15 @@
-export type Persona = 'creator' | 'viewer';
+export type TeamRole = 'manager' | 'editor' | 'moderator' | 'analytics';
+
+/** `recruiter` and `recruit` start off every team, for a spec that adds and removes a member. */
+export type Persona = 'creator' | 'viewer' | 'recruiter' | 'recruit' | TeamRole;
 
 type SeededVideo = { id: string; title: string };
 
 export type Stack = {
   apiUrl: string;
   personas: Record<Persona, string>;
+  /** The creator's channel, with a member persona per role on its team. */
+  team: { channelId: string; ownerId: string; userIds: Record<TeamRole, string> };
   videos: {
     watchable: SeededVideo;
     canvas: SeededVideo;

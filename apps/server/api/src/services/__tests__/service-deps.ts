@@ -11,6 +11,7 @@ import {
 import { RedisReactionCacheAdapter } from '@vp/adapters/redis/redis-reaction-cache.adapter';
 import type { StorageClient } from '@vp/core/ports';
 import type { VideoRepository } from '@vp/core/repositories';
+import type { ActingChannel } from '@vp/domain';
 import { asCdnBase, inProcessAppConfig } from '@vp/env-schema';
 import { createLogger } from '@vp/logger';
 import { Paginator } from '@vp/pagination';
@@ -48,6 +49,10 @@ export function videoServiceDeps(
     probeQueue: new InMemoryJobQueue('probe'),
     ...overrides,
   };
+}
+
+export function ownerActing(ownerId: string, channelId: string): ActingChannel {
+  return { channelId, ownerId, role: 'owner' };
 }
 
 export const TEST_PUBLIC_BUCKET = 'public';

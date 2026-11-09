@@ -14,6 +14,7 @@ import {
   type DataTableFeatures,
   dataTableFeatures,
 } from '#app/components/table/data-table';
+import { FilterSelect } from '#app/components/table/filter-select';
 import { LoadMore } from '#app/components/table/load-more';
 import {
   adminDlqQueryOptions,
@@ -23,7 +24,6 @@ import {
 } from '#app/features/admin/api/admin-dlq';
 import { pagedRows, tableStateOf } from '#app/utils/paged-rows';
 import { type DlqAction, DlqActionDialog } from '../dlq-action-dialog/dlq-action-dialog';
-import { FilterSelect } from '../filter-select/filter-select';
 
 const route = getRouteApi('/_authed/admin/queues');
 const column = createColumnHelper<DataTableFeatures, DlqEntry>();

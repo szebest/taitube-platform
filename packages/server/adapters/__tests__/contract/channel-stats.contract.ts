@@ -43,6 +43,7 @@ export function describeChannelStatsContract(makeSubject: MakeRepositoriesSubjec
           expectedVersion: video?.version ?? 0,
           patch: { visibility: 'public' },
           userId: OWNER_ID,
+          auditFields: [],
         })
       );
     };

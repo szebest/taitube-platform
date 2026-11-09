@@ -5,6 +5,7 @@ import type {
   VideoViewRepositoryPort,
 } from '@vp/core/repositories';
 import {
+  type ActingChannel,
   type AnalyticsRange,
   TOP_VIDEOS_LIMIT,
   analyticsPeriods,
@@ -19,7 +20,7 @@ import {
 import {
   type AuthorizationFailure,
   type ReadVideoFailure,
-  decideChannelAnalyticsRead,
+  decideChannelTask,
   decideVideoAnalyticsRead,
 } from '@vp/domain-rules';
 import type { DatabaseUnavailable } from '@vp/errors';
@@ -94,11 +95,12 @@ export class AnalyticsService {
 
   async channelAnalytics(
     viewer: UserContext,
+    acting: ActingChannel,
     range: AnalyticsRange
   ): Promise<Result<ChannelAnalytics, ChannelAnalyticsFailure>> {
-    const allowed = decideChannelAnalyticsRead(viewer);
+    const allowed = decideChannelTask({ user: viewer, acting, task: 'read-analytics' });
     if (isErr(allowed)) return allowed;
-    const ownerId = allowed.value.id;
+    const { ownerId } = allowed.value;
 
     const now = new Date(this.deps.now());
     const periods = analyticsPeriods(range, now);

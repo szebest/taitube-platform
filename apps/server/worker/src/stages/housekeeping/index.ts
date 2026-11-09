@@ -7,7 +7,7 @@ import type {
   ViewBufferPort,
 } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
-import { SEARCH_HISTORY_RETENTION_DAYS } from '@vp/domain';
+import { CHANNEL_AUDIT_RETENTION_DAYS, SEARCH_HISTORY_RETENTION_DAYS } from '@vp/domain';
 import type { AppConfig } from '@vp/env-schema';
 import type { AnyFailure } from '@vp/errors';
 import type { HousekeepingJob, QueueName } from '@vp/job-contracts';
@@ -16,6 +16,7 @@ import type { PipelineMetrics } from '@vp/observability';
 import { type Result, assertNever, ok } from '@vp/result';
 import { runExpireRaw } from './expire-raw';
 import { runFlushVideoViews } from './flush-video-views';
+import { runPurgeChannelAudit } from './purge-channel-audit';
 import { runPurgeDeleted } from './purge-deleted';
 import { runPurgeSearchHistory } from './purge-search-history';
 import { runReconcileCaptions } from './reconcile-captions';
@@ -33,6 +34,7 @@ export * from './tmp-sweep';
 export * from './outbox-relay';
 export * from './flush-video-views';
 export * from './reconcile-captions';
+export * from './purge-channel-audit';
 export * from './purge-search-history';
 
 interface HousekeepingSettings {
@@ -85,6 +87,7 @@ export function housekeepingTasks(housekeeping: AppConfig['housekeeping']) {
       scanLimit: housekeeping.scanLimit,
     },
     searchHistory: { retentionDays: SEARCH_HISTORY_RETENTION_DAYS },
+    channelAudit: { retentionDays: CHANNEL_AUDIT_RETENTION_DAYS },
     outbox: {
       batchSize: housekeeping.outboxBatchSize,
       intervalMs: housekeeping.outboxRelayIntervalMs,
@@ -184,6 +187,14 @@ export function createHousekeepingProcessor(
           repositories,
           now,
           ...tasks.searchHistory,
+          logger,
+        });
+
+      case 'purge-channel-audit':
+        return await runPurgeChannelAudit({
+          repositories,
+          now,
+          ...tasks.channelAudit,
           logger,
         });
 

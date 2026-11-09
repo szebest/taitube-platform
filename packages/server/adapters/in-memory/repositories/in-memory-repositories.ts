@@ -1,14 +1,17 @@
 import type { Repositories } from '@vp/core/repositories';
 import type { InMemoryCaptionRepository } from './in-memory-caption-repository';
 import type { InMemoryCategoryRepository } from './in-memory-category-repository';
+import type { InMemoryChannelAuditRepository } from './in-memory-channel-audit-repository';
 import type { InMemoryChannelFeaturedRepository } from './in-memory-channel-featured-repository';
+import type { InMemoryChannelInviteRepository } from './in-memory-channel-invite-repository';
+import type { InMemoryChannelMemberRepository } from './in-memory-channel-member-repository';
 import type { InMemoryChannelRepository } from './in-memory-channel-repository';
 import type { InMemoryClipRepository } from './in-memory-clip-repository';
 import type { InMemoryCommentReportRepository } from './in-memory-comment-report-repository';
 import type { InMemoryCommentRepository } from './in-memory-comment-repository';
 import type { InMemoryDlqRepository } from './in-memory-dlq-repository';
 import type { InMemoryEventRepository } from './in-memory-event-repository';
-import { graph, Repo } from './in-memory-graph';
+import { graph } from './in-memory-graph';
 import { InMemoryLiveChatRepository } from './in-memory-live-chat-repository';
 import type { InMemoryLiveStreamRepository } from './in-memory-live-stream-repository';
 import type { InMemoryNotificationRepository } from './in-memory-notification-repository';
@@ -18,6 +21,7 @@ import type { InMemoryPlaylistRepository } from './in-memory-playlist-repository
 import type { InMemoryRecommendationFeedbackRepository } from './in-memory-recommendation-feedback-repository';
 import type { InMemoryRelatedVideosRepository } from './in-memory-related-videos-repository';
 import type { InMemoryRenditionRepository } from './in-memory-rendition-repository';
+import { Repo } from './in-memory-repo-tokens';
 import type { InMemoryRisingVideosRepository } from './in-memory-rising-videos-repository';
 import type { InMemorySearchHistoryRepository } from './in-memory-search-history-repository';
 import type { InMemorySearchRepository } from './in-memory-search-repository';
@@ -47,6 +51,9 @@ export class InMemoryRepositories implements Repositories {
   readonly outbox: InMemoryOutboxRepository;
   readonly categories: InMemoryCategoryRepository;
   readonly channels: InMemoryChannelRepository;
+  readonly channelMembers: InMemoryChannelMemberRepository;
+  readonly channelInvites: InMemoryChannelInviteRepository;
+  readonly channelAudit: InMemoryChannelAuditRepository;
   readonly videoReactions: InMemoryVideoReactionRepository;
   readonly subscriptions: InMemorySubscriptionRepository;
   readonly videoViews: InMemoryVideoViewRepository;
@@ -83,6 +90,9 @@ export class InMemoryRepositories implements Repositories {
     this.outbox = c.get(Repo.outbox);
     this.categories = c.get(Repo.categories);
     this.channels = c.get(Repo.channels);
+    this.channelMembers = c.get(Repo.channelMembers);
+    this.channelInvites = c.get(Repo.channelInvites);
+    this.channelAudit = c.get(Repo.channelAudit);
     this.videoReactions = c.get(Repo.videoReactions);
     this.subscriptions = c.get(Repo.subscriptions);
     this.videoViews = c.get(Repo.videoViews);

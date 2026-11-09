@@ -4,17 +4,19 @@ import type {
   ChannelRepositoryPort,
   VideoRepository,
 } from '@vp/core/repositories';
-import { type Channel, FEATURED_VIDEOS_MAX, type Video } from '@vp/domain';
+import { type ActingChannel, type Channel, FEATURED_VIDEOS_MAX, type Video } from '@vp/domain';
 import {
+  type AuthorizationFailure,
   type ChannelNotFound,
   channelNotFound,
+  decideChannelTask,
   decideFeaturedVideos,
   type FeaturedVideosFailure,
   isFeaturable,
 } from '@vp/domain-rules';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { all, andThen, andThenAsync, err, map, type Result } from '@vp/result';
+import { all, andThen, andThenAsync, err, isErr, map, type Result } from '@vp/result';
 import { type InvalidFeaturedSelection, validateFeaturedSelection } from '@vp/validation';
 import { findChannelByIdOrHandle } from './channel-lookup';
 import type { VideoService } from './video-service';
@@ -30,7 +32,8 @@ export type GetChannelFeaturedFailure = ChannelNotFound | DatabaseUnavailable;
 export type SetChannelFeaturedFailure =
   | GetChannelFeaturedFailure
   | InvalidFeaturedSelection
-  | FeaturedVideosFailure;
+  | FeaturedVideosFailure
+  | AuthorizationFailure;
 
 /**
  * The channel's Start here shelf. What a visitor sees is decided here and nowhere else: the
@@ -46,11 +49,15 @@ export class ChannelFeaturedService {
 
   async replace(
     caller: UserContext,
+    acting: ActingChannel,
     videoIds: readonly string[]
   ): Promise<Result<ChannelFeaturedView, SetChannelFeaturedFailure>> {
-    const channel = await this.deps.channels.findByUserId(caller.id);
+    const allowed = decideChannelTask({ user: caller, acting, task: 'pin-content' });
+    if (isErr(allowed)) return allowed;
+
+    const channel = await this.deps.channels.findById(acting.channelId);
     return andThenAsync(channel, async (found) => {
-      if (!found) return err(channelNotFound(caller.id));
+      if (!found) return err(channelNotFound(acting.channelId));
       const selection = validateFeaturedSelection(videoIds, FEATURED_VIDEOS_MAX);
       return andThenAsync(selection, (ids) => this.save(caller, found, ids));
     });
@@ -65,6 +72,7 @@ export class ChannelFeaturedService {
     const decided = andThen(loaded, (videos) =>
       decideFeaturedVideos({
         viewer: caller,
+        shelfOwnerId: channel.userId,
         videoIds,
         videos: new Map(videos.map((video) => [video.id, video])),
       })

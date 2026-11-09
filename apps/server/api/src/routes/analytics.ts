@@ -7,7 +7,7 @@ import {
 import { publicReadFailure } from '@vp/domain-rules';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
-import { requireAuth } from '../plugins/auth';
+import { requireActingChannel, requireAuth } from '../plugins/auth';
 import { contractSchema } from './contract-schema';
 import { sendResult } from './send-result';
 
@@ -63,11 +63,11 @@ export async function analyticsRoutes(app: FastifyInstance): Promise<void> {
       },
     },
     async (request, reply) => {
-      const user = requireAuth(request);
+      const { user, acting } = requireActingChannel(request);
       return sendResult(
         reply,
         request,
-        await analyticsService.channelAnalytics(user, request.query.range)
+        await analyticsService.channelAnalytics(user, acting, request.query.range)
       );
     }
   );

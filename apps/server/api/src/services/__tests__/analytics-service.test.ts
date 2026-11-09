@@ -5,9 +5,13 @@ import { err, ok } from '@vp/result';
 import { SEEDED } from '@vp/testing';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { AnalyticsService } from '../analytics-service';
+import { ownerActing } from './service-deps';
 
 const OWNER: UserContext = { id: SEEDED.userId, role: 'CREATOR' };
 const STRANGER: UserContext = { id: SEEDED.otherUserId, role: 'USER' };
+const OWNER_ACTING = ownerActing(OWNER.id, SEEDED.channelId);
+const STRANGER_ACTING = ownerActing(STRANGER.id, SEEDED.otherChannelId);
+const GUEST: UserContext = { id: 'guest', role: 'GUEST' };
 const VIDEO = '00000000-0000-7000-8000-0000000000a1';
 const OTHER_VIDEO = '00000000-0000-7000-8000-0000000000a2';
 const TODAY = Date.parse('2026-03-10T08:00:00.000Z');
@@ -167,7 +171,7 @@ describe('AnalyticsService', () => {
 
   describe('channelAnalytics', () => {
     it("sums the caller's videos over the range and ranks them", async () => {
-      const analytics = expectOk(await service.channelAnalytics(OWNER, '7d'));
+      const analytics = expectOk(await service.channelAnalytics(OWNER, OWNER_ACTING, '7d'));
 
       expect(analytics).toMatchObject({
         range: '7d',
@@ -186,7 +190,7 @@ describe('AnalyticsService', () => {
     });
 
     it("sums the hours of the caller's videos over the last 48", async () => {
-      const { hourly } = expectOk(await service.channelAnalytics(OWNER, '7d'));
+      const { hourly } = expectOk(await service.channelAnalytics(OWNER, OWNER_ACTING, '7d'));
 
       expect(hourly).toHaveLength(48);
       expect(hourly.at(-2)).toEqual({ viewHour: '2026-03-10T07:00:00.000Z', views: 7 });
@@ -198,7 +202,7 @@ describe('AnalyticsService', () => {
         .mockResolvedValueOnce(ok(3))
         .mockResolvedValueOnce(ok(-1));
 
-      const analytics = expectOk(await service.channelAnalytics(OWNER, '7d'));
+      const analytics = expectOk(await service.channelAnalytics(OWNER, OWNER_ACTING, '7d'));
 
       expect(analytics.netSubscribers).toBe(3);
       expect(analytics.previous?.netSubscribers).toBe(-1);
@@ -209,7 +213,7 @@ describe('AnalyticsService', () => {
     });
 
     it('reads a lifetime from the first day with views, with no previous period', async () => {
-      const analytics = expectOk(await service.channelAnalytics(OWNER, 'lifetime'));
+      const analytics = expectOk(await service.channelAnalytics(OWNER, OWNER_ACTING, 'lifetime'));
 
       expect(analytics).toMatchObject({
         from: '2026-03-01',
@@ -220,7 +224,7 @@ describe('AnalyticsService', () => {
     });
 
     it('answers a channel with no views with zeros', async () => {
-      const analytics = expectOk(await service.channelAnalytics(STRANGER, '7d'));
+      const analytics = expectOk(await service.channelAnalytics(STRANGER, STRANGER_ACTING, '7d'));
 
       expect(analytics).toMatchObject({
         rangeViews: 0,
@@ -232,7 +236,9 @@ describe('AnalyticsService', () => {
 
     it('refuses a guest-role caller', async () => {
       expect(
-        expectErr(await service.channelAnalytics({ id: 'guest', role: 'GUEST' }, '7d')).code
+        expectErr(
+          await service.channelAnalytics(GUEST, ownerActing(GUEST.id, SEEDED.channelId), '7d')
+        ).code
       ).toBe('FORBIDDEN');
     });
 
@@ -243,7 +249,7 @@ describe('AnalyticsService', () => {
           err(databaseUnavailable(method))
         );
 
-        expect(expectErr(await service.channelAnalytics(OWNER, '7d')).code).toBe(
+        expect(expectErr(await service.channelAnalytics(OWNER, OWNER_ACTING, '7d')).code).toBe(
           'DATABASE_UNAVAILABLE'
         );
       }
@@ -254,7 +260,7 @@ describe('AnalyticsService', () => {
         err(databaseUnavailable('netSubscribers'))
       );
 
-      expect(expectErr(await service.channelAnalytics(OWNER, '7d')).code).toBe(
+      expect(expectErr(await service.channelAnalytics(OWNER, OWNER_ACTING, '7d')).code).toBe(
         'DATABASE_UNAVAILABLE'
       );
     });
