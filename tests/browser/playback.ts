@@ -1,9 +1,11 @@
 import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { createConnection, createServer, type Socket } from 'node:net';
 import { resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { chromium } from 'playwright-core';
 import { mintToken } from '../../packages/server/dev-token/src/index';
+import { compareCues, describeAlignment, type Span } from '../../scripts/cue-alignment';
 import { sessionCookie } from '../playwright/session-cookie';
 
 const { values } = parseArgs({
@@ -14,6 +16,9 @@ const { values } = parseArgs({
     'host-rules': { type: 'string', default: 'MAP minio 127.0.0.1' },
     project: { type: 'string', default: 'video-pipeline' },
     'timeout-sec': { type: 'string', default: '180' },
+    fixture: { type: 'string', default: resolve(import.meta.dirname, '../fixtures/s2.mp4') },
+    truth: { type: 'string' },
+    'tolerance-ms': { type: 'string', default: '100' },
   },
 });
 
@@ -29,7 +34,7 @@ const PUBLISHED = [
   { service: 'minio', port: 9000 },
 ];
 
-const FIXTURE = resolve(import.meta.dirname, '../fixtures/s2.mp4');
+const FIXTURE = resolve(values.fixture);
 const TITLE = `Browser playback ${Date.now()}`;
 const deadline = Date.now() + Number(values['timeout-sec']) * 1000;
 const token = mintToken({ role: 'user', ttl: '1h' });
@@ -109,6 +114,44 @@ async function statusOf(videoId: string): Promise<string> {
   return body.status ?? `HTTP ${res.status}`;
 }
 
+const CAPTION_CUES = `(async () => {
+  const video = document.querySelector('video');
+  const isCaptions = (track) => track.kind === 'captions' || track.kind === 'subtitles';
+  const track = video && [...video.textTracks].find(isCaptions);
+  if (!track) return null;
+  if (track.mode === 'disabled') track.mode = 'hidden';
+  return track.cues ? [...track.cues].map((cue) => ({
+    startMs: Math.round(cue.startTime * 1000),
+    endMs: Math.round(cue.endTime * 1000),
+  })) : [];
+})()`;
+
+type CaptionList = { tracks?: { status: string; url: string | null }[] };
+
+async function listCaptions(videoId: string): Promise<CaptionList> {
+  const res = await fetch(`${values.api}/v1/videos/${videoId}/captions`, {
+    headers: { authorization: `Bearer ${token}` },
+  });
+  return (await res.json()) as CaptionList;
+}
+
+async function enableCaptions(videoId: string): Promise<void> {
+  await fetch(`${values.api}/v1/videos/${videoId}/captions`, {
+    method: 'PATCH',
+    headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
+    body: JSON.stringify({ autoCaptions: true }),
+  });
+}
+
+async function waitFor<T>(what: string, poll: () => Promise<T | undefined>): Promise<T> {
+  for (;;) {
+    const found = await poll();
+    if (found !== undefined) return found;
+    if (Date.now() > deadline) throw new Error(`timed out waiting for ${what}`);
+    await new Promise((settle) => setTimeout(settle, 1000));
+  }
+}
+
 const forwarders: (() => void)[] = [];
 for (const { service, port } of PUBLISHED) {
   if (!(await answers(port))) forwarders.push(forward(port, service));
@@ -185,6 +228,27 @@ try {
     video = await page.evaluate(VIDEO_STATE);
   }
   step('the browser played the video past one second');
+
+  if (values.truth) {
+    const utterances = JSON.parse(readFileSync(values.truth, 'utf8')) as Span[];
+    await enableCaptions(videoId);
+    step('waiting for the generated captions track to be ready');
+    await waitFor('a ready captions track', async () =>
+      (await listCaptions(videoId)).tracks?.find(
+        (track) => track.status === 'ready' && track.url !== null
+      )
+    );
+    await page.goto(`${values.web}/watch/${videoId}`);
+    const cues = await waitFor('the browser to load the track cues', async () => {
+      const loaded: Span[] | null = await page.evaluate(CAPTION_CUES);
+      return loaded?.length ? loaded : undefined;
+    });
+    const report = compareCues(utterances, cues, Number(values['tolerance-ms']));
+    step(describeAlignment(report, Number(values['tolerance-ms'])));
+    if (report.failures.length > 0) {
+      throw new Error(`cues do not match the media:\n${report.failures.join('\n')}`);
+    }
+  }
 } finally {
   await browser.close();
   for (const stop of forwarders) stop();
