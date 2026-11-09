@@ -23,6 +23,7 @@ import type { InMemoryRelatedVideosRepository } from './in-memory-related-videos
 import type { InMemoryRenditionRepository } from './in-memory-rendition-repository';
 import { Repo } from './in-memory-repo-tokens';
 import type { InMemoryRisingVideosRepository } from './in-memory-rising-videos-repository';
+import type { InMemoryScreeningRepository } from './in-memory-screening-repository';
 import type { InMemorySearchHistoryRepository } from './in-memory-search-history-repository';
 import type { InMemorySearchRepository } from './in-memory-search-repository';
 import type { InMemoryStepRepository } from './in-memory-step-repository';
@@ -69,6 +70,7 @@ export class InMemoryRepositories implements Repositories {
   readonly related: InMemoryRelatedVideosRepository;
   readonly rising: InMemoryRisingVideosRepository;
   readonly captions: InMemoryCaptionRepository;
+  readonly screenings: InMemoryScreeningRepository;
   readonly clips: InMemoryClipRepository;
   readonly channelFeatured: InMemoryChannelFeaturedRepository;
   readonly picks: InMemoryPickRepository;
@@ -108,6 +110,7 @@ export class InMemoryRepositories implements Repositories {
     this.related = c.get(Repo.related);
     this.rising = c.get(Repo.rising);
     this.captions = c.get(Repo.captions);
+    this.screenings = c.get(Repo.screenings);
     this.clips = c.get(Repo.clips);
     this.channelFeatured = c.get(Repo.channelFeatured);
     this.picks = c.get(Repo.picks);

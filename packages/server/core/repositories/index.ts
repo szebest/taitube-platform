@@ -28,6 +28,7 @@ export * from './search-repository';
 export * from './related-videos-repository';
 export * from './rising-videos-repository';
 export * from './caption-repository';
+export * from './screening-repository';
 export * from './channel-featured-repository';
 export * from './clip-repository';
 export * from './pick-repository';

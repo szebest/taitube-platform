@@ -25,6 +25,7 @@ import { PostgresRecommendationFeedbackRepository } from './postgres-recommendat
 import { PostgresRelatedVideosRepository } from './postgres-related-videos-repository';
 import { PostgresRenditionRepository } from './postgres-rendition-repository';
 import { PostgresRisingVideosRepository } from './postgres-rising-videos-repository';
+import { PostgresScreeningRepository } from './postgres-screening-repository';
 import { PostgresSearchHistoryRepository } from './postgres-search-history-repository';
 import { PostgresSearchRepository } from './postgres-search-repository';
 import { PostgresStepRepository } from './postgres-step-repository';
@@ -78,6 +79,7 @@ export class PostgresRepositories implements Repositories {
   readonly related: PostgresRelatedVideosRepository;
   readonly rising: PostgresRisingVideosRepository;
   readonly captions: PostgresCaptionRepository;
+  readonly screenings: PostgresScreeningRepository;
   readonly clips: PostgresClipRepository;
   readonly channelFeatured: PostgresChannelFeaturedRepository;
   readonly picks: PostgresPickRepository;
@@ -121,6 +123,7 @@ export class PostgresRepositories implements Repositories {
     this.related = new PostgresRelatedVideosRepository(db);
     this.rising = new PostgresRisingVideosRepository(db);
     this.captions = new PostgresCaptionRepository(db);
+    this.screenings = new PostgresScreeningRepository(db);
     this.clips = new PostgresClipRepository(db);
     this.channelFeatured = new PostgresChannelFeaturedRepository(db);
     this.picks = new PostgresPickRepository(db);

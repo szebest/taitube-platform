@@ -20,6 +20,7 @@ import type { RecommendationFeedbackRepositoryPort } from './recommendation-feed
 import type { RelatedVideosRepositoryPort } from './related-videos-repository';
 import type { RenditionRepository } from './rendition-repository';
 import type { RisingVideosRepositoryPort } from './rising-videos-repository';
+import type { ScreeningRepository } from './screening-repository';
 import type { SearchHistoryRepositoryPort } from './search-history-repository';
 import type { SearchRepositoryPort } from './search-repository';
 import type { StepRepository } from './step-repository';
@@ -66,6 +67,7 @@ export interface Repositories {
   related: RelatedVideosRepositoryPort;
   rising: RisingVideosRepositoryPort;
   captions: CaptionRepository;
+  screenings: ScreeningRepository;
   clips: ClipRepositoryPort;
   channelFeatured: ChannelFeaturedRepositoryPort;
   picks: PickRepositoryPort;

@@ -20,6 +20,7 @@ import type { InMemoryRecommendationFeedbackRepository } from './in-memory-recom
 import type { InMemoryRelatedVideosRepository } from './in-memory-related-videos-repository';
 import type { InMemoryRenditionRepository } from './in-memory-rendition-repository';
 import type { InMemoryRisingVideosRepository } from './in-memory-rising-videos-repository';
+import type { InMemoryScreeningRepository } from './in-memory-screening-repository';
 import type { InMemorySearchHistoryRepository } from './in-memory-search-history-repository';
 import type { InMemorySearchRepository } from './in-memory-search-repository';
 import type { InMemoryStepRepository } from './in-memory-step-repository';
@@ -67,6 +68,7 @@ export const Repo = {
   related: token<InMemoryRelatedVideosRepository>('related'),
   rising: token<InMemoryRisingVideosRepository>('rising'),
   captions: token<InMemoryCaptionRepository>('captions'),
+  screenings: token<InMemoryScreeningRepository>('screenings'),
   clips: token<InMemoryClipRepository>('clips'),
   channelFeatured: token<InMemoryChannelFeaturedRepository>('channelFeatured'),
   picks: token<InMemoryPickRepository>('picks'),

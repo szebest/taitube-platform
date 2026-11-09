@@ -17,6 +17,7 @@ export * from './user-events-schema';
 export * from './captions-schema';
 export * from './live-schema';
 export * from './channel-team-schema';
+export * from './screening-schema';
 export * from './client';
 export * from './migrate';
 export * from './seed';

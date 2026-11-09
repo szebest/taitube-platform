@@ -20,6 +20,7 @@ export default defineConfig({
     './src/webhooks-schema.ts',
     './src/live-schema.ts',
     './src/channel-team-schema.ts',
+    './src/screening-schema.ts',
   ],
   out: './drizzle',
   dialect: 'postgresql',
