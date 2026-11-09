@@ -4,6 +4,7 @@ import type {
   CreateInviteOutcome,
   NewChannelInvite,
   OutboxRepository,
+  PendingInvitesQuery,
 } from '@vp/core/repositories';
 import { type ChannelInvite, type NewChannelAuditEntry, roleHas } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
@@ -12,6 +13,7 @@ import { isErr, map, ok, type Result } from '@vp/result';
 import type { InMemoryChannelAuditRepository } from './in-memory-channel-audit-repository';
 import type { InMemoryChannelMemberRepository } from './in-memory-channel-member-repository';
 import type { InMemoryChannelRepository } from './in-memory-channel-repository';
+import { byKeysetDesc, isKeysetBefore } from './keyset';
 
 const isLivePending = (invite: ChannelInvite) =>
   invite.status === 'pending' && invite.expiresAt.getTime() > Date.now();
@@ -69,6 +71,23 @@ export class InMemoryChannelInviteRepository implements ChannelInviteRepositoryP
       [...this.rows.values()]
         .filter((row) => row.channelId === channelId && isLivePending(row))
         .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
+        .map((row) => ({ ...row }))
+    );
+  }
+
+  async listPendingFor(
+    inviteeUserId: string,
+    { cursor, limit }: PendingInvitesQuery
+  ): Promise<Result<ChannelInvite[], DatabaseUnavailable>> {
+    const after = cursor && { sort: cursor.createdAt, tie: cursor.id };
+    return ok(
+      [...this.rows.values()]
+        .filter((row) => row.inviteeUserId === inviteeUserId && isLivePending(row))
+        .filter((row) => isKeysetBefore({ sort: row.createdAt, tie: row.id }, after))
+        .sort((a, b) =>
+          byKeysetDesc({ sort: a.createdAt, tie: a.id }, { sort: b.createdAt, tie: b.id })
+        )
+        .slice(0, limit + 1)
         .map((row) => ({ ...row }))
     );
   }
