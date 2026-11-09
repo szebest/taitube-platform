@@ -1,4 +1,9 @@
-import { DEFAULT_COMMENT_SETTINGS, DISCLOSURE_RULES } from '../comment-settings';
+import {
+  DEFAULT_COMMENT_SETTINGS,
+  DISCLOSURE_RULES,
+  type Disclosure,
+  type DisclosureRule,
+} from '../comment-settings';
 
 describe('@vp/domain: comment settings defaults', () => {
   it('starts with nothing held, limited or blocked', () => {
@@ -12,7 +17,7 @@ describe('@vp/domain: comment settings defaults', () => {
     });
   });
 
-  it.each([
+  it.each<{ rule: DisclosureRule; disclosure: Disclosure }>([
     { rule: 'hide', disclosure: 'silent' },
     { rule: 'remove', disclosure: 'visible' },
     { rule: 'manual_hold', disclosure: 'visible' },
@@ -20,7 +25,7 @@ describe('@vp/domain: comment settings defaults', () => {
     { rule: 'auto.links', disclosure: 'visible' },
     { rule: 'auto.review_all', disclosure: 'visible' },
   ])('discloses $rule as $disclosure by default', ({ rule, disclosure }) => {
-    expect(DEFAULT_COMMENT_SETTINGS.disclosure).toHaveProperty(rule, disclosure);
+    expect(DEFAULT_COMMENT_SETTINGS.disclosure[rule]).toBe(disclosure);
   });
 
   it('has a default for every rule and no other', () => {
