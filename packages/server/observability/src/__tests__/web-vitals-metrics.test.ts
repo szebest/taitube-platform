@@ -13,6 +13,7 @@ describe('createWebVitalsMetrics', () => {
     ['frontendCls', 'frontend_cls_ratio'],
     ['frontendFcp', 'frontend_fcp_seconds'],
     ['frontendTtfb', 'frontend_ttfb_seconds'],
+    ['frontendLongTasks', 'frontend_long_tasks_seconds'],
   ] as const)('exposes %s as the %s histogram by app and route', async (field, name) => {
     const { registry, metrics } = createMetrics();
 
@@ -20,6 +21,16 @@ describe('createWebVitalsMetrics', () => {
 
     expect(await registry.getSingleMetricAsString(name)).toContain(
       `${name}_count{app="web",route="/watch/$videoId"} 1`
+    );
+  });
+
+  it('counts layout shift sources by app, route and slot', async () => {
+    const { registry, metrics } = createMetrics();
+
+    metrics.frontendLayoutShiftSources.inc({ app: 'web', route: '/', source: 'install-prompt' });
+
+    expect(await registry.getSingleMetricAsString('frontend_layout_shift_sources_total')).toContain(
+      'frontend_layout_shift_sources_total{app="web",route="/",source="install-prompt"} 1'
     );
   });
 });

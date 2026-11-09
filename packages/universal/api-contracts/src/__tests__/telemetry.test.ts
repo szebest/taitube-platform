@@ -24,6 +24,16 @@ describe('packages/api-contracts: telemetry', () => {
       'a CLS score and the root route',
       batchOf({ vitals: [{ name: 'CLS', value: 0.08, route: '__root__' }] }),
     ],
+    [
+      'the long task time of a page',
+      batchOf({ vitals: [{ name: 'LONG_TASKS', value: 428, route: '/' }] }),
+    ],
+    [
+      'a CLS score with the slot that shifted',
+      batchOf({
+        vitals: [{ name: 'CLS', value: 0.09, route: '/', source: 'app-shell-main' }],
+      }),
+    ],
     ['an optional param segment', batchOf({ vitals: [{ ...LCP, route: '/c/{-$tab}' }] })],
     ['a full batch', batchOf({ vitals: Array(MAX_WEB_VITALS_PER_BATCH).fill(LCP) })],
   ])('parses %s', (_name, batch) => {
@@ -39,6 +49,10 @@ describe('packages/api-contracts: telemetry', () => {
     ['an infinite value', batchOf({ vitals: [{ ...LCP, value: Number.POSITIVE_INFINITY }] })],
     ['a value past ten minutes', batchOf({ vitals: [{ ...LCP, value: 600_001 }] })],
     ['a URL in place of a route id', batchOf({ vitals: [{ ...LCP, route: '/watch/1?q=a b' }] })],
+    [
+      'a shift source that is not a slot name',
+      batchOf({ vitals: [{ ...LCP, source: 'div > p.x' }] }),
+    ],
     ['an empty route id', batchOf({ vitals: [{ ...LCP, route: '' }] })],
     [
       'a route id past 128 characters',

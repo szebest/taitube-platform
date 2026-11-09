@@ -180,6 +180,7 @@ encodes or real services, not a parity question.
 | Smoke against Compose | `make smoke`, `make smoke-offline` |
 | In-process acceptance suite | `make e2e` |
 | Browser suites (Playwright) | `make e2e-web`, `make e2e-studio` |
+| The web click path's speed (CLS and its shift source, long tasks, the worst interaction, a palette keystroke) | `pnpm perf:clicks before`, then `pnpm perf:clicks after --against before` |
 
 A package's specs run only if the root `vitest.config.ts` `projects` globs reach its `vitest*.config.ts`.
 After adding one, check the file count in the `pnpm test` summary went up.

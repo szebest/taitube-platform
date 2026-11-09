@@ -5,7 +5,7 @@ import { defineEndpoint } from './endpoint';
 
 const TELEMETRY_APPS = ['web', 'studio'] as const;
 
-const WEB_VITAL_NAMES = ['LCP', 'INP', 'CLS', 'FCP', 'TTFB'] as const;
+const WEB_VITAL_NAMES = ['LCP', 'INP', 'CLS', 'FCP', 'TTFB', 'LONG_TASKS'] as const;
 
 /** Five vitals per page, each reported again after a back-forward cache restore, with room to spare. */
 export const MAX_WEB_VITALS_PER_BATCH = 32;
@@ -20,6 +20,12 @@ const RouteIdSchema = z
   .regex(/^[\w$./(){}-]+$/)
   .describe('Route id of the page the browser measured, never its URL');
 
+/** A `data-slot` of the kit, such as `install-prompt`: a name from a closed set, never user text. */
+const ShiftSourceSchema = z
+  .string()
+  .regex(/^[a-z][a-z0-9-]{0,63}$/)
+  .describe('The data-slot of the element that moved most in the layout shift; CLS only');
+
 const WebVitalSchema = z.object({
   name: z.enum(WEB_VITAL_NAMES),
   value: z
@@ -27,9 +33,10 @@ const WebVitalSchema = z.object({
     .nonnegative()
     .max(10 * MS_PER_MINUTE)
     .describe(
-      'What the browser reported: milliseconds, or the unitless layout shift score for CLS'
+      'What the browser reported: milliseconds, or the unitless layout shift score for CLS; for LONG_TASKS the milliseconds of every task over 50 ms the page ran'
     ),
   route: RouteIdSchema,
+  source: ShiftSourceSchema.optional(),
 });
 
 const WebVitalsBatchSchema = z.object({
@@ -43,7 +50,7 @@ export const recordWebVitals = defineEndpoint({
   tag: 'Telemetry',
   summary: 'Record a batch of Core Web Vitals',
   description:
-    'Real-user LCP, INP, CLS, FCP and TTFB from the client apps, recorded as Prometheus histograms by app and route id. Also accepted as text/plain, which is what navigator.sendBeacon sends without a CORS preflight. A body over the limit is refused with 413, and more than 60 batches a minute from one address with 429.',
+    'Real-user LCP, INP, CLS, FCP, TTFB and long-task time from the client apps, recorded as Prometheus histograms by app and route id, and the element a layout shift moved as a counter by slot. Also accepted as text/plain, which is what navigator.sendBeacon sends without a CORS preflight. A body over the limit is refused with 413, and more than 60 batches a minute from one address with 429.',
   anonymous: true,
   body: WebVitalsBatchSchema,
   status: 204,

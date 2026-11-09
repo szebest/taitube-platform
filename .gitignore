@@ -73,3 +73,6 @@ packages/client/ui/.scaffold-*/
 # Demo stack state
 demo/.run/
 demo/minio-data/
+
+# pnpm perf:clicks output
+.perf/

@@ -1,4 +1,4 @@
-import { Histogram, type Registry } from 'prom-client';
+import { Counter, Histogram, type Registry } from 'prom-client';
 
 /** Real-user Core Web Vitals from the client apps, by app and TanStack Router route id. */
 export interface WebVitalsMetrics {
@@ -7,6 +7,8 @@ export interface WebVitalsMetrics {
   frontendCls: Histogram<string>;
   frontendFcp: Histogram<string>;
   frontendTtfb: Histogram<string>;
+  frontendLongTasks: Histogram<string>;
+  frontendLayoutShiftSources: Counter<string>;
 }
 
 const LABEL_NAMES = ['app', 'route'];
@@ -53,5 +55,28 @@ export function createWebVitalsMetrics(registry: Registry): WebVitalsMetrics {
     registers: [registry],
   });
 
-  return { frontendLcp, frontendInp, frontendCls, frontendFcp, frontendTtfb };
+  const frontendLongTasks = new Histogram({
+    name: 'frontend_long_tasks_seconds',
+    help: 'Total time of the tasks over 50 ms a page ran, in seconds',
+    labelNames: LABEL_NAMES,
+    buckets: [0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10],
+    registers: [registry],
+  });
+
+  const frontendLayoutShiftSources = new Counter({
+    name: 'frontend_layout_shift_sources_total',
+    help: 'Pages whose largest layout shift moved an element, by its data-slot',
+    labelNames: [...LABEL_NAMES, 'source'],
+    registers: [registry],
+  });
+
+  return {
+    frontendLcp,
+    frontendInp,
+    frontendCls,
+    frontendFcp,
+    frontendTtfb,
+    frontendLongTasks,
+    frontendLayoutShiftSources,
+  };
 }
