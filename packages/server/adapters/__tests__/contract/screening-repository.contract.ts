@@ -1,38 +1,10 @@
-import type { NewScreeningInput, ScreeningRecord } from '@vp/core/repositories';
-import {
-  SCREENING_TRANSITIONS,
-  type ScreeningReason,
-  VIDEO_STATUSES,
-  type VideoStatus,
-} from '@vp/domain';
+import { SCREENING_TRANSITIONS, VIDEO_STATUSES, type VideoStatus } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import { expectOk } from '@vp/testing/result';
-import { OTHER_OWNER_ID, OWNER_ID, publicVideo, seedOwners, VIDEO_IDS } from './fixtures';
+import { OWNER_ID, publicVideo, seedOwners, VIDEO_IDS } from './fixtures';
+import { APPEAL_ID, MODERATOR_A, MODERATOR_B, SCREENING_ID, screening } from './screening-fixtures';
+import { describeScreeningResults } from './screening-results.contract';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
-
-const MODERATOR_A = OTHER_OWNER_ID;
-const MODERATOR_B = '00000000-0000-7000-8000-000000000103';
-const SCREENING_ID = '00000000-0000-7000-8000-0000000005a1';
-const APPEAL_ID = '00000000-0000-7000-8000-0000000005b1';
-
-const finding = (reason: ScreeningReason, score: number) => ({
-  reason,
-  score,
-  evidence: { matchedVideoId: VIDEO_IDS.b },
-});
-
-const screening = (overrides: Partial<NewScreeningInput> = {}): NewScreeningInput => ({
-  id: SCREENING_ID,
-  videoId: VIDEO_IDS.a,
-  sourceChecksum: 'sum-1',
-  outcome: 'HOLD',
-  score: 0.93,
-  reasons: [finding('DUPLICATE', 0.93)],
-  flags: [],
-  modelVersion: 'nsfw-classifier',
-  thresholdVersion: 'v1',
-  ...overrides,
-});
 
 const EDGES = Object.entries(SCREENING_TRANSITIONS).flatMap(([name, edge]) =>
   VIDEO_STATUSES.map((status) => ({
@@ -64,6 +36,8 @@ export function describeScreeningRepositoryContract(makeSubject: MakeRepositorie
         email: 'moderator-b@video-pipeline.local',
       });
     });
+
+    describeScreeningResults(() => subject);
 
     const screenings = () => subject.repositories.screenings;
     const videoIn = async (status: VideoStatus, errorCode?: string) => {
@@ -230,69 +204,6 @@ export function describeScreeningRepositoryContract(makeSubject: MakeRepositorie
       const queued = expectOk(await subject.repositories.outbox.findById(outbox.id));
 
       expect(queued?.payload).toEqual(outbox.payload);
-    });
-
-    it('stores one result per video and source and hands the first back on a repeat', async () => {
-      await subject.seedVideo(publicVideo({ id: VIDEO_IDS.a }));
-      const first = expectOk(await screenings().record(screening({ outcome: 'HOLD' })));
-      const again = expectOk(
-        await screenings().record(
-          screening({ id: '00000000-0000-7000-8000-0000000005a2', outcome: 'PASS', score: 0 })
-        )
-      );
-
-      expect(again).toEqual(first);
-      expect(expectOk(await screenings().findByVideo(VIDEO_IDS.a, 'sum-1'))).toEqual(first);
-      expect(expectOk(await screenings().findByVideo(VIDEO_IDS.a, 'other'))).toBeNull();
-    });
-
-    it('reads the newest result of a video whatever its source', async () => {
-      await subject.seedVideo(publicVideo({ id: VIDEO_IDS.a }));
-      await screenings().record(screening());
-      const newer: ScreeningRecord = expectOk(
-        await screenings().record(
-          screening({
-            id: '00000000-0000-7000-8000-0000000005a2',
-            sourceChecksum: 'sum-2',
-            outcome: 'PASS',
-            score: 0,
-            reasons: [],
-          })
-        )
-      );
-
-      expect(expectOk(await screenings().latestForVideo(VIDEO_IDS.a))).toEqual(newer);
-      expect(expectOk(await screenings().latestForVideo(VIDEO_IDS.b))).toBeNull();
-    });
-
-    it.each([
-      {
-        name: 'a passed result with a flag',
-        outcome: 'PASS' as const,
-        flags: [finding('PARTIAL_MATCH', 0.4)],
-        dismissed: true,
-      },
-      {
-        name: 'a passed result with no flag',
-        outcome: 'PASS' as const,
-        flags: [],
-        dismissed: false,
-      },
-      {
-        name: 'a held result',
-        outcome: 'HOLD' as const,
-        flags: [finding('PARTIAL_MATCH', 0.4)],
-        dismissed: false,
-      },
-    ])('dismisses $name: $dismissed, once', async ({ outcome, flags, dismissed }) => {
-      await subject.seedVideo(publicVideo({ id: VIDEO_IDS.a }));
-      await screenings().record(screening({ outcome, flags, reasons: [] }));
-      const dismiss = () =>
-        screenings().dismiss({ videoId: VIDEO_IDS.a, moderatorId: MODERATOR_A });
-
-      expect(expectOk(await dismiss())).toBe(dismissed);
-      expect(expectOk(await dismiss())).toBe(false);
-      expect(await eventTypes()).toEqual(dismissed ? ['video.screening_dismissed'] : []);
     });
 
     it('forgets everything on clear and reset', async () => {

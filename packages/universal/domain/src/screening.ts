@@ -44,6 +44,7 @@ export interface ScreeningThresholds {
   spamMaxTags: number;
   spamMaxRepeatShare: number;
   spamMaxCapsShare: number;
+  spamSignalWeight: number;
   spamHoldScore: number;
 }
 

@@ -146,6 +146,7 @@ export const SCREENING_THRESHOLDS = {
   spamMaxTags: 30,
   spamMaxRepeatShare: 0.5,
   spamMaxCapsShare: 0.7,
+  spamSignalWeight: 0.4,
   spamHoldScore: 0.8,
 } as const satisfies ScreeningThresholds;
 

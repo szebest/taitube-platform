@@ -7,6 +7,7 @@ export * from './comment';
 export * from './comment-report';
 export * from './creator-library';
 export * from './featured-videos';
+export * from './frame-hash';
 export * from './home';
 export * from './hourly-views';
 export * from './live';
