@@ -1,8 +1,8 @@
 import type { Repositories } from '@vp/core/repositories';
-import type { Channel } from '@vp/domain';
+import type { Channel, ChannelRole } from '@vp/domain';
 import { expectOk } from '@vp/testing/result';
 import { INVITEE_ID, auditOf, expired, invite, inviteId, seedTeam } from './channel-team-fixtures';
-import { OWNER_ID, seedOwners } from './fixtures';
+import { OTHER_OWNER_ID, OWNER_ID, seedOwners } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
 export function describeChannelInviteRepositoryContract(
@@ -147,6 +147,33 @@ export function describeChannelInviteRepositoryContract(
       await setup(1);
 
       expect(await accept(1)).toEqual({ type: 'not-pending' });
+    });
+
+    const joinAs = async (role: ChannelRole) => {
+      expectOk(
+        await repositories.channelInvites.create(
+          invite(channel, 80, { inviteeUserId: OTHER_OWNER_ID, role }),
+          auditOf(channel, 'invite.created', 80)
+        )
+      );
+      expect(await accept(80, OTHER_OWNER_ID)).toMatchObject({ type: 'accepted' });
+    };
+
+    it.each<{ scenario: string; inviter: ChannelRole | 'outsider' | 'deleted'; accepted: boolean }>(
+      [
+        { scenario: 'a manager', inviter: 'manager', accepted: true },
+        { scenario: 'an editor', inviter: 'editor', accepted: false },
+        { scenario: 'someone off the team', inviter: 'outsider', accepted: false },
+        { scenario: 'a deleted account', inviter: 'deleted', accepted: false },
+      ]
+    )('accepts an invite sent by $scenario: $accepted', async ({ inviter, accepted }) => {
+      if (inviter !== 'outsider' && inviter !== 'deleted') await joinAs(inviter);
+      await create(1, { invitedBy: inviter === 'deleted' ? null : OTHER_OWNER_ID });
+
+      expect((await accept(1)).type).toBe(accepted ? 'accepted' : 'not-pending');
+      expect(expectOk(await repositories.channelInvites.findById(inviteId(1)))?.status).toBe(
+        accepted ? 'accepted' : 'pending'
+      );
     });
 
     it('lets only the invitee accept', async () => {

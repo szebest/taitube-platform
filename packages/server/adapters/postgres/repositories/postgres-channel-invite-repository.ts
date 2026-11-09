@@ -5,16 +5,38 @@ import type {
   NewChannelInvite,
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
-import type { ChannelInvite, NewChannelAuditEntry } from '@vp/domain';
+import {
+  CHANNEL_ROLE_NAMES,
+  type ChannelInvite,
+  type NewChannelAuditEntry,
+  roleHas,
+} from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { teamInviteOutbox } from '@vp/job-contracts';
 import { fromPromise, type Result } from '@vp/result';
-import { and, asc, eq, gt, lte, sql } from 'drizzle-orm';
+import { and, asc, eq, gt, inArray, lte, sql } from 'drizzle-orm';
 import { appendChannelAudit } from './channel-audit-writes';
 import { enqueueNotificationJobs } from './notification-jobs';
 import type { PostgresDatabase } from './types';
 
-const { channelInvites: i, channelMembers: m } = schema;
+const { channelInvites: i, channelMembers: m, channels: c } = schema;
+
+const MANAGING_ROLES = CHANNEL_ROLE_NAMES.filter((role) => roleHas(role, 'team.manage'));
+
+/**
+ * The inviter still runs the team: the owner, or a member whose role manages it. The member row is
+ * share-locked so a removal racing the accept waits for it. A deleted inviter (`null`) matches nothing.
+ */
+const inviterStillManages = sql`(
+  ${i.invitedBy} = (select ${c.userId} from ${c} where ${c.id} = ${i.channelId})
+  or exists (
+    select 1 from ${m}
+    where ${m.channelId} = ${i.channelId}
+      and ${m.userId} = ${i.invitedBy}
+      and ${inArray(m.role, MANAGING_ROLES)}
+    for share
+  )
+)`;
 
 type InviteRow = typeof i.$inferSelect;
 
@@ -99,7 +121,7 @@ export class PostgresChannelInviteRepository implements ChannelInviteRepositoryP
           const [accepted] = await tx
             .update(i)
             .set({ status: 'accepted' })
-            .where(and(livePending(id), eq(i.inviteeUserId, inviteeUserId)))
+            .where(and(livePending(id), eq(i.inviteeUserId, inviteeUserId), inviterStillManages))
             .returning();
           if (!accepted) return { type: 'not-pending' };
 

@@ -1,6 +1,7 @@
 export type TeamRole = 'manager' | 'editor' | 'moderator' | 'analytics';
 
-export type Persona = 'creator' | 'viewer' | TeamRole;
+/** `recruiter` and `recruit` start off every team, for a spec that adds and removes a member. */
+export type Persona = 'creator' | 'viewer' | 'recruiter' | 'recruit' | TeamRole;
 
 type SeededVideo = { id: string; title: string };
 

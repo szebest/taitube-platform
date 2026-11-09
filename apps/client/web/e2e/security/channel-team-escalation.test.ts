@@ -1,3 +1,4 @@
+import type { APIRequestContext } from '@playwright/test';
 import { type Stack, expect, test } from '../../../../../tests/playwright/fixtures';
 import type { Persona } from '../../../../../tests/playwright/stack';
 
@@ -128,4 +129,43 @@ test.describe('only the owner and managers run a channel team', () => {
       expect(await response.json()).toMatchObject({ status, code });
     });
   }
+});
+
+test.describe('a removed manager brings no one in', () => {
+  test('the invite a manager sent cannot be accepted once they are removed', async ({
+    api,
+    stack,
+  }) => {
+    const { channelId } = stack.team;
+    const creator = await api('creator');
+    const recruiter = await api('recruiter', { channelId });
+    const recruit = await api('recruit');
+    const accountOf = async (client: APIRequestContext) =>
+      (await (await client.get('/v1/me/account')).json()) as {
+        id: string;
+        channel: { handle: string };
+      };
+    const [recruiterAccount, recruitAccount] = [
+      await accountOf(recruiter),
+      await accountOf(recruit),
+    ];
+
+    const hired = await creator.post('/v1/me/channel/invites', {
+      data: { handle: recruiterAccount.channel.handle, role: 'manager' },
+    });
+    expect((await recruiter.post(`/v1/invites/${(await hired.json()).id}/accept`)).status()).toBe(
+      200
+    );
+    const sent = await recruiter.post('/v1/me/channel/invites', {
+      data: { handle: recruitAccount.channel.handle, role: 'editor' },
+    });
+    expect(sent.status()).toBe(201);
+    const removed = await creator.delete(`/v1/me/channel/members/${recruiterAccount.id}`);
+    expect(removed.status()).toBe(204);
+
+    const accepted = await recruit.post(`/v1/invites/${(await sent.json()).id}/accept`);
+
+    expect(accepted.status()).toBe(409);
+    expect(await accepted.json()).toMatchObject({ code: 'CHANNEL_INVITE_NOT_PENDING' });
+  });
 });

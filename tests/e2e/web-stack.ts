@@ -179,7 +179,12 @@ async function main(log: Logger): Promise<void> {
     viewer: mintToken({ sub: SEEDED.otherUserId }),
   };
   const { tokens, team } = await seedTeam(apiUrl, owners.creator);
-  const personas = { ...owners, ...tokens };
+  const personas = {
+    ...owners,
+    ...tokens,
+    recruiter: mintToken({ sub: randomUUID() }),
+    recruit: mintToken({ sub: randomUUID() }),
+  };
   const draftTitle = `E2E private draft ${run}`;
   const [watchable, canvas, draft, clippable] = await Promise.all([
     seedReadyVideo(apiUrl, personas.creator, `E2E seeded video ${run}`),

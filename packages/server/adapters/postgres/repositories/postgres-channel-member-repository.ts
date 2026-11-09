@@ -4,11 +4,17 @@ import type {
   HeldMembership,
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
-import type { ChannelMembership, MemberChannel, NewChannelAuditEntry } from '@vp/domain';
+import {
+  type ChannelMembership,
+  type MemberChannel,
+  type NewChannelAuditEntry,
+  roleHas,
+} from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { fromPromise, type Result } from '@vp/result';
 import { and, asc, eq } from 'drizzle-orm';
 import { appendChannelAudit } from './channel-audit-writes';
+import { revokeInvitesSentBy } from './channel-invite-writes';
 import type { PostgresDatabase } from './types';
 
 const { channelMembers: m, channels: c } = schema;
@@ -57,6 +63,13 @@ export class PostgresChannelMemberRepository implements ChannelMemberRepositoryP
           if (!changed) return null;
 
           await appendChannelAudit(tx, audit);
+          if (!roleHas(to, 'team.manage')) {
+            await revokeInvitesSentBy(tx, {
+              channelId,
+              inviterId: userId,
+              actorUserId: audit.actorUserId,
+            });
+          }
           return changed;
         }),
       databaseUnavailable.during('changeChannelMemberRole')
@@ -77,6 +90,11 @@ export class PostgresChannelMemberRepository implements ChannelMemberRepositoryP
           if (!gone) return false;
 
           await appendChannelAudit(tx, audit);
+          await revokeInvitesSentBy(tx, {
+            channelId,
+            inviterId: userId,
+            actorUserId: audit.actorUserId,
+          });
           return true;
         }),
       databaseUnavailable.during('removeChannelMember')
