@@ -31,7 +31,7 @@ describe('apps/client/studio: useSwitchChannel', () => {
 
   it('forgets what the cache held for the channel the viewer left', async () => {
     serveLibrary([{ cursor: null, items: [], next: null }]);
-    const { user, queryClient } = await renderTeam('/team', {
+    const { user, queryClient, router } = await renderTeam('/team', {
       state: { memberships: [membership('editor')] },
       handlers: [emptyInbox],
     });
@@ -41,5 +41,6 @@ describe('apps/client/studio: useSwitchChannel', () => {
     await user.click(await screen.findByRole('menuitemradio', { name: /Other Show/ }));
 
     await vi.waitFor(() => expect(queryClient.getQueryData(['videos', 'mine'])).toBeUndefined());
+    await vi.waitFor(() => expect(router.state.location.pathname).toBe('/videos'));
   });
 });

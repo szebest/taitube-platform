@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { AppWords } from '@vp/queries';
 import { FilterSelect } from '../filter-select';
 
 const meta = {
@@ -13,6 +14,13 @@ const meta = {
     ],
     onChange: () => undefined,
   },
+  decorators: [
+    (Story) => (
+      <AppWords>
+        <Story />
+      </AppWords>
+    ),
+  ],
 } satisfies Meta<typeof FilterSelect<string>>;
 
 export default meta;
