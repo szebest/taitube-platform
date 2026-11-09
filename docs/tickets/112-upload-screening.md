@@ -181,16 +181,6 @@ fingerprints, the index and matching; (4) the classifier port, adapter, image bu
 queue, `package` integration, KEDA, compose and smoke step; (6) the admin moderation tab and Studio hold and appeal screens;
 (7) SDD, README and ARCHITECTURE updates.
 
-## Stack plan
-
-Three slices on `feat/112-upload-screening`, bottom first, each green on its own. They follow the delivery order above.
-
-| Slice | Holds | Delivery commits |
-|---|---|---|
-| `slice/112a-screening-core` | contracts, schema and migrations, tuning thresholds, env keys, the `HELD` state with its CAS transitions and permissions; the pure rules and `decideScreening`; `@vp/fingerprint` (dHash, bands, Chromaprint, matcher) and the fingerprint repositories | 1, 2, 3 |
-| `slice/112b-screen-stage` | `FrameClassifier` port, ONNX adapter and double, image build and lock file; the `screen` stage, queue, `package` integration, KEDA, compose, smoke step | 4, 5 |
-| `slice/112c-screening-ui-docs` | admin Held and flagged tab, Studio hold and appeal screens, SDD, README and ARCHITECTURE; ticket `done` | 6, 7 |
-
 ## Out of scope
 
 - Matching against any catalogue outside the platform, an external Content ID, and any hosted moderation API.
