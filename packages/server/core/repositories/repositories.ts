@@ -1,6 +1,9 @@
 import type { CaptionRepository } from './caption-repository';
 import type { CategoryRepositoryPort } from './category-repository';
+import type { ChannelAuditRepositoryPort } from './channel-audit-repository';
 import type { ChannelFeaturedRepositoryPort } from './channel-featured-repository';
+import type { ChannelInviteRepositoryPort } from './channel-invite-repository';
+import type { ChannelMemberRepositoryPort } from './channel-member-repository';
 import type { ChannelRepositoryPort } from './channel-repository';
 import type { ClipRepositoryPort } from './clip-repository';
 import type { CommentReportRepositoryPort } from './comment-report-repository';
@@ -45,6 +48,9 @@ export interface Repositories {
   outbox: OutboxRepository;
   categories: CategoryRepositoryPort;
   channels: ChannelRepositoryPort;
+  channelMembers: ChannelMemberRepositoryPort;
+  channelInvites: ChannelInviteRepositoryPort;
+  channelAudit: ChannelAuditRepositoryPort;
   videoReactions: VideoReactionRepositoryPort;
   subscriptions: SubscriptionRepositoryPort;
   videoViews: VideoViewRepositoryPort;

@@ -57,3 +57,15 @@ export function canReportComment({ user }: { user: UserContext | null }): boolea
   if (!user) return false;
   return getUserPermissions(user).can('report', 'Comment');
 }
+
+/** The creator inbox and the comment moderation of a channel's videos. */
+export function canModerateComments({
+  user,
+  videoOwnerId,
+}: {
+  user: UserContext | null;
+  videoOwnerId: string;
+}): boolean {
+  if (!user) return false;
+  return getUserPermissions(user).can('moderate', subject('Comment', { videoOwnerId }));
+}

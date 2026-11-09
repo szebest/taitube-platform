@@ -8,7 +8,7 @@ import {
 import type { Container } from '@vp/composition';
 import type { JobQueue, StorageClient } from '@vp/core/ports';
 import { mintToken } from '@vp/dev-token';
-import { SEARCH_SUGGESTIONS } from '@vp/domain';
+import { type ChannelRole, SEARCH_SUGGESTIONS } from '@vp/domain';
 import { type AppConfig, inProcessAppConfig } from '@vp/env-schema';
 import { QUEUES } from '@vp/job-contracts';
 import type { Logger } from '@vp/logger';
@@ -89,6 +89,56 @@ export async function seedVideo(repositories: InMemoryRepositories, video: SeedV
       ...video,
     })
   );
+}
+
+const TEAM_INVITE_ID = '00000000-0000-7000-8000-00000000e117';
+
+/**
+ * Puts `memberId` on the team of `ownerId`'s channel the only way the store allows, through an
+ * accepted invite; creates the owner's channel when no request has provisioned it yet.
+ */
+export async function seedTeamMember(
+  repositories: InMemoryRepositories,
+  { ownerId, memberId, role }: { ownerId: string; memberId: string; role: ChannelRole }
+): Promise<string> {
+  const found = expectOk(await repositories.channels.findByUserId(ownerId));
+  const channel =
+    found ??
+    expectOk(
+      await repositories.channels.create({
+        userId: ownerId,
+        handle: 'team-owner',
+        displayName: 'Owner',
+      })
+    );
+  const audit = {
+    channelId: channel.id,
+    actorUserId: ownerId,
+    targetType: 'invite',
+    targetId: TEAM_INVITE_ID,
+    meta: { inviteeUserId: memberId, role },
+  } as const;
+  expectOk(
+    await repositories.channelInvites.create(
+      {
+        id: TEAM_INVITE_ID,
+        channelId: channel.id,
+        inviteeUserId: memberId,
+        role,
+        invitedBy: ownerId,
+        expiresAt: new Date(Date.now() + 3_600_000),
+      },
+      { ...audit, action: 'invite.created' }
+    )
+  );
+  expectOk(
+    await repositories.channelInvites.accept(TEAM_INVITE_ID, memberId, {
+      ...audit,
+      actorUserId: memberId,
+      action: 'invite.accepted',
+    })
+  );
+  return channel.id;
 }
 
 export async function backdate(

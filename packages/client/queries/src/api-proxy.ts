@@ -1,5 +1,5 @@
 import { getRequestIP } from '@tanstack/react-start/server';
-import { PROBLEM_CONTENT_TYPE, problemDetails } from '@vp/api-contracts';
+import { CHANNEL_HEADER, PROBLEM_CONTENT_TYPE, problemDetails } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { API_PROXY_PATH, UNAUTHORIZED } from './api-client';
 import type { SessionConfig } from './session-config';
@@ -18,6 +18,7 @@ const FORWARDED_REQUEST_HEADERS = [
   'accept-language',
   'content-type',
   'if-none-match',
+  CHANNEL_HEADER,
   'last-event-id',
   'traceparent',
   'tracestate',

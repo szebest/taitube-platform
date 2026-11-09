@@ -16,7 +16,8 @@ type WorkerFixtures = {
 type TestFixtures = {
   offMachineRequests: string[];
   signIn: (persona: Persona) => Promise<void>;
-  api: (persona?: Persona) => Promise<APIRequestContext>;
+  /** `channelId` acts on that channel through `X-Channel-Id`, as the studio does for a team member. */
+  api: (persona?: Persona, options?: { channelId?: string }) => Promise<APIRequestContext>;
 };
 
 const LOCAL_HOSTS = new Set(['127.0.0.1', 'localhost', '[::1]']);
@@ -62,10 +63,13 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
 
   api: async ({ playwright, stack }, use) => {
     const contexts: APIRequestContext[] = [];
-    await use(async (persona) => {
+    await use(async (persona, { channelId } = {}) => {
       const context = await playwright.request.newContext({
         baseURL: stack.apiUrl,
-        extraHTTPHeaders: persona ? { authorization: `Bearer ${stack.personas[persona]}` } : {},
+        extraHTTPHeaders: {
+          ...(persona && { authorization: `Bearer ${stack.personas[persona]}` }),
+          ...(channelId && { 'x-channel-id': channelId }),
+        },
       });
       contexts.push(context);
       return context;

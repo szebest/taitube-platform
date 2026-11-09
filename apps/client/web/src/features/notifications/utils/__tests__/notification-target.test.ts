@@ -36,6 +36,12 @@ describe('apps/client/web: notificationTarget', () => {
       },
     },
     {
+      case: 'a team invite has no video to open',
+      overrides: { kind: 'team_invite' as const, videoId: null },
+      count: 1,
+      target: undefined,
+    },
+    {
       case: 'a notification with no video opens nothing',
       overrides: { kind: 'processing' as const, videoId: null },
       count: 1,

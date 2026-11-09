@@ -1,6 +1,7 @@
 import * as path from 'node:path';
 import type { StoragePresignedPartInfo } from '@vp/core/ports';
-import type { VideoVisibility } from '@vp/domain';
+import type { ActingChannel, VideoVisibility } from '@vp/domain';
+import { type AuthorizationFailure, decideChannelTask } from '@vp/domain-rules';
 import { MS_PER_SECOND } from '@vp/domain/time';
 import type { DatabaseUnavailable, StorageUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
@@ -36,13 +37,18 @@ export interface InitiateUploadResult {
   expiresAt: string;
 }
 
-export type InitiateUploadFailure = StorageUnavailable | DatabaseUnavailable;
+export type InitiateUploadFailure = AuthorizationFailure | StorageUnavailable | DatabaseUnavailable;
 
+/** A member's upload is the channel owner's video; the member stays on record as its uploader. */
 export async function initiateUpload(
   ctx: UploadContext,
   user: UserContext,
+  acting: ActingChannel,
   params: InitiateUploadParams
 ): Promise<Result<InitiateUploadResult, InitiateUploadFailure>> {
+  const allowed = decideChannelTask({ user, acting, task: 'upload' });
+  if (isErr(allowed)) return allowed;
+
   const { filename, sizeBytes, contentType, sha256, title, visibility } = params;
 
   const videoId = uuidv7();
@@ -59,7 +65,7 @@ export async function initiateUpload(
   const createVideoRow = () =>
     ctx.videos.create({
       id: videoId,
-      ownerId: user.id,
+      ownerId: allowed.value.ownerId,
       title: title || filename,
       visibility: visibility || 'private',
       status: 'UPLOADING',
@@ -97,7 +103,7 @@ export async function initiateUpload(
     const recorded = await ctx.events.create({
       videoId,
       type: 'upload.initiated',
-      payload: { uploadId, strategy: 'single', sizeBytes, filename },
+      payload: { uploadId, strategy: 'single', sizeBytes, filename, uploadedBy: user.id },
     });
     if (isErr(recorded)) return recorded;
 
@@ -150,6 +156,7 @@ export async function initiateUpload(
       partSizeBytes,
       partsExpected,
       multipartUploadId,
+      uploadedBy: user.id,
     },
   });
   if (isErr(recorded)) return recorded;

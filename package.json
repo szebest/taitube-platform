@@ -33,6 +33,8 @@
     "e2e:web-stack": "tsx tests/e2e/web-stack.ts",
     "test:e2e": "vp test run --config tests/vitest.config.ts",
     "test:browser": "tsx tests/browser/playback.ts",
+    "gen:speech-fixture": "tsx scripts/gen-speech-fixture.ts",
+    "measure:captions": "tsx scripts/measure-captions.ts",
     "test:live": "tsx tests/live/live-smoke.ts",
     "gen:tokens": "turbo run build --filter=@vp/design-tokens --output-logs=errors-only && tsx scripts/gen-tokens.ts",
     "gen:theme": "turbo run build --filter=@vp/design-tokens --output-logs=errors-only && tsx scripts/gen-theme.ts",

@@ -87,6 +87,16 @@ describe('@vp/queries: the same-origin API proxy', () => {
     expect(headers).not.toHaveProperty('x-admin-token');
   });
 
+  it('forwards the channel the studio acts on, for the API to check against the memberships', async () => {
+    const sent = api();
+
+    await callProxy('/api/v1/me/channel/members', {
+      init: { headers: { 'x-channel-id': '00000000-0000-7000-8000-0000000000c1' } },
+    });
+
+    expect(sent[0]?.headers.get('x-channel-id')).toBe('00000000-0000-7000-8000-0000000000c1');
+  });
+
   it.each([
     { hops: 'no proxy before it', upstream: undefined, expected: '203.0.113.7' },
     {

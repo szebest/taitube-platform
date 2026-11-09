@@ -14,12 +14,14 @@ import { ShellAccountMenu } from '../shell-account-menu/shell-account-menu';
 export type StudioShellProps = {
   /** The toolbar's action beside the account menu. */
   toolbarAction: ReactNode;
+  /** The navigation's pages ahead of the admin entry, told whether a comment arrived off the inbox. */
+  navigation: (state: { newComments: boolean }) => ReactNode;
   /** What the inspector shows for the video the library selected. */
   inspector: (videoId: string) => ReactNode;
 };
 
 /** The studio around every page: the workspace's navigation and toolbar, the page in its content. */
-export function StudioShell({ toolbarAction, inspector }: StudioShellProps) {
+export function StudioShell({ toolbarAction, navigation, inspector }: StudioShellProps) {
   const matchRoute = useMatchRoute();
   const maxWidth = useLayoutMaxWidth();
   const { tOr } = useT();
@@ -46,39 +48,7 @@ export function StudioShell({ toolbarAction, inspector }: StudioShellProps) {
       }}
     >
       <StudioWorkspace.Nav>
-        <StudioWorkspace.NavItem
-          asChild
-          icon="video"
-          active={Boolean(matchRoute({ to: '/videos', fuzzy: true }))}
-        >
-          <Link to="/videos" search={{}}>
-            {tOr('studio.navLibrary', {}, '')}
-          </Link>
-        </StudioWorkspace.NavItem>
-        <StudioWorkspace.NavItem
-          asChild
-          icon="chart"
-          active={Boolean(matchRoute({ to: '/analytics' }))}
-        >
-          <Link to="/analytics" search={{}}>
-            {tOr('studio.navAnalytics', {}, '')}
-          </Link>
-        </StudioWorkspace.NavItem>
-        <StudioWorkspace.NavItem
-          asChild
-          icon="chat"
-          active={onComments}
-          badge={newComments ? tOr('studio.commentsNavNew', {}, '') : undefined}
-        >
-          <Link to="/comments" search={{}}>
-            {tOr('studio.commentsNav', {}, '')}
-          </Link>
-        </StudioWorkspace.NavItem>
-        <StudioWorkspace.NavItem asChild icon="live" active={Boolean(matchRoute({ to: '/live' }))}>
-          <Link to="/live" search={{}}>
-            {tOr('studio.liveNav', {}, '')}
-          </Link>
-        </StudioWorkspace.NavItem>
+        {navigation({ newComments })}
         <Can type="rule" I={canAccessAdmin}>
           <StudioWorkspace.NavItem
             asChild

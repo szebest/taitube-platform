@@ -24,10 +24,11 @@ import {
   notDeletedScope,
   ownerScope,
 } from '../scopes/index';
+import { appendChannelAudit } from './channel-audit-writes';
 import { enqueueNotificationJobs } from './notification-jobs';
 import type { PostgresDatabase } from './types';
 
-const { videos: v, videoEvents: ve, categories: c } = schema;
+const { videos: v, videoEvents: ve, categories: c, channels: ch } = schema;
 
 function sortKey(sort: LibrarySort) {
   if (sort === 'newest') return v.createdAt;
@@ -82,7 +83,7 @@ export class PostgresVideoStudioRepository extends VideoStudioRepository {
   async updateMetadata(
     options: UpdateStudioMetadataOptions
   ): Promise<Result<StudioMetadataOutcome, DatabaseUnavailable | VersionConflict>> {
-    const { videoId, expectedVersion, patch, userId } = options;
+    const { videoId, expectedVersion, patch, userId, auditFields } = options;
 
     const committed = await fromPromise(
       () =>
@@ -122,6 +123,21 @@ export class PostgresVideoStudioRepository extends VideoStudioRepository {
             type: 'video.metadata_updated',
             payload: { patch, expectedVersion, newVersion: updated.version, requestedBy: userId },
           });
+          const [channel] = await tx
+            .select({ id: ch.id })
+            .from(ch)
+            .where(eq(ch.userId, updated.ownerId))
+            .limit(1);
+          if (channel) {
+            await appendChannelAudit(tx, {
+              channelId: channel.id,
+              actorUserId: userId,
+              action: 'video.updated',
+              targetType: 'video',
+              targetId: videoId,
+              meta: { fields: auditFields },
+            });
+          }
           await enqueueNotificationJobs(
             tx,
             visibilityNotificationJobs(

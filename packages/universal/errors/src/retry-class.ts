@@ -87,6 +87,13 @@ export const RETRY_CLASS: Readonly<Record<ErrorCode, RetryClass>> = {
   [ErrorCodes.LIVE_CHAT_SUBSCRIBERS_ONLY]: 'permanent',
   [ErrorCodes.LIVE_CHAT_CLOSED]: 'permanent',
   [ErrorCodes.LIVE_CHAT_TICKET_INVALID]: 'permanent',
+  [ErrorCodes.CHANNEL_MEMBERSHIP_REQUIRED]: 'permanent',
+  [ErrorCodes.CHANNEL_INVITE_NOT_FOUND]: 'permanent',
+  [ErrorCodes.CHANNEL_INVITE_NOT_PENDING]: 'permanent',
+  [ErrorCodes.CHANNEL_INVITE_ALREADY_PENDING]: 'permanent',
+  [ErrorCodes.CHANNEL_MEMBER_EXISTS]: 'permanent',
+  [ErrorCodes.CHANNEL_MEMBER_NOT_FOUND]: 'permanent',
+  [ErrorCodes.CHANNEL_OWNER_IMMUTABLE]: 'permanent',
 };
 
 /** ADR-18's "when unsure, retry a little, then park" applies to anything not in the table. */

@@ -2655,6 +2655,9 @@ importers:
       '@casl/ability':
         specifier: ^7.0.1
         version: 7.0.1
+      '@vp/domain':
+        specifier: workspace:*
+        version: link:../domain
       '@vp/errors':
         specifier: workspace:*
         version: link:../errors

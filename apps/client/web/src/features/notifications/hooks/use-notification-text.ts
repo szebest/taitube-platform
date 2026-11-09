@@ -29,6 +29,8 @@ export function useNotificationText(): (notification: Notification) => Notificat
         return tOr('notifications.comment', { name }, '');
       case 'heart':
         return tOr('notifications.heart', { name }, '');
+      case 'team_invite':
+        return tOr('notifications.teamInvite', { name }, '');
       case 'processing':
         return payload.outcome === 'failed'
           ? tOr('notifications.processingFailed', {}, '')

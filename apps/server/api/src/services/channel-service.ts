@@ -6,12 +6,20 @@ import type {
   PlaylistRepositoryPort,
   UserRepository,
 } from '@vp/core/repositories';
-import { type Channel, type UpdateChannelInput, type VideoFormat, toChannelCard } from '@vp/domain';
+import {
+  type ActingChannel,
+  type Channel,
+  type UpdateChannelInput,
+  type VideoFormat,
+  toChannelCard,
+} from '@vp/domain';
 import {
   type ChannelNotFound,
+  type AuthorizationFailure,
   type ClaimHandleFailure,
   type InvalidBrandColor,
   channelNotFound,
+  decideChannelTask,
   decideHandleClaim,
   validateBrandColor,
 } from '@vp/domain-rules';
@@ -21,9 +29,8 @@ import type { InvalidCursor, Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
 import { type Result, err, isErr, map, ok } from '@vp/result';
 import { type InvalidChannelLinks, validateChannelLinks } from '@vp/validation';
-import { uuidv7 } from 'uuidv7';
 import type { ChannelImageService, ResolveChannelImageFailure } from './channel-image-service';
-import { type ProvisionFailure, claimFreeHandle, findChannelByIdOrHandle } from './channel-lookup';
+import { type ProvisionFailure, findChannelByIdOrHandle, provisionAccount } from './channel-lookup';
 import { type ChannelView, toChannelView } from './channel-views';
 import { decodeCreatedAtCursor, createdAtCursorPayload } from './cursor';
 import { toChannelPlaylistView } from './library-views';
@@ -55,6 +62,7 @@ type AccountNotFound = { readonly code: 'UNAUTHORIZED'; readonly message: string
 
 export type GetAccountFailure = AccountNotFound | ChannelNotFound | DatabaseUnavailable;
 export type UpdateChannelFailure =
+  | AuthorizationFailure
   | ChannelNotFound
   | ResolveChannelImageFailure
   | ClaimHandleFailure
@@ -109,12 +117,16 @@ export class ChannelService {
   }
 
   async updateChannel(
-    userId: string,
+    user: UserContext,
+    acting: ActingChannel,
     input: UpdateChannelCommand
   ): Promise<Result<OwnerChannel, UpdateChannelFailure>> {
-    const existing = await this.deps.channels.findByUserId(userId);
+    const allowed = decideChannelTask({ user, acting, task: 'edit-channel' });
+    if (isErr(allowed)) return allowed;
+
+    const existing = await this.deps.channels.findById(acting.channelId);
     if (isErr(existing)) return existing;
-    if (!existing.value) return err(channelNotFound(userId));
+    if (!existing.value) return err(channelNotFound(acting.channelId));
 
     let links: UpdateChannelInput['links'];
     if (input.links !== undefined) {
@@ -160,7 +172,7 @@ export class ChannelService {
 
     return updated.value
       ? await this.ownerChannelView(updated.value)
-      : err(channelNotFound(userId));
+      : err(channelNotFound(acting.channelId));
   }
 
   async getPublicChannel(
@@ -235,43 +247,9 @@ export class ChannelService {
 
   /**
    * Creates the user, channel and Watch Later rows a verified identity implies, on its first
-   * authenticated request. Every write tolerates losing a race with a concurrent request for the
-   * same identity - and only that, so a dead store still surfaces instead of a half-provisioned user.
+   * authenticated request, and answers the caller's channel.
    */
-  async ensureProvisioned(userId: string, email?: string): Promise<Result<void, ProvisionFailure>> {
-    const userEmail = email || `${userId}@taitube.local`;
-
-    const existingUser = await this.deps.users.findById(userId);
-    if (isErr(existingUser)) return existingUser;
-
-    if (!existingUser.value) {
-      const upserted = await this.deps.users.upsert({ id: userId, email: userEmail, tier: 'free' });
-      if (isErr(upserted)) return upserted;
-    }
-
-    const existingChannel = await this.deps.channels.findByUserId(userId);
-    if (isErr(existingChannel)) return existingChannel;
-    if (existingChannel.value) return ok();
-
-    // The channel is the "already provisioned" marker, so Watch Later has to exist before it does.
-    const watchLater = await this.deps.playlists.provisionWatchLater({
-      id: uuidv7(),
-      ownerId: userId,
-    });
-    if (isErr(watchLater)) return watchLater;
-
-    const handle = await claimFreeHandle(this.deps.channels, userEmail, userId);
-    if (isErr(handle)) return handle;
-
-    const created = await this.deps.channels.create({
-      userId,
-      handle: handle.value,
-      displayName: email ? email.split('@')[0] || 'User' : 'User',
-    });
-
-    // A concurrent request for the same identity got there first; that is a success for us.
-    return isErr(created) && created.error.code !== ErrorCodes.HANDLE_ALREADY_TAKEN
-      ? created
-      : ok();
+  ensureProvisioned(userId: string, email?: string): Promise<Result<Channel, ProvisionFailure>> {
+    return provisionAccount(this.deps, userId, email);
   }
 }

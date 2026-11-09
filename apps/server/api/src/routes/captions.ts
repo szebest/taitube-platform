@@ -13,7 +13,7 @@ import { MAX_CAPTION_FILE_BYTES } from '@vp/domain';
 import { type VideoForbidden, publicReadFailure } from '@vp/domain-rules';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
-import { requireAuth } from '../plugins/auth';
+import { requireActingChannel, requireAuth } from '../plugins/auth';
 import { contractSchema } from './contract-schema';
 import { sendResult } from './send-result';
 
@@ -174,11 +174,13 @@ export async function captionsRoutes(app: FastifyInstance): Promise<void> {
   server.put(
     setChannelAutoCaptions.path,
     { schema: { ...contractSchema(setChannelAutoCaptions), body: setChannelAutoCaptions.body } },
-    async (request, reply) =>
-      sendResult(
+    async (request, reply) => {
+      const { user, acting } = requireActingChannel(request);
+      return sendResult(
         reply,
         request,
-        await captionService.setChannelDefault(requireAuth(request), request.body.enabled)
-      )
+        await captionService.setChannelDefault(user, acting, request.body.enabled)
+      );
+    }
   );
 }
