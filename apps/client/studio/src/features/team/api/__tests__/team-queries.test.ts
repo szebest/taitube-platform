@@ -1,10 +1,11 @@
 import { createQueryClient } from '@vp/queries';
 import { api, apiServer } from '@vp/web-testing';
-import { membership, serveTeam } from '#app/features/team/__tests__/team-api.fixture';
+import { membership, myInvite, serveTeam } from '#app/features/team/__tests__/team-api.fixture';
 import {
   auditQueryOptions,
   channelLookupQueryOptions,
   membershipsQueryOptions,
+  myInvitesQueryOptions,
   teamKeys,
   teamQueryOptions,
 } from '../team-queries';
@@ -15,6 +16,7 @@ describe('apps/client/studio: team queries', () => {
       [
         teamQueryOptions(api).queryKey,
         membershipsQueryOptions(api).queryKey,
+        myInvitesQueryOptions(api).queryKey,
         auditQueryOptions(api, { action: 'member.left' }).queryKey,
         channelLookupQueryOptions(api, 'creator').queryKey,
       ].every((key) => key[0] === teamKeys.all[0])
@@ -34,6 +36,15 @@ describe('apps/client/studio: team queries', () => {
     const { items } = await createQueryClient().fetchQuery(membershipsQueryOptions(api));
 
     expect(items.map(({ role }) => role)).toEqual(['editor']);
+  });
+
+  it('reads the first page of the invites the API lists', async () => {
+    const { handlers } = serveTeam({ myInvites: [myInvite('moderator')] });
+    apiServer.use(...handlers);
+
+    const { pages } = await createQueryClient().fetchInfiniteQuery(myInvitesQueryOptions(api));
+
+    expect(pages.flatMap(({ items }) => items.map(({ role }) => role))).toEqual(['moderator']);
   });
 
   it('asks about no channel until there is a handle', () => {

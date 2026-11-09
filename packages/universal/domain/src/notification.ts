@@ -86,6 +86,8 @@ export interface NotificationPayload {
   videoTitle: string | null;
   excerpt: string | null;
   outcome: 'ready' | 'failed' | null;
+  /** Set on `team_invite`: the invite the notification opens. */
+  inviteId?: string;
 }
 
 export interface Notification {

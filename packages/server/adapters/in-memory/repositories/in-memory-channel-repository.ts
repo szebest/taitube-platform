@@ -78,6 +78,11 @@ export class InMemoryChannelRepository implements ChannelRepositoryPort {
     return ok(this.getAllChannels().filter((channel) => wanted.has(channel.userId)));
   }
 
+  async findByIds(ids: readonly string[]): Promise<Result<Channel[], DatabaseUnavailable>> {
+    const wanted = new Set(ids);
+    return ok(this.getAllChannels().filter((channel) => wanted.has(channel.id)));
+  }
+
   async findByHandle(handle: string): Promise<Result<Channel | null, DatabaseUnavailable>> {
     const normalized = handle.toLowerCase();
     return ok(this.find((channel) => channel.handle.toLowerCase() === normalized));

@@ -46,6 +46,7 @@ export function createNotifyTeamInviteProcessor(deps: NotifyTeamInviteDeps) {
         videoTitle: null,
         excerpt: null,
         outcome: null,
+        inviteId,
       },
     });
     if (isErr(saved)) return saved;

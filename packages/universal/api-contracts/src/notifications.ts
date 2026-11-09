@@ -22,6 +22,7 @@ const NotificationPayloadSchema = z.object({
   videoTitle: z.string().nullable(),
   excerpt: z.string().nullable().describe('The start of the comment, for comment kinds'),
   outcome: z.enum(['ready', 'failed']).nullable().describe('How an upload finished'),
+  inviteId: z.uuid().optional().describe('The channel team invite a `team_invite` opens'),
 });
 
 export const NotificationSchema = z.object({

@@ -12,6 +12,11 @@ export type AcceptInviteOutcome =
   | { type: 'accepted'; membership: ChannelMembership }
   | { type: 'not-pending' };
 
+export interface PendingInvitesQuery {
+  cursor: { createdAt: Date; id: string } | null;
+  limit: number;
+}
+
 /**
  * Invites expire lazily: a `pending` row past `expiresAt` reads as `expired` and can be neither
  * accepted nor closed. Every transition is a compare-and-set from `pending` that writes its audit
@@ -26,6 +31,11 @@ export interface ChannelInviteRepositoryPort {
   findById(id: string): Promise<Result<ChannelInvite | null, DatabaseUnavailable>>;
   /** Pending and unexpired, oldest first. */
   listPending(channelId: string): Promise<Result<ChannelInvite[], DatabaseUnavailable>>;
+  /** The invitee's pending and unexpired invites across channels, newest first, up to `limit + 1` rows. */
+  listPendingFor(
+    inviteeUserId: string,
+    query: PendingInvitesQuery
+  ): Promise<Result<ChannelInvite[], DatabaseUnavailable>>;
   /** The invitee's own pending invite becomes a membership; an existing membership is kept as it is. */
   accept(
     id: string,
