@@ -17,6 +17,19 @@ components:
       name: x-admin-token
       description: Static admin token for administrative operations
   schemas:
+    BannerLinkInput:
+      type: object
+      properties:
+        label:
+          type: string
+          description: 1-24 characters of plain text after trimming
+        url:
+          type: string
+          description: An https URL of up to 2048 characters
+      required:
+        - label
+        - url
+      description: The button the channel banner carries
     ChannelLinkInput:
       type: object
       properties:
@@ -30,6 +43,36 @@ components:
         - label
         - url
       description: A link the creator lists on the channel About tab
+    ChannelResourceLinkInput:
+      type: object
+      properties:
+        label:
+          type: string
+          description: 1-40 characters of plain text after trimming
+        url:
+          type: string
+          description: An https URL of up to 2048 characters
+        platform:
+          type: string
+          enum:
+            - website
+            - github
+            - x
+            - instagram
+            - tiktok
+            - twitch
+            - discord
+            - mastodon
+            - bluesky
+            - linkedin
+            - reddit
+            - facebook
+          description: Read off the URL host; `website` when the host is not a known platform
+      required:
+        - label
+        - url
+        - platform
+      description: A listed link with the platform it points at
     ChannelCardInput:
       type: object
       properties:
@@ -224,6 +267,20 @@ components:
         - offsetMs
         - createdAt
       description: One chat line
+    BannerLink:
+      type: object
+      properties:
+        label:
+          type: string
+          description: 1-24 characters of plain text after trimming
+        url:
+          type: string
+          description: An https URL of up to 2048 characters
+      required:
+        - label
+        - url
+      additionalProperties: false
+      description: The button the channel banner carries
     ChannelLink:
       type: object
       properties:
@@ -238,6 +295,37 @@ components:
         - url
       additionalProperties: false
       description: A link the creator lists on the channel About tab
+    ChannelResourceLink:
+      type: object
+      properties:
+        label:
+          type: string
+          description: 1-40 characters of plain text after trimming
+        url:
+          type: string
+          description: An https URL of up to 2048 characters
+        platform:
+          type: string
+          enum:
+            - website
+            - github
+            - x
+            - instagram
+            - tiktok
+            - twitch
+            - discord
+            - mastodon
+            - bluesky
+            - linkedin
+            - reddit
+            - facebook
+          description: Read off the URL host; `website` when the host is not a known platform
+      required:
+        - label
+        - url
+        - platform
+      additionalProperties: false
+      description: A listed link with the platform it points at
     ChannelCard:
       type: object
       properties:
@@ -11624,10 +11712,12 @@ paths:
                                 displayName:
                                   type: string
                                 avatarUrl:
+                                  description: The default variant (128 px) of the uploaded avatar, else an address set earlier
                                   type:
                                     - string
                                     - 'null'
                                 bio:
+                                  description: The description in the negotiated locale when the channel wrote one, else the default
                                   type:
                                     - string
                                     - 'null'
@@ -12132,27 +12222,119 @@ paths:
                           displayName:
                             type: string
                           avatarUrl:
+                            description: The default variant (128 px) of the uploaded avatar, else an address set earlier
                             type:
                               - string
                               - 'null'
                           bannerUrl:
+                            description: The default variant (desktop, 1280 px) of the uploaded banner, else an address set earlier
                             type:
                               - string
                               - 'null'
+                          avatar:
+                            anyOf:
+                              - type: object
+                                properties:
+                                  sizes:
+                                    type: object
+                                    properties:
+                                      '48':
+                                        type: string
+                                      '72':
+                                        type: string
+                                      '128':
+                                        type: string
+                                      '256':
+                                        type: string
+                                    required:
+                                      - '48'
+                                      - '72'
+                                      - '128'
+                                      - '256'
+                                    additionalProperties: false
+                                    description: Public WebP of each square size, by its edge in pixels
+                                required:
+                                  - sizes
+                                additionalProperties: false
+                              - type: 'null'
+                            description: Every size of the uploaded avatar; null while the channel has none
+                          banner:
+                            anyOf:
+                              - type: object
+                                properties:
+                                  desktop:
+                                    type: object
+                                    properties:
+                                      '1280':
+                                        type: string
+                                      '2560':
+                                        type: string
+                                    required:
+                                      - '1280'
+                                      - '2560'
+                                    additionalProperties: false
+                                    description: Public WebP of the target, by its width in pixels
+                                  mobile:
+                                    type: object
+                                    properties:
+                                      '1280':
+                                        type: string
+                                      '2560':
+                                        type: string
+                                    required:
+                                      - '1280'
+                                      - '2560'
+                                    additionalProperties: false
+                                    description: Public WebP of the target, by its width in pixels
+                                  tv:
+                                    type: object
+                                    properties:
+                                      '1280':
+                                        type: string
+                                      '2560':
+                                        type: string
+                                    required:
+                                      - '1280'
+                                      - '2560'
+                                    additionalProperties: false
+                                    description: Public WebP of the target, by its width in pixels
+                                required:
+                                  - desktop
+                                  - mobile
+                                  - tv
+                                additionalProperties: false
+                              - type: 'null'
+                            description: Every target of the uploaded banner; null while the channel has none
+                          bannerLink:
+                            anyOf:
+                              - $ref: '#/components/schemas/BannerLink'
+                              - type: 'null'
+                            description: A button shown inside the banner safe area, never over the whole banner
+                          country:
+                            anyOf:
+                              - type: string
+                                minLength: 2
+                                maxLength: 2
+                              - type: 'null'
+                            description: ISO 3166-1 alpha-2, as the creator chose
+                          hasContact:
+                            type: boolean
+                            description: Whether a contact email is set; the address itself is `revealChannelContact`
                           brandColor:
                             description: 'The channel accent as #rrggbb, or null for the viewer''s own'
                             type:
                               - string
                               - 'null'
                           bio:
+                            description: The description in the negotiated locale when the channel wrote one, else the default
                             type:
                               - string
                               - 'null'
                           links:
                             type: array
                             items:
-                              $ref: '#/components/schemas/ChannelLink'
-                            description: Up to five, in the order the creator set
+                              $ref: '#/components/schemas/ChannelResourceLink'
+                            description: Up to eight, in the order the creator set
                           subscriberCount:
                             type: integer
                             minimum: -9007199254740991
@@ -12201,6 +12383,11 @@ paths:
                           - displayName
                           - avatarUrl
                           - bannerUrl
+                          - avatar
+                          - banner
+                          - bannerLink
+                          - country
+                          - hasContact
                           - brandColor
                           - bio
                           - links
@@ -14475,27 +14662,119 @@ paths:
                       displayName:
                         type: string
                       avatarUrl:
+                        description: The default variant (128 px) of the uploaded avatar, else an address set earlier
                         type:
                           - string
                           - 'null'
                       bannerUrl:
+                        description: The default variant (desktop, 1280 px) of the uploaded banner, else an address set earlier
                         type:
                           - string
                           - 'null'
+                      avatar:
+                        anyOf:
+                          - type: object
+                            properties:
+                              sizes:
+                                type: object
+                                properties:
+                                  '48':
+                                    type: string
+                                  '72':
+                                    type: string
+                                  '128':
+                                    type: string
+                                  '256':
+                                    type: string
+                                required:
+                                  - '48'
+                                  - '72'
+                                  - '128'
+                                  - '256'
+                                additionalProperties: false
+                                description: Public WebP of each square size, by its edge in pixels
+                            required:
+                              - sizes
+                            additionalProperties: false
+                          - type: 'null'
+                        description: Every size of the uploaded avatar; null while the channel has none
+                      banner:
+                        anyOf:
+                          - type: object
+                            properties:
+                              desktop:
+                                type: object
+                                properties:
+                                  '1280':
+                                    type: string
+                                  '2560':
+                                    type: string
+                                required:
+                                  - '1280'
+                                  - '2560'
+                                additionalProperties: false
+                                description: Public WebP of the target, by its width in pixels
+                              mobile:
+                                type: object
+                                properties:
+                                  '1280':
+                                    type: string
+                                  '2560':
+                                    type: string
+                                required:
+                                  - '1280'
+                                  - '2560'
+                                additionalProperties: false
+                                description: Public WebP of the target, by its width in pixels
+                              tv:
+                                type: object
+                                properties:
+                                  '1280':
+                                    type: string
+                                  '2560':
+                                    type: string
+                                required:
+                                  - '1280'
+                                  - '2560'
+                                additionalProperties: false
+                                description: Public WebP of the target, by its width in pixels
+                            required:
+                              - desktop
+                              - mobile
+                              - tv
+                            additionalProperties: false
+                          - type: 'null'
+                        description: Every target of the uploaded banner; null while the channel has none
+                      bannerLink:
+                        anyOf:
+                          - $ref: '#/components/schemas/BannerLink'
+                          - type: 'null'
+                        description: A button shown inside the banner safe area, never over the whole banner
+                      country:
+                        anyOf:
+                          - type: string
+                            minLength: 2
+                            maxLength: 2
+                          - type: 'null'
+                        description: ISO 3166-1 alpha-2, as the creator chose
+                      hasContact:
+                        type: boolean
+                        description: Whether a contact email is set; the address itself is `revealChannelContact`
                       brandColor:
                         description: 'The channel accent as #rrggbb, or null for the viewer''s own'
                         type:
                           - string
                           - 'null'
                       bio:
+                        description: The description in the negotiated locale when the channel wrote one, else the default
                         type:
                           - string
                           - 'null'
                       links:
                         type: array
                         items:
-                          $ref: '#/components/schemas/ChannelLink'
-                        description: Up to five, in the order the creator set
+                          $ref: '#/components/schemas/ChannelResourceLink'
+                        description: Up to eight, in the order the creator set
                       subscriberCount:
                         type: integer
                         minimum: -9007199254740991
@@ -14537,6 +14816,105 @@ paths:
                         type: string
                       updatedAt:
                         type: string
+                      bannerCrops:
+                        anyOf:
+                          - type: object
+                            properties:
+                              desktop:
+                                type: object
+                                properties:
+                                  x:
+                                    type: integer
+                                    minimum: 0
+                                    maximum: 9007199254740991
+                                  'y':
+                                    type: integer
+                                    minimum: 0
+                                    maximum: 9007199254740991
+                                  width:
+                                    type: integer
+                                    exclusiveMinimum: 0
+                                    maximum: 9007199254740991
+                                  height:
+                                    type: integer
+                                    exclusiveMinimum: 0
+                                    maximum: 9007199254740991
+                                required:
+                                  - x
+                                  - 'y'
+                                  - width
+                                  - height
+                                additionalProperties: false
+                              mobile:
+                                type: object
+                                properties:
+                                  x:
+                                    type: integer
+                                    minimum: 0
+                                    maximum: 9007199254740991
+                                  'y':
+                                    type: integer
+                                    minimum: 0
+                                    maximum: 9007199254740991
+                                  width:
+                                    type: integer
+                                    exclusiveMinimum: 0
+                                    maximum: 9007199254740991
+                                  height:
+                                    type: integer
+                                    exclusiveMinimum: 0
+                                    maximum: 9007199254740991
+                                required:
+                                  - x
+                                  - 'y'
+                                  - width
+                                  - height
+                                additionalProperties: false
+                              tv:
+                                type: object
+                                properties:
+                                  x:
+                                    type: integer
+                                    minimum: 0
+                                    maximum: 9007199254740991
+                                  'y':
+                                    type: integer
+                                    minimum: 0
+                                    maximum: 9007199254740991
+                                  width:
+                                    type: integer
+                                    exclusiveMinimum: 0
+                                    maximum: 9007199254740991
+                                  height:
+                                    type: integer
+                                    exclusiveMinimum: 0
+                                    maximum: 9007199254740991
+                                required:
+                                  - x
+                                  - 'y'
+                                  - width
+                                  - height
+                                additionalProperties: false
+                            required:
+                              - desktop
+                              - mobile
+                              - tv
+                            additionalProperties: false
+                            description: 'Whole pixels of the uploaded image: desktop 6:1, mobile 3:1, tv 16:9'
+                          - type: 'null'
+                        description: The crops of the current banner
+                      contactEmail:
+                        description: The address `revealChannelContact` hands out
+                        type:
+                          - string
+                          - 'null'
+                      handleChangeAvailableAt:
+                        anyOf:
+                          - type: string
+                            format: date-time
+                            pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+                          - type: 'null'
+                        description: When the handle may change again; null when it may change now
                       autoCaptionsDefault:
                         type: boolean
                         description: Whether videos uploaded from now on get generated captions; shown to the owner only
@@ -14547,6 +14925,11 @@ paths:
                       - displayName
                       - avatarUrl
                       - bannerUrl
+                      - avatar
+                      - banner
+                      - bannerLink
+                      - country
+                      - hasContact
                       - brandColor
                       - bio
                       - links
@@ -14556,6 +14939,9 @@ paths:
                       - live
                       - createdAt
                       - updatedAt
+                      - bannerCrops
+                      - contactEmail
+                      - handleChangeAvailableAt
                       - autoCaptionsDefault
                     additionalProperties: false
                 required:
@@ -14652,7 +15038,7 @@ paths:
       summary: Update authenticated user channel profile
       tags:
         - Account
-      description: Updates handle, display name, avatar, banner, bio, or links for the authenticated user channel.
+      description: Updates handle, display name, avatar, banner, description, links, banner link, country or contact email of the acting channel. A handle changes at most once every 30 days (`HANDLE_CHANGE_TOO_SOON`) and cannot take one another channel gave up in the last 90 days (`HANDLE_RESERVED`); the old one keeps resolving to this channel meanwhile.
       requestBody:
         required: true
         content:
@@ -14688,15 +15074,281 @@ paths:
                     - string
                     - 'null'
                 bio:
+                  description: 'The default description: up to 5000 characters of plain text'
                   anyOf:
                     - type: string
-                      maxLength: 1000
+                      maxLength: 5000
                     - type: 'null'
                 links:
-                  description: 'Replaces the list: up to five, https only; an empty list clears it'
+                  description: 'Replaces the list: up to eight, https only; an empty list clears it'
                   type: array
                   items:
                     $ref: '#/components/schemas/ChannelLinkInput'
+                country:
+                  description: ISO 3166-1 alpha-2; null clears it
+                  anyOf:
+                    - type: string
+                      enum:
+                        - AD
+                        - AE
+                        - AF
+                        - AG
+                        - AI
+                        - AL
+                        - AM
+                        - AO
+                        - AQ
+                        - AR
+                        - AS
+                        - AT
+                        - AU
+                        - AW
+                        - AX
+                        - AZ
+                        - BA
+                        - BB
+                        - BD
+                        - BE
+                        - BF
+                        - BG
+                        - BH
+                        - BI
+                        - BJ
+                        - BL
+                        - BM
+                        - BN
+                        - BO
+                        - BQ
+                        - BR
+                        - BS
+                        - BT
+                        - BV
+                        - BW
+                        - BY
+                        - BZ
+                        - CA
+                        - CC
+                        - CD
+                        - CF
+                        - CG
+                        - CH
+                        - CI
+                        - CK
+                        - CL
+                        - CM
+                        - CN
+                        - CO
+                        - CR
+                        - CU
+                        - CV
+                        - CW
+                        - CX
+                        - CY
+                        - CZ
+                        - DE
+                        - DJ
+                        - DK
+                        - DM
+                        - DO
+                        - DZ
+                        - EC
+                        - EE
+                        - EG
+                        - EH
+                        - ER
+                        - ES
+                        - ET
+                        - FI
+                        - FJ
+                        - FK
+                        - FM
+                        - FO
+                        - FR
+                        - GA
+                        - GB
+                        - GD
+                        - GE
+                        - GF
+                        - GG
+                        - GH
+                        - GI
+                        - GL
+                        - GM
+                        - GN
+                        - GP
+                        - GQ
+                        - GR
+                        - GS
+                        - GT
+                        - GU
+                        - GW
+                        - GY
+                        - HK
+                        - HM
+                        - HN
+                        - HR
+                        - HT
+                        - HU
+                        - ID
+                        - IE
+                        - IL
+                        - IM
+                        - IN
+                        - IO
+                        - IQ
+                        - IR
+                        - IS
+                        - IT
+                        - JE
+                        - JM
+                        - JO
+                        - JP
+                        - KE
+                        - KG
+                        - KH
+                        - KI
+                        - KM
+                        - KN
+                        - KP
+                        - KR
+                        - KW
+                        - KY
+                        - KZ
+                        - LA
+                        - LB
+                        - LC
+                        - LI
+                        - LK
+                        - LR
+                        - LS
+                        - LT
+                        - LU
+                        - LV
+                        - LY
+                        - MA
+                        - MC
+                        - MD
+                        - ME
+                        - MF
+                        - MG
+                        - MH
+                        - MK
+                        - ML
+                        - MM
+                        - MN
+                        - MO
+                        - MP
+                        - MQ
+                        - MR
+                        - MS
+                        - MT
+                        - MU
+                        - MV
+                        - MW
+                        - MX
+                        - MY
+                        - MZ
+                        - NA
+                        - NC
+                        - NE
+                        - NF
+                        - NG
+                        - NI
+                        - NL
+                        - 'NO'
+                        - NP
+                        - NR
+                        - NU
+                        - NZ
+                        - OM
+                        - PA
+                        - PE
+                        - PF
+                        - PG
+                        - PH
+                        - PK
+                        - PL
+                        - PM
+                        - PN
+                        - PR
+                        - PS
+                        - PT
+                        - PW
+                        - PY
+                        - QA
+                        - RE
+                        - RO
+                        - RS
+                        - RU
+                        - RW
+                        - SA
+                        - SB
+                        - SC
+                        - SD
+                        - SE
+                        - SG
+                        - SH
+                        - SI
+                        - SJ
+                        - SK
+                        - SL
+                        - SM
+                        - SN
+                        - SO
+                        - SR
+                        - SS
+                        - ST
+                        - SV
+                        - SX
+                        - SY
+                        - SZ
+                        - TC
+                        - TD
+                        - TF
+                        - TG
+                        - TH
+                        - TJ
+                        - TK
+                        - TL
+                        - TM
+                        - TN
+                        - TO
+                        - TR
+                        - TT
+                        - TV
+                        - TW
+                        - TZ
+                        - UA
+                        - UG
+                        - UM
+                        - US
+                        - UY
+                        - UZ
+                        - VA
+                        - VC
+                        - VE
+                        - VG
+                        - VI
+                        - VN
+                        - VU
+                        - WF
+                        - WS
+                        - YE
+                        - YT
+                        - ZA
+                        - ZM
+                        - ZW
+                    - type: 'null'
+                contactEmail:
+                  description: Shown to a signed-in visitor on request only; null clears it
+                  type:
+                    - string
+                    - 'null'
+                bannerLink:
+                  description: null clears it
+                  anyOf:
+                    - $ref: '#/components/schemas/BannerLinkInput'
+                    - type: 'null'
       parameters:
         - schema:
             type: string
@@ -14728,27 +15380,119 @@ paths:
                   displayName:
                     type: string
                   avatarUrl:
+                    description: The default variant (128 px) of the uploaded avatar, else an address set earlier
                     type:
                       - string
                       - 'null'
                   bannerUrl:
+                    description: The default variant (desktop, 1280 px) of the uploaded banner, else an address set earlier
                     type:
                       - string
                       - 'null'
+                  avatar:
+                    anyOf:
+                      - type: object
+                        properties:
+                          sizes:
+                            type: object
+                            properties:
+                              '48':
+                                type: string
+                              '72':
+                                type: string
+                              '128':
+                                type: string
+                              '256':
+                                type: string
+                            required:
+                              - '48'
+                              - '72'
+                              - '128'
+                              - '256'
+                            additionalProperties: false
+                            description: Public WebP of each square size, by its edge in pixels
+                        required:
+                          - sizes
+                        additionalProperties: false
+                      - type: 'null'
+                    description: Every size of the uploaded avatar; null while the channel has none
+                  banner:
+                    anyOf:
+                      - type: object
+                        properties:
+                          desktop:
+                            type: object
+                            properties:
+                              '1280':
+                                type: string
+                              '2560':
+                                type: string
+                            required:
+                              - '1280'
+                              - '2560'
+                            additionalProperties: false
+                            description: Public WebP of the target, by its width in pixels
+                          mobile:
+                            type: object
+                            properties:
+                              '1280':
+                                type: string
+                              '2560':
+                                type: string
+                            required:
+                              - '1280'
+                              - '2560'
+                            additionalProperties: false
+                            description: Public WebP of the target, by its width in pixels
+                          tv:
+                            type: object
+                            properties:
+                              '1280':
+                                type: string
+                              '2560':
+                                type: string
+                            required:
+                              - '1280'
+                              - '2560'
+                            additionalProperties: false
+                            description: Public WebP of the target, by its width in pixels
+                        required:
+                          - desktop
+                          - mobile
+                          - tv
+                        additionalProperties: false
+                      - type: 'null'
+                    description: Every target of the uploaded banner; null while the channel has none
+                  bannerLink:
+                    anyOf:
+                      - $ref: '#/components/schemas/BannerLink'
+                      - type: 'null'
+                    description: A button shown inside the banner safe area, never over the whole banner
+                  country:
+                    anyOf:
+                      - type: string
+                        minLength: 2
+                        maxLength: 2
+                      - type: 'null'
+                    description: ISO 3166-1 alpha-2, as the creator chose
+                  hasContact:
+                    type: boolean
+                    description: Whether a contact email is set; the address itself is `revealChannelContact`
                   brandColor:
                     description: 'The channel accent as #rrggbb, or null for the viewer''s own'
                     type:
                       - string
                       - 'null'
                   bio:
+                    description: The description in the negotiated locale when the channel wrote one, else the default
                     type:
                       - string
                       - 'null'
                   links:
                     type: array
                     items:
-                      $ref: '#/components/schemas/ChannelLink'
-                    description: Up to five, in the order the creator set
+                      $ref: '#/components/schemas/ChannelResourceLink'
+                    description: Up to eight, in the order the creator set
                   subscriberCount:
                     type: integer
                     minimum: -9007199254740991
@@ -14790,6 +15534,105 @@ paths:
                     type: string
                   updatedAt:
                     type: string
+                  bannerCrops:
+                    anyOf:
+                      - type: object
+                        properties:
+                          desktop:
+                            type: object
+                            properties:
+                              x:
+                                type: integer
+                                minimum: 0
+                                maximum: 9007199254740991
+                              'y':
+                                type: integer
+                                minimum: 0
+                                maximum: 9007199254740991
+                              width:
+                                type: integer
+                                exclusiveMinimum: 0
+                                maximum: 9007199254740991
+                              height:
+                                type: integer
+                                exclusiveMinimum: 0
+                                maximum: 9007199254740991
+                            required:
+                              - x
+                              - 'y'
+                              - width
+                              - height
+                            additionalProperties: false
+                          mobile:
+                            type: object
+                            properties:
+                              x:
+                                type: integer
+                                minimum: 0
+                                maximum: 9007199254740991
+                              'y':
+                                type: integer
+                                minimum: 0
+                                maximum: 9007199254740991
+                              width:
+                                type: integer
+                                exclusiveMinimum: 0
+                                maximum: 9007199254740991
+                              height:
+                                type: integer
+                                exclusiveMinimum: 0
+                                maximum: 9007199254740991
+                            required:
+                              - x
+                              - 'y'
+                              - width
+                              - height
+                            additionalProperties: false
+                          tv:
+                            type: object
+                            properties:
+                              x:
+                                type: integer
+                                minimum: 0
+                                maximum: 9007199254740991
+                              'y':
+                                type: integer
+                                minimum: 0
+                                maximum: 9007199254740991
+                              width:
+                                type: integer
+                                exclusiveMinimum: 0
+                                maximum: 9007199254740991
+                              height:
+                                type: integer
+                                exclusiveMinimum: 0
+                                maximum: 9007199254740991
+                            required:
+                              - x
+                              - 'y'
+                              - width
+                              - height
+                            additionalProperties: false
+                        required:
+                          - desktop
+                          - mobile
+                          - tv
+                        additionalProperties: false
+                        description: 'Whole pixels of the uploaded image: desktop 6:1, mobile 3:1, tv 16:9'
+                      - type: 'null'
+                    description: The crops of the current banner
+                  contactEmail:
+                    description: The address `revealChannelContact` hands out
+                    type:
+                      - string
+                      - 'null'
+                  handleChangeAvailableAt:
+                    anyOf:
+                      - type: string
+                        format: date-time
+                        pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+                      - type: 'null'
+                    description: When the handle may change again; null when it may change now
                   autoCaptionsDefault:
                     type: boolean
                     description: Whether videos uploaded from now on get generated captions; shown to the owner only
@@ -14800,6 +15643,11 @@ paths:
                   - displayName
                   - avatarUrl
                   - bannerUrl
+                  - avatar
+                  - banner
+                  - bannerLink
+                  - country
+                  - hasContact
                   - brandColor
                   - bio
                   - links
@@ -14809,6 +15657,9 @@ paths:
                   - live
                   - createdAt
                   - updatedAt
+                  - bannerCrops
+                  - contactEmail
+                  - handleChangeAvailableAt
                   - autoCaptionsDefault
                 additionalProperties: false
         '400':
@@ -14914,8 +15765,8 @@ paths:
                   code:
                     type: string
                     enum:
-                      - CHANNEL_MEMBERSHIP_REQUIRED
                       - FORBIDDEN
+                      - CHANNEL_MEMBERSHIP_REQUIRED
                     description: Machine-readable error code
                   instance:
                     type: string
@@ -14996,6 +15847,8 @@ paths:
                     type: string
                     enum:
                       - HANDLE_ALREADY_TAKEN
+                      - HANDLE_CHANGE_TOO_SOON
+                      - HANDLE_RESERVED
                     description: Machine-readable error code
                   instance:
                     type: string
@@ -18749,6 +19602,12 @@ paths:
                     - unlisted
                     - public
                   description: 'public: listed and searchable; unlisted: anyone with the link; private: the owner'
+                kind:
+                  description: playlist unless asked otherwise
+                  type: string
+                  enum:
+                    - playlist
+                    - series
               required:
                 - title
       responses:
@@ -18778,6 +19637,12 @@ paths:
                       - unlisted
                       - public
                     description: 'public: listed and searchable; unlisted: anyone with the link; private: the owner'
+                  kind:
+                    type: string
+                    enum:
+                      - playlist
+                      - series
+                    description: 'series: made only of the owner channel videos, with episodes and progress'
                   isSystem:
                     type: boolean
                     description: 'Watch Later: cannot be renamed or deleted'
@@ -18795,6 +19660,13 @@ paths:
                     anyOf:
                       - $ref: '#/components/schemas/ChannelCard'
                       - type: 'null'
+                  nextEpisodeVideoId:
+                    anyOf:
+                      - type: string
+                        format: uuid
+                        pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                      - type: 'null'
+                    description: 'A series, for a signed-in viewer: the first episode after the last one watched that is below 92 percent, else the first unfinished one; null otherwise or when all are done'
                   items:
                     type: array
                     items:
@@ -18817,6 +19689,20 @@ paths:
                         addedAt:
                           type: string
                           description: ISO 8601 timestamp the video was added
+                        episode:
+                          anyOf:
+                            - type: integer
+                              exclusiveMinimum: 0
+                              maximum: 9007199254740991
+                            - type: 'null'
+                          description: Its place counted from 1, in a series; null in any other playlist
+                        progress:
+                          anyOf:
+                            - type: number
+                              minimum: 0
+                              maximum: 100
+                            - type: 'null'
+                          description: Percent of the video this signed-in viewer has watched, in a series; null otherwise
                         video:
                           type: object
                           properties:
@@ -18946,6 +19832,8 @@ paths:
                         - videoId
                         - position
                         - addedAt
+                        - episode
+                        - progress
                         - video
                         - channel
                       additionalProperties: false
@@ -18961,10 +19849,12 @@ paths:
                   - title
                   - description
                   - visibility
+                  - kind
                   - isSystem
                   - thumbnailUrl
                   - videoCount
                   - owner
+                  - nextEpisodeVideoId
                   - items
                   - createdAt
                   - updatedAt
@@ -19131,6 +20021,12 @@ paths:
                       - unlisted
                       - public
                     description: 'public: listed and searchable; unlisted: anyone with the link; private: the owner'
+                  kind:
+                    type: string
+                    enum:
+                      - playlist
+                      - series
+                    description: 'series: made only of the owner channel videos, with episodes and progress'
                   isSystem:
                     type: boolean
                     description: 'Watch Later: cannot be renamed or deleted'
@@ -19148,6 +20044,13 @@ paths:
                     anyOf:
                       - $ref: '#/components/schemas/ChannelCard'
                       - type: 'null'
+                  nextEpisodeVideoId:
+                    anyOf:
+                      - type: string
+                        format: uuid
+                        pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                      - type: 'null'
+                    description: 'A series, for a signed-in viewer: the first episode after the last one watched that is below 92 percent, else the first unfinished one; null otherwise or when all are done'
                   items:
                     type: array
                     items:
@@ -19170,6 +20073,20 @@ paths:
                         addedAt:
                           type: string
                           description: ISO 8601 timestamp the video was added
+                        episode:
+                          anyOf:
+                            - type: integer
+                              exclusiveMinimum: 0
+                              maximum: 9007199254740991
+                            - type: 'null'
+                          description: Its place counted from 1, in a series; null in any other playlist
+                        progress:
+                          anyOf:
+                            - type: number
+                              minimum: 0
+                              maximum: 100
+                            - type: 'null'
+                          description: Percent of the video this signed-in viewer has watched, in a series; null otherwise
                         video:
                           type: object
                           properties:
@@ -19299,6 +20216,8 @@ paths:
                         - videoId
                         - position
                         - addedAt
+                        - episode
+                        - progress
                         - video
                         - channel
                       additionalProperties: false
@@ -19314,10 +20233,12 @@ paths:
                   - title
                   - description
                   - visibility
+                  - kind
                   - isSystem
                   - thumbnailUrl
                   - videoCount
                   - owner
+                  - nextEpisodeVideoId
                   - items
                   - createdAt
                   - updatedAt
@@ -19467,6 +20388,12 @@ paths:
                     - unlisted
                     - public
                   description: 'public: listed and searchable; unlisted: anyone with the link; private: the owner'
+                kind:
+                  description: Turning a playlist into a series is refused while it holds a video of another channel
+                  type: string
+                  enum:
+                    - playlist
+                    - series
       parameters:
         - schema:
             type: string
@@ -19502,6 +20429,12 @@ paths:
                       - unlisted
                       - public
                     description: 'public: listed and searchable; unlisted: anyone with the link; private: the owner'
+                  kind:
+                    type: string
+                    enum:
+                      - playlist
+                      - series
+                    description: 'series: made only of the owner channel videos, with episodes and progress'
                   isSystem:
                     type: boolean
                     description: 'Watch Later: cannot be renamed or deleted'
@@ -19519,6 +20452,13 @@ paths:
                     anyOf:
                       - $ref: '#/components/schemas/ChannelCard'
                       - type: 'null'
+                  nextEpisodeVideoId:
+                    anyOf:
+                      - type: string
+                        format: uuid
+                        pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                      - type: 'null'
+                    description: 'A series, for a signed-in viewer: the first episode after the last one watched that is below 92 percent, else the first unfinished one; null otherwise or when all are done'
                   items:
                     type: array
                     items:
@@ -19541,6 +20481,20 @@ paths:
                         addedAt:
                           type: string
                           description: ISO 8601 timestamp the video was added
+                        episode:
+                          anyOf:
+                            - type: integer
+                              exclusiveMinimum: 0
+                              maximum: 9007199254740991
+                            - type: 'null'
+                          description: Its place counted from 1, in a series; null in any other playlist
+                        progress:
+                          anyOf:
+                            - type: number
+                              minimum: 0
+                              maximum: 100
+                            - type: 'null'
+                          description: Percent of the video this signed-in viewer has watched, in a series; null otherwise
                         video:
                           type: object
                           properties:
@@ -19670,6 +20624,8 @@ paths:
                         - videoId
                         - position
                         - addedAt
+                        - episode
+                        - progress
                         - video
                         - channel
                       additionalProperties: false
@@ -19685,10 +20641,12 @@ paths:
                   - title
                   - description
                   - visibility
+                  - kind
                   - isSystem
                   - thumbnailUrl
                   - videoCount
                   - owner
+                  - nextEpisodeVideoId
                   - items
                   - createdAt
                   - updatedAt
@@ -19877,6 +20835,7 @@ paths:
                     type: string
                     enum:
                       - VALIDATION_FAILED
+                      - SERIES_VIDEO_NOT_OWNED
                     description: Machine-readable error code
                   instance:
                     type: string
@@ -20125,6 +21084,12 @@ paths:
                       - unlisted
                       - public
                     description: 'public: listed and searchable; unlisted: anyone with the link; private: the owner'
+                  kind:
+                    type: string
+                    enum:
+                      - playlist
+                      - series
+                    description: 'series: made only of the owner channel videos, with episodes and progress'
                   isSystem:
                     type: boolean
                     description: 'Watch Later: cannot be renamed or deleted'
@@ -20142,6 +21107,13 @@ paths:
                     anyOf:
                       - $ref: '#/components/schemas/ChannelCard'
                       - type: 'null'
+                  nextEpisodeVideoId:
+                    anyOf:
+                      - type: string
+                        format: uuid
+                        pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                      - type: 'null'
+                    description: 'A series, for a signed-in viewer: the first episode after the last one watched that is below 92 percent, else the first unfinished one; null otherwise or when all are done'
                   items:
                     type: array
                     items:
@@ -20164,6 +21136,20 @@ paths:
                         addedAt:
                           type: string
                           description: ISO 8601 timestamp the video was added
+                        episode:
+                          anyOf:
+                            - type: integer
+                              exclusiveMinimum: 0
+                              maximum: 9007199254740991
+                            - type: 'null'
+                          description: Its place counted from 1, in a series; null in any other playlist
+                        progress:
+                          anyOf:
+                            - type: number
+                              minimum: 0
+                              maximum: 100
+                            - type: 'null'
+                          description: Percent of the video this signed-in viewer has watched, in a series; null otherwise
                         video:
                           type: object
                           properties:
@@ -20293,6 +21279,8 @@ paths:
                         - videoId
                         - position
                         - addedAt
+                        - episode
+                        - progress
                         - video
                         - channel
                       additionalProperties: false
@@ -20308,10 +21296,12 @@ paths:
                   - title
                   - description
                   - visibility
+                  - kind
                   - isSystem
                   - thumbnailUrl
                   - videoCount
                   - owner
+                  - nextEpisodeVideoId
                   - items
                   - createdAt
                   - updatedAt
@@ -20460,6 +21450,46 @@ paths:
                     enum:
                       - PLAYLIST_NOT_FOUND
                       - VIDEO_NOT_FOUND
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '422':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - SERIES_VIDEO_NOT_OWNED
                     description: Machine-readable error code
                   instance:
                     type: string
@@ -20735,6 +21765,12 @@ paths:
                       - unlisted
                       - public
                     description: 'public: listed and searchable; unlisted: anyone with the link; private: the owner'
+                  kind:
+                    type: string
+                    enum:
+                      - playlist
+                      - series
+                    description: 'series: made only of the owner channel videos, with episodes and progress'
                   isSystem:
                     type: boolean
                     description: 'Watch Later: cannot be renamed or deleted'
@@ -20752,6 +21788,13 @@ paths:
                     anyOf:
                       - $ref: '#/components/schemas/ChannelCard'
                       - type: 'null'
+                  nextEpisodeVideoId:
+                    anyOf:
+                      - type: string
+                        format: uuid
+                        pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                      - type: 'null'
+                    description: 'A series, for a signed-in viewer: the first episode after the last one watched that is below 92 percent, else the first unfinished one; null otherwise or when all are done'
                   items:
                     type: array
                     items:
@@ -20774,6 +21817,20 @@ paths:
                         addedAt:
                           type: string
                           description: ISO 8601 timestamp the video was added
+                        episode:
+                          anyOf:
+                            - type: integer
+                              exclusiveMinimum: 0
+                              maximum: 9007199254740991
+                            - type: 'null'
+                          description: Its place counted from 1, in a series; null in any other playlist
+                        progress:
+                          anyOf:
+                            - type: number
+                              minimum: 0
+                              maximum: 100
+                            - type: 'null'
+                          description: Percent of the video this signed-in viewer has watched, in a series; null otherwise
                         video:
                           type: object
                           properties:
@@ -20903,6 +21960,8 @@ paths:
                         - videoId
                         - position
                         - addedAt
+                        - episode
+                        - progress
                         - video
                         - channel
                       additionalProperties: false
@@ -20918,10 +21977,12 @@ paths:
                   - title
                   - description
                   - visibility
+                  - kind
                   - isSystem
                   - thumbnailUrl
                   - videoCount
                   - owner
+                  - nextEpisodeVideoId
                   - items
                   - createdAt
                   - updatedAt
@@ -26469,7 +27530,7 @@ paths:
       summary: Get public creator channel profile
       tags:
         - Channels
-      description: Returns public channel details, subscriber count, avatar, banner, and bio by channel UUID or @handle.
+      description: Returns public channel details, subscriber count, avatar, banner, and bio by channel UUID or @handle. A handle the channel gave up in the last 90 days resolves to it with `redirectedFrom` set, so a client answers 301 to the new handle. The contact email is never in the resource.
       parameters:
         - schema:
             type: string
@@ -26499,27 +27560,119 @@ paths:
                   displayName:
                     type: string
                   avatarUrl:
+                    description: The default variant (128 px) of the uploaded avatar, else an address set earlier
                     type:
                       - string
                       - 'null'
                   bannerUrl:
+                    description: The default variant (desktop, 1280 px) of the uploaded banner, else an address set earlier
                     type:
                       - string
                       - 'null'
+                  avatar:
+                    anyOf:
+                      - type: object
+                        properties:
+                          sizes:
+                            type: object
+                            properties:
+                              '48':
+                                type: string
+                              '72':
+                                type: string
+                              '128':
+                                type: string
+                              '256':
+                                type: string
+                            required:
+                              - '48'
+                              - '72'
+                              - '128'
+                              - '256'
+                            additionalProperties: false
+                            description: Public WebP of each square size, by its edge in pixels
+                        required:
+                          - sizes
+                        additionalProperties: false
+                      - type: 'null'
+                    description: Every size of the uploaded avatar; null while the channel has none
+                  banner:
+                    anyOf:
+                      - type: object
+                        properties:
+                          desktop:
+                            type: object
+                            properties:
+                              '1280':
+                                type: string
+                              '2560':
+                                type: string
+                            required:
+                              - '1280'
+                              - '2560'
+                            additionalProperties: false
+                            description: Public WebP of the target, by its width in pixels
+                          mobile:
+                            type: object
+                            properties:
+                              '1280':
+                                type: string
+                              '2560':
+                                type: string
+                            required:
+                              - '1280'
+                              - '2560'
+                            additionalProperties: false
+                            description: Public WebP of the target, by its width in pixels
+                          tv:
+                            type: object
+                            properties:
+                              '1280':
+                                type: string
+                              '2560':
+                                type: string
+                            required:
+                              - '1280'
+                              - '2560'
+                            additionalProperties: false
+                            description: Public WebP of the target, by its width in pixels
+                        required:
+                          - desktop
+                          - mobile
+                          - tv
+                        additionalProperties: false
+                      - type: 'null'
+                    description: Every target of the uploaded banner; null while the channel has none
+                  bannerLink:
+                    anyOf:
+                      - $ref: '#/components/schemas/BannerLink'
+                      - type: 'null'
+                    description: A button shown inside the banner safe area, never over the whole banner
+                  country:
+                    anyOf:
+                      - type: string
+                        minLength: 2
+                        maxLength: 2
+                      - type: 'null'
+                    description: ISO 3166-1 alpha-2, as the creator chose
+                  hasContact:
+                    type: boolean
+                    description: Whether a contact email is set; the address itself is `revealChannelContact`
                   brandColor:
                     description: 'The channel accent as #rrggbb, or null for the viewer''s own'
                     type:
                       - string
                       - 'null'
                   bio:
+                    description: The description in the negotiated locale when the channel wrote one, else the default
                     type:
                       - string
                       - 'null'
                   links:
                     type: array
                     items:
-                      $ref: '#/components/schemas/ChannelLink'
-                    description: Up to five, in the order the creator set
+                      $ref: '#/components/schemas/ChannelResourceLink'
+                    description: Up to eight, in the order the creator set
                   subscriberCount:
                     type: integer
                     minimum: -9007199254740991
@@ -26561,6 +27714,11 @@ paths:
                     type: string
                   updatedAt:
                     type: string
+                  redirectedFrom:
+                    description: The retired handle the request named, when it resolved to this channel
+                    type:
+                      - string
+                      - 'null'
                 required:
                   - id
                   - userId
@@ -26568,6 +27726,11 @@ paths:
                   - displayName
                   - avatarUrl
                   - bannerUrl
+                  - avatar
+                  - banner
+                  - bannerLink
+                  - country
+                  - hasContact
                   - brandColor
                   - bio
                   - links
@@ -26577,6 +27740,7 @@ paths:
                   - live
                   - createdAt
                   - updatedAt
+                  - redirectedFrom
                 additionalProperties: false
         '400':
           description: Problem Details (RFC 9457)
@@ -29606,6 +30770,7 @@ paths:
               - member.removed
               - member.left
               - video.updated
+              - channel.updated
           in: query
           name: action
           required: false
@@ -30153,6 +31318,72 @@ paths:
                               type: string
                               enum:
                                 - video
+                            targetId:
+                              type: string
+                            meta:
+                              type: object
+                              properties:
+                                fields:
+                                  type: array
+                                  items:
+                                    type: string
+                              required:
+                                - fields
+                              additionalProperties: false
+                            actorUserId:
+                              anyOf:
+                                - type: string
+                                  format: uuid
+                                  pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                - type: 'null'
+                              description: null once the actor deleted their account
+                            actor:
+                              anyOf:
+                                - type: object
+                                  properties:
+                                    handle:
+                                      type: string
+                                    displayName:
+                                      type: string
+                                    avatarUrl:
+                                      type:
+                                        - string
+                                        - 'null'
+                                  required:
+                                    - handle
+                                    - displayName
+                                    - avatarUrl
+                                  additionalProperties: false
+                                  description: The person or channel as their own channel presents them
+                                - type: 'null'
+                            createdAt:
+                              type: string
+                              format: date-time
+                              pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+                          required:
+                            - id
+                            - action
+                            - targetType
+                            - targetId
+                            - meta
+                            - actorUserId
+                            - actor
+                            - createdAt
+                          additionalProperties: false
+                        - type: object
+                          properties:
+                            id:
+                              type: string
+                              format: uuid
+                              pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                            action:
+                              type: string
+                              enum:
+                                - channel.updated
+                            targetType:
+                              type: string
+                              enum:
+                                - channel
                             targetId:
                               type: string
                             meta:
@@ -32194,6 +33425,76 @@ paths:
                           - title
                           - startedAt
                           - channel
+                        additionalProperties: false
+                    required:
+                      - type
+                      - payload
+                    additionalProperties: false
+                  - type: object
+                    properties:
+                      type:
+                        type: string
+                        enum:
+                          - channel.image.ready
+                      payload:
+                        type: object
+                        properties:
+                          uploadId:
+                            type: string
+                            format: uuid
+                            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                          channelId:
+                            type: string
+                            format: uuid
+                            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                          kind:
+                            type: string
+                            enum:
+                              - avatar
+                              - banner
+                          version:
+                            type: integer
+                            exclusiveMinimum: 0
+                            maximum: 9007199254740991
+                        required:
+                          - uploadId
+                          - channelId
+                          - kind
+                          - version
+                        additionalProperties: false
+                    required:
+                      - type
+                      - payload
+                    additionalProperties: false
+                  - type: object
+                    properties:
+                      type:
+                        type: string
+                        enum:
+                          - channel.image.failed
+                      payload:
+                        type: object
+                        properties:
+                          uploadId:
+                            type: string
+                            format: uuid
+                            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                          channelId:
+                            type: string
+                            format: uuid
+                            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                          kind:
+                            type: string
+                            enum:
+                              - avatar
+                              - banner
+                          reason:
+                            type: string
+                        required:
+                          - uploadId
+                          - channelId
+                          - kind
+                          - reason
                         additionalProperties: false
                     required:
                       - type

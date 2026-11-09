@@ -1,6 +1,7 @@
 import { CaslAuthorizationAdapter } from '@vp/adapters/authorization';
 import {
   InMemoryCacheClient,
+  InMemoryChannelHandleHistoryRepository,
   InMemoryChannelRepository,
   InMemoryJobQueue,
   InMemoryMultipartStorage,
@@ -16,6 +17,10 @@ import { asCdnBase, inProcessAppConfig } from '@vp/env-schema';
 import { createLogger } from '@vp/logger';
 import { Paginator } from '@vp/pagination';
 import { ok } from '@vp/result';
+import {
+  ChannelIdentityService,
+  type ChannelIdentityServiceDeps,
+} from '../channel-identity-service';
 import { ChannelImageService, type ChannelImageServiceDeps } from '../channel-image-service';
 import type { ChannelServiceDeps } from '../channel-service';
 import type { SseServiceDeps } from '../sse-service';
@@ -37,7 +42,10 @@ export function videoServiceDeps(
 ): VideoServiceDeps {
   return {
     videos,
-    channels: new InMemoryChannelRepository(new InMemoryVideoRepository()),
+    channels: new InMemoryChannelRepository(
+      new InMemoryVideoRepository(),
+      new InMemoryChannelHandleHistoryRepository()
+    ),
     cdn: TEST_CDN,
     sprite: TEST_SPRITE,
     reactionCache: new RedisReactionCacheAdapter({
@@ -72,6 +80,22 @@ export function channelImageServiceDeps(
   };
 }
 
+export const TEST_NOW = Date.parse('2026-03-10T00:00:00.000Z');
+
+/** The channel identity rules over one repositories bundle, at a fixed clock. */
+export function channelIdentityServiceDeps(
+  repositories: InMemoryRepositories,
+  overrides: Partial<ChannelIdentityServiceDeps> = {}
+): ChannelIdentityServiceDeps {
+  return {
+    channels: repositories.channels,
+    handleHistory: repositories.channelHandleHistory,
+    audit: repositories.channelAudit,
+    now: () => TEST_NOW,
+    ...overrides,
+  };
+}
+
 /** A ChannelService over one repositories bundle, its videos read from the same store. */
 export function channelServiceDeps(
   repositories: InMemoryRepositories,
@@ -89,6 +113,9 @@ export function channelServiceDeps(
     paginator: new Paginator(),
     cdn: TEST_CDN,
     images: new ChannelImageService(channelImageServiceDeps(repositories)),
+    identity: new ChannelIdentityService(channelIdentityServiceDeps(repositories)),
+    pages: repositories.channelPages,
+    now: () => TEST_NOW,
     ...overrides,
   };
 }

@@ -12,7 +12,10 @@ import type {
   CaptionTrackService,
   CategoryService,
   ChannelFeaturedService,
+  ChannelIdentityService,
+  ChannelImagePipelineService,
   ChannelImageService,
+  ChannelSpotlightService,
   ChannelAuditService,
   ChannelInviteService,
   ChannelMemberService,
@@ -75,6 +78,9 @@ export interface ServiceSet {
   categoryService: CategoryService;
   channelService: ChannelService;
   channelImageService: ChannelImageService;
+  channelIdentityService: ChannelIdentityService;
+  channelImagePipelineService: ChannelImagePipelineService;
+  channelSpotlightService: ChannelSpotlightService;
   channelFeaturedService: ChannelFeaturedService;
   channelInviteService: ChannelInviteService;
   channelMemberService: ChannelMemberService;
@@ -136,6 +142,9 @@ export const Services = {
   ChannelService: token<ChannelService>('ChannelService'),
   RequestIdentity: token<RequestIdentity>('RequestIdentity'),
   ChannelImageService: token<ChannelImageService>('ChannelImageService'),
+  ChannelIdentityService: token<ChannelIdentityService>('ChannelIdentityService'),
+  ChannelImagePipelineService: token<ChannelImagePipelineService>('ChannelImagePipelineService'),
+  ChannelSpotlightService: token<ChannelSpotlightService>('ChannelSpotlightService'),
   ChannelFeaturedService: token<ChannelFeaturedService>('ChannelFeaturedService'),
   ChannelInviteService: token<ChannelInviteService>('ChannelInviteService'),
   ChannelMemberService: token<ChannelMemberService>('ChannelMemberService'),

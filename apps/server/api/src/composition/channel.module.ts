@@ -1,8 +1,12 @@
-import { Adapters } from '@vp/adapters/composition';
+import { Adapters, queueNamed } from '@vp/adapters/composition';
 import type { Container } from '@vp/composition';
+import { SUPPORTED_LOCALES } from '@vp/messages';
 import {
   ChannelFeaturedService,
+  ChannelIdentityService,
+  ChannelImagePipelineService,
   ChannelImageService,
+  ChannelSpotlightService,
   ChannelService,
   RequestIdentity,
 } from '../services/index';
@@ -23,6 +27,42 @@ export function registerChannelServices(c: Container): Container {
         })
     )
     .provide(
+      Services.ChannelIdentityService,
+      (c) =>
+        new ChannelIdentityService({
+          channels: c.get(Adapters.Repositories).channels,
+          handleHistory: c.get(Adapters.Repositories).channelHandleHistory,
+          audit: c.get(Adapters.Repositories).channelAudit,
+          now: Date.now,
+        })
+    )
+    .provide(
+      Services.ChannelImagePipelineService,
+      (c) =>
+        new ChannelImagePipelineService({
+          channels: c.get(Adapters.Repositories).channels,
+          images: c.get(Adapters.Repositories).channelImages,
+          storage: c.get(Adapters.Storage),
+          rawBucket: c.get(Adapters.Config).buckets.raw,
+          presignedUrlTtlSeconds: c.get(Adapters.Config).limits.presignTtlSeconds,
+          queue: queueNamed(c.get(Adapters.Queues), 'thumbnail'),
+        })
+    )
+    .provide(
+      Services.ChannelSpotlightService,
+      (c) =>
+        new ChannelSpotlightService({
+          channels: c.get(Adapters.Repositories).channels,
+          pages: c.get(Adapters.Repositories).channelPages,
+          videos: c.get(Adapters.Repositories).videos,
+          subscriptions: c.get(Adapters.Repositories).subscriptions,
+          audit: c.get(Adapters.Repositories).channelAudit,
+          identity: c.get(Services.ChannelIdentityService),
+          videoService: c.get(Services.VideoService),
+          locales: SUPPORTED_LOCALES,
+        })
+    )
+    .provide(
       Services.ChannelService,
       (c) =>
         new ChannelService({
@@ -35,6 +75,9 @@ export function registerChannelServices(c: Container): Container {
           paginator: c.get(Services.Paginator),
           cdn: c.get(Adapters.Config).cdn,
           images: c.get(Services.ChannelImageService),
+          identity: c.get(Services.ChannelIdentityService),
+          pages: c.get(Adapters.Repositories).channelPages,
+          now: Date.now,
         })
     )
     .provide(

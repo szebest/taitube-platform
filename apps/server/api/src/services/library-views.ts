@@ -27,6 +27,8 @@ export function toPlaylistView(
   const entries = items.map(({ addedAt, video, ...item }) => ({
     ...item,
     addedAt: addedAt.toISOString(),
+    episode: null,
+    progress: null,
     video: toVideoSummaryView(video, cdn, sprite, item.channel),
   }));
   return {
@@ -36,6 +38,7 @@ export function toPlaylistView(
       : (entries[0]?.video.posterUrl ?? null),
     videoCount: entries.length,
     owner,
+    nextEpisodeVideoId: null,
     items: entries,
     createdAt: createdAt.toISOString(),
     updatedAt: updatedAt.toISOString(),

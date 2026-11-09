@@ -1,4 +1,5 @@
 import {
+  InMemoryChannelHandleHistoryRepository,
   InMemoryChannelRepository,
   InMemoryEventRepository,
   InMemoryOutboxRepository,
@@ -48,7 +49,7 @@ describe('SubscriptionService', () => {
       renditionsRepo: new InMemoryRenditionRepository(),
       stepsRepo: new InMemoryStepRepository(),
     });
-    channels = new InMemoryChannelRepository(videos);
+    channels = new InMemoryChannelRepository(videos, new InMemoryChannelHandleHistoryRepository());
     subscriptions = new InMemorySubscriptionRepository({
       channelsRepo: channels,
       videosRepo: videos,

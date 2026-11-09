@@ -1,12 +1,21 @@
 import type { OwnedPlaylistView, PlaylistView } from '@vp/api-contracts';
 import type { PlaylistRepositoryPort, VideoRepository } from '@vp/core/repositories';
-import type { Playlist, PlaylistPatch, PlaylistReorder, PlaylistVisibility } from '@vp/domain';
+import {
+  type Playlist,
+  type PlaylistKind,
+  type PlaylistPatch,
+  type PlaylistReorder,
+  type PlaylistVisibility,
+  nextEpisode,
+  percentWatched,
+} from '@vp/domain';
 import {
   type CreatePlaylistFailure,
   type DeletePlaylistFailure,
   type ManagePlaylistFailure,
   type PlaylistNotFound,
   type ReorderPlaylistFailure,
+  type SeriesVideoNotOwned,
   type UpdatePlaylistFailure,
   type VideoNotFound,
   decidePlaylistCreate,
@@ -14,6 +23,7 @@ import {
   decidePlaylistItemsChange,
   decidePlaylistReorder,
   decidePlaylistUpdate,
+  decideSeriesMembership,
   decideVideoRead,
   playlistNotFound,
   publicReadFailure,
@@ -39,12 +49,17 @@ export interface PlaylistServiceDeps {
 type ReadPlaylistFailure = PlaylistNotFound | DatabaseUnavailable;
 type CreatePlaylistServiceFailure = CreatePlaylistFailure | ReadPlaylistFailure;
 type ItemsFailure = ManagePlaylistFailure | DatabaseUnavailable;
-type AddItemFailure = ItemsFailure | ReturnType<typeof publicReadFailure> | VideoNotFound;
+type AddItemFailure =
+  | ItemsFailure
+  | ReturnType<typeof publicReadFailure>
+  | VideoNotFound
+  | SeriesVideoNotOwned;
 
 interface NewPlaylistBody {
   title: string;
   description?: string;
   visibility?: PlaylistVisibility;
+  kind?: PlaylistKind;
 }
 
 /**
@@ -91,12 +106,17 @@ export class PlaylistService {
     actor: UserContext,
     playlistId: string,
     patch: PlaylistPatch
-  ): Promise<Result<PlaylistView, UpdatePlaylistFailure | DatabaseUnavailable>> {
+  ): Promise<
+    Result<PlaylistView, UpdatePlaylistFailure | SeriesVideoNotOwned | DatabaseUnavailable>
+  > {
     const playlist = await this.deps.playlists.findById(playlistId);
     if (isErr(playlist)) return playlist;
 
     const decided = decidePlaylistUpdate({ actor, playlist: playlist.value, playlistId, patch });
     if (isErr(decided)) return decided;
+
+    const owned = await this.checkSeriesConversion(actor, playlist.value, decided.value);
+    if (isErr(owned)) return owned;
 
     const updated = await this.deps.playlists.update(playlistId, decided.value);
     if (isErr(updated)) return updated;
@@ -130,6 +150,9 @@ export class PlaylistService {
     if (isErr(video)) return video;
     const readable = decideVideoRead({ viewer: actor, video: video.value, videoId });
     if (isErr(readable)) return err(publicReadFailure(readable.error));
+
+    const member = decideSeriesMembership(permitted.value, readable.value);
+    if (isErr(member)) return member;
 
     const added = await this.deps.playlists.addItem(playlistId, { id: uuidv7(), videoId });
     if (isErr(added)) return added;
@@ -184,6 +207,23 @@ export class PlaylistService {
     return decidePlaylistItemsChange({ actor, playlist: playlist.value, playlistId });
   }
 
+  /** A playlist becomes a series only when every video it holds is the owner's own. */
+  private async checkSeriesConversion(
+    actor: UserContext,
+    playlist: Playlist | null,
+    patch: PlaylistPatch
+  ): Promise<Result<void, SeriesVideoNotOwned | DatabaseUnavailable>> {
+    if (!playlist || patch.kind !== 'series' || playlist.kind === 'series') return ok();
+
+    const held = await this.deps.playlists.findDetail(playlist.id, actor);
+    if (isErr(held)) return held;
+    for (const { video } of held.value?.items ?? []) {
+      const member = decideSeriesMembership({ ...playlist, kind: 'series' }, video);
+      if (isErr(member)) return member;
+    }
+    return ok();
+  }
+
   private async detail(
     viewer: UserContext | null,
     playlistId: string
@@ -197,9 +237,44 @@ export class PlaylistService {
       viewer,
       view.items.map((item) => item.video)
     );
-    return ok({
-      ...view,
-      items: view.items.map((item, index) => ({ ...item, video: videos[index] ?? item.video })),
-    });
+    const items = view.items.map((item, index) => ({
+      ...item,
+      video: videos[index] ?? item.video,
+    }));
+    return ok(
+      view.kind === 'series'
+        ? { ...view, ...seriesProgress(view.items.length, items, viewer) }
+        : { ...view, items }
+    );
   }
+}
+
+type PlaylistItems = PlaylistView['items'];
+
+/** A series reads like a list of episodes: numbered for everyone, with progress and "Continue" for a signed-in viewer. */
+function seriesProgress(
+  count: number,
+  items: PlaylistItems,
+  viewer: UserContext | null
+): Pick<PlaylistView, 'items' | 'nextEpisodeVideoId'> {
+  const episodes = items.map((item) => {
+    const watched = item.video.viewer;
+    return {
+      ...item,
+      episode: item.position + 1,
+      progress: watched ? percentWatched(watched.progressSeconds, item.video.durationMs) : null,
+    };
+  });
+  if (!viewer || count === 0) return { items: episodes, nextEpisodeVideoId: null };
+
+  return {
+    items: episodes,
+    nextEpisodeVideoId: nextEpisode(
+      episodes.map(({ videoId, progress, video }) => ({
+        videoId,
+        percent: progress,
+        watchedAt: video.viewer ? new Date(video.viewer.watchedAt) : null,
+      }))
+    ),
+  };
 }

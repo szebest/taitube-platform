@@ -12,6 +12,8 @@ import {
   TEST_PUBLIC_BUCKET,
 } from './service-deps';
 
+const LOCALES = ['en'];
+
 describe('ChannelService', () => {
   let repositories: InMemoryRepositories;
   let channelService: ChannelService;
@@ -175,16 +177,16 @@ describe('ChannelService', () => {
       const cleared = expectOk(await update({ links: [] }));
 
       expect(stored.links).toEqual([
-        { label: 'Shop', url: 'https://shop.example.com' },
-        { label: 'Blog', url: 'https://blog.example.com' },
+        { label: 'Shop', url: 'https://shop.example.com', platform: 'website' },
+        { label: 'Blog', url: 'https://blog.example.com', platform: 'website' },
       ]);
       expect(cleared.links).toEqual([]);
     });
 
     it.each([
       {
-        name: 'a sixth link',
-        links: Array.from({ length: 6 }, (_, i) => ({ label: `L${i}`, url: `https://e.com/${i}` })),
+        name: 'a ninth link',
+        links: Array.from({ length: 9 }, (_, i) => ({ label: `L${i}`, url: `https://e.com/${i}` })),
       },
       { name: 'a non-https link', links: [{ label: 'Site', url: 'http://example.com' }] },
     ])('refuses $name and leaves the stored links alone', async ({ links }) => {
@@ -240,7 +242,7 @@ describe('ChannelService', () => {
       { name: 'handle', idOrHandle: '@creator' },
       { name: 'UUID', idOrHandle: CHANNEL_ID },
     ])('finds a public channel by $name', async ({ idOrHandle }) => {
-      const channel = expectOk(await channelService.getPublicChannel(idOrHandle));
+      const channel = expectOk(await channelService.getPublicChannel(idOrHandle, LOCALES));
 
       expect(channel.id).toBe(CHANNEL_ID);
       expect(channel.handle).toBe('creator');
@@ -269,17 +271,17 @@ describe('ChannelService', () => {
         viewsCount: 90,
       });
 
-      const channel = expectOk(await channelService.getPublicChannel('@creator'));
+      const channel = expectOk(await channelService.getPublicChannel('@creator', LOCALES));
 
       expect(channel).toMatchObject({
-        links: [{ label: 'Shop', url: 'https://shop.example.com' }],
+        links: [{ label: 'Shop', url: 'https://shop.example.com', platform: 'website' }],
         videoCount: 1,
         totalViews: 12,
       });
     });
 
     it('reports CHANNEL_NOT_FOUND for a non-existent channel', async () => {
-      const failure = expectErr(await channelService.getPublicChannel('nonexistent'));
+      const failure = expectErr(await channelService.getPublicChannel('nonexistent', LOCALES));
 
       expect(failure.code).toBe(ErrorCodes.CHANNEL_NOT_FOUND);
     });
