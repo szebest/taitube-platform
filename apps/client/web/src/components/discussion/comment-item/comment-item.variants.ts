@@ -15,7 +15,7 @@ export const commentItemStyles = tv({
     author: 'text-label text-fg',
     time: 'text-caption text-fg-muted no-underline hover:underline focus-ring rounded-xs',
     edited: 'text-caption text-fg-muted',
-    body: 'col-start-2 m-0 max-w-reading-max text-body break-words whitespace-pre-line [&_a]:text-accent-ink [&_a]:underline',
+    body: 'col-start-2 m-0 max-w-reading-max text-body select-text break-words whitespace-pre-line [&_a]:text-accent-ink [&_a]:underline',
     clamp: 'line-clamp-6',
     gone: 'col-start-2 m-0 text-body text-fg-muted italic',
     actions: 'col-start-2 -ms-inline flex flex-wrap items-center gap-1',

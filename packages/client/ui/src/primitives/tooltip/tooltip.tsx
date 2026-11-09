@@ -50,7 +50,7 @@ export function TooltipContent({
         sideOffset={sideOffset}
         collisionPadding={collisionPadding}
         className={cn(
-          'z-tooltip flex max-w-[min(20rem,var(--radix-tooltip-content-available-width))] origin-(--radix-tooltip-content-transform-origin) items-center gap-inline rounded-sm bg-fg px-2 py-1 font-sans text-caption font-(weight:--type-label-weight) text-balance wrap-break-word text-bg shadow-2 select-none motion-enter [&_[data-slot=kbd]]:border-bg/40 [&_[data-slot=kbd]]:bg-transparent [&_[data-slot=kbd]]:text-bg',
+          'z-tooltip flex max-w-[min(20rem,var(--radix-tooltip-content-available-width))] origin-(--radix-tooltip-content-transform-origin) items-center gap-inline rounded-sm bg-fg px-2 py-1 font-sans text-caption font-(weight:--type-label-weight) text-balance wrap-break-word text-bg shadow-2 motion-enter [&_[data-slot=kbd]]:border-bg/40 [&_[data-slot=kbd]]:bg-transparent [&_[data-slot=kbd]]:text-bg',
           className
         )}
         {...props}

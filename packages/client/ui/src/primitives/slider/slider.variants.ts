@@ -3,7 +3,7 @@ import type { SliderSize, SliderTone } from './types';
 
 export const sliderStyles = tv({
   slots: {
-    root: 'relative flex touch-none items-center select-none data-[orientation=horizontal]:h-icon-md data-[orientation=horizontal]:w-full data-[orientation=vertical]:min-h-32 data-[orientation=vertical]:w-icon-md data-[orientation=vertical]:flex-col data-disabled:opacity-60',
+    root: 'relative flex touch-none items-center data-[orientation=horizontal]:h-icon-md data-[orientation=horizontal]:w-full data-[orientation=vertical]:min-h-32 data-[orientation=vertical]:w-icon-md data-[orientation=vertical]:flex-col data-disabled:opacity-60',
     track:
       'relative grow overflow-hidden rounded-chip bg-tint-strong data-[orientation=vertical]:h-full',
     range:

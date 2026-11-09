@@ -202,6 +202,39 @@ html {
   body:has([data-obs-overlay]) {
     background: transparent;
   }
+
+  /* Chrome is never selected by a drag or a double click: controls, tab and menu roles, key hints, badges,
+     thumbnails, avatars and anything painted as clickable. Content (titles, descriptions, comments, chat,
+     table cells, hints, errors) stays selectable; `select-text` brings it back inside a chrome ancestor. */
+  button,
+  summary,
+  kbd,
+  nav a,
+  [role="button"],
+  [role="tab"],
+  [role="menuitem"],
+  [role="menuitemcheckbox"],
+  [role="menuitemradio"],
+  [role="option"],
+  [role="switch"],
+  [role="checkbox"],
+  [role="radio"],
+  [role="slider"],
+  a[data-slot="card"],
+  [data-slot="avatar"],
+  [data-slot="badge"],
+  [data-slot="chip"],
+  [data-slot="chip-group-item"],
+  [data-slot="kbd"],
+  [data-slot="label"],
+  [data-slot="tooltip-content"],
+  [data-slot="video-thumbnail"],
+  [data-slot="page-header-tabs"],
+  .cursor-pointer,
+  .touch-none {
+    -webkit-user-select: none;
+    user-select: none;
+  }
 }
 
 [data-theme-switching] *,

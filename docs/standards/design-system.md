@@ -88,6 +88,8 @@ Each row has a fixture proving it fires; the list is [ARCHITECTURE.md section 6]
 - Token values are declared only under `ui/src/tokens/` and `ui/src/themes/`, and only the registry imports them.
 - No raw `z-<n>`, `z-[<n>]`, `-z-<n>`, `zIndex` or `z-index`: a layer is a role of `scale.z`
   ([foundations/shape-elevation.md](../design/foundations/shape-elevation.md#layering)).
+- Chrome is never selectable and content always is, by one `user-select` rule in `base.css`; see
+  [Selectable text](#selectable-text).
 - No stylesheet outside `@vp/ui`'s styles, no CSS module and no SCSS.
 - Every component folder has its component, index, story and jsdom spec.
 - `@vp/components` exports are each imported by both apps.
@@ -100,6 +102,16 @@ of its own. `base.css` holds the one rule, `html { scrollbar-gutter: stable }`, 
 works around the lock: overriding that margin moves the content by the scrollbar's width. `layout-stability.test.ts`
 in each app's `e2e/` opens every locking primitive over a page with a 15 px classic scrollbar and holds the content's
 box and `scrollY` where they were, open and closed.
+
+## Selectable text
+
+One `@layer base` rule in `base.css` sets `user-select: none` on every control (`button`, `summary`, `kbd`, nav
+links, the ARIA roles tab, menuitem, option, switch, checkbox, radio, slider), on the chrome slots avatar, badge,
+chip, kbd, label, tooltip and video thumbnail, and on anything painted `cursor-pointer` or `touch-none`. A primitive
+or component never writes `select-none`. Content (titles, descriptions, comments, chat, table cells, hints, errors)
+is selectable by default; where it sits inside a chrome ancestor it opts back in with `select-text`. A new control
+needs no line of its own if it paints `cursor-pointer`; a new chrome slot is added to the rule's list.
+`user-select.test.ts` holds that and `e2e/user-select.test.ts` reads the computed value in the browser.
 
 ## Motion
 

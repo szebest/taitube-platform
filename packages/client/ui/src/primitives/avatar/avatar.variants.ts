@@ -3,7 +3,7 @@ import type { AvatarShape, AvatarSize, AvatarTone } from './types';
 
 export const avatarStyles = tv({
   slots: {
-    root: 'relative inline-flex shrink-0 bg-tint-strong font-sans text-fg select-none',
+    root: 'relative inline-flex shrink-0 bg-tint-strong font-sans text-fg',
     image: 'size-full rounded-[inherit] object-cover',
     fallback: 'flex size-full items-center justify-center rounded-[inherit]',
   },

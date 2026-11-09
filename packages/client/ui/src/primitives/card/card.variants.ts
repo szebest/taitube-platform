@@ -5,8 +5,8 @@ export const cardStyles = tv({
   slots: {
     root: 'flex flex-col rounded-card font-sans text-fg no-underline transition-shadow duration-slow ease-settle motion-reduce:transition-none [a&,button&]:cursor-pointer [a&,button&]:text-start [a&,button&]:focus-ring [a&,button&]:hover:shadow-2',
     header: 'grid grid-cols-[1fr_auto] items-start gap-x-stack',
-    title: 'col-start-1 m-0 text-title',
-    description: 'col-start-1 m-0 text-body-sm text-fg-muted',
+    title: 'col-start-1 m-0 text-title select-text',
+    description: 'col-start-1 m-0 text-body-sm text-fg-muted select-text',
     action: 'col-start-2 row-span-2 row-start-1 self-center',
     body: '',
     footer: 'flex items-center justify-end gap-inline',

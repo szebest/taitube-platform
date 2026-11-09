@@ -26,7 +26,7 @@ const FILL_TONES = {
 } satisfies Record<ButtonFill, Record<ButtonTone, string>>;
 
 export const buttonStyles = tv({
-  base: 'group/button relative inline-flex shrink-0 cursor-pointer items-center justify-center gap-inline border-0 font-sans text-label whitespace-nowrap no-underline transition duration-fast ease-standard select-none touch-target focus-ring active:scale-97 motion-reduce:transition-none motion-reduce:active:scale-100 disabled:cursor-not-allowed disabled:bg-tint disabled:text-fg-subtle disabled:active:scale-100 aria-disabled:cursor-not-allowed aria-disabled:bg-tint aria-disabled:text-fg-subtle aria-busy:cursor-progress aria-pressed:bg-accent-soft aria-pressed:text-accent-ink [&_svg]:pointer-events-none [&_svg]:shrink-0',
+  base: 'group/button relative inline-flex shrink-0 cursor-pointer items-center justify-center gap-inline border-0 font-sans text-label whitespace-nowrap no-underline transition duration-fast ease-standard touch-target focus-ring active:scale-97 motion-reduce:transition-none motion-reduce:active:scale-100 disabled:cursor-not-allowed disabled:bg-tint disabled:text-fg-subtle disabled:active:scale-100 aria-disabled:cursor-not-allowed aria-disabled:bg-tint aria-disabled:text-fg-subtle aria-busy:cursor-progress aria-pressed:bg-accent-soft aria-pressed:text-accent-ink [&_svg]:pointer-events-none [&_svg]:shrink-0',
   variants: {
     variant: {
       solid: '',
