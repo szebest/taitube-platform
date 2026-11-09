@@ -9,6 +9,10 @@ describe('packages/env-schema: inProcessAppConfig', () => {
     });
   });
 
+  it('gives an in-process app a guest salt', () => {
+    expect(inProcessAppConfig().watchParties.guestSalt).toBeTruthy();
+  });
+
   it('merges a nested override without dropping its siblings', () => {
     const config = inProcessAppConfig({
       buckets: { raw: 'vp-raw' },

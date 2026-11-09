@@ -6,6 +6,7 @@ import { bullBoardQueues } from '../bullmq/bull-board-queues';
 import { BullMqFlowProducer } from '../bullmq/bullmq-flow-producer';
 import { BullMqJobQueue } from '../bullmq/bullmq-job-queue';
 import { redisConnectionOptions } from '../bullmq/connection';
+import { ScryptPasswordHasher } from '../crypto/scrypt-password-hasher';
 import { MediaMtxLiveGateway } from '../mediamtx/mediamtx-live-gateway';
 import { MeteredMultipartStorage } from '../metered/metered-multipart-storage';
 import { MeteredStorageClient } from '../metered/metered-storage-client';
@@ -14,9 +15,12 @@ import { PostgresRepositories } from '../postgres/repositories/postgres-reposito
 import { RedisCacheClient } from '../redis/redis-cache-client';
 import { RedisLiveChatGateAdapter } from '../redis/redis-live-chat-gate.adapter';
 import { RedisLivePresenceAdapter } from '../redis/redis-live-presence.adapter';
+import { RedisPartyGuestSessionsAdapter } from '../redis/redis-party-guest-sessions.adapter';
 import { RedisSearchSuggestionIndexAdapter } from '../redis/redis-search-suggestion-index.adapter';
 import { RedisSubscriptionCacheAdapter } from '../redis/redis-subscription-cache.adapter';
 import { RedisViewBufferAdapter } from '../redis/redis-view-buffer.adapter';
+import { RedisWatchPartyGateAdapter } from '../redis/redis-watch-party-gate.adapter';
+import { RedisWatchPartyPresenceAdapter } from '../redis/redis-watch-party-presence.adapter';
 import { FallbackViewBuffer } from '../resilient/fallback-view-buffer';
 import { S3MultipartStorage } from '../s3/s3-multipart-storage';
 import { S3StorageClient } from '../s3/s3-storage-client';
@@ -164,5 +168,26 @@ export function registerFamily(c: Container): void {
           ttlSeconds: Math.ceil((2 * config.live.chat.presenceWindowMs) / 1000),
         })
     )
+    .provide(
+      Adapters.WatchPartyGate,
+      (c) =>
+        new RedisWatchPartyGateAdapter(
+          c.get(Redis).getRedis(),
+          config.watchParties.presence.keyTtlSeconds
+        )
+    )
+    .provide(
+      Adapters.WatchPartyPresence,
+      (c) =>
+        new RedisWatchPartyPresenceAdapter({
+          redis: c.get(Redis).getRedis(),
+          ttlSeconds: config.watchParties.presence.keyTtlSeconds,
+        })
+    )
+    .provide(
+      Adapters.PartyGuestSessions,
+      (c) => new RedisPartyGuestSessionsAdapter(c.get(Redis).getRedis())
+    )
+    .provide(Adapters.PasswordHasher, () => new ScryptPasswordHasher(config.watchParties.scrypt))
     .provide(Adapters.BoardQueues, () => bullBoardQueues);
 }

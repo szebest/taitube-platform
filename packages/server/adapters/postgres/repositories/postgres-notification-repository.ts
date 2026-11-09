@@ -57,6 +57,9 @@ export class PostgresNotificationRepository implements NotificationRepositoryPor
                   eq(n.groupKey, input.groupKey),
                   input.videoId ? eq(n.videoId, input.videoId) : isNull(n.videoId),
                   input.commentId ? eq(n.commentId, input.commentId) : isNull(n.commentId),
+                  input.payload.party
+                    ? sql`${n.payload} -> 'party' ->> 'inviteId' = ${input.payload.party.inviteId}`
+                    : undefined,
                   gt(n.createdAt, windowStart)
                 )
               )
@@ -198,6 +201,7 @@ export class PostgresNotificationRepository implements NotificationRepositoryPor
         actorChannelId: input.actorChannelId,
         videoId: input.videoId,
         commentId: input.commentId,
+        watchPartyId: input.watchPartyId ?? null,
         groupKey: input.groupKey,
         payload: { ...input.payload, count: 1 },
         createdAt: now,
@@ -222,6 +226,7 @@ export class PostgresNotificationRepository implements NotificationRepositoryPor
         actorChannelId: folded.actorChannelId,
         videoId: folded.videoId,
         commentId: folded.commentId,
+        watchPartyId: folded.watchPartyId,
         payload: folded.payload,
         createdAt: folded.createdAt,
       })

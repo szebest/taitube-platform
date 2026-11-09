@@ -1,39 +1,51 @@
-import type { LiveChatRepositoryPort } from '@vp/core/repositories';
-import type { LiveChatMessage } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { isErr, map, type Result } from '@vp/result';
 
-type LiveChatResume = 'fresh' | 'replayed' | 'expired';
+type ChatResume = 'fresh' | 'replayed' | 'expired';
 
-export interface LiveChatBacklog {
-  resume: LiveChatResume;
+export interface ChatBacklog<M> {
+  resume: ChatResume;
   /** Lines a replayed client may still show that a moderator removed while it was away. */
   removed: string[];
-  lines: LiveChatMessage[];
+  lines: M[];
+}
+
+/** A stream's chat or a room's: lines after a cursor, and the ones removed since it. */
+interface ChatLines<M> {
+  listAfter(
+    id: string,
+    after: string | null,
+    limit: number
+  ): Promise<Result<M[], DatabaseUnavailable>>;
+  listRemovedSince(
+    id: string,
+    after: string,
+    limit: number
+  ): Promise<Result<string[], DatabaseUnavailable>>;
 }
 
 /**
  * What a joining socket is sent first: every line after its cursor while there are at most `limit`,
  * else, as with no cursor, the latest `limit`.
  */
-export async function readLiveChatBacklog(
-  liveChat: Pick<LiveChatRepositoryPort, 'listAfter' | 'listRemovedSince'>,
-  liveStreamId: string,
+export async function readChatBacklog<M>(
+  source: ChatLines<M>,
+  id: string,
   after: string | null,
   limit: number
-): Promise<Result<LiveChatBacklog, DatabaseUnavailable>> {
+): Promise<Result<ChatBacklog<M>, DatabaseUnavailable>> {
   const latest = async (resume: 'fresh' | 'expired') =>
-    map(await liveChat.listAfter(liveStreamId, null, limit), (lines) => ({
+    map(await source.listAfter(id, null, limit), (lines) => ({
       resume,
       removed: [],
       lines,
     }));
   if (after === null) return latest('fresh');
 
-  const missed = await liveChat.listAfter(liveStreamId, after, limit + 1);
+  const missed = await source.listAfter(id, after, limit + 1);
   if (isErr(missed)) return missed;
   if (missed.value.length > limit) return latest('expired');
-  return map(await liveChat.listRemovedSince(liveStreamId, after, limit), (removed) => ({
+  return map(await source.listRemovedSince(id, after, limit), (removed) => ({
     resume: 'replayed' as const,
     removed,
     lines: missed.value,

@@ -25,6 +25,8 @@ function merged<T>(base: T, overrides: unknown): T {
   return result as T;
 }
 
+const IN_PROCESS_GUEST_SALT = 'in-process-guest-salt';
+
 /**
  * What an in-process app runs on: the in-memory family over the schema defaults, with any
  * overrides merged in `AppConfig`'s own shape. Port 0 lets the OS pick, so two in-process apps
@@ -43,5 +45,13 @@ export function inProcessAppConfig(overrides: AppConfigOverrides = {}): AppConfi
     })
   );
 
-  return merged({ ...base, cdn: cdn === undefined ? base.cdn : asCdnBase(cdn) }, rest);
+  const watchParties = {
+    ...base.watchParties,
+    guestSalt: base.watchParties.guestSalt ?? IN_PROCESS_GUEST_SALT,
+  };
+
+  return merged(
+    { ...base, watchParties, cdn: cdn === undefined ? base.cdn : asCdnBase(cdn) },
+    rest
+  );
 }

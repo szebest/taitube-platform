@@ -41,7 +41,14 @@ export type UserEvent =
       payload: { videoId: string; track: { id: string; language: string; kind: CaptionKind } };
     }
   | { type: 'captions.failed'; payload: { videoId: string; captionId: string; reason: string } }
-  | { type: 'live.started'; payload: LiveStartedPayload };
+  | { type: 'live.started'; payload: LiveStartedPayload }
+  | { type: 'party.controls.updated'; payload: PartyControlsUpdatedPayload };
+
+/** The target and scope of a personal control that changed; `roomId` is `null` for everywhere. */
+interface PartyControlsUpdatedPayload {
+  targetKey: string;
+  roomId: string | null;
+}
 
 /** A channel the person subscribes to went live; `startedAt` is ISO 8601. */
 export interface LiveStartedPayload {
@@ -101,4 +108,8 @@ export function captionsFailed(videoId: string, captionId: string, reason: strin
 
 export function liveStarted(payload: LiveStartedPayload): UserEvent {
   return { type: 'live.started', payload };
+}
+
+export function partyControlsUpdated(targetKey: string, roomId: string | null): UserEvent {
+  return { type: 'party.controls.updated', payload: { targetKey, roomId } };
 }

@@ -16,7 +16,9 @@ Instructions for any coding agent working on `@vp/db`.
   `src/library-schema.ts` for `playlists`, `playlist_items` and `watch_history`, and
   `src/preferences-schema.ts` for `user_preferences`, whose `jsonb` sections are typed by `@vp/domain/settings`, and
   `src/user-events-schema.ts` for `user_events`, `src/search-history-schema.ts` for `search_history`, `src/recommendation-feedback-schema.ts` for `recommendation_feedback`, `src/clips-schema.ts` for `clips`, `src/picks-schema.ts` for `picks` (its no-overlap exclusion constraint exists only in `0026_picks.sql`, like the search vectors), `src/channel-featured-schema.ts` for `channel_featured_videos`, `src/channel-team-schema.ts` for `channel_members`, `channel_invites` and the append-only `channel_audit_log` (roles and statuses CHECKed against `@vp/domain`, audit actions left open), and `src/captions-schema.ts` for `video_captions` and
-  `video_transcript_cues`; `drizzle.config.ts` reads them all). The cue `text_vector` is generated in
+  `video_transcript_cues`, and `src/watch-parties-schema.ts` (rooms, seats, bans, roles) with
+  `src/watch-party-activity-schema.ts` (invites, links, queue, chat, personal controls, interest, reports),
+  whose room `search_vector` and its GIN and trigram indexes exist only in `0034_watch_parties.sql`; `drizzle.config.ts` reads them all). The cue `text_vector` is generated in
   `0022_captions.sql` like the search vectors, and reached through `transcriptVector`. `schema.ts` sits near the 10 KB ceiling, so a new table goes in a module of its own.
   `src/search-schema.ts` declares no table: the generated `search_vector` columns and the GIN and trigram
   indexes exist only in `0014_search_vectors.sql` (a custom migration), so no `select()` carries a vector,

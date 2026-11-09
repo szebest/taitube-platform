@@ -36,6 +36,16 @@ import type { InMemoryVideoRepository } from './in-memory-video-repository';
 import type { InMemoryVideoStudioRepository } from './in-memory-video-studio-repository';
 import type { InMemoryVideoViewRepository } from './in-memory-video-view-repository';
 import type { InMemoryWatchHistoryRepository } from './in-memory-watch-history-repository';
+import { InMemoryWatchPartyHousekeepingRepository } from './in-memory-watch-party-housekeeping-repository';
+import { InMemoryWatchPartyInviteLinkRepository } from './in-memory-watch-party-invite-link-repository';
+import { InMemoryWatchPartyInviteRepository } from './in-memory-watch-party-invite-repository';
+import { InMemoryWatchPartyMemberRepository } from './in-memory-watch-party-member-repository';
+import { InMemoryWatchPartyMessageRepository } from './in-memory-watch-party-message-repository';
+import { InMemoryWatchPartyPersonalControlRepository } from './in-memory-watch-party-personal-control-repository';
+import { InMemoryWatchPartyQueueRepository } from './in-memory-watch-party-queue-repository';
+import { InMemoryWatchPartyRoleRepository } from './in-memory-watch-party-role-repository';
+import { InMemoryWatchPartyRoomRepository } from './in-memory-watch-party-room-repository';
+import { InMemoryWatchPartyStore } from './in-memory-watch-party-store';
 import type { InMemoryWebhookRepository } from './in-memory-webhook-repository';
 
 export class InMemoryRepositories implements Repositories {
@@ -75,6 +85,16 @@ export class InMemoryRepositories implements Repositories {
   readonly webhooks: InMemoryWebhookRepository;
   readonly liveStreams: InMemoryLiveStreamRepository;
   readonly liveChat: InMemoryLiveChatRepository;
+  readonly watchPartyRooms: InMemoryWatchPartyRoomRepository;
+  readonly watchPartyRoles: InMemoryWatchPartyRoleRepository;
+  readonly watchPartyMembers: InMemoryWatchPartyMemberRepository;
+  readonly watchPartyQueue: InMemoryWatchPartyQueueRepository;
+  readonly watchPartyMessages: InMemoryWatchPartyMessageRepository;
+  readonly watchPartyInvites: InMemoryWatchPartyInviteRepository;
+  readonly watchPartyInviteLinks: InMemoryWatchPartyInviteLinkRepository;
+  readonly watchPartyControls: InMemoryWatchPartyPersonalControlRepository;
+  readonly watchPartyHousekeeping: InMemoryWatchPartyHousekeepingRepository;
+  private readonly watchParties = new InMemoryWatchPartyStore();
 
   constructor() {
     const c = graph();
@@ -114,6 +134,18 @@ export class InMemoryRepositories implements Repositories {
     this.webhooks = c.get(Repo.webhooks);
     this.liveStreams = c.get(Repo.liveStreams);
     this.liveChat = new InMemoryLiveChatRepository(this.channels);
+    this.watchPartyRooms = new InMemoryWatchPartyRoomRepository(this.watchParties);
+    this.watchPartyRoles = new InMemoryWatchPartyRoleRepository(this.watchParties);
+    this.watchPartyMembers = new InMemoryWatchPartyMemberRepository(this.watchParties);
+    this.watchPartyQueue = new InMemoryWatchPartyQueueRepository(this.watchParties);
+    this.watchPartyMessages = new InMemoryWatchPartyMessageRepository(this.watchParties);
+    this.watchPartyInvites = new InMemoryWatchPartyInviteRepository(this.watchParties, this.outbox);
+    this.watchPartyInviteLinks = new InMemoryWatchPartyInviteLinkRepository(this.watchParties);
+    this.watchPartyControls = new InMemoryWatchPartyPersonalControlRepository(
+      this.watchParties,
+      this.userEvents
+    );
+    this.watchPartyHousekeeping = new InMemoryWatchPartyHousekeepingRepository(this.watchParties);
   }
 
   clear(): void {
@@ -121,5 +153,6 @@ export class InMemoryRepositories implements Repositories {
       this[name].clear();
     }
     this.liveChat.clear();
+    this.watchParties.clear();
   }
 }

@@ -1,8 +1,5 @@
 import type { Repositories } from '@vp/core/repositories';
-import * as schema from '@vp/db';
-import { assertNever } from '@vp/result';
-import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres, { type Sql } from 'postgres';
+import type { Sql } from 'postgres';
 import { PostgresCaptionRepository } from './postgres-caption-repository';
 import { PostgresCategoryRepository } from './postgres-category-repository';
 import { PostgresChannelAuditRepository } from './postgres-channel-audit-repository';
@@ -13,6 +10,7 @@ import { PostgresChannelRepository } from './postgres-channel-repository';
 import { PostgresClipRepository } from './postgres-clip-repository';
 import { PostgresCommentReportRepository } from './postgres-comment-report-repository';
 import { PostgresCommentRepository } from './postgres-comment-repository';
+import { connectPostgres, type PostgresRepositoriesConfig } from './postgres-connection';
 import { PostgresDlqRepository } from './postgres-dlq-repository';
 import { PostgresEventRepository } from './postgres-event-repository';
 import { PostgresLiveChatRepository } from './postgres-live-chat-repository';
@@ -38,14 +36,16 @@ import { PostgresVideoRepository } from './postgres-video-repository';
 import { PostgresVideoStudioRepository } from './postgres-video-studio-repository';
 import { PostgresVideoViewRepository } from './postgres-video-view-repository';
 import { PostgresWatchHistoryRepository } from './postgres-watch-history-repository';
+import { PostgresWatchPartyHousekeepingRepository } from './postgres-watch-party-housekeeping-repository';
+import { PostgresWatchPartyInviteLinkRepository } from './postgres-watch-party-invite-link-repository';
+import { PostgresWatchPartyInviteRepository } from './postgres-watch-party-invite-repository';
+import { PostgresWatchPartyMemberRepository } from './postgres-watch-party-member-repository';
+import { PostgresWatchPartyMessageRepository } from './postgres-watch-party-message-repository';
+import { PostgresWatchPartyPersonalControlRepository } from './postgres-watch-party-personal-control-repository';
+import { PostgresWatchPartyQueueRepository } from './postgres-watch-party-queue-repository';
+import { PostgresWatchPartyRoleRepository } from './postgres-watch-party-role-repository';
+import { PostgresWatchPartyRoomRepository } from './postgres-watch-party-room-repository';
 import { PostgresWebhookRepository } from './postgres-webhook-repository';
-import type { PostgresDatabase } from './types';
-
-/** A `drizzle` handle or a `sql` pool is borrowed; a `url` opens a pool the bundle ends. */
-export type PostgresRepositoriesConfig =
-  | { type: 'drizzle'; db: PostgresDatabase }
-  | { type: 'sql'; sql: Sql }
-  | { type: 'url'; url: string; max: number };
 
 export class PostgresRepositories implements Repositories {
   readonly videos: PostgresVideoRepository;
@@ -84,11 +84,20 @@ export class PostgresRepositories implements Repositories {
   readonly webhooks: PostgresWebhookRepository;
   readonly liveStreams: PostgresLiveStreamRepository;
   readonly liveChat: PostgresLiveChatRepository;
+  readonly watchPartyRooms: PostgresWatchPartyRoomRepository;
+  readonly watchPartyRoles: PostgresWatchPartyRoleRepository;
+  readonly watchPartyMembers: PostgresWatchPartyMemberRepository;
+  readonly watchPartyQueue: PostgresWatchPartyQueueRepository;
+  readonly watchPartyMessages: PostgresWatchPartyMessageRepository;
+  readonly watchPartyInvites: PostgresWatchPartyInviteRepository;
+  readonly watchPartyInviteLinks: PostgresWatchPartyInviteLinkRepository;
+  readonly watchPartyControls: PostgresWatchPartyPersonalControlRepository;
+  readonly watchPartyHousekeeping: PostgresWatchPartyHousekeepingRepository;
 
   private readonly ownedPool: Sql | undefined;
 
   constructor(config: PostgresRepositoriesConfig) {
-    const { db, ownedPool } = PostgresRepositories.connect(config);
+    const { db, ownedPool } = connectPostgres(config);
     this.ownedPool = ownedPool;
 
     this.videos = new PostgresVideoRepository(db);
@@ -127,24 +136,15 @@ export class PostgresRepositories implements Repositories {
     this.webhooks = new PostgresWebhookRepository(db);
     this.liveStreams = new PostgresLiveStreamRepository(db);
     this.liveChat = new PostgresLiveChatRepository(db);
-  }
-
-  private static connect(config: PostgresRepositoriesConfig): {
-    db: PostgresDatabase;
-    ownedPool: Sql | undefined;
-  } {
-    switch (config.type) {
-      case 'drizzle':
-        return { db: config.db, ownedPool: undefined };
-      case 'sql':
-        return { db: drizzle(config.sql, { schema }), ownedPool: undefined };
-      case 'url': {
-        const sql = postgres(config.url, { max: config.max });
-        return { db: drizzle(sql, { schema }), ownedPool: sql };
-      }
-      default:
-        return assertNever(config, 'PostgresRepositoriesConfig');
-    }
+    this.watchPartyRooms = new PostgresWatchPartyRoomRepository(db);
+    this.watchPartyRoles = new PostgresWatchPartyRoleRepository(db);
+    this.watchPartyMembers = new PostgresWatchPartyMemberRepository(db);
+    this.watchPartyQueue = new PostgresWatchPartyQueueRepository(db);
+    this.watchPartyMessages = new PostgresWatchPartyMessageRepository(db);
+    this.watchPartyInvites = new PostgresWatchPartyInviteRepository(db);
+    this.watchPartyInviteLinks = new PostgresWatchPartyInviteLinkRepository(db);
+    this.watchPartyControls = new PostgresWatchPartyPersonalControlRepository(db);
+    this.watchPartyHousekeeping = new PostgresWatchPartyHousekeepingRepository(db);
   }
 
   async close(): Promise<void> {

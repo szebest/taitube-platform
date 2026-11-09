@@ -5,10 +5,13 @@ import { expectOk } from '@vp/testing/result';
 import { InMemoryFlowProducer } from '../../in-memory/in-memory-flow-producer';
 import { InMemoryJobQueue } from '../../in-memory/in-memory-job-queue';
 import { InMemoryMultipartStorage } from '../../in-memory/in-memory-multipart-storage';
+import { InMemoryPartyGuestSessions } from '../../in-memory/in-memory-party-guest-sessions';
 import { InMemorySearchSuggestionIndex } from '../../in-memory/in-memory-search-suggestion-index';
 import { InMemoryStorageClient } from '../../in-memory/in-memory-storage-client';
 import { InMemorySubscriptionCache } from '../../in-memory/in-memory-subscription-cache';
 import { InMemoryViewBuffer } from '../../in-memory/in-memory-view-buffer';
+import { InMemoryWatchPartyGate } from '../../in-memory/in-memory-watch-party-gate';
+import { InMemoryWatchPartyPresence } from '../../in-memory/in-memory-watch-party-presence';
 import type { MeteredMultipartStorage } from '../../metered/metered-multipart-storage';
 import type { MeteredStorageClient } from '../../metered/metered-storage-client';
 import { Adapters } from '../adapter-tokens';
@@ -42,6 +45,17 @@ describe('in-memory adapter family', () => {
 
     expect(c.get(Adapters.QueueRegistry).get('probe')).toBeInstanceOf(InMemoryJobQueue);
     expect(c.get(Adapters.FlowProducer)).toBeInstanceOf(InMemoryFlowProducer);
+  });
+
+  it('registers the watch party doubles and a hasher at the configured scrypt cost', async () => {
+    const c = family();
+
+    expect(c.get(Adapters.WatchPartyGate)).toBeInstanceOf(InMemoryWatchPartyGate);
+    expect(c.get(Adapters.WatchPartyPresence)).toBeInstanceOf(InMemoryWatchPartyPresence);
+    expect(c.get(Adapters.PartyGuestSessions)).toBeInstanceOf(InMemoryPartyGuestSessions);
+    expect(expectOk(await c.get(Adapters.PasswordHasher).hash('pw'))).toMatch(
+      /^scrypt\$131072\$8\$1\$/
+    );
   });
 
   it('closes every resource it built exactly once, in reverse construction order', async () => {

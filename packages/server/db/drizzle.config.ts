@@ -19,6 +19,8 @@ export default defineConfig({
     './src/recommendation-feedback-schema.ts',
     './src/webhooks-schema.ts',
     './src/live-schema.ts',
+    './src/watch-parties-schema.ts',
+    './src/watch-party-activity-schema.ts',
     './src/channel-team-schema.ts',
   ],
   out: './drizzle',

@@ -13,6 +13,7 @@ import { definePreferencesRules } from './rules/preferences.rules';
 import { defineRecommendationFeedbackRules } from './rules/recommendation-feedback.rules';
 import { defineUploadRules } from './rules/upload.rules';
 import { defineVideoRules } from './rules/video.rules';
+import { defineWatchPartyRules } from './rules/watch-party.rules';
 import { defineWebhookRules } from './rules/webhook.rules';
 import type { AppAbility, UserContext } from './types/index';
 
@@ -33,6 +34,7 @@ export function getUserPermissions(user: UserContext | null): AppAbility {
   defineRecommendationFeedbackRules(user, builder);
   defineWebhookRules(user, builder);
   defineLiveStreamRules(user, builder);
+  defineWatchPartyRules(user, builder);
   // Last, because a later CASL rule wins: an admin's `manage all` overrides every `cannot` above.
   defineAdminRules(user, builder);
 

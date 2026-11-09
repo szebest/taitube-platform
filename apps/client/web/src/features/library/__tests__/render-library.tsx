@@ -94,7 +94,12 @@ export function libraryApi({
   return [
     holds(
       preferencesView({
-        privacy: { historyPaused, playlistVisibility: 'private', subscriptionsVisible: false },
+        privacy: {
+          historyPaused,
+          playlistVisibility: 'private',
+          subscriptionsVisible: false,
+          showInParties: true,
+        },
       })
     ),
     asked(listWatchHistory, (info) => HttpResponse.json(pageOf(history, cursorOf(info), pageSize))),

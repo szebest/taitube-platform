@@ -6,6 +6,7 @@ import type {
 } from '@vp/core/repositories';
 import {
   foldNotification,
+  sameNotificationSubject,
   kindsOfFilter,
   type NewNotificationInput,
   NOTIFICATION_GROUP_WINDOW_MS,
@@ -139,9 +140,8 @@ export class InMemoryNotificationRepository implements NotificationRepositoryPor
   }
 
   private seenInWindow(input: NewNotificationInput, now: Date): boolean {
-    return this.inWindow(input, now).some(
-      (notification) =>
-        notification.videoId === input.videoId && notification.commentId === input.commentId
+    return this.inWindow(input, now).some((notification) =>
+      sameNotificationSubject(notification, input)
     );
   }
 
@@ -159,6 +159,7 @@ export class InMemoryNotificationRepository implements NotificationRepositoryPor
       actorChannelId: input.actorChannelId,
       videoId: input.videoId,
       commentId: input.commentId,
+      watchPartyId: input.watchPartyId ?? null,
       groupKey: input.groupKey,
       payload: { ...input.payload, count: 1 },
       readAt: null,

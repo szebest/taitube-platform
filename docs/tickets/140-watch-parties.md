@@ -89,7 +89,7 @@
 | Channels and keys | `packages/server/events/src/channels.ts`, `keys.ts` |
 | Config | `packages/server/env-schema/src/app-env.ts` (three keys), `tuning.ts` (`WATCH_PARTY`), new `watch-party-config.ts`; `.env.example` |
 | API | routes `apps/server/api/src/routes/watch-parties.ts`, `watch-party-roles.ts`, `watch-party-guests.ts`, `watch-party-socket.ts`, `watch-party-invites.ts`, `watch-party-personal-controls.ts`, `watch-party-discovery.ts`; services under `apps/server/api/src/services/watch-party/`; `composition/watch-party.module.ts` |
-| Jobs | `packages/server/job-contracts/src/notifications.ts` (two jobs); worker `apps/server/worker/src/stages/notifications/notify-party-invite.ts`, `notify-party-reminder.ts`; `stages/housekeeping/watch-party-sweep.ts` |
+| Jobs | `packages/server/job-contracts/src/notifications.ts` (two jobs); worker `apps/server/worker/src/stages/notifications/notify-party-invite.ts`, `notify-party-reminder.ts`; the sweep is in the API, `apps/server/api/src/services/watch-party/watch-party-sweep.ts` on a `Poller` |
 | Client data | new `packages/client/queries/src/watch-party-queries.ts`, `use-watch-party-socket.ts`, `watch-party-state.ts`, `use-personal-controls.ts` |
 | Web | routes `apps/client/web/src/routes/parties.index.tsx`, `parties.$roomId.tsx`, `settings/party-controls.tsx`; kit `apps/client/web/src/components/party/`; feature `apps/client/web/src/features/watch-party/` |
 | Copy | new `packages/universal/messages/src/en/party.ts` and `pl/party.ts` |
@@ -1216,7 +1216,8 @@ One stack, `feat/140-watch-parties`, three slices (`slice/140a-…` to `slice/14
 - **API**: routes through the in-memory app; the socket with two app instances over one cache for fan-out, live role
   changes and seat upgrades, owner grace with fake timers, buffering, supersede, every refusal before the upgrade; the
   per-permission enforcement table; the `partyGuest` boundary.
-- **Worker**: the invite and reminder jobs (rollback, folding, the stale reminder) and the sweep.
+- **Worker**: the invite and reminder jobs (rollback, folding, the stale reminder).
+- **API**: the sweep (idle close, owner hand-over, purge, gauges) on a `Poller`.
 - **Web**: component specs through the suite's single render helper; the socket hook against a fake socket; the drift
   driver against a fake `PlayerCommands`; the role editor's disabled states from the ability; personal controls filtering
   in the chat and roster; route specs for `/parties` search params.
@@ -1285,6 +1286,7 @@ None.
 - Decided: `qrcode` for the QR code, rendered to SVG in the browser.
 - Decided: 140 contains no Discord code; 78 issues Discord credentials and maps activity instances to rooms, 142 bridges chat;
   no voice is relayed to or from Discord.
+- Decided: the sweep runs in the API on a `Poller` in every pod, not in the worker's housekeeping stage: the owner hand-over announces `owner` and `closed` frames from `@vp/api-contracts`, which the worker does not depend on, and the presence it reads is the API's. Each write is a compare-and-set, so every pod may run it.
 - Decided: SDD gains ADR-31, "Watch parties: a server-authoritative room clock, room roles and party principals on one
   socket", recording the transport, the CAS clock, the fan-out, the capacity ceiling, the roles model and the credential
   boundary.
@@ -1292,7 +1294,7 @@ None.
 ## Definition of Done
 
 - [ ] All acceptance criteria proved with command output in the PRs.
-- [ ] `docs/SDD.md`: §5 (the tables), §6.1 (every endpoint above), §6.2 (the codes), §9.8 (the sweep), §10.4 (the two
+- [ ] `docs/SDD.md`: §5 (the tables), §6.1 (every endpoint above), §6.2 (the codes), §9.8 (a note that the sweep runs in the API), §10.4 (the two
       kinds and group keys), a new §10.7 Watch parties (socket order, clock, drift, fan-out, capacity, roles, principals,
       the roster and its privacy projection, personal controls), ADR-27's WebSocket line naming 140 instead of 78, the
       new ADR-31, §11 (the party credential and its route boundary), §13.1 metrics, §13.5 alerts, §14.2 S8, §16 the env

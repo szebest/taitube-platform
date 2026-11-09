@@ -119,8 +119,9 @@ answer with a `HeadBucket` on the raw bucket.
 - **`OutboxRepository`**: `enqueue`, `claimBatch`, `markPublished`, `recordAttempt`, `prune`, `findById`.
 - **`CategoryRepositoryPort`**, **`ChannelRepositoryPort`**, **`VideoReactionRepositoryPort`**, **`SubscriptionRepositoryPort`**: category taxonomy, channel identity, reactions with their counters, and subscriptions with the subscription feed.
 - **`LiveStreamRepositoryPort`**: `ensureIdle`, `findById`, `findByKey`, `findOpenByChannel`, `findByVideoId`, `goLive` (`IDLE -> LIVE` with its `LIVE` video, the video event and the outbox rows in one transaction), `end` (`LIVE -> ENDED`, handing the stream key to the next `IDLE` row), `update` (SDD ADR-29).
+- **`WatchPartyRoomRepositoryPort`** and its eight siblings (`WatchPartyRoleRepositoryPort`, `WatchPartyMemberRepositoryPort`, `WatchPartyQueueRepositoryPort`, `WatchPartyMessageRepositoryPort`, `WatchPartyInviteRepositoryPort`, `WatchPartyInviteLinkRepositoryPort`, `WatchPartyPersonalControlRepositoryPort`, `WatchPartyHousekeepingRepositoryPort`): rooms with the room clock's compare-and-set on `playback_version` and `roles_version`, roles and their assignments, seats and bans, the shared queue, chat lines, invites and invite links, personal controls, and the sweep's reads and purges (SDD §5.4, §10.7, ADR-31).
 - **`SearchRepositoryPort`**: `search` (one ranked, keyset-paged list over videos, channels and playlists, lexical or trigram) and `suggestChannels`.
-- **`Repositories`**: the aggregate the composition roots hand around (`videos`, `videoStudio`, `uploads`, `steps`, `renditions`, `events`, `users`, `userEvents`, `dlq`, `outbox`, `categories`, `channels`, `videoReactions`, `subscriptions`, `videoViews`, `comments`, `playlists`, `watchHistory`, `searchHistory`, `recommendationFeedback`, `rising`, `clips`, `channelFeatured`, `search`, `liveStreams`).
+- **`Repositories`**: the aggregate the composition roots hand around (`videos`, `videoStudio`, `uploads`, `steps`, `renditions`, `events`, `users`, `userEvents`, `dlq`, `outbox`, `categories`, `channels`, `videoReactions`, `subscriptions`, `videoViews`, `comments`, `playlists`, `watchHistory`, `searchHistory`, `recommendationFeedback`, `rising`, `clips`, `channelFeatured`, `search`, `liveStreams`, `watchPartyRooms`, `watchPartyRoles`, `watchPartyMembers`, `watchPartyQueue`, `watchPartyMessages`, `watchPartyInvites`, `watchPartyInviteLinks`, `watchPartyControls`, `watchPartyHousekeeping`).
 
 ### `AuthorizationPort`
 Abstracts user authorization and declarative rule evaluation. It answers the verdict; the refusal is a
@@ -128,6 +129,8 @@ rule's, through `authorize(actor, allowed, context)` in `@vp/domain-rules` (ADR-
 - `getAbility()`: returns the active `@casl/ability` instance.
 - `can(action, subject)` / `can(helper, params)`: evaluates if an action is permitted.
 - `forUser(user)`: returns a new `AuthorizationPort` instance scoped to the target user.
+
+A watch party room is authorised apart from this port: `getWatchPartyPermissions(user, viewer)` in `@vp/permissions` builds a room-scoped ability from the viewer's roles in the room (the closed registry of SDD §10.7), a guest clamped to its ceiling and a platform MODERATOR or ADMIN given the moderation extras. Every REST route and socket frame of a room asks that ability, never a user id or a role inline.
 
 ### `TokenVerifier`
 `verify(token)` answers `Result<Principal, AuthFailure>`. The JWKS adapter checks the signature, `iss`,
@@ -151,6 +154,13 @@ Key-value caching and Pub/Sub: `get`, `set`, `del`, `ping`, `publish`, `subscrib
 The ingest gateway's control plane (MediaMTX, SDD ADR-29), addressed by the path a publisher sends on:
 `isPublishing(path)` and `kick(path)`, both answering `LiveGatewayUnavailable` when it cannot be reached.
 
+### `WatchPartyGatePort`, `WatchPartyPresencePort`, `PartyGuestSessionsPort` & `PasswordHasherPort`
+The short-lived, cross-pod state of a watch party (SDD §10.7, ADR-31), each over Redis and each with an in-memory double:
+- `WatchPartyGatePort`: `issueTicket` / `redeemTicket` (the one-time socket ticket, a second redeem answers `null`), `consume` / `check` / `reset` (the per-key budgets every pod counts against) and the slow-mode, roles-version and skip-vote keys.
+- `WatchPartyPresencePort`: `admit` (capacity, one Lua script), `touch`, `leave`, `members`; a member that misses three keepalives stops counting.
+- `PartyGuestSessionsPort`: `issue`, `resolve`, `revoke` for the opaque party credential of a guest or a Discord member, read only on `partyGuest` routes (SDD §11).
+- `PasswordHasherPort`: `hash` and `verify`, scrypt through `node:crypto` (`HashingFailed` on failure).
+
 ### `JobQueue` & `FlowProducerPort`
 - `JobQueue`: `add`, `process`, `getName`, `getJobState`, `isPaused`, `pause`, `resume`, `getJobCounts`
   (over `QUEUE_JOB_STATES`), `getJobs`, `upsertJobScheduler`, `getJobSchedulers`, `close`, plus the
@@ -173,6 +183,10 @@ The ingest gateway's control plane (MediaMTX, SDD ADR-29), addressed by the path
 | `JobQueue` | `BullMqJobQueue` | `InMemoryJobQueue` |
 | `FlowProducerPort` | `BullMqFlowProducer` | `InMemoryFlowProducer` |
 | `LiveGatewayPort` | `MediaMtxLiveGateway` | `InMemoryLiveGateway` |
+| `WatchPartyGatePort` | `RedisWatchPartyGateAdapter` | `InMemoryWatchPartyGate` |
+| `WatchPartyPresencePort` | `RedisWatchPartyPresenceAdapter` | `InMemoryWatchPartyPresence` |
+| `PartyGuestSessionsPort` | `RedisPartyGuestSessionsAdapter` | `InMemoryPartyGuestSessions` |
+| `PasswordHasherPort` | `ScryptPasswordHasher` | `ScryptPasswordHasher` (no I/O, shared) |
 
 Both families wrap storage in `MeteredStorageClient` / `MeteredMultipartStorage`, and share
 `CaslAuthorizationAdapter`, the token verifier (`JwksTokenVerifier` or `DevTokenVerifier`, chosen by
@@ -430,6 +444,7 @@ fails.
 | `client-app-duplicates.test.ts` | no `.ts`, `.tsx`, `.css` or `.scss` under the `src/` of one `apps/client/*` app is byte-identical to one under another (specs, `export *` barrels and the two Start entry files `src/router.tsx` and `src/start.ts` aside); the client apps are read from their manifests, in `client-apps.ts`; the files at one path in two apps that differ by fewer than 10 lines, and share more than they differ, stay at a per-app count that only goes down | the same `export const a = 1;` planted in both apps, while the same bytes twice in one app pass; a five-line file with one line changed |
 | `shared-unions.test.ts` | AST over production source in `@vp/ui`, `@vp/components` and each `apps/client/*/src/components/`, `types.ts` aside: no member of a `*Props` interface or alias, or of a type literal written onto a parameter, spells a union of two or more string literals; a shared union is narrowed in the folder's `types.ts` | `interface ChipProps { size?: 'sm' \| 'md'; }`, `(props: { variant: 'inline' \| 'palette' })`, while `Omit<X, 'side' \| 'align'>` passes |
 | `live-role-confined.test.ts` | regex over production source of the live surfaces (web `features/live/`, `components/live/`, the `/live` routes, the Live now shelf and the player's control bar; studio `features/live/`, `components/live/` and the `/live` and overlay routes): the `live` tone sits only on a `Badge`, no `live` colour utility or `var(--live)` appears (its ink, `on-live`, may), and no red is written as a value (a hex, `rgb()`/`hsl()`/`oklch()` or a `red`/`rose` palette class), so the live badge is the one red thing on a live page | a `bg-live` ground, `var(--live)`, `tone="live"` on a `Button`, a red hex and `text-red-600`, while the live badge, a badge live only at the edge and `text-on-live` pass |
+| `party-guest-confined.test.ts` | regex over `packages/universal/api-contracts/src/`: `partyGuest: true` appears only in a `watch-party*.ts` / `watch-parties.ts` contract, so a guest's or a Discord member's party credential is read on the watch party routes alone and every other route sees an anonymous caller | `partyGuest: true` planted in `me.ts`, while the watch party contracts pass |
 | `settings-appearance-cookie.test.ts` | regex over production source under `apps/client/web/src/features/account/`: no `vp.appearance` cookie name and no call of `requestAppearancePreference`, `saveAppearancePreference` or `rewriteLegacyAppearance`, so the appearance engine stays the one reader and writer of its cookie | `readCookie('vp.appearance')` in a settings row |
 | `shared-components-used-by-both-apps.test.ts` | AST: every component `packages/client/components/src/index.ts` re-exports has at least one value export imported from `@vp/components` by the production source of every `apps/client/*` app; one app alone moves it to that app's kit | a planted `PageHeader` that only web imports, studio importing it as a type only |
 | `component-folders.test.ts` | every `@vp/ui` primitive (`primitives/<name>/`), `@vp/components` component (a folder with an `index.ts`) and app-kit component (`apps/client/*/src/components/<area>/<name>/`) holds `<name>.tsx`, `index.ts`, `__stories__/<name>.stories.tsx` (none under `components/player/`) and `__tests__/<name>.dom.test.tsx`, and beside them only kebab-case `.ts`/`.tsx` sources (`.context.ts`, `.variants.ts`, `.lazy.ts`, `types.ts`, `constants.ts`, a sibling part), `hooks/use-*.ts`, `utils/*.ts` and subcomponents under `components/<name>/` in the same shape without a story; no source sits loose in a kit; the findings still open are listed and the list only shrinks | a folder without its story and spec, a `.module.css` in one, a nested folder, a story beside its component or in a subcomponent, a hook not named `use-*`, `route-fallbacks.tsx` loose in a kit |

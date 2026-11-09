@@ -21,3 +21,4 @@ export * from './picks/index';
 export * from './webhooks/index';
 export * from './oembed/index';
 export * from './live/index';
+export * from './watch-parties/index';

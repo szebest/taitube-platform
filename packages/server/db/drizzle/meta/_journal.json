@@ -239,6 +239,13 @@
       "when": 1794003622512,
       "tag": "0033_channel_team",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1794006981420,
+      "tag": "0034_watch_parties",
+      "breakpoints": true
     }
   ]
 }
