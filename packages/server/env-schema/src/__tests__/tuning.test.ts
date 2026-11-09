@@ -30,4 +30,20 @@ describe('packages/env-schema: tuning', () => {
       tuning.UPLOAD_SESSION_TTL_SECONDS * 1000
     );
   });
+
+  it.each([
+    { name: 'a partial copy', lower: 'partialCoverage', upper: 'duplicateCoverage' },
+    { name: 'a hold', lower: 'nsfwShareThreshold', upper: 'nsfwFrameThreshold' },
+  ] as const)(
+    'sets the bar for $name below the bar for the stronger finding',
+    ({ lower, upper }) => {
+      expect(tuning.SCREENING_THRESHOLDS[lower]).toBeLessThan(tuning.SCREENING_THRESHOLDS[upper]);
+    }
+  );
+
+  it('keeps the audio index under 4000 rows for an hour of Chromaprint terms', () => {
+    const termsPerHour = 3600 * 8.07;
+
+    expect(termsPerHour / tuning.SCREENING_SAMPLING.audioIndexStride).toBeLessThan(4000);
+  });
 });

@@ -14,10 +14,10 @@ are in [package.json](package.json).
 
 - **Queue names (`QUEUES`):** `probe`, `transcode-1080p`, `transcode-720p`, `transcode-480p`, `thumbnail`,
   `package`, `notify`, `housekeeping`, `dlq`.
-- **Payloads:** `ProbeJob`, `TranscodeJob`, `ThumbnailJob`, `PackageJob`, `NotifyJob`, `HousekeepingJob`,
-  `DlqJob`. Results: `TranscodeResult` and `ThumbnailResult`, told apart by `type` in the
+- **Payloads:** `ProbeJob`, `TranscodeJob`, `ThumbnailJob`, `ScreenJob`, `PackageJob`, `NotifyJob`, `HousekeepingJob`,
+  `DlqJob`. Results: `TranscodeResult`, `ThumbnailResult` and `ScreenResult`, told apart by `type` in the
   `ChildResult` discriminated union a package job reads back from its flow children.
-- **Deterministic job ids (`ids`):** probe, thumbnail and package are `<videoId>--<stage>--g<generation>`, a
+- **Deterministic job ids (`ids`):** probe, thumbnail, screen and package are `<videoId>--<stage>--g<generation>`, a
   transcode adds the rendition (`<videoId>--transcode--720p--g1`), notify is
   `<videoId>--notify--<event>--<seq>` and a DLQ entry `<queue>--<jobId>--a<attempt>`; a replay appends
   `--r<n>` (`generateReplayJobId`).

@@ -87,6 +87,7 @@ export const RETRY_CLASS: Readonly<Record<ErrorCode, RetryClass>> = {
   [ErrorCodes.LIVE_CHAT_SUBSCRIBERS_ONLY]: 'permanent',
   [ErrorCodes.LIVE_CHAT_CLOSED]: 'permanent',
   [ErrorCodes.LIVE_CHAT_TICKET_INVALID]: 'permanent',
+  [ErrorCodes.SCREENING_REJECTED]: 'permanent',
   [ErrorCodes.CHANNEL_MEMBERSHIP_REQUIRED]: 'permanent',
   [ErrorCodes.CHANNEL_INVITE_NOT_FOUND]: 'permanent',
   [ErrorCodes.CHANNEL_INVITE_NOT_PENDING]: 'permanent',

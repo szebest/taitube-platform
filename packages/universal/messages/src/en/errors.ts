@@ -81,6 +81,9 @@ export const errors = {
   liveChatSubscribersOnly: dt('Only subscribers can chat right now.'),
   liveChatClosed: dt('Chat is closed because the stream is not live.'),
   liveChatTicketInvalid: dt('Your chat session expired. Reconnect to keep chatting.'),
+  screeningRejected: dt(
+    'A reviewer rejected this video after an automatic check held it. You can appeal the decision.'
+  ),
   channelMembershipRequired: dt('You are not on the team of this channel any more.'),
   channelInviteNotFound: dt('This invite does not exist.'),
   channelInviteNotPending: dt(

@@ -69,6 +69,7 @@ function kindOf(code: ErrorCode): ErrorStateKind {
     case ErrorCodes.COMMENT_ALREADY_REPORTED:
     case ErrorCodes.REPORT_ALREADY_RESOLVED:
     case ErrorCodes.SYSTEM_PLAYLIST_IMMUTABLE:
+    case ErrorCodes.SCREENING_REJECTED:
     case ErrorCodes.UNSUPPORTED_CODEC:
     case ErrorCodes.CORRUPT_CONTAINER:
     case ErrorCodes.DURATION_EXCEEDED:

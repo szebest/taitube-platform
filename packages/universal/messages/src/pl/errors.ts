@@ -83,6 +83,9 @@ export const errors = {
   liveChatSubscribersOnly: dt('Teraz mogą pisać na czacie tylko subskrybenci.'),
   liveChatClosed: dt('Czat jest zamknięty, bo transmisja nie trwa.'),
   liveChatTicketInvalid: dt('Sesja czatu wygasła. Połącz się ponownie, aby dalej pisać.'),
+  screeningRejected: dt(
+    'Recenzent odrzucił ten film po tym, jak zatrzymała go automatyczna kontrola. Możesz się odwołać od decyzji.'
+  ),
   channelMembershipRequired: dt('Nie należysz już do zespołu tego kanału.'),
   channelInviteNotFound: dt('To zaproszenie nie istnieje.'),
   channelInviteNotPending: dt(

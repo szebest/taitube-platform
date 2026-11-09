@@ -1,4 +1,4 @@
-import { NOTIFICATION_RETENTION_DAYS } from '@vp/domain';
+import { NOTIFICATION_RETENTION_DAYS, type ScreeningThresholds } from '@vp/domain';
 import {
   MS_PER_DAY,
   MS_PER_HOUR,
@@ -123,6 +123,42 @@ export const CAPTIONS_PROCESS = {
   presignSeconds: 2 * SECONDS_PER_HOUR,
   niceness: 19,
   leaseRenewMs: 30 * MS_PER_SECOND,
+} as const;
+
+/**
+ * What the screening judges a video against. Not environment keys: the schema is closed, and an
+ * operator does not tune a Hamming distance. Each stored result names `version`, so a change here
+ * is a new version and never rewrites a decided case.
+ */
+export const SCREENING_THRESHOLDS = {
+  version: 'v1',
+  frameMaxHamming: 3,
+  duplicateCoverage: 0.9,
+  partialCoverage: 0.3,
+  partialRunSeconds: 30,
+  audioMaxBitErrorRate: 0.35,
+  nsfwFrameThreshold: 0.85,
+  nsfwShareThreshold: 0.1,
+  blankFrameShare: 0.95,
+  blankMaxHamming: 2,
+  blankMaxLumaRange: 8,
+  spamMaxLinks: 3,
+  spamMaxTags: 30,
+  spamMaxRepeatShare: 0.5,
+  spamMaxCapsShare: 0.7,
+  spamHoldScore: 0.8,
+} as const satisfies ScreeningThresholds;
+
+/**
+ * One frame every 2 s is hashed for the duplicate check and one every 10 s, at most 120 and the first,
+ * middle and last, is classified. The audio index keeps every 8th Chromaprint term, about 3 600 rows for
+ * an hour of video at the 8 terms a second it produces.
+ */
+export const SCREENING_SAMPLING = {
+  hashIntervalSeconds: 2,
+  classifyIntervalSeconds: 10,
+  classifyMaxFrames: 120,
+  audioIndexStride: 8,
 } as const;
 
 /** `infra/k8s` liveness allows three missed beats, so this sets how fast a hung worker is restarted. */

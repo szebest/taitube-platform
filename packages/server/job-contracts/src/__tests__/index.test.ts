@@ -1,4 +1,4 @@
-import { CaptionsJob, ids, ProbeJob, QUEUES } from '../index';
+import { CaptionsJob, ChildResult, ids, ProbeJob, QUEUES, ScreenJob, ScreenResult } from '../index';
 
 describe('@vp/job-contracts smoke test', () => {
   it('builds deterministic job IDs with -- separator', () => {
@@ -7,6 +7,7 @@ describe('@vp/job-contracts smoke test', () => {
     expect(ids.transcode(videoId, '720p', 1)).toBe(`${videoId}--transcode--720p--g1`);
     expect(ids.transcodeChunk(videoId, '720p', 3, 1)).toBe(`${videoId}--transcode--720p--c3--g1`);
     expect(ids.thumbnail(videoId, 1)).toBe(`${videoId}--thumbnail--g1`);
+    expect(ids.screen(videoId, 2)).toBe(`${videoId}--screen--g2`);
     expect(ids.package(videoId, 1)).toBe(`${videoId}--package--g1`);
     expect(ids.captions(videoId, 'small-q5_1', 2)).toBe(`${videoId}--captions--small-q5_1--v2`);
     expect(ids.captionsChunk(videoId, 'small-q5_1', 2, 3)).toBe(
@@ -41,6 +42,45 @@ describe('@vp/job-contracts smoke test', () => {
       sourceKey: 'raw/11111111-1111-7111-8111-111111111111/source.mp4',
     });
     expect(parsed.generation).toBe(1);
+  });
+
+  it('validates a screen job and its result, and reads the result back as a flow child', () => {
+    const videoId = '11111111-1111-7111-8111-111111111111';
+    const job = ScreenJob.parse({
+      videoId,
+      generation: 1,
+      traceparent: '',
+      sourceKey: `raw/${videoId}/source.mp4`,
+      durationMs: 600_000,
+    });
+    const result = {
+      type: 'screen',
+      screeningId: '22222222-2222-7222-8222-222222222222',
+      outcome: 'HOLD',
+      score: 0.93,
+      reasons: ['DUPLICATE'],
+    };
+
+    expect(job.durationMs).toBe(600_000);
+    expect(ScreenResult.parse(result)).toEqual(result);
+    expect(ChildResult.parse(result)).toEqual(result);
+  });
+
+  it.each([
+    { name: 'a score above one', patch: { score: 1.2 } },
+    { name: 'an unknown reason', patch: { reasons: ['TOO_LONG'] } },
+    { name: 'an outcome that is not a verdict', patch: { outcome: 'FLAG' } },
+  ])('refuses a screen result with $name', ({ patch }) => {
+    const result = {
+      type: 'screen',
+      screeningId: '22222222-2222-7222-8222-222222222222',
+      outcome: 'PASS',
+      score: 0,
+      reasons: [],
+      ...patch,
+    };
+
+    expect(ScreenResult.safeParse(result).success).toBe(false);
   });
 
   it('includes all required queues', () => {

@@ -22,6 +22,7 @@ export * from './related';
 export * from './retention';
 export * from './rising';
 export * from './rendition';
+export * from './screening';
 export * from './search';
 export * from './search-history';
 export * from './status-vocabulary';

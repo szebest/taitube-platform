@@ -1,3 +1,4 @@
+import { SCREENING_OUTCOMES, SCREENING_REASONS } from '@vp/domain';
 import { z } from 'zod';
 import { LadderEntry, RENDITIONS, type RenditionName } from './ladder';
 
@@ -52,6 +53,12 @@ export const ThumbnailJob = Base.extend({
   durationMs: z.number().int().positive(),
 });
 export type ThumbnailJob = z.infer<typeof ThumbnailJob>;
+
+export const ScreenJob = Base.extend({
+  sourceKey: z.string(),
+  durationMs: z.number().int().positive(),
+});
+export type ScreenJob = z.infer<typeof ScreenJob>;
 
 export const PackageJob = Base.extend({
   ladder: z.array(LadderEntry).min(1),
@@ -152,8 +159,21 @@ export const ThumbnailResult = z.object({
 });
 export type ThumbnailResult = z.infer<typeof ThumbnailResult>;
 
+export const ScreenResult = z.object({
+  type: z.literal('screen'),
+  screeningId: z.uuid(),
+  outcome: z.enum(SCREENING_OUTCOMES),
+  score: z.number().min(0).max(1),
+  reasons: z.array(z.enum(SCREENING_REASONS)),
+});
+export type ScreenResult = z.infer<typeof ScreenResult>;
+
 /** What a package job reads back from its flow children, told apart by the stage that wrote it. */
-export const ChildResult = z.discriminatedUnion('type', [TranscodeResult, ThumbnailResult]);
+export const ChildResult = z.discriminatedUnion('type', [
+  TranscodeResult,
+  ThumbnailResult,
+  ScreenResult,
+]);
 export type ChildResult = z.infer<typeof ChildResult>;
 
 // Deterministic job IDs
@@ -163,6 +183,7 @@ export const ids = {
   transcodeChunk: (v: string, r: RenditionName, chunk: number, g: number) =>
     `${v}--transcode--${r}--c${chunk}--g${g}`,
   thumbnail: (v: string, g: number) => `${v}--thumbnail--g${g}`,
+  screen: (v: string, g: number) => `${v}--screen--g${g}`,
   package: (v: string, g: number) => `${v}--package--g${g}`,
   captions: (v: string, modelVersion: string, captionVersion: number) =>
     `${v}--captions--${modelVersion}--v${captionVersion}`,

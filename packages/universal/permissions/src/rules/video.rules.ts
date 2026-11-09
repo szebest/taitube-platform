@@ -1,4 +1,5 @@
 import type { AbilityBuilder } from '@casl/ability';
+import { ErrorCodes } from '@vp/errors';
 import { type AppAbility, type UserContext, isSignedInRole } from '../types/index';
 import { ownersWith } from './memberships';
 
@@ -31,6 +32,13 @@ export function defineVideoRules(
     can('update', 'Video', { ownerId: user.id });
     cannot('update', 'Video', 'visibility', { ownerId: user.id, status: 'REJECTED' });
     can('delete', 'Video', { ownerId: user.id });
+
+    can('appeal', 'Video', { ownerId: user.id, status: 'HELD' });
+    can('appeal', 'Video', {
+      ownerId: user.id,
+      status: 'REJECTED',
+      errorCode: ErrorCodes.SCREENING_REJECTED,
+    });
   }
 
   if (role === 'CREATOR' || role === 'MODERATOR') {

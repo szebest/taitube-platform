@@ -115,6 +115,7 @@ const PROBLEM_STATUS: Readonly<Record<ErrorCode, number>> = {
   [ErrorCodes.CAPTION_NOT_FOUND]: 404,
   [ErrorCodes.CAPTION_TRACK_LIMIT]: 409,
   [ErrorCodes.CAPTION_OVERWRITE_UNCONFIRMED]: 409,
+  [ErrorCodes.SCREENING_REJECTED]: 422,
 };
 
 const UNCLASSIFIED_STATUS = 422;

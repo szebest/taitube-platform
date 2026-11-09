@@ -6,6 +6,20 @@ import { studioLive } from './studio-live';
 import { studioPicks } from './studio-picks';
 import { studioTeam } from './studio-team';
 
+const VIDEO_STATUS = {
+  UPLOADING: 'Przesyłanie',
+  UPLOADED: 'Przesłano',
+  PROBING: 'Analizowanie',
+  PROCESSING: 'Przetwarzanie',
+  READY: 'Gotowe',
+  FAILED: 'Niepowodzenie',
+  REJECTED: 'Odrzucone',
+  ABANDONED: 'Porzucone',
+  DELETED: 'Usunięte',
+  LIVE: 'Na żywo',
+  HELD: 'Wstrzymane',
+} as const;
+
 export const studio = {
   title: dt('Studio twórcy'),
   backToWeb: dt('Wróć do Taitube'),
@@ -15,18 +29,7 @@ export const studio = {
   processingStatus: dt('Stan przetwarzania'),
   processing: dt('{status:enum}, zakodowano {overall:number}%', {
     enum: {
-      status: {
-        UPLOADING: 'Przesyłanie',
-        UPLOADED: 'Przesłano',
-        PROBING: 'Analizowanie',
-        PROCESSING: 'Przetwarzanie',
-        READY: 'Gotowe',
-        FAILED: 'Niepowodzenie',
-        REJECTED: 'Odrzucone',
-        ABANDONED: 'Porzucone',
-        DELETED: 'Usunięte',
-        LIVE: 'Na żywo',
-      },
+      status: VIDEO_STATUS,
     },
     number: { overall: { maximumFractionDigits: 0 } },
   }),
@@ -52,18 +55,7 @@ export const studio = {
   inspectorFailed: dt('Nie udało się wczytać szczegółów filmu.'),
   videoStatus: dt('{status:enum}', {
     enum: {
-      status: {
-        UPLOADING: 'Przesyłanie',
-        UPLOADED: 'Przesłano',
-        PROBING: 'Analizowanie',
-        PROCESSING: 'Przetwarzanie',
-        READY: 'Gotowe',
-        FAILED: 'Niepowodzenie',
-        REJECTED: 'Odrzucone',
-        ABANDONED: 'Porzucone',
-        DELETED: 'Usunięte',
-        LIVE: 'Na żywo',
-      },
+      status: VIDEO_STATUS,
     },
   }),
   videoActions: dt('Działania dla filmu {title}'),

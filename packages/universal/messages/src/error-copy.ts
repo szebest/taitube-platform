@@ -85,6 +85,7 @@ export const ERROR_COPY: Readonly<Record<ErrorCode, ArgumentFreeKey>> = {
   [ErrorCodes.LIVE_CHAT_SUBSCRIBERS_ONLY]: 'errors.liveChatSubscribersOnly',
   [ErrorCodes.LIVE_CHAT_CLOSED]: 'errors.liveChatClosed',
   [ErrorCodes.LIVE_CHAT_TICKET_INVALID]: 'errors.liveChatTicketInvalid',
+  [ErrorCodes.SCREENING_REJECTED]: 'errors.screeningRejected',
   [ErrorCodes.CHANNEL_MEMBERSHIP_REQUIRED]: 'errors.channelMembershipRequired',
   [ErrorCodes.CHANNEL_INVITE_NOT_FOUND]: 'errors.channelInviteNotFound',
   [ErrorCodes.CHANNEL_INVITE_NOT_PENDING]: 'errors.channelInviteNotPending',
