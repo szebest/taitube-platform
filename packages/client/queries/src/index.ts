@@ -26,6 +26,7 @@ export { SESSION_COOKIE } from './session-cookie';
 export * from './session-functions';
 export * from './session-middleware';
 export * from './session-provider';
+export * from './sign-in-button';
 export * from './use-failure-toast';
 export { useLiveChat } from './use-live-chat';
 export { useLiveVideoEvents, type ViewerSample } from './use-live-video-events';
