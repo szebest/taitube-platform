@@ -8,7 +8,7 @@
 | Blocks | 114, 116, 118, 120, 122 |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §5 Domain model & DDL](../SDD.md#5-domain-model--database-schema) · [SDD ADR-24 Result-typed errors](../SDD.md#adr-24--result-typed-error-handling-domain-returns-the-edge-decides) |
 
-**Status:** ready
+**Status:** in-progress
 
 > **Why.** [42](42-threaded-comments-keyset-pagination-moderation.md) lets the owner pin a comment and delete any comment
 > under their video, and [103](103-comment-hearts-reports-creator-inbox.md) adds hearts, reports and the creator's inbox;
@@ -228,13 +228,13 @@ On [59](59-video-watch-page-responsive-layout-enhancements.md)'s thread, through
 
 ## Delivery
 
-One stack of three slices:
+One stack of two slices on `feat/113-channel-comment-moderation`:
 
-1. Data, `ModerationAction` and `applyModeration`, the gate in `@vp/domain-rules`, the read scope and counts, the settings endpoints, `commentsEnabled`, the held state in reads and the
-   cache, the `comment.held` event.
-2. `moderate`, restrictions, trusted, saved replies, bulk, the leak tests, the inbox filters, the removals endpoint, the
-   notification kind and the audit calls.
-3. The web comment UI and the studio (settings, bulk bar, queue and its keyboard flow).
+1. `slice/113a-moderation-backend`: the data (one migration), `ModerationAction`, `applyModeration`, the gate, the read
+   scope and counts, the settings endpoints, `commentsEnabled`, `comment.held`, then `moderate`, restrictions, trusted,
+   bulk, the leak tests, the inbox filters, the removals endpoint, the notification kind and the audit calls.
+2. `slice/113b-moderation-ui`: saved replies (API and popover), the web comment UI, `/feed/you/moderation` and the studio
+   (inbox filters, bulk bar, queue and its keyboard flow, settings, the per-video switch).
 
 ## Acceptance criteria
 
