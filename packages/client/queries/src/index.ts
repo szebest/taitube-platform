@@ -1,3 +1,4 @@
+export * from './acting-channel';
 export * from './api-base-url';
 export * from './api-client';
 export * from './api-provider';

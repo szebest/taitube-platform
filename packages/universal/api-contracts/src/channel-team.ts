@@ -49,6 +49,7 @@ const TeamSchema = z.object({
 
 const MembershipSchema = z.object({
   channelId: z.uuid(),
+  ownerId: z.uuid().describe("The channel owner's user id, which the permission rules key on"),
   role: ChannelRoleSchema,
   channel: ProfileSchema,
 });
