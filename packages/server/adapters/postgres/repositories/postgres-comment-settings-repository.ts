@@ -1,9 +1,14 @@
 import type { CommentSettingsRepositoryPort } from '@vp/core/repositories';
 import * as schema from '@vp/db';
-import { type CommentSettings, DEFAULT_COMMENT_SETTINGS } from '@vp/domain';
+import {
+  type CommentSettings,
+  DEFAULT_COMMENT_SETTINGS,
+  type NewChannelAuditEntry,
+} from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { fromPromise, map, type Result } from '@vp/result';
 import { eq } from 'drizzle-orm';
+import { appendChannelAudit } from './channel-audit-writes';
 import type { PostgresDatabase } from './types';
 
 const { channelCommentSettings: s } = schema;
@@ -39,7 +44,8 @@ export class PostgresCommentSettingsRepository implements CommentSettingsReposit
 
   async save(
     channelId: string,
-    settings: CommentSettings
+    settings: CommentSettings,
+    audit: NewChannelAuditEntry
   ): Promise<Result<CommentSettings, DatabaseUnavailable>> {
     const values = {
       ...settings,
@@ -49,11 +55,15 @@ export class PostgresCommentSettingsRepository implements CommentSettingsReposit
     };
     const rows = await fromPromise(
       () =>
-        this.db
-          .insert(s)
-          .values({ channelId, ...values })
-          .onConflictDoUpdate({ target: s.channelId, set: values })
-          .returning(),
+        this.db.transaction(async (tx) => {
+          const saved = await tx
+            .insert(s)
+            .values({ channelId, ...values })
+            .onConflictDoUpdate({ target: s.channelId, set: values })
+            .returning();
+          await appendChannelAudit(tx, audit);
+          return saved;
+        }),
       databaseUnavailable.during('saveCommentSettings')
     );
     return map(rows, ([row]) => (row ? toSettings(row) : settings));

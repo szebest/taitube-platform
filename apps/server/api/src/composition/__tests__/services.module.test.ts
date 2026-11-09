@@ -46,6 +46,7 @@ describe('apps/server/api/composition: services module', () => {
       'clipService',
       'commentReportService',
       'commentService',
+      'commentSettingsService',
       'creatorCommentService',
       'creatorLiveService',
       'creatorStudioService',

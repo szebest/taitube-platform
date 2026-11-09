@@ -20,8 +20,16 @@ export const SDD_COMMENT_ENDPOINTS: SddEndpointContract[] = [
   {
     path: '/v1/videos/{id}/comments',
     method: 'post',
-    expectedStatuses: [201, 400, 401, 403, 404, 422],
-    expectedErrorCodes: [...OWNED_VIDEO, ErrorCodes.COMMENT_NOT_FOUND],
+    expectedStatuses: [201, 400, 401, 403, 404, 422, 429],
+    expectedErrorCodes: [
+      ...OWNED_VIDEO,
+      ErrorCodes.COMMENT_NOT_FOUND,
+      ErrorCodes.COMMENTS_BANNED,
+      ErrorCodes.COMMENTS_DISABLED,
+      ErrorCodes.COMMENTS_SUBSCRIBERS_ONLY,
+      ErrorCodes.COMMENTS_ACCOUNT_TOO_NEW,
+      ErrorCodes.COMMENTS_SLOW_MODE,
+    ],
     hasBody: true,
     hasPathParams: true,
   },
@@ -87,5 +95,18 @@ export const SDD_COMMENT_ENDPOINTS: SddEndpointContract[] = [
     ],
     hasBody: true,
     hasPathParams: true,
+  },
+  {
+    path: '/v1/me/channel/comment-settings',
+    method: 'get',
+    expectedStatuses: [200, 401, 403],
+    expectedErrorCodes: [UNAUTHORIZED, FORBIDDEN],
+  },
+  {
+    path: '/v1/me/channel/comment-settings',
+    method: 'put',
+    expectedStatuses: [200, 400, 401, 403, 422],
+    expectedErrorCodes: [...AUTHENTICATED, FORBIDDEN],
+    hasBody: true,
   },
 ];

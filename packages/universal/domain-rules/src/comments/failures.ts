@@ -69,6 +69,11 @@ export type CommentsAccountTooNew = Failure<
   { opensAt: string }
 >;
 
+export type CommentsSlowMode = Failure<
+  typeof ErrorCodes.COMMENTS_SLOW_MODE,
+  { retryAfterSeconds: number }
+>;
+
 /** Why a moderation action was refused: the state forbids it, or a visible one lacks its reason. */
 export type ModerationRefusal = 'state' | 'reason_required';
 
@@ -106,6 +111,14 @@ export function commentsAccountTooNew(opensAt: Date): CommentsAccountTooNew {
     code: ErrorCodes.COMMENTS_ACCOUNT_TOO_NEW,
     message: 'Your account is too new to comment',
     opensAt: opensAt.toISOString(),
+  };
+}
+
+export function commentsSlowMode(retryAfterSeconds: number): CommentsSlowMode {
+  return {
+    code: ErrorCodes.COMMENTS_SLOW_MODE,
+    message: 'You are commenting too fast on this channel',
+    retryAfterSeconds,
   };
 }
 

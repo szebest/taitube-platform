@@ -6,6 +6,7 @@ import {
   commentsAccountTooNew,
   commentsBanned,
   commentsDisabled,
+  commentsSlowMode,
   commentsSubscribersOnly,
   moderationNotApplicable,
   reportAlreadyResolved,
@@ -74,6 +75,12 @@ describe('@vp/domain-rules: comment moderation failures', () => {
       failure: commentsAccountTooNew(new Date('2026-03-01T00:00:00.000Z')),
       code: ErrorCodes.COMMENTS_ACCOUNT_TOO_NEW,
       payload: { opensAt: '2026-03-01T00:00:00.000Z' },
+    },
+    {
+      name: 'commentsSlowMode',
+      failure: commentsSlowMode(12),
+      code: ErrorCodes.COMMENTS_SLOW_MODE,
+      payload: { retryAfterSeconds: 12 },
     },
     {
       name: 'moderationNotApplicable',

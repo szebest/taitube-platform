@@ -14,18 +14,20 @@ import {
   type Comment,
   type CommentThread,
   type CreatorInboxComment,
-  commentCreated,
   type NewCommentInput,
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { commentOutbox, heartOutbox } from '@vp/job-contracts';
 import type { UserContext } from '@vp/permissions';
 import { isErr, ok, type Result, unwrapOr } from '@vp/result';
+import { announceCreated } from './comment-announce';
+import { listAuthored } from './comment-authored';
 import { inboxPage } from './comment-inbox-filter';
-import { commentSortKey, compareKeys, newestAfter, rowKey, threadPage } from './comment-order';
-import { newStoredComment, toAuthoredCommentOf, toThreadOf } from './comment-projections';
+import { commentSortKey, compareKeys, rowKey, threadPage } from './comment-order';
+import { newStoredComment, toThreadOf } from './comment-projections';
 import {
   isVisibleTo,
+  ownNonPublic,
   ownOrPublicTo,
   type PublicScopeContext,
   publicScopeOf,
@@ -35,7 +37,6 @@ import type { InMemoryChannelRepository } from './in-memory-channel-repository';
 import type { InMemoryChannelUserRestrictionRepository } from './in-memory-channel-user-restriction-repository';
 import type { InMemoryCommentReportRepository } from './in-memory-comment-report-repository';
 import type { InMemoryVideoRepository } from './in-memory-video-repository';
-import { keepWatchable } from './watchable-video';
 
 export interface InMemoryCommentRepositoryOptions {
   channelsRepo: InMemoryChannelRepository;
@@ -100,6 +101,15 @@ export class InMemoryCommentRepository implements CommentRepositoryPort {
     return ok(await this.threadsOf(replies, ownOrPublicTo(viewer, scope)));
   }
 
+  async listOwnNonPublic(
+    videoId: string,
+    authorId: string
+  ): Promise<Result<CommentThread[], DatabaseUnavailable>> {
+    const scope = await this.scope([videoId]);
+    const mine = ownNonPublic(this.live(), videoId, authorId, scope);
+    return ok(await this.threadsOf(mine, ownOrPublicTo({ id: authorId }, scope)));
+  }
+
   async create(input: NewCommentInput): Promise<Result<CommentThread | null, DatabaseUnavailable>> {
     const video = unwrapOr(await this.deps.videosRepo.findById(input.videoId), null);
     const scope = await this.scope([input.videoId]);
@@ -116,13 +126,13 @@ export class InMemoryCommentRepository implements CommentRepositoryPort {
     }
 
     const created = await this.toThread(stored, ownOrPublicTo({ id: input.authorId }, scope));
-    if (counted && video && video.ownerId !== input.authorId) {
-      const announced = await this.deps.userEventsRepo.append({
-        userId: video.ownerId,
-        ...commentCreated(created, { id: video.id, title: video.title ?? '' }),
-      });
-      if (isErr(announced)) return announced;
-    }
+    const announced = await announceCreated(this.deps.userEventsRepo, {
+      created,
+      video,
+      input,
+      counted,
+    });
+    if (isErr(announced)) return announced;
     return ok(created);
   }
 
@@ -192,15 +202,9 @@ export class InMemoryCommentRepository implements CommentRepositoryPort {
 
   async listByAuthor(
     viewer: UserContext,
-    { cursor, limit }: ListAuthoredCommentsOptions
+    options: ListAuthoredCommentsOptions
   ): Promise<Result<AuthoredComment[], DatabaseUnavailable>> {
-    const mine = this.live()
-      .filter((row) => row.authorId === viewer.id)
-      .sort((a, b) => compareKeys(rowKey(b), rowKey(a)));
-
-    const lookups = { videosRepo: this.deps.videosRepo, channelsRepo: this.deps.channelsRepo };
-    const kept = await keepWatchable(lookups, viewer, newestAfter(mine, cursor), limit);
-    return ok(kept.map(({ video, ...comment }) => toAuthoredCommentOf(comment, video)));
+    return ok(await listAuthored(this.deps, this.live(), viewer, options));
   }
 
   async listForOwner(

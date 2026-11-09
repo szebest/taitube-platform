@@ -6,7 +6,16 @@ export const studioComments = {
   commentsTitle: dt('Komentarze'),
   commentsFilter: dt('Pokaż'),
   commentsFilterOption: dt('{filter:enum}', {
-    enum: { filter: { all: 'Wszystkie', unanswered: 'Bez odpowiedzi', reported: 'Zgłoszone' } },
+    enum: {
+      filter: {
+        all: 'Wszystkie',
+        unanswered: 'Bez odpowiedzi',
+        reported: 'Zgłoszone',
+        held: 'Wstrzymane',
+        hidden: 'Ukryte',
+        questions: 'Pytania',
+      },
+    },
   }),
   commentsCaption: dt('Komentarze pod Twoimi filmami, od najnowszych'),
   commentsVideo: dt('Film'),

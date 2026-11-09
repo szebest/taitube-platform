@@ -118,6 +118,29 @@ export function describeCommentPublicScopeContract(ctx: CommentContractContext):
       }
     );
 
+    it('lists what only its author sees: shadowed, held and hidden, never another author', async () => {
+      await write(C.old, { authorId: OWNER_ID });
+      await write(C.reply1, { parentId: C.old, authorId: OTHER_OWNER_ID });
+      await write(C.reply2, { state: 'held', authorId: OTHER_OWNER_ID });
+      await write(C.other, { state: 'hidden', authorId: OTHER_OWNER_ID });
+      await write(C.liked, { state: 'held', authorId: OWNER_ID });
+      await shadowBan();
+
+      const own = expectOk(await ctx.comments.listOwnNonPublic(VIDEO_IDS.a, OTHER_OWNER_ID));
+
+      expect(idsOf(own).sort()).toEqual([C.reply1, C.reply2, C.other].sort());
+    });
+
+    it('lists nothing once the author is no longer shadow banned and nothing is held', async () => {
+      await write(C.old);
+      await shadowBan();
+      await lift();
+
+      expect(expectOk(await ctx.comments.listOwnNonPublic(VIDEO_IDS.a, OTHER_OWNER_ID))).toEqual(
+        []
+      );
+    });
+
     it.each([
       { viewer: 'anonymous' as const, replyCount: 1 },
       { viewer: 'stranger' as const, replyCount: 1 },

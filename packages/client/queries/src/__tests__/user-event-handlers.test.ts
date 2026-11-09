@@ -145,6 +145,20 @@ describe('@vp/queries: user event handlers', () => {
     ).toBe(true);
   });
 
+  it('refetches the creator inbox when a comment is held on one of the caller videos', () => {
+    const queryClient = createQueryClient();
+    queryClient.setQueryData(['creator', 'comments', { filter: 'held' }], { pages: [] });
+
+    applyUserEvent(queryClient, {
+      type: 'comment.held',
+      payload: { commentId: VIDEO_ID, videoId: VIDEO_ID },
+    });
+
+    expect(
+      queryClient.getQueryState(['creator', 'comments', { filter: 'held' }])?.isInvalidated
+    ).toBe(true);
+  });
+
   it.each<UserEvent>([
     {
       type: 'captions.ready',

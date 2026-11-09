@@ -1,5 +1,5 @@
 import type { CommentRepositoryPort, CommentWindow } from '@vp/core/repositories';
-import type { CommentThread } from '@vp/domain';
+import type { CommentThread, NewCommentModeration } from '@vp/domain';
 import { expectOk } from '@vp/testing/result';
 import { HOUR_MS, OTHER_OWNER_ID, VIDEO_IDS } from './fixtures';
 import type { RepositoriesSubject } from './subjects';
@@ -41,7 +41,13 @@ export async function commentsCount(
 export async function seedComment(
   ctx: CommentContractContext,
   id: string,
-  options: { parentId?: string; hoursAgo?: number; likes?: number; videoId?: string } = {}
+  options: {
+    parentId?: string;
+    hoursAgo?: number;
+    likes?: number;
+    videoId?: string;
+    moderation?: NewCommentModeration;
+  } = {}
 ): Promise<void> {
   expectOk(
     await ctx.comments.create({
@@ -50,6 +56,7 @@ export async function seedComment(
       authorId: OTHER_OWNER_ID,
       parentId: options.parentId ?? null,
       content: `comment ${id.slice(-2)}`,
+      moderation: options.moderation,
     })
   );
   await ctx.subject.adjustComment(id, {

@@ -23,6 +23,7 @@ import type {
   WebhookService,
   CommentReportService,
   CommentService,
+  CommentSettingsService,
   CreatorCommentService,
   CreatorLiveService,
   CreatorStudioService,
@@ -93,6 +94,7 @@ export interface ServiceSet {
   reactionService: ReactionService;
   subscriptionService: SubscriptionService;
   commentService: CommentService;
+  commentSettingsService: CommentSettingsService;
   commentReportService: CommentReportService;
   creatorCommentService: CreatorCommentService;
   viewService: ViewService;
@@ -156,6 +158,7 @@ export const Services = {
   ReactionService: token<ReactionService>('ReactionService'),
   SubscriptionService: token<SubscriptionService>('SubscriptionService'),
   CommentService: token<CommentService>('CommentService'),
+  CommentSettingsService: token<CommentSettingsService>('CommentSettingsService'),
   CommentReportService: token<CommentReportService>('CommentReportService'),
   CreatorCommentService: token<CreatorCommentService>('CreatorCommentService'),
   ViewService: token<ViewService>('ViewService'),

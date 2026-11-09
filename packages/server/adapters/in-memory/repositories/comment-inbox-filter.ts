@@ -1,5 +1,5 @@
 import type { ListCreatorInboxOptions } from '@vp/core/repositories';
-import type { CreatorInboxFilter } from '@vp/domain';
+import type { CreatorInboxFilter, ModerationState } from '@vp/domain';
 import { assertNever } from '@vp/result';
 import { compareKeys, newestAfter, rowKey } from './comment-order';
 import type { StoredComment } from './comment-visibility';
@@ -9,6 +9,8 @@ interface InboxRow {
   parentId: string | null;
   authorId: string;
   createdAt: Date;
+  moderationState: ModerationState;
+  looksLikeQuestion: boolean;
 }
 
 /** The in-memory form of `creatorInboxFilterScope`; `live` is every comment still standing. */
@@ -36,6 +38,11 @@ export function matchesInbox(
     }
     case 'reported':
       return reports.hasOpenReport(comment.id);
+    case 'held':
+    case 'hidden':
+      return comment.moderationState === filter;
+    case 'questions':
+      return comment.looksLikeQuestion;
     default:
       return assertNever(filter, 'CreatorInboxFilter');
   }

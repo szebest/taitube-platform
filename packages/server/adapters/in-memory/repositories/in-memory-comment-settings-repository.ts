@@ -1,10 +1,21 @@
 import type { CommentSettingsRepositoryPort } from '@vp/core/repositories';
-import { type CommentSettings, DEFAULT_COMMENT_SETTINGS } from '@vp/domain';
+import {
+  type CommentSettings,
+  DEFAULT_COMMENT_SETTINGS,
+  type NewChannelAuditEntry,
+} from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { ok, type Result } from '@vp/result';
+import { andThenAsync, ok, type Result } from '@vp/result';
+import type { InMemoryChannelAuditRepository } from './in-memory-channel-audit-repository';
+
+export interface InMemoryCommentSettingsRepositoryOptions {
+  audit: Pick<InMemoryChannelAuditRepository, 'append'>;
+}
 
 export class InMemoryCommentSettingsRepository implements CommentSettingsRepositoryPort {
   private readonly documents = new Map<string, CommentSettings>();
+
+  constructor(private readonly deps: InMemoryCommentSettingsRepositoryOptions) {}
 
   async get(channelId: string): Promise<Result<CommentSettings, DatabaseUnavailable>> {
     return ok(this.documents.get(channelId) ?? DEFAULT_COMMENT_SETTINGS);
@@ -12,11 +23,14 @@ export class InMemoryCommentSettingsRepository implements CommentSettingsReposit
 
   async save(
     channelId: string,
-    settings: CommentSettings
+    settings: CommentSettings,
+    audit: NewChannelAuditEntry
   ): Promise<Result<CommentSettings, DatabaseUnavailable>> {
-    const stored = { ...settings };
-    this.documents.set(channelId, stored);
-    return ok({ ...stored });
+    return andThenAsync(await this.deps.audit.append(audit), async () => {
+      const stored = { ...settings };
+      this.documents.set(channelId, stored);
+      return ok({ ...stored });
+    });
   }
 
   clear(): void {

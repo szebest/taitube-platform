@@ -1,5 +1,6 @@
 import type { CommentViewer, VideoRepository } from '@vp/core/repositories';
 import { unwrapOr } from '@vp/result';
+import { compareKeys, rowKey } from './comment-order';
 import type { StoredComment } from './comment-visibility';
 import type { InMemoryChannelRepository } from './in-memory-channel-repository';
 import type { InMemoryChannelUserRestrictionRepository } from './in-memory-channel-user-restriction-repository';
@@ -40,6 +41,20 @@ export function isVisibleTo(
   if (comment.parentId === null) return true;
   const parent = comments.get(comment.parentId);
   return parent !== undefined && isOwnOrPublic(viewer, parent, shadowed);
+}
+
+/** The author's comments on a video that only they can see, newest first. */
+export function ownNonPublic(
+  standing: readonly StoredComment[],
+  videoId: string,
+  authorId: string,
+  scope: PublicScopeContext
+): StoredComment[] {
+  const viewer = { id: authorId };
+  return standing
+    .filter((row) => row.videoId === videoId && row.authorId === authorId)
+    .filter((row) => isVisibleTo(viewer, row, scope) && !isVisibleTo(null, row, scope))
+    .sort((a, b) => compareKeys(rowKey(b), rowKey(a)));
 }
 
 export interface PublicScopeLookups {

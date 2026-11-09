@@ -6580,6 +6580,66 @@ paths:
                           type: integer
                           minimum: 0
                           maximum: 9007199254740991
+                        status:
+                          type: string
+                          enum:
+                            - published
+                            - held
+                            - hidden
+                          description: published unless the reader is the author of a visibly moderated comment or a moderator
+                        moderation:
+                          anyOf:
+                            - type: object
+                              properties:
+                                state:
+                                  type: string
+                                  enum:
+                                    - held
+                                    - hidden
+                                reason:
+                                  anyOf:
+                                    - type: string
+                                      enum:
+                                        - spam
+                                        - harassment
+                                        - hate
+                                        - misinformation
+                                        - other
+                                        - off_topic
+                                    - type: 'null'
+                                disclosure:
+                                  anyOf:
+                                    - type: string
+                                      enum:
+                                        - silent
+                                        - visible
+                                    - type: 'null'
+                                heldReason:
+                                  anyOf:
+                                    - type: string
+                                      enum:
+                                        - review_all
+                                        - link
+                                        - blocked_word
+                                    - type: 'null'
+                                by:
+                                  anyOf:
+                                    - type: string
+                                      format: uuid
+                                      pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                    - type: 'null'
+                                at:
+                                  anyOf:
+                                    - type: string
+                                      format: date-time
+                                      pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+                                    - type: 'null'
+                              required:
+                                - state
+                              additionalProperties: false
+                              description: 'What the reader may know of a moderated comment: the state and the reason for its author when it was done visibly, everything for a moderator'
+                            - type: 'null'
+                          description: Null for a published comment and for a silently moderated one, which looks published to its author
                         author:
                           type: object
                           properties:
@@ -6633,6 +6693,8 @@ paths:
                         - likeCount
                         - heartedByCreator
                         - replyCount
+                        - status
+                        - moderation
                         - author
                         - createdAt
                         - updatedAt
@@ -6842,6 +6904,66 @@ paths:
                     type: integer
                     minimum: 0
                     maximum: 9007199254740991
+                  status:
+                    type: string
+                    enum:
+                      - published
+                      - held
+                      - hidden
+                    description: published unless the reader is the author of a visibly moderated comment or a moderator
+                  moderation:
+                    anyOf:
+                      - type: object
+                        properties:
+                          state:
+                            type: string
+                            enum:
+                              - held
+                              - hidden
+                          reason:
+                            anyOf:
+                              - type: string
+                                enum:
+                                  - spam
+                                  - harassment
+                                  - hate
+                                  - misinformation
+                                  - other
+                                  - off_topic
+                              - type: 'null'
+                          disclosure:
+                            anyOf:
+                              - type: string
+                                enum:
+                                  - silent
+                                  - visible
+                              - type: 'null'
+                          heldReason:
+                            anyOf:
+                              - type: string
+                                enum:
+                                  - review_all
+                                  - link
+                                  - blocked_word
+                              - type: 'null'
+                          by:
+                            anyOf:
+                              - type: string
+                                format: uuid
+                                pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                              - type: 'null'
+                          at:
+                            anyOf:
+                              - type: string
+                                format: date-time
+                                pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+                              - type: 'null'
+                        required:
+                          - state
+                        additionalProperties: false
+                        description: 'What the reader may know of a moderated comment: the state and the reason for its author when it was done visibly, everything for a moderator'
+                      - type: 'null'
+                    description: Null for a published comment and for a silently moderated one, which looks published to its author
                   author:
                     type: object
                     properties:
@@ -6895,6 +7017,8 @@ paths:
                   - likeCount
                   - heartedByCreator
                   - replyCount
+                  - status
+                  - moderation
                   - author
                   - createdAt
                   - updatedAt
@@ -7002,6 +7126,10 @@ paths:
                     type: string
                     enum:
                       - FORBIDDEN
+                      - COMMENTS_BANNED
+                      - COMMENTS_DISABLED
+                      - COMMENTS_SUBSCRIBERS_ONLY
+                      - COMMENTS_ACCOUNT_TOO_NEW
                     description: Machine-readable error code
                   instance:
                     type: string
@@ -7100,6 +7228,46 @@ paths:
                   - instance
                 additionalProperties: false
                 description: Problem Details (RFC 9457)
+        '429':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - COMMENTS_SLOW_MODE
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
   /v1/comments/{id}/replies:
     get:
       summary: List replies to a comment
@@ -7175,6 +7343,66 @@ paths:
                           type: integer
                           minimum: 0
                           maximum: 9007199254740991
+                        status:
+                          type: string
+                          enum:
+                            - published
+                            - held
+                            - hidden
+                          description: published unless the reader is the author of a visibly moderated comment or a moderator
+                        moderation:
+                          anyOf:
+                            - type: object
+                              properties:
+                                state:
+                                  type: string
+                                  enum:
+                                    - held
+                                    - hidden
+                                reason:
+                                  anyOf:
+                                    - type: string
+                                      enum:
+                                        - spam
+                                        - harassment
+                                        - hate
+                                        - misinformation
+                                        - other
+                                        - off_topic
+                                    - type: 'null'
+                                disclosure:
+                                  anyOf:
+                                    - type: string
+                                      enum:
+                                        - silent
+                                        - visible
+                                    - type: 'null'
+                                heldReason:
+                                  anyOf:
+                                    - type: string
+                                      enum:
+                                        - review_all
+                                        - link
+                                        - blocked_word
+                                    - type: 'null'
+                                by:
+                                  anyOf:
+                                    - type: string
+                                      format: uuid
+                                      pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                    - type: 'null'
+                                at:
+                                  anyOf:
+                                    - type: string
+                                      format: date-time
+                                      pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+                                    - type: 'null'
+                              required:
+                                - state
+                              additionalProperties: false
+                              description: 'What the reader may know of a moderated comment: the state and the reason for its author when it was done visibly, everything for a moderator'
+                            - type: 'null'
+                          description: Null for a published comment and for a silently moderated one, which looks published to its author
                         author:
                           type: object
                           properties:
@@ -7228,6 +7456,8 @@ paths:
                         - likeCount
                         - heartedByCreator
                         - replyCount
+                        - status
+                        - moderation
                         - author
                         - createdAt
                         - updatedAt
@@ -7427,6 +7657,66 @@ paths:
                     type: integer
                     minimum: 0
                     maximum: 9007199254740991
+                  status:
+                    type: string
+                    enum:
+                      - published
+                      - held
+                      - hidden
+                    description: published unless the reader is the author of a visibly moderated comment or a moderator
+                  moderation:
+                    anyOf:
+                      - type: object
+                        properties:
+                          state:
+                            type: string
+                            enum:
+                              - held
+                              - hidden
+                          reason:
+                            anyOf:
+                              - type: string
+                                enum:
+                                  - spam
+                                  - harassment
+                                  - hate
+                                  - misinformation
+                                  - other
+                                  - off_topic
+                              - type: 'null'
+                          disclosure:
+                            anyOf:
+                              - type: string
+                                enum:
+                                  - silent
+                                  - visible
+                              - type: 'null'
+                          heldReason:
+                            anyOf:
+                              - type: string
+                                enum:
+                                  - review_all
+                                  - link
+                                  - blocked_word
+                              - type: 'null'
+                          by:
+                            anyOf:
+                              - type: string
+                                format: uuid
+                                pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                              - type: 'null'
+                          at:
+                            anyOf:
+                              - type: string
+                                format: date-time
+                                pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+                              - type: 'null'
+                        required:
+                          - state
+                        additionalProperties: false
+                        description: 'What the reader may know of a moderated comment: the state and the reason for its author when it was done visibly, everything for a moderator'
+                      - type: 'null'
+                    description: Null for a published comment and for a silently moderated one, which looks published to its author
                   author:
                     type: object
                     properties:
@@ -7480,6 +7770,8 @@ paths:
                   - likeCount
                   - heartedByCreator
                   - replyCount
+                  - status
+                  - moderation
                   - author
                   - createdAt
                   - updatedAt
@@ -7914,6 +8206,66 @@ paths:
                     type: integer
                     minimum: 0
                     maximum: 9007199254740991
+                  status:
+                    type: string
+                    enum:
+                      - published
+                      - held
+                      - hidden
+                    description: published unless the reader is the author of a visibly moderated comment or a moderator
+                  moderation:
+                    anyOf:
+                      - type: object
+                        properties:
+                          state:
+                            type: string
+                            enum:
+                              - held
+                              - hidden
+                          reason:
+                            anyOf:
+                              - type: string
+                                enum:
+                                  - spam
+                                  - harassment
+                                  - hate
+                                  - misinformation
+                                  - other
+                                  - off_topic
+                              - type: 'null'
+                          disclosure:
+                            anyOf:
+                              - type: string
+                                enum:
+                                  - silent
+                                  - visible
+                              - type: 'null'
+                          heldReason:
+                            anyOf:
+                              - type: string
+                                enum:
+                                  - review_all
+                                  - link
+                                  - blocked_word
+                              - type: 'null'
+                          by:
+                            anyOf:
+                              - type: string
+                                format: uuid
+                                pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                              - type: 'null'
+                          at:
+                            anyOf:
+                              - type: string
+                                format: date-time
+                                pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+                              - type: 'null'
+                        required:
+                          - state
+                        additionalProperties: false
+                        description: 'What the reader may know of a moderated comment: the state and the reason for its author when it was done visibly, everything for a moderator'
+                      - type: 'null'
+                    description: Null for a published comment and for a silently moderated one, which looks published to its author
                   author:
                     type: object
                     properties:
@@ -7967,6 +8319,8 @@ paths:
                   - likeCount
                   - heartedByCreator
                   - replyCount
+                  - status
+                  - moderation
                   - author
                   - createdAt
                   - updatedAt
@@ -8184,6 +8538,66 @@ paths:
                     type: integer
                     minimum: 0
                     maximum: 9007199254740991
+                  status:
+                    type: string
+                    enum:
+                      - published
+                      - held
+                      - hidden
+                    description: published unless the reader is the author of a visibly moderated comment or a moderator
+                  moderation:
+                    anyOf:
+                      - type: object
+                        properties:
+                          state:
+                            type: string
+                            enum:
+                              - held
+                              - hidden
+                          reason:
+                            anyOf:
+                              - type: string
+                                enum:
+                                  - spam
+                                  - harassment
+                                  - hate
+                                  - misinformation
+                                  - other
+                                  - off_topic
+                              - type: 'null'
+                          disclosure:
+                            anyOf:
+                              - type: string
+                                enum:
+                                  - silent
+                                  - visible
+                              - type: 'null'
+                          heldReason:
+                            anyOf:
+                              - type: string
+                                enum:
+                                  - review_all
+                                  - link
+                                  - blocked_word
+                              - type: 'null'
+                          by:
+                            anyOf:
+                              - type: string
+                                format: uuid
+                                pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                              - type: 'null'
+                          at:
+                            anyOf:
+                              - type: string
+                                format: date-time
+                                pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+                              - type: 'null'
+                        required:
+                          - state
+                        additionalProperties: false
+                        description: 'What the reader may know of a moderated comment: the state and the reason for its author when it was done visibly, everything for a moderator'
+                      - type: 'null'
+                    description: Null for a published comment and for a silently moderated one, which looks published to its author
                   author:
                     type: object
                     properties:
@@ -8237,6 +8651,8 @@ paths:
                   - likeCount
                   - heartedByCreator
                   - replyCount
+                  - status
+                  - moderation
                   - author
                   - createdAt
                   - updatedAt
@@ -8455,6 +8871,66 @@ paths:
                     type: integer
                     minimum: 0
                     maximum: 9007199254740991
+                  status:
+                    type: string
+                    enum:
+                      - published
+                      - held
+                      - hidden
+                    description: published unless the reader is the author of a visibly moderated comment or a moderator
+                  moderation:
+                    anyOf:
+                      - type: object
+                        properties:
+                          state:
+                            type: string
+                            enum:
+                              - held
+                              - hidden
+                          reason:
+                            anyOf:
+                              - type: string
+                                enum:
+                                  - spam
+                                  - harassment
+                                  - hate
+                                  - misinformation
+                                  - other
+                                  - off_topic
+                              - type: 'null'
+                          disclosure:
+                            anyOf:
+                              - type: string
+                                enum:
+                                  - silent
+                                  - visible
+                              - type: 'null'
+                          heldReason:
+                            anyOf:
+                              - type: string
+                                enum:
+                                  - review_all
+                                  - link
+                                  - blocked_word
+                              - type: 'null'
+                          by:
+                            anyOf:
+                              - type: string
+                                format: uuid
+                                pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                              - type: 'null'
+                          at:
+                            anyOf:
+                              - type: string
+                                format: date-time
+                                pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+                              - type: 'null'
+                        required:
+                          - state
+                        additionalProperties: false
+                        description: 'What the reader may know of a moderated comment: the state and the reason for its author when it was done visibly, everything for a moderator'
+                      - type: 'null'
+                    description: Null for a published comment and for a silently moderated one, which looks published to its author
                   author:
                     type: object
                     properties:
@@ -8508,6 +8984,8 @@ paths:
                   - likeCount
                   - heartedByCreator
                   - replyCount
+                  - status
+                  - moderation
                   - author
                   - createdAt
                   - updatedAt
@@ -8765,6 +9243,66 @@ paths:
                     type: integer
                     minimum: 0
                     maximum: 9007199254740991
+                  status:
+                    type: string
+                    enum:
+                      - published
+                      - held
+                      - hidden
+                    description: published unless the reader is the author of a visibly moderated comment or a moderator
+                  moderation:
+                    anyOf:
+                      - type: object
+                        properties:
+                          state:
+                            type: string
+                            enum:
+                              - held
+                              - hidden
+                          reason:
+                            anyOf:
+                              - type: string
+                                enum:
+                                  - spam
+                                  - harassment
+                                  - hate
+                                  - misinformation
+                                  - other
+                                  - off_topic
+                              - type: 'null'
+                          disclosure:
+                            anyOf:
+                              - type: string
+                                enum:
+                                  - silent
+                                  - visible
+                              - type: 'null'
+                          heldReason:
+                            anyOf:
+                              - type: string
+                                enum:
+                                  - review_all
+                                  - link
+                                  - blocked_word
+                              - type: 'null'
+                          by:
+                            anyOf:
+                              - type: string
+                                format: uuid
+                                pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                              - type: 'null'
+                          at:
+                            anyOf:
+                              - type: string
+                                format: date-time
+                                pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+                              - type: 'null'
+                        required:
+                          - state
+                        additionalProperties: false
+                        description: 'What the reader may know of a moderated comment: the state and the reason for its author when it was done visibly, everything for a moderator'
+                      - type: 'null'
+                    description: Null for a published comment and for a silently moderated one, which looks published to its author
                   author:
                     type: object
                     properties:
@@ -8818,6 +9356,8 @@ paths:
                   - likeCount
                   - heartedByCreator
                   - replyCount
+                  - status
+                  - moderation
                   - author
                   - createdAt
                   - updatedAt
@@ -9354,7 +9894,7 @@ paths:
       summary: The creator comment inbox
       tags:
         - Creator Studio
-      description: Comments on the caller videos that the caller did not write, newest first, keyset-paginated. unanswered keeps those without a later reply from the caller in their thread; reported keeps those with an open report.
+      description: Comments on the caller videos that the caller did not write, newest first, keyset-paginated. unanswered keeps those without a later reply from the caller in their thread; reported keeps those with an open report; held and hidden keep those in that moderation state; questions keeps those with a question mark or a leading question word. Held and hidden comments are listed here with their moderation state, for the people who moderate.
       parameters:
         - schema:
             default: all
@@ -9363,6 +9903,9 @@ paths:
               - all
               - unanswered
               - reported
+              - held
+              - hidden
+              - questions
           in: query
           name: filter
           required: false
@@ -9433,6 +9976,66 @@ paths:
                           type: integer
                           minimum: 0
                           maximum: 9007199254740991
+                        status:
+                          type: string
+                          enum:
+                            - published
+                            - held
+                            - hidden
+                          description: published unless the reader is the author of a visibly moderated comment or a moderator
+                        moderation:
+                          anyOf:
+                            - type: object
+                              properties:
+                                state:
+                                  type: string
+                                  enum:
+                                    - held
+                                    - hidden
+                                reason:
+                                  anyOf:
+                                    - type: string
+                                      enum:
+                                        - spam
+                                        - harassment
+                                        - hate
+                                        - misinformation
+                                        - other
+                                        - off_topic
+                                    - type: 'null'
+                                disclosure:
+                                  anyOf:
+                                    - type: string
+                                      enum:
+                                        - silent
+                                        - visible
+                                    - type: 'null'
+                                heldReason:
+                                  anyOf:
+                                    - type: string
+                                      enum:
+                                        - review_all
+                                        - link
+                                        - blocked_word
+                                    - type: 'null'
+                                by:
+                                  anyOf:
+                                    - type: string
+                                      format: uuid
+                                      pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                    - type: 'null'
+                                at:
+                                  anyOf:
+                                    - type: string
+                                      format: date-time
+                                      pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+                                    - type: 'null'
+                              required:
+                                - state
+                              additionalProperties: false
+                              description: 'What the reader may know of a moderated comment: the state and the reason for its author when it was done visibly, everything for a moderator'
+                            - type: 'null'
+                          description: Null for a published comment and for a silently moderated one, which looks published to its author
                         author:
                           type: object
                           properties:
@@ -9500,6 +10103,8 @@ paths:
                         - likeCount
                         - heartedByCreator
                         - replyCount
+                        - status
+                        - moderation
                         - author
                         - createdAt
                         - updatedAt
@@ -31435,6 +32040,542 @@ paths:
                   - instance
                 additionalProperties: false
                 description: Problem Details (RFC 9457)
+  /v1/me/channel/comment-settings:
+    get:
+      summary: Read the comment settings of the channel
+      tags:
+        - Comment moderation
+      description: The acting channel comment settings; a channel that never saved any has the defaults. Owner and managers.
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+          in: header
+          name: x-channel-id
+          required: false
+      responses:
+        '200':
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reviewMode:
+                    type: string
+                    enum:
+                      - none
+                      - links
+                      - all
+                    description: none, hold comments with a link, or hold everything
+                  blockedWords:
+                    type: array
+                    items:
+                      type: string
+                    description: Up to 200 entries of 2 to 40 characters; a match holds the comment
+                  linkAllowlist:
+                    type: array
+                    items:
+                      type: string
+                    description: Up to 50 host names whose links, and their subdomains, are not held
+                  slowModeSeconds:
+                    anyOf:
+                      - type: integer
+                        minimum: -9007199254740991
+                        maximum: 9007199254740991
+                      - type: 'null'
+                    description: null for no limit, otherwise one of 5, 10, 30, 60 or 300
+                  subscribersOnly:
+                    type: boolean
+                  minAccountAgeDays:
+                    type: integer
+                    minimum: -9007199254740991
+                    maximum: 9007199254740991
+                    description: 0 to 30
+                  disclosure:
+                    type: object
+                    properties:
+                      hide:
+                        type: string
+                        enum:
+                          - silent
+                          - visible
+                      remove:
+                        type: string
+                        enum:
+                          - silent
+                          - visible
+                      manual_hold:
+                        type: string
+                        enum:
+                          - silent
+                          - visible
+                      auto.blocked_words:
+                        type: string
+                        enum:
+                          - silent
+                          - visible
+                      auto.links:
+                        type: string
+                        enum:
+                          - silent
+                          - visible
+                      auto.review_all:
+                        type: string
+                        enum:
+                          - silent
+                          - visible
+                    required:
+                      - hide
+                      - remove
+                      - manual_hold
+                      - auto.blocked_words
+                      - auto.links
+                      - auto.review_all
+                    additionalProperties: false
+                    description: What the author is told by default for each action and each automatic hold
+                required:
+                  - reviewMode
+                  - blockedWords
+                  - linkAllowlist
+                  - slowModeSeconds
+                  - subscribersOnly
+                  - minAccountAgeDays
+                  - disclosure
+                additionalProperties: false
+        '401':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '403':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - FORBIDDEN
+                      - CHANNEL_MEMBERSHIP_REQUIRED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+    put:
+      summary: Replace the comment settings of the channel
+      tags:
+        - Comment moderation
+      description: Replaces the whole document and records settings.comments.updated in the channel audit log with the fields that changed. Owner and managers; a moderator or an editor is refused.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reviewMode:
+                  type: string
+                  enum:
+                    - none
+                    - links
+                    - all
+                  description: none, hold comments with a link, or hold everything
+                blockedWords:
+                  type: array
+                  items:
+                    type: string
+                  description: Up to 200 entries of 2 to 40 characters; a match holds the comment
+                linkAllowlist:
+                  type: array
+                  items:
+                    type: string
+                  description: Up to 50 host names whose links, and their subdomains, are not held
+                slowModeSeconds:
+                  anyOf:
+                    - type: integer
+                      minimum: -9007199254740991
+                      maximum: 9007199254740991
+                    - type: 'null'
+                  description: null for no limit, otherwise one of 5, 10, 30, 60 or 300
+                subscribersOnly:
+                  type: boolean
+                minAccountAgeDays:
+                  type: integer
+                  minimum: -9007199254740991
+                  maximum: 9007199254740991
+                  description: 0 to 30
+                disclosure:
+                  type: object
+                  properties:
+                    hide:
+                      type: string
+                      enum:
+                        - silent
+                        - visible
+                    remove:
+                      type: string
+                      enum:
+                        - silent
+                        - visible
+                    manual_hold:
+                      type: string
+                      enum:
+                        - silent
+                        - visible
+                    auto.blocked_words:
+                      type: string
+                      enum:
+                        - silent
+                        - visible
+                    auto.links:
+                      type: string
+                      enum:
+                        - silent
+                        - visible
+                    auto.review_all:
+                      type: string
+                      enum:
+                        - silent
+                        - visible
+                  required:
+                    - hide
+                    - remove
+                    - manual_hold
+                    - auto.blocked_words
+                    - auto.links
+                    - auto.review_all
+                  description: What the author is told by default for each action and each automatic hold
+              required:
+                - reviewMode
+                - blockedWords
+                - linkAllowlist
+                - slowModeSeconds
+                - subscribersOnly
+                - minAccountAgeDays
+                - disclosure
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+          in: header
+          name: x-channel-id
+          required: false
+      responses:
+        '200':
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reviewMode:
+                    type: string
+                    enum:
+                      - none
+                      - links
+                      - all
+                    description: none, hold comments with a link, or hold everything
+                  blockedWords:
+                    type: array
+                    items:
+                      type: string
+                    description: Up to 200 entries of 2 to 40 characters; a match holds the comment
+                  linkAllowlist:
+                    type: array
+                    items:
+                      type: string
+                    description: Up to 50 host names whose links, and their subdomains, are not held
+                  slowModeSeconds:
+                    anyOf:
+                      - type: integer
+                        minimum: -9007199254740991
+                        maximum: 9007199254740991
+                      - type: 'null'
+                    description: null for no limit, otherwise one of 5, 10, 30, 60 or 300
+                  subscribersOnly:
+                    type: boolean
+                  minAccountAgeDays:
+                    type: integer
+                    minimum: -9007199254740991
+                    maximum: 9007199254740991
+                    description: 0 to 30
+                  disclosure:
+                    type: object
+                    properties:
+                      hide:
+                        type: string
+                        enum:
+                          - silent
+                          - visible
+                      remove:
+                        type: string
+                        enum:
+                          - silent
+                          - visible
+                      manual_hold:
+                        type: string
+                        enum:
+                          - silent
+                          - visible
+                      auto.blocked_words:
+                        type: string
+                        enum:
+                          - silent
+                          - visible
+                      auto.links:
+                        type: string
+                        enum:
+                          - silent
+                          - visible
+                      auto.review_all:
+                        type: string
+                        enum:
+                          - silent
+                          - visible
+                    required:
+                      - hide
+                      - remove
+                      - manual_hold
+                      - auto.blocked_words
+                      - auto.links
+                      - auto.review_all
+                    additionalProperties: false
+                    description: What the author is told by default for each action and each automatic hold
+                required:
+                  - reviewMode
+                  - blockedWords
+                  - linkAllowlist
+                  - slowModeSeconds
+                  - subscribersOnly
+                  - minAccountAgeDays
+                  - disclosure
+                additionalProperties: false
+        '400':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_FAILED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '401':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '403':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - FORBIDDEN
+                      - CHANNEL_MEMBERSHIP_REQUIRED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '422':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_FAILED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
   /v1/channels/{id}/subscribers:
     post:
       summary: Subscribe to channel
@@ -33194,6 +34335,31 @@ paths:
                         required:
                           - comment
                           - video
+                        additionalProperties: false
+                    required:
+                      - type
+                      - payload
+                    additionalProperties: false
+                  - type: object
+                    properties:
+                      type:
+                        type: string
+                        enum:
+                          - comment.held
+                      payload:
+                        type: object
+                        properties:
+                          commentId:
+                            type: string
+                            format: uuid
+                            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                          videoId:
+                            type: string
+                            format: uuid
+                            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                        required:
+                          - commentId
+                          - videoId
                         additionalProperties: false
                     required:
                       - type

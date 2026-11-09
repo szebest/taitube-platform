@@ -11,7 +11,7 @@ const renderFilter = ({ value = 'all', onChange = vi.fn() }: Partial<InboxFilter
   );
 
 describe('apps/client/studio: InboxFilter', () => {
-  it('offers the three filters, marks the current one and asks for the one picked', async () => {
+  it('offers every filter, marks the current one and asks for the one picked', async () => {
     const onChange = vi.fn();
     renderFilter({ value: 'unanswered', onChange });
 
@@ -21,6 +21,9 @@ describe('apps/client/studio: InboxFilter', () => {
       'All',
       'Unanswered',
       'Reported',
+      'Held',
+      'Hidden',
+      'Questions',
     ]);
     expect(screen.getByRole('radio', { name: 'Unanswered' })).toBeChecked();
     expect(onChange).toHaveBeenCalledWith('reported');

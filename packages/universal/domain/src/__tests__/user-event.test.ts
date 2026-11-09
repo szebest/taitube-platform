@@ -3,6 +3,7 @@ import {
   captionsFailed,
   captionsReady,
   commentCreated,
+  commentHeld,
   preferencesUpdated,
   videoStatusChanged,
 } from '../user-event';
@@ -59,6 +60,13 @@ describe('domain: user event', () => {
         },
         video: { id: 'v1', title: 'Clip' },
       },
+    });
+  });
+
+  it('announces a held comment by its ids, never its text or author', () => {
+    expect(commentHeld({ id: 'c1', videoId: 'v1' })).toEqual({
+      type: 'comment.held',
+      payload: { commentId: 'c1', videoId: 'v1' },
     });
   });
 

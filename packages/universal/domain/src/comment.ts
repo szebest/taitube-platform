@@ -37,7 +37,14 @@ export interface CommentVideoSummary {
   title: string;
 }
 
-export const CREATOR_INBOX_FILTERS = ['all', 'unanswered', 'reported'] as const;
+export const CREATOR_INBOX_FILTERS = [
+  'all',
+  'unanswered',
+  'reported',
+  'held',
+  'hidden',
+  'questions',
+] as const;
 
 export type CreatorInboxFilter = (typeof CREATOR_INBOX_FILTERS)[number];
 
@@ -53,6 +60,8 @@ export interface NewCommentInput {
   content: string;
   /** Published when absent; the gate sets it for a comment it holds. */
   moderation?: NewCommentModeration;
+  /** The moderators told, in the same transaction, that a held comment is waiting. */
+  moderators?: readonly string[];
 }
 
 /**
@@ -61,4 +70,23 @@ export interface NewCommentInput {
  */
 export function threadRootId(comment: Pick<Comment, 'id' | 'parentId'>): string {
   return comment.parentId ?? comment.id;
+}
+
+function threadOrderKey(sort: CommentSort, thread: CommentThread): readonly (number | string)[] {
+  const pinned = thread.isPinned ? 1 : 0;
+  const created = thread.createdAt.getTime();
+  return sort === 'top'
+    ? [pinned, thread.likeCount, created, thread.id]
+    : [pinned, created, thread.id];
+}
+
+/** The order a listing of root comments comes in: pinned first, then the sort, newest breaking ties. */
+export function compareThreads(sort: CommentSort) {
+  return (a: CommentThread, b: CommentThread): number => {
+    const left = threadOrderKey(sort, a);
+    const right = threadOrderKey(sort, b);
+    const at = left.findIndex((part, index) => part !== right[index]);
+    if (at === -1) return 0;
+    return (left[at] ?? 0) > (right[at] ?? 0) ? -1 : 1;
+  };
 }

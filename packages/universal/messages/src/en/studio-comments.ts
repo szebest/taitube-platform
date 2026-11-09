@@ -6,7 +6,16 @@ export const studioComments = {
   commentsTitle: dt('Comments'),
   commentsFilter: dt('Show'),
   commentsFilterOption: dt('{filter:enum}', {
-    enum: { filter: { all: 'All', unanswered: 'Unanswered', reported: 'Reported' } },
+    enum: {
+      filter: {
+        all: 'All',
+        unanswered: 'Unanswered',
+        reported: 'Reported',
+        held: 'Held',
+        hidden: 'Hidden',
+        questions: 'Questions',
+      },
+    },
   }),
   commentsCaption: dt('Comments on your videos, newest first'),
   commentsVideo: dt('Video'),

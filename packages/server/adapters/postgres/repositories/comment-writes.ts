@@ -2,6 +2,7 @@ import * as schema from '@vp/db';
 import {
   type CommentThread,
   commentCreated,
+  commentHeld,
   type NewCommentInput,
   PUBLISHED_AT_CREATION,
 } from '@vp/domain';
@@ -69,7 +70,7 @@ export async function insertComment(
   if (input.parentId !== null && !(await isLive(tx, input.parentId))) return null;
 
   const now = new Date();
-  const { moderation, ...fields } = input;
+  const { moderation, moderators = [], ...fields } = input;
   await tx.insert(c).values({
     ...fields,
     ...(moderation ?? PUBLISHED_AT_CREATION),
@@ -92,6 +93,11 @@ export async function insertComment(
       userId: video.ownerId,
       ...commentCreated(created, { id: input.videoId, title: video.title }),
     });
+  }
+  if (created && moderation?.moderationState === 'held') {
+    for (const userId of moderators) {
+      if (userId !== input.authorId) await appendUserEvent(tx, { userId, ...commentHeld(created) });
+    }
   }
   return created;
 }

@@ -82,6 +82,14 @@ export interface CommentRepositoryPort {
     options: ListCommentRepliesOptions
   ): Promise<Result<CommentThread[], DatabaseUnavailable>>;
   /**
+   * The author's own comments and replies on the video that no one else can see: held, hidden or
+   * shadowed. One batched read, so the author's count matches their list.
+   */
+  listOwnNonPublic(
+    videoId: string,
+    authorId: string
+  ): Promise<Result<CommentThread[], DatabaseUnavailable>>;
+  /**
    * Answers null, and writes nothing, when the parent was removed before the reply landed. The
    * thread counts the replies its author may see.
    */

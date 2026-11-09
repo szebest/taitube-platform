@@ -19,7 +19,7 @@ import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { heartOutbox } from '@vp/job-contracts';
 import type { UserContext } from '@vp/permissions';
 import { fromPromise, map, type Result } from '@vp/result';
-import { and, eq, ne, or, sql } from 'drizzle-orm';
+import { and, eq, ne, not, or, sql } from 'drizzle-orm';
 import { drizzleWhere, notDeletedScope, publicCommentScope } from '../scopes/index';
 import { toCreatorInboxComment } from './comment-inbox-query';
 import {
@@ -118,6 +118,29 @@ export class PostgresCommentRepository implements CommentRepositoryPort {
           .orderBy(...commentReplyOrderBy())
           .limit(limit + 1),
       databaseUnavailable.during('listCommentReplies')
+    );
+    return map(rows, (found) => found.map(toCommentThread));
+  }
+
+  async listOwnNonPublic(
+    videoId: string,
+    authorId: string
+  ): Promise<Result<CommentThread[], DatabaseUnavailable>> {
+    const viewer = { id: authorId };
+    const rows = await fromPromise(
+      () =>
+        selectThreads(this.db, viewer)
+          .where(
+            drizzleWhere(
+              eq(c.videoId, videoId),
+              eq(c.authorId, authorId),
+              notDeletedScope(c),
+              publicCommentScope(viewer),
+              not(publicCommentScope(null))
+            )
+          )
+          .orderBy(...commentThreadOrderBy('newest')),
+      databaseUnavailable.during('listOwnNonPublicComments')
     );
     return map(rows, (found) => found.map(toCommentThread));
   }

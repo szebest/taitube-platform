@@ -1,3 +1,4 @@
+import type { CreatorInboxFilter, NewCommentModeration } from '@vp/domain';
 import { expectOk } from '@vp/testing/result';
 import { C, type CommentContractContext, seedComment } from './comment-contract-context';
 import { OTHER_OWNER_ID, OWNER_ID, VIDEO_IDS, idsOf, publicVideo } from './fixtures';
@@ -6,7 +7,7 @@ const REPORT_ID = '00000000-0000-7000-8000-000000000d01';
 const OWNER_REPLY_ID = '00000000-0000-7000-8000-000000000c0a';
 
 export function describeCommentInboxContract(ctx: CommentContractContext): void {
-  const inbox = async (filter: 'all' | 'unanswered' | 'reported' = 'all', limit = 10) =>
+  const inbox = async (filter: CreatorInboxFilter = 'all', limit = 10) =>
     expectOk(await ctx.comments.listForOwner(OWNER_ID, { filter, cursor: null, limit }));
 
   async function ownerReplies(parentId: string, hoursAgo: number): Promise<void> {
@@ -143,6 +144,40 @@ export function describeCommentInboxContract(ctx: CommentContractContext): void 
       expectOk(await ctx.subject.repositories.commentReports.resolve(REPORT_ID, 'dismissed'));
 
       expect(await inbox('reported')).toEqual([]);
+    });
+  });
+
+  describe('the moderation filters', () => {
+    const state = (moderationState: 'held' | 'hidden', looksLikeQuestion = false) =>
+      ({
+        moderationState,
+        moderationDisclosure: 'silent',
+        heldReason: null,
+        looksLikeQuestion,
+      }) satisfies NewCommentModeration;
+
+    beforeEach(async () => {
+      await seedComment(ctx, C.old, { hoursAgo: 4 });
+      await seedComment(ctx, C.liked, { hoursAgo: 3, moderation: state('held') });
+      await seedComment(ctx, C.fresh, { hoursAgo: 2, moderation: state('hidden') });
+      await seedComment(ctx, C.reply1, {
+        hoursAgo: 1,
+        moderation: {
+          moderationState: 'published',
+          moderationDisclosure: null,
+          heldReason: null,
+          looksLikeQuestion: true,
+        },
+      });
+    });
+
+    it.each<{ filter: CreatorInboxFilter; ids: string[] }>([
+      { filter: 'held', ids: [C.liked] },
+      { filter: 'hidden', ids: [C.fresh] },
+      { filter: 'questions', ids: [C.reply1] },
+      { filter: 'all', ids: [C.reply1, C.fresh, C.liked, C.old] },
+    ])('lists under $filter exactly $ids', async ({ filter, ids }) => {
+      expect(idsOf(await inbox(filter))).toEqual(ids);
     });
   });
 

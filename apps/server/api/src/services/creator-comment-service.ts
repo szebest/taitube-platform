@@ -47,7 +47,7 @@ export class CreatorCommentService {
     return map(rows, (found) =>
       paginator.paginate(found, limit, {
         cursorOf: createdAtCursorPayload,
-        toItem: (comment) => toCreatorInboxCommentView(comment, ownerId),
+        toItem: (comment) => toCreatorInboxCommentView(comment, ownerId, user),
       })
     );
   }

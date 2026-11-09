@@ -53,7 +53,10 @@ export function graph(): Container {
     .provide(Repo.channels, (c) => new InMemoryChannelRepository(c.get(Repo.videos)))
     .provide(Repo.events, () => new InMemoryEventRepository())
     .provide(Repo.channelAudit, () => new InMemoryChannelAuditRepository())
-    .provide(Repo.commentSettings, () => new InMemoryCommentSettingsRepository())
+    .provide(
+      Repo.commentSettings,
+      (c) => new InMemoryCommentSettingsRepository({ audit: c.get(Repo.channelAudit) })
+    )
     .provide(Repo.channelUserRestrictions, () => new InMemoryChannelUserRestrictionRepository())
     .provide(Repo.trustedCommenters, () => new InMemoryTrustedCommenterRepository())
     .provide(

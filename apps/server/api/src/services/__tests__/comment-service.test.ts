@@ -1,12 +1,14 @@
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { Singleflight } from '@vp/concurrency';
 import type { CommentCachePort, HotComments } from '@vp/core/ports';
+import { DEFAULT_COMMENT_SETTINGS } from '@vp/domain';
 import { ErrorCodes, cacheUnavailable } from '@vp/errors';
 import { Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
 import { type Result, err, isOk, ok } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { CommentService } from '../comment-service';
+import { commentCreateDeps, saveSettings } from './comment-deps';
 
 const OWNER: UserContext = { id: '11111111-1111-7111-8111-111111111111', role: 'CREATOR' };
 const VIEWER: UserContext = { id: '22222222-2222-7222-8222-222222222222', role: 'USER' };
@@ -39,8 +41,7 @@ describe('CommentService', () => {
     repositories = new InMemoryRepositories();
     cache = new MapCommentCache();
     service = new CommentService({
-      comments: repositories.comments,
-      videos: repositories.videos,
+      ...commentCreateDeps(repositories),
       commentCache: cache,
       singleflight: new Singleflight(),
       paginator: new Paginator(),
@@ -105,6 +106,55 @@ describe('CommentService', () => {
     const created = await service.create(VIEWER, VIDEO_ID, { content: 'still saved' });
 
     expect(isOk(created)).toBe(true);
+  });
+
+  describe("an author's own comments that nobody else sees", () => {
+    const holdEverything = async () => {
+      const channel = expectOk(
+        await repositories.channels.create({
+          userId: OWNER.id,
+          handle: 'owner',
+          displayName: 'Owner',
+        })
+      );
+      await saveSettings(repositories, channel.id, {
+        ...DEFAULT_COMMENT_SETTINGS,
+        reviewMode: 'all',
+      });
+    };
+
+    it.each([
+      { viewer: null, shown: 1, total: 1 },
+      { viewer: OWNER, shown: 1, total: 1 },
+      { viewer: VIEWER, shown: 2, total: 2 },
+    ])(
+      'shows a held comment to $viewer.id as $shown of $total, from the shared page too',
+      async ({ viewer, shown, total }) => {
+        await holdEverything();
+        const held = expectOk(await service.create(VIEWER, VIDEO_ID, { content: 'later' }));
+        expect(held.status).toBe('held');
+
+        const hot = expectOk(await service.listForVideo(viewer, VIDEO_ID, {}));
+        const newest = expectOk(await service.listForVideo(viewer, VIDEO_ID, { sort: 'newest' }));
+
+        expect([hot.items.length, hot.total]).toEqual([shown, total]);
+        expect([newest.items.length, newest.total]).toEqual([shown, total]);
+      }
+    );
+
+    it('counts a held reply on the public root it answers, for its author only', async () => {
+      const [root] = expectOk(await service.listForVideo(null, VIDEO_ID, {})).items;
+      await holdEverything();
+      expectOk(
+        await service.create(VIEWER, VIDEO_ID, { content: 'held reply', parentId: root?.id })
+      );
+
+      const author = expectOk(await service.listForVideo(VIEWER, VIDEO_ID, {}));
+      const anonymous = expectOk(await service.listForVideo(null, VIDEO_ID, {}));
+
+      expect(author.items.map((item) => item.replyCount)).toEqual([1]);
+      expect(anonymous.items.map((item) => item.replyCount)).toEqual([0]);
+    });
   });
 
   describe('hearts', () => {

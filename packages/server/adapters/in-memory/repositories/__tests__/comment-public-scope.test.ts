@@ -115,7 +115,7 @@ describe('adapters/in-memory: public comment scope', () => {
       viewer: OTHER,
       expected: false,
     },
-  ])('shows $name: $expected', ({ parent, viewer, expected }) => {
+  ])('shows a reply as $name: $expected', ({ parent, viewer, expected }) => {
     const root = comment('root', parent);
     const reply = comment('reply', { parentId: 'root' });
 

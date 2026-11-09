@@ -1,8 +1,13 @@
 import type { Repositories } from '@vp/core/repositories';
-import { type Channel, type CommentSettings, DEFAULT_COMMENT_SETTINGS } from '@vp/domain';
+import {
+  type Channel,
+  type CommentSettings,
+  DEFAULT_COMMENT_SETTINGS,
+  type NewChannelAuditEntry,
+} from '@vp/domain';
 import { expectOk } from '@vp/testing/result';
 import { seedTeam } from './channel-team-fixtures';
-import { seedOwners } from './fixtures';
+import { OWNER_ID, seedOwners } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
 const STRICT: CommentSettings = {
@@ -14,6 +19,15 @@ const STRICT: CommentSettings = {
   minAccountAgeDays: 7,
   disclosure: { ...DEFAULT_COMMENT_SETTINGS.disclosure, hide: 'visible' },
 };
+
+const auditOf = (channel: Channel): NewChannelAuditEntry => ({
+  channelId: channel.id,
+  actorUserId: OWNER_ID,
+  action: 'settings.comments.updated',
+  targetType: 'settings',
+  targetId: channel.id,
+  meta: { fields: ['reviewMode'] },
+});
 
 export function describeCommentSettingsRepositoryContract(
   makeSubject: MakeRepositoriesSubject
@@ -53,12 +67,23 @@ export function describeCommentSettingsRepositoryContract(
       },
     ])('reads back $name', async ({ saves, expected }) => {
       for (const settings of saves) {
-        expect(expectOk(await repositories.commentSettings.save(channel.id, settings))).toEqual(
-          settings
-        );
+        expect(
+          expectOk(await repositories.commentSettings.save(channel.id, settings, auditOf(channel)))
+        ).toEqual(settings);
       }
 
       expect(expectOk(await repositories.commentSettings.get(channel.id))).toEqual(expected);
+    });
+
+    it('audits the save on the channel, as the member who made it', async () => {
+      expectOk(await repositories.commentSettings.save(channel.id, STRICT, auditOf(channel)));
+
+      const log = expectOk(
+        await repositories.channelAudit.list(channel.id, { cursor: null, limit: 10 })
+      );
+      expect(log).toMatchObject([
+        { actorUserId: OWNER_ID, action: 'settings.comments.updated', targetId: channel.id },
+      ]);
     });
 
     it('keeps one channel settings apart from another', async () => {
@@ -69,7 +94,7 @@ export function describeCommentSettingsRepositoryContract(
           displayName: 'Other',
         })
       );
-      expectOk(await repositories.commentSettings.save(channel.id, STRICT));
+      expectOk(await repositories.commentSettings.save(channel.id, STRICT, auditOf(channel)));
 
       expect(expectOk(await repositories.commentSettings.get(other.id))).toEqual(
         DEFAULT_COMMENT_SETTINGS

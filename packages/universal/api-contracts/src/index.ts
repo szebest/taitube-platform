@@ -12,6 +12,7 @@ import * as channelVideos from './channel-videos';
 import * as channels from './channels';
 import * as clips from './clips';
 import * as commentReports from './comment-reports';
+import * as commentSettings from './comment-settings';
 import * as comments from './comments';
 import * as creatorComments from './creator-comments';
 import * as creatorLive from './creator-live';
@@ -59,6 +60,7 @@ export * from './channel-videos';
 export * from './channels';
 export * from './clips';
 export * from './comment-reports';
+export * from './comment-settings';
 export * from './comments';
 export * from './creator-comments';
 export * from './creator-live';
@@ -112,6 +114,7 @@ export const contracts = {
   channels,
   clips,
   commentReports,
+  commentSettings,
   comments,
   creatorComments,
   creatorLive,

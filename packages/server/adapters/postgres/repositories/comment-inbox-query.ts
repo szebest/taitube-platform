@@ -37,6 +37,11 @@ export function creatorInboxFilterScope(
       return sql`exists (
         select 1 from ${r} where ${r.commentId} = ${c.id} and ${r.resolvedAt} is null
       )`;
+    case 'held':
+    case 'hidden':
+      return sql`${c.moderationState} = ${filter}`;
+    case 'questions':
+      return sql`${c.looksLikeQuestion}`;
     default:
       return assertNever(filter, 'CreatorInboxFilter');
   }

@@ -122,6 +122,8 @@ export function comment(overrides: Partial<CommentView> = {}): CommentView {
     likeCount: 0,
     heartedByCreator: false,
     replyCount: 0,
+    status: 'published',
+    moderation: null,
     author: {
       userId: COMMENT_AUTHOR_ID,
       channelId: null,
