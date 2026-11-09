@@ -148,6 +148,7 @@ export class ChannelInviteService {
       case 'accepted':
         return ok({
           channelId: invite.channelId,
+          ownerId: invite.ownerId,
           role: outcome.membership.role,
           channel: profileOf(invite.channel),
         });

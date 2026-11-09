@@ -118,6 +118,7 @@ describe('apps/server/api/services: ChannelMemberService', () => {
       items: [
         {
           channelId,
+          ownerId: OWNER.id,
           role: 'analytics',
           channel: { handle: 'team-owner', displayName: 'Owner', avatarUrl: null },
         },

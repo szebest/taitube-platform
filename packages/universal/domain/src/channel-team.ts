@@ -1,5 +1,5 @@
 /** One per row of the channel role matrix; an action added to the matrix adds its capability here. */
-const CHANNEL_CAPABILITIES = [
+export const CHANNEL_CAPABILITIES = [
   'video.read',
   'analytics.read',
   'video.edit',
@@ -97,13 +97,16 @@ export interface ChannelInvite {
 
 export const CHANNEL_AUDIT_RETENTION_DAYS = 365;
 
-export type VideoAuditField =
-  | 'title'
-  | 'description'
-  | 'visibility'
-  | 'categoryId'
-  | 'tags'
-  | 'thumbnail';
+export const VIDEO_AUDIT_FIELDS = [
+  'title',
+  'description',
+  'visibility',
+  'categoryId',
+  'tags',
+  'thumbnail',
+] as const;
+
+export type VideoAuditField = (typeof VIDEO_AUDIT_FIELDS)[number];
 
 /** `meta` holds ids and enum values only, never text another user wrote. */
 type ChannelAuditEvent =

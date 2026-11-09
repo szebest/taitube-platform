@@ -8,6 +8,7 @@ export function getRouter(options: AppRouterOptions = {}) {
       routeTree,
       apiBaseUrl: API_BASE_URL,
       pending: RoutePending,
+      actsOnChannels: true,
     },
     options
   );

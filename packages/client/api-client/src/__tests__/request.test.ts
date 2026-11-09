@@ -1,4 +1,13 @@
-import { abortUpload, getFeed, getVideo, setReaction, startUpload } from '@vp/api-contracts';
+import {
+  CHANNEL_HEADER,
+  abortUpload,
+  getFeed,
+  getVideo,
+  listMyMemberships,
+  setReaction,
+  startUpload,
+  updateMyChannel,
+} from '@vp/api-contracts';
 import { ApiContractError, ApiError } from '../api-error';
 import { sendRequest } from '../request';
 
@@ -69,6 +78,25 @@ describe('packages/api-client: request', () => {
     expect(headersOf(0)?.['content-type']).toBeUndefined();
     expect(headersOf(1)?.['content-type']).toBe('application/json');
   });
+
+  it.each([
+    { contract: updateMyChannel, channelId: 'chan-1', sent: 'chan-1' },
+    { contract: updateMyChannel, channelId: undefined, sent: undefined },
+    { contract: listMyMemberships, channelId: 'chan-1', sent: undefined },
+  ])(
+    'names the acting channel $channelId on $contract.path only when the endpoint is channel scoped',
+    async ({ contract, channelId, sent }) => {
+      const { calls, fetchStub } = recordingFetch(() => jsonResponse({ items: [] }));
+
+      await sendRequest(
+        { baseUrl: 'http://localhost:3000', fetch: fetchStub, getChannelId: () => channelId },
+        contract
+      ).catch(() => undefined);
+
+      const headers = calls[0]?.init.headers as Record<string, string>;
+      expect(headers[CHANNEL_HEADER]).toBe(sent);
+    }
+  );
 
   it('hands keepalive to fetch so a request can outlive the page', async () => {
     const { calls, fetchStub } = recordingFetch(() => new Response(null, { status: 204 }));

@@ -1,5 +1,7 @@
 import {
   type ActingRole,
+  CHANNEL_CAPABILITIES,
+  VIDEO_AUDIT_FIELDS,
   CHANNEL_ROLE_NAMES,
   type ChannelCapability,
   roleHas,
@@ -21,5 +23,25 @@ describe('@vp/domain: channel team', () => {
     ['analytics', 'comment.pin', false],
   ])('a %s holding %s: %s', (role, capability, expected) => {
     expect(roleHas(role, capability)).toBe(expected);
+  });
+
+  it('lists every capability, so the owner holds all of them and a manager all but ownership', () => {
+    expect(CHANNEL_CAPABILITIES.filter((capability) => roleHas('owner', capability))).toEqual(
+      CHANNEL_CAPABILITIES
+    );
+    expect(CHANNEL_CAPABILITIES.filter((capability) => !roleHas('manager', capability))).toEqual([
+      'channel.own',
+    ]);
+  });
+
+  it('names the video fields an audit row can carry', () => {
+    expect(VIDEO_AUDIT_FIELDS).toEqual([
+      'title',
+      'description',
+      'visibility',
+      'categoryId',
+      'tags',
+      'thumbnail',
+    ]);
   });
 });

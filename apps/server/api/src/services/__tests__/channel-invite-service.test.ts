@@ -85,6 +85,7 @@ describe('apps/server/api/services: ChannelInviteService', () => {
 
     expect(expectOk(await service.accept(INVITEE, id))).toEqual({
       channelId: acting.channelId,
+      ownerId: acting.ownerId,
       role: 'editor',
       channel: { handle: 'owner', displayName: 'Owner', avatarUrl: null },
     });

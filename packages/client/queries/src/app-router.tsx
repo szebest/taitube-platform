@@ -13,6 +13,7 @@ import { isSupportedLocale } from '@vp/messages';
 import { requestNonce } from '@vp/security-headers';
 import { createToaster, type Toaster } from '@vp/ui';
 import { type PropsWithChildren, useSyncExternalStore } from 'react';
+import { type ActingChannelStore, createActingChannelStore } from './acting-channel';
 import { createAppApiClient } from './api-client';
 import { AppWords } from './app-words';
 import { createQueryClient } from './create-query-client';
@@ -26,6 +27,8 @@ export type AppRouterContext = {
   toaster: Toaster;
   /** The negotiated locale and its loaded catalogue; the root route's `requestLocale` sets it. */
   locales: LocaleStore;
+  /** The channel a studio acts on; web never selects one, so its calls name none. */
+  actingChannel: ActingChannelStore;
 };
 
 /** What a spec or a request hands the router in place of the defaults it would build. */
@@ -41,6 +44,8 @@ export type AppRoutes<TRouteTree extends AnyRoute> = {
   /** Where the app's API client calls, from the app's own `src/config`. */
   apiBaseUrl: string;
   pending: RouteComponent;
+  /** Sends the store's channel as `X-Channel-Id` on the calls that take one: the studio's. */
+  actsOnChannels?: boolean;
 };
 
 function parseSearch(searchStr: string): Record<string, string> {
@@ -85,20 +90,25 @@ const PENDING_MIN_MS = 500;
  * `'1.10'` and each route's schema coerces what it needs.
  */
 export function createAppRouter<TRouteTree extends AnyRoute>(
-  { routeTree, apiBaseUrl, pending }: AppRoutes<TRouteTree>,
+  { routeTree, apiBaseUrl, pending, actsOnChannels = false }: AppRoutes<TRouteTree>,
   {
     history,
     api,
     queryClient = createQueryClient(),
     toaster = createToaster(),
     locales = createLocaleStore(),
+    actingChannel = createActingChannelStore(),
     nonce = requestNonce(),
     defaultPreload = 'intent',
   }: AppRouterOptions = {}
 ): Router<TRouteTree> {
   let renderedAt = new Date().toISOString();
   const sessionApi = () =>
-    createAppApiClient({ apiBaseUrl, onUnauthorized: () => endSession(router) });
+    createAppApiClient({
+      apiBaseUrl,
+      onUnauthorized: () => endSession(router),
+      getChannelId: actsOnChannels ? actingChannel.read : undefined,
+    });
   // Named as `Router`, not `createRouter`'s `RouterCore`, so the emitted declaration imports a
   // package the apps resolve: `@tanstack/router-core` is react-router's own dependency, not theirs.
   const router: Router<TRouteTree> = new Router({
@@ -110,6 +120,7 @@ export function createAppRouter<TRouteTree extends AnyRoute>(
       queryClient,
       toaster,
       locales,
+      actingChannel,
     } satisfies AppRouterContext,
     defaultPreload,
     defaultPreloadStaleTime: 0,
@@ -128,9 +139,11 @@ export function createAppRouter<TRouteTree extends AnyRoute>(
     dehydrate: (): Record<string, string> => ({
       renderedAt,
       locale: locales.snapshot().locale,
+      actingChannel: actingChannel.read() ?? '',
     }),
     hydrate: async (dehydrated) => {
       renderedAt = dehydrated['renderedAt'] ?? renderedAt;
+      actingChannel.select(dehydrated['actingChannel'] || undefined);
       const locale = dehydrated['locale'] ?? '';
       if (isSupportedLocale(locale)) {
         await locales.activate(locale);
