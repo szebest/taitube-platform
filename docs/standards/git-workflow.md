@@ -27,6 +27,8 @@ A ticket whose plan has more than one PR ships as a native GitHub stack managed 
 - **Slice branches** `slice/<NN>a-<slug>`, `slice/<NN>b-<slug>`, ..., each stacked on the one below, the bottom one on the feature branch. Each slice PR is titled `<NN>a: <slice title>`, reviewed on its own, and green on its own; the top slice sets the ticket `done`.
 - **Merging, bottom-up:** the stack's lead lands each clean slice into the feature branch with `gh stack merge`; the owner reviews and squash-merges the feature PR into `main`, one commit per ticket.
 
+A folder restructure ships as its own slice: only `git mv` and the import paths the move forces, so `git diff -M --summary` prints `rename ... (100%)` lines and the diff stays reviewable. Renames of symbols and any code edit go in another slice. The target layout is [frontend-structure.md](frontend-structure.md).
+
 The mechanics (opening, syncing after a lower slice changes or merges, the exact commands) are `git-and-pr-conventions`, `references/stacked-prs.md` and `references/this-repo.md`, under `.agents/skills/`.
 
 ---
