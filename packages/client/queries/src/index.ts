@@ -14,6 +14,7 @@ export type { LiveChatLine } from './live-chat-state';
 export * from './parse-client-env';
 export * from './parse-param';
 export * from './prefetched';
+export { failureCode } from './failure-code';
 export * from './present-failure';
 export * from './request-locale';
 export * from './retry-policy';

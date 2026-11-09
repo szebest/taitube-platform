@@ -1,4 +1,8 @@
-import type { WatchPartyServerFrame, WatchPartyView } from '@vp/api-contracts';
+import type {
+  WatchPartyPreviewView,
+  WatchPartyServerFrame,
+  WatchPartyView,
+} from '@vp/api-contracts';
 import { VIDEO_ID } from './fixtures';
 
 const partyId = (index: number) => `0190c3a0-5e1d-7000-8000-${String(index).padStart(12, '0')}`;
@@ -107,5 +111,47 @@ export function partyHello(
     },
     chat: { resume: 'fresh', mode: { enabled: true, slowModeSeconds: 0 }, pinned: null },
     ...overrides,
+  };
+}
+
+/** What a visitor with no seat gets from `GET /v1/watch-parties/:id`: the room, who is in it, and what they may do. */
+export function partyPreview(
+  overrides: Partial<Omit<WatchPartyPreviewView, 'viewer'>> & {
+    viewer?: Partial<WatchPartyPreviewView['viewer']>;
+  } = {}
+): WatchPartyPreviewView {
+  const { viewer, ...room } = overrides;
+
+  return {
+    ...partyRoom(),
+    features: { voice: false },
+    roster: {
+      faces: [{ name: 'Ana', avatarUrl: null }],
+      others: 1,
+      discord: 0,
+      guests: 1,
+      total: 3,
+    },
+    viewer: {
+      memberKey: null,
+      permissions: [],
+      roleIds: [],
+      canJoin: 'yes',
+      actions: ['guest', 'sign_in'],
+      ...viewer,
+    },
+    ...room,
+  };
+}
+
+export function partyMembership(memberKey = PARTY_VIEWER_KEY) {
+  return {
+    roomId: PARTY_ID,
+    memberKey,
+    kind: 'user' as const,
+    name: 'Me',
+    joinedVia: 'link' as const,
+    roleIds: [],
+    permissions: [],
   };
 }

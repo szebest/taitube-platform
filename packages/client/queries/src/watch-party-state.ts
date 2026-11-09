@@ -54,8 +54,7 @@ export type WatchPartyAction =
   | { type: 'connection'; connection: PartyConnection }
   | { type: 'dismissRequest'; key: string };
 
-/** @internal */
-export const PARTY_LINES_KEPT = 500;
+const PARTY_LINES_KEPT = 500;
 
 export const INITIAL_WATCH_PARTY: WatchPartyState = {
   connection: 'connecting',
