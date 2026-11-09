@@ -31,7 +31,13 @@ describe('apps/server/api/composition: comment module', () => {
     );
     const queue = expectOk(await c.get(Services.CommentReportService).list(ADMIN, {}));
     const inbox = expectOk(
-      await c.get(Services.CreatorCommentService).inbox(CREATOR, { filter: 'reported' })
+      await c.get(Services.CreatorCommentService).inbox(
+        CREATOR,
+        { channelId: 'chan-creator', ownerId: CREATOR.id, role: 'owner' },
+        {
+          filter: 'reported',
+        }
+      )
     );
 
     expect(queue.items.map((item) => item.id)).toEqual([report.id]);

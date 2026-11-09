@@ -1,11 +1,19 @@
 import * as crypto from 'node:crypto';
-import { contracts, endpointKey, isEndpoint, PARTY_CREDENTIAL_HEADER } from '@vp/api-contracts';
+import {
+  CHANNEL_HEADER,
+  contracts,
+  endpointKey,
+  isEndpoint,
+  PARTY_CREDENTIAL_HEADER,
+} from '@vp/api-contracts';
 import type {
   AuthFailure,
   PartyGuestSession,
   PartyGuestSessionsPort,
   TokenVerifier,
 } from '@vp/core/ports';
+import type { ActingChannel } from '@vp/domain';
+import type { ChannelMembershipRequired } from '@vp/domain-rules';
 import type { AppConfig, AuthConfig } from '@vp/env-schema';
 import {
   type CacheUnavailable,
@@ -20,10 +28,10 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import fp from 'fastify-plugin';
 import type { ServiceSet } from '../composition/services.module';
 import { sendResult } from '../routes/send-result';
-import type { ChannelService } from '../services/channel-service';
+import type { RequestIdentity } from '../services/request-identity';
 
 export interface AuthPluginOptions {
-  channelService: ChannelService;
+  identity: RequestIdentity;
   verifier: TokenVerifier;
   auth: AuthConfig;
   guestSessions: PartyGuestSessionsPort;
@@ -36,6 +44,7 @@ declare module 'fastify' {
     user: UserContext | null;
     /** A guest's or a Discord member's party credential, resolved only on `partyGuest` routes. */
     party: PartyGuestSession | null;
+    actingChannel: Result<ActingChannel, ChannelMembershipRequired> | null;
   }
   interface FastifyInstance {
     services: ServiceSet;
@@ -122,6 +131,7 @@ async function authPlugin(app: FastifyInstance, options: AuthPluginOptions): Pro
   app.decorateRequest('user', null);
   app.decorateRequest('party', null);
   const partyRoutes = partyGuestRoutes();
+  app.decorateRequest('actingChannel', null);
 
   app.addHook('onRequest', async (request: FastifyRequest, reply: FastifyReply) => {
     const identified = await identify(request, options);
@@ -133,12 +143,17 @@ async function authPlugin(app: FastifyInstance, options: AuthPluginOptions): Pro
       request.party = party.value;
     }
 
-    request.user = identified.value;
     if (!identified.value) return;
 
-    const { id, email } = identified.value;
-    const provisioned = await options.channelService.ensureProvisioned(id, email);
-    if (isErr(provisioned)) return sendResult(reply, request, provisioned);
+    const requested = request.headers[CHANNEL_HEADER];
+    const resolved = await options.identity.resolve(
+      identified.value,
+      typeof requested === 'string' ? requested : undefined
+    );
+    if (isErr(resolved)) return sendResult(reply, request, resolved);
+
+    request.user = resolved.value.user;
+    request.actingChannel = resolved.value.acting;
   });
 }
 
@@ -154,4 +169,18 @@ export function requireAuth(request: FastifyRequest): UserContext {
     );
   }
   return request.user;
+}
+
+/** The channel a studio route works on: the caller's own, or the one `X-Channel-Id` named. */
+export function requireActingChannel(request: FastifyRequest): {
+  user: UserContext;
+  acting: ActingChannel;
+} {
+  const user = requireAuth(request);
+  const acting = request.actingChannel;
+  if (!acting) {
+    throw new PermanentError(ErrorCodes.UNAUTHORIZED, 'No acting channel for this request');
+  }
+  if (isErr(acting)) throw new PermanentError(acting.error.code, acting.error.message);
+  return { user, acting: acting.value };
 }

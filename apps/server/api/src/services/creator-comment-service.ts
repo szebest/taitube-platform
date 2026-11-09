@@ -1,6 +1,7 @@
 import type { CreatorInboxCommentView } from '@vp/api-contracts';
 import type { CommentRepositoryPort } from '@vp/core/repositories';
-import type { CreatorInboxFilter } from '@vp/domain';
+import type { ActingChannel, CreatorInboxFilter } from '@vp/domain';
+import { type AuthorizationFailure, decideChannelTask } from '@vp/domain-rules';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { InvalidCursor, Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
@@ -18,22 +19,27 @@ export interface CreatorInboxPage {
   nextCursor: string | null;
 }
 
-export type CreatorInboxFailure = InvalidCursor | DatabaseUnavailable;
+export type CreatorInboxFailure = AuthorizationFailure | InvalidCursor | DatabaseUnavailable;
 
-/** The inbox is scoped to the caller's own videos by the query, so it asks no permission. */
+/** The comments on the acting channel's videos, for whoever moderates them. */
 export class CreatorCommentService {
   constructor(private readonly deps: CreatorCommentServiceDeps) {}
 
   async inbox(
-    creator: UserContext,
+    user: UserContext,
+    acting: ActingChannel,
     options: { filter: CreatorInboxFilter; cursor?: string; limit?: number }
   ): Promise<Result<CreatorInboxPage, CreatorInboxFailure>> {
+    const allowed = decideChannelTask({ user, acting, task: 'read-inbox' });
+    if (isErr(allowed)) return allowed;
+    const { ownerId } = allowed.value;
+
     const { paginator, comments } = this.deps;
     const limit = paginator.limit(options.limit);
     const cursor = decodeCreatedAtCursor(options.cursor, paginator);
     if (isErr(cursor)) return cursor;
 
-    const rows = await comments.listForOwner(creator.id, {
+    const rows = await comments.listForOwner(ownerId, {
       filter: options.filter,
       cursor: cursor.value,
       limit,
@@ -41,7 +47,7 @@ export class CreatorCommentService {
     return map(rows, (found) =>
       paginator.paginate(found, limit, {
         cursorOf: createdAtCursorPayload,
-        toItem: (comment) => toCreatorInboxCommentView(comment, creator.id),
+        toItem: (comment) => toCreatorInboxCommentView(comment, ownerId),
       })
     );
   }

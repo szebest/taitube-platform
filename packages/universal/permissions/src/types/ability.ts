@@ -3,6 +3,11 @@ import type { AnalyticsResource } from './analytics';
 import type { CaptionResource } from './caption';
 import type { CategoryResource } from './category';
 import type { ChannelResource } from './channel';
+import type {
+  ChannelAuditResource,
+  ChannelInviteResource,
+  ChannelMemberResource,
+} from './channel-team';
 import type { ClipResource } from './clip';
 import type { CommentResource } from './comment';
 import type { LiveStreamResource } from './live-stream';
@@ -46,6 +51,9 @@ export type AppSubjects =
       | (LiveStreamResource & ForcedSubject<'LiveStream'>)
       | (RecommendationFeedbackResource & ForcedSubject<'RecommendationFeedback'>)
       | (WatchPartyResource & ForcedSubject<'WatchParty'>)
+      | (ChannelMemberResource & ForcedSubject<'ChannelMember'>)
+      | (ChannelInviteResource & ForcedSubject<'ChannelInvite'>)
+      | (ChannelAuditResource & ForcedSubject<'ChannelAudit'>)
     >
   | 'Video'
   | 'Upload'
@@ -62,6 +70,9 @@ export type AppSubjects =
   | 'Pick'
   | 'RecommendationFeedback'
   | 'Webhook'
-  | 'WatchParty';
+  | 'WatchParty'
+  | 'ChannelMember'
+  | 'ChannelInvite'
+  | 'ChannelAudit';
 
 export type AppAbility = MongoAbility<[AppAction, AppSubjects]>;

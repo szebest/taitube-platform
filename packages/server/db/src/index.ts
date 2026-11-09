@@ -18,6 +18,7 @@ export * from './captions-schema';
 export * from './live-schema';
 export * from './watch-parties-schema';
 export * from './watch-party-activity-schema';
+export * from './channel-team-schema';
 export * from './client';
 export * from './migrate';
 export * from './seed';

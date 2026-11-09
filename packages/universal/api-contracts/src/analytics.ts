@@ -147,6 +147,7 @@ export const getVideoRetention = defineEndpoint({
 export const getChannelAnalytics = defineEndpoint({
   method: 'GET',
   path: '/v1/creator/channel/analytics',
+  channelScoped: true,
   tag: 'Creator Analytics',
   summary: "Views across the caller's channel",
   description:

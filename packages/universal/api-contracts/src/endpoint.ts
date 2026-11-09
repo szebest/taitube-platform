@@ -7,6 +7,9 @@ type HttpMethod = (typeof HTTP_METHODS)[number];
 
 type ErrorResponses = Readonly<Record<number, readonly ErrorCode[]>>;
 
+/** Names the channel a studio request acts on; absent, the caller acts on their own. */
+export const CHANNEL_HEADER = 'x-channel-id';
+
 export interface EndpointContract {
   readonly method: HttpMethod;
   readonly path: string;
@@ -26,6 +29,12 @@ export interface EndpointContract {
    * the OpenAPI document, so SDD §6.1 is where it is documented.
    */
   readonly socket?: boolean;
+  /**
+   * Acts on the channel `X-Channel-Id` names, which must be one whose team the caller is on: the
+   * route also answers 403 `CHANNEL_MEMBERSHIP_REQUIRED`, and `FORBIDDEN` when the caller's role
+   * there does not cover it.
+   */
+  readonly channelScoped?: true;
   readonly params?: z.ZodType;
   readonly query?: z.ZodType;
   readonly body?: z.ZodType;

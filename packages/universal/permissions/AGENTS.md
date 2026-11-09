@@ -9,19 +9,22 @@ Instructions for any coding agent working on `@vp/permissions`.
 ## 1. Scope & Purpose
 
 `@vp/permissions` is the zero-I/O authorization engine built on `@casl/ability`. Universal / T2: it
-depends on `@vp/domain` (the watch party permission registry), `@vp/errors` and `@casl/ability` only, so `apps/client/web`, `apps/server/api`, `@vp/core`,
+depends on `@vp/domain` (the watch party permission registry and the channel team roles), `@vp/errors` and `@casl/ability` only, so `apps/client/web`, `apps/server/api`, `@vp/core`,
 `@vp/adapters` and `@vp/domain-rules` all import it.
 
 - Rule factories in `src/rules/`: `defineVideoRules`, `defineCommentRules`, `defineChannelRules`,
   `defineUploadRules`, `defineAnalyticsRules`, `definePlaylistRules`, `definePreferencesRules`,
-  `defineCaptionRules`, `defineRecommendationFeedbackRules`, `defineAdminRules` (`<resource>.rules.ts`).
-- The ability builder `getUserPermissions(user: UserContext | null)` in `ability.ts`, which applies all
-  nine. The admin rules go last: a later CASL rule wins, so `manage all` overrides every `cannot`, such as
+  `defineCaptionRules`, `defineRecommendationFeedbackRules`, `defineChannelTeamRules`, `defineAdminRules`
+  (`<resource>.rules.ts`). Channel team members get their rules beside the owner's, through `ownersWith` /
+  `channelsWith` in `rules/memberships.ts` over `UserContext.memberships` and `CHANNEL_ROLES` from `@vp/domain`;
+  never an empty `$in`.
+- The ability builder `getUserPermissions(user: UserContext | null)` in `ability.ts`, which applies every
+  rule factory. The admin rules go last: a later CASL rule wins, so `manage all` overrides every `cannot`, such as
   the one that stops an owner changing the visibility of a video an admin took down (`REJECTED`).
 - Typed helpers in `src/helpers/`: `canReadVideo`, `canUpdateVideo`, `canDeleteVideo`, `canModerateVideo` (the
   `moderate` action, an admin takedown), `canReactVideo`,
   `canAccessUpload`, `canSubscribeChannel`, `canCreateComment`, `canUpdateComment`,
-  `canDeleteComment`, `canPinComment`, `canManageCategory`, `canManagePick`, `canAccessAdmin`, `canReadAnalytics`,
+  `canDeleteComment`, `canPinComment`, `canModerateComments`, `canUpdateChannel`, `canManageCategory`, `canManagePick`, `canAccessAdmin`, `canReadAnalytics`,
   `canCreatePlaylist`, `canReadPlaylist`, `canUpdatePlaylist`, `canDeletePlaylist`,
   `canManagePlaylistItems`, `canReadCaptions`, `canManageCaptions`.
 - The room-scoped ability `getWatchPartyPermissions(user, viewer)` in `src/helpers/watch-parties.ts`, built

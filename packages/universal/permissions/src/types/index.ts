@@ -14,3 +14,4 @@ export * from './clip';
 export * from './live-stream';
 export * from './recommendation-feedback';
 export * from './watch-party';
+export * from './channel-team';

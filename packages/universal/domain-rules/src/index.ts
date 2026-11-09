@@ -2,6 +2,7 @@ export * from './authorize';
 export * from './videos/index';
 export * from './uploads/index';
 export * from './channels/index';
+export * from './channel-team/index';
 export * from './categories/index';
 export * from './reactions/index';
 export * from './comments/index';

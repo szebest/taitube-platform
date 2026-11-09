@@ -10,6 +10,7 @@ export const NOTIFICATION_KINDS = [
   'heart',
   'party_invite',
   'party_starting',
+  'team_invite',
 ] as const;
 export type NotificationKind = (typeof NOTIFICATION_KINDS)[number];
 
@@ -45,7 +46,7 @@ export function levelAllows(level: NotificationLevel, kind: NotificationKind): b
   return !BLOCKED_BY_LEVEL[level].includes(kind);
 }
 
-/** The account switch that gates a kind, in `preferences.notifications`. */
+/** The account switch that gates a kind, in `preferences.notifications`; `null` is always delivered. */
 export const KIND_SWITCH = {
   upload: 'subscriptionUploads',
   live: 'subscriptionUploads',
@@ -56,7 +57,8 @@ export const KIND_SWITCH = {
   heart: 'repliesAndMentions',
   party_invite: 'watchParties',
   party_starting: 'watchParties',
-} as const satisfies Record<NotificationKind, string>;
+  team_invite: null,
+} as const satisfies Record<NotificationKind, string | null>;
 
 interface NotifiableVideo {
   ownerId: string;

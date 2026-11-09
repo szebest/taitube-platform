@@ -33,6 +33,8 @@ export function useNotificationText(): (notification: Notification) => Notificat
         return tOr('notifications.partyInvite', { name }, '');
       case 'party_starting':
         return tOr('notifications.partyStarting', {}, '');
+      case 'team_invite':
+        return tOr('notifications.teamInvite', { name }, '');
       case 'processing':
         return payload.outcome === 'failed'
           ? tOr('notifications.processingFailed', {}, '')

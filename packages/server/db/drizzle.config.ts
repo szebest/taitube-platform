@@ -21,6 +21,7 @@ export default defineConfig({
     './src/live-schema.ts',
     './src/watch-parties-schema.ts',
     './src/watch-party-activity-schema.ts',
+    './src/channel-team-schema.ts',
   ],
   out: './drizzle',
   dialect: 'postgresql',

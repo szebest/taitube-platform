@@ -133,6 +133,7 @@ describe('apps/server/worker: stage registry', () => {
         commentId: '018f0000-0000-7000-8000-000000000002',
       },
     },
+    { name: 'notify-team-invite', data: { inviteId: '018f0000-0000-7000-8000-000000000004' } },
     {
       name: 'notify-processing',
       data: { videoId: '018f0000-0000-7000-8000-000000000001', outcome: 'ready' },

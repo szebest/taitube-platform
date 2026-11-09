@@ -1,10 +1,16 @@
 import { Adapters } from '@vp/adapters/composition';
 import type { Container } from '@vp/composition';
-import { ChannelFeaturedService, ChannelImageService, ChannelService } from '../services/index';
+import {
+  ChannelFeaturedService,
+  ChannelImageService,
+  ChannelService,
+  RequestIdentity,
+} from '../services/index';
 import { Services } from './service-tokens';
+import { registerTeamServices } from './team.module';
 
 export function registerChannelServices(c: Container): Container {
-  return c
+  return registerTeamServices(c)
     .provide(
       Services.ChannelImageService,
       (c) =>
@@ -29,6 +35,14 @@ export function registerChannelServices(c: Container): Container {
           paginator: c.get(Services.Paginator),
           cdn: c.get(Adapters.Config).cdn,
           images: c.get(Services.ChannelImageService),
+        })
+    )
+    .provide(
+      Services.RequestIdentity,
+      (c) =>
+        new RequestIdentity({
+          channels: c.get(Services.ChannelService),
+          members: c.get(Adapters.Repositories).channelMembers,
         })
     )
     .provide(

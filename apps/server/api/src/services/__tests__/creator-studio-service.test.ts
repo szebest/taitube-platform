@@ -4,9 +4,9 @@ import { ErrorCodes } from '@vp/errors';
 import { Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
 import { expectErr, expectOk } from '@vp/testing/result';
-import { CreatorStudioService } from '../creator-studio-service';
+import { type CreatorLibraryOptions, CreatorStudioService } from '../creator-studio-service';
 import { VideoService } from '../video-service';
-import { TEST_CDN, TEST_SPRITE, videoServiceDeps } from './service-deps';
+import { ownerActing, TEST_CDN, TEST_SPRITE, videoServiceDeps } from './service-deps';
 
 const OWNER: UserContext = { id: '00000000-0000-7000-8000-0000000000d1', role: 'CREATOR' };
 const STRANGER: UserContext = { id: '00000000-0000-7000-8000-0000000000d2', role: 'USER' };
@@ -19,6 +19,9 @@ const THUMBNAIL_ID = '00000000-0000-7000-8000-0000000000dd';
 describe('apps/server/api/services: creator studio', () => {
   let repositories: InMemoryRepositories;
   let studio: CreatorStudioService;
+
+  const library = (user: UserContext, options: CreatorLibraryOptions) =>
+    studio.library(user, ownerActing(user.id, 'chan'), options);
 
   async function seed(overrides: Partial<NewVideoInput> = {}) {
     return expectOk(
@@ -64,12 +67,12 @@ describe('apps/server/api/services: creator studio', () => {
       await seed({ viewsCount: 3, commentsCount: 1, tags: ['a'] });
       await seed({ id: OTHER_VIDEO_ID, viewsCount: 9 });
 
-      const first = expectOk(await studio.library(OWNER, { sort: 'views', limit: 1 }));
+      const first = expectOk(await library(OWNER, { sort: 'views', limit: 1 }));
       expect(first.items.map((item) => [item.id, item.viewsCount])).toEqual([[OTHER_VIDEO_ID, 9]]);
       expect(first.items[0]?.channel).toMatchObject({ handle: 'owner' });
 
       const cursor = first.nextCursor ?? undefined;
-      const second = expectOk(await studio.library(OWNER, { sort: 'views', limit: 1, cursor }));
+      const second = expectOk(await library(OWNER, { sort: 'views', limit: 1, cursor }));
       expect(second).toMatchObject({
         items: [{ id: VIDEO_ID, commentsCount: 1, tags: ['a'] }],
         nextCursor: null,
@@ -79,16 +82,16 @@ describe('apps/server/api/services: creator studio', () => {
     it('lists nothing of anyone else', async () => {
       await seed();
 
-      expect(expectOk(await studio.library(STRANGER, { sort: 'newest' })).items).toEqual([]);
+      expect(expectOk(await library(STRANGER, { sort: 'newest' })).items).toEqual([]);
     });
 
     it('refuses a cursor carried over from another sort', async () => {
       await seed();
       await seed({ id: OTHER_VIDEO_ID });
-      const page = expectOk(await studio.library(OWNER, { sort: 'views', limit: 1 }));
+      const page = expectOk(await library(OWNER, { sort: 'views', limit: 1 }));
 
       const failure = expectErr(
-        await studio.library(OWNER, { sort: 'likes', cursor: page.nextCursor ?? undefined })
+        await library(OWNER, { sort: 'likes', cursor: page.nextCursor ?? undefined })
       );
 
       expect(failure.code).toBe(ErrorCodes.INVALID_CURSOR);
@@ -185,11 +188,7 @@ describe('apps/server/api/services: creator studio', () => {
         })
       );
 
-      expect(view).toMatchObject({
-        tags: ['lofi'],
-        categoryId: CATEGORY_ID,
-        version: version + 1,
-      });
+      expect(view).toMatchObject({ tags: ['lofi'], categoryId: CATEGORY_ID, version: version + 1 });
     });
 
     it('goes back to the generated poster', async () => {
@@ -200,6 +199,7 @@ describe('apps/server/api/services: creator studio', () => {
           expectedVersion: version,
           patch: { customThumbnailKey: `videos/${VIDEO_ID}/thumbs/custom/${THUMBNAIL_ID}.jpg` },
           userId: OWNER.id,
+          auditFields: ['thumbnail'],
         })
       );
 
@@ -276,12 +276,12 @@ describe('apps/server/api/services: creator studio', () => {
     });
 
     it.each([
-      { name: 'the owner', actor: OWNER, code: ErrorCodes.FORBIDDEN },
-      { name: 'someone else', actor: STRANGER, code: ErrorCodes.FORBIDDEN },
-    ])('refuses $name', async ({ actor, code }) => {
+      { name: 'the owner', actor: OWNER },
+      { name: 'someone else', actor: STRANGER },
+    ])('refuses $name', async ({ actor }) => {
       await seed();
 
-      expect(expectErr(await studio.takeDown(actor, VIDEO_ID)).code).toBe(code);
+      expect(expectErr(await studio.takeDown(actor, VIDEO_ID)).code).toBe(ErrorCodes.FORBIDDEN);
     });
 
     it('reports a video that is not there as absent', async () => {

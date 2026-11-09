@@ -6,6 +6,7 @@ import {
 } from '@tanstack/react-router';
 import { createLocaleStore } from '@vp/intl-react';
 import { serverRender } from '@vp/web-testing/server';
+import { createActingChannelStore } from '../acting-channel';
 import {
   type AppRouterContext,
   type AppRouterOptions,
@@ -168,6 +169,18 @@ describe('@vp/queries: app router', () => {
       expect(browser.options.context.locales.snapshot().locale).toBe(active);
     }
   );
+
+  it('carries the acting channel into the page, so the browser names the one the server rendered for', async () => {
+    const actingChannel = createActingChannelStore();
+    actingChannel.select('chan-2');
+
+    const { html } = await serverRender(() => getRouter({ actingChannel }), '/wide');
+    const browser = getRouter();
+    await browser.options.hydrate?.({ locale: 'en', actingChannel: 'chan-2' });
+
+    expect(html).toContain('actingChannel:"chan-2"');
+    expect(browser.options.context.actingChannel.read()).toBe('chan-2');
+  });
 
   it('renders the not-found page for a path no route matches', async () => {
     const { status, html } = await serverRender(getRouter, '/nope');

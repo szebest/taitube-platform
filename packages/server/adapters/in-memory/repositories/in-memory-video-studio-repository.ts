@@ -1,5 +1,7 @@
 import {
   type CategoryRepositoryPort,
+  type ChannelAuditRepositoryPort,
+  type ChannelRepositoryPort,
   type EventRepository,
   type OutboxRepository,
   type StudioMetadataOutcome,
@@ -23,6 +25,8 @@ export interface InMemoryVideoStudioRepositoryOptions {
   categories: Pick<CategoryRepositoryPort, 'findById'>;
   events: Pick<EventRepository, 'create'>;
   outbox: Pick<OutboxRepository, 'enqueue'>;
+  channels: Pick<ChannelRepositoryPort, 'findByUserId'>;
+  audit: Pick<ChannelAuditRepositoryPort, 'append'>;
 }
 
 function compare<T extends Date | number | string>(a: T, b: T): number {
@@ -72,7 +76,7 @@ export class InMemoryVideoStudioRepository extends VideoStudioRepository {
   async updateMetadata(
     options: UpdateStudioMetadataOptions
   ): Promise<Result<StudioMetadataOutcome, DatabaseUnavailable | VersionConflict>> {
-    const { videoId, expectedVersion, patch, userId } = options;
+    const { videoId, expectedVersion, patch, userId, auditFields } = options;
     const { categoryId } = patch;
 
     if (categoryId) {
@@ -93,6 +97,20 @@ export class InMemoryVideoStudioRepository extends VideoStudioRepository {
       payload: { patch, expectedVersion, newVersion: video.version, requestedBy: userId },
     });
     if (isErr(recorded)) return recorded;
+
+    const channel = await this.deps.channels.findByUserId(video.ownerId);
+    if (isErr(channel)) return channel;
+    if (channel.value) {
+      const audited = await this.deps.audit.append({
+        channelId: channel.value.id,
+        actorUserId: userId,
+        action: 'video.updated',
+        targetType: 'video',
+        targetId: videoId,
+        meta: { fields: auditFields },
+      });
+      if (isErr(audited)) return audited;
+    }
 
     for (const job of visibilityNotificationJobs(
       videoId,

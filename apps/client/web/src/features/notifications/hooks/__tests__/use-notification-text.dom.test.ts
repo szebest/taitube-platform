@@ -41,6 +41,11 @@ describe('apps/client/web: useNotificationText', () => {
       headline: 'Night Kitchen hearted your comment',
     },
     {
+      case: 'a team invite',
+      shown: notification({ kind: 'team_invite', videoId: null }, { videoTitle: null }),
+      headline: 'Night Kitchen invited you to join their team',
+    },
+    {
       case: 'a finished upload',
       shown: notification({ kind: 'processing' }, { actor: null, outcome: 'ready' }),
       headline: 'Your video is ready to watch',

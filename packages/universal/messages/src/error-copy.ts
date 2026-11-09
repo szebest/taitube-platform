@@ -107,4 +107,11 @@ export const ERROR_COPY: Readonly<Record<ErrorCode, ArgumentFreeKey>> = {
   [ErrorCodes.WATCH_PARTY_CHAT_OFF]: 'errors.watchPartyChatOff',
   [ErrorCodes.WATCH_PARTY_TICKET_INVALID]: 'errors.watchPartyTicketInvalid',
   [ErrorCodes.WATCH_PARTY_CREDENTIAL_INVALID]: 'errors.watchPartyCredentialInvalid',
+  [ErrorCodes.CHANNEL_MEMBERSHIP_REQUIRED]: 'errors.channelMembershipRequired',
+  [ErrorCodes.CHANNEL_INVITE_NOT_FOUND]: 'errors.channelInviteNotFound',
+  [ErrorCodes.CHANNEL_INVITE_NOT_PENDING]: 'errors.channelInviteNotPending',
+  [ErrorCodes.CHANNEL_INVITE_ALREADY_PENDING]: 'errors.channelInviteAlreadyPending',
+  [ErrorCodes.CHANNEL_MEMBER_EXISTS]: 'errors.channelMemberExists',
+  [ErrorCodes.CHANNEL_MEMBER_NOT_FOUND]: 'errors.channelMemberNotFound',
+  [ErrorCodes.CHANNEL_OWNER_IMMUTABLE]: 'errors.channelOwnerImmutable',
 };

@@ -12,6 +12,7 @@ import {
 import type { AppAction, AppSubjects, UserContext } from '../../types/index';
 import { defineVideoRules } from '../video.rules';
 import { buildAbility } from './build-ability';
+import { matrixCells } from './channel-matrix';
 
 const ownPrivate = subject('Video', privateVideo);
 
@@ -146,12 +147,30 @@ describe('rules/video.rules: Declarative Video Ability Rules', () => {
     expect(buildAbility(defineVideoRules, user).can(action, target)).toBe(expected);
   });
 
-  it.each([
-    { field: 'visibility', expected: false },
-    { field: 'title', expected: true },
-  ])('the owner of a video taken down may change its $field: $expected', ({ field, expected }) => {
-    const ability = buildAbility(defineVideoRules, creatorUser);
+  const editorOfCreator: UserContext = {
+    id: 'editor-1',
+    role: 'USER',
+    memberships: { 'chan-creator': { role: 'editor', ownerId: creatorUser.id } },
+  };
 
-    expect(ability.can('update', subject('Video', rejectedVideo), field)).toBe(expected);
-  });
+  it.each([
+    { who: 'owner', user: creatorUser, field: 'visibility', expected: false },
+    { who: 'owner', user: creatorUser, field: 'title', expected: true },
+    { who: 'editor', user: editorOfCreator, field: 'visibility', expected: false },
+    { who: 'editor', user: editorOfCreator, field: 'title', expected: true },
+  ])(
+    'the $who of a video taken down may change its $field: $expected',
+    ({ user, field, expected }) => {
+      const ability = buildAbility(defineVideoRules, user);
+
+      expect(ability.can('update', subject('Video', rejectedVideo), field)).toBe(expected);
+    }
+  );
+
+  it.each(matrixCells('Video'))(
+    'the channel matrix: $persona holding $capability may $action: $expected',
+    ({ user, action, target, expected }) => {
+      expect(buildAbility(defineVideoRules, user).can(action, target)).toBe(expected);
+    }
+  );
 });

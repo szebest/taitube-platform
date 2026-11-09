@@ -32,6 +32,7 @@ export function notificationTarget({
       return watch(videoId);
     case 'live':
     case 'processing':
+    case 'team_invite':
       return watch(videoId);
     case 'reply':
     case 'mention':

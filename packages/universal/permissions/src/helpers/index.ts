@@ -15,3 +15,4 @@ export * from './recommendation-feedback';
 export * from './picks';
 export * from './webhooks';
 export * from './watch-parties';
+export * from './channel-team';

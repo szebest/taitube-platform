@@ -4,11 +4,12 @@ import type { Result } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
 import type { UploadContext } from '../upload-context';
 import { UploadService } from '../upload-service';
-import { uploadContext } from './service-deps';
+import { ownerActing, uploadContext } from './service-deps';
 
 const MULTIPART_THRESHOLD_BYTES = 100 * 1024 * 1024;
 
 const OWNER: UserContext = { id: '00000000-0000-7000-8000-00000000e001', role: 'CREATOR' };
+const OWNER_ACTING = ownerActing(OWNER.id, '00000000-0000-7000-8000-00000000c0c1');
 const STRANGER: UserContext = { id: '00000000-0000-7000-8000-00000000e002', role: 'CREATOR' };
 
 type Refusable = (
@@ -38,7 +39,7 @@ describe('apps/server/api/services: UploadService', () => {
     const service = build();
 
     const result = expectOk(
-      await service.initiate(OWNER, {
+      await service.initiate(OWNER, OWNER_ACTING, {
         filename: 'clip.mp4',
         sizeBytes: MULTIPART_THRESHOLD_BYTES + 1,
         contentType: 'video/mp4',
@@ -52,7 +53,7 @@ describe('apps/server/api/services: UploadService', () => {
     const service = build({ rawBucket: 'custom-raw' });
 
     const { videoId } = expectOk(
-      await service.initiate(OWNER, {
+      await service.initiate(OWNER, OWNER_ACTING, {
         filename: 'clip.mp4',
         sizeBytes: 1024,
         contentType: 'video/mp4',
@@ -79,7 +80,7 @@ describe('apps/server/api/services: UploadService', () => {
 
     const before = Date.now();
     const { expiresAt } = expectOk(
-      await service.initiate(OWNER, {
+      await service.initiate(OWNER, OWNER_ACTING, {
         filename: 'clip.mp4',
         sizeBytes: 1024,
         contentType: 'video/mp4',
@@ -106,7 +107,7 @@ describe('apps/server/api/services: UploadService', () => {
   ])('refuses to $operation an upload the caller does not own', async ({ call }) => {
     const service = build();
     const { uploadId, videoId } = expectOk(
-      await service.initiate(OWNER, {
+      await service.initiate(OWNER, OWNER_ACTING, {
         filename: 'clip.mp4',
         sizeBytes: MULTIPART_THRESHOLD_BYTES + 1,
         contentType: 'video/mp4',

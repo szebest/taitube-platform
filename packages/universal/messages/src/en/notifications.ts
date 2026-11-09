@@ -26,6 +26,7 @@ export const notifications = {
   heart: dt('{name} hearted your comment'),
   partyInvite: dt('{name} invited you to a watch party'),
   partyStarting: dt('A watch party is starting'),
+  teamInvite: dt('{name} invited you to join their team'),
   processingReady: dt('Your video is ready to watch'),
   processingFailed: dt('Your video could not be processed'),
   loadFailed: dt('Notifications could not load'),

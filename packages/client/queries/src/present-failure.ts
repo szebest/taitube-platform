@@ -31,8 +31,11 @@ function kindOf(code: ErrorCode): ErrorStateKind {
     case ErrorCodes.LIVE_STREAM_NOT_FOUND:
     case ErrorCodes.WATCH_PARTY_NOT_FOUND:
     case ErrorCodes.WATCH_PARTY_ROLE_NOT_FOUND:
+    case ErrorCodes.CHANNEL_INVITE_NOT_FOUND:
+    case ErrorCodes.CHANNEL_MEMBER_NOT_FOUND:
       return 'not-found';
     case ErrorCodes.FORBIDDEN:
+    case ErrorCodes.CHANNEL_MEMBERSHIP_REQUIRED:
     case ErrorCodes.LIVE_CHAT_SUBSCRIBERS_ONLY:
     case ErrorCodes.WATCH_PARTY_BANNED:
     case ErrorCodes.WATCH_PARTY_GUESTS_OFF:
@@ -118,6 +121,10 @@ function kindOf(code: ErrorCode): ErrorStateKind {
     case ErrorCodes.WATCH_PARTY_QUEUE_FULL:
     case ErrorCodes.WATCH_PARTY_STATE_STALE:
     case ErrorCodes.WATCH_PARTY_ROLE_LIMIT:
+    case ErrorCodes.CHANNEL_INVITE_NOT_PENDING:
+    case ErrorCodes.CHANNEL_INVITE_ALREADY_PENDING:
+    case ErrorCodes.CHANNEL_MEMBER_EXISTS:
+    case ErrorCodes.CHANNEL_OWNER_IMMUTABLE:
       return 'generic';
     default:
       return assertNever(code, 'kindOf');

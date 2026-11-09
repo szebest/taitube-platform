@@ -109,4 +109,13 @@ export const errors = {
     'Połączenie z imprezą wygasło. Połącz się ponownie, aby dalej oglądać.'
   ),
   watchPartyCredentialInvalid: dt('Twoje miejsce gościa wygasło. Dołącz do imprezy ponownie.'),
+  channelMembershipRequired: dt('Nie należysz już do zespołu tego kanału.'),
+  channelInviteNotFound: dt('To zaproszenie nie istnieje.'),
+  channelInviteNotPending: dt(
+    'To zaproszenie jest już nieaktualne: zostało przyjęte, odrzucone, cofnięte albo wygasło.'
+  ),
+  channelInviteAlreadyPending: dt('Ta osoba ma już otwarte zaproszenie do zespołu.'),
+  channelMemberExists: dt('Ta osoba jest już w zespole.'),
+  channelMemberNotFound: dt('Tej osoby nie ma w zespole.'),
+  channelOwnerImmutable: dt('Właściciela kanału nie można usunąć ani zmienić mu roli.'),
 } as const;

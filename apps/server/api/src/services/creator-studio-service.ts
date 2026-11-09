@@ -7,10 +7,12 @@ import type {
   VideoStudioRepository,
 } from '@vp/core/repositories';
 import type {
+  ActingChannel,
   CreatorLibrarySort,
   LibrarySort,
   SortOrder,
   ThumbnailSelection,
+  VideoAuditField,
   VideoStatus,
   VideoVisibility,
 } from '@vp/domain';
@@ -23,6 +25,7 @@ import {
   type VideoMetadataPatch,
   categoryNotFound,
   decideAdminAccess,
+  decideChannelTask,
   decideVideoMetadataUpdate,
   decideVideoTakedown,
   videoNotFound,
@@ -74,6 +77,8 @@ export interface AdminLibraryOptions {
   q?: string;
 }
 
+export type CreatorLibraryFailure = AuthorizationFailure | DatabaseUnavailable | InvalidCursor;
+
 export type AdminLibraryFailure = AuthorizationFailure | DatabaseUnavailable | InvalidCursor;
 
 interface LibraryWalk {
@@ -112,6 +117,21 @@ function thumbnailKeyOf(selection: ThumbnailSelection): string | null {
   }
 }
 
+const AUDIT_FIELD_OF: Record<keyof VideoMetadataPatch, VideoAuditField> = {
+  title: 'title',
+  description: 'description',
+  visibility: 'visibility',
+  categoryId: 'categoryId',
+  tags: 'tags',
+  selectedThumbnail: 'thumbnail',
+};
+
+function auditFieldsOf(patch: VideoMetadataPatch): VideoAuditField[] {
+  return (Object.keys(AUDIT_FIELD_OF) as (keyof VideoMetadataPatch)[])
+    .filter((field) => patch[field] !== undefined)
+    .map((field) => AUDIT_FIELD_OF[field]);
+}
+
 function toStudioPatch(patch: VideoMetadataPatch): StudioMetadataPatch {
   const { selectedThumbnail, ...columns } = patch;
   if (!selectedThumbnail) return columns;
@@ -123,16 +143,18 @@ export class CreatorStudioService {
 
   async library(
     user: UserContext,
+    acting: ActingChannel,
     options: CreatorLibraryOptions
   ): Promise<
-    Result<
-      { items: CreatorVideoView[]; nextCursor: string | null },
-      DatabaseUnavailable | InvalidCursor
-    >
+    Result<{ items: CreatorVideoView[]; nextCursor: string | null }, CreatorLibraryFailure>
   > {
+    const allowed = decideChannelTask({ user, acting, task: 'read-library' });
+    if (isErr(allowed)) return allowed;
+    const { ownerId } = allowed.value;
+
     const { sort, status, visibility, q } = options;
     const walked = await this.walk({ sort, order: 'desc', cursor: options.cursor }, options.limit, {
-      ownerId: user.id,
+      ownerId,
       status,
       visibility,
       titleContains: q,
@@ -140,11 +162,11 @@ export class CreatorStudioService {
     if (isErr(walked)) return walked;
     const { rows, limit } = walked.value;
 
-    const channelOf = await loadChannelsOf(this.deps.channels, [user.id]);
+    const channelOf = await loadChannelsOf(this.deps.channels, [ownerId]);
     return map(channelOf, (of) =>
       this.deps.paginator.paginate(rows, limit, {
         cursorOf: (row) => creatorLibraryCursorPayload(row, sort),
-        toItem: (row) => toCreatorVideoView(row, this.deps.cdn, this.deps.sprite, of(user.id)),
+        toItem: (row) => toCreatorVideoView(row, this.deps.cdn, this.deps.sprite, of(ownerId)),
       })
     );
   }
@@ -222,6 +244,7 @@ export class CreatorStudioService {
       expectedVersion: version,
       patch: toStudioPatch(decided.value),
       userId: user.id,
+      auditFields: auditFieldsOf(decided.value),
     });
     if (isErr(outcome)) return outcome;
 

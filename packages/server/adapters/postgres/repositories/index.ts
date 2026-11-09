@@ -1,6 +1,9 @@
 export * from './postgres-caption-repository';
 export * from './postgres-category-repository';
+export * from './postgres-channel-audit-repository';
 export * from './postgres-channel-featured-repository';
+export * from './postgres-channel-invite-repository';
+export * from './postgres-channel-member-repository';
 export * from './postgres-channel-repository';
 export * from './postgres-clip-repository';
 export * from './postgres-comment-repository';
@@ -14,6 +17,7 @@ export * from './postgres-recommendation-feedback-repository';
 export * from './postgres-related-videos-repository';
 export * from './postgres-rising-videos-repository';
 export * from './postgres-rendition-repository';
+export * from './postgres-connection';
 export * from './postgres-repositories';
 export * from './postgres-search-history-repository';
 export * from './postgres-search-repository';
