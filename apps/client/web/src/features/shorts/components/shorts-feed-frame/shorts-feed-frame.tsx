@@ -1,7 +1,7 @@
 import type { VideoSummary } from '@vp/api-contracts';
 import { useT } from '@vp/intl-react';
 import { useMediaQuery, VisuallyHidden } from '@vp/ui';
-import { useState } from 'react';
+import { type ReactNode, useState } from 'react';
 import { ShortsPlayerFrame } from '#app/components/shorts/shorts-player-frame';
 import { useReducedMotion } from '#app/features/shorts/hooks/use-reduced-motion';
 import { useShortsNavigation } from '#app/features/shorts/hooks/use-shorts-navigation';
@@ -13,13 +13,14 @@ const ACTIONS_BESIDE = '(min-width: 600px)';
 
 export interface ShortsFeedFrameProps {
   short: VideoSummary;
+  renderComments: (videoId: string) => ReactNode;
 }
 
 /**
  * One Short in the Shorts player: it starts muted and playing, paused under the `reduced` motion set,
  * and the move to the next or previous Short is announced.
  */
-export function ShortsFeedFrame({ short }: ShortsFeedFrameProps) {
+export function ShortsFeedFrame({ short, renderComments }: ShortsFeedFrameProps) {
   const { tOr } = useT();
   const reduced = useReducedMotion();
   const beside = useMediaQuery(ACTIONS_BESIDE);
@@ -82,7 +83,7 @@ export function ShortsFeedFrame({ short }: ShortsFeedFrameProps) {
         </ShortsPlayerFrame.Caption>
         <ShortsPlayerFrame.Progress value={progress} />
       </ShortsPlayerFrame.Player>
-      <ShortsFeedActions short={short} />
+      <ShortsFeedActions short={short} renderComments={renderComments} />
       <VisuallyHidden role="status">
         {tOr('shorts.announce', { title, channel }, '')}
       </VisuallyHidden>

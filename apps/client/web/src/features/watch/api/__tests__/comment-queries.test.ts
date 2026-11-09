@@ -3,7 +3,11 @@ import { createQueryClient, KEYSET_PAGE_SIZE } from '@vp/queries';
 import { api, apiServer, mockEndpoint, VIDEO_ID } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
 import { COMMENT_ID, comment } from '#app/__tests__/comment-fixtures';
-import { commentKeys, commentsQueryOptions, repliesQueryOptions } from '../comment-queries';
+import {
+  commentKeys,
+  commentsQueryOptions,
+  repliesQueryOptions,
+} from '#app/lib/query-keys/comment-keys';
 
 describe('apps/client/web: comment queries', () => {
   it('reads the comments of a video in the chosen order, a page at a time', async () => {

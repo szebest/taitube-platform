@@ -2,7 +2,7 @@ import { getRelatedVideos } from '@vp/api-contracts';
 import { createQueryClient } from '@vp/queries';
 import { api, apiServer, mockEndpoint, VIDEO_ID } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
-import { relatedQueryOptions } from '../related-queries';
+import { relatedQueryOptions } from '#app/lib/query-keys/related-keys';
 
 describe('apps/client/web: related queries', () => {
   it('reads the videos related to one video', async () => {

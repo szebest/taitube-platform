@@ -13,9 +13,9 @@ import {
   type CommentThreadLayout,
   CommentThreadSkeleton,
 } from '#app/components/watch/comment-thread';
-import { commentsQueryOptions } from '#app/features/watch/api/comment-queries';
 import { type NewComment, usePostComment } from '#app/features/watch/hooks/use-post-comment';
 import { useWindowRows } from '#app/hooks/use-window-rows';
+import { commentsQueryOptions } from '#app/lib/query-keys/comment-keys';
 import { NearViewport } from '../near-viewport/near-viewport';
 import { VideoCommentItem } from '../video-comment-item/video-comment-item';
 

@@ -1,7 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { z } from 'zod';
-import { publicFeedQueryOptions, TrendingFeed, VideoFeedSkeleton } from '#app/features/browse';
+import { TrendingFeed, VideoFeedSkeleton } from '#app/features/browse';
 import { WEB_URL } from '#app/lib/config';
+import { publicFeedQueryOptions } from '#app/lib/query-keys/feed-keys';
 import { feedHead } from '#app/lib/seo/feed-head';
 import { headWords } from '#app/lib/seo/head-words';
 

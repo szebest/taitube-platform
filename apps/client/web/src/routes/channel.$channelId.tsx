@@ -2,12 +2,12 @@ import { createFileRoute } from '@tanstack/react-router';
 import { ChannelIdParamSchema } from '@vp/api-contracts';
 import { ensureFound, parseParam } from '@vp/queries';
 import { z } from 'zod';
+import { ChannelPage } from '#app/features/channel';
+import { WEB_URL } from '#app/lib/config';
 import {
-  ChannelPage,
   channelQueryOptions,
   channelStartHereQueryOptions,
-} from '#app/features/channel';
-import { WEB_URL } from '#app/lib/config';
+} from '#app/lib/query-keys/channel-keys';
 import { channelHead } from '#app/lib/seo/channel-head';
 import { headWords } from '#app/lib/seo/head-words';
 

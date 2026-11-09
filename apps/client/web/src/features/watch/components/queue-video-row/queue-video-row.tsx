@@ -3,7 +3,7 @@ import type { ReasonedVideo, VideoSummary } from '@vp/api-contracts';
 import { VideoCard } from '@vp/components';
 import { useT } from '@vp/intl-react';
 import { useCan } from '@vp/permissions-react';
-import { FeedbackMenuItems } from '#app/features/recommendations/components/feedback-menu-items/feedback-menu-items';
+import { FeedbackMenuItems } from '#app/components/video/feedback-menu-items';
 import { useDurationText } from '#app/hooks/use-duration-text';
 
 export interface QueueVideoRowProps {

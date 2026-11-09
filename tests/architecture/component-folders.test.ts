@@ -1,5 +1,6 @@
 import { posix } from 'node:path';
 import { clientApps } from './client-apps';
+import { PENDING } from './component-folders-pending';
 import { trackedFiles } from './repo-files';
 
 const PRIMITIVES = 'packages/client/ui/src/primitives/';
@@ -24,18 +25,6 @@ const MOVED_DOWN: ReadonlySet<string> = new Set([
 ]);
 
 const isStoryless = (folder: string) => PLAYER.test(folder) || MOVED_DOWN.has(folder);
-
-/** Findings the tree still holds: each folder gets its index, story and spec, or leaves the kit. */
-const PENDING = [
-  'apps/client/studio/src/components/states/route-fallbacks/: no index.ts',
-  'apps/client/studio/src/components/states/route-fallbacks/: no __stories__/route-fallbacks.stories.tsx',
-  'apps/client/studio/src/components/states/route-fallbacks/: no __tests__/route-fallbacks.dom.test.tsx',
-  'apps/client/web/src/components/player/control-bar/: no index.ts',
-  'apps/client/web/src/components/player/taitube-preview/: no index.ts',
-  'apps/client/web/src/components/states/route-fallbacks/: no index.ts',
-  'apps/client/web/src/components/states/route-fallbacks/: no __stories__/route-fallbacks.stories.tsx',
-  'apps/client/web/src/components/states/route-fallbacks/: no __tests__/route-fallbacks.dom.test.tsx',
-];
 
 const kitOf = (app: string) => `${app}/src/components/`;
 

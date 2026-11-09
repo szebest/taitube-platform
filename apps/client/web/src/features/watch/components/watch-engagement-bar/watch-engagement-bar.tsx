@@ -6,17 +6,16 @@ import { useCan } from '@vp/permissions-react';
 import { SectionBoundary, useApi, useFailureToast } from '@vp/queries';
 import { unwrapOr } from '@vp/result';
 import { BrandScope, useUiCopy } from '@vp/ui';
+import type { ReactNode } from 'react';
 import { EngagementBar } from '#app/components/watch/engagement-bar';
-import { channelQueryOptions } from '#app/features/channel/api/channel-queries';
-import { ClipAction } from '#app/features/clips/components/clip-action/clip-action';
-import { subscriptionStatusQueryOptions } from '#app/features/library/api/subscription-queries';
-import { useSetSubscription } from '#app/features/library/hooks/use-set-subscription';
-import { SaveOfflineToggle } from '#app/features/offline/components/save-offline-toggle/save-offline-toggle';
-import { useReaction } from '#app/features/reactions/hooks/use-reaction';
+import { ShareDialog } from '#app/components/watch/share-dialog';
 import { toSummary } from '#app/features/watch/utils/to-summary';
+import { useReaction } from '#app/hooks/use-reaction';
+import { useSetSubscription } from '#app/hooks/use-set-subscription';
 import { useSignIn } from '#app/hooks/use-sign-in';
 import { useVideoActions } from '#app/hooks/use-video-actions';
-import { ShareDialog } from '../share-dialog/share-dialog';
+import { channelQueryOptions } from '#app/lib/query-keys/channel-keys';
+import { subscriptionStatusQueryOptions } from '#app/lib/query-keys/subscription-keys';
 
 function ChannelSection({ channelId }: { channelId: string }) {
   const api = useApi();
@@ -93,10 +92,15 @@ function SaveSection({ video }: { video: Video }) {
   );
 }
 
+export interface WatchEngagementBarProps {
+  video: Video;
+  /** More actions after Save, from the features the route composes in. */
+  renderActions?: (video: Video) => ReactNode;
+}
+
 /** The channel, Subscribe, the reactions, Share and Save under a video's title. */
-export function WatchEngagementBar({ video }: { video: Video }) {
+export function WatchEngagementBar({ video, renderActions }: WatchEngagementBarProps) {
   const { tOr } = useT();
-  const signIn = useSignIn();
 
   return (
     <EngagementBar.Root>
@@ -113,8 +117,7 @@ export function WatchEngagementBar({ video }: { video: Video }) {
         <ReactionSection video={video} />
         <ShareDialog video={video} />
         <SaveSection video={video} />
-        <SaveOfflineToggle video={video} />
-        <ClipAction video={video} onSignIn={signIn} />
+        {renderActions?.(video)}
       </EngagementBar.Actions>
     </EngagementBar.Root>
   );

@@ -7,7 +7,7 @@ import { runMutation } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
 import { COMMENT_ID, comment, REPLY_ID } from '#app/__tests__/comment-fixtures';
 import { AppProviders } from '#app/__tests__/providers';
-import { commentKeys } from '#app/features/watch/api/comment-queries';
+import { commentKeys } from '#app/lib/query-keys/comment-keys';
 import { usePostComment } from '../use-post-comment';
 
 function seeded() {

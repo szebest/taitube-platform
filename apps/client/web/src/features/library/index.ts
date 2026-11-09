@@ -7,7 +7,6 @@ export {
   uploadsShelfQueryOptions,
   watchHistoryQueryOptions,
 } from './api/library-queries';
-export { mySubscriptionsQueryOptions } from './api/subscription-queries';
 export { LibraryPage, LibraryPageSkeleton } from './components/library-page/library-page';
 export { PlaylistPageSkeleton } from './components/playlist-page-skeleton/playlist-page-skeleton';
 export { PlaylistPage } from './components/playlist-page/playlist-page';
@@ -16,3 +15,6 @@ export { PlaylistsPage } from './components/playlists-page/playlists-page';
 export { SubscriptionsPage } from './components/subscriptions-page/subscriptions-page';
 export { YouPage, YouPageSkeleton } from './components/you-page/you-page';
 export { LibrarySearchSchema } from './utils/library-search';
+export { ChannelLevels } from './components/channel-levels/channel-levels';
+export { LazyNewPlaylistDialog } from './components/new-playlist-dialog/new-playlist-dialog.lazy';
+export { LazySaveToPlaylistDialog } from './components/save-to-playlist-dialog/save-to-playlist-dialog.lazy';

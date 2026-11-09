@@ -3,7 +3,10 @@ import type { ApiClient } from '@vp/api-client';
 import type { NotificationLevel } from '@vp/domain';
 import { useApi } from '@vp/queries';
 import { restoreQueryData } from '#app/integrations/query/restore-query-data';
-import { mySubscriptionsQueryOptions, subscriptionKeys } from '../api/subscription-queries';
+import {
+  mySubscriptionsQueryOptions,
+  subscriptionKeys,
+} from '#app/lib/query-keys/subscription-keys';
 
 function setSubscriptionLevelMutationOptions(api: ApiClient, channelId: string) {
   const listKey = mySubscriptionsQueryOptions(api).queryKey;

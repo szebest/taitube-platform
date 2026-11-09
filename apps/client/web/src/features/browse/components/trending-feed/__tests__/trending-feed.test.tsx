@@ -3,10 +3,7 @@ import { createQueryClient } from '@vp/queries';
 import { api, feedPages, videoSummary } from '@vp/web-testing';
 import { renderPage } from '@vp/web-testing/server';
 import { AppProviders } from '#app/__tests__/providers';
-import {
-  type PublicFeedFilter,
-  publicFeedQueryOptions,
-} from '#app/features/browse/api/feed-queries';
+import { type PublicFeedFilter, publicFeedQueryOptions } from '#app/lib/query-keys/feed-keys';
 import { TrendingFeed } from '../trending-feed';
 
 function withFeed(queryClient: QueryClient, filter: PublicFeedFilter, title: string): void {

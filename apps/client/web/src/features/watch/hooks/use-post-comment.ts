@@ -4,7 +4,7 @@ import { useApi } from '@vp/queries';
 import { fromPromise } from '@vp/result';
 import { isQueuedByWorker } from '#app/integrations/service-worker-client/is-queued-by-worker';
 import { queueableNetworkMode } from '#app/integrations/service-worker-client/queueable-network-mode';
-import { commentKeys } from '../api/comment-queries';
+import { commentKeys } from '#app/lib/query-keys/comment-keys';
 
 export interface NewComment {
   content: string;

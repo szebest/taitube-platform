@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { z } from 'zod';
-import { mySubscriptionsQueryOptions, SubscriptionsPage } from '#app/features/library';
+import { SubscriptionsPage } from '#app/features/library';
+import { mySubscriptionsQueryOptions } from '#app/lib/query-keys/subscription-keys';
 
 export const Route = createFileRoute('/_authed/subscriptions/')({
   validateSearch: z.object({}),

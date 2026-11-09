@@ -5,7 +5,7 @@ import { serverRender } from '@vp/web-testing/server';
 import { HttpResponse } from 'msw/http';
 import { loaderApi } from '#app/__tests__/loader-api';
 import { SHORTS } from '#app/__tests__/short-fixtures';
-import { shortsFeedQueryOptions } from '#app/features/browse/api/feed-queries';
+import { shortsFeedQueryOptions } from '#app/lib/query-keys/feed-keys';
 import { getRouter } from '#app/router';
 
 describe('apps/client/web: /shorts', () => {

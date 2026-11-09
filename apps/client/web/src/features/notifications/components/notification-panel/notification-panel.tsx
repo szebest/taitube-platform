@@ -7,12 +7,12 @@ import { unreadNotificationCountQueryOptions, useApi } from '@vp/queries';
 import { unwrapOr } from '@vp/result';
 import { Tabs } from '@vp/ui';
 import { useState } from 'react';
+import { PagedFooter } from '#app/components/feed/paged-footer';
 import {
   NotificationCentre,
   NotificationCentreSkeletonRows,
   useNotificationCentre,
 } from '#app/components/shell/notification-centre';
-import { PagedFooter } from '#app/features/library/components/paged-footer/paged-footer';
 import { notificationsQueryOptions } from '#app/features/notifications/api/notification-queries';
 import { useMarkRead } from '#app/features/notifications/hooks/use-mark-read';
 import { groupByDay } from '#app/features/notifications/utils/group-by-day';
