@@ -6,16 +6,7 @@ import { runFfmpegChannelImage } from '../channel-image';
 import { planChannelImageVariants } from '../channel-image-variants';
 import { LIMITS } from './encoder-settings';
 
-const hasFfmpeg = (() => {
-  try {
-    execFileSync('ffmpeg', ['-version'], { stdio: 'ignore' });
-    return true;
-  } catch {
-    return false;
-  }
-})();
-
-describe.skipIf(!hasFfmpeg)('@vp/ffmpeg: channel image with the real ffmpeg', () => {
+describe('@vp/ffmpeg: channel image with the real ffmpeg', () => {
   let dir: string;
 
   beforeEach(() => {

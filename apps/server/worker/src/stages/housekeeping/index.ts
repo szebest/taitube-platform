@@ -9,6 +9,7 @@ import type {
 import type { Repositories } from '@vp/core/repositories';
 import {
   CHANNEL_AUDIT_RETENTION_DAYS,
+  CHANNEL_IMAGE_RETENTION_DAYS,
   HANDLE_RESERVATION_DAYS,
   SEARCH_HISTORY_RETENTION_DAYS,
 } from '@vp/domain';
@@ -21,7 +22,7 @@ import { type Result, assertNever, ok } from '@vp/result';
 import { runExpireRaw } from './expire-raw';
 import { runFlushVideoViews } from './flush-video-views';
 import { runPurgeChannelAudit } from './purge-channel-audit';
-import { CHANNEL_IMAGE_RETENTION_DAYS, runPurgeChannelImages } from './purge-channel-images';
+import { runPurgeChannelImages } from './purge-channel-images';
 import { runPurgeDeleted } from './purge-deleted';
 import { runPurgeHandleHistory } from './purge-handle-history';
 import { runPurgeSearchHistory } from './purge-search-history';

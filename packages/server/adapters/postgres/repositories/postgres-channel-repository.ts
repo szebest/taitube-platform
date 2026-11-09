@@ -125,8 +125,8 @@ export class PostgresChannelRepository implements ChannelRepositoryPort {
       () =>
         this.db.transaction(async (tx) => {
           const values = channelPatch(input);
-          if (handle !== undefined) {
-            const claimed = await claimHandle(tx, id, handle, input.handleChangedAt ?? new Date());
+          if (handle !== undefined && input.handleChangedAt !== undefined) {
+            const claimed = await claimHandle(tx, id, handle, input.handleChangedAt);
             if (claimed === 'taken') return claimed;
             Object.assign(values, claimed);
           }

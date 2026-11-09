@@ -25,12 +25,12 @@ const unfinished = ({ percent }: EpisodeProgress) =>
 export function nextEpisode(episodes: readonly EpisodeProgress[]): string | null {
   let lastWatched = -1;
   let latest = Number.NEGATIVE_INFINITY;
-  episodes.forEach(({ watchedAt }, index) => {
+  for (const [index, { watchedAt }] of episodes.entries()) {
     if (watchedAt && watchedAt.getTime() >= latest) {
       latest = watchedAt.getTime();
       lastWatched = index;
     }
-  });
+  }
 
   const after = episodes.slice(lastWatched + 1).find(unfinished);
   return (after ?? episodes.find(unfinished))?.videoId ?? null;

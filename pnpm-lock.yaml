@@ -667,15 +667,15 @@ importers:
       '@vp/events':
         specifier: workspace:*
         version: link:../../../packages/server/events
+      '@vp/intl':
+        specifier: workspace:*
+        version: link:../../../packages/universal/intl
       '@vp/job-contracts':
         specifier: workspace:*
         version: link:../../../packages/server/job-contracts
       '@vp/logger':
         specifier: workspace:*
         version: link:../../../packages/server/logger
-      '@vp/messages':
-        specifier: workspace:*
-        version: link:../../../packages/universal/messages
       '@vp/observability':
         specifier: workspace:*
         version: link:../../../packages/server/observability

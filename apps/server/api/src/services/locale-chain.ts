@@ -1,4 +1,5 @@
-const FALLBACK_LOCALE = 'en';
+import { FALLBACK_LOCALE, localeChain } from '@vp/intl';
+import { isOk } from '@vp/result';
 
 function tagsOf(acceptLanguage: string | undefined): string[] {
   return (acceptLanguage ?? '')
@@ -20,16 +21,8 @@ function tagsOf(acceptLanguage: string | undefined): string[] {
 export function localeChainOf(explicit: string | undefined, acceptLanguage?: string): string[] {
   const chain: string[] = [];
   for (const tag of [...(explicit ? [explicit] : []), ...tagsOf(acceptLanguage)]) {
-    const parsed = safeLocale(tag);
-    if (parsed) chain.push(parsed.baseName, parsed.language);
+    const parsed = localeChain(tag);
+    if (isOk(parsed)) chain.push(...parsed.value.filter((entry) => entry !== FALLBACK_LOCALE));
   }
   return [...new Set([...chain, FALLBACK_LOCALE])];
-}
-
-function safeLocale(tag: string): Intl.Locale | null {
-  try {
-    return new Intl.Locale(tag);
-  } catch {
-    return null;
-  }
 }

@@ -66,7 +66,10 @@ export class PostgresChannelImageRepository implements ChannelImageRepositoryPor
     });
   }
 
-  commit(id: string, defaultUrl: string): Promise<Result<ChannelImageCommit | null, DatabaseUnavailable>> {
+  commit(
+    id: string,
+    defaultUrl: string
+  ): Promise<Result<ChannelImageCommit | null, DatabaseUnavailable>> {
     return this.write('commitChannelImageUpload', async (tx) => {
       const row = await lockUpload(tx, id);
       if (!row) return null;

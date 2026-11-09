@@ -2,8 +2,8 @@ import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import type { QueueJob, StorageClient } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
-import type { ChannelImageUpload } from '@vp/domain';
-import { decideImageCrops, type DecideImageCropsFailure, type ImageCrops } from '@vp/domain-rules';
+import type { ChannelImageUpload, ImageCrops } from '@vp/domain';
+import { decideImageCrops, type DecideImageCropsFailure } from '@vp/domain-rules';
 import type { CdnBase } from '@vp/env-schema';
 import {
   type DatabaseUnavailable,
@@ -57,13 +57,6 @@ interface QueuedUpload {
   upload: ChannelImageUpload;
   version: number;
   crops: ImageCrops;
-}
-
-function storedCrops({ kind, crops }: ChannelImageUpload): ImageCrops | null {
-  if (crops === null) return null;
-  if (kind === 'avatar' && 'width' in crops) return { kind, crop: crops };
-  if (kind === 'banner' && 'desktop' in crops) return { kind, crops };
-  return null;
 }
 
 /** What the uploader is told; a media failure carries process output that is no business of theirs. */
@@ -174,7 +167,7 @@ export function createChannelImageProcessor(deps: ChannelImageProcessorDeps) {
       return ok({ type: STAGE, uploadId, version: upload?.version ?? null, applied: false });
     }
 
-    const crops = storedCrops(upload);
+    const { crops } = upload;
     const queued =
       upload.version !== null && crops !== null ? { upload, version: upload.version, crops } : null;
 

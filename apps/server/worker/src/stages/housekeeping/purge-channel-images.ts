@@ -7,8 +7,6 @@ import type { Logger } from '@vp/logger';
 import { type Result, err, isErr, ok } from '@vp/result';
 import { channelImageUploadKey, channelImageVersionPrefix } from '@vp/storage';
 
-export const CHANNEL_IMAGE_RETENTION_DAYS = 7;
-
 export interface PurgeChannelImagesOptions {
   repositories: Repositories;
   storage: StorageClient;

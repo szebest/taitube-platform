@@ -204,7 +204,13 @@ export function describeChannelRepositoryContract(makeSubject: MakeRepositoriesS
       });
 
       it('leaves history and the change time alone when the handle stays', async () => {
-        expectOk(await channels.update(CHANNEL_ID, { handle: 'OWNERHANDLE', bio: 'Hi' }));
+        expectOk(
+          await channels.update(CHANNEL_ID, {
+            handle: 'OWNERHANDLE',
+            handleChangedAt: changedAt,
+            bio: 'Hi',
+          })
+        );
 
         expect(expectOk(await channels.findById(CHANNEL_ID))?.handleChangedAt).toBeNull();
         expect(await historyOf('ownerhandle')).toBeNull();
@@ -214,7 +220,9 @@ export function describeChannelRepositoryContract(makeSubject: MakeRepositoriesS
         expectOk(
           await channels.update(CHANNEL_ID, { handle: 'newhandle', handleChangedAt: changedAt })
         );
-        expectOk(await channels.update(CHANNEL_ID, { handle: 'ownerhandle' }));
+        expectOk(
+          await channels.update(CHANNEL_ID, { handle: 'ownerhandle', handleChangedAt: changedAt })
+        );
 
         expect(await historyOf('ownerhandle')).toBeNull();
         expect(await historyOf('newhandle')).toMatchObject({ channelId: CHANNEL_ID });
@@ -223,7 +231,9 @@ export function describeChannelRepositoryContract(makeSubject: MakeRepositoriesS
       it('retires nothing when another channel holds the new handle', async () => {
         await createOtherChannel();
 
-        expectErr(await channels.update(CHANNEL_ID, { handle: 'otherhandle' }));
+        expectErr(
+          await channels.update(CHANNEL_ID, { handle: 'otherhandle', handleChangedAt: changedAt })
+        );
 
         expect(await historyOf('ownerhandle')).toBeNull();
         expect(expectOk(await channels.findById(CHANNEL_ID))?.handle).toBe('ownerhandle');
@@ -233,7 +243,9 @@ export function describeChannelRepositoryContract(makeSubject: MakeRepositoriesS
     it('reports a patch taking a handle another channel holds', async () => {
       await createOtherChannel();
 
-      const failure = expectErr(await channels.update(CHANNEL_ID, { handle: 'otherhandle' }));
+      const failure = expectErr(
+        await channels.update(CHANNEL_ID, { handle: 'otherhandle', handleChangedAt: changedAt })
+      );
 
       expect(failure.code).toBe(ErrorCodes.HANDLE_ALREADY_TAKEN);
     });

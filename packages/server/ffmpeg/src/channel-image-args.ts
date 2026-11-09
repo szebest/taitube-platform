@@ -1,6 +1,5 @@
+import { CHANNEL_IMAGE_QUALITY } from '@vp/domain';
 import type { ChannelImageVariant } from './channel-image-variants';
-
-export const CHANNEL_IMAGE_QUALITY = 82;
 
 interface ChannelImageArgsOptions {
   sourcePath: string;

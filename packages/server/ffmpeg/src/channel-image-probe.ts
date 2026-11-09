@@ -1,9 +1,7 @@
 import { spawn } from 'node:child_process';
+import { MAX_CHANNEL_IMAGE_EDGE, MAX_CHANNEL_IMAGE_PIXELS } from '@vp/domain';
 import { ErrorCodes, PermanentError, TransientError } from '@vp/errors';
 import { tryCatch } from '@vp/result';
-
-export const MAX_CHANNEL_IMAGE_EDGE = 8192;
-export const MAX_CHANNEL_IMAGE_PIXELS = 40_000_000;
 
 export interface ChannelImageProbe {
   format: 'jpeg' | 'png' | 'webp';

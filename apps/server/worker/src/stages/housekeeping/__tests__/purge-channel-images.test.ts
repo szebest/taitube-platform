@@ -1,16 +1,12 @@
 import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
-import type { ChannelImageKind } from '@vp/domain';
+import { CHANNEL_IMAGE_RETENTION_DAYS, type ChannelImageKind } from '@vp/domain';
 import { MS_PER_DAY } from '@vp/domain/time';
 import { storageUnavailable } from '@vp/errors';
 import { err } from '@vp/result';
 import { channelImageUploadKey, channelImageVariantKey } from '@vp/storage';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
-import {
-  CHANNEL_IMAGE_RETENTION_DAYS,
-  type PurgeChannelImagesOptions,
-  runPurgeChannelImages,
-} from '../purge-channel-images';
+import { type PurgeChannelImagesOptions, runPurgeChannelImages } from '../purge-channel-images';
 
 const OWNER_ID = '00000000-0000-7000-8000-00000000a001';
 const CROP = { x: 0, y: 0, width: 400, height: 400 };
@@ -52,7 +48,11 @@ describe('housekeeping: purge-channel-images', () => {
   async function committed(kind: ChannelImageKind = 'avatar') {
     const id = await upload(kind);
     const queued = expectOk(
-      await repositories.channelImages.queue(id, { width: 800, height: 800, crops: CROP })
+      await repositories.channelImages.queue(id, {
+        width: 800,
+        height: 800,
+        crops: { kind: 'avatar', crop: CROP },
+      })
     );
     const version = queued?.version ?? 0;
     await put('public', channelImageVariantKey(channelId, kind, '128', version));

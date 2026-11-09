@@ -1,4 +1,4 @@
-import type { BannerCrops, ChannelImageKind, ChannelImageUpload, CropRect } from '@vp/domain';
+import type { ChannelImageKind, ChannelImageUpload, ImageCrops } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { Result } from '@vp/result';
 
@@ -14,7 +14,7 @@ export interface NewChannelImageUpload {
 export interface ChannelImageCompletion {
   width: number;
   height: number;
-  crops: BannerCrops | CropRect;
+  crops: ImageCrops;
 }
 
 export interface ChannelImageCommit {
@@ -46,7 +46,10 @@ export interface ChannelImageRepositoryPort {
    * the image wherever only one is shown, and the uploader is told. Committing an upload that is already `ready` or `superseded` repeats
    * that outcome and writes nothing more.
    */
-  commit(id: string, defaultUrl: string): Promise<Result<ChannelImageCommit | null, DatabaseUnavailable>>;
+  commit(
+    id: string,
+    defaultUrl: string
+  ): Promise<Result<ChannelImageCommit | null, DatabaseUnavailable>>;
   /** The upload becomes `failed` and the uploader is told; the channel keeps its image. */
   fail(id: string, reason: string): Promise<Result<ChannelImageUpload | null, DatabaseUnavailable>>;
   /** Versions a newer one replaced, and files that never became one, oldest first. */

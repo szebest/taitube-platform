@@ -1,11 +1,6 @@
 import type { ChannelImageCommit } from '@vp/core/repositories';
 import { channelImageUploads as up, channels } from '@vp/db';
-import {
-  channelImageFailed,
-  channelImageReady,
-  type ChannelImageUpload,
-  type BannerCrops,
-} from '@vp/domain';
+import { channelImageFailed, channelImageReady, type ChannelImageUpload } from '@vp/domain';
 import { and, eq, lt, sql } from 'drizzle-orm';
 import { appendChannelAudit } from './channel-audit-writes';
 import { appendUserEvent } from './postgres-user-event-repository';
@@ -66,7 +61,7 @@ export async function commitUpload(
           .set({
             bannerVersion: version,
             bannerUrl: defaultUrl,
-            bannerCrops: upload.crops as BannerCrops,
+            bannerCrops: upload.crops?.kind === 'banner' ? upload.crops.crops : undefined,
             updatedAt: new Date(),
           })
           .where(and(eq(channels.id, upload.channelId), lt(channels.bannerVersion, version)))

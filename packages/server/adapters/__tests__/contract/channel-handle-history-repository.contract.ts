@@ -18,7 +18,7 @@ export function describeChannelHandleHistoryRepositoryContract(
     let channelId: string;
 
     const retire = async (from: string, to: string, at: Date) => {
-      expectOk(await channels.update(channelId, { handle: from }));
+      expectOk(await channels.update(channelId, { handle: from, handleChangedAt: at }));
       expectOk(await channels.update(channelId, { handle: to, handleChangedAt: at }));
     };
 

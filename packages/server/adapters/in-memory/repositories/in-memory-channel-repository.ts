@@ -1,11 +1,10 @@
 import type { ChannelRepositoryPort } from '@vp/core/repositories';
 import {
-  type BannerCrops,
   type Channel,
   type ChannelImageKind,
   type ChannelStats,
-  type CropRect,
   type CreateChannelInput,
+  type ImageCrops,
   type UpdateChannelInput,
   isPublicFeedEligible,
 } from '@vp/domain';
@@ -183,7 +182,8 @@ export class InMemoryChannelRepository implements ChannelRepositoryPort {
         (other) => other.id !== id && other.handle.toLowerCase() === normalized
       );
       if (heldByAnother) return err(handleTaken(normalized));
-      if (normalized !== channel.handle) this.changeHandle(channel, normalized, input);
+      if (normalized !== channel.handle)
+        this.changeHandle(channel, normalized, input.handleChangedAt);
     }
 
     if (input.displayName !== undefined) channel.displayName = input.displayName;
@@ -200,8 +200,7 @@ export class InMemoryChannelRepository implements ChannelRepositoryPort {
     return ok(channel);
   }
 
-  private changeHandle(channel: Channel, handle: string, input: UpdateChannelInput): void {
-    const at = input.handleChangedAt ?? new Date();
+  private changeHandle(channel: Channel, handle: string, at: Date): void {
     this.history.release(handle);
     this.history.retire({ handle: channel.handle, channelId: channel.id, retiredAt: at });
     channel.handle = handle;
@@ -216,7 +215,7 @@ export class InMemoryChannelRepository implements ChannelRepositoryPort {
     id: string,
     kind: ChannelImageKind,
     version: number,
-    crops: BannerCrops | CropRect,
+    crops: ImageCrops,
     defaultUrl: string
   ): boolean {
     const channel = this.channels.get(id);
@@ -229,7 +228,7 @@ export class InMemoryChannelRepository implements ChannelRepositoryPort {
     } else {
       channel.bannerVersion = version;
       channel.bannerUrl = defaultUrl;
-      channel.bannerCrops = crops as BannerCrops;
+      if (crops.kind === 'banner') channel.bannerCrops = crops.crops;
     }
     channel.updatedAt = new Date();
     return true;

@@ -14,15 +14,6 @@ const still = (overrides: Record<string, unknown> = {}) => ({
   ...overrides,
 });
 
-const hasFfmpeg = (() => {
-  try {
-    execFileSync('ffmpeg', ['-version'], { stdio: 'ignore' });
-    return true;
-  } catch {
-    return false;
-  }
-})();
-
 describe('@vp/ffmpeg: channel image probe', () => {
   it.each([
     { codec: 'mjpeg', format: 'jpeg' },
@@ -92,7 +83,7 @@ describe('@vp/ffmpeg: channel image probe', () => {
     expect(() => parseChannelImageProbe(raw)).toThrow(expect.objectContaining({ code }));
   });
 
-  describe.skipIf(!hasFfmpeg)('with the real ffprobe', () => {
+  describe('with the real ffprobe', () => {
     let dir: string;
     const options = { ffprobePath: 'ffprobe', timeoutMs: 20_000 };
 

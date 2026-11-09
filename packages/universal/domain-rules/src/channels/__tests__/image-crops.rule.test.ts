@@ -1,5 +1,6 @@
+import type { ImageCrops } from '@vp/domain';
 import { expectErr, expectOk } from '@vp/testing/result';
-import { type ImageCrops, decideImageCrops } from '../image-crops.rule';
+import { decideImageCrops } from '../image-crops.rule';
 
 const IMAGE = { width: 2560, height: 1440 };
 const banner: ImageCrops = {

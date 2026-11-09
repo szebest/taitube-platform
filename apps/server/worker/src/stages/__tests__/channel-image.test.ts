@@ -2,8 +2,7 @@ import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
-import type { QueueJob } from '@vp/core/ports';
-import type { BannerCrops, ChannelImageKind, CropRect } from '@vp/domain';
+import type { ChannelImageKind } from '@vp/domain';
 import {
   ErrorCodes,
   PermanentError,
@@ -12,28 +11,26 @@ import {
   storageUnavailable,
 } from '@vp/errors';
 import { type ChannelImageProbe, type MediaTools, planChannelImageVariants } from '@vp/ffmpeg';
-import type { ChannelImageJob } from '@vp/job-contracts';
 import { createLogger } from '@vp/logger';
 import { err } from '@vp/result';
 import { channelImageUploadKey, channelImageVariantKey } from '@vp/storage';
-import { createMockJob } from '@vp/testing';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { STAGE_SETTINGS } from '../../__tests__/stage-settings';
 import { createChannelImageProcessor } from '../channel-image';
+import {
+  AVATAR_PROBE,
+  BANNER_CROPS,
+  BANNER_PROBE,
+  type ChannelImageJobArgs,
+  channelImageJob,
+  fakeMedia,
+  IMMUTABLE,
+  OWNER_ID,
+  queueUpload,
+} from './channel-image-harness';
 
 const logger = createLogger({ format: 'json', service: 'channel-image-test', level: 'silent' });
-const OWNER_ID = '00000000-0000-7000-8000-00000000a001';
-const IMMUTABLE = 'public, max-age=31536000, immutable';
-const AVATAR_CROP: CropRect = { x: 0, y: 0, width: 400, height: 400 };
-const BANNER_CROPS: BannerCrops = {
-  desktop: { x: 0, y: 0, width: 2400, height: 400 },
-  mobile: { x: 0, y: 0, width: 1500, height: 500 },
-  tv: { x: 0, y: 0, width: 1600, height: 900 },
-};
-const AVATAR_PROBE: ChannelImageProbe = { format: 'png', width: 800, height: 800 };
-const BANNER_PROBE: ChannelImageProbe = { format: 'jpeg', width: 2560, height: 1440 };
-
 describe('channel image stage', () => {
   let repositories: InMemoryRepositories;
   let storage: InMemoryStorageClient;
@@ -42,23 +39,12 @@ describe('channel image stage', () => {
   let probe: ChannelImageProbe | Error;
   let rendered: number;
 
-  const media: MediaTools = {
-    ...STAGE_SETTINGS.media,
-    probeChannelImage: async () => {
-      if (probe instanceof Error) throw probe;
-      return probe;
-    },
-    channelImage: async ({ outputDir, variants }) => {
+  const media = fakeMedia(
+    () => probe,
+    () => {
       rendered += 1;
-      return Promise.all(
-        variants.map(async ({ name }) => {
-          const file = path.join(outputDir, `${name}.webp`);
-          await fs.writeFile(file, `webp ${name}`);
-          return { name, path: file };
-        })
-      );
-    },
-  };
+    }
+  );
 
   const processor = (overrides: Partial<MediaTools> = {}) =>
     createChannelImageProcessor({
@@ -70,42 +56,10 @@ describe('channel image stage', () => {
       media: { ...media, ...overrides },
     });
 
-  async function queued(kind: ChannelImageKind = 'avatar', { raw = true } = {}) {
-    const id = uuidv7();
-    await repositories.channelImages.create({
-      id,
-      channelId,
-      uploadedBy: OWNER_ID,
-      kind,
-      contentType: 'image/png',
-      sizeBytes: 100,
-    });
-    if (raw) {
-      await storage.uploadObject({
-        bucket: 'raw',
-        key: channelImageUploadKey(channelId, kind, id),
-        body: 'raw bytes',
-        contentType: 'image/png',
-      });
-    }
-    const ready = kind === 'avatar';
-    const completion = ready
-      ? { width: 800, height: 800, crops: AVATAR_CROP }
-      : { width: 2560, height: 1440, crops: BANNER_CROPS };
-    expectOk(await repositories.channelImages.queue(id, completion));
-    return id;
-  }
+  const queued = (kind: ChannelImageKind = 'avatar', options: { raw?: boolean } = {}) =>
+    queueUpload({ repositories, storage, channelId }, kind, options);
 
-  const jobFor = (
-    uploadId: string,
-    kind: ChannelImageKind = 'avatar',
-    overrides: Partial<QueueJob<ChannelImageJob>> = {}
-  ) =>
-    createMockJob<ChannelImageJob>(
-      'thumbnail',
-      { type: 'channel-image', uploadId, channelId, kind, traceparent: '00-01' },
-      { id: `${uploadId}--channel-image`, ...overrides }
-    );
+  const jobFor = (...args: ChannelImageJobArgs) => channelImageJob(channelId, ...args);
 
   const status = async (uploadId: string) =>
     expectOk(await repositories.channelImages.findById(uploadId))?.status;

@@ -1,8 +1,7 @@
 import {
-  type BannerCrops,
   type ChannelImageKind,
-  type CropRect,
   IMAGE_UPLOAD_STATUSES,
+  type ImageCrops,
   type ImageUploadStatus,
 } from '@vp/domain';
 import { sql } from 'drizzle-orm';
@@ -51,7 +50,7 @@ export const channelImageUploads = pgTable(
     status: text('status').$type<ImageUploadStatus>().notNull().default('issued'),
     width: integer('width'),
     height: integer('height'),
-    crops: jsonb('crops').$type<BannerCrops | CropRect>(),
+    crops: jsonb('crops').$type<ImageCrops>(),
     version: integer('version'),
     failure: text('failure'),
     createdAt: timestamptz('created_at').notNull().defaultNow(),

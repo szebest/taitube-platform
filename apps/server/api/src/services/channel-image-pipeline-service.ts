@@ -161,7 +161,7 @@ export class ChannelImagePipelineService {
 
     const queued = await this.deps.images.queue(upload.value.id, {
       ...image,
-      crops: decided.value.kind === 'avatar' ? decided.value.crop : decided.value.crops,
+      crops: decided.value,
     });
     if (isErr(queued)) return queued;
     if (!queued.value?.version) return err(imageUploadNotFound(input.uploadId));

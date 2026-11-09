@@ -18,6 +18,10 @@ export interface CropRect {
 
 export type BannerCrops = Record<BannerTarget, CropRect>;
 
+export type ImageCrops =
+  | { readonly kind: 'avatar'; readonly crop: CropRect }
+  | { readonly kind: 'banner'; readonly crops: BannerCrops };
+
 export const AVATAR_SIZES = [48, 72, 128, 256] as const;
 
 export type AvatarSize = (typeof AVATAR_SIZES)[number];
@@ -63,9 +67,14 @@ export interface ChannelImageUpload {
   status: ImageUploadStatus;
   width: number | null;
   height: number | null;
-  crops: BannerCrops | CropRect | null;
+  crops: ImageCrops | null;
   version: number | null;
   failure: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
+
+export const MAX_CHANNEL_IMAGE_EDGE = 8192;
+export const MAX_CHANNEL_IMAGE_PIXELS = 40_000_000;
+export const CHANNEL_IMAGE_QUALITY = 82;
+export const CHANNEL_IMAGE_RETENTION_DAYS = 7;

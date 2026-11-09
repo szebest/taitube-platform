@@ -17,8 +17,16 @@ const BANNER_CROPS: BannerCrops = {
   mobile: { x: 0, y: 0, width: 1500, height: 500 },
   tv: { x: 0, y: 0, width: 1600, height: 900 },
 };
-const AVATAR_DONE: ChannelImageCompletion = { width: 800, height: 800, crops: CROP };
-const BANNER_DONE: ChannelImageCompletion = { width: 2560, height: 1440, crops: BANNER_CROPS };
+const AVATAR_DONE: ChannelImageCompletion = {
+  width: 800,
+  height: 800,
+  crops: { kind: 'avatar', crop: CROP },
+};
+const BANNER_DONE: ChannelImageCompletion = {
+  width: 2560,
+  height: 1440,
+  crops: { kind: 'banner', crops: BANNER_CROPS },
+};
 
 const DAY_MS = 86_400_000;
 const DEFAULT_URL = 'https://cdn.example/channels/c/banner/v1/desktop-1280.webp';

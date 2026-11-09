@@ -1,7 +1,7 @@
 import type { Channel as ChannelResource, OwnerChannel } from '@vp/api-contracts';
 import {
   AVATAR_SIZES,
-  BANNER_TARGETS,
+  type BANNER_TARGETS,
   BANNER_WIDTHS,
   type Channel,
   type ChannelLocalization,

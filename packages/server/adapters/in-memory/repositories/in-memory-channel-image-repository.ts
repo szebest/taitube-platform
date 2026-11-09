@@ -87,7 +87,10 @@ export class InMemoryChannelImageRepository implements ChannelImageRepositoryPor
     );
     upload.status = applied ? 'ready' : 'superseded';
     upload.updatedAt = new Date();
-    if (applied) await this.announceReady(upload, upload.version);
+    if (applied) {
+      const announced = await this.announceReady(upload, upload.version);
+      if (isErr(announced)) return announced;
+    }
     return ok({ upload: { ...upload }, applied });
   }
 
@@ -169,8 +172,11 @@ export class InMemoryChannelImageRepository implements ChannelImageRepositoryPor
     return !isErr(current) && (upload.version ?? 0) < current.value;
   }
 
-  private async announceReady(upload: ChannelImageUpload, version: number): Promise<void> {
-    await this.deps.audit.append({
+  private async announceReady(
+    upload: ChannelImageUpload,
+    version: number
+  ): Promise<Result<unknown, DatabaseUnavailable>> {
+    const audited = await this.deps.audit.append({
       channelId: upload.channelId,
       actorUserId: upload.uploadedBy,
       action: 'channel.updated',
@@ -178,7 +184,8 @@ export class InMemoryChannelImageRepository implements ChannelImageRepositoryPor
       targetId: upload.channelId,
       meta: { fields: [upload.kind] },
     });
-    await this.deps.userEvents.append({
+    if (isErr(audited)) return audited;
+    return this.deps.userEvents.append({
       userId: upload.uploadedBy,
       ...channelImageReady({
         uploadId: upload.id,

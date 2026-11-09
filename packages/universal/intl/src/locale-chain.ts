@@ -3,6 +3,8 @@ import { type FormatFailure, unsupportedLocale } from './failures';
 
 export const FALLBACK_LOCALE = 'en';
 
+export const SUPPORTED_LOCALES = [FALLBACK_LOCALE, 'pl'] as const;
+
 /**
  * Most specific first, ending at the fallback: `sv-FI` walks `sv-FI`, `sv`, `en`. A catalogue
  * looks a key up in each in turn, so a partial translation is useful rather than broken.

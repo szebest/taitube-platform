@@ -1,5 +1,5 @@
-import { BANNER_ASPECTS, BANNER_TARGETS, type BannerCrops, type CropRect } from '@vp/domain';
-import { type Result, all, andThen, map, ok } from '@vp/result';
+import { BANNER_ASPECTS, BANNER_TARGETS, type BannerCrops, type ImageCrops } from '@vp/domain';
+import { type Result, all, andThen, map } from '@vp/result';
 import {
   type ChannelImageKind,
   type ImageDimensions,
@@ -8,10 +8,6 @@ import {
   validateChannelImageDimensions,
   validateCropRect,
 } from '@vp/validation';
-
-export type ImageCrops =
-  | { readonly kind: 'avatar'; readonly crop: CropRect }
-  | { readonly kind: 'banner'; readonly crops: BannerCrops };
 
 export type DecideImageCropsFailure = ImageTooSmall | InvalidCropRect;
 
