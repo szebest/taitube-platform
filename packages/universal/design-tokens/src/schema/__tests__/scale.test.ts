@@ -16,6 +16,8 @@ describe('ScaleSchema', () => {
     { label: 'a space step Tailwind has no index for', scale: scaleWith('space', { 7: '28px' }) },
     { label: 'tooltips layered under toasts', scale: scaleWith('z', { tooltip: 65 }) },
     { label: 'a fractional layer', scale: scaleWith('z', { modal: 50.5 }) },
+    { label: 'a layer shared by two roles', scale: scaleWith('z', { header: 20 }) },
+    { label: 'a header under the sticky bars', scale: scaleWith('z', { header: 15 }) },
     {
       label: 'a breakpoint below the one before it',
       scale: scaleWith('breakpoint', { large: '1000px' }),

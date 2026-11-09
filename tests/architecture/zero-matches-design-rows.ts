@@ -80,6 +80,14 @@ export const DESIGN_ROWS: readonly Row[] = [
     fires: "'h-[calc(100dvh-var(--spacing-header))]'",
   },
   {
+    name: 'a raw z-index (z-<n>, z-[<n>], -z-<n>, zIndex, z-index), where a role of scale.z belongs: z-behind to z-tooltip, one distinct number each',
+    pattern: new RegExp(`${UTILITY}z-[\\d\\[(]|\\bzIndex\\b|(?<![\\w-])z-index\\s*:`, 'g'),
+    scope: [...CLIENT_SOURCE, ...SYSTEM_STYLESHEETS],
+    expected: 0,
+    fires: '<div className="relative -z-10 md:z-[2] z-1" style={{ zIndex: 3 }} />',
+    passes: '<div className="z-behind z-stage-hud group-data-open:z-modal" />',
+  },
+  {
     name: 'a Tailwind palette class, which the generated theme wipes, so it draws nothing',
     pattern: new RegExp(
       `${UTILITY}(?:bg|text|border(?:-[xytblrse])?|ring|ring-offset|outline|fill|stroke|from|via|to|decoration|divide|placeholder|caret|accent|shadow)-(?:black|white|(?:${PALETTE})-\\d{2,3})\\b`,

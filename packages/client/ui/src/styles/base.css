@@ -164,7 +164,7 @@
 }
 
 /* A page with and without a scrollbar lays out alike. The scroll lock Radix applies to `body` drops the
-   viewport's scrollbar, and its own `margin-right` gives that width back: do not override it. */
+   viewport's scrollbar, and the end margin it adds gives that width back: do not override it. */
 html {
   scrollbar-gutter: stable;
 }

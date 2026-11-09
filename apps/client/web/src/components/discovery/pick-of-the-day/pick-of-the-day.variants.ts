@@ -3,13 +3,13 @@ import type { PickOfTheDayLayoutStyle } from './types';
 
 export const pickOfTheDayStyles = tv({
   slots: {
-    root: 'relative isolate animate-fade-in rounded-card p-inset-card before:absolute before:inset-0 before:-z-1 before:rounded-card before:bg-surface font-sans text-fg [animation-duration:var(--duration-base)] medium:[&_[data-slot=video-card-thumb]]:max-w-[30rem] expanded:[&_[data-slot=video-card-thumb]]:max-w-[40rem]',
-    glow: 'pointer-events-none absolute inset-y-0 start-0 -z-10 w-2/3 rounded-card blur-ambient opacity-ambient transition-opacity duration-slow ease-standard starting:opacity-0 in-data-[ambient=off]:hidden in-data-[contrast=more]:hidden',
+    root: 'relative isolate animate-fade-in rounded-card p-inset-card before:absolute before:inset-0 before:z-behind before:rounded-card before:bg-surface font-sans text-fg [animation-duration:var(--duration-base)] medium:[&_[data-slot=video-card-thumb]]:max-w-[30rem] expanded:[&_[data-slot=video-card-thumb]]:max-w-[40rem]',
+    glow: 'pointer-events-none absolute inset-y-0 start-0 z-behind w-2/3 rounded-card blur-ambient opacity-ambient transition-opacity duration-slow ease-standard starting:opacity-0 in-data-[ambient=off]:hidden in-data-[contrast=more]:hidden',
     kicker: 'm-0 text-overline text-accent-ink uppercase',
     note: 'm-0 line-clamp-2 max-w-reading-max font-editorial text-editorial text-fg large:line-clamp-3',
     window: 'm-0 min-h-[1lh] text-caption text-fg-muted',
     actions:
-      'relative z-1 flex flex-wrap items-center gap-inline max-medium:[&>[data-slot=button]]:flex-1',
+      'relative z-lift flex flex-wrap items-center gap-inline max-medium:[&>[data-slot=button]]:flex-1',
   },
   variants: {
     layout: {

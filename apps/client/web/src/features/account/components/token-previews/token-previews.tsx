@@ -71,7 +71,7 @@ export function ShadowPreview() {
 export function AmbientPreview() {
   return (
     <div className="relative isolate p-3">
-      <span className="absolute inset-1 -z-10 rounded-card bg-accent opacity-ambient blur-ambient in-data-[ambient=off]:hidden" />
+      <span className="absolute inset-1 z-behind rounded-card bg-accent opacity-ambient blur-ambient in-data-[ambient=off]:hidden" />
       <span className="block h-8 rounded-card border-divider border-border bg-surface" />
     </div>
   );

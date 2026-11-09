@@ -5,7 +5,7 @@ export const channelHeaderStyles = tv({
   slots: {
     root: 'flex flex-col gap-stack font-sans text-fg',
     bannerFrame: 'relative isolate max-medium:-mx-gutter-compact',
-    glow: 'pointer-events-none absolute -inset-stack -z-10 blur-ambient opacity-ambient transition-opacity duration-slow ease-standard starting:opacity-0 in-data-[ambient=off]:hidden in-data-[contrast=more]:hidden',
+    glow: 'pointer-events-none absolute -inset-stack z-behind blur-ambient opacity-ambient transition-opacity duration-slow ease-standard starting:opacity-0 in-data-[ambient=off]:hidden in-data-[contrast=more]:hidden',
     banner:
       'relative aspect-[3/1] overflow-hidden bg-surface medium:aspect-[4/1] medium:rounded-card expanded:aspect-[6/1]',
     bannerMedia: 'size-full object-cover',

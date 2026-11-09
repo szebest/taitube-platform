@@ -86,6 +86,8 @@ Each row has a fixture proving it fires; the list is [ARCHITECTURE.md section 6]
 - No raw colour, ramp step or Tailwind palette class outside a theme; logical properties only.
 - No inline string-literal union in a props type outside `types.ts`.
 - Token values are declared only under `ui/src/tokens/` and `ui/src/themes/`, and only the registry imports them.
+- No raw `z-<n>`, `z-[<n>]`, `-z-<n>`, `zIndex` or `z-index`: a layer is a role of `scale.z`
+  ([foundations/shape-elevation.md](../design/foundations/shape-elevation.md#layering)).
 - No stylesheet outside `@vp/ui`'s styles, no CSS module and no SCSS.
 - Every component folder has its component, index, story and jsdom spec.
 - `@vp/components` exports are each imported by both apps.
