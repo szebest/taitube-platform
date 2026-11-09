@@ -14,17 +14,15 @@ const meta = {
     ],
     onChange: () => undefined,
   },
-  decorators: [
-    (Story) => (
-      <IntlProvider
-        locale={FALLBACK_ACTIVE_LOCALE.locale}
-        catalogues={FALLBACK_ACTIVE_LOCALE.catalogues}
-        timeZone="UTC"
-      >
-        <Story />
-      </IntlProvider>
-    ),
-  ],
+  render: (args) => (
+    <IntlProvider
+      locale={FALLBACK_ACTIVE_LOCALE.locale}
+      catalogues={FALLBACK_ACTIVE_LOCALE.catalogues}
+      timeZone="UTC"
+    >
+      <FilterSelect {...args} />
+    </IntlProvider>
+  ),
 } satisfies Meta<typeof FilterSelect<string>>;
 
 export default meta;
