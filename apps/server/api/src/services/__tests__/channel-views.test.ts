@@ -1,9 +1,10 @@
 import type { LiveStream } from '@vp/domain';
+import { asCdnBase } from '@vp/env-schema';
 import { toChannelView, toOwnerExtras } from '../channel-views';
 import { aChannel, aLiveStream, STREAM_ID, VIDEO_ID } from './live-harness';
 
 const STATS = { videoCount: 1, totalViews: 9 };
-const CDN = 'https://cdn.test';
+const CDN = asCdnBase('https://cdn.test');
 
 const viewOf = (
   overrides = {},

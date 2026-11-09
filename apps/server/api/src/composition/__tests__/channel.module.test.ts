@@ -31,7 +31,7 @@ describe('apps/server/api/composition: channel module', () => {
     );
 
     expect(view).toMatchObject({ source: 'pinned', items: [{ id: VIDEO, title: 'Match' }] });
-    expect(expectOk(await c.get(Services.ChannelService).getPublicChannel('@owner')).handle).toBe(
+    expect(expectOk(await c.get(Services.ChannelService).getPublicChannel('@owner', ['en'])).handle).toBe(
       'owner'
     );
     expectOk(await c.dispose());
