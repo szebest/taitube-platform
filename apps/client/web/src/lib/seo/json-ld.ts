@@ -64,7 +64,7 @@ export function videoObject(
       author: {
         '@type': 'Person',
         name: video.channel.displayName,
-        url: channelUrl(siteUrl, video.channel.id),
+        url: channelUrl(siteUrl, video.channel.handle),
       },
     }),
   };

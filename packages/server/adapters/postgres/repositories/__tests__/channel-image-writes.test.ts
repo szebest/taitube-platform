@@ -15,6 +15,11 @@ const CROP = { x: 0, y: 0, width: 400, height: 400 };
 const URL = 'https://cdn.example/avatar-128.webp';
 const uploadId = (n: number) => `00000000-0000-7000-8000-0000000000e${n}`;
 
+function expectRow<T>(row: T | null): T {
+  if (row === null) throw new Error('expected an upload row');
+  return row;
+}
+
 describe('postgres: channel image writes', () => {
   async function seeded() {
     const engine = await migratedPglite();
@@ -62,11 +67,11 @@ describe('postgres: channel image writes', () => {
   it('takes a newer version, refuses an older one and appends one audit row and one event', async () => {
     const { engine, db } = await seeded();
     try {
-      const newer = await lockUpload(db, uploadId(2));
-      const older = await lockUpload(db, uploadId(1));
+      const newer = expectRow(await lockUpload(db, uploadId(2)));
+      const older = expectRow(await lockUpload(db, uploadId(1)));
 
-      expect((await commitUpload(db, newer!, URL)).applied).toBe(true);
-      expect((await commitUpload(db, older!, URL)).applied).toBe(false);
+      expect((await commitUpload(db, newer, URL)).applied).toBe(true);
+      expect((await commitUpload(db, older, URL)).applied).toBe(false);
 
       expect(await db.select().from(schema.channelAuditLog)).toHaveLength(1);
       expect(await db.select().from(schema.userEvents)).toHaveLength(1);
@@ -80,9 +85,9 @@ describe('postgres: channel image writes', () => {
   it('fails an upload with its reason and tells its uploader', async () => {
     const { engine, db } = await seeded();
     try {
-      const row = await lockUpload(db, uploadId(1));
+      const row = expectRow(await lockUpload(db, uploadId(1)));
 
-      const failed = await failUpload(db, row!, 'unreadable');
+      const failed = await failUpload(db, row, 'unreadable');
 
       expect(failed).toMatchObject({ status: 'failed', failure: 'unreadable' });
       expect(await db.select().from(schema.userEvents)).toHaveLength(1);

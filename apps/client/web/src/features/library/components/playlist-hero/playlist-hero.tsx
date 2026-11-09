@@ -33,7 +33,8 @@ export function PlaylistHero({ playlist, editable }: PlaylistHeroProps) {
   const [editing, setEditing] = useState(false);
   const { spoken } = useDurationText(totalDurationMs(playlist));
 
-  const { id, title, description, visibility, owner, items } = playlist;
+  const { id, title, description, visibility, owner, items, nextEpisodeVideoId } = playlist;
+  const continueIndex = items.findIndex(({ videoId }) => videoId === nextEpisodeVideoId);
   const cover = items.slice(0, STACK_DEPTH);
   const empty = items.length === 0;
 
@@ -100,9 +101,19 @@ export function PlaylistHero({ playlist, editable }: PlaylistHeroProps) {
           </>
         )}
         <div className="flex flex-wrap gap-inline">
+          {continueIndex >= 0 && (
+            <Button variant="solid" tone="accent" onClick={() => play(continueIndex, false)}>
+              <Icon name="play" />
+              {tOr('library.continueSeries', {}, '')}
+            </Button>
+          )}
           {!empty && (
             <>
-              <Button variant="solid" tone="accent" onClick={() => play(0, false)}>
+              <Button
+                variant={continueIndex >= 0 ? 'soft' : 'solid'}
+                tone={continueIndex >= 0 ? 'neutral' : 'accent'}
+                onClick={() => play(0, false)}
+              >
                 <Icon name="play" />
                 {tOr('library.playOrder', { mode: 'play' }, '')}
               </Button>
