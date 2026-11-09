@@ -5,6 +5,7 @@ import { defineCaptionRules } from './rules/caption.rules';
 import { defineChannelTeamRules } from './rules/channel-team.rules';
 import { defineChannelRules } from './rules/channel.rules';
 import { defineClipRules } from './rules/clip.rules';
+import { defineCommentModerationRules } from './rules/comment-moderation.rules';
 import { defineCommentRules } from './rules/comment.rules';
 import { defineLiveStreamRules } from './rules/live-stream.rules';
 import { defineNotificationRules } from './rules/notification.rules';
@@ -21,6 +22,7 @@ export function getUserPermissions(user: UserContext | null): AppAbility {
 
   defineVideoRules(user, builder);
   defineCommentRules(user, builder);
+  defineCommentModerationRules(user, builder);
   defineChannelRules(user, builder);
   defineChannelTeamRules(user, builder);
   defineUploadRules(user, builder);

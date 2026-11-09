@@ -2,7 +2,16 @@ import { subject } from '@casl/ability';
 import { CHANNEL_ROLE_NAMES, type ChannelCapability, roleHas } from '@vp/domain';
 import type { AppAction, AppSubjects, UserContext } from '../../types/index';
 
-type SubjectType = 'Video' | 'Comment' | 'Channel' | 'Analytics' | 'Caption' | 'Upload' | 'Team';
+type SubjectType =
+  | 'Video'
+  | 'Comment'
+  | 'Channel'
+  | 'Analytics'
+  | 'Caption'
+  | 'Upload'
+  | 'Team'
+  | 'ChannelUser'
+  | 'CommentSettings';
 
 interface Probe {
   type: SubjectType;
@@ -24,6 +33,8 @@ const comment = subject('Comment', {
   videoOwnerId: OWNER_ID,
 });
 const channel = subject('Channel', { id: CHANNEL_ID, userId: OWNER_ID, ownerId: OWNER_ID });
+const channelUser = subject('ChannelUser', { channelId: CHANNEL_ID, ownerId: OWNER_ID });
+const commentSettings = subject('CommentSettings', { channelId: CHANNEL_ID, ownerId: OWNER_ID });
 const editor = subject('ChannelMember', {
   channelId: CHANNEL_ID,
   ownerId: OWNER_ID,
@@ -38,7 +49,7 @@ const editorInvite = subject('ChannelInvite', {
 });
 
 /** Every capability is probed or marked pending until its first action exists: the Record keeps it complete. */
-const CAPABILITY_PROBES: Record<ChannelCapability, Probe[] | { pending: '113' | '118' }> = {
+const CAPABILITY_PROBES: Record<ChannelCapability, Probe[] | { pending: '118' }> = {
   'video.read': [
     { type: 'Video', action: 'read', target: privateVideo },
     {
@@ -75,8 +86,17 @@ const CAPABILITY_PROBES: Record<ChannelCapability, Probe[] | { pending: '113' | 
   'comment.moderate': [
     { type: 'Comment', action: 'moderate', target: comment },
     { type: 'Comment', action: 'delete', target: comment },
+    ...(['hold', 'approve', 'hide', 'unhide', 'remove'] as const).map((action) => ({
+      type: 'Comment' as const,
+      action,
+      target: comment,
+    })),
+    { type: 'ChannelUser', action: 'restrict', target: channelUser },
   ],
-  'comment.settings': { pending: '113' },
+  'comment.settings': [
+    { type: 'CommentSettings', action: 'read', target: commentSettings },
+    { type: 'CommentSettings', action: 'update', target: commentSettings },
+  ],
   'data.export': { pending: '118' },
   'team.manage': [
     {

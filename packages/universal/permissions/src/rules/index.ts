@@ -1,6 +1,7 @@
 export * from './admin.rules';
 export * from './video.rules';
 export * from './comment.rules';
+export * from './comment-moderation.rules';
 export * from './channel.rules';
 export * from './channel-team.rules';
 export * from './upload.rules';

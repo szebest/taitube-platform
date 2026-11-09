@@ -2,6 +2,8 @@ import type { AbilityBuilder } from '@casl/ability';
 import { type AppAbility, type UserContext, isSignedInRole } from '../types/index';
 import { ownersWith } from './memberships';
 
+const MODERATION_ACTIONS = ['hold', 'approve', 'hide', 'unhide', 'remove'] as const;
+
 export function defineCommentRules(
   user: UserContext | null,
   builder: AbilityBuilder<AppAbility>
@@ -23,6 +25,7 @@ export function defineCommentRules(
     can('delete', 'Comment', { videoOwnerId: user.id });
     can('moderate', 'Comment', { videoOwnerId: user.id });
     can('pin', 'Comment', { videoOwnerId: user.id });
+    for (const action of MODERATION_ACTIONS) can(action, 'Comment', { videoOwnerId: user.id });
     can('heart', 'Comment', { videoOwnerId: user.id });
     can('report', 'Comment');
   }
@@ -35,6 +38,7 @@ export function defineCommentRules(
   if (moderated) {
     can('delete', 'Comment', { videoOwnerId: moderated });
     can('moderate', 'Comment', { videoOwnerId: moderated });
+    for (const action of MODERATION_ACTIONS) can(action, 'Comment', { videoOwnerId: moderated });
   }
 
   const pinnable = ownersWith(user, 'comment.pin');
