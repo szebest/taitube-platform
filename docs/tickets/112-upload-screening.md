@@ -8,7 +8,7 @@
 | Blocks | — |
 | Spec | [PRD §6 Functional requirements](../PRD.md#6-functional-requirements) · [SDD P9 Local-first](../SDD.md#13-design-principles-used-to-break-ties-throughout) · [SDD §3.2 Processing pipeline](../SDD.md#32-processing-pipeline-fan-out--fan-in) · [SDD §3.5 State machine](../SDD.md#35-state-machine) · [SDD §7 Object storage layout](../SDD.md#7-object-storage-layout) · [SDD §9.3 Fan-out / fan-in](../SDD.md#93-fan-out--fan-in-with-flows) · [SDD §11 Security](../SDD.md#11-security) · [SDD ADR-18](../SDD.md#adr-18--error-taxonomy-decides-retry-policy) |
 
-**Status:** ready
+**Status:** in-progress
 
 > **Why.** Nothing screens an upload today. [44](44-creator-studio-video-management-visibility.md) lists automated
 > copyright scanning as out of scope, and moderation is manual afterwards: an admin takedown (`moderate Video`, one CAS to
@@ -180,6 +180,16 @@ the `HELD` state with its CAS transitions and permissions; (2) the pure rules an
 fingerprints, the index and matching; (4) the classifier port, adapter, image build and lock file; (5) the `screen` stage,
 queue, `package` integration, KEDA, compose and smoke step; (6) the admin moderation tab and Studio hold and appeal screens;
 (7) SDD, README and ARCHITECTURE updates.
+
+## Stack plan
+
+Three slices on `feat/112-upload-screening`, bottom first, each green on its own. They follow the delivery order above.
+
+| Slice | Holds | Delivery commits |
+|---|---|---|
+| `slice/112a-screening-core` | contracts, schema and migrations, tuning thresholds, env keys, the `HELD` state with its CAS transitions and permissions; the pure rules and `decideScreening`; `@vp/fingerprint` (dHash, bands, Chromaprint, matcher) and the fingerprint repositories | 1, 2, 3 |
+| `slice/112b-screen-stage` | `FrameClassifier` port, ONNX adapter and double, image build and lock file; the `screen` stage, queue, `package` integration, KEDA, compose, smoke step | 4, 5 |
+| `slice/112c-screening-ui-docs` | admin Held and flagged tab, Studio hold and appeal screens, SDD, README and ARCHITECTURE; ticket `done` | 6, 7 |
 
 ## Out of scope
 
