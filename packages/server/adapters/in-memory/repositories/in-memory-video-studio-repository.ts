@@ -11,7 +11,7 @@ import {
   type VideoRecord,
   VideoStudioRepository,
 } from '@vp/core/repositories';
-import { type CreatorLibraryCursor, creatorLibraryCursorOf } from '@vp/domain';
+import { type CreatorLibraryCursor, creatorLibraryCursorOf, videoEditAudit } from '@vp/domain';
 import { type DatabaseUnavailable, type VersionConflict, versionConflict } from '@vp/errors';
 import { visibilityNotificationJobs } from '@vp/job-contracts';
 import { err, isErr, map, ok, type Result } from '@vp/result';
@@ -101,15 +101,15 @@ export class InMemoryVideoStudioRepository extends VideoStudioRepository {
     const channel = await this.deps.channels.findByUserId(video.ownerId);
     if (isErr(channel)) return channel;
     if (channel.value) {
-      const audited = await this.deps.audit.append({
-        channelId: channel.value.id,
-        actorUserId: userId,
-        action: 'video.updated',
-        targetType: 'video',
-        targetId: videoId,
-        meta: { fields: auditFields },
-      });
-      if (isErr(audited)) return audited;
+      const edit = { videoId, fields: auditFields, commentsEnabled: patch.commentsEnabled };
+      for (const entry of videoEditAudit(edit)) {
+        const audited = await this.deps.audit.append({
+          ...entry,
+          channelId: channel.value.id,
+          actorUserId: userId,
+        });
+        if (isErr(audited)) return audited;
+      }
     }
 
     for (const job of visibilityNotificationJobs(

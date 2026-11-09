@@ -49,6 +49,12 @@ const UpdateCreatorVideoSchema = z.object({
     .optional()
     .describe('Replaces every tag; at most 30, each 1 to 30 characters once trimmed'),
   selectedThumbnail: ThumbnailSelectionSchema.optional(),
+  commentsEnabled: z
+    .boolean()
+    .optional()
+    .describe(
+      'false turns comments off for this video; owner, managers and moderators may still comment'
+    ),
   version: z.number().int().nonnegative().describe('The version the edit was made against'),
 });
 

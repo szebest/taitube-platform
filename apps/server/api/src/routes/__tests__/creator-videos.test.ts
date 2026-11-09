@@ -119,6 +119,21 @@ describe('creator studio video routes', () => {
       });
     });
 
+    it('turns comments off and back on, and the audit log records each toggle', async () => {
+      const channel = expectOk(await repositories.channels.findByUserId(SEEDED.userId));
+      const off = await patch({ commentsEnabled: false, version: await versionOf(VIDEO_ID) });
+      const on = await patch({ commentsEnabled: true, version: await versionOf(VIDEO_ID) });
+
+      expect([off.json().commentsEnabled, on.json().commentsEnabled]).toEqual([false, true]);
+      const log = expectOk(
+        await repositories.channelAudit.list(channel?.id ?? '', { cursor: null, limit: 10 })
+      );
+      expect(log.map((row) => [row.action, row.meta])).toEqual([
+        ['video.comments.toggled', { enabled: true }],
+        ['video.comments.toggled', { enabled: false }],
+      ]);
+    });
+
     it('answers the second of two edits made against the same version with 409', async () => {
       const version = await versionOf(VIDEO_ID);
 

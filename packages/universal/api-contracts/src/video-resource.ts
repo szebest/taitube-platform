@@ -97,6 +97,10 @@ export const VideoSchema = z.object({
     .describe('Public CDN URL of the thumbnail to show: the custom one if set, else the poster'),
   categoryId: z.uuid().nullable().optional().describe('Category UUID identifier'),
   tags: z.array(z.string()).optional().describe('Tags the creator set'),
+  commentsEnabled: z
+    .boolean()
+    .default(true)
+    .describe('false when the creator turned comments off for this video'),
   channel: ChannelCardSchema.nullable()
     .optional()
     .describe('The owner channel; set when one video is read, absent on the studio writes'),

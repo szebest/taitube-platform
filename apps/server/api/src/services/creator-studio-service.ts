@@ -94,6 +94,7 @@ export interface CreatorVideoEdit {
   categoryId?: string | null;
   tags?: string[];
   selectedThumbnail?: ThumbnailSelection;
+  commentsEnabled?: boolean;
   version: number;
 }
 
@@ -117,7 +118,9 @@ function thumbnailKeyOf(selection: ThumbnailSelection): string | null {
   }
 }
 
-const AUDIT_FIELD_OF: Record<keyof VideoMetadataPatch, VideoAuditField> = {
+type AuditedField = Exclude<keyof VideoMetadataPatch, 'commentsEnabled'>;
+
+const AUDIT_FIELD_OF: Record<AuditedField, VideoAuditField> = {
   title: 'title',
   description: 'description',
   visibility: 'visibility',
@@ -127,7 +130,7 @@ const AUDIT_FIELD_OF: Record<keyof VideoMetadataPatch, VideoAuditField> = {
 };
 
 function auditFieldsOf(patch: VideoMetadataPatch): VideoAuditField[] {
-  return (Object.keys(AUDIT_FIELD_OF) as (keyof VideoMetadataPatch)[])
+  return (Object.keys(AUDIT_FIELD_OF) as AuditedField[])
     .filter((field) => patch[field] !== undefined)
     .map((field) => AUDIT_FIELD_OF[field]);
 }

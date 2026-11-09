@@ -6,6 +6,7 @@ import {
   CHANNEL_ROLE_NAMES,
   type ChannelCapability,
   roleHas,
+  videoEditAudit,
 } from '../channel-team';
 
 describe('@vp/domain: channel team', () => {
@@ -62,5 +63,24 @@ describe('@vp/domain: channel team', () => {
     'settings.comments.updated',
   ] as const)('audits %s', (action) => {
     expect(CHANNEL_AUDIT_ACTIONS).toContain(action);
+  });
+
+  it.each([
+    { scenario: 'fields only', edit: { fields: ['title'] }, actions: ['video.updated'] },
+    {
+      scenario: 'a toggle only',
+      edit: { fields: [], commentsEnabled: false },
+      actions: ['video.comments.toggled'],
+    },
+    {
+      scenario: 'both, as two rows',
+      edit: { fields: ['tags'], commentsEnabled: true },
+      actions: ['video.updated', 'video.comments.toggled'],
+    },
+    { scenario: 'nothing', edit: { fields: [] }, actions: [] },
+  ] as const)('audits an edit of $scenario', ({ edit, actions }) => {
+    const events = videoEditAudit({ videoId: 'v', ...edit, fields: [...edit.fields] });
+
+    expect(events.map(({ action }) => action)).toEqual(actions);
   });
 });

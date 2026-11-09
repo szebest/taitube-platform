@@ -174,6 +174,30 @@ type LiftMeta = { kind: RestrictionKind };
 
 export type ChannelAuditAction = ChannelAuditEvent['action'];
 
+type VideoAuditEvent = Extract<ChannelAuditEvent, { targetType: 'video' }>;
+
+/** One edit is audited as what changed in its fields and, on its own row, a comments toggle. */
+export function videoEditAudit(edit: {
+  videoId: string;
+  fields: VideoAuditField[];
+  commentsEnabled?: boolean;
+}): VideoAuditEvent[] {
+  const { videoId: targetId, fields, commentsEnabled } = edit;
+  const events: VideoAuditEvent[] = [];
+  if (fields.length > 0) {
+    events.push({ action: 'video.updated', targetType: 'video', targetId, meta: { fields } });
+  }
+  if (commentsEnabled !== undefined) {
+    events.push({
+      action: 'video.comments.toggled',
+      targetType: 'video',
+      targetId,
+      meta: { enabled: commentsEnabled },
+    });
+  }
+  return events;
+}
+
 const AUDIT_ACTIONS: Record<ChannelAuditAction, true> = {
   'invite.created': true,
   'invite.accepted': true,
