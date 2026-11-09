@@ -119,7 +119,7 @@ describe('ChannelIdentityService', () => {
         code: ErrorCodes.HANDLE_ALREADY_TAKEN,
       },
       { scenario: 'a malformed handle', handle: 'a', code: ErrorCodes.INVALID_HANDLE_FORMAT },
-    ])('refuses $scenario', async ({ handle, code }) => {
+    ])('refuses the handle change of $scenario', async ({ handle, code }) => {
       expect(expectErr(await service.decide(channel, { handle })).code).toBe(code);
     });
 

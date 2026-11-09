@@ -108,15 +108,16 @@ describe('me routes', () => {
     const account = await app.inject({ method: 'GET', url: '/v1/me/account', headers: auth });
 
     expect(patched.statusCode).toBe(200);
-    expect(patched.json().links).toEqual(links);
-    expect(account.json().channel.links).toEqual(links);
+    const listed = links.map((link) => ({ ...link, platform: 'website' }));
+    expect(patched.json().links).toEqual(listed);
+    expect(account.json().channel.links).toEqual(listed);
   });
 
   it.each([
     { name: 'a non-https link', links: [{ label: 'Site', url: 'http://example.com' }] },
     {
-      name: 'a sixth link',
-      links: Array.from({ length: 6 }, (_, i) => ({ label: `L${i}`, url: `https://e.com/${i}` })),
+      name: 'a ninth link',
+      links: Array.from({ length: 9 }, (_, i) => ({ label: `L${i}`, url: `https://e.com/${i}` })),
     },
   ])('refuses $name as a 422 problem naming the links field', async ({ links }) => {
     const res = await app.inject({
