@@ -10,12 +10,32 @@ const resolvedSand = () =>
     resolveTheme(expectOk(parseTheme(themeFromTokens('sand'))), RefSchema.parse(refFromTokens()))
   );
 
-const failing = (theme: ResolvedTheme) =>
-  checkThemeContrast(theme).map(({ mode, label }) => `${mode}: ${label}`);
+const failing = (theme: ResolvedTheme, set: 'core' | 'drawn' = 'core') =>
+  checkThemeContrast(theme, set).map(({ mode, label }) => `${mode}: ${label}`);
 
 describe('checkThemeContrast', () => {
   it('passes sand from tokens.json in every mode', () => {
     expect(failing(resolvedSand())).toEqual([]);
+  });
+
+  it('holds a shipped theme to every pair a component draws, under more contrast as well', () => {
+    const sand = resolvedSand();
+    const theme: ResolvedTheme = {
+      ...sand,
+      color: { ...sand.color, light: { ...sand.color.light, 'fg-subtle': '#8A8072' } },
+    };
+
+    expect(
+      checkThemeContrast(theme).map(({ mode, contrast, label }) => `${mode} ${contrast}: ${label}`)
+    ).toEqual([
+      'light standard: fg-subtle on bg',
+      'light standard: fg-subtle on surface',
+      'light standard: fg-subtle on raised',
+      'light more: fg-subtle on bg',
+      'light more: fg-subtle on surface',
+      'light more: fg-subtle on raised',
+    ]);
+    expect(failing(theme, 'core')).toEqual([]);
   });
 
   it('names the mode of each failing pair, OLED inheriting the roles it does not override from dark', () => {

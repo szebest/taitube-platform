@@ -46,6 +46,7 @@ describe('tailwindTheme', () => {
         '  --color-info-ink: var(--info-ink);',
         '  --color-scrim: var(--scrim);',
         '  --color-media: var(--media);',
+        '  --color-on-media: var(--on-media);',
         '  --font-sans: var(--font-sans);',
         '  --font-editorial: var(--font-editorial);',
         '  --font-mono: var(--font-mono);',

@@ -15,7 +15,8 @@ const failing = (ground: string, accent: string) =>
         expectOk(buildTheme(sand, { id: 'custom', name: 'Custom' }, { ground, accent })),
         RefSchema.parse(refFromTokens())
       )
-    )
+    ),
+    'core'
   ).map(({ mode, label }) => `${mode}: ${label}`);
 
 describe('buildTheme', () => {

@@ -157,6 +157,7 @@ const dark: RoleColors = {
   'info-ink': '#90B0E0',
   scrim: '#000000B8',
   media: '#000000',
+  'on-media': '#FFFFFF',
 };
 
 export const fixtureTheme = defineTheme({

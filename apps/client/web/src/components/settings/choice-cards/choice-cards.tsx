@@ -48,7 +48,7 @@ export function ChoiceCardsOption({
     <label
       data-slot="choice-cards-option"
       className={cn(
-        'relative flex min-w-0 cursor-pointer flex-col gap-inline rounded-card border-control border-border bg-surface p-inset-control text-fg has-checked:border-accent has-checked:bg-accent-soft has-focus-visible:focus-ring hover:border-border-strong touch-target',
+        'relative flex min-w-0 cursor-pointer flex-col gap-inline rounded-card border-control border-border-strong bg-surface p-inset-control text-fg has-checked:border-accent has-checked:bg-accent-soft has-focus-visible:focus-ring hover:border-fg touch-target',
         className
       )}
       {...props}

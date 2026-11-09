@@ -11,7 +11,7 @@ export const appShellStyles = tv({
     headerStart: 'flex shrink-0 items-center gap-inline',
     headerSearch: 'flex min-w-0 flex-1 justify-end medium:justify-center',
     searchTrigger:
-      'flex size-control-md shrink-0 cursor-pointer items-center justify-center gap-inline rounded-full border-0 bg-transparent p-0 font-sans text-body text-fg transition-colors duration-fast touch-target hover:bg-tint focus-ring medium:w-full medium:max-w-[40rem] medium:shrink medium:justify-start medium:rounded-control medium:border-control medium:border-border medium:bg-surface medium:px-inset-control medium:text-fg-muted',
+      'flex size-control-md shrink-0 cursor-pointer items-center justify-center gap-inline rounded-full border-0 bg-transparent p-0 font-sans text-body text-fg transition-colors duration-fast touch-target hover:bg-tint focus-ring medium:w-full medium:max-w-[40rem] medium:shrink medium:justify-start medium:rounded-control medium:border-control medium:border-border-strong medium:bg-surface medium:px-inset-control medium:text-fg-muted',
     searchLabel: 'sr-only medium:not-sr-only medium:truncate',
     searchHint: 'ms-auto hidden medium:inline-flex',
     headerEnd: 'flex shrink-0 items-center gap-inline',

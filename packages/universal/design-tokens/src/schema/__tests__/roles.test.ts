@@ -19,7 +19,16 @@ const sandDark = (overrides: Partial<RoleColors> = {}): RoleColors => ({
   ...overrides,
 });
 
-const failingPairs = (roles: RoleColors) => checkRoleContrast(roles).map(({ label }) => label);
+const failingPairs = (
+  roles: RoleColors,
+  contrast: 'standard' | 'more' = 'standard',
+  set: 'core' | 'drawn' = 'core'
+) => checkRoleContrast(roles, contrast, set).map(({ label }) => label);
+
+const sandLight = (overrides: Partial<RoleColors> = {}): RoleColors => ({
+  ...rolesOf('sand', 'light'),
+  ...overrides,
+});
 
 describe('checkRoleContrast', () => {
   it.each(THEME_NAMES.flatMap((name) => THEME_MODES.map((mode) => ({ name, mode }))))(
@@ -54,8 +63,77 @@ describe('checkRoleContrast', () => {
     expect(failingPairs(sandDark(overrides))).toEqual(failing);
   });
 
+  it.each([
+    { name: 'sand' as const, mode: 'light' as const },
+    { name: 'nocturne' as const, mode: 'dark' as const },
+  ])(
+    'clears every pair a component draws in $name $mode, standard and under more contrast',
+    ({ name, mode }) => {
+      expect(failingPairs(rolesOf(name, mode), 'standard', 'drawn')).toEqual([]);
+      expect(failingPairs(rolesOf(name, mode), 'more', 'drawn')).toEqual([]);
+    }
+  );
+
+  it.each<{
+    label: string;
+    roles: RoleColors;
+    contrast?: 'standard' | 'more';
+    failing: string[];
+  }>([
+    {
+      label: 'a success ink at 4.2:1 on a tint',
+      roles: sandLight({ 'success-ink': '#2F7A47' }),
+      failing: [
+        'success-ink on tint / bg',
+        'success-ink on tint-strong / bg',
+        'success-ink on tint-strong / surface',
+        'success-ink on tint-strong / raised',
+        'success-ink on accent-soft / bg',
+        'success-ink on accent-soft / surface',
+        'success-ink on accent-soft / raised',
+      ],
+    },
+    {
+      label: 'a placeholder at 3.5:1 on the page',
+      roles: sandLight({ 'fg-subtle': '#8A8072' }),
+      failing: ['fg-subtle on bg', 'fg-subtle on surface', 'fg-subtle on raised'],
+    },
+    {
+      label: 'an invalid border at 2.99:1 on a floating layer',
+      roles: sandDark({ danger: '#C8323C' }),
+      failing: ['danger on raised'],
+    },
+    {
+      label: 'a strong border at 2.7:1 on a floating layer',
+      roles: sandDark({ 'border-strong': '#5E554A' }),
+      failing: ['border-strong on bg', 'border-strong on surface', 'border-strong on raised'],
+    },
+    {
+      label: 'a strong border under more contrast, where it is also the hairline',
+      roles: sandDark({ 'border-strong': '#5E554A' }),
+      contrast: 'more',
+      failing: [
+        'border-strong on bg',
+        'border-strong on surface',
+        'border-strong on raised',
+        'border on bg',
+        'border on surface',
+        'border on raised',
+      ],
+    },
+  ])(
+    'fails exactly the drawn pairs under their floor for $label',
+    ({ roles, contrast, failing }) => {
+      expect(failingPairs(roles, contrast, 'drawn')).toEqual(failing);
+    }
+  );
+
+  it('leaves the drawn pairs out of the core set', () => {
+    expect(failingPairs(sandLight({ 'fg-subtle': '#8A8072' }), 'standard', 'core')).toEqual([]);
+  });
+
   it('reports the hex values it measured with the ratio', () => {
-    expect(checkRoleContrast(sandDark({ 'on-live': '#F59298' }))).toEqual([
+    expect(checkRoleContrast(sandDark({ 'on-live': '#F59298' }), 'standard', 'core')).toEqual([
       {
         label: 'on-live on live',
         foreground: '#F59298',
