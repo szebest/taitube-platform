@@ -16,5 +16,6 @@ describe('apps/client/web: useQueueNavigation', () => {
 
     await vi.waitFor(() => expect(router.state.location.pathname).toBe(`/watch/${QUEUED[0]}`));
     expect(router.history.length).toBe(entries + 1);
+    await vi.waitFor(() => expect(router.state.isLoading).toBe(false));
   });
 });
