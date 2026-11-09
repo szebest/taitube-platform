@@ -35,7 +35,11 @@ function renderRoom(ticketReplies = [ticket]) {
 }
 
 describe('packages/queries: useWatchPartySocket', () => {
-  it('opens the socket on the API origin with the ticket and folds hello into the state', async () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('opens the socket on the API origin with the one-time pass and folds hello into the state', async () => {
     const { result, socket } = renderRoom();
 
     await vi.waitFor(() => expect(result.current.state.connection).toBe('open'));
@@ -70,7 +74,7 @@ describe('packages/queries: useWatchPartySocket', () => {
     await vi.waitFor(() => expect(socket.received).toContainEqual({ type: 'ready', ready: true }));
   });
 
-  it('retries a ticket the API did not issue, then opens', async () => {
+  it('retries a pass the API did not issue, then opens', async () => {
     let asked = 0;
     const refusedOnce = mockEndpoint(createWatchPartySocketTicket, () => {
       asked += 1;
@@ -87,7 +91,8 @@ describe('packages/queries: useWatchPartySocket', () => {
     await vi.waitFor(() => expect(result.current.state.connection).toBe('open'), { timeout: 3000 });
   });
 
-  it('reconnects after a drop with a new ticket, and not after the room ended the visit', async () => {
+  it('reconnects after a drop with a new pass, and not after the room ended the visit', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
     const { result, socket } = renderRoom();
     await vi.waitFor(() => expect(result.current.state.connection).toBe('open'));
 
@@ -97,7 +102,7 @@ describe('packages/queries: useWatchPartySocket', () => {
     act(() => socket.push({ type: 'kicked' }));
     await vi.waitFor(() => expect(result.current.state.ended).toBe('kicked'));
     act(() => socket.drop());
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    await vi.advanceTimersByTimeAsync(1500);
 
     expect(socket.urls).toHaveLength(2);
   });

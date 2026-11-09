@@ -47,7 +47,7 @@ function socketUrl(apiUrl: string, roomId: string, ticket: string, after?: strin
 }
 
 /**
- * One room's socket for a member, whatever their kind: a one-time ticket, `hello` as the full
+ * One room's socket for a member, whatever their kind: a one-time pass, `hello` as the full
  * snapshot, frames folded into `state`, a clock ping every 30 s. A dropped socket retries with
  * backoff and resumes chat after the last line; a member the room ended (kicked, closed, superseded)
  * is not retried.
