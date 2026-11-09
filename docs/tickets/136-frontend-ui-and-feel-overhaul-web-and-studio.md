@@ -8,7 +8,7 @@
 | Blocks | — |
 | Spec | [95 design system 2](95-design-system-2.md) - [design foundations, motion](../design/foundations/motion.md) - [72 settings](72-frontend-settings-customization-system.md) - [97 account preferences](97-account-preferences-api.md) - [57 player](57-production-video-player-hls-streaming-controls.md) - [docs/standards/authorization.md](../standards/authorization.md) |
 
-**Status:** blocked
+**Status:** ready
 
 > **Why.** The owner clicked through the running app and found the same classes of defect on every page: the page
 > jumps when an overlay opens or closes, chrome text is selectable, tab bars lock up or lose their counts, a modal

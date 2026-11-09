@@ -9,7 +9,7 @@ repo.
 ## What it holds
 
 - `.storybook/main.ts`: Storybook 10 on Vite, the stories of `packages/client/*/src` and `apps/client/*/src`
-  (`*.stories.tsx` beside the component), the a11y and vitest addons, `@vp/*` resolved to source through
+  (`__stories__/*.stories.tsx` in the component folder), the a11y and vitest addons, `@vp/*` resolved to source through
   `@vp/vite-preset`'s `workspaceSourceAliases`, the React Compiler (`reactPlugins()`, so stories and story tests
   run compiled), Tailwind, and telemetry off (local-first: Storybook phones
   nowhere). `@tanstack/react-start` is aliased to `.storybook/tanstack-start.ts`, the browser half `@vp/ui`'s
@@ -42,7 +42,7 @@ repo.
 
 ## Rules
 
-- A story lives beside its component as `<name>.stories.tsx`, never here. Stories are exempt from the
+- A story lives in its component's `__stories__/` as `<name>.stories.tsx`, never here. Stories are exempt from the
   one-spec-per-file rule; the visual suite is their test.
 - A toolbar or option is never declared by hand: offering a set in the registry adds it here.
 

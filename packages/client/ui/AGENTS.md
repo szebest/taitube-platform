@@ -60,7 +60,7 @@ it with `useUiCopy()` and takes no label prop for it, and each app fills it thro
 glyph is chosen, mirroring the directional ones under RTL.
 
 Every primitive is a folder, `src/primitives/<name>/`: `<name>.tsx`, `<name>.variants.ts` when it has `tv()`
-variants, `types.ts` for the unions it narrows, `<name>.context.ts` for a compound one, `<name>.stories.tsx`
+variants, `types.ts` for the unions it narrows, `<name>.context.ts` for a compound one, `__stories__/<name>.stories.tsx`
 (the workbench, `@vp/workbench`, shows it under every theme and set), `__tests__/<name>.dom.test.tsx` and an
 `index.ts` that exports a compound one as `X = { Root, ...parts }` with its `useX` hook and its styles.
 `pnpm gen:component <name> --kind primitive|shared|web|studio [--area <area>] [--compound]` scaffolds that
