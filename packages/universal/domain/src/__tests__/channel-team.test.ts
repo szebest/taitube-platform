@@ -1,5 +1,6 @@
 import {
   type ActingRole,
+  CHANNEL_AUDIT_ACTIONS,
   CHANNEL_CAPABILITIES,
   VIDEO_AUDIT_FIELDS,
   CHANNEL_ROLE_NAMES,
@@ -43,5 +44,23 @@ describe('@vp/domain: channel team', () => {
       'tags',
       'thumbnail',
     ]);
+  });
+
+  it.each([
+    'video.comments.toggled',
+    'comment.held',
+    'comment.approved',
+    'comment.hidden',
+    'comment.unhidden',
+    'comment.removed',
+    'comment.pinned',
+    'user.shadow_banned',
+    'user.banned',
+    'user.restriction_lifted',
+    'trusted.added',
+    'trusted.removed',
+    'settings.comments.updated',
+  ] as const)('audits %s', (action) => {
+    expect(CHANNEL_AUDIT_ACTIONS).toContain(action);
   });
 });

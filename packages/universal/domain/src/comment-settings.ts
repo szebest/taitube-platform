@@ -31,6 +31,18 @@ export interface CommentSettings {
   disclosure: DisclosureDefaults;
 }
 
+export const COMMENT_SETTINGS_FIELDS = [
+  'reviewMode',
+  'blockedWords',
+  'linkAllowlist',
+  'slowModeSeconds',
+  'subscribersOnly',
+  'minAccountAgeDays',
+  'disclosure',
+] as const satisfies readonly (keyof CommentSettings)[];
+
+export type CommentSettingsField = (typeof COMMENT_SETTINGS_FIELDS)[number];
+
 export const DEFAULT_DISCLOSURE: DisclosureDefaults = {
   hide: 'silent',
   remove: 'visible',

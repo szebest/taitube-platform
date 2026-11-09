@@ -1,4 +1,5 @@
 import {
+  COMMENT_SETTINGS_FIELDS,
   DEFAULT_COMMENT_SETTINGS,
   DISCLOSURE_RULES,
   type Disclosure,
@@ -31,6 +32,12 @@ describe('@vp/domain: comment settings defaults', () => {
   it('has a default for every rule and no other', () => {
     expect(Object.keys(DEFAULT_COMMENT_SETTINGS.disclosure).sort()).toEqual(
       [...DISCLOSURE_RULES].sort()
+    );
+  });
+
+  it('names every settings field', () => {
+    expect([...COMMENT_SETTINGS_FIELDS].sort()).toEqual(
+      Object.keys(DEFAULT_COMMENT_SETTINGS).sort()
     );
   });
 });

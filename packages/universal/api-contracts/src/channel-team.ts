@@ -3,6 +3,8 @@ import {
   CHANNEL_INVITE_STATUSES,
   CHANNEL_INVITE_TTL_DAYS,
   CHANNEL_ROLE_NAMES,
+  COMMENT_SETTINGS_FIELDS,
+  DISCLOSURES,
 } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import { z } from 'zod';
@@ -74,6 +76,8 @@ const MyInvitePageSchema = z.object({
 
 const InviteMetaSchema = z.object({ inviteeUserId: z.uuid(), role: ChannelRoleSchema });
 const MemberMetaSchema = z.object({ role: ChannelRoleSchema });
+const CommentMetaSchema = z.object({ videoId: z.uuid(), disclosure: z.enum(DISCLOSURES) });
+const NoMetaSchema = z.object({});
 
 function auditEntry<A extends string, T extends string, M extends z.ZodType>(
   action: A,
@@ -105,6 +109,23 @@ const AuditEntrySchema = z.discriminatedUnion('action', [
   auditEntry('member.removed', 'member', MemberMetaSchema),
   auditEntry('member.left', 'member', MemberMetaSchema),
   auditEntry('video.updated', 'video', z.object({ fields: z.array(z.string()) })),
+  auditEntry('video.comments.toggled', 'video', z.object({ enabled: z.boolean() })),
+  auditEntry('comment.held', 'comment', CommentMetaSchema),
+  auditEntry('comment.approved', 'comment', CommentMetaSchema),
+  auditEntry('comment.hidden', 'comment', CommentMetaSchema),
+  auditEntry('comment.unhidden', 'comment', CommentMetaSchema),
+  auditEntry('comment.removed', 'comment', CommentMetaSchema),
+  auditEntry('comment.pinned', 'comment', z.object({ videoId: z.uuid(), pinned: z.boolean() })),
+  auditEntry('user.shadow_banned', 'user', NoMetaSchema),
+  auditEntry('user.banned', 'user', z.object({ expiresAt: z.iso.datetime().nullable() })),
+  auditEntry('user.restriction_lifted', 'user', z.object({ kind: z.enum(['shadow', 'ban']) })),
+  auditEntry('trusted.added', 'user', NoMetaSchema),
+  auditEntry('trusted.removed', 'user', NoMetaSchema),
+  auditEntry(
+    'settings.comments.updated',
+    'settings',
+    z.object({ fields: z.array(z.enum(COMMENT_SETTINGS_FIELDS)) })
+  ),
 ]);
 
 const AuditPageSchema = z.object({

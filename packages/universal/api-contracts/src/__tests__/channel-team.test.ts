@@ -36,6 +36,7 @@ describe('packages/api-contracts: channel team', () => {
 
   it.each([
     { scenario: 'an action', query: { action: 'member.left' }, ok: true },
+    { scenario: 'a moderation action', query: { action: 'comment.held' }, ok: true },
     { scenario: 'an unknown action', query: { action: 'member.deleted' }, ok: false },
     {
       scenario: 'an actor',

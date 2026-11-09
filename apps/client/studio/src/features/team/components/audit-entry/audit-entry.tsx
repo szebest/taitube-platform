@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router';
 import type { ChannelAuditPageView } from '@vp/api-contracts';
-import { VIDEO_AUDIT_FIELDS } from '@vp/domain';
+import { COMMENT_SETTINGS_FIELDS, VIDEO_AUDIT_FIELDS } from '@vp/domain';
 import { publishedAt } from '@vp/intl';
 import { Format, useT } from '@vp/intl-react';
 import { assertNever } from '@vp/result';
@@ -11,6 +11,9 @@ export type AuditEntryView = ChannelAuditPageView['items'][number];
 
 const videoFieldsOf = (fields: readonly string[]) =>
   VIDEO_AUDIT_FIELDS.filter((known) => fields.includes(known));
+
+const settingsFieldsOf = (fields: readonly string[]) =>
+  COMMENT_SETTINGS_FIELDS.filter((known) => fields.includes(known));
 
 function AuditDetail({ entry }: { entry: AuditEntryView }) {
   const { tOr } = useT();
@@ -49,6 +52,48 @@ function AuditDetail({ entry }: { entry: AuditEntryView }) {
           </Link>
         </AuditLogList.Detail>
       );
+    case 'video.comments.toggled':
+      return (
+        <AuditLogList.Detail>
+          {tOr('studio.teamAuditCommentsToggled', { state: entry.meta.enabled ? 'on' : 'off' }, '')}
+        </AuditLogList.Detail>
+      );
+    case 'comment.held':
+    case 'comment.approved':
+    case 'comment.hidden':
+    case 'comment.unhidden':
+    case 'comment.removed':
+      return (
+        <AuditLogList.Detail>
+          {tOr('studio.teamAuditDisclosure', { disclosure: entry.meta.disclosure }, '')}
+        </AuditLogList.Detail>
+      );
+    case 'comment.pinned':
+      return (
+        <AuditLogList.Detail>
+          {tOr('studio.teamAuditPinned', { state: entry.meta.pinned ? 'on' : 'off' }, '')}
+        </AuditLogList.Detail>
+      );
+    case 'settings.comments.updated':
+      return (
+        <AuditLogList.Detail>
+          {tOr(
+            'studio.teamAuditSettingsFields',
+            {
+              fields: settingsFieldsOf(entry.meta.fields).map((field) =>
+                tOr('studio.teamAuditSettingsField', { field }, field)
+              ),
+            },
+            ''
+          )}
+        </AuditLogList.Detail>
+      );
+    case 'user.shadow_banned':
+    case 'user.banned':
+    case 'user.restriction_lifted':
+    case 'trusted.added':
+    case 'trusted.removed':
+      return null;
     default:
       return assertNever(entry, 'ChannelAuditAction');
   }
