@@ -5,6 +5,7 @@ import type { AuthConfig } from './auth-config';
 import { type CaptionsConfig, captionsConfig } from './captions-config';
 import { asCdnBase, type CdnBase } from './cdn-base';
 import { type LiveConfig, liveConfig } from './live-config';
+import { type ScreeningConfig, screeningConfig } from './screening-config';
 import {
   CACHES,
   FFMPEG_PROCESS,
@@ -30,6 +31,8 @@ import {
 } from './tuning';
 
 export type WorkerStageName = AppEnv['WORKER_STAGE'];
+
+type Numbers<T> = { -readonly [K in keyof T]: number };
 
 export interface AppConfig {
   environment: AppEnv['NODE_ENV'];
@@ -139,6 +142,7 @@ export interface AppConfig {
     bodyLimitBytes: number;
   };
   captions: CaptionsConfig;
+  screening: ScreeningConfig;
   live: LiveConfig;
   worker: {
     stage: WorkerStageName;
@@ -154,18 +158,8 @@ export interface AppConfig {
     hlsSegmentSeconds: number;
     gopSeconds: number;
     jobTimeoutFactor: number;
-    ffmpegProcess: {
-      killGraceMs: number;
-      stderrTailLines: number;
-      minTranscodeTimeoutMs: number;
-      thumbnailTimeoutMs: number;
-    };
-    segmentUpload: {
-      concurrency: number;
-      maxRetries: number;
-      retryDelayMs: number;
-      pollIntervalMs: number;
-    };
+    ffmpegProcess: Numbers<typeof FFMPEG_PROCESS>;
+    segmentUpload: Numbers<typeof SEGMENT_UPLOAD>;
   };
 }
 
@@ -290,6 +284,7 @@ export function toAppConfig(env: AppEnv): AppConfig {
       vadModelPath: env.CAPTIONS_VAD_MODEL_PATH,
       threads: env.CAPTIONS_THREADS,
     }),
+    screening: screeningConfig({ modelPath: env.SCREENING_MODEL_PATH }),
     live: liveConfig({
       hookSecret: env.LIVE_HOOK_SECRET,
       ingestUrl: env.LIVE_INGEST_URL,

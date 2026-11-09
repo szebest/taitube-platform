@@ -3,6 +3,7 @@ import { inProcessAppConfig } from '@vp/env-schema';
 import { createMetricsRegistry } from '@vp/observability';
 import { expectOk } from '@vp/testing/result';
 import { InMemoryFlowProducer } from '../../in-memory/in-memory-flow-producer';
+import { InMemoryFrameClassifier } from '../../in-memory/in-memory-frame-classifier';
 import { InMemoryJobQueue } from '../../in-memory/in-memory-job-queue';
 import { InMemoryMultipartStorage } from '../../in-memory/in-memory-multipart-storage';
 import { InMemorySearchSuggestionIndex } from '../../in-memory/in-memory-search-suggestion-index';
@@ -35,6 +36,7 @@ describe('in-memory adapter family', () => {
     expect(c.get(Adapters.SubscriptionCache)).toBeInstanceOf(InMemorySubscriptionCache);
     expect(c.get(Adapters.ViewBuffer)).toBeInstanceOf(InMemoryViewBuffer);
     expect(c.get(Adapters.SearchSuggestions)).toBeInstanceOf(InMemorySearchSuggestionIndex);
+    expect(c.get(Adapters.FrameClassifier)).toBeInstanceOf(InMemoryFrameClassifier);
   });
 
   it('opens in-memory queues and a flow producer that routes into them', () => {

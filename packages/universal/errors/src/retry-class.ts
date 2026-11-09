@@ -64,6 +64,8 @@ export const RETRY_CLASS: Readonly<Record<ErrorCode, RetryClass>> = {
   [ErrorCodes.WHISPER_MODEL_INVALID]: 'permanent',
   [ErrorCodes.WHISPER_INPUT_REJECTED]: 'permanent',
   [ErrorCodes.NO_AUDIO_STREAM]: 'permanent',
+  [ErrorCodes.SCREEN_MODEL_INVALID]: 'permanent',
+  [ErrorCodes.SCREEN_MODEL_FAILED]: 'transient',
   [ErrorCodes.SEARCH_HISTORY_NOT_FOUND]: 'permanent',
   [ErrorCodes.RECOMMENDATION_FEEDBACK_NOT_FOUND]: 'permanent',
   [ErrorCodes.CLIP_NOT_FOUND]: 'permanent',

@@ -15,7 +15,7 @@ const { values } = parseArgs({
   },
 });
 
-const MODELS = ['CAPTIONS_MODEL', 'CAPTIONS_VAD_MODEL'] as const;
+const MODELS = ['CAPTIONS_MODEL', 'CAPTIONS_VAD_MODEL', 'SCREENING_MODEL'] as const;
 
 function parseLock(text: string): Map<string, string> {
   const entries = text
@@ -47,7 +47,7 @@ async function fetchModel(lock: Map<string, string>, key: string, out: string): 
   const expected = lock.get(`${key}_SHA256`);
   if (!(url && expected)) throw new Error(`${key}_URL and ${key}_SHA256 are not in the lock file`);
 
-  const name = basename(new URL(url).pathname);
+  const name = lock.get(`${key}_FILE`) ?? basename(new URL(url).pathname);
   const target = resolve(out, name);
   if ((await sha256Of(target)) === expected) {
     process.stdout.write(`${name} present, sha256 verified\n`);

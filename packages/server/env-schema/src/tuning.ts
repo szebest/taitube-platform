@@ -8,6 +8,7 @@ import {
   SECONDS_PER_HOUR,
   SECONDS_PER_MINUTE,
 } from '@vp/domain/time';
+import type { ScreeningModelTuning } from './screening-config';
 
 /**
  * Tuning with no environment key of its own, declared once here so no service, stage or adapter holds
@@ -161,6 +162,25 @@ export const SCREENING_SAMPLING = {
   classifyMaxFrames: 120,
   audioIndexStride: 8,
 } as const;
+
+/**
+ * The classifier the image carries, as `apps/server/worker/assets.lock` pins it (`SCREENING_MODEL_URL`,
+ * `SCREENING_MODEL_SHA256`, licence Apache-2.0): AdamCodd/vit-base-nsfw-detector, int8. The adapter
+ * refuses a file whose SHA-256 differs, `labels` maps each label a caller reads to its output index, and
+ * the softmax turns the two logits into a probability. A model with other labels is a new entry here,
+ * a new `name` and a new threshold version.
+ */
+export const SCREENING_MODEL = {
+  name: 'vit-base-nsfw-detector-int8',
+  sha256: '432763a6899ebc418c55f784b98f90565e5fc694c778d2ffcb0294b12f6a7404',
+  inputSize: 384,
+  mean: 0.5,
+  std: 0.5,
+  activation: 'softmax',
+  labels: { nsfw: 1 },
+  intraOpThreads: 2,
+  batchSize: 4,
+} as const satisfies ScreeningModelTuning;
 
 /** `infra/k8s` liveness allows three missed beats, so this sets how fast a hung worker is restarted. */
 export const WORKER_HEARTBEAT_INTERVAL_MS = 15 * MS_PER_SECOND;

@@ -71,6 +71,8 @@ export const ERROR_COPY: Readonly<Record<ErrorCode, ArgumentFreeKey>> = {
   [ErrorCodes.WHISPER_KILLED]: 'errors.whisperKilled',
   [ErrorCodes.WHISPER_TIMEOUT]: 'errors.whisperTimeout',
   [ErrorCodes.WHISPER_MODEL_INVALID]: 'errors.whisperModelInvalid',
+  [ErrorCodes.SCREEN_MODEL_INVALID]: 'errors.screenModelInvalid',
+  [ErrorCodes.SCREEN_MODEL_FAILED]: 'errors.screenModelFailed',
   [ErrorCodes.WHISPER_INPUT_REJECTED]: 'errors.whisperInputRejected',
   [ErrorCodes.NO_AUDIO_STREAM]: 'errors.noAudioStream',
   [ErrorCodes.CAPTION_NOT_FOUND]: 'errors.captionNotFound',

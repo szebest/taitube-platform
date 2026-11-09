@@ -65,6 +65,8 @@ export const errors = {
   whisperKilled: dt('Generating captions was stopped and will be retried.'),
   whisperTimeout: dt('Generating captions took too long.'),
   whisperModelInvalid: dt('The captions model is missing or damaged.'),
+  screenModelInvalid: dt('The screening model is missing or damaged.'),
+  screenModelFailed: dt('Screening the video failed and will be retried.'),
   whisperInputRejected: dt('The audio of this video could not be transcribed.'),
   noAudioStream: dt('This video has no audio to caption.'),
   captionNotFound: dt('This video has no captions in that language.'),

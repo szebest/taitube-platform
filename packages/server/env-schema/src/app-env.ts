@@ -152,6 +152,7 @@ const PipelineEnvSchema = z.object({
   CAPTIONS_MODEL_PATH: z.string().default('.models/ggml-small-q5_1.bin'),
   CAPTIONS_VAD_MODEL_PATH: z.string().default('.models/ggml-silero-v5.1.2.bin'),
   CAPTIONS_THREADS: z.coerce.number().int().positive().default(4),
+  SCREENING_MODEL_PATH: z.string().default('.models/vit-base-nsfw-detector-int8.onnx'),
 });
 
 const LiveEnvSchema = z.object({

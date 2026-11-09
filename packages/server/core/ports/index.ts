@@ -18,3 +18,4 @@ export * from './webhook-dispatcher';
 export * from './live-gateway';
 export * from './live-chat-gate';
 export * from './live-presence';
+export * from './frame-classifier';

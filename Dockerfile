@@ -101,7 +101,7 @@ FROM client-runtime AS studio
 COPY --from=studio-bundle / /app
 EXPOSE 5174
 
-# whisper.cpp and its models are pinned in apps/server/worker/assets.lock; a bump is a deliberate commit and
+# whisper.cpp, its models and the screening classifier are pinned in apps/server/worker/assets.lock; a bump is a deliberate commit and
 # Renovate does not read the file. The build runs on bookworm, the older libc of the two worker bases, and
 # links libstdc++ statically, so one binary runs under both.
 FROM node:24-slim AS whisper-build
@@ -128,13 +128,22 @@ RUN . /assets.lock \
  && curl -fsSL -o ggml-silero-v5.1.2.bin "${CAPTIONS_VAD_MODEL_URL}" \
  && printf '%s  ggml-small-q5_1.bin\n%s  ggml-silero-v5.1.2.bin\n' "${CAPTIONS_MODEL_SHA256}" "${CAPTIONS_VAD_MODEL_SHA256}" | sha256sum -c -
 
+FROM node:24-slim AS screening-model
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl \
+ && rm -rf /var/lib/apt/lists/*
+WORKDIR /opt/screening
+COPY apps/server/worker/assets.lock /assets.lock
+RUN . /assets.lock \
+ && curl -fsSL -o "${SCREENING_MODEL_FILE}" "${SCREENING_MODEL_URL}" \
+ && printf '%s  %s\n' "${SCREENING_MODEL_SHA256}" "${SCREENING_MODEL_FILE}" | sha256sum -c -
+
 FROM oven/bun:1.4-slim AS worker-base-bun
 FROM node:24-slim AS worker-base-node
 
 FROM worker-base-${WORKER_RUNTIME:-bun} AS worker
 ARG WORKER_RUNTIME=bun
 ENV WORKER_RUNTIME=${WORKER_RUNTIME}
-RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends ffmpeg fonts-dejavu-core ca-certificates tini curl \
+RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends ffmpeg libchromaprint-tools fonts-dejavu-core ca-certificates tini curl \
  && rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack /opt/yarn-* \
     /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack /usr/local/bin/yarn /usr/local/bin/yarnpkg \
  && rm -rf /var/lib/apt/lists/* \
@@ -142,6 +151,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
  && mkdir -p /tmp/vp && chown -R 10001:10001 /tmp/vp
 COPY --from=whisper-build /whisper-cli /usr/local/bin/whisper-cli
 COPY --from=captions-models /opt/whisper /opt/whisper
+COPY --from=screening-model /opt/screening /opt/screening
 WORKDIR /app
 COPY --from=worker-bundle --chown=10001:10001 / /app
 USER 10001

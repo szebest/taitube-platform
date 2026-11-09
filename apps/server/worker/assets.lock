@@ -4,3 +4,8 @@ CAPTIONS_MODEL_URL=https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggm
 CAPTIONS_MODEL_SHA256=ae85e4a935d7a567bd102fe55afc16bb595bdb618e11b2fc7591bc08120411bb
 CAPTIONS_VAD_MODEL_URL=https://huggingface.co/ggml-org/whisper-vad/resolve/main/ggml-silero-v5.1.2.bin
 CAPTIONS_VAD_MODEL_SHA256=29940d98d42b91fbd05ce489f3ecf7c72f0a42f027e4875919a28fb4c04ea2cf
+# Upload screening classifier: AdamCodd/vit-base-nsfw-detector, int8 ONNX, pinned to a Hugging Face commit.
+# Licence Apache-2.0 (model card, and its base google/vit-base-patch16-384); it labels "sexy" frames as NSFW.
+SCREENING_MODEL_URL=https://huggingface.co/AdamCodd/vit-base-nsfw-detector/resolve/8587de998f441aac03fdd57a85d2e4cb808c7d64/onnx/model_quantized.onnx
+SCREENING_MODEL_SHA256=432763a6899ebc418c55f784b98f90565e5fc694c778d2ffcb0294b12f6a7404
+SCREENING_MODEL_FILE=vit-base-nsfw-detector-int8.onnx

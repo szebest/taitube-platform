@@ -1,5 +1,6 @@
 import { type Container, closeOnDispose, token } from '@vp/composition';
 import { CircuitBreaker } from '@vp/concurrency';
+import type { FrameClassifier } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import { SEARCH_SUGGESTIONS } from '@vp/domain';
 import { bullBoardQueues } from '../bullmq/bull-board-queues';
@@ -9,6 +10,7 @@ import { redisConnectionOptions } from '../bullmq/connection';
 import { MediaMtxLiveGateway } from '../mediamtx/mediamtx-live-gateway';
 import { MeteredMultipartStorage } from '../metered/metered-multipart-storage';
 import { MeteredStorageClient } from '../metered/metered-storage-client';
+import { OnnxFrameClassifier } from '../onnx/onnx-frame-classifier';
 import { PostgresDatabaseClient } from '../postgres/postgres-database-client';
 import { PostgresRepositories } from '../postgres/repositories/postgres-repositories';
 import { RedisCacheClient } from '../redis/redis-cache-client';
@@ -109,6 +111,15 @@ export function registerFamily(c: Container): void {
           prefix: config.redis.bullmqPrefix,
         }),
       closeOnDispose
+    )
+    .provide<FrameClassifier, OnnxFrameClassifier>(
+      Adapters.FrameClassifier,
+      () =>
+        new OnnxFrameClassifier({
+          modelPath: config.screening.modelPath,
+          model: config.screening.model,
+        }),
+      { start: (classifier) => classifier.start(), dispose: (classifier) => classifier.close() }
     )
     .provide(
       Adapters.SubscriptionCache,

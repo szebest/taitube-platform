@@ -88,6 +88,8 @@ function kindOf(code: ErrorCode): ErrorStateKind {
     case ErrorCodes.WHISPER_KILLED:
     case ErrorCodes.WHISPER_TIMEOUT:
     case ErrorCodes.WHISPER_MODEL_INVALID:
+    case ErrorCodes.SCREEN_MODEL_INVALID:
+    case ErrorCodes.SCREEN_MODEL_FAILED:
     case ErrorCodes.WHISPER_INPUT_REJECTED:
     case ErrorCodes.NO_AUDIO_STREAM:
     case ErrorCodes.CAPTION_TRACK_LIMIT:

@@ -65,6 +65,8 @@ export const errors = {
   whisperKilled: dt('Generowanie napisów zostało przerwane i zostanie ponowione.'),
   whisperTimeout: dt('Generowanie napisów trwało zbyt długo.'),
   whisperModelInvalid: dt('Model napisów jest niedostępny lub uszkodzony.'),
+  screenModelInvalid: dt('Model weryfikacji jest niedostępny lub uszkodzony.'),
+  screenModelFailed: dt('Weryfikacja filmu nie powiodła się i zostanie ponowiona.'),
   whisperInputRejected: dt('Nie udało się przepisać dźwięku z tego filmu.'),
   noAudioStream: dt('Ten film nie ma dźwięku, do którego można utworzyć napisy.'),
   captionNotFound: dt('Ten film nie ma napisów w tym języku.'),

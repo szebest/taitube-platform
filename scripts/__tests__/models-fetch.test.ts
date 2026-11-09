@@ -9,6 +9,7 @@ import { join, resolve } from 'node:path';
 const ENTRYPOINT = resolve(import.meta.dirname, '../models-fetch.ts');
 const MODEL = Buffer.from('small model bytes');
 const VAD = Buffer.from('vad model bytes');
+const SCREENING = Buffer.from('screening model bytes');
 const sha256 = (bytes: Buffer) => createHash('sha256').update(bytes).digest('hex');
 
 function run(args: string[]): Promise<{ code: number; stdout: string; stderr: string }> {
@@ -31,7 +32,7 @@ describe('scripts: models-fetch', () => {
   beforeAll(async () => {
     server = createServer((request, response) => {
       requests.push(request.url ?? '');
-      response.end(request.url === '/vad.bin' ? VAD : MODEL);
+      response.end({ '/vad.bin': VAD, '/classifier.onnx': SCREENING }[request.url ?? ''] ?? MODEL);
     });
     await new Promise<void>((listening) => server.listen(0, '127.0.0.1', listening));
     base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
@@ -58,13 +59,16 @@ describe('scripts: models-fetch', () => {
         `CAPTIONS_MODEL_SHA256=${modelSha}`,
         `CAPTIONS_VAD_MODEL_URL=${base}/vad.bin`,
         `CAPTIONS_VAD_MODEL_SHA256=${sha256(VAD)}`,
+        `SCREENING_MODEL_URL=${base}/classifier.onnx`,
+        `SCREENING_MODEL_SHA256=${sha256(SCREENING)}`,
+        'SCREENING_MODEL_FILE=screening.onnx',
         '',
       ].join('\n')
     );
     return { lock, out: join(dir, '.models') };
   }
 
-  it('downloads both models, and fetches nothing on a second run', async () => {
+  it('downloads every model, and fetches nothing on a second run', async () => {
     const { lock, out } = workspace();
 
     const first = await run(['--lock', lock, '--out', out]);
@@ -73,10 +77,11 @@ describe('scripts: models-fetch', () => {
     expect(first.code).toBe(0);
     expect(readFileSync(join(out, 'model.bin'))).toEqual(MODEL);
     expect(readFileSync(join(out, 'vad.bin'))).toEqual(VAD);
+    expect(readFileSync(join(out, 'screening.onnx'))).toEqual(SCREENING);
     expect(second.stdout).toBe(
-      'model.bin present, sha256 verified\nvad.bin present, sha256 verified\n'
+      'model.bin present, sha256 verified\nvad.bin present, sha256 verified\nscreening.onnx present, sha256 verified\n'
     );
-    expect(requests).toEqual(['/model.bin', '/vad.bin']);
+    expect(requests).toEqual(['/model.bin', '/vad.bin', '/classifier.onnx']);
   });
 
   it('replaces a file whose checksum is wrong', async () => {
