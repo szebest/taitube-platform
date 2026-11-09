@@ -12,10 +12,10 @@
       "import": "./dist/index.js",
       "default": "./dist/index.js"
     },
-    "./dev-personas": {
-      "types": "./dist/dev-only/index.d.ts",
-      "import": "./dist/dev-only/index.js",
-      "default": "./dist/dev-only/index.js"
+    "./demo-personas": {
+      "types": "./dist/demo-personas/index.d.ts",
+      "import": "./dist/demo-personas/index.js",
+      "default": "./dist/demo-personas/index.js"
     }
   },
   "scripts": {

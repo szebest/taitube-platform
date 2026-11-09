@@ -61,7 +61,7 @@ pnpm --filter @vp/studio test:e2e    # the Playwright suite; `make e2e-studio` i
 ```
 
 The browser calls the studio's own `/api`, which its server forwards to the API with the session cookie's token, as
-in web. Locally `/login` offers the dev personas, which `dev-token serve` (started by `pnpm dev`) mints.
+in web. `/login` offers the demo personas as web's does (`VITE_DEMO_PERSONAS`, `SSR_DEV_TOKEN_URL`; see web's AGENTS.md).
 
 ## 4. Also read
 

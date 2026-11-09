@@ -72,6 +72,12 @@ describe('@vp/vite-preset: client app test config', () => {
     );
   });
 
+  it('builds with the demo personas on, which the specs of both apps render', async () => {
+    const { test } = await clientAppTestConfig(viteConfig, { app: 'web', environment: 'jsdom' });
+
+    expect(test?.env).toEqual({ VITE_DEMO_PERSONAS: 'true' });
+  });
+
   it('restores stubbed globals and environment after every test, in a shared worker pool', async () => {
     const { test } = await clientAppTestConfig(viteConfig, { app: 'web', environment: 'node' });
 

@@ -43,18 +43,21 @@ function devTokenServe(reply: (persona: string | null) => Response) {
 }
 
 describe('@vp/queries: PersonaSwitcher', () => {
-  it.each(['User', 'Creator', 'Admin'])(
-    'signs in as %s and loads the routes again as them',
-    async (persona) => {
-      devTokenServe((asked) => HttpResponse.json({ token: `token-of-${asked}` }));
-      const { invalidate, user } = await renderSwitcher();
+  it.each([
+    { button: 'Viewer', persona: 'user' },
+    { button: 'Creator', persona: 'creator' },
+    { button: 'Second creator', persona: 'creator2' },
+    { button: 'Moderator', persona: 'moderator' },
+    { button: 'Admin', persona: 'admin' },
+  ])('signs in as the $button and loads the routes again as them', async ({ button, persona }) => {
+    devTokenServe((asked) => HttpResponse.json({ token: `token-of-${asked}` }));
+    const { invalidate, user } = await renderSwitcher();
 
-      await user.click(await screen.findByRole('button', { name: persona }));
+    await user.click(await screen.findByRole('button', { name: button }));
 
-      await vi.waitFor(() => expect(invalidate).toHaveBeenCalledOnce());
-      expect(document.cookie).toBe(`vp.session=token-of-${persona.toLowerCase()}`);
-    }
-  );
+    await vi.waitFor(() => expect(invalidate).toHaveBeenCalledOnce());
+    expect(document.cookie).toBe(`vp.session=token-of-${persona}`);
+  });
 
   it('signs out as Guest', async () => {
     // oxlint-disable-next-line unicorn/no-document-cookie -- the browser arrives signed in.
@@ -77,7 +80,7 @@ describe('@vp/queries: PersonaSwitcher', () => {
 
     await vi.waitFor(() => expect(onFailed).toHaveBeenCalledOnce());
     expect(onFailed).toHaveBeenCalledWith(
-      'That persona could not sign in. Is pnpm dev running dev-token serve?'
+      'That persona could not sign in. Is dev-token serve running?'
     );
     expect(onAttempt).toHaveBeenCalledOnce();
     expect(invalidate).not.toHaveBeenCalled();

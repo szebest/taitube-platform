@@ -5,10 +5,10 @@ vi.mock(import('@tanstack/react-start'), async (importOriginal) => ({
   getGlobalStartContext: vi.fn(),
 }));
 
-async function requestCookieDomain() {
+async function readFromRequest(key: 'requestCookieDomain' | 'requestDevTokenUrl') {
   vi.resetModules();
-  const { requestCookieDomain: read } = await import('../session-config');
-  return read();
+  const config = await import('../session-config');
+  return config[key]();
 }
 
 function outsideARequest(): never {
@@ -16,13 +16,22 @@ function outsideARequest(): never {
 }
 
 describe('@vp/queries: session config', () => {
-  it('reads the cookie domain sessionMiddleware put in the request context', async () => {
-    vi.mocked<() => { sessionCookieDomain?: string } | undefined>(
-      getGlobalStartContext
-    ).mockReturnValue({ sessionCookieDomain: 'taitube.example' });
+  it.each([
+    { read: 'requestCookieDomain' as const, expected: 'taitube.example' },
+    { read: 'requestDevTokenUrl' as const, expected: 'http://dev-token:3002' },
+  ])(
+    'reads what sessionMiddleware put in the request context: $read',
+    async ({ read, expected }) => {
+      vi.mocked<() => { sessionCookieDomain?: string; devTokenUrl?: string } | undefined>(
+        getGlobalStartContext
+      ).mockReturnValue({
+        sessionCookieDomain: 'taitube.example',
+        devTokenUrl: 'http://dev-token:3002',
+      });
 
-    expect(await requestCookieDomain()).toBe('taitube.example');
-  });
+      expect(await readFromRequest(read)).toBe(expected);
+    }
+  );
 
   it.each([
     { scenario: 'on the client, which has no request context', context: () => undefined },
@@ -30,6 +39,7 @@ describe('@vp/queries: session config', () => {
   ])('has none $scenario', async ({ context }) => {
     vi.mocked(getGlobalStartContext).mockImplementation(context);
 
-    expect(await requestCookieDomain()).toBeUndefined();
+    expect(await readFromRequest('requestCookieDomain')).toBeUndefined();
+    expect(await readFromRequest('requestDevTokenUrl')).toBeUndefined();
   });
 });

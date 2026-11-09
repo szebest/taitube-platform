@@ -10,7 +10,7 @@ import {
   type Session,
   SessionProvider,
 } from '@vp/queries';
-import { DEV_TOKEN_URL } from '@vp/queries/dev-personas';
+import { DEV_TOKEN_URL } from '@vp/queries/demo-personas';
 import { AppearanceProvider, DEFAULT_APPEARANCE, Tooltip } from '@vp/ui';
 import { account, api, apiServer, mockEndpoint } from '@vp/web-testing';
 import { HttpResponse, http } from 'msw/http';

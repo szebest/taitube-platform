@@ -12,12 +12,14 @@ type Switch = z.infer<typeof SwitchSchema>;
 
 const LABELS: Record<Switch, string> = {
   guest: 'Guest',
-  user: 'User',
+  user: 'Viewer',
   creator: 'Creator',
+  creator2: 'Second creator',
+  moderator: 'Moderator',
   admin: 'Admin',
 };
 
-const FAILED_MESSAGE = 'That persona could not sign in. Is pnpm dev running dev-token serve?';
+const FAILED_MESSAGE = 'That persona could not sign in. Is dev-token serve running?';
 
 export interface PersonaSwitcherProps {
   /** A switch started: the caller drops the failure it showed for the last one. */
@@ -31,9 +33,10 @@ function switchTo(persona: Switch): Promise<void> {
 }
 
 /**
- * Development only: signs in as Guest, User, Creator or Admin with a token minted on this machine.
- * An app imports it from `@vp/queries/dev-personas` behind `import.meta.env.DEV`, so no production
- * bundle carries it, its server function or its words (which is why they are not in the catalogue).
+ * Local demos only: signs in as a Guest or a persona with a token minted on this machine. An app
+ * imports it from `@vp/queries/demo-personas` behind `VITE_DEMO_PERSONAS`, so a build that leaves
+ * the flag off carries neither it, its server function nor its words (which is why they are not
+ * in the catalogue).
  */
 export function PersonaSwitcher({ onAttempt, onFailed }: PersonaSwitcherProps) {
   const router = useRouter();
@@ -57,7 +60,7 @@ export function PersonaSwitcher({ onAttempt, onFailed }: PersonaSwitcherProps) {
   return (
     <form action={switchPersona}>
       <fieldset disabled={isPending}>
-        <legend>Sign in as a dev persona</legend>
+        <legend>Sign in as a demo persona</legend>
         {SwitchSchema.options.map((persona) => (
           <button key={persona} type="submit" name="persona" value={persona}>
             {LABELS[persona]}

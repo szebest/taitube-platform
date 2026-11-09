@@ -29,7 +29,6 @@ describe('@vp/vite-preset: bundle guard', () => {
       '@tanstack/router-devtools-core',
       '@tanstack/query-devtools',
     ].map((name) => [name, `/repo/node_modules/.pnpm/x/node_modules/${name}/dist/esm/index.js`]),
-    ['dev-only/', '/repo/packages/client/queries/src/dev-only/persona-switcher.tsx'],
   ])('refuses %s in a production chunk', (name, moduleId) => {
     const leaked = chunk('assets/leaked.js', [moduleId]);
 
@@ -38,15 +37,44 @@ describe('@vp/vite-preset: bundle guard', () => {
     ]);
   });
 
-  it('refuses a dev-only module in the server bundle, which may read its environment and keep its routes', () => {
-    const server = chunk('server.js', [`${ROUTES}/watch.$videoId.tsx`], true, 'process.env.PORT');
-    const leaked = chunk('assets/persona-sign-in.js', [
-      '/repo/packages/client/queries/src/dev-only/persona-sign-in.ts',
+  describe('the demo personas', () => {
+    const personas = chunk('assets/persona-switcher.js', [
+      '/repo/packages/client/queries/src/demo-personas/persona-switcher.tsx',
+    ]);
+    const serverPersonas = chunk('assets/persona-sign-in.js', [
+      '/repo/packages/client/queries/src/demo-personas/persona-sign-in.ts',
     ]);
 
-    expect(serverBundleViolations([server, leaked])).toEqual([
-      'assets/persona-sign-in.js carries dev-only/, which only the dev server may load',
-    ]);
+    it.each([
+      {
+        scenario: 'a client chunk',
+        violations: () => bundleViolations([entry, watch, personas], RULES),
+        file: personas.fileName,
+      },
+      {
+        scenario: 'the server bundle, which may read its environment and keep its routes',
+        violations: () =>
+          serverBundleViolations(
+            [
+              chunk('server.js', [`${ROUTES}/watch.$videoId.tsx`], true, 'process.env.PORT'),
+              serverPersonas,
+            ],
+            RULES
+          ),
+        file: serverPersonas.fileName,
+      },
+    ])('are refused in $scenario of a build with the flag off', ({ violations, file }) => {
+      expect(violations()).toEqual([
+        `${file} carries demo-personas/, which only a build with VITE_DEMO_PERSONAS=true may ship`,
+      ]);
+    });
+
+    it('are allowed in a build with the flag on', () => {
+      const on = { ...RULES, demoPersonas: true };
+
+      expect(bundleViolations([entry, watch, personas], on)).toEqual([]);
+      expect(serverBundleViolations([serverPersonas], on)).toEqual([]);
+    });
   });
 
   it('refuses a directory whose code moved to another app, in any chunk', () => {

@@ -1,5 +1,5 @@
 import { screen } from '@testing-library/react';
-import { DEV_TOKEN_URL } from '@vp/queries/dev-personas';
+import { DEV_TOKEN_URL } from '@vp/queries/demo-personas';
 import { renderRoute } from '@vp/web-testing/dom';
 import { HttpResponse, http } from 'msw/http';
 import { loaderApi } from '#app/__tests__/loader-api';
@@ -28,7 +28,7 @@ describe('apps/client/web: login page', () => {
     await user.click(await screen.findByRole('button', { name: 'Creator' }));
 
     const alert = await screen.findByRole('alert');
-    expect(alert).toHaveTextContent('Is pnpm dev running dev-token serve?');
+    expect(alert).toHaveTextContent('Is dev-token serve running?');
     expect(alert).toHaveFocus();
   });
 });

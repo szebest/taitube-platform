@@ -12,20 +12,30 @@ export type SessionConfig = {
   apiBaseUrl: string;
   /** The parent domain both apps share, so one sign-in holds on both; unset locally. */
   cookieDomain?: string;
+  /** Where the app's server reaches `dev-token serve`, for a build that offers the demo personas; unset otherwise. */
+  devTokenUrl?: string;
   refresh?: RefreshSession;
 };
 
 // Start types the request context from the app's registered middleware, which a package never sees.
-type SessionContext = { sessionCookieDomain?: string };
+type SessionContext = { sessionCookieDomain?: string; devTokenUrl?: string };
 
-/** The cookie domain `sessionMiddleware` put in a server function's request context; none in a spec. */
-export function requestCookieDomain(): string | undefined {
-  const context = unwrapOr(
+function sessionContext(): SessionContext | undefined {
+  return unwrapOr(
     tryCatch(
       (): SessionContext | undefined => getGlobalStartContext(),
       (cause) => cause
     ),
     undefined
   );
-  return context?.sessionCookieDomain;
+}
+
+/** The cookie domain `sessionMiddleware` put in a server function's request context; none in a spec. */
+export function requestCookieDomain(): string | undefined {
+  return sessionContext()?.sessionCookieDomain;
+}
+
+/** The `dev-token serve` address `sessionMiddleware` put in a server function's request context. */
+export function requestDevTokenUrl(): string | undefined {
+  return sessionContext()?.devTokenUrl;
 }

@@ -33,7 +33,7 @@ src/
 ├── routes/               file routes only: params, validateSearch, loader, head, component
 │   ├── __root.tsx        the document (ThemedDocument from @vp/ui), global styles, provider stack, the app shell, devtools
 │   ├── _authed.tsx       pathless members-only layout: requireSignedIn sends a guest to /login
-│   ├── login.tsx         the `LoginPage` wrapper over `@vp/components`' sign-in card, the dev persona switcher behind import.meta.env.DEV
+│   ├── login.tsx         the `LoginPage` wrapper over `@vp/components`' sign-in card, the demo persona switcher behind `VITE_DEMO_PERSONAS`
 │   ├── upload/           redirects to the same path on the studio, server render and client navigation alike
 │   └── $.tsx             the legacy redirects for unmatched paths
 ├── features/<feature>/   one folder per domain, isolated: index.ts (its public face), api/ (query options and key
@@ -96,7 +96,7 @@ export const Route = createFileRoute('/watch/$videoId')({
   interpolated string. `src/__tests__/router.test.tsx` holds `@ts-expect-error` cases the typecheck keeps.
 - **Code splitting is automatic** (the Start router plugin splits each route's component into its own
   chunk). Write no `React.lazy` for a route. The bundle guard from `@vp/vite-preset` fails the build if a route
-  lands in the entry chunk, two routes share one, devtools or a `dev-only/` folder reach the production bundle,
+  lands in the entry chunk, two routes share one, devtools reach the production bundle, or the demo personas reach one built without `VITE_DEMO_PERSONAS=true`,
   or any chunk carries the upload and edit code that moved to the studio (the `forbiddenDirs`).
   - The exception is a dev-only route: its component is a `React.lazy` gated on
     `import.meta.env.DEV`, the pattern `__root.tsx` uses for the devtools, because a static import survives
@@ -122,12 +122,15 @@ Everything under `src/` runs on the server first. A component that reads `window
 The session is the httpOnly `vp.session` cookie (`@vp/queries`, SDD §11), so the server renders the signed-in
 page: the root route's `beforeLoad` returns `auth` (`ensureSession`), `_authed`'s `beforeLoad` sends a guest to
 `/login?redirect=<path>`, and its loaders run on the server with the cookie's token. No script reads the token: the
-browser's API calls go to this origin's `/api`, and only server functions (`signOut`, the dev personas' sign-in)
+browser's API calls go to this origin's `/api`, and only server functions (`signOut`, the demo personas' sign-in)
 set or clear the cookie. A 401 for a signed-in viewer lands them on `/login`, and back where they were once signed
 in. The shell header mounts `features/account/components/account-menu.tsx`: `@vp/components`' `AccountMenu` with the
 studio's upload and admin pages, a guest's sign-in link, and sign-out, which ends the session on both apps. Locally
-`pnpm dev` starts `dev-token serve`, and `/login` offers the dev personas (Guest, User, Creator, Admin); a
-production build has no sign-in provider until the OIDC client lands.
+`/login` offers the demo personas (Guest, Viewer, Creator, Second creator, Moderator, Admin) in the dev server, where
+`pnpm dev` starts `dev-token serve`, and in a build made with `VITE_DEMO_PERSONAS=true`, which `demo/start.sh` makes
+and points at `dev-token serve` through `SSR_DEV_TOKEN_URL` (setup in `docs/LOCAL_FIRST.md`). The gate is the literal
+`import.meta.env.VITE_DEMO_PERSONAS === 'true'` in `persona-switcher.lazy.ts`; any other build has no sign-in
+provider until the OIDC client lands.
 
 ### SEO on the server render
 
