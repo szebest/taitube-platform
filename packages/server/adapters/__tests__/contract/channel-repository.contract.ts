@@ -57,6 +57,13 @@ export function describeChannelRepositoryContract(makeSubject: MakeRepositoriesS
         brandColor: null,
         bio: null,
         links: [],
+        avatarVersion: 0,
+        bannerVersion: 0,
+        bannerCrops: null,
+        country: null,
+        contactEmail: null,
+        bannerLink: null,
+        handleChangedAt: null,
         subscriberCount: 0,
       });
     });
@@ -157,6 +164,70 @@ export function describeChannelRepositoryContract(makeSubject: MakeRepositoriesS
         await brandColorAfter({ bio: 'Hello' }),
         await brandColorAfter({ brandColor: null }),
       ]).toEqual(['#3366cc', '#3366cc', null]);
+    });
+
+    it.each([
+      { field: 'country', value: 'PL' },
+      { field: 'contactEmail', value: 'ada@example.com' },
+      { field: 'bannerLink', value: { label: 'Shop', url: 'https://shop.example.com' } },
+    ] as const)(
+      'stores $field, keeps it across a patch that omits it, and clears it with null',
+      async ({ field, value }) => {
+        const after = async (patch: UpdateChannelInput) =>
+          expectOk(await channels.update(CHANNEL_ID, patch))?.[field];
+
+        expect([
+          await after({ [field]: value }),
+          await after({ bio: 'Hello' }),
+          await after({ [field]: null }),
+        ]).toEqual([value, value, null]);
+      }
+    );
+
+    describe('changing the handle', () => {
+      const changedAt = new Date('2026-03-01T00:00:00.000Z');
+      const historyOf = async (handle: string) =>
+        expectOk(await subject.repositories.channelHandleHistory.findByHandle(handle));
+
+      it('stamps the change time, retires the old handle and frees nothing else', async () => {
+        const updated = expectOk(
+          await channels.update(CHANNEL_ID, { handle: 'NewHandle', handleChangedAt: changedAt })
+        );
+
+        expect(updated).toMatchObject({ handle: 'newhandle', handleChangedAt: changedAt });
+        expect(await historyOf('ownerhandle')).toEqual({
+          handle: 'ownerhandle',
+          channelId: CHANNEL_ID,
+          retiredAt: changedAt,
+        });
+        expect(await historyOf('newhandle')).toBeNull();
+      });
+
+      it('leaves history and the change time alone when the handle stays', async () => {
+        expectOk(await channels.update(CHANNEL_ID, { handle: 'OWNERHANDLE', bio: 'Hi' }));
+
+        expect(expectOk(await channels.findById(CHANNEL_ID))?.handleChangedAt).toBeNull();
+        expect(await historyOf('ownerhandle')).toBeNull();
+      });
+
+      it('takes the old handle out of the history when the channel changes back to it', async () => {
+        expectOk(
+          await channels.update(CHANNEL_ID, { handle: 'newhandle', handleChangedAt: changedAt })
+        );
+        expectOk(await channels.update(CHANNEL_ID, { handle: 'ownerhandle' }));
+
+        expect(await historyOf('ownerhandle')).toBeNull();
+        expect(await historyOf('newhandle')).toMatchObject({ channelId: CHANNEL_ID });
+      });
+
+      it('retires nothing when another channel holds the new handle', async () => {
+        await createOtherChannel();
+
+        expectErr(await channels.update(CHANNEL_ID, { handle: 'otherhandle' }));
+
+        expect(await historyOf('ownerhandle')).toBeNull();
+        expect(expectOk(await channels.findById(CHANNEL_ID))?.handle).toBe('ownerhandle');
+      });
     });
 
     it('reports a patch taking a handle another channel holds', async () => {

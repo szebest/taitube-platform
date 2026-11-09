@@ -56,6 +56,7 @@ export class InMemoryPlaylistRepository implements PlaylistRepositoryPort {
     const now = new Date();
     const playlist: Playlist = {
       ...input,
+      kind: input.kind ?? 'playlist',
       isSystem: false,
       customThumbnailKey: null,
       createdAt: now,
@@ -79,6 +80,7 @@ export class InMemoryPlaylistRepository implements PlaylistRepositoryPort {
       title: WATCH_LATER_TITLE,
       description: '',
       visibility: 'private',
+      kind: 'playlist',
       isSystem: true,
       customThumbnailKey: null,
       createdAt: now,

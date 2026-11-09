@@ -673,6 +673,9 @@ importers:
       '@vp/logger':
         specifier: workspace:*
         version: link:../../../packages/server/logger
+      '@vp/messages':
+        specifier: workspace:*
+        version: link:../../../packages/universal/messages
       '@vp/observability':
         specifier: workspace:*
         version: link:../../../packages/server/observability

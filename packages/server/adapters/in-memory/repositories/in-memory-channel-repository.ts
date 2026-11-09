@@ -1,7 +1,10 @@
 import type { ChannelRepositoryPort } from '@vp/core/repositories';
 import {
+  type BannerCrops,
   type Channel,
+  type ChannelImageKind,
   type ChannelStats,
+  type CropRect,
   type CreateChannelInput,
   type UpdateChannelInput,
   isPublicFeedEligible,
@@ -15,12 +18,16 @@ import {
 } from '@vp/errors';
 import { type Result, err, ok } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
+import type { InMemoryChannelHandleHistoryRepository } from './in-memory-channel-handle-history-repository';
 import type { InMemoryVideoRepository } from './in-memory-video-repository';
 
 export class InMemoryChannelRepository implements ChannelRepositoryPort {
   private readonly channels = new Map<string, Channel>();
 
-  constructor(private readonly videosRepo: Pick<InMemoryVideoRepository, 'getAllVideos'>) {
+  constructor(
+    private readonly videosRepo: Pick<InMemoryVideoRepository, 'getAllVideos'>,
+    private readonly history: Pick<InMemoryChannelHandleHistoryRepository, 'retire' | 'release'>
+  ) {
     this.seedDevChannels();
   }
 
@@ -36,6 +43,13 @@ export class InMemoryChannelRepository implements ChannelRepositoryPort {
       brandColor: null,
       bio: 'Development testing channel',
       links: [],
+      avatarVersion: 0,
+      bannerVersion: 0,
+      bannerCrops: null,
+      country: null,
+      contactEmail: null,
+      bannerLink: null,
+      handleChangedAt: null,
       subscriberCount: 42,
       createdAt: now,
       updatedAt: now,
@@ -50,6 +64,13 @@ export class InMemoryChannelRepository implements ChannelRepositoryPort {
       brandColor: null,
       bio: null,
       links: [],
+      avatarVersion: 0,
+      bannerVersion: 0,
+      bannerCrops: null,
+      country: null,
+      contactEmail: null,
+      bannerLink: null,
+      handleChangedAt: null,
       subscriberCount: 0,
       createdAt: now,
       updatedAt: now,
@@ -110,6 +131,13 @@ export class InMemoryChannelRepository implements ChannelRepositoryPort {
       brandColor: input.brandColor ?? null,
       bio: input.bio ?? null,
       links: [],
+      avatarVersion: 0,
+      bannerVersion: 0,
+      bannerCrops: null,
+      country: null,
+      contactEmail: null,
+      bannerLink: null,
+      handleChangedAt: null,
       subscriberCount: input.subscriberCount ?? 0,
       createdAt: now,
       updatedAt: now,
@@ -155,7 +183,7 @@ export class InMemoryChannelRepository implements ChannelRepositoryPort {
         (other) => other.id !== id && other.handle.toLowerCase() === normalized
       );
       if (heldByAnother) return err(handleTaken(normalized));
-      channel.handle = normalized;
+      if (normalized !== channel.handle) this.changeHandle(channel, normalized, input);
     }
 
     if (input.displayName !== undefined) channel.displayName = input.displayName;
@@ -164,8 +192,46 @@ export class InMemoryChannelRepository implements ChannelRepositoryPort {
     if (input.brandColor !== undefined) channel.brandColor = input.brandColor;
     if (input.bio !== undefined) channel.bio = input.bio;
     if (input.links !== undefined) channel.links = input.links;
+    if (input.country !== undefined) channel.country = input.country;
+    if (input.contactEmail !== undefined) channel.contactEmail = input.contactEmail;
+    if (input.bannerLink !== undefined) channel.bannerLink = input.bannerLink;
     channel.updatedAt = new Date();
 
     return ok(channel);
+  }
+
+  private changeHandle(channel: Channel, handle: string, input: UpdateChannelInput): void {
+    const at = input.handleChangedAt ?? new Date();
+    this.history.release(handle);
+    this.history.retire({ handle: channel.handle, channelId: channel.id, retiredAt: at });
+    channel.handle = handle;
+    channel.handleChangedAt = at;
+  }
+
+  /**
+   * Moves an image's version forward, which `update` deliberately does not expose because the
+   * image repository owns it; answers whether the version was newer than the one held.
+   */
+  advanceImageVersion(
+    id: string,
+    kind: ChannelImageKind,
+    version: number,
+    crops: BannerCrops | CropRect,
+    defaultUrl: string
+  ): boolean {
+    const channel = this.channels.get(id);
+    const held = kind === 'avatar' ? channel?.avatarVersion : channel?.bannerVersion;
+    if (!channel || held === undefined || held >= version) return false;
+
+    if (kind === 'avatar') {
+      channel.avatarVersion = version;
+      channel.avatarUrl = defaultUrl;
+    } else {
+      channel.bannerVersion = version;
+      channel.bannerUrl = defaultUrl;
+      channel.bannerCrops = crops as BannerCrops;
+    }
+    channel.updatedAt = new Date();
+    return true;
   }
 }
