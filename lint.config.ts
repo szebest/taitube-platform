@@ -179,6 +179,26 @@ const LINT_IGNORES = [
 
 const OVERRIDES: NonNullable<OxlintConfig['overrides']> = [
   {
+    files: ['apps/client/*/src/**'],
+    rules: { 'import/no-cycle': 'error' },
+  },
+  {
+    files: ['apps/client/*/src/routes/**'],
+    rules: {
+      'eslint/no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['#app/features/*/**'],
+              message: 'A route imports a feature through its index.ts.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     files: [
       'tests/architecture/**',
       'packages/server/testing/src/__tests__/cloud-terraform.test.ts',
@@ -188,7 +208,7 @@ const OVERRIDES: NonNullable<OxlintConfig['overrides']> = [
   },
   {
     files: ['tests/**', '**/__tests__/**'],
-    rules: { 'react/rules-of-hooks': 'off' },
+    rules: { 'react/rules-of-hooks': 'off', 'eslint/no-restricted-imports': 'off' },
   },
 ];
 
