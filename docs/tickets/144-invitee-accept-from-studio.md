@@ -8,7 +8,7 @@
 | Blocks | — |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD ADR-24 Result-typed errors](../SDD.md#adr-24--result-typed-error-handling-domain-returns-the-edge-decides) |
 
-**Status:** ready
+**Status:** done
 
 > **Why.** [117](117-channel-team-roles.md) ships invites, accept and decline as endpoints (`POST /v1/invites/:id/accept`, `POST /v1/invites/:id/decline`), but the invitee has no way to reach them from the UI: the studio has no page that lists the caller's pending invites, and the `team_invite` notification does not carry the invite id. The same gap hides leaving a team: `DELETE /v1/me/channel/members/:userId` lets a member remove themselves, and nothing in the studio calls it.
 
