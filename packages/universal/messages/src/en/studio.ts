@@ -1,6 +1,7 @@
 import { dt } from '../define';
 import { studioAdmin } from './studio-admin';
 import { studioCaptions } from './studio-captions';
+import { studioChannel } from './studio-channel';
 import { studioComments } from './studio-comments';
 import { studioImages } from './studio-images';
 import { studioLive } from './studio-live';
@@ -74,6 +75,7 @@ export const studio = {
   ...studioAdmin,
   ...studioCaptions,
   ...studioComments,
+  ...studioChannel,
   ...studioImages,
   ...studioLive,
   ...studioPicks,
@@ -183,7 +185,7 @@ export const studio = {
   sectionSaved: dt('Saved'),
   sectionNotSaved: dt('Could not save. Try again.'),
   identityTitle: dt('Name and handle'),
-  identityDescription: dt('How your channel is named and found.'),
+  identityDescription: dt('How your channel is named, found and reached.'),
   displayNameLabel: dt('Channel name'),
   displayNameInvalid: dt('Use 1 to 100 characters.'),
   handleLabel: dt('Handle'),
@@ -191,7 +193,7 @@ export const studio = {
   aboutTitle: dt('About'),
   aboutDescription: dt('What viewers read on your channel.'),
   bioLabel: dt('Description'),
-  bioInvalid: dt('Use up to 1000 characters.'),
+  bioInvalid: dt('Use up to 5000 characters.'),
   linksLabel: dt('Links'),
   linkTitleLabel: dt('Link title {position}'),
   linkUrlLabel: dt('Link address {position}'),

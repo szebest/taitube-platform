@@ -1,6 +1,7 @@
 import { dt } from '../define';
 import { studioAdmin } from './studio-admin';
 import { studioCaptions } from './studio-captions';
+import { studioChannel } from './studio-channel';
 import { studioComments } from './studio-comments';
 import { studioImages } from './studio-images';
 import { studioLive } from './studio-live';
@@ -74,6 +75,7 @@ export const studio = {
   ...studioAdmin,
   ...studioCaptions,
   ...studioComments,
+  ...studioChannel,
   ...studioImages,
   ...studioLive,
   ...studioPicks,
@@ -210,7 +212,7 @@ export const studio = {
   aboutTitle: dt('Informacje'),
   aboutDescription: dt('To, co widzowie czytają na Twoim kanale.'),
   bioLabel: dt('Opis'),
-  bioInvalid: dt('Użyj najwyżej 1000 znaków.'),
+  bioInvalid: dt('Użyj najwyżej 5000 znaków.'),
   linksLabel: dt('Linki'),
   linkTitleLabel: dt('Tytuł linku {position}'),
   linkUrlLabel: dt('Adres linku {position}'),

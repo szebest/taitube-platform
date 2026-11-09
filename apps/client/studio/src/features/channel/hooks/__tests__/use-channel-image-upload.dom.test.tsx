@@ -2,8 +2,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { completeChannelImage, prepareChannelImage } from '@vp/api-contracts';
 import type { ImageCrops } from '@vp/domain';
+import { ErrorCodes } from '@vp/errors';
 import { SESSION_KEY, UserEventStream } from '@vp/queries';
-import { CHANNEL_ID, apiServer, mockEndpoint } from '@vp/web-testing';
+import { CHANNEL_ID, apiServer, mockEndpoint, problemReply } from '@vp/web-testing';
 import { streamUserEvents } from '@vp/web-testing/dom';
 import axios from 'axios';
 import { HttpResponse } from 'msw/http';
@@ -66,10 +67,7 @@ function serving(complete: 'queues' | 'refuses' = 'queues') {
     mockEndpoint(completeChannelImage, () =>
       complete === 'queues'
         ? HttpResponse.json({ uploadId: UPLOAD_ID, version: 2 }, { status: 202 })
-        : HttpResponse.json(
-            { error: { code: 'IMAGE_TOO_SMALL', message: 'too small' } },
-            { status: 422 }
-          )
+        : problemReply(ErrorCodes.IMAGE_TOO_SMALL)
     )
   );
 }

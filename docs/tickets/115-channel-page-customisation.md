@@ -8,7 +8,7 @@
 | Blocks | 119, 120, 121, 122 |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §7 Object storage layout](../SDD.md#7-object-storage-layout) · [SDD §11 Security](../SDD.md#11-security) · [SDD ADR-24 Result-typed errors](../SDD.md#adr-24--result-typed-error-handling-domain-returns-the-edge-decides) |
 
-**Status:** in-progress
+**Status:** done
 
 > **Why.** A channel's identity cannot be set up properly: the banner and avatar are URLs, there is no trailer for a
 > newcomer, the handle cannot change without breaking every link to it, and About carries five unlabelled links. [38](38-user-channel-identity-universal-auth.md) left avatar and banner upload out of scope,

@@ -1,39 +1,51 @@
-import type { Channel } from '@vp/api-contracts';
+import type { OwnerChannel } from '@vp/api-contracts';
+import { platformOfUrl } from '@vp/domain';
 import { fieldError, useAppForm } from '@vp/forms';
 import { useT } from '@vp/intl-react';
-import { Button, Field, Input } from '@vp/ui';
+import { Button, Field, Input, PlatformIcon } from '@vp/ui';
 import {
-  useChannelValidators,
+  validateBannerLinkField,
   validateLinksField,
   withoutBlankLinks,
 } from '#app/features/channel/forms/channel-field-validators';
 import { useUpdateChannel } from '#app/features/channel/hooks/use-update-channel';
-import { ChannelTextField } from '../channel-text-field/channel-text-field';
 import { CustomizationSection } from '../customization-section/customization-section';
 
-const MAX_LINKS = 5;
+const MAX_LINKS = 8;
 const LINKS_LABEL_ID = 'channel-links-label';
 
-function valuesOf({ bio, links }: Pick<Channel, 'bio' | 'links'>) {
-  return { bio: bio ?? '', links };
+function valuesOf({ links, bannerLink }: Pick<OwnerChannel, 'links' | 'bannerLink'>) {
+  return {
+    links: links.map(({ label, url }) => ({ label, url })),
+    bannerLink: bannerLink ?? { label: '', url: '' },
+  };
 }
 
-/** The channel's description and the links it lists, saved on their own. */
-export function AboutSection({ channel }: { channel: Channel }) {
+function moved<T>(items: readonly T[], from: number, to: number): T[] {
+  const next = [...items];
+  const [item] = next.splice(from, 1);
+  if (item !== undefined) next.splice(to, 0, item);
+  return next;
+}
+
+/** The links on the About tab, in the order set, and the one button on the banner. */
+export function LinksSection({ channel }: { channel: OwnerChannel }) {
   const { tOr } = useT();
-  const validators = useChannelValidators();
   const update = useUpdateChannel();
   const form = useAppForm({
     defaultValues: valuesOf(channel),
     listeners: { onChange: () => update.reset() },
-    onSubmit: ({ value, formApi }) =>
+    onSubmit: ({ value, formApi }) => {
+      const label = value.bannerLink.label.trim();
+      const url = value.bannerLink.url.trim();
       update.mutate(
         {
-          bio: value.bio.trim() === '' ? null : value.bio.trim(),
           links: withoutBlankLinks(value.links),
+          bannerLink: label === '' && url === '' ? null : { label, url },
         },
         { onSuccess: (saved) => formApi.reset(valuesOf(saved)) }
-      ),
+      );
+    },
   });
 
   return (
@@ -44,17 +56,12 @@ export function AboutSection({ channel }: { channel: Channel }) {
       }}
     >
       <CustomizationSection.Header>
-        <CustomizationSection.Title>{tOr('studio.aboutTitle', {}, '')}</CustomizationSection.Title>
+        <CustomizationSection.Title>{tOr('studio.linksTitle', {}, '')}</CustomizationSection.Title>
         <CustomizationSection.Description>
-          {tOr('studio.aboutDescription', {}, '')}
+          {tOr('studio.linksDescription', {}, '')}
         </CustomizationSection.Description>
       </CustomizationSection.Header>
       <CustomizationSection.Body>
-        <form.AppField name="bio" validators={{ onChange: validators.bio }}>
-          {(field) => (
-            <ChannelTextField field={field} label={tOr('studio.bioLabel', {}, '')} multiline />
-          )}
-        </form.AppField>
         <form.AppField name="links" validators={{ onChange: validateLinksField }}>
           {(field) => {
             const links = field.state.value;
@@ -79,6 +86,14 @@ export function AboutSection({ channel }: { channel: Channel }) {
                     key={index}
                     className="flex items-center gap-inline"
                   >
+                    <PlatformIcon
+                      platform={platformOfUrl(link.url.trim())}
+                      aria-label={tOr(
+                        'studio.linkPlatform',
+                        { platform: platformOfUrl(link.url.trim()) },
+                        ''
+                      )}
+                    />
                     <Input
                       aria-label={tOr('studio.linkTitleLabel', { position: index + 1 }, '')}
                       value={link.label}
@@ -89,6 +104,20 @@ export function AboutSection({ channel }: { channel: Channel }) {
                       value={link.url}
                       onChange={(event) => change(index, { url: event.target.value })}
                     />
+                    <Button
+                      variant="ghost"
+                      disabled={index === 0}
+                      onClick={() => field.handleChange(moved(links, index, index - 1))}
+                    >
+                      {tOr('studio.moveLinkUp', { position: index + 1 }, '')}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      disabled={index === links.length - 1}
+                      onClick={() => field.handleChange(moved(links, index, index + 1))}
+                    >
+                      {tOr('studio.moveLinkDown', { position: index + 1 }, '')}
+                    </Button>
                     <Button
                       variant="ghost"
                       onClick={() => field.handleChange(links.filter((_, at) => at !== index))}
@@ -105,6 +134,32 @@ export function AboutSection({ channel }: { channel: Channel }) {
                 >
                   {tOr('studio.addLink', {}, '')}
                 </Button>
+              </Field.Root>
+            );
+          }}
+        </form.AppField>
+        <form.AppField name="bannerLink" validators={{ onChange: validateBannerLinkField }}>
+          {(field) => {
+            const error = fieldError(field.state.meta);
+            const { label, url } = field.state.value;
+
+            return (
+              <Field.Root invalid={error !== undefined}>
+                <span className="text-label">{tOr('studio.bannerLinkTitle', {}, '')}</span>
+                <div className="flex items-center gap-inline">
+                  <Input
+                    aria-label={tOr('studio.bannerLinkLabel', {}, '')}
+                    value={label}
+                    onChange={(event) => field.handleChange({ label: event.target.value, url })}
+                  />
+                  <Input
+                    aria-label={tOr('studio.bannerLinkUrl', {}, '')}
+                    value={url}
+                    onChange={(event) => field.handleChange({ label, url: event.target.value })}
+                  />
+                </div>
+                <Field.Hint>{tOr('studio.bannerLinkHint', {}, '')}</Field.Hint>
+                {error !== undefined && <Field.Error>{error}</Field.Error>}
               </Field.Root>
             );
           }}

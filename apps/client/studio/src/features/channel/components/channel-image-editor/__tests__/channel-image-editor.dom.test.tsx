@@ -1,6 +1,7 @@
 import { screen, waitFor, within } from '@testing-library/react';
 import { completeChannelImage, prepareChannelImage, updateMyChannel } from '@vp/api-contracts';
-import { CHANNEL_ID, apiServer, mockEndpoint } from '@vp/web-testing';
+import { ErrorCodes } from '@vp/errors';
+import { CHANNEL_ID, apiServer, mockEndpoint, problemReply } from '@vp/web-testing';
 import { streamUserEvents } from '@vp/web-testing/dom';
 import axios from 'axios';
 import { HttpResponse } from 'msw/http';
@@ -63,7 +64,7 @@ describe('apps/client/studio: channel image editor', () => {
       kind: 'picture',
       drop: /Drop a picture here/,
       title: 'Frame your picture',
-      apiKind: 'avatar',
+      apiKind: 'avatar' as const,
       size: [800, 600],
       crop: { crop: { x: 100, y: 0, width: 600, height: 600 } },
     },
@@ -71,7 +72,7 @@ describe('apps/client/studio: channel image editor', () => {
       kind: 'banner',
       drop: /Drop a banner here/,
       title: 'Frame your banner',
-      apiKind: 'banner',
+      apiKind: 'banner' as const,
       size: [2560, 1440],
       crop: {
         crops: {
@@ -217,9 +218,7 @@ describe('apps/client/studio: channel image editor', () => {
 
   it('says so when taking an image away is refused', async () => {
     const { user } = await renderCustomization({ avatarUrl: 'https://cdn.test/a.png' }, [
-      mockEndpoint(updateMyChannel, () =>
-        HttpResponse.json({ error: { code: 'INTERNAL_ERROR', message: 'no' } }, { status: 500 })
-      ),
+      mockEndpoint(updateMyChannel, () => problemReply(ErrorCodes.INTERNAL)),
     ]);
 
     await user.click(within(section()).getByRole('button', { name: 'Remove picture' }));
