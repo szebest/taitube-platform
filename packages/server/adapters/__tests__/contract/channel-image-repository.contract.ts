@@ -29,7 +29,7 @@ const BANNER_DONE: ChannelImageCompletion = {
 };
 
 const DAY_MS = 86_400_000;
-const DEFAULT_URL = 'https://cdn.example/channels/c/banner/v1/desktop-1280.webp';
+const DEFAULT_URL = 'https://cdn.example/c/banner/v1/desktop-1280.webp';
 
 export function describeChannelImageRepositoryContract(makeSubject: MakeRepositoriesSubject): void {
   describe('ChannelImageRepository contract', () => {

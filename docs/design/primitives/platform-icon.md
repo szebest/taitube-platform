@@ -48,7 +48,7 @@ Rest only. It takes no interaction; a link or button around it carries hover, fo
 
 ## Where the paths come from
 
-The paths are generated once into `platform-icon-paths.generated.ts` by `pnpm gen:platform-icons` from the `simple-icons` devDependency (LinkedIn from `simple-icons-linkedin`, an alias of the last release that carried it, since later releases dropped the mark). Nothing is fetched at runtime and no package is imported by the browser bundle. `pnpm gen:platform-icons --check` fails on drift.
+The paths are generated once into `src/icons/platform-icon-paths.generated.json` by `pnpm gen:platform-icons` from the `simple-icons` devDependency (LinkedIn from `simple-icons-linkedin`, an alias of the last release that carried it, since later releases dropped the mark). Nothing is fetched at runtime and no package is imported by the browser bundle. `pnpm gen:platform-icons --check` fails on drift.
 
 ## Do and don't
 

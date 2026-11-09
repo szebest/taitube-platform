@@ -1,8 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import { LINK_PLATFORMS } from '@vp/domain';
 import { axeViolations } from '@vp/web-testing/dom';
+import PLATFORM_ICON_PATHS from '../../../icons/platform-icon-paths.generated.json';
 import { PlatformIcon, type PlatformIconProps } from '../platform-icon';
-import { PLATFORM_ICON_PATHS } from '../platform-icon-paths.generated';
 
 const renderIcon = (props: Partial<PlatformIconProps> = {}) =>
   render(<PlatformIcon platform="github" {...props} />);
