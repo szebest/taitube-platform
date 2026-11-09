@@ -8,7 +8,7 @@
 | Blocks | 114, 116, 118, 120, 122 |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §5 Domain model & DDL](../SDD.md#5-domain-model--database-schema) · [SDD ADR-24 Result-typed errors](../SDD.md#adr-24--result-typed-error-handling-domain-returns-the-edge-decides) |
 
-**Status:** blocked
+**Status:** ready
 
 > **Why.** [42](42-threaded-comments-keyset-pagination-moderation.md) lets the owner pin a comment and delete any comment
 > under their video, and [103](103-comment-hearts-reports-creator-inbox.md) adds hearts, reports and the creator's inbox;

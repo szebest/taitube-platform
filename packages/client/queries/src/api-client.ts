@@ -12,6 +12,8 @@ export type AppApiClientOptions = {
   apiBaseUrl: string;
   /** Told of every 401 the browser receives, so a session that ended under the viewer closes. */
   onUnauthorized: () => void;
+  /** The acting channel of an app that works on several; sent as `X-Channel-Id` on the endpoints that take one. */
+  getChannelId?: () => string | undefined;
 };
 
 function reportingUnauthorized(onUnauthorized: () => void): typeof fetch {
@@ -28,12 +30,13 @@ function reportingUnauthorized(onUnauthorized: () => void): typeof fetch {
  * (`sessionMiddleware`), so no script ever holds it and the API is never a cross-origin call.
  */
 export const createAppApiClient = createIsomorphicFn()
-  .server(({ apiBaseUrl }: AppApiClientOptions): ApiClient =>
-    createApiClient({ baseUrl: apiBaseUrl, getAuthToken: readSessionToken })
+  .server(({ apiBaseUrl, getChannelId }: AppApiClientOptions): ApiClient =>
+    createApiClient({ baseUrl: apiBaseUrl, getAuthToken: readSessionToken, getChannelId })
   )
-  .client(({ onUnauthorized }: AppApiClientOptions): ApiClient =>
+  .client(({ onUnauthorized, getChannelId }: AppApiClientOptions): ApiClient =>
     createApiClient({
       baseUrl: `${window.location.origin}${API_PROXY_PATH}`,
       fetch: reportingUnauthorized(onUnauthorized),
+      getChannelId,
     })
   );

@@ -8,7 +8,7 @@
 | Blocks | — |
 | Spec | [SDD §11 Security](../SDD.md#11-security) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §5 Domain model & DDL](../SDD.md#5-domain-model--database-schema) · [SDD ADR-24 Result-typed errors](../SDD.md#adr-24--result-typed-error-handling-domain-returns-the-edge-decides) |
 
-**Status:** blocked
+**Status:** ready
 
 > **Why.** One browser holds one session and one user holds one channel. Anyone with a personal account and a creator
 > account signs out and in again to change hats, loses the page they were on, and cannot tell which hat they are

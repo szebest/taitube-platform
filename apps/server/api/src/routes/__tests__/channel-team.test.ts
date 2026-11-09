@@ -103,6 +103,7 @@ describe('channel team routes', () => {
     expect(accepted.statusCode).toBe(200);
     expect(accepted.json()).toEqual({
       channelId: owner.id,
+      ownerId: owner.userId,
       role: 'editor',
       channel: { handle: owner.handle, displayName: owner.displayName, avatarUrl: owner.avatarUrl },
     });

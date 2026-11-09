@@ -8,7 +8,7 @@
 | Blocks | 119, 120, 121, 122 |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §7 Object storage layout](../SDD.md#7-object-storage-layout) · [SDD §11 Security](../SDD.md#11-security) · [SDD ADR-24 Result-typed errors](../SDD.md#adr-24--result-typed-error-handling-domain-returns-the-edge-decides) |
 
-**Status:** blocked
+**Status:** ready
 
 > **Why.** A channel's identity cannot be set up properly: the banner and avatar are URLs, there is no trailer for a
 > newcomer, the handle cannot change without breaking every link to it, and About carries five unlabelled links. [38](38-user-channel-identity-universal-auth.md) left avatar and banner upload out of scope,
@@ -23,6 +23,8 @@
 > places the trailer and returning-subscriber video this ticket resolves. [106](106-channel-branded-and-user-built-themes.md) owns the brand colour and lists banner theming as
 > out of scope: this ticket supplies the banner image and nothing about its colours, and the two tickets edit different
 > sections of `/customization`. Team members who may edit the channel are 117's matrix.
+
+> **Acting channel.** An editor acts on another channel through 117's `X-Channel-Id`, but `/customization` reads the viewer's own channel from the session today. This ticket makes the page read the acting channel, so an editor edits the channel they switched to and not their own.
 
 ## What to build
 

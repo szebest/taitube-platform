@@ -1,4 +1,4 @@
-import { type Account, getAccount } from '@vp/api-contracts';
+import { type Account, getAccount, listMyMemberships } from '@vp/api-contracts';
 import {
   ApiProvider,
   AppWords,
@@ -15,7 +15,7 @@ import {
   Tooltip,
   createToaster,
 } from '@vp/ui';
-import { account, api, mockEndpoint } from '@vp/web-testing';
+import { account, api, apiServer, mockEndpoint } from '@vp/web-testing';
 import { http, HttpResponse } from 'msw/http';
 import type { ComponentType, PropsWithChildren } from 'react';
 
@@ -48,8 +48,9 @@ export function signedIn(creator: Account = account()): ComponentType<PropsWithC
 /** The session cookie of a signed-in browser, as a request carries it. */
 export const SESSION = `${SESSION_COOKIE}=signed-in`;
 
-/** The API's answer for the account the session cookie reaches. */
+/** The API's answer for the account the session cookie reaches, who works on no other channel until a spec says so. */
 export function accountOf(creator: Account = account()) {
+  apiServer.use(mockEndpoint(listMyMemberships, () => HttpResponse.json({ items: [] })));
   return mockEndpoint(getAccount, () => HttpResponse.json(creator));
 }
 

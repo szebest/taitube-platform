@@ -1,13 +1,14 @@
 import { Link, Outlet, useMatches, useMatchRoute } from '@tanstack/react-router';
 import { useT } from '@vp/intl-react';
-import { canAccessAdmin } from '@vp/permissions';
+import { canAccessAdmin, canUpdateVideo } from '@vp/permissions';
 import { Can } from '@vp/permissions-react';
-import { useLayoutMaxWidth, useUserEvent } from '@vp/queries';
+import { useAccount, useLayoutMaxWidth, useUserEvent } from '@vp/queries';
 import { Button, Logo } from '@vp/ui';
 import { useState } from 'react';
 import { StudioWorkspace } from '#app/components/workspace/studio-workspace';
 import { SelectedVideoContext } from '#app/features/shell/hooks/selected-video';
 import { useAccessDeniedToast } from '#app/features/shell/hooks/use-access-denied-toast';
+import { ActingNavItems, ActiveChannelProvider, useActiveChannel } from '#app/features/team';
 import { UploadDialog } from '#app/features/upload/components/upload-dialog/upload-dialog';
 import {
   UploadDockProvider,
@@ -21,16 +22,20 @@ import { ShellAccountMenu } from '../shell-account-menu/shell-account-menu';
 function UploadToolbarButton() {
   const { setDialogOpen } = useUploadDock('ToolbarButton');
   const { tOr } = useT();
+  const { ownerId } = useActiveChannel();
 
   return (
-    <Button size="sm" variant="solid" tone="accent" onClick={() => setDialogOpen(true)}>
-      {tOr('studio.navUpload', {}, '')}
-    </Button>
+    <Can type="rule" I={canUpdateVideo} this={{ video: { ownerId } }}>
+      <Button size="sm" variant="solid" tone="accent" onClick={() => setDialogOpen(true)}>
+        {tOr('studio.navUpload', {}, '')}
+      </Button>
+    </Can>
   );
 }
 
 function StudioFrame() {
   const matchRoute = useMatchRoute();
+  const signedIn = Boolean(useAccount());
   const maxWidth = useLayoutMaxWidth();
   const { tOr } = useT();
   const [videoId, setVideoId] = useState<string>();
@@ -56,39 +61,7 @@ function StudioFrame() {
       }}
     >
       <StudioWorkspace.Nav>
-        <StudioWorkspace.NavItem
-          asChild
-          icon="video"
-          active={Boolean(matchRoute({ to: '/videos', fuzzy: true }))}
-        >
-          <Link to="/videos" search={{}}>
-            {tOr('studio.navLibrary', {}, '')}
-          </Link>
-        </StudioWorkspace.NavItem>
-        <StudioWorkspace.NavItem
-          asChild
-          icon="chart"
-          active={Boolean(matchRoute({ to: '/analytics' }))}
-        >
-          <Link to="/analytics" search={{}}>
-            {tOr('studio.navAnalytics', {}, '')}
-          </Link>
-        </StudioWorkspace.NavItem>
-        <StudioWorkspace.NavItem
-          asChild
-          icon="chat"
-          active={onComments}
-          badge={newComments ? tOr('studio.commentsNavNew', {}, '') : undefined}
-        >
-          <Link to="/comments" search={{}}>
-            {tOr('studio.commentsNav', {}, '')}
-          </Link>
-        </StudioWorkspace.NavItem>
-        <StudioWorkspace.NavItem asChild icon="live" active={Boolean(matchRoute({ to: '/live' }))}>
-          <Link to="/live" search={{}}>
-            {tOr('studio.liveNav', {}, '')}
-          </Link>
-        </StudioWorkspace.NavItem>
+        <ActingNavItems newComments={newComments} />
         <Can type="rule" I={canAccessAdmin}>
           <StudioWorkspace.NavItem
             asChild
@@ -112,7 +85,7 @@ function StudioFrame() {
           <span className="text-label">{tOr('studio.title', {}, '')}</span>
         </Link>
         <div className="ms-auto flex items-center gap-inline">
-          <UploadToolbarButton />
+          {signedIn && <UploadToolbarButton />}
           <ShellAccountMenu />
         </div>
       </StudioWorkspace.Toolbar>
@@ -143,10 +116,12 @@ export function StudioShell() {
   }
 
   return (
-    <UploadDockProvider>
-      <StudioFrame />
-      <UploadDialog />
-      <UploadWidget />
-    </UploadDockProvider>
+    <ActiveChannelProvider>
+      <UploadDockProvider>
+        <StudioFrame />
+        <UploadDialog />
+        <UploadWidget />
+      </UploadDockProvider>
+    </ActiveChannelProvider>
   );
 }

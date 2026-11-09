@@ -118,9 +118,9 @@ export class ChannelMemberService {
     const byId = new Map(owners.value.map((channel) => [channel.id, channel]));
 
     return ok({
-      items: held.value.flatMap(({ channelId, role }): ChannelMembershipView[] => {
+      items: held.value.flatMap(({ channelId, ownerId, role }): ChannelMembershipView[] => {
         const channel = byId.get(channelId);
-        return channel ? [{ channelId, role, channel: profileOf(channel) }] : [];
+        return channel ? [{ channelId, ownerId, role, channel: profileOf(channel) }] : [];
       }),
     });
   }
