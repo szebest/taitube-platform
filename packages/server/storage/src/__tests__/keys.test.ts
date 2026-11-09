@@ -5,6 +5,9 @@ import {
   captionsPrefix,
   captionsTmpPrefix,
   channelImageKey,
+  channelImageUploadKey,
+  channelImageVariantKey,
+  channelImageVersionPrefix,
   channelImagePrefix,
   chunkKey,
   chunkPrefix,
@@ -91,6 +94,18 @@ describe('packages/storage: object keys', () => {
     expect(key.startsWith(channelImagePrefix('chan-1', 'avatar'))).toBe(true);
     expect(key.startsWith(channelImagePrefix('chan-1', 'banner'))).toBe(false);
     expect(key.startsWith(channelImagePrefix('chan-10', 'avatar'))).toBe(false);
+  });
+
+  it('keeps the raw upload apart from its variants, one prefix per version', () => {
+    const variant = channelImageVariantKey('chan-1', 'banner', 'desktop-1280', 3);
+
+    expect(channelImageUploadKey('chan-1', 'banner', 'up-1')).toBe(
+      'channel-images/chan-1/banner/up-1'
+    );
+    expect(variant).toBe('channels/chan-1/banner/v3/desktop-1280.webp');
+    expect(variant.startsWith(channelImageVersionPrefix('chan-1', 'banner', 3))).toBe(true);
+    expect(variant.startsWith(channelImageVersionPrefix('chan-1', 'banner', 30))).toBe(false);
+    expect(variant.startsWith(channelImagePrefix('chan-1', 'banner'))).toBe(true);
   });
 
   it('keeps everything a broadcast writes under its live prefix, an epoch apart', () => {

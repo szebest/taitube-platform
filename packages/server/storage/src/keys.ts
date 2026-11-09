@@ -107,6 +107,29 @@ export function channelImageKey(channelId: string, kind: string, id: string, ext
   return `${channelImagePrefix(channelId, kind)}${id}.${ext}`;
 }
 
+/** Raw bucket: the file a creator uploaded for an avatar or banner, until the job has cut its variants. */
+export function channelImageUploadKey(channelId: string, kind: string, uploadId: string): string {
+  return `channel-images/${channelId}/${kind}/${uploadId}`;
+}
+
+/** Public bucket: every variant of one version of an avatar or banner, so a version is purged by its prefix. */
+export function channelImageVersionPrefix(
+  channelId: string,
+  kind: string,
+  version: number
+): string {
+  return `${channelImagePrefix(channelId, kind)}v${version}/`;
+}
+
+export function channelImageVariantKey(
+  channelId: string,
+  kind: string,
+  variant: string,
+  version: number
+): string {
+  return `${channelImageVersionPrefix(channelId, kind, version)}${variant}.webp`;
+}
+
 /** Drops what can carry a credential: the query (a presigned signature) and the user info. */
 export function sanitizeStorageUrl(url: string): string {
   if (!URL.canParse(url)) return url;
