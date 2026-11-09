@@ -1,4 +1,4 @@
-import type { RoleWrite } from '@vp/core/repositories';
+import type { NewSystemLine, RoleWrite } from '@vp/core/repositories';
 import { type BuiltInRoleKey, ROLE_EXPIRY_MS, type RoleExpiry, type RoomRole } from '@vp/domain';
 import { decideRoleAssign, decideRoleRevoke } from '@vp/domain-rules';
 import {
@@ -14,6 +14,7 @@ import type { WatchPartyDeps } from './watch-party-deps';
 import { actingInRoom, resolveTarget, roleOf } from './watch-party-member-targets';
 import {
   afterCommit,
+  announceLine,
   announceMemberRoles,
   appliedOrRefused,
   logChange,
@@ -77,11 +78,16 @@ export function assignMemberRole(
               targetKey: memberKey,
               detail: role.name,
             } as const;
+            const stored = systemLineFor(deps, context.room, line);
             const written = await deps.repositories.watchPartyRoles.assign(
               { roomId, memberKey, roleId, grantedBy: actorKey, expiresAt, createdAt: at },
-              { line: systemLineFor(deps, context.room, line), at }
+              { line: stored, at }
             );
-            return changed(deps, { roomId, actorKey, memberKey, action: 'role.assign' }, written);
+            return changed(
+              deps,
+              { roomId, actorKey, memberKey, action: 'role.assign', line: stored },
+              written
+            );
           })
         );
       })
@@ -109,16 +115,21 @@ export function revokeMemberRole(deps: WatchPartyDeps, input: RoleOnMember) {
               targetKey: memberKey,
               detail: role.name,
             } as const;
+            const stored = systemLineFor(deps, context.room, line);
             const written = await deps.repositories.watchPartyRoles.revoke(
               roomId,
               memberKey,
               roleId,
               {
-                line: systemLineFor(deps, context.room, line),
+                line: stored,
                 at: deps.now(),
               }
             );
-            return changed(deps, { roomId, actorKey, memberKey, action: 'role.revoke' }, written);
+            return changed(
+              deps,
+              { roomId, actorKey, memberKey, action: 'role.revoke', line: stored },
+              written
+            );
           })
         );
       })
@@ -128,13 +139,20 @@ export function revokeMemberRole(deps: WatchPartyDeps, input: RoleOnMember) {
 
 async function changed(
   deps: WatchPartyDeps,
-  change: { roomId: string; actorKey: string; memberKey: string; action: string },
+  change: {
+    roomId: string;
+    actorKey: string;
+    memberKey: string;
+    action: string;
+    line: NewSystemLine;
+  },
   written: Result<RoleWrite<unknown>, DatabaseUnavailable>
 ) {
-  const { roomId, actorKey, memberKey, action } = change;
+  const { roomId, actorKey, memberKey, action, line } = change;
   const applied = andThen(written, (write) => appliedOrRefused(write, roomId, roomId));
   return afterCommit(applied, async ({ rolesVersion }) => {
     logChange(deps, { roomId, actorKey, action, targetKey: memberKey });
+    await announceLine(deps, roomId, line);
     await announceMemberRoles(deps, roomId, memberKey, rolesVersion);
   });
 }

@@ -1,5 +1,6 @@
 import type { WatchPartyServerFrame } from '@vp/api-contracts';
 import { parseMemberKey, type RosterEntry } from '@vp/domain';
+import { MS_PER_SECOND } from '@vp/domain/time';
 import { canInRoom } from '@vp/permissions';
 import { isErr, ok, type Result } from '@vp/result';
 import type { PartyCaller } from './party-caller';
@@ -39,6 +40,7 @@ export interface FrameReply {
 /** One member's socket on this pod: what it hears, what it may send, and its roster entry. */
 export class RoomConnection {
   private superseded = false;
+  private closed = false;
   private readonly keepalive: ReturnType<typeof setInterval>;
 
   private constructor(
@@ -53,6 +55,7 @@ export class RoomConnection {
     private readonly leaveHub: () => void
   ) {
     const { presence, config, now } = deps;
+    deps.metrics.watchPartySockets.inc();
     this.keepalive = setInterval(
       () =>
         void this.keep(
@@ -111,10 +114,14 @@ export class RoomConnection {
     return ok({ connection, sentLines: lines.map((line) => line.id) });
   }
 
-  deliver({ memberKey, audience, except, frame }: RoomEnvelope): void {
+  deliver({ memberKey, audience, except, sentAt, frame }: RoomEnvelope): void {
     if (except === this.id) return;
     if (memberKey !== null && memberKey !== this.memberKey) return;
     if (audience !== null && !canInRoom(this.context.ability, audience)) return;
+    if (sentAt !== undefined) {
+      const lateMs = Math.max(0, this.deps.now().getTime() - sentAt);
+      this.deps.metrics.watchPartyFanoutSeconds.observe(lateMs / MS_PER_SECOND);
+    }
 
     if (frame.type === 'superseded') this.superseded = true;
     if (frame.type === 'roster.patch') {
@@ -148,6 +155,9 @@ export class RoomConnection {
 
   /** The seat stays the member's on a superseded socket's close: the newer one holds it. */
   leave(): void {
+    if (this.closed) return;
+    this.closed = true;
+    this.deps.metrics.watchPartySockets.dec();
     clearInterval(this.keepalive);
     this.leaveHub();
     if (this.superseded) return;

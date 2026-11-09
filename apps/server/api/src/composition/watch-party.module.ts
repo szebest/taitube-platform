@@ -2,6 +2,7 @@ import { createHash, createHmac, randomBytes } from 'node:crypto';
 import { Adapters } from '@vp/adapters/composition';
 import type { Container } from '@vp/composition';
 import { WATCH_PARTY_WILDCARD_CHANNEL, roomIdOfWatchParty } from '@vp/events';
+import { createWatchPartyMetrics } from '@vp/observability';
 import { uuidv7 } from 'uuidv7';
 import {
   BufferingWait,
@@ -62,14 +63,18 @@ export function registerWatchPartyServices(c: Container): Container {
       webUrl: config.webUrl,
       cdn: config.cdn,
       logger: c.get(Services.Logger),
+      metrics: c.get(Services.WatchPartyMetrics),
       now: () => new Date(),
     };
   };
 
   return c
+    .provide(Services.WatchPartyMetrics, (c) =>
+      createWatchPartyMetrics(c.get(Adapters.Metrics).registry)
+    )
     .provide(
       Services.WatchPartyBroadcaster,
-      (c) => new WatchPartyBroadcaster(c.get(Adapters.Cache))
+      (c) => new WatchPartyBroadcaster(c.get(Adapters.Cache), Date.now)
     )
     .provide(
       Services.WatchPartyContextLoader,

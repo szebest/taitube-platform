@@ -5,7 +5,7 @@ import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { sendInvites } from '../watch-party-invite-sending';
 import { seatGuest, seatUser, ROOM_ID, seedRoom } from './watch-party-moderation-fixture';
-import { MEMBER, OTHER, OWNER, watchPartyTestDeps } from './watch-party-test-deps';
+import { MEMBER, OTHER, OWNER, reading, watchPartyTestDeps } from './watch-party-test-deps';
 
 const EXTRA = [
   { id: '00000000-0000-7000-8000-00000000f010', role: 'USER' as const },
@@ -186,5 +186,8 @@ describe('sendInvites', () => {
       folded: [{ userId: OTHER.id }],
       refused: [{ userId: EXTRA[0]?.id }],
     });
+    expect(await reading(party.metrics.watchPartyInvitesTotal, { outcome: 'folded' })).toBe(1);
+    expect(await reading(party.metrics.watchPartyInvitesTotal, { outcome: 'refused' })).toBe(1);
+    expect(await reading(party.metrics.watchPartyInvitesTotal, { outcome: 'sent' })).toBe(0);
   });
 });

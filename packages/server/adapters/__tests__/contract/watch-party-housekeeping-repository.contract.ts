@@ -68,6 +68,16 @@ export function describeWatchPartyHousekeepingRepositoryContract(
       });
     });
 
+    describe('databaseClock', () => {
+      it('answers the time the database holds now', async () => {
+        const before = Date.now();
+
+        const clock = expectOk(await housekeeping().databaseClock());
+
+        expect(Math.abs(clock.getTime() - before)).toBeLessThan(60_000);
+      });
+    });
+
     describe('purgeClosedBefore', () => {
       it('removes the rooms closed before the cutoff with their lines, keeping open and newer ones', async () => {
         await closeAt(OTHER_ROOM_ID, new Date(AT.getTime() - 40 * DAY_MS));

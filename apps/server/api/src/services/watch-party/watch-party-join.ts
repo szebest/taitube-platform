@@ -27,7 +27,7 @@ import { holdsJoinWhenFull, isRoomMember, joinCapacity } from './watch-party-adm
 import type { RoomContext } from './watch-party-context';
 import type { WatchPartyDeps } from './watch-party-deps';
 import { claimGrant, findGrant, type Grant, joinGrantOf, settleGrant } from './watch-party-grants';
-import { systemLineFor } from './watch-party-moderation-effects';
+import { announceLine, systemLineFor } from './watch-party-moderation-effects';
 import { resolvePeople } from './watch-party-names';
 import { checkPassword } from './watch-party-passwords';
 import {
@@ -36,6 +36,8 @@ import {
   toNewSeat,
   type Unauthenticated,
 } from './watch-party-principals';
+import { flushRoster } from './watch-party-roster-feed';
+import { countJoin, inSpan } from './watch-party-telemetry';
 import { heldRoleIds, type MembershipView, toMembershipView } from './watch-party-views';
 
 export type JoinFailure =
@@ -162,9 +164,26 @@ export async function joinRoom(
 ): Promise<Result<{ membership: MembershipView }, JoinFailure>> {
   const principal = requirePrincipal(caller, 'join a watch party');
   if (isErr(principal)) return principal;
+  const { kind } = principal.value;
+  return countJoin(
+    deps,
+    kind,
+    await inSpan('join', { 'room.id': roomId, 'watch_party.kind': kind }, () =>
+      attemptJoin(deps, roomId, caller, body, principal.value)
+    )
+  );
+}
+
+async function attemptJoin(
+  deps: WatchPartyDeps,
+  roomId: string,
+  caller: PartyCaller,
+  body: JoinBody,
+  principal: PartyPrincipal
+): Promise<Result<{ membership: MembershipView }, JoinFailure>> {
   const loaded = await deps.context.load(roomId, caller);
   if (isErr(loaded)) return loaded;
-  const state = await stateOf(deps, loaded.value, principal.value, body);
+  const state = await stateOf(deps, loaded.value, principal, body);
   if (isErr(state)) return state;
 
   const granted = await decide(deps, state.value, body);
@@ -186,6 +205,14 @@ async function seatCaller(
   if (isErr(claimed)) return claimed;
 
   const rejoin = via === null && context.seat !== null;
+  const line = rejoin
+    ? null
+    : systemLineFor(deps, room, {
+        event: 'joined',
+        actorKey: memberKey,
+        targetKey: null,
+        detail: null,
+      });
   const seat = await deps.repositories.watchPartyMembers.join(
     toNewSeat({
       roomId: room.id,
@@ -194,16 +221,10 @@ async function seatCaller(
       joinedAt: at,
       ipHash: ipHashOf(caller),
     }),
-    rejoin
-      ? null
-      : systemLineFor(deps, room, {
-          event: 'joined',
-          actorKey: memberKey,
-          targetKey: null,
-          detail: null,
-        })
+    line
   );
   if (isErr(seat)) return seat;
+  if (line !== null) await announceLine(deps, room.id, line);
   const settled = await settleGrant(deps, via === 'invite' ? grant : { type: 'none' });
   if (isErr(settled)) return settled;
 
@@ -244,17 +265,17 @@ export async function leaveRoom(
   const { room, seat, memberKey } = loaded.value;
   if (seat === null || memberKey === null) return err(watchPartyNotFound(roomId));
 
-  const left = await deps.repositories.watchPartyMembers.leave(
-    roomId,
-    memberKey,
-    systemLineFor(deps, room, {
-      event: 'left',
-      actorKey: memberKey,
-      targetKey: null,
-      detail: null,
-    }),
-    deps.now()
-  );
+  const line = systemLineFor(deps, room, {
+    event: 'left',
+    actorKey: memberKey,
+    targetKey: null,
+    detail: null,
+  });
+  const left = await deps.repositories.watchPartyMembers.leave(roomId, memberKey, line, deps.now());
   if (isErr(left)) return left;
-  return deps.presence.leave(roomId, memberKey);
+  const gone = await deps.presence.leave(roomId, memberKey);
+  if (isErr(gone)) return gone;
+  await announceLine(deps, roomId, line);
+  await flushRoster(deps)(roomId, [{ type: 'removal', memberKey }]);
+  return ok();
 }

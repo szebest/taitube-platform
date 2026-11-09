@@ -30,6 +30,9 @@ describe('ban and unban', () => {
     expect((await seatOf(party, GUEST_KEY))?.leftAt).not.toBeNull();
     expect(frames()).toEqual([
       expect.objectContaining({ memberKey: GUEST_KEY, frame: { type: 'kicked' } }),
+      expect.objectContaining({
+        frame: expect.objectContaining({ type: 'roster.patch', removals: [GUEST_KEY] }),
+      }),
     ]);
     expect(await linesOf(party)).toEqual([
       { event: 'banned', actorKey: keyOf(OTHER), targetKey: GUEST_KEY, detail: null },
@@ -142,6 +145,7 @@ describe('transferOwner', () => {
     expect(await linesOf(party)).toEqual([
       { event: 'owner_changed', actorKey: keyOf(OWNER), targetKey: keyOf(MEMBER), detail: null },
     ]);
+    expect(party.systemLines()).toEqual(await linesOf(party));
   });
 
   it.each([

@@ -57,6 +57,7 @@ describe('the room clock’s commits', () => {
       await party.repositories.watchPartyMessages.listAfter(ROOM_ID, null, 10)
     );
     expect(lines.at(-1)?.system).toMatchObject({ event: 'now_playing', detail: VIDEO_B });
+    expect(party.systemLines().at(-1)).toMatchObject({ event: 'now_playing', detail: VIDEO_B });
   });
 
   it('finishes the room once the queue has run out', async () => {

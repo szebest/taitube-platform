@@ -9,7 +9,7 @@ import {
 import type { DatabaseUnavailable } from '@vp/errors';
 import { isErr, type Result } from '@vp/result';
 import type { WatchPartyDeps } from './watch-party-deps';
-import { announce } from './watch-party-moderation-effects';
+import { announce, announceLine } from './watch-party-moderation-effects';
 import { presentQueue } from './watch-party-queue-views';
 
 type PlaybackDeps = Pick<
@@ -60,6 +60,7 @@ export async function commitState(
 
   const committed = written.value.room;
   await announce(deps, room.id, stateFrame(committed, by, reason));
+  if (line) await announceLine(deps, room.id, line);
   if (committed.phase === 'playing' && committed.playback.anchorAt > at.getTime()) {
     await announce(deps, room.id, { type: 'countdown', startsAt: committed.playback.anchorAt });
   }

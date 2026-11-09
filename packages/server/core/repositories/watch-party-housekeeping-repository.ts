@@ -9,6 +9,8 @@ export interface WatchPartyHousekeepingRepositoryPort {
     afterId: string | null,
     limit: number
   ): Promise<Result<WatchPartyRoom[], DatabaseUnavailable>>;
+  /** The database's own clock, what pod clocks are measured against. */
+  databaseClock(): Promise<Result<Date, DatabaseUnavailable>>;
   /** Rooms closed before `cutoff`, with everything that belongs to them; the count removed. */
   purgeClosedBefore(cutoff: Date): Promise<Result<number, DatabaseUnavailable>>;
   /** Chat and system lines sent before `cutoff`, in every room; the count removed. */

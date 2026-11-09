@@ -16,9 +16,10 @@ import { joinCapacity } from './watch-party-admission';
 import { consumeBudget, type RateLimited } from './watch-party-budgets';
 import type { WatchPartyDeps } from './watch-party-deps';
 import { claimGrant, findGrant, joinGrantOf } from './watch-party-grants';
-import { systemLineFor } from './watch-party-moderation-effects';
+import { announceLine, systemLineFor } from './watch-party-moderation-effects';
 import { toNewSeat } from './watch-party-principals';
 import { upgradeSeat } from './watch-party-seat-upgrade';
+import { countJoin, inSpan } from './watch-party-telemetry';
 import { type MembershipView, toMembershipView } from './watch-party-views';
 
 export interface GuestJoinBody {
@@ -56,6 +57,20 @@ export class WatchPartyGuestService {
   constructor(private readonly deps: WatchPartyDeps) {}
 
   async join(
+    roomId: string,
+    caller: PartyCaller,
+    body: GuestJoinBody | null | undefined
+  ): Promise<Result<GuestJoined, GuestJoinFailure>> {
+    return countJoin(
+      this.deps,
+      'guest',
+      await inSpan('join', { 'room.id': roomId, 'watch_party.kind': 'guest' }, () =>
+        this.attemptJoin(roomId, caller, body)
+      )
+    );
+  }
+
+  private async attemptJoin(
     roomId: string,
     caller: PartyCaller,
     body: GuestJoinBody | null | undefined
@@ -124,6 +139,12 @@ export class WatchPartyGuestService {
     if (isErr(issued)) return issued;
 
     const at = now();
+    const line = systemLineFor(deps, room, {
+      event: 'joined',
+      actorKey: memberKey,
+      targetKey: null,
+      detail: null,
+    });
     const seat = await repositories.watchPartyMembers.join(
       toNewSeat({
         roomId,
@@ -132,14 +153,10 @@ export class WatchPartyGuestService {
         joinedAt: at,
         ipHash,
       }),
-      systemLineFor(deps, room, {
-        event: 'joined',
-        actorKey: memberKey,
-        targetKey: null,
-        detail: null,
-      })
+      line
     );
     if (isErr(seat)) return seat;
+    await announceLine(deps, roomId, line);
 
     const { effective } = deps.context.contextOf(room, roles, assignments, seat.value, {
       user: null,
@@ -156,6 +173,8 @@ export class WatchPartyGuestService {
   }
 
   upgrade(roomId: string, caller: PartyCaller, credential: string | null) {
-    return upgradeSeat(this.deps, roomId, caller, credential);
+    return inSpan('seat_upgrade', { 'room.id': roomId }, () =>
+      upgradeSeat(this.deps, roomId, caller, credential)
+    );
   }
 }

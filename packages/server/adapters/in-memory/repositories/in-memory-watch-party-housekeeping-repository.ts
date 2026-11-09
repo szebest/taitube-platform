@@ -18,6 +18,10 @@ export class InMemoryWatchPartyHousekeepingRepository implements WatchPartyHouse
     return ok(page.map((room) => ({ ...room, playback: { ...room.playback } })));
   }
 
+  async databaseClock(): Promise<Result<Date, DatabaseUnavailable>> {
+    return ok(new Date());
+  }
+
   async purgeClosedBefore(cutoff: Date): Promise<Result<number, DatabaseUnavailable>> {
     const gone = new Set(
       [...this.store.rooms.values()]

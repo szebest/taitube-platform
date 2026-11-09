@@ -3,7 +3,7 @@ import * as schema from '@vp/db';
 import type { WatchPartyRoom } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { fromPromise, map, type Result } from '@vp/result';
-import { and, asc, eq, gt, lt } from 'drizzle-orm';
+import { and, asc, eq, gt, lt, sql } from 'drizzle-orm';
 import type { PostgresDatabase } from './types';
 
 const { watchPartyRooms: rooms, watchPartyMessages: messages } = schema;
@@ -32,6 +32,17 @@ export class PostgresWatchPartyHousekeepingRepository implements WatchPartyHouse
     return map(rows, (found) =>
       found.map(({ trendScore: _trendScore, searchText: _searchText, ...room }) => room)
     );
+  }
+
+  async databaseClock(): Promise<Result<Date, DatabaseUnavailable>> {
+    const rows = await fromPromise(
+      () =>
+        this.db
+          .select({ epochMs: sql<string>`(extract(epoch from clock_timestamp()) * 1000)::text` })
+          .from(sql`(values (1)) as one(n)`),
+      databaseUnavailable.during('readDatabaseClock')
+    );
+    return map(rows, ([row]) => new Date(Number(row?.epochMs)));
   }
 
   async purgeClosedBefore(cutoff: Date): Promise<Result<number, DatabaseUnavailable>> {

@@ -248,8 +248,8 @@ describe('live role changes', () => {
     });
 
     expect(res.statusCode).toBe(200);
-    expect(frames).toHaveLength(1);
-    expect(frames[0]).toMatchObject({ type: 'roles', rolesVersion: before + 1 });
+    expect(frames.map(({ type }) => type)).toEqual(['chat.message', 'roles']);
+    expect(frames[1]).toMatchObject({ type: 'roles', rolesVersion: before + 1 });
     expect(res.json().permissions).not.toContain('playback.control');
     expect((await app.roles()).rolesVersion).toBe(before + 1);
   });

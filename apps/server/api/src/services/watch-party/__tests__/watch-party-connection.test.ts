@@ -5,7 +5,7 @@ import type { RoomEnvelope } from '../watch-party-broadcaster';
 import { WatchPartySocketService } from '../watch-party-socket-service';
 import { GUEST_KEY, keyOf, ROOM_ID } from './watch-party-moderation-fixture';
 import { drainMicrotasks, socketRoom } from './watch-party-socket-fixture';
-import { MEMBER, OWNER } from './watch-party-test-deps';
+import { MEMBER, OWNER, reading } from './watch-party-test-deps';
 
 const EVERYONE = { memberKey: null, audience: null, except: null } as const;
 const COUNTDOWN: WatchPartyServerFrame = { type: 'countdown', startsAt: 1 };
@@ -109,6 +109,19 @@ describe('RoomConnection', () => {
     connection.deliver({ ...EVERYONE, memberKey: account, frame: COUNTDOWN });
 
     expect(sent.map(({ type }) => type)).toEqual(['you', 'countdown']);
+  });
+
+  it('counts the socket while it is open and the delay of each frame it hears', async () => {
+    const { party, connection } = await connected();
+    const { metrics, clock } = party;
+    expect(await reading(metrics.watchPartySockets)).toBe(1);
+
+    connection.deliver({ ...EVERYONE, sentAt: clock.nowMs - 40, frame: COUNTDOWN });
+    connection.leave();
+    connection.leave();
+
+    expect(await reading(metrics.watchPartyFanoutSeconds)).toBeGreaterThan(0);
+    expect(await reading(metrics.watchPartySockets)).toBe(0);
   });
 
   it.each([

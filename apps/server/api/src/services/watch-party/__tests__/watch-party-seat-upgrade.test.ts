@@ -3,7 +3,7 @@ import { expectErr, expectOk } from '@vp/testing/result';
 import { upgradeSeat } from '../watch-party-seat-upgrade';
 import { assignRole, banKey } from './watch-party-access-fixture';
 import { guestJoined, setUpGuests } from './watch-party-guest-fixture';
-import { GUEST_IP, MEMBER, OTHER, OWNER } from './watch-party-test-deps';
+import { GUEST_IP, MEMBER, OTHER, OWNER, reading } from './watch-party-test-deps';
 
 describe('apps/server/api/services: upgradeSeat', () => {
   async function guestWithSession() {
@@ -27,6 +27,7 @@ describe('apps/server/api/services: upgradeSeat', () => {
       joinedVia: 'link',
     });
     expect(membership.permissions).toContain('chat.post');
+    expect(await reading(world.metrics.watchPartySeatUpgradesTotal, { to: 'user' })).toBe(1);
     expect((await world.seated()).map(({ memberKey }) => memberKey)).toEqual([
       `user:${OWNER.id}`,
       `user:${MEMBER.id}`,

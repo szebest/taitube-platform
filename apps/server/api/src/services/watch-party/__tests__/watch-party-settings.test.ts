@@ -60,7 +60,7 @@ describe('apps/server/api/services: updateRoom', () => {
   });
 
   it('writes a settings line and tells every socket the new room', async () => {
-    const { update, repositories, frames, room, log } = await setUpSettings();
+    const { update, repositories, frames, systemLines, room, log } = await setUpSettings();
 
     const view = expectOk(await update({ name: 'Renamed' }));
 
@@ -69,6 +69,7 @@ describe('apps/server/api/services: updateRoom', () => {
     expect(frames()).toEqual([
       expect.objectContaining({ memberKey: null, frame: { type: 'settings', room: view } }),
     ]);
+    expect(systemLines().map((line) => line?.event)).toEqual(['settings_changed']);
     expect(log.lines()).toContainEqual(
       expect.objectContaining({ roomId: room.id, actorKey: OWNER_KEY, action: 'settings' })
     );

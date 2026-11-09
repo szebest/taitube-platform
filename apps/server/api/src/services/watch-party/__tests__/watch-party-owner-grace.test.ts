@@ -62,6 +62,9 @@ describe('the owner’s grace', () => {
     expect(party.published('owner')).toEqual([
       expect.objectContaining({ memberKey: keyOf(OTHER) }),
     ]);
+    expect(party.systemLines()).toEqual([
+      expect.objectContaining({ event: 'owner_changed', targetKey: keyOf(OTHER) }),
+    ]);
     const lines = expectOk(
       await party.repositories.watchPartyMessages.listAfter(ROOM_ID, null, 50)
     );

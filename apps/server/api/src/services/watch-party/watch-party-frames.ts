@@ -3,7 +3,8 @@ import {
   WatchPartyClientFrameSchema,
   type WatchPartyServerFrame,
 } from '@vp/api-contracts';
-import type { RosterEntry } from '@vp/domain';
+import { parseMemberKey, type RosterEntry } from '@vp/domain';
+import { MS_PER_SECOND } from '@vp/domain/time';
 import type { WatchPartyAbility } from '@vp/permissions';
 import { assertNever, err, isErr, map, ok, parseJson, type Result } from '@vp/result';
 import { type InvalidField, invalidField } from '@vp/validation';
@@ -12,6 +13,7 @@ import { pinChat, removeChat, type SendFailure, sendChat } from './watch-party-c
 import { type CommandFailure, runCommand } from './watch-party-commands';
 import { react, requestPlayback, type SignalFailure, voteSkip } from './watch-party-signals';
 import type { RoomSocketDeps } from './watch-party-socket-service';
+import { countCommand, countDenial, inSpan } from './watch-party-telemetry';
 
 type Unreadable = InvalidField<{ reason: 'unreadable' }>;
 
@@ -47,6 +49,18 @@ export async function answerFrame(
   sender: FrameSender,
   frame: WatchPartyClientFrame
 ): Promise<Result<WatchPartyServerFrame, FrameFailure>> {
+  const answered = await answer(deps, sender, frame);
+  if (isErr(answered)) {
+    countDenial(deps, parseMemberKey(sender.memberKey)?.kind ?? 'unknown', answered.error);
+  }
+  return answered;
+}
+
+async function answer(
+  deps: RoomSocketDeps,
+  sender: FrameSender,
+  frame: WatchPartyClientFrame
+): Promise<Result<WatchPartyServerFrame, FrameFailure>> {
   const { roomId, caller, memberKey } = sender;
   const ack = (): WatchPartyServerFrame => ({ type: 'ack', ref: frame.ref });
   const patched = (change: Partial<RosterEntry>) => {
@@ -63,7 +77,23 @@ export async function answerFrame(
     case 'next':
     case 'start':
     case 'ended':
-      return map(await runCommand(deps, roomId, caller, frame, sender.direct), ack);
+      return map(
+        countCommand(
+          deps,
+          frame.type,
+          await inSpan(
+            'command',
+            {
+              'room.id': roomId,
+              'watch_party.action': frame.type,
+              'watch_party.playback_version': frame.version,
+              'watch_party.roles_version': frame.rolesVersion,
+            },
+            () => runCommand(deps, roomId, caller, frame, sender.direct)
+          )
+        ),
+        ack
+      );
     case 'ready':
       return patched({ ready: frame.ready });
     case 'away':
@@ -76,8 +106,14 @@ export async function answerFrame(
       return map(await voteSkip(deps, roomId, caller, frame.itemId), ack);
     case 'request':
       return map(await requestPlayback(deps, roomId, caller, frame), ack);
-    case 'chat.send':
-      return map(await sendChat(deps, roomId, caller, frame.message), ack);
+    case 'chat.send': {
+      const sent = await sendChat(deps, roomId, caller, frame.message);
+      deps.metrics.watchPartyChatMessagesTotal.inc({
+        source: 'app',
+        outcome: sent.ok ? 'sent' : 'refused',
+      });
+      return map(sent, ack);
+    }
     case 'chat.remove':
       return map(await removeChat(deps, roomId, caller, frame.id), ack);
     case 'chat.pin':
@@ -93,6 +129,8 @@ export async function answerFrame(
       return map(reacted, ack);
     }
     case 'stats':
+      deps.metrics.watchPartyDriftSeconds.observe(frame.driftMs / MS_PER_SECOND);
+      deps.metrics.watchPartyHardSeeksTotal.inc(frame.hardSeeks);
       return ok(ack());
     default:
       return assertNever(frame, 'WatchPartyClientFrame');

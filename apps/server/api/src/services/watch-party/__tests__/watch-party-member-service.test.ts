@@ -19,7 +19,7 @@ import { ANONYMOUS, MEMBER, MODERATOR, OTHER, OWNER, userCaller } from './watch-
 describe('kick', () => {
   it('takes the seat, clears presence, tells that member alone and writes the line', async () => {
     const party = await setUpParty([['moderator', OTHER]]);
-    const { service, presence, frames, log, clock } = party;
+    const { service, presence, frames, systemLines, log, clock } = party;
     const present = { limit: null, nowMs: clock.nowMs, staleBeforeMs: 0 };
     await presence.admit(ROOM_ID, keyOf(MEMBER), present);
 
@@ -30,10 +30,18 @@ describe('kick', () => {
     expect(expectOk(await presence.members(ROOM_ID, 0))).toEqual([]);
     expect(frames()).toEqual([
       expect.objectContaining({ memberKey: keyOf(MEMBER), frame: { type: 'kicked' } }),
+      expect.objectContaining({
+        frame: expect.objectContaining({ type: 'roster.patch', removals: [keyOf(MEMBER)] }),
+      }),
     ]);
-    expect(await linesOf(party)).toEqual([
-      { event: 'kicked', actorKey: keyOf(OTHER), targetKey: keyOf(MEMBER), detail: null },
-    ]);
+    const kickedLine = {
+      event: 'kicked',
+      actorKey: keyOf(OTHER),
+      targetKey: keyOf(MEMBER),
+      detail: null,
+    };
+    expect(await linesOf(party)).toEqual([kickedLine]);
+    expect(systemLines()).toEqual([kickedLine]);
     expect(log.lines()).toEqual([
       expect.objectContaining({
         level: 'info',
@@ -131,9 +139,14 @@ describe('removeGuests', () => {
 
     expect(removed.ok).toBe(true);
     expect(await seatedCount(party)).toBe(SEATED - 1);
-    expect(party.frames().map(({ memberKey }) => memberKey)).toEqual(
-      [GUEST_KEY, 'guest:second-guest-0001'].sort()
-    );
+    const guests = [GUEST_KEY, 'guest:second-guest-0001'].sort();
+    expect(
+      party
+        .frames()
+        .filter(({ frame }) => frame.type === 'kicked')
+        .map(({ memberKey }) => memberKey)
+    ).toEqual(guests);
+    expect(party.frames().at(-1)?.frame).toMatchObject({ type: 'roster.patch', removals: guests });
     expect(await linesOf(party)).toEqual([
       { event: 'kicked', actorKey: keyOf(OTHER), targetKey: null, detail: 'guests' },
     ]);

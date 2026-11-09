@@ -27,7 +27,7 @@ describe('kicking', () => {
 
     expect(res.statusCode).toBe(204);
     expect((await seatOf(app, keyFor('member')))?.leftAt).not.toBeNull();
-    expect(frames).toEqual([{ type: 'kicked' }]);
+    expect(frames.map(({ type }) => type)).toEqual(['chat.message', 'kicked', 'roster.patch']);
     expect(
       expectOk(
         await app.repositories.watchPartyMembers.isBanned(app.roomId, keyFor('member'), null)
@@ -106,7 +106,14 @@ describe('removing guests', () => {
     expect(rest.statusCode).toBe(204);
     expect(await seated(app)).not.toContain(SECOND_GUEST);
     expect(await seated(app)).toContain(keyFor('member'));
-    expect(frames).toEqual([{ type: 'kicked' }, { type: 'kicked' }]);
+    expect(frames.map(({ type }) => type)).toEqual([
+      'chat.message',
+      'kicked',
+      'roster.patch',
+      'chat.message',
+      'kicked',
+      'roster.patch',
+    ]);
   });
 });
 
@@ -163,7 +170,7 @@ describe('transferring ownership', () => {
 
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual({ ownerKey: keyFor('member'), rolesVersion: before + 1 });
-    expect(frames.map(({ type }) => type)).toEqual(['owner', 'member.roles']);
+    expect(frames.map(({ type }) => type)).toEqual(['chat.message', 'owner', 'member.roles']);
     const room = expectOk(await app.repositories.watchPartyRooms.findById(app.roomId));
     expect(room?.ownerKey).toBe(keyFor('member'));
     const held = expectOk(

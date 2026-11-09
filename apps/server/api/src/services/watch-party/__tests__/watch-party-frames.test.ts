@@ -5,7 +5,7 @@ import { expectErr, expectOk } from '@vp/testing/result';
 import { answerFrame, type FrameSender, readFrame } from '../watch-party-frames';
 import { keyOf, ROOM_ID } from './watch-party-moderation-fixture';
 import { socketRoom } from './watch-party-socket-fixture';
-import { MEMBER, userCaller } from './watch-party-test-deps';
+import { MEMBER, OWNER, reading, userCaller } from './watch-party-test-deps';
 
 function senderOf(overrides: Partial<FrameSender> = {}) {
   const direct: WatchPartyServerFrame[] = [];
@@ -84,16 +84,78 @@ describe('room frames', () => {
     expect(start).toHaveBeenCalledTimes(waits);
   });
 
-  it('acknowledges drift stats', async () => {
-    const { socketDeps } = await socketRoom();
+  it('acknowledges drift stats and records the drift and the hard seeks', async () => {
+    const { socketDeps, metrics } = await socketRoom();
 
     const answer = await answerFrame(socketDeps, senderOf().sender, {
       type: 'stats',
       ref: 's',
       driftMs: 120,
-      hardSeeks: 0,
+      hardSeeks: 3,
     });
 
     expect(expectOk(answer)).toEqual({ type: 'ack', ref: 's' });
+    expect(await reading(metrics.watchPartyHardSeeksTotal)).toBe(3);
+    expect(await reading(metrics.watchPartyDriftSeconds)).toBeGreaterThan(0);
+  });
+
+  it.each([
+    { scenario: 'a pause the room accepts', owner: true, version: 0, result: 'applied' },
+    { scenario: 'a pause from stale versions', owner: true, version: 99, result: 'stale' },
+    { scenario: 'a pause without playback.control', owner: false, version: 0, result: 'forbidden' },
+  ])('counts $scenario as $result', async ({ owner, version, result }) => {
+    const party = await socketRoom({ preset: 'public' });
+    await party.play();
+    const room = await party.room();
+    const user = owner ? OWNER : MEMBER;
+    const { sender } = senderOf({
+      caller: userCaller(user),
+      memberKey: keyOf(user),
+    });
+
+    await answerFrame(party.socketDeps, sender, {
+      type: 'pause',
+      positionMs: 1_000,
+      version: version === 0 ? room.playbackVersion : version,
+      rolesVersion: room.rolesVersion,
+    });
+
+    expect(await reading(party.metrics.watchPartyCommandsTotal, { command: 'pause', result })).toBe(
+      1
+    );
+  });
+
+  it('counts a refused permission against the permission and the kind that lacked it', async () => {
+    const party = await socketRoom({ preset: 'public' });
+    const room = await party.room();
+
+    await answerFrame(party.socketDeps, senderOf().sender, {
+      type: 'play',
+      version: room.playbackVersion,
+      rolesVersion: room.rolesVersion,
+    });
+
+    expect(
+      await reading(party.metrics.watchPartyPermissionDenialsTotal, {
+        permission: 'playback.control',
+        kind: 'user',
+      })
+    ).toBe(1);
+  });
+
+  it.each([
+    { text: 'hello', outcome: 'sent' },
+    { text: '   ', outcome: 'refused' },
+  ])('counts a chat line that is $outcome', async ({ text, outcome }) => {
+    const party = await socketRoom();
+
+    await answerFrame(party.socketDeps, senderOf().sender, {
+      type: 'chat.send',
+      message: text,
+    });
+
+    expect(
+      await reading(party.metrics.watchPartyChatMessagesTotal, { source: 'app', outcome })
+    ).toBe(1);
   });
 });

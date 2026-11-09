@@ -27,7 +27,7 @@ export interface InviteOutcome {
   refused: { userId: string }[];
 }
 
-type SendingDeps = Pick<WatchPartyDeps, 'repositories' | 'secrets' | 'now'>;
+type SendingDeps = Pick<WatchPartyDeps, 'repositories' | 'secrets' | 'metrics' | 'now'>;
 
 /** Who is watching, as far as each allows it, frozen into an invite when it is sent. */
 async function watchingSnapshot(
@@ -135,6 +135,9 @@ export async function sendInvites(
     } else {
       outcome.folded.push({ userId: inviteeId });
     }
+  }
+  for (const [name, entries] of Object.entries(outcome)) {
+    deps.metrics.watchPartyInvitesTotal.inc({ outcome: name }, entries.length);
   }
   return ok(outcome);
 }

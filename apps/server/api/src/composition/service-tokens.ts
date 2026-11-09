@@ -1,7 +1,7 @@
 import { token } from '@vp/composition';
 import type { JobQueue } from '@vp/core/ports';
 import type { Logger } from '@vp/logger';
-import type { MetricsServer } from '@vp/observability';
+import type { MetricsServer, WatchPartyMetrics } from '@vp/observability';
 import type { Paginator } from '@vp/pagination';
 import type { FastifyPluginCallback } from 'fastify';
 import type { HistoryPause } from '../services/history-pause';
@@ -208,6 +208,7 @@ export const Services = {
   WatchPartyControlsService: token<WatchPartyControlsService>('WatchPartyControlsService'),
   WatchPartyHub: token<PatternHub<RoomEnvelope>>('WatchPartyHub'),
   WatchPartySweep: token<Poller>('WatchPartySweep'),
+  WatchPartyMetrics: token<WatchPartyMetrics>('WatchPartyMetrics'),
   WatchPartyReactions: token<RoomBatcher<Reaction>>('WatchPartyReactions'),
   WatchPartyRoster: token<RoomBatcher<RosterChange>>('WatchPartyRoster'),
   WatchPartyBuffering: token<BufferingWait>('WatchPartyBuffering'),

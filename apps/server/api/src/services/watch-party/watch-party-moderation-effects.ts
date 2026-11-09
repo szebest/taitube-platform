@@ -17,7 +17,21 @@ import { assertNever, err, ok, type Result } from '@vp/result';
 import type { WatchPartyDeps } from './watch-party-deps';
 import { memberRolesFrame, toRoleView } from './watch-party-role-views';
 
-type Effects = Pick<WatchPartyDeps, 'broadcaster' | 'logger' | 'now' | 'secrets' | 'repositories'>;
+type Effects = Pick<
+  WatchPartyDeps,
+  'broadcaster' | 'logger' | 'metrics' | 'now' | 'secrets' | 'repositories'
+>;
+
+const ROLE_CHANGES = {
+  'role.create': 'create',
+  'role.update': 'update',
+  'role.delete': 'delete',
+  'role.assign': 'assign',
+  'role.revoke': 'revoke',
+  'role.preset': 'preset',
+  'owner.transfer': 'transfer',
+  'owner.grace': 'transfer',
+} as const satisfies Record<string, string>;
 
 export interface ChangeLine {
   readonly event: WatchPartySystemEvent;
@@ -57,10 +71,37 @@ export async function announce(
   }
 }
 
+/** A system line a committed change wrote, out to the sockets now: the store replays it to a reconnect. */
+export async function announceLine(
+  deps: Pick<Effects, 'broadcaster' | 'logger'>,
+  roomId: string,
+  { id, line, videoId, positionMs, createdAt }: NewSystemLine
+): Promise<void> {
+  await announce(deps, roomId, {
+    type: 'chat.message',
+    message: {
+      id,
+      author: null,
+      source: 'app',
+      kind: 'system',
+      body: '',
+      system: line,
+      videoId,
+      positionMs,
+      pinned: false,
+      createdAt: createdAt.toISOString(),
+    },
+  });
+}
+
 export function logChange(
-  { logger }: Pick<Effects, 'logger'>,
+  { logger, metrics }: Pick<Effects, 'logger' | 'metrics'>,
   change: { roomId: string; actorKey: string; action: string; targetKey?: string | null }
 ): void {
+  const roleAction = ROLE_CHANGES[change.action as keyof typeof ROLE_CHANGES];
+  if (roleAction !== undefined) {
+    metrics.watchPartyRoleChangesTotal.inc({ action: roleAction, result: 'applied' });
+  }
   logger.info(
     {
       roomId: change.roomId,

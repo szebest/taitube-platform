@@ -1,14 +1,15 @@
 import { IDLE_CLOSE_MS, type WatchPartyCloseReason, type WatchPartyRoom } from '@vp/domain';
-import { MS_PER_DAY } from '@vp/domain/time';
+import { MS_PER_DAY, MS_PER_SECOND } from '@vp/domain/time';
 import type { CacheUnavailable, DatabaseUnavailable } from '@vp/errors';
 import { isErr, ok, type Result } from '@vp/result';
 import type { WatchPartyDeps } from './watch-party-deps';
 import { announce, logChange } from './watch-party-moderation-effects';
 import { handOverAbsentOwner } from './watch-party-owner-grace';
+import { addToTally, emptyTally, publishTally, type SweepTally } from './watch-party-sweep-gauges';
 
 type SweepDeps = Pick<
   WatchPartyDeps,
-  'repositories' | 'presence' | 'broadcaster' | 'logger' | 'config' | 'now' | 'secrets'
+  'repositories' | 'presence' | 'broadcaster' | 'logger' | 'metrics' | 'config' | 'now' | 'secrets'
 >;
 
 type SweepFailure = DatabaseUnavailable | CacheUnavailable;
@@ -57,8 +58,12 @@ export class WatchPartySweep {
     const { repositories, config, now } = this.deps;
     const at = now();
     const totals = { rooms: 0, closed: 0, handedOver: 0 };
+    const gauges = emptyTally();
     let afterId: string | null = null;
     const seen = new Set<string>();
+
+    const skewed = await this.readSkew(at);
+    if (isErr(skewed)) return skewed;
 
     for (;;) {
       const page = await repositories.watchPartyHousekeeping.listOpen(
@@ -68,7 +73,7 @@ export class WatchPartySweep {
       if (isErr(page)) return page;
       for (const room of page.value) {
         seen.add(room.id);
-        const swept = await this.sweepRoom(room, at);
+        const swept = await this.sweepRoom(room, at, gauges);
         if (isErr(swept)) return swept;
         totals.rooms += 1;
         totals.closed += swept.value === 'closed' ? 1 : 0;
@@ -77,6 +82,7 @@ export class WatchPartySweep {
       afterId = page.value.at(-1)?.id ?? null;
       if (page.value.length < config.sweep.batchSize || afterId === null) break;
     }
+    publishTally(gauges, this.deps.metrics);
     for (const roomId of this.ownerAbsentSince.keys()) {
       if (!seen.has(roomId)) this.ownerAbsentSince.delete(roomId);
     }
@@ -86,9 +92,19 @@ export class WatchPartySweep {
     return ok({ ...totals, ...purged.value });
   }
 
+  private async readSkew(at: Date): Promise<Result<void, DatabaseUnavailable>> {
+    const clock = await this.deps.repositories.watchPartyHousekeeping.databaseClock();
+    if (isErr(clock)) return clock;
+    this.deps.metrics.watchPartyClockSkewSeconds.set(
+      (at.getTime() - clock.value.getTime()) / MS_PER_SECOND
+    );
+    return ok();
+  }
+
   private async sweepRoom(
     room: WatchPartyRoom,
-    at: Date
+    at: Date,
+    gauges: SweepTally
   ): Promise<Result<'kept' | 'closed' | 'handed over', SweepFailure>> {
     const { presence, repositories, config } = this.deps;
     const nowMs = at.getTime();
@@ -100,6 +116,7 @@ export class WatchPartySweep {
       at
     );
     if (isErr(recorded)) return recorded;
+    addToTally(gauges, room, present.value);
 
     if (present.value.length === 0) {
       this.ownerAbsentSince.delete(room.id);

@@ -147,6 +147,7 @@ export async function upgradeSeat(
     action: 'seat upgrade',
     targetKey: pair.guestKey,
   });
+  deps.metrics.watchPartySeatUpgradesTotal.inc({ to: 'user' });
 
   const people = await resolvePeople(
     repositories.channels,

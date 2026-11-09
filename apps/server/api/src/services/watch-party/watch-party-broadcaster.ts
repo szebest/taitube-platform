@@ -18,6 +18,8 @@ export const RoomEnvelopeSchema = z.object({
   memberKey: z.string().nullable(),
   audience: WatchPartyPermissionSchema.nullable(),
   except: z.string().nullable(),
+  /** When the publishing pod sent it, in epoch milliseconds: what the fan-out time is measured from. */
+  sentAt: z.number().optional(),
   frame: WatchPartyServerFrameSchema,
 });
 
@@ -30,10 +32,16 @@ const EVERYONE = { memberKey: null, audience: null, except: null } as const;
  * to the sockets it holds.
  */
 export class WatchPartyBroadcaster {
-  constructor(private readonly cache: Pick<CacheClient, 'publish'>) {}
+  constructor(
+    private readonly cache: Pick<CacheClient, 'publish'>,
+    private readonly now: () => number
+  ) {}
 
   async publish(roomId: string, envelope: RoomEnvelope): Promise<Result<void, CacheUnavailable>> {
-    const sent = await this.cache.publish(watchPartyChannel(roomId), JSON.stringify(envelope));
+    const sent = await this.cache.publish(
+      watchPartyChannel(roomId),
+      JSON.stringify({ ...envelope, sentAt: this.now() })
+    );
     return map(sent, () => undefined);
   }
 

@@ -129,7 +129,7 @@ export async function socketRoom(
   /** Every frame published on the room channel, of one type. */
   const published = <T extends Frame['type']>(type: T) =>
     test
-      .frames()
+      .everyFrame()
       .map(({ frame }) => frame)
       .filter((frame): frame is Extract<Frame, { type: T }> => frame.type === type);
 

@@ -17,7 +17,7 @@ import { andThenAsync, assertNever, err, isErr, ok, type Result } from '@vp/resu
 import type { PartyCaller } from './party-caller';
 import type { RoomContext } from './watch-party-context';
 import type { WatchPartyDeps } from './watch-party-deps';
-import { announce, logChange, systemLineFor } from './watch-party-moderation-effects';
+import { announce, announceLine, logChange, systemLineFor } from './watch-party-moderation-effects';
 import { requirePrincipal, type Unauthenticated } from './watch-party-principals';
 import { checkRoomInput, type InvalidRoomInput } from './watch-party-room-input';
 import { presentRoom } from './watch-party-room-views';
@@ -135,16 +135,17 @@ export async function updateRoom(
     typeof password === 'string' ? await deps.hasher.hash(password) : ok(password);
   if (isErr(passwordHash)) return passwordHash;
 
+  const line = systemLineFor(deps, context.room, {
+    event: 'settings_changed',
+    actorKey,
+    targetKey: null,
+    detail: null,
+  });
   const written = await deps.repositories.watchPartyRooms.updateSettings(
     roomId,
     patchOf(body, checked.value, passwordHash.value),
     body.version,
-    systemLineFor(deps, context.room, {
-      event: 'settings_changed',
-      actorKey,
-      targetKey: null,
-      detail: null,
-    }),
+    line,
     deps.now()
   );
   if (isErr(written)) return written;
@@ -154,6 +155,7 @@ export async function updateRoom(
   const view = await presentRoom(deps, applied.value);
   if (isErr(view)) return view;
   await announce(deps, roomId, { type: 'settings', room: view.value });
+  await announceLine(deps, roomId, line);
   logChange(deps, { roomId, actorKey, action: 'settings' });
   return view;
 }

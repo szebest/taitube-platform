@@ -2,7 +2,15 @@ import { ErrorCodes } from '@vp/errors';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { GUEST_KEY, keyOf, ROOM_ID } from './watch-party-moderation-fixture';
 import { popcorn, setUpRoles, STRANGER } from './watch-party-role-party';
-import { ANONYMOUS, guestCaller, MEMBER, OWNER, userCaller } from './watch-party-test-deps';
+import {
+  ANONYMOUS,
+  guestCaller,
+  MEMBER,
+  OTHER,
+  OWNER,
+  reading,
+  userCaller,
+} from './watch-party-test-deps';
 
 describe('list', () => {
   it('answers every role, highest position first, with both versions', async () => {
@@ -45,7 +53,7 @@ describe('list', () => {
 describe('create', () => {
   it('stores the role below the creator, writes the line, tells the room once and logs it', async () => {
     const setup = await setUpRoles();
-    const { service, owner, frames, lines, log, room } = setup;
+    const { service, owner, frames, systemLines, lines, log, room } = setup;
 
     const created = expectOk(await service.create(ROOM_ID, owner, popcorn));
 
@@ -64,6 +72,7 @@ describe('create', () => {
       },
     ]);
     const rolesVersion = (await room())?.rolesVersion;
+    expect(systemLines().map((line) => line?.event)).toEqual(['roles_changed']);
     expect(frames()).toEqual([
       expect.objectContaining({
         memberKey: null,
@@ -186,5 +195,26 @@ describe('remove', () => {
     );
 
     expect(failure.code).toBe(code);
+  });
+});
+
+describe('role change metrics', () => {
+  it('counts an applied change and a refused escalation against their actions', async () => {
+    const { service, owner, metrics, ids } = await setUpRoles();
+    expectOk(await service.create(ROOM_ID, owner, popcorn));
+    const moderator = userCaller(OTHER);
+    expectOk(await service.assign(ROOM_ID, owner, keyOf(OTHER), ids.moderator, undefined));
+
+    await service.assign(ROOM_ID, moderator, keyOf(MEMBER), ids.cohost, undefined);
+
+    expect(
+      await reading(metrics.watchPartyRoleChangesTotal, { action: 'create', result: 'applied' })
+    ).toBe(1);
+    expect(
+      await reading(metrics.watchPartyRoleChangesTotal, { action: 'assign', result: 'applied' })
+    ).toBe(1);
+    expect(
+      await reading(metrics.watchPartyRoleChangesTotal, { action: 'assign', result: 'escalation' })
+    ).toBe(1);
   });
 });

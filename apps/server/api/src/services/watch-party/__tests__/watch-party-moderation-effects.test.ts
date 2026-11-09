@@ -4,6 +4,7 @@ import { WatchPartyBroadcaster } from '../watch-party-broadcaster';
 import {
   afterCommit,
   announce,
+  announceLine,
   announceMemberRoles,
   appliedOrRefused,
   logChange,
@@ -14,6 +15,42 @@ import { keyOf, ROOM_ID, seatUser, seedRoom, roleIdsOf } from './watch-party-mod
 import { OWNER, START, watchPartyTestDeps } from './watch-party-test-deps';
 
 const MEMBER_KEY = 'user:00000000-0000-7000-8000-00000000f002';
+
+describe('announceLine', () => {
+  it('sends a stored system line to every socket as a chat line with no author', async () => {
+    const { deps, everyFrame } = watchPartyTestDeps();
+    const at = deps.now();
+
+    await announceLine(deps, ROOM_ID, {
+      id: 'line-1',
+      line: { event: 'joined', actorKey: MEMBER_KEY, targetKey: null, detail: null },
+      videoId: null,
+      positionMs: 1_500,
+      createdAt: at,
+    });
+
+    expect(everyFrame()).toEqual([
+      expect.objectContaining({
+        memberKey: null,
+        frame: {
+          type: 'chat.message',
+          message: {
+            id: 'line-1',
+            author: null,
+            source: 'app',
+            kind: 'system',
+            body: '',
+            system: { event: 'joined', actorKey: MEMBER_KEY, targetKey: null, detail: null },
+            videoId: null,
+            positionMs: 1_500,
+            pinned: false,
+            createdAt: at.toISOString(),
+          },
+        },
+      }),
+    ]);
+  });
+});
 
 describe('systemLineFor', () => {
   it.each([
@@ -82,9 +119,10 @@ describe('announce', () => {
 
   it('logs a frame that could not be published instead of failing', async () => {
     const { deps, log } = watchPartyTestDeps();
-    const failing = new WatchPartyBroadcaster({
-      publish: async () => err(cacheUnavailable('publish')),
-    });
+    const failing = new WatchPartyBroadcaster(
+      { publish: async () => err(cacheUnavailable('publish')) },
+      () => 0
+    );
 
     await announce({ ...deps, broadcaster: failing }, ROOM_ID, { type: 'kicked' });
 

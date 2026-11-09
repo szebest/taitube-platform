@@ -2,9 +2,9 @@ import type { WatchPartyRoom } from '@vp/domain';
 import { MS_PER_DAY, MS_PER_MINUTE } from '@vp/domain/time';
 import { expectOk } from '@vp/testing/result';
 import { idleCloseReason, WatchPartySweep } from '../watch-party-sweep';
-import { keyOf, ROOM_ID } from './watch-party-moderation-fixture';
+import { GUEST_KEY, keyOf, ROOM_ID } from './watch-party-moderation-fixture';
 import { socketRoom } from './watch-party-socket-fixture';
-import { MEMBER, OWNER, START } from './watch-party-test-deps';
+import { MEMBER, OWNER, reading, START } from './watch-party-test-deps';
 
 type Party = Awaited<ReturnType<typeof socketRoom>>;
 
@@ -162,5 +162,18 @@ describe('the watch party sweep', () => {
 
     expect(outcome.purgedMessages).toBe(1);
     expect(expectOk(await lines.listAfter(ROOM_ID, null, 10))).toEqual([]);
+  });
+
+  it('sets the rooms by phase, the members present by kind and the clock skew', async () => {
+    const party = await socketRoom();
+    await present(party, keyOf(OWNER), GUEST_KEY);
+
+    expectOk(await sweepOf(party).run());
+
+    const { metrics } = party;
+    expect(await reading(metrics.watchPartyRooms, { phase: 'lobby' })).toBe(1);
+    expect(await reading(metrics.watchPartyPresentMembers, { kind: 'user' })).toBe(1);
+    expect(await reading(metrics.watchPartyPresentMembers, { kind: 'guest' })).toBe(1);
+    expect(await reading(metrics.watchPartyClockSkewSeconds)).not.toBeNaN();
   });
 });

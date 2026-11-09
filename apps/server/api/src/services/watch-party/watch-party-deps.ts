@@ -7,6 +7,7 @@ import type {
 import type { Repositories } from '@vp/core/repositories';
 import type { CdnBase, WatchPartyConfig } from '@vp/env-schema';
 import type { Logger } from '@vp/logger';
+import type { WatchPartyMetrics } from '@vp/observability';
 import type { WatchPartyBroadcaster } from './watch-party-broadcaster';
 import type { WatchPartyContextLoader } from './watch-party-context';
 
@@ -58,5 +59,6 @@ export interface WatchPartyDeps {
   readonly webUrl: string;
   readonly cdn: CdnBase;
   readonly logger: Logger;
+  readonly metrics: WatchPartyMetrics;
   readonly now: () => Date;
 }

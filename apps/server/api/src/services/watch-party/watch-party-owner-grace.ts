@@ -2,13 +2,18 @@ import { effectivePermissions, expectedPositionMs, parseMemberKey } from '@vp/do
 import type { CacheUnavailable, DatabaseUnavailable } from '@vp/errors';
 import { isErr, ok, type Result } from '@vp/result';
 import type { WatchPartyDeps } from './watch-party-deps';
-import { announce, announceMemberRoles, logChange } from './watch-party-moderation-effects';
+import {
+  announce,
+  announceLine,
+  announceMemberRoles,
+  logChange,
+} from './watch-party-moderation-effects';
 
 type HandOver = 'kept' | 'waiting' | 'transferred';
 
 type GraceDeps = Pick<
   WatchPartyDeps,
-  'repositories' | 'presence' | 'broadcaster' | 'logger' | 'config' | 'now' | 'secrets'
+  'repositories' | 'presence' | 'broadcaster' | 'logger' | 'metrics' | 'config' | 'now' | 'secrets'
 >;
 
 /**
@@ -57,18 +62,19 @@ export async function handOverAbsentOwner(
   const cohost = roles.value.find(({ key }) => key === 'cohost');
   if (heir === undefined || cohost === undefined) return ok('waiting');
 
+  const line = {
+    id: deps.secrets.newId(),
+    line: { event: 'owner_changed', actorKey: null, targetKey: heir.memberKey, detail: null },
+    videoId: room.currentVideoId,
+    positionMs: Math.round(expectedPositionMs(room.playback, at.getTime())),
+    createdAt: at,
+  } as const;
   const written = await repositories.watchPartyRooms.transferOwner(roomId, {
     fromKey: room.ownerKey,
     toKey: heir.memberKey,
     expectedRolesVersion: room.rolesVersion,
     cohostRoleId: cohost.id,
-    line: {
-      id: deps.secrets.newId(),
-      line: { event: 'owner_changed', actorKey: null, targetKey: heir.memberKey, detail: null },
-      videoId: room.currentVideoId,
-      positionMs: Math.round(expectedPositionMs(room.playback, at.getTime())),
-      createdAt: at,
-    },
+    line,
     at,
   });
   if (isErr(written)) return written;
@@ -81,6 +87,7 @@ export async function handOverAbsentOwner(
     action: 'owner.grace',
     targetKey: heir.memberKey,
   });
+  await announceLine(deps, roomId, line);
   await announce(deps, roomId, { type: 'owner', memberKey: heir.memberKey, rolesVersion });
   await announceMemberRoles(deps, roomId, room.ownerKey, rolesVersion);
   return ok('transferred');

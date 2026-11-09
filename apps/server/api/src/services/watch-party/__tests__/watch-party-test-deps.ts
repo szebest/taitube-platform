@@ -11,6 +11,7 @@ import type { CreateWatchPartyBody, WatchPartyView } from '@vp/api-contracts';
 import type { PartyGuestSession } from '@vp/core/ports';
 import { type AppConfigOverrides, asCdnBase, inProcessAppConfig } from '@vp/env-schema';
 import { createLogger } from '@vp/logger';
+import { createMetricsRegistry, createWatchPartyMetrics } from '@vp/observability';
 import type { UserContext } from '@vp/permissions';
 import { captureLog } from '@vp/testing/log-capture';
 import { expectOk } from '@vp/testing/result';
@@ -87,6 +88,7 @@ export function watchPartyTestDeps({ config, secrets }: WatchPartyTestOptions = 
   const guestSessions = new InMemoryPartyGuestSessions(() => clock.nowMs);
   const cache = new InMemoryCacheClient();
   const log = captureLog();
+  const metrics = createWatchPartyMetrics(createMetricsRegistry().registry);
 
   const deps: WatchPartyDeps = {
     repositories,
@@ -94,7 +96,7 @@ export function watchPartyTestDeps({ config, secrets }: WatchPartyTestOptions = 
     presence,
     guestSessions,
     hasher: new ScryptPasswordHasher(appConfig.watchParties.scrypt),
-    broadcaster: new WatchPartyBroadcaster(cache),
+    broadcaster: new WatchPartyBroadcaster(cache, () => clock.nowMs),
     context: new WatchPartyContextLoader({ repositories, now }),
     config: appConfig.watchParties,
     secrets: { ...deterministicSecrets(appConfig.watchParties.guestSalt), ...secrets },
@@ -106,16 +108,40 @@ export function watchPartyTestDeps({ config, secrets }: WatchPartyTestOptions = 
       format: 'json',
       destination: log.destination,
     }),
+    metrics,
     now,
   };
 
-  const frames = (): PublishedFrame[] =>
-    cache.publishedMessages.map(({ channel, message }) => ({
-      channel,
-      ...(JSON.parse(message) as RoomEnvelope),
-    }));
+  const everyFrame = (): PublishedFrame[] =>
+    cache.publishedMessages.map(({ channel, message }) => {
+      const { sentAt: _sentAt, ...envelope } = JSON.parse(message) as RoomEnvelope;
+      return { channel, ...envelope };
+    });
 
-  return { deps, repositories, gate, presence, guestSessions, cache, clock, log, frames };
+  const isSystemLine = ({ frame }: PublishedFrame) =>
+    frame.type === 'chat.message' && frame.message.kind === 'system';
+
+  /** What went out on the room channels, the system lines apart: `systemLines()` reads those. */
+  const frames = (): PublishedFrame[] => everyFrame().filter((sent) => !isSystemLine(sent));
+  const systemLines = () =>
+    everyFrame().flatMap((sent) =>
+      sent.frame.type === 'chat.message' && isSystemLine(sent) ? [sent.frame.message.system] : []
+    );
+
+  return {
+    deps,
+    repositories,
+    gate,
+    presence,
+    guestSessions,
+    cache,
+    clock,
+    log,
+    metrics,
+    frames,
+    everyFrame,
+    systemLines,
+  };
 }
 
 export type WatchPartyTest = ReturnType<typeof watchPartyTestDeps>;
@@ -190,4 +216,21 @@ export async function startParty(
   return expectOk(
     await new WatchPartyService(deps).create(userCaller(owner), partyBody(overrides))
   );
+}
+
+/** What a counter or gauge reads for one label set; zero when nothing was recorded. */
+export async function reading(
+  series: {
+    get(): Promise<{
+      values: { value: number; labels: Partial<Record<string, string | number>> }[];
+    }>;
+  },
+  labels: Record<string, string> = {}
+): Promise<number> {
+  const { values } = await series.get();
+  return values
+    .filter((point) =>
+      Object.entries(labels).every(([name, value]) => point.labels[name] === value)
+    )
+    .reduce((sum, point) => sum + point.value, 0);
 }

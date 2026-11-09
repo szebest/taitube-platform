@@ -3,7 +3,7 @@ import { ErrorCodes } from '@vp/errors';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { banKey, fillPresence, GUEST_KEY, seedLink } from './watch-party-access-fixture';
 import { guestJoined, setUpGuests } from './watch-party-guest-fixture';
-import { GUEST_IP } from './watch-party-test-deps';
+import { GUEST_IP, reading } from './watch-party-test-deps';
 
 describe('apps/server/api/services: WatchPartyGuestService.join', () => {
   it('issues a credential and a seat in one step, without handing the credential to the body', async () => {
@@ -19,6 +19,10 @@ describe('apps/server/api/services: WatchPartyGuestService.join', () => {
       permissions: ['voice.join'],
     });
     expect(Object.keys(joined.membership)).not.toContain('credential');
+    expect(
+      await reading(guests.metrics.watchPartyJoinsTotal, { kind: 'guest', outcome: 'joined' })
+    ).toBe(1);
+    expect(guests.systemLines().map((line) => line?.event)).toEqual(['joined']);
     expect(joined.maxAgeSeconds).toBe(guests.deps.config.guestCredentialTtlSeconds);
     expect(joined.expiresAt).toBe(new Date(guests.clock.nowMs + 12 * MS_PER_HOUR).toISOString());
     expect(session).toMatchObject({

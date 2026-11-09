@@ -18,7 +18,7 @@ export interface InviteLinkInput {
 
 type LinkDeps = Pick<
   WatchPartyDeps,
-  'repositories' | 'context' | 'secrets' | 'webUrl' | 'logger' | 'now'
+  'repositories' | 'context' | 'secrets' | 'webUrl' | 'logger' | 'metrics' | 'now'
 >;
 
 function toInviteLinkView(link: WatchPartyInviteLink) {

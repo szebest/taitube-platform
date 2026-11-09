@@ -19,9 +19,11 @@ import {
   announce,
   afterCommit,
   announceMemberRoles,
+  announceLine,
   logChange,
   systemLineFor,
 } from './watch-party-moderation-effects';
+import { flushRoster } from './watch-party-roster-feed';
 
 export type BanInput = z.output<typeof banWatchPartyMember.body>;
 export type TransferInput = z.output<typeof transferWatchPartyOwnership.body>;
@@ -46,25 +48,27 @@ export class WatchPartyMemberService {
             target: subject,
           }),
           async () => {
+            const line = systemLineFor(this.deps, context.room, {
+              event: 'kicked',
+              actorKey,
+              targetKey: memberKey,
+              detail: null,
+            });
             const left = await this.deps.repositories.watchPartyMembers.leave(
               roomId,
               memberKey,
-              systemLineFor(this.deps, context.room, {
-                event: 'kicked',
-                actorKey,
-                targetKey: memberKey,
-                detail: null,
-              }),
+              line,
               this.deps.now()
             );
             return afterCommit(left, async () => {
+              await announceLine(this.deps, roomId, line);
               logChange(this.deps, {
                 roomId,
                 actorKey,
                 action: 'member.kick',
                 targetKey: memberKey,
               });
-              await this.expel(roomId, memberKey);
+              await this.expel(roomId, [memberKey]);
             });
           }
         )
@@ -75,19 +79,21 @@ export class WatchPartyMemberService {
   removeGuests(roomId: string, caller: PartyCaller) {
     return actingInRoom(this.deps.context, roomId, caller, (context, actorKey) =>
       andThenAsync(requireRoomPermission(context.ability, 'members.kick'), async () => {
+        const line = systemLineFor(this.deps, context.room, {
+          event: 'kicked',
+          actorKey,
+          targetKey: null,
+          detail: 'guests',
+        });
         const removed = await this.deps.repositories.watchPartyMembers.removeGuests(
           roomId,
-          systemLineFor(this.deps, context.room, {
-            event: 'kicked',
-            actorKey,
-            targetKey: null,
-            detail: 'guests',
-          }),
+          line,
           this.deps.now()
         );
         return afterCommit(removed, async (guestKeys) => {
+          await announceLine(this.deps, roomId, line);
           logChange(this.deps, { roomId, actorKey, action: 'guests.remove' });
-          await Promise.all(guestKeys.map((guestKey) => this.expel(roomId, guestKey)));
+          await this.expel(roomId, guestKeys);
         });
       })
     );
@@ -106,6 +112,12 @@ export class WatchPartyMemberService {
           }),
           async () => {
             const at = this.deps.now();
+            const line = systemLineFor(this.deps, context.room, {
+              event: 'banned',
+              actorKey,
+              targetKey: memberKey,
+              detail: null,
+            });
             const banned = await this.deps.repositories.watchPartyMembers.ban(
               {
                 roomId,
@@ -115,21 +127,17 @@ export class WatchPartyMemberService {
                 reason: input?.reason ?? null,
                 createdAt: at,
               },
-              systemLineFor(this.deps, context.room, {
-                event: 'banned',
-                actorKey,
-                targetKey: memberKey,
-                detail: null,
-              })
+              line
             );
             return afterCommit(banned, async () => {
+              await announceLine(this.deps, roomId, line);
               logChange(this.deps, {
                 roomId,
                 actorKey,
                 action: 'member.ban',
                 targetKey: memberKey,
               });
-              await this.expel(roomId, memberKey);
+              await this.expel(roomId, [memberKey]);
             });
           }
         )
@@ -204,19 +212,24 @@ export class WatchPartyMemberService {
     const { room, roles } = context;
     const cohost = roles.find(({ key }) => key === 'cohost');
     if (cohost === undefined) return ok({ type: 'missing' });
-    return this.deps.repositories.watchPartyRooms.transferOwner(room.id, {
+    const line = systemLineFor(this.deps, room, {
+      event: 'owner_changed',
+      actorKey,
+      targetKey: toKey,
+      detail: null,
+    });
+    const written = await this.deps.repositories.watchPartyRooms.transferOwner(room.id, {
       fromKey: actorKey,
       toKey,
       expectedRolesVersion: room.rolesVersion,
       cohostRoleId: cohost.id,
-      line: systemLineFor(this.deps, room, {
-        event: 'owner_changed',
-        actorKey,
-        targetKey: toKey,
-        detail: null,
-      }),
+      line,
       at: this.deps.now(),
     });
+    if (written.ok && written.value.type === 'applied') {
+      await announceLine(this.deps, room.id, line);
+    }
+    return written;
   }
 
   private async transferred(
@@ -236,11 +249,17 @@ export class WatchPartyMemberService {
     return ok({ ownerKey, rolesVersion });
   }
 
-  private async expel(roomId: string, memberKey: string): Promise<void> {
-    const left = await this.deps.presence.leave(roomId, memberKey);
-    if (!left.ok) {
-      this.deps.logger.warn({ err: left.error, roomId, memberKey }, 'presence not cleared');
+  private async expel(roomId: string, memberKeys: readonly string[]): Promise<void> {
+    for (const memberKey of memberKeys) {
+      const left = await this.deps.presence.leave(roomId, memberKey);
+      if (!left.ok) {
+        this.deps.logger.warn({ err: left.error, roomId, memberKey }, 'presence not cleared');
+      }
+      await announce(this.deps, roomId, { type: 'kicked' }, memberKey);
     }
-    await announce(this.deps, roomId, { type: 'kicked' }, memberKey);
+    await flushRoster(this.deps)(
+      roomId,
+      memberKeys.map((memberKey) => ({ type: 'removal', memberKey }))
+    );
   }
 }

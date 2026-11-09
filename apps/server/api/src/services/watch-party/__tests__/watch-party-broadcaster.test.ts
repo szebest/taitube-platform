@@ -5,11 +5,12 @@ import { expectOk } from '@vp/testing/result';
 import { RoomEnvelopeSchema, WatchPartyBroadcaster } from '../watch-party-broadcaster';
 
 const ROOM = '018f0000-0000-7000-8000-00000000a001';
+const SENT_AT = 1_772_366_400_000;
 const FRAME: WatchPartyServerFrame = { type: 'closed', reason: 'owner' };
 
 function setUp() {
   const cache = new InMemoryCacheClient();
-  return { cache, broadcaster: new WatchPartyBroadcaster(cache) };
+  return { cache, broadcaster: new WatchPartyBroadcaster(cache, () => SENT_AT) };
 }
 
 const published = (cache: InMemoryCacheClient) =>
@@ -50,6 +51,8 @@ describe('WatchPartyBroadcaster', () => {
 
     expectOk(await send(broadcaster));
 
-    expect(published(cache)).toEqual([{ channel: watchPartyChannel(ROOM), ...envelope }]);
+    expect(published(cache)).toEqual([
+      { channel: watchPartyChannel(ROOM), ...envelope, sentAt: SENT_AT },
+    ]);
   });
 });
