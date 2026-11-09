@@ -9,6 +9,7 @@ import { assertNever, err, isErr, ok, type Result } from '@vp/result';
 
 export type RateLimited = Failure<typeof ErrorCodes.RATE_LIMITED, { retryAfterSeconds: number }>;
 
+/** @internal */
 export function rateLimited(retryAfterSeconds: number): RateLimited {
   return { code: ErrorCodes.RATE_LIMITED, message: 'Too many requests', retryAfterSeconds };
 }

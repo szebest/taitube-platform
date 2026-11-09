@@ -39,6 +39,7 @@ type IdleView = Pick<
 >;
 
 /** The reason an open room with nobody present closes now, or `null` while it may stay. */
+/** @internal */
 export function idleCloseReason(
   room: IdleView,
   nowMs: number,

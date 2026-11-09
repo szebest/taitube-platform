@@ -23,6 +23,7 @@ export interface MemberTarget {
   readonly subject: WatchPartyMemberSubject & { readonly memberKey: string };
 }
 
+/** @internal */
 export function actorKeyOf(context: RoomContext): Result<string, WatchPartyNotFound> {
   return context.memberKey === null
     ? err(watchPartyNotFound(context.room.id))

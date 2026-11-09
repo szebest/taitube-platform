@@ -14,6 +14,7 @@ const WATCH_PARTY_DRIFT = {
   reportIntervalMs: 30 * MS_PER_SECOND,
 } as const;
 
+/** @internal */
 export interface DriftInput {
   /** The player's position minus the room's expected position: positive is ahead. */
   readonly driftMs: number;
@@ -26,6 +27,7 @@ export interface DriftInput {
   readonly cooldownUntil: number;
 }
 
+/** @internal */
 export type DriftAction =
   | { readonly type: 'hold' }
   | { readonly type: 'rate'; readonly rate: number }
@@ -34,6 +36,7 @@ export type DriftAction =
 const HOLD: DriftAction = { type: 'hold' };
 
 /** What the player does about its drift on one check. */
+/** @internal */
 export function correctDrift(input: DriftInput): DriftAction {
   const { driftMs, expectedMs, roomRate, playerRate, seekLatencyMs, now, cooldownUntil } = input;
   if (now < cooldownUntil) return HOLD;

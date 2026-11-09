@@ -94,6 +94,7 @@ export function isNearEnd(playback: WatchPartyPlayback, durationMs: number, now:
 }
 
 /** One ping: sent at `t0` and answered at `t1` on the client's clock, stamped `serverNow` on the server's. */
+/** @internal */
 export interface ClockSample {
   readonly t0: number;
   readonly serverNow: number;
@@ -101,6 +102,7 @@ export interface ClockSample {
 }
 
 /** Server time minus client time, from the latest samples' fastest round trip; `null` before the first. */
+/** @internal */
 export function clockOffsetMs(samples: readonly ClockSample[]): number | null {
   const fastest = samples
     .slice(-WATCH_PARTY_CLOCK.samples)

@@ -41,6 +41,7 @@ export function isNoPersonalControl(values: PersonalControlValues): boolean {
 }
 
 /** The controls that apply in `roomId`: that room's and the everywhere ones. */
+/** @internal */
 export function controlsForRoom(
   controls: readonly PersonalControl[],
   roomId: string
@@ -49,6 +50,7 @@ export function controlsForRoom(
 }
 
 /**
+ * @internal
  * One target's controls in a room: a flag holds when either scope sets it, and the room's volume
  * wins over the everywhere one when it sets one. Blocking invites is an everywhere control only.
  */

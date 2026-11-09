@@ -53,6 +53,7 @@ export const ROLE_EXPIRY_MS: Readonly<Record<RoleExpiry, number | null>> = {
   party: null,
 };
 
+/** @internal */
 export interface BuiltInRole {
   readonly key: BuiltInRoleKey;
   readonly kind: RoleKind;
@@ -61,6 +62,7 @@ export interface BuiltInRole {
   readonly colour: string | null;
 }
 
+/** @internal */
 export const BUILT_IN_ROLES: readonly BuiltInRole[] = [
   { key: 'owner', kind: 'grant', position: ROLE_POSITIONS.owner, name: 'Owner', colour: '#e8a33d' },
   { key: 'cohost', kind: 'grant', position: 800, name: 'Co-host', colour: '#9b6bdf' },

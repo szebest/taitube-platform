@@ -75,6 +75,7 @@ function hasAccess({ isMember, grant }: AccessInput): boolean {
 }
 
 /** A membership, an invite and an invite link each skip the password: an explicit grant is the stronger credential. */
+/** @internal */
 export function joinNeedsPassword(input: AccessInput): boolean {
   return input.room.passwordHash !== null && !hasAccess(input);
 }

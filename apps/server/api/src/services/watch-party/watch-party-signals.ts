@@ -42,6 +42,7 @@ export type SignalFailure =
   | CacheUnavailable;
 
 /** One window's reactions as one frame: the totals, and how many each member sent of each. */
+/** @internal */
 export function foldReactions(reactions: readonly Reaction[]): ReactionsFrame {
   const counts: Partial<Record<Emoji, number>> = {};
   const from = new Map<string, { memberKey: string; emoji: Emoji; count: number }>();

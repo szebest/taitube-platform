@@ -16,6 +16,7 @@ const CO_WATCHER_WINDOW_MS = 30 * MS_PER_DAY;
 
 type Reason = InviteCandidateView['reason'];
 
+/** @internal */
 export interface CandidatePerson {
   readonly userId: string;
   readonly handle: string;
@@ -39,6 +40,7 @@ const startsWith = (person: CandidatePerson, prefix: string) =>
   person.displayName.toLowerCase().startsWith(prefix);
 
 /**
+ * @internal
  * People worth inviting, each once under the first reason that names them: people from recent
  * parties, then owners of channels the caller subscribes to, then a prefix match. A query narrows
  * the first two to the people it matches.

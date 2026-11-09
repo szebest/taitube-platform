@@ -119,6 +119,7 @@ export const PLATFORM_STAFF_PERMISSIONS: readonly WatchPartyPermission[] = [
   'room.close',
 ];
 
+/** @internal */
 export function isWatchPartyPermission(value: string): value is WatchPartyPermission {
   return (WATCH_PARTY_PERMISSION_IDS as readonly string[]).includes(value);
 }
