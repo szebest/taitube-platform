@@ -31,10 +31,15 @@ function kindOf(code: ErrorCode): ErrorStateKind {
     case ErrorCodes.LIVE_STREAM_NOT_FOUND:
     case ErrorCodes.CHANNEL_INVITE_NOT_FOUND:
     case ErrorCodes.CHANNEL_MEMBER_NOT_FOUND:
+    case ErrorCodes.RESTRICTION_NOT_FOUND:
       return 'not-found';
     case ErrorCodes.FORBIDDEN:
     case ErrorCodes.CHANNEL_MEMBERSHIP_REQUIRED:
     case ErrorCodes.LIVE_CHAT_SUBSCRIBERS_ONLY:
+    case ErrorCodes.COMMENTS_BANNED:
+    case ErrorCodes.COMMENTS_DISABLED:
+    case ErrorCodes.COMMENTS_SUBSCRIBERS_ONLY:
+    case ErrorCodes.COMMENTS_ACCOUNT_TOO_NEW:
       return 'forbidden';
     case ErrorCodes.UNAUTHORIZED:
     case ErrorCodes.LIVE_INGEST_REFUSED:
@@ -42,6 +47,7 @@ function kindOf(code: ErrorCode): ErrorStateKind {
       return 'unauthorised';
     case ErrorCodes.RATE_LIMITED:
     case ErrorCodes.LIVE_CHAT_SLOW_MODE:
+    case ErrorCodes.COMMENTS_SLOW_MODE:
       return 'rate-limited';
     case ErrorCodes.INTERNAL:
     case ErrorCodes.DATABASE_UNAVAILABLE:
@@ -103,6 +109,8 @@ function kindOf(code: ErrorCode): ErrorStateKind {
     case ErrorCodes.CHANNEL_INVITE_ALREADY_PENDING:
     case ErrorCodes.CHANNEL_MEMBER_EXISTS:
     case ErrorCodes.CHANNEL_OWNER_IMMUTABLE:
+    case ErrorCodes.MODERATION_NOT_APPLICABLE:
+    case ErrorCodes.CANNOT_RESTRICT_MEMBER:
       return 'generic';
     default:
       return assertNever(code, 'kindOf');
