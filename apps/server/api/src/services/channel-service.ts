@@ -10,7 +10,7 @@ import type {
 import {
   type ActingChannel,
   type Channel,
-  type UpdateChannelInput,
+  type ChannelFieldsPatch,
   type ChannelLocalization,
   type VideoFormat,
   pickLocalization,
@@ -55,7 +55,8 @@ export type { ChannelView } from './channel-views';
 export type PublicChannelView = ChannelView & { redirectedFrom: string | null };
 
 /** An uploaded image's key replaces the address of the same field. */
-export type UpdateChannelCommand = UpdateChannelInput & {
+export type UpdateChannelCommand = ChannelFieldsPatch & {
+  handle?: string;
   avatarKey?: string;
   bannerKey?: string;
 };

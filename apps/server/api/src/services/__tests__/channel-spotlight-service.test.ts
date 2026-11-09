@@ -1,4 +1,5 @@
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
+import type { ChannelSpotlightSettings } from '@vp/api-contracts';
 import type { ActingChannel } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
@@ -23,7 +24,11 @@ const FAN: UserContext = { id: FAN_ID, role: 'USER' };
 const MEMBER: UserContext = { id: '018f0000-0000-7000-8000-000000000009', role: 'CREATOR' };
 const ACTING = ownerActing(OWNER_ID, CHANNEL_ID);
 const MODERATOR: ActingChannel = { channelId: CHANNEL_ID, ownerId: OWNER_ID, role: 'moderator' };
-const NOTHING = { trailerVideoId: null, returningVideoId: null, localizations: [] };
+const NOTHING: ChannelSpotlightSettings = {
+  trailerVideoId: null,
+  returningVideoId: null,
+  localizations: [],
+};
 
 describe('ChannelSpotlightService', () => {
   let repositories: InMemoryRepositories;
@@ -33,7 +38,7 @@ describe('ChannelSpotlightService', () => {
     expectOk(await service.get(viewer, '@owner', locales)).source;
   const idOf = async (viewer: UserContext | null, locales = ['en']) =>
     expectOk(await service.get(viewer, '@owner', locales)).video?.id ?? null;
-  const replace = (input: Partial<typeof NOTHING>, acting = ACTING, user = OWNER) =>
+  const replace = (input: Partial<ChannelSpotlightSettings>, acting = ACTING, user = OWNER) =>
     service.replace(user, acting, { ...NOTHING, ...input });
 
   async function video(id: string, ownerId: string, overrides = {}) {
@@ -100,7 +105,9 @@ describe('ChannelSpotlightService', () => {
     it('audits the change', async () => {
       expectOk(await replace({ trailerVideoId: TRAILER }));
 
-      const rows = expectOk(await repositories.channelAudit.list(CHANNEL_ID, { limit: 10 }));
+      const rows = expectOk(
+        await repositories.channelAudit.list(CHANNEL_ID, { cursor: null, limit: 10 })
+      );
       expect(rows).toMatchObject([{ action: 'channel.updated', meta: { fields: ['spotlight'] } }]);
     });
 

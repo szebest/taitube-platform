@@ -44,14 +44,14 @@ export interface CreateChannelInput {
   subscriberCount?: number;
 }
 
-export type UpdateChannelInput = ChannelFieldsPatch &
-  (
-    | { handle?: undefined; handleChangedAt?: undefined }
-    /** A handle change carries the instant the old handle is retired and the cooldown starts. */
-    | { handle: string; handleChangedAt: Date }
-  );
+/** A handle change carries the instant the old handle is retired and the cooldown starts. */
+export type ChannelHandleChange =
+  | { handle?: undefined; handleChangedAt?: undefined }
+  | { handle: string; handleChangedAt: Date };
 
-interface ChannelFieldsPatch {
+export type UpdateChannelInput = ChannelFieldsPatch & ChannelHandleChange;
+
+export interface ChannelFieldsPatch {
   displayName?: string;
   avatarUrl?: string | null;
   bannerUrl?: string | null;

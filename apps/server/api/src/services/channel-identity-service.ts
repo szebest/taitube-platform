@@ -7,7 +7,8 @@ import {
   type Channel,
   type ChannelAuditField,
   HANDLE_RESERVATION_DAYS,
-  type UpdateChannelInput,
+  type ChannelFieldsPatch,
+  type ChannelHandleChange,
 } from '@vp/domain';
 import {
   type ChannelNotFound,
@@ -52,9 +53,10 @@ export interface IdentityInput {
 }
 
 export type IdentityPatch = Pick<
-  UpdateChannelInput,
-  'handle' | 'handleChangedAt' | 'brandColor' | 'links' | 'country' | 'contactEmail' | 'bannerLink'
->;
+  ChannelFieldsPatch,
+  'brandColor' | 'links' | 'country' | 'contactEmail' | 'bannerLink'
+> &
+  ChannelHandleChange;
 
 export type IdentityFailure =
   | ClaimHandleFailure

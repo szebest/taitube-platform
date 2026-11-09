@@ -162,7 +162,9 @@ describe('ChannelIdentityService', () => {
     it('appends one channel.updated audit row naming the fields', async () => {
       expectOk(await service.recordChange(USER, CHANNEL_ID, ['handle']));
 
-      const rows = expectOk(await repositories.channelAudit.list(CHANNEL_ID, { limit: 10 }));
+      const rows = expectOk(
+        await repositories.channelAudit.list(CHANNEL_ID, { cursor: null, limit: 10 })
+      );
       expect(rows).toMatchObject([
         { action: 'channel.updated', actorUserId: OWNER_ID, meta: { fields: ['handle'] } },
       ]);

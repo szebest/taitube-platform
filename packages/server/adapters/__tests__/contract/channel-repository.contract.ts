@@ -232,7 +232,7 @@ export function describeChannelRepositoryContract(makeSubject: MakeRepositoriesS
         await createOtherChannel();
 
         expectErr(
-          await channels.update(CHANNEL_ID, { handle: 'otherhandle', handleChangedAt: changedAt })
+          await channels.update(CHANNEL_ID, { handle: 'otherhandle', handleChangedAt: new Date() })
         );
 
         expect(await historyOf('ownerhandle')).toBeNull();
@@ -244,7 +244,7 @@ export function describeChannelRepositoryContract(makeSubject: MakeRepositoriesS
       await createOtherChannel();
 
       const failure = expectErr(
-        await channels.update(CHANNEL_ID, { handle: 'otherhandle', handleChangedAt: changedAt })
+        await channels.update(CHANNEL_ID, { handle: 'otherhandle', handleChangedAt: new Date() })
       );
 
       expect(failure.code).toBe(ErrorCodes.HANDLE_ALREADY_TAKEN);

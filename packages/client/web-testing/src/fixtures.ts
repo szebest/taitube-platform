@@ -9,6 +9,7 @@ import type {
   LiveChatServerFrame,
   LiveStreamPublicView,
   OwnerChannel,
+  PublicChannel,
   SubscribedChannel,
   TranscriptView,
   Video,
@@ -142,7 +143,9 @@ export function inboxComment(
   return { ...comment(), video: { id: VIDEO_ID, title: 'Alfama at 5 a.m.' }, ...overrides };
 }
 
-export function channel(overrides: Partial<OwnerChannel> = {}): OwnerChannel {
+export function channel(
+  overrides: Partial<OwnerChannel & PublicChannel> = {}
+): OwnerChannel & PublicChannel {
   return {
     id: CHANNEL_ID,
     userId: OWNER_ID,
@@ -158,6 +161,7 @@ export function channel(overrides: Partial<OwnerChannel> = {}): OwnerChannel {
     hasContact: false,
     contactEmail: null,
     handleChangeAvailableAt: null,
+    redirectedFrom: null,
     brandColor: null,
     bio: null,
     links: [],
