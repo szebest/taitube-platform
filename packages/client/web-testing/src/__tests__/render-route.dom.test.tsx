@@ -39,7 +39,8 @@ const rootRoute = createRootRouteWithContext<{ queryClient: QueryClient }>()({
 const homeRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/',
-  loader: ({ context: { queryClient } }) => queryClient.ensureQueryData(feedQuery),
+  loader: ({ context: { queryClient } }) =>
+    queryClient.query({ ...feedQuery, staleTime: 'static' }),
   component: function Home() {
     const { data } = useSuspenseQuery(feedQuery);
     return data.items.map((item) => <p key={item.id}>{item.title}</p>);
@@ -50,7 +51,7 @@ const videoRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/videos/$videoId',
   loader: ({ context: { queryClient }, params }) =>
-    queryClient.ensureQueryData(videoQuery(params.videoId)),
+    queryClient.query({ ...videoQuery(params.videoId), staleTime: 'static' }),
   component: () => <p>video</p>,
 });
 

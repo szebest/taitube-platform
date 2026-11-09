@@ -1,9 +1,9 @@
 import { screen } from '@testing-library/react';
 import { account } from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
+import { serveLibrary } from '#app/__tests__/library-api.fixture';
 import { signInBrowser } from '#app/__tests__/providers';
-import { categoriesList } from '#app/features/admin/components/__tests__/categories.fixture';
-import { serveLibrary } from '#app/features/content/__tests__/library-api.fixture';
+import { categoriesList } from '#app/features/admin/__tests__/categories.fixture';
 import { getRouter } from '#app/router';
 
 const renderAdmin = (url: string, role: 'ADMIN' | 'CREATOR') => {

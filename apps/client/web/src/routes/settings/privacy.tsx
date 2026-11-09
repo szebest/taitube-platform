@@ -1,13 +1,13 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { z } from 'zod';
-import { ClearHistoryRow } from '#app/features/settings/components/clear-history-row';
-import { HiddenRecommendationsRow } from '#app/features/settings/components/hidden-recommendations-row';
 import {
+  ClearHistoryRow,
+  HiddenRecommendationsRow,
   PauseHistoryRow,
   PlaylistVisibilityRow,
+  SettingsSectionPage,
   SubscriptionsVisibleRow,
-} from '#app/features/settings/components/privacy-rows';
-import { SettingsSectionPage } from '#app/features/settings/components/settings-section-page';
+} from '#app/features/account';
 
 export const Route = createFileRoute('/settings/privacy')({
   validateSearch: z.object({}),

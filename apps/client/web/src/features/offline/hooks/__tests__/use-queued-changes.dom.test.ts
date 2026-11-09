@@ -1,5 +1,5 @@
 import { renderHook, waitFor } from '@testing-library/react';
-import { SYNC_CHANNEL, type SyncMessage } from '#app/sw/sync-messages';
+import { SYNC_CHANNEL, type SyncMessage } from '#app/integrations/service-worker/sync-messages';
 import { useQueuedChanges } from '../use-queued-changes';
 
 function workerSays(...messages: SyncMessage[]) {

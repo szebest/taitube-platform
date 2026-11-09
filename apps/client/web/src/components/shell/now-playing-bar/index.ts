@@ -1,3 +1,4 @@
+import { NowPlayingBarProgress } from './components/now-playing-bar-progress/now-playing-bar-progress';
 import {
   NowPlayingBarExpand,
   NowPlayingBarInfo,
@@ -12,7 +13,6 @@ import {
   NowPlayingBarTitle,
   NowPlayingBarTransport,
 } from './now-playing-bar';
-import { NowPlayingBarProgress } from './now-playing-bar-progress';
 
 export const NowPlayingBar = {
   Root: NowPlayingBarRoot,

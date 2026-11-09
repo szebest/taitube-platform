@@ -8,13 +8,16 @@ import {
 } from 'workbox-precaching';
 import { registerRoute, setCatchHandler } from 'workbox-routing';
 import { NetworkOnly } from 'workbox-strategies';
-import { registerBackgroundSync } from './sw/background-sync';
-import { deleteStaleCaches } from './sw/delete-stale-caches';
-import { offlineFallback } from './sw/offline-page';
-import { isPageNavigation } from './sw/route-matchers';
-import { registerRuntimeCaching } from './sw/runtime-caching';
-import { registerSavedVideoRoutes, savedVideoFallback } from './sw/saved-videos';
-import { SYNC_CHANNEL } from './sw/sync-messages';
+import { registerBackgroundSync } from './integrations/service-worker/background-sync';
+import { deleteStaleCaches } from './integrations/service-worker/delete-stale-caches';
+import { offlineFallback } from './integrations/service-worker/offline-page';
+import { isPageNavigation } from './integrations/service-worker/route-matchers';
+import { registerRuntimeCaching } from './integrations/service-worker/runtime-caching';
+import {
+  registerSavedVideoRoutes,
+  savedVideoFallback,
+} from './integrations/service-worker/saved-videos';
+import { SYNC_CHANNEL } from './integrations/service-worker/sync-messages';
 
 declare global {
   interface ServiceWorkerGlobalScope {

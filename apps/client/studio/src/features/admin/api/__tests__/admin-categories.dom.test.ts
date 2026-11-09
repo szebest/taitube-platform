@@ -2,7 +2,7 @@ import { listAdminCategories } from '@vp/api-contracts';
 import { createQueryClient } from '@vp/queries';
 import { api, apiServer, mockEndpoint } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
-import { adminCategory } from '#app/features/admin/components/__tests__/categories.fixture';
+import { adminCategory } from '#app/features/admin/__tests__/categories.fixture';
 import { adminCategoriesQueryOptions } from '../admin-categories';
 
 describe('apps/client/studio: adminCategoriesQueryOptions', () => {
@@ -12,6 +12,6 @@ describe('apps/client/studio: adminCategoriesQueryOptions', () => {
     const options = adminCategoriesQueryOptions(api);
 
     expect(options.queryKey).toEqual(['admin', 'categories']);
-    await expect(createQueryClient().fetchQuery(options)).resolves.toEqual([category]);
+    await expect(createQueryClient().query(options)).resolves.toEqual([category]);
   });
 });

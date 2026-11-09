@@ -11,7 +11,7 @@ describe('apps/client/studio: categoriesQueryOptions', () => {
 
     const options = categoriesQueryOptions(api);
 
-    await expect(client.fetchQuery(options)).resolves.toEqual([]);
+    await expect(client.query(options)).resolves.toEqual([]);
     expect(client.getQueryData(options.queryKey)).toEqual([]);
   });
 });

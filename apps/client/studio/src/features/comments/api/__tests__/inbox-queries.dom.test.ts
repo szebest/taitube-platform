@@ -15,7 +15,7 @@ describe('apps/client/studio: inboxQueryOptions', () => {
     );
     const options = inboxQueryOptions(api, 'reported');
 
-    const data = await createQueryClient().fetchInfiniteQuery(options);
+    const data = await createQueryClient().infiniteQuery(options);
 
     expect(options.queryKey).toEqual(['creator', 'comments', 'reported']);
     expect(asked).toEqual(['reported']);

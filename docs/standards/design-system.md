@@ -62,7 +62,7 @@ Never edit `tokens.json` or `generated/` by hand. A value changes in its set or 
 5. Export the extension points: `className`, `asChild` (through `Slot` from `@vp/ui`), the context hook of a
    compound component and its `tv()` styles.
 6. Radix and `@dnd-kit/*` are imported here only.
-7. The folder holds `<name>.tsx`, `index.ts`, `<name>.stories.tsx` and `__tests__/<name>.dom.test.tsx`.
+7. The folder holds `<name>.tsx`, `index.ts`, `__stories__/<name>.stories.tsx` and `__tests__/<name>.dom.test.tsx`.
 
 ## Add a shared component, an app kit component
 

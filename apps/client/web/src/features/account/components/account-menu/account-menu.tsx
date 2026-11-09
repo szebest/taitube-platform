@@ -1,0 +1,44 @@
+import { AccountMenu as Menu } from '@vp/components';
+import { useT } from '@vp/intl-react';
+import { canAccessAdmin } from '@vp/permissions';
+import { Can } from '@vp/permissions-react';
+import { SignInButton, useAccount, useSignOut } from '@vp/queries';
+import { clearQueuedChanges } from '#app/integrations/service-worker-client/clear-queued-changes';
+import { STUDIO_URL } from '#app/lib/config';
+
+/** The viewer's account in the header: a guest's way to sign in, or the channel's menu with the studio's pages and sign-out. */
+export function AccountMenu() {
+  const account = useAccount();
+  const signOut = useSignOut();
+  const { tOr } = useT();
+
+  if (!account) {
+    return <SignInButton />;
+  }
+
+  return (
+    <Menu.Root>
+      <Menu.Trigger name={account.channel.displayName} imageUrl={account.channel.avatarUrl} />
+      <Menu.Content align="end">
+        <Menu.Label>{account.channel.displayName}</Menu.Label>
+        <Menu.Item asChild>
+          <a href={`${STUDIO_URL}/upload`}>{tOr('auth.upload', {}, '')}</a>
+        </Menu.Item>
+        <Can type="rule" I={canAccessAdmin}>
+          <Menu.Item asChild>
+            <a href={`${STUDIO_URL}/admin`}>{tOr('auth.admin', {}, '')}</a>
+          </Menu.Item>
+        </Can>
+        <Menu.Separator />
+        <Menu.Item
+          onSelect={() => {
+            clearQueuedChanges();
+            signOut();
+          }}
+        >
+          {tOr('auth.signOut', {}, '')}
+        </Menu.Item>
+      </Menu.Content>
+    </Menu.Root>
+  );
+}

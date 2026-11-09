@@ -1,14 +1,15 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { assertNever } from '@vp/result';
 import {
+  LibraryPage,
+  LibraryPageSkeleton,
+  LibrarySearchSchema,
   likedVideosQueryOptions,
   myCommentsQueryOptions,
   searchHistoryQueryOptions,
   watchHistoryQueryOptions,
-} from '#app/features/library/api/library-queries';
-import { LibraryPage, LibraryPageSkeleton } from '#app/features/library/components/library-page';
-import { LibrarySearchSchema } from '#app/features/library/library-search';
-import { urlModals } from '#app/features/url-modal/registry';
+} from '#app/features/library';
+import { urlModals } from '#app/lib/url-modal/registry';
 
 export const Route = createFileRoute('/_authed/feed/history')({
   validateSearch: (search) => LibrarySearchSchema.and(urlModals.searchSchema).parse(search),
@@ -17,16 +18,16 @@ export const Route = createFileRoute('/_authed/feed/history')({
   loader: async ({ context: { queryClient, api }, deps: { tab } }) => {
     switch (tab) {
       case 'history':
-        await queryClient.ensureInfiniteQueryData(watchHistoryQueryOptions(api));
+        await queryClient.infiniteQuery({ ...watchHistoryQueryOptions(api), staleTime: 'static' });
         return;
       case 'searches':
-        await queryClient.ensureInfiniteQueryData(searchHistoryQueryOptions(api));
+        await queryClient.infiniteQuery({ ...searchHistoryQueryOptions(api), staleTime: 'static' });
         return;
       case 'liked':
-        await queryClient.ensureInfiniteQueryData(likedVideosQueryOptions(api));
+        await queryClient.infiniteQuery({ ...likedVideosQueryOptions(api), staleTime: 'static' });
         return;
       case 'comments':
-        await queryClient.ensureInfiniteQueryData(myCommentsQueryOptions(api));
+        await queryClient.infiniteQuery({ ...myCommentsQueryOptions(api), staleTime: 'static' });
         return;
       default:
         assertNever(tab, 'library tab');

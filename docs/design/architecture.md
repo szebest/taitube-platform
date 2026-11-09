@@ -290,14 +290,16 @@ How the SOLID principles land here:
   button.tsx                           video-card.tsx        Root and parts
   button.variants.ts                   video-card.context.ts createCompoundContext, useVideoCard
   types.ts                             video-card.variants.ts
-  button.stories.tsx                   types.ts
-  __tests__/button.dom.test.tsx        video-card.stories.tsx
+  __stories__/button.stories.tsx       types.ts
+  __tests__/button.dom.test.tsx        __stories__/video-card.stories.tsx
   index.ts                             __tests__/video-card.dom.test.tsx
                                        index.ts              export const VideoCard = { Root, Thumb, ... }
 ```
 
 `pnpm gen:component <name> --kind primitive|shared|web|studio [--compound]` scaffolds exactly this, including the
-context file for a compound one.
+context file for a compound one. A component with hooks or helpers of its own adds `hooks/` and `utils/`, and a
+subcomponent a `components/<name>/` of the same shape; the whole shape is
+[frontend-structure.md](../standards/frontend-structure.md#3-a-component-folder).
 
 ---
 

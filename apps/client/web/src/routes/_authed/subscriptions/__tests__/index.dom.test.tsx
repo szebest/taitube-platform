@@ -5,7 +5,7 @@ import { api, mockEndpoint, problemReply } from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
 import { loaderApi } from '#app/__tests__/loader-api';
 import { devTokenServe, signInBrowser } from '#app/__tests__/providers';
-import { mySubscriptionsQueryOptions } from '#app/features/subscriptions/api/subscription-queries';
+import { mySubscriptionsQueryOptions } from '#app/lib/query-keys/subscription-keys';
 import { getRouter } from '#app/router';
 
 describe('apps/client/web: /subscriptions in the browser', () => {

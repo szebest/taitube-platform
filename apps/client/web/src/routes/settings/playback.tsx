@@ -1,13 +1,13 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { z } from 'zod';
-import { AutoplayNextRow } from '#app/features/settings/components/autoplay-next-row';
 import {
+  AutoplayNextRow,
   HoverPreviewRow,
   QualityRow,
+  SettingsSectionPage,
   SpeedRow,
   StatsOverlayRow,
-} from '#app/features/settings/components/playback-rows';
-import { SettingsSectionPage } from '#app/features/settings/components/settings-section-page';
+} from '#app/features/account';
 
 export const Route = createFileRoute('/settings/playback')({
   validateSearch: z.object({}),

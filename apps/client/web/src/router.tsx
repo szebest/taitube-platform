@@ -1,8 +1,7 @@
-import { type AppRouterOptions, createAppRouter } from '@vp/queries';
-import { API_BASE_URL } from './config';
-import { RoutePending } from './features/errors/components/route-fallbacks';
-import { shouldPrefetch } from './features/pwa/should-prefetch';
-import { routeTree } from './routeTree.gen';
+import { type AppRouterOptions, createAppRouter, RoutePending } from '@vp/queries';
+import { shouldPrefetch } from '#app/integrations/network/should-prefetch';
+import { API_BASE_URL } from '#app/lib/config';
+import { routeTree } from '#app/routeTree.gen';
 
 export function getRouter(options: AppRouterOptions = {}) {
   return createAppRouter(

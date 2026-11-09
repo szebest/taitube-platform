@@ -32,7 +32,7 @@ describe('apps/client/studio: channel featured queries', () => {
   it('reads the shelf by the channel, apart from the picker', async () => {
     apiServer.use(mockEndpoint(getChannelFeatured, () => HttpResponse.json(BEFORE)));
 
-    const loaded = await createQueryClient().fetchQuery(featuredQueryOptions(api, CHANNEL_ID));
+    const loaded = await createQueryClient().query(featuredQueryOptions(api, CHANNEL_ID));
 
     expect(loaded.items.map(({ id }) => id)).toEqual([FIRST.id]);
     expect(KEY).not.toEqual(pickableVideosQueryOptions(api).queryKey);
@@ -47,7 +47,7 @@ describe('apps/client/studio: channel featured queries', () => {
       })
     );
 
-    await createQueryClient().fetchInfiniteQuery(pickableVideosQueryOptions(api));
+    await createQueryClient().infiniteQuery(pickableVideosQueryOptions(api));
 
     expect(asked).toHaveLength(1);
     const query = new URLSearchParams(asked[0]);

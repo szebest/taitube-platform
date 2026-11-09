@@ -9,9 +9,10 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 - [48: Complete monorepo rebrand & package namespace unification (@vp/ -> @taitube/, services, Docker & CLI)](48-project-rebrand-cli-unification.md)
 - [112: Upload screening - local duplicate, content-safety and rule checks that hold a video for review](112-upload-screening.md)
 - [117: Channel team roles - invite managers, editors, moderators and analytics viewers](117-channel-team-roles.md)
-- [131: Front-end folder structure, names and boundaries, web and studio](131-frontend-folder-structure-names-and-boundaries.md)
+- [136: Front-end UI and feel overhaul, web and studio - layers, tokens, motion, sign-in prompt, settings, queue, mini player, shorts and the local demo login](136-frontend-ui-and-feel-overhaul-web-and-studio.md)
 - [138: Type-aware lint backlog, the twelve oxlint rules 110 left off](138-type-aware-lint-backlog.md)
 - [139: Captions measurements - whisper speed, time to ready, transcode isolation, cue alignment, offline smoke](139-captions-measurements.md)
+- [145: Stories and visual baselines for the app kit folders that have none](145-kit-stories-and-visual-baselines.md)
 
 ## How to work a ticket (humans and agents)
 
@@ -165,12 +166,12 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 | 128 | [Creator analytics that hold up - views the player really sends, a device split and a first-week benchmark](128-creator-analytics-device-split-and-benchmark.md) | 5 - Developer experience & growth | L | 43, 60, 65, 95, 114 | — | blocked |
 | 129 | [Multiple accounts and channels - signed in at once, one switcher, per-tab identity](129-multiple-accounts-and-channels.md) | 5 - Developer experience & growth | XL | 38, 56, 72, 95, 98, 99, 117 | — | blocked |
 | 130 | [Faster CI, measured one change at a time](130-faster-ci-measured-one-change-at-a-time.md) | 5 - Developer experience & growth | M | — | — | done |
-| 131 | [Front-end folder structure, names and boundaries, web and studio](131-frontend-folder-structure-names-and-boundaries.md) | 5 - Developer experience & growth | L | 59, 60, 61, 62, 72, 73, 95, 99, 103, 110, 111 | 136 | ready |
+| 131 | [Front-end folder structure, names and boundaries, web and studio](131-frontend-folder-structure-names-and-boundaries.md) | 5 - Developer experience & growth | L | 59, 60, 61, 62, 72, 73, 95, 99, 103, 110, 111 | 136, 145 | done |
 | 132 | [Watch page follow-ups - queue reorder on a real queue, the LCP and CLS proof, the view transition check](132-watch-page-queue-reorder-web-vitals-proof-and-view-transition.md) | 5 - Developer experience & growth | S | 59 | — | done |
 | 133 | [SEO follow-ups - channel meta without an extra request, an embed route for the player card, and VITE_WEB_URL in the env schema](133-seo-channel-meta-without-an-extra-request-embed-route-and-web-url.md) | 5 - Developer experience & growth | S | 63 | — | done |
 | 134 | [Settings follow-ups - the player and queue read the playback defaults, the account switch reset, and avatar and banner upload](134-settings-readers-account-switch-and-channel-image-upload.md) | 5 - Developer experience & growth | M | 72 | — | done |
 | 135 | [Studio analytics and library - the backend gaps and the UI that waits on them](135-studio-analytics-and-library-backend-gaps.md) | 5 - Developer experience & growth | M | 60 | — | done |
-| 136 | [Front-end UI and feel overhaul, web and studio - layers, tokens, motion, sign-in prompt, settings, queue, mini player, shorts and the local demo login](136-frontend-ui-and-feel-overhaul-web-and-studio.md) | 5 - Developer experience & growth | XL (4 stacks, 12 slices) | 68, 73, 102, 131, 110 | — | blocked |
+| 136 | [Front-end UI and feel overhaul, web and studio - layers, tokens, motion, sign-in prompt, settings, queue, mini player, shorts and the local demo login](136-frontend-ui-and-feel-overhaul-web-and-studio.md) | 5 - Developer experience & growth | XL (4 stacks, 12 slices) | 68, 73, 102, 131, 110 | — | ready |
 | 137 | [CI and test environment stability, main and PRs green first time](137-ci-and-test-environment-stability-main-and-prs-green-first-time.md) | 5 - Developer experience & growth | L (one PR, one slice) | — | — | done |
 | 138 | [Type-aware lint backlog, the twelve oxlint rules 110 left off](138-type-aware-lint-backlog.md) | 5 - Developer experience & growth | M (one PR per rule group, about four) | 110 | — | ready |
 | 139 | [Captions measurements - whisper speed, time to ready, transcode isolation, cue alignment, offline smoke](139-captions-measurements.md) | 5 - Developer experience & growth | S | 111 | — | ready |
@@ -178,6 +179,7 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 | 141 | [Watch party voice chat - a self-hosted SFU, push-to-talk or open mic, speaking rings, per-user volume and ducking](141-watch-party-voice-chat.md) | 5 - Developer experience & growth | L | 83, 140 | 143 | blocked |
 | 142 | [Discord party bridge - chat relayed both ways, a live party embed, Scheduled Events and role mapping](142-discord-party-bridge.md) | 5 - Developer experience & growth | M | 78, 140 | — | blocked |
 | 143 | [Watch party extras - play, memory, social, creator and safety features on top of the room engine](143-watch-party-extras.md) | 5 - Developer experience & growth | XL | 105, 111, 140, 141 | — | blocked |
+| 145 | [Stories and visual baselines for the app kit folders that have none](145-kit-stories-and-visual-baselines.md) | 5 - Developer experience & growth | S | 131 | — | ready |
 
 > `in-progress` and `done` are set by hand; the rest derive from the blockers and are written back to each ticket: `ready` = all blockers done (the frontier) · `blocked` · `blocked-by-date` (blockers done, waiting for a date the ticket names; set by hand, reset to `blocked` while a blocker is open).
 
@@ -342,6 +344,7 @@ flowchart LR
         T141["141 Watch party voice chat - a self-hosted SFU"]
         T142["142 Discord party bridge - chat relayed both…"]
         T143["143 Watch party extras - play"]
+        T145["145 Stories"]
     end
     T01 --> T02
     T01 --> T03
@@ -874,6 +877,7 @@ flowchart LR
     T111 --> T143
     T140 --> T143
     T141 --> T143
+    T131 --> T145
 ```
 
 ## Parallel lanes (frontier levels)
@@ -903,7 +907,7 @@ Tickets in the same level have all their blockers in earlier levels, so they can
 | 18 | [62](62-frontend-performance-virtualization-ssr-bundle-hardening.md) Remove the legacy frontend · [63](63-tanstack-router-start-ssr-seo-streaming.md) Video SEO on the SSR render - route meta · [66](66-advanced-code-splitting-dynamic-chunking-lazy-loading.md) Advanced code splitting · [73](73-frontend-youtube-playlists-library-player-queue.md) Frontend YouTube-grade playlist & watch … · [76](76-live-streaming-rtmp-whip-llhls-packaging-chat.md) Live streaming architecture · [96](96-channel-featured-videos-start-here.md) Channel featured videos - creators pin t… · [101](101-pick-of-the-day-curation.md) Pick of the day - editors schedule the h… · [105](105-clips.md) Clips - share a moment of a video as its… · [106](106-channel-branded-and-user-built-themes.md) Themes beyond the built-ins - a channel'… · [117](117-channel-team-roles.md) Channel team roles - invite managers · [123](123-parallel-studio-upload-and-atomic-retention-flush.md) Parallel Studio upload parts · [124](124-related-videos-payload-and-unused-field-filter-removal.md) Related videos payload · [126](126-recommendation-feedback-and-new-shelves.md) Recommendation feedback - "Not interested" · [132](132-watch-page-queue-reorder-web-vitals-proof-and-view-transition.md) Watch page follow-ups - queue reorder on… · [134](134-settings-readers-account-switch-and-channel-image-upload.md) Settings follow-ups - the player · [135](135-studio-analytics-and-library-backend-gaps.md) Studio analytics · [138](138-type-aware-lint-backlog.md) Type-aware lint backlog |
 | 19 | [77](77-platform-integrations-oembed-embed-player-webhooks.md) Platform integrations ecosystem · [86](86-localisation-rollout-locale-negotiation-rtl.md) Localisation rollout · [111](111-captions-and-transcripts.md) Captions · [113](113-channel-comment-moderation.md) Channel comment moderation - hold for re… · [129](129-multiple-accounts-and-channels.md) Multiple accounts · [133](133-seo-channel-meta-without-an-extra-request-embed-route-and-web-url.md) SEO follow-ups - channel meta without an… · [140](140-watch-parties.md) Watch parties - rooms on a shared clock |
 | 20 | [78](78-discord-integration-bot-watch-together-activity-creator-alerts.md) Discord integration ecosystem · [112](112-upload-screening.md) Upload screening - local duplicate · [114](114-creator-stats-on-the-watch-page.md) Creator stats on the watch page - the nu… · [115](115-channel-page-customisation.md) Channel identity - banner · [116](116-video-management-power-tools.md) Video management power tools - bulk edit · [118](118-creator-data-portability-and-api.md) Creator data portability · [131](131-frontend-folder-structure-names-and-boundaries.md) Front-end folder structure · [139](139-captions-measurements.md) Captions measurements - whisper speed · [141](141-watch-party-voice-chat.md) Watch party voice chat - a self-hosted SFU |
-| 21 | [119](119-playlists-customisation-and-collaboration.md) Playlists · [120](120-community-posts-and-threads.md) Community - channel posts · [128](128-creator-analytics-device-split-and-benchmark.md) Creator analytics that hold up - views t… · [136](136-frontend-ui-and-feel-overhaul-web-and-studio.md) Front-end UI · [142](142-discord-party-bridge.md) Discord party bridge - chat relayed both… · [143](143-watch-party-extras.md) Watch party extras - play |
+| 21 | [119](119-playlists-customisation-and-collaboration.md) Playlists · [120](120-community-posts-and-threads.md) Community - channel posts · [128](128-creator-analytics-device-split-and-benchmark.md) Creator analytics that hold up - views t… · [136](136-frontend-ui-and-feel-overhaul-web-and-studio.md) Front-end UI · [142](142-discord-party-bridge.md) Discord party bridge - chat relayed both… · [143](143-watch-party-extras.md) Watch party extras - play · [145](145-kit-stories-and-visual-baselines.md) Stories |
 | 22 | [121](121-channel-page-builder.md) Channel page builder - configurable sect… |
 | 23 | [122](122-linked-content-graph.md) Linked content - one typed link graph be… |
 

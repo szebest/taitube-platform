@@ -8,6 +8,6 @@
     "declarationMap": false,
     "incremental": false
   },
-  "include": ["src/sw.ts", "src/sw/**/*.ts"],
-  "exclude": ["src/sw/**/__tests__"]
+  "include": ["src/sw.ts", "src/integrations/service-worker/**/*.ts"],
+  "exclude": ["src/integrations/service-worker/**/__tests__"]
 }
