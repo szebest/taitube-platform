@@ -77,6 +77,13 @@ describe('apps/server/api/composition: services module', () => {
       'viewService',
       'viewerActivityService',
       'watchHistoryService',
+      'watchPartyControlsService',
+      'watchPartyGuestService',
+      'watchPartyInviteService',
+      'watchPartyMemberService',
+      'watchPartyQueueService',
+      'watchPartyRoleService',
+      'watchPartyService',
       'webVitalsService',
       'webhookService',
     ]);
