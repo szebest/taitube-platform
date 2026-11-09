@@ -6,9 +6,11 @@ import { InMemoryChannelFeaturedRepository } from './in-memory-channel-featured-
 import { InMemoryChannelInviteRepository } from './in-memory-channel-invite-repository';
 import { InMemoryChannelMemberRepository } from './in-memory-channel-member-repository';
 import { InMemoryChannelRepository } from './in-memory-channel-repository';
+import { InMemoryChannelUserRestrictionRepository } from './in-memory-channel-user-restriction-repository';
 import { InMemoryClipRepository } from './in-memory-clip-repository';
 import { InMemoryCommentReportRepository } from './in-memory-comment-report-repository';
 import { InMemoryCommentRepository } from './in-memory-comment-repository';
+import { InMemoryCommentSettingsRepository } from './in-memory-comment-settings-repository';
 import { InMemoryDlqRepository } from './in-memory-dlq-repository';
 import { InMemoryEventRepository } from './in-memory-event-repository';
 import { InMemoryLiveStreamRepository } from './in-memory-live-stream-repository';
@@ -25,6 +27,7 @@ import { InMemorySearchHistoryRepository } from './in-memory-search-history-repo
 import { InMemorySearchRepository } from './in-memory-search-repository';
 import { InMemoryStepRepository } from './in-memory-step-repository';
 import { InMemorySubscriptionRepository } from './in-memory-subscription-repository';
+import { InMemoryTrustedCommenterRepository } from './in-memory-trusted-commenter-repository';
 import { InMemoryUploadRepository } from './in-memory-upload-repository';
 import { InMemoryUserEventRepository } from './in-memory-user-event-repository';
 import { InMemoryUserPreferencesRepository } from './in-memory-user-preferences-repository';
@@ -50,6 +53,9 @@ export function graph(): Container {
     .provide(Repo.channels, (c) => new InMemoryChannelRepository(c.get(Repo.videos)))
     .provide(Repo.events, () => new InMemoryEventRepository())
     .provide(Repo.channelAudit, () => new InMemoryChannelAuditRepository())
+    .provide(Repo.commentSettings, () => new InMemoryCommentSettingsRepository())
+    .provide(Repo.channelUserRestrictions, () => new InMemoryChannelUserRestrictionRepository())
+    .provide(Repo.trustedCommenters, () => new InMemoryTrustedCommenterRepository())
     .provide(
       Repo.channelMembers,
       (c) =>

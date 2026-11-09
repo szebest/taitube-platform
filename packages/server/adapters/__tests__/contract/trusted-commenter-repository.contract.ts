@@ -1,0 +1,84 @@
+import type { Repositories } from '@vp/core/repositories';
+import type { Channel } from '@vp/domain';
+import { expectOk } from '@vp/testing/result';
+import { INVITEE_ID, seedTeam } from './channel-team-fixtures';
+import { OTHER_OWNER_ID, OWNER_ID, seedOwners } from './fixtures';
+import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
+
+export function describeTrustedCommenterRepositoryContract(
+  makeSubject: MakeRepositoriesSubject
+): void {
+  describe('TrustedCommenterRepository contract', () => {
+    let subject: RepositoriesSubject;
+    let repositories: Repositories;
+    let channel: Channel;
+
+    const add = async (userId: string) =>
+      expectOk(await repositories.trustedCommenters.add(channel.id, userId, OWNER_ID));
+    const isTrusted = async (userId: string) =>
+      expectOk(await repositories.trustedCommenters.isTrusted(channel.id, userId));
+
+    beforeAll(async () => {
+      subject = await makeSubject();
+    });
+
+    afterAll(async () => {
+      await subject.close();
+    });
+
+    beforeEach(async () => {
+      await subject.reset();
+      repositories = subject.repositories;
+      await seedOwners(repositories);
+      channel = await seedTeam(repositories);
+    });
+
+    it('trusts nobody until a user is added', async () => {
+      expect(await isTrusted(OTHER_OWNER_ID)).toBe(false);
+    });
+
+    it('adds a user once, and says so when they were already trusted', async () => {
+      expect([await add(OTHER_OWNER_ID), await add(OTHER_OWNER_ID)]).toEqual([true, false]);
+      expect(await isTrusted(OTHER_OWNER_ID)).toBe(true);
+    });
+
+    it('removes a user once, and says so when they were not trusted', async () => {
+      await add(OTHER_OWNER_ID);
+      const remove = async () =>
+        expectOk(await repositories.trustedCommenters.remove(channel.id, OTHER_OWNER_ID));
+
+      expect([await remove(), await remove()]).toEqual([true, false]);
+      expect(await isTrusted(OTHER_OWNER_ID)).toBe(false);
+    });
+
+    it('trusts a user on one channel only', async () => {
+      const other = expectOk(
+        await repositories.channels.create({
+          userId: OTHER_OWNER_ID,
+          handle: 'other',
+          displayName: 'Other',
+        })
+      );
+      await add(INVITEE_ID);
+
+      expect(expectOk(await repositories.trustedCommenters.isTrusted(other.id, INVITEE_ID))).toBe(
+        false
+      );
+    });
+
+    it('lists the newest first and pages by cursor', async () => {
+      await add(OTHER_OWNER_ID);
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      await add(INVITEE_ID);
+      const page = async (cursor: { createdAt: Date; userId: string } | null) =>
+        expectOk(await repositories.trustedCommenters.list(channel.id, { cursor, limit: 1 }));
+
+      const firstPage = await page(null);
+      const [head] = firstPage;
+      const rest = await page(head ? { createdAt: head.createdAt, userId: head.userId } : null);
+
+      expect(firstPage.map((row) => row.userId)).toEqual([INVITEE_ID, OTHER_OWNER_ID]);
+      expect(rest.map((row) => row.userId)).toEqual([OTHER_OWNER_ID]);
+    });
+  });
+}

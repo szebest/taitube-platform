@@ -4,6 +4,7 @@ import {
   DISCLOSURES,
   type DisclosureDefaults,
   REVIEW_MODES,
+  type RestrictionKind,
   type ReviewMode,
 } from '@vp/domain';
 import { sql } from 'drizzle-orm';
@@ -83,7 +84,7 @@ export const channelUserRestrictions = pgTable(
   {
     channelId: channelRef(),
     userId: userRef('user_id'),
-    kind: text('kind').$type<'shadow' | 'ban'>().notNull(),
+    kind: text('kind').$type<RestrictionKind>().notNull(),
     reason: text('reason'),
     expiresAt: timestamptz('expires_at'),
     createdBy: actorRef('created_by'),

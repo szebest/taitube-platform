@@ -6,9 +6,11 @@ import type { InMemoryChannelFeaturedRepository } from './in-memory-channel-feat
 import type { InMemoryChannelInviteRepository } from './in-memory-channel-invite-repository';
 import type { InMemoryChannelMemberRepository } from './in-memory-channel-member-repository';
 import type { InMemoryChannelRepository } from './in-memory-channel-repository';
+import type { InMemoryChannelUserRestrictionRepository } from './in-memory-channel-user-restriction-repository';
 import type { InMemoryClipRepository } from './in-memory-clip-repository';
 import type { InMemoryCommentReportRepository } from './in-memory-comment-report-repository';
 import type { InMemoryCommentRepository } from './in-memory-comment-repository';
+import type { InMemoryCommentSettingsRepository } from './in-memory-comment-settings-repository';
 import type { InMemoryDlqRepository } from './in-memory-dlq-repository';
 import type { InMemoryEventRepository } from './in-memory-event-repository';
 import type { InMemoryLiveStreamRepository } from './in-memory-live-stream-repository';
@@ -24,6 +26,7 @@ import type { InMemorySearchHistoryRepository } from './in-memory-search-history
 import type { InMemorySearchRepository } from './in-memory-search-repository';
 import type { InMemoryStepRepository } from './in-memory-step-repository';
 import type { InMemorySubscriptionRepository } from './in-memory-subscription-repository';
+import type { InMemoryTrustedCommenterRepository } from './in-memory-trusted-commenter-repository';
 import type { InMemoryUploadRepository } from './in-memory-upload-repository';
 import type { InMemoryUserEventRepository } from './in-memory-user-event-repository';
 import type { InMemoryUserPreferencesRepository } from './in-memory-user-preferences-repository';
@@ -52,6 +55,10 @@ export const Repo = {
   channelMembers: token<InMemoryChannelMemberRepository>('channelMembers'),
   channelInvites: token<InMemoryChannelInviteRepository>('channelInvites'),
   channelAudit: token<InMemoryChannelAuditRepository>('channelAudit'),
+  commentSettings: token<InMemoryCommentSettingsRepository>('commentSettings'),
+  channelUserRestrictions:
+    token<InMemoryChannelUserRestrictionRepository>('channelUserRestrictions'),
+  trustedCommenters: token<InMemoryTrustedCommenterRepository>('trustedCommenters'),
   videoReactions: token<InMemoryVideoReactionRepository>('videoReactions'),
   subscriptions: token<InMemorySubscriptionRepository>('subscriptions'),
   videoViews: token<InMemoryVideoViewRepository>('videoViews'),

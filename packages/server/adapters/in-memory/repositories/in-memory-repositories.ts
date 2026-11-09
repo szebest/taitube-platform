@@ -6,9 +6,11 @@ import type { InMemoryChannelFeaturedRepository } from './in-memory-channel-feat
 import type { InMemoryChannelInviteRepository } from './in-memory-channel-invite-repository';
 import type { InMemoryChannelMemberRepository } from './in-memory-channel-member-repository';
 import type { InMemoryChannelRepository } from './in-memory-channel-repository';
+import type { InMemoryChannelUserRestrictionRepository } from './in-memory-channel-user-restriction-repository';
 import type { InMemoryClipRepository } from './in-memory-clip-repository';
 import type { InMemoryCommentReportRepository } from './in-memory-comment-report-repository';
 import type { InMemoryCommentRepository } from './in-memory-comment-repository';
+import type { InMemoryCommentSettingsRepository } from './in-memory-comment-settings-repository';
 import type { InMemoryDlqRepository } from './in-memory-dlq-repository';
 import type { InMemoryEventRepository } from './in-memory-event-repository';
 import { graph } from './in-memory-graph';
@@ -27,6 +29,7 @@ import type { InMemorySearchHistoryRepository } from './in-memory-search-history
 import type { InMemorySearchRepository } from './in-memory-search-repository';
 import type { InMemoryStepRepository } from './in-memory-step-repository';
 import type { InMemorySubscriptionRepository } from './in-memory-subscription-repository';
+import type { InMemoryTrustedCommenterRepository } from './in-memory-trusted-commenter-repository';
 import type { InMemoryUploadRepository } from './in-memory-upload-repository';
 import type { InMemoryUserEventRepository } from './in-memory-user-event-repository';
 import type { InMemoryUserPreferencesRepository } from './in-memory-user-preferences-repository';
@@ -54,6 +57,9 @@ export class InMemoryRepositories implements Repositories {
   readonly channelMembers: InMemoryChannelMemberRepository;
   readonly channelInvites: InMemoryChannelInviteRepository;
   readonly channelAudit: InMemoryChannelAuditRepository;
+  readonly commentSettings: InMemoryCommentSettingsRepository;
+  readonly channelUserRestrictions: InMemoryChannelUserRestrictionRepository;
+  readonly trustedCommenters: InMemoryTrustedCommenterRepository;
   readonly videoReactions: InMemoryVideoReactionRepository;
   readonly subscriptions: InMemorySubscriptionRepository;
   readonly videoViews: InMemoryVideoViewRepository;
@@ -93,6 +99,9 @@ export class InMemoryRepositories implements Repositories {
     this.channelMembers = c.get(Repo.channelMembers);
     this.channelInvites = c.get(Repo.channelInvites);
     this.channelAudit = c.get(Repo.channelAudit);
+    this.commentSettings = c.get(Repo.commentSettings);
+    this.channelUserRestrictions = c.get(Repo.channelUserRestrictions);
+    this.trustedCommenters = c.get(Repo.trustedCommenters);
     this.videoReactions = c.get(Repo.videoReactions);
     this.subscriptions = c.get(Repo.subscriptions);
     this.videoViews = c.get(Repo.videoViews);

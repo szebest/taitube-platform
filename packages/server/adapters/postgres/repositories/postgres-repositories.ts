@@ -10,9 +10,11 @@ import { PostgresChannelFeaturedRepository } from './postgres-channel-featured-r
 import { PostgresChannelInviteRepository } from './postgres-channel-invite-repository';
 import { PostgresChannelMemberRepository } from './postgres-channel-member-repository';
 import { PostgresChannelRepository } from './postgres-channel-repository';
+import { PostgresChannelUserRestrictionRepository } from './postgres-channel-user-restriction-repository';
 import { PostgresClipRepository } from './postgres-clip-repository';
 import { PostgresCommentReportRepository } from './postgres-comment-report-repository';
 import { PostgresCommentRepository } from './postgres-comment-repository';
+import { PostgresCommentSettingsRepository } from './postgres-comment-settings-repository';
 import { PostgresDlqRepository } from './postgres-dlq-repository';
 import { PostgresEventRepository } from './postgres-event-repository';
 import { PostgresLiveChatRepository } from './postgres-live-chat-repository';
@@ -29,6 +31,7 @@ import { PostgresSearchHistoryRepository } from './postgres-search-history-repos
 import { PostgresSearchRepository } from './postgres-search-repository';
 import { PostgresStepRepository } from './postgres-step-repository';
 import { PostgresSubscriptionRepository } from './postgres-subscription-repository';
+import { PostgresTrustedCommenterRepository } from './postgres-trusted-commenter-repository';
 import { PostgresUploadRepository } from './postgres-upload-repository';
 import { PostgresUserEventRepository } from './postgres-user-event-repository';
 import { PostgresUserPreferencesRepository } from './postgres-user-preferences-repository';
@@ -63,6 +66,9 @@ export class PostgresRepositories implements Repositories {
   readonly channelMembers: PostgresChannelMemberRepository;
   readonly channelInvites: PostgresChannelInviteRepository;
   readonly channelAudit: PostgresChannelAuditRepository;
+  readonly commentSettings: PostgresCommentSettingsRepository;
+  readonly channelUserRestrictions: PostgresChannelUserRestrictionRepository;
+  readonly trustedCommenters: PostgresTrustedCommenterRepository;
   readonly videoReactions: PostgresVideoReactionRepository;
   readonly subscriptions: PostgresSubscriptionRepository;
   readonly videoViews: PostgresVideoViewRepository;
@@ -106,6 +112,9 @@ export class PostgresRepositories implements Repositories {
     this.channelMembers = new PostgresChannelMemberRepository(db);
     this.channelInvites = new PostgresChannelInviteRepository(db);
     this.channelAudit = new PostgresChannelAuditRepository(db);
+    this.commentSettings = new PostgresCommentSettingsRepository(db);
+    this.channelUserRestrictions = new PostgresChannelUserRestrictionRepository(db);
+    this.trustedCommenters = new PostgresTrustedCommenterRepository(db);
     this.videoReactions = new PostgresVideoReactionRepository(db);
     this.subscriptions = new PostgresSubscriptionRepository(db);
     this.videoViews = new PostgresVideoViewRepository(db);
