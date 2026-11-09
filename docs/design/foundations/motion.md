@@ -107,6 +107,12 @@ forces it whatever the viewer picked. Under it:
    dot is static and the `LIVE` label carries the meaning (README section 8).
 3. **Entering uses `enter`, leaving `exit`, moving `settle`.** An exit is a step faster than its enter
    (`slow` in, `base` out).
+   **A surface that closes animates out, from the keyboard as well.** Dialog, Drawer, Popover, Menu, Select,
+   Command's palette and Toast keep their content mounted for the `exit` animation (`motion-enter` carries it on
+   `data-state="closed"`, `fast` by default), and under reduced motion it is an opacity fade. A caller never
+   unmounts one on close: a `key` that changes with `open` removes the surface in the first frame; key it by the
+   opening (the command palette's `session`) so the next one starts fresh. `overlay-exit.test.ts` in the web
+   app's `e2e/` closes each primitive and holds it in the document, `data-state="closed"`, a few frames later.
 4. **No layout shift on hover.** The lift moves the thumbnail by transform; the card's box and its neighbours
    never move.
 5. **Respond within one frame.** Press and hover start immediately; do not delay a hover feedback. The one

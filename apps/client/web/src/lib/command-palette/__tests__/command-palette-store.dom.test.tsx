@@ -3,9 +3,14 @@ import userEvent, { type UserEvent } from '@testing-library/user-event';
 import { CommandPaletteProvider, useCommandPaletteStore } from '../command-palette-store';
 
 function OpenState() {
-  const { open } = useCommandPaletteStore();
+  const { open, session } = useCommandPaletteStore();
 
-  return <output>{open ? 'open' : 'closed'}</output>;
+  return (
+    <>
+      <output>{open ? 'open' : 'closed'}</output>
+      <output aria-label="Session">{session}</output>
+    </>
+  );
 }
 
 function renderStore() {
@@ -55,7 +60,7 @@ describe('apps/client/web: command palette store', () => {
     before();
     await user.keyboard(press);
 
-    expect(screen.getByRole('status')).toHaveTextContent(shown);
+    expect(screen.getByText(/^(open|closed)$/)).toHaveTextContent(shown);
   });
 
   it.each([
@@ -77,6 +82,21 @@ describe('apps/client/web: command palette store', () => {
 
     press();
 
-    expect(screen.getByRole('status')).toHaveTextContent('closed');
+    expect(screen.getByText(/^(open|closed)$/)).toHaveTextContent('closed');
+  });
+
+  it('starts a new session on each opening and keeps it while the palette closes', async () => {
+    const user = renderStore();
+    const session = () => screen.getByLabelText('Session');
+
+    await user.keyboard('/');
+    expect(session()).toHaveTextContent('1');
+
+    await user.keyboard('{Control>}k{/Control}');
+    expect(screen.getByText('closed')).toBeInTheDocument();
+    expect(session()).toHaveTextContent('1');
+
+    await user.keyboard('/');
+    expect(session()).toHaveTextContent('2');
   });
 });
