@@ -14,6 +14,8 @@ describe('@vp/messages: pl party', () => {
   it.each([
     { key: 'party.rosterGuests', args: { count: 1 }, expected: '1 gość' },
     { key: 'party.rosterGuests', args: { count: 3 }, expected: '3 gości' },
+    { key: 'party.roomPresent', args: { count: 3 }, expected: '3 osoby' },
+    { key: 'party.roomPresent', args: { count: 5 }, expected: '5 osób' },
     { key: 'party.discoveryNewParties', args: { count: 3 }, expected: '3 nowe seanse' },
     { key: 'party.discoveryNewParties', args: { count: 5 }, expected: '5 nowych seansów' },
     {

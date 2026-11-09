@@ -13,6 +13,7 @@ describe('@vp/messages: en party', () => {
   });
 
   it.each([
+    { key: 'party.memberOptions', args: { name: 'Ana' }, expected: 'Options for Ana' },
     {
       key: 'party.roomTitle',
       args: { name: 'Movie night' },
