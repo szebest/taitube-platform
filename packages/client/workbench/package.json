@@ -39,7 +39,6 @@
     "@vp/tsconfig": "workspace:*",
     "@vp/ui": "workspace:*",
     "@vp/vite-preset": "workspace:*",
-    "@vp/web-telemetry": "workspace:*",
     "@vp/web-testing": "workspace:*",
     "jsdom": "^30.1.2",
     "react": "^19.3.0",

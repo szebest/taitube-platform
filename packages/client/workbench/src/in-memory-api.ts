@@ -1,7 +1,7 @@
 import { type ApiClient, createApiClient } from '@vp/api-client';
 import type { EndpointContract } from '@vp/api-contracts';
 
-export interface ApiCall {
+interface ApiCall {
   params: Readonly<Record<string, string>>;
   body: unknown;
 }
@@ -32,7 +32,7 @@ function matcher({ method, path }: ApiReply['contract']) {
 }
 
 /** A `fetch` that answers the contracts in `replies` and nothing else, so a story never leaves the page. */
-export function inMemoryFetch(replies: readonly ApiReply[]): typeof fetch {
+function inMemoryFetch(replies: readonly ApiReply[]): typeof fetch {
   const routes = replies.map((reply) => ({ reply, match: matcher(reply.contract) }));
 
   return async (input, init) => {

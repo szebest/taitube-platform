@@ -1606,9 +1606,6 @@ importers:
       '@vp/vite-preset':
         specifier: workspace:*
         version: link:../../server/vite-preset
-      '@vp/web-telemetry':
-        specifier: workspace:*
-        version: link:../web-telemetry
       '@vp/web-testing':
         specifier: workspace:*
         version: link:../web-testing
