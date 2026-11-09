@@ -3,13 +3,17 @@ import type {
   ChannelInviteView,
   ChannelMemberView,
   ChannelMembershipView,
+  MyInviteView,
 } from '@vp/api-contracts';
 import {
+  acceptChannelInvite,
   changeChannelMemberRole,
   createChannelInvite,
+  declineChannelInvite,
   getChannel,
   getChannelTeam,
   listChannelAudit,
+  listMyInvites,
   listMyMemberships,
   removeChannelMember,
   revokeChannelInvite,
@@ -59,6 +63,19 @@ export function invite(role: ChannelRole, displayName: string): ChannelInviteVie
   };
 }
 
+export const MY_INVITE_ID = '0190c3a0-5e1d-7000-8000-0000000dd002';
+
+export function myInvite(role: ChannelRole, overrides: Partial<MyInviteView> = {}): MyInviteView {
+  return {
+    id: MY_INVITE_ID,
+    channel: { id: OTHER_CHANNEL_ID, ...profile('othershow', 'Other Show') },
+    role,
+    invitedByName: 'Olivia Owner',
+    expiresAt: '2026-01-15T00:00:00.000Z',
+    ...overrides,
+  };
+}
+
 export const roleChanged = (id: string): ChannelAuditPageView['items'][number] => ({
   id,
   action: 'member.role_changed',
@@ -82,32 +99,44 @@ export interface TeamState {
   invites: ChannelInviteView[];
   auditPages: ChannelAuditPageView['items'][];
   memberships: ChannelMembershipView[];
+  myInvites: MyInviteView[];
 }
 
 interface TeamRequests {
   teamChannels: (string | null)[];
   changes: { userId: string; role: unknown }[];
   removed: string[];
+  removedFrom: (string | null)[];
   revoked: string[];
   invited: { handle: string; role: string }[];
+  accepted: string[];
+  declined: string[];
   audits: { actor: string | null; action: string | null; cursor: string | null }[];
 }
 
 /** The API behind the team page: the state it answers from, and what it was asked, the state moving with each write. */
-export function serveTeam(initial: Partial<TeamState> = {}, inviteFailure?: ErrorCode) {
+export function serveTeam(
+  initial: Partial<TeamState> = {},
+  inviteFailure?: ErrorCode,
+  answerFailure?: ErrorCode
+) {
   const state: TeamState = {
     members: [],
     invites: [],
     auditPages: [[]],
     memberships: [],
+    myInvites: [],
     ...initial,
   };
   const requests: TeamRequests = {
     teamChannels: [],
     changes: [],
     removed: [],
+    removedFrom: [],
     revoked: [],
     invited: [],
+    accepted: [],
+    declined: [],
     audits: [],
   };
 
@@ -141,9 +170,12 @@ export function serveTeam(initial: Partial<TeamState> = {}, inviteFailure?: Erro
         state.members.find((held) => held.userId === params.userId) ?? state.members[0]
       );
     }),
-    mockEndpoint(removeChannelMember, ({ params }) => {
+    mockEndpoint(removeChannelMember, ({ request, params }) => {
+      const channelId = request.headers.get('x-channel-id');
       requests.removed.push(String(params.userId));
+      requests.removedFrom.push(channelId);
       state.members = state.members.filter((held) => held.userId !== params.userId);
+      state.memberships = state.memberships.filter((held) => held.channelId !== channelId);
       return new HttpResponse(null, { status: 204 });
     }),
     mockEndpoint(revokeChannelInvite, ({ params }) => {
@@ -158,6 +190,31 @@ export function serveTeam(initial: Partial<TeamState> = {}, inviteFailure?: Erro
       const created = invite(body.role, body.handle);
       state.invites = [...state.invites, created];
       return HttpResponse.json(created, { status: 201 });
+    }),
+    mockEndpoint(listMyInvites, () =>
+      HttpResponse.json({ items: state.myInvites, nextCursor: null })
+    ),
+    mockEndpoint(acceptChannelInvite, ({ params }) => {
+      requests.accepted.push(String(params.id));
+      if (answerFailure) {
+        state.myInvites = state.myInvites.filter((pending) => pending.id !== params.id);
+        return problemReply(answerFailure);
+      }
+      const accepted = state.myInvites.find((pending) => pending.id === params.id);
+      state.myInvites = state.myInvites.filter((pending) => pending.id !== params.id);
+      if (!accepted) return problemReply(ErrorCodes.CHANNEL_INVITE_NOT_FOUND);
+      const joined = {
+        ...membership(accepted.role),
+        channelId: accepted.channel.id,
+        channel: accepted.channel,
+      };
+      state.memberships = [...state.memberships, joined];
+      return HttpResponse.json(joined);
+    }),
+    mockEndpoint(declineChannelInvite, ({ params }) => {
+      requests.declined.push(String(params.id));
+      state.myInvites = state.myInvites.filter((pending) => pending.id !== params.id);
+      return answerFailure ? problemReply(answerFailure) : new HttpResponse(null, { status: 204 });
     }),
     mockEndpoint(getChannel, ({ params }) =>
       params.idOrHandle === 'newcomer'

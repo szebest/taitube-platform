@@ -5,6 +5,7 @@ import {
   declineChannelInvite,
   getChannelTeam,
   listChannelAudit,
+  listMyInvites,
   listMyMemberships,
   removeChannelMember,
   revokeChannelInvite,
@@ -52,6 +53,17 @@ export async function channelTeamRoutes(app: FastifyInstance): Promise<void> {
       const revoked = await channelInviteService.revoke(user, acting, request.params.id);
       return sendResult(reply, request, revoked, { status: revokeChannelInvite.status });
     }
+  );
+
+  server.get(
+    listMyInvites.path,
+    { schema: { ...contractSchema(listMyInvites), querystring: listMyInvites.query } },
+    async (request, reply) =>
+      sendResult(
+        reply,
+        request,
+        await channelInviteService.listMine(requireAuth(request), request.query)
+      )
   );
 
   server.post(

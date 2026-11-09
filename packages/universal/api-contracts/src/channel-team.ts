@@ -56,6 +56,22 @@ const MembershipSchema = z.object({
 
 const MembershipListSchema = z.object({ items: z.array(MembershipSchema) });
 
+const MyInviteSchema = z.object({
+  id: z.uuid(),
+  channel: z.object({ id: z.uuid() }).extend(ProfileSchema.shape),
+  role: ChannelRoleSchema,
+  invitedByName: z
+    .string()
+    .nullable()
+    .describe("The inviter's display name; null once they deleted their account"),
+  expiresAt: z.iso.datetime(),
+});
+
+const MyInvitePageSchema = z.object({
+  items: z.array(MyInviteSchema),
+  nextCursor: z.string().nullable(),
+});
+
 const InviteMetaSchema = z.object({ inviteeUserId: z.uuid(), role: ChannelRoleSchema });
 const MemberMetaSchema = z.object({ role: ChannelRoleSchema });
 
@@ -167,6 +183,19 @@ export const revokeChannelInvite = defineEndpoint({
   },
 });
 
+export const listMyInvites = defineEndpoint({
+  method: 'GET',
+  path: '/v1/me/invites',
+  tag: TAG,
+  summary: 'List the caller pending invites',
+  description:
+    'The invites to a channel team the caller can still answer, newest first, keyset-paginated. A declined, accepted, revoked or expired invite, and any invite sent to someone else, is never listed.',
+  query: KeysetQuerySchema,
+  status: 200,
+  result: MyInvitePageSchema,
+  errors: { ...SIGNED_IN, 400: [ErrorCodes.VALIDATION_FAILED, ErrorCodes.INVALID_CURSOR] },
+});
+
 export const acceptChannelInvite = defineEndpoint({
   method: 'POST',
   path: '/v1/invites/:id/accept',
@@ -261,5 +290,7 @@ export type ChannelTeamView = z.infer<typeof TeamSchema>;
 export type ChannelMemberView = z.infer<typeof MemberSchema>;
 export type ChannelInviteView = z.infer<typeof InviteSchema>;
 export type ChannelMembershipView = z.infer<typeof MembershipSchema>;
+export type MyInviteView = z.infer<typeof MyInviteSchema>;
+export type MyInvitePageView = z.infer<typeof MyInvitePageSchema>;
 export type ChannelAuditPageView = z.infer<typeof AuditPageSchema>;
 export type TeamProfileView = z.infer<typeof ProfileSchema>;

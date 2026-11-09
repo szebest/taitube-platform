@@ -9,6 +9,7 @@ export const teamKeys = {
   all: ['team'] as const,
   members: () => [...teamKeys.all, 'members'] as const,
   memberships: () => [...teamKeys.all, 'memberships'] as const,
+  myInvites: () => [...teamKeys.all, 'my-invites'] as const,
   audit: (filters: AuditFilters) => [...teamKeys.all, 'audit', filters] as const,
   lookup: (handle: string) => [...teamKeys.all, 'lookup', handle] as const,
 };
@@ -27,6 +28,17 @@ export function membershipsQueryOptions(api: ApiClient) {
     queryKey: teamKeys.memberships(),
     queryFn: () => api.channelTeam.listMyMemberships(),
     staleTime: 30_000,
+  });
+}
+
+/** The invites to a team the viewer has not answered yet, newest first, keyset-paged. */
+export function myInvitesQueryOptions(api: ApiClient) {
+  return infiniteQueryOptions({
+    queryKey: teamKeys.myInvites(),
+    queryFn: ({ pageParam }) =>
+      api.channelTeam.listMyInvites({ query: { limit: KEYSET_PAGE_SIZE, cursor: pageParam } }),
+    staleTime: 30_000,
+    ...keysetPaging,
   });
 }
 

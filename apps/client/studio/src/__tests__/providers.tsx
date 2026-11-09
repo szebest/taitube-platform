@@ -1,4 +1,4 @@
-import { type Account, getAccount, listMyMemberships } from '@vp/api-contracts';
+import { type Account, getAccount, listMyInvites, listMyMemberships } from '@vp/api-contracts';
 import {
   ApiProvider,
   AppWords,
@@ -50,7 +50,10 @@ export const SESSION = `${SESSION_COOKIE}=signed-in`;
 
 /** The API's answer for the account the session cookie reaches, who works on no other channel until a spec says so. */
 export function accountOf(creator: Account = account()) {
-  apiServer.use(mockEndpoint(listMyMemberships, () => HttpResponse.json({ items: [] })));
+  apiServer.use(
+    mockEndpoint(listMyMemberships, () => HttpResponse.json({ items: [] })),
+    mockEndpoint(listMyInvites, () => HttpResponse.json({ items: [], nextCursor: null }))
+  );
   return mockEndpoint(getAccount, () => HttpResponse.json(creator));
 }
 

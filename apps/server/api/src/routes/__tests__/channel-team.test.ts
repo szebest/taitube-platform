@@ -171,6 +171,7 @@ describe('channel team routes', () => {
       { method: 'POST', url: `/v1/invites/${UNKNOWN_ID}/accept` },
       { method: 'POST', url: `/v1/invites/${UNKNOWN_ID}/decline` },
       { method: 'GET', url: '/v1/me/memberships' },
+      { method: 'GET', url: '/v1/me/invites' },
     ] as const;
 
     for (const call of calls) expect((await send(null, call)).statusCode).toBe(401);
