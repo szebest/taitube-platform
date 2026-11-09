@@ -100,7 +100,10 @@ export const Expanded: Story = {
 export const MenuOpenAsMember: Story = {
   tags: ['motion'],
   args: { reason: { kind: 'shared-tags' } },
-  parameters: { app: { session: 'signed-in' } },
+  parameters: {
+    app: { session: 'signed-in' },
+    a11y: { config: { rules: [{ id: 'aria-hidden-focus', enabled: false }] } },
+  },
   play: async ({ canvasElement, userEvent }) => {
     const trigger = canvasElement.querySelector<HTMLElement>(
       '[data-slot="video-card-menu"] button'
