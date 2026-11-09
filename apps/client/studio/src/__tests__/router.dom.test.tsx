@@ -1,11 +1,10 @@
 import { createMemoryHistory } from '@tanstack/react-router';
 import { requestHandler } from '@tanstack/react-start/server';
 import { getVideo, listCategories } from '@vp/api-contracts';
-import { RouteError, RouteNotFound } from '@vp/queries';
+import { RouteError, RouteNotFound, RoutePending } from '@vp/queries';
 import { apiServer, mockEndpoint, VIDEO_ID, video } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
 import { signInBrowser } from '#app/__tests__/providers';
-import { RoutePending } from '#app/features/errors/components/route-fallbacks';
 import { getRouter } from '#app/router';
 
 /** Loads `path` for a signed-in creator, recording every video the loaders asked for. */

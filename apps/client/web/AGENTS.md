@@ -12,13 +12,13 @@ Instructions for any coding agent working on the Taitube web client (`apps/clien
 | Routing | file-based **TanStack Router** under `src/routes/`; `src/routeTree.gen.ts` is generated and committed |
 | Data | **TanStack Query** (one `QueryClient` per request and per tab, in router context), filled by route loaders; **TanStack Form** for forms |
 | Styling | **Tailwind CSS 4** (`@tailwindcss/vite`, plain class names, preflight on) on the colour roles and token sets of `@vp/ui`, with its **Radix** primitives and `@vp/components`; no stylesheet outside `@vp/ui` |
-| Playback | `<TaitubePlayer />` from `src/features/player`, on Video.js 10 (`@videojs/react`) and the `hls.js` its `@videojs/hlsjs-video` engine bundles; `features/player/engine/video-js-engine.tsx` is the one module that imports either, so the engine swaps in one file; the skin in `features/player/components/` reads it through `usePlayerState` and `usePlayerCommands`, typed by `player-port.ts`, and the player specs stand an offline hls.js in for the network (`features/player/__tests__/offline-hls.ts`) |
+| Playback | `<TaitubePlayer />` from `src/components/player/taitube-player`, on Video.js 10 (`@videojs/react`) and the `hls.js` its `@videojs/hlsjs-video` engine bundles; `integrations/video-js/video-js-engine.tsx` is the one module that imports either, so the engine swaps in one file; the skin in `components/player/` reads it through `usePlayerState` and `usePlayerCommands`, typed by `lib/player/player-port.ts` |
 | Tests | Vitest through the app's own Vite config, `globals: true`, in two projects: `node` (`vitest.config.ts`) and `jsdom` (`vitest.jsdom.config.ts`, the `*.dom.test.{ts,tsx}` specs) with Testing Library; MSW answers for the API in both |
 | Server | `vite build` writes `dist/client` and `dist/server/server.js` (a fetch handler); `start` serves it with `srvx`, and `src/server.ts` serves `dist/client` ahead of the app, `/assets/` immutable for a year (`withStaticAssets`) |
 
 `apps/client/web` is **tier `client`, layer T6**, the viewer app; the creator surface is `apps/client/studio`
 ([AGENTS.md](../studio/AGENTS.md)), on the same stack, and `/upload` and `/upload/edit/$videoId` here redirect
-to it on `VITE_STUDIO_URL` (`src/config`). It may import `packages/universal/*` and `packages/client/*` only;
+to it on `VITE_STUDIO_URL` (`src/lib/config`). It may import `packages/universal/*` and `packages/client/*` only;
 `pnpm boundaries` fails on anything else, and `tests/architecture/client-app-duplicates.test.ts` fails a source
 file byte-identical between the two apps. The browser-tier packages resolve **from their TypeScript
 source** through the aliases `@vp/vite-preset` sets up, so an edit to `@vp/intl-react` hot-reloads the app; `tsc`
@@ -36,16 +36,20 @@ src/
 │   ├── login.tsx         the `LoginPage` wrapper over `@vp/components`' sign-in card, the dev persona switcher behind import.meta.env.DEV
 │   ├── upload/           redirects to the same path on the studio, server render and client navigation alike
 │   └── $.tsx             the legacy redirects for unmatched paths
-├── features/<feature>/   new code: api/ (query options and key factories), hooks/ (mutations),
-│                         forms/ (field validators), components/
-├── integrations/         query/ (restoreQueryData), devtools/ (dev server only); the QueryClient,
-│                         the API client, the session and the shared queries come from @vp/queries
-├── components/<area>/<name>/  the app kit: shell, video, watch, channel, discovery, discussion, live, shorts, states;
-│                         presentational and compound, plus the route fallbacks
-├── hooks/                useStoredState, useVideoPages, useWatchProgress, useVideoActions, useAmbientSample
-├── config/               the only reader of import.meta.env, parsed with Zod
+├── features/<feature>/   one folder per domain, isolated: index.ts (its public face), api/ (query options and key
+│                         factories), hooks/ (mutations), forms/, utils/, components/<name>/
+├── components/<area>/<name>/  the app kit: presentational pieces two or more features use, and the player skin
+├── hooks/  utils/        what two or more features share (useStoredState, useVideoPages, useWatchProgress, ...)
+├── lib/                  first-party code with no SDK at its edge: config/ (the only reader of import.meta.env,
+│                         parsed with Zod), query-keys/, player/ (the port), seo/, preferences/
+├── integrations/         adapters at a third-party or platform edge: query/, devtools/, video-js/, service-worker/;
+│                         the QueryClient, the API client, the session and the shared queries come from @vp/queries
 └── router.tsx            getRouter(): this app's route tree and fallbacks handed to createAppRouter (@vp/queries)
 ```
+
+The layers, what each may import, the component folder and the names are written once, in
+[docs/standards/frontend-structure.md](../../../docs/standards/frontend-structure.md); read it before adding a feature,
+a component or a hook.
 
 ### A route file stays thin
 
@@ -120,7 +124,7 @@ page: the root route's `beforeLoad` returns `auth` (`ensureSession`), `_authed`'
 `/login?redirect=<path>`, and its loaders run on the server with the cookie's token. No script reads the token: the
 browser's API calls go to this origin's `/api`, and only server functions (`signOut`, the dev personas' sign-in)
 set or clear the cookie. A 401 for a signed-in viewer lands them on `/login`, and back where they were once signed
-in. The shell header mounts `features/auth/components/account-menu.tsx`: `@vp/components`' `AccountMenu` with the
+in. The shell header mounts `features/account/components/account-menu.tsx`: `@vp/components`' `AccountMenu` with the
 studio's upload and admin pages, a guest's sign-in link, and sign-out, which ends the session on both apps. Locally
 `pnpm dev` starts `dev-token serve`, and `/login` offers the dev personas (Guest, User, Creator, Admin); a
 production build has no sign-in provider until the OIDC client lands.
@@ -147,8 +151,8 @@ no meta.
   `API_BASE_URL`) and puts it in router context, so a loader reads `context.api`; a component or a hook reads
   the same one with `useApi()`, from the `ApiProvider` `__root.tsx` mounts.
 - **The loader fetches the page's primary data**: `ensureFound(queryClient, xQueryOptions(...))` for an entity
-  (an API 404 renders the not-found page), `queryClient.ensureQueryData` for a list,
-  `queryClient.ensureInfiniteQueryData` for a keyset feed. The component reads it with `useSuspenseQuery`, or
+  (an API 404 renders the not-found page), `queryClient.query({ ...options, staleTime: 'static' })` for a list,
+  `queryClient.infiniteQuery({ ...options, staleTime: 'static' })` for a keyset feed. The component reads it with `useSuspenseQuery`, or
   `useVideoPages` (over `useSuspenseInfiniteQuery`) for a feed of videos. Data only a signed-in viewer has
   (my reaction, is-subscribed) is a plain `useQuery({ ...options, enabled })` in the component that needs it.
 - **Keyset feeds** spread `keysetPaging` into `infiniteQueryOptions`: the cursor is the `pageParam` and
@@ -167,7 +171,7 @@ no meta.
   `form.Subscribe selector={(state) => state.canSubmit}`; `onMount` validators run after hydration, so a spec
   of that gate is a `*.dom.test.tsx`.
 
-### Settings and preferences (`features/settings`)
+### Settings and preferences (`features/account`)
 
 One preference store behind the settings area, with a catalogue per section in `@vp/domain/settings`
 (`appearance`, `playback`, `privacy`, `notifications`); each field says whether the `device`, the `account` or
@@ -189,7 +193,7 @@ One preference store behind the settings area, with a catalogue per section in `
   consumer reading `usePlaybackPreference`, never a `localStorage` key.
 - **Adding a row**: add the id to `SETTING_ROWS` in `settings-index.ts`, its words to `settings.rowLabel`,
   `rowKeywords` and (for a switch) `rowDescription` in `@vp/messages`, the row component in
-  `features/settings/components/` over `SettingItem` (or `SettingSwitchRow`), and the row to its page in
+  `features/account/components/` over `SettingItem` (or `SettingSwitchRow`), and the row to its page in
   `routes/settings/`. Search, the overview cards and the `#row` highlight come from the index.
 - Gaps owned elsewhere: the stats overlay (57) and autoplay next (73's queue) are saved but nothing reads them
   yet.
@@ -340,7 +344,7 @@ page by client-side navigation; a full page load of `/watch/...` is a server ren
 |---|---|
 | 55 design system | `@vp/ui`; global styles are linked once, in `__root.tsx` |
 | 69 URL state | the `validateSearch` every leaf route declares, and `features/url-modal/registry.ts` for a modal |
-| 57 player | `<TaitubePlayer />` and its prop, payload and event types from `#app/features/player`; `features/watch/components/watch-stage.tsx` mounts it on the watch page, and `PlayerChannelProvider` hands the page's other parts its seek, its playhead and its theater mode |
+| 57 player | `<TaitubePlayer />` and its prop, payload and event types from `#app/components/player/taitube-player`; `features/watch/components/watch-stage.tsx` mounts it on the watch page, and `PlayerChannelProvider` hands the page's other parts its seek, its playhead and its theater mode |
 | 73 library, queue | `features/library/` (above); `features/watch/hooks/use-playback-queue.ts` holds the watch page's queue, seeded with the video opened; 73 replaces it with the playlist's queue and the now playing bar |
 | 68 PWA | `src/sw.ts` (caching and sync land there), `features/pwa/` for the prompts and `shouldPrefetch()`, `vite-pwa.config.ts` for the build, `src/sw/` for the caching rules, `features/offline/` for the offline UI |
 | 76 live | `features/live/` (above), `components/live/`, `TaitubePlayer`'s `live` and `overlay` |

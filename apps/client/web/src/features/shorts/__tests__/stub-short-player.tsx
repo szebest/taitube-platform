@@ -1,4 +1,4 @@
-import type { TaitubePlayerWithTelemetryProps } from '#app/features/player';
+import type { TaitubePlayerWithTelemetryProps } from '#app/components/player/taitube-player';
 
 /** Stands for the player: it shows how the Shorts player asked for it to play. */
 export function StubShortPlayer({ layout, control, playbackUrl }: TaitubePlayerWithTelemetryProps) {

@@ -2,7 +2,7 @@ import { listAdminVideos } from '@vp/api-contracts';
 import { createQueryClient } from '@vp/queries';
 import { api, apiServer, mockEndpoint } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
-import { adminVideo } from '#app/features/admin/components/__tests__/moderation.fixture';
+import { adminVideo } from '#app/features/admin/__tests__/moderation.fixture';
 import { pickableVideosQueryOptions } from '../pick-videos';
 
 describe('apps/client/studio: pickableVideosQueryOptions', () => {
@@ -20,7 +20,7 @@ describe('apps/client/studio: pickableVideosQueryOptions', () => {
     );
 
     await expect(
-      createQueryClient().fetchQuery(pickableVideosQueryOptions(api, typed))
+      createQueryClient().query(pickableVideosQueryOptions(api, typed))
     ).resolves.toEqual([video]);
 
     expect(asked[0]?.get('visibility')).toBe('public');

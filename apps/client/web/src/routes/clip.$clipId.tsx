@@ -1,8 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { clipQueryOptions, ensureFound, parseParam } from '@vp/queries';
 import { z } from 'zod';
-import { ClipPage } from '#app/features/clips/components/clip-page';
-import { WatchPending } from '#app/features/watch/components/watch-pending';
+import { WatchPending } from '#app/features/watch';
+import { ClipPage } from './-components/clip-page/clip-page';
 
 export const Route = createFileRoute('/clip/$clipId')({
   params: {

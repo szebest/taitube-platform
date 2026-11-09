@@ -10,7 +10,7 @@ export async function ensureFound<T, TKey extends QueryKey>(
   options: EnsureQueryDataOptions<T, Error, T, TKey>
 ): Promise<T> {
   const loaded = await fromPromise(
-    () => queryClient.ensureQueryData(options),
+    () => queryClient.query({ ...options, staleTime: 'static' }),
     (cause) => cause
   );
   if (isOk(loaded)) return loaded.value;

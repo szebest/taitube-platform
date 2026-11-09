@@ -2,7 +2,7 @@ import { useRouter } from '@tanstack/react-router';
 import { useT } from '@vp/intl-react';
 import { useCan } from '@vp/permissions-react';
 import { appearance } from '@vp/ui/appearance/registry';
-import { APPEARANCE_MODES, type CommandAction, PLANNED_PAGES } from '../command-actions';
+import { APPEARANCE_MODES, type CommandAction, PLANNED_PAGES } from '../utils/command-actions';
 
 /** Every action the palette can run: a theme and a mode each, the pages whose route exists, and the studio for a creator. */
 export function useCommandActions(): CommandAction[] {

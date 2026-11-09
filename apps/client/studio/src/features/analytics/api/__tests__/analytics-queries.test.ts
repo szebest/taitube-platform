@@ -12,9 +12,7 @@ describe('apps/client/studio: analytics queries', () => {
     async ({ scope, range }) => {
       const requests = serveAnalytics({ views: [4, 6] });
 
-      const analytics = await createQueryClient().fetchQuery(
-        analyticsQueryOptions(api, scope, range)
-      );
+      const analytics = await createQueryClient().query(analyticsQueryOptions(api, scope, range));
 
       expect(requests).toEqual([{ scope: scope.kind, range }]);
       expect(analytics.rangeViews).toBe(10);

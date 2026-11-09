@@ -1,6 +1,6 @@
 import { useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
-import { publicFeedQueryOptions } from '#app/features/feed/api/feed-queries';
+import { publicFeedQueryOptions } from '#app/lib/query-keys/feed-keys';
 import { VideoFeed } from '../video-feed/video-feed';
 
 export function TrendingFeed() {

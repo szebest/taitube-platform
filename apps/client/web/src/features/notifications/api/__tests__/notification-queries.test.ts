@@ -24,7 +24,7 @@ describe('apps/client/web: notification queries', () => {
       })
     );
 
-    const pages = await createQueryClient().fetchInfiniteQuery({
+    const pages = await createQueryClient().infiniteQuery({
       ...notificationsQueryOptions(api, 'mentions'),
       pages: 2,
     });

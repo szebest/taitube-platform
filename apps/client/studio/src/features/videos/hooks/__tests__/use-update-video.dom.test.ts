@@ -7,7 +7,7 @@ import { api, mockEndpoint } from '@vp/web-testing';
 import { runMutation } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
 import { AppProviders } from '#app/__tests__/providers';
-import { libraryKeys } from '#app/features/content/api/library-queries';
+import { libraryKeys } from '#app/features/videos/api/library-queries';
 import { useUpdateVideo } from '../use-update-video';
 
 const detailKey = videoQueryOptions(api, VIDEO_ID).queryKey;

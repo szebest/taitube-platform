@@ -3,7 +3,7 @@ import { getCookie, setCookie } from '@tanstack/react-start/server';
 import { z } from 'zod';
 
 const remember = createServerFn()
-  .inputValidator(z.object({ value: z.string() }))
+  .validator(z.object({ value: z.string() }))
   .handler(({ data }) => {
     setCookie('kept', data.value, { httpOnly: true, path: '/' });
   });

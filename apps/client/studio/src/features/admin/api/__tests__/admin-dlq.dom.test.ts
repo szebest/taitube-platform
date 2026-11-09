@@ -2,7 +2,7 @@ import { listDlq } from '@vp/api-contracts';
 import { createQueryClient } from '@vp/queries';
 import { api, apiServer, mockEndpoint } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
-import { dlqEntry, dlqList } from '#app/features/admin/components/__tests__/queues.fixture';
+import { dlqEntry, dlqList } from '#app/features/admin/__tests__/queues.fixture';
 import {
   adminDlqQueryOptions,
   DlqSearchSchema,
@@ -17,7 +17,7 @@ describe('apps/client/studio: adminDlqQueryOptions', () => {
     apiServer.use(dlqList([dlqEntry(), replayed], queries));
     const options = adminDlqQueryOptions(api, 'REPLAYED');
 
-    const data = await createQueryClient().fetchInfiniteQuery(options);
+    const data = await createQueryClient().infiniteQuery(options);
 
     expect(options.queryKey).toEqual(['admin', 'dlq', 'list', 'REPLAYED']);
     expect(queries[0]?.get('status')).toBe('REPLAYED');
@@ -38,7 +38,7 @@ describe('apps/client/studio: parkedDlqQueryOptions', () => {
       })
     );
 
-    const result = await createQueryClient().fetchQuery(parkedDlqQueryOptions(api));
+    const result = await createQueryClient().query(parkedDlqQueryOptions(api));
 
     expect(queries[0]?.get('status')).toBe('PARKED');
     expect(result).toEqual({ count: 2, more });

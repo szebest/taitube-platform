@@ -1,9 +1,12 @@
 import { cleanupOutdatedCaches, precacheAndRoute } from 'workbox-precaching';
 import { registerRoute, setCatchHandler } from 'workbox-routing';
-import { registerBackgroundSync } from '#app/sw/background-sync';
-import { CACHE_NAMES } from '#app/sw/cache-names';
-import { registerRuntimeCaching } from '#app/sw/runtime-caching';
-import { registerSavedVideoRoutes, savedVideoFallback } from '#app/sw/saved-videos';
+import { registerBackgroundSync } from '#app/integrations/service-worker/background-sync';
+import { CACHE_NAMES } from '#app/integrations/service-worker/cache-names';
+import { registerRuntimeCaching } from '#app/integrations/service-worker/runtime-caching';
+import {
+  registerSavedVideoRoutes,
+  savedVideoFallback,
+} from '#app/integrations/service-worker/saved-videos';
 
 vi.mock(import('workbox-precaching'), () => ({
   cleanupOutdatedCaches: vi.fn(),
@@ -12,9 +15,13 @@ vi.mock(import('workbox-precaching'), () => ({
 }));
 vi.mock(import('workbox-routing'), () => ({ registerRoute: vi.fn(), setCatchHandler: vi.fn() }));
 vi.mock(import('workbox-strategies'), () => ({ NetworkOnly: vi.fn() }));
-vi.mock(import('#app/sw/background-sync'), () => ({ registerBackgroundSync: vi.fn() }));
-vi.mock(import('#app/sw/runtime-caching'), () => ({ registerRuntimeCaching: vi.fn() }));
-vi.mock(import('#app/sw/saved-videos'), () => ({
+vi.mock(import('#app/integrations/service-worker/background-sync'), () => ({
+  registerBackgroundSync: vi.fn(),
+}));
+vi.mock(import('#app/integrations/service-worker/runtime-caching'), () => ({
+  registerRuntimeCaching: vi.fn(),
+}));
+vi.mock(import('#app/integrations/service-worker/saved-videos'), () => ({
   registerSavedVideoRoutes: vi.fn(),
   savedVideoFallback: vi.fn(),
 }));

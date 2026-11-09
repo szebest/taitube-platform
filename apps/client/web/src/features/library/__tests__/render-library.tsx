@@ -29,11 +29,11 @@ import {
 import { type clip, mockEndpoint } from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
 import { type HttpHandler, HttpResponse } from 'msw/http';
+import { NOW, playlistDetail, uuid, watchLaterPlaylist } from '#app/__tests__/library-fixtures';
 import { loaderApi } from '#app/__tests__/loader-api';
+import { holds, preferencesView } from '#app/__tests__/preferences-fixtures';
 import { signInBrowser } from '#app/__tests__/providers';
-import { holds, preferencesView } from '#app/features/settings/__tests__/preferences-fixtures';
 import { getRouter } from '#app/router';
-import { NOW, playlistDetail, uuid, watchLaterPlaylist } from './library-fixtures';
 
 export interface LibraryApi {
   history?: WatchHistoryItemView[];

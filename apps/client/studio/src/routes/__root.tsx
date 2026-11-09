@@ -17,9 +17,9 @@ import {
 import uiStyles from '@vp/ui/styles.css?url';
 import { useWebTelemetry } from '@vp/web-telemetry';
 import type { ReactNode } from 'react';
-import { API_BASE_URL, COOKIE_DOMAIN, OTEL_TRACES_URL } from '#app/config';
-import { AccessDeniedSearchSchema } from '#app/features/shell/access-denied-search';
-import { StudioShell } from '#app/features/shell/components/studio-shell';
+import { API_BASE_URL, COOKIE_DOMAIN, OTEL_TRACES_URL } from '#app/lib/config';
+import { AccessDeniedSearchSchema } from '#app/utils/access-denied-search';
+import { StudioRoot } from './-components/studio-root/studio-root';
 
 /** The studio is a dense workspace: it starts on compact spacing and small sizing. */
 const STUDIO_SETS: TokenSetIds = { spacing: 'compact', sizing: 'small' };
@@ -75,7 +75,7 @@ function RootLayout() {
         <UserEventStream>
           <Tooltip.Provider>
             <ToastProvider toaster={toaster}>
-              <StudioShell />
+              <StudioRoot />
             </ToastProvider>
           </Tooltip.Provider>
         </UserEventStream>

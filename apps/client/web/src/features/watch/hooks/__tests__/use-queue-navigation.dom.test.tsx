@@ -1,8 +1,8 @@
 import { screen } from '@testing-library/react';
-import { QUEUED, renderPlaylistWatch } from '#app/features/watch/__tests__/render-watch';
+import { QUEUED, renderPlaylistWatch } from '#app/__tests__/render-watch';
 
-vi.mock(import('#app/features/player/taitube-player'), async () => ({
-  TaitubePlayer: (await import('#app/features/watch/__tests__/stub-player')).StubPlayer,
+vi.mock(import('#app/components/player/taitube-player/taitube-player'), async () => ({
+  TaitubePlayer: (await import('#app/__tests__/stub-player')).StubPlayer,
 }));
 
 describe('apps/client/web: useQueueNavigation', () => {
@@ -16,5 +16,6 @@ describe('apps/client/web: useQueueNavigation', () => {
 
     await vi.waitFor(() => expect(router.state.location.pathname).toBe(`/watch/${QUEUED[0]}`));
     expect(router.history.length).toBe(entries + 1);
+    await vi.waitFor(() => expect(router.state.isLoading).toBe(false));
   });
 });

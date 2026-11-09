@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { playChime } from '../overlay-chime';
+import { playChime } from '../utils/overlay-chime';
 
 /** @internal */
 export const SUBSCRIBER_ALERT_MS = 6000;

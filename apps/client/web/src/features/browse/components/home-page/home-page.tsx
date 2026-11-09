@@ -1,0 +1,72 @@
+import { useSuspenseQuery } from '@tanstack/react-query';
+import { ClientOnly, Link, useLocation } from '@tanstack/react-router';
+import { EmptyLibraryIllustration, EmptyState, ShelfSkeleton } from '@vp/components';
+import { useT } from '@vp/intl-react';
+import { useAccount, useApi } from '@vp/queries';
+import { type ReactNode, Suspense } from 'react';
+import { PickOfTheDaySkeleton } from '#app/components/discovery/pick-of-the-day';
+import { SignedOutSection } from '#app/components/states/signed-out-section';
+import { homeQueryOptions } from '#app/lib/query-keys/home-keys';
+import { HomePick } from '../home-pick/home-pick';
+import { HomeShelf } from '../home-shelf/home-shelf';
+
+export interface HomePageProps {
+  /** Shelves of other features, each rendered in the browser only, after the API's own. */
+  clientShelves?: Readonly<Record<string, ReactNode>>;
+}
+
+export function HomePage({ clientShelves = {} }: HomePageProps) {
+  const api = useApi();
+  const account = useAccount();
+  const href = useLocation({ select: (location) => location.href });
+  const { tOr } = useT();
+
+  const { data } = useSuspenseQuery(homeQueryOptions(api));
+
+  if (data.shelves.length === 0) {
+    return (
+      <EmptyState.Root>
+        <EmptyState.Illustration>
+          <EmptyLibraryIllustration />
+        </EmptyState.Illustration>
+        <EmptyState.Title>{tOr('home.empty', {}, '')}</EmptyState.Title>
+      </EmptyState.Root>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-section">
+      <HomePick />
+      {data.shelves.map((shelf) => (
+        <HomeShelf key={`${shelf.kind}:${shelf.subject?.id ?? ''}`} shelf={shelf} />
+      ))}
+      {Object.entries(clientShelves).map(([name, shelf]) => (
+        <ClientOnly key={name}>
+          <Suspense fallback={null}>{shelf}</Suspense>
+        </ClientOnly>
+      ))}
+      {!account && (
+        <SignedOutSection.Root>
+          <SignedOutSection.Line>
+            {tOr('home.signedOutSubscriptions', {}, '')}
+          </SignedOutSection.Line>
+          <SignedOutSection.Action asChild>
+            <Link to="/login" search={{ redirect: href }}>
+              {tOr('auth.signIn', {}, '')}
+            </Link>
+          </SignedOutSection.Action>
+        </SignedOutSection.Root>
+      )}
+    </div>
+  );
+}
+
+export function HomePageSkeleton() {
+  return (
+    <div aria-hidden="true" className="flex flex-col gap-section">
+      <PickOfTheDaySkeleton />
+      <ShelfSkeleton />
+      <ShelfSkeleton />
+    </div>
+  );
+}

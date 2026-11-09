@@ -1,0 +1,28 @@
+import { TitleFilterSchema } from '@vp/api-contracts';
+import { CREATOR_LIBRARY_SORTS } from '@vp/domain';
+import { z } from 'zod';
+import { AccessDeniedSearchSchema } from '#app/utils/access-denied-search';
+
+const FIRST_PAGE = 1;
+
+export const LibrarySearchSchema = AccessDeniedSearchSchema.extend({
+  sort: z
+    .unknown()
+    .optional()
+    .transform((sort) => CREATOR_LIBRARY_SORTS.find((known) => known === sort) ?? 'newest'),
+  page: z
+    .unknown()
+    .optional()
+    .transform((page) => {
+      const number = Number(page);
+      return Number.isInteger(number) && number >= FIRST_PAGE ? number : FIRST_PAGE;
+    }),
+  q: z
+    .unknown()
+    .optional()
+    .transform((q) => TitleFilterSchema.safeParse(q).data),
+});
+
+type LibrarySearch = z.output<typeof LibrarySearchSchema>;
+export type LibrarySort = LibrarySearch['sort'];
+export type LibraryQuery = Pick<LibrarySearch, 'sort' | 'page'> & { q?: string };

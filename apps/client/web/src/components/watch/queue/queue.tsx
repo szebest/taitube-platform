@@ -7,10 +7,10 @@ import {
   type ReactNode,
   useId,
 } from 'react';
+import { useScrollToCurrent } from './hooks/use-scroll-to-current';
 import { QueueContext, useQueue } from './queue.context';
 import { queueStyles } from './queue.variants';
 import type { QueueLayout, QueueRepeat } from './types';
-import { useScrollToCurrent } from './use-scroll-to-current';
 
 const NEXT_REPEAT = { off: 'all', all: 'one', one: 'off' } satisfies Record<
   QueueRepeat,
