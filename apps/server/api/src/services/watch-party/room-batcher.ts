@@ -15,7 +15,9 @@ export class RoomBatcher<T> {
   constructor(private readonly options: RoomBatcherOptions<T>) {}
 
   add(roomId: string, item: T): void {
-    this.pending.set(roomId, [...(this.pending.get(roomId) ?? []), item]);
+    const gathered = this.pending.get(roomId);
+    if (gathered === undefined) this.pending.set(roomId, [item]);
+    else gathered.push(item);
     if (this.timers.has(roomId)) return;
     this.timers.set(
       roomId,

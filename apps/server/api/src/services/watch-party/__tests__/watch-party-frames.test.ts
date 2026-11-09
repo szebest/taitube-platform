@@ -70,6 +70,23 @@ describe('room frames', () => {
   });
 
   it.each([
+    { type: 'ready', ready: true },
+    { type: 'away', away: true },
+    { type: 'buffering', buffering: false },
+    { type: 'stats', driftMs: 40, hardSeeks: 0 },
+  ] as const)('refuses the seventh $type frame in five seconds', async (frame) => {
+    const { socketDeps } = await socketRoom();
+    const { sender } = senderOf();
+    for (let sent = 0; sent < 6; sent += 1) {
+      expectOk(await answerFrame(socketDeps, sender, { ...frame, ref: `r${sent}` }));
+    }
+
+    const refused = await answerFrame(socketDeps, sender, { ...frame, ref: 'r6' });
+
+    expect(expectErr(refused).code).toBe(ErrorCodes.RATE_LIMITED);
+  });
+
+  it.each([
     { who: 'a member', guest: false, waits: 1 },
     { who: 'a guest', guest: true, waits: 0 },
   ])('starts the buffering wait for $who only', async ({ guest, waits }) => {

@@ -9,6 +9,7 @@ import type { WatchPartyAbility } from '@vp/permissions';
 import { assertNever, err, isErr, map, ok, parseJson, type Result } from '@vp/result';
 import { type InvalidField, invalidField } from '@vp/validation';
 import type { PartyCaller } from './party-caller';
+import { consumeBudget } from './watch-party-budgets';
 import {
   pinChat,
   type RemoveFailure,
@@ -67,6 +68,13 @@ export async function answerFrame(
   return answered;
 }
 
+const STATE_FRAMES: ReadonlySet<WatchPartyClientFrame['type']> = new Set([
+  'ready',
+  'away',
+  'buffering',
+  'stats',
+]);
+
 async function answer(
   deps: RoomSocketDeps,
   sender: FrameSender,
@@ -78,6 +86,15 @@ async function answer(
     sender.patch(change);
     return ok(ack());
   };
+  if (STATE_FRAMES.has(frame.type)) {
+    const spent = await consumeBudget(
+      deps.gate,
+      'command',
+      `${roomId}:${memberKey}:state`,
+      deps.config.budgets.command
+    );
+    if (isErr(spent)) return spent;
+  }
   switch (frame.type) {
     case 'clock':
       return ok({ type: 'clock', t0: frame.t0, serverNow: deps.now().getTime() });
