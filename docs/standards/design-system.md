@@ -112,7 +112,7 @@ Every ground is one role of the colour map; a component picks the role of what i
 | `bg` | the page, `html` and `body` (set once in `base.css`), sticking chrome (header, chip bar, page header, tab bar), the rail |
 | `surface` | content: cards, tables, panels, settings tiles |
 | `raised` | what floats over content: menus, popovers, dialogs, drawers, toasts, the now-playing bar |
-| `media` | what shows a picture or a video: thumbnails, posters, the player frame (always black) |
+| `media` and `on-media` | what shows a picture or a video, and what is drawn on it: thumbnails, posters, the player frame, its controls, captions and title (black and white in every theme) |
 | `tint` | hover |
 | `tint-strong` | pressed |
 | `accent-soft` | selected |
@@ -120,7 +120,10 @@ Every ground is one role of the colour map; a component picks the role of what i
 In the light modes `raised` and `surface` are the same value: a floating layer is told from a card by its border
 and shadow, not by a lighter ground, and no shade lighter than white exists. The player container sets
 `data-mode="dark"` so its native controls and scrollbars draw dark, and `bg-media` so the letterbox is black in
-every theme; `data-theme` carries a theme id only. `surface-roles.test.ts` holds the page ground and the player.
+every theme; `data-theme` carries a theme id only. The control bar and the title scrim carry `data-media-controls`:
+`base.css` gives everything inside it the `on-media` colour, a shadow under glyphs and text, and a focus ring that is
+white with a black halo, so a control is seen on a black frame and on a white one; the seek bar is `media-seek`
+with its played, buffered and rest colours. `surface-roles.test.ts` holds the page ground and the player.
 
 ## Selectable text
 

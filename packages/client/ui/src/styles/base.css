@@ -453,3 +453,80 @@ html {
     }
   }
 }
+
+/* The player draws on a black frame whatever the page theme: its controls take the fixed `on-media` white, a
+   shadow under glyphs and text, and a ring that is white with a black halo, so it is seen on a black frame
+   and on a white one. */
+[data-media-controls] {
+  color: var(--on-media);
+  text-shadow: 0 1px 2px var(--media);
+}
+
+[data-media-controls] svg {
+  filter: drop-shadow(0 1px 2px var(--media));
+}
+
+[data-media-controls] :is([data-slot="icon-button"], [data-slot="button"]) {
+  background: transparent;
+  color: var(--on-media);
+}
+
+[data-media-controls] :is([data-slot="icon-button"], [data-slot="button"]):hover {
+  background: color-mix(in srgb, var(--on-media) 20%, transparent);
+}
+
+[data-media-controls] :focus-visible {
+  outline: var(--border-focus) solid var(--on-media);
+  outline-offset: var(--border-focus-offset);
+  box-shadow: 0 0 0 calc(var(--border-focus) + var(--border-focus-offset) + 1px) var(--media);
+}
+
+@utility media-seek {
+  --track-played: var(--accent);
+  --track-buffered: color-mix(in srgb, var(--on-media) 45%, transparent);
+  --track-rest: color-mix(in srgb, var(--on-media) 20%, transparent);
+  --seek-direction: to right;
+  &:dir(rtl) {
+    --seek-direction: to left;
+  }
+  height: 1.25rem;
+  appearance: none;
+  background: transparent;
+  &::-webkit-slider-runnable-track {
+    height: 0.25rem;
+    border-radius: 9999px;
+    background: linear-gradient(
+      var(--seek-direction),
+      var(--track-played) var(--played),
+      var(--track-buffered) var(--played) var(--buffered),
+      var(--track-rest) var(--buffered)
+    );
+  }
+  &::-moz-range-track {
+    height: 0.25rem;
+    border-radius: 9999px;
+    background: linear-gradient(
+      var(--seek-direction),
+      var(--track-played) var(--played),
+      var(--track-buffered) var(--played) var(--buffered),
+      var(--track-rest) var(--buffered)
+    );
+  }
+  &::-webkit-slider-thumb {
+    appearance: none;
+    width: 0.75rem;
+    height: 0.75rem;
+    margin-block-start: -0.25rem;
+    border-radius: 9999px;
+    background: var(--on-media);
+    box-shadow: 0 0 0 2px var(--media);
+  }
+  &::-moz-range-thumb {
+    width: 0.75rem;
+    height: 0.75rem;
+    border: 0;
+    border-radius: 9999px;
+    background: var(--on-media);
+    box-shadow: 0 0 0 2px var(--media);
+  }
+}

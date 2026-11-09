@@ -14,7 +14,7 @@ import {
   Volume2,
   VolumeX,
 } from 'lucide-react';
-import { type ChangeEvent, useRef } from 'react';
+import { type ChangeEvent, type CSSProperties, useRef } from 'react';
 import {
   LiveEdgeButton,
   usePlayerCommands,
@@ -27,6 +27,8 @@ import { SettingsMenu } from './components/settings-menu/settings-menu';
 import { fromClipTime, toClipPlayhead } from './utils/clip-playhead';
 
 export interface ControlBarProps {
+  /** Shown over the top of the picture, on its own scrim, while the controls are. */
+  title?: string;
   live?: boolean;
   /** A clip: the seek bar and the clock show only this range of the video. */
   range?: PlaybackRange;
@@ -34,40 +36,57 @@ export interface ControlBarProps {
   onNext?: () => void;
 }
 
-export function ControlBar({ live = false, range, onPrevious, onNext }: ControlBarProps) {
+export function ControlBar({ title, live = false, range, onPrevious, onNext }: ControlBarProps) {
   const visible = usePlayerState((state) => state.controlsVisible);
 
   const { tOr } = useT();
 
   return (
-    <fieldset
-      aria-label={tOr('player.controls', {}, '')}
-      data-visible={visible || undefined}
-      className="absolute inset-x-0 bottom-0 m-0 min-w-0 border-0 bg-linear-to-t from-scrim to-transparent px-3 pt-12 pb-1 transition-opacity duration-200 motion-reduce:transition-none not-data-visible:pointer-events-none not-data-visible:opacity-0 has-focus-visible:pointer-events-auto has-focus-visible:opacity-100"
-    >
-      {!live && <SeekBar range={range} />}
-      <div className="flex items-center gap-1">
-        {onPrevious && (
-          <IconButton aria-label={tOr('player.previousVideo', {}, '')} onClick={onPrevious}>
-            <SkipBack aria-hidden="true" />
-          </IconButton>
-        )}
-        <PlayButton />
-        {onNext && (
-          <IconButton aria-label={tOr('player.nextVideo', {}, '')} onClick={onNext}>
-            <SkipForward aria-hidden="true" />
-          </IconButton>
-        )}
-        <VolumeControl />
-        {live ? <LiveBadge /> : <ElapsedTime range={range} />}
-        <div className="ms-auto flex items-center gap-1">
-          <CaptionsButton />
-          <SettingsMenu />
-          <TheaterButton />
-          <FullscreenButton />
+    <>
+      {title && <TitleScrim title={title} visible={visible} />}
+      <fieldset
+        aria-label={tOr('player.controls', {}, '')}
+        data-media-controls=""
+        data-visible={visible || undefined}
+        className="absolute inset-x-0 bottom-0 m-0 min-w-0 border-0 bg-linear-to-t from-media/90 via-media/55 to-transparent px-3 pt-20 pb-1 transition-opacity duration-fast ease-standard motion-reduce:transition-none not-data-visible:pointer-events-none not-data-visible:opacity-0 has-focus-visible:pointer-events-auto has-focus-visible:opacity-100"
+      >
+        {!live && <SeekBar range={range} />}
+        <div className="flex items-center gap-1">
+          {onPrevious && (
+            <IconButton aria-label={tOr('player.previousVideo', {}, '')} onClick={onPrevious}>
+              <SkipBack aria-hidden="true" />
+            </IconButton>
+          )}
+          <PlayButton />
+          {onNext && (
+            <IconButton aria-label={tOr('player.nextVideo', {}, '')} onClick={onNext}>
+              <SkipForward aria-hidden="true" />
+            </IconButton>
+          )}
+          <VolumeControl />
+          {live ? <LiveBadge /> : <ElapsedTime range={range} />}
+          <div className="ms-auto flex items-center gap-1">
+            <CaptionsButton />
+            <SettingsMenu />
+            <TheaterButton />
+            <FullscreenButton />
+          </div>
         </div>
-      </div>
-    </fieldset>
+      </fieldset>
+    </>
+  );
+}
+
+function TitleScrim({ title, visible }: Readonly<{ title: string; visible: boolean }>) {
+  return (
+    <div
+      aria-hidden="true"
+      data-media-controls=""
+      data-visible={visible || undefined}
+      className="pointer-events-none absolute inset-x-0 top-0 bg-linear-to-b from-media/80 via-media/40 to-transparent px-3 pt-2 pb-10 transition-opacity duration-fast ease-standard motion-reduce:transition-none not-data-visible:opacity-0"
+    >
+      <p className="m-0 truncate text-title select-text">{title}</p>
+    </div>
   );
 }
 
@@ -78,9 +97,17 @@ function useClipPlayhead(range: PlaybackRange | undefined) {
   return toClipPlayhead(range, { currentTime, duration });
 }
 
+const percentOf = (part: number, whole: number) =>
+  `${whole > 0 ? Math.min((part / whole) * 100, 100) : 0}%`;
+
 function SeekBar({ range }: Pick<ControlBarProps, 'range'>) {
   const { currentTime, duration } = useClipPlayhead(range);
   const videoDurationSeconds = usePlayerState((state) => state.duration);
+  const bufferedEnd = usePlayerState((state) => state.bufferedEnd);
+  const { currentTime: buffered } = toClipPlayhead(range, {
+    currentTime: bufferedEnd,
+    duration: videoDurationSeconds,
+  });
 
   const { seek } = usePlayerCommands();
   const { tOr } = useT();
@@ -98,7 +125,13 @@ function SeekBar({ range }: Pick<ControlBarProps, 'range'>) {
       onChange={({ currentTarget }) =>
         seek(fromClipTime(range, currentTarget.valueAsNumber, videoDurationSeconds))
       }
-      className="block w-full cursor-pointer accent-accent"
+      style={
+        {
+          '--played': percentOf(currentTime, duration),
+          '--buffered': percentOf(buffered, duration),
+        } as CSSProperties
+      }
+      className="media-seek block w-full cursor-pointer"
     />
   );
 }
@@ -180,7 +213,7 @@ function VolumeControl() {
         step={0.01}
         value={position}
         onChange={handleSlide}
-        className="w-0 cursor-pointer opacity-0 accent-fg transition-all duration-200 group-focus-within/volume:w-20 group-focus-within/volume:opacity-100 group-hover/volume:w-20 group-hover/volume:opacity-100 motion-reduce:transition-none"
+        className="w-0 cursor-pointer opacity-0 accent-fg transition-[width,opacity] duration-fast ease-standard group-focus-within/volume:w-20 group-focus-within/volume:opacity-100 group-hover/volume:w-20 group-hover/volume:opacity-100 motion-reduce:transition-none"
       />
     </div>
   );

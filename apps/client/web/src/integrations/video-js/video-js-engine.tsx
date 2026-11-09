@@ -3,6 +3,7 @@ import { Container, createPlayer, Gesture, LiveButton, Poster, useContainer } fr
 import { HlsJsVideo } from '@videojs/react/media/hlsjs-video';
 import { fromPromise, isOk } from '@vp/result';
 import { type ReactNode, type SyntheticEvent, useEffect, useEffectEvent, useRef } from 'react';
+import { bufferedEndAt } from '#app/lib/player/buffered-end';
 import { findDefaultRendition } from '#app/lib/player/playback-defaults';
 import { useOfferedPlayerChannel } from '#app/lib/player/player-channel';
 import type { PlayerCommands, PlayerState } from '#app/lib/player/player-port';
@@ -118,8 +119,8 @@ export function VideoJsEngine({
           data-mode="dark"
           className={
             vertical || fill
-              ? 'relative size-full overflow-hidden bg-media font-sans text-on-live'
-              : 'relative aspect-video w-full overflow-hidden rounded-thumb bg-media font-sans text-on-live not-data-controls-visible:cursor-none [&:fullscreen]:rounded-none'
+              ? 'relative size-full overflow-hidden bg-media font-sans text-on-media'
+              : 'relative aspect-video w-full overflow-hidden rounded-thumb bg-media font-sans text-on-media not-data-controls-visible:cursor-none [&:fullscreen]:rounded-none'
           }
         >
           <HlsJsVideo
@@ -285,6 +286,7 @@ export function usePlayerState<Selected>(select: (state: PlayerState) => Selecte
       paused: state.paused,
       currentTime: state.currentTime,
       duration: state.duration,
+      bufferedEnd: bufferedEndAt(state.buffered, state.currentTime),
       volume: state.volume,
       muted: state.muted,
       playbackRate: state.playbackRate,

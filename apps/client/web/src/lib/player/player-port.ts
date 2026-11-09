@@ -24,6 +24,8 @@ export interface PlayerState {
   paused: boolean;
   currentTime: number;
   duration: number;
+  /** Where the buffered range around the playhead ends, in seconds. */
+  bufferedEnd: number;
   /** The gain the media element applies, from 0 to 1. */
   volume: number;
   muted: boolean;

@@ -9,9 +9,9 @@ const SIZE_CLASSES: Record<PlayerCaptionStyle['size'], string> = {
 };
 
 const BACKGROUND_CLASSES: Record<PlayerCaptionStyle['background'], string> = {
-  none: '[text-shadow:0_0_0.25em_var(--scrim)]',
-  translucent: 'bg-scrim',
-  solid: 'bg-bg',
+  none: '[text-shadow:0_0_0.25em_var(--media)]',
+  translucent: 'bg-media/70',
+  solid: 'bg-media',
 };
 
 /** The cues at the playhead, drawn from the port state so their size and background look the same in every browser. */
@@ -25,7 +25,7 @@ export function CaptionOverlay() {
         <p
           data-caption-size={size}
           data-caption-background={background}
-          className={`m-0 max-w-[80%] rounded-control px-2 py-1 text-center whitespace-pre-line text-fg ${SIZE_CLASSES[size]} ${BACKGROUND_CLASSES[background]}`}
+          className={`m-0 max-w-[80%] rounded-control px-2 py-1 text-center whitespace-pre-line text-on-media ${SIZE_CLASSES[size]} ${BACKGROUND_CLASSES[background]}`}
         >
           {cues}
         </p>
