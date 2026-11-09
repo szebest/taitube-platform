@@ -28,11 +28,9 @@ export type CommentModerationAction =
   | ({ action: 'remove' } & Moderated);
 
 /** `shadow_ban` is silent and `ban` is visible by definition, so each is its own member. */
-export type UserModerationAction =
+type UserModerationAction =
   | { action: 'shadow_ban' }
   | { action: 'ban'; reason?: string; expiresAt?: Date | null }
   | { action: 'lift' };
 
 export type ModerationAction = CommentModerationAction | UserModerationAction;
-
-export type ModerationActionName = ModerationAction['action'];

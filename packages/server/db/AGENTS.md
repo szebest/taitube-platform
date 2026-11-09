@@ -12,7 +12,7 @@ Instructions for any coding agent working on `@vp/db`.
 (no CLI, no `migrate` / `seed` scripts):
 - **Schema Definitions:** Drizzle ORM tables (`src/schema.ts`, subpath `@vp/db/schema`, with
   `src/social-schema.ts` for `video_reactions` and `channel_subscriptions`, `src/comments-schema.ts` for
-  `video_comments`, `src/view-schema.ts` for `video_views_daily` and `video_view_batches`, and
+  `video_comments` (with its moderation columns), `src/comment-moderation-schema.ts` for `channel_comment_settings`, `channel_user_restrictions`, `channel_trusted_commenters`, `channel_saved_replies` and `comment_removals`, `src/view-schema.ts` for `video_views_daily` and `video_view_batches`, and
   `src/library-schema.ts` for `playlists`, `playlist_items` and `watch_history`, and
   `src/preferences-schema.ts` for `user_preferences`, whose `jsonb` sections are typed by `@vp/domain/settings`, and
   `src/user-events-schema.ts` for `user_events`, `src/search-history-schema.ts` for `search_history`, `src/recommendation-feedback-schema.ts` for `recommendation_feedback`, `src/clips-schema.ts` for `clips`, `src/picks-schema.ts` for `picks` (its no-overlap exclusion constraint exists only in `0026_picks.sql`, like the search vectors), `src/channel-featured-schema.ts` for `channel_featured_videos`, `src/channel-team-schema.ts` for `channel_members`, `channel_invites` and the append-only `channel_audit_log` (roles and statuses CHECKed against `@vp/domain`, audit actions left open), and `src/captions-schema.ts` for `video_captions` and

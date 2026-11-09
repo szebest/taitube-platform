@@ -1,3 +1,4 @@
+import type { ModerationAction, ModerationState } from '@vp/domain';
 import { ErrorCodes, type Failure } from '@vp/errors';
 
 export type CommentNotFound = Failure<typeof ErrorCodes.COMMENT_NOT_FOUND, { commentId: string }>;
@@ -73,7 +74,7 @@ export type ModerationRefusal = 'state' | 'reason_required';
 
 export type ModerationNotApplicable = Failure<
   typeof ErrorCodes.MODERATION_NOT_APPLICABLE,
-  { action: string; state: string; why: ModerationRefusal }
+  { action: ModerationAction['action']; state: ModerationState; why: ModerationRefusal }
 >;
 
 export function commentsBanned(restriction: {
@@ -109,8 +110,8 @@ export function commentsAccountTooNew(opensAt: Date): CommentsAccountTooNew {
 }
 
 export function moderationNotApplicable(
-  action: string,
-  state: string,
+  action: ModerationAction['action'],
+  state: ModerationState,
   why: ModerationRefusal
 ): ModerationNotApplicable {
   return {

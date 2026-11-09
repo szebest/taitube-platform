@@ -3,7 +3,7 @@ import { normalizePlainText, withinLength } from '../plain-text';
 import { foldForMatching } from './blocked-words';
 import { type InvalidCommentSettings, invalidCommentSettings } from './failures';
 
-export const SLOW_MODE_SECONDS = [5, 10, 30, 60, 300] as const;
+const SLOW_MODE_SECONDS = [5, 10, 30, 60, 300] as const;
 
 const WHITESPACE_RUN = /\s+/g;
 const MAX_BLOCKED_WORDS = 200;

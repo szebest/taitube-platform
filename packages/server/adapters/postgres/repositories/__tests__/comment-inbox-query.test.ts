@@ -1,6 +1,7 @@
 import type { CommentThread } from '@vp/domain';
 import { PgDialect } from 'drizzle-orm/pg-core';
 import { creatorInboxFilterScope, toCreatorInboxComment } from '../comment-inbox-query';
+import { UNMODERATED } from './comment-row';
 
 const dialect = new PgDialect();
 
@@ -36,6 +37,7 @@ describe('comment inbox query', () => {
       createdAt: at,
       updatedAt: at,
       deletedAt: null,
+      ...UNMODERATED,
       channelId: null,
       handle: null,
       displayName: null,
