@@ -11,16 +11,12 @@ import {
 import { createQueryClient } from '@vp/queries';
 import { api, apiServer, mockEndpoint, VIDEO_ID } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
+import { WATCH_LATER_ID, watchLaterPlaylist } from '#app/__tests__/library-fixtures';
+import { libraryKeys, playlistQueryOptions } from '#app/lib/query-keys/library-keys';
 import {
-  WATCH_LATER_ID,
-  watchLaterPlaylist,
-} from '#app/features/library/__tests__/library-fixtures';
-import {
-  libraryKeys,
   likedVideosQueryOptions,
   myCommentsQueryOptions,
   myPlaylistsQueryOptions,
-  playlistQueryOptions,
   saveTargetsQueryOptions,
   searchHistoryQueryOptions,
   uploadsShelfQueryOptions,
@@ -32,25 +28,25 @@ const KEYSET = [
     name: 'watch history',
     contract: listWatchHistory,
     fetch: (client: QueryClient) =>
-      client.fetchInfiniteQuery({ ...watchHistoryQueryOptions(api), pages: 2 }),
+      client.infiniteQuery({ ...watchHistoryQueryOptions(api), pages: 2 }),
   },
   {
     name: 'search history',
     contract: listSearchHistory,
     fetch: (client: QueryClient) =>
-      client.fetchInfiniteQuery({ ...searchHistoryQueryOptions(api), pages: 2 }),
+      client.infiniteQuery({ ...searchHistoryQueryOptions(api), pages: 2 }),
   },
   {
     name: 'liked videos',
     contract: listLikedVideos,
     fetch: (client: QueryClient) =>
-      client.fetchInfiniteQuery({ ...likedVideosQueryOptions(api), pages: 2 }),
+      client.infiniteQuery({ ...likedVideosQueryOptions(api), pages: 2 }),
   },
   {
     name: 'my comments',
     contract: listMyComments,
     fetch: (client: QueryClient) =>
-      client.fetchInfiniteQuery({ ...myCommentsQueryOptions(api), pages: 2 }),
+      client.infiniteQuery({ ...myCommentsQueryOptions(api), pages: 2 }),
   },
 ] as const;
 
@@ -114,9 +110,9 @@ describe('apps/client/web: library queries', () => {
     );
     const client = createQueryClient();
 
-    await client.fetchQuery(myPlaylistsQueryOptions(api));
-    await client.fetchQuery(playlistQueryOptions(api, WATCH_LATER_ID));
-    await client.fetchQuery(uploadsShelfQueryOptions(api, 'ch'));
+    await client.query(myPlaylistsQueryOptions(api));
+    await client.query(playlistQueryOptions(api, WATCH_LATER_ID));
+    await client.query(uploadsShelfQueryOptions(api, 'ch'));
 
     expect(asked).toEqual(['playlists', `playlist ${WATCH_LATER_ID}`, 'channel ch limit=12']);
   });
@@ -130,7 +126,7 @@ describe('apps/client/web: library queries', () => {
       })
     );
 
-    await createQueryClient().fetchQuery(saveTargetsQueryOptions(api, VIDEO_ID));
+    await createQueryClient().query(saveTargetsQueryOptions(api, VIDEO_ID));
 
     expect(asked).toEqual([VIDEO_ID]);
   });

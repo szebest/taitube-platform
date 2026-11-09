@@ -1,7 +1,7 @@
 import type { VideoSummary } from '@vp/api-contracts';
 import { useOnPlayerEnded } from '#app/components/player/taitube-player';
-import { usePlaybackPreference } from '#app/features/account/components/device-preferences-provider/device-preferences-provider';
-import { usePlaybackQueue } from './use-playback-queue';
+import { usePlaybackQueue } from '#app/hooks/use-playback-queue';
+import { usePlaybackPreference } from '#app/lib/preferences/device-preferences-provider';
 import { useQueueNavigation } from './use-queue-navigation';
 
 /** Opens the video after the current one in the queue, or the first recommendation, once the playing video ends. */

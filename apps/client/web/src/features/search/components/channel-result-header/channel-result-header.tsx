@@ -1,4 +1,4 @@
-import { ChannelRow } from '#app/features/channel/components/channel-row/channel-row';
+import { ChannelRow } from '#app/components/channel/channel-row';
 import type { ChannelHit } from '#app/features/search/utils/search-hits';
 import { MatchedText } from '../matched-text/matched-text';
 

@@ -1,7 +1,7 @@
 import { useNavigate } from '@tanstack/react-router';
 import type { VideoSummary } from '@vp/api-contracts';
+import { usePlaybackQueue } from '#app/hooks/use-playback-queue';
 import { useIsWatching } from './use-is-watching';
-import { usePlaybackQueue } from './use-playback-queue';
 
 /** Moves playback through the queue; on a watch page it also moves the page, so the address always names what plays. */
 export function useQueueNavigation() {

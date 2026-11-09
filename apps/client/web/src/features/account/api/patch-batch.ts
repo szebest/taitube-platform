@@ -1,4 +1,4 @@
-import { mergeChanges, type PreferencesChange } from './preferences-change';
+import { mergeChanges, type PreferencesChange } from '#app/lib/preferences/preferences-change';
 
 export interface PatchBatch {
   add: (change: PreferencesChange) => void;

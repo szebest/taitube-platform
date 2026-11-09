@@ -3,7 +3,7 @@ import { createQueryClient } from '@vp/queries';
 import { api, CHANNEL_ID, videoSummary } from '@vp/web-testing';
 import { renderPage } from '@vp/web-testing/server';
 import { AppProviders } from '#app/__tests__/providers';
-import { channelStartHereQueryOptions } from '#app/features/channel/api/channel-queries';
+import { channelStartHereQueryOptions } from '#app/lib/query-keys/channel-keys';
 import { ChannelStartHere } from '../channel-start-here';
 
 const FIRST = '0190a1b2-0000-7000-8000-000000000011';

@@ -25,7 +25,7 @@ describe('apps/client/studio: live queries', () => {
   it("fetches the channel's stream by opening it", async () => {
     apiServer.use(...liveApi(liveStream({ title: 'Opened' })).handlers);
 
-    const stream = await new QueryClient().fetchQuery(myLiveStreamQueryOptions(api));
+    const stream = await new QueryClient().query(myLiveStreamQueryOptions(api));
 
     expect(stream.title).toBe('Opened');
   });
@@ -49,7 +49,7 @@ describe('apps/client/studio: live queries', () => {
     apiServer.use(overlayApi({ count: 7 }));
     const options = liveOverlayQueryOptions(api, OVERLAY_TOKEN);
 
-    const overlay = await new QueryClient().fetchQuery(options);
+    const overlay = await new QueryClient().query(options);
 
     expect(overlay.subscriberCount).toBe(7);
     expect(options.refetchInterval).toBe(LIVE_POLL_MS);

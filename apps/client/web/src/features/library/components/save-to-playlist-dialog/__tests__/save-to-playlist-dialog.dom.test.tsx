@@ -10,14 +10,14 @@ import { ErrorCodes } from '@vp/errors';
 import { mockEndpoint, problemReply } from '@vp/web-testing';
 import { heldReply, renderRoute } from '@vp/web-testing/dom';
 import { type HttpHandler, HttpResponse } from 'msw/http';
-import { loaderApi } from '#app/__tests__/loader-api';
 import {
   historyItem,
   ownedPlaylist,
   playlistDetail,
   uuid,
   WATCH_LATER_ID,
-} from '#app/features/library/__tests__/library-fixtures';
+} from '#app/__tests__/library-fixtures';
+import { loaderApi } from '#app/__tests__/loader-api';
 import { renderLibrary } from '#app/features/library/__tests__/render-library';
 import { getRouter } from '#app/router';
 

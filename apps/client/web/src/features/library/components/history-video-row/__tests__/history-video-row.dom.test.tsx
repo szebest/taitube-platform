@@ -4,7 +4,7 @@ import { ErrorCodes } from '@vp/errors';
 import { mockEndpoint, problemReply } from '@vp/web-testing';
 import { heldReply } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
-import { historyItem, uuid } from '#app/features/library/__tests__/library-fixtures';
+import { historyItem, uuid } from '#app/__tests__/library-fixtures';
 import { renderLibrary, useLibraryClock } from '#app/features/library/__tests__/render-library';
 
 const HISTORY = [historyItem(1, { title: 'Tram ride' }), historyItem(2, { title: 'Old film' })];

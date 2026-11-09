@@ -1,12 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { z } from 'zod';
-import { liveNowQueryOptions } from '#app/features/live/api/live-queries';
-import { LivePage } from '#app/features/live/components/live-page/live-page';
+import { liveNowQueryOptions, LivePage } from '#app/features/live';
 
 export const Route = createFileRoute('/live/')({
   validateSearch: z.object({}),
   loader: ({ context: { queryClient, api } }) =>
-    queryClient.ensureQueryData(liveNowQueryOptions(api)),
+    queryClient.query({ ...liveNowQueryOptions(api), staleTime: 'static' }),
   head: () => ({ meta: [{ title: 'Live - Taitube' }] }),
   component: LivePage,
 });

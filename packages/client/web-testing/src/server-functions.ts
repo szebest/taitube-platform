@@ -20,12 +20,12 @@ function serverFunctionsThrough(call: Call, start: Start): typeof createServerFn
         const value: unknown = Reflect.get(target, property, receiver);
         if (property === 'handler') {
           const held: object = target;
-          const { inputValidator } = Reflect.get(held, 'options');
+          const { validator } = Reflect.get(held, 'options');
           return (handle: Handler) =>
             (options: { data?: unknown } = {}) =>
               call(async () => {
-                const data = inputValidator
-                  ? await start.execValidator(inputValidator, options.data)
+                const data = validator
+                  ? await start.execValidator(validator, options.data)
                   : options.data;
                 return handle({ data, context: {} });
               });

@@ -5,16 +5,20 @@ import { youCache } from '#app/features/library/__tests__/you-cache';
 import { YouPage, YouPageSkeleton } from '../you-page';
 
 describe('apps/client/web: YouPage', () => {
-  it('has the heading and the four shelves in order', async () => {
+  it('has the heading and its shelves in order, the clips slot last', async () => {
     const viewer = account();
-    const markup = await renderPage(<YouPage />, signedIn(viewer), {
+    const markup = await renderPage(<YouPage clips={<h2>Your clips</h2>} />, signedIn(viewer), {
       queryClient: youCache({ channelId: viewer.channel.id }),
     });
 
     expect(markup).toContain('>You</h1>');
-    const order = ['>History<', '>Watch later<', '>Playlists<', '>Your videos<'].map((heading) =>
-      markup.indexOf(heading)
-    );
+    const order = [
+      '>History<',
+      '>Watch later<',
+      '>Playlists<',
+      '>Your videos<',
+      '>Your clips<',
+    ].map((heading) => markup.indexOf(heading));
     expect(order).toEqual([...order].sort((a, b) => a - b));
     expect(order).not.toContain(-1);
   });

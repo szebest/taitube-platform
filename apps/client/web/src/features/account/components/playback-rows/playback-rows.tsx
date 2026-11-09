@@ -1,7 +1,7 @@
 import { PLAYBACK_SETTINGS } from '@vp/domain/settings';
 import { useT } from '@vp/intl-react';
 import { Select } from '@vp/ui';
-import { usePlaybackPreference } from '../device-preferences-provider/device-preferences-provider';
+import { usePlaybackPreference } from '#app/lib/preferences/device-preferences-provider';
 import { SettingItem } from '../setting-item/setting-item';
 import { SettingSwitchRow } from '../setting-switch-row/setting-switch-row';
 

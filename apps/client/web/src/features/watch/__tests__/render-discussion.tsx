@@ -1,7 +1,7 @@
 import type { Account } from '@vp/api-contracts';
 import type { HttpHandler } from 'msw/http';
-import { RecordingObserver } from './recording-observer';
-import { renderWatch } from './render-watch';
+import { RecordingObserver } from '#app/__tests__/recording-observer';
+import { renderWatch } from '#app/__tests__/render-watch';
 
 interface DiscussionOptions {
   viewer?: Account;

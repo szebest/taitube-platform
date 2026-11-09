@@ -6,13 +6,13 @@ import {
   ownedPlaylist,
   WATCH_LATER_ID,
   watchLaterPlaylist,
-} from '#app/features/library/__tests__/library-fixtures';
+} from '#app/__tests__/library-fixtures';
 import {
   historyShelfQueryOptions,
   myPlaylistsQueryOptions,
-  playlistQueryOptions,
   uploadsShelfQueryOptions,
 } from '#app/features/library/api/library-queries';
+import { playlistQueryOptions } from '#app/lib/query-keys/library-keys';
 
 export const WATCH_LATER = ownedPlaylist(0, {
   id: WATCH_LATER_ID,

@@ -1,15 +1,15 @@
 import { screen, waitFor } from '@testing-library/react';
 import { fakeCacheStorage } from '#app/__tests__/fake-cache-storage';
 import { supportOffline } from '#app/__tests__/offline-support';
+import { renderWatch } from '#app/__tests__/render-watch';
 import { cdnHandlers, LOW_URL, savableVideo } from '#app/features/offline/__tests__/saved-fixtures';
-import { renderWatch } from '#app/features/watch/__tests__/render-watch';
 import { CACHE_NAMES } from '#app/integrations/service-worker/cache-names';
 
-vi.mock(import('#app/features/pwa/utils/register-service-worker'), () => ({
+vi.mock(import('#app/integrations/service-worker-client/register-service-worker'), () => ({
   registerServiceWorker: () => () => {},
 }));
 vi.mock(import('#app/components/player/taitube-player/taitube-player'), async () => ({
-  TaitubePlayer: (await import('#app/features/watch/__tests__/stub-player')).StubPlayer,
+  TaitubePlayer: (await import('#app/__tests__/stub-player')).StubPlayer,
 }));
 
 const { id: _id, ...savable } = savableVideo();

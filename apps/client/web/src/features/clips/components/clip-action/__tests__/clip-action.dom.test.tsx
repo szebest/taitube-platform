@@ -1,14 +1,14 @@
 import { screen } from '@testing-library/react';
 import { account } from '@vp/web-testing';
+import { renderWatch } from '#app/__tests__/render-watch';
 import { LazyClipDialog } from '#app/features/clips/components/clip-dialog/clip-dialog.lazy';
-import { renderWatch } from '#app/features/watch/__tests__/render-watch';
 
 vi.mock(import('#app/components/player/taitube-player/taitube-player'), async () => ({
-  TaitubePlayer: (await import('#app/features/watch/__tests__/stub-player')).StubPlayer,
+  TaitubePlayer: (await import('#app/__tests__/stub-player')).StubPlayer,
 }));
 
 vi.mock(import('#app/components/player/taitube-preview/taitube-preview'), async () => ({
-  TaitubePreview: (await import('#app/features/watch/__tests__/stub-player')).StubPlayer,
+  TaitubePreview: (await import('#app/__tests__/stub-player')).StubPlayer,
 }));
 
 beforeAll(() => LazyClipDialog.preload());

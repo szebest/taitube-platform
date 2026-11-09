@@ -1,14 +1,14 @@
 import { screen, within } from '@testing-library/react';
 import { clip } from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
-import { loaderApi } from '#app/__tests__/loader-api';
 import {
   historyItem,
   libraryVideo,
   ownedPlaylist,
   uuid,
   WATCH_LATER_ID,
-} from '#app/features/library/__tests__/library-fixtures';
+} from '#app/__tests__/library-fixtures';
+import { loaderApi } from '#app/__tests__/loader-api';
 import {
   libraryApi,
   renderLibrary,

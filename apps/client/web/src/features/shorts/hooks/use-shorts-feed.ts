@@ -1,0 +1,10 @@
+import { useApi } from '@vp/queries';
+import { useVideoPages } from '#app/hooks/use-video-pages';
+import { shortsFeedQueryOptions } from '#app/lib/query-keys/feed-keys';
+
+/** The Shorts the platform serves, page after page, never one twice. */
+export function useShortsFeed() {
+  const api = useApi();
+
+  return useVideoPages(shortsFeedQueryOptions(api));
+}

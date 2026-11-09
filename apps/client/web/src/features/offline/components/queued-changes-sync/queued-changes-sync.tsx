@@ -2,8 +2,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useApi, videoQueryOptions } from '@vp/queries';
 import { useEffect, useEffectEvent } from 'react';
 import { listenForSync } from '#app/features/offline/utils/sync-channel';
-import { myReactionQueryOptions } from '#app/features/reactions/api/reaction-queries';
-import { commentKeys } from '#app/features/watch/api/comment-queries';
+import { commentKeys } from '#app/lib/query-keys/comment-keys';
+import { myReactionQueryOptions } from '#app/lib/query-keys/reaction-keys';
 
 /**
  * Refetches a video's reaction, counts and comments once the service worker has replayed what the

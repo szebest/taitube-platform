@@ -1,35 +1,25 @@
-import { Link, Outlet, useMatches, useMatchRoute } from '@tanstack/react-router';
+import { Link, Outlet, useMatchRoute } from '@tanstack/react-router';
 import { useT } from '@vp/intl-react';
 import { canAccessAdmin } from '@vp/permissions';
 import { Can } from '@vp/permissions-react';
 import { useLayoutMaxWidth, useUserEvent } from '@vp/queries';
-import { Button, Logo } from '@vp/ui';
-import { useState } from 'react';
+import { Logo } from '@vp/ui';
+import { type ReactNode, useState } from 'react';
 import { StudioWorkspace } from '#app/components/workspace/studio-workspace';
-import { SelectedVideoContext } from '#app/features/shell/hooks/selected-video';
 import { useAccessDeniedToast } from '#app/features/shell/hooks/use-access-denied-toast';
-import { UploadDialog } from '#app/features/upload/components/upload-dialog/upload-dialog';
-import {
-  UploadDockProvider,
-  useUploadDock,
-} from '#app/features/upload/components/upload-dock/upload-dock';
-import { UploadWidget } from '#app/features/upload/components/upload-widget/upload-widget';
-import { VideoInspector } from '#app/features/videos/components/video-inspector/video-inspector';
+import { SelectedVideoContext } from '#app/hooks/use-selected-video';
 import { WEB_URL } from '#app/lib/config';
 import { ShellAccountMenu } from '../shell-account-menu/shell-account-menu';
 
-function UploadToolbarButton() {
-  const { setDialogOpen } = useUploadDock('ToolbarButton');
-  const { tOr } = useT();
+export type StudioShellProps = {
+  /** The toolbar's action beside the account menu. */
+  toolbarAction: ReactNode;
+  /** What the inspector shows for the video the library selected. */
+  inspector: (videoId: string) => ReactNode;
+};
 
-  return (
-    <Button size="sm" variant="solid" tone="accent" onClick={() => setDialogOpen(true)}>
-      {tOr('studio.navUpload', {}, '')}
-    </Button>
-  );
-}
-
-function StudioFrame() {
+/** The studio around every page: the workspace's navigation and toolbar, the page in its content. */
+export function StudioShell({ toolbarAction, inspector }: StudioShellProps) {
   const matchRoute = useMatchRoute();
   const maxWidth = useLayoutMaxWidth();
   const { tOr } = useT();
@@ -112,7 +102,7 @@ function StudioFrame() {
           <span className="text-label">{tOr('studio.title', {}, '')}</span>
         </Link>
         <div className="ms-auto flex items-center gap-inline">
-          <UploadToolbarButton />
+          {toolbarAction}
           <ShellAccountMenu />
         </div>
       </StudioWorkspace.Toolbar>
@@ -125,28 +115,9 @@ function StudioFrame() {
       </SelectedVideoContext>
       {onLibrary && (
         <StudioWorkspace.Inspector title={tOr('studio.inspectorTitle', {}, '')}>
-          {videoId !== undefined && <VideoInspector videoId={videoId} />}
+          {videoId !== undefined && inspector(videoId)}
         </StudioWorkspace.Inspector>
       )}
     </StudioWorkspace.Root>
-  );
-}
-
-/** The studio around every page: the workspace's navigation and toolbar, the page in its content. A bare page has none of it. */
-export function StudioShell() {
-  const bare = useMatches({
-    select: (matches) => matches.some(({ staticData }) => staticData.bare),
-  });
-
-  if (bare) {
-    return <Outlet />;
-  }
-
-  return (
-    <UploadDockProvider>
-      <StudioFrame />
-      <UploadDialog />
-      <UploadWidget />
-    </UploadDockProvider>
   );
 }

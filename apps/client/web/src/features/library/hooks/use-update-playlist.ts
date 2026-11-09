@@ -1,7 +1,7 @@
 import type { ApiClient } from '@vp/api-client';
 import type { PlaylistVisibility } from '@vp/domain';
 import { useApi } from '@vp/queries';
-import { libraryKeys, playlistQueryOptions } from '../api/library-queries';
+import { libraryKeys, playlistQueryOptions } from '#app/lib/query-keys/library-keys';
 import { queryMutationOptions } from '../api/query-mutation';
 import { useListMutation } from './use-list-mutation';
 

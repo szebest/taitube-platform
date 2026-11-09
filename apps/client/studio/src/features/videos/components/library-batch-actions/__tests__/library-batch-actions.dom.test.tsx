@@ -1,8 +1,8 @@
 import { screen, waitFor, within } from '@testing-library/react';
 import { renderRoute } from '@vp/web-testing/dom';
+import { creatorVideo, videoIdOf } from '#app/__tests__/creator-video.fixture';
+import { serveLibrary, serveManagement } from '#app/__tests__/library-api.fixture';
 import { signInBrowser } from '#app/__tests__/providers';
-import { creatorVideo, videoIdOf } from '#app/features/videos/__tests__/creator-video.fixture';
-import { serveLibrary, serveManagement } from '#app/features/videos/__tests__/library-api.fixture';
 import { getRouter } from '#app/router';
 
 const TITLES = ['Lisbon at night', 'Harbour at dawn', 'Night bus to Porto'];

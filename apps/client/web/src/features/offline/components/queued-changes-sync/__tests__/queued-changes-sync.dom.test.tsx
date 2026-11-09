@@ -3,9 +3,9 @@ import { render, waitFor } from '@testing-library/react';
 import { createQueryClient, videoQueryOptions } from '@vp/queries';
 import { api, VIDEO_ID } from '@vp/web-testing';
 import { AppProviders } from '#app/__tests__/providers';
-import { myReactionQueryOptions } from '#app/features/reactions/api/reaction-queries';
-import { commentKeys } from '#app/features/watch/api/comment-queries';
 import { SYNC_CHANNEL, type SyncMessage } from '#app/integrations/service-worker/sync-messages';
+import { commentKeys } from '#app/lib/query-keys/comment-keys';
+import { myReactionQueryOptions } from '#app/lib/query-keys/reaction-keys';
 import { QueuedChangesSync } from '../queued-changes-sync';
 
 const keys = {

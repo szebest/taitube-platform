@@ -1,6 +1,6 @@
 import { useRouter } from '@tanstack/react-router';
 import { useApi } from '@vp/queries';
-import { libraryKeys } from '../api/library-queries';
+import { libraryKeys } from '#app/lib/query-keys/library-keys';
 import { useListMutation } from './use-list-mutation';
 
 /** Deletes a playlist and leaves its page for the list of playlists. */

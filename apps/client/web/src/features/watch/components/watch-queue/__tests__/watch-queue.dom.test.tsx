@@ -2,14 +2,10 @@ import { screen, waitFor, within } from '@testing-library/react';
 import { getRelatedVideos } from '@vp/api-contracts';
 import { mockEndpoint, VIDEO_ID, videoSummary } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
-import {
-  QUEUED,
-  renderPlaylistWatch,
-  renderWatch,
-} from '#app/features/watch/__tests__/render-watch';
+import { QUEUED, renderPlaylistWatch, renderWatch } from '#app/__tests__/render-watch';
 
 vi.mock(import('#app/components/player/taitube-player/taitube-player'), async () => ({
-  TaitubePlayer: (await import('#app/features/watch/__tests__/stub-player')).StubPlayer,
+  TaitubePlayer: (await import('#app/__tests__/stub-player')).StubPlayer,
 }));
 
 const RELATED_ID = '0190c3a0-5e1d-7000-8000-00000000a009';

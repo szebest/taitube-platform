@@ -10,7 +10,7 @@ describe('@vp/queries: notification queries', () => {
       mockEndpoint(getUnreadNotificationCount, () => HttpResponse.json({ unreadCount: 3 }))
     );
 
-    const loaded = await createQueryClient().fetchQuery(unreadNotificationCountQueryOptions(api));
+    const loaded = await createQueryClient().query(unreadNotificationCountQueryOptions(api));
 
     expect(loaded).toEqual({ unreadCount: 3 });
   });

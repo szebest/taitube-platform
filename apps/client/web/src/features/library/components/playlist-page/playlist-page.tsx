@@ -3,7 +3,7 @@ import { useSearch } from '@tanstack/react-router';
 import { canUpdatePlaylist } from '@vp/permissions';
 import { useCan } from '@vp/permissions-react';
 import { useApi } from '@vp/queries';
-import { playlistQueryOptions } from '#app/features/library/api/library-queries';
+import { playlistQueryOptions } from '#app/lib/query-keys/library-keys';
 import { DeletePlaylistDialog } from '../delete-playlist-dialog/delete-playlist-dialog';
 import { PlaylistHero } from '../playlist-hero/playlist-hero';
 import { PlaylistItems } from '../playlist-items/playlist-items';

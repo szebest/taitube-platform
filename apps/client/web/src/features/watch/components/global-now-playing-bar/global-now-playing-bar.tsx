@@ -6,9 +6,9 @@ import { usePlayerSeek, usePlayerTime } from '#app/components/player/taitube-pla
 import { NowPlayingBar } from '#app/components/shell/now-playing-bar';
 import { useAutoplayNext } from '#app/features/watch/hooks/use-autoplay-next';
 import { useIsWatching } from '#app/features/watch/hooks/use-is-watching';
-import { usePlaybackQueue } from '#app/features/watch/hooks/use-playback-queue';
 import { useQueueNavigation } from '#app/features/watch/hooks/use-queue-navigation';
 import { useDurationText } from '#app/hooks/use-duration-text';
+import { usePlaybackQueue } from '#app/hooks/use-playback-queue';
 import { PlayerSlot } from '../player-slot/player-slot';
 
 const MS_PER_SECOND = 1000;

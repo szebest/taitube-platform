@@ -5,9 +5,9 @@ import { useAccount, useApi } from '@vp/queries';
 import { BrandScope } from '@vp/ui';
 import { Suspense } from 'react';
 import { ChannelHeader } from '#app/components/channel/channel-header';
-import { VideoGridSkeleton } from '#app/features/browse/components/video-grid/video-grid';
-import { channelQueryOptions } from '#app/features/channel/api/channel-queries';
-import { SubscribeAction } from '#app/features/library/components/subscribe-action/subscribe-action';
+import { SubscribeAction } from '#app/components/channel/subscribe-action';
+import { VideoGridSkeleton } from '#app/components/video/video-grid';
+import { channelQueryOptions } from '#app/lib/query-keys/channel-keys';
 import { ChannelStartHere } from '../channel-start-here/channel-start-here';
 import { OwnVideos } from '../own-videos/own-videos';
 
