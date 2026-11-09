@@ -23,4 +23,16 @@ describe('@vp/queries: acting channel store in the browser', () => {
     expect(store.read()).toBeUndefined();
     expect(createActingChannelStore().read()).toBeUndefined();
   });
+
+  it('tells a subscriber when the channel changes, and not after it unsubscribes', () => {
+    const store = createActingChannelStore();
+    const onChange = vi.fn();
+    const unsubscribe = store.subscribe(onChange);
+
+    store.select(CHANNEL);
+    unsubscribe();
+    store.select(undefined);
+
+    expect(onChange).toHaveBeenCalledTimes(1);
+  });
 });

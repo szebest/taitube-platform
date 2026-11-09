@@ -8,6 +8,7 @@ export type ActingChannelStore = {
   /** The channel the next channel-scoped call names; `undefined` is the caller's own. */
   read: () => string | undefined;
   select: (channelId: string | undefined) => void;
+  subscribe: (onChange: () => void) => () => void;
 };
 
 const persist = createIsomorphicFn()
@@ -19,6 +20,7 @@ const persist = createIsomorphicFn()
 /** One per router, so no two requests share a channel; it starts from the cookie on first read. */
 export function createActingChannelStore(): ActingChannelStore {
   let selected: { channelId: string | undefined } | undefined;
+  const listeners = new Set<() => void>();
 
   return {
     read: () => {
@@ -28,6 +30,11 @@ export function createActingChannelStore(): ActingChannelStore {
     select: (channelId) => {
       selected = { channelId };
       persist(channelId);
+      for (const listener of listeners) listener();
+    },
+    subscribe: (onChange) => {
+      listeners.add(onChange);
+      return () => listeners.delete(onChange);
     },
   };
 }
