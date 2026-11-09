@@ -10,6 +10,7 @@ import type { CommentReportRepositoryPort } from './comment-report-repository';
 import type { CommentRepositoryPort } from './comment-repository';
 import type { DlqRepository } from './dlq-repository';
 import type { EventRepository } from './event-repository';
+import type { FingerprintRepository } from './fingerprint-repository';
 import type { LiveChatRepositoryPort } from './live-chat-repository';
 import type { LiveStreamRepositoryPort } from './live-stream-repository';
 import type { NotificationRepositoryPort } from './notification-repository';
@@ -68,6 +69,7 @@ export interface Repositories {
   rising: RisingVideosRepositoryPort;
   captions: CaptionRepository;
   screenings: ScreeningRepository;
+  fingerprints: FingerprintRepository;
   clips: ClipRepositoryPort;
   channelFeatured: ChannelFeaturedRepositoryPort;
   picks: PickRepositoryPort;

@@ -18,6 +18,7 @@ export * from './postgres-related-videos-repository';
 export * from './postgres-rising-videos-repository';
 export * from './postgres-rendition-repository';
 export * from './postgres-repositories';
+export * from './postgres-fingerprint-repository';
 export * from './postgres-screening-repository';
 export * from './postgres-search-history-repository';
 export * from './postgres-search-repository';

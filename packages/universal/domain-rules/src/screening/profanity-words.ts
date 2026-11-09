@@ -1,6 +1,6 @@
 /** Lower-case whole words per language; a word only counts as itself, never inside another word. */
-export const PROFANITY_WORDS: Readonly<Record<string, ReadonlySet<string>>> = {
-  en: new Set([
+export const PROFANITY_WORDS: Readonly<Record<string, readonly string[]>> = {
+  en: [
     'fuck',
     'fucking',
     'fucker',
@@ -12,8 +12,8 @@ export const PROFANITY_WORDS: Readonly<Record<string, ReadonlySet<string>>> = {
     'bastard',
     'cunt',
     'dickhead',
-  ]),
-  pl: new Set([
+  ],
+  pl: [
     'kurwa',
     'kurwy',
     'chuj',
@@ -24,7 +24,7 @@ export const PROFANITY_WORDS: Readonly<Record<string, ReadonlySet<string>>> = {
     'jebany',
     'skurwysyn',
     'dupek',
-  ]),
+  ],
 };
 
 export const FALLBACK_PROFANITY_LANGUAGE = 'en';

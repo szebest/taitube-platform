@@ -15,6 +15,7 @@ import { PostgresCommentReportRepository } from './postgres-comment-report-repos
 import { PostgresCommentRepository } from './postgres-comment-repository';
 import { PostgresDlqRepository } from './postgres-dlq-repository';
 import { PostgresEventRepository } from './postgres-event-repository';
+import { PostgresFingerprintRepository } from './postgres-fingerprint-repository';
 import { PostgresLiveChatRepository } from './postgres-live-chat-repository';
 import { PostgresLiveStreamRepository } from './postgres-live-stream-repository';
 import { PostgresNotificationRepository } from './postgres-notification-repository';
@@ -80,6 +81,7 @@ export class PostgresRepositories implements Repositories {
   readonly rising: PostgresRisingVideosRepository;
   readonly captions: PostgresCaptionRepository;
   readonly screenings: PostgresScreeningRepository;
+  readonly fingerprints: PostgresFingerprintRepository;
   readonly clips: PostgresClipRepository;
   readonly channelFeatured: PostgresChannelFeaturedRepository;
   readonly picks: PostgresPickRepository;
@@ -124,6 +126,7 @@ export class PostgresRepositories implements Repositories {
     this.rising = new PostgresRisingVideosRepository(db);
     this.captions = new PostgresCaptionRepository(db);
     this.screenings = new PostgresScreeningRepository(db);
+    this.fingerprints = new PostgresFingerprintRepository(db);
     this.clips = new PostgresClipRepository(db);
     this.channelFeatured = new PostgresChannelFeaturedRepository(db);
     this.picks = new PostgresPickRepository(db);

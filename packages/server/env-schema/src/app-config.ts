@@ -148,6 +148,7 @@ export interface AppConfig {
     tmpDir: string;
     ffmpegPath: string;
     ffprobePath: string;
+    fpcalcPath: string;
     ffmpegThreads: number;
     x264Preset: string;
     hlsSegmentSeconds: number;
@@ -304,6 +305,7 @@ export function toAppConfig(env: AppEnv): AppConfig {
       tmpDir: env.TMP_DIR,
       ffmpegPath: env.FFMPEG_PATH,
       ffprobePath: env.FFPROBE_PATH,
+      fpcalcPath: env.FPCALC_PATH,
       ffmpegThreads: env.FFMPEG_THREADS,
       x264Preset: env.X264_PRESET,
       hlsSegmentSeconds: env.HLS_SEGMENT_SECONDS,

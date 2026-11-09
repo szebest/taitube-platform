@@ -226,7 +226,7 @@ async function latestOf(db: Tx, videoId: string): Promise<ScreeningRecord | unde
     .select()
     .from(vs)
     .where(eq(vs.videoId, videoId))
-    .orderBy(desc(vs.createdAt))
+    .orderBy(desc(vs.createdAt), desc(vs.id))
     .limit(1);
   return row;
 }

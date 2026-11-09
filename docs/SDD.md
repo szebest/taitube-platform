@@ -3288,6 +3288,7 @@ The two bucket keys are the only spelling: every reader in both apps takes them 
 | `WORKER_STAGE` | `probe` | `probe` · `transcode-1080p` · `transcode-720p` · `transcode-480p` · `thumbnail` · `package` · `notify` · `housekeeping` · `captions` · `live` |
 | `WORKER_CONCURRENCY` | empty = the stage's registry value | override |
 | `FFMPEG_PATH` / `FFPROBE_PATH` | `ffmpeg` / `ffprobe` | the binaries the stages spawn |
+| `FPCALC_PATH` | `fpcalc` | the Chromaprint binary the `screen` stage runs for the audio fingerprint, `libchromaprint-tools` in the worker image |
 | `FFMPEG_THREADS` | `2` | k8s sets it from the container's CPU limit (`resourceFieldRef`) |
 | `X264_PRESET` | `veryfast` | load-test variable |
 | `HLS_SEGMENT_SECONDS` | `6` | `-hls_time` |

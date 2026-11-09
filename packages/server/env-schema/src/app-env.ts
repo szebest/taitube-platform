@@ -128,6 +128,7 @@ const PipelineEnvSchema = z.object({
   ),
   FFMPEG_PATH: z.string().default('ffmpeg'),
   FFPROBE_PATH: z.string().default('ffprobe'),
+  FPCALC_PATH: z.string().default('fpcalc'),
   FFMPEG_THREADS: z.coerce.number().int().positive().default(2),
   X264_PRESET: z.string().default('veryfast'),
   HLS_SEGMENT_SECONDS: z.coerce.number().int().positive().default(6),

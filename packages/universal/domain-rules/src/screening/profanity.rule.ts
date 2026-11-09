@@ -6,5 +6,5 @@ export function findProfanity(metadata: ScreeningMetadata): string[] {
   const list =
     PROFANITY_WORDS[languageOf(metadata.locale)] ?? PROFANITY_WORDS[FALLBACK_PROFANITY_LANGUAGE];
   const text = [metadata.title, metadata.description ?? '', ...metadata.tags].join(' ');
-  return [...new Set(wordsOf(text).filter((word) => list?.has(word)))];
+  return [...new Set(wordsOf(text).filter((word) => list?.includes(word)))];
 }

@@ -11,6 +11,7 @@ import type { InMemoryCommentReportRepository } from './in-memory-comment-report
 import type { InMemoryCommentRepository } from './in-memory-comment-repository';
 import type { InMemoryDlqRepository } from './in-memory-dlq-repository';
 import type { InMemoryEventRepository } from './in-memory-event-repository';
+import type { InMemoryFingerprintRepository } from './in-memory-fingerprint-repository';
 import { graph } from './in-memory-graph';
 import { InMemoryLiveChatRepository } from './in-memory-live-chat-repository';
 import type { InMemoryLiveStreamRepository } from './in-memory-live-stream-repository';
@@ -71,6 +72,7 @@ export class InMemoryRepositories implements Repositories {
   readonly rising: InMemoryRisingVideosRepository;
   readonly captions: InMemoryCaptionRepository;
   readonly screenings: InMemoryScreeningRepository;
+  readonly fingerprints: InMemoryFingerprintRepository;
   readonly clips: InMemoryClipRepository;
   readonly channelFeatured: InMemoryChannelFeaturedRepository;
   readonly picks: InMemoryPickRepository;
@@ -111,6 +113,7 @@ export class InMemoryRepositories implements Repositories {
     this.rising = c.get(Repo.rising);
     this.captions = c.get(Repo.captions);
     this.screenings = c.get(Repo.screenings);
+    this.fingerprints = c.get(Repo.fingerprints);
     this.clips = c.get(Repo.clips);
     this.channelFeatured = c.get(Repo.channelFeatured);
     this.picks = c.get(Repo.picks);

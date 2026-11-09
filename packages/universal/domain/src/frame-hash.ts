@@ -2,7 +2,8 @@ const BITS = 64;
 const WORD_MASK = 0xffffffffn;
 const BITS_PER_WORD = 32;
 
-function popcount32(value: number): number {
+/** The number of set bits in the low 32 bits of `value`. */
+export function popcount32(value: number): number {
   let rest = value >>> 0;
   let count = 0;
   while (rest !== 0) {

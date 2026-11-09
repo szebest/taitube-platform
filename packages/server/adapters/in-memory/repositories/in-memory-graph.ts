@@ -11,6 +11,7 @@ import { InMemoryCommentReportRepository } from './in-memory-comment-report-repo
 import { InMemoryCommentRepository } from './in-memory-comment-repository';
 import { InMemoryDlqRepository } from './in-memory-dlq-repository';
 import { InMemoryEventRepository } from './in-memory-event-repository';
+import { InMemoryFingerprintRepository } from './in-memory-fingerprint-repository';
 import { InMemoryLiveStreamRepository } from './in-memory-live-stream-repository';
 import { InMemoryNotificationRepository } from './in-memory-notification-repository';
 import { InMemoryOutboxRepository } from './in-memory-outbox-repository';
@@ -220,6 +221,7 @@ export function graph(): Container {
           events: c.get(Repo.events),
         })
     )
+    .provide(Repo.fingerprints, () => new InMemoryFingerprintRepository())
     .provide(
       Repo.clips,
       (c) =>

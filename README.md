@@ -123,6 +123,7 @@ taitube-platform/
 │       ├── env-schema/          # Zod environment schema, AppConfig and toAppConfig
 │       ├── events/              # SSE envelope, pub/sub channels and Redis cache keys
 │       ├── ffmpeg/              # FFmpeg/ffprobe runners, ladder selection, master playlist, thumbnails
+│       ├── fingerprint/         # Frame dHash, Chromaprint, the offset-vote matcher for the duplicate check
 │       ├── gen-video/           # CLI: generates deterministic test video fixtures
 │       ├── job-contracts/       # BullMQ queue names, job payload schemas, retry policies, rendition ladder
 │       ├── lighthouse/          # CLI: Lighthouse CI on the built web app, offline, warn-only

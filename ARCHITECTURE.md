@@ -72,6 +72,7 @@ taitube-platform/
 │   ├── env-schema/                 # @vp/env-schema - the zod schema, AppConfig and toAppConfig
 │   ├── events/                     # @vp/events - publishVideoEvent, SSE framing, channels, cache keys
 │   ├── ffmpeg/                     # @vp/ffmpeg - argument builders, progress parsers, probe rules
+│   ├── fingerprint/                # @vp/fingerprint - frame dHash, Chromaprint, the offset-vote matcher
 │   ├── job-contracts/              # @vp/job-contracts - BullMQ payloads, queue names, the ladder
 │   ├── logger/                     # @vp/logger - createLogger (pino), json and pretty formats
 │   ├── observability/              # @vp/observability - OpenTelemetry and Prometheus metrics
@@ -223,7 +224,7 @@ packages/client/      browser only
 | Tier | Packages | May depend on |
 |---|---|---|
 | `universal` | `api-contracts`, `design-tokens`, `domain`, `domain-rules`, `errors`, `intl`, `messages`, `pagination`, `permissions`, `result`, `tsconfig`, `validation` | `universal` only — no `node:*`, no server SDK |
-| `server` | `adapters`, `composition`, `compose-autoscaler`, `concurrency`, `config`, `core`, `db`, `dev-token`, `env-schema`, `events`, `ffmpeg`, `gen-video`, `job-contracts`, `logger`, `observability`, `storage`, `testing`, `upload-client`, `whisper` | `universal` + `server` |
+| `server` | `adapters`, `composition`, `compose-autoscaler`, `concurrency`, `config`, `core`, `db`, `dev-token`, `env-schema`, `events`, `ffmpeg`, `fingerprint`, `gen-video`, `job-contracts`, `logger`, `observability`, `storage`, `testing`, `upload-client`, `whisper` | `universal` + `server` |
 | `client` | `api-client`, `forms`, `intl-react`, `permissions-react`, `queries`, `security-headers`, `ui`, `web-telemetry`, `web-testing`, `workbench` | `universal` + `client` |
 
 Apps take their tier from their directory the same way: `apps/server/api` and `apps/server/worker` are `server`,
@@ -245,7 +246,7 @@ portability.
 | T1 | Foundation — no `@vp/*` dependency | `domain`, `errors`, `result`, `tsconfig`, `concurrency`, `logger`, `storage`, `vite-preset` |
 | T2 | Contracts and policy, and the CLIs that log through `@vp/logger` | `composition`, `design-tokens`, `events`, `intl`, `job-contracts`, `observability`, `pagination`, `permissions`, `testing`, `validation`, `whisper`, `compose-autoscaler`, `dev-token`, `gen-video`, `security-headers` |
 | T3 | Domain capability — ports, repository contracts, rules and the configuration value, the React bindings over the rules, and the design system's token sets | `api-contracts`, `core`, `db`, `domain-rules`, `env-schema`, `ffmpeg`, `messages`, `permissions-react`, `ui` |
-| T4 | Integration — concrete drivers, generated clients and the env loader | `adapters`, `api-client`, `config`, `forms`, `intl-react` |
+| T4 | Integration — concrete drivers, generated clients and the env loader | `adapters`, `api-client`, `config`, `fingerprint`, `forms`, `intl-react` |
 | T5 | App modules - code more than one application shares, above an integration | `queries`, `web-testing` |
 | T6 | Applications | `apps/server/api`, `apps/server/worker`, `apps/client/web`, `apps/client/studio` |
 | T7 | Reference tools whose acceptance suite drives a running application | `upload-client` |

@@ -1,4 +1,4 @@
-import { frameBands, hammingDistance } from '../frame-hash';
+import { frameBands, hammingDistance, popcount32 } from '../frame-hash';
 
 describe('@vp/domain: hammingDistance', () => {
   it.each([
@@ -43,5 +43,18 @@ describe('@vp/domain: frameBands', () => {
       expect(hammingDistance(base, near)).toBe(3);
       expect(shared).toBe(true);
     }
+  });
+});
+
+describe('@vp/domain: popcount32', () => {
+  it.each([
+    { value: 0, bits: 0 },
+    { value: 1, bits: 1 },
+    { value: 0xff, bits: 8 },
+    { value: -1, bits: 32 },
+    { value: 0x8000_0000, bits: 1 },
+    { value: 0xffff_ffff, bits: 32 },
+  ])('counts $bits bits in $value', ({ value, bits }) => {
+    expect(popcount32(value)).toBe(bits);
   });
 });
