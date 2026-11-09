@@ -28,7 +28,7 @@ describe('apps/client/web: party page', () => {
     expect(socket.urls).toEqual([]);
   });
 
-  it('puts a member in the room: the lobby, its roster and the socket opened with a ticket', async () => {
+  it('puts a member in the room: the lobby, its roster and the socket opened with its one-time pass', async () => {
     const { socket } = await renderPartyRoute({ preview: SEATED });
 
     expect(await screen.findByText('Waiting to start', { selector: 'p' })).toBeInTheDocument();

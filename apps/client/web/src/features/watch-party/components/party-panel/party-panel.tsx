@@ -29,7 +29,7 @@ export function PartyPanel({ roomId, socket, tab, onTabChange, onSignIn }: Party
   const { tOr } = useT();
   const { format } = useFormat();
   const moderation = usePartyModeration(roomId);
-  const canPost = usePartyCan({ permission: 'chat.post' });
+  const canPost = usePartyCan({ kind: 'permission', permission: 'chat.post' });
   const { room, you, roles, roster } = state;
 
   const ownerKey = room?.owner.memberKey ?? '';

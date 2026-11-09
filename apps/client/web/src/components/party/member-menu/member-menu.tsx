@@ -32,6 +32,7 @@ function RoleItem({
   onToggle: (assigned: boolean) => void;
 }) {
   const allowed = usePartyCan({
+    kind: 'role',
     action: role.assigned ? 'revoke' : 'assign',
     role: { key: role.key, position: role.position },
   });
@@ -85,10 +86,10 @@ export function MemberMenu({
   onTransfer,
 }: MemberMenuProps) {
   const { tOr } = useT();
-  const canAssign = usePartyCan({ action: 'assign', member });
-  const canMute = usePartyCan({ action: 'mute', member });
-  const canKick = usePartyCan({ action: 'kick', member });
-  const canBan = usePartyCan({ action: 'ban', member });
+  const canAssign = usePartyCan({ kind: 'member', action: 'assign', member });
+  const canMute = usePartyCan({ kind: 'member', action: 'mute', member });
+  const canKick = usePartyCan({ kind: 'member', action: 'kick', member });
+  const canBan = usePartyCan({ kind: 'member', action: 'ban', member });
   const moderates = canAssign || canMute || canKick || canBan || canTransfer;
 
   if (!(moderates || personalControls)) {

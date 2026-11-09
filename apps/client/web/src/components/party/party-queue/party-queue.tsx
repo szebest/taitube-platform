@@ -68,7 +68,7 @@ export function PartyQueueItem({
         </span>
       </span>
       {onRemove && (
-        <PartyCan gate={{ permission: 'queue.remove' }}>
+        <PartyCan gate={{ kind: 'permission', permission: 'queue.remove' }}>
           <IconButton
             size="sm"
             variant="ghost"
@@ -98,7 +98,7 @@ export function PartyQueueAdd({ onAdd }: { onAdd: () => void }) {
   const { tOr } = useT();
 
   return (
-    <PartyCan gate={{ permission: 'queue.add' }}>
+    <PartyCan gate={{ kind: 'permission', permission: 'queue.add' }}>
       <Button size="sm" variant="soft" onClick={onAdd}>
         <Icon name="queue-add" size="sm" />
         {tOr('party.queueAdd', {}, '')}

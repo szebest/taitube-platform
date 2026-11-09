@@ -11,19 +11,20 @@ import {
 import { usePartyAbility } from './party-permissions-provider';
 
 export type PartyGate =
-  | { permission: WatchPartyViewer['permissions'][number] }
-  | { action: WatchPartyMemberAction; member: WatchPartyMemberSubject }
-  | { action: WatchPartyRoleAction; role: WatchPartyRoleSubject };
+  | { kind: 'permission'; permission: WatchPartyViewer['permissions'][number] }
+  | { kind: 'member'; action: WatchPartyMemberAction; member: WatchPartyMemberSubject }
+  | { kind: 'role'; action: WatchPartyRoleAction; role: WatchPartyRoleSubject };
 
 /** Whether the viewer may act in this room: a held permission, an act on a member, or on a role. */
 export function usePartyCan(gate: PartyGate): boolean {
   const ability = usePartyAbility();
 
-  if ('permission' in gate) {
-    return canInRoom(ability, gate.permission);
+  switch (gate.kind) {
+    case 'permission':
+      return canInRoom(ability, gate.permission);
+    case 'member':
+      return canActOnMember(ability, gate.action, gate.member);
+    case 'role':
+      return canTouchRole(ability, gate.action, gate.role);
   }
-  if ('member' in gate) {
-    return canActOnMember(ability, gate.action, gate.member);
-  }
-  return canTouchRole(ability, gate.action, gate.role);
 }

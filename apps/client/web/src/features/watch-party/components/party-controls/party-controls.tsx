@@ -28,8 +28,8 @@ function acceptFrame(request: PartyRequest, versions: Versioned): WatchPartyClie
 export function PartyControls({ socket }: PartyControlsProps) {
   const { state, serverNow, send, dismissRequest } = socket;
   const { tOr } = useT();
-  const canControl = usePartyCan({ permission: 'playback.control' });
-  const canRequest = usePartyCan({ permission: 'playback.request' });
+  const canControl = usePartyCan({ kind: 'permission', permission: 'playback.control' });
+  const canRequest = usePartyCan({ kind: 'permission', permission: 'playback.request' });
   const { playback, version, rolesVersion } = state;
   const versions = { version, rolesVersion };
   const playing = playback.phase === 'playing';

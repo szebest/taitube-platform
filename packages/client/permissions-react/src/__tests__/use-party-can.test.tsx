@@ -24,31 +24,51 @@ function answer(gate: PartyGate): string {
 
 describe('@vp/permissions-react: usePartyCan', () => {
   it.each<{ scenario: string; gate: PartyGate; allowed: boolean }>([
-    { scenario: 'a held permission', gate: { permission: 'chat.moderate' }, allowed: true },
-    { scenario: 'a permission the roles lack', gate: { permission: 'queue.add' }, allowed: false },
+    {
+      scenario: 'a held permission',
+      gate: { kind: 'permission', permission: 'chat.moderate' },
+      allowed: true,
+    },
+    {
+      scenario: 'a permission the roles lack',
+      gate: { kind: 'permission', permission: 'queue.add' },
+      allowed: false,
+    },
     {
       scenario: 'kicking a member below',
-      gate: { action: 'kick', member: { topPosition: 10, isOwner: false, kind: 'user' } },
+      gate: {
+        kind: 'member',
+        action: 'kick',
+        member: { topPosition: 10, isOwner: false, kind: 'user' },
+      },
       allowed: true,
     },
     {
       scenario: 'kicking a member at the same position',
-      gate: { action: 'kick', member: { topPosition: 50, isOwner: false, kind: 'user' } },
+      gate: {
+        kind: 'member',
+        action: 'kick',
+        member: { topPosition: 50, isOwner: false, kind: 'user' },
+      },
       allowed: false,
     },
     {
       scenario: 'kicking the owner',
-      gate: { action: 'kick', member: { topPosition: 0, isOwner: true, kind: 'user' } },
+      gate: {
+        kind: 'member',
+        action: 'kick',
+        member: { topPosition: 0, isOwner: true, kind: 'user' },
+      },
       allowed: false,
     },
     {
       scenario: 'editing a role below',
-      gate: { action: 'update', role: { key: null, position: 10 } },
+      gate: { kind: 'role', action: 'update', role: { key: null, position: 10 } },
       allowed: true,
     },
     {
       scenario: 'editing a role at their own position',
-      gate: { action: 'update', role: { key: null, position: 50 } },
+      gate: { kind: 'role', action: 'update', role: { key: null, position: 50 } },
       allowed: false,
     },
   ])('answers $scenario', ({ gate, allowed }) => {

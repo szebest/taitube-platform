@@ -22,10 +22,10 @@ function renderCan(gate: PartyCanProps['gate']): string {
 
 describe('@vp/permissions-react: PartyCan', () => {
   it('renders its children where the room ability allows the gate', () => {
-    expect(renderCan({ permission: 'chat.post' })).toContain('ALLOWED');
+    expect(renderCan({ kind: 'permission', permission: 'chat.post' })).toContain('ALLOWED');
   });
 
   it('renders the fallback where it does not', () => {
-    expect(renderCan({ permission: 'queue.add' })).toContain('DENIED');
+    expect(renderCan({ kind: 'permission', permission: 'queue.add' })).toContain('DENIED');
   });
 });

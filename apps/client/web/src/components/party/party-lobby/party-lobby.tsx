@@ -120,7 +120,7 @@ export function PartyLobbyActions({ ready, onToggleReady, onStart }: PartyLobbyA
       <Button variant={ready ? 'soft' : 'solid'} aria-pressed={ready} onClick={onToggleReady}>
         {ready ? tOr('party.stageNotReady', {}, '') : tOr('party.stageReady', {}, '')}
       </Button>
-      <PartyCan gate={{ permission: 'playback.control' }}>
+      <PartyCan gate={{ kind: 'permission', permission: 'playback.control' }}>
         <Button tone="accent" variant="solid" onClick={onStart}>
           {tOr('party.stageStart', {}, '')}
         </Button>
