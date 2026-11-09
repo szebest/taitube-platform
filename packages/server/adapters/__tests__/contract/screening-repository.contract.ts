@@ -2,6 +2,7 @@ import { SCREENING_TRANSITIONS, VIDEO_STATUSES, type VideoStatus } from '@vp/dom
 import { ErrorCodes } from '@vp/errors';
 import { expectOk } from '@vp/testing/result';
 import { OWNER_ID, publicVideo, seedOwners, VIDEO_IDS } from './fixtures';
+import { describeScreeningCases } from './screening-cases.contract';
 import { APPEAL_ID, MODERATOR_A, MODERATOR_B, SCREENING_ID, screening } from './screening-fixtures';
 import { describeScreeningResults } from './screening-results.contract';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
@@ -38,6 +39,7 @@ export function describeScreeningRepositoryContract(makeSubject: MakeRepositorie
     });
 
     describeScreeningResults(() => subject);
+    describeScreeningCases(() => subject);
 
     const screenings = () => subject.repositories.screenings;
     const videoIn = async (status: VideoStatus, errorCode?: string) => {

@@ -59,4 +59,10 @@ export class FingerprintDouble extends FingerprintRepository {
     this.audioReads.push(videoId);
     return ok([...(this.audio.get(videoId) ?? [])]);
   }
+
+  async deleteForVideo(videoId: string): Promise<Result<void, DatabaseUnavailable>> {
+    this.frames.delete(videoId);
+    this.audio.delete(videoId);
+    return ok();
+  }
 }

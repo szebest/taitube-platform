@@ -48,6 +48,38 @@ export interface AppealRejectionInput {
   message: string;
 }
 
+export interface RaiseFlagInput {
+  /** Names the result row when the video has none yet and the flag has to start one. */
+  id: string;
+  videoId: string;
+  finding: ScreeningFinding;
+  thresholdVersion: string;
+}
+
+/** Open cases sort before decided ones, each group newest first. */
+export interface ScreeningCaseCursor {
+  open: boolean;
+  createdAt: Date;
+  id: string;
+}
+
+export interface ListScreeningCasesOptions {
+  cursor: ScreeningCaseCursor | null;
+  limit: number;
+  state?: 'open' | 'decided';
+}
+
+/** A result that held or flagged a video, with the newest appeal on the video. */
+export interface ScreeningCase {
+  screening: ScreeningRecord;
+  appeal: ScreeningAppealRecord | null;
+}
+
+export interface PurgeableEvidenceOptions {
+  closedBefore: Date;
+  limit: number;
+}
+
 export interface DismissFlagsInput {
   videoId: string;
   moderatorId: string;
@@ -81,6 +113,24 @@ export abstract class ScreeningRepository {
   abstract reject(input: RejectHeldVideoInput): Promise<Result<boolean, DatabaseUnavailable>>;
   /** `REJECTED` to `HELD`, only for a screening rejection, and opens the appeal row. */
   abstract appeal(input: AppealRejectionInput): Promise<Result<boolean, DatabaseUnavailable>>;
-  /** Closes a flag without a state change; `false` when the newest result is decided or has no flags. */
+  /**
+   * Closes the flags of a passed result without a state change, or the later flags of a decided one;
+   * `false` when the newest result has none open, or is a hold nobody has decided.
+   */
   abstract dismiss(input: DismissFlagsInput): Promise<Result<boolean, DatabaseUnavailable>>;
+  /**
+   * Adds a flag to the newest result, or starts a passed one when the video has none, and reopens the
+   * case. State is untouched. `false` when the same finding is already there.
+   */
+  abstract raiseFlag(input: RaiseFlagInput): Promise<Result<boolean, DatabaseUnavailable>>;
+
+  /** Cases newest first, open before decided, up to `limit + 1` so the caller sees a further page. */
+  abstract listCases(
+    options: ListScreeningCasesOptions
+  ): Promise<Result<ScreeningCase[], DatabaseUnavailable>>;
+  /** Decided cases whose evidence frames have outlived their retention. */
+  abstract findPurgeableEvidence(
+    options: PurgeableEvidenceOptions
+  ): Promise<Result<ScreeningRecord[], DatabaseUnavailable>>;
+  abstract markEvidencePurged(id: string): Promise<Result<boolean, DatabaseUnavailable>>;
 }

@@ -62,8 +62,53 @@ export interface VideoScreening {
   decidedBy: string | null;
   decidedAt: Date | null;
   decisionNote: string | null;
+  /** Set when a moderator reviews the flags, cleared when a new flag is raised. */
+  flagsClearedAt: Date | null;
+  evidencePurgedAt: Date | null;
   createdAt: Date;
 }
+
+/** A case is open while a hold waits for a person or a flag has not been looked at. */
+export function isScreeningCaseOpen(
+  screening: Pick<VideoScreening, 'outcome' | 'decision' | 'flags' | 'flagsClearedAt'>
+): boolean {
+  const heldAndUndecided = screening.outcome === 'HOLD' && screening.decision === null;
+  const flagged = screening.flags.length > 0 && screening.flagsClearedAt === null;
+  return heldAndUndecided || flagged;
+}
+
+function canonical(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(canonical).join(',')}]`;
+  if (value !== null && typeof value === 'object') {
+    const entries = Object.entries(value).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+    return `{${entries.map(([key, inner]) => `${JSON.stringify(key)}:${canonical(inner)}`).join(',')}}`;
+  }
+  return JSON.stringify(value);
+}
+
+export interface FlagMerge {
+  flags: ScreeningFinding[];
+  /** Whether the finding is news: the same finding again is not raised twice, even after a dismissal. */
+  changed: boolean;
+}
+
+/** One flag per reason: a fresh finding of a reason replaces the older one. */
+export function mergeFlag(
+  flags: readonly ScreeningFinding[],
+  finding: ScreeningFinding
+): FlagMerge {
+  const current = flags.find((flag) => flag.reason === finding.reason);
+  if (current && canonical(current) === canonical(finding)) {
+    return { flags: [...flags], changed: false };
+  }
+  return {
+    flags: [...flags.filter((flag) => flag.reason !== finding.reason), finding],
+    changed: true,
+  };
+}
+
+/** The source checksum of a result made of flags alone, for a video that was never screened. */
+export const FLAG_ONLY_CHECKSUM = 'flags';
 
 export interface ScreeningAppeal {
   id: string;

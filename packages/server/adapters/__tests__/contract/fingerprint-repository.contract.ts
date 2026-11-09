@@ -141,5 +141,17 @@ export function describeFingerprintRepositoryContract(makeSubject: MakeRepositor
       );
       expect(expectOk(await fingerprints().findAudioTerms([1], VIDEO_IDS.b))).toEqual([]);
     });
+
+    it('removes the frames and audio of a deleted video and leaves the others', async () => {
+      await fingerprints().storeFrames(VIDEO_IDS.a, [{ idx: 0, hash: FRAME }]);
+      await fingerprints().storeAudio(VIDEO_IDS.a, [{ idx: 0, term: 7 }]);
+      await fingerprints().storeFrames(VIDEO_IDS.c, [{ idx: 0, hash: FRAME }]);
+
+      expectOk(await fingerprints().deleteForVideo(VIDEO_IDS.a));
+
+      expect(expectOk(await fingerprints().audioTermsOf(VIDEO_IDS.a))).toEqual([]);
+      const hits = expectOk(await fingerprints().findFramesSharingBand([FRAME], VIDEO_IDS.b));
+      expect(hits.map((hit) => hit.videoId)).toEqual([VIDEO_IDS.c]);
+    });
   });
 }

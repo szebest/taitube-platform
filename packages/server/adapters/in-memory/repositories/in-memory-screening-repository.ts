@@ -4,14 +4,24 @@ import {
   type DismissFlagsInput,
   type EventRepository,
   type HoldVideoInput,
+  type ListScreeningCasesOptions,
   type NewScreeningInput,
+  type PurgeableEvidenceOptions,
+  type RaiseFlagInput,
   type RejectHeldVideoInput,
   type ScreeningAppealRecord,
+  type ScreeningCase,
   type ScreeningRecord,
   ScreeningRepository,
   type VideoRepository,
 } from '@vp/core/repositories';
-import { SCREENING_TRANSITIONS, type ScreeningDecision } from '@vp/domain';
+import {
+  FLAG_ONLY_CHECKSUM,
+  SCREENING_TRANSITIONS,
+  type ScreeningDecision,
+  isScreeningCaseOpen,
+  mergeFlag,
+} from '@vp/domain';
 import { type DatabaseUnavailable, ErrorCodes } from '@vp/errors';
 import { type Result, isErr, ok } from '@vp/result';
 
@@ -38,6 +48,8 @@ export class InMemoryScreeningRepository extends ScreeningRepository {
       decidedBy: null,
       decidedAt: null,
       decisionNote: null,
+      flagsClearedAt: null,
+      evidencePurgedAt: null,
       createdAt: new Date(),
     };
     this.screenings.set(created.id, created);
@@ -60,11 +72,7 @@ export class InMemoryScreeningRepository extends ScreeningRepository {
   async findAppeals(
     videoId: string
   ): Promise<Result<ScreeningAppealRecord[], DatabaseUnavailable>> {
-    return ok(
-      this.appeals
-        .filter((appeal) => appeal.videoId === videoId)
-        .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-    );
+    return ok(this.appealsOf(videoId));
   }
 
   async hold(input: HoldVideoInput): Promise<Result<boolean, DatabaseUnavailable>> {
@@ -167,9 +175,9 @@ export class InMemoryScreeningRepository extends ScreeningRepository {
     const screening = this.latest(videoId);
     if (
       !screening ||
-      screening.outcome !== 'PASS' ||
       screening.flags.length === 0 ||
-      screening.decision !== null
+      screening.flagsClearedAt !== null ||
+      (screening.outcome === 'HOLD' && screening.decision === null)
     ) {
       return ok(false);
     }
@@ -181,17 +189,105 @@ export class InMemoryScreeningRepository extends ScreeningRepository {
     });
     if (isErr(logged)) return logged;
 
+    const now = new Date();
     Object.assign(screening, {
-      decision: 'dismissed',
-      decidedBy: moderatorId,
-      decidedAt: new Date(),
+      flagsClearedAt: now,
+      ...(screening.decision === null
+        ? { decision: 'dismissed', decidedBy: moderatorId, decidedAt: now }
+        : {}),
     });
+    return ok(true);
+  }
+
+  async raiseFlag(input: RaiseFlagInput): Promise<Result<boolean, DatabaseUnavailable>> {
+    const { id, videoId, finding, thresholdVersion } = input;
+    const latest = this.latest(videoId);
+    if (!latest) {
+      await this.record({
+        id,
+        videoId,
+        sourceChecksum: FLAG_ONLY_CHECKSUM,
+        outcome: 'PASS',
+        score: 0,
+        reasons: [],
+        flags: [finding],
+        modelVersion: null,
+        thresholdVersion,
+      });
+      return ok(true);
+    }
+
+    const merged = mergeFlag(latest.flags, finding);
+    if (!merged.changed) return ok(false);
+
+    Object.assign(latest, {
+      flags: merged.flags,
+      flagsClearedAt: null,
+      ...(latest.decision === 'dismissed'
+        ? { decision: null, decidedBy: null, decidedAt: null }
+        : {}),
+    });
+    return ok(true);
+  }
+
+  async listCases(
+    options: ListScreeningCasesOptions
+  ): Promise<Result<ScreeningCase[], DatabaseUnavailable>> {
+    const { cursor, limit, state } = options;
+    const key = (screening: ScreeningRecord) =>
+      `${isScreeningCaseOpen(screening) ? 1 : 0}|${screening.createdAt.toISOString()}|${screening.id}`;
+    const after = cursor
+      ? `${cursor.open ? 1 : 0}|${cursor.createdAt.toISOString()}|${cursor.id}`
+      : null;
+
+    const cases = [...this.screenings.values()]
+      .filter((screening) => screening.outcome === 'HOLD' || screening.flags.length > 0)
+      .filter((screening) => {
+        const open = isScreeningCaseOpen(screening);
+        return state === undefined || (state === 'open') === open;
+      })
+      .sort((a, b) => (key(a) < key(b) ? 1 : -1))
+      .filter((screening) => after === null || key(screening) < after)
+      .slice(0, limit + 1)
+      .map((screening) => ({
+        screening: { ...screening },
+        appeal: this.appealsOf(screening.videoId)[0] ?? null,
+      }));
+    return ok(cases);
+  }
+
+  async findPurgeableEvidence(
+    options: PurgeableEvidenceOptions
+  ): Promise<Result<ScreeningRecord[], DatabaseUnavailable>> {
+    const found = [...this.screenings.values()]
+      .filter(
+        ({ decision, decidedAt, evidencePurgedAt }) =>
+          decision !== null &&
+          evidencePurgedAt === null &&
+          decidedAt !== null &&
+          decidedAt < options.closedBefore
+      )
+      .slice(0, options.limit)
+      .map((screening) => ({ ...screening }));
+    return ok(found);
+  }
+
+  async markEvidencePurged(id: string): Promise<Result<boolean, DatabaseUnavailable>> {
+    const screening = this.screenings.get(id);
+    if (!screening || screening.evidencePurgedAt !== null) return ok(false);
+    screening.evidencePurgedAt = new Date();
     return ok(true);
   }
 
   clear(): void {
     this.screenings.clear();
     this.appeals.length = 0;
+  }
+
+  private appealsOf(videoId: string): ScreeningAppealRecord[] {
+    return this.appeals
+      .filter((appeal) => appeal.videoId === videoId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }
 
   private find(videoId: string, sourceChecksum: string): ScreeningRecord | undefined {
@@ -220,6 +316,7 @@ export class InMemoryScreeningRepository extends ScreeningRepository {
       decidedBy: decision.moderatorId,
       decidedAt: new Date(),
       decisionNote: decision.note ?? null,
+      flagsClearedAt: new Date(),
     });
   }
 

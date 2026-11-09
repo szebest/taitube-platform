@@ -66,6 +66,12 @@ export class InMemoryFingerprintRepository extends FingerprintRepository {
     return ok([...(this.audio.get(videoId) ?? [])].sort((a, b) => a.idx - b.idx));
   }
 
+  async deleteForVideo(videoId: string): Promise<Result<void, DatabaseUnavailable>> {
+    this.frames.delete(videoId);
+    this.audio.delete(videoId);
+    return ok(undefined);
+  }
+
   clear(): void {
     this.frames.clear();
     this.audio.clear();

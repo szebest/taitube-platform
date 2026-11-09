@@ -101,4 +101,15 @@ export class PostgresFingerprintRepository extends FingerprintRepository {
       databaseUnavailable.during('audioTermsOf')
     );
   }
+
+  async deleteForVideo(videoId: string): Promise<Result<void, DatabaseUnavailable>> {
+    return fromPromise(
+      () =>
+        this.db.transaction(async (tx) => {
+          await tx.delete(vf).where(eq(vf.videoId, videoId));
+          await tx.delete(va).where(eq(va.videoId, videoId));
+        }),
+      databaseUnavailable.during('deleteForVideo')
+    );
+  }
 }

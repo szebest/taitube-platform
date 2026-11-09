@@ -21,6 +21,8 @@ const quoted = (values: readonly string[]) => sql.raw(values.map((v) => `'${v}'`
 /**
  * One result per video and source checksum, so a re-run reads what the first run stored. The reasons
  * hold the findings that held the video, the flags the ones that only raise a case for a moderator.
+ * A case is open while a hold is undecided or a flag is not cleared; the evidence frames of a decided
+ * case are removed once `evidencePurgedAt` is set.
  */
 export const videoScreenings = pgTable(
   'video_screenings',
@@ -40,6 +42,8 @@ export const videoScreenings = pgTable(
     decidedBy: uuid('decided_by').references(() => users.id, { onDelete: 'set null' }),
     decidedAt: timestamptz('decided_at'),
     decisionNote: text('decision_note'),
+    flagsClearedAt: timestamptz('flags_cleared_at'),
+    evidencePurgedAt: timestamptz('evidence_purged_at'),
     createdAt: timestamptz('created_at').notNull().defaultNow(),
   },
   (table) => [
@@ -47,8 +51,11 @@ export const videoScreenings = pgTable(
     index('video_screenings_open_idx')
       .on(table.createdAt.desc())
       .where(
-        sql`${table.decision} IS NULL AND (${table.outcome} = 'HOLD' OR ${table.flags} <> '[]'::jsonb)`
+        sql`(${table.decision} IS NULL AND ${table.outcome} = 'HOLD') OR (${table.flags} <> '[]'::jsonb AND ${table.flagsClearedAt} IS NULL)`
       ),
+    index('video_screenings_purge_idx')
+      .on(table.decidedAt)
+      .where(sql`${table.decision} IS NOT NULL AND ${table.evidencePurgedAt} IS NULL`),
     check(
       'video_screenings_outcome_check',
       sql`${table.outcome} IN (${quoted(SCREENING_OUTCOMES)})`

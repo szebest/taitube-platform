@@ -15,6 +15,8 @@ const record = (overrides: Partial<VideoScreening>): VideoScreening => ({
   decidedBy: null,
   decidedAt: null,
   decisionNote: null,
+  flagsClearedAt: null,
+  evidencePurgedAt: null,
   createdAt: new Date(0),
   ...overrides,
 });

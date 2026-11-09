@@ -52,4 +52,6 @@ export abstract class FingerprintRepository {
   ): Promise<Result<AudioTermHit[], DatabaseUnavailable>>;
   /** A video's stored terms, in position order. */
   abstract audioTermsOf(videoId: string): Promise<Result<AudioTerm[], DatabaseUnavailable>>;
+  /** Removes everything stored for the video, as a purge of a deleted video does. */
+  abstract deleteForVideo(videoId: string): Promise<Result<void, DatabaseUnavailable>>;
 }
