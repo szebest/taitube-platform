@@ -64,6 +64,13 @@ export const SDD_TEAM_ENDPOINTS: SddEndpointContract[] = [
     hasPathParams: true,
   },
   {
+    path: '/v1/me/invites',
+    method: 'get',
+    expectedStatuses: [200, 400, 401],
+    expectedErrorCodes: [UNAUTHORIZED, VALIDATION_FAILED, INVALID_CURSOR],
+    hasQueryParams: true,
+  },
+  {
     path: '/v1/invites/{id}/accept',
     method: 'post',
     expectedStatuses: [200, 400, 401, 403, 404, 409],
