@@ -228,13 +228,8 @@ On [59](59-video-watch-page-responsive-layout-enhancements.md)'s thread, through
 
 ## Delivery
 
-One stack of two slices on `feat/113-channel-comment-moderation`:
-
-1. `slice/113a-moderation-backend`: the data (one migration), `ModerationAction`, `applyModeration`, the gate, the read
-   scope and counts, the settings endpoints, `commentsEnabled`, `comment.held`, then `moderate`, restrictions, trusted,
-   bulk, the leak tests, the inbox filters, the removals endpoint, the notification kind and the audit calls.
-2. `slice/113b-moderation-ui`: saved replies (API and popover), the web comment UI, `/feed/you/moderation` and the studio
-   (inbox filters, bulk bar, queue and its keyboard flow, settings, the per-video switch).
+One PR, commits in backend-first order: the data and domain rules, the gate and read scope, `moderate`, restrictions,
+bulk and the leak tests, then the web comment UI, then the studio.
 
 ## Acceptance criteria
 
