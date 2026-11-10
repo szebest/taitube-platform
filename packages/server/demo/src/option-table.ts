@@ -28,6 +28,7 @@ interface Flag {
   about: string;
 }
 
+/** @internal Exported for its spec. */
 export const FLAGS: readonly Flag[] = [
   {
     flag: '--profile',

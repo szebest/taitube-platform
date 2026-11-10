@@ -1,6 +1,7 @@
 import { QUEUES } from '@vp/job-contracts';
 import { z } from 'zod';
 
+/** @internal Exported for its spec. */
 export const WORKER_STAGES: readonly string[] = QUEUES.filter((queue) => queue !== 'dlq');
 
 export const FEATURE_KEYS = {

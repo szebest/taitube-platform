@@ -19,6 +19,7 @@ import { expired, migrationsCheck, slug } from './maintenance-commands';
 
 const DEFAULT_BASE = 'origin/main';
 
+/** @internal Exported for its spec. */
 export const USAGE = `pnpm envctl <command> [environment] [options]    (the typed half of scripts/deploy.sh)
 
   list                        every environment, its kind and what it is for

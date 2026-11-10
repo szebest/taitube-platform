@@ -3,7 +3,7 @@ import type { AppEnv } from './app-env';
 /** Every key `AppEnvSchema` declares; `ENV_DOCS` has an entry for each one and for no other. */
 export type AppEnvKey = keyof AppEnv;
 
-/** The sections of `.env.example` and of `docs/ENVIRONMENT.md`, in the order both list them. */
+/** @internal The sections of `.env.example` and of `docs/ENVIRONMENT.md`, in the order both list them. */
 export const ENV_GROUPS = [
   { id: 'core', title: 'Core', summary: 'What every process reads: mode, logging, HTTP and CORS.' },
   { id: 'postgres', title: 'PostgreSQL', summary: 'The system of record.' },
@@ -37,6 +37,7 @@ type EnvReader = (typeof ENV_READERS)[number];
 /**
  * When a key must be set: `always` means the schema fails without it, `production` that a production
  * boot refuses to start without it, `jwks-auth` that `AUTH_MODE=jwks` needs it.
+ * @internal
  */
 export type EnvRequirement = 'always' | 'production' | 'jwks-auth';
 

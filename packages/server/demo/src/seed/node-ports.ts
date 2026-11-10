@@ -15,6 +15,7 @@ import type { FetchPort, SeedPorts, UploaderPort } from './ports';
 const CONTRACT_URL = new URL('../../../../universal/api-contracts/openapi.yaml', import.meta.url);
 const TOKEN_TTL = '12h';
 
+/** @internal Exported for its spec. */
 export function runProcess(
   binary: string,
   args: readonly string[]
@@ -38,7 +39,7 @@ export function runProcess(
   });
 }
 
-/** `UploadClient` throws `initUpload failed (429): ...`; the status is what the retry decides on. */
+/** @internal `UploadClient` throws `initUpload failed (429): ...`; the status is what the retry decides on. */
 export function failureFromUpload(message: string): SeedFailure {
   const status = /\((\d{3})\)/.exec(message)?.[1];
   return status
@@ -53,6 +54,7 @@ const COMPOSE_STORAGE_ALIASES: Readonly<Record<string, string>> = {
 /**
  * The compose API signs URLs for `minio:9000`, which only the compose network resolves. The request goes
  * to the alias and keeps the signed `Host` header, which `fetch` forbids setting, hence `node:http`.
+ * @internal
  */
 export function aliasingFetch(aliases: Readonly<Record<string, string>>): FetchPort {
   return (url, init) => {
@@ -79,6 +81,7 @@ export function aliasingFetch(aliases: Readonly<Record<string, string>>): FetchP
   };
 }
 
+/** @internal Exported for its spec. */
 export function createUploader(apiUrl: string, send: FetchPort): UploaderPort {
   return {
     async upload({ token, filePath, title, contentType }) {

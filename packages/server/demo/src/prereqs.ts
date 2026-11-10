@@ -4,6 +4,7 @@ import type { DemoHost } from './host';
 import type { DemoRunOptions } from './options';
 import { COMPOSE_PS, requiredPorts } from './targets';
 
+/** @internal Exported for its spec. */
 export type PlatformKind = 'macos' | 'linux' | 'wsl';
 
 export interface Check {
@@ -13,6 +14,7 @@ export interface Check {
   hint: string;
 }
 
+/** @internal Exported for its spec. */
 export function platformKind(host: Pick<DemoHost, 'platform' | 'env'>): PlatformKind {
   if (host.platform === 'darwin') return 'macos';
   return host.env.WSL_DISTRO_NAME || host.env.WSL_INTEROP ? 'wsl' : 'linux';
@@ -59,6 +61,7 @@ const HINTS: Record<Check['id'], Record<PlatformKind, string>> = {
   },
 };
 
+/** @internal Exported for its spec. */
 export function hintFor(check: Pick<Check, 'id'>, kind: PlatformKind): string {
   return HINTS[check.id][kind];
 }
@@ -88,12 +91,14 @@ function ownPorts(stdout: string): Set<number> {
   return ports;
 }
 
+/** @internal Exported for its spec. */
 export interface Listener {
   port: number;
   pid: string;
   name: string;
 }
 
+/** @internal Exported for its spec. */
 export function parseListeners(output: string): Listener[] {
   const listeners: Listener[] = [];
   let pid = '';

@@ -15,6 +15,7 @@ interface ClockPort {
   sleep(ms: number): Promise<void>;
 }
 
+/** @internal Exported for its spec. */
 export interface UploadRequest {
   token: string;
   filePath: string;
@@ -27,6 +28,7 @@ export interface UploaderPort {
   upload(request: UploadRequest): Promise<Result<{ videoId: string }, SeedFailure>>;
 }
 
+/** @internal Exported for its spec. */
 export interface IdentityRow {
   id: string;
   email: string;

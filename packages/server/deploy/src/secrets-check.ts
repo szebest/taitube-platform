@@ -20,7 +20,7 @@ function unquoted(value: string): string {
   return trimmed;
 }
 
-/** The names an env file sets and what each is set to; the caller must never print the values. */
+/** @internal The names an env file sets and what each is set to; the caller must never print the values. */
 export function parseEnvFile(text: string): Map<string, string> {
   const entries = text
     .split('\n')

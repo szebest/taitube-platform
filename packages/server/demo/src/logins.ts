@@ -1,3 +1,4 @@
+/** @internal Exported for its spec. */
 export const SESSION_COOKIE = 'vp.session';
 
 export interface Persona {
@@ -42,10 +43,12 @@ export function mintArgs(persona: Persona): string[] {
   return ['--silent', 'dev-token', 'mint', '--raw', '--sub', persona.id, '--role', persona.role];
 }
 
+/** @internal Exported for its spec. */
 export function cookieOneLiner(token: string): string {
   return `document.cookie = "${SESSION_COOKIE}=${token}; path=/; max-age=28800"; location.reload()`;
 }
 
+/** @internal Exported for its spec. */
 export function curlLine(token: string, apiUrl: string): string {
   return `curl -H 'Authorization: Bearer ${token}' ${apiUrl}/v1/videos`;
 }

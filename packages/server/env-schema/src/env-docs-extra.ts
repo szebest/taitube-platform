@@ -1,6 +1,6 @@
 import type { EnvKeyDocBody } from './env-doc';
 
-/** Keys outside `AppEnvSchema`: client build-time keys, keys handed to other tools, tooling keys. */
+/** @internal Keys outside `AppEnvSchema`: client build-time keys, keys handed to other tools, tooling keys. */
 export const EXTRA_GROUPS = [
   {
     id: 'client',
@@ -24,6 +24,7 @@ export const EXTRA_GROUPS = [
 
 type ExtraEnvGroup = (typeof EXTRA_GROUPS)[number]['id'];
 
+/** @internal Exported for its spec. */
 export interface ExtraEnvKeyDoc extends EnvKeyDocBody {
   group: ExtraEnvGroup;
 }

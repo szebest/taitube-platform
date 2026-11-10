@@ -24,7 +24,7 @@ function origin(host: string): string {
   return `${local ? 'http' : 'https'}://${host}`;
 }
 
-/** The ConfigMap entries an environment sets: hosts first, then flags, then its own `config`, which wins. */
+/** @internal The ConfigMap entries an environment sets: hosts first, then flags, then its own `config`, which wins. */
 export function configData(env: KubernetesEnvironment): Record<string, string> {
   const { web, studio, cdn } = env.hosts;
   const origins = [web, studio].filter((host) => host !== undefined).map(origin);

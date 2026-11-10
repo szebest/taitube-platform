@@ -7,6 +7,7 @@ type EnvDefault =
   | { kind: 'unset' }
   | { kind: 'value'; value: string; parsed: unknown };
 
+/** @internal Exported for its spec. */
 export interface EnvKeyShape {
   type: string;
   default: EnvDefault;
@@ -41,7 +42,7 @@ function textOf(value: unknown): string {
   return Array.isArray(value) ? value.join(',') : String(value);
 }
 
-/** The input type and the default of one key, read from the schema itself rather than retyped. */
+/** @internal The input type and the default of one key, read from the schema itself rather than retyped. */
 export function describeEnvKey(key: AppEnvKey): EnvKeyShape {
   const schema = AppEnvSchema.shape[key];
   const outcome = schema.safeParse(undefined);

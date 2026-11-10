@@ -65,6 +65,7 @@ const PERSONAS: readonly Persona[] = [
   },
 ];
 
+/** @internal Exported for its spec. */
 export function extraUserId(position: number): string {
   return `${ID_PREFIX}${(0x1000 + position).toString(16).padStart(12, '0')}`;
 }

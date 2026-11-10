@@ -11,7 +11,7 @@ export interface LoadedEnvironments {
   problems: string[];
 }
 
-/** Every directory under `infra/environments` except the underscore ones (the template) holds one. */
+/** @internal Every directory under `infra/environments` except the underscore ones (the template) holds one. */
 export function environmentDirs(root: string): string[] {
   const base = join(root, ENVIRONMENTS_DIR);
   if (!existsSync(base)) return [];

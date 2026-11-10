@@ -1,6 +1,6 @@
 import type { Environment } from './environment-spec';
 
-/** The context an environment deploys to: a cluster context, or the Docker context a compose project runs on. */
+/** @internal The context an environment deploys to: a cluster context, or the Docker context a compose project runs on. */
 export function declaredContext(env: Environment): string {
   return env.kind === 'compose' ? env.compose.context : env.cluster.context;
 }

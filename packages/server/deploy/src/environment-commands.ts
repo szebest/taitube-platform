@@ -24,6 +24,7 @@ export interface CommandInput {
 
 type Found = { ok: true; env: Environment } | { ok: false; exit: ExitCode };
 
+/** @internal Exported for its spec. */
 export function findEnvironment(host: DeployHost, name: string | undefined): Found {
   const { environments, problems } = loadEnvironments(host.root);
   if (problems.length > 0) {

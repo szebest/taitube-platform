@@ -5,6 +5,7 @@ import type { SeedFailure } from './failure';
 import type { SeedPorts } from './ports';
 import type { UserSpec, VideoSpec } from './world-types';
 
+/** @internal Exported for its spec. */
 export interface ClipSpec {
   source: VideoSpec['source'];
   width: number;
@@ -25,6 +26,7 @@ const AVATAR = { width: 512, height: 512 } as const;
 const BANNER = { width: 1536, height: 864 } as const;
 const BITEXACT = ['-fflags', '+bitexact', '-flags:v', '+bitexact', '-flags:a', '+bitexact'];
 
+/** @internal Exported for its spec. */
 export function clipSpecOf(video: VideoSpec): ClipSpec {
   const vertical = video.shape === 'short';
   return {
@@ -42,6 +44,7 @@ function cacheKey(spec: unknown): string {
   return createHash('sha256').update(JSON.stringify(spec)).digest('hex').slice(0, 16);
 }
 
+/** @internal Exported for its spec. */
 export const clipCacheKey = (spec: ClipSpec): string => cacheKey(spec);
 
 function lavfiSource({ source, width, height, hue, seed }: ClipSpec): string {
@@ -75,7 +78,7 @@ function hueToHex(hue: number): string {
 
 const flags = (text: string): string[] => text.split(' ');
 
-/** Only lavfi sources and a sine tone, so the clip needs no font, no input file and no drawtext build. */
+/** @internal Only lavfi sources and a sine tone, so the clip needs no font, no input file and no drawtext build. */
 export function clipArgs(spec: ClipSpec, output: string): string[] {
   const tone = `sine=frequency=${spec.toneHz}:sample_rate=44100:duration=${spec.seconds}`;
   return [

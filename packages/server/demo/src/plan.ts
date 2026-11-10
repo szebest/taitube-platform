@@ -11,6 +11,7 @@ import {
 } from './targets';
 import { type Endpoint } from './urls';
 
+/** @internal Exported for its spec. */
 export function seedLine(options: DemoRunOptions): string {
   const worker = options.withWorker ? 'through the worker pipeline' : 'rows only, no worker';
   return `seed ${options.videos} videos, ${options.users} users, ${options.channels} channels, seed ${options.seed}, ${worker}`;
