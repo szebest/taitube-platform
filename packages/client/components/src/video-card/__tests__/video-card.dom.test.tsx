@@ -54,7 +54,7 @@ describe('@vp/components: VideoCard', () => {
   });
 
   it.each(variantNames(videoCardStyles.variants.variant))(
-    'links the %s card to its video and its channel',
+    'links the %s card to its video and its channel and prints a snippet',
     (variant) => {
       renderCard({ variant });
 
@@ -67,17 +67,12 @@ describe('@vp/components: VideoCard', () => {
         'href',
         '/channel/marta'
       );
+      expect(screen.getByText('A night walk from Alfama.')).toHaveAttribute(
+        'data-slot',
+        'video-card-snippet'
+      );
     }
   );
-
-  it('prints a snippet of the description under the meta', () => {
-    renderCard({ variant: 'row' });
-
-    expect(screen.getByText('A night walk from Alfama.')).toHaveAttribute(
-      'data-slot',
-      'video-card-snippet'
-    );
-  });
 
   it('shows how much was watched and says the duration in words', () => {
     renderCard();
