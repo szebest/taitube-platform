@@ -208,6 +208,8 @@ Read by the web and studio apps, never by the API or a worker. VITE_* is inlined
 | `VITE_COOKIE_DOMAIN` | no | web, studio | The Domain of the theme and session cookies: the parent domain both apps share in the cloud. Empty locally, where a cookie spans ports. | `taitube.local` |
 | `VITE_OTEL_TRACES_URL` | no | web, studio | Where the browser sends its OTLP/HTTP spans. Unset, no tracer loads. Each app .env.development and the compose build set the local collector. | `http://localhost:4318/v1/traces` |
 | `SSR_API_BASE_URL` | no | apps/client/web's SSR server, parsed by its own schema in apps/client/web/src/config | The web and studio servers only, read at start: where the server render and the /api proxy call the API when VITE_API_BASE_URL does not reach it. Empty falls back to VITE_API_BASE_URL. | `http://api:3000` |
+| `SSR_DEV_TOKEN_URL` | no | apps/client/web and apps/client/studio's SSR servers, parsed by their own schemas in src/lib/config, and demo/start.sh: where the server reaches dev-token serve for the demo personas | The web and studio servers only, read at start: where they reach `pnpm dev-token serve` to mint the demo personas tokens when a build sets VITE_DEMO_PERSONAS=true. Empty means http://localhost:3002. | `http://localhost:3002` |
+| `VITE_DEMO_PERSONAS` | no | web, studio | Build-time, both client apps: /login offers one-click sign-in as a demo persona. Set true only for local and demo builds; every real deployment keeps it false, and the bundle guard fails a build that ships the code anyway. | `true` |
 
 ## Platform keys
 

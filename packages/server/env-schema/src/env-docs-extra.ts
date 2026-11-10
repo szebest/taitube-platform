@@ -86,6 +86,20 @@ const CLIENT = extraDocs('client', {
     visibility: 'public',
     readBy: ['web', 'studio'],
   },
+  SSR_DEV_TOKEN_URL: {
+    description:
+      'The web and studio servers only, read at start: where they reach `pnpm dev-token serve` to mint the demo personas tokens when a build sets VITE_DEMO_PERSONAS=true. Empty means http://localhost:3002.',
+    example: 'http://localhost:3002',
+    visibility: 'public',
+    readBy: ['web', 'studio'],
+  },
+  VITE_DEMO_PERSONAS: {
+    description:
+      'Build-time, both client apps: /login offers one-click sign-in as a demo persona. Set true only for local and demo builds; every real deployment keeps it false, and the bundle guard fails a build that ships the code anyway.',
+    example: 'true',
+    visibility: 'public',
+    readBy: ['web', 'studio'],
+  },
 });
 
 const PLATFORM = extraDocs('platform', {

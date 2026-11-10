@@ -17,6 +17,7 @@ runs offline with no external cloud dependency.
 - [Monorepo Structure](#monorepo-structure)
 - [Key Capabilities](#key-capabilities)
 - [Prerequisites](#prerequisites)
+- [Zero to demo](#zero-to-demo)
 - [Quick Start with Docker](#quick-start-with-docker)
 - [Local Development Setup](#local-development-setup)
 - [End-to-End Workflow](#end-to-end-workflow)
@@ -120,6 +121,8 @@ taitube-platform/
 │       ├── config/              # loadEnv(): reads process.env once and validates it
 │       ├── core/                # Abstract class ports and repository interfaces
 │       ├── db/                  # Drizzle schema, client, migrations and migrate/seed functions
+│       ├── demo/                # CLI behind make demo: starts the stack, seeds a deterministic demo world through the API
+│       ├── deploy/              # Typed environment files and pnpm envctl, the typed half of scripts/deploy.sh
 │       ├── dev-token/           # CLI: mints local EdDSA JWTs and serves a dev JWKS
 │       ├── env-schema/          # Zod environment schema, AppConfig and toAppConfig
 │       ├── events/              # SSE envelope, pub/sub channels and Redis cache keys
@@ -241,6 +244,24 @@ colima start --cpu 6 --memory 12 --disk 40 --vm-type vz --mount-type virtiofs
 Homebrew installs the Compose and buildx plugins outside Docker's search path, so add
 `/opt/homebrew/lib/docker/cli-plugins` to `cliPluginsExtraDirs` in `~/.docker/config.json`
 or `docker compose` will not be found.
+
+---
+
+## Zero to demo
+
+```bash
+git clone https://github.com/szebest/taitube-platform.git && cd taitube-platform
+make demo                       # checks prerequisites, installs, starts the stack, seeds, prints URLs and logins
+make demo-login PERSONA=creator # a token and a sign-in snippet for a persona
+make demo-down                  # stop, keep the data; `make demo-reset` wipes and starts over
+```
+
+`make demo` is idempotent and takes options by flag or environment (`DEMO_PROFILE`, `DEMO_VIDEOS`, `DEMO_SEED`, ...).
+Everything, from prerequisites per OS to troubleshooting, is in [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md);
+the demo world and a guided tour are in [docs/DEMO.md](docs/DEMO.md); every environment variable is in
+[docs/ENVIRONMENT.md](docs/ENVIRONMENT.md) (generated, checked in CI); deploying any environment is in
+[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md): `make deploy ENV=<local|preview|staging|production|compose-vm>`,
+`make deploy-plan` shows the diff and applies nothing, `make secrets-check ENV=production` lists missing secrets by name.
 
 ---
 
@@ -523,6 +544,9 @@ Manifests are organized with Kustomize under `infra/k8s/base` with overlays for 
 | `pnpm dev-token` | Mint, verify and serve local EdDSA dev JWTs and their JWKS |
 | `pnpm upload-client` | Run the reference resumable upload CLI |
 | `pnpm compose-autoscaler` | Run the Docker Compose queue-depth autoscaler |
+| `make demo` / `pnpm demo` | Start the stack and seed the demo world: [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) |
+| `make deploy ENV=<env>` | Deploy an environment, `make deploy-plan` first: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) |
+| `pnpm gen:env-docs` | Regenerate [docs/ENVIRONMENT.md](docs/ENVIRONMENT.md) from the env schema (`--check` in CI) |
 | `pnpm sync:tickets` | Synchronize local markdown tickets with GitHub Issues |
 
 ---
@@ -549,6 +573,10 @@ Manifests are organized with Kustomize under `infra/k8s/base` with overlays for 
 - [File Discipline & Sizing](docs/standards/file-discipline.md): Modularity, <= 250 lines target, and repository file organization.
 - [Declarative Authorization](docs/standards/authorization.md): CASL ability engine, role hierarchy, and route protection.
 - [Error Handling](docs/standards/error-handling.md): `Result` at the domain seam - rules return, services compose, the edge decides (SDD ADR-24).
+- [Getting Started](docs/GETTING_STARTED.md): Zero to a seeded demo in five commands, ports, troubleshooting, FAQ.
+- [The Demo World](docs/DEMO.md): Personas, a guided tour, extending the seed.
+- [Environment Reference](docs/ENVIRONMENT.md): Every environment variable, generated from the schema.
+- [Deployment](docs/DEPLOYMENT.md): The environment model, first deploys, day-2 operations, go-live checklist.
 - [Domain Glossary & Model](CONTEXT.md): Ubiquitous domain language, entities, and seam discipline.
 - [Package Tiers & Dependency Layers](packages/AGENTS.md): Where each package may run, which way dependencies point, and how both are enforced.
 - [System Design Document (SDD)](docs/SDD.md): Deep dives, database schemas, and §4, the Architecture Decision Records (every ADR lives there).
