@@ -15,7 +15,7 @@ import { DIRECTIONS, pickOption, preferenceFromGlobals } from './toolbars';
 
 type Translation = Catalogues[string];
 
-const pickLocale = (globals: Readonly<Record<string, unknown>>) =>
+export const pickLocale = (globals: Readonly<Record<string, unknown>>) =>
   pickOption(SUPPORTED_LOCALES, globals.locale, FALLBACK_LOCALE);
 
 /** The toolbar locale's catalogue, loaded before the story renders as the apps load it before they hydrate. */
