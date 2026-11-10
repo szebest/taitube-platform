@@ -11,6 +11,9 @@ apps/client/studio/src/
     table/data-table/              DataTable
     analytics/stat-card/           StatCard
     analytics/chart-frame/         ChartFrame and the chart helpers
+    comments/bulk-action-bar/      BulkActionBar
+    comments/moderation-queue/     ModerationQueue
+    section/customization-section/ CustomizationSection
   features/<feature>/components/   smart wrappers (below): data, formatting, permissions
 ```
 
@@ -27,6 +30,9 @@ These components exist for the studio alone today, so they stay in the studio's 
 | [StudioWorkspace](studio-workspace.md) | Navigation, toolbar, content, inspector | `ScrollArea`, `IconButton`, `Drawer`, `Dialog` (sheet), `Tooltip`, `Separator` | [60](../../../tickets/60-creator-studio-dashboard-video-management-ui.md), [93](../../../tickets/93-creator-studio-separate-app.md) |
 | [DataTable](data-table.md) | Studio table behaviour over the `Table` primitive and TanStack Table state | `Table`, `Checkbox`, `Badge`, `DropdownMenu`, `Button`, `Skeleton` | [60](../../../tickets/60-creator-studio-dashboard-video-management-ui.md), [61](../../../tickets/61-admin-control-panel-category-moderation-ui.md) |
 | [StatCard](stat-card.md) | One KPI with delta and sparkline | `Card`, `Badge`, `Icon` | [60](../../../tickets/60-creator-studio-dashboard-video-management-ui.md) |
+| [BulkActionBar](bulk-action-bar.md) | The actions on selected rows and the disclosure they share | `Button`, `DisclosureControl` | [113](../../../tickets/113-channel-comment-moderation.md) |
+| [ModerationQueue](moderation-queue.md) | The held comments as a listbox, one open | none | [113](../../../tickets/113-channel-comment-moderation.md) |
+| [CustomizationSection](customization-section.md) | A settings block with its own save | `Card`, `Button` | [72](../../../tickets/72-frontend-settings-customization-system.md), [113](../../../tickets/113-channel-comment-moderation.md) |
 | [Charts](charts.md) | `ChartFrame` and the palette helpers every chart follows | `Skeleton`, `Badge` | [60](../../../tickets/60-creator-studio-dashboard-video-management-ui.md) |
 
 ## Smart wrappers the studio needs
