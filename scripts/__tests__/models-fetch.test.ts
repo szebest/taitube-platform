@@ -84,6 +84,16 @@ describe('scripts: models-fetch', () => {
     expect(requests).toEqual(['/model.bin', '/vad.bin', '/classifier.onnx']);
   });
 
+  it('fetches only the models it is asked for', async () => {
+    const { lock, out } = workspace();
+
+    const result = await run(['--lock', lock, '--out', out, '--only', 'SCREENING_MODEL']);
+
+    expect(result.code).toBe(0);
+    expect(readdirSync(out)).toEqual(['screening.onnx']);
+    expect(requests).toEqual(['/classifier.onnx']);
+  });
+
   it('replaces a file whose checksum is wrong', async () => {
     const { lock, out } = workspace();
     mkdirSync(out);

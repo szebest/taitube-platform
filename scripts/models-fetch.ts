@@ -12,6 +12,7 @@ const { values } = parseArgs({
   options: {
     lock: { type: 'string', default: resolve(ROOT, 'apps/server/worker/assets.lock') },
     out: { type: 'string', default: resolve(ROOT, '.models') },
+    only: { type: 'string', multiple: true, default: [] },
   },
 });
 
@@ -67,6 +68,7 @@ async function fetchModel(lock: Map<string, string>, key: string, out: string): 
 
 const lock = parseLock(await readFile(values.lock, 'utf8'));
 await mkdir(values.out, { recursive: true });
-for (const key of MODELS) {
+const wanted = values.only.length > 0 ? MODELS.filter((key) => values.only.includes(key)) : MODELS;
+for (const key of wanted) {
   await fetchModel(lock, key, values.out);
 }

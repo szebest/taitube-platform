@@ -1,0 +1,17 @@
+name: Screening model
+description: The pinned screening classifier in .models, cached on the lock file so a run downloads it only when the pin changes.
+
+runs:
+  using: composite
+  steps:
+    - name: Restore the model
+      id: cache
+      uses: actions/cache@v6
+      with:
+        path: .models
+        key: screening-model-${{ hashFiles('apps/server/worker/assets.lock', 'scripts/models-fetch.ts') }}
+
+    - name: Fetch the model and verify its checksum
+      if: steps.cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: pnpm models:fetch --only SCREENING_MODEL
