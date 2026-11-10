@@ -110,6 +110,7 @@ export interface VideoSummaryView {
 export interface CreatorVideoView extends VideoSummaryView {
   commentsCount: number;
   tags: string[];
+  commentsEnabled: boolean;
 }
 
 export function cdnUrl(cdn: CdnBase, key: string): string {
@@ -207,6 +208,7 @@ export function toCreatorVideoView(
     ...toVideoSummaryView(v, cdn, sprite, channel),
     commentsCount: v.commentsCount ?? 0,
     tags: v.tags ?? [],
+    commentsEnabled: v.commentsEnabled ?? true,
   };
 }
 

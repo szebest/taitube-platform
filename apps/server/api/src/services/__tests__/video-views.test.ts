@@ -81,20 +81,22 @@ describe('apps/server/api/services: video views', () => {
   });
 
   describe('toCreatorVideoView', () => {
-    it('adds the comment counter and the tags to the summary', () => {
+    it('adds the comment counter, the tags and the comments switch to the summary', () => {
       const subject = video({ commentsCount: 4, tags: ['lofi'], customThumbnailKey: 'c.png' });
 
       expect(toCreatorVideoView(subject, CDN, SPRITE, CHANNEL)).toEqual({
         ...toVideoSummaryView(subject, CDN, SPRITE, CHANNEL),
         commentsCount: 4,
         tags: ['lofi'],
+        commentsEnabled: true,
       });
     });
 
-    it('reads absent counters and tags as their column defaults', () => {
+    it('reads absent counters, tags and the comments switch as their column defaults', () => {
       expect(toCreatorVideoView(video(), CDN, SPRITE, CHANNEL)).toMatchObject({
         commentsCount: 0,
         tags: [],
+        commentsEnabled: true,
       });
     });
   });

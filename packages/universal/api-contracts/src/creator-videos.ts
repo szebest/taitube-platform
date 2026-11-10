@@ -61,6 +61,7 @@ const UpdateCreatorVideoSchema = z.object({
 const CreatorVideoSchema = VideoSummarySchema.extend({
   commentsCount: z.number().int().nonnegative().describe('Comments on the video'),
   tags: z.array(z.string()).describe('Tags the creator set'),
+  commentsEnabled: z.boolean().describe('false when comments are turned off for this video'),
 });
 
 const CreatorLibraryResponseSchema = z.object({

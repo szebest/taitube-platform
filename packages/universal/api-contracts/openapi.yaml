@@ -5559,6 +5559,9 @@ paths:
                           items:
                             type: string
                           description: Tags the creator set
+                        commentsEnabled:
+                          type: boolean
+                          description: false when comments are turned off for this video
                       required:
                         - id
                         - ownerId
@@ -5573,6 +5576,7 @@ paths:
                         - updatedAt
                         - commentsCount
                         - tags
+                        - commentsEnabled
                       additionalProperties: false
                     description: Page of the caller videos
                   nextCursor:
