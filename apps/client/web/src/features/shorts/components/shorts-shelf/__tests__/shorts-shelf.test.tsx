@@ -1,7 +1,7 @@
 import { createQueryClient } from '@vp/queries';
 import { api } from '@vp/web-testing';
 import { renderPage } from '@vp/web-testing/server';
-import { AppProviders } from '#app/__tests__/providers';
+import { AppProvidersWithToasts } from '#app/__tests__/providers';
 import { SHORTS } from '#app/__tests__/short-fixtures';
 import { shortsFeedQueryOptions } from '#app/lib/query-keys/feed-keys';
 import { ShortsShelf } from '../shorts-shelf';
@@ -12,7 +12,7 @@ function renderShelf(items: typeof SHORTS) {
     pages: [{ items, nextCursor: null, total: items.length }],
     pageParams: [undefined],
   });
-  return renderPage(<ShortsShelf />, AppProviders, { queryClient });
+  return renderPage(<ShortsShelf />, AppProvidersWithToasts, { queryClient });
 }
 
 describe('apps/client/web: ShortsShelf', () => {

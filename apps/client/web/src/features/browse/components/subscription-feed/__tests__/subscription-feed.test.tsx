@@ -1,7 +1,7 @@
 import { createQueryClient } from '@vp/queries';
 import { api, feedPages, videoSummary } from '@vp/web-testing';
 import { renderPage } from '@vp/web-testing/server';
-import { AppProviders } from '#app/__tests__/providers';
+import { AppProvidersWithToasts } from '#app/__tests__/providers';
 import { subscriptionFeedQueryOptions } from '#app/lib/query-keys/feed-keys';
 import { SubscriptionFeed } from '../subscription-feed';
 
@@ -12,7 +12,7 @@ function renderSubscriptionFeed() {
     feedPages([videoSummary({ title: 'From a subscription' })])
   );
 
-  return renderPage(<SubscriptionFeed />, AppProviders, { queryClient });
+  return renderPage(<SubscriptionFeed />, AppProvidersWithToasts, { queryClient });
 }
 
 describe('apps/client/web: subscription feed', () => {

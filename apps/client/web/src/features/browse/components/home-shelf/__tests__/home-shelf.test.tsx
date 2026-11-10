@@ -1,7 +1,7 @@
 import type { HomeShelf as HomeShelfData } from '@vp/api-contracts';
 import { VIDEO_ID, videoSummary } from '@vp/web-testing';
 import { renderPage } from '@vp/web-testing/server';
-import { AppProviders } from '#app/__tests__/providers';
+import { AppProvidersWithToasts } from '#app/__tests__/providers';
 import { HomeShelf } from '../home-shelf';
 
 const shelfOf = (shelf: Partial<HomeShelfData> = {}): HomeShelfData => ({
@@ -11,7 +11,7 @@ const shelfOf = (shelf: Partial<HomeShelfData> = {}): HomeShelfData => ({
 });
 
 const renderShelf = (shelf: Partial<HomeShelfData> = {}) =>
-  renderPage(<HomeShelf shelf={shelfOf(shelf)} />, AppProviders);
+  renderPage(<HomeShelf shelf={shelfOf(shelf)} />, AppProvidersWithToasts);
 
 describe('apps/client/web: home shelf', () => {
   it.each([

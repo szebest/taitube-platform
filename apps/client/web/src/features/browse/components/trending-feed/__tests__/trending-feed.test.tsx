@@ -2,7 +2,7 @@ import type { QueryClient } from '@tanstack/react-query';
 import { createQueryClient } from '@vp/queries';
 import { api, feedPages, videoSummary } from '@vp/web-testing';
 import { renderPage } from '@vp/web-testing/server';
-import { AppProviders } from '#app/__tests__/providers';
+import { AppProvidersWithToasts } from '#app/__tests__/providers';
 import { type PublicFeedFilter, publicFeedQueryOptions } from '#app/lib/query-keys/feed-keys';
 import { TrendingFeed } from '../trending-feed';
 
@@ -17,7 +17,7 @@ async function renderTrending() {
   const queryClient = createQueryClient();
   withFeed(queryClient, { sort: 'trending' }, 'Going viral');
   withFeed(queryClient, { sort: 'recent' }, 'Just uploaded');
-  return renderPage(<TrendingFeed />, AppProviders, { queryClient });
+  return renderPage(<TrendingFeed />, AppProvidersWithToasts, { queryClient });
 }
 
 describe('apps/client/web: trending feed', () => {

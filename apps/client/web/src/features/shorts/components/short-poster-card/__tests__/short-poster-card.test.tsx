@@ -1,10 +1,10 @@
 import { renderPage } from '@vp/web-testing/server';
-import { AppProviders } from '#app/__tests__/providers';
+import { AppProvidersWithToasts } from '#app/__tests__/providers';
 import { shortSummary } from '#app/__tests__/short-fixtures';
 import { ShortPosterCard, type ShortPosterCardProps } from '../short-poster-card';
 
 const renderCard = (video: ShortPosterCardProps['video'] = shortSummary(1)) =>
-  renderPage(<ShortPosterCard video={video} />, AppProviders);
+  renderPage(<ShortPosterCard video={video} />, AppProvidersWithToasts);
 
 describe('apps/client/web: ShortPosterCard', () => {
   it('links its title to the Shorts player opened on that Short', async () => {

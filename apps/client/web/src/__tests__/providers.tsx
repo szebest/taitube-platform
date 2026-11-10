@@ -104,3 +104,11 @@ export function devTokenServe() {
     HttpResponse.json({ token: `token-of-${new URL(request.url).searchParams.get('persona')}` })
   );
 }
+
+/** `AppProviders` with toasts, for a server render of a card that offers queue actions. */
+export const AppProvidersWithToasts = withToasts(AppProviders);
+
+/** `signedIn(viewer)` with toasts. */
+export function signedInWithToasts(viewer?: Account): ComponentType<PropsWithChildren> {
+  return withToasts(signedIn(viewer));
+}
