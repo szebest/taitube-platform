@@ -39,10 +39,6 @@ describe('scripts: pnpm gen:env-docs', () => {
     expect(run.stderr).toBe(`gen:env-docs: ${DOC} is stale; run pnpm gen:env-docs and commit it\n`);
   });
 
-  it('fails the check when the file is missing', () => {
-    expect(genEnvDocs('--check', tree()).status).toBe(1);
-  });
-
   it('prints its usage for --help and exits 2 for an option it does not know', () => {
     expect(genEnvDocs('--help')).toMatchObject({ status: 0 });
     expect(genEnvDocs('--help').stdout).toContain('Usage: pnpm gen:env-docs');

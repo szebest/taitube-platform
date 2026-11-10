@@ -32,7 +32,7 @@ export const CORE_DOCS = groupDocs('core', {
   CORS_ORIGINS: {
     description:
       'Comma list of browser origins the API allows. Production refuses an empty list or *; a missing origin makes the browser block every API call from that app.',
-    example: 'https://taitube.example,https://studio.taitube.example',
+    example: 'https://taitube.local',
     visibility: 'public',
     readBy: ['api'],
   },
@@ -88,7 +88,7 @@ export const CORE_DOCS = groupDocs('core', {
   WEB_URL: {
     description:
       "The web app's public origin: oEmbed answers and webhook payloads link to it. Keep it equal to VITE_WEB_URL or shared links point at the wrong host.",
-    example: 'https://taitube.example',
+    example: 'https://taitube.local',
     visibility: 'public',
     readBy: ['api'],
   },
@@ -105,7 +105,7 @@ export const POSTGRES_DOCS = groupDocs('postgres', {
   DATABASE_URL: {
     description:
       'The Postgres connection string the API and workers query through. Use the pooled host when the provider has one; a wrong value fails the boot at the first query.',
-    example: 'postgres://<user>:<password>@localhost:5432/vp',
+    example: '<postgres connection string>',
     visibility: 'secret',
     readBy: ['api', 'worker'],
     requiredIn: ['always', 'production'],
@@ -113,7 +113,7 @@ export const POSTGRES_DOCS = groupDocs('postgres', {
   DATABASE_URL_MIGRATIONS: {
     description:
       'A direct, non-pooled connection that pnpm db:migrate uses. Empty falls back to DATABASE_URL, which fails on a pooler that cannot run DDL.',
-    example: 'postgres://<user>:<password>@localhost:5432/vp',
+    example: '<postgres connection string>',
     visibility: 'public',
     readBy: ['api', 'tooling'],
   },

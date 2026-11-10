@@ -22,7 +22,7 @@ export const EXTRA_GROUPS = [
   },
 ] as const;
 
-export type ExtraEnvGroup = (typeof EXTRA_GROUPS)[number]['id'];
+type ExtraEnvGroup = (typeof EXTRA_GROUPS)[number]['id'];
 
 export interface ExtraEnvKeyDoc extends EnvKeyDocBody {
   group: ExtraEnvGroup;
@@ -54,21 +54,21 @@ const CLIENT = extraDocs('client', {
   VITE_STUDIO_URL: {
     description:
       'Where the creator studio is: the web app /upload redirects there and the header upload entry links to it. Defaults to http://localhost:5174.',
-    example: 'https://studio.taitube.example',
+    example: 'https://studio.taitube.local',
     visibility: 'public',
     readBy: ['web'],
   },
   VITE_WEB_URL: {
     description:
       "The web app's public origin: the studio links back to it, and the web canonical, OpenGraph and sitemap URLs are absolute on it. Keep it equal to the API's WEB_URL.",
-    example: 'https://taitube.example',
+    example: 'https://taitube.local',
     visibility: 'public',
     readBy: ['web', 'studio'],
   },
   VITE_COOKIE_DOMAIN: {
     description:
       'The Domain of the theme and session cookies: the parent domain both apps share in the cloud. Empty locally, where a cookie spans ports.',
-    example: 'taitube.example',
+    example: 'taitube.local',
     visibility: 'public',
     readBy: ['web', 'studio'],
   },
@@ -113,7 +113,7 @@ const PLATFORM = extraDocs('platform', {
   GRAFANA_OTLP_ENDPOINT: {
     description:
       "Alloy's upstream OTLP endpoint in the cloud. The apps never read it; they export to Alloy through OTEL_EXPORTER_OTLP_ENDPOINT.",
-    example: 'https://otlp-gateway-prod-eu-west-0.grafana.net/otlp',
+    example: 'https://otlp-gateway-<region>.grafana.net/otlp',
     visibility: 'public',
     readBy: ['infra'],
   },
@@ -137,14 +137,14 @@ const TOOLING = extraDocs('tooling', {
   PROMETHEUS_REMOTE_WRITE_URL: {
     description:
       'The Grafana Cloud Prometheus push endpoint Alloy writes metrics to. It carries basic-auth credentials in cloud setups.',
-    example: 'https://<user>:<token>@prometheus-prod-xx.grafana.net/api/prom/push',
+    example: '<prometheus push url with credentials>',
     visibility: 'secret',
     readBy: ['infra'],
   },
   LOKI_URL: {
     description:
       'The Grafana Cloud Loki push endpoint Alloy writes logs to. It carries basic-auth credentials in cloud setups.',
-    example: 'https://<user>:<token>@logs-prod-xx.grafana.net/loki/api/v1/push',
+    example: '<loki push url with credentials>',
     visibility: 'secret',
     readBy: ['infra', 'tooling'],
   },

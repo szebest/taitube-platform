@@ -61,7 +61,7 @@ export const STORAGE_DOCS = groupDocs('storage', {
   CDN_BASE_URL: {
     description:
       'The public origin media is served from, with or without a trailing slash. Every playlist, thumbnail and sprite URL the API returns starts with it.',
-    example: 'https://cdn.example.com',
+    example: 'https://cdn.taitube.local',
     visibility: 'public',
     readBy: ['api', 'worker'],
   },
@@ -106,14 +106,14 @@ export const AUTH_DOCS = groupDocs('auth', {
   AUTH_JWKS_URL: {
     description:
       "Your identity provider's JWKS endpoint. Only read when AUTH_MODE=jwks, and then the schema fails without it.",
-    example: 'https://idp.example.com/.well-known/jwks.json',
+    example: 'https://idp.taitube.local/.well-known/jwks.json',
     visibility: 'public',
     readBy: ['api'],
     requiredIn: ['jwks-auth'],
   },
   AUTH_ISSUER: {
     description: 'The iss claim a token must carry. A mismatch rejects every request with 401.',
-    example: 'https://idp.example.com/',
+    example: 'https://idp.taitube.local/',
     visibility: 'public',
     readBy: ['api'],
   },

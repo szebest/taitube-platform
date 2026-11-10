@@ -62,7 +62,7 @@ What every process reads: mode, logging, HTTP and CORS.
 | `LOG_LEVEL` | trace \| debug \| info \| warn \| error | `debug` | - | no | api, worker | The pino log level of the API and the worker. A level above info hides the request and stage logs you debug with. | `info` |
 | `SERVICE_VERSION` | string | `dev` | - | no | api, worker | The build identifier reported as the service version in telemetry. The Dockerfile sets it to the git sha; locally it stays dev. | `a1b2c3d` |
 | `ADAPTER_FAMILY` | external \| in-memory | `external` | - | no | api, worker | Which adapter family the container registers: external talks to Postgres, Redis and S3, in-memory is for in-process tests only. A deployed process on in-memory loses everything on restart. | `external` |
-| `CORS_ORIGINS` | comma list | `http://localhost:5173,http://localhost:5174,http://localhost:8080` | - | no | api | Comma list of browser origins the API allows. Production refuses an empty list or *; a missing origin makes the browser block every API call from that app. | `https://taitube.example,https://studio.taitube.example` |
+| `CORS_ORIGINS` | comma list | `http://localhost:5173,http://localhost:5174,http://localhost:8080` | - | no | api | Comma list of browser origins the API allows. Production refuses an empty list or *; a missing origin makes the browser block every API call from that app. | `https://taitube.local` |
 | `TRUST_PROXY` | comma list | *empty* | - | no | api | Comma list of proxy addresses, CIDRs or names (loopback, uniquelocal) whose X-Forwarded-For the API trusts. Empty trusts none, so every client appears to come from the proxy. | `uniquelocal` |
 | `HTTP_BODY_LIMIT_BYTES` | integer > 0 | `1048576` | - | no | api | The cap on a JSON request body. Uploads go straight to object storage, so this only bounds API payloads; larger bodies are rejected with 413. | `1048576` |
 | `PORT` | integer >= 0 | `3000` | - | no | api | The port the API listens on. Another process on it fails the boot with EADDRINUSE. | `3000` |
@@ -70,7 +70,7 @@ What every process reads: mode, logging, HTTP and CORS.
 | `PAGE_SIZE_DEFAULT` | integer > 0 | `20` | - | no | api | The keyset page size when a request omits ?limit. Keep it at or below PAGE_SIZE_MAX. | `20` |
 | `PAGE_SIZE_MAX` | integer > 0 | `100` | - | no | api | The largest page a request can ask for. A larger ?limit is clamped to it, never rejected. | `100` |
 | `FEATURE_FLAGS` | comma list | *empty* | - | no | api | Comma list of flags GET /v1/bootstrap reports as enabled to the client apps. Empty means none. | `live,watch-party` |
-| `WEB_URL` | url | `http://localhost:5173` | - | no | api | The web app's public origin: oEmbed answers and webhook payloads link to it. Keep it equal to VITE_WEB_URL or shared links point at the wrong host. | `https://taitube.example` |
+| `WEB_URL` | url | `http://localhost:5173` | - | no | api | The web app's public origin: oEmbed answers and webhook payloads link to it. Keep it equal to VITE_WEB_URL or shared links point at the wrong host. | `https://taitube.local` |
 | `WEBHOOK_ALLOW_PRIVATE_HOSTS` | true \| false | `false` | - | no | api | Lets a webhook URL be plain http or name a private host, for local receivers. Production refuses true because a webhook could then reach the internal network. | `false` |
 
 ## PostgreSQL
@@ -79,8 +79,8 @@ The system of record.
 
 | Name | Type | Default | Required in | Secret | Read by | Description | Example |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `DATABASE_URL` | url | *required* | always, production | yes | api, worker | The Postgres connection string the API and workers query through. Use the pooled host when the provider has one; a wrong value fails the boot at the first query. | `postgres://<user>:<password>@localhost:5432/vp` |
-| `DATABASE_URL_MIGRATIONS` | url | *unset* | - | no | api, tooling | A direct, non-pooled connection that pnpm db:migrate uses. Empty falls back to DATABASE_URL, which fails on a pooler that cannot run DDL. | `postgres://<user>:<password>@localhost:5432/vp` |
+| `DATABASE_URL` | url | *required* | always, production | yes | api, worker | The Postgres connection string the API and workers query through. Use the pooled host when the provider has one; a wrong value fails the boot at the first query. | `<postgres connection string>` |
+| `DATABASE_URL_MIGRATIONS` | url | *unset* | - | no | api, tooling | A direct, non-pooled connection that pnpm db:migrate uses. Empty falls back to DATABASE_URL, which fails on a pooler that cannot run DDL. | `<postgres connection string>` |
 | `DATABASE_POOL_MAX` | integer > 0 | `10` | - | no | api, worker | The most connections one process holds open. Pods multiplied by this must stay under the database limit or new connections are refused. | `10` |
 
 ## Redis
@@ -108,7 +108,7 @@ S3-compatible storage: MinIO locally, Cloudflare R2 in the cloud.
 | `S3_BUCKET_RAW` | string | `raw` | - | no | api, worker | The bucket uploads land in before processing. Keep it private and give it the RAW_RETENTION_DAYS lifecycle rule. | `vp-raw` |
 | `S3_BUCKET_PUBLIC` | string | `public` | - | no | api, worker | The bucket holding renditions, thumbnails and playlists that CDN_BASE_URL serves. It must allow public reads. | `vp-public` |
 | `S3_PRESIGN_TTL_SEC` | integer > 0 | `900` | - | no | api | How long a presigned upload or part URL stays valid. Too short and slow connections fail mid-upload; the session itself outlives it. | `900` |
-| `CDN_BASE_URL` | string | `http://localhost:9000/public` | - | no | api, worker | The public origin media is served from, with or without a trailing slash. Every playlist, thumbnail and sprite URL the API returns starts with it. | `https://cdn.example.com` |
+| `CDN_BASE_URL` | string | `http://localhost:9000/public` | - | no | api, worker | The public origin media is served from, with or without a trailing slash. Every playlist, thumbnail and sprite URL the API returns starts with it. | `https://cdn.taitube.local` |
 | `S3_MULTIPART_THRESHOLD_BYTES` | integer > 0 | `104857600` | - | no | api | Files above this size upload in parts instead of one request. Keep it at or above S3_PART_SIZE_MIN_BYTES. | `104857600` |
 | `S3_PART_SIZE_MIN_BYTES` | integer > 0 | `8388608` | - | no | api | The smallest part a multipart upload may use. S3 rejects parts under 5 MB except the last one. | `8388608` |
 | `S3_PART_SIZE_MAX_BYTES` | integer > 0 | `67108864` | - | no | api | The largest part a multipart upload may use; the API clamps the client plan to it. | `67108864` |
@@ -121,8 +121,8 @@ How the API verifies who is calling.
 | Name | Type | Default | Required in | Secret | Read by | Description | Example |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | `AUTH_MODE` | jwks \| dev | `dev` | - | no | api | dev verifies tokens against the public dev key (pnpm dev-token); jwks verifies against your IdP. Production refuses dev. | `jwks` |
-| `AUTH_JWKS_URL` | url | *unset* | AUTH_MODE=jwks | no | api | Your identity provider's JWKS endpoint. Only read when AUTH_MODE=jwks, and then the schema fails without it. | `https://idp.example.com/.well-known/jwks.json` |
-| `AUTH_ISSUER` | string | `vp-dev` | - | no | api | The iss claim a token must carry. A mismatch rejects every request with 401. | `https://idp.example.com/` |
+| `AUTH_JWKS_URL` | url | *unset* | AUTH_MODE=jwks | no | api | Your identity provider's JWKS endpoint. Only read when AUTH_MODE=jwks, and then the schema fails without it. | `https://idp.taitube.local/.well-known/jwks.json` |
+| `AUTH_ISSUER` | string | `vp-dev` | - | no | api | The iss claim a token must carry. A mismatch rejects every request with 401. | `https://idp.taitube.local/` |
 | `AUTH_AUDIENCE` | string | `vp-api` | - | no | api | The aud claim a token must carry. A mismatch rejects every request with 401. | `vp-api` |
 | `AUTH_ALGORITHMS` | comma list | `RS256,ES256` | - | no | api | Comma list of signature algorithms a jwks token may use (RS256, RS384, RS512, ES256, ES384, ES512, EdDSA). Tokens signed otherwise are rejected. | `RS256,ES256` |
 | `AUTH_DEV_USER_ID` | uuid | `00000000-0000-7000-8000-000000000001` | - | no | api | The user ADMIN_TOKEN acts as in dev mode. The seed provisions it; a different value needs a matching user row. | `00000000-0000-7000-8000-000000000001` |
@@ -171,8 +171,8 @@ The MediaMTX gateway and the live worker.
 | `LIVE_HOOK_SECRET` | string | *unset* | - | yes | api, worker | The secret MediaMTX sends on every auth and event call. Unset, the API refuses every gateway call and no one can publish; production refuses the local value. | `<random 32 bytes>` |
 | `LIVE_INGEST_URL` | string | `rtsp://localhost:8554` | - | no | worker | Where the live worker reads a publisher's stream from (RTSP on MediaMTX). A wrong value leaves a live stream without packaging. | `rtsp://mediamtx:8554` |
 | `LIVE_GATEWAY_API_URL` | url | `http://localhost:9997` | - | no | api, worker | The MediaMTX control API: who is publishing, and kicking a publisher. Unreachable, live status checks and moderation kicks fail. | `http://mediamtx:9997` |
-| `LIVE_RTMP_PUBLIC_URL` | string | `rtmp://localhost:1935/live` | - | no | api | The RTMP server URL a creator pastes into OBS. It must be reachable from the creator machine, not from the cluster. | `rtmp://live.example.com:1935/live` |
-| `LIVE_WHIP_PUBLIC_URL` | url | `http://localhost:8889/live` | - | no | api | MediaMTX's WHIP endpoint, followed by /{stream key}. It must be reachable from the creator browser. | `https://live.example.com:8889/live` |
+| `LIVE_RTMP_PUBLIC_URL` | string | `rtmp://localhost:1935/live` | - | no | api | The RTMP server URL a creator pastes into OBS. It must be reachable from the creator machine, not from the cluster. | `rtmp://live.taitube.local:1935/live` |
+| `LIVE_WHIP_PUBLIC_URL` | url | `http://localhost:8889/live` | - | no | api | MediaMTX's WHIP endpoint, followed by /{stream key}. It must be reachable from the creator browser. | `https://live.taitube.local:8889/live` |
 
 ## Watch parties
 
@@ -203,9 +203,9 @@ Read by the web and studio apps, never by the API or a worker. VITE_* is inlined
 | --- | --- | --- | --- | --- |
 | `VITE_API_BASE_URL` | no | web, studio | Where the web and studio servers reach the API; the browser calls the app's own /api proxy instead. Unset, the apps cannot find the API. | `http://localhost:3000` |
 | `VITE_API_PUBLIC_URL` | no | web, studio | The API origin as the browser reaches it, for the live chat socket (the /api proxy carries no upgrade) and the studio's Bull Board link. | `http://localhost:3000` |
-| `VITE_STUDIO_URL` | no | web | Where the creator studio is: the web app /upload redirects there and the header upload entry links to it. Defaults to http://localhost:5174. | `https://studio.taitube.example` |
-| `VITE_WEB_URL` | no | apps/client/web and apps/client/studio at build time: the web app's public origin, the same value the API reads as WEB_URL | The web app's public origin: the studio links back to it, and the web canonical, OpenGraph and sitemap URLs are absolute on it. Keep it equal to the API's WEB_URL. | `https://taitube.example` |
-| `VITE_COOKIE_DOMAIN` | no | web, studio | The Domain of the theme and session cookies: the parent domain both apps share in the cloud. Empty locally, where a cookie spans ports. | `taitube.example` |
+| `VITE_STUDIO_URL` | no | web | Where the creator studio is: the web app /upload redirects there and the header upload entry links to it. Defaults to http://localhost:5174. | `https://studio.taitube.local` |
+| `VITE_WEB_URL` | no | apps/client/web and apps/client/studio at build time: the web app's public origin, the same value the API reads as WEB_URL | The web app's public origin: the studio links back to it, and the web canonical, OpenGraph and sitemap URLs are absolute on it. Keep it equal to the API's WEB_URL. | `https://taitube.local` |
+| `VITE_COOKIE_DOMAIN` | no | web, studio | The Domain of the theme and session cookies: the parent domain both apps share in the cloud. Empty locally, where a cookie spans ports. | `taitube.local` |
 | `VITE_OTEL_TRACES_URL` | no | web, studio | Where the browser sends its OTLP/HTTP spans. Unset, no tracer loads. Each app .env.development and the compose build set the local collector. | `http://localhost:4318/v1/traces` |
 | `SSR_API_BASE_URL` | no | apps/client/web's SSR server, parsed by its own schema in apps/client/web/src/config | The web and studio servers only, read at start: where the server render and the /api proxy call the API when VITE_API_BASE_URL does not reach it. Empty falls back to VITE_API_BASE_URL. | `http://api:3000` |
 
@@ -218,7 +218,7 @@ Handed to something other than this repo code. platform-env.json names the consu
 | `TURBO_TELEMETRY_DISABLED` | no | turbo, which phones home unless told not to | Stops turbo from phoning home, which local-first forbids. Leave it at 1 in every shell and CI job that runs turbo. | `1` |
 | `DO_NOT_TRACK` | no | turbo and every tool that honours the convention | The cross-tool opt-out convention: turbo and other tools that honour it send no telemetry. | `1` |
 | `WORKER_RUNTIME` | no | the worker image CMD and the k8s worker command, the worker target of the Dockerfile | bun or node: picks the worker image stage and its command. It is read by the image, not the app, so changing it needs a rebuild. | `bun` |
-| `GRAFANA_OTLP_ENDPOINT` | no | Grafana Alloy, infra/k8s/overlays/cloud/alloy.yaml | Alloy's upstream OTLP endpoint in the cloud. The apps never read it; they export to Alloy through OTEL_EXPORTER_OTLP_ENDPOINT. | `https://otlp-gateway-prod-eu-west-0.grafana.net/otlp` |
+| `GRAFANA_OTLP_ENDPOINT` | no | Grafana Alloy, infra/k8s/overlays/cloud/alloy.yaml | Alloy's upstream OTLP endpoint in the cloud. The apps never read it; they export to Alloy through OTEL_EXPORTER_OTLP_ENDPOINT. | `https://otlp-gateway-<region>.grafana.net/otlp` |
 | `GRAFANA_OTLP_HEADERS` | yes | Grafana Alloy, infra/k8s/overlays/cloud/alloy.yaml | The Authorization=Basic header Alloy sends to GRAFANA_OTLP_ENDPOINT, built from the base64 of instanceId:token. Wrong credentials drop all cloud telemetry. | `Authorization=Basic <base64 instanceId:token>` |
 | `CLOUDFLARE_TUNNEL_TOKEN` | yes | cloudflared, infra/k8s/overlays/cloud/cloudflared.yaml | The token cloudflared uses to attach the cluster to its Cloudflare tunnel. Without it the cloud overlay has no public ingress. | `<tunnel token>` |
 
@@ -228,8 +228,8 @@ Left commented in .env.example: read by Terraform, Alloy, k6 and the cloud runbo
 
 | Name | Secret | Read by | Description | Example |
 | --- | --- | --- | --- | --- |
-| `PROMETHEUS_REMOTE_WRITE_URL` | yes | infra | The Grafana Cloud Prometheus push endpoint Alloy writes metrics to. It carries basic-auth credentials in cloud setups. | `https://<user>:<token>@prometheus-prod-xx.grafana.net/api/prom/push` |
-| `LOKI_URL` | yes | infra, tooling | The Grafana Cloud Loki push endpoint Alloy writes logs to. It carries basic-auth credentials in cloud setups. | `https://<user>:<token>@logs-prod-xx.grafana.net/loki/api/v1/push` |
+| `PROMETHEUS_REMOTE_WRITE_URL` | yes | infra | The Grafana Cloud Prometheus push endpoint Alloy writes metrics to. It carries basic-auth credentials in cloud setups. | `<prometheus push url with credentials>` |
+| `LOKI_URL` | yes | infra, tooling | The Grafana Cloud Loki push endpoint Alloy writes logs to. It carries basic-auth credentials in cloud setups. | `<loki push url with credentials>` |
 | `SENTRY_DSN` | yes | infra | An optional Sentry project DSN, reserved for error reporting. Nothing in the apps reads it yet. | `<sentry dsn>` |
 | `CLOUDFLARE_API_TOKEN` | yes | tooling | The Terraform token for R2 buckets, DNS and the tunnel. Needs only those scopes; a broader token is a liability. | `<cloudflare api token>` |
 | `CLOUDFLARE_ACCOUNT_ID` | no | tooling | The Cloudflare account Terraform provisions R2 and the tunnel in. | `<account id>` |

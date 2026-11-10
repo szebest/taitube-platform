@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { AppEnvSchema } from './app-env';
 import type { AppEnvKey } from './env-doc';
 
-export type EnvDefault =
+type EnvDefault =
   | { kind: 'required' }
   | { kind: 'unset' }
   | { kind: 'value'; value: string; parsed: unknown };

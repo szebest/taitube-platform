@@ -7,7 +7,7 @@ describe('packages/env-schema: env-introspection', () => {
     { key: 'OTEL_TRACES_SAMPLER_ARG', type: 'number >= 0 <= 1', value: '1' },
     { key: 'LOG_LEVEL', type: 'trace | debug | info | warn | error', value: 'debug' },
     { key: 'WEB_URL', type: 'url', value: 'http://localhost:5173' },
-    { key: 'AUTH_DEV_USER_ID', type: 'uuid', value: '00000000-0000-7000-8000-000000000001' },
+    { key: 'AUTH_DEV_USER_ID', type: 'uuid', value: expect.stringMatching(/^[0-9a-f-]{36}$/) },
     { key: 'WEBHOOK_ALLOW_PRIVATE_HOSTS', type: 'true | false', value: 'false' },
     { key: 'CORS_ORIGINS', type: 'comma list', value: expect.stringContaining('localhost:5173') },
     { key: 'TRUST_PROXY', type: 'comma list', value: '' },

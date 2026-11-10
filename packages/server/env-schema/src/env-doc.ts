@@ -30,9 +30,9 @@ export const ENV_GROUPS = [
 
 export type EnvGroup = (typeof ENV_GROUPS)[number]['id'];
 
-export const ENV_READERS = ['api', 'worker', 'web', 'studio', 'tooling', 'infra'] as const;
+const ENV_READERS = ['api', 'worker', 'web', 'studio', 'tooling', 'infra'] as const;
 
-export type EnvReader = (typeof ENV_READERS)[number];
+type EnvReader = (typeof ENV_READERS)[number];
 
 /**
  * When a key must be set: `always` means the schema fails without it, `production` that a production

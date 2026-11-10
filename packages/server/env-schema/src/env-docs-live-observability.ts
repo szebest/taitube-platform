@@ -25,14 +25,14 @@ export const LIVE_DOCS = groupDocs('live', {
   LIVE_RTMP_PUBLIC_URL: {
     description:
       'The RTMP server URL a creator pastes into OBS. It must be reachable from the creator machine, not from the cluster.',
-    example: 'rtmp://live.example.com:1935/live',
+    example: 'rtmp://live.taitube.local:1935/live',
     visibility: 'public',
     readBy: ['api'],
   },
   LIVE_WHIP_PUBLIC_URL: {
     description:
       "MediaMTX's WHIP endpoint, followed by /{stream key}. It must be reachable from the creator browser.",
-    example: 'https://live.example.com:8889/live',
+    example: 'https://live.taitube.local:8889/live',
     visibility: 'public',
     readBy: ['api'],
   },

@@ -94,6 +94,10 @@ export function shapeFindings(source: string): string[] {
     );
   }
 
+  if (!/\bpnpm gen:env-docs --check\b/.test(runs(jobNamed('lint-typecheck') ?? {}))) {
+    findings.push('lint-typecheck: docs/ENVIRONMENT.md is not checked for drift');
+  }
+
   const e2e = jobNamed('e2e-smoke');
   if (e2e && needsOf(e2e).join() !== 'build') findings.push('e2e-smoke: needs more than build');
 

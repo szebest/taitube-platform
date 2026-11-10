@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import {
@@ -32,8 +33,8 @@ interface Outcome {
   stderr: string;
 }
 
-const readOrNothing = (path: string): Promise<string | undefined> =>
-  readFile(path, 'utf8').then(String, () => undefined);
+const readOrNothing = async (path: string): Promise<string | undefined> =>
+  existsSync(path) ? readFile(path, 'utf8') : undefined;
 
 export async function renderFor(root: string): Promise<string> {
   const [example, platform] = await Promise.all([

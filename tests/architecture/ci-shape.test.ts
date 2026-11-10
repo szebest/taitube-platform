@@ -116,6 +116,7 @@ describe('architecture: the CI pipeline holds its budgets', () => {
     'terraform: does not check fmt, init and validate',
     'terraform: no provider cache keyed by the lock file',
     'lint-typecheck: tokens.json and the generated stylesheets are not checked for drift',
+    'lint-typecheck: docs/ENVIRONMENT.md is not checked for drift',
   ])('fires on a workflow where %s', (finding) => {
     expect(shapeFindings(BAD_WORKFLOW)).toContain(finding);
   });
