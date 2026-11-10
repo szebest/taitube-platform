@@ -10,7 +10,8 @@ describe('apps/client/web: /shorts in the browser', () => {
     await renderShorts();
 
     expect(document.title).toBe('Shorts - Taitube');
-    expect(await screen.findByTestId('player')).toHaveAttribute('data-layout', 'vertical');
+    const [first] = await screen.findAllByTestId('player');
+    expect(first).toHaveAttribute('data-layout', 'vertical');
   });
 
   it('keeps the Short the URL names across a move, on the one page', async () => {
