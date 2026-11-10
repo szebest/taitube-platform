@@ -8,9 +8,16 @@ export const creatorCommentKeys = {
 
 const VIDEO_COMMENTS_KEY = ['comments'] as const;
 
+export const commentListKeys = [VIDEO_COMMENTS_KEY, creatorCommentKeys.all] as const;
+
 interface CommentHeart {
   commentId: string;
   hearted: boolean;
+}
+
+interface CommentPin {
+  commentId: string;
+  pinned: boolean;
 }
 
 function heartCommentMutationOptions(api: ApiClient) {
@@ -20,11 +27,18 @@ function heartCommentMutationOptions(api: ApiClient) {
       return hearted ? api.comments.heartComment(request) : api.comments.unheartComment(request);
     },
     onSuccess: (_comment, _heart, _snapshot, { client }) =>
-      Promise.all(
-        [VIDEO_COMMENTS_KEY, creatorCommentKeys.all].map((queryKey) =>
-          client.invalidateQueries({ queryKey })
-        )
-      ),
+      Promise.all(commentListKeys.map((queryKey) => client.invalidateQueries({ queryKey }))),
+  });
+}
+
+function pinCommentMutationOptions(api: ApiClient) {
+  return mutationOptions({
+    mutationFn: ({ commentId, pinned }: CommentPin) => {
+      const request = { params: { id: commentId } };
+      return pinned ? api.comments.pinComment(request) : api.comments.unpinComment(request);
+    },
+    onSuccess: (_comment, _pin, _snapshot, { client }) =>
+      Promise.all(commentListKeys.map((queryKey) => client.invalidateQueries({ queryKey }))),
   });
 }
 
@@ -32,4 +46,10 @@ function heartCommentMutationOptions(api: ApiClient) {
 export function useHeartComment() {
   const api = useApi();
   return useMutation(heartCommentMutationOptions(api));
+}
+
+/** Pins a top-level comment to the top of its video's list, or takes the pin off. */
+export function usePinComment() {
+  const api = useApi();
+  return useMutation(pinCommentMutationOptions(api));
 }

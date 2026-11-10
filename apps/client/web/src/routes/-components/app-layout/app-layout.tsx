@@ -3,7 +3,7 @@ import { ApiProvider, SessionProvider, UserEventStream } from '@vp/queries';
 import { ToastProvider, Tooltip } from '@vp/ui';
 import { useWebTelemetry } from '@vp/web-telemetry';
 import { Suspense } from 'react';
-import { AccountMenu, PreferencesSync } from '#app/features/account';
+import { AccountMenu, ChannelPermissions, PreferencesSync } from '#app/features/account';
 import { LazyNewPlaylistDialog, LazySaveToPlaylistDialog } from '#app/features/library';
 import { HeaderNotificationCentre } from '#app/features/notifications';
 import { OfflineBanner, QueuedChangesSync } from '#app/features/offline';
@@ -30,45 +30,47 @@ export function AppLayout() {
     <>
       <ApiProvider api={api}>
         <SessionProvider session={auth}>
-          <UserEventStream>
-            <Tooltip.Provider>
-              <ToastProvider toaster={toaster}>
-                <DevicePreferencesProvider initial={devicePreferences}>
-                  <PreferencesSync>
-                    <PlaybackSessionProvider>
-                      <CommandPaletteProvider>
-                        <RootShell
-                          sidebar={sidebarState}
-                          account={<AccountMenu />}
-                          actions={<HeaderNotificationCentre />}
-                          notices={
-                            <>
-                              <OfflineBanner />
-                              <InstallPrompt />
-                            </>
-                          }
-                          nowPlaying={<LazyGlobalNowPlayingBar />}
-                          overlays={
-                            <>
-                              <AppCommandPalette />
-                              <UrlModal.WhenOpened id="save-to-playlist">
-                                <LazySaveToPlaylistDialog />
-                              </UrlModal.WhenOpened>
-                              <UrlModal.WhenOpened id="new-playlist">
-                                <LazyNewPlaylistDialog />
-                              </UrlModal.WhenOpened>
-                              <UpdatePrompt />
-                              <QueuedChangesSync />
-                            </>
-                          }
-                        />
-                      </CommandPaletteProvider>
-                    </PlaybackSessionProvider>
-                  </PreferencesSync>
-                </DevicePreferencesProvider>
-              </ToastProvider>
-            </Tooltip.Provider>
-          </UserEventStream>
+          <ChannelPermissions>
+            <UserEventStream>
+              <Tooltip.Provider>
+                <ToastProvider toaster={toaster}>
+                  <DevicePreferencesProvider initial={devicePreferences}>
+                    <PreferencesSync>
+                      <PlaybackSessionProvider>
+                        <CommandPaletteProvider>
+                          <RootShell
+                            sidebar={sidebarState}
+                            account={<AccountMenu />}
+                            actions={<HeaderNotificationCentre />}
+                            notices={
+                              <>
+                                <OfflineBanner />
+                                <InstallPrompt />
+                              </>
+                            }
+                            nowPlaying={<LazyGlobalNowPlayingBar />}
+                            overlays={
+                              <>
+                                <AppCommandPalette />
+                                <UrlModal.WhenOpened id="save-to-playlist">
+                                  <LazySaveToPlaylistDialog />
+                                </UrlModal.WhenOpened>
+                                <UrlModal.WhenOpened id="new-playlist">
+                                  <LazyNewPlaylistDialog />
+                                </UrlModal.WhenOpened>
+                                <UpdatePrompt />
+                                <QueuedChangesSync />
+                              </>
+                            }
+                          />
+                        </CommandPaletteProvider>
+                      </PlaybackSessionProvider>
+                    </PreferencesSync>
+                  </DevicePreferencesProvider>
+                </ToastProvider>
+              </Tooltip.Provider>
+            </UserEventStream>
+          </ChannelPermissions>
         </SessionProvider>
       </ApiProvider>
       <Suspense>

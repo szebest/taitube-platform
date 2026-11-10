@@ -14,6 +14,7 @@ import {
   getVideo,
   isSubscribedToChannel,
   listCategories,
+  listMyMemberships,
   listCaptions,
   listChannelVideos,
   listLiveStreams,
@@ -114,6 +115,7 @@ export function loaderApi(answered: string[] = []): HttpHandler[] {
 
   return [
     recorded(getAccount, () => HttpResponse.json(account())),
+    recorded(listMyMemberships, () => HttpResponse.json({ items: [] })),
     recorded(getFeed, () => HttpResponse.json(FEED)),
     recorded(getPreferences, () => HttpResponse.json(preferencesView())),
     recorded(getUnreadNotificationCount, () => HttpResponse.json({ unreadCount: 0 })),

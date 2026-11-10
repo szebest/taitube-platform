@@ -2,6 +2,7 @@ export { AccessibilitySettings } from './components/accessibility-settings/acces
 export { AdvancedSettings } from './components/advanced-settings/advanced-settings';
 export { AppearanceSettings } from './components/appearance-settings/appearance-settings';
 export { AutoplayNextRow } from './components/autoplay-next-row/autoplay-next-row';
+export { ChannelPermissions } from './components/channel-permissions/channel-permissions';
 export { ClearHistoryRow } from './components/clear-history-row/clear-history-row';
 export { HiddenRecommendationsRow } from './components/hidden-recommendations-row/hidden-recommendations-row';
 export { LanguageRow } from './components/language-row/language-row';

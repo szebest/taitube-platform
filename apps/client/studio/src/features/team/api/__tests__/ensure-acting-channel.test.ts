@@ -1,4 +1,10 @@
-import { type ActingChannelStore, createQueryClient, GUEST, type Session } from '@vp/queries';
+import {
+  type ActingChannelStore,
+  createQueryClient,
+  GUEST,
+  membershipsQueryOptions,
+  type Session,
+} from '@vp/queries';
 import { account, api, apiServer } from '@vp/web-testing';
 import {
   membership,
@@ -6,7 +12,7 @@ import {
   serveTeam,
 } from '#app/features/team/__tests__/team-api.fixture';
 import { ensureActingChannel, forgetChannelData } from '../ensure-acting-channel';
-import { membershipsQueryOptions, teamKeys } from '../team-queries';
+import { teamKeys } from '../team-queries';
 
 const SIGNED_IN: Session = { status: 'signed-in', account: account() };
 

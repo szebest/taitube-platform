@@ -1,10 +1,10 @@
-import { heartComment, unheartComment } from '@vp/api-contracts';
+import { heartComment, pinComment, unheartComment, unpinComment } from '@vp/api-contracts';
 import { api, apiServer, COMMENT_ID, comment, mockEndpoint } from '@vp/web-testing';
 import { runMutation } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
 import type { PropsWithChildren } from 'react';
 import { ApiProvider } from '../api-provider';
-import { creatorCommentKeys, useHeartComment } from '../comment-queries';
+import { creatorCommentKeys, useHeartComment, usePinComment } from '../comment-queries';
 import { createQueryClient } from '../create-query-client';
 
 const VIDEO_COMMENTS = ['comments', 'video', 'v1', 'top'];
@@ -14,13 +14,17 @@ function WithApi({ children }: PropsWithChildren) {
   return <ApiProvider api={api}>{children}</ApiProvider>;
 }
 
-async function runHeart(hearted: boolean) {
+async function run<TVariables>(
+  hook: () => { mutateAsync: (variables: TVariables) => Promise<unknown> },
+  variables: TVariables,
+  contracts: (typeof heartComment | typeof unheartComment)[]
+) {
   const asked: string[] = [];
   apiServer.use(
-    ...[heartComment, unheartComment].map((contract) =>
+    ...contracts.map((contract) =>
       mockEndpoint(contract, ({ request, params }) => {
         asked.push(`${request.method} ${params.id}`);
-        return HttpResponse.json(comment({ heartedByCreator: hearted }));
+        return HttpResponse.json(comment());
       })
     )
   );
@@ -29,7 +33,7 @@ async function runHeart(hearted: boolean) {
     client.setQueryData(key, { pages: [], pageParams: [] });
   }
 
-  await runMutation(client, useHeartComment, { commentId: COMMENT_ID, hearted }, WithApi);
+  await runMutation(client, hook, variables, WithApi);
 
   return {
     asked,
@@ -37,14 +41,23 @@ async function runHeart(hearted: boolean) {
   };
 }
 
-describe('@vp/queries: useHeartComment', () => {
+const MUTATIONS = {
+  heart: (on: boolean) =>
+    run(useHeartComment, { commentId: COMMENT_ID, hearted: on }, [heartComment, unheartComment]),
+  pin: (on: boolean) =>
+    run(usePinComment, { commentId: COMMENT_ID, pinned: on }, [pinComment, unpinComment]),
+};
+
+describe('@vp/queries: comment mutations', () => {
   it.each([
-    { action: 'hearts', hearted: true, method: 'POST' },
-    { action: 'unhearts', hearted: false, method: 'DELETE' },
-  ])(
-    '$action the comment and refreshes the watch page and inbox lists',
-    async ({ hearted, method }) => {
-      const { asked, invalidated } = await runHeart(hearted);
+    { kind: 'heart', on: true, method: 'POST' },
+    { kind: 'heart', on: false, method: 'DELETE' },
+    { kind: 'pin', on: true, method: 'POST' },
+    { kind: 'pin', on: false, method: 'DELETE' },
+  ] as const)(
+    '$kind $on sends $method and refreshes the watch page and inbox lists',
+    async ({ kind, on, method }) => {
+      const { asked, invalidated } = await MUTATIONS[kind](on);
 
       expect(asked).toEqual([`${method} ${COMMENT_ID}`]);
       expect(invalidated).toEqual([true, true]);

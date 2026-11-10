@@ -1,7 +1,12 @@
 import type { QueryClient } from '@tanstack/react-query';
 import type { ApiClient } from '@vp/api-client';
-import { type ActingChannelStore, SESSION_KEY, type Session } from '@vp/queries';
-import { membershipsQueryOptions, teamKeys } from './team-queries';
+import {
+  type ActingChannelStore,
+  membershipsQueryOptions,
+  SESSION_KEY,
+  type Session,
+} from '@vp/queries';
+import { teamKeys } from './team-queries';
 
 interface EnsureContext {
   auth: Session;
