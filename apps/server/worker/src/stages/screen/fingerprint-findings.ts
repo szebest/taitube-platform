@@ -82,6 +82,11 @@ export async function fingerprintFindings(
     thresholds,
     hashIntervalSeconds: sampling.hashIntervalSeconds,
     audioIndexStride: sampling.audioIndexStride,
+    lookup: {
+      minBandSetBits: sampling.minBandSetBits,
+      minTermSetBits: sampling.minTermSetBits,
+      maxHitsPerKey: sampling.maxHitsPerKey,
+    },
   };
   const matches = await findMatches(deps.repositories.fingerprints, fingerprint, settings);
   if (isErr(matches)) return matches;

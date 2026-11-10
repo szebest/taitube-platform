@@ -22,6 +22,17 @@ export interface AudioTermHit extends AudioTerm {
 }
 
 /**
+ * What keeps a lookup bounded. A band or term with fewer than `minBandSetBits` or `minTermSetBits`
+ * set (or clear) bits is left out of the query, and the answer holds at most `maxHitsPerKey` rows for
+ * each band or term that was queried.
+ */
+export interface FingerprintLookupLimits {
+  minBandSetBits: number;
+  minTermSetBits: number;
+  maxHitsPerKey: number;
+}
+
+/**
  * The derived data the duplicate check reads, per video and nowhere else: frame hashes behind a band
  * index and a subsample of audio terms behind a term index. A lookup returns candidates, rows that
  * share a band or a term; the exact distance and the vote on an offset are the caller's.
@@ -40,15 +51,17 @@ export abstract class FingerprintRepository {
     terms: readonly AudioTerm[]
   ): Promise<Result<void, DatabaseUnavailable>>;
 
-  /** Every stored frame of another video that agrees with any of the hashes on at least one band. */
+  /** Stored frames of another video that agree with any of the hashes on at least one band. */
   abstract findFramesSharingBand(
     hashes: readonly bigint[],
-    excludeVideoId: string
+    excludeVideoId: string,
+    limits: FingerprintLookupLimits
   ): Promise<Result<FrameFingerprintHit[], DatabaseUnavailable>>;
-  /** Every stored term of another video equal to one of `terms`. */
+  /** Stored terms of another video equal to one of `terms`. */
   abstract findAudioTerms(
     terms: readonly number[],
-    excludeVideoId: string
+    excludeVideoId: string,
+    limits: FingerprintLookupLimits
   ): Promise<Result<AudioTermHit[], DatabaseUnavailable>>;
   /** A video's stored terms, in position order. */
   abstract audioTermsOf(videoId: string): Promise<Result<AudioTerm[], DatabaseUnavailable>>;

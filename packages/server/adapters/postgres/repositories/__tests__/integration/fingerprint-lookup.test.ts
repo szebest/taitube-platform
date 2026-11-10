@@ -10,6 +10,7 @@ const FRAMES_PER_VIDEO = 150;
 const QUERY_FRAMES = 150;
 const AUDIO_TERMS_PER_VIDEO = 400;
 const BUDGET_MS = 200;
+const LIMITS = { minBandSetBits: 2, minTermSetBits: 4, maxHitsPerKey: 200 };
 
 /**
  * The lookup for a new upload against a catalogue of 10 000 fingerprinted videos of five minutes each,
@@ -62,7 +63,7 @@ describe('PostgresFingerprintRepository: lookup against a catalogue of 10 000 vi
       SELECT video_id, idx, term FROM video_audio_fingerprints
       WHERE video_id <> '00000000-0000-7000-8000-0000000000ff' AND term IN (${terms.join(',')})`);
     const frames = expectOk(
-      await repository.findFramesSharingBand(hashes, '00000000-0000-7000-8000-0000000000ff')
+      await repository.findFramesSharingBand(hashes, '00000000-0000-7000-8000-0000000000ff', LIMITS)
     );
 
     expect(frameMs, `frame lookup, ${frames.length} candidate rows`).toBeLessThan(BUDGET_MS);

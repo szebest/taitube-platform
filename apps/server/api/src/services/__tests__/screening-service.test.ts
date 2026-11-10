@@ -11,6 +11,8 @@ import {
   screeningHarness,
 } from './screening-harness';
 
+const LOOKUP = { minBandSetBits: 2, minTermSetBits: 4, maxHitsPerKey: 10 };
+
 const partialMatch = {
   reason: 'PARTIAL_MATCH' as const,
   score: 0.4,
@@ -93,7 +95,7 @@ describe('apps/server/api/services: screening', () => {
       expect(decided).toEqual({ videoId: HELD_ID, status: 'REJECTED' });
       expect(await h.eventTypes()).toEqual(['video.screening_rejected']);
       expect(
-        expectOk(await h.repositories.fingerprints.findFramesSharingBand([5n], ORIGINAL_ID))
+        expectOk(await h.repositories.fingerprints.findFramesSharingBand([5n], ORIGINAL_ID, LOOKUP))
       ).toHaveLength(1);
       expect(expectOk(await h.service.ownScreening(OWNER, HELD_ID))).toMatchObject({
         status: 'REJECTED',

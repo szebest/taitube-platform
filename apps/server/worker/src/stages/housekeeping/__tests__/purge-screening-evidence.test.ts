@@ -9,6 +9,8 @@ import { uuidv7 } from 'uuidv7';
 import { runPurgeScreeningEvidence } from '../purge-screening-evidence';
 import { seedVideo } from './housekeeping-harness';
 
+const LOOKUP = { minBandSetBits: 2, minTermSetBits: 4, maxHitsPerKey: 10 };
+
 const MODERATOR = '00000000-0000-7000-8000-00000000a0a1';
 
 describe('housekeeping: purge-screening-evidence', () => {
@@ -116,7 +118,9 @@ describe('housekeeping: purge-screening-evidence', () => {
     expect(await purgeAfter(31)).toEqual({ purgedCount: 1 });
     expect(await purgeAfter(31)).toEqual({ purgedCount: 0 });
 
-    const hits = expectOk(await repositories.fingerprints.findFramesSharingBand([7n], uuidv7()));
+    const hits = expectOk(
+      await repositories.fingerprints.findFramesSharingBand([7n], uuidv7(), LOOKUP)
+    );
     expect(hits).toHaveLength(1);
   });
 

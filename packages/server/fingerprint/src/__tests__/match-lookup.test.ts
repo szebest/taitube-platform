@@ -20,6 +20,7 @@ const SETTINGS: FingerprintMatchSettings = {
   },
   hashIntervalSeconds: 2,
   audioIndexStride: 4,
+  lookup: { minBandSetBits: 2, minTermSetBits: 4, maxHitsPerKey: 200 },
 };
 
 function term(i: number, family = 0): number {
@@ -170,6 +171,14 @@ describe('@vp/fingerprint: findMatches', () => {
       ['orig', 1],
       ['half', 0.5],
     ]);
+  });
+
+  it('hands the lookup limits to both the frame and the audio read', async () => {
+    const store = await catalogue(ORIGINAL);
+
+    expectOk(await findMatches(store, upload('copy', hashes(60), terms(480)), SETTINGS));
+
+    expect(store.lookups).toEqual([SETTINGS.lookup, SETTINGS.lookup]);
   });
 
   it('fails with the repository failure, whichever read it was', async () => {

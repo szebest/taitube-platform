@@ -8,6 +8,8 @@ import { uuidv7 } from 'uuidv7';
 import { type PurgeDeletedOptions, runPurgeDeleted } from '../purge-deleted';
 import { hoursAgo, seedVideo } from './housekeeping-harness';
 
+const LOOKUP = { minBandSetBits: 2, minTermSetBits: 4, maxHitsPerKey: 10 };
+
 const PLAYLIST = 'application/vnd.apple.mpegurl';
 
 describe('housekeeping: purge-deleted', () => {
@@ -139,7 +141,9 @@ describe('housekeeping: purge-deleted', () => {
     await purge();
 
     expect(expectOk(await storage.headObject('raw', `evidence/${videoId}/frame-0.jpg`))).toBeNull();
-    const hits = expectOk(await repositories.fingerprints.findFramesSharingBand([9n], uuidv7()));
+    const hits = expectOk(
+      await repositories.fingerprints.findFramesSharingBand([9n], uuidv7(), LOOKUP)
+    );
     expect(hits.map((hit) => hit.videoId)).toEqual([rejected.id]);
   });
 

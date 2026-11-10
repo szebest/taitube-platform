@@ -28,6 +28,9 @@ interface ScreeningSampling {
   classifyIntervalSeconds: number;
   classifyMaxFrames: number;
   audioIndexStride: number;
+  minBandSetBits: number;
+  minTermSetBits: number;
+  maxHitsPerKey: number;
 }
 
 export interface ScreeningProcessTuning {

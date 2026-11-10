@@ -1,4 +1,4 @@
-import { frameBands, hammingDistance, popcount32 } from '../frame-hash';
+import { frameBands, hammingDistance, isLowEntropy, lookupBands, popcount32 } from '../frame-hash';
 
 describe('@vp/domain: hammingDistance', () => {
   it.each([
@@ -56,5 +56,35 @@ describe('@vp/domain: popcount32', () => {
     { value: 0xffff_ffff, bits: 32 },
   ])('counts $bits bits in $value', ({ value, bits }) => {
     expect(popcount32(value)).toBe(bits);
+  });
+});
+
+describe('@vp/domain: isLowEntropy', () => {
+  it.each([
+    { name: 'a zero band', value: 0, width: 16, low: true },
+    { name: 'an all-ones band', value: 0xffff, width: 16, low: true },
+    { name: 'a band with one set bit', value: 0x0100, width: 16, low: true },
+    { name: 'a band with one clear bit', value: 0xfffb, width: 16, low: true },
+    { name: 'a band with two set bits', value: 0x0101, width: 16, low: false },
+    { name: 'a mixed band', value: 0x4567, width: 16, low: false },
+    { name: 'a zero term', value: 0, width: 32, low: true },
+    { name: 'an all-ones term', value: -1, width: 32, low: true },
+    { name: 'a term with three set bits', value: 0b111, width: 32, low: true },
+    { name: 'a term with three clear bits', value: ~0b111, width: 32, low: true },
+    { name: 'a mixed term', value: 0x1234_5678, width: 32, low: false },
+  ])('judges $name', ({ value, width, low }) => {
+    expect(isLowEntropy(value, width, width === 16 ? 2 : 4)).toBe(low);
+  });
+});
+
+describe('@vp/domain: lookupBands', () => {
+  it('collects the distinct bands per position and leaves out the low-entropy ones', () => {
+    const bands = lookupBands([0n, 0x0123_4567_89ab_cdefn, 0x0123_4567_89ab_cdefn, -1n], 2);
+
+    expect(bands.map((set) => [...set])).toEqual([[0xcdef], [0x89ab], [0x4567], [0x0123]]);
+  });
+
+  it('is empty for no hashes', () => {
+    expect(lookupBands([], 2).every((set) => set.size === 0)).toBe(true);
   });
 });

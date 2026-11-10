@@ -21,6 +21,7 @@ export function hammingDistance(a: bigint, b: bigint): number {
 
 const BAND_BITS = 16n;
 const BAND_MASK = 0xffffn;
+const BAND_BITS_COUNT = 16;
 
 /**
  * The four 16-bit bands of a frame hash, low band first. A frame within Hamming distance 3 of another
@@ -34,4 +35,25 @@ export function frameBands(hash: bigint): [number, number, number, number] {
     number,
     number,
   ];
+}
+
+/**
+ * Whether a `width`-bit value is nearly all zeros or all ones: what a black or title-card frame
+ * hashes to in every band, and what silence fingerprints to. Such a value matches thousands of
+ * unrelated videos, so a lookup leaves it out.
+ */
+export function isLowEntropy(value: number, width: number, minSetBits: number): boolean {
+  const set = popcount32(value);
+  return set < minSetBits || width - set < minSetBits;
+}
+
+/** The distinct bands of `hashes` per position, without the low-entropy ones. */
+export function lookupBands(hashes: readonly bigint[], minSetBits: number): Set<number>[] {
+  const positions = Array.from({ length: 4 }, () => new Set<number>());
+  for (const hash of hashes) {
+    for (const [position, band] of frameBands(hash).entries()) {
+      if (!isLowEntropy(band, BAND_BITS_COUNT, minSetBits)) positions[position]?.add(band);
+    }
+  }
+  return positions;
 }

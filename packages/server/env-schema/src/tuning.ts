@@ -154,13 +154,18 @@ export const SCREENING_THRESHOLDS = {
 /**
  * One frame every 2 s is hashed for the duplicate check and one every 10 s, at most 120 and the first,
  * middle and last, is classified. The audio index keeps every 8th Chromaprint term, about 3 600 rows for
- * an hour of video at the 8 terms a second it produces.
+ * an hour of video at the 8 terms a second it produces. A lookup leaves out a 16-bit band with fewer
+ * than `minBandSetBits` ones or zeros and a 32-bit term with fewer than `minTermSetBits`, which black
+ * frames and silence produce, and takes at most `maxHitsPerKey` rows per band or term it asks for.
  */
 export const SCREENING_SAMPLING = {
   hashIntervalSeconds: 2,
   classifyIntervalSeconds: 10,
   classifyMaxFrames: 120,
   audioIndexStride: 8,
+  minBandSetBits: 2,
+  minTermSetBits: 4,
+  maxHitsPerKey: 200,
 } as const;
 
 /**

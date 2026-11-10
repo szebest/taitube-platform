@@ -2,16 +2,18 @@ import {
   type AudioTerm,
   type AudioTermHit,
   type FrameFingerprint,
+  type FingerprintLookupLimits,
   type FrameFingerprintHit,
   FingerprintRepository,
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
-import { frameBands } from '@vp/domain';
+import { frameBands, isLowEntropy, lookupBands } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { type Result, fromPromise, ok } from '@vp/result';
 import { and, asc, eq, inArray, ne, or } from 'drizzle-orm';
 import type { PostgresDatabase } from './types';
 
+const TERM_BITS = 32;
 const { videoFrameHashes: vf, videoAudioFingerprints: va } = schema;
 
 export class PostgresFingerprintRepository extends FingerprintRepository {
@@ -56,36 +58,45 @@ export class PostgresFingerprintRepository extends FingerprintRepository {
 
   async findFramesSharingBand(
     hashes: readonly bigint[],
-    excludeVideoId: string
+    excludeVideoId: string,
+    limits: FingerprintLookupLimits
   ): Promise<Result<FrameFingerprintHit[], DatabaseUnavailable>> {
-    if (hashes.length === 0) return ok([]);
-    const bands = hashes.map(frameBands);
+    const wanted = lookupBands(hashes, limits.minBandSetBits);
+    const keys = wanted.reduce((total, bands) => total + bands.size, 0);
+    if (keys === 0) return ok([]);
+    const [b0, b1, b2, b3] = wanted.map((bands) => [...bands]);
     const sharing = or(
-      inArray(vf.b0, [...new Set(bands.map((band) => band[0]))]),
-      inArray(vf.b1, [...new Set(bands.map((band) => band[1]))]),
-      inArray(vf.b2, [...new Set(bands.map((band) => band[2]))]),
-      inArray(vf.b3, [...new Set(bands.map((band) => band[3]))])
+      b0?.length ? inArray(vf.b0, b0) : undefined,
+      b1?.length ? inArray(vf.b1, b1) : undefined,
+      b2?.length ? inArray(vf.b2, b2) : undefined,
+      b3?.length ? inArray(vf.b3, b3) : undefined
     );
     return fromPromise(async () => {
       const rows = await this.db
         .select({ videoId: vf.videoId, idx: vf.idx, hash: vf.hash })
         .from(vf)
-        .where(and(ne(vf.videoId, excludeVideoId), sharing));
+        .where(and(ne(vf.videoId, excludeVideoId), sharing))
+        .limit(keys * limits.maxHitsPerKey);
       return rows.map((row) => ({ ...row, hash: BigInt.asUintN(64, row.hash) }));
     }, databaseUnavailable.during('findFramesSharingBand'));
   }
 
   async findAudioTerms(
     terms: readonly number[],
-    excludeVideoId: string
+    excludeVideoId: string,
+    limits: FingerprintLookupLimits
   ): Promise<Result<AudioTermHit[], DatabaseUnavailable>> {
-    if (terms.length === 0) return ok([]);
+    const wanted = [
+      ...new Set(terms.filter((term) => !isLowEntropy(term, TERM_BITS, limits.minTermSetBits))),
+    ];
+    if (wanted.length === 0) return ok([]);
     return fromPromise(
       () =>
         this.db
           .select({ videoId: va.videoId, idx: va.idx, term: va.term })
           .from(va)
-          .where(and(ne(va.videoId, excludeVideoId), inArray(va.term, [...new Set(terms)]))),
+          .where(and(ne(va.videoId, excludeVideoId), inArray(va.term, wanted)))
+          .limit(wanted.length * limits.maxHitsPerKey),
       databaseUnavailable.during('findAudioTerms')
     );
   }

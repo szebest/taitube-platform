@@ -1,4 +1,4 @@
-import type { FingerprintRepository } from '@vp/core/repositories';
+import type { FingerprintLookupLimits, FingerprintRepository } from '@vp/core/repositories';
 import type { ScreeningThresholds } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { type Result, isErr, ok } from '@vp/result';
@@ -16,6 +16,7 @@ export interface FingerprintMatchSettings {
   hashIntervalSeconds: number;
   /** Every `audioIndexStride`th Chromaprint term is stored and indexed. */
   audioIndexStride: number;
+  lookup: FingerprintLookupLimits;
 }
 
 export interface NewVideoFingerprint {
@@ -65,15 +66,16 @@ export async function findMatches(
   fingerprint: NewVideoFingerprint,
   settings: FingerprintMatchSettings
 ): Promise<Result<VideoMatch[], DatabaseUnavailable>> {
-  const { thresholds, hashIntervalSeconds, audioIndexStride } = settings;
+  const { thresholds, hashIntervalSeconds, audioIndexStride, lookup } = settings;
   const { videoId, frames, audioTerms } = fingerprint;
 
   const frameHits = await fingerprints.findFramesSharingBand(
     frames.flatMap((frame) => [frame.hash, frame.mirroredHash]),
-    videoId
+    videoId,
+    lookup
   );
   if (isErr(frameHits)) return frameHits;
-  const audioHits = await fingerprints.findAudioTerms([...new Set(audioTerms)], videoId);
+  const audioHits = await fingerprints.findAudioTerms([...new Set(audioTerms)], videoId, lookup);
   if (isErr(audioHits)) return audioHits;
 
   const byVideo = new Map<string, VideoMatch>();

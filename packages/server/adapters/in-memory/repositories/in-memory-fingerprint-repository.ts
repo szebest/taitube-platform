@@ -2,12 +2,15 @@ import {
   type AudioTerm,
   type AudioTermHit,
   type FrameFingerprint,
+  type FingerprintLookupLimits,
   type FrameFingerprintHit,
   FingerprintRepository,
 } from '@vp/core/repositories';
-import { frameBands } from '@vp/domain';
+import { frameBands, isLowEntropy, lookupBands } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { type Result, ok } from '@vp/result';
+
+const TERM_BITS = 32;
 
 export class InMemoryFingerprintRepository extends FingerprintRepository {
   private readonly frames = new Map<string, readonly FrameFingerprint[]>();
@@ -31,12 +34,11 @@ export class InMemoryFingerprintRepository extends FingerprintRepository {
 
   async findFramesSharingBand(
     hashes: readonly bigint[],
-    excludeVideoId: string
+    excludeVideoId: string,
+    limits: FingerprintLookupLimits
   ): Promise<Result<FrameFingerprintHit[], DatabaseUnavailable>> {
-    const wanted = Array.from({ length: 4 }, () => new Set<number>());
-    for (const hash of hashes) {
-      for (const [position, band] of frameBands(hash).entries()) wanted[position]?.add(band);
-    }
+    const wanted = lookupBands(hashes, limits.minBandSetBits);
+    const keys = wanted.reduce((total, bands) => total + bands.size, 0);
     const hits = [...this.frames]
       .filter(([videoId]) => videoId !== excludeVideoId)
       .flatMap(([videoId, frames]) =>
@@ -46,20 +48,23 @@ export class InMemoryFingerprintRepository extends FingerprintRepository {
           )
           .map((frame) => ({ videoId, ...frame }))
       );
-    return ok(hits);
+    return ok(hits.slice(0, keys * limits.maxHitsPerKey));
   }
 
   async findAudioTerms(
     terms: readonly number[],
-    excludeVideoId: string
+    excludeVideoId: string,
+    limits: FingerprintLookupLimits
   ): Promise<Result<AudioTermHit[], DatabaseUnavailable>> {
-    const wanted = new Set(terms);
+    const wanted = new Set(
+      terms.filter((term) => !isLowEntropy(term, TERM_BITS, limits.minTermSetBits))
+    );
     const hits = [...this.audio]
       .filter(([videoId]) => videoId !== excludeVideoId)
       .flatMap(([videoId, stored]) =>
         stored.filter((term) => wanted.has(term.term)).map((term) => ({ videoId, ...term }))
       );
-    return ok(hits);
+    return ok(hits.slice(0, wanted.size * limits.maxHitsPerKey));
   }
 
   async audioTermsOf(videoId: string): Promise<Result<AudioTerm[], DatabaseUnavailable>> {

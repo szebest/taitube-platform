@@ -1,6 +1,7 @@
 import {
   type AudioTerm,
   type AudioTermHit,
+  type FingerprintLookupLimits,
   FingerprintRepository,
   type FrameFingerprint,
   type FrameFingerprintHit,
@@ -13,6 +14,7 @@ export class FingerprintDouble extends FingerprintRepository {
   readonly frames = new Map<string, readonly FrameFingerprint[]>();
   readonly audio = new Map<string, readonly AudioTerm[]>();
   audioReads: string[] = [];
+  lookups: FingerprintLookupLimits[] = [];
 
   async storeFrames(
     videoId: string,
@@ -32,8 +34,10 @@ export class FingerprintDouble extends FingerprintRepository {
 
   async findFramesSharingBand(
     _hashes: readonly bigint[],
-    excludeVideoId: string
+    excludeVideoId: string,
+    limits: FingerprintLookupLimits
   ): Promise<Result<FrameFingerprintHit[], DatabaseUnavailable>> {
+    this.lookups.push(limits);
     return ok(
       [...this.frames]
         .filter(([videoId]) => videoId !== excludeVideoId)
@@ -43,8 +47,10 @@ export class FingerprintDouble extends FingerprintRepository {
 
   async findAudioTerms(
     terms: readonly number[],
-    excludeVideoId: string
+    excludeVideoId: string,
+    limits: FingerprintLookupLimits
   ): Promise<Result<AudioTermHit[], DatabaseUnavailable>> {
+    this.lookups.push(limits);
     const wanted = new Set(terms);
     return ok(
       [...this.audio]
