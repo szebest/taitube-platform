@@ -23,6 +23,17 @@ repo.
   appearance, `dir` and `lang` on `<html>` through `applyAppearance`, the attributes `ThemedDocument` renders
   in the apps, with the `ui` words of the toolbar locale's catalogue as its `UiCopy` (`loadCatalogue`, a
   loader, fetches it before the story renders, as the apps load it before they hydrate).
+- `src/app-decorator.tsx`: `withApp`, for a story that sets `parameters.app` (`session`: `'guest'` or
+  `'signed-in'`, `api`: a function returning the replies it wants, built once per story render so a closure over
+  it is that render's own state; a story without it renders bare). It stands a memory-history router, a query
+  client (no retries), the API client over `src/in-memory-api.ts` (`inMemoryFetch` answers the contracts in the
+  replies and a 404 for anything else, so a story never leaves the page), the session, the locale's words, the
+  toaster, the tooltip provider and `src/web-providers.tsx` (the web app's device preferences, their sync and the
+  player channel) around it. `web-providers.tsx` is the one file in the repo allowed to import the web app's source by
+  relative path (`packages/AGENTS.md` section 6): the workbench already reads the apps' sources, and those providers
+  are not a package. No other file here reaches into `apps/`. A kit component that reads the router, the cache or the API is shown through it; no
+  story builds its own provider tree. `.storybook/tanstack-start.ts` stubs the server-only exports `@vp/queries`
+  imports so it bundles.
 
 - `visual/`: the visual suite. `visual.test.ts` reads the built `storybook-static/index.json` and shoots
   each story at every registered theme and every shown mode: on main every story, on a pull request only the
@@ -37,8 +48,8 @@ repo.
   command below. `.storybook/vitest.config.ts` runs every story as a test in Chromium (the vitest addon), its
   a11y checks failing it; it sits in `.storybook/` so the root run never picks it up.
 - The visual jobs' ceiling: about 80 s a shard outside the shots, about 0.45 s a shot on two workers, 6 shots
-  a story plus the `motion`, `text` and `translated` extras, under the 4 minute budget. There are 10 shards, and each also
-  runs its share of the story tests (`--shard=x/10`); add shards as stories grow.
+  a story plus the `motion`, `text` and `translated` extras, under the 4 minute budget. There are 12 shards, and each also
+  runs its share of the story tests (`--shard=x/12`); add shards as stories grow.
 
 ## Rules
 
