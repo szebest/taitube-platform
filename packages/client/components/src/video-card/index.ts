@@ -26,5 +26,6 @@ export const VideoCard = {
 export type { VideoCardVariant } from './types';
 export { useVideoCard } from './video-card.context';
 export { videoCardStyles } from './video-card.variants';
+export type { VideoCardSprite } from './components/video-card-frames/video-card-frames';
 export type { VideoCardActionsProps } from './components/video-card-actions/video-card-actions';
 export { VideoCardSkeleton } from './components/video-card-skeleton/video-card-skeleton';

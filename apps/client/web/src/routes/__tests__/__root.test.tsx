@@ -31,6 +31,14 @@ describe('apps/client/web: root route', () => {
     expect(html).toContain('<meta name="description" content="Share videos with others online!"/>');
   });
 
+  it('lets the page draw under a notch, so safe-area insets are real', async () => {
+    const html = await home();
+
+    expect(head(html)).toContain(
+      '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>'
+    );
+  });
+
   it.each([
     { scenario: 'Accept-Language', cookie: '', acceptLanguage: 'pl-PL,en;q=0.5', lang: 'pl' },
     {

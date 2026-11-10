@@ -1,4 +1,6 @@
+import { useAnalytics } from '#app/features/analytics/hooks/use-analytics';
 import type { AnalyticsRange, AnalyticsScope, KpiMetric } from '#app/features/analytics/types';
+import { AnalyticsEmpty } from '../analytics-empty/analytics-empty';
 import { KpiCard } from '../kpi-card/kpi-card';
 import { NetSubscribersCard } from '../net-subscribers-card/net-subscribers-card';
 import { ViewsChart } from '../views-chart/views-chart';
@@ -15,6 +17,12 @@ export interface AnalyticsOverviewProps {
 }
 
 export function AnalyticsOverview({ scope, range }: AnalyticsOverviewProps) {
+  const { data } = useAnalytics(scope, range);
+
+  if (data?.rangeViews === 0) {
+    return <AnalyticsEmpty />;
+  }
+
   return (
     <>
       <div className="grid grid-cols-2 gap-stack medium:grid-cols-3">

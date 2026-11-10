@@ -1,8 +1,10 @@
 import { VIDEO_ID, video } from '@vp/web-testing';
 import { serverRender } from '@vp/web-testing/server';
 import { SESSION, accountOf } from '#app/__tests__/providers';
+import { EditVideoPageSkeleton } from '#app/features/videos';
 import { serveEditor } from '#app/features/videos/__tests__/edit-api.fixture';
 import { getRouter } from '#app/router';
+import { Route } from '../$videoId.edit';
 
 function renderEditor(path: string, stored = video()) {
   serveEditor(stored);
@@ -10,6 +12,10 @@ function renderEditor(path: string, stored = video()) {
 }
 
 describe('apps/client/studio: /videos/$videoId/edit', () => {
+  it('shows its skeleton while the loader runs', () => {
+    expect(Route.options.pendingComponent).toBe(EditVideoPageSkeleton);
+  });
+
   it.each([
     { scenario: 'a video id', path: `/videos/${VIDEO_ID}/edit`, status: 200 },
     { scenario: 'a segment that is not a video id', path: '/videos/nope/edit', status: 404 },

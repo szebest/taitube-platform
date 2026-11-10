@@ -5,10 +5,10 @@ const CONTROL = '[&>:not([data-slot^=field-])]';
 
 export const fieldStyles = tv({
   slots: {
-    root: 'font-sans',
+    root: 'min-w-0 font-sans',
     label: '',
-    hint: 'm-0 text-caption text-fg-muted',
-    error: 'm-0 flex items-center gap-inline text-caption text-danger-ink',
+    hint: 'm-0 text-caption text-fg-muted select-text',
+    error: 'm-0 flex items-center gap-inline text-caption text-danger-ink select-text',
   },
   variants: {
     orientation: {

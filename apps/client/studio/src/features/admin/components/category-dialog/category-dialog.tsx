@@ -2,7 +2,7 @@ import { ApiError } from '@vp/api-client';
 import { useAppForm, validateWith } from '@vp/forms';
 import { useT } from '@vp/intl-react';
 import { fromPromise, isOk } from '@vp/result';
-import { Button, Dialog, Field, Input, Textarea, useToast, useUiCopy } from '@vp/ui';
+import { Button, Field, Input, ResponsiveModal, Textarea, useToast, useUiCopy } from '@vp/ui';
 import { validateCategoryName, validateSlug } from '@vp/validation';
 import { useState } from 'react';
 import type { AdminCategory } from '#app/features/admin/api/admin-categories';
@@ -95,27 +95,27 @@ export function CategoryDialog({ category, nextSortOrder, onClose }: CategoryDia
   });
 
   return (
-    <Dialog.Root open onOpenChange={(open) => !open && onClose()}>
-      <Dialog.Content size="sm">
+    <ResponsiveModal.Root open onOpenChange={(open) => !open && onClose()}>
+      <ResponsiveModal.Content size="sm">
         <form
           onSubmit={(event) => {
             event.preventDefault();
             form.handleSubmit();
           }}
         >
-          <Dialog.Header>
-            <Dialog.Title>
+          <ResponsiveModal.Header>
+            <ResponsiveModal.Title>
               {tOr(
                 category ? 'studio.adminCategoryEditTitle' : 'studio.adminCategoryCreateTitle',
                 {},
                 ''
               )}
-            </Dialog.Title>
-            <Dialog.Description>
+            </ResponsiveModal.Title>
+            <ResponsiveModal.Description>
               {tOr('studio.adminCategoryDialogDescription', {}, '')}
-            </Dialog.Description>
-          </Dialog.Header>
-          <Dialog.Body>
+            </ResponsiveModal.Description>
+          </ResponsiveModal.Header>
+          <ResponsiveModal.Body>
             <form.Field name="name" validators={{ onChange: validateWith(validateCategoryName) }}>
               {(field) => (
                 <CategoryTextField
@@ -158,11 +158,11 @@ export function CategoryDialog({ category, nextSortOrder, onClose }: CategoryDia
                 />
               )}
             </form.Field>
-          </Dialog.Body>
-          <Dialog.Footer>
-            <Dialog.Close asChild>
+          </ResponsiveModal.Body>
+          <ResponsiveModal.Footer>
+            <ResponsiveModal.Close asChild>
               <Button variant="outline">{cancel}</Button>
-            </Dialog.Close>
+            </ResponsiveModal.Close>
             <form.Subscribe selector={(state) => state.isSubmitting}>
               {(submitting) => (
                 <Button type="submit" variant="solid" tone="accent" loading={submitting}>
@@ -170,10 +170,10 @@ export function CategoryDialog({ category, nextSortOrder, onClose }: CategoryDia
                 </Button>
               )}
             </form.Subscribe>
-          </Dialog.Footer>
+          </ResponsiveModal.Footer>
         </form>
-      </Dialog.Content>
-    </Dialog.Root>
+      </ResponsiveModal.Content>
+    </ResponsiveModal.Root>
   );
 }
 

@@ -1,14 +1,16 @@
 import { TOKEN_GROUPS, tokenGroups } from '@vp/design-tokens';
+import { densityOf } from './density';
 import type { ShownMode } from './provider';
 import type { ResolvedAppearance } from './resolve';
 
 type Shown = Readonly<{ resolved: ResolvedAppearance; shownMode: ShownMode }>;
 
-/** What `<html>` carries for an appearance: the theme, mode, contrast and one attribute per group. */
+/** What `<html>` carries for an appearance: the theme, mode, contrast, density and one attribute per group. */
 export const appearanceAttributes = ({ resolved, shownMode }: Shown): Record<string, string> => ({
   'data-theme': resolved.theme.id,
   'data-mode': shownMode,
   'data-contrast': resolved.contrast,
+  'data-density': densityOf(resolved.sets),
   ...Object.fromEntries(
     TOKEN_GROUPS.map((group) => [`data-${tokenGroups[group].path}`, resolved.sets[group].id])
   ),

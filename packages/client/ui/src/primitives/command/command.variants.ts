@@ -11,7 +11,7 @@ export const commandStyles = tv({
     empty: 'px-inset-control py-inset-card text-center text-body-sm text-fg-muted',
     group:
       '[&_[cmdk-group-heading]]:px-inset-control [&_[cmdk-group-heading]]:py-1 [&_[cmdk-group-heading]]:text-overline [&_[cmdk-group-heading]]:text-fg-muted',
-    item: 'flex cursor-pointer items-center gap-inline rounded-sm px-inset-control text-label select-none data-[disabled=true]:pointer-events-none data-[disabled=true]:text-fg-subtle data-[selected=true]:bg-tint [&_svg]:size-icon-sm [&_svg]:shrink-0',
+    item: 'flex cursor-pointer items-center gap-inline rounded-sm px-inset-control text-label transition-colors duration-fast ease-standard data-[disabled=true]:pointer-events-none data-[disabled=true]:text-fg-subtle data-[selected=true]:bg-tint [&_svg]:size-icon-sm [&_svg]:shrink-0',
     shortcut: 'ms-auto text-mono text-fg-muted',
   },
   variants: {

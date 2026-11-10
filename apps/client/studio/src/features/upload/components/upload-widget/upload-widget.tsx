@@ -108,7 +108,7 @@ export function UploadWidget() {
   return (
     <aside
       aria-label={tOr('studio.uploadDockTitle', {}, '')}
-      className="fixed start-0 bottom-0 z-toast w-full p-gutter-compact medium:max-w-[24rem]"
+      className="fixed start-0 bottom-0 z-toast w-full p-gutter-compact pb-[max(var(--gutter-compact),env(safe-area-inset-bottom))] medium:max-w-[24rem]"
     >
       <Card.Root elevation={3}>
         <Card.Header>

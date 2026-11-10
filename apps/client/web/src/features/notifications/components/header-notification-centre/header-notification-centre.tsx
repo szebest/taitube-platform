@@ -4,12 +4,13 @@ import type { Notification } from '@vp/api-contracts';
 import { useFormat, useT } from '@vp/intl-react';
 import { unreadNotificationCountQueryOptions, useAccount, useApi, useUserEvent } from '@vp/queries';
 import { unwrapOr } from '@vp/result';
-import { useMediaQuery, useToast } from '@vp/ui';
+import { Button, Icon, useMediaQuery, useToast, useUiCopy } from '@vp/ui';
 import { useState } from 'react';
 import { NotificationCentre } from '#app/components/shell/notification-centre';
 import { useMarkRead } from '#app/features/notifications/hooks/use-mark-read';
 import { useNotificationText } from '#app/features/notifications/hooks/use-notification-text';
 import { notificationTarget } from '#app/features/notifications/utils/notification-target';
+import { useRequireAccount } from '#app/hooks/use-require-account';
 import { LazyNotificationPanel } from '../notification-panel/notification-panel.lazy';
 
 const POPOVER_FITS = '(min-width: 600px)';
@@ -61,7 +62,19 @@ function useArrivals(open: boolean): Announcement {
   return announcement;
 }
 
-/** The header bell for a signed-in viewer: the unread count, live arrivals, and the centre it opens. */
+function GuestBell() {
+  const { notifications } = useUiCopy();
+  const { run } = useRequireAccount('bell');
+
+  return (
+    <Button variant="ghost" shape="icon" onClick={() => run(() => undefined)}>
+      <Icon name="bell" />
+      <span className="sr-only">{notifications}</span>
+    </Button>
+  );
+}
+
+/** The header bell: for a signed-in viewer the unread count, live arrivals and the centre it opens, for a guest the sign-in prompt. */
 export function HeaderNotificationCentre() {
   const account = useAccount();
   const api = useApi();
@@ -75,7 +88,7 @@ export function HeaderNotificationCentre() {
   const announcement = useArrivals(open);
 
   if (!account) {
-    return null;
+    return <GuestBell />;
   }
 
   const unreadCount = data?.unreadCount ?? 0;

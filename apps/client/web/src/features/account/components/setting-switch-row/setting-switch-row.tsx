@@ -5,6 +5,7 @@ import { SettingItem } from '../setting-item/setting-item';
 type SwitchRowId =
   | 'autoplay-next'
   | 'hover-preview'
+  | 'hover-play'
   | 'stats-overlay'
   | 'pause-history'
   | 'subscriptions-visible'

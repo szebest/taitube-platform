@@ -19,12 +19,21 @@ async function renderAt(path: string) {
 }
 
 describe('@vp/queries: SignInButton', () => {
-  it('links to the sign-in page, and back to the page it was pressed on', async () => {
-    await renderAt('/feed/trending?tab=new');
+  it.each([
+    {
+      scenario: 'links to the sign-in page, and back to the page it was pressed on',
+      path: '/feed/trending?tab=new',
+      href: '/login?redirect=%2Ffeed%2Ftrending%3Ftab%3Dnew',
+    },
+    {
+      scenario: 'keeps the way back the sign-in page already has, not nesting it',
+      path: '/login?redirect=%2Fwatch%2F1',
+      href: '/login?redirect=%2Fwatch%2F1',
+    },
+    { scenario: 'adds no way back on a bare sign-in page', path: '/login', href: '/login' },
+  ])('$scenario', async ({ path, href }) => {
+    await renderAt(path);
 
-    expect(await screen.findByRole('link', { name: 'Sign in' })).toHaveAttribute(
-      'href',
-      '/login?redirect=%2Ffeed%2Ftrending%3Ftab%3Dnew'
-    );
+    expect(await screen.findByRole('link', { name: 'Sign in' })).toHaveAttribute('href', href);
   });
 });

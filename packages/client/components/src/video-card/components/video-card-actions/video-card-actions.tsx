@@ -6,6 +6,7 @@ import { videoCardStyles } from '../../video-card.variants';
 export interface VideoCardActionsProps {
   onSave?: () => void;
   onQueue?: () => void;
+  onPlayNext?: () => void;
 }
 
 export interface VideoCardMenuProps extends VideoCardActionsProps {
@@ -14,17 +15,36 @@ export interface VideoCardMenuProps extends VideoCardActionsProps {
   children?: ReactNode;
 }
 
-/** The card's actions behind one button, shown on hover and focus, always on touch; nothing when there are none. */
-export function VideoCardMenu({ onSave, onQueue, className, children }: VideoCardMenuProps) {
+/**
+ * The card's actions: Add to queue as a button of its own, the rest behind "More actions", all shown on hover
+ * and focus and always on touch; nothing when there are none.
+ */
+export function VideoCardMenu({
+  onSave,
+  onQueue,
+  onPlayNext,
+  className,
+  children,
+}: VideoCardMenuProps) {
   const shared = useVideoCard('Menu');
   const copy = useUiCopy();
 
-  if (onSave === undefined && onQueue === undefined && children === undefined) {
+  if (
+    onSave === undefined &&
+    onQueue === undefined &&
+    onPlayNext === undefined &&
+    children === undefined
+  ) {
     return null;
   }
 
   return (
     <div data-slot="video-card-menu" className={videoCardStyles(shared).menu({ className })}>
+      {onQueue !== undefined && (
+        <IconButton aria-label={copy.addToQueue} size="sm" onClick={onQueue}>
+          <Icon name="queue-add" />
+        </IconButton>
+      )}
       <DropdownMenu.Root>
         <DropdownMenu.Trigger asChild>
           <IconButton aria-label={copy.moreActions} size="sm">
@@ -40,8 +60,14 @@ export function VideoCardMenu({ onSave, onQueue, className, children }: VideoCar
           )}
           {onQueue !== undefined && (
             <DropdownMenu.Item onSelect={onQueue}>
-              <Icon name="playlist" />
-              {copy.queue}
+              <Icon name="queue-add" />
+              {copy.addToQueue}
+            </DropdownMenu.Item>
+          )}
+          {onPlayNext !== undefined && (
+            <DropdownMenu.Item onSelect={onPlayNext}>
+              <Icon name="play" />
+              {copy.playNext}
             </DropdownMenu.Item>
           )}
           {children}
@@ -58,12 +84,13 @@ export interface VideoCardExpandedProps extends VideoCardActionsProps {
 }
 
 /**
- * The raised panel a resting mouse opens: the description and Save and Queue. It is no tab stop and
+ * The raised panel a resting mouse opens: the description and Save, Add to queue and Play next. It is no tab stop and
  * hidden from assistive technology, since the menu holds the same actions.
  */
 export function VideoCardExpanded({
   onSave,
   onQueue,
+  onPlayNext,
   className,
   children,
 }: VideoCardExpandedProps) {
@@ -87,8 +114,14 @@ export function VideoCardExpanded({
         )}
         {onQueue !== undefined && (
           <Button tabIndex={-1} size="sm" variant="soft" onClick={onQueue}>
-            <Icon name="playlist" />
-            {copy.queue}
+            <Icon name="queue-add" />
+            {copy.addToQueue}
+          </Button>
+        )}
+        {onPlayNext !== undefined && (
+          <Button tabIndex={-1} size="sm" variant="soft" onClick={onPlayNext}>
+            <Icon name="play" />
+            {copy.playNext}
           </Button>
         )}
       </div>

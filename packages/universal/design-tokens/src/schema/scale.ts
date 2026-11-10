@@ -20,9 +20,18 @@ const SPACE_INDICES = [
 const SPACE_GRID_PX = 4;
 
 export const Z_LAYERS = [
+  'behind',
+  'ambient',
   'base',
+  'lift',
+  'stage-tap',
+  'stage-hud',
+  'stage-controls',
+  'stage-actions',
   'sticky',
+  'header',
   'rail',
+  'pip',
   'overlay',
   'modal',
   'popover',
@@ -56,7 +65,7 @@ export const ScaleSchema = z.strictObject({
       'a space step is its Tailwind index times 4 px'
     ),
   z: z
-    .record(z.enum(Z_LAYERS), z.int().nonnegative())
+    .record(z.enum(Z_LAYERS), z.int())
     .refine(risesInOrder(Z_LAYERS, Number), 'each layer sits above the one before it'),
   breakpoint: z
     .record(z.enum(BREAKPOINTS), PixelSchema)

@@ -62,6 +62,7 @@ export async function clientAppTestConfig(
     defineConfig({
       test: {
         ...project(options),
+        env: { VITE_DEMO_PERSONAS: 'true' },
         pool: 'threads',
         css: { include: [/\.s?css\?url/] },
         globals: true,

@@ -4,7 +4,7 @@ import { SectionError } from '@vp/components';
 import { ErrorCodes } from '@vp/errors';
 import { useT } from '@vp/intl-react';
 import { captionsQueryOptions, transcriptQueryOptions, useApi } from '@vp/queries';
-import { Button, Dialog, Skeleton, useToast } from '@vp/ui';
+import { Button, ResponsiveModal, Skeleton, useToast } from '@vp/ui';
 import { useState } from 'react';
 import { VersionConflictDialog } from '#app/components/dialogs/version-conflict-dialog';
 import { editCuesMutationOptions } from '#app/features/captions/api/caption-mutations';
@@ -93,16 +93,16 @@ export function CueEditorDialog({
 
   return (
     <>
-      <Dialog.Root open={open} onOpenChange={onOpenChange}>
-        <Dialog.Content size="lg">
-          <Dialog.Header>
-            <Dialog.Title>
+      <ResponsiveModal.Root open={open} onOpenChange={onOpenChange}>
+        <ResponsiveModal.Content size="lg">
+          <ResponsiveModal.Header>
+            <ResponsiveModal.Title>
               {tOr('studio.captionsEditorTitle', { language: languageLabel(track.language) }, '')}
-            </Dialog.Title>
-            <Dialog.Description>
+            </ResponsiveModal.Title>
+            <ResponsiveModal.Description>
               {tOr('studio.captionsEditorDescription', {}, '')}
-            </Dialog.Description>
-          </Dialog.Header>
+            </ResponsiveModal.Description>
+          </ResponsiveModal.Header>
           {transcript.isPending && <Skeleton className="h-32 w-full" />}
           {transcript.isError && (
             <SectionError.Root
@@ -127,7 +127,7 @@ export function CueEditorDialog({
               onChange={(index, text) => setDrafts((current) => ({ ...current, [index]: text }))}
             />
           )}
-          <Dialog.Footer>
+          <ResponsiveModal.Footer>
             <Button
               variant="solid"
               tone="accent"
@@ -137,9 +137,9 @@ export function CueEditorDialog({
             >
               {tOr('studio.captionsEditorSave', {}, '')}
             </Button>
-          </Dialog.Footer>
-        </Dialog.Content>
-      </Dialog.Root>
+          </ResponsiveModal.Footer>
+        </ResponsiveModal.Content>
+      </ResponsiveModal.Root>
       <VersionConflictDialog
         open={conflict}
         onOpenChange={setConflict}

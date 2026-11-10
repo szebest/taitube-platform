@@ -1,11 +1,17 @@
 import { screen } from '@testing-library/react';
+import { AdminPageSkeleton } from '#app/features/admin';
 import {
   adminVideo,
   commentReport,
   renderModeration,
 } from '#app/features/admin/__tests__/moderation.fixture';
+import { Route } from '../moderation';
 
 describe('apps/client/studio: /admin/moderation', () => {
+  it('shows its skeleton while the loader runs', () => {
+    expect(Route.options.pendingComponent).toBe(AdminPageSkeleton);
+  });
+
   it('shows the videos and the reported comments as two sections of one page', async () => {
     const video = adminVideo({ title: 'Cats' });
     const report = commentReport();

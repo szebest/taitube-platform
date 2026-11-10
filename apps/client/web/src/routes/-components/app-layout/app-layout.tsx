@@ -3,7 +3,13 @@ import { ApiProvider, SessionProvider, UserEventStream } from '@vp/queries';
 import { ToastProvider, Tooltip } from '@vp/ui';
 import { useWebTelemetry } from '@vp/web-telemetry';
 import { Suspense } from 'react';
-import { AccountMenu, ChannelPermissions, PreferencesSync } from '#app/features/account';
+import {
+  AccountMenu,
+  ChannelPermissions,
+  LazySignInDialog,
+  PreferencesSync,
+  ReplayIntent,
+} from '#app/features/account';
 import { LazyNewPlaylistDialog, LazySaveToPlaylistDialog } from '#app/features/library';
 import { HeaderNotificationCentre } from '#app/features/notifications';
 import { OfflineBanner, QueuedChangesSync } from '#app/features/offline';
@@ -12,6 +18,7 @@ import { AppCommandPalette } from '#app/features/search';
 import { RootShell } from '#app/features/shell';
 import { LazyGlobalNowPlayingBar, PlaybackSessionProvider } from '#app/features/watch';
 import { LazyDevtools } from '#app/integrations/devtools/devtools.lazy';
+import { AmbientGlowProvider } from '#app/lib/ambient/ambient-glow';
 import { CommandPaletteProvider } from '#app/lib/command-palette/command-palette-store';
 import { API_BASE_URL, OTEL_TRACES_URL } from '#app/lib/config';
 import { DevicePreferencesProvider } from '#app/lib/preferences/device-preferences-provider';
@@ -38,31 +45,37 @@ export function AppLayout() {
                     <PreferencesSync>
                       <PlaybackSessionProvider>
                         <CommandPaletteProvider>
-                          <RootShell
-                            sidebar={sidebarState}
-                            account={<AccountMenu />}
-                            actions={<HeaderNotificationCentre />}
-                            notices={
-                              <>
-                                <OfflineBanner />
-                                <InstallPrompt />
-                              </>
-                            }
-                            nowPlaying={<LazyGlobalNowPlayingBar />}
-                            overlays={
-                              <>
-                                <AppCommandPalette />
-                                <UrlModal.WhenOpened id="save-to-playlist">
-                                  <LazySaveToPlaylistDialog />
-                                </UrlModal.WhenOpened>
-                                <UrlModal.WhenOpened id="new-playlist">
-                                  <LazyNewPlaylistDialog />
-                                </UrlModal.WhenOpened>
-                                <UpdatePrompt />
-                                <QueuedChangesSync />
-                              </>
-                            }
-                          />
+                          <AmbientGlowProvider>
+                            <RootShell
+                              sidebar={sidebarState}
+                              account={<AccountMenu />}
+                              actions={<HeaderNotificationCentre />}
+                              notices={
+                                <>
+                                  <OfflineBanner />
+                                  <InstallPrompt />
+                                </>
+                              }
+                              nowPlaying={<LazyGlobalNowPlayingBar />}
+                              overlays={
+                                <>
+                                  <AppCommandPalette />
+                                  <UrlModal.WhenOpened id="save-to-playlist">
+                                    <LazySaveToPlaylistDialog />
+                                  </UrlModal.WhenOpened>
+                                  <UrlModal.WhenOpened id="sign-in">
+                                    <LazySignInDialog />
+                                  </UrlModal.WhenOpened>
+                                  <ReplayIntent />
+                                  <UrlModal.WhenOpened id="new-playlist">
+                                    <LazyNewPlaylistDialog />
+                                  </UrlModal.WhenOpened>
+                                  <UpdatePrompt />
+                                  <QueuedChangesSync />
+                                </>
+                              }
+                            />
+                          </AmbientGlowProvider>
                         </CommandPaletteProvider>
                       </PlaybackSessionProvider>
                     </PreferencesSync>

@@ -5,6 +5,7 @@ import {
   useOfferedPlayerChannel,
   useOnPlayerEnded,
   usePlayerFullscreen,
+  usePlayerPictureInPicture,
   usePlayerSeek,
   usePlayerTheater,
   usePlayerTime,
@@ -105,6 +106,28 @@ describe('apps/client/web: player channel', () => {
 
     expect(result.current.fullscreen).toBe(true);
     expect(renderHook(() => usePlayerFullscreen()).result.current).toBe(false);
+  });
+
+  it('tells every reader whether picture in picture is possible and on, and toggles it through the engine', () => {
+    const toggle = vi.fn();
+    const { result } = renderHook(
+      () => ({ channel: useOfferedPlayerChannel(), pip: usePlayerPictureInPicture() }),
+      { wrapper: PlayerChannelProvider }
+    );
+    expect(result.current.pip).toEqual({ available: false, active: false });
+    act(() => {
+      result.current.channel?.attachPictureInPicture(toggle);
+      result.current.channel?.publishPictureInPicture({ available: true, active: true });
+    });
+
+    result.current.channel?.togglePictureInPicture();
+
+    expect(result.current.pip).toEqual({ available: true, active: true });
+    expect(toggle).toHaveBeenCalledOnce();
+    expect(renderHook(() => usePlayerPictureInPicture()).result.current).toEqual({
+      available: false,
+      active: false,
+    });
   });
 
   it('tells the listener the video ended, with its latest closure, until it unmounts', () => {

@@ -11,6 +11,8 @@ type WorkerFixtures = {
   stack: Stack;
   /** The other client app's origin, when the suite serves it alongside (`alongside` in its config). */
   alongsideUrl: string;
+  /** This app's dev server, which hydrates only while no client module reaches a server-only import. */
+  devUrl: string;
 };
 
 type TestFixtures = {
@@ -25,6 +27,7 @@ const LOCAL_HOSTS = new Set(['127.0.0.1', 'localhost', '[::1]']);
 export const test = base.extend<TestFixtures, WorkerFixtures>({
   stackUrl: ['', { scope: 'worker', option: true }],
   alongsideUrl: ['', { scope: 'worker', option: true }],
+  devUrl: ['', { scope: 'worker', option: true }],
 
   stack: [
     async ({ playwright, stackUrl }, use) => {

@@ -8,15 +8,16 @@ export interface WebVitalsServiceDeps {
   maxRoutesPerApp: number;
 }
 
-/** The label a route id past `maxRoutesPerApp` is recorded under. */
-const OVERFLOW_ROUTE = 'other';
+/** The label a route id or a shift source past `maxRoutesPerApp` is recorded under. */
+const OVERFLOW_LABEL = 'other';
 
 type VitalHistogram =
   | 'frontendLcp'
   | 'frontendInp'
   | 'frontendCls'
   | 'frontendFcp'
-  | 'frontendTtfb';
+  | 'frontendTtfb'
+  | 'frontendLongTasks';
 
 /** Each vital's histogram, and the divisor that turns the browser's value into the histogram's unit. */
 const HISTOGRAMS: Readonly<Record<WebVital['name'], { field: VitalHistogram; divisor: number }>> = {
@@ -25,35 +26,42 @@ const HISTOGRAMS: Readonly<Record<WebVital['name'], { field: VitalHistogram; div
   FCP: { field: 'frontendFcp', divisor: MS_PER_SECOND },
   TTFB: { field: 'frontendTtfb', divisor: MS_PER_SECOND },
   CLS: { field: 'frontendCls', divisor: 1 },
+  LONG_TASKS: { field: 'frontendLongTasks', divisor: MS_PER_SECOND },
 };
 
 /**
- * Turns browser-reported vitals into histogram observations. The contract bounds each route id; the
- * per-app cap bounds how many there are, so a client cannot grow the series without limit.
+ * Turns browser-reported vitals into histogram observations. The contract bounds each route id and
+ * shift source; the per-app cap bounds how many there are, so a client cannot grow the series without limit.
  */
 export class WebVitalsService {
   private readonly routes = new Map<TelemetryApp, Set<string>>();
+  private readonly sources = new Map<TelemetryApp, Set<string>>();
 
   constructor(private readonly deps: WebVitalsServiceDeps) {}
 
   record({ app, vitals }: WebVitalsBatch): Result<undefined, never> {
     for (const vital of vitals) {
-      this.observe(vital, app, this.routeLabel(app, vital.route));
+      const route = this.cappedLabel(this.routes, app, vital.route);
+      this.observe(vital, app, route);
+      if (vital.name === 'CLS' && vital.source) {
+        const source = this.cappedLabel(this.sources, app, vital.source);
+        this.deps.metrics.frontendLayoutShiftSources.inc({ app, route, source });
+      }
     }
     return ok(undefined);
   }
 
-  private routeLabel(app: TelemetryApp, route: string): string {
-    const known = this.routes.get(app);
-    if (known?.has(route)) {
-      return route;
+  private cappedLabel(known: Map<TelemetryApp, Set<string>>, app: TelemetryApp, label: string) {
+    const labels = known.get(app);
+    if (labels?.has(label)) {
+      return label;
     }
-    if (known && known.size >= this.deps.maxRoutesPerApp) {
-      return OVERFLOW_ROUTE;
+    if (labels && labels.size >= this.deps.maxRoutesPerApp) {
+      return OVERFLOW_LABEL;
     }
 
-    this.routes.set(app, new Set(known).add(route));
-    return route;
+    known.set(app, new Set(labels).add(label));
+    return label;
   }
 
   private observe({ name, value }: WebVital, app: TelemetryApp, route: string): void {

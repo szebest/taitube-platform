@@ -84,6 +84,19 @@ export function HoverPreviewRow() {
   );
 }
 
+export function HoverPlayRow() {
+  const [hoverPlay, setHoverPlay] = usePlaybackPreference('hoverPlay');
+
+  return (
+    <SettingSwitchRow
+      row="hover-play"
+      setting="playback.hoverPlay"
+      checked={hoverPlay}
+      onCheckedChange={setHoverPlay}
+    />
+  );
+}
+
 export function StatsOverlayRow() {
   const [statsOverlay, setStatsOverlay] = usePlaybackPreference('statsOverlay');
 

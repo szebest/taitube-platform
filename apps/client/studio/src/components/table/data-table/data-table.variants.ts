@@ -3,7 +3,7 @@ import { tv } from '@vp/ui';
 export const dataTableStyles = tv({
   slots: {
     root: 'grid grid-cols-[minmax(0,1fr)] rounded-card border-divider border-border bg-surface text-fg max-expanded:[&_[data-slot=table-scroller]]:overflow-x-auto',
-    bar: 'col-start-1 row-start-1 flex min-h-control-lg items-center gap-inline px-inset-control py-inline transition-[opacity,visibility] duration-fast ease-standard',
+    bar: 'col-start-1 row-start-1 flex min-h-control-lg flex-wrap items-center gap-inline px-inset-control py-inline transition-[opacity,visibility] duration-fast ease-standard',
     batchCount: 'me-auto text-label text-fg',
     strip: 'h-(--border-focus) bg-accent p-0',
     sortButton: 'group/sort -ms-inline gap-inline',

@@ -5,7 +5,6 @@ import { z } from 'zod';
 import { ClipAction } from '#app/features/clips';
 import { SaveOfflineToggle } from '#app/features/offline';
 import { WatchPage, WatchPending } from '#app/features/watch';
-import { useSignIn } from '#app/hooks/use-sign-in';
 import { WEB_URL } from '#app/lib/config';
 import { channelQueryOptions } from '#app/lib/query-keys/channel-keys';
 import { playlistQueryOptions } from '#app/lib/query-keys/library-keys';
@@ -27,12 +26,10 @@ function validOrUndefined<T>(schema: z.ZodType<T>) {
 }
 
 function EngagementActions({ video }: { video: Video }) {
-  const signIn = useSignIn();
-
   return (
     <>
       <SaveOfflineToggle video={video} />
-      <ClipAction video={video} onSignIn={signIn} />
+      <ClipAction video={video} />
     </>
   );
 }

@@ -71,7 +71,7 @@ export function ShadowPreview() {
 export function AmbientPreview() {
   return (
     <div className="relative isolate p-3">
-      <span className="absolute inset-1 -z-10 rounded-card bg-accent opacity-ambient blur-ambient in-data-[ambient=off]:hidden" />
+      <span className="absolute inset-1 z-behind rounded-card bg-accent opacity-ambient blur-ambient in-data-[ambient=off]:hidden" />
       <span className="block h-8 rounded-card border-divider border-border bg-surface" />
     </div>
   );
@@ -89,11 +89,13 @@ export function MotionPreview() {
   }, []);
 
   return (
-    <div className="flex h-8 items-center">
+    <div className="flex h-8 items-center [container-type:inline-size]">
       <span
         className={cn(
-          'size-5 rounded-full bg-accent transition-[margin-inline-start] duration-slow ease-standard motion-reduce:transition-none',
-          atEnd ? 'ms-[calc(100%-1.25rem)]' : 'ms-0'
+          'size-5 rounded-full bg-accent transition-transform duration-slow ease-standard motion-reduce:transition-none',
+          atEnd
+            ? 'translate-x-[calc(100cqw-1.25rem)] rtl:-translate-x-[calc(100cqw-1.25rem)]'
+            : 'translate-x-0'
         )}
       />
     </div>

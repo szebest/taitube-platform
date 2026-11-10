@@ -1,91 +1,10 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
-import { userEvent } from '@testing-library/user-event';
-import { IntlProvider } from '@vp/intl-react';
+import { act, fireEvent, screen } from '@testing-library/react';
 import { axeViolations } from '@vp/web-testing/dom';
-import { Fragment } from 'react';
-import { VideoJsEngine } from '#app/integrations/video-js/video-js-engine';
-import { PlayerChannelProvider, usePlayerTheater } from '#app/lib/player/player-channel';
-import type { PlaybackRange } from '#app/lib/player/taitube-player-props';
-import { ControlBar } from '../control-bar';
-
-type Fullscreen = 'unsupported' | 'inline' | 'fullscreen';
-
-interface Playhead {
-  paused: boolean;
-  currentTime: number;
-  duration: number;
-  fullscreen: Fullscreen;
-}
+import { renderBar } from './render-bar';
 
 afterEach(() => {
   vi.useRealTimers();
 });
-
-function stubFullscreen(fullscreen: Fullscreen) {
-  const requestFullscreen = vi.fn();
-  const exitFullscreen = vi.fn();
-  const stubs = [
-    { on: document, name: 'fullscreenEnabled', get: () => fullscreen !== 'unsupported' },
-    {
-      on: document,
-      name: 'fullscreenElement',
-      get: () =>
-        fullscreen === 'fullscreen' ? screen.getByRole('group', { name: 'Media player' }) : null,
-    },
-    { on: document, name: 'exitFullscreen', get: () => exitFullscreen },
-    { on: HTMLElement.prototype, name: 'requestFullscreen', get: () => requestFullscreen },
-  ];
-  for (const { on, name, get } of stubs) {
-    Object.defineProperty(on, name, { configurable: true, get });
-    onTestFinished(() => {
-      Reflect.deleteProperty(on, name);
-    });
-  }
-  return { requestFullscreen, exitFullscreen };
-}
-
-function TheaterProbe() {
-  return <output data-testid="theater">{String(usePlayerTheater())}</output>;
-}
-
-function renderBar({
-  paused = true,
-  currentTime = 0,
-  duration = 600,
-  fullscreen = 'unsupported',
-  channel = false,
-  live = false,
-  range,
-}: Partial<Playhead> & { channel?: boolean; live?: boolean; range?: PlaybackRange } = {}) {
-  vi.spyOn(HTMLMediaElement.prototype, 'paused', 'get').mockReturnValue(paused);
-  vi.spyOn(HTMLMediaElement.prototype, 'currentTime', 'get').mockReturnValue(currentTime);
-  vi.spyOn(HTMLMediaElement.prototype, 'duration', 'get').mockReturnValue(duration);
-  vi.spyOn(HTMLMediaElement.prototype, 'readyState', 'get').mockReturnValue(
-    HTMLMediaElement.HAVE_ENOUGH_DATA
-  );
-  const fullscreenCalls = stubFullscreen(fullscreen);
-  const user = userEvent.setup();
-  const Channel = channel ? PlayerChannelProvider : Fragment;
-  const rendered = render(
-    <IntlProvider locale="en" timeZone="UTC">
-      <Channel>
-        <VideoJsEngine
-          playbackUrl="http://localhost:9000/public/videos/v1/hls/master.m3u8"
-          posterUrl="http://localhost:9000/posters/p.jpg"
-          title="Launch day"
-        >
-          <ControlBar live={live} range={range} />
-        </VideoJsEngine>
-        <TheaterProbe />
-      </Channel>
-    </IntlProvider>
-  );
-  const video = rendered.container.querySelector('video');
-  if (!video) throw new Error('the player rendered no <video>');
-  const player = screen.getByRole('group', { name: 'Media player' });
-  const bar = screen.getByRole('group', { name: 'Player controls' });
-  return { ...rendered, user, video, player, bar, fullscreenCalls };
-}
 
 describe('apps/client/web: the player control bar', () => {
   it.each([
@@ -106,6 +25,25 @@ describe('apps/client/web: the player control bar', () => {
     await vi.waitFor(() => expect(bar).toHaveTextContent('01:05 / 10:00'));
     expect(screen.getByRole('slider', { name: 'Seek' })).toHaveAttribute('aria-valuetext', '01:05');
     expect(await axeViolations()).toEqual([]);
+  });
+
+  it.each([
+    { title: 'Launch day', scrim: 'Launch day' },
+    { title: undefined, scrim: null },
+  ])('draws the bar on the media role, with a title scrim for $title', ({ title, scrim }) => {
+    const { bar, container } = renderBar({ title });
+    const text = container.querySelector('[data-media-controls][aria-hidden] p')?.textContent;
+
+    expect(bar).toHaveAttribute('data-media-controls');
+    expect(text ?? null).toBe(scrim);
+  });
+
+  it('sizes the seek track from the playhead and the buffered range', async () => {
+    renderBar({ currentTime: 150, duration: 600 });
+    const seekBar = screen.getByRole('slider', { name: 'Seek' });
+
+    await vi.waitFor(() => expect(seekBar.style.getPropertyValue('--played')).toBe('25%'));
+    expect(seekBar.style.getPropertyValue('--buffered')).toBe('0%');
   });
 
   it('shows only the clip: its own clock and seek bar, seeking inside it', async () => {

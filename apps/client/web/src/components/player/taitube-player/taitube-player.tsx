@@ -55,6 +55,7 @@ export function TaitubePlayer({
       {controls && props.layout !== 'vertical' && (
         <>
           <ControlBar
+            title={props.title ?? undefined}
             live={props.live}
             range={props.range}
             onPrevious={props.onPrevious}

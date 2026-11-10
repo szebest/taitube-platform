@@ -11,6 +11,7 @@ describe('@vp/messages: en shorts', () => {
       expected:
         'Short vertical videos are on their way. Until then, the home feed has plenty to watch.',
     },
+    { key: 'shorts.controls', expected: 'Short controls' },
     { key: 'shorts.browse', expected: 'Browse videos' },
   ] as const)('renders $key with no arguments', ({ key, expected }) => {
     expect(t(key)).toEqual({ ok: true, value: expected });

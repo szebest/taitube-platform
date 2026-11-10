@@ -1,8 +1,16 @@
 import { liveFeature, videoFeatures } from '@videojs/core/dom';
 import { Container, createPlayer, Gesture, LiveButton, Poster, useContainer } from '@videojs/react';
 import { HlsJsVideo } from '@videojs/react/media/hlsjs-video';
-import { fromPromise, isOk } from '@vp/result';
-import { type ReactNode, type SyntheticEvent, useEffect, useEffectEvent, useRef } from 'react';
+import { fromPromise, ignore, isOk } from '@vp/result';
+import {
+  type ReactNode,
+  type RefObject,
+  type SyntheticEvent,
+  useEffect,
+  useEffectEvent,
+  useRef,
+} from 'react';
+import { bufferedEndAt } from '#app/lib/player/buffered-end';
 import { findDefaultRendition } from '#app/lib/player/playback-defaults';
 import { useOfferedPlayerChannel } from '#app/lib/player/player-channel';
 import type { PlayerCommands, PlayerState } from '#app/lib/player/player-port';
@@ -68,8 +76,9 @@ export function VideoJsEngine({
       currentTarget.currentTime = startAt;
     }
 
-    if (defaults) {
-      currentTarget.playbackRate = defaults.speed;
+    const speed = control?.speed ?? defaults?.speed;
+    if (speed !== undefined) {
+      currentTarget.playbackRate = speed;
     }
 
     if (control && !control.paused) {
@@ -115,11 +124,11 @@ export function VideoJsEngine({
     <VideoPlayer title={title} poster={posterUrl}>
       <CaptionsContext value={captions}>
         <Container
-          data-theme="dark"
+          data-mode="dark"
           className={
             vertical || fill
-              ? 'relative size-full overflow-hidden bg-bg font-sans text-fg'
-              : 'relative aspect-video w-full overflow-hidden rounded-thumb bg-bg font-sans text-fg not-data-controls-visible:cursor-none [&:fullscreen]:rounded-none'
+              ? 'relative size-full overflow-hidden bg-media font-sans text-on-media'
+              : 'relative aspect-video w-full overflow-hidden rounded-thumb bg-media font-sans text-on-media not-data-controls-visible:cursor-none [&:fullscreen]:rounded-none'
           }
         >
           <HlsJsVideo
@@ -155,16 +164,18 @@ export function VideoJsEngine({
         {control && <PlaybackSync {...control} />}
         {defaults && <StartAtDefaultQuality key={playbackUrl} quality={defaults.quality} />}
         <QualityReport onQualityChange={onQualityChange} />
-        <ChannelBinding />
+        <ChannelBinding videoRef={videoRef} />
       </CaptionsContext>
     </VideoPlayer>
   );
 }
 
 /** The media starts as the element's `autoPlay` and `muted` say; only a change after that is a command. */
-function PlaybackSync({ paused, muted }: PlaybackControl) {
-  const { play, pause, setMuted } = usePlayerCommands();
-  const applied = useRef({ paused, muted });
+function PlaybackSync({ paused, muted, speed, captions }: PlaybackControl) {
+  const { play, pause, setMuted, setPlaybackRate } = usePlayerCommands();
+  const { state, commands } = useCaptionsContext();
+  const shown = state.captionsEnabled;
+  const applied = useRef({ paused, muted, speed });
 
   useEffect(() => {
     if (applied.current.paused === paused) {
@@ -188,6 +199,21 @@ function PlaybackSync({ paused, muted }: PlaybackControl) {
     applied.current.muted = muted;
     setMuted(muted);
   }, [muted, setMuted]);
+
+  useEffect(() => {
+    if (speed === undefined || applied.current.speed === speed) {
+      return;
+    }
+
+    applied.current.speed = speed;
+    setPlaybackRate(speed);
+  }, [speed, setPlaybackRate]);
+
+  useEffect(() => {
+    if (captions !== undefined && captions !== shown) {
+      commands.toggleCaptions();
+    }
+  }, [captions, shown, commands]);
 
   return null;
 }
@@ -231,22 +257,49 @@ function QualityReport({ onQualityChange }: Pick<TaitubePlayerProps, 'onQualityC
   return null;
 }
 
-function ChannelBinding() {
+function ChannelBinding({ videoRef }: { videoRef: RefObject<HTMLVideoElement | null> }) {
   const channel = useOfferedPlayerChannel();
   const { seek } = usePlayerCommands();
-  const currentTime = usePlayerState((state) => state.currentTime);
   const fullscreen = usePlayerState((state) => state.fullscreen);
   const captionTrackId = usePlayerState((state) => state.activeCaptionTrack?.id ?? null);
+  const canPictureInPicture = usePlayerState((state) => state.canPictureInPicture);
+  const pictureInPicture = usePlayerState((state) => state.pictureInPicture);
+  const { requestPictureInPicture, exitPictureInPicture } = usePlayerCommands();
 
   useEffect(() => channel?.attach(seek), [channel, seek]);
 
   useEffect(() => {
-    channel?.publish(currentTime);
-  }, [channel, currentTime]);
+    const video = videoRef.current;
+    if (!channel || !video) {
+      return;
+    }
+
+    const publishTime = () => channel.publish(video.currentTime);
+    publishTime();
+    video.addEventListener('timeupdate', publishTime);
+    video.addEventListener('seeked', publishTime);
+    const stopListening = () => {
+      video.removeEventListener('timeupdate', publishTime);
+      video.removeEventListener('seeked', publishTime);
+    };
+    return stopListening;
+  }, [channel, videoRef]);
 
   useEffect(() => {
     channel?.publishFullscreen(fullscreen);
   }, [channel, fullscreen]);
+
+  useEffect(() => {
+    channel?.publishPictureInPicture({ available: canPictureInPicture, active: pictureInPicture });
+  }, [channel, canPictureInPicture, pictureInPicture]);
+
+  useEffect(
+    () =>
+      channel?.attachPictureInPicture(
+        pictureInPicture ? exitPictureInPicture : requestPictureInPicture
+      ),
+    [channel, pictureInPicture, requestPictureInPicture, exitPictureInPicture]
+  );
 
   useEffect(() => {
     channel?.publishCaptionTrack(captionTrackId);
@@ -287,11 +340,14 @@ export function usePlayerState<Selected>(select: (state: PlayerState) => Selecte
       ended: state.ended,
       currentTime: state.currentTime,
       duration: state.duration,
+      bufferedEnd: bufferedEndAt(state.buffered, state.currentTime),
       volume: state.volume,
       muted: state.muted,
       playbackRate: state.playbackRate,
       fullscreen: state.isFullscreen,
       canFullscreen: state.fullscreenAvailability === 'available',
+      pictureInPicture: state.isPictureInPicture,
+      canPictureInPicture: state.pictureInPictureAvailability === 'available',
       controlsVisible: state.controlsVisible,
       renditions: state.videoRenditionList,
       quality: state.videoRenditionList.find(({ selected }) => selected)?.id ?? AUTO_QUALITY,
@@ -312,6 +368,8 @@ export function usePlayerCommands(): PlayerCommands {
     selectVideoRendition,
     requestFullscreen,
     exitFullscreen,
+    requestPictureInPicture,
+    exitPictureInPicture,
     requestControlsLock,
   } = usePlayer();
   const { commands } = useCaptionsContext();
@@ -326,6 +384,24 @@ export function usePlayerCommands(): PlayerCommands {
     selectVideoRendition,
     requestFullscreen,
     exitFullscreen,
+    requestPictureInPicture: async () => {
+      ignore(
+        await fromPromise(
+          async () => requestPictureInPicture(),
+          (cause) => cause
+        ),
+        'a refused picture in picture leaves the video where it is'
+      );
+    },
+    exitPictureInPicture: async () => {
+      ignore(
+        await fromPromise(
+          async () => exitPictureInPicture(),
+          (cause) => cause
+        ),
+        'a refused exit leaves the video in its window'
+      );
+    },
     requestControlsLock,
     ...commands,
   };

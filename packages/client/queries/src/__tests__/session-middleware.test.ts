@@ -10,7 +10,11 @@ async function answer(pathname: string) {
   apiServer.use(http.all(`${API}/*`, proxied));
   const next = vi.fn().mockResolvedValue({ response: new Response('page') });
   const request = new Request(`http://localhost:5173${pathname}`);
-  const middleware = sessionMiddleware({ apiBaseUrl: API, cookieDomain: 'taitube.example' });
+  const middleware = sessionMiddleware({
+    apiBaseUrl: API,
+    cookieDomain: 'taitube.example',
+    devTokenUrl: 'http://dev-token:3002',
+  });
 
   await requestHandler(async () => {
     await middleware.options.server?.({
@@ -35,12 +39,14 @@ describe('@vp/queries: session middleware', () => {
   });
 
   it.each(['/apiary', '/watch/abc', '/_serverFn/x'])(
-    "renders %s, handing it the session cookie's domain",
+    "renders %s, handing it the session cookie's domain and the token server's address",
     async (pathname) => {
       const { proxied, next } = await answer(pathname);
 
       expect(proxied).toBe(false);
-      expect(next).toHaveBeenCalledWith({ context: { sessionCookieDomain: 'taitube.example' } });
+      expect(next).toHaveBeenCalledWith({
+        context: { sessionCookieDomain: 'taitube.example', devTokenUrl: 'http://dev-token:3002' },
+      });
     }
   );
 });

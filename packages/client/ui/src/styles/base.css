@@ -140,12 +140,6 @@
 :root[data-motion="reduced"] {
   --motion-travel: 0;
 }
-@media (prefers-reduced-motion: reduce) {
-  :root {
-    --motion-travel: 0;
-  }
-}
-
 /* The reduced set is chosen as well as forced by the system, so both variants follow `data-motion` too. */
 @custom-variant motion-reduce {
   @media (prefers-reduced-motion: reduce) {
@@ -161,6 +155,17 @@
       @slot;
     }
   }
+}
+
+/* A page with and without a scrollbar lays out alike. The gutter stays reserved while the scroll lock Radix
+   applies to `body` hides the scrollbar, so the end margin the lock adds for that width would shrink the
+   content a second time: it is dropped. */
+html {
+  scrollbar-gutter: stable;
+}
+
+html body[data-scroll-locked] {
+  margin-inline: 0 !important;
 }
 
 [data-mode="dark"],
@@ -185,16 +190,54 @@
     border-color: var(--border);
   }
 
+  html,
   body {
-    margin: 0;
     background: var(--bg);
     color: var(--fg);
+  }
+
+  body {
+    margin: 0;
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
   }
 
+  html:has([data-obs-overlay]),
   body:has([data-obs-overlay]) {
     background: transparent;
+  }
+
+  /* Chrome is never selected by a drag or a double click: controls, tab and menu roles, key hints, badges,
+     thumbnails, avatars and anything painted as clickable. Content (titles, descriptions, comments, chat,
+     table cells, hints, errors) stays selectable; `select-text` brings it back inside a chrome ancestor. */
+  button,
+  summary,
+  kbd,
+  nav a,
+  [role="button"],
+  [role="tab"],
+  [role="menuitem"],
+  [role="menuitemcheckbox"],
+  [role="menuitemradio"],
+  [role="option"],
+  [role="switch"],
+  [role="checkbox"],
+  [role="radio"],
+  [role="slider"],
+  a[data-slot="card"],
+  [data-slot="avatar"],
+  [data-slot="badge"],
+  [data-slot="chip"],
+  [data-slot="chip-group-item"],
+  [data-slot="kbd"],
+  [data-slot="label"],
+  [data-slot="tooltip-content"],
+  [data-slot="video-thumbnail"],
+  [data-slot="page-header-tabs"],
+  .cursor-pointer,
+  .touch-none {
+    -webkit-user-select: none;
+    user-select: none;
   }
 }
 
@@ -221,7 +264,12 @@
   animation: none;
 }
 
+/* The one place the system setting is read: it forces what `data-motion="reduced"` chooses. */
 @media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-travel: 0;
+  }
+
   ::view-transition-group(*),
   ::view-transition-old(*),
   ::view-transition-new(*) {
@@ -407,5 +455,82 @@
       inset-inline: min(0px, calc((100% - var(--layout-touch-target)) / 2));
       inset-block: min(0px, calc((100% - var(--layout-touch-target)) / 2));
     }
+  }
+}
+
+/* The player draws on a black frame whatever the page theme: its controls take the fixed `on-media` white, a
+   shadow under glyphs and text, and a ring that is white with a black halo, so it is seen on a black frame
+   and on a white one. */
+[data-media-controls] {
+  color: var(--on-media);
+  text-shadow: 0 1px 2px var(--media);
+}
+
+[data-media-controls] svg {
+  filter: drop-shadow(0 1px 2px var(--media));
+}
+
+[data-media-controls] :is([data-slot="icon-button"], [data-slot="button"]) {
+  background: transparent;
+  color: var(--on-media);
+}
+
+[data-media-controls] :is([data-slot="icon-button"], [data-slot="button"]):hover {
+  background: color-mix(in srgb, var(--on-media) 20%, transparent);
+}
+
+[data-media-controls] :focus-visible {
+  outline: var(--border-focus) solid var(--on-media);
+  outline-offset: var(--border-focus-offset);
+  box-shadow: 0 0 0 calc(var(--border-focus) + var(--border-focus-offset) + 1px) var(--media);
+}
+
+@utility media-seek {
+  --track-played: var(--accent);
+  --track-buffered: color-mix(in srgb, var(--on-media) 45%, transparent);
+  --track-rest: color-mix(in srgb, var(--on-media) 20%, transparent);
+  --seek-direction: to right;
+  &:dir(rtl) {
+    --seek-direction: to left;
+  }
+  height: 1.25rem;
+  appearance: none;
+  background: transparent;
+  &::-webkit-slider-runnable-track {
+    height: 0.25rem;
+    border-radius: 9999px;
+    background: linear-gradient(
+      var(--seek-direction),
+      var(--track-played) var(--played),
+      var(--track-buffered) var(--played) var(--buffered),
+      var(--track-rest) var(--buffered)
+    );
+  }
+  &::-moz-range-track {
+    height: 0.25rem;
+    border-radius: 9999px;
+    background: linear-gradient(
+      var(--seek-direction),
+      var(--track-played) var(--played),
+      var(--track-buffered) var(--played) var(--buffered),
+      var(--track-rest) var(--buffered)
+    );
+  }
+  &::-webkit-slider-thumb {
+    appearance: none;
+    width: 0.75rem;
+    height: 0.75rem;
+    margin-block-start: -0.25rem;
+    border-radius: 9999px;
+    background: var(--on-media);
+    box-shadow: 0 0 0 2px var(--media);
+  }
+  &::-moz-range-thumb {
+    width: 0.75rem;
+    height: 0.75rem;
+    border: 0;
+    border-radius: 9999px;
+    background: var(--on-media);
+    box-shadow: 0 0 0 2px var(--media);
   }
 }

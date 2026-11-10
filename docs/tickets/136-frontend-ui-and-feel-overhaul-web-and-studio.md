@@ -3,12 +3,18 @@
 | Field | Value |
 |---|---|
 | Phase | 5 - Developer experience & growth |
-| Size | XL (4 stacks, 12 slices) |
+| Size | XL (one PR, 12 work items as commits) |
 | Blocked by | 68 - PWA and service worker - 73 - Playlists and library - 102 - Shorts - 131 - Front-end folder structure (which waits on 110 - Oxc and Vite+) |
 | Blocks | — |
 | Spec | [95 design system 2](95-design-system-2.md) - [design foundations, motion](../design/foundations/motion.md) - [72 settings](72-frontend-settings-customization-system.md) - [97 account preferences](97-account-preferences-api.md) - [57 player](57-production-video-player-hls-streaming-controls.md) - [docs/standards/authorization.md](../standards/authorization.md) |
 
-**Status:** ready
+**Status:** done
+
+**Progress:** a1 to a3 and b1 to b3 are on this branch; stack C is c1 (the sign-in prompt, `useRequireAccount` and the
+settings storage: cookie for the paint fields, `localStorage` for playback), c2 (the queue actions, Undo and the frame
+hover preview) and c3 (the persistent playback host, never reparented, the mini player on the `pip` layer, Media
+Session and the browser's picture in picture), which marks stack C done except for what the c3 note in the PR lists
+(the mini player's corner, size and swipe to dismiss). Stack D remains.
 
 > **Why.** The owner clicked through the running app and found the same classes of defect on every page: the page
 > jumps when an overlay opens or closes, chrome text is selectable, tab bars lock up or lose their counts, a modal
@@ -318,6 +324,10 @@ lands before d2 (Shorts), because Shorts needs the engine to outlive a route cha
 
 Every slice ends the same way: the app launched and clicked through in a real browser (acceptance criterion 1), the
 before and after table in the PR, and the architecture or lint check for its rule with a fixture proving it fires.
+
+**Branches.** One PR for the whole ticket (the owner's rule): `feat/136a-foundations` into `main`, a plain branch, no stack.
+The 12 slices below are work items, built in this order as separate commits, each with its own click-through and
+check; they are not PRs. A second PR is cut only if the diff proves unreviewable, and then as one stacked pair.
 
 ### Stack A: `feat/136a-foundations` (root fixes, so the rest builds on them)
 
@@ -650,6 +660,7 @@ Each is proved by a test or a recorded artifact. The last one holds for every sl
 - Playback readers for quality, speed, captions and the stats overlay, and the account switch reset
   ([134](134-settings-readers-account-switch-and-channel-image-upload.md)); the player scrim here does not read them.
 - Live chat and notifications beyond their sign-in prompt and overflow.
+- A standalone studio settings page and a featured shelf route: the shelf is the Start here section of `/customization` ([96](96-channel-featured-videos-start-here.md), done) and the viewer's own appearance is the Appearance popover in the account menu ([72](72-frontend-settings-customization-system.md)), so there is no page to build; the channel's identity, links and images are [115](115-channel-page-customisation.md)'s sections of the same `/customization` page.
 
 ## Testing plan
 

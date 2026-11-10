@@ -39,6 +39,7 @@ export type PlaybackAction =
   | { type: 'reorder'; id: string; toIndex: number }
   | { type: 'remove'; id: string }
   | { type: 'append'; video: VideoSummary }
+  | { type: 'playNext'; video: VideoSummary }
   | { type: 'modes'; shuffle: boolean; repeat: QueueRepeat }
   | { type: 'paused'; paused: boolean }
   | { type: 'close' };
@@ -160,6 +161,15 @@ export function playbackReducer(state: PlaybackSession, action: PlaybackAction):
       return state.videos.some(({ id }) => id === action.video.id)
         ? state
         : { ...state, videos: [...state.videos, action.video] };
+    case 'playNext': {
+      if (state.current?.video.id === action.video.id) {
+        return state;
+      }
+
+      const rest = state.videos.filter(({ id }) => id !== action.video.id);
+      const after = rest.findIndex(({ id }) => id === state.current?.video.id) + 1;
+      return { ...state, videos: [...rest.slice(0, after), action.video, ...rest.slice(after)] };
+    }
     case 'modes':
       return { ...state, shuffle: action.shuffle, repeat: action.repeat };
     case 'paused':

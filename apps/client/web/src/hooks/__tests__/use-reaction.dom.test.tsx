@@ -63,12 +63,18 @@ function renderReaction(Providers: ComponentType<PropsWithChildren>) {
 }
 
 describe('apps/client/web: useReaction', () => {
-  it('sends a guest who reacts to sign in', async () => {
+  it('opens the sign-in prompt for a guest who reacts, with the like to replay', async () => {
     const { router } = renderReaction(AppProviders);
 
     await userEvent.click(await screen.findByRole('button', { name: 'Like' }));
 
-    await vi.waitFor(() => expect(router.state.location.pathname).toBe('/login'));
+    await vi.waitFor(() =>
+      expect(router.state.location.search).toMatchObject({
+        modal: 'sign-in',
+        reason: 'like',
+        intent: `like:${VIDEO_ID}`,
+      })
+    );
   });
 
   it("holds the member's reaction and the count the API answered", async () => {

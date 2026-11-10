@@ -16,7 +16,7 @@ export const liveChatStyles = tv({
     messages: 'm-0 flex list-none flex-col gap-stack p-0',
     jump: 'absolute inset-x-0 bottom-inline mx-auto w-max shadow-2',
     message: 'flex items-start gap-inline',
-    messageBody: 'm-0 min-w-0 text-body-sm [overflow-wrap:anywhere]',
+    messageBody: 'm-0 min-w-0 text-body-sm select-text [overflow-wrap:anywhere]',
     text: '',
     author: 'me-inline text-label text-fg-muted',
     roleBadge: 'me-inline align-middle',

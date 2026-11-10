@@ -109,6 +109,8 @@ export const settings = {
   saveFailed: dt('Could not save your settings'),
   saveFailedDescription: dt('The change is kept on this device.'),
   retry: dt('Try again'),
+  keptChoice: dt('Kept your choice for {field}'),
+  keptChoiceUndo: dt('Undo'),
   sectionTitle: dt('{section:enum}', {
     enum: {
       section: {

@@ -6,7 +6,7 @@ export const sortableListStyles = tv({
     root: 'm-0 flex list-none gap-inline p-0',
     item: 'relative flex items-center gap-inline',
     handle:
-      'inline-flex size-control-sm min-h-touch-target min-w-touch-target shrink-0 cursor-grab touch-none items-center justify-center rounded-sm border-0 bg-transparent p-0 text-fg-muted focus-ring hover:text-fg active:cursor-grabbing',
+      'inline-flex size-control-sm min-h-touch-target min-w-touch-target shrink-0 cursor-grab touch-none items-center justify-center rounded-sm border-0 bg-transparent p-0 text-fg-muted transition-colors duration-fast ease-standard focus-ring hover:text-fg active:cursor-grabbing',
   },
   variants: {
     orientation: {

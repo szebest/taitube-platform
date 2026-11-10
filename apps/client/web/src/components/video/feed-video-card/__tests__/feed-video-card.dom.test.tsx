@@ -9,11 +9,12 @@ import {
   type VideoSummary,
 } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
-import { writeCookie } from '@vp/ui';
+import { DEFAULT_APPEARANCE, writeCookie } from '@vp/ui';
 import { CHANNEL_ID, mockEndpoint, problemReply, VIDEO_ID, videoSummary } from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
 import { signInBrowser } from '#app/__tests__/providers';
+import { saveStoredPlayback } from '#app/lib/preferences/device-preferences';
 import { getRouter } from '#app/router';
 
 const WATCH_LATER_ID = '0190c3a0-5e1d-7000-8000-00000000d001';
@@ -89,6 +90,67 @@ describe('apps/client/web: FeedVideoCard', () => {
     }
   );
 
+  describe('the frame preview', () => {
+    const SPRITE = {
+      url: 'http://localhost:9000/sprites/s.jpg',
+      intervalSec: 5,
+      columns: 10,
+      tileWidth: 160,
+      tileHeight: 90,
+    };
+
+    const rest = async (setup: () => void = () => undefined) => {
+      setup();
+      await renderHome({ ...LAUNCH_DAY, sprite: SPRITE });
+      const article = screen.getByRole('article');
+      vi.useFakeTimers();
+      fireEvent.pointerEnter(article, { pointerType: 'mouse' });
+      act(() => vi.advanceTimersByTime(500));
+      return article.querySelector('[data-slot=video-card-frames]');
+    };
+
+    afterEach(() => {
+      Object.defineProperty(navigator, 'connection', { value: undefined, configurable: true });
+    });
+
+    it('plays the sprite frames after a rest, from the sheet the API gave', async () => {
+      const frames = await rest();
+
+      expect(frames?.querySelector('img')).toHaveAttribute('src', SPRITE.url);
+    });
+
+    it.each([
+      { label: 'the setting off', setup: () => saveStoredPlayback({ hoverPlay: false }) },
+      {
+        label: 'save-data',
+        setup: () =>
+          Object.defineProperty(navigator, 'connection', {
+            value: { saveData: true },
+            configurable: true,
+          }),
+      },
+      {
+        label: 'a 2g link',
+        setup: () =>
+          Object.defineProperty(navigator, 'connection', {
+            value: { effectiveType: '2g' },
+            configurable: true,
+          }),
+      },
+      {
+        label: 'reduced motion',
+        setup: () =>
+          writeCookie(
+            'vp.appearance',
+            JSON.stringify({ ...DEFAULT_APPEARANCE, overrides: { motion: 'reduced' } }),
+            { maxAge: 60 }
+          ),
+      },
+    ])('does not play under $label', async ({ setup }) => {
+      expect(await rest(setup)).toBeNull();
+    });
+  });
+
   it('shows the frame, the title, the channel, the views, the age and the reason', async () => {
     const { card } = await renderHome();
 
@@ -132,13 +194,16 @@ describe('apps/client/web: FeedVideoCard', () => {
     expect(card.queryByRole('progressbar')).toBeNull();
   });
 
-  it('offers a guest the queue and not the save dialog', async () => {
+  it.each([
+    { item: 'Add to queue', reason: 'Sign in to build a queue' },
+    { item: 'Save', reason: 'Sign in to save this video' },
+  ])('answers a guest who picks $item with the sign-in prompt', async ({ item, reason }) => {
     const { card, user } = await renderHome();
 
     await user.click(await card.findByRole('button', { name: 'More actions' }));
+    await user.click(await screen.findByRole('menuitem', { name: item }));
 
-    expect(await screen.findByRole('menuitem', { name: 'Queue' })).toBeInTheDocument();
-    expect(screen.queryByRole('menuitem', { name: 'Save' })).toBeNull();
+    expect(await screen.findByRole('dialog', { name: reason })).toBeInTheDocument();
   });
 
   it("opens the save dialog from a member's card menu", async () => {

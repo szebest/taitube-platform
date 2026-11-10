@@ -33,7 +33,7 @@ src/
 ├── routes/               file routes only: params, validateSearch, loader, head, component
 │   ├── __root.tsx        the document (ThemedDocument from @vp/ui), global styles, provider stack, the app shell, devtools
 │   ├── _authed.tsx       pathless members-only layout: requireSignedIn sends a guest to /login
-│   ├── login.tsx         the `LoginPage` wrapper over `@vp/components`' sign-in card, the dev persona switcher behind import.meta.env.DEV
+│   ├── login.tsx         the `LoginPage` wrapper over `@vp/components`' sign-in card, the demo persona switcher behind `VITE_DEMO_PERSONAS`
 │   ├── upload/           redirects to the same path on the studio, server render and client navigation alike
 │   └── $.tsx             the legacy redirects for unmatched paths
 ├── features/<feature>/   one folder per domain, isolated: index.ts (its public face), api/ (query options and key
@@ -96,7 +96,7 @@ export const Route = createFileRoute('/watch/$videoId')({
   interpolated string. `src/__tests__/router.test.tsx` holds `@ts-expect-error` cases the typecheck keeps.
 - **Code splitting is automatic** (the Start router plugin splits each route's component into its own
   chunk). Write no `React.lazy` for a route. The bundle guard from `@vp/vite-preset` fails the build if a route
-  lands in the entry chunk, two routes share one, devtools or a `dev-only/` folder reach the production bundle,
+  lands in the entry chunk, two routes share one, devtools reach the production bundle, or the demo personas reach one built without `VITE_DEMO_PERSONAS=true`,
   or any chunk carries the upload and edit code that moved to the studio (the `forbiddenDirs`).
   - The exception is a dev-only route: its component is a `React.lazy` gated on
     `import.meta.env.DEV`, the pattern `__root.tsx` uses for the devtools, because a static import survives
@@ -122,12 +122,15 @@ Everything under `src/` runs on the server first. A component that reads `window
 The session is the httpOnly `vp.session` cookie (`@vp/queries`, SDD §11), so the server renders the signed-in
 page: the root route's `beforeLoad` returns `auth` (`ensureSession`), `_authed`'s `beforeLoad` sends a guest to
 `/login?redirect=<path>`, and its loaders run on the server with the cookie's token. No script reads the token: the
-browser's API calls go to this origin's `/api`, and only server functions (`signOut`, the dev personas' sign-in)
+browser's API calls go to this origin's `/api`, and only server functions (`signOut`, the demo personas' sign-in)
 set or clear the cookie. A 401 for a signed-in viewer lands them on `/login`, and back where they were once signed
 in. The shell header mounts `features/account/components/account-menu.tsx`: `@vp/components`' `AccountMenu` with the
 studio's upload and admin pages, a guest's sign-in link, and sign-out, which ends the session on both apps. Locally
-`pnpm dev` starts `dev-token serve`, and `/login` offers the dev personas (Guest, User, Creator, Admin); a
-production build has no sign-in provider until the OIDC client lands.
+`/login` offers the demo personas (Guest, Viewer, Creator, Second creator, Moderator, Admin) in the dev server, where
+`pnpm dev` starts `dev-token serve`, and in a build made with `VITE_DEMO_PERSONAS=true`, which `demo/start.sh` makes
+and points at `dev-token serve` through `SSR_DEV_TOKEN_URL` (setup in `docs/LOCAL_FIRST.md`). The gate is the literal
+`import.meta.env.VITE_DEMO_PERSONAS === 'true'` in `persona-switcher.lazy.ts`; any other build has no sign-in
+provider until the OIDC client lands.
 
 ### SEO on the server render
 
@@ -177,17 +180,28 @@ One preference store behind the settings area, with a catalogue per section in `
 (`appearance`, `playback`, `privacy`, `notifications`); each field says whether the `device`, the `account` or
 `both` hold it.
 
-- **The device holds** the appearance, the playback defaults and the locale, in the `vp.device` cookie
-  (`device/device-preferences.ts`, one `zod` schema with a fallback per field). The root `beforeLoad` reads it, so
-  the first paint already has the viewer's theme and defaults. `DevicePreferencesProvider` applies a change at
-  once and writes the cookie back; read it with `usePlaybackPreference(key)` and `useLocalePreference()`.
+- **The device holds** two stores behind one catalogue, a field's backend being its `device` column in
+  `@vp/domain/settings` (`cookie` or `storage`). The `vp.appearance` cookie keeps the appearance fields, which the
+  root `beforeLoad` reads so the first paint has the viewer's theme (and which web and studio share); the
+  `vp.device` cookie keeps the locale; **everything else is in `localStorage`** (`vp.prefs.device`: the playback
+  fields) because the server never needs it. A storage-backed field renders its catalogue default on the server
+  and the hydration pass and takes the stored value once mounted, so the markup always matches
+  (`DevicePreferencesProvider`; read with `usePlaybackPreference(key)` and `useLocalePreference()`, never a key).
+  `lib/preferences/migrations.ts` holds one ordered list of pure steps per backend, run on read; an invalid
+  field falls back to its default alone, and a version newer than the code knows is read and left untouched.
+  Every write re-reads the stored value first, and a change is posted on `BroadcastChannel('vp.prefs')` (the
+  `storage` event is the fallback), so two tabs agree. A cookie costs a request header: the appearance cookie's
+  worst case is a test that fails past 1 KB, so a new paint-critical field is a decision, not a default.
+- **Guest changes are tracked per field.** A field changed while signed out is in the `dirty` set
+  (`dirty-fields.ts`). On sign-in `planMerge` takes the account's value for every other field, uploads a dirty
+  field (it wins) and, when the account held another value, raises "Kept your choice for <field>" with Undo.
 - **The account holds** all of `privacy` and `notifications`, and a copy of the appearance and playback.
   `useAccountPreference('privacy' | 'notifications', key)` is the saved value or the catalogue default; a guest
   has none to change, and the page wrapper shows the sign-in prompt for them.
 - **Sync** is `PreferencesSync` (mounted once, in the root): a signed-in change is debounced into one
   `PATCH /v1/me/preferences` per burst, a version conflict refetches and sends again, and a failure keeps the
-  change on the device and marks the row `Not saved to your account` with a retry. On sign-in the account's
-  sections replace the device's, and a section the account never saved is uploaded as it is (`merge-account.ts`).
+  change on the device and marks the row `Not saved to your account` with a retry. On sign-in the merge is per field, as above
+  (`merge-account.ts`); a field of a section the account never saved is uploaded as it is when it is not the default.
 - **A consumer reads the store, never its own key**: the watch stage hands the player `defaults` (speed,
   quality), `FeedVideoCard` hands the card `expandOnHover`. A new playback default is a catalogue field plus the
   consumer reading `usePlaybackPreference`, never a `localStorage` key.
@@ -197,6 +211,66 @@ One preference store behind the settings area, with a catalogue per section in `
   `routes/settings/`. Search, the overview cards and the `#row` highlight come from the index.
 - Gaps owned elsewhere: the stats overlay (57) and autoplay next (73's queue) are saved but nothing reads them
   yet.
+
+### The sign-in prompt (`useRequireAccount`)
+
+A guest is never sent to `/login` by an action. Every account action (like, dislike, comment, reply, heart,
+subscribe, save, playlist, queue, clip, history, report, the bell, feedback) calls
+`useRequireAccount(action)`, which decides with `useCan` over `@vp/permissions` (the rules table is
+`lib/account-action/account-actions.ts`, `Queue` is a subject with the `queue` action) and, for a guest, opens
+the `sign-in` url-modal with the action's reason (`?modal=sign-in&reason=like&redirect=`). A control a guest
+cannot use stays visible. The dialog's one call to action goes to `/login?redirect=` for the page the viewer was
+on; an idempotent intent (like, subscribe, save) is remembered in `sessionStorage` and replayed once by
+`ReplayIntent` after sign-in. The redirect stays for the member-only routes (`requireSignedIn`), and the header
+Sign in link keeps the `redirect` it is already on instead of nesting it. One toast system: `@vp/ui`'s `Toast`.
+
+### Queue and hover preview
+
+`useVideoActions(video)` returns `save`, `enqueue` and `playNext`; each goes through `useRequireAccount` (the `queue`
+action on the `Queue` subject), and `enqueue` and `playNext` toast with **Undo** (`Toast`'s one action): Undo takes
+a new video out of the queue, or puts a moved one back at its index. A video already queued says so and changes
+nothing. They are shown, not only in a menu: `VideoCard.Menu` has Add to queue as a button of its own beside
+"More actions" (hover, focus, always on touch) and Play next in the menu, the watch bar has both, and a recommended
+row, a search row and a Shorts rail carry them. The queue panel is `Queue` over `PlaybackSession` (persistent, its
+own scroll, full height beside the stage, at least a third of the viewport in the phone drawer).
+
+A card that asked for it (`VideoCard.Root previewOnHover`, from `useHoverPlay()`) plays its sprite sheet: after a
+500 ms rest, a mouse only, four frames a second as a `translate` over an `overflow: hidden` sheet (`VideoCardFrames`,
+no layout shift, no extra request), one card at a time (a document event, no module state). `hoverPlay` is a
+playback field (default on) and is forced off under save-data, on 2g and under reduced motion; the expanding
+panel keeps its own `hoverPreview`. `previewSrc` stays the seam for a worker-made clip.
+
+### The playback host and the mini player
+
+One engine plays for the whole session. `PlaybackHost` (`features/watch/components/playback-host/`, mounted by
+`PlaybackSessionProvider` above the routes) renders `WatchPlayer` once, in a `position: fixed` box, and a page or the
+mini player offers a **slot** (`PlayerSlot`, a `size-full` box that registers itself with the session): the host sits
+over the latest registered slot with a `translate` from `SlotRectStore` (measured on resize and scroll, right to left
+aware). The `<video>` is never reparented, so docking to the stage and undocking to the mini bar neither detaches
+nor pauses it, and exactly one `<video>` exists. `data-state` is `docked` (`z-sticky`, on a watch page), `mini` (`z-pip`,
+in the now playing bar) or `hidden` (no slot); nothing plays, nothing mounts, and the player chunk stays lazy.
+A page with a player of its own (`clip`, `live`, `shorts`) pauses the session player. `useMediaSession` gives the
+system the title, channel, poster and the play, pause, previous and next handlers. Picture in picture is on the player
+port (`PlayerState.canPictureInPicture` and `pictureInPicture`, `requestPictureInPicture` and `exitPictureInPicture`,
+the Video.js adapter in `integrations/video-js/video-js-engine.tsx`), a button in the control bar and in the now playing
+bar through the player channel; where the browser has no API nothing is drawn.
+
+### Share and Shorts
+
+`shareUrl(kind, id, { origin, startAt })` (`lib/share/share-url.ts`) is the one builder of a public link: `watch` gives
+`/watch/<id>` with `?t=` when `startAt` is above 0, `shorts` gives `/shorts/<id>`. The share dialog is a
+`ResponsiveModal` (a drawer under 600 px): the link in a middle-truncated, selectable row with `min-w-0`, Copy with a
+toast, a fixed list of plain share URLs (`lib/share/social-targets.ts`, no SDK, no script) and the Web Share API button
+where `navigator.share` exists. Every dialog that is not a destructive confirmation or the image cropper is a
+`ResponsiveModal`; Popover and HoverCard cap their height at the space Radix reports; `viewport-fit=cover` is on in both apps,
+and a fixed bottom surface pads with `env(safe-area-inset-bottom)`.
+
+`/shorts` is `ShortsFeed`: one scroll-snap `region` (it takes focus when it opens) holding a `ShortsSlide` per Short.
+The Short on screen and one each side have a player (the neighbours paused and muted), the rest hold their place, so
+a step builds no player. Swipe, wheel and trackpad are the browser's scroll; Arrow keys, J and K, M, Space, C and L work
+from the first focus. The URL follows with a replace once the feed rests (`useShortsUrl`), and the playhead reaches
+only `ShortsFeedProgress`, through the player channel. The player port's `PlaybackControl` takes `speed` and `captions`
+beside `paused` and `muted`.
 
 ### The library (`features/library`)
 
@@ -348,7 +422,7 @@ page by client-side navigation; a full page load of `/watch/...` is a server ren
 | 55 design system | `@vp/ui`; global styles are linked once, in `__root.tsx` |
 | 69 URL state | the `validateSearch` every leaf route declares, and `features/url-modal/registry.ts` for a modal |
 | 57 player | `<TaitubePlayer />` and its prop, payload and event types from `#app/components/player/taitube-player`; `features/watch/components/watch-stage.tsx` mounts it on the watch page, and `PlayerChannelProvider` hands the page's other parts its seek, its playhead and its theater mode |
-| 73 library, queue | `features/library/` (above); `features/watch/hooks/use-playback-queue.ts` holds the watch page's queue, seeded with the video opened; 73 replaces it with the playlist's queue and the now playing bar |
+| 73 library, queue | `features/library/` (above); `lib/playback-session` holds the queue and the one player's state for the whole session (`PlaybackSessionProvider`), and the now playing bar is the mini player |
 | 68 PWA | `src/sw.ts` (caching and sync land there), `features/pwa/` for the prompts and `shouldPrefetch()`, `vite-pwa.config.ts` for the build, `src/sw/` for the caching rules, `features/offline/` for the offline UI |
 | 76 live | `features/live/` (above), `components/live/`, `TaitubePlayer`'s `live` and `overlay` |
 | every page ticket | its browser flows, in `e2e/` (Rule 10) |

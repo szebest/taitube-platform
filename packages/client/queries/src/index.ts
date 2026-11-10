@@ -28,7 +28,7 @@ export * from './section-boundary';
 export * from './session';
 export * from './session-changes';
 /** @public */
-export { SESSION_COOKIE } from './session-cookie';
+export { SESSION_COOKIE } from './session-config';
 export * from './session-functions';
 export * from './session-middleware';
 export * from './session-provider';

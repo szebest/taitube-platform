@@ -18,6 +18,8 @@ export interface DataTableRootProps<TData extends RowData> extends ComponentProp
   stickyHeader?: boolean;
   /** A refetch that keeps the rows: the accent strip under the header and `aria-busy`. */
   fetching?: boolean;
+  /** Classes for the `table` itself, such as `table-fixed` for a table whose columns declare their widths. */
+  tableClassName?: string;
 }
 
 const slicesOf = ({ sorting, rowSelection, pagination }: TableState<DataTableFeatures>) => ({
@@ -38,6 +40,7 @@ export function DataTableRoot<TData extends RowData>({
   state = 'ready',
   stickyHeader = true,
   fetching = false,
+  tableClassName,
   className,
   children,
   ...props
@@ -61,7 +64,11 @@ export function DataTableRoot<TData extends RowData>({
             {...props}
           >
             {bars}
-            <Table.Root stickyHeader={stickyHeader} aria-busy={fetching || state === 'loading'}>
+            <Table.Root
+              stickyHeader={stickyHeader}
+              className={tableClassName}
+              aria-busy={fetching || state === 'loading'}
+            >
               {sections}
             </Table.Root>
             {footers}

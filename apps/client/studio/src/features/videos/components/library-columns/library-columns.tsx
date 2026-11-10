@@ -10,14 +10,14 @@ import { type CreatorVideo, LibraryVideoRow } from '../library-video-row/library
 const column = createColumnHelper<DataTableFeatures, CreatorVideo>();
 
 const WIDTHS = {
-  title: { width: '36%' },
-  status: { width: '12%' },
-  visibility: { width: '10%' },
-  date: { width: '12%', numeric: true },
-  views: { width: '9%', numeric: true },
-  likes: { width: '9%', numeric: true },
-  comments: { width: '9%', numeric: true },
-  actions: { width: '3%' },
+  title: { width: 'auto' },
+  status: { width: '8rem' },
+  visibility: { width: '7rem' },
+  date: { width: '7.5rem', numeric: true },
+  views: { width: '5.5rem', numeric: true },
+  likes: { width: '5.5rem', numeric: true },
+  comments: { width: '6rem', numeric: true },
+  actions: { width: '3.5rem' },
 } as const satisfies Record<string, DataTableColumnMeta>;
 
 export const LIBRARY_SKELETON_COLUMNS = Object.values(WIDTHS).map((meta) => ({ meta }));

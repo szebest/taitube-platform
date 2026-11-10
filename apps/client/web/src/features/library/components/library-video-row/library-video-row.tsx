@@ -31,7 +31,7 @@ export function LibraryVideoRow({
   actions,
 }: LibraryVideoRowProps) {
   const { tOr } = useT();
-  const { save, enqueue } = useVideoActions(video);
+  const { save, enqueue, playNext } = useVideoActions(video);
   const { clock, spoken } = useDurationText(video.durationMs);
   const { channel } = video;
 
@@ -68,7 +68,7 @@ export function LibraryVideoRow({
           <Format value={publishedAt(at).relative} />
         </time>
       </VideoCard.Meta>
-      <VideoCard.Menu onSave={save} onQueue={enqueue}>
+      <VideoCard.Menu onSave={save} onQueue={enqueue} onPlayNext={playNext}>
         {actions}
       </VideoCard.Menu>
     </VideoCard.Root>

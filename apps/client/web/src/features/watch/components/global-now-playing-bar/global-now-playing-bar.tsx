@@ -2,7 +2,12 @@ import { Link, useNavigate } from '@tanstack/react-router';
 import type { VideoSummary } from '@vp/api-contracts';
 import { useT } from '@vp/intl-react';
 import { Icon, IconButton, useUiCopy } from '@vp/ui';
-import { usePlayerSeek, usePlayerTime } from '#app/components/player/taitube-player';
+import { PictureInPicture2 } from 'lucide-react';
+import {
+  usePlayerPictureInPicture,
+  usePlayerSeek,
+  usePlayerTime,
+} from '#app/components/player/taitube-player';
 import { NowPlayingBar } from '#app/components/shell/now-playing-bar';
 import { useAutoplayNext } from '#app/features/watch/hooks/use-autoplay-next';
 import { useIsWatching } from '#app/features/watch/hooks/use-is-watching';
@@ -31,6 +36,7 @@ function NowPlayingBarFor({ video }: { video: VideoSummary }) {
   const { close: closeLabel } = useUiCopy();
   const navigate = useNavigate();
   const seeker = usePlayerSeek();
+  const pictureInPicture = usePlayerPictureInPicture();
   const seconds = usePlayerTime(Math.floor);
   const { videos, playlistId, paused, setPaused, close } = usePlaybackQueue();
   const { next, previous, hasNext, hasPrevious } = useQueueNavigation();
@@ -90,6 +96,19 @@ function NowPlayingBarFor({ video }: { video: VideoSummary }) {
         count={queuePosition}
         onClick={() => navigate({ to: '/watch/$videoId', params: { videoId: video.id }, search })}
       />
+      {pictureInPicture.available && (
+        <IconButton
+          aria-label={tOr(
+            pictureInPicture.active ? 'player.exitPictureInPicture' : 'player.pictureInPicture',
+            {},
+            ''
+          )}
+          aria-pressed={pictureInPicture.active}
+          onClick={seeker.togglePictureInPicture}
+        >
+          <PictureInPicture2 aria-hidden="true" />
+        </IconButton>
+      )}
       <IconButton aria-label={closeLabel} onClick={close}>
         <Icon name="close" />
       </IconButton>

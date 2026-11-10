@@ -119,6 +119,8 @@ export const settings = {
   notSaved: dt('Nie zapisano na Twoim koncie'),
   saveFailed: dt('Nie udało się zapisać Twoich ustawień'),
   saveFailedDescription: dt('Zmiana została zachowana na tym urządzeniu.'),
+  keptChoice: dt('Zachowano Twój wybór: {field}'),
+  keptChoiceUndo: dt('Cofnij'),
   retry: dt('Spróbuj ponownie'),
   sectionTitle: dt('{section:enum}', {
     enum: {

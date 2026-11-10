@@ -39,6 +39,18 @@ describe('apps/client/studio: DataTable', () => {
     expect(screen.getByRole('table')).toHaveAttribute('aria-busy', busy);
   });
 
+  it('puts the classes it is given on the table, so a caller can fix the layout of its columns', () => {
+    renderVideoTable({ tableClassName: 'table-fixed' });
+
+    expect(screen.getByRole('table')).toHaveClass('table-fixed');
+  });
+
+  it('lets the batch bar wrap, so its actions stay in view on a phone', () => {
+    renderVideoTable({ selected: ['lisbon'] });
+
+    expect(document.querySelector('[data-slot="data-table-batch"]')).toHaveClass('flex-wrap');
+  });
+
   it('asks for its root around a part', () => {
     vi.spyOn(console, 'error').mockImplementation(() => undefined);
 

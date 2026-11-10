@@ -72,6 +72,9 @@ describe('@vp/messages: en watch', () => {
     { key: 'watch.queueTitle', args: undefined, expected: 'Your queue' },
     { key: 'watch.queuePosition', args: { position: 3, count: 12 }, expected: '3 / 12' },
     { key: 'watch.queueEmpty', args: undefined, expected: 'Nothing queued' },
+    { key: 'watch.queueCount', args: { count: 3 }, expected: '3 in the queue' },
+    { key: 'watch.queuedToast', args: undefined, expected: 'Added to your queue' },
+    { key: 'watch.alreadyQueued', args: undefined, expected: 'Already in your queue' },
     { key: 'watch.queueBrowse', args: undefined, expected: 'Browse' },
   ] as const)('writes $key', ({ key, args, expected }) => {
     expect(t(key, ...(args ? [args] : []))).toEqual({ ok: true, value: expected });

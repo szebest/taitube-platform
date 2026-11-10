@@ -10,7 +10,7 @@ export const tableStyles = tv({
     body: '',
     row: 'border-b-divider border-border transition-colors duration-fast data-[selected=true]:bg-accent-soft motion-reduce:transition-none [&[tabindex]]:hover:bg-tint [&[tabindex]]:focus-ring',
     head: 'px-inset-control text-label text-fg-muted aria-[sort]:text-fg',
-    cell: 'px-inset-control text-body-sm text-fg',
+    cell: 'px-inset-control text-body-sm text-fg select-text',
     footer: 'border-t-divider border-border-strong bg-surface text-caption',
   },
   variants: {

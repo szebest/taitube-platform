@@ -1,3 +1,4 @@
+import { Link } from '@tanstack/react-router';
 import { AccountMenu as Menu } from '@vp/components';
 import { useT } from '@vp/intl-react';
 import { canAccessAdmin } from '@vp/permissions';
@@ -23,6 +24,9 @@ export function AccountMenu() {
         <Menu.Label>{account.channel.displayName}</Menu.Label>
         <Menu.Item asChild>
           <a href={`${STUDIO_URL}/upload`}>{tOr('auth.upload', {}, '')}</a>
+        </Menu.Item>
+        <Menu.Item asChild>
+          <Link to="/settings">{tOr('shell.settings', {}, '')}</Link>
         </Menu.Item>
         <Can type="rule" I={canAccessAdmin}>
           <Menu.Item asChild>

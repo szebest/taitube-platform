@@ -134,6 +134,12 @@ export function DrawerBody({ className, ...props }: ComponentPropsWithRef<'div'>
   return <div data-slot="drawer-body" className={drawerStyles().body({ className })} {...props} />;
 }
 
+export function DrawerHeader({ className, ...props }: ComponentPropsWithRef<'div'>) {
+  return (
+    <div data-slot="drawer-header" className={drawerStyles().header({ className })} {...props} />
+  );
+}
+
 export function DrawerFooter({ className, ...props }: ComponentPropsWithRef<'div'>) {
   return (
     <div data-slot="drawer-footer" className={drawerStyles().footer({ className })} {...props} />

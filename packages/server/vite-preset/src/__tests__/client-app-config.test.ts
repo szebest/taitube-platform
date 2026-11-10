@@ -42,6 +42,17 @@ describe('@vp/vite-preset: client app config', () => {
     });
   });
 
+  it('scans every browser-tier package source for dependencies, specs and stories left out', async () => {
+    const entries = (await resolveConfig(5174)).environments?.client?.optimizeDeps?.entries;
+
+    expect(entries).toEqual([
+      expect.stringMatching(/\/packages\/universal\/\*\/src\/\*\*\/\*\.\{ts,tsx\}$/),
+      expect.stringMatching(/\/packages\/client\/\*\/src\/\*\*\/\*\.\{ts,tsx\}$/),
+      '!**/__tests__/**',
+      '!**/__stories__/**',
+    ]);
+  });
+
   it("adds the app's plugins after its own, except under test", async () => {
     const extra = { name: 'app:extra' };
     const names = async (mode: string) =>

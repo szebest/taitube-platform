@@ -6,6 +6,7 @@ const LOCAL = {
   webUrl: 'http://localhost:5173',
   cookieDomain: undefined,
   tracesUrl: undefined,
+  devTokenUrl: undefined,
 };
 
 describe('@vp/queries: parseClientEnv', () => {
@@ -36,8 +37,15 @@ describe('@vp/queries: parseClientEnv', () => {
     expect(apiPublicUrl).toBe('http://localhost:3000');
   });
 
+  it('reads the server-only address of dev-token serve, never from the build', () => {
+    expect(
+      parseClientEnv({ env: {}, serverEnv: { SSR_DEV_TOKEN_URL: 'http://dev-token:3002/' } })
+    ).toHaveProperty('devTokenUrl', 'http://dev-token:3002');
+  });
+
   it.each([
     { key: 'VITE_API_BASE_URL', value: 'not a url' },
+    { key: 'VITE_DEMO_PERSONAS', value: 'yes' },
     { key: 'VITE_COOKIE_DOMAIN', value: 'https://taitube.local' },
   ])('refuses a $key that is not what its schema asks', ({ key, value }) => {
     expect(() => parseClientEnv({ env: { [key]: value }, serverEnv: {} })).toThrow();

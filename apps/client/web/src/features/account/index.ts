@@ -6,6 +6,8 @@ export { ChannelPermissions } from './components/channel-permissions/channel-per
 export { ClearHistoryRow } from './components/clear-history-row/clear-history-row';
 export { HiddenRecommendationsRow } from './components/hidden-recommendations-row/hidden-recommendations-row';
 export { LanguageRow } from './components/language-row/language-row';
+export { LazySignInDialog } from './components/sign-in-dialog/sign-in-dialog.lazy';
+export { ReplayIntent } from './components/replay-intent/replay-intent';
 export { LoginPage } from './components/login-page/login-page';
 export {
   ProcessingFinishedRow,
@@ -14,6 +16,7 @@ export {
 } from './components/notification-rows/notification-rows';
 export { LazyPersonaSwitcher } from './components/persona-switcher/persona-switcher.lazy';
 export {
+  HoverPlayRow,
   HoverPreviewRow,
   QualityRow,
   SpeedRow,

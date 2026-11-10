@@ -1,23 +1,9 @@
 import { useAccount } from '@vp/queries';
-import { type PropsWithChildren, useEffect, useReducer, useState } from 'react';
+import { type PropsWithChildren, useReducer, useState } from 'react';
 import { PlayerChannelProvider } from '#app/components/player/taitube-player';
 import { EMPTY_SESSION, playbackReducer } from '#app/lib/playback-session/playback-session';
 import { PlaybackSessionContext } from '#app/lib/playback-session/playback-session.context';
-import { PersistentPlayer } from '../persistent-player/persistent-player';
-
-function createHost() {
-  if (typeof document === 'undefined') {
-    return {};
-  }
-
-  const host = document.createElement('div');
-  host.style.display = 'contents';
-  const park = document.createElement('div');
-  park.setAttribute('aria-hidden', 'true');
-  park.style.cssText = 'position:fixed;inline-size:0;block-size:0;overflow:hidden';
-  park.append(host);
-  return { host, park };
-}
+import { PlaybackHost } from '../playback-host/playback-host';
 
 /** Holds the queue and the one player above the routes, so leaving the watch page does not stop the video; another account starts with none. */
 export function PlaybackSessionProvider({ children }: PropsWithChildren) {
@@ -28,22 +14,18 @@ export function PlaybackSessionProvider({ children }: PropsWithChildren) {
 
 function Session({ children }: PropsWithChildren) {
   const [session, dispatch] = useReducer(playbackReducer, EMPTY_SESSION);
-  const [{ host, park }] = useState(createHost);
+  const [slots, setSlots] = useState<readonly HTMLElement[]>([]);
 
-  useEffect(() => {
-    if (!park) {
-      return;
-    }
-
-    document.body.append(park);
-    return () => park.remove();
-  }, [park]);
+  const registerSlot = (slot: HTMLElement) => {
+    setSlots((held) => [...held, slot]);
+    return () => setSlots((held) => held.filter((other) => other !== slot));
+  };
 
   return (
     <PlayerChannelProvider>
-      <PlaybackSessionContext value={{ session, dispatch, host, park }}>
+      <PlaybackSessionContext value={{ session, dispatch, slots, registerSlot }}>
         {children}
-        <PersistentPlayer />
+        <PlaybackHost />
       </PlaybackSessionContext>
     </PlayerChannelProvider>
   );

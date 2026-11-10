@@ -1,6 +1,6 @@
 import { useT } from '@vp/intl-react';
 import { fromPromise, isOk, unwrapOr } from '@vp/result';
-import { Button, Dialog, useToast, useUiCopy } from '@vp/ui';
+import { Button, ResponsiveModal, useToast, useUiCopy } from '@vp/ui';
 import { validatePickNote } from '@vp/validation';
 import { useState } from 'react';
 import type { AdminPick } from '#app/features/admin/api/admin-picks';
@@ -121,32 +121,34 @@ export function PickDialog({ pick, picks, onClose, onCancelPick }: PickDialogPro
   };
 
   return (
-    <Dialog.Root open onOpenChange={(open) => !open && onClose()}>
-      <Dialog.Content size="lg">
+    <ResponsiveModal.Root open onOpenChange={(open) => !open && onClose()}>
+      <ResponsiveModal.Content size="lg">
         <form
           onSubmit={(event) => {
             event.preventDefault();
             submit();
           }}
         >
-          <Dialog.Header>
-            <Dialog.Title>
+          <ResponsiveModal.Header>
+            <ResponsiveModal.Title>
               {tOr(pick ? 'studio.pickEditTitle' : 'studio.pickCreateTitle', {}, '')}
-            </Dialog.Title>
-            <Dialog.Description>{tOr('studio.pickDialogDescription', {}, '')}</Dialog.Description>
-          </Dialog.Header>
-          <Dialog.Body>
+            </ResponsiveModal.Title>
+            <ResponsiveModal.Description>
+              {tOr('studio.pickDialogDescription', {}, '')}
+            </ResponsiveModal.Description>
+          </ResponsiveModal.Header>
+          <ResponsiveModal.Body>
             <PickDraftFields draft={draft} onChange={change} issues={shown} />
-          </Dialog.Body>
-          <Dialog.Footer>
+          </ResponsiveModal.Body>
+          <ResponsiveModal.Footer>
             {onCancelPick && (
               <Button variant="outline" tone="danger" onClick={onCancelPick}>
                 {tOr('studio.pickCancelAction', {}, '')}
               </Button>
             )}
-            <Dialog.Close asChild>
+            <ResponsiveModal.Close asChild>
               <Button variant="outline">{cancel}</Button>
-            </Dialog.Close>
+            </ResponsiveModal.Close>
             <Button
               type="submit"
               variant="solid"
@@ -155,9 +157,9 @@ export function PickDialog({ pick, picks, onClose, onCancelPick }: PickDialogPro
             >
               {save}
             </Button>
-          </Dialog.Footer>
+          </ResponsiveModal.Footer>
         </form>
-      </Dialog.Content>
-    </Dialog.Root>
+      </ResponsiveModal.Content>
+    </ResponsiveModal.Root>
   );
 }

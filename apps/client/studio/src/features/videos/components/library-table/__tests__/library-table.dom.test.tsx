@@ -24,6 +24,15 @@ const bodyRows = () =>
   within(screen.getAllByRole('rowgroup')[1] as HTMLElement).getAllByRole('row');
 
 describe('apps/client/studio: LibraryTable', () => {
+  it('fixes its layout to the declared column widths, so a long title truncates instead of widening the page', async () => {
+    await renderTable();
+
+    expect(screen.getByRole('table', { name: 'Your videos' })).toHaveClass(
+      'table-fixed',
+      'min-w-[56rem]'
+    );
+  });
+
   it('moves between rows with the arrow keys, one stop in the tab order', async () => {
     const { user } = await renderTable();
     const [first, second] = bodyRows();

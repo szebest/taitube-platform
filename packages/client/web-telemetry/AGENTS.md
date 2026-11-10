@@ -14,6 +14,9 @@ Owner: ticket [64](../../../docs/tickets/64-web-vitals-monitoring-inp-lcp-cls-re
   page (`vitals-queue.ts`), each vital tagged with the TanStack Router route id the page is on, never the
   URL. The queue flushes on `visibilitychange` to hidden and on `pagehide`, through `navigator.sendBeacon`
   with a `fetch` `keepalive` retry (`send-json-beacon.ts`), to `POST /v1/telemetry/vitals`.
+- `observe-page-health.ts`: the page's long tasks and the `data-slot` of the element its largest layout shift
+  moved. `start-web-vitals.ts` adds the slot to the CLS vital (`source`) and reports the long task time as the
+  `LONG_TASKS` vital when the page is hidden, so a regression is found by element, not only by score.
 - `start-web-tracing.ts`: `@opentelemetry/sdk-trace-web` with the fetch instrumentation. `traceparent`
   goes to the API origin and the page's own origin only; spans export over OTLP/HTTP to `tracesUrl`.
   `drop-url-query.ts` strips the query string from every span's URL.

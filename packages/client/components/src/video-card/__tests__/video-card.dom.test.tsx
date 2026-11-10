@@ -20,6 +20,14 @@ const renderCard = (
     <VideoCard.Root videoId={VIDEO_ID} {...props}>
       <VideoCard.Thumb
         src="/poster.jpg"
+        frames={{
+          url: '/sprite.jpg',
+          columns: 4,
+          count: 8,
+          tileWidth: 160,
+          tileHeight: 90,
+          intervalSec: 5,
+        }}
         duration="18:42"
         spokenDuration="18 minutes 42 seconds"
         progress={0.5}
@@ -46,7 +54,7 @@ describe('@vp/components: VideoCard', () => {
   });
 
   it.each(variantNames(videoCardStyles.variants.variant))(
-    'links the %s card to its video and its channel',
+    'links the %s card to its video and its channel and prints a snippet',
     (variant) => {
       renderCard({ variant });
 
@@ -59,17 +67,12 @@ describe('@vp/components: VideoCard', () => {
         'href',
         '/channel/marta'
       );
+      expect(screen.getByText('A night walk from Alfama.')).toHaveAttribute(
+        'data-slot',
+        'video-card-snippet'
+      );
     }
   );
-
-  it('prints a snippet of the description under the meta', () => {
-    renderCard({ variant: 'row' });
-
-    expect(screen.getByText('A night walk from Alfama.')).toHaveAttribute(
-      'data-slot',
-      'video-card-snippet'
-    );
-  });
 
   it('shows how much was watched and says the duration in words', () => {
     renderCard();
@@ -146,17 +149,74 @@ describe('@vp/components: VideoCard', () => {
     expect(card()).not.toHaveAttribute('data-expanded');
   });
 
-  it('saves and queues from the menu', async () => {
-    const actions = { onSave: vi.fn(), onQueue: vi.fn() };
+  it.each([
+    {
+      label: 'a mouse on a card that asked for it',
+      pointer: 'mouse',
+      previewOnHover: true,
+      plays: true,
+    },
+    {
+      label: 'a mouse on a card that did not',
+      pointer: 'mouse',
+      previewOnHover: false,
+      plays: false,
+    },
+    {
+      label: 'a touch on a card that asked for it',
+      pointer: 'touch',
+      previewOnHover: true,
+      plays: false,
+    },
+  ])('plays the frames after a rest for $label: $plays', ({ pointer, previewOnHover, plays }) => {
+    vi.useFakeTimers();
+    renderCard({ previewOnHover });
+
+    fireEvent.pointerOver(card(), { pointerType: pointer });
+    fireEvent.pointerEnter(card(), { pointerType: pointer });
+    act(() => vi.advanceTimersByTime(499));
+    expect(card().querySelector('[data-slot=video-card-frames]')).toBeNull();
+    act(() => vi.advanceTimersByTime(1));
+
+    expect(card().querySelector('[data-slot=video-card-frames]') !== null).toBe(plays);
+  });
+
+  it('takes the frames away when the pointer leaves', () => {
+    vi.useFakeTimers();
+    renderCard({ previewOnHover: true });
+    fireEvent.pointerEnter(card(), { pointerType: 'mouse' });
+    act(() => vi.advanceTimersByTime(500));
+    expect(card().querySelector('[data-slot=video-card-frames]')).not.toBeNull();
+
+    fireEvent.pointerLeave(card(), { pointerType: 'mouse' });
+
+    expect(card().querySelector('[data-slot=video-card-frames]')).toBeNull();
+  });
+
+  it('saves, queues and plays next from the menu', async () => {
+    const actions = { onSave: vi.fn(), onQueue: vi.fn(), onPlayNext: vi.fn() };
     renderCard({}, actions);
     const user = userEvent.setup();
 
     await user.click(screen.getByRole('button', { name: 'moreActions' }));
     await user.click(await screen.findByRole('menuitem', { name: 'save' }));
+    await user.click(screen.getByRole('button', { name: 'moreActions' }));
+    await user.click(await screen.findByRole('menuitem', { name: 'addToQueue' }));
+    await user.click(screen.getByRole('button', { name: 'moreActions' }));
+    await user.click(await screen.findByRole('menuitem', { name: 'playNext' }));
 
     expect(actions.onSave).toHaveBeenCalledOnce();
-    await user.click(screen.getByRole('button', { name: 'moreActions' }));
-    expect(await screen.findByRole('menuitem', { name: 'queue' })).toBeInTheDocument();
+    expect(actions.onQueue).toHaveBeenCalledOnce();
+    expect(actions.onPlayNext).toHaveBeenCalledOnce();
+  });
+
+  it('shows Add to queue as a button of its own, beside the menu', async () => {
+    const actions = { onQueue: vi.fn() };
+    renderCard({}, actions);
+
+    await userEvent.setup().click(screen.getByRole('button', { name: 'addToQueue' }));
+
+    expect(actions.onQueue).toHaveBeenCalledOnce();
   });
 
   it('draws no menu when the card has no actions', () => {

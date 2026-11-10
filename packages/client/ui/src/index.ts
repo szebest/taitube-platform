@@ -7,9 +7,10 @@ export {
   CUSTOM_THEME_START,
   registerCustomTheme,
 } from './appearance/custom-theme';
-export { PREFERS_REDUCED_MOTION, useMediaQuery } from './appearance/media';
+export { PREFERS_MORE_CONTRAST, PREFERS_REDUCED_MOTION, useMediaQuery } from './appearance/media';
 export type { AppearancePreference, StoredAppearance, TokenSetIds } from './appearance/preference';
 export {
+  AppearancePreferenceSchema,
   accountAppearance,
   appearanceFromAccount,
   DEFAULT_APPEARANCE,

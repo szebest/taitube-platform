@@ -7,9 +7,9 @@ export const startHereShelfStyles = tv({
     kicker: '',
     note: 'line-clamp-2 max-w-reading-max whitespace-normal text-fg',
     track: 'has-[>li:only-child]:auto-cols-[minmax(0,40rem)]',
-    item: 'relative',
+    item: 'relative grid',
     position:
-      'pointer-events-none absolute inset-bs-inline inset-s-inline z-1 flex min-w-[1.25rem] items-center justify-center rounded-xs bg-scrim px-1 font-mono text-mono text-on-live tabular-nums',
+      'pointer-events-none absolute inset-bs-inline inset-e-inline z-lift flex min-w-[1.25rem] items-center justify-center rounded-xs bg-scrim px-1 font-mono text-mono text-on-live tabular-nums',
     footer: 'flex flex-wrap items-baseline gap-x-stack gap-y-1',
     attribution: 'm-0 text-caption text-fg-muted',
   },

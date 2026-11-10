@@ -16,10 +16,14 @@ import { getRouter } from '#app/router';
 const OTHER_USER_ID = '0190c3a0-5e1d-7000-8000-0000000000b2';
 
 describe('apps/client/web: header notification centre', () => {
-  it('has no bell for a guest', async () => {
-    await renderRoute(getRouter, '/', { handlers: loaderApi() });
+  it('gives a guest a bell that asks them to sign in', async () => {
+    const { user } = await renderRoute(getRouter, '/', { handlers: loaderApi() });
 
-    expect(screen.queryByRole('button', { name: /^Notifications/ })).not.toBeInTheDocument();
+    await user.click(await screen.findByRole('button', { name: 'Notifications' }));
+
+    expect(
+      await screen.findByRole('dialog', { name: 'Sign in to get notifications' })
+    ).toBeInTheDocument();
   });
 
   it.each([

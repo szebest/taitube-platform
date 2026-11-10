@@ -15,6 +15,10 @@ export interface PlayerChannel {
   theater(): boolean;
   toggleTheater(): void;
   fullscreen(): boolean;
+  /** The browser's own floating window can take the picture now. */
+  canPictureInPicture(): boolean;
+  pictureInPicture(): boolean;
+  togglePictureInPicture(): void;
   /** The id of the caption track the player shows, or `null` with captions off. */
   captionTrack(): string | null;
   subscribe(listener: () => void): () => void;
@@ -25,6 +29,8 @@ interface PlayerChannelEnd extends PlayerChannel {
   attach(seek: (seconds: number) => void): () => void;
   publish(seconds: number): void;
   publishFullscreen(fullscreen: boolean): void;
+  attachPictureInPicture(toggle: () => void): () => void;
+  publishPictureInPicture(state: { available: boolean; active: boolean }): void;
   publishCaptionTrack(id: string | null): void;
   end(): void;
 }
@@ -34,6 +40,8 @@ function createPlayerChannel(): PlayerChannelEnd {
   let time = 0;
   let theater = false;
   let fullscreen = false;
+  let pip = { available: false, active: false };
+  let togglePip: (() => void) | undefined;
   let captionTrack: string | null = null;
   const listeners = new Set<() => void>();
   const endListeners = new Set<() => void>();
@@ -50,6 +58,9 @@ function createPlayerChannel(): PlayerChannelEnd {
       notify();
     },
     fullscreen: () => fullscreen,
+    canPictureInPicture: () => pip.available,
+    pictureInPicture: () => pip.active,
+    togglePictureInPicture: () => togglePip?.(),
     captionTrack: () => captionTrack,
     subscribe: (listener) => {
       listeners.add(listener);
@@ -70,6 +81,16 @@ function createPlayerChannel(): PlayerChannelEnd {
     },
     publish: (seconds) => {
       time = seconds;
+      notify();
+    },
+    attachPictureInPicture: (toggle) => {
+      togglePip = toggle;
+      return () => {
+        togglePip = undefined;
+      };
+    },
+    publishPictureInPicture: (state) => {
+      pip = state;
       notify();
     },
     publishFullscreen: (next) => {
@@ -147,6 +168,13 @@ export function usePlayerTheater(): boolean {
 /** Whether the player fills the screen; false where no provider offers a channel. */
 export function usePlayerFullscreen(): boolean {
   return useChannelValue((channel) => channel.fullscreen(), false);
+}
+
+/** Whether the browser's picture in picture can take the picture, and whether it has it; false where no provider offers a channel. */
+export function usePlayerPictureInPicture(): { available: boolean; active: boolean } {
+  const available = useChannelValue((channel) => channel.canPictureInPicture(), false);
+  const active = useChannelValue((channel) => channel.pictureInPicture(), false);
+  return { available, active };
 }
 
 /** The id of the caption track the player shows; `null` with captions off or no provider. */

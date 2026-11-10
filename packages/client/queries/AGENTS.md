@@ -69,7 +69,7 @@ The session (SDD §11, Transport and Origins and cookies):
   process, or the cookie cleared; a write body over 1 MiB answered 413 before it is forwarded), and hands every
   other request the cookie domain.
 - The cookie, `SESSION_COOKIE` (`vp.session`): httpOnly, `SameSite=Lax`, `Secure` off localhost, `Domain` the
-  app's `COOKIE_DOMAIN`. Only server code writes it: the proxy, `signOut`, and the dev personas' sign-in;
+  app's `COOKIE_DOMAIN`. Only server code writes it: the proxy, `signOut`, and the demo personas' sign-in;
   `hasSession` tells the browser whether one is there.
 - `ensureSession(context)`: what the root route's `beforeLoad` returns as `auth`, the `Session` (a guest, or the
   account `GET /v1/me/account` answers for the token), cached in the query client and dehydrated into the page.
@@ -79,10 +79,11 @@ The session (SDD §11, Transport and Origins and cookies):
 - `settleSession(router)` after a sign-in or a sign-out, and `endSession(router)`, which sends a signed-in viewer
   whose token the API refused to `/login?redirect=<where they were>`, with no reload.
 - `SessionProvider` (the session from router context, and the `PermissionsProvider` it fills) and `useAccount()`.
-- `useSignOut()`, which ends the session on both apps and loads the routes again as a guest; the sign-in card and the account menu it feeds are `@vp/components`' parts, wrapped in each app's `features/auth/components/`. `@vp/queries/dev-personas` is development only: the
+- `useSignOut()`, which ends the session on both apps and loads the routes again as a guest; the sign-in card and the account menu it feeds are `@vp/components`' parts, wrapped in each app's `features/auth/components/`. `@vp/queries/demo-personas` is for local demos: the
   `PersonaSwitcher` and its `signInAsPersona` server function, which signs in with a token `pnpm dev-token serve`
-  mints. Each app imports it behind `import.meta.env.DEV` in its `/login` route, and the bundle guard in
-  `@vp/vite-preset` fails a build in which anything under `src/dev-only/` reaches a client or a server chunk.
+  mints, at the address `sessionMiddleware` was given as `devTokenUrl`. Each app imports it behind
+  `VITE_DEMO_PERSONAS` in its `/login` route, and the bundle guard in `@vp/vite-preset` fails a build with the
+  flag off in which anything under `src/demo-personas/` reaches a client or a server chunk.
 
 ## Rules
 

@@ -2,6 +2,7 @@ import type { ComponentPropsWithRef } from 'react';
 import { VideoThumbnail } from '../../../video-thumbnail';
 import { useVideoCard } from '../../video-card.context';
 import { videoCardStyles } from '../../video-card.variants';
+import { VideoCardFrames, type VideoCardSprite } from '../video-card-frames/video-card-frames';
 
 export interface VideoCardThumbProps extends ComponentPropsWithRef<'div'> {
   src?: string;
@@ -14,6 +15,8 @@ export interface VideoCardThumbProps extends ComponentPropsWithRef<'div'> {
   progress?: number;
   /** A short muted clip that plays while the card is expanded, paused under reduced motion. */
   previewSrc?: string;
+  /** The sprite sheet that plays, muted, four frames a second, after the pointer rests on a card that asked for it. */
+  frames?: VideoCardSprite;
 }
 
 /** The frame, from `VideoThumbnail`; its children are `Badge`s for the start-top corner. */
@@ -24,6 +27,7 @@ export function VideoCardThumb({
   spokenDuration,
   progress,
   previewSrc,
+  frames,
   className,
   children,
   ...props
@@ -54,6 +58,9 @@ export function VideoCardThumb({
             node.src = previewSrc;
           }}
         />
+      )}
+      {shared.previewing && frames !== undefined && (
+        <VideoCardFrames key={frames.url} sprite={frames} className={styles.frames()} />
       )}
       {children !== undefined && <VideoThumbnail.Badge>{children}</VideoThumbnail.Badge>}
       {shared.state === 'live' && <VideoThumbnail.Live />}

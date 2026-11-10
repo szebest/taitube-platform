@@ -27,6 +27,7 @@ describe('apps/client/web: account menu', () => {
       'href',
       `${STUDIO_URL}/upload`
     );
+    expect(screen.getByRole('menuitem', { name: 'Settings' })).toHaveAttribute('href', '/settings');
     expect(screen.getByRole('menuitem', { name: 'Sign out' })).toBeVisible();
   });
 

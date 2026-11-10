@@ -59,6 +59,6 @@ export async function pwaPlugins(): Promise<PluginOption[]> {
       globPatterns: ['**/*.{js,css,woff2}', 'favicon.{svg,ico}'],
       additionalManifestEntries: [{ url: OFFLINE_PAGE_URL, revision: buildRevision() }],
     },
-    devOptions: { enabled: false },
+    devOptions: { enabled: true, type: 'module' },
   }).map(clientEnvironmentOnly);
 }

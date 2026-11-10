@@ -129,6 +129,41 @@ describe('apps/client/web: playback session reducer', () => {
 
   it.each([
     {
+      scenario: 'a new video goes right after the one playing',
+      session: playing(a),
+      video: other,
+      order: ['a', 'other', 'b', 'c'],
+    },
+    {
+      scenario: 'a video later in the queue moves up to it',
+      session: playing(a),
+      video: c,
+      order: ['a', 'c', 'b'],
+    },
+    {
+      scenario: 'a new video goes after a video in the middle',
+      session: playing(b),
+      video: other,
+      order: ['a', 'b', 'other', 'c'],
+    },
+    {
+      scenario: 'the video playing stays where it is',
+      session: playing(a),
+      video: a,
+      order: ['a', 'b', 'c'],
+    },
+    {
+      scenario: 'a new video leads a queue nothing plays in',
+      session: { ...EMPTY_SESSION, videos: [b] },
+      video: other,
+      order: ['other', 'b'],
+    },
+  ])('plays next: $scenario', ({ session, video, order }) => {
+    expect(titles(playbackReducer(session, { type: 'playNext', video }).videos)).toEqual(order);
+  });
+
+  it.each([
+    {
       scenario: 'seeds the queue with a video opened from nowhere',
       state: { ...EMPTY_SESSION, videos: [b] },
       action: open({ video: other, autoplay: true }),

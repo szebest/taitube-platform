@@ -28,6 +28,7 @@
     "compose-autoscaler": "tsx --conditions=source packages/server/compose-autoscaler/src/main.ts",
     "stack": "tsx --conditions=source packages/server/stack/src/main.ts",
     "demo": "tsx --conditions=source packages/server/demo/src/main.ts",
+    "perf:clicks": "tsx scripts/perf-clicks.ts",
     "fairness": "tsx scripts/fairness-simulation.ts",
     "models:fetch": "tsx scripts/models-fetch.ts",
     "e2e": "tsx tests/e2e/run-e2e.ts",

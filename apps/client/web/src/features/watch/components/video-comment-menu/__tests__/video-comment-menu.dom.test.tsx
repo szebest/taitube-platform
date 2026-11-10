@@ -31,6 +31,7 @@ interface Viewer {
   memberships?: ChannelMembershipView[];
 }
 
+const GUEST: Viewer = { viewer: 'a guest' };
 const OTHER: Viewer = { viewer: 'another viewer', account: viewerAccount(OTHER_ID) };
 const AUTHOR: Viewer = { viewer: 'the author', account: viewerAccount(AUTHOR_ID) };
 const OWNER: Viewer = { viewer: 'the video owner', account: viewerAccount(OWNER_ID) };
@@ -79,6 +80,7 @@ const itemNames = () => screen.getAllByRole('menuitem').map((item) => item.textC
 
 describe('apps/client/web: VideoCommentMenu', () => {
   it.each([
+    { ...GUEST, actions: ['Report'] },
     { ...OTHER, actions: ['Report'] },
     { ...AUTHOR, actions: ['Edit', 'Delete'] },
     { ...OWNER, actions: ['Pin', 'Delete', 'Report', 'Moderate'] },
@@ -88,12 +90,6 @@ describe('apps/client/web: VideoCommentMenu', () => {
     await openMenu({ account, memberships });
 
     await vi.waitFor(() => expect(itemNames()).toEqual(actions));
-  });
-
-  it('gives a guest no menu at all', async () => {
-    const { article } = await renderComment();
-
-    expect(article.queryByRole('button', { name: 'More actions' })).not.toBeInTheDocument();
   });
 
   it.each([

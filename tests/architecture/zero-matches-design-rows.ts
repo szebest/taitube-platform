@@ -80,6 +80,46 @@ export const DESIGN_ROWS: readonly Row[] = [
     fires: "'h-[calc(100dvh-var(--spacing-header))]'",
   },
   {
+    name: 'a raw z-index (z-<n>, z-[<n>], -z-<n>, zIndex, z-index), where a role of scale.z belongs: z-behind to z-tooltip, one distinct number each',
+    pattern: new RegExp(`${UTILITY}z-[\\d\\[(]|\\bzIndex\\b|(?<![\\w-])z-index\\s*:`, 'g'),
+    scope: [...CLIENT_SOURCE, ...SYSTEM_STYLESHEETS],
+    expected: 0,
+    fires: '<div className="relative -z-10 md:z-[2] z-1" style={{ zIndex: 3 }} />',
+    passes: '<div className="z-behind z-stage-hud group-data-open:z-modal" />',
+  },
+  {
+    name: 'a literal duration or delay (duration-200, duration-[300ms]), where a duration token belongs: duration-instant to duration-cinematic, which the motion set (standard, calm, reduced) scales',
+    pattern: new RegExp(`${UTILITY}(?:duration|delay)-(?:\\d|\\[\\d)`, 'g'),
+    scope: [...CLIENT_SOURCE, ...SYSTEM_STYLESHEETS],
+    expected: 0,
+    fires: '<div className="transition-colors duration-200 md:delay-[150ms]" />',
+    passes: '<div className="transition-colors duration-fast ease-standard" />',
+  },
+  {
+    name: 'a transition of every property or of a layout one (transition-all, transition-[width], transition: height), where only transform, opacity, colour, shadow and the other compositor properties animate; the sliding indicator is absolutely positioned and resizes nothing around it',
+    pattern: new RegExp(
+      `${UTILITY}transition-(?:all\\b|\\[[^\\]]*\\b(?:all|width|height|inline-size|block-size|margin[\\w-]*|padding[\\w-]*|top|left|right|bottom|inset[\\w-]*|gap)\\b[^\\]]*\\])|\\btransition(?:-property)?:[^;{}]*\\b(?:all|width|height|inline-size|block-size|margin[\\w-]*|padding[\\w-]*)\\b`,
+      'g'
+    ),
+    scope: [
+      ...CLIENT_SOURCE,
+      ...SYSTEM_STYLESHEETS,
+      ':(exclude)packages/client/ui/src/lib/sliding-indicator.ts',
+    ],
+    expected: 0,
+    fires:
+      '<div className="transition-all transition-[width,opacity] hover:transition-[margin-inline-start]" /> a { transition: height 1s }',
+    passes: '<div className="transition-[opacity,translate] transition-colors" />',
+  },
+  {
+    name: 'data-theme set to a mode (dark, light, oled), which is not a theme id: a surface that must be dark sets data-mode="dark"',
+    pattern: /data-theme=["'{]*(?:dark|light|oled)\b/g,
+    scope: CLIENT_SOURCE,
+    expected: 0,
+    fires: '<Container data-theme="dark" className="bg-bg" />',
+    passes: '<Container data-mode="dark" className="bg-media" />',
+  },
+  {
     name: 'a Tailwind palette class, which the generated theme wipes, so it draws nothing',
     pattern: new RegExp(
       `${UTILITY}(?:bg|text|border(?:-[xytblrse])?|ring|ring-offset|outline|fill|stroke|from|via|to|decoration|divide|placeholder|caret|accent|shadow)-(?:black|white|(?:${PALETTE})-\\d{2,3})\\b`,

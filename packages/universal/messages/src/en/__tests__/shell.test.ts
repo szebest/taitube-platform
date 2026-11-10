@@ -15,6 +15,7 @@ describe('@vp/messages: en shell', () => {
     { key: 'shell.trending', expected: 'Trending' },
     { key: 'shell.subscriptions', expected: 'Subscriptions' },
     { key: 'shell.you', expected: 'You' },
+    { key: 'shell.settings', expected: 'Settings' },
     { key: 'shell.yourChannel', expected: 'Your channel' },
     { key: 'shell.yourVideos', expected: 'Your videos' },
     { key: 'shell.untitled', expected: 'Untitled' },

@@ -18,6 +18,11 @@ export function sessionMiddleware({ refresh, ...config }: SessionConfig) {
   return createMiddleware().server(({ pathname, request, next }) =>
     isProxied(pathname)
       ? proxyToApi(request, proxied)
-      : next({ context: { sessionCookieDomain: config.cookieDomain } })
+      : next({
+          context: {
+            sessionCookieDomain: config.cookieDomain,
+            devTokenUrl: config.devTokenUrl,
+          },
+        })
   );
 }

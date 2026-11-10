@@ -33,6 +33,7 @@ describe('apps/client/studio: LeaveTeamDialog', () => {
     expect(requests.removed).toEqual([account().user.id]);
     expect(requests.removedFrom).toEqual([OTHER_CHANNEL_ID]);
     await vi.waitFor(() => expect(router.state.location.pathname).toBe('/videos'));
+    await vi.waitFor(() => expect(router.state.status).toBe('idle'));
     expect(screen.queryByRole('button', { name: 'Switch channel' })).toBeNull();
   });
 

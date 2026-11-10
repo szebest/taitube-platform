@@ -83,9 +83,11 @@ names a part used outside its root. The shared UI unions (`FillOption`, `ShapeOp
   merges in. Both come from `src/lib/class-names.ts`, which teaches tailwind-merge the z-index tokens.
 - **Radix through the one `radix-ui` package**: `import { Dialog as DialogPrimitive } from 'radix-ui'`.
 - **The appearance** is the `vp.appearance` cookie (`src/appearance/preference.ts`) the root route reads in
-  `beforeLoad` and hands `ThemedDocument`, which renders `data-theme`, `data-mode`, `data-contrast` and one
-  `data-<kebab-group>` per token group on `<html>`, the accent override and registered themes as inline styles
-  under the request nonce, and a pre-paint script for a `system` mode and reduced motion. `useAppearance()`
+  `beforeLoad` and hands `ThemedDocument`, which renders `data-theme`, `data-mode`, `data-contrast`, `data-density`
+  (compact spacing with small sizing, read by `densityOf`) and one `data-<kebab-group>` per token group on `<html>`,
+  the accent override and registered themes as inline styles under the request nonce, and a pre-paint script for a
+  `system` mode, an `auto` contrast (it follows `prefers-contrast` until the viewer picks `standard` or `more`)
+  and reduced motion. `useAppearance()`
   reads the resolved state and changes any axis or override; a change writes the cookie and swaps the attributes
   through a view transition, with no reload. A legacy `vp.theme` is rewritten once and deleted.
 - **Root providers** (`ThemedDocument`'s `AppearanceProvider`, `TooltipProvider`, `ToastProvider`, and

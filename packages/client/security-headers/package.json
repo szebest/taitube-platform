@@ -11,6 +11,11 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "default": "./dist/index.js"
+    },
+    "./static-assets": {
+      "types": "./dist/static-assets.d.ts",
+      "import": "./dist/static-assets.js",
+      "default": "./dist/static-assets.js"
     }
   },
   "scripts": {

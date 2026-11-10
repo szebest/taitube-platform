@@ -20,10 +20,10 @@ const DIALOG_FITS = '(min-width: 600px)';
 
 /** The header's command palette: results as you type, the shell's places and actions, and the words go to the search page. */
 export function AppCommandPalette() {
-  const { open } = useCommandPaletteStore();
-  const { q = '' } = useSearch({ strict: false });
+  const { session } = useCommandPaletteStore();
+  const q = useSearch({ strict: false, select: (search) => search.q ?? '' });
 
-  return <Palette key={open ? 'open' : 'closed'} initialQuery={q} />;
+  return <Palette key={session} initialQuery={q} />;
 }
 
 function Palette({ initialQuery }: { initialQuery: string }) {

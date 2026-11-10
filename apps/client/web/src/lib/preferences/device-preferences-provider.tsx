@@ -5,15 +5,19 @@ import {
   use,
   useEffect,
   useEffectEvent,
-  useRef,
   useState,
+  useSyncExternalStore,
 } from 'react';
 import {
+  adoptLegacyPlayback,
   type DevicePreferences,
-  saveDevicePreferences,
+  requestDevicePreferences,
+  saveDeviceLocale,
   takeLegacyLocale,
 } from './device-preferences';
+import { PlaybackStore } from './playback-store';
 import { usePreferencesSync } from './preferences-sync.context';
+import { postPref, subscribePrefs } from './prefs-channel';
 
 type DeviceStore = Readonly<{
   preferences: DevicePreferences;
@@ -25,37 +29,60 @@ type DeviceStore = Readonly<{
 const DeviceStoreContext = createContext<DeviceStore | undefined>(undefined);
 
 export type DevicePreferencesProviderProps = PropsWithChildren<{
-  /** What the server read from the request's cookie. */
+  /** What the server read from the request's cookie: the locale, and the defaults for the fields only the page can read. */
   initial: DevicePreferences;
 }>;
 
-/** The device's preferences from the cookie, applied at once and written back to it on every change. */
+/**
+ * The device's preferences. The locale comes from the cookie the server read; the playback fields are
+ * in `localStorage`, so they render as their defaults on the server and the hydration pass and take
+ * the stored values once mounted. Every write merges over what is stored now and tells the other tabs.
+ */
 export function DevicePreferencesProvider({ initial, children }: DevicePreferencesProviderProps) {
-  const [preferences, setPreferences] = useState(initial);
-  const current = useRef(initial);
+  const [locale, setLocaleState] = useState(initial.locale);
+  const [playbackStore] = useState(() => new PlaybackStore());
+  const playback = useSyncExternalStore(
+    playbackStore.subscribe,
+    playbackStore.snapshot,
+    playbackStore.serverSnapshot
+  );
 
-  const commit = (next: DevicePreferences) => {
-    current.current = next;
-    saveDevicePreferences(next);
-    setPreferences(next);
+  const writePlayback = (patch: Partial<PlaybackPreferences>) => {
+    const next = playbackStore.save(patch);
+    for (const key of Object.keys(patch) as (keyof PlaybackPreferences)[]) {
+      postPref({ field: `playback.${key}`, value: next[key] });
+    }
   };
   const actions = {
-    setPlayback: (patch: Partial<PlaybackPreferences>) =>
-      commit({ ...current.current, playback: { ...current.current.playback, ...patch } }),
-    replacePlayback: (playback: PlaybackPreferences) => commit({ ...current.current, playback }),
-    setLocale: (locale: string | null) => commit({ ...current.current, locale }),
+    setPlayback: writePlayback,
+    replacePlayback: writePlayback,
+    setLocale: (next: string | null) => {
+      saveDeviceLocale(next);
+      setLocaleState(next);
+      postPref({ field: 'locale', value: next });
+    },
   };
 
-  const store = { preferences, ...actions };
+  const store = { preferences: { ...initial, playback, locale }, ...actions };
 
-  const adoptLegacyLocale = useEffectEvent(() => {
+  const settle = useEffectEvent(() => {
+    adoptLegacyPlayback();
+    playbackStore.refresh();
     const legacy = takeLegacyLocale();
-    if (legacy !== undefined && current.current.locale === null) {
+    if (legacy !== undefined && requestDevicePreferences().locale === null) {
       actions.setLocale(legacy);
     }
   });
+  const hear = useEffectEvent(({ field }: { field: string }) => {
+    if (field === 'locale') {
+      setLocaleState(requestDevicePreferences().locale);
+    } else if (field.startsWith('playback')) {
+      playbackStore.refresh();
+    }
+  });
 
-  useEffect(() => adoptLegacyLocale(), []);
+  useEffect(() => settle(), []);
+  useEffect(() => subscribePrefs(hear), []);
 
   return <DeviceStoreContext value={store}>{children}</DeviceStoreContext>;
 }

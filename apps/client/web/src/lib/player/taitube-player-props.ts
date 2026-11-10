@@ -29,6 +29,10 @@ type PlayerLayout = 'landscape' | 'vertical' | 'fill';
 export interface PlaybackControl {
   paused: boolean;
   muted: boolean;
+  /** The playback rate; left out, the engine keeps the viewer's default. */
+  speed?: number;
+  /** Whether the captions are shown; left out, the engine keeps the viewer's default. */
+  captions?: boolean;
 }
 
 export interface PlaybackDefaults {

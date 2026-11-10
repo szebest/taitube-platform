@@ -22,6 +22,7 @@ import { useDeleteComment } from '#app/features/watch/hooks/use-delete-comment';
 import { useEditComment } from '#app/features/watch/hooks/use-edit-comment';
 import { usePostComment } from '#app/features/watch/hooks/use-post-comment';
 import { type DescriptionToken, tokenizeDescription } from '#app/features/watch/utils/timecodes';
+import { useRequireAccount } from '#app/hooks/use-require-account';
 import { repliesQueryOptions } from '#app/lib/query-keys/comment-keys';
 import { CommentEditor } from '../comment-editor/comment-editor';
 import { LazyReportCommentDialog } from '../report-comment-dialog/report-comment-dialog.lazy';
@@ -161,7 +162,7 @@ export function VideoCommentItem({
   const deleteComment = useDeleteComment(comment.id);
   const postReply = usePostComment(comment.videoId);
   const heartComment = useHeartComment();
-  const canReply = useCan('create', 'Comment');
+  const reply = useRequireAccount('reply');
   const canHeart = useCan(canHeartComment, { videoOwnerId: video.ownerId });
 
   const level = comment.parentId === null ? 'comment' : 'reply';
@@ -245,7 +246,7 @@ export function VideoCommentItem({
       </CommentItem.Body>
       <CommentItem.Actions>
         <CommentItem.Heart hearted={hearted} onToggle={canHeart ? toggleHeart : undefined} />
-        {canReply && <CommentItem.Reply onClick={() => setMode('replying')} />}
+        <CommentItem.Reply onClick={() => reply.run(() => setMode('replying'))} />
         <VideoCommentMenu
           comment={comment}
           videoOwnerId={video.ownerId}

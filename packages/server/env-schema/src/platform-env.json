@@ -6,5 +6,6 @@
   "WORKER_RUNTIME": "the worker image CMD and the k8s worker command, the worker target of the Dockerfile",
   "CLOUDFLARE_TUNNEL_TOKEN": "cloudflared, infra/k8s/overlays/cloud/cloudflared.yaml",
   "SSR_API_BASE_URL": "apps/client/web's SSR server, parsed by its own schema in apps/client/web/src/config",
+  "SSR_DEV_TOKEN_URL": "apps/client/web and apps/client/studio's SSR servers, parsed by their own schemas in src/lib/config, and demo/start.sh: where the server reaches dev-token serve for the demo personas",
   "VITE_WEB_URL": "apps/client/web and apps/client/studio at build time: the web app's public origin, the same value the API reads as WEB_URL"
 }

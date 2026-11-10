@@ -26,6 +26,7 @@ import { LibraryTitleFilter } from '../library-title-filter/library-title-filter
 const LIBRARY_ID = '/_authed/videos/';
 const LIBRARY_PATH = '/videos/';
 const PAGE_SIZES = [KEYSET_PAGE_SIZE];
+const TABLE_LAYOUT = 'table-fixed min-w-[56rem]';
 
 interface LibraryTableProps {
   onInspect: (videoId: string) => void;
@@ -108,6 +109,7 @@ export function LibraryTable({ onInspect }: LibraryTableProps) {
       table={table}
       state={view.items.length === 0 ? 'empty' : 'ready'}
       fetching={isFetching}
+      tableClassName={TABLE_LAYOUT}
     >
       <DataTable.Caption>{tOr('studio.libraryTitle', {}, '')}</DataTable.Caption>
       <DataTable.Toolbar>

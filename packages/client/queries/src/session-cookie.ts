@@ -1,7 +1,5 @@
 import { deleteCookie, getCookie, getRequest, setCookie } from '@tanstack/react-start/server';
-
-/** The one session cookie both client apps read, set and cleared by their servers alone. */
-export const SESSION_COOKIE = 'vp.session';
+import { SESSION_COOKIE } from './session-config';
 
 const SESSION_MAX_AGE_S = 8 * 60 * 60;
 const LOCAL_HOSTS: ReadonlySet<string> = new Set(['localhost', '127.0.0.1', '[::1]']);

@@ -3,19 +3,19 @@ import type { AppShellRailState, AppShellVariant } from './types';
 
 export const appShellStyles = tv({
   slots: {
-    root: 'group/shell grid min-h-dvh grid-cols-[auto_minmax(0,1fr)] grid-rows-[auto_1fr] bg-bg font-sans text-fg',
+    root: 'group/shell relative isolate grid min-h-dvh grid-cols-[auto_minmax(0,1fr)] grid-rows-[auto_1fr] bg-bg font-sans text-fg',
     skipLink:
       'sr-only focus:not-sr-only focus:fixed focus:start-inline focus:top-inline focus:z-popover focus:rounded-control focus:bg-raised focus:px-inset-control focus:py-inline focus-ring',
     header:
-      'sticky top-0 z-sticky col-span-full flex h-header items-center gap-stack border-b-divider border-transparent bg-bg/90 transition-colors duration-fast data-scrolled:border-border px-gutter-compact backdrop-blur-ambient medium:px-gutter-medium group-data-[variant=immersive]/shell:hidden',
+      'sticky top-0 z-header col-span-full flex h-header items-center gap-inline border-b-divider medium:gap-stack border-transparent bg-bg/90 transition-colors duration-fast data-scrolled:border-border px-gutter-compact backdrop-blur-ambient medium:px-gutter-medium group-data-[variant=immersive]/shell:hidden',
     headerStart: 'flex shrink-0 items-center gap-inline',
     headerSearch: 'flex min-w-0 flex-1 justify-end medium:justify-center',
     searchTrigger:
-      'flex size-control-md shrink-0 cursor-pointer items-center justify-center gap-inline rounded-full border-0 bg-transparent p-0 font-sans text-body text-fg transition-colors duration-fast touch-target hover:bg-tint focus-ring medium:w-full medium:max-w-[40rem] medium:shrink medium:justify-start medium:rounded-control medium:border-control medium:border-border medium:bg-surface medium:px-inset-control medium:text-fg-muted',
+      'flex size-control-md shrink-0 cursor-pointer items-center justify-center gap-inline rounded-full border-0 bg-transparent p-0 font-sans text-body text-fg transition-colors duration-fast touch-target hover:bg-tint focus-ring medium:w-full medium:max-w-[40rem] medium:shrink medium:justify-start medium:rounded-control medium:border-control medium:border-border-strong medium:bg-surface medium:px-inset-control medium:text-fg-muted',
     searchLabel: 'sr-only medium:not-sr-only medium:truncate',
     searchHint: 'ms-auto hidden medium:inline-flex',
     headerEnd: 'flex shrink-0 items-center gap-inline',
-    rail: 'group/rail sticky top-header z-rail hidden h-[calc(100dvh-var(--layout-header))] flex-col gap-inline overflow-y-auto p-inline transition-[width,margin] duration-base ease-settle motion-reduce:transition-none medium:flex group-data-[variant=immersive]/shell:hidden',
+    rail: 'group/rail sticky top-header z-rail hidden h-[calc(100dvh-var(--layout-header))] bg-bg/90 flex-col gap-inline overflow-y-auto p-inline medium:flex group-data-[variant=immersive]/shell:hidden',
     drawerNav: 'group/rail flex flex-col gap-inline pb-stack',
     group: 'flex flex-col gap-inline',
     groupHeading:

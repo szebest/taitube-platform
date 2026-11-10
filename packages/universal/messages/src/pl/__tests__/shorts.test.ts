@@ -7,6 +7,7 @@ describe('@vp/messages: pl shorts', () => {
   it.each([
     { key: 'shorts.title', expected: 'Shorts' },
     { key: 'shorts.emptyTitle', expected: 'Tutaj pojawią się filmy Shorts' },
+    { key: 'shorts.controls', expected: 'Sterowanie filmem Short' },
     { key: 'shorts.browse', expected: 'Przeglądaj filmy' },
   ] as const)('renders $key with no arguments', ({ key, expected }) => {
     expect(t(key)).toEqual({ ok: true, value: expected });

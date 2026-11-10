@@ -27,6 +27,7 @@ describe('@vp/ui: applyAppearance', () => {
       theme: 'nocturne',
       mode: 'dark',
       contrast: 'standard',
+      density: 'comfortable',
       fontSize: 'default',
       radius: 'soft',
       shadow: 'flat',

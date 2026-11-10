@@ -2,6 +2,8 @@ import { useCallback, useSyncExternalStore } from 'react';
 
 export const PREFERS_LIGHT = '(prefers-color-scheme: light)';
 
+export const PREFERS_MORE_CONTRAST = '(prefers-contrast: more)';
+
 export const PREFERS_REDUCED_MOTION = '(prefers-reduced-motion: reduce)';
 
 /** A media query's answer, `false` on the server, where the pre-paint script settles it instead. */

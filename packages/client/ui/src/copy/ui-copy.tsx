@@ -50,6 +50,8 @@ export const UI_COPY_KEYS = [
   'previous',
   'next',
   'queue',
+  'addToQueue',
+  'playNext',
   'backToVideo',
   'seek',
   'live',

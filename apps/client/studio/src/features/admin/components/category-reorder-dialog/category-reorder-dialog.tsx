@@ -1,5 +1,5 @@
 import { useT } from '@vp/intl-react';
-import { Dialog, SortableList, useToast } from '@vp/ui';
+import { ResponsiveModal, SortableList, useToast } from '@vp/ui';
 import type { AdminCategory } from '#app/features/admin/api/admin-categories';
 import { useReorderCategories } from '#app/features/admin/hooks/use-reorder-categories';
 
@@ -25,15 +25,17 @@ export function CategoryReorderDialog({ categories, onClose }: CategoryReorderDi
   };
 
   return (
-    <Dialog.Root open onOpenChange={(open) => !open && onClose()}>
-      <Dialog.Content size="sm">
-        <Dialog.Header>
-          <Dialog.Title>{tOr('studio.adminCategoryReorderTitle', {}, '')}</Dialog.Title>
-          <Dialog.Description>
+    <ResponsiveModal.Root open onOpenChange={(open) => !open && onClose()}>
+      <ResponsiveModal.Content size="sm">
+        <ResponsiveModal.Header>
+          <ResponsiveModal.Title>
+            {tOr('studio.adminCategoryReorderTitle', {}, '')}
+          </ResponsiveModal.Title>
+          <ResponsiveModal.Description>
             {tOr('studio.adminCategoryReorderDescription', {}, '')}
-          </Dialog.Description>
-        </Dialog.Header>
-        <Dialog.Body>
+          </ResponsiveModal.Description>
+        </ResponsiveModal.Header>
+        <ResponsiveModal.Body>
           <SortableList.Root items={categories.map(({ id }) => id)} onReorder={save}>
             {categories.map((category) => (
               <SortableList.Item key={category.id} id={category.id} aria-label={category.name}>
@@ -42,8 +44,8 @@ export function CategoryReorderDialog({ categories, onClose }: CategoryReorderDi
               </SortableList.Item>
             ))}
           </SortableList.Root>
-        </Dialog.Body>
-      </Dialog.Content>
-    </Dialog.Root>
+        </ResponsiveModal.Body>
+      </ResponsiveModal.Content>
+    </ResponsiveModal.Root>
   );
 }

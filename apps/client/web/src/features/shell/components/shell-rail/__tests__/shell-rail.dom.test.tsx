@@ -14,6 +14,7 @@ const SIGNED_IN_LINKS = [
   ['Subscriptions', '/subscriptions/videos'],
   ['Trending', '/feed/trending'],
   ['Live', '/live'],
+  ['Settings', '/settings'],
   ['You', '/feed/you'],
   ['Watch history', '/feed/history'],
   ['Your channel', CHANNEL],
@@ -32,6 +33,7 @@ describe('apps/client/web: shell rail', () => {
         ['Shorts', '/shorts'],
         ['Trending', '/feed/trending'],
         ['Live', '/live'],
+        ['Settings', '/settings'],
       ],
     },
     {

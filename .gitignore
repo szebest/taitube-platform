@@ -72,3 +72,10 @@ packages/client/ui/.scaffold-*/
 
 # The Vite+ hook dispatcher `vp config` writes; the repo installs its own shim (scripts/install-git-hooks.ts)
 .vite-hooks/_/
+
+# Demo stack state
+demo/.run/
+demo/minio-data/
+
+# pnpm perf:clicks output
+.perf/

@@ -3,7 +3,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { type BundleRules, bundleGuard } from '@vp/vite-preset/bundle-guard';
 import { type ReactCompiler, reactPlugins } from '@vp/vite-preset/react-plugins';
-import { type Alias, defineConfig, type PluginOption, type SSROptions } from 'vite';
+import { type Alias, defineConfig, loadEnv, type PluginOption, type SSROptions } from 'vite';
 
 // Vite loads an app's config with this package external, and Node cannot resolve an extensionless
 // relative import between two of its source files: the bundle guard and the React plugins are reached
@@ -92,6 +92,15 @@ export function workspaceSourceAliases(packagesDir: string): SourceAlias[] {
   return [...exact, ...patterns.sort(byNodePrecedence)].map(toAlias);
 }
 
+/** The workspace sources are aliased in, so the dev server's dependency scan reads them too and bundles their packages before the first load, not after it. */
+const WORKSPACE_ENTRIES = [
+  ...BROWSER_TIERS.map(
+    (tier) => `${PACKAGES_DIR.replaceAll('\\', '/')}${tier}/*/src/**/*.{ts,tsx}`
+  ),
+  '!**/__tests__/**',
+  '!**/__stories__/**',
+];
+
 const VENDOR_CHUNKS = {
   react: /[\\/]node_modules[\\/](react|react-dom|scheduler|react-compiler-runtime)[\\/]/,
   tanstack:
@@ -169,6 +178,8 @@ export function clientAppConfig({
     // A CommonJS dependency a workspace package brings in, inlined next to an external `react`,
     // would `require` it at runtime from an image that ships no node_modules.
     const ssr: SSROptions = command === 'build' ? { noExternal: true } : {};
+    const { VITE_DEMO_PERSONAS } = loadEnv(mode, dirname(fileURLToPath(configUrl)), 'VITE_');
+    const guarded = { ...rules, demoPersonas: VITE_DEMO_PERSONAS === 'true' };
     return {
       resolve: { alias: workspaceSourceAliases(PACKAGES_DIR) },
       ssr,
@@ -179,6 +190,7 @@ export function clientAppConfig({
       },
       environments: {
         client: {
+          optimizeDeps: { entries: WORKSPACE_ENTRIES },
           build: {
             rolldownOptions: {
               output: { codeSplitting: { groups: VENDOR_GROUPS } },
@@ -188,7 +200,7 @@ export function clientAppConfig({
       },
       server: { port, strictPort: true },
       preview: { host: '127.0.0.1', port, strictPort: true },
-      plugins: await appPlugins(mode, rules, prerender, compiler, plugins),
+      plugins: await appPlugins(mode, guarded, prerender, compiler, plugins),
     };
   });
 }
