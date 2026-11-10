@@ -9,6 +9,7 @@ export const videoCardStyles = tv({
     thumb:
       'col-span-full mb-inline transition-[translate,box-shadow] duration-slow ease-settle pointer-fine:group-hover/card:translate-y-[calc(-2px*var(--motion-travel))] pointer-fine:group-hover/card:shadow-2',
     preview: 'absolute inset-0 size-full animate-fade-in bg-media object-cover',
+    frames: 'absolute inset-0 animate-fade-in overflow-hidden bg-media',
     byline: `${BODY} relative z-lift block w-fit max-w-full truncate text-overline text-fg-muted uppercase no-underline focus-ring hover:text-fg`,
     avatar: 'me-inline inline-flex align-middle',
     title: `${BODY} m-0 line-clamp-2 text-title text-balance text-fg no-underline focus-ring after:absolute after:inset-0 after:content-[''] aria-disabled:pointer-events-none aria-disabled:text-fg-muted`,
@@ -16,7 +17,7 @@ export const videoCardStyles = tv({
     snippet: `${BODY} m-0 line-clamp-2 text-body-sm text-fg-muted`,
     reason: `${BODY} m-0 flex items-center gap-inline text-caption text-accent-ink`,
     reasonDot: 'size-1.5 shrink-0 rounded-full bg-current',
-    menu: 'relative z-lift col-start-2 row-start-2 row-span-2 opacity-0 transition-opacity duration-fast ease-standard group-hover/card:opacity-100 group-focus-within/card:opacity-100 pointer-coarse:opacity-100 has-[[data-state=open]]:opacity-100',
+    menu: 'relative z-lift flex items-center col-start-2 row-start-2 row-span-2 opacity-0 transition-opacity duration-fast ease-standard group-hover/card:opacity-100 group-focus-within/card:opacity-100 pointer-coarse:opacity-100 has-[[data-state=open]]:opacity-100',
     panel:
       'absolute -inset-x-inline top-full z-lift flex animate-pop-in flex-col gap-inline rounded-b-card bg-raised px-inline pt-inline pb-inline shadow-3',
     description: 'm-0 line-clamp-2 text-body-sm text-fg-muted',

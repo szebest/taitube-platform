@@ -1,5 +1,6 @@
 import { Avatar, Icon, Slot } from '@vp/ui';
 import { type ComponentPropsWithRef, useState } from 'react';
+import { useFramePreview } from './hooks/use-frame-preview';
 import { useVideoCardHover } from './hooks/use-video-card-hover';
 import type { VideoCardSize, VideoCardState, VideoCardVariant } from './types';
 import { useVideoCard, VideoCardContext } from './video-card.context';
@@ -16,6 +17,8 @@ export interface VideoCardRootProps extends ComponentPropsWithRef<'article'> {
   videoId?: string;
   /** Whether a mouse resting on a `grid` or `shelf` card expands it. */
   expandOnHover?: boolean;
+  /** Whether a fine pointer resting on the card plays its thumbnail's frames; the caller decides, once for the card. */
+  previewOnHover?: boolean;
 }
 
 /**
@@ -28,6 +31,7 @@ export function VideoCardRoot({
   size = 'md',
   videoId,
   expandOnHover = true,
+  previewOnHover = false,
   className,
   onPointerEnter,
   onPointerLeave,
@@ -36,12 +40,20 @@ export function VideoCardRoot({
   ...props
 }: VideoCardRootProps) {
   const { expanded, wait, cancel } = useVideoCardHover();
+  const preview = useFramePreview();
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
 
   return (
     <VideoCardContext
-      value={{ variant, state, size, videoId: hovered || focused ? videoId : undefined, expanded }}
+      value={{
+        variant,
+        state,
+        size,
+        videoId: hovered || focused ? videoId : undefined,
+        expanded,
+        previewing: preview.playing,
+      }}
     >
       <article
         data-slot="video-card"
@@ -52,11 +64,13 @@ export function VideoCardRoot({
           onPointerEnter?.(event);
           setHovered(true);
           if (expandOnHover && event.pointerType === 'mouse' && EXPANDABLE.has(variant)) wait();
+          if (previewOnHover && event.pointerType === 'mouse') preview.wait();
         }}
         onPointerLeave={(event) => {
           onPointerLeave?.(event);
           if (event.pointerType === 'mouse') setHovered(false);
           cancel();
+          preview.cancel();
         }}
         onFocus={(event) => {
           onFocus?.(event);

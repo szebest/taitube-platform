@@ -52,6 +52,29 @@ describe('apps/client/web: watch engagement bar', () => {
     writeCookie('vp.appearance', '', { maxAge: 0 });
   });
 
+  it.each(['Add to queue', 'Play next'])(
+    'offers %s on the bar, which says the video playing is queued already',
+    async (name) => {
+      const { user } = await renderWatch({ viewer: account() });
+
+      await user.click((await screen.findAllByRole('button', { name }))[0] as HTMLElement);
+
+      expect(await screen.findByText('Already in your queue')).toBeInTheDocument();
+    }
+  );
+
+  it('asks a guest who presses Add to queue to sign in', async () => {
+    const { user } = await renderWatch();
+
+    await user.click(
+      (await screen.findAllByRole('button', { name: 'Add to queue' }))[0] as HTMLElement
+    );
+
+    expect(
+      await screen.findByRole('dialog', { name: 'Sign in to build a queue' })
+    ).toBeInTheDocument();
+  });
+
   it('keeps a channel that cannot load to its own section, leaving the actions', async () => {
     const offline = mockEndpoint(getChannel, () => HttpResponse.error());
     await renderWatch({ handlers: [offline] });

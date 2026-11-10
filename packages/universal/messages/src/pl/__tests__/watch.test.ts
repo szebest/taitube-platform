@@ -9,6 +9,7 @@ describe('@vp/messages: pl watch', () => {
     { key: 'watch.shareTitle', expected: 'Udostępnij ten film' },
     { key: 'watch.linkCopied', expected: 'Link skopiowany' },
     { key: 'watch.queueEmpty', expected: 'Kolejka jest pusta' },
+    { key: 'watch.playNext', expected: 'Odtwórz jako następny' },
   ] as const)('renders $key with no arguments', ({ key, expected }) => {
     expect(t(key)).toEqual({ ok: true, value: expected });
   });

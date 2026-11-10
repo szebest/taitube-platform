@@ -16,7 +16,7 @@ export interface SearchVideoResultProps {
 export function SearchVideoResult({ video, terms }: SearchVideoResultProps) {
   const { tOr } = useT();
   const { clock, spoken } = useDurationText(video.durationMs);
-  const { save, enqueue } = useVideoActions(video);
+  const { save, enqueue, playNext } = useVideoActions(video);
   const { channel } = video;
 
   return (
@@ -52,7 +52,7 @@ export function SearchVideoResult({ video, terms }: SearchVideoResultProps) {
           <MatchedText text={video.description} terms={terms} />
         </VideoCard.Snippet>
       )}
-      <VideoCard.Menu onSave={save} onQueue={enqueue} />
+      <VideoCard.Menu onSave={save} onQueue={enqueue} onPlayNext={playNext} />
     </VideoCard.Root>
   );
 }

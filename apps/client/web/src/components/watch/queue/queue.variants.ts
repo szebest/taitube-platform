@@ -19,14 +19,14 @@ export const queueStyles = tv({
   variants: {
     layout: {
       side: {
-        root: 'sticky top-header max-h-[calc(100dvh-var(--layout-header))] w-[25rem] large:w-[26.25rem]',
-        list: 'overflow-y-auto',
+        root: 'sticky top-header h-[calc(100dvh-var(--layout-header))] w-[25rem] overflow-y-auto overscroll-contain large:w-[26.25rem]',
       },
       below: { root: 'w-full' },
-      sheet: { root: 'h-full border-0 bg-transparent p-0', list: 'overflow-y-auto' },
+      sheet: {
+        root: 'h-full min-h-[33dvh] overflow-y-auto overscroll-contain border-0 bg-transparent p-0',
+      },
       auto: {
-        root: 'w-full expanded:sticky expanded:top-header expanded:max-h-[calc(100dvh-var(--layout-header))] expanded:w-[25rem] large:w-[26.25rem]',
-        list: 'expanded:overflow-y-auto',
+        root: 'w-full expanded:sticky expanded:top-header expanded:h-[calc(100dvh-var(--layout-header))] expanded:w-[25rem] expanded:overflow-y-auto expanded:overscroll-contain large:w-[26.25rem]',
       },
     } satisfies Record<QueueLayout | 'auto', object>,
   },

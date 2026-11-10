@@ -50,6 +50,8 @@ export const ui = {
   previous: dt('Previous'),
   next: dt('Next'),
   queue: dt('Queue'),
+  addToQueue: dt('Add to queue'),
+  playNext: dt('Play next'),
   backToVideo: dt('Back to the video'),
   seek: dt('Seek'),
   live: dt('Live'),

@@ -51,6 +51,8 @@ describe('@vp/messages: en ui', () => {
     { key: 'ui.previous', expected: 'Previous' },
     { key: 'ui.next', expected: 'Next' },
     { key: 'ui.queue', expected: 'Queue' },
+    { key: 'ui.addToQueue', expected: 'Add to queue' },
+    { key: 'ui.playNext', expected: 'Play next' },
     { key: 'ui.backToVideo', expected: 'Back to the video' },
     { key: 'ui.seek', expected: 'Seek' },
     { key: 'ui.live', expected: 'Live' },

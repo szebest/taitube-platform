@@ -63,7 +63,9 @@ export function WatchQueue() {
         position={
           position > 0
             ? tOr('watch.queuePosition', { position, count: videos.length }, '')
-            : undefined
+            : videos.length > 0
+              ? tOr('watch.queueCount', { count: videos.length }, '')
+              : undefined
         }
         modes={
           <Queue.Modes

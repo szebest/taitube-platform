@@ -23,7 +23,7 @@ export function ShortsFeedActions({ short, renderComments }: ShortsFeedActionsPr
   const { format } = useFormat();
   const copy = useUiCopy();
   const { reaction, change, likesCount } = useReaction(short.id);
-  const { save, enqueue } = useVideoActions(short);
+  const { save, enqueue, playNext } = useVideoActions(short);
   const [panel, setPanel] = useState<Panel>();
 
   const liked = reaction === 'LIKE';
@@ -56,7 +56,12 @@ export function ShortsFeedActions({ short, renderComments }: ShortsFeedActionsPr
         </ShortsPlayerFrame.Action>
         {enqueue && (
           <ShortsPlayerFrame.Action icon={<Icon name="queue-add" />} onSelect={enqueue}>
-            {copy.queue}
+            {copy.addToQueue}
+          </ShortsPlayerFrame.Action>
+        )}
+        {playNext && (
+          <ShortsPlayerFrame.Action icon={<Icon name="play" />} onSelect={playNext}>
+            {copy.playNext}
           </ShortsPlayerFrame.Action>
         )}
         {save && (

@@ -11,7 +11,7 @@ export interface ShortPosterCardProps {
 /** A Short as a 9:16 poster, linked to the Shorts player opened on it. */
 export function ShortPosterCard({ video }: ShortPosterCardProps) {
   const { tOr } = useT();
-  const { save, enqueue } = useVideoActions(video);
+  const { save, enqueue, playNext } = useVideoActions(video);
 
   return (
     <VideoCard.Root variant="poster" videoId={video.id}>
@@ -21,7 +21,7 @@ export function ShortPosterCard({ video }: ShortPosterCardProps) {
           {video.title ?? tOr('browse.untitled', {}, '')}
         </Link>
       </VideoCard.Title>
-      <VideoCard.Menu onSave={save} onQueue={enqueue} />
+      <VideoCard.Menu onSave={save} onQueue={enqueue} onPlayNext={playNext} />
     </VideoCard.Root>
   );
 }

@@ -4,11 +4,12 @@ import {
   createRouter,
   RouterProvider,
 } from '@tanstack/react-router';
-import { act, render } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
+import { userEvent } from '@testing-library/user-event';
 import { VIDEO_ID, videoSummary } from '@vp/web-testing';
 import type { ComponentType, PropsWithChildren } from 'react';
 import { PlaybackSessionStub } from '#app/__tests__/playback-session-stub';
-import { AppProviders, signedIn } from '#app/__tests__/providers';
+import { AppProviders, signedIn, withToasts } from '#app/__tests__/providers';
 import { usePlaybackQueue } from '../use-playback-queue';
 import { useVideoActions, type VideoActions } from '../use-video-actions';
 
@@ -33,10 +34,11 @@ async function renderActions(
     history: createMemoryHistory({ initialEntries: ['/'] }),
   });
   await router.load();
+  const Toasting = withToasts(Providers);
   render(
-    <Providers>
+    <Toasting>
       <RouterProvider router={router} />
-    </Providers>
+    </Toasting>
   );
 
   return { router, actions: () => seen.actions, queued: () => seen.queued };
@@ -58,18 +60,42 @@ describe('apps/client/web: useVideoActions', () => {
     });
   });
 
-  it('adds the video to the queue for a member', async () => {
+  it('adds the video to the queue for a member, says so, and takes it out again on Undo', async () => {
     const { actions, queued } = await renderActions(signedIn());
 
     await act(async () => actions()?.enqueue?.());
 
     expect(queued()).toEqual([VIDEO_ID]);
+    await userEvent.click(await screen.findByRole('button', { name: 'Undo' }));
+    expect(queued()).toEqual([]);
   });
 
-  it('offers no queue action for a Short', async () => {
+  it('says a video queued already is, and does not queue it twice', async () => {
+    const { actions, queued } = await renderActions(signedIn());
+    await act(async () => actions()?.enqueue?.());
+
+    await act(async () => actions()?.enqueue?.());
+
+    expect(await screen.findByText('Already in your queue')).toBeInTheDocument();
+    expect(queued()).toEqual([VIDEO_ID]);
+  });
+
+  it('plays a video next, and puts the queue back on Undo', async () => {
+    const { actions, queued } = await renderActions(signedIn());
+
+    await act(async () => actions()?.playNext?.());
+
+    expect(await screen.findByText('Playing next')).toBeInTheDocument();
+    expect(queued()).toEqual([VIDEO_ID]);
+    await userEvent.click(screen.getByRole('button', { name: 'Undo' }));
+    expect(queued()).toEqual([]);
+  });
+
+  it('offers a Short the queue actions too', async () => {
     const { actions } = await renderActions(AppProviders, videoSummary({ format: 'short' }));
 
-    expect(actions()?.enqueue).toBeUndefined();
+    expect(actions()?.enqueue).toBeTypeOf('function');
+    expect(actions()?.playNext).toBeTypeOf('function');
   });
 
   it('lets a member save a video by opening the save dialog for it', async () => {

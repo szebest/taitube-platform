@@ -224,6 +224,22 @@ on; an idempotent intent (like, subscribe, save) is remembered in `sessionStorag
 `ReplayIntent` after sign-in. The redirect stays for the member-only routes (`requireSignedIn`), and the header
 Sign in link keeps the `redirect` it is already on instead of nesting it. One toast system: `@vp/ui`'s `Toast`.
 
+### Queue and hover preview
+
+`useVideoActions(video)` returns `save`, `enqueue` and `playNext`; each goes through `useRequireAccount` (the `queue`
+action on the `Queue` subject), and `enqueue` and `playNext` toast with **Undo** (`Toast`'s one action): Undo takes
+a new video out of the queue, or puts a moved one back at its index. A video already queued says so and changes
+nothing. They are shown, not only in a menu: `VideoCard.Menu` has Add to queue as a button of its own beside
+"More actions" (hover, focus, always on touch) and Play next in the menu, the watch bar has both, and a recommended
+row, a search row and a Shorts rail carry them. The queue panel is `Queue` over `PlaybackSession` (persistent, its
+own scroll, full height beside the stage, at least a third of the viewport in the phone drawer).
+
+A card that asked for it (`VideoCard.Root previewOnHover`, from `useHoverPlay()`) plays its sprite sheet: after a
+500 ms rest, a mouse only, four frames a second as a `translate` over an `overflow: hidden` sheet (`VideoCardFrames`,
+no layout shift, no extra request), one card at a time (a document event, no module state). `hoverPlay` is a
+playback field (default on) and is forced off under save-data, on 2g and under reduced motion; the expanding
+panel keeps its own `hoverPreview`. `previewSrc` stays the seam for a worker-made clip.
+
 ### The library (`features/library`)
 
 The viewer's own lists: the You hub `/feed/you` and `/feed/history` with its Searches, Liked and Comments tabs, all
