@@ -1,13 +1,22 @@
 import type {
   ChannelUserRestrictionQuery,
   ChannelUserRestrictionRepositoryPort,
+  RestrictionLifted,
+  RestrictionWritten,
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
-import type { ChannelUserRestriction, NewChannelUserRestriction } from '@vp/domain';
+import type {
+  ChannelUserRestriction,
+  ModerationRecord,
+  NewChannelAuditEntry,
+  NewChannelUserRestriction,
+} from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { fromPromise, map, type Result } from '@vp/result';
 import { and, desc, eq, gt, isNull, lt, or } from 'drizzle-orm';
 import { keysetBefore } from '../scopes/index';
+import { appendChannelAudit, appendModerationRecord } from './channel-audit-writes';
+import { recountAuthored } from './comment-recount';
 import type { PostgresDatabase } from './types';
 
 const { channelUserRestrictions: r } = schema;
@@ -35,34 +44,49 @@ export class PostgresChannelUserRestrictionRepository implements ChannelUserRest
   }
 
   async apply(
-    restriction: NewChannelUserRestriction
-  ): Promise<Result<ChannelUserRestriction, DatabaseUnavailable>> {
+    restriction: NewChannelUserRestriction,
+    record?: ModerationRecord
+  ): Promise<Result<RestrictionWritten, DatabaseUnavailable>> {
     const createdAt = new Date();
-    const rows = await fromPromise(
+    return fromPromise(
       () =>
-        this.db
-          .insert(r)
-          .values({ ...restriction, createdAt })
-          .onConflictDoUpdate({
-            target: [r.channelId, r.userId],
-            set: { ...restriction, createdAt },
-          })
-          .returning(),
+        this.db.transaction(async (tx) => {
+          const [row] = await tx
+            .insert(r)
+            .values({ ...restriction, createdAt })
+            .onConflictDoUpdate({
+              target: [r.channelId, r.userId],
+              set: { ...restriction, createdAt },
+            })
+            .returning();
+          const videoIds = await recountAuthored(tx, restriction.channelId, restriction.userId);
+          if (record) await appendModerationRecord(tx, record);
+          return { restriction: row ?? { ...restriction, createdAt }, videoIds };
+        }),
       databaseUnavailable.during('applyRestriction')
     );
-    return map(rows, ([row]) => row ?? { ...restriction, createdAt });
   }
 
-  async lift(channelId: string, userId: string): Promise<Result<boolean, DatabaseUnavailable>> {
-    const rows = await fromPromise(
+  async lift(
+    channelId: string,
+    userId: string,
+    audit?: NewChannelAuditEntry
+  ): Promise<Result<RestrictionLifted, DatabaseUnavailable>> {
+    return fromPromise(
       () =>
-        this.db
-          .delete(r)
-          .where(and(eq(r.channelId, channelId), eq(r.userId, userId)))
-          .returning({ userId: r.userId }),
+        this.db.transaction(async (tx) => {
+          const removed = await tx
+            .delete(r)
+            .where(and(eq(r.channelId, channelId), eq(r.userId, userId)))
+            .returning({ userId: r.userId });
+          if (removed.length === 0) return { lifted: false, videoIds: [] };
+
+          const videoIds = await recountAuthored(tx, channelId, userId);
+          if (audit) await appendChannelAudit(tx, audit);
+          return { lifted: true, videoIds };
+        }),
       databaseUnavailable.during('liftRestriction')
     );
-    return map(rows, (lifted) => lifted.length > 0);
   }
 
   async list(

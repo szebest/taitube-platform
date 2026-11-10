@@ -11,8 +11,10 @@ import { type CommentRemoval, commentCreated } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { commentOutbox } from '@vp/job-contracts';
 import { isErr, ok, type Result, unwrapOr } from '@vp/result';
+import { recordModeration } from './comment-moderation-record';
 import { toThreadOf } from './comment-projections';
 import { isVisibleTo, publicScopeOf } from './comment-public-scope';
+import { recountAuthored } from './comment-recount';
 import { repliesOf, standing, type StoredComment } from './comment-visibility';
 import type { InMemoryChannelAuditRepository } from './in-memory-channel-audit-repository';
 import type { InMemoryChannelRepository } from './in-memory-channel-repository';
@@ -40,6 +42,7 @@ export class InMemoryCommentModerationRepository implements CommentModerationRep
     outcome,
     moderatorId,
     audit,
+    notice,
   }: CommentModerationWrite): Promise<Result<CommentModerationWritten, DatabaseUnavailable>> {
     const { comments } = this.deps.commentsRepo;
     const stored = standing(comments.values()).find(
@@ -75,8 +78,8 @@ export class InMemoryCommentModerationRepository implements CommentModerationRep
     });
     video.commentsCount = (video.commentsCount ?? 0) + counted() - before;
 
-    const audited = await this.deps.auditRepo.append(audit);
-    if (isErr(audited)) return audited;
+    const recorded = await recordModeration(this.deps, { audit, ...(notice && { notice }) });
+    if (isErr(recorded)) return recorded;
 
     const channel = unwrapOr(await this.deps.channelsRepo.findByUserId(stored.authorId), null);
     const thread = toThreadOf(stored, channel, repliesOf(comments.values(), stored.id).length);
@@ -95,6 +98,27 @@ export class InMemoryCommentModerationRepository implements CommentModerationRep
       }
     }
     return ok({ type: 'applied', thread, firstPublication });
+  }
+
+  /** What a restriction runs after it changes: the channel's videos the user commented on, counted again. */
+  async recount(channelId: string, userId: string): Promise<string[]> {
+    const { comments } = this.deps.commentsRepo;
+    const channel = unwrapOr(await this.deps.channelsRepo.findById(channelId), null);
+    if (!channel) return [];
+
+    const videos = this.deps.videosRepo
+      .getAllVideos()
+      .filter((video) => video.ownerId === channel.userId && !video.deletedAt);
+    const scope = await publicScopeOf(
+      comments,
+      videos.map(({ id }) => id),
+      {
+        videos: this.deps.videosRepo,
+        channels: this.deps.channelsRepo,
+        restrictions: this.deps.restrictionsRepo,
+      }
+    );
+    return recountAuthored(comments, videos, userId, scope);
   }
 
   async threadIds(target: CommentLocator): Promise<Result<string[], DatabaseUnavailable>> {

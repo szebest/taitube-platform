@@ -4,6 +4,7 @@ import {
   type CommentThread,
   commentCreated,
   commentHeld,
+  type ModerationRecord,
   type NewChannelAuditEntry,
   type NewCommentInput,
   type NewCommentRemoval,
@@ -12,7 +13,7 @@ import {
 import { commentOutbox } from '@vp/job-contracts';
 import { type SQL, and, eq, ne, or, sql } from 'drizzle-orm';
 import { drizzleWhere, notDeletedScope, publicCommentScope } from '../scopes/index';
-import { appendChannelAudit } from './channel-audit-writes';
+import { appendChannelAudit, appendModerationRecord } from './channel-audit-writes';
 import { threadById } from './comment-thread-query';
 import { enqueueNotificationJobs } from './notification-jobs';
 import { appendUserEvent } from './postgres-user-event-repository';
@@ -119,7 +120,7 @@ export async function insertComment(
 export async function removeComment(
   tx: PostgresDatabase,
   target: CommentLocator,
-  record?: { audit: NewChannelAuditEntry; removal?: NewCommentRemoval }
+  record?: ModerationRecord & { removal?: NewCommentRemoval }
 ): Promise<number> {
   await lockVideo(tx, target.videoId);
   const taken = and(
@@ -141,7 +142,7 @@ export async function removeComment(
   if (removed.length > 0 && record) {
     if (record.removal)
       await tx.insert(commentRemovals).values(record.removal).onConflictDoNothing();
-    await appendChannelAudit(tx, record.audit);
+    await appendModerationRecord(tx, record);
   }
   return removed.length;
 }

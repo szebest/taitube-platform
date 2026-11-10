@@ -1,6 +1,8 @@
 import * as schema from '@vp/db';
-import type { ChannelAuditEntry, NewChannelAuditEntry } from '@vp/domain';
+import type { ChannelAuditEntry, ModerationRecord, NewChannelAuditEntry } from '@vp/domain';
+import { moderationOutbox } from '@vp/job-contracts';
 import { uuidv7 } from 'uuidv7';
+import { enqueueNotificationJobs } from './notification-jobs';
 import type { PostgresDatabase } from './types';
 
 type AuditRow = typeof schema.channelAuditLog.$inferSelect;
@@ -21,4 +23,14 @@ export async function appendChannelAudit(
     .returning();
   if (!row) throw new Error('channel audit insert returned no row');
   return toChannelAuditEntry(row);
+}
+
+/** The audit row of a moderation action and the notification job that tells the user, in one transaction. */
+export async function appendModerationRecord(
+  tx: PostgresDatabase,
+  { audit, notice }: ModerationRecord
+): Promise<void> {
+  const entry = await appendChannelAudit(tx, audit);
+  if (notice)
+    await enqueueNotificationJobs(tx, [moderationOutbox({ eventId: entry.id, ...notice })]);
 }

@@ -3,6 +3,7 @@ import type {
   CommentThread,
   ModerationOutcome,
   ModerationState,
+  ModerationNotice,
   NewChannelAuditEntry,
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
@@ -17,6 +18,8 @@ export interface CommentModerationWrite {
   outcome: ModerationOutcome & { state: ModerationState };
   moderatorId: string;
   audit: NewChannelAuditEntry;
+  /** Enqueued with the audit row when the author is to be told. */
+  notice?: ModerationNotice;
 }
 
 export type CommentModerationWritten =

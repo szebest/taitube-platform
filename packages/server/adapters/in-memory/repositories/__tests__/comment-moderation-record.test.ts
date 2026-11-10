@@ -1,6 +1,8 @@
-import type { CommentRemoval, NewChannelAuditEntry } from '@vp/domain';
+import type { ModerationNotice, NewChannelAuditEntry } from '@vp/domain';
+import { expectOk } from '@vp/testing/result';
 import { recordModeration } from '../comment-moderation-record';
 import { InMemoryChannelAuditRepository } from '../in-memory-channel-audit-repository';
+import { InMemoryOutboxRepository } from '../in-memory-outbox-repository';
 
 const audit: NewChannelAuditEntry = {
   channelId: 'channel',
@@ -10,33 +12,44 @@ const audit: NewChannelAuditEntry = {
   targetId: 'comment',
   meta: { videoId: 'video', disclosure: 'visible' },
 };
-const removal = {
-  id: 'comment',
-  channelId: 'channel',
-  videoId: 'video',
-  authorId: 'author',
-  excerpt: 'hello',
+const notice: ModerationNotice = {
+  userId: '00000000-0000-7000-8000-000000000001',
+  action: 'remove',
+  channelId: '00000000-0000-7000-8000-000000000002',
+  videoId: null,
+  commentId: null,
   reason: 'spam',
-  note: null,
-  disclosure: 'visible',
-  removedBy: 'actor',
-} as const;
+  expiresAt: null,
+  excerpt: 'hello',
+};
 
 describe('adapters/in-memory: recordModeration', () => {
   it.each([
-    { scenario: 'a record with a removal', record: { audit, removal }, removals: 1, audited: 1 },
-    { scenario: 'a record without a removal', record: { audit }, removals: 0, audited: 1 },
-    { scenario: 'no record', record: undefined, removals: 0, audited: 0 },
-  ])('writes $removals removals and $audited audit rows for $scenario', async (given) => {
-    const audits = new InMemoryChannelAuditRepository();
-    const removals = new Map<string, CommentRemoval>();
-    const now = new Date('2026-01-01T00:00:00.000Z');
+    { scenario: 'a record with a notice', record: { audit, notice }, audited: 1, queued: 1 },
+    { scenario: 'a record without a notice', record: { audit }, audited: 1, queued: 0 },
+    { scenario: 'no record', record: undefined, audited: 0, queued: 0 },
+  ])('writes $audited audit rows and $queued jobs for $scenario', async (given) => {
+    const sinks = {
+      auditRepo: new InMemoryChannelAuditRepository(),
+      outboxRepo: new InMemoryOutboxRepository(),
+    };
 
-    await recordModeration(audits, removals, given.record, now);
+    await recordModeration(sinks, given.record);
 
-    expect(removals.size).toBe(given.removals);
-    expect(removals.get('comment')?.createdAt).toEqual(given.removals ? now : undefined);
-    const logged = await audits.list('channel', { cursor: null, limit: 10 });
+    const logged = await sinks.auditRepo.list('channel', { cursor: null, limit: 10 });
     expect(logged.ok && logged.value).toHaveLength(given.audited);
+    expect(sinks.outboxRepo.getAll()).toHaveLength(given.queued);
+  });
+
+  it('names the job after the audit row, so one action is one job', async () => {
+    const sinks = {
+      auditRepo: new InMemoryChannelAuditRepository(),
+      outboxRepo: new InMemoryOutboxRepository(),
+    };
+
+    await recordModeration(sinks, { audit, notice });
+
+    const [entry] = expectOk(await sinks.auditRepo.list('channel', { cursor: null, limit: 1 }));
+    expect(JSON.stringify(sinks.outboxRepo.getAll())).toContain(`${entry?.id}--notify-moderation`);
   });
 });

@@ -13,6 +13,7 @@ import {
   type Comment,
   type CommentThread,
   type CreatorInboxComment,
+  type ModerationRecord,
   type NewChannelAuditEntry,
   type NewCommentInput,
   type NewCommentRemoval,
@@ -44,7 +45,7 @@ import { insertComment, pinComment, removeComment } from './comment-writes';
 import { enqueueNotificationJobs } from './notification-jobs';
 import type { PostgresDatabase } from './types';
 
-const { videoComments: c, videos: v } = schema;
+const { videoComments: c } = schema;
 
 export class PostgresCommentRepository implements CommentRepositoryPort {
   constructor(private readonly db: PostgresDatabase) {}
@@ -174,7 +175,7 @@ export class PostgresCommentRepository implements CommentRepositoryPort {
 
   async remove(
     target: CommentLocator,
-    record?: { audit: NewChannelAuditEntry; removal?: NewCommentRemoval }
+    record?: ModerationRecord & { removal?: NewCommentRemoval }
   ): Promise<Result<number, DatabaseUnavailable>> {
     return await fromPromise(
       () => this.db.transaction((tx) => removeComment(tx, target, record)),

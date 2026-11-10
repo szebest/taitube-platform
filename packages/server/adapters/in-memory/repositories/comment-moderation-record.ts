@@ -1,17 +1,28 @@
-import type { CommentRemoval, NewChannelAuditEntry, NewCommentRemoval } from '@vp/domain';
+import type { OutboxRepository } from '@vp/core/repositories';
+import type { ModerationRecord } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
+import { moderationOutbox } from '@vp/job-contracts';
 import { isErr, ok, type Result } from '@vp/result';
 import type { InMemoryChannelAuditRepository } from './in-memory-channel-audit-repository';
 
-/** The audit row of a moderator's removal and, when the author is to be told, the removal the author lists. */
+export interface ModerationSinks {
+  auditRepo: Pick<InMemoryChannelAuditRepository, 'append'>;
+  outboxRepo: Pick<OutboxRepository, 'enqueue'>;
+}
+
+/** The audit row of a moderator's action and, when the user is to be told, the notification job. */
 export async function recordModeration(
-  audits: Pick<InMemoryChannelAuditRepository, 'append'>,
-  removals: Map<string, CommentRemoval>,
-  record: { audit: NewChannelAuditEntry; removal?: NewCommentRemoval } | undefined,
-  now = new Date()
+  { auditRepo, outboxRepo }: ModerationSinks,
+  record?: ModerationRecord
 ): Promise<Result<void, DatabaseUnavailable>> {
   if (!record) return ok();
-  if (record.removal) removals.set(record.removal.id, { ...record.removal, createdAt: now });
-  const audited = await audits.append(record.audit);
-  return isErr(audited) ? audited : ok();
+
+  const entry = await auditRepo.append(record.audit);
+  if (isErr(entry)) return entry;
+  if (!record.notice) return ok();
+
+  const queued = await outboxRepo.enqueue(
+    moderationOutbox({ eventId: entry.value.id, ...record.notice })
+  );
+  return isErr(queued) ? queued : ok();
 }

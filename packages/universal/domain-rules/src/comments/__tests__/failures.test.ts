@@ -8,6 +8,8 @@ import {
   commentsDisabled,
   commentsSlowMode,
   commentsSubscribersOnly,
+  cannotRestrictMember,
+  restrictionNotFound,
   moderationNotApplicable,
   reportAlreadyResolved,
   reportNotFound,
@@ -90,6 +92,16 @@ describe('@vp/domain-rules: comment moderation failures', () => {
     },
   ])('$name carries $code and its payload, off the wire', ({ failure, code, payload }) => {
     expect(failure).toMatchObject({ code, ...payload });
+    expect(isInputFailure(failure)).toBe(false);
+  });
+});
+
+describe('@vp/domain-rules: restriction failures', () => {
+  it.each([
+    { failure: restrictionNotFound('u1'), code: ErrorCodes.RESTRICTION_NOT_FOUND },
+    { failure: cannotRestrictMember('u1'), code: ErrorCodes.CANNOT_RESTRICT_MEMBER },
+  ])('$code carries the user id, off the wire', ({ failure, code }) => {
+    expect(failure).toMatchObject({ code, userId: 'u1' });
     expect(isInputFailure(failure)).toBe(false);
   });
 });

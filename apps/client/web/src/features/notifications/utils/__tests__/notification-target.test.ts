@@ -42,6 +42,12 @@ describe('apps/client/web: notificationTarget', () => {
       target: undefined,
     },
     {
+      case: 'a moderation notice opens the account feed until the moderation page exists',
+      overrides: { kind: 'moderation' as const, videoId: null },
+      count: 1,
+      target: { to: '/feed/you' },
+    },
+    {
       case: 'a notification with no video opens nothing',
       overrides: { kind: 'processing' as const, videoId: null },
       count: 1,

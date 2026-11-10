@@ -6,12 +6,8 @@ import { InMemoryChannelFeaturedRepository } from './in-memory-channel-featured-
 import { InMemoryChannelInviteRepository } from './in-memory-channel-invite-repository';
 import { InMemoryChannelMemberRepository } from './in-memory-channel-member-repository';
 import { InMemoryChannelRepository } from './in-memory-channel-repository';
-import { InMemoryChannelUserRestrictionRepository } from './in-memory-channel-user-restriction-repository';
 import { InMemoryClipRepository } from './in-memory-clip-repository';
-import { InMemoryCommentModerationRepository } from './in-memory-comment-moderation-repository';
-import { InMemoryCommentReportRepository } from './in-memory-comment-report-repository';
-import { InMemoryCommentRepository } from './in-memory-comment-repository';
-import { InMemoryCommentSettingsRepository } from './in-memory-comment-settings-repository';
+import { provideCommentRepositories } from './in-memory-comment-graph';
 import { InMemoryDlqRepository } from './in-memory-dlq-repository';
 import { InMemoryEventRepository } from './in-memory-event-repository';
 import { InMemoryLiveStreamRepository } from './in-memory-live-stream-repository';
@@ -28,7 +24,6 @@ import { InMemorySearchHistoryRepository } from './in-memory-search-history-repo
 import { InMemorySearchRepository } from './in-memory-search-repository';
 import { InMemoryStepRepository } from './in-memory-step-repository';
 import { InMemorySubscriptionRepository } from './in-memory-subscription-repository';
-import { InMemoryTrustedCommenterRepository } from './in-memory-trusted-commenter-repository';
 import { InMemoryUploadRepository } from './in-memory-upload-repository';
 import { InMemoryUserEventRepository } from './in-memory-user-event-repository';
 import { InMemoryUserPreferencesRepository } from './in-memory-user-preferences-repository';
@@ -45,212 +40,184 @@ import { InMemoryWebhookRepository } from './in-memory-webhook-repository';
  * after both are built, so no repository needs a setter to be wired.
  */
 export function graph(): Container {
-  return new Container()
-    .provide(Repo.outbox, () => new InMemoryOutboxRepository())
-    .provide(Repo.renditions, () => new InMemoryRenditionRepository())
-    .provide(Repo.steps, () => new InMemoryStepRepository())
-    .provide(Repo.users, () => new InMemoryUserRepository())
-    .provide(Repo.userEvents, (c) => new InMemoryUserEventRepository(c.get(Repo.outbox)))
-    .provide(Repo.channels, (c) => new InMemoryChannelRepository(c.get(Repo.videos)))
-    .provide(Repo.events, () => new InMemoryEventRepository())
-    .provide(Repo.channelAudit, () => new InMemoryChannelAuditRepository())
-    .provide(
-      Repo.commentSettings,
-      (c) => new InMemoryCommentSettingsRepository({ audit: c.get(Repo.channelAudit) })
-    )
-    .provide(Repo.channelUserRestrictions, () => new InMemoryChannelUserRestrictionRepository())
-    .provide(Repo.trustedCommenters, () => new InMemoryTrustedCommenterRepository())
-    .provide(
-      Repo.channelMembers,
-      (c) =>
-        new InMemoryChannelMemberRepository({
-          channels: c.get(Repo.channels),
-          audit: c.get(Repo.channelAudit),
-          invites: { revokeSentBy: (sent) => c.get(Repo.channelInvites).revokeSentBy(sent) },
-        })
-    )
-    .provide(
-      Repo.channelInvites,
-      (c) =>
-        new InMemoryChannelInviteRepository({
-          members: c.get(Repo.channelMembers),
-          channels: c.get(Repo.channels),
-          audit: c.get(Repo.channelAudit),
-          outbox: c.get(Repo.outbox),
-        })
-    )
-    .provide(
-      Repo.videos,
-      (c) =>
-        new InMemoryVideoRepository({
-          eventsRepo: c.get(Repo.events),
-          renditionsRepo: c.get(Repo.renditions),
-          stepsRepo: c.get(Repo.steps),
-          outboxRepo: c.get(Repo.outbox),
-          userEventsRepo: c.get(Repo.userEvents),
-          uploadsRepo: { findByVideoId: (id) => c.get(Repo.uploads).findByVideoId(id) },
-        })
-    )
-    .provide(
-      Repo.videoStudio,
-      (c) =>
-        new InMemoryVideoStudioRepository({
-          videos: c.get(Repo.videos),
-          categories: c.get(Repo.categories),
-          events: c.get(Repo.events),
-          outbox: c.get(Repo.outbox),
-          channels: c.get(Repo.channels),
-          audit: c.get(Repo.channelAudit),
-        })
-    )
-    .provide(Repo.uploads, (c) => new InMemoryUploadRepository({ videosRepo: c.get(Repo.videos) }))
-    .provide(Repo.dlq, (c) => new InMemoryDlqRepository({ outboxRepo: c.get(Repo.outbox) }))
-    .provide(
-      Repo.categories,
-      (c) => new InMemoryCategoryRepository({ videosRepo: c.get(Repo.videos) })
-    )
-    .provide(
-      Repo.videoReactions,
-      (c) =>
-        new InMemoryVideoReactionRepository({
-          videosRepo: c.get(Repo.videos),
-          channelsRepo: c.get(Repo.channels),
-        })
-    )
-    .provide(
-      Repo.subscriptions,
-      (c) =>
-        new InMemorySubscriptionRepository({
-          channelsRepo: c.get(Repo.channels),
-          videosRepo: c.get(Repo.videos),
-        })
-    )
-    .provide(Repo.videoViews, (c) => new InMemoryVideoViewRepository(c.get(Repo.videos)))
-    .provide(
-      Repo.comments,
-      (c) =>
-        new InMemoryCommentRepository({
-          channelsRepo: c.get(Repo.channels),
-          videosRepo: c.get(Repo.videos),
-          outboxRepo: c.get(Repo.outbox),
-          auditRepo: c.get(Repo.channelAudit),
-          reportsRepo: c.get(Repo.commentReports),
-          userEventsRepo: c.get(Repo.userEvents),
-          restrictionsRepo: c.get(Repo.channelUserRestrictions),
-        })
-    )
-    .provide(
-      Repo.commentModeration,
-      (c) =>
-        new InMemoryCommentModerationRepository({
-          commentsRepo: c.get(Repo.comments),
-          videosRepo: c.get(Repo.videos),
-          channelsRepo: c.get(Repo.channels),
-          restrictionsRepo: c.get(Repo.channelUserRestrictions),
-          auditRepo: c.get(Repo.channelAudit),
-          outboxRepo: c.get(Repo.outbox),
-          userEventsRepo: c.get(Repo.userEvents),
-        })
-    )
-    .provide(
-      Repo.commentReports,
-      (c) =>
-        new InMemoryCommentReportRepository({
-          commentsRepo: { peek: (id) => c.get(Repo.comments).peek(id) },
-        })
-    )
-    .provide(
-      Repo.playlists,
-      (c) =>
-        new InMemoryPlaylistRepository({
-          channelsRepo: c.get(Repo.channels),
-          videosRepo: c.get(Repo.videos),
-        })
-    )
-    .provide(
-      Repo.watchHistory,
-      (c) =>
-        new InMemoryWatchHistoryRepository({
-          channelsRepo: c.get(Repo.channels),
-          videosRepo: c.get(Repo.videos),
-        })
-    )
-    .provide(
-      Repo.userPreferences,
-      (c) => new InMemoryUserPreferencesRepository(c.get(Repo.userEvents))
-    )
-    .provide(Repo.notifications, (c) => new InMemoryNotificationRepository(c.get(Repo.userEvents)))
-    .provide(
-      Repo.search,
-      (c) =>
-        new InMemorySearchRepository({
-          videosRepo: c.get(Repo.videos),
-          channelsRepo: c.get(Repo.channels),
-          playlistsRepo: c.get(Repo.playlists),
-        })
-    )
-    .provide(Repo.searchHistory, () => new InMemorySearchHistoryRepository())
-    .provide(Repo.webhooks, () => new InMemoryWebhookRepository())
-    .provide(
-      Repo.liveStreams,
-      (c) =>
-        new InMemoryLiveStreamRepository({
-          videos: c.get(Repo.videos),
-          events: c.get(Repo.events),
-          outbox: c.get(Repo.outbox),
-          userEvents: c.get(Repo.userEvents),
-        })
-    )
-    .provide(
-      Repo.recommendationFeedback,
-      (c) =>
-        new InMemoryRecommendationFeedbackRepository({
-          videosRepo: c.get(Repo.videos),
-          channelsRepo: c.get(Repo.channels),
-        })
-    )
-    .provide(
-      Repo.related,
-      (c) =>
-        new InMemoryRelatedVideosRepository({
-          videosRepo: c.get(Repo.videos),
-          historyRepo: c.get(Repo.watchHistory),
-        })
-    )
-    .provide(
-      Repo.rising,
-      (c) =>
-        new InMemoryRisingVideosRepository({
-          videosRepo: c.get(Repo.videos),
-          channelsRepo: c.get(Repo.channels),
-          viewsRepo: c.get(Repo.videoViews),
-        })
-    )
-    .provide(
-      Repo.captions,
-      (c) =>
-        new InMemoryCaptionRepository({
-          videos: c.get(Repo.videos),
-          channels: c.get(Repo.channels),
-          events: c.get(Repo.events),
-          userEvents: c.get(Repo.userEvents),
-        })
-    )
-    .provide(
-      Repo.clips,
-      (c) =>
-        new InMemoryClipRepository({
-          videosRepo: c.get(Repo.videos),
-          channelsRepo: c.get(Repo.channels),
-        })
-    )
-    .provide(Repo.channelFeatured, (c) => new InMemoryChannelFeaturedRepository(c.get(Repo.videos)))
-    .provide(
-      Repo.picks,
-      (c) =>
-        new InMemoryPickRepository({
-          videosRepo: c.get(Repo.videos),
-          channelsRepo: c.get(Repo.channels),
-        })
-    );
+  return provideCommentRepositories(
+    new Container()
+      .provide(Repo.outbox, () => new InMemoryOutboxRepository())
+      .provide(Repo.renditions, () => new InMemoryRenditionRepository())
+      .provide(Repo.steps, () => new InMemoryStepRepository())
+      .provide(Repo.users, () => new InMemoryUserRepository())
+      .provide(Repo.userEvents, (c) => new InMemoryUserEventRepository(c.get(Repo.outbox)))
+      .provide(Repo.channels, (c) => new InMemoryChannelRepository(c.get(Repo.videos)))
+      .provide(Repo.events, () => new InMemoryEventRepository())
+      .provide(Repo.channelAudit, () => new InMemoryChannelAuditRepository())
+      .provide(
+        Repo.channelMembers,
+        (c) =>
+          new InMemoryChannelMemberRepository({
+            channels: c.get(Repo.channels),
+            audit: c.get(Repo.channelAudit),
+            invites: { revokeSentBy: (sent) => c.get(Repo.channelInvites).revokeSentBy(sent) },
+          })
+      )
+      .provide(
+        Repo.channelInvites,
+        (c) =>
+          new InMemoryChannelInviteRepository({
+            members: c.get(Repo.channelMembers),
+            channels: c.get(Repo.channels),
+            audit: c.get(Repo.channelAudit),
+            outbox: c.get(Repo.outbox),
+          })
+      )
+      .provide(
+        Repo.videos,
+        (c) =>
+          new InMemoryVideoRepository({
+            eventsRepo: c.get(Repo.events),
+            renditionsRepo: c.get(Repo.renditions),
+            stepsRepo: c.get(Repo.steps),
+            outboxRepo: c.get(Repo.outbox),
+            userEventsRepo: c.get(Repo.userEvents),
+            uploadsRepo: { findByVideoId: (id) => c.get(Repo.uploads).findByVideoId(id) },
+          })
+      )
+      .provide(
+        Repo.videoStudio,
+        (c) =>
+          new InMemoryVideoStudioRepository({
+            videos: c.get(Repo.videos),
+            categories: c.get(Repo.categories),
+            events: c.get(Repo.events),
+            outbox: c.get(Repo.outbox),
+            channels: c.get(Repo.channels),
+            audit: c.get(Repo.channelAudit),
+          })
+      )
+      .provide(
+        Repo.uploads,
+        (c) => new InMemoryUploadRepository({ videosRepo: c.get(Repo.videos) })
+      )
+      .provide(Repo.dlq, (c) => new InMemoryDlqRepository({ outboxRepo: c.get(Repo.outbox) }))
+      .provide(
+        Repo.categories,
+        (c) => new InMemoryCategoryRepository({ videosRepo: c.get(Repo.videos) })
+      )
+      .provide(
+        Repo.videoReactions,
+        (c) =>
+          new InMemoryVideoReactionRepository({
+            videosRepo: c.get(Repo.videos),
+            channelsRepo: c.get(Repo.channels),
+          })
+      )
+      .provide(
+        Repo.subscriptions,
+        (c) =>
+          new InMemorySubscriptionRepository({
+            channelsRepo: c.get(Repo.channels),
+            videosRepo: c.get(Repo.videos),
+          })
+      )
+      .provide(Repo.videoViews, (c) => new InMemoryVideoViewRepository(c.get(Repo.videos)))
+      .provide(
+        Repo.playlists,
+        (c) =>
+          new InMemoryPlaylistRepository({
+            channelsRepo: c.get(Repo.channels),
+            videosRepo: c.get(Repo.videos),
+          })
+      )
+      .provide(
+        Repo.watchHistory,
+        (c) =>
+          new InMemoryWatchHistoryRepository({
+            channelsRepo: c.get(Repo.channels),
+            videosRepo: c.get(Repo.videos),
+          })
+      )
+      .provide(
+        Repo.userPreferences,
+        (c) => new InMemoryUserPreferencesRepository(c.get(Repo.userEvents))
+      )
+      .provide(
+        Repo.notifications,
+        (c) => new InMemoryNotificationRepository(c.get(Repo.userEvents))
+      )
+      .provide(
+        Repo.search,
+        (c) =>
+          new InMemorySearchRepository({
+            videosRepo: c.get(Repo.videos),
+            channelsRepo: c.get(Repo.channels),
+            playlistsRepo: c.get(Repo.playlists),
+          })
+      )
+      .provide(Repo.searchHistory, () => new InMemorySearchHistoryRepository())
+      .provide(Repo.webhooks, () => new InMemoryWebhookRepository())
+      .provide(
+        Repo.liveStreams,
+        (c) =>
+          new InMemoryLiveStreamRepository({
+            videos: c.get(Repo.videos),
+            events: c.get(Repo.events),
+            outbox: c.get(Repo.outbox),
+            userEvents: c.get(Repo.userEvents),
+          })
+      )
+      .provide(
+        Repo.recommendationFeedback,
+        (c) =>
+          new InMemoryRecommendationFeedbackRepository({
+            videosRepo: c.get(Repo.videos),
+            channelsRepo: c.get(Repo.channels),
+          })
+      )
+      .provide(
+        Repo.related,
+        (c) =>
+          new InMemoryRelatedVideosRepository({
+            videosRepo: c.get(Repo.videos),
+            historyRepo: c.get(Repo.watchHistory),
+          })
+      )
+      .provide(
+        Repo.rising,
+        (c) =>
+          new InMemoryRisingVideosRepository({
+            videosRepo: c.get(Repo.videos),
+            channelsRepo: c.get(Repo.channels),
+            viewsRepo: c.get(Repo.videoViews),
+          })
+      )
+      .provide(
+        Repo.captions,
+        (c) =>
+          new InMemoryCaptionRepository({
+            videos: c.get(Repo.videos),
+            channels: c.get(Repo.channels),
+            events: c.get(Repo.events),
+            userEvents: c.get(Repo.userEvents),
+          })
+      )
+      .provide(
+        Repo.clips,
+        (c) =>
+          new InMemoryClipRepository({
+            videosRepo: c.get(Repo.videos),
+            channelsRepo: c.get(Repo.channels),
+          })
+      )
+      .provide(
+        Repo.channelFeatured,
+        (c) => new InMemoryChannelFeaturedRepository(c.get(Repo.videos))
+      )
+      .provide(
+        Repo.picks,
+        (c) =>
+          new InMemoryPickRepository({
+            videosRepo: c.get(Repo.videos),
+            channelsRepo: c.get(Repo.channels),
+          })
+      )
+  );
 }

@@ -27,3 +27,17 @@ export function invalidCommentSettings(
 ): InvalidCommentSettings {
   return invalidField(field, message, constraint);
 }
+
+export interface RestrictionConstraint {
+  readonly max?: number;
+}
+
+export type InvalidRestriction = InvalidField<RestrictionConstraint>;
+
+export function invalidRestriction(
+  field: 'reason' | 'expiresAt' | 'userId',
+  message: string,
+  constraint: RestrictionConstraint
+): InvalidRestriction {
+  return invalidField(field, message, constraint);
+}

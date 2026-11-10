@@ -45,6 +45,19 @@ describe('apps/client/web: useNotificationText', () => {
       shown: notification({ kind: 'team_invite', videoId: null }, { videoTitle: null }),
       headline: 'Night Kitchen invited you to join their team',
     },
+    ...(['hold', 'hide', 'remove', 'ban'] as const).map((action) => ({
+      case: `a visible ${action}`,
+      shown: notification(
+        { kind: 'moderation', videoId: null },
+        { actor: null, moderation: { action, reason: null, expiresAt: null } }
+      ),
+      headline: {
+        hold: 'Your comment is waiting for review',
+        hide: 'Your comment was hidden',
+        remove: 'Your comment was removed',
+        ban: 'You can no longer comment on a channel',
+      }[action],
+    })),
     {
       case: 'a finished upload',
       shown: notification({ kind: 'processing' }, { actor: null, outcome: 'ready' }),

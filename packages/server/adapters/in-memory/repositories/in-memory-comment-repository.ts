@@ -15,6 +15,7 @@ import {
   type CommentRemoval,
   type CommentThread,
   type CreatorInboxComment,
+  type ModerationRecord,
   type NewChannelAuditEntry,
   type NewCommentInput,
   type NewCommentRemoval,
@@ -48,16 +49,13 @@ export interface InMemoryCommentRepositoryOptions {
   channelsRepo: InMemoryChannelRepository;
   videosRepo: InMemoryVideoRepository;
   outboxRepo: OutboxRepository;
-  auditRepo: Pick<InMemoryChannelAuditRepository, 'append'>;
+  auditRepo: InMemoryChannelAuditRepository;
   reportsRepo: InMemoryCommentReportRepository;
   userEventsRepo: UserEventRepository;
-  restrictionsRepo: Pick<InMemoryChannelUserRestrictionRepository, 'shadowedUserIds'>;
+  restrictionsRepo: InMemoryChannelUserRestrictionRepository;
 }
 
-/**
- * Every write takes its one await before touching state, so a burst of concurrent creates moves
- * the video counter the way the Postgres transaction does, with no half-step to observe.
- */
+/** Every write takes its one await before touching state, so concurrent creates leave no half-step to observe. */
 export class InMemoryCommentRepository implements CommentRepositoryPort {
   readonly comments = new Map<string, StoredComment>();
   readonly removals = new Map<string, CommentRemoval>();
@@ -158,7 +156,7 @@ export class InMemoryCommentRepository implements CommentRepositoryPort {
 
   async remove(
     target: CommentLocator,
-    record?: { audit: NewChannelAuditEntry; removal?: NewCommentRemoval }
+    record?: ModerationRecord & { removal?: NewCommentRemoval }
   ): Promise<Result<number, DatabaseUnavailable>> {
     const video = unwrapOr(await this.deps.videosRepo.findById(target.videoId), null);
     const scope = await this.scope([target.videoId]);
@@ -171,7 +169,9 @@ export class InMemoryCommentRepository implements CommentRepositoryPort {
     const now = new Date();
     for (const row of removed) Object.assign(row, { deletedAt: now, isPinned: false });
     if (video) video.commentsCount = (video.commentsCount ?? 0) - counted;
-    const recorded = await recordModeration(this.deps.auditRepo, this.removals, record, now);
+    if (record?.removal)
+      this.removals.set(record.removal.id, { ...record.removal, createdAt: now });
+    const recorded = await recordModeration(this.deps, record);
     return isErr(recorded) ? recorded : ok(removed.length);
   }
 
@@ -190,7 +190,7 @@ export class InMemoryCommentRepository implements CommentRepositoryPort {
       }
     }
     Object.assign(comment, { isPinned: pinned, updatedAt: new Date() });
-    const recorded = await recordModeration(this.deps.auditRepo, this.removals, audit && { audit });
+    const recorded = await recordModeration(this.deps, audit && { audit });
     if (isErr(recorded)) return recorded;
     return ok(await this.toThread(comment, ownOrPublicTo(null, scope)));
   }

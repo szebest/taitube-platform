@@ -1,12 +1,18 @@
 import { describeChannelUserRestrictionRepositoryContract } from '../../../__tests__/contract/channel-user-restriction-repository.contract';
 import { inMemorySubject } from '../../../__tests__/contract/subjects';
+import { InMemoryChannelAuditRepository } from '../in-memory-channel-audit-repository';
 import { InMemoryChannelUserRestrictionRepository } from '../in-memory-channel-user-restriction-repository';
+import { InMemoryOutboxRepository } from '../in-memory-outbox-repository';
 
 describeChannelUserRestrictionRepositoryContract(inMemorySubject);
 
 describe('InMemoryChannelUserRestrictionRepository', () => {
   it('names the shadow banned users of a channel, and not its bans or another channel', async () => {
-    const restrictions = new InMemoryChannelUserRestrictionRepository();
+    const restrictions = new InMemoryChannelUserRestrictionRepository({
+      auditRepo: new InMemoryChannelAuditRepository(),
+      outboxRepo: new InMemoryOutboxRepository(),
+      recount: async () => [],
+    });
     const restrict = (channelId: string, userId: string, kind: 'shadow' | 'ban') =>
       restrictions.apply({
         channelId,

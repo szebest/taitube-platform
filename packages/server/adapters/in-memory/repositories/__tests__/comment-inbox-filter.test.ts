@@ -13,7 +13,7 @@ const question = {
 };
 const answer = { ...question, id: 'a', parentId: 'q', authorId: OWNER, createdAt: at(5) };
 const earlierAnswer = { ...answer, createdAt: at(-5) };
-const neverReported = { hasOpenReport: () => false };
+const neverReported = { hasOpenReport: () => false, isRestricted: () => false };
 
 describe('matchesInbox', () => {
   it('keeps everything for the whole inbox', () => {
@@ -38,10 +38,17 @@ describe('matchesInbox', () => {
   });
 
   it('follows the open reports for the reported filter', () => {
-    const reports = { hasOpenReport: (id: string) => id === 'q' };
+    const reports = { ...neverReported, hasOpenReport: (id: string) => id === 'q' };
 
     expect(matchesInbox(question, 'reported', OWNER, [question], reports)).toBe(true);
     expect(matchesInbox(answer, 'reported', OWNER, [question, answer], reports)).toBe(false);
+  });
+
+  it('keeps the comments of restricted authors for the restricted filter', () => {
+    const restricted = { ...neverReported, isRestricted: (id: string) => id === 'viewer-1' };
+
+    expect(matchesInbox(question, 'restricted', OWNER, [question], restricted)).toBe(true);
+    expect(matchesInbox(question, 'restricted', OWNER, [question], neverReported)).toBe(false);
   });
 
   it.each([

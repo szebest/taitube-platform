@@ -18,6 +18,7 @@ import type {
   ChannelMemberService,
   ChannelService,
   RequestIdentity,
+  ChannelRestrictionService,
   ClipService,
   OEmbedService,
   WebhookService,
@@ -95,6 +96,7 @@ export interface ServiceSet {
   reactionService: ReactionService;
   subscriptionService: SubscriptionService;
   commentService: CommentService;
+  channelRestrictionService: ChannelRestrictionService;
   commentModerationService: CommentModerationService;
   commentSettingsService: CommentSettingsService;
   commentReportService: CommentReportService;
@@ -160,6 +162,7 @@ export const Services = {
   ReactionService: token<ReactionService>('ReactionService'),
   SubscriptionService: token<SubscriptionService>('SubscriptionService'),
   CommentService: token<CommentService>('CommentService'),
+  ChannelRestrictionService: token<ChannelRestrictionService>('ChannelRestrictionService'),
   CommentModerationService: token<CommentModerationService>('CommentModerationService'),
   CommentSettingsService: token<CommentSettingsService>('CommentSettingsService'),
   CommentReportService: token<CommentReportService>('CommentReportService'),

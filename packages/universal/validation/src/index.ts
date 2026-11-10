@@ -16,6 +16,7 @@ export * from './categories/category-form';
 export * from './views/failures';
 export * from './views/view-telemetry';
 export * from './comments/failures';
+export * from './comments/ban';
 export * from './comments/blocked-words';
 export * from './comments/comment-settings';
 export * from './comments/content';

@@ -8,6 +8,7 @@ export const NOTIFY_COMMENT = 'notify-comment';
 export const NOTIFY_PROCESSING = 'notify-processing';
 export const NOTIFY_HEART = 'notify-heart';
 export const NOTIFY_TEAM_INVITE = 'notify-team-invite';
+export const NOTIFY_MODERATION = 'notify-moderation';
 /** Not a notification row: tells each subscriber's open tabs, through `live.started`, right away. */
 export const ANNOUNCE_LIVE = 'announce-live';
 
@@ -52,6 +53,22 @@ export const NotifyTeamInviteJob = z.object({
 });
 export type NotifyTeamInviteJob = z.infer<typeof NotifyTeamInviteJob>;
 
+export const NotifyModerationJob = z.object({
+  /** The audit row of the action, so one action is one job however often it is enqueued. */
+  eventId: z.uuid(),
+  userId: z.uuid(),
+  action: z.enum(['hold', 'hide', 'remove', 'ban']),
+  channelId: z.uuid(),
+  videoId: z.uuid().nullable(),
+  commentId: z.uuid().nullable(),
+  reason: z.string().nullable(),
+  expiresAt: z.iso.datetime().nullable(),
+  excerpt: z.string().nullable(),
+  traceparent: z.string().optional(),
+  requestId: z.string().optional(),
+});
+export type NotifyModerationJob = z.infer<typeof NotifyModerationJob>;
+
 export const AnnounceLiveJob = z.object({
   liveStreamId: z.uuid(),
   /** The last subscriber of the batch before this one; absent on the first. */
@@ -69,6 +86,7 @@ const notificationJobIds = {
   comment: (commentId: string) => `${commentId}--${NOTIFY_COMMENT}`,
   heart: (commentId: string) => `${commentId}--${NOTIFY_HEART}`,
   teamInvite: (inviteId: string) => `${inviteId}--${NOTIFY_TEAM_INVITE}`,
+  moderation: (eventId: string) => `${eventId}--${NOTIFY_MODERATION}`,
   processing: (videoId: string, outcome: NotifyProcessingJob['outcome']) =>
     `${videoId}--${NOTIFY_PROCESSING}--${outcome}`,
 };
@@ -124,6 +142,13 @@ export const teamInviteOutbox = (job: NotifyTeamInviteJob) =>
     name: NOTIFY_TEAM_INVITE,
     data: job,
     jobId: notificationJobIds.teamInvite(job.inviteId),
+  });
+
+export const moderationOutbox = (job: NotifyModerationJob) =>
+  notificationOutbox({
+    name: NOTIFY_MODERATION,
+    data: job,
+    jobId: notificationJobIds.moderation(job.eventId),
   });
 
 const processingOutbox = (job: NotifyProcessingJob) =>

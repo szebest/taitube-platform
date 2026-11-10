@@ -128,7 +128,7 @@ describe('CommentService', () => {
       { viewer: OWNER, shown: 1, total: 1 },
       { viewer: VIEWER, shown: 2, total: 2 },
     ])(
-      'shows a held comment to $viewer.id as $shown of $total, from the shared page too',
+      'shows a held comment to viewer $viewer as $shown of $total, from the shared page too',
       async ({ viewer, shown, total }) => {
         await holdEverything();
         const held = expectOk(await service.create(VIEWER, VIDEO_ID, { content: 'later' }));

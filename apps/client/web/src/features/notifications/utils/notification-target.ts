@@ -34,6 +34,8 @@ export function notificationTarget({
     case 'processing':
     case 'team_invite':
       return watch(videoId);
+    case 'moderation':
+      return linkOptions({ to: '/feed/you' });
     case 'reply':
     case 'mention':
     case 'comment':

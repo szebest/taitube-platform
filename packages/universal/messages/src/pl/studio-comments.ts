@@ -14,6 +14,7 @@ export const studioComments = {
         held: 'Wstrzymane',
         hidden: 'Ukryte',
         questions: 'Pytania',
+        restricted: 'Ograniczeni',
       },
     },
   }),

@@ -12,11 +12,6 @@ import { HOUR_MS, OTHER_OWNER_ID, OWNER_ID, publicVideo, seedOwners, VIDEO_IDS }
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
 const CHANNEL_ID = '00000000-0000-7000-8000-000000000901';
-const COMMENT_IDS = {
-  first: '00000000-0000-7000-8000-000000000c01',
-  second: '00000000-0000-7000-8000-000000000c02',
-  third: '00000000-0000-7000-8000-000000000c03',
-} as const;
 const ACTOR = { handle: 'night-kitchen', displayName: 'Night Kitchen', avatarUrl: null };
 
 function upload(
@@ -242,35 +237,6 @@ export function describeNotificationRepositoryContract(makeSubject: MakeReposito
 
       expect(found.map((row) => row.id)).toEqual([stored.id]);
       expect(expectOk(await notifications.findByIds([]))).toEqual([]);
-    });
-
-    it('withdraws the unread notifications about the given comments and announces the cleared ids', async () => {
-      const comment = async (id: string) =>
-        expectOk(
-          await subject.repositories.comments.create({
-            id,
-            videoId: VIDEO_IDS.a,
-            authorId: OWNER_ID,
-            parentId: null,
-            content: 'hello',
-          })
-        );
-      const about = (commentId: string) =>
-        upload(VIDEO_IDS.a, { kind: 'reply', commentId, groupKey: `reply:${commentId}` });
-      const [first, second, third] = [COMMENT_IDS.first, COMMENT_IDS.second, COMMENT_IDS.third];
-      for (const id of [first, second, third]) await comment(id);
-      const read = await record(about(first));
-      const unread = await record(about(second));
-      await record(about(third));
-      expectOk(await notifications.markRead(OTHER_OWNER_ID, { scope: 'ids', ids: [read.id] }));
-
-      expect(expectOk(await notifications.withdrawUnread([]))).toBe(0);
-      expect(expectOk(await notifications.withdrawUnread([first, second]))).toBe(1);
-
-      expect((await list()).map((row) => row.commentId).sort()).toEqual([first, third].sort());
-      expect((await announced()).at(-1)).toEqual(
-        notificationRead({ scope: 'ids', ids: [unread.id] }, 1)
-      );
     });
 
     it('prunes what is older than the retention window', async () => {

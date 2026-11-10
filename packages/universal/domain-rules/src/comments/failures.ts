@@ -135,3 +135,29 @@ export function moderationNotApplicable(
     why,
   };
 }
+
+export type RestrictionNotFound = Failure<
+  typeof ErrorCodes.RESTRICTION_NOT_FOUND,
+  { userId: string }
+>;
+
+export function restrictionNotFound(userId: string): RestrictionNotFound {
+  return {
+    code: ErrorCodes.RESTRICTION_NOT_FOUND,
+    message: 'No restriction on that user',
+    userId,
+  };
+}
+
+export type CannotRestrictMember = Failure<
+  typeof ErrorCodes.CANNOT_RESTRICT_MEMBER,
+  { userId: string }
+>;
+
+export function cannotRestrictMember(userId: string): CannotRestrictMember {
+  return {
+    code: ErrorCodes.CANNOT_RESTRICT_MEMBER,
+    message: 'The owner and the team of a channel cannot be restricted on it',
+    userId,
+  };
+}

@@ -16,7 +16,7 @@ export const listCreatorComments = defineEndpoint({
   tag: 'Creator Studio',
   summary: 'The creator comment inbox',
   description:
-    'Comments on the caller videos that the caller did not write, newest first, keyset-paginated. unanswered keeps those without a later reply from the caller in their thread; reported keeps those with an open report; held and hidden keep those in that moderation state; questions keeps those with a question mark or a leading question word. Held and hidden comments are listed here with their moderation state, for the people who moderate.',
+    'Comments on the caller videos that the caller did not write, newest first, keyset-paginated. unanswered keeps those without a later reply from the caller in their thread; reported keeps those with an open report; held and hidden keep those in that moderation state; questions keeps those with a question mark or a leading question word; restricted keeps those whose author has a shadow ban or a ban on the channel that has not ended. Held and hidden comments are listed here with their moderation state, for the people who moderate.',
   query: z.object({
     filter: z.enum(CREATOR_INBOX_FILTERS).default('all'),
     cursor: CursorSchema.optional(),

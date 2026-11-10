@@ -44,6 +44,7 @@ export const CREATOR_INBOX_FILTERS = [
   'held',
   'hidden',
   'questions',
+  'restricted',
 ] as const;
 
 export type CreatorInboxFilter = (typeof CREATOR_INBOX_FILTERS)[number];

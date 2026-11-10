@@ -3,7 +3,7 @@ import * as schema from '@vp/db';
 import { and, eq, or } from 'drizzle-orm';
 import { sql } from 'drizzle-orm';
 import { drizzleWhere, notDeletedScope } from '../scopes/index';
-import { appendChannelAudit } from './channel-audit-writes';
+import { appendModerationRecord } from './channel-audit-writes';
 import { threadById } from './comment-thread-query';
 import { countedAmong, lockVideo, publish } from './comment-writes';
 import type { PostgresDatabase } from './types';
@@ -16,7 +16,7 @@ const { videoComments: c, videos: v } = schema;
  */
 export async function moderateComment(
   tx: PostgresDatabase,
-  { comment, from, outcome, moderatorId, audit }: CommentModerationWrite
+  { comment, from, outcome, moderatorId, audit, notice }: CommentModerationWrite
 ): Promise<CommentModerationWritten> {
   const video = await lockVideo(tx, comment.videoId);
   const [row] = await tx
@@ -53,7 +53,7 @@ export async function moderateComment(
       .set({ commentsCount: sql`${v.commentsCount} + ${after - before}` })
       .where(eq(v.id, comment.videoId));
   }
-  await appendChannelAudit(tx, audit);
+  await appendModerationRecord(tx, { audit, ...(notice && { notice }) });
 
   const thread = await threadById(tx, comment.id, null);
   if (!thread) return { type: 'missing' };

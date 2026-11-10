@@ -25,6 +25,16 @@ export const notifications = {
   comment: dt('{name} commented on your video'),
   heart: dt('{name} hearted your comment'),
   teamInvite: dt('{name} invited you to join their team'),
+  moderation: dt('{action:enum}', {
+    enum: {
+      action: {
+        hold: 'Your comment is waiting for review',
+        hide: 'Your comment was hidden',
+        remove: 'Your comment was removed',
+        ban: 'You can no longer comment on a channel',
+      },
+    },
+  }),
   processingReady: dt('Your video is ready to watch'),
   processingFailed: dt('Your video could not be processed'),
   loadFailed: dt('Notifications could not load'),

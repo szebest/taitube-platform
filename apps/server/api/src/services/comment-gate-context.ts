@@ -12,6 +12,9 @@ import type { DatabaseUnavailable } from '@vp/errors';
 import { isChannelTeamMember, type UserContext } from '@vp/permissions';
 import { isErr, ok, type Result } from '@vp/result';
 
+/** An account with no row is as old as can be, so the age check never refuses it. */
+const EPOCH = new Date(0);
+
 export interface CommentGateLookups {
   channels: Pick<ChannelRepositoryPort, 'findByUserId'>;
   settings: CommentSettingsRepositoryPort;
@@ -67,7 +70,7 @@ export async function loadCommentGate(
       isTeamMember: isChannelTeamMember({ user: author, channelId, ownerId: video.ownerId }),
       isSubscribed: subscribed.value,
       isTrusted: trusted.value,
-      accountCreatedAt: account.value?.createdAt ?? new Date(0),
+      accountCreatedAt: account.value?.createdAt ?? EPOCH,
     },
   });
 }

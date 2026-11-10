@@ -9,3 +9,4 @@ export * from './read-comment-thread.rule';
 export * from './heart-comment.rule';
 export * from './report-comment.rule';
 export * from './resolve-report.rule';
+export * from './restrict-channel-user.rule';

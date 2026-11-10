@@ -14,6 +14,7 @@ export const studioComments = {
         held: 'Held',
         hidden: 'Hidden',
         questions: 'Questions',
+        restricted: 'Restricted',
       },
     },
   }),

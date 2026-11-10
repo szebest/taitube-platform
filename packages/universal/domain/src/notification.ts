@@ -9,6 +9,7 @@ export const NOTIFICATION_KINDS = [
   'processing',
   'heart',
   'team_invite',
+  'moderation',
 ] as const;
 export type NotificationKind = (typeof NOTIFICATION_KINDS)[number];
 
@@ -54,6 +55,7 @@ export const KIND_SWITCH = {
   processing: 'processingFinished',
   heart: 'repliesAndMentions',
   team_invite: null,
+  moderation: null,
 } as const satisfies Record<NotificationKind, string | null>;
 
 interface NotifiableVideo {
@@ -97,6 +99,12 @@ export interface NotificationPayload {
   outcome: 'ready' | 'failed' | null;
   /** Set on `team_invite`: the invite the notification opens. */
   inviteId?: string;
+  /** Set on `moderation`: what was done, why, and when a ban ends. */
+  moderation?: {
+    action: 'hold' | 'hide' | 'remove' | 'ban';
+    reason: string | null;
+    expiresAt: string | null;
+  };
 }
 
 export interface Notification {

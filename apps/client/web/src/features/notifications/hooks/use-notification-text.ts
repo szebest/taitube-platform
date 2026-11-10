@@ -31,6 +31,12 @@ export function useNotificationText(): (notification: Notification) => Notificat
         return tOr('notifications.heart', { name }, '');
       case 'team_invite':
         return tOr('notifications.teamInvite', { name }, '');
+      case 'moderation':
+        return tOr(
+          'notifications.moderation',
+          { action: payload.moderation?.action ?? 'hold' },
+          ''
+        );
       case 'processing':
         return payload.outcome === 'failed'
           ? tOr('notifications.processingFailed', {}, '')

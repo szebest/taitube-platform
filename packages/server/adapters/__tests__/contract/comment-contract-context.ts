@@ -1,7 +1,7 @@
 import type { CommentRepositoryPort, CommentWindow } from '@vp/core/repositories';
 import type { CommentThread, NewCommentModeration } from '@vp/domain';
 import { expectOk } from '@vp/testing/result';
-import { HOUR_MS, OTHER_OWNER_ID, VIDEO_IDS } from './fixtures';
+import { HOUR_MS, VIDEO_IDS } from './fixtures';
 import type { RepositoriesSubject } from './subjects';
 
 export interface CommentContractContext {

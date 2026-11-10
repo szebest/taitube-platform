@@ -134,6 +134,9 @@ export function registerServices(c: Container): Container {
           videoReactions: repositories().videoReactions,
           reactionCache: c.get(Adapters.ReactionCache),
           videos: repositories().videos,
+          channels: repositories().channels,
+          restrictions: repositories().channelUserRestrictions,
+          now: () => Date.now(),
         })
     )
     .provide(

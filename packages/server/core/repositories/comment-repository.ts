@@ -5,6 +5,7 @@ import type {
   CommentThread,
   CreatorInboxComment,
   CreatorInboxFilter,
+  ModerationRecord,
   NewChannelAuditEntry,
   NewCommentInput,
   NewCommentRemoval,
@@ -107,7 +108,7 @@ export interface CommentRepositoryPort {
    */
   remove(
     comment: CommentLocator,
-    record?: { audit: NewChannelAuditEntry; removal?: NewCommentRemoval }
+    record?: ModerationRecord & { removal?: NewCommentRemoval }
   ): Promise<Result<number, DatabaseUnavailable>>;
   /** Pinning unpins whichever comment held the video's one pinned slot, and records `audit`. */
   setPinned(

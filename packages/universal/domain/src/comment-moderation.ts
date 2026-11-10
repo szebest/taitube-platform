@@ -1,3 +1,4 @@
+import type { ChannelUserRestriction, RestrictionKind } from './channel-restriction';
 import type { NewChannelAuditEntry } from './channel-team';
 import { COMMENT_REPORT_REASONS } from './comment-report';
 import type { Disclosure } from './comment-settings';
@@ -94,5 +95,58 @@ export function commentModerationAudit(entry: {
     targetType: 'comment',
     targetId: commentId,
     meta: { videoId, disclosure },
+  };
+}
+
+/** What a visible action tells the user it was done to, as the notification job carries it. */
+export interface ModerationNotice {
+  readonly userId: string;
+  readonly action: 'hold' | 'hide' | 'remove' | 'ban';
+  readonly channelId: string;
+  readonly videoId: string | null;
+  readonly commentId: string | null;
+  readonly reason: string | null;
+  readonly expiresAt: string | null;
+  readonly excerpt: string | null;
+}
+
+/** The audit row of an action and, when the user is to be told, the notice that goes with it. */
+export interface ModerationRecord {
+  readonly audit: NewChannelAuditEntry;
+  readonly notice?: ModerationNotice;
+}
+
+/** The audit row of a restriction: a ban carries its end, and nothing else says why. */
+export function restrictionAudit(entry: {
+  channelId: string;
+  actorUserId: string;
+  userId: string;
+  restriction: Pick<ChannelUserRestriction, 'kind' | 'expiresAt'>;
+}): NewChannelAuditEntry {
+  const { channelId, actorUserId, userId, restriction } = entry;
+  const base = { channelId, actorUserId, targetType: 'user', targetId: userId } as const;
+  return restriction.kind === 'ban'
+    ? {
+        ...base,
+        action: 'user.banned',
+        meta: { expiresAt: restriction.expiresAt?.toISOString() ?? null },
+      }
+    : { ...base, action: 'user.shadow_banned', meta: {} };
+}
+
+export function liftAudit(entry: {
+  channelId: string;
+  actorUserId: string;
+  userId: string;
+  kind: RestrictionKind;
+}): NewChannelAuditEntry {
+  const { channelId, actorUserId, userId, kind } = entry;
+  return {
+    channelId,
+    actorUserId,
+    action: 'user.restriction_lifted',
+    targetType: 'user',
+    targetId: userId,
+    meta: { kind },
   };
 }

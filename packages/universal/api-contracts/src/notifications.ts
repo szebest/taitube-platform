@@ -23,6 +23,14 @@ const NotificationPayloadSchema = z.object({
   excerpt: z.string().nullable().describe('The start of the comment, for comment kinds'),
   outcome: z.enum(['ready', 'failed']).nullable().describe('How an upload finished'),
   inviteId: z.uuid().optional().describe('The channel team invite a `team_invite` opens'),
+  moderation: z
+    .object({
+      action: z.enum(['hold', 'hide', 'remove', 'ban']),
+      reason: z.string().nullable(),
+      expiresAt: z.iso.datetime().nullable().describe('When a ban ends, null for a permanent one'),
+    })
+    .optional()
+    .describe('What a `moderation` notification tells: the visible action, its reason and end'),
 });
 
 export const NotificationSchema = z.object({

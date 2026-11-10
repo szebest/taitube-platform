@@ -4,14 +4,17 @@ import {
   announceLiveOutbox,
   commentOutbox,
   heartOutbox,
+  moderationOutbox,
   teamInviteOutbox,
   NOTIFY_COMMENT,
   NOTIFY_HEART,
+  NOTIFY_MODERATION,
   NOTIFY_TEAM_INVITE,
   NOTIFY_PROCESSING,
   NOTIFY_SUBSCRIBERS,
   NotifyCommentJob,
   NotifyHeartJob,
+  NotifyModerationJob,
   NotifyTeamInviteJob,
   NotifyProcessingJob,
   NotifySubscribersJob,
@@ -24,7 +27,20 @@ import { defaultJobOptions, stagePolicies } from '../policies';
 const VIDEO_ID = '00000000-0000-7000-8000-0000000000a1';
 const COMMENT_ID = '00000000-0000-7000-8000-0000000000b1';
 const INVITE_ID = '00000000-0000-7000-8000-0000000000d1';
+const EVENT_ID = '00000000-0000-7000-8000-0000000000e1';
 const AFTER = '00000000-0000-7000-8000-0000000000c1';
+
+const MODERATION = {
+  eventId: EVENT_ID,
+  userId: VIDEO_ID,
+  action: 'remove',
+  channelId: COMMENT_ID,
+  videoId: VIDEO_ID,
+  commentId: COMMENT_ID,
+  reason: 'spam',
+  expiresAt: null,
+  excerpt: 'the start of it',
+} as const;
 
 describe('job-contracts: notification jobs', () => {
   it.each([
@@ -32,6 +48,7 @@ describe('job-contracts: notification jobs', () => {
     { schema: NotifyCommentJob, valid: { videoId: VIDEO_ID, commentId: COMMENT_ID } },
     { schema: NotifyHeartJob, valid: { videoId: VIDEO_ID, commentId: COMMENT_ID } },
     { schema: NotifyTeamInviteJob, valid: { inviteId: INVITE_ID } },
+    { schema: NotifyModerationJob, valid: MODERATION },
     { schema: NotifyProcessingJob, valid: { videoId: VIDEO_ID, outcome: 'failed' } },
     { schema: AnnounceLiveJob, valid: { liveStreamId: VIDEO_ID, after: AFTER } },
   ])('reads a well-formed payload', ({ schema, valid }) => {
@@ -81,6 +98,12 @@ describe('job-contracts: notification jobs', () => {
       outbox: teamInviteOutbox({ inviteId: INVITE_ID }),
       name: NOTIFY_TEAM_INVITE,
       jobId: `${INVITE_ID}--notify-team-invite`,
+    },
+    {
+      scenario: 'a visible moderation action',
+      outbox: moderationOutbox(MODERATION),
+      name: NOTIFY_MODERATION,
+      jobId: `${EVENT_ID}--notify-moderation`,
     },
     {
       scenario: 'a finished upload',
