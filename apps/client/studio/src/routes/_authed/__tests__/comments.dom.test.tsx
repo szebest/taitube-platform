@@ -24,7 +24,7 @@ describe('apps/client/studio: /comments', () => {
   it('lists every comment by default, reached from the studio navigation', async () => {
     const { requests } = await renderInbox('/comments', [[inboxComment()]]);
 
-    expect(screen.getByRole('radio', { name: 'All' })).toBeChecked();
+    expect(screen.getByRole('combobox', { name: 'Show' })).toHaveTextContent('All');
     expect(requests.lists).toEqual([{ filter: 'all', cursor: null }]);
     expect(
       within(screen.getAllByRole('navigation', { name: 'Studio' })[0] as HTMLElement).getByRole(
@@ -37,7 +37,7 @@ describe('apps/client/studio: /comments', () => {
   it('restores the filter from the address', async () => {
     const { requests } = await renderInbox('/comments?filter=reported');
 
-    expect(screen.getByRole('radio', { name: 'Reported' })).toBeChecked();
+    expect(screen.getByRole('combobox', { name: 'Show' })).toHaveTextContent('Reported');
     expect(requests.lists).toEqual([{ filter: 'reported', cursor: null }]);
   });
 
