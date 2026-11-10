@@ -1,12 +1,29 @@
 import * as crypto from 'node:crypto';
-import { CHANNEL_HEADER } from '@vp/api-contracts';
-import type { AuthFailure, TokenVerifier } from '@vp/core/ports';
+import {
+  CHANNEL_HEADER,
+  contracts,
+  endpointKey,
+  isEndpoint,
+  PARTY_CREDENTIAL_HEADER,
+} from '@vp/api-contracts';
+import type {
+  AuthFailure,
+  PartyGuestSession,
+  PartyGuestSessionsPort,
+  TokenVerifier,
+} from '@vp/core/ports';
 import type { ActingChannel } from '@vp/domain';
 import type { ChannelMembershipRequired } from '@vp/domain-rules';
 import type { AppConfig, AuthConfig } from '@vp/env-schema';
-import { ErrorCodes, PermanentError } from '@vp/errors';
+import {
+  type CacheUnavailable,
+  ErrorCodes,
+  PermanentError,
+  type WatchPartyCredentialInvalid,
+  watchPartyCredentialInvalid,
+} from '@vp/errors';
 import { type UserContext, parseRole } from '@vp/permissions';
-import { type Result, assertNever, err, isErr, ok } from '@vp/result';
+import { type Result, andThen, assertNever, err, isErr, ok } from '@vp/result';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import fp from 'fastify-plugin';
 import type { ServiceSet } from '../composition/services.module';
@@ -17,11 +34,16 @@ export interface AuthPluginOptions {
   identity: RequestIdentity;
   verifier: TokenVerifier;
   auth: AuthConfig;
+  guestSessions: PartyGuestSessionsPort;
+  /** Every resolve slides a party credential's life forward this far. */
+  partyCredentialTtlSeconds: number;
 }
 
 declare module 'fastify' {
   interface FastifyRequest {
     user: UserContext | null;
+    /** A guest's or a Discord member's party credential, resolved only on `partyGuest` routes. */
+    party: PartyGuestSession | null;
     actingChannel: Result<ActingChannel, ChannelMembershipRequired> | null;
   }
   interface FastifyInstance {
@@ -81,13 +103,45 @@ async function identify(
   return ok({ id: sub, role: parseRole(role ?? 'user'), ...(email ? { email } : {}) });
 }
 
+/** The routes whose contract accepts a party credential; on any other it is never read. */
+function partyGuestRoutes(): ReadonlySet<string> {
+  return new Set(
+    Object.values(contracts)
+      .flatMap((group) => Object.values(group).filter(isEndpoint))
+      .filter((endpoint) => endpoint.partyGuest === true)
+      .map((endpoint) => endpointKey(endpoint.method, endpoint.path))
+  );
+}
+
+/**
+ * A credential that resolves to nothing is refused rather than dropped, so a guest whose seat
+ * expired is told so instead of being treated as a stranger to the room.
+ */
+async function resolveParty(
+  request: FastifyRequest,
+  { guestSessions, partyCredentialTtlSeconds }: AuthPluginOptions
+): Promise<Result<PartyGuestSession | null, CacheUnavailable | WatchPartyCredentialInvalid>> {
+  const credential = request.headers[PARTY_CREDENTIAL_HEADER];
+  if (typeof credential !== 'string' || credential === '') return ok(null);
+  const session = await guestSessions.resolve(credential, partyCredentialTtlSeconds);
+  return andThen(session, (found) => (found ? ok(found) : err(watchPartyCredentialInvalid())));
+}
+
 async function authPlugin(app: FastifyInstance, options: AuthPluginOptions): Promise<void> {
   app.decorateRequest('user', null);
+  app.decorateRequest('party', null);
+  const partyRoutes = partyGuestRoutes();
   app.decorateRequest('actingChannel', null);
 
   app.addHook('onRequest', async (request: FastifyRequest, reply: FastifyReply) => {
     const identified = await identify(request, options);
     if (isErr(identified)) return sendResult(reply, request, identified);
+
+    if (partyRoutes.has(endpointKey(request.method, request.routeOptions.url ?? ''))) {
+      const party = await resolveParty(request, options);
+      if (isErr(party)) return sendResult(reply, request, party);
+      request.party = party.value;
+    }
 
     if (!identified.value) return;
 

@@ -14,6 +14,8 @@ import { SDD_SEARCH_ENDPOINTS } from './sdd-search-endpoints';
 import { SDD_STUDIO_ENDPOINTS } from './sdd-studio-endpoints';
 import { SDD_TEAM_ENDPOINTS } from './sdd-team-endpoints';
 import { SDD_VIEWER_ACTIVITY_ENDPOINTS } from './sdd-viewer-activity-endpoints';
+import { SDD_WATCH_PARTY_ENDPOINTS } from './sdd-watch-party-endpoints';
+import { SDD_WATCH_PARTY_MEMBER_ENDPOINTS } from './sdd-watch-party-member-endpoints';
 
 export interface SddEndpointContract {
   path: string;
@@ -324,6 +326,8 @@ export const SDD_ENDPOINT_CONTRACT: SddEndpointContract[] = [
   ...SDD_TEAM_ENDPOINTS,
   ...SDD_LIVE_ENDPOINTS,
   ...SDD_SCREENING_ENDPOINTS,
+  ...SDD_WATCH_PARTY_ENDPOINTS,
+  ...SDD_WATCH_PARTY_MEMBER_ENDPOINTS,
   { path: '/healthz', method: 'get', expectedStatuses: [200] },
   { path: '/readyz', method: 'get', expectedStatuses: [200, 503] },
 ];

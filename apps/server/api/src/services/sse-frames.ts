@@ -28,6 +28,7 @@ function coalesceKey(event: UserEventFrame): string | undefined {
     case 'live.started':
     case 'channel.image.ready':
     case 'channel.image.failed':
+    case 'party.controls.updated':
       return undefined;
     default:
       return assertNever(event, 'UserEventFrame');

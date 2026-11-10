@@ -29,19 +29,34 @@ function kindOf(code: ErrorCode): ErrorStateKind {
     case ErrorCodes.PICK_NOT_FOUND:
     case ErrorCodes.WEBHOOK_NOT_FOUND:
     case ErrorCodes.LIVE_STREAM_NOT_FOUND:
+    case ErrorCodes.WATCH_PARTY_NOT_FOUND:
+    case ErrorCodes.WATCH_PARTY_ROLE_NOT_FOUND:
     case ErrorCodes.CHANNEL_INVITE_NOT_FOUND:
     case ErrorCodes.CHANNEL_MEMBER_NOT_FOUND:
       return 'not-found';
     case ErrorCodes.FORBIDDEN:
     case ErrorCodes.CHANNEL_MEMBERSHIP_REQUIRED:
     case ErrorCodes.LIVE_CHAT_SUBSCRIBERS_ONLY:
+    case ErrorCodes.WATCH_PARTY_BANNED:
+    case ErrorCodes.WATCH_PARTY_GUESTS_OFF:
+    case ErrorCodes.WATCH_PARTY_PASSWORD_REQUIRED:
+    case ErrorCodes.WATCH_PARTY_PASSWORD_INVALID:
+    case ErrorCodes.WATCH_PARTY_INVITE_INVALID:
+    case ErrorCodes.WATCH_PARTY_PERMISSION_MISSING:
+    case ErrorCodes.WATCH_PARTY_ROLE_ESCALATION:
+    case ErrorCodes.WATCH_PARTY_ROLE_PROTECTED:
+    case ErrorCodes.WATCH_PARTY_CHAT_OFF:
       return 'forbidden';
     case ErrorCodes.UNAUTHORIZED:
     case ErrorCodes.LIVE_INGEST_REFUSED:
     case ErrorCodes.LIVE_CHAT_TICKET_INVALID:
+    case ErrorCodes.WATCH_PARTY_TICKET_INVALID:
+    case ErrorCodes.WATCH_PARTY_CREDENTIAL_INVALID:
       return 'unauthorised';
     case ErrorCodes.RATE_LIMITED:
     case ErrorCodes.LIVE_CHAT_SLOW_MODE:
+    case ErrorCodes.WATCH_PARTY_PASSWORD_LOCKED:
+    case ErrorCodes.WATCH_PARTY_SLOW_MODE:
       return 'rate-limited';
     case ErrorCodes.INTERNAL:
     case ErrorCodes.DATABASE_UNAVAILABLE:
@@ -102,6 +117,13 @@ function kindOf(code: ErrorCode): ErrorStateKind {
     case ErrorCodes.OEMBED_FORMAT_UNSUPPORTED:
     case ErrorCodes.LIVE_STREAM_NOT_LIVE:
     case ErrorCodes.LIVE_CHAT_CLOSED:
+    case ErrorCodes.WATCH_PARTY_CLOSED:
+    case ErrorCodes.WATCH_PARTY_FULL:
+    case ErrorCodes.WATCH_PARTY_LIMIT_REACHED:
+    case ErrorCodes.WATCH_PARTY_VIDEO_NOT_SHAREABLE:
+    case ErrorCodes.WATCH_PARTY_QUEUE_FULL:
+    case ErrorCodes.WATCH_PARTY_STATE_STALE:
+    case ErrorCodes.WATCH_PARTY_ROLE_LIMIT:
     case ErrorCodes.CHANNEL_INVITE_NOT_PENDING:
     case ErrorCodes.CHANNEL_INVITE_ALREADY_PENDING:
     case ErrorCodes.CHANNEL_MEMBER_EXISTS:

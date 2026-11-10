@@ -108,7 +108,7 @@ document is stale — fix it.
 | `@vp/design-tokens` | universal | `@vp/domain`, `@vp/errors`, `@vp/result` |
 | `@vp/intl` | universal | `@vp/errors`, `@vp/result` |
 | `@vp/pagination` | universal | `@vp/errors`, `@vp/result` |
-| `@vp/permissions` | universal | `@vp/errors` |
+| `@vp/permissions` | universal | `@vp/domain`, `@vp/errors` |
 | `@vp/validation` | universal | `@vp/errors`, `@vp/result` |
 | `@vp/security-headers` | client | `@vp/result` |
 | `@vp/compose-autoscaler` | server | `@vp/logger` |

@@ -29,6 +29,7 @@ import {
   WEB_VITALS,
   WORKER_HEARTBEAT_INTERVAL_MS,
 } from './tuning';
+import { type WatchPartyConfig, watchPartyConfig } from './watch-party-config';
 
 export type WorkerStageName = AppEnv['WORKER_STAGE'];
 
@@ -39,9 +40,9 @@ export interface AppConfig {
   kind: AppEnv['ADAPTER_FAMILY'];
   logLevel: string;
   cdn: CdnBase;
-  /** The web app's public origin, without a path or trailing slash: what oEmbed and webhook payloads link to. */
+  /** The web app's origin: what oEmbed and webhook payloads link to. */
   webUrl: string;
-  /** The sprite sheet's geometry: the thumbnail stage tiles by it and the API hands it to the card. */
+  /** The sprite geometry: the thumbnail stage and the card read it. */
   sprite: { intervalSec: number; columns: number; tileWidth: number; tileHeight: number };
   buckets: { raw: string; public: string };
   limits: {
@@ -114,26 +115,9 @@ export interface AppConfig {
     reactionReconcileLimit: number;
     scanLimit: number;
   };
-  views: {
-    minWatchSeconds: number;
-    dedupTtlSeconds: number;
-    fallbackCapacity: number;
-    breakerFailureThreshold: number;
-    breakerCooldownMs: number;
-    flushIntervalMs: number;
-    batchRetentionMs: number;
-    bodyLimitBytes: number;
-    ratePerMinute: number;
-  };
-  playbackTelemetry: {
-    bodyLimitBytes: number;
-    ratePerMinute: number;
-  };
-  webVitals: {
-    bodyLimitBytes: number;
-    ratePerMinute: number;
-    maxRoutesPerApp: number;
-  };
+  views: Numbers<typeof VIEWS>;
+  playbackTelemetry: { bodyLimitBytes: number; ratePerMinute: number };
+  webVitals: { bodyLimitBytes: number; ratePerMinute: number; maxRoutesPerApp: number };
   http: {
     port: number;
     metricsPort: number;
@@ -144,6 +128,7 @@ export interface AppConfig {
   captions: CaptionsConfig;
   screening: ScreeningConfig;
   live: LiveConfig;
+  watchParties: WatchPartyConfig;
   worker: {
     stage: WorkerStageName;
     concurrency: number | undefined;
@@ -294,6 +279,11 @@ export function toAppConfig(env: AppEnv): AppConfig {
       gatewayApiUrl: env.LIVE_GATEWAY_API_URL,
       rtmpPublicUrl: env.LIVE_RTMP_PUBLIC_URL,
       whipPublicUrl: env.LIVE_WHIP_PUBLIC_URL,
+    }),
+    watchParties: watchPartyConfig({
+      maxMembers: env.WATCH_PARTY_MAX_MEMBERS,
+      maxOpenPerUser: env.WATCH_PARTY_MAX_OPEN_PER_USER,
+      guestSalt: env.WATCH_PARTY_GUEST_SALT,
     }),
     worker: {
       stage: env.WORKER_STAGE,

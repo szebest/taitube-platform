@@ -52,6 +52,7 @@ export * from './preferences-service';
 export * from './caption-service';
 export * from './caption-track-service';
 export * from './notification-service';
+export * from './watch-party/index';
 export * from './channel-audit-service';
 export * from './channel-invite-service';
 export * from './channel-member-service';

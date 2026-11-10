@@ -41,9 +41,10 @@ import type { InMemoryVideoRepository } from './in-memory-video-repository';
 import type { InMemoryVideoStudioRepository } from './in-memory-video-studio-repository';
 import type { InMemoryVideoViewRepository } from './in-memory-video-view-repository';
 import type { InMemoryWatchHistoryRepository } from './in-memory-watch-history-repository';
+import { InMemoryWatchPartyRepositories } from './in-memory-watch-party-repositories';
 import type { InMemoryWebhookRepository } from './in-memory-webhook-repository';
 
-export class InMemoryRepositories implements Repositories {
+export class InMemoryRepositories extends InMemoryWatchPartyRepositories implements Repositories {
   readonly events: InMemoryEventRepository;
   readonly renditions: InMemoryRenditionRepository;
   readonly steps: InMemoryStepRepository;
@@ -88,6 +89,7 @@ export class InMemoryRepositories implements Repositories {
 
   constructor() {
     const c = graph();
+    super(c.get(Repo.outbox), c.get(Repo.userEvents));
     this.events = c.get(Repo.events);
     this.renditions = c.get(Repo.renditions);
     this.steps = c.get(Repo.steps);
@@ -136,5 +138,6 @@ export class InMemoryRepositories implements Repositories {
       this[name].clear();
     }
     this.liveChat.clear();
+    this.clearWatchParties();
   }
 }

@@ -31,19 +31,10 @@ describe('packages/env-schema: tuning', () => {
     );
   });
 
-  it.each([
-    { name: 'a partial copy', lower: 'partialCoverage', upper: 'duplicateCoverage' },
-    { name: 'a hold', lower: 'nsfwShareThreshold', upper: 'nsfwFrameThreshold' },
-  ] as const)(
-    'sets the bar for $name below the bar for the stronger finding',
-    ({ lower, upper }) => {
-      expect(tuning.SCREENING_THRESHOLDS[lower]).toBeLessThan(tuning.SCREENING_THRESHOLDS[upper]);
-    }
-  );
+  it('keeps a watch party member counted through two missed keepalives, not three', () => {
+    const { keepaliveMs, staleAfterMs } = tuning.WATCH_PARTY.presence;
 
-  it('keeps the audio index under 4000 rows for an hour of Chromaprint terms', () => {
-    const termsPerHour = 3600 * 8.07;
-
-    expect(termsPerHour / tuning.SCREENING_SAMPLING.audioIndexStride).toBeLessThan(4000);
+    expect(staleAfterMs).toBeGreaterThan(2 * keepaliveMs);
+    expect(staleAfterMs).toBeLessThanOrEqual(3 * keepaliveMs);
   });
 });

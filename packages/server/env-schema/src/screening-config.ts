@@ -4,7 +4,7 @@ import {
   SCREENING_PROCESS,
   SCREENING_SAMPLING,
   SCREENING_THRESHOLDS,
-} from './tuning';
+} from './screening-tuning';
 
 export interface ScreeningModelTuning {
   /** Names the model in each stored result. */

@@ -6,7 +6,7 @@ import {
   SCREENING_PROCESS,
   SCREENING_SAMPLING,
   SCREENING_THRESHOLDS,
-} from '../tuning';
+} from '../screening-tuning';
 
 const LOCK = resolve(import.meta.dirname, '../../../../../apps/server/worker/screening.lock');
 
