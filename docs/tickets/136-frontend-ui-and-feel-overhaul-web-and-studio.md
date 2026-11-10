@@ -8,7 +8,7 @@
 | Blocks | — |
 | Spec | [95 design system 2](95-design-system-2.md) - [design foundations, motion](../design/foundations/motion.md) - [72 settings](72-frontend-settings-customization-system.md) - [97 account preferences](97-account-preferences-api.md) - [57 player](57-production-video-player-hls-streaming-controls.md) - [docs/standards/authorization.md](../standards/authorization.md) |
 
-**Status:** in-progress
+**Status:** done
 
 **Progress:** a1 to a3 and b1 to b3 are on this branch; stack C is c1 (the sign-in prompt, `useRequireAccount` and the
 settings storage: cookie for the paint fields, `localStorage` for playback), c2 (the queue actions, Undo and the frame
