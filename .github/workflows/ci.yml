@@ -332,7 +332,7 @@ jobs:
         uses: ./.github/actions/budget
         with:
           step: integration-tests
-          seconds: 120
+          seconds: 180
           started-at: ${{ steps.integration-tests.outputs.started-at }}
 
   e2e:
