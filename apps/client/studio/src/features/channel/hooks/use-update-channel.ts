@@ -5,7 +5,7 @@ import type { ContractBody, updateMyChannel } from '@vp/api-contracts';
 import { type ErrorCode, ErrorCodes } from '@vp/errors';
 import { SESSION_KEY, type Session, useApi } from '@vp/queries';
 import { actingChannelKeys } from '#app/features/channel/api/acting-channel';
-import { useActiveChannel } from '#app/features/team/hooks/use-active-channel';
+import { useActiveChannel } from '#app/hooks/use-active-channel';
 
 type ChannelChanges = ContractBody<typeof updateMyChannel>;
 

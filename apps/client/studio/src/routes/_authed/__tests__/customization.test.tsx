@@ -1,6 +1,6 @@
 import { serverRender } from '@vp/web-testing/server';
+import { channelApi } from '#app/__tests__/channel-api.fixture';
 import { SESSION, accountOf } from '#app/__tests__/providers';
-import { channelApi } from '#app/features/channel/__tests__/render-customization';
 import { getRouter } from '#app/router';
 
 describe('apps/client/studio: /customization', () => {

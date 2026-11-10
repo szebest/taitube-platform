@@ -4,7 +4,7 @@ import type { ApiClient } from '@vp/api-client';
 import type { OwnerChannel } from '@vp/api-contracts';
 import { SESSION_KEY, type Session, useApi } from '@vp/queries';
 import { actingChannelKeys } from '#app/features/channel/api/acting-channel';
-import { useActiveChannel } from '#app/features/team/hooks/use-active-channel';
+import { useActiveChannel } from '#app/hooks/use-active-channel';
 
 function setAutoCaptionsMutationOptions(
   api: ApiClient,

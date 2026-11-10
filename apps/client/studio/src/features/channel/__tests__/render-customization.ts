@@ -1,23 +1,13 @@
 import { screen } from '@testing-library/react';
-import { getMyChannel, getMySpotlight, setMySpotlight, updateMyChannel } from '@vp/api-contracts';
+import { updateMyChannel } from '@vp/api-contracts';
 import { platformOfUrl } from '@vp/domain';
 import { account, channel, mockEndpoint } from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
 import { type HttpHandler, HttpResponse } from 'msw/http';
+import { channelApi } from '#app/__tests__/channel-api.fixture';
 import { featuredApi } from '#app/__tests__/featured-api.fixture';
 import { signInBrowser } from '#app/__tests__/providers';
 import { getRouter } from '#app/router';
-
-/** The acting channel and its spotlight as the API answers them for a creator whose channel is `own`. */
-export function channelApi(own: Parameters<typeof channel>[0] = {}) {
-  return [
-    mockEndpoint(getMyChannel, () => HttpResponse.json(channel(own))),
-    mockEndpoint(getMySpotlight, () =>
-      HttpResponse.json({ trailerVideoId: null, returningVideoId: null, localizations: [] })
-    ),
-    mockEndpoint(setMySpotlight, async ({ request }) => HttpResponse.json(await request.json())),
-  ];
-}
 
 /** `/customization` for a signed-in creator whose channel is `own`, with `handlers` answering the API first. */
 export async function renderCustomization(

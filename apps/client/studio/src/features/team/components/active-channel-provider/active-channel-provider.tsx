@@ -5,10 +5,7 @@ import { PermissionsProvider } from '@vp/permissions-react';
 import { useAccount, useApi, viewerOf } from '@vp/queries';
 import { type PropsWithChildren, useSyncExternalStore } from 'react';
 import { membershipsQueryOptions } from '#app/features/team/api/team-queries';
-import {
-  type ActiveChannel,
-  ActiveChannelContext,
-} from '#app/features/team/hooks/use-active-channel';
+import { type ActiveChannel, ActiveChannelContext } from '#app/hooks/use-active-channel';
 
 const NONE: ActiveChannel['memberships'] = [];
 

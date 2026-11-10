@@ -3,7 +3,7 @@ import { CHANNEL_ROLE_NAMES, type ChannelRole } from '@vp/domain';
 import type { UserContext } from '@vp/permissions';
 import { PermissionsProvider } from '@vp/permissions-react';
 import type { PropsWithChildren } from 'react';
-import { ActiveChannelContext, type ActiveChannel } from '../use-active-channel';
+import { ActiveChannelContext, type ActiveChannel } from '#app/hooks/use-active-channel';
 import { useRoleRules } from '../use-role-rules';
 
 const CHANNEL = { channelId: 'channel-1', ownerId: 'owner-1' };
