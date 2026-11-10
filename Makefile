@@ -276,4 +276,4 @@ secrets-check: ## List the secrets an environment expects and .secrets/<env>.env
 	@$(DEPLOY) secrets-check $(DEPLOY_FLAGS)
 
 new-environment: ## Scaffold infra/environments/<NAME> from the template
-	@bash scripts/new-environment.sh "$(NAME)"
+	@bash scripts/new-environment.sh "$(NAME)" $(if $(DRY_RUN),--dry-run)
