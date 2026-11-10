@@ -10,7 +10,7 @@ test.describe('the mini player follows the viewer, on one player that never move
     stack,
   }) => {
     await signIn('viewer');
-    await page.goto(`/watch/${stack.videos.watchable.id}`, { waitUntil: 'networkidle' });
+    await page.goto(`/watch/${stack.videos.clippable.id}`, { waitUntil: 'networkidle' });
     await expect(oneVideo(page)).toHaveCount(1);
     const host = page.locator('[data-slot=playback-host]');
     await expect(host).toHaveAttribute('data-state', 'docked');
