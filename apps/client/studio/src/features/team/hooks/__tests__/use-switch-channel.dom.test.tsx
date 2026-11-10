@@ -27,6 +27,7 @@ describe('apps/client/studio: useSwitchChannel', () => {
     await user.click(await screen.findByRole('menuitemradio', { name: /Other Show/ }));
 
     await vi.waitFor(() => expect(router.state.location.pathname).toBe(lands));
+    await vi.waitFor(() => expect(router.state.status).toBe('idle'));
   });
 
   it('forgets what the cache held for the channel the viewer left', async () => {
@@ -42,5 +43,6 @@ describe('apps/client/studio: useSwitchChannel', () => {
 
     await vi.waitFor(() => expect(queryClient.getQueryData(['videos', 'mine'])).toBeUndefined());
     await vi.waitFor(() => expect(router.state.location.pathname).toBe('/videos'));
+    await vi.waitFor(() => expect(router.state.status).toBe('idle'));
   });
 });
