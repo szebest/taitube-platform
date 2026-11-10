@@ -18,6 +18,8 @@ import { Paginator } from '@vp/pagination';
 import { ok } from '@vp/result';
 import { ChannelImageService, type ChannelImageServiceDeps } from '../channel-image-service';
 import type { ChannelServiceDeps } from '../channel-service';
+import { CreatorStudioService } from '../creator-studio-service';
+import { MetadataScreening } from '../metadata-screening';
 import type { SseServiceDeps } from '../sse-service';
 import type { UploadContext } from '../upload-context';
 import { VideoService, type VideoServiceDeps } from '../video-service';
@@ -136,4 +138,30 @@ export function sseServiceDeps(
     logger: createLogger({ format: 'json', service: 'sse-service-spec', level: 'silent' }),
     ...overrides,
   };
+}
+
+/** The edit screening switched on, over the same repositories as the service under test. */
+function metadataScreeningOf(repositories: InMemoryRepositories): MetadataScreening {
+  const { thresholds, process } = inProcessAppConfig().screening;
+  return new MetadataScreening({
+    screenings: repositories.screenings,
+    videos: repositories.videos,
+    enabled: true,
+    thresholds,
+    locales: process.metadataLocales,
+    recentTitleCount: process.recentTitleCount,
+  });
+}
+
+export function creatorStudioOf(repositories: InMemoryRepositories): CreatorStudioService {
+  return new CreatorStudioService({
+    videos: repositories.videos,
+    studio: repositories.videoStudio,
+    videoService: new VideoService(videoServiceDeps(repositories.videos)),
+    metadataScreening: metadataScreeningOf(repositories),
+    cdn: TEST_CDN,
+    sprite: TEST_SPRITE,
+    channels: repositories.channels,
+    paginator: new Paginator(),
+  });
 }

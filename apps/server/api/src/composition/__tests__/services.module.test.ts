@@ -70,6 +70,7 @@ describe('apps/server/api/composition: services module', () => {
       'readiness',
       'recommendationFeedbackService',
       'relatedService',
+      'screeningService',
       'searchHistoryService',
       'searchService',
       'sseHub',

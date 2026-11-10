@@ -9,6 +9,7 @@ import { SDD_LIBRARY_ENDPOINTS } from './sdd-library-endpoints';
 import { SDD_LIVE_ENDPOINTS } from './sdd-live-endpoints';
 import { SDD_PICK_ENDPOINTS } from './sdd-pick-endpoints';
 import { SDD_RECOMMENDATION_ENDPOINTS } from './sdd-recommendation-endpoints';
+import { SDD_SCREENING_ENDPOINTS } from './sdd-screening-endpoints';
 import { SDD_SEARCH_ENDPOINTS } from './sdd-search-endpoints';
 import { SDD_STUDIO_ENDPOINTS } from './sdd-studio-endpoints';
 import { SDD_TEAM_ENDPOINTS } from './sdd-team-endpoints';
@@ -331,6 +332,7 @@ export const SDD_ENDPOINT_CONTRACT: SddEndpointContract[] = [
   ...SDD_INTEGRATION_ENDPOINTS,
   ...SDD_TEAM_ENDPOINTS,
   ...SDD_LIVE_ENDPOINTS,
+  ...SDD_SCREENING_ENDPOINTS,
   { path: '/healthz', method: 'get', expectedStatuses: [200] },
   { path: '/readyz', method: 'get', expectedStatuses: [200, 503] },
 ];

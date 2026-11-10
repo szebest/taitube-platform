@@ -1,4 +1,9 @@
-import { SCREENING_TRANSITIONS, isScreeningCaseOpen, mergeFlag } from '../screening';
+import {
+  SCREENING_TRANSITIONS,
+  creatorScreeningReasons,
+  isScreeningCaseOpen,
+  mergeFlag,
+} from '../screening';
 import type { ScreeningFinding } from '../screening';
 import { VIDEO_STATUSES } from '../status-vocabulary';
 
@@ -110,6 +115,13 @@ describe('packages/domain: screening transitions', () => {
       changed: true,
       reasons: ['PARTIAL_MATCH', 'METADATA_SPAM'],
     },
+    {
+      name: 'the same reason read from a transcript, beside the one read from the text',
+      before: [finding('METADATA_SPAM', { a: 1 })],
+      next: finding('METADATA_SPAM', { source: 'transcript' }),
+      changed: true,
+      reasons: ['METADATA_SPAM', 'METADATA_SPAM'],
+    },
   ])('merges $name: changed $changed', ({ before, next, changed, reasons }) => {
     const merged = mergeFlag(before, next);
 
@@ -124,3 +136,23 @@ function finding(
 ): ScreeningFinding {
   return { reason, score: 0.5, evidence };
 }
+
+describe('packages/domain: creator screening reasons', () => {
+  it.each([
+    { name: 'a duplicate', reasons: ['DUPLICATE'], told: ['DUPLICATE'] },
+    { name: 'a match with a taken-down video', reasons: ['KNOWN_REJECTED'], told: ['DUPLICATE'] },
+    {
+      name: 'both kinds of match, once',
+      reasons: ['KNOWN_REJECTED', 'DUPLICATE'],
+      told: ['DUPLICATE'],
+    },
+    { name: 'a partial match, never told', reasons: ['PARTIAL_MATCH'], told: [] },
+    {
+      name: 'several, in a fixed order',
+      reasons: ['SCREEN_ERROR', 'NSFW', 'BLANK'],
+      told: ['NSFW', 'BLANK', 'SCREEN_ERROR'],
+    },
+  ] as const)('tells $name', ({ reasons, told }) => {
+    expect(creatorScreeningReasons(reasons.map((reason) => ({ reason })))).toEqual(told);
+  });
+});

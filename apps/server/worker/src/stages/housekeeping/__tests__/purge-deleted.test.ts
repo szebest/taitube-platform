@@ -128,6 +128,21 @@ describe('housekeeping: purge-deleted', () => {
     expect(expectOk(await repositories.videos.findById(videoId))).toBeNull();
   });
 
+  it('removes the evidence frames and fingerprints of a deleted video, and keeps those of a rejected one', async () => {
+    const { videoId } = await seedSoftDeleted();
+    const rejected = await seedVideo(repositories, { status: 'REJECTED' });
+    for (const id of [videoId, rejected.id]) {
+      await put('raw', `evidence/${id}/frame-0.jpg`, 'image/jpeg');
+      expectOk(await repositories.fingerprints.storeFrames(id, [{ idx: 0, hash: 9n }]));
+    }
+
+    await purge();
+
+    expect(expectOk(await storage.headObject('raw', `evidence/${videoId}/frame-0.jpg`))).toBeNull();
+    const hits = expectOk(await repositories.fingerprints.findFramesSharingBand([9n], uuidv7()));
+    expect(hits.map((hit) => hit.videoId)).toEqual([rejected.id]);
+  });
+
   it('purges the broadcast a soft-deleted live archive was recorded under', async () => {
     const channel = expectOk(
       await repositories.channels.create({ userId: uuidv7(), handle: 'live', displayName: 'Live' })

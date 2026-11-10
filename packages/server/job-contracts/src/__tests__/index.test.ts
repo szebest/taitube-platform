@@ -19,6 +19,7 @@ describe('@vp/job-contracts smoke test', () => {
     expect(ids.thumbnail(videoId, 1)).toBe(`${videoId}--thumbnail--g1`);
     expect(ids.screen(videoId, 2)).toBe(`${videoId}--screen--g2`);
     expect(ids.package(videoId, 1)).toBe(`${videoId}--package--g1`);
+    expect(ids.packageApproved(videoId, 2)).toBe(`${videoId}--package--approved--g2`);
     expect(ids.captions(videoId, 'small-q5_1', 2)).toBe(`${videoId}--captions--small-q5_1--v2`);
     expect(ids.captionsChunk(videoId, 'small-q5_1', 2, 3)).toBe(
       `${videoId}--captions--small-q5_1--v2--w3`

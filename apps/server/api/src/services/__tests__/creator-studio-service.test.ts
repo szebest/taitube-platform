@@ -1,12 +1,10 @@
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { NewVideoInput } from '@vp/core/repositories';
 import { ErrorCodes } from '@vp/errors';
-import { Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
 import { expectErr, expectOk } from '@vp/testing/result';
-import { type CreatorLibraryOptions, CreatorStudioService } from '../creator-studio-service';
-import { VideoService } from '../video-service';
-import { ownerActing, TEST_CDN, TEST_SPRITE, videoServiceDeps } from './service-deps';
+import type { CreatorLibraryOptions, CreatorStudioService } from '../creator-studio-service';
+import { creatorStudioOf, ownerActing, TEST_CDN } from './service-deps';
 
 const OWNER: UserContext = { id: '00000000-0000-7000-8000-0000000000d1', role: 'CREATOR' };
 const STRANGER: UserContext = { id: '00000000-0000-7000-8000-0000000000d2', role: 'USER' };
@@ -40,16 +38,7 @@ describe('apps/server/api/services: creator studio', () => {
 
   beforeEach(async () => {
     repositories = new InMemoryRepositories();
-    const paginator = new Paginator();
-    studio = new CreatorStudioService({
-      videos: repositories.videos,
-      studio: repositories.videoStudio,
-      videoService: new VideoService(videoServiceDeps(repositories.videos)),
-      cdn: TEST_CDN,
-      sprite: TEST_SPRITE,
-      channels: repositories.channels,
-      paginator,
-    });
+    studio = creatorStudioOf(repositories);
     expectOk(
       await repositories.categories.create({ id: CATEGORY_ID, slug: 'music', name: 'Music' })
     );

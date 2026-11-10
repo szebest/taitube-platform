@@ -6,6 +6,7 @@ import { adminDlqRoutes } from './admin/dlq';
 import { adminPicksRoutes } from './admin/picks';
 import { adminQueuesRoutes } from './admin/queues';
 import { adminReportsRoutes } from './admin/reports';
+import { adminScreeningRoutes } from './admin/screening';
 import { adminVideosRoutes } from './admin/videos';
 import { analyticsRoutes } from './analytics';
 import { bootstrapRoutes } from './bootstrap';
@@ -37,6 +38,7 @@ import { preferencesRoutes } from './preferences';
 import { reactionsRoutes } from './reactions';
 import { recommendationFeedbackRoutes } from './recommendation-feedback';
 import { recommendationsRoutes } from './recommendations';
+import { screeningRoutes } from './screening';
 import { searchRoutes } from './search';
 import { searchHistoryRoutes } from './search-history';
 import { shortsRoutes } from './shorts';
@@ -95,6 +97,8 @@ const ROUTES: readonly FastifyPluginAsync[] = [
   adminQueuesRoutes,
   adminDlqRoutes,
   adminReportsRoutes,
+  adminScreeningRoutes,
+  screeningRoutes,
   adminPicksRoutes,
 ];
 

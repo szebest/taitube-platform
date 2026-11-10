@@ -32,6 +32,7 @@ import { registerCommentServices } from './comment.module';
 import { registerDiscoveryServices } from './discovery.module';
 import { registerLiveServices } from './live.module';
 import { registerNotificationServices } from './notification.module';
+import { registerScreeningServices } from './screening.module';
 import { registerSearchServices } from './search.module';
 import { registerServiceSet } from './service-set.module';
 import { Services } from './service-tokens';
@@ -68,8 +69,10 @@ export function registerServices(c: Container): Container {
               registerCaptionServices(
                 registerNotificationServices(
                   registerStudioServices(
-                    registerCommentServices(
-                      registerSseServices(registerLiveServices(registerBootstrap(c)))
+                    registerScreeningServices(
+                      registerCommentServices(
+                        registerSseServices(registerLiveServices(registerBootstrap(c)))
+                      )
                     )
                   )
                 )

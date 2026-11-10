@@ -85,7 +85,7 @@ export interface NotificationPayload {
   actor: NotificationActor | null;
   videoTitle: string | null;
   excerpt: string | null;
-  outcome: 'ready' | 'failed' | null;
+  outcome: 'ready' | 'failed' | 'held' | 'approved' | 'rejected' | null;
   /** Set on `team_invite`: the invite the notification opens. */
   inviteId?: string;
 }

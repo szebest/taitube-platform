@@ -16,9 +16,9 @@ export type Tx = PostgresDatabase;
 
 const hasFlags = sql`${vs.flags} <> '[]'::jsonb`;
 const isCase = sql`(${vs.outcome} = 'HOLD' OR ${hasFlags})`;
-export const isOpen = sql<boolean>`((${vs.decision} IS NULL AND ${vs.outcome} = 'HOLD') OR (${hasFlags} AND ${vs.flagsClearedAt} IS NULL))`;
+const isOpen = sql<boolean>`((${vs.decision} IS NULL AND ${vs.outcome} = 'HOLD') OR (${hasFlags} AND ${vs.flagsClearedAt} IS NULL))`;
 
-export function caseScope(options: ListScreeningCasesOptions): SQL {
+function caseScope(options: ListScreeningCasesOptions): SQL {
   const { cursor, state } = options;
   return and(
     isCase,

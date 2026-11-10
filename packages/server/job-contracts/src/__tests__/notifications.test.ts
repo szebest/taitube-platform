@@ -33,6 +33,7 @@ describe('job-contracts: notification jobs', () => {
     { schema: NotifyHeartJob, valid: { videoId: VIDEO_ID, commentId: COMMENT_ID } },
     { schema: NotifyTeamInviteJob, valid: { inviteId: INVITE_ID } },
     { schema: NotifyProcessingJob, valid: { videoId: VIDEO_ID, outcome: 'failed' } },
+    { schema: NotifyProcessingJob, valid: { videoId: VIDEO_ID, outcome: 'held' } },
     { schema: AnnounceLiveJob, valid: { liveStreamId: VIDEO_ID, after: AFTER } },
   ])('reads a well-formed payload', ({ schema, valid }) => {
     expect(schema.parse(valid)).toEqual(valid);
@@ -111,6 +112,11 @@ describe('job-contracts: notification jobs', () => {
     { from: 'PROCESSING', to: 'READY', visibility: 'private', names: [NOTIFY_PROCESSING] },
     { from: 'LIVE', to: 'READY', visibility: 'public', names: [NOTIFY_PROCESSING] },
     { from: 'PROCESSING', to: 'FAILED', visibility: 'public', names: [NOTIFY_PROCESSING] },
+    { from: 'PROCESSING', to: 'HELD', visibility: 'public', names: [NOTIFY_PROCESSING] },
+    { from: 'HELD', to: 'PROCESSING', visibility: 'public', names: [NOTIFY_PROCESSING] },
+    { from: 'HELD', to: 'REJECTED', visibility: 'public', names: [NOTIFY_PROCESSING] },
+    { from: 'REJECTED', to: 'HELD', visibility: 'public', names: [NOTIFY_PROCESSING] },
+    { from: 'READY', to: 'REJECTED', visibility: 'public', names: [] },
     { from: 'PROBING', to: 'PROCESSING', visibility: 'public', names: [] },
     { from: 'READY', to: 'DELETED', visibility: 'public', names: [] },
   ] as const)(

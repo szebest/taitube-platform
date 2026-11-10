@@ -14,10 +14,10 @@ import {
   ScreeningRepository,
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
-import { FLAG_ONLY_CHECKSUM, SCREENING_TRANSITIONS, mergeFlag } from '@vp/domain';
+import { SCREENING_TRANSITIONS } from '@vp/domain';
 import { type DatabaseUnavailable, ErrorCodes, databaseUnavailable } from '@vp/errors';
 import { type Result, fromPromise, map } from '@vp/result';
-import { and, desc, eq, inArray, isNotNull, isNull, lt } from 'drizzle-orm';
+import { and, desc, eq, isNotNull, isNull, lt } from 'drizzle-orm';
 import { decide, flagLatest, latestOf, resolveAppeal, selectCases } from './screening-queries';
 import type { PostgresDatabase } from './types';
 import { commitVideoTransition } from './video-transition';

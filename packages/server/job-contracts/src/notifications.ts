@@ -29,9 +29,12 @@ export const NotifyCommentJob = z.object({
 });
 export type NotifyCommentJob = z.infer<typeof NotifyCommentJob>;
 
+/** `held`, `approved` and `rejected` tell the owner how upload screening went; the others how processing ended. */
+const PROCESSING_OUTCOMES = ['ready', 'failed', 'held', 'approved', 'rejected'] as const;
+
 export const NotifyProcessingJob = z.object({
   videoId: z.uuid(),
-  outcome: z.enum(['ready', 'failed']),
+  outcome: z.enum(PROCESSING_OUTCOMES),
   traceparent: z.string().optional(),
   requestId: z.string().optional(),
 });
@@ -144,6 +147,7 @@ export function transitionNotificationJobs(
   visibility: VideoVisibility
 ) {
   const archive = [from].flat().includes('LIVE');
+  const wasHeld = [from].flat().includes('HELD');
   switch (status) {
     case 'READY':
       return [
@@ -154,6 +158,12 @@ export function transitionNotificationJobs(
       ];
     case 'FAILED':
       return [processingOutbox({ videoId, outcome: 'failed' })];
+    case 'HELD':
+      return [processingOutbox({ videoId, outcome: 'held' })];
+    case 'REJECTED':
+      return wasHeld ? [processingOutbox({ videoId, outcome: 'rejected' })] : [];
+    case 'PROCESSING':
+      return wasHeld ? [processingOutbox({ videoId, outcome: 'approved' })] : [];
     default:
       return [];
   }

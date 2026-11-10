@@ -25,3 +25,18 @@ export function screenMetadata(
   );
   return { reason: 'METADATA_SPAM', score, evidence: { signals, profanity, ...measures } };
 }
+
+/**
+ * The same text once per language the platform serves, because a video carries no language of its own,
+ * keeping the strongest hit.
+ */
+export function screenMetadataInLocales(
+  metadata: Omit<ScreeningMetadata, 'locale'>,
+  locales: readonly string[],
+  thresholds: ScreeningThresholds
+): ScreeningFinding | null {
+  const findings = locales
+    .map((locale) => screenMetadata({ ...metadata, locale }, thresholds))
+    .filter((finding): finding is ScreeningFinding => finding !== null);
+  return findings.sort((a, b) => b.score - a.score)[0] ?? null;
+}

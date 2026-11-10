@@ -33,6 +33,7 @@ import * as preferences from './preferences';
 import * as reactions from './reactions';
 import * as recommendationFeedback from './recommendation-feedback';
 import * as recommendations from './recommendations';
+import * as screening from './screening';
 import * as search from './search';
 import * as searchHistory from './search-history';
 import * as shorts from './shorts';
@@ -84,6 +85,7 @@ export * from './problem-for';
 export * from './reactions';
 export * from './recommendation-feedback';
 export * from './recommendations';
+export * from './screening';
 export * from './search';
 export * from './search-history';
 export * from './shorts';
@@ -133,6 +135,7 @@ export const contracts = {
   reactions,
   recommendationFeedback,
   recommendations,
+  screening,
   search,
   searchHistory,
   shorts,

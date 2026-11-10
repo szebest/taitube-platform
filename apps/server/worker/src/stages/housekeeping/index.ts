@@ -7,7 +7,11 @@ import type {
   ViewBufferPort,
 } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
-import { CHANNEL_AUDIT_RETENTION_DAYS, SEARCH_HISTORY_RETENTION_DAYS } from '@vp/domain';
+import {
+  CHANNEL_AUDIT_RETENTION_DAYS,
+  SCREENING_EVIDENCE_RETENTION_DAYS,
+  SEARCH_HISTORY_RETENTION_DAYS,
+} from '@vp/domain';
 import type { AppConfig } from '@vp/env-schema';
 import type { AnyFailure } from '@vp/errors';
 import type { HousekeepingJob, QueueName } from '@vp/job-contracts';
@@ -18,6 +22,7 @@ import { runExpireRaw } from './expire-raw';
 import { runFlushVideoViews } from './flush-video-views';
 import { runPurgeChannelAudit } from './purge-channel-audit';
 import { runPurgeDeleted } from './purge-deleted';
+import { runPurgeScreeningEvidence } from './purge-screening-evidence';
 import { runPurgeSearchHistory } from './purge-search-history';
 import { runReconcileCaptions } from './reconcile-captions';
 import { runReconcileProcessing } from './reconcile-processing';
@@ -35,6 +40,7 @@ export * from './outbox-relay';
 export * from './flush-video-views';
 export * from './reconcile-captions';
 export * from './purge-channel-audit';
+export * from './purge-screening-evidence';
 export * from './purge-search-history';
 
 interface HousekeepingSettings {
@@ -88,6 +94,10 @@ export function housekeepingTasks(housekeeping: AppConfig['housekeeping']) {
     },
     searchHistory: { retentionDays: SEARCH_HISTORY_RETENTION_DAYS },
     channelAudit: { retentionDays: CHANNEL_AUDIT_RETENTION_DAYS },
+    screeningEvidence: {
+      retentionDays: SCREENING_EVIDENCE_RETENTION_DAYS,
+      scanLimit: housekeeping.scanLimit,
+    },
     outbox: {
       batchSize: housekeeping.outboxBatchSize,
       intervalMs: housekeeping.outboxRelayIntervalMs,
@@ -195,6 +205,16 @@ export function createHousekeepingProcessor(
           repositories,
           now,
           ...tasks.channelAudit,
+          logger,
+        });
+
+      case 'purge-screening-evidence':
+        return await runPurgeScreeningEvidence({
+          repositories,
+          storage,
+          rawBucket,
+          now,
+          ...tasks.screeningEvidence,
           logger,
         });
 

@@ -1,6 +1,6 @@
 import type { VideoRepository, VideoRecord } from '@vp/core/repositories';
 import type { ScreeningFinding, ScreeningThresholds } from '@vp/domain';
-import { screenMetadata } from '@vp/domain-rules';
+import { screenMetadataInLocales } from '@vp/domain-rules';
 import type { ScreeningConfig } from '@vp/env-schema';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { type Result, isErr, ok } from '@vp/result';
@@ -26,20 +26,16 @@ export async function metadataFinding(
   const recentTitles = recent.value
     .filter((other) => other.id !== video.id)
     .map((other) => other.title ?? '');
-  const findings = process.metadataLocales.map((locale) =>
-    screenMetadata(
+  return ok(
+    screenMetadataInLocales(
       {
         title: video.title ?? '',
         description: video.description,
         tags: video.tags ?? [],
-        locale,
         recentTitles,
       },
+      process.metadataLocales,
       thresholds
     )
   );
-  const strongest = findings
-    .filter((finding): finding is ScreeningFinding => finding !== null)
-    .sort((a, b) => b.score - a.score)[0];
-  return ok(strongest ?? null);
 }

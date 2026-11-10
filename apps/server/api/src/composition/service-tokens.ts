@@ -46,6 +46,7 @@ import type {
   ReactionService,
   RecommendationFeedbackService,
   RelatedService,
+  ScreeningService,
   SearchHistoryService,
   SearchService,
   SseHub,
@@ -58,6 +59,7 @@ import type {
   WatchHistoryService,
   WebVitalsService,
 } from '../services/index';
+import type { MetadataScreening } from '../services/metadata-screening';
 import type { Poller } from '../services/poller';
 import type { ReadinessService } from '../services/readiness-service';
 import type { ViewerProgress } from '../services/viewer-progress';
@@ -94,6 +96,7 @@ export interface ServiceSet {
   subscriptionService: SubscriptionService;
   commentService: CommentService;
   commentReportService: CommentReportService;
+  screeningService: ScreeningService;
   creatorCommentService: CreatorCommentService;
   viewService: ViewService;
   webVitalsService: WebVitalsService;
@@ -157,6 +160,8 @@ export const Services = {
   SubscriptionService: token<SubscriptionService>('SubscriptionService'),
   CommentService: token<CommentService>('CommentService'),
   CommentReportService: token<CommentReportService>('CommentReportService'),
+  MetadataScreening: token<MetadataScreening>('MetadataScreening'),
+  ScreeningService: token<ScreeningService>('ScreeningService'),
   CreatorCommentService: token<CreatorCommentService>('CreatorCommentService'),
   ViewService: token<ViewService>('ViewService'),
   WebVitalsService: token<WebVitalsService>('WebVitalsService'),

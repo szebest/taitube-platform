@@ -14,6 +14,9 @@ export const SCREENING_REASONS = [
 ] as const;
 export type ScreeningReason = (typeof SCREENING_REASONS)[number];
 
+/** Evidence frames are kept this long after a case closes, then housekeeping removes them. */
+export const SCREENING_EVIDENCE_RETENTION_DAYS = 30;
+
 export const SCREENING_DECISIONS = ['approved', 'rejected', 'dismissed'] as const;
 export type ScreeningDecision = (typeof SCREENING_DECISIONS)[number];
 
@@ -92,19 +95,24 @@ export interface FlagMerge {
   changed: boolean;
 }
 
-/** One flag per reason: a fresh finding of a reason replaces the older one. */
+/** Where a finding was read: the text of the video by default, or what is said in it. */
+function sourceOf(finding: ScreeningFinding): string {
+  const { source } = finding.evidence;
+  return typeof source === 'string' ? source : '';
+}
+
+/** One flag per reason and source: a fresh finding replaces the older one of the same two. */
 export function mergeFlag(
   flags: readonly ScreeningFinding[],
   finding: ScreeningFinding
 ): FlagMerge {
-  const current = flags.find((flag) => flag.reason === finding.reason);
+  const same = (flag: ScreeningFinding) =>
+    flag.reason === finding.reason && sourceOf(flag) === sourceOf(finding);
+  const current = flags.find(same);
   if (current && canonical(current) === canonical(finding)) {
     return { flags: [...flags], changed: false };
   }
-  return {
-    flags: [...flags.filter((flag) => flag.reason !== finding.reason), finding],
-    changed: true,
-  };
+  return { flags: [...flags.filter((flag) => !same(flag)), finding], changed: true };
 }
 
 /** The source checksum of a result made of flags alone, for a video that was never screened. */
@@ -141,3 +149,33 @@ export const SCREENING_TRANSITIONS = {
   reject: { from: 'HELD', to: 'REJECTED', event: 'video.screening_rejected' },
   appeal: { from: 'REJECTED', to: 'HELD', event: 'video.screening_appealed' },
 } as const satisfies Record<ScreeningTransitionName, ScreeningTransitionEdge>;
+
+/**
+ * What a creator is told. A near-total match and a match with a taken-down video are one reason,
+ * because neither says whose video it matched, and a partial match never holds.
+ */
+export const CREATOR_SCREENING_REASONS = [
+  'DUPLICATE',
+  'NSFW',
+  'BLANK',
+  'METADATA_SPAM',
+  'SCREEN_ERROR',
+] as const;
+export type CreatorScreeningReason = (typeof CREATOR_SCREENING_REASONS)[number];
+
+export function creatorScreeningReasons(
+  findings: readonly Pick<ScreeningFinding, 'reason'>[]
+): CreatorScreeningReason[] {
+  const told = findings.flatMap(({ reason }): CreatorScreeningReason[] => {
+    switch (reason) {
+      case 'DUPLICATE':
+      case 'KNOWN_REJECTED':
+        return ['DUPLICATE'];
+      case 'PARTIAL_MATCH':
+        return [];
+      default:
+        return [reason];
+    }
+  });
+  return CREATOR_SCREENING_REASONS.filter((reason) => told.includes(reason));
+}

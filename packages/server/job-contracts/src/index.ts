@@ -123,6 +123,7 @@ export const HousekeepingJob = z.object({
     'reconcile-captions',
     'purge-search-history',
     'purge-channel-audit',
+    'purge-screening-evidence',
   ]),
 });
 export type HousekeepingJob = z.infer<typeof HousekeepingJob>;
@@ -190,6 +191,7 @@ export const ids = {
   thumbnail: (v: string, g: number) => `${v}--thumbnail--g${g}`,
   screen: (v: string, g: number) => `${v}--screen--g${g}`,
   package: (v: string, g: number) => `${v}--package--g${g}`,
+  packageApproved: (v: string, g: number) => `${v}--package--approved--g${g}`,
   captions: (v: string, modelVersion: string, captionVersion: number) =>
     `${v}--captions--${modelVersion}--v${captionVersion}`,
   captionsChunk: (v: string, modelVersion: string, captionVersion: number, window: number) =>

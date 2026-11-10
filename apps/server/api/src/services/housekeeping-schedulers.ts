@@ -15,6 +15,7 @@ const CRON_SCHEDULERS = [
   { id: 'reconcile-captions', pattern: '*/20 * * * *' },
   { id: 'purge-search-history', pattern: '15 3 * * *' },
   { id: 'purge-channel-audit', pattern: '45 3 * * *' },
+  { id: 'purge-screening-evidence', pattern: '0 4 * * *' },
 ] as const satisfies readonly { id: HousekeepingTask; pattern: string }[];
 
 export interface HousekeepingScheduleSettings {
