@@ -37,11 +37,19 @@ describe('apps/client/web: the sign-in dialog', () => {
   });
 
   it('keeps the intent for after the sign-in, once the viewer follows the link', async () => {
+    const { user } = await renderSignIn(`reason=like&intent=like:${VIDEO_ID}&redirect=%2F`);
+
+    await user.click(await screen.findByRole('link', { name: 'Sign in' }));
+
+    expect(takeIntent('/')).toEqual({ kind: 'like', id: VIDEO_ID });
+  });
+
+  it('keeps no intent when it does not know the page to come back to', async () => {
     const { user } = await renderSignIn(`reason=like&intent=like:${VIDEO_ID}`);
 
     await user.click(await screen.findByRole('link', { name: 'Sign in' }));
 
-    expect(takeIntent()).toEqual({ kind: 'like', id: VIDEO_ID });
+    expect(takeIntent('/')).toBeUndefined();
   });
 
   it('closes on Not now and stays on the page', async () => {

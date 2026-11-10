@@ -13,7 +13,7 @@ describe('apps/client/web: replaying an intent after sign-in', () => {
 
   it('likes once for the viewer who pressed Like before signing in', async () => {
     const likes: unknown[] = [];
-    rememberIntent({ kind: 'like', id: VIDEO_ID });
+    rememberIntent({ kind: 'like', id: VIDEO_ID }, '/');
 
     await renderRoute(getRouter, '/', {
       handlers: [
@@ -36,7 +36,7 @@ describe('apps/client/web: replaying an intent after sign-in', () => {
 
   it('subscribes once for the viewer who pressed Subscribe before signing in', async () => {
     const subscribed: string[] = [];
-    rememberIntent({ kind: 'subscribe', id: CHANNEL_ID });
+    rememberIntent({ kind: 'subscribe', id: CHANNEL_ID }, '/');
 
     await renderRoute(getRouter, '/', {
       handlers: [
@@ -53,7 +53,7 @@ describe('apps/client/web: replaying an intent after sign-in', () => {
   });
 
   it('opens the save dialog for the viewer who pressed Save before signing in', async () => {
-    rememberIntent({ kind: 'save', id: VIDEO_ID });
+    rememberIntent({ kind: 'save', id: VIDEO_ID }, '/');
 
     await renderRoute(getRouter, '/', {
       handlers: [
@@ -66,9 +66,33 @@ describe('apps/client/web: replaying an intent after sign-in', () => {
     expect(await screen.findByRole('dialog', { name: 'Save to playlist' })).toBeInTheDocument();
   });
 
+  it('replays nothing when the viewer lands on a page other than the one the intent came from', async () => {
+    const likes: unknown[] = [];
+    rememberIntent({ kind: 'like', id: VIDEO_ID }, '/watch/abandoned');
+
+    await renderRoute(getRouter, '/', {
+      handlers: [
+        signInBrowser(),
+        mockEndpoint(setReaction, async ({ request }) => {
+          likes.push(await request.json());
+          return HttpResponse.json({
+            videoId: VIDEO_ID,
+            reaction: 'LIKE',
+            likesCount: 1,
+            dislikesCount: 0,
+          });
+        }),
+        ...loaderApi(),
+      ],
+    });
+    await screen.findByRole('banner');
+
+    expect(likes).toEqual([]);
+  });
+
   it('replays nothing for a guest, and nothing without an intent', async () => {
     const likes: unknown[] = [];
-    rememberIntent({ kind: 'like', id: VIDEO_ID });
+    rememberIntent({ kind: 'like', id: VIDEO_ID }, '/');
 
     await renderRoute(getRouter, '/', {
       handlers: [

@@ -17,12 +17,16 @@ export function decodeIntent(raw: string | undefined): ReplayIntent | undefined 
   return parsed.success ? parsed.data : undefined;
 }
 
-const StoredSchema = z.object({ intent: IntentSchema, at: z.number() });
+const StoredSchema = z.object({ intent: IntentSchema, redirect: z.string(), at: z.number() });
 
-export function rememberIntent(intent: ReplayIntent): void {
+export function rememberIntent(intent: ReplayIntent, redirect: string): void {
   ignore(
     tryCatch(
-      () => window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ intent, at: Date.now() })),
+      () =>
+        window.sessionStorage.setItem(
+          STORAGE_KEY,
+          JSON.stringify({ intent, redirect, at: Date.now() })
+        ),
       (cause) => cause
     ),
     'blocked storage means no replay, and the viewer presses the action again'
@@ -48,22 +52,24 @@ export function rawIntent(): string | null {
   return isOk(raw) ? raw.value : null;
 }
 
-/** The intent in `raw`, unless it is damaged or older than ten minutes. */
-export function intentIn(raw: string | null): ReplayIntent | undefined {
+/** The intent in `raw`, unless it is damaged, older than ten minutes, or meant for a page other than `href`. */
+export function intentIn(raw: string | null, href: string): ReplayIntent | undefined {
   if (raw === null) return undefined;
   const json = tryCatch(
     (): unknown => JSON.parse(raw),
     (cause) => cause
   );
   const stored = isOk(json) ? StoredSchema.safeParse(json.value) : undefined;
-  return stored?.success && Date.now() - stored.data.at <= STALE_AFTER_MS
+  return stored?.success &&
+    stored.data.redirect === href &&
+    Date.now() - stored.data.at <= STALE_AFTER_MS
     ? stored.data.intent
     : undefined;
 }
 
-/** The remembered intent, once: it is gone after this read. */
-export function takeIntent(): ReplayIntent | undefined {
-  const intent = intentIn(rawIntent());
+/** The remembered intent for `href`, once: it is gone after this read. */
+export function takeIntent(href: string): ReplayIntent | undefined {
+  const intent = intentIn(rawIntent(), href);
   forgetIntent();
   return intent;
 }

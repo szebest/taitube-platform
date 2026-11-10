@@ -35,8 +35,8 @@ export function SignInDialog() {
 
   const keepIntent = () => {
     const intent = decodeIntent(params?.intent);
-    if (intent) {
-      rememberIntent(intent);
+    if (intent && params?.redirect) {
+      rememberIntent(intent, params.redirect);
     } else {
       forgetIntent();
     }

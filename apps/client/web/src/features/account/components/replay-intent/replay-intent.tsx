@@ -1,3 +1,4 @@
+import { useLocation } from '@tanstack/react-router';
 import { useAccount } from '@vp/queries';
 import { useEffect, useEffectEvent, useSyncExternalStore } from 'react';
 import { useSetReaction } from '#app/hooks/use-set-reaction';
@@ -53,7 +54,8 @@ const noIntent = () => null;
 /** Carries on with the like, subscribe or save a guest pressed before signing in, once, and renders nothing. */
 export function ReplayIntent() {
   const account = useAccount();
-  const intent = intentIn(useSyncExternalStore(subscribeNever, rawIntent, noIntent));
+  const href = useLocation({ select: (location) => location.href });
+  const intent = intentIn(useSyncExternalStore(subscribeNever, rawIntent, noIntent), href);
 
   if (!(account && intent)) {
     return null;
