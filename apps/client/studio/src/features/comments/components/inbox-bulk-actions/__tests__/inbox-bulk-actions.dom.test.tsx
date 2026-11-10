@@ -15,6 +15,9 @@ const selectBoth = async (user: Awaited<ReturnType<typeof renderInbox>>['user'])
 
 const bar = () => screen.getByRole('toolbar', { name: 'Moderate the selected comments' });
 
+const settled = () =>
+  vi.waitFor(() => expect(within(bar()).getByRole('button', { name: 'Approve' })).toBeEnabled());
+
 describe('apps/client/studio: InboxBulkActions', () => {
   it('approves the selected comments in one call and says how many changed', async () => {
     const { user, requests } = await renderInbox('/comments', [[FIRST, SECOND]]);
@@ -23,6 +26,7 @@ describe('apps/client/studio: InboxBulkActions', () => {
     await user.click(within(bar()).getByRole('button', { name: 'Approve' }));
 
     expect(await screen.findByText('2 comments updated')).toBeInTheDocument();
+    await settled();
     expect(requests.bulks).toEqual([{ ids: [FIRST.id, SECOND.id], action: { action: 'approve' } }]);
   });
 
@@ -32,12 +36,14 @@ describe('apps/client/studio: InboxBulkActions', () => {
 
     await user.click(within(bar()).getByRole('button', { name: 'Hide' }));
     await vi.waitFor(() => expect(requests.bulks).toHaveLength(1));
+    await settled();
     await user.click(within(bar()).getByRole('radio', { name: 'Visible' }));
     await user.click(within(bar()).getByRole('button', { name: 'Hide' }));
     await user.click(await screen.findByRole('radio', { name: /Harassment/ }));
     await user.click(screen.getByRole('button', { name: /^Hide/ }));
 
     await vi.waitFor(() => expect(requests.bulks).toHaveLength(2));
+    await settled();
     expect(requests.bulks.map(({ action }) => action)).toEqual([
       { action: 'hide', disclosure: 'silent' },
       { action: 'hide', disclosure: 'visible', reason: 'harassment' },
@@ -73,6 +79,7 @@ describe('apps/client/studio: InboxBulkActions', () => {
     await user.click(screen.getByRole('button', { name: /^Ban/ }));
 
     await vi.waitFor(() => expect(requests.bulks).toHaveLength(1));
+    await settled();
     expect(requests.bulks[0]?.action).toMatchObject({ action: 'ban', reason: 'No more' });
   });
 });
