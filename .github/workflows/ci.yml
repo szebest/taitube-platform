@@ -71,6 +71,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
+        with:
+          fetch-depth: 2
 
       - name: Set up the workspace
         uses: ./.github/actions/setup-workspace
@@ -88,6 +90,10 @@ jobs:
 
       - name: Check package boundaries (tiers, layers, CLAUDE.md symlinks)
         run: pnpm boundaries
+
+      - name: Fail when a pull request edits or deletes a shipped migration (they only grow)
+        if: github.event_name == 'pull_request'
+        run: pnpm envctl migrations-check --base HEAD^1
 
       - name: Check architectural invariants
         id: architecture

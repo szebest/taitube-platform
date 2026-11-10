@@ -8,7 +8,10 @@ import { type Command, commandsIn, makeTargets, phonyTargets, VP_COMMANDS } from
 function checkedDocuments(): string[] {
   return trackedDocuments().filter(
     (file) =>
-      ['README.md', 'ARCHITECTURE.md', 'CONTEXT.md', 'docs/SDD.md'].includes(file) ||
+      ['README.md', 'ARCHITECTURE.md', 'CONTEXT.md', 'docs/SDD.md', 'docs/DEPLOYMENT.md'].includes(
+        file
+      ) ||
+      (file.startsWith('infra/environments/') && file.endsWith('README.md')) ||
       file.startsWith('docs/standards/') ||
       file.startsWith('docs/runbooks/') ||
       file.endsWith('AGENTS.md')
