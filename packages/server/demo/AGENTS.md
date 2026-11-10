@@ -7,12 +7,12 @@ Instructions for any coding agent working on `packages/server/demo`.
 ## Orchestration (`pnpm demo`, `make demo`)
 
 `pnpm demo [up|seed|reset|down|status|login <persona>|help]` starts the stack, seeds the demo world and prints
-where everything is. `make demo*` calls `scripts/demo.sh`, a bootstrap that works before `pnpm install`
+where everything is. `make demo` and its `demo-seed`, `demo-reset`, `demo-down`, `demo-status` and `demo-login` siblings call `scripts/demo.sh`, a bootstrap that works before `pnpm install`
 (checks Node 24, pnpm 12, Docker, Compose v2, ffmpeg, installs when `node_modules` is stale, creates `.env`)
 and then runs `pnpm --silent demo`. Exit codes: 0 ok, 1 failure, 2 bad usage, 3 prerequisite missing.
 
-- `src/options.ts` owns every flag, env var and default (`FLAGS`, `DEFAULTS`, `PROFILE_DEFAULTS`); the help text
-  is generated from that table, and `parseDemoCommand` returns a tagged `DemoCommand` or a one-line usage error
+- `src/option-table.ts` owns every flag, env var and default (`FLAGS`, `DEFAULTS`, `PROFILE_DEFAULTS`) and
+  generates the help text from them; `src/options.ts`'s `parseDemoCommand` returns a tagged `DemoCommand` or a one-line usage error
   (exit 2). A flag beats its env var. A new option is a new `FLAGS` row, nothing else.
 - `src/targets.ts` turns options into `pnpm stack up` targets (`minimal`: `api web studio` plus the stages
   `worker:probe|transcode|thumbnail|package|notify|housekeeping`; `full`: `all`; `observability` on request) and
