@@ -167,6 +167,7 @@ describe('apps/server/worker: stage registry', () => {
       name: 'notify-processing',
       data: { videoId: '018f0000-0000-7000-8000-000000000001', outcome: 'ready' },
     },
+    { name: 'notify-party-invite', data: { inviteId: '018f0000-0000-7000-8000-000000000004' } },
     { name: 'announce-live', data: { liveStreamId: '018f0000-0000-7000-8000-000000000003' } },
   ])('runs a $name job on the notify stage, not as a status notice', async ({ name, data }) => {
     const processor = STAGE_REGISTRY.notify.createProcessor(deps());

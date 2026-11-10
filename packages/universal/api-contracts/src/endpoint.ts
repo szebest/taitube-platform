@@ -17,6 +17,11 @@ export interface EndpointContract {
   readonly summary: string;
   readonly description: string;
   readonly anonymous?: boolean;
+  /**
+   * Also accepts a guest's or a Discord member's party credential (`X-Party-Credential`). Only the
+   * watch party routes set it; on every other route that credential is ignored and the caller is anonymous.
+   */
+  readonly partyGuest?: boolean;
   /** Called by a sibling service on the compose network, never by a client: left out of the OpenAPI document. */
   readonly internal?: boolean;
   /**

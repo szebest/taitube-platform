@@ -38,6 +38,7 @@ import { Services } from './service-tokens';
 import { registerSseServices } from './sse.module';
 import { registerStudioServices } from './studio.module';
 import { registerTelemetryServices } from './telemetry.module';
+import { registerWatchPartyServices } from './watch-party.module';
 
 export * from './service-tokens';
 
@@ -49,6 +50,8 @@ export function resolveBackground(c: Container): void {
   c.get(Services.MetricsServer);
   c.get(Services.SseHub);
   c.get(Services.LiveChatHub);
+  c.get(Services.WatchPartyHub);
+  c.get(Services.WatchPartySweep);
   c.get(Services.LiveViewerHeartbeat);
   c.get(Services.QueuePoller);
   c.get(Services.SqlPoller);
@@ -69,7 +72,9 @@ export function registerServices(c: Container): Container {
                 registerNotificationServices(
                   registerStudioServices(
                     registerCommentServices(
-                      registerSseServices(registerLiveServices(registerBootstrap(c)))
+                      registerSseServices(
+                        registerLiveServices(registerWatchPartyServices(registerBootstrap(c)))
+                      )
                     )
                   )
                 )

@@ -1,7 +1,7 @@
 import { token } from '@vp/composition';
 import type { JobQueue } from '@vp/core/ports';
 import type { Logger } from '@vp/logger';
-import type { MetricsServer } from '@vp/observability';
+import type { MetricsServer, WatchPartyMetrics } from '@vp/observability';
 import type { Paginator } from '@vp/pagination';
 import type { FastifyPluginCallback } from 'fastify';
 import type { HistoryPause } from '../services/history-pause';
@@ -60,9 +60,28 @@ import type {
   WatchHistoryService,
   WebVitalsService,
 } from '../services/index';
+import type { PatternHub } from '../services/pattern-hub';
 import type { Poller } from '../services/poller';
 import type { ReadinessService } from '../services/readiness-service';
 import type { ViewerProgress } from '../services/viewer-progress';
+import type {
+  BufferingWait,
+  OwnerGrace,
+  Reaction,
+  RoomBatcher,
+  RoomEnvelope,
+  RosterChange,
+  WatchPartyBroadcaster,
+  WatchPartyContextLoader,
+  WatchPartySocketService,
+  WatchPartyService,
+  WatchPartyGuestService,
+  WatchPartyRoleService,
+  WatchPartyMemberService,
+  WatchPartyQueueService,
+  WatchPartyInviteService,
+  WatchPartyControlsService,
+} from '../services/watch-party/index';
 
 export interface ServiceSet {
   videoService: VideoService;
@@ -117,6 +136,14 @@ export interface ServiceSet {
   sseHub: SseHub;
   readiness: ReadinessService;
   queueBoard: FastifyPluginCallback;
+  watchPartyService: WatchPartyService;
+  watchPartyGuestService: WatchPartyGuestService;
+  watchPartyRoleService: WatchPartyRoleService;
+  watchPartyMemberService: WatchPartyMemberService;
+  watchPartyQueueService: WatchPartyQueueService;
+  watchPartyInviteService: WatchPartyInviteService;
+  watchPartyControlsService: WatchPartyControlsService;
+  watchPartySocketService: WatchPartySocketService;
 }
 
 export const Services = {
@@ -187,4 +214,21 @@ export const Services = {
   QueueBoard: token<FastifyPluginCallback>('QueueBoard'),
   MetricsServer: token<MetricsServer>('MetricsServer'),
   ServiceSet: token<ServiceSet>('ServiceSet'),
+  WatchPartyBroadcaster: token<WatchPartyBroadcaster>('WatchPartyBroadcaster'),
+  WatchPartyContextLoader: token<WatchPartyContextLoader>('WatchPartyContextLoader'),
+  WatchPartyService: token<WatchPartyService>('WatchPartyService'),
+  WatchPartyGuestService: token<WatchPartyGuestService>('WatchPartyGuestService'),
+  WatchPartyRoleService: token<WatchPartyRoleService>('WatchPartyRoleService'),
+  WatchPartyMemberService: token<WatchPartyMemberService>('WatchPartyMemberService'),
+  WatchPartyQueueService: token<WatchPartyQueueService>('WatchPartyQueueService'),
+  WatchPartyInviteService: token<WatchPartyInviteService>('WatchPartyInviteService'),
+  WatchPartyControlsService: token<WatchPartyControlsService>('WatchPartyControlsService'),
+  WatchPartyHub: token<PatternHub<RoomEnvelope>>('WatchPartyHub'),
+  WatchPartySweep: token<Poller>('WatchPartySweep'),
+  WatchPartyMetrics: token<WatchPartyMetrics>('WatchPartyMetrics'),
+  WatchPartyReactions: token<RoomBatcher<Reaction>>('WatchPartyReactions'),
+  WatchPartyRoster: token<RoomBatcher<RosterChange>>('WatchPartyRoster'),
+  WatchPartyBuffering: token<BufferingWait>('WatchPartyBuffering'),
+  WatchPartyOwnerGrace: token<OwnerGrace>('WatchPartyOwnerGrace'),
+  WatchPartySocketService: token<WatchPartySocketService>('WatchPartySocketService'),
 } as const;

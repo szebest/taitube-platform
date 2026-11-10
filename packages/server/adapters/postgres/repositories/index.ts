@@ -17,6 +17,7 @@ export * from './postgres-recommendation-feedback-repository';
 export * from './postgres-related-videos-repository';
 export * from './postgres-rising-videos-repository';
 export * from './postgres-rendition-repository';
+export * from './postgres-connection';
 export * from './postgres-repositories';
 export * from './postgres-search-history-repository';
 export * from './postgres-search-repository';

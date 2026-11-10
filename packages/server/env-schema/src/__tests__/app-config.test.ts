@@ -49,6 +49,12 @@ describe('packages/env-schema: toAppConfig', () => {
         rtmpPublicUrl: 'rtmp://localhost:1935/live',
         packaging: { segmentMs: 2000, partMs: 500, windowSegments: 5 },
       },
+      watchParties: {
+        maxMembers: 200,
+        maxOpenPerUser: 3,
+        guestSalt: 'change-me-party-salt',
+        ticketTtlSeconds: 30,
+      },
     });
   });
 

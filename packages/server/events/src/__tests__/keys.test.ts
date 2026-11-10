@@ -29,6 +29,14 @@ describe('@vp/events cache keys', () => {
     [CacheKeys.liveChatSlowMode('s1', 'u1'), 'taitube:live:s1:chat:slow:u1'],
     [CacheKeys.liveChatBurst('s1', 'u1'), 'taitube:live:s1:chat:burst:u1'],
     [CacheKeys.livePresence('s1'), 'taitube:live:s1:presence'],
+    [CacheKeys.watchPartyTicket('t1'), 'taitube:watch-party:ticket:t1'],
+    [CacheKeys.watchPartyBudget('chat', 'r1:m1'), 'taitube:watch-party:budget:chat:r1:m1'],
+    [CacheKeys.watchPartySlowMode('r1', 'user:u1'), 'taitube:watch-party:r1:slow:user:u1'],
+    [CacheKeys.watchPartyRolesVersion('r1'), 'taitube:watch-party:r1:roles-version'],
+    [CacheKeys.watchPartySkipVotes('r1', 'i1'), 'taitube:watch-party:r1:skip:i1'],
+    [CacheKeys.watchPartyPresence('r1'), 'taitube:watch-party:r1:presence'],
+    [CacheKeys.watchPartyPresenceSince('r1'), 'taitube:watch-party:r1:presence-since'],
+    [CacheKeys.partyGuestSession('abc'), 'taitube:watch-party:guest:abc'],
   ])('builds %s', (key, expected) => {
     expect(key).toBe(expected);
   });

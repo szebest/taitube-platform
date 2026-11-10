@@ -29,6 +29,10 @@ export function useNotificationText(): (notification: Notification) => Notificat
         return tOr('notifications.comment', { name }, '');
       case 'heart':
         return tOr('notifications.heart', { name }, '');
+      case 'party_invite':
+        return tOr('notifications.partyInvite', { name }, '');
+      case 'party_starting':
+        return tOr('notifications.partyStarting', {}, '');
       case 'team_invite':
         return tOr('notifications.teamInvite', { name }, '');
       case 'processing':

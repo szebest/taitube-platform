@@ -70,7 +70,7 @@ because it is a status mark, not a control.
 
 ## Inventory
 
-Every id in `lib/icons.svg` (65), what it draws and where Taitube uses it. `@vp/ui`'s `src/icons/inventory.tsx`
+Every id in `lib/icons.svg` (66), what it draws and where Taitube uses it. `@vp/ui`'s `src/icons/inventory.tsx`
 maps each one but `mark` to its Lucide glyph, or to a glyph of its own for the filled `more`, `more-h`, `grip` and
 `verified`, and a spec holds the map to the sprite.
 
@@ -109,6 +109,7 @@ maps each one but `mark` to its Lucide glyph, or to a glyph of its own for the f
 | | `chat` | live chat and Discussion |
 | | `pin` | a pinned comment or a pinned Start here shelf |
 | | `flame` | trending and popular reasons |
+| | `party` | watch parties: the nav entry, "Watch together" and the roster |
 | Controls | `more` | overflow menu on a card (vertical) |
 | | `more-h` | overflow menu in a toolbar (horizontal) |
 | | `chevron-right`, `chevron-left`, `chevron-down` | shelf scroll, disclosure, expand |

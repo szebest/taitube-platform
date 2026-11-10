@@ -95,6 +95,7 @@ describe('packages/env-schema: the environment contract', () => {
     DATABASE_URL_MIGRATIONS: '',
     WEBHOOK_ALLOW_PRIVATE_HOSTS: 'false',
     LIVE_HOOK_SECRET: '',
+    WATCH_PARTY_GUEST_SALT: '',
   };
 
   function refusals(env: Record<string, string>): [string, string][] {
@@ -119,6 +120,7 @@ describe('packages/env-schema: the environment contract', () => {
         'is refused in production: a webhook could reach the internal network',
       ],
       ['LIVE_HOOK_SECRET', 'holds a credential this repo ships for local use'],
+      ['WATCH_PARTY_GUEST_SALT', 'holds a credential this repo ships for local use'],
     ]);
   });
 
@@ -138,6 +140,11 @@ describe('packages/env-schema: the environment contract', () => {
       key: 'ADMIN_TOKEN',
       value: 'a-real-random-token',
       message: 'is refused in production: admin comes from a verified token role',
+    },
+    {
+      key: 'WATCH_PARTY_GUEST_SALT',
+      value: 'change-me-party-salt',
+      message: 'holds a credential this repo ships for local use',
     },
     { key: 'AUTH_MODE', value: 'dev', message: 'dev verifies the public dev key; use jwks' },
     { key: 'CORS_ORIGINS', value: '*', message: 'must name the allowed origins in production' },
@@ -190,6 +197,10 @@ describe('packages/env-schema: the environment contract', () => {
     { key: 'OTEL_TRACES_SAMPLER', raw: 'parentbased_ratio' },
     { key: 'OTEL_TRACES_SAMPLER_ARG', raw: '1.5' },
     { key: 'OTEL_TRACES_SAMPLER_ARG', raw: '-0.1' },
+    { key: 'WATCH_PARTY_MAX_MEMBERS', raw: '1' },
+    { key: 'WATCH_PARTY_MAX_MEMBERS', raw: '2.5' },
+    { key: 'WATCH_PARTY_MAX_OPEN_PER_USER', raw: '0' },
+    { key: 'WATCH_PARTY_MAX_OPEN_PER_USER', raw: 'many' },
   ] as const)('refuses $key $raw', ({ key, raw }) => {
     expect(SHAPE[key].safeParse(raw).success).toBe(false);
   });
@@ -203,5 +214,20 @@ describe('packages/env-schema: the environment contract', () => {
 
   it('defaults the connection pool without being told', () => {
     expect(SHAPE.DATABASE_POOL_MAX.parse(undefined)).toBe(10);
+  });
+
+  it.each([
+    { key: 'WATCH_PARTY_MAX_MEMBERS' as const, raw: undefined, expected: 200 },
+    { key: 'WATCH_PARTY_MAX_MEMBERS' as const, raw: '2', expected: 2 },
+    { key: 'WATCH_PARTY_MAX_OPEN_PER_USER' as const, raw: undefined, expected: 3 },
+    { key: 'WATCH_PARTY_MAX_OPEN_PER_USER' as const, raw: '1', expected: 1 },
+  ])('reads $key $raw as $expected', ({ key, raw, expected }) => {
+    expect(SHAPE[key].parse(raw)).toBe(expected);
+  });
+
+  it('gives WATCH_PARTY_GUEST_SALT no default', () => {
+    const unset = SHAPE.WATCH_PARTY_GUEST_SALT.safeParse(undefined);
+
+    expect(unset.success ? unset.data : undefined).toBeUndefined();
   });
 });

@@ -283,6 +283,8 @@ export function usePlayerState<Selected>(select: (state: PlayerState) => Selecte
   return usePlayer((state) =>
     select({
       paused: state.paused,
+      buffering: state.waiting,
+      ended: state.ended,
       currentTime: state.currentTime,
       duration: state.duration,
       volume: state.volume,

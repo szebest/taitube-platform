@@ -13,7 +13,12 @@ vi.mock(import('#app/components/player/taitube-player/taitube-player'), async ()
 
 const PAUSED = preferencesView({
   version: 1,
-  privacy: { historyPaused: true, playlistVisibility: 'private', subscriptionsVisible: false },
+  privacy: {
+    historyPaused: true,
+    playlistVisibility: 'private',
+    subscriptionsVisible: false,
+    showInParties: true,
+  },
 });
 
 function recording() {

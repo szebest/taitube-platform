@@ -83,6 +83,32 @@ export const errors = {
   liveChatSubscribersOnly: dt('Teraz mogą pisać na czacie tylko subskrybenci.'),
   liveChatClosed: dt('Czat jest zamknięty, bo transmisja nie trwa.'),
   liveChatTicketInvalid: dt('Sesja czatu wygasła. Połącz się ponownie, aby dalej pisać.'),
+  watchPartyNotFound: dt('Ta impreza do wspólnego oglądania nie istnieje.'),
+  watchPartyClosed: dt('Ta impreza do wspólnego oglądania już się skończyła.'),
+  watchPartyFull: dt('Impreza jest pełna. Spróbuj ponownie, gdy zwolni się miejsce.'),
+  watchPartyBanned: dt('Nie możesz dołączyć do tej imprezy.'),
+  watchPartyGuestsOff: dt('Ta impreza nie przyjmuje gości. Zaloguj się, aby dołączyć.'),
+  watchPartyPasswordRequired: dt('Ta impreza wymaga hasła.'),
+  watchPartyPasswordInvalid: dt('To hasło jest nieprawidłowe.'),
+  watchPartyPasswordLocked: dt('Zbyt wiele błędnych haseł. Spróbuj ponownie później.'),
+  watchPartyInviteInvalid: dt('To zaproszenie jest już nieważne.'),
+  watchPartyLimitReached: dt(
+    'Prowadzisz już maksymalną liczbę otwartych imprez. Najpierw zamknij jedną.'
+  ),
+  watchPartyVideoNotShareable: dt('Tego filmu nie można oglądać na tej imprezie.'),
+  watchPartyQueueFull: dt('Kolejka imprezy jest pełna.'),
+  watchPartyStateStale: dt('Impreza poszła dalej. Twoja akcja nie została zastosowana.'),
+  watchPartyPermissionMissing: dt('Nie możesz tego zrobić na tej imprezie.'),
+  watchPartyRoleEscalation: dt('Możesz zmieniać tylko role i osoby poniżej swojej roli.'),
+  watchPartyRoleProtected: dt('Tej wbudowanej roli nie można tak zmienić.'),
+  watchPartyRoleNotFound: dt('Ta rola nie istnieje.'),
+  watchPartyRoleLimit: dt('Ta impreza ma już maksymalną liczbę ról.'),
+  watchPartySlowMode: dt('Tryb powolny: odczekaj chwilę przed wysłaniem kolejnej wiadomości.'),
+  watchPartyChatOff: dt('Czat na tej imprezie jest wyłączony.'),
+  watchPartyTicketInvalid: dt(
+    'Połączenie z imprezą wygasło. Połącz się ponownie, aby dalej oglądać.'
+  ),
+  watchPartyCredentialInvalid: dt('Twoje miejsce gościa wygasło. Dołącz do imprezy ponownie.'),
   channelMembershipRequired: dt('Nie należysz już do zespołu tego kanału.'),
   channelInviteNotFound: dt('To zaproszenie nie istnieje.'),
   channelInviteNotPending: dt(

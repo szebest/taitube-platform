@@ -161,6 +161,12 @@ const LiveEnvSchema = z.object({
   LIVE_WHIP_PUBLIC_URL: z.url().default('http://localhost:8889/live'),
 });
 
+const WatchPartyEnvSchema = z.object({
+  WATCH_PARTY_MAX_MEMBERS: z.coerce.number().int().min(2).default(200),
+  WATCH_PARTY_MAX_OPEN_PER_USER: z.coerce.number().int().min(1).default(3),
+  WATCH_PARTY_GUEST_SALT: secret(),
+});
+
 const TRACE_SAMPLERS = [
   'always_on',
   'always_off',
@@ -185,6 +191,7 @@ const AppEnvShape = z.object({
   ...AuthEnvSchema.shape,
   ...PipelineEnvSchema.shape,
   ...LiveEnvSchema.shape,
+  ...WatchPartyEnvSchema.shape,
   ...OtelEnvSchema.shape,
 });
 
@@ -224,6 +231,15 @@ function productionIssues(env: ParsedEnv): { key: string; message: string }[] {
   if (env.LIVE_HOOK_SECRET !== undefined && heldLocalCredentials(env.LIVE_HOOK_SECRET)) {
     issues.push({
       key: 'LIVE_HOOK_SECRET',
+      message: 'holds a credential this repo ships for local use',
+    });
+  }
+  if (
+    env.WATCH_PARTY_GUEST_SALT !== undefined &&
+    heldLocalCredentials(env.WATCH_PARTY_GUEST_SALT)
+  ) {
+    issues.push({
+      key: 'WATCH_PARTY_GUEST_SALT',
       message: 'holds a credential this repo ships for local use',
     });
   }

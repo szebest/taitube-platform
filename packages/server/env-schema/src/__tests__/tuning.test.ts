@@ -30,4 +30,11 @@ describe('packages/env-schema: tuning', () => {
       tuning.UPLOAD_SESSION_TTL_SECONDS * 1000
     );
   });
+
+  it('keeps a watch party member counted through two missed keepalives, not three', () => {
+    const { keepaliveMs, staleAfterMs } = tuning.WATCH_PARTY.presence;
+
+    expect(staleAfterMs).toBeGreaterThan(2 * keepaliveMs);
+    expect(staleAfterMs).toBeLessThanOrEqual(3 * keepaliveMs);
+  });
 });

@@ -93,7 +93,14 @@ describe('@vp/queries: user event handlers', () => {
       actorChannelId: null,
       videoId: VIDEO_ID,
       commentId: null,
-      payload: { count: 1, actor: null, videoTitle: null, excerpt: null, outcome: null },
+      payload: {
+        count: 1,
+        actor: null,
+        videoTitle: null,
+        excerpt: null,
+        outcome: null,
+        party: null,
+      },
       read: false,
       createdAt: '2026-01-02T03:04:05.000Z',
     } as const;
@@ -217,5 +224,17 @@ describe('@vp/queries: user event handlers', () => {
       payload: { ...payload, version: 2 },
     });
     expect(queryClient.getQueryState(key)?.isInvalidated).toBe(true);
+  });
+
+  it('refetches the personal controls when another device changed one', () => {
+    const queryClient = createQueryClient();
+    queryClient.setQueryData(['watch-party-controls'], { items: [] });
+
+    applyUserEvent(queryClient, {
+      type: 'party.controls.updated',
+      payload: { targetKey: `user:${VIDEO_ID}`, roomId: null },
+    });
+
+    expect(queryClient.getQueryState(['watch-party-controls'])?.isInvalidated).toBe(true);
   });
 });
