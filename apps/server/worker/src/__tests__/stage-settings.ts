@@ -36,6 +36,8 @@ const mediaTools: MediaTools = {
   concat: (...args) => ffmpeg.runFfmpegConcat(...args),
   audio: (...args) => ffmpeg.runFfmpegAudio(...args),
   live: (...args) => ffmpeg.runFfmpegLive(...args),
+  probeChannelImage: (...args) => ffmpeg.probeChannelImage(...args),
+  channelImage: (...args) => ffmpeg.runFfmpegChannelImage(...args),
 };
 
 /** The configuration a stage reads, at the values `.env.example` gives a local process. */

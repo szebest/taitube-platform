@@ -1,6 +1,7 @@
 import {
   ChannelHeaderActions,
   ChannelHeaderBanner,
+  ChannelHeaderBannerLink,
   ChannelHeaderBell,
   ChannelHeaderBio,
   ChannelHeaderIdentity,
@@ -13,6 +14,7 @@ import {
 export const ChannelHeader = {
   Root: ChannelHeaderRoot,
   Banner: ChannelHeaderBanner,
+  BannerLink: ChannelHeaderBannerLink,
   Identity: ChannelHeaderIdentity,
   Bio: ChannelHeaderBio,
   Actions: ChannelHeaderActions,
@@ -21,6 +23,6 @@ export const ChannelHeader = {
   Tabs: ChannelHeaderTabs,
   Tab: ChannelHeaderTab,
 };
-export { ChannelHeaderSkeleton } from './channel-header';
+export { ChannelHeaderSkeleton } from './channel-header-skeleton';
 export { useChannelHeader } from './channel-header.context';
 export { channelHeaderStyles } from './channel-header.variants';

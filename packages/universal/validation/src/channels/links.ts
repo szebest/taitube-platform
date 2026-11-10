@@ -1,9 +1,10 @@
 import { type Result, err, ok } from '@vp/result';
 import { normalizePlainText } from '../plain-text';
 import { type ChannelLinkLimits, type InvalidChannelLinks, invalidChannelLinks } from './failures';
+import { isHttpsUrl } from './https-url';
 
 const CHANNEL_LINK_LIMITS: ChannelLinkLimits = {
-  maxLinks: 5,
+  maxLinks: 8,
   maxLabelLength: 40,
   maxUrlLength: 2048,
 };
@@ -11,12 +12,6 @@ const CHANNEL_LINK_LIMITS: ChannelLinkLimits = {
 export interface ChannelLinkInput {
   readonly label: string;
   readonly url: string;
-}
-
-function isHttpsUrl(value: string): boolean {
-  if (!URL.canParse(value)) return false;
-  const { protocol, username, password } = new URL(value);
-  return protocol === 'https:' && username === '' && password === '';
 }
 
 function normalized({ label, url }: ChannelLinkInput): ChannelLinkInput | null {

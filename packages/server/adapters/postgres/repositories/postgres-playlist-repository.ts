@@ -143,6 +143,20 @@ export class PostgresPlaylistRepository implements PlaylistRepositoryPort {
     );
   }
 
+  async listItemOwners(
+    playlistId: string
+  ): Promise<Result<{ id: string; ownerId: string }[], DatabaseUnavailable>> {
+    return await fromPromise(
+      () =>
+        this.db
+          .select({ id: v.id, ownerId: v.ownerId })
+          .from(pi)
+          .innerJoin(v, eq(v.id, pi.videoId))
+          .where(eq(pi.playlistId, playlistId)),
+      databaseUnavailable.during('listPlaylistItemOwners')
+    );
+  }
+
   async update(
     id: string,
     patch: PlaylistPatch

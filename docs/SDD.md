@@ -1085,6 +1085,10 @@ erDiagram
     channels ||--o{ channel_subscriptions : has
     channels ||--o{ subscription_events : "gains and loses"
     channels ||--o{ channel_featured_videos : pins
+    channels ||--o{ channel_handle_history : "retired handles"
+    channels ||--o{ channel_image_uploads : "avatar and banner uploads"
+    channels ||--o| channel_page_settings : "trailer and returning video"
+    channels ||--o{ channel_localizations : "per language"
     videos ||--o{ channel_featured_videos : "is pinned in"
     channels ||--o{ channel_members : "has on its team"
     users ||--o{ channel_members : "works on"
@@ -1106,9 +1110,41 @@ erDiagram
         text banner_url
         text bio
         jsonb links
+        int avatar_version
+        int banner_version
+        jsonb banner_crops
+        text country
+        text contact_email
+        jsonb banner_link
+        timestamptz handle_changed_at
         int subscriber_count
         timestamptz created_at
         timestamptz updated_at
+    }
+    channel_handle_history {
+        text handle PK
+        uuid channel_id FK
+        timestamptz retired_at
+    }
+    channel_image_uploads {
+        uuid id PK
+        uuid channel_id FK
+        uuid uploaded_by FK
+        text kind
+        text status
+        jsonb crops
+        int version
+    }
+    channel_page_settings {
+        uuid channel_id PK,FK
+        uuid trailer_video_id FK
+        uuid returning_video_id FK
+    }
+    channel_localizations {
+        uuid channel_id PK,FK
+        text locale PK
+        text description
+        uuid trailer_video_id FK
     }
     channel_subscriptions {
         uuid id PK
@@ -1200,6 +1236,7 @@ erDiagram
         text title
         text visibility
         bool is_system
+        text kind
         text custom_thumbnail_key
     }
     playlist_items {
@@ -1359,8 +1396,15 @@ CREATE TABLE channels (
   display_name      text NOT NULL,
   avatar_url        text,
   banner_url        text,
-  bio               text,
-  links             jsonb NOT NULL DEFAULT '[]',        -- [{ label, url }], up to 5, https only: validateChannelLinks in @vp/validation
+  bio               text,                               -- the default description, up to 5000 characters of plain text
+  links             jsonb NOT NULL DEFAULT '[]',        -- [{ label, url }], up to 8, https only: validateChannelLinks in @vp/validation; the platform is read off the host, never stored
+  avatar_version    integer NOT NULL DEFAULT 0,         -- 0034: the newest ready avatar upload; moved only forward, by the channel-image job
+  banner_version    integer NOT NULL DEFAULT 0,
+  banner_crops      jsonb,                              -- { desktop, mobile, tv } rectangles of the current banner
+  country           text,                               -- ISO 3166-1 alpha-2 from COUNTRIES in @vp/domain
+  contact_email     text,                               -- never in the channel resource; POST /v1/channels/:id/contact-reveal
+  banner_link       jsonb,                              -- { label <= 24, url https }
+  handle_changed_at timestamptz,                        -- the cooldown starts here (30 days)
   subscriber_count  integer NOT NULL DEFAULT 0,
   created_at        timestamptz NOT NULL DEFAULT now(),
   updated_at        timestamptz NOT NULL DEFAULT now()
@@ -1578,6 +1622,7 @@ CREATE TABLE playlists (
   description          text NOT NULL DEFAULT '',
   visibility           text NOT NULL DEFAULT 'private' CHECK (visibility IN ('private', 'unlisted', 'public')),
   is_system            boolean NOT NULL DEFAULT false,  -- Watch Later: never renamed, never deleted
+  kind                 text NOT NULL DEFAULT 'playlist' CHECK (kind IN ('playlist', 'series')),  -- 0034: a series holds only the owner's own videos
   custom_thumbnail_key text,
   created_at           timestamptz NOT NULL DEFAULT now(),
   updated_at           timestamptz NOT NULL DEFAULT now()   -- moved by item writes too
@@ -1678,6 +1723,49 @@ CREATE TABLE channel_featured_videos (
   PRIMARY KEY (channel_id, video_id),
   CONSTRAINT channel_featured_videos_channel_position_key UNIQUE (channel_id, position),
   CONSTRAINT channel_featured_videos_position_check CHECK (position BETWEEN 0 AND 5)
+);
+
+-- 0034: channel identity. A handle a channel gave up is held for its owner for 90 days and resolves to the channel meanwhile.
+CREATE TABLE channel_handle_history (
+  handle     text PRIMARY KEY,
+  channel_id uuid NOT NULL REFERENCES channels(id) ON DELETE CASCADE,
+  retired_at timestamptz NOT NULL
+);
+CREATE INDEX channel_handle_history_retired_at_idx ON channel_handle_history (retired_at);
+
+-- One avatar or banner file from its presigned URL to the version it became.
+CREATE TABLE channel_image_uploads (
+  id           uuid PRIMARY KEY,                                        -- the upload id; also the channel-image job id
+  channel_id   uuid NOT NULL REFERENCES channels(id) ON DELETE CASCADE,
+  uploaded_by  uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  kind         text NOT NULL,                                           -- avatar|banner
+  content_type text NOT NULL,
+  size_bytes   bigint NOT NULL,
+  status       text NOT NULL DEFAULT 'issued',                          -- issued|queued|ready|failed|superseded|purged
+  width        integer,
+  height       integer,
+  crops        jsonb,                                                   -- { kind: 'avatar', crop } | { kind: 'banner', crops: { desktop, mobile, tv } }
+  version      integer,                                                 -- assigned when queued
+  failure      text,
+  created_at   timestamptz NOT NULL DEFAULT now(),
+  updated_at   timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT channel_image_uploads_version_key UNIQUE (channel_id, kind, version)
+);
+
+CREATE TABLE channel_page_settings (
+  channel_id         uuid PRIMARY KEY REFERENCES channels(id) ON DELETE CASCADE,
+  trailer_video_id   uuid REFERENCES videos(id) ON DELETE SET NULL,
+  returning_video_id uuid REFERENCES videos(id) ON DELETE SET NULL,
+  updated_at         timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE channel_localizations (
+  channel_id       uuid NOT NULL REFERENCES channels(id) ON DELETE CASCADE,
+  locale           text NOT NULL,                                       -- one of the app's supported locales
+  description      text,
+  trailer_video_id uuid REFERENCES videos(id) ON DELETE SET NULL,
+  updated_at       timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (channel_id, locale)
 );
 
 -- 0016: saved preferences, one document per account. Each section is the shape @vp/domain/settings infers.
@@ -1847,9 +1935,15 @@ Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>`
 | `DELETE /v1/creator/videos/:id` | Studio delete | — | `202 { videoId, status:"DELETED" }` | Same soft delete as `DELETE /videos/:id`. |
 | `GET /v1/creator/comments?filter=all\|unanswered\|reported&cursor=&limit=` | Creator comment inbox | — | `200 { items:[Comment + { video:{ id, title } }], nextCursor }` | Authenticated caller, over live comments on the videos they own that they did not write, newest first, keyset on `(created_at, id)`. `unanswered` drops a comment once the caller has a later reply in its thread; `reported` keeps comments with an open report. A new comment on one of their videos arrives live as `comment.created` (§10.3). |
 | `GET /videos/:id/reactions/me` | My reaction | — | `200 { videoId, type: "LIKE" \| "DISLIKE" \| null }` | Authenticated caller. |
-| `GET /v1/channels/:idOrHandle` | Channel | — | `200 Channel` (`handle`, `displayName`, `avatarUrl`, `bannerUrl`, `brandColor`, `bio`, `links:[{ label, url }]`, `subscriberCount`, `videoCount`, `totalViews`) / `404 CHANNEL_NOT_FOUND` | Anonymous. The channel by UUID or `@handle`. `videoCount` and `totalViews` are one aggregate over the owner's public `READY` undeleted videos (§5.2); the same fields come with `GET /v1/me/account` and the `PATCH /v1/me/channel` response, never with search results. |
-| `PATCH /v1/me/channel` | Edit my channel | `{ handle?, displayName?, avatarUrl?, bannerUrl?, avatarKey?, bannerKey?, brandColor?, bio?, links? }` | `200 Channel` plus `autoCaptionsDefault` / `400 INVALID_HANDLE_FORMAT` / `404 CHANNEL_NOT_FOUND` / `409 HANDLE_ALREADY_TAKEN` / `422 VALIDATION_FAILED` | Authenticated caller. `avatarKey` and `bannerKey` are the keys `POST /v1/me/channel/images` returned: each must sit under the caller's own `channels/<channelId>/<kind>/` prefix and name an uploaded object (else `422 VALIDATION_FAILED` naming the field), and replaces the address of the same field with its public URL. `links` replaces the list: up to 5 `{ label, url }`, a label of 1-40 characters, an `https` URL of up to 2048 characters without credentials (`validateChannelLinks` in `@vp/validation`, so the form runs the same rule); an empty list clears it. `brandColor` is `#rrggbb` in any case, stored lowercase, or `null` to clear it (`validateBrandColor` in `@vp/domain-rules`, the `ACCENT_PATTERN` check the account's accent uses): a malformed value is `422 VALIDATION_FAILED`, any well-formed one is accepted, a hostile one too, because the web app derives the channel's accent from it with `deriveAccent`, which steps it until every contrast pair passes. |
-| `POST /v1/me/channel/images` | Presign an avatar or banner upload | `{ kind: 'avatar' \| 'banner', contentType, sizeBytes }` | `201 { key, uploadUrl, headers, expiresAt }` / `400` / `401` / `404 CHANNEL_NOT_FOUND` / `422 UNSUPPORTED_CONTENT_TYPE \| UPLOAD_TOO_LARGE` | Authenticated caller, their own channel (resolved from the token, never from an id in the request). A presigned `PUT` into the public bucket at `channelImageKey` (`channels/<channelId>/<kind>/<id>.<ext>` in `@vp/storage`); `image/jpeg`, `image/png` or `image/webp`, at most 5 MB for an avatar and 10 MB for a banner (`validateChannelImage` in `@vp/validation`, so the form runs the same rule); the size is signed into the URL. The upload is saved to the channel by `PATCH /v1/me/channel`. |
+| `GET /v1/channels/:idOrHandle?locale=` | Channel | — | `200 Channel` (`handle`, `displayName`, `avatarUrl`, `bannerUrl`, `avatar: { sizes }`, `banner: { desktop, mobile, tv }`, `bannerLink`, `country`, `hasContact`, `brandColor`, `bio`, `links:[{ label, url, platform }]`, `subscriberCount`, `videoCount`, `totalViews`, `redirectedFrom`) / `404 CHANNEL_NOT_FOUND` | Anonymous. The channel by UUID or `@handle`; a handle the channel gave up in the last 90 days resolves to it with `redirectedFrom` set, and the web app answers that handle's page with a `301` to the new one. `bio` is the description in the negotiated locale (`locale`, else `Accept-Language`) when the channel wrote one, else the default. `platform` is read off the link's host by `LINK_PLATFORMS` in `@vp/domain`, `website` for an unknown host. The contact email is never in the resource. `videoCount` and `totalViews` are one aggregate over the owner's public `READY` undeleted videos (§5.2); the same fields come with `GET /v1/me/account` and the `PATCH /v1/me/channel` response, never with search results. |
+| `PATCH /v1/me/channel` | Edit my channel | `{ handle?, displayName?, avatarUrl?, bannerUrl?, brandColor?, bio?, links?, country?, contactEmail?, bannerLink? }` | `200 OwnerChannel` / `400 INVALID_HANDLE_FORMAT` / `403 FORBIDDEN` / `404 CHANNEL_NOT_FOUND` / `409 HANDLE_ALREADY_TAKEN \| HANDLE_CHANGE_TOO_SOON \| HANDLE_RESERVED` / `422 VALIDATION_FAILED` | The acting channel (`X-Channel-Id`, default the caller's own): the owner, a manager or an editor (`edit-channel`, `decideChannelTask`); a moderator gets `403`. `avatarUrl` and `bannerUrl` take an external image address, which stays until an upload replaces it (`POST /v1/me/channel/images/:kind/upload` and `/complete`), or `null` to remove the image. A handle changes at most once every 30 days (`HANDLE_CHANGE_TOO_SOON`, `decideHandleChange`); the one it leaves goes to `channel_handle_history` in the same transaction and stays reserved for its old owner for 90 days (`HANDLE_RESERVED`, `decideHandleClaim`). `bio` up to 5000 characters of plain text. `links` replaces the list: up to 8 `{ label, url }`, a label of 1-40 characters, an `https` URL of up to 2048 characters without credentials (`validateChannelLinks` in `@vp/validation`, so the form runs the same rule); an empty list clears it. `country` is an ISO 3166-1 alpha-2 code in `COUNTRIES` or `null`; `contactEmail` is a validated address or `null`; `bannerLink` is `{ label <= 24, url }`, `https` only, or `null`. `brandColor` is `#rrggbb` in any case, stored lowercase, or `null` to clear it (`validateBrandColor` in `@vp/domain-rules`): a malformed value is `422 VALIDATION_FAILED`, any well-formed one is accepted, a hostile one too, because the web app derives the channel's accent from it with `deriveAccent`. A save that changes anything appends one `channel.updated` row to the channel audit log naming the fields. |
+| `GET /v1/me/channel` | Read my channel for editing | — | `200 OwnerChannel` (the channel resource plus `contactEmail`, `bannerCrops`, `handleChangeAvailableAt`, `autoCaptionsDefault`) / `401` / `403 FORBIDDEN` / `404 CHANNEL_NOT_FOUND` | The acting channel, for the roles that may edit it (`edit-channel`): the owner, a manager and an editor; a moderator gets `403`. The studio's customisation page reads this, so an editor edits the channel they switched to and not their own. |
+| `POST /v1/me/channel/images/:kind/upload` | Presign an avatar or banner upload | `{ contentType, sizeBytes }` | `201 { uploadId, uploadUrl, headers, expiresAt }` / `400` / `401` / `403` / `404 CHANNEL_NOT_FOUND` / `422 UNSUPPORTED_CONTENT_TYPE \| UPLOAD_TOO_LARGE` | The acting channel (`edit-channel`). A presigned `PUT` into the private `raw` bucket at `channelImageUploadKey` (`channel-images/<channelId>/<kind>/<uploadId>`); `image/jpeg`, `image/png` or `image/webp`, at most 2 MB for an avatar and 6 MB for a banner (`validateChannelImageUploadRequest` in `@vp/validation`); the size is signed into the URL. Records a `channel_image_uploads` row at `issued`. |
+| `POST /v1/me/channel/images/:kind/complete` | Crop an uploaded image and start processing it | `{ uploadId, width, height, crop }` for an avatar, `{ uploadId, width, height, crops: { desktop, mobile, tv } }` for a banner | `202 { uploadId, version }` / `400` / `401` / `403` / `404 CHANNEL_NOT_FOUND \| IMAGE_UPLOAD_NOT_FOUND` / `422 VALIDATION_FAILED \| UPLOAD_TOO_LARGE \| UPLOAD_SIZE_MISMATCH \| UNSUPPORTED_CONTENT_TYPE \| IMAGE_TOO_SMALL` | The acting channel. Heads the object for its stored size and type, checks the dimensions (an avatar at least 200 x 200, a banner at least 1024 x 576) and every crop against the image (`decideImageCrops`: an avatar square, a banner desktop 6:1, mobile 3:1, tv 16:9, each inside the image), stores the crops on the upload row and enqueues a `channel-image` job on the `thumbnail` queue under `jobId = <uploadId>--channel-image`. Completing the same upload again answers the same version. The channel keeps its image until the job succeeds; `channel.image.ready` or `channel.image.failed` arrives on `GET /v1/me/events` (§10.3). |
+| `GET /v1/channels/:idOrHandle/spotlight?locale=` | The video a channel page shows first | — | `200 { source: 'returning' \| 'trailer' \| null, video: VideoSummary \| null }` / `400` / `404 CHANNEL_NOT_FOUND` | Anonymous. A subscriber (§5.2, `channel_subscriptions`) gets the returning-subscriber video, the trailer when none is set; anyone else gets the trailer. A localized trailer for the negotiated locale wins over the default. Judged on every read (`isSpotlightable`: the channel's own, `READY`, `public`, not deleted), so a trailer made private drops out without a save. It is the only viewer-dependent block of a channel page, fetched on its own so the rest stays cacheable. |
+| `GET /v1/me/channel/spotlight` | Read the spotlight settings | — | `200 { trailerVideoId, returningVideoId, localizations: [{ locale, description, trailerVideoId }] }` / `401` / `403` / `404` | The acting channel (`edit-channel`). What was saved, whatever state each video is in since. |
+| `PUT /v1/me/channel/spotlight` | Set the trailer, the returning-subscriber video and the per-language overrides | `{ trailerVideoId, returningVideoId, localizations }` | `200` (the settings as saved) / `400` / `401` / `403` / `404 CHANNEL_NOT_FOUND` / `422 VALIDATION_FAILED \| INVALID_SPOTLIGHT_VIDEO` | The acting channel (`edit-channel`). Replaces all three in one transaction. Every video is the channel's own, `READY` and `public` (`decideSpotlightVideo` in `@vp/domain-rules`; `INVALID_SPOTLIGHT_VIDEO` names the field and why); every locale one of the supported set, once. Audited as `channel.updated { fields: ['spotlight'] }`. |
+| `POST /v1/channels/:id/contact-reveal` | Reveal a channel's contact email | — | `200 { email }` / `400` / `401` / `404 CHANNEL_NOT_FOUND` / `429 RATE_LIMITED` | A signed-in caller, at most 20 a day each (`CONTACT_REVEALS_PER_DAY`). `404` when the channel set none, the same answer as for a channel that is not there. Nothing sends email. |
 | `GET /v1/channels/:idOrHandle/videos?format=&cursor=&limit=` | Channel videos | — | `200 { items:[VideoSummary], nextCursor, total }` / `400 INVALID_CURSOR` / `404 CHANNEL_NOT_FOUND` | Anonymous. The channel by UUID or `@handle`, then its `public` `READY` videos of one `format` (`standard` by default, `short` for the channel's Shorts tab) newest first: the public feed read narrowed to the owner (`ListPublicVideosOptions.ownerId`), keyset on `(created_at, id)`, read in order from `videos_owner_created_id_idx` (its `NULLS FIRST` matches the plain `DESC` of the `ORDER BY`, or Postgres sorts the owner's rows on every page). Every item carries the channel the lookup found, so it costs no `findByUserIds`. Not cached. |
 | `GET /v1/channels/:idOrHandle/playlists?cursor=&limit=` | Channel playlists | — | `200 { items:[{ id, title, description, thumbnailUrl, thumbnailUrls, videoCount, updatedAt }], nextCursor }` / `400 INVALID_CURSOR` / `404 CHANNEL_NOT_FOUND` | Anonymous. The channel by UUID or `@handle` (the lookup `GET /v1/channels/:idOrHandle/videos` uses), then its `public`, non-system playlists, most recently changed first: keyset on `(updated_at truncated to milliseconds, id)`, the stored `now()` carrying microseconds a cursor cannot. `videoCount` and `thumbnailUrls` (the first three video posters in playlist order) count only the videos an anonymous visitor may watch; `thumbnailUrl` is the custom thumbnail, else the first poster. Not cached. |
 | `GET /v1/channels/:idOrHandle/featured` | Channel Start here shelf | — | `200 { source: 'pinned' \| 'popular', items:[VideoSummary] }` / `400` / `404 CHANNEL_NOT_FOUND` | Anonymous. The channel by UUID or `@handle`, then the videos its creator pinned that are still `public` and `READY`, in the order they chose, with `source: 'pinned'`; a video that turned private or unlisted or was deleted drops out on the next read, its row staying until the creator saves again or the video is purged. When none qualify, the channel's six most-viewed public uploads of the standard format (`ListPublicVideosOptions` with `sort: 'popular'` narrowed to the owner) with `source: 'popular'`. The fallback is decided here and the web app only renders `source`. Not cached, so the `PUT` has nothing to invalidate. |
@@ -1873,8 +1967,8 @@ Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>`
 | `POST /comments/:id/heart` | Heart comment | — | `200 Comment` | Video owner only (`comment:heart`; an admin's `manage all` does not reach it). Idempotent; every viewer then reads `heartedByCreator: true`. Purges the hot page. |
 | `DELETE /comments/:id/heart` | Remove heart | — | `200 Comment` | Video owner only (`comment:heart`; an admin's `manage all` does not reach it). |
 | `POST /comments/:id/reports` | Report comment | `{ reason: spam\|harassment\|hate\|misinformation\|other, note? }` | `201 CommentReport` / `409 COMMENT_ALREADY_REPORTED` | Any signed-in viewer who can read the video (`comment:report`). One report per reporter per comment; `note` is up to 500 characters of plain text. |
-| `POST /playlists` | Create playlist | `{ title, description?, visibility? }` | `201 Playlist` | Authenticated (`playlist:create`). Private unless asked otherwise. Title 1-150 characters, description up to 5000. |
-| `GET /playlists/:id` | Read playlist | — | `200 Playlist` (metadata, owner channel, `videoCount`, ordered `items[]`) / `404 PLAYLIST_NOT_FOUND` | Anonymous allowed. Scoped in SQL by `playlistReadScope` (the `playlist:read` rules): a private playlist of someone else is absent. Items the viewer may not watch are hidden and keep their place. |
+| `POST /playlists` | Create playlist | `{ title, description?, visibility?, kind? }` | `201 Playlist` | Authenticated (`playlist:create`). Private unless asked otherwise. Title 1-150 characters, description up to 5000. |
+| `GET /playlists/:id` | Read playlist | — | `200 Playlist` (metadata, owner channel, `videoCount`, ordered `items[]`) / `404 PLAYLIST_NOT_FOUND` | Anonymous allowed. Scoped in SQL by `playlistReadScope` (the `playlist:read` rules): a private playlist of someone else is absent. Items the viewer may not watch are hidden and keep their place. `kind` is `playlist` or `series`; a series holds only its owner's own videos (`decideSeriesMembership`, `SERIES_VIDEO_NOT_OWNED`). For a signed-in viewer a series carries each item's `episode` (its position from 1) and `progress` (percent from `watch_history`, §5.2) and `nextEpisodeVideoId`: the first item after the last one watched that is below 92 percent, else the first unfinished one, else `null`. |
 | `PATCH /playlists/:id` | Edit playlist | `{ title?, description?, visibility? }` | `200 Playlist` / `400 SYSTEM_PLAYLIST_IMMUTABLE` | Owner or admin (`playlist:update`). |
 | `DELETE /playlists/:id` | Delete playlist | — | `204` / `400 SYSTEM_PLAYLIST_IMMUTABLE` | Owner or admin (`playlist:delete`). Items go with it. |
 | `POST /playlists/:id/items` | Add video | `{ videoId }` | `201 Playlist` | Owner or admin (`playlist:update`). Appends after the last item; a video already there changes nothing; a video the caller may not watch is `VIDEO_NOT_FOUND`. |
@@ -2000,7 +2094,7 @@ A malformed cursor raises `InvalidCursorError` in core, which the API layer tran
 
 ### 6.2 Error codes (stable, machine-readable)
 
-`UPLOAD_TOO_LARGE`, `UPLOAD_SIZE_MISMATCH`, `UNSUPPORTED_CONTENT_TYPE`, `UPLOAD_EXPIRED`, `UPLOAD_NOT_OPEN`, `QUOTA_EXCEEDED`, `VIDEO_NOT_FOUND`, `DLQ_ENTRY_NOT_FOUND`, `VERSION_CONFLICT`, `FORBIDDEN`, `RATE_LIMITED`, `UNAUTHORIZED`, `VALIDATION_FAILED`, `ROUTE_NOT_FOUND`, `INVALID_CURSOR`, `CATEGORY_NOT_FOUND`, `CATEGORY_SLUG_CONFLICT`, `CATEGORY_IN_USE`, `CHANNEL_NOT_FOUND`, `HANDLE_ALREADY_TAKEN`, `INVALID_HANDLE_FORMAT`, `CANNOT_SUBSCRIBE_TO_SELF`, `COMMENT_NOT_FOUND`, `COMMENT_NOT_PINNABLE`, `COMMENT_ALREADY_REPORTED`, `REPORT_NOT_FOUND`, `REPORT_ALREADY_RESOLVED`, `PLAYLIST_NOT_FOUND`, `PLAYLIST_ITEM_NOT_FOUND`, `SYSTEM_PLAYLIST_IMMUTABLE`, `DATABASE_UNAVAILABLE`, `CACHE_UNAVAILABLE`, `QUEUE_UNAVAILABLE`, `INTERNAL`, `FORMAT_UNSUPPORTED_LOCALE`, `FORMAT_UNKNOWN_OPTION`, `FORMAT_WRONG_KIND`, `FORMAT_UNRENDERABLE`, `CAPTION_NOT_FOUND`, `CAPTION_TRACK_LIMIT`, `CAPTION_OVERWRITE_UNCONFIRMED`, `SEARCH_HISTORY_NOT_FOUND`, `CLIP_NOT_FOUND`, `PICK_NOT_FOUND`, `PICK_WINDOW_OVERLAP`, `RECOMMENDATION_FEEDBACK_NOT_FOUND`, `WEBHOOK_NOT_FOUND`, `WEBHOOK_LIMIT_REACHED`, `WEBHOOK_DELIVERY_FAILED`, `WEBHOOK_DELIVERY_REJECTED`, `OEMBED_URL_UNSUPPORTED`, `OEMBED_FORMAT_UNSUPPORTED`, `LIVE_STREAM_NOT_FOUND`, `LIVE_STREAM_NOT_LIVE`, `LIVE_INGEST_REFUSED`, `LIVE_GATEWAY_UNAVAILABLE`, `LIVE_CHAT_SLOW_MODE`, `LIVE_CHAT_SUBSCRIBERS_ONLY`, `LIVE_CHAT_CLOSED`, `LIVE_CHAT_TICKET_INVALID`, `CHANNEL_MEMBERSHIP_REQUIRED`, `CHANNEL_INVITE_NOT_FOUND`, `CHANNEL_INVITE_NOT_PENDING`, `CHANNEL_INVITE_ALREADY_PENDING`, `CHANNEL_MEMBER_EXISTS`, `CHANNEL_MEMBER_NOT_FOUND`, `CHANNEL_OWNER_IMMUTABLE` (API) · `UNSUPPORTED_CODEC`, `CORRUPT_CONTAINER`, `DURATION_EXCEEDED`, `SOURCE_MISSING`, `FFMPEG_FAILED`, `FFMPEG_OOM`, `FFMPEG_TIMEOUT`, `STORAGE_UNAVAILABLE`, `SEGMENT_VERIFY_FAILED`, `DISK_FULL`, `ORPHANED`, `WHISPER_FAILED`, `WHISPER_KILLED`, `WHISPER_TIMEOUT`, `WHISPER_MODEL_INVALID`, `WHISPER_INPUT_REJECTED`, `NO_AUDIO_STREAM`, `LIVE_INGEST_UNAVAILABLE` (pipeline; ORPHANED marks a video the processing reconciler found with nothing running and nothing queued).
+`UPLOAD_TOO_LARGE`, `UPLOAD_SIZE_MISMATCH`, `UNSUPPORTED_CONTENT_TYPE`, `UPLOAD_EXPIRED`, `UPLOAD_NOT_OPEN`, `QUOTA_EXCEEDED`, `VIDEO_NOT_FOUND`, `DLQ_ENTRY_NOT_FOUND`, `VERSION_CONFLICT`, `FORBIDDEN`, `RATE_LIMITED`, `UNAUTHORIZED`, `VALIDATION_FAILED`, `ROUTE_NOT_FOUND`, `INVALID_CURSOR`, `CATEGORY_NOT_FOUND`, `CATEGORY_SLUG_CONFLICT`, `CATEGORY_IN_USE`, `CHANNEL_NOT_FOUND`, `HANDLE_ALREADY_TAKEN`, `INVALID_HANDLE_FORMAT`, `CANNOT_SUBSCRIBE_TO_SELF`, `COMMENT_NOT_FOUND`, `COMMENT_NOT_PINNABLE`, `COMMENT_ALREADY_REPORTED`, `REPORT_NOT_FOUND`, `REPORT_ALREADY_RESOLVED`, `PLAYLIST_NOT_FOUND`, `PLAYLIST_ITEM_NOT_FOUND`, `SYSTEM_PLAYLIST_IMMUTABLE`, `DATABASE_UNAVAILABLE`, `CACHE_UNAVAILABLE`, `QUEUE_UNAVAILABLE`, `INTERNAL`, `FORMAT_UNSUPPORTED_LOCALE`, `FORMAT_UNKNOWN_OPTION`, `FORMAT_WRONG_KIND`, `FORMAT_UNRENDERABLE`, `CAPTION_NOT_FOUND`, `CAPTION_TRACK_LIMIT`, `CAPTION_OVERWRITE_UNCONFIRMED`, `SEARCH_HISTORY_NOT_FOUND`, `CLIP_NOT_FOUND`, `PICK_NOT_FOUND`, `PICK_WINDOW_OVERLAP`, `RECOMMENDATION_FEEDBACK_NOT_FOUND`, `WEBHOOK_NOT_FOUND`, `WEBHOOK_LIMIT_REACHED`, `WEBHOOK_DELIVERY_FAILED`, `WEBHOOK_DELIVERY_REJECTED`, `OEMBED_URL_UNSUPPORTED`, `OEMBED_FORMAT_UNSUPPORTED`, `LIVE_STREAM_NOT_FOUND`, `LIVE_STREAM_NOT_LIVE`, `LIVE_INGEST_REFUSED`, `LIVE_GATEWAY_UNAVAILABLE`, `LIVE_CHAT_SLOW_MODE`, `LIVE_CHAT_SUBSCRIBERS_ONLY`, `LIVE_CHAT_CLOSED`, `LIVE_CHAT_TICKET_INVALID`, `CHANNEL_MEMBERSHIP_REQUIRED`, `CHANNEL_INVITE_NOT_FOUND`, `CHANNEL_INVITE_NOT_PENDING`, `CHANNEL_INVITE_ALREADY_PENDING`, `CHANNEL_MEMBER_EXISTS`, `CHANNEL_MEMBER_NOT_FOUND`, `CHANNEL_OWNER_IMMUTABLE`, `HANDLE_CHANGE_TOO_SOON`, `HANDLE_RESERVED`, `INVALID_SPOTLIGHT_VIDEO`, `IMAGE_TOO_SMALL`, `IMAGE_UPLOAD_NOT_FOUND`, `SERIES_VIDEO_NOT_OWNED` (API) · `UNSUPPORTED_CODEC`, `CORRUPT_CONTAINER`, `DURATION_EXCEEDED`, `SOURCE_MISSING`, `FFMPEG_FAILED`, `FFMPEG_OOM`, `FFMPEG_TIMEOUT`, `STORAGE_UNAVAILABLE`, `SEGMENT_VERIFY_FAILED`, `DISK_FULL`, `ORPHANED`, `WHISPER_FAILED`, `WHISPER_KILLED`, `WHISPER_TIMEOUT`, `WHISPER_MODEL_INVALID`, `WHISPER_INPUT_REJECTED`, `NO_AUDIO_STREAM`, `LIVE_INGEST_UNAVAILABLE` (pipeline; ORPHANED marks a video the processing reconciler found with nothing running and nothing queued).
 
 A code is declared in `@vp/errors` and carries two properties, each declared once over the whole `ErrorCode` union so that adding a code fails to compile until both are decided:
 
@@ -2070,7 +2164,12 @@ raw/                                   (private; lifecycle: expire objects after
     └── source.{ext}                   ← original upload
 tmp/captions/{videoId}/{modelVersion}/v{captionVersion}/w{n}.json   ← a captions window's cues, purged by its merge
 
+raw/channel-images/{channelId}/{kind}/{uploadId}    ← an avatar or banner file until the channel-image job has cut it (7-day lifecycle)
+
 public/                                (private bucket, public read via CDN custom domain; lifecycle: none)
+└── channel-images/{channelId}/{kind}/v{version}/      (kind: avatar | banner; written by the `channel-image` job)
+    ├── 48.webp 72.webp 128.webp 256.webp              ← avatar, square, metadata stripped
+    └── desktop-1280.webp desktop-2560.webp mobile-1280.webp mobile-2560.webp tv-1280.webp tv-2560.webp   ← banner, one crop per target
 └── videos/{videoId}/
     ├── hls/
     │   ├── master.m3u8                ← written last by `package`; presence == READY
@@ -2099,6 +2198,7 @@ public/                                (private bucket, public read via CDN cust
 Rules:
 
 - Segment naming is zero-padded and derived from FFmpeg's `%05d` — a retry overwrites identical keys with identical bytes (same encoder settings, same source, deterministic `-fflags +bitexact` where practical).
+- A channel image version is immutable: the `channel-image` job writes each variant of `v{n}` as `image/webp` with `public, max-age=31536000, immutable`, strips every metadata tag (`-map_metadata -1`, so no EXIF position), and only then moves `channels.avatar_version` or `banner_version` forward in one compare-and-set; a failed or superseded upload leaves the served image alone, and housekeeping purges a superseded version's prefix.
 - Every writer uses `Content-Type` (`application/vnd.apple.mpegurl`, `video/MP2T`, `image/jpeg`, `text/vtt`) and `Cache-Control` (`public, max-age=60` for playlists, `public, max-age=31536000, immutable` for segments and images).
 - A re-process that changes the ladder writes into a new *generation* prefix `hls/g{n}/` and `master_playlist_key` is switched atomically in the DB; the old generation is purged by housekeeping. MVP: `g1` implied (no prefix); the generation column exists from day one.
 - Local dev: MinIO console at `:9001`; the `public` bucket gets an anonymous `download` policy so hls.js can fetch directly from `http://localhost:9000/public/...`.
@@ -2203,7 +2303,7 @@ BullMQ has no exchanges; a *queue* is the routing unit and Redis key prefix. One
 | `transcode-1080p` | probe (as Flow child) | `transcode-1080p` | 1 | 4 | exp 10 s, jitter 0.5 | 120 s | 1–25 min |
 | `transcode-720p` | probe | `transcode-720p` | 1 | 4 | exp 10 s | 120 s | 0.5–12 min |
 | `transcode-480p` | probe | `transcode-480p` | 1 (or 2) | 4 | exp 10 s | 120 s | 0.3–6 min |
-| `thumbnail` | probe | `thumbnail` | 2 | 4 | exp 5 s | 60 s | 5–60 s |
+| `thumbnail` | probe; API (`channel-image`, `jobId = <uploadId>--channel-image`) | `thumbnail` | 2 | 4 | exp 5 s | 60 s | 5–60 s |
 | `package` | probe (Flow parent) | `package` | 4 | 5 | exp 5 s | 60 s | 1–5 s |
 | `notify` | package, failure handler | `notify` | 8, **rate limit 100/10 s** | 8 | exp 2 s | 30 s | < 1 s |
 | `housekeeping` | Job Schedulers (cron) | `housekeeping` | 1 | 3 | fixed 60 s | 300 s | seconds–minutes |
@@ -2247,6 +2347,7 @@ Deterministic IDs are the first line of idempotency: BullMQ ignores an `add()` w
 | probe | `${videoId}--probe--g${generation}` | `{ videoId, sourceKey, generation, traceparent }` |
 | transcode | `${videoId}--transcode--720p--g${generation}` | `{ videoId, sourceKey, generation, rendition: LadderEntry, fps, durationMs, chunkIndex?, chunkCount?, traceparent }` |
 | thumbnail | `${videoId}--thumbnail--g${generation}` | `{ videoId, sourceKey, generation, durationMs, traceparent }` |
+| channel-image | `${uploadId}--channel-image` | `{ type: 'channel-image', uploadId, channelId, kind, traceparent }` on the `thumbnail` queue, which routes it by `type`; the crops are read from the upload row, so a retry cuts the same image |
 | package | `${videoId}--package--g${generation}` | `{ videoId, generation, ladder, traceparent }` |
 | captions | `${videoId}--captions--${modelVersion}--v${captionVersion}`, a window `…--w${n}` | `{ videoId, captionId, captionVersion, sourceKey, durationMs, modelVersion, language, plan: single \| merge(windowCount) \| window(index, windowCount), traceparent }` |
 | notify | `${videoId}--notify--${event}--${eventSeq}` | `{ videoId, userId, event, payload, traceparent }` |
@@ -2392,6 +2493,8 @@ BullMQ 6 Job Schedulers (`queue.upsertJobScheduler(id, { pattern }, template)`) 
 | `reconcile-reaction-counters` | `0 * * * *` | Detect and repair drift between exact `video_reactions` counts and cached counter columns (`videos.likes_count`, `videos.dislikes_count`). |
 | `purge-search-history` | `15 3 * * *` | Delete `search_history` rows last searched more than 90 days ago (`SEARCH_HISTORY_RETENTION_DAYS`); the 100-row cap is enforced by each write. |
 | `purge-channel-audit` | `45 3 * * *` | Delete `channel_audit_log` rows written more than 365 days ago (`CHANNEL_AUDIT_RETENTION_DAYS`); nothing else deletes or changes an audit row. |
+| `purge-channel-images` | `0 4 * * *` | Delete the raw file of a `channel_image_uploads` row settled for 7 days (`CHANNEL_IMAGE_RETENTION_DAYS`) and every variant of a version nothing shows any more, then mark the row `purged`; a row whose files are not all gone stays listed for the next run. |
+| `purge-handle-history` | `15 4 * * *` | Delete `channel_handle_history` rows retired more than 90 days ago (`HANDLE_RESERVATION_DAYS`), which frees the handle for anyone. |
 | `reconcile-captions` | `*/20 * * * *` | Re-enqueue the run of every generated captions track still `pending` an hour after its last change, under the same job id (ADR-16). |
 | `flush-video-views` | every 10 s (`every`, not cron: cron has minute resolution) | Drain the Redis view and retention buffers into `videos.views_count` and `video_views_daily` effectively-once (§5.2), and the retention steps into `video_retention_milestones` in the same batch, then forget ledger batches older than a day. |
 
@@ -2467,6 +2570,7 @@ event: video.processing
 data: {"type":"video.processing","payload":{"videoId":"…","change":{"kind":"progress","rendition":"720p","percent":40,"overall":20}}}
 ```
 
+- **Channel images**: the `channel-image` job appends `channel.image.ready { uploadId, channelId, kind, version }` or `channel.image.failed { uploadId, channelId, kind, reason }` to the uploader's log in the transaction that settles the upload, so the studio learns the outcome of `POST /v1/me/channel/images/:kind/complete` on this stream.
 - **Order**: authorise, subscribe to `user:{userId}`, read the log, write `hello`, replay, go live.
 - **Live events come from the log too.** A numbered message on `user:{userId}` is a cue: the connection reads `user_events` after the last id it wrote and writes what it finds, in id order, so the relay delivering late, twice or out of order changes nothing. `appendUserEvent` takes a per-user advisory lock (`pg_advisory_xact_lock`) held to commit, so one user's ids commit in id order and a read that saw id N has seen every id below it; `id > Last-Event-ID` on reconnect therefore misses nothing. A fresh or expired stream starts that cursor at the user's newest id. Progress ticks carry no id and are written as they come.
 - **`hello`** carries `unreadNotifications`, the bell's badge, read after the newest log id so a notification created in between is both counted and replayed (each `notification.created` carries the absolute count, so a repeat changes nothing). It carries no `id`, so a stream cut during the replay never moves the client's `Last-Event-ID` past an event it has not received. `resume` is `fresh` with no `Last-Event-ID`, `replayed` when the event it names is still in `user_events` and at most `SSE_REPLAY_LIMIT` (500) followed it, and `expired` otherwise; the client refetches what it shows on `expired`.

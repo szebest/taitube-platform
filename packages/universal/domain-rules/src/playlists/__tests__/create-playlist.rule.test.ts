@@ -11,6 +11,7 @@ describe('@vp/domain-rules: decidePlaylistCreate', () => {
       title: 'Mix',
       description: '',
       visibility: 'private',
+      kind: 'playlist',
     });
   });
 
@@ -26,7 +27,14 @@ describe('@vp/domain-rules: decidePlaylistCreate', () => {
       title: 'Mix',
       description: 'songs',
       visibility: 'unlisted',
+      kind: 'playlist',
     });
+  });
+
+  it('makes a series when asked', () => {
+    const result = decidePlaylistCreate({ actor: STRANGER, title: 'Season 1', kind: 'series' });
+
+    expect(isOk(result) && result.value.kind).toBe('series');
   });
 
   it.each([

@@ -1,6 +1,8 @@
 import type { CommentThread } from '../comment';
 import {
   captionsFailed,
+  channelImageFailed,
+  channelImageReady,
   captionsReady,
   commentCreated,
   preferencesUpdated,
@@ -66,5 +68,22 @@ describe('domain: user event', () => {
       type: 'captions.failed',
       payload: { videoId: 'v1', captionId: 'c1', reason: 'WHISPER_FAILED' },
     });
+  });
+
+  it('announces an image that became the channel one, with its version', () => {
+    const payload = { uploadId: 'u1', channelId: 'ch1', kind: 'banner' as const, version: 3 };
+
+    expect(channelImageReady(payload)).toEqual({ type: 'channel.image.ready', payload });
+  });
+
+  it('announces an image the job gave up on, with the reason', () => {
+    const payload = {
+      uploadId: 'u1',
+      channelId: 'ch1',
+      kind: 'avatar' as const,
+      reason: 'unreadable',
+    };
+
+    expect(channelImageFailed(payload)).toEqual({ type: 'channel.image.failed', payload });
   });
 });

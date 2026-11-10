@@ -94,6 +94,23 @@ export function describePlaylistItemsContract(ctx: PlaylistContractContext): voi
       expect(await places(STRANGER)).toEqual([0, 1, 2]);
     });
 
+    it('lists the owner of every item, including a video the viewer may not watch', async () => {
+      await ctx.subject.repositories.videos.create(
+        publicVideo({ id: STRANGERS_PRIVATE_VIDEO, ownerId: OTHER_OWNER_ID, visibility: 'private' })
+      );
+      await addAll(ctx, [VIDEO_IDS.a, STRANGERS_PRIVATE_VIDEO]);
+
+      const owners = expectOk(await ctx.playlists.listItemOwners(P.mix));
+
+      expect(owners).toEqual(
+        expect.arrayContaining([
+          { id: VIDEO_IDS.a, ownerId: OWNER.id },
+          { id: STRANGERS_PRIVATE_VIDEO, ownerId: OTHER_OWNER_ID },
+        ])
+      );
+      expect(owners).toHaveLength(2);
+    });
+
     it('removes a video and closes the gap it leaves', async () => {
       await addAll(ctx, FIVE);
 
