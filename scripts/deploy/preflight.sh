@@ -5,7 +5,7 @@ current_context() {
   if [ "$(field kind)" = compose ]; then
     docker context show 2>/dev/null || true
   else
-    kubectl config current-context 2>/dev/null || true
+    kube_current_context
   fi
 }
 
@@ -50,7 +50,28 @@ check_gate() {
   show envctl gate "$ENV" --context "$ctx" --tag "$(resolved_tag)" $(confirm_flags) && good "context $ctx is the one $ENV declares"
 }
 
+# Names only, against the cluster: an external-secrets environment keeps its values in the store, not on this machine.
+verify_secret_names() {
+  step "secret names in the cluster (names only)"
+  if [ "$DRY_RUN" = 1 ]; then
+    would "compare the keys of Secret vp-secrets with secrets.keys, printing names only"
+    return 0
+  fi
+  local present key missing=""
+  if ! present="$(kc -n "$(ns)" get secret vp-secrets -o go-template='{{range $k, $v := .data}}{{$k}}{{"\n"}}{{end}}' 2>/dev/null)"; then
+    warn "Secret vp-secrets is not in $(ns) yet: the ExternalSecret creates it on the first apply"
+    return 0
+  fi
+  for key in $(field secrets.keys); do
+    printf '%s\n' "$present" | grep -qx "$key" || missing="$missing $key"
+  done
+  if [ -z "$missing" ]; then good "vp-secrets holds every expected key"; return 0; fi
+  bad "vp-secrets lacks:$missing"
+  return 1
+}
+
 check_secrets() {
+  if [ "$(field secrets.source)" = external-secrets ]; then verify_secret_names; return; fi
   step "secrets, by name"
   if show envctl secrets-check "$ENV"; then return 0; fi
   if [ "$DRY_RUN" = 1 ]; then
@@ -101,7 +122,7 @@ check_manifests() {
   local dir
   dir="$(render_overlay)" || return 1
   kustomize_build "$dir" >/dev/null && good "$dir builds"
-  show bash scripts/validate-k8s.sh >/dev/null && good "scripts/validate-k8s.sh"
+  show bash scripts/validate-k8s.sh "$ENV" >/dev/null && good "scripts/validate-k8s.sh $ENV"
 }
 
 check_terraform() {
@@ -129,7 +150,7 @@ check_cluster() {
     return 0
   fi
   for crd in $crds; do
-    if kubectl get crd "$crd" >/dev/null 2>&1; then good "$crd"; else bad "$crd is not installed in this cluster"; failed=1; fi
+    if kc get crd "$crd" >/dev/null 2>&1; then good "$crd"; else bad "$crd is not installed in this cluster"; failed=1; fi
   done
   return "$failed"
 }

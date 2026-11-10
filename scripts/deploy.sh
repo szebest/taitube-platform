@@ -15,6 +15,10 @@ COMMAND=""
 # shellcheck disable=SC1091
 . scripts/deploy/preflight.sh
 # shellcheck disable=SC1091
+. scripts/deploy/k8s-cluster.sh
+# shellcheck disable=SC1091
+. scripts/deploy/k8s-rollout.sh
+# shellcheck disable=SC1091
 . scripts/deploy/k8s.sh
 # shellcheck disable=SC1091
 . scripts/deploy/compose.sh
@@ -38,7 +42,8 @@ Options
   --env <name>        environment (or ENV=)
   --slug <ref>        a branch or PR, for a preview
   --tag <tag>         image tag; a protected environment needs a pinned one
-  --yes               confirm a protected environment (or --confirm <name>)
+  --yes               confirm a protected environment, production excepted
+  --confirm <name>    type the environment name back: all production needs (CONFIRM=<name>)
   --dry-run           run the static checks and print every step instead of executing it
   --service <name>    logs: api, web, studio, worker-probe, ... (default api)
   --follow, --tail N  logs

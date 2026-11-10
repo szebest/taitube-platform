@@ -17,7 +17,12 @@ die() { local code="$1"; shift; printf '%s%s%s\n' "$RED" "$*" "$RESET" >&2; exit
 # Runs a command, or prints it under --dry-run. Nothing mutating goes around this.
 run() {
   if [ "$DRY_RUN" = 1 ]; then
-    printf '    %s[dry-run]%s %s\n' "$DIM" "$RESET" "$*"
+    local shown="$*"
+    case "$1" in
+      kc) shown="kubectl --context $(field cluster.context) ${*:2}" ;;
+      hc) shown="helm --kube-context $(field cluster.context) ${*:2}" ;;
+    esac
+    printf '    %s[dry-run]%s %s\n' "$DIM" "$RESET" "$shown"
     return 0
   fi
   "$@"
@@ -34,8 +39,14 @@ field() {
   printf '%s' "${!var:-}"
 }
 
+# The only places kubectl and helm are named: every call goes to the context the environment declares, not
+# whichever one is current when it runs. A k3d context exists only once bootstrap_cluster has made it.
+kc() { kubectl --context "$(field cluster.context)" "$@"; }
+hc() { helm --kube-context "$(field cluster.context)" "$@"; }
+kube_current_context() { kubectl config current-context 2>/dev/null || true; }
+
 kustomize_build() {
-  if have kustomize; then kustomize build "$1"; else kubectl kustomize "$1"; fi
+  if have kustomize; then kustomize build "$1"; else kc kustomize "$1"; fi
 }
 
 state_dir() { echo ".deploy/$ENV"; }
@@ -53,7 +64,7 @@ hint() {
   case "$1:$(uname -s)" in
     kubectl:Darwin) echo "brew install kubectl" ;;
     kubectl:*) echo "install kubectl: https://kubernetes.io/docs/tasks/tools/" ;;
-    kustomize:Darwin) echo "brew install kustomize (kubectl kustomize also works)" ;;
+    kustomize:Darwin) echo "brew install kustomize (or use kubectl kustomize)" ;;
     kustomize:*) echo "install kustomize, or use kubectl kustomize" ;;
     helm:Darwin) echo "brew install helm" ;;
     helm:*) echo "install helm: https://helm.sh/docs/intro/install/" ;;
