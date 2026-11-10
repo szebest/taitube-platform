@@ -42,6 +42,39 @@ export function describeChannelInviteRepositoryContract(
           : []
       );
 
+    const closedInvites = [
+      { scenario: 'an expired invite', setup: (n: number) => create(n, expired) },
+      {
+        scenario: 'a revoked invite',
+        setup: async (n: number) => {
+          await create(n);
+          await repositories.channelInvites.close(
+            inviteId(n),
+            'revoked',
+            auditOf(channel, 'invite.revoked', n)
+          );
+        },
+      },
+      {
+        scenario: 'a declined invite',
+        setup: async (n: number) => {
+          await create(n);
+          await repositories.channelInvites.close(
+            inviteId(n),
+            'declined',
+            auditOf(channel, 'invite.declined', n, INVITEE_ID)
+          );
+        },
+      },
+      {
+        scenario: 'an accepted invite',
+        setup: async (n: number) => {
+          await create(n);
+          await accept(n);
+        },
+      },
+    ];
+
     beforeAll(async () => {
       subject = await makeSubject();
     });
@@ -112,38 +145,7 @@ export function describeChannelInviteRepositoryContract(
       expect(await auditActions()).toEqual(['invite.accepted', 'invite.created']);
     });
 
-    it.each([
-      { scenario: 'an expired invite', setup: (n: number) => create(n, expired) },
-      {
-        scenario: 'a revoked invite',
-        setup: async (n: number) => {
-          await create(n);
-          await repositories.channelInvites.close(
-            inviteId(n),
-            'revoked',
-            auditOf(channel, 'invite.revoked', n)
-          );
-        },
-      },
-      {
-        scenario: 'a declined invite',
-        setup: async (n: number) => {
-          await create(n);
-          await repositories.channelInvites.close(
-            inviteId(n),
-            'declined',
-            auditOf(channel, 'invite.declined', n, INVITEE_ID)
-          );
-        },
-      },
-      {
-        scenario: 'an accepted invite',
-        setup: async (n: number) => {
-          await create(n);
-          await accept(n);
-        },
-      },
-    ])('cannot accept $scenario', async ({ setup }) => {
+    it.each(closedInvites)('cannot accept $scenario', async ({ setup }) => {
       await setup(1);
 
       expect(await accept(1)).toEqual({ type: 'not-pending' });
@@ -174,6 +176,79 @@ export function describeChannelInviteRepositoryContract(
       expect(expectOk(await repositories.channelInvites.findById(inviteId(1)))?.status).toBe(
         accepted ? 'accepted' : 'pending'
       );
+    });
+
+    describe('listPendingFor', () => {
+      const otherChannel = async () =>
+        expectOk(
+          await repositories.channels.create({
+            userId: OTHER_OWNER_ID,
+            handle: 'other',
+            displayName: 'Other',
+          })
+        );
+
+      const pendingIds = async (
+        cursor: { createdAt: Date; id: string } | null = null,
+        limit = 10
+      ) =>
+        expectOk(
+          await repositories.channelInvites.listPendingFor(INVITEE_ID, { cursor, limit })
+        ).map(({ id }) => id);
+
+      it('lists the invitee own pending invites, newest first', async () => {
+        const other = await otherChannel();
+        await create(1);
+        expectOk(
+          await repositories.channelInvites.create(
+            invite(other, 2, { invitedBy: OTHER_OWNER_ID }),
+            auditOf(other, 'invite.created', 2, OTHER_OWNER_ID)
+          )
+        );
+
+        expect(await pendingIds()).toEqual([inviteId(2), inviteId(1)]);
+      });
+
+      it.each(closedInvites)('leaves out $scenario', async ({ setup }) => {
+        await setup(1);
+
+        expect(await pendingIds()).toEqual([]);
+      });
+
+      it('leaves out another user invite', async () => {
+        await create(1, { inviteeUserId: OTHER_OWNER_ID });
+
+        expect(await pendingIds()).toEqual([]);
+      });
+
+      it('walks the invites by keyset, one more row than the limit', async () => {
+        const second = await otherChannel();
+        const third = expectOk(
+          await repositories.channels.create({
+            userId: INVITEE_ID,
+            handle: 'third',
+            displayName: 'Third',
+          })
+        );
+        for (const [index, from] of [channel, second, third].entries()) {
+          expectOk(
+            await repositories.channelInvites.create(
+              invite(from, index + 1),
+              auditOf(from, 'invite.created', index + 1)
+            )
+          );
+        }
+        const all = await pendingIds();
+
+        const firstPage = expectOk(
+          await repositories.channelInvites.listPendingFor(INVITEE_ID, { cursor: null, limit: 1 })
+        );
+        const [lastOfPage] = firstPage;
+
+        expect(all).toHaveLength(3);
+        expect(firstPage.map(({ id }) => id)).toEqual(all.slice(0, 2));
+        expect(lastOfPage && (await pendingIds(lastOfPage))).toEqual(all.slice(1));
+      });
     });
 
     it('lets only the invitee accept', async () => {

@@ -12,6 +12,7 @@ export function registerTeamServices(c: Container): Container {
           invites: c.get(Adapters.Repositories).channelInvites,
           members: c.get(Adapters.Repositories).channelMembers,
           channels: c.get(Adapters.Repositories).channels,
+          paginator: c.get(Services.Paginator),
           now: Date.now,
         })
     )
