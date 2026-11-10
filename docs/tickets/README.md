@@ -183,7 +183,8 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 | 144 | [Invitee accept from the studio - pending invites, accept and decline, and leaving a team](144-invitee-accept-from-studio.md) | 5 - Developer experience & growth | M | 117 | — | done |
 | 145 | [Stories and visual baselines for the app kit folders that have none](145-kit-stories-and-visual-baselines.md) | 5 - Developer experience & growth | S | 131 | — | done |
 | 146 | [Word-level caption timestamps so per-cue edges meet 100 ms](146-word-level-caption-timestamps.md) | 5 - Developer experience & growth | S | 139 | — | blocked |
-| 170 | [Platform packages - reusable, app-independent, extractable; the app registers its data through injection tokens](170-platform-packages-open-closed-extractable.md) | 5 - Developer experience & growth | XL (one PR, ordered commits, see *Delivery*) | 82, 85, 86, 87, 88, 131 | 48 | ready |
+| 170 | [Platform packages - reusable, app-independent, extractable; the app registers its data through injection tokens](170-platform-packages-open-closed-extractable.md) | 5 - Developer experience & growth | XL (one PR, ordered commits, see *Delivery*) | 82, 85, 86, 87, 88, 131 | 48, 171 | ready |
+| 171 | [Intl formatters - one open contract, lists that collapse into "and N more" with a tooltip, richer formatters, a duration conformance suite](171-intl-formatters-open-extensible-list-more-tooltip-and-duration-conformance.md) | 5 - Developer experience & growth | XL (one PR, ordered commits, see *Delivery*) | 170 | — | blocked |
 | 172 | [One ECMAScript baseline per tier - presets, a browser floor, a guard, and the cleanup it enables](172-ecmascript-baseline-per-tier-presets-browser-floor-and-cleanup.md) | 5 - Developer experience & growth | M (one PR, ordered commits, see *Delivery*) | 85, 110 | — | ready |
 
 > `in-progress` and `done` are set by hand; the rest derive from the blockers and are written back to each ticket: `ready` = all blockers done (the frontier) · `blocked` · `blocked-by-date` (blockers done, waiting for a date the ticket names; set by hand, reset to `blocked` while a blocker is open).
@@ -353,6 +354,7 @@ flowchart LR
         T145["145 Stories"]
         T146["146 Word-level caption timestamps so per-cue…"]
         T170["170 Platform packages - reusable"]
+        T171["171 Intl formatters - one open contract"]
         T172["172 One ECMAScript baseline per tier - presets"]
     end
     T01 --> T02
@@ -896,6 +898,7 @@ flowchart LR
     T87 --> T170
     T88 --> T170
     T131 --> T170
+    T170 --> T171
     T85 --> T172
     T110 --> T172
 ```
@@ -928,7 +931,7 @@ Tickets in the same level have all their blockers in earlier levels, so they can
 | 19 | [77](77-platform-integrations-oembed-embed-player-webhooks.md) Platform integrations ecosystem · [86](86-localisation-rollout-locale-negotiation-rtl.md) Localisation rollout · [111](111-captions-and-transcripts.md) Captions · [113](113-channel-comment-moderation.md) Channel comment moderation - hold for re… · [129](129-multiple-accounts-and-channels.md) Multiple accounts · [133](133-seo-channel-meta-without-an-extra-request-embed-route-and-web-url.md) SEO follow-ups - channel meta without an… · [140](140-watch-parties.md) Watch parties - rooms on a shared clock · [144](144-invitee-accept-from-studio.md) Invitee accept from the studio - pending… |
 | 20 | [78](78-discord-integration-bot-watch-together-activity-creator-alerts.md) Discord integration ecosystem · [112](112-upload-screening.md) Upload screening - local duplicate · [114](114-creator-stats-on-the-watch-page.md) Creator stats on the watch page - the nu… · [115](115-channel-page-customisation.md) Channel identity - banner · [116](116-video-management-power-tools.md) Video management power tools - bulk edit · [118](118-creator-data-portability-and-api.md) Creator data portability · [131](131-frontend-folder-structure-names-and-boundaries.md) Front-end folder structure · [139](139-captions-measurements.md) Captions measurements - whisper speed · [141](141-watch-party-voice-chat.md) Watch party voice chat - a self-hosted SFU |
 | 21 | [119](119-playlists-customisation-and-collaboration.md) Playlists · [120](120-community-posts-and-threads.md) Community - channel posts · [128](128-creator-analytics-device-split-and-benchmark.md) Creator analytics that hold up - views t… · [136](136-frontend-ui-and-feel-overhaul-web-and-studio.md) Front-end UI · [142](142-discord-party-bridge.md) Discord party bridge - chat relayed both… · [143](143-watch-party-extras.md) Watch party extras - play · [145](145-kit-stories-and-visual-baselines.md) Stories · [146](146-word-level-caption-timestamps.md) Word-level caption timestamps so per-cue… · [170](170-platform-packages-open-closed-extractable.md) Platform packages - reusable |
-| 22 | [48](48-project-rebrand-cli-unification.md) Complete monorepo rebrand & package name… · [121](121-channel-page-builder.md) Channel page builder - configurable sect… |
+| 22 | [48](48-project-rebrand-cli-unification.md) Complete monorepo rebrand & package name… · [121](121-channel-page-builder.md) Channel page builder - configurable sect… · [171](171-intl-formatters-open-extensible-list-more-tooltip-and-duration-conformance.md) Intl formatters - one open contract |
 | 23 | [122](122-linked-content-graph.md) Linked content - one typed link graph be… |
 
 ## Suggested single-developer order

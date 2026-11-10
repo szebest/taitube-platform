@@ -5,7 +5,7 @@
 | Phase | 5 - Developer experience & growth |
 | Size | XL (one PR, ordered commits, see *Delivery*) |
 | Blocked by | 82 - Architecture remediation · 85 - Universal intl and message core · 86 - Localisation rollout · 87 - Composition root and typed container · 88 - Codebase health ratchets · 131 - Front-end folder structure |
-| Blocks | 48 |
+| Blocks | 48, 171 |
 | Spec | [packages/AGENTS.md](../../packages/AGENTS.md) · [ARCHITECTURE.md section 6](../../ARCHITECTURE.md#6-verification--enforcement) · [SDD ADR-23](../SDD.md#adr-23--package-runtime-tiers-the-directory-is-the-tier) · [SDD ADR-25](../SDD.md#adr-25--composition-one-container-configuration-is-a-value) · [87](87-composition-root-typed-container-config-value.md) · [85](85-universal-intl-formatting-message-core.md) · [86](86-localisation-rollout-locale-negotiation-rtl.md) · [48](48-project-rebrand-cli-unification.md) |
 
 **Status:** ready
