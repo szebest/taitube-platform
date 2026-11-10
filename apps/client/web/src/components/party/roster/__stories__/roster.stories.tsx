@@ -1,9 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { withPartyIntl } from '#app/components/party/__stories__/with-party-intl';
 import { Roster } from '..';
 import { RosterRoot } from '../roster';
 
 const meta = {
   title: 'Web/Roster',
+  decorators: [withPartyIntl],
   tags: ['text'],
   component: RosterRoot,
 } satisfies Meta<typeof RosterRoot>;

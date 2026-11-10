@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { PartyPermissionsProvider } from '@vp/permissions-react';
+import { withPartyIntl } from '#app/components/party/__stories__/with-party-intl';
 import { MemberMenu } from '..';
 
 const ROLES = [
@@ -10,6 +11,7 @@ const ROLES = [
 
 const meta = {
   title: 'Web/MemberMenu',
+  decorators: [withPartyIntl],
   component: MemberMenu,
   args: {
     name: 'Bruno',

@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { PartyPermissionsProvider } from '@vp/permissions-react';
 import type { ReactNode } from 'react';
+import { withPartyIntl } from '#app/components/party/__stories__/with-party-intl';
 import { PartyLobby, type PartyLobbyMember } from '..';
 import { PartyLobbyRoot } from '../party-lobby';
 
@@ -23,6 +24,7 @@ function AsHost({ children }: { children: ReactNode }) {
 
 const meta = {
   title: 'Web/PartyLobby',
+  decorators: [withPartyIntl],
   tags: ['text'],
   component: PartyLobbyRoot,
 } satisfies Meta<typeof PartyLobbyRoot>;

@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { withPartyIntl } from '#app/components/party/__stories__/with-party-intl';
 import { PartyJoinPanel } from '..';
 
 const POSTER = `data:image/svg+xml,${encodeURIComponent(
@@ -7,6 +8,7 @@ const POSTER = `data:image/svg+xml,${encodeURIComponent(
 
 const meta = {
   title: 'Web/PartyJoinPanel',
+  decorators: [withPartyIntl],
   tags: ['text'],
   component: PartyJoinPanel,
   args: {

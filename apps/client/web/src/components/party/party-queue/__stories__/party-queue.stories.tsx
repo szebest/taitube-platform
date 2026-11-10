@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { PartyPermissionsProvider } from '@vp/permissions-react';
 import type { ReactNode } from 'react';
+import { withPartyIntl } from '#app/components/party/__stories__/with-party-intl';
 import { PartyQueue } from '..';
 import { PartyQueueRoot } from '../party-queue';
 
@@ -22,6 +23,7 @@ function AsDj({ children }: { children: ReactNode }) {
 
 const meta = {
   title: 'Web/PartyQueue',
+  decorators: [withPartyIntl],
   tags: ['text'],
   component: PartyQueueRoot,
 } satisfies Meta<typeof PartyQueueRoot>;

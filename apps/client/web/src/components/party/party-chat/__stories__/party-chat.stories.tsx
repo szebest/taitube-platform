@@ -1,10 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { withPartyIntl } from '#app/components/party/__stories__/with-party-intl';
 import { Roster } from '#app/components/party/roster';
 import { PartyChat, type PartyChatComposerProps } from '..';
 import { PartyChatRoot, type PartyChatRootProps } from '../party-chat';
 
 const meta = {
   title: 'Web/PartyChat',
+  decorators: [withPartyIntl],
   tags: ['text'],
   component: PartyChatRoot,
   args: { onSend: () => undefined },

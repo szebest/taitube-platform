@@ -20,6 +20,7 @@ export function watchPartyPreviewQueryOptions(api: ApiClient, roomId: string, in
   });
 }
 
+/** @public */
 export function myWatchPartiesQueryOptions(api: ApiClient) {
   return queryOptions({
     queryKey: watchPartyKeys.mine(),
