@@ -29,6 +29,8 @@ jobs:
     timeout-minutes: 3
     outputs:
       code: ${{ github.event_name != 'pull_request' || steps.changes.outputs.code == 'true' }}
+      unit-shards: ${{ steps.unit-shards.outputs.unit-shards }}
+      unit-shard-count: ${{ steps.unit-shards.outputs.unit-shard-count }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -54,6 +56,11 @@ jobs:
       - name: Fail when a committed route tree differs from the one its app's build generated
         if: github.event_name != 'pull_request' || steps.changes.outputs.code == 'true'
         run: git diff --exit-code -- 'apps/client/*/src/routeTree.gen.ts'
+
+      - name: Plan the unit shards from the recorded spec costs, so the shard count follows the suite
+        id: unit-shards
+        if: github.event_name != 'pull_request' || steps.changes.outputs.code == 'true'
+        run: pnpm -s unit-shards --github-output
 
       - name: Save the build for the jobs that follow
         if: github.event_name != 'pull_request' || steps.changes.outputs.code == 'true'
@@ -154,7 +161,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4, 5, 6]
+        shard: ${{ fromJSON(needs.build.outputs.unit-shards || '[1]') }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -185,7 +192,7 @@ jobs:
         id: unit-tests
         run: |
           echo "started-at=$(date +%s%3N)" >> "$GITHUB_OUTPUT"
-          pnpm test:unit --maxWorkers=4 --shard=${{ matrix.shard }}/6 --retry=1 $(pnpm -s quarantine) \
+          pnpm test:unit --maxWorkers=4 --shard=${{ matrix.shard }}/${{ needs.build.outputs.unit-shard-count }} --retry=1 $(pnpm -s quarantine) \
             --reporter=default --reporter=json --reporter=./scripts/timings/timings-reporter.ts \
             --reporter=./scripts/vitest-retried-reporter.ts \
             --outputFile.json="$RUNNER_TEMP/unit-${{ matrix.shard }}.json" \

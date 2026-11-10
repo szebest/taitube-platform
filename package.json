@@ -57,6 +57,7 @@
     "quarantine": "tsx scripts/quarantine.ts",
     "flake-hunt": "tsx scripts/flake-hunt.ts",
     "timings:update": "tsx scripts/timings-update.ts",
+    "unit-shards": "tsx scripts/unit-shards.ts",
     "boundaries": "tsx scripts/check-boundaries.ts && tsx scripts/sync-claude-symlinks.ts --check",
     "sync:claude": "tsx scripts/sync-claude-symlinks.ts",
     "strip:tw-prefix": "tsx scripts/strip-tw-prefix.ts"

@@ -3,7 +3,10 @@ import { load } from 'js-yaml';
 import { budgetFindings } from './ci-budget-rules';
 import { checks, type Job, needsOf, runs, triggersOf, type Workflow } from './ci-workflow';
 
-const matrixShards = (job: Job): (string | number)[] => [...(job.strategy?.matrix?.shard ?? [])];
+const matrixShards = (job: Job): string | (string | number)[] => {
+  const shards = job.strategy?.matrix?.shard ?? [];
+  return typeof shards === 'string' ? shards : [...shards];
+};
 
 const rangeTo = (count: number): number[] => Array.from({ length: count }, (_, index) => index + 1);
 
@@ -27,6 +30,11 @@ const TERRAFORM_CHECKS = [
 ];
 const PROVIDER_CACHE_KEY = "hashFiles('infra/terraform/.terraform.lock.hcl')";
 const DOCS_ONLY_FILTER = { code: ['**', '!**/*.md', '!docs/**/!(tokens.json)'] };
+
+const PLANS_SHARDS = /\bpnpm (?:-s )?unit-shards --github-output\b/;
+const PLANNED_MATRIX =
+  /^\$\{\{\s*fromJSON\(needs\.build\.outputs\.([\w-]+)(?:\s*\|\|[^)]*)?\)\s*\}\}$/;
+const PLANNED_COUNT = /^\$\{\{\s*needs\.build\.outputs\.([\w-]+)\s*\}\}$/;
 
 /** The scripts that run `pnpm boundaries` themselves, as `package.json` defines them. */
 const RUNS_BOUNDARIES = /\bpnpm (boundaries|build|typecheck)\b/g;
@@ -129,11 +137,32 @@ export function shapeFindings(source: string): string[] {
     }
   }
 
+  const build = jobNamed('build');
+  const planned = (build?.steps ?? []).some((step) => PLANS_SHARDS.test(step.run ?? ''));
   for (const [key, job] of Object.entries(workflow.jobs)) {
     const shards = matrixShards(job);
-    const divided = /--shard=\$\{\{\s*matrix\.shard\s*\}\}\/(\d+)/.exec(runs(job))?.[1];
-    if (divided !== undefined && !isDeepStrictEqual(shards, rangeTo(Number(divided)))) {
-      findings.push(`${key}: its matrix does not run every one of the ${divided} shards`);
+    const divisor = /--shard=\$\{\{\s*matrix\.shard\s*\}\}\/(\d+|\$\{\{[^}]*\}\})/.exec(
+      runs(job)
+    )?.[1];
+    if (divisor === undefined) continue;
+    if (/^\d+$/.test(divisor)) {
+      if (!isDeepStrictEqual(shards, rangeTo(Number(divisor)))) {
+        findings.push(`${key}: its matrix does not run every one of the ${divisor} shards`);
+      }
+      continue;
+    }
+    const matrixOutput = typeof shards === 'string' ? PLANNED_MATRIX.exec(shards)?.[1] : undefined;
+    const countOutput = PLANNED_COUNT.exec(divisor)?.[1];
+    if (
+      !planned ||
+      matrixOutput === undefined ||
+      countOutput === undefined ||
+      !build?.outputs?.[matrixOutput] ||
+      !build.outputs[countOutput]
+    ) {
+      findings.push(
+        `${key}: its matrix and --shard denominator are not the outputs of pnpm unit-shards in build`
+      );
     }
   }
 
