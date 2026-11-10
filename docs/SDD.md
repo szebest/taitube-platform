@@ -3429,7 +3429,7 @@ The two bucket keys are the only spelling: every reader in both apps takes them 
 | `CAPTIONS_MODEL_PATH` / `CAPTIONS_VAD_MODEL_PATH` | `.models/ggml-small-q5_1.bin` / `.models/ggml-silero-v5.1.2.bin` | baked into the image at `/opt/whisper/` at build, SHA-256 checked; `pnpm models:fetch` fills `.models/` for a run outside Docker. The model file names the run (`small-q5_1`) |
 | `CAPTIONS_THREADS` | `4` | = the captions container CPU limit |
 | `SCREENING_ENABLED` | `true` | platform kill switch for upload screening; off, probe adds no `screen` child and nothing is held |
-| `SCREENING_MODEL_PATH` | `.models/vit-base-nsfw-detector-int8.onnx` | the upload-screening classifier, baked into the image at `/opt/screening/` at build, SHA-256 checked against `assets.lock`; the adapter checks it again at start and refuses a file that is not the pinned one. `pnpm models:fetch` fills `.models/` for a run outside Docker |
+| `SCREENING_MODEL_PATH` | `.models/vit-base-nsfw-detector-int8.onnx` | the upload-screening classifier, baked into the image at `/opt/screening/` at build, SHA-256 checked against `screening.lock`; the adapter checks it again at start and refuses a file that is not the pinned one. `pnpm models:fetch` fills `.models/` for a run outside Docker |
 | `LIVE_HOOK_SECRET` 🔒 | none; `.env.example` ships `change-me-live-hook` | MediaMTX sends it on every auth call (ADR-29) and the live worker reads with it; unset refuses every publisher; production refuses the shipped value |
 | `LIVE_INGEST_URL` | `rtsp://localhost:8554` | where the live worker reads a publisher |
 | `LIVE_GATEWAY_API_URL` | `http://localhost:9997` | MediaMTX's control API: who is publishing, and the kick |

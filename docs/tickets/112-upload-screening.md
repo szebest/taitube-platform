@@ -40,7 +40,7 @@ native library.
 | Worker stage | `apps/server/worker/src/stages/screen/`, registered in `registry.ts` and `composition/stages.module.ts`; `package.ts` reads its result |
 | Repositories | `packages/server/core/repositories` (interfaces), Postgres implementations in `packages/server/adapters/postgres/repositories/`, tables in `packages/server/db` |
 | `fpcalc` in the image | `libchromaprint-tools` in the `worker` stage's `apt-get` line of the root `Dockerfile`, next to `ffmpeg`; `FPCALC_PATH` (default `fpcalc`) in the closed env schema for a run outside Docker |
-| ONNX model and pins | fetched in the root `Dockerfile` build stage, URL and SHA-256 in `apps/server/worker/assets.lock` (the file 111 creates; whichever of the two tickets lands first creates it); `SCREENING_MODEL_PATH` for a run outside Docker, filled by `pnpm models:fetch` |
+| ONNX model and pins | fetched in the root `Dockerfile` build stage, URL and SHA-256 in `apps/server/worker/screening.lock` (beside the `assets.lock` of 111, so a change to one leaves the other's image layers cached); `SCREENING_MODEL_PATH` for a run outside Docker, filled by `pnpm models:fetch` |
 | Evidence and admin UI | `apps/client/studio` (admin area from 61 and the creator hold and appeal screens); keys in `packages/server/storage/src/keys.ts` |
 
 Why a package for fingerprints but not for classification: the matcher and `fpcalc` wrapper are server logic with no port to

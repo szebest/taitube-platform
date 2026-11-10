@@ -169,7 +169,7 @@ export const SCREENING_SAMPLING = {
 } as const;
 
 /**
- * The classifier the image carries, as `apps/server/worker/assets.lock` pins it (`SCREENING_MODEL_URL`,
+ * The classifier the image carries, as `apps/server/worker/screening.lock` pins it (`SCREENING_MODEL_URL`,
  * `SCREENING_MODEL_SHA256`, licence Apache-2.0): AdamCodd/vit-base-nsfw-detector, int8. The adapter
  * refuses a file whose SHA-256 differs, `labels` maps each label a caller reads to its output index, and
  * the softmax turns the two logits into a probability. A model with other labels is a new entry here,

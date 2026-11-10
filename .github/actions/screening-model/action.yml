@@ -9,7 +9,7 @@ runs:
       uses: actions/cache@v6
       with:
         path: .models
-        key: screening-model-${{ hashFiles('apps/server/worker/assets.lock', 'scripts/models-fetch.ts') }}
+        key: screening-model-${{ hashFiles('apps/server/worker/screening.lock', 'scripts/models-fetch.ts') }}
 
     - name: Fetch the model and verify its checksum
       if: steps.cache.outputs.cache-hit != 'true'

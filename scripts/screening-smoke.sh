@@ -6,7 +6,7 @@ set -eu
 
 files=""
 for file in "$@"; do files="$files -f $file"; done
-expected=$(sed -n 's/^SCREENING_MODEL_SHA256=//p' apps/server/worker/assets.lock)
+expected=$(sed -n 's/^SCREENING_MODEL_SHA256=//p' apps/server/worker/screening.lock)
 
 # shellcheck disable=SC2086
 docker compose $files exec -T -e EXPECTED_SHA256="$expected" worker-screen sh -ec '

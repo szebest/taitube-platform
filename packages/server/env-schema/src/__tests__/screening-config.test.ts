@@ -8,7 +8,7 @@ import {
   SCREENING_THRESHOLDS,
 } from '../tuning';
 
-const LOCK = resolve(import.meta.dirname, '../../../../../apps/server/worker/assets.lock');
+const LOCK = resolve(import.meta.dirname, '../../../../../apps/server/worker/screening.lock');
 
 function lockValue(key: string): string | undefined {
   const line = readFileSync(LOCK, 'utf8')

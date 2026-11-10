@@ -84,6 +84,19 @@ describe('scripts: models-fetch', () => {
     expect(requests).toEqual(['/model.bin', '/vad.bin', '/classifier.onnx']);
   });
 
+  it('reads the models from every lock file it is given', async () => {
+    const { lock, out } = workspace();
+    const [captions, screening] = [`${lock}.captions`, `${lock}.screening`];
+    const lines = readFileSync(lock, 'utf8').split('\n');
+    writeFileSync(captions, lines.filter((line) => !line.startsWith('SCREENING')).join('\n'));
+    writeFileSync(screening, lines.filter((line) => line.startsWith('SCREENING')).join('\n'));
+
+    const result = await run(['--lock', captions, '--lock', screening, '--out', out]);
+
+    expect(result.code).toBe(0);
+    expect(readdirSync(out).sort()).toEqual(['model.bin', 'screening.onnx', 'vad.bin']);
+  });
+
   it('fetches only the models it is asked for', async () => {
     const { lock, out } = workspace();
 
