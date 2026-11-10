@@ -16,8 +16,8 @@ const LIMITS = { minBandSetBits: 2, minTermSetBits: 4, maxHitsPerKey: 200 };
  * The lookup for a new upload against a catalogue of 10 000 fingerprinted videos, timed by Postgres itself
  * (`EXPLAIN ANALYZE`, the median of three runs after a warm-up, as a catalogue in use is cached), on PGlite, which is Postgres compiled to WebAssembly and
  * slower than a server. Every row draws its own random hash, the best case for the band index; real footage
- * clusters, so the numbers bound nothing from above. The secondary indexes are built after the load, which is
- * several times faster than keeping them up to date row by row.
+ * clusters, so the numbers bound nothing from above. The load runs without foreign-key triggers, and the primary
+ * keys and secondary indexes are built after it, which is several times faster than keeping them up to date row by row.
  * Run by hand: `pnpm --filter @vp/adapters test:integration`.
  */
 describe('PostgresFingerprintRepository: lookup against a catalogue of 10 000 videos', () => {
@@ -35,6 +35,11 @@ describe('PostgresFingerprintRepository: lookup against a catalogue of 10 000 vi
     );
     for (const { indexname } of secondary.rows) await pglite.exec(`DROP INDEX ${indexname}`);
     await pglite.exec(`
+      SET session_replication_role = replica;
+      ALTER TABLE video_frame_hashes DROP CONSTRAINT video_frame_hashes_video_id_idx_pk;
+      ALTER TABLE video_audio_fingerprints DROP CONSTRAINT video_audio_fingerprints_video_id_idx_pk;
+    `);
+    await pglite.exec(`
       ALTER TABLE video_frame_hashes SET UNLOGGED;
       ALTER TABLE video_audio_fingerprints SET UNLOGGED;
       INSERT INTO video_frame_hashes (video_id, idx, hash, b0, b1, b2, b3)
@@ -46,6 +51,11 @@ describe('PostgresFingerprintRepository: lookup against a catalogue of 10 000 vi
         ) frames;
       INSERT INTO video_audio_fingerprints (video_id, idx, term)
         SELECT v.id, i, ((random() * 4e9)::bigint - 2147483648)::int FROM videos v, generate_series(0, ${AUDIO_TERMS_PER_VIDEO - 1}) i;
+    `);
+    await pglite.exec(`
+      ALTER TABLE video_frame_hashes ADD PRIMARY KEY (video_id, idx);
+      ALTER TABLE video_audio_fingerprints ADD PRIMARY KEY (video_id, idx);
+      SET session_replication_role = origin;
     `);
     for (const { indexdef } of secondary.rows) await pglite.exec(indexdef);
     await pglite.exec('ANALYZE');

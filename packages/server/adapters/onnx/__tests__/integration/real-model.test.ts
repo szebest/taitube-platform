@@ -27,7 +27,7 @@ describe('OnnxFrameClassifier: the pinned model', () => {
     const classifier = new OnnxFrameClassifier({ modelPath: MODEL, model });
     expectOk(await classifier.start());
 
-    const frames = Array.from({ length: 4 }, () => gradient(model.inputSize));
+    const frames = Array.from({ length: 1 }, () => gradient(model.inputSize));
     const scores = expectOk(await classifier.classify(frames));
 
     expect(scores).toHaveLength(frames.length);

@@ -42,7 +42,7 @@ describe('screen stage over the real ffmpeg and fpcalc', () => {
       '-f',
       'lavfi',
       '-i',
-      'gradients=size=640x360:rate=25:speed=0.05:nb_colors=6:seed=3',
+      'gradients=size=320x180:rate=25:speed=0.05:nb_colors=6:seed=3',
     ];
     ffmpeg(
       ...source,
@@ -54,6 +54,8 @@ describe('screen stage over the real ffmpeg and fpcalc', () => {
       String(SECONDS),
       '-c:v',
       'libx264',
+      '-preset',
+      'ultrafast',
       '-pix_fmt',
       'yuv420p',
       '-g',
@@ -66,20 +68,38 @@ describe('screen stage over the real ffmpeg and fpcalc', () => {
       '-i',
       join(dir, 'original.mp4'),
       '-vf',
-      'scale=480:270',
+      'scale=240:136',
       '-b:v',
       '200k',
       '-b:a',
       '64k',
+      '-preset',
+      'ultrafast',
       join(dir, 'reencoded.mp4')
     );
-    ffmpeg('-ss', String(SECONDS / 5), '-i', join(dir, 'original.mp4'), join(dir, 'trimmed.mp4'));
-    ffmpeg('-i', join(dir, 'original.mp4'), '-vf', 'hflip', join(dir, 'mirrored.mp4'));
+    ffmpeg(
+      '-ss',
+      String(SECONDS / 5),
+      '-i',
+      join(dir, 'original.mp4'),
+      '-preset',
+      'ultrafast',
+      join(dir, 'trimmed.mp4')
+    );
+    ffmpeg(
+      '-i',
+      join(dir, 'original.mp4'),
+      '-vf',
+      'hflip',
+      '-preset',
+      'ultrafast',
+      join(dir, 'mirrored.mp4')
+    );
     ffmpeg(
       '-f',
       'lavfi',
       '-i',
-      'gradients=size=640x360:rate=25:speed=0.03:nb_colors=4',
+      'gradients=size=320x180:rate=25:speed=0.03:nb_colors=4',
       '-f',
       'lavfi',
       '-i',
@@ -88,6 +108,8 @@ describe('screen stage over the real ffmpeg and fpcalc', () => {
       String(SECONDS),
       '-c:v',
       'libx264',
+      '-preset',
+      'ultrafast',
       '-pix_fmt',
       'yuv420p',
       '-c:a',
@@ -108,6 +130,8 @@ describe('screen stage over the real ffmpeg and fpcalc', () => {
       '[a]',
       '-c:v',
       'libx264',
+      '-preset',
+      'ultrafast',
       '-pix_fmt',
       'yuv420p',
       '-c:a',
