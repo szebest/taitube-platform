@@ -106,7 +106,7 @@ describe('architecture: the CI pipeline holds its budgets', () => {
     'a push to main can cancel the run of the merge before it',
     'lint-typecheck: architecture is not held to 20 s',
     'unit-shards: unit-tests is not held to 240 s',
-    'integration: integration-tests is not held to 120 s',
+    'integration: integration-tests is not held to 180 s',
     'unit-shards: a budget names no step before it',
     "unit-shards: a budget of 180 s is not below the job's 180 s timeout",
     "integration: a budget of 300 s is not below the job's 240 s timeout",
