@@ -6,6 +6,7 @@ import {
   ModerationChannelProvider,
 } from '#app/features/comments/hooks/use-moderation-channel';
 import { CommentInbox } from '../comment-inbox/comment-inbox';
+import { CommentSettingsLink } from '../comment-settings-link/comment-settings-link';
 import { InboxFilter } from '../inbox-filter/inbox-filter';
 
 export interface CommentsPageProps {
@@ -25,6 +26,7 @@ export function CommentsPage({ channel }: CommentsPageProps) {
             <h1>{tOr('studio.commentsTitle', {}, '')}</h1>
           </PageHeader.Title>
           <PageHeader.Actions>
+            <CommentSettingsLink />
             <InboxFilter
               value={filter}
               onChange={(next) => void navigate({ search: { filter: next } })}

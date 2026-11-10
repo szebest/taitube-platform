@@ -24,6 +24,7 @@ import {
 } from '#app/features/comments/hooks/use-queue-shortcuts';
 import { reasonedAction } from '#app/features/comments/utils/reasoned-action';
 import { pagedRows } from '#app/utils/paged-rows';
+import { CommentSettingsLink } from '../comment-settings-link/comment-settings-link';
 import {
   type ModerationReason,
   ModerationReasonDialog,
@@ -113,6 +114,9 @@ function ModerationQueueBoard() {
         <PageHeader.Title asChild>
           <h1>{tOr('studio.queueTitle', {}, '')}</h1>
         </PageHeader.Title>
+        <PageHeader.Actions>
+          <CommentSettingsLink />
+        </PageHeader.Actions>
       </PageHeader.Root>
       {held.isPending && <Spinner />}
       {held.isError && rows.length === 0 && (

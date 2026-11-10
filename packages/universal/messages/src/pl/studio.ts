@@ -2,6 +2,7 @@ import { dt } from '../define';
 import { studioAdmin } from './studio-admin';
 import { studioBatch } from './studio-batch';
 import { studioCaptions } from './studio-captions';
+import { studioCommentSettings } from './studio-comment-settings';
 import { studioComments } from './studio-comments';
 import { studioLive } from './studio-live';
 import { studioModeration } from './studio-moderation';
@@ -76,6 +77,7 @@ export const studio = {
   ...studioBatch,
   ...studioCaptions,
   ...studioComments,
+  ...studioCommentSettings,
   ...studioModeration,
   ...studioLive,
   ...studioPicks,

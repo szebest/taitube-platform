@@ -21,6 +21,9 @@ import { KEYSET_PAGE_SIZE, keysetPaging } from './keyset-paging';
 export const moderationKeys = {
   all: ['moderation'] as const,
   removals: () => [...moderationKeys.all, 'removals'] as const,
+  restrictions: () => [...moderationKeys.all, 'restrictions'] as const,
+  trusted: () => [...moderationKeys.all, 'trusted'] as const,
+  savedReplies: () => [...moderationKeys.all, 'saved-replies'] as const,
   restriction: (channelId: string) => [...moderationKeys.all, 'restriction', channelId] as const,
   settings: (channelId?: string) => [...moderationKeys.all, 'settings', channelId] as const,
 };
@@ -112,7 +115,11 @@ function restrictUserMutationOptions(api: ApiClient) {
         headers: channelHeaders(channelId),
       }),
     onSuccess: (_restriction, _variables, _snapshot, { client }) =>
-      Promise.all(commentListKeys.map((queryKey) => client.invalidateQueries({ queryKey }))),
+      Promise.all(
+        [...commentListKeys, moderationKeys.restrictions()].map((queryKey) =>
+          client.invalidateQueries({ queryKey })
+        )
+      ),
   });
 }
 
@@ -124,7 +131,11 @@ function liftRestrictionMutationOptions(api: ApiClient) {
         headers: channelHeaders(channelId),
       }),
     onSuccess: (_nothing, _variables, _snapshot, { client }) =>
-      Promise.all(commentListKeys.map((queryKey) => client.invalidateQueries({ queryKey }))),
+      Promise.all(
+        [...commentListKeys, moderationKeys.restrictions()].map((queryKey) =>
+          client.invalidateQueries({ queryKey })
+        )
+      ),
   });
 }
 

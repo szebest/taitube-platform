@@ -10,6 +10,7 @@ export * from './create-query-client';
 export * from './ensure-found';
 export * from './keyset-paging';
 export * from './membership-queries';
+export * from './channel-moderation-queries';
 export * from './moderation-queries';
 export * from './notification-queries';
 export type { LiveChatLine } from './live-chat-state';
