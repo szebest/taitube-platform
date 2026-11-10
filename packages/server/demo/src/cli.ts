@@ -1,5 +1,6 @@
 import { type DemoHost } from './host';
-import { helpText, parseDemoCommand } from './options';
+import { helpText } from './option-table';
+import { parseDemoCommand } from './options';
 import {
   EXIT,
   type SeedFn,

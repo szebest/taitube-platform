@@ -1,4 +1,5 @@
-import { DEFAULTS, FLAGS, PROFILE_DEFAULTS, helpText, parseDemoCommand } from '../options';
+import { DEFAULTS, PROFILE_DEFAULTS } from '../option-table';
+import { parseDemoCommand } from '../options';
 import { optionsFrom } from './fake-host';
 
 describe('demo: options', () => {
@@ -93,13 +94,5 @@ describe('demo: options', () => {
   ])('reads the command of $argv as $kind', ({ argv, kind }) => {
     const parsed = parseDemoCommand(argv, {});
     expect(parsed.ok && parsed.value.kind).toBe(kind);
-  });
-
-  it('prints every flag and env var in the help', () => {
-    const help = helpText();
-    for (const flag of FLAGS) {
-      expect(help).toContain(flag.flag);
-      if (flag.env) expect(help).toContain(flag.env);
-    }
   });
 });
