@@ -9,6 +9,8 @@ const PACKAGES_DIR = fileURLToPath(new URL('../../../', import.meta.url));
 
 const START_STUB = fileURLToPath(new URL('./tanstack-start.ts', import.meta.url));
 
+const SRVX_STATIC_STUB = fileURLToPath(new URL('./srvx-static.ts', import.meta.url));
+
 const config: StorybookConfig = {
   framework: '@storybook/react-vite',
   stories: [
@@ -22,6 +24,7 @@ const config: StorybookConfig = {
       resolve: {
         alias: [
           { find: /^@tanstack\/react-start(\/server)?$/, replacement: START_STUB },
+          { find: /^srvx\/static$/, replacement: SRVX_STATIC_STUB },
           ...workspaceSourceAliases(PACKAGES_DIR),
         ],
       },

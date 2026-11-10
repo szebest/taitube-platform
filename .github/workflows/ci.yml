@@ -484,7 +484,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
     steps:
       - name: Checkout repository, with the baselines from Git LFS and the base branch to diff against
         uses: actions/checkout@v7
@@ -530,7 +530,7 @@ jobs:
             -e GITHUB_STEP_SUMMARY -v "$GITHUB_STEP_SUMMARY:$GITHUB_STEP_SUMMARY" \
             -v "$PWD:$PWD" -w "$PWD/packages/client/workbench" "${{ steps.image.outputs.ref }}" \
             node node_modules/@playwright/test/cli.js test -c visual/playwright.config.ts \
-            --shard=${{ matrix.shard }}/10 "${no_tests[@]}"
+            --shard=${{ matrix.shard }}/12 "${no_tests[@]}"
 
       - name: Run this shard's stories as tests in the same image, their a11y checks included
         run: |
@@ -538,11 +538,11 @@ jobs:
             -e GITHUB_STEP_SUMMARY -v "$GITHUB_STEP_SUMMARY:$GITHUB_STEP_SUMMARY" \
             -v "$PWD:$PWD" -w "$PWD/packages/client/workbench" "${{ steps.image.outputs.ref }}" \
             node node_modules/vitest/vitest.mjs run --config .storybook/vitest.config.ts \
-            --shard=${{ matrix.shard }}/10 --retry=1 \
+            --shard=${{ matrix.shard }}/12 --retry=1 \
             --reporter=default --reporter=../../../scripts/vitest-retried-reporter.ts
 
       - name: Keep the report and the diffs of a failed run
-        if: failure()
+        if: failure() || cancelled()
         uses: actions/upload-artifact@v7
         with:
           name: visual-${{ matrix.shard }}-report
