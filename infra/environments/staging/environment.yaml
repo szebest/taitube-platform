@@ -1,6 +1,6 @@
 name: staging
 kind: k3s
-description: "The rehearsal for production: the cloud overlay on its own cluster, managed Postgres and R2 buckets of its own, deployed from main."
+description: "The rehearsal for production: the cloud overlay on its own cluster, managed Postgres and its own R2 account or bucket names, deployed from main."
 production: true
 protected: true
 images:
@@ -19,6 +19,8 @@ config:
   AUTH_JWKS_URL: https://auth.staging.taitube.example.com/.well-known/jwks.json
   AUTH_ISSUER: https://auth.staging.taitube.example.com/
   AUTH_AUDIENCE: taitube
+  S3_BUCKET_RAW: vp-raw
+  S3_BUCKET_PUBLIC: vp-public
 secrets:
   source: external-secrets
   keys:

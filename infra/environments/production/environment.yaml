@@ -19,6 +19,8 @@ config:
   AUTH_JWKS_URL: https://auth.taitube.example.com/.well-known/jwks.json
   AUTH_ISSUER: https://auth.taitube.example.com/
   AUTH_AUDIENCE: taitube
+  S3_BUCKET_RAW: vp-raw
+  S3_BUCKET_PUBLIC: vp-public
 secrets:
   source: external-secrets
   keys:
