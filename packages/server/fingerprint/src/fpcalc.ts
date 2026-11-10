@@ -14,6 +14,9 @@ export interface Chromaprint {
   terms: number[];
 }
 
+/** Under about 2.7 s of audio fpcalc exits 2 with `Empty fingerprint`, and ffmpeg's retry policy would retry that. */
+const MIN_FINGERPRINT_SECONDS = 3;
+
 type FpcalcOutputInvalid = Failure<typeof ErrorCodes.CORRUPT_CONTAINER>;
 
 /**
@@ -61,8 +64,12 @@ export interface RunFpcalcOptions {
   signal?: AbortSignal;
 }
 
-/** Runs fpcalc as a subprocess under the same span, timeout and kill grace as ffmpeg. */
+/**
+ * Runs fpcalc as a subprocess under the same span, timeout and kill grace as ffmpeg. A clip too short
+ * to fingerprint has nothing to match, like one without audio, so it gets an empty sequence.
+ */
 export async function runFpcalc(options: RunFpcalcOptions): Promise<Chromaprint> {
+  if (options.durationSeconds < MIN_FINGERPRINT_SECONDS) return { durationSeconds: 0, terms: [] };
   const lines: string[] = [];
   await runFfmpeg({
     ffmpegPath: options.fpcalcPath,

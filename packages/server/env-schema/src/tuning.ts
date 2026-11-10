@@ -143,6 +143,7 @@ export const SCREENING_THRESHOLDS = {
   blankFrameShare: 0.95,
   blankMaxHamming: 2,
   blankMaxLumaRange: 8,
+  blankMinFrames: 3,
   spamMaxLinks: 3,
   spamMaxTags: 30,
   spamMaxRepeatShare: 0.5,

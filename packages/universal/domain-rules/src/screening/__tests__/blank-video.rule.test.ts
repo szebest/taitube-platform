@@ -8,6 +8,9 @@ const frames = (count: number, make: (index: number) => ReturnType<typeof frame>
 describe('@vp/domain-rules: screenBlankVideo', () => {
   it.each([
     { name: 'no frames', input: [], score: null },
+    { name: 'one frame', input: frames(1, () => frame(0xffn)), score: null },
+    { name: 'two identical frames', input: frames(2, () => frame(0xffn)), score: null },
+    { name: 'three identical frames', input: frames(3, () => frame(0xffn)), score: 1 },
     { name: 'identical frames', input: frames(20, () => frame(0xffn)), score: 1 },
     {
       name: 'frames a flip or two apart',

@@ -3446,7 +3446,7 @@ The screening numbers are constants, not keys (the schema is closed, and an oper
 | `partialCoverage` / `partialRunSeconds` | `0.3` / `30` | a smaller overlap is a `PARTIAL_MATCH` flag, never a hold |
 | `audioMaxBitErrorRate` | `0.35` | the audio fingerprint's agreement bar |
 | `nsfwFrameThreshold` / `nsfwShareThreshold` | `0.85` / `0.1` | a hold needs a frame over the first and this share of frames over it |
-| `blankFrameShare` | `0.95` | share of frames within `blankMaxHamming` 2 and `blankMaxLumaRange` 8 of the first |
+| `blankFrameShare` | `0.95` | share of frames within `blankMaxHamming` 2 and `blankMaxLumaRange` 8 of the first, judged only when at least `blankMinFrames` 3 were sampled (a clip under 5 s has too few to call it frozen) |
 | `hashIntervalSeconds`, `classifyIntervalSeconds`, `classifyMaxFrames` | `2`, `10`, `120` | one hashed frame every 2 s; one classified frame every 10 s, at most 120, plus first, middle and last |
 | `audioIndexStride` | `8` | every 8th Chromaprint term is indexed, about 3 600 rows per hour of video |
 

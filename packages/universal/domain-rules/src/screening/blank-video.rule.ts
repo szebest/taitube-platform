@@ -8,14 +8,15 @@ export interface SampledFrame {
 
 /**
  * A video whose sampled frames barely differ from its first one in picture and brightness is blank
- * or frozen. The score is the share of frames that match it.
+ * or frozen. The score is the share of frames that match it. A clip with fewer than `blankMinFrames`
+ * frames has nothing to compare, since a lone frame always matches itself.
  */
 export function screenBlankVideo(
   frames: readonly SampledFrame[],
   thresholds: ScreeningThresholds
 ): ScreeningFinding | null {
   const [first] = frames;
-  if (!first) return null;
+  if (!first || frames.length < thresholds.blankMinFrames) return null;
   const matching = frames.filter(
     (frame) =>
       hammingDistance(frame.hash, first.hash) <= thresholds.blankMaxHamming &&

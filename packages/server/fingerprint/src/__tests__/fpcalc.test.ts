@@ -54,6 +54,15 @@ describe('@vp/fingerprint: runFpcalc', () => {
     await expect(run()).rejects.toBeInstanceOf(PermanentError);
   });
 
+  it.each([0.4, 2, 2.99])(
+    'reads a %s s clip, too short to fingerprint, as an empty sequence',
+    async (seconds) => {
+      await writeFile(join(dir, 'mode'), 'fail');
+
+      expect(await run(seconds)).toEqual({ durationSeconds: 0, terms: [] });
+    }
+  );
+
   it('throws the classified process failure when fpcalc exits non-zero', async () => {
     await writeFile(join(dir, 'mode'), 'fail');
 
@@ -63,7 +72,7 @@ describe('@vp/fingerprint: runFpcalc', () => {
   it.each([
     { durationSeconds: 600, length: '600' },
     { durationSeconds: 600.2, length: '601' },
-    { durationSeconds: 0.4, length: '1' },
+    { durationSeconds: 3, length: '3' },
   ])(
     'fingerprints the whole $durationSeconds s as -length $length',
     async ({ durationSeconds, length }) => {

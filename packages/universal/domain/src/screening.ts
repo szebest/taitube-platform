@@ -43,6 +43,7 @@ export interface ScreeningThresholds {
   blankFrameShare: number;
   blankMaxHamming: number;
   blankMaxLumaRange: number;
+  blankMinFrames: number;
   spamMaxLinks: number;
   spamMaxTags: number;
   spamMaxRepeatShare: number;
