@@ -34,6 +34,9 @@ coverage/
 /tmp/
 tmp/
 
+# Demo state and generated clips
+.demo/
+
 # Video fixtures
 fixtures/
 tests/fixtures/
