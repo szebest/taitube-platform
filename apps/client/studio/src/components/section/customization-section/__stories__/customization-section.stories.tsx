@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { FALLBACK_ACTIVE_LOCALE, IntlProvider } from '@vp/intl-react';
 import { Field, Input } from '@vp/ui';
 import { CustomizationSection } from '../index';
 
@@ -21,19 +22,25 @@ function Section({
   failure?: string;
 }) {
   return (
-    <CustomizationSection.Root className="w-[32rem]">
-      <CustomizationSection.Header>
-        <CustomizationSection.Title>Identity</CustomizationSection.Title>
-        <CustomizationSection.Description>The name viewers see.</CustomizationSection.Description>
-      </CustomizationSection.Header>
-      <CustomizationSection.Body>
-        <Field.Root>
-          <Field.Label>Name</Field.Label>
-          <Input defaultValue="The Creator" />
-        </Field.Root>
-      </CustomizationSection.Body>
-      <CustomizationSection.Footer saving={saving} saved={saved} failure={failure} />
-    </CustomizationSection.Root>
+    <IntlProvider
+      locale={FALLBACK_ACTIVE_LOCALE.locale}
+      catalogues={FALLBACK_ACTIVE_LOCALE.catalogues}
+      timeZone="UTC"
+    >
+      <CustomizationSection.Root className="w-[32rem]">
+        <CustomizationSection.Header>
+          <CustomizationSection.Title>Identity</CustomizationSection.Title>
+          <CustomizationSection.Description>The name viewers see.</CustomizationSection.Description>
+        </CustomizationSection.Header>
+        <CustomizationSection.Body>
+          <Field.Root>
+            <Field.Label>Name</Field.Label>
+            <Input defaultValue="The Creator" />
+          </Field.Root>
+        </CustomizationSection.Body>
+        <CustomizationSection.Footer saving={saving} saved={saved} failure={failure} />
+      </CustomizationSection.Root>
+    </IntlProvider>
   );
 }
 
