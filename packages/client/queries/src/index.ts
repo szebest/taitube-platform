@@ -14,6 +14,7 @@ export type { LiveChatLine } from './live-chat-state';
 export * from './parse-client-env';
 export * from './parse-param';
 export * from './prefetched';
+export { failureCode } from './failure-code';
 export * from './present-failure';
 export * from './request-locale';
 export * from './retry-policy';
@@ -36,3 +37,13 @@ export * from './use-sign-out';
 /** @public */
 export { UserEventStream, useUserEvent } from './user-event-stream';
 export * from './video-queries';
+export * from './watch-party-queries';
+export {
+  type PartyChatLine,
+  type PartyRequest,
+  type PartyRole,
+  type PartyRosterEntry,
+  selectPartyPermissions,
+  type WatchPartyState,
+} from './watch-party-state';
+export { useWatchPartySocket, type WatchPartySocket } from './use-watch-party-socket';

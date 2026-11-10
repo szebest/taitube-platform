@@ -8,6 +8,7 @@ import { home } from './home';
 import { library } from './library';
 import { live } from './live';
 import { notifications } from './notifications';
+import { party } from './party';
 import { player } from './player';
 import { pwa } from './pwa';
 import { search } from './search';
@@ -31,6 +32,7 @@ export const en = {
   library,
   live,
   notifications,
+  party,
   player,
   pwa,
   search,

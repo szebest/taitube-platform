@@ -1118,6 +1118,9 @@ importers:
       '@vp/components':
         specifier: workspace:*
         version: link:../components
+      '@vp/domain':
+        specifier: workspace:*
+        version: link:../../universal/domain
       '@vp/errors':
         specifier: workspace:*
         version: link:../../universal/errors

@@ -4,7 +4,7 @@ import { MS_PER_SECOND } from './time';
  * 250 ms because two people talking over a call notice a gap of about a third of a second; 2 s
  * because a 5 % nudge closes 2 s in 40 s, past which a seek is less noticeable than a long speed change.
  */
-const WATCH_PARTY_DRIFT = {
+export const WATCH_PARTY_DRIFT = {
   ignoreBelowMs: 250,
   seekAboveMs: 2 * MS_PER_SECOND,
   settledWithinMs: 100,
