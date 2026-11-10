@@ -14,6 +14,21 @@ describe('apps/client/studio: library columns', () => {
     ]);
   });
 
+  it('gives every column but the video a width that holds its content, and the video the rest', () => {
+    const widths = LIBRARY_SKELETON_COLUMNS.map(({ meta }) => meta.width);
+
+    expect(widths).toEqual([
+      'auto',
+      '8rem',
+      '7rem',
+      '7.5rem',
+      '5.5rem',
+      '5.5rem',
+      '6rem',
+      '3.5rem',
+    ]);
+  });
+
   it('gives the skeleton the width of every column', () => {
     expect(LIBRARY_SKELETON_COLUMNS).toHaveLength(8);
     expect(LIBRARY_SKELETON_COLUMNS.every(({ meta }) => meta.width !== undefined)).toBe(true);

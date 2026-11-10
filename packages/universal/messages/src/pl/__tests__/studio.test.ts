@@ -7,6 +7,7 @@ describe('@vp/messages: pl studio', () => {
   it.each([
     { key: 'studio.title', expected: 'Studio twórcy' },
     { key: 'studio.backToWeb', expected: 'Wróć do Taitube' },
+    { key: 'studio.analyticsEmptyTitle', expected: 'W tym okresie nie ma jeszcze wyświetleń' },
     { key: 'studio.uploadTitle', expected: 'Prześlij film' },
     { key: 'studio.batchFailed', expected: 'Nic nie zostało zmienione. Spróbuj ponownie.' },
   ] as const)('renders $key with no arguments', ({ key, expected }) => {

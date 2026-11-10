@@ -3,6 +3,7 @@ import { useT } from '@vp/intl-react';
 import { prefetched } from '@vp/queries';
 import { useId } from 'react';
 import {
+  AdminPageSkeleton,
   adminCategoriesQueryOptions,
   adminVideosQueryOptions,
   ModerationSearchSchema,
@@ -42,5 +43,6 @@ export const Route = createFileRoute('/_authed/admin/moderation')({
       prefetched(queryClient.query(adminCategoriesQueryOptions(api))),
     ]);
   },
+  pendingComponent: AdminPageSkeleton,
   component: ModerationPage,
 });

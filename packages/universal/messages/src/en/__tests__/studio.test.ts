@@ -6,6 +6,7 @@ describe('@vp/messages: en studio', () => {
   it.each([
     { key: 'studio.title', expected: 'Creator Studio' },
     { key: 'studio.backToWeb', expected: 'Back to Taitube' },
+    { key: 'studio.analyticsEmptyTitle', expected: 'No views in this range yet' },
     { key: 'studio.signIn', expected: 'Sign in to the studio' },
     { key: 'studio.processingStatus', expected: 'Processing status' },
     { key: 'studio.uploadTitle', expected: 'Upload a video' },

@@ -9,6 +9,12 @@ describeHorizontalOverflow('creator', [
 
 describeHorizontalOverflow(
   'creator',
-  [(stack) => `/videos/${stack.videos.watchable.id}/edit`],
+  [
+    '/videos',
+    (stack) => `/videos/${stack.videos.watchable.id}/edit`,
+    '/analytics',
+    '/customization',
+    '/admin/categories',
+  ],
   [768, 1280]
 );

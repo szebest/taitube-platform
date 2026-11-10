@@ -1,9 +1,15 @@
 import { serverRender } from '@vp/web-testing/server';
 import { channelApi } from '#app/__tests__/channel-api.fixture';
 import { SESSION, accountOf } from '#app/__tests__/providers';
+import { CustomizationPageSkeleton } from '#app/features/channel';
 import { getRouter } from '#app/router';
+import { Route } from '../customization';
 
 describe('apps/client/studio: /customization', () => {
+  it('shows its skeleton while the loader runs', () => {
+    expect(Route.options.pendingComponent).toBe(CustomizationPageSkeleton);
+  });
+
   it('renders the channel sections on the server, in the narrowed layout', async () => {
     const { status, main } = await serverRender(getRouter, '/customization', {
       handlers: [accountOf(), ...channelApi()],

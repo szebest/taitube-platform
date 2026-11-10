@@ -660,6 +660,7 @@ Each is proved by a test or a recorded artifact. The last one holds for every sl
 - Playback readers for quality, speed, captions and the stats overlay, and the account switch reset
   ([134](134-settings-readers-account-switch-and-channel-image-upload.md)); the player scrim here does not read them.
 - Live chat and notifications beyond their sign-in prompt and overflow.
+- A standalone studio settings page and a featured shelf route: the shelf is the Start here section of `/customization` ([96](96-channel-featured-videos-start-here.md), done) and the viewer's own appearance is the Appearance popover in the account menu ([72](72-frontend-settings-customization-system.md)), so there is no page to build; the channel's identity, links and images are [115](115-channel-page-customisation.md)'s sections of the same `/customization` page.
 
 ## Testing plan
 
