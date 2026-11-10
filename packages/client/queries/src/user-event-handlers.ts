@@ -105,7 +105,7 @@ function applyChannelImageReady(
 /** A failed upload changes nothing a query holds; the studio's own upload state reads the event. */
 function ignoreChannelImageFailed() {}
 
-export const userEventHandlers: UserEventHandlers = {
+const userEventHandlers: UserEventHandlers = {
   'video.processing': applyVideoProcessing,
   'preferences.updated': applyPreferencesUpdated,
   'captions.ready': applyCaptionsChange,

@@ -1,9 +1,9 @@
-import { type ChannelImageJob, ThumbnailQueueJob, type VideoThumbnailJob } from '@vp/job-contracts';
+import { type ChannelImageJob, ThumbnailQueueJob } from '@vp/job-contracts';
 import { ok } from '@vp/result';
 import { createMockJob } from '@vp/testing';
-import { createThumbnailQueueProcessor } from '../thumbnail-queue';
+import { createThumbnailQueueProcessor } from '../thumbnail-queue-processor';
 
-const VIDEO: VideoThumbnailJob = {
+const VIDEO: Extract<ThumbnailQueueJob, { type: 'video-thumbnail' }> = {
   type: 'video-thumbnail',
   videoId: '11111111-1111-7111-8111-111111111111',
   generation: 1,

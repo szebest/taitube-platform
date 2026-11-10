@@ -38,7 +38,7 @@ function clamp(value: number, low: number, high: number): number {
 }
 
 /** The frame in whole pixels: the largest of the aspect that fits the image, its sides divided by the zoom. */
-export function frameSize(size: ImageSize, aspect: number, zoom: number): ImageSize {
+function frameSize(size: ImageSize, aspect: number, zoom: number): ImageSize {
   const widthLimited = size.width / size.height <= aspect;
   const largestWidth = widthLimited ? size.width : size.height * aspect;
   const width = clamp(Math.round(largestWidth / zoom), 1, size.width);
@@ -55,7 +55,7 @@ function clampedView(size: ImageSize, aspect: number, view: CropView): CropView 
   };
 }
 
-export function initialView(size: ImageSize): CropView {
+function initialView(size: ImageSize): CropView {
   return { zoom: 1, centreX: size.width / 2, centreY: size.height / 2 };
 }
 

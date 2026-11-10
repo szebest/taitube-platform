@@ -99,7 +99,7 @@ export function spriteVttKey(videoId: string): string {
   return `${videoPrefix(videoId)}thumbs/sprite.vtt`;
 }
 
-export function channelImagePrefix(channelId: string, kind: string): string {
+function channelImagePrefix(channelId: string, kind: string): string {
   return `channels/${channelId}/${kind}/`;
 }
 

@@ -178,7 +178,6 @@
       ]
     },
     "packages/client/queries": {
-      "entry": ["src/**/type-fixtures/*.ts"],
       "project": [
         "**/*.{ts,tsx,mts,mjs,js}!",
         "!**/__tests__/**!",

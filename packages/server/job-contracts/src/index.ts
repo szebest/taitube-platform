@@ -56,7 +56,6 @@ export const ThumbnailJob = Base.extend({
 export type ThumbnailJob = z.infer<typeof ThumbnailJob>;
 
 const VideoThumbnailJob = ThumbnailJob.extend({ type: z.literal('video-thumbnail') });
-export type VideoThumbnailJob = z.infer<typeof VideoThumbnailJob>;
 
 function withDefaultType(payload: unknown): unknown {
   const fields = z.record(z.string(), z.unknown()).safeParse(payload);

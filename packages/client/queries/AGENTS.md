@@ -51,8 +51,8 @@ The user event stream (SDD §10.3, ADR-27):
 - `userEventHandlers`: per `type` of the `UserEvent` union, the query-cache work it does (a `video.processing`
   status patches the video and refetches it and the caller's list, a progress tick patches the progress, and
   `preferences.updated` refetches `['preferences']` unless the cached version is already the saved one, `notification.created` and `notification.read` set the unread count and refetch every notification list, and `comment.created` refetches the creator inbox under `['creator', 'comments']`). It is
-  typed by the union, so a new member does not compile until it has a handler
-  (`src/__tests__/type-fixtures/missing-handler.ts`). A `hello` whose `resume` is `fresh` (every stream opened
+  typed by the union, so a new member does not compile until it has a handler.
+  A `hello` whose `resume` is `fresh` (every stream opened
   with no id: the first one, or a takeover before any tab saw an id) refetches the active video queries, for
   what changed before the stream opened, and a tab that joins behind a leading one (it gets no `hello`) does the
   same when it joins; `expired` refetches every query. A new event type is its schema in `@vp/api-contracts`,

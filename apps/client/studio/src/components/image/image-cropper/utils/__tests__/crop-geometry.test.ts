@@ -9,8 +9,6 @@ import {
   cropRect,
   cropsOf,
   frameBox,
-  frameSize,
-  initialView,
   initialViews,
   moveView,
   previewStyle,
@@ -75,13 +73,15 @@ describe('apps/client/studio: crop geometry', () => {
       frame: { width: 640, height: 213 },
     },
   ])('sizes the frame for $scenario', ({ size, aspect, zoom, frame }) => {
-    expect(frameSize(size, aspect, zoom)).toEqual(frame);
+    expect(
+      cropRect(size, aspect, { zoom, centreX: size.width / 2, centreY: size.height / 2 })
+    ).toMatchObject(frame);
   });
 
   it.each([
     {
       scenario: 'the centre',
-      view: initialView(LANDSCAPE),
+      view: { zoom: 1, centreX: 1280, centreY: 720 },
       rect: { x: 560, y: 0, width: 1440, height: 1440 },
     },
     {
@@ -118,7 +118,9 @@ describe('apps/client/studio: crop geometry', () => {
     { zoom: 2.5, expected: 2.5 },
     { zoom: 40, expected: MAX_ZOOM },
   ])('zooms to $expected when asked for $zoom', ({ zoom, expected }) => {
-    expect(zoomView(LANDSCAPE, 1, initialView(LANDSCAPE), zoom).zoom).toBe(expected);
+    expect(zoomView(LANDSCAPE, 1, { zoom: 1, centreX: 1280, centreY: 720 }, zoom).zoom).toBe(
+      expected
+    );
   });
 
   it('pulls the centre back inside when a zoom out widens the frame', () => {
@@ -205,7 +207,7 @@ describe('apps/client/studio: crops the API accepts', () => {
   )('gives $scenario, $view, an avatar crop that decideImageCrops accepts', ({ size, view }) => {
     const crops = cropsOf('avatar', size, {
       ...initialViews(size),
-      avatar: VIEWS[view]?.('avatar') ?? initialView(size),
+      avatar: VIEWS[view]?.('avatar') ?? initialViews(size).avatar,
     });
 
     expect(isOk(decideImageCrops(crops, size))).toBe(true);
