@@ -4,6 +4,7 @@ import { studioCaptions } from './studio-captions';
 import { studioComments } from './studio-comments';
 import { studioLive } from './studio-live';
 import { studioPicks } from './studio-picks';
+import { studioScreening } from './studio-screening';
 import { studioTeam } from './studio-team';
 
 const VIDEO_STATUS = {
@@ -67,6 +68,7 @@ export const studio = {
   ...studioComments,
   ...studioLive,
   ...studioPicks,
+  ...studioScreening,
   ...studioTeam,
   deleteVideo: dt('Delete'),
   setVisibility: dt('Visibility'),
