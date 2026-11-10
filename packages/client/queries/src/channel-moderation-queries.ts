@@ -43,9 +43,9 @@ export function savedRepliesQueryOptions(api: ApiClient) {
   });
 }
 
-export type NewSavedReply = ContractBody<typeof createSavedReply>;
+type NewSavedReply = ContractBody<typeof createSavedReply>;
 
-export type SavedReplyEdit = ContractBody<typeof updateSavedReply>;
+type SavedReplyEdit = ContractBody<typeof updateSavedReply>;
 
 function trustMutationOptions(api: ApiClient) {
   return mutationOptions({

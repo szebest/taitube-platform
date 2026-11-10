@@ -21,7 +21,7 @@ const LISTS = {
   },
 } as const;
 
-export type TagListField = keyof typeof LISTS;
+type TagListField = keyof typeof LISTS;
 
 export interface TagListSectionProps {
   settings: CommentSettingsView;
