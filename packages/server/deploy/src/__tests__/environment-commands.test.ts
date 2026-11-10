@@ -2,6 +2,7 @@ import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import {
   type CommandInput,
   findEnvironment,
+  confirm,
   gate,
   get,
   list,
@@ -10,6 +11,7 @@ import {
   secretsCheck,
   tag,
   validate,
+  vars,
 } from '../environment-commands';
 import { fakeHost, workspace } from './host-fixture';
 
@@ -232,5 +234,36 @@ describe('gate', () => {
 
     expect(gate(host, input(args))).toBe(exit);
     expect(host.printed).toEqual(message === undefined ? [] : [message]);
+  });
+
+  it('reports every refusal at once', () => {
+    const host = fakeHost(root);
+
+    expect(gate(host, input({ context: 'k3d-vp' }))).toBe(1);
+    expect(host.printed).toEqual([
+      [
+        'refusing production: the current context is k3d-vp, the environment declares k3s-prod',
+        'production is protected: pin an image tag, e.g. TAG=v1.2.3, not latest',
+        'production is protected: pass --yes, or --confirm production',
+      ].join('\n'),
+    ]);
+  });
+
+  it('leaves the tag out of a confirm, which a rollback pins nothing for', () => {
+    expect(confirm(fakeHost(root), input({ context: 'k3s-prod', yes: true }))).toBe(0);
+    expect(confirm(fakeHost(root), input({ context: 'k3s-prod' }))).toBe(1);
+  });
+});
+
+describe('vars', () => {
+  it('prints the environment as E_ lines for a shell', () => {
+    const host = fakeHost(root);
+
+    expect(vars(host, input())).toBe(0);
+    expect(host.printed[0]).toContain("E_cluster_context='k3s-prod'");
+  });
+
+  it('answers usage for an unknown environment', () => {
+    expect(vars(fakeHost(root), input({ environment: 'qa' }))).toBe(2);
   });
 });

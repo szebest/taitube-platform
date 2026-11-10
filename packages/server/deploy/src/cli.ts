@@ -2,6 +2,7 @@ import { parseArgs } from 'node:util';
 import { tryCatch } from '@vp/result';
 import {
   type CommandInput,
+  confirm,
   gate,
   get,
   list,
@@ -10,6 +11,7 @@ import {
   secretsCheck,
   tag,
   validate,
+  vars,
 } from './environment-commands';
 import { EXIT, type ExitCode } from './exit-codes';
 import type { DeployHost } from './host';
@@ -22,11 +24,13 @@ export const USAGE = `pnpm envctl <command> [environment] [options]    (the type
   list                        every environment, its kind and what it is for
   validate                    every environment file against the spec and the env schema
   get <env> <path>            one field, e.g. cluster.context or health.smoke
+  vars <env>                  every field as E_<path>='value' lines a shell can eval
   namespace <env>             the namespace, with --slug <branch or PR> for a preview
   render <env>                write .deploy/<env>/ (kustomization.yaml and quota.yaml) and print its path
   secrets-check <env>         which expected secrets .secrets/<env>.env lacks, names only
   tag <env>                   the image tag a deploy uses, {sha} resolved against HEAD
   gate <env>                  refuse a context the environment does not declare, a floating tag or an unconfirmed protected one
+  confirm <env>               the same without the tag rule: for a rollback, which pins nothing
   migrations-check            migration files may only be added against --base (default ${DEFAULT_BASE})
   preview-slug <ref>          a branch or PR as a preview slug
   expired-previews            namespaces past their expiry, from kubectl's JSON on stdin
@@ -85,6 +89,8 @@ export function run(argv: readonly string[], host: DeployHost): ExitCode {
       return validate(host);
     case 'get':
       return get(host, input);
+    case 'vars':
+      return vars(host, input);
     case 'namespace':
       return namespace(host, input);
     case 'render':
@@ -95,6 +101,8 @@ export function run(argv: readonly string[], host: DeployHost): ExitCode {
       return tag(host, input);
     case 'gate':
       return gate(host, input);
+    case 'confirm':
+      return confirm(host, input);
     case 'migrations-check':
       return migrationsCheck(host, values.base);
     case 'preview-slug':

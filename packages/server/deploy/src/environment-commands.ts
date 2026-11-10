@@ -9,6 +9,7 @@ import { resolveNamespace } from './preview';
 import { renderOverlay } from './render-overlay';
 import { consistencyFindings } from './required-keys';
 import { formatSecretsReport, secretsOk, secretsReport } from './secrets-check';
+import { shellVars } from './shell-vars';
 
 export interface CommandInput {
   environment: string | undefined;
@@ -76,6 +77,13 @@ export function get(host: DeployHost, input: CommandInput): ExitCode {
     return EXIT.failure;
   }
   host.print(typeof value === 'object' ? JSON.stringify(value) : String(value));
+  return EXIT.ok;
+}
+
+export function vars(host: DeployHost, input: CommandInput): ExitCode {
+  const found = findEnvironment(host, input.environment);
+  if (!found.ok) return found.exit;
+  host.print(shellVars(found.env));
   return EXIT.ok;
 }
 
@@ -148,13 +156,19 @@ export function tag(host: DeployHost, input: CommandInput): ExitCode {
   return EXIT.ok;
 }
 
-export function gate(host: DeployHost, input: CommandInput): ExitCode {
+function refusal(host: DeployHost, input: CommandInput, checkTag: boolean): ExitCode {
   const found = findEnvironment(host, input.environment);
   if (!found.ok) return found.exit;
-  const finding =
-    contextFinding(found.env, input.context) ??
-    tagFinding(found.env, input.tag ?? found.env.images.tag) ??
-    confirmationFinding(found.env, { yes: input.yes, typed: input.confirm });
-  if (finding !== undefined) host.print(finding);
-  return finding === undefined ? EXIT.ok : EXIT.failure;
+  const findings = [
+    contextFinding(found.env, input.context),
+    checkTag ? tagFinding(found.env, input.tag ?? found.env.images.tag) : undefined,
+    confirmationFinding(found.env, { yes: input.yes, typed: input.confirm }),
+  ].filter((finding) => finding !== undefined);
+  if (findings.length > 0) host.print(findings.join('\n'));
+  return findings.length === 0 ? EXIT.ok : EXIT.failure;
 }
+
+export const gate = (host: DeployHost, input: CommandInput): ExitCode => refusal(host, input, true);
+
+export const confirm = (host: DeployHost, input: CommandInput): ExitCode =>
+  refusal(host, input, false);

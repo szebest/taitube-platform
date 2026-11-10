@@ -37,6 +37,8 @@ describe('run', () => {
     { argv: ['secrets-check', 'production'], exit: 1 },
     { argv: ['gate', 'production', '--context', 'k3s-prod', '--tag', 'v1', '--yes'], exit: 0 },
     { argv: ['gate', 'production', '--context', 'elsewhere', '--tag', 'v1', '--yes'], exit: 1 },
+    { argv: ['confirm', 'production', '--context', 'k3s-prod', '--yes'], exit: 0 },
+    { argv: ['vars', 'production'], exit: 0 },
     { argv: ['preview-slug', 'Feat/X'], exit: 0 },
     { argv: ['migrations-check'], exit: 3 },
     { argv: ['expired-previews'], exit: 2 },
