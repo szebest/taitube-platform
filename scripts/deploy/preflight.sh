@@ -145,8 +145,17 @@ run_checks() {
   return "$code"
 }
 
+PREFLIGHT_AFTER_TOOLS="check_spec check_gate check_secrets check_images check_migrations check_manifests check_terraform check_cluster"
+
 preflight_all() {
-  run_checks check_tools check_spec check_gate check_secrets check_images check_migrations check_manifests check_terraform check_cluster
+  # shellcheck disable=SC2086
+  run_checks check_tools $PREFLIGHT_AFTER_TOOLS
+}
+
+# For a cluster the deploy creates itself: tools first, the cluster, then these.
+preflight_after_tools() {
+  # shellcheck disable=SC2086
+  run_checks $PREFLIGHT_AFTER_TOOLS
 }
 
 # What a dry run proves with no cluster or registry: tools, files, manifests, migrations.

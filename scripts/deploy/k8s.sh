@@ -149,15 +149,35 @@ verify_secret_names() {
   return 1
 }
 
+deployment_revisions() {
+  kubectl -n "$(ns)" get deploy -l "vp.dev/environment=$ENV" \
+    -o go-template='{{range .items}}{{.metadata.name}}={{index .metadata.annotations "deployment.kubernetes.io/revision"}}{{"\n"}}{{end}}' 2>/dev/null || true
+}
+
+revision_of() { printf '%s\n' "$1" | sed -n "s/^$2=//p" | head -1; }
+
+# rollback_deployments all | changed <revisions recorded before the apply>
 rollback_deployments() {
-  local namespace d
+  local mode="${1:-all}" before="${2:-}" namespace d name now
   namespace="$(ns)"
   step "rolling back to the previous revision"
   if [ "$DRY_RUN" = 1 ]; then
-    would "kubectl -n $namespace rollout undo every deployment labelled vp.dev/environment=$ENV"
+    if [ "$mode" = changed ]; then
+      would "kubectl -n $namespace rollout undo each deployment labelled vp.dev/environment=$ENV whose revision the apply changed"
+    else
+      would "kubectl -n $namespace rollout undo every deployment labelled vp.dev/environment=$ENV"
+    fi
     return 0
   fi
+  now="$(deployment_revisions)"
   for d in $(kubectl -n "$namespace" get deploy -l "vp.dev/environment=$ENV" -o name 2>/dev/null); do
+    name="${d#*/}"
+    if [ "$mode" = changed ]; then
+      if [ -z "$(revision_of "$before" "$name")" ] || [ "$(revision_of "$before" "$name")" = "$(revision_of "$now" "$name")" ]; then
+        info "$name kept its revision: nothing to undo"
+        continue
+      fi
+    fi
     kubectl -n "$namespace" rollout undo "$d" 2>&1 | sed 's/^/    /' || warn "$d has no earlier revision"
   done
   kubectl -n "$namespace" rollout status deployment/vp-api --timeout=180s || return 1
@@ -181,16 +201,24 @@ k8s_plan() {
 k8s_deploy() {
   step "deploy $ENV to $(field cluster.context) / $(ns), tag $(resolved_tag)"
   if [ "$DRY_RUN" = 1 ]; then info "dry run: nothing below is executed"; else ensure_dev_secrets; fi
-  preflight_all || return $?
-  bootstrap_cluster
+  if [ "$(field kind)" = k3d ]; then
+    check_tools || return $?
+    bootstrap_cluster || return $?
+    preflight_after_tools || return $?
+  else
+    preflight_all || return $?
+    bootstrap_cluster
+  fi
   helm_backing
   build_images
   if [ "$DRY_RUN" = 1 ]; then ensure_dev_secrets; fi
   step "apply"
+  local before=""
+  if [ "$DRY_RUN" = 0 ]; then before="$(deployment_revisions)"; fi
   run kubectl -n "$(ns)" delete job vp-migrate --ignore-not-found
   if ! { apply_manifest && wait_rollout && verify_secret_names && health_gate; }; then
     bad "the deploy of $ENV failed"
-    rollback_deployments || warn "the rollback did not finish: check make deploy-status ENV=$ENV"
+    rollback_deployments changed "$before" || warn "the rollback did not finish: check make deploy-status ENV=$ENV"
     return 1
   fi
   if [ "$DRY_RUN" = 1 ]; then good "dry run of $ENV complete: nothing was changed"; else good "$ENV is deployed at $(resolved_tag)"; fi

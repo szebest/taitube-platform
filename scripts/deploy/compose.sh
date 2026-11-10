@@ -68,25 +68,37 @@ compose_deploy() {
   run docker --context "$(field compose.context)" compose -f "$(field compose.file)" -p "$(field compose.project)" --env-file "$(secrets_file)" pull
   if ! { run docker --context "$(field compose.context)" compose -f "$(field compose.file)" -p "$(field compose.project)" --env-file "$(secrets_file)" up -d --remove-orphans --wait && compose_health; }; then
     bad "the deploy of $ENV failed"
-    compose_rollback_to_previous || warn "no previous tag is recorded: pass TAG= to make deploy-rollback"
+    compose_rollback_to_previous || warn "the rollback did not finish: check make deploy-status ENV=$ENV"
     return 1
   fi
   if [ "$DRY_RUN" = 0 ]; then remember_tag "$tag"; fi
   if [ "$DRY_RUN" = 1 ]; then good "dry run of $ENV complete: nothing was changed"; else good "$ENV is deployed at $tag"; fi
 }
 
+remember_rollback() {
+  local dir current=""
+  dir="$(state_dir)"
+  mkdir -p "$dir"
+  if [ -f "$dir/current-tag" ]; then current="$(cat "$dir/current-tag")"; fi
+  if [ -n "$current" ] && [ "$current" != "$1" ]; then printf '%s\n' "$current" > "$dir/previous-tag"; fi
+  printf '%s\n' "$1" > "$dir/current-tag"
+}
+
+# compose_rollback_to_previous [tag]: without a tag, the one in previous-tag; a tag is the operator's choice.
 compose_rollback_to_previous() {
-  local previous="${TAG:-}" file
+  local target="${1:-}" file
   file="$(state_dir)/previous-tag"
-  if [ -z "$previous" ] && [ -f "$file" ]; then previous="$(cat "$file")"; fi
-  if [ -z "$previous" ]; then
+  if [ -z "$target" ] && [ -f "$file" ]; then target="$(cat "$file")"; fi
+  if [ -z "$target" ]; then
     if [ "$DRY_RUN" = 1 ]; then would "redeploy the tag recorded in $file"; return 0; fi
+    bad "no previous tag is recorded in $file: pass TAG= to make deploy-rollback"
     return 1
   fi
-  step "rolling back to $previous"
-  compose_env "$previous"
+  step "rolling back to $target"
+  compose_env "$target"
   run docker --context "$(field compose.context)" compose -f "$(field compose.file)" -p "$(field compose.project)" --env-file "$(secrets_file)" up -d --remove-orphans --wait
-  compose_health
+  compose_health || return 1
+  if [ "$DRY_RUN" = 0 ]; then remember_rollback "$target"; fi
 }
 
 compose_rollback() {
@@ -95,7 +107,7 @@ compose_rollback() {
     # shellcheck disable=SC2046
     show envctl confirm "$ENV" --context "$(current_context)" $(confirm_flags) || return 1
   fi
-  compose_rollback_to_previous
+  compose_rollback_to_previous "${TAG:-}"
 }
 
 compose_status() {
