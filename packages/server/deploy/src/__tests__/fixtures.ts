@@ -6,6 +6,7 @@ export const PRODUCTION: KubernetesEnvironment = {
   description: 'The environment real users reach.',
   production: true,
   protected: true,
+  typedConfirmation: true,
   images: { source: 'registry', registry: 'ghcr.io/acme', tag: 'latest' },
   hosts: { web: 'taitube.example.org', cdn: 'cdn.example.org' },
   features: { captions: true, screening: false },
@@ -22,11 +23,19 @@ export const PRODUCTION: KubernetesEnvironment = {
   },
 };
 
+export const STAGING: KubernetesEnvironment = {
+  ...PRODUCTION,
+  name: 'staging',
+  typedConfirmation: undefined,
+  cluster: { context: 'k3s-staging', namespace: 'video-pipeline', backing: 'managed' },
+};
+
 export const PREVIEW: KubernetesEnvironment = {
   ...PRODUCTION,
   name: 'preview',
   production: false,
   protected: false,
+  typedConfirmation: undefined,
   images: { source: 'registry', registry: 'ghcr.io/acme', tag: '{sha}' },
   hosts: {},
   config: {},

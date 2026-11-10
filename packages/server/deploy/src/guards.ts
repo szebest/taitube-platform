@@ -20,13 +20,18 @@ export interface Confirmation {
   typed: string | undefined;
 }
 
-/** A protected environment needs `--yes` or its own name typed back; others never ask. */
+/** A protected environment needs `--yes`; one that asks for its name typed back accepts nothing less. */
 export function confirmationFinding(
   env: Environment,
   confirmation: Confirmation
 ): string | undefined {
-  if (!env.protected || confirmation.yes || confirmation.typed === env.name) return undefined;
-  return `${env.name} is protected: pass --yes, or --confirm ${env.name}`;
+  if (!env.protected || confirmation.typed === env.name) return undefined;
+  if (env.typedConfirmation === true) {
+    return `${env.name} is protected: type its name back with --confirm ${env.name} (CONFIRM=${env.name}), --yes is not enough`;
+  }
+  return confirmation.yes
+    ? undefined
+    : `${env.name} is protected: pass --yes, or --confirm ${env.name}`;
 }
 
 /** A protected environment runs a release, never whatever `latest` points at when the pods next pull. */

@@ -102,17 +102,19 @@ Preflight (`make deploy-preflight ENV=<name>` runs it alone and changes nothing)
 |---|---|
 | tools | `kubectl`, `helm`, `k3d`, `docker` or `git` is missing; the message says how to install it (exit 3) |
 | environment files | a file fails the spec or the schema (`pnpm envctl validate`) |
-| context and confirmation | the current `kubectl` or Docker context is not the one the environment declares, a protected environment has no `--yes` (`YES=1`) or typed name, or its tag is `latest` |
-| secrets, by name | an expected secret is missing, empty or a placeholder, or a production value is a credential this repo ships for local use. Names only, never values |
+| context and confirmation | the current `kubectl` or Docker context is not the one the environment declares, a protected environment has no `--yes` (`YES=1`), production has no typed name (`CONFIRM=production`; `--yes` alone is refused), or its tag is `latest` |
+| secrets, by name | file-based: an expected secret is missing, empty or a placeholder in `.secrets/<env>.env`, or a production value is a credential this repo ships for local use. External secrets: `vp-secrets` in the cluster lacks an expected key. Names only, never values |
 | images | the tag is not in the registry (only a real run asks the registry; a dry run says what it would ask) |
 | migrations | a shipped migration was edited, deleted or renamed against `origin/main`: they only grow (production-mode environments; CI checks every pull request) |
-| manifests | the overlay does not build, `scripts/validate-k8s.sh` fails, or the compose file is invalid |
+| manifests | the overlay does not build, `scripts/validate-k8s.sh <env>` fails (it validates only that environment; `make k8s-validate` and CI validate every overlay and environment), or the compose file is invalid |
 | terraform | `terraform fmt -check` fails, when terraform is installed (otherwise skipped, and said so) |
 | cluster | the KEDA, Prometheus Operator or External Secrets CRDs the manifests need are not installed |
 
 After the apply, the deploy waits for the `vp-migrate` Job, the rollouts of the API, web and studio, then
 polls `/readyz` for `health.readyzTimeoutSec` and, where the environment says `smoke: true`, runs
-`scripts/e2e-smoke.sh` (it uploads a clip, so production does not). Any failure rolls every Deployment back
+`scripts/e2e-smoke.sh` (it mints a dev token and uploads a clip, so only the dev-auth environments, local and
+preview, run it: staging and production run JWKS auth, so `/readyz` is their whole gate, and the spec and
+`tests/architecture/environments.test.ts` refuse `smoke: true` there). Any failure rolls every Deployment back
 with `kubectl rollout undo` (compose: the previous tag the script recorded) and exits 1. Migrations are
 forward-only, so a release must work against the schema of the release before it: add a column in one
 release, use it in the next.
@@ -201,18 +203,17 @@ Order matters; each step is something you do once.
    ```
 
 4. Secrets: put the values in the secret manager behind the `vp-secret-store` ClusterSecretStore under
-   `video-pipeline/<KEY>`, and keep the same names in `.secrets/production.env` to check against
-   ([Secrets](#secrets)).
+   `video-pipeline/<KEY>`. The preflight reads the key names of `vp-secrets` from the cluster, so no value
+   ever sits on your machine ([Secrets](#secrets)).
 5. Set the real hosts, identity provider URLs and replica ceilings in
    [`infra/environments/production/environment.yaml`](../infra/environments/production/README.md).
 6. Push the images for a release (the Images workflow pushes on a `v*` tag, or run it by hand with `push`),
    then:
 
    ```bash
-   make secrets-check ENV=production
    make deploy-preflight ENV=production TAG=v1.2.3
    make deploy-plan ENV=production TAG=v1.2.3
-   make deploy ENV=production TAG=v1.2.3 YES=1
+   make deploy ENV=production TAG=v1.2.3 CONFIRM=production
    ```
 
    `/readyz` answers 503 while Postgres, Redis or storage is unreachable (`make chaos-readiness` proves it
@@ -225,8 +226,9 @@ Order matters; each step is something you do once.
 volume, one replica of each stage at most, captions and screening off, a `ResourceQuota` of 4 CPU and 8 GiB
 requests, and the annotation `vp.dev/expires-at` 48 hours out. The images must exist at `sha-<HEAD>`.
 
-A preview runs dev auth with the repo's local credentials, so it is never given a public host. Reach it with
-`kubectl -n preview-feat-new-player port-forward svc/vp-web 5173:5173`.
+A preview runs dev auth with the repo's local credentials, so it has no Ingress: it is never given a host, and
+two previews cannot collide on one. The health gate reaches the API by port-forward and so do you:
+`kubectl --context k3s-staging -n preview-feat-new-player port-forward svc/vp-web 5173:5173`.
 
 ```bash
 make deploy-plan ENV=preview SLUG=feat/new-player
@@ -255,8 +257,9 @@ committed, encrypted or not.
   writes `ADMIN_TOKEN` there once with a random value.
 - **For a cluster in the cloud:** the values live in your secret manager and External Secrets materialises the
   `vp-secrets` Secret (`infra/k8s/overlays/cloud/external-secret.yaml`). `.secrets/<env>.env` is the file you
-  keep to seed the store and to check names against. After an apply the deploy compares the key names of the
-  Secret in the cluster with `secrets.keys` and prints only names.
+  keep to seed the store, and only `make secrets-check` reads it. The preflight, before anything is applied,
+  compares the key names of the Secret in the cluster with `secrets.keys` and prints only names; a namespace
+  with no `vp-secrets` yet (the first deploy) is a warning, because the ExternalSecret creates it.
 - **Sealed Secrets** are a fine alternative where there is no secret manager: encrypt each value for one
   cluster with `kubeseal`, commit the `SealedSecret` under that environment's directory, and add the file to
   its `kustomization.yaml`. It is not wired in because the reference deployment uses External Secrets; if you
@@ -274,9 +277,9 @@ make secrets-check ENV=compose-vm
 Every command below accepts `DRY_RUN=1`.
 
 **Upgrade.** Push the release's images (a `v*` tag runs the Images workflow), then
-`make deploy ENV=production TAG=v1.3.0 YES=1`. Staging first: `make deploy ENV=staging` deploys `HEAD`.
+`make deploy ENV=production TAG=v1.3.0 CONFIRM=production`. Staging first: `make deploy ENV=staging` deploys `HEAD`.
 
-**Roll back.** `make deploy-rollback ENV=production YES=1` runs `kubectl rollout undo` on every Deployment
+**Roll back.** `make deploy-rollback ENV=production CONFIRM=production` runs `kubectl rollout undo` on every Deployment
 labelled `vp.dev/environment=production` and waits for the API. It does not undo a migration: forward-only
 means the previous release has to run against the newer schema. On compose it redeploys the recorded previous
 tag, or the one you pass as `TAG=`.
@@ -313,7 +316,8 @@ from the bucket's own history; see [storage-outage](runbooks/storage-outage.md) 
 - [ ] The hosts, `AUTH_JWKS_URL`, `AUTH_ISSUER` and `AUTH_AUDIENCE` in `environment.yaml` are yours, not the
       `example.com` placeholders, and the identity provider issues tokens with that audience.
 - [ ] `S3_BUCKET_RAW` and `S3_BUCKET_PUBLIC` match the buckets Terraform created.
-- [ ] The same tag ran on staging, `/readyz` answered, and the smoke upload reached READY.
+- [ ] The same tag ran on staging, and its `/readyz` answered. Staging runs JWKS auth, so no smoke upload runs there:
+      upload a clip by hand with a real token.
 - [ ] `scaling.budget` fits the node and `scaling.maxReplicas` is what you will pay for
       ([Cost and capacity](#cost-and-capacity)).
 - [ ] The R2 budget alert and the dashboards load; someone knows the
@@ -361,7 +365,7 @@ and not run against live clusters. Treat the first deploy of each as a rehearsal
 | Message | What to do |
 |---|---|
 | `refusing production: the current context is X, the environment declares Y` | `kubectl config use-context Y`, or fix `cluster.context` if Y is wrong |
-| `production is protected: pass --yes` | add `YES=1` (or `CONFIRM=production`) once you have read the plan |
+| `production is protected: type its name back` | add `CONFIRM=production` once you have read the plan: `YES=1` is enough for staging and the compose VM, not for production |
 | `production is protected: pin an image tag` | add `TAG=v1.2.3`; `latest` is not a release |
 | `missing: ...` from `secrets-check` | add those names to `.secrets/<env>.env` (and the secret store) |
 | `<image> is not in the registry` | run the Images workflow with `push`, or pass the tag that exists |

@@ -3,6 +3,7 @@ kind: k3s
 description: "What real users reach: the cloud overlay, a release tag pinned at deploy time, the context checked and the name typed back before anything applies."
 production: true
 protected: true
+typedConfirmation: true
 images:
   source: registry
   registry: ghcr.io/szebest

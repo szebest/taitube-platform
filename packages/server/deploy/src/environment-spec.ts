@@ -44,6 +44,7 @@ const Common = {
   description: z.string().min(10),
   production: z.boolean(),
   protected: z.boolean(),
+  typedConfirmation: z.boolean().optional(),
   images: Images,
   hosts: z.object({
     web: Host.optional(),
@@ -113,6 +114,15 @@ export const EnvironmentSpec = z
     }
     if (env.production && !env.protected) {
       problem(['protected'], 'a production-mode environment must be protected');
+    }
+    if (env.typedConfirmation === true && !env.protected) {
+      problem(['typedConfirmation'], 'only a protected environment asks for its name typed back');
+    }
+    if (env.production && env.health.smoke) {
+      problem(
+        ['health', 'smoke'],
+        'the smoke upload mints a dev token and uploads a clip: a production-mode environment gates on /readyz alone'
+      );
     }
     const secretNames = new Set(env.secrets.keys);
     for (const key of Object.keys(env.config)) {

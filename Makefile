@@ -248,7 +248,7 @@ chaos-s7: ## Run S7 Soak test (4h duration, configurable with SOAK_DURATION)
 DEPLOY := bash scripts/deploy.sh
 DEPLOY_FLAGS = --env "$(ENV)" $(if $(SLUG),--slug "$(SLUG)") $(if $(TAG),--tag "$(TAG)") $(if $(YES),--yes) $(if $(CONFIRM),--confirm "$(CONFIRM)") $(if $(DRY_RUN),--dry-run)
 
-deploy: ## Deploy an environment: preflight, apply, health gate, rollback on failure (ENV=local|preview|staging|production|compose-vm, SLUG=, TAG=, YES=1, DRY_RUN=1)
+deploy: ## Deploy an environment: preflight, apply, health gate, rollback on failure (ENV=local|preview|staging|production|compose-vm, SLUG=, TAG=, YES=1, CONFIRM=<name> for production, DRY_RUN=1)
 	@$(DEPLOY) deploy $(DEPLOY_FLAGS)
 
 deploy-list: ## List the environments and what each is for
@@ -260,7 +260,7 @@ deploy-plan: ## Render an environment and diff it against its cluster, applying 
 deploy-status: ## Show what an environment is running (ENV=, SLUG=)
 	@$(DEPLOY) status $(DEPLOY_FLAGS)
 
-deploy-rollback: ## Return an environment to its previous revision (ENV=, YES=1 for a protected one)
+deploy-rollback: ## Return an environment to its previous revision (ENV=, YES=1 for a protected one, CONFIRM=production for production)
 	@$(DEPLOY) rollback $(DEPLOY_FLAGS)
 
 deploy-logs: ## Recent logs of one service of an environment (ENV=, SERVICE=api, FOLLOW=1)

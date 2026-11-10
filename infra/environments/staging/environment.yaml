@@ -35,7 +35,7 @@ secrets:
     - CLOUDFLARE_TUNNEL_TOKEN
 health:
   readyzTimeoutSec: 300
-  smoke: true
+  smoke: false
 cluster:
   context: k3s-staging
   namespace: video-pipeline

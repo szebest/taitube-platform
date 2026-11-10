@@ -6,3 +6,14 @@ resources:
 
 components:
   - ../../k8s/components/dev-mode
+
+patches:
+  - target:
+      kind: Ingress
+      name: vp-ingress
+    patch: |-
+      $patch: delete
+      apiVersion: networking.k8s.io/v1
+      kind: Ingress
+      metadata:
+        name: vp-ingress

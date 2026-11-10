@@ -162,7 +162,7 @@ No credential is committed to git, encrypted or not:
    ```bash
    make secrets-check ENV=production
    make deploy-plan ENV=production TAG=v1.2.3
-   make deploy ENV=production TAG=v1.2.3 YES=1
+   make deploy ENV=production TAG=v1.2.3 CONFIRM=production
    ```
    [docs/DEPLOYMENT.md](../DEPLOYMENT.md) covers the environments, the gates and the first deploy on Hetzner.
 

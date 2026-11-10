@@ -12,6 +12,8 @@ description: "What this environment is for, in one sentence."
 production: true
 # true to make a deploy need --yes (or --confirm <name>) and a pinned image tag.
 protected: true
+# optional, true to make the deploy need --confirm <name> instead of --yes. Only for a protected environment.
+# typedConfirmation: true
 
 images:
   # registry pulls <registry>/vp-api:<tag> and friends; build builds this checkout and imports it into k3d.
@@ -48,7 +50,7 @@ secrets:
 
 health:
   readyzTimeoutSec: 300
-  # true to run scripts/e2e-smoke.sh after /readyz answers: it uploads a clip, so not on production.
+  # true to run scripts/e2e-smoke.sh after /readyz answers: it mints a dev token and uploads a clip, so never on a production-mode or JWKS environment.
   smoke: false
 
 # Only for kind k3d and k3s; a compose environment has `compose:` instead (see compose-vm).

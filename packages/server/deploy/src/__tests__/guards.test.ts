@@ -1,5 +1,5 @@
 import { confirmationFinding, contextFinding, declaredContext, tagFinding } from '../guards';
-import { COMPOSE, PREVIEW, PRODUCTION } from './fixtures';
+import { COMPOSE, PREVIEW, PRODUCTION, STAGING } from './fixtures';
 
 describe('declaredContext', () => {
   it.each([
@@ -27,8 +27,12 @@ describe('contextFinding', () => {
 
 describe('confirmationFinding', () => {
   it.each([
-    { env: PRODUCTION, confirmation: { yes: true, typed: undefined }, ok: true },
+    { env: PRODUCTION, confirmation: { yes: true, typed: undefined }, ok: false },
+    { env: PRODUCTION, confirmation: { yes: true, typed: 'staging' }, ok: false },
     { env: PRODUCTION, confirmation: { yes: false, typed: 'production' }, ok: true },
+    { env: STAGING, confirmation: { yes: true, typed: undefined }, ok: true },
+    { env: STAGING, confirmation: { yes: false, typed: 'staging' }, ok: true },
+    { env: STAGING, confirmation: { yes: false, typed: undefined }, ok: false },
     { env: PRODUCTION, confirmation: { yes: false, typed: 'staging' }, ok: false },
     { env: PRODUCTION, confirmation: { yes: false, typed: undefined }, ok: false },
     { env: PREVIEW, confirmation: { yes: false, typed: undefined }, ok: true },
@@ -36,10 +40,20 @@ describe('confirmationFinding', () => {
     expect(confirmationFinding(env, confirmation) === undefined).toBe(ok);
   });
 
-  it('tells the operator what to pass', () => {
-    expect(confirmationFinding(PRODUCTION, { yes: false, typed: undefined })).toBe(
-      'production is protected: pass --yes, or --confirm production'
-    );
+  it.each([
+    {
+      env: PRODUCTION,
+      confirmation: { yes: true, typed: undefined },
+      expected:
+        'production is protected: type its name back with --confirm production (CONFIRM=production), --yes is not enough',
+    },
+    {
+      env: STAGING,
+      confirmation: { yes: false, typed: undefined },
+      expected: 'staging is protected: pass --yes, or --confirm staging',
+    },
+  ])('tells the operator what to pass for $env.name', ({ env, confirmation, expected }) => {
+    expect(confirmationFinding(env, confirmation)).toBe(expected);
   });
 });
 

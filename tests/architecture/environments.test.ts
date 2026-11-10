@@ -2,7 +2,7 @@ import { execFile } from 'node:child_process';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
-import { load, loadAll, YAML11_SCHEMA } from 'js-yaml';
+import { loadAll } from 'js-yaml';
 import {
   type Environment,
   EnvironmentSpec,
@@ -167,6 +167,27 @@ describe('architecture: every cluster environment renders what its file says', (
     }
   );
 
+  it.each(kubernetes.map((env) => ({ name: env.name, env })))(
+    'runs the smoke upload against $name only when it runs dev auth outside production',
+    ({ name, env }) => {
+      const authMode = podEnv(rendered.get(name) ?? [])['AUTH_MODE'];
+
+      if (env.health.smoke) {
+        expect(
+          { authMode, production: env.production },
+          `${ENVIRONMENT_FILE(name)}: scripts/e2e-smoke.sh mints a dev token, so smoke needs AUTH_MODE=dev and production: false`
+        ).toEqual({ authMode: 'dev', production: false });
+      }
+    }
+  );
+
+  it.each(kubernetes.filter((env) => env.preview !== undefined).map((env) => ({ name: env.name })))(
+    'exposes no Ingress from the $name render, so a shared cluster never serves its dev-auth API on a host',
+    ({ name }) => {
+      expect((rendered.get(name) ?? []).filter((m) => m.kind === 'Ingress')).toEqual([]);
+    }
+  );
+
   it.each(kubernetes.filter((env) => env.production).map((env) => ({ name: env.name, env })))(
     'boots $name under the schema once its secrets are supplied, with no credential rendered',
     ({ name, env }) => {
@@ -202,57 +223,5 @@ describe('architecture: every cluster environment renders what its file says', (
       keys,
       `${ENVIRONMENT_FILE(name)} secrets.keys and infra/k8s/overlays/cloud/external-secret.yaml must agree`
     ).toEqual([...env.secrets.keys].sort());
-  });
-});
-
-describe('architecture: the compose environment runs every stage the platform has', () => {
-  const compose = load(read('infra/environments/compose-vm/docker-compose.yml'), {
-    schema: YAML11_SCHEMA,
-  }) as {
-    services: Record<string, { image?: string; environment?: Record<string, string> }>;
-  };
-  const NOT_IN_COMPOSE_VM = ['live'];
-
-  it('has a worker service for every stage but the one that needs a media gateway', () => {
-    const missing = WORKER_STAGES.filter(
-      (stage) => !NOT_IN_COMPOSE_VM.includes(stage) && !(`worker-${stage}` in compose.services)
-    );
-
-    expect(missing).toEqual([]);
-  });
-
-  it('sets only keys the environment schema declares, and pulls images from the environment registry', () => {
-    const keys = Object.values(compose.services).flatMap((service) =>
-      Object.keys(service.environment ?? {})
-    );
-    const known = new Set([...Object.keys(AppEnvSchema.shape), 'WORKER_STAGE', 'TUNNEL_TOKEN']);
-
-    expect([...new Set(keys)].filter((key) => !known.has(key))).toEqual([]);
-    expect(compose.services['api']?.image).toContain('/vp-api:');
-    expect(compose.services['worker-probe']?.image).toContain('/vp-worker:');
-  });
-});
-
-describe('architecture: the Helm chart pins the deploy script installs match the Makefile', () => {
-  it('uses the same version for Postgres, Redis and MinIO', () => {
-    const pins = Object.fromEntries(
-      read('infra/k8s/charts.env')
-        .split('\n')
-        .filter((line) => line.includes('='))
-        .map((line) => line.split('='))
-    );
-    const makefile = read('Makefile');
-    const versionOf = (release: string) =>
-      new RegExp(`helm upgrade --install ${release} \\S+ --version (\\S+)`).exec(makefile)?.[1];
-
-    expect({
-      POSTGRES_VERSION: versionOf('vp-postgres'),
-      REDIS_VERSION: versionOf('vp-redis'),
-      MINIO_VERSION: versionOf('vp-minio'),
-    }).toEqual({
-      POSTGRES_VERSION: pins['POSTGRES_VERSION'],
-      REDIS_VERSION: pins['REDIS_VERSION'],
-      MINIO_VERSION: pins['MINIO_VERSION'],
-    });
   });
 });

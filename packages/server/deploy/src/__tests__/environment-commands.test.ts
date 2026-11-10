@@ -201,8 +201,9 @@ describe('gate', () => {
     {
       scenario: 'the right context, a pinned tag and --yes',
       args: { context: 'k3s-prod', tag: 'v1', yes: true },
-      exit: 0,
-      message: undefined,
+      exit: 1,
+      message:
+        'production is protected: type its name back with --confirm production (CONFIRM=production), --yes is not enough',
     },
     {
       scenario: 'the right context, a pinned tag and the name typed',
@@ -212,14 +213,14 @@ describe('gate', () => {
     },
     {
       scenario: 'a context the environment does not declare',
-      args: { context: 'k3d-vp', tag: 'v1', yes: true },
+      args: { context: 'k3d-vp', tag: 'v1', confirm: 'production' },
       exit: 1,
       message:
         'refusing production: the current context is k3d-vp, the environment declares k3s-prod',
     },
     {
       scenario: 'a floating tag',
-      args: { context: 'k3s-prod', yes: true },
+      args: { context: 'k3s-prod', confirm: 'production' },
       exit: 1,
       message: 'production is protected: pin an image tag, e.g. TAG=v1.2.3, not latest',
     },
@@ -227,7 +228,8 @@ describe('gate', () => {
       scenario: 'no confirmation',
       args: { context: 'k3s-prod', tag: 'v1' },
       exit: 1,
-      message: 'production is protected: pass --yes, or --confirm production',
+      message:
+        'production is protected: type its name back with --confirm production (CONFIRM=production), --yes is not enough',
     },
   ])('answers $exit for $scenario', ({ args, exit, message }) => {
     const host = fakeHost(root);
@@ -244,13 +246,13 @@ describe('gate', () => {
       [
         'refusing production: the current context is k3d-vp, the environment declares k3s-prod',
         'production is protected: pin an image tag, e.g. TAG=v1.2.3, not latest',
-        'production is protected: pass --yes, or --confirm production',
+        'production is protected: type its name back with --confirm production (CONFIRM=production), --yes is not enough',
       ].join('\n'),
     ]);
   });
 
   it('leaves the tag out of a confirm, which a rollback pins nothing for', () => {
-    expect(confirm(fakeHost(root), input({ context: 'k3s-prod', yes: true }))).toBe(0);
+    expect(confirm(fakeHost(root), input({ context: 'k3s-prod', confirm: 'production' }))).toBe(0);
     expect(confirm(fakeHost(root), input({ context: 'k3s-prod' }))).toBe(1);
   });
 });

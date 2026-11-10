@@ -34,6 +34,17 @@ describe('EnvironmentSpec', () => {
       expected: 'protected: a production-mode environment must be protected',
     },
     {
+      scenario: 'a typed confirmation on an environment nobody protects',
+      value: { ...PREVIEW, typedConfirmation: true },
+      expected: 'typedConfirmation: only a protected environment asks for its name typed back',
+    },
+    {
+      scenario: 'a smoke upload against a production-mode environment',
+      value: { ...PRODUCTION, health: { readyzTimeoutSec: 300, smoke: true } },
+      expected:
+        'health.smoke: the smoke upload mints a dev token and uploads a clip: a production-mode environment gates on /readyz alone',
+    },
+    {
       scenario: 'a templated namespace without a preview block',
       value: { ...PREVIEW, preview: undefined },
       expected: 'preview: a {slug} namespace needs a preview block with ttlHours',

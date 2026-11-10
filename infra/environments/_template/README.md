@@ -18,6 +18,7 @@ leaves you three files to edit. Run `make deploy-plan ENV=<name>` to see what it
 | `description` | One sentence on what it is for; `make deploy-list` prints it. |
 | `production` | The pods run with `NODE_ENV=production`. Every key the schema requires in production must be listed under `secrets.keys` or `config`; `tests/architecture/environments.test.ts` fails otherwise. |
 | `protected` | A deploy needs `--yes` (or `--confirm <name>`) and an image tag that is not `latest`. A production-mode environment must be protected. |
+| `typedConfirmation` | Optional. `true` makes a deploy need `--confirm <name>` (`CONFIRM=<name>`); `--yes` alone is refused. Production sets it. |
 | `images.source` | `registry` pulls `<registry>/vp-api:<tag>`; `build` builds this checkout and imports the images into k3d. |
 | `images.registry`, `images.tag` | Where from and which version. `{sha}` means `sha-<HEAD>`, the tag `images.yml` pushes for a commit. `TAG=v1.2.3 make deploy ENV=<name>` overrides it. |
 | `hosts` | `web`, `studio`, `api`, `cdn`: bare host names. `web` and `studio` become `CORS_ORIGINS`, `cdn` becomes `CDN_BASE_URL`. |
@@ -26,7 +27,7 @@ leaves you three files to edit. Run `make deploy-plan ENV=<name>` to see what it
 | `secrets.source` | `env-file`: `.secrets/<name>.env` is the source and the script applies it. `external-secrets`: the cluster's secret store holds the values. |
 | `secrets.keys` | The names the environment expects, never values. `make secrets-check ENV=<name>` lists the ones missing from `.secrets/<name>.env`. |
 | `health.readyzTimeoutSec` | How long a deploy waits for `/readyz` before it rolls back. |
-| `health.smoke` | Run `scripts/e2e-smoke.sh` after `/readyz`. It uploads a clip: leave it off for production. |
+| `health.smoke` | Run `scripts/e2e-smoke.sh` after `/readyz`. It uploads a clip: leave it off for any production-mode environment: it mints a dev token, which a JWKS environment rejects, and the spec refuses `smoke: true` there. `/readyz` is the gate. |
 | `cluster.context` | The `kubectl` context the deploy must run against. Any other current context is refused. |
 | `cluster.namespace` | A fixed name, or `preview-{slug}` with a `preview` block. |
 | `cluster.backing` | `helm` installs Postgres, Redis and MinIO in the namespace; `managed` expects them outside (Neon, R2). |

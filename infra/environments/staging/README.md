@@ -9,6 +9,9 @@ make deploy-plan ENV=staging
 make deploy ENV=staging YES=1
 ```
 
+Staging runs JWKS auth, so the smoke upload (it mints a dev token) cannot authenticate and is off: `/readyz` is the
+health gate, and a failure rolls the deploy back. Check an upload by hand with a real token.
+
 Secrets reach the pods through External Secrets from the store behind `vp-secret-store`; the names are the
 `secrets.keys` of `environment.yaml` and the `ExternalSecret` in `infra/k8s/overlays/cloud`, held equal by
 `tests/architecture/environments.test.ts`. The hosts are placeholders on `example.com`: set yours.
