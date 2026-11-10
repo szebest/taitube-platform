@@ -72,6 +72,7 @@ describe('apps/server/worker/stages: notify-team-invite', () => {
           actor: { handle: 'night-kitchen', displayName: 'Night Kitchen' },
           videoTitle: null,
           excerpt: null,
+          inviteId: INVITE,
           count: 1,
         },
       },

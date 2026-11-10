@@ -11,6 +11,8 @@ export interface ChannelRepositoryPort {
   findByUserId(userId: string): Promise<Result<Channel | null, DatabaseUnavailable>>;
   /** One read for a page of owners; a user with no channel is simply absent from the answer. */
   findByUserIds(userIds: readonly string[]): Promise<Result<Channel[], DatabaseUnavailable>>;
+  /** One read for a page of channels; an id with no channel is simply absent from the answer. */
+  findByIds(ids: readonly string[]): Promise<Result<Channel[], DatabaseUnavailable>>;
   findByHandle(handle: string): Promise<Result<Channel | null, DatabaseUnavailable>>;
   /** What the public feed shows of the owner's videos: the numbers on a channel page. */
   statsOf(userId: string): Promise<Result<ChannelStats, DatabaseUnavailable>>;

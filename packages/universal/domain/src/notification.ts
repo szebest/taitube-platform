@@ -100,6 +100,8 @@ interface NotificationFields {
   videoTitle: string | null;
   excerpt: string | null;
   outcome: 'ready' | 'failed' | null;
+  /** Set on `team_invite`: the invite the notification opens. */
+  inviteId?: string;
 }
 
 /** Written when the notification is created, so listing and pushing it need no join. */

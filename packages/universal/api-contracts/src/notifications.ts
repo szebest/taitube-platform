@@ -34,6 +34,7 @@ const NotificationPayloadSchema = z.object({
     })
     .nullable()
     .describe('The party a party_invite points at, with who was watching when it was sent'),
+  inviteId: z.uuid().optional().describe('The channel team invite a `team_invite` opens'),
 });
 
 export const NotificationSchema = z.object({

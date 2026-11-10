@@ -3,6 +3,7 @@ import type {
   ChannelInviteRepositoryPort,
   CreateInviteOutcome,
   NewChannelInvite,
+  PendingInvitesQuery,
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import {
@@ -14,7 +15,8 @@ import {
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { teamInviteOutbox } from '@vp/job-contracts';
 import { fromPromise, type Result } from '@vp/result';
-import { and, asc, eq, gt, inArray, lte, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gt, inArray, lte, sql } from 'drizzle-orm';
+import { keysetBefore } from '../scopes/index';
 import { appendChannelAudit } from './channel-audit-writes';
 import { enqueueNotificationJobs } from './notification-jobs';
 import type { PostgresDatabase } from './types';
@@ -107,6 +109,29 @@ export class PostgresChannelInviteRepository implements ChannelInviteRepositoryP
           )
           .orderBy(asc(i.createdAt), asc(i.id)),
       databaseUnavailable.during('listPendingChannelInvites')
+    );
+  }
+
+  async listPendingFor(
+    inviteeUserId: string,
+    { cursor, limit }: PendingInvitesQuery
+  ): Promise<Result<ChannelInvite[], DatabaseUnavailable>> {
+    return fromPromise(
+      () =>
+        this.db
+          .select()
+          .from(i)
+          .where(
+            and(
+              eq(i.inviteeUserId, inviteeUserId),
+              eq(i.status, 'pending'),
+              gt(i.expiresAt, sql`now()`),
+              keysetBefore(i.createdAt, i.id, cursor && { sort: cursor.createdAt, tie: cursor.id })
+            )
+          )
+          .orderBy(desc(i.createdAt), desc(i.id))
+          .limit(limit + 1),
+      databaseUnavailable.during('listPendingInvitesFor')
     );
   }
 
