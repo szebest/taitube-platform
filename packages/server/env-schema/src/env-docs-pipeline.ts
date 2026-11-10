@@ -142,7 +142,7 @@ export const PIPELINE_DOCS = groupDocs('pipeline', {
   },
   CAPTIONS_ENABLED: {
     description:
-      'The platform kill switch for speech-to-text captions. false queues no captions job and hides the caption controls.',
+      'The platform kill switch for speech-to-text captions. false queues no captions job and skips the captions reconcile.',
     example: 'true',
     visibility: 'public',
     readBy: ['api', 'worker'],

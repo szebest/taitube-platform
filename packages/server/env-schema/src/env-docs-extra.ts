@@ -119,7 +119,7 @@ const PLATFORM = extraDocs('platform', {
   },
   GRAFANA_OTLP_HEADERS: {
     description:
-      'The Authorization=Basic <base64(instanceId:token)> header Alloy sends to GRAFANA_OTLP_ENDPOINT. Wrong credentials drop all cloud telemetry.',
+      'The Authorization=Basic header Alloy sends to GRAFANA_OTLP_ENDPOINT, built from the base64 of instanceId:token. Wrong credentials drop all cloud telemetry.',
     example: 'Authorization=Basic <base64 instanceId:token>',
     visibility: 'secret',
     readBy: ['infra'],

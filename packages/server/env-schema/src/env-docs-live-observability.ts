@@ -54,7 +54,7 @@ export const WATCH_PARTY_DOCS = groupDocs('watch-party', {
   },
   WATCH_PARTY_GUEST_SALT: {
     description:
-      'Keys the guest IP hash kept for a ban. Unset, guest bans cannot be matched across visits; production refuses the local value.',
+      'Keys the guest IP hash kept for a ban. Unset, guest joins are switched off; production refuses the local value.',
     example: '<random 32 bytes>',
     visibility: 'secret',
     readBy: ['api'],
