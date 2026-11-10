@@ -155,6 +155,13 @@ export const SDD_COMMENT_ENDPOINTS: SddEndpointContract[] = [
     hasPathParams: true,
   },
   {
+    path: '/v1/creator/comments/bulk',
+    method: 'post',
+    expectedStatuses: [200, 400, 401, 403],
+    expectedErrorCodes: [...AUTHENTICATED, FORBIDDEN],
+    hasBody: true,
+  },
+  {
     path: '/v1/me/channel/comment-settings',
     method: 'get',
     expectedStatuses: [200, 401, 403],

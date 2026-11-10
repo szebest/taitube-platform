@@ -1,6 +1,8 @@
 import { CREATOR_INBOX_FILTERS } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import { z } from 'zod';
+import { RestrictionActionSchema } from './channel-restrictions';
+import { CommentActionSchema } from './comment-moderation';
 import { CommentSchema } from './comments';
 import { defineEndpoint } from './endpoint';
 import { CursorSchema, PageLimitSchema } from './pagination';
@@ -34,3 +36,44 @@ export const listCreatorComments = defineEndpoint({
 });
 
 export type CreatorInboxCommentView = z.infer<typeof CreatorInboxCommentSchema>;
+
+const BulkActionSchema = z
+  .union([CommentActionSchema, RestrictionActionSchema, z.object({ action: z.literal('lift') })])
+  .describe(
+    'Any moderation action; a user action applies to the author of each comment, once per author'
+  );
+
+export type BulkActionBody = z.infer<typeof BulkActionSchema>;
+
+const BulkResultSchema = z.object({
+  results: z.array(
+    z.object({
+      id: z.uuid(),
+      ok: z.boolean(),
+      code: z.enum(ErrorCodes).optional().describe('Why this comment was refused'),
+    })
+  ),
+});
+
+export type BulkResultView = z.infer<typeof BulkResultSchema>;
+
+export const bulkModerateComments = defineEndpoint({
+  method: 'POST',
+  path: '/v1/creator/comments/bulk',
+  channelScoped: true,
+  tag: 'Creator Studio',
+  summary: 'Moderate up to 100 comments at once',
+  description:
+    'Applies one action to each comment. Every id is decided by its own rule and the response lists { id, ok, code? } in the order sent, so one refusal never fails the batch. A user action applies once per author, whatever the number of their comments. Each applied action writes its own audit row.',
+  body: z.object({
+    ids: z.array(z.uuid()).min(1).max(100),
+    action: BulkActionSchema,
+  }),
+  status: 200,
+  result: BulkResultSchema,
+  errors: {
+    400: [ErrorCodes.VALIDATION_FAILED],
+    401: [ErrorCodes.UNAUTHORIZED],
+    403: [ErrorCodes.FORBIDDEN],
+  },
+});

@@ -22,6 +22,7 @@ import type {
   ClipService,
   OEmbedService,
   WebhookService,
+  CommentBulkService,
   CommentModerationService,
   CommentReportService,
   CommentService,
@@ -99,6 +100,7 @@ export interface ServiceSet {
   trustedCommenterService: TrustedCommenterService;
   commentService: CommentService;
   channelRestrictionService: ChannelRestrictionService;
+  commentBulkService: CommentBulkService;
   commentModerationService: CommentModerationService;
   commentSettingsService: CommentSettingsService;
   commentReportService: CommentReportService;
@@ -166,6 +168,7 @@ export const Services = {
   TrustedCommenterService: token<TrustedCommenterService>('TrustedCommenterService'),
   CommentService: token<CommentService>('CommentService'),
   ChannelRestrictionService: token<ChannelRestrictionService>('ChannelRestrictionService'),
+  CommentBulkService: token<CommentBulkService>('CommentBulkService'),
   CommentModerationService: token<CommentModerationService>('CommentModerationService'),
   CommentSettingsService: token<CommentSettingsService>('CommentSettingsService'),
   CommentReportService: token<CommentReportService>('CommentReportService'),

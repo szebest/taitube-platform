@@ -45,6 +45,7 @@ describe('apps/server/api/composition: services module', () => {
       'channelRestrictionService',
       'channelService',
       'clipService',
+      'commentBulkService',
       'commentModerationService',
       'commentReportService',
       'commentService',

@@ -3,6 +3,7 @@ import type { Container } from '@vp/composition';
 import { Singleflight } from '@vp/concurrency';
 import {
   ChannelRestrictionService,
+  CommentBulkService,
   CommentModerationService,
   CommentReportService,
   CommentService,
@@ -49,6 +50,16 @@ export function registerCommentServices(c: Container): Container {
           commentCache: c.get(Adapters.CommentCache),
           paginator: c.get(Services.Paginator),
           now: () => Date.now(),
+        })
+    )
+    .provide(
+      Services.CommentBulkService,
+      (c) =>
+        new CommentBulkService({
+          comments: repositories().comments,
+          videos: repositories().videos,
+          moderation: c.get(Services.CommentModerationService),
+          restrictions: c.get(Services.ChannelRestrictionService),
         })
     )
     .provide(

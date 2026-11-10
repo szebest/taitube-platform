@@ -10242,6 +10242,421 @@ paths:
                   - instance
                 additionalProperties: false
                 description: Problem Details (RFC 9457)
+  /v1/creator/comments/bulk:
+    post:
+      summary: Moderate up to 100 comments at once
+      tags:
+        - Creator Studio
+      description: Applies one action to each comment. Every id is decided by its own rule and the response lists { id, ok, code? } in the order sent, so one refusal never fails the batch. A user action applies once per author, whatever the number of their comments. Each applied action writes its own audit row.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ids:
+                  minItems: 1
+                  maxItems: 100
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                    pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                action:
+                  anyOf:
+                    - oneOf:
+                        - type: object
+                          properties:
+                            action:
+                              type: string
+                              enum:
+                                - hold
+                            disclosure:
+                              description: 'Overrides the channel''s default for this action: what the comment''s author is told'
+                              type: string
+                              enum:
+                                - silent
+                                - visible
+                            reason:
+                              description: Required when the action is visible
+                              type: string
+                              enum:
+                                - spam
+                                - harassment
+                                - hate
+                                - misinformation
+                                - other
+                                - off_topic
+                            note:
+                              type: string
+                              maxLength: 200
+                          required:
+                            - action
+                        - type: object
+                          properties:
+                            action:
+                              type: string
+                              enum:
+                                - approve
+                          required:
+                            - action
+                        - type: object
+                          properties:
+                            action:
+                              type: string
+                              enum:
+                                - hide
+                            disclosure:
+                              description: 'Overrides the channel''s default for this action: what the comment''s author is told'
+                              type: string
+                              enum:
+                                - silent
+                                - visible
+                            reason:
+                              description: Required when the action is visible
+                              type: string
+                              enum:
+                                - spam
+                                - harassment
+                                - hate
+                                - misinformation
+                                - other
+                                - off_topic
+                            note:
+                              type: string
+                              maxLength: 200
+                          required:
+                            - action
+                        - type: object
+                          properties:
+                            action:
+                              type: string
+                              enum:
+                                - unhide
+                          required:
+                            - action
+                        - type: object
+                          properties:
+                            action:
+                              type: string
+                              enum:
+                                - remove
+                            disclosure:
+                              description: 'Overrides the channel''s default for this action: what the comment''s author is told'
+                              type: string
+                              enum:
+                                - silent
+                                - visible
+                            reason:
+                              description: Required when the action is visible
+                              type: string
+                              enum:
+                                - spam
+                                - harassment
+                                - hate
+                                - misinformation
+                                - other
+                                - off_topic
+                            note:
+                              type: string
+                              maxLength: 200
+                          required:
+                            - action
+                      description: One action on a comment; approve and unhide restore, so they carry no disclosure
+                    - oneOf:
+                        - type: object
+                          properties:
+                            action:
+                              type: string
+                              enum:
+                                - shadow_ban
+                          required:
+                            - action
+                        - type: object
+                          properties:
+                            action:
+                              type: string
+                              enum:
+                                - ban
+                            reason:
+                              description: Shown to the banned user; up to 200 characters
+                              type: string
+                              maxLength: 200
+                            expiresAt:
+                              description: When the ban ends; absent or null for a permanent one
+                              anyOf:
+                                - type: string
+                                  format: date-time
+                                  pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+                                - type: 'null'
+                          required:
+                            - action
+                      description: A shadow ban is silent and never ends; a ban is told to the user, refuses their writes and may end
+                    - type: object
+                      properties:
+                        action:
+                          type: string
+                          enum:
+                            - lift
+                      required:
+                        - action
+                  description: Any moderation action; a user action applies to the author of each comment, once per author
+              required:
+                - ids
+                - action
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+          in: header
+          name: x-channel-id
+          required: false
+      responses:
+        '200':
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                        ok:
+                          type: boolean
+                        code:
+                          description: Why this comment was refused
+                          type: string
+                          enum:
+                            - UPLOAD_TOO_LARGE
+                            - UPLOAD_SIZE_MISMATCH
+                            - UNSUPPORTED_CONTENT_TYPE
+                            - UPLOAD_EXPIRED
+                            - UPLOAD_NOT_OPEN
+                            - QUOTA_EXCEEDED
+                            - VIDEO_NOT_FOUND
+                            - DLQ_ENTRY_NOT_FOUND
+                            - VERSION_CONFLICT
+                            - FORBIDDEN
+                            - RATE_LIMITED
+                            - UNAUTHORIZED
+                            - VALIDATION_FAILED
+                            - ROUTE_NOT_FOUND
+                            - INVALID_CURSOR
+                            - CATEGORY_NOT_FOUND
+                            - CATEGORY_SLUG_CONFLICT
+                            - CATEGORY_IN_USE
+                            - CHANNEL_NOT_FOUND
+                            - CHANNEL_MEMBERSHIP_REQUIRED
+                            - CHANNEL_INVITE_NOT_FOUND
+                            - CHANNEL_INVITE_NOT_PENDING
+                            - CHANNEL_INVITE_ALREADY_PENDING
+                            - CHANNEL_MEMBER_EXISTS
+                            - CHANNEL_MEMBER_NOT_FOUND
+                            - CHANNEL_OWNER_IMMUTABLE
+                            - HANDLE_ALREADY_TAKEN
+                            - INVALID_HANDLE_FORMAT
+                            - CANNOT_SUBSCRIBE_TO_SELF
+                            - COMMENT_NOT_FOUND
+                            - COMMENT_NOT_PINNABLE
+                            - COMMENT_ALREADY_REPORTED
+                            - COMMENTS_BANNED
+                            - COMMENTS_DISABLED
+                            - COMMENTS_SUBSCRIBERS_ONLY
+                            - COMMENTS_ACCOUNT_TOO_NEW
+                            - COMMENTS_SLOW_MODE
+                            - MODERATION_NOT_APPLICABLE
+                            - RESTRICTION_NOT_FOUND
+                            - CANNOT_RESTRICT_MEMBER
+                            - REPORT_NOT_FOUND
+                            - REPORT_ALREADY_RESOLVED
+                            - PLAYLIST_NOT_FOUND
+                            - PLAYLIST_ITEM_NOT_FOUND
+                            - SYSTEM_PLAYLIST_IMMUTABLE
+                            - SEARCH_HISTORY_NOT_FOUND
+                            - RECOMMENDATION_FEEDBACK_NOT_FOUND
+                            - CLIP_NOT_FOUND
+                            - PICK_NOT_FOUND
+                            - PICK_WINDOW_OVERLAP
+                            - WEBHOOK_NOT_FOUND
+                            - WEBHOOK_LIMIT_REACHED
+                            - WEBHOOK_DELIVERY_FAILED
+                            - WEBHOOK_DELIVERY_REJECTED
+                            - OEMBED_URL_UNSUPPORTED
+                            - OEMBED_FORMAT_UNSUPPORTED
+                            - CAPTION_NOT_FOUND
+                            - CAPTION_TRACK_LIMIT
+                            - CAPTION_OVERWRITE_UNCONFIRMED
+                            - LIVE_STREAM_NOT_FOUND
+                            - LIVE_STREAM_NOT_LIVE
+                            - LIVE_INGEST_REFUSED
+                            - LIVE_GATEWAY_UNAVAILABLE
+                            - LIVE_CHAT_SLOW_MODE
+                            - LIVE_CHAT_SUBSCRIBERS_ONLY
+                            - LIVE_CHAT_CLOSED
+                            - LIVE_CHAT_TICKET_INVALID
+                            - DATABASE_UNAVAILABLE
+                            - CACHE_UNAVAILABLE
+                            - QUEUE_UNAVAILABLE
+                            - INTERNAL
+                            - FORMAT_UNSUPPORTED_LOCALE
+                            - FORMAT_UNKNOWN_OPTION
+                            - FORMAT_WRONG_KIND
+                            - FORMAT_UNRENDERABLE
+                            - UNSUPPORTED_CODEC
+                            - CORRUPT_CONTAINER
+                            - DURATION_EXCEEDED
+                            - SOURCE_MISSING
+                            - FFMPEG_FAILED
+                            - FFMPEG_OOM
+                            - FFMPEG_TIMEOUT
+                            - STORAGE_UNAVAILABLE
+                            - SEGMENT_VERIFY_FAILED
+                            - DISK_FULL
+                            - ORPHANED
+                            - WHISPER_FAILED
+                            - WHISPER_KILLED
+                            - WHISPER_TIMEOUT
+                            - WHISPER_MODEL_INVALID
+                            - WHISPER_INPUT_REJECTED
+                            - NO_AUDIO_STREAM
+                            - LIVE_INGEST_UNAVAILABLE
+                      required:
+                        - id
+                        - ok
+                      additionalProperties: false
+                required:
+                  - results
+                additionalProperties: false
+        '400':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_FAILED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '401':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '403':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - FORBIDDEN
+                      - CHANNEL_MEMBERSHIP_REQUIRED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
   /v1/feed:
     get:
       summary: Public video feed
