@@ -106,6 +106,24 @@ export function describeChannelRepositoryContract(makeSubject: MakeRepositoriesS
       });
     });
 
+    describe('findByIds', () => {
+      beforeEach(createOtherChannel);
+
+      it.each([
+        {
+          name: 'each channel once, repeats included',
+          ids: [OTHER_CHANNEL_ID, CHANNEL_ID, CHANNEL_ID],
+          expected: [CHANNEL_ID, OTHER_CHANNEL_ID],
+        },
+        { name: 'no ids', ids: [], expected: [] },
+        { name: 'an id with no channel', ids: [CHANNEL_ID, ABSENT_ID], expected: [CHANNEL_ID] },
+      ])('finds $name in one call', async ({ ids, expected }) => {
+        const found = expectOk(await channels.findByIds(ids));
+
+        expect(found.map((channel) => channel.id).sort()).toEqual(expected);
+      });
+    });
+
     it('reports a handle another channel holds as HANDLE_ALREADY_TAKEN', async () => {
       const failure = expectErr(
         await channels.create({

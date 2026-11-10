@@ -8,6 +8,17 @@ import { featuredApi } from '#app/__tests__/featured-api.fixture';
 import { signInBrowser } from '#app/__tests__/providers';
 import { getRouter } from '#app/router';
 
+/** The acting channel and its spotlight as the API answers them for a creator whose channel is `own`. */
+export function channelApi(own: Parameters<typeof channel>[0] = {}) {
+  return [
+    mockEndpoint(getMyChannel, () => HttpResponse.json(channel(own))),
+    mockEndpoint(getMySpotlight, () =>
+      HttpResponse.json({ trailerVideoId: null, returningVideoId: null, localizations: [] })
+    ),
+    mockEndpoint(setMySpotlight, async ({ request }) => HttpResponse.json(await request.json())),
+  ];
+}
+
 /** `/customization` for a signed-in creator whose channel is `own`, with `handlers` answering the API first. */
 export async function renderCustomization(
   own: Parameters<typeof channel>[0] = {},
@@ -17,11 +28,7 @@ export async function renderCustomization(
     handlers: [
       signInBrowser(account({ channel: channel(own) })),
       ...handlers,
-      mockEndpoint(getMyChannel, () => HttpResponse.json(channel(own))),
-      mockEndpoint(getMySpotlight, () =>
-        HttpResponse.json({ trailerVideoId: null, returningVideoId: null, localizations: [] })
-      ),
-      mockEndpoint(setMySpotlight, async ({ request }) => HttpResponse.json(await request.json())),
+      ...channelApi(own),
       ...featuredApi().handlers,
     ],
   });

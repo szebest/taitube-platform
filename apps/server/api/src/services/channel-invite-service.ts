@@ -1,4 +1,4 @@
-import type { ChannelInviteView, ChannelMembershipView } from '@vp/api-contracts';
+import type { ChannelInviteView, ChannelMembershipView, MyInvitePageView } from '@vp/api-contracts';
 import type {
   ChannelInviteRepositoryPort,
   ChannelMemberRepositoryPort,
@@ -23,15 +23,26 @@ import {
   decideInviteRevoke,
 } from '@vp/domain-rules';
 import type { DatabaseUnavailable } from '@vp/errors';
+import type { InvalidCursor, Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
 import { type Result, assertNever, err, isErr, ok } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
-import { profileOf, toInviteView } from './channel-team-views';
+import { profileOf, profilesOf, toInviteView } from './channel-team-views';
+import { createdAtCursorPayload, decodeCreatedAtCursor } from './cursor';
+
+export interface MyInvitesQuery {
+  cursor?: string;
+  limit?: number;
+}
 
 export interface ChannelInviteServiceDeps {
   invites: ChannelInviteRepositoryPort;
   members: Pick<ChannelMemberRepositoryPort, 'membershipsOf'>;
-  channels: Pick<ChannelRepositoryPort, 'findByHandle' | 'findById'>;
+  channels: Pick<
+    ChannelRepositoryPort,
+    'findByHandle' | 'findById' | 'findByIds' | 'findByUserIds'
+  >;
+  paginator: Paginator;
   now: () => number;
 }
 
@@ -167,6 +178,46 @@ export class ChannelInviteService {
     if (isErr(answered)) return answered;
 
     return this.close(answered.value, 'declined', user);
+  }
+
+  async listMine(
+    user: UserContext,
+    query: MyInvitesQuery
+  ): Promise<Result<MyInvitePageView, InvalidCursor | DatabaseUnavailable>> {
+    const { invites, channels, paginator } = this.deps;
+
+    const cursor = decodeCreatedAtCursor(query.cursor, paginator);
+    if (isErr(cursor)) return cursor;
+    const limit = paginator.limit(query.limit);
+    const rows = await invites.listPendingFor(user.id, { cursor: cursor.value, limit });
+    if (isErr(rows)) return rows;
+
+    const found = await channels.findByIds(rows.value.map(({ channelId }) => channelId));
+    if (isErr(found)) return found;
+    const channelById = new Map(found.value.map((channel) => [channel.id, channel]));
+    const inviters = await profilesOf(
+      channels,
+      rows.value.map(({ invitedBy }) => invitedBy)
+    );
+    if (isErr(inviters)) return inviters;
+
+    const listed = rows.value.flatMap((invite) => {
+      const channel = channelById.get(invite.channelId);
+      return channel ? [{ invite, channel }] : [];
+    });
+    return ok(
+      paginator.paginate(listed, limit, {
+        cursorOf: ({ invite }) => createdAtCursorPayload(invite),
+        toItem: ({ invite: { id, role, invitedBy, expiresAt }, channel }) => ({
+          id,
+          channel: { id: channel.id, ...profileOf(channel) },
+          role,
+          invitedByName:
+            invitedBy === null ? null : (inviters.value.get(invitedBy)?.displayName ?? null),
+          expiresAt: expiresAt.toISOString(),
+        }),
+      })
+    );
   }
 
   /** The invite with its channel, once the caller may answer it. */

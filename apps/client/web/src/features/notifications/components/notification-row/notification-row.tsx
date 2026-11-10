@@ -10,6 +10,7 @@ import {
 } from '#app/components/shell/notification-centre';
 import { useMarkRead } from '#app/features/notifications/hooks/use-mark-read';
 import { useNotificationText } from '#app/features/notifications/hooks/use-notification-text';
+import { notificationHref } from '#app/features/notifications/utils/notification-href';
 import { notificationTarget } from '#app/features/notifications/utils/notification-target';
 
 export interface NotificationRowProps {
@@ -25,6 +26,7 @@ export function NotificationRow({ notification }: NotificationRowProps) {
 
   const { headline, detail } = textOf(notification);
   const target = notificationTarget(notification);
+  const href = notificationHref(notification);
   const styles = notificationCentreStyles();
 
   const open = () => {
@@ -48,6 +50,16 @@ export function NotificationRow({ notification }: NotificationRowProps) {
     time: unwrapOr(format(publishedAt(notification.createdAt).relative), ''),
     onSelect: open,
   };
+
+  if (href) {
+    return (
+      <NotificationCentre.Item asChild {...item}>
+        <a href={href}>
+          <span className={styles.text()}>{words}</span>
+        </a>
+      </NotificationCentre.Item>
+    );
+  }
 
   if (!target) {
     return <NotificationCentre.Item {...item}>{words}</NotificationCentre.Item>;

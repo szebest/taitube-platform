@@ -1,9 +1,11 @@
 import { dt } from '../define';
+import { studioInvites } from './studio-invites';
 
 const roles = (manager: string, editor: string, moderator: string, analytics: string) =>
   ({ manager, editor, moderator, analytics }) as const;
 
 export const studioTeam = {
+  ...studioInvites,
   teamNav: dt('Team'),
   teamTitle: dt('Team'),
   teamTabs: dt('Team sections'),

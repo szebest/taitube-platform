@@ -83,6 +83,20 @@ export class PostgresChannelRepository implements ChannelRepositoryPort {
     return map(rows, (found) => found.map(mapRow));
   }
 
+  async findByIds(ids: readonly string[]): Promise<Result<Channel[], DatabaseUnavailable>> {
+    const unique = [...new Set(ids)];
+    if (unique.length === 0) {
+      return ok([]);
+    }
+
+    const rows = await fromPromise(
+      () => this.db.select().from(channels).where(inArray(channels.id, unique)),
+      databaseUnavailable.during('findByIds')
+    );
+
+    return map(rows, (found) => found.map(mapRow));
+  }
+
   findByHandle(handle: string): Promise<Result<Channel | null, DatabaseUnavailable>> {
     return this.findOneBy(channels.handle, handle.toLowerCase(), 'findByHandle');
   }

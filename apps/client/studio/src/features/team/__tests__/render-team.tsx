@@ -14,20 +14,29 @@ interface TeamOptions {
   /** The channel the studio acts on, by its id: the viewer's own unless a membership is named. */
   actingOn?: string;
   inviteFailure?: ErrorCode;
-  /** What else the page under test asks the API. */
+  /** What accepting or declining an invite is refused with. */
+  answerFailure?: ErrorCode;
+  /** What else the page under test asks the API, or answers otherwise than the team API does. */
   handlers?: HttpHandler[];
 }
 
 /** `url` in the studio over a team API holding `state`, the viewer signed in and acting on `actingOn`. */
 export async function renderTeam(
   url = '/team',
-  { viewer = account(), state, actingOn, inviteFailure, handlers = [] }: TeamOptions = {}
+  {
+    viewer = account(),
+    state,
+    actingOn,
+    inviteFailure,
+    answerFailure,
+    handlers = [],
+  }: TeamOptions = {}
 ) {
   onTestFinished(forgetActingChannel);
   if (actingOn) actOn(actingOn);
-  const served = serveTeam(state, inviteFailure);
+  const served = serveTeam(state, inviteFailure, answerFailure);
   const rendered = await renderRoute(getRouter, url, {
-    handlers: [signInBrowser(viewer), ...served.handlers, ...handlers],
+    handlers: [signInBrowser(viewer), ...handlers, ...served.handlers],
   });
   await screen.findByRole('navigation', { name: 'Studio' });
   return { ...rendered, ...served };
