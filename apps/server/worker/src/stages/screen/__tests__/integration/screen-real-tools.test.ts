@@ -16,7 +16,7 @@ import { STAGE_SETTINGS } from '../../../../__tests__/stage-settings';
 import { createScreenProcessor } from '../../screen-stage';
 
 const OTHER_OWNER = '00000000-0000-7000-8000-0000000000aa';
-const SECONDS = 20;
+const SECONDS = 40;
 const ORIGINAL_AUDIO =
   'aevalsrc=0.4*sin(2*PI*t*(300+200*sin(2*PI*t/7)))+0.3*sin(2*PI*t*(90+60*sin(2*PI*t/3.1))):s=44100';
 const UNRELATED_AUDIO = 'anoisesrc=c=brown:seed=7:a=0.3:sample_rate=44100';

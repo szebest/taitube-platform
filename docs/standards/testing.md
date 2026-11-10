@@ -40,7 +40,7 @@ rule below that can be checked by a machine is, and the check is named next to i
 - A spec there that would fall back to PGlite or a double fails instead: the setup fails any file in which no
   contract claimed a real service, and a service that is not reachable fails the file.
 - A measurement is not a gate: `*.perf.test.ts` specs stay out of every CI run and run on demand with
-  `pnpm --filter @vp/adapters test:perf` (the fingerprint lookup against 10 000 videos, ticket 112's 200 ms
+  `pnpm --filter @vp/adapters test:perf` (the fingerprint lookup against 10 000 videos, its 200 ms
   figure); the integration run keeps a 500-video variant of the same query path.
 - `make test-r2` runs the S3 contracts against the R2 bucket the `S3_*` variables you export name.
 
