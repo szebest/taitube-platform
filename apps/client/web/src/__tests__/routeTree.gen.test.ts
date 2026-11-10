@@ -13,6 +13,7 @@ describe('apps/client/web: generated route tree', () => {
       '/_authed/feed/history',
       '/_authed/feed/playlists',
       '/_authed/feed/you',
+      '/_authed/feed/you_/moderation',
       '/_authed/subscriptions/',
       '/_authed/subscriptions/videos',
       '/channel/$channelId',
