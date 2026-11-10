@@ -7,8 +7,8 @@ import { unwrapOr } from '@vp/result';
 import { Button, Callout } from '@vp/ui';
 import { CommentThread } from '#app/components/watch/comment-thread';
 import { useCountdown } from '#app/features/watch/hooks/use-countdown';
+import type { CommentRefusal } from '#app/features/watch/utils/comment-refusal';
 import { useSetSubscription } from '#app/hooks/use-set-subscription';
-import type { CommentRefusal } from '../../utils/comment-refusal';
 
 type Notice = Exclude<CommentRefusal, { kind: 'slow-mode' }>;
 

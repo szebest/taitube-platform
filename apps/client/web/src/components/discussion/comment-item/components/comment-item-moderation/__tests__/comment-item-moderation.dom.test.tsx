@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { AppProviders } from '#app/__tests__/providers';
-import { CommentItem } from '../../..';
-import type { CommentState } from '../../../types';
+import { CommentItem } from '#app/components/discussion/comment-item';
+import type { CommentState } from '#app/components/discussion/comment-item/types';
 import type { CommentItemModerationProps } from '../comment-item-moderation';
 
 const renderModeration = (state: CommentState, props: CommentItemModerationProps = {}) =>

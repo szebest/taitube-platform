@@ -31,7 +31,6 @@ interface Viewer {
   memberships?: ChannelMembershipView[];
 }
 
-const GUEST: Viewer = { viewer: 'a guest' };
 const OTHER: Viewer = { viewer: 'another viewer', account: viewerAccount(OTHER_ID) };
 const AUTHOR: Viewer = { viewer: 'the author', account: viewerAccount(AUTHOR_ID) };
 const OWNER: Viewer = { viewer: 'the video owner', account: viewerAccount(OWNER_ID) };

@@ -33,19 +33,21 @@ export function commentRefusal(error: unknown): CommentRefusal | null {
     case ErrorCodes.COMMENTS_SUBSCRIBERS_ONLY:
       return { kind: 'subscribers-only' };
     case ErrorCodes.COMMENTS_BANNED: {
-      const { reason, expiresAt } = BanDetail.catch({}).parse(detail);
-      return { kind: 'banned', reason: reason ?? null, expiresAt: expiresAt ?? null };
+      const ban = BanDetail.safeParse(detail);
+      return {
+        kind: 'banned',
+        reason: (ban.success && ban.data.reason) || null,
+        expiresAt: (ban.success && ban.data.expiresAt) || null,
+      };
     }
     case ErrorCodes.COMMENTS_ACCOUNT_TOO_NEW: {
       const opens = OpensDetail.safeParse(detail);
       return opens.success ? { kind: 'account-too-new', opensAt: opens.data.opensAt } : null;
     }
     case ErrorCodes.COMMENTS_SLOW_MODE: {
-      const { retryAfter } = SlowDetail.catch({}).parse(detail);
-      return {
-        kind: 'slow-mode',
-        retryAfterMs: error.retryAfterMs ?? (retryAfter ?? 0) * SECOND_MS,
-      };
+      const slow = SlowDetail.safeParse(detail);
+      const seconds = (slow.success && slow.data.retryAfter) || 0;
+      return { kind: 'slow-mode', retryAfterMs: error.retryAfterMs ?? seconds * SECOND_MS };
     }
     default:
       return null;

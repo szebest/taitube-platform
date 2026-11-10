@@ -12,6 +12,7 @@ import type {
   RestrictionActionBody,
 } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
+import { fromPromise } from '@vp/result';
 import { useApi } from './api-provider';
 import { commentListKeys } from './comment-queries';
 import { failureCode } from './failure-code';
@@ -45,14 +46,17 @@ export function ownRestrictionQueryOptions(api: ApiClient, channelId: string) {
   return queryOptions({
     queryKey: moderationKeys.restriction(channelId),
     queryFn: async () => {
-      try {
-        return await api.channelRestrictions.getOwnRestriction({ params: { id: channelId } });
-      } catch (error) {
-        if (failureCode(error) === ErrorCodes.RESTRICTION_NOT_FOUND) {
-          return null;
-        }
-        throw error;
+      const own = await fromPromise(
+        api.channelRestrictions.getOwnRestriction({ params: { id: channelId } }),
+        (cause) => cause
+      );
+      if (own.ok) {
+        return own.value;
       }
+      if (failureCode(own.error) === ErrorCodes.RESTRICTION_NOT_FOUND) {
+        return null;
+      }
+      throw own.error;
     },
     retry: false,
   });
