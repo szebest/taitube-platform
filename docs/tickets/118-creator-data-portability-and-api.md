@@ -8,7 +8,7 @@
 | Blocks | — |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §11 Security](../SDD.md#11-security) · [SDD ADR-24 Result-typed errors](../SDD.md#adr-24--result-typed-error-handling-domain-returns-the-edge-decides) |
 
-**Status:** blocked
+**Status:** ready
 
 > **Why.** A creator's data lives only in the studio's screens: there is no way to take the numbers or the comments into a
 > spreadsheet, to automate a chore (tag a batch, hold a keyword, read last night's views) or to leave with their data. The

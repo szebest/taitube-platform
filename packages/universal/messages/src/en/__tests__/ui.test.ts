@@ -98,6 +98,11 @@ describe('@vp/messages: en ui', () => {
     { key: 'ui.delete', expected: 'Delete' },
     { key: 'ui.commentDeleted', expected: 'This comment was deleted' },
     { key: 'ui.commentRemoved', expected: 'This comment was removed' },
+    { key: 'ui.commentHeld', expected: 'Waiting for review' },
+    { key: 'ui.commentHidden', expected: 'Hidden by moderators' },
+    { key: 'ui.disclosureLabel', expected: 'Visibility to the author' },
+    { key: 'ui.disclosureSilent', expected: 'Silent' },
+    { key: 'ui.disclosureVisible', expected: 'Visible' },
     { key: 'ui.sortComments', expected: 'Sort comments' },
     { key: 'ui.sortTop', expected: 'Top' },
     { key: 'ui.sortNewest', expected: 'Newest' },
@@ -140,8 +145,10 @@ describe('@vp/messages: en ui', () => {
     { key: 'ui.removeFromQueue', expected: 'Remove Lisbon at night from the queue' },
     { key: 'ui.selectedCount', expected: '12 selected' },
     { key: 'ui.pageOf', expected: 'Page 3 of 12' },
+    { key: 'ui.tagRemove', expected: 'Remove night' },
+    { key: 'ui.tagDuplicate', expected: 'night is already in the list' },
   ] as const)('renders $key with the item and its place', ({ key, expected }) => {
-    expect(t(key, { name: 'Lisbon at night', position: '3', count: '12' })).toEqual({
+    expect(t(key, { name: 'Lisbon at night', position: '3', count: '12', tag: 'night' })).toEqual({
       ok: true,
       value: expected,
     });

@@ -5,6 +5,7 @@ import {
   channelImageReady,
   captionsReady,
   commentCreated,
+  commentHeld,
   partyControlsUpdated,
   preferencesUpdated,
   videoStatusChanged,
@@ -36,6 +37,14 @@ describe('domain: user event', () => {
       isEdited: false,
       likeCount: 0,
       heartedAt: null,
+      moderationState: 'published',
+      moderationDisclosure: null,
+      moderationReason: null,
+      moderationNote: null,
+      moderatedBy: null,
+      moderatedAt: null,
+      heldReason: null,
+      looksLikeQuestion: false,
       createdAt: new Date('2026-03-01T12:00:00.000Z'),
       updatedAt: new Date('2026-03-01T12:00:00.000Z'),
       replyCount: 0,
@@ -54,6 +63,13 @@ describe('domain: user event', () => {
         },
         video: { id: 'v1', title: 'Clip' },
       },
+    });
+  });
+
+  it('announces a held comment by its ids, never its text or author', () => {
+    expect(commentHeld({ id: 'c1', videoId: 'v1' })).toEqual({
+      type: 'comment.held',
+      payload: { commentId: 'c1', videoId: 'v1' },
     });
   });
 

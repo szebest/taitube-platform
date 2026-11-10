@@ -10,6 +10,7 @@ import {
   commentWindowBounds,
   toCommentThread,
 } from '../comment-thread-query';
+import { UNMODERATED } from './comment-row';
 
 const CREATED_AT = new Date('2026-03-01T12:00:00.000Z');
 const CURSOR = { isPinned: true, likeCount: 4, createdAt: CREATED_AT, id: 'c-9' };
@@ -98,6 +99,7 @@ describe('adapters/postgres: comment thread SQL query', () => {
       likeCount: 0,
       heartedAt: null,
       createdAt: CREATED_AT,
+      ...UNMODERATED,
       updatedAt: CREATED_AT,
       deletedAt: null,
       channelId: null,

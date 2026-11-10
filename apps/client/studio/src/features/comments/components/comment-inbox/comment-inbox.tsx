@@ -1,5 +1,11 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { createColumnHelper, useTable } from '@tanstack/react-table';
+import {
+  createColumnHelper,
+  functionalUpdate,
+  type OnChangeFn,
+  type RowSelectionState,
+  useTable,
+} from '@tanstack/react-table';
 import { EmptyState, SectionError } from '@vp/components';
 import type { CreatorInboxFilter } from '@vp/domain';
 import { publishedAt } from '@vp/intl';
@@ -15,6 +21,7 @@ import { LoadMore } from '#app/components/table/load-more';
 import { type InboxComment, inboxQueryOptions } from '#app/features/comments/api/inbox-queries';
 import { WEB_URL } from '#app/lib/config';
 import { pagedRows, tableStateOf } from '#app/utils/paged-rows';
+import { InboxBulkActions } from '../inbox-bulk-actions/inbox-bulk-actions';
 import { InboxCommentActions } from '../inbox-comment-actions/inbox-comment-actions';
 import { InboxReply } from '../inbox-reply/inbox-reply';
 
@@ -34,9 +41,15 @@ export function CommentInbox({ filter }: CommentInboxProps) {
     select: pagedRows,
   });
   const [replyingTo, setReplyingTo] = useState<string>();
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
   const rows = comments.data ?? [];
   const state = tableStateOf(comments, rows.length);
+
+  const changeSelection: OnChangeFn<RowSelectionState> = (updater) =>
+    setRowSelection(functionalUpdate(updater, rowSelection));
+  const keepRefusedSelected = (refused: string[]) =>
+    setRowSelection(Object.fromEntries(refused.map((id) => [id, true])));
 
   const table = useTable({
     features: dataTableFeatures,
@@ -89,9 +102,10 @@ export function CommentInbox({ filter }: CommentInboxProps) {
     ]),
     data: rows,
     getRowId: ({ id }) => id,
-    enableRowSelection: false,
     manualPagination: true,
     manualSorting: true,
+    state: { rowSelection },
+    onRowSelectionChange: changeSelection,
   });
 
   return (
@@ -102,6 +116,12 @@ export function CommentInbox({ filter }: CommentInboxProps) {
         fetching={comments.isFetching && !comments.isPending}
       >
         <DataTable.Caption>{tOr('studio.commentsCaption', {}, '')}</DataTable.Caption>
+        <DataTable.Batch>
+          <InboxBulkActions
+            ids={rows.filter(({ id }) => rowSelection[id]).map(({ id }) => id)}
+            onSettled={keepRefusedSelected}
+          />
+        </DataTable.Batch>
         <DataTable.Header />
         <DataTable.Body>
           {state === 'empty' && (

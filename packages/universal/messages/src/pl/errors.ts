@@ -1,4 +1,5 @@
 import { dt } from '../define';
+import { commentErrors } from './errors-comments';
 
 export const errors = {
   uploadTooLarge: dt('Ten plik jest większy, niż pozwalają przesyłane pliki.'),
@@ -23,9 +24,7 @@ export const errors = {
   handleAlreadyTaken: dt('Ta nazwa użytkownika jest już zajęta.'),
   invalidHandleFormat: dt('Nazwa użytkownika może zawierać tylko małe litery, cyfry i myślniki.'),
   cannotSubscribeToSelf: dt('Nie możesz subskrybować własnego kanału.'),
-  commentNotFound: dt('Ten komentarz nie istnieje lub został usunięty.'),
-  commentNotPinnable: dt('Przypiąć można tylko komentarz najwyższego poziomu.'),
-  commentAlreadyReported: dt('Ten komentarz został już przez Ciebie zgłoszony.'),
+  ...commentErrors,
   reportNotFound: dt('To zgłoszenie nie istnieje.'),
   reportAlreadyResolved: dt('To zgłoszenie zostało już rozpatrzone.'),
   playlistNotFound: dt('Ta playlista nie istnieje lub jest prywatna.'),

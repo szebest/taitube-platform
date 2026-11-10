@@ -130,6 +130,7 @@ export const videos = pgTable(
     version: integer('version').notNull().default(0),
     viewsCount: bigint('views_count', { mode: 'number' }).notNull().default(0),
     commentsCount: integer('comments_count').notNull().default(0),
+    commentsEnabled: boolean('comments_enabled').notNull().default(true),
     likesCount: integer('likes_count').notNull().default(0),
     dislikesCount: integer('dislikes_count').notNull().default(0),
     readyAt: timestamptz('ready_at'),

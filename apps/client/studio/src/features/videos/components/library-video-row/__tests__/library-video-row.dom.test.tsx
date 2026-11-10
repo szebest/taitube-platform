@@ -7,9 +7,11 @@ import {
 } from '@tanstack/react-router';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { updateCreatorVideo } from '@vp/api-contracts';
 import { createQueryClient } from '@vp/queries';
-import { account, VIDEO_ID } from '@vp/web-testing';
+import { account, apiServer, mockEndpoint, VIDEO_ID, video } from '@vp/web-testing';
 import { axeViolations } from '@vp/web-testing/dom';
+import { HttpResponse } from 'msw/http';
 import type { ComponentType, PropsWithChildren } from 'react';
 import { creatorVideo } from '#app/__tests__/creator-video.fixture';
 import { signedIn } from '#app/__tests__/providers';
@@ -77,13 +79,13 @@ describe('apps/client/studio: LibraryVideoRow', () => {
       viewer: 'the creator, on a public ready video',
       Providers: creator,
       video: creatorVideo(),
-      shown: ['Edit', 'Visibility', 'Analytics', 'Watch on Taitube', 'Delete'],
+      shown: ['Edit', 'Visibility', 'Turn comments off', 'Analytics', 'Watch on Taitube', 'Delete'],
     },
     {
       viewer: 'the creator, on a private video',
       Providers: creator,
       video: creatorVideo({ visibility: 'private' }),
-      shown: ['Edit', 'Visibility', 'Analytics', 'Delete'],
+      shown: ['Edit', 'Visibility', 'Turn comments off', 'Analytics', 'Delete'],
     },
     {
       viewer: 'someone else',
@@ -98,6 +100,28 @@ describe('apps/client/studio: LibraryVideoRow', () => {
 
     expect(screen.getAllByRole('menuitem').map((item) => item.textContent)).toEqual(shown);
   });
+
+  it.each([
+    { stored: true, label: 'Turn comments off', sent: false },
+    { stored: false, label: 'Turn comments on', sent: true },
+  ])(
+    'sends commentsEnabled $sent from "$label" against the version it shows',
+    async ({ stored, label, sent }) => {
+      const edits: unknown[] = [];
+      apiServer.use(
+        mockEndpoint(updateCreatorVideo, async ({ request }) => {
+          edits.push(await request.json());
+          return HttpResponse.json(video());
+        })
+      );
+      const { user } = await renderRow(creatorVideo({ commentsEnabled: stored, version: 5 }));
+
+      await openMenu(user);
+      await user.click(screen.getByRole('menuitem', { name: label }));
+
+      await vi.waitFor(() => expect(edits).toEqual([{ commentsEnabled: sent, version: 5 }]));
+    }
+  );
 
   it('passes axe', async () => {
     await renderRow();

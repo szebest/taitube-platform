@@ -1,9 +1,11 @@
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { QueueJob } from '@vp/core/ports';
+import type { NewCommentModeration } from '@vp/domain';
 import type { NotifyHeartJob } from '@vp/job-contracts';
 import { expectOk } from '@vp/testing/result';
 import { createNotifyHeartProcessor } from '../notify-heart';
 import {
+  CHANNEL_ID,
   CREATOR_ID,
   logger,
   notificationsOf,
@@ -21,7 +23,13 @@ const COMMENT = '00000000-0000-7000-8000-000000000901';
 describe('apps/server/worker/stages: notify-heart', () => {
   let repositories: InMemoryRepositories;
 
-  const setUp = async (options: { visibility?: 'public' | 'private'; author?: string } = {}) => {
+  const setUp = async (
+    options: {
+      visibility?: 'public' | 'private';
+      author?: string;
+      moderation?: NewCommentModeration;
+    } = {}
+  ) => {
     repositories = new InMemoryRepositories();
     await seedCreator(repositories);
     await seedVideo(repositories, VIDEO, { visibility: options.visibility });
@@ -33,6 +41,7 @@ describe('apps/server/worker/stages: notify-heart', () => {
         authorId: options.author ?? FAN,
         parentId: null,
         content: 'lovely video',
+        moderation: options.moderation,
       })
     );
   };
@@ -101,5 +110,36 @@ describe('apps/server/worker/stages: notify-heart', () => {
 
     expect(await notify()).toMatchObject({ recorded: false });
     expect(await notificationsOf(repositories, reader)).toEqual([]);
+  });
+
+  it.each([
+    { scenario: 'held', state: 'held' as const, shadow: false },
+    { scenario: 'hidden', state: 'hidden' as const, shadow: false },
+    { scenario: 'by a shadow banned author', state: 'published' as const, shadow: true },
+  ])('says nothing about a comment $scenario', async ({ state, shadow }) => {
+    await setUp({
+      moderation: {
+        moderationState: state,
+        moderationDisclosure: 'silent',
+        heldReason: null,
+        looksLikeQuestion: false,
+      },
+    });
+    if (shadow) {
+      expectOk(
+        await repositories.channelUserRestrictions.apply({
+          channelId: CHANNEL_ID,
+          userId: FAN,
+          kind: 'shadow',
+          reason: null,
+          expiresAt: null,
+          createdBy: CREATOR_ID,
+        })
+      );
+    }
+    await heart();
+
+    expect(await notify()).toMatchObject({ recorded: false });
+    expect(await notificationsOf(repositories, FAN)).toEqual([]);
   });
 });

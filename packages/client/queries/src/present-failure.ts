@@ -33,10 +33,16 @@ function kindOf(code: ErrorCode): ErrorStateKind {
     case ErrorCodes.WATCH_PARTY_ROLE_NOT_FOUND:
     case ErrorCodes.CHANNEL_INVITE_NOT_FOUND:
     case ErrorCodes.CHANNEL_MEMBER_NOT_FOUND:
+    case ErrorCodes.RESTRICTION_NOT_FOUND:
+    case ErrorCodes.SAVED_REPLY_NOT_FOUND:
       return 'not-found';
     case ErrorCodes.FORBIDDEN:
     case ErrorCodes.CHANNEL_MEMBERSHIP_REQUIRED:
     case ErrorCodes.LIVE_CHAT_SUBSCRIBERS_ONLY:
+    case ErrorCodes.COMMENTS_BANNED:
+    case ErrorCodes.COMMENTS_DISABLED:
+    case ErrorCodes.COMMENTS_SUBSCRIBERS_ONLY:
+    case ErrorCodes.COMMENTS_ACCOUNT_TOO_NEW:
     case ErrorCodes.WATCH_PARTY_BANNED:
     case ErrorCodes.WATCH_PARTY_GUESTS_OFF:
     case ErrorCodes.WATCH_PARTY_PASSWORD_REQUIRED:
@@ -55,6 +61,7 @@ function kindOf(code: ErrorCode): ErrorStateKind {
       return 'unauthorised';
     case ErrorCodes.RATE_LIMITED:
     case ErrorCodes.LIVE_CHAT_SLOW_MODE:
+    case ErrorCodes.COMMENTS_SLOW_MODE:
     case ErrorCodes.WATCH_PARTY_PASSWORD_LOCKED:
     case ErrorCodes.WATCH_PARTY_SLOW_MODE:
       return 'rate-limited';
@@ -128,6 +135,9 @@ function kindOf(code: ErrorCode): ErrorStateKind {
     case ErrorCodes.CHANNEL_INVITE_ALREADY_PENDING:
     case ErrorCodes.CHANNEL_MEMBER_EXISTS:
     case ErrorCodes.CHANNEL_OWNER_IMMUTABLE:
+    case ErrorCodes.MODERATION_NOT_APPLICABLE:
+    case ErrorCodes.CANNOT_RESTRICT_MEMBER:
+    case ErrorCodes.SAVED_REPLY_LIMIT:
     case ErrorCodes.HANDLE_CHANGE_TOO_SOON:
     case ErrorCodes.HANDLE_RESERVED:
     case ErrorCodes.INVALID_SPOTLIGHT_VIDEO:

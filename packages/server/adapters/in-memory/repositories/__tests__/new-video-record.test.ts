@@ -33,6 +33,7 @@ describe('newVideoRecord', () => {
       errorMessage: null,
       viewsCount: 0,
       commentsCount: 0,
+      commentsEnabled: true,
       likesCount: 0,
       dislikesCount: 0,
       categoryId: null,

@@ -7,7 +7,7 @@ import {
   VideoStudioRepository,
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
-import { CREATOR_LIBRARY_COUNTERS, type LibrarySort } from '@vp/domain';
+import { CREATOR_LIBRARY_COUNTERS, type LibrarySort, videoEditAudit } from '@vp/domain';
 import {
   type DatabaseUnavailable,
   databaseUnavailable,
@@ -129,14 +129,14 @@ export class PostgresVideoStudioRepository extends VideoStudioRepository {
             .where(eq(ch.userId, updated.ownerId))
             .limit(1);
           if (channel) {
-            await appendChannelAudit(tx, {
-              channelId: channel.id,
-              actorUserId: userId,
-              action: 'video.updated',
-              targetType: 'video',
-              targetId: videoId,
-              meta: { fields: auditFields },
-            });
+            const edit = { videoId, fields: auditFields, commentsEnabled: patch.commentsEnabled };
+            for (const entry of videoEditAudit(edit)) {
+              await appendChannelAudit(tx, {
+                ...entry,
+                channelId: channel.id,
+                actorUserId: userId,
+              });
+            }
           }
           await enqueueNotificationJobs(
             tx,

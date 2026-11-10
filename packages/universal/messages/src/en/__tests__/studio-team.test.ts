@@ -16,6 +16,17 @@ describe('@vp/messages: en studio team', () => {
       args: { action: 'member.role_changed' },
       expected: 'Changed a role',
     },
+    { key: 'studio.teamAuditAction', args: { action: 'comment.held' }, expected: 'Held a comment' },
+    {
+      key: 'studio.teamAuditDisclosure',
+      args: { disclosure: 'visible' },
+      expected: 'with the author told',
+    },
+    {
+      key: 'studio.teamAuditSettingsFields',
+      args: { fields: ['blockedWords', 'slowModeSeconds'] },
+      expected: 'blockedWords and slowModeSeconds',
+    },
     {
       key: 'studio.teamAuditRoleChanged',
       args: { from: 'editor', to: 'manager' },

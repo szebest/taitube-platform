@@ -6,7 +6,7 @@ import { ErrorCodes } from '@vp/errors';
 import { useAppForm } from '@vp/forms';
 import { useT } from '@vp/intl-react';
 import { useApi, videoQueryOptions } from '@vp/queries';
-import { Button, useToast } from '@vp/ui';
+import { Button, Field, Switch, useToast } from '@vp/ui';
 import { useState } from 'react';
 import { VersionConflictDialog } from '#app/components/dialogs/version-conflict-dialog';
 import { categoriesQueryOptions } from '#app/features/videos/api/category-queries';
@@ -132,6 +132,16 @@ export function EditVideoForm({ video }: { video: Video }) {
             placeholder={tOr('studio.editTagsPlaceholder', {}, '')}
             removeLabel={(tag) => tOr('studio.editTagRemove', { tag }, '')}
           />
+        )}
+      </form.AppField>
+
+      <form.AppField name="commentsEnabled">
+        {(field) => (
+          <Field.Root orientation="horizontal">
+            <Field.Label>{tOr('studio.commentsSwitchLabel', {}, '')}</Field.Label>
+            <Switch checked={field.state.value} onCheckedChange={field.handleChange} />
+            <Field.Hint>{tOr('studio.commentsSwitchHint', {}, '')}</Field.Hint>
+          </Field.Root>
         )}
       </form.AppField>
 

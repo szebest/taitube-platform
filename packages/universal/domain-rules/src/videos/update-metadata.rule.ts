@@ -12,6 +12,7 @@ export interface VideoMetadataPatch {
   readonly categoryId?: string | null;
   readonly tags?: string[];
   readonly selectedThumbnail?: ThumbnailSelection;
+  readonly commentsEnabled?: boolean;
 }
 
 export interface UpdateVideoMetadataInput {

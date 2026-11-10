@@ -1,6 +1,7 @@
 import { screen, within } from '@testing-library/react';
-import { listCreatorComments } from '@vp/api-contracts';
-import { account, apiServer, comment, mockEndpoint, VIDEO_ID } from '@vp/web-testing';
+import { getCommentSettings, listCreatorComments } from '@vp/api-contracts';
+import { ErrorCodes } from '@vp/errors';
+import { account, apiServer, comment, mockEndpoint, problemReply, VIDEO_ID } from '@vp/web-testing';
 import { axeViolations, renderRoute, streamUserEvents } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
 import { serveLibrary } from '#app/__tests__/library-api.fixture';
@@ -36,8 +37,8 @@ describe('apps/client/studio: studio shell', () => {
       within(studioNav())
         .getAllByRole('link')
         .map((link) => link.textContent)
-        .slice(0, 4)
-    ).toEqual(['Videos', 'Analytics', 'Comments', 'Live']);
+        .slice(0, 5)
+    ).toEqual(['Videos', 'Analytics', 'Comments', 'Review queue', 'Live']);
     expect(within(studioNav()).getByRole('link', { name: 'Videos' })).toHaveAttribute(
       'aria-current',
       'page'
@@ -70,7 +71,8 @@ describe('apps/client/studio: studio shell', () => {
   it('marks Comments while a new comment waits, until the inbox is opened', async () => {
     const stream = streamUserEvents();
     apiServer.use(
-      mockEndpoint(listCreatorComments, () => HttpResponse.json({ items: [], nextCursor: null }))
+      mockEndpoint(listCreatorComments, () => HttpResponse.json({ items: [], nextCursor: null })),
+      mockEndpoint(getCommentSettings, () => problemReply(ErrorCodes.FORBIDDEN))
     );
     const { user } = await renderShell();
     const { id, parentId, content, createdAt } = comment();

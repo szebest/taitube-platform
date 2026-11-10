@@ -11,6 +11,7 @@ export const NOTIFICATION_KINDS = [
   'party_invite',
   'party_starting',
   'team_invite',
+  'moderation',
 ] as const;
 export type NotificationKind = (typeof NOTIFICATION_KINDS)[number];
 
@@ -58,6 +59,7 @@ export const KIND_SWITCH = {
   party_invite: 'watchParties',
   party_starting: 'watchParties',
   team_invite: null,
+  moderation: null,
 } as const satisfies Record<NotificationKind, string | null>;
 
 interface NotifiableVideo {
@@ -75,6 +77,15 @@ export function mayHearAbout(video: NotifiableVideo, userId: string): boolean {
   if (video.deletedAt) return false;
   if (video.ownerId === userId) return true;
   return video.visibility === 'public' && video.status === 'READY';
+}
+
+/** The ids of notifications grouped by the user they belong to, users in id order. */
+export function notificationIdsByUser(
+  rows: readonly { id: string; userId: string }[]
+): [string, string[]][] {
+  const byUser = new Map<string, string[]>();
+  for (const { id, userId } of rows) byUser.set(userId, [...(byUser.get(userId) ?? []), id]);
+  return [...byUser].sort(([a], [b]) => a.localeCompare(b));
 }
 
 export interface NotificationActor {
@@ -102,6 +113,12 @@ interface NotificationFields {
   outcome: 'ready' | 'failed' | 'held' | 'approved' | 'rejected' | null;
   /** Set on `team_invite`: the invite the notification opens. */
   inviteId?: string;
+  /** Set on `moderation`: what was done, why, and when a ban ends. */
+  moderation?: {
+    action: 'hold' | 'hide' | 'remove' | 'ban';
+    reason: string | null;
+    expiresAt: string | null;
+  };
 }
 
 /** Written when the notification is created, so listing and pushing it need no join. */

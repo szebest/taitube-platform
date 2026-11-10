@@ -1,28 +1,48 @@
-import type { CommentReplyCursor, CommentThreadCursor, CommentWindow } from '@vp/core/repositories';
+import type {
+  CommentReplyCursor,
+  CommentThreadCursor,
+  CommentViewer,
+  CommentWindow,
+} from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import type { Comment, CommentSort, CommentThread } from '@vp/domain';
 import { assertNever } from '@vp/result';
-import { type SQL, asc, desc, getTableColumns, sql } from 'drizzle-orm';
+import { type SQL, asc, desc, eq, getTableColumns, sql } from 'drizzle-orm';
 import type { AnyPgColumn } from 'drizzle-orm/pg-core';
+import { aliasedTable, ownOrPublicScope } from '../scopes/index';
+import type { PostgresDatabase } from './types';
 
 const { videoComments: c, channels: ch } = schema;
 
 type CommentRow = typeof c.$inferSelect;
 
-const replyCount = sql<number>`(
-  select count(*)::int from ${c} as reply
-  where reply.video_id = ${c.videoId} and reply.parent_id = ${c.id} and reply.deleted_at is null
+const reply = aliasedTable(c, 'reply');
+
+const replyCountOf = (scope: SQL | undefined) => sql<number>`(
+  select count(*)::int from ${reply.from}
+  where ${reply.table.videoId} = ${c.videoId} and ${reply.table.parentId} = ${c.id}
+    and ${reply.table.deletedAt} is null${scope ? sql` and ${scope}` : sql``}
 )`;
 
-/** Selected over `video_comments LEFT JOIN channels ON channels.user_id = author_id`. */
-export const commentThreadColumns = {
+const channelColumns = {
   ...getTableColumns(c),
   channelId: ch.id,
   handle: ch.handle,
   displayName: ch.displayName,
   avatarUrl: ch.avatarUrl,
-  replyCount,
 };
+
+/**
+ * Selected over `video_comments LEFT JOIN channels ON channels.user_id = author_id`. The reply
+ * count is what the viewer may see of the replies, so it matches the thread they open.
+ */
+const publicThreadColumns = (viewer: CommentViewer) => ({
+  ...channelColumns,
+  replyCount: replyCountOf(ownOrPublicScope(viewer, reply.table)),
+});
+
+/** For the creator and their moderators, who see every reply. */
+export const moderatedThreadColumns = { ...channelColumns, replyCount: replyCountOf(undefined) };
 
 type ThreadRow = CommentRow & {
   channelId: string | null;
@@ -127,4 +147,21 @@ export function commentWindowBounds(window: CommentWindow): {
     default:
       return assertNever(window, 'CommentWindow');
   }
+}
+
+export function selectThreads(db: PostgresDatabase, viewer: CommentViewer) {
+  return db
+    .select(publicThreadColumns(viewer))
+    .from(c)
+    .leftJoin(ch, eq(ch.userId, c.authorId))
+    .$dynamic();
+}
+
+export async function threadById(
+  db: PostgresDatabase,
+  id: string,
+  viewer: CommentViewer
+): Promise<CommentThread | null> {
+  const [row] = await selectThreads(db, viewer).where(eq(c.id, id));
+  return row ? toCommentThread(row) : null;
 }

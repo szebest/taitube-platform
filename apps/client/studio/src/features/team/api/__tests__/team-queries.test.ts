@@ -1,10 +1,9 @@
 import { createQueryClient } from '@vp/queries';
 import { api, apiServer } from '@vp/web-testing';
-import { membership, myInvite, serveTeam } from '#app/features/team/__tests__/team-api.fixture';
+import { myInvite, serveTeam } from '#app/features/team/__tests__/team-api.fixture';
 import {
   auditQueryOptions,
   channelLookupQueryOptions,
-  membershipsQueryOptions,
   myInvitesQueryOptions,
   teamKeys,
   teamQueryOptions,
@@ -15,7 +14,6 @@ describe('apps/client/studio: team queries', () => {
     expect(
       [
         teamQueryOptions(api).queryKey,
-        membershipsQueryOptions(api).queryKey,
         myInvitesQueryOptions(api).queryKey,
         auditQueryOptions(api, { action: 'member.left' }).queryKey,
         channelLookupQueryOptions(api, 'creator').queryKey,
@@ -27,15 +25,6 @@ describe('apps/client/studio: team queries', () => {
     expect(auditQueryOptions(api, {}).queryKey).not.toEqual(
       auditQueryOptions(api, { action: 'member.left' }).queryKey
     );
-  });
-
-  it('reads the memberships the API lists', async () => {
-    const { handlers } = serveTeam({ memberships: [membership('editor')] });
-    apiServer.use(...handlers);
-
-    const { items } = await createQueryClient().fetchQuery(membershipsQueryOptions(api));
-
-    expect(items.map(({ role }) => role)).toEqual(['editor']);
   });
 
   it('reads the first page of the invites the API lists', async () => {

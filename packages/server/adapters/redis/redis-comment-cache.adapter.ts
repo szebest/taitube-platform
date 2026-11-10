@@ -1,4 +1,10 @@
 import type { CacheClient, CommentCachePort, HotComments } from '@vp/core/ports';
+import {
+  COMMENT_MODERATION_REASONS,
+  DISCLOSURES,
+  HELD_REASONS,
+  MODERATION_STATES,
+} from '@vp/domain';
 import type { CacheUnavailable } from '@vp/errors';
 import { CacheKeys } from '@vp/events';
 import { type Result, ignore, isOk, map, ok, parseJson, unwrapOr } from '@vp/result';
@@ -17,6 +23,14 @@ const HotCommentsSchema = z.object({
       isEdited: z.boolean(),
       likeCount: z.number().int(),
       heartedAt: z.union([z.null(), z.coerce.date()]),
+      moderationState: z.enum(MODERATION_STATES),
+      moderationDisclosure: z.enum(DISCLOSURES).nullable(),
+      moderationReason: z.enum(COMMENT_MODERATION_REASONS).nullable(),
+      moderationNote: z.string().nullable(),
+      moderatedBy: z.string().nullable(),
+      moderatedAt: z.union([z.null(), z.coerce.date()]),
+      heldReason: z.enum(HELD_REASONS).nullable(),
+      looksLikeQuestion: z.boolean(),
       createdAt: z.coerce.date(),
       updatedAt: z.coerce.date(),
       author: z.object({

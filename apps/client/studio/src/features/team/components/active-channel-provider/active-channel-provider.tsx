@@ -2,9 +2,8 @@ import { useQuery } from '@tanstack/react-query';
 import { useRouter } from '@tanstack/react-router';
 import type { Account } from '@vp/api-contracts';
 import { PermissionsProvider } from '@vp/permissions-react';
-import { useAccount, useApi, viewerOf } from '@vp/queries';
+import { membershipsQueryOptions, useAccount, useApi, viewerOf } from '@vp/queries';
 import { type PropsWithChildren, useSyncExternalStore } from 'react';
-import { membershipsQueryOptions } from '#app/features/team/api/team-queries';
 import { type ActiveChannel, ActiveChannelContext } from '#app/hooks/use-active-channel';
 
 const NONE: ActiveChannel['memberships'] = [];

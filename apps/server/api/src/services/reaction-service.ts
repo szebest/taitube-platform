@@ -1,12 +1,14 @@
 import type { ReactionCachePort } from '@vp/core/ports';
 import type { VideoReactionRepositoryPort, VideoRepository } from '@vp/core/repositories';
-import type { ReactionCounts, ReactionInputType, ReactionType } from '@vp/domain';
-import { type ReactFailure, decideReact } from '@vp/domain-rules';
+import type { ReactionCounts, ReactionInputType, ReactionType, Video } from '@vp/domain';
+import { type CommentsBanned, type ReactFailure, decideReact } from '@vp/domain-rules';
 import { type DatabaseUnavailable, ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { type Result, err, ignore, isErr, isOk, ok } from '@vp/result';
+import { type ChannelBanLookups, refuseWhileBanned } from './channel-ban';
 
-export interface ReactionServiceDeps {
+export interface ReactionServiceDeps extends ChannelBanLookups {
+  now: () => number;
   videoReactions: VideoReactionRepositoryPort;
   reactionCache: ReactionCachePort;
   videos: VideoRepository;
@@ -24,7 +26,7 @@ export interface GetUserReactionOutput {
   reaction: ReactionType | null;
 }
 
-export type ReactionServiceFailure = ReactFailure | DatabaseUnavailable;
+export type ReactionServiceFailure = ReactFailure | CommentsBanned | DatabaseUnavailable;
 
 /**
  * Reactions on a video. `CacheUnavailable` is absent from every signature: a dead cache costs a
@@ -36,7 +38,7 @@ export class ReactionService {
   private async reactableVideo(
     user: UserContext | null,
     videoId: string
-  ): Promise<Result<unknown, ReactionServiceFailure>> {
+  ): Promise<Result<Video, ReactFailure | DatabaseUnavailable>> {
     const found = await this.deps.videos.findById(videoId);
     if (isErr(found)) return found;
 
@@ -50,6 +52,13 @@ export class ReactionService {
   ): Promise<Result<SetReactionOutput, ReactionServiceFailure>> {
     const allowed = await this.reactableVideo(user, videoId);
     if (isErr(allowed)) return allowed;
+    const banned = await refuseWhileBanned(
+      this.deps,
+      allowed.value.ownerId,
+      user.id,
+      new Date(this.deps.now())
+    );
+    if (isErr(banned)) return banned;
 
     const written = await this.deps.videoReactions.setReaction(videoId, user.id, type);
     if (isErr(written)) return written;

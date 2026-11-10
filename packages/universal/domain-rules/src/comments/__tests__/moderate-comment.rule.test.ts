@@ -71,10 +71,12 @@ describe('@vp/domain-rules: decideCommentPin', () => {
     expect(isErr(result) && result.error.code).toBe(code);
   });
 
-  it('refuses to pin a reply', () => {
-    const reply = aComment({ parentId: 'root-1' });
-
-    const result = decideCommentPin({ actor: OWNER, comment: reply, commentId: reply.id, video });
+  it.each([
+    { scenario: 'a reply', target: aComment({ parentId: 'root-1' }) },
+    { scenario: 'a held comment', target: aComment({ moderationState: 'held' }) },
+    { scenario: 'a hidden comment', target: aComment({ moderationState: 'hidden' }) },
+  ])('refuses to pin $scenario', ({ target }) => {
+    const result = decideCommentPin({ actor: OWNER, comment: target, commentId: target.id, video });
 
     expect(isErr(result) && result.error.code).toBe(ErrorCodes.COMMENT_NOT_PINNABLE);
   });

@@ -139,7 +139,7 @@ export const SDD_ENDPOINT_CONTRACT: SddEndpointContract[] = [
     path: '/v1/videos/{id}/reactions',
     method: 'put',
     expectedStatuses: [200, 400, 401, 403, 404],
-    expectedErrorCodes: OWNED_VIDEO,
+    expectedErrorCodes: [...OWNED_VIDEO, ErrorCodes.COMMENTS_BANNED],
     hasBody: true,
     hasPathParams: true,
   },

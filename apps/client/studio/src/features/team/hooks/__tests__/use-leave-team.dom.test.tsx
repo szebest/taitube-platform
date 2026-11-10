@@ -20,5 +20,6 @@ describe('apps/client/studio: useLeaveTeam', () => {
     await vi.waitFor(() => expect(createActingChannelStore().read()).toBeUndefined());
     expect(requests.removedFrom).toEqual([OTHER_CHANNEL_ID]);
     await vi.waitFor(() => expect(router.state.location.pathname).toBe('/videos'));
+    await vi.waitFor(() => expect(router.state.status).toBe('idle'));
   });
 });

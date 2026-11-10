@@ -34,6 +34,16 @@ export const notifications = {
   partyInvite: dt('{name} zaprasza Cię na wspólne oglądanie'),
   partyStarting: dt('Wspólne oglądanie się zaczyna'),
   teamInvite: dt('{name} zaprasza Cię do swojego zespołu'),
+  moderation: dt('{action:enum}', {
+    enum: {
+      action: {
+        hold: 'Twój komentarz czeka na przegląd',
+        hide: 'Twój komentarz został ukryty',
+        remove: 'Twój komentarz został usunięty',
+        ban: 'Nie możesz już komentować na tym kanale',
+      },
+    },
+  }),
   processingReady: dt('Twój film jest gotowy do obejrzenia'),
   processingFailed: dt('Nie udało się przetworzyć Twojego filmu'),
   processingHeld: dt('Twój film czeka na sprawdzenie przez moderatora'),

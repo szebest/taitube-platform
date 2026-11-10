@@ -42,5 +42,10 @@ export interface NotificationRepositoryPort {
     userId: string,
     scope: NotificationReadScope
   ): Promise<Result<MarkedRead, DatabaseUnavailable>>;
+  /**
+   * Deletes the unread notifications about these comments, because they left public reads, and
+   * announces each affected user's cleared ids with the count that is left. Read ones stay.
+   */
+  withdrawUnread(commentIds: readonly string[]): Promise<Result<number, DatabaseUnavailable>>;
   prune(retentionDays: number): Promise<Result<number, DatabaseUnavailable>>;
 }

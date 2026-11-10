@@ -69,6 +69,7 @@ export * from './primitives/spinner';
 export * from './primitives/switch';
 export * from './primitives/table';
 export * from './primitives/tabs';
+export * from './primitives/tag-input';
 export * from './primitives/textarea';
 export * from './primitives/toast';
 export * from './primitives/toggle-group';

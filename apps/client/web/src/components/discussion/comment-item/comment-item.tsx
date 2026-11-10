@@ -165,11 +165,13 @@ export function CommentItemTimecode({
   );
 }
 
+const ACTIONABLE: ReadonlySet<CommentState> = new Set(['view', 'held', 'hidden']);
+
 /** The row under the text, hidden while editing or once the comment is gone. */
 export function CommentItemActions({ className, ...props }: ComponentPropsWithRef<'div'>) {
   const { state } = useCommentItem('Actions');
 
-  if (state !== 'view') return null;
+  if (!ACTIONABLE.has(state)) return null;
 
   return (
     <div

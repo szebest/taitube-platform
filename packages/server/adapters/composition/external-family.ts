@@ -15,6 +15,7 @@ import { OnnxFrameClassifier } from '../onnx/onnx-frame-classifier';
 import { PostgresDatabaseClient } from '../postgres/postgres-database-client';
 import { PostgresRepositories } from '../postgres/repositories/postgres-repositories';
 import { RedisCacheClient } from '../redis/redis-cache-client';
+import { RedisCommentSlowModeAdapter } from '../redis/redis-comment-slow-mode.adapter';
 import { RedisLiveChatGateAdapter } from '../redis/redis-live-chat-gate.adapter';
 import { RedisLivePresenceAdapter } from '../redis/redis-live-presence.adapter';
 import { RedisPartyGuestSessionsAdapter } from '../redis/redis-party-guest-sessions.adapter';
@@ -169,6 +170,10 @@ export function registerFamily(c: Container): void {
           { apiUrl: config.live.gatewayApiUrl, timeoutMs: config.live.gatewayTimeoutMs },
           fetch
         )
+    )
+    .provide(
+      Adapters.CommentSlowMode,
+      (c) => new RedisCommentSlowModeAdapter(c.get(Redis).getRedis())
     )
     .provide(Adapters.LiveChatGate, (c) => new RedisLiveChatGateAdapter(c.get(Redis).getRedis()))
     .provide(

@@ -132,6 +132,18 @@ describe('sendResult', () => {
     expect(sent.status).toBe(451);
   });
 
+  it('sets the headers a failure carries, and none for a success', () => {
+    const failed = fakeReply();
+    const succeeded = fakeReply();
+    const headers = (failure: typeof forbidden) => ({ 'retry-after': failure.videoId });
+
+    sendResult(failed.reply, request, err(forbidden), { headers });
+    sendResult(succeeded.reply, request, ok({ id: 'v1' }), { headers });
+
+    expect(failed.sent.headers['retry-after']).toBe('v1');
+    expect(succeeded.sent.headers['retry-after']).toBeUndefined();
+  });
+
   it('keeps an infra payload off the wire', () => {
     const { reply, sent } = fakeReply();
 
