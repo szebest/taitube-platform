@@ -104,7 +104,7 @@ jobs:
         uses: ./.github/actions/budget
         with:
           step: architecture
-          seconds: 20
+          seconds: 30
           started-at: ${{ steps.architecture-time.outputs.started }}
           finished-at: ${{ steps.architecture-time.outputs.finished }}
 

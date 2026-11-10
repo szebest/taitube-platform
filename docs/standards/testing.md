@@ -203,7 +203,7 @@ flat assertion with no exception list.
 ## 9. CI budgets, shards and retries
 
 Each job's `timeout-minutes` in `.github/workflows/ci.yml` is its outer bound, and three test steps carry their
-own budget through `.github/actions/budget`: `unit-tests` 240 s in each unit shard, `architecture` 20 s in
+own budget through `.github/actions/budget`: `unit-tests` 240 s in each unit shard, `architecture` 30 s in
 `lint-typecheck` (the suite's own time from its JSON report) and `integration-tests` 180 s.
 `tests/architecture/ci-budget-rules.ts` holds the numbers: `build` 3, `lint-typecheck` 4, `unit-shards` 5,
 `unit-bun-shards` 4, `integration` 6, `e2e-smoke` 4, `e2e-client` 4, `visual` 5, `terraform` 2, the two

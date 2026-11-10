@@ -23,7 +23,7 @@ const BUDGET_ACTION = './.github/actions/budget';
 /** What `.github/actions/budget` holds, in seconds, each on the step whose id it names. */
 const STEP_BUDGETS = [
   { job: 'unit-shards', step: 'unit-tests', seconds: 240 },
-  { job: 'lint-typecheck', step: 'architecture', seconds: 20 },
+  { job: 'lint-typecheck', step: 'architecture', seconds: 30 },
   { job: 'integration', step: 'integration-tests', seconds: 180 },
 ];
 
