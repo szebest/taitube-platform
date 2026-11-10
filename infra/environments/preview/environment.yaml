@@ -1,0 +1,45 @@
+name: preview
+kind: k3s
+description: One throwaway namespace per branch or pull request on a shared cluster, a small budget, deleted when its time to live passes.
+production: false
+protected: false
+images:
+  source: registry
+  registry: ghcr.io/szebest
+  tag: "{sha}"
+hosts: {}
+features:
+  captions: false
+  screening: false
+config:
+  LOG_LEVEL: debug
+secrets:
+  source: env-file
+  keys:
+    - ADMIN_TOKEN
+health:
+  readyzTimeoutSec: 300
+  smoke: true
+cluster:
+  context: k3s-staging
+  namespace: "preview-{slug}"
+  backing: helm
+scaling:
+  maxReplicas:
+    probe: 1
+    transcode-1080p: 1
+    transcode-720p: 1
+    transcode-480p: 1
+    thumbnail: 1
+    screen: 1
+    captions: 1
+    package: 1
+    notify: 1
+    housekeeping: 1
+    live: 1
+  budget:
+    cpu: "4"
+    memory: 8Gi
+    pods: 30
+preview:
+  ttlHours: 48

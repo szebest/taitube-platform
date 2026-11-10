@@ -1,0 +1,27 @@
+name: local
+kind: k3d
+description: Your machine. A k3d cluster with Postgres, Redis and MinIO from Helm, images built from this checkout, dev auth.
+production: false
+protected: false
+images:
+  source: build
+  registry: local
+  tag: local
+hosts: {}
+features:
+  captions: true
+  screening: true
+config: {}
+secrets:
+  source: env-file
+  keys:
+    - ADMIN_TOKEN
+health:
+  readyzTimeoutSec: 180
+  smoke: true
+cluster:
+  context: k3d-vp
+  namespace: video-pipeline
+  backing: helm
+scaling:
+  maxReplicas: {}
