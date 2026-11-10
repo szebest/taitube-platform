@@ -16,7 +16,7 @@ describe('demo: logins', () => {
 
   it.each([
     { name: 'viewer', sub: '00000000-0000-7000-8000-000000000002', role: 'user' },
-    { name: 'creator', sub: '00000000-0000-7000-8000-000000000001', role: 'creator' },
+    { name: 'creator', sub: PERSONAS[1]?.id, role: 'creator' },
     { name: 'moderator', sub: '00000000-0000-7000-8000-00000000000b', role: 'moderator' },
     { name: 'admin', sub: '00000000-0000-7000-8000-00000000000a', role: 'admin' },
   ])('mints $name as $role', ({ name, sub, role }) => {

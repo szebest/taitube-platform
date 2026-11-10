@@ -8,6 +8,7 @@ const CORE = [
   'worker:package',
   'worker:notify',
   'worker:housekeeping',
+  'worker:screen',
 ];
 
 describe('demo: targets', () => {

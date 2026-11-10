@@ -10,6 +10,7 @@ const CORE_WORKER_STAGES = [
   'worker:package',
   'worker:notify',
   'worker:housekeeping',
+  'worker:screen',
 ] as const;
 
 const IMAGES = ['vp-api:local', 'vp-web:local', 'vp-studio:local', 'vp-worker:local'];

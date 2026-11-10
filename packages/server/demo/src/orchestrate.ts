@@ -24,8 +24,8 @@ function credentials(host: DemoHost): Credentials {
   const env = parseEnv(host.readFile('.env') ?? '');
   return {
     adminToken: env.ADMIN_TOKEN || CREDENTIAL_FALLBACKS.adminToken,
-    storageUser: env.STORAGE_ACCESS_KEY_ID || CREDENTIAL_FALLBACKS.storageUser,
-    storagePassword: env.STORAGE_SECRET_ACCESS_KEY || CREDENTIAL_FALLBACKS.storagePassword,
+    storageUser: env.S3_ACCESS_KEY_ID || CREDENTIAL_FALLBACKS.storageUser,
+    storagePassword: env.S3_SECRET_ACCESS_KEY || CREDENTIAL_FALLBACKS.storagePassword,
   };
 }
 
@@ -78,7 +78,13 @@ async function seedWorld(
   options: DemoRunOptions,
   seed: SeedFn
 ): Promise<SeedReport> {
-  const report = await seed(options, { log: (line) => host.print(`    ${line}`) });
+  const env = parseEnv(host.readFile('.env') ?? '');
+  const report = await seed(options, {
+    log: (line) => host.print(`    ${line}`),
+    databaseUrl: env.DATABASE_URL,
+    cdnBaseUrl: env.CDN_BASE_URL,
+    environment: env.NODE_ENV,
+  });
   const previous = readState(host, options);
   writeState(host, options, previous.ok ? previous.value : undefined, report);
   return report;

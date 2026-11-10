@@ -7,7 +7,7 @@ const REPORT = { steps: [{ scenario: 'users', status: 'done' as const, detail: '
 const BASE: Setup = {
   files: {
     '.env.example': 'ADMIN_TOKEN=abc\n',
-    '.env': 'ADMIN_TOKEN=abc\nSTORAGE_ACCESS_KEY_ID=ak\n',
+    '.env': 'ADMIN_TOKEN=abc\nS3_ACCESS_KEY_ID=ak\n',
   },
 };
 
@@ -29,7 +29,7 @@ describe('demo: orchestrate up', () => {
     expect(await runUp(host, optionsFrom(), seed)).toBe(EXIT.ok);
 
     expect(shown).toEqual([
-      'pnpm --silent stack up api web studio worker:probe worker:transcode worker:thumbnail worker:package worker:notify worker:housekeeping',
+      'pnpm --silent stack up api web studio worker:probe worker:transcode worker:thumbnail worker:package worker:notify worker:housekeeping worker:screen',
     ]);
     expect(calls).toEqual([1729]);
     for (const label of [

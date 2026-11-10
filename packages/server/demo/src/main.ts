@@ -4,9 +4,7 @@ import { dirname } from 'node:path';
 import { fromPromise } from '@vp/result';
 import { run } from './cli';
 import type { DemoHost, ExecResult } from './host';
-import type { SeedFn } from './orchestrate';
-
-const seed: SeedFn = async () => ({ steps: [] });
+import { seedDemo } from './seed';
 
 const host: DemoHost = {
   cwd: process.cwd(),
@@ -52,4 +50,4 @@ const host: DemoHost = {
   },
 };
 
-process.exitCode = await run(process.argv.slice(2), host, seed);
+process.exitCode = await run(process.argv.slice(2), host, seedDemo);
