@@ -36,7 +36,6 @@ import {
   PackageJob,
   ProbeJob,
   ScreenJob,
-  ThumbnailJob,
   TranscodeJob,
 } from '@vp/job-contracts';
 import type { Logger } from '@vp/logger';
@@ -59,7 +58,7 @@ import { createNotifyProcessor } from './stages/notify';
 import { createPackageProcessor } from './stages/package';
 import { createProbeProcessor } from './stages/probe';
 import { createScreenProcessor } from './stages/screen/screen-stage';
-import { createThumbnailProcessor } from './stages/thumbnail';
+import { createThumbnailQueueStage } from './stages/thumbnail-queue';
 import { createTranscodeProcessor } from './stages/transcode';
 import { createTranscodeChunkProcessor } from './stages/transcode-chunk';
 import { transcodeCollaborators } from './transcode-collaborators';
@@ -181,24 +180,7 @@ export const live = (d: StageDeps) =>
   consuming(LiveJob, createLiveStage({ ...d, ...liveCollaborators(d) }));
 
 export const thumbnail = (d: StageDeps) =>
-  consuming(
-    ThumbnailJob,
-    createThumbnailProcessor({
-      repositories: d.repositories,
-      storage: d.storage,
-      media: d.media,
-      metrics: d.metrics,
-      rawBucket: d.config.buckets.raw,
-      publicBucket: d.config.buckets.public,
-      workerId: d.workerId,
-      logger: d.logger,
-      tmpDir: d.config.worker.tmpDir,
-      ffmpegPath: d.config.worker.ffmpegPath,
-      sprite: d.config.sprite,
-      ffmpegProcess: d.config.worker.ffmpegProcess,
-      progressReporter: transcodeCollaborators(d).progressReporter,
-    })
-  );
+  createThumbnailQueueStage({ ...d, progressReporter: transcodeCollaborators(d).progressReporter });
 
 export const screen = (d: StageDeps) =>
   consuming(

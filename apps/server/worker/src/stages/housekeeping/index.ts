@@ -10,6 +10,8 @@ import type { Repositories } from '@vp/core/repositories';
 import {
   CHANNEL_AUDIT_RETENTION_DAYS,
   SCREENING_EVIDENCE_RETENTION_DAYS,
+  CHANNEL_IMAGE_RETENTION_DAYS,
+  HANDLE_RESERVATION_DAYS,
   SEARCH_HISTORY_RETENTION_DAYS,
 } from '@vp/domain';
 import type { AppConfig } from '@vp/env-schema';
@@ -21,7 +23,9 @@ import { type Result, assertNever, ok } from '@vp/result';
 import { runExpireRaw } from './expire-raw';
 import { runFlushVideoViews } from './flush-video-views';
 import { runPurgeChannelAudit } from './purge-channel-audit';
+import { runPurgeChannelImages } from './purge-channel-images';
 import { runPurgeDeleted } from './purge-deleted';
+import { runPurgeHandleHistory } from './purge-handle-history';
 import { runPurgeScreeningEvidence } from './purge-screening-evidence';
 import { runPurgeSearchHistory } from './purge-search-history';
 import { runReconcileCaptions } from './reconcile-captions';
@@ -41,6 +45,8 @@ export * from './flush-video-views';
 export * from './reconcile-captions';
 export * from './purge-channel-audit';
 export * from './purge-screening-evidence';
+export * from './purge-channel-images';
+export * from './purge-handle-history';
 export * from './purge-search-history';
 
 interface HousekeepingSettings {
@@ -98,6 +104,11 @@ export function housekeepingTasks(housekeeping: AppConfig['housekeeping']) {
       retentionDays: SCREENING_EVIDENCE_RETENTION_DAYS,
       scanLimit: housekeeping.scanLimit,
     },
+    channelImages: {
+      retentionDays: CHANNEL_IMAGE_RETENTION_DAYS,
+      scanLimit: housekeeping.scanLimit,
+    },
+    handleHistory: { reservationDays: HANDLE_RESERVATION_DAYS },
     outbox: {
       batchSize: housekeeping.outboxBatchSize,
       intervalMs: housekeeping.outboxRelayIntervalMs,
@@ -215,6 +226,25 @@ export function createHousekeepingProcessor(
           rawBucket,
           now,
           ...tasks.screeningEvidence,
+          logger,
+        });
+
+      case 'purge-channel-images':
+        return await runPurgeChannelImages({
+          repositories,
+          storage,
+          rawBucket,
+          publicBucket,
+          now,
+          ...tasks.channelImages,
+          logger,
+        });
+
+      case 'purge-handle-history':
+        return await runPurgeHandleHistory({
+          repositories,
+          now,
+          ...tasks.handleHistory,
           logger,
         });
 

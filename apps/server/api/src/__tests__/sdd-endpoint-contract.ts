@@ -216,22 +216,13 @@ export const SDD_ENDPOINT_CONTRACT: SddEndpointContract[] = [
   {
     path: '/v1/me/channel',
     method: 'patch',
-    expectedStatuses: [200, 400, 401, 404, 409, 422],
+    expectedStatuses: [200, 400, 401, 403, 404, 409, 422],
     expectedErrorCodes: [
       ...CHANNEL,
       ErrorCodes.HANDLE_ALREADY_TAKEN,
+      ErrorCodes.HANDLE_CHANGE_TOO_SOON,
+      ErrorCodes.HANDLE_RESERVED,
       ErrorCodes.INVALID_HANDLE_FORMAT,
-    ],
-    hasBody: true,
-  },
-  {
-    path: '/v1/me/channel/images',
-    method: 'post',
-    expectedStatuses: [201, 400, 401, 404, 422],
-    expectedErrorCodes: [
-      ...CHANNEL,
-      ErrorCodes.UPLOAD_TOO_LARGE,
-      ErrorCodes.UNSUPPORTED_CONTENT_TYPE,
     ],
     hasBody: true,
   },

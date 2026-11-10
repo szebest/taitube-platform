@@ -1,5 +1,5 @@
 {
-  "id": "ca30935c-a579-4b26-bb8e-92b2d0d66c7c",
+  "id": "40edcf9b-ef25-46bc-91ad-7f158f42e81f",
   "prevId": "1e3ac298-2067-4c98-ba19-b4d1c4f1b734",
   "version": "7",
   "dialect": "postgresql",
@@ -163,6 +163,50 @@
           "primaryKey": false,
           "notNull": true,
           "default": "'[]'::jsonb"
+        },
+        "avatar_version": {
+          "name": "avatar_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "banner_version": {
+          "name": "banner_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "banner_crops": {
+          "name": "banner_crops",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "country": {
+          "name": "country",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "contact_email": {
+          "name": "contact_email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "banner_link": {
+          "name": "banner_link",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "handle_changed_at": {
+          "name": "handle_changed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
         },
         "auto_captions_default": {
           "name": "auto_captions_default",
@@ -2520,6 +2564,13 @@
           "notNull": true,
           "default": "'private'"
         },
+        "kind": {
+          "name": "kind",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'playlist'"
+        },
         "is_system": {
           "name": "is_system",
           "type": "boolean",
@@ -2609,6 +2660,10 @@
         "playlists_visibility_check": {
           "name": "playlists_visibility_check",
           "value": "\"playlists\".\"visibility\" IN ('private', 'unlisted', 'public')"
+        },
+        "playlists_kind_check": {
+          "name": "playlists_kind_check",
+          "value": "\"playlists\".\"kind\" IN ('playlist', 'series')"
         }
       },
       "isRLSEnabled": false
@@ -4839,80 +4894,37 @@
       },
       "isRLSEnabled": false
     },
-    "public.screening_appeals": {
-      "name": "screening_appeals",
+    "public.channel_handle_history": {
+      "name": "channel_handle_history",
       "schema": "",
       "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
+        "handle": {
+          "name": "handle",
+          "type": "text",
           "primaryKey": true,
           "notNull": true
         },
-        "video_id": {
-          "name": "video_id",
+        "channel_id": {
+          "name": "channel_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
-        "screening_id": {
-          "name": "screening_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "author_id": {
-          "name": "author_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "message": {
-          "name": "message",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "rejected_by": {
-          "name": "rejected_by",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
+        "retired_at": {
+          "name": "retired_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "resolved_by": {
-          "name": "resolved_by",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "resolved_at": {
-          "name": "resolved_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
+          "notNull": true
         }
       },
       "indexes": {
-        "screening_appeals_video_idx": {
-          "name": "screening_appeals_video_idx",
+        "channel_handle_history_retired_at_idx": {
+          "name": "channel_handle_history_retired_at_idx",
           "columns": [
             {
-              "expression": "video_id",
+              "expression": "retired_at",
               "isExpression": false,
               "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "created_at",
-              "isExpression": false,
-              "asc": false,
               "nulls": "last"
             }
           ],
@@ -4920,88 +4932,20 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
-        },
-        "screening_appeals_open_idx": {
-          "name": "screening_appeals_open_idx",
-          "columns": [
-            {
-              "expression": "video_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "where": "\"screening_appeals\".\"resolved_at\" IS NULL",
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
         }
       },
       "foreignKeys": {
-        "screening_appeals_video_id_videos_id_fk": {
-          "name": "screening_appeals_video_id_videos_id_fk",
-          "tableFrom": "screening_appeals",
-          "tableTo": "videos",
+        "channel_handle_history_channel_id_channels_id_fk": {
+          "name": "channel_handle_history_channel_id_channels_id_fk",
+          "tableFrom": "channel_handle_history",
+          "tableTo": "channels",
           "columnsFrom": [
-            "video_id"
+            "channel_id"
           ],
           "columnsTo": [
             "id"
           ],
           "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "screening_appeals_screening_id_video_screenings_id_fk": {
-          "name": "screening_appeals_screening_id_video_screenings_id_fk",
-          "tableFrom": "screening_appeals",
-          "tableTo": "video_screenings",
-          "columnsFrom": [
-            "screening_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "screening_appeals_author_id_users_id_fk": {
-          "name": "screening_appeals_author_id_users_id_fk",
-          "tableFrom": "screening_appeals",
-          "tableTo": "users",
-          "columnsFrom": [
-            "author_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "screening_appeals_rejected_by_users_id_fk": {
-          "name": "screening_appeals_rejected_by_users_id_fk",
-          "tableFrom": "screening_appeals",
-          "tableTo": "users",
-          "columnsFrom": [
-            "rejected_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        },
-        "screening_appeals_resolved_by_users_id_fk": {
-          "name": "screening_appeals_resolved_by_users_id_fk",
-          "tableFrom": "screening_appeals",
-          "tableTo": "users",
-          "columnsFrom": [
-            "resolved_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
           "onUpdate": "no action"
         }
       },
@@ -5011,293 +4955,79 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.video_audio_fingerprints": {
-      "name": "video_audio_fingerprints",
+    "public.channel_image_uploads": {
+      "name": "channel_image_uploads",
       "schema": "",
       "columns": {
-        "video_id": {
-          "name": "video_id",
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "channel_id": {
+          "name": "channel_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
-        "idx": {
-          "name": "idx",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "term": {
-          "name": "term",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {
-        "video_audio_fingerprints_term_idx": {
-          "name": "video_audio_fingerprints_term_idx",
-          "columns": [
-            {
-              "expression": "term",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "video_audio_fingerprints_video_id_videos_id_fk": {
-          "name": "video_audio_fingerprints_video_id_videos_id_fk",
-          "tableFrom": "video_audio_fingerprints",
-          "tableTo": "videos",
-          "columnsFrom": [
-            "video_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {
-        "video_audio_fingerprints_video_id_idx_pk": {
-          "name": "video_audio_fingerprints_video_id_idx_pk",
-          "columns": [
-            "video_id",
-            "idx"
-          ]
-        }
-      },
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.video_frame_hashes": {
-      "name": "video_frame_hashes",
-      "schema": "",
-      "columns": {
-        "video_id": {
-          "name": "video_id",
+        "uploaded_by": {
+          "name": "uploaded_by",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
-        "idx": {
-          "name": "idx",
-          "type": "integer",
+        "kind": {
+          "name": "kind",
+          "type": "text",
           "primaryKey": false,
           "notNull": true
         },
-        "hash": {
-          "name": "hash",
+        "content_type": {
+          "name": "content_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "size_bytes": {
+          "name": "size_bytes",
           "type": "bigint",
           "primaryKey": false,
           "notNull": true
         },
-        "b0": {
-          "name": "b0",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "b1": {
-          "name": "b1",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "b2": {
-          "name": "b2",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "b3": {
-          "name": "b3",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {
-        "video_frame_hashes_b0_idx": {
-          "name": "video_frame_hashes_b0_idx",
-          "columns": [
-            {
-              "expression": "b0",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "video_frame_hashes_b1_idx": {
-          "name": "video_frame_hashes_b1_idx",
-          "columns": [
-            {
-              "expression": "b1",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "video_frame_hashes_b2_idx": {
-          "name": "video_frame_hashes_b2_idx",
-          "columns": [
-            {
-              "expression": "b2",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "video_frame_hashes_b3_idx": {
-          "name": "video_frame_hashes_b3_idx",
-          "columns": [
-            {
-              "expression": "b3",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "video_frame_hashes_video_id_videos_id_fk": {
-          "name": "video_frame_hashes_video_id_videos_id_fk",
-          "tableFrom": "video_frame_hashes",
-          "tableTo": "videos",
-          "columnsFrom": [
-            "video_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {
-        "video_frame_hashes_video_id_idx_pk": {
-          "name": "video_frame_hashes_video_id_idx_pk",
-          "columns": [
-            "video_id",
-            "idx"
-          ]
-        }
-      },
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.video_screenings": {
-      "name": "video_screenings",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "video_id": {
-          "name": "video_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "source_checksum": {
-          "name": "source_checksum",
+        "status": {
+          "name": "status",
           "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "outcome": {
-          "name": "outcome",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "score": {
-          "name": "score",
-          "type": "double precision",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "reasons": {
-          "name": "reasons",
-          "type": "jsonb",
           "primaryKey": false,
           "notNull": true,
-          "default": "'[]'::jsonb"
+          "default": "'issued'"
         },
-        "flags": {
-          "name": "flags",
+        "width": {
+          "name": "width",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "height": {
+          "name": "height",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "crops": {
+          "name": "crops",
           "type": "jsonb",
           "primaryKey": false,
-          "notNull": true,
-          "default": "'[]'::jsonb"
+          "notNull": false
         },
-        "model_version": {
-          "name": "model_version",
-          "type": "text",
+        "version": {
+          "name": "version",
+          "type": "integer",
           "primaryKey": false,
           "notNull": false
         },
-        "threshold_version": {
-          "name": "threshold_version",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "decision": {
-          "name": "decision",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "decided_by": {
-          "name": "decided_by",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "decided_at": {
-          "name": "decided_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "decision_note": {
-          "name": "decision_note",
+        "failure": {
+          "name": "failure",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -5308,54 +5038,66 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
         }
       },
       "indexes": {
-        "video_screenings_video_checksum_idx": {
-          "name": "video_screenings_video_checksum_idx",
+        "channel_image_uploads_channel_idx": {
+          "name": "channel_image_uploads_channel_idx",
           "columns": [
             {
-              "expression": "video_id",
+              "expression": "channel_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
             },
             {
-              "expression": "source_checksum",
+              "expression": "kind",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
             }
           ],
-          "isUnique": true,
+          "isUnique": false,
           "concurrently": false,
           "method": "btree",
           "with": {}
         },
-        "video_screenings_open_idx": {
-          "name": "video_screenings_open_idx",
+        "channel_image_uploads_status_idx": {
+          "name": "channel_image_uploads_status_idx",
           "columns": [
             {
-              "expression": "created_at",
+              "expression": "status",
               "isExpression": false,
-              "asc": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "updated_at",
+              "isExpression": false,
+              "asc": true,
               "nulls": "last"
             }
           ],
           "isUnique": false,
-          "where": "\"video_screenings\".\"decision\" IS NULL AND (\"video_screenings\".\"outcome\" = 'HOLD' OR \"video_screenings\".\"flags\" <> '[]'::jsonb)",
           "concurrently": false,
           "method": "btree",
           "with": {}
         }
       },
       "foreignKeys": {
-        "video_screenings_video_id_videos_id_fk": {
-          "name": "video_screenings_video_id_videos_id_fk",
-          "tableFrom": "video_screenings",
-          "tableTo": "videos",
+        "channel_image_uploads_channel_id_channels_id_fk": {
+          "name": "channel_image_uploads_channel_id_channels_id_fk",
+          "tableFrom": "channel_image_uploads",
+          "tableTo": "channels",
           "columnsFrom": [
-            "video_id"
+            "channel_id"
           ],
           "columnsTo": [
             "id"
@@ -5363,12 +5105,188 @@
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
-        "video_screenings_decided_by_users_id_fk": {
-          "name": "video_screenings_decided_by_users_id_fk",
-          "tableFrom": "video_screenings",
+        "channel_image_uploads_uploaded_by_users_id_fk": {
+          "name": "channel_image_uploads_uploaded_by_users_id_fk",
+          "tableFrom": "channel_image_uploads",
           "tableTo": "users",
           "columnsFrom": [
-            "decided_by"
+            "uploaded_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "channel_image_uploads_version_key": {
+          "name": "channel_image_uploads_version_key",
+          "nullsNotDistinct": false,
+          "columns": [
+            "channel_id",
+            "kind",
+            "version"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "channel_image_uploads_kind_check": {
+          "name": "channel_image_uploads_kind_check",
+          "value": "\"channel_image_uploads\".\"kind\" IN ('avatar', 'banner')"
+        },
+        "channel_image_uploads_status_check": {
+          "name": "channel_image_uploads_status_check",
+          "value": "\"channel_image_uploads\".\"status\" IN ('issued', 'queued', 'ready', 'failed', 'superseded', 'purged')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.channel_localizations": {
+      "name": "channel_localizations",
+      "schema": "",
+      "columns": {
+        "channel_id": {
+          "name": "channel_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "locale": {
+          "name": "locale",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "trailer_video_id": {
+          "name": "trailer_video_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "channel_localizations_channel_id_channels_id_fk": {
+          "name": "channel_localizations_channel_id_channels_id_fk",
+          "tableFrom": "channel_localizations",
+          "tableTo": "channels",
+          "columnsFrom": [
+            "channel_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "channel_localizations_trailer_video_id_videos_id_fk": {
+          "name": "channel_localizations_trailer_video_id_videos_id_fk",
+          "tableFrom": "channel_localizations",
+          "tableTo": "videos",
+          "columnsFrom": [
+            "trailer_video_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "channel_localizations_channel_id_locale_pk": {
+          "name": "channel_localizations_channel_id_locale_pk",
+          "columns": [
+            "channel_id",
+            "locale"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.channel_page_settings": {
+      "name": "channel_page_settings",
+      "schema": "",
+      "columns": {
+        "channel_id": {
+          "name": "channel_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "trailer_video_id": {
+          "name": "trailer_video_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "returning_video_id": {
+          "name": "returning_video_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "channel_page_settings_channel_id_channels_id_fk": {
+          "name": "channel_page_settings_channel_id_channels_id_fk",
+          "tableFrom": "channel_page_settings",
+          "tableTo": "channels",
+          "columnsFrom": [
+            "channel_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "channel_page_settings_trailer_video_id_videos_id_fk": {
+          "name": "channel_page_settings_trailer_video_id_videos_id_fk",
+          "tableFrom": "channel_page_settings",
+          "tableTo": "videos",
+          "columnsFrom": [
+            "trailer_video_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "channel_page_settings_returning_video_id_videos_id_fk": {
+          "name": "channel_page_settings_returning_video_id_videos_id_fk",
+          "tableFrom": "channel_page_settings",
+          "tableTo": "videos",
+          "columnsFrom": [
+            "returning_video_id"
           ],
           "columnsTo": [
             "id"
@@ -5380,16 +5298,7 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
-      "checkConstraints": {
-        "video_screenings_outcome_check": {
-          "name": "video_screenings_outcome_check",
-          "value": "\"video_screenings\".\"outcome\" IN ('PASS', 'HOLD')"
-        },
-        "video_screenings_decision_check": {
-          "name": "video_screenings_decision_check",
-          "value": "\"video_screenings\".\"decision\" IS NULL OR \"video_screenings\".\"decision\" IN ('approved', 'rejected', 'dismissed')"
-        }
-      },
+      "checkConstraints": {},
       "isRLSEnabled": false
     }
   },
@@ -5448,8 +5357,7 @@
         "REJECTED",
         "ABANDONED",
         "DELETED",
-        "LIVE",
-        "HELD"
+        "LIVE"
       ]
     },
     "public.caption_kind": {

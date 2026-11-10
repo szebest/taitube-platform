@@ -3,8 +3,8 @@ import { useAccount } from '@vp/queries';
 import { Avatar, Button, DropdownMenu, Icon } from '@vp/ui';
 import { useState } from 'react';
 import { RoleBadge } from '#app/components/team/role-badge';
-import { useActiveChannel } from '#app/features/team/hooks/use-active-channel';
 import { useSwitchChannel } from '#app/features/team/hooks/use-switch-channel';
+import { useActiveChannel } from '#app/hooks/use-active-channel';
 import { LeaveTeamDialog } from '../leave-team-dialog/leave-team-dialog';
 import { LeaveTeamItem } from '../leave-team-item/leave-team-item';
 

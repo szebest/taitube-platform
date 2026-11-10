@@ -3,8 +3,11 @@ import type { InMemoryCaptionRepository } from './in-memory-caption-repository';
 import type { InMemoryCategoryRepository } from './in-memory-category-repository';
 import type { InMemoryChannelAuditRepository } from './in-memory-channel-audit-repository';
 import type { InMemoryChannelFeaturedRepository } from './in-memory-channel-featured-repository';
+import type { InMemoryChannelHandleHistoryRepository } from './in-memory-channel-handle-history-repository';
+import type { InMemoryChannelImageRepository } from './in-memory-channel-image-repository';
 import type { InMemoryChannelInviteRepository } from './in-memory-channel-invite-repository';
 import type { InMemoryChannelMemberRepository } from './in-memory-channel-member-repository';
+import type { InMemoryChannelPageRepository } from './in-memory-channel-page-repository';
 import type { InMemoryChannelRepository } from './in-memory-channel-repository';
 import type { InMemoryClipRepository } from './in-memory-clip-repository';
 import type { InMemoryCommentReportRepository } from './in-memory-comment-report-repository';
@@ -73,6 +76,9 @@ export const Repo = {
   fingerprints: token<InMemoryFingerprintRepository>('fingerprints'),
   clips: token<InMemoryClipRepository>('clips'),
   channelFeatured: token<InMemoryChannelFeaturedRepository>('channelFeatured'),
+  channelHandleHistory: token<InMemoryChannelHandleHistoryRepository>('channelHandleHistory'),
+  channelImages: token<InMemoryChannelImageRepository>('channelImages'),
+  channelPages: token<InMemoryChannelPageRepository>('channelPages'),
   picks: token<InMemoryPickRepository>('picks'),
   webhooks: token<InMemoryWebhookRepository>('webhooks'),
   liveStreams: token<InMemoryLiveStreamRepository>('liveStreams'),

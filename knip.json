@@ -94,6 +94,7 @@
     },
     "packages/client/ui": {
       "includeEntryExports": false,
+      "ignoreDependencies": ["simple-icons", "simple-icons-linkedin"],
       "project": [
         "**/*.{ts,tsx,css}!",
         "!**/*.stories.tsx!",
@@ -185,7 +186,6 @@
       ]
     },
     "packages/client/queries": {
-      "entry": ["src/**/type-fixtures/*.ts"],
       "project": [
         "**/*.{ts,tsx,mts,mjs,js}!",
         "!**/__tests__/**!",

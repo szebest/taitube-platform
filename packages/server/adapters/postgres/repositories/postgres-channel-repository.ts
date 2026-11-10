@@ -8,9 +8,10 @@ import {
   handleTaken,
 } from '@vp/errors';
 import { type Result, err, fromPromise, map, ok } from '@vp/result';
-import { and, eq, inArray, ne, sql } from 'drizzle-orm';
+import { eq, inArray, sql } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
 import { isUniqueViolation } from '../pg-errors';
+import { channelPatch, claimHandle } from './channel-writes';
 import { publicFeedScope } from './public-feed-query';
 import type { PostgresDatabase } from './types';
 
@@ -25,6 +26,13 @@ function mapRow(row: typeof channels.$inferSelect): Channel {
     brandColor: row.brandColor,
     bio: row.bio,
     links: row.links,
+    avatarVersion: row.avatarVersion,
+    bannerVersion: row.bannerVersion,
+    bannerCrops: row.bannerCrops,
+    country: row.country,
+    contactEmail: row.contactEmail,
+    bannerLink: row.bannerLink,
+    handleChangedAt: row.handleChangedAt,
     subscriberCount: row.subscriberCount,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
@@ -127,35 +135,28 @@ export class PostgresChannelRepository implements ChannelRepositoryPort {
   ): Promise<Result<Channel | null, DatabaseUnavailable | HandleTaken>> {
     const handle = input.handle?.toLowerCase();
 
-    if (handle) {
-      const conflicting = await fromPromise(
-        () =>
-          this.db
-            .select({ id: channels.id })
-            .from(channels)
-            .where(and(eq(channels.handle, handle), ne(channels.id, id)))
-            .limit(1),
-        databaseUnavailable.during('update')
-      );
-      if (!conflicting.ok) return conflicting;
-      if (conflicting.value[0]) return err(handleTaken(handle));
-    }
-
-    const values: Partial<typeof channels.$inferInsert> = { updatedAt: new Date() };
-    if (handle !== undefined) values.handle = handle;
-    if (input.displayName !== undefined) values.displayName = input.displayName;
-    if (input.avatarUrl !== undefined) values.avatarUrl = input.avatarUrl;
-    if (input.bannerUrl !== undefined) values.bannerUrl = input.bannerUrl;
-    if (input.brandColor !== undefined) values.brandColor = input.brandColor;
-    if (input.bio !== undefined) values.bio = input.bio;
-    if (input.links !== undefined) values.links = input.links;
-
-    const rows = await fromPromise(
-      () => this.db.update(channels).set(values).where(eq(channels.id, id)).returning(),
+    const written = await fromPromise(
+      () =>
+        this.db.transaction(async (tx) => {
+          const values = channelPatch(input);
+          if (handle !== undefined && input.handleChangedAt !== undefined) {
+            const claimed = await claimHandle(tx, id, handle, input.handleChangedAt);
+            if (claimed === 'taken') return claimed;
+            Object.assign(values, claimed);
+          }
+          const [row] = await tx
+            .update(channels)
+            .set(values)
+            .where(eq(channels.id, id))
+            .returning();
+          return row;
+        }),
       this.conflict(handle ?? '', 'update')
     );
 
-    return map(rows, ([row]) => (row ? mapRow(row) : null));
+    if (!written.ok) return written;
+    if (written.value === 'taken') return err(handleTaken(handle ?? ''));
+    return ok(written.value ? mapRow(written.value) : null);
   }
 
   async statsOf(userId: string): Promise<Result<ChannelStats, DatabaseUnavailable>> {

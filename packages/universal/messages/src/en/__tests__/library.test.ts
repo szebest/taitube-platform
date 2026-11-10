@@ -117,6 +117,9 @@ describe('@vp/messages: en library', () => {
     { key: 'library.moveToTop', args: undefined, expected: 'Move to top' },
     { key: 'library.moveToBottom', args: undefined, expected: 'Move to bottom' },
     { key: 'library.playlistItems', args: { title: 'Trips' }, expected: 'Videos in Trips' },
+    { key: 'library.episode', args: { number: 1204 }, expected: 'Episode 1204' },
+    { key: 'library.continueSeries', args: undefined, expected: 'Continue' },
+    { key: 'library.episodeWatched', args: { percent: 42.4 }, expected: '42% watched' },
   ] as const)('writes $key', ({ key, args, expected }) => {
     expect(t(key, ...(args ? [args] : []))).toEqual({ ok: true, value: expected });
   });

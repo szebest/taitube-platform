@@ -57,6 +57,10 @@ export interface PlaylistRepositoryPort {
     ownerId: string,
     options: ListPublicPlaylistsOptions
   ): Promise<Result<PublicPlaylist[], DatabaseUnavailable>>;
+  /** Every item's video id and owner, whether or not any viewer may watch it. */
+  listItemOwners(
+    playlistId: string
+  ): Promise<Result<{ id: string; ownerId: string }[], DatabaseUnavailable>>;
   update(id: string, patch: PlaylistPatch): Promise<Result<Playlist | null, DatabaseUnavailable>>;
   /** Never removes a system playlist; answers whether a row went. */
   remove(id: string): Promise<Result<boolean, DatabaseUnavailable>>;

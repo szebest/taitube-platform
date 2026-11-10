@@ -4,8 +4,9 @@ import {
   captionsFileKey,
   captionsPrefix,
   captionsTmpPrefix,
-  channelImageKey,
-  channelImagePrefix,
+  channelImageUploadKey,
+  channelImageVariantKey,
+  channelImageVersionPrefix,
   chunkKey,
   chunkPrefix,
   liveArchivePlaylistKey,
@@ -92,13 +93,16 @@ describe('packages/storage: object keys', () => {
     expect(masterPlaylistKey(videoId, 3).startsWith(prefix)).toBe(false);
   });
 
-  it('keeps a channel image under its channel and kind prefix', () => {
-    const key = channelImageKey('chan-1', 'avatar', 'img-9', 'webp');
+  it('keeps the raw upload apart from its variants, one prefix per version', () => {
+    const variant = channelImageVariantKey('chan-1', 'banner', 'desktop-1280', 3);
 
-    expect(key).toBe('channels/chan-1/avatar/img-9.webp');
-    expect(key.startsWith(channelImagePrefix('chan-1', 'avatar'))).toBe(true);
-    expect(key.startsWith(channelImagePrefix('chan-1', 'banner'))).toBe(false);
-    expect(key.startsWith(channelImagePrefix('chan-10', 'avatar'))).toBe(false);
+    expect(channelImageUploadKey('chan-1', 'banner', 'up-1')).toBe(
+      'channel-images/chan-1/banner/up-1'
+    );
+    expect(variant).toBe('channels/chan-1/banner/v3/desktop-1280.webp');
+    expect(variant.startsWith(channelImageVersionPrefix('chan-1', 'banner', 3))).toBe(true);
+    expect(variant.startsWith(channelImageVersionPrefix('chan-1', 'banner', 30))).toBe(false);
+    expect(variant.startsWith('channels/chan-1/banner/')).toBe(true);
   });
 
   it('keeps everything a broadcast writes under its live prefix, an epoch apart', () => {

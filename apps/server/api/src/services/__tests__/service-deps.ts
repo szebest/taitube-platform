@@ -1,11 +1,11 @@
 import { CaslAuthorizationAdapter } from '@vp/adapters/authorization';
 import {
   InMemoryCacheClient,
+  InMemoryChannelHandleHistoryRepository,
   InMemoryChannelRepository,
   InMemoryJobQueue,
   InMemoryMultipartStorage,
   type InMemoryRepositories,
-  InMemoryStorageClient,
   InMemoryVideoRepository,
 } from '@vp/adapters/in-memory';
 import { RedisReactionCacheAdapter } from '@vp/adapters/redis/redis-reaction-cache.adapter';
@@ -16,7 +16,10 @@ import { asCdnBase, inProcessAppConfig } from '@vp/env-schema';
 import { createLogger } from '@vp/logger';
 import { Paginator } from '@vp/pagination';
 import { ok } from '@vp/result';
-import { ChannelImageService, type ChannelImageServiceDeps } from '../channel-image-service';
+import {
+  ChannelIdentityService,
+  type ChannelIdentityServiceDeps,
+} from '../channel-identity-service';
 import type { ChannelServiceDeps } from '../channel-service';
 import { CreatorStudioService } from '../creator-studio-service';
 import { MetadataScreening } from '../metadata-screening';
@@ -39,7 +42,10 @@ export function videoServiceDeps(
 ): VideoServiceDeps {
   return {
     videos,
-    channels: new InMemoryChannelRepository(new InMemoryVideoRepository()),
+    channels: new InMemoryChannelRepository(
+      new InMemoryVideoRepository(),
+      new InMemoryChannelHandleHistoryRepository()
+    ),
     cdn: TEST_CDN,
     sprite: TEST_SPRITE,
     reactionCache: new RedisReactionCacheAdapter({
@@ -57,19 +63,18 @@ export function ownerActing(ownerId: string, channelId: string): ActingChannel {
   return { channelId, ownerId, role: 'owner' };
 }
 
-export const TEST_PUBLIC_BUCKET = 'public';
+export const TEST_NOW = Date.parse('2026-03-10T00:00:00.000Z');
 
-/** Channel images over one repositories bundle and an in-memory public bucket. */
-export function channelImageServiceDeps(
+/** The channel identity rules over one repositories bundle, at a fixed clock. */
+export function channelIdentityServiceDeps(
   repositories: InMemoryRepositories,
-  overrides: Partial<ChannelImageServiceDeps> = {}
-): ChannelImageServiceDeps {
+  overrides: Partial<ChannelIdentityServiceDeps> = {}
+): ChannelIdentityServiceDeps {
   return {
     channels: repositories.channels,
-    storage: new InMemoryStorageClient(),
-    publicBucket: TEST_PUBLIC_BUCKET,
-    cdn: TEST_CDN,
-    presignedUrlTtlSeconds: 900,
+    handleHistory: repositories.channelHandleHistory,
+    audit: repositories.channelAudit,
+    now: () => TEST_NOW,
     ...overrides,
   };
 }
@@ -90,7 +95,9 @@ export function channelServiceDeps(
     ),
     paginator: new Paginator(),
     cdn: TEST_CDN,
-    images: new ChannelImageService(channelImageServiceDeps(repositories)),
+    identity: new ChannelIdentityService(channelIdentityServiceDeps(repositories)),
+    pages: repositories.channelPages,
+    now: () => TEST_NOW,
     ...overrides,
   };
 }

@@ -21,6 +21,7 @@ export default defineConfig({
     './src/live-schema.ts',
     './src/channel-team-schema.ts',
     './src/screening-schema.ts',
+    './src/channel-identity-schema.ts',
   ],
   out: './drizzle',
   dialect: 'postgresql',

@@ -4,7 +4,7 @@ import { useT } from '@vp/intl-react';
 import { canReadChannelTeam } from '@vp/permissions';
 import { useCan } from '@vp/permissions-react';
 import { Tabs } from '@vp/ui';
-import { useActiveChannel } from '#app/features/team/hooks/use-active-channel';
+import { useActiveChannel } from '#app/hooks/use-active-channel';
 import { AuditPanel } from '../audit-panel/audit-panel';
 import { MembersPanel } from '../members-panel/members-panel';
 

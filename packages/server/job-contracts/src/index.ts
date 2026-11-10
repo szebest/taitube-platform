@@ -1,8 +1,10 @@
 import { SCREENING_OUTCOMES, SCREENING_REASONS } from '@vp/domain';
 import { z } from 'zod';
+import { ChannelImageJob } from './channel-images';
 import { LadderEntry, RENDITIONS, type RenditionName } from './ladder';
 
 export * from './captions-flow';
+export * from './channel-images';
 export * from './chunks';
 export * from './ladder';
 export * from './live';
@@ -62,6 +64,24 @@ export const ScreenJob = Base.extend({
   hasAudio: z.boolean(),
 });
 export type ScreenJob = z.infer<typeof ScreenJob>;
+const VideoThumbnailJob = ThumbnailJob.extend({ type: z.literal('video-thumbnail') });
+
+function withDefaultType(payload: unknown): unknown {
+  const fields = z.record(z.string(), z.unknown()).safeParse(payload);
+  return fields.success && fields.data.type === undefined
+    ? { ...fields.data, type: 'video-thumbnail' }
+    : payload;
+}
+
+/**
+ * The thumbnail queue also carries channel images. A payload without a `type` is a video thumbnail:
+ * every job already in Redis and every producer of one predates the tag.
+ */
+export const ThumbnailQueueJob = z.preprocess(
+  withDefaultType,
+  z.discriminatedUnion('type', [VideoThumbnailJob, ChannelImageJob])
+);
+export type ThumbnailQueueJob = z.infer<typeof ThumbnailQueueJob>;
 
 export const PackageJob = Base.extend({
   ladder: z.array(LadderEntry).min(1),
@@ -124,6 +144,8 @@ export const HousekeepingJob = z.object({
     'purge-search-history',
     'purge-channel-audit',
     'purge-screening-evidence',
+    'purge-channel-images',
+    'purge-handle-history',
   ]),
 });
 export type HousekeepingJob = z.infer<typeof HousekeepingJob>;
@@ -190,6 +212,7 @@ export const ids = {
     `${v}--transcode--${r}--c${chunk}--g${g}`,
   thumbnail: (v: string, g: number) => `${v}--thumbnail--g${g}`,
   screen: (v: string, g: number) => `${v}--screen--g${g}`,
+  channelImage: (uploadId: string) => `${uploadId}--channel-image`,
   package: (v: string, g: number) => `${v}--package--g${g}`,
   packageApproved: (v: string, g: number) => `${v}--package--approved--g${g}`,
   captions: (v: string, modelVersion: string, captionVersion: number) =>

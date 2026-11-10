@@ -3,15 +3,17 @@ import { InMemoryCaptionRepository } from './in-memory-caption-repository';
 import { InMemoryCategoryRepository } from './in-memory-category-repository';
 import { InMemoryChannelAuditRepository } from './in-memory-channel-audit-repository';
 import { InMemoryChannelFeaturedRepository } from './in-memory-channel-featured-repository';
+import { InMemoryChannelHandleHistoryRepository } from './in-memory-channel-handle-history-repository';
+import { InMemoryChannelImageRepository } from './in-memory-channel-image-repository';
 import { InMemoryChannelInviteRepository } from './in-memory-channel-invite-repository';
 import { InMemoryChannelMemberRepository } from './in-memory-channel-member-repository';
+import { InMemoryChannelPageRepository } from './in-memory-channel-page-repository';
 import { InMemoryChannelRepository } from './in-memory-channel-repository';
 import { InMemoryClipRepository } from './in-memory-clip-repository';
 import { InMemoryCommentReportRepository } from './in-memory-comment-report-repository';
 import { InMemoryCommentRepository } from './in-memory-comment-repository';
 import { InMemoryDlqRepository } from './in-memory-dlq-repository';
 import { InMemoryEventRepository } from './in-memory-event-repository';
-import { InMemoryFingerprintRepository } from './in-memory-fingerprint-repository';
 import { InMemoryLiveStreamRepository } from './in-memory-live-stream-repository';
 import { InMemoryNotificationRepository } from './in-memory-notification-repository';
 import { InMemoryOutboxRepository } from './in-memory-outbox-repository';
@@ -22,7 +24,7 @@ import { InMemoryRelatedVideosRepository } from './in-memory-related-videos-repo
 import { InMemoryRenditionRepository } from './in-memory-rendition-repository';
 import { Repo } from './in-memory-repo-tokens';
 import { InMemoryRisingVideosRepository } from './in-memory-rising-videos-repository';
-import { InMemoryScreeningRepository } from './in-memory-screening-repository';
+import { provideScreening } from './in-memory-screening-providers';
 import { InMemorySearchHistoryRepository } from './in-memory-search-history-repository';
 import { InMemorySearchRepository } from './in-memory-search-repository';
 import { InMemoryStepRepository } from './in-memory-step-repository';
@@ -43,13 +45,17 @@ import { InMemoryWebhookRepository } from './in-memory-webhook-repository';
  * after both are built, so no repository needs a setter to be wired.
  */
 export function graph(): Container {
-  return new Container()
+  return provideScreening(new Container())
     .provide(Repo.outbox, () => new InMemoryOutboxRepository())
     .provide(Repo.renditions, () => new InMemoryRenditionRepository())
     .provide(Repo.steps, () => new InMemoryStepRepository())
     .provide(Repo.users, () => new InMemoryUserRepository())
     .provide(Repo.userEvents, (c) => new InMemoryUserEventRepository(c.get(Repo.outbox)))
-    .provide(Repo.channels, (c) => new InMemoryChannelRepository(c.get(Repo.videos)))
+    .provide(Repo.channelHandleHistory, () => new InMemoryChannelHandleHistoryRepository())
+    .provide(
+      Repo.channels,
+      (c) => new InMemoryChannelRepository(c.get(Repo.videos), c.get(Repo.channelHandleHistory))
+    )
     .provide(Repo.events, () => new InMemoryEventRepository())
     .provide(Repo.channelAudit, () => new InMemoryChannelAuditRepository())
     .provide(
@@ -214,15 +220,6 @@ export function graph(): Container {
         })
     )
     .provide(
-      Repo.screenings,
-      (c) =>
-        new InMemoryScreeningRepository({
-          videos: c.get(Repo.videos),
-          events: c.get(Repo.events),
-        })
-    )
-    .provide(Repo.fingerprints, () => new InMemoryFingerprintRepository())
-    .provide(
       Repo.clips,
       (c) =>
         new InMemoryClipRepository({
@@ -231,6 +228,16 @@ export function graph(): Container {
         })
     )
     .provide(Repo.channelFeatured, (c) => new InMemoryChannelFeaturedRepository(c.get(Repo.videos)))
+    .provide(Repo.channelPages, (c) => new InMemoryChannelPageRepository(c.get(Repo.videos)))
+    .provide(
+      Repo.channelImages,
+      (c) =>
+        new InMemoryChannelImageRepository({
+          channels: c.get(Repo.channels),
+          audit: c.get(Repo.channelAudit),
+          userEvents: c.get(Repo.userEvents),
+        })
+    )
     .provide(
       Repo.picks,
       (c) =>

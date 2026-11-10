@@ -6,7 +6,7 @@ import {
   canRevokeChannelInvite,
 } from '@vp/permissions';
 import { usePermissions } from '@vp/permissions-react';
-import { useActiveChannel } from '#app/features/team/hooks/use-active-channel';
+import { useActiveChannel } from '#app/hooks/use-active-channel';
 
 /** What the viewer may do to a member or an invite of the acting channel; a manager may touch neither the manager role nor a manager. */
 export function useRoleRules() {

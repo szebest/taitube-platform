@@ -9,6 +9,7 @@ import { useAutoplayNext } from '#app/features/watch/hooks/use-autoplay-next';
 import { useQueueNavigation } from '#app/features/watch/hooks/use-queue-navigation';
 import { usePlaybackQueue } from '#app/hooks/use-playback-queue';
 import { usePlaybackPreference } from '#app/lib/preferences/device-preferences-provider';
+import { playlistQueryOptions } from '#app/lib/query-keys/library-keys';
 import { relatedQueryOptions } from '#app/lib/query-keys/related-keys';
 import { QueueVideoRow } from '../queue-video-row/queue-video-row';
 
@@ -28,6 +29,14 @@ export function WatchQueue() {
   const { videos, playlistId, shuffle, repeat, reorder, remove, setModes } = usePlaybackQueue();
   const { open } = useQueueNavigation();
   const theater = usePlayerTheater();
+
+  const { data: playlist } = useQuery({
+    ...playlistQueryOptions(api, playlistId ?? ''),
+    enabled: playlistId !== undefined,
+  });
+  const episodes = new Map(
+    playlist?.kind === 'series' ? playlist.items.map((item) => [item.videoId, item.episode]) : []
+  );
 
   const position = videos.findIndex(({ id }) => id === videoId) + 1;
   const recommended = related?.items.filter(({ id }) => id !== videoId) ?? [];
@@ -84,6 +93,7 @@ export function WatchQueue() {
                 video={queued}
                 current={queued.id === videoId}
                 playlist={playlistId ? { id: playlistId, index } : undefined}
+                episode={episodes.get(queued.id) ?? undefined}
               />
             </Queue.Item>
           ))}

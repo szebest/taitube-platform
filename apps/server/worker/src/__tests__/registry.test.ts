@@ -107,6 +107,35 @@ describe('apps/server/worker: stage registry', () => {
     expect(expectOk(cached)).toEqual({ likesCount: 1, dislikesCount: 0 });
   });
 
+  it.each([
+    {
+      scenario: 'a channel image job',
+      data: {
+        type: 'channel-image',
+        uploadId: '018f0000-0000-7000-8000-000000000010',
+        channelId: '018f0000-0000-7000-8000-000000000011',
+        kind: 'avatar',
+        traceparent: '00-01',
+      },
+    },
+    {
+      scenario: 'a video thumbnail job without the type tag',
+      data: {
+        videoId: '018f0000-0000-7000-8000-000000000001',
+        generation: 1,
+        traceparent: '00-01',
+        sourceKey: 'raw/missing.mp4',
+        durationMs: 1000,
+      },
+    },
+  ])('reads $scenario on the thumbnail queue', async ({ data }) => {
+    const processor = STAGE_REGISTRY.thumbnail.createProcessor(deps());
+
+    const outcome = await processor({ id: 'thumbnail-job', name: 'thumbnail', data });
+
+    expect(outcome.ok || outcome.error.code !== 'VALIDATION_FAILED').toBe(true);
+  });
+
   it.each(STAGES)(
     'lets %s give up before the kubelet kills it, and not a moment sooner',
     (stage) => {

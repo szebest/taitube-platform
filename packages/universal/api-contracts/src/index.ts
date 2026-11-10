@@ -6,6 +6,7 @@ import * as bootstrap from './bootstrap';
 import * as captions from './captions';
 import * as categories from './categories';
 import * as channelFeatured from './channel-featured';
+import * as channelIdentity from './channel-identity';
 import * as channelPlaylists from './channel-playlists';
 import * as channelTeam from './channel-team';
 import * as channelVideos from './channel-videos';
@@ -54,6 +55,8 @@ export * from './bootstrap';
 export * from './captions';
 export * from './categories';
 export * from './channel-featured';
+export * from './channel-identity';
+export * from './channel-images';
 export * from './channel-playlists';
 export * from './channel-team';
 export * from './channel-videos';
@@ -108,6 +111,7 @@ export const contracts = {
   captions,
   categories,
   channelFeatured,
+  channelIdentity,
   channelPlaylists,
   channelTeam,
   channelVideos,
