@@ -11,7 +11,7 @@ export interface FrameSample {
  * Compares each pixel with its right neighbour, row by row, first comparison in the highest bit: a
  * set bit means the pixel is brighter than the one beside it.
  */
-export function dHash(pixels: Uint8Array): bigint {
+function dHash(pixels: Uint8Array): bigint {
   let hash = 0n;
   for (let y = 0; y < FRAME_HEIGHT; y++) {
     for (let x = 0; x < FRAME_WIDTH - 1; x++) {
@@ -23,7 +23,7 @@ export function dHash(pixels: Uint8Array): bigint {
   return hash;
 }
 
-export function mirrorFrame(pixels: Uint8Array): Uint8Array {
+function mirrorFrame(pixels: Uint8Array): Uint8Array {
   const mirrored = new Uint8Array(FRAME_BYTES);
   for (let y = 0; y < FRAME_HEIGHT; y++) {
     for (let x = 0; x < FRAME_WIDTH; x++) {
@@ -33,7 +33,7 @@ export function mirrorFrame(pixels: Uint8Array): Uint8Array {
   return mirrored;
 }
 
-export function meanLuma(pixels: Uint8Array): number {
+function meanLuma(pixels: Uint8Array): number {
   let sum = 0;
   for (const pixel of pixels) sum += pixel;
   return sum / pixels.length;

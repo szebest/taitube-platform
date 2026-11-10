@@ -4,7 +4,7 @@ import {
   InMemoryStorageClient,
 } from '@vp/adapters/in-memory';
 import type { QueueJob } from '@vp/core/ports';
-import type { FingerprintTools, FrameSample } from '@vp/fingerprint';
+import type { FingerprintTools } from '@vp/fingerprint';
 import type { ScreenJob } from '@vp/job-contracts';
 import { createLogger } from '@vp/logger';
 import { SEEDED, createMockJob } from '@vp/testing';
@@ -18,6 +18,8 @@ const LCG_MUL = 6364136223846793005n;
 const LCG_ADD = 1442695040888963407n;
 
 /** Frames of a pretend video: the same seed gives the same frames, another seed shares none. */
+type FrameSample = Awaited<ReturnType<FingerprintTools['sampleFrames']>>[number];
+
 export function framesOf(seed: number, count: number, from = 0): FrameSample[] {
   return Array.from({ length: count }, (_, index) => {
     const state = BigInt.asUintN(

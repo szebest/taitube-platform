@@ -1,4 +1,4 @@
-import { dHash, meanLuma, mirrorFrame, sampleFrame, splitFrames } from '../frame-hash';
+import { sampleFrame, splitFrames } from '../frame-hash';
 import { FRAME_BYTES } from '../frame-sampling-args';
 
 const gradient = (direction: 1 | -1): Uint8Array =>
@@ -7,13 +7,13 @@ const gradient = (direction: 1 | -1): Uint8Array =>
     return direction === 1 ? x * 20 : (8 - x) * 20;
   });
 
-describe('@vp/fingerprint: dHash', () => {
+describe('@vp/fingerprint: sampleFrame hash', () => {
   it.each([
     { name: 'a flat frame', pixels: new Uint8Array(FRAME_BYTES).fill(90), hash: 0n },
     { name: 'a frame darkening to the right', pixels: gradient(-1), hash: (1n << 64n) - 1n },
     { name: 'a frame brightening to the right', pixels: gradient(1), hash: 0n },
   ])('hashes $name', ({ pixels, hash }) => {
-    expect(dHash(pixels)).toBe(hash);
+    expect(sampleFrame(pixels).hash).toBe(hash);
   });
 
   it('sets the highest bit for the first comparison and the lowest for the last', () => {
@@ -22,36 +22,25 @@ describe('@vp/fingerprint: dHash', () => {
     const last = new Uint8Array(FRAME_BYTES);
     last[7 * 9 + 7] = 255;
 
-    expect(dHash(first)).toBe(1n << 63n);
-    expect(dHash(last)).toBe(1n);
+    expect(sampleFrame(first).hash).toBe(1n << 63n);
+    expect(sampleFrame(last).hash).toBe(1n);
   });
 
   it('ignores a uniform brightness shift', () => {
     const pixels = Uint8Array.from({ length: FRAME_BYTES }, (_, i) => (i * 37) % 100);
     const brighter = pixels.map((pixel) => pixel + 100);
 
-    expect(dHash(brighter)).toBe(dHash(pixels));
+    expect(sampleFrame(brighter).hash).toBe(sampleFrame(pixels).hash);
   });
 });
 
-describe('@vp/fingerprint: mirrorFrame', () => {
-  it('reverses every row', () => {
-    const pixels = Uint8Array.from({ length: FRAME_BYTES }, (_, i) => i);
-
-    const mirrored = mirrorFrame(pixels);
-
-    expect([...mirrored.slice(0, 9)]).toEqual([8, 7, 6, 5, 4, 3, 2, 1, 0]);
-    expect([...mirrored.slice(63, 72)]).toEqual([71, 70, 69, 68, 67, 66, 65, 64, 63]);
-  });
-
-  it('is its own inverse', () => {
-    const pixels = Uint8Array.from({ length: FRAME_BYTES }, (_, i) => (i * 7) % 256);
-
-    expect(mirrorFrame(mirrorFrame(pixels))).toEqual(pixels);
+describe('@vp/fingerprint: sampleFrame mirror', () => {
+  it('hashes the frame with every row reversed', () => {
+    expect(sampleFrame(gradient(1)).mirroredHash).toBe(sampleFrame(gradient(-1)).hash);
   });
 });
 
-describe('@vp/fingerprint: meanLuma', () => {
+describe('@vp/fingerprint: sampleFrame luma', () => {
   it.each([
     { name: 'black', pixels: new Uint8Array(FRAME_BYTES), luma: 0 },
     { name: 'white', pixels: new Uint8Array(FRAME_BYTES).fill(255), luma: 255 },
@@ -61,19 +50,18 @@ describe('@vp/fingerprint: meanLuma', () => {
       luma: 50,
     },
   ])('averages $name', ({ pixels, luma }) => {
-    expect(meanLuma(pixels)).toBe(luma);
+    expect(sampleFrame(pixels).luma).toBe(luma);
   });
 });
 
 describe('@vp/fingerprint: sampleFrame', () => {
   it('hashes the frame and its mirror image, so a flipped copy is found by the second', () => {
     const pixels = gradient(-1);
-    const flipped = sampleFrame(mirrorFrame(pixels));
+    const flipped = sampleFrame(gradient(1));
     const original = sampleFrame(pixels);
 
     expect(flipped.mirroredHash).toBe(original.hash);
     expect(original.mirroredHash).toBe(flipped.hash);
-    expect(original.luma).toBe(meanLuma(pixels));
   });
 });
 

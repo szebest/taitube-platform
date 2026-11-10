@@ -26,7 +26,7 @@ export interface DecodeClassifierFramesOptions {
  * `-ss` before `-i` seeks to the nearest keyframe first, so a frame costs a short decode, not a pass
  * over the video.
  */
-export function buildClassifierFrameArgs(options: {
+function buildClassifierFrameArgs(options: {
   sourcePath: string;
   timestampSeconds: number;
   size: number;

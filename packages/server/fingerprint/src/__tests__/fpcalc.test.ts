@@ -1,59 +1,8 @@
-import { chmod, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { chmod, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { ErrorCodes, PermanentError } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
-import { buildFpcalcArgs, parseFpcalcOutput, runFpcalc } from '../fpcalc';
-
-describe('@vp/fingerprint: buildFpcalcArgs', () => {
-  it.each([
-    { durationSeconds: 600, length: '600' },
-    { durationSeconds: 600.2, length: '601' },
-    { durationSeconds: 0.4, length: '1' },
-  ])(
-    'fingerprints the whole $durationSeconds s as -length $length',
-    ({ durationSeconds, length }) => {
-      expect(buildFpcalcArgs({ sourcePath: 'a.mp4', durationSeconds })).toEqual([
-        '-raw',
-        '-json',
-        '-length',
-        length,
-        'a.mp4',
-      ]);
-    }
-  );
-});
-
-describe('@vp/fingerprint: parseFpcalcOutput', () => {
-  it('reads the duration and the raw terms, folding unsigned values to signed', () => {
-    const output = JSON.stringify({ duration: 12.5, fingerprint: [1, 4294967295, 2147483648] });
-
-    expect(expectOk(parseFpcalcOutput(output))).toEqual({
-      durationSeconds: 12.5,
-      terms: [1, -1, -2147483648],
-    });
-  });
-
-  it('accepts a video without audio as an empty sequence', () => {
-    expect(expectOk(parseFpcalcOutput('{"duration":0,"fingerprint":[]}')).terms).toEqual([]);
-  });
-
-  it.each([
-    { name: 'text that is not JSON', output: 'ERROR: Error decoding audio frame' },
-    {
-      name: 'a base64 fingerprint where raw terms are expected',
-      output: '{"duration":1,"fingerprint":"AQAAA"}',
-    },
-    { name: 'a missing duration', output: '{"fingerprint":[1]}' },
-    { name: 'a negative duration', output: '{"duration":-1,"fingerprint":[1]}' },
-    { name: 'a fractional term', output: '{"duration":1,"fingerprint":[1.5]}' },
-    { name: 'nothing', output: '' },
-  ])('fails permanently on $name', ({ output }) => {
-    expect(expectErr(parseFpcalcOutput(output))).toMatchObject({
-      code: ErrorCodes.CORRUPT_CONTAINER,
-    });
-  });
-});
+import { runFpcalc } from '../fpcalc';
 
 const FAKE_FPCALC = `#!/bin/sh
 case "$(cat "$(dirname "$0")/mode")" in
@@ -61,16 +10,18 @@ case "$(cat "$(dirname "$0")/mode")" in
   garbage) echo 'not json' ;;
   fail) echo "ERROR: could not open the file" >&2; exit 2 ;;
   args) printf '{"duration": 1, "fingerprint": [%s]}\\n' "$#" ;;
+  record) echo "$@" > "$(dirname "$0")/argv"; printf '{"duration": 1, "fingerprint": []}\\n' ;;
+  file) cat "$(dirname "$0")/out" ;;
 esac
 `;
 
 describe('@vp/fingerprint: runFpcalc', () => {
   let dir: string;
-  const run = () =>
+  const run = (durationSeconds = 3) =>
     runFpcalc({
       fpcalcPath: join(dir, 'fpcalc'),
-      sourcePath: join(dir, 'in.mp4'),
-      durationSeconds: 3,
+      sourcePath: 'a.mp4',
+      durationSeconds,
       timeoutMs: 5000,
       limits: { killGraceMs: 100, stderrTailLines: 10 },
     });
@@ -107,5 +58,56 @@ describe('@vp/fingerprint: runFpcalc', () => {
     await writeFile(join(dir, 'mode'), 'fail');
 
     await expect(run()).rejects.toThrow(/exit code 2/);
+  });
+
+  it.each([
+    { durationSeconds: 600, length: '600' },
+    { durationSeconds: 600.2, length: '601' },
+    { durationSeconds: 0.4, length: '1' },
+  ])(
+    'fingerprints the whole $durationSeconds s as -length $length',
+    async ({ durationSeconds, length }) => {
+      await writeFile(join(dir, 'mode'), 'record');
+
+      await run(durationSeconds);
+
+      expect((await readFile(join(dir, 'argv'), 'utf8')).trim()).toBe(
+        `-raw -json -length ${length} a.mp4`
+      );
+    }
+  );
+
+  it('reads the duration and the raw terms, folding unsigned values to signed', async () => {
+    await writeFile(join(dir, 'mode'), 'file');
+    await writeFile(
+      join(dir, 'out'),
+      `${JSON.stringify({ duration: 12.5, fingerprint: [1, 4294967295, 2147483648] })}\n`
+    );
+
+    expect(await run()).toEqual({ durationSeconds: 12.5, terms: [1, -1, -2147483648] });
+  });
+
+  it('accepts a video without audio as an empty sequence', async () => {
+    await writeFile(join(dir, 'mode'), 'file');
+    await writeFile(join(dir, 'out'), '{"duration":0,"fingerprint":[]}\n');
+
+    expect((await run()).terms).toEqual([]);
+  });
+
+  it.each([
+    { name: 'text that is not JSON', output: 'ERROR: Error decoding audio frame' },
+    {
+      name: 'a base64 fingerprint where raw terms are expected',
+      output: '{"duration":1,"fingerprint":"AQAAA"}',
+    },
+    { name: 'a missing duration', output: '{"fingerprint":[1]}' },
+    { name: 'a negative duration', output: '{"duration":-1,"fingerprint":[1]}' },
+    { name: 'a fractional term', output: '{"duration":1,"fingerprint":[1.5]}' },
+    { name: 'nothing', output: '' },
+  ])('fails permanently as a corrupt container on $name', async ({ output }) => {
+    await writeFile(join(dir, 'mode'), 'file');
+    await writeFile(join(dir, 'out'), `${output}\n`);
+
+    await expect(run()).rejects.toMatchObject({ code: ErrorCodes.CORRUPT_CONTAINER });
   });
 });

@@ -43,7 +43,7 @@ export function frameBands(hash: bigint): [number, number, number, number] {
  * hashes to in every band, and what silence fingerprints to. Such a value matches thousands of
  * unrelated videos, so a lookup leaves it out.
  */
-export function isLowEntropy(value: number, width: number, minSetBits: number): boolean {
+function isLowEntropy(value: number, width: number, minSetBits: number): boolean {
   const set = popcount32(value);
   return set < minSetBits || width - set < minSetBits;
 }

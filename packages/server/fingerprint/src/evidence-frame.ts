@@ -12,7 +12,7 @@ export interface EvidenceFrameOptions {
 }
 
 /** A small JPEG of the frame at a moment, for a moderator to see why a video was held. */
-export function buildEvidenceFrameArgs(
+function buildEvidenceFrameArgs(
   options: Pick<EvidenceFrameOptions, 'sourcePath' | 'timestampSeconds' | 'widthPixels'>
 ): string[] {
   return [

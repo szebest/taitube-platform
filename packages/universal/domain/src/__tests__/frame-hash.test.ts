@@ -1,7 +1,6 @@
 import {
   frameBands,
   hammingDistance,
-  isLowEntropy,
   isLowEntropyTerm,
   lookupBands,
   popcount32,
@@ -66,28 +65,13 @@ describe('@vp/domain: popcount32', () => {
   });
 });
 
-describe('@vp/domain: isLowEntropy', () => {
-  it.each([
-    { name: 'a zero band', value: 0, width: 16, low: true },
-    { name: 'an all-ones band', value: 0xffff, width: 16, low: true },
-    { name: 'a band with one set bit', value: 0x0100, width: 16, low: true },
-    { name: 'a band with one clear bit', value: 0xfffb, width: 16, low: true },
-    { name: 'a band with two set bits', value: 0x0101, width: 16, low: false },
-    { name: 'a mixed band', value: 0x4567, width: 16, low: false },
-    { name: 'a zero term', value: 0, width: 32, low: true },
-    { name: 'an all-ones term', value: -1, width: 32, low: true },
-    { name: 'a term with three set bits', value: 0b111, width: 32, low: true },
-    { name: 'a term with three clear bits', value: ~0b111, width: 32, low: true },
-    { name: 'a mixed term', value: 0x1234_5678, width: 32, low: false },
-  ])('judges $name', ({ value, width, low }) => {
-    expect(isLowEntropy(value, width, width === 16 ? 2 : 4)).toBe(low);
-  });
-});
-
 describe('@vp/domain: isLowEntropyTerm', () => {
   it.each([
     { name: 'a zero term', term: 0, low: true },
     { name: 'an all-ones term', term: -1, low: true },
+    { name: 'a term with three set bits', term: 0b111, low: true },
+    { name: 'a term with three clear bits', term: ~0b111, low: true },
+    { name: 'a term with four set bits', term: 0b1111, low: false },
     { name: 'a mixed term', term: 0x1234_5678, low: false },
   ])('judges $name', ({ term, low }) => {
     expect(isLowEntropyTerm(term, 4)).toBe(low);
@@ -99,6 +83,15 @@ describe('@vp/domain: lookupBands', () => {
     const bands = lookupBands([0n, 0x0123_4567_89ab_cdefn, 0x0123_4567_89ab_cdefn, -1n], 2);
 
     expect(bands.map((set) => [...set])).toEqual([[0xcdef], [0x89ab], [0x4567], [0x0123]]);
+  });
+
+  it.each([
+    { name: 'a band with one set bit', band: 0x0100, kept: false },
+    { name: 'a band with one clear bit', band: 0xfffb, kept: false },
+    { name: 'a band with two set bits', band: 0x0101, kept: true },
+    { name: 'a mixed band', band: 0x4567, kept: true },
+  ])('judges $name against two set bits', ({ band, kept }) => {
+    expect(lookupBands([BigInt(band)], 2)[0]?.has(band)).toBe(kept);
   });
 
   it('is empty for no hashes', () => {

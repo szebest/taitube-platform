@@ -1,5 +1,5 @@
 import type { ScreeningMetadata } from '../metadata-text';
-import { screenMetadata, screenMetadataInLocales } from '../screen-metadata.rule';
+import { screenMetadataInLocales } from '../screen-metadata.rule';
 import { THRESHOLDS } from './thresholds';
 
 const clean: ScreeningMetadata = {
@@ -10,9 +10,14 @@ const clean: ScreeningMetadata = {
   recentTitles: [],
 };
 
-describe('@vp/domain-rules: screenMetadata', () => {
+const screenInLocale = (metadata: ScreeningMetadata) => {
+  const { locale, ...text } = metadata;
+  return screenMetadataInLocales(text, [locale], THRESHOLDS);
+};
+
+describe('@vp/domain-rules: screenMetadataInLocales, one language', () => {
   it('finds nothing in a clean text', () => {
-    expect(screenMetadata(clean, THRESHOLDS)).toBeNull();
+    expect(screenInLocale(clean)).toBeNull();
   });
 
   it.each([
@@ -38,13 +43,13 @@ describe('@vp/domain-rules: screenMetadata', () => {
       score: 1,
     },
   ])('scores $name as $score', ({ overrides, score }) => {
-    const finding = screenMetadata({ ...clean, ...overrides }, THRESHOLDS);
+    const finding = screenInLocale({ ...clean, ...overrides });
 
     expect(finding).toMatchObject({ reason: 'METADATA_SPAM', score });
   });
 
   it('keeps the signals and the measures as evidence', () => {
-    const finding = screenMetadata({ ...clean, title: 'Shit', recentTitles: ['shit'] }, THRESHOLDS);
+    const finding = screenInLocale({ ...clean, title: 'Shit', recentTitles: ['shit'] });
 
     expect(finding?.evidence).toMatchObject({
       signals: ['sameTitle'],
@@ -54,7 +59,7 @@ describe('@vp/domain-rules: screenMetadata', () => {
   });
 });
 
-describe('@vp/domain-rules: screenMetadataInLocales', () => {
+describe('@vp/domain-rules: screenMetadataInLocales, several languages', () => {
   const { locale: _locale, ...text } = clean;
 
   it.each([

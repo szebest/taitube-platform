@@ -10,7 +10,7 @@ const SCORE_PRECISION = 1e4;
  * same weight to one `METADATA_SPAM` finding, so one hit is a flag and enough of them reach the hold
  * score; `decideScreening` makes that call. No hit is no finding.
  */
-export function screenMetadata(
+function screenMetadata(
   metadata: ScreeningMetadata,
   thresholds: ScreeningThresholds
 ): ScreeningFinding | null {

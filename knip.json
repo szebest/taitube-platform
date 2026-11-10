@@ -113,10 +113,10 @@
       "vitest": ["vitest.config.ts", "integration.config.ts"]
     },
     "packages/server/adapters": {
+      "project": ["**/*.ts!", "!**/__tests__/**!"],
       "vitest": ["vitest.config.ts", "integration.config.ts"]
     },
     "packages/server/fingerprint": {
-      "includeEntryExports": false,
       "project": ["src/**/*.ts!", "!src/**/__tests__/**!"]
     },
     "packages/server/whisper": {

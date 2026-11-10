@@ -1,18 +1,20 @@
 import { chmod, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { buildClassifierFrameArgs, sampleClassifierFrames } from '../decode-classifier-frames';
+import { sampleClassifierFrames } from '../decode-classifier-frames';
 
 const SIZE = 4;
 
 /** Stands in for ffmpeg: logs the `-ss` it was given and prints a flat frame of that many bytes, none past 30 s. */
 const FAKE_FFMPEG = `#!/bin/sh
 dir="$(dirname "$0")"
+ARGS="$*"
 while [ $# -gt 0 ]; do
   if [ "$1" = "-ss" ]; then at="$2"; fi
   shift
 done
 echo "$at" >> "$dir/calls"
+echo "$ARGS" > "$dir/argv"
 if [ "\${at%.*}" -gt 30 ]; then exit 0; fi
 i=0; while [ $i -lt 48 ]; do printf '\\144'; i=$((i+1)); done
 `;
@@ -79,13 +81,10 @@ describe('@vp/fingerprint: classifier frames', () => {
     await expect(sampleClassifierFrames(options([0]))).rejects.toThrow(/decode input container/);
   });
 
-  it('seeks before the input, takes a single frame and scales it to the classifier size', () => {
-    const args = buildClassifierFrameArgs({
-      sourcePath: 'a.mp4',
-      timestampSeconds: 7.5,
-      size: 384,
-    });
+  it('seeks before the input, takes a single frame and scales it to the classifier size', async () => {
+    await sampleClassifierFrames({ ...options([7]), size: 384 });
 
+    const args = (await readFile(join(dir, 'argv'), 'utf8')).trim().split(' ');
     expect(args.indexOf('-ss')).toBeLessThan(args.indexOf('-i'));
     expect(args).toContain('scale=384:384:flags=bilinear');
     expect(args.slice(args.indexOf('-frames:v'), args.indexOf('-frames:v') + 2)).toEqual([

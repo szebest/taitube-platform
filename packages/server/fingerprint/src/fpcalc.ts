@@ -14,16 +14,13 @@ export interface Chromaprint {
   terms: number[];
 }
 
-export type FpcalcOutputInvalid = Failure<typeof ErrorCodes.CORRUPT_CONTAINER>;
+type FpcalcOutputInvalid = Failure<typeof ErrorCodes.CORRUPT_CONTAINER>;
 
 /**
  * `-length` is the whole duration, rounded up: fpcalc stops at 120 seconds by default, and a
  * fingerprint of the first two minutes cannot match a trimmed copy.
  */
-export function buildFpcalcArgs(options: {
-  sourcePath: string;
-  durationSeconds: number;
-}): string[] {
+function buildFpcalcArgs(options: { sourcePath: string; durationSeconds: number }): string[] {
   return [
     '-raw',
     '-json',
@@ -33,7 +30,7 @@ export function buildFpcalcArgs(options: {
   ];
 }
 
-export function parseFpcalcOutput(output: string): Result<Chromaprint, FpcalcOutputInvalid> {
+function parseFpcalcOutput(output: string): Result<Chromaprint, FpcalcOutputInvalid> {
   const json = tryCatch(
     (): unknown => JSON.parse(output),
     (): FpcalcOutputInvalid => ({
