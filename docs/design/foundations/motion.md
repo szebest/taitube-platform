@@ -72,7 +72,7 @@ forced by `prefers-reduced-motion`.
 | Theme cross-fade | the viewer switches theme or mode | whole-page cross-fade through the View Transitions API | `cinematic` | `standard` | none: instant swap |
 | Live pulse | live badge, live dot, always while live | opacity 1 to 0.35 and back, 1.6 s loop (stand-in) | loop | ease in out | static dot and the `LIVE` label, no animation |
 | Skeleton shimmer | while loading | background position sweep, 1.4 s linear loop (stand-in) | loop | linear | static `tint` fill, no sweep |
-| Ambient glow | new video frame sample | opacity and colour of a blurred layer, sampled at 10 to 15 fps | continuous | linear | static glow from the poster |
+| Ambient glow | a page with a stage (the watch page) mounts; a new frame sample | one page-level layer on the `ambient` role, below the header and rail, sized from the stage's box (a quarter of it past each edge) and clipped by the page; opacity and colour of a blurred layer, sampled at 12 fps | continuous | linear | static glow from the first sample; none under save-data, 2g or `data-ambient=off` |
 | Chip bar, shelf scroll | wheel, drag, chevron | scroll with snap | native | native | native (not a transition) |
 
 Fallback where the View Transitions API is missing: the existing `data-theme-switching` pause (transitions are

@@ -3,7 +3,7 @@ import type { AppShellRailState, AppShellVariant } from './types';
 
 export const appShellStyles = tv({
   slots: {
-    root: 'group/shell grid min-h-dvh grid-cols-[auto_minmax(0,1fr)] grid-rows-[auto_1fr] bg-bg font-sans text-fg',
+    root: 'group/shell relative isolate grid min-h-dvh grid-cols-[auto_minmax(0,1fr)] grid-rows-[auto_1fr] bg-bg font-sans text-fg',
     skipLink:
       'sr-only focus:not-sr-only focus:fixed focus:start-inline focus:top-inline focus:z-popover focus:rounded-control focus:bg-raised focus:px-inset-control focus:py-inline focus-ring',
     header:
@@ -15,7 +15,7 @@ export const appShellStyles = tv({
     searchLabel: 'sr-only medium:not-sr-only medium:truncate',
     searchHint: 'ms-auto hidden medium:inline-flex',
     headerEnd: 'flex shrink-0 items-center gap-inline',
-    rail: 'group/rail sticky top-header z-rail hidden h-[calc(100dvh-var(--layout-header))] bg-bg flex-col gap-inline overflow-y-auto p-inline medium:flex group-data-[variant=immersive]/shell:hidden',
+    rail: 'group/rail sticky top-header z-rail hidden h-[calc(100dvh-var(--layout-header))] bg-bg/90 flex-col gap-inline overflow-y-auto p-inline medium:flex group-data-[variant=immersive]/shell:hidden',
     drawerNav: 'group/rail flex flex-col gap-inline pb-stack',
     group: 'flex flex-col gap-inline',
     groupHeading:

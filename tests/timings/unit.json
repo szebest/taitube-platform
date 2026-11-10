@@ -460,7 +460,7 @@
   "apps/client/web/src/hooks/__tests__/use-copy-link.dom.test.tsx": 2217,
   "apps/client/web/src/hooks/__tests__/use-debounced-value.dom.test.ts": 1439,
   "apps/client/web/src/hooks/__tests__/use-duration-text.dom.test.tsx": 2144,
-  "apps/client/web/src/features/shorts/hooks/__tests__/use-reduced-motion.dom.test.ts": 1294,
+  "apps/client/web/src/hooks/__tests__/use-reduced-motion.dom.test.ts": 1294,
   "apps/client/web/src/features/watch/hooks/__tests__/use-autoplay-next.dom.test.tsx": 4316,
   "apps/client/web/src/hooks/__tests__/use-stored-state.test.tsx": 360,
   "apps/client/web/src/hooks/__tests__/use-video-actions.dom.test.tsx": 2269,

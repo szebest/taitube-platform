@@ -3,6 +3,7 @@ import { useT } from '@vp/intl-react';
 import { useLayoutMaxWidth } from '@vp/queries';
 import { Logo, ThemeMenu } from '@vp/ui';
 import { type ReactNode, useState } from 'react';
+import { AmbientLayer } from '#app/components/shell/ambient-layer';
 import { AppShell } from '#app/components/shell/app-shell';
 import { useImmersive } from '#app/features/shell/hooks/use-immersive';
 import { type SidebarState, saveSidebarState } from '#app/features/shell/utils/sidebar-state';
@@ -50,6 +51,7 @@ export function RootShell({
         railState={state === 'expanded' ? 'open' : 'collapsed'}
         onRailStateChange={handleRailStateChange}
       >
+        <AmbientLayer />
         <AppShell.Header
           logo={
             <Link to="/" aria-label={tOr('shell.brandHome', {}, '')} className="flex">

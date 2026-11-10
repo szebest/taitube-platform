@@ -12,6 +12,7 @@ import { AppCommandPalette } from '#app/features/search';
 import { RootShell } from '#app/features/shell';
 import { LazyGlobalNowPlayingBar, PlaybackSessionProvider } from '#app/features/watch';
 import { LazyDevtools } from '#app/integrations/devtools/devtools.lazy';
+import { AmbientGlowProvider } from '#app/lib/ambient/ambient-glow';
 import { CommandPaletteProvider } from '#app/lib/command-palette/command-palette-store';
 import { API_BASE_URL, OTEL_TRACES_URL } from '#app/lib/config';
 import { DevicePreferencesProvider } from '#app/lib/preferences/device-preferences-provider';
@@ -37,31 +38,33 @@ export function AppLayout() {
                   <PreferencesSync>
                     <PlaybackSessionProvider>
                       <CommandPaletteProvider>
-                        <RootShell
-                          sidebar={sidebarState}
-                          account={<AccountMenu />}
-                          actions={<HeaderNotificationCentre />}
-                          notices={
-                            <>
-                              <OfflineBanner />
-                              <InstallPrompt />
-                            </>
-                          }
-                          nowPlaying={<LazyGlobalNowPlayingBar />}
-                          overlays={
-                            <>
-                              <AppCommandPalette />
-                              <UrlModal.WhenOpened id="save-to-playlist">
-                                <LazySaveToPlaylistDialog />
-                              </UrlModal.WhenOpened>
-                              <UrlModal.WhenOpened id="new-playlist">
-                                <LazyNewPlaylistDialog />
-                              </UrlModal.WhenOpened>
-                              <UpdatePrompt />
-                              <QueuedChangesSync />
-                            </>
-                          }
-                        />
+                        <AmbientGlowProvider>
+                          <RootShell
+                            sidebar={sidebarState}
+                            account={<AccountMenu />}
+                            actions={<HeaderNotificationCentre />}
+                            notices={
+                              <>
+                                <OfflineBanner />
+                                <InstallPrompt />
+                              </>
+                            }
+                            nowPlaying={<LazyGlobalNowPlayingBar />}
+                            overlays={
+                              <>
+                                <AppCommandPalette />
+                                <UrlModal.WhenOpened id="save-to-playlist">
+                                  <LazySaveToPlaylistDialog />
+                                </UrlModal.WhenOpened>
+                                <UrlModal.WhenOpened id="new-playlist">
+                                  <LazyNewPlaylistDialog />
+                                </UrlModal.WhenOpened>
+                                <UpdatePrompt />
+                                <QueuedChangesSync />
+                              </>
+                            }
+                          />
+                        </AmbientGlowProvider>
                       </CommandPaletteProvider>
                     </PlaybackSessionProvider>
                   </PreferencesSync>

@@ -88,6 +88,8 @@ Each row has a fixture proving it fires; the list is [ARCHITECTURE.md section 6]
 - Token values are declared only under `ui/src/tokens/` and `ui/src/themes/`, and only the registry imports them.
 - No raw `z-<n>`, `z-[<n>]`, `-z-<n>`, `zIndex` or `z-index`: a layer is a role of `scale.z`
   ([foundations/shape-elevation.md](../design/foundations/shape-elevation.md#layering)).
+- The ambient glow is one layer on the `ambient` role, drawn by the shell behind the header and rail from the stage a
+  page registers (`useAmbientGlow`); no page paints a glow of its own.
 - Chrome is never selectable and content always is, by one `user-select` rule in `base.css`; see
   [Selectable text](#selectable-text).
 - No stylesheet outside `@vp/ui`'s styles, no CSS module and no SCSS.
