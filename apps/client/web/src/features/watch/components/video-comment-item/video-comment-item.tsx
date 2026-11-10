@@ -3,12 +3,7 @@ import type { CommentView } from '@vp/api-contracts';
 import { threadRootId } from '@vp/domain';
 import { publishedAt } from '@vp/intl';
 import { useFormat, useT } from '@vp/intl-react';
-import {
-  canDeleteComment,
-  canHeartComment,
-  canReportComment,
-  canUpdateComment,
-} from '@vp/permissions';
+import { canHeartComment } from '@vp/permissions';
 import { useCan } from '@vp/permissions-react';
 import {
   SectionBoundary,
@@ -18,7 +13,7 @@ import {
   videoQueryOptions,
 } from '@vp/queries';
 import { unwrapOr } from '@vp/result';
-import { DropdownMenu, Icon, useUiCopy } from '@vp/ui';
+import { useUiCopy } from '@vp/ui';
 import { Suspense, useEffect, useEffectEvent, useState } from 'react';
 import { CommentItem, CommentItemSkeleton } from '#app/components/discussion/comment-item';
 import { usePlayerSeek } from '#app/components/player/taitube-player';
@@ -30,6 +25,7 @@ import { type DescriptionToken, tokenizeDescription } from '#app/features/watch/
 import { repliesQueryOptions } from '#app/lib/query-keys/comment-keys';
 import { CommentEditor } from '../comment-editor/comment-editor';
 import { LazyReportCommentDialog } from '../report-comment-dialog/report-comment-dialog.lazy';
+import { VideoCommentMenu } from '../video-comment-menu/video-comment-menu';
 
 type Mode = 'view' | 'editing' | 'replying';
 
@@ -144,7 +140,7 @@ export function VideoCommentItem({
   const { tOr } = useT();
   const { format } = useFormat();
   const showFailure = useFailureToast();
-  const { reply: replyLabel, delete: deleteLabel } = useUiCopy();
+  const { reply: replyLabel } = useUiCopy();
   const [mode, setMode] = useState<Mode>('view');
   const [ownExpanded, setOwnExpanded] = useState(false);
   const expanded = heldExpanded ?? ownExpanded;
@@ -165,12 +161,8 @@ export function VideoCommentItem({
   const deleteComment = useDeleteComment(comment.id);
   const postReply = usePostComment(comment.videoId);
   const heartComment = useHeartComment();
-  const target = { id: comment.id, authorId: comment.author.userId };
   const canReply = useCan('create', 'Comment');
-  const canEdit = useCan(canUpdateComment, { comment: target });
-  const canDelete = useCan(canDeleteComment, { comment: target, videoOwnerId: video.ownerId });
   const canHeart = useCan(canHeartComment, { videoOwnerId: video.ownerId });
-  const canReport = useCan(canReportComment) && !canEdit;
 
   const level = comment.parentId === null ? 'comment' : 'reply';
   const state = deleteComment.isSuccess ? 'deleted' : mode === 'editing' ? 'editing' : 'view';
@@ -239,28 +231,13 @@ export function VideoCommentItem({
       <CommentItem.Actions>
         <CommentItem.Heart hearted={hearted} onToggle={canHeart ? toggleHeart : undefined} />
         {canReply && <CommentItem.Reply onClick={() => setMode('replying')} />}
-        {(canEdit || canDelete || canReport) && (
-          <CommentItem.Menu>
-            {canEdit && (
-              <DropdownMenu.Item onSelect={() => setMode('editing')}>
-                <Icon name="edit" />
-                {tOr('watch.editComment', {}, '')}
-              </DropdownMenu.Item>
-            )}
-            {canDelete && (
-              <DropdownMenu.Item tone="danger" onSelect={removeComment}>
-                <Icon name="trash" />
-                {deleteLabel}
-              </DropdownMenu.Item>
-            )}
-            {canReport && (
-              <DropdownMenu.Item onSelect={openReport}>
-                <Icon name="alert" />
-                {tOr('watch.reportComment', {}, '')}
-              </DropdownMenu.Item>
-            )}
-          </CommentItem.Menu>
-        )}
+        <VideoCommentMenu
+          comment={comment}
+          videoOwnerId={video.ownerId}
+          onEdit={() => setMode('editing')}
+          onDelete={removeComment}
+          onReport={openReport}
+        />
       </CommentItem.Actions>
       {mode === 'replying' && state === 'view' && (
         <div className="col-start-2">
