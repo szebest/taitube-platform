@@ -13,7 +13,6 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 - [136: Front-end UI and feel overhaul, web and studio - layers, tokens, motion, sign-in prompt, settings, queue, mini player, shorts and the local demo login](136-frontend-ui-and-feel-overhaul-web-and-studio.md)
 - [138: Type-aware lint backlog, the twelve oxlint rules 110 left off](138-type-aware-lint-backlog.md)
 - [140: Watch parties - rooms on a shared clock, room roles, guests, the roster, lobby, chat, shared queue, invites, discovery and the Discord hand-off](140-watch-parties.md)
-- [145: Stories and visual baselines for the app kit folders that have none](145-kit-stories-and-visual-baselines.md)
 
 ## How to work a ticket (humans and agents)
 
@@ -181,7 +180,7 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 | 142 | [Discord party bridge - chat relayed both ways, a live party embed, Scheduled Events and role mapping](142-discord-party-bridge.md) | 5 - Developer experience & growth | M | 78, 140 | — | blocked |
 | 143 | [Watch party extras - play, memory, social, creator and safety features on top of the room engine](143-watch-party-extras.md) | 5 - Developer experience & growth | XL | 105, 111, 140, 141 | — | blocked |
 | 144 | [Invitee accept from the studio - pending invites, accept and decline, and leaving a team](144-invitee-accept-from-studio.md) | 5 - Developer experience & growth | M | 117 | — | done |
-| 145 | [Stories and visual baselines for the app kit folders that have none](145-kit-stories-and-visual-baselines.md) | 5 - Developer experience & growth | S | 131 | — | ready |
+| 145 | [Stories and visual baselines for the app kit folders that have none](145-kit-stories-and-visual-baselines.md) | 5 - Developer experience & growth | S | 131 | — | done |
 | 146 | [Word-level caption timestamps so per-cue edges meet 100 ms](146-word-level-caption-timestamps.md) | 5 - Developer experience & growth | S | 139 | — | blocked |
 
 > `in-progress` and `done` are set by hand; the rest derive from the blockers and are written back to each ticket: `ready` = all blockers done (the frontier) · `blocked` · `blocked-by-date` (blockers done, waiting for a date the ticket names; set by hand, reset to `blocked` while a blocker is open).
