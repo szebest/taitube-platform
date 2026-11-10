@@ -1,5 +1,10 @@
-import type { Account } from '@vp/api-contracts';
-import { getAccount, getPreferences, getUnreadNotificationCount } from '@vp/api-contracts';
+import type { Account, ChannelMembershipView } from '@vp/api-contracts';
+import {
+  getAccount,
+  getPreferences,
+  getUnreadNotificationCount,
+  listMyMemberships,
+} from '@vp/api-contracts';
 import type { UserContext } from '@vp/permissions';
 import { PermissionsProvider } from '@vp/permissions-react';
 import {
@@ -78,8 +83,11 @@ export function asViewer(viewer: UserContext | null): ComponentType<PropsWithChi
 /** The session cookie of a signed-in browser, as a request carries it. */
 export const SESSION = `${SESSION_COOKIE}=signed-in`;
 
-/** Signs this jsdom browser in as `viewer`: the session cookie, and the API naming them, with no saved preferences and nothing unread. */
-export function signInBrowser(viewer: Account = account()) {
+/** Signs this jsdom browser in as `viewer`: the session cookie, and the API naming them, with no saved preferences, nothing unread and the channels of `memberships`. */
+export function signInBrowser(
+  viewer: Account = account(),
+  memberships: ChannelMembershipView[] = []
+) {
   // oxlint-disable-next-line unicorn/no-document-cookie -- jsdom's jar is where the session cookie lives.
   document.cookie = `${SESSION}; path=/`;
   apiServer.use(
@@ -93,13 +101,15 @@ export function signInBrowser(viewer: Account = account()) {
         updatedAt: null,
       })
     ),
-    mockEndpoint(getUnreadNotificationCount, () => HttpResponse.json({ unreadCount: 0 }))
+    mockEndpoint(getUnreadNotificationCount, () => HttpResponse.json({ unreadCount: 0 })),
+    mockEndpoint(listMyMemberships, () => HttpResponse.json({ items: memberships }))
   );
   return mockEndpoint(getAccount, () => HttpResponse.json(viewer));
 }
 
-/** `dev-token serve` on this machine, minting the token of whichever persona is asked for. */
+/** `dev-token serve` on this machine, minting the token of whichever persona is asked for, and the API answering the signed-in persona with no channels. */
 export function devTokenServe() {
+  apiServer.use(mockEndpoint(listMyMemberships, () => HttpResponse.json({ items: [] })));
   return http.get(`${DEV_TOKEN_URL}/token`, ({ request }) =>
     HttpResponse.json({ token: `token-of-${new URL(request.url).searchParams.get('persona')}` })
   );

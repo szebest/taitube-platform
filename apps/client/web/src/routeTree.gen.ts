@@ -46,6 +46,7 @@ import { Route as AuthedSubscriptionsVideosRouteImport } from './routes/_authed/
 import { Route as SettingsAppearanceIndexRouteImport } from './routes/settings/appearance/index';
 import { Route as SettingsAppearanceAdvancedRouteImport } from './routes/settings/appearance/advanced';
 import { Route as UploadEditVideoIdRouteImport } from './routes/upload/edit.$videoId';
+import { Route as AuthedFeedYouModerationRouteImport } from './routes/_authed/feed.you_.moderation';
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -234,6 +235,11 @@ const UploadEditVideoIdRoute = UploadEditVideoIdRouteImport.update({
   path: '/upload/edit/$videoId',
   getParentRoute: () => rootRouteImport,
 } as any);
+const AuthedFeedYouModerationRoute = AuthedFeedYouModerationRouteImport.update({
+  id: '/feed/you_/moderation',
+  path: '/feed/you/moderation',
+  getParentRoute: () => AuthedRoute,
+} as any);
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute;
@@ -272,6 +278,7 @@ export interface FileRoutesByFullPath {
   '/upload/edit/$videoId': typeof UploadEditVideoIdRoute;
   '/subscriptions/': typeof AuthedSubscriptionsIndexRoute;
   '/settings/appearance/': typeof SettingsAppearanceIndexRoute;
+  '/feed/you/moderation': typeof AuthedFeedYouModerationRoute;
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute;
@@ -309,6 +316,7 @@ export interface FileRoutesByTo {
   '/upload/edit/$videoId': typeof UploadEditVideoIdRoute;
   '/subscriptions': typeof AuthedSubscriptionsIndexRoute;
   '/settings/appearance': typeof SettingsAppearanceIndexRoute;
+  '/feed/you/moderation': typeof AuthedFeedYouModerationRoute;
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport;
@@ -349,6 +357,7 @@ export interface FileRoutesById {
   '/upload/edit/$videoId': typeof UploadEditVideoIdRoute;
   '/_authed/subscriptions/': typeof AuthedSubscriptionsIndexRoute;
   '/settings/appearance/': typeof SettingsAppearanceIndexRoute;
+  '/_authed/feed/you_/moderation': typeof AuthedFeedYouModerationRoute;
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath;
@@ -388,7 +397,8 @@ export interface FileRouteTypes {
     | '/settings/appearance/advanced'
     | '/upload/edit/$videoId'
     | '/subscriptions/'
-    | '/settings/appearance/';
+    | '/settings/appearance/'
+    | '/feed/you/moderation';
   fileRoutesByTo: FileRoutesByTo;
   to:
     | '/'
@@ -425,7 +435,8 @@ export interface FileRouteTypes {
     | '/settings/appearance/advanced'
     | '/upload/edit/$videoId'
     | '/subscriptions'
-    | '/settings/appearance';
+    | '/settings/appearance'
+    | '/feed/you/moderation';
   id:
     | '__root__'
     | '/'
@@ -464,7 +475,8 @@ export interface FileRouteTypes {
     | '/settings/appearance/advanced'
     | '/upload/edit/$videoId'
     | '/_authed/subscriptions/'
-    | '/settings/appearance/';
+    | '/settings/appearance/'
+    | '/_authed/feed/you_/moderation';
   fileRoutesById: FileRoutesById;
 }
 export interface RootRouteChildren {
@@ -753,6 +765,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UploadEditVideoIdRouteImport;
       parentRoute: typeof rootRouteImport;
     };
+    '/_authed/feed/you_/moderation': {
+      id: '/_authed/feed/you_/moderation';
+      path: '/feed/you/moderation';
+      fullPath: '/feed/you/moderation';
+      preLoaderRoute: typeof AuthedFeedYouModerationRouteImport;
+      parentRoute: typeof AuthedRoute;
+    };
   }
 }
 
@@ -763,6 +782,7 @@ interface AuthedRouteChildren {
   AuthedFeedYouRoute: typeof AuthedFeedYouRoute;
   AuthedSubscriptionsVideosRoute: typeof AuthedSubscriptionsVideosRoute;
   AuthedSubscriptionsIndexRoute: typeof AuthedSubscriptionsIndexRoute;
+  AuthedFeedYouModerationRoute: typeof AuthedFeedYouModerationRoute;
 }
 
 const AuthedRouteChildren: AuthedRouteChildren = {
@@ -772,6 +792,7 @@ const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedFeedYouRoute: AuthedFeedYouRoute,
   AuthedSubscriptionsVideosRoute: AuthedSubscriptionsVideosRoute,
   AuthedSubscriptionsIndexRoute: AuthedSubscriptionsIndexRoute,
+  AuthedFeedYouModerationRoute: AuthedFeedYouModerationRoute,
 };
 
 const AuthedRouteWithChildren =

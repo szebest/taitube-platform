@@ -56,6 +56,7 @@ export function video(overrides: Partial<Video> = {}): Video {
     format: 'standard',
     progress: { overall: 100, byRendition: {} },
     renditions: [],
+    commentsEnabled: true,
     likesCount: 0,
     dislikesCount: 0,
     version: 3,
@@ -122,6 +123,8 @@ export function comment(overrides: Partial<CommentView> = {}): CommentView {
     likeCount: 0,
     heartedByCreator: false,
     replyCount: 0,
+    status: 'published',
+    moderation: null,
     author: {
       userId: COMMENT_AUTHOR_ID,
       channelId: null,

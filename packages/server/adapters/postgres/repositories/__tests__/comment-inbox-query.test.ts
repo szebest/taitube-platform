@@ -1,6 +1,7 @@
 import type { CommentThread } from '@vp/domain';
 import { PgDialect } from 'drizzle-orm/pg-core';
 import { creatorInboxFilterScope, toCreatorInboxComment } from '../comment-inbox-query';
+import { UNMODERATED } from './comment-row';
 
 const dialect = new PgDialect();
 
@@ -12,13 +13,14 @@ describe('comment inbox query', () => {
   it.each([
     { filter: 'unanswered' as const, mentions: ['not exists', 'answer.author_id'] },
     { filter: 'reported' as const, mentions: ['exists', 'comment_reports'] },
+    { filter: 'restricted' as const, mentions: ['exists', 'channel_user_restrictions'] },
   ])('narrows to $filter with a subquery', ({ filter, mentions }) => {
     const scope = creatorInboxFilterScope(filter, 'owner-1');
 
     const { sql, params } = dialect.sqlToQuery(scope ?? (undefined as never));
 
     for (const part of mentions) expect(sql).toContain(part);
-    expect(params).toEqual(filter === 'unanswered' ? ['owner-1'] : []);
+    expect(params).toEqual(filter === 'reported' ? [] : ['owner-1']);
   });
 
   it('keeps the video title out of the comment and puts it under video', () => {
@@ -36,6 +38,7 @@ describe('comment inbox query', () => {
       createdAt: at,
       updatedAt: at,
       deletedAt: null,
+      ...UNMODERATED,
       channelId: null,
       handle: null,
       displayName: null,

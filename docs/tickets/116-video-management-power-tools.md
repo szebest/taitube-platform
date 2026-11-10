@@ -8,7 +8,7 @@
 | Blocks | 119, 120, 121, 122 |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §3.2 Processing pipeline](../SDD.md#32-processing-pipeline-fan-out--fan-in) · [SDD §11 Security](../SDD.md#11-security) · [SDD ADR-24 Result-typed errors](../SDD.md#adr-24--result-typed-error-handling-domain-returns-the-edge-decides) |
 
-**Status:** blocked
+**Status:** ready
 
 > **Why.** [44](44-creator-studio-video-management-visibility.md) edits one video at a time with no way back, a mistake in
 > a published video means a new upload and a lost URL, comments and history, a private link cannot expire, nothing tells a

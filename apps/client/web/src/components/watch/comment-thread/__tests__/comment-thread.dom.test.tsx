@@ -98,6 +98,18 @@ describe('apps/client/web: CommentThread', () => {
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
+  it('shows the wait on a disabled submit button and ignores the shortcut until it is over', async () => {
+    const onSubmit = vi.fn();
+    renderThread({ composer: { value: 'Watched it twice.', onSubmit, wait: 'Wait 12 s' } });
+
+    await userEvent.click(screen.getByRole('textbox'));
+    await userEvent.keyboard('{Control>}{Enter}{/Control}');
+
+    expect(screen.getByRole('button', { name: 'Wait 12 s' })).toBeDisabled();
+    expect(screen.queryByRole('button', { name: 'Comment' })).not.toBeInTheDocument();
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
   it('describes the field with the reason a post failed', () => {
     renderThread({ composer: { value: 'Draft', error: 'Your comment was not posted.' } });
 

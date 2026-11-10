@@ -9,7 +9,8 @@ One comment: avatar, author, time, text, reactions and a reply control. It is a 
 ```
  ┌────┐ 1 PINNED BY CREATOR
  │ av │ 2 Ines Carvalho   3 3 days ago  4 (edited)
- └────┘ 5 The tram at 02:15 is the best sound design this year.
+ └────┘ 10 [Waiting for review] Contains a link   silent
+        5 The tram at 02:15 is the best sound design this year.
         6 [ Like 128 ] [ Dislike ]  7 [ Reply ]            8 [ ... ]
         9 View 14 replies
 ```
@@ -25,6 +26,7 @@ One comment: avatar, author, time, text, reactions and a reply control. It is a 
 | 7 | Reply | `Button` `ghost` fill, `sm` size |
 | 8 | Menu | edit, delete, report; only the actions the app lists |
 | 9 | Replies toggle | `accent-ink` button with the reply count |
+| 10 | Moderation line | only for `held` and `hidden`: a `Badge` ("Waiting for review" in `warning`, "Hidden by moderators" in `neutral`), the reason in `caption` `fg-muted` when the author was told one, and for a moderator a quiet italic "Silent" when the author was not told |
 
 ## Props
 
@@ -36,7 +38,9 @@ import type { SizeOption } from '@vp/design-tokens';
 import type { ReactionType } from '@vp/domain';
 
 export type CommentLevel = 'comment' | 'reply';
-export type CommentState = 'view' | 'editing' | 'pending' | 'failed' | 'deleted' | 'removed';
+export type CommentState =
+  | 'view' | 'editing' | 'pending' | 'failed' | 'deleted' | 'removed'
+  | 'held' | 'hidden';
 export type CommentReaction = ReactionType | null;
 export type CommentAvatarSize = Extract<SizeOption, 'sm' | 'md' | 'lg'>;
 ```
@@ -51,7 +55,11 @@ interface CommentItemReactionsProps {
   likes: string;                          // formatted by the app
   onChange: (next: CommentReaction) => void;
 }
-// Parts: CommentItem.Root, .Author, .Body, .Timecode, .Reactions, .Reply, .Menu, .Replies, .Pinned, .Failed
+// Parts: CommentItem.Root, .Author, .Body, .Timecode, .Reactions, .Reply, .Menu, .Replies, .Pinned, .Failed, .Moderation
+interface CommentItemModerationProps {
+  reason?: string;  // why, in the viewer's words, finished by the app; absent when the author is not told
+  silent?: boolean; // a moderator's view of an action the author was not told about
+}
 ```
 
 ```tsx
@@ -65,7 +73,7 @@ interface CommentItemReactionsProps {
 </CommentItem.Root>
 ```
 
-`state` is one enum for what would otherwise be five booleans. `failed` shows Retry through `<CommentItem.Failed onRetry onDelete />`; `editing` renders the editor passed as a child of `CommentItem.Body`; a pinned comment is `<CommentItem.Pinned />`. The avatar size follows `level` through a `CommentAvatarSize` map (`lg` for a comment, `sm` for a reply, `sm` on compact). Edit and delete are present only when the app passes them in `Menu`; the component does no permission check. Reaction, reply, creator, edited and read-more labels come from `useUiCopy()`.
+`state` is one enum for what would otherwise be five booleans. `failed` shows Retry through `<CommentItem.Failed onRetry onDelete />`; `editing` renders the editor passed as a child of `CommentItem.Body`; a pinned comment is `<CommentItem.Pinned />`; a moderated one is `state="held"` or `"hidden"` with `<CommentItem.Moderation reason silent />` under the author line, which draws nothing in any other state. The avatar size follows `level` through a `CommentAvatarSize` map (`lg` for a comment, `sm` for a reply, `sm` on compact). Edit and delete are present only when the app passes them in `Menu`; the component does no permission check. Reaction, reply, creator, edited and read-more labels come from `useUiCopy()`.
 
 ## Extension points
 
@@ -99,6 +107,9 @@ interface CommentItemReactionsProps {
 | `failed` | `danger-ink` caption "Not posted" with Retry and Delete buttons |
 | `deleted` | the body is replaced by a `fg-muted` line, actions hidden, replies kept |
 | `removed` | moderation: as deleted with a different label from the app |
+| `held` | the viewer's own comment waiting for review, or any held comment seen by a moderator: the moderation line with the warning `Badge`, the body in `fg-muted`, the actions kept so a moderator can approve it |
+| `hidden` | the same for a hidden comment, with the neutral `Badge`; the author sees the reason when the moderator chose Visible |
+| silent | a moderator also sees "Silent" on a `held` or `hidden` comment the author was not told about; the author of a silent action sees the comment as published and never gets a `held` or `hidden` state |
 | replies expanded | the replies panel shows under the body |
 
 ## Responsive behaviour
@@ -130,9 +141,9 @@ interface CommentItemReactionsProps {
 
 | Wrapper | Folder (`features/...`) | Props | Hooks |
 |---|---|---|---|
-| `VideoCommentItem` | `watch/components/` | `comment: CommentView` | `useFormat`, `useCan` (edit, delete, report), `useCommentReplies`, `useReactComment`, `useSession`, `useT` |
+| `VideoCommentItem` | `watch/components/` | `comment: CommentView` | `useFormat`, `useCan` (edit, delete, report, pin, moderate), `useCommentReplies`, `useReactComment`, `useSession`, `useT` |
 
-It fixes `level` from the comment's depth, builds `Menu` from what `useCan` allows, tokenises the body (mentions, links, timecodes) and passes `onSeek` to the player.
+It fixes `level` from the comment's depth, maps the comment's `status` to `held` or `hidden` and its `moderation` to the moderation line, builds `Menu` from what `useCan` allows (Pin or Unpin, a Moderate submenu with Hold, Approve, Hide, Unhide, Remove, Shadow ban user, Ban user and Lift, each only when the ability allows it, opening the lazy `ModerationDialog`), tokenises the body (mentions, links, timecodes) and passes `onSeek` to the player.
 
 ## Composition
 
@@ -152,6 +163,8 @@ It fixes `level` from the comment's depth, builds `Menu` from what `useCan` allo
 - Edited
 - Editing
 - Pending, failed, deleted, removed
+- Held and hidden for the author, with a reason
+- Held and hidden silently, as a moderator sees them
 - Reply
 - With replies expanded
 - RTL

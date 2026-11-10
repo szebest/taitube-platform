@@ -5,6 +5,7 @@ import { useWebTelemetry } from '@vp/web-telemetry';
 import { Suspense } from 'react';
 import {
   AccountMenu,
+  ChannelPermissions,
   LazySignInDialog,
   PreferencesSync,
   ReplayIntent,
@@ -36,51 +37,53 @@ export function AppLayout() {
     <>
       <ApiProvider api={api}>
         <SessionProvider session={auth}>
-          <UserEventStream>
-            <Tooltip.Provider>
-              <ToastProvider toaster={toaster}>
-                <DevicePreferencesProvider initial={devicePreferences}>
-                  <PreferencesSync>
-                    <PlaybackSessionProvider>
-                      <CommandPaletteProvider>
-                        <AmbientGlowProvider>
-                          <RootShell
-                            sidebar={sidebarState}
-                            account={<AccountMenu />}
-                            actions={<HeaderNotificationCentre />}
-                            notices={
-                              <>
-                                <OfflineBanner />
-                                <InstallPrompt />
-                              </>
-                            }
-                            nowPlaying={<LazyGlobalNowPlayingBar />}
-                            overlays={
-                              <>
-                                <AppCommandPalette />
-                                <UrlModal.WhenOpened id="save-to-playlist">
-                                  <LazySaveToPlaylistDialog />
-                                </UrlModal.WhenOpened>
-                                <UrlModal.WhenOpened id="sign-in">
-                                  <LazySignInDialog />
-                                </UrlModal.WhenOpened>
-                                <ReplayIntent />
-                                <UrlModal.WhenOpened id="new-playlist">
-                                  <LazyNewPlaylistDialog />
-                                </UrlModal.WhenOpened>
-                                <UpdatePrompt />
-                                <QueuedChangesSync />
-                              </>
-                            }
-                          />
-                        </AmbientGlowProvider>
-                      </CommandPaletteProvider>
-                    </PlaybackSessionProvider>
-                  </PreferencesSync>
-                </DevicePreferencesProvider>
-              </ToastProvider>
-            </Tooltip.Provider>
-          </UserEventStream>
+          <ChannelPermissions>
+            <UserEventStream>
+              <Tooltip.Provider>
+                <ToastProvider toaster={toaster}>
+                  <DevicePreferencesProvider initial={devicePreferences}>
+                    <PreferencesSync>
+                      <PlaybackSessionProvider>
+                        <CommandPaletteProvider>
+                          <AmbientGlowProvider>
+                            <RootShell
+                              sidebar={sidebarState}
+                              account={<AccountMenu />}
+                              actions={<HeaderNotificationCentre />}
+                              notices={
+                                <>
+                                  <OfflineBanner />
+                                  <InstallPrompt />
+                                </>
+                              }
+                              nowPlaying={<LazyGlobalNowPlayingBar />}
+                              overlays={
+                                <>
+                                  <AppCommandPalette />
+                                  <UrlModal.WhenOpened id="save-to-playlist">
+                                    <LazySaveToPlaylistDialog />
+                                  </UrlModal.WhenOpened>
+                                  <UrlModal.WhenOpened id="sign-in">
+                                    <LazySignInDialog />
+                                  </UrlModal.WhenOpened>
+                                  <ReplayIntent />
+                                  <UrlModal.WhenOpened id="new-playlist">
+                                    <LazyNewPlaylistDialog />
+                                  </UrlModal.WhenOpened>
+                                  <UpdatePrompt />
+                                  <QueuedChangesSync />
+                                </>
+                              }
+                            />
+                          </AmbientGlowProvider>
+                        </CommandPaletteProvider>
+                      </PlaybackSessionProvider>
+                    </PreferencesSync>
+                  </DevicePreferencesProvider>
+                </ToastProvider>
+              </Tooltip.Provider>
+            </UserEventStream>
+          </ChannelPermissions>
         </SessionProvider>
       </ApiProvider>
       <Suspense>

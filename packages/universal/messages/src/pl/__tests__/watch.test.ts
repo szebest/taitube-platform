@@ -21,6 +21,31 @@ describe('@vp/messages: pl watch', () => {
     expect(t(key, args)).toEqual({ ok: true, value: expected });
   });
 
+  it.each([
+    {
+      name: 'a moderation action',
+      written: () => t('watch.moderateAction', { action: 'shadow_ban' }),
+      expected: 'Cichy ban użytkownika',
+    },
+    {
+      name: 'a moderation reason',
+      written: () => t('watch.moderationReason', { reason: 'off_topic' }),
+      expected: 'Nie na temat',
+    },
+    {
+      name: 'a ban length',
+      written: () => t('watch.moderationDuration', { duration: '24h' }),
+      expected: '24 godziny',
+    },
+    {
+      name: 'the slow mode wait',
+      written: () => t('watch.commentsSlowMode', { seconds: 12 }),
+      expected: 'Poczekaj 12 s',
+    },
+  ])('writes $name', ({ written, expected }) => {
+    expect(written()).toEqual({ ok: true, value: expected });
+  });
+
   it('names a report reason', () => {
     expect(t('watch.reportReason', { reason: 'hate' })).toEqual({
       ok: true,

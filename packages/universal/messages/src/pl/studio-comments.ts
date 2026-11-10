@@ -6,7 +6,17 @@ export const studioComments = {
   commentsTitle: dt('Komentarze'),
   commentsFilter: dt('Pokaż'),
   commentsFilterOption: dt('{filter:enum}', {
-    enum: { filter: { all: 'Wszystkie', unanswered: 'Bez odpowiedzi', reported: 'Zgłoszone' } },
+    enum: {
+      filter: {
+        all: 'Wszystkie',
+        unanswered: 'Bez odpowiedzi',
+        reported: 'Zgłoszone',
+        held: 'Wstrzymane',
+        hidden: 'Ukryte',
+        questions: 'Pytania',
+        restricted: 'Ograniczeni',
+      },
+    },
   }),
   commentsCaption: dt('Komentarze pod Twoimi filmami, od najnowszych'),
   commentsVideo: dt('Film'),
@@ -25,5 +35,10 @@ export const studioComments = {
   commentsPinFailed: dt('Nie udało się zmienić przypięcia.'),
   commentsEmptyTitle: dt('Brak komentarzy'),
   commentsEmptyDescription: dt('Tutaj pojawiają się komentarze widzów pod Twoimi filmami.'),
+  commentsSwitchLabel: dt('Komentarze'),
+  commentsSwitchHint: dt('Widzowie mogą komentować ten film. Właściciel i zespół zawsze mogą.'),
+  commentsTurnOff: dt('Wyłącz komentarze'),
+  commentsTurnOn: dt('Włącz komentarze'),
+  commentsSwitchFailed: dt('Nie udało się zmienić ustawienia komentarzy.'),
   commentsFailed: dt('Nie udało się wczytać komentarzy.'),
 } as const;

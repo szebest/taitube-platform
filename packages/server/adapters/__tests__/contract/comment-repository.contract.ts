@@ -12,6 +12,7 @@ import {
 } from './comment-contract-context';
 import { describeCommentInboxContract } from './comment-inbox.contract';
 import { describeCommentListingContract } from './comment-listing.contract';
+import { describeCommentPublicScopeContract } from './comment-public-scope.contract';
 import { OTHER_OWNER_ID, OWNER_ID, VIDEO_IDS, idsOf, publicVideo, seedOwners } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
@@ -26,6 +27,7 @@ export function describeCommentRepositoryContract(makeSubject: MakeRepositoriesS
       get comments() {
         return comments;
       },
+      authorId: OTHER_OWNER_ID,
     };
 
     beforeAll(async () => {
@@ -157,10 +159,60 @@ export function describeCommentRepositoryContract(makeSubject: MakeRepositoriesS
     it('edits the content and marks the comment edited', async () => {
       await seedComment(ctx, C.old);
 
-      const edited = expectOk(await comments.updateContent(C.old, 'rewritten'));
+      const edited = expectOk(
+        await comments.updateContent(C.old, 'rewritten', { looksLikeQuestion: false })
+      );
 
       expect(edited).toMatchObject({ id: C.old, content: 'rewritten', isEdited: true });
       expect(expectOk(await comments.findById(C.old))?.content).toBe('rewritten');
+    });
+
+    it('rewrites the question flag with the content and leaves the state alone', async () => {
+      await seedComment(ctx, C.old);
+
+      const asked = expectOk(
+        await comments.updateContent(C.old, 'how so?', { looksLikeQuestion: true })
+      );
+
+      expect(asked).toMatchObject({ looksLikeQuestion: true, moderationState: 'published' });
+      expect(await commentsCount(ctx, VIDEO_IDS.a)).toBe(1);
+    });
+
+    it('holds an edited comment, takes it and its replies off the count and tells the moderators', async () => {
+      await seedComment(ctx, C.old);
+      await seedComment(ctx, C.reply1, { parentId: C.old });
+      await seedComment(ctx, C.fresh);
+      expect(await commentsCount(ctx, VIDEO_IDS.a)).toBe(3);
+
+      const held = expectOk(
+        await comments.updateContent(C.old, 'blocked', {
+          looksLikeQuestion: false,
+          hold: { reason: 'blocked_word', disclosure: 'silent', moderators: [OWNER_ID] },
+        })
+      );
+
+      expect(held).toMatchObject({
+        content: 'blocked',
+        moderationState: 'held',
+        moderationDisclosure: 'silent',
+        heldReason: 'blocked_word',
+      });
+      expect(await commentsCount(ctx, VIDEO_IDS.a)).toBe(1);
+      const events = expectOk(await subject.repositories.userEvents.listFrom(OWNER_ID, 0, 10));
+      expect(events.map(({ type }) => type).filter((type) => type === 'comment.held')).toEqual([
+        'comment.held',
+      ]);
+    });
+
+    it('answers null and writes nothing when editing a comment that is gone', async () => {
+      expect(
+        expectOk(
+          await comments.updateContent(C.old, 'nothing', {
+            looksLikeQuestion: false,
+            hold: { reason: 'review_all', disclosure: 'visible', moderators: [] },
+          })
+        )
+      ).toBeNull();
     });
 
     it('removes a root with its replies and takes them all off the count', async () => {
@@ -172,10 +224,18 @@ export function describeCommentRepositoryContract(makeSubject: MakeRepositoriesS
       expect(await commentsCount(ctx, VIDEO_IDS.a)).toBe(2);
       expect(expectOk(await comments.findById(C.liked))).toBeNull();
       expect(expectOk(await comments.findById(C.reply1))).toBeNull();
-      expect(expectOk(await comments.updateContent(C.liked, 'too late'))).toBeNull();
+      expect(
+        expectOk(await comments.updateContent(C.liked, 'too late', { looksLikeQuestion: false }))
+      ).toBeNull();
       expect(
         idsOf(
-          expectOk(await comments.listThreads(VIDEO_IDS.a, { sort: 'top', window: keyset(10) }))
+          expectOk(
+            await comments.listThreads(VIDEO_IDS.a, {
+              viewer: null,
+              sort: 'top',
+              window: keyset(10),
+            })
+          )
         )
       ).toEqual([C.old, C.fresh]);
     });
@@ -187,7 +247,7 @@ export function describeCommentRepositoryContract(makeSubject: MakeRepositoriesS
       expect(expectOk(await comments.remove({ id: C.reply1, videoId: VIDEO_IDS.a }))).toBe(0);
 
       const [liked] = expectOk(
-        await comments.listThreads(VIDEO_IDS.a, { sort: 'top', window: keyset(1) })
+        await comments.listThreads(VIDEO_IDS.a, { viewer: null, sort: 'top', window: keyset(1) })
       );
       expect(liked).toMatchObject({ id: C.liked, replyCount: 1 });
       expect(await commentsCount(ctx, VIDEO_IDS.a)).toBe(4);
@@ -226,5 +286,6 @@ export function describeCommentRepositoryContract(makeSubject: MakeRepositoriesS
     describeCommentListingContract(ctx);
     describeCommentInboxContract(ctx);
     describeAuthoredCommentsContract(ctx);
+    describeCommentPublicScopeContract(ctx);
   });
 }

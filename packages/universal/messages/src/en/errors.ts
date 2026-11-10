@@ -1,4 +1,5 @@
 import { dt } from '../define';
+import { commentErrors } from './errors-comments';
 
 export const errors = {
   uploadTooLarge: dt('This file is larger than uploads allow.'),
@@ -23,9 +24,7 @@ export const errors = {
   handleAlreadyTaken: dt('This handle is already taken.'),
   invalidHandleFormat: dt('Handles use lowercase letters, digits and dashes only.'),
   cannotSubscribeToSelf: dt('You cannot subscribe to your own channel.'),
-  commentNotFound: dt('This comment does not exist or was removed.'),
-  commentNotPinnable: dt('Only a top-level comment can be pinned.'),
-  commentAlreadyReported: dt('You already reported this comment.'),
+  ...commentErrors,
   reportNotFound: dt('This report does not exist.'),
   reportAlreadyResolved: dt('This report was already resolved.'),
   playlistNotFound: dt('This playlist does not exist or is private.'),

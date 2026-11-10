@@ -10,19 +10,47 @@ const renderFilter = ({ value = 'all', onChange = vi.fn() }: Partial<InboxFilter
     </AppProviders>
   );
 
+const openFilter = async () => {
+  await userEvent.click(screen.getByRole('combobox', { name: 'Show' }));
+  return screen.findAllByRole('option');
+};
+
 describe('apps/client/studio: InboxFilter', () => {
-  it('offers the three filters, marks the current one and asks for the one picked', async () => {
-    const onChange = vi.fn();
-    renderFilter({ value: 'unanswered', onChange });
+  it('offers every filter, with all as no choice', async () => {
+    renderFilter();
 
-    await userEvent.click(screen.getByRole('radio', { name: 'Reported' }));
+    const options = await openFilter();
 
-    expect(screen.getAllByRole('radio').map((radio) => radio.textContent)).toEqual([
+    expect(options.map((option) => option.textContent)).toEqual([
       'All',
       'Unanswered',
       'Reported',
+      'Held',
+      'Hidden',
+      'Questions',
+      'Restricted',
     ]);
-    expect(screen.getByRole('radio', { name: 'Unanswered' })).toBeChecked();
-    expect(onChange).toHaveBeenCalledWith('reported');
+  });
+
+  it.each([
+    { value: 'all' as const, shown: 'All' },
+    { value: 'restricted' as const, shown: 'Restricted' },
+  ])('shows $value as $shown', ({ value, shown }) => {
+    renderFilter({ value });
+
+    expect(screen.getByRole('combobox', { name: 'Show' })).toHaveTextContent(shown);
+  });
+
+  it.each([
+    { picked: 'Held', filter: 'held' },
+    { picked: 'All', filter: 'all' },
+  ])('asks for $filter when $picked is picked', async ({ picked, filter }) => {
+    const onChange = vi.fn();
+    renderFilter({ value: 'questions', onChange });
+
+    await openFilter();
+    await userEvent.click(screen.getByRole('option', { name: picked }));
+
+    expect(onChange).toHaveBeenCalledWith(filter);
   });
 });

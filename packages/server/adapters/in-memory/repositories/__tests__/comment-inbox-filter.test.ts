@@ -3,10 +3,17 @@ import { matchesInbox } from '../comment-inbox-filter';
 const OWNER = 'owner-1';
 const at = (minute: number) => new Date(Date.UTC(2026, 2, 1, 12, minute));
 
-const question = { id: 'q', parentId: null, authorId: 'viewer-1', createdAt: at(0) };
-const answer = { id: 'a', parentId: 'q', authorId: OWNER, createdAt: at(5) };
+const question = {
+  id: 'q',
+  parentId: null,
+  authorId: 'viewer-1',
+  createdAt: at(0),
+  moderationState: 'published' as const,
+  looksLikeQuestion: false,
+};
+const answer = { ...question, id: 'a', parentId: 'q', authorId: OWNER, createdAt: at(5) };
 const earlierAnswer = { ...answer, createdAt: at(-5) };
-const neverReported = { hasOpenReport: () => false };
+const neverReported = { hasOpenReport: () => false, isRestricted: () => false };
 
 describe('matchesInbox', () => {
   it('keeps everything for the whole inbox', () => {
@@ -31,9 +38,29 @@ describe('matchesInbox', () => {
   });
 
   it('follows the open reports for the reported filter', () => {
-    const reports = { hasOpenReport: (id: string) => id === 'q' };
+    const reports = { ...neverReported, hasOpenReport: (id: string) => id === 'q' };
 
     expect(matchesInbox(question, 'reported', OWNER, [question], reports)).toBe(true);
     expect(matchesInbox(answer, 'reported', OWNER, [question, answer], reports)).toBe(false);
+  });
+
+  it('keeps the comments of restricted authors for the restricted filter', () => {
+    const restricted = { ...neverReported, isRestricted: (id: string) => id === 'viewer-1' };
+
+    expect(matchesInbox(question, 'restricted', OWNER, [question], restricted)).toBe(true);
+    expect(matchesInbox(question, 'restricted', OWNER, [question], neverReported)).toBe(false);
+  });
+
+  it.each([
+    { filter: 'held' as const, row: { moderationState: 'held' as const }, kept: true },
+    { filter: 'held' as const, row: { moderationState: 'hidden' as const }, kept: false },
+    { filter: 'hidden' as const, row: { moderationState: 'hidden' as const }, kept: true },
+    { filter: 'hidden' as const, row: {}, kept: false },
+    { filter: 'questions' as const, row: { looksLikeQuestion: true }, kept: true },
+    { filter: 'questions' as const, row: {}, kept: false },
+  ])('keeps a $row under $filter: $kept', ({ filter, row, kept }) => {
+    const comment = { ...question, ...row };
+
+    expect(matchesInbox(comment, filter, OWNER, [comment], neverReported)).toBe(kept);
   });
 });

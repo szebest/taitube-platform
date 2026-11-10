@@ -1,4 +1,10 @@
-import { type Account, getAccount, listMyInvites, listMyMemberships } from '@vp/api-contracts';
+import {
+  type Account,
+  getAccount,
+  listCreatorComments,
+  listMyInvites,
+  listMyMemberships,
+} from '@vp/api-contracts';
 import {
   ApiProvider,
   AppWords,
@@ -48,11 +54,15 @@ export function signedIn(creator: Account = account()): ComponentType<PropsWithC
 /** The session cookie of a signed-in browser, as a request carries it. */
 export const SESSION = `${SESSION_COOKIE}=signed-in`;
 
-/** The API's answer for the account the session cookie reaches, who works on no other channel until a spec says so. */
+/**
+ * The API's answer for the account the session cookie reaches, who works on no other channel until a
+ * spec says so, and whose navigation finds no comment held for review.
+ */
 export function accountOf(creator: Account = account()) {
   apiServer.use(
     mockEndpoint(listMyMemberships, () => HttpResponse.json({ items: [] })),
-    mockEndpoint(listMyInvites, () => HttpResponse.json({ items: [], nextCursor: null }))
+    mockEndpoint(listMyInvites, () => HttpResponse.json({ items: [], nextCursor: null })),
+    mockEndpoint(listCreatorComments, () => HttpResponse.json({ items: [], nextCursor: null }))
   );
   return mockEndpoint(getAccount, () => HttpResponse.json(creator));
 }

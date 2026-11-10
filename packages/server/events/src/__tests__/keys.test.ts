@@ -25,6 +25,7 @@ describe('@vp/events cache keys', () => {
     [CacheKeys.retentionBuffer, 'taitube:retention:buffer'],
     [CacheKeys.retentionSession('v1', 's1'), 'taitube:retention:session:v1:s1'],
     [CacheKeys.videoHotComments('v1'), 'taitube:video:v1:comments:top'],
+    [CacheKeys.commentSlowMode('c1', 'u1'), 'taitube:comments:slow:c1:u1'],
     [CacheKeys.liveChatTicket('t1'), 'taitube:live:chat:ticket:t1'],
     [CacheKeys.liveChatSlowMode('s1', 'u1'), 'taitube:live:s1:chat:slow:u1'],
     [CacheKeys.liveChatBurst('s1', 'u1'), 'taitube:live:s1:chat:burst:u1'],

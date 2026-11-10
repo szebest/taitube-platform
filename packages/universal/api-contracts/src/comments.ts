@@ -1,4 +1,10 @@
-import { COMMENT_SORTS } from '@vp/domain';
+import {
+  COMMENT_MODERATION_REASONS,
+  COMMENT_SORTS,
+  DISCLOSURES,
+  HELD_REASONS,
+  MODERATION_STATES,
+} from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import { PAGE_SIZE_MAX } from '@vp/pagination';
 import { z } from 'zod';
@@ -19,6 +25,19 @@ const CommentAuthorSchema = z.object({
   isCreator: z.boolean().describe('The author owns the video, shown as a creator badge'),
 });
 
+const CommentModerationSchema = z
+  .object({
+    state: z.enum(['held', 'hidden']),
+    reason: z.enum(COMMENT_MODERATION_REASONS).nullable().optional(),
+    disclosure: z.enum(DISCLOSURES).nullable().optional(),
+    heldReason: z.enum(HELD_REASONS).nullable().optional(),
+    by: z.uuid().nullable().optional(),
+    at: z.iso.datetime().nullable().optional(),
+  })
+  .describe(
+    'What the reader may know of a moderated comment: the state and the reason for its author when it was done visibly, everything for a moderator'
+  );
+
 export const CommentSchema = z.object({
   id: z.uuid(),
   videoId: z.uuid(),
@@ -29,6 +48,14 @@ export const CommentSchema = z.object({
   likeCount: z.number().int().nonnegative(),
   heartedByCreator: z.boolean().describe('The video owner hearted the comment'),
   replyCount: z.number().int().nonnegative(),
+  status: z
+    .enum(MODERATION_STATES)
+    .describe(
+      'published unless the reader is the author of a visibly moderated comment or a moderator'
+    ),
+  moderation: CommentModerationSchema.nullable().describe(
+    'Null for a published comment and for a silently moderated one, which looks published to its author'
+  ),
   author: CommentAuthorSchema,
   createdAt: z.string().describe('ISO 8601 creation timestamp'),
   updatedAt: z.string().describe('ISO 8601 last update timestamp'),
@@ -115,9 +142,16 @@ export const createComment = defineEndpoint({
   errors: {
     400: [ErrorCodes.VALIDATION_FAILED],
     401: [ErrorCodes.UNAUTHORIZED],
-    403: [ErrorCodes.FORBIDDEN],
+    403: [
+      ErrorCodes.FORBIDDEN,
+      ErrorCodes.COMMENTS_BANNED,
+      ErrorCodes.COMMENTS_DISABLED,
+      ErrorCodes.COMMENTS_SUBSCRIBERS_ONLY,
+      ErrorCodes.COMMENTS_ACCOUNT_TOO_NEW,
+    ],
     404: [ErrorCodes.VIDEO_NOT_FOUND, ErrorCodes.COMMENT_NOT_FOUND],
     422: [ErrorCodes.VALIDATION_FAILED],
+    429: [ErrorCodes.COMMENTS_SLOW_MODE],
   },
 });
 
@@ -126,7 +160,8 @@ export const updateComment = defineEndpoint({
   path: '/v1/comments/:id',
   tag: 'Comments',
   summary: 'Edit a comment',
-  description: 'The author rewrites their comment, which is then marked edited.',
+  description:
+    "The author rewrites their comment, which is then marked edited. The channel's rules run again: a published comment edited into a blocked word or a link off the allowlist is held like a new one, and an author under a visible ban cannot edit.",
   params: CommentIdParamSchema,
   body: z.object({ content: CommentContentSchema }),
   status: 200,
@@ -134,7 +169,13 @@ export const updateComment = defineEndpoint({
   errors: {
     400: [ErrorCodes.VALIDATION_FAILED],
     401: [ErrorCodes.UNAUTHORIZED],
-    403: [ErrorCodes.FORBIDDEN],
+    403: [
+      ErrorCodes.FORBIDDEN,
+      ErrorCodes.COMMENTS_BANNED,
+      ErrorCodes.COMMENTS_DISABLED,
+      ErrorCodes.COMMENTS_SUBSCRIBERS_ONLY,
+      ErrorCodes.COMMENTS_ACCOUNT_TOO_NEW,
+    ],
     404: [ErrorCodes.COMMENT_NOT_FOUND],
     422: [ErrorCodes.VALIDATION_FAILED],
   },

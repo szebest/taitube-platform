@@ -8,11 +8,15 @@ import * as categories from './categories';
 import * as channelFeatured from './channel-featured';
 import * as channelIdentity from './channel-identity';
 import * as channelPlaylists from './channel-playlists';
+import * as channelRestrictions from './channel-restrictions';
 import * as channelTeam from './channel-team';
 import * as channelVideos from './channel-videos';
 import * as channels from './channels';
 import * as clips from './clips';
+import * as commentModeration from './comment-moderation';
+import * as commentRemovals from './comment-removals';
 import * as commentReports from './comment-reports';
+import * as commentSettings from './comment-settings';
 import * as comments from './comments';
 import * as creatorComments from './creator-comments';
 import * as creatorLive from './creator-live';
@@ -34,12 +38,14 @@ import * as preferences from './preferences';
 import * as reactions from './reactions';
 import * as recommendationFeedback from './recommendation-feedback';
 import * as recommendations from './recommendations';
+import * as savedReplies from './saved-replies';
 import * as screening from './screening';
 import * as search from './search';
 import * as searchHistory from './search-history';
 import * as shorts from './shorts';
 import * as subscriptions from './subscriptions';
 import * as telemetry from './telemetry';
+import * as trustedCommenters from './trusted-commenters';
 import * as uploads from './uploads';
 import * as videos from './videos';
 import * as viewerActivity from './viewer-activity';
@@ -66,11 +72,15 @@ export * from './channel-featured';
 export * from './channel-identity';
 export * from './channel-images';
 export * from './channel-playlists';
+export * from './channel-restrictions';
 export * from './channel-team';
 export * from './channel-videos';
 export * from './channels';
 export * from './clips';
+export * from './comment-removals';
 export * from './comment-reports';
+export * from './comment-moderation';
+export * from './comment-settings';
 export * from './comments';
 export * from './creator-comments';
 export * from './creator-live';
@@ -98,10 +108,12 @@ export * from './recommendation-feedback';
 export * from './recommendations';
 export * from './screening';
 export * from './search';
+export * from './saved-replies';
 export * from './search-history';
 export * from './shorts';
 export * from './subscriptions';
 export * from './telemetry';
+export * from './trusted-commenters';
 export * from './uploads';
 export * from './video-resource';
 export * from './videos';
@@ -130,11 +142,15 @@ export const contracts = {
   channelFeatured,
   channelIdentity,
   channelPlaylists,
+  channelRestrictions,
   channelTeam,
   channelVideos,
   channels,
   clips,
+  commentModeration,
+  commentRemovals,
   commentReports,
+  commentSettings,
   comments,
   creatorComments,
   creatorLive,
@@ -162,6 +178,8 @@ export const contracts = {
   shorts,
   subscriptions,
   telemetry,
+  savedReplies,
+  trustedCommenters,
   uploads,
   videos,
   viewerActivity,

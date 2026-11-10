@@ -43,6 +43,12 @@ export function useNotificationText(): (notification: Notification) => Notificat
         return tOr('notifications.partyStarting', {}, '');
       case 'team_invite':
         return tOr('notifications.teamInvite', { name }, '');
+      case 'moderation':
+        return tOr(
+          'notifications.moderation',
+          { action: payload.moderation?.action ?? 'hold' },
+          ''
+        );
       case 'processing':
         return tOr(PROCESSING_TEXT[payload.outcome ?? 'ready'], {}, '');
       default:

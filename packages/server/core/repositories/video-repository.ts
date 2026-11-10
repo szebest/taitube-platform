@@ -40,6 +40,7 @@ export interface NewVideoInput {
   likesCount?: number;
   dislikesCount?: number;
   commentsCount?: number;
+  commentsEnabled?: boolean;
   categoryId?: string | null;
   tags?: string[];
   errorCode?: ErrorCode | null;

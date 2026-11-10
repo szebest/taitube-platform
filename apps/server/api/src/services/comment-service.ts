@@ -1,31 +1,42 @@
 import type { CommentView, ListCommentsQuery } from '@vp/api-contracts';
 import type { Singleflight } from '@vp/concurrency';
 import type { CommentCachePort, HotComments } from '@vp/core/ports';
-import type { CommentRepositoryPort, CommentWindow, VideoRepository } from '@vp/core/repositories';
+import type { CommentWindow } from '@vp/core/repositories';
 import type { CommentSort, CommentThread, Video } from '@vp/domain';
 import {
   type CommentNotFound,
-  type CreateCommentFailure,
   type DeleteCommentFailure,
   type HeartCommentFailure,
   type PinCommentFailure,
-  type UpdateCommentFailure,
   commentNotFound,
-  decideCommentCreate,
   decideCommentDelete,
   decideCommentHeart,
   decideCommentPin,
   decideCommentThreadRead,
-  decideCommentUpdate,
-  decideVideoRead,
   publicReadFailure,
 } from '@vp/domain-rules';
 import { type DatabaseUnavailable, ErrorCodes } from '@vp/errors';
 import type { InvalidCursor, Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
 import { type Result, err, ignore, isErr, map, ok } from '@vp/result';
-import { uuidv7 } from 'uuidv7';
-import { commentWithVideo } from './comment-lookup';
+import { deletionAudit, pinAudit } from './comment-audit';
+import {
+  type CommentCreateDeps,
+  type CreateCommentServiceFailure,
+  createComment,
+} from './comment-create';
+import {
+  type PublicReadFailure,
+  commentWithVideo,
+  readableVideo,
+  visibleCommentWithVideo,
+} from './comment-lookup';
+import { withOwnComments } from './comment-own-overlay';
+import {
+  type CommentUpdateDeps,
+  type UpdateCommentServiceFailure,
+  updateComment,
+} from './comment-update';
 import { toCommentView } from './comment-views';
 import {
   commentThreadCursorPayload,
@@ -34,9 +45,7 @@ import {
   decodeCreatedAtCursor,
 } from './cursor';
 
-export interface CommentServiceDeps {
-  comments: CommentRepositoryPort;
-  videos: VideoRepository;
+export interface CommentServiceDeps extends CommentCreateDeps, CommentUpdateDeps {
   commentCache: CommentCachePort;
   singleflight: Singleflight;
   paginator: Paginator;
@@ -47,15 +56,8 @@ export interface CommentPage {
   nextCursor: string | null;
 }
 
-type PublicReadFailure = ReturnType<typeof publicReadFailure>;
-
 export type ListCommentsFailure = PublicReadFailure | InvalidCursor | DatabaseUnavailable;
 export type ListRepliesFailure = ListCommentsFailure | CommentNotFound;
-export type CreateCommentServiceFailure =
-  | CreateCommentFailure
-  | PublicReadFailure
-  | DatabaseUnavailable;
-export type UpdateCommentServiceFailure = UpdateCommentFailure | DatabaseUnavailable;
 export type DeleteCommentServiceFailure = DeleteCommentFailure | DatabaseUnavailable;
 export type PinCommentServiceFailure = PinCommentFailure | DatabaseUnavailable;
 export type HeartCommentServiceFailure = HeartCommentFailure | DatabaseUnavailable;
@@ -77,20 +79,32 @@ export class CommentService {
     videoId: string,
     query: ListCommentsQuery
   ): Promise<Result<CommentPage & { total: number }, ListCommentsFailure>> {
-    const video = await this.readableVideo(viewer, videoId);
+    const video = await readableVideo(this.deps, viewer, videoId);
     if (isErr(video)) return video;
 
     const request = this.threadsRequest(query);
     if (isErr(request)) return request;
 
-    const hot = await this.threads(video.value, request.value);
-    return map(hot, ({ threads, total }) => ({
+    const read = await this.threads(viewer, video.value, request.value);
+    if (isErr(read)) return read;
+    const own = viewer
+      ? await this.deps.comments.listOwnNonPublic(video.value.id, viewer.id)
+      : ok([]);
+    if (isErr(own)) return own;
+
+    const { threads, total } = withOwnComments(
+      read.value.page,
+      own.value,
+      request.value.sort,
+      read.value.shared
+    );
+    return ok({
       ...this.deps.paginator.paginate(threads, request.value.window.limit, {
         cursorOf: commentThreadCursorPayload,
-        toItem: (thread) => toCommentView(thread, video.value.ownerId),
+        toItem: (thread) => toCommentView(thread, video.value.ownerId, viewer),
       }),
       total,
-    }));
+    });
   }
 
   async listReplies(
@@ -98,7 +112,7 @@ export class CommentService {
     commentId: string,
     options: { cursor?: string; limit?: number }
   ): Promise<Result<CommentPage, ListRepliesFailure>> {
-    const found = await commentWithVideo(this.deps, commentId);
+    const found = await visibleCommentWithVideo(this.deps, viewer, commentId);
     if (isErr(found)) return found;
 
     const thread = decideCommentThreadRead({ viewer, commentId, ...found.value });
@@ -114,11 +128,15 @@ export class CommentService {
     if (isErr(cursor)) return cursor;
 
     const { comment, video } = thread.value;
-    const rows = await this.deps.comments.listReplies(comment, { cursor: cursor.value, limit });
+    const rows = await this.deps.comments.listReplies(comment, {
+      viewer,
+      cursor: cursor.value,
+      limit,
+    });
     return map(rows, (replies): CommentPage =>
       this.deps.paginator.paginate(replies, limit, {
         cursorOf: createdAtCursorPayload,
-        toItem: (reply) => toCommentView(reply, video.ownerId),
+        toItem: (reply) => toCommentView(reply, video.ownerId, viewer),
       })
     );
   }
@@ -128,34 +146,9 @@ export class CommentService {
     videoId: string,
     body: { content: string; parentId?: string }
   ): Promise<Result<CommentView, CreateCommentServiceFailure>> {
-    const video = await this.readableVideo(author, videoId);
-    if (isErr(video)) return video;
-    const parentId = body.parentId ?? null;
-    const parent = parentId ? await this.deps.comments.findById(parentId) : ok(null);
-    if (isErr(parent)) return parent;
-
-    const decided = decideCommentCreate({
-      author,
-      video: video.value,
-      videoId,
-      parent: parent.value,
-      parentId,
-      content: body.content,
-    });
-    if (isErr(decided)) return decided;
-
-    const created = await this.deps.comments.create({
-      id: uuidv7(),
-      videoId,
-      authorId: author.id,
-      parentId: decided.value.parentId,
-      content: decided.value.content,
-    });
-    if (isErr(created)) return created;
-    if (!created.value) return err(commentNotFound(parentId ?? videoId));
-
-    await this.purge(videoId);
-    return ok(toCommentView(created.value, decided.value.video.ownerId));
+    const created = await createComment(this.deps, author, videoId, body);
+    if (!isErr(created)) await this.purge(videoId);
+    return created;
   }
 
   async update(
@@ -163,15 +156,12 @@ export class CommentService {
     commentId: string,
     content: string
   ): Promise<Result<CommentView, UpdateCommentServiceFailure>> {
-    const found = await commentWithVideo(this.deps, commentId);
-    if (isErr(found)) return found;
-    const { comment, video } = found.value;
+    const updated = await updateComment(this.deps, actor, commentId, content);
+    if (isErr(updated)) return updated;
 
-    const decided = decideCommentUpdate({ actor, comment, commentId, content });
-    if (isErr(decided)) return decided;
-
-    const updated = await this.deps.comments.updateContent(commentId, decided.value.content);
-    return await this.settled(updated, commentId, video);
+    const { thread, video } = updated.value;
+    await this.purge(video.id);
+    return ok(toCommentView(thread, video.ownerId, actor));
   }
 
   async remove(
@@ -183,8 +173,14 @@ export class CommentService {
 
     const decided = decideCommentDelete({ actor, commentId, ...found.value });
     if (isErr(decided)) return decided;
+    const { video } = found.value;
 
-    const removed = await this.deps.comments.remove(decided.value);
+    const channelId = await this.channelIdOf(video);
+    if (isErr(channelId)) return channelId;
+    const removed = await this.deps.comments.remove(
+      decided.value,
+      deletionAudit(channelId.value, actor, decided.value)
+    );
     if (isErr(removed)) return removed;
 
     await this.purge(decided.value.videoId);
@@ -203,8 +199,14 @@ export class CommentService {
     const decided = decideCommentPin({ actor, commentId, ...found.value });
     if (isErr(decided)) return decided;
 
-    const updated = await this.deps.comments.setPinned(decided.value, pinned);
-    return await this.settled(updated, commentId, video);
+    const channelId = await this.channelIdOf(video);
+    if (isErr(channelId)) return channelId;
+    const updated = await this.deps.comments.setPinned(
+      decided.value,
+      pinned,
+      pinAudit(channelId.value, actor, decided.value, pinned)
+    );
+    return await this.settled(updated, commentId, video, actor);
   }
 
   async setHearted(
@@ -220,18 +222,14 @@ export class CommentService {
     if (isErr(decided)) return decided;
 
     const updated = await this.deps.comments.setHearted(decided.value, hearted);
-    return await this.settled(updated, commentId, video);
+    return await this.settled(updated, commentId, video, actor);
   }
 
-  private async readableVideo(
-    viewer: UserContext | null,
-    videoId: string
-  ): Promise<Result<Video, DatabaseUnavailable | PublicReadFailure>> {
-    const found = await this.deps.videos.findById(videoId);
-    if (isErr(found)) return found;
-
-    const decided = decideVideoRead({ viewer, video: found.value, videoId });
-    return isErr(decided) ? err(publicReadFailure(decided.error)) : decided;
+  private async channelIdOf(
+    video: Video | null
+  ): Promise<Result<string | undefined, DatabaseUnavailable>> {
+    if (!video) return ok(undefined);
+    return map(await this.deps.channels.findByUserId(video.ownerId), (channel) => channel?.id);
   }
 
   private threadsRequest(query: ListCommentsQuery) {
@@ -251,13 +249,18 @@ export class CommentService {
     }));
   }
 
-  private async threads(video: Video, { sort, window }: ThreadsRequest) {
-    const fetch = () =>
+  /** The shared hot page holds public comments only, so it is read and filled as no one in particular. */
+  private async threads(
+    viewer: UserContext | null,
+    video: Video,
+    { sort, window }: ThreadsRequest
+  ) {
+    const fetchFor = (reader: UserContext | null) => () =>
       this.deps.singleflight.do(
-        `comments:${video.id}:${sort}:${JSON.stringify(window)}`,
+        `comments:${video.id}:${reader?.id ?? 'public'}:${sort}:${JSON.stringify(window)}`,
         async () =>
           map(
-            await this.deps.comments.listThreads(video.id, { sort, window }),
+            await this.deps.comments.listThreads(video.id, { viewer: reader, sort, window }),
             (threads): HotComments => ({ threads, total: video.commentsCount ?? 0 })
           )
       );
@@ -268,19 +271,23 @@ export class CommentService {
       window.cursor === null &&
       window.limit === this.deps.paginator.defaults.defaultLimit;
 
-    return isHotPage ? await this.deps.commentCache.getHot(video.id, fetch) : await fetch();
+    const page = isHotPage
+      ? await this.deps.commentCache.getHot(video.id, fetchFor(null))
+      : await fetchFor(viewer)();
+    return map(page, (found) => ({ page: found, shared: isHotPage }));
   }
 
   private async settled(
     written: Result<CommentThread | null, DatabaseUnavailable>,
     commentId: string,
-    video: Video | null
+    video: Video | null,
+    viewer: UserContext
   ) {
     if (isErr(written)) return written;
     if (!(written.value && video)) return err(commentNotFound(commentId));
 
     await this.purge(video.id);
-    return ok(toCommentView(written.value, video.ownerId));
+    return ok(toCommentView(written.value, video.ownerId, viewer));
   }
 
   private async purge(videoId: string): Promise<void> {

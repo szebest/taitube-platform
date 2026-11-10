@@ -5,6 +5,7 @@ import { useAppForm } from '@vp/forms';
 import { Format, useFormat, useT } from '@vp/intl-react';
 import { unwrapOr } from '@vp/result';
 import { Callout, Field, Select } from '@vp/ui';
+import { CustomizationSection } from '#app/components/section/customization-section';
 import {
   useChannelValidators,
   validateContactEmailField,
@@ -12,7 +13,6 @@ import {
 } from '#app/features/channel/forms/channel-field-validators';
 import { failureCodeOf, useUpdateChannel } from '#app/features/channel/hooks/use-update-channel';
 import { ChannelTextField } from '../channel-text-field/channel-text-field';
-import { CustomizationSection } from '../customization-section/customization-section';
 
 const NO_COUNTRY = 'none';
 

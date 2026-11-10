@@ -10,6 +10,7 @@ import type {
 } from './channel-team';
 import type { ClipResource } from './clip';
 import type { CommentResource } from './comment';
+import type { ChannelUserResource, CommentSettingsResource } from './comment-moderation';
 import type { LiveStreamResource } from './live-stream';
 import type { NotificationResource } from './notification';
 import type { PlaylistResource } from './playlist';
@@ -34,7 +35,13 @@ export type AppAction =
   | 'report'
   | 'subscribe'
   | 'queue'
-  | 'access';
+  | 'access'
+  | 'hold'
+  | 'approve'
+  | 'hide'
+  | 'unhide'
+  | 'remove'
+  | 'restrict';
 
 export type AppSubjects =
   | 'all'
@@ -56,6 +63,8 @@ export type AppSubjects =
       | (ChannelMemberResource & ForcedSubject<'ChannelMember'>)
       | (ChannelInviteResource & ForcedSubject<'ChannelInvite'>)
       | (ChannelAuditResource & ForcedSubject<'ChannelAudit'>)
+      | (ChannelUserResource & ForcedSubject<'ChannelUser'>)
+      | (CommentSettingsResource & ForcedSubject<'CommentSettings'>)
     >
   | 'Video'
   | 'Upload'
@@ -76,6 +85,8 @@ export type AppSubjects =
   | 'WatchParty'
   | 'ChannelMember'
   | 'ChannelInvite'
-  | 'ChannelAudit';
+  | 'ChannelAudit'
+  | 'ChannelUser'
+  | 'CommentSettings';
 
 export type AppAbility = MongoAbility<[AppAction, AppSubjects]>;

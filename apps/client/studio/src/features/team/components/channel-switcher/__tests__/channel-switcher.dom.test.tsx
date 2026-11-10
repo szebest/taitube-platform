@@ -44,7 +44,7 @@ describe('apps/client/studio: ChannelSwitcher', () => {
     await user.click(await screen.findByRole('menuitemradio', { name: /Other Show/ }));
 
     await vi.waitFor(() => expect(router.state.location.pathname).toBe('/comments'));
-    expect(navLinks()).toEqual(['Comments', 'Back to Taitube']);
+    expect(navLinks()).toEqual(['Comments', 'Review queue', 'Back to Taitube']);
   });
 
   it('names the channel on the next channel-scoped call, and goes back to the own one', async () => {

@@ -866,7 +866,8 @@ the video envelope of every owned video, replayed from `video_events`, with no t
 - **One union.** `UserEventSchema` in `@vp/api-contracts` is a discriminated union on `type`, each member with
   its own `payload`; today it holds `video.processing`, whose `change` is a `status` or a `progress` tick, and
   `preferences.updated`, the sections a save named and the version it made, `comment.created`, the comment and
-  its video, sent to the video's owner, `notification.created`, a notification as the list returns it with the
+  its video, sent to the video's owner, `comment.held`, the ids of a comment the gate held, sent to the owner and to
+  every member who may moderate (`comment.moderate`) so an open queue and the nav badge update live, `notification.created`, a notification as the list returns it with the
   unread count it made, and `notification.read`, the ids (or `all`) marked read with the count that is left. A new
   event type is a member there,
   a producer and a client handler, nothing else.
@@ -875,7 +876,8 @@ the video envelope of every owned video, replayed from `video_events`, with no t
   event, and the append writes the outbox row that publishes it on `user:{userId}` (ADR-16), so a change that
   rolls back announces nothing. `VideoRepository.transition` is the producer for `video.processing` status,
   `UserPreferencesRepository.save` for `preferences.updated`, `CommentRepository.create` for `comment.created`
-  (not when the owner wrote the comment), `NotificationRepository.record` and `markRead` for the two notification
+  (public comments only, and not when the owner wrote it) and for `comment.held` (to the moderators the service
+  names, in the same transaction; a silent action later emits nothing), `NotificationRepository.record` and `markRead` for the two notification
   events.
   Progress ticks are lossy: the worker publishes them with no `id` and never logs them.
 - **`hello` first.** The stream subscribes, writes `hello` (no `id`), replays, then goes live (§10.3).
@@ -1129,6 +1131,12 @@ erDiagram
     users ||--o{ channel_members : "works on"
     channels ||--o{ channel_invites : invites
     channels ||--o{ channel_audit_log : "records"
+    channels ||--o| channel_comment_settings : "moderates comments by"
+    channels ||--o{ channel_user_restrictions : "restricts"
+    users ||--o{ channel_user_restrictions : "is restricted on"
+    channels ||--o{ channel_trusted_commenters : "trusts"
+    channels ||--o{ channel_saved_replies : "keeps"
+    channels ||--o{ comment_removals : "removes with a reason"
     videos ||--o{ video_screenings : "is screened as"
     video_screenings ||--o{ screening_appeals : "is appealed in"
     videos ||--o{ video_frame_hashes : fingerprints
@@ -1220,6 +1228,46 @@ erDiagram
         timestamptz created_at
         timestamptz expires_at
     }
+    channel_comment_settings {
+        uuid channel_id PK,FK
+        text review_mode
+        text_array blocked_words
+        text_array link_allowlist
+        int slow_mode_seconds
+        bool subscribers_only
+        int min_account_age_days
+        jsonb disclosure
+    }
+    channel_user_restrictions {
+        uuid channel_id PK,FK
+        uuid user_id PK,FK
+        text kind
+        text reason
+        timestamptz expires_at
+        uuid created_by FK
+    }
+    channel_trusted_commenters {
+        uuid channel_id PK,FK
+        uuid user_id PK,FK
+        uuid created_by FK
+    }
+    channel_saved_replies {
+        uuid id PK
+        uuid channel_id FK
+        text title
+        text body
+        int position
+    }
+    comment_removals {
+        uuid id PK
+        uuid channel_id FK
+        uuid video_id FK
+        uuid author_id FK
+        text excerpt
+        text reason
+        text disclosure
+        uuid removed_by FK
+        timestamptz created_at
     video_screenings {
         uuid id PK
         uuid video_id FK
@@ -1291,6 +1339,10 @@ erDiagram
         bool is_pinned
         int like_count
         timestamptz hearted_at
+        text moderation_state
+        text moderation_disclosure
+        text held_reason
+        bool looks_like_question
         timestamptz deleted_at
     }
     comment_reports {
@@ -1633,6 +1685,14 @@ CREATE TABLE video_comments (
   is_edited   boolean NOT NULL DEFAULT false,
   like_count  integer NOT NULL DEFAULT 0,
   hearted_at  timestamptz,                              -- the video owner's heart; NULL for none
+  moderation_state      text NOT NULL DEFAULT 'published' CHECK (moderation_state IN ('published','held','hidden')),
+  moderation_disclosure text CHECK (moderation_disclosure IN ('silent','visible')),   -- what the author is told, set with the state
+  moderation_reason     text CHECK (moderation_reason IN ('spam','harassment','hate','misinformation','other','off_topic')),
+  moderation_note       text,
+  moderated_by          uuid REFERENCES users(id) ON DELETE SET NULL,
+  moderated_at          timestamptz,
+  held_reason           text CHECK (held_reason IN ('review_all','link','blocked_word')),   -- why the gate held it
+  looks_like_question   boolean NOT NULL DEFAULT false,   -- written at insert, a marker for an inbox filter
   created_at  timestamptz NOT NULL DEFAULT now(),
   updated_at  timestamptz NOT NULL DEFAULT now(),
   deleted_at  timestamptz                               -- soft delete; a deleted root takes its replies with it
@@ -1641,6 +1701,64 @@ CREATE INDEX video_comments_top_idx ON video_comments (video_id, parent_id, is_p
 CREATE INDEX video_comments_newest_idx ON video_comments (video_id, parent_id, is_pinned DESC, created_at DESC, id DESC);
 CREATE INDEX video_comments_author_created_idx ON video_comments (author_id, created_at DESC, id DESC) WHERE deleted_at IS NULL;  -- GET /me/comments
 CREATE UNIQUE INDEX video_comments_one_pinned_per_video_idx ON video_comments (video_id) WHERE is_pinned AND deleted_at IS NULL;
+CREATE INDEX video_comments_moderation_idx ON video_comments (video_id, created_at DESC, id DESC) WHERE moderation_state <> 'published';
+-- Only `published` comments of an author who is not shadow banned are public: counts, the hot cache and every read go
+-- through one scope (`publicCommentScope`). A shadow ban is read from channel_user_restrictions on every read.
+
+ALTER TABLE videos ADD COLUMN comments_enabled boolean NOT NULL DEFAULT true;   -- PATCH /v1/creator/videos/:id
+
+CREATE TABLE channel_comment_settings (                 -- one row per channel, created on the first save; defaults when absent
+  channel_id           uuid PRIMARY KEY REFERENCES channels(id) ON DELETE CASCADE,
+  review_mode          text NOT NULL DEFAULT 'none' CHECK (review_mode IN ('none','links','all')),
+  blocked_words        text[] NOT NULL DEFAULT '{}',    -- at most 200 entries of 2-40 characters
+  link_allowlist       text[] NOT NULL DEFAULT '{}',    -- at most 50 host names
+  slow_mode_seconds    integer CHECK (slow_mode_seconds IS NULL OR slow_mode_seconds > 0),   -- 5, 10, 30, 60 or 300
+  subscribers_only     boolean NOT NULL DEFAULT false,
+  min_account_age_days integer NOT NULL DEFAULT 0 CHECK (min_account_age_days BETWEEN 0 AND 30),
+  disclosure           jsonb NOT NULL DEFAULT '{"hide":"silent","remove":"visible","manual_hold":"visible","auto.blocked_words":"silent","auto.links":"visible","auto.review_all":"visible"}',
+  updated_at           timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE channel_user_restrictions (                -- one row per (channel, user): a shadow ban or a ban
+  channel_id uuid NOT NULL REFERENCES channels(id) ON DELETE CASCADE,
+  user_id    uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  kind       text NOT NULL CHECK (kind IN ('shadow','ban')),
+  reason     text CHECK (reason IS NULL OR char_length(reason) <= 200),
+  expires_at timestamptz,                               -- an expired row counts as absent; housekeeping purges it after 30 days
+  created_by uuid REFERENCES users(id) ON DELETE SET NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (channel_id, user_id),
+  CHECK (kind = 'ban' OR expires_at IS NULL)            -- a shadow ban has no expiry
+);
+
+CREATE TABLE channel_trusted_commenters (               -- skip every automatic hold, slow mode and the account age
+  channel_id uuid NOT NULL REFERENCES channels(id) ON DELETE CASCADE,
+  user_id    uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_by uuid REFERENCES users(id) ON DELETE SET NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (channel_id, user_id)
+);
+
+CREATE TABLE channel_saved_replies (
+  id         uuid PRIMARY KEY,
+  channel_id uuid NOT NULL REFERENCES channels(id) ON DELETE CASCADE,
+  title      text NOT NULL CHECK (char_length(title) BETWEEN 1 AND 40),
+  body       text NOT NULL CHECK (char_length(body) BETWEEN 1 AND 2000),
+  position   integer NOT NULL                           -- at most 20 per channel
+);
+
+CREATE TABLE comment_removals (                         -- the reason of a removal, because the comment itself is soft deleted
+  id         uuid PRIMARY KEY,
+  channel_id uuid NOT NULL REFERENCES channels(id) ON DELETE CASCADE,
+  video_id   uuid NOT NULL REFERENCES videos(id) ON DELETE CASCADE,
+  author_id  uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  excerpt    text NOT NULL,                             -- the first 200 characters
+  reason     text NOT NULL CHECK (reason IN ('spam','harassment','hate','misinformation','other','off_topic')),
+  note       text CHECK (note IS NULL OR char_length(note) <= 200),
+  disclosure text NOT NULL CHECK (disclosure IN ('silent','visible')),   -- the author's list shows `visible` rows only
+  removed_by uuid REFERENCES users(id) ON DELETE SET NULL,
+  created_at timestamptz NOT NULL DEFAULT now()         -- housekeeping deletes rows past 30 days
+);
 
 CREATE TABLE comment_reports (
   id          uuid PRIMARY KEY,                         -- UUIDv7
@@ -2064,19 +2182,21 @@ Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>`
 | `GET /v1/bootstrap` | Initial app context | — | `200 { user: Channel \| null, categories:[Category], featureFlags: Record<string, boolean> }` | Anonymous allowed; a valid bearer adds the caller's channel, an invalid one is 401. Categories come from the same L1/L2 cache as `GET /v1/categories`; `featureFlags` holds each name in `FEATURE_FLAGS` as `true`. One round trip for the web root loader. |
 | `GET /v1/me/account` | The caller's account | — | `200 { id, email, tier, createdAt, role, user, channel }` (`channel` is the owner's view: a `Channel` plus `autoCaptionsDefault`, read through `CaptionRepository.channelDefault`, which no public channel read carries) / `401 UNAUTHORIZED` / `404 CHANNEL_NOT_FOUND` | Authenticated caller. `role` is the verified token's role claim read through `parseRole` (`GUEST` for an unknown claim), the role the API authorizes with; no table stores it. The client apps' session comes from this call (§11). |
 | `GET /videos/:id` | Detail | — | `200 Video` (status, progress, ladder, `playbackUrl`, `posterUrl`, `spriteUrl`, `renditions[]`, `channel`, `viewsCount`, `likesCount`, `dislikesCount`, `error?`) | Owner or public/unlisted. |
-| `PUT /videos/:id/reactions` | Set/clear reaction | `{ type: "LIKE" \| "DISLIKE" \| "NONE" }` | `200 { videoId, likesCount, dislikesCount, userReaction }` | Authenticated caller (`video:react`). Atomically updates Postgres and Redis counters. |
+| `PUT /videos/:id/reactions` | Set/clear reaction | `{ type: "LIKE" \| "DISLIKE" \| "NONE" }` | `200 { videoId, likesCount, dislikesCount, userReaction }` / `403 COMMENTS_BANNED` | Authenticated caller (`video:react`). Atomically updates Postgres and Redis counters. A visible ban on the owning channel refuses it with `COMMENTS_BANNED` and the ban's reason and end; a shadow ban takes no part. |
 | `POST /v1/videos/:id/views` | View beacon | `{ sessionId, watchSeconds, videoDuration }` | `202 { videoId }` / `400` / `413` / `429 RATE_LIMITED` | Anonymous allowed, 120 a minute per address, body limit 2 KiB, also accepted as `text/plain` for `navigator.sendBeacon`. No database access: HyperLogLog dedupe per viewer (the account when signed in, else the session) and a Redis buffer increment (§5.2). `watchSeconds` only qualifies the view and adds no watch time. Under 5 s of watch time (or the whole of a shorter video) is accepted and not counted. An unknown video id is dropped at flush. |
 | `POST /v1/telemetry/vitals` | Core Web Vitals beacon | `{ app: "web"\|"studio", vitals:[{ name: "LCP"\|"INP"\|"CLS"\|"FCP"\|"TTFB"\|"LONG_TASKS", value, route, source? }] }` | `204` / `400 VALIDATION_FAILED` / `413` / `429 RATE_LIMITED` | Anonymous, no cookie, 60 a minute per address. 1-32 vitals; `value` is what the browser reported (milliseconds, the unitless score for CLS, the total milliseconds of the tasks over 50 ms for `LONG_TASKS`), finite and 0-600000; `source` is optional, on a CLS vital only, and names the kit `data-slot` of the element that moved most (`^[a-z][a-z0-9-]{0,63}$`, never a selector or text); `route` is the TanStack Router route id (`/watch/$videoId`), never the URL. Also accepted as `text/plain`, which `navigator.sendBeacon` sends without a preflight. Body limit 16 KiB. No database access: each vital is one observation in the `frontend_*` histograms (§13.1); an app records at most 32 distinct route ids and 32 distinct sources per process, and the rest land under `route="other"` and `source="other"`. |
 | `POST /v1/telemetry/playback` | Playback QoS and retention beacon | `{ videoId, sessionUuid, eventType: "playback_start"\|"heartbeat"\|"rebuffer"\|"quality_change"\|"playback_ended", currentTime, duration, rebufferingMs?, watchedSeconds?, rendition? }` | `204` / `400 VALIDATION_FAILED` / `413` / `429 RATE_LIMITED` | Anonymous, no cookie, 120 a minute per address, body limit 2 KiB. `sessionUuid` is generated by the player for each video load and never reused; nothing else identifies the viewer. `rebufferingMs` and `watchedSeconds` cover the time since the previous event. Also accepted as `text/plain` for `navigator.sendBeacon`. No database access: it feeds the `video_playback_*` and `video_rebuffering_ratio` metrics (§13.1), adds `watchedSeconds` to the day's watch time, counts the view once the session has watched 5 s (or the whole of a shorter video), and counts the session once at each 5 percent step it reached into the view buffer (`taitube:retention:*` in Redis). The `flush-video-views` housekeeping task moves both buffers in one batch into `video_views_daily`, `videos.views_count` and `video_retention_milestones`, so a failed write leaves the batch pending and loses no step. |
 | `GET /v1/creator/videos/:id/analytics?range=7d\|30d\|90d\|lifetime` | Video analytics | — | `200 { videoId, range, from, to, timeline:[{viewDate, views, watchSeconds}], hourly:[{viewHour, views}], rangeViews, rangeWatchSeconds, totalViews, averageDailyViews, averageRetention, previous:{ rangeViews, rangeWatchSeconds } \| null }` | Owner or admin (`read Analytics`). A stranger gets 403 on a video they can see and 404 on one they cannot. Reads what the last flush committed. `lifetime` starts at the first day with views (today when none) and has no `previous`; a fixed range's `previous` is the as-long period just before it. `hourly` is the last 48 UTC hours, the current one included, zero-filled, whatever the range; `video_views_hourly` keeps only those. |
 | `GET /v1/creator/videos/:id/retention` | Audience retention curve | — | `200 { videoId, curve:[{ percent, viewers }] }` | Owner or admin (`read Analytics`), 403 and 404 as for analytics. 21 points, `percent` 0 to 100 in steps of 5, `viewers` the sessions that reached that step; a step nobody reached is 0. Reads what the last flush committed. |
 | `GET /v1/creator/channel/analytics?range=7d\|30d\|90d\|lifetime` | Channel analytics | — | `200 { range, from, to, timeline, hourly, rangeViews, rangeWatchSeconds, netSubscribers, totalViews, videoCount, dailyVelocity, topVideos:[{videoId, title, views, totalViews}], previous:{ rangeViews, rangeWatchSeconds, netSubscribers } \| null }` | Authenticated caller, over the videos they own. Range, `hourly` and `previous` as for video analytics. `netSubscribers` is gains minus losses of the caller's channel over the range, from `subscription_events`, which each subscribe and unsubscribe appends in its own transaction. |
+| `GET /v1/creator/videos?sort=newest\|views\|likes\|comments&status=&visibility=&q=&cursor=&limit=` | Creator library | — | `200 { items:[VideoSummary + { commentsCount, tags, commentsEnabled }], nextCursor }` | Authenticated caller, over the videos they own that are not `DELETED`. `q` is a case-insensitive title substring, LIKE wildcards matched literally. Keyset on `(sort column, id)` descending; a cursor names its sort and is refused under another. |
+| `PATCH /v1/creator/videos/:id` | Studio edit | `{ title?, description?, visibility?, categoryId?, tags?, selectedThumbnail?: { source:"poster" }, commentsEnabled?, version }` | `200 Video` / `404 CATEGORY_NOT_FOUND` / `409 VERSION_CONFLICT` / `422 VALIDATION_FAILED` | Owner or admin (`update Video`, per field). `version` must be the one the edit was made against; the write is a CAS on it and appends `video.metadata_updated`. The category is checked `FOR SHARE` in the same transaction and must be active. The owner of a `REJECTED` video cannot change its visibility. `commentsEnabled: false` refuses new comments with `COMMENTS_DISABLED` for everyone but the owner and the channel team, and is audited `video.comments.toggled { enabled }`; the other fields are audited as `video.updated`. |
 | `GET /v1/creator/videos?sort=newest\|views\|likes\|comments&status=&visibility=&q=&cursor=&limit=` | Creator library | — | `200 { items:[VideoSummary + { commentsCount, tags }], nextCursor }` | Authenticated caller, over the videos they own that are not `DELETED`. `q` is a case-insensitive title substring, LIKE wildcards matched literally. Keyset on `(sort column, id)` descending; a cursor names its sort and is refused under another. |
 | `GET /v1/creator/videos/:id/screening` | Why a video is on hold | — | `200 { videoId, status, reasons:[DUPLICATE\|NSFW\|BLANK\|METADATA_SPAM\|SCREEN_ERROR], decision:"rejected"\|null, decisionNote, canAppeal, appeal:{ message, createdAt, resolved }\|null }` / `401` / `403` / `404` | Owner (`update Video`); a caller who cannot read the video gets `404`. A plain reason only: a match with a taken-down video reads as `DUPLICATE`, a partial match is never told, and neither the matched video nor a score or threshold is on the wire. |
 | `POST /v1/creator/videos/:id/screening/appeal` | Appeal a screening rejection | `{ message }` (1 to 1000 characters) | `201` the same view / `400` / `403` / `404` / `409 VERSION_CONFLICT` / `422` | Owner (`appeal Video`: a `HELD` video or a `REJECTED` one whose `error_code` is `SCREENING_REJECTED`). `REJECTED → HELD` and the appeal row in one CAS; a takedown by a moderator is `403`, a video still on hold `422`. The case returns to the queue and a moderator other than the one who rejected decides. |
 | `PATCH /v1/creator/videos/:id` | Studio edit | `{ title?, description?, visibility?, categoryId?, tags?, selectedThumbnail?: { source:"poster" }, version }` | `200 Video` / `404 CATEGORY_NOT_FOUND` / `409 VERSION_CONFLICT` / `422 VALIDATION_FAILED` | Owner or admin (`update Video`, per field). `version` must be the one the edit was made against; the write is a CAS on it and appends `video.metadata_updated`. The category is checked `FOR SHARE` in the same transaction and must be active. The owner of a `REJECTED` video cannot change its visibility. |
 | `DELETE /v1/creator/videos/:id` | Studio delete | — | `202 { videoId, status:"DELETED" }` | Same soft delete as `DELETE /videos/:id`. |
-| `GET /v1/creator/comments?filter=all\|unanswered\|reported&cursor=&limit=` | Creator comment inbox | — | `200 { items:[Comment + { video:{ id, title } }], nextCursor }` | Authenticated caller, over live comments on the videos they own that they did not write, newest first, keyset on `(created_at, id)`. `unanswered` drops a comment once the caller has a later reply in its thread; `reported` keeps comments with an open report. A new comment on one of their videos arrives live as `comment.created` (§10.3). |
+| `GET /v1/creator/comments?filter=all\|unanswered\|reported\|held\|hidden\|questions\|restricted&authorId=&cursor=&limit=` | Creator comment inbox | — | `200 { items:[Comment + { video:{ id, title } }], nextCursor }` | Authenticated caller, over live comments on the videos they own that they did not write, newest first, keyset on `(created_at, id)`. `unanswered` drops a comment once the caller has a later reply in its thread; `reported` keeps comments with an open report; `held` and `hidden` keep comments in that moderation state, `questions` those with a question mark or a leading question word (`looks_like_question`). A new comment on one of their videos arrives live as `comment.created` (§10.3). |
 | `GET /videos/:id/reactions/me` | My reaction | — | `200 { videoId, type: "LIKE" \| "DISLIKE" \| null }` | Authenticated caller. |
 | `GET /v1/channels/:idOrHandle?locale=` | Channel | — | `200 Channel` (`handle`, `displayName`, `avatarUrl`, `bannerUrl`, `avatar: { sizes }`, `banner: { desktop, mobile, tv }`, `bannerLink`, `country`, `hasContact`, `brandColor`, `bio`, `links:[{ label, url, platform }]`, `subscriberCount`, `videoCount`, `totalViews`, `redirectedFrom`) / `404 CHANNEL_NOT_FOUND` | Anonymous. The channel by UUID or `@handle`; a handle the channel gave up in the last 90 days resolves to it with `redirectedFrom` set, and the web app answers that handle's page with a `301` to the new one. `bio` is the description in the negotiated locale (`locale`, else `Accept-Language`) when the channel wrote one, else the default. `platform` is read off the link's host by `LINK_PLATFORMS` in `@vp/domain`, `website` for an unknown host. The contact email is never in the resource. `videoCount` and `totalViews` are one aggregate over the owner's public `READY` undeleted videos (§5.2); the same fields come with `GET /v1/me/account` and the `PATCH /v1/me/channel` response, never with search results. |
 | `PATCH /v1/me/channel` | Edit my channel | `{ handle?, displayName?, avatarUrl?, bannerUrl?, brandColor?, bio?, links?, country?, contactEmail?, bannerLink? }` | `200 OwnerChannel` / `400 INVALID_HANDLE_FORMAT` / `403 FORBIDDEN` / `404 CHANNEL_NOT_FOUND` / `409 HANDLE_ALREADY_TAKEN \| HANDLE_CHANGE_TOO_SOON \| HANDLE_RESERVED` / `422 VALIDATION_FAILED` | The acting channel (`X-Channel-Id`, default the caller's own): the owner, a manager or an editor (`edit-channel`, `decideChannelTask`); a moderator gets `403`. `avatarUrl` and `bannerUrl` take an external image address, which stays until an upload replaces it (`POST /v1/me/channel/images/:kind/upload` and `/complete`), or `null` to remove the image. A handle changes at most once every 30 days (`HANDLE_CHANGE_TOO_SOON`, `decideHandleChange`); the one it leaves goes to `channel_handle_history` in the same transaction and stays reserved for its old owner for 90 days (`HANDLE_RESERVED`, `decideHandleClaim`). `bio` up to 5000 characters of plain text. `links` replaces the list: up to 8 `{ label, url }`, a label of 1-40 characters, an `https` URL of up to 2048 characters without credentials (`validateChannelLinks` in `@vp/validation`, so the form runs the same rule); an empty list clears it. `country` is an ISO 3166-1 alpha-2 code in `COUNTRIES` or `null`; `contactEmail` is a validated address or `null`; `bannerLink` is `{ label <= 24, url }`, `https` only, or `null`. `brandColor` is `#rrggbb` in any case, stored lowercase, or `null` to clear it (`validateBrandColor` in `@vp/domain-rules`): a malformed value is `422 VALIDATION_FAILED`, any well-formed one is accepted, a hostile one too, because the web app derives the channel's accent from it with `deriveAccent`. A save that changes anything appends one `channel.updated` row to the channel audit log naming the fields. |
@@ -2100,10 +2220,10 @@ Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>`
 | `GET /v1/me/notifications/unread-count` | The badge number | — | `200 { unreadCount }` / `401 UNAUTHORIZED` | Authenticated. Served from `notifications_user_unread_idx`; the same number `hello` carries as `unreadNotifications`. |
 | `POST /v1/me/notifications/read` | Mark read | `{ ids: [uuid] }` (1 to 100) or `{ all: true }` | `200 { unreadCount }` / `400` / `401` / `403 FORBIDDEN` | `update Notification { ownerId }` on every named row: an id of someone else's notification refuses the whole request, an id already gone is skipped, one already read is a no-op. Emits `notification.read` on the user stream, so the caller's other tabs and devices clear their badge. |
 | `GET /feed/subscriptions?cursor=&limit=` | Subscribed video feed | — | `200 { items:[VideoSummary], nextCursor, total }` | Authenticated caller. Keyset pagination on `(created_at, id)` for `READY` + `public` videos. |
-| `GET /videos/:id/comments?sort=&cursor=&limit=&page=&size=` | Video comments | — | `200 { items:[Comment], nextCursor, total }` | Anonymous allowed (video read rules). Root comments, pinned first; `sort=top` keys on `(is_pinned, like_count, created_at, id)`, `sort=newest` on `(is_pinned, created_at, id)`, all descending. Legacy `page`/`size` read as an offset. The first top page is cached in Redis (`taitube:video:{id}:comments:top`, 60 s) behind singleflight. |
+| `GET /videos/:id/comments?sort=&cursor=&limit=&page=&size=` | Video comments | — | `200 { items:[Comment], nextCursor, total }` | Anonymous allowed (video read rules). Root comments, pinned first; `sort=top` keys on `(is_pinned, like_count, created_at, id)`, `sort=newest` on `(is_pinned, created_at, id)`, all descending. Legacy `page`/`size` read as an offset. The first top page is cached in Redis (`taitube:video:{id}:comments:top`, 60 s) behind singleflight. Every `Comment` carries `status` (`published`, `held`, `hidden`) and `moderation`: `null` for a published comment and for a silently moderated one, `{ state, reason? }` for the author of a visibly moderated one, and `{ state, reason, disclosure, heldReason, by, at }` for a moderator. A signed-in reader also gets their own held, hidden or shadowed comments merged into the page and added to `total`, so their count matches their list; the shared hot page is never written with them. |
 | `GET /comments/:id/replies?cursor=&limit=` | Comment replies | — | `200 { items:[Comment], nextCursor }` | Anonymous allowed. Oldest first, keyset on `(created_at, id)`. |
-| `POST /videos/:id/comments` | Comment or reply | `{ content, parentId? }` | `201 Comment` | Authenticated (`comment:create`). 1-2000 characters of plain text. A reply to a reply joins the root thread. Increments `comments_count`, purges the hot page. |
-| `PATCH /comments/:id` | Edit comment | `{ content }` | `200 Comment` | Author only (`comment:update`); sets `isEdited`. |
+| `POST /videos/:id/comments` | Comment or reply | `{ content, parentId? }` | `201 Comment` / `403 COMMENTS_BANNED \| COMMENTS_DISABLED \| COMMENTS_SUBSCRIBERS_ONLY \| COMMENTS_ACCOUNT_TOO_NEW` / `429 COMMENTS_SLOW_MODE` | Authenticated (`comment:create`). 1-2000 characters of plain text. A reply to a reply joins the root thread. One context lookup (settings, restriction, subscription, team membership, trusted list, account age) feeds `evaluateCommentGate`, which refuses in this order: a visible ban, comments off, subscribers only, account age; then slow mode is claimed last in Redis (`SET NX EX`, released when the insert fails, fail-open when Redis is down). `COMMENTS_BANNED` carries `errors: [{ reason, expiresAt }]`, `COMMENTS_ACCOUNT_TOO_NEW` `[{ opensAt }]` and `COMMENTS_SLOW_MODE` `[{ retryAfter }]` plus a `Retry-After` header. A held comment answers `201` too; the owner, managers, moderators and trusted commenters are never held. A shadow ban takes no part: the comment is stored and answered as any other. A public comment increments `comments_count` and purges the hot page; a held, hidden or shadowed one does neither. |
+| `PATCH /comments/:id` | Edit comment | `{ content }` | `200 Comment` / `403 COMMENTS_BANNED` and the other gate refusals | Author only (`comment:update`); sets `isEdited` and rewrites `looks_like_question`. The gate's content checks run again: a published comment edited into a blocked word, a link off the allowlist or a `review_all` channel is held with that rule's disclosure, takes it and its replies off `comments_count` in the same transaction, purges the hot cache, tells the moderators and withdraws the unread notifications of the thread; trusted commenters and channel members are exempt, a held or hidden comment keeps its state, and an author under a visible ban is refused. |
 | `DELETE /comments/:id` | Delete comment | — | `204` | Author, video owner, moderator or admin (`comment:delete`). Removes the replies of a root too and decrements `comments_count` by all of them. |
 | `POST /comments/:id/pin` | Pin comment | — | `200 Comment` / `409 COMMENT_NOT_PINNABLE` | Video owner or admin (`comment:pin`). Top-level only; unpins whichever comment held the video's one pinned slot. |
 | `DELETE /comments/:id/pin` | Unpin comment | — | `200 Comment` | Video owner or admin (`comment:pin`). |
@@ -2171,6 +2291,22 @@ Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>`
 | `DELETE /v1/me/channel/members/:userId` | Remove a member, or leave | — | `204` / `400 VALIDATION_FAILED \| CHANNEL_OWNER_IMMUTABLE` / `401` / `403` / `404 CHANNEL_MEMBER_NOT_FOUND` | `delete ChannelMember`: the owner, a manager (not another manager), or the member themselves, who names the channel they leave in `X-Channel-Id`. Audited `member.left` when the caller is the member, `member.removed` otherwise. The next request of the removed member no longer reaches the channel. |
 | `GET /v1/me/memberships` | List my channel memberships | — | `200 { items: [{ channelId, ownerId, role, channel: { handle, displayName, avatarUrl } }] }` / `401` | Signed in. The channels whose team the caller is on, for the studio's channel switcher; the caller's own channel is not listed. |
 | `GET /v1/me/channel/audit?cursor=&limit=&actorUserId=&action=` | Read the channel audit log | — | `200 { items: AuditEntry[], nextCursor }` / `400 VALIDATION_FAILED \| INVALID_CURSOR` / `401` / `403` | `read ChannelAudit`: the owner and managers. Keyset on `(created_at, id)`, newest first (§6.1.1), narrowed to one actor or one action. Each entry carries `action`, `targetType`, `targetId`, `meta`, the `actorUserId` (null once deleted) and the `actor` (their profile, null with the account). Append-only: no route changes or deletes a row; housekeeping purges rows past 365 days. |
+| `GET /v1/me/channel/comment-settings` | Read the comment settings | — | `200 CommentSettings` / `401` / `403` | `update CommentSettings` on the acting channel: the owner and managers (a moderator, an editor and an analytics viewer get `403`). The defaults for a channel that never saved. |
+| `PUT /v1/me/channel/comment-settings` | Replace the comment settings | `{ reviewMode: "none"\|"links"\|"all", blockedWords, linkAllowlist, slowModeSeconds: null\|5\|10\|30\|60\|300, subscribersOnly, minAccountAgeDays: 0..30, disclosure: { hide, remove, manual_hold, "auto.blocked_words", "auto.links", "auto.review_all": "silent"\|"visible" } }` | `200 CommentSettings` / `400` / `401` / `403` / `422 VALIDATION_FAILED` | Same rule as the read. `@vp/validation` normalises words (case and accent folded, one spelling kept) and hosts, and checks the bounds. A save that changes nothing writes nothing; otherwise it is one transaction with the audit row `settings.comments.updated { fields }`. |
+| `POST /v1/comments/:id/moderate` | Hold, approve, hide, unhide or remove a comment | `{ action: "hold"\|"hide"\|"remove", disclosure?: "silent"\|"visible", reason?, note? }` or `{ action: "approve"\|"unhide" }` | `200 { state, comment }` / `400` / `401` / `403` / `404 COMMENT_NOT_FOUND` / `409 MODERATION_NOT_APPLICABLE` | `hold`, `approve`, `hide`, `unhide`, `remove` on `Comment` by the video owner and by members whose role has `comment.moderate`; each action is its own check. The disclosure is the body's, else the channel default (`manual_hold`, `hide`, `remove`); a visible one needs a `reason`. The write compares and sets on `moderation_state` under the video lock and moves `comments_count` by the exact change in what is public (the comment and its public replies), unpins what leaves public reads, purges the hot cache and withdraws the unread notifications that refer to the thread. The first approval of a comment the gate held enqueues the comment notification (job id `<commentId>--notify-comment`) and emits `comment.created`; an unhide or a later approval does not. `remove` is 42's soft delete plus a `comment_removals` row. One audit row per action with `meta.disclosure`. 42's pin refuses a held or hidden comment (`409 COMMENT_NOT_PINNABLE`) and writes `comment.pinned`; a moderator's `DELETE` writes a silent `comment.removed`. |
+| `GET /v1/me/channel/restrictions` | List the restricted users | `?cursor&limit` | `200 { items: [{ userId, kind: "shadow"\|"ban", reason, expiresAt, createdBy, createdAt, user }], nextCursor }` / `400` / `401` / `403` | `restrict ChannelUser` on the acting channel: the owner, managers and moderators. Shadow bans and bans that have not ended, newest first; an ended ban is absent whether or not housekeeping purged it. |
+| `PUT /v1/me/channel/restrictions/:userId` | Shadow ban or ban a user | `{ action: "shadow_ban" }` or `{ action: "ban", reason?: ≤200, expiresAt?: future ISO\|null }` | `200 Restriction` / `400` / `401` / `403` / `409 CANNOT_RESTRICT_MEMBER` / `422 VALIDATION_FAILED` | Same rule as the list. The owner and the team cannot be restricted. One transaction: the restriction row (a ban over a shadow ban replaces it), an exact recount of `comments_count` on every video of the channel the user commented on, the audit row `user.shadow_banned` or `user.banned { expiresAt }` and, for a ban, the `moderation` notification job. The hot cache of those videos is purged, and a shadow ban withdraws the unread notifications about the user's comments. A ban affects writes only (comments and video reactions, `403 COMMENTS_BANNED` with its reason and end); only a shadow ban affects reads. |
+| `DELETE /v1/me/channel/restrictions/:userId` | Lift the restriction | - | `204` / `400` / `401` / `403` / `404 RESTRICTION_NOT_FOUND` | Same rule. Recounts like the apply and writes `user.restriction_lifted { kind }`; nothing else is rewritten. |
+| `GET /v1/channels/:id/me/restriction` | The own visible ban on a channel | - | `200 { reason, expiresAt }` / `400` / `401` / `404 RESTRICTION_NOT_FOUND` | Signed in. `404` for none, for an ended ban and for a shadow ban, which is never told. |
+| `POST /v1/creator/comments/bulk` | Moderate up to 100 comments | `{ ids: uuid[1..100], action }` where `action` is any moderation action (`hold`, `approve`, `hide`, `unhide`, `remove`, `shadow_ban`, `ban`, `lift`) with its `disclosure`, `reason` and `note` | `200 { results: [{ id, ok, code? }] }` / `400` / `401` | Acting channel. Each id is decided by the permission and the state rule of its own action, in the order sent, so one refusal is one id's `code` and never fails the batch. A user action applies once per author and answers for each of their comments; it refuses a comment outside the acting channel with `COMMENT_NOT_FOUND`. Every applied action writes its own audit row. |
+| `GET /v1/me/comment-removals` | The own comments removed visibly | `?cursor&limit` | `200 { items: [{ id, videoId, excerpt, reason, note, createdAt }], nextCursor }` / `400` / `401` | The author. Visible removals of the last 30 days, newest first; a silent removal is never listed. Housekeeping deletes `comment_removals` rows older than 30 days. |
+| `GET /v1/me/channel/trusted-commenters` | List the trusted commenters | `?cursor&limit` | `200 { items: [{ userId, createdBy, createdAt, user }], nextCursor }` / `400` / `401` / `403` | `update CommentSettings` on the acting channel: the owner and managers. Newest first. |
+| `PUT /v1/me/channel/trusted-commenters/:userId` | Trust a commenter | - | `204` / `400` / `401` / `403` / `422 VALIDATION_FAILED` | Same rule. Idempotent; writes `trusted.added` only when the list changed. A trusted commenter skips every automatic hold, slow mode and the account age check. |
+| `DELETE /v1/me/channel/trusted-commenters/:userId` | Stop trusting a commenter | - | `204` / `400` / `401` / `403` | Same rule; writes `trusted.removed` only when the list changed. |
+| `GET /v1/me/channel/saved-replies` | List the saved replies | - | `200 { items: [{ id, title, body, position }] }` / `401` / `403` | `read-inbox` on the acting channel: the owner, managers and moderators. By position. |
+| `POST /v1/me/channel/saved-replies` | Save a reply | `{ title: 1-40, body: 1-2000 }` | `201 SavedReply` / `400` / `401` / `403` / `409 SAVED_REPLY_LIMIT` | `update CommentSettings`: the owner and managers. Appended after the last position; a channel keeps at most 20, counted under a per-channel lock. Not audited. |
+| `PATCH /v1/me/channel/saved-replies/:id` | Edit or move a reply | `{ title?, body?, position? }`, at least one | `200 SavedReply` / `400` / `401` / `403` / `404 SAVED_REPLY_NOT_FOUND` | Same rule. A reply of another channel is not found. |
+| `DELETE /v1/me/channel/saved-replies/:id` | Delete a reply | - | `204` / `400` / `401` / `403` / `404 SAVED_REPLY_NOT_FOUND` | Same rule. |
 | `POST /v1/me/live` | Open my live stream | — | `200 LiveStream` / `401` / `404 CHANNEL_NOT_FOUND` | Signed in. The caller's channel stream that is `IDLE` or `LIVE`, minted on the first call with a stream key; `ingest` carries the RTMP server URL (`LIVE_RTMP_PUBLIC_URL`), the key and the WHIP endpoint (`LIVE_WHIP_PUBLIC_URL/{key}/whip`). The key outlives a broadcast: ending one moves it to the next `IDLE` row (ADR-29). |
 | `GET /v1/me/live` | Get my live stream | — | `200 LiveStream` / `401` / `404 LIVE_STREAM_NOT_FOUND` | The open stream, without minting one. |
 | `PATCH /v1/me/live/:id` | Edit my live stream | `{ title?, description?, visibility?, archiveVisibility?, chatSlowModeSeconds?, chatSubscribersOnly? }` | `200 LiveStream` / `400` / `401` / `404 LIVE_STREAM_NOT_FOUND` / `422` | `update LiveStream` (`decideLiveStreamUpdate`); someone else's stream is not found. `archiveVisibility` is what the recording becomes when the broadcast ends. While `LIVE`, the title (unless empty), description and visibility reach the video in the same transaction. A chat mode change reaches the open chat sockets as a `mode` frame. `ingest` also carries the overlay and control tokens. |
@@ -2279,7 +2415,7 @@ A malformed cursor raises `InvalidCursorError` in core, which the API layer tran
 
 ### 6.2 Error codes (stable, machine-readable)
 
-`UPLOAD_TOO_LARGE`, `UPLOAD_SIZE_MISMATCH`, `UNSUPPORTED_CONTENT_TYPE`, `UPLOAD_EXPIRED`, `UPLOAD_NOT_OPEN`, `QUOTA_EXCEEDED`, `VIDEO_NOT_FOUND`, `DLQ_ENTRY_NOT_FOUND`, `VERSION_CONFLICT`, `FORBIDDEN`, `RATE_LIMITED`, `UNAUTHORIZED`, `VALIDATION_FAILED`, `ROUTE_NOT_FOUND`, `INVALID_CURSOR`, `CATEGORY_NOT_FOUND`, `CATEGORY_SLUG_CONFLICT`, `CATEGORY_IN_USE`, `CHANNEL_NOT_FOUND`, `HANDLE_ALREADY_TAKEN`, `INVALID_HANDLE_FORMAT`, `CANNOT_SUBSCRIBE_TO_SELF`, `COMMENT_NOT_FOUND`, `COMMENT_NOT_PINNABLE`, `COMMENT_ALREADY_REPORTED`, `REPORT_NOT_FOUND`, `REPORT_ALREADY_RESOLVED`, `PLAYLIST_NOT_FOUND`, `PLAYLIST_ITEM_NOT_FOUND`, `SYSTEM_PLAYLIST_IMMUTABLE`, `DATABASE_UNAVAILABLE`, `CACHE_UNAVAILABLE`, `QUEUE_UNAVAILABLE`, `INTERNAL`, `FORMAT_UNSUPPORTED_LOCALE`, `FORMAT_UNKNOWN_OPTION`, `FORMAT_WRONG_KIND`, `FORMAT_UNRENDERABLE`, `CAPTION_NOT_FOUND`, `CAPTION_TRACK_LIMIT`, `CAPTION_OVERWRITE_UNCONFIRMED`, `SEARCH_HISTORY_NOT_FOUND`, `CLIP_NOT_FOUND`, `PICK_NOT_FOUND`, `PICK_WINDOW_OVERLAP`, `RECOMMENDATION_FEEDBACK_NOT_FOUND`, `WEBHOOK_NOT_FOUND`, `WEBHOOK_LIMIT_REACHED`, `WEBHOOK_DELIVERY_FAILED`, `WEBHOOK_DELIVERY_REJECTED`, `OEMBED_URL_UNSUPPORTED`, `OEMBED_FORMAT_UNSUPPORTED`, `LIVE_STREAM_NOT_FOUND`, `LIVE_STREAM_NOT_LIVE`, `LIVE_INGEST_REFUSED`, `LIVE_GATEWAY_UNAVAILABLE`, `LIVE_CHAT_SLOW_MODE`, `LIVE_CHAT_SUBSCRIBERS_ONLY`, `LIVE_CHAT_CLOSED`, `LIVE_CHAT_TICKET_INVALID`, `SCREENING_REJECTED`, `WATCH_PARTY_NOT_FOUND`, `WATCH_PARTY_CLOSED`, `WATCH_PARTY_FULL`, `WATCH_PARTY_BANNED`, `WATCH_PARTY_GUESTS_OFF`, `WATCH_PARTY_PASSWORD_REQUIRED`, `WATCH_PARTY_PASSWORD_INVALID`, `WATCH_PARTY_PASSWORD_LOCKED`, `WATCH_PARTY_INVITE_INVALID`, `WATCH_PARTY_LIMIT_REACHED`, `WATCH_PARTY_VIDEO_NOT_SHAREABLE`, `WATCH_PARTY_QUEUE_FULL`, `WATCH_PARTY_STATE_STALE`, `WATCH_PARTY_PERMISSION_MISSING`, `WATCH_PARTY_ROLE_ESCALATION`, `WATCH_PARTY_ROLE_PROTECTED`, `WATCH_PARTY_ROLE_NOT_FOUND`, `WATCH_PARTY_ROLE_LIMIT`, `WATCH_PARTY_SLOW_MODE`, `WATCH_PARTY_CHAT_OFF`, `WATCH_PARTY_TICKET_INVALID`, `WATCH_PARTY_CREDENTIAL_INVALID` (API) · `UNSUPPORTED_CODEC`, `CORRUPT_CONTAINER`, `DURATION_EXCEEDED`, `SOURCE_MISSING`, `FFMPEG_FAILED`, `FFMPEG_OOM`, `FFMPEG_TIMEOUT`, `STORAGE_UNAVAILABLE`, `SEGMENT_VERIFY_FAILED`, `DISK_FULL`, `ORPHANED`, `WHISPER_FAILED`, `WHISPER_KILLED`, `WHISPER_TIMEOUT`, `WHISPER_MODEL_INVALID`, `WHISPER_INPUT_REJECTED`, `NO_AUDIO_STREAM`, `SCREEN_MODEL_INVALID`, `SCREEN_MODEL_FAILED`, `LIVE_INGEST_UNAVAILABLE`, `CHANNEL_MEMBERSHIP_REQUIRED`, `CHANNEL_INVITE_NOT_FOUND`, `CHANNEL_INVITE_NOT_PENDING`, `CHANNEL_INVITE_ALREADY_PENDING`, `CHANNEL_MEMBER_EXISTS`, `CHANNEL_MEMBER_NOT_FOUND`, `CHANNEL_OWNER_IMMUTABLE`, `HANDLE_CHANGE_TOO_SOON`, `HANDLE_RESERVED`, `INVALID_SPOTLIGHT_VIDEO`, `IMAGE_TOO_SMALL`, `IMAGE_UPLOAD_NOT_FOUND`, `SERIES_VIDEO_NOT_OWNED` (pipeline; ORPHANED marks a video the processing reconciler found with nothing running and nothing queued).
+`UPLOAD_TOO_LARGE`, `UPLOAD_SIZE_MISMATCH`, `UNSUPPORTED_CONTENT_TYPE`, `UPLOAD_EXPIRED`, `UPLOAD_NOT_OPEN`, `QUOTA_EXCEEDED`, `VIDEO_NOT_FOUND`, `DLQ_ENTRY_NOT_FOUND`, `VERSION_CONFLICT`, `FORBIDDEN`, `RATE_LIMITED`, `UNAUTHORIZED`, `VALIDATION_FAILED`, `ROUTE_NOT_FOUND`, `INVALID_CURSOR`, `CATEGORY_NOT_FOUND`, `CATEGORY_SLUG_CONFLICT`, `CATEGORY_IN_USE`, `CHANNEL_NOT_FOUND`, `HANDLE_ALREADY_TAKEN`, `INVALID_HANDLE_FORMAT`, `CANNOT_SUBSCRIBE_TO_SELF`, `COMMENT_NOT_FOUND`, `COMMENT_NOT_PINNABLE`, `COMMENT_ALREADY_REPORTED`, `REPORT_NOT_FOUND`, `REPORT_ALREADY_RESOLVED`, `PLAYLIST_NOT_FOUND`, `PLAYLIST_ITEM_NOT_FOUND`, `SYSTEM_PLAYLIST_IMMUTABLE`, `DATABASE_UNAVAILABLE`, `CACHE_UNAVAILABLE`, `QUEUE_UNAVAILABLE`, `INTERNAL`, `FORMAT_UNSUPPORTED_LOCALE`, `FORMAT_UNKNOWN_OPTION`, `FORMAT_WRONG_KIND`, `FORMAT_UNRENDERABLE`, `CAPTION_NOT_FOUND`, `CAPTION_TRACK_LIMIT`, `CAPTION_OVERWRITE_UNCONFIRMED`, `SEARCH_HISTORY_NOT_FOUND`, `CLIP_NOT_FOUND`, `PICK_NOT_FOUND`, `PICK_WINDOW_OVERLAP`, `RECOMMENDATION_FEEDBACK_NOT_FOUND`, `WEBHOOK_NOT_FOUND`, `WEBHOOK_LIMIT_REACHED`, `WEBHOOK_DELIVERY_FAILED`, `WEBHOOK_DELIVERY_REJECTED`, `OEMBED_URL_UNSUPPORTED`, `OEMBED_FORMAT_UNSUPPORTED`, `LIVE_STREAM_NOT_FOUND`, `LIVE_STREAM_NOT_LIVE`, `LIVE_INGEST_REFUSED`, `LIVE_GATEWAY_UNAVAILABLE`, `LIVE_CHAT_SLOW_MODE`, `LIVE_CHAT_SUBSCRIBERS_ONLY`, `LIVE_CHAT_CLOSED`, `LIVE_CHAT_TICKET_INVALID`, `COMMENTS_BANNED`, `COMMENTS_DISABLED`, `COMMENTS_SUBSCRIBERS_ONLY`, `COMMENTS_ACCOUNT_TOO_NEW`, `COMMENTS_SLOW_MODE`, `MODERATION_NOT_APPLICABLE`, `RESTRICTION_NOT_FOUND`, `CANNOT_RESTRICT_MEMBER`, `SAVED_REPLY_NOT_FOUND`, `SAVED_REPLY_LIMIT`, `SCREENING_REJECTED`, `WATCH_PARTY_NOT_FOUND`, `WATCH_PARTY_CLOSED`, `WATCH_PARTY_FULL`, `WATCH_PARTY_BANNED`, `WATCH_PARTY_GUESTS_OFF`, `WATCH_PARTY_PASSWORD_REQUIRED`, `WATCH_PARTY_PASSWORD_INVALID`, `WATCH_PARTY_PASSWORD_LOCKED`, `WATCH_PARTY_INVITE_INVALID`, `WATCH_PARTY_LIMIT_REACHED`, `WATCH_PARTY_VIDEO_NOT_SHAREABLE`, `WATCH_PARTY_QUEUE_FULL`, `WATCH_PARTY_STATE_STALE`, `WATCH_PARTY_PERMISSION_MISSING`, `WATCH_PARTY_ROLE_ESCALATION`, `WATCH_PARTY_ROLE_PROTECTED`, `WATCH_PARTY_ROLE_NOT_FOUND`, `WATCH_PARTY_ROLE_LIMIT`, `WATCH_PARTY_SLOW_MODE`, `WATCH_PARTY_CHAT_OFF`, `WATCH_PARTY_TICKET_INVALID`, `WATCH_PARTY_CREDENTIAL_INVALID` (API) · `UNSUPPORTED_CODEC`, `CORRUPT_CONTAINER`, `DURATION_EXCEEDED`, `SOURCE_MISSING`, `FFMPEG_FAILED`, `FFMPEG_OOM`, `FFMPEG_TIMEOUT`, `STORAGE_UNAVAILABLE`, `SEGMENT_VERIFY_FAILED`, `DISK_FULL`, `ORPHANED`, `WHISPER_FAILED`, `WHISPER_KILLED`, `WHISPER_TIMEOUT`, `WHISPER_MODEL_INVALID`, `WHISPER_INPUT_REJECTED`, `NO_AUDIO_STREAM`, `SCREEN_MODEL_INVALID`, `SCREEN_MODEL_FAILED`, `LIVE_INGEST_UNAVAILABLE`, `CHANNEL_MEMBERSHIP_REQUIRED`, `CHANNEL_INVITE_NOT_FOUND`, `CHANNEL_INVITE_NOT_PENDING`, `CHANNEL_INVITE_ALREADY_PENDING`, `CHANNEL_MEMBER_EXISTS`, `CHANNEL_MEMBER_NOT_FOUND`, `CHANNEL_OWNER_IMMUTABLE`, `HANDLE_CHANGE_TOO_SOON`, `HANDLE_RESERVED`, `INVALID_SPOTLIGHT_VIDEO`, `IMAGE_TOO_SMALL`, `IMAGE_UPLOAD_NOT_FOUND`, `SERIES_VIDEO_NOT_OWNED` (pipeline; ORPHANED marks a video the processing reconciler found with nothing running and nothing queued).
 
 A code is declared in `@vp/errors` and carries two properties, each declared once over the whole `ErrorCode` union so that adding a code fails to compile until both are decided:
 
@@ -2689,6 +2825,7 @@ The watch party sweep (idle close, owner hand-over, purge) is not a scheduler: i
 | `tmp-sweep` | `*/30 * * * *` | Remove orphaned `/tmp/vp/*` dirs older than 2 h on the housekeeping pod (worker pods clean their own on exit). |
 | `reconcile-reaction-counters` | `0 * * * *` | Detect and repair drift between exact `video_reactions` counts and cached counter columns (`videos.likes_count`, `videos.dislikes_count`). |
 | `purge-search-history` | `15 3 * * *` | Delete `search_history` rows last searched more than 90 days ago (`SEARCH_HISTORY_RETENTION_DAYS`); the 100-row cap is enforced by each write. |
+| `purge-comment-moderation` | `0 4 * * *` | Delete `comment_removals` rows older than 30 days (`COMMENT_REMOVAL_RETENTION_DAYS`) and `channel_user_restrictions` bans that ended more than 30 days ago (`RESTRICTION_RETENTION_DAYS`); an ended ban reads as absent before that, so a purge changes no answer. |
 | `purge-screening-evidence` | `0 4 * * *` | Remove `evidence/{videoId}/` from the raw bucket for every case decided more than 30 days ago (`SCREENING_EVIDENCE_RETENTION_DAYS`) and stamp `evidence_purged_at`; the result row and the fingerprints stay. |
 | `purge-channel-audit` | `45 3 * * *` | Delete `channel_audit_log` rows written more than 365 days ago (`CHANNEL_AUDIT_RETENTION_DAYS`); nothing else deletes or changes an audit row. |
 | `purge-channel-images` | `0 4 * * *` | Delete the raw file of a `channel_image_uploads` row settled for 7 days (`CHANNEL_IMAGE_RETENTION_DAYS`) and every variant of a version nothing shows any more, then mark the row `purged`; a row whose files are not all gone stays listed for the next run. |

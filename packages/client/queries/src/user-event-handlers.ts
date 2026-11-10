@@ -66,7 +66,7 @@ function applyNotificationChange(
 }
 
 function applyCommentCreated(
-  _payload: UserEventPayloads['comment.created'],
+  _payload: UserEventPayloads['comment.created' | 'comment.held'],
   queryClient: QueryClient
 ) {
   void queryClient.invalidateQueries({ queryKey: creatorCommentKeys.all });
@@ -121,6 +121,7 @@ const userEventHandlers: UserEventHandlers = {
   'notification.created': applyNotificationChange,
   'notification.read': applyNotificationChange,
   'comment.created': applyCommentCreated,
+  'comment.held': applyCommentCreated,
   'live.started': applyLiveStarted,
   'channel.image.ready': applyChannelImageReady,
   'channel.image.failed': ignoreChannelImageFailed,

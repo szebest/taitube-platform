@@ -17,6 +17,7 @@ export interface StudioMetadataPatch {
   categoryId?: string | null;
   tags?: string[];
   customThumbnailKey?: string | null;
+  commentsEnabled?: boolean;
 }
 
 export interface UpdateStudioMetadataOptions {
@@ -24,7 +25,10 @@ export interface UpdateStudioMetadataOptions {
   expectedVersion: number;
   patch: StudioMetadataPatch;
   userId: string;
-  /** Audited as `video.updated` by `userId` on the channel of the video owner, in the edit transaction. */
+  /**
+   * Audited as `video.updated` by `userId` on the channel of the video owner, in the edit transaction,
+   * unless empty; a `commentsEnabled` in the patch is audited on its own as `video.comments.toggled`.
+   */
   auditFields: VideoAuditField[];
 }
 

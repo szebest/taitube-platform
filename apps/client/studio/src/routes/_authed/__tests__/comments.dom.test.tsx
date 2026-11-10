@@ -24,8 +24,10 @@ describe('apps/client/studio: /comments', () => {
   it('lists every comment by default, reached from the studio navigation', async () => {
     const { requests } = await renderInbox('/comments', [[inboxComment()]]);
 
-    expect(screen.getByRole('radio', { name: 'All' })).toBeChecked();
-    expect(requests.lists).toEqual([{ filter: 'all', cursor: null }]);
+    expect(screen.getByRole('combobox', { name: 'Show' })).toHaveTextContent('All');
+    expect(requests.lists.filter(({ filter }) => filter === 'all')).toEqual([
+      { filter: 'all', cursor: null },
+    ]);
     expect(
       within(screen.getAllByRole('navigation', { name: 'Studio' })[0] as HTMLElement).getByRole(
         'link',
@@ -37,8 +39,10 @@ describe('apps/client/studio: /comments', () => {
   it('restores the filter from the address', async () => {
     const { requests } = await renderInbox('/comments?filter=reported');
 
-    expect(screen.getByRole('radio', { name: 'Reported' })).toBeChecked();
-    expect(requests.lists).toEqual([{ filter: 'reported', cursor: null }]);
+    expect(screen.getByRole('combobox', { name: 'Show' })).toHaveTextContent('Reported');
+    expect(requests.lists.filter(({ filter }) => filter === 'reported')).toEqual([
+      { filter: 'reported', cursor: null },
+    ]);
   });
 
   it('shows a new comment the moment it lands', async () => {

@@ -5,7 +5,7 @@ import {
   type ChannelInviteStatus,
   type ChannelRole,
 } from '@vp/domain';
-import { type SQL, sql } from 'drizzle-orm';
+import { sql } from 'drizzle-orm';
 import {
   check,
   index,
@@ -16,11 +16,8 @@ import {
   uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { timestamptz } from './columns';
+import { listOf, timestamptz } from './columns';
 import { channels, users } from './schema';
-
-const listOf = (values: readonly string[]): SQL =>
-  sql.raw(values.map((value) => `'${value}'`).join(', '));
 
 export const channelMembers = pgTable(
   'channel_members',

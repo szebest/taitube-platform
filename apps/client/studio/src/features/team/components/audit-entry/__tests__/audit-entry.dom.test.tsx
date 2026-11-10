@@ -5,7 +5,7 @@ import { EDITOR_ID, roleChanged } from '#app/features/team/__tests__/team-api.fi
 
 type Entry = ChannelAuditPageView['items'][number];
 
-const id = (n: number) => `0190c3a0-5e1d-7000-8000-0000000ee00${n}`;
+const id = (n: number) => `0190c3a0-5e1d-7000-8000-0000000ee0${String(n).padStart(2, '0')}`;
 
 const base = {
   targetId: EDITOR_ID,
@@ -82,6 +82,61 @@ const entries: { scenario: string; entry: Entry; shown: string[] }[] = [
     scenario: 'a video edited',
     entry: editedVideo,
     shown: ['Edited a video', 'title and tags'],
+  },
+  {
+    scenario: 'comments turned off',
+    entry: {
+      ...base,
+      id: id(9),
+      action: 'video.comments.toggled',
+      targetType: 'video',
+      meta: { enabled: false },
+    },
+    shown: ['Turned comments on or off', 'comments off'],
+  },
+  {
+    scenario: 'a silent hide',
+    entry: {
+      ...base,
+      id: id(10),
+      action: 'comment.hidden',
+      targetType: 'comment',
+      meta: { videoId: EDITOR_ID, disclosure: 'silent' },
+    },
+    shown: ['Hid a comment', 'silently'],
+  },
+  {
+    scenario: 'a pin',
+    entry: {
+      ...base,
+      id: id(11),
+      action: 'comment.pinned',
+      targetType: 'comment',
+      meta: { videoId: EDITOR_ID, pinned: true },
+    },
+    shown: ['Pinned or unpinned a comment', 'pinned'],
+  },
+  {
+    scenario: 'a changed setting',
+    entry: {
+      ...base,
+      id: id(12),
+      action: 'settings.comments.updated',
+      targetType: 'settings',
+      meta: { fields: ['blockedWords', 'slowModeSeconds'] },
+    },
+    shown: ['Changed the comment settings', 'blocked words and slow mode'],
+  },
+  {
+    scenario: 'a ban',
+    entry: {
+      ...base,
+      id: id(13),
+      action: 'user.banned',
+      targetType: 'user',
+      meta: { expiresAt: null },
+    },
+    shown: ['Banned a user'],
   },
 ];
 

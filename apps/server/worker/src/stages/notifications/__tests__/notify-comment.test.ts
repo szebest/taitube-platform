@@ -1,9 +1,11 @@
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { QueueJob } from '@vp/core/ports';
+import type { NewCommentModeration } from '@vp/domain';
 import type { NotifyCommentJob } from '@vp/job-contracts';
 import { expectOk } from '@vp/testing/result';
 import { createNotifyCommentProcessor } from '../notify-comment';
 import {
+  CHANNEL_ID,
   CREATOR_ID,
   logger,
   notificationsOf,
@@ -22,7 +24,12 @@ describe('apps/server/worker/stages: notify-comment', () => {
   let repositories: InMemoryRepositories;
   let commentCount = 0;
 
-  const comment = async (author: string, content: string, parentId: string | null = null) => {
+  const comment = async (
+    author: string,
+    content: string,
+    parentId: string | null = null,
+    moderation?: NewCommentModeration
+  ) => {
     commentCount += 1;
     const id = `00000000-0000-7000-8000-${String(900 + commentCount).padStart(12, '0')}`;
     expectOk(
@@ -32,6 +39,7 @@ describe('apps/server/worker/stages: notify-comment', () => {
         authorId: author,
         parentId,
         content,
+        moderation,
       })
     );
     return id;
@@ -157,4 +165,39 @@ describe('apps/server/worker/stages: notify-comment', () => {
 
     expect(result.recorded).toBe(0);
   });
+
+  it.each([
+    { scenario: 'held', state: 'held' as const, shadow: false },
+    { scenario: 'hidden', state: 'hidden' as const, shadow: false },
+    { scenario: 'by a shadow banned author', state: 'published' as const, shadow: true },
+  ])(
+    'tells no one about a comment $scenario, nor about a mention in it',
+    async ({ state, shadow }) => {
+      const moderation: NewCommentModeration = {
+        moderationState: state,
+        moderationDisclosure: 'silent',
+        heldReason: null,
+        looksLikeQuestion: false,
+      };
+      if (shadow) {
+        expectOk(
+          await repositories.channelUserRestrictions.apply({
+            channelId: CHANNEL_ID,
+            userId: FAN,
+            kind: 'shadow',
+            reason: null,
+            expiresAt: null,
+            createdBy: CREATOR_ID,
+          })
+        );
+      }
+      const root = await comment(AUTHOR, 'first');
+
+      const result = await notify(await comment(FAN, 'hi @the-author', root, moderation));
+
+      expect(result.recorded).toBe(0);
+      expect(await kindsFor(AUTHOR)).toEqual([]);
+      expect(await kindsFor(CREATOR_ID)).toEqual([]);
+    }
+  );
 });

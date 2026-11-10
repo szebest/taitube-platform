@@ -135,4 +135,12 @@ export const ui = {
   nextPage: dt('Następna strona'),
   studioNavigation: dt('Studio'),
   inspectorEmpty: dt('Wybierz film, aby zobaczyć jego szczegóły'),
+  disclosureLabel: dt('Widoczność dla autora'),
+  disclosureSilent: dt('Po cichu'),
+  disclosureVisible: dt('Widoczne'),
+  commentHeld: dt('Czeka na weryfikację'),
+  commentHidden: dt('Ukryty przez moderatorów'),
+  commentSilent: dt('Po cichu'),
+  tagRemove: dt('Usuń {tag}'),
+  tagDuplicate: dt('{tag} jest już na liście'),
 } as const;

@@ -136,6 +136,14 @@ export const FIXTURE_UI_COPY: UiCopy = {
   nextPage: 'Next page',
   studioNavigation: 'Studio',
   inspectorEmpty: 'Select a video to see its details',
+  disclosureLabel: 'Visibility to the author',
+  disclosureSilent: 'Silent',
+  disclosureVisible: 'Visible',
+  commentHeld: 'Waiting for review',
+  commentHidden: 'Hidden by moderators',
+  commentSilent: 'Silent',
+  tagRemove: 'Remove {tag}',
+  tagDuplicate: '{tag} is already in the list',
 };
 
 export function WithUiCopy({ children }: PropsWithChildren) {

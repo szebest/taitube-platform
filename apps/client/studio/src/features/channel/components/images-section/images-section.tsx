@@ -1,7 +1,7 @@
 import type { Channel } from '@vp/api-contracts';
 import { useT } from '@vp/intl-react';
+import { CustomizationSection } from '#app/components/section/customization-section';
 import { ChannelImageEditor } from '../channel-image-editor/channel-image-editor';
-import { CustomizationSection } from '../customization-section/customization-section';
 
 /** The channel's picture and banner: each is framed in the cropper and processed on its own, with no section save. */
 export function ImagesSection({ channel }: { channel: Channel }) {

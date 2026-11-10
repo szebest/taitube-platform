@@ -1,12 +1,14 @@
 import type { CommentRepositoryPort, CommentWindow } from '@vp/core/repositories';
-import type { CommentThread } from '@vp/domain';
+import type { CommentThread, NewCommentModeration } from '@vp/domain';
 import { expectOk } from '@vp/testing/result';
-import { HOUR_MS, OTHER_OWNER_ID, VIDEO_IDS } from './fixtures';
+import { HOUR_MS, VIDEO_IDS } from './fixtures';
 import type { RepositoriesSubject } from './subjects';
 
 export interface CommentContractContext {
   readonly subject: RepositoriesSubject;
   readonly comments: CommentRepositoryPort;
+  /** Who writes the seeded comments. */
+  readonly authorId: string;
 }
 
 export const CHANNEL_ID = '00000000-0000-7000-8000-000000000901';
@@ -41,15 +43,22 @@ export async function commentsCount(
 export async function seedComment(
   ctx: CommentContractContext,
   id: string,
-  options: { parentId?: string; hoursAgo?: number; likes?: number; videoId?: string } = {}
+  options: {
+    parentId?: string;
+    hoursAgo?: number;
+    likes?: number;
+    videoId?: string;
+    moderation?: NewCommentModeration;
+  } = {}
 ): Promise<void> {
   expectOk(
     await ctx.comments.create({
       id,
       videoId: options.videoId ?? VIDEO_IDS.a,
-      authorId: OTHER_OWNER_ID,
+      authorId: ctx.authorId,
       parentId: options.parentId ?? null,
       content: `comment ${id.slice(-2)}`,
+      moderation: options.moderation,
     })
   );
   await ctx.subject.adjustComment(id, {

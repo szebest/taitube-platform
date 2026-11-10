@@ -23,8 +23,6 @@ import type {
   ClipService,
   OEmbedService,
   WebhookService,
-  CommentReportService,
-  CommentService,
   CreatorCommentService,
   CreatorLiveService,
   CreatorStudioService,
@@ -83,9 +81,10 @@ import type {
   WatchPartyInviteService,
   WatchPartyControlsService,
 } from '../services/watch-party/index';
+import { type CommentServiceSet, CommentServices } from './comment-tokens';
 import { ScreeningServices } from './screening-tokens';
 
-export interface ServiceSet {
+export interface ServiceSet extends CommentServiceSet {
   videoService: VideoService;
   creatorStudioService: CreatorStudioService;
   searchService: SearchService;
@@ -117,8 +116,6 @@ export interface ServiceSet {
   pickService: PickService;
   reactionService: ReactionService;
   subscriptionService: SubscriptionService;
-  commentService: CommentService;
-  commentReportService: CommentReportService;
   screeningService: ScreeningService;
   creatorCommentService: CreatorCommentService;
   viewService: ViewService;
@@ -191,8 +188,7 @@ export const Services = {
   PickService: token<PickService>('PickService'),
   ReactionService: token<ReactionService>('ReactionService'),
   SubscriptionService: token<SubscriptionService>('SubscriptionService'),
-  CommentService: token<CommentService>('CommentService'),
-  CommentReportService: token<CommentReportService>('CommentReportService'),
+  ...CommentServices,
   ...ScreeningServices,
   CreatorCommentService: token<CreatorCommentService>('CreatorCommentService'),
   ViewService: token<ViewService>('ViewService'),

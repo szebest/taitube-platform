@@ -59,6 +59,7 @@ export interface VideoDetailView {
   thumbnailUrl?: string;
   categoryId: string | null;
   tags: string[];
+  commentsEnabled: boolean;
   channel?: ChannelCard | null;
   viewsCount: number;
   likesCount: number;
@@ -109,6 +110,7 @@ export interface VideoSummaryView {
 export interface CreatorVideoView extends VideoSummaryView {
   commentsCount: number;
   tags: string[];
+  commentsEnabled: boolean;
 }
 
 export function cdnUrl(cdn: CdnBase, key: string): string {
@@ -206,6 +208,7 @@ export function toCreatorVideoView(
     ...toVideoSummaryView(v, cdn, sprite, channel),
     commentsCount: v.commentsCount ?? 0,
     tags: v.tags ?? [],
+    commentsEnabled: v.commentsEnabled ?? true,
   };
 }
 
@@ -280,6 +283,7 @@ export function toVideoDetailView(
     thumbnailUrl: thumbnailUrl(video, cdn),
     categoryId: video.categoryId ?? null,
     tags: video.tags ?? [],
+    commentsEnabled: video.commentsEnabled ?? true,
     viewsCount: video.viewsCount ?? 0,
     likesCount: video.likesCount ?? 0,
     dislikesCount: video.dislikesCount ?? 0,

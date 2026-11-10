@@ -47,6 +47,11 @@ function recipientsOf(
   return recipients;
 }
 
+/**
+ * Re-reads the comment as an anonymous reader would: one that was held, hidden or shadow banned
+ * since it was queued has nobody to tell, and a held one never meets this job again until it is
+ * approved.
+ */
 export function createNotifyCommentProcessor(deps: NotifyCommentDeps) {
   const { repositories, logger } = deps;
 
@@ -56,7 +61,7 @@ export function createNotifyCommentProcessor(deps: NotifyCommentDeps) {
     const { commentId, videoId } = job.data;
     const skipped = ok({ commentId, recorded: 0 });
 
-    const comment = await repositories.comments.findById(commentId);
+    const comment = await repositories.comments.findVisible(null, commentId);
     if (isErr(comment)) return comment;
     const video = await repositories.videos.findById(videoId);
     if (isErr(video)) return video;
