@@ -27,5 +27,6 @@ describe('apps/client/studio: InvitesNavItem', () => {
     await user.click(link);
 
     await vi.waitFor(() => expect(router.state.location.pathname).toBe('/invites'));
+    await vi.waitFor(() => expect(router.state.status).toBe('idle'));
   });
 });

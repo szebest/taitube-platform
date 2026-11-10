@@ -2,9 +2,8 @@ import { Link } from '@tanstack/react-router';
 import { EmptyLibraryIllustration, EmptyState } from '@vp/components';
 import { useT } from '@vp/intl-react';
 import type { ReactNode } from 'react';
-import { PlayerChannelProvider } from '#app/components/player/taitube-player';
 import { useShortsNavigation } from '#app/features/shorts/hooks/use-shorts-navigation';
-import { ShortsFeedFrame } from '../shorts-feed-frame/shorts-feed-frame';
+import { ShortsFeed } from '../shorts-feed/shorts-feed';
 
 function ShortsEmpty() {
   const { tOr } = useT();
@@ -25,25 +24,25 @@ function ShortsEmpty() {
   );
 }
 
-/** `/shorts`: the Short the URL names in its frame, with the posters of the next two already on their way. */
 export interface ShortsPageProps {
   renderComments: (videoId: string) => ReactNode;
 }
 
+/** `/shorts`: the feed that opens on the Short the URL names. */
 export function ShortsPage({ renderComments }: ShortsPageProps) {
-  const { current, upcoming } = useShortsNavigation();
+  const { shorts, named, hasMore, loadMore } = useShortsNavigation();
 
-  if (!current) {
+  if (shorts.length === 0) {
     return <ShortsEmpty />;
   }
 
   return (
-    <PlayerChannelProvider>
-      {upcoming.map(
-        ({ id, posterUrl }) =>
-          posterUrl && <link key={id} rel="preload" as="image" href={posterUrl} />
-      )}
-      <ShortsFeedFrame short={current} renderComments={renderComments} />
-    </PlayerChannelProvider>
+    <ShortsFeed
+      shorts={shorts}
+      named={named}
+      hasMore={hasMore}
+      loadMore={loadMore}
+      renderComments={renderComments}
+    />
   );
 }

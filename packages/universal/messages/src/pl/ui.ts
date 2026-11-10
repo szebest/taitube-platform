@@ -49,6 +49,8 @@ export const ui = {
   previous: dt('Poprzedni'),
   next: dt('Następny'),
   queue: dt('Kolejka'),
+  addToQueue: dt('Dodaj do kolejki'),
+  playNext: dt('Odtwórz jako następny'),
   backToVideo: dt('Wróć do filmu'),
   seek: dt('Przewiń'),
   live: dt('Na żywo'),

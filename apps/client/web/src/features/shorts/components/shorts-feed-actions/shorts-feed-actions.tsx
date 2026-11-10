@@ -1,7 +1,7 @@
 import type { VideoSummary } from '@vp/api-contracts';
 import { useFormat, useT } from '@vp/intl-react';
 import { unwrapOr } from '@vp/result';
-import { Dialog, Icon, useUiCopy } from '@vp/ui';
+import { Icon, ResponsiveModal, useUiCopy } from '@vp/ui';
 import { type ReactNode, useState } from 'react';
 import { ShortsPlayerFrame } from '#app/components/shorts/shorts-player-frame';
 import { ShareDialogContent } from '#app/components/watch/share-dialog';
@@ -23,7 +23,7 @@ export function ShortsFeedActions({ short, renderComments }: ShortsFeedActionsPr
   const { format } = useFormat();
   const copy = useUiCopy();
   const { reaction, change, likesCount } = useReaction(short.id);
-  const { save, enqueue } = useVideoActions(short);
+  const { save, enqueue, playNext } = useVideoActions(short);
   const [panel, setPanel] = useState<Panel>();
 
   const liked = reaction === 'LIKE';
@@ -56,7 +56,12 @@ export function ShortsFeedActions({ short, renderComments }: ShortsFeedActionsPr
         </ShortsPlayerFrame.Action>
         {enqueue && (
           <ShortsPlayerFrame.Action icon={<Icon name="queue-add" />} onSelect={enqueue}>
-            {copy.queue}
+            {copy.addToQueue}
+          </ShortsPlayerFrame.Action>
+        )}
+        {playNext && (
+          <ShortsPlayerFrame.Action icon={<Icon name="play" />} onSelect={playNext}>
+            {copy.playNext}
           </ShortsPlayerFrame.Action>
         )}
         {save && (
@@ -68,9 +73,9 @@ export function ShortsFeedActions({ short, renderComments }: ShortsFeedActionsPr
       <ShortsCommentSheet open={panel === 'discussion'} onOpenChange={closePanel}>
         {renderComments(short.id)}
       </ShortsCommentSheet>
-      <Dialog.Root open={panel === 'share'} onOpenChange={closePanel}>
-        <ShareDialogContent videoId={short.id} startAt={0} />
-      </Dialog.Root>
+      <ResponsiveModal.Root open={panel === 'share'} onOpenChange={closePanel}>
+        <ShareDialogContent kind="shorts" id={short.id} title={short.title} startAt={0} />
+      </ResponsiveModal.Root>
     </>
   );
 }

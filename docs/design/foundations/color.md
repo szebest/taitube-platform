@@ -39,10 +39,10 @@ Each role, its use, and its value per theme and mode. OLED lists only four overr
 | `surface` | cards, panels, search field, now playing bar | `#1C1915` | `#FFFCF7` | `#0C0B09` | `#121722` | `#FFFFFF` | `#06080C` |
 | `raised` | menus, popovers, toasts, expanded card | `#26221D` | `#FFFCF7` | `#1C1915` | `#1A2130` | `#FFFFFF` | `#121722` |
 | `border` | dividers, card outlines | `#332E27` | `#DED5C6` | `#26221D` | `#263044` | `#DCE3EC` | `#1A2130` |
-| `border-strong` | field and control outlines | `#8A8072` | `#8A8072` | `#8A8072` | `#5B6578` | `#7A8599` | `#5B6578` |
+| `border-strong` | field and control outlines | `#8A8072` | `#8A8072` | `#8A8072` | `#687182` | `#7A8599` | `#687182` |
 | `fg` | text, icons | `#EFE9E0` | `#1C1915` | `#EFE9E0` | `#EDF1F7` | `#121722` | `#EDF1F7` |
-| `fg-muted` | metadata, secondary text | `#A89F92` | `#6B6256` | `#A89F92` | `#97A3B7` | `#5B6578` | `#97A3B7` |
-| `fg-subtle` | placeholder, disabled only | `#8A8072` | `#8A8072` | `#8A8072` | `#7A8599` | `#7A8599` | `#7A8599` |
+| `fg-muted` | metadata, secondary text | `#AFA79B` | `#685F53` | `#AFA79B` | `#9BA7BA` | `#596376` | `#9BA7BA` |
+| `fg-subtle` | placeholder, disabled only | `#92897C` | `#756D61` | `#92897C` | `#7E899C` | `#687182` | `#7E899C` |
 | `tint` | secondary button, hover, skeleton base | `#FFFAF012` | `#1C19150F` | `#FFFAF012` | `#EDF1F712` | `#1217220F` | `#EDF1F712` |
 | `tint-strong` | pressed, selected chip, skeleton highlight | `#FFFAF01F` | `#1C19151A` | `#FFFAF01F` | `#EDF1F721` | `#1217221A` | `#EDF1F721` |
 | `accent` | primary fill, progress, selection | `#C9A66B` | `#86683A` | `#C9A66B` | `#FFB547` | `#B07620` | `#FFB547` |
@@ -53,13 +53,14 @@ Each role, its use, and its value per theme and mode. OLED lists only four overr
 | `focus-ring` | the one focus ring | `#D2B076` | `#86683A` | `#D2B076` | `#FFC266` | `#7A5216` | `#FFC266` |
 | `live` | live badge, pulse | `#D91F3A` | `#D91F3A` | `#D91F3A` | `#D91F3A` | `#D91F3A` | `#D91F3A` |
 | `on-live` | text on live | `#FFFFFF` | `#FFFFFF` | `#FFFFFF` | `#FFFFFF` | `#FFFFFF` | `#FFFFFF` |
-| `danger` | destructive fill | `#C8323C` | `#C8323C` | `#C8323C` | `#C8323C` | `#C8323C` | `#C8323C` |
+| `danger` | destructive fill | `#CE3A44` | `#C8323C` | `#CE3A44` | `#C8323C` | `#C8323C` | `#C8323C` |
 | `danger-ink` | destructive text, field errors | `#F59298` | `#A3242E` | `#F59298` | `#F59298` | `#A3242E` | `#F59298` |
-| `success-ink` | success text | `#8CC79D` | `#2F7A47` | `#8CC79D` | `#8CC79D` | `#2F7A47` | `#8CC79D` |
-| `warning-ink` | warning text | `#F7A27A` | `#A9481F` | `#F7A27A` | `#F7A27A` | `#A9481F` | `#F7A27A` |
-| `info-ink` | info text | `#93B4DE` | `#3D6595` | `#93B4DE` | `#93B4DE` | `#3D6595` | `#93B4DE` |
+| `success-ink` | success text | `#8CC79D` | `#2A6D3F` | `#8CC79D` | `#8CC79D` | `#2A6D3F` | `#8CC79D` |
+| `warning-ink` | warning text | `#F7A27A` | `#A1441D` | `#F7A27A` | `#F7A27A` | `#A1441D` | `#F7A27A` |
+| `info-ink` | info text | `#93B4DE` | `#3B6291` | `#93B4DE` | `#93B4DE` | `#3B6291` | `#93B4DE` |
 | `scrim` | behind dialogs, under text on video | `#0C0B09B8` | `#1C191599` | `#0C0B09B8` | `#06080CB8` | `#12172299` | `#06080CB8` |
 | `media` | behind video | `#000000` | `#000000` | `#000000` | `#000000` | `#000000` | `#000000` |
+| `on-media` | text and icons drawn on media: the player's controls, its captions and title | `#FFFFFF` | `#FFFFFF` | `#FFFFFF` | `#FFFFFF` | `#FFFFFF` | `#FFFFFF` |
 
 Reading the table: light mode moves the accent from the 500 step to the 700 step so a filled button and the
 progress bar clear 3:1 on paper. Sand light moves the hover to 800 (darker on hover, where dark mode goes
@@ -99,9 +100,9 @@ Sand dark, light, oled, Nocturne dark, light, oled.
 | `fg` on `bg` | 4.5 | 15.49 | 15.69 | 17.40 | 17.04 | 16.70 | 18.53 |
 | `fg` on `surface` | 4.5 | 14.51 | 17.11 | 16.30 | 15.82 | 17.93 | 17.68 |
 | `fg` on `raised` | 4.5 | 13.09 | 17.11 | 14.51 | 14.21 | 17.93 | 15.82 |
-| `fg-muted` on `bg` | 4.5 | 7.16 | 5.37 | 8.04 | 7.58 | 5.47 | 8.24 |
-| `fg-muted` on `surface` | 4.5 | 6.70 | 5.85 | 7.53 | 7.03 | 5.87 | 7.86 |
-| `fg-muted` on `raised` | 4.5 | 6.05 | 5.85 | 6.70 | 6.32 | 5.87 | 7.03 |
+| `fg-muted` on `bg` | 4.5 | 7.86 | 5.62 | 8.82 | 7.94 | 5.64 | 8.63 |
+| `fg-muted` on `surface` | 4.5 | 7.36 | 6.12 | 8.27 | 7.37 | 6.05 | 8.24 |
+| `fg-muted` on `raised` | 4.5 | 6.64 | 6.12 | 7.36 | 6.62 | 6.05 | 7.37 |
 | `border-strong` on `bg` | 3 | 4.82 | 3.48 | 5.41 | 3.29 | 3.47 | 3.58 |
 | `border-strong` on `surface` | 3 | 4.51 | 3.79 | 5.07 | 3.05 | 3.72 | 3.41 |
 | `on-accent` on `accent` | 4.5 | 8.15 | 5.06 | 8.15 | 10.99 | 5.02 | 10.99 |
@@ -116,18 +117,27 @@ Sand dark, light, oled, Nocturne dark, light, oled.
 | `on-live` on `live` | 4.5 | 4.99 | 4.99 | 4.99 | 4.99 | 4.99 | 4.99 |
 | `danger-ink` on `bg` | 4.5 | 8.41 | 6.61 | 9.45 | 8.69 | 6.87 | 9.45 |
 | `danger-ink` on `surface` | 4.5 | 7.88 | 7.20 | 8.85 | 8.07 | 7.37 | 9.02 |
-| `success-ink` on `bg` | 4.5 | 9.59 | 4.71 | 10.77 | 9.91 | 4.90 | 10.77 |
-| `success-ink` on `surface` | 4.5 | 8.98 | 5.14 | 10.09 | 9.20 | 5.26 | 10.28 |
-| `warning-ink` on `bg` | 4.5 | 9.26 | 5.18 | 10.40 | 9.57 | 5.38 | 10.40 |
-| `warning-ink` on `surface` | 4.5 | 8.68 | 5.65 | 9.75 | 8.88 | 5.78 | 9.93 |
-| `info-ink` on `bg` | 4.5 | 8.75 | 5.39 | 9.82 | 9.04 | 5.60 | 9.82 |
-| `info-ink` on `surface` | 4.5 | 8.19 | 5.87 | 9.20 | 8.39 | 6.01 | 9.38 |
+| `success-ink` on `bg` | 4.5 | 9.59 | 5.60 | 10.77 | 9.91 | 5.83 | 10.77 |
+| `success-ink` on `surface` | 4.5 | 8.98 | 6.11 | 10.09 | 9.20 | 6.25 | 10.28 |
+| `warning-ink` on `bg` | 4.5 | 9.26 | 5.60 | 10.40 | 9.57 | 5.82 | 10.40 |
+| `warning-ink` on `surface` | 4.5 | 8.68 | 6.11 | 9.75 | 8.88 | 6.25 | 9.93 |
+| `info-ink` on `bg` | 4.5 | 8.75 | 5.63 | 9.82 | 9.04 | 5.86 | 9.82 |
+| `info-ink` on `surface` | 4.5 | 8.19 | 6.14 | 9.20 | 8.39 | 6.28 | 9.38 |
+| `on-media` on `media` | 4.5 | 21.00 | 21.00 | 21.00 | 21.00 | 21.00 | 21.00 |
 | white on `scrim` over `media` | 4.5 | 20.02 | 19.13 | 20.02 | 20.29 | 19.32 | 20.29 |
-| `fg-subtle` on `bg` (advisory, never read) | none | 4.82 | 3.48 | 5.41 | 5.19 | 3.47 | 5.64 |
+| `fg-subtle` on `bg` | 4.5 | 5.42 | 4.57 | 6.09 | 5.47 | 4.58 | 5.95 |
+| `fg-subtle` on `surface` | 4.5 | 5.08 | 4.98 | 5.71 | 5.08 | 4.91 | 5.67 |
+| `fg-subtle` on `raised` | 4.5 | 4.58 | 4.98 | 5.08 | 4.56 | 4.91 | 5.08 |
 
 Every pair meets its floor in every theme and mode (checked by `src/themes/__tests__/themes.test.ts` in `@vp/ui`,
-translucent roles composited over `bg`), and every chart series clears 3:1 on `surface`. `fg-muted` is 7:1 or
-more in dark and OLED and above 4.5:1 in light; `on-live` on `live` is 4.99.
+translucent roles composited over `bg`), and every chart series clears 3:1 on `surface`. `on-live` on `live` is
+4.99.
+
+Beyond the table, `checkThemeContrast` also holds every pair a component draws, for each mode and for
+`data-contrast="more"` (where `border` is `border-strong` and `fg-muted` is `fg`): `fg` and `fg-muted` on `tint`,
+`tint-strong` and `accent-soft`, each laid over `bg`, `surface` and `raised`; the four tone inks on those tints (4.5);
+`border-strong`, `danger` and `focus-ring` on `raised` (3); and under `more`, `border` on every ground (3). A theme a
+viewer builds from two colours is held to the core pairs of the table above, not to these.
 
 ## Rules
 

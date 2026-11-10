@@ -5,6 +5,8 @@ const URL_LITERAL = /\bhttps?:\/\/[^\s'"`)\\<>]+/g;
 const HOST = /^https?:\/\/([^/:?#]+)/;
 const LOOPBACK = new Set(['localhost', '127.0.0.1', '0.0.0.0', '[::1]']);
 const NAMESPACE_HOSTS = new Set(['www.w3.org', 'schema.org', 'www.sitemaps.org']);
+/** Share links a viewer follows by clicking; the file builds hrefs and nothing in it fetches. */
+const OUTBOUND_LINKS = 'apps/client/web/src/lib/share/social-targets.ts';
 /** TanStack Start renders the whole HTML document from each app's root route; there is no static shell. */
 const APP_DOCUMENTS = clientApps().map((app) => `${app}/src/routes/__root.tsx`);
 
@@ -44,11 +46,18 @@ describe('architecture: local-first', () => {
   });
 
   it('names no external host in production source', () => {
-    const offenders = productionSources().flatMap((file) =>
-      externalHosts(read(file)).map((url) => `${file}: ${url}`)
-    );
+    const offenders = productionSources()
+      .filter((file) => file !== OUTBOUND_LINKS)
+      .flatMap((file) => externalHosts(read(file)).map((url) => `${file}: ${url}`));
 
     expect(offenders).toEqual([]);
+  });
+
+  it('lets the share targets name their hosts only as links, never to fetch', () => {
+    const source = read(OUTBOUND_LINKS);
+
+    expect(externalHosts(source).length).toBeGreaterThan(0);
+    expect(source).not.toMatch(/\bfetch\(|XMLHttpRequest|sendBeacon|WebSocket|import\(/);
   });
 
   it('imports no stylesheet or font from another host in the design system styles', () => {

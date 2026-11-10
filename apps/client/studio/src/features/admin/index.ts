@@ -3,6 +3,7 @@ export { adminDlqQueryOptions, DlqSearchSchema } from './api/admin-dlq';
 export { adminPicksQueryOptions } from './api/admin-picks';
 export { adminVideosQueryOptions } from './api/admin-videos';
 export { ModerationSearchSchema } from './api/moderation-search';
+export { AdminPageSkeleton } from './components/admin-page-skeleton/admin-page-skeleton';
 export { adminScreeningQueryOptions, ScreeningSearchSchema } from './api/admin-screening';
 export { AdminLayout } from './components/admin-layout/admin-layout';
 export { CategoryTable } from './components/category-table/category-table';

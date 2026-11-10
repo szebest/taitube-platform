@@ -13,7 +13,7 @@ depends on `@vp/domain` (the watch party permission registry and the channel tea
 `@vp/adapters` and `@vp/domain-rules` all import it.
 
 - Rule factories in `src/rules/`: `defineVideoRules`, `defineCommentRules`, `defineChannelRules`,
-  `defineUploadRules`, `defineAnalyticsRules`, `definePlaylistRules`, `definePreferencesRules`,
+  `defineUploadRules`, `defineAnalyticsRules`, `definePlaylistRules`, `definePreferencesRules`, `defineQueueRules` (the `queue` action on `Queue`, signed-in only),
   `defineCaptionRules`, `defineRecommendationFeedbackRules`, `defineChannelTeamRules`, `defineAdminRules`
   (`<resource>.rules.ts`). Channel team members get their rules beside the owner's, through `ownersWith` /
   `channelsWith` in `rules/memberships.ts` over `UserContext.memberships` and `CHANNEL_ROLES` from `@vp/domain`;

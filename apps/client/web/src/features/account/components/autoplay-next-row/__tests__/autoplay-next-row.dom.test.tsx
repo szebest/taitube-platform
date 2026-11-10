@@ -12,7 +12,7 @@ import {
   type SentSave,
 } from '#app/__tests__/preferences-fixtures';
 import { signInBrowser } from '#app/__tests__/providers';
-import { requestDevicePreferences } from '#app/lib/preferences/device-preferences';
+import { readStoredPlayback } from '#app/lib/preferences/device-preferences';
 import { getRouter } from '#app/router';
 
 const renderPlayback = (handlers: HttpHandler[] = []) =>
@@ -32,7 +32,7 @@ describe('apps/client/web: the autoplay row', () => {
     await user.click(autoplay());
 
     expect(autoplay()).not.toBeChecked();
-    expect(requestDevicePreferences().playback.autoplayNext).toBe(false);
+    expect(readStoredPlayback().autoplayNext).toBe(false);
   });
 
   it("saves a signed-in viewer's change to the account, once, and keeps the answer in the cache", async () => {

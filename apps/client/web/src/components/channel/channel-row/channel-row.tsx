@@ -22,7 +22,7 @@ export function ChannelRow({ channel, bio }: ChannelRowProps) {
   const { tOr } = useT();
 
   return (
-    <ChannelHeader.Root layout="identity">
+    <ChannelHeader.Root layout="identity" className="relative">
       <ChannelHeader.Identity
         name={channel.displayName}
         handle={tOr('channels.handle', { handle: channel.handle }, '')}
@@ -31,8 +31,13 @@ export function ChannelRow({ channel, bio }: ChannelRowProps) {
       >
         {bio && <ChannelHeader.Bio>{bio}</ChannelHeader.Bio>}
         <ChannelHeader.Actions>
-          <SubscribeAction channelId={channel.id} />
-          <Button asChild variant="soft" tone="neutral">
+          <SubscribeAction channelId={channel.id} className="relative z-lift max-medium:flex-1" />
+          <Button
+            asChild
+            variant="soft"
+            tone="neutral"
+            className="static after:absolute after:inset-0 after:content-['']"
+          >
             <Link to="/channel/$channelId" params={{ channelId: channel.id }}>
               {tOr('channels.viewChannel', {}, '')}
             </Link>

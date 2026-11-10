@@ -5,7 +5,7 @@ export const stageStyles = tv({
   slots: {
     root: 'group/stage relative isolate w-full rounded-none medium:rounded-card in-data-[motion=reduced]:[view-transition-name:none]',
     ground: 'absolute inset-0 rounded-[inherit] bg-media shadow-3',
-    glow: 'pointer-events-none absolute -inset-[5rem] -z-10 hidden blur-ambient opacity-ambient transition-opacity duration-slow ease-standard medium:flex group-data-paused/stage:opacity-[calc(var(--opacity-ambient)*0.6)] in-data-[ambient=off]:hidden in-data-[contrast=more]:hidden',
+    glow: 'pointer-events-none absolute -inset-[5rem] z-behind hidden blur-ambient opacity-ambient transition-opacity duration-slow ease-standard medium:flex group-data-paused/stage:opacity-[calc(var(--opacity-ambient)*0.6)] in-data-[ambient=off]:hidden in-data-[contrast=more]:hidden',
     glowColor: 'flex-1 transition-colors duration-slow ease-standard',
     player: 'absolute inset-0 overflow-hidden rounded-[inherit]',
     poster: 'absolute inset-0 size-full rounded-[inherit] object-cover',

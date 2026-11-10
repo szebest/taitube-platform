@@ -19,16 +19,30 @@ export type ClientAppSuite = {
   alongside?: { appDir: string; devPort: number };
 };
 
+function appEnv(apiUrl: string) {
+  return {
+    VITE_API_BASE_URL: apiUrl,
+    VITE_API_PUBLIC_URL: apiUrl,
+    VITE_OTEL_TRACES_URL: 'http://localhost:4318/v1/traces',
+  };
+}
+
 function servedApp(appDir: string, port: number, apiUrl: string, origin: string) {
   return {
     command: `vp build --outDir e2e/dist && srvx serve --prod --host 127.0.0.1 --port ${port} --entry e2e/dist/server/server.js`,
     cwd: appDir,
-    env: {
-      VITE_API_BASE_URL: apiUrl,
-      VITE_API_PUBLIC_URL: apiUrl,
-      VITE_OTEL_TRACES_URL: 'http://localhost:4318/v1/traces',
-    },
+    env: appEnv(apiUrl),
     url: origin,
+    timeout: 120_000,
+  };
+}
+
+function devApp(apiUrl: string, port: number) {
+  return {
+    command: `vp dev --host 127.0.0.1 --port ${port} --strictPort`,
+    cwd: '.',
+    env: appEnv(apiUrl),
+    url: `http://127.0.0.1:${port}`,
     timeout: 120_000,
   };
 }
@@ -49,6 +63,7 @@ export function clientAppPlaywrightConfig({ devPort, defaultPortBase, alongside 
     api: portBase + 3,
     s3: portBase + 4,
     alongside: portBase + 5,
+    dev: portBase + 6,
   };
   const servedAt = (localPort: number, port: number) =>
     externalApiUrl
@@ -67,7 +82,7 @@ export function clientAppPlaywrightConfig({ devPort, defaultPortBase, alongside 
       : `--api-port ${ports.api} --s3-port ${ports.s3}`,
   ].join(' ');
 
-  return defineConfig<object, { stackUrl: string; alongsideUrl: string }>({
+  return defineConfig<object, { stackUrl: string; alongsideUrl: string; devUrl: string }>({
     testDir: 'e2e',
     testIgnore: readQuarantine().map(({ spec }) =>
       fileURLToPath(new URL(`../../${spec}`, import.meta.url))
@@ -75,7 +90,7 @@ export function clientAppPlaywrightConfig({ devPort, defaultPortBase, alongside 
     outputDir: 'e2e/test-results',
     forbidOnly: true,
     fullyParallel: true,
-    workers: ci ? 2 : undefined,
+    workers: ci ? 3 : undefined,
     retries: ci ? 1 : 0,
     reporter: ci
       ? [
@@ -88,6 +103,7 @@ export function clientAppPlaywrightConfig({ devPort, defaultPortBase, alongside 
       baseURL: app.origin,
       stackUrl,
       alongsideUrl: other?.origin ?? '',
+      devUrl: `http://127.0.0.1:${ports.dev}`,
       trace: 'retain-on-failure',
       screenshot: 'only-on-failure',
     },
@@ -101,6 +117,7 @@ export function clientAppPlaywrightConfig({ devPort, defaultPortBase, alongside 
         gracefulShutdown: { signal: 'SIGTERM', timeout: 5_000 },
       },
       { name: 'app', ...servedApp('.', app.port, apiUrl, app.origin) },
+      { name: 'dev', ...devApp(apiUrl, ports.dev) },
       ...(alongside && other
         ? [{ name: 'alongside', ...servedApp(alongside.appDir, other.port, apiUrl, other.origin) }]
         : []),

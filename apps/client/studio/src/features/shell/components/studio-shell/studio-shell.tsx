@@ -68,8 +68,10 @@ export function StudioShell({ toolbarAction, navigation, inspector }: StudioShel
           search={{}}
           className="flex items-center gap-inline text-fg no-underline"
         >
-          <Logo />
-          <span className="text-label">{tOr('studio.title', {}, '')}</span>
+          <Logo className="[&>span]:hidden medium:[&>span]:block" />
+          <span className="sr-only text-label medium:not-sr-only">
+            {tOr('studio.title', {}, '')}
+          </span>
         </Link>
         <div className="ms-auto flex items-center gap-inline">
           {toolbarAction}

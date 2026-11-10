@@ -7,7 +7,14 @@ import { VideoCardExpanded, VideoCardMenu } from '../video-card-actions';
 const renderWith = (expanded: boolean, ui: React.ReactNode) =>
   renderWithCopy(
     <VideoCardContext
-      value={{ variant: 'grid', state: 'rest', size: 'md', videoId: undefined, expanded }}
+      value={{
+        variant: 'grid',
+        state: 'rest',
+        size: 'md',
+        videoId: undefined,
+        expanded,
+        previewing: false,
+      }}
     >
       {ui}
     </VideoCardContext>

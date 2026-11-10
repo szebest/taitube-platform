@@ -34,19 +34,27 @@ export type BundleRules = {
   initialBudgetKb?: number;
   /** Directories of the app no chunk may carry at all: code that moved to another app. */
   forbiddenDirs?: readonly string[];
+  /** Whether the build carries the demo personas (`VITE_DEMO_PERSONAS=true`), which the preset reads from the build's environment. */
+  demoPersonas?: boolean;
 };
 
-/** A package's development-only modules, such as `@vp/queries/dev-personas`, live in a `dev-only/` folder. */
-const DEV_ONLY_FOLDER = 'dev-only/';
+/** The one-click sign-in modules, `@vp/queries/demo-personas`, which only a build with the flag on may carry. */
+const DEMO_PERSONAS_FOLDER = 'demo-personas/';
 
-function devOnlyViolations(chunk: BundledChunk): string[] {
-  const devOnly = [
-    ...DEVTOOLS.filter((name) => carries(chunk, `/node_modules/${name}/`)),
-    ...(carries(chunk, `/${DEV_ONLY_FOLDER}`) ? [DEV_ONLY_FOLDER] : []),
+function devOnlyViolations(chunk: BundledChunk, rules: BundleRules): string[] {
+  const devtools = DEVTOOLS.filter((name) => carries(chunk, `/node_modules/${name}/`));
+  const personas =
+    !rules.demoPersonas && carries(chunk, `/${DEMO_PERSONAS_FOLDER}`)
+      ? [
+          `${chunk.fileName} carries ${DEMO_PERSONAS_FOLDER}, which only a build with VITE_DEMO_PERSONAS=true may ship`,
+        ]
+      : [];
+  return [
+    ...devtools.map(
+      (name) => `${chunk.fileName} carries ${name}, which only the dev server may load`
+    ),
+    ...personas,
   ];
-  return devOnly.map(
-    (name) => `${chunk.fileName} carries ${name}, which only the dev server may load`
-  );
 }
 
 function gzipKb(code: string): number {
@@ -115,7 +123,7 @@ function chunkViolations(chunk: BundledChunk, rules: BundleRules): string[] {
   const forbidden = (rules.forbiddenDirs ?? []).filter((dir) => carries(chunk, `/${dir}/`));
   const routes = routesIn(chunk);
   return [
-    ...devOnlyViolations(chunk),
+    ...devOnlyViolations(chunk, rules),
     ...budgetViolations(chunk, rules.entryBudgetKb),
     ...vendorImportsApp(chunk),
     ...forbidden.map((dir) => `${chunk.fileName} carries ${dir}, which this app no longer ships`),
@@ -130,7 +138,7 @@ function chunkViolations(chunk: BundledChunk, rules: BundleRules): string[] {
 }
 
 /**
- * What a production client bundle must not do: ship devtools or a `dev-only/` folder, carry a directory
+ * What a production client bundle must not do: ship devtools, or the demo personas without `VITE_DEMO_PERSONAS=true`, carry a directory
  * whose code moved to another app, stop splitting per route, or read the server's
  * environment (`SSR_API_BASE_URL` is read behind `import.meta.env.SSR`, which the build drops).
  */
@@ -145,9 +153,12 @@ export function bundleViolations(chunks: readonly BundledChunk[], rules: BundleR
   return split ? violations : [...violations, 'no route was split into a chunk of its own'];
 }
 
-/** What the production server bundle must not do: carry the code only the dev server may run. */
-export function serverBundleViolations(chunks: readonly BundledChunk[]): string[] {
-  return chunks.flatMap((chunk) => devOnlyViolations(chunk));
+/** What the production server bundle must not do: carry the code only the dev server, or a demo build, may run. */
+export function serverBundleViolations(
+  chunks: readonly BundledChunk[],
+  rules: BundleRules
+): string[] {
+  return chunks.flatMap((chunk) => devOnlyViolations(chunk, rules));
 }
 
 export function bundleGuard(rules: BundleRules): Plugin {
@@ -172,7 +183,7 @@ export function bundleGuard(rules: BundleRules): Plugin {
       const violations =
         this.environment.name === 'client'
           ? bundleViolations(chunks, rules)
-          : serverBundleViolations(chunks);
+          : serverBundleViolations(chunks, rules);
       if (violations.length > 0) this.error(violations.join('\n'));
     },
   };

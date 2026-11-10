@@ -1,11 +1,6 @@
 import type { CommentView } from '@vp/api-contracts';
 import { useT } from '@vp/intl-react';
-import {
-  canDeleteComment,
-  canPinComment,
-  canReportComment,
-  canUpdateComment,
-} from '@vp/permissions';
+import { canDeleteComment, canPinComment, canUpdateComment } from '@vp/permissions';
 import { useCan } from '@vp/permissions-react';
 import { DropdownMenu, Icon, useUiCopy } from '@vp/ui';
 import { useState } from 'react';
@@ -15,6 +10,7 @@ import {
   type ModerationChoice,
   useModerationChoices,
 } from '#app/features/watch/hooks/use-moderation-choices';
+import { useRequireAccount } from '#app/hooks/use-require-account';
 import type { ModerationDialogAction } from '../moderation-dialog/moderation-dialog';
 import { LazyModerationDialog } from '../moderation-dialog/moderation-dialog.lazy';
 
@@ -54,7 +50,8 @@ export function VideoCommentMenu({
   const target = { id: comment.id, authorId: comment.author.userId };
   const canEdit = useCan(canUpdateComment, { comment: target });
   const canDelete = useCan(canDeleteComment, { comment: target, videoOwnerId });
-  const canReport = useCan(canReportComment) && !canEdit;
+  const report = useRequireAccount('report');
+  const canReport = !canEdit;
   const canPin =
     useCan(canPinComment, { videoOwnerId }) &&
     comment.parentId === null &&
@@ -94,7 +91,7 @@ export function VideoCommentMenu({
           </DropdownMenu.Item>
         )}
         {canReport && (
-          <DropdownMenu.Item onSelect={onReport}>
+          <DropdownMenu.Item onSelect={() => report.run(onReport)}>
             <Icon name="alert" />
             {tOr('watch.reportComment', {}, '')}
           </DropdownMenu.Item>

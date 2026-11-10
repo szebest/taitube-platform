@@ -100,6 +100,8 @@ export const studio = {
   navAnalytics: dt('Statystyki'),
   analyticsTitle: dt('Statystyki'),
   videoAnalyticsTitle: dt('Statystyki filmu'),
+  analyticsEmptyTitle: dt('W tym okresie nie ma jeszcze wyświetleń'),
+  analyticsEmptyDescription: dt('Liczby i wykresy pojawią się, gdy ktoś obejrzy film.'),
   analyticsRange: dt('Zakres czasu'),
   analyticsRangeOption: dt('{range:enum}', {
     enum: { range: { '7d': '7 dni', '30d': '30 dni', '90d': '90 dni', lifetime: 'Cały okres' } },

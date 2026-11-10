@@ -17,7 +17,13 @@ describe('WebVitalsService', () => {
   const record = (vitals: WebVital[], app: WebVitalsBatch['app'] = 'web') =>
     expectOk(service.record({ app, vitals }));
 
-  type Histogram = 'frontendLcp' | 'frontendInp' | 'frontendFcp' | 'frontendTtfb' | 'frontendCls';
+  type Histogram =
+    | 'frontendLcp'
+    | 'frontendInp'
+    | 'frontendFcp'
+    | 'frontendTtfb'
+    | 'frontendCls'
+    | 'frontendLongTasks';
 
   const sample = async (histogram: Histogram, route = ROUTE, app = 'web') => {
     const { values } = await metrics[histogram].get();
@@ -65,6 +71,13 @@ describe('WebVitalsService', () => {
       metric: 'frontend_cls_ratio',
       observed: 0.07,
     },
+    {
+      name: 'LONG_TASKS',
+      value: 428,
+      histogram: 'frontendLongTasks',
+      metric: 'frontend_long_tasks_seconds',
+      observed: 0.428,
+    },
   ] as const)(
     'records $name into $metric as $observed',
     async ({ name, value, histogram, metric, observed }) => {
@@ -104,6 +117,34 @@ describe('WebVitalsService', () => {
     });
     expect(await sample('frontendLcp', '/c/$channelId', 'studio')).toMatchObject({
       frontend_lcp_seconds_count: 1,
+    });
+  });
+
+  describe('the layout shift source', () => {
+    const sources = async () => {
+      const { values } = await metrics.frontendLayoutShiftSources.get();
+      return Object.fromEntries(values.map(({ labels, value }) => [labels.source, value]));
+    };
+
+    it('counts the slot a CLS vital names, and ignores one on any other vital', async () => {
+      record([
+        { name: 'CLS', value: 0.09, route: ROUTE, source: 'app-shell-main' },
+        { name: 'CLS', value: 0.2, route: ROUTE, source: 'app-shell-main' },
+        { name: 'CLS', value: 0.01, route: ROUTE },
+        { name: 'LCP', value: 900, route: ROUTE, source: 'video-card' },
+      ]);
+
+      expect(await sources()).toEqual({ 'app-shell-main': 2 });
+    });
+
+    it('counts slots past the per-app limit under "other"', async () => {
+      record([
+        { name: 'CLS', value: 0.09, route: ROUTE, source: 'a' },
+        { name: 'CLS', value: 0.09, route: ROUTE, source: 'b' },
+        { name: 'CLS', value: 0.09, route: ROUTE, source: 'c' },
+      ]);
+
+      expect(await sources()).toEqual({ a: 1, b: 1, other: 1 });
     });
   });
 });

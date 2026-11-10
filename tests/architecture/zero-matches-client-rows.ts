@@ -33,7 +33,7 @@ export const WEB_ROWS: readonly Row[] = [
     passes: 'export const lazyLoaded = true;',
   },
   {
-    name: 'a client app module reading the build environment outside src/lib/config (the dev-only gates in the *.lazy.ts files read import.meta.env.DEV themselves, or Rolldown ships their dead chunks; the update prompt reads it to keep the service worker off the dev server)',
+    name: 'a client app module reading the build environment outside src/lib/config (the dev-only and demo-personas gates in the *.lazy.ts files read import.meta.env.DEV and VITE_DEMO_PERSONAS themselves, or Rolldown ships their dead chunks; the update prompt reads it to keep the service worker off the dev server)',
     pattern: /import\.meta\.env/g,
     scope: [
       ...inEachApp('src/**/*.ts'),

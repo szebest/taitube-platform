@@ -1,4 +1,5 @@
 import type { Metric } from 'web-vitals';
+import { observePageHealth } from '../observe-page-health';
 import { startWebVitals } from '../start-web-vitals';
 
 const reporters = vi.hoisted(() => new Map<string, (metric: Metric) => void>());
@@ -18,9 +19,18 @@ vi.mock(import('web-vitals'), () => {
   };
 });
 
+vi.mock(import('../observe-page-health'));
+
 const VITALS_URL = 'http://localhost:3000/v1/telemetry/vitals';
 
-const startOnPage = () => {
+const startOnPage = ({
+  longTaskMs = 0,
+  shiftSource,
+}: { longTaskMs?: number; shiftSource?: string } = {}) => {
+  vi.mocked(observePageHealth).mockReturnValue({
+    longTaskMs: () => longTaskMs,
+    largestShiftSource: () => shiftSource,
+  });
   const page = { route: '/' };
   const document = Object.assign(new EventTarget(), { visibilityState: 'visible' });
   const window = new EventTarget();
@@ -96,5 +106,38 @@ describe('startWebVitals', () => {
       [{ name: 'FCP', value: 700, route: '/' }],
       [{ name: 'INP', value: 64, route: '/' }],
     ]);
+  });
+
+  it('names the element that shifted most on the CLS vital, and no other', () => {
+    const { report, hide, batches } = startOnPage({ shiftSource: 'install-prompt' });
+
+    report('CLS', 0.09);
+    report('LCP', 900);
+    hide();
+
+    expect(batches()[0]?.batch.vitals).toEqual([
+      { name: 'CLS', value: 0.09, route: '/', source: 'install-prompt' },
+      { name: 'LCP', value: 900, route: '/' },
+    ]);
+  });
+
+  it('beacons the long task time once, on the route the page ended on', () => {
+    const { page, window, hide, batches } = startOnPage({ longTaskMs: 428.4 });
+
+    page.route = '/search';
+    hide();
+    window.dispatchEvent(new Event('pagehide'));
+
+    expect(batches().map(({ batch }) => batch.vitals)).toEqual([
+      [{ name: 'LONG_TASKS', value: 428, route: '/search' }],
+    ]);
+  });
+
+  it('beacons nothing for a page with no long task', () => {
+    const { hide, batches } = startOnPage();
+
+    hide();
+
+    expect(batches()).toEqual([]);
   });
 });

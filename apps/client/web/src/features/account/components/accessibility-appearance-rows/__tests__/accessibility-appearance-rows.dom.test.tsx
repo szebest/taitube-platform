@@ -1,5 +1,5 @@
 import { screen, within } from '@testing-library/react';
-import { PREFERS_REDUCED_MOTION, readCookie, writeCookie } from '@vp/ui';
+import { PREFERS_MORE_CONTRAST, PREFERS_REDUCED_MOTION, readCookie, writeCookie } from '@vp/ui';
 import { renderRoute } from '@vp/web-testing/dom';
 import { getRouter } from '#app/router';
 
@@ -73,6 +73,30 @@ describe('apps/client/web: the accessibility appearance rows', () => {
       await screen.findByText(/Your system asks for reduced motion, which always wins/)
     ).toBeInTheDocument();
     expect(document.documentElement.dataset.motion).toBe('reduced');
+  });
+
+  it('follows the system request for more contrast until the viewer chooses, and then keeps the choice', async () => {
+    vi.spyOn(window, 'matchMedia').mockImplementation((query) => ({
+      media: query,
+      matches: query === PREFERS_MORE_CONTRAST,
+      onchange: null,
+      addListener: () => undefined,
+      removeListener: () => undefined,
+      addEventListener: () => undefined,
+      removeEventListener: () => undefined,
+      dispatchEvent: () => false,
+    }));
+    const { user } = await renderAccessibility();
+    const contrast = (await row('Contrast')).getByRole('switch', { name: 'More contrast' });
+
+    expect(contrast).toBeChecked();
+    expect(document.documentElement.dataset.contrast).toBe('more');
+    expect(savedAppearance()?.contrast ?? 'auto').toBe('auto');
+
+    await user.click(contrast);
+
+    expect(document.documentElement.dataset.contrast).toBe('standard');
+    expect(savedAppearance().contrast).toBe('standard');
   });
 
   it('holds the same values the advanced page holds, whichever page set them', async () => {

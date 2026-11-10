@@ -1,7 +1,7 @@
 import { tv } from '@vp/ui';
 import type { EngagementBarLayout } from './types';
 
-const BAR_ACTIONS = 'basis-auto ms-auto overflow-visible [mask-image:none]';
+const BAR_ACTIONS = 'basis-auto ms-auto flex-wrap justify-end overflow-visible [mask-image:none]';
 
 export const engagementBarStyles = tv({
   slots: {
@@ -22,7 +22,7 @@ export const engagementBarStyles = tv({
       stacked: {},
       auto: {
         actions:
-          'expanded:basis-auto expanded:ms-auto expanded:overflow-visible expanded:[mask-image:none]',
+          'expanded:basis-auto expanded:ms-auto expanded:flex-wrap expanded:justify-end expanded:overflow-visible expanded:[mask-image:none]',
       },
     } satisfies Record<EngagementBarLayout | 'auto', object>,
   },

@@ -1,16 +1,17 @@
-type Media = { scheme: 'dark' | 'light'; reducedMotion: boolean };
+type Media = { scheme: 'dark' | 'light'; reducedMotion: boolean; moreContrast: boolean };
 
 /** What the colour scheme and reduced motion queries answer in a jsdom spec, and a way to flip them. */
 export function stubMediaQueries(initial: Partial<Media> = {}): {
   change: (next: Partial<Media>) => void;
 } {
-  let media: Media = { scheme: 'dark', reducedMotion: false, ...initial };
+  let media: Media = { scheme: 'dark', reducedMotion: false, moreContrast: false, ...initial };
   const changes = new EventTarget();
   vi.spyOn(window, 'matchMedia').mockImplementation((query: string): MediaQueryList => ({
     media: query,
     matches:
       query === `(prefers-color-scheme: ${media.scheme})` ||
-      (query === '(prefers-reduced-motion: reduce)' && media.reducedMotion),
+      (query === '(prefers-reduced-motion: reduce)' && media.reducedMotion) ||
+      (query === '(prefers-contrast: more)' && media.moreContrast),
     onchange: null,
     addListener: () => undefined,
     removeListener: () => undefined,

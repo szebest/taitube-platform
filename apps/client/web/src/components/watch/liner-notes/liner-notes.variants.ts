@@ -5,7 +5,7 @@ export const linerNotesStyles = tv({
   slots: {
     root: 'group/liner flex flex-col gap-inline text-fg',
     meta: 'm-0 text-label [&_a]:text-accent-ink [&_a]:underline',
-    body: 'm-0 h-[3lh] max-w-[68ch] overflow-hidden text-body break-words whitespace-pre-line transition-[height] duration-base ease-settle [interpolate-size:allow-keywords] group-data-expanded/liner:h-auto motion-reduce:transition-none [&_a]:text-accent-ink [&_a]:underline',
+    body: 'm-0 h-[3lh] max-w-[68ch] overflow-hidden text-body break-words whitespace-pre-line group-data-expanded/liner:h-auto [&_a]:text-accent-ink [&_a]:underline',
     toggle: 'self-start px-0',
     timecode:
       'inline cursor-pointer rounded-xs border-0 bg-transparent p-0 font-mono text-mono text-accent-ink hover:underline focus-ring',

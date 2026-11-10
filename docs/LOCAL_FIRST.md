@@ -66,6 +66,13 @@ API smoke, and then drives a browser through the web container: upload, `READY`,
 page and playback (`pnpm test:browser`). Last it broadcasts a test pattern from inside the live worker
 container through MediaMTX and checks the LL-HLS window and the archive in MinIO (`pnpm test:live`).
 
+### Signing in locally
+There is no password login. `./demo/start.sh` builds both apps with `VITE_DEMO_PERSONAS=true`, starts `dev-token serve`
+(port 3002, this machine only) and puts one-click sign-in on `/login` of web (:5173) and studio (:5174): Viewer,
+Creator, Second creator, Moderator, Admin or Guest. The session cookie spans ports, so one sign-in holds on both.
+Any other build leaves the flag off and ships none of that code (the bundle guard fails the build otherwise).
+`demo/login.sh <persona>` stays as the fallback: it prints a snippet to paste in DevTools.
+
 ---
 
 ## 4. Local-First Guardrails & Guarantees

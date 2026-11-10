@@ -1,5 +1,8 @@
 import { tryCatch, unwrapOr } from '@vp/result';
 import { useEffect, useState } from 'react';
+import { shouldPrefetch } from '#app/integrations/network/should-prefetch';
+import { useReducedMotion } from './use-reduced-motion';
+import { useRootAttribute } from './use-root-attribute';
 
 const BANDS = 3;
 const CHANNELS = 4;
@@ -48,16 +51,20 @@ const NO_COLOURS: string[] = [];
 
 /**
  * Up to three CSS colours from a poster or a playing video, start to end, for an ambient glow. A
- * video is sampled 12 times a second and smoothed; under reduced motion its first sample stays. Empty
- * on the server, and until a frame can be read (a cross-origin image without CORS never can).
+ * video is sampled 12 times a second and smoothed; under reduced motion, which it follows as it changes,
+ * its first sample stays. Empty on the server, with the glow off, under save-data or on a 2g link, and until
+ * a frame can be read (a cross-origin image without CORS never can).
  */
 export function useAmbientSample(source: AmbientSource | undefined): string[] {
   const [sampled, setSampled] = useState<{ source?: AmbientSource; colours: string[] }>({
     colours: [],
   });
 
+  const reduced = useReducedMotion();
+  const off = useRootAttribute('ambient') === 'off';
+
   useEffect(() => {
-    if (source === undefined) return;
+    if (source === undefined || off || !shouldPrefetch()) return;
 
     const canvas = document.createElement('canvas');
     canvas.width = BANDS;
@@ -83,7 +90,6 @@ export function useAmbientSample(source: AmbientSource | undefined): string[] {
       };
     }
 
-    const reduced = document.documentElement.dataset.motion === 'reduced';
     let frame = 0;
     let sampledAt = Number.NEGATIVE_INFINITY;
     const tick = (now: number) => {
@@ -98,7 +104,7 @@ export function useAmbientSample(source: AmbientSource | undefined): string[] {
     frame = requestAnimationFrame(tick);
 
     return () => cancelAnimationFrame(frame);
-  }, [source]);
+  }, [source, reduced, off]);
 
-  return sampled.source === source ? sampled.colours : NO_COLOURS;
+  return sampled.source === source && !off ? sampled.colours : NO_COLOURS;
 }

@@ -3,7 +3,7 @@ import type { NowPlayingBarStatus } from './types';
 
 export const nowPlayingBarStyles = tv({
   slots: {
-    root: 'relative flex min-h-[4.5rem] items-center gap-inline overflow-hidden rounded-card border-divider border-border bg-surface p-inline font-sans text-fg shadow-3 transition-[opacity,translate] duration-base ease-enter starting:opacity-0 motion-safe:starting:translate-y-stack medium:px-inset-control',
+    root: 'relative flex min-h-[4.5rem] items-center gap-inline overflow-hidden rounded-card border-divider border-border bg-raised p-inline font-sans text-fg shadow-3 transition-[opacity,translate] duration-base ease-enter starting:opacity-0 motion-safe:starting:translate-y-stack medium:px-inset-control',
     media:
       'relative aspect-video w-[5.5rem] shrink-0 overflow-hidden rounded-sm bg-media medium:w-32',
     mediaSlot: 'size-full *:block *:size-full *:object-cover',

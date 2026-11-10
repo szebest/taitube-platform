@@ -42,8 +42,13 @@ the reason when it is active ([accessibility.md](accessibility.md)).
 `reduced` uses a linear curve throughout, so there is no easing character left to tune. `calm` differs from
 `standard` only in longer durations and a slightly softer `settle`.
 
-Tailwind utilities are `duration-fast`, `ease-settle` and so on; a raw millisecond or a `transition-all` is a
-review failure. Animate `transform` and `opacity` only, so nothing re-lays out.
+Tailwind utilities are `duration-fast`, `ease-settle` and so on. A literal `duration-<n>` or `delay-<n>`, a
+`transition-all` and a transition of `width`, `height`, `inline-size`, `margin` or `padding` fail the build (the
+`zero-matches` design rows); a sliding indicator is the one exception, being absolutely positioned. Animate
+`transform` and `opacity` only, so nothing re-lays out. A shared control that paints `cursor-pointer` has a
+`transition`, an `animate-` or `motion-enter`, and one that moves has a `motion-reduce` guard
+(`motion.test.ts`). The system setting is read in one place, the single `prefers-reduced-motion` block of
+`base.css`; everything else follows `data-motion="reduced"` or the `motion-reduce` variant.
 
 ## Catalogue
 
@@ -67,7 +72,7 @@ forced by `prefers-reduced-motion`.
 | Theme cross-fade | the viewer switches theme or mode | whole-page cross-fade through the View Transitions API | `cinematic` | `standard` | none: instant swap |
 | Live pulse | live badge, live dot, always while live | opacity 1 to 0.35 and back, 1.6 s loop (stand-in) | loop | ease in out | static dot and the `LIVE` label, no animation |
 | Skeleton shimmer | while loading | background position sweep, 1.4 s linear loop (stand-in) | loop | linear | static `tint` fill, no sweep |
-| Ambient glow | new video frame sample | opacity and colour of a blurred layer, sampled at 10 to 15 fps | continuous | linear | static glow from the poster |
+| Ambient glow | a page with a stage (the watch page) mounts; a new frame sample | one page-level layer on the `ambient` role, below the header and rail, sized from the stage's box (a quarter of it past each edge) and clipped by the page; opacity and colour of a blurred layer, sampled at 12 fps | continuous | linear | static glow from the first sample; none under save-data, 2g or `data-ambient=off` |
 | Chip bar, shelf scroll | wheel, drag, chevron | scroll with snap | native | native | native (not a transition) |
 
 Fallback where the View Transitions API is missing: the existing `data-theme-switching` pause (transitions are
@@ -107,6 +112,12 @@ forces it whatever the viewer picked. Under it:
    dot is static and the `LIVE` label carries the meaning (README section 8).
 3. **Entering uses `enter`, leaving `exit`, moving `settle`.** An exit is a step faster than its enter
    (`slow` in, `base` out).
+   **A surface that closes animates out, from the keyboard as well.** Dialog, Drawer, Popover, Menu, Select,
+   Command's palette and Toast keep their content mounted for the `exit` animation (`motion-enter` carries it on
+   `data-state="closed"`, `fast` by default), and under reduced motion it is an opacity fade. A caller never
+   unmounts one on close: a `key` that changes with `open` removes the surface in the first frame; key it by the
+   opening (the command palette's `session`) so the next one starts fresh. `overlay-exit.test.ts` in the web
+   app's `e2e/` closes each primitive and holds it in the document, `data-state="closed"`, a few frames later.
 4. **No layout shift on hover.** The lift moves the thumbnail by transform; the card's box and its neighbours
    never move.
 5. **Respond within one frame.** Press and hover start immediately; do not delay a hover feedback. The one

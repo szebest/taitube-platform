@@ -1,5 +1,5 @@
 import { type ContrastFailure, checkContrast, NON_TEXT_FLOOR } from './contrast';
-import { checkRoleContrast } from './schema/roles';
+import { checkRoleContrast, type RoleContrast, type RolePairSet } from './schema/roles';
 import type { ModeOption, ResolvedTheme } from './schema/theme';
 
 type ThemeMode = Exclude<ModeOption, 'system'>;
@@ -17,10 +17,17 @@ type LabelledPair = Readonly<{
   floor: number;
 }>;
 
-export type ThemeContrastFailure = ContrastFailure<LabelledPair> & Readonly<{ mode: ThemeMode }>;
+export type ThemeContrastFailure = ContrastFailure<LabelledPair> &
+  Readonly<{ mode: ThemeMode; contrast: RoleContrast }>;
 
-/** Every required role pair and every chart series at 3:1 on `surface`, in each mode of the theme. */
-export const checkThemeContrast = ({ color, dataviz }: ResolvedTheme): ThemeContrastFailure[] =>
+/**
+ * Every required role pair, standard and under `data-contrast="more"`, and every chart series at 3:1 on
+ * `surface`, in each mode of the theme. `core` leaves out the pairs only a shipped theme is chosen against.
+ */
+export const checkThemeContrast = (
+  { color, dataviz }: ResolvedTheme,
+  set: RolePairSet = 'drawn'
+): ThemeContrastFailure[] =>
   MODE_PALETTES.flatMap(({ mode, palette }) => {
     const roles = mode === 'oled' ? { ...color.dark, ...color.oled } : color[mode];
     const series = dataviz[palette].map((foreground, index) => ({
@@ -29,8 +36,15 @@ export const checkThemeContrast = ({ color, dataviz }: ResolvedTheme): ThemeCont
       background: roles.surface,
       floor: NON_TEXT_FLOOR,
     }));
-    return [...checkRoleContrast(roles), ...checkContrast(series)].map((failure) => ({
-      ...failure,
-      mode,
-    }));
+    return [
+      ...checkRoleContrast(roles, 'standard', set).map((failure) => ({
+        ...failure,
+        contrast: 'standard' as const,
+      })),
+      ...(set === 'drawn' ? checkRoleContrast(roles, 'more', set) : []).map((failure) => ({
+        ...failure,
+        contrast: 'more' as const,
+      })),
+      ...checkContrast(series).map((failure) => ({ ...failure, contrast: 'standard' as const })),
+    ].map((failure) => ({ ...failure, mode }));
   });

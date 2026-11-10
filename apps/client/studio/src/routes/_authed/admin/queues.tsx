@@ -4,6 +4,7 @@ import { prefetched } from '@vp/queries';
 import { Button } from '@vp/ui';
 import { useId } from 'react';
 import {
+  AdminPageSkeleton,
   adminDlqQueryOptions,
   DlqParkedCount,
   DlqSearchSchema,
@@ -44,5 +45,6 @@ export const Route = createFileRoute('/_authed/admin/queues')({
   loader: async ({ context: { queryClient, api }, deps: { status } }) => {
     await prefetched(queryClient.infiniteQuery(adminDlqQueryOptions(api, status)));
   },
+  pendingComponent: AdminPageSkeleton,
   component: QueuesPage,
 });

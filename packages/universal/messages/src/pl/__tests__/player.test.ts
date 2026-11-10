@@ -8,6 +8,7 @@ describe('@vp/messages: pl player', () => {
     { key: 'player.play', expected: 'Odtwórz' },
     { key: 'player.unmute', expected: 'Włącz dźwięk' },
     { key: 'player.fullscreen', expected: 'Pełny ekran' },
+    { key: 'player.pictureInPicture', expected: 'Obraz w obrazie' },
     { key: 'player.unavailable', expected: 'Ten film jest niedostępny' },
   ] as const)('renders $key with no arguments', ({ key, expected }) => {
     expect(t(key)).toEqual({ ok: true, value: expected });

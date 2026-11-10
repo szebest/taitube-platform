@@ -5,7 +5,7 @@ export const progressStyles = tv({
   slots: {
     root: 'relative block w-full overflow-hidden rounded-chip bg-tint-strong data-[state=indeterminate]:motion-safe:animate-indeterminate data-[state=indeterminate]:bg-size-[50%_100%] data-[state=indeterminate]:bg-no-repeat',
     indicator:
-      'block h-full rounded-chip transition-[inline-size] duration-base ease-standard motion-reduce:transition-none data-[state=indeterminate]:hidden',
+      'block h-full w-full origin-left rounded-chip transition-transform duration-base ease-standard motion-reduce:transition-none rtl:origin-right data-[state=indeterminate]:hidden',
   },
   variants: {
     size: {

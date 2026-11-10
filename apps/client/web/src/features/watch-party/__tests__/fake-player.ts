@@ -26,6 +26,8 @@ export const fakePlayer = {
     setPlaybackRate: vi.fn(),
     selectVideoRendition: vi.fn(),
     requestFullscreen: vi.fn(),
+    requestPictureInPicture: vi.fn(),
+    exitPictureInPicture: vi.fn(),
     exitFullscreen: vi.fn(),
     requestControlsLock: vi.fn(() => () => undefined),
     selectCaptionTrack: vi.fn(),

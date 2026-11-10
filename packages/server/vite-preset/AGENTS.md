@@ -24,8 +24,8 @@ allows across tiers (`BUILD_TOOLING`), and nothing of it reaches a bundle.
   an edit hot-reloads the app; a `"./x/*"` export pattern becomes one alias, its capture substituted into the
   source path, and its source directory must exist;
 - Sass `loadPaths` at the app's `src/`, and the dev and preview port, strict;
-- the bundle guard on the client build: no devtools and no `dev-only/` folder in a production
-  chunk, none of its `forbiddenDirs` (code that moved to another app) in any chunk, every route in a chunk
+- the bundle guard on the client build: no devtools in a production chunk, no `demo-personas/` folder in one built without
+  `VITE_DEMO_PERSONAS=true` (read with `loadEnv`), none of its `forbiddenDirs` (code that moved to another app) in any chunk, every route in a chunk
   of its own, no `process.env` read, no module in two chunks, an entry chunk within its `entryBudgetKb` (gzip), and
   no `vendor-player` or `vendor-charts` chunk among the entry's static imports;
 - the `vendor-*` chunks (`react`, `tanstack`, `dnd`, `forms`, `player`, `charts`), so vendor code keeps its hash across a deploy.
@@ -35,7 +35,7 @@ allows across tiers (`BUILD_TOOLING`), and nothing of it reaches a bundle.
 - **One module.** Vite loads an app's config with this package left external, so Node imports
   `src/client-app-config.ts` itself and cannot resolve an extensionless relative import. Keep it one file and
   its spec one file.
-- **No app knowledge here.** A rule one app needs (a dev-only directory, a forbidden module) is an option
+- **No app knowledge here.** A rule one app needs (a forbidden module) is an option
   the app passes, never a path written into this package.
 - **Not here:** runtime code, test helpers (`@vp/web-testing`), anything that reads an app's `src/config`.
 

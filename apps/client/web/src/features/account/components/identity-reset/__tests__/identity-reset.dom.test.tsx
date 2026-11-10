@@ -11,6 +11,7 @@ function renderReset(userId: string | undefined) {
   const merge: MergeState = {
     applied: { current: { userId: 'ada', version: 4 } },
     guest: { current: undefined },
+    baseline: { current: undefined },
   };
   const tree = (id: string | undefined) => (
     <QueryClientProvider client={new QueryClient()}>

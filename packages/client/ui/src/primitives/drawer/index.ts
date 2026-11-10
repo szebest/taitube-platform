@@ -5,6 +5,7 @@ import {
   DrawerDescription,
   DrawerFooter,
   DrawerHandle,
+  DrawerHeader,
   DrawerRoot,
   DrawerTitle,
 } from './drawer';
@@ -14,6 +15,7 @@ export const Drawer = {
   Trigger: DialogPrimitive.Trigger,
   Content: DrawerContent,
   Handle: DrawerHandle,
+  Header: DrawerHeader,
   Title: DrawerTitle,
   Description: DrawerDescription,
   Body: DrawerBody,

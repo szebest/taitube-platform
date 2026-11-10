@@ -124,15 +124,18 @@ test.describe('watch', () => {
     const seekBar = page.getByRole('slider', { name: 'Seek' });
     await expect.poll(async () => Number(await seekBar.getAttribute('max'))).toBeGreaterThan(1);
     await seekBar.fill('1');
+    await expect
+      .poll(() => page.locator('video').evaluate((video: HTMLVideoElement) => video.currentTime))
+      .toBeGreaterThanOrEqual(1);
 
     await page.getByRole('button', { name: 'Share', exact: true }).click();
     const dialog = page.getByRole('dialog', { name: 'Share this video' });
-    const link = dialog.getByLabel('Link');
-    await expect(link).toHaveValue(new RegExp(`/watch/${stack.videos.watchable.id}$`));
+    const link = dialog.getByRole('textbox', { name: 'Link' });
+    await expect(link).toHaveText(new RegExp(`/watch/${stack.videos.watchable.id}$`));
 
     await dialog.getByRole('checkbox', { name: /^Start at/ }).check();
 
-    await expect(link).toHaveValue(new RegExp(`/watch/${stack.videos.watchable.id}\\?t=\\d+$`));
+    await expect(link).toHaveText(new RegExp(`/watch/${stack.videos.watchable.id}\\?t=\\d+$`));
   });
 
   test('the queue holds the video on the stage, beside it on an expanded screen', async ({
@@ -164,7 +167,7 @@ test.describe('watch', () => {
     const queue = page.getByRole('region', { name: 'Your queue' });
     const standard = await box(stage);
 
-    await stage.hover();
+    await page.locator('[data-slot=playback-host]').hover();
     await page.getByRole('button', { name: 'Theater mode' }).click();
 
     await expect.poll(async () => (await box(stage)).width).toBeGreaterThan(standard.width);

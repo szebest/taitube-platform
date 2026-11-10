@@ -28,6 +28,7 @@ function renderReset() {
   const merge: MergeState = {
     applied: { current: { userId: 'old', version: 4 } },
     guest: { current: undefined },
+    baseline: { current: undefined },
   };
   const hook = renderHook(
     () => ({

@@ -51,8 +51,8 @@ const Card = ({
     </VideoCard.Title>
     <VideoCard.Meta>412K views · 2 days ago</VideoCard.Meta>
     <VideoCard.Reason>Because you watched Porto</VideoCard.Reason>
-    <VideoCard.Menu onSave={noop} onQueue={noop} />
-    <VideoCard.Expanded onSave={noop} onQueue={noop}>
+    <VideoCard.Menu onSave={noop} onQueue={noop} onPlayNext={noop} />
+    <VideoCard.Expanded onSave={noop} onQueue={noop} onPlayNext={noop}>
       A night walk from Alfama down to the river, on a camcorder older than the tram it follows.
     </VideoCard.Expanded>
   </VideoCard.Root>

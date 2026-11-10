@@ -11,6 +11,7 @@ import { defineLiveStreamRules } from './rules/live-stream.rules';
 import { defineNotificationRules } from './rules/notification.rules';
 import { definePlaylistRules } from './rules/playlist.rules';
 import { definePreferencesRules } from './rules/preferences.rules';
+import { defineQueueRules } from './rules/queue.rules';
 import { defineRecommendationFeedbackRules } from './rules/recommendation-feedback.rules';
 import { defineUploadRules } from './rules/upload.rules';
 import { defineVideoRules } from './rules/video.rules';
@@ -33,6 +34,7 @@ export function getUserPermissions(user: UserContext | null): AppAbility {
   defineCaptionRules(user, builder);
   defineNotificationRules(user, builder);
   defineClipRules(user, builder);
+  defineQueueRules(user, builder);
   defineRecommendationFeedbackRules(user, builder);
   defineWebhookRules(user, builder);
   defineLiveStreamRules(user, builder);

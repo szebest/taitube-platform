@@ -13,8 +13,9 @@ e2e suite authenticate with. The library (`src/jwt.ts`: `mintToken`, `verifyToke
 `getDevKeyPair`, `getDevJwks`, `DEV_KEY_ID`) derives its key pair from a fixed seed; `@vp/adapters` uses
 `getDevJwks` for its `DevTokenVerifier`. `src/cli.ts` implements the `mint`, `verify`, `jwks` and `serve`
 commands and `src/main.ts` runs them. `serve` (`src/server.ts`, port 3002 on loopback only, started by the root `pnpm dev`)
-serves the key set and `GET /token?persona=user|creator|admin`, the token of a dev persona
-(`src/personas.ts`), which the client apps' dev-only persona switcher signs in with (SDD §11).
+serves the key set and `GET /token?persona=user|creator|creator2|moderator|admin`, the token of a demo persona
+(`src/personas.ts`), which the client apps' persona switcher signs in with when a build sets
+`VITE_DEMO_PERSONAS=true` (SDD §11).
 
 This is a **workspace package with a CLI**, not a loose script — which is why it lives under
 `packages/server/` rather than `tools/`. `tools/` is for assets with no `package.json`.

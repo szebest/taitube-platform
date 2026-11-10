@@ -17,6 +17,8 @@ describe('@vp/messages: en player', () => {
     { key: 'player.speed', expected: 'Playback speed' },
     { key: 'player.normalSpeed', expected: 'Normal' },
     { key: 'player.fullscreen', expected: 'Full screen' },
+    { key: 'player.pictureInPicture', expected: 'Picture in picture' },
+    { key: 'player.exitPictureInPicture', expected: 'Exit picture in picture' },
     { key: 'player.exitFullscreen', expected: 'Exit full screen' },
     { key: 'player.theater', expected: 'Theater mode' },
     { key: 'player.exitTheater', expected: 'Exit theater mode' },

@@ -1,6 +1,8 @@
 import { requestHandler } from '@tanstack/react-start/server';
+import { TOKEN_GROUPS } from '@vp/design-tokens';
 import {
   type AppearancePreference,
+  AppearancePreferenceSchema,
   accountAppearance,
   appearanceFromAccount,
   DEFAULT_APPEARANCE,
@@ -38,7 +40,7 @@ const ELSEWHERE = {
 };
 
 describe('@vp/ui: the appearance preference', () => {
-  it('defaults to the catalogue: the registry default theme, system mode, no accent, no overrides', () => {
+  it('defaults to the catalogue: the registry default theme, system mode and contrast, no accent, no overrides', () => {
     expect(DEFAULT_APPEARANCE).toEqual({
       schema: 2,
       theme: null,
@@ -46,7 +48,7 @@ describe('@vp/ui: the appearance preference', () => {
       accent: null,
       customGround: null,
       customAccent: null,
-      contrast: 'standard',
+      contrast: 'auto',
       overrides: {},
     });
   });
@@ -166,5 +168,23 @@ describe('@vp/ui: the appearance preference', () => {
       ...NOCTURNE_AIRY,
       overrides: { spacing: 'airy' },
     });
+  });
+
+  it('stays under 1 KB as a cookie at its worst: every id at its longest, every group overridden', () => {
+    const longest = 'a'.repeat(32);
+    const worst = {
+      ...DEFAULT_APPEARANCE,
+      theme: longest,
+      accent: '#ffffff',
+      customGround: '#ffffff',
+      customAccent: '#ffffff',
+      contrast: 'standard',
+      overrides: Object.fromEntries(TOKEN_GROUPS.map((group) => [group, longest])),
+    } as const;
+
+    const cookie = `vp.appearance=${encodeURIComponent(JSON.stringify(worst))}`;
+
+    expect(AppearancePreferenceSchema.parse(worst)).toEqual(worst);
+    expect(cookie.length).toBeLessThan(1024);
   });
 });

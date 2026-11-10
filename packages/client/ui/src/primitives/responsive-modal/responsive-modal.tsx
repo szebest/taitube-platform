@@ -6,6 +6,7 @@ import {
   DialogContent,
   DialogDescription,
   DialogFooter,
+  DialogHeader,
   DialogTitle,
 } from '../dialog/dialog';
 import {
@@ -14,6 +15,7 @@ import {
   DrawerDescription,
   DrawerFooter,
   DrawerHandle,
+  DrawerHeader,
   DrawerRoot,
   DrawerTitle,
 } from '../drawer/drawer';
@@ -62,6 +64,13 @@ export function ResponsiveModalContent({ children, ...props }: ResponsiveModalCo
       {children}
     </DialogContent>
   );
+}
+
+export function ResponsiveModalHeader(props: ComponentPropsWithRef<'div'>) {
+  const { compact } = useResponsiveModal('Header');
+  const Header = compact ? DrawerHeader : DialogHeader;
+
+  return <Header {...props} />;
 }
 
 export function ResponsiveModalTitle(props: ComponentPropsWithRef<typeof DialogPrimitive.Title>) {

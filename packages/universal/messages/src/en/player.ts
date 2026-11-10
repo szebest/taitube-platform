@@ -18,6 +18,8 @@ export const player = {
   normalSpeed: dt('Normal'),
   rate: dt('{rate:number}x'),
   fullscreen: dt('Full screen'),
+  pictureInPicture: dt('Picture in picture'),
+  exitPictureInPicture: dt('Exit picture in picture'),
   exitFullscreen: dt('Exit full screen'),
   theater: dt('Theater mode'),
   exitTheater: dt('Exit theater mode'),

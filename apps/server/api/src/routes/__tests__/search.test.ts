@@ -111,6 +111,15 @@ describe('search routes', () => {
       expect(res.json().tookMs).toBeGreaterThanOrEqual(0);
     });
 
+    it.each(['all', 'video', 'channel', 'playlist'])(
+      'counts every kind on the first page whichever type=%s is asked for',
+      async (type) => {
+        const res = await get(`/v1/search?q=javascript&type=${type}`);
+
+        expect(res.json().counts).toEqual({ video: 1, channel: 1, playlist: 1 });
+      }
+    );
+
     it.each(['fireship', '@fireship', 'FIRESHIP'])(
       'pins the channel whose handle is %j to the top',
       async (q) => {

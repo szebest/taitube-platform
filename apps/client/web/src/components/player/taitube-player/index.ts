@@ -3,6 +3,7 @@ export {
   useOnPlayerEnded,
   usePlayerCaptionTrack,
   usePlayerFullscreen,
+  usePlayerPictureInPicture,
   usePlayerSeek,
   usePlayerTheater,
   usePlayerTime,

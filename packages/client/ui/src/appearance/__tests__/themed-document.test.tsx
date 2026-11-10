@@ -44,7 +44,7 @@ describe('@vp/ui: ThemedDocument', () => {
     });
 
     expect(htmlTag(html)).toBe(
-      '<html lang="en" dir="ltr" data-theme="nocturne" data-mode="oled" data-contrast="more" data-typography="geist" data-font-size="large" data-spacing="default" data-sizing="medium" data-radius="sharp" data-border="regular" data-shadow="flat" data-ambient="subtle" data-motion="standard">'
+      '<html lang="en" dir="ltr" data-theme="nocturne" data-mode="oled" data-contrast="more" data-density="comfortable" data-typography="geist" data-font-size="large" data-spacing="default" data-sizing="medium" data-radius="sharp" data-border="regular" data-shadow="flat" data-ambient="subtle" data-motion="standard">'
     );
     expect(html).toContain('<main>Page</main>');
   });

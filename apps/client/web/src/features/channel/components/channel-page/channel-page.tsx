@@ -35,7 +35,7 @@ export function ChannelPage({ channelId }: { channelId: string }) {
           >
             {channel.bio && <ChannelHeader.Bio>{channel.bio}</ChannelHeader.Bio>}
             <ChannelHeader.Actions>
-              <SubscribeAction channelId={channel.id} />
+              <SubscribeAction channelId={channel.id} className="max-medium:flex-1" />
             </ChannelHeader.Actions>
           </ChannelHeader.Identity>
         </ChannelHeader.Root>

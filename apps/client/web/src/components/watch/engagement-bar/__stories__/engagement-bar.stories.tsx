@@ -1,5 +1,6 @@
 import type { Decorator, Meta, StoryObj } from '@storybook/react-vite';
 import { DropdownMenu, Icon } from '@vp/ui';
+import { SubscribeButton } from '#app/components/channel/subscribe-button';
 import { EngagementBar, EngagementBarSkeleton } from '..';
 import { EngagementBarRoot } from '../engagement-bar';
 import type { EngagementBarReaction } from '../types';
@@ -34,9 +35,9 @@ function Bar({
       <EngagementBar.Channel name={name} avatarSrc={AVATAR} subscribers={subscribers} asChild>
         <a href="/channel/marta" />
       </EngagementBar.Channel>
-      <EngagementBar.Subscribe subscribed={subscribed} pending={pending} onToggle={() => undefined}>
+      <SubscribeButton subscribed={subscribed} pending={pending} onToggle={() => undefined}>
         {subscribed ? 'Subscribed' : 'Subscribe'}
-      </EngagementBar.Subscribe>
+      </SubscribeButton>
       <EngagementBar.Actions>
         <EngagementBar.Reaction value={reaction} likes={likes} onChange={() => undefined} />
         <EngagementBar.Action icon="share">Share</EngagementBar.Action>

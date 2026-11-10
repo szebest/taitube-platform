@@ -50,6 +50,8 @@ export const FIXTURE_UI_COPY: UiCopy = {
   previous: 'Previous',
   next: 'Next',
   queue: 'Queue',
+  addToQueue: 'Add to queue',
+  playNext: 'Play next',
   backToVideo: 'Back to the video',
   seek: 'Seek',
   live: 'Live',

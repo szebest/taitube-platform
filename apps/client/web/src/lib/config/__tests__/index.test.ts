@@ -6,6 +6,8 @@ interface Env {
   cookieDomain?: string;
   traces?: string;
   publicApi?: string;
+  devToken?: string;
+  demoPersonas?: string;
 }
 
 async function configFor({
@@ -16,10 +18,14 @@ async function configFor({
   cookieDomain,
   traces,
   publicApi,
+  devToken,
+  demoPersonas,
 }: Env) {
   vi.stubEnv('SSR', ssr);
   vi.stubEnv('VITE_API_BASE_URL', 'http://localhost:3000');
   vi.stubEnv('SSR_API_BASE_URL', server);
+  vi.stubEnv('SSR_DEV_TOKEN_URL', devToken);
+  vi.stubEnv('VITE_DEMO_PERSONAS', demoPersonas);
   vi.stubEnv('VITE_API_PUBLIC_URL', publicApi);
   vi.stubEnv('VITE_STUDIO_URL', studio);
   vi.stubEnv('VITE_WEB_URL', web);
@@ -106,6 +112,23 @@ describe('apps/client/web: config', () => {
   });
 
   it.each([
+    { scenario: 'is unset by default', env: { ssr: true }, expected: undefined },
+    {
+      scenario: 'reads SSR_DEV_TOKEN_URL on the server',
+      env: { ssr: true, devToken: 'http://dev-token:3002/' },
+      expected: 'http://dev-token:3002',
+    },
+    {
+      scenario: 'ignores SSR_DEV_TOKEN_URL in the browser',
+      env: { devToken: 'http://dev-token:3002' },
+      expected: undefined,
+    },
+  ])("resolves the token server's address: $scenario", async ({ env, expected }) => {
+    expect((await configFor(env)).DEV_TOKEN_URL).toBe(expected);
+  });
+
+  it.each([
+    { name: 'VITE_DEMO_PERSONAS', env: { demoPersonas: 'yes' } },
     { name: 'VITE_COOKIE_DOMAIN', env: { cookieDomain: 'https://taitube.local' } },
     { name: 'VITE_STUDIO_URL', env: { studio: 'not a url' } },
     { name: 'VITE_WEB_URL', env: { web: 'not a url' } },

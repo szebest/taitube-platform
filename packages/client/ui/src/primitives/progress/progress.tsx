@@ -33,7 +33,7 @@ export function Progress({
       <ProgressPrimitive.Indicator
         data-slot="progress-indicator"
         className={styles.indicator()}
-        style={{ inlineSize: `${filled}%` }}
+        style={{ transform: `scaleX(${filled / 100})` }}
       />
     </ProgressPrimitive.Root>
   );

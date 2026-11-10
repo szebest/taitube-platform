@@ -1,5 +1,5 @@
 import { useT } from '@vp/intl-react';
-import { Button, Dialog, useToast, useUiCopy } from '@vp/ui';
+import { Button, ResponsiveModal, useToast, useUiCopy } from '@vp/ui';
 import { useState } from 'react';
 import { useClearWatchHistory } from '#app/features/account/hooks/use-clear-watch-history';
 import { SettingItem } from '../setting-item/setting-item';
@@ -27,27 +27,31 @@ export function ClearHistoryRow() {
       row="clear-history"
       description={tOr('settings.rowDescription', { row: 'clear-history' }, '')}
     >
-      <Dialog.Root open={open} onOpenChange={setOpen}>
-        <Dialog.Trigger asChild>
+      <ResponsiveModal.Root open={open} onOpenChange={setOpen}>
+        <ResponsiveModal.Trigger asChild>
           <Button variant="outline" tone="danger">
             {tOr('settings.clearHistoryAction', {}, '')}
           </Button>
-        </Dialog.Trigger>
-        <Dialog.Content>
-          <Dialog.Header>
-            <Dialog.Title>{tOr('settings.clearHistoryTitle', {}, '')}</Dialog.Title>
-            <Dialog.Description>{tOr('settings.clearHistoryBody', {}, '')}</Dialog.Description>
-          </Dialog.Header>
-          <Dialog.Footer>
-            <Dialog.Close asChild>
+        </ResponsiveModal.Trigger>
+        <ResponsiveModal.Content>
+          <ResponsiveModal.Header>
+            <ResponsiveModal.Title>
+              {tOr('settings.clearHistoryTitle', {}, '')}
+            </ResponsiveModal.Title>
+            <ResponsiveModal.Description>
+              {tOr('settings.clearHistoryBody', {}, '')}
+            </ResponsiveModal.Description>
+          </ResponsiveModal.Header>
+          <ResponsiveModal.Footer>
+            <ResponsiveModal.Close asChild>
               <Button variant="ghost">{cancel}</Button>
-            </Dialog.Close>
+            </ResponsiveModal.Close>
             <Button variant="solid" tone="danger" disabled={isPending} onClick={clear}>
               {tOr('settings.clearHistoryAction', {}, '')}
             </Button>
-          </Dialog.Footer>
-        </Dialog.Content>
-      </Dialog.Root>
+          </ResponsiveModal.Footer>
+        </ResponsiveModal.Content>
+      </ResponsiveModal.Root>
     </SettingItem>
   );
 }

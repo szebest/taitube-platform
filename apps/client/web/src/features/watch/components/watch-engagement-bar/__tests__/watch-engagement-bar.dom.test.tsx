@@ -52,6 +52,29 @@ describe('apps/client/web: watch engagement bar', () => {
     writeCookie('vp.appearance', '', { maxAge: 0 });
   });
 
+  it.each(['Add to queue', 'Play next'])(
+    'offers %s on the bar, which says the video playing is queued already',
+    async (name) => {
+      const { user } = await renderWatch({ viewer: account() });
+
+      await user.click((await screen.findAllByRole('button', { name }))[0] as HTMLElement);
+
+      expect(await screen.findByText('Already in your queue')).toBeInTheDocument();
+    }
+  );
+
+  it('asks a guest who presses Add to queue to sign in', async () => {
+    const { user } = await renderWatch();
+
+    await user.click(
+      (await screen.findAllByRole('button', { name: 'Add to queue' }))[0] as HTMLElement
+    );
+
+    expect(
+      await screen.findByRole('dialog', { name: 'Sign in to build a queue' })
+    ).toBeInTheDocument();
+  });
+
   it('keeps a channel that cannot load to its own section, leaving the actions', async () => {
     const offline = mockEndpoint(getChannel, () => HttpResponse.error());
     await renderWatch({ handlers: [offline] });
@@ -103,15 +126,15 @@ describe('apps/client/web: watch engagement bar', () => {
   });
 
   it.each([
-    { action: 'Subscribe', name: 'Subscribe' },
-    { action: 'Like', name: 'Like 24' },
-  ])('sends a guest who presses $action to sign in, back to this video', async ({ name }) => {
+    { action: 'Subscribe', name: 'Subscribe', reason: 'Sign in to subscribe to this channel' },
+    { action: 'Like', name: 'Like 24', reason: 'Sign in to like this' },
+  ])('asks a guest who presses $action to sign in, on this video', async ({ name, reason }) => {
     const { router, user } = await renderWatch();
 
     await user.click(screen.getByRole('button', { name }));
 
-    await vi.waitFor(() => expect(router.state.location.pathname).toBe('/login'));
-    expect(router.state.location.search).toEqual({ redirect: `/watch/${VIDEO_ID}` });
+    expect(await screen.findByRole('dialog', { name: reason })).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe(`/watch/${VIDEO_ID}`);
   });
 
   it('subscribes at once and settles on the count the API answers', async () => {

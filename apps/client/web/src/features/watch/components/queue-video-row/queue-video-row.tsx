@@ -2,9 +2,9 @@ import { Link } from '@tanstack/react-router';
 import type { ReasonedVideo, VideoSummary } from '@vp/api-contracts';
 import { VideoCard } from '@vp/components';
 import { useT } from '@vp/intl-react';
-import { useCan } from '@vp/permissions-react';
 import { FeedbackMenuItems } from '#app/components/video/feedback-menu-items';
 import { useDurationText } from '#app/hooks/use-duration-text';
+import { useVideoActions } from '#app/hooks/use-video-actions';
 
 export interface QueueVideoRowProps {
   video: VideoSummary;
@@ -27,7 +27,7 @@ export function QueueVideoRow({
 }: QueueVideoRowProps) {
   const { tOr } = useT();
   const { clock, spoken } = useDurationText(video.durationMs);
-  const canGiveFeedback = useCan('create', 'RecommendationFeedback');
+  const { enqueue, playNext } = useVideoActions(video);
 
   const byline = [
     episode === undefined ? undefined : tOr('library.episode', { number: episode }, ''),
@@ -57,8 +57,11 @@ export function QueueVideoRow({
       {reason && (
         <VideoCard.Reason>{tOr('home.reason', { kind: reason.kind }, '')}</VideoCard.Reason>
       )}
-      <VideoCard.Menu>
-        {reason && canGiveFeedback ? <FeedbackMenuItems video={video} /> : undefined}
+      <VideoCard.Menu
+        onQueue={reason ? enqueue : undefined}
+        onPlayNext={reason ? playNext : undefined}
+      >
+        {reason ? <FeedbackMenuItems video={video} /> : undefined}
       </VideoCard.Menu>
     </VideoCard.Root>
   );

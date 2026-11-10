@@ -5,6 +5,8 @@ describe('packages/dev-token: personas', () => {
   it.each([
     { persona: 'user', role: 'user' },
     { persona: 'creator', role: 'creator' },
+    { persona: 'creator2', role: 'creator' },
+    { persona: 'moderator', role: 'moderator' },
     { persona: 'admin', role: 'admin' },
   ])('mints a $role token for the $persona persona', ({ persona, role }) => {
     const token = mintPersonaToken(persona);
@@ -13,11 +15,10 @@ describe('packages/dev-token: personas', () => {
   });
 
   it('gives every persona a user of its own', () => {
-    const subjects = ['user', 'creator', 'admin'].map(
-      (persona) => verifyToken(mintPersonaToken(persona) ?? '').sub
-    );
+    const personas = ['user', 'creator', 'creator2', 'moderator', 'admin'];
+    const subjects = personas.map((persona) => verifyToken(mintPersonaToken(persona) ?? '').sub);
 
-    expect(new Set(subjects).size).toBe(3);
+    expect(new Set(subjects).size).toBe(personas.length);
   });
 
   it.each(['root', 'guest', 'constructor'])(

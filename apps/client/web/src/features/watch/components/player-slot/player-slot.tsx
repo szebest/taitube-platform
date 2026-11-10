@@ -1,26 +1,8 @@
 import { usePlaybackSession } from '#app/hooks/use-playback-queue';
 
-/** Where the player is on this page: the element it lives in moves in when this mounts, so playback carries on. */
+/** A box the one player sits over: the stage's, or the mini player's. It holds no player, so the video never moves. */
 export function PlayerSlot() {
-  const { host, park } = usePlaybackSession();
+  const { registerSlot } = usePlaybackSession();
 
-  return (
-    <div
-      ref={(slot) => {
-        if (!(slot && host && park)) {
-          return;
-        }
-
-        if (host.parentElement !== slot) {
-          slot.append(host);
-        }
-
-        return () => {
-          if (host.parentElement === slot) {
-            park.append(host);
-          }
-        };
-      }}
-    />
-  );
+  return <div ref={(slot) => (slot ? registerSlot(slot) : undefined)} className="size-full" />;
 }

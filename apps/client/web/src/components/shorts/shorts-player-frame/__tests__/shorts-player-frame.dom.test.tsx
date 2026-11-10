@@ -1,19 +1,14 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Icon } from '@vp/ui';
 import { axeViolations } from '@vp/web-testing/dom';
-import type { ReactNode } from 'react';
-import { createPortal } from 'react-dom';
 import { AppProviders } from '#app/__tests__/providers';
 import { ShortsPlayerFrame, ShortsPlayerFrameSkeleton } from '..';
 import type { ShortsPlayerFrameRootProps } from '../shorts-player-frame';
 
-function renderFrame(
-  props: Partial<ShortsPlayerFrameRootProps> = {},
-  liked = false,
-  extra?: ReactNode
-) {
-  const playback = { paused: false, muted: false, onTogglePlay: vi.fn(), onToggleMute: vi.fn() };
+function renderFrame(props: Partial<ShortsPlayerFrameRootProps> = {}, liked = false) {
+  const playback = { paused: false, onTogglePlay: vi.fn() };
+  const onSeek = vi.fn();
   const onPrevious = vi.fn();
   const onNext = vi.fn();
   const onLike = vi.fn();
@@ -32,7 +27,10 @@ function renderFrame(
             This Short did not load.
           </ShortsPlayerFrame.Error>
           <ShortsPlayerFrame.Caption>The 28 tram at dusk</ShortsPlayerFrame.Caption>
-          <ShortsPlayerFrame.Progress value={0.4} />
+          <ShortsPlayerFrame.Progress value={0.4} label="Seek" onSeek={onSeek} />
+          <ShortsPlayerFrame.Toolbar label="Short controls">
+            <button type="button">Mute</button>
+          </ShortsPlayerFrame.Toolbar>
         </ShortsPlayerFrame.Player>
         <ShortsPlayerFrame.Actions>
           <ShortsPlayerFrame.Action
@@ -44,58 +42,38 @@ function renderFrame(
             Like
           </ShortsPlayerFrame.Action>
         </ShortsPlayerFrame.Actions>
-        {extra}
       </ShortsPlayerFrame.Root>
     </AppProviders>
   );
-  return { user: userEvent.setup(), playback, onPrevious, onNext, onLike, onRetry };
+  return { user: userEvent.setup(), playback, onPrevious, onNext, onLike, onRetry, onSeek };
 }
 
 describe('apps/client/web: ShortsPlayerFrame', () => {
-  it('is a region named for the Shorts player', () => {
+  it('draws no landmark of its own, the feed is the one region', () => {
     renderFrame();
 
-    expect(screen.getByRole('region', { name: 'Shorts player' })).toBeInTheDocument();
+    expect(screen.queryByRole('region')).not.toBeInTheDocument();
   });
 
-  it.each([
-    { key: '{ArrowDown}', moves: 'onNext' },
-    { key: 'j', moves: 'onNext' },
-    { key: '{ArrowUp}', moves: 'onPrevious' },
-    { key: 'k', moves: 'onPrevious' },
-  ] as const)('moves with $key', async ({ key, moves }) => {
-    const rendered = renderFrame();
-    screen.getByRole('button', { name: 'Pause' }).focus();
+  it('names the seek bar as a slider that reports where the viewer drags it', async () => {
+    const { user, onSeek } = renderFrame();
+    const seek = screen.getByRole('slider', { name: 'Seek' });
 
-    await rendered.user.keyboard(key);
+    expect(seek).toHaveAttribute('aria-valuenow', '40');
+    seek.focus();
+    await user.keyboard('{ArrowRight}');
 
-    expect(rendered[moves]).toHaveBeenCalledOnce();
+    expect(onSeek).toHaveBeenCalledWith(0.41);
   });
 
-  it.each([
-    { key: 'm', focus: 'Like 24K', toggles: 'onToggleMute' },
-    { key: ' ', focus: 'Pause', toggles: 'onTogglePlay' },
-  ] as const)('reaches playback once with "$key" from $focus', async ({ key, focus, toggles }) => {
-    const { user, playback } = renderFrame();
-    screen.getByRole('button', { name: focus }).focus();
+  it('names its toolbar', () => {
+    renderFrame();
 
-    await user.keyboard(key);
-
-    expect(playback[toggles]).toHaveBeenCalledOnce();
-  });
-
-  it('leaves the keys and swipes of a portalled sheet to the sheet', async () => {
-    const outside = createPortal(<button type="button">Inside the sheet</button>, document.body);
-    const { user, onNext, onPrevious } = renderFrame({}, false, outside);
-    const sheetButton = screen.getByRole('button', { name: 'Inside the sheet' });
-    sheetButton.focus();
-
-    await user.keyboard('{ArrowDown}j');
-    fireEvent.touchStart(sheetButton, { touches: [{ clientY: 300 }] });
-    fireEvent.touchEnd(sheetButton, { changedTouches: [{ clientY: 100 }] });
-
-    expect(onNext).not.toHaveBeenCalled();
-    expect(onPrevious).not.toHaveBeenCalled();
+    expect(
+      within(screen.getByRole('toolbar', { name: 'Short controls' })).getByRole('button', {
+        name: 'Mute',
+      })
+    ).toBeInTheDocument();
   });
 
   it.each([
@@ -109,10 +87,8 @@ describe('apps/client/web: ShortsPlayerFrame', () => {
     expect(rendered[moves]).toHaveBeenCalledOnce();
   });
 
-  it('disables next on the last Short and says the viewer is caught up', async () => {
-    const { user, onNext } = renderFrame({ state: 'ended' });
-
-    await user.keyboard('j');
+  it('disables next on the last Short and says the viewer is caught up', () => {
+    const { onNext } = renderFrame({ state: 'ended' });
 
     expect(screen.getByRole('button', { name: 'Next Short' })).toBeDisabled();
     expect(screen.getByRole('status')).toHaveTextContent('You are all caught up');
@@ -125,15 +101,13 @@ describe('apps/client/web: ShortsPlayerFrame', () => {
     expect(screen.queryByRole('button', { name: 'Next Short' })).not.toBeInTheDocument();
   });
 
-  it('plays from the paused glyph and unmutes from the muted marker', async () => {
-    const playback = { paused: true, muted: true, onTogglePlay: vi.fn(), onToggleMute: vi.fn() };
+  it('plays from the paused glyph', async () => {
+    const playback = { paused: true, onTogglePlay: vi.fn() };
     const { user } = renderFrame({ playback });
 
     await user.click(screen.getByRole('button', { name: 'Play' }));
-    await user.click(screen.getByRole('button', { name: 'Unmute' }));
 
     expect(playback.onTogglePlay).toHaveBeenCalledOnce();
-    expect(playback.onToggleMute).toHaveBeenCalledOnce();
   });
 
   it.each([false, true])('names an action with its count, pressed %s', async (liked) => {
@@ -176,9 +150,7 @@ describe('apps/client/web: ShortsPlayerFrame', () => {
   });
 
   it('passes axe, loaded and as a skeleton', async () => {
-    renderFrame({
-      playback: { paused: true, muted: true, onTogglePlay: vi.fn(), onToggleMute: vi.fn() },
-    });
+    renderFrame({ playback: { paused: true, onTogglePlay: vi.fn() } });
     render(<ShortsPlayerFrameSkeleton />);
 
     expect(await axeViolations()).toEqual([]);

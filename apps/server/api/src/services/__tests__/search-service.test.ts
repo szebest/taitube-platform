@@ -80,7 +80,7 @@ describe('apps/server/api/services: SearchService', () => {
     );
   });
 
-  it('runs one repository search for identical concurrent misses', async () => {
+  it('runs one page search and one count per kind for identical concurrent misses', async () => {
     const search = vi.spyOn(repositories.search, 'search');
 
     const pages = await Promise.all([
@@ -89,7 +89,7 @@ describe('apps/server/api/services: SearchService', () => {
     ]);
 
     expect(pages.map((page) => expectOk(page).cache)).toEqual(['MISS', 'MISS']);
-    expect(search).toHaveBeenCalledTimes(1);
+    expect(search).toHaveBeenCalledTimes(4);
   });
 
   it("puts each video hit under its owner's channel", async () => {

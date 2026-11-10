@@ -7,4 +7,5 @@ export const [VideoCardContext, useVideoCard] = createCompoundContext<{
   size: VideoCardSize;
   videoId: string | undefined;
   expanded: boolean;
+  previewing: boolean;
 }>('VideoCard');

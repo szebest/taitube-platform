@@ -1,12 +1,12 @@
 import { renderPage } from '@vp/web-testing/server';
 import { libraryVideo, NOW, uuid } from '#app/__tests__/library-fixtures';
-import { AppProviders } from '#app/__tests__/providers';
+import { AppProvidersWithToasts } from '#app/__tests__/providers';
 import { LibraryVideoRow, type LibraryVideoRowProps } from '../library-video-row';
 
 const render = (props: Partial<LibraryVideoRowProps> = {}) =>
   renderPage(
     <LibraryVideoRow video={libraryVideo(1, 'Tram ride')} at={NOW} actions={null} {...props} />,
-    AppProviders
+    AppProvidersWithToasts
   );
 
 describe('apps/client/web: LibraryVideoRow', () => {

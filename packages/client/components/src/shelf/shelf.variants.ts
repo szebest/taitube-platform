@@ -13,7 +13,7 @@ export const shelfStyles = tv({
       'm-0 -my-inline grid list-none grid-flow-col justify-start gap-shelf overflow-x-auto overscroll-x-contain scroll-smooth p-0 py-inline [scrollbar-width:none] snap-x snap-mandatory scroll-fade focus-ring in-data-[motion=reduced]:scroll-auto',
     item: 'min-w-0 snap-start',
     chevron:
-      'absolute inset-bs-1/2 z-1 -translate-y-1/2 bg-raised opacity-0 shadow-2 transition-opacity duration-fast ease-standard group-focus-within/shelf:opacity-100 group-hover/shelf:opacity-100 pointer-coarse:hidden data-hidden:hidden',
+      'absolute inset-bs-1/2 z-lift -translate-y-1/2 bg-raised opacity-0 shadow-2 transition-opacity duration-fast ease-standard group-focus-within/shelf:opacity-100 group-hover/shelf:opacity-100 pointer-coarse:hidden data-hidden:hidden',
   },
   variants: {
     variant: {

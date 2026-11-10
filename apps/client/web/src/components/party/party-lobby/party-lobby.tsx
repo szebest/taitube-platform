@@ -22,7 +22,7 @@ export function PartyLobbyRoot({ posterUrl, className, children, ...props }: Par
           className="absolute inset-0 size-full object-cover opacity-40"
         />
       )}
-      <div className="relative z-10 flex flex-col items-center gap-stack p-inset-card text-center">
+      <div className="relative z-lift flex flex-col items-center gap-stack p-inset-card text-center">
         {children}
       </div>
     </div>

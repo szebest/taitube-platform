@@ -82,7 +82,7 @@ export function registerTheme(
     return invalid(parsed.error.field, parsed.error.message);
   }
   const theme = parsed.value;
-  const pairs = checkThemeContrast(theme);
+  const pairs = checkThemeContrast(theme, 'core');
   if (pairs.length > 0) {
     return invalid('color', `${pairs.length} contrast pairs are under their floor`, pairs);
   }

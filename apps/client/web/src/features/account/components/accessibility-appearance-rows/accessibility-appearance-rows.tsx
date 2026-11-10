@@ -36,7 +36,7 @@ export function FontSizeRow() {
 }
 
 export function ContrastRow() {
-  const { preference, update } = useAppearance();
+  const { resolved, update } = useAppearance();
   const { tOr } = useT();
 
   return (
@@ -47,7 +47,7 @@ export function ContrastRow() {
     >
       <Switch
         aria-label={tOr('settings.contrastMore', {}, '')}
-        checked={preference.contrast === 'more'}
+        checked={resolved.contrast === 'more'}
         onCheckedChange={(more) => update({ contrast: more ? 'more' : 'standard' })}
       />
     </SettingItem>

@@ -5,6 +5,7 @@ import { AccentRow } from '../accent-row/accent-row';
 import { BuildThemeRow } from '../build-theme-row/build-theme-row';
 import { DensityRow } from '../density-row/density-row';
 import { ModeRow } from '../mode-row/mode-row';
+import { RoundnessRow } from '../roundness-row/roundness-row';
 import { SettingsSectionPage } from '../settings-section-page/settings-section-page';
 import { ThemeRow } from '../theme-row/theme-row';
 
@@ -18,6 +19,7 @@ export function AppearanceSettings() {
       <ModeRow />
       <AccentRow />
       <BuildThemeRow />
+      <RoundnessRow />
       <DensityRow />
       <Link
         to="/settings/appearance/advanced"

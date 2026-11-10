@@ -23,6 +23,17 @@ const renderChannelLink = (size?: HoverCardSize) => {
 };
 
 describe('@vp/ui: HoverCard', () => {
+  it('scrolls inside the space the viewport leaves it, so it never runs off a short screen', async () => {
+    const { user } = renderChannelLink();
+
+    await user.hover(screen.getByRole('link', { name: '@marta-reis' }));
+
+    expect(await screen.findByText(/284K followers/)).toHaveClass(
+      'max-h-(--radix-hover-card-content-available-height)',
+      'overflow-y-auto'
+    );
+  });
+
   it.each([
     { size: 'sm', width: 'w-70' },
     { size: 'md', width: 'w-90' },

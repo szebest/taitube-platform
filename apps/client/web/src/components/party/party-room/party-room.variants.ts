@@ -6,7 +6,7 @@ export const partyRoomStyles = tv({
     root: "grid grid-cols-1 gap-stack [grid-template-areas:'header'_'stage'_'panel']",
     header: 'flex min-w-0 flex-wrap items-center gap-inline [grid-area:header]',
     stage: 'relative min-w-0 [grid-area:stage]',
-    overlay: 'pointer-events-none absolute inset-0 z-10 [&>*]:pointer-events-auto',
+    overlay: 'pointer-events-none absolute inset-0 z-stage-hud [&>*]:pointer-events-auto',
     panel: 'flex h-[28rem] min-h-0 min-w-0 flex-col [grid-area:panel]',
   },
   variants: {

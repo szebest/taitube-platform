@@ -55,18 +55,17 @@ export function PlaylistHero({ playlist, editable }: PlaylistHeroProps) {
   return (
     <header className="flex flex-col gap-stack expanded:flex-row">
       <div aria-hidden="true" className="relative aspect-video w-full max-w-96 shrink-0">
-        {cover.map(({ id: itemId, video }, depth) => (
-          <VideoThumbnail.Root
-            key={itemId}
-            className="absolute inset-x-0 bottom-0 w-full"
-            style={{
-              transform: `translateY(${-depth * 0.75}rem) scale(${1 - depth * 0.05})`,
-              zIndex: STACK_DEPTH - depth,
-            }}
-          >
-            <VideoThumbnail.Image src={video.thumbnailUrl ?? video.posterUrl} />
-          </VideoThumbnail.Root>
-        ))}
+        {cover
+          .map(({ id: itemId, video }, depth) => (
+            <VideoThumbnail.Root
+              key={itemId}
+              className="absolute inset-x-0 bottom-0 w-full"
+              style={{ transform: `translateY(${-depth * 0.75}rem) scale(${1 - depth * 0.05})` }}
+            >
+              <VideoThumbnail.Image src={video.thumbnailUrl ?? video.posterUrl} />
+            </VideoThumbnail.Root>
+          ))
+          .reverse()}
         {empty && (
           <VideoThumbnail.Root className="w-full">
             <VideoThumbnail.Image src={playlist.thumbnailUrl ?? undefined} />

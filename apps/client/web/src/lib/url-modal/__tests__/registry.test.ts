@@ -36,6 +36,19 @@ describe('the app modal registry', () => {
     );
   });
 
+  it('keeps the sign-in modal with its reason, the way back and the intent to replay', () => {
+    const params = { reason: 'like', redirect: '/watch/1?t=4', intent: 'like:abc' };
+
+    expect(urlModals.searchSchema.parse({ modal: 'sign-in', ...params })).toEqual({
+      modal: 'sign-in',
+      ...params,
+    });
+  });
+
+  it('drops a sign-in modal with no known reason', () => {
+    expect(urlModals.searchSchema.parse({ modal: 'sign-in', reason: 'shout' })).toEqual({});
+  });
+
   it('drops the keys of a modal nothing registered', () => {
     expect(urlModals.searchSchema.parse({ modal: 'share', videoId: 'v1' })).toEqual({});
   });

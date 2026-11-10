@@ -1,10 +1,10 @@
 import { CHANNEL_ID, channel } from '@vp/web-testing';
 import { renderPage } from '@vp/web-testing/server';
-import { AppProviders } from '#app/__tests__/providers';
+import { AppProviders, withToasts } from '#app/__tests__/providers';
 import { ChannelRow, type ChannelRowProps } from '../channel-row';
 
 function renderRow(props: Partial<ChannelRowProps> = {}) {
-  return renderPage(<ChannelRow channel={channel()} {...props} />, AppProviders);
+  return renderPage(<ChannelRow channel={channel()} {...props} />, withToasts(AppProviders));
 }
 
 describe('apps/client/web: channel row', () => {

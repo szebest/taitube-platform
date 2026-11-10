@@ -30,6 +30,12 @@ describe('@vp/ui: Field', () => {
     }
   );
 
+  it('can shrink inside a flex row, so a long control never widens it', () => {
+    const { container } = renderField();
+
+    expect(container.querySelector('[data-slot="field"]')).toHaveClass('min-w-0');
+  });
+
   it('describes the control with the hint, then the error, and marks it invalid', async () => {
     renderField({ invalid: true });
 
