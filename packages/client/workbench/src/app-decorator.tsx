@@ -10,7 +10,6 @@ import {
 import type { Account } from '@vp/api-contracts';
 import { ApiProvider, AppWords, GUEST, type Session, SessionProvider } from '@vp/queries';
 import { createToaster, ToastProvider, Tooltip } from '@vp/ui';
-import { account } from '@vp/web-testing';
 import { createContext, type PropsWithChildren, type ReactNode, use, useState } from 'react';
 import { pickLocale } from './decorator';
 import { type ApiReply, inMemoryApi } from './in-memory-api';
@@ -23,14 +22,44 @@ export interface AppParameters {
   api?: () => readonly ApiReply[];
 }
 
-const VIEWER: Account = account({
+const USER = {
+  id: '0190c3a0-5e1d-7000-8000-00000000b001',
+  email: 'viewer@example.com',
+  tier: 'free',
+  createdAt: '2026-01-01T00:00:00.000Z',
+} as const;
+
+const VIEWER: Account = {
+  ...USER,
+  role: 'CREATOR',
+  user: USER,
   channel: {
-    ...account().channel,
     id: '0190c3a0-5e1d-7000-8000-00000000c001',
+    userId: USER.id,
     handle: 'viewer',
     displayName: 'The Viewer',
+    avatarUrl: null,
+    bannerUrl: null,
+    avatar: null,
+    banner: null,
+    bannerLink: null,
+    bannerCrops: null,
+    country: null,
+    hasContact: false,
+    contactEmail: null,
+    handleChangeAvailableAt: null,
+    brandColor: null,
+    bio: null,
+    links: [],
+    subscriberCount: 0,
+    videoCount: 0,
+    totalViews: 0,
+    live: null,
+    autoCaptionsDefault: false,
+    createdAt: USER.createdAt,
+    updatedAt: USER.createdAt,
   },
-});
+};
 
 const StoryContext = createContext<ReactNode>(null);
 
