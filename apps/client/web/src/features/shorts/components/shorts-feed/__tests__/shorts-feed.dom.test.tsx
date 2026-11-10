@@ -1,4 +1,8 @@
 import { fireEvent, screen, within } from '@testing-library/react';
+import { getVideo } from '@vp/api-contracts';
+import { mockEndpoint, video } from '@vp/web-testing';
+import { delay } from 'msw';
+import { HttpResponse } from 'msw/http';
 import { SHORTS } from '#app/__tests__/short-fixtures';
 import { renderShorts } from '#app/features/shorts/__tests__/render-shorts';
 
@@ -181,5 +185,25 @@ describe('apps/client/web: ShortsFeed', () => {
     fireEvent.scroll(feed());
 
     expect(sources()).toEqual([hlsOf(1), hlsOf(2)]);
+  });
+
+  it('stays on the Short on screen when the URL names one the feed has not loaded', async () => {
+    const unloaded = '0190c3a0-5e1d-7000-8000-0000000000ff';
+    const { router } = await renderShorts({
+      path: `/shorts/${SHORTS[1]?.id}`,
+      handlers: [
+        mockEndpoint(getVideo, ({ params }) =>
+          String(params.id) === unloaded
+            ? new HttpResponse(null, { status: 404 })
+            : HttpResponse.json(video({ id: String(params.id), format: 'short' }))
+        ),
+      ],
+    });
+
+    await router.navigate({ to: '/shorts/$videoId', params: { videoId: unloaded } });
+
+    await delay(300);
+
+    expect(screen.getByRole('status')).toHaveTextContent('Short 2, by The Creator');
   });
 });

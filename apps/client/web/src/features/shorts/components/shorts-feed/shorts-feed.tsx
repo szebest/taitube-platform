@@ -54,7 +54,12 @@ export function ShortsFeed({ shorts, named, hasMore, loadMore, renderComments }:
   useShortsUrl({
     activeId: active?.id,
     named,
-    onExternal: (id) => goTo(shorts.findIndex((short) => short.id === id)),
+    onExternal: (id) => {
+      const position = shorts.findIndex((short) => short.id === id);
+      if (position >= 0) {
+        goTo(position);
+      }
+    },
   });
 
   useEffect(() => {
