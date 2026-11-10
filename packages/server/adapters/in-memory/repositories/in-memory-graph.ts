@@ -20,6 +20,7 @@ import { InMemoryRelatedVideosRepository } from './in-memory-related-videos-repo
 import { InMemoryRenditionRepository } from './in-memory-rendition-repository';
 import { Repo } from './in-memory-repo-tokens';
 import { InMemoryRisingVideosRepository } from './in-memory-rising-videos-repository';
+import { InMemorySavedReplyRepository } from './in-memory-saved-reply-repository';
 import { InMemorySearchHistoryRepository } from './in-memory-search-history-repository';
 import { InMemorySearchRepository } from './in-memory-search-repository';
 import { InMemoryStepRepository } from './in-memory-step-repository';
@@ -50,6 +51,7 @@ export function graph(): Container {
       .provide(Repo.channels, (c) => new InMemoryChannelRepository(c.get(Repo.videos)))
       .provide(Repo.events, () => new InMemoryEventRepository())
       .provide(Repo.channelAudit, () => new InMemoryChannelAuditRepository())
+      .provide(Repo.savedReplies, () => new InMemorySavedReplyRepository())
       .provide(
         Repo.channelMembers,
         (c) =>

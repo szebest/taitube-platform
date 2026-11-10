@@ -54,6 +54,7 @@ import type {
   SearchHistoryService,
   SearchService,
   SseHub,
+  SavedReplyService,
   SseService,
   SubscriptionService,
   TrustedCommenterService,
@@ -99,6 +100,7 @@ export interface ServiceSet {
   reactionService: ReactionService;
   subscriptionService: SubscriptionService;
   trustedCommenterService: TrustedCommenterService;
+  savedReplyService: SavedReplyService;
   commentService: CommentService;
   channelRestrictionService: ChannelRestrictionService;
   commentBulkService: CommentBulkService;
@@ -168,6 +170,7 @@ export const Services = {
   ReactionService: token<ReactionService>('ReactionService'),
   SubscriptionService: token<SubscriptionService>('SubscriptionService'),
   TrustedCommenterService: token<TrustedCommenterService>('TrustedCommenterService'),
+  SavedReplyService: token<SavedReplyService>('SavedReplyService'),
   CommentService: token<CommentService>('CommentService'),
   ChannelRestrictionService: token<ChannelRestrictionService>('ChannelRestrictionService'),
   CommentBulkService: token<CommentBulkService>('CommentBulkService'),

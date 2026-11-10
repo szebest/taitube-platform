@@ -23,6 +23,7 @@ import type { RecommendationFeedbackRepositoryPort } from './recommendation-feed
 import type { RelatedVideosRepositoryPort } from './related-videos-repository';
 import type { RenditionRepository } from './rendition-repository';
 import type { RisingVideosRepositoryPort } from './rising-videos-repository';
+import type { SavedReplyRepositoryPort } from './saved-reply-repository';
 import type { SearchHistoryRepositoryPort } from './search-history-repository';
 import type { SearchRepositoryPort } from './search-repository';
 import type { StepRepository } from './step-repository';
@@ -64,6 +65,7 @@ export interface Repositories {
   commentSettings: CommentSettingsRepositoryPort;
   channelUserRestrictions: ChannelUserRestrictionRepositoryPort;
   trustedCommenters: TrustedCommenterRepositoryPort;
+  savedReplies: SavedReplyRepositoryPort;
   playlists: PlaylistRepositoryPort;
   watchHistory: WatchHistoryRepositoryPort;
   userPreferences: UserPreferencesRepositoryPort;

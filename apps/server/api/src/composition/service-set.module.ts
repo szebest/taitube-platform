@@ -34,6 +34,7 @@ export function registerServiceSet(c: Container): Container {
     reactionService: c.get(Services.ReactionService),
     subscriptionService: c.get(Services.SubscriptionService),
     trustedCommenterService: c.get(Services.TrustedCommenterService),
+    savedReplyService: c.get(Services.SavedReplyService),
     commentService: c.get(Services.CommentService),
     channelRestrictionService: c.get(Services.ChannelRestrictionService),
     commentBulkService: c.get(Services.CommentBulkService),

@@ -34,6 +34,8 @@ export const errors = {
   moderationNotApplicable: dt('That action does not apply to this comment in its current state.'),
   restrictionNotFound: dt('This user has no restriction on the channel.'),
   cannotRestrictMember: dt('The channel owner and its team cannot be restricted.'),
+  savedReplyNotFound: dt('This saved reply does not exist.'),
+  savedReplyLimit: dt('A channel can keep at most 20 saved replies.'),
   reportNotFound: dt('This report does not exist.'),
   reportAlreadyResolved: dt('This report was already resolved.'),
   playlistNotFound: dt('This playlist does not exist or is private.'),

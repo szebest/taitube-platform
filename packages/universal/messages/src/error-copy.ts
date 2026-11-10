@@ -40,6 +40,8 @@ export const ERROR_COPY: Readonly<Record<ErrorCode, ArgumentFreeKey>> = {
   [ErrorCodes.MODERATION_NOT_APPLICABLE]: 'errors.moderationNotApplicable',
   [ErrorCodes.RESTRICTION_NOT_FOUND]: 'errors.restrictionNotFound',
   [ErrorCodes.CANNOT_RESTRICT_MEMBER]: 'errors.cannotRestrictMember',
+  [ErrorCodes.SAVED_REPLY_NOT_FOUND]: 'errors.savedReplyNotFound',
+  [ErrorCodes.SAVED_REPLY_LIMIT]: 'errors.savedReplyLimit',
   [ErrorCodes.REPORT_NOT_FOUND]: 'errors.reportNotFound',
   [ErrorCodes.REPORT_ALREADY_RESOLVED]: 'errors.reportAlreadyResolved',
   [ErrorCodes.PLAYLIST_NOT_FOUND]: 'errors.playlistNotFound',

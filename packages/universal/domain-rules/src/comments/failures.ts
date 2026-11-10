@@ -161,3 +161,22 @@ export function cannotRestrictMember(userId: string): CannotRestrictMember {
     userId,
   };
 }
+
+export type SavedReplyNotFound = Failure<
+  typeof ErrorCodes.SAVED_REPLY_NOT_FOUND,
+  { replyId: string }
+>;
+
+export function savedReplyNotFound(replyId: string): SavedReplyNotFound {
+  return { code: ErrorCodes.SAVED_REPLY_NOT_FOUND, message: 'Saved reply not found', replyId };
+}
+
+export type SavedReplyLimit = Failure<typeof ErrorCodes.SAVED_REPLY_LIMIT, { limit: number }>;
+
+export function savedReplyLimit(limit: number): SavedReplyLimit {
+  return {
+    code: ErrorCodes.SAVED_REPLY_LIMIT,
+    message: `A channel keeps at most ${limit} saved replies`,
+    limit,
+  };
+}

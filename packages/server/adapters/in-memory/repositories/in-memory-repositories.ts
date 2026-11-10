@@ -26,6 +26,7 @@ import type { InMemoryRelatedVideosRepository } from './in-memory-related-videos
 import type { InMemoryRenditionRepository } from './in-memory-rendition-repository';
 import { Repo } from './in-memory-repo-tokens';
 import type { InMemoryRisingVideosRepository } from './in-memory-rising-videos-repository';
+import type { InMemorySavedReplyRepository } from './in-memory-saved-reply-repository';
 import type { InMemorySearchHistoryRepository } from './in-memory-search-history-repository';
 import type { InMemorySearchRepository } from './in-memory-search-repository';
 import type { InMemoryStepRepository } from './in-memory-step-repository';
@@ -61,6 +62,7 @@ export class InMemoryRepositories implements Repositories {
   readonly commentSettings: InMemoryCommentSettingsRepository;
   readonly channelUserRestrictions: InMemoryChannelUserRestrictionRepository;
   readonly trustedCommenters: InMemoryTrustedCommenterRepository;
+  readonly savedReplies: InMemorySavedReplyRepository;
   readonly videoReactions: InMemoryVideoReactionRepository;
   readonly subscriptions: InMemorySubscriptionRepository;
   readonly videoViews: InMemoryVideoViewRepository;
@@ -104,6 +106,7 @@ export class InMemoryRepositories implements Repositories {
     this.commentSettings = c.get(Repo.commentSettings);
     this.channelUserRestrictions = c.get(Repo.channelUserRestrictions);
     this.trustedCommenters = c.get(Repo.trustedCommenters);
+    this.savedReplies = c.get(Repo.savedReplies);
     this.videoReactions = c.get(Repo.videoReactions);
     this.subscriptions = c.get(Repo.subscriptions);
     this.videoViews = c.get(Repo.videoViews);

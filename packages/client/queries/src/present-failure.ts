@@ -32,6 +32,7 @@ function kindOf(code: ErrorCode): ErrorStateKind {
     case ErrorCodes.CHANNEL_INVITE_NOT_FOUND:
     case ErrorCodes.CHANNEL_MEMBER_NOT_FOUND:
     case ErrorCodes.RESTRICTION_NOT_FOUND:
+    case ErrorCodes.SAVED_REPLY_NOT_FOUND:
       return 'not-found';
     case ErrorCodes.FORBIDDEN:
     case ErrorCodes.CHANNEL_MEMBERSHIP_REQUIRED:
@@ -111,6 +112,7 @@ function kindOf(code: ErrorCode): ErrorStateKind {
     case ErrorCodes.CHANNEL_OWNER_IMMUTABLE:
     case ErrorCodes.MODERATION_NOT_APPLICABLE:
     case ErrorCodes.CANNOT_RESTRICT_MEMBER:
+    case ErrorCodes.SAVED_REPLY_LIMIT:
       return 'generic';
     default:
       return assertNever(code, 'kindOf');

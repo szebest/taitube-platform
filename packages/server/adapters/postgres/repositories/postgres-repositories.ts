@@ -28,6 +28,7 @@ import { PostgresRecommendationFeedbackRepository } from './postgres-recommendat
 import { PostgresRelatedVideosRepository } from './postgres-related-videos-repository';
 import { PostgresRenditionRepository } from './postgres-rendition-repository';
 import { PostgresRisingVideosRepository } from './postgres-rising-videos-repository';
+import { PostgresSavedReplyRepository } from './postgres-saved-reply-repository';
 import { PostgresSearchHistoryRepository } from './postgres-search-history-repository';
 import { PostgresSearchRepository } from './postgres-search-repository';
 import { PostgresStepRepository } from './postgres-step-repository';
@@ -70,6 +71,7 @@ export class PostgresRepositories implements Repositories {
   readonly commentSettings: PostgresCommentSettingsRepository;
   readonly channelUserRestrictions: PostgresChannelUserRestrictionRepository;
   readonly trustedCommenters: PostgresTrustedCommenterRepository;
+  readonly savedReplies: PostgresSavedReplyRepository;
   readonly videoReactions: PostgresVideoReactionRepository;
   readonly subscriptions: PostgresSubscriptionRepository;
   readonly videoViews: PostgresVideoViewRepository;
@@ -117,6 +119,7 @@ export class PostgresRepositories implements Repositories {
     this.commentSettings = new PostgresCommentSettingsRepository(db);
     this.channelUserRestrictions = new PostgresChannelUserRestrictionRepository(db);
     this.trustedCommenters = new PostgresTrustedCommenterRepository(db);
+    this.savedReplies = new PostgresSavedReplyRepository(db);
     this.videoReactions = new PostgresVideoReactionRepository(db);
     this.subscriptions = new PostgresSubscriptionRepository(db);
     this.videoViews = new PostgresVideoViewRepository(db);

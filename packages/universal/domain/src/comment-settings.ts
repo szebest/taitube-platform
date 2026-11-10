@@ -61,3 +61,13 @@ export const DEFAULT_COMMENT_SETTINGS: CommentSettings = {
   minAccountAgeDays: 0,
   disclosure: DEFAULT_DISCLOSURE,
 };
+
+export const SAVED_REPLY_LIMITS = { perChannel: 20, titleLength: 40, bodyLength: 2000 } as const;
+
+export interface SavedReply {
+  id: string;
+  channelId: string;
+  title: string;
+  body: string;
+  position: number;
+}

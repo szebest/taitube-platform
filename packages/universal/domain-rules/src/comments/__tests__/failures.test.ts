@@ -10,6 +10,8 @@ import {
   commentsSubscribersOnly,
   cannotRestrictMember,
   restrictionNotFound,
+  savedReplyLimit,
+  savedReplyNotFound,
   moderationNotApplicable,
   reportAlreadyResolved,
   reportNotFound,
@@ -102,6 +104,20 @@ describe('@vp/domain-rules: restriction failures', () => {
     { failure: cannotRestrictMember('u1'), code: ErrorCodes.CANNOT_RESTRICT_MEMBER },
   ])('$code carries the user id, off the wire', ({ failure, code }) => {
     expect(failure).toMatchObject({ code, userId: 'u1' });
+    expect(isInputFailure(failure)).toBe(false);
+  });
+});
+
+describe('@vp/domain-rules: saved reply failures', () => {
+  it.each([
+    {
+      failure: savedReplyNotFound('s1'),
+      code: ErrorCodes.SAVED_REPLY_NOT_FOUND,
+      detail: { replyId: 's1' },
+    },
+    { failure: savedReplyLimit(20), code: ErrorCodes.SAVED_REPLY_LIMIT, detail: { limit: 20 } },
+  ])('$code carries its detail, off the wire', ({ failure, code, detail }) => {
+    expect(failure).toMatchObject({ code, ...detail });
     expect(isInputFailure(failure)).toBe(false);
   });
 });

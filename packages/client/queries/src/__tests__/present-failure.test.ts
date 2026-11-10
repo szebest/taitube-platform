@@ -16,6 +16,8 @@ describe('@vp/queries: present', () => {
     { code: ErrorCodes.COMMENTS_SLOW_MODE, kind: 'rate-limited' },
     { code: ErrorCodes.RESTRICTION_NOT_FOUND, kind: 'not-found' },
     { code: ErrorCodes.MODERATION_NOT_APPLICABLE, kind: 'generic' },
+    { code: ErrorCodes.SAVED_REPLY_NOT_FOUND, kind: 'not-found' },
+    { code: ErrorCodes.SAVED_REPLY_LIMIT, kind: 'generic' },
   ])('shows $code as a $kind failure', ({ code, kind }) => {
     expect(present({ code }).kind).toBe(kind);
   });

@@ -10,6 +10,7 @@ import {
   CommentService,
   CommentSettingsService,
   CreatorCommentService,
+  SavedReplyService,
   TrustedCommenterService,
 } from '../services/index';
 import { Services } from './service-tokens';
@@ -94,6 +95,10 @@ export function registerCommentServices(c: Container): Container {
           paginator: c.get(Services.Paginator),
           now: () => Date.now(),
         })
+    )
+    .provide(
+      Services.SavedReplyService,
+      () => new SavedReplyService({ replies: repositories().savedReplies })
     )
     .provide(
       Services.CommentSettingsService,

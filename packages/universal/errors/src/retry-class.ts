@@ -41,6 +41,8 @@ export const RETRY_CLASS: Readonly<Record<ErrorCode, RetryClass>> = {
   [ErrorCodes.MODERATION_NOT_APPLICABLE]: 'permanent',
   [ErrorCodes.RESTRICTION_NOT_FOUND]: 'permanent',
   [ErrorCodes.CANNOT_RESTRICT_MEMBER]: 'permanent',
+  [ErrorCodes.SAVED_REPLY_NOT_FOUND]: 'permanent',
+  [ErrorCodes.SAVED_REPLY_LIMIT]: 'permanent',
   [ErrorCodes.REPORT_NOT_FOUND]: 'permanent',
   [ErrorCodes.REPORT_ALREADY_RESOLVED]: 'permanent',
   [ErrorCodes.PLAYLIST_NOT_FOUND]: 'permanent',

@@ -23,6 +23,7 @@ export * from './comment-bulk-service';
 export * from './comment-moderation-service';
 export * from './comment-removal-service';
 export * from './comment-settings-service';
+export * from './saved-reply-service';
 export * from './trusted-commenter-service';
 export * from './comment-service';
 export * from './creator-comment-service';

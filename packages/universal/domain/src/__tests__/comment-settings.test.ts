@@ -2,6 +2,7 @@ import {
   COMMENT_SETTINGS_FIELDS,
   DEFAULT_COMMENT_SETTINGS,
   DISCLOSURE_RULES,
+  SAVED_REPLY_LIMITS,
   type Disclosure,
   type DisclosureRule,
 } from '../comment-settings';
@@ -39,5 +40,11 @@ describe('@vp/domain: comment settings defaults', () => {
     expect([...COMMENT_SETTINGS_FIELDS].sort()).toEqual(
       Object.keys(DEFAULT_COMMENT_SETTINGS).sort()
     );
+  });
+});
+
+describe('@vp/domain: saved reply limits', () => {
+  it('keeps up to 20 replies of a 40 character title and a 2000 character body', () => {
+    expect(SAVED_REPLY_LIMITS).toEqual({ perChannel: 20, titleLength: 40, bodyLength: 2000 });
   });
 });

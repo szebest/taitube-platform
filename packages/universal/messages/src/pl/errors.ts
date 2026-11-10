@@ -36,6 +36,8 @@ export const errors = {
   moderationNotApplicable: dt('Ta akcja nie ma zastosowania do komentarza w jego obecnym stanie.'),
   restrictionNotFound: dt('Ten użytkownik nie ma ograniczeń na kanale.'),
   cannotRestrictMember: dt('Właściciela kanału i jego zespołu nie można ograniczyć.'),
+  savedReplyNotFound: dt('Ta zapisana odpowiedź nie istnieje.'),
+  savedReplyLimit: dt('Kanał może mieć najwyżej 20 zapisanych odpowiedzi.'),
   reportNotFound: dt('To zgłoszenie nie istnieje.'),
   reportAlreadyResolved: dt('To zgłoszenie zostało już rozpatrzone.'),
   playlistNotFound: dt('Ta playlista nie istnieje lub jest prywatna.'),

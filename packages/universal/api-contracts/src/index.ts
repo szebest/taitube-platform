@@ -37,6 +37,7 @@ import * as preferences from './preferences';
 import * as reactions from './reactions';
 import * as recommendationFeedback from './recommendation-feedback';
 import * as recommendations from './recommendations';
+import * as savedReplies from './saved-replies';
 import * as search from './search';
 import * as searchHistory from './search-history';
 import * as shorts from './shorts';
@@ -94,6 +95,7 @@ export * from './reactions';
 export * from './recommendation-feedback';
 export * from './recommendations';
 export * from './search';
+export * from './saved-replies';
 export * from './search-history';
 export * from './shorts';
 export * from './subscriptions';
@@ -152,6 +154,7 @@ export const contracts = {
   shorts,
   subscriptions,
   telemetry,
+  savedReplies,
   trustedCommenters,
   uploads,
   videos,

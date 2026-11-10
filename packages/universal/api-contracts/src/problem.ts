@@ -83,6 +83,8 @@ const PROBLEM_STATUS: Readonly<Record<ErrorCode, number>> = {
   [ErrorCodes.MODERATION_NOT_APPLICABLE]: 409,
   [ErrorCodes.RESTRICTION_NOT_FOUND]: 404,
   [ErrorCodes.CANNOT_RESTRICT_MEMBER]: 409,
+  [ErrorCodes.SAVED_REPLY_NOT_FOUND]: 404,
+  [ErrorCodes.SAVED_REPLY_LIMIT]: 409,
   [ErrorCodes.REPORT_ALREADY_RESOLVED]: 409,
   [ErrorCodes.UPLOAD_NOT_OPEN]: 410,
   [ErrorCodes.UPLOAD_EXPIRED]: 410,

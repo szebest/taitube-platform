@@ -41,6 +41,7 @@ import { preferencesRoutes } from './preferences';
 import { reactionsRoutes } from './reactions';
 import { recommendationFeedbackRoutes } from './recommendation-feedback';
 import { recommendationsRoutes } from './recommendations';
+import { savedRepliesRoutes } from './saved-replies';
 import { searchRoutes } from './search';
 import { searchHistoryRoutes } from './search-history';
 import { shortsRoutes } from './shorts';
@@ -100,6 +101,7 @@ const ROUTES: readonly FastifyPluginAsync[] = [
   commentRemovalsRoutes,
   commentSettingsRoutes,
   trustedCommentersRoutes,
+  savedRepliesRoutes,
   subscriptionsRoutes,
   eventsRoutes,
   adminQueuesRoutes,
