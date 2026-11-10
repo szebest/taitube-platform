@@ -61,6 +61,7 @@ for (const shot of shots) {
           (element) => getComputedStyle(element).fontFamily
         )
       );
+      families.delete('');
       return Promise.all([...families].map((family) => document.fonts.load(`1em ${family}`)));
     });
     await page.evaluate(() => document.fonts.ready);
