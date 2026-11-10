@@ -83,14 +83,14 @@ describe('apps/client/web: the Shorts actions', () => {
   });
 
   it('keeps the arrow keys inside the share dialog from moving the player', async () => {
-    const { router, user } = await renderShorts();
+    const { router, user } = await renderShorts({ path: `/shorts/${FIRST}` });
     await user.click(screen.getByRole('button', { name: 'Share' }));
     const dialog = await screen.findByRole('dialog', { name: 'Share this short' });
     within(dialog).getByRole('button', { name: 'Copy' }).focus();
 
     await user.keyboard('{ArrowDown}');
 
-    expect(router.state.location.pathname).toBe('/shorts');
+    expect(router.state.location.pathname).toBe(`/shorts/${FIRST}`);
   });
 
   it.each([

@@ -68,6 +68,7 @@ export function intentIn(raw: string | null, href: string): ReplayIntent | undef
 }
 
 /** The remembered intent for `href`, once: it is gone after this read. */
+/** @internal */
 export function takeIntent(href: string): ReplayIntent | undefined {
   const intent = intentIn(rawIntent(), href);
   forgetIntent();

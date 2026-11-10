@@ -160,6 +160,7 @@ export function writeStoredPlayback(json: string): boolean {
 }
 
 /** Merges `patch` over what storage holds now and writes it, for a caller with no store of its own. */
+/** @internal */
 export function saveStoredPlayback(patch: Partial<PlaybackPreferences>): PlaybackPreferences {
   const { json, playback } = mergedPlayback(readStorageRaw(), patch);
   writeStoredPlayback(json);

@@ -5,7 +5,7 @@ type SettingScope = 'device' | 'account' | 'both';
  * Where a device keeps a field: the cookie the server reads before the first paint, or `localStorage`,
  * which only the page reads. A field the account alone holds has none.
  */
-export type DeviceBackend = 'cookie' | 'storage';
+type DeviceBackend = 'cookie' | 'storage';
 
 /** A free value's check, by name: `@vp/domain-rules` runs it, this package cannot import it. */
 export type TextKind = 'preferenceId' | 'accent' | 'languageTag';
@@ -102,6 +102,7 @@ export function sectionDefaults<D extends SectionDefinition>(definition: D): Sec
 }
 
 /** The backend of a field the device holds: its catalogue column, `storage` when the field names none. */
+/** @internal */
 export function deviceBackend(setting: Setting): DeviceBackend | undefined {
   return setting.scope === 'account' ? undefined : (setting.device ?? 'storage');
 }

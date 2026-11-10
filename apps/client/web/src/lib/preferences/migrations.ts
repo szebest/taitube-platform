@@ -13,6 +13,7 @@ function isStored(value: unknown): value is Stored {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+/** @internal */
 export const currentVersion = (steps: readonly MigrationStep[]): number => steps.length + 1;
 
 /** Runs every step from the stored version up to the current one; stored data that is no object is empty at version 1. */
