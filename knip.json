@@ -114,7 +114,7 @@
     },
     "packages/server/adapters": {
       "project": ["**/*.ts!", "!**/__tests__/**!"],
-      "vitest": ["vitest.config.ts", "integration.config.ts"]
+      "vitest": ["vitest.config.ts", "integration.config.ts", "perf.config.ts"]
     },
     "packages/server/fingerprint": {
       "project": ["src/**/*.ts!", "!src/**/__tests__/**!"]

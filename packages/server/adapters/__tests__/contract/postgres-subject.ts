@@ -10,32 +10,18 @@ import { migratedPglite } from './pglite-snapshot';
 import { claimRealServices } from './real-services';
 import type { RepositoriesSubject } from './subjects';
 
-const TRUNCATE = sql.raw(
-  `TRUNCATE ${[
-    'video_view_batches',
-    'video_views_daily',
-    'watch_history',
-    'clips',
-    'channel_featured_videos',
-    'picks',
-    'playlist_items',
-    'playlists',
-    'channel_subscriptions',
-    'video_comments',
-    'video_reactions',
-    'outbox',
-    'user_events',
-    'dlq_entries',
-    'video_events',
-    'renditions',
-    'processing_steps',
-    'uploads',
-    'videos',
-    'categories',
-    'channels',
-    'users',
-  ].join(', ')} RESTART IDENTITY CASCADE`
-);
+const EMPTY_EVERY_TABLE = sql.raw(`
+  DO $$
+  DECLARE name text;
+  BEGIN
+    SET LOCAL session_replication_role = replica;
+    FOR name IN SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename <> '__vp_migration_hash' LOOP
+      EXECUTE format('DELETE FROM %I', name);
+    END LOOP;
+    FOR name IN SELECT sequencename FROM pg_sequences WHERE schemaname = 'public' LOOP
+      EXECUTE format('SELECT setval(%L, 1, false)', name);
+    END LOOP;
+  END $$`);
 
 function subjectOver(db: PostgresDatabase, close: () => Promise<void>): RepositoriesSubject {
   const repositories = new PostgresRepositories({ type: 'drizzle', db });
@@ -61,7 +47,7 @@ function subjectOver(db: PostgresDatabase, close: () => Promise<void>): Reposito
       );
     },
     reset: async () => {
-      await db.execute(TRUNCATE);
+      await db.execute(EMPTY_EVERY_TABLE);
     },
     close,
   };

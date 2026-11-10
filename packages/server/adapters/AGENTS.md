@@ -105,6 +105,12 @@ pnpm --filter @vp/adapters typecheck
 # Run adapter unit tests
 pnpm --filter @vp/adapters test
 
+# Run the pinned-model spec and the 500-video fingerprint lookup (what the integration job runs)
+pnpm --filter @vp/adapters test:integration
+
+# Measure the fingerprint lookup against 10 000 videos (on demand, about 20 s, never in CI)
+pnpm --filter @vp/adapters test:perf
+
 # Build package
 pnpm --filter @vp/adapters build
 ```

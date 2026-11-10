@@ -39,6 +39,9 @@ rule below that can be checked by a machine is, and the check is named next to i
   repository specs, and the Redis, S3 and BullMQ adapter specs (`tests/integration/vitest.config.ts`).
 - A spec there that would fall back to PGlite or a double fails instead: the setup fails any file in which no
   contract claimed a real service, and a service that is not reachable fails the file.
+- A measurement is not a gate: `*.perf.test.ts` specs stay out of every CI run and run on demand with
+  `pnpm --filter @vp/adapters test:perf` (the fingerprint lookup against 10 000 videos, ticket 112's 200 ms
+  figure); the integration run keeps a 500-video variant of the same query path.
 - `make test-r2` runs the S3 contracts against the R2 bucket the `S3_*` variables you export name.
 
 ### End to end
@@ -175,6 +178,7 @@ encodes or real services, not a parity question.
 | Unit, as CI runs it (no architecture suite) | `pnpm test:unit` |
 | The architecture invariants | `pnpm test:architecture` |
 | Real services | `pnpm test:integration` |
+| On-demand measurements | `pnpm --filter @vp/adapters test:perf` |
 | Bun parity | `pnpm test:bun` |
 | One package | `pnpm --filter @vp/adapters test`, any package name in place of `adapters` |
 | Smoke against Compose | `make smoke`, `make smoke-offline` |
