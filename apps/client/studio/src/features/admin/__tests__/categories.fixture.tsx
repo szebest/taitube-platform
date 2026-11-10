@@ -6,6 +6,7 @@ import {
   listAdminVideos,
   listCommentReports,
   listDlq,
+  listScreeningCases,
   updateCategory,
 } from '@vp/api-contracts';
 import { account, mockEndpoint } from '@vp/web-testing';
@@ -49,6 +50,7 @@ export const adminSection = (url: string) =>
       mockEndpoint(listAdminVideos, () => HttpResponse.json(emptyPage)),
       mockEndpoint(listCommentReports, () => HttpResponse.json(emptyPage)),
       mockEndpoint(listDlq, () => HttpResponse.json(emptyPage)),
+      mockEndpoint(listScreeningCases, () => HttpResponse.json(emptyPage)),
       mockEndpoint(listAdminPicks, () => HttpResponse.json({ items: [] })),
     ],
   });

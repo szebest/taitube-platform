@@ -31,6 +31,8 @@ export const notifications = {
   mention: dt('{name} wspomina o Tobie'),
   comment: dt('{name} komentuje Twój film'),
   heart: dt('{name} dodaje serce do Twojego komentarza'),
+  partyInvite: dt('{name} zaprasza Cię na wspólne oglądanie'),
+  partyStarting: dt('Wspólne oglądanie się zaczyna'),
   teamInvite: dt('{name} zaprasza Cię do swojego zespołu'),
   moderation: dt('{action:enum}', {
     enum: {
@@ -44,6 +46,9 @@ export const notifications = {
   }),
   processingReady: dt('Twój film jest gotowy do obejrzenia'),
   processingFailed: dt('Nie udało się przetworzyć Twojego filmu'),
+  processingHeld: dt('Twój film czeka na sprawdzenie przez moderatora'),
+  processingApproved: dt('Moderator zatwierdził Twój film'),
+  processingRejected: dt('Moderator odrzucił Twój film'),
   loadFailed: dt('Nie udało się wczytać powiadomień'),
   loadMoreFailed: dt('Nie udało się wczytać kolejnych powiadomień'),
   offline: dt('Jesteś offline. To powiadomienia wczytane ostatnio.'),

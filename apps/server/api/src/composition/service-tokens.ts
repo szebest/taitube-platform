@@ -1,7 +1,7 @@
 import { token } from '@vp/composition';
 import type { JobQueue } from '@vp/core/ports';
 import type { Logger } from '@vp/logger';
-import type { MetricsServer } from '@vp/observability';
+import type { MetricsServer, WatchPartyMetrics } from '@vp/observability';
 import type { Paginator } from '@vp/pagination';
 import type { FastifyPluginCallback } from 'fastify';
 import type { HistoryPause } from '../services/history-pause';
@@ -20,16 +20,9 @@ import type {
   ChannelMemberService,
   ChannelService,
   RequestIdentity,
-  ChannelRestrictionService,
   ClipService,
   OEmbedService,
   WebhookService,
-  CommentBulkService,
-  CommentModerationService,
-  CommentRemovalService,
-  CommentReportService,
-  CommentService,
-  CommentSettingsService,
   CreatorCommentService,
   CreatorLiveService,
   CreatorStudioService,
@@ -53,13 +46,12 @@ import type {
   ReactionService,
   RecommendationFeedbackService,
   RelatedService,
+  ScreeningService,
   SearchHistoryService,
   SearchService,
   SseHub,
-  SavedReplyService,
   SseService,
   SubscriptionService,
-  TrustedCommenterService,
   UploadService,
   VideoService,
   ViewerActivityService,
@@ -67,11 +59,32 @@ import type {
   WatchHistoryService,
   WebVitalsService,
 } from '../services/index';
+import type { PatternHub } from '../services/pattern-hub';
 import type { Poller } from '../services/poller';
 import type { ReadinessService } from '../services/readiness-service';
 import type { ViewerProgress } from '../services/viewer-progress';
+import type {
+  BufferingWait,
+  OwnerGrace,
+  Reaction,
+  RoomBatcher,
+  RoomEnvelope,
+  RosterChange,
+  WatchPartyBroadcaster,
+  WatchPartyContextLoader,
+  WatchPartySocketService,
+  WatchPartyService,
+  WatchPartyGuestService,
+  WatchPartyRoleService,
+  WatchPartyMemberService,
+  WatchPartyQueueService,
+  WatchPartyInviteService,
+  WatchPartyControlsService,
+} from '../services/watch-party/index';
+import { type CommentServiceSet, CommentServices } from './comment-tokens';
+import { ScreeningServices } from './screening-tokens';
 
-export interface ServiceSet {
+export interface ServiceSet extends CommentServiceSet {
   videoService: VideoService;
   creatorStudioService: CreatorStudioService;
   searchService: SearchService;
@@ -103,15 +116,7 @@ export interface ServiceSet {
   pickService: PickService;
   reactionService: ReactionService;
   subscriptionService: SubscriptionService;
-  trustedCommenterService: TrustedCommenterService;
-  savedReplyService: SavedReplyService;
-  commentService: CommentService;
-  channelRestrictionService: ChannelRestrictionService;
-  commentBulkService: CommentBulkService;
-  commentModerationService: CommentModerationService;
-  commentRemovalService: CommentRemovalService;
-  commentSettingsService: CommentSettingsService;
-  commentReportService: CommentReportService;
+  screeningService: ScreeningService;
   creatorCommentService: CreatorCommentService;
   viewService: ViewService;
   webVitalsService: WebVitalsService;
@@ -131,6 +136,14 @@ export interface ServiceSet {
   sseHub: SseHub;
   readiness: ReadinessService;
   queueBoard: FastifyPluginCallback;
+  watchPartyService: WatchPartyService;
+  watchPartyGuestService: WatchPartyGuestService;
+  watchPartyRoleService: WatchPartyRoleService;
+  watchPartyMemberService: WatchPartyMemberService;
+  watchPartyQueueService: WatchPartyQueueService;
+  watchPartyInviteService: WatchPartyInviteService;
+  watchPartyControlsService: WatchPartyControlsService;
+  watchPartySocketService: WatchPartySocketService;
 }
 
 export const Services = {
@@ -175,15 +188,8 @@ export const Services = {
   PickService: token<PickService>('PickService'),
   ReactionService: token<ReactionService>('ReactionService'),
   SubscriptionService: token<SubscriptionService>('SubscriptionService'),
-  TrustedCommenterService: token<TrustedCommenterService>('TrustedCommenterService'),
-  SavedReplyService: token<SavedReplyService>('SavedReplyService'),
-  CommentService: token<CommentService>('CommentService'),
-  ChannelRestrictionService: token<ChannelRestrictionService>('ChannelRestrictionService'),
-  CommentBulkService: token<CommentBulkService>('CommentBulkService'),
-  CommentModerationService: token<CommentModerationService>('CommentModerationService'),
-  CommentRemovalService: token<CommentRemovalService>('CommentRemovalService'),
-  CommentSettingsService: token<CommentSettingsService>('CommentSettingsService'),
-  CommentReportService: token<CommentReportService>('CommentReportService'),
+  ...CommentServices,
+  ...ScreeningServices,
   CreatorCommentService: token<CreatorCommentService>('CreatorCommentService'),
   ViewService: token<ViewService>('ViewService'),
   WebVitalsService: token<WebVitalsService>('WebVitalsService'),
@@ -208,4 +214,21 @@ export const Services = {
   QueueBoard: token<FastifyPluginCallback>('QueueBoard'),
   MetricsServer: token<MetricsServer>('MetricsServer'),
   ServiceSet: token<ServiceSet>('ServiceSet'),
+  WatchPartyBroadcaster: token<WatchPartyBroadcaster>('WatchPartyBroadcaster'),
+  WatchPartyContextLoader: token<WatchPartyContextLoader>('WatchPartyContextLoader'),
+  WatchPartyService: token<WatchPartyService>('WatchPartyService'),
+  WatchPartyGuestService: token<WatchPartyGuestService>('WatchPartyGuestService'),
+  WatchPartyRoleService: token<WatchPartyRoleService>('WatchPartyRoleService'),
+  WatchPartyMemberService: token<WatchPartyMemberService>('WatchPartyMemberService'),
+  WatchPartyQueueService: token<WatchPartyQueueService>('WatchPartyQueueService'),
+  WatchPartyInviteService: token<WatchPartyInviteService>('WatchPartyInviteService'),
+  WatchPartyControlsService: token<WatchPartyControlsService>('WatchPartyControlsService'),
+  WatchPartyHub: token<PatternHub<RoomEnvelope>>('WatchPartyHub'),
+  WatchPartySweep: token<Poller>('WatchPartySweep'),
+  WatchPartyMetrics: token<WatchPartyMetrics>('WatchPartyMetrics'),
+  WatchPartyReactions: token<RoomBatcher<Reaction>>('WatchPartyReactions'),
+  WatchPartyRoster: token<RoomBatcher<RosterChange>>('WatchPartyRoster'),
+  WatchPartyBuffering: token<BufferingWait>('WatchPartyBuffering'),
+  WatchPartyOwnerGrace: token<OwnerGrace>('WatchPartyOwnerGrace'),
+  WatchPartySocketService: token<WatchPartySocketService>('WatchPartySocketService'),
 } as const;

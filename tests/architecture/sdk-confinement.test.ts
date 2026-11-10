@@ -1,6 +1,6 @@
 import { productionSources, read, trackedFiles } from './repo-files';
 
-const SDK = /^(@aws-sdk\/[^/'"]+|ioredis|bullmq|postgres|drizzle-orm)(\/.*)?$/;
+const SDK = /^(@aws-sdk\/[^/'"]+|ioredis|bullmq|onnxruntime-node|postgres|drizzle-orm)(\/.*)?$/;
 const SPECIFIER = /(?:from|import|require)\s*\(?\s*['"]([^'"]+)['"]/g;
 const DRIVER_HOMES = ['packages/server/adapters/', 'packages/server/db/'];
 const COMPOSITION_ROOTS = ['apps/server/api/src/app.ts', 'apps/server/worker/src/runner.ts'];

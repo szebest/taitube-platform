@@ -24,6 +24,7 @@ import { Route as AuthedAdminCategoriesRouteImport } from './routes/_authed/admi
 import { Route as AuthedAdminCurationRouteImport } from './routes/_authed/admin/curation';
 import { Route as AuthedAdminModerationRouteImport } from './routes/_authed/admin/moderation';
 import { Route as AuthedAdminQueuesRouteImport } from './routes/_authed/admin/queues';
+import { Route as AuthedAdminScreeningRouteImport } from './routes/_authed/admin/screening';
 import { Route as AuthedCommentsQueueRouteImport } from './routes/_authed/comments_.queue';
 import { Route as AuthedCommentsSettingsRouteImport } from './routes/_authed/comments_.settings';
 import { Route as AuthedUploadIndexRouteImport } from './routes/_authed/upload/index';
@@ -107,6 +108,11 @@ const AuthedAdminQueuesRoute = AuthedAdminQueuesRouteImport.update({
   path: '/queues',
   getParentRoute: () => AuthedAdminRoute,
 } as any);
+const AuthedAdminScreeningRoute = AuthedAdminScreeningRouteImport.update({
+  id: '/screening',
+  path: '/screening',
+  getParentRoute: () => AuthedAdminRoute,
+} as any);
 const AuthedCommentsQueueRoute = AuthedCommentsQueueRouteImport.update({
   id: '/comments_/queue',
   path: '/comments/queue',
@@ -163,6 +169,7 @@ export interface FileRoutesByFullPath {
   '/admin/curation': typeof AuthedAdminCurationRoute;
   '/admin/moderation': typeof AuthedAdminModerationRoute;
   '/admin/queues': typeof AuthedAdminQueuesRoute;
+  '/admin/screening': typeof AuthedAdminScreeningRoute;
   '/comments/queue': typeof AuthedCommentsQueueRoute;
   '/comments/settings': typeof AuthedCommentsSettingsRoute;
   '/live/overlay/$token': typeof LiveOverlayTokenRoute;
@@ -186,6 +193,7 @@ export interface FileRoutesByTo {
   '/admin/curation': typeof AuthedAdminCurationRoute;
   '/admin/moderation': typeof AuthedAdminModerationRoute;
   '/admin/queues': typeof AuthedAdminQueuesRoute;
+  '/admin/screening': typeof AuthedAdminScreeningRoute;
   '/comments/queue': typeof AuthedCommentsQueueRoute;
   '/comments/settings': typeof AuthedCommentsSettingsRoute;
   '/live/overlay/$token': typeof LiveOverlayTokenRoute;
@@ -212,6 +220,7 @@ export interface FileRoutesById {
   '/_authed/admin/curation': typeof AuthedAdminCurationRoute;
   '/_authed/admin/moderation': typeof AuthedAdminModerationRoute;
   '/_authed/admin/queues': typeof AuthedAdminQueuesRoute;
+  '/_authed/admin/screening': typeof AuthedAdminScreeningRoute;
   '/_authed/comments_/queue': typeof AuthedCommentsQueueRoute;
   '/_authed/comments_/settings': typeof AuthedCommentsSettingsRoute;
   '/live/overlay/$token': typeof LiveOverlayTokenRoute;
@@ -238,6 +247,7 @@ export interface FileRouteTypes {
     | '/admin/curation'
     | '/admin/moderation'
     | '/admin/queues'
+    | '/admin/screening'
     | '/comments/queue'
     | '/comments/settings'
     | '/live/overlay/$token'
@@ -261,6 +271,7 @@ export interface FileRouteTypes {
     | '/admin/curation'
     | '/admin/moderation'
     | '/admin/queues'
+    | '/admin/screening'
     | '/comments/queue'
     | '/comments/settings'
     | '/live/overlay/$token'
@@ -286,6 +297,7 @@ export interface FileRouteTypes {
     | '/_authed/admin/curation'
     | '/_authed/admin/moderation'
     | '/_authed/admin/queues'
+    | '/_authed/admin/screening'
     | '/_authed/comments_/queue'
     | '/_authed/comments_/settings'
     | '/live/overlay/$token'
@@ -411,6 +423,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedAdminQueuesRouteImport;
       parentRoute: typeof AuthedAdminRoute;
     };
+    '/_authed/admin/screening': {
+      id: '/_authed/admin/screening';
+      path: '/screening';
+      fullPath: '/admin/screening';
+      preLoaderRoute: typeof AuthedAdminScreeningRouteImport;
+      parentRoute: typeof AuthedAdminRoute;
+    };
     '/_authed/comments_/queue': {
       id: '/_authed/comments_/queue';
       path: '/comments/queue';
@@ -475,6 +494,7 @@ interface AuthedAdminRouteChildren {
   AuthedAdminCurationRoute: typeof AuthedAdminCurationRoute;
   AuthedAdminModerationRoute: typeof AuthedAdminModerationRoute;
   AuthedAdminQueuesRoute: typeof AuthedAdminQueuesRoute;
+  AuthedAdminScreeningRoute: typeof AuthedAdminScreeningRoute;
   AuthedAdminIndexRoute: typeof AuthedAdminIndexRoute;
 }
 
@@ -483,6 +503,7 @@ const AuthedAdminRouteChildren: AuthedAdminRouteChildren = {
   AuthedAdminCurationRoute: AuthedAdminCurationRoute,
   AuthedAdminModerationRoute: AuthedAdminModerationRoute,
   AuthedAdminQueuesRoute: AuthedAdminQueuesRoute,
+  AuthedAdminScreeningRoute: AuthedAdminScreeningRoute,
   AuthedAdminIndexRoute: AuthedAdminIndexRoute,
 };
 

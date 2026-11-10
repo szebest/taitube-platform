@@ -1,8 +1,5 @@
 import type { Repositories } from '@vp/core/repositories';
-import * as schema from '@vp/db';
-import { assertNever } from '@vp/result';
-import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres, { type Sql } from 'postgres';
+import type { Sql } from 'postgres';
 import { PostgresCaptionRepository } from './postgres-caption-repository';
 import { PostgresCategoryRepository } from './postgres-category-repository';
 import { PostgresChannelAuditRepository } from './postgres-channel-audit-repository';
@@ -13,14 +10,15 @@ import { PostgresChannelInviteRepository } from './postgres-channel-invite-repos
 import { PostgresChannelMemberRepository } from './postgres-channel-member-repository';
 import { PostgresChannelPageRepository } from './postgres-channel-page-repository';
 import { PostgresChannelRepository } from './postgres-channel-repository';
-import { PostgresChannelUserRestrictionRepository } from './postgres-channel-user-restriction-repository';
 import { PostgresClipRepository } from './postgres-clip-repository';
-import { PostgresCommentModerationRepository } from './postgres-comment-moderation-repository';
-import { PostgresCommentReportRepository } from './postgres-comment-report-repository';
-import { PostgresCommentRepository } from './postgres-comment-repository';
-import { PostgresCommentSettingsRepository } from './postgres-comment-settings-repository';
+import {
+  type CommentRepositories,
+  createCommentRepositories,
+} from './postgres-comment-repositories';
+import { connectPostgres, type PostgresRepositoriesConfig } from './postgres-connection';
 import { PostgresDlqRepository } from './postgres-dlq-repository';
 import { PostgresEventRepository } from './postgres-event-repository';
+import { PostgresFingerprintRepository } from './postgres-fingerprint-repository';
 import { PostgresLiveChatRepository } from './postgres-live-chat-repository';
 import { PostgresLiveStreamRepository } from './postgres-live-stream-repository';
 import { PostgresNotificationRepository } from './postgres-notification-repository';
@@ -31,12 +29,11 @@ import { PostgresRecommendationFeedbackRepository } from './postgres-recommendat
 import { PostgresRelatedVideosRepository } from './postgres-related-videos-repository';
 import { PostgresRenditionRepository } from './postgres-rendition-repository';
 import { PostgresRisingVideosRepository } from './postgres-rising-videos-repository';
-import { PostgresSavedReplyRepository } from './postgres-saved-reply-repository';
+import { PostgresScreeningRepository } from './postgres-screening-repository';
 import { PostgresSearchHistoryRepository } from './postgres-search-history-repository';
 import { PostgresSearchRepository } from './postgres-search-repository';
 import { PostgresStepRepository } from './postgres-step-repository';
 import { PostgresSubscriptionRepository } from './postgres-subscription-repository';
-import { PostgresTrustedCommenterRepository } from './postgres-trusted-commenter-repository';
 import { PostgresUploadRepository } from './postgres-upload-repository';
 import { PostgresUserEventRepository } from './postgres-user-event-repository';
 import { PostgresUserPreferencesRepository } from './postgres-user-preferences-repository';
@@ -46,14 +43,11 @@ import { PostgresVideoRepository } from './postgres-video-repository';
 import { PostgresVideoStudioRepository } from './postgres-video-studio-repository';
 import { PostgresVideoViewRepository } from './postgres-video-view-repository';
 import { PostgresWatchHistoryRepository } from './postgres-watch-history-repository';
+import {
+  createWatchPartyRepositories,
+  type WatchPartyRepositories,
+} from './postgres-watch-party-repositories';
 import { PostgresWebhookRepository } from './postgres-webhook-repository';
-import type { PostgresDatabase } from './types';
-
-/** A `drizzle` handle or a `sql` pool is borrowed; a `url` opens a pool the bundle ends. */
-export type PostgresRepositoriesConfig =
-  | { type: 'drizzle'; db: PostgresDatabase }
-  | { type: 'sql'; sql: Sql }
-  | { type: 'url'; url: string; max: number };
 
 export class PostgresRepositories implements Repositories {
   readonly videos: PostgresVideoRepository;
@@ -71,16 +65,16 @@ export class PostgresRepositories implements Repositories {
   readonly channelMembers: PostgresChannelMemberRepository;
   readonly channelInvites: PostgresChannelInviteRepository;
   readonly channelAudit: PostgresChannelAuditRepository;
-  readonly commentSettings: PostgresCommentSettingsRepository;
-  readonly channelUserRestrictions: PostgresChannelUserRestrictionRepository;
-  readonly trustedCommenters: PostgresTrustedCommenterRepository;
-  readonly savedReplies: PostgresSavedReplyRepository;
+  declare readonly commentSettings: CommentRepositories['commentSettings'];
+  declare readonly channelUserRestrictions: CommentRepositories['channelUserRestrictions'];
+  declare readonly trustedCommenters: CommentRepositories['trustedCommenters'];
+  declare readonly savedReplies: CommentRepositories['savedReplies'];
   readonly videoReactions: PostgresVideoReactionRepository;
   readonly subscriptions: PostgresSubscriptionRepository;
   readonly videoViews: PostgresVideoViewRepository;
-  readonly comments: PostgresCommentRepository;
-  readonly commentModeration: PostgresCommentModerationRepository;
-  readonly commentReports: PostgresCommentReportRepository;
+  declare readonly comments: CommentRepositories['comments'];
+  declare readonly commentModeration: CommentRepositories['commentModeration'];
+  declare readonly commentReports: CommentRepositories['commentReports'];
   readonly playlists: PostgresPlaylistRepository;
   readonly watchHistory: PostgresWatchHistoryRepository;
   readonly userPreferences: PostgresUserPreferencesRepository;
@@ -91,6 +85,8 @@ export class PostgresRepositories implements Repositories {
   readonly related: PostgresRelatedVideosRepository;
   readonly rising: PostgresRisingVideosRepository;
   readonly captions: PostgresCaptionRepository;
+  readonly screenings: PostgresScreeningRepository;
+  readonly fingerprints: PostgresFingerprintRepository;
   readonly clips: PostgresClipRepository;
   readonly channelFeatured: PostgresChannelFeaturedRepository;
   readonly channelHandleHistory: PostgresChannelHandleHistoryRepository;
@@ -100,11 +96,20 @@ export class PostgresRepositories implements Repositories {
   readonly webhooks: PostgresWebhookRepository;
   readonly liveStreams: PostgresLiveStreamRepository;
   readonly liveChat: PostgresLiveChatRepository;
+  readonly watchPartyRooms: WatchPartyRepositories['watchPartyRooms'];
+  readonly watchPartyRoles: WatchPartyRepositories['watchPartyRoles'];
+  readonly watchPartyMembers: WatchPartyRepositories['watchPartyMembers'];
+  readonly watchPartyQueue: WatchPartyRepositories['watchPartyQueue'];
+  readonly watchPartyMessages: WatchPartyRepositories['watchPartyMessages'];
+  readonly watchPartyInvites: WatchPartyRepositories['watchPartyInvites'];
+  readonly watchPartyInviteLinks: WatchPartyRepositories['watchPartyInviteLinks'];
+  readonly watchPartyControls: WatchPartyRepositories['watchPartyControls'];
+  readonly watchPartyHousekeeping: WatchPartyRepositories['watchPartyHousekeeping'];
 
   private readonly ownedPool: Sql | undefined;
 
   constructor(config: PostgresRepositoriesConfig) {
-    const { db, ownedPool } = PostgresRepositories.connect(config);
+    const { db, ownedPool } = connectPostgres(config);
     this.ownedPool = ownedPool;
 
     this.videos = new PostgresVideoRepository(db);
@@ -122,16 +127,10 @@ export class PostgresRepositories implements Repositories {
     this.channelMembers = new PostgresChannelMemberRepository(db);
     this.channelInvites = new PostgresChannelInviteRepository(db);
     this.channelAudit = new PostgresChannelAuditRepository(db);
-    this.commentSettings = new PostgresCommentSettingsRepository(db);
-    this.channelUserRestrictions = new PostgresChannelUserRestrictionRepository(db);
-    this.trustedCommenters = new PostgresTrustedCommenterRepository(db);
-    this.savedReplies = new PostgresSavedReplyRepository(db);
+    Object.assign(this, createCommentRepositories(db));
     this.videoReactions = new PostgresVideoReactionRepository(db);
     this.subscriptions = new PostgresSubscriptionRepository(db);
     this.videoViews = new PostgresVideoViewRepository(db);
-    this.comments = new PostgresCommentRepository(db);
-    this.commentModeration = new PostgresCommentModerationRepository(db);
-    this.commentReports = new PostgresCommentReportRepository(db);
     this.playlists = new PostgresPlaylistRepository(db);
     this.watchHistory = new PostgresWatchHistoryRepository(db);
     this.userPreferences = new PostgresUserPreferencesRepository(db);
@@ -142,33 +141,27 @@ export class PostgresRepositories implements Repositories {
     this.related = new PostgresRelatedVideosRepository(db);
     this.rising = new PostgresRisingVideosRepository(db);
     this.captions = new PostgresCaptionRepository(db);
+    this.screenings = new PostgresScreeningRepository(db);
+    this.fingerprints = new PostgresFingerprintRepository(db);
     this.clips = new PostgresClipRepository(db);
     this.channelFeatured = new PostgresChannelFeaturedRepository(db);
     this.channelHandleHistory = new PostgresChannelHandleHistoryRepository(db);
     this.channelImages = new PostgresChannelImageRepository(db);
     this.channelPages = new PostgresChannelPageRepository(db);
+    const party = createWatchPartyRepositories(db);
+    this.watchPartyRooms = party.watchPartyRooms;
+    this.watchPartyRoles = party.watchPartyRoles;
+    this.watchPartyMembers = party.watchPartyMembers;
+    this.watchPartyQueue = party.watchPartyQueue;
+    this.watchPartyMessages = party.watchPartyMessages;
+    this.watchPartyInvites = party.watchPartyInvites;
+    this.watchPartyInviteLinks = party.watchPartyInviteLinks;
+    this.watchPartyControls = party.watchPartyControls;
+    this.watchPartyHousekeeping = party.watchPartyHousekeeping;
     this.picks = new PostgresPickRepository(db);
     this.webhooks = new PostgresWebhookRepository(db);
     this.liveStreams = new PostgresLiveStreamRepository(db);
     this.liveChat = new PostgresLiveChatRepository(db);
-  }
-
-  private static connect(config: PostgresRepositoriesConfig): {
-    db: PostgresDatabase;
-    ownedPool: Sql | undefined;
-  } {
-    switch (config.type) {
-      case 'drizzle':
-        return { db: config.db, ownedPool: undefined };
-      case 'sql':
-        return { db: drizzle(config.sql, { schema }), ownedPool: undefined };
-      case 'url': {
-        const sql = postgres(config.url, { max: config.max });
-        return { db: drizzle(sql, { schema }), ownedPool: sql };
-      }
-      default:
-        return assertNever(config, 'PostgresRepositoriesConfig');
-    }
   }
 
   async close(): Promise<void> {

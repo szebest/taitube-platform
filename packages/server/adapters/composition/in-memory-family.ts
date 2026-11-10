@@ -1,19 +1,24 @@
 import { type Container, closeOnDispose, token } from '@vp/composition';
 import { SEARCH_SUGGESTIONS } from '@vp/domain';
 import { portBoardQueues } from '../bullmq/port-board-queues';
+import { ScryptPasswordHasher } from '../crypto/scrypt-password-hasher';
 import { InMemoryCacheClient } from '../in-memory/in-memory-cache-client';
 import { InMemoryCommentSlowMode } from '../in-memory/in-memory-comment-slow-mode';
 import { InMemoryDatabaseClient } from '../in-memory/in-memory-database-client';
 import { InMemoryFlowProducer } from '../in-memory/in-memory-flow-producer';
+import { InMemoryFrameClassifier } from '../in-memory/in-memory-frame-classifier';
 import { InMemoryJobQueue } from '../in-memory/in-memory-job-queue';
 import { InMemoryLiveChatGate } from '../in-memory/in-memory-live-chat-gate';
 import { InMemoryLiveGateway } from '../in-memory/in-memory-live-gateway';
 import { InMemoryLivePresence } from '../in-memory/in-memory-live-presence';
 import { InMemoryMultipartStorage } from '../in-memory/in-memory-multipart-storage';
+import { InMemoryPartyGuestSessions } from '../in-memory/in-memory-party-guest-sessions';
 import { InMemorySearchSuggestionIndex } from '../in-memory/in-memory-search-suggestion-index';
 import { InMemoryStorageClient } from '../in-memory/in-memory-storage-client';
 import { InMemorySubscriptionCache } from '../in-memory/in-memory-subscription-cache';
 import { InMemoryViewBuffer } from '../in-memory/in-memory-view-buffer';
+import { InMemoryWatchPartyGate } from '../in-memory/in-memory-watch-party-gate';
+import { InMemoryWatchPartyPresence } from '../in-memory/in-memory-watch-party-presence';
 import { InMemoryWebhookDispatcher } from '../in-memory/in-memory-webhook-dispatcher';
 import { InMemoryRepositories } from '../in-memory/repositories/in-memory-repositories';
 import { MeteredMultipartStorage } from '../metered/metered-multipart-storage';
@@ -55,6 +60,11 @@ export function registerFamily(c: Container): void {
       },
       closeOnDispose
     )
+    .provide(
+      Adapters.FrameClassifier,
+      (c) =>
+        new InMemoryFrameClassifier({ inputSize: c.get(Adapters.Config).screening.model.inputSize })
+    )
     .provide(Adapters.SubscriptionCache, () => new InMemorySubscriptionCache())
     .provide(
       Adapters.SearchSuggestions,
@@ -66,5 +76,12 @@ export function registerFamily(c: Container): void {
     .provide(Adapters.CommentSlowMode, () => new InMemoryCommentSlowMode())
     .provide(Adapters.LiveChatGate, () => new InMemoryLiveChatGate())
     .provide(Adapters.LivePresence, () => new InMemoryLivePresence())
+    .provide(Adapters.WatchPartyGate, () => new InMemoryWatchPartyGate())
+    .provide(Adapters.WatchPartyPresence, () => new InMemoryWatchPartyPresence())
+    .provide(Adapters.PartyGuestSessions, () => new InMemoryPartyGuestSessions())
+    .provide(
+      Adapters.PasswordHasher,
+      (c) => new ScryptPasswordHasher(c.get(Adapters.Config).watchParties.scrypt)
+    )
     .provide(Adapters.BoardQueues, () => portBoardQueues);
 }

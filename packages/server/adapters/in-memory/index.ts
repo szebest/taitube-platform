@@ -15,3 +15,7 @@ export * from './in-memory-webhook-dispatcher';
 export * from './in-memory-comment-slow-mode';
 export * from './in-memory-live-chat-gate';
 export * from './in-memory-live-presence';
+export * from './in-memory-frame-classifier';
+export * from './in-memory-watch-party-gate';
+export * from './in-memory-watch-party-presence';
+export * from './in-memory-party-guest-sessions';

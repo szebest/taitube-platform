@@ -72,6 +72,7 @@ taitube-platform/
 │   ├── env-schema/                 # @vp/env-schema - the zod schema, AppConfig and toAppConfig
 │   ├── events/                     # @vp/events - publishVideoEvent, SSE framing, channels, cache keys
 │   ├── ffmpeg/                     # @vp/ffmpeg - argument builders, progress parsers, probe rules
+│   ├── fingerprint/                # @vp/fingerprint - frame dHash, Chromaprint, the offset-vote matcher
 │   ├── job-contracts/              # @vp/job-contracts - BullMQ payloads, queue names, the ladder
 │   ├── logger/                     # @vp/logger - createLogger (pino), json and pretty formats
 │   ├── observability/              # @vp/observability - OpenTelemetry and Prometheus metrics
@@ -119,8 +120,10 @@ answer with a `HeadBucket` on the raw bucket.
 - **`OutboxRepository`**: `enqueue`, `claimBatch`, `markPublished`, `recordAttempt`, `prune`, `findById`.
 - **`CategoryRepositoryPort`**, **`ChannelRepositoryPort`**, **`VideoReactionRepositoryPort`**, **`SubscriptionRepositoryPort`**: category taxonomy, channel identity, reactions with their counters, and subscriptions with the subscription feed.
 - **`LiveStreamRepositoryPort`**: `ensureIdle`, `findById`, `findByKey`, `findOpenByChannel`, `findByVideoId`, `goLive` (`IDLE -> LIVE` with its `LIVE` video, the video event and the outbox rows in one transaction), `end` (`LIVE -> ENDED`, handing the stream key to the next `IDLE` row), `update` (SDD ADR-29).
+- **`ScreeningRepository`** and **`FingerprintRepository`**: the result of an upload screening and the four edges that touch `HELD` (`hold`, `approve`, `reject`, `appeal`, each a CAS on the video status that appends its `video_events` row), `dismiss`, `raiseFlag`, `listCases` and the evidence retention; and the frame hashes and audio terms behind the duplicate lookup (SDD §3.2, §5).
+- **`WatchPartyRoomRepositoryPort`** and its eight siblings (`WatchPartyRoleRepositoryPort`, `WatchPartyMemberRepositoryPort`, `WatchPartyQueueRepositoryPort`, `WatchPartyMessageRepositoryPort`, `WatchPartyInviteRepositoryPort`, `WatchPartyInviteLinkRepositoryPort`, `WatchPartyPersonalControlRepositoryPort`, `WatchPartyHousekeepingRepositoryPort`): rooms with the room clock's compare-and-set on `playback_version` and `roles_version`, roles and their assignments, seats and bans, the shared queue, chat lines, invites and invite links, personal controls, and the sweep's reads and purges (SDD §5.4, §10.7, ADR-31).
 - **`SearchRepositoryPort`**: `search` (one ranked, keyset-paged list over videos, channels and playlists, lexical or trigram) and `suggestChannels`.
-- **`Repositories`**: the aggregate the composition roots hand around (`videos`, `videoStudio`, `uploads`, `steps`, `renditions`, `events`, `users`, `userEvents`, `dlq`, `outbox`, `categories`, `channels`, `videoReactions`, `subscriptions`, `videoViews`, `comments`, `playlists`, `watchHistory`, `searchHistory`, `recommendationFeedback`, `rising`, `clips`, `channelFeatured`, `search`, `liveStreams`).
+- **`Repositories`**: the aggregate the composition roots hand around (`videos`, `videoStudio`, `uploads`, `steps`, `renditions`, `events`, `users`, `userEvents`, `dlq`, `outbox`, `categories`, `channels`, `videoReactions`, `subscriptions`, `videoViews`, `comments`, `playlists`, `watchHistory`, `searchHistory`, `recommendationFeedback`, `rising`, `clips`, `channelFeatured`, `search`, `liveStreams`, `screenings`, `fingerprints`, `watchPartyRooms`, `watchPartyRoles`, `watchPartyMembers`, `watchPartyQueue`, `watchPartyMessages`, `watchPartyInvites`, `watchPartyInviteLinks`, `watchPartyControls`, `watchPartyHousekeeping`).
 
 ### `AuthorizationPort`
 Abstracts user authorization and declarative rule evaluation. It answers the verdict; the refusal is a
@@ -128,6 +131,8 @@ rule's, through `authorize(actor, allowed, context)` in `@vp/domain-rules` (ADR-
 - `getAbility()`: returns the active `@casl/ability` instance.
 - `can(action, subject)` / `can(helper, params)`: evaluates if an action is permitted.
 - `forUser(user)`: returns a new `AuthorizationPort` instance scoped to the target user.
+
+A watch party room is authorised apart from this port: `getWatchPartyPermissions(user, viewer)` in `@vp/permissions` builds a room-scoped ability from the viewer's roles in the room (the closed registry of SDD §10.7), a guest clamped to its ceiling and a platform MODERATOR or ADMIN given the moderation extras. Every REST route and socket frame of a room asks that ability, never a user id or a role inline.
 
 ### `TokenVerifier`
 `verify(token)` answers `Result<Principal, AuthFailure>`. The JWKS adapter checks the signature, `iss`,
@@ -151,6 +156,13 @@ Key-value caching and Pub/Sub: `get`, `set`, `del`, `ping`, `publish`, `subscrib
 The ingest gateway's control plane (MediaMTX, SDD ADR-29), addressed by the path a publisher sends on:
 `isPublishing(path)` and `kick(path)`, both answering `LiveGatewayUnavailable` when it cannot be reached.
 
+### `WatchPartyGatePort`, `WatchPartyPresencePort`, `PartyGuestSessionsPort` & `PasswordHasherPort`
+The short-lived, cross-pod state of a watch party (SDD §10.7, ADR-31), each over Redis and each with an in-memory double:
+- `WatchPartyGatePort`: `issueTicket` / `redeemTicket` (the one-time socket ticket, a second redeem answers `null`), `consume` / `check` / `reset` (the per-key budgets every pod counts against) and the slow-mode, roles-version and skip-vote keys.
+- `WatchPartyPresencePort`: `admit` (capacity, one Lua script), `touch`, `leave`, `members`; a member that misses three keepalives stops counting.
+- `PartyGuestSessionsPort`: `issue`, `resolve`, `revoke` for the opaque party credential of a guest or a Discord member, read only on `partyGuest` routes (SDD §11).
+- `PasswordHasherPort`: `hash` and `verify`, scrypt through `node:crypto` (`HashingFailed` on failure).
+
 ### `JobQueue` & `FlowProducerPort`
 - `JobQueue`: `add`, `process`, `getName`, `getJobState`, `isPaused`, `pause`, `resume`, `getJobCounts`
   (over `QUEUE_JOB_STATES`), `getJobs`, `upsertJobScheduler`, `getJobSchedulers`, `close`, plus the
@@ -173,6 +185,10 @@ The ingest gateway's control plane (MediaMTX, SDD ADR-29), addressed by the path
 | `JobQueue` | `BullMqJobQueue` | `InMemoryJobQueue` |
 | `FlowProducerPort` | `BullMqFlowProducer` | `InMemoryFlowProducer` |
 | `LiveGatewayPort` | `MediaMtxLiveGateway` | `InMemoryLiveGateway` |
+| `WatchPartyGatePort` | `RedisWatchPartyGateAdapter` | `InMemoryWatchPartyGate` |
+| `WatchPartyPresencePort` | `RedisWatchPartyPresenceAdapter` | `InMemoryWatchPartyPresence` |
+| `PartyGuestSessionsPort` | `RedisPartyGuestSessionsAdapter` | `InMemoryPartyGuestSessions` |
+| `PasswordHasherPort` | `ScryptPasswordHasher` | `ScryptPasswordHasher` (no I/O, shared) |
 
 Both families wrap storage in `MeteredStorageClient` / `MeteredMultipartStorage`, and share
 `CaslAuthorizationAdapter`, the token verifier (`JwksTokenVerifier` or `DevTokenVerifier`, chosen by
@@ -223,7 +239,7 @@ packages/client/      browser only
 | Tier | Packages | May depend on |
 |---|---|---|
 | `universal` | `api-contracts`, `design-tokens`, `domain`, `domain-rules`, `errors`, `intl`, `messages`, `pagination`, `permissions`, `result`, `tsconfig`, `validation` | `universal` only — no `node:*`, no server SDK |
-| `server` | `adapters`, `composition`, `compose-autoscaler`, `concurrency`, `config`, `core`, `db`, `dev-token`, `env-schema`, `events`, `ffmpeg`, `gen-video`, `job-contracts`, `logger`, `observability`, `storage`, `testing`, `upload-client`, `whisper` | `universal` + `server` |
+| `server` | `adapters`, `composition`, `compose-autoscaler`, `concurrency`, `config`, `core`, `db`, `dev-token`, `env-schema`, `events`, `ffmpeg`, `fingerprint`, `gen-video`, `job-contracts`, `logger`, `observability`, `storage`, `testing`, `upload-client`, `whisper` | `universal` + `server` |
 | `client` | `api-client`, `forms`, `intl-react`, `permissions-react`, `queries`, `security-headers`, `ui`, `web-telemetry`, `web-testing`, `workbench` | `universal` + `client` |
 
 Apps take their tier from their directory the same way: `apps/server/api` and `apps/server/worker` are `server`,
@@ -245,7 +261,7 @@ portability.
 | T1 | Foundation — no `@vp/*` dependency | `domain`, `errors`, `result`, `tsconfig`, `concurrency`, `logger`, `storage`, `vite-preset` |
 | T2 | Contracts and policy, and the CLIs that log through `@vp/logger` | `composition`, `design-tokens`, `events`, `intl`, `job-contracts`, `observability`, `pagination`, `permissions`, `testing`, `validation`, `whisper`, `compose-autoscaler`, `dev-token`, `gen-video`, `security-headers` |
 | T3 | Domain capability — ports, repository contracts, rules and the configuration value, the React bindings over the rules, and the design system's token sets | `api-contracts`, `core`, `db`, `domain-rules`, `env-schema`, `ffmpeg`, `messages`, `permissions-react`, `ui` |
-| T4 | Integration — concrete drivers, generated clients and the env loader | `adapters`, `api-client`, `config`, `forms`, `intl-react` |
+| T4 | Integration — concrete drivers, generated clients and the env loader | `adapters`, `api-client`, `config`, `fingerprint`, `forms`, `intl-react` |
 | T5 | App modules - code more than one application shares, above an integration | `queries`, `web-testing` |
 | T6 | Applications | `apps/server/api`, `apps/server/worker`, `apps/client/web`, `apps/client/studio` |
 | T7 | Reference tools whose acceptance suite drives a running application | `upload-client` |
@@ -423,13 +439,14 @@ fails.
 | Assertion | Holds | Fixture that proves it fires |
 |---|---|---|
 | `package-boundaries.test.ts` | `checkBoundaries()` from `scripts/check-boundaries.ts`, over every manifest under `packages/` and `apps/`: a package or app takes its tier from its `packages/<tier>/` or `apps/<server\|client>/` directory, one anywhere else has none, and none may declare `vp.tier`; tiers only depend where allowed (`universal` never on `server`); dependencies point strictly down, devDependencies included, a dev edge on `BUILD_TOOLING` exempt and a runtime one still checked | planted manifests: a `client` package depending (and dev-depending) on a `server` one, and a `client` app doing the same; an app outside `apps/<server\|client>/`; a `vp.tier` on a package and on an app; a T2 package depending on a T4 one; a runtime dependency on each `BUILD_TOOLING` package |
-| `sdk-confinement.test.ts` | regex over import specifiers: `@aws-sdk/*`, `ioredis`, `bullmq`, `postgres` and `drizzle-orm` are named only under `packages/server/adapters/` and `packages/server/db/` across `.ts`/`.tsx` in `apps`, `packages`, `scripts`, `tests` and `tools`, and declared in no other manifest (root included); `@vp/adapters` is imported, **within `apps/` only**, from a `composition/` module, `app.ts` or `runner.ts` | `import { CaslAuthorizationAdapter } from '@vp/adapters'` at a service path |
+| `sdk-confinement.test.ts` | regex over import specifiers: `@aws-sdk/*`, `ioredis`, `bullmq`, `onnxruntime-node`, `postgres` and `drizzle-orm` are named only under `packages/server/adapters/` and `packages/server/db/` across `.ts`/`.tsx` in `apps`, `packages`, `scripts`, `tests` and `tools`, and declared in no other manifest (root included); `@vp/adapters` is imported, **within `apps/` only**, from a `composition/` module, `app.ts` or `runner.ts` | `import { CaslAuthorizationAdapter } from '@vp/adapters'` at a service path |
 | `lockfile-closure.test.ts` | every `apps/client/*` app's runtime workspace closure, and its dev closure with build tooling aside, holds no `packages/server/` package - read line by line from the `importers` of `pnpm-lock.yaml`, so a transitive edge is caught too | none - reads the repo |
 | `workspace-closure.test.ts` | the line-based lockfile reader behind `lockfile-closure`, `frontend-vocabulary` and `load-smoke-triggers` follows `dependencies`, `optionalDependencies` and `devDependencies` and exempts build tooling only on a dev edge - asserted over a planted lockfile only | a planted lockfile where `apps/client/web` has a runtime `@vp/testing` edge that drags in `@vp/job-contracts` |
 | `repo-files.test.ts` | the index reader every text ratchet scans through: `trackedFiles` lists, for a `:(glob)` pathspec, exactly the tracked files `matchesGlob` matches, and `:(exclude,glob)` drops its matches | none - compares against `matchesGlob` over `git ls-files` |
 | `client-app-duplicates.test.ts` | no `.ts`, `.tsx`, `.css` or `.scss` under the `src/` of one `apps/client/*` app is byte-identical to one under another (specs, `export *` barrels and the two Start entry files `src/router.tsx` and `src/start.ts` aside); the client apps are read from their manifests, in `client-apps.ts`; the files at one path in two apps that differ by fewer than 10 lines, and share more than they differ, stay at a per-app count that only goes down | the same `export const a = 1;` planted in both apps, while the same bytes twice in one app pass; a five-line file with one line changed |
 | `shared-unions.test.ts` | AST over production source in `@vp/ui`, `@vp/components` and each `apps/client/*/src/components/`, `types.ts` aside: no member of a `*Props` interface or alias, or of a type literal written onto a parameter, spells a union of two or more string literals; a shared union is narrowed in the folder's `types.ts` | `interface ChipProps { size?: 'sm' \| 'md'; }`, `(props: { variant: 'inline' \| 'palette' })`, while `Omit<X, 'side' \| 'align'>` passes |
 | `live-role-confined.test.ts` | regex over production source of the live surfaces (web `features/live/`, `components/live/`, the `/live` routes, the Live now shelf and the player's control bar; studio `features/live/`, `components/live/` and the `/live` and overlay routes): the `live` tone sits only on a `Badge`, no `live` colour utility or `var(--live)` appears (its ink, `on-live`, may), and no red is written as a value (a hex, `rgb()`/`hsl()`/`oklch()` or a `red`/`rose` palette class), so the live badge is the one red thing on a live page | a `bg-live` ground, `var(--live)`, `tone="live"` on a `Button`, a red hex and `text-red-600`, while the live badge, a badge live only at the edge and `text-on-live` pass |
+| `party-guest-confined.test.ts` | regex over `packages/universal/api-contracts/src/`: `partyGuest: true` appears only in a `watch-party*.ts` / `watch-parties.ts` contract, so a guest's or a Discord member's party credential is read on the watch party routes alone and every other route sees an anonymous caller | `partyGuest: true` planted in `me.ts`, while the watch party contracts pass |
 | `settings-appearance-cookie.test.ts` | regex over production source under `apps/client/web/src/features/account/`: no `vp.appearance` cookie name and no call of `requestAppearancePreference`, `saveAppearancePreference` or `rewriteLegacyAppearance`, so the appearance engine stays the one reader and writer of its cookie | `readCookie('vp.appearance')` in a settings row |
 | `shared-components-used-by-both-apps.test.ts` | AST: every component `packages/client/components/src/index.ts` re-exports has at least one value export imported from `@vp/components` by the production source of every `apps/client/*` app; one app alone moves it to that app's kit | a planted `PageHeader` that only web imports, studio importing it as a type only |
 | `component-folders.test.ts` | every `@vp/ui` primitive (`primitives/<name>/`), `@vp/components` component (a folder with an `index.ts`) and app-kit component (`apps/client/*/src/components/<area>/<name>/`) holds `<name>.tsx`, `index.ts`, `__stories__/<name>.stories.tsx` (none under `components/player/`) and `__tests__/<name>.dom.test.tsx`, and beside them only kebab-case `.ts`/`.tsx` sources (`.context.ts`, `.variants.ts`, `.lazy.ts`, `types.ts`, `constants.ts`, a sibling part), `hooks/use-*.ts`, `utils/*.ts` and subcomponents under `components/<name>/` in the same shape without a story; no source sits loose in a kit; the findings still open are listed and the list only shrinks | a folder without its story and spec, a `.module.css` in one, a nested folder, a story beside its component or in a subcomponent, a hook not named `use-*`, `route-fallbacks.tsx` loose in a kit |

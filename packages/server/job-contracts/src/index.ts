@@ -1,3 +1,4 @@
+import { SCREENING_OUTCOMES, SCREENING_REASONS } from '@vp/domain';
 import { z } from 'zod';
 import { ChannelImageJob } from './channel-images';
 import { LadderEntry, RENDITIONS, type RenditionName } from './ladder';
@@ -16,6 +17,7 @@ export const QUEUES = [
   'transcode-720p',
   'transcode-480p',
   'thumbnail',
+  'screen',
   'package',
   'notify',
   'housekeeping',
@@ -55,6 +57,13 @@ export const ThumbnailJob = Base.extend({
 });
 export type ThumbnailJob = z.infer<typeof ThumbnailJob>;
 
+export const ScreenJob = Base.extend({
+  sourceKey: z.string(),
+  durationMs: z.number().int().positive(),
+  /** Whether probe found an audio stream, so the stage fingerprints the audio only when there is one. */
+  hasAudio: z.boolean(),
+});
+export type ScreenJob = z.infer<typeof ScreenJob>;
 const VideoThumbnailJob = ThumbnailJob.extend({ type: z.literal('video-thumbnail') });
 
 function withDefaultType(payload: unknown): unknown {
@@ -76,6 +85,8 @@ export type ThumbnailQueueJob = z.infer<typeof ThumbnailQueueJob>;
 
 export const PackageJob = Base.extend({
   ladder: z.array(LadderEntry).min(1),
+  /** Probe added a `screen` child: a package that finds no result from it holds the video, never publishes it. */
+  screened: z.boolean().optional(),
 });
 export type PackageJob = z.infer<typeof PackageJob>;
 
@@ -133,6 +144,7 @@ export const HousekeepingJob = z.object({
     'purge-search-history',
     'purge-channel-audit',
     'purge-comment-moderation',
+    'purge-screening-evidence',
     'purge-channel-images',
     'purge-handle-history',
   ]),
@@ -176,8 +188,21 @@ export const ThumbnailResult = z.object({
 });
 export type ThumbnailResult = z.infer<typeof ThumbnailResult>;
 
+export const ScreenResult = z.object({
+  type: z.literal('screen'),
+  screeningId: z.uuid(),
+  outcome: z.enum(SCREENING_OUTCOMES),
+  score: z.number().min(0).max(1),
+  reasons: z.array(z.enum(SCREENING_REASONS)),
+});
+export type ScreenResult = z.infer<typeof ScreenResult>;
+
 /** What a package job reads back from its flow children, told apart by the stage that wrote it. */
-export const ChildResult = z.discriminatedUnion('type', [TranscodeResult, ThumbnailResult]);
+export const ChildResult = z.discriminatedUnion('type', [
+  TranscodeResult,
+  ThumbnailResult,
+  ScreenResult,
+]);
 export type ChildResult = z.infer<typeof ChildResult>;
 
 // Deterministic job IDs
@@ -187,8 +212,10 @@ export const ids = {
   transcodeChunk: (v: string, r: RenditionName, chunk: number, g: number) =>
     `${v}--transcode--${r}--c${chunk}--g${g}`,
   thumbnail: (v: string, g: number) => `${v}--thumbnail--g${g}`,
+  screen: (v: string, g: number) => `${v}--screen--g${g}`,
   channelImage: (uploadId: string) => `${uploadId}--channel-image`,
   package: (v: string, g: number) => `${v}--package--g${g}`,
+  packageApproved: (v: string, g: number) => `${v}--package--approved--g${g}`,
   captions: (v: string, modelVersion: string, captionVersion: number) =>
     `${v}--captions--${modelVersion}--v${captionVersion}`,
   captionsChunk: (v: string, modelVersion: string, captionVersion: number, window: number) =>

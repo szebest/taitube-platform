@@ -1,5 +1,5 @@
 {
-  "id": "d0ff2292-d407-41e9-8c02-44b1b6ce1160",
+  "id": "8757d96b-8831-4e9d-b68d-50992cc649d2",
   "prevId": "40edcf9b-ef25-46bc-91ad-7f158f42e81f",
   "version": "7",
   "dialect": "postgresql",
@@ -1203,13 +1203,6 @@
           "notNull": true,
           "default": 0
         },
-        "comments_enabled": {
-          "name": "comments_enabled",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": true
-        },
         "likes_count": {
           "name": "likes_count",
           "type": "integer",
@@ -1827,56 +1820,6 @@
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": false
-        },
-        "moderation_state": {
-          "name": "moderation_state",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'published'"
-        },
-        "moderation_disclosure": {
-          "name": "moderation_disclosure",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "moderation_reason": {
-          "name": "moderation_reason",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "moderation_note": {
-          "name": "moderation_note",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "moderated_by": {
-          "name": "moderated_by",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "moderated_at": {
-          "name": "moderated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "held_reason": {
-          "name": "held_reason",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "looks_like_question": {
-          "name": "looks_like_question",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
         }
       },
       "indexes": {
@@ -2007,34 +1950,6 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
-        },
-        "video_comments_moderation_idx": {
-          "name": "video_comments_moderation_idx",
-          "columns": [
-            {
-              "expression": "video_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "created_at",
-              "isExpression": false,
-              "asc": false,
-              "nulls": "last"
-            },
-            {
-              "expression": "id",
-              "isExpression": false,
-              "asc": false,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "where": "\"video_comments\".\"moderation_state\" <> 'published'",
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
         }
       },
       "foreignKeys": {
@@ -2076,42 +1991,12 @@
           ],
           "onDelete": "cascade",
           "onUpdate": "no action"
-        },
-        "video_comments_moderated_by_users_id_fk": {
-          "name": "video_comments_moderated_by_users_id_fk",
-          "tableFrom": "video_comments",
-          "tableTo": "users",
-          "columnsFrom": [
-            "moderated_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
-      "checkConstraints": {
-        "video_comments_moderation_state_check": {
-          "name": "video_comments_moderation_state_check",
-          "value": "\"video_comments\".\"moderation_state\" IN ('published', 'held', 'hidden')"
-        },
-        "video_comments_moderation_disclosure_check": {
-          "name": "video_comments_moderation_disclosure_check",
-          "value": "\"video_comments\".\"moderation_disclosure\" IS NULL OR \"video_comments\".\"moderation_disclosure\" IN ('silent', 'visible')"
-        },
-        "video_comments_moderation_reason_check": {
-          "name": "video_comments_moderation_reason_check",
-          "value": "\"video_comments\".\"moderation_reason\" IS NULL OR \"video_comments\".\"moderation_reason\" IN ('spam', 'harassment', 'hate', 'misinformation', 'other', 'off_topic')"
-        },
-        "video_comments_held_reason_check": {
-          "name": "video_comments_held_reason_check",
-          "value": "\"video_comments\".\"held_reason\" IS NULL OR \"video_comments\".\"held_reason\" IN ('review_all', 'link', 'blocked_word')"
-        }
-      },
+      "checkConstraints": {},
       "isRLSEnabled": false
     },
     "public.comment_reports": {
@@ -2273,607 +2158,6 @@
         "comment_reports_resolution_check": {
           "name": "comment_reports_resolution_check",
           "value": "(\"comment_reports\".\"resolved_at\" IS NULL) = (\"comment_reports\".\"resolution\" IS NULL) AND (\"comment_reports\".\"resolution\" IS NULL OR \"comment_reports\".\"resolution\" IN ('removed', 'dismissed'))"
-        }
-      },
-      "isRLSEnabled": false
-    },
-    "public.channel_comment_settings": {
-      "name": "channel_comment_settings",
-      "schema": "",
-      "columns": {
-        "channel_id": {
-          "name": "channel_id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "review_mode": {
-          "name": "review_mode",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'none'"
-        },
-        "blocked_words": {
-          "name": "blocked_words",
-          "type": "text[]",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'{}'::text[]"
-        },
-        "link_allowlist": {
-          "name": "link_allowlist",
-          "type": "text[]",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'{}'::text[]"
-        },
-        "slow_mode_seconds": {
-          "name": "slow_mode_seconds",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "subscribers_only": {
-          "name": "subscribers_only",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
-        "min_account_age_days": {
-          "name": "min_account_age_days",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "disclosure": {
-          "name": "disclosure",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'{\"hide\":\"silent\",\"remove\":\"visible\",\"manual_hold\":\"visible\",\"auto.blocked_words\":\"silent\",\"auto.links\":\"visible\",\"auto.review_all\":\"visible\"}'::jsonb"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "channel_comment_settings_channel_id_channels_id_fk": {
-          "name": "channel_comment_settings_channel_id_channels_id_fk",
-          "tableFrom": "channel_comment_settings",
-          "tableTo": "channels",
-          "columnsFrom": [
-            "channel_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {
-        "channel_comment_settings_review_mode_check": {
-          "name": "channel_comment_settings_review_mode_check",
-          "value": "\"channel_comment_settings\".\"review_mode\" IN ('none', 'links', 'all')"
-        },
-        "channel_comment_settings_slow_mode_check": {
-          "name": "channel_comment_settings_slow_mode_check",
-          "value": "\"channel_comment_settings\".\"slow_mode_seconds\" IS NULL OR \"channel_comment_settings\".\"slow_mode_seconds\" > 0"
-        },
-        "channel_comment_settings_min_age_check": {
-          "name": "channel_comment_settings_min_age_check",
-          "value": "\"channel_comment_settings\".\"min_account_age_days\" BETWEEN 0 AND 30"
-        }
-      },
-      "isRLSEnabled": false
-    },
-    "public.channel_saved_replies": {
-      "name": "channel_saved_replies",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "channel_id": {
-          "name": "channel_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "title": {
-          "name": "title",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "body": {
-          "name": "body",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "position": {
-          "name": "position",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {
-        "channel_saved_replies_channel_position_idx": {
-          "name": "channel_saved_replies_channel_position_idx",
-          "columns": [
-            {
-              "expression": "channel_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "position",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "channel_saved_replies_channel_id_channels_id_fk": {
-          "name": "channel_saved_replies_channel_id_channels_id_fk",
-          "tableFrom": "channel_saved_replies",
-          "tableTo": "channels",
-          "columnsFrom": [
-            "channel_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {
-        "channel_saved_replies_title_check": {
-          "name": "channel_saved_replies_title_check",
-          "value": "char_length(\"channel_saved_replies\".\"title\") BETWEEN 1 AND 40"
-        },
-        "channel_saved_replies_body_check": {
-          "name": "channel_saved_replies_body_check",
-          "value": "char_length(\"channel_saved_replies\".\"body\") BETWEEN 1 AND 2000"
-        }
-      },
-      "isRLSEnabled": false
-    },
-    "public.channel_trusted_commenters": {
-      "name": "channel_trusted_commenters",
-      "schema": "",
-      "columns": {
-        "channel_id": {
-          "name": "channel_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "created_by": {
-          "name": "created_by",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "channel_trusted_commenters_channel_id_channels_id_fk": {
-          "name": "channel_trusted_commenters_channel_id_channels_id_fk",
-          "tableFrom": "channel_trusted_commenters",
-          "tableTo": "channels",
-          "columnsFrom": [
-            "channel_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "channel_trusted_commenters_user_id_users_id_fk": {
-          "name": "channel_trusted_commenters_user_id_users_id_fk",
-          "tableFrom": "channel_trusted_commenters",
-          "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "channel_trusted_commenters_created_by_users_id_fk": {
-          "name": "channel_trusted_commenters_created_by_users_id_fk",
-          "tableFrom": "channel_trusted_commenters",
-          "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {
-        "channel_trusted_commenters_channel_id_user_id_pk": {
-          "name": "channel_trusted_commenters_channel_id_user_id_pk",
-          "columns": [
-            "channel_id",
-            "user_id"
-          ]
-        }
-      },
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.channel_user_restrictions": {
-      "name": "channel_user_restrictions",
-      "schema": "",
-      "columns": {
-        "channel_id": {
-          "name": "channel_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "kind": {
-          "name": "kind",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "reason": {
-          "name": "reason",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "expires_at": {
-          "name": "expires_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_by": {
-          "name": "created_by",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "channel_user_restrictions_user_idx": {
-          "name": "channel_user_restrictions_user_idx",
-          "columns": [
-            {
-              "expression": "user_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "channel_user_restrictions_expires_idx": {
-          "name": "channel_user_restrictions_expires_idx",
-          "columns": [
-            {
-              "expression": "expires_at",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "where": "\"channel_user_restrictions\".\"expires_at\" IS NOT NULL",
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "channel_user_restrictions_channel_id_channels_id_fk": {
-          "name": "channel_user_restrictions_channel_id_channels_id_fk",
-          "tableFrom": "channel_user_restrictions",
-          "tableTo": "channels",
-          "columnsFrom": [
-            "channel_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "channel_user_restrictions_user_id_users_id_fk": {
-          "name": "channel_user_restrictions_user_id_users_id_fk",
-          "tableFrom": "channel_user_restrictions",
-          "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "channel_user_restrictions_created_by_users_id_fk": {
-          "name": "channel_user_restrictions_created_by_users_id_fk",
-          "tableFrom": "channel_user_restrictions",
-          "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {
-        "channel_user_restrictions_channel_id_user_id_pk": {
-          "name": "channel_user_restrictions_channel_id_user_id_pk",
-          "columns": [
-            "channel_id",
-            "user_id"
-          ]
-        }
-      },
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {
-        "channel_user_restrictions_kind_check": {
-          "name": "channel_user_restrictions_kind_check",
-          "value": "\"channel_user_restrictions\".\"kind\" IN ('shadow', 'ban')"
-        },
-        "channel_user_restrictions_expiry_check": {
-          "name": "channel_user_restrictions_expiry_check",
-          "value": "\"channel_user_restrictions\".\"kind\" = 'ban' OR \"channel_user_restrictions\".\"expires_at\" IS NULL"
-        },
-        "channel_user_restrictions_reason_check": {
-          "name": "channel_user_restrictions_reason_check",
-          "value": "\"channel_user_restrictions\".\"reason\" IS NULL OR char_length(\"channel_user_restrictions\".\"reason\") <= 200"
-        }
-      },
-      "isRLSEnabled": false
-    },
-    "public.comment_removals": {
-      "name": "comment_removals",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "channel_id": {
-          "name": "channel_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "video_id": {
-          "name": "video_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "author_id": {
-          "name": "author_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "excerpt": {
-          "name": "excerpt",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "reason": {
-          "name": "reason",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "note": {
-          "name": "note",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "disclosure": {
-          "name": "disclosure",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "removed_by": {
-          "name": "removed_by",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "comment_removals_author_created_idx": {
-          "name": "comment_removals_author_created_idx",
-          "columns": [
-            {
-              "expression": "author_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "created_at",
-              "isExpression": false,
-              "asc": false,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "comment_removals_created_at_idx": {
-          "name": "comment_removals_created_at_idx",
-          "columns": [
-            {
-              "expression": "created_at",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "comment_removals_channel_id_channels_id_fk": {
-          "name": "comment_removals_channel_id_channels_id_fk",
-          "tableFrom": "comment_removals",
-          "tableTo": "channels",
-          "columnsFrom": [
-            "channel_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "comment_removals_video_id_videos_id_fk": {
-          "name": "comment_removals_video_id_videos_id_fk",
-          "tableFrom": "comment_removals",
-          "tableTo": "videos",
-          "columnsFrom": [
-            "video_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "comment_removals_author_id_users_id_fk": {
-          "name": "comment_removals_author_id_users_id_fk",
-          "tableFrom": "comment_removals",
-          "tableTo": "users",
-          "columnsFrom": [
-            "author_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "comment_removals_removed_by_users_id_fk": {
-          "name": "comment_removals_removed_by_users_id_fk",
-          "tableFrom": "comment_removals",
-          "tableTo": "users",
-          "columnsFrom": [
-            "removed_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {
-        "comment_removals_reason_check": {
-          "name": "comment_removals_reason_check",
-          "value": "\"comment_removals\".\"reason\" IN ('spam', 'harassment', 'hate', 'misinformation', 'other', 'off_topic')"
-        },
-        "comment_removals_disclosure_check": {
-          "name": "comment_removals_disclosure_check",
-          "value": "\"comment_removals\".\"disclosure\" IN ('silent', 'visible')"
-        },
-        "comment_removals_note_check": {
-          "name": "comment_removals_note_check",
-          "value": "\"comment_removals\".\"note\" IS NULL OR char_length(\"comment_removals\".\"note\") <= 200"
         }
       },
       "isRLSEnabled": false
@@ -3940,6 +3224,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "watch_party_id": {
+          "name": "watch_party_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
         "group_key": {
           "name": "group_key",
           "type": "text",
@@ -4078,6 +3368,19 @@
           "tableTo": "video_comments",
           "columnsFrom": [
             "comment_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "notifications_watch_party_id_watch_party_rooms_id_fk": {
+          "name": "notifications_watch_party_id_watch_party_rooms_id_fk",
+          "tableFrom": "notifications",
+          "tableTo": "watch_party_rooms",
+          "columnsFrom": [
+            "watch_party_id"
           ],
           "columnsTo": [
             "id"
@@ -5212,6 +4515,1790 @@
           "value": "\"live_streams\".\"chat_slow_mode_seconds\" BETWEEN 0 AND 300"
         }
       },
+      "isRLSEnabled": false
+    },
+    "public.watch_party_bans": {
+      "name": "watch_party_bans",
+      "schema": "",
+      "columns": {
+        "room_id": {
+          "name": "room_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "member_key": {
+          "name": "member_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ip_hash": {
+          "name": "ip_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "banned_by": {
+          "name": "banned_by",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "reason": {
+          "name": "reason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "watch_party_bans_ip_idx": {
+          "name": "watch_party_bans_ip_idx",
+          "columns": [
+            {
+              "expression": "room_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "ip_hash",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"watch_party_bans\".\"ip_hash\" IS NOT NULL",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "watch_party_bans_room_id_watch_party_rooms_id_fk": {
+          "name": "watch_party_bans_room_id_watch_party_rooms_id_fk",
+          "tableFrom": "watch_party_bans",
+          "tableTo": "watch_party_rooms",
+          "columnsFrom": [
+            "room_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "watch_party_bans_room_id_member_key_pk": {
+          "name": "watch_party_bans_room_id_member_key_pk",
+          "columns": [
+            "room_id",
+            "member_key"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.watch_party_member_roles": {
+      "name": "watch_party_member_roles",
+      "schema": "",
+      "columns": {
+        "room_id": {
+          "name": "room_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "member_key": {
+          "name": "member_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "role_id": {
+          "name": "role_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "granted_by": {
+          "name": "granted_by",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "watch_party_member_roles_expires_idx": {
+          "name": "watch_party_member_roles_expires_idx",
+          "columns": [
+            {
+              "expression": "expires_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"watch_party_member_roles\".\"expires_at\" IS NOT NULL",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "watch_party_member_roles_room_id_watch_party_rooms_id_fk": {
+          "name": "watch_party_member_roles_room_id_watch_party_rooms_id_fk",
+          "tableFrom": "watch_party_member_roles",
+          "tableTo": "watch_party_rooms",
+          "columnsFrom": [
+            "room_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "watch_party_member_roles_role_id_watch_party_roles_id_fk": {
+          "name": "watch_party_member_roles_role_id_watch_party_roles_id_fk",
+          "tableFrom": "watch_party_member_roles",
+          "tableTo": "watch_party_roles",
+          "columnsFrom": [
+            "role_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "watch_party_member_roles_room_id_member_key_role_id_pk": {
+          "name": "watch_party_member_roles_room_id_member_key_role_id_pk",
+          "columns": [
+            "room_id",
+            "member_key",
+            "role_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.watch_party_members": {
+      "name": "watch_party_members",
+      "schema": "",
+      "columns": {
+        "room_id": {
+          "name": "room_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "member_key": {
+          "name": "member_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "kind": {
+          "name": "kind",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "discord_user_id": {
+          "name": "discord_user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "display_name": {
+          "name": "display_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "avatar_url": {
+          "name": "avatar_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ip_hash": {
+          "name": "ip_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "joined_via": {
+          "name": "joined_via",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "joined_at": {
+          "name": "joined_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "left_at": {
+          "name": "left_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "watch_party_members_user_idx": {
+          "name": "watch_party_members_user_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "watch_party_members_room_id_watch_party_rooms_id_fk": {
+          "name": "watch_party_members_room_id_watch_party_rooms_id_fk",
+          "tableFrom": "watch_party_members",
+          "tableTo": "watch_party_rooms",
+          "columnsFrom": [
+            "room_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "watch_party_members_user_id_users_id_fk": {
+          "name": "watch_party_members_user_id_users_id_fk",
+          "tableFrom": "watch_party_members",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "watch_party_members_room_id_member_key_pk": {
+          "name": "watch_party_members_room_id_member_key_pk",
+          "columns": [
+            "room_id",
+            "member_key"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.watch_party_role_permissions": {
+      "name": "watch_party_role_permissions",
+      "schema": "",
+      "columns": {
+        "role_id": {
+          "name": "role_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "permission": {
+          "name": "permission",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "watch_party_role_permissions_role_id_watch_party_roles_id_fk": {
+          "name": "watch_party_role_permissions_role_id_watch_party_roles_id_fk",
+          "tableFrom": "watch_party_role_permissions",
+          "tableTo": "watch_party_roles",
+          "columnsFrom": [
+            "role_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "watch_party_role_permissions_role_id_permission_pk": {
+          "name": "watch_party_role_permissions_role_id_permission_pk",
+          "columns": [
+            "role_id",
+            "permission"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.watch_party_roles": {
+      "name": "watch_party_roles",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "room_id": {
+          "name": "room_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "key": {
+          "name": "key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "kind": {
+          "name": "kind",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "colour": {
+          "name": "colour",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "position": {
+          "name": "position",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "watch_party_roles_room_key_key": {
+          "name": "watch_party_roles_room_key_key",
+          "columns": [
+            {
+              "expression": "room_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "key",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"watch_party_roles\".\"key\" IS NOT NULL",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "watch_party_roles_room_id_watch_party_rooms_id_fk": {
+          "name": "watch_party_roles_room_id_watch_party_rooms_id_fk",
+          "tableFrom": "watch_party_roles",
+          "tableTo": "watch_party_rooms",
+          "columnsFrom": [
+            "room_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "watch_party_roles_room_position_key": {
+          "name": "watch_party_roles_room_position_key",
+          "nullsNotDistinct": false,
+          "columns": [
+            "room_id",
+            "position"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.watch_party_rooms": {
+      "name": "watch_party_rooms",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "owner_key": {
+          "name": "owner_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "as_channel_id": {
+          "name": "as_channel_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "visibility": {
+          "name": "visibility",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "password_hash": {
+          "name": "password_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "capacity": {
+          "name": "capacity",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "allow_guests": {
+          "name": "allow_guests",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "chat_enabled": {
+          "name": "chat_enabled",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "slow_mode_seconds": {
+          "name": "slow_mode_seconds",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "buffer_policy": {
+          "name": "buffer_policy",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'wait'"
+        },
+        "autoplay": {
+          "name": "autoplay",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "skip_vote_percent": {
+          "name": "skip_vote_percent",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 50
+        },
+        "idle_close": {
+          "name": "idle_close",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'15m'"
+        },
+        "language": {
+          "name": "language",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "accent": {
+          "name": "accent",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "scheduled_for": {
+          "name": "scheduled_for",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "auto_start": {
+          "name": "auto_start",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "phase": {
+          "name": "phase",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'lobby'"
+        },
+        "playback": {
+          "name": "playback",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "playback_version": {
+          "name": "playback_version",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "roles_version": {
+          "name": "roles_version",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "permissions_version": {
+          "name": "permissions_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "queue_length": {
+          "name": "queue_length",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "queue_version": {
+          "name": "queue_version",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "current_video_id": {
+          "name": "current_video_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "present_count": {
+          "name": "present_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "trend_score": {
+          "name": "trend_score",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "search_text": {
+          "name": "search_text",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'open'"
+        },
+        "closed_reason": {
+          "name": "closed_reason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "hidden_at": {
+          "name": "hidden_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "version": {
+          "name": "version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "started_at": {
+          "name": "started_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "last_present_at": {
+          "name": "last_present_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "closed_at": {
+          "name": "closed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "watch_party_rooms_owner_open_idx": {
+          "name": "watch_party_rooms_owner_open_idx",
+          "columns": [
+            {
+              "expression": "owner_key",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"watch_party_rooms\".\"status\" = 'open'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "watch_party_rooms_open_last_present_idx": {
+          "name": "watch_party_rooms_open_last_present_idx",
+          "columns": [
+            {
+              "expression": "last_present_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"watch_party_rooms\".\"status\" = 'open'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "watch_party_rooms_closed_at_idx": {
+          "name": "watch_party_rooms_closed_at_idx",
+          "columns": [
+            {
+              "expression": "closed_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"watch_party_rooms\".\"status\" = 'closed'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "watch_party_rooms_members_keyset_idx": {
+          "name": "watch_party_rooms_members_keyset_idx",
+          "columns": [
+            {
+              "expression": "present_count",
+              "isExpression": false,
+              "asc": false,
+              "nulls": "last"
+            },
+            {
+              "expression": "id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"watch_party_rooms\".\"status\" = 'open' AND \"watch_party_rooms\".\"visibility\" = 'public' AND \"watch_party_rooms\".\"hidden_at\" IS NULL",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "watch_party_rooms_newest_keyset_idx": {
+          "name": "watch_party_rooms_newest_keyset_idx",
+          "columns": [
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": false,
+              "nulls": "last"
+            },
+            {
+              "expression": "id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"watch_party_rooms\".\"status\" = 'open' AND \"watch_party_rooms\".\"visibility\" = 'public' AND \"watch_party_rooms\".\"hidden_at\" IS NULL",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "watch_party_rooms_starting_soon_keyset_idx": {
+          "name": "watch_party_rooms_starting_soon_keyset_idx",
+          "columns": [
+            {
+              "expression": "scheduled_for",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"watch_party_rooms\".\"status\" = 'open' AND \"watch_party_rooms\".\"visibility\" = 'public' AND \"watch_party_rooms\".\"hidden_at\" IS NULL",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "watch_party_rooms_trending_keyset_idx": {
+          "name": "watch_party_rooms_trending_keyset_idx",
+          "columns": [
+            {
+              "expression": "trend_score",
+              "isExpression": false,
+              "asc": false,
+              "nulls": "last"
+            },
+            {
+              "expression": "id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"watch_party_rooms\".\"status\" = 'open' AND \"watch_party_rooms\".\"visibility\" = 'public' AND \"watch_party_rooms\".\"hidden_at\" IS NULL",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "watch_party_rooms_as_channel_id_channels_id_fk": {
+          "name": "watch_party_rooms_as_channel_id_channels_id_fk",
+          "tableFrom": "watch_party_rooms",
+          "tableTo": "channels",
+          "columnsFrom": [
+            "as_channel_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "watch_party_rooms_current_video_id_videos_id_fk": {
+          "name": "watch_party_rooms_current_video_id_videos_id_fk",
+          "tableFrom": "watch_party_rooms",
+          "tableTo": "videos",
+          "columnsFrom": [
+            "current_video_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "watch_party_rooms_capacity_check": {
+          "name": "watch_party_rooms_capacity_check",
+          "value": "\"watch_party_rooms\".\"capacity\" IS NULL OR \"watch_party_rooms\".\"capacity\" >= 2"
+        },
+        "watch_party_rooms_slow_mode_check": {
+          "name": "watch_party_rooms_slow_mode_check",
+          "value": "\"watch_party_rooms\".\"slow_mode_seconds\" IN (0, 5, 10, 30, 60)"
+        },
+        "watch_party_rooms_skip_vote_check": {
+          "name": "watch_party_rooms_skip_vote_check",
+          "value": "\"watch_party_rooms\".\"skip_vote_percent\" BETWEEN 1 AND 100"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.watch_party_interest": {
+      "name": "watch_party_interest",
+      "schema": "",
+      "columns": {
+        "room_id": {
+          "name": "room_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "watch_party_interest_room_id_watch_party_rooms_id_fk": {
+          "name": "watch_party_interest_room_id_watch_party_rooms_id_fk",
+          "tableFrom": "watch_party_interest",
+          "tableTo": "watch_party_rooms",
+          "columnsFrom": [
+            "room_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "watch_party_interest_user_id_users_id_fk": {
+          "name": "watch_party_interest_user_id_users_id_fk",
+          "tableFrom": "watch_party_interest",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "watch_party_interest_room_id_user_id_pk": {
+          "name": "watch_party_interest_room_id_user_id_pk",
+          "columns": [
+            "room_id",
+            "user_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.watch_party_invite_links": {
+      "name": "watch_party_invite_links",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "room_id": {
+          "name": "room_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_by": {
+          "name": "created_by",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "token_hash": {
+          "name": "token_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "max_uses": {
+          "name": "max_uses",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "uses": {
+          "name": "uses",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "revoked_at": {
+          "name": "revoked_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "watch_party_invite_links_room_idx": {
+          "name": "watch_party_invite_links_room_idx",
+          "columns": [
+            {
+              "expression": "room_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "watch_party_invite_links_room_id_watch_party_rooms_id_fk": {
+          "name": "watch_party_invite_links_room_id_watch_party_rooms_id_fk",
+          "tableFrom": "watch_party_invite_links",
+          "tableTo": "watch_party_rooms",
+          "columnsFrom": [
+            "room_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "watch_party_invite_links_token_hash_unique": {
+          "name": "watch_party_invite_links_token_hash_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "token_hash"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.watch_party_invites": {
+      "name": "watch_party_invites",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "room_id": {
+          "name": "room_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "inviter_id": {
+          "name": "inviter_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "invitee_id": {
+          "name": "invitee_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending'"
+        },
+        "watching": {
+          "name": "watching",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "watch_party_invites_inviter_created_idx": {
+          "name": "watch_party_invites_inviter_created_idx",
+          "columns": [
+            {
+              "expression": "inviter_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "watch_party_invites_room_id_watch_party_rooms_id_fk": {
+          "name": "watch_party_invites_room_id_watch_party_rooms_id_fk",
+          "tableFrom": "watch_party_invites",
+          "tableTo": "watch_party_rooms",
+          "columnsFrom": [
+            "room_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "watch_party_invites_inviter_id_users_id_fk": {
+          "name": "watch_party_invites_inviter_id_users_id_fk",
+          "tableFrom": "watch_party_invites",
+          "tableTo": "users",
+          "columnsFrom": [
+            "inviter_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "watch_party_invites_invitee_id_users_id_fk": {
+          "name": "watch_party_invites_invitee_id_users_id_fk",
+          "tableFrom": "watch_party_invites",
+          "tableTo": "users",
+          "columnsFrom": [
+            "invitee_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "watch_party_invites_room_invitee_key": {
+          "name": "watch_party_invites_room_invitee_key",
+          "nullsNotDistinct": false,
+          "columns": [
+            "room_id",
+            "invitee_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.watch_party_messages": {
+      "name": "watch_party_messages",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "room_id": {
+          "name": "room_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "author_key": {
+          "name": "author_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "source": {
+          "name": "source",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'app'"
+        },
+        "kind": {
+          "name": "kind",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "body": {
+          "name": "body",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "system": {
+          "name": "system",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "video_id": {
+          "name": "video_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "position_ms": {
+          "name": "position_ms",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "pinned": {
+          "name": "pinned",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "removed_at": {
+          "name": "removed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "watch_party_messages_room_id_idx": {
+          "name": "watch_party_messages_room_id_idx",
+          "columns": [
+            {
+              "expression": "room_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "watch_party_messages_one_pinned": {
+          "name": "watch_party_messages_one_pinned",
+          "columns": [
+            {
+              "expression": "room_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"watch_party_messages\".\"pinned\"",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "watch_party_messages_created_at_idx": {
+          "name": "watch_party_messages_created_at_idx",
+          "columns": [
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "watch_party_messages_room_id_watch_party_rooms_id_fk": {
+          "name": "watch_party_messages_room_id_watch_party_rooms_id_fk",
+          "tableFrom": "watch_party_messages",
+          "tableTo": "watch_party_rooms",
+          "columnsFrom": [
+            "room_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "watch_party_messages_video_id_videos_id_fk": {
+          "name": "watch_party_messages_video_id_videos_id_fk",
+          "tableFrom": "watch_party_messages",
+          "tableTo": "videos",
+          "columnsFrom": [
+            "video_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "watch_party_messages_length_check": {
+          "name": "watch_party_messages_length_check",
+          "value": "\"watch_party_messages\".\"kind\" = 'system' OR char_length(\"watch_party_messages\".\"body\") BETWEEN 1 AND 200"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.watch_party_personal_controls": {
+      "name": "watch_party_personal_controls",
+      "schema": "",
+      "columns": {
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "target_key": {
+          "name": "target_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "room_id": {
+          "name": "room_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "voice_muted": {
+          "name": "voice_muted",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "volume": {
+          "name": "volume",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 100
+        },
+        "hide_messages": {
+          "name": "hide_messages",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "hide_reactions": {
+          "name": "hide_reactions",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "hide_avatar": {
+          "name": "hide_avatar",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "hide_requests": {
+          "name": "hide_requests",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "block_invites": {
+          "name": "block_invites",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "favourite": {
+          "name": "favourite",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "watch_party_personal_controls_user_id_users_id_fk": {
+          "name": "watch_party_personal_controls_user_id_users_id_fk",
+          "tableFrom": "watch_party_personal_controls",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "watch_party_personal_controls_room_id_watch_party_rooms_id_fk": {
+          "name": "watch_party_personal_controls_room_id_watch_party_rooms_id_fk",
+          "tableFrom": "watch_party_personal_controls",
+          "tableTo": "watch_party_rooms",
+          "columnsFrom": [
+            "room_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "watch_party_personal_controls_scope_key": {
+          "name": "watch_party_personal_controls_scope_key",
+          "nullsNotDistinct": true,
+          "columns": [
+            "user_id",
+            "target_key",
+            "room_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "watch_party_personal_controls_volume_check": {
+          "name": "watch_party_personal_controls_volume_check",
+          "value": "\"watch_party_personal_controls\".\"volume\" BETWEEN 0 AND 200"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.watch_party_queue_items": {
+      "name": "watch_party_queue_items",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "room_id": {
+          "name": "room_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "video_id": {
+          "name": "video_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "added_by": {
+          "name": "added_by",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "position": {
+          "name": "position",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "start_ms": {
+          "name": "start_ms",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "played_at": {
+          "name": "played_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "removed_at": {
+          "name": "removed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "watch_party_queue_items_room_position_idx": {
+          "name": "watch_party_queue_items_room_position_idx",
+          "columns": [
+            {
+              "expression": "room_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "position",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"watch_party_queue_items\".\"removed_at\" IS NULL",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "watch_party_queue_items_video_idx": {
+          "name": "watch_party_queue_items_video_idx",
+          "columns": [
+            {
+              "expression": "video_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "watch_party_queue_items_room_id_watch_party_rooms_id_fk": {
+          "name": "watch_party_queue_items_room_id_watch_party_rooms_id_fk",
+          "tableFrom": "watch_party_queue_items",
+          "tableTo": "watch_party_rooms",
+          "columnsFrom": [
+            "room_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "watch_party_queue_items_video_id_videos_id_fk": {
+          "name": "watch_party_queue_items_video_id_videos_id_fk",
+          "tableFrom": "watch_party_queue_items",
+          "tableTo": "videos",
+          "columnsFrom": [
+            "video_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.watch_party_reports": {
+      "name": "watch_party_reports",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "room_id": {
+          "name": "room_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "reporter_id": {
+          "name": "reporter_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "target_key": {
+          "name": "target_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "context": {
+          "name": "context",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'room'"
+        },
+        "reason": {
+          "name": "reason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "details": {
+          "name": "details",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "resolved_at": {
+          "name": "resolved_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "watch_party_reports_room_id_watch_party_rooms_id_fk": {
+          "name": "watch_party_reports_room_id_watch_party_rooms_id_fk",
+          "tableFrom": "watch_party_reports",
+          "tableTo": "watch_party_rooms",
+          "columnsFrom": [
+            "room_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "watch_party_reports_reporter_id_users_id_fk": {
+          "name": "watch_party_reports_reporter_id_users_id_fk",
+          "tableFrom": "watch_party_reports",
+          "tableTo": "users",
+          "columnsFrom": [
+            "reporter_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "watch_party_reports_once_key": {
+          "name": "watch_party_reports_once_key",
+          "nullsNotDistinct": true,
+          "columns": [
+            "room_id",
+            "reporter_id",
+            "target_key"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
       "isRLSEnabled": false
     },
     "public.channel_audit_log": {

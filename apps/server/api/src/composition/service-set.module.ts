@@ -44,6 +44,7 @@ export function registerServiceSet(c: Container): Container {
     commentRemovalService: c.get(Services.CommentRemovalService),
     commentSettingsService: c.get(Services.CommentSettingsService),
     commentReportService: c.get(Services.CommentReportService),
+    screeningService: c.get(Services.ScreeningService),
     creatorCommentService: c.get(Services.CreatorCommentService),
     viewService: c.get(Services.ViewService),
     webVitalsService: c.get(Services.WebVitalsService),
@@ -63,5 +64,13 @@ export function registerServiceSet(c: Container): Container {
     sseHub: c.get(Services.SseHub),
     readiness: c.get(Services.Readiness),
     queueBoard: c.get(Services.QueueBoard),
+    watchPartyService: c.get(Services.WatchPartyService),
+    watchPartyGuestService: c.get(Services.WatchPartyGuestService),
+    watchPartyRoleService: c.get(Services.WatchPartyRoleService),
+    watchPartyMemberService: c.get(Services.WatchPartyMemberService),
+    watchPartyQueueService: c.get(Services.WatchPartyQueueService),
+    watchPartyInviteService: c.get(Services.WatchPartyInviteService),
+    watchPartyControlsService: c.get(Services.WatchPartyControlsService),
+    watchPartySocketService: c.get(Services.WatchPartySocketService),
   }));
 }

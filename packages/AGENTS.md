@@ -108,7 +108,7 @@ document is stale — fix it.
 | `@vp/design-tokens` | universal | `@vp/domain`, `@vp/errors`, `@vp/result` |
 | `@vp/intl` | universal | `@vp/errors`, `@vp/result` |
 | `@vp/pagination` | universal | `@vp/errors`, `@vp/result` |
-| `@vp/permissions` | universal | `@vp/errors` |
+| `@vp/permissions` | universal | `@vp/domain`, `@vp/errors` |
 | `@vp/validation` | universal | `@vp/errors`, `@vp/result` |
 | `@vp/security-headers` | client | `@vp/result` |
 | `@vp/compose-autoscaler` | server | `@vp/logger` |
@@ -147,6 +147,7 @@ document is stale — fix it.
 | `@vp/web-telemetry` | client | `@vp/api-contracts`, `@vp/result` |
 | `@vp/adapters` | server | `@vp/composition`, `@vp/concurrency`, `@vp/core`, `@vp/db`, `@vp/dev-token`, `@vp/domain`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/job-contracts`, `@vp/observability`, `@vp/permissions`, `@vp/result`, `@vp/storage` |
 | `@vp/config` | server | `@vp/composition`, `@vp/env-schema`, `@vp/logger`, `@vp/result` |
+| `@vp/fingerprint` | server | `@vp/core`, `@vp/domain`, `@vp/errors`, `@vp/ffmpeg`, `@vp/result` |
 
 ### T5 — App modules
 

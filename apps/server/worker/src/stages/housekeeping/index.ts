@@ -9,6 +9,7 @@ import type {
 import type { Repositories } from '@vp/core/repositories';
 import {
   CHANNEL_AUDIT_RETENTION_DAYS,
+  SCREENING_EVIDENCE_RETENTION_DAYS,
   CHANNEL_IMAGE_RETENTION_DAYS,
   HANDLE_RESERVATION_DAYS,
   SEARCH_HISTORY_RETENTION_DAYS,
@@ -26,6 +27,7 @@ import { runPurgeChannelImages } from './purge-channel-images';
 import { runPurgeCommentModeration } from './purge-comment-moderation';
 import { runPurgeDeleted } from './purge-deleted';
 import { runPurgeHandleHistory } from './purge-handle-history';
+import { runPurgeScreeningEvidence } from './purge-screening-evidence';
 import { runPurgeSearchHistory } from './purge-search-history';
 import { runReconcileCaptions } from './reconcile-captions';
 import { runReconcileProcessing } from './reconcile-processing';
@@ -44,6 +46,7 @@ export * from './flush-video-views';
 export * from './reconcile-captions';
 export * from './purge-channel-audit';
 export * from './purge-comment-moderation';
+export * from './purge-screening-evidence';
 export * from './purge-channel-images';
 export * from './purge-handle-history';
 export * from './purge-search-history';
@@ -99,6 +102,10 @@ export function housekeepingTasks(housekeeping: AppConfig['housekeeping']) {
     },
     searchHistory: { retentionDays: SEARCH_HISTORY_RETENTION_DAYS },
     channelAudit: { retentionDays: CHANNEL_AUDIT_RETENTION_DAYS },
+    screeningEvidence: {
+      retentionDays: SCREENING_EVIDENCE_RETENTION_DAYS,
+      scanLimit: housekeeping.scanLimit,
+    },
     channelImages: {
       retentionDays: CHANNEL_IMAGE_RETENTION_DAYS,
       scanLimit: housekeeping.scanLimit,
@@ -216,6 +223,16 @@ export function createHousekeepingProcessor(
 
       case 'purge-comment-moderation':
         return await runPurgeCommentModeration({ repositories, now, logger });
+      case 'purge-screening-evidence':
+        return await runPurgeScreeningEvidence({
+          repositories,
+          storage,
+          rawBucket,
+          now,
+          ...tasks.screeningEvidence,
+          logger,
+        });
+
       case 'purge-channel-images':
         return await runPurgeChannelImages({
           repositories,

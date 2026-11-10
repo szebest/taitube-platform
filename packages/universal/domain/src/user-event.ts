@@ -45,7 +45,8 @@ export type UserEvent =
   | { type: 'captions.failed'; payload: { videoId: string; captionId: string; reason: string } }
   | { type: 'live.started'; payload: LiveStartedPayload }
   | { type: 'channel.image.ready'; payload: ChannelImageReadyPayload }
-  | { type: 'channel.image.failed'; payload: ChannelImageFailedPayload };
+  | { type: 'channel.image.failed'; payload: ChannelImageFailedPayload }
+  | { type: 'party.controls.updated'; payload: PartyControlsUpdatedPayload };
 
 /** An avatar or banner upload became the channel's image at `version`. */
 export interface ChannelImageReadyPayload {
@@ -61,6 +62,12 @@ export interface ChannelImageFailedPayload {
   channelId: string;
   kind: ChannelImageKind;
   reason: string;
+}
+
+/** The target and scope of a personal control that changed; `roomId` is `null` for everywhere. */
+interface PartyControlsUpdatedPayload {
+  targetKey: string;
+  roomId: string | null;
 }
 
 /** A channel the person subscribes to went live; `startedAt` is ISO 8601. */
@@ -134,4 +141,8 @@ export function channelImageReady(payload: ChannelImageReadyPayload): UserEvent 
 
 export function channelImageFailed(payload: ChannelImageFailedPayload): UserEvent {
   return { type: 'channel.image.failed', payload };
+}
+
+export function partyControlsUpdated(targetKey: string, roomId: string | null): UserEvent {
+  return { type: 'party.controls.updated', payload: { targetKey, roomId } };
 }

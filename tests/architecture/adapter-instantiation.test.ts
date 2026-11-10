@@ -57,8 +57,8 @@ describe('architecture: a concrete adapter is constructed only where the graph i
 });
 
 /**
- * A service or a stage builds values, never collaborators. `SseConnection` and `LiveSession` are the
- * classes here: one per request or per packager run, each owns only the response or the archive it
+ * A service or a stage builds values, never collaborators. `SseConnection`, `RoomConnection` and
+ * `LiveSession` are the classes here: one per request, socket or packager run, each owns only the response or the archive it
  * writes, and has nothing a composition root could hand in ahead of time. `Promise` and
  * `AbortController` are per-call values like `Date`.
  */
@@ -71,6 +71,7 @@ const VALUES: ReadonlySet<string> = new Set([
   'Promise',
   'AbortController',
   'SseConnection',
+  'RoomConnection',
   'LiveSession',
 ]);
 

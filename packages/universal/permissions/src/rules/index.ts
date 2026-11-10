@@ -14,3 +14,4 @@ export * from './clip.rules';
 export * from './live-stream.rules';
 export * from './webhook.rules';
 export * from './recommendation-feedback.rules';
+export * from './watch-party.rules';

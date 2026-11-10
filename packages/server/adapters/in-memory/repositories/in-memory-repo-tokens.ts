@@ -17,6 +17,7 @@ import type { InMemoryCommentRepository } from './in-memory-comment-repository';
 import type { InMemoryCommentSettingsRepository } from './in-memory-comment-settings-repository';
 import type { InMemoryDlqRepository } from './in-memory-dlq-repository';
 import type { InMemoryEventRepository } from './in-memory-event-repository';
+import type { InMemoryFingerprintRepository } from './in-memory-fingerprint-repository';
 import type { InMemoryLiveStreamRepository } from './in-memory-live-stream-repository';
 import type { InMemoryNotificationRepository } from './in-memory-notification-repository';
 import type { InMemoryOutboxRepository } from './in-memory-outbox-repository';
@@ -27,6 +28,7 @@ import type { InMemoryRelatedVideosRepository } from './in-memory-related-videos
 import type { InMemoryRenditionRepository } from './in-memory-rendition-repository';
 import type { InMemoryRisingVideosRepository } from './in-memory-rising-videos-repository';
 import type { InMemorySavedReplyRepository } from './in-memory-saved-reply-repository';
+import type { InMemoryScreeningRepository } from './in-memory-screening-repository';
 import type { InMemorySearchHistoryRepository } from './in-memory-search-history-repository';
 import type { InMemorySearchRepository } from './in-memory-search-repository';
 import type { InMemoryStepRepository } from './in-memory-step-repository';
@@ -81,6 +83,8 @@ export const Repo = {
   related: token<InMemoryRelatedVideosRepository>('related'),
   rising: token<InMemoryRisingVideosRepository>('rising'),
   captions: token<InMemoryCaptionRepository>('captions'),
+  screenings: token<InMemoryScreeningRepository>('screenings'),
+  fingerprints: token<InMemoryFingerprintRepository>('fingerprints'),
   clips: token<InMemoryClipRepository>('clips'),
   channelFeatured: token<InMemoryChannelFeaturedRepository>('channelFeatured'),
   channelHandleHistory: token<InMemoryChannelHandleHistoryRepository>('channelHandleHistory'),

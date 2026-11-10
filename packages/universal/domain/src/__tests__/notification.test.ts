@@ -21,6 +21,7 @@ const NOTIFICATION: Notification = {
   actorChannelId: 'c1',
   videoId: 'v1',
   commentId: null,
+  watchPartyId: null,
   groupKey: 'upload:c1',
   payload: { count: 3, actor: null, videoTitle: 'Dinner', excerpt: null, outcome: null },
   readAt: null,
@@ -67,7 +68,7 @@ describe('domain: notification', () => {
       actorChannelId: 'c1',
       videoId: 'v1',
       commentId: null,
-      payload: NOTIFICATION.payload,
+      payload: { ...NOTIFICATION.payload, party: null },
       read: false,
       createdAt: '2026-01-02T03:04:05.000Z',
     });
@@ -114,6 +115,45 @@ describe('domain: notification', () => {
 
     it('changes nothing for the subject it already holds', () => {
       expect(foldNotification(NOTIFICATION, { ...NEXT, videoId: 'v1' }, NOW)).toBeNull();
+    });
+
+    describe('invites to one room', () => {
+      const party = (inviteId: string) => ({
+        roomId: 'r1',
+        name: 'Movie night',
+        videoTitle: null,
+        scheduledFor: null,
+        inviteId,
+        expiresAt: '2026-01-03T03:04:05.000Z',
+        watching: { names: [], count: 0 },
+      });
+      const held: Notification = {
+        ...NOTIFICATION,
+        kind: 'party_invite',
+        videoId: null,
+        watchPartyId: 'r1',
+        groupKey: 'party_invite:r1',
+        payload: { ...NOTIFICATION.payload, party: party('i1') },
+      };
+      const invite = (inviteId: string): NewNotificationInput => ({
+        ...NEXT,
+        kind: 'party_invite',
+        videoId: null,
+        watchPartyId: 'r1',
+        groupKey: 'party_invite:r1',
+        payload: { ...NEXT.payload, party: party(inviteId) },
+      });
+
+      it('folds a second invite into the row, holding the newest', () => {
+        expect(foldNotification(held, invite('i2'), NOW)).toMatchObject({
+          watchPartyId: 'r1',
+          payload: { count: 4, party: { inviteId: 'i2' } },
+        });
+      });
+
+      it('changes nothing for an invite it already holds', () => {
+        expect(foldNotification(held, invite('i1'), NOW)).toBeNull();
+      });
     });
   });
 

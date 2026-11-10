@@ -9,7 +9,22 @@ import { studioImages } from './studio-images';
 import { studioLive } from './studio-live';
 import { studioModeration } from './studio-moderation';
 import { studioPicks } from './studio-picks';
+import { studioScreening } from './studio-screening';
 import { studioTeam } from './studio-team';
+
+const VIDEO_STATUS = {
+  UPLOADING: 'Uploading',
+  UPLOADED: 'Uploaded',
+  PROBING: 'Probing',
+  PROCESSING: 'Processing',
+  READY: 'Ready',
+  FAILED: 'Failed',
+  REJECTED: 'Rejected',
+  ABANDONED: 'Abandoned',
+  DELETED: 'Deleted',
+  LIVE: 'Live',
+  HELD: 'On hold',
+} as const;
 
 export const studio = {
   title: dt('Creator Studio'),
@@ -20,18 +35,7 @@ export const studio = {
   processingStatus: dt('Processing status'),
   processing: dt('{status:enum}, {overall:number}% encoded', {
     enum: {
-      status: {
-        UPLOADING: 'Uploading',
-        UPLOADED: 'Uploaded',
-        PROBING: 'Probing',
-        PROCESSING: 'Processing',
-        READY: 'Ready',
-        FAILED: 'Failed',
-        REJECTED: 'Rejected',
-        ABANDONED: 'Abandoned',
-        DELETED: 'Deleted',
-        LIVE: 'Live',
-      },
+      status: VIDEO_STATUS,
     },
     number: { overall: { maximumFractionDigits: 0 } },
   }),
@@ -57,18 +61,7 @@ export const studio = {
   inspectorFailed: dt('The video details did not load.'),
   videoStatus: dt('{status:enum}', {
     enum: {
-      status: {
-        UPLOADING: 'Uploading',
-        UPLOADED: 'Uploaded',
-        PROBING: 'Probing',
-        PROCESSING: 'Processing',
-        READY: 'Ready',
-        FAILED: 'Failed',
-        REJECTED: 'Rejected',
-        ABANDONED: 'Abandoned',
-        DELETED: 'Deleted',
-        LIVE: 'Live',
-      },
+      status: VIDEO_STATUS,
     },
   }),
   videoActions: dt('Actions for {title}'),
@@ -85,6 +78,7 @@ export const studio = {
   ...studioImages,
   ...studioLive,
   ...studioPicks,
+  ...studioScreening,
   ...studioTeam,
   deleteVideo: dt('Delete'),
   setVisibility: dt('Visibility'),

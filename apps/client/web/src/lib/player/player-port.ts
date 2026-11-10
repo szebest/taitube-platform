@@ -22,6 +22,10 @@ export interface PlayerCaptionStyle {
 /** What a skin reads from the engine, whichever engine plays the video. */
 export interface PlayerState {
   paused: boolean;
+  /** Waiting for data it does not have yet: a stall, or the first segment after a seek. */
+  buffering: boolean;
+  /** The media played to its end. */
+  ended: boolean;
   currentTime: number;
   duration: number;
   /** The gain the media element applies, from 0 to 1. */

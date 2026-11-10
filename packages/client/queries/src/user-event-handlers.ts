@@ -9,6 +9,7 @@ type UserEventPayloads = { [Event in UserEvent as Event['type']]: Event['payload
 
 const PREFERENCES_KEY = ['preferences'] as const;
 const LIVE_KEY = ['live'] as const;
+const PARTY_CONTROLS_KEY = ['watch-party-controls'] as const;
 const CHANNEL_DETAIL_KEY = ['channels', 'detail'] as const;
 
 type UserEventHandlers = {
@@ -90,6 +91,13 @@ function applyLiveStarted(
   }
 }
 
+function applyPartyControlsUpdated(
+  _payload: UserEventPayloads['party.controls.updated'],
+  queryClient: QueryClient
+) {
+  void queryClient.invalidateQueries({ queryKey: PARTY_CONTROLS_KEY });
+}
+
 /**
  * What each event does to one tab's query cache; an event type with no entry does not compile.
  * @public
@@ -117,6 +125,7 @@ const userEventHandlers: UserEventHandlers = {
   'live.started': applyLiveStarted,
   'channel.image.ready': applyChannelImageReady,
   'channel.image.failed': ignoreChannelImageFailed,
+  'party.controls.updated': applyPartyControlsUpdated,
 };
 
 // Mapped rather than `UserEvent`, so `type` and `payload` stay correlated once the union grows.

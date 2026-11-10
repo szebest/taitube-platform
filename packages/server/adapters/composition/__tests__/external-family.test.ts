@@ -1,12 +1,18 @@
 import { Container } from '@vp/composition';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { createMetricsRegistry } from '@vp/observability';
+import { ok } from '@vp/result';
+import { expectOk } from '@vp/testing/result';
 import { InMemoryCacheClient } from '../../in-memory/in-memory-cache-client';
 import type { MeteredMultipartStorage } from '../../metered/metered-multipart-storage';
 import type { MeteredStorageClient } from '../../metered/metered-storage-client';
+import { OnnxFrameClassifier } from '../../onnx/onnx-frame-classifier';
 import { PostgresDatabaseClient } from '../../postgres/postgres-database-client';
+import { RedisPartyGuestSessionsAdapter } from '../../redis/redis-party-guest-sessions.adapter';
 import { RedisSearchSuggestionIndexAdapter } from '../../redis/redis-search-suggestion-index.adapter';
 import { RedisSubscriptionCacheAdapter } from '../../redis/redis-subscription-cache.adapter';
+import { RedisWatchPartyGateAdapter } from '../../redis/redis-watch-party-gate.adapter';
+import { RedisWatchPartyPresenceAdapter } from '../../redis/redis-watch-party-presence.adapter';
 import { FallbackViewBuffer } from '../../resilient/fallback-view-buffer';
 import { S3MultipartStorage } from '../../s3/s3-multipart-storage';
 import { S3StorageClient } from '../../s3/s3-storage-client';
@@ -32,6 +38,18 @@ describe('external adapter family', () => {
     expect(await (storage.inner as S3StorageClient).getRawClient().config.region()).toBe(
       'us-east-1'
     );
+    await c.dispose();
+  });
+
+  it('builds the ONNX classifier from the screening config and starts it with the container', async () => {
+    const c = family();
+    const classifier = c.get(Adapters.FrameClassifier);
+    const start = vi.spyOn(classifier as OnnxFrameClassifier, 'start').mockResolvedValue(ok());
+
+    expect(classifier).toBeInstanceOf(OnnxFrameClassifier);
+    expect(classifier.modelVersion).toBe(inProcessAppConfig().screening.model.name);
+    expectOk(await c.start());
+    expect(start).toHaveBeenCalledTimes(1);
     await c.dispose();
   });
 
@@ -63,6 +81,18 @@ describe('external adapter family', () => {
     expect(c.get(Adapters.SubscriptionCache)).toBeInstanceOf(RedisSubscriptionCacheAdapter);
     expect(c.get(Adapters.ViewBuffer)).toBeInstanceOf(FallbackViewBuffer);
     expect(c.get(Adapters.SearchSuggestions)).toBeInstanceOf(RedisSearchSuggestionIndexAdapter);
+    await c.dispose();
+  });
+
+  it('builds the watch party adapters over Redis and a hasher at the configured scrypt cost', async () => {
+    const c = family();
+
+    expect(c.get(Adapters.WatchPartyGate)).toBeInstanceOf(RedisWatchPartyGateAdapter);
+    expect(c.get(Adapters.WatchPartyPresence)).toBeInstanceOf(RedisWatchPartyPresenceAdapter);
+    expect(c.get(Adapters.PartyGuestSessions)).toBeInstanceOf(RedisPartyGuestSessionsAdapter);
+    expect(expectOk(await c.get(Adapters.PasswordHasher).hash('pw'))).toMatch(
+      /^scrypt\$131072\$8\$1\$/
+    );
     await c.dispose();
   });
 });

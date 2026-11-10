@@ -6,6 +6,7 @@ import {
   captionsReady,
   commentCreated,
   commentHeld,
+  partyControlsUpdated,
   preferencesUpdated,
   videoStatusChanged,
 } from '../user-event';
@@ -101,5 +102,15 @@ describe('domain: user event', () => {
     };
 
     expect(channelImageFailed(payload)).toEqual({ type: 'channel.image.failed', payload });
+  });
+
+  it.each([
+    { scope: 'a room', roomId: 'r1' },
+    { scope: 'everywhere', roomId: null },
+  ])('announces a personal control changed for $scope without its values', ({ roomId }) => {
+    expect(partyControlsUpdated('user:u2', roomId)).toEqual({
+      type: 'party.controls.updated',
+      payload: { targetKey: 'user:u2', roomId },
+    });
   });
 });

@@ -1,13 +1,14 @@
 import type { FlowProducerPort, JobQueue, QueueJob } from '@vp/core/ports';
 import type { NewOutboxInput, Repositories } from '@vp/core/repositories';
 import { autoCaptionsEnabled } from '@vp/domain';
-import type { CaptionsConfig } from '@vp/env-schema';
+import type { CaptionsConfig, ScreeningConfig } from '@vp/env-schema';
 import type { DatabaseUnavailable, QueueUnavailable } from '@vp/errors';
 import type { ProbeMetadata } from '@vp/ffmpeg';
 import {
   captionsFlow,
   type PackageJob,
   type ProbeJob,
+  type ScreenJob,
   type ThumbnailJob,
   type TranscodeJob,
   chunkCountFor,
@@ -25,13 +26,14 @@ export interface EnqueueFollowUpsParams {
   priority: number;
   flowProducer?: FlowProducerPort;
   getQueue?: (name: string) => JobQueue;
+  screening: Pick<ScreeningConfig, 'enabled'>;
   log: Logger;
 }
 
 export async function enqueueFollowUpJobs(
   params: EnqueueFollowUpsParams
 ): Promise<Result<void, QueueUnavailable>> {
-  const { job, metadata, priority, flowProducer, getQueue, log } = params;
+  const { job, metadata, priority, flowProducer, getQueue, screening, log } = params;
   const { videoId, sourceKey } = job.data;
 
   if (flowProducer) {
@@ -43,6 +45,7 @@ export async function enqueueFollowUpJobs(
         videoId,
         generation: job.data.generation,
         ladder: metadata.ladder,
+        screened: screening.enabled,
         traceparent: job.data.traceparent,
         requestId: job.data.requestId,
       } satisfies PackageJob,
@@ -112,6 +115,31 @@ export async function enqueueFollowUpJobs(
             ignoreDependencyOnFailure: true,
           },
         },
+        ...(screening.enabled
+          ? [
+              {
+                name: 'screen',
+                queueName: 'screen',
+                data: {
+                  videoId,
+                  sourceKey,
+                  generation: job.data.generation,
+                  durationMs: metadata.durationMs,
+                  hasAudio: metadata.audioCodec !== undefined,
+                  traceparent: job.data.traceparent,
+                  requestId: job.data.requestId,
+                } satisfies ScreenJob,
+                opts: {
+                  jobId: ids.screen(videoId, job.data.generation),
+                  priority,
+                  ...stagePolicies.screen,
+                  ...defaultJobOptions,
+                  failParentOnFailure: false,
+                  ignoreDependencyOnFailure: true,
+                },
+              },
+            ]
+          : []),
       ],
     });
     if (isErr(flow)) return flow;

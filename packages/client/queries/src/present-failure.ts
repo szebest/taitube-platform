@@ -29,6 +29,8 @@ function kindOf(code: ErrorCode): ErrorStateKind {
     case ErrorCodes.PICK_NOT_FOUND:
     case ErrorCodes.WEBHOOK_NOT_FOUND:
     case ErrorCodes.LIVE_STREAM_NOT_FOUND:
+    case ErrorCodes.WATCH_PARTY_NOT_FOUND:
+    case ErrorCodes.WATCH_PARTY_ROLE_NOT_FOUND:
     case ErrorCodes.CHANNEL_INVITE_NOT_FOUND:
     case ErrorCodes.CHANNEL_MEMBER_NOT_FOUND:
     case ErrorCodes.RESTRICTION_NOT_FOUND:
@@ -41,14 +43,27 @@ function kindOf(code: ErrorCode): ErrorStateKind {
     case ErrorCodes.COMMENTS_DISABLED:
     case ErrorCodes.COMMENTS_SUBSCRIBERS_ONLY:
     case ErrorCodes.COMMENTS_ACCOUNT_TOO_NEW:
+    case ErrorCodes.WATCH_PARTY_BANNED:
+    case ErrorCodes.WATCH_PARTY_GUESTS_OFF:
+    case ErrorCodes.WATCH_PARTY_PASSWORD_REQUIRED:
+    case ErrorCodes.WATCH_PARTY_PASSWORD_INVALID:
+    case ErrorCodes.WATCH_PARTY_INVITE_INVALID:
+    case ErrorCodes.WATCH_PARTY_PERMISSION_MISSING:
+    case ErrorCodes.WATCH_PARTY_ROLE_ESCALATION:
+    case ErrorCodes.WATCH_PARTY_ROLE_PROTECTED:
+    case ErrorCodes.WATCH_PARTY_CHAT_OFF:
       return 'forbidden';
     case ErrorCodes.UNAUTHORIZED:
     case ErrorCodes.LIVE_INGEST_REFUSED:
     case ErrorCodes.LIVE_CHAT_TICKET_INVALID:
+    case ErrorCodes.WATCH_PARTY_TICKET_INVALID:
+    case ErrorCodes.WATCH_PARTY_CREDENTIAL_INVALID:
       return 'unauthorised';
     case ErrorCodes.RATE_LIMITED:
     case ErrorCodes.LIVE_CHAT_SLOW_MODE:
     case ErrorCodes.COMMENTS_SLOW_MODE:
+    case ErrorCodes.WATCH_PARTY_PASSWORD_LOCKED:
+    case ErrorCodes.WATCH_PARTY_SLOW_MODE:
       return 'rate-limited';
     case ErrorCodes.INTERNAL:
     case ErrorCodes.DATABASE_UNAVAILABLE:
@@ -76,6 +91,7 @@ function kindOf(code: ErrorCode): ErrorStateKind {
     case ErrorCodes.COMMENT_ALREADY_REPORTED:
     case ErrorCodes.REPORT_ALREADY_RESOLVED:
     case ErrorCodes.SYSTEM_PLAYLIST_IMMUTABLE:
+    case ErrorCodes.SCREENING_REJECTED:
     case ErrorCodes.UNSUPPORTED_CODEC:
     case ErrorCodes.CORRUPT_CONTAINER:
     case ErrorCodes.DURATION_EXCEEDED:
@@ -94,6 +110,8 @@ function kindOf(code: ErrorCode): ErrorStateKind {
     case ErrorCodes.WHISPER_KILLED:
     case ErrorCodes.WHISPER_TIMEOUT:
     case ErrorCodes.WHISPER_MODEL_INVALID:
+    case ErrorCodes.SCREEN_MODEL_INVALID:
+    case ErrorCodes.SCREEN_MODEL_FAILED:
     case ErrorCodes.WHISPER_INPUT_REJECTED:
     case ErrorCodes.NO_AUDIO_STREAM:
     case ErrorCodes.CAPTION_TRACK_LIMIT:
@@ -106,6 +124,13 @@ function kindOf(code: ErrorCode): ErrorStateKind {
     case ErrorCodes.OEMBED_FORMAT_UNSUPPORTED:
     case ErrorCodes.LIVE_STREAM_NOT_LIVE:
     case ErrorCodes.LIVE_CHAT_CLOSED:
+    case ErrorCodes.WATCH_PARTY_CLOSED:
+    case ErrorCodes.WATCH_PARTY_FULL:
+    case ErrorCodes.WATCH_PARTY_LIMIT_REACHED:
+    case ErrorCodes.WATCH_PARTY_VIDEO_NOT_SHAREABLE:
+    case ErrorCodes.WATCH_PARTY_QUEUE_FULL:
+    case ErrorCodes.WATCH_PARTY_STATE_STALE:
+    case ErrorCodes.WATCH_PARTY_ROLE_LIMIT:
     case ErrorCodes.CHANNEL_INVITE_NOT_PENDING:
     case ErrorCodes.CHANNEL_INVITE_ALREADY_PENDING:
     case ErrorCodes.CHANNEL_MEMBER_EXISTS:

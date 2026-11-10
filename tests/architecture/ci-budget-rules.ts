@@ -11,10 +11,10 @@ const TIMEOUTS: Readonly<Record<string, number>> = {
   unit: 1,
   'unit-bun-shards': 4,
   'unit-bun': 1,
-  integration: 4,
+  integration: 6,
   'e2e-smoke': 4,
   'e2e-client': 4,
-  visual: 4,
+  visual: 5,
   terraform: 2,
 };
 
@@ -23,8 +23,8 @@ const BUDGET_ACTION = './.github/actions/budget';
 /** What `.github/actions/budget` holds, in seconds, each on the step whose id it names. */
 const STEP_BUDGETS = [
   { job: 'unit-shards', step: 'unit-tests', seconds: 240 },
-  { job: 'lint-typecheck', step: 'architecture', seconds: 20 },
-  { job: 'integration', step: 'integration-tests', seconds: 160 },
+  { job: 'lint-typecheck', step: 'architecture', seconds: 30 },
+  { job: 'integration', step: 'integration-tests', seconds: 240 },
 ];
 
 /** A budget measures a step that runs before it, and fires before its job's timeout would. */

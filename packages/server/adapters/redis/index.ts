@@ -9,3 +9,6 @@ export * from './redis-playhead-cache.adapter';
 export * from './redis-search-suggestion-index.adapter';
 export * from './redis-live-chat-gate.adapter';
 export * from './redis-live-presence.adapter';
+export * from './redis-watch-party-gate.adapter';
+export * from './redis-watch-party-presence.adapter';
+export * from './redis-party-guest-sessions.adapter';

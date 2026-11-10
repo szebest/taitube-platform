@@ -7,6 +7,7 @@ import { Container } from '@vp/composition';
 import type { WorkerStageName } from '@vp/env-schema';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { mediaTools } from '@vp/ffmpeg';
+import { fingerprintTools } from '@vp/fingerprint';
 import { LogContext, createLogger } from '@vp/logger';
 import { expectOk } from '@vp/testing/result';
 import { speechTools } from '@vp/whisper';
@@ -24,6 +25,7 @@ async function stageContainer(stage: WorkerStageName, tmpDir = os.tmpdir(), outb
     logContext: new LogContext(),
     media: mediaTools,
     speech: speechTools,
+    fingerprint: fingerprintTools,
     workerId: 'stages-test',
     outboxRelay: { enabled: outbox },
   });

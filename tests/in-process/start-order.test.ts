@@ -3,6 +3,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { mediaTools } from '@vp/ffmpeg';
+import { fingerprintTools } from '@vp/fingerprint';
 import { LogContext, createLogger } from '@vp/logger';
 import { speechTools } from '@vp/whisper';
 import { composeApp } from '../../apps/server/api/src/app';
@@ -66,6 +67,7 @@ describe('in-process: consumers start after the metrics server and the heartbeat
       logContext: new LogContext(),
       media: mediaTools,
       speech: speechTools,
+      fingerprint: fingerprintTools,
       workerId: 'start-order',
     });
 

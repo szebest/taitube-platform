@@ -48,6 +48,21 @@ export const rejectedVideo: VideoResource = {
   status: 'REJECTED',
 };
 
+export const heldVideo: VideoResource = {
+  id: 'vid-held',
+  ownerId: 'creator-1',
+  visibility: 'private',
+  status: 'HELD',
+};
+
+export const screeningRejectedVideo: VideoResource = {
+  id: 'vid-screening-rejected',
+  ownerId: 'creator-1',
+  visibility: 'private',
+  status: 'REJECTED',
+  errorCode: 'SCREENING_REJECTED',
+};
+
 export const foreignVideo: VideoResource = {
   id: 'vid-foreign',
   ownerId: 'creator-2',

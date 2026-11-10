@@ -16,6 +16,7 @@ import type { CommentRepositoryPort } from './comment-repository';
 import type { CommentSettingsRepositoryPort } from './comment-settings-repository';
 import type { DlqRepository } from './dlq-repository';
 import type { EventRepository } from './event-repository';
+import type { FingerprintRepository } from './fingerprint-repository';
 import type { LiveChatRepositoryPort } from './live-chat-repository';
 import type { LiveStreamRepositoryPort } from './live-stream-repository';
 import type { NotificationRepositoryPort } from './notification-repository';
@@ -27,6 +28,7 @@ import type { RelatedVideosRepositoryPort } from './related-videos-repository';
 import type { RenditionRepository } from './rendition-repository';
 import type { RisingVideosRepositoryPort } from './rising-videos-repository';
 import type { SavedReplyRepositoryPort } from './saved-reply-repository';
+import type { ScreeningRepository } from './screening-repository';
 import type { SearchHistoryRepositoryPort } from './search-history-repository';
 import type { SearchRepositoryPort } from './search-repository';
 import type { StepRepository } from './step-repository';
@@ -41,6 +43,15 @@ import type { VideoRepository } from './video-repository';
 import type { VideoStudioRepository } from './video-studio-repository';
 import type { VideoViewRepositoryPort } from './video-view-repository';
 import type { WatchHistoryRepositoryPort } from './watch-history-repository';
+import type { WatchPartyHousekeepingRepositoryPort } from './watch-party-housekeeping-repository';
+import type { WatchPartyInviteLinkRepositoryPort } from './watch-party-invite-link-repository';
+import type { WatchPartyInviteRepositoryPort } from './watch-party-invite-repository';
+import type { WatchPartyMemberRepositoryPort } from './watch-party-member-repository';
+import type { WatchPartyMessageRepositoryPort } from './watch-party-message-repository';
+import type { WatchPartyPersonalControlRepositoryPort } from './watch-party-personal-control-repository';
+import type { WatchPartyQueueRepositoryPort } from './watch-party-queue-repository';
+import type { WatchPartyRoleRepositoryPort } from './watch-party-role-repository';
+import type { WatchPartyRoomRepositoryPort } from './watch-party-room-repository';
 import type { WebhookRepositoryPort } from './webhook-repository';
 
 export interface Repositories {
@@ -79,6 +90,8 @@ export interface Repositories {
   related: RelatedVideosRepositoryPort;
   rising: RisingVideosRepositoryPort;
   captions: CaptionRepository;
+  screenings: ScreeningRepository;
+  fingerprints: FingerprintRepository;
   clips: ClipRepositoryPort;
   channelFeatured: ChannelFeaturedRepositoryPort;
   channelHandleHistory: ChannelHandleHistoryRepositoryPort;
@@ -88,4 +101,13 @@ export interface Repositories {
   webhooks: WebhookRepositoryPort;
   liveStreams: LiveStreamRepositoryPort;
   liveChat: LiveChatRepositoryPort;
+  watchPartyRooms: WatchPartyRoomRepositoryPort;
+  watchPartyRoles: WatchPartyRoleRepositoryPort;
+  watchPartyMembers: WatchPartyMemberRepositoryPort;
+  watchPartyQueue: WatchPartyQueueRepositoryPort;
+  watchPartyMessages: WatchPartyMessageRepositoryPort;
+  watchPartyInvites: WatchPartyInviteRepositoryPort;
+  watchPartyInviteLinks: WatchPartyInviteLinkRepositoryPort;
+  watchPartyControls: WatchPartyPersonalControlRepositoryPort;
+  watchPartyHousekeeping: WatchPartyHousekeepingRepositoryPort;
 }

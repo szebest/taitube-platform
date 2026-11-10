@@ -18,7 +18,7 @@ export interface SendResultOptions<E extends AnyFailure> {
   readonly on?: FailureOverrides<E>;
   /** A total presenter for the whole union, when the route owns a real mapping. */
   readonly present?: (failure: E) => Problem;
-  /** Response headers a failure carries, such as `Retry-After`. */
+  /** Headers a failure carries beside its Problem, such as `Retry-After`. */
   readonly headers?: (failure: E) => Readonly<Record<string, string>>;
 }
 
@@ -48,6 +48,9 @@ export function sendResult<T, E extends AnyFailure>(
   const problem =
     override?.(failure) ?? options.present?.(failure) ?? problemFor(failure, request.url);
 
+  for (const [name, value] of Object.entries(options.headers?.(failure) ?? {})) {
+    reply.header(name, value);
+  }
   reply.header('content-type', PROBLEM_CONTENT_TYPE);
   for (const [name, value] of Object.entries(options.headers?.(failure) ?? {})) {
     reply.header(name, value);

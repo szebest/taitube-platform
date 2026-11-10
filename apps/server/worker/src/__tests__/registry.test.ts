@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import {
   InMemoryCacheClient,
+  InMemoryFrameClassifier,
   InMemoryFlowProducer,
   InMemoryJobQueue,
   InMemoryLiveGateway,
@@ -15,6 +16,7 @@ import { RedisReactionCacheAdapter } from '@vp/adapters/redis/redis-reaction-cac
 import type { QueueJob } from '@vp/core/ports';
 import { AppEnvSchema, inProcessAppConfig } from '@vp/env-schema';
 import { mediaTools } from '@vp/ffmpeg';
+import { fingerprintTools } from '@vp/fingerprint';
 import { QUEUES } from '@vp/job-contracts';
 import { createLogger } from '@vp/logger';
 import { createMetricsRegistry } from '@vp/observability';
@@ -65,6 +67,8 @@ function deps(): StageDeps {
     metrics: createMetricsRegistry(),
     media: mediaTools,
     speech: speechTools,
+    fingerprint: fingerprintTools,
+    frameClassifier: () => new InMemoryFrameClassifier({ inputSize: 8 }),
     workerId: 'registry-test',
     now: Date.now,
     every: everyInterval,
@@ -167,6 +171,7 @@ describe('apps/server/worker: stage registry', () => {
       name: 'notify-processing',
       data: { videoId: '018f0000-0000-7000-8000-000000000001', outcome: 'ready' },
     },
+    { name: 'notify-party-invite', data: { inviteId: '018f0000-0000-7000-8000-000000000004' } },
     { name: 'announce-live', data: { liveStreamId: '018f0000-0000-7000-8000-000000000003' } },
   ])('runs a $name job on the notify stage, not as a status notice', async ({ name, data }) => {
     const processor = STAGE_REGISTRY.notify.createProcessor(deps());

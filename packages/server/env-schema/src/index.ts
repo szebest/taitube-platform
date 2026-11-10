@@ -3,6 +3,8 @@ export * from './app-config';
 export * from './auth-config';
 export * from './captions-config';
 export * from './live-config';
+export * from './screening-config';
+export * from './watch-party-config';
 export * from './in-process-config';
 export * from './cdn-base';
 export * from './local-credentials';

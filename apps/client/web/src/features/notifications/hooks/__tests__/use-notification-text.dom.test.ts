@@ -69,6 +69,21 @@ describe('apps/client/web: useNotificationText', () => {
       headline: 'Your video could not be processed',
     },
     {
+      case: 'a video held by screening',
+      shown: notification({ kind: 'processing' }, { actor: null, outcome: 'held' }),
+      headline: 'Your video is on hold until a reviewer has looked at it',
+    },
+    {
+      case: 'a video a reviewer approved',
+      shown: notification({ kind: 'processing' }, { actor: null, outcome: 'approved' }),
+      headline: 'A reviewer approved your video',
+    },
+    {
+      case: 'a video a reviewer rejected',
+      shown: notification({ kind: 'processing' }, { actor: null, outcome: 'rejected' }),
+      headline: 'A reviewer rejected your video',
+    },
+    {
       case: 'an actor that is gone',
       shown: notification({ kind: 'reply' }, { actor: null }),
       headline: 'Someone replied to your comment',

@@ -16,6 +16,7 @@ const CRON_SCHEDULERS = [
   { id: 'purge-search-history', pattern: '15 3 * * *' },
   { id: 'purge-channel-audit', pattern: '45 3 * * *' },
   { id: 'purge-comment-moderation', pattern: '0 4 * * *' },
+  { id: 'purge-screening-evidence', pattern: '0 4 * * *' },
   { id: 'purge-channel-images', pattern: '0 4 * * *' },
   { id: 'purge-handle-history', pattern: '15 4 * * *' },
 ] as const satisfies readonly { id: HousekeepingTask; pattern: string }[];

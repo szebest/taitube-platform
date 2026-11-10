@@ -7,6 +7,7 @@ import { defineEndpoint } from './endpoint';
 import { NotificationSchema } from './notifications';
 import { PreferenceSectionSchema } from './preferences';
 import { VideoIdParamSchema, VideoStatusSchema } from './video-resource';
+import { MemberKeySchema } from './watch-party-resource';
 
 /** A `Last-Event-ID` the stream resumes from; anything else opens it as if none was sent. */
 export const LastEventIdSchema = z.string().regex(/^\d{1,15}$/);
@@ -120,6 +121,10 @@ const UserEventSchema = z.discriminatedUnion('type', [
       kind: z.enum(CHANNEL_IMAGE_KINDS),
       reason: z.string(),
     }),
+  }),
+  z.object({
+    type: z.literal('party.controls.updated'),
+    payload: z.object({ targetKey: MemberKeySchema, roomId: z.uuid().nullable() }),
   }),
 ]) satisfies z.ZodType<UserEvent>;
 

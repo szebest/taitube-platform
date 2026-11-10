@@ -1,5 +1,5 @@
 name: Set up FFmpeg
-description: Ubuntu's FFmpeg and the fonts its drawtext filter needs, installed from .deb files cached per runner image, once per job.
+description: Ubuntu's FFmpeg, fpcalc for the screening stage and the fonts the drawtext filter needs, installed from .deb files cached per runner image, once per job.
 
 runs:
   using: composite
@@ -9,7 +9,7 @@ runs:
       if: env.FFMPEG_SET_UP != 'true'
       shell: bash
       env:
-        PACKAGES: ffmpeg fonts-dejavu-core fontconfig
+        PACKAGES: ffmpeg fonts-dejavu-core fontconfig libchromaprint-tools
       run: |
         packages_hash=$(printf '%s' "$PACKAGES" | sha256sum | cut -c1-16)
         echo "key=ffmpeg-debs-${ImageOS}-${ImageVersion}-${packages_hash}" >> "$GITHUB_OUTPUT"
@@ -42,4 +42,5 @@ runs:
         sudo rm -f /var/lib/man-db/auto-update
         sudo dpkg --force-unsafe-io -i ~/ffmpeg-debs/*.deb > /dev/null
         ffmpeg -hide_banner -version | head -1
+        fpcalc -version
         echo "FFMPEG_SET_UP=true" >> "$GITHUB_ENV"

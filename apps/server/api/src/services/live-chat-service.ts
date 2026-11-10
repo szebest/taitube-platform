@@ -30,13 +30,13 @@ import { canModerateLiveStream, type UserContext } from '@vp/permissions';
 import { assertNever, err, ignore, isErr, map, ok, parseJson, type Result } from '@vp/result';
 import {
   type InvalidField,
-  type InvalidLiveChatMessage,
+  type InvalidChatMessage,
   invalidField,
-  validateLiveChatMessage,
+  validateChatMessage,
 } from '@vp/validation';
 import { uuidv7 } from 'uuidv7';
 import { type LiveAccessDeps, type ReadLiveFailure, readLive } from './live-access';
-import { readLiveChatBacklog } from './live-chat-backlog';
+import { readChatBacklog } from './live-chat-backlog';
 import { type LiveChatHub, publishLiveChat } from './live-chat-hub';
 import { liveChatMode, toLiveChatMessageView } from './live-views';
 
@@ -71,7 +71,7 @@ export type OpenLiveChatFailure =
 
 type SendFailure =
   | LiveChatTicketInvalid
-  | InvalidLiveChatMessage
+  | InvalidChatMessage
   | LiveStreamNotFound
   | LiveChatClosed
   | LiveChatSubscribersOnly
@@ -156,7 +156,7 @@ export class LiveChatService {
       else held.push(event);
     });
 
-    const backlog = await readLiveChatBacklog(
+    const backlog = await readChatBacklog(
       liveChat,
       session.liveStreamId,
       after,
@@ -214,7 +214,7 @@ export class LiveChatService {
     const { viewer, liveStreamId, ownerId } = session;
     if (viewer === null) return err(liveChatTicketInvalid());
 
-    const message = validateLiveChatMessage(text);
+    const message = validateChatMessage(text);
     if (isErr(message)) return message;
     const stream = await liveStreams.findById(liveStreamId);
     if (isErr(stream)) return stream;

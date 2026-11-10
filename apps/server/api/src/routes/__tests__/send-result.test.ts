@@ -70,6 +70,17 @@ describe('sendResult', () => {
     expect(sent.headers['content-type']).toBe(PROBLEM_CONTENT_TYPE);
   });
 
+  it('adds the headers the route derives from the failure', () => {
+    const { reply, sent } = fakeReply();
+
+    sendResult(reply, request, err(forbidden), { headers: () => ({ 'retry-after': '30' }) });
+
+    expect(sent.headers).toMatchObject({
+      'retry-after': '30',
+      'content-type': PROBLEM_CONTENT_TYPE,
+    });
+  });
+
   it('lets one route override one code without touching the service', () => {
     const { reply, sent } = fakeReply();
 

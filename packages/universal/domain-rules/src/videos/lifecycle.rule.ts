@@ -23,6 +23,7 @@ export const DELETABLE_STATUSES: readonly VideoStatus[] = [
   'PROBING',
   'PROCESSING',
   'READY',
+  'HELD',
   'FAILED',
   'REJECTED',
   'ABANDONED',

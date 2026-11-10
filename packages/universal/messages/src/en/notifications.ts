@@ -24,6 +24,8 @@ export const notifications = {
   mention: dt('{name} mentioned you'),
   comment: dt('{name} commented on your video'),
   heart: dt('{name} hearted your comment'),
+  partyInvite: dt('{name} invited you to a watch party'),
+  partyStarting: dt('A watch party is starting'),
   teamInvite: dt('{name} invited you to join their team'),
   moderation: dt('{action:enum}', {
     enum: {
@@ -37,6 +39,9 @@ export const notifications = {
   }),
   processingReady: dt('Your video is ready to watch'),
   processingFailed: dt('Your video could not be processed'),
+  processingHeld: dt('Your video is on hold until a reviewer has looked at it'),
+  processingApproved: dt('A reviewer approved your video'),
+  processingRejected: dt('A reviewer rejected your video'),
   loadFailed: dt('Notifications could not load'),
   loadMoreFailed: dt('More notifications could not load'),
   offline: dt('You are offline. These are the notifications you last loaded.'),

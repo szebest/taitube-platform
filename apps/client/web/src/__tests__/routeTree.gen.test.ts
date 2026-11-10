@@ -25,6 +25,7 @@ describe('apps/client/web: generated route tree', () => {
       '/live/$streamId',
       '/login',
       '/offline',
+      '/parties/$roomId',
       '/playlist',
       '/search',
       '/settings',

@@ -28,6 +28,7 @@ import { Route as FeedTrendingRouteImport } from './routes/feed.trending';
 import { Route as FeedsVideosDotxmlRouteImport } from './routes/feeds.videos[.]xml';
 import { Route as LiveIndexRouteImport } from './routes/live.index';
 import { Route as LiveStreamIdRouteImport } from './routes/live.$streamId';
+import { Route as PartiesRoomIdRouteImport } from './routes/parties.$roomId';
 import { Route as SettingsIndexRouteImport } from './routes/settings/index';
 import { Route as SettingsAccessibilityRouteImport } from './routes/settings/accessibility';
 import { Route as SettingsLanguageRouteImport } from './routes/settings/language';
@@ -139,6 +140,11 @@ const LiveIndexRoute = LiveIndexRouteImport.update({
 const LiveStreamIdRoute = LiveStreamIdRouteImport.update({
   id: '/live/$streamId',
   path: '/live/$streamId',
+  getParentRoute: () => rootRouteImport,
+} as any);
+const PartiesRoomIdRoute = PartiesRoomIdRouteImport.update({
+  id: '/parties/$roomId',
+  path: '/parties/$roomId',
   getParentRoute: () => rootRouteImport,
 } as any);
 const SettingsIndexRoute = SettingsIndexRouteImport.update({
@@ -253,6 +259,7 @@ export interface FileRoutesByFullPath {
   '/feed/trending': typeof FeedTrendingRoute;
   '/feeds/videos.xml': typeof FeedsVideosDotxmlRoute;
   '/live/$streamId': typeof LiveStreamIdRoute;
+  '/parties/$roomId': typeof PartiesRoomIdRoute;
   '/settings/accessibility': typeof SettingsAccessibilityRoute;
   '/settings/language': typeof SettingsLanguageRoute;
   '/settings/notifications': typeof SettingsNotificationsRoute;
@@ -290,6 +297,7 @@ export interface FileRoutesByTo {
   '/feed/trending': typeof FeedTrendingRoute;
   '/feeds/videos.xml': typeof FeedsVideosDotxmlRoute;
   '/live/$streamId': typeof LiveStreamIdRoute;
+  '/parties/$roomId': typeof PartiesRoomIdRoute;
   '/settings/accessibility': typeof SettingsAccessibilityRoute;
   '/settings/language': typeof SettingsLanguageRoute;
   '/settings/notifications': typeof SettingsNotificationsRoute;
@@ -330,6 +338,7 @@ export interface FileRoutesById {
   '/feed/trending': typeof FeedTrendingRoute;
   '/feeds/videos.xml': typeof FeedsVideosDotxmlRoute;
   '/live/$streamId': typeof LiveStreamIdRoute;
+  '/parties/$roomId': typeof PartiesRoomIdRoute;
   '/settings/accessibility': typeof SettingsAccessibilityRoute;
   '/settings/language': typeof SettingsLanguageRoute;
   '/settings/notifications': typeof SettingsNotificationsRoute;
@@ -370,6 +379,7 @@ export interface FileRouteTypes {
     | '/feed/trending'
     | '/feeds/videos.xml'
     | '/live/$streamId'
+    | '/parties/$roomId'
     | '/settings/accessibility'
     | '/settings/language'
     | '/settings/notifications'
@@ -407,6 +417,7 @@ export interface FileRouteTypes {
     | '/feed/trending'
     | '/feeds/videos.xml'
     | '/live/$streamId'
+    | '/parties/$roomId'
     | '/settings/accessibility'
     | '/settings/language'
     | '/settings/notifications'
@@ -446,6 +457,7 @@ export interface FileRouteTypes {
     | '/feed/trending'
     | '/feeds/videos.xml'
     | '/live/$streamId'
+    | '/parties/$roomId'
     | '/settings/accessibility'
     | '/settings/language'
     | '/settings/notifications'
@@ -485,6 +497,7 @@ export interface RootRouteChildren {
   FeedTrendingRoute: typeof FeedTrendingRoute;
   FeedsVideosDotxmlRoute: typeof FeedsVideosDotxmlRoute;
   LiveStreamIdRoute: typeof LiveStreamIdRoute;
+  PartiesRoomIdRoute: typeof PartiesRoomIdRoute;
   WatchVideoIdRoute: typeof WatchVideoIdRoute;
   LiveIndexRoute: typeof LiveIndexRoute;
   UploadIndexRoute: typeof UploadIndexRoute;
@@ -624,6 +637,13 @@ declare module '@tanstack/react-router' {
       path: '/live/$streamId';
       fullPath: '/live/$streamId';
       preLoaderRoute: typeof LiveStreamIdRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    '/parties/$roomId': {
+      id: '/parties/$roomId';
+      path: '/parties/$roomId';
+      fullPath: '/parties/$roomId';
+      preLoaderRoute: typeof PartiesRoomIdRouteImport;
       parentRoute: typeof rootRouteImport;
     };
     '/settings/': {
@@ -833,6 +853,7 @@ const rootRouteChildren: RootRouteChildren = {
   FeedTrendingRoute: FeedTrendingRoute,
   FeedsVideosDotxmlRoute: FeedsVideosDotxmlRoute,
   LiveStreamIdRoute: LiveStreamIdRoute,
+  PartiesRoomIdRoute: PartiesRoomIdRoute,
   WatchVideoIdRoute: WatchVideoIdRoute,
   LiveIndexRoute: LiveIndexRoute,
   UploadIndexRoute: UploadIndexRoute,

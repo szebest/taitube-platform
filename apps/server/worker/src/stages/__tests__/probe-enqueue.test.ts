@@ -1,4 +1,4 @@
-import { ThumbnailJob, TranscodeJob } from '@vp/job-contracts';
+import { PackageJob, ScreenJob, ThumbnailJob, TranscodeJob } from '@vp/job-contracts';
 import { ok } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import { fakeMedia, flowWorld, probed, rungs, uploadedVideo } from '../../__tests__/flow-harness';
@@ -93,6 +93,66 @@ describe('apps/server/worker/stages: probe follow-up enqueue', () => {
       Array.from({ length: 12 }, (_, i) => i)
     );
     expect(world.getQueue('transcode-480p').enqueuedJobs).toHaveLength(12);
+  });
+
+  describe('screening', () => {
+    async function probeWith(enabled: boolean, audioCodec?: string) {
+      const world = flowWorld();
+      const added = vi.spyOn(world.flowProducer, 'add');
+      const sourceKey = 'raw/s15.mp4';
+      const videoId = await uploadedVideo(world, sourceKey);
+      const metadata = {
+        ...probed({ width: 1920, height: 1080, durationMs: 15_000 }, rungs('720p')),
+        audioCodec,
+      };
+      await createProbeProcessor({
+        ...STAGE_SETTINGS,
+        ...world,
+        media: fakeMedia(metadata),
+        screening: { enabled },
+      })({
+        id: `${videoId}--probe--g1`,
+        name: 'probe',
+        data: { videoId, sourceKey, generation: 1, traceparent: '00-1' },
+        attemptsMade: 0,
+      });
+      return {
+        videoId,
+        screen: world.getQueue('screen').enqueuedJobs,
+        packaged: added.mock.calls[0]?.[0]?.data,
+      };
+    }
+
+    it('adds a screen child beside the others and marks the package job screened', async () => {
+      const { videoId, screen, packaged } = await probeWith(true, 'aac');
+
+      expect(screen.map((job) => job.id)).toEqual([`${videoId}--screen--g1`]);
+      expect(ScreenJob.parse(screen[0]?.data)).toMatchObject({
+        sourceKey: 'raw/s15.mp4',
+        durationMs: 15_000,
+        hasAudio: true,
+      });
+      expect(PackageJob.parse(packaged).screened).toBe(true);
+    });
+
+    it.each([
+      { audioCodec: 'aac', hasAudio: true },
+      { audioCodec: undefined, hasAudio: false },
+    ])(
+      'tells the stage there is audio only when the probe found a stream ($audioCodec)',
+      async ({ audioCodec, hasAudio }) => {
+        const { screen } = await probeWith(true, audioCodec);
+
+        expect(ScreenJob.parse(screen[0]?.data).hasAudio).toBe(hasAudio);
+      }
+    );
+
+    it('adds no child and no mark when screening is off', async () => {
+      const { screen, packaged } = await probeWith(false, 'aac');
+
+      expect(screen).toEqual([]);
+      expect(PackageJob.parse(packaged).screened).toBe(false);
+    });
   });
 
   describe('captions', () => {
