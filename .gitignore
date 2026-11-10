@@ -79,3 +79,7 @@ demo/minio-data/
 
 # pnpm perf:clicks output
 .perf/
+
+# deploy: rendered overlays and per-environment secrets
+.deploy/
+.secrets/
