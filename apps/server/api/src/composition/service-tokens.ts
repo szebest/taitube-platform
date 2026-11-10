@@ -54,6 +54,7 @@ import type {
   SseHub,
   SseService,
   SubscriptionService,
+  TrustedCommenterService,
   UploadService,
   VideoService,
   ViewerActivityService,
@@ -95,6 +96,7 @@ export interface ServiceSet {
   pickService: PickService;
   reactionService: ReactionService;
   subscriptionService: SubscriptionService;
+  trustedCommenterService: TrustedCommenterService;
   commentService: CommentService;
   channelRestrictionService: ChannelRestrictionService;
   commentModerationService: CommentModerationService;
@@ -161,6 +163,7 @@ export const Services = {
   PickService: token<PickService>('PickService'),
   ReactionService: token<ReactionService>('ReactionService'),
   SubscriptionService: token<SubscriptionService>('SubscriptionService'),
+  TrustedCommenterService: token<TrustedCommenterService>('TrustedCommenterService'),
   CommentService: token<CommentService>('CommentService'),
   ChannelRestrictionService: token<ChannelRestrictionService>('ChannelRestrictionService'),
   CommentModerationService: token<CommentModerationService>('CommentModerationService'),

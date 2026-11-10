@@ -45,6 +45,7 @@ import { searchHistoryRoutes } from './search-history';
 import { shortsRoutes } from './shorts';
 import { subscriptionsRoutes } from './subscriptions';
 import { telemetryRoutes } from './telemetry';
+import { trustedCommentersRoutes } from './trusted-commenters';
 import { uploadsRoutes } from './uploads';
 import { videosRoutes } from './videos';
 import { viewerActivityRoutes } from './viewer-activity';
@@ -96,6 +97,7 @@ const ROUTES: readonly FastifyPluginAsync[] = [
   channelRestrictionsRoutes,
   commentModerationRoutes,
   commentSettingsRoutes,
+  trustedCommentersRoutes,
   subscriptionsRoutes,
   eventsRoutes,
   adminQueuesRoutes,

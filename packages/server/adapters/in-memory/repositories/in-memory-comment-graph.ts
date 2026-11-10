@@ -23,7 +23,10 @@ export function provideCommentRepositories(c: Container): Container {
           recount: (channelId, userId) => c.get(Repo.commentModeration).recount(channelId, userId),
         })
     )
-    .provide(Repo.trustedCommenters, () => new InMemoryTrustedCommenterRepository())
+    .provide(
+      Repo.trustedCommenters,
+      (c) => new InMemoryTrustedCommenterRepository({ auditRepo: c.get(Repo.channelAudit) })
+    )
     .provide(
       Repo.comments,
       (c) =>

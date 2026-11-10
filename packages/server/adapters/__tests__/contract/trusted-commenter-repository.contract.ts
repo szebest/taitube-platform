@@ -42,6 +42,27 @@ export function describeTrustedCommenterRepositoryContract(
       expect(await isTrusted(OTHER_OWNER_ID)).toBe(true);
     });
 
+    it('records its audit row only when the list changed', async () => {
+      const entry = (action: 'trusted.added' | 'trusted.removed') =>
+        ({
+          channelId: channel.id,
+          actorUserId: OWNER_ID,
+          action,
+          targetType: 'user',
+          targetId: OTHER_OWNER_ID,
+          meta: {},
+        }) as const;
+      const { trustedCommenters, channelAudit } = repositories;
+
+      await trustedCommenters.add(channel.id, OTHER_OWNER_ID, OWNER_ID, entry('trusted.added'));
+      await trustedCommenters.add(channel.id, OTHER_OWNER_ID, OWNER_ID, entry('trusted.added'));
+      await trustedCommenters.remove(channel.id, OTHER_OWNER_ID, entry('trusted.removed'));
+      await trustedCommenters.remove(channel.id, OTHER_OWNER_ID, entry('trusted.removed'));
+
+      const log = expectOk(await channelAudit.list(channel.id, { cursor: null, limit: 10 }));
+      expect(log.map((row) => row.action).reverse()).toEqual(['trusted.added', 'trusted.removed']);
+    });
+
     it('removes a user once, and says so when they were not trusted', async () => {
       await add(OTHER_OWNER_ID);
       const remove = async () =>

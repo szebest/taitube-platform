@@ -21,6 +21,7 @@ export * from './comment-report-service';
 export * from './channel-restriction-service';
 export * from './comment-moderation-service';
 export * from './comment-settings-service';
+export * from './trusted-commenter-service';
 export * from './comment-service';
 export * from './creator-comment-service';
 export * from './view-service';

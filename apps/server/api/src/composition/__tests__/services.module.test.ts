@@ -78,6 +78,7 @@ describe('apps/server/api/composition: services module', () => {
       'sseHub',
       'sseService',
       'subscriptionService',
+      'trustedCommenterService',
       'uploadService',
       'videoService',
       'viewService',

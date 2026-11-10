@@ -3,6 +3,7 @@ import {
   commentModerationAudit,
   liftAudit,
   restrictionAudit,
+  trustAudit,
 } from '../comment-moderation';
 import { COMMENT_REPORT_REASONS } from '../comment-report';
 
@@ -74,6 +75,24 @@ describe('@vp/domain: restriction audit', () => {
       action: 'user.restriction_lifted',
       targetId: 'user',
       meta: { kind: 'ban' },
+    });
+  });
+});
+
+describe('@vp/domain: trustAudit', () => {
+  it.each([
+    { trusted: true, action: 'trusted.added' },
+    { trusted: false, action: 'trusted.removed' },
+  ])('writes trusted=$trusted as $action', ({ trusted, action }) => {
+    expect(
+      trustAudit({ channelId: 'channel', actorUserId: 'manager', userId: 'user', trusted })
+    ).toEqual({
+      channelId: 'channel',
+      actorUserId: 'manager',
+      action,
+      targetType: 'user',
+      targetId: 'user',
+      meta: {},
     });
   });
 });

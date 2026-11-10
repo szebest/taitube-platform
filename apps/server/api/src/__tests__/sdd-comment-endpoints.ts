@@ -134,6 +134,27 @@ export const SDD_COMMENT_ENDPOINTS: SddEndpointContract[] = [
     hasPathParams: true,
   },
   {
+    path: '/v1/me/channel/trusted-commenters',
+    method: 'get',
+    expectedStatuses: [200, 400, 401, 403],
+    expectedErrorCodes: [...LISTED, FORBIDDEN],
+    hasQueryParams: true,
+  },
+  {
+    path: '/v1/me/channel/trusted-commenters/{userId}',
+    method: 'put',
+    expectedStatuses: [204, 400, 401, 403, 422],
+    expectedErrorCodes: [...AUTHENTICATED, FORBIDDEN],
+    hasPathParams: true,
+  },
+  {
+    path: '/v1/me/channel/trusted-commenters/{userId}',
+    method: 'delete',
+    expectedStatuses: [204, 400, 401, 403],
+    expectedErrorCodes: [...AUTHENTICATED, FORBIDDEN],
+    hasPathParams: true,
+  },
+  {
     path: '/v1/me/channel/comment-settings',
     method: 'get',
     expectedStatuses: [200, 401, 403],

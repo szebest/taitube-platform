@@ -8,6 +8,7 @@ import {
   CommentService,
   CommentSettingsService,
   CreatorCommentService,
+  TrustedCommenterService,
 } from '../services/index';
 import { Services } from './service-tokens';
 
@@ -61,6 +62,16 @@ export function registerCommentServices(c: Container): Container {
           moderation: repositories().commentModeration,
           notifications: repositories().notifications,
           commentCache: c.get(Adapters.CommentCache),
+        })
+    )
+    .provide(
+      Services.TrustedCommenterService,
+      (c) =>
+        new TrustedCommenterService({
+          trusted: repositories().trustedCommenters,
+          users: repositories().users,
+          channels: repositories().channels,
+          paginator: c.get(Services.Paginator),
         })
     )
     .provide(

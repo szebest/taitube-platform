@@ -33,6 +33,7 @@ export function registerServiceSet(c: Container): Container {
     pickService: c.get(Services.PickService),
     reactionService: c.get(Services.ReactionService),
     subscriptionService: c.get(Services.SubscriptionService),
+    trustedCommenterService: c.get(Services.TrustedCommenterService),
     commentService: c.get(Services.CommentService),
     channelRestrictionService: c.get(Services.ChannelRestrictionService),
     commentModerationService: c.get(Services.CommentModerationService),

@@ -41,6 +41,7 @@ import * as searchHistory from './search-history';
 import * as shorts from './shorts';
 import * as subscriptions from './subscriptions';
 import * as telemetry from './telemetry';
+import * as trustedCommenters from './trusted-commenters';
 import * as uploads from './uploads';
 import * as videos from './videos';
 import * as viewerActivity from './viewer-activity';
@@ -95,6 +96,7 @@ export * from './search-history';
 export * from './shorts';
 export * from './subscriptions';
 export * from './telemetry';
+export * from './trusted-commenters';
 export * from './uploads';
 export * from './video-resource';
 export * from './videos';
@@ -147,6 +149,7 @@ export const contracts = {
   shorts,
   subscriptions,
   telemetry,
+  trustedCommenters,
   uploads,
   videos,
   viewerActivity,

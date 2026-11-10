@@ -150,3 +150,20 @@ export function liftAudit(entry: {
     meta: { kind },
   };
 }
+
+export function trustAudit(entry: {
+  channelId: string;
+  actorUserId: string;
+  userId: string;
+  trusted: boolean;
+}): NewChannelAuditEntry {
+  const { channelId, actorUserId, userId, trusted } = entry;
+  return {
+    channelId,
+    actorUserId,
+    action: trusted ? 'trusted.added' : 'trusted.removed',
+    targetType: 'user',
+    targetId: userId,
+    meta: {},
+  };
+}
