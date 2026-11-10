@@ -5,7 +5,6 @@ import {
   ChannelHeaderBio,
   ChannelHeaderIdentity,
   ChannelHeaderRoot,
-  ChannelHeaderSubscribe,
   ChannelHeaderTab,
   ChannelHeaderTabs,
 } from './channel-header';
@@ -16,7 +15,6 @@ export const ChannelHeader = {
   Identity: ChannelHeaderIdentity,
   Bio: ChannelHeaderBio,
   Actions: ChannelHeaderActions,
-  Subscribe: ChannelHeaderSubscribe,
   Bell: ChannelHeaderBell,
   Tabs: ChannelHeaderTabs,
   Tab: ChannelHeaderTab,

@@ -11,7 +11,13 @@ import {
   SessionProvider,
 } from '@vp/queries';
 import { DEV_TOKEN_URL } from '@vp/queries/demo-personas';
-import { AppearanceProvider, DEFAULT_APPEARANCE, Tooltip } from '@vp/ui';
+import {
+  AppearanceProvider,
+  createToaster,
+  DEFAULT_APPEARANCE,
+  ToastProvider,
+  Tooltip,
+} from '@vp/ui';
 import { account, api, apiServer, mockEndpoint } from '@vp/web-testing';
 import { HttpResponse, http } from 'msw/http';
 import type { ComponentType, PropsWithChildren } from 'react';
@@ -43,6 +49,17 @@ function providersFor(session: Session): ComponentType<PropsWithChildren> {
 
 /** What the root route mounts around every page for a guest, in a fixed locale and zone. */
 export const AppProviders = providersFor(GUEST);
+
+/** `Providers` with the toasts a page that reports a failed write needs; a page that renders nothing for an empty list stays free of them. */
+export function withToasts(
+  Providers: ComponentType<PropsWithChildren>
+): ComponentType<PropsWithChildren> {
+  return ({ children }) => (
+    <Providers>
+      <ToastProvider toaster={createToaster()}>{children}</ToastProvider>
+    </Providers>
+  );
+}
 
 /** The same, for `viewer` signed in. */
 export function signedIn(viewer: Account = account()): ComponentType<PropsWithChildren> {

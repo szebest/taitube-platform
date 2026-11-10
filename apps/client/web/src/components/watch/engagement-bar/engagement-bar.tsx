@@ -9,7 +9,6 @@ import {
   Skeleton,
   Slot,
   useUiCopy,
-  VisuallyHidden,
 } from '@vp/ui';
 import {
   type ComponentProps,
@@ -80,43 +79,6 @@ export function EngagementBarChannel({
         {subscribers && <span className={styles.channelMeta()}>{subscribers}</span>}
       </span>
     </Element>
-  );
-}
-
-export interface EngagementBarSubscribeProps extends Omit<
-  ComponentPropsWithRef<'button'>,
-  'onToggle'
-> {
-  subscribed: boolean;
-  pending?: boolean;
-  onToggle: () => void;
-}
-
-/** A toggle: primary to subscribe, the quiet accent once subscribed; its label is the caller's. */
-export function EngagementBarSubscribe({
-  subscribed,
-  pending = false,
-  onToggle,
-  children,
-  ...props
-}: EngagementBarSubscribeProps) {
-  return (
-    <>
-      <Button
-        data-slot="engagement-bar-subscribe"
-        variant={subscribed ? 'soft' : 'solid'}
-        tone={subscribed ? 'neutral' : 'accent'}
-        shape="pill"
-        aria-pressed={subscribed}
-        loading={pending}
-        onClick={onToggle}
-        {...props}
-      >
-        {subscribed && <Icon name="check" />}
-        {children}
-      </Button>
-      <VisuallyHidden aria-live="polite">{subscribed ? children : null}</VisuallyHidden>
-    </>
   );
 }
 

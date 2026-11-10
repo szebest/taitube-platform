@@ -3,30 +3,32 @@ import { AppearanceProvider, DEFAULT_APPEARANCE } from '@vp/ui';
 import { api, CHANNEL_ID, channel, feedPages, videoSummary } from '@vp/web-testing';
 import { renderPage } from '@vp/web-testing/server';
 import type { PropsWithChildren } from 'react';
-import { AppProviders, signedIn } from '#app/__tests__/providers';
+import { AppProviders, signedIn, withToasts } from '#app/__tests__/providers';
 import { channelQueryOptions } from '#app/lib/query-keys/channel-keys';
 import { ChannelPage } from '../channel-page';
 
+const ToastedProviders = withToasts(AppProviders);
+
 function viewerWithAccent(accent: string) {
   return ({ children }: PropsWithChildren) => (
-    <AppProviders>
+    <ToastedProviders>
       <AppearanceProvider
         stored={{ preference: { ...DEFAULT_APPEARANCE, accent }, source: 'appearance' }}
       >
         {children}
       </AppearanceProvider>
-    </AppProviders>
+    </ToastedProviders>
   );
 }
 
 interface ChannelOptions {
-  Providers?: typeof AppProviders;
+  Providers?: typeof ToastedProviders;
   bio?: string | null;
   brandColor?: string | null;
 }
 
 function renderChannel({
-  Providers = AppProviders,
+  Providers = ToastedProviders,
   bio = null,
   brandColor = null,
 }: ChannelOptions = {}) {
@@ -56,7 +58,7 @@ describe('apps/client/web: channel page', () => {
   });
 
   it("adds the video list on the viewer's own channel", async () => {
-    const markup = await renderChannel({ Providers: signedIn() });
+    const markup = await renderChannel({ Providers: withToasts(signedIn()) });
 
     expect(markup).toContain('>Your videos</h2>');
     expect(markup).toContain('My upload');
@@ -77,7 +79,7 @@ describe('apps/client/web: channel page', () => {
   );
 
   it.each([
-    { name: 'a channel with no brand colour', brandColor: null, Providers: AppProviders },
+    { name: 'a channel with no brand colour', brandColor: null, Providers: ToastedProviders },
     {
       name: "a viewer's own accent",
       brandColor: '#3366cc',

@@ -24,7 +24,6 @@ export const channelHeaderStyles = tv({
     bioText: 'm-0 line-clamp-2 max-w-reading-max',
     actions:
       'col-span-full flex items-center gap-inline medium:col-span-1 medium:col-start-3 medium:row-span-3 medium:row-start-1 medium:justify-end',
-    subscribe: 'max-medium:flex-1',
     tabs: 'border-b-divider border-border',
     tabList: 'm-0 flex list-none gap-inline overflow-x-auto p-0 scroll-fade [scrollbar-width:none]',
     tab: 'inline-flex h-control-md shrink-0 items-center px-inset-control text-label whitespace-nowrap text-fg-muted no-underline transition-[color,box-shadow] duration-base ease-settle focus-ring hover:text-fg aria-[current=page]:text-accent-ink aria-[current=page]:shadow-[inset_0_-2px_0_0_var(--accent)] motion-reduce:transition-none',

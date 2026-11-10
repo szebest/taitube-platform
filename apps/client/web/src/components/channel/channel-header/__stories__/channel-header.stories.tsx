@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Button } from '@vp/ui';
 import type { ReactNode } from 'react';
+import { SubscribeButton } from '#app/components/channel/subscribe-button';
 import { ChannelHeader, ChannelHeaderSkeleton } from '..';
 import { ChannelHeaderRoot, type ChannelHeaderRootProps } from '../channel-header';
 
@@ -50,9 +51,9 @@ function StoryHeader({
         </ChannelHeader.Bio>
         <ChannelHeader.Actions>
           {actions ?? (
-            <ChannelHeader.Subscribe subscribed={false} onClick={() => undefined}>
+            <SubscribeButton subscribed={false} onToggle={() => undefined}>
               Subscribe
-            </ChannelHeader.Subscribe>
+            </SubscribeButton>
           )}
         </ChannelHeader.Actions>
       </ChannelHeader.Identity>
@@ -92,7 +93,9 @@ export const SubscribedWithBell: Story = {
       {...args}
       actions={
         <>
-          <ChannelHeader.Subscribe subscribed>Subscribed</ChannelHeader.Subscribe>
+          <SubscribeButton subscribed onToggle={() => undefined}>
+            Subscribed
+          </SubscribeButton>
           <ChannelHeader.Bell />
         </>
       }
@@ -105,9 +108,9 @@ export const Pending: Story = {
     <StoryHeader
       {...args}
       actions={
-        <ChannelHeader.Subscribe subscribed pending>
+        <SubscribeButton subscribed pending onToggle={() => undefined}>
           Subscribed
-        </ChannelHeader.Subscribe>
+        </SubscribeButton>
       }
     />
   ),

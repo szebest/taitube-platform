@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { axeViolations } from '@vp/web-testing/dom';
 import { AppProviders } from '#app/__tests__/providers';
+import { SubscribeButton } from '#app/components/channel/subscribe-button';
 import { ChannelHeader, ChannelHeaderSkeleton } from '..';
 import type { ChannelHeaderRootProps } from '../channel-header';
 
@@ -34,9 +35,9 @@ const renderHeader = ({
               Short films shot on tape.
             </ChannelHeader.Bio>
             <ChannelHeader.Actions>
-              <ChannelHeader.Subscribe subscribed={subscribed} pending={pending}>
+              <SubscribeButton subscribed={subscribed} pending={pending} onToggle={() => undefined}>
                 {subscribed ? 'Subscribed' : 'Subscribe'}
-              </ChannelHeader.Subscribe>
+              </SubscribeButton>
             </ChannelHeader.Actions>
           </ChannelHeader.Identity>
           <ChannelHeader.Tabs>

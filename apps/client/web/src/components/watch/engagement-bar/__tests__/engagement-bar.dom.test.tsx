@@ -3,6 +3,7 @@ import { userEvent } from '@testing-library/user-event';
 import { DropdownMenu } from '@vp/ui';
 import { axeViolations } from '@vp/web-testing/dom';
 import { AppProviders } from '#app/__tests__/providers';
+import { SubscribeButton } from '#app/components/channel/subscribe-button';
 import { EngagementBar, type EngagementBarReaction, EngagementBarSkeleton } from '..';
 
 interface BarProps {
@@ -28,9 +29,9 @@ const renderBar = ({
         <EngagementBar.Channel name="Marta Reis Films" subscribers="284K subscribers" asChild>
           <a href="/channel/marta" />
         </EngagementBar.Channel>
-        <EngagementBar.Subscribe subscribed={subscribed} pending={pending} onToggle={onToggle}>
+        <SubscribeButton subscribed={subscribed} pending={pending} onToggle={onToggle}>
           {subscribed ? 'Subscribed' : 'Subscribe'}
-        </EngagementBar.Subscribe>
+        </SubscribeButton>
         <EngagementBar.Actions>
           <EngagementBar.Reaction value={reaction} likes={likes} onChange={onReact} />
           <EngagementBar.Action icon="share">Share</EngagementBar.Action>

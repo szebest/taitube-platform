@@ -1,14 +1,4 @@
-import {
-  Avatar,
-  Badge,
-  Button,
-  type ButtonProps,
-  Icon,
-  IconButton,
-  Skeleton,
-  Slot,
-  useUiCopy,
-} from '@vp/ui';
+import { Avatar, Badge, Icon, IconButton, Skeleton, Slot, useUiCopy } from '@vp/ui';
 import type { ComponentPropsWithRef, ReactNode } from 'react';
 import { ChannelHeaderContext, useChannelHeader } from './channel-header.context';
 import { channelHeaderStyles } from './channel-header.variants';
@@ -171,41 +161,6 @@ export function ChannelHeaderActions({ className, ...props }: ComponentPropsWith
 
   return (
     <div data-slot="channel-header-actions" className={styles.actions({ className })} {...props} />
-  );
-}
-
-export type ChannelHeaderSubscribeProps = Omit<
-  ButtonProps,
-  'variant' | 'tone' | 'asChild' | 'loading'
-> & {
-  subscribed: boolean;
-  /** Holds the optimistic result with a spinner in the button. */
-  pending?: boolean;
-};
-
-/** A toggle: Subscribe in the accent, Subscribed as a quiet button with a check. */
-export function ChannelHeaderSubscribe({
-  subscribed,
-  pending = false,
-  className,
-  children,
-  ...props
-}: ChannelHeaderSubscribeProps) {
-  const styles = channelHeaderStyles({ layout: useChannelHeader('Subscribe').layout });
-
-  return (
-    <Button
-      data-slot="channel-header-subscribe"
-      variant={subscribed ? 'soft' : 'solid'}
-      tone={subscribed ? 'neutral' : 'accent'}
-      aria-pressed={subscribed}
-      loading={pending}
-      className={styles.subscribe({ className })}
-      {...props}
-    >
-      {subscribed && <Icon name="check" />}
-      {children}
-    </Button>
   );
 }
 
