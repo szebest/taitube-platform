@@ -29,6 +29,7 @@ Areas: `shell`, `video`, `watch`, `channel`, `discovery`, `discussion`, `states`
 | [CommentThread](comment-thread.md) | watch | discussion shell | [CommentItem](comment-item.md), `Textarea`, `SegmentedControl` | [59](../../../tickets/59-video-watch-page-responsive-layout-enhancements.md) |
 | [ChannelHeader](channel-header.md) | channel | banner, identity, tabs | `Avatar`, `Tabs`, `Button` | [58](../../../tickets/58-modern-browse-layout-microinteractions-motion.md), [74](../../../tickets/74-frontend-multi-resource-search-discovery-ui.md) |
 | [StartHereShelf](start-here-shelf.md) | channel | pinned or popular videos for newcomers | `Shelf`, `VideoCard` | [58](../../../tickets/58-modern-browse-layout-microinteractions-motion.md), [96](../../../tickets/96-channel-featured-videos-start-here.md) |
+| [ChannelSpotlight](channel-spotlight.md) | channel | the channel's trailer or returning-subscriber video | `VideoCard`, `Button` | [115](../../../tickets/115-channel-page-customisation.md) |
 | [LiveChat](live-chat.md) | live | docked or overlay chat | `ScrollArea`, `Textarea`, `Slider` | [76](../../../tickets/76-live-streaming-rtmp-whip-llhls-packaging-chat.md), [95](../../../tickets/95-design-system-2.md) |
 | [ShortsPlayerFrame](shorts-player-frame.md) | shorts | 9:16 player with actions | `IconButton`, `Progress`, Stage ground | [95](../../../tickets/95-design-system-2.md) |
 
@@ -99,6 +100,7 @@ it; props are the entity (or its id) and at most one placement fact. `Video`, `V
 | [ChannelHeader](channel-header.md) | `ChannelPageHeader` | `channels` | `channel: Channel` | `useSubscription`, `useChannelTabs`, `useAmbientSample` |
 | | `ChannelResultHeader` | `search` | `channel: ChannelCard` | `useSubscription` |
 | [StartHereShelf](start-here-shelf.md) | `ChannelStartHere` | `channels` | `channelId: string` | `useChannelFeatured`, `useChannelVideos` |
+| [ChannelSpotlight](channel-spotlight.md) | `ChannelPageSpotlight` | `channel` | `channelId: string` | `useChannelSpotlight`, `useFormat` |
 | [LiveChat](live-chat.md) | `LiveStreamChat` | `live` | `streamId: string` | `useLiveChat`, `usePlayerLayout` |
 | [ShortsPlayerFrame](shorts-player-frame.md) | `ShortsFeedFrame` | `shorts` | `short: VideoSummary` | `useShortsNavigation`, `useReaction` |
 

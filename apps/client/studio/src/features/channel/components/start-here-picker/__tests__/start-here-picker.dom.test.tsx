@@ -4,7 +4,7 @@ import { renderCustomization } from '#app/features/channel/__tests__/render-cust
 
 const open = async (user: Awaited<ReturnType<typeof renderCustomization>>['user']) => {
   await user.click(screen.getByRole('button', { name: 'Add videos' }));
-  return screen.findByRole('combobox');
+  return screen.findByPlaceholderText('Search your videos');
 };
 
 async function renderPicker(options: Parameters<typeof featuredApi>[0]) {

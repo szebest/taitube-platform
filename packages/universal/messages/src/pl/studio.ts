@@ -1,7 +1,9 @@
 import { dt } from '../define';
 import { studioAdmin } from './studio-admin';
 import { studioCaptions } from './studio-captions';
+import { studioChannel } from './studio-channel';
 import { studioComments } from './studio-comments';
+import { studioImages } from './studio-images';
 import { studioLive } from './studio-live';
 import { studioPicks } from './studio-picks';
 import { studioTeam } from './studio-team';
@@ -73,6 +75,8 @@ export const studio = {
   ...studioAdmin,
   ...studioCaptions,
   ...studioComments,
+  ...studioChannel,
+  ...studioImages,
   ...studioLive,
   ...studioPicks,
   ...studioTeam,
@@ -208,24 +212,12 @@ export const studio = {
   aboutTitle: dt('Informacje'),
   aboutDescription: dt('To, co widzowie czytają na Twoim kanale.'),
   bioLabel: dt('Opis'),
-  bioInvalid: dt('Użyj najwyżej 1000 znaków.'),
+  bioInvalid: dt('Użyj najwyżej 5000 znaków.'),
   linksLabel: dt('Linki'),
   linkTitleLabel: dt('Tytuł linku {position}'),
   linkUrlLabel: dt('Adres linku {position}'),
   addLink: dt('Dodaj link'),
   removeLink: dt('Usuń link {position}'),
-  brandingTitle: dt('Zdjęcie i baner'),
-  brandingDescription: dt(
-    'Prześlij obraz JPEG, PNG lub WebP: do 5 MB dla zdjęcia i do 10 MB dla banera.'
-  ),
-  avatarDrop: dt('Upuść tutaj zdjęcie albo kliknij, aby je wybrać'),
-  bannerDrop: dt('Upuść tutaj baner albo kliknij, aby go wybrać'),
-  avatarRemove: dt('Usuń zdjęcie'),
-  bannerRemove: dt('Usuń baner'),
-  avatarPreview: dt('Podgląd zdjęcia'),
-  bannerPreview: dt('Podgląd banera'),
-  avatarSafeZone: dt('Wyświetlane jako koło: twarze i tekst trzymaj wewnątrz prowadnicy.'),
-  bannerSafeZone: dt('Telefony pokazują tylko środkowy pas: tekst trzymaj wewnątrz prowadnicy.'),
   brandTitle: dt('Kolor marki'),
   brandDescription: dt('Przyciski, linki i wyróżnienia na stronie Twojego kanału mają ten kolor.'),
   brandLabel: dt('Kolor'),

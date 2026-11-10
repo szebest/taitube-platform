@@ -20,6 +20,10 @@ const HEADER_MAPPINGS: Record<string, HeaderMapping> = {
     contentType: 'image/jpeg',
     cacheControl: 'public, max-age=31536000, immutable',
   },
+  '.webp': {
+    contentType: 'image/webp',
+    cacheControl: 'public, max-age=31536000, immutable',
+  },
   '.vtt': {
     contentType: 'text/vtt',
     cacheControl: 'public, max-age=31536000, immutable',

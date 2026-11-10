@@ -1,4 +1,4 @@
-import { FALLBACK_LOCALE } from '@vp/intl';
+import { SUPPORTED_LOCALES } from '@vp/intl';
 import type { Catalogues } from './catalogue';
 import { en } from './en';
 
@@ -14,7 +14,7 @@ export interface LocaleDetails {
   readonly load: () => Promise<Translation>;
 }
 
-export const SUPPORTED_LOCALES = [FALLBACK_LOCALE, 'pl'] as const;
+export { SUPPORTED_LOCALES };
 
 export type SupportedLocale = (typeof SUPPORTED_LOCALES)[number];
 

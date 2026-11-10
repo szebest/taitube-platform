@@ -17,6 +17,7 @@ const ALL_TABS = ['Home', 'Videos', 'Shorts', 'Live', 'Playlists', 'Community', 
 
 interface StoryHeaderProps extends ChannelHeaderRootProps {
   banner?: boolean;
+  bannerLink?: boolean;
   tabs?: string[];
   name?: string;
   handle?: string;
@@ -26,6 +27,7 @@ interface StoryHeaderProps extends ChannelHeaderRootProps {
 
 function StoryHeader({
   banner = true,
+  bannerLink = false,
   tabs = ALL_TABS,
   name = 'Marta Reis Films',
   handle = '@martareis',
@@ -35,7 +37,16 @@ function StoryHeader({
 }: StoryHeaderProps) {
   return (
     <ChannelHeader.Root {...props}>
-      {banner ? <ChannelHeader.Banner src={BANNER} /> : <ChannelHeader.Banner />}
+      <ChannelHeader.Banner
+        src={banner ? BANNER : undefined}
+        link={
+          bannerLink ? (
+            <ChannelHeader.BannerLink href="https://example.com/shop">
+              Shop
+            </ChannelHeader.BannerLink>
+          ) : undefined
+        }
+      />
       <ChannelHeader.Identity
         name={name}
         handle={handle}
@@ -80,6 +91,10 @@ type Story = StoryObj<typeof meta>;
 
 export const FullWithBanner: Story = {
   render: (args) => <StoryHeader {...args} />,
+};
+
+export const WithBannerLink: Story = {
+  render: (args) => <StoryHeader {...args} bannerLink />,
 };
 
 export const GradientFallback: Story = {

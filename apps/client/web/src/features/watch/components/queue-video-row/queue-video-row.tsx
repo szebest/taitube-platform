@@ -13,15 +13,24 @@ export interface QueueVideoRowProps {
   reason?: ReasonedVideo['reason'];
   /** The playlist the row sits in: its link opens the video inside the playlist. */
   playlist?: { id: string; index: number };
+  /** The video's number in a series, which leads its byline. */
+  episode?: number;
 }
 
 /** One video of the queue or of "More like this" as a compact row, linked to its watch page. */
-export function QueueVideoRow({ video, current = false, reason, playlist }: QueueVideoRowProps) {
+export function QueueVideoRow({
+  video,
+  current = false,
+  reason,
+  playlist,
+  episode,
+}: QueueVideoRowProps) {
   const { tOr } = useT();
   const { clock, spoken } = useDurationText(video.durationMs);
   const canGiveFeedback = useCan('create', 'RecommendationFeedback');
 
   const byline = [
+    episode === undefined ? undefined : tOr('library.episode', { number: episode }, ''),
     video.channel?.displayName,
     tOr('videos.views', { count: video.viewsCount ?? 0 }, ''),
   ]

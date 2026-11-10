@@ -1,5 +1,6 @@
 import type { CaptionKind } from './captions';
 import type { ChannelCard } from './channel';
+import type { ChannelImageKind } from './channel-images';
 import type { CommentThread, CommentVideoSummary } from './comment';
 import type { NotificationReadScope, NotificationView } from './notification';
 import type { PreferenceSection } from './settings';
@@ -42,7 +43,25 @@ export type UserEvent =
     }
   | { type: 'captions.failed'; payload: { videoId: string; captionId: string; reason: string } }
   | { type: 'live.started'; payload: LiveStartedPayload }
+  | { type: 'channel.image.ready'; payload: ChannelImageReadyPayload }
+  | { type: 'channel.image.failed'; payload: ChannelImageFailedPayload }
   | { type: 'party.controls.updated'; payload: PartyControlsUpdatedPayload };
+
+/** An avatar or banner upload became the channel's image at `version`. */
+export interface ChannelImageReadyPayload {
+  uploadId: string;
+  channelId: string;
+  kind: ChannelImageKind;
+  version: number;
+}
+
+/** The job gave up on an upload; the channel keeps the image it had. */
+export interface ChannelImageFailedPayload {
+  uploadId: string;
+  channelId: string;
+  kind: ChannelImageKind;
+  reason: string;
+}
 
 /** The target and scope of a personal control that changed; `roomId` is `null` for everywhere. */
 interface PartyControlsUpdatedPayload {
@@ -108,6 +127,14 @@ export function captionsFailed(videoId: string, captionId: string, reason: strin
 
 export function liveStarted(payload: LiveStartedPayload): UserEvent {
   return { type: 'live.started', payload };
+}
+
+export function channelImageReady(payload: ChannelImageReadyPayload): UserEvent {
+  return { type: 'channel.image.ready', payload };
+}
+
+export function channelImageFailed(payload: ChannelImageFailedPayload): UserEvent {
+  return { type: 'channel.image.failed', payload };
 }
 
 export function partyControlsUpdated(targetKey: string, roomId: string | null): UserEvent {

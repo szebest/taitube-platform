@@ -6,6 +6,13 @@ export const PLAYLIST_VISIBILITIES = VIDEO_VISIBILITIES;
 
 export type PlaylistVisibility = VideoVisibility;
 
+export const PLAYLIST_KINDS = ['playlist', 'series'] as const;
+
+export type PlaylistKind = (typeof PLAYLIST_KINDS)[number];
+
+/** A series episode counts as watched once this share of it has played. */
+export const SERIES_EPISODE_DONE_PERCENT = 92;
+
 export const DEFAULT_PLAYLIST_VISIBILITY: PlaylistVisibility = 'private';
 
 /** Every user owns exactly one system playlist, provisioned with their channel. */
@@ -17,6 +24,7 @@ export interface Playlist {
   title: string;
   description: string;
   visibility: PlaylistVisibility;
+  kind: PlaylistKind;
   isSystem: boolean;
   customThumbnailKey: string | null;
   createdAt: Date;
@@ -58,12 +66,14 @@ export interface NewPlaylistInput {
   title: string;
   description: string;
   visibility: PlaylistVisibility;
+  kind?: PlaylistKind;
 }
 
 export interface PlaylistPatch {
   title?: string;
   description?: string;
   visibility?: PlaylistVisibility;
+  kind?: PlaylistKind;
 }
 
 export type PlaylistReorder =

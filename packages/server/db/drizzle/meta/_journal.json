@@ -243,8 +243,15 @@
     {
       "idx": 34,
       "version": "7",
-      "when": 1794006981420,
-      "tag": "0034_watch_parties",
+      "when": 1794223324030,
+      "tag": "0034_channel_identity",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1794306125953,
+      "tag": "0035_watch_parties",
       "breakpoints": true
     }
   ]

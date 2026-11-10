@@ -12,7 +12,7 @@ export function channelHead(
   return pageHead({
     siteUrl,
     locale,
-    path: `/channel/${channel.id}`,
+    path: `/@${channel.handle}`,
     title: channel.displayName,
     description: channel.bio || tOr('shell.channelDescription', { name: channel.displayName }, ''),
     image: channel.avatarUrl ?? undefined,

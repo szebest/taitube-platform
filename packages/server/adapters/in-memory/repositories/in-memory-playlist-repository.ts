@@ -56,6 +56,7 @@ export class InMemoryPlaylistRepository implements PlaylistRepositoryPort {
     const now = new Date();
     const playlist: Playlist = {
       ...input,
+      kind: input.kind ?? 'playlist',
       isSystem: false,
       customThumbnailKey: null,
       createdAt: now,
@@ -79,6 +80,7 @@ export class InMemoryPlaylistRepository implements PlaylistRepositoryPort {
       title: WATCH_LATER_TITLE,
       description: '',
       visibility: 'private',
+      kind: 'playlist',
       isSystem: true,
       customThumbnailKey: null,
       createdAt: now,
@@ -182,6 +184,17 @@ export class InMemoryPlaylistRepository implements PlaylistRepositoryPort {
         })
       )
     );
+  }
+
+  async listItemOwners(
+    playlistId: string
+  ): Promise<Result<{ id: string; ownerId: string }[], DatabaseUnavailable>> {
+    const videos = await Promise.all(
+      this.itemsOf(playlistId).map(async ({ videoId }) =>
+        unwrapOr(await this.lookups.videosRepo.findById(videoId), null)
+      )
+    );
+    return ok(videos.filter((video) => video !== null).map(({ id, ownerId }) => ({ id, ownerId })));
   }
 
   async update(
