@@ -17,8 +17,10 @@ const renderQueueDrawer = (size?: DrawerSize) => {
         </Drawer.Trigger>
         <Drawer.Content size={size}>
           <Drawer.Handle />
-          <Drawer.Title>Your queue</Drawer.Title>
-          <Drawer.Description>Up next</Drawer.Description>
+          <Drawer.Header>
+            <Drawer.Title>Your queue</Drawer.Title>
+            <Drawer.Description>Up next</Drawer.Description>
+          </Drawer.Header>
           <Drawer.Body>Lisbon at night</Drawer.Body>
           <Drawer.Footer>
             <Drawer.Close asChild>

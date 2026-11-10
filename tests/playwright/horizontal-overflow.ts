@@ -1,6 +1,6 @@
 import { type Persona, type Stack, expect, test } from './fixtures';
 
-export const NARROW_WIDTHS = [320, 375];
+const NARROW_WIDTHS = [320, 375];
 
 const widestBoxes = () => {
   const edge = document.documentElement.clientWidth;

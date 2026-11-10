@@ -27,6 +27,17 @@ const renderSharePopover = (size?: PopoverSize, container?: HTMLElement) => {
 };
 
 describe('@vp/ui: Popover', () => {
+  it('scrolls inside the space the viewport leaves it, so it never runs off a short screen', async () => {
+    const { user } = renderSharePopover();
+
+    await user.click(screen.getByRole('button', { name: 'Share' }));
+
+    expect(screen.getByRole('dialog', { name: 'Share video' })).toHaveClass(
+      'max-h-(--radix-popover-content-available-height)',
+      'overflow-y-auto'
+    );
+  });
+
   it.each([
     { size: 'sm', width: 'w-60' },
     { size: 'md', width: 'w-80' },

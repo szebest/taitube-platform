@@ -4,6 +4,7 @@ import {
   ResponsiveModalContent,
   ResponsiveModalDescription,
   ResponsiveModalFooter,
+  ResponsiveModalHeader,
   ResponsiveModalRoot,
   ResponsiveModalTitle,
 } from './responsive-modal';
@@ -11,10 +12,12 @@ import {
 export const ResponsiveModal = {
   Root: ResponsiveModalRoot,
   Content: ResponsiveModalContent,
+  Header: ResponsiveModalHeader,
   Title: ResponsiveModalTitle,
   Description: ResponsiveModalDescription,
   Body: ResponsiveModalBody,
   Footer: ResponsiveModalFooter,
+  Trigger: DialogPrimitive.Trigger,
   Close: DialogPrimitive.Close,
 };
 export type { ResponsiveModalContentProps } from './responsive-modal';

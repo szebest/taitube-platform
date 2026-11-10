@@ -1,46 +1,5 @@
-import { expect, type Page, test } from '../../../../tests/playwright/fixtures';
-
-const EXPANDED = { width: 1280, height: 900 };
-
-const idOf = (position: number) =>
-  `0190c3a0-5e1d-7000-8000-00000000f${String(position).padStart(3, '0')}`;
-
-const shorts = [1, 2, 3].map((position) => ({
-  id: idOf(position),
-  ownerId: '0190c3a0-5e1d-7000-8000-00000000b001',
-  title: `Short ${position}`,
-  description: null,
-  visibility: 'public',
-  status: 'READY',
-  format: 'short',
-  channel: {
-    id: '0190c3a0-5e1d-7000-8000-00000000c001',
-    handle: 'marta',
-    displayName: 'Marta',
-    avatarUrl: null,
-  },
-  version: 0,
-  createdAt: '2026-01-01T00:00:00.000Z',
-  updatedAt: '2026-01-01T00:00:00.000Z',
-}));
-
-/** The browser's Shorts feed is three Shorts; the stack's own uploads are landscape, and never Shorts. */
-async function serveShorts(page: Page) {
-  await page.route(/\/v1\/shorts(\?|$)/, (route) =>
-    route.fulfill({
-      json: { items: shorts, nextCursor: null, total: shorts.length },
-      headers: { 'access-control-allow-origin': '*' },
-    })
-  );
-}
-
-async function openShorts(page: Page) {
-  await serveShorts(page);
-  await page.setViewportSize(EXPANDED);
-  await page.goto('/');
-  await page.getByRole('link', { name: 'Shorts', exact: true }).first().click();
-  await expect(page.getByRole('region', { name: 'Shorts player' })).toContainText('Short 1');
-}
+import { expect, test } from '../../../../tests/playwright/fixtures';
+import { idOf, openShorts } from './shorts-feed';
 
 test.describe('shorts', () => {
   test('arrow keys swipe through the Shorts, name each in the URL and announce it', async ({

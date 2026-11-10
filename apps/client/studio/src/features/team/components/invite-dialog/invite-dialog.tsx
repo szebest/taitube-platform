@@ -3,7 +3,7 @@ import { CHANNEL_ROLE_NAMES, type ChannelRole } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import { useT } from '@vp/intl-react';
 import { fromPromise, isOk } from '@vp/result';
-import { Button, Dialog, Field, SegmentedControl, useToast, useUiCopy } from '@vp/ui';
+import { Button, Field, ResponsiveModal, SegmentedControl, useToast, useUiCopy } from '@vp/ui';
 import { type FormEvent, useState } from 'react';
 import { useRoleRules } from '#app/features/team/hooks/use-role-rules';
 import { useInviteMember } from '#app/features/team/hooks/use-team-mutations';
@@ -70,14 +70,16 @@ export function InviteDialog({ onClose }: InviteDialogProps) {
   };
 
   return (
-    <Dialog.Root open onOpenChange={(open) => !open && onClose()}>
-      <Dialog.Content size="md">
+    <ResponsiveModal.Root open onOpenChange={(open) => !open && onClose()}>
+      <ResponsiveModal.Content size="md">
         <form onSubmit={send}>
-          <Dialog.Header>
-            <Dialog.Title>{tOr('studio.teamInviteTitle', {}, '')}</Dialog.Title>
-            <Dialog.Description>{tOr('studio.teamInviteDescription', {}, '')}</Dialog.Description>
-          </Dialog.Header>
-          <Dialog.Body>
+          <ResponsiveModal.Header>
+            <ResponsiveModal.Title>{tOr('studio.teamInviteTitle', {}, '')}</ResponsiveModal.Title>
+            <ResponsiveModal.Description>
+              {tOr('studio.teamInviteDescription', {}, '')}
+            </ResponsiveModal.Description>
+          </ResponsiveModal.Header>
+          <ResponsiveModal.Body>
             <Field.Root invalid={refusal !== undefined}>
               <span className="text-label">{tOr('studio.teamInviteHandle', {}, '')}</span>
               <HandleLookup
@@ -116,8 +118,8 @@ export function InviteDialog({ onClose }: InviteDialogProps) {
               <Field.Hint>{tOr('studio.teamRoleSummary', { role }, '')}</Field.Hint>
             </Field.Root>
             <RoleCapabilities role={role} />
-          </Dialog.Body>
-          <Dialog.Footer>
+          </ResponsiveModal.Body>
+          <ResponsiveModal.Footer>
             <Button variant="outline" type="button" onClick={onClose}>
               {cancel}
             </Button>
@@ -130,9 +132,9 @@ export function InviteDialog({ onClose }: InviteDialogProps) {
             >
               {tOr('studio.teamInviteSend', {}, '')}
             </Button>
-          </Dialog.Footer>
+          </ResponsiveModal.Footer>
         </form>
-      </Dialog.Content>
-    </Dialog.Root>
+      </ResponsiveModal.Content>
+    </ResponsiveModal.Root>
   );
 }

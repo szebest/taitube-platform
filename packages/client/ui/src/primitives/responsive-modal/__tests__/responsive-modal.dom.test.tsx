@@ -10,8 +10,10 @@ import { COMPACT_QUERY } from '../responsive-modal';
 const shareModal = (onOpenChange?: (open: boolean) => void) => (
   <ResponsiveModal.Root open onOpenChange={onOpenChange}>
     <ResponsiveModal.Content>
-      <ResponsiveModal.Title>Share video</ResponsiveModal.Title>
-      <ResponsiveModal.Description>Anyone with the link</ResponsiveModal.Description>
+      <ResponsiveModal.Header>
+        <ResponsiveModal.Title>Share video</ResponsiveModal.Title>
+        <ResponsiveModal.Description>Anyone with the link</ResponsiveModal.Description>
+      </ResponsiveModal.Header>
       <ResponsiveModal.Body>Lisbon at night</ResponsiveModal.Body>
       <ResponsiveModal.Footer>
         <ResponsiveModal.Close asChild>
@@ -42,9 +44,9 @@ describe('@vp/ui: ResponsiveModal', () => {
   });
 
   it.each([
-    { viewport: 'medium and up', compact: false, slot: 'dialog-content' },
-    { viewport: 'compact', compact: true, slot: 'drawer-content' },
-  ])('renders the same parts as a $slot on a $viewport viewport', ({ compact, slot }) => {
+    { viewport: 'medium and up', compact: false, slot: 'dialog-content', header: 'dialog-header' },
+    { viewport: 'compact', compact: true, slot: 'drawer-content', header: 'drawer-header' },
+  ])('renders the same parts as a $slot on a $viewport viewport', ({ compact, slot, header }) => {
     stubViewport(compact);
 
     renderShareModal();
@@ -52,7 +54,29 @@ describe('@vp/ui: ResponsiveModal', () => {
     const modal = screen.getByRole('dialog', { name: 'Share video' });
     expect(modal).toHaveAttribute('data-slot', slot);
     expect(modal).toHaveAccessibleDescription('Anyone with the link');
+    expect(modal.querySelector(`[data-slot="${header}"]`)).toContainElement(
+      screen.getByText('Share video')
+    );
     expect(screen.getByText('Lisbon at night')).toBeInTheDocument();
+  });
+
+  it('opens from its trigger', async () => {
+    stubViewport(false);
+    render(
+      <ResponsiveModal.Root>
+        <ResponsiveModal.Trigger asChild>
+          <Button>Share</Button>
+        </ResponsiveModal.Trigger>
+        <ResponsiveModal.Content>
+          <ResponsiveModal.Title>Share video</ResponsiveModal.Title>
+        </ResponsiveModal.Content>
+      </ResponsiveModal.Root>,
+      { wrapper: WithUiCopy }
+    );
+
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Share' }));
+
+    expect(screen.getByRole('dialog', { name: 'Share video' })).toBeInTheDocument();
   });
 
   it('stays open across the breakpoint', () => {

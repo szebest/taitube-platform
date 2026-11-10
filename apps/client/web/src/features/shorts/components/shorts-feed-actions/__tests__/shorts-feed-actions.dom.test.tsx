@@ -71,21 +71,21 @@ describe('apps/client/web: the Shorts actions', () => {
     );
   });
 
-  it('shares the link to the Short in a dialog', async () => {
+  it('shares the /shorts link of the Short in a dialog', async () => {
     const { user } = await renderShorts();
 
     await user.click(screen.getByRole('button', { name: 'Share' }));
 
-    const dialog = await screen.findByRole('dialog', { name: 'Share this video' });
-    expect(within(dialog).getByRole('textbox', { name: 'Link' })).toHaveValue(
-      `http://localhost:3000/watch/${FIRST}`
+    const dialog = await screen.findByRole('dialog', { name: 'Share this short' });
+    expect(within(dialog).getByRole('textbox', { name: 'Link' })).toHaveTextContent(
+      `http://localhost:3000/shorts/${FIRST}`
     );
   });
 
   it('keeps the arrow keys inside the share dialog from moving the player', async () => {
     const { router, user } = await renderShorts();
     await user.click(screen.getByRole('button', { name: 'Share' }));
-    const dialog = await screen.findByRole('dialog', { name: 'Share this video' });
+    const dialog = await screen.findByRole('dialog', { name: 'Share this short' });
     within(dialog).getByRole('button', { name: 'Copy' }).focus();
 
     await user.keyboard('{ArrowDown}');

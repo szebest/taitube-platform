@@ -13,6 +13,7 @@ import { player } from './player';
 import { pwa } from './pwa';
 import { search } from './search';
 import { settings } from './settings';
+import { share } from './share';
 import { shell } from './shell';
 import { shorts } from './shorts';
 import { studio } from './studio';
@@ -36,6 +37,7 @@ export const pl = {
   pwa,
   search,
   settings,
+  share,
   shell,
   shorts,
   studio,

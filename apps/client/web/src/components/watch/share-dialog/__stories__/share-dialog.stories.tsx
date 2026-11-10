@@ -1,6 +1,6 @@
 import type { Decorator, Meta, StoryObj } from '@storybook/react-vite';
 import { screen } from '@testing-library/dom';
-import { Dialog } from '@vp/ui';
+import { ResponsiveModal } from '@vp/ui';
 import { ShareDialog, ShareDialogContent } from '..';
 
 const VIDEO_ID = '0190c3a0-5e1d-7000-8000-00000000a001';
@@ -15,7 +15,7 @@ const meta = {
   title: 'Web/ShareDialog',
   tags: ['text', 'translated'],
   component: ShareDialog,
-  args: { video: { id: VIDEO_ID } },
+  args: { video: { id: VIDEO_ID, title: 'Launch day' } },
   parameters: { app: {}, layout: 'fullscreen' },
   decorators: [padded],
 } satisfies Meta<typeof ShareDialog>;
@@ -36,17 +36,25 @@ export const Opened: Story = {
 
 export const LinkOnly: Story = {
   render: () => (
-    <Dialog.Root open>
-      <ShareDialogContent videoId={VIDEO_ID} startAt={0} />
-    </Dialog.Root>
+    <ResponsiveModal.Root open>
+      <ShareDialogContent kind="watch" id={VIDEO_ID} title="Launch day" startAt={0} />
+    </ResponsiveModal.Root>
   ),
 };
 
 export const WithStartAtOption: Story = {
   render: () => (
-    <Dialog.Root open>
-      <ShareDialogContent videoId={VIDEO_ID} startAt={83} />
-    </Dialog.Root>
+    <ResponsiveModal.Root open>
+      <ShareDialogContent kind="watch" id={VIDEO_ID} title="Launch day" startAt={83} />
+    </ResponsiveModal.Root>
+  ),
+};
+
+export const Short: Story = {
+  render: () => (
+    <ResponsiveModal.Root open>
+      <ShareDialogContent kind="shorts" id={VIDEO_ID} title="Launch day" startAt={0} />
+    </ResponsiveModal.Root>
   ),
 };
 
