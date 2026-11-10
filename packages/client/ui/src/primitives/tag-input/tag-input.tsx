@@ -43,7 +43,7 @@ export function TagInput({
     let duplicate: string | undefined;
     for (const entry of entries.map((raw) => raw.trim()).filter((tag) => tag !== '')) {
       if (known.has(fold(entry))) {
-        duplicate ??= entry;
+        duplicate = duplicate ?? entry;
       } else if (value.length + added.length < max) {
         known.add(fold(entry));
         added.push(entry);
