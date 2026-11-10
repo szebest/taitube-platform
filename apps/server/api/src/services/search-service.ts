@@ -18,6 +18,7 @@ import {
   SEARCH_SUGGESTIONS,
   type SearchCursor,
   type SearchMode,
+  type SearchResultKind,
   type SearchSort,
   searchHandleOf,
   searchKinds,
@@ -187,18 +188,46 @@ export class SearchService {
     const mode: SearchMode = fallBack ? 'fuzzy' : firstMode;
     const found = fallBack ? await this.deps.search.search(query(mode)) : first;
 
-    return andThenAsync(found, async (page) => {
-      const owners = page.hits.flatMap((hit) => (hit.kind === 'video' ? [hit.video.ownerId] : []));
-      const channelOf = await loadChannelsOf(this.deps.channels, owners);
-      return map(channelOf, (of): SearchBody => ({
-        ...this.deps.paginator.paginate(page.hits, limit, {
-          cursorOf: (hit) => searchCursorPayload(hit, { sort, mode, instant }),
-          toItem: (hit) => toSearchResultItem(hit, this.deps.cdn, this.deps.sprite, of),
-        }),
-        total: page.total,
-        fuzzyFallback: mode === 'fuzzy',
-      }));
-    });
+    const counts = cursor ? ok(undefined) : await this.countKinds(query(mode));
+
+    return andThenAsync(
+      andThen(found, (page) => map(counts, (kinds) => ({ page, kinds }))),
+      async ({ page, kinds }) => {
+        const owners = page.hits.flatMap((hit) =>
+          hit.kind === 'video' ? [hit.video.ownerId] : []
+        );
+        const channelOf = await loadChannelsOf(this.deps.channels, owners);
+        return map(channelOf, (of): SearchBody => ({
+          ...this.deps.paginator.paginate(page.hits, limit, {
+            cursorOf: (hit) => searchCursorPayload(hit, { sort, mode, instant }),
+            toItem: (hit) => toSearchResultItem(hit, this.deps.cdn, this.deps.sprite, of),
+          }),
+          total: page.total,
+          counts: kinds,
+          fuzzyFallback: mode === 'fuzzy',
+        }));
+      }
+    );
+  }
+
+  private async countKinds(query: SearchQuery) {
+    const count = (kind: SearchResultKind) =>
+      this.deps.search.search({ ...query, kinds: [kind], limit: 1 });
+    const [video, channel, playlist] = await Promise.all([
+      count('video'),
+      count('channel'),
+      count('playlist'),
+    ]);
+
+    return andThen(video, (videos) =>
+      andThen(channel, (channels) =>
+        map(playlist, (playlists) => ({
+          video: videos.total,
+          channel: channels.total,
+          playlist: playlists.total,
+        }))
+      )
+    );
   }
 
   private async timed(

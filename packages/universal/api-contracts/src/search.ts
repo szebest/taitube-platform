@@ -75,6 +75,16 @@ const SearchResponseSchema = z.object({
   nextCursor: z.string().nullable(),
   tookMs: z.number().nonnegative().describe('Time the page took to produce, cache hits included'),
   total: z.number().int().nonnegative().describe('Every match across the kinds searched'),
+  counts: z
+    .object({
+      video: z.number().int().nonnegative(),
+      channel: z.number().int().nonnegative(),
+      playlist: z.number().int().nonnegative(),
+    })
+    .optional()
+    .describe(
+      'Every match of each kind for the same words, on the first page only: the tabs show them whichever kind is selected'
+    ),
   fuzzyFallback: z
     .boolean()
     .describe('Nothing matched the words as typed, so these are trigram matches for a likely typo'),
