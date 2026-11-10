@@ -3,6 +3,7 @@ import { SEARCH_SUGGESTIONS } from '@vp/domain';
 import { portBoardQueues } from '../bullmq/port-board-queues';
 import { ScryptPasswordHasher } from '../crypto/scrypt-password-hasher';
 import { InMemoryCacheClient } from '../in-memory/in-memory-cache-client';
+import { InMemoryCommentSlowMode } from '../in-memory/in-memory-comment-slow-mode';
 import { InMemoryDatabaseClient } from '../in-memory/in-memory-database-client';
 import { InMemoryFlowProducer } from '../in-memory/in-memory-flow-producer';
 import { InMemoryFrameClassifier } from '../in-memory/in-memory-frame-classifier';
@@ -72,6 +73,7 @@ export function registerFamily(c: Container): void {
     .provide(Adapters.ViewBuffer, () => new InMemoryViewBuffer())
     .provide(Adapters.WebhookDispatcher, () => new InMemoryWebhookDispatcher())
     .provide(Adapters.LiveGateway, () => new InMemoryLiveGateway())
+    .provide(Adapters.CommentSlowMode, () => new InMemoryCommentSlowMode())
     .provide(Adapters.LiveChatGate, () => new InMemoryLiveChatGate())
     .provide(Adapters.LivePresence, () => new InMemoryLivePresence())
     .provide(Adapters.WatchPartyGate, () => new InMemoryWatchPartyGate())

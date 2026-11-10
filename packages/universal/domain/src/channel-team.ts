@@ -1,3 +1,6 @@
+import type { RestrictionKind } from './channel-restriction';
+import type { CommentSettingsField, Disclosure } from './comment-settings';
+
 /** One per row of the channel role matrix; an action added to the matrix adds its capability here. */
 export const CHANNEL_CAPABILITIES = [
   'video.read',
@@ -132,6 +135,24 @@ type ChannelAuditEvent =
       targetId: string;
       meta: { fields: VideoAuditField[] };
     }
+  | { action: 'video.comments.toggled'; targetType: 'video'; targetId: string; meta: ToggledMeta }
+  | { action: 'comment.held'; targetType: 'comment'; targetId: string; meta: CommentMeta }
+  | { action: 'comment.approved'; targetType: 'comment'; targetId: string; meta: CommentMeta }
+  | { action: 'comment.hidden'; targetType: 'comment'; targetId: string; meta: CommentMeta }
+  | { action: 'comment.unhidden'; targetType: 'comment'; targetId: string; meta: CommentMeta }
+  | { action: 'comment.removed'; targetType: 'comment'; targetId: string; meta: CommentMeta }
+  | { action: 'comment.pinned'; targetType: 'comment'; targetId: string; meta: PinnedMeta }
+  | { action: 'user.shadow_banned'; targetType: 'user'; targetId: string; meta: UserMeta }
+  | { action: 'user.banned'; targetType: 'user'; targetId: string; meta: BanMeta }
+  | { action: 'user.restriction_lifted'; targetType: 'user'; targetId: string; meta: LiftMeta }
+  | { action: 'trusted.added'; targetType: 'user'; targetId: string; meta: UserMeta }
+  | { action: 'trusted.removed'; targetType: 'user'; targetId: string; meta: UserMeta }
+  | {
+      action: 'settings.comments.updated';
+      targetType: 'settings';
+      targetId: string;
+      meta: { fields: CommentSettingsField[] };
+    }
   | {
       action: 'channel.updated';
       targetType: 'channel';
@@ -149,7 +170,43 @@ type MemberMeta = {
   role: ChannelRole;
 };
 
+type ToggledMeta = { enabled: boolean };
+
+type CommentMeta = { videoId: string; disclosure: Disclosure };
+
+type PinnedMeta = { videoId: string; pinned: boolean };
+
+type UserMeta = Record<never, never>;
+
+type BanMeta = { expiresAt: string | null };
+
+type LiftMeta = { kind: RestrictionKind };
+
 export type ChannelAuditAction = ChannelAuditEvent['action'];
+
+type VideoAuditEvent = Extract<ChannelAuditEvent, { targetType: 'video' }>;
+
+/** One edit is audited as what changed in its fields and, on its own row, a comments toggle. */
+export function videoEditAudit(edit: {
+  videoId: string;
+  fields: VideoAuditField[];
+  commentsEnabled?: boolean;
+}): VideoAuditEvent[] {
+  const { videoId: targetId, fields, commentsEnabled } = edit;
+  const events: VideoAuditEvent[] = [];
+  if (fields.length > 0) {
+    events.push({ action: 'video.updated', targetType: 'video', targetId, meta: { fields } });
+  }
+  if (commentsEnabled !== undefined) {
+    events.push({
+      action: 'video.comments.toggled',
+      targetType: 'video',
+      targetId,
+      meta: { enabled: commentsEnabled },
+    });
+  }
+  return events;
+}
 
 const AUDIT_ACTIONS: Record<ChannelAuditAction, true> = {
   'invite.created': true,
@@ -160,6 +217,19 @@ const AUDIT_ACTIONS: Record<ChannelAuditAction, true> = {
   'member.removed': true,
   'member.left': true,
   'video.updated': true,
+  'video.comments.toggled': true,
+  'comment.held': true,
+  'comment.approved': true,
+  'comment.hidden': true,
+  'comment.unhidden': true,
+  'comment.removed': true,
+  'comment.pinned': true,
+  'user.shadow_banned': true,
+  'user.banned': true,
+  'user.restriction_lifted': true,
+  'trusted.added': true,
+  'trusted.removed': true,
+  'settings.comments.updated': true,
   'channel.updated': true,
 };
 

@@ -30,6 +30,7 @@ export interface Video {
   errorMessage?: string | null;
   viewsCount?: number;
   commentsCount?: number;
+  commentsEnabled?: boolean;
   likesCount?: number;
   dislikesCount?: number;
   categoryId?: string | null;

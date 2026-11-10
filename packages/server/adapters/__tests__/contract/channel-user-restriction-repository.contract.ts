@@ -1,0 +1,255 @@
+import type { Repositories } from '@vp/core/repositories';
+import type { Channel, NewChannelAuditEntry, NewChannelUserRestriction } from '@vp/domain';
+import { expectOk } from '@vp/testing/result';
+import { INVITEE_ID, seedTeam } from './channel-team-fixtures';
+import { OTHER_OWNER_ID, OWNER_ID, publicVideo, seedOwners, VIDEO_IDS } from './fixtures';
+import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
+
+const HOUR_MS = 3_600_000;
+
+export function describeChannelUserRestrictionRepositoryContract(
+  makeSubject: MakeRepositoriesSubject
+): void {
+  describe('ChannelUserRestrictionRepository contract', () => {
+    let subject: RepositoriesSubject;
+    let repositories: Repositories;
+    let channel: Channel;
+
+    const ban = (
+      userId: string,
+      expiresAt: Date | null = null,
+      reason: string | null = 'spam'
+    ): NewChannelUserRestriction => ({
+      channelId: channel.id,
+      userId,
+      kind: 'ban',
+      reason,
+      expiresAt,
+      createdBy: OWNER_ID,
+    });
+    const shadow = (userId: string): NewChannelUserRestriction => ({
+      channelId: channel.id,
+      userId,
+      kind: 'shadow',
+      reason: null,
+      expiresAt: null,
+      createdBy: OWNER_ID,
+    });
+    const write = async (restriction: NewChannelUserRestriction) =>
+      expectOk(await repositories.channelUserRestrictions.apply(restriction));
+    const apply = async (restriction: NewChannelUserRestriction) =>
+      (await write(restriction)).restriction;
+    const findActive = async (userId: string, now = new Date()) =>
+      expectOk(await repositories.channelUserRestrictions.findActive(channel.id, userId, now));
+    const list = async (limit = 10, cursor = null as { createdAt: Date; userId: string } | null) =>
+      expectOk(
+        await repositories.channelUserRestrictions.list(channel.id, {
+          cursor,
+          limit,
+          now: new Date(),
+        })
+      );
+
+    beforeAll(async () => {
+      subject = await makeSubject();
+    });
+
+    afterAll(async () => {
+      await subject.close();
+    });
+
+    beforeEach(async () => {
+      await subject.reset();
+      repositories = subject.repositories;
+      await seedOwners(repositories);
+      channel = await seedTeam(repositories);
+    });
+
+    it('answers nothing for a user with no restriction', async () => {
+      expect(await findActive(OTHER_OWNER_ID)).toBeNull();
+    });
+
+    it.each([
+      { name: 'a permanent ban', make: () => ban(OTHER_OWNER_ID) },
+      {
+        name: 'a ban that has not ended',
+        make: () => ban(OTHER_OWNER_ID, new Date(Date.now() + HOUR_MS)),
+      },
+      { name: 'a shadow ban', make: () => shadow(OTHER_OWNER_ID) },
+    ])('finds $name', async ({ make }) => {
+      const restriction = make();
+
+      expect(await apply(restriction)).toMatchObject(restriction);
+      expect(await findActive(OTHER_OWNER_ID)).toMatchObject(restriction);
+    });
+
+    it('reads an ended ban as absent, with no job having run', async () => {
+      await apply(ban(OTHER_OWNER_ID, new Date(Date.now() - HOUR_MS)));
+
+      expect(await findActive(OTHER_OWNER_ID)).toBeNull();
+      expect(await list()).toEqual([]);
+    });
+
+    it('holds one restriction per user: a ban replaces a shadow ban', async () => {
+      await apply(shadow(OTHER_OWNER_ID));
+      await apply(ban(OTHER_OWNER_ID));
+
+      expect(await findActive(OTHER_OWNER_ID)).toMatchObject({ kind: 'ban', reason: 'spam' });
+      expect(await list()).toHaveLength(1);
+    });
+
+    it('restricts a user on one channel without touching another', async () => {
+      const other = expectOk(
+        await repositories.channels.create({
+          userId: OTHER_OWNER_ID,
+          handle: 'other',
+          displayName: 'Other',
+        })
+      );
+      await apply(ban(INVITEE_ID));
+
+      expect(
+        expectOk(
+          await repositories.channelUserRestrictions.findActive(other.id, INVITEE_ID, new Date())
+        )
+      ).toBeNull();
+    });
+
+    it('lifts a restriction once, and says so when there was none', async () => {
+      await apply(shadow(OTHER_OWNER_ID));
+      const lift = async () =>
+        expectOk(await repositories.channelUserRestrictions.lift(channel.id, OTHER_OWNER_ID));
+
+      expect([(await lift()).lifted, (await lift()).lifted]).toEqual([true, false]);
+      expect(await findActive(OTHER_OWNER_ID)).toBeNull();
+    });
+
+    describe('what it keeps true with the restriction', () => {
+      const COMMENT_IDS = [
+        '00000000-0000-7000-8000-000000000c01',
+        '00000000-0000-7000-8000-000000000c02',
+      ] as const;
+      const audit = (
+        action: 'user.shadow_banned' | 'user.restriction_lifted'
+      ): NewChannelAuditEntry =>
+        action === 'user.shadow_banned'
+          ? {
+              channelId: channel.id,
+              actorUserId: OWNER_ID,
+              action,
+              targetType: 'user',
+              targetId: OTHER_OWNER_ID,
+              meta: {},
+            }
+          : {
+              channelId: channel.id,
+              actorUserId: OWNER_ID,
+              action,
+              targetType: 'user',
+              targetId: OTHER_OWNER_ID,
+              meta: { kind: 'shadow' },
+            };
+      const count = async () =>
+        expectOk(await repositories.videos.findById(VIDEO_IDS.a))?.commentsCount;
+
+      beforeEach(async () => {
+        await subject.seedVideo(publicVideo({ id: VIDEO_IDS.a }));
+        await subject.seedVideo(publicVideo({ id: VIDEO_IDS.b }));
+        for (const id of COMMENT_IDS) {
+          expectOk(
+            await repositories.comments.create({
+              id,
+              videoId: VIDEO_IDS.a,
+              authorId: OTHER_OWNER_ID,
+              parentId: null,
+              content: 'hello',
+            })
+          );
+        }
+      });
+
+      it('counts again exactly, naming the videos it touched, for a shadow ban and its lift', async () => {
+        const shadowed = await write(shadow(OTHER_OWNER_ID));
+        const during = await count();
+        const lifted = expectOk(
+          await repositories.channelUserRestrictions.lift(channel.id, OTHER_OWNER_ID)
+        );
+
+        expect(shadowed.videoIds).toEqual([VIDEO_IDS.a]);
+        expect(during).toBe(0);
+        expect(lifted).toEqual({ lifted: true, videoIds: [VIDEO_IDS.a] });
+        expect(await count()).toBe(2);
+      });
+
+      it('leaves the count alone for a ban, which refuses writes and hides nothing', async () => {
+        await write(ban(OTHER_OWNER_ID));
+
+        expect(await count()).toBe(2);
+      });
+
+      it('counts nothing again, and records nothing, when there was no restriction to lift', async () => {
+        const lifted = expectOk(
+          await repositories.channelUserRestrictions.lift(
+            channel.id,
+            OTHER_OWNER_ID,
+            audit('user.restriction_lifted')
+          )
+        );
+
+        expect(lifted).toEqual({ lifted: false, videoIds: [] });
+        expect(
+          expectOk(await repositories.channelAudit.list(channel.id, { cursor: null, limit: 10 }))
+        ).toEqual([]);
+      });
+
+      it('records each audit row it is given with the change', async () => {
+        await repositories.channelUserRestrictions.apply(shadow(OTHER_OWNER_ID), {
+          audit: audit('user.shadow_banned'),
+        });
+        await repositories.channelUserRestrictions.lift(
+          channel.id,
+          OTHER_OWNER_ID,
+          audit('user.restriction_lifted')
+        );
+
+        const log = expectOk(
+          await repositories.channelAudit.list(channel.id, { cursor: null, limit: 10 })
+        );
+        expect(log.map((entry) => entry.action).reverse()).toEqual([
+          'user.shadow_banned',
+          'user.restriction_lifted',
+        ]);
+      });
+    });
+
+    it('pages by cursor, one more row than asked for so the caller sees a next page', async () => {
+      await apply(ban(OTHER_OWNER_ID));
+      await apply(shadow(INVITEE_ID));
+
+      const firstPage = await list(1);
+      const [head] = firstPage;
+      const rest = await list(1, head && { createdAt: head.createdAt, userId: head.userId });
+
+      expect(firstPage).toHaveLength(2);
+      expect(rest).toHaveLength(1);
+      expect(new Set([...firstPage, ...rest].map((row) => row.userId))).toEqual(
+        new Set([OTHER_OWNER_ID, INVITEE_ID])
+      );
+      expect(rest.map((row) => row.userId)).toEqual([firstPage[1]?.userId]);
+    });
+
+    it('purges restrictions that ended before the cutoff and keeps the rest', async () => {
+      await apply(ban(OTHER_OWNER_ID, new Date(Date.now() - 40 * 24 * HOUR_MS)));
+      await apply(ban(INVITEE_ID, new Date(Date.now() - HOUR_MS)));
+      await apply(shadow(OWNER_ID));
+      const cutoff = new Date(Date.now() - 30 * 24 * HOUR_MS);
+
+      expect(expectOk(await repositories.channelUserRestrictions.purgeEndedBefore(cutoff))).toBe(1);
+      expect(
+        expectOk(
+          await repositories.channelUserRestrictions.findActive(channel.id, OWNER_ID, new Date())
+        )
+      ).not.toBeNull();
+    });
+  });
+}

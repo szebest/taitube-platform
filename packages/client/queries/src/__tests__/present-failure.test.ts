@@ -12,6 +12,12 @@ describe('@vp/queries: present', () => {
     { code: ErrorCodes.DATABASE_UNAVAILABLE, kind: 'server' },
     { code: ErrorCodes.INTERNAL, kind: 'server' },
     { code: ErrorCodes.VALIDATION_FAILED, kind: 'generic' },
+    { code: ErrorCodes.COMMENTS_BANNED, kind: 'forbidden' },
+    { code: ErrorCodes.COMMENTS_SLOW_MODE, kind: 'rate-limited' },
+    { code: ErrorCodes.RESTRICTION_NOT_FOUND, kind: 'not-found' },
+    { code: ErrorCodes.MODERATION_NOT_APPLICABLE, kind: 'generic' },
+    { code: ErrorCodes.SAVED_REPLY_NOT_FOUND, kind: 'not-found' },
+    { code: ErrorCodes.SAVED_REPLY_LIMIT, kind: 'generic' },
   ])('shows $code as a $kind failure', ({ code, kind }) => {
     expect(present({ code }).kind).toBe(kind);
   });

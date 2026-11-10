@@ -30,7 +30,10 @@ export function decideCommentDelete(
   );
 }
 
-/** Pinning and unpinning are one decision: only the video owner curates the top of the list. */
+/**
+ * Pinning and unpinning are one decision: only the video owner curates the top of the list, and
+ * only a root that is published, because a held or hidden one is out of public reads.
+ */
 export function decideCommentPin(input: ModerateCommentInput): Result<Comment, PinCommentFailure> {
   return andThen(locateComment(input), ({ comment, video }) =>
     andThen(
@@ -39,7 +42,9 @@ export function decideCommentPin(input: ModerateCommentInput): Result<Comment, P
         subject: 'Comment',
       }),
       (): Result<Comment, CommentNotPinnable> =>
-        comment.parentId === null ? ok(comment) : err(commentNotPinnable(comment.id))
+        comment.parentId === null && comment.moderationState === 'published'
+          ? ok(comment)
+          : err(commentNotPinnable(comment.id))
     )
   );
 }

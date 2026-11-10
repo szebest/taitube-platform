@@ -3,13 +3,13 @@ import { platformOfUrl } from '@vp/domain';
 import { fieldError, useAppForm } from '@vp/forms';
 import { useT } from '@vp/intl-react';
 import { Button, Field, Input, PlatformIcon } from '@vp/ui';
+import { CustomizationSection } from '#app/components/section/customization-section';
 import {
   validateBannerLinkField,
   validateLinksField,
   withoutBlankLinks,
 } from '#app/features/channel/forms/channel-field-validators';
 import { useUpdateChannel } from '#app/features/channel/hooks/use-update-channel';
-import { CustomizationSection } from '../customization-section/customization-section';
 
 const MAX_LINKS = 8;
 const LINKS_LABEL_ID = 'channel-links-label';

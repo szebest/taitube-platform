@@ -23,6 +23,7 @@ export function describeCommentReportRepositoryContract(
       get comments() {
         return subject.repositories.comments;
       },
+      authorId: OTHER_OWNER_ID,
     };
 
     beforeAll(async () => {

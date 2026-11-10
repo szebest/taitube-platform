@@ -6,7 +6,7 @@ const NO_ID = '00000000-0000-7000-8000-000000000000';
 
 type TeamAttempt = {
   name: string;
-  method: 'GET' | 'POST' | 'PATCH' | 'DELETE';
+  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   path: (team: Stack['team']) => string;
   data?: Record<string, unknown>;
 };
@@ -32,6 +32,58 @@ const TEAM_ATTEMPTS: TeamAttempt[] = [
     path: ({ userIds }) => `/v1/me/channel/members/${userIds.manager}`,
   },
   { name: 'read the audit log', method: 'GET', path: () => '/v1/me/channel/audit' },
+  {
+    name: 'read the comment settings',
+    method: 'GET',
+    path: () => '/v1/me/channel/comment-settings',
+  },
+  {
+    name: 'replace the comment settings',
+    method: 'PUT',
+    path: () => '/v1/me/channel/comment-settings',
+    data: {
+      reviewMode: 'none',
+      blockedWords: [],
+      linkAllowlist: [],
+      slowModeSeconds: null,
+      subscribersOnly: false,
+      minAccountAgeDays: 0,
+      disclosure: {
+        hide: 'silent',
+        remove: 'visible',
+        manual_hold: 'visible',
+        'auto.blocked_words': 'silent',
+        'auto.links': 'visible',
+        'auto.review_all': 'visible',
+      },
+    },
+  },
+  {
+    name: 'read the trusted commenters',
+    method: 'GET',
+    path: () => '/v1/me/channel/trusted-commenters',
+  },
+  {
+    name: 'trust a commenter',
+    method: 'PUT',
+    path: () => `/v1/me/channel/trusted-commenters/${NO_ID}`,
+  },
+];
+
+/** Moderators run the comment queue, so only the roles without `comment.moderate` are refused these. */
+const MODERATION_ATTEMPTS: TeamAttempt[] = [
+  { name: 'list the restricted users', method: 'GET', path: () => '/v1/me/channel/restrictions' },
+  {
+    name: 'shadow ban a user',
+    method: 'PUT',
+    path: () => `/v1/me/channel/restrictions/${NO_ID}`,
+    data: { action: 'shadow_ban' },
+  },
+  {
+    name: 'lift a restriction',
+    method: 'DELETE',
+    path: () => `/v1/me/channel/restrictions/${NO_ID}`,
+  },
 ];
 
 const SIGNED_IN_ATTEMPTS: TeamAttempt[] = [
@@ -105,6 +157,16 @@ const REFUSALS: Refusal[] = [
   ...OFF_ROLES.flatMap(({ caller, persona, code }) =>
     TEAM_ATTEMPTS.map((attempt) => ({ caller, persona, attempt, status: 403, code }))
   ),
+  ...OFF_ROLES.filter(({ persona }) => persona !== 'moderator').flatMap(
+    ({ caller, persona, code }) =>
+      MODERATION_ATTEMPTS.map((attempt) => ({ caller, persona, attempt, status: 403, code }))
+  ),
+  ...MODERATION_ATTEMPTS.map((attempt) => ({
+    caller: 'an anonymous caller',
+    attempt,
+    status: 401,
+    code: 'UNAUTHORIZED',
+  })),
   ...MANAGER_ATTEMPTS.map(({ status, code, ...attempt }) => ({
     caller: 'a manager',
     persona: 'manager' as const,

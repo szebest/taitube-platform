@@ -5,7 +5,7 @@ import {
   SectionError,
   SignedOutIllustration,
 } from '@vp/components';
-import { Drawer } from '@vp/ui';
+import { Button, Callout, Drawer } from '@vp/ui';
 import { type ReactNode, useState } from 'react';
 import { CommentItem } from '#app/components/discussion/comment-item';
 import { CommentThread, CommentThreadSkeleton } from '..';
@@ -136,10 +136,90 @@ export const ErrorState: Story = {
   ),
 };
 
+function Notice({ title, children }: { title: string; children?: ReactNode }) {
+  return (
+    <Callout.Root tone="warning" role="status">
+      <Callout.Icon />
+      <Callout.Title>{title}</Callout.Title>
+      {children}
+    </Callout.Root>
+  );
+}
+
 export const CommentsDisabled: Story = {
   render: (args) => (
-    <Thread args={args} composer={<span />}>
-      <p className="m-0 text-body text-fg-muted">The creator turned comments off.</p>
+    <Thread args={args} composer={<Notice title="Comments are turned off for this video" />}>
+      <CommentThread.List>
+        <Comments />
+      </CommentThread.List>
+    </Thread>
+  ),
+};
+
+export const Banned: Story = {
+  render: (args) => (
+    <Thread
+      args={args}
+      composer={
+        <Notice title="You cannot comment on this channel">
+          <Callout.Body>Reason: Spam. This lasts until Nov 17, 2026.</Callout.Body>
+        </Notice>
+      }
+    >
+      <CommentThread.List>
+        <Comments />
+      </CommentThread.List>
+    </Thread>
+  ),
+};
+
+export const SubscribersOnly: Story = {
+  render: (args) => (
+    <Thread
+      args={args}
+      composer={
+        <Notice title="Only subscribers can comment on this channel">
+          <Callout.Action>
+            <Button variant="solid" size="sm">
+              Subscribe
+            </Button>
+          </Callout.Action>
+        </Notice>
+      }
+    >
+      <CommentThread.List>
+        <Comments />
+      </CommentThread.List>
+    </Thread>
+  ),
+};
+
+export const AccountTooNew: Story = {
+  render: (args) => (
+    <Thread args={args} composer={<Notice title="Your account can comment from Nov 12, 2026" />}>
+      <CommentThread.List>
+        <Comments />
+      </CommentThread.List>
+    </Thread>
+  ),
+};
+
+export const SlowMode: Story = {
+  render: (args) => (
+    <Thread
+      args={args}
+      composer={
+        <CommentThread.Composer
+          value="Watched it twice."
+          onChange={noop}
+          onSubmit={noop}
+          wait="Wait 12 s"
+        />
+      }
+    >
+      <CommentThread.List>
+        <Comments />
+      </CommentThread.List>
     </Thread>
   ),
 };

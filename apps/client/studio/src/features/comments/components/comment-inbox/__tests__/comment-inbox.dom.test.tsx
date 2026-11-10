@@ -30,7 +30,9 @@ describe('apps/client/studio: CommentInbox', () => {
     await user.click(screen.getByRole('button', { name: 'Load more' }));
 
     expect(await screen.findByText('An older one')).toBeInTheDocument();
-    expect(requests.lists.map(({ cursor }) => cursor)).toEqual([null, '1']);
+    expect(
+      requests.lists.filter(({ filter }) => filter === 'all').map(({ cursor }) => cursor)
+    ).toEqual([null, '1']);
   });
 
   it('says so when nothing matches the filter', async () => {

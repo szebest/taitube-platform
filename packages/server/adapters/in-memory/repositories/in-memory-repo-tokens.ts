@@ -9,9 +9,12 @@ import type { InMemoryChannelInviteRepository } from './in-memory-channel-invite
 import type { InMemoryChannelMemberRepository } from './in-memory-channel-member-repository';
 import type { InMemoryChannelPageRepository } from './in-memory-channel-page-repository';
 import type { InMemoryChannelRepository } from './in-memory-channel-repository';
+import type { InMemoryChannelUserRestrictionRepository } from './in-memory-channel-user-restriction-repository';
 import type { InMemoryClipRepository } from './in-memory-clip-repository';
+import type { InMemoryCommentModerationRepository } from './in-memory-comment-moderation-repository';
 import type { InMemoryCommentReportRepository } from './in-memory-comment-report-repository';
 import type { InMemoryCommentRepository } from './in-memory-comment-repository';
+import type { InMemoryCommentSettingsRepository } from './in-memory-comment-settings-repository';
 import type { InMemoryDlqRepository } from './in-memory-dlq-repository';
 import type { InMemoryEventRepository } from './in-memory-event-repository';
 import type { InMemoryFingerprintRepository } from './in-memory-fingerprint-repository';
@@ -24,11 +27,13 @@ import type { InMemoryRecommendationFeedbackRepository } from './in-memory-recom
 import type { InMemoryRelatedVideosRepository } from './in-memory-related-videos-repository';
 import type { InMemoryRenditionRepository } from './in-memory-rendition-repository';
 import type { InMemoryRisingVideosRepository } from './in-memory-rising-videos-repository';
+import type { InMemorySavedReplyRepository } from './in-memory-saved-reply-repository';
 import type { InMemoryScreeningRepository } from './in-memory-screening-repository';
 import type { InMemorySearchHistoryRepository } from './in-memory-search-history-repository';
 import type { InMemorySearchRepository } from './in-memory-search-repository';
 import type { InMemoryStepRepository } from './in-memory-step-repository';
 import type { InMemorySubscriptionRepository } from './in-memory-subscription-repository';
+import type { InMemoryTrustedCommenterRepository } from './in-memory-trusted-commenter-repository';
 import type { InMemoryUploadRepository } from './in-memory-upload-repository';
 import type { InMemoryUserEventRepository } from './in-memory-user-event-repository';
 import type { InMemoryUserPreferencesRepository } from './in-memory-user-preferences-repository';
@@ -57,10 +62,16 @@ export const Repo = {
   channelMembers: token<InMemoryChannelMemberRepository>('channelMembers'),
   channelInvites: token<InMemoryChannelInviteRepository>('channelInvites'),
   channelAudit: token<InMemoryChannelAuditRepository>('channelAudit'),
+  commentSettings: token<InMemoryCommentSettingsRepository>('commentSettings'),
+  channelUserRestrictions:
+    token<InMemoryChannelUserRestrictionRepository>('channelUserRestrictions'),
+  trustedCommenters: token<InMemoryTrustedCommenterRepository>('trustedCommenters'),
+  savedReplies: token<InMemorySavedReplyRepository>('savedReplies'),
   videoReactions: token<InMemoryVideoReactionRepository>('videoReactions'),
   subscriptions: token<InMemorySubscriptionRepository>('subscriptions'),
   videoViews: token<InMemoryVideoViewRepository>('videoViews'),
   comments: token<InMemoryCommentRepository>('comments'),
+  commentModeration: token<InMemoryCommentModerationRepository>('commentModeration'),
   commentReports: token<InMemoryCommentReportRepository>('commentReports'),
   playlists: token<InMemoryPlaylistRepository>('playlists'),
   watchHistory: token<InMemoryWatchHistoryRepository>('watchHistory'),

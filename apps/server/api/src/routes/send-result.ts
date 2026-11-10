@@ -52,5 +52,8 @@ export function sendResult<T, E extends AnyFailure>(
     reply.header(name, value);
   }
   reply.header('content-type', PROBLEM_CONTENT_TYPE);
+  for (const [name, value] of Object.entries(options.headers?.(failure) ?? {})) {
+    reply.header(name, value);
+  }
   return reply.status(problem.status).send(problem);
 }

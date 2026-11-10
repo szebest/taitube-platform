@@ -27,7 +27,7 @@ export function createNotifyHeartProcessor(deps: NotifyHeartDeps) {
     const { commentId, videoId } = job.data;
     const skipped = ok({ commentId, recorded: false });
 
-    const comment = await repositories.comments.findById(commentId);
+    const comment = await repositories.comments.findVisible(null, commentId);
     if (isErr(comment)) return comment;
     const video = await repositories.videos.findById(videoId);
     if (isErr(video)) return video;

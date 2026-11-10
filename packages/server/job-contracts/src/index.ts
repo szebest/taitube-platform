@@ -143,6 +143,7 @@ export const HousekeepingJob = z.object({
     'reconcile-captions',
     'purge-search-history',
     'purge-channel-audit',
+    'purge-comment-moderation',
     'purge-screening-evidence',
     'purge-channel-images',
     'purge-handle-history',

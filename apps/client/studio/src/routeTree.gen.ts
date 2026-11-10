@@ -25,6 +25,8 @@ import { Route as AuthedAdminCurationRouteImport } from './routes/_authed/admin/
 import { Route as AuthedAdminModerationRouteImport } from './routes/_authed/admin/moderation';
 import { Route as AuthedAdminQueuesRouteImport } from './routes/_authed/admin/queues';
 import { Route as AuthedAdminScreeningRouteImport } from './routes/_authed/admin/screening';
+import { Route as AuthedCommentsQueueRouteImport } from './routes/_authed/comments_.queue';
+import { Route as AuthedCommentsSettingsRouteImport } from './routes/_authed/comments_.settings';
 import { Route as AuthedUploadIndexRouteImport } from './routes/_authed/upload/index';
 import { Route as AuthedVideosIndexRouteImport } from './routes/_authed/videos/index';
 import { Route as LiveOverlayTokenRouteImport } from './routes/live.overlay.$token';
@@ -111,6 +113,16 @@ const AuthedAdminScreeningRoute = AuthedAdminScreeningRouteImport.update({
   path: '/screening',
   getParentRoute: () => AuthedAdminRoute,
 } as any);
+const AuthedCommentsQueueRoute = AuthedCommentsQueueRouteImport.update({
+  id: '/comments_/queue',
+  path: '/comments/queue',
+  getParentRoute: () => AuthedRoute,
+} as any);
+const AuthedCommentsSettingsRoute = AuthedCommentsSettingsRouteImport.update({
+  id: '/comments_/settings',
+  path: '/comments/settings',
+  getParentRoute: () => AuthedRoute,
+} as any);
 const AuthedUploadIndexRoute = AuthedUploadIndexRouteImport.update({
   id: '/upload/',
   path: '/upload/',
@@ -158,6 +170,8 @@ export interface FileRoutesByFullPath {
   '/admin/moderation': typeof AuthedAdminModerationRoute;
   '/admin/queues': typeof AuthedAdminQueuesRoute;
   '/admin/screening': typeof AuthedAdminScreeningRoute;
+  '/comments/queue': typeof AuthedCommentsQueueRoute;
+  '/comments/settings': typeof AuthedCommentsSettingsRoute;
   '/live/overlay/$token': typeof LiveOverlayTokenRoute;
   '/admin/': typeof AuthedAdminIndexRoute;
   '/upload/': typeof AuthedUploadIndexRoute;
@@ -180,6 +194,8 @@ export interface FileRoutesByTo {
   '/admin/moderation': typeof AuthedAdminModerationRoute;
   '/admin/queues': typeof AuthedAdminQueuesRoute;
   '/admin/screening': typeof AuthedAdminScreeningRoute;
+  '/comments/queue': typeof AuthedCommentsQueueRoute;
+  '/comments/settings': typeof AuthedCommentsSettingsRoute;
   '/live/overlay/$token': typeof LiveOverlayTokenRoute;
   '/admin': typeof AuthedAdminIndexRoute;
   '/upload': typeof AuthedUploadIndexRoute;
@@ -205,6 +221,8 @@ export interface FileRoutesById {
   '/_authed/admin/moderation': typeof AuthedAdminModerationRoute;
   '/_authed/admin/queues': typeof AuthedAdminQueuesRoute;
   '/_authed/admin/screening': typeof AuthedAdminScreeningRoute;
+  '/_authed/comments_/queue': typeof AuthedCommentsQueueRoute;
+  '/_authed/comments_/settings': typeof AuthedCommentsSettingsRoute;
   '/live/overlay/$token': typeof LiveOverlayTokenRoute;
   '/_authed/admin/': typeof AuthedAdminIndexRoute;
   '/_authed/upload/': typeof AuthedUploadIndexRoute;
@@ -230,6 +248,8 @@ export interface FileRouteTypes {
     | '/admin/moderation'
     | '/admin/queues'
     | '/admin/screening'
+    | '/comments/queue'
+    | '/comments/settings'
     | '/live/overlay/$token'
     | '/admin/'
     | '/upload/'
@@ -252,6 +272,8 @@ export interface FileRouteTypes {
     | '/admin/moderation'
     | '/admin/queues'
     | '/admin/screening'
+    | '/comments/queue'
+    | '/comments/settings'
     | '/live/overlay/$token'
     | '/admin'
     | '/upload'
@@ -276,6 +298,8 @@ export interface FileRouteTypes {
     | '/_authed/admin/moderation'
     | '/_authed/admin/queues'
     | '/_authed/admin/screening'
+    | '/_authed/comments_/queue'
+    | '/_authed/comments_/settings'
     | '/live/overlay/$token'
     | '/_authed/admin/'
     | '/_authed/upload/'
@@ -406,6 +430,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedAdminScreeningRouteImport;
       parentRoute: typeof AuthedAdminRoute;
     };
+    '/_authed/comments_/queue': {
+      id: '/_authed/comments_/queue';
+      path: '/comments/queue';
+      fullPath: '/comments/queue';
+      preLoaderRoute: typeof AuthedCommentsQueueRouteImport;
+      parentRoute: typeof AuthedRoute;
+    };
+    '/_authed/comments_/settings': {
+      id: '/_authed/comments_/settings';
+      path: '/comments/settings';
+      fullPath: '/comments/settings';
+      preLoaderRoute: typeof AuthedCommentsSettingsRouteImport;
+      parentRoute: typeof AuthedRoute;
+    };
     '/_authed/upload/': {
       id: '/_authed/upload/';
       path: '/upload';
@@ -481,6 +519,8 @@ interface AuthedRouteChildren {
   AuthedInvitesRoute: typeof AuthedInvitesRoute;
   AuthedLiveRoute: typeof AuthedLiveRoute;
   AuthedTeamRoute: typeof AuthedTeamRoute;
+  AuthedCommentsQueueRoute: typeof AuthedCommentsQueueRoute;
+  AuthedCommentsSettingsRoute: typeof AuthedCommentsSettingsRoute;
   AuthedUploadIndexRoute: typeof AuthedUploadIndexRoute;
   AuthedVideosIndexRoute: typeof AuthedVideosIndexRoute;
   AuthedUploadEditVideoIdRoute: typeof AuthedUploadEditVideoIdRoute;
@@ -496,6 +536,8 @@ const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedInvitesRoute: AuthedInvitesRoute,
   AuthedLiveRoute: AuthedLiveRoute,
   AuthedTeamRoute: AuthedTeamRoute,
+  AuthedCommentsQueueRoute: AuthedCommentsQueueRoute,
+  AuthedCommentsSettingsRoute: AuthedCommentsSettingsRoute,
   AuthedUploadIndexRoute: AuthedUploadIndexRoute,
   AuthedVideosIndexRoute: AuthedVideosIndexRoute,
   AuthedUploadEditVideoIdRoute: AuthedUploadEditVideoIdRoute,

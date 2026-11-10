@@ -8,6 +8,10 @@ export {
   watchHistoryQueryOptions,
 } from './api/library-queries';
 export { LibraryPage, LibraryPageSkeleton } from './components/library-page/library-page';
+export {
+  ModerationPage,
+  ModerationPageSkeleton,
+} from './components/moderation-page/moderation-page';
 export { PlaylistPageSkeleton } from './components/playlist-page-skeleton/playlist-page-skeleton';
 export { PlaylistPage } from './components/playlist-page/playlist-page';
 export { PlaylistsPageSkeleton } from './components/playlists-page-skeleton/playlists-page-skeleton';

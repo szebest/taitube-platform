@@ -1,4 +1,5 @@
 import type { NewVideoInput, Repositories, VideoRecord } from '@vp/core/repositories';
+import type { CommentModerationFields } from '@vp/domain';
 import { expectOk } from '@vp/testing/result';
 import { InMemoryRepositories } from '../../in-memory/repositories/in-memory-repositories';
 export interface RepositoriesSubject {
@@ -15,10 +16,8 @@ export interface RepositoriesSubject {
   close(): Promise<void>;
 }
 
-interface CommentAdjustment {
-  likeCount: number;
-  createdAt: Date;
-}
+type CommentAdjustment = Partial<{ likeCount: number; createdAt: Date }> &
+  Partial<CommentModerationFields>;
 
 export type MakeRepositoriesSubject = () => Promise<RepositoriesSubject>;
 

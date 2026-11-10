@@ -14,7 +14,7 @@ const { videoComments: c, channels: ch, videos: v } = schema;
 export function creatorInboxQuery(
   db: PostgresDatabase,
   ownerId: string,
-  { filter, cursor, limit }: ListCreatorInboxOptions
+  { filter, authorId, cursor, limit }: ListCreatorInboxOptions
 ) {
   return db
     .select(creatorInboxColumns)
@@ -28,6 +28,7 @@ export function creatorInboxQuery(
         notDeletedScope(c),
         notDeletedScope(v),
         creatorInboxFilterScope(filter, ownerId),
+        authorId === undefined ? undefined : eq(c.authorId, authorId),
         commentInboxCursorScope(cursor)
       )
     )

@@ -23,6 +23,8 @@ export const commentItemStyles = tv({
     count: 'font-mono text-mono',
     timecode:
       'inline cursor-pointer rounded-xs border-0 bg-transparent p-0 font-mono text-mono text-accent-ink hover:underline focus-ring',
+    moderation: 'col-start-2 flex flex-wrap items-center gap-inline text-caption text-fg-muted',
+    silent: 'italic',
     failed: 'col-start-2 flex flex-wrap items-center gap-inline text-caption text-danger-ink',
     replies: 'col-start-2 flex flex-col items-start gap-stack',
     repliesList: 'm-0 flex w-full list-none flex-col gap-stack p-0 motion-safe:animate-fade-in',
@@ -35,6 +37,8 @@ export const commentItemStyles = tv({
       failed: {},
       deleted: {},
       removed: {},
+      held: { body: 'text-fg-muted' },
+      hidden: { body: 'text-fg-muted' },
     } satisfies Record<CommentState, object>,
   },
   defaultVariants: { state: 'view' },

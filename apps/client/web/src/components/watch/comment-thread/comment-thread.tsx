@@ -116,6 +116,8 @@ export interface CommentThreadComposerProps extends Omit<
   submitting?: boolean;
   /** Why the last post failed, in the caller's words. */
   error?: string;
+  /** Slow mode is on: the time left to wait, finished by the app, shown on the submit button until it is over. */
+  wait?: string;
 }
 
 /** One row that grows; Comment and Cancel appear on focus or once there is text. */
@@ -126,6 +128,7 @@ export function CommentThreadComposer({
   viewerAvatar,
   submitting = false,
   error,
+  wait,
   className,
   ...props
 }: CommentThreadComposerProps) {
@@ -138,7 +141,7 @@ export function CommentThreadComposer({
   const open = focused || value.length > 0 || submitting;
 
   const submit = () => {
-    if (submitting || value.trim().length === 0) return;
+    if (submitting || wait !== undefined || value.trim().length === 0) return;
     onSubmit();
     field.current?.focus();
   };
@@ -212,9 +215,9 @@ export function CommentThreadComposer({
             variant="solid"
             tone="accent"
             loading={submitting}
-            disabled={value.trim().length === 0}
+            disabled={value.trim().length === 0 || wait !== undefined}
           >
-            {copy.postComment}
+            {wait ?? copy.postComment}
           </Button>
         </div>
       )}

@@ -138,4 +138,16 @@ describe('packages/api-contracts: events', () => {
 
     expect(UserEventFrameSchema.parse({ id: 9, ...created })).toEqual({ id: 9, ...created });
   });
+
+  it('frames a held comment with its ids only', () => {
+    const held: UserEvent = {
+      type: 'comment.held',
+      payload: {
+        commentId: '00000000-0000-7000-8000-0000000000c1',
+        videoId: '00000000-0000-7000-8000-0000000000c3',
+      },
+    };
+
+    expect(UserEventFrameSchema.parse({ id: 10, ...held })).toEqual({ id: 10, ...held });
+  });
 });

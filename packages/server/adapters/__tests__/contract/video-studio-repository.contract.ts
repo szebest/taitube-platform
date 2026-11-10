@@ -116,6 +116,46 @@ export function describeVideoStudioRepositoryContract(makeSubject: MakeRepositor
         ]);
       });
 
+      it.each([
+        {
+          scenario: 'a toggle alone',
+          fields: [] as const,
+          actions: ['video.comments.toggled'],
+        },
+        {
+          scenario: 'a toggle and a field, as two rows',
+          fields: ['title'] as const,
+          actions: ['video.comments.toggled', 'video.updated'],
+        },
+      ])('turns comments off and audits $scenario', async ({ fields, actions }) => {
+        const channel = expectOk(
+          await subject.repositories.channels.create({
+            userId: OWNER_ID,
+            handle: 'owner',
+            displayName: 'Owner',
+          })
+        );
+
+        const outcome = expectOk(
+          await studio.updateMetadata({
+            videoId: VIDEO_IDS.a,
+            expectedVersion: await versionOf(VIDEO_IDS.a),
+            patch: { commentsEnabled: false, ...(fields.length > 0 && { title: 'Edited' }) },
+            userId: OWNER_ID,
+            auditFields: [...fields],
+          })
+        );
+
+        expect(outcome).toMatchObject({ type: 'updated', video: { commentsEnabled: false } });
+        const log = expectOk(
+          await subject.repositories.channelAudit.list(channel.id, { cursor: null, limit: 10 })
+        );
+        expect(log.map(({ action }) => action).sort()).toEqual([...actions].sort());
+        expect(log.find(({ action }) => action === 'video.comments.toggled')?.meta).toEqual({
+          enabled: false,
+        });
+      });
+
       it('clears a category and a custom thumbnail with null', async () => {
         expectOk(await update({ categoryId: CATEGORY_GAMING_ID, customThumbnailKey: 'k' }));
 

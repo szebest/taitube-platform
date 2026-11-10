@@ -4,11 +4,13 @@ import { sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/pglite';
 import { OTHER_OWNER_ID, OWNER_ID, seedOwners } from '../../../__tests__/contract/fixtures';
 import { describeNotificationRepositoryContract } from '../../../__tests__/contract/notification-repository.contract';
+import { describeNotificationWithdrawalContract } from '../../../__tests__/contract/notification-withdrawal.contract';
 import { migratedPglite } from '../../../__tests__/contract/pglite-snapshot';
 import { postgresSubject } from '../../../__tests__/contract/postgres-subject';
 import { PostgresRepositories } from '../postgres-repositories';
 
 describeNotificationRepositoryContract(postgresSubject);
+describeNotificationWithdrawalContract(postgresSubject);
 
 describe('PostgresNotificationRepository: one transaction per write', () => {
   it('writes no notification when its notification.created cannot be written', async () => {

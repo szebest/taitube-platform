@@ -60,9 +60,20 @@ describe('apps/client/studio: EditVideoForm', () => {
         visibility: 'private',
         categoryId: GAMING,
         tags: ['night', 'harbour'],
+        commentsEnabled: true,
         version: 3,
       },
     ]);
+  });
+
+  it('turns comments off for the video from the switch', async () => {
+    const { user, edits } = await renderEditor();
+
+    await user.click(screen.getByRole('switch', { name: 'Comments' }));
+    await user.click(save());
+
+    expect(await screen.findByText('Changes saved')).toBeInTheDocument();
+    expect(edits).toMatchObject([{ commentsEnabled: false, version: 3 }]);
   });
 
   it('shows the rule a title breaks, and holds the save back until it is fixed', async () => {

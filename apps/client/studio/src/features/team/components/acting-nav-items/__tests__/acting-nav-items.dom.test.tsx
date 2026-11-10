@@ -16,6 +16,7 @@ describe('apps/client/studio: ActingNavItems', () => {
       'Videos',
       'Analytics',
       'Comments',
+      'Review queue',
       'Live',
       'Team',
       'Back to Taitube',
@@ -23,9 +24,9 @@ describe('apps/client/studio: ActingNavItems', () => {
   });
 
   it.each<{ role: ChannelRole; pages: string[] }>([
-    { role: 'manager', pages: ['Videos', 'Analytics', 'Comments', 'Team'] },
+    { role: 'manager', pages: ['Videos', 'Analytics', 'Comments', 'Review queue', 'Team'] },
     { role: 'editor', pages: ['Videos', 'Analytics'] },
-    { role: 'moderator', pages: ['Comments'] },
+    { role: 'moderator', pages: ['Comments', 'Review queue'] },
     { role: 'analytics', pages: ['Analytics'] },
   ])('shows a $role the pages that role reaches: $pages', async ({ role, pages }) => {
     await renderTeam('/team', {

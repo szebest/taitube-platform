@@ -1,4 +1,4 @@
-import type { CommentThreadCursor } from '@vp/core/repositories';
+import type { CommentThreadCursor, CommentWindow } from '@vp/core/repositories';
 import type { CommentSort } from '@vp/domain';
 import { assertNever } from '@vp/result';
 
@@ -30,4 +30,35 @@ export function compareKeys(a: SortKey, b: SortKey): number {
     if (left > right) return 1;
   }
   return 0;
+}
+
+/** One page of `roots`, already in descending order, up to one row past the limit. */
+export function threadPage<T extends CommentThreadCursor>(
+  roots: readonly T[],
+  sort: CommentSort,
+  window: CommentWindow
+): T[] {
+  switch (window.type) {
+    case 'keyset': {
+      const { cursor } = window;
+      const after = cursor
+        ? roots.filter(
+            (row) => compareKeys(commentSortKey(sort, row), commentSortKey(sort, cursor)) < 0
+          )
+        : roots;
+      return after.slice(0, window.limit + 1);
+    }
+    case 'offset':
+      return roots.slice(window.offset, window.offset + window.limit + 1);
+    default:
+      return assertNever(window, 'CommentWindow');
+  }
+}
+
+/** The rows after `cursor` in newest-first order, which `rows` already is. */
+export function newestAfter<T extends { createdAt: Date; id: string }>(
+  rows: readonly T[],
+  cursor: { createdAt: Date; id: string } | null
+): T[] {
+  return cursor ? rows.filter((row) => compareKeys(rowKey(row), rowKey(cursor)) < 0) : [...rows];
 }

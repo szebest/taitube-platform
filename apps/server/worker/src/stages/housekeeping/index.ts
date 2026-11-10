@@ -24,6 +24,7 @@ import { runExpireRaw } from './expire-raw';
 import { runFlushVideoViews } from './flush-video-views';
 import { runPurgeChannelAudit } from './purge-channel-audit';
 import { runPurgeChannelImages } from './purge-channel-images';
+import { runPurgeCommentModeration } from './purge-comment-moderation';
 import { runPurgeDeleted } from './purge-deleted';
 import { runPurgeHandleHistory } from './purge-handle-history';
 import { runPurgeScreeningEvidence } from './purge-screening-evidence';
@@ -44,6 +45,7 @@ export * from './outbox-relay';
 export * from './flush-video-views';
 export * from './reconcile-captions';
 export * from './purge-channel-audit';
+export * from './purge-comment-moderation';
 export * from './purge-screening-evidence';
 export * from './purge-channel-images';
 export * from './purge-handle-history';
@@ -219,6 +221,8 @@ export function createHousekeepingProcessor(
           logger,
         });
 
+      case 'purge-comment-moderation':
+        return await runPurgeCommentModeration({ repositories, now, logger });
       case 'purge-screening-evidence':
         return await runPurgeScreeningEvidence({
           repositories,

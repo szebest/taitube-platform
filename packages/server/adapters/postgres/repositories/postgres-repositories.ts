@@ -11,8 +11,10 @@ import { PostgresChannelMemberRepository } from './postgres-channel-member-repos
 import { PostgresChannelPageRepository } from './postgres-channel-page-repository';
 import { PostgresChannelRepository } from './postgres-channel-repository';
 import { PostgresClipRepository } from './postgres-clip-repository';
-import { PostgresCommentReportRepository } from './postgres-comment-report-repository';
-import { PostgresCommentRepository } from './postgres-comment-repository';
+import {
+  type CommentRepositories,
+  createCommentRepositories,
+} from './postgres-comment-repositories';
 import { connectPostgres, type PostgresRepositoriesConfig } from './postgres-connection';
 import { PostgresDlqRepository } from './postgres-dlq-repository';
 import { PostgresEventRepository } from './postgres-event-repository';
@@ -63,11 +65,16 @@ export class PostgresRepositories implements Repositories {
   readonly channelMembers: PostgresChannelMemberRepository;
   readonly channelInvites: PostgresChannelInviteRepository;
   readonly channelAudit: PostgresChannelAuditRepository;
+  declare readonly commentSettings: CommentRepositories['commentSettings'];
+  declare readonly channelUserRestrictions: CommentRepositories['channelUserRestrictions'];
+  declare readonly trustedCommenters: CommentRepositories['trustedCommenters'];
+  declare readonly savedReplies: CommentRepositories['savedReplies'];
   readonly videoReactions: PostgresVideoReactionRepository;
   readonly subscriptions: PostgresSubscriptionRepository;
   readonly videoViews: PostgresVideoViewRepository;
-  readonly comments: PostgresCommentRepository;
-  readonly commentReports: PostgresCommentReportRepository;
+  declare readonly comments: CommentRepositories['comments'];
+  declare readonly commentModeration: CommentRepositories['commentModeration'];
+  declare readonly commentReports: CommentRepositories['commentReports'];
   readonly playlists: PostgresPlaylistRepository;
   readonly watchHistory: PostgresWatchHistoryRepository;
   readonly userPreferences: PostgresUserPreferencesRepository;
@@ -120,11 +127,10 @@ export class PostgresRepositories implements Repositories {
     this.channelMembers = new PostgresChannelMemberRepository(db);
     this.channelInvites = new PostgresChannelInviteRepository(db);
     this.channelAudit = new PostgresChannelAuditRepository(db);
+    Object.assign(this, createCommentRepositories(db));
     this.videoReactions = new PostgresVideoReactionRepository(db);
     this.subscriptions = new PostgresSubscriptionRepository(db);
     this.videoViews = new PostgresVideoViewRepository(db);
-    this.comments = new PostgresCommentRepository(db);
-    this.commentReports = new PostgresCommentReportRepository(db);
     this.playlists = new PostgresPlaylistRepository(db);
     this.watchHistory = new PostgresWatchHistoryRepository(db);
     this.userPreferences = new PostgresUserPreferencesRepository(db);

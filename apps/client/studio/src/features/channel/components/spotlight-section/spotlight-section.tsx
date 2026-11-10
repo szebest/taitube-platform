@@ -7,11 +7,11 @@ import { useApi } from '@vp/queries';
 import { unwrapOr } from '@vp/result';
 import { Field, Tabs, Textarea } from '@vp/ui';
 import { useState } from 'react';
+import { CustomizationSection } from '#app/components/section/customization-section';
 import { spotlightQueryOptions } from '#app/features/channel/api/channel-spotlight';
 import { useSaveSpotlight } from '#app/features/channel/hooks/use-save-spotlight';
 import { failureCodeOf } from '#app/features/channel/hooks/use-update-channel';
 import { useActiveChannel } from '#app/hooks/use-active-channel';
-import { CustomizationSection } from '../customization-section/customization-section';
 import { SpotlightVideoPicker } from '../spotlight-video-picker/spotlight-video-picker';
 
 const OTHER_LOCALES = SUPPORTED_LOCALES.filter((locale) => locale !== FALLBACK_LOCALE);

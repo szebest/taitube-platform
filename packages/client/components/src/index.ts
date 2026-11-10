@@ -1,4 +1,5 @@
 export * from './account-menu';
+export * from './disclosure-control';
 export * from './illustrations';
 export * from './login-card';
 export * from './page-header';

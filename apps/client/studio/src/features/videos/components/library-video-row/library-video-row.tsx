@@ -6,10 +6,12 @@ import { videoDuration } from '@vp/intl';
 import { useFormat, useT } from '@vp/intl-react';
 import { canDeleteVideo, canReadAnalytics, canUpdateVideo } from '@vp/permissions';
 import { useCan } from '@vp/permissions-react';
+import { useFailureToast } from '@vp/queries';
 import { unwrapOr } from '@vp/result';
 import { DropdownMenu, Icon, IconButton } from '@vp/ui';
 import { useState } from 'react';
 import { useBatchActions } from '#app/features/videos/hooks/use-batch-actions';
+import { useUpdateVideo } from '#app/features/videos/hooks/use-update-video';
 import { WEB_URL } from '#app/lib/config';
 import { DeleteVideosDialog } from '../delete-videos-dialog/delete-videos-dialog';
 
@@ -71,9 +73,16 @@ export function LibraryVideoActions({ video }: LibraryVideoPartProps) {
   const canDelete = useCan(canDeleteVideo, { video });
   const canSeeAnalytics = useCan(canReadAnalytics, { analytics: { ownerId: video.ownerId } });
   const { deleteVideos, setVisibility } = useBatchActions();
+  const updateVideo = useUpdateVideo(video.id);
+  const showFailure = useFailureToast();
   const [confirming, setConfirming] = useState(false);
 
   const title = video.title ?? tOr('browse.untitled', {}, '');
+  const toggleComments = () =>
+    updateVideo.mutate(
+      { commentsEnabled: !video.commentsEnabled, version: video.version },
+      { onError: (error) => showFailure(tOr('studio.commentsSwitchFailed', {}, ''), error) }
+    );
   const watchable = video.status === 'READY' && video.visibility !== 'private';
 
   return (
@@ -108,6 +117,13 @@ export function LibraryVideoActions({ video }: LibraryVideoPartProps) {
                 ))}
               </DropdownMenu.SubContent>
             </DropdownMenu.Sub>
+          )}
+          {canEdit && (
+            <DropdownMenu.Item onSelect={toggleComments}>
+              {video.commentsEnabled
+                ? tOr('studio.commentsTurnOff', {}, '')
+                : tOr('studio.commentsTurnOn', {}, '')}
+            </DropdownMenu.Item>
           )}
           {canSeeAnalytics && (
             <DropdownMenu.Item asChild>

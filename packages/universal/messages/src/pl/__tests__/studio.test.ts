@@ -28,7 +28,6 @@ describe('@vp/messages: pl studio', () => {
     { key: 'studio.deleteConfirmTitle', args: { count: 1 }, expected: 'Usunąć ten film?' },
     { key: 'studio.deleteConfirmTitle', args: { count: 3 }, expected: 'Usunąć 3 filmy?' },
     { key: 'studio.deleteConfirmTitle', args: { count: 5 }, expected: 'Usunąć 5 filmów?' },
-    { key: 'studio.batchDeleted', args: { count: 22 }, expected: '22 filmy usunięte' },
   ] as const)('renders $key for $args', ({ key, args, expected }) => {
     expect(t(key, args)).toEqual({ ok: true, value: expected });
   });

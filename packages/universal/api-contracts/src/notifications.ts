@@ -38,6 +38,14 @@ const NotificationPayloadSchema = z.object({
     .nullable()
     .describe('The party a party_invite points at, with who was watching when it was sent'),
   inviteId: z.uuid().optional().describe('The channel team invite a `team_invite` opens'),
+  moderation: z
+    .object({
+      action: z.enum(['hold', 'hide', 'remove', 'ban']),
+      reason: z.string().nullable(),
+      expiresAt: z.iso.datetime().nullable().describe('When a ban ends, null for a permanent one'),
+    })
+    .optional()
+    .describe('What a `moderation` notification tells: the visible action, its reason and end'),
 });
 
 export const NotificationSchema = z.object({

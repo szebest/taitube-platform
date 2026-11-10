@@ -1,14 +1,14 @@
 import { infiniteQueryOptions, queryOptions } from '@tanstack/react-query';
 import type { ApiClient } from '@vp/api-client';
 import type { ChannelAuditAction } from '@vp/domain';
-import { KEYSET_PAGE_SIZE, keysetPaging } from '@vp/queries';
+import { KEYSET_PAGE_SIZE, keysetPaging, membershipKeys } from '@vp/queries';
 
 export type AuditFilters = { actorUserId?: string; action?: ChannelAuditAction };
 
 export const teamKeys = {
   all: ['team'] as const,
   members: () => [...teamKeys.all, 'members'] as const,
-  memberships: () => [...teamKeys.all, 'memberships'] as const,
+  memberships: () => membershipKeys.all,
   myInvites: () => [...teamKeys.all, 'my-invites'] as const,
   audit: (filters: AuditFilters) => [...teamKeys.all, 'audit', filters] as const,
   lookup: (handle: string) => [...teamKeys.all, 'lookup', handle] as const,
@@ -19,15 +19,6 @@ export function teamQueryOptions(api: ApiClient) {
   return queryOptions({
     queryKey: teamKeys.members(),
     queryFn: () => api.channelTeam.getChannelTeam(),
-  });
-}
-
-/** The channels the caller works on besides their own, for the switcher and the permission rules. */
-export function membershipsQueryOptions(api: ApiClient) {
-  return queryOptions({
-    queryKey: teamKeys.memberships(),
-    queryFn: () => api.channelTeam.listMyMemberships(),
-    staleTime: 30_000,
   });
 }
 

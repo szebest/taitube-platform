@@ -6,7 +6,17 @@ export const studioComments = {
   commentsTitle: dt('Comments'),
   commentsFilter: dt('Show'),
   commentsFilterOption: dt('{filter:enum}', {
-    enum: { filter: { all: 'All', unanswered: 'Unanswered', reported: 'Reported' } },
+    enum: {
+      filter: {
+        all: 'All',
+        unanswered: 'Unanswered',
+        reported: 'Reported',
+        held: 'Held',
+        hidden: 'Hidden',
+        questions: 'Questions',
+        restricted: 'Restricted',
+      },
+    },
   }),
   commentsCaption: dt('Comments on your videos, newest first'),
   commentsVideo: dt('Video'),
@@ -25,5 +35,10 @@ export const studioComments = {
   commentsPinFailed: dt('The pin was not changed.'),
   commentsEmptyTitle: dt('No comments here'),
   commentsEmptyDescription: dt('Comments viewers leave on your videos appear here.'),
+  commentsSwitchLabel: dt('Comments'),
+  commentsSwitchHint: dt('Viewers can comment on this video. The owner and the team always can.'),
+  commentsTurnOff: dt('Turn comments off'),
+  commentsTurnOn: dt('Turn comments on'),
+  commentsSwitchFailed: dt('The comments setting was not changed.'),
   commentsFailed: dt('The comments did not load.'),
 } as const;

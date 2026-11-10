@@ -1,4 +1,5 @@
 import { Outlet, useMatches } from '@tanstack/react-router';
+import { ReviewQueueNavItem } from '#app/features/comments';
 import { StudioShell } from '#app/features/shell';
 import { ActingNavItems, ActiveChannelProvider } from '#app/features/team';
 import { UploadDialog, UploadDockProvider, UploadWidget } from '#app/features/upload';
@@ -20,7 +21,9 @@ export function StudioRoot() {
       <UploadDockProvider>
         <StudioShell
           toolbarAction={<ActingUploadAction />}
-          navigation={({ newComments }) => <ActingNavItems newComments={newComments} />}
+          navigation={({ newComments }) => (
+            <ActingNavItems newComments={newComments} reviewQueue={<ReviewQueueNavItem />} />
+          )}
           inspector={(videoId) => <VideoInspector videoId={videoId} />}
         />
         <UploadDialog />

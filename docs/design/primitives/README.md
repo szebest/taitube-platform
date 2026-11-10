@@ -31,6 +31,7 @@ The catalogue of `@vp/ui` primitives that [ticket 95](../../tickets/95-design-sy
 | [SegmentedControl](segmented-control.md) | Exactly one of two to five options, joined | RadioGroup | new |
 | [Tabs](tabs.md) | Peer views, one visible at a time | Tabs | existing-rebuilt |
 | [Chip](chip.md) (`Chip.Root`, `Chip.Remove`, `ChipGroup`) | A pill toggle or link for filters and tags | ToggleGroup (group) | new |
+| [TagInput](tag-input.md) | A list of short values typed into one field, with paste-a-list | none (Chip, Input) | new |
 | [Progress](progress.md) | How far a task or video has got | Progress | existing-rebuilt |
 | [Skeleton](skeleton.md) | A placeholder at the loaded layout's dimensions | none | existing-rebuilt |
 | [Table](table.md) | Semantic table parts with density, dividers and states; no data state | none | new |

@@ -13,10 +13,14 @@ import { bootstrapRoutes } from './bootstrap';
 import { captionsRoutes } from './captions';
 import { categoriesRoutes } from './categories';
 import { channelFeaturedRoutes } from './channel-featured';
+import { channelRestrictionsRoutes } from './channel-restrictions';
 import { channelTeamRoutes } from './channel-team';
 import { channelsRoutes } from './channels';
 import { clipsRoutes } from './clips';
+import { commentModerationRoutes } from './comment-moderation';
+import { commentRemovalsRoutes } from './comment-removals';
 import { commentReportsRoutes } from './comment-reports';
+import { commentSettingsRoutes } from './comment-settings';
 import { commentsRoutes } from './comments';
 import { creatorCommentsRoutes } from './creator-comments';
 import { creatorLiveRoutes } from './creator-live';
@@ -38,12 +42,14 @@ import { preferencesRoutes } from './preferences';
 import { reactionsRoutes } from './reactions';
 import { recommendationFeedbackRoutes } from './recommendation-feedback';
 import { recommendationsRoutes } from './recommendations';
+import { savedRepliesRoutes } from './saved-replies';
 import { screeningRoutes } from './screening';
 import { searchRoutes } from './search';
 import { searchHistoryRoutes } from './search-history';
 import { shortsRoutes } from './shorts';
 import { subscriptionsRoutes } from './subscriptions';
 import { telemetryRoutes } from './telemetry';
+import { trustedCommentersRoutes } from './trusted-commenters';
 import { uploadsRoutes } from './uploads';
 import { videosRoutes } from './videos';
 import { viewerActivityRoutes } from './viewer-activity';
@@ -100,6 +106,12 @@ const ROUTES: readonly FastifyPluginAsync[] = [
   channelsRoutes,
   channelFeaturedRoutes,
   channelTeamRoutes,
+  channelRestrictionsRoutes,
+  commentModerationRoutes,
+  commentRemovalsRoutes,
+  commentSettingsRoutes,
+  trustedCommentersRoutes,
+  savedRepliesRoutes,
   subscriptionsRoutes,
   eventsRoutes,
   adminQueuesRoutes,

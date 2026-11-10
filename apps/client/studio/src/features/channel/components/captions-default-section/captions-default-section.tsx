@@ -2,8 +2,8 @@ import type { OwnerChannel } from '@vp/api-contracts';
 import { useT } from '@vp/intl-react';
 import { Field, Switch } from '@vp/ui';
 import { useState } from 'react';
+import { CustomizationSection } from '#app/components/section/customization-section';
 import { useSetChannelAutoCaptions } from '#app/features/channel/hooks/use-set-channel-auto-captions';
-import { CustomizationSection } from '../customization-section/customization-section';
 
 /** Whether new uploads get generated captions when their own switch follows the channel, saved on its own. */
 export function CaptionsDefaultSection({

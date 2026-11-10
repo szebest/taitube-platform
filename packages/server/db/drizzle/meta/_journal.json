@@ -267,6 +267,13 @@
       "when": 1794306380000,
       "tag": "0037_screening_review",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1794315849498,
+      "tag": "0038_comment_moderation",
+      "breakpoints": true
     }
   ]
 }

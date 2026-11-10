@@ -8,6 +8,7 @@ import { ok } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { CommentReportService } from '../comment-report-service';
 import { CommentService } from '../comment-service';
+import { commentUpdateDeps } from './comment-deps';
 
 const OWNER: UserContext = { id: '11111111-1111-7111-8111-111111111111', role: 'CREATOR' };
 const AUTHOR: UserContext = { id: '22222222-2222-7222-8222-222222222222', role: 'USER' };
@@ -34,8 +35,7 @@ describe('CommentReportService', () => {
     };
     const paginator = new Paginator();
     const commentService = new CommentService({
-      comments: repositories.comments,
-      videos: repositories.videos,
+      ...commentUpdateDeps(repositories),
       commentCache,
       singleflight: new Singleflight(),
       paginator,

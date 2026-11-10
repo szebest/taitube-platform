@@ -12,6 +12,7 @@ export const creatorVideo = (overrides: Partial<CreatorVideo> = {}): CreatorVide
   }),
   commentsCount: 4,
   tags: ['night'],
+  commentsEnabled: true,
   ...overrides,
 });
 
