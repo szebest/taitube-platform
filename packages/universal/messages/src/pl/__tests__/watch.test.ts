@@ -20,6 +20,18 @@ describe('@vp/messages: pl watch', () => {
     expect(t(key, args)).toEqual({ ok: true, value: expected });
   });
 
+  it.each([
+    {
+      key: 'watch.moderateAction',
+      args: { action: 'shadow_ban' },
+      expected: 'Cichy ban użytkownika',
+    },
+    { key: 'watch.moderationReason', args: { reason: 'off_topic' }, expected: 'Nie na temat' },
+    { key: 'watch.moderationDuration', args: { duration: '24h' }, expected: '24 godziny' },
+  ] as const)('writes $key', ({ key, args, expected }) => {
+    expect(t(key, args)).toEqual({ ok: true, value: expected });
+  });
+
   it('names a report reason', () => {
     expect(t('watch.reportReason', { reason: 'hate' })).toEqual({
       ok: true,

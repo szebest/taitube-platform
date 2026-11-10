@@ -165,7 +165,14 @@ export function VideoCommentItem({
   const canHeart = useCan(canHeartComment, { videoOwnerId: video.ownerId });
 
   const level = comment.parentId === null ? 'comment' : 'reply';
-  const state = deleteComment.isSuccess ? 'deleted' : mode === 'editing' ? 'editing' : 'view';
+  const state = deleteComment.isSuccess
+    ? 'deleted'
+    : mode === 'editing'
+      ? 'editing'
+      : comment.status === 'published'
+        ? 'view'
+        : comment.status;
+  const moderationReason = comment.moderation?.reason;
   const hearted = heartComment.isPending
     ? heartComment.variables.hearted
     : comment.heartedByCreator;
@@ -214,6 +221,14 @@ export function VideoCommentItem({
         creator={comment.author.isCreator}
         edited={comment.isEdited}
       />
+      <CommentItem.Moderation
+        reason={
+          moderationReason
+            ? tOr('watch.moderationReason', { reason: moderationReason }, '')
+            : undefined
+        }
+        silent={comment.moderation?.disclosure === 'silent'}
+      />
       <CommentItem.Body>
         {mode === 'editing' ? (
           <CommentEditor
@@ -234,6 +249,7 @@ export function VideoCommentItem({
         <VideoCommentMenu
           comment={comment}
           videoOwnerId={video.ownerId}
+          channelId={video.channel?.id}
           onEdit={() => setMode('editing')}
           onDelete={removeComment}
           onReport={openReport}

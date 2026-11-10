@@ -46,6 +46,102 @@ export const watch = {
   reportSubmit: dt('Wyślij zgłoszenie'),
   reportSent: dt('Dziękujemy, komentarz został zgłoszony'),
   reportFailed: dt('Nie udało się zgłosić komentarza'),
+  pinComment: dt('Przypnij'),
+  unpinComment: dt('Odepnij'),
+  pinFailed: dt('Nie udało się zmienić przypięcia'),
+  moderate: dt('Moderuj'),
+  moderateAction: dt('{action:enum}', {
+    enum: {
+      action: {
+        hold: 'Wstrzymaj do weryfikacji',
+        approve: 'Zatwierdź',
+        hide: 'Ukryj',
+        unhide: 'Pokaż ponownie',
+        remove: 'Usuń',
+        shadow_ban: 'Cichy ban użytkownika',
+        ban: 'Zbanuj użytkownika',
+        lift: 'Zdejmij ograniczenie',
+      },
+    },
+  }),
+  moderationTitle: dt('{action:enum}', {
+    enum: {
+      action: {
+        hold: 'Wstrzymaj ten komentarz',
+        hide: 'Ukryj ten komentarz',
+        remove: 'Usuń ten komentarz',
+        shadow_ban: 'Cichy ban tego użytkownika',
+        ban: 'Zbanuj tego użytkownika',
+      },
+    },
+  }),
+  moderationDescription: dt('{action:enum}', {
+    enum: {
+      action: {
+        hold: 'Komentarz znika z dyskusji, dopóki ktoś go nie zatwierdzi.',
+        hide: 'Komentarz znika z dyskusji, a później możesz go pokazać ponownie.',
+        remove: 'Komentarz jest usuwany razem z odpowiedziami.',
+        shadow_ban: 'Jego komentarze widzi tylko on sam i nie dostaje o tym informacji.',
+        ban: 'Nie może komentować ani reagować na tym kanale i widzi dlaczego.',
+      },
+    },
+  }),
+  moderationReasonLabel: dt('Powód'),
+  moderationReason: dt('{reason:enum}', {
+    enum: {
+      reason: {
+        spam: 'Spam',
+        harassment: 'Nękanie',
+        hate: 'Mowa nienawiści',
+        misinformation: 'Dezinformacja',
+        other: 'Coś innego',
+        off_topic: 'Nie na temat',
+      },
+    },
+  }),
+  moderationNoteLabel: dt('Notatka'),
+  moderationNoteRequired: dt('Napisz autorowi, co się stało'),
+  moderationNoteInvalid: dt('Notatka jest za długa'),
+  moderationDisclosureSilent: dt('Autor nie dostaje informacji.'),
+  moderationDisclosureVisible: dt('Autor widzi, co się stało i dlaczego.'),
+  moderationDurationLabel: dt('Ban na'),
+  moderationDuration: dt('{duration:enum}', {
+    enum: {
+      duration: {
+        '1h': '1 godzinę',
+        '24h': '24 godziny',
+        '7d': '7 dni',
+        '30d': '30 dni',
+        forever: 'Do odwołania',
+      },
+    },
+  }),
+  moderationSubmit: dt('{action:enum}', {
+    enum: {
+      action: {
+        hold: 'Wstrzymaj',
+        hide: 'Ukryj',
+        remove: 'Usuń',
+        shadow_ban: 'Cichy ban',
+        ban: 'Zbanuj',
+      },
+    },
+  }),
+  moderationDone: dt('{action:enum}', {
+    enum: {
+      action: {
+        hold: 'Komentarz jest wstrzymany',
+        approve: 'Komentarz jest zatwierdzony',
+        hide: 'Komentarz jest ukryty',
+        unhide: 'Komentarz jest znowu widoczny',
+        remove: 'Komentarz jest usunięty',
+        shadow_ban: 'Użytkownik ma cichy ban',
+        ban: 'Użytkownik jest zbanowany',
+        lift: 'Ograniczenie zostało zdjęte',
+      },
+    },
+  }),
+  moderationFailed: dt('Nie udało się wykonać tej akcji'),
   queueTitle: dt('Twoja kolejka'),
   queuePosition: dt('{position:number} / {count:number}'),
   queueEmpty: dt('Kolejka jest pusta'),

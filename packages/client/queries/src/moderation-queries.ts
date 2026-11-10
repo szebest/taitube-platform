@@ -21,7 +21,7 @@ export const moderationKeys = {
   all: ['moderation'] as const,
   removals: () => [...moderationKeys.all, 'removals'] as const,
   restriction: (channelId: string) => [...moderationKeys.all, 'restriction', channelId] as const,
-  settings: () => [...moderationKeys.all, 'settings'] as const,
+  settings: (channelId?: string) => [...moderationKeys.all, 'settings', channelId] as const,
 };
 
 const CHANNEL_HEADER = 'x-channel-id';
@@ -58,11 +58,14 @@ export function ownRestrictionQueryOptions(api: ApiClient, channelId: string) {
   });
 }
 
-/** The acting channel's comment settings; the owner and managers read them. */
-export function commentSettingsQueryOptions(api: ApiClient) {
+/** The comment settings of the acting channel, or of `channelId` for an app with no acting channel; the owner and managers read them. */
+export function commentSettingsQueryOptions(api: ApiClient, channelId?: string) {
   return queryOptions({
-    queryKey: moderationKeys.settings(),
-    queryFn: () => api.commentSettings.getCommentSettings(),
+    queryKey: moderationKeys.settings(channelId),
+    queryFn: () =>
+      api.commentSettings.getCommentSettings({
+        headers: channelId ? channelHeaders(channelId) : undefined,
+      }),
   });
 }
 

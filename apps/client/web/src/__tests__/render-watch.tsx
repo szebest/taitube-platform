@@ -1,6 +1,7 @@
 import { screen } from '@testing-library/react';
 import {
   type Account,
+  type ChannelMembershipView,
   getMyReaction,
   getPlaylist,
   getVideo,
@@ -23,6 +24,7 @@ const PLAYER_TIMEOUT_MS = 10_000;
 interface WatchOptions {
   video?: Partial<Video>;
   viewer?: Account;
+  memberships?: ChannelMembershipView[];
   search?: string;
   handlers?: HttpHandler[];
 }
@@ -31,12 +33,13 @@ interface WatchOptions {
 export async function renderWatch({
   video: overrides = {},
   viewer,
+  memberships = [],
   search = '',
   handlers = [],
 }: WatchOptions = {}) {
   const viewerApi = viewer
     ? [
-        signInBrowser(viewer),
+        signInBrowser(viewer, memberships),
         mockEndpoint(getMyReaction, () => HttpResponse.json({ videoId: VIDEO_ID, reaction: null })),
         mockEndpoint(isSubscribedToChannel, () =>
           HttpResponse.json({ channelId: CHANNEL_ID, subscribed: false })

@@ -21,6 +21,7 @@ export * from './comments/blocked-words';
 export * from './comments/comment-settings';
 export * from './comments/content';
 export * from './comments/link-hosts';
+export * from './comments/moderation-note';
 export * from './comments/question-markers';
 export * from './comments/report-note';
 export * from './playlists/failures';

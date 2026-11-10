@@ -157,12 +157,22 @@ describe('@vp/queries: moderation queries', () => {
     expect(client.getQueryData(moderationKeys.settings())).toEqual(SETTINGS);
   });
 
-  it('reads the settings the API holds', async () => {
-    apiServer.use(mockEndpoint(getCommentSettings, () => HttpResponse.json(SETTINGS)));
-
-    expect(await createQueryClient().fetchQuery(commentSettingsQueryOptions(api))).toEqual(
-      SETTINGS
+  it.each([
+    { channelId: undefined, header: null },
+    { channelId: CHANNEL_ID, header: CHANNEL_ID },
+  ])('reads the settings the API holds for channel $channelId', async ({ channelId, header }) => {
+    const sent: (string | null)[] = [];
+    apiServer.use(
+      mockEndpoint(getCommentSettings, ({ request }) => {
+        sent.push(request.headers.get('x-channel-id'));
+        return HttpResponse.json(SETTINGS);
+      })
     );
+
+    expect(
+      await createQueryClient().fetchQuery(commentSettingsQueryOptions(api, channelId))
+    ).toEqual(SETTINGS);
+    expect(sent).toEqual([header]);
   });
 
   it('reads the first page of the removals', async () => {

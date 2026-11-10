@@ -6,6 +6,12 @@ export function invalidReportNote(bounds: LengthBounds): InvalidReportNote {
   return invalidLength('note', bounds);
 }
 
+export type InvalidModerationNote = InvalidField<LengthBounds>;
+
+export function invalidModerationNote(bounds: LengthBounds): InvalidModerationNote {
+  return invalidLength('note', bounds);
+}
+
 export type InvalidCommentContent = InvalidField<LengthBounds>;
 
 export function invalidCommentContent(bounds: LengthBounds): InvalidCommentContent {

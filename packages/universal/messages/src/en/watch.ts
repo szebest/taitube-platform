@@ -46,6 +46,103 @@ export const watch = {
   reportSubmit: dt('Send report'),
   reportSent: dt('Thanks, the comment was reported'),
   reportFailed: dt('The comment could not be reported'),
+  pinComment: dt('Pin'),
+  unpinComment: dt('Unpin'),
+  pinFailed: dt('The pin could not be changed'),
+  moderate: dt('Moderate'),
+  moderateAction: dt('{action:enum}', {
+    enum: {
+      action: {
+        hold: 'Hold for review',
+        approve: 'Approve',
+        hide: 'Hide',
+        unhide: 'Unhide',
+        remove: 'Remove',
+        shadow_ban: 'Shadow ban user',
+        ban: 'Ban user',
+        lift: 'Lift restriction',
+      },
+    },
+  }),
+  moderationTitle: dt('{action:enum}', {
+    enum: {
+      action: {
+        hold: 'Hold this comment',
+        hide: 'Hide this comment',
+        remove: 'Remove this comment',
+        shadow_ban: 'Shadow ban this user',
+        ban: 'Ban this user',
+      },
+    },
+  }),
+  moderationDescription: dt('{action:enum}', {
+    enum: {
+      action: {
+        hold: 'It leaves the discussion until someone approves it.',
+        hide: 'It leaves the discussion, and you can unhide it later.',
+        remove: 'It is deleted together with its replies.',
+        shadow_ban:
+          'Their comments stay visible to them and to nobody else, and they are not told.',
+        ban: 'They cannot comment or react on this channel, and they see why.',
+      },
+    },
+  }),
+  moderationReasonLabel: dt('Reason'),
+  moderationReason: dt('{reason:enum}', {
+    enum: {
+      reason: {
+        spam: 'Spam',
+        harassment: 'Harassment',
+        hate: 'Hate',
+        misinformation: 'Misinformation',
+        other: 'Something else',
+        off_topic: 'Off topic',
+      },
+    },
+  }),
+  moderationNoteLabel: dt('Note'),
+  moderationNoteRequired: dt('Tell the author what happened'),
+  moderationNoteInvalid: dt('The note is too long'),
+  moderationDisclosureSilent: dt('The author is not told.'),
+  moderationDisclosureVisible: dt('The author sees what happened and why.'),
+  moderationDurationLabel: dt('Ban for'),
+  moderationDuration: dt('{duration:enum}', {
+    enum: {
+      duration: {
+        '1h': '1 hour',
+        '24h': '24 hours',
+        '7d': '7 days',
+        '30d': '30 days',
+        forever: 'Until lifted',
+      },
+    },
+  }),
+  moderationSubmit: dt('{action:enum}', {
+    enum: {
+      action: {
+        hold: 'Hold',
+        hide: 'Hide',
+        remove: 'Remove',
+        shadow_ban: 'Shadow ban',
+        ban: 'Ban',
+      },
+    },
+  }),
+  moderationDone: dt('{action:enum}', {
+    enum: {
+      action: {
+        hold: 'The comment is on hold',
+        approve: 'The comment is approved',
+        hide: 'The comment is hidden',
+        unhide: 'The comment is visible again',
+        remove: 'The comment is removed',
+        shadow_ban: 'The user is shadow banned',
+        ban: 'The user is banned',
+        lift: 'The restriction is lifted',
+      },
+    },
+  }),
+  moderationFailed: dt('The action could not be done'),
   queueTitle: dt('Your queue'),
   queuePosition: dt('{position:number} / {count:number}'),
   queueEmpty: dt('Nothing queued'),
