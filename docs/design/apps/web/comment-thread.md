@@ -51,6 +51,7 @@ interface CommentThreadComposerProps {
   viewerAvatar?: string;
   submitting?: boolean;
   error?: string;
+  wait?: string;     // slow mode: the time left, finished by the app; shown on the submit Button, which stays disabled
 }
 ```
 
@@ -69,7 +70,11 @@ The sort is controlled so the wrapper resets it with the video. Empty, error, di
 |---|---|
 | empty | an editorial line ("Nobody has said anything yet") and an action that focuses the composer |
 | error | `SectionError` with retry replaces the list; the heading stays and the video keeps playing |
-| disabled | comments off: a message in the list area, no composer |
+| comments off | a `Callout` (`warning`) in place of the composer: "Comments are turned off for this video"; the owner, managers and moderators keep the composer |
+| banned | a `Callout` in place of the composer with "You cannot comment on this channel", the reason the moderator gave and the day and time it ends, or that it lasts until a moderator lifts it; a shadow-banned viewer sees the normal composer |
+| subscribers only | after a refused post: a `Callout` with the Subscribe `Button` as its action; subscribing gives the composer back |
+| account too new | after a refused post: a `Callout` naming the day the account can comment |
+| slow mode | after a refused post: the text stays, the submit `Button` reads "Wait 12 s" and counts down from `Retry-After`, disabled until zero |
 | signed out | a sign-in prompt in place of the composer |
 | submitting | composer read-only, `Spinner` in the button, the new comment at the top as `pending` |
 | composer error | text in `danger-ink` with an icon under the field |
@@ -105,7 +110,7 @@ New and pending comments enter at the top at `base` with `enter`; the rest do no
 
 | Wrapper | Folder (`features/...`) | Props | Hooks |
 |---|---|---|---|
-| `WatchCommentThread` | `watch/components/` | `videoId: string` | `useComments(videoId, sort)`, `usePostComment`, `useSession`, `useCan`, `useFormat`, `useT` |
+| `WatchCommentThread` | `watch/components/` | `videoId: string` | `useComments(videoId, sort)`, `usePostComment`, `useSession`, `useCan`, `useFormat`, `useT`; its composer is the smart `CommentComposer`, which reads the video, the viewer's own ban (`GET /v1/channels/:id/me/restriction`) and the refusal of the last post |
 | `ShortsCommentSheet` | `shorts/components/` | `videoId: string` | the same, fixed to `layout="sheet"` |
 | `VideoCommentItem` | `watch/components/` | `comment: CommentView` | `useFormat`, `useCan`, `useCommentReplies`, `useReactComment` |
 
@@ -117,4 +122,4 @@ The wrappers own an error boundary around the section, so a failing discussion n
 
 ## Workbench stories
 
-Pinned first; loading; empty; error; comments disabled; signed out; composer focused; submitting and failing; loading more; sheet; RTL; skeleton.
+Pinned first; loading; empty; error; comments disabled; banned; subscribers only; account too new; slow mode; signed out; composer focused; submitting and failing; loading more; sheet; RTL; skeleton.

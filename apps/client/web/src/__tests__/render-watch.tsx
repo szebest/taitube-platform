@@ -3,12 +3,22 @@ import {
   type Account,
   type ChannelMembershipView,
   getMyReaction,
+  getOwnRestriction,
   getPlaylist,
   getVideo,
   isSubscribedToChannel,
   type Video,
 } from '@vp/api-contracts';
-import { CHANNEL_ID, channel, mockEndpoint, VIDEO_ID, video, videoSummary } from '@vp/web-testing';
+import { ErrorCodes } from '@vp/errors';
+import {
+  CHANNEL_ID,
+  channel,
+  mockEndpoint,
+  problemReply,
+  VIDEO_ID,
+  video,
+  videoSummary,
+} from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
 import { type HttpHandler, HttpResponse } from 'msw/http';
 import { loaderApi } from '#app/__tests__/loader-api';
@@ -44,6 +54,7 @@ export async function renderWatch({
         mockEndpoint(isSubscribedToChannel, () =>
           HttpResponse.json({ channelId: CHANNEL_ID, subscribed: false })
         ),
+        mockEndpoint(getOwnRestriction, () => problemReply(ErrorCodes.RESTRICTION_NOT_FOUND)),
       ]
     : [];
 

@@ -62,6 +62,13 @@ describe('@vp/messages: en watch', () => {
       args: { action: 'lift' },
       expected: 'The restriction is lifted',
     },
+    { key: 'watch.commentsBannedReason', args: { reason: 'Spam' }, expected: 'Reason: Spam' },
+    {
+      key: 'watch.commentsAccountTooNew',
+      args: { date: 'Nov 12' },
+      expected: 'Your account can comment from Nov 12',
+    },
+    { key: 'watch.commentsSlowMode', args: { seconds: 12 }, expected: 'Wait 12 s' },
     { key: 'watch.queueTitle', args: undefined, expected: 'Your queue' },
     { key: 'watch.queuePosition', args: { position: 3, count: 12 }, expected: '3 / 12' },
     { key: 'watch.queueEmpty', args: undefined, expected: 'Nothing queued' },
