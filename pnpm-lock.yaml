@@ -1546,6 +1546,12 @@ importers:
       '@tailwindcss/vite':
         specifier: ^4.3.3
         version: 4.3.3(@voidzero-dev/vite-plus-core@1.5.0(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.1)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1))
+      '@tanstack/react-query':
+        specifier: ^5.104.1
+        version: 5.104.1(react@19.3.0)
+      '@tanstack/react-router':
+        specifier: ^1.170.41
+        version: 1.170.41(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       '@testing-library/jest-dom':
         specifier: ^7.0.1
         version: 7.0.1(@testing-library/dom@10.4.2)(vitest@5.1.0)
@@ -1564,6 +1570,12 @@ importers:
       '@vitest/browser-playwright':
         specifier: 'catalog:'
         version: 5.1.0(@voidzero-dev/vite-plus-core@1.5.0(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.1)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1))(msw@3.0.2(@types/node@24.19.1)(@voidzero-dev/vite-plus-core@1.5.0(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.1)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1))(supports-color@10.2.2)(typescript@6.0.3))(playwright@1.64.0)(vitest@5.1.0)
+      '@vp/api-client':
+        specifier: workspace:*
+        version: link:../api-client
+      '@vp/api-contracts':
+        specifier: workspace:*
+        version: link:../../universal/api-contracts
       '@vp/components':
         specifier: workspace:*
         version: link:../components
@@ -1573,9 +1585,15 @@ importers:
       '@vp/intl':
         specifier: workspace:*
         version: link:../../universal/intl
+      '@vp/intl-react':
+        specifier: workspace:*
+        version: link:../intl-react
       '@vp/messages':
         specifier: workspace:*
         version: link:../../universal/messages
+      '@vp/queries':
+        specifier: workspace:*
+        version: link:../queries
       '@vp/result':
         specifier: workspace:*
         version: link:../../universal/result

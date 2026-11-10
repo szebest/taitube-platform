@@ -1,4 +1,5 @@
 import type { Preview } from '@storybook/react-vite';
+import { withApp } from '../src/app-decorator';
 import { loadCatalogue, withAppearance } from '../src/decorator';
 import { loadLatinFonts } from '../src/fonts';
 import { appearanceToolbars, initialAppearanceGlobals } from '../src/toolbars';
@@ -7,7 +8,7 @@ import './preview.css';
 const preview: Preview = {
   globalTypes: appearanceToolbars,
   initialGlobals: initialAppearanceGlobals,
-  decorators: [withAppearance],
+  decorators: [withApp, withAppearance],
   loaders: [() => loadLatinFonts(), loadCatalogue],
   parameters: { a11y: { test: 'error' } },
 };
