@@ -8,7 +8,7 @@
 | Blocks | 128 |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §9.8 Housekeeping and the views flush](../SDD.md#98-housekeeping-job-schedulers) · [SDD ADR-24 Result-typed errors](../SDD.md#adr-24--result-typed-error-handling-domain-returns-the-edge-decides) |
 
-**Status:** blocked
+**Status:** ready
 
 > **Why.** A creator who opens their own video sees what every viewer sees. Their numbers are one trip away in the
 > studio ([60](60-creator-studio-dashboard-video-management-ui.md)'s analytics), so the question "how is the video I

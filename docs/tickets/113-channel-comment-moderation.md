@@ -8,7 +8,7 @@
 | Blocks | 114, 116, 118, 120, 122 |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §5 Domain model & DDL](../SDD.md#5-domain-model--database-schema) · [SDD ADR-24 Result-typed errors](../SDD.md#adr-24--result-typed-error-handling-domain-returns-the-edge-decides) |
 
-**Status:** in-progress
+**Status:** done
 
 > **Why.** [42](42-threaded-comments-keyset-pagination-moderation.md) lets the owner pin a comment and delete any comment
 > under their video, and [103](103-comment-hearts-reports-creator-inbox.md) adds hearts, reports and the creator's inbox;
@@ -234,35 +234,35 @@ bulk and the leak tests, then the web comment UI, then the studio.
 ## Acceptance criteria
 
 - [ ] Switching account or channel ([129](129-multiple-accounts-and-channels.md)) shows only the new identity's moderation queue, with every action written as the acting identity, with no stale cache.
-- [ ] With `all` and the visible default, a viewer's comment is held: the author sees "Waiting for review", nobody else sees
+- [x] With `all` and the visible default, a viewer's comment is held: the author sees "Waiting for review", nobody else sees
       it, the count and cache exclude it; approving it publishes it live for everyone. With the silent default the author's
       copy looks published.
-- [ ] With `links`, a comment with a link to a host off the allowlist is held and one to an allowed host is not; a
+- [x] With `links`, a comment with a link to a host off the allowlist is held and one to an allowed host is not; a
       blocked word holds in `none`, `links` and `all`, but not for a trusted commenter.
-- [ ] A shadow-banned user's comment is accepted with a response identical to an ordinary one, shows only to them, and lifting
+- [x] A shadow-banned user's comment is accepted with a response identical to an ordinary one, shows only to them, and lifting
       the ban makes it visible with no data change; a hot-cache read never leaks it.
-- [ ] A visible ban refuses comments, thread creation, post replies and reactions on the channel with `COMMENTS_BANNED`, the
+- [x] A visible ban refuses comments, thread creation, post replies and reactions on the channel with `COMMENTS_BANNED`, the
       reason and the expiry, tells the user through 99, and ends at its expiry or on `lift` with no rewrite; a timeout of 24
       hours is over after 24 hours without any job having run.
-- [ ] Slow mode refuses a second comment inside the window with `Retry-After`, the composer counts down, and a member
+- [x] Slow mode refuses a second comment inside the window with `Retry-After`, the composer counts down, and a member
       is exempt; subscribers only, account age and comments-off each refuse with their code and the composer says why.
-- [ ] A visible removal or hide needs a reason and the author sees it in their list and the bell; a silent one tells the
+- [x] A visible removal or hide needs a reason and the author sees it in their list and the bell; a silent one tells the
       author nothing and creates no notification. The moderator can override each channel default per action, in the dialog,
       the queue and the bulk bar; a bulk call with one unauthorised id applies the rest and reports that id.
-- [ ] Every comment action and automatic hold honours its own disclosure setting (`hide`, `remove`, `manual_hold`,
+- [x] Every comment action and automatic hold honours its own disclosure setting (`hide`, `remove`, `manual_hold`,
       `auto.blocked_words`, `auto.links`, `auto.review_all`), and every audit row records the disclosure used.
-- [ ] **No leak of silent state**: for a silently hidden, held, removed or shadow-banned item, a table-driven spec over every
+- [x] **No leak of silent state**: for a silently hidden, held, removed or shadow-banned item, a table-driven spec over every
       read path (comment lists and replies, permalink, hot cache, `comments_count` and reply counts, the inbox for a
       non-moderator, post and thread replies, notifications and events, the webhook payloads, the export for a
       non-exporter, and the error and timing of the write) shows it identical to "nothing happened" for every viewer except
       its author and the moderators, and the author's own view matches their own count.
-- [ ] A moderator (117) can approve, remove, pin and hide but gets a 403 on settings; an editor gets a 403 on all of
+- [x] A moderator (117) can approve, remove, pin and hide but gets a 403 on settings; an editor gets a 403 on all of
       them; `privilege-escalation.test.ts` gains the rows.
-- [ ] The queue works by keyboard alone (`j`, `k`, `a`, `r`, `h`), with shortcuts inert inside fields.
-- [ ] The questions filter lists comments with a question mark or a leading question word and nothing else.
-- [ ] Every action above appears in the channel audit log with the acting member.
-- [ ] The pieces meet the polish bar ([docs/design/README.md section 9](../design/README.md#9-the-polish-bar)).
-- [ ] `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:bun`, `pnpm test:architecture`, `pnpm gen:contracts`
+- [x] The queue works by keyboard alone (`j`, `k`, `a`, `r`, `h`), with shortcuts inert inside fields.
+- [x] The questions filter lists comments with a question mark or a leading question word and nothing else.
+- [x] Every action above appears in the channel audit log with the acting member.
+- [x] The pieces meet the polish bar ([docs/design/README.md section 9](../design/README.md#9-the-polish-bar)).
+- [x] `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:bun`, `pnpm test:architecture`, `pnpm gen:contracts`
       (no diff) green, with output in the PR.
 
 ## Out of scope
@@ -306,6 +306,6 @@ bulk and the leak tests, then the web comment UI, then the studio.
 
 ## Definition of Done
 
-- [ ] All acceptance criteria proved with command output in the PR.
-- [ ] SDD §5, §6.1 and §6.2 updated; the OpenAPI document regenerated.
-- [ ] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
+- [x] All acceptance criteria proved with command output in the PR.
+- [x] SDD §5, §6.1 and §6.2 updated; the OpenAPI document regenerated.
+- [x] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
