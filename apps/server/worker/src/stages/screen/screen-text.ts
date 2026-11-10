@@ -16,9 +16,6 @@ export interface ScreenTextInput {
   language: string;
 }
 
-/** A transcript can be read after the video is public, so a hit here is a flag for a moderator and never a hold. */
-const SCREENED_STATUSES = new Set(['READY', 'HELD']);
-
 /**
  * The `screen-text` pass over a finished transcript: its cue rows against the profanity list. A video
  * without cue rows, one that is gone or not yet public, and a deployment with screening off are no-ops.
@@ -33,7 +30,8 @@ export async function screenText(
 
   const video = await repositories.videos.findById(input.videoId);
   if (isErr(video)) return video;
-  if (!(video.value && SCREENED_STATUSES.has(video.value.status))) return ok(false);
+  if (!(video.value && (video.value.status === 'READY' || video.value.status === 'HELD')))
+    return ok(false);
 
   const cues = await repositories.captions.cues(input.captionId);
   if (isErr(cues)) return cues;

@@ -29,37 +29,49 @@ export interface ScreeningCaseViewsDeps {
 
 export type ScreeningCaseViewFailure = DatabaseUnavailable | StorageUnavailable;
 
-const number = z.number().optional().catch(undefined);
-
 /** Evidence is stored as loose JSON, so each field is read on its own and a bad one reads as absent. */
-const EvidenceSchema = z.looseObject({
-  matchedVideoId: z.string().optional().catch(undefined),
-  sameChannel: z.boolean().optional().catch(undefined),
-  video: z
-    .looseObject({
-      coverage: number,
-      runFromSeconds: number,
-      runToSeconds: number,
-      offsetSeconds: number,
-      mirrored: z.boolean().optional().catch(undefined),
+function lenient<T extends z.ZodType>(schema: T) {
+  return z
+    .unknown()
+    .transform((value): z.infer<T> | undefined => {
+      const read = schema.safeParse(value);
+      return read.success ? read.data : undefined;
     })
-    .nullable()
-    .optional()
-    .catch(undefined),
-  audio: z
-    .looseObject({ coverage: number, runFromSeconds: number, runToSeconds: number })
-    .nullable()
-    .optional()
-    .catch(undefined),
-  frames: z
-    .array(z.object({ key: z.string(), timestampSeconds: z.number(), score: z.number() }))
-    .optional()
-    .catch(undefined),
+    .optional();
+}
+
+const number = lenient(z.number());
+
+const EvidenceSchema = z.looseObject({
+  matchedVideoId: lenient(z.string()),
+  sameChannel: lenient(z.boolean()),
+  video: lenient(
+    z
+      .looseObject({
+        coverage: number,
+        runFromSeconds: number,
+        runToSeconds: number,
+        offsetSeconds: number,
+        mirrored: lenient(z.boolean()),
+      })
+      .nullable()
+  ),
+  audio: lenient(
+    z.looseObject({ coverage: number, runFromSeconds: number, runToSeconds: number }).nullable()
+  ),
+  frames: lenient(
+    z.array(z.object({ key: z.string(), timestampSeconds: z.number(), score: z.number() }))
+  ),
   share: number,
-  signals: z.array(z.string()).optional().catch(undefined),
-  profanity: z.array(z.string()).optional().catch(undefined),
+  signals: lenient(z.array(z.string())),
+  profanity: lenient(z.array(z.string())),
 });
 type Evidence = z.infer<typeof EvidenceSchema>;
+
+function readEvidence(stored: Readonly<Record<string, unknown>>): Evidence {
+  const read = EvidenceSchema.safeParse(stored);
+  return read.success ? read.data : {};
+}
 
 function rangeOf(from: number | undefined, to: number | undefined, offset = 0) {
   return from === undefined || to === undefined
@@ -77,7 +89,7 @@ export class ScreeningCaseViews {
     const evidenceOf = new Map(
       cases.flatMap(({ screening }) =>
         [...screening.reasons, ...screening.flags].map(
-          (finding) => [finding, EvidenceSchema.parse(finding.evidence)] as const
+          (finding) => [finding, readEvidence(finding.evidence)] as const
         )
       )
     );
@@ -106,7 +118,7 @@ export class ScreeningCaseViews {
     if (isErr(frameUrls)) return frameUrls;
 
     const finding = (item: ScreeningFinding): ScreeningFindingView => {
-      const evidence = evidenceOf.get(item) ?? EvidenceSchema.parse({});
+      const evidence = evidenceOf.get(item) ?? {};
       const matched = evidence.matchedVideoId ? videos.get(evidence.matchedVideoId) : undefined;
       return {
         reason: item.reason,

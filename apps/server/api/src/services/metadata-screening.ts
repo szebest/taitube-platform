@@ -14,8 +14,8 @@ export interface MetadataScreeningDeps {
   recentTitleCount: number;
 }
 
-/** Statuses where a flag has somewhere to go: public, or already in the queue. */
-const FLAGGABLE = new Set<VideoRecord['status']>(['READY', 'HELD']);
+/** A flag has somewhere to go on a public video and on one already in the queue. */
+const flaggable = ({ status }: VideoRecord): boolean => status === 'READY' || status === 'HELD';
 
 /**
  * Runs the metadata rules over a video's edited title, description and tags and raises a flag for
@@ -26,7 +26,7 @@ export class MetadataScreening {
 
   async flag(video: VideoRecord): Promise<Result<boolean, DatabaseUnavailable>> {
     const { enabled, thresholds, locales, recentTitleCount } = this.deps;
-    if (!(enabled && FLAGGABLE.has(video.status))) return ok(false);
+    if (!(enabled && flaggable(video))) return ok(false);
 
     const recent = await this.deps.videos.listByOwner({
       ownerId: video.ownerId,
