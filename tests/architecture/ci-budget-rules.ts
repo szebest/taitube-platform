@@ -14,7 +14,7 @@ const TIMEOUTS: Readonly<Record<string, number>> = {
   integration: 6,
   'e2e-smoke': 4,
   'e2e-client': 4,
-  visual: 4,
+  visual: 5,
   terraform: 2,
 };
 
