@@ -59,6 +59,26 @@ declares its own default now.
    `src/tuning.ts`, declared once and folded into `AppConfig` by `toAppConfig` (the barrel does not export it);
    `tests/architecture/env-keys-consumed.test.ts` and `tests/architecture/no-tuning-literals.test.ts` hold both.
 
+9. **Every key is documented, and the docs are generated.** `ENV_DOCS` (`src/env-docs.ts`, filled by the
+   `src/env-docs-*.ts` group files) holds one `EnvKeyDoc` per `AppEnvSchema` key: group, description, example,
+   visibility, readers, and when it is required. It is typed `Record<AppEnvKey, EnvKeyDoc>`, so a schema key
+   without an entry, or an entry for a key the schema lacks, is a type error. Type and default are never
+   written down: `describeEnvKey` reads them from the schema. Keys outside the schema (client build-time keys,
+   `platform-env.json`, tooling keys left commented in `.env.example`) are documented in `EXTRA_ENV_DOCS`
+   (`src/env-docs-extra.ts`). `docs/ENVIRONMENT.md` is rendered from both by `pnpm gen:env-docs`, and CI runs
+   it with `--check`. `tests/architecture/env-key-closure.test.ts` holds the rest: an empty description, a
+   secret whose example is not a placeholder, a stale `docs/ENVIRONMENT.md`, and a `.env.example` that
+   disagrees with the schema.
+
+### Adding a key
+
+1. Declare it in the sub-schema it belongs to in `src/app-env.ts` (a secret uses `secret()` and has no default).
+2. Add its entry to the group file in `src/env-docs-*.ts` (a key outside the schema goes in `src/env-docs-extra.ts`).
+3. Add its line to `.env.example` under the matching `# ----` heading, a secret marked 🔒.
+
+Then run `pnpm gen:env-docs` and commit `docs/ENVIRONMENT.md` with the change. A key that `platform-env.json`
+gains needs steps 2 and the regenerate only.
+
 ---
 
 ## 3. Local Commands
@@ -66,4 +86,6 @@ declares its own default now.
 ```bash
 pnpm --filter @vp/env-schema typecheck
 pnpm --filter @vp/env-schema test
+pnpm gen:env-docs            # rewrite docs/ENVIRONMENT.md
+pnpm gen:env-docs --check    # what CI runs: fails when the file is stale
 ```
