@@ -12,6 +12,7 @@
     "@vp/db": "workspace:*",
     "@vp/dev-token": "workspace:*",
     "@vp/domain": "workspace:*",
+    "@vp/env-schema": "workspace:*",
     "@vp/errors": "workspace:*",
     "@vp/result": "workspace:*",
     "@vp/upload-client": "workspace:*",

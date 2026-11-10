@@ -6,8 +6,8 @@ import { type Setup, fakeHost, optionsFrom } from './fake-host';
 const REPORT = { steps: [{ scenario: 'users', status: 'done' as const, detail: '12' }] };
 const BASE: Setup = {
   files: {
-    '.env.example': 'ADMIN_TOKEN=abc\n',
-    '.env': 'ADMIN_TOKEN=abc\nS3_ACCESS_KEY_ID=ak\n',
+    '.env.example': 'ADMIN_TOKEN=change-me-32-bytes-random\n',
+    '.env': 'ADMIN_TOKEN=change-me-32-bytes-random\nS3_ACCESS_KEY_ID=ak\n',
   },
 };
 
@@ -41,10 +41,31 @@ describe('demo: orchestrate up', () => {
     ]) {
       expect(text()).toContain(label);
     }
-    expect(text()).toContain('x-admin-token: abc');
+    expect(text()).toContain('x-admin-token: change-me-32-bytes-random');
     expect(text()).toContain('ak / minioadmin');
     expect(text()).toContain('1 done, 0 skipped, 0 failed');
     expect(files.get('.demo/state.json')).toContain('"scenario": "users"');
+  });
+
+  it.each([
+    {
+      env: 'ADMIN_TOKEN=r3al-t0ken\nS3_SECRET_ACCESS_KEY=r2-s3cret\n',
+      shows: ['see .env'],
+      hides: ['r3al-t0ken', 'r2-s3cret'],
+    },
+    {
+      env: 'ADMIN_TOKEN=change-me-1\nS3_SECRET_ACCESS_KEY=minioadmin\n',
+      shows: ['change-me-1', 'minioadmin'],
+      hides: ['see .env'],
+    },
+    { env: '', shows: ['change-me-32-bytes-random', 'minioadmin'], hides: ['see .env'] },
+  ])('prints a credential only when it is a local one ($env)', async ({ env, shows, hides }) => {
+    const { host, text } = fakeHost({ files: { '.env': env } });
+
+    await runUp(host, optionsFrom(), seeder().seed);
+
+    for (const line of shows) expect(text()).toContain(line);
+    for (const line of hides) expect(text()).not.toContain(line);
   });
 
   it('creates .env from the example and never overwrites it', async () => {

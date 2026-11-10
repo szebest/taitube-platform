@@ -7,7 +7,8 @@ const labels = (argv: string[]) =>
 describe('demo: urls', () => {
   it.each([
     { argv: [], labels: ['Web', 'Studio', 'API', 'API docs', 'Bull Board', 'MinIO'] },
-    { argv: ['--only', 'web'], labels: ['Web', 'MinIO'] },
+    { argv: ['--only', 'web'], labels: ['Web', 'API', 'API docs', 'Bull Board', 'MinIO'] },
+    { argv: ['--only', 'web', '--no-worker'], labels: ['Web', 'MinIO'] },
     {
       argv: ['--observability'],
       labels: ['Web', 'Studio', 'API', 'API docs', 'Bull Board', 'MinIO', 'Grafana'],

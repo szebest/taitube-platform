@@ -27,7 +27,7 @@
     "upload-client": "tsx --conditions=source packages/server/upload-client/src/main.ts",
     "compose-autoscaler": "tsx --conditions=source packages/server/compose-autoscaler/src/main.ts",
     "stack": "tsx --conditions=source packages/server/stack/src/main.ts",
-    "demo": "tsx --conditions=source packages/server/demo/src/main.ts",
+    "demo": "turbo run build --filter=@vp/demo^... --output-logs=errors-only && tsx --conditions=source packages/server/demo/src/main.ts",
     "envctl": "tsx --conditions=source packages/server/deploy/src/main.ts",
     "perf:clicks": "tsx scripts/perf-clicks.ts",
     "fairness": "tsx scripts/fairness-simulation.ts",

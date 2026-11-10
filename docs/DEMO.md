@@ -32,7 +32,8 @@ Code: [packages/server/demo](../packages/server/demo/AGENTS.md).
 
 The rest of the users are fans and the owners of the other channels (Garden Signal, Harbor Journal, Paper Archive
 and so on, depending on `--channels`). Sign in with `make demo-login PERSONA=<name>`; it prints a token, a `curl`
-line and a console one-liner that sets the `vp.session` cookie for both apps.
+line and a console one-liner that sets the `vp.session` cookie for both apps. The demo stack has no persona buttons
+on `/login` (the compose images are built without `VITE_DEMO_PERSONAS`); they exist under `pnpm dev` only.
 
 ## What is in it (default minimal profile)
 

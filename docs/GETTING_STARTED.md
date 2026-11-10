@@ -76,7 +76,7 @@ make demo ARGS="--dry-run"          # print the plan, run nothing
 | `--no-worker` | `DEMO_WITH_WORKER=0` | on | no worker stages: no video reaches READY, and the steps that need one are skipped |
 | `--reset` | `DEMO_RESET=1` | off | wipe the stack volumes and the state first |
 | `--observability` | `DEMO_OBSERVABILITY=1` | off | add Prometheus, Grafana, Tempo and Loki |
-| `--only web\|studio\|api` | none | all three | start only these apps (repeatable) |
+| `--only web\|studio\|api` | none | all three | start only these apps (repeatable); with workers on, the API and the worker stages start too, since the seed needs them |
 | `--api-url <url>` | `DEMO_API_URL` | http://localhost:3000 | where the seed reaches the API |
 | `--no-build` | none | off | skip the image build when the images exist |
 | `--purge-media` | none | off | with a reset, also delete the generated clip cache |
@@ -106,8 +106,9 @@ curl -s http://localhost:3000/healthz
 
 The apps read the `vp.session` cookie. `make demo-login PERSONA=<viewer|creator|moderator|admin>` prints a dev token,
 a `curl` line and a one-liner for the browser console on http://localhost:5173 or :5174 (one cookie serves both).
-Under `pnpm dev` the apps also offer one-click persona buttons on `/login` (`VITE_DEMO_PERSONAS`, see
-[ENVIRONMENT.md](ENVIRONMENT.md)). Production builds refuse it.
+One-click persona buttons on `/login` exist under `pnpm dev` only (`VITE_DEMO_PERSONAS`, see
+[ENVIRONMENT.md](ENVIRONMENT.md)): the compose images are built without it, so `make demo-login` is the way in on the
+demo stack. Production builds refuse it.
 
 ## Reset and clean up
 

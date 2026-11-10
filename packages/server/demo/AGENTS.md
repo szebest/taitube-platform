@@ -15,7 +15,7 @@ and then runs `pnpm --silent demo`. Exit codes: 0 ok, 1 failure, 2 bad usage, 3 
   generates the help text from them; `src/options.ts`'s `parseDemoCommand` returns a tagged `DemoCommand` or a one-line usage error
   (exit 2). A flag beats its env var. A new option is a new `FLAGS` row, nothing else.
 - `src/targets.ts` turns options into `pnpm stack up` targets (`minimal`: `api web studio` plus the stages
-  `worker:probe|transcode|thumbnail|package|notify|housekeeping`; `full`: `all`; `observability` on request) and
+  `worker:probe|transcode|thumbnail|package|notify|housekeeping|screen`; with workers on, `--only` still adds `api` and the stages, because the seed waits for READY; `full`: `all`; `observability` on request) and
   the ports a run needs. The stack resolves infra and migrate through compose `depends_on`: never list them here.
 - `src/prereqs.ts` runs the checks in parallel and names a holder (via `lsof`) for any needed port that this
   compose project does not publish itself; hints are per macOS, Linux and WSL.
@@ -24,18 +24,21 @@ and then runs `pnpm --silent demo`. Exit codes: 0 ok, 1 failure, 2 bad usage, 3 
   `src/main.ts` is the only file touching `child_process`, `fs` and `fetch`. The seed is injected (`SeedFn`).
 - `src/state.ts` keeps `.demo/state.json` (options, timestamps, last seed report); `.demo/media` is the clip
   cache `reset` keeps unless `--purge-media`. `.demo/` is git-ignored and nothing is written outside it.
-- `src/logins.ts` is the persona table (viewer, creator, moderator, admin) and the `vp.session` cookie name,
-  copied from `@vp/queries` because a server package may not import a client one. Tokens come from
-  `pnpm dev-token mint`. The ids and roles must equal what the seed creates.
+- `src/logins.ts` names the four demo personas (viewer, creator, moderator, admin) over `DEV_PERSONAS` from
+  `@vp/dev-token`, which owns the ids and roles, and holds the `vp.session` cookie name, copied from `@vp/queries`
+  because a server package may not import a client one. Tokens come from `pnpm dev-token mint`. The ids and
+  roles must equal what the seed creates.
+- The summary table prints `ADMIN_TOKEN` and `S3_SECRET_ACCESS_KEY` only when `heldLocalCredentials`
+  (`@vp/env-schema`) knows the value, else `see .env`: a `.env` pointed at R2 never leaks into a terminal.
 - `down` runs `docker compose stop`, so volumes survive and the next `up` is quick; `reset` is `pnpm stack down`
   (volumes deleted) plus the state, then `up`.
 
 Tests: every file has a spec; orchestrator branches run against `__tests__/fake-host.ts`, no real Docker. The
 bootstrap is covered by `scripts/__tests__/demo-sh.test.ts`.
 
-Dependency to wire once PR #326 (`VITE_DEMO_PERSONAS`, `SSR_DEV_TOKEN_URL`) merges: the one-click persona
-buttons on `/login`. Until then `pnpm demo login <persona>` prints a token, a curl line and a DevTools cookie
-one-liner; when #326 lands, set those two keys in the `.env` that `ensureEnv` creates and print the button hint.
+Sign-in: `pnpm demo login <persona>` prints a token, a curl line and a DevTools cookie one-liner, and is the path on
+the compose stack. The one-click persona buttons on `/login` (`VITE_DEMO_PERSONAS`, `SSR_DEV_TOKEN_URL`) exist under
+`pnpm dev` only: the compose images are built without them.
 
 ## Seed (`src/seed/`)
 

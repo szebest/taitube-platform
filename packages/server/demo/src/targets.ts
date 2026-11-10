@@ -15,12 +15,19 @@ const CORE_WORKER_STAGES = [
 
 const IMAGES = ['vp-api:local', 'vp-web:local', 'vp-studio:local', 'vp-worker:local'];
 
+/** The seed and the worker stages talk to the API, so a run with workers always starts it. */
+export function stackApps(options: DemoRunOptions): DemoRunOptions['only'] {
+  if (options.only.length === 0) return ['api', 'web', 'studio'];
+  return options.withWorker && !options.only.includes('api')
+    ? [...options.only, 'api']
+    : options.only;
+}
+
 /** The `pnpm stack up` targets; the stack adds the infrastructure and migrate through `depends_on`. */
 export function stackTargets(options: DemoRunOptions): string[] {
-  const apps = options.only.length > 0 ? options.only : (['api', 'web', 'studio'] as const);
   const full = options.profile === 'full' && options.withWorker && options.only.length === 0;
-  const targets: string[] = full ? ['all'] : [...apps];
-  if (!full && options.withWorker && apps.includes('api')) targets.push(...CORE_WORKER_STAGES);
+  const targets: string[] = full ? ['all'] : [...stackApps(options)];
+  if (!full && options.withWorker) targets.push(...CORE_WORKER_STAGES);
   if (options.observability) targets.push('observability');
   return targets;
 }
@@ -52,7 +59,7 @@ export const COMPOSE_PS: Command = {
 
 export function requiredPorts(options: DemoRunOptions): number[] {
   const ports = new Set([5432, 6379, 9000, 9001]);
-  const apps = options.only.length > 0 ? options.only : ['api', 'web', 'studio'];
+  const apps = stackApps(options);
   if (apps.includes('api')) ports.add(3000);
   if (apps.includes('web')) ports.add(5173);
   if (apps.includes('studio')) ports.add(5174);

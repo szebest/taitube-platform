@@ -1,4 +1,5 @@
 import type { DemoRunOptions } from './options';
+import { stackApps } from './targets';
 
 export interface Endpoint {
   label: string;
@@ -19,7 +20,7 @@ export const CREDENTIAL_FALLBACKS: Credentials = {
 };
 
 export function endpoints(options: DemoRunOptions, credentials: Credentials): Endpoint[] {
-  const apps = options.only.length > 0 ? options.only : ['api', 'web', 'studio'];
+  const apps = stackApps(options);
   const list: Endpoint[] = [];
   if (apps.includes('web'))
     list.push({ label: 'Web', url: 'http://localhost:5173', note: 'the viewer app' });

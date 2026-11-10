@@ -1,4 +1,5 @@
 import { parseEnv } from 'node:util';
+import { heldLocalCredentials } from '@vp/env-schema';
 import type { DemoHost } from './host';
 import { findPersona, mintArgs, renderLogin } from './logins';
 import type { DemoRunOptions } from './options';
@@ -20,12 +21,19 @@ const MODELS = [
   '.models/vit-base-nsfw-detector-int8.onnx',
 ];
 
+const SEE_ENV = 'see .env';
+
+function shown(value: string | undefined, fallback: string): string {
+  if (!value) return fallback;
+  return heldLocalCredentials(value) ? value : SEE_ENV;
+}
+
 function credentials(host: DemoHost): Credentials {
   const env = parseEnv(host.readFile('.env') ?? '');
   return {
-    adminToken: env.ADMIN_TOKEN || CREDENTIAL_FALLBACKS.adminToken,
+    adminToken: shown(env.ADMIN_TOKEN, CREDENTIAL_FALLBACKS.adminToken),
     storageUser: env.S3_ACCESS_KEY_ID || CREDENTIAL_FALLBACKS.storageUser,
-    storagePassword: env.S3_SECRET_ACCESS_KEY || CREDENTIAL_FALLBACKS.storagePassword,
+    storagePassword: shown(env.S3_SECRET_ACCESS_KEY, CREDENTIAL_FALLBACKS.storagePassword),
   };
 }
 

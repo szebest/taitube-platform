@@ -1948,6 +1948,9 @@ importers:
       '@vp/domain':
         specifier: workspace:*
         version: link:../../universal/domain
+      '@vp/env-schema':
+        specifier: workspace:*
+        version: link:../env-schema
       '@vp/errors':
         specifier: workspace:*
         version: link:../../universal/errors
