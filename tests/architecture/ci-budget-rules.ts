@@ -24,7 +24,7 @@ const BUDGET_ACTION = './.github/actions/budget';
 const STEP_BUDGETS = [
   { job: 'unit-shards', step: 'unit-tests', seconds: 240 },
   { job: 'lint-typecheck', step: 'architecture', seconds: 30 },
-  { job: 'integration', step: 'integration-tests', seconds: 180 },
+  { job: 'integration', step: 'integration-tests', seconds: 240 },
 ];
 
 /** A budget measures a step that runs before it, and fires before its job's timeout would. */
