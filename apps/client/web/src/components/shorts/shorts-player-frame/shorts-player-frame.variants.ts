@@ -6,19 +6,20 @@ export const shortsPlayerFrameStyles = tv({
     root: 'relative flex w-full items-end justify-center font-sans text-fg',
     nav: 'hidden flex-col gap-stack self-center pointer-fine:flex',
     frame:
-      'relative isolate overflow-hidden rounded-card bg-media text-on-live shadow-3 after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-[45%] after:bg-linear-to-b after:from-transparent after:to-scrim after:content-[""] data-[enter=next]:animate-slide-in-from-bottom data-[enter=previous]:animate-slide-in-from-top motion-reduce:animate-none in-data-[motion=reduced]:animate-none data-[state=empty]:bg-surface data-[state=empty]:text-fg data-[state=empty]:shadow-none data-[state=empty]:after:hidden',
+      'relative isolate overflow-hidden rounded-card bg-media text-on-live shadow-3 after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-[45%] after:bg-linear-to-b after:from-transparent after:to-scrim after:content-[""] data-[state=empty]:bg-surface data-[state=empty]:text-fg data-[state=empty]:shadow-none data-[state=empty]:after:hidden',
     media: 'absolute inset-0 *:size-full *:object-cover',
     surface:
       'absolute inset-0 z-stage-tap flex cursor-pointer items-center justify-center border-0 bg-transparent p-0 text-on-live focus-ring',
     paused: 'flex size-[4rem] items-center justify-center rounded-full bg-scrim animate-fade-in',
-    muted: 'absolute end-inline top-inline z-stage-hud bg-scrim text-on-live',
+    toolbar:
+      'absolute end-inline top-inline z-stage-controls flex items-center gap-inline text-on-live',
     centre:
       'absolute inset-0 z-stage-hud flex flex-col items-center justify-center gap-stack p-inset-card text-center text-body',
     notice:
       'absolute inset-x-0 top-inline z-stage-hud mx-auto my-0 w-max max-w-[90%] rounded-chip bg-scrim px-inset-control py-inline text-center text-label',
     caption:
       'absolute inset-x-0 bottom-0 z-stage-hud flex flex-col gap-inline ps-inset-card pb-stack text-on-live',
-    progress: 'absolute inset-x-0 bottom-0 z-stage-controls h-[0.1875rem] rounded-none',
+    progress: 'absolute inset-x-0 bottom-0 z-stage-controls rounded-none',
     actions: 'z-stage-actions flex flex-col items-center gap-stack',
     action:
       'group/action flex min-w-touch-target flex-col items-center gap-inline border-0 bg-transparent p-0 text-caption no-underline focus-ring',

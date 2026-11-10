@@ -41,6 +41,7 @@ window.scrollTo = () => undefined;
 window.IntersectionObserver = NeverIntersecting;
 window.ResizeObserver = UnobservedSize;
 Element.prototype.scrollIntoView = () => undefined;
+Element.prototype.scrollTo = () => undefined;
 Element.prototype.hasPointerCapture = () => false;
 Element.prototype.releasePointerCapture = () => undefined;
 installTextTracks();

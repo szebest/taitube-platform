@@ -76,8 +76,9 @@ export function VideoJsEngine({
       currentTarget.currentTime = startAt;
     }
 
-    if (defaults) {
-      currentTarget.playbackRate = defaults.speed;
+    const speed = control?.speed ?? defaults?.speed;
+    if (speed !== undefined) {
+      currentTarget.playbackRate = speed;
     }
 
     if (control && !control.paused) {
@@ -170,9 +171,11 @@ export function VideoJsEngine({
 }
 
 /** The media starts as the element's `autoPlay` and `muted` say; only a change after that is a command. */
-function PlaybackSync({ paused, muted }: PlaybackControl) {
-  const { play, pause, setMuted } = usePlayerCommands();
-  const applied = useRef({ paused, muted });
+function PlaybackSync({ paused, muted, speed, captions }: PlaybackControl) {
+  const { play, pause, setMuted, setPlaybackRate } = usePlayerCommands();
+  const { state, commands } = useCaptionsContext();
+  const shown = state.captionsEnabled;
+  const applied = useRef({ paused, muted, speed });
 
   useEffect(() => {
     if (applied.current.paused === paused) {
@@ -196,6 +199,21 @@ function PlaybackSync({ paused, muted }: PlaybackControl) {
     applied.current.muted = muted;
     setMuted(muted);
   }, [muted, setMuted]);
+
+  useEffect(() => {
+    if (speed === undefined || applied.current.speed === speed) {
+      return;
+    }
+
+    applied.current.speed = speed;
+    setPlaybackRate(speed);
+  }, [speed, setPlaybackRate]);
+
+  useEffect(() => {
+    if (captions !== undefined && captions !== shown) {
+      commands.toggleCaptions();
+    }
+  }, [captions, shown, commands]);
 
   return null;
 }

@@ -8,6 +8,7 @@ import {
   ShortsPlayerFrameError,
   ShortsPlayerFrameProgress,
   ShortsPlayerFrameRoot,
+  ShortsPlayerFrameToolbar,
 } from './shorts-player-frame';
 
 export const ShortsPlayerFrame = {
@@ -16,6 +17,7 @@ export const ShortsPlayerFrame = {
   Error: ShortsPlayerFrameError,
   Caption: ShortsPlayerFrameCaption,
   Progress: ShortsPlayerFrameProgress,
+  Toolbar: ShortsPlayerFrameToolbar,
   Actions: ShortsPlayerFrameActions,
   Action: ShortsPlayerFrameAction,
 };

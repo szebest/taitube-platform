@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import { renderShorts } from '#app/features/shorts/__tests__/render-shorts';
 
 vi.mock(import('#app/components/player/taitube-player/taitube-player'), async () => ({
@@ -22,6 +22,6 @@ describe('apps/client/web: /shorts in the browser', () => {
 
     await screen.findByText('Short 2', { selector: 'p' });
     expect(screen.getByRole('region', { name: 'Shorts player' })).toBe(frame);
-    expect(router.state.location.pathname).toMatch(/^\/shorts\/0190c3a0/);
+    await waitFor(() => expect(router.state.location.pathname).toMatch(/^\/shorts\/0190c3a0/));
   });
 });

@@ -5,8 +5,8 @@ import { ShortsPlayerFrameRoot } from '#app/components/shorts/shorts-player-fram
 import type { ShortsFrameState } from '#app/components/shorts/shorts-player-frame/types';
 import { ShortsPlayerFramePlayer } from '../shorts-player-frame-player';
 
-function renderPlayer(state: ShortsFrameState, paused = false, muted = false) {
-  const playback = { paused, muted, onTogglePlay: vi.fn(), onToggleMute: vi.fn() };
+function renderPlayer(state: ShortsFrameState, paused = false) {
+  const playback = { paused, onTogglePlay: vi.fn() };
   render(
     <AppProviders>
       <ShortsPlayerFrameRoot state={state} playback={playback}>

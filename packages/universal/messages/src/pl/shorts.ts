@@ -7,5 +7,6 @@ export const shorts = {
     'Krótkie filmy pionowe są w drodze. Do tego czasu na stronie głównej jest mnóstwo do obejrzenia.'
   ),
   browse: dt('Przeglądaj filmy'),
+  controls: dt('Sterowanie filmem Short'),
   announce: dt('{title}, autor: {channel}'),
 } as const;

@@ -1,6 +1,6 @@
 import type { Decorator, Meta, StoryObj } from '@storybook/react-vite';
 import { EmptyLibraryIllustration, EmptyState } from '@vp/components';
-import { Icon } from '@vp/ui';
+import { Icon, IconButton } from '@vp/ui';
 import { ShortsPlayerFrame, ShortsPlayerFrameSkeleton } from '..';
 import { ShortsPlayerFrameRoot, type ShortsPlayerFrameRootProps } from '../shorts-player-frame';
 
@@ -10,7 +10,7 @@ const POSTER = `data:image/svg+xml,${encodeURIComponent(
 
 const noop = () => undefined;
 
-const PLAYING = { paused: false, muted: false, onTogglePlay: noop, onToggleMute: noop };
+const PLAYING = { paused: false, onTogglePlay: noop };
 
 function Short({ liked = false, ...args }: ShortsPlayerFrameRootProps & { liked?: boolean }) {
   return (
@@ -22,7 +22,12 @@ function Short({ liked = false, ...args }: ShortsPlayerFrameRootProps & { liked?
           <p className="m-0 text-label">Marta Reis Films</p>
           <p className="m-0 text-body-sm">The 28 tram at dusk, one take</p>
         </ShortsPlayerFrame.Caption>
-        <ShortsPlayerFrame.Progress value={0.4} />
+        <ShortsPlayerFrame.Progress value={0.4} label="Seek" onSeek={noop} />
+        <ShortsPlayerFrame.Toolbar label="Short controls">
+          <IconButton size="sm" aria-label="Mute" className="bg-scrim text-on-live">
+            <Icon name="volume" />
+          </IconButton>
+        </ShortsPlayerFrame.Toolbar>
       </ShortsPlayerFrame.Player>
       <ShortsPlayerFrame.Actions>
         <ShortsPlayerFrame.Action
@@ -75,8 +80,8 @@ export const OverlayAtCompact: Story = {
   render: (args) => <Short {...args} />,
 };
 
-export const PausedAndMuted: Story = {
-  args: { playback: { ...PLAYING, paused: true, muted: true } },
+export const Paused: Story = {
+  args: { playback: { ...PLAYING, paused: true } },
   render: (args) => <Short {...args} />,
 };
 

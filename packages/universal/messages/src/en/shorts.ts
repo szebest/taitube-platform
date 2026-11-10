@@ -7,5 +7,6 @@ export const shorts = {
     'Short vertical videos are on their way. Until then, the home feed has plenty to watch.'
   ),
   browse: dt('Browse videos'),
+  controls: dt('Short controls'),
   announce: dt('{title}, by {channel}'),
 } as const;

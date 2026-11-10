@@ -255,6 +255,23 @@ port (`PlayerState.canPictureInPicture` and `pictureInPicture`, `requestPictureI
 the Video.js adapter in `integrations/video-js/video-js-engine.tsx`), a button in the control bar and in the now playing
 bar through the player channel; where the browser has no API nothing is drawn.
 
+### Share and Shorts
+
+`shareUrl(kind, id, { origin, startAt })` (`lib/share/share-url.ts`) is the one builder of a public link: `watch` gives
+`/watch/<id>` with `?t=` when `startAt` is above 0, `shorts` gives `/shorts/<id>`. The share dialog is a
+`ResponsiveModal` (a drawer under 600 px): the link in a middle-truncated, selectable row with `min-w-0`, Copy with a
+toast, a fixed list of plain share URLs (`lib/share/social-targets.ts`, no SDK, no script) and the Web Share API button
+where `navigator.share` exists. Every dialog that is not a destructive confirmation or the image cropper is a
+`ResponsiveModal`; Popover and HoverCard cap their height at the space Radix reports; `viewport-fit=cover` is on in both apps,
+and a fixed bottom surface pads with `env(safe-area-inset-bottom)`.
+
+`/shorts` is `ShortsFeed`: one scroll-snap `region` (it takes focus when it opens) holding a `ShortsSlide` per Short.
+The Short on screen and one each side have a player (the neighbours paused and muted), the rest hold their place, so
+a step builds no player. Swipe, wheel and trackpad are the browser's scroll; Arrow keys, J and K, M, Space, C and L work
+from the first focus. The URL follows with a replace once the feed rests (`useShortsUrl`), and the playhead reaches
+only `ShortsFeedProgress`, through the player channel. The player port's `PlaybackControl` takes `speed` and `captions`
+beside `paused` and `muted`.
+
 ### The library (`features/library`)
 
 The viewer's own lists: the You hub `/feed/you` and `/feed/history` with its Searches, Liked and Comments tabs, all
