@@ -37,6 +37,7 @@ export async function lockVideo(
   return video;
 }
 
+/** @internal */
 export async function isLive(tx: PostgresDatabase, id: string): Promise<boolean> {
   const [row] = await tx
     .select({ id: c.id })

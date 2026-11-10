@@ -6,14 +6,14 @@ import type { InMemoryChannelRepository } from './in-memory-channel-repository';
 import type { InMemoryChannelUserRestrictionRepository } from './in-memory-channel-user-restriction-repository';
 
 /** The authors a channel has shadow banned, by the video their comments sit under. */
-export type ShadowedAuthors = ReadonlyMap<string, ReadonlySet<string>>;
+type ShadowedAuthors = ReadonlyMap<string, ReadonlySet<string>>;
 
 export interface PublicScopeContext {
   readonly shadowed: ShadowedAuthors;
   readonly comments: ReadonlyMap<string, StoredComment>;
 }
 
-/** The in-memory form of `ownOrPublicScope`: the public comments and the viewer's own. */
+/** @internal The in-memory form of `ownOrPublicScope`: the public comments and the viewer's own. */
 export function isOwnOrPublic(
   viewer: CommentViewer,
   comment: StoredComment,

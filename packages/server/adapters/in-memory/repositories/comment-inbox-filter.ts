@@ -26,7 +26,7 @@ interface InboxLookups {
   isRestricted(userId: string): boolean;
 }
 
-/** The in-memory form of `creatorInboxFilterScope`; `live` is every comment still standing. */
+/** @internal The in-memory form of `creatorInboxFilterScope`; `live` is every comment still standing. */
 export function matchesInbox(
   comment: InboxRow,
   filter: CreatorInboxFilter,

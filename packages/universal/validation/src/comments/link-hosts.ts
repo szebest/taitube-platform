@@ -10,7 +10,7 @@ function hostOf(candidate: string): string | null {
   return new URL(target).hostname.replace(/\.$/, '').toLowerCase();
 }
 
-/** An allowed host admits itself and every subdomain of it. */
+/** @internal An allowed host admits itself and every subdomain of it. */
 export function isAllowedHost(host: string, allowlist: readonly string[]): boolean {
   const lowered = host.toLowerCase();
   return allowlist.some((allowed) => lowered === allowed || lowered.endsWith(`.${allowed}`));

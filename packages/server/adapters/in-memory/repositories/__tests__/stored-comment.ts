@@ -1,6 +1,6 @@
 import type { StoredComment } from '../comment-visibility';
 
-/** The moderation fields of a comment nobody has moderated. */
+/** @internal The moderation fields of a comment nobody has moderated. */
 export const UNMODERATED = {
   moderationState: 'published',
   moderationDisclosure: null,
@@ -12,6 +12,7 @@ export const UNMODERATED = {
   looksLikeQuestion: false,
 } as const satisfies Partial<StoredComment>;
 
+/** @internal */
 export function aStoredComment(overrides: Partial<StoredComment> = {}): StoredComment {
   return {
     id: 'comment-1',

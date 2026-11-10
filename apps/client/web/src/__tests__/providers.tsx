@@ -90,8 +90,9 @@ export function signInBrowser(
   return mockEndpoint(getAccount, () => HttpResponse.json(viewer));
 }
 
-/** `dev-token serve` on this machine, minting the token of whichever persona is asked for. */
+/** `dev-token serve` on this machine, minting the token of whichever persona is asked for, and the API answering the signed-in persona with no channels. */
 export function devTokenServe() {
+  apiServer.use(mockEndpoint(listMyMemberships, () => HttpResponse.json({ items: [] })));
   return http.get(`${DEV_TOKEN_URL}/token`, ({ request }) =>
     HttpResponse.json({ token: `token-of-${new URL(request.url).searchParams.get('persona')}` })
   );

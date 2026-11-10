@@ -21,8 +21,10 @@ export type SavedReplyView = z.infer<typeof SavedReplySchema>;
 
 const SavedReplyListSchema = z.object({ items: z.array(SavedReplySchema) });
 
+/** @internal */
 export const CreateSavedReplyBodySchema = z.object({ title: TitleSchema, body: BodySchema });
 
+/** @internal */
 export const UpdateSavedReplyBodySchema = z
   .object({
     title: TitleSchema.optional(),
