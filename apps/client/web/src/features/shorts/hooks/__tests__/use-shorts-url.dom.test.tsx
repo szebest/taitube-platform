@@ -9,6 +9,10 @@ vi.mock(import('#app/components/player/taitube-player/taitube-player'), async ()
 const pathOf = (position: number) => `/shorts/${SHORTS[position - 1]?.id}`;
 
 describe('apps/client/web: useShortsUrl', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it('names the Short the feed rests on in the URL, replacing the entry', async () => {
     const { router } = await renderShorts();
 
@@ -22,7 +26,8 @@ describe('apps/client/web: useShortsUrl', () => {
     const { router } = await renderShorts({ path: pathOf(2) });
     const navigate = vi.spyOn(router, 'navigate');
 
-    await act(() => new Promise((settle) => setTimeout(settle, 300)));
+    vi.useFakeTimers();
+    act(() => vi.advanceTimersByTime(300));
 
     expect(navigate).not.toHaveBeenCalled();
     expect(router.state.location.pathname).toBe(pathOf(2));
