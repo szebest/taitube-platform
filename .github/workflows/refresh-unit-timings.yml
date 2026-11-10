@@ -1,0 +1,68 @@
+name: Refresh unit timings
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+concurrency:
+  group: refresh-unit-timings
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  TURBO_TELEMETRY_DISABLED: 1
+  DO_NOT_TRACK: 1
+
+jobs:
+  refresh:
+    name: refresh-unit-timings
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      actions: read
+      contents: write
+      pull-requests: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      BRANCH: chore/refresh-unit-timings
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          ref: main
+
+      - name: Set up the workspace
+        uses: ./.github/actions/setup-workspace
+        with:
+          build: 'false'
+
+      - name: Average the spec costs of the last two green CI runs on main
+        id: runs
+        run: |
+          runs=$(gh run list --workflow ci.yml --branch main --event push --status success --limit 2 --json databaseId --jq '.[].databaseId')
+          test -n "$runs" || { echo "::error::no successful CI run on main to read"; exit 1; }
+          args=()
+          for run in $runs; do args+=(--run "$run"); done
+          pnpm -s timings:update "${args[@]}"
+
+      - name: Open a pull request with the new timings when they changed
+        run: |
+          if git diff --quiet -- tests/timings/unit.json; then
+            echo "tests/timings/unit.json is up to date" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -C "$BRANCH"
+          git add tests/timings/unit.json
+          git commit -m "chore: refresh the unit spec timings"
+          git push --force origin "$BRANCH"
+          if [ -z "$(gh pr list --head "$BRANCH" --state open --json number --jq '.[].number')" ]; then
+            gh pr create --base main --head "$BRANCH" \
+              --title "chore: refresh the unit spec timings" \
+              --body "Spec costs in tests/timings/unit.json, averaged over the last two green CI runs on main. The unit shard count follows from them (pnpm unit-shards)."
+          fi
