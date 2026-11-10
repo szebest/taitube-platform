@@ -1,18 +1,10 @@
-import {
-  Avatar,
-  Badge,
-  Button,
-  type ButtonProps,
-  Icon,
-  IconButton,
-  Skeleton,
-  Slot,
-  useUiCopy,
-} from '@vp/ui';
+import { Avatar, Badge, Button, type ButtonProps, Icon, IconButton, Slot, useUiCopy } from '@vp/ui';
 import type { ComponentPropsWithRef, ReactNode } from 'react';
 import { ChannelHeaderContext, useChannelHeader } from './channel-header.context';
 import { channelHeaderStyles } from './channel-header.variants';
 import type { ChannelHeaderLayout } from './types';
+
+const AVATAR_SIZES = '(min-width: 600px) 112px, 72px';
 
 export interface ChannelHeaderRootProps extends ComponentPropsWithRef<'div'> {
   layout?: ChannelHeaderLayout;
@@ -42,6 +34,8 @@ export function ChannelHeaderRoot({
 export interface ChannelHeaderBannerProps extends ComponentPropsWithRef<'img'> {
   /** Styles the media element the caller passes (a `picture`) in place of the `img`. */
   asChild?: boolean;
+  /** A `BannerLink`, drawn in the safe area. */
+  link?: ReactNode;
 }
 
 /** The banner image, or a tint of the sampled colour over `surface` at the same height when there is none. */
@@ -49,6 +43,7 @@ export function ChannelHeaderBanner({
   src,
   alt = '',
   asChild = false,
+  link,
   className,
   ...props
 }: ChannelHeaderBannerProps) {
@@ -78,8 +73,28 @@ export function ChannelHeaderBanner({
               <div className={styles.bannerFade()} />
             </div>
           ))}
+        {link !== undefined && <div className={styles.bannerSafeArea()}>{link}</div>}
       </div>
     </div>
+  );
+}
+
+export type ChannelHeaderBannerLinkProps = Omit<ComponentPropsWithRef<'a'>, 'target' | 'rel'>;
+
+/** A small button to a new tab; give it an `https` address only. */
+export function ChannelHeaderBannerLink({
+  className,
+  children,
+  ...props
+}: ChannelHeaderBannerLinkProps) {
+  const styles = channelHeaderStyles({ layout: useChannelHeader('BannerLink').layout });
+
+  return (
+    <Button asChild size="sm" variant="soft" className={styles.bannerLink({ className })}>
+      <a target="_blank" rel="noopener noreferrer" {...props}>
+        {children}
+      </a>
+    </Button>
   );
 }
 
@@ -90,6 +105,8 @@ export interface ChannelHeaderIdentityProps extends Omit<
   name: string;
   handle: string;
   avatarSrc?: string;
+  /** The avatar by width, `"url 48w, url 128w"`. */
+  avatarSrcSet?: string;
   /** Finished, e.g. "284K subscribers · 86 videos". */
   stats?: string;
   verified?: boolean;
@@ -104,6 +121,7 @@ export function ChannelHeaderIdentity({
   name,
   handle,
   avatarSrc,
+  avatarSrcSet,
   stats,
   verified = false,
   live = false,
@@ -125,7 +143,14 @@ export function ChannelHeaderIdentity({
       {...props}
     >
       <Avatar.Root size="xl" tone={live ? 'live' : 'neutral'} className={styles.avatar()}>
-        {avatarSrc !== undefined && <Avatar.Image src={avatarSrc} alt="" />}
+        {avatarSrc !== undefined && (
+          <Avatar.Image
+            src={avatarSrc}
+            srcSet={avatarSrcSet}
+            sizes={avatarSrcSet && AVATAR_SIZES}
+            alt=""
+          />
+        )}
         <Avatar.Fallback aria-hidden="true">{name.slice(0, 1)}</Avatar.Fallback>
       </Avatar.Root>
       <div className={styles.nameRow()}>
@@ -275,35 +300,5 @@ export function ChannelHeaderTab({
         {...props}
       />
     </li>
-  );
-}
-
-export function ChannelHeaderSkeleton({ layout = 'full' }: { layout?: ChannelHeaderLayout }) {
-  const styles = channelHeaderStyles({ layout });
-
-  return (
-    <div data-slot="channel-header-skeleton" aria-hidden="true" className={styles.root()}>
-      {layout === 'full' && (
-        <div className={styles.bannerFrame()}>
-          <Skeleton
-            radius="card"
-            className="aspect-[3/1] w-full medium:aspect-[4/1] expanded:aspect-[6/1]"
-          />
-        </div>
-      )}
-      <div className={styles.identity()}>
-        <Skeleton shape="circle" className={styles.avatar({ className: 'size-avatar-xl' })} />
-        <Skeleton shape="text" className={styles.name({ className: 'w-[17.5rem] max-w-full' })} />
-        <Skeleton shape="text" className={styles.stats({ className: 'w-[13.75rem]' })} />
-        <Skeleton
-          shape="text"
-          className={styles.bio({ className: 'w-[22.5rem] max-w-full text-body' })}
-        />
-        <div className={styles.actions()}>
-          <Skeleton radius="control" className="h-control-md w-[7.5rem] max-medium:flex-1" />
-        </div>
-      </div>
-      {layout === 'full' && <Skeleton radius="xs" className="h-control-md w-full" />}
-    </div>
   );
 }

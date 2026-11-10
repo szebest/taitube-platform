@@ -1,6 +1,6 @@
 import { screen, within } from '@testing-library/react';
 import type { HttpHandler } from 'msw/http';
-import { libraryVideo, playlistDetail, uuid } from '#app/__tests__/library-fixtures';
+import { libraryVideo, playlistDetail, seriesDetail, uuid } from '#app/__tests__/library-fixtures';
 import { renderLibrary } from './render-library';
 
 export const LIST = uuid(4100);
@@ -19,6 +19,12 @@ export const renderPlaylist = (
   renderLibrary(`/playlist?list=${LIST}`, {
     details: [playlistDetail(LIST, VIDEOS, { description: 'Slow ways home', ...overrides })],
     handlers,
+  });
+
+/** The same page for a series of `VIDEOS`, `progress` percent watched of each, continuing at the video numbered `next`. */
+export const renderSeries = (progress: (number | null)[], next: number | null) =>
+  renderLibrary(`/playlist?list=${LIST}`, {
+    details: [seriesDetail(LIST, VIDEOS, progress, next === null ? null : uuid(next))],
   });
 
 export const rowOf = async (title: string) => {

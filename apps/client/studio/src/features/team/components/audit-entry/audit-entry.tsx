@@ -93,6 +93,7 @@ function AuditDetail({ entry }: { entry: AuditEntryView }) {
     case 'user.restriction_lifted':
     case 'trusted.added':
     case 'trusted.removed':
+    case 'channel.updated':
       return null;
     default:
       return assertNever(entry, 'ChannelAuditAction');

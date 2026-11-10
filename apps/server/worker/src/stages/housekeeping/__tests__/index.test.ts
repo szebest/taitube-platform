@@ -45,6 +45,8 @@ describe('housekeeping: createHousekeepingProcessor', () => {
     { task: 'purge-search-history', result: { purgedCount: 0 } },
     { task: 'purge-channel-audit', result: { purgedCount: 0 } },
     { task: 'purge-comment-moderation', result: { removals: 0, restrictions: 0 } },
+    { task: 'purge-channel-images', result: { purgedCount: 0 } },
+    { task: 'purge-handle-history', result: { purgedCount: 0 } },
   ] as const)('dispatches $task to its task', async ({ task, result }) => {
     expect(await run(task)).toEqual(result);
   });

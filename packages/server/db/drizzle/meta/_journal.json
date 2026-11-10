@@ -243,8 +243,15 @@
     {
       "idx": 34,
       "version": "7",
-      "when": 1794227390569,
-      "tag": "0034_comment_moderation",
+      "when": 1794223324030,
+      "tag": "0034_channel_identity",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1794305635100,
+      "tag": "0035_comment_moderation",
       "breakpoints": true
     }
   ]

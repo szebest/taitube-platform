@@ -1,4 +1,4 @@
-import { ErrorCodes, type Failure } from '@vp/errors';
+import { ErrorCodes, type Failure, type InputFailure } from '@vp/errors';
 
 export type PlaylistNotFound = Failure<
   typeof ErrorCodes.PLAYLIST_NOT_FOUND,
@@ -33,5 +33,20 @@ export function systemPlaylistImmutable(playlistId: string): SystemPlaylistImmut
     code: ErrorCodes.SYSTEM_PLAYLIST_IMMUTABLE,
     message: 'A system playlist cannot be renamed or deleted',
     playlistId,
+  };
+}
+
+export type SeriesVideoNotOwned = InputFailure<
+  typeof ErrorCodes.SERIES_VIDEO_NOT_OWNED,
+  { playlistId: string; videoId: string }
+>;
+
+export function seriesVideoNotOwned(playlistId: string, videoId: string): SeriesVideoNotOwned {
+  return {
+    code: ErrorCodes.SERIES_VIDEO_NOT_OWNED,
+    message: 'A series holds only videos of its own channel',
+    field: 'videoId',
+    playlistId,
+    videoId,
   };
 }

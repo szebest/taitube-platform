@@ -101,6 +101,7 @@ export const studioTeam = {
         'member.role_changed': 'Zmienił(a) rolę',
         'member.removed': 'Usunął(-ęła) członka zespołu',
         'member.left': 'Opuścił(a) zespół',
+        'channel.updated': 'Zmieniono kanał',
         'video.updated': 'Edytował(a) film',
         'video.comments.toggled': 'Włączył(a) lub wyłączył(a) komentarze',
         'comment.held': 'Wstrzymał(a) komentarz',

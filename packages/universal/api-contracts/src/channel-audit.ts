@@ -46,6 +46,7 @@ const AuditEntrySchema = z.discriminatedUnion('action', [
   auditEntry('member.removed', 'member', MemberMetaSchema),
   auditEntry('member.left', 'member', MemberMetaSchema),
   auditEntry('video.updated', 'video', z.object({ fields: z.array(z.string()) })),
+  auditEntry('channel.updated', 'channel', z.object({ fields: z.array(z.string()) })),
   auditEntry('video.comments.toggled', 'video', z.object({ enabled: z.boolean() })),
   auditEntry('comment.held', 'comment', CommentMetaSchema),
   auditEntry('comment.approved', 'comment', CommentMetaSchema),

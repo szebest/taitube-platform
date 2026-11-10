@@ -9,6 +9,7 @@ import type {
   LiveChatServerFrame,
   LiveStreamPublicView,
   OwnerChannel,
+  PublicChannel,
   SubscribedChannel,
   TranscriptView,
   Video,
@@ -145,7 +146,9 @@ export function inboxComment(
   return { ...comment(), video: { id: VIDEO_ID, title: 'Alfama at 5 a.m.' }, ...overrides };
 }
 
-export function channel(overrides: Partial<OwnerChannel> = {}): OwnerChannel {
+export function channel(
+  overrides: Partial<OwnerChannel & PublicChannel> = {}
+): OwnerChannel & PublicChannel {
   return {
     id: CHANNEL_ID,
     userId: OWNER_ID,
@@ -153,6 +156,15 @@ export function channel(overrides: Partial<OwnerChannel> = {}): OwnerChannel {
     displayName: 'The Creator',
     avatarUrl: null,
     bannerUrl: null,
+    avatar: null,
+    banner: null,
+    bannerLink: null,
+    bannerCrops: null,
+    country: null,
+    hasContact: false,
+    contactEmail: null,
+    handleChangeAvailableAt: null,
+    redirectedFrom: null,
     brandColor: null,
     bio: null,
     links: [],
@@ -178,7 +190,8 @@ export function feedPages(items: VideoSummary[]) {
 
 export function account(overrides: Partial<Account> = {}): Account {
   const user = { id: OWNER_ID, email: 'creator@example.com', tier: 'free', createdAt: CREATED_AT };
-  return { ...user, role: 'CREATOR', user, channel: channel(), ...overrides };
+  const { redirectedFrom: _redirectedFrom, ...owned } = channel();
+  return { ...user, role: 'CREATOR', user, channel: owned, ...overrides };
 }
 
 export const LIVE_STREAM_ID = '0190c3a0-5e1d-7000-8000-00000000e001';

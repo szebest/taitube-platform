@@ -47,6 +47,7 @@ The catalogue of `@vp/ui` primitives that [ticket 95](../../tickets/95-design-sy
 | [VisuallyHidden](visually-hidden.md) | Text for assistive technology only | VisuallyHidden | new |
 | [UiCopyProvider](ui-copy-provider.md) | Supplies the built-in control strings from the app's catalogue | none | new |
 | [Logo](logo.md) | The mark and wordmark | none | existing-rebuilt (was `BrandLogo`) |
+| [PlatformIcon](platform-icon.md) | The mark of a platform a channel links to | none | new |
 
 `Sheet` has no file of its own: it is `Dialog.Content` with `side="inline-start"` or `"inline-end"`, and its bottom form is `Drawer`.
 

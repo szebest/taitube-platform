@@ -42,6 +42,7 @@
     "@vp/env-schema": "workspace:*",
     "@vp/errors": "workspace:*",
     "@vp/events": "workspace:*",
+    "@vp/intl": "workspace:*",
     "@vp/job-contracts": "workspace:*",
     "@vp/logger": "workspace:*",
     "@vp/observability": "workspace:*",

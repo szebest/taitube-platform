@@ -45,6 +45,7 @@ function detail(customThumbnailKey: string | null, posterKey: string | null): Pl
       title: 'Mix',
       description: '',
       visibility: 'public',
+      kind: 'playlist',
       isSystem: false,
       customThumbnailKey,
       createdAt: AT,

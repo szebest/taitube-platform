@@ -11,7 +11,8 @@ describe('apps/client/studio: customization page', () => {
     ).toBeInTheDocument();
     for (const name of [
       'Name and handle',
-      'About',
+      'Links',
+      'Trailer and welcome back',
       'Picture and banner',
       'Brand colour',
       'Captions',
@@ -19,7 +20,7 @@ describe('apps/client/studio: customization page', () => {
     ]) {
       expect(await screen.findByRole('form', { name })).toBeInTheDocument();
     }
-    expect(screen.getAllByRole('form')).toHaveLength(6);
+    expect(screen.getAllByRole('form')).toHaveLength(7);
   });
 
   it('passes axe', async () => {

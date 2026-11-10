@@ -1,5 +1,6 @@
 import type { CaptionKind } from './captions';
 import type { ChannelCard } from './channel';
+import type { ChannelImageKind } from './channel-images';
 import type { Comment, CommentThread, CommentVideoSummary } from './comment';
 import type { NotificationReadScope, NotificationView } from './notification';
 import type { PreferenceSection } from './settings';
@@ -42,7 +43,25 @@ export type UserEvent =
       payload: { videoId: string; track: { id: string; language: string; kind: CaptionKind } };
     }
   | { type: 'captions.failed'; payload: { videoId: string; captionId: string; reason: string } }
-  | { type: 'live.started'; payload: LiveStartedPayload };
+  | { type: 'live.started'; payload: LiveStartedPayload }
+  | { type: 'channel.image.ready'; payload: ChannelImageReadyPayload }
+  | { type: 'channel.image.failed'; payload: ChannelImageFailedPayload };
+
+/** An avatar or banner upload became the channel's image at `version`. */
+export interface ChannelImageReadyPayload {
+  uploadId: string;
+  channelId: string;
+  kind: ChannelImageKind;
+  version: number;
+}
+
+/** The job gave up on an upload; the channel keeps the image it had. */
+export interface ChannelImageFailedPayload {
+  uploadId: string;
+  channelId: string;
+  kind: ChannelImageKind;
+  reason: string;
+}
 
 /** A channel the person subscribes to went live; `startedAt` is ISO 8601. */
 export interface LiveStartedPayload {
@@ -107,4 +126,12 @@ export function captionsFailed(videoId: string, captionId: string, reason: strin
 
 export function liveStarted(payload: LiveStartedPayload): UserEvent {
   return { type: 'live.started', payload };
+}
+
+export function channelImageReady(payload: ChannelImageReadyPayload): UserEvent {
+  return { type: 'channel.image.ready', payload };
+}
+
+export function channelImageFailed(payload: ChannelImageFailedPayload): UserEvent {
+  return { type: 'channel.image.failed', payload };
 }

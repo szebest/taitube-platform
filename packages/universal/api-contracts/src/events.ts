@@ -1,5 +1,6 @@
 import { CAPTION_KINDS, THUMBNAIL_PROGRESS, type UserEvent } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
+import { CHANNEL_IMAGE_KINDS } from '@vp/validation';
 import { z } from 'zod';
 import { ChannelCardSchema } from './channels';
 import { defineEndpoint } from './endpoint';
@@ -100,6 +101,24 @@ const UserEventSchema = z.discriminatedUnion('type', [
       title: z.string(),
       startedAt: z.iso.datetime(),
       channel: ChannelCardSchema,
+    }),
+  }),
+  z.object({
+    type: z.literal('channel.image.ready'),
+    payload: z.object({
+      uploadId: z.uuid(),
+      channelId: z.uuid(),
+      kind: z.enum(CHANNEL_IMAGE_KINDS),
+      version: z.number().int().positive(),
+    }),
+  }),
+  z.object({
+    type: z.literal('channel.image.failed'),
+    payload: z.object({
+      uploadId: z.uuid(),
+      channelId: z.uuid(),
+      kind: z.enum(CHANNEL_IMAGE_KINDS),
+      reason: z.string(),
     }),
   }),
 ]) satisfies z.ZodType<UserEvent>;

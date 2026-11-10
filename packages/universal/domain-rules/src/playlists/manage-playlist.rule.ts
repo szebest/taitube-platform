@@ -58,12 +58,13 @@ function userEditable(playlist: Playlist): Result<Playlist, SystemPlaylistImmuta
 export function decidePlaylistUpdate(
   input: UpdatePlaylistInput
 ): Result<PlaylistPatch, UpdatePlaylistFailure> {
-  const { visibility } = input.patch;
+  const { visibility, kind } = input.patch;
   return andThen(permitted(input, canUpdatePlaylist, 'update'), (playlist) =>
     andThen(userEditable(playlist), () =>
       map(validatePlaylistDetails(input.patch), (details) => ({
         ...details,
         ...(visibility === undefined ? {} : { visibility }),
+        ...(kind === undefined ? {} : { kind }),
       }))
     )
   );

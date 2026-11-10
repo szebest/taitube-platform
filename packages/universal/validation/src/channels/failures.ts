@@ -39,3 +39,21 @@ export function invalidChannelLinks(limits: ChannelLinkLimits): InvalidChannelLi
     limits
   );
 }
+
+export type ImageTooSmall = InputFailure<
+  typeof ErrorCodes.IMAGE_TOO_SMALL,
+  { width: number; height: number; minWidth: number; minHeight: number }
+>;
+
+export function imageTooSmall(
+  size: { width: number; height: number },
+  min: { minWidth: number; minHeight: number }
+): ImageTooSmall {
+  return {
+    code: ErrorCodes.IMAGE_TOO_SMALL,
+    message: `The image is ${size.width} x ${size.height}; it must be at least ${min.minWidth} x ${min.minHeight}`,
+    field: 'file',
+    ...size,
+    ...min,
+  };
+}

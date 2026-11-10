@@ -111,6 +111,10 @@ export const VIDEO_AUDIT_FIELDS = [
 
 export type VideoAuditField = (typeof VIDEO_AUDIT_FIELDS)[number];
 
+const CHANNEL_AUDIT_FIELDS = ['handle', 'avatar', 'banner', 'spotlight'] as const;
+
+export type ChannelAuditField = (typeof CHANNEL_AUDIT_FIELDS)[number];
+
 /** `meta` holds ids and enum values only, never text another user wrote. */
 type ChannelAuditEvent =
   | { action: 'invite.created'; targetType: 'invite'; targetId: string; meta: InviteMeta }
@@ -148,6 +152,12 @@ type ChannelAuditEvent =
       targetType: 'settings';
       targetId: string;
       meta: { fields: CommentSettingsField[] };
+    }
+  | {
+      action: 'channel.updated';
+      targetType: 'channel';
+      targetId: string;
+      meta: { fields: ChannelAuditField[] };
     };
 
 /** Type literals, not interfaces, so a meta stays assignable to the jsonb column's record type. */
@@ -220,6 +230,7 @@ const AUDIT_ACTIONS: Record<ChannelAuditAction, true> = {
   'trusted.added': true,
   'trusted.removed': true,
   'settings.comments.updated': true,
+  'channel.updated': true,
 };
 
 export const CHANNEL_AUDIT_ACTIONS = Object.keys(AUDIT_ACTIONS) as ChannelAuditAction[];

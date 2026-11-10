@@ -1,4 +1,8 @@
-import { InMemoryChannelRepository, InMemoryVideoRepository } from '@vp/adapters/in-memory';
+import {
+  InMemoryChannelHandleHistoryRepository,
+  InMemoryChannelRepository,
+  InMemoryVideoRepository,
+} from '@vp/adapters/in-memory';
 import type { RenditionRecord, VideoRecord } from '@vp/core/repositories';
 import { expectOk } from '@vp/testing/result';
 import {
@@ -136,7 +140,10 @@ describe('apps/server/api/services: video views', () => {
 
   describe('loadChannelsOf', () => {
     it('reads the channel of each owner, null for an owner without one', async () => {
-      const channels = new InMemoryChannelRepository(new InMemoryVideoRepository());
+      const channels = new InMemoryChannelRepository(
+        new InMemoryVideoRepository(),
+        new InMemoryChannelHandleHistoryRepository()
+      );
       const owner = '00000000-0000-7000-8000-0000000000e2';
       expectOk(await channels.create({ ...CHANNEL, userId: owner }));
 

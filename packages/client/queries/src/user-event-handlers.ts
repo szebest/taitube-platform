@@ -94,7 +94,18 @@ function applyLiveStarted(
  * What each event does to one tab's query cache; an event type with no entry does not compile.
  * @public
  */
-export const userEventHandlers: UserEventHandlers = {
+/** The new image changes what a channel resource's `avatar` and `banner` address, so a cached one is stale. */
+function applyChannelImageReady(
+  { channelId }: UserEventPayloads['channel.image.ready'],
+  queryClient: QueryClient
+) {
+  void queryClient.invalidateQueries({ queryKey: [...CHANNEL_DETAIL_KEY, channelId] });
+}
+
+/** A failed upload changes nothing a query holds; the studio's own upload state reads the event. */
+function ignoreChannelImageFailed() {}
+
+const userEventHandlers: UserEventHandlers = {
   'video.processing': applyVideoProcessing,
   'preferences.updated': applyPreferencesUpdated,
   'captions.ready': applyCaptionsChange,
@@ -104,6 +115,8 @@ export const userEventHandlers: UserEventHandlers = {
   'comment.created': applyCommentCreated,
   'comment.held': applyCommentCreated,
   'live.started': applyLiveStarted,
+  'channel.image.ready': applyChannelImageReady,
+  'channel.image.failed': ignoreChannelImageFailed,
 };
 
 // Mapped rather than `UserEvent`, so `type` and `payload` stay correlated once the union grows.

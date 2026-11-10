@@ -155,4 +155,9 @@ export const library = {
   moderationNoteLine: dt('Notatka: {note}'),
   moderationRemovedAt: dt('Usunięto {when}'),
   moderationOpenVideo: dt('Otwórz film'),
+  episode: dt('Odcinek {number:number}', { number: { number: { useGrouping: false } } }),
+  continueSeries: dt('Kontynuuj'),
+  episodeWatched: dt('Obejrzano {percent:number}%', {
+    number: { percent: { maximumFractionDigits: 0 } },
+  }),
 } as const;

@@ -101,6 +101,7 @@ export const studioTeam = {
         'member.role_changed': 'Changed a role',
         'member.removed': 'Removed a member',
         'member.left': 'Left the team',
+        'channel.updated': 'Changed the channel',
         'video.updated': 'Edited a video',
         'video.comments.toggled': 'Turned comments on or off',
         'comment.held': 'Held a comment',

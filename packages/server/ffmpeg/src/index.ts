@@ -1,4 +1,8 @@
 export * from './audio';
+export * from './channel-image';
+export * from './channel-image-args';
+export * from './channel-image-probe';
+export * from './channel-image-variants';
 export * from './chunk';
 export type { Fmp4Fragment } from './fmp4-fragments';
 export * from './ladder';
@@ -14,6 +18,8 @@ export * from './transcode';
 export { computeFfmpegThreads } from './transcode-args';
 
 import { runFfmpegAudio } from './audio';
+import { runFfmpegChannelImage } from './channel-image';
+import { probeChannelImage } from './channel-image-probe';
 import { runFfmpegChunk, runFfmpegConcat } from './chunk';
 import { runFfmpegLive } from './live';
 import { runFfprobe } from './probe';
@@ -31,6 +37,8 @@ export interface MediaTools {
   concat: typeof runFfmpegConcat;
   thumbnail: typeof runFfmpegThumbnail;
   audio: typeof runFfmpegAudio;
+  probeChannelImage: typeof probeChannelImage;
+  channelImage: typeof runFfmpegChannelImage;
   live: typeof runFfmpegLive;
 }
 
@@ -41,5 +49,7 @@ export const mediaTools: MediaTools = {
   concat: runFfmpegConcat,
   thumbnail: runFfmpegThumbnail,
   audio: runFfmpegAudio,
+  probeChannelImage,
+  channelImage: runFfmpegChannelImage,
   live: runFfmpegLive,
 };

@@ -76,21 +76,43 @@ export function playlistDetail(
     title: 'Road trips',
     description: '',
     visibility: 'private',
+    kind: 'playlist',
     isSystem: false,
     thumbnailUrl: null,
     videoCount: videos.length,
     owner: null,
+    nextEpisodeVideoId: null,
     items: videos.map((video, position) => ({
       id: uuid(5000 + position),
       videoId: video.id,
       position,
       addedAt: NOW,
+      episode: null,
+      progress: null,
       video,
       channel: null,
     })),
     createdAt: NOW,
     updatedAt: NOW,
     ...overrides,
+  };
+}
+
+/** A series of `videos` in order, each with the percent `progress` the viewer has watched of it, to be continued at `nextEpisodeVideoId`. */
+export function seriesDetail(
+  id: string,
+  videos: VideoSummary[],
+  progress: (number | null)[],
+  nextEpisodeVideoId: string | null
+): PlaylistView {
+  const detail = playlistDetail(id, videos, { kind: 'series', nextEpisodeVideoId });
+  return {
+    ...detail,
+    items: detail.items.map((item, index) => ({
+      ...item,
+      episode: index + 1,
+      progress: progress[index] ?? null,
+    })),
   };
 }
 

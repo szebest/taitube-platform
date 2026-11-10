@@ -14,6 +14,7 @@ apps/client/studio/src/
     comments/bulk-action-bar/      BulkActionBar
     comments/moderation-queue/     ModerationQueue
     section/customization-section/ CustomizationSection
+    image/image-cropper/           ImageCropper
   features/<feature>/components/   smart wrappers (below): data, formatting, permissions
 ```
 
@@ -33,6 +34,7 @@ These components exist for the studio alone today, so they stay in the studio's 
 | [BulkActionBar](bulk-action-bar.md) | The actions on selected rows and the disclosure they share | `Button`, `DisclosureControl` | [113](../../../tickets/113-channel-comment-moderation.md) |
 | [ModerationQueue](moderation-queue.md) | The held comments as a listbox, one open | none | [113](../../../tickets/113-channel-comment-moderation.md) |
 | [CustomizationSection](customization-section.md) | A settings block with its own save | `Card`, `Button` | [72](../../../tickets/72-frontend-settings-customization-system.md), [113](../../../tickets/113-channel-comment-moderation.md) |
+| [ImageCropper](image-cropper.md) | Frame a picture or banner: crop frame, zoom, safe-area guides, previews, job progress | `Dialog`, `SegmentedControl`, `Slider`, `Progress`, `Callout`, `Button` | [115](../../../tickets/115-channel-page-customisation.md) |
 | [Charts](charts.md) | `ChartFrame` and the palette helpers every chart follows | `Skeleton`, `Badge` | [60](../../../tickets/60-creator-studio-dashboard-video-management-ui.md) |
 
 ## Smart wrappers the studio needs
@@ -46,6 +48,7 @@ A wrapper is the one place a kit component meets data ([architecture section 5](
 | `KpiCard` | `features/analytics/components/` | `metric: KpiMetric`, `range: AnalyticsRange` | `useChannelAnalytics`, `useFormat`, `useT` | `StatCard` |
 | `ViewsChart` | `features/analytics/components/` | `scope`, `range`, `granularity` | `useAnalytics`, `useChartTheme`, `useFormat`, `useT` | `ChartFrame` and the charting library |
 | `RetentionHeatmap` | `features/analytics/components/` | `videoId: string` | `useVideoAnalytics`, `useChartTheme`, `seriesColor`, `useFormat`, `useT` | `ChartFrame` and the charting library; built by [60](../../../tickets/60-creator-studio-dashboard-video-management-ui.md) |
+| `ImagesSection` | `features/channel/components/` | `channel: Channel` | `useChannelImageUpload`, `useObjectUrl`, `useUpdateChannel`, `useT` | `ImageCropper`, `FileField` |
 | `StudioShell` | `features/shell/components/` | none (reads the route and session) | `useMatchRoute`, `useUploadDock`, `useCan`, `useT`, `useSelectedVideo` | `StudioWorkspace` |
 | `CategoryTable` | `features/admin/components/` | none | `useSearch`, `useSuspenseQuery`, `useReactTable`, `useCan`, `useT` | `DataTable` |
 

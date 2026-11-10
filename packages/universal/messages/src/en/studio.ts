@@ -2,8 +2,10 @@ import { dt } from '../define';
 import { studioAdmin } from './studio-admin';
 import { studioBatch } from './studio-batch';
 import { studioCaptions } from './studio-captions';
+import { studioChannel } from './studio-channel';
 import { studioCommentSettings } from './studio-comment-settings';
 import { studioComments } from './studio-comments';
+import { studioImages } from './studio-images';
 import { studioLive } from './studio-live';
 import { studioModeration } from './studio-moderation';
 import { studioPicks } from './studio-picks';
@@ -79,6 +81,8 @@ export const studio = {
   ...studioComments,
   ...studioCommentSettings,
   ...studioModeration,
+  ...studioChannel,
+  ...studioImages,
   ...studioLive,
   ...studioPicks,
   ...studioTeam,
@@ -177,7 +181,7 @@ export const studio = {
   sectionSaved: dt('Saved'),
   sectionNotSaved: dt('Could not save. Try again.'),
   identityTitle: dt('Name and handle'),
-  identityDescription: dt('How your channel is named and found.'),
+  identityDescription: dt('How your channel is named, found and reached.'),
   displayNameLabel: dt('Channel name'),
   displayNameInvalid: dt('Use 1 to 100 characters.'),
   handleLabel: dt('Handle'),
@@ -185,24 +189,12 @@ export const studio = {
   aboutTitle: dt('About'),
   aboutDescription: dt('What viewers read on your channel.'),
   bioLabel: dt('Description'),
-  bioInvalid: dt('Use up to 1000 characters.'),
+  bioInvalid: dt('Use up to 5000 characters.'),
   linksLabel: dt('Links'),
   linkTitleLabel: dt('Link title {position}'),
   linkUrlLabel: dt('Link address {position}'),
   addLink: dt('Add a link'),
   removeLink: dt('Remove link {position}'),
-  brandingTitle: dt('Picture and banner'),
-  brandingDescription: dt(
-    'Upload a JPEG, PNG or WebP image: up to 5 MB for the picture and 10 MB for the banner.'
-  ),
-  avatarDrop: dt('Drop a picture here, or click to choose one'),
-  bannerDrop: dt('Drop a banner here, or click to choose one'),
-  avatarRemove: dt('Remove picture'),
-  bannerRemove: dt('Remove banner'),
-  avatarPreview: dt('Picture preview'),
-  bannerPreview: dt('Banner preview'),
-  avatarSafeZone: dt('Shown as a circle: keep faces and text inside the guide.'),
-  bannerSafeZone: dt('Phones show only the centre band: keep text inside the guide.'),
   brandTitle: dt('Brand colour'),
   brandDescription: dt('Buttons, links and highlights on your channel page take this colour.'),
   brandLabel: dt('Colour'),

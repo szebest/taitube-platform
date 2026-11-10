@@ -7,6 +7,7 @@ import {
   getPlaylist,
   getVideo,
   isSubscribedToChannel,
+  type PlaylistView,
   type Video,
 } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
@@ -24,7 +25,7 @@ import { type HttpHandler, HttpResponse } from 'msw/http';
 import { loaderApi } from '#app/__tests__/loader-api';
 import { signInBrowser } from '#app/__tests__/providers';
 import { getRouter } from '#app/router';
-import { playlistDetail, uuid } from './library-fixtures';
+import { playlistDetail, seriesDetail, uuid } from './library-fixtures';
 
 const { id, handle, displayName, avatarUrl } = channel();
 
@@ -84,18 +85,20 @@ export async function renderWatch({
 export const LIST = uuid(4100);
 export const QUEUED = [uuid(6010), uuid(6011)];
 
-/** The watch page of the video, opened from a playlist of it and two more, `Queued <id>` by title. */
-export const renderPlaylistWatch = () =>
+const PLAYLIST_VIDEOS = [
+  videoSummary({ id: VIDEO_ID, title: 'Launch day' }),
+  ...QUEUED.map((id) => videoSummary({ id, title: `Queued ${id}` })),
+];
+
+const watchFromList = (detail: PlaylistView) =>
   renderWatch({
     search: `?list=${LIST}&index=0`,
-    handlers: [
-      mockEndpoint(getPlaylist, () =>
-        HttpResponse.json(
-          playlistDetail(LIST, [
-            videoSummary({ id: VIDEO_ID, title: 'Launch day' }),
-            ...QUEUED.map((id) => videoSummary({ id, title: `Queued ${id}` })),
-          ])
-        )
-      ),
-    ],
+    handlers: [mockEndpoint(getPlaylist, () => HttpResponse.json(detail))],
   });
+
+/** The watch page of the video, opened from a playlist of it and two more, `Queued <id>` by title. */
+export const renderPlaylistWatch = () => watchFromList(playlistDetail(LIST, PLAYLIST_VIDEOS));
+
+/** The same, opened from a series of the three. */
+export const renderSeriesWatch = () =>
+  watchFromList(seriesDetail(LIST, PLAYLIST_VIDEOS, [null, null, null], null));

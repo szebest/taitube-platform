@@ -113,7 +113,7 @@ describe('db: comment moderation schema', () => {
   });
 });
 
-describe('db: 0034 restriction and settings checks', () => {
+describe('db: 0035 restriction and settings checks', () => {
   let database: SocketDatabase;
   const userId = crypto.randomUUID();
   const channelId = crypto.randomUUID();

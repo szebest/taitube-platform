@@ -1,11 +1,12 @@
 import { serverRender } from '@vp/web-testing/server';
+import { channelApi } from '#app/__tests__/channel-api.fixture';
 import { SESSION, accountOf } from '#app/__tests__/providers';
 import { getRouter } from '#app/router';
 
 describe('apps/client/studio: /customization', () => {
   it('renders the channel sections on the server, in the narrowed layout', async () => {
     const { status, main } = await serverRender(getRouter, '/customization', {
-      handlers: [accountOf()],
+      handlers: [accountOf(), ...channelApi()],
       headers: { cookie: SESSION },
     });
 

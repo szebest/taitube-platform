@@ -3,8 +3,11 @@ import { InMemoryCaptionRepository } from './in-memory-caption-repository';
 import { InMemoryCategoryRepository } from './in-memory-category-repository';
 import { InMemoryChannelAuditRepository } from './in-memory-channel-audit-repository';
 import { InMemoryChannelFeaturedRepository } from './in-memory-channel-featured-repository';
+import { InMemoryChannelHandleHistoryRepository } from './in-memory-channel-handle-history-repository';
+import { InMemoryChannelImageRepository } from './in-memory-channel-image-repository';
 import { InMemoryChannelInviteRepository } from './in-memory-channel-invite-repository';
 import { InMemoryChannelMemberRepository } from './in-memory-channel-member-repository';
+import { InMemoryChannelPageRepository } from './in-memory-channel-page-repository';
 import { InMemoryChannelRepository } from './in-memory-channel-repository';
 import { InMemoryClipRepository } from './in-memory-clip-repository';
 import { provideCommentRepositories } from './in-memory-comment-graph';
@@ -48,7 +51,11 @@ export function graph(): Container {
       .provide(Repo.steps, () => new InMemoryStepRepository())
       .provide(Repo.users, () => new InMemoryUserRepository())
       .provide(Repo.userEvents, (c) => new InMemoryUserEventRepository(c.get(Repo.outbox)))
-      .provide(Repo.channels, (c) => new InMemoryChannelRepository(c.get(Repo.videos)))
+      .provide(Repo.channelHandleHistory, () => new InMemoryChannelHandleHistoryRepository())
+      .provide(
+        Repo.channels,
+        (c) => new InMemoryChannelRepository(c.get(Repo.videos), c.get(Repo.channelHandleHistory))
+      )
       .provide(Repo.events, () => new InMemoryEventRepository())
       .provide(Repo.channelAudit, () => new InMemoryChannelAuditRepository())
       .provide(Repo.savedReplies, () => new InMemorySavedReplyRepository())
@@ -212,6 +219,16 @@ export function graph(): Container {
       .provide(
         Repo.channelFeatured,
         (c) => new InMemoryChannelFeaturedRepository(c.get(Repo.videos))
+      )
+      .provide(Repo.channelPages, (c) => new InMemoryChannelPageRepository(c.get(Repo.videos)))
+      .provide(
+        Repo.channelImages,
+        (c) =>
+          new InMemoryChannelImageRepository({
+            channels: c.get(Repo.channels),
+            audit: c.get(Repo.channelAudit),
+            userEvents: c.get(Repo.userEvents),
+          })
       )
       .provide(
         Repo.picks,

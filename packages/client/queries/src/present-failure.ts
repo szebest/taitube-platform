@@ -113,6 +113,12 @@ function kindOf(code: ErrorCode): ErrorStateKind {
     case ErrorCodes.MODERATION_NOT_APPLICABLE:
     case ErrorCodes.CANNOT_RESTRICT_MEMBER:
     case ErrorCodes.SAVED_REPLY_LIMIT:
+    case ErrorCodes.HANDLE_CHANGE_TOO_SOON:
+    case ErrorCodes.HANDLE_RESERVED:
+    case ErrorCodes.INVALID_SPOTLIGHT_VIDEO:
+    case ErrorCodes.IMAGE_TOO_SMALL:
+    case ErrorCodes.IMAGE_UPLOAD_NOT_FOUND:
+    case ErrorCodes.SERIES_VIDEO_NOT_OWNED:
       return 'generic';
     default:
       return assertNever(code, 'kindOf');

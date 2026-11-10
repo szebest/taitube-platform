@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { prefetched } from '@vp/queries';
 import { CommentsPage, inboxQueryOptions, InboxSearchSchema } from '#app/features/comments';
-import { useActiveChannel } from '#app/features/team';
+import { useActiveChannel } from '#app/hooks/use-active-channel';
 
 export const Route = createFileRoute('/_authed/comments')({
   validateSearch: InboxSearchSchema,
