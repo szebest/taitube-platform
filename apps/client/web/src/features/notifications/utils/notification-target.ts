@@ -35,7 +35,10 @@ export function notificationTarget({
     case 'team_invite':
       return watch(videoId);
     case 'moderation':
-      return linkOptions({ to: '/feed/you' });
+      return linkOptions({
+        to: '/feed/you/moderation',
+        search: actorChannelId ? { channel: actorChannelId } : {},
+      });
     case 'reply':
     case 'mention':
     case 'comment':

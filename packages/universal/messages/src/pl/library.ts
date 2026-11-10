@@ -144,4 +144,15 @@ export const library = {
   moveToTop: dt('Przenieś na początek'),
   moveToBottom: dt('Przenieś na koniec'),
   playlistItems: dt('Filmy na playliście {title}'),
+  moderationTitle: dt('Moderacja'),
+  moderationDescription: dt('Co moderatorzy zrobili z Twoimi komentarzami i czy masz bana.'),
+  moderationBanTitle: dt('Nie możesz komentować na kanale {channel}'),
+  moderationRemovedTitle: dt('Usunięte komentarze'),
+  moderationRemovedEmpty: dt(
+    'Moderator nie usunął żadnego Twojego komentarza w ciągu ostatnich 30 dni'
+  ),
+  moderationReasonLine: dt('Powód: {reason}'),
+  moderationNoteLine: dt('Notatka: {note}'),
+  moderationRemovedAt: dt('Usunięto {when}'),
+  moderationOpenVideo: dt('Otwórz film'),
 } as const;

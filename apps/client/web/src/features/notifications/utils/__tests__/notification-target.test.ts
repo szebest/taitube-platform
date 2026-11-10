@@ -42,10 +42,16 @@ describe('apps/client/web: notificationTarget', () => {
       target: undefined,
     },
     {
-      case: 'a moderation notice opens the account feed until the moderation page exists',
-      overrides: { kind: 'moderation' as const, videoId: null },
+      case: 'a moderation notice opens the moderation page for the channel that acted',
+      overrides: { kind: 'moderation' as const, videoId: null, actorChannelId: CHANNEL_ID },
       count: 1,
-      target: { to: '/feed/you' },
+      target: { to: '/feed/you/moderation', search: { channel: CHANNEL_ID } },
+    },
+    {
+      case: 'a moderation notice with no channel opens the moderation page',
+      overrides: { kind: 'moderation' as const, videoId: null, actorChannelId: null },
+      count: 1,
+      target: { to: '/feed/you/moderation', search: {} },
     },
     {
       case: 'a notification with no video opens nothing',

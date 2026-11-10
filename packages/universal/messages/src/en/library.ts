@@ -109,4 +109,15 @@ export const library = {
   moveToTop: dt('Move to top'),
   moveToBottom: dt('Move to bottom'),
   playlistItems: dt('Videos in {title}'),
+  moderationTitle: dt('Moderation'),
+  moderationDescription: dt('What moderators did to your comments, and any ban you are under.'),
+  moderationBanTitle: dt('You cannot comment on {channel}'),
+  moderationRemovedTitle: dt('Removed comments'),
+  moderationRemovedEmpty: dt(
+    'A moderator has not removed any of your comments in the last 30 days'
+  ),
+  moderationReasonLine: dt('Reason: {reason}'),
+  moderationNoteLine: dt('Note: {note}'),
+  moderationRemovedAt: dt('Removed {when}'),
+  moderationOpenVideo: dt('Open the video'),
 } as const;
