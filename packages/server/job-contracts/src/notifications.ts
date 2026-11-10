@@ -7,6 +7,7 @@ export const NOTIFY_SUBSCRIBERS = 'notify-subscribers';
 export const NOTIFY_COMMENT = 'notify-comment';
 export const NOTIFY_PROCESSING = 'notify-processing';
 export const NOTIFY_HEART = 'notify-heart';
+export const NOTIFY_PARTY_INVITE = 'notify-party-invite';
 export const NOTIFY_TEAM_INVITE = 'notify-team-invite';
 /** Not a notification row: tells each subscriber's open tabs, through `live.started`, right away. */
 export const ANNOUNCE_LIVE = 'announce-live';
@@ -29,9 +30,12 @@ export const NotifyCommentJob = z.object({
 });
 export type NotifyCommentJob = z.infer<typeof NotifyCommentJob>;
 
+/** `held`, `approved` and `rejected` tell the owner how upload screening went; the others how processing ended. */
+const PROCESSING_OUTCOMES = ['ready', 'failed', 'held', 'approved', 'rejected'] as const;
+
 export const NotifyProcessingJob = z.object({
   videoId: z.uuid(),
-  outcome: z.enum(['ready', 'failed']),
+  outcome: z.enum(PROCESSING_OUTCOMES),
   traceparent: z.string().optional(),
   requestId: z.string().optional(),
 });
@@ -45,11 +49,18 @@ export const NotifyHeartJob = z.object({
 });
 export type NotifyHeartJob = z.infer<typeof NotifyHeartJob>;
 
+export const NotifyPartyInviteJob = z.object({
+  inviteId: z.uuid(),
+  traceparent: z.string().optional(),
+  requestId: z.string().optional(),
+});
+
 export const NotifyTeamInviteJob = z.object({
   inviteId: z.uuid(),
   traceparent: z.string().optional(),
   requestId: z.string().optional(),
 });
+export type NotifyPartyInviteJob = z.infer<typeof NotifyPartyInviteJob>;
 export type NotifyTeamInviteJob = z.infer<typeof NotifyTeamInviteJob>;
 
 export const AnnounceLiveJob = z.object({
@@ -68,6 +79,7 @@ const notificationJobIds = {
     `${liveStreamId}--${ANNOUNCE_LIVE}${after ? `--${after}` : ''}`,
   comment: (commentId: string) => `${commentId}--${NOTIFY_COMMENT}`,
   heart: (commentId: string) => `${commentId}--${NOTIFY_HEART}`,
+  partyInvite: (inviteId: string) => `${inviteId}--${NOTIFY_PARTY_INVITE}`,
   teamInvite: (inviteId: string) => `${inviteId}--${NOTIFY_TEAM_INVITE}`,
   processing: (videoId: string, outcome: NotifyProcessingJob['outcome']) =>
     `${videoId}--${NOTIFY_PROCESSING}--${outcome}`,
@@ -119,6 +131,13 @@ export const heartOutbox = (job: NotifyHeartJob) =>
     jobId: notificationJobIds.heart(job.commentId),
   });
 
+export const partyInviteOutbox = (job: NotifyPartyInviteJob) =>
+  notificationOutbox({
+    name: NOTIFY_PARTY_INVITE,
+    data: job,
+    jobId: notificationJobIds.partyInvite(job.inviteId),
+  });
+
 export const teamInviteOutbox = (job: NotifyTeamInviteJob) =>
   notificationOutbox({
     name: NOTIFY_TEAM_INVITE,
@@ -144,6 +163,7 @@ export function transitionNotificationJobs(
   visibility: VideoVisibility
 ) {
   const archive = [from].flat().includes('LIVE');
+  const wasHeld = [from].flat().includes('HELD');
   switch (status) {
     case 'READY':
       return [
@@ -154,6 +174,12 @@ export function transitionNotificationJobs(
       ];
     case 'FAILED':
       return [processingOutbox({ videoId, outcome: 'failed' })];
+    case 'HELD':
+      return [processingOutbox({ videoId, outcome: 'held' })];
+    case 'REJECTED':
+      return wasHeld ? [processingOutbox({ videoId, outcome: 'rejected' })] : [];
+    case 'PROCESSING':
+      return wasHeld ? [processingOutbox({ videoId, outcome: 'approved' })] : [];
     default:
       return [];
   }

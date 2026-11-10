@@ -246,6 +246,27 @@
       "when": 1794223324030,
       "tag": "0034_channel_identity",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1794306125953,
+      "tag": "0035_watch_parties",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1794306370044,
+      "tag": "0036_screening",
+      "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1794306380000,
+      "tag": "0037_screening_review",
+      "breakpoints": true
     }
   ]
 }

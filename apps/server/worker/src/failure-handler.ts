@@ -155,7 +155,8 @@ export function createFailureHandler(deps: FailureHandlerDeps) {
           (s.status === 'DEAD' || s.status === 'FAILED') &&
           s.errorCode &&
           s.step !== 'package' &&
-          s.step !== 'captions'
+          s.step !== 'captions' &&
+          s.step !== 'screen'
       );
       const childCode = failedChild?.errorCode;
       const videoErrorCode = isErrorCode(childCode) ? childCode : errorCode;

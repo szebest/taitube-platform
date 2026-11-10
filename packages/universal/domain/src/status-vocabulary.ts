@@ -9,6 +9,7 @@ export const VIDEO_STATUSES = [
   'ABANDONED',
   'DELETED',
   'LIVE',
+  'HELD',
 ] as const;
 
 export const VIDEO_VISIBILITIES = ['private', 'unlisted', 'public'] as const;

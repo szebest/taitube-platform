@@ -24,6 +24,7 @@ export function notification(
       videoTitle: 'Midnight ramen',
       excerpt: null,
       outcome: null,
+      party: null,
       ...payload,
     },
   };

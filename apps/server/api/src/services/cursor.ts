@@ -34,17 +34,17 @@ export interface FeedCursorRow {
   viewsCount?: number | null;
 }
 
-function isoOf(value: Date | string): string {
+export function isoOf(value: Date | string): string {
   return value instanceof Date ? value.toISOString() : new Date(value).toISOString();
 }
 
-function asDate(value: unknown): Result<Date, InvalidCursor> {
+export function asDate(value: unknown): Result<Date, InvalidCursor> {
   if (typeof value !== 'string') return err(invalidCursor());
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? err(invalidCursor()) : ok(date);
 }
 
-function asId(value: unknown): Result<string, InvalidCursor> {
+export function asId(value: unknown): Result<string, InvalidCursor> {
   return typeof value === 'string' ? ok(value) : err(invalidCursor());
 }
 
@@ -88,7 +88,7 @@ export function commentThreadCursorPayload(row: CommentThreadCursorRow): CursorP
   };
 }
 
-function asPinnedFlag(value: unknown): Result<boolean, InvalidCursor> {
+export function asPinnedFlag(value: unknown): Result<boolean, InvalidCursor> {
   return value === 0 || value === 1 ? ok(value === 1) : err(invalidCursor());
 }
 
@@ -126,7 +126,7 @@ function asString(value: unknown): Result<string, InvalidCursor> {
 }
 
 /** An absent cursor is the first page, so it stays `ok(null)` rather than becoming a failure. */
-function decodeWith<T>(
+export function decodeWith<T>(
   cursor: string | undefined,
   paginator: Paginator,
   read: (payload: CursorPayload) => Result<T, InvalidCursor>

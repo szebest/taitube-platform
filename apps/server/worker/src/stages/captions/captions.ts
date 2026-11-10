@@ -3,7 +3,7 @@ import type { CaptionRecord } from '@vp/core/repositories';
 import { MS_PER_SECOND } from '@vp/domain/time';
 import { type DatabaseUnavailable, ErrorCodes, type StorageUnavailable } from '@vp/errors';
 import type { CaptionsJob } from '@vp/job-contracts';
-import { type Result, assertNever, isErr, ok } from '@vp/result';
+import { type Result, assertNever, ignore, isErr, ok } from '@vp/result';
 import {
   CAPTIONS_TRACK_HEADERS,
   captionsChunkKey,
@@ -17,6 +17,7 @@ import {
   parseWindowTranscript,
   toWebVtt,
 } from '@vp/whisper';
+import { screenText } from '../screen/screen-text';
 import { type TranscribeFailure, transcribeSpan } from './captions-audio';
 import type { CaptionsStageDeps } from './captions-deps';
 import {
@@ -103,6 +104,13 @@ async function publishTrack(
   switch (committed.value.type) {
     case 'committed':
       recordReady(deps, track);
+      ignore(
+        await screenText(
+          { repositories: deps.repositories, screening: deps.screening },
+          { videoId: job.videoId, captionId: job.captionId, language }
+        ),
+        'the track is published, and a transcript flag is raised again the next time it is generated'
+      );
       return ok({ type: 'track', outcome: 'ready', language, cues: cues.length });
     case 'stale':
       return ok({ type: 'skipped' });

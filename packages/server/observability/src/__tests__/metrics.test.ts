@@ -119,6 +119,8 @@ describe('Metrics Catalogue Conformance (SDD §13.1)', () => {
     { name: 'captions_realtime_factor', type: 'histogram', labels: ['model'] },
     { name: 'captions_time_to_ready_seconds', type: 'histogram', labels: [] },
     { name: 'captions_jobs_total', type: 'counter', labels: ['outcome'] },
+    { name: 'screen_seconds', type: 'histogram', labels: ['outcome'] },
+    { name: 'screening_outcomes_total', type: 'counter', labels: ['outcome', 'reason'] },
   ];
 
   it.each(EXPECTED_METRICS)(

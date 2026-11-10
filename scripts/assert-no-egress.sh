@@ -6,7 +6,7 @@ set -u
 files=""
 for file in "$@"; do files="$files -f $file"; done
 
-for service in api web studio worker-captions; do
+for service in api web studio worker-captions worker-screen; do
   # shellcheck disable=SC2086
   if ! docker compose $files exec -T "$service" true; then
     echo "ERROR: $service is not running, so its egress was not checked."

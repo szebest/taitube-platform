@@ -8,6 +8,7 @@ import {
   SECONDS_PER_HOUR,
   SECONDS_PER_MINUTE,
 } from '@vp/domain/time';
+export * from './screening-tuning';
 
 /**
  * Tuning with no environment key of its own, declared once here so no service, stage or adapter holds
@@ -182,4 +183,41 @@ export const LIVE_CHAT = {
   listLimit: 48,
   presenceHeartbeatMs: 15 * MS_PER_SECOND,
   presenceWindowMs: 40 * MS_PER_SECOND,
+} as const;
+
+/**
+ * Watch parties. A socket token only has to outlive the upgrade right after it is fetched, and a
+ * member is counted until it misses three keepalives, so a dead pod frees its seats.
+ */
+export const WATCH_PARTY = {
+  ticketTtlSeconds: 30,
+  guestCredentialTtlSeconds: 12 * SECONDS_PER_HOUR,
+  presence: {
+    keepaliveMs: 15 * MS_PER_SECOND,
+    staleAfterMs: 45 * MS_PER_SECOND,
+    keyTtlSeconds: SECONDS_PER_HOUR,
+  },
+  ownerGraceMs: MS_PER_MINUTE,
+  budgets: {
+    create: { limit: 10, windowSeconds: SECONDS_PER_HOUR },
+    command: { limit: 6, windowSeconds: 5 },
+    reaction: { limit: 10, windowSeconds: 5 },
+    request: { limit: 3, windowSeconds: SECONDS_PER_MINUTE },
+    chat: { limit: 5, windowSeconds: 10 },
+    invite: { limit: 30, windowSeconds: SECONDS_PER_HOUR },
+    guestCredential: { limit: 5, windowSeconds: SECONDS_PER_HOUR },
+    guestJoin: { limit: 30, windowSeconds: SECONDS_PER_MINUTE },
+    password: { limit: 5, windowSeconds: 15 * SECONDS_PER_MINUTE },
+  },
+  frameMaxBytes: 4096,
+  socket: { pingIntervalMs: 30 * MS_PER_SECOND, maxBufferedBytes: 1024 * 1024 },
+  chatBacklog: 200,
+  inviteCandidates: 20,
+  reactionsFoldMs: 250,
+  rosterBatchMs: 500,
+  buffering: { waitAfterMs: 1500, maxWaitMs: 10 * MS_PER_SECOND, maxRoomSize: 12 },
+  scrypt: { N: 2 ** 17, r: 8, p: 1, keyLength: 32, saltLength: 16 },
+  messageRetentionDays: 7,
+  closedRoomRetentionDays: 30,
+  sweep: { intervalMs: MS_PER_MINUTE, batchSize: 200, scheduledStartGraceMs: MS_PER_HOUR },
 } as const;

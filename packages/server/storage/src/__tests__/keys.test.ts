@@ -18,6 +18,8 @@ import {
   livePrefix,
   liveRelativeUri,
   liveSegmentKey,
+  evidenceFrameKey,
+  evidencePrefix,
   masterPlaylistKey,
   posterKey,
   rawPrefix,
@@ -36,6 +38,12 @@ describe('packages/storage: object keys', () => {
   const videoId = SEEDED.videoId;
   const segmentKeyOf = (generation: number) =>
     renditionObjectKey(videoId, '720p', 'seg_00001.ts', generation);
+
+  it('keeps evidence under a prefix of its own, outside the raw uploads', () => {
+    expect(evidencePrefix(videoId)).toBe(`evidence/${videoId}/`);
+    expect(evidenceFrameKey(videoId, 2)).toBe(`evidence/${videoId}/frame-2.jpg`);
+    expect(evidencePrefix(videoId).startsWith(rawPrefix(videoId).slice(0, 4))).toBe(false);
+  });
 
   it('lays keys out as SDD §7 specifies', () => {
     expect(rawSourceKey(videoId, 'mp4')).toBe(`raw/${videoId}/source.mp4`);

@@ -332,6 +332,9 @@ for a signed-in viewer ([ticket 99](../../../docs/tickets/99-notifications.md)).
 - **Where a row goes** is `notificationTarget`: the video, a group of uploads the channel, a comment kind the video with
   `?comment=<id>`, which the watch discussion loads at once, scrolls to and marks when that comment is on its first
   pages (a reply inside a thread is not opened).
+  `notificationHref` overrides it for what lives in the studio: a team invite opens `/invites`, and a processing
+  notification of outcome `held` or `rejected` opens the video's editor there, since a held video is not watchable and
+  its appeal is on that page.
 - **Arrivals** with the centre closed: a reply or a mention is a toast that opens it, any other kind a polite
   announcement; nothing is said while the centre is open.
 - **Per-channel levels** (`all`, `highlights`, `none`) sit on `/settings/notifications` under Channels

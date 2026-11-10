@@ -104,7 +104,7 @@ jobs:
         uses: ./.github/actions/budget
         with:
           step: architecture
-          seconds: 20
+          seconds: 30
           started-at: ${{ steps.architecture-time.outputs.started }}
           finished-at: ${{ steps.architecture-time.outputs.finished }}
 
@@ -281,7 +281,7 @@ jobs:
     needs: [build]
     if: needs.build.outputs.code == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 4
+    timeout-minutes: 6
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -304,6 +304,9 @@ jobs:
 
       - name: Verify video fixtures against manifest
         run: pnpm gen-video --check
+
+      - name: Restore or fetch the screening model
+        uses: ./.github/actions/screening-model
 
       - name: Migrate the database and create the buckets
         run: |
@@ -332,7 +335,7 @@ jobs:
         uses: ./.github/actions/budget
         with:
           step: integration-tests
-          seconds: 120
+          seconds: 240
           started-at: ${{ steps.integration-tests.outputs.started-at }}
 
   e2e:
@@ -480,7 +483,7 @@ jobs:
     needs: [build]
     if: needs.build.outputs.code == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 4
+    timeout-minutes: 5
     strategy:
       fail-fast: false
       matrix:

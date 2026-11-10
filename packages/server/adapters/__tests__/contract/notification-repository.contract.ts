@@ -9,6 +9,7 @@ import {
 import { MS_PER_DAY } from '@vp/domain/time';
 import { expectOk } from '@vp/testing/result';
 import { HOUR_MS, OTHER_OWNER_ID, OWNER_ID, publicVideo, seedOwners, VIDEO_IDS } from './fixtures';
+import { describeNotificationPartyInvitesContract } from './notification-party-invites.contract';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
 const CHANNEL_ID = '00000000-0000-7000-8000-000000000901';
@@ -64,6 +65,8 @@ export function describeNotificationRepositoryContract(makeSubject: MakeReposito
     afterAll(async () => {
       await subject.close();
     });
+
+    describeNotificationPartyInvitesContract(makeSubject);
 
     beforeEach(async () => {
       await subject.reset();

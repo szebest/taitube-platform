@@ -52,6 +52,13 @@ scrape_configs:
           service: 'vp-worker'
           stage: 'thumbnail'
 
+  - job_name: 'worker-screen'
+    static_configs:
+      - targets: ['worker-screen:9464']
+        labels:
+          service: 'vp-worker'
+          stage: 'screen'
+
   - job_name: 'worker-captions'
     static_configs:
       - targets: ['worker-captions:9464']

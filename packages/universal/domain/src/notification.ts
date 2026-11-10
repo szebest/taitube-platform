@@ -8,6 +8,8 @@ export const NOTIFICATION_KINDS = [
   'comment',
   'processing',
   'heart',
+  'party_invite',
+  'party_starting',
   'team_invite',
 ] as const;
 export type NotificationKind = (typeof NOTIFICATION_KINDS)[number];
@@ -53,6 +55,8 @@ export const KIND_SWITCH = {
   comment: 'repliesAndMentions',
   processing: 'processingFinished',
   heart: 'repliesAndMentions',
+  party_invite: 'watchParties',
+  party_starting: 'watchParties',
   team_invite: null,
 } as const satisfies Record<NotificationKind, string | null>;
 
@@ -79,15 +83,35 @@ export interface NotificationActor {
   avatarUrl: string | null;
 }
 
-/** Written when the notification is created, so listing and pushing it need no join. */
-export interface NotificationPayload {
+/** The invite a `party_invite` carries, frozen when it is sent: the row opens the room with `inviteId`. */
+interface NotificationParty {
+  roomId: string;
+  name: string;
+  videoTitle: string | null;
+  scheduledFor: string | null;
+  inviteId: string;
+  expiresAt: string;
+  watching: { names: string[]; count: number };
+}
+
+interface NotificationFields {
   count: number;
   actor: NotificationActor | null;
   videoTitle: string | null;
   excerpt: string | null;
-  outcome: 'ready' | 'failed' | null;
+  outcome: 'ready' | 'failed' | 'held' | 'approved' | 'rejected' | null;
   /** Set on `team_invite`: the invite the notification opens. */
   inviteId?: string;
+}
+
+/** Written when the notification is created, so listing and pushing it need no join. */
+export interface NotificationPayload extends NotificationFields {
+  /** Absent on a row written before watch parties; `null` on every kind but the party ones. */
+  party?: NotificationParty | null;
+}
+
+interface NotificationViewPayload extends NotificationFields {
+  party: NotificationParty | null;
 }
 
 export interface Notification {
@@ -97,6 +121,7 @@ export interface Notification {
   actorChannelId: string | null;
   videoId: string | null;
   commentId: string | null;
+  watchPartyId: string | null;
   groupKey: string | null;
   payload: NotificationPayload;
   readAt: Date | null;
@@ -109,8 +134,28 @@ export interface NewNotificationInput {
   actorChannelId: string | null;
   videoId: string | null;
   commentId: string | null;
+  /** The room a party notification points at; its row goes with the room. */
+  watchPartyId?: string | null;
   groupKey: string | null;
   payload: Omit<NotificationPayload, 'count'>;
+}
+
+/** What tells one event of a group from another: the video and comment, and for an invite the invite. */
+export function sameNotificationSubject(
+  held: {
+    videoId: string | null;
+    commentId: string | null;
+    payload: Pick<NotificationPayload, 'party'>;
+  },
+  input: Pick<NewNotificationInput, 'videoId' | 'commentId'> & {
+    payload: Pick<NotificationPayload, 'party'>;
+  }
+): boolean {
+  return (
+    held.videoId === input.videoId &&
+    held.commentId === input.commentId &&
+    (held.payload.party?.inviteId ?? null) === (input.payload.party?.inviteId ?? null)
+  );
 }
 
 /**
@@ -123,13 +168,14 @@ export function foldNotification(
   input: NewNotificationInput,
   now: Date
 ): Notification | null {
-  if (existing.videoId === input.videoId && existing.commentId === input.commentId) return null;
+  if (sameNotificationSubject(existing, input)) return null;
 
   return {
     ...existing,
     actorChannelId: input.actorChannelId,
     videoId: input.videoId,
     commentId: input.commentId,
+    watchPartyId: input.watchPartyId ?? null,
     payload: { ...input.payload, count: existing.payload.count + 1 },
     createdAt: now,
   };
@@ -142,7 +188,7 @@ export interface NotificationView {
   actorChannelId: string | null;
   videoId: string | null;
   commentId: string | null;
-  payload: NotificationPayload;
+  payload: NotificationViewPayload;
   read: boolean;
   createdAt: string;
 }
@@ -155,7 +201,7 @@ export function toNotificationView(notification: Notification): NotificationView
     actorChannelId,
     videoId,
     commentId,
-    payload,
+    payload: { ...payload, party: payload.party ?? null },
     read: readAt !== null,
     createdAt: createdAt.toISOString(),
   };

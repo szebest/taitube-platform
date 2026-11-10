@@ -6,6 +6,7 @@ import type { Logger } from '@vp/logger';
 import { type Result, ignore, isErr, ok, unwrapOr } from '@vp/result';
 import {
   captionsTmpPrefix,
+  evidencePrefix,
   livePrefix,
   masterPlaylistKey,
   rawPrefix,
@@ -72,6 +73,11 @@ export async function runPurgeDeleted(
       'a leftover captions window costs storage, and the bucket lifecycle rule expires it'
     );
 
+    ignore(
+      await storage.purgePrefix(rawBucket, evidencePrefix(video.id)),
+      'a leftover evidence frame costs storage, and the housekeeping that closes a case removes it'
+    );
+
     const broadcast = await repositories.liveStreams.findByVideoId(video.id);
     if (isErr(broadcast)) return broadcast;
     const publicPrefixes = [
@@ -88,6 +94,9 @@ export async function runPurgeDeleted(
       );
       continue;
     }
+
+    const fingerprints = await repositories.fingerprints.deleteForVideo(video.id);
+    if (isErr(fingerprints)) return fingerprints;
 
     const deleted = await repositories.videos.hardDelete(video.id);
     if (isErr(deleted)) return deleted;

@@ -6,6 +6,7 @@ import { adminDlqRoutes } from './admin/dlq';
 import { adminPicksRoutes } from './admin/picks';
 import { adminQueuesRoutes } from './admin/queues';
 import { adminReportsRoutes } from './admin/reports';
+import { adminScreeningRoutes } from './admin/screening';
 import { adminVideosRoutes } from './admin/videos';
 import { analyticsRoutes } from './analytics';
 import { bootstrapRoutes } from './bootstrap';
@@ -37,6 +38,7 @@ import { preferencesRoutes } from './preferences';
 import { reactionsRoutes } from './reactions';
 import { recommendationFeedbackRoutes } from './recommendation-feedback';
 import { recommendationsRoutes } from './recommendations';
+import { screeningRoutes } from './screening';
 import { searchRoutes } from './search';
 import { searchHistoryRoutes } from './search-history';
 import { shortsRoutes } from './shorts';
@@ -47,6 +49,14 @@ import { videosRoutes } from './videos';
 import { viewerActivityRoutes } from './viewer-activity';
 import { viewsRoutes } from './views';
 import { watchHistoryRoutes } from './watch-history';
+import { watchPartiesRoutes } from './watch-parties';
+import { watchPartyControlsRoutes } from './watch-party-controls';
+import { watchPartyGuestsRoutes } from './watch-party-guests';
+import { watchPartyInvitesRoutes } from './watch-party-invites';
+import { watchPartyMembersRoutes } from './watch-party-members';
+import { watchPartyQueueRoutes } from './watch-party-queue';
+import { watchPartyRolesRoutes } from './watch-party-roles';
+import { watchPartySocketRoutes } from './watch-party-socket';
 import { webhooksRoutes } from './webhooks';
 
 const ROUTES: readonly FastifyPluginAsync[] = [
@@ -95,7 +105,17 @@ const ROUTES: readonly FastifyPluginAsync[] = [
   adminQueuesRoutes,
   adminDlqRoutes,
   adminReportsRoutes,
+  adminScreeningRoutes,
+  screeningRoutes,
   adminPicksRoutes,
+  watchPartiesRoutes,
+  watchPartyGuestsRoutes,
+  watchPartyRolesRoutes,
+  watchPartyMembersRoutes,
+  watchPartyQueueRoutes,
+  watchPartyInvitesRoutes,
+  watchPartyControlsRoutes,
+  watchPartySocketRoutes,
 ];
 
 /** The dev key is derived from a committed seed, so its JWKS is served in dev mode and nowhere else. */

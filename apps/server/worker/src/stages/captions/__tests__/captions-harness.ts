@@ -87,6 +87,7 @@ export async function captionsWorld(
       minTimeoutMs: 60_000,
     },
     captions: STAGE_SETTINGS.captions,
+    screening: { ...STAGE_SETTINGS.screening, enabled: true },
   };
   const run = () =>
     captionsFlow({

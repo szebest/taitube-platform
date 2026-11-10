@@ -137,6 +137,14 @@ export const WORKER_STAGES = [
     maxReplicas: 4,
   },
   {
+    name: 'vp-worker-screen',
+    grace: 300,
+    requests: { cpu: '1', memory: '1Gi' },
+    limits: { cpu: '2', memory: '1.5Gi' },
+    threads: true,
+    maxReplicas: 4,
+  },
+  {
     name: 'vp-worker-captions',
     grace: 900,
     requests: { cpu: '2', memory: '1Gi' },

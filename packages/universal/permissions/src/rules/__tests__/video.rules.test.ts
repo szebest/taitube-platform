@@ -2,14 +2,16 @@ import { subject } from '@casl/ability';
 import {
   creatorUser,
   guestUser,
+  heldVideo,
   moderatorUser,
   privateVideo,
   publicVideo,
   rejectedVideo,
+  screeningRejectedVideo,
   standardUser,
   unlistedVideo,
 } from '../../__mocks__/fixtures';
-import type { AppAction, AppSubjects, UserContext } from '../../types/index';
+import type { AppAction, AppSubjects, UserContext, VideoResource } from '../../types/index';
 import { defineVideoRules } from '../video.rules';
 import { buildAbility } from './build-ability';
 import { matrixCells } from './channel-matrix';
@@ -145,6 +147,82 @@ describe('rules/video.rules: Declarative Video Ability Rules', () => {
     },
   ])('$scenario: $expected', ({ user, action, target, expected }) => {
     expect(buildAbility(defineVideoRules, user).can(action, target)).toBe(expected);
+  });
+
+  it.each<{
+    scenario: string;
+    user: UserContext | null;
+    action: AppAction;
+    video: VideoResource;
+    expected: boolean;
+  }>([
+    {
+      scenario: 'the owner appeals a held video',
+      user: creatorUser,
+      action: 'appeal',
+      video: heldVideo,
+      expected: true,
+    },
+    {
+      scenario: 'the owner appeals a screening rejection',
+      user: creatorUser,
+      action: 'appeal',
+      video: screeningRejectedVideo,
+      expected: true,
+    },
+    {
+      scenario: 'the owner appeals a manual takedown',
+      user: creatorUser,
+      action: 'appeal',
+      video: rejectedVideo,
+      expected: false,
+    },
+    {
+      scenario: 'the owner appeals a ready video',
+      user: creatorUser,
+      action: 'appeal',
+      video: publicVideo,
+      expected: false,
+    },
+    {
+      scenario: 'another user appeals a held video',
+      user: standardUser,
+      action: 'appeal',
+      video: heldVideo,
+      expected: false,
+    },
+    {
+      scenario: 'a moderator appeals a held video',
+      user: moderatorUser,
+      action: 'appeal',
+      video: heldVideo,
+      expected: false,
+    },
+    {
+      scenario: 'a guest appeals a held video',
+      user: guestUser,
+      action: 'appeal',
+      video: heldVideo,
+      expected: false,
+    },
+    {
+      scenario: 'the owner moderates their own held video',
+      user: creatorUser,
+      action: 'moderate',
+      video: heldVideo,
+      expected: false,
+    },
+    {
+      scenario: 'the owner updates the visibility of a held video',
+      user: creatorUser,
+      action: 'update',
+      video: heldVideo,
+      expected: true,
+    },
+  ])('appeal rules: $scenario: $expected', ({ user, action, video, expected }) => {
+    expect(buildAbility(defineVideoRules, user).can(action, subject('Video', video))).toBe(
+      expected
+    );
   });
 
   const editorOfCreator: UserContext = {

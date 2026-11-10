@@ -21,7 +21,22 @@ const NotificationPayloadSchema = z.object({
     .describe('The newest actor: the channel that published, or whoever commented'),
   videoTitle: z.string().nullable(),
   excerpt: z.string().nullable().describe('The start of the comment, for comment kinds'),
-  outcome: z.enum(['ready', 'failed']).nullable().describe('How an upload finished'),
+  outcome: z
+    .enum(['ready', 'failed', 'held', 'approved', 'rejected'])
+    .nullable()
+    .describe('How an upload finished, or how its screening went'),
+  party: z
+    .object({
+      roomId: z.uuid(),
+      name: z.string(),
+      videoTitle: z.string().nullable(),
+      scheduledFor: z.iso.datetime().nullable(),
+      inviteId: z.uuid(),
+      expiresAt: z.iso.datetime(),
+      watching: z.object({ names: z.array(z.string()), count: z.number().int().nonnegative() }),
+    })
+    .nullable()
+    .describe('The party a party_invite points at, with who was watching when it was sent'),
   inviteId: z.uuid().optional().describe('The channel team invite a `team_invite` opens'),
 });
 

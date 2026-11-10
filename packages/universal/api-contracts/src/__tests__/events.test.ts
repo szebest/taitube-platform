@@ -59,6 +59,7 @@ describe('packages/api-contracts: events', () => {
               videoTitle: 'Dinner',
               excerpt: null,
               outcome: null,
+              party: null,
             },
             read: false,
             createdAt: '2026-01-02T03:04:05.000Z',
@@ -70,6 +71,17 @@ describe('packages/api-contracts: events', () => {
     [
       'notifications read by id',
       { type: 'notification.read', payload: { scope: 'ids', ids: [VIDEO_ID], unreadCount: 1 } },
+    ],
+    [
+      'a personal control change in a room',
+      {
+        type: 'party.controls.updated',
+        payload: { targetKey: `user:${VIDEO_ID}`, roomId: VIDEO_ID },
+      },
+    ],
+    [
+      'a personal control change everywhere',
+      { type: 'party.controls.updated', payload: { targetKey: `user:${VIDEO_ID}`, roomId: null } },
     ],
     [
       'every notification read',
