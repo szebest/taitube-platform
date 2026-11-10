@@ -1,4 +1,4 @@
-# AGENTS.md — @vp/demo (server tier)
+# AGENTS.md - @vp/demo (server tier)
 
 Instructions for any coding agent working on `packages/server/demo`.
 

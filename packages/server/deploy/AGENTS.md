@@ -1,4 +1,4 @@
-# AGENTS.md — @vp/deploy (server tier)
+# AGENTS.md - @vp/deploy (server tier)
 
 Instructions for any coding agent working on `packages/server/deploy`.
 
