@@ -1,4 +1,5 @@
-import { type Result, err, fromPromise, isErr, ok } from '@vp/result';
+import { asThrowable } from '@vp/errors';
+import { type Result, err, fromPromise, isErr, ok, tryCatch } from '@vp/result';
 import { z } from 'zod';
 import type { SeedFailure } from './failure';
 import type { SeedPorts } from './ports';
@@ -31,12 +32,14 @@ const REQUEST_TIMEOUT_MS = 60_000;
 const ProblemSchema = z.object({ code: z.string().optional(), detail: z.string().optional() });
 
 function messageOf(body: string): string {
-  try {
-    const problem = ProblemSchema.parse(JSON.parse(body));
-    return [problem.code, problem.detail].filter(Boolean).join(': ') || body.slice(0, 200);
-  } catch {
-    return body.slice(0, 200);
-  }
+  const problem = tryCatch(
+    () => ProblemSchema.parse(JSON.parse(body)),
+    () => undefined
+  );
+  const text = problem.ok
+    ? [problem.value?.code, problem.value?.detail].filter(Boolean).join(': ')
+    : '';
+  return text || body.slice(0, 200);
 }
 
 function backoffMs(attempt: number, retryAfter: string | null): number {
@@ -90,7 +93,7 @@ export function createApi(ports: SeedPorts, baseUrl: string): Api {
         kind: 'network',
         method,
         path,
-        message: cause instanceof Error ? cause.message : String(cause),
+        message: asThrowable(cause).message,
       })
     );
     if (isErr(response)) return response;

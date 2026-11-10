@@ -41,6 +41,10 @@ describe('seed/openapi-routes: parseContractRoutes', () => {
     expect(parseContractRoutes('openapi: 3.1.0\n').has('GET /healthz')).toBe(false);
   });
 
+  it('lists nothing for text that is not YAML', () => {
+    expect(parseContractRoutes('paths: [unclosed').has('GET /healthz')).toBe(false);
+  });
+
   it('has an index that knows every route for the case where the contract cannot be read', () => {
     expect(ALL_ROUTES.has('GET /anything')).toBe(true);
   });

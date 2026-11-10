@@ -1,16 +1,13 @@
 import type { UserRole, UserTier, VideoVisibility } from '@vp/domain';
 
-export const CLIP_SOURCES = [
-  'testsrc2',
-  'gradients',
-  'life',
-  'mandelbrot',
-  'cellauto',
-  'smptebars',
-  'rgbtestsrc',
-] as const;
-
-type ClipSource = (typeof CLIP_SOURCES)[number];
+export type ClipSource =
+  | 'testsrc2'
+  | 'gradients'
+  | 'life'
+  | 'mandelbrot'
+  | 'cellauto'
+  | 'smptebars'
+  | 'rgbtestsrc';
 
 export type UserKind = 'viewer' | 'creator' | 'admin' | 'moderator' | 'extra-creator' | 'fan';
 

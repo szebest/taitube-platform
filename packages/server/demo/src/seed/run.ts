@@ -1,3 +1,4 @@
+import { asThrowable } from '@vp/errors';
 import { fromPromise, isErr } from '@vp/result';
 import type { SeedStepReport } from '../types';
 import type { Scenario, ScenarioContext, StepOutcome } from './scenario';
@@ -39,7 +40,7 @@ export async function runScenarios(
 async function runOne(scenario: Scenario, context: ScenarioContext): Promise<StepOutcome> {
   const ran = await fromPromise(
     () => scenario.run(context),
-    (cause) => (cause instanceof Error ? cause.message : String(cause))
+    (cause) => asThrowable(cause).message
   );
   return isErr(ran) ? { status: 'failed', detail: `unexpected: ${ran.error}` } : ran.value;
 }

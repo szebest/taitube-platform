@@ -4,6 +4,7 @@ import { request as httpRequest } from 'node:http';
 import { basename } from 'node:path';
 import { upsertIdentities } from '@vp/db/seed-identities';
 import { mintToken } from '@vp/dev-token';
+import { asThrowable } from '@vp/errors';
 import { type Result, err, fromPromise, isErr, ok } from '@vp/result';
 import { UploadClient } from '@vp/upload-client';
 import type { DemoOptions, SeedHost } from '../types';
@@ -101,7 +102,7 @@ export function createUploader(apiUrl: string, send: FetchPort): UploaderPort {
           if (!put.ok) throw new Error(`Single upload failed (${put.status}): ${put.statusText}`);
           return client.completeUpload(started.uploadId);
         },
-        (cause) => failureFromUpload(cause instanceof Error ? cause.message : String(cause))
+        (cause) => failureFromUpload(asThrowable(cause).message)
       );
       return isErr(uploaded) ? uploaded : ok({ videoId: uploaded.value.videoId });
     },
@@ -117,11 +118,7 @@ export function createNodePorts(
   return {
     fetch: send,
     files: {
-      exists: (path) =>
-        stat(path).then(
-          () => true,
-          () => false
-        ),
+      exists: async (path) => (await fromPromise(stat(path), () => undefined)).ok,
       mkdir: async (path) => {
         await mkdir(path, { recursive: true });
       },

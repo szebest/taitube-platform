@@ -1,34 +1,35 @@
+import { tryCatch } from '@vp/result';
+import { load } from 'js-yaml';
+import { z } from 'zod';
+
 export interface RouteIndex {
   has(route: string): boolean;
 }
 
-const METHODS = new Set(['get', 'post', 'put', 'patch', 'delete']);
+const METHODS = ['get', 'post', 'put', 'patch', 'delete'];
+
+const ContractSchema = z.object({ paths: z.record(z.string(), z.record(z.string(), z.unknown())) });
 
 function normalize(route: string): string {
   return route.replace(/\{[^}]*\}|:[A-Za-z]+/g, '{}');
 }
 
-/** The operations the committed OpenAPI document lists, as `METHOD /path/{}`; a reader for one YAML shape, not a YAML parser. */
+/** The operations the committed OpenAPI document lists, as `METHOD /path/{}`. */
 export function parseContractRoutes(document: string): RouteIndex {
-  const routes = new Set<string>();
-  let path: string | null = null;
-  let inPaths = false;
+  const loaded = tryCatch(
+    () => load(document),
+    () => undefined
+  );
+  const contract = ContractSchema.safeParse(loaded.ok ? loaded.value : undefined);
+  const routes = contract.success
+    ? Object.entries(contract.data.paths).flatMap(([path, operations]) =>
+        Object.keys(operations)
+          .filter((method) => METHODS.includes(method))
+          .map((method) => normalize(`${method.toUpperCase()} ${path}`))
+      )
+    : [];
 
-  for (const line of document.split('\n')) {
-    if (/^\S/.test(line)) inPaths = line.startsWith('paths:');
-    if (!inPaths) continue;
-    const pathMatch = /^ {2}(\/\S*):\s*$/.exec(line);
-    if (pathMatch) {
-      path = pathMatch[1] ?? null;
-      continue;
-    }
-    const methodMatch = /^ {4}([a-z]+):\s*$/.exec(line);
-    if (path && methodMatch && METHODS.has(methodMatch[1] ?? '')) {
-      routes.add(normalize(`${(methodMatch[1] ?? '').toUpperCase()} ${path}`));
-    }
-  }
-
-  return { has: (route) => routes.has(normalize(route)) };
+  return { has: (route) => routes.includes(normalize(route)) };
 }
 
 /** Every route is present: the contract could not be read, and a route that is really missing answers 404 at run time. */

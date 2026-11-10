@@ -12,8 +12,10 @@
     "@vp/db": "workspace:*",
     "@vp/dev-token": "workspace:*",
     "@vp/domain": "workspace:*",
+    "@vp/errors": "workspace:*",
     "@vp/result": "workspace:*",
     "@vp/upload-client": "workspace:*",
+    "js-yaml": "^5.5.0",
     "zod": "^4.6.5"
   },
   "devDependencies": {

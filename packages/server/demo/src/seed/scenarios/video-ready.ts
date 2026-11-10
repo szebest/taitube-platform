@@ -7,7 +7,7 @@ import { type LibraryVideo, listLibrary } from './video-library';
 
 const POLL_MS = 2_000;
 const TIMEOUT_MS = 15 * 60_000;
-const SETTLED = new Set(['READY', 'FAILED', 'REJECTED', 'ABANDONED', 'DELETED']);
+const SETTLED = ['READY', 'FAILED', 'REJECTED', 'ABANDONED', 'DELETED'];
 
 function histogram(statuses: Iterable<string>): string {
   const counts = new Map<string, number>();
@@ -71,7 +71,8 @@ export async function waitForReady(
     }
     const waiting = [...state.videos.values()].some(
       (video) =>
-        !gaveUp.has(video.id) && (video.status === 'HELD' ? canApprove : !SETTLED.has(video.status))
+        !gaveUp.has(video.id) &&
+        (video.status === 'HELD' ? canApprove : !SETTLED.includes(video.status))
     );
     if (!waiting) break;
     if (ports.clock.now() - started > TIMEOUT_MS) {

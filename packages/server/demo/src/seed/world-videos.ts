@@ -1,6 +1,6 @@
 import { CATEGORIES, DESCRIPTION_TEMPLATES, TITLE_TEMPLATES } from './catalog';
 import type { Rng } from './rng';
-import { CLIP_SOURCES, type UserSpec, type VideoSpec } from './world-types';
+import type { ClipSource, UserSpec, VideoSpec } from './world-types';
 
 const MIN_VIDEOS_FOR_NON_PUBLIC = 6;
 
@@ -14,6 +14,16 @@ function visibilityFor(index: number, count: number): VideoSpec['visibility'] {
   if (index === count - 2) return 'unlisted';
   return 'public';
 }
+
+const CLIP_SOURCES = [
+  'testsrc2',
+  'gradients',
+  'life',
+  'mandelbrot',
+  'cellauto',
+  'smptebars',
+  'rgbtestsrc',
+] as const satisfies readonly ClipSource[];
 
 /** Videos go round the owners; every owner has two topics, and about one video in four is a vertical Short. */
 export function buildVideos(
