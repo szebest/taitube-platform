@@ -22,6 +22,7 @@ function Comment({
   pinned = false,
   heart,
   replies,
+  moderation,
 }: {
   children?: ReactNode;
   creator?: boolean;
@@ -29,6 +30,7 @@ function Comment({
   pinned?: boolean;
   heart?: ReactNode;
   replies?: ReactNode;
+  moderation?: ReactNode;
 }) {
   return (
     <>
@@ -43,6 +45,7 @@ function Comment({
       >
         <a href="#comment-1" />
       </CommentItem.Author>
+      {moderation}
       <CommentItem.Body>{children}</CommentItem.Body>
       <CommentItem.Failed onRetry={noop} onDelete={noop} />
       <CommentItem.Actions>
@@ -184,6 +187,42 @@ export const Deleted: Story = {
 export const Removed: Story = {
   args: { state: 'removed' },
   render: Plain.render,
+};
+
+export const HeldForItsAuthor: Story = {
+  args: { state: 'held' },
+  render: (args) => (
+    <CommentItem.Root {...args}>
+      <Comment moderation={<CommentItem.Moderation reason="Contains a link" />} />
+    </CommentItem.Root>
+  ),
+};
+
+export const HiddenForItsAuthor: Story = {
+  args: { state: 'hidden' },
+  render: (args) => (
+    <CommentItem.Root {...args}>
+      <Comment moderation={<CommentItem.Moderation reason="Spam" />} />
+    </CommentItem.Root>
+  ),
+};
+
+export const HeldSilentlyForAModerator: Story = {
+  args: { state: 'held' },
+  render: (args) => (
+    <CommentItem.Root {...args}>
+      <Comment moderation={<CommentItem.Moderation reason="Blocked word" silent />} />
+    </CommentItem.Root>
+  ),
+};
+
+export const HiddenSilentlyForAModerator: Story = {
+  args: { state: 'hidden' },
+  render: (args) => (
+    <CommentItem.Root {...args}>
+      <Comment moderation={<CommentItem.Moderation silent />} />
+    </CommentItem.Root>
+  ),
 };
 
 export const Reply: Story = {
