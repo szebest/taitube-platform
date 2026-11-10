@@ -168,8 +168,8 @@ make deploy-status ENV=compose-vm
 ```
 
 Compose has no KEDA, so each worker stage runs one container and does not scale; size the VM for the
-transcodes you expect. Rollback redeploys the tag recorded in `.deploy/compose-vm/previous-tag` on the
-machine you deploy from.
+transcodes you expect. A failed deploy goes back to the tag in `.deploy/compose-vm/current-tag` (the last release that passed its health gate);
+`make deploy-rollback` redeploys `.deploy/compose-vm/previous-tag`, or the `TAG=` you pass, from the machine you deploy from.
 
 ### On Hetzner k3s with Cloudflare R2
 

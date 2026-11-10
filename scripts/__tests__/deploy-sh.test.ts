@@ -121,7 +121,7 @@ describe('scripts: deploy/*.sh functions', () => {
   `;
 
   describe('compose rollback', () => {
-    it('reads previous-tag after a failed deploy of an explicit --tag, and records the swap', () => {
+    it('goes back to current-tag after a failed deploy of an explicit --tag', () => {
       writeState('current-tag', 'good-2');
       writeState('previous-tag', 'good-1');
 
@@ -129,9 +129,17 @@ describe('scripts: deploy/*.sh functions', () => {
         TAG=broken; compose_deploy`);
 
       expect(run.status).toBe(1);
-      expect(readFileSync(join(dir, 'calls'), 'utf8').trim().split('\n').at(-1)).toBe('good-1');
-      expect(readState('current-tag')).toBe('good-1');
-      expect(readState('previous-tag')).toBe('good-2');
+      expect(readFileSync(join(dir, 'calls'), 'utf8').trim().split('\n').at(-1)).toBe('good-2');
+      expect(readState('current-tag')).toBe('good-2');
+      expect(readState('previous-tag')).toBe('good-1');
+    });
+
+    it('has nothing to go back to after a failed first deploy', () => {
+      const run = sourced(`${composeStubs} preflight_all() { return 0; }
+        TAG=broken; compose_deploy`);
+
+      expect(run.status).toBe(1);
+      expect(run.stderr).toContain('first deploy');
     });
 
     it('refuses clearly when no previous tag is recorded, and never redeploys the broken tag', () => {

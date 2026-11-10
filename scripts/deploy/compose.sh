@@ -68,7 +68,7 @@ compose_deploy() {
   run docker --context "$(field compose.context)" compose -f "$(field compose.file)" -p "$(field compose.project)" --env-file "$(secrets_file)" pull
   if ! { run docker --context "$(field compose.context)" compose -f "$(field compose.file)" -p "$(field compose.project)" --env-file "$(secrets_file)" up -d --remove-orphans --wait && compose_health; }; then
     bad "the deploy of $ENV failed"
-    compose_rollback_to_previous || warn "the rollback did not finish: check make deploy-status ENV=$ENV"
+    compose_restore_current || warn "the rollback did not finish: check make deploy-status ENV=$ENV"
     return 1
   fi
   if [ "$DRY_RUN" = 0 ]; then remember_tag "$tag"; fi
@@ -82,6 +82,16 @@ remember_rollback() {
   if [ -f "$dir/current-tag" ]; then current="$(cat "$dir/current-tag")"; fi
   if [ -n "$current" ] && [ "$current" != "$1" ]; then printf '%s\n' "$current" > "$dir/previous-tag"; fi
   printf '%s\n' "$1" > "$dir/current-tag"
+}
+
+# A failed deploy goes back to current-tag, the last release that passed its health gate.
+compose_restore_current() {
+  local file
+  file="$(state_dir)/current-tag"
+  if [ -f "$file" ]; then compose_rollback_to_previous "$(cat "$file")"; return $?; fi
+  if [ "$DRY_RUN" = 1 ]; then would "redeploy the tag recorded in $file"; return 0; fi
+  bad "no release is recorded in $file: this was the first deploy, nothing to go back to"
+  return 1
 }
 
 # compose_rollback_to_previous [tag]: without a tag, the one in previous-tag; a tag is the operator's choice.
