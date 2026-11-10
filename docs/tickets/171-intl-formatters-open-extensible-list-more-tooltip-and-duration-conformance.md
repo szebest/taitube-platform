@@ -169,7 +169,7 @@ its spec. "Skipped" says why.
 |---|---|---|
 | `initials` (grapheme-aware, locale upper-casing, two letters) | `packages/client/components/src/account-menu/account-menu.tsx` builds it with `charAt(0).toUpperCase()`: breaks on emoji and Turkish `i`; avatars in 163/164 need it | **Yes**, S |
 | `capitalize` (`toLocaleUpperCase(locale)` on the first grapheme) | `apps/client/web/src/features/account/utils/set-name.ts` | **Yes**, S, same file as `initials` |
-| `plainDate` (calendar date, no zone) | scheduled publishing and birthdays ([167](167-scheduled-publishing-premieres-and-upload-defaults.md), [163](163-privacy-center-account-deletion-viewer-export-and-blocking.md)); fixes the `Apr 30` shift | **Yes**, S |
+| `plainDate` (calendar date, no zone) | scheduled publishing and birthdays (ticket 167, ticket 163); fixes the `Apr 30` shift | **Yes**, S |
 | `timeZone` name (`long`, `short`, `offset`: "Central European Summer Time", "GMT+2") | "times shown in ..." notice beside a premiere time (167) | **Yes**, S |
 | `isolate` (wraps in FSI and PDI) | user-written names in a sentence in an RTL locale ("{channel} replied"); opt-in per placeholder, default output unchanged | **Yes**, S |
 | `parseDecimal(text, ctx)` (locale grouping and decimal, any numeral system) | amount and numeric inputs in Studio and 164's supporter amount; not a formatter, a sibling in `src/parsers/` returning `Result` | **Yes**, M |
