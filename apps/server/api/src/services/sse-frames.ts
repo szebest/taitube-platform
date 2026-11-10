@@ -26,6 +26,8 @@ function coalesceKey(event: UserEventFrame): string | undefined {
     case 'notification.read':
     case 'comment.created':
     case 'live.started':
+    case 'channel.image.ready':
+    case 'channel.image.failed':
       return undefined;
     default:
       return assertNever(event, 'UserEventFrame');

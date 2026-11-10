@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root';
 import { Route as IndexRouteImport } from './routes/index';
 import { Route as SplatRouteImport } from './routes/$';
+import { Route as AtChar123handleChar125RouteImport } from './routes/@{$handle}';
 import { Route as AuthedRouteImport } from './routes/_authed';
 import { Route as LoginRouteImport } from './routes/login';
 import { Route as OfflineRouteImport } from './routes/offline';
@@ -53,6 +54,11 @@ const IndexRoute = IndexRouteImport.update({
 const SplatRoute = SplatRouteImport.update({
   id: '/$',
   path: '/$',
+  getParentRoute: () => rootRouteImport,
+} as any);
+const AtChar123handleChar125Route = AtChar123handleChar125RouteImport.update({
+  id: '/@{$handle}',
+  path: '/@{$handle}',
   getParentRoute: () => rootRouteImport,
 } as any);
 const AuthedRoute = AuthedRouteImport.update({
@@ -226,6 +232,7 @@ const UploadEditVideoIdRoute = UploadEditVideoIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute;
   '/$': typeof SplatRoute;
+  '/@{$handle}': typeof AtChar123handleChar125Route;
   '/login': typeof LoginRoute;
   '/offline': typeof OfflineRoute;
   '/playlist': typeof PlaylistRoute;
@@ -262,6 +269,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute;
   '/$': typeof SplatRoute;
+  '/@{$handle}': typeof AtChar123handleChar125Route;
   '/login': typeof LoginRoute;
   '/offline': typeof OfflineRoute;
   '/playlist': typeof PlaylistRoute;
@@ -298,6 +306,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport;
   '/': typeof IndexRoute;
   '/$': typeof SplatRoute;
+  '/@{$handle}': typeof AtChar123handleChar125Route;
   '/_authed': typeof AuthedRouteWithChildren;
   '/login': typeof LoginRoute;
   '/offline': typeof OfflineRoute;
@@ -337,6 +346,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/$'
+    | '/@{$handle}'
     | '/login'
     | '/offline'
     | '/playlist'
@@ -373,6 +383,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/$'
+    | '/@{$handle}'
     | '/login'
     | '/offline'
     | '/playlist'
@@ -408,6 +419,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/$'
+    | '/@{$handle}'
     | '/_authed'
     | '/login'
     | '/offline'
@@ -446,6 +458,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute;
   SplatRoute: typeof SplatRoute;
+  AtChar123handleChar125Route: typeof AtChar123handleChar125Route;
   AuthedRoute: typeof AuthedRouteWithChildren;
   LoginRoute: typeof LoginRoute;
   OfflineRoute: typeof OfflineRoute;
@@ -480,6 +493,13 @@ declare module '@tanstack/react-router' {
       path: '/$';
       fullPath: '/$';
       preLoaderRoute: typeof SplatRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    '/@{$handle}': {
+      id: '/@{$handle}';
+      path: '/@{$handle}';
+      fullPath: '/@{$handle}';
+      preLoaderRoute: typeof AtChar123handleChar125RouteImport;
       parentRoute: typeof rootRouteImport;
     };
     '/_authed': {
@@ -777,6 +797,7 @@ const ShortsRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SplatRoute: SplatRoute,
+  AtChar123handleChar125Route: AtChar123handleChar125Route,
   AuthedRoute: AuthedRouteWithChildren,
   LoginRoute: LoginRoute,
   OfflineRoute: OfflineRoute,

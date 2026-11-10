@@ -25,6 +25,9 @@ describe('@vp/messages: pl library', () => {
       args: { count: 22, duration: '1 godz.' },
       expected: '22 filmy, 1 godz.',
     },
+    { key: 'library.episode', args: { number: 3 }, expected: 'Odcinek 3' },
+    { key: 'library.continueSeries', args: undefined, expected: 'Kontynuuj' },
+    { key: 'library.episodeWatched', args: { percent: 42 }, expected: 'Obejrzano 42%' },
   ] as const)('writes $key', ({ key, args, expected }) => {
     expect(t(key, ...(args ? [args] : []))).toEqual({ ok: true, value: expected });
   });

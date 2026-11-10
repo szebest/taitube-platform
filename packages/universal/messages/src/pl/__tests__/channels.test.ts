@@ -10,6 +10,16 @@ describe('@vp/messages: pl channels', () => {
     { key: 'channels.subscriptionsTitle', expected: 'Twoje subskrypcje' },
     { key: 'channels.yourVideos', expected: 'Twoje filmy' },
     { key: 'channels.viewChannel', expected: 'Zobacz kanał' },
+    { key: 'channels.spotlightTrailer', expected: 'Zwiastun kanału' },
+    { key: 'channels.spotlightReturning', expected: 'Witaj ponownie' },
+    { key: 'channels.spotlightWatch', expected: 'Oglądaj' },
+    { key: 'channels.aboutTitle', expected: 'O kanale' },
+    { key: 'channels.aboutLinks', expected: 'Linki' },
+    { key: 'channels.aboutCountry', expected: 'Kraj' },
+    { key: 'channels.aboutContact', expected: 'Kontakt' },
+    { key: 'channels.showContact', expected: 'Pokaż e-mail kontaktowy' },
+    { key: 'channels.contactSignIn', expected: 'Zaloguj się, aby zobaczyć e-mail kontaktowy' },
+    { key: 'channels.contactFailed', expected: 'Nie udało się pokazać e-maila kontaktowego' },
   ] as const)('renders $key with no arguments', ({ key, expected }) => {
     expect(t(key)).toEqual({ ok: true, value: expected });
   });

@@ -1,18 +1,38 @@
 import type { ApiClient } from '@vp/api-client';
+import type { QueuedChannelImage } from '@vp/api-contracts';
+import type { ImageCrops } from '@vp/domain';
 import type { ChannelImageKind } from '@vp/validation';
 import axios from 'axios';
 
-/** The API never receives the bytes: it presigns a PUT, the browser sends the file, and the key goes in the channel save. */
+interface ChannelImageUpload {
+  kind: ChannelImageKind;
+  file: File;
+  /** The file's decoded pixels, which the API reads again. */
+  size: { width: number; height: number };
+  crops: ImageCrops;
+}
+
+/** The API never receives the bytes: it presigns a PUT, the browser sends the file, then the crops queue the job. */
 export async function uploadChannelImage(
   api: ApiClient,
-  kind: ChannelImageKind,
-  file: File,
+  { kind, file, size, crops }: ChannelImageUpload,
+  onPrepared: (uploadId: string) => void,
   signal?: AbortSignal
-): Promise<string> {
-  const issued = await api.me.issueChannelImageUpload({
-    body: { kind, contentType: file.type, sizeBytes: file.size },
+): Promise<QueuedChannelImage> {
+  const prepared = await api.channelIdentity.prepareChannelImage({
+    params: { kind },
+    body: { contentType: file.type, sizeBytes: file.size },
     ...(signal && { signal }),
   });
-  await axios.put(issued.uploadUrl, file, { headers: issued.headers, signal });
-  return issued.key;
+  onPrepared(prepared.uploadId);
+  await axios.put(prepared.uploadUrl, file, { headers: prepared.headers, signal });
+  return api.channelIdentity.completeChannelImage({
+    params: { kind },
+    body: {
+      uploadId: prepared.uploadId,
+      ...size,
+      ...(crops.kind === 'avatar' ? { crop: crops.crop } : { crops: crops.crops }),
+    },
+    ...(signal && { signal }),
+  });
 }

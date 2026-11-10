@@ -1,8 +1,8 @@
 import { canUpdateVideo } from '@vp/permissions';
 import { Can } from '@vp/permissions-react';
 import { useAccount } from '@vp/queries';
-import { useActiveChannel } from '#app/features/team';
 import { UploadToolbarButton } from '#app/features/upload';
+import { useActiveChannel } from '#app/hooks/use-active-channel';
 
 function SignedInUploadAction() {
   const { ownerId } = useActiveChannel();

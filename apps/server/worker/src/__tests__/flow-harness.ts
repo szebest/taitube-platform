@@ -124,8 +124,13 @@ export async function encodeSegments(
   };
 }
 
-export const fixedTools: Pick<MediaTools, 'transcodeChunk' | 'concat' | 'audio' | 'live'> = {
+export const fixedTools: Pick<
+  MediaTools,
+  'transcodeChunk' | 'concat' | 'audio' | 'live' | 'probeChannelImage' | 'channelImage'
+> = {
   live: async () => undefined,
+  probeChannelImage: async () => ({ format: 'png', width: 800, height: 800 }),
+  channelImage: async () => [],
   transcodeChunk: async ({ outputPath }) => {
     await fs.writeFile(outputPath, Buffer.alloc(100));
   },

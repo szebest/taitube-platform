@@ -37,6 +37,7 @@
     "gen:speech-fixture": "tsx scripts/gen-speech-fixture.ts",
     "measure:captions": "tsx scripts/measure-captions.ts",
     "test:live": "tsx tests/live/live-smoke.ts",
+    "gen:platform-icons": "tsx scripts/gen-platform-icons.ts",
     "gen:tokens": "turbo run build --filter=@vp/design-tokens --output-logs=errors-only && tsx scripts/gen-tokens.ts",
     "gen:theme": "turbo run build --filter=@vp/design-tokens --output-logs=errors-only && tsx scripts/gen-theme.ts",
     "gen:token-set": "turbo run build --filter=@vp/design-tokens --output-logs=errors-only && tsx scripts/gen-token-set.ts",

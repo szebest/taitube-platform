@@ -88,6 +88,8 @@
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "rimraf": "^6.1.3",
+    "simple-icons": "16.37.0",
+    "simple-icons-linkedin": "npm:simple-icons@13.21.0",
     "tailwindcss": "^4.3.3",
     "typescript": "^6.0.3",
     "vite-plus": "catalog:",

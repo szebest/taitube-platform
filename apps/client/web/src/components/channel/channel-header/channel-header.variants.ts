@@ -8,7 +8,10 @@ export const channelHeaderStyles = tv({
     glow: 'pointer-events-none absolute -inset-stack z-behind blur-ambient opacity-ambient transition-opacity duration-slow ease-standard starting:opacity-0 in-data-[ambient=off]:hidden in-data-[contrast=more]:hidden',
     banner:
       'relative aspect-[3/1] overflow-hidden bg-surface medium:aspect-[4/1] medium:rounded-card expanded:aspect-[6/1]',
-    bannerMedia: 'size-full object-cover',
+    bannerMedia: 'block size-full object-cover [&_img]:size-full [&_img]:object-cover',
+    bannerSafeArea:
+      'pointer-events-none absolute inset-y-0 inset-x-[19.8%] flex items-end justify-end p-inline',
+    bannerLink: 'pointer-events-auto',
     bannerTint:
       'absolute inset-0 opacity-ambient transition-opacity duration-slow ease-standard starting:opacity-0 in-data-[ambient=off]:hidden',
     bannerFade: 'absolute inset-0 bg-linear-to-t from-surface to-transparent',

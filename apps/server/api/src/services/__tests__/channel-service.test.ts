@@ -1,16 +1,11 @@
-import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
+import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { expectErr, expectOk } from '@vp/testing/result';
-import { ChannelImageService } from '../channel-image-service';
 import { ChannelService, type UpdateChannelCommand } from '../channel-service';
-import {
-  channelImageServiceDeps,
-  channelServiceDeps,
-  ownerActing,
-  TEST_CDN,
-  TEST_PUBLIC_BUCKET,
-} from './service-deps';
+import { channelServiceDeps, ownerActing } from './service-deps';
+
+const LOCALES = ['en'];
 
 describe('ChannelService', () => {
   let repositories: InMemoryRepositories;
@@ -109,35 +104,28 @@ describe('ChannelService', () => {
   });
 
   describe('updateChannel', () => {
-    it('stores the public address of an uploaded banner in place of its key', async () => {
-      const storage = new InMemoryStorageClient();
-      const images = new ChannelImageService(channelImageServiceDeps(repositories, { storage }));
-      const withImages = new ChannelService(channelServiceDeps(repositories, { images }));
-      const key = `channels/${CHANNEL_ID}/banner/b1.jpg`;
-      await storage.uploadObject({
-        bucket: TEST_PUBLIC_BUCKET,
-        key,
-        body: Buffer.from('x'),
-        contentType: 'image/jpeg',
-      });
+    it.each([
+      {
+        name: 'an external picture address',
+        change: { avatarUrl: 'https://img.example.com/a.png' },
+      },
+      {
+        name: 'an external banner address',
+        change: { bannerUrl: 'https://img.example.com/b.png' },
+      },
+    ])('stores $name as sent', async ({ change }) => {
+      const updated = expectOk(await update(change));
 
-      const updated = expectOk(await withImages.updateChannel(USER, ACTING, { bannerKey: key }));
-
-      expect(updated.bannerUrl).toBe(`${TEST_CDN}/${key}`);
+      expect(updated).toMatchObject(change);
     });
 
-    it('refuses a banner key that names nothing and keeps the banner it has', async () => {
-      const failure = expectErr(
-        await update({
-          bannerKey: `channels/${CHANNEL_ID}/banner/none.jpg`,
-        })
-      );
+    it('clears the banner when its address is null and leaves the picture alone', async () => {
+      expectOk(await update({ avatarUrl: 'https://img.example.com/a.png' }));
 
-      expect(failure.code).toBe(ErrorCodes.VALIDATION_FAILED);
-      expect(
-        expectOk(await channelService.getAccount({ id: USER_ID, role: 'CREATOR' })).channel
-          .bannerUrl
-      ).toBe('https://cdn.example.com/banner.png');
+      const updated = expectOk(await update({ bannerUrl: null }));
+
+      expect(updated.bannerUrl).toBeNull();
+      expect(updated.avatarUrl).toBe('https://img.example.com/a.png');
     });
 
     it('updates channel metadata successfully', async () => {
@@ -175,16 +163,16 @@ describe('ChannelService', () => {
       const cleared = expectOk(await update({ links: [] }));
 
       expect(stored.links).toEqual([
-        { label: 'Shop', url: 'https://shop.example.com' },
-        { label: 'Blog', url: 'https://blog.example.com' },
+        { label: 'Shop', url: 'https://shop.example.com', platform: 'website' },
+        { label: 'Blog', url: 'https://blog.example.com', platform: 'website' },
       ]);
       expect(cleared.links).toEqual([]);
     });
 
     it.each([
       {
-        name: 'a sixth link',
-        links: Array.from({ length: 6 }, (_, i) => ({ label: `L${i}`, url: `https://e.com/${i}` })),
+        name: 'a ninth link',
+        links: Array.from({ length: 9 }, (_, i) => ({ label: `L${i}`, url: `https://e.com/${i}` })),
       },
       { name: 'a non-https link', links: [{ label: 'Site', url: 'http://example.com' }] },
     ])('refuses $name and leaves the stored links alone', async ({ links }) => {
@@ -240,7 +228,7 @@ describe('ChannelService', () => {
       { name: 'handle', idOrHandle: '@creator' },
       { name: 'UUID', idOrHandle: CHANNEL_ID },
     ])('finds a public channel by $name', async ({ idOrHandle }) => {
-      const channel = expectOk(await channelService.getPublicChannel(idOrHandle));
+      const channel = expectOk(await channelService.getPublicChannel(idOrHandle, LOCALES));
 
       expect(channel.id).toBe(CHANNEL_ID);
       expect(channel.handle).toBe('creator');
@@ -269,17 +257,17 @@ describe('ChannelService', () => {
         viewsCount: 90,
       });
 
-      const channel = expectOk(await channelService.getPublicChannel('@creator'));
+      const channel = expectOk(await channelService.getPublicChannel('@creator', LOCALES));
 
       expect(channel).toMatchObject({
-        links: [{ label: 'Shop', url: 'https://shop.example.com' }],
+        links: [{ label: 'Shop', url: 'https://shop.example.com', platform: 'website' }],
         videoCount: 1,
         totalViews: 12,
       });
     });
 
     it('reports CHANNEL_NOT_FOUND for a non-existent channel', async () => {
-      const failure = expectErr(await channelService.getPublicChannel('nonexistent'));
+      const failure = expectErr(await channelService.getPublicChannel('nonexistent', LOCALES));
 
       expect(failure.code).toBe(ErrorCodes.CHANNEL_NOT_FOUND);
     });

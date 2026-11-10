@@ -1,16 +1,16 @@
 import { mutationOptions, useMutation } from '@tanstack/react-query';
 import type { ApiClient } from '@vp/api-client';
-import type { Channel } from '@vp/api-contracts';
+import type { PublicChannel } from '@vp/api-contracts';
 import { useApi } from '@vp/queries';
 import { restoreQueryData } from '#app/integrations/query/restore-query-data';
-import { channelQueryOptions } from '#app/lib/query-keys/channel-keys';
+import { channelQueryOptions, channelSpotlightScope } from '#app/lib/query-keys/channel-keys';
 import { feedKeys } from '#app/lib/query-keys/feed-keys';
 import {
   subscriptionKeys,
   subscriptionStatusQueryOptions,
 } from '#app/lib/query-keys/subscription-keys';
 
-function recount(channel: Channel, subscribed: boolean): Channel {
+function recount(channel: PublicChannel, subscribed: boolean): PublicChannel {
   return { ...channel, subscriberCount: channel.subscriberCount + (subscribed ? 1 : -1) };
 }
 
@@ -46,6 +46,7 @@ function setSubscriptionMutationOptions(api: ApiClient, channelId: string) {
       Promise.all([
         client.invalidateQueries({ queryKey: subscriptionKeys.all }),
         client.invalidateQueries({ queryKey: channelKey }),
+        client.invalidateQueries({ queryKey: channelSpotlightScope(channelId) }),
         client.invalidateQueries({ queryKey: feedKeys.subscriptions() }),
       ]),
   });

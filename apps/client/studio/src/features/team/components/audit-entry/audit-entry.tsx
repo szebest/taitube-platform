@@ -49,6 +49,8 @@ function AuditDetail({ entry }: { entry: AuditEntryView }) {
           </Link>
         </AuditLogList.Detail>
       );
+    case 'channel.updated':
+      return null;
     default:
       return assertNever(entry, 'ChannelAuditAction');
   }

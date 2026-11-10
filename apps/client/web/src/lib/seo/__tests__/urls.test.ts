@@ -9,8 +9,8 @@ describe('apps/client/web: seo urls', () => {
     },
     {
       name: 'a channel',
-      url: channelUrl('https://taitube.test', 'c1'),
-      expected: 'https://taitube.test/channel/c1',
+      url: channelUrl('https://taitube.test', 'ada'),
+      expected: 'https://taitube.test/@ada',
     },
     {
       name: 'an embed',

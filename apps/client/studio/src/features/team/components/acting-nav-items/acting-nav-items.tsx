@@ -11,7 +11,7 @@ import { Can } from '@vp/permissions-react';
 import { useAccount } from '@vp/queries';
 import { StudioWorkspace } from '#app/components/workspace/studio-workspace';
 import { ChannelSwitcher } from '#app/features/team/components/channel-switcher/channel-switcher';
-import { useActiveChannel } from '#app/features/team/hooks/use-active-channel';
+import { useActiveChannel } from '#app/hooks/use-active-channel';
 import { InvitesNavItem } from '../invites-nav-item/invites-nav-item';
 
 export interface ActingNavItemsProps {

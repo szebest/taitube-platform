@@ -1,10 +1,14 @@
+import type { Channel, ChannelSpotlight } from '@vp/api-contracts';
 import { createQueryClient, myVideosQueryOptions } from '@vp/queries';
 import { AppearanceProvider, DEFAULT_APPEARANCE } from '@vp/ui';
 import { api, CHANNEL_ID, channel, feedPages, videoSummary } from '@vp/web-testing';
 import { renderPage } from '@vp/web-testing/server';
 import type { PropsWithChildren } from 'react';
 import { AppProviders, signedIn, withToasts } from '#app/__tests__/providers';
-import { channelQueryOptions } from '#app/lib/query-keys/channel-keys';
+import {
+  channelQueryOptions,
+  channelSpotlightQueryOptions,
+} from '#app/lib/query-keys/channel-keys';
 import { ChannelPage } from '../channel-page';
 
 const ToastedProviders = withToasts(AppProviders);
@@ -25,24 +29,34 @@ interface ChannelOptions {
   Providers?: typeof ToastedProviders;
   bio?: string | null;
   brandColor?: string | null;
+  fields?: Partial<Channel>;
+  spotlight?: ChannelSpotlight;
 }
 
 function renderChannel({
   Providers = ToastedProviders,
   bio = null,
   brandColor = null,
+  fields = {},
+  spotlight,
 }: ChannelOptions = {}) {
   const queryClient = createQueryClient();
   queryClient.setQueryData(
     channelQueryOptions(api, CHANNEL_ID).queryKey,
-    channel({ bio, brandColor })
+    channel({ bio, brandColor, ...fields })
   );
+  if (spotlight) {
+    queryClient.setQueryData(
+      channelSpotlightQueryOptions(api, CHANNEL_ID, 'en', null).queryKey,
+      spotlight
+    );
+  }
   queryClient.setQueryData(
     myVideosQueryOptions(api).queryKey,
     feedPages([videoSummary({ title: 'My upload' })])
   );
 
-  return renderPage(<ChannelPage />, Providers, {
+  return renderPage(<ChannelPage channelId={CHANNEL_ID} />, Providers, {
     queryClient,
     url: `/channel/${CHANNEL_ID}`,
     route: '/channel/$channelId',
@@ -90,5 +104,32 @@ describe('apps/client/web: channel page', () => {
 
     expect(markup).toContain('The Creator');
     expect(markup).not.toContain('data-brand');
+  });
+
+  it('opens with the spotlight the API chose for the viewer', async () => {
+    const markup = await renderChannel({
+      spotlight: { source: 'trailer', video: videoSummary({ title: 'Two minutes' }) },
+    });
+
+    expect(markup).toContain('Channel trailer');
+    expect(markup).toContain('>Two minutes</a>');
+  });
+
+  it('lists About with the links, the country and the contact button, or nothing without them', async () => {
+    const about = await renderChannel({
+      Providers: ToastedProviders,
+      fields: {
+        links: [{ label: 'Code', url: 'https://github.com/marta', platform: 'github' }],
+        country: 'PL',
+        hasContact: true,
+      },
+    });
+    const bare = await renderChannel();
+
+    expect(about).toContain('>About</h2>');
+    expect(about).toContain('>Code</a>');
+    expect(about).toContain('>Poland</dd>');
+    expect(about).toContain('Sign in to see the contact email');
+    expect(bare).not.toContain('>About</h2>');
   });
 });

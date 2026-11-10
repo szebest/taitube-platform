@@ -1,21 +1,18 @@
 import { useT } from '@vp/intl-react';
 import { Button, createCompoundContext } from '@vp/ui';
-import type { ComponentPropsWithRef, PropsWithChildren } from 'react';
-import { useObjectUrl } from '#app/features/channel/hooks/use-object-url';
+import type { PropsWithChildren } from 'react';
 import { ImagePreview } from '../image-preview/image-preview';
 
 type ImageState = {
   kind: 'avatar' | 'banner';
-  file: File | undefined;
   currentUrl: string | null;
-  removed: boolean;
 };
 
 const [ImageContext, useImage] = createCompoundContext<ImageState>('ChannelImage');
 
-function ImageRoot({ kind, file, currentUrl, removed, children }: PropsWithChildren<ImageState>) {
+function ImageRoot({ kind, currentUrl, children }: PropsWithChildren<ImageState>) {
   return (
-    <ImageContext value={{ kind, file, currentUrl, removed }}>
+    <ImageContext value={{ kind, currentUrl }}>
       <div data-slot="channel-image" className="flex flex-col gap-stack">
         {children}
       </div>
@@ -23,29 +20,21 @@ function ImageRoot({ kind, file, currentUrl, removed, children }: PropsWithChild
   );
 }
 
-function shownAddress({ file, currentUrl, removed }: ImageState, local: string | undefined) {
-  if (file) return local;
-  return removed ? undefined : (currentUrl ?? undefined);
-}
-
 function ImageShown() {
-  const image = useImage('Shown');
+  const { kind, currentUrl } = useImage('Shown');
   const { tOr } = useT();
-  const src = shownAddress(image, useObjectUrl(image.file));
 
-  if (!src) return null;
-  return (
-    <ImagePreview kind={image.kind} src={src} label={tOr(`studio.${image.kind}Preview`, {}, '')} />
-  );
+  if (!currentUrl) return null;
+  return <ImagePreview kind={kind} src={currentUrl} label={tOr(`studio.${kind}Preview`, {}, '')} />;
 }
 
-function ImageRemove({ onClick }: Pick<ComponentPropsWithRef<'button'>, 'onClick'>) {
-  const { kind, file, currentUrl, removed } = useImage('Remove');
+function ImageRemove({ onClick, loading }: { onClick: () => void; loading: boolean }) {
+  const { kind, currentUrl } = useImage('Remove');
   const { tOr } = useT();
 
-  if (!file && (removed || !currentUrl)) return null;
+  if (!currentUrl) return null;
   return (
-    <Button variant="ghost" onClick={onClick}>
+    <Button variant="ghost" onClick={onClick} loading={loading}>
       {tOr(`studio.${kind}Remove`, {}, '')}
     </Button>
   );
