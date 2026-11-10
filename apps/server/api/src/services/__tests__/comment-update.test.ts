@@ -25,6 +25,7 @@ describe('apps/server/api/services: update comment', () => {
 
   beforeEach(async () => {
     h = await setUpCommentCreate();
+    h.setClock(Date.now() + 1000);
     rootId = expectOk(await h.create(VIEWER, 'hello')).id;
     replyId = expectOk(await h.create(OTHER, 'a reply', rootId)).id;
   });

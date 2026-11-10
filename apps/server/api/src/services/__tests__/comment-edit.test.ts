@@ -31,6 +31,7 @@ describe('apps/server/api/services: decide a comment edit', () => {
 
   beforeEach(async () => {
     h = await setUpCommentCreate();
+    h.setClock(Date.now() + 1000);
   });
 
   it.each<{
