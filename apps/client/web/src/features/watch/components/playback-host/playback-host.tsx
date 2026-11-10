@@ -42,7 +42,7 @@ export function PlaybackHost() {
   }, [ownsPlayer, dispatch]);
 
   useMediaSession({
-    video: current?.video,
+    video: ownsPlayer ? undefined : current?.video,
     onPlay: () => dispatch({ type: 'paused', paused: false }),
     onPause: () => dispatch({ type: 'paused', paused: true }),
     onPrevious: hasPrevious ? previous : undefined,
