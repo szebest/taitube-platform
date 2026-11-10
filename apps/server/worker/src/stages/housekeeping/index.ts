@@ -17,6 +17,7 @@ import { type Result, assertNever, ok } from '@vp/result';
 import { runExpireRaw } from './expire-raw';
 import { runFlushVideoViews } from './flush-video-views';
 import { runPurgeChannelAudit } from './purge-channel-audit';
+import { runPurgeCommentModeration } from './purge-comment-moderation';
 import { runPurgeDeleted } from './purge-deleted';
 import { runPurgeSearchHistory } from './purge-search-history';
 import { runReconcileCaptions } from './reconcile-captions';
@@ -35,6 +36,7 @@ export * from './outbox-relay';
 export * from './flush-video-views';
 export * from './reconcile-captions';
 export * from './purge-channel-audit';
+export * from './purge-comment-moderation';
 export * from './purge-search-history';
 
 interface HousekeepingSettings {
@@ -197,6 +199,9 @@ export function createHousekeepingProcessor(
           ...tasks.channelAudit,
           logger,
         });
+
+      case 'purge-comment-moderation':
+        return await runPurgeCommentModeration({ repositories, now, logger });
 
       default:
         return assertNever(data.task, 'createHousekeepingProcessor');

@@ -13,7 +13,7 @@ import { isChannelTeamMember, type UserContext } from '@vp/permissions';
 import { isErr, ok, type Result } from '@vp/result';
 
 /** An account with no row is as old as can be, so the age check never refuses it. */
-const EPOCH = new Date(0);
+const oldestAccount = (): Date => new Date(0);
 
 export interface CommentGateLookups {
   channels: Pick<ChannelRepositoryPort, 'findByUserId'>;
@@ -70,7 +70,7 @@ export async function loadCommentGate(
       isTeamMember: isChannelTeamMember({ user: author, channelId, ownerId: video.ownerId }),
       isSubscribed: subscribed.value,
       isTrusted: trusted.value,
-      accountCreatedAt: account.value?.createdAt ?? EPOCH,
+      accountCreatedAt: account.value?.createdAt ?? oldestAccount(),
     },
   });
 }

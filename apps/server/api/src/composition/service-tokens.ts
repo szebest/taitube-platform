@@ -24,6 +24,7 @@ import type {
   WebhookService,
   CommentBulkService,
   CommentModerationService,
+  CommentRemovalService,
   CommentReportService,
   CommentService,
   CommentSettingsService,
@@ -102,6 +103,7 @@ export interface ServiceSet {
   channelRestrictionService: ChannelRestrictionService;
   commentBulkService: CommentBulkService;
   commentModerationService: CommentModerationService;
+  commentRemovalService: CommentRemovalService;
   commentSettingsService: CommentSettingsService;
   commentReportService: CommentReportService;
   creatorCommentService: CreatorCommentService;
@@ -170,6 +172,7 @@ export const Services = {
   ChannelRestrictionService: token<ChannelRestrictionService>('ChannelRestrictionService'),
   CommentBulkService: token<CommentBulkService>('CommentBulkService'),
   CommentModerationService: token<CommentModerationService>('CommentModerationService'),
+  CommentRemovalService: token<CommentRemovalService>('CommentRemovalService'),
   CommentSettingsService: token<CommentSettingsService>('CommentSettingsService'),
   CommentReportService: token<CommentReportService>('CommentReportService'),
   CreatorCommentService: token<CreatorCommentService>('CreatorCommentService'),

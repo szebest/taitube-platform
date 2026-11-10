@@ -22,11 +22,13 @@ import {
   LiveJob,
   NOTIFY_COMMENT,
   NOTIFY_HEART,
+  NOTIFY_MODERATION,
   NOTIFY_TEAM_INVITE,
   NOTIFY_PROCESSING,
   NOTIFY_SUBSCRIBERS,
   NotifyCommentJob,
   NotifyHeartJob,
+  NotifyModerationJob,
   NotifyTeamInviteJob,
   NotifyJob,
   NotifyProcessingJob,
@@ -50,6 +52,7 @@ import { createLiveStage } from './stages/live/live-stage';
 import { createAnnounceLiveProcessor } from './stages/notifications/announce-live';
 import { createNotifyCommentProcessor } from './stages/notifications/notify-comment';
 import { createNotifyHeartProcessor } from './stages/notifications/notify-heart';
+import { createNotifyModerationProcessor } from './stages/notifications/notify-moderation';
 import { createNotifyProcessingProcessor } from './stages/notifications/notify-processing';
 import { createNotifySubscribersProcessor } from './stages/notifications/notify-subscribers';
 import { createNotifyTeamInviteProcessor } from './stages/notifications/notify-team-invite';
@@ -111,23 +114,16 @@ const notify = (d: StageDeps): StageProcessor => {
       webhookDispatcher: d.webhookDispatcher,
     })
   );
-  const fanOut = { repositories, getQueue: d.getQueue, logger };
+  const own = { repositories, logger };
+  const fanOut = { ...own, getQueue: d.getQueue };
   const byName: Record<string, StageProcessor> = {
     [NOTIFY_SUBSCRIBERS]: consuming(NotifySubscribersJob, createNotifySubscribersProcessor(fanOut)),
     [ANNOUNCE_LIVE]: consuming(AnnounceLiveJob, createAnnounceLiveProcessor(fanOut)),
-    [NOTIFY_COMMENT]: consuming(
-      NotifyCommentJob,
-      createNotifyCommentProcessor({ repositories, logger })
-    ),
-    [NOTIFY_HEART]: consuming(NotifyHeartJob, createNotifyHeartProcessor({ repositories, logger })),
-    [NOTIFY_TEAM_INVITE]: consuming(
-      NotifyTeamInviteJob,
-      createNotifyTeamInviteProcessor({ repositories, logger })
-    ),
-    [NOTIFY_PROCESSING]: consuming(
-      NotifyProcessingJob,
-      createNotifyProcessingProcessor({ repositories, logger })
-    ),
+    [NOTIFY_COMMENT]: consuming(NotifyCommentJob, createNotifyCommentProcessor(own)),
+    [NOTIFY_HEART]: consuming(NotifyHeartJob, createNotifyHeartProcessor(own)),
+    [NOTIFY_TEAM_INVITE]: consuming(NotifyTeamInviteJob, createNotifyTeamInviteProcessor(own)),
+    [NOTIFY_MODERATION]: consuming(NotifyModerationJob, createNotifyModerationProcessor(own)),
+    [NOTIFY_PROCESSING]: consuming(NotifyProcessingJob, createNotifyProcessingProcessor(own)),
   };
   return (job) => (byName[job.name] ?? status)(job);
 };

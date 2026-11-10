@@ -16,3 +16,6 @@ export type NewChannelUserRestriction = Omit<ChannelUserRestriction, 'createdAt'
 export function isRestrictionActive(restriction: { expiresAt: Date | null }, now: Date): boolean {
   return restriction.expiresAt === null || restriction.expiresAt > now;
 }
+
+/** An ended restriction is absent at once; the row is purged this many days after it ended. */
+export const RESTRICTION_RETENTION_DAYS = 30;

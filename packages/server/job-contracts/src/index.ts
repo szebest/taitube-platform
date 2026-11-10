@@ -111,6 +111,7 @@ export const HousekeepingJob = z.object({
     'reconcile-captions',
     'purge-search-history',
     'purge-channel-audit',
+    'purge-comment-moderation',
   ]),
 });
 export type HousekeepingJob = z.infer<typeof HousekeepingJob>;

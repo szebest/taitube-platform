@@ -8,6 +8,8 @@ import type {
 } from '@vp/core/repositories';
 import {
   COMMENT_REMOVAL_EXCERPT_LENGTH,
+  type ModerationNotice,
+  NOTIFICATION_EXCERPT_LENGTH,
   type CommentModerationAction,
   type DisclosureDefaults,
   type DisclosureRule,
@@ -95,10 +97,28 @@ export class CommentModerationService {
       disclosure: outcome.disclosure ?? comment.moderationDisclosure ?? 'silent',
     });
 
+    const notice: ModerationNotice | undefined =
+      outcome.disclosure === 'visible' && action.action !== 'approve' && action.action !== 'unhide'
+        ? {
+            userId: comment.authorId,
+            action: action.action,
+            channelId,
+            videoId: video.id,
+            commentId: comment.id,
+            reason: outcome.reason,
+            expiresAt: null,
+            excerpt:
+              action.action === 'remove'
+                ? comment.content.slice(0, NOTIFICATION_EXCERPT_LENGTH)
+                : null,
+          }
+        : undefined;
+
     let view: ModerationResultView;
     if (outcome.state === 'removed') {
       const removed = await comments.remove(locator, {
         audit,
+        ...(notice && { notice }),
         removal: {
           id: comment.id,
           channelId,
@@ -121,6 +141,7 @@ export class CommentModerationService {
         outcome: { ...outcome, state: outcome.state },
         moderatorId: actor.id,
         audit,
+        ...(notice && { notice }),
       });
       if (isErr(written)) return written;
       if (written.value.type === 'missing') return err(commentNotFound(commentId));

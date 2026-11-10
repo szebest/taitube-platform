@@ -28,6 +28,7 @@ describe('apps/server/api/services: housekeeping schedulers', () => {
       'expire-raw',
       'flush-video-views',
       'purge-channel-audit',
+      'purge-comment-moderation',
       'purge-deleted',
       'purge-search-history',
       'reconcile-captions',

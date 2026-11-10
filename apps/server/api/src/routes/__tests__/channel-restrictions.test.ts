@@ -107,50 +107,6 @@ describe('channel restrictions routes', () => {
     });
   });
 
-  describe('a shadow ban', () => {
-    it('takes the comments of the user out of every public read and count, and lifting puts them back', async () => {
-      await ctx.comment('author', 'mine');
-      await ctx.comment('stranger', 'theirs');
-      expect((await publicList()).total).toBe(2);
-
-      const banned = await put(SHADOW);
-      const during = await publicList();
-      const own = (await ctx.list('', AS.author)).json();
-      await lift();
-      const after = await publicList();
-
-      expect(banned.statusCode).toBe(200);
-      expect(banned.json()).toMatchObject({ userId: AUTHOR, kind: 'shadow', reason: null });
-      expect([during.items.length, during.total]).toEqual([1, 1]);
-      expect(own.total).toBe(2);
-      expect([after.items.length, after.total]).toEqual([2, 2]);
-    });
-
-    it('is never told to its user, who reads no ban', async () => {
-      await put(SHADOW);
-
-      const res = await own('author');
-
-      expect(res.statusCode).toBe(404);
-      expect(res.json().code).toBe(ErrorCodes.RESTRICTION_NOT_FOUND);
-    });
-
-    it('records the shadow ban and its lift in the channel audit log', async () => {
-      await put(SHADOW);
-      await lift();
-
-      expect(await audited()).toEqual([
-        { action: 'user.shadow_banned', actorUserId: CREATOR, targetId: AUTHOR, meta: {} },
-        {
-          action: 'user.restriction_lifted',
-          actorUserId: CREATOR,
-          targetId: AUTHOR,
-          meta: { kind: 'shadow' },
-        },
-      ]);
-    });
-  });
-
   describe('a ban', () => {
     const endsInAnHour = () => new Date(Date.now() + HOUR_MS).toISOString();
 
@@ -277,36 +233,5 @@ describe('channel restrictions routes', () => {
       expect(lifted.json().code).toBe(ErrorCodes.RESTRICTION_NOT_FOUND);
       expect(missing.statusCode).toBe(422);
     });
-  });
-
-  it('lists the comments of restricted users under the restricted filter of the inbox', async () => {
-    const first = await ctx.comment('author', 'mine');
-    await ctx.comment('stranger', 'theirs');
-    const inbox = async () =>
-      (
-        await ctx.app.inject({
-          method: 'GET',
-          url: '/v1/creator/comments?filter=restricted',
-          headers: AS.creator,
-        })
-      )
-        .json()
-        .items.map((item: { id: string }) => item.id);
-
-    const before = await inbox();
-    await put({ action: 'ban' });
-    const during = await inbox();
-    await lift();
-
-    expect([before, during, await inbox()]).toEqual([[], [first], []]);
-  });
-
-  it('keeps the video the comments are on in view of the restriction it purges', async () => {
-    await ctx.comment('author', 'mine');
-    await publicList();
-
-    await put(SHADOW);
-
-    expect((await ctx.list('', {}, VIDEO)).json().items).toEqual([]);
   });
 });

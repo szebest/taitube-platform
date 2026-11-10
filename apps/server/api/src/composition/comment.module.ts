@@ -5,6 +5,7 @@ import {
   ChannelRestrictionService,
   CommentBulkService,
   CommentModerationService,
+  CommentRemovalService,
   CommentReportService,
   CommentService,
   CommentSettingsService,
@@ -83,6 +84,15 @@ export function registerCommentServices(c: Container): Container {
           users: repositories().users,
           channels: repositories().channels,
           paginator: c.get(Services.Paginator),
+        })
+    )
+    .provide(
+      Services.CommentRemovalService,
+      (c) =>
+        new CommentRemovalService({
+          moderation: repositories().commentModeration,
+          paginator: c.get(Services.Paginator),
+          now: () => Date.now(),
         })
     )
     .provide(

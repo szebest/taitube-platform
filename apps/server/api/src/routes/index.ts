@@ -17,6 +17,7 @@ import { channelTeamRoutes } from './channel-team';
 import { channelsRoutes } from './channels';
 import { clipsRoutes } from './clips';
 import { commentModerationRoutes } from './comment-moderation';
+import { commentRemovalsRoutes } from './comment-removals';
 import { commentReportsRoutes } from './comment-reports';
 import { commentSettingsRoutes } from './comment-settings';
 import { commentsRoutes } from './comments';
@@ -96,6 +97,7 @@ const ROUTES: readonly FastifyPluginAsync[] = [
   channelTeamRoutes,
   channelRestrictionsRoutes,
   commentModerationRoutes,
+  commentRemovalsRoutes,
   commentSettingsRoutes,
   trustedCommentersRoutes,
   subscriptionsRoutes,

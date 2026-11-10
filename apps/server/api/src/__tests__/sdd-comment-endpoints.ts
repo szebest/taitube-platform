@@ -162,6 +162,13 @@ export const SDD_COMMENT_ENDPOINTS: SddEndpointContract[] = [
     hasBody: true,
   },
   {
+    path: '/v1/me/comment-removals',
+    method: 'get',
+    expectedStatuses: [200, 400, 401],
+    expectedErrorCodes: LISTED,
+    hasQueryParams: true,
+  },
+  {
     path: '/v1/me/channel/comment-settings',
     method: 'get',
     expectedStatuses: [200, 401, 403],

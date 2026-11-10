@@ -13,7 +13,7 @@ const audit: NewChannelAuditEntry = {
   meta: { videoId: 'video', disclosure: 'visible' },
 };
 const notice: ModerationNotice = {
-  userId: '00000000-0000-7000-8000-000000000001',
+  userId: '00000000-0000-7000-8000-0000000000f1',
   action: 'remove',
   channelId: '00000000-0000-7000-8000-000000000002',
   videoId: null,
