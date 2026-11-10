@@ -26,15 +26,21 @@ export const Route = createFileRoute('/search')({
     const query = validateSearchQuery(q ?? '');
     return { query: isOk(query) ? query.value : undefined, type, sort };
   },
-  loader: async ({ context: { queryClient, api }, deps: { query, type, sort } }) => {
+  loader: async ({ cause, context: { queryClient, api }, deps: { query, type, sort } }) => {
     if (query === undefined) {
       return;
     }
 
-    await queryClient.infiniteQuery({
+    const options = {
       ...searchQueryOptions(api, { query, type, sort }),
-      staleTime: 'static',
-    });
+      staleTime: 'static' as const,
+    };
+    if (cause === 'stay') {
+      void queryClient.prefetchInfiniteQuery(options);
+      return;
+    }
+
+    await queryClient.infiniteQuery(options);
   },
   pendingComponent: SearchPageSkeleton,
   component: SearchPage,

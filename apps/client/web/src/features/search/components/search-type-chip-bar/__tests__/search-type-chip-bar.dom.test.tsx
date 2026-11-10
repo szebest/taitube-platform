@@ -7,10 +7,12 @@ import {
   videoResult,
 } from '#app/features/search/__tests__/search-fixtures';
 
+const COUNTS = { video: 2400, channel: 31, playlist: 5 };
+
 const everything = (params: URLSearchParams) =>
   params.get('type') === 'channel'
-    ? page([channelHit()], { total: 31 })
-    : page([videoResult(), channelHit()], { total: 2400 });
+    ? page([channelHit()], { total: 31, counts: COUNTS })
+    : page([videoResult(), channelHit()], { total: 2400, counts: COUNTS });
 
 describe('apps/client/web: SearchTypeChipBar', () => {
   it('narrows the results to one kind and replaces the URL instead of stacking it', async () => {
@@ -29,11 +31,13 @@ describe('apps/client/web: SearchTypeChipBar', () => {
     expect(screen.queryByRole('link', { name: 'React in practice' })).not.toBeInTheDocument();
   });
 
-  it('prints the total on the chip of the kind shown', async () => {
+  it('prints the count of every kind on its chip, whichever kind is shown', async () => {
     await renderSearch('/search?q=react&type=channel', [searchReply(everything)]);
 
     expect(await screen.findByRole('radio', { name: 'Channels 31' })).toBeChecked();
-    expect(screen.getByRole('radio', { name: 'Videos' })).not.toBeChecked();
+    expect(screen.getByRole('radio', { name: 'Videos 2.4K' })).not.toBeChecked();
+    expect(screen.getByRole('radio', { name: 'Playlists 5' })).not.toBeChecked();
+    expect(screen.getByRole('radio', { name: 'All 2.4K' })).not.toBeChecked();
   });
 
   it.each([
