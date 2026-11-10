@@ -140,4 +140,6 @@ export const ui = {
   commentHeld: dt('Waiting for review'),
   commentHidden: dt('Hidden by moderators'),
   commentSilent: dt('Silent'),
+  tagRemove: dt('Remove {tag}'),
+  tagDuplicate: dt('{tag} is already in the list'),
 } as const;

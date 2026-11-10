@@ -2,6 +2,7 @@ import type { Channel } from '@vp/api-contracts';
 import { fieldError, useAppForm } from '@vp/forms';
 import { useT } from '@vp/intl-react';
 import { Button, Field, Input } from '@vp/ui';
+import { CustomizationSection } from '#app/components/section/customization-section';
 import {
   useChannelValidators,
   validateLinksField,
@@ -9,7 +10,6 @@ import {
 } from '#app/features/channel/forms/channel-field-validators';
 import { useUpdateChannel } from '#app/features/channel/hooks/use-update-channel';
 import { ChannelTextField } from '../channel-text-field/channel-text-field';
-import { CustomizationSection } from '../customization-section/customization-section';
 
 const MAX_LINKS = 5;
 const LINKS_LABEL_ID = 'channel-links-label';

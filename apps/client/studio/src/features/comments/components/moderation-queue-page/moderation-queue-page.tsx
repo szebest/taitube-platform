@@ -129,7 +129,7 @@ function ModerationQueueBoard() {
         </EmptyState.Root>
       )}
       {active && (
-        <div className="grid items-start gap-section lg:grid-cols-[minmax(16rem,24rem)_1fr]">
+        <div className="grid items-start gap-section expanded:grid-cols-[minmax(16rem,24rem)_1fr]">
           <div className="flex flex-col gap-stack">
             <ModerationQueue.Root
               aria-label={tOr('studio.queueListLabel', {}, '')}

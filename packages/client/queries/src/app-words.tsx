@@ -4,7 +4,12 @@ import { UiCopyProvider, uiCopyFrom } from '@vp/ui';
 import type { PropsWithChildren } from 'react';
 
 /** The placeholders a primitive fills itself, kept in the word so the catalogue owns the sentence. */
-const KEPT_PLACEHOLDERS = { name: '{name}', position: '{position}', count: '{count}' };
+const KEPT_PLACEHOLDERS = {
+  name: '{name}',
+  position: '{position}',
+  count: '{count}',
+  tag: '{tag}',
+};
 
 function CatalogueUiCopy({ children }: PropsWithChildren) {
   const { tOr } = useT();

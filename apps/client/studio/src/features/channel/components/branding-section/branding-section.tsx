@@ -2,11 +2,11 @@ import type { Channel } from '@vp/api-contracts';
 import { useAppForm } from '@vp/forms';
 import { useT } from '@vp/intl-react';
 import { CHANNEL_IMAGE_CONTENT_TYPES } from '@vp/validation';
+import { CustomizationSection } from '#app/components/section/customization-section';
 import { validateChannelImageFile } from '#app/features/channel/forms/channel-field-validators';
 import { useUpdateChannel } from '#app/features/channel/hooks/use-update-channel';
 import { useUploadChannelImages } from '#app/features/channel/hooks/use-upload-channel-images';
 import { ChannelImage } from '../channel-image/channel-image';
-import { CustomizationSection } from '../customization-section/customization-section';
 
 const IMAGE_ACCEPT = Object.fromEntries(CHANNEL_IMAGE_CONTENT_TYPES.map((type) => [type, []]));
 

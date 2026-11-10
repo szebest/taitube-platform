@@ -2,13 +2,13 @@ import type { Channel } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { useAppForm } from '@vp/forms';
 import { useT } from '@vp/intl-react';
+import { CustomizationSection } from '#app/components/section/customization-section';
 import {
   useChannelValidators,
   validateHandleField,
 } from '#app/features/channel/forms/channel-field-validators';
 import { failureCodeOf, useUpdateChannel } from '#app/features/channel/hooks/use-update-channel';
 import { ChannelTextField } from '../channel-text-field/channel-text-field';
-import { CustomizationSection } from '../customization-section/customization-section';
 
 /** The channel's name and handle, saved on their own. */
 export function IdentitySection({ channel }: { channel: Channel }) {

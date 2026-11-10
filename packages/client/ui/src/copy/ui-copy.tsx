@@ -140,6 +140,8 @@ export const UI_COPY_KEYS = [
   'commentHeld',
   'commentHidden',
   'commentSilent',
+  'tagRemove',
+  'tagDuplicate',
 ] as const;
 
 export type UiCopyKey = (typeof UI_COPY_KEYS)[number];
