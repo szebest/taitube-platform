@@ -30,6 +30,7 @@ describe('domain: comment threads', () => {
       'held',
       'hidden',
       'questions',
+      'restricted',
     ]);
   });
 
