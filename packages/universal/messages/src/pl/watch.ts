@@ -104,6 +104,9 @@ export const watch = {
   moderationNoteInvalid: dt('Notatka jest za długa'),
   moderationDisclosureSilent: dt('Autor nie dostaje informacji.'),
   moderationDisclosureVisible: dt('Autor widzi, co się stało i dlaczego.'),
+  moderationDisclosureDefault: dt(
+    'Domyślne ustawienie kanału decyduje, czy autor dostaje informację.'
+  ),
   moderationDurationLabel: dt('Ban na'),
   moderationDuration: dt('{duration:enum}', {
     enum: {

@@ -8,7 +8,7 @@ import type { UserContext } from '@vp/permissions';
 import { type Result, err, isOk, ok } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { CommentService } from '../comment-service';
-import { commentCreateDeps, saveSettings } from './comment-deps';
+import { commentUpdateDeps, saveSettings } from './comment-deps';
 
 const OWNER: UserContext = { id: '11111111-1111-7111-8111-111111111111', role: 'CREATOR' };
 const VIEWER: UserContext = { id: '22222222-2222-7222-8222-222222222222', role: 'USER' };
@@ -41,7 +41,7 @@ describe('CommentService', () => {
     repositories = new InMemoryRepositories();
     cache = new MapCommentCache();
     service = new CommentService({
-      ...commentCreateDeps(repositories),
+      ...commentUpdateDeps(repositories),
       commentCache: cache,
       singleflight: new Singleflight(),
       paginator: new Paginator(),
@@ -155,6 +155,16 @@ describe('CommentService', () => {
       expect(author.items.map((item) => item.replyCount)).toEqual([1]);
       expect(anonymous.items.map((item) => item.replyCount)).toEqual([0]);
     });
+  });
+
+  it('purges the hot page once an edit is saved', async () => {
+    const [root] = expectOk(await service.listForVideo(null, VIDEO_ID, {})).items;
+    expect(cache.pages.has(VIDEO_ID)).toBe(true);
+
+    const edited = expectOk(await service.update(VIEWER, root?.id ?? '', 'rewritten'));
+
+    expect(edited).toMatchObject({ content: 'rewritten', isEdited: true });
+    expect(cache.pages.has(VIDEO_ID)).toBe(false);
   });
 
   describe('hearts', () => {

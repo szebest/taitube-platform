@@ -1,6 +1,7 @@
 import type {
   AuthoredComment,
   Comment,
+  CommentEditWrite,
   CommentSort,
   CommentThread,
   CreatorInboxComment,
@@ -99,9 +100,14 @@ export interface CommentRepositoryPort {
    * thread counts the replies its author may see.
    */
   create(input: NewCommentInput): Promise<Result<CommentThread | null, DatabaseUnavailable>>;
+  /**
+   * A hold takes the comment, and the replies under it, off the count in the same transaction and
+   * tells the moderators; the question flag is rewritten either way.
+   */
   updateContent(
     id: string,
-    content: string
+    content: string,
+    edit: CommentEditWrite
   ): Promise<Result<CommentThread | null, DatabaseUnavailable>>;
   /**
    * Removes the comment and, for a root, its replies; answers how many were removed. A moderator's

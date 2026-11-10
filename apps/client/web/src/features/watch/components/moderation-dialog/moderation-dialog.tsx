@@ -7,7 +7,6 @@ import {
   banExpiry,
   COMMENT_MODERATION_REASONS,
   type CommentModerationReason,
-  DEFAULT_DISCLOSURE,
   type Disclosure,
   type DisclosureRule,
 } from '@vp/domain';
@@ -33,6 +32,12 @@ const RULE_OF: Record<
   DisclosureRule
 > = { hold: 'manual_hold', hide: 'hide', remove: 'remove' };
 
+const DISCLOSURE_NOTE = {
+  silent: 'watch.moderationDisclosureSilent',
+  visible: 'watch.moderationDisclosureVisible',
+  default: 'watch.moderationDisclosureDefault',
+} as const;
+
 export interface ModerationDialogProps {
   comment: CommentView;
   action: ModerationDialogAction;
@@ -43,7 +48,7 @@ export interface ModerationDialogProps {
 
 interface FormProps extends Omit<ModerationDialogProps, 'open' | 'channel'> {
   channelId: string;
-  preset: Disclosure;
+  preset: Disclosure | null;
 }
 
 function ModerationForm({ comment, action, channelId, preset, onOpenChange }: FormProps) {
@@ -60,7 +65,7 @@ function ModerationForm({ comment, action, channelId, preset, onOpenChange }: Fo
 
   const form = useAppForm({
     defaultValues: {
-      disclosure: preset,
+      disclosure: preset as Disclosure | null,
       reason: 'spam' as CommentModerationReason,
       note: '',
       duration: '7d' as BanDuration,
@@ -75,7 +80,10 @@ function ModerationForm({ comment, action, channelId, preset, onOpenChange }: Fo
 
       if (onComment) {
         moderate.mutate(
-          { commentId: comment.id, action: { action, disclosure, reason, note: detail } },
+          {
+            commentId: comment.id,
+            action: { action, ...(disclosure && { disclosure }), reason, note: detail },
+          },
           { onSuccess: done, onError: failed }
         );
         return;
@@ -118,9 +126,7 @@ function ModerationForm({ comment, action, channelId, preset, onOpenChange }: Fo
                   aria-describedby={disclosureNote}
                 />
                 <p id={disclosureNote} className="m-0 text-caption text-fg-muted">
-                  {field.state.value === 'silent'
-                    ? tOr('watch.moderationDisclosureSilent', {}, '')
-                    : tOr('watch.moderationDisclosureVisible', {}, '')}
+                  {tOr(DISCLOSURE_NOTE[field.state.value ?? 'default'], {}, '')}
                 </p>
               </div>
             )}
@@ -201,7 +207,7 @@ export function ModerationDialog({
     ...commentSettingsQueryOptions(api, channel.channelId),
     enabled: asksSettings,
   });
-  const preset = rule ? (settings.data?.disclosure[rule] ?? DEFAULT_DISCLOSURE[rule]) : 'silent';
+  const preset = rule && settings.data ? settings.data.disclosure[rule] : null;
   const settled = !asksSettings || !settings.isPending;
 
   return (

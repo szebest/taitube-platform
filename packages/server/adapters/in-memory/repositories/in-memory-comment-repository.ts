@@ -12,6 +12,7 @@ import type {
 import {
   type AuthoredComment,
   type Comment,
+  type CommentEditWrite,
   type CommentRemoval,
   type CommentThread,
   type CreatorInboxComment,
@@ -26,6 +27,7 @@ import type { UserContext } from '@vp/permissions';
 import { isErr, ok, type Result, unwrapOr } from '@vp/result';
 import { announceCreated } from './comment-announce';
 import { listAuthored } from './comment-authored';
+import { editStored } from './comment-edit';
 import { applyHeart } from './comment-heart';
 import { creatorInbox } from './comment-inbox-filter';
 import { recordModeration } from './comment-moderation-record';
@@ -132,26 +134,26 @@ export class InMemoryCommentRepository implements CommentRepositoryPort {
     }
 
     const created = await this.toThread(stored, ownOrPublicTo({ id: input.authorId }, scope));
-    const announced = await announceCreated(this.deps.userEventsRepo, {
+    const told = await announceCreated(this.deps.userEventsRepo, {
       created,
       video,
       input,
       counted,
     });
-    if (isErr(announced)) return announced;
-    return ok(created);
+    return isErr(told) ? told : ok(created);
   }
 
   async updateContent(
     id: string,
-    content: string
+    content: string,
+    edit: CommentEditWrite
   ): Promise<Result<CommentThread | null, DatabaseUnavailable>> {
     const comment = this.liveById(id);
     if (!comment) return ok(null);
 
     const scope = await this.scope([comment.videoId]);
-    Object.assign(comment, { content, isEdited: true, updatedAt: new Date() });
-    return ok(await this.toThread(comment, ownOrPublicTo({ id: comment.authorId }, scope)));
+    const read = () => this.toThread(comment, ownOrPublicTo({ id: comment.authorId }, scope));
+    return editStored(this.deps, comment, this.repliesOf(id), scope, content, edit, read);
   }
 
   async remove(
@@ -184,15 +186,14 @@ export class InMemoryCommentRepository implements CommentRepositoryPort {
     if (!comment) return ok(null);
 
     const scope = await this.scope([target.videoId]);
-    if (pinned) {
-      for (const row of this.live()) {
-        if (row.videoId === target.videoId && row.isPinned) row.isPinned = false;
-      }
+    for (const row of this.live()) {
+      if (pinned && row.videoId === target.videoId) row.isPinned = false;
     }
     Object.assign(comment, { isPinned: pinned, updatedAt: new Date() });
     const recorded = await recordModeration(this.deps, audit && { audit });
-    if (isErr(recorded)) return recorded;
-    return ok(await this.toThread(comment, ownOrPublicTo(null, scope)));
+    return isErr(recorded)
+      ? recorded
+      : ok(await this.toThread(comment, ownOrPublicTo(null, scope)));
   }
 
   async setHearted(

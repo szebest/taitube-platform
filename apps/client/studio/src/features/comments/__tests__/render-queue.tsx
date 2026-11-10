@@ -6,7 +6,8 @@ import {
   listCreatorComments,
 } from '@vp/api-contracts';
 import { DEFAULT_DISCLOSURE } from '@vp/domain';
-import { inboxComment, mockEndpoint } from '@vp/web-testing';
+import { ErrorCodes } from '@vp/errors';
+import { inboxComment, mockEndpoint, problemReply } from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
 import { signInBrowser } from '#app/__tests__/providers';
@@ -34,12 +35,20 @@ interface QueueOptions {
   held: InboxComment[];
   history?: InboxComment[];
   settings?: Partial<CommentSettingsView>;
+  /** The settings read is refused, as it is for a moderator. */
+  settingsRefused?: boolean;
   /** Answers a bulk call itself; accepted when it returns nothing. */
   bulk?: (ids: string[]) => Response | Promise<Response> | undefined;
 }
 
 /** The review queue over `held`, every bulk call recorded and, unless `bulk` answers otherwise, accepted. */
-export async function renderQueue({ held, history = [], settings, bulk }: QueueOptions) {
+export async function renderQueue({
+  held,
+  history = [],
+  settings,
+  settingsRefused = false,
+  bulk,
+}: QueueOptions) {
   const requests = {
     bulks: [] as { ids: string[]; action: Record<string, unknown> }[],
     authors: [] as string[],
@@ -56,7 +65,11 @@ export async function renderQueue({ held, history = [], settings, bulk }: QueueO
         }
         return HttpResponse.json({ items: held, nextCursor: null });
       }),
-      mockEndpoint(getCommentSettings, () => HttpResponse.json({ ...SETTINGS, ...settings })),
+      mockEndpoint(getCommentSettings, () =>
+        settingsRefused
+          ? problemReply(ErrorCodes.FORBIDDEN)
+          : HttpResponse.json({ ...SETTINGS, ...settings })
+      ),
       mockEndpoint(bulkModerateComments, async ({ request }) => {
         const body = (await request.json()) as (typeof requests.bulks)[number];
         requests.bulks.push(body);

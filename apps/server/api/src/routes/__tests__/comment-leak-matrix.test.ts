@@ -1,5 +1,6 @@
 import type { CommentActionBody } from '@vp/api-contracts';
 import { CHANNEL_HEADER } from '@vp/api-contracts';
+import { DEFAULT_COMMENT_SETTINGS } from '@vp/domain';
 import { expectOk } from '@vp/testing/result';
 import {
   AS,
@@ -9,7 +10,7 @@ import {
   buildCommentsApp,
 } from '../../__tests__/comments-app';
 
-type Silent = 'held' | 'hidden' | 'removed' | 'shadow';
+type Silent = 'held' | 'hidden' | 'removed' | 'shadow' | 'edited';
 type Viewer = 'anonymous' | 'stranger' | 'author' | 'moderator';
 
 const HEADERS = {
@@ -23,9 +24,9 @@ const SILENT_ACTION = {
   held: { action: 'hold', disclosure: 'silent' },
   hidden: { action: 'hide', disclosure: 'silent' },
   removed: { action: 'remove', disclosure: 'silent' },
-} satisfies Record<Exclude<Silent, 'shadow'>, CommentActionBody>;
+} satisfies Record<Exclude<Silent, 'shadow' | 'edited'>, CommentActionBody>;
 
-const STATES: Silent[] = ['held', 'hidden', 'removed', 'shadow'];
+const STATES: Silent[] = ['held', 'hidden', 'removed', 'shadow', 'edited'];
 const VIEWERS: Viewer[] = ['anonymous', 'stranger', 'author', 'moderator'];
 
 describe('no leak of silent state: state x viewer x read path', () => {
@@ -35,21 +36,39 @@ describe('no leak of silent state: state x viewer x read path', () => {
   let subject: string;
   let reply: string;
 
+  const edit = async () => {
+    const saved = await ctx.app.inject({
+      method: 'PUT',
+      url: '/v1/me/channel/comment-settings',
+      headers: AS.creator,
+      payload: { ...DEFAULT_COMMENT_SETTINGS, blockedWords: ['spoiler'] },
+    });
+    expect(saved.statusCode).toBe(200);
+    return await ctx.app.inject({
+      method: 'PATCH',
+      url: `/v1/comments/${subject}`,
+      headers: AS.author,
+      payload: { content: 'a spoiler' },
+    });
+  };
+
   const apply = async (state: Silent) => {
     const res =
-      state === 'shadow'
-        ? await ctx.app.inject({
-            method: 'PUT',
-            url: `/v1/me/channel/restrictions/${AUTHOR}`,
-            headers: { ...AS.creator, [CHANNEL_HEADER]: channelId },
-            payload: { action: 'shadow_ban' },
-          })
-        : await ctx.app.inject({
-            method: 'POST',
-            url: `/v1/comments/${subject}/moderate`,
-            headers: AS.creator,
-            payload: SILENT_ACTION[state],
-          });
+      state === 'edited'
+        ? await edit()
+        : state === 'shadow'
+          ? await ctx.app.inject({
+              method: 'PUT',
+              url: `/v1/me/channel/restrictions/${AUTHOR}`,
+              headers: { ...AS.creator, [CHANNEL_HEADER]: channelId },
+              payload: { action: 'shadow_ban' },
+            })
+          : await ctx.app.inject({
+              method: 'POST',
+              url: `/v1/comments/${subject}/moderate`,
+              headers: AS.creator,
+              payload: SILENT_ACTION[state],
+            });
     expect(res.statusCode).toBe(200);
   };
   const visibleToAuthor = (state: Silent) => state !== 'removed';
@@ -151,11 +170,13 @@ describe('no leak of silent state: state x viewer x read path', () => {
       });
 
       const found = res.json().items.find((item: { id: string }) => item.id === subject);
-      expect(found).toMatchObject(state === 'shadow' ? { status: 'published' } : { status: state });
+      expect(found).toMatchObject({
+        status: state === 'shadow' ? 'published' : state === 'edited' ? 'held' : state,
+      });
     }
   );
 
-  it.each(STATES)(
+  it.each(STATES.filter((state) => state !== 'edited'))(
     'emits no event and takes back the unread notification for a silent %s',
     async (state) => {
       expectOk(

@@ -4,6 +4,7 @@ import { useT } from '@vp/intl-react';
 import { useState } from 'react';
 import { BulkActionBar } from '#app/components/comments/bulk-action-bar';
 import { useBulkModeration } from '#app/features/comments/hooks/use-bulk-moderation';
+import { useDisclosureDefaults } from '#app/features/comments/hooks/use-disclosure-defaults';
 import { useModerationAbilities } from '#app/features/comments/hooks/use-moderation-abilities';
 import { reasonedAction } from '#app/features/comments/utils/reasoned-action';
 import {
@@ -22,20 +23,29 @@ export function InboxBulkActions({ ids, onSettled }: InboxBulkActionsProps) {
   const { tOr } = useT();
   const can = useModerationAbilities();
   const { run, pending } = useBulkModeration();
-  const [disclosure, setDisclosure] = useState<Disclosure>('silent');
+  const defaults = useDisclosureDefaults();
+  const [picked, setPicked] = useState<Disclosure>();
   const [asking, setAsking] = useState<ReasonedAction | null>(null);
 
   const apply = async (action: BulkActionBody) => onSettled(await run(ids, action));
 
-  const choose = (action: 'hide' | 'remove') =>
-    disclosure === 'visible' ? setAsking(action) : apply({ action, disclosure });
+  const disclosureOf = (action: 'hide' | 'remove') => picked ?? defaults?.[action];
+  const shown = picked ?? (defaults?.hide === defaults?.remove ? defaults?.hide : undefined);
+
+  const choose = (action: 'hide' | 'remove') => {
+    const disclosure = disclosureOf(action);
+    if (disclosure === 'silent') void apply({ action, disclosure });
+    else setAsking(action);
+  };
 
   const confirm = (details: ModerationReason) => {
     const action = asking;
     setAsking(null);
     if (action !== null) {
       const label = tOr('studio.moderationReasonOption', { reason: details.reason }, '');
-      void apply(reasonedAction(action, details, disclosure, label));
+      void apply(
+        reasonedAction(action, details, action === 'ban' ? undefined : disclosureOf(action), label)
+      );
     }
   };
 
@@ -70,7 +80,7 @@ export function InboxBulkActions({ ids, onSettled }: InboxBulkActionsProps) {
             </BulkActionBar.Action>
           </>
         )}
-        <BulkActionBar.Disclosure value={disclosure} onValueChange={setDisclosure} />
+        <BulkActionBar.Disclosure value={shown ?? null} onValueChange={setPicked} />
       </BulkActionBar.Root>
       <ModerationReasonDialog
         action={asking}

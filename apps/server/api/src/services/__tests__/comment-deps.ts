@@ -2,6 +2,7 @@ import { InMemoryCommentSlowMode, type InMemoryRepositories } from '@vp/adapters
 import type { CommentSettings } from '@vp/domain';
 import { expectOk } from '@vp/testing/result';
 import type { CommentCreateDeps } from '../comment-create';
+import type { CommentUpdateDeps } from '../comment-update';
 
 /** Everything creating a comment reads, over the in-memory stores and a clock the test owns. */
 export function commentCreateDeps(
@@ -20,6 +21,17 @@ export function commentCreateDeps(
     users: repositories.users,
     slowMode: new InMemoryCommentSlowMode(now),
     now,
+  };
+}
+
+export function commentUpdateDeps(
+  repositories: InMemoryRepositories,
+  now: () => number = Date.now
+): CommentUpdateDeps {
+  return {
+    ...commentCreateDeps(repositories, now),
+    moderation: repositories.commentModeration,
+    notifications: repositories.notifications,
   };
 }
 

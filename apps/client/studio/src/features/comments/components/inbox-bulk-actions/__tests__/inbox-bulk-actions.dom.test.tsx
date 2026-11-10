@@ -1,4 +1,5 @@
 import { screen, within } from '@testing-library/react';
+import { DEFAULT_DISCLOSURE } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import { inboxComment } from '@vp/web-testing';
 import { renderInbox } from '#app/features/comments/__tests__/render-inbox';
@@ -31,8 +32,13 @@ describe('apps/client/studio: InboxBulkActions', () => {
   });
 
   it('hides silently without asking why, and visibly with a reason', async () => {
-    const { user, requests } = await renderInbox('/comments', [[FIRST, SECOND]]);
+    const { user, requests } = await renderInbox('/comments', [[FIRST, SECOND]], {}, [], {
+      disclosure: { ...DEFAULT_DISCLOSURE, hide: 'silent', remove: 'silent' },
+    });
     await selectBoth(user);
+    await vi.waitFor(() =>
+      expect(within(bar()).getByRole('radio', { name: 'Silent' })).toBeChecked()
+    );
 
     await user.click(within(bar()).getByRole('button', { name: 'Hide' }));
     await vi.waitFor(() => expect(requests.bulks).toHaveLength(1));
@@ -48,6 +54,52 @@ describe('apps/client/studio: InboxBulkActions', () => {
       { action: 'hide', disclosure: 'silent' },
       { action: 'hide', disclosure: 'visible', reason: 'harassment' },
     ]);
+  });
+
+  it('starts on the channel default of each action, asking for a reason where it is visible', async () => {
+    const { user, requests } = await renderInbox('/comments', [[FIRST]], {}, [], {
+      disclosure: { ...DEFAULT_DISCLOSURE, hide: 'silent', remove: 'visible' },
+    });
+    await user.click(
+      within(screen.getByText(FIRST.content).closest('tr') as HTMLElement).getByRole('checkbox')
+    );
+
+    await user.click(within(bar()).getByRole('button', { name: 'Hide' }));
+    await vi.waitFor(() => expect(requests.bulks).toHaveLength(1));
+    await settled();
+    await user.click(within(bar()).getByRole('button', { name: 'Remove' }));
+    await user.click(await screen.findByRole('radio', { name: /Harassment/ }));
+    await user.click(screen.getByRole('button', { name: /^Remove/ }));
+
+    await vi.waitFor(() => expect(requests.bulks).toHaveLength(2));
+    expect(requests.bulks.map(({ action }) => action)).toEqual([
+      { action: 'hide', disclosure: 'silent' },
+      { action: 'remove', disclosure: 'visible', reason: 'harassment' },
+    ]);
+  });
+
+  it('shows the control on the default when both actions share it', async () => {
+    await renderInbox('/comments', [[FIRST]], {}, [], {
+      disclosure: { ...DEFAULT_DISCLOSURE, hide: 'visible', remove: 'visible' },
+    });
+
+    expect(await within(bar()).findByRole('radio', { name: 'Visible' })).toBeChecked();
+  });
+
+  it('sends no disclosure when the settings are not readable', async () => {
+    const { user, requests } = await renderInbox('/comments', [[FIRST]], {}, [], 'refused');
+    await user.click(
+      within(screen.getByText(FIRST.content).closest('tr') as HTMLElement).getByRole('checkbox')
+    );
+
+    await user.click(within(bar()).getByRole('button', { name: 'Hide' }));
+    await user.click(await screen.findByRole('radio', { name: /Harassment/ }));
+    await user.click(screen.getByRole('button', { name: /^Hide/ }));
+
+    await vi.waitFor(() => expect(requests.bulks).toHaveLength(1));
+    expect(requests.bulks[0]?.action).toEqual({ action: 'hide', reason: 'harassment' });
+    expect(within(bar()).getByRole('radio', { name: 'Silent' })).not.toBeChecked();
+    expect(within(bar()).getByRole('radio', { name: 'Visible' })).not.toBeChecked();
   });
 
   it('names each refused id and why, and keeps those rows selected', async () => {

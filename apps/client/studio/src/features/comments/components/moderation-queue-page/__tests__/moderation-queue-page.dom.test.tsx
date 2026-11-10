@@ -96,16 +96,16 @@ describe('apps/client/studio: the review queue', () => {
   it('hides silently at once, and asks why once v made the next action visible', async () => {
     const { user, requests } = await renderQueue({ held: HELD });
     const toolbar = () => screen.getByRole('toolbar', { name: 'Actions on the open comment' });
-    expect(within(toolbar()).getByRole('button', { name: /^Hide · Silent/ })).toBeInTheDocument();
+    expect(
+      await within(toolbar()).findByRole('button', { name: /^Hide · Silent/ })
+    ).toBeInTheDocument();
 
     await user.keyboard('h');
     await vi.waitFor(() => expect(requests.bulks).toHaveLength(1));
     await user.keyboard('v');
 
     expect(within(toolbar()).getByRole('button', { name: /^Hide · Visible/ })).toBeInTheDocument();
-    expect(
-      within(toolbar()).getByRole('button', { name: /^Remove · Visible/ })
-    ).toBeInTheDocument();
+    expect(within(toolbar()).getByRole('button', { name: /^Remove · Silent/ })).toBeInTheDocument();
     await user.keyboard('h');
     expect(await screen.findByRole('dialog', { name: 'Hide with a reason' })).toBeInTheDocument();
     await user.keyboard('{Enter}');
@@ -114,6 +114,43 @@ describe('apps/client/studio: the review queue', () => {
     expect(requests.bulks.map(({ action }) => action)).toEqual([
       { action: 'hide', disclosure: 'silent' },
       { action: 'hide', disclosure: 'visible', reason: 'spam' },
+    ]);
+  });
+
+  it('flips each action from its own default, and back on a second v', async () => {
+    const { user } = await renderQueue({ held: HELD });
+    const toolbar = () => screen.getByRole('toolbar', { name: 'Actions on the open comment' });
+    const button = (name: RegExp) => within(toolbar()).getByRole('button', { name });
+    expect(await within(toolbar()).findByRole('button', { name: /^Hide · Silent/ })).toBeVisible();
+
+    await user.keyboard('v');
+    expect(button(/^Hide · Visible/)).toBeInTheDocument();
+    expect(button(/^Remove · Silent/)).toBeInTheDocument();
+    expect(button(/^Flip who is told/)).toHaveAttribute('aria-pressed', 'true');
+
+    await user.keyboard('v');
+    expect(button(/^Hide · Silent/)).toBeInTheDocument();
+    expect(button(/^Remove · Visible/)).toBeInTheDocument();
+  });
+
+  it('sends no disclosure when the settings are not readable, so the API applies the channel default', async () => {
+    const { user, requests } = await renderQueue({ held: HELD, settingsRefused: true });
+    const toolbar = () => screen.getByRole('toolbar', { name: 'Actions on the open comment' });
+    expect(
+      await within(toolbar()).findByRole('button', { name: /^Hide · Channel default/ })
+    ).toBeInTheDocument();
+
+    await user.keyboard('h');
+    await user.keyboard('{Enter}');
+    await vi.waitFor(() => expect(requests.bulks).toHaveLength(1));
+    await user.keyboard('v');
+    await user.keyboard('r');
+    await user.keyboard('{Enter}');
+
+    await vi.waitFor(() => expect(requests.bulks).toHaveLength(2));
+    expect(requests.bulks.map(({ action }) => action)).toEqual([
+      { action: 'hide', reason: 'spam' },
+      { action: 'remove', disclosure: 'visible', reason: 'spam' },
     ]);
   });
 

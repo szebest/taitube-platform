@@ -35,6 +35,8 @@ export function registerCommentServices(c: Container): Container {
           slowMode: c.get(Adapters.CommentSlowMode),
           now: () => Date.now(),
           commentCache: c.get(Adapters.CommentCache),
+          moderation: repositories().commentModeration,
+          notifications: repositories().notifications,
           singleflight: new Singleflight(),
           paginator: c.get(Services.Paginator),
         })

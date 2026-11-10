@@ -10408,7 +10408,7 @@ paths:
       summary: Edit a comment
       tags:
         - Comments
-      description: The author rewrites their comment, which is then marked edited.
+      description: 'The author rewrites their comment, which is then marked edited. The channel''s rules run again: a published comment edited into a blocked word or a link off the allowlist is held like a new one, and an author under a visible ban cannot edit.'
       requestBody:
         required: true
         content:
@@ -10691,6 +10691,10 @@ paths:
                     type: string
                     enum:
                       - FORBIDDEN
+                      - COMMENTS_BANNED
+                      - COMMENTS_DISABLED
+                      - COMMENTS_SUBSCRIBERS_ONLY
+                      - COMMENTS_ACCOUNT_TOO_NEW
                     description: Machine-readable error code
                   instance:
                     type: string

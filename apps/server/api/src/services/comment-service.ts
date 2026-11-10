@@ -8,13 +8,11 @@ import {
   type DeleteCommentFailure,
   type HeartCommentFailure,
   type PinCommentFailure,
-  type UpdateCommentFailure,
   commentNotFound,
   decideCommentDelete,
   decideCommentHeart,
   decideCommentPin,
   decideCommentThreadRead,
-  decideCommentUpdate,
   publicReadFailure,
 } from '@vp/domain-rules';
 import { type DatabaseUnavailable, ErrorCodes } from '@vp/errors';
@@ -34,6 +32,11 @@ import {
   visibleCommentWithVideo,
 } from './comment-lookup';
 import { withOwnComments } from './comment-own-overlay';
+import {
+  type CommentUpdateDeps,
+  type UpdateCommentServiceFailure,
+  updateComment,
+} from './comment-update';
 import { toCommentView } from './comment-views';
 import {
   commentThreadCursorPayload,
@@ -42,7 +45,7 @@ import {
   decodeCreatedAtCursor,
 } from './cursor';
 
-export interface CommentServiceDeps extends CommentCreateDeps {
+export interface CommentServiceDeps extends CommentCreateDeps, CommentUpdateDeps {
   commentCache: CommentCachePort;
   singleflight: Singleflight;
   paginator: Paginator;
@@ -55,7 +58,6 @@ export interface CommentPage {
 
 export type ListCommentsFailure = PublicReadFailure | InvalidCursor | DatabaseUnavailable;
 export type ListRepliesFailure = ListCommentsFailure | CommentNotFound;
-export type UpdateCommentServiceFailure = UpdateCommentFailure | DatabaseUnavailable;
 export type DeleteCommentServiceFailure = DeleteCommentFailure | DatabaseUnavailable;
 export type PinCommentServiceFailure = PinCommentFailure | DatabaseUnavailable;
 export type HeartCommentServiceFailure = HeartCommentFailure | DatabaseUnavailable;
@@ -154,15 +156,12 @@ export class CommentService {
     commentId: string,
     content: string
   ): Promise<Result<CommentView, UpdateCommentServiceFailure>> {
-    const found = await commentWithVideo(this.deps, commentId);
-    if (isErr(found)) return found;
-    const { comment, video } = found.value;
+    const updated = await updateComment(this.deps, actor, commentId, content);
+    if (isErr(updated)) return updated;
 
-    const decided = decideCommentUpdate({ actor, comment, commentId, content });
-    if (isErr(decided)) return decided;
-
-    const updated = await this.deps.comments.updateContent(commentId, decided.value.content);
-    return await this.settled(updated, commentId, video, actor);
+    const { thread, video } = updated.value;
+    await this.purge(video.id);
+    return ok(toCommentView(thread, video.ownerId, actor));
   }
 
   async remove(

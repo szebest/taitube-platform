@@ -1,7 +1,9 @@
 import { screen } from '@testing-library/react';
 import {
   bulkModerateComments,
+  type CommentSettingsView,
   createComment,
+  getCommentSettings,
   heartComment,
   listCreatorComments,
   listSavedReplies,
@@ -11,8 +13,9 @@ import {
   unheartComment,
   unpinComment,
 } from '@vp/api-contracts';
-import type { ErrorCode } from '@vp/errors';
-import { comment, type EndpointResolver, mockEndpoint } from '@vp/web-testing';
+import { DEFAULT_DISCLOSURE } from '@vp/domain';
+import { type ErrorCode, ErrorCodes } from '@vp/errors';
+import { comment, type EndpointResolver, mockEndpoint, problemReply } from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
 import { signInBrowser } from '#app/__tests__/providers';
@@ -36,7 +39,8 @@ export async function renderInbox(
   url = '/comments',
   pages: InboxComment[][] = [[]],
   refused: Record<string, ErrorCode> = {},
-  savedReplies: SavedReplyView[] = []
+  savedReplies: SavedReplyView[] = [],
+  settings: Partial<CommentSettingsView> | 'refused' = {}
 ) {
   const requests: InboxRequests = {
     lists: [],
@@ -64,6 +68,20 @@ export async function renderInbox(
           nextCursor: index + 1 < pages.length ? String(index + 1) : null,
         });
       }),
+      mockEndpoint(getCommentSettings, () =>
+        settings === 'refused'
+          ? problemReply(ErrorCodes.FORBIDDEN)
+          : HttpResponse.json({
+              reviewMode: 'none',
+              blockedWords: [],
+              linkAllowlist: [],
+              slowModeSeconds: null,
+              subscribersOnly: false,
+              minAccountAgeDays: 0,
+              disclosure: DEFAULT_DISCLOSURE,
+              ...settings,
+            })
+      ),
       mockEndpoint(createComment, async ({ request, params }) => {
         requests.replies.push({ videoId: String(params.id), body: await request.json() });
         return HttpResponse.json(comment(), { status: 201 });

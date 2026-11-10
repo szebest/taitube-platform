@@ -28,11 +28,21 @@ export async function announceCreated(
   }
 
   if (input.moderation?.moderationState === 'held') {
-    for (const userId of input.moderators ?? []) {
-      if (userId === input.authorId) continue;
-      const told = await events.append({ userId, ...commentHeld(created) });
-      if (isErr(told)) return told;
-    }
+    return await announceHeld(events, created, input.moderators ?? []);
+  }
+  return ok();
+}
+
+/** A held comment reaches the moderators the service named, never its own author. */
+export async function announceHeld(
+  events: Pick<UserEventRepository, 'append'>,
+  held: CommentThread,
+  moderators: readonly string[]
+): Promise<Result<void, DatabaseUnavailable>> {
+  for (const userId of moderators) {
+    if (userId === held.authorId) continue;
+    const told = await events.append({ userId, ...commentHeld(held) });
+    if (isErr(told)) return told;
   }
   return ok();
 }

@@ -1,4 +1,9 @@
-import type { CommentModerationFields, NewCommentModeration } from './comment-moderation';
+import type {
+  CommentModerationFields,
+  HeldReason,
+  NewCommentModeration,
+} from './comment-moderation';
+import type { Disclosure } from './comment-settings';
 
 export const COMMENT_SORTS = ['top', 'newest'] as const;
 
@@ -63,6 +68,17 @@ export interface NewCommentInput {
   moderation?: NewCommentModeration;
   /** The moderators told, in the same transaction, that a held comment is waiting. */
   moderators?: readonly string[];
+}
+
+/** What an edit writes besides the text: the question flag, and the hold when the gate caught it. */
+export interface CommentEditWrite {
+  looksLikeQuestion: boolean;
+  hold?: {
+    reason: HeldReason;
+    disclosure: Disclosure;
+    /** The moderators told, in the same transaction, that the edited comment is waiting. */
+    moderators: readonly string[];
+  };
 }
 
 /**

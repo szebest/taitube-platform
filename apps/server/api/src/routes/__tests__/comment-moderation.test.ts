@@ -1,5 +1,5 @@
 import type { CommentActionBody } from '@vp/api-contracts';
-import type { ChannelRole } from '@vp/domain';
+import { type ChannelRole, DEFAULT_COMMENT_SETTINGS } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import { expectOk } from '@vp/testing/result';
 import {
@@ -150,6 +150,39 @@ describe('POST /v1/comments/:id/moderate', () => {
       comment: { status: 'hidden', moderation: { state: 'hidden', reason: 'spam' } },
     });
   });
+
+  it.each([
+    { hide: 'silent', remove: 'visible', hidden: 200, removed: 409 },
+    { hide: 'visible', remove: 'silent', hidden: 409, removed: 200 },
+  ] as const)(
+    'applies the default of the action itself when no disclosure is sent: hide $hide, remove $remove',
+    async ({ hide, remove, hidden, removed }) => {
+      expectOk(
+        await ctx.repositories.commentSettings.save(
+          channelId,
+          {
+            ...DEFAULT_COMMENT_SETTINGS,
+            disclosure: { ...DEFAULT_COMMENT_SETTINGS.disclosure, hide, remove },
+          },
+          {
+            channelId,
+            actorUserId: CREATOR,
+            action: 'settings.comments.updated',
+            targetType: 'settings',
+            targetId: channelId,
+            meta: { fields: [] },
+          }
+        )
+      );
+      const toHide = await ctx.comment('author', 'hide me');
+      const toRemove = await ctx.comment('author', 'remove me');
+
+      const hideRes = await moderate(toHide, { action: 'hide' });
+      const removeRes = await moderate(toRemove, { action: 'remove' });
+
+      expect([hideRes.statusCode, removeRes.statusCode]).toEqual([hidden, removed]);
+    }
+  );
 
   it('tells the author of a visible hide and nobody of a silent one', async () => {
     const loud = await ctx.comment('author', 'loud');

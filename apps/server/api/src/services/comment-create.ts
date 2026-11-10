@@ -104,7 +104,7 @@ async function store(
   return created.value ? ok(created.value) : err(commentNotFound(parentId ?? video.id));
 }
 
-async function moderatorsOf(
+export async function moderatorsOf(
   deps: Pick<CommentCreateDeps, 'members'>,
   channelId: string,
   ownerId: string

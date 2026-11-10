@@ -105,6 +105,7 @@ export const watch = {
   moderationNoteInvalid: dt('The note is too long'),
   moderationDisclosureSilent: dt('The author is not told.'),
   moderationDisclosureVisible: dt('The author sees what happened and why.'),
+  moderationDisclosureDefault: dt("The channel's default decides whether the author is told."),
   moderationDurationLabel: dt('Ban for'),
   moderationDuration: dt('{duration:enum}', {
     enum: {

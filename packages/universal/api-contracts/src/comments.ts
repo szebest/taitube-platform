@@ -160,7 +160,8 @@ export const updateComment = defineEndpoint({
   path: '/v1/comments/:id',
   tag: 'Comments',
   summary: 'Edit a comment',
-  description: 'The author rewrites their comment, which is then marked edited.',
+  description:
+    "The author rewrites their comment, which is then marked edited. The channel's rules run again: a published comment edited into a blocked word or a link off the allowlist is held like a new one, and an author under a visible ban cannot edit.",
   params: CommentIdParamSchema,
   body: z.object({ content: CommentContentSchema }),
   status: 200,
@@ -168,7 +169,13 @@ export const updateComment = defineEndpoint({
   errors: {
     400: [ErrorCodes.VALIDATION_FAILED],
     401: [ErrorCodes.UNAUTHORIZED],
-    403: [ErrorCodes.FORBIDDEN],
+    403: [
+      ErrorCodes.FORBIDDEN,
+      ErrorCodes.COMMENTS_BANNED,
+      ErrorCodes.COMMENTS_DISABLED,
+      ErrorCodes.COMMENTS_SUBSCRIBERS_ONLY,
+      ErrorCodes.COMMENTS_ACCOUNT_TOO_NEW,
+    ],
     404: [ErrorCodes.COMMENT_NOT_FOUND],
     422: [ErrorCodes.VALIDATION_FAILED],
   },

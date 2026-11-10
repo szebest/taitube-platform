@@ -1,27 +1,25 @@
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery } from '@tanstack/react-query';
 import type { BulkActionBody } from '@vp/api-contracts';
 import { EmptyState, PageHeader, SectionError } from '@vp/components';
-import { DEFAULT_DISCLOSURE, type Disclosure } from '@vp/domain';
 import { useT } from '@vp/intl-react';
-import { canReadCommentSettings } from '@vp/permissions';
-import { useCan } from '@vp/permissions-react';
-import { commentSettingsQueryOptions, useApi } from '@vp/queries';
+import { useApi } from '@vp/queries';
 import { Badge, Spinner } from '@vp/ui';
 import { useState } from 'react';
 import { ModerationQueue } from '#app/components/comments/moderation-queue';
 import { LoadMore } from '#app/components/table/load-more';
 import { inboxQueryOptions } from '#app/features/comments/api/inbox-queries';
 import { useBulkModeration } from '#app/features/comments/hooks/use-bulk-moderation';
+import { useDisclosureDefaults } from '#app/features/comments/hooks/use-disclosure-defaults';
 import { useModerationAbilities } from '#app/features/comments/hooks/use-moderation-abilities';
 import {
   type ModerationChannel,
   ModerationChannelProvider,
-  useModerationChannel,
 } from '#app/features/comments/hooks/use-moderation-channel';
 import {
   type QueueShortcuts,
   useQueueShortcuts,
 } from '#app/features/comments/hooks/use-queue-shortcuts';
+import { chosenDisclosure, needsReason } from '#app/features/comments/utils/disclosure-choice';
 import { reasonedAction } from '#app/features/comments/utils/reasoned-action';
 import { pagedRows } from '#app/utils/paged-rows';
 import { CommentSettingsLink } from '../comment-settings-link/comment-settings-link';
@@ -34,22 +32,17 @@ import { QueueActions } from '../queue-actions/queue-actions';
 import { QueueDetail } from '../queue-detail/queue-detail';
 import { QueueHelpDialog } from '../queue-help-dialog/queue-help-dialog';
 
-const opposite = (disclosure: Disclosure): Disclosure =>
-  disclosure === 'silent' ? 'visible' : 'silent';
-
 function ModerationQueueBoard() {
   const api = useApi();
   const { tOr } = useT();
-  const channel = useModerationChannel();
   const abilities = useModerationAbilities();
   const { run, pending } = useBulkModeration();
   const held = useInfiniteQuery({ ...inboxQueryOptions(api, 'held'), select: pagedRows });
-  const canReadSettings = useCan(canReadCommentSettings, { channel });
-  const settings = useQuery({ ...commentSettingsQueryOptions(api), enabled: canReadSettings });
+  const defaults = useDisclosureDefaults();
 
   const [activeId, setActiveId] = useState<string>();
   const [marked, setMarked] = useState<ReadonlySet<string>>(new Set());
-  const [flip, setFlip] = useState<Disclosure>();
+  const [flipped, setFlipped] = useState(false);
   const [asking, setAsking] = useState<ReasonedAction | null>(null);
   const [helping, setHelping] = useState(false);
 
@@ -62,15 +55,14 @@ function ModerationQueueBoard() {
   const markedRows = rows.filter(({ id }) => marked.has(id));
   const targets = markedRows.length > 0 ? markedRows : active ? [active] : [];
 
-  const defaults = settings.data?.disclosure ?? DEFAULT_DISCLOSURE;
-  const hide = flip ?? defaults.hide;
-  const remove = flip ?? defaults.remove;
+  const hide = chosenDisclosure(defaults?.hide, flipped);
+  const remove = chosenDisclosure(defaults?.remove, flipped);
 
   const apply = async (action: BulkActionBody) => {
     const ids = targets.map(({ id }) => id);
     setActiveId((rows[index + 1] ?? rows[index - 1])?.id);
     setMarked(new Set());
-    setFlip(undefined);
+    setFlipped(false);
     await run(ids, action);
   };
 
@@ -90,11 +82,11 @@ function ModerationQueueBoard() {
     r: () => abilities.remove && active && setAsking('remove'),
     h: () => {
       if (!(abilities.hide && active)) return;
-      if (hide === 'visible') setAsking('hide');
+      if (needsReason(hide)) setAsking('hide');
       else void apply({ action: 'hide', disclosure: 'silent' });
     },
     b: () => abilities.restrict && active && setAsking('ban'),
-    v: () => setFlip(opposite(hide)),
+    v: () => setFlipped(!flipped),
     x: () => {
       if (!active) return;
       const next = new Set(marked);
@@ -175,7 +167,7 @@ function ModerationQueueBoard() {
               abilities={abilities}
               hide={hide}
               remove={remove}
-              flipped={opposite(hide)}
+              flipped={flipped}
               selected={marked.has(active.id)}
               pending={pending}
               canMovePrevious={index > 0}

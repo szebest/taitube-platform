@@ -111,11 +111,11 @@ export const studioModeration = {
   queuePrevious: dt('Poprzedni'),
   queueNext: dt('Następny'),
   queueDisclosure: dt('{disclosure:enum}', {
-    enum: { disclosure: { silent: 'Po cichu', visible: 'Widocznie' } },
+    enum: {
+      disclosure: { silent: 'Po cichu', visible: 'Widocznie', default: 'Domyślnie w kanale' },
+    },
   }),
-  queueFlip: dt('Następne działanie: {disclosure:enum}', {
-    enum: { disclosure: { silent: 'Po cichu', visible: 'Widocznie' } },
-  }),
+  queueFlip: dt('Odwróć, kto jest informowany'),
   queueHelp: dt('Skróty'),
   queueHelpTitle: dt('Skróty klawiszowe'),
   queueHelpDescription: dt('Działają wszędzie na stronie poza polem tekstowym.'),

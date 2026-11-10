@@ -94,7 +94,7 @@ describe('apps/client/web: ModerationDialog', () => {
     await vi.waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
 
-  it('falls back to the built-in default when the viewer cannot read the settings, and needs no note for a silent action', async () => {
+  it('leaves the choice to the channel default when the viewer cannot read the settings, and sends no disclosure', async () => {
     const sent: unknown[] = [];
     const { user, dialog } = await openDialog({
       choice: 'Hide',
@@ -103,13 +103,15 @@ describe('apps/client/web: ModerationDialog', () => {
       handlers: [moderated(sent)],
     });
 
-    expect(await dialog.findByRole('radio', { name: 'Silent' })).toBeChecked();
+    expect(await dialog.findByRole('radio', { name: 'Silent' })).not.toBeChecked();
+    expect(dialog.getByRole('radio', { name: 'Visible' })).not.toBeChecked();
+    expect(
+      dialog.getByText("The channel's default decides whether the author is told.")
+    ).toBeInTheDocument();
     await user.click(dialog.getByRole('button', { name: 'Hide' }));
 
     await vi.waitFor(() =>
-      expect(sent).toEqual([
-        { id: COMMENT_ID, action: 'hide', disclosure: 'silent', reason: 'spam' },
-      ])
+      expect(sent).toEqual([{ id: COMMENT_ID, action: 'hide', reason: 'spam' }])
     );
   });
 

@@ -1,6 +1,7 @@
 import type { CommentLocator } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import {
+  type CommentEditWrite,
   type CommentThread,
   commentCreated,
   commentHeld,
@@ -115,6 +116,60 @@ export async function insertComment(
     }
   }
   return created;
+}
+
+export async function editComment(
+  tx: PostgresDatabase,
+  id: string,
+  content: string,
+  { looksLikeQuestion, hold }: CommentEditWrite
+): Promise<CommentThread | null> {
+  const [found] = await tx
+    .select({ videoId: c.videoId, authorId: c.authorId })
+    .from(c)
+    .where(drizzleWhere(eq(c.id, id), notDeletedScope(c)));
+  if (!found) return null;
+
+  await lockVideo(tx, found.videoId);
+  const subtree = and(eq(c.videoId, found.videoId), or(eq(c.id, id), eq(c.parentId, id)));
+  const before = await countedAmong(tx, subtree);
+  const [updated] = await tx
+    .update(c)
+    .set({
+      content,
+      looksLikeQuestion,
+      isEdited: true,
+      updatedAt: new Date(),
+      ...(hold && {
+        moderationState: 'held' as const,
+        moderationDisclosure: hold.disclosure,
+        heldReason: hold.reason,
+        moderationReason: null,
+        moderationNote: null,
+        moderatedBy: null,
+        moderatedAt: null,
+        isPinned: false,
+      }),
+    })
+    .where(drizzleWhere(eq(c.id, id), notDeletedScope(c)))
+    .returning({ id: c.id });
+  if (!updated) return null;
+
+  const after = await countedAmong(tx, subtree);
+  if (after !== before) {
+    await tx
+      .update(v)
+      .set({ commentsCount: sql`${v.commentsCount} + ${after - before}` })
+      .where(eq(v.id, found.videoId));
+  }
+
+  const thread = await threadById(tx, id, { id: found.authorId });
+  if (thread && hold) {
+    for (const userId of hold.moderators) {
+      if (userId !== found.authorId) await appendUserEvent(tx, { userId, ...commentHeld(thread) });
+    }
+  }
+  return thread;
 }
 
 /** A root takes its replies with it; a held or hidden item was never counted, so it never decrements. */

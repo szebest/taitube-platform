@@ -5,7 +5,8 @@ export interface DisclosureControlProps extends Omit<
   SegmentedControlRootProps,
   'value' | 'defaultValue' | 'onValueChange' | 'children' | 'tone'
 > {
-  value: DisclosureOption;
+  /** `null` picks neither: the channel's default applies. */
+  value: DisclosureOption | null;
   onValueChange: (value: DisclosureOption) => void;
 }
 
@@ -20,7 +21,7 @@ export function DisclosureControl({ value, onValueChange, ...props }: Disclosure
     <SegmentedControl.Root
       data-slot="disclosure-control"
       aria-label={disclosureLabel}
-      value={value}
+      value={value ?? ''}
       onValueChange={(next) => isDisclosure(next) && onValueChange(next)}
       {...props}
     >

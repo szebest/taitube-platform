@@ -7,10 +7,10 @@ import type { QueueKey } from '#app/features/comments/hooks/use-queue-shortcuts'
 
 export interface QueueActionsProps {
   abilities: ModerationAbilities;
-  /** What the next hide or remove tells the author: the channel's default unless `v` flipped it. */
-  hide: Disclosure;
-  remove: Disclosure;
-  flipped: Disclosure;
+  /** What the next hide or remove tells the author: the channel's default unless `v` flipped it; none when the default is unknown. */
+  hide: Disclosure | undefined;
+  remove: Disclosure | undefined;
+  flipped: boolean;
   selected: boolean;
   pending: boolean;
   canMovePrevious: boolean;
@@ -62,8 +62,8 @@ export function QueueActions({
   const { tOr } = useT();
   const label = (action: 'approve' | 'hide' | 'remove' | 'ban') =>
     tOr('studio.moderationAction', { action }, '');
-  const withDisclosure = (action: 'hide' | 'remove', disclosure: Disclosure) =>
-    `${label(action)} · ${tOr('studio.queueDisclosure', { disclosure }, '')}`;
+  const withDisclosure = (action: 'hide' | 'remove', disclosure: Disclosure | undefined) =>
+    `${label(action)} · ${tOr('studio.queueDisclosure', { disclosure: disclosure ?? 'default' }, '')}`;
 
   return (
     <div
@@ -91,8 +91,8 @@ export function QueueActions({
           {label('ban')}
         </KeyButton>
       )}
-      <KeyButton shortcut="v" onKey={onKey}>
-        {tOr('studio.queueFlip', { disclosure: flipped }, '')}
+      <KeyButton shortcut="v" onKey={onKey} aria-pressed={flipped}>
+        {tOr('studio.queueFlip', {}, '')}
       </KeyButton>
       <KeyButton shortcut="x" onKey={onKey} aria-pressed={selected}>
         {selected ? tOr('studio.queueUnselect', {}, '') : tOr('studio.queueSelect', {}, '')}

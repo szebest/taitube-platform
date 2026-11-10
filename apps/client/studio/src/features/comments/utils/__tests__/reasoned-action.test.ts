@@ -17,6 +17,12 @@ describe('apps/client/studio: reasonedAction', () => {
       expected: { action: 'remove', disclosure: 'visible', reason: 'hate', note: 'Rule 2' },
     },
     {
+      action: 'hide' as const,
+      disclosure: undefined,
+      note: undefined,
+      expected: { action: 'hide', reason: 'hate', note: undefined },
+    },
+    {
       action: 'ban' as const,
       disclosure: 'silent' as const,
       note: undefined,

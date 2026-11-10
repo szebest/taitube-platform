@@ -11,6 +11,7 @@ import * as schema from '@vp/db';
 import {
   type AuthoredComment,
   type Comment,
+  type CommentEditWrite,
   type CommentThread,
   type CreatorInboxComment,
   type ModerationRecord,
@@ -41,7 +42,7 @@ import {
   threadById,
   toCommentThread,
 } from './comment-thread-query';
-import { insertComment, pinComment, removeComment } from './comment-writes';
+import { editComment, insertComment, pinComment, removeComment } from './comment-writes';
 import { enqueueNotificationJobs } from './notification-jobs';
 import type { PostgresDatabase } from './types';
 
@@ -157,18 +158,11 @@ export class PostgresCommentRepository implements CommentRepositoryPort {
 
   async updateContent(
     id: string,
-    content: string
+    content: string,
+    edit: CommentEditWrite
   ): Promise<Result<CommentThread | null, DatabaseUnavailable>> {
     return await fromPromise(
-      () =>
-        this.db.transaction(async (tx) => {
-          const [updated] = await tx
-            .update(c)
-            .set({ content, isEdited: true, updatedAt: new Date() })
-            .where(drizzleWhere(eq(c.id, id), notDeletedScope(c)))
-            .returning({ authorId: c.authorId });
-          return updated ? threadById(tx, id, { id: updated.authorId }) : null;
-        }),
+      () => this.db.transaction((tx) => editComment(tx, id, content, edit)),
       databaseUnavailable.during('updateComment')
     );
   }

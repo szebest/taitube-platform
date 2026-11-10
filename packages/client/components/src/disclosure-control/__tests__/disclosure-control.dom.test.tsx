@@ -30,6 +30,17 @@ describe('DisclosureControl', () => {
     expect(screen.getByRole('radio', { name: checked })).toBeChecked();
   });
 
+  it('marks neither option while the channel default applies, and reports the first pick', async () => {
+    const onValueChange = renderControl({ value: null });
+
+    expect(screen.getAllByRole('radio').map((radio) => radio.getAttribute('aria-checked'))).toEqual(
+      ['false', 'false']
+    );
+    await userEvent.click(screen.getByRole('radio', { name: 'disclosureSilent' }));
+
+    expect(onValueChange).toHaveBeenCalledWith('silent');
+  });
+
   it('reports the other option once it is picked', async () => {
     const onValueChange = renderControl({ value: 'silent' });
 

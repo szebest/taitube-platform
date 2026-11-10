@@ -13,7 +13,7 @@ const renderActions = (props: Partial<QueueActionsProps> = {}) => {
       abilities={ALL}
       hide="silent"
       remove="visible"
-      flipped="visible"
+      flipped={false}
       selected={false}
       pending={false}
       canMovePrevious
@@ -39,12 +39,26 @@ describe('apps/client/studio: QueueActions', () => {
     expect(onKey.mock.calls.map(([key]) => key)).toEqual(names());
   });
 
-  it('shows who the next hide and remove tell, and what v would switch to', () => {
-    renderActions({ hide: 'silent', remove: 'visible', flipped: 'visible' });
+  it.each([
+    { hide: 'silent', remove: 'visible', names: ['Hide · Silent', 'Remove · Visible'] },
+    {
+      hide: undefined,
+      remove: undefined,
+      names: ['Hide · Channel default', 'Remove · Channel default'],
+    },
+  ] as const)('shows who the next hide and remove tell: $names', ({ hide, remove, names }) => {
+    renderActions({ hide, remove });
 
-    expect(screen.getByRole('button', { name: 'Hide · Silent' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Remove · Visible' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Next action: Visible' })).toBeInTheDocument();
+    for (const name of names) expect(screen.getByRole('button', { name })).toBeInTheDocument();
+  });
+
+  it.each([true, false])('presses v while the disclosure is flipped: %s', (flipped) => {
+    renderActions({ flipped });
+
+    expect(screen.getByRole('button', { name: 'Flip who is told' })).toHaveAttribute(
+      'aria-pressed',
+      String(flipped)
+    );
   });
 
   it.each([

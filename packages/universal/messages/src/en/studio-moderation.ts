@@ -99,11 +99,9 @@ export const studioModeration = {
   queuePrevious: dt('Previous'),
   queueNext: dt('Next'),
   queueDisclosure: dt('{disclosure:enum}', {
-    enum: { disclosure: { silent: 'Silent', visible: 'Visible' } },
+    enum: { disclosure: { silent: 'Silent', visible: 'Visible', default: 'Channel default' } },
   }),
-  queueFlip: dt('Next action: {disclosure:enum}', {
-    enum: { disclosure: { silent: 'Silent', visible: 'Visible' } },
-  }),
+  queueFlip: dt('Flip who is told'),
   queueHelp: dt('Shortcuts'),
   queueHelpTitle: dt('Keyboard shortcuts'),
   queueHelpDescription: dt('They work anywhere on the page except in a field.'),
