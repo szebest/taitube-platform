@@ -19,3 +19,14 @@ describe('@vp/messages: en settings', () => {
     expect(t(key, args)).toEqual({ ok: true, value: expected });
   });
 });
+
+describe('@vp/messages: en settings, kept choice', () => {
+  const { t } = translatorFor('en');
+
+  it('names the field it kept', () => {
+    expect(t('settings.keptChoice', { field: 'Speed' })).toEqual({
+      ok: true,
+      value: 'Kept your choice for Speed',
+    });
+  });
+});

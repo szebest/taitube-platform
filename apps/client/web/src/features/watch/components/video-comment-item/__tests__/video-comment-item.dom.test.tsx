@@ -101,7 +101,7 @@ describe('apps/client/web: video comment item', () => {
   });
 
   it.each<{ viewer: string; account?: Account; actions: string[] }>([
-    { viewer: 'a guest', actions: [] },
+    { viewer: 'a guest', actions: ['Report'] },
     { viewer: 'another viewer', account: viewerAccount(OTHER_ID), actions: ['Report'] },
     { viewer: 'the author', account: viewerAccount(AUTHOR_ID), actions: ['Edit', 'Delete'] },
     { viewer: 'the video owner', account: viewerAccount(OWNER_ID), actions: ['Delete', 'Report'] },

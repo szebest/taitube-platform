@@ -5,12 +5,13 @@ import { DevicePreferencesProvider } from '../../../../apps/client/web/src/lib/p
 import { PreferencesSyncContext } from '../../../../apps/client/web/src/lib/preferences/preferences-sync.context';
 
 const DEVICE: DevicePreferences = {
-  schema: 1,
+  schema: 2,
   playback: {
     quality: 'auto',
     speed: 1,
     autoplayNext: true,
     hoverPreview: true,
+    hoverPlay: true,
     captionsOn: false,
     captionsLanguage: null,
     captionsSize: 'medium',

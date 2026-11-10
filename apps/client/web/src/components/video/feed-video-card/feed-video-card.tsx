@@ -3,7 +3,6 @@ import type { ReasonedVideo, VideoSummary } from '@vp/api-contracts';
 import { VideoCard } from '@vp/components';
 import { publishedAt } from '@vp/intl';
 import { Format, useT } from '@vp/intl-react';
-import { useCan } from '@vp/permissions-react';
 import { FeedbackMenuItems } from '#app/components/video/feedback-menu-items';
 import { useDurationText } from '#app/hooks/use-duration-text';
 import { useVideoActions } from '#app/hooks/use-video-actions';
@@ -25,7 +24,6 @@ export function FeedVideoCard({ video, reason }: FeedVideoCardProps) {
   const progress = useWatchProgress(video);
   const [hoverPreview] = usePlaybackPreference('hoverPreview');
   const { save, enqueue } = useVideoActions(video);
-  const canGiveFeedback = useCan('create', 'RecommendationFeedback');
 
   const { clock, spoken } = useDurationText(video.durationMs);
   const { channel } = video;
@@ -64,7 +62,7 @@ export function FeedVideoCard({ video, reason }: FeedVideoCardProps) {
         <VideoCard.Reason>{tOr('home.reason', { kind: reason.kind }, '')}</VideoCard.Reason>
       )}
       <VideoCard.Menu onSave={save} onQueue={enqueue}>
-        {hideable && canGiveFeedback ? <FeedbackMenuItems video={video} /> : undefined}
+        {hideable ? <FeedbackMenuItems video={video} /> : undefined}
       </VideoCard.Menu>
       <VideoCard.Expanded onSave={save} onQueue={enqueue}>
         {video.description ?? undefined}

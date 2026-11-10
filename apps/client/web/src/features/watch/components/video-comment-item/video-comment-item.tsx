@@ -3,12 +3,7 @@ import type { CommentView } from '@vp/api-contracts';
 import { threadRootId } from '@vp/domain';
 import { publishedAt } from '@vp/intl';
 import { useFormat, useT } from '@vp/intl-react';
-import {
-  canDeleteComment,
-  canHeartComment,
-  canReportComment,
-  canUpdateComment,
-} from '@vp/permissions';
+import { canDeleteComment, canHeartComment, canUpdateComment } from '@vp/permissions';
 import { useCan } from '@vp/permissions-react';
 import {
   SectionBoundary,
@@ -27,6 +22,7 @@ import { useDeleteComment } from '#app/features/watch/hooks/use-delete-comment';
 import { useEditComment } from '#app/features/watch/hooks/use-edit-comment';
 import { usePostComment } from '#app/features/watch/hooks/use-post-comment';
 import { type DescriptionToken, tokenizeDescription } from '#app/features/watch/utils/timecodes';
+import { useRequireAccount } from '#app/hooks/use-require-account';
 import { repliesQueryOptions } from '#app/lib/query-keys/comment-keys';
 import { CommentEditor } from '../comment-editor/comment-editor';
 import { LazyReportCommentDialog } from '../report-comment-dialog/report-comment-dialog.lazy';
@@ -166,11 +162,12 @@ export function VideoCommentItem({
   const postReply = usePostComment(comment.videoId);
   const heartComment = useHeartComment();
   const target = { id: comment.id, authorId: comment.author.userId };
-  const canReply = useCan('create', 'Comment');
+  const reply = useRequireAccount('reply');
+  const report = useRequireAccount('report');
   const canEdit = useCan(canUpdateComment, { comment: target });
   const canDelete = useCan(canDeleteComment, { comment: target, videoOwnerId: video.ownerId });
   const canHeart = useCan(canHeartComment, { videoOwnerId: video.ownerId });
-  const canReport = useCan(canReportComment) && !canEdit;
+  const canReport = !canEdit;
 
   const level = comment.parentId === null ? 'comment' : 'reply';
   const state = deleteComment.isSuccess ? 'deleted' : mode === 'editing' ? 'editing' : 'view';
@@ -238,7 +235,7 @@ export function VideoCommentItem({
       </CommentItem.Body>
       <CommentItem.Actions>
         <CommentItem.Heart hearted={hearted} onToggle={canHeart ? toggleHeart : undefined} />
-        {canReply && <CommentItem.Reply onClick={() => setMode('replying')} />}
+        <CommentItem.Reply onClick={() => reply.run(() => setMode('replying'))} />
         {(canEdit || canDelete || canReport) && (
           <CommentItem.Menu>
             {canEdit && (
@@ -254,7 +251,7 @@ export function VideoCommentItem({
               </DropdownMenu.Item>
             )}
             {canReport && (
-              <DropdownMenu.Item onSelect={openReport}>
+              <DropdownMenu.Item onSelect={() => report.run(openReport)}>
                 <Icon name="alert" />
                 {tOr('watch.reportComment', {}, '')}
               </DropdownMenu.Item>

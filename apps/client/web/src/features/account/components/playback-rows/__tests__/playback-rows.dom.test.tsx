@@ -1,16 +1,17 @@
 import { screen } from '@testing-library/react';
 import { writeCookie } from '@vp/ui';
 import { renderRoute } from '@vp/web-testing/dom';
-import { requestDevicePreferences } from '#app/lib/preferences/device-preferences';
+import { readStoredPlayback } from '#app/lib/preferences/device-preferences';
 import { getRouter } from '#app/router';
 
 const renderPlayback = () => renderRoute(getRouter, '/settings/playback');
 
-const saved = () => requestDevicePreferences().playback;
+const saved = () => readStoredPlayback();
 
 describe('apps/client/web: the playback rows', () => {
   afterEach(() => {
     writeCookie('vp.device', '', { maxAge: 0 });
+    localStorage.clear();
   });
 
   it.each([

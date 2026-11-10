@@ -29,7 +29,9 @@ function Document({
     <html lang={lang} dir={dir} {...appearanceAttributes(shown)} suppressHydrationWarning>
       <head>
         <HeadContent />
-        <ScriptOnce>{prePaintScript(preference.mode === 'system')}</ScriptOnce>
+        <ScriptOnce>
+          {prePaintScript(preference.mode === 'system', preference.contrast === 'auto')}
+        </ScriptOnce>
         {registered?.map(({ theme, css }) => (
           <InlineStyle key={theme.id} css={css} nonce={nonce} />
         ))}

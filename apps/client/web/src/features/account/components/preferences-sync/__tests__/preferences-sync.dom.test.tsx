@@ -13,6 +13,8 @@ import {
   type SentSave,
 } from '#app/__tests__/preferences-fixtures';
 import { signInBrowser } from '#app/__tests__/providers';
+import { readStoredPlayback, saveStoredPlayback } from '#app/lib/preferences/device-preferences';
+import { markDirty, readDirty } from '#app/lib/preferences/dirty-fields';
 import { getRouter } from '#app/router';
 
 const renderSettings = (handlers: HttpHandler[]) =>
@@ -56,8 +58,59 @@ describe('apps/client/web: syncing preferences with the account', () => {
     await waitFor(() => expect(sent).toHaveLength(1));
     expect(sent[0]).toEqual({
       version: 2,
-      appearance: { ...DEFAULT_PREFERENCES.appearance, mode: 'light' },
+      appearance: { mode: 'light' },
     });
+  });
+
+  it("keeps a field chosen here while signed out over the account's, says so, and brings the account's back on Undo", async () => {
+    const sent: SentSave[] = [];
+    saveStoredPlayback({ speed: 1.5 });
+    markDirty(['playback.speed']);
+
+    const { user } = await renderSettings([
+      signInBrowser(),
+      holds(
+        preferencesView({
+          version: 2,
+          playback: { ...DEFAULT_PREFERENCES.playback, speed: 2, autoplayNext: false },
+        })
+      ),
+      acceptsSaves(sent, () => preferencesView({ version: 3 })),
+    ]);
+
+    expect(await screen.findByText('Kept your choice for Speed')).toBeInTheDocument();
+    await waitFor(() => expect(sent[0]).toEqual({ version: 2, playback: { speed: 1.5 } }));
+    await waitFor(() =>
+      expect(readStoredPlayback()).toMatchObject({ speed: 1.5, autoplayNext: false })
+    );
+    expect(readDirty().size).toBe(0);
+
+    await user.click(await screen.findByRole('button', { name: 'Undo' }));
+
+    await waitFor(() => expect(readStoredPlayback().speed).toBe(2));
+  });
+
+  it("takes the account's value for a field not chosen here, and says nothing", async () => {
+    saveStoredPlayback({ speed: 1.5 });
+
+    await renderSettings([
+      signInBrowser(),
+      holds(
+        preferencesView({ version: 2, playback: { ...DEFAULT_PREFERENCES.playback, speed: 2 } })
+      ),
+    ]);
+
+    await waitFor(() => expect(readStoredPlayback().speed).toBe(2));
+    expect(screen.queryByText(/Kept your choice/)).not.toBeInTheDocument();
+  });
+
+  it('notes the fields a guest changes, and not the ones the app sets itself', async () => {
+    const { user } = await renderSettings([]);
+
+    await user.click(await screen.findByRole('button', { name: 'Appearance' }));
+    await user.click(screen.getByRole('menuitemradio', { name: 'Nocturne' }));
+
+    await waitFor(() => expect([...readDirty()]).toEqual(['appearance.theme']));
   });
 
   it('sends nothing up for a device that holds only the defaults', async () => {

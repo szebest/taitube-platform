@@ -17581,6 +17581,7 @@ paths:
                           contrast:
                             type: string
                             enum:
+                              - auto
                               - standard
                               - more
                           overrides:
@@ -17626,6 +17627,8 @@ paths:
                             type: boolean
                           hoverPreview:
                             type: boolean
+                          hoverPlay:
+                            type: boolean
                           captionsOn:
                             type: boolean
                           captionsLanguage:
@@ -17653,6 +17656,7 @@ paths:
                           - speed
                           - autoplayNext
                           - hoverPreview
+                          - hoverPlay
                           - captionsOn
                           - captionsLanguage
                           - captionsSize
@@ -17856,6 +17860,7 @@ paths:
                           anyOf:
                             - type: string
                               enum:
+                                - auto
                                 - standard
                                 - more
                             - type: 'null'
@@ -17901,6 +17906,10 @@ paths:
                             - boolean
                             - 'null'
                         hoverPreview:
+                          type:
+                            - boolean
+                            - 'null'
+                        hoverPlay:
                           type:
                             - boolean
                             - 'null'
@@ -18019,6 +18028,7 @@ paths:
                           contrast:
                             type: string
                             enum:
+                              - auto
                               - standard
                               - more
                           overrides:
@@ -18064,6 +18074,8 @@ paths:
                             type: boolean
                           hoverPreview:
                             type: boolean
+                          hoverPlay:
+                            type: boolean
                           captionsOn:
                             type: boolean
                           captionsLanguage:
@@ -18091,6 +18103,7 @@ paths:
                           - speed
                           - autoplayNext
                           - hoverPreview
+                          - hoverPlay
                           - captionsOn
                           - captionsLanguage
                           - captionsSize

@@ -100,4 +100,21 @@ describe('@vp/ui: resolving the appearance', () => {
   }[])('resolves $label', ({ preference, resolved, ...options }) => {
     expect(resolvedIds(preference, options)).toEqual(resolved);
   });
+
+  it.each([
+    { contrast: 'auto', prefersMoreContrast: false, resolved: 'standard' },
+    { contrast: 'auto', prefersMoreContrast: true, resolved: 'more' },
+    { contrast: 'standard', prefersMoreContrast: true, resolved: 'standard' },
+    { contrast: 'more', prefersMoreContrast: false, resolved: 'more' },
+  ] as const)(
+    'resolves $contrast contrast to $resolved when the system asks for more: $prefersMoreContrast',
+    ({ contrast, prefersMoreContrast, resolved }) => {
+      expect(
+        resolveAppearance(
+          { ...DEFAULT_APPEARANCE, contrast },
+          { reducedMotion: false, prefersMoreContrast }
+        ).contrast
+      ).toBe(resolved);
+    }
+  );
 });

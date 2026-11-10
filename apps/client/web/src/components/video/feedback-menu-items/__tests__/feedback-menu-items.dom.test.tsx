@@ -89,11 +89,14 @@ describe('apps/client/web: the recommendation feedback menu', () => {
     }
   );
 
-  it('offers a guest no way to give feedback', async () => {
-    const { user } = await renderHome({ signedIn: false });
+  it('asks a guest who gives feedback to sign in, and sends nothing', async () => {
+    const { user, calls } = await renderHome({ signedIn: false });
 
-    await user.click(screen.getAllByRole('button', { name: 'More actions' })[0] as HTMLElement);
+    await chooseOnFirstCard(user, 'Not interested');
 
-    expect(screen.queryByRole('menuitem', { name: 'Not interested' })).toBeNull();
+    expect(
+      await screen.findByRole('dialog', { name: 'Sign in to tune your recommendations' })
+    ).toBeInTheDocument();
+    expect(calls.put).toEqual([]);
   });
 });

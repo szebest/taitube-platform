@@ -1,5 +1,5 @@
 import { useSuspenseInfiniteQuery } from '@tanstack/react-query';
-import { Link, useLocation, useSearch } from '@tanstack/react-router';
+import { useSearch } from '@tanstack/react-router';
 import { EmptyState } from '@vp/components';
 import type { CommentSort } from '@vp/domain';
 import { Format, useT } from '@vp/intl-react';
@@ -14,6 +14,7 @@ import {
   CommentThreadSkeleton,
 } from '#app/components/watch/comment-thread';
 import { type NewComment, usePostComment } from '#app/features/watch/hooks/use-post-comment';
+import { useRequireAccount } from '#app/hooks/use-require-account';
 import { useWindowRows } from '#app/hooks/use-window-rows';
 import { commentsQueryOptions } from '#app/lib/query-keys/comment-keys';
 import { NearViewport } from '../near-viewport/near-viewport';
@@ -36,15 +37,13 @@ const toggled = (held: ReadonlySet<string>, id: string, on: boolean): ReadonlySe
 
 function SignInPrompt() {
   const { tOr } = useT();
-  const redirect = useLocation({ select: ({ href }) => href });
+  const { run } = useRequireAccount('comment');
 
   return (
     <div className="flex flex-wrap items-center gap-stack">
       <p className="m-0 text-body">{tOr('watch.discussionSignIn', {}, '')}</p>
-      <Button asChild variant="soft">
-        <Link to="/login" search={{ redirect }}>
-          {tOr('auth.signIn', {}, '')}
-        </Link>
+      <Button variant="soft" onClick={() => run(() => undefined)}>
+        {tOr('auth.signIn', {}, '')}
       </Button>
     </div>
   );

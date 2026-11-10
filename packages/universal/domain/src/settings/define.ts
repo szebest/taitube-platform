@@ -1,6 +1,12 @@
 /** Where a value lives: on the device alone, on the account alone, or on both and merged. */
 type SettingScope = 'device' | 'account' | 'both';
 
+/**
+ * Where a device keeps a field: the cookie the server reads before the first paint, or `localStorage`,
+ * which only the page reads. A field the account alone holds has none.
+ */
+export type DeviceBackend = 'cookie' | 'storage';
+
 /** A free value's check, by name: `@vp/domain-rules` runs it, this package cannot import it. */
 export type TextKind = 'preferenceId' | 'accent' | 'languageTag';
 
@@ -11,12 +17,14 @@ export interface ChoiceSetting<O extends Options = Options> {
   readonly options: O;
   readonly default: O[number];
   readonly scope: SettingScope;
+  readonly device?: DeviceBackend;
 }
 
 export interface FlagSetting {
   readonly type: 'flag';
   readonly default: boolean;
   readonly scope: SettingScope;
+  readonly device?: DeviceBackend;
 }
 
 /** A free string, `null` until chosen. */
@@ -25,6 +33,7 @@ export interface TextSetting {
   readonly kind: TextKind;
   readonly default: null;
   readonly scope: SettingScope;
+  readonly device?: DeviceBackend;
 }
 
 /** Token group to set id, merged key by key. */
@@ -32,6 +41,7 @@ export interface TokenOverridesSetting {
   readonly type: 'tokenOverrides';
   readonly default: Readonly<Record<string, string>>;
   readonly scope: SettingScope;
+  readonly device?: DeviceBackend;
 }
 
 export type Setting = ChoiceSetting | FlagSetting | TextSetting | TokenOverridesSetting;
@@ -89,4 +99,9 @@ export function mapSection<R>(
 
 export function sectionDefaults<D extends SectionDefinition>(definition: D): SectionValues<D> {
   return mapSection<SectionValues<D>>(definition, (setting) => setting.default);
+}
+
+/** The backend of a field the device holds: its catalogue column, `storage` when the field names none. */
+export function deviceBackend(setting: Setting): DeviceBackend | undefined {
+  return setting.scope === 'account' ? undefined : (setting.device ?? 'storage');
 }

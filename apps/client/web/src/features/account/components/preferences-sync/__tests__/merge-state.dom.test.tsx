@@ -5,7 +5,11 @@ import { MergeStateContext, useMergeState } from '../merge-state.context';
 
 describe('useMergeState', () => {
   it('answers the merge state of the PreferencesSync around it', () => {
-    const state: MergeState = { applied: { current: undefined }, guest: { current: undefined } };
+    const state: MergeState = {
+      applied: { current: undefined },
+      guest: { current: undefined },
+      baseline: { current: undefined },
+    };
 
     const { result } = renderHook(useMergeState, {
       wrapper: ({ children }: PropsWithChildren) => (

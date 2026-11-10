@@ -73,8 +73,22 @@ vi.mock(import('@tanstack/react-start'), async (importOriginal) => {
   };
 });
 
-// A server function sets cookies in jsdom's jar, which outlives the test that signed in.
+// Node's BroadcastChannel reaches the other test files running in worker threads of the same process, so the app's own channels are named per file.
+const PerFileBroadcastChannel = ((Native, scope) =>
+  class extends Native {
+    constructor(name: string) {
+      super(name.startsWith('vp.') ? `${scope}:${name}` : name);
+    }
+  })(globalThis.BroadcastChannel, crypto.randomUUID());
+Object.defineProperty(globalThis, 'BroadcastChannel', {
+  value: PerFileBroadcastChannel,
+  configurable: true,
+});
+
+// A server function sets cookies in jsdom's jar, and the stores keep what a preference or an intent wrote, all of which outlive the test.
 afterEach(() => {
+  window.localStorage.clear();
+  window.sessionStorage.clear();
   for (const name of Object.keys(parse(document.cookie))) {
     // oxlint-disable-next-line unicorn/no-document-cookie -- jsdom's jar is where the server functions keep the cookies.
     document.cookie = serialize(name, '', { maxAge: 0, path: '/' });

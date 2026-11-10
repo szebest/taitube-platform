@@ -10,7 +10,7 @@ export type ResolvedAppearance = Readonly<{
   theme: Theme;
   mode: AppearancePreference['mode'];
   accent: AppearancePreference['accent'];
-  contrast: AppearancePreference['contrast'];
+  contrast: Exclude<AppearancePreference['contrast'], 'auto'>;
   sets: SetPerGroup;
 }>;
 
@@ -31,8 +31,14 @@ export function resolveAppearance(
   {
     defaults = {},
     reducedMotion,
+    prefersMoreContrast = false,
     registered = [],
-  }: Readonly<{ defaults?: TokenSetIds; reducedMotion: boolean; registered?: readonly Theme[] }>
+  }: Readonly<{
+    defaults?: TokenSetIds;
+    reducedMotion: boolean;
+    prefersMoreContrast?: boolean;
+    registered?: readonly Theme[];
+  }>
 ): ResolvedAppearance {
   const theme =
     [...appearance.themes, ...registered].find(({ id }) => id === themeId) ??
@@ -44,7 +50,7 @@ export function resolveAppearance(
     theme,
     mode,
     accent,
-    contrast,
+    contrast: contrast === 'auto' ? (prefersMoreContrast ? 'more' : 'standard') : contrast,
     sets: {
       typography: pick('typography'),
       fontSize: pick('fontSize'),

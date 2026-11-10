@@ -43,15 +43,23 @@ async function renderActions(
 }
 
 describe('apps/client/web: useVideoActions', () => {
-  it('offers a guest the queue and not the playlists', async () => {
-    const { actions } = await renderActions(AppProviders);
+  it('offers a guest both actions, and each opens the sign-in prompt instead of acting', async () => {
+    const { router, actions, queued } = await renderActions(AppProviders);
 
-    expect(actions()?.save).toBeUndefined();
-    expect(actions()?.enqueue).toBeTypeOf('function');
+    await act(async () => actions()?.enqueue?.());
+    expect(router.state.location.search).toMatchObject({ modal: 'sign-in', reason: 'queue' });
+    expect(queued()).toEqual([]);
+
+    await act(async () => actions()?.save?.());
+    expect(router.state.location.search).toMatchObject({
+      modal: 'sign-in',
+      reason: 'save',
+      intent: `save:${VIDEO_ID}`,
+    });
   });
 
-  it('adds the video to the queue', async () => {
-    const { actions, queued } = await renderActions(AppProviders);
+  it('adds the video to the queue for a member', async () => {
+    const { actions, queued } = await renderActions(signedIn());
 
     await act(async () => actions()?.enqueue?.());
 

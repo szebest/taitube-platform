@@ -31,6 +31,7 @@ export type AppAction =
   | 'heart'
   | 'report'
   | 'subscribe'
+  | 'queue'
   | 'access';
 
 export type AppSubjects =
@@ -59,6 +60,7 @@ export type AppSubjects =
   | 'Channel'
   | 'Category'
   | 'Playlist'
+  | 'Queue'
   | 'Analytics'
   | 'Preferences'
   | 'Caption'

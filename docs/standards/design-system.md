@@ -51,6 +51,13 @@ Never edit `tokens.json` or `generated/` by hand. A value changes in its set or 
    fixed in the theme, never by relaxing the gate.
 4. Changing the product default theme is one line in the registry.
 
+## The appearance on `<html>`
+
+`<html>` carries `data-theme`, `data-mode`, `data-contrast`, `data-density` and one `data-<group>` per token group.
+`data-contrast` is `standard` or `more`: the preference `auto` (the default) resolves to `more` while the system asks
+for `prefers-contrast: more`, in the pre-paint script and in `resolveAppearance`, until the viewer chooses. A style that
+depends on density reads `data-density` (`compact` is compact spacing with small sizing), never the two token ids.
+
 ## Add a primitive
 
 1. `pnpm gen:component <name> --kind primitive` (add `--compound` for more than one region).

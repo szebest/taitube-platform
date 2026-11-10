@@ -3,7 +3,12 @@ import { ignore, isOk } from '@vp/result';
 import { createContext, type PropsWithChildren, useContext, useEffect, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { registerCustomTheme } from './custom-theme';
-import { PREFERS_LIGHT, PREFERS_REDUCED_MOTION, useMediaQuery } from './media';
+import {
+  PREFERS_LIGHT,
+  PREFERS_MORE_CONTRAST,
+  PREFERS_REDUCED_MOTION,
+  useMediaQuery,
+} from './media';
 import { pauseTransitions } from './pause-transitions';
 import {
   type AppearancePreference,
@@ -78,6 +83,7 @@ export function AppearanceProvider({
   const [preference, setPreference] = useState(stored.preference);
   const prefersLight = useMediaQuery(PREFERS_LIGHT);
   const reducedMotion = useMediaQuery(PREFERS_REDUCED_MOTION);
+  const prefersMoreContrast = useMediaQuery(PREFERS_MORE_CONTRAST);
 
   useEffect(() => {
     if (stored.source !== 'legacy') {
@@ -107,7 +113,12 @@ export function AppearanceProvider({
   const systemMode: ShownMode = prefersLight ? 'light' : 'dark';
   const value: AppearanceContextValue = {
     preference,
-    resolved: resolveAppearance(preference, { defaults, reducedMotion, registered: themesInUse }),
+    resolved: resolveAppearance(preference, {
+      defaults,
+      reducedMotion,
+      prefersMoreContrast,
+      registered: themesInUse,
+    }),
     themes: [...appearance.themes, ...themesInUse],
     custom,
     shownMode: preference.mode === 'system' ? systemMode : preference.mode,

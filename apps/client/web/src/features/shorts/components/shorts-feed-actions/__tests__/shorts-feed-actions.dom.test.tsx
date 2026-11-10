@@ -34,13 +34,13 @@ function likeAnswered() {
 }
 
 describe('apps/client/web: the Shorts actions', () => {
-  it('sends a guest who presses Like to sign in, back to this Short', async () => {
+  it('asks a guest who presses Like to sign in, on this Short', async () => {
     const { router, user } = await renderShorts({ path: `/shorts/${FIRST}` });
 
     await user.click(screen.getByRole('button', { name: 'Like 24' }));
 
-    await vi.waitFor(() => expect(router.state.location.pathname).toBe('/login'));
-    expect(router.state.location.search).toEqual({ redirect: `/shorts/${FIRST}` });
+    expect(await screen.findByRole('dialog', { name: 'Sign in to like this' })).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe(`/shorts/${FIRST}`);
   });
 
   it('likes at once and settles on the count the API answers', async () => {
@@ -94,7 +94,7 @@ describe('apps/client/web: the Shorts actions', () => {
   });
 
   it.each([
-    { viewer: 'a guest', as: undefined, offered: false },
+    { viewer: 'a guest', as: undefined, offered: true },
     { viewer: 'a member', as: account(), offered: true },
   ])('offers $viewer Save: $offered', async ({ as, offered }) => {
     await renderShorts({ viewer: as });

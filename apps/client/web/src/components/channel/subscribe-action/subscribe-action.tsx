@@ -1,10 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { useT } from '@vp/intl-react';
-import { useCan } from '@vp/permissions-react';
 import { useApi, useFailureToast } from '@vp/queries';
 import { SubscribeButton } from '#app/components/channel/subscribe-button';
+import { useRequireAccount } from '#app/hooks/use-require-account';
 import { useSetSubscription } from '#app/hooks/use-set-subscription';
-import { useSignIn } from '#app/hooks/use-sign-in';
 import { subscriptionStatusQueryOptions } from '#app/lib/query-keys/subscription-keys';
 
 export interface SubscribeActionProps {
@@ -12,13 +11,12 @@ export interface SubscribeActionProps {
   className?: string;
 }
 
-/** Subscribe for a channel, wherever it is shown; a guest who presses it signs in and comes back, a failed write offers a retry. */
+/** Subscribe for a channel, wherever it is shown; a guest who presses it gets the sign-in prompt and subscribes once signed in, a failed write offers a retry. */
 export function SubscribeAction({ channelId, className }: SubscribeActionProps) {
   const api = useApi();
   const { tOr } = useT();
   const showFailure = useFailureToast();
-  const signIn = useSignIn();
-  const canSubscribe = useCan('subscribe', 'Channel');
+  const { allowed: canSubscribe, run } = useRequireAccount('subscribe');
   const status = useQuery({
     ...subscriptionStatusQueryOptions(api, channelId),
     enabled: canSubscribe,
@@ -27,16 +25,11 @@ export function SubscribeAction({ channelId, className }: SubscribeActionProps) 
 
   const subscribed = status.data?.subscribed ?? false;
   const toggle = () => {
-    if (!canSubscribe) {
-      signIn();
-      return;
-    }
-
     const subscribe = () =>
       setSubscription.mutate(!subscribed, {
         onError: (error) => showFailure(tOr('watch.subscribeFailed', {}, ''), error, subscribe),
       });
-    subscribe();
+    run(subscribe, { kind: 'subscribe', id: channelId });
   };
 
   return (

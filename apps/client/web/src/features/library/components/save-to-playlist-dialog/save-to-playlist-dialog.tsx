@@ -1,13 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 import { SectionError } from '@vp/components';
 import { useT } from '@vp/intl-react';
-import { useCan } from '@vp/permissions-react';
 import { useApi } from '@vp/queries';
 import { Button, Checkbox, Icon, Label, Skeleton } from '@vp/ui';
 import { useState } from 'react';
 import { saveTargetsQueryOptions } from '#app/features/library/api/library-queries';
 import { useTogglePlaylistItem } from '#app/features/library/hooks/use-toggle-playlist-item';
-import { useSignIn } from '#app/hooks/use-sign-in';
+import { useRequireAccount } from '#app/hooks/use-require-account';
 import { urlModals } from '#app/lib/url-modal/registry';
 import { NewPlaylistForm } from '../new-playlist-form/new-playlist-form';
 
@@ -65,14 +64,18 @@ function SaveTargets({ videoId }: { videoId: string }) {
   );
 }
 
-function SignInPrompt() {
+function SignInPrompt({ videoId }: { videoId: string }) {
   const { tOr } = useT();
-  const signIn = useSignIn();
+  const { run } = useRequireAccount('save');
 
   return (
     <div className="flex flex-col items-start gap-stack">
       <p>{tOr('library.saveSignIn', {}, '')}</p>
-      <Button variant="solid" tone="accent" onClick={signIn}>
+      <Button
+        variant="solid"
+        tone="accent"
+        onClick={() => run(() => undefined, { kind: 'save', id: videoId })}
+      >
         {tOr('auth.signIn', {}, '')}
       </Button>
     </div>
@@ -83,7 +86,7 @@ function SignInPrompt() {
 export function SaveToPlaylistDialog() {
   const { tOr } = useT();
   const { params } = useUrlModal('save-to-playlist');
-  const canSave = useCan('create', 'Playlist');
+  const { allowed: canSave } = useRequireAccount('save');
 
   return (
     <UrlModal.Root id="save-to-playlist">
@@ -91,7 +94,12 @@ export function SaveToPlaylistDialog() {
         <UrlModal.Title>{tOr('library.saveTitle', {}, '')}</UrlModal.Title>
         <UrlModal.Description>{tOr('library.saveBody', {}, '')}</UrlModal.Description>
         <UrlModal.Body>
-          {params && (canSave ? <SaveTargets videoId={params.videoId} /> : <SignInPrompt />)}
+          {params &&
+            (canSave ? (
+              <SaveTargets videoId={params.videoId} />
+            ) : (
+              <SignInPrompt videoId={params.videoId} />
+            ))}
         </UrlModal.Body>
       </UrlModal.Content>
     </UrlModal.Root>

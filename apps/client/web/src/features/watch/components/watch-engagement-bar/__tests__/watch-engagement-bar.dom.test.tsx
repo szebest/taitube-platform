@@ -103,15 +103,15 @@ describe('apps/client/web: watch engagement bar', () => {
   });
 
   it.each([
-    { action: 'Subscribe', name: 'Subscribe' },
-    { action: 'Like', name: 'Like 24' },
-  ])('sends a guest who presses $action to sign in, back to this video', async ({ name }) => {
+    { action: 'Subscribe', name: 'Subscribe', reason: 'Sign in to subscribe to this channel' },
+    { action: 'Like', name: 'Like 24', reason: 'Sign in to like this' },
+  ])('asks a guest who presses $action to sign in, on this video', async ({ name, reason }) => {
     const { router, user } = await renderWatch();
 
     await user.click(screen.getByRole('button', { name }));
 
-    await vi.waitFor(() => expect(router.state.location.pathname).toBe('/login'));
-    expect(router.state.location.search).toEqual({ redirect: `/watch/${VIDEO_ID}` });
+    expect(await screen.findByRole('dialog', { name: reason })).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe(`/watch/${VIDEO_ID}`);
   });
 
   it('subscribes at once and settles on the count the API answers', async () => {

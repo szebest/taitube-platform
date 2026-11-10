@@ -3,7 +3,12 @@ import { ApiProvider, SessionProvider, UserEventStream } from '@vp/queries';
 import { ToastProvider, Tooltip } from '@vp/ui';
 import { useWebTelemetry } from '@vp/web-telemetry';
 import { Suspense } from 'react';
-import { AccountMenu, PreferencesSync } from '#app/features/account';
+import {
+  AccountMenu,
+  LazySignInDialog,
+  PreferencesSync,
+  ReplayIntent,
+} from '#app/features/account';
 import { LazyNewPlaylistDialog, LazySaveToPlaylistDialog } from '#app/features/library';
 import { HeaderNotificationCentre } from '#app/features/notifications';
 import { OfflineBanner, QueuedChangesSync } from '#app/features/offline';
@@ -56,6 +61,10 @@ export function AppLayout() {
                                 <UrlModal.WhenOpened id="save-to-playlist">
                                   <LazySaveToPlaylistDialog />
                                 </UrlModal.WhenOpened>
+                                <UrlModal.WhenOpened id="sign-in">
+                                  <LazySignInDialog />
+                                </UrlModal.WhenOpened>
+                                <ReplayIntent />
                                 <UrlModal.WhenOpened id="new-playlist">
                                   <LazyNewPlaylistDialog />
                                 </UrlModal.WhenOpened>

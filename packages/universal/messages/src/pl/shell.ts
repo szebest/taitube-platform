@@ -12,6 +12,7 @@ export const shell = {
   trending: dt('Na czasie'),
   subscriptions: dt('Subskrypcje'),
   you: dt('Ty'),
+  settings: dt('Ustawienia'),
   yourChannel: dt('Twój kanał'),
   yourVideos: dt('Twoje filmy'),
   siteDescription: dt('Udostępniaj filmy innym w sieci!'),

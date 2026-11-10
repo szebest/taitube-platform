@@ -70,7 +70,7 @@ describe('apps/client/web: queue video row', () => {
 
   it.each([
     { who: 'a member', signedIn: true, items: ['Not interested', "Don't recommend this channel"] },
-    { who: 'a guest', signedIn: false, items: [] },
+    { who: 'a guest', signedIn: false, items: ['Not interested', "Don't recommend this channel"] },
   ])('offers $who $items in the menu of a recommended row', async ({ signedIn, items }) => {
     const { user } = await renderWatch({
       handlers: [relatedWith()],

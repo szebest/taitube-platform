@@ -132,13 +132,16 @@ describe('apps/client/web: FeedVideoCard', () => {
     expect(card.queryByRole('progressbar')).toBeNull();
   });
 
-  it('offers a guest the queue and not the save dialog', async () => {
+  it.each([
+    { item: 'Queue', reason: 'Sign in to build a queue' },
+    { item: 'Save', reason: 'Sign in to save this video' },
+  ])('answers a guest who picks $item with the sign-in prompt', async ({ item, reason }) => {
     const { card, user } = await renderHome();
 
     await user.click(await card.findByRole('button', { name: 'More actions' }));
+    await user.click(await screen.findByRole('menuitem', { name: item }));
 
-    expect(await screen.findByRole('menuitem', { name: 'Queue' })).toBeInTheDocument();
-    expect(screen.queryByRole('menuitem', { name: 'Save' })).toBeNull();
+    expect(await screen.findByRole('dialog', { name: reason })).toBeInTheDocument();
   });
 
   it("opens the save dialog from a member's card menu", async () => {

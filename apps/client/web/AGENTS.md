@@ -180,17 +180,28 @@ One preference store behind the settings area, with a catalogue per section in `
 (`appearance`, `playback`, `privacy`, `notifications`); each field says whether the `device`, the `account` or
 `both` hold it.
 
-- **The device holds** the appearance, the playback defaults and the locale, in the `vp.device` cookie
-  (`device/device-preferences.ts`, one `zod` schema with a fallback per field). The root `beforeLoad` reads it, so
-  the first paint already has the viewer's theme and defaults. `DevicePreferencesProvider` applies a change at
-  once and writes the cookie back; read it with `usePlaybackPreference(key)` and `useLocalePreference()`.
+- **The device holds** two stores behind one catalogue, a field's backend being its `device` column in
+  `@vp/domain/settings` (`cookie` or `storage`). The `vp.appearance` cookie keeps the appearance fields, which the
+  root `beforeLoad` reads so the first paint has the viewer's theme (and which web and studio share); the
+  `vp.device` cookie keeps the locale; **everything else is in `localStorage`** (`vp.prefs.device`: the playback
+  fields) because the server never needs it. A storage-backed field renders its catalogue default on the server
+  and the hydration pass and takes the stored value once mounted, so the markup always matches
+  (`DevicePreferencesProvider`; read with `usePlaybackPreference(key)` and `useLocalePreference()`, never a key).
+  `lib/preferences/migrations.ts` holds one ordered list of pure steps per backend, run on read; an invalid
+  field falls back to its default alone, and a version newer than the code knows is read and left untouched.
+  Every write re-reads the stored value first, and a change is posted on `BroadcastChannel('vp.prefs')` (the
+  `storage` event is the fallback), so two tabs agree. A cookie costs a request header: the appearance cookie's
+  worst case is a test that fails past 1 KB, so a new paint-critical field is a decision, not a default.
+- **Guest changes are tracked per field.** A field changed while signed out is in the `dirty` set
+  (`dirty-fields.ts`). On sign-in `planMerge` takes the account's value for every other field, uploads a dirty
+  field (it wins) and, when the account held another value, raises "Kept your choice for <field>" with Undo.
 - **The account holds** all of `privacy` and `notifications`, and a copy of the appearance and playback.
   `useAccountPreference('privacy' | 'notifications', key)` is the saved value or the catalogue default; a guest
   has none to change, and the page wrapper shows the sign-in prompt for them.
 - **Sync** is `PreferencesSync` (mounted once, in the root): a signed-in change is debounced into one
   `PATCH /v1/me/preferences` per burst, a version conflict refetches and sends again, and a failure keeps the
-  change on the device and marks the row `Not saved to your account` with a retry. On sign-in the account's
-  sections replace the device's, and a section the account never saved is uploaded as it is (`merge-account.ts`).
+  change on the device and marks the row `Not saved to your account` with a retry. On sign-in the merge is per field, as above
+  (`merge-account.ts`); a field of a section the account never saved is uploaded as it is when it is not the default.
 - **A consumer reads the store, never its own key**: the watch stage hands the player `defaults` (speed,
   quality), `FeedVideoCard` hands the card `expandOnHover`. A new playback default is a catalogue field plus the
   consumer reading `usePlaybackPreference`, never a `localStorage` key.
@@ -200,6 +211,18 @@ One preference store behind the settings area, with a catalogue per section in `
   `routes/settings/`. Search, the overview cards and the `#row` highlight come from the index.
 - Gaps owned elsewhere: the stats overlay (57) and autoplay next (73's queue) are saved but nothing reads them
   yet.
+
+### The sign-in prompt (`useRequireAccount`)
+
+A guest is never sent to `/login` by an action. Every account action (like, dislike, comment, reply, heart,
+subscribe, save, playlist, queue, clip, history, report, the bell, feedback) calls
+`useRequireAccount(action)`, which decides with `useCan` over `@vp/permissions` (the rules table is
+`lib/account-action/account-actions.ts`, `Queue` is a subject with the `queue` action) and, for a guest, opens
+the `sign-in` url-modal with the action's reason (`?modal=sign-in&reason=like&redirect=`). A control a guest
+cannot use stays visible. The dialog's one call to action goes to `/login?redirect=` for the page the viewer was
+on; an idempotent intent (like, subscribe, save) is remembered in `sessionStorage` and replayed once by
+`ReplayIntent` after sign-in. The redirect stays for the member-only routes (`requireSignedIn`), and the header
+Sign in link keeps the `redirect` it is already on instead of nesting it. One toast system: `@vp/ui`'s `Toast`.
 
 ### The library (`features/library`)
 
