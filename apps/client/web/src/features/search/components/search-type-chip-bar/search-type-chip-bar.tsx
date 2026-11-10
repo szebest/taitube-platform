@@ -19,6 +19,7 @@ export function SearchTypeChipBar({ counts }: SearchTypeChipBarProps) {
 
   return (
     <ChipBar.Root
+      className="min-w-0 flex-1"
       aria-label={tOr('search.filterLabel', {}, '')}
       value={type}
       onValueChange={(next) => {

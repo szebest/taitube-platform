@@ -57,7 +57,7 @@ export function SearchResults({ query }: SearchResultsProps) {
           <h1 id={headingId}>{tOr('search.resultsFor', { query }, '')}</h1>
         </PageHeader.Title>
       </PageHeader.Root>
-      <div className="flex items-center gap-stack">
+      <div className="flex min-w-0 items-center gap-stack">
         <SearchTypeChipBar counts={{ [type]: first?.total }} />
         <SearchSortMenu />
       </div>

@@ -14,7 +14,7 @@ export function SearchSortMenu() {
   return (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger asChild>
-        <Button variant="soft" tone="neutral" size="sm">
+        <Button variant="soft" tone="neutral" size="sm" className="shrink-0">
           <Icon name="sort" />
           {tOr('search.sort', { sort }, '')}
         </Button>

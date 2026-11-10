@@ -7,7 +7,7 @@ export const appShellStyles = tv({
     skipLink:
       'sr-only focus:not-sr-only focus:fixed focus:start-inline focus:top-inline focus:z-popover focus:rounded-control focus:bg-raised focus:px-inset-control focus:py-inline focus-ring',
     header:
-      'sticky top-0 z-header col-span-full flex h-header items-center gap-stack border-b-divider border-transparent bg-bg/90 transition-colors duration-fast data-scrolled:border-border px-gutter-compact backdrop-blur-ambient medium:px-gutter-medium group-data-[variant=immersive]/shell:hidden',
+      'sticky top-0 z-header col-span-full flex h-header items-center gap-inline border-b-divider medium:gap-stack border-transparent bg-bg/90 transition-colors duration-fast data-scrolled:border-border px-gutter-compact backdrop-blur-ambient medium:px-gutter-medium group-data-[variant=immersive]/shell:hidden',
     headerStart: 'flex shrink-0 items-center gap-inline',
     headerSearch: 'flex min-w-0 flex-1 justify-end medium:justify-center',
     searchTrigger:
