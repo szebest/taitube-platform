@@ -28,8 +28,7 @@ test.describe('a guest is asked to sign in in place, never sent to /login by an 
     await expect(page.getByRole('dialog', { name: 'Sign in to comment' })).toBeVisible();
     await page.keyboard.press('Escape');
 
-    await page.getByRole('button', { name: 'More actions' }).first().click();
-    await page.getByRole('menuitem', { name: 'Save' }).click();
+    await page.getByRole('button', { name: 'Save', exact: true }).click();
     await expect(page.getByRole('dialog', { name: 'Sign in to save this video' })).toBeVisible();
   });
 

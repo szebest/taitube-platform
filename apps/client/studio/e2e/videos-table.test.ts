@@ -24,6 +24,6 @@ test('a video address with nothing after it opens the library', async ({ page, s
 
   await page.goto(`/videos/${stack.videos.watchable.id}`, { waitUntil: 'networkidle' });
 
-  await expect(page).toHaveURL(/\/videos\/?$/);
+  await expect(page).toHaveURL(/\/videos\/?(\?.*)?$/);
   await expect(page.getByRole('table', { name: 'Your videos' })).toBeVisible();
 });

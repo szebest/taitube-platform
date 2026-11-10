@@ -40,12 +40,12 @@ test.describe('clips', () => {
     await expect(page.getByRole('button', { name: 'Delete clip' })).toHaveCount(0);
   });
 
-  test('a guest asking for a clip is sent to sign-in', async ({ page, stack }) => {
-    await page.goto(`/watch/${stack.videos.clippable.id}`);
+  test('a guest asking for a clip is asked to sign in', async ({ page, stack }) => {
+    await page.goto(`/watch/${stack.videos.clippable.id}`, { waitUntil: 'networkidle' });
 
     await page.getByRole('button', { name: 'Clip', exact: true }).click();
 
-    await expect(page).toHaveURL(/\/login/);
+    await expect(page.getByRole('dialog', { name: 'Sign in to make a clip' })).toBeVisible();
   });
 
   test('its creator deletes a clip and the link stops resolving', async ({

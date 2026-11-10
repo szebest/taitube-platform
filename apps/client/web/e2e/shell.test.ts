@@ -10,13 +10,14 @@ const HYDRATION_ERROR = /hydrat|react\.dev\/errors\/(418|419|423|425)/i;
 const SHELL_PAGE = '/search';
 
 const GUEST_ICONS = ['Home', 'Shorts', 'Trending'];
-const GUEST_LINKS = ['Home', 'Shorts', 'Trending', 'Live'];
+const GUEST_LINKS = ['Home', 'Shorts', 'Trending', 'Live', 'Settings'];
 const SIGNED_IN_LINKS = [
   'Home',
   'Shorts',
   'Subscriptions',
   'Trending',
   'Live',
+  'Settings',
   'You',
   'Watch history',
   'Your channel',

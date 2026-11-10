@@ -14,7 +14,7 @@ test.describe('the mini player follows the viewer, on one player that never move
     await expect(oneVideo(page)).toHaveCount(1);
     const host = page.locator('[data-slot=playback-host]');
     await expect(host).toHaveAttribute('data-state', 'docked');
-    await page.getByRole('button', { name: 'Play' }).first().click();
+    await page.getByRole('button', { name: 'Play', exact: true }).first().click();
     await expect
       .poll(() => oneVideo(page).evaluate((video: HTMLVideoElement) => video.paused))
       .toBe(false);
@@ -22,7 +22,7 @@ test.describe('the mini player follows the viewer, on one player that never move
       (video as HTMLVideoElement & { marker?: string }).marker = 'same';
     });
 
-    for (const link of ['Home', 'Trending', 'Settings']) {
+    for (const link of ['Home', 'Trending', 'Subscriptions']) {
       await page.getByRole('link', { name: link, exact: true }).first().click();
       await expect(page.getByRole('region', { name: 'Now playing' })).toBeVisible();
       await expect(oneVideo(page)).toHaveCount(1);

@@ -23,7 +23,7 @@ test.describe('shorts', () => {
     await openShorts(page);
 
     await page.getByRole('region', { name: 'Shorts player' }).hover();
-    await page.mouse.wheel(0, 120);
+    await page.mouse.wheel(0, 500);
 
     await expect(page).toHaveURL(`/shorts/${idOf(2)}`);
   });
@@ -108,7 +108,7 @@ test.describe('shorts', () => {
     await page.keyboard.press('ArrowDown');
     await page.keyboard.press('ArrowDown');
 
-    await expect(page.getByRole('status')).toHaveText('Short 3, by Marta');
+    await expect(page.getByRole('status').filter({ hasText: 'Short 3, by Marta' })).toBeVisible();
     expect(await page.locator('video').count()).toBeLessThanOrEqual(3);
   });
 

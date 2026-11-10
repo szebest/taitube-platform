@@ -34,8 +34,20 @@ export async function serveShorts(page: Page) {
   );
 }
 
+async function serveShortDetails(page: Page) {
+  for (const short of shorts) {
+    await page.route(new RegExp(`/v1/videos/${short.id}$`), (route) =>
+      route.fulfill({ json: short, headers: { 'access-control-allow-origin': '*' } })
+    );
+    await page.route(new RegExp(`/v1/videos/${short.id}/captions$`), (route) =>
+      route.fulfill({ json: { tracks: [] }, headers: { 'access-control-allow-origin': '*' } })
+    );
+  }
+}
+
 export async function openShorts(page: Page) {
   await serveShorts(page);
+  await serveShortDetails(page);
   await page.setViewportSize(EXPANDED);
   await page.goto('/');
   await page.getByRole('link', { name: 'Shorts', exact: true }).first().click();

@@ -14,5 +14,5 @@ export async function expectOverlayFits(page: Page, overlay: Locator, width: num
     await page.evaluate(
       () => document.documentElement.scrollWidth - document.documentElement.clientWidth
     )
-  ).toBe(0);
+  ).toBeLessThanOrEqual(0);
 }

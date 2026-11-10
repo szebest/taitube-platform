@@ -17,7 +17,7 @@ test.describe('the queue: add, undo, reorder with the keyboard, play next', () =
       .first()
       .click();
 
-    await expect(page.getByText('Added to your queue')).toBeVisible();
+    await expect(page.getByText('Added to your queue', { exact: true })).toBeVisible();
     await expect(queue.getByRole('listitem')).toHaveCount(before + 1);
 
     await page.getByRole('button', { name: 'Undo' }).click();
@@ -39,7 +39,9 @@ test.describe('the queue: add, undo, reorder with the keyboard, play next', () =
       .getByRole('button', { name: /reorder|drag/i })
       .focus();
     await page.keyboard.press('Space');
+    await expect(page.getByText(/^Picked up /)).toBeAttached();
     await page.keyboard.press('ArrowDown');
+    await expect(page.getByText(/^Moved to position /)).toBeAttached();
     await page.keyboard.press('Space');
 
     await expect(items.nth(2)).toHaveAttribute('aria-label', first ?? '');
@@ -53,7 +55,7 @@ test.describe('the queue: add, undo, reorder with the keyboard, play next', () =
     await more.getByRole('button', { name: 'More actions' }).first().click();
     await page.getByRole('menuitem', { name: 'Play next' }).click();
 
-    await expect(page.getByText('Playing next')).toBeVisible();
+    await expect(page.getByText('Playing next', { exact: true })).toBeVisible();
     const items = page.getByRole('region', { name: 'Your queue' }).getByRole('listitem');
     await expect(items.nth(1)).toBeVisible();
   });
