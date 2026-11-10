@@ -1,7 +1,7 @@
 import { liveFeature, videoFeatures } from '@videojs/core/dom';
 import { Container, createPlayer, Gesture, LiveButton, Poster, useContainer } from '@videojs/react';
 import { HlsJsVideo } from '@videojs/react/media/hlsjs-video';
-import { fromPromise, isOk } from '@vp/result';
+import { fromPromise, ignore, isOk } from '@vp/result';
 import {
   type ReactNode,
   type RefObject,
@@ -244,6 +244,9 @@ function ChannelBinding({ videoRef }: { videoRef: RefObject<HTMLVideoElement | n
   const { seek } = usePlayerCommands();
   const fullscreen = usePlayerState((state) => state.fullscreen);
   const captionTrackId = usePlayerState((state) => state.activeCaptionTrack?.id ?? null);
+  const canPictureInPicture = usePlayerState((state) => state.canPictureInPicture);
+  const pictureInPicture = usePlayerState((state) => state.pictureInPicture);
+  const { requestPictureInPicture, exitPictureInPicture } = usePlayerCommands();
 
   useEffect(() => channel?.attach(seek), [channel, seek]);
 
@@ -267,6 +270,18 @@ function ChannelBinding({ videoRef }: { videoRef: RefObject<HTMLVideoElement | n
   useEffect(() => {
     channel?.publishFullscreen(fullscreen);
   }, [channel, fullscreen]);
+
+  useEffect(() => {
+    channel?.publishPictureInPicture({ available: canPictureInPicture, active: pictureInPicture });
+  }, [channel, canPictureInPicture, pictureInPicture]);
+
+  useEffect(
+    () =>
+      channel?.attachPictureInPicture(
+        pictureInPicture ? exitPictureInPicture : requestPictureInPicture
+      ),
+    [channel, pictureInPicture, requestPictureInPicture, exitPictureInPicture]
+  );
 
   useEffect(() => {
     channel?.publishCaptionTrack(captionTrackId);
@@ -311,6 +326,8 @@ export function usePlayerState<Selected>(select: (state: PlayerState) => Selecte
       playbackRate: state.playbackRate,
       fullscreen: state.isFullscreen,
       canFullscreen: state.fullscreenAvailability === 'available',
+      pictureInPicture: state.isPictureInPicture,
+      canPictureInPicture: state.pictureInPictureAvailability === 'available',
       controlsVisible: state.controlsVisible,
       renditions: state.videoRenditionList,
       quality: state.videoRenditionList.find(({ selected }) => selected)?.id ?? AUTO_QUALITY,
@@ -331,6 +348,8 @@ export function usePlayerCommands(): PlayerCommands {
     selectVideoRendition,
     requestFullscreen,
     exitFullscreen,
+    requestPictureInPicture,
+    exitPictureInPicture,
     requestControlsLock,
   } = usePlayer();
   const { commands } = useCaptionsContext();
@@ -345,6 +364,24 @@ export function usePlayerCommands(): PlayerCommands {
     selectVideoRendition,
     requestFullscreen,
     exitFullscreen,
+    requestPictureInPicture: async () => {
+      ignore(
+        await fromPromise(
+          async () => requestPictureInPicture(),
+          (cause) => cause
+        ),
+        'a refused picture in picture leaves the video where it is'
+      );
+    },
+    exitPictureInPicture: async () => {
+      ignore(
+        await fromPromise(
+          async () => exitPictureInPicture(),
+          (cause) => cause
+        ),
+        'a refused exit leaves the video in its window'
+      );
+    },
     requestControlsLock,
     ...commands,
   };

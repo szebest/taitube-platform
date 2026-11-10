@@ -240,6 +240,21 @@ no layout shift, no extra request), one card at a time (a document event, no mod
 playback field (default on) and is forced off under save-data, on 2g and under reduced motion; the expanding
 panel keeps its own `hoverPreview`. `previewSrc` stays the seam for a worker-made clip.
 
+### The playback host and the mini player
+
+One engine plays for the whole session. `PlaybackHost` (`features/watch/components/playback-host/`, mounted by
+`PlaybackSessionProvider` above the routes) renders `WatchPlayer` once, in a `position: fixed` box, and a page or the
+mini player offers a **slot** (`PlayerSlot`, a `size-full` box that registers itself with the session): the host sits
+over the latest registered slot with a `translate` from `SlotRectStore` (measured on resize and scroll, right to left
+aware). The `<video>` is never reparented, so docking to the stage and undocking to the mini bar neither detaches
+nor pauses it, and exactly one `<video>` exists. `data-state` is `docked` (`z-sticky`, on a watch page), `mini` (`z-pip`,
+in the now playing bar) or `hidden` (no slot); nothing plays, nothing mounts, and the player chunk stays lazy.
+A page with a player of its own (`clip`, `live`, `shorts`) pauses the session player. `useMediaSession` gives the
+system the title, channel, poster and the play, pause, previous and next handlers. Picture in picture is on the player
+port (`PlayerState.canPictureInPicture` and `pictureInPicture`, `requestPictureInPicture` and `exitPictureInPicture`,
+the Video.js adapter in `integrations/video-js/video-js-engine.tsx`), a button in the control bar and in the now playing
+bar through the player channel; where the browser has no API nothing is drawn.
+
 ### The library (`features/library`)
 
 The viewer's own lists: the You hub `/feed/you` and `/feed/history` with its Searches, Liked and Comments tabs, all
@@ -387,7 +402,7 @@ page by client-side navigation; a full page load of `/watch/...` is a server ren
 | 55 design system | `@vp/ui`; global styles are linked once, in `__root.tsx` |
 | 69 URL state | the `validateSearch` every leaf route declares, and `features/url-modal/registry.ts` for a modal |
 | 57 player | `<TaitubePlayer />` and its prop, payload and event types from `#app/components/player/taitube-player`; `features/watch/components/watch-stage.tsx` mounts it on the watch page, and `PlayerChannelProvider` hands the page's other parts its seek, its playhead and its theater mode |
-| 73 library, queue | `features/library/` (above); `features/watch/hooks/use-playback-queue.ts` holds the watch page's queue, seeded with the video opened; 73 replaces it with the playlist's queue and the now playing bar |
+| 73 library, queue | `features/library/` (above); `lib/playback-session` holds the queue and the one player's state for the whole session (`PlaybackSessionProvider`), and the now playing bar is the mini player |
 | 68 PWA | `src/sw.ts` (caching and sync land there), `features/pwa/` for the prompts and `shouldPrefetch()`, `vite-pwa.config.ts` for the build, `src/sw/` for the caching rules, `features/offline/` for the offline UI |
 | 76 live | `features/live/` (above), `components/live/`, `TaitubePlayer`'s `live` and `overlay` |
 | every page ticket | its browser flows, in `e2e/` (Rule 10) |

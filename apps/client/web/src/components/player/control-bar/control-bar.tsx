@@ -23,6 +23,7 @@ import {
 import { useOfferedPlayerChannel, usePlayerTheater } from '#app/lib/player/player-channel';
 import type { PlaybackRange } from '#app/lib/player/taitube-player-props';
 import { CaptionsButton } from './components/captions-button/captions-button';
+import { PictureInPictureButton } from './components/picture-in-picture-button/picture-in-picture-button';
 import { SettingsMenu } from './components/settings-menu/settings-menu';
 import { fromClipTime, toClipPlayhead } from './utils/clip-playhead';
 
@@ -69,6 +70,7 @@ export function ControlBar({ title, live = false, range, onPrevious, onNext }: C
             <CaptionsButton />
             <SettingsMenu />
             <TheaterButton />
+            <PictureInPictureControl />
             <FullscreenButton />
           </div>
         </div>
@@ -238,6 +240,21 @@ function ElapsedTime({ range }: Pick<ControlBarProps, 'range'>) {
     <span className="px-2 text-label whitespace-nowrap tabular-nums">
       <Format value={videoDuration(currentTime)} /> / <Format value={videoDuration(duration)} />
     </span>
+  );
+}
+
+function PictureInPictureControl() {
+  const available = usePlayerState((state) => state.canPictureInPicture);
+  const active = usePlayerState((state) => state.pictureInPicture);
+  const { requestPictureInPicture, exitPictureInPicture } = usePlayerCommands();
+
+  return (
+    <PictureInPictureButton
+      available={available}
+      active={active}
+      onRequest={requestPictureInPicture}
+      onExit={exitPictureInPicture}
+    />
   );
 }
 

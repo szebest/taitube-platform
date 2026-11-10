@@ -32,6 +32,10 @@ export interface PlayerState {
   playbackRate: number;
   fullscreen: boolean;
   canFullscreen: boolean;
+  /** The picture is in the browser's own floating window. */
+  pictureInPicture: boolean;
+  /** The browser has the API and the video has pictures to float; false everywhere else, so no control is drawn. */
+  canPictureInPicture: boolean;
   controlsVisible: boolean;
   renditions: readonly PlayerRendition[];
   /** The id of the rendition the viewer picked, or the engine's `AUTO_QUALITY` while adaptive bitrate picks. */
@@ -57,6 +61,8 @@ export interface PlayerCommands {
   selectVideoRendition(id: string): void;
   requestFullscreen(): void;
   exitFullscreen(): void;
+  requestPictureInPicture(): void;
+  exitPictureInPicture(): void;
   /** Keeps the controls shown, idle or not, until the returned release runs. */
   requestControlsLock(): () => void;
   /** `null` turns captions off. */

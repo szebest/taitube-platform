@@ -4,10 +4,10 @@ import type { PlaybackAction, PlaybackSession } from './playback-session';
 export interface PlaybackSessionValue {
   session: PlaybackSession;
   dispatch: Dispatch<PlaybackAction>;
-  /** The one element the player lives in; the stage and the now playing bar each take it in turn. */
-  host: HTMLElement | undefined;
-  /** Holds the host, out of sight but in the document, while no slot does, so the video never stops for lack of a parent. */
-  park: HTMLElement | undefined;
+  /** The boxes a page or the mini player holds for the one player, the latest registered being the one it sits over. */
+  slots: readonly HTMLElement[];
+  /** A box offers itself to the player; the returned function takes it back. */
+  registerSlot: (slot: HTMLElement) => () => void;
 }
 
 export const PlaybackSessionContext = createContext<PlaybackSessionValue | undefined>(undefined);

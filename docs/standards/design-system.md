@@ -58,6 +58,9 @@ Never edit `tokens.json` or `generated/` by hand. A value changes in its set or 
 for `prefers-contrast: more`, in the pre-paint script and in `resolveAppearance`, until the viewer chooses. A style that
 depends on density reads `data-density` (`compact` is compact spacing with small sizing), never the two token ids.
 
+The one playback host takes its layer from where it sits: `z-sticky` while docked on a watch page, under the header, and
+`z-pip` as the mini player, above the rail and the tab bar and under every overlay.
+
 ## Add a primitive
 
 1. `pnpm gen:component <name> --kind primitive` (add `--compound` for more than one region).

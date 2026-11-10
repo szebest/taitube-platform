@@ -10,6 +10,12 @@
 
 **Status:** in-progress
 
+**Progress:** a1 to a3 and b1 to b3 are on this branch; stack C is c1 (the sign-in prompt, `useRequireAccount` and the
+settings storage: cookie for the paint fields, `localStorage` for playback), c2 (the queue actions, Undo and the frame
+hover preview) and c3 (the persistent playback host, never reparented, the mini player on the `pip` layer, Media
+Session and the browser's picture in picture), which marks stack C done except for what the c3 note in the PR lists
+(the mini player's corner, size and swipe to dismiss). Stack D remains.
+
 > **Why.** The owner clicked through the running app and found the same classes of defect on every page: the page
 > jumps when an overlay opens or closes, chrome text is selectable, tab bars lock up or lose their counts, a modal
 > vanishes with no exit animation, a guest's click does a different thing on each surface (a redirect here, a legacy
