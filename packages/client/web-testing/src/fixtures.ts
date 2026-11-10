@@ -187,7 +187,8 @@ export function feedPages(items: VideoSummary[]) {
 
 export function account(overrides: Partial<Account> = {}): Account {
   const user = { id: OWNER_ID, email: 'creator@example.com', tier: 'free', createdAt: CREATED_AT };
-  return { ...user, role: 'CREATOR', user, channel: channel(), ...overrides };
+  const { redirectedFrom: _redirectedFrom, ...owned } = channel();
+  return { ...user, role: 'CREATOR', user, channel: owned, ...overrides };
 }
 
 export const LIVE_STREAM_ID = '0190c3a0-5e1d-7000-8000-00000000e001';
