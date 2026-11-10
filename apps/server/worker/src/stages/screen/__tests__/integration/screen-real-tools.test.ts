@@ -38,7 +38,12 @@ describe('screen stage over the real ffmpeg and fpcalc', () => {
 
   beforeAll(() => {
     dir = mkdtempSync(join(tmpdir(), 'vp-screen-real-'));
-    const source = ['-f', 'lavfi', '-i', `mandelbrot=size=640x360:rate=25:end_scale=0.0001`];
+    const source = [
+      '-f',
+      'lavfi',
+      '-i',
+      'gradients=size=640x360:rate=25:speed=0.05:nb_colors=6:seed=3',
+    ];
     ffmpeg(
       ...source,
       '-f',
