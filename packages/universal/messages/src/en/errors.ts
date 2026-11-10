@@ -112,4 +112,12 @@ export const errors = {
   channelMemberExists: dt('This person is already on the team.'),
   channelMemberNotFound: dt('This person is not on the team.'),
   channelOwnerImmutable: dt('The channel owner cannot be removed or given another role.'),
+  handleChangeTooSoon: dt(
+    'You changed your handle recently. You can change it again in a few weeks.'
+  ),
+  handleReserved: dt('This handle was used by another channel recently and is held for its owner.'),
+  invalidSpotlightVideo: dt('Pick a public, ready video from your own channel.'),
+  imageTooSmall: dt('This image is smaller than the minimum size.'),
+  imageUploadNotFound: dt('This image upload was not found. Start it again.'),
+  seriesVideoNotOwned: dt('A series can only hold videos from its own channel.'),
 } as const;

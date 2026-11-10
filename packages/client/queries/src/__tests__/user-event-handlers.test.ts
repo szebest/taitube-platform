@@ -206,6 +206,26 @@ describe('@vp/queries: user event handlers', () => {
     ]);
   });
 
+  it('refetches the channel whose image became ready, and leaves the cache alone on a failure', () => {
+    const queryClient = createQueryClient();
+    const channelId = '00000000-0000-7000-8000-0000000000d1';
+    const key = ['channels', 'detail', channelId];
+    queryClient.setQueryData(key, {});
+    const payload = { uploadId: VIDEO_ID, channelId, kind: 'banner' as const };
+
+    applyUserEvent(queryClient, {
+      type: 'channel.image.failed',
+      payload: { ...payload, reason: 'unreadable' },
+    });
+    expect(queryClient.getQueryState(key)?.isInvalidated).toBe(false);
+
+    applyUserEvent(queryClient, {
+      type: 'channel.image.ready',
+      payload: { ...payload, version: 2 },
+    });
+    expect(queryClient.getQueryState(key)?.isInvalidated).toBe(true);
+  });
+
   it('refetches the personal controls when another device changed one', () => {
     const queryClient = createQueryClient();
     queryClient.setQueryData(['watch-party-controls'], { items: [] });

@@ -1,6 +1,7 @@
 import type { Account, ChannelPlaylistView, OwnerChannel } from '@vp/api-contracts';
 import type {
   CaptionRepository,
+  ChannelPageRepositoryPort,
   ChannelRepositoryPort,
   LiveStreamRepositoryPort,
   PlaylistRepositoryPort,
@@ -9,29 +10,26 @@ import type {
 import {
   type ActingChannel,
   type Channel,
-  type UpdateChannelInput,
+  type ChannelFieldsPatch,
+  type ChannelLocalization,
   type VideoFormat,
+  pickLocalization,
   toChannelCard,
 } from '@vp/domain';
 import {
   type ChannelNotFound,
   type AuthorizationFailure,
-  type ClaimHandleFailure,
-  type InvalidBrandColor,
   channelNotFound,
   decideChannelTask,
-  decideHandleClaim,
-  validateBrandColor,
 } from '@vp/domain-rules';
 import type { CdnBase } from '@vp/env-schema';
 import { type DatabaseUnavailable, ErrorCodes } from '@vp/errors';
 import type { InvalidCursor, Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
 import { type Result, err, isErr, map, ok } from '@vp/result';
-import { type InvalidChannelLinks, validateChannelLinks } from '@vp/validation';
-import type { ChannelImageService, ResolveChannelImageFailure } from './channel-image-service';
+import type { ChannelIdentityService, IdentityFailure } from './channel-identity-service';
 import { type ProvisionFailure, findChannelByIdOrHandle, provisionAccount } from './channel-lookup';
-import { type ChannelView, toChannelView } from './channel-views';
+import { type ChannelView, toChannelView, toOwnerExtras } from './channel-views';
 import { decodeCreatedAtCursor, createdAtCursorPayload } from './cursor';
 import { toChannelPlaylistView } from './library-views';
 import type { ListVideosFailure, VideoService, VideoSummaryView } from './video-service';
@@ -45,16 +43,16 @@ export interface ChannelServiceDeps {
   videoService: VideoService;
   paginator: Paginator;
   cdn: CdnBase;
-  images: ChannelImageService;
+  identity: ChannelIdentityService;
+  pages: Pick<ChannelPageRepositoryPort, 'listLocalizations'>;
+  now: () => number;
 }
 
 export type { ChannelView } from './channel-views';
 
-/** An uploaded image's key replaces the address of the same field. */
-export type UpdateChannelCommand = UpdateChannelInput & {
-  avatarKey?: string;
-  bannerKey?: string;
-};
+export type PublicChannelView = ChannelView & { redirectedFrom: string | null };
+
+export type UpdateChannelCommand = ChannelFieldsPatch & { handle?: string };
 
 export type UserAccountView = Account;
 
@@ -64,11 +62,9 @@ export type GetAccountFailure = AccountNotFound | ChannelNotFound | DatabaseUnav
 export type UpdateChannelFailure =
   | AuthorizationFailure
   | ChannelNotFound
-  | ResolveChannelImageFailure
-  | ClaimHandleFailure
-  | InvalidBrandColor
-  | InvalidChannelLinks
+  | IdentityFailure
   | DatabaseUnavailable;
+export type GetOwnerChannelFailure = AuthorizationFailure | ChannelNotFound | DatabaseUnavailable;
 export type GetPublicChannelFailure = ChannelNotFound | DatabaseUnavailable;
 export type ListChannelVideosFailure = GetPublicChannelFailure | ListVideosFailure;
 export type ListChannelPlaylistsFailure =
@@ -128,58 +124,57 @@ export class ChannelService {
     if (isErr(existing)) return existing;
     if (!existing.value) return err(channelNotFound(acting.channelId));
 
-    let links: UpdateChannelInput['links'];
-    if (input.links !== undefined) {
-      const checked = validateChannelLinks(input.links);
-      if (isErr(checked)) return checked;
-      links = checked.value;
-    }
-
-    let brandColor: string | null | undefined;
-    if (input.brandColor !== undefined) {
-      const checked = validateBrandColor(input.brandColor);
-      if (isErr(checked)) return checked;
-      brandColor = checked.value;
-    }
-
-    let handle: string | undefined;
-    if (input.handle !== undefined) {
-      const heldBy = await this.deps.channels.findByHandle(input.handle);
-      if (isErr(heldBy)) return heldBy;
-
-      const claimed = decideHandleClaim({
-        handle: input.handle,
-        heldBy: heldBy.value,
-        claimantChannelId: existing.value.id,
-      });
-      if (isErr(claimed)) return claimed;
-      handle = claimed.value;
-    }
-
-    const images = await this.deps.images.addressesOf(existing.value.id, input);
-    if (isErr(images)) return images;
+    const identity = await this.deps.identity.decide(existing.value, input);
+    if (isErr(identity)) return identity;
 
     const updated = await this.deps.channels.update(existing.value.id, {
-      handle,
+      ...identity.value,
       displayName: input.displayName,
-      avatarUrl: images.value.avatarUrl,
-      bannerUrl: images.value.bannerUrl,
-      brandColor,
+      avatarUrl: input.avatarUrl,
+      bannerUrl: input.bannerUrl,
       bio: input.bio,
-      links,
     });
     if (isErr(updated)) return updated;
+    if (!updated.value) return err(channelNotFound(acting.channelId));
 
-    return updated.value
-      ? await this.ownerChannelView(updated.value)
-      : err(channelNotFound(acting.channelId));
+    if (identity.value.handle !== undefined) {
+      const recorded = await this.deps.identity.recordChange(user, updated.value.id, ['handle']);
+      if (isErr(recorded)) return recorded;
+    }
+    return await this.ownerChannelView(updated.value);
   }
 
+  /** `locales` is the negotiated chain, most preferred first; the channel's own description is the last resort. */
   async getPublicChannel(
-    idOrHandle: string
-  ): Promise<Result<ChannelView, GetPublicChannelFailure>> {
-    const channel = await findChannelByIdOrHandle(this.deps.channels, idOrHandle);
-    return isErr(channel) ? channel : await this.channelView(channel.value);
+    idOrHandle: string,
+    locales: readonly string[]
+  ): Promise<Result<PublicChannelView, GetPublicChannelFailure>> {
+    const match = await this.deps.identity.findPublic(idOrHandle);
+    if (isErr(match)) return match;
+
+    const localizations = await this.deps.pages.listLocalizations(match.value.channel.id);
+    if (isErr(localizations)) return localizations;
+
+    const view = await this.channelView(
+      match.value.channel,
+      pickLocalization(localizations.value, locales)
+    );
+    return map(view, (found) => ({ ...found, redirectedFrom: match.value.redirectedFrom }));
+  }
+
+  /** The channel the studio edits: only roles that may edit it read what its team sees. */
+  async getOwnerChannel(
+    user: UserContext,
+    acting: ActingChannel
+  ): Promise<Result<OwnerChannel, GetOwnerChannelFailure>> {
+    const allowed = decideChannelTask({ user, acting, task: 'edit-channel' });
+    if (isErr(allowed)) return allowed;
+
+    const channel = await this.deps.channels.findById(acting.channelId);
+    if (isErr(channel)) return channel;
+    return channel.value
+      ? await this.ownerChannelView(channel.value)
+      : err(channelNotFound(acting.channelId));
   }
 
   /** Every video of the channel is its own, so the card comes from the lookup, not another read. */
@@ -226,11 +221,14 @@ export class ChannelService {
     );
   }
 
-  private async channelView(channel: Channel): Promise<Result<ChannelView, DatabaseUnavailable>> {
+  private async channelView(
+    channel: Channel,
+    localization: ChannelLocalization | null = null
+  ): Promise<Result<ChannelView, DatabaseUnavailable>> {
     const stats = await this.deps.channels.statsOf(channel.userId);
     if (isErr(stats)) return stats;
     return map(await this.deps.liveStreams.findOpenByChannel(channel.id), (stream) =>
-      toChannelView(channel, stats.value, stream)
+      toChannelView(channel, stats.value, stream, { cdn: this.deps.cdn, localization })
     );
   }
 
@@ -241,6 +239,7 @@ export class ChannelService {
     if (isErr(view)) return view;
     return map(await this.deps.captions.channelDefault(channel.userId), (autoCaptionsDefault) => ({
       ...view.value,
+      ...toOwnerExtras(channel, new Date(this.deps.now())),
       autoCaptionsDefault,
     }));
   }

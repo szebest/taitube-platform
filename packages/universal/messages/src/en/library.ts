@@ -109,4 +109,9 @@ export const library = {
   moveToTop: dt('Move to top'),
   moveToBottom: dt('Move to bottom'),
   playlistItems: dt('Videos in {title}'),
+  episode: dt('Episode {number:number}', { number: { number: { useGrouping: false } } }),
+  continueSeries: dt('Continue'),
+  episodeWatched: dt('{percent:number}% watched', {
+    number: { percent: { maximumFractionDigits: 0 } },
+  }),
 } as const;

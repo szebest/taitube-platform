@@ -144,4 +144,9 @@ export const library = {
   moveToTop: dt('Przenieś na początek'),
   moveToBottom: dt('Przenieś na koniec'),
   playlistItems: dt('Filmy na playliście {title}'),
+  episode: dt('Odcinek {number:number}', { number: { number: { useGrouping: false } } }),
+  continueSeries: dt('Kontynuuj'),
+  episodeWatched: dt('Obejrzano {percent:number}%', {
+    number: { percent: { maximumFractionDigits: 0 } },
+  }),
 } as const;

@@ -106,6 +106,17 @@ describe('@vp/domain-rules: playlist management', () => {
     expect(isOk(result) && result.value).toEqual({ title: 'Road trip 2', visibility: 'public' });
   });
 
+  it('passes the kind of an edit through', () => {
+    const result = decidePlaylistUpdate({
+      actor: OWNER,
+      playlist,
+      playlistId: playlist.id,
+      patch: { kind: 'series' },
+    });
+
+    expect(isOk(result) && result.value).toEqual({ kind: 'series' });
+  });
+
   it('rejects a blank title in an edit', () => {
     const result = decidePlaylistUpdate({
       actor: OWNER,

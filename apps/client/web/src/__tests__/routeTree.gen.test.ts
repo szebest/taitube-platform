@@ -7,6 +7,7 @@ describe('apps/client/web: generated route tree', () => {
     expect(Object.keys(getRouter().routesById).sort()).toEqual([
       '/',
       '/$',
+      '/@{$handle}',
       '/_authed',
       '/_authed/clips',
       '/_authed/feed/history',

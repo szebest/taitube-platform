@@ -3,6 +3,7 @@ import {
   getAccount,
   getChannel,
   getChannelFeatured,
+  getChannelSpotlight,
   getCurrentPick,
   getFeed,
   getHome,
@@ -138,6 +139,7 @@ export function loaderApi(answered: string[] = []): HttpHandler[] {
     recorded(getChannelFeatured, () =>
       HttpResponse.json({ source: 'popular' as const, items: FEED.items })
     ),
+    recorded(getChannelSpotlight, () => HttpResponse.json({ source: null, video: null })),
     recorded(getVideo, ({ params }) =>
       HttpResponse.json(video({ id: String(params.id), title: 'Launch day' }))
     ),

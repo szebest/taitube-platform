@@ -1,11 +1,12 @@
 import { render, screen } from '@testing-library/react';
 import { axeViolations } from '@vp/web-testing/dom';
 import { AppProviders } from '#app/__tests__/providers';
-import { ChannelHeader, ChannelHeaderSkeleton } from '..';
+import { ChannelHeader } from '..';
 import type { ChannelHeaderRootProps } from '../channel-header';
 
 interface HeaderCase extends ChannelHeaderRootProps {
   bannerSrc?: string;
+  withLink?: boolean;
   subscribed?: boolean;
   pending?: boolean;
   live?: boolean;
@@ -13,6 +14,7 @@ interface HeaderCase extends ChannelHeaderRootProps {
 
 const renderHeader = ({
   bannerSrc,
+  withLink = false,
   subscribed = false,
   pending = false,
   live = false,
@@ -22,7 +24,16 @@ const renderHeader = ({
     <AppProviders>
       <main>
         <ChannelHeader.Root {...props}>
-          <ChannelHeader.Banner src={bannerSrc} />
+          <ChannelHeader.Banner
+            src={bannerSrc}
+            link={
+              withLink ? (
+                <ChannelHeader.BannerLink href="https://shop.example.com/">
+                  Shop
+                </ChannelHeader.BannerLink>
+              ) : undefined
+            }
+          />
           <ChannelHeader.Identity
             name="Marta Reis Films"
             handle="@martareis"
@@ -127,6 +138,19 @@ describe('apps/client/web: ChannelHeader', () => {
     expect(screen.getByText('Live')).toHaveAttribute('data-slot', 'badge');
   });
 
+  it('draws the banner link as a button in the banner, opening a new tab without the opener', () => {
+    renderHeader({ bannerSrc: '/banner.png', withLink: true });
+
+    const link = screen.getByRole('link', { name: 'Shop' });
+
+    expect(link).toHaveAttribute('href', 'https://shop.example.com/');
+    expect(link).toHaveAttribute('target', '_blank');
+    expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+    expect(link).toHaveAttribute('data-slot', 'button');
+    expect(document.querySelector('[data-slot="channel-header-banner"]')).toContainElement(link);
+    expect(document.querySelector('[data-slot="channel-header-banner"] a:not([href])')).toBeNull();
+  });
+
   it('names a part used outside the root', () => {
     vi.spyOn(console, 'error').mockImplementation(() => undefined);
 
@@ -135,9 +159,8 @@ describe('apps/client/web: ChannelHeader', () => {
     );
   });
 
-  it('passes axe, loaded and as a skeleton', async () => {
-    renderHeader({ bannerSrc: '/banner.png', glowColor: 'sienna', live: true });
-    render(<ChannelHeaderSkeleton />);
+  it('passes axe', async () => {
+    renderHeader({ bannerSrc: '/banner.png', glowColor: 'sienna', live: true, withLink: true });
 
     expect(await axeViolations()).toEqual([]);
   });

@@ -11,6 +11,13 @@ function channel(overrides: Partial<Channel> = {}): Channel {
     brandColor: null,
     bio: null,
     links: [],
+    avatarVersion: 0,
+    bannerVersion: 0,
+    bannerCrops: null,
+    country: null,
+    contactEmail: null,
+    bannerLink: null,
+    handleChangedAt: null,
     subscriberCount: 0,
     createdAt: new Date(0),
     updatedAt: new Date(0),
@@ -19,15 +26,22 @@ function channel(overrides: Partial<Channel> = {}): Channel {
 }
 
 describe('@vp/domain: the channel entity', () => {
-  it('requires exactly the identity, the presentation and the audit columns', () => {
+  it('requires exactly the identity, the presentation, the image versions and the audit columns', () => {
     expect(Object.keys(channel()).sort()).toEqual([
       'avatarUrl',
+      'avatarVersion',
+      'bannerCrops',
+      'bannerLink',
       'bannerUrl',
+      'bannerVersion',
       'bio',
       'brandColor',
+      'contactEmail',
+      'country',
       'createdAt',
       'displayName',
       'handle',
+      'handleChangedAt',
       'id',
       'links',
       'subscriberCount',

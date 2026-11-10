@@ -42,7 +42,7 @@ describe('apps/client/studio: channel field validators', () => {
       links: [{ label: '', url: 'https://example.com' }],
       valid: false,
     },
-    { scenario: 'six links', links: Array.from({ length: 6 }, () => valid), valid: false },
+    { scenario: 'nine links', links: Array.from({ length: 9 }, () => valid), valid: false },
   ])('judges $scenario', ({ links, valid: ok }) => {
     expect(validateLinksField({ value: links }) === undefined).toBe(ok);
   });
@@ -66,7 +66,7 @@ describe('apps/client/studio: channel field validators', () => {
     { field: 'displayName', value: '   ', words: 'Use 1 to 100 characters.' },
     { field: 'displayName', value: 'x'.repeat(101), words: 'Use 1 to 100 characters.' },
     { field: 'displayName', value: 'The Creator', words: undefined },
-    { field: 'bio', value: 'x'.repeat(1001), words: 'Use up to 1000 characters.' },
+    { field: 'bio', value: 'x'.repeat(5001), words: 'Use up to 5000 characters.' },
     { field: 'bio', value: '', words: undefined },
     { field: 'brandColor', value: '#FFFF00', words: undefined },
     { field: 'brandColor', value: '', words: undefined },

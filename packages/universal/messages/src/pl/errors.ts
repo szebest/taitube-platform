@@ -118,4 +118,12 @@ export const errors = {
   channelMemberExists: dt('Ta osoba jest już w zespole.'),
   channelMemberNotFound: dt('Tej osoby nie ma w zespole.'),
   channelOwnerImmutable: dt('Właściciela kanału nie można usunąć ani zmienić mu roli.'),
+  handleChangeTooSoon: dt('Niedawno zmieniono uchwyt. Można go zmienić ponownie za kilka tygodni.'),
+  handleReserved: dt(
+    'Ten uchwyt był niedawno używany przez inny kanał i jest zarezerwowany dla jego właściciela.'
+  ),
+  invalidSpotlightVideo: dt('Wybierz publiczny, gotowy film z własnego kanału.'),
+  imageTooSmall: dt('Ten obraz jest mniejszy niż minimalny rozmiar.'),
+  imageUploadNotFound: dt('Nie znaleziono tego przesłania obrazu. Zacznij od nowa.'),
+  seriesVideoNotOwned: dt('Seria może zawierać tylko filmy z własnego kanału.'),
 } as const;

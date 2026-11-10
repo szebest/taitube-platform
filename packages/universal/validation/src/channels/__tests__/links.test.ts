@@ -13,8 +13,8 @@ describe('@vp/validation: validateChannelLinks', () => {
     },
     {
       name: 'the ceiling of links',
-      input: Array.from({ length: 5 }, (_, i) => link(i)),
-      expected: Array.from({ length: 5 }, (_, i) => link(i)),
+      input: Array.from({ length: 8 }, (_, i) => link(i)),
+      expected: Array.from({ length: 8 }, (_, i) => link(i)),
     },
     {
       name: 'a padded label and URL, trimmed',
@@ -33,7 +33,7 @@ describe('@vp/validation: validateChannelLinks', () => {
   });
 
   it.each([
-    { name: 'a sixth link', input: Array.from({ length: 6 }, (_, i) => link(i)) },
+    { name: 'a ninth link', input: Array.from({ length: 9 }, (_, i) => link(i)) },
     { name: 'an http link', input: [{ label: 'Site', url: 'http://example.com' }] },
     { name: 'a javascript: link', input: [{ label: 'Site', url: 'javascript:alert(1)' }] },
     { name: 'a mailto: link', input: [{ label: 'Mail', url: 'mailto:me@example.com' }] },
@@ -59,7 +59,7 @@ describe('@vp/validation: validateChannelLinks', () => {
     expect(isErr(result) && result.error).toMatchObject({
       code: 'VALIDATION_FAILED',
       field: 'links',
-      maxLinks: 5,
+      maxLinks: 8,
       maxLabelLength: 40,
       maxUrlLength: 2048,
     });

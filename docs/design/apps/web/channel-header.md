@@ -18,9 +18,9 @@ The top of a channel page: a banner tinted by the latest upload, the identity ro
 
 | # | Part | Notes |
 |---|---|---|
-| 1 | `Banner` | 6:1 from expanded, 3:1 on compact, radius `card`; without one, a gradient from `glowColor` over `surface` at the same height |
+| 1 | `Banner` | 6:1 from expanded, 3:1 on compact, radius `card`; without one, a gradient from `glowColor` over `surface` at the same height. A `BannerLink` sits in its safe area (below) |
 | 2 | `Identity` name | `display` on large, `headline` below; verified mark; `text-wrap: balance` |
-| 3 | `Identity` avatar | `avatar.xl` (72 px on compact); a `live` ring when streaming |
+| 3 | `Identity` avatar | `avatar.xl` (72 px on compact); a `live` ring when streaming; `avatarSrcSet` offers the 48, 72, 128 and 256 px files and the browser takes the sharper one |
 | 4 | `Identity` stats | `body-sm`, `fg-muted`, finished strings |
 | 5 | `Subscribe` | same states as [EngagementBar](engagement-bar.md); a bell `IconButton` once subscribed |
 | 6 | `Bio` | two lines with a "more" link to About |
@@ -39,17 +39,23 @@ interface ChannelHeaderRootProps {
   glowColor?: string;
 }
 
+interface ChannelHeaderBannerProps {
+  asChild?: boolean;
+  link?: ReactNode;
+}
+
 interface ChannelHeaderIdentityProps {
   name: string;
   handle: string;
   avatarSrc?: string;
+  avatarSrcSet?: string;
   stats?: string;
   verified?: boolean;
   live?: boolean;
 }
 ```
 
-Banner, identity, actions and tabs are parts. A creator on their own channel omits `Subscribe` and puts an "Open in Studio" button in `Actions`. An absent `Banner` renders the gradient. `glowColor` is a sampled CSS colour painted as a tint (`data-ambient="off"` removes it). Subscribe, Subscribed and the counts are strings the wrapper supplies.
+Banner, identity, actions and tabs are parts. The banner is a `picture` handed to `Banner asChild`: the wrapper lists the `tv` target (16:9) from 1920 px, the `desktop` target (6:1) from 600 px and the `mobile` target (3:1) as the `img`, each as a 1280 and 2560 px `srcset`; a channel that only has an older `bannerUrl` passes it as `src`. `BannerLink` is a small `Button` (soft, `sm`) that opens in a new tab with `rel="noopener noreferrer"`, passed as `Banner`'s `link` and drawn in the safe area, the centre 60 % of the width at the bottom end. It is never a click target over the banner, and the wrapper passes it only for an `https` address. A creator on their own channel omits `Subscribe` and puts an "Open in Studio" button in `Actions`. An absent `Banner` renders the gradient. `glowColor` is a sampled CSS colour painted as a tint (`data-ambient="off"` removes it). Subscribe, Subscribed and the counts are strings the wrapper supplies.
 
 ## Variants
 

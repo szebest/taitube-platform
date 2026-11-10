@@ -1,7 +1,7 @@
 import type { PlaylistView } from '@vp/api-contracts';
 import { EmptyLibraryIllustration, EmptyState } from '@vp/components';
 import { useT } from '@vp/intl-react';
-import { DropdownMenu, Icon, SortableList } from '@vp/ui';
+import { DropdownMenu, Icon, Progress, SortableList } from '@vp/ui';
 import { useRemovePlaylistItem } from '#app/features/library/hooks/use-remove-playlist-item';
 import { useReorderPlaylist } from '#app/features/library/hooks/use-reorder-playlist';
 import { type PlaylistEdge, moveToEdge } from '#app/features/library/utils/playlist-order';
@@ -20,6 +20,7 @@ export function PlaylistItems({ playlist, editable }: PlaylistItemsProps) {
   const remove = useRemovePlaylistItem(playlist.id);
 
   const ids = playlist.items.map(({ id }) => id);
+  const series = playlist.kind === 'series';
   const moveTo = (id: string, edge: PlaylistEdge) => reorder.mutate(moveToEdge(ids, id, edge));
 
   if (ids.length === 0) {
@@ -41,7 +42,7 @@ export function PlaylistItems({ playlist, editable }: PlaylistItemsProps) {
       aria-disabled={!editable || undefined}
       className="gap-stack"
     >
-      {playlist.items.map(({ id, videoId, video, addedAt }, index) => (
+      {playlist.items.map(({ id, videoId, video, addedAt, episode, progress }, index) => (
         <SortableList.Item
           key={id}
           id={id}
@@ -50,6 +51,11 @@ export function PlaylistItems({ playlist, editable }: PlaylistItemsProps) {
         >
           <SortableList.Handle />
           <div className="min-w-0 flex-1">
+            {series && episode !== null && (
+              <p className="m-0 text-overline text-fg-muted uppercase">
+                {tOr('library.episode', { number: episode }, '')}
+              </p>
+            )}
             <LibraryVideoRow
               video={video}
               at={addedAt}
@@ -73,6 +79,13 @@ export function PlaylistItems({ playlist, editable }: PlaylistItemsProps) {
                 ) : undefined
               }
             />
+            {series && progress !== null && (
+              <Progress
+                size="sm"
+                value={progress}
+                aria-label={tOr('library.episodeWatched', { percent: progress }, '')}
+              />
+            )}
           </div>
         </SortableList.Item>
       ))}

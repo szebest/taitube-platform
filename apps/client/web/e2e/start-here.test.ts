@@ -20,7 +20,7 @@ test.describe('start here', () => {
     const pinned = section.getByRole('list', { name: 'Pinned videos' }).getByRole('listitem');
     for (const [index, video] of [watchable, canvas, clippable].entries()) {
       await section.getByRole('button', { name: 'Add videos' }).click();
-      await page.getByRole('combobox').fill(video.title);
+      await page.getByPlaceholder('Search your videos').fill(video.title);
       await expect(page.getByRole('option')).toHaveCount(1);
       await page.getByRole('option', { name: video.title }).click();
       await expect(pinned.nth(index)).toHaveAccessibleName(video.title);

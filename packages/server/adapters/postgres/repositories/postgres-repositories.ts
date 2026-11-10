@@ -4,8 +4,11 @@ import { PostgresCaptionRepository } from './postgres-caption-repository';
 import { PostgresCategoryRepository } from './postgres-category-repository';
 import { PostgresChannelAuditRepository } from './postgres-channel-audit-repository';
 import { PostgresChannelFeaturedRepository } from './postgres-channel-featured-repository';
+import { PostgresChannelHandleHistoryRepository } from './postgres-channel-handle-history-repository';
+import { PostgresChannelImageRepository } from './postgres-channel-image-repository';
 import { PostgresChannelInviteRepository } from './postgres-channel-invite-repository';
 import { PostgresChannelMemberRepository } from './postgres-channel-member-repository';
+import { PostgresChannelPageRepository } from './postgres-channel-page-repository';
 import { PostgresChannelRepository } from './postgres-channel-repository';
 import { PostgresClipRepository } from './postgres-clip-repository';
 import { PostgresCommentReportRepository } from './postgres-comment-report-repository';
@@ -36,15 +39,10 @@ import { PostgresVideoRepository } from './postgres-video-repository';
 import { PostgresVideoStudioRepository } from './postgres-video-studio-repository';
 import { PostgresVideoViewRepository } from './postgres-video-view-repository';
 import { PostgresWatchHistoryRepository } from './postgres-watch-history-repository';
-import { PostgresWatchPartyHousekeepingRepository } from './postgres-watch-party-housekeeping-repository';
-import { PostgresWatchPartyInviteLinkRepository } from './postgres-watch-party-invite-link-repository';
-import { PostgresWatchPartyInviteRepository } from './postgres-watch-party-invite-repository';
-import { PostgresWatchPartyMemberRepository } from './postgres-watch-party-member-repository';
-import { PostgresWatchPartyMessageRepository } from './postgres-watch-party-message-repository';
-import { PostgresWatchPartyPersonalControlRepository } from './postgres-watch-party-personal-control-repository';
-import { PostgresWatchPartyQueueRepository } from './postgres-watch-party-queue-repository';
-import { PostgresWatchPartyRoleRepository } from './postgres-watch-party-role-repository';
-import { PostgresWatchPartyRoomRepository } from './postgres-watch-party-room-repository';
+import {
+  createWatchPartyRepositories,
+  type WatchPartyRepositories,
+} from './postgres-watch-party-repositories';
 import { PostgresWebhookRepository } from './postgres-webhook-repository';
 
 export class PostgresRepositories implements Repositories {
@@ -80,19 +78,22 @@ export class PostgresRepositories implements Repositories {
   readonly captions: PostgresCaptionRepository;
   readonly clips: PostgresClipRepository;
   readonly channelFeatured: PostgresChannelFeaturedRepository;
+  readonly channelHandleHistory: PostgresChannelHandleHistoryRepository;
+  readonly channelImages: PostgresChannelImageRepository;
+  readonly channelPages: PostgresChannelPageRepository;
   readonly picks: PostgresPickRepository;
   readonly webhooks: PostgresWebhookRepository;
   readonly liveStreams: PostgresLiveStreamRepository;
   readonly liveChat: PostgresLiveChatRepository;
-  readonly watchPartyRooms: PostgresWatchPartyRoomRepository;
-  readonly watchPartyRoles: PostgresWatchPartyRoleRepository;
-  readonly watchPartyMembers: PostgresWatchPartyMemberRepository;
-  readonly watchPartyQueue: PostgresWatchPartyQueueRepository;
-  readonly watchPartyMessages: PostgresWatchPartyMessageRepository;
-  readonly watchPartyInvites: PostgresWatchPartyInviteRepository;
-  readonly watchPartyInviteLinks: PostgresWatchPartyInviteLinkRepository;
-  readonly watchPartyControls: PostgresWatchPartyPersonalControlRepository;
-  readonly watchPartyHousekeeping: PostgresWatchPartyHousekeepingRepository;
+  readonly watchPartyRooms: WatchPartyRepositories['watchPartyRooms'];
+  readonly watchPartyRoles: WatchPartyRepositories['watchPartyRoles'];
+  readonly watchPartyMembers: WatchPartyRepositories['watchPartyMembers'];
+  readonly watchPartyQueue: WatchPartyRepositories['watchPartyQueue'];
+  readonly watchPartyMessages: WatchPartyRepositories['watchPartyMessages'];
+  readonly watchPartyInvites: WatchPartyRepositories['watchPartyInvites'];
+  readonly watchPartyInviteLinks: WatchPartyRepositories['watchPartyInviteLinks'];
+  readonly watchPartyControls: WatchPartyRepositories['watchPartyControls'];
+  readonly watchPartyHousekeeping: WatchPartyRepositories['watchPartyHousekeeping'];
 
   private readonly ownedPool: Sql | undefined;
 
@@ -132,19 +133,23 @@ export class PostgresRepositories implements Repositories {
     this.captions = new PostgresCaptionRepository(db);
     this.clips = new PostgresClipRepository(db);
     this.channelFeatured = new PostgresChannelFeaturedRepository(db);
+    this.channelHandleHistory = new PostgresChannelHandleHistoryRepository(db);
+    this.channelImages = new PostgresChannelImageRepository(db);
+    this.channelPages = new PostgresChannelPageRepository(db);
+    const party = createWatchPartyRepositories(db);
+    this.watchPartyRooms = party.watchPartyRooms;
+    this.watchPartyRoles = party.watchPartyRoles;
+    this.watchPartyMembers = party.watchPartyMembers;
+    this.watchPartyQueue = party.watchPartyQueue;
+    this.watchPartyMessages = party.watchPartyMessages;
+    this.watchPartyInvites = party.watchPartyInvites;
+    this.watchPartyInviteLinks = party.watchPartyInviteLinks;
+    this.watchPartyControls = party.watchPartyControls;
+    this.watchPartyHousekeeping = party.watchPartyHousekeeping;
     this.picks = new PostgresPickRepository(db);
     this.webhooks = new PostgresWebhookRepository(db);
     this.liveStreams = new PostgresLiveStreamRepository(db);
     this.liveChat = new PostgresLiveChatRepository(db);
-    this.watchPartyRooms = new PostgresWatchPartyRoomRepository(db);
-    this.watchPartyRoles = new PostgresWatchPartyRoleRepository(db);
-    this.watchPartyMembers = new PostgresWatchPartyMemberRepository(db);
-    this.watchPartyQueue = new PostgresWatchPartyQueueRepository(db);
-    this.watchPartyMessages = new PostgresWatchPartyMessageRepository(db);
-    this.watchPartyInvites = new PostgresWatchPartyInviteRepository(db);
-    this.watchPartyInviteLinks = new PostgresWatchPartyInviteLinkRepository(db);
-    this.watchPartyControls = new PostgresWatchPartyPersonalControlRepository(db);
-    this.watchPartyHousekeeping = new PostgresWatchPartyHousekeepingRepository(db);
   }
 
   async close(): Promise<void> {
