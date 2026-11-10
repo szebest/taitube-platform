@@ -188,6 +188,4 @@ export const revealChannelContact = defineEndpoint({
 
 export type ChannelSpotlight = z.infer<typeof SpotlightSchema>;
 export type ChannelSpotlightSettings = z.infer<typeof SpotlightSettingsSchema>;
-export type ChannelLocalizationInput = z.infer<typeof LocalizationSchema>;
-export type PreparedChannelImage = z.infer<typeof PreparedImageSchema>;
 export type QueuedChannelImage = z.infer<typeof QueuedImageSchema>;

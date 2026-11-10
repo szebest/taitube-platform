@@ -1,7 +1,7 @@
 import { type Result, err, ok } from '@vp/result';
 import { type InvalidField, invalidField } from '../failures';
 
-export const CONTACT_EMAIL_MAX_LENGTH = 254;
+const CONTACT_EMAIL_MAX_LENGTH = 254;
 
 const EMAIL_SHAPE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 

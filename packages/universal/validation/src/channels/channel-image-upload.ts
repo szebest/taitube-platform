@@ -11,7 +11,7 @@ import { type ImageTooSmall, imageTooSmall } from './failures';
 
 const MEGABYTE = 1024 * 1024;
 
-export const CHANNEL_IMAGE_UPLOAD_LIMITS: Readonly<
+const CHANNEL_IMAGE_UPLOAD_LIMITS: Readonly<
   Record<ChannelImageKind, { maxBytes: number; minWidth: number; minHeight: number }>
 > = {
   avatar: { maxBytes: 2 * MEGABYTE, minWidth: 200, minHeight: 200 },

@@ -108,7 +108,7 @@ export const VIDEO_AUDIT_FIELDS = [
 
 export type VideoAuditField = (typeof VIDEO_AUDIT_FIELDS)[number];
 
-export const CHANNEL_AUDIT_FIELDS = ['handle', 'avatar', 'banner', 'spotlight'] as const;
+const CHANNEL_AUDIT_FIELDS = ['handle', 'avatar', 'banner', 'spotlight'] as const;
 
 export type ChannelAuditField = (typeof CHANNEL_AUDIT_FIELDS)[number];
 

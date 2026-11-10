@@ -3,7 +3,7 @@ import type { Channel } from '@vp/api-contracts';
 type Banner = NonNullable<Channel['banner']>;
 type Variants = Banner[keyof Banner];
 
-export interface BannerSource {
+interface BannerSource {
   media: string;
   srcSet: string;
 }

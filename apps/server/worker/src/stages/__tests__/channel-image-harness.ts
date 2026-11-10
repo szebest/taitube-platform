@@ -14,7 +14,7 @@ import { STAGE_SETTINGS } from '../../__tests__/stage-settings';
 
 export const OWNER_ID = '00000000-0000-7000-8000-00000000a001';
 export const IMMUTABLE = 'public, max-age=31536000, immutable';
-export const AVATAR_CROP: CropRect = { x: 0, y: 0, width: 400, height: 400 };
+const AVATAR_CROP: CropRect = { x: 0, y: 0, width: 400, height: 400 };
 export const BANNER_CROPS: BannerCrops = {
   desktop: { x: 0, y: 0, width: 2400, height: 400 },
   mobile: { x: 0, y: 0, width: 1500, height: 500 },
@@ -23,7 +23,7 @@ export const BANNER_CROPS: BannerCrops = {
 export const AVATAR_PROBE: ChannelImageProbe = { format: 'png', width: 800, height: 800 };
 export const BANNER_PROBE: ChannelImageProbe = { format: 'jpeg', width: 2560, height: 1440 };
 
-export function completionFor(kind: ChannelImageKind): ChannelImageCompletion {
+function completionFor(kind: ChannelImageKind): ChannelImageCompletion {
   return kind === 'avatar'
     ? { width: 800, height: 800, crops: { kind: 'avatar', crop: AVATAR_CROP } }
     : { width: 2560, height: 1440, crops: { kind: 'banner', crops: BANNER_CROPS } };

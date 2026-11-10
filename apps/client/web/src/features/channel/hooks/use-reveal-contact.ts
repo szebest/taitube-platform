@@ -2,7 +2,7 @@ import { mutationOptions, useMutation } from '@tanstack/react-query';
 import type { ApiClient } from '@vp/api-client';
 import { useApi } from '@vp/queries';
 
-export function revealContactMutationOptions(api: ApiClient, channelId: string) {
+function revealContactMutationOptions(api: ApiClient, channelId: string) {
   return mutationOptions({
     mutationFn: () => api.channelIdentity.revealChannelContact({ params: { id: channelId } }),
   });

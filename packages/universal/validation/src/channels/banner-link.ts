@@ -3,7 +3,7 @@ import { type InvalidField, invalidField } from '../failures';
 import { normalizePlainText, withinLength } from '../plain-text';
 import { isHttpsUrl } from './https-url';
 
-export const BANNER_LINK_LIMITS = { maxLabelLength: 24, maxUrlLength: 2048 } as const;
+const BANNER_LINK_LIMITS = { maxLabelLength: 24, maxUrlLength: 2048 } as const;
 
 export interface BannerLinkInput {
   readonly label: string;

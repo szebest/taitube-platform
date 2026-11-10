@@ -93,6 +93,7 @@
     },
     "packages/client/ui": {
       "includeEntryExports": false,
+      "ignoreDependencies": ["simple-icons", "simple-icons-linkedin"],
       "project": [
         "**/*.{ts,tsx,css}!",
         "!**/*.stories.tsx!",

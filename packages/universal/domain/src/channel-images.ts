@@ -24,13 +24,7 @@ export type ImageCrops =
 
 export const AVATAR_SIZES = [48, 72, 128, 256] as const;
 
-export type AvatarSize = (typeof AVATAR_SIZES)[number];
-
 export const BANNER_WIDTHS = [1280, 2560] as const;
-
-export type BannerWidth = (typeof BANNER_WIDTHS)[number];
-
-export const IMAGE_VARIANT_EXTENSION = 'webp';
 
 export interface ChannelBannerLink {
   label: string;
