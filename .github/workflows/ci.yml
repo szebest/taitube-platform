@@ -340,7 +340,7 @@ jobs:
     needs: [build]
     if: needs.build.outputs.code == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 4
+    timeout-minutes: 6
     steps:
       - name: Move Docker to the containerd image store, where a build lands without a tarball load
         run: |

@@ -203,7 +203,7 @@ export class InMemoryScreeningRepository extends ScreeningRepository {
     const { id, videoId, finding, thresholdVersion } = input;
     const latest = this.latest(videoId);
     if (!latest) {
-      await this.record({
+      const created = await this.record({
         id,
         videoId,
         sourceChecksum: FLAG_ONLY_CHECKSUM,
@@ -214,7 +214,7 @@ export class InMemoryScreeningRepository extends ScreeningRepository {
         modelVersion: null,
         thresholdVersion,
       });
-      return ok(true);
+      return isErr(created) ? created : ok(true);
     }
 
     const merged = mergeFlag(latest.flags, finding);
