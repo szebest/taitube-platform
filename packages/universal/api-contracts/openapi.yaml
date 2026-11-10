@@ -224,6 +224,392 @@ components:
         - offsetMs
         - createdAt
       description: One chat line
+    ScreeningMatchedVideoInput:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+        title:
+          type:
+            - string
+            - 'null'
+        channel:
+          anyOf:
+            - $ref: '#/components/schemas/ChannelCardInput'
+            - type: 'null'
+        thumbnailUrl:
+          type: string
+        status:
+          anyOf:
+            - type: string
+              enum:
+                - UPLOADING
+                - UPLOADED
+                - PROBING
+                - PROCESSING
+                - READY
+                - FAILED
+                - REJECTED
+                - ABANDONED
+                - DELETED
+                - LIVE
+                - HELD
+              description: Current pipeline lifecycle state
+            - type: 'null'
+          description: Null when the matched video is gone
+        sameChannel:
+          type: boolean
+          description: 'The matched video is on the same channel: advisory only'
+        mirrored:
+          type: boolean
+        videoCoverage:
+          description: Share of the frames that match, 0 to 1
+          type:
+            - number
+            - 'null'
+        audioCoverage:
+          description: Share of the audio that matches, 0 to 1
+          type:
+            - number
+            - 'null'
+        sourceRange:
+          anyOf:
+            - type: object
+              properties:
+                fromSeconds:
+                  type: number
+                toSeconds:
+                  type: number
+              required:
+                - fromSeconds
+                - toSeconds
+            - type: 'null'
+          description: Where the overlap sits in this video
+        matchedRange:
+          anyOf:
+            - type: object
+              properties:
+                fromSeconds:
+                  type: number
+                toSeconds:
+                  type: number
+              required:
+                - fromSeconds
+                - toSeconds
+            - type: 'null'
+          description: Where the overlap sits in the matched one
+      required:
+        - id
+        - title
+        - channel
+        - status
+        - sameChannel
+        - mirrored
+        - videoCoverage
+        - audioCoverage
+        - sourceRange
+        - matchedRange
+    ScreeningFindingInput:
+      type: object
+      properties:
+        reason:
+          type: string
+          enum:
+            - DUPLICATE
+            - PARTIAL_MATCH
+            - KNOWN_REJECTED
+            - NSFW
+            - BLANK
+            - METADATA_SPAM
+            - SCREEN_ERROR
+        score:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: Evidence for a person to read, never a verdict
+        match:
+          anyOf:
+            - $ref: '#/components/schemas/ScreeningMatchedVideoInput'
+            - type: 'null'
+        frames:
+          type: array
+          items:
+            type: object
+            properties:
+              url:
+                type: string
+                description: Short-lived signed URL of the flagged frame
+              timestampSeconds:
+                type: number
+              score:
+                type: number
+            required:
+              - url
+              - timestampSeconds
+              - score
+        flaggedShare:
+          description: Share of the sampled frames over the threshold
+          type:
+            - number
+            - 'null'
+        signals:
+          type: array
+          items:
+            type: string
+          description: The metadata rules that tripped
+        profanity:
+          type: array
+          items:
+            type: string
+      required:
+        - reason
+        - score
+        - match
+        - frames
+        - flaggedShare
+        - signals
+        - profanity
+    ScreeningAppealInput:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+        message:
+          type: string
+        createdAt:
+          type: string
+          description: ISO 8601 creation timestamp
+        rejectedBy:
+          anyOf:
+            - type: string
+              format: uuid
+              pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+            - type: 'null'
+          description: The moderator whose rejection is appealed
+        resolvedAt:
+          description: ISO 8601 resolution timestamp, null while open
+          type:
+            - string
+            - 'null'
+      required:
+        - id
+        - message
+        - createdAt
+        - rejectedBy
+        - resolvedAt
+    ScreeningCaseInput:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+          description: The screening result this case is about
+        videoId:
+          type: string
+          format: uuid
+          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+        title:
+          type:
+            - string
+            - 'null'
+        status:
+          type: string
+          enum:
+            - UPLOADING
+            - UPLOADED
+            - PROBING
+            - PROCESSING
+            - READY
+            - FAILED
+            - REJECTED
+            - ABANDONED
+            - DELETED
+            - LIVE
+            - HELD
+          description: Current pipeline lifecycle state
+        channel:
+          anyOf:
+            - $ref: '#/components/schemas/ChannelCardInput'
+            - type: 'null'
+        thumbnailUrl:
+          type: string
+        outcome:
+          type: string
+          enum:
+            - PASS
+            - HOLD
+        score:
+          type: number
+          minimum: 0
+          maximum: 1
+        open:
+          type: boolean
+          description: A hold waits for a decision, or a flag has not been looked at
+        reasons:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScreeningFindingInput'
+          description: What held the video
+        flags:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScreeningFindingInput'
+          description: What only raised the case
+        decision:
+          anyOf:
+            - type: string
+              enum:
+                - approved
+                - rejected
+                - dismissed
+            - type: 'null'
+        decidedBy:
+          anyOf:
+            - type: string
+              format: uuid
+              pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+            - type: 'null'
+        decidedAt:
+          type:
+            - string
+            - 'null'
+        decisionNote:
+          type:
+            - string
+            - 'null'
+        appeal:
+          anyOf:
+            - $ref: '#/components/schemas/ScreeningAppealInput'
+            - type: 'null'
+          description: The newest appeal on the video
+        modelVersion:
+          type:
+            - string
+            - 'null'
+        thresholdVersion:
+          type: string
+        createdAt:
+          type: string
+          description: ISO 8601 creation timestamp
+      required:
+        - id
+        - videoId
+        - title
+        - status
+        - channel
+        - outcome
+        - score
+        - open
+        - reasons
+        - flags
+        - decision
+        - decidedBy
+        - decidedAt
+        - decisionNote
+        - appeal
+        - modelVersion
+        - thresholdVersion
+        - createdAt
+    ScreeningDecisionInput:
+      type: object
+      properties:
+        videoId:
+          type: string
+          format: uuid
+          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+        status:
+          type: string
+          enum:
+            - UPLOADING
+            - UPLOADED
+            - PROBING
+            - PROCESSING
+            - READY
+            - FAILED
+            - REJECTED
+            - ABANDONED
+            - DELETED
+            - LIVE
+            - HELD
+          description: Current pipeline lifecycle state
+      required:
+        - videoId
+        - status
+    CreatorScreeningInput:
+      type: object
+      properties:
+        videoId:
+          type: string
+          format: uuid
+          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+        status:
+          type: string
+          enum:
+            - UPLOADING
+            - UPLOADED
+            - PROBING
+            - PROCESSING
+            - READY
+            - FAILED
+            - REJECTED
+            - ABANDONED
+            - DELETED
+            - LIVE
+            - HELD
+          description: Current pipeline lifecycle state
+        reasons:
+          type: array
+          items:
+            type: string
+            enum:
+              - DUPLICATE
+              - NSFW
+              - BLANK
+              - METADATA_SPAM
+              - SCREEN_ERROR
+          description: A plain reason, never the matched video or a threshold
+        decision:
+          anyOf:
+            - type: string
+              enum:
+                - rejected
+            - type: 'null'
+          description: Set once a moderator rejected the video
+        decisionNote:
+          description: The reason the moderator gave
+          type:
+            - string
+            - 'null'
+        canAppeal:
+          type: boolean
+        appeal:
+          anyOf:
+            - type: object
+              properties:
+                message:
+                  type: string
+                createdAt:
+                  type: string
+                resolved:
+                  type: boolean
+              required:
+                - message
+                - createdAt
+                - resolved
+            - type: 'null'
+      required:
+        - videoId
+        - status
+        - reasons
+        - decision
+        - decisionNote
+        - canAppeal
+        - appeal
     ChannelLink:
       type: object
       properties:
@@ -439,6 +825,402 @@ components:
         - createdAt
       additionalProperties: false
       description: One chat line
+    ScreeningMatchedVideo:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+        title:
+          type:
+            - string
+            - 'null'
+        channel:
+          anyOf:
+            - $ref: '#/components/schemas/ChannelCard'
+            - type: 'null'
+        thumbnailUrl:
+          type: string
+        status:
+          anyOf:
+            - type: string
+              enum:
+                - UPLOADING
+                - UPLOADED
+                - PROBING
+                - PROCESSING
+                - READY
+                - FAILED
+                - REJECTED
+                - ABANDONED
+                - DELETED
+                - LIVE
+                - HELD
+              description: Current pipeline lifecycle state
+            - type: 'null'
+          description: Null when the matched video is gone
+        sameChannel:
+          type: boolean
+          description: 'The matched video is on the same channel: advisory only'
+        mirrored:
+          type: boolean
+        videoCoverage:
+          description: Share of the frames that match, 0 to 1
+          type:
+            - number
+            - 'null'
+        audioCoverage:
+          description: Share of the audio that matches, 0 to 1
+          type:
+            - number
+            - 'null'
+        sourceRange:
+          anyOf:
+            - type: object
+              properties:
+                fromSeconds:
+                  type: number
+                toSeconds:
+                  type: number
+              required:
+                - fromSeconds
+                - toSeconds
+              additionalProperties: false
+            - type: 'null'
+          description: Where the overlap sits in this video
+        matchedRange:
+          anyOf:
+            - type: object
+              properties:
+                fromSeconds:
+                  type: number
+                toSeconds:
+                  type: number
+              required:
+                - fromSeconds
+                - toSeconds
+              additionalProperties: false
+            - type: 'null'
+          description: Where the overlap sits in the matched one
+      required:
+        - id
+        - title
+        - channel
+        - status
+        - sameChannel
+        - mirrored
+        - videoCoverage
+        - audioCoverage
+        - sourceRange
+        - matchedRange
+      additionalProperties: false
+    ScreeningFinding:
+      type: object
+      properties:
+        reason:
+          type: string
+          enum:
+            - DUPLICATE
+            - PARTIAL_MATCH
+            - KNOWN_REJECTED
+            - NSFW
+            - BLANK
+            - METADATA_SPAM
+            - SCREEN_ERROR
+        score:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: Evidence for a person to read, never a verdict
+        match:
+          anyOf:
+            - $ref: '#/components/schemas/ScreeningMatchedVideo'
+            - type: 'null'
+        frames:
+          type: array
+          items:
+            type: object
+            properties:
+              url:
+                type: string
+                description: Short-lived signed URL of the flagged frame
+              timestampSeconds:
+                type: number
+              score:
+                type: number
+            required:
+              - url
+              - timestampSeconds
+              - score
+            additionalProperties: false
+        flaggedShare:
+          description: Share of the sampled frames over the threshold
+          type:
+            - number
+            - 'null'
+        signals:
+          type: array
+          items:
+            type: string
+          description: The metadata rules that tripped
+        profanity:
+          type: array
+          items:
+            type: string
+      required:
+        - reason
+        - score
+        - match
+        - frames
+        - flaggedShare
+        - signals
+        - profanity
+      additionalProperties: false
+    ScreeningAppeal:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+        message:
+          type: string
+        createdAt:
+          type: string
+          description: ISO 8601 creation timestamp
+        rejectedBy:
+          anyOf:
+            - type: string
+              format: uuid
+              pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+            - type: 'null'
+          description: The moderator whose rejection is appealed
+        resolvedAt:
+          description: ISO 8601 resolution timestamp, null while open
+          type:
+            - string
+            - 'null'
+      required:
+        - id
+        - message
+        - createdAt
+        - rejectedBy
+        - resolvedAt
+      additionalProperties: false
+    ScreeningCase:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+          description: The screening result this case is about
+        videoId:
+          type: string
+          format: uuid
+          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+        title:
+          type:
+            - string
+            - 'null'
+        status:
+          type: string
+          enum:
+            - UPLOADING
+            - UPLOADED
+            - PROBING
+            - PROCESSING
+            - READY
+            - FAILED
+            - REJECTED
+            - ABANDONED
+            - DELETED
+            - LIVE
+            - HELD
+          description: Current pipeline lifecycle state
+        channel:
+          anyOf:
+            - $ref: '#/components/schemas/ChannelCard'
+            - type: 'null'
+        thumbnailUrl:
+          type: string
+        outcome:
+          type: string
+          enum:
+            - PASS
+            - HOLD
+        score:
+          type: number
+          minimum: 0
+          maximum: 1
+        open:
+          type: boolean
+          description: A hold waits for a decision, or a flag has not been looked at
+        reasons:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScreeningFinding'
+          description: What held the video
+        flags:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScreeningFinding'
+          description: What only raised the case
+        decision:
+          anyOf:
+            - type: string
+              enum:
+                - approved
+                - rejected
+                - dismissed
+            - type: 'null'
+        decidedBy:
+          anyOf:
+            - type: string
+              format: uuid
+              pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+            - type: 'null'
+        decidedAt:
+          type:
+            - string
+            - 'null'
+        decisionNote:
+          type:
+            - string
+            - 'null'
+        appeal:
+          anyOf:
+            - $ref: '#/components/schemas/ScreeningAppeal'
+            - type: 'null'
+          description: The newest appeal on the video
+        modelVersion:
+          type:
+            - string
+            - 'null'
+        thresholdVersion:
+          type: string
+        createdAt:
+          type: string
+          description: ISO 8601 creation timestamp
+      required:
+        - id
+        - videoId
+        - title
+        - status
+        - channel
+        - outcome
+        - score
+        - open
+        - reasons
+        - flags
+        - decision
+        - decidedBy
+        - decidedAt
+        - decisionNote
+        - appeal
+        - modelVersion
+        - thresholdVersion
+        - createdAt
+      additionalProperties: false
+    ScreeningDecision:
+      type: object
+      properties:
+        videoId:
+          type: string
+          format: uuid
+          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+        status:
+          type: string
+          enum:
+            - UPLOADING
+            - UPLOADED
+            - PROBING
+            - PROCESSING
+            - READY
+            - FAILED
+            - REJECTED
+            - ABANDONED
+            - DELETED
+            - LIVE
+            - HELD
+          description: Current pipeline lifecycle state
+      required:
+        - videoId
+        - status
+      additionalProperties: false
+    CreatorScreening:
+      type: object
+      properties:
+        videoId:
+          type: string
+          format: uuid
+          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+        status:
+          type: string
+          enum:
+            - UPLOADING
+            - UPLOADED
+            - PROBING
+            - PROCESSING
+            - READY
+            - FAILED
+            - REJECTED
+            - ABANDONED
+            - DELETED
+            - LIVE
+            - HELD
+          description: Current pipeline lifecycle state
+        reasons:
+          type: array
+          items:
+            type: string
+            enum:
+              - DUPLICATE
+              - NSFW
+              - BLANK
+              - METADATA_SPAM
+              - SCREEN_ERROR
+          description: A plain reason, never the matched video or a threshold
+        decision:
+          anyOf:
+            - type: string
+              enum:
+                - rejected
+            - type: 'null'
+          description: Set once a moderator rejected the video
+        decisionNote:
+          description: The reason the moderator gave
+          type:
+            - string
+            - 'null'
+        canAppeal:
+          type: boolean
+        appeal:
+          anyOf:
+            - type: object
+              properties:
+                message:
+                  type: string
+                createdAt:
+                  type: string
+                resolved:
+                  type: boolean
+              required:
+                - message
+                - createdAt
+                - resolved
+              additionalProperties: false
+            - type: 'null'
+      required:
+        - videoId
+        - status
+        - reasons
+        - decision
+        - decisionNote
+        - canAppeal
+        - appeal
+      additionalProperties: false
 paths:
   /healthz:
     get:
@@ -18405,8 +19187,11 @@ paths:
                                   enum:
                                     - ready
                                     - failed
+                                    - held
+                                    - approved
+                                    - rejected
                                 - type: 'null'
-                              description: How an upload finished
+                              description: How an upload finished, or how its screening went
                             inviteId:
                               description: The channel team invite a `team_invite` opens
                               type: string
@@ -32146,8 +32931,11 @@ paths:
                                         enum:
                                           - ready
                                           - failed
+                                          - held
+                                          - approved
+                                          - rejected
                                       - type: 'null'
-                                    description: How an upload finished
+                                    description: How an upload finished, or how its screening went
                                   inviteId:
                                     description: The channel team invite a `team_invite` opens
                                     type: string
@@ -33565,6 +34353,1230 @@ paths:
                     type: string
                     enum:
                       - REPORT_ALREADY_RESOLVED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+  /v1/admin/screening:
+    get:
+      summary: List held and flagged videos
+      tags:
+        - Admin
+      description: 'The upload screening queue for a moderator: open cases first and each group newest first, keyset-paginated. A case carries its score, reasons, the matched video with the overlapping time ranges, flagged frames as signed URLs and the metadata hits.'
+      parameters:
+        - schema:
+            type: string
+          in: query
+          name: cursor
+          required: false
+          description: Opaque base64url keyset pagination cursor
+        - schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+          in: query
+          name: limit
+          required: false
+          description: 'Page size limit (1-100, default 20). A deployment with a lower PAGE_SIZE_MAX clamps rather than rejects: the page comes back shorter than asked for and nextCursor walks the remainder.'
+        - schema:
+            type: string
+            enum:
+              - open
+              - decided
+          in: query
+          name: state
+          required: false
+          description: Only open or only decided cases
+      responses:
+        '200':
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ScreeningCase'
+                  nextCursor:
+                    type:
+                      - string
+                      - 'null'
+                required:
+                  - items
+                  - nextCursor
+                additionalProperties: false
+        '400':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_FAILED
+                      - INVALID_CURSOR
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '401':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '403':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - FORBIDDEN
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+  /v1/admin/videos/{id}/screening/approve:
+    post:
+      summary: Approve a held video
+      tags:
+        - Admin
+      description: Moves a held video back to PROCESSING and enqueues its package job, which writes the master and makes it READY. The same video is never held again. When the video was rejected and appealed, a moderator other than the one who rejected it decides.
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+          in: path
+          name: id
+          required: true
+      responses:
+        '200':
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScreeningDecision'
+        '400':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_FAILED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '401':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '403':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - FORBIDDEN
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '404':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VIDEO_NOT_FOUND
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '409':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VERSION_CONFLICT
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+  /v1/admin/videos/{id}/screening/reject:
+    post:
+      summary: Reject a held video
+      tags:
+        - Admin
+      description: Moves a held video to REJECTED with a reason the creator reads and can appeal. When the video was appealed, a moderator other than the one who rejected it decides.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                  minLength: 1
+                  maxLength: 500
+                  description: Why the video is rejected
+              required:
+                - reason
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+          in: path
+          name: id
+          required: true
+      responses:
+        '200':
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScreeningDecision'
+        '400':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_FAILED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '401':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '403':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - FORBIDDEN
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '404':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VIDEO_NOT_FOUND
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '409':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VERSION_CONFLICT
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+  /v1/admin/videos/{id}/screening/dismiss:
+    post:
+      summary: Dismiss the flags on a video
+      tags:
+        - Admin
+      description: Closes the flags of a video that stayed public, without changing its state. The same finding is not raised again.
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+          in: path
+          name: id
+          required: true
+      responses:
+        '200':
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScreeningDecision'
+        '400':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_FAILED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '401':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '403':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - FORBIDDEN
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '404':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VIDEO_NOT_FOUND
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '409':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VERSION_CONFLICT
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+  /v1/creator/videos/{id}/screening:
+    get:
+      summary: Why a video is on hold
+      tags:
+        - Creator Studio
+      description: The owner reads why the video is held or was rejected by screening, in plain terms, with whether it can be appealed.
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+          in: path
+          name: id
+          required: true
+      responses:
+        '200':
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreatorScreening'
+        '401':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '403':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - FORBIDDEN
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '404':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VIDEO_NOT_FOUND
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+  /v1/creator/videos/{id}/screening/appeal:
+    post:
+      summary: Appeal a screening rejection
+      tags:
+        - Creator Studio
+      description: The owner appeals a rejection that screening led to, with a message. The video goes back on hold and into the moderation queue, where a different moderator decides. A takedown by a moderator cannot be appealed.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  minLength: 1
+                  maxLength: 1000
+                  description: Why the rejection is a mistake
+              required:
+                - message
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+          in: path
+          name: id
+          required: true
+      responses:
+        '201':
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreatorScreening'
+        '400':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_FAILED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '401':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '403':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - FORBIDDEN
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '404':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VIDEO_NOT_FOUND
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '409':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VERSION_CONFLICT
                     description: Machine-readable error code
                   instance:
                     type: string
