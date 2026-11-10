@@ -2,6 +2,9 @@ import { useQuery } from '@tanstack/react-query';
 import type { CommentView } from '@vp/api-contracts';
 import { DisclosureControl } from '@vp/components';
 import {
+  BAN_DURATIONS,
+  type BanDuration,
+  banExpiry,
   COMMENT_MODERATION_REASONS,
   type CommentModerationReason,
   DEFAULT_DISCLOSURE,
@@ -22,7 +25,6 @@ import {
 import { Button, ResponsiveModal, useToast, useUiCopy } from '@vp/ui';
 import { validateModerationNote } from '@vp/validation';
 import { useId } from 'react';
-import { BAN_DURATIONS, type BanDuration, banExpiry } from '#app/features/watch/utils/ban-duration';
 
 export type ModerationDialogAction = 'hold' | 'hide' | 'remove' | 'shadow_ban' | 'ban';
 

@@ -3,7 +3,7 @@ import * as schema from '@vp/db';
 import type { SavedReply } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { fromPromise, type Result } from '@vp/result';
-import { and, asc, count, eq, max, sql } from 'drizzle-orm';
+import { and, asc, count, eq, sql } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
 import type { PostgresDatabase } from './types';
 
@@ -36,13 +36,13 @@ export class PostgresSavedReplyRepository implements SavedReplyRepositoryPort {
             sql`select pg_advisory_xact_lock(hashtext(${`saved_replies:${channelId}`}))`
           );
           const [stats] = await tx
-            .select({ total: count(), last: max(r.position) })
+            .select({ total: count(), next: sql<number>`coalesce(max(${r.position}) + 1, 0)` })
             .from(r)
             .where(eq(r.channelId, channelId));
           if ((stats?.total ?? 0) >= limit) return null;
           const [created] = await tx
             .insert(r)
-            .values({ id: uuidv7(), channelId, ...draft, position: (stats?.last ?? -1) + 1 })
+            .values({ id: uuidv7(), channelId, ...draft, position: stats?.next ?? 0 })
             .returning();
           return created ?? null;
         }),

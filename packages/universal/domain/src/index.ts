@@ -4,6 +4,7 @@ export * from './channel';
 export * from './channel-restriction';
 export * from './channel-team';
 export * from './clip';
+export * from './ban-duration';
 export * from './comment';
 export * from './comment-moderation';
 export * from './comment-removal';

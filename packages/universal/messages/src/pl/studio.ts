@@ -1,8 +1,10 @@
 import { dt } from '../define';
 import { studioAdmin } from './studio-admin';
+import { studioBatch } from './studio-batch';
 import { studioCaptions } from './studio-captions';
 import { studioComments } from './studio-comments';
 import { studioLive } from './studio-live';
+import { studioModeration } from './studio-moderation';
 import { studioPicks } from './studio-picks';
 import { studioTeam } from './studio-team';
 
@@ -71,8 +73,10 @@ export const studio = {
   videoAnalytics: dt('Statystyki'),
   watchOnWeb: dt('Obejrzyj w Taitube'),
   ...studioAdmin,
+  ...studioBatch,
   ...studioCaptions,
   ...studioComments,
+  ...studioModeration,
   ...studioLive,
   ...studioPicks,
   ...studioTeam,
@@ -93,30 +97,6 @@ export const studio = {
   ),
   deleteConfirm: dt('Usuń'),
   deleteCancel: dt('Anuluj'),
-  batchDeleted: dt('{count:plural}', {
-    plural: {
-      count: {
-        one: '{?} film usunięty',
-        few: '{?} filmy usunięte',
-        many: '{?} filmów usuniętych',
-        other: '{?} filmu usuniętego',
-      },
-    },
-  }),
-  batchVisibilitySet: dt('{count:plural}', {
-    plural: {
-      count: {
-        one: '{?} film zaktualizowany',
-        few: '{?} filmy zaktualizowane',
-        many: '{?} filmów zaktualizowanych',
-        other: '{?} filmu zaktualizowanego',
-      },
-    },
-  }),
-  batchPartial: dt(
-    'Gotowe: {done:number} z {total:number}, niepowodzenia: {failed:number}. Te, którym się nie udało, pozostają zaznaczone.'
-  ),
-  batchFailed: dt('Nic nie zostało zmienione. Spróbuj ponownie.'),
   navAnalytics: dt('Statystyki'),
   analyticsTitle: dt('Statystyki'),
   videoAnalyticsTitle: dt('Statystyki filmu'),

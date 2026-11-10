@@ -1,5 +1,6 @@
 import { screen } from '@testing-library/react';
 import {
+  bulkModerateComments,
   createComment,
   heartComment,
   listCreatorComments,
@@ -7,6 +8,7 @@ import {
   unheartComment,
   unpinComment,
 } from '@vp/api-contracts';
+import type { ErrorCode } from '@vp/errors';
 import { comment, type EndpointResolver, mockEndpoint } from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
@@ -19,14 +21,19 @@ interface InboxRequests {
   lists: { filter: string | null; cursor: string | null }[];
   writes: string[];
   replies: { videoId: string; body: unknown }[];
+  bulks: { ids: string[]; action: unknown }[];
 }
 
 /**
  * `url` in the studio over an inbox of keyset `pages`, every write recorded and answered. The pages
  * are the API's live state: a spec that changes them sees the change on the next request.
  */
-export async function renderInbox(url = '/comments', pages: InboxComment[][] = [[]]) {
-  const requests: InboxRequests = { lists: [], writes: [], replies: [] };
+export async function renderInbox(
+  url = '/comments',
+  pages: InboxComment[][] = [[]],
+  refused: Record<string, ErrorCode> = {}
+) {
+  const requests: InboxRequests = { lists: [], writes: [], replies: [], bulks: [] };
   const recordWrite =
     (name: string): EndpointResolver<typeof heartComment> =>
     ({ params }) => {
@@ -49,6 +56,15 @@ export async function renderInbox(url = '/comments', pages: InboxComment[][] = [
       mockEndpoint(createComment, async ({ request, params }) => {
         requests.replies.push({ videoId: String(params.id), body: await request.json() });
         return HttpResponse.json(comment(), { status: 201 });
+      }),
+      mockEndpoint(bulkModerateComments, async ({ request }) => {
+        const body = (await request.json()) as { ids: string[]; action: unknown };
+        requests.bulks.push(body);
+        return HttpResponse.json({
+          results: body.ids.map((id) =>
+            refused[id] ? { id, ok: false, code: refused[id] } : { id, ok: true }
+          ),
+        });
       }),
       mockEndpoint(heartComment, recordWrite('heart')),
       mockEndpoint(unheartComment, recordWrite('unheart')),

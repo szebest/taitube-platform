@@ -1,8 +1,10 @@
 import { dt } from '../define';
 import { studioAdmin } from './studio-admin';
+import { studioBatch } from './studio-batch';
 import { studioCaptions } from './studio-captions';
 import { studioComments } from './studio-comments';
 import { studioLive } from './studio-live';
+import { studioModeration } from './studio-moderation';
 import { studioPicks } from './studio-picks';
 import { studioTeam } from './studio-team';
 
@@ -71,8 +73,10 @@ export const studio = {
   videoAnalytics: dt('Analytics'),
   watchOnWeb: dt('Watch on Taitube'),
   ...studioAdmin,
+  ...studioBatch,
   ...studioCaptions,
   ...studioComments,
+  ...studioModeration,
   ...studioLive,
   ...studioPicks,
   ...studioTeam,
@@ -86,16 +90,6 @@ export const studio = {
   ),
   deleteConfirm: dt('Delete'),
   deleteCancel: dt('Cancel'),
-  batchDeleted: dt('{count:plural}', {
-    plural: { count: { one: '{?} video deleted', other: '{?} videos deleted' } },
-  }),
-  batchVisibilitySet: dt('{count:plural}', {
-    plural: { count: { one: '{?} video updated', other: '{?} videos updated' } },
-  }),
-  batchPartial: dt(
-    '{done:number} of {total:number} done, {failed:number} failed. The failed ones stay selected.'
-  ),
-  batchFailed: dt('Nothing was changed. Try again.'),
   navAnalytics: dt('Analytics'),
   analyticsTitle: dt('Analytics'),
   videoAnalyticsTitle: dt('Video analytics'),

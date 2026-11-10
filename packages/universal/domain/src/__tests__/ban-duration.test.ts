@@ -2,7 +2,7 @@ import { banExpiry } from '../ban-duration';
 
 const NOW = new Date('2026-11-10T09:00:00.000Z');
 
-describe('apps/client/web: banExpiry', () => {
+describe('@vp/domain: banExpiry', () => {
   it.each([
     { duration: '1h', ends: '2026-11-10T10:00:00.000Z' },
     { duration: '24h', ends: '2026-11-11T09:00:00.000Z' },
