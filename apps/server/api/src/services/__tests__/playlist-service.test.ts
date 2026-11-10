@@ -85,6 +85,24 @@ describe('PlaylistService', () => {
     }
   );
 
+  it('refuses a series conversion while the playlist holds a video of another channel the owner cannot watch', async () => {
+    const hidden = '00000000-0000-7000-8000-00000000e003';
+    await seedVideo(repositories, {
+      id: hidden,
+      ownerId: '00000000-0000-7000-8000-00000000e009',
+      visibility: 'private',
+    });
+    const id = await created();
+    expectOk(await repositories.playlists.addItem(id, { id: 'item-hidden', videoId: hidden }));
+
+    const converted = await service.update(OWNER, id, { kind: 'series' });
+
+    expect(expectErr(converted)).toMatchObject({
+      code: ErrorCodes.SERIES_VIDEO_NOT_OWNED,
+      videoId: hidden,
+    });
+  });
+
   it('hands the reorder rule the items as the write transaction sees them', async () => {
     const id = await created();
     expectOk(await service.addItem(OWNER, id, VIDEO));

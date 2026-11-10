@@ -215,9 +215,9 @@ export class PlaylistService {
   ): Promise<Result<void, SeriesVideoNotOwned | DatabaseUnavailable>> {
     if (!playlist || patch.kind !== 'series' || playlist.kind === 'series') return ok();
 
-    const held = await this.deps.playlists.findDetail(playlist.id, actor);
+    const held = await this.deps.playlists.listItemOwners(playlist.id);
     if (isErr(held)) return held;
-    for (const { video } of held.value?.items ?? []) {
+    for (const video of held.value) {
       const member = decideSeriesMembership({ ...playlist, kind: 'series' }, video);
       if (isErr(member)) return member;
     }

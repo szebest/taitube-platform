@@ -186,6 +186,17 @@ export class InMemoryPlaylistRepository implements PlaylistRepositoryPort {
     );
   }
 
+  async listItemOwners(
+    playlistId: string
+  ): Promise<Result<{ id: string; ownerId: string }[], DatabaseUnavailable>> {
+    const videos = await Promise.all(
+      this.itemsOf(playlistId).map(async ({ videoId }) =>
+        unwrapOr(await this.lookups.videosRepo.findById(videoId), null)
+      )
+    );
+    return ok(videos.filter((video) => video !== null).map(({ id, ownerId }) => ({ id, ownerId })));
+  }
+
   async update(
     id: string,
     patch: PlaylistPatch
