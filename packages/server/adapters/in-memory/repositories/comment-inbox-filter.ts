@@ -67,11 +67,12 @@ function inboxPage(
   live: readonly StoredComment[],
   ownerVideos: ReadonlyMap<string, unknown>,
   ownerId: string,
-  { filter, cursor, limit }: ListCreatorInboxOptions,
+  { filter, authorId, cursor, limit }: ListCreatorInboxOptions,
   lookups: InboxLookups
 ): StoredComment[] {
   const mine = live
     .filter((comment) => ownerVideos.has(comment.videoId) && comment.authorId !== ownerId)
+    .filter((comment) => authorId === undefined || comment.authorId === authorId)
     .filter((comment) => matchesInbox(comment, filter, ownerId, live, lookups))
     .sort((a, b) => compareKeys(rowKey(b), rowKey(a)));
   return newestAfter(mine, cursor).slice(0, limit + 1);

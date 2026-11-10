@@ -49,6 +49,8 @@ export interface ListCommentRepliesOptions {
 
 export interface ListCreatorInboxOptions {
   filter: CreatorInboxFilter;
+  /** Only this author's comments, for the moderator who looks at who wrote one. */
+  authorId?: string;
   cursor: CommentReplyCursor | null;
   limit: number;
 }

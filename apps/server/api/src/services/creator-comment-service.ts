@@ -28,7 +28,7 @@ export class CreatorCommentService {
   async inbox(
     user: UserContext,
     acting: ActingChannel,
-    options: { filter: CreatorInboxFilter; cursor?: string; limit?: number }
+    options: { filter: CreatorInboxFilter; authorId?: string; cursor?: string; limit?: number }
   ): Promise<Result<CreatorInboxPage, CreatorInboxFailure>> {
     const allowed = decideChannelTask({ user, acting, task: 'read-inbox' });
     if (isErr(allowed)) return allowed;
@@ -41,6 +41,7 @@ export class CreatorCommentService {
 
     const rows = await comments.listForOwner(ownerId, {
       filter: options.filter,
+      authorId: options.authorId,
       cursor: cursor.value,
       limit,
     });

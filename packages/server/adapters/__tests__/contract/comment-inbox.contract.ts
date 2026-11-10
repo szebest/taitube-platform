@@ -4,6 +4,7 @@ import { C, type CommentContractContext, seedComment } from './comment-contract-
 import { OTHER_OWNER_ID, OWNER_ID, VIDEO_IDS, idsOf, publicVideo } from './fixtures';
 
 const REPORT_ID = '00000000-0000-7000-8000-000000000d01';
+const NOBODY = '00000000-0000-7000-8000-0000000000ff';
 const OWNER_REPLY_ID = '00000000-0000-7000-8000-000000000c0a';
 
 export function describeCommentInboxContract(ctx: CommentContractContext): void {
@@ -94,6 +95,23 @@ export function describeCommentInboxContract(ctx: CommentContractContext): void 
       expectOk(await ctx.comments.remove({ id: C.old, videoId: VIDEO_IDS.a }));
 
       expect(idsOf(await inbox())).toEqual([C.fresh]);
+    });
+
+    it('lists only the comments of the author asked for', async () => {
+      await seedComment(ctx, C.old, { hoursAgo: 2 });
+      await seedComment(ctx, C.fresh, { hoursAgo: 1 });
+      const by = async (authorId: string) =>
+        expectOk(
+          await ctx.comments.listForOwner(OWNER_ID, {
+            filter: 'all',
+            authorId,
+            cursor: null,
+            limit: 10,
+          })
+        );
+
+      expect(idsOf(await by(ctx.authorId))).toEqual([C.fresh, C.old]);
+      expect(await by(NOBODY)).toEqual([]);
     });
 
     it('hands back one row past the limit and resumes after a cursor', async () => {

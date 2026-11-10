@@ -2,6 +2,7 @@ import { DEFAULT_COMMENT_SETTINGS } from '@vp/domain';
 import { expectOk } from '@vp/testing/result';
 import {
   AS,
+  AUTHOR,
   CREATOR,
   type CommentsApp,
   closeSharedCommentsApp,
@@ -43,6 +44,19 @@ describe('creator comment inbox routes: the moderation filters', () => {
     for (const content of posted) await ctx.comment('author', content);
 
     expect(contents(await inbox('questions'))).toEqual(listed);
+  });
+
+  it('lists only the comments of the author asked for', async () => {
+    await ctx.comment('author', 'From the author');
+    await ctx.comment('stranger', 'From a stranger');
+
+    const byAuthor = await ctx.app.inject({
+      method: 'GET',
+      url: `/v1/creator/comments?authorId=${AUTHOR}`,
+      headers: AS.creator,
+    });
+
+    expect(contents(byAuthor)).toEqual(['From the author']);
   });
 
   it('lists held and hidden comments only under their own filter, with their state', async () => {
