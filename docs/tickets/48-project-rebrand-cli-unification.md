@@ -5,11 +5,11 @@
 | Phase | 5 — Developer experience & growth |
 | Issue | [#48](https://github.com/szebest/taitube-platform/issues/48) |
 | Size | L |
-| Blocked by | 01 — Repo skeleton · 92 — Apps grouped by tier · 93 — Creator Studio as its own app |
+| Blocked by | 01 — Repo skeleton · 92 — Apps grouped by tier · 93 — Creator Studio as its own app · 170 — Platform packages |
 | Blocks | — |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD ADR-20 Monorepo topology](../SDD.md#adr-20--monorepo-topology-workspace-boundaries-and-contract-single-sourcing) · [SDD §15.1 Repository layout](../SDD.md#151-repository-layout-monorepo-video-pipeline) |
 
-**Status:** ready
+**Status:** blocked
 
 > **Result-typed error handling (ticket 84, SDD ADR-24).** Any service this ticket adds or touches returns
 > `Promise<Result<T, E>>` with an **inferred** error union and contains no `throw`, `try` or `catch`. Input
