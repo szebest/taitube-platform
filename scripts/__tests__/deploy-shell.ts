@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
 export const DEPLOY_DIR = resolve(import.meta.dirname, '../deploy');
-export const MODULE_NAMES = ['common', 'preflight', 'compose', 'k8s-cluster', 'k8s-rollout', 'k8s'];
+const MODULE_NAMES = ['common', 'preflight', 'compose', 'k8s-cluster', 'k8s-rollout', 'k8s'];
 
 export interface DeployShell {
   dir: string;
