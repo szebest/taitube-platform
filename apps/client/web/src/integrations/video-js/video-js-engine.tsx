@@ -2,7 +2,14 @@ import { liveFeature, videoFeatures } from '@videojs/core/dom';
 import { Container, createPlayer, Gesture, LiveButton, Poster, useContainer } from '@videojs/react';
 import { HlsJsVideo } from '@videojs/react/media/hlsjs-video';
 import { fromPromise, isOk } from '@vp/result';
-import { type ReactNode, type SyntheticEvent, useEffect, useEffectEvent, useRef } from 'react';
+import {
+  type ReactNode,
+  type RefObject,
+  type SyntheticEvent,
+  useEffect,
+  useEffectEvent,
+  useRef,
+} from 'react';
 import { bufferedEndAt } from '#app/lib/player/buffered-end';
 import { findDefaultRendition } from '#app/lib/player/playback-defaults';
 import { useOfferedPlayerChannel } from '#app/lib/player/player-channel';
@@ -156,7 +163,7 @@ export function VideoJsEngine({
         {control && <PlaybackSync {...control} />}
         {defaults && <StartAtDefaultQuality key={playbackUrl} quality={defaults.quality} />}
         <QualityReport onQualityChange={onQualityChange} />
-        <ChannelBinding />
+        <ChannelBinding videoRef={videoRef} />
       </CaptionsContext>
     </VideoPlayer>
   );
@@ -232,18 +239,30 @@ function QualityReport({ onQualityChange }: Pick<TaitubePlayerProps, 'onQualityC
   return null;
 }
 
-function ChannelBinding() {
+function ChannelBinding({ videoRef }: { videoRef: RefObject<HTMLVideoElement | null> }) {
   const channel = useOfferedPlayerChannel();
   const { seek } = usePlayerCommands();
-  const currentTime = usePlayerState((state) => state.currentTime);
   const fullscreen = usePlayerState((state) => state.fullscreen);
   const captionTrackId = usePlayerState((state) => state.activeCaptionTrack?.id ?? null);
 
   useEffect(() => channel?.attach(seek), [channel, seek]);
 
   useEffect(() => {
-    channel?.publish(currentTime);
-  }, [channel, currentTime]);
+    const video = videoRef.current;
+    if (!channel || !video) {
+      return;
+    }
+
+    const publishTime = () => channel.publish(video.currentTime);
+    publishTime();
+    video.addEventListener('timeupdate', publishTime);
+    video.addEventListener('seeked', publishTime);
+    const stopListening = () => {
+      video.removeEventListener('timeupdate', publishTime);
+      video.removeEventListener('seeked', publishTime);
+    };
+    return stopListening;
+  }, [channel, videoRef]);
 
   useEffect(() => {
     channel?.publishFullscreen(fullscreen);
