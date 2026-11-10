@@ -8,7 +8,7 @@ export const tabsStyles = tv({
     list: 'relative flex gap-inline overflow-auto',
     tab: 'relative inline-flex shrink-0 cursor-pointer items-center gap-inline border-0 bg-transparent px-inset-control text-label whitespace-nowrap text-fg-muted transition-colors duration-fast focus-ring hover:text-fg active:bg-tint-strong disabled:pointer-events-none disabled:text-fg-subtle data-[state=active]:text-fg motion-reduce:transition-none [&_svg]:size-icon-sm',
     indicator: slidingIndicatorBase,
-    panel: 'focus-ring',
+    panel: 'focus-ring data-[state=active]:animate-fade-in',
   },
   variants: {
     variant: {

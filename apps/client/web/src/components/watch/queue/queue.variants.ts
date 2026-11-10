@@ -9,7 +9,7 @@ export const queueStyles = tv({
     position: 'font-mono text-mono text-fg-muted',
     modes: 'm-0 flex min-w-0 items-center gap-1 border-0 p-0',
     list: 'min-h-0',
-    item: 'rounded-card p-1 transition-colors duration-fast ease-standard aria-[current=true]:bg-accent-soft',
+    item: 'animate-fade-in rounded-card p-1 transition-colors duration-fast ease-standard aria-[current=true]:bg-accent-soft',
     itemBody: 'flex min-w-0 flex-1 flex-col gap-1',
     nowPlaying: 'm-0 text-overline text-accent-ink uppercase',
     recommendations: 'flex flex-col gap-inline border-t-divider border-border pt-stack',
