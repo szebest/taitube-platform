@@ -98,8 +98,9 @@ Each row has a fixture proving it fires; the list is [ARCHITECTURE.md section 6]
 ## Scroll lock
 
 Radix locks `body` for a Dialog, Drawer, Menu and Select, and gives the scrollbar's width back with a `margin-right`
-of its own. `base.css` holds the one rule, `html { scrollbar-gutter: stable }`, and no primitive pads, overrides or
-works around the lock: overriding that margin moves the content by the scrollbar's width. `layout-stability.test.ts`
+of its own. `html { scrollbar-gutter: stable }` already keeps that width reserved while the lock hides the scrollbar,
+so `base.css` holds the two rules, the gutter and `html body[data-scroll-locked] { margin-inline: 0 }`, and no
+primitive pads, overrides or works around the lock. `layout-stability.test.ts`
 in each app's `e2e/` opens every locking primitive over a page with a 15 px classic scrollbar and holds the content's
 box and `scrollY` where they were, open and closed.
 

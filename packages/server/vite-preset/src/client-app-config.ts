@@ -92,6 +92,15 @@ export function workspaceSourceAliases(packagesDir: string): SourceAlias[] {
   return [...exact, ...patterns.sort(byNodePrecedence)].map(toAlias);
 }
 
+/** The workspace sources are aliased in, so the dev server's dependency scan reads them too and bundles their packages before the first load, not after it. */
+const WORKSPACE_ENTRIES = [
+  ...BROWSER_TIERS.map(
+    (tier) => `${PACKAGES_DIR.replaceAll('\\', '/')}${tier}/*/src/**/*.{ts,tsx}`
+  ),
+  '!**/__tests__/**',
+  '!**/__stories__/**',
+];
+
 const VENDOR_CHUNKS = {
   react: /[\\/]node_modules[\\/](react|react-dom|scheduler|react-compiler-runtime)[\\/]/,
   tanstack:
@@ -181,6 +190,7 @@ export function clientAppConfig({
       },
       environments: {
         client: {
+          optimizeDeps: { entries: WORKSPACE_ENTRIES },
           build: {
             rolldownOptions: {
               output: { codeSplitting: { groups: VENDOR_GROUPS } },

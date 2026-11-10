@@ -163,10 +163,15 @@
   }
 }
 
-/* A page with and without a scrollbar lays out alike. The scroll lock Radix applies to `body` drops the
-   viewport's scrollbar, and the end margin it adds gives that width back: do not override it. */
+/* A page with and without a scrollbar lays out alike. The gutter stays reserved while the scroll lock Radix
+   applies to `body` hides the scrollbar, so the end margin the lock adds for that width would shrink the
+   content a second time: it is dropped. */
 html {
   scrollbar-gutter: stable;
+}
+
+html body[data-scroll-locked] {
+  margin-inline: 0 !important;
 }
 
 [data-mode="dark"],

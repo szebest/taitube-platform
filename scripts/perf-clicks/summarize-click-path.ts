@@ -15,7 +15,7 @@ const median = (values: readonly number[]) => {
 
 const round = (value: number, places: number) => Number(value.toFixed(places));
 
-const KEYSTROKE_TYPES = new Set(['keydown', 'keypress', 'keyup']);
+const KEYSTROKE_TYPES: readonly string[] = ['keydown', 'keypress', 'keyup'];
 
 /** The numbers `pnpm perf:clicks` prints for a click path: the worst interaction, the typical keystroke in the palette, and the biggest shift with its source. */
 export function summarizeClickPath({
@@ -25,7 +25,7 @@ export function summarizeClickPath({
   interactions,
 }: PageHealth): ClickPathSummary {
   const keystrokes = interactions.filter(
-    ({ type, target }) => KEYSTROKE_TYPES.has(type) && target.startsWith('command')
+    ({ type, target }) => KEYSTROKE_TYPES.includes(type) && target.startsWith('command')
   );
   return {
     cls: round(cls, 4),
