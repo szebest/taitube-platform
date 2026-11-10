@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react-vite';
+import type { Decorator, Meta, StoryObj } from '@storybook/react-vite';
 import { ImageCropper, type ImageCropperRootProps } from '../index';
 
 const SIZE = { width: 2560, height: 1440 };
@@ -7,11 +7,19 @@ const SRC = `data:image/svg+xml;utf8,${encodeURIComponent(
   '<svg xmlns="http://www.w3.org/2000/svg" width="2560" height="1440"><defs><linearGradient id="g"><stop offset="0" stop-color="#456"/><stop offset="1" stop-color="#c84"/></linearGradient></defs><rect width="2560" height="1440" fill="url(#g)"/><circle cx="1280" cy="720" r="300" fill="#fff" fill-opacity="0.6"/></svg>'
 )}`;
 
+const anchored: Decorator = (Story) => (
+  <>
+    <div className="min-h-dvh" />
+    <Story />
+  </>
+);
+
 type CropperArgs = Pick<ImageCropperRootProps, 'kind' | 'status'>;
 
 const meta = {
   title: 'Studio/ImageCropper',
   component: ImageCropper.Root,
+  decorators: [anchored],
   args: {
     kind: 'banner',
     src: SRC,
