@@ -138,6 +138,11 @@ needs no line of its own if it paints `cursor-pointer`; a new chrome slot is add
 
 ## Motion
 
+A transition animates compositor properties (`transform`, `opacity`, colour, shadow) over a duration token;
+`transition-all`, a literal `duration-<n>`, and a transition of a layout property fail the `zero-matches` design
+rows. Every shared control has motion and every moving one a `motion-reduce` guard (`motion.test.ts`), and
+`base.css` reads `prefers-reduced-motion` once. The rest is [motion.md](../design/foundations/motion.md).
+
 Use the `animate-*` utilities and the motion tokens (`duration-fast|base`, `ease-enter|exit|settle`); never a literal
 duration. Under `motion: reduced`, chosen or forced by `prefers-reduced-motion`, nothing moves: opacity and colour
 only, skeletons static, the live dot static beside its label, view transitions off, autoplay previews paused, and a

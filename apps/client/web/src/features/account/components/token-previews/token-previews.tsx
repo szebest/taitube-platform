@@ -89,11 +89,13 @@ export function MotionPreview() {
   }, []);
 
   return (
-    <div className="flex h-8 items-center">
+    <div className="flex h-8 items-center [container-type:inline-size]">
       <span
         className={cn(
-          'size-5 rounded-full bg-accent transition-[margin-inline-start] duration-slow ease-standard motion-reduce:transition-none',
-          atEnd ? 'ms-[calc(100%-1.25rem)]' : 'ms-0'
+          'size-5 rounded-full bg-accent transition-transform duration-slow ease-standard motion-reduce:transition-none',
+          atEnd
+            ? 'translate-x-[calc(100cqw-1.25rem)] rtl:-translate-x-[calc(100cqw-1.25rem)]'
+            : 'translate-x-0'
         )}
       />
     </div>

@@ -17,7 +17,7 @@ describe('@vp/ui: Progress', () => {
       expect(bar).toHaveAttribute('aria-valuenow', '40');
       expect(bar).toHaveAttribute('aria-valuemax', '100');
       expect(container.querySelector('[data-slot="progress-indicator"]')).toHaveStyle({
-        inlineSize: '40%',
+        transform: 'scaleX(0.4)',
       });
     }
   );

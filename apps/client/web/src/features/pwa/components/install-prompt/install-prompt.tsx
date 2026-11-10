@@ -14,7 +14,7 @@ export function InstallPrompt() {
   return (
     <Callout.Root
       role="status"
-      className="fixed inset-x-gutter-compact bottom-[calc(3.5rem+env(safe-area-inset-bottom)+var(--gap-stack))] z-pip shadow-3 motion-enter medium:inset-x-auto medium:end-gutter-medium medium:bottom-stack medium:max-w-md"
+      className="fixed inset-x-gutter-compact bottom-[calc(3.5rem+env(safe-area-inset-bottom)+var(--gap-stack))] z-pip shadow-3 motion-enter medium:inset-x-auto medium:end-gutter-medium medium:bottom-stack medium:max-w-[28rem]"
     >
       <Callout.Icon />
       <Callout.Title>{tOr('pwa.installTitle', {}, '')}</Callout.Title>

@@ -42,8 +42,13 @@ the reason when it is active ([accessibility.md](accessibility.md)).
 `reduced` uses a linear curve throughout, so there is no easing character left to tune. `calm` differs from
 `standard` only in longer durations and a slightly softer `settle`.
 
-Tailwind utilities are `duration-fast`, `ease-settle` and so on; a raw millisecond or a `transition-all` is a
-review failure. Animate `transform` and `opacity` only, so nothing re-lays out.
+Tailwind utilities are `duration-fast`, `ease-settle` and so on. A literal `duration-<n>` or `delay-<n>`, a
+`transition-all` and a transition of `width`, `height`, `inline-size`, `margin` or `padding` fail the build (the
+`zero-matches` design rows); a sliding indicator is the one exception, being absolutely positioned. Animate
+`transform` and `opacity` only, so nothing re-lays out. A shared control that paints `cursor-pointer` has a
+`transition`, an `animate-` or `motion-enter`, and one that moves has a `motion-reduce` guard
+(`motion.test.ts`). The system setting is read in one place, the single `prefers-reduced-motion` block of
+`base.css`; everything else follows `data-motion="reduced"` or the `motion-reduce` variant.
 
 ## Catalogue
 

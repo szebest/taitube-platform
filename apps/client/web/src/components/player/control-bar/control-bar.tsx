@@ -213,7 +213,7 @@ function VolumeControl() {
         step={0.01}
         value={position}
         onChange={handleSlide}
-        className="w-0 cursor-pointer opacity-0 accent-fg transition-[width,opacity] duration-fast ease-standard group-focus-within/volume:w-20 group-focus-within/volume:opacity-100 group-hover/volume:w-20 group-hover/volume:opacity-100 motion-reduce:transition-none"
+        className="w-0 cursor-pointer opacity-0 accent-fg transition-opacity duration-fast ease-standard group-focus-within/volume:w-20 group-focus-within/volume:opacity-100 group-hover/volume:w-20 group-hover/volume:opacity-100 motion-reduce:transition-none"
       />
     </div>
   );

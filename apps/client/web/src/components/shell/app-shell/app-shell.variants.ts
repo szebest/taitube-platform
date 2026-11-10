@@ -15,7 +15,7 @@ export const appShellStyles = tv({
     searchLabel: 'sr-only medium:not-sr-only medium:truncate',
     searchHint: 'ms-auto hidden medium:inline-flex',
     headerEnd: 'flex shrink-0 items-center gap-inline',
-    rail: 'group/rail sticky top-header z-rail hidden h-[calc(100dvh-var(--layout-header))] bg-bg flex-col gap-inline overflow-y-auto p-inline transition-[width,margin] duration-base ease-settle motion-reduce:transition-none medium:flex group-data-[variant=immersive]/shell:hidden',
+    rail: 'group/rail sticky top-header z-rail hidden h-[calc(100dvh-var(--layout-header))] bg-bg flex-col gap-inline overflow-y-auto p-inline medium:flex group-data-[variant=immersive]/shell:hidden',
     drawerNav: 'group/rail flex flex-col gap-inline pb-stack',
     group: 'flex flex-col gap-inline',
     groupHeading:

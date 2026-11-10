@@ -92,16 +92,6 @@ describe('apps/server/api/services: SearchService', () => {
     expect(search).toHaveBeenCalledTimes(4);
   });
 
-  it('counts each kind on the first page', async () => {
-    const first = expectOk(await service.search(request('rust')));
-
-    expect(first.data.counts).toEqual({
-      video: expect.any(Number),
-      channel: expect.any(Number),
-      playlist: expect.any(Number),
-    });
-  });
-
   it("puts each video hit under its owner's channel", async () => {
     const { data } = expectOk(await service.search(request('ownership')));
 

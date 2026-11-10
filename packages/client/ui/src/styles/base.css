@@ -140,12 +140,6 @@
 :root[data-motion="reduced"] {
   --motion-travel: 0;
 }
-@media (prefers-reduced-motion: reduce) {
-  :root {
-    --motion-travel: 0;
-  }
-}
-
 /* The reduced set is chosen as well as forced by the system, so both variants follow `data-motion` too. */
 @custom-variant motion-reduce {
   @media (prefers-reduced-motion: reduce) {
@@ -270,7 +264,12 @@ html body[data-scroll-locked] {
   animation: none;
 }
 
+/* The one place the system setting is read: it forces what `data-motion="reduced"` chooses. */
 @media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-travel: 0;
+  }
+
   ::view-transition-group(*),
   ::view-transition-old(*),
   ::view-transition-new(*) {

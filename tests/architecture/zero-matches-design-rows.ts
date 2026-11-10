@@ -88,6 +88,30 @@ export const DESIGN_ROWS: readonly Row[] = [
     passes: '<div className="z-behind z-stage-hud group-data-open:z-modal" />',
   },
   {
+    name: 'a literal duration or delay (duration-200, duration-[300ms]), where a duration token belongs: duration-instant to duration-cinematic, which the motion set (standard, calm, reduced) scales',
+    pattern: new RegExp(`${UTILITY}(?:duration|delay)-(?:\\d|\\[\\d)`, 'g'),
+    scope: [...CLIENT_SOURCE, ...SYSTEM_STYLESHEETS],
+    expected: 0,
+    fires: '<div className="transition-colors duration-200 md:delay-[150ms]" />',
+    passes: '<div className="transition-colors duration-fast ease-standard" />',
+  },
+  {
+    name: 'a transition of every property or of a layout one (transition-all, transition-[width], transition: height), where only transform, opacity, colour, shadow and the other compositor properties animate; the sliding indicator is absolutely positioned and resizes nothing around it',
+    pattern: new RegExp(
+      `${UTILITY}transition-(?:all\\b|\\[[^\\]]*\\b(?:all|width|height|inline-size|block-size|margin[\\w-]*|padding[\\w-]*|top|left|right|bottom|inset[\\w-]*|gap)\\b[^\\]]*\\])|\\btransition(?:-property)?:[^;{}]*\\b(?:all|width|height|inline-size|block-size|margin[\\w-]*|padding[\\w-]*)\\b`,
+      'g'
+    ),
+    scope: [
+      ...CLIENT_SOURCE,
+      ...SYSTEM_STYLESHEETS,
+      ':(exclude)packages/client/ui/src/lib/sliding-indicator.ts',
+    ],
+    expected: 0,
+    fires:
+      '<div className="transition-all transition-[width,opacity] hover:transition-[margin-inline-start]" /> a { transition: height 1s }',
+    passes: '<div className="transition-[opacity,translate] transition-colors" />',
+  },
+  {
     name: 'data-theme set to a mode (dark, light, oled), which is not a theme id: a surface that must be dark sets data-mode="dark"',
     pattern: /data-theme=["'{]*(?:dark|light|oled)\b/g,
     scope: CLIENT_SOURCE,
