@@ -21,7 +21,7 @@ interface Persona {
   displayName: string;
 }
 
-/** The ids and token roles are the ones `@vp/dev-token` signs in as; the moderator has no dev persona. */
+/** The ids and token roles are the ones `@vp/dev-token` signs in as. */
 const PERSONAS: readonly Persona[] = [
   {
     kind: 'creator',
