@@ -5,7 +5,7 @@ const BODY = 'col-start-1 min-w-0';
 
 export const videoCardStyles = tv({
   slots: {
-    root: 'group/card relative isolate grid grid-cols-[minmax(0,1fr)_auto] content-start items-start gap-x-inline gap-y-1 font-sans text-fg before:pointer-events-none before:absolute before:-inset-inline before:z-behind before:rounded-card before:bg-raised before:opacity-0 before:shadow-3 before:transition-opacity before:duration-slow before:ease-settle data-expanded:z-lift data-expanded:before:opacity-100',
+    root: 'group/card relative isolate grid grid-cols-[minmax(0,1fr)_auto] content-start items-start gap-x-inline gap-y-1 font-sans text-fg before:pointer-events-none before:absolute before:-inset-inline before:z-behind before:rounded-card before:bg-raised before:opacity-0 before:shadow-3 before:transition-opacity before:duration-slow before:ease-settle data-expanded:z-lift data-expanded:before:rounded-b-none data-expanded:before:opacity-100',
     thumb:
       'col-span-full mb-inline transition-[translate,box-shadow] duration-slow ease-settle pointer-fine:group-hover/card:translate-y-[calc(-2px*var(--motion-travel))] pointer-fine:group-hover/card:shadow-2',
     preview: 'absolute inset-0 size-full animate-fade-in bg-media object-cover',
@@ -18,7 +18,7 @@ export const videoCardStyles = tv({
     reasonDot: 'size-1.5 shrink-0 rounded-full bg-current',
     menu: 'relative z-lift col-start-2 row-start-2 row-span-2 opacity-0 transition-opacity duration-fast ease-standard group-hover/card:opacity-100 group-focus-within/card:opacity-100 pointer-coarse:opacity-100 has-[[data-state=open]]:opacity-100',
     panel:
-      'absolute inset-x-0 inset-be-0 z-lift flex animate-pop-in flex-col gap-inline bg-raised pt-inline',
+      'absolute -inset-x-inline top-full z-lift flex animate-pop-in flex-col gap-inline rounded-b-card bg-raised px-inline pt-inline pb-inline shadow-3',
     description: 'm-0 line-clamp-2 text-body-sm text-fg-muted',
     actions: 'flex flex-wrap gap-inline',
   },
