@@ -18,18 +18,27 @@ export interface ClickRun {
   env: Record<string, string>;
 }
 
-/** What `pnpm perf:clicks <label> [--against <label>] [--port-base <n>]` asks for, and the env the click path runs with. */
+/** What `pnpm perf:clicks <label> [--against <label>] [--port-base <n>] [--throttle <cpu slowdown>]` asks for, and the env the click path runs with. */
 export function parseClickRun(args: readonly string[]): ClickRun {
   const { positionals, values } = parseArgs({
     args: [...args],
     allowPositionals: true,
-    options: { against: { type: 'string' }, 'port-base': { type: 'string', default: '5740' } },
+    options: {
+      against: { type: 'string' },
+      'port-base': { type: 'string', default: '5740' },
+      throttle: { type: 'string', default: '1' },
+    },
   });
   const label = positionals[0] ?? 'run';
   return {
     label,
     against: values.against,
-    env: { PERF_LABEL: label, PERF_OUT: OUT, E2E_PORT_BASE: values['port-base'] },
+    env: {
+      PERF_LABEL: label,
+      PERF_OUT: OUT,
+      E2E_PORT_BASE: values['port-base'],
+      PERF_CPU_THROTTLE: values.throttle,
+    },
   };
 }
 

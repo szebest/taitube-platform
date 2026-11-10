@@ -7,6 +7,7 @@ import { videoCard } from '../video-card';
 
 const QUERY = 'launch';
 const KEYSTROKE_DELAY_MS = 120;
+const CPU_THROTTLE = Number(process.env['PERF_CPU_THROTTLE'] ?? 1);
 
 test('the click path home, video, back, search, sidebar and theme', async ({
   page,
@@ -16,6 +17,10 @@ test('the click path home, video, back, search, sidebar and theme', async ({
   await signIn('viewer');
   await page.setViewportSize({ width: 1280, height: 800 });
   await observePageHealth(page);
+  if (CPU_THROTTLE > 1) {
+    const session = await page.context().newCDPSession(page);
+    await session.send('Emulation.setCPUThrottlingRate', { rate: CPU_THROTTLE });
+  }
 
   await page.goto('/', { waitUntil: 'networkidle' });
   await page.evaluate(() =>
