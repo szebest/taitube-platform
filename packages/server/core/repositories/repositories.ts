@@ -13,6 +13,7 @@ import type { CommentReportRepositoryPort } from './comment-report-repository';
 import type { CommentRepositoryPort } from './comment-repository';
 import type { DlqRepository } from './dlq-repository';
 import type { EventRepository } from './event-repository';
+import type { FingerprintRepository } from './fingerprint-repository';
 import type { LiveChatRepositoryPort } from './live-chat-repository';
 import type { LiveStreamRepositoryPort } from './live-stream-repository';
 import type { NotificationRepositoryPort } from './notification-repository';
@@ -23,6 +24,7 @@ import type { RecommendationFeedbackRepositoryPort } from './recommendation-feed
 import type { RelatedVideosRepositoryPort } from './related-videos-repository';
 import type { RenditionRepository } from './rendition-repository';
 import type { RisingVideosRepositoryPort } from './rising-videos-repository';
+import type { ScreeningRepository } from './screening-repository';
 import type { SearchHistoryRepositoryPort } from './search-history-repository';
 import type { SearchRepositoryPort } from './search-repository';
 import type { StepRepository } from './step-repository';
@@ -78,6 +80,8 @@ export interface Repositories {
   related: RelatedVideosRepositoryPort;
   rising: RisingVideosRepositoryPort;
   captions: CaptionRepository;
+  screenings: ScreeningRepository;
+  fingerprints: FingerprintRepository;
   clips: ClipRepositoryPort;
   channelFeatured: ChannelFeaturedRepositoryPort;
   channelHandleHistory: ChannelHandleHistoryRepositoryPort;

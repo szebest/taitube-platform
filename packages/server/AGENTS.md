@@ -11,7 +11,7 @@ Everything a browser does not import. This is the default tier — a package is 
 only when it has earned it with a real consumer.
 
 Members: `adapters`, `composition`, `concurrency`, `config`, `core`, `db`, `env-schema`, `events`,
-`ffmpeg`, `job-contracts`, `logger`, `observability`, `storage`, `testing`, `vite-preset` (the client apps'
+`ffmpeg`, `fingerprint`, `job-contracts`, `logger`, `observability`, `storage`, `testing`, `vite-preset` (the client apps'
 Vite config, build tooling), `whisper`, plus the CLI packages `compose-autoscaler`, `dev-token`, `gen-video`, `lighthouse`, `upload-client`.
 
 CLI packages live here rather than in `tools/` because they are workspace packages with a

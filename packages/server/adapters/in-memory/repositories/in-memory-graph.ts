@@ -24,6 +24,7 @@ import { InMemoryRelatedVideosRepository } from './in-memory-related-videos-repo
 import { InMemoryRenditionRepository } from './in-memory-rendition-repository';
 import { Repo } from './in-memory-repo-tokens';
 import { InMemoryRisingVideosRepository } from './in-memory-rising-videos-repository';
+import { provideScreening } from './in-memory-screening-providers';
 import { InMemorySearchHistoryRepository } from './in-memory-search-history-repository';
 import { InMemorySearchRepository } from './in-memory-search-repository';
 import { InMemoryStepRepository } from './in-memory-step-repository';
@@ -44,7 +45,7 @@ import { InMemoryWebhookRepository } from './in-memory-webhook-repository';
  * after both are built, so no repository needs a setter to be wired.
  */
 export function graph(): Container {
-  return new Container()
+  return provideScreening(new Container())
     .provide(Repo.outbox, () => new InMemoryOutboxRepository())
     .provide(Repo.renditions, () => new InMemoryRenditionRepository())
     .provide(Repo.steps, () => new InMemoryStepRepository())

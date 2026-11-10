@@ -3,15 +3,18 @@ import {
   creatorUser,
   foreignVideo,
   guestUser,
+  heldVideo,
   moderatorUser,
   privateVideo,
   publicVideo,
   rejectedVideo,
+  screeningRejectedVideo,
   standardUser,
   unlistedVideo,
 } from '../../__mocks__/fixtures';
 import type { UserContext, VideoResource } from '../../types/index';
 import {
+  canAppealVideo,
   canDeleteVideo,
   canModerateVideo,
   canPinVideo,
@@ -144,6 +147,57 @@ describe('helpers/videos: Video Action Helpers', () => {
       { scenario: 'an admin', user: adminUser, video: foreignVideo, expected: true },
     ])('$scenario: $expected', ({ user, video, expected }) => {
       expect(canModerateVideo({ user, video })).toBe(expected);
+    });
+  });
+
+  describe('canModerateVideo over a held video', () => {
+    it.each<VideoCase>([
+      {
+        scenario: 'a non-moderator approving or rejecting it',
+        user: creatorUser,
+        video: heldVideo,
+        expected: false,
+      },
+      {
+        scenario: 'an admin approving, rejecting or dismissing it',
+        user: adminUser,
+        video: heldVideo,
+        expected: true,
+      },
+    ])('$scenario: $expected', ({ user, video, expected }) => {
+      expect(canModerateVideo({ user, video })).toBe(expected);
+    });
+  });
+
+  describe('canAppealVideo', () => {
+    it.each<VideoCase>([
+      {
+        scenario: 'the owner of a held video',
+        user: creatorUser,
+        video: heldVideo,
+        expected: true,
+      },
+      {
+        scenario: 'the owner of a screening rejection',
+        user: creatorUser,
+        video: screeningRejectedVideo,
+        expected: true,
+      },
+      {
+        scenario: 'the owner of a manual takedown',
+        user: creatorUser,
+        video: rejectedVideo,
+        expected: false,
+      },
+      {
+        scenario: 'a stranger to a held video',
+        user: standardUser,
+        video: heldVideo,
+        expected: false,
+      },
+      { scenario: 'a guest', user: guestUser, video: heldVideo, expected: false },
+    ])('$scenario: $expected', ({ user, video, expected }) => {
+      expect(canAppealVideo({ user, video })).toBe(expected);
     });
   });
 

@@ -5,6 +5,7 @@ import type { AuthConfig } from './auth-config';
 import { type CaptionsConfig, captionsConfig } from './captions-config';
 import { asCdnBase, type CdnBase } from './cdn-base';
 import { type LiveConfig, liveConfig } from './live-config';
+import { type ScreeningConfig, screeningConfig } from './screening-config';
 import {
   CACHES,
   FFMPEG_PROCESS,
@@ -31,6 +32,8 @@ import {
 import { type WatchPartyConfig, watchPartyConfig } from './watch-party-config';
 
 export type WorkerStageName = AppEnv['WORKER_STAGE'];
+
+type Numbers<T> = { -readonly [K in keyof T]: number };
 
 export interface AppConfig {
   environment: AppEnv['NODE_ENV'];
@@ -112,17 +115,7 @@ export interface AppConfig {
     reactionReconcileLimit: number;
     scanLimit: number;
   };
-  views: {
-    minWatchSeconds: number;
-    dedupTtlSeconds: number;
-    fallbackCapacity: number;
-    breakerFailureThreshold: number;
-    breakerCooldownMs: number;
-    flushIntervalMs: number;
-    batchRetentionMs: number;
-    bodyLimitBytes: number;
-    ratePerMinute: number;
-  };
+  views: Numbers<typeof VIEWS>;
   playbackTelemetry: { bodyLimitBytes: number; ratePerMinute: number };
   webVitals: { bodyLimitBytes: number; ratePerMinute: number; maxRoutesPerApp: number };
   http: {
@@ -133,6 +126,7 @@ export interface AppConfig {
     bodyLimitBytes: number;
   };
   captions: CaptionsConfig;
+  screening: ScreeningConfig;
   live: LiveConfig;
   watchParties: WatchPartyConfig;
   worker: {
@@ -143,23 +137,14 @@ export interface AppConfig {
     tmpDir: string;
     ffmpegPath: string;
     ffprobePath: string;
+    fpcalcPath: string;
     ffmpegThreads: number;
     x264Preset: string;
     hlsSegmentSeconds: number;
     gopSeconds: number;
     jobTimeoutFactor: number;
-    ffmpegProcess: {
-      killGraceMs: number;
-      stderrTailLines: number;
-      minTranscodeTimeoutMs: number;
-      thumbnailTimeoutMs: number;
-    };
-    segmentUpload: {
-      concurrency: number;
-      maxRetries: number;
-      retryDelayMs: number;
-      pollIntervalMs: number;
-    };
+    ffmpegProcess: Numbers<typeof FFMPEG_PROCESS>;
+    segmentUpload: Numbers<typeof SEGMENT_UPLOAD>;
   };
 }
 
@@ -284,6 +269,10 @@ export function toAppConfig(env: AppEnv): AppConfig {
       vadModelPath: env.CAPTIONS_VAD_MODEL_PATH,
       threads: env.CAPTIONS_THREADS,
     }),
+    screening: screeningConfig({
+      enabled: env.SCREENING_ENABLED,
+      modelPath: env.SCREENING_MODEL_PATH,
+    }),
     live: liveConfig({
       hookSecret: env.LIVE_HOOK_SECRET,
       ingestUrl: env.LIVE_INGEST_URL,
@@ -304,6 +293,7 @@ export function toAppConfig(env: AppEnv): AppConfig {
       tmpDir: env.TMP_DIR,
       ffmpegPath: env.FFMPEG_PATH,
       ffprobePath: env.FFPROBE_PATH,
+      fpcalcPath: env.FPCALC_PATH,
       ffmpegThreads: env.FFMPEG_THREADS,
       x264Preset: env.X264_PRESET,
       hlsSegmentSeconds: env.HLS_SEGMENT_SECONDS,

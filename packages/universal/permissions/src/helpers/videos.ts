@@ -67,6 +67,17 @@ export function canModerateVideo({
   return getUserPermissions(user).can('moderate', videoSubject ?? 'Video');
 }
 
+export function canAppealVideo({
+  user,
+  video,
+}: {
+  user: UserContext | null;
+  video?: VideoResource;
+}): boolean {
+  const videoSubject = toVideoSubject(video);
+  return getUserPermissions(user).can('appeal', videoSubject ?? 'Video');
+}
+
 export function canPinVideo({
   user,
   video,

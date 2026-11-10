@@ -1,4 +1,3 @@
-import { trace } from '@opentelemetry/api';
 import {
   type ListPublicVideosOptions,
   type ListPublicVideosResult,
@@ -11,9 +10,8 @@ import {
   type VideoWithDetails,
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
-import { publicFeedWalkInstant, videoStatusChanged } from '@vp/domain';
+import { publicFeedWalkInstant } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
-import { transitionNotificationJobs } from '@vp/job-contracts';
 import { type Result, err, fromPromise, map, ok } from '@vp/result';
 import { type SQL, and, desc, eq, inArray, sql } from 'drizzle-orm';
 import {
@@ -23,11 +21,10 @@ import {
   ownerScope,
   videoReadScope,
 } from '../scopes/index';
-import { enqueueNotificationJobs } from './notification-jobs';
-import { appendUserEvent } from './postgres-user-event-repository';
 import { publicFeedCursorScope, publicFeedOrderBy, publicFeedScope } from './public-feed-query';
-import type { PostgresDatabase, VideoInsert } from './types';
+import type { PostgresDatabase } from './types';
 import { videoScanScope } from './video-scan-query';
+import { commitVideoTransition } from './video-transition';
 
 const { videos: v, videoEvents: ve, processingSteps: ps, renditions: rn } = schema;
 
@@ -127,57 +124,8 @@ export class PostgresVideoRepository extends VideoRepository {
   }
 
   async transition(options: TransitionVideoOptions): Promise<Result<boolean, DatabaseUnavailable>> {
-    const { videoId, from, to, patch = {}, eventType, eventPayload = {}, traceId } = options;
-    const effectiveTraceId = traceId || trace.getActiveSpan()?.spanContext().traceId || null;
-
     return fromPromise(
-      () =>
-        this.db.transaction(async (tx) => {
-          const statusCond = Array.isArray(from) ? inArray(v.status, from) : eq(v.status, from);
-
-          const rows = await tx
-            .update(v)
-            .set({
-              ...patch,
-              status: to,
-              updatedAt: new Date(),
-              ...(to === 'READY' ? { readyAt: new Date() } : {}),
-            } as VideoInsert)
-            .where(and(eq(v.id, videoId), statusCond))
-            .returning({ ownerId: v.ownerId, visibility: v.visibility });
-
-          const [owner] = rows;
-          if (!owner) return false;
-
-          await tx.insert(ve).values({
-            videoId,
-            type: eventType || `video.${to.toLowerCase()}`,
-            payload: eventPayload,
-            traceId: effectiveTraceId,
-            createdAt: new Date(),
-          });
-
-          if (options.outbox) {
-            await tx.insert(schema.outbox).values({
-              id: options.outbox.id || sql`gen_random_uuid()`,
-              kind: options.outbox.kind,
-              payload: options.outbox.payload,
-              createdAt: new Date(),
-              attempts: 0,
-            });
-          }
-
-          await appendUserEvent(tx, {
-            userId: owner.ownerId,
-            ...videoStatusChanged(videoId, to),
-          });
-          await enqueueNotificationJobs(
-            tx,
-            transitionNotificationJobs(videoId, from, to, owner.visibility)
-          );
-
-          return true;
-        }),
+      () => this.db.transaction((tx) => commitVideoTransition(tx, options)),
       databaseUnavailable.during('transition')
     );
   }

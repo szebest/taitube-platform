@@ -65,6 +65,8 @@ export const errors = {
   whisperKilled: dt('Generowanie napisów zostało przerwane i zostanie ponowione.'),
   whisperTimeout: dt('Generowanie napisów trwało zbyt długo.'),
   whisperModelInvalid: dt('Model napisów jest niedostępny lub uszkodzony.'),
+  screenModelInvalid: dt('Model weryfikacji jest niedostępny lub uszkodzony.'),
+  screenModelFailed: dt('Weryfikacja filmu nie powiodła się i zostanie ponowiona.'),
   whisperInputRejected: dt('Nie udało się przepisać dźwięku z tego filmu.'),
   noAudioStream: dt('Ten film nie ma dźwięku, do którego można utworzyć napisy.'),
   captionNotFound: dt('Ten film nie ma napisów w tym języku.'),
@@ -83,6 +85,9 @@ export const errors = {
   liveChatSubscribersOnly: dt('Teraz mogą pisać na czacie tylko subskrybenci.'),
   liveChatClosed: dt('Czat jest zamknięty, bo transmisja nie trwa.'),
   liveChatTicketInvalid: dt('Sesja czatu wygasła. Połącz się ponownie, aby dalej pisać.'),
+  screeningRejected: dt(
+    'Recenzent odrzucił ten film po tym, jak zatrzymała go automatyczna kontrola. Możesz się odwołać od decyzji.'
+  ),
   watchPartyNotFound: dt('Ta impreza do wspólnego oglądania nie istnieje.'),
   watchPartyClosed: dt('Ta impreza do wspólnego oglądania już się skończyła.'),
   watchPartyFull: dt('Impreza jest pełna. Spróbuj ponownie, gdy zwolni się miejsce.'),

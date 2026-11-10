@@ -18,6 +18,7 @@ export * from './webhook-dispatcher';
 export * from './live-gateway';
 export * from './live-chat-gate';
 export * from './live-presence';
+export * from './frame-classifier';
 export * from './watch-party-gate';
 export * from './watch-party-presence';
 export * from './party-guest-sessions';

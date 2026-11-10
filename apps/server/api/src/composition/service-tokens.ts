@@ -48,6 +48,7 @@ import type {
   ReactionService,
   RecommendationFeedbackService,
   RelatedService,
+  ScreeningService,
   SearchHistoryService,
   SearchService,
   SseHub,
@@ -82,6 +83,7 @@ import type {
   WatchPartyInviteService,
   WatchPartyControlsService,
 } from '../services/watch-party/index';
+import { ScreeningServices } from './screening-tokens';
 
 export interface ServiceSet {
   videoService: VideoService;
@@ -117,6 +119,7 @@ export interface ServiceSet {
   subscriptionService: SubscriptionService;
   commentService: CommentService;
   commentReportService: CommentReportService;
+  screeningService: ScreeningService;
   creatorCommentService: CreatorCommentService;
   viewService: ViewService;
   webVitalsService: WebVitalsService;
@@ -190,6 +193,7 @@ export const Services = {
   SubscriptionService: token<SubscriptionService>('SubscriptionService'),
   CommentService: token<CommentService>('CommentService'),
   CommentReportService: token<CommentReportService>('CommentReportService'),
+  ...ScreeningServices,
   CreatorCommentService: token<CreatorCommentService>('CreatorCommentService'),
   ViewService: token<ViewService>('ViewService'),
   WebVitalsService: token<WebVitalsService>('WebVitalsService'),

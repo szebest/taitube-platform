@@ -65,6 +65,7 @@ TaiTube decouples high-throughput API ingestion from resource-heavy video transc
    - `probe`: Validates container metadata, codec support, aspect ratios, and duration limits using `ffprobe`.
    - `transcode-1080p / 720p / 480p`: Parallel FFmpeg workers generate keyframe-aligned H.264 video and AAC audio TS segments.
    - `thumbnail`: Generates high-resolution poster frames and synchronized WebVTT scrub thumbnail sprite sheets.
+   - `screen`: A flow child beside the transcodes: matches the upload against the platform's own catalogue (frame and audio fingerprints), scores sampled frames with a pinned local ONNX classifier and reads the title and tags. A clear pass goes on; a hit holds the video for a moderator before any master is written. Nothing leaves the machine and nothing is deleted.
    - `package`: Generates master HLS `.m3u8` playlists linking all processed renditions.
    - `notify`: Finalizes state transitions, updates read models, and publishes real-time SSE completion events.
    - `captions`: Off the critical path, on its own queue and pods: local whisper.cpp speech-to-text started by `probe`, written as a side-loaded WebVTT track and searchable transcript cues. `READY` never waits for it.
@@ -123,6 +124,7 @@ taitube-platform/
 │       ├── env-schema/          # Zod environment schema, AppConfig and toAppConfig
 │       ├── events/              # SSE envelope, pub/sub channels and Redis cache keys
 │       ├── ffmpeg/              # FFmpeg/ffprobe runners, ladder selection, master playlist, thumbnails
+│       ├── fingerprint/         # Frame dHash, Chromaprint, the offset-vote matcher for the duplicate check
 │       ├── gen-video/           # CLI: generates deterministic test video fixtures
 │       ├── job-contracts/       # BullMQ queue names, job payload schemas, retry policies, rendition ladder
 │       ├── lighthouse/          # CLI: Lighthouse CI on the built web app, offline, warn-only

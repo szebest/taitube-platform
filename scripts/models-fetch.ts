@@ -10,12 +10,19 @@ const ROOT = resolve(import.meta.dirname, '..');
 
 const { values } = parseArgs({
   options: {
-    lock: { type: 'string', default: resolve(ROOT, 'apps/server/worker/assets.lock') },
+    lock: {
+      type: 'string',
+      multiple: true,
+      default: ['assets.lock', 'screening.lock'].map((name) =>
+        resolve(ROOT, 'apps/server/worker', name)
+      ),
+    },
     out: { type: 'string', default: resolve(ROOT, '.models') },
+    only: { type: 'string', multiple: true, default: [] },
   },
 });
 
-const MODELS = ['CAPTIONS_MODEL', 'CAPTIONS_VAD_MODEL'] as const;
+const MODELS = ['CAPTIONS_MODEL', 'CAPTIONS_VAD_MODEL', 'SCREENING_MODEL'] as const;
 
 function parseLock(text: string): Map<string, string> {
   const entries = text
@@ -47,7 +54,7 @@ async function fetchModel(lock: Map<string, string>, key: string, out: string): 
   const expected = lock.get(`${key}_SHA256`);
   if (!(url && expected)) throw new Error(`${key}_URL and ${key}_SHA256 are not in the lock file`);
 
-  const name = basename(new URL(url).pathname);
+  const name = lock.get(`${key}_FILE`) ?? basename(new URL(url).pathname);
   const target = resolve(out, name);
   if ((await sha256Of(target)) === expected) {
     process.stdout.write(`${name} present, sha256 verified\n`);
@@ -65,8 +72,12 @@ async function fetchModel(lock: Map<string, string>, key: string, out: string): 
   process.stdout.write(`${name} downloaded, sha256 verified\n`);
 }
 
-const lock = parseLock(await readFile(values.lock, 'utf8'));
+const lock = new Map<string, string>();
+for (const file of values.lock) {
+  for (const [key, value] of parseLock(await readFile(file, 'utf8'))) lock.set(key, value);
+}
 await mkdir(values.out, { recursive: true });
-for (const key of MODELS) {
+const wanted = values.only.length > 0 ? MODELS.filter((key) => values.only.includes(key)) : MODELS;
+for (const key of wanted) {
   await fetchModel(lock, key, values.out);
 }

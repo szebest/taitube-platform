@@ -305,6 +305,9 @@ jobs:
       - name: Verify video fixtures against manifest
         run: pnpm gen-video --check
 
+      - name: Restore or fetch the screening model
+        uses: ./.github/actions/screening-model
+
       - name: Migrate the database and create the buckets
         run: |
           until docker compose -f infra/compose/docker-compose.yml exec -T postgres pg_isready -U vp -d vp; do sleep 1; done

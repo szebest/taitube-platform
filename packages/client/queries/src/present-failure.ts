@@ -84,6 +84,7 @@ function kindOf(code: ErrorCode): ErrorStateKind {
     case ErrorCodes.COMMENT_ALREADY_REPORTED:
     case ErrorCodes.REPORT_ALREADY_RESOLVED:
     case ErrorCodes.SYSTEM_PLAYLIST_IMMUTABLE:
+    case ErrorCodes.SCREENING_REJECTED:
     case ErrorCodes.UNSUPPORTED_CODEC:
     case ErrorCodes.CORRUPT_CONTAINER:
     case ErrorCodes.DURATION_EXCEEDED:
@@ -102,6 +103,8 @@ function kindOf(code: ErrorCode): ErrorStateKind {
     case ErrorCodes.WHISPER_KILLED:
     case ErrorCodes.WHISPER_TIMEOUT:
     case ErrorCodes.WHISPER_MODEL_INVALID:
+    case ErrorCodes.SCREEN_MODEL_INVALID:
+    case ErrorCodes.SCREEN_MODEL_FAILED:
     case ErrorCodes.WHISPER_INPUT_REJECTED:
     case ErrorCodes.NO_AUDIO_STREAM:
     case ErrorCodes.CAPTION_TRACK_LIMIT:

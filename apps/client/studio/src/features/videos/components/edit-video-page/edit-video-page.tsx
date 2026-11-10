@@ -7,6 +7,7 @@ import { useApi, videoQueryOptions } from '@vp/queries';
 import type { ReactNode } from 'react';
 import { EditVideoForm } from '../edit-video-form/edit-video-form';
 import { VideoProcessingStatus } from '../video-processing-status/video-processing-status';
+import { VideoScreeningPanel } from '../video-screening-panel/video-screening-panel';
 
 export type EditVideoPageProps = {
   videoId: string;
@@ -27,6 +28,7 @@ export function EditVideoPage({ videoId, captions }: EditVideoPageProps) {
         </PageHeader.Title>
       </PageHeader.Root>
       <VideoProcessingStatus videoId={videoId} />
+      <VideoScreeningPanel video={video} />
       <EditVideoForm video={video} />
       <Can
         type="rule"

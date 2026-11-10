@@ -30,7 +30,7 @@ resource "cloudflare_r2_bucket_lifecycle" "raw" {
   rules = [{
     id         = "raw-retention-and-abort-multipart"
     enabled    = true
-    conditions = { prefix = "" }
+    conditions = { prefix = "raw/" }
 
     abort_multipart_uploads_transition = {
       condition = { type = "Age", max_age = 86400 }

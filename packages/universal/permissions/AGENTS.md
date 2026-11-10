@@ -22,7 +22,8 @@ depends on `@vp/domain` (the watch party permission registry and the channel tea
   rule factory. The admin rules go last: a later CASL rule wins, so `manage all` overrides every `cannot`, such as
   the one that stops an owner changing the visibility of a video an admin took down (`REJECTED`).
 - Typed helpers in `src/helpers/`: `canReadVideo`, `canUpdateVideo`, `canDeleteVideo`, `canModerateVideo` (the
-  `moderate` action, an admin takedown), `canReactVideo`,
+  `moderate` action: an admin takedown, and approving, rejecting or dismissing a held video), `canAppealVideo` (the owner of a
+  `HELD` video or of a screening rejection, marked `errorCode: SCREENING_REJECTED`; not a manual takedown), `canReactVideo`,
   `canAccessUpload`, `canSubscribeChannel`, `canCreateComment`, `canUpdateComment`,
   `canDeleteComment`, `canPinComment`, `canModerateComments`, `canUpdateChannel`, `canManageCategory`, `canManagePick`, `canAccessAdmin`, `canReadAnalytics`,
   `canCreatePlaylist`, `canReadPlaylist`, `canUpdatePlaylist`, `canDeletePlaylist`,

@@ -36,6 +36,7 @@
     },
     "apps/server/worker": {
       "entry": ["src/main.ts!", "src/instrument.ts!"],
+      "vitest": ["vitest.config.ts", "integration.config.ts"],
       "project": [
         "src/**/*.ts!",
         "!src/**/__tests__/**!",
@@ -111,6 +112,13 @@
     "packages/server/ffmpeg": {
       "project": ["src/**/*.ts!", "!src/**/__tests__/**!"],
       "vitest": ["vitest.config.ts", "integration.config.ts"]
+    },
+    "packages/server/adapters": {
+      "project": ["**/*.ts!", "!**/__tests__/**!"],
+      "vitest": ["vitest.config.ts", "integration.config.ts", "perf.config.ts"]
+    },
+    "packages/server/fingerprint": {
+      "project": ["src/**/*.ts!", "!src/**/__tests__/**!"]
     },
     "packages/server/whisper": {
       "project": ["src/**/*.ts!", "!src/**/__tests__/**!"],

@@ -1,10 +1,12 @@
 import { Container } from '@vp/composition';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { createMetricsRegistry } from '@vp/observability';
+import { ok } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import { InMemoryCacheClient } from '../../in-memory/in-memory-cache-client';
 import type { MeteredMultipartStorage } from '../../metered/metered-multipart-storage';
 import type { MeteredStorageClient } from '../../metered/metered-storage-client';
+import { OnnxFrameClassifier } from '../../onnx/onnx-frame-classifier';
 import { PostgresDatabaseClient } from '../../postgres/postgres-database-client';
 import { RedisPartyGuestSessionsAdapter } from '../../redis/redis-party-guest-sessions.adapter';
 import { RedisSearchSuggestionIndexAdapter } from '../../redis/redis-search-suggestion-index.adapter';
@@ -36,6 +38,18 @@ describe('external adapter family', () => {
     expect(await (storage.inner as S3StorageClient).getRawClient().config.region()).toBe(
       'us-east-1'
     );
+    await c.dispose();
+  });
+
+  it('builds the ONNX classifier from the screening config and starts it with the container', async () => {
+    const c = family();
+    const classifier = c.get(Adapters.FrameClassifier);
+    const start = vi.spyOn(classifier as OnnxFrameClassifier, 'start').mockResolvedValue(ok());
+
+    expect(classifier).toBeInstanceOf(OnnxFrameClassifier);
+    expect(classifier.modelVersion).toBe(inProcessAppConfig().screening.model.name);
+    expectOk(await c.start());
+    expect(start).toHaveBeenCalledTimes(1);
     await c.dispose();
   });
 

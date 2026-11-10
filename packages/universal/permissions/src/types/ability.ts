@@ -27,6 +27,7 @@ export type AppAction =
   | 'delete'
   | 'publish'
   | 'moderate'
+  | 'appeal'
   | 'react'
   | 'pin'
   | 'heart'

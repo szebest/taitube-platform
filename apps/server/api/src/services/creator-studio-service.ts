@@ -34,8 +34,9 @@ import type { CdnBase } from '@vp/env-schema';
 import { type DatabaseUnavailable, type VersionConflict, versionConflict } from '@vp/errors';
 import type { InvalidCursor, Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
-import { type Result, assertNever, err, isErr, map } from '@vp/result';
+import { type Result, assertNever, err, ignore, isErr, map } from '@vp/result';
 import { creatorLibraryCursorPayload, decodeCreatorLibraryCursor } from './cursor';
+import type { MetadataScreening } from './metadata-screening';
 import type { ReadVideoServiceFailure, VideoService } from './video-service';
 import {
   type CreatorVideoView,
@@ -51,6 +52,7 @@ export interface CreatorStudioServiceDeps {
   videos: VideoRepository;
   studio: VideoStudioRepository;
   videoService: VideoService;
+  metadataScreening: MetadataScreening;
   channels: ChannelRepositoryPort;
   cdn: CdnBase;
   sprite: SpriteGeometry;
@@ -130,6 +132,11 @@ function auditFieldsOf(patch: VideoMetadataPatch): VideoAuditField[] {
   return (Object.keys(AUDIT_FIELD_OF) as (keyof VideoMetadataPatch)[])
     .filter((field) => patch[field] !== undefined)
     .map((field) => AUDIT_FIELD_OF[field]);
+}
+
+/** Only the words a screening reads: a visibility or category change raises nothing. */
+function editsText({ title, description, tags }: VideoMetadataPatch): boolean {
+  return [title, description, tags].some((field) => field !== undefined);
 }
 
 function toStudioPatch(patch: VideoMetadataPatch): StudioMetadataPatch {
@@ -250,6 +257,12 @@ export class CreatorStudioService {
 
     switch (outcome.value.type) {
       case 'updated':
+        if (editsText(decided.value)) {
+          ignore(
+            await this.deps.metadataScreening.flag(outcome.value.video),
+            'the edit is saved, and the next edit of the text raises the flag again'
+          );
+        }
         return this.deps.videoService.get(user, videoId);
       case 'video-missing':
         return err(videoNotFound(videoId));

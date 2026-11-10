@@ -21,7 +21,10 @@ const NotificationPayloadSchema = z.object({
     .describe('The newest actor: the channel that published, or whoever commented'),
   videoTitle: z.string().nullable(),
   excerpt: z.string().nullable().describe('The start of the comment, for comment kinds'),
-  outcome: z.enum(['ready', 'failed']).nullable().describe('How an upload finished'),
+  outcome: z
+    .enum(['ready', 'failed', 'held', 'approved', 'rejected'])
+    .nullable()
+    .describe('How an upload finished, or how its screening went'),
   party: z
     .object({
       roomId: z.uuid(),

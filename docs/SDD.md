@@ -138,7 +138,7 @@ flowchart LR
 | Component | Runtime | Responsibility | Scales |
 |---|---|---|---|
 | `apps/server/api` | Node.js 24 LTS · Fastify 5 | Auth, upload orchestration (presign / multipart / complete / verify), video CRUD, SSE hub, admin (Bull Board, DLQ replay), `/metrics`, `/healthz`, `/readyz`. Stateless. | Horizontally, on CPU/RPS (HPA). Long-running, so cold start is irrelevant. |
-| `apps/server/worker` | Bun 1.4 · one image | `main.ts` reads `WORKER_STAGE` and boots exactly one BullMQ `Worker` for that queue. Stages: `probe`, `transcode-1080p`, `transcode-720p`, `transcode-480p`, `thumbnail`, `package`, `notify`, `housekeeping`, `captions`, `live`. | Per stage, on queue depth (KEDA), 0 → N. |
+| `apps/server/worker` | Bun 1.4 · one image | `main.ts` reads `WORKER_STAGE` and boots exactly one BullMQ `Worker` for that queue. Stages: `probe`, `transcode-1080p`, `transcode-720p`, `transcode-480p`, `thumbnail`, `screen`, `package`, `notify`, `housekeeping`, `captions`, `live`. | Per stage, on queue depth (KEDA), 0 → N. |
 | PostgreSQL 18 | Neon (cloud) / container (local) | Source of truth: users, videos, uploads, renditions, processing steps, append-only `video_events`, DLQ mirror. | Vertical; read replicas out of scope. |
 | Redis 8 / Valkey 8 | container / same VPS | BullMQ queues (`noeviction`), Pub/Sub for SSE fan-out, small caches (presign throttles, idempotency keys). | Single node; persistence AOF `everysec`. |
 | Object storage | MinIO (local) / Cloudflare R2 (cloud) | `raw` bucket (private, sources, 7-day lifecycle) and `public` bucket (HLS, thumbnails, CDN-fronted). | Managed. |
@@ -206,6 +206,7 @@ sequenceDiagram
     participant P as probe worker
     participant T as transcode-{1080p,720p,480p} workers
     participant TH as thumbnail worker
+    participant SC as screen worker
     participant PK as package worker
     participant N as notify worker
     participant PG as Postgres
@@ -218,7 +219,7 @@ sequenceDiagram
     P->>P: validate (duration ≤ 60min, codec allowlist, sane dims) → else throw UnrecoverableError(code)
     P->>P: compute ladder: renditions with height ≤ source height (min 1)
     P->>PG: UPDATE videos SET duration_ms, width, height, format, fps, ladder · status=PROCESSING · INSERT renditions(PENDING)
-    P->>Q: FlowProducer.add({ name:"package", queue:"package", jobId:`${videoId}--package`, children:[transcode-1080p, transcode-720p, transcode-480p, thumbnail] })
+    P->>Q: FlowProducer.add({ name:"package", queue:"package", jobId:`${videoId}--package`, children:[transcode-1080p, transcode-720p, transcode-480p, thumbnail, screen] })
     P->>PS: PUBLISH video:{id} {status:PROCESSING, ladder}
 
     par each rendition, independent queue & worker pool
@@ -230,11 +231,14 @@ sequenceDiagram
         T->>PG: renditions.status=DONE, segment_count, bytes, ms  · steps DONE (fencing token check)
     and thumbnails
         Q->>TH: thumbnail job → poster.jpg, sprite.jpg, sprite.vtt → S3 public
+    and screening
+        Q->>SC: screen job → fingerprints, frame scores, text rules → PG video_screenings (PASS | HOLD)
     end
 
     Note over Q,PK: parent "package" leaves waiting-children only when ALL children completed
     Q->>PK: package job
     PK->>S3: HEAD every rendition index.m3u8 + sample segments · read children results via getChildrenValues()
+    PK->>PG: screen result HOLD (or none) → CAS videos PROCESSING→HELD, no master written
     PK->>S3: PUT videos/{id}/hls/master.m3u8 (BANDWIDTH, RESOLUTION, CODECS, FRAME-RATE)
     PK->>PG: CAS videos PROCESSING→READY, master_playlist_key, ready_at  · INSERT video_events(video.ready)
     PK->>Q: add("notify", {videoId, event:"video.ready"})
@@ -242,6 +246,10 @@ sequenceDiagram
 ```
 
 Failure path (any child): BullMQ retries with backoff; when attempts are exhausted or an `UnrecoverableError` is thrown, the `failed` handler moves the job to `dlq`, marks the rendition `FAILED`, and — because `failParentOnFailure: true` is set on children — the parent `package` job fails too, which flips the video to `FAILED` with the first child error as `errorCode`. See §9.6.
+
+**Screening branch.** Unless `SCREENING_ENABLED` is off, probe adds a `screen` child to the flow, a sibling of the transcodes and the thumbnail: it reads the source only, so it overlaps the transcodes. The stage samples a 9x8 frame every 2 s and hashes it, fingerprints the audio with `fpcalc` when probe found an audio stream, looks the video up against every other stored video (§7 of ticket 112, `@vp/fingerprint`), scores a frame every 10 s (at most 120, plus the first, middle and last) with the pinned ONNX classifier, and runs the profanity, spam and blank-picture rules; `decideScreening` turns the findings into `PASS` or `HOLD` with ordered reasons, and the result is stored by video and source checksum, so a re-process of the same source reuses it. The child is `ignoreDependencyOnFailure`, and `package` fails closed: a `HOLD` result, or no result because the stage spent its retries, moves the video `PROCESSING → HELD` (reason `SCREEN_ERROR` for the second) before any master is written, so nothing plays. A video a moderator approved is not held again. A match with a video of the same owner and a partial match are flags for the moderation queue, never a hold.
+
+The queue is `GET /v1/admin/screening` (§6.1). A moderator approves (`HELD → PROCESSING` and a fresh `package` job, `ids.packageApproved`, whose `screened` gate finds the approval and writes the master), rejects with a reason (`HELD → REJECTED`, `error_code = SCREENING_REJECTED`) or dismisses a flag; every move is a CAS on `videos.status` in the repository, so a second moderator finds the video moved and gets `409`. The owner reads a plain reason and may appeal a screening rejection (`REJECTED → HELD`), and a moderator other than the one who rejected decides the appeal. Text is screened where it changes: a creator edit of the title, description or tags runs the metadata rules and raises a flag on a `READY` or `HELD` video, and a finished transcript is read for profanity by the captions stage once its track commits, raising a flag tagged `source: transcript` and never a hold; a video without cue rows is a no-op. Both leave the state of the video alone.
 
 **Captions branch.** When captions are on for the video (its `auto_captions` switch, else its channel's `auto_captions_default`, and `CAPTIONS_ENABLED`) and probe found an audio stream, probe creates the `pending` generated row in `video_captions` and puts one more flow in the outbox, committed with `PROBING → PROCESSING`: a `captions` job on the `captions` queue alone, or for a source over 300 s a `captions` merge parent over one window child per 180 s (`captionsFlow` in `@vp/job-contracts`). It is never a child of `package`, so `READY` never waits for it and a captions failure never touches `videos.status` or `videos.version`. A window extracts its slice of the raw source with ffmpeg (`-ss` before `-i`, mono 16 kHz PCM) plus a 5 s lead-in and tail, runs `whisper-cli` under `nice -n 19` with Silero VAD, keeps the cues that start in its own span and writes them to the raw bucket; the merge joins them in order, writes `captions/{lang}/captions.vtt`, the cue rows and `ready` in one compare-and-set on the track, and publishes `captions.ready` to the owner (`captions.failed` when a run spends its last attempt). A source without audio gets a `disabled` row and no job.
 
@@ -283,6 +291,10 @@ stateDiagram-v2
     PROBING --> PROCESSING: probe ok, flow created
     PROBING --> FAILED: UnrecoverableError
     PROCESSING --> READY: package ok
+    PROCESSING --> HELD: screening result HOLD, or none
+    HELD --> PROCESSING: moderator approves, package re-enqueued
+    HELD --> REJECTED: moderator rejects
+    REJECTED --> HELD: creator appeals a screening rejection
     PROCESSING --> FAILED: child exhausted retries / unrecoverable
     FAILED --> PROBING: admin re-process
     READY --> DELETED: soft delete + purge job
@@ -555,7 +567,7 @@ into the `PermanentError` / `TransientError` BullMQ needs (ADR-24). Never by reg
   - Driver/connection primitives (`DatabaseClient`) are segregated from domain entities (`Repositories`: `VideoRepository`, `UploadRepository`, `StepRepository`, `RenditionRepository`, `EventRepository`, `UserRepository`).
   - Standard object storage (`StorageClient`) is segregated from multipart chunk lifecycle (`MultipartStorage`).
 - **Concrete SDK Isolation (`adapters/`)**:
-  - `@aws-sdk/client-s3`, `ioredis`, `bullmq`, `postgres`, and `drizzle-orm` are strictly forbidden outside `adapters/` and composition roots (`apps/server/api/src/app.ts`, `apps/server/worker/src/runner.ts`).
+  - `@aws-sdk/client-s3`, `ioredis`, `bullmq`, `onnxruntime-node`, `postgres`, and `drizzle-orm` are strictly forbidden outside `adapters/` and composition roots (`apps/server/api/src/app.ts`, `apps/server/worker/src/runner.ts`).
   - Domain services, controllers, and worker stages depend purely on injected port interfaces.
 - **Single Responsibility & File Length Discipline**:
   - Every repository implementation resides in its own dedicated file under `repositories/` (e.g. `packages/server/adapters/postgres/repositories/postgres-video-repository.ts`).
@@ -1117,6 +1129,10 @@ erDiagram
     users ||--o{ channel_members : "works on"
     channels ||--o{ channel_invites : invites
     channels ||--o{ channel_audit_log : "records"
+    videos ||--o{ video_screenings : "is screened as"
+    video_screenings ||--o{ screening_appeals : "is appealed in"
+    videos ||--o{ video_frame_hashes : fingerprints
+    videos ||--o{ video_audio_fingerprints : fingerprints
     processing_steps ||--o{ dlq_entries : "may park in"
 
     users {
@@ -1203,6 +1219,39 @@ erDiagram
         text status
         timestamptz created_at
         timestamptz expires_at
+    }
+    video_screenings {
+        uuid id PK
+        uuid video_id FK
+        text source_checksum
+        text outcome
+        double score
+        jsonb reasons
+        jsonb flags
+        text decision
+        uuid decided_by FK
+        timestamptz flags_cleared_at
+        timestamptz evidence_purged_at
+    }
+    screening_appeals {
+        uuid id PK
+        uuid video_id FK
+        uuid screening_id FK
+        uuid author_id FK
+        text message
+        uuid rejected_by FK
+        timestamptz resolved_at
+    }
+    video_frame_hashes {
+        uuid video_id FK
+        integer idx
+        bigint hash
+        integer b0
+    }
+    video_audio_fingerprints {
+        uuid video_id FK
+        integer idx
+        integer term
     }
     channel_audit_log {
         uuid id PK
@@ -1876,7 +1925,54 @@ CREATE TABLE video_transcript_cues (
   PRIMARY KEY (caption_id, cue_index)
 );
 CREATE INDEX video_transcript_cues_text_vector_idx ON video_transcript_cues USING gin (text_vector);
+
+-- 0036, 0037: upload screening. HELD is a video_status; every move into or out of it is a CAS on videos.status plus a video_events row.
+CREATE TABLE video_screenings (                          -- one result per video and source checksum
+  id uuid PRIMARY KEY,
+  video_id uuid NOT NULL REFERENCES videos(id) ON DELETE CASCADE,
+  source_checksum text NOT NULL,                         -- the source object's ETag; a re-process of the same source reads this row
+  outcome text NOT NULL CHECK (outcome IN ('PASS', 'HOLD')),
+  score double precision NOT NULL,
+  reasons jsonb NOT NULL DEFAULT '[]',                   -- the findings that held the video, each with its evidence
+  flags jsonb NOT NULL DEFAULT '[]',                     -- findings that only raise a case: partial match, edited text, transcript
+  model_version text, threshold_version text NOT NULL,   -- a change of either never rewrites a decided case
+  decision text CHECK (decision IS NULL OR decision IN ('approved', 'rejected', 'dismissed')),
+  decided_by uuid REFERENCES users(id) ON DELETE SET NULL, decided_at timestamptz, decision_note text,
+  flags_cleared_at timestamptz,                          -- set when a moderator reviews the flags, cleared when a new one is raised
+  evidence_purged_at timestamptz,                        -- set once housekeeping removed the frames under evidence/{videoId}/
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE UNIQUE INDEX video_screenings_video_checksum_idx ON video_screenings (video_id, source_checksum);
+CREATE INDEX video_screenings_open_idx ON video_screenings (created_at DESC)
+  WHERE (decision IS NULL AND outcome = 'HOLD') OR (flags <> '[]' AND flags_cleared_at IS NULL);
+CREATE INDEX video_screenings_purge_idx ON video_screenings (decided_at) WHERE decision IS NOT NULL AND evidence_purged_at IS NULL;
+CREATE TABLE screening_appeals (
+  id uuid PRIMARY KEY,
+  video_id uuid NOT NULL REFERENCES videos(id) ON DELETE CASCADE,
+  screening_id uuid NOT NULL REFERENCES video_screenings(id) ON DELETE CASCADE,
+  author_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  message text NOT NULL,
+  rejected_by uuid REFERENCES users(id) ON DELETE SET NULL,   -- the moderator who may not decide this appeal
+  created_at timestamptz NOT NULL DEFAULT now(),
+  resolved_by uuid REFERENCES users(id) ON DELETE SET NULL, resolved_at timestamptz
+);
+CREATE UNIQUE INDEX screening_appeals_open_idx ON screening_appeals (video_id) WHERE resolved_at IS NULL;
+CREATE TABLE video_frame_hashes (                        -- a 64-bit dHash per sampled frame, split into four indexed 16-bit bands
+  video_id uuid NOT NULL REFERENCES videos(id) ON DELETE CASCADE,
+  idx integer NOT NULL, hash bigint NOT NULL,
+  b0 integer NOT NULL, b1 integer NOT NULL, b2 integer NOT NULL, b3 integer NOT NULL,
+  PRIMARY KEY (video_id, idx)
+);
+CREATE INDEX video_frame_hashes_b0_idx ON video_frame_hashes (b0);   -- likewise b1, b2, b3
+CREATE TABLE video_audio_fingerprints (                  -- every Nth Chromaprint term, an inverted index by value
+  video_id uuid NOT NULL REFERENCES videos(id) ON DELETE CASCADE,
+  idx integer NOT NULL, term integer NOT NULL,
+  PRIMARY KEY (video_id, idx)
+);
+CREATE INDEX video_audio_fingerprints_term_idx ON video_audio_fingerprints (term);
 ```
+
+Why screening is a result row and a state, not a verdict on the video: `decideScreening` is a pure function of findings, so `video_screenings` stores what it was given and what it answered, under the thresholds' version, and a person's decision is written onto the same row (`decision`, `decided_by`, `decision_note`). A case is open while a hold is undecided or a flag has not been looked at; `approve`, `reject` and `dismiss` all stamp `flags_cleared_at`, and a later flag (a creator edit, a transcript) clears it again, which is how a decided case reopens without its decision being rewritten. Frame hashes and audio terms belong to the video and nothing else: a lookup returns another video's id only to the worker that decides, and the creator is told a plain reason, never the match. Fingerprints of a `REJECTED` video stay, because the re-upload of a taken-down video is the match worth a hold; `purge-deleted` removes them with a deleted video, before the row. The evidence frames of a closed case live under `evidence/{videoId}/` in the raw bucket, outside its 7 day rule, and `purge-screening-evidence` removes them 30 days after the case closes and stamps `evidence_purged_at`.
 
 Why playlist positions are sparse: a drag-and-drop move is the common write, and dense `0..n-1` positions make one move rewrite every row between the old place and the new one. Items are spaced 1024 apart instead, so a move takes the midpoint between its new neighbours and rewrites the moved row alone; only when two neighbours sit adjacent (about ten moves into the same gap) or a key would leave the integer range is the playlist respaced, in one `UPDATE ... FROM (VALUES ...)`. Removing an item deletes one row and leaves a gap. The API never shows the stored key: `position` on the wire is the 0-based place, ranked before the viewer's scope hides any video, so a hidden video keeps its place and a reorder sent back names the same slot. A full reindex names the items the caller can see; a hidden one keeps its slot and the given order fills the others, so a video going private never blocks a reorder. Every item write, removals included, locks the playlist row first, so concurrent appends, removals and reorders serialise in one lock order, and the reorder rule runs against the slots as that transaction sees them.
 
@@ -1976,6 +2072,8 @@ Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>`
 | `GET /v1/creator/videos/:id/retention` | Audience retention curve | — | `200 { videoId, curve:[{ percent, viewers }] }` | Owner or admin (`read Analytics`), 403 and 404 as for analytics. 21 points, `percent` 0 to 100 in steps of 5, `viewers` the sessions that reached that step; a step nobody reached is 0. Reads what the last flush committed. |
 | `GET /v1/creator/channel/analytics?range=7d\|30d\|90d\|lifetime` | Channel analytics | — | `200 { range, from, to, timeline, hourly, rangeViews, rangeWatchSeconds, netSubscribers, totalViews, videoCount, dailyVelocity, topVideos:[{videoId, title, views, totalViews}], previous:{ rangeViews, rangeWatchSeconds, netSubscribers } \| null }` | Authenticated caller, over the videos they own. Range, `hourly` and `previous` as for video analytics. `netSubscribers` is gains minus losses of the caller's channel over the range, from `subscription_events`, which each subscribe and unsubscribe appends in its own transaction. |
 | `GET /v1/creator/videos?sort=newest\|views\|likes\|comments&status=&visibility=&q=&cursor=&limit=` | Creator library | — | `200 { items:[VideoSummary + { commentsCount, tags }], nextCursor }` | Authenticated caller, over the videos they own that are not `DELETED`. `q` is a case-insensitive title substring, LIKE wildcards matched literally. Keyset on `(sort column, id)` descending; a cursor names its sort and is refused under another. |
+| `GET /v1/creator/videos/:id/screening` | Why a video is on hold | — | `200 { videoId, status, reasons:[DUPLICATE\|NSFW\|BLANK\|METADATA_SPAM\|SCREEN_ERROR], decision:"rejected"\|null, decisionNote, canAppeal, appeal:{ message, createdAt, resolved }\|null }` / `401` / `403` / `404` | Owner (`update Video`); a caller who cannot read the video gets `404`. A plain reason only: a match with a taken-down video reads as `DUPLICATE`, a partial match is never told, and neither the matched video nor a score or threshold is on the wire. |
+| `POST /v1/creator/videos/:id/screening/appeal` | Appeal a screening rejection | `{ message }` (1 to 1000 characters) | `201` the same view / `400` / `403` / `404` / `409 VERSION_CONFLICT` / `422` | Owner (`appeal Video`: a `HELD` video or a `REJECTED` one whose `error_code` is `SCREENING_REJECTED`). `REJECTED → HELD` and the appeal row in one CAS; a takedown by a moderator is `403`, a video still on hold `422`. The case returns to the queue and a moderator other than the one who rejected decides. |
 | `PATCH /v1/creator/videos/:id` | Studio edit | `{ title?, description?, visibility?, categoryId?, tags?, selectedThumbnail?: { source:"poster" }, version }` | `200 Video` / `404 CATEGORY_NOT_FOUND` / `409 VERSION_CONFLICT` / `422 VALIDATION_FAILED` | Owner or admin (`update Video`, per field). `version` must be the one the edit was made against; the write is a CAS on it and appends `video.metadata_updated`. The category is checked `FOR SHARE` in the same transaction and must be active. The owner of a `REJECTED` video cannot change its visibility. |
 | `DELETE /v1/creator/videos/:id` | Studio delete | — | `202 { videoId, status:"DELETED" }` | Same soft delete as `DELETE /videos/:id`. |
 | `GET /v1/creator/comments?filter=all\|unanswered\|reported&cursor=&limit=` | Creator comment inbox | — | `200 { items:[Comment + { video:{ id, title } }], nextCursor }` | Authenticated caller, over live comments on the videos they own that they did not write, newest first, keyset on `(created_at, id)`. `unanswered` drops a comment once the caller has a later reply in its thread; `reported` keeps comments with an open report. A new comment on one of their videos arrives live as `comment.created` (§10.3). |
@@ -2126,6 +2224,10 @@ Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>`
 | `GET /v1/admin/videos?cursor=&limit=&sort=&order=&status=&visibility=&categoryId=&q=` | List every video | — | `200 { items:[id, ownerId, title, visibility, status, posterUrl?, thumbnailUrl?, channel, viewsCount?, likesCount?, categoryId?, version, createdAt, updatedAt], nextCursor }` / `400 INVALID_CURSOR` / `401` / `403` | Admin (`access Admin`). Every owner's videos except `DELETED`. `sort` is `newest` (default), `views`, `likes`, `comments` or `title` (by character code), `order` is `desc` (default) or `asc`; `q` is a case-insensitive title substring. Same keyset walk as `GET /v1/creator/videos` with an optional owner; a cursor only continues the sort and order it came from. |
 | `GET /v1/admin/videos/:id` | Read a video as an operator | — | `200 Video` / `403 FORBIDDEN` / `404` | Same `VideoService.get` call as `GET /videos/:id`; renders `FORBIDDEN` as a detailed 403 where the public route disguises it as 404 (ADR-24). |
 | `POST /v1/admin/videos/:id/takedown` | Take a video down | `{ reason? }` | `200 Video` / `403` / `404` | Admin (`moderate Video`). One CAS moves any non-deleted video to `REJECTED` and `private`, bumps `version` so an edit read before it cannot land, and appends `video.taken_down { requestedBy, reason }`. |
+| `GET /v1/admin/screening?cursor=&limit=&state=open\|decided` | Held and flagged videos | — | `200 { items:[ScreeningCase], nextCursor }` / `400 INVALID_CURSOR` / `401` / `403` | Moderator (`moderate Video`). A case is `{ id, videoId, title, status, channel, thumbnailUrl?, outcome, score, open, reasons:[Finding], flags:[Finding], decision, decidedBy, decidedAt, decisionNote, appeal, modelVersion, thresholdVersion, createdAt }`; a finding is `{ reason, score, match:{ id, title, channel, thumbnailUrl?, status, sameChannel, mirrored, videoCoverage, audioCoverage, sourceRange, matchedRange } \| null, frames:[{ url, timestampSeconds, score }], flaggedShare, signals, profanity }` with each frame a signed URL (`presignTtlSeconds`), empty once the evidence is purged. Open cases first, each group newest first; keyset on `(open, created_at, id)`. The same listing shape as the comment report queue, so the admin table shows both. |
+| `POST /v1/admin/videos/:id/screening/approve` | Approve a held video | — | `200 { videoId, status:"PROCESSING" }` / `403` / `404` / `409 VERSION_CONFLICT` | Moderator (`moderate Video`). `HELD → PROCESSING` and a `package` job (`ids.packageApproved`, `screened: true`) in the outbox row of the same transaction, with a fast-path enqueue after; the existing path writes the master and reaches `READY`. The moderator who rejected a video may not decide its appeal. A video not `HELD` (a stale moderator) is `409`. A moderator-approved video is not held again, also on a re-process. |
+| `POST /v1/admin/videos/:id/screening/reject` | Reject a held video | `{ reason }` (1 to 500 characters) | `200 { videoId, status:"REJECTED" }` / `400` / `403` / `404` / `409` | Moderator. `HELD → REJECTED` with `error_code = SCREENING_REJECTED`, the reason in the event and on the case; the fingerprints stay. Same appeal rule and stale-actor `409` as approve. |
+| `POST /v1/admin/videos/:id/screening/dismiss` | Dismiss the flags on a video | — | `200 { videoId, status }` / `403` / `404` / `409` | Moderator. Closes the flags of a video that stayed public, appends `video.screening_dismissed`, changes no state; `409` when there is nothing open. The same finding is not raised again. |
 | `GET /v1/admin/reports?cursor=&limit=` | Comment report queue | — | `200 { items:[CommentReport + { reporterId, comment:{ id, videoId, authorId, content, removed } }], nextCursor }` | Admin (`access Admin`). Open reports first, each group newest first; keyset on `(resolved_at IS NULL, created_at, id)`. |
 | `POST /v1/admin/reports/:id/resolve` | Resolve a report | `{ resolution: removed\|dismissed }` | `200 CommentReport` / `404 REPORT_NOT_FOUND` / `409 REPORT_ALREADY_RESOLVED` | Admin. `removed` goes through the same delete as `DELETE /comments/:id` (replies, `comments_count`, hot page) and closes every open report on that comment; `dismissed` closes this one. |
 | `GET /admin/queues/*` | Bull Board UI | — | HTML | `@bull-board/fastify`. |
@@ -2177,7 +2279,7 @@ A malformed cursor raises `InvalidCursorError` in core, which the API layer tran
 
 ### 6.2 Error codes (stable, machine-readable)
 
-`UPLOAD_TOO_LARGE`, `UPLOAD_SIZE_MISMATCH`, `UNSUPPORTED_CONTENT_TYPE`, `UPLOAD_EXPIRED`, `UPLOAD_NOT_OPEN`, `QUOTA_EXCEEDED`, `VIDEO_NOT_FOUND`, `DLQ_ENTRY_NOT_FOUND`, `VERSION_CONFLICT`, `FORBIDDEN`, `RATE_LIMITED`, `UNAUTHORIZED`, `VALIDATION_FAILED`, `ROUTE_NOT_FOUND`, `INVALID_CURSOR`, `CATEGORY_NOT_FOUND`, `CATEGORY_SLUG_CONFLICT`, `CATEGORY_IN_USE`, `CHANNEL_NOT_FOUND`, `HANDLE_ALREADY_TAKEN`, `INVALID_HANDLE_FORMAT`, `CANNOT_SUBSCRIBE_TO_SELF`, `COMMENT_NOT_FOUND`, `COMMENT_NOT_PINNABLE`, `COMMENT_ALREADY_REPORTED`, `REPORT_NOT_FOUND`, `REPORT_ALREADY_RESOLVED`, `PLAYLIST_NOT_FOUND`, `PLAYLIST_ITEM_NOT_FOUND`, `SYSTEM_PLAYLIST_IMMUTABLE`, `DATABASE_UNAVAILABLE`, `CACHE_UNAVAILABLE`, `QUEUE_UNAVAILABLE`, `INTERNAL`, `FORMAT_UNSUPPORTED_LOCALE`, `FORMAT_UNKNOWN_OPTION`, `FORMAT_WRONG_KIND`, `FORMAT_UNRENDERABLE`, `CAPTION_NOT_FOUND`, `CAPTION_TRACK_LIMIT`, `CAPTION_OVERWRITE_UNCONFIRMED`, `SEARCH_HISTORY_NOT_FOUND`, `CLIP_NOT_FOUND`, `PICK_NOT_FOUND`, `PICK_WINDOW_OVERLAP`, `RECOMMENDATION_FEEDBACK_NOT_FOUND`, `WEBHOOK_NOT_FOUND`, `WEBHOOK_LIMIT_REACHED`, `WEBHOOK_DELIVERY_FAILED`, `WEBHOOK_DELIVERY_REJECTED`, `OEMBED_URL_UNSUPPORTED`, `OEMBED_FORMAT_UNSUPPORTED`, `LIVE_STREAM_NOT_FOUND`, `LIVE_STREAM_NOT_LIVE`, `LIVE_INGEST_REFUSED`, `LIVE_GATEWAY_UNAVAILABLE`, `LIVE_CHAT_SLOW_MODE`, `LIVE_CHAT_SUBSCRIBERS_ONLY`, `LIVE_CHAT_CLOSED`, `LIVE_CHAT_TICKET_INVALID`, `WATCH_PARTY_NOT_FOUND`, `WATCH_PARTY_CLOSED`, `WATCH_PARTY_FULL`, `WATCH_PARTY_BANNED`, `WATCH_PARTY_GUESTS_OFF`, `WATCH_PARTY_PASSWORD_REQUIRED`, `WATCH_PARTY_PASSWORD_INVALID`, `WATCH_PARTY_PASSWORD_LOCKED`, `WATCH_PARTY_INVITE_INVALID`, `WATCH_PARTY_LIMIT_REACHED`, `WATCH_PARTY_VIDEO_NOT_SHAREABLE`, `WATCH_PARTY_QUEUE_FULL`, `WATCH_PARTY_STATE_STALE`, `WATCH_PARTY_PERMISSION_MISSING`, `WATCH_PARTY_ROLE_ESCALATION`, `WATCH_PARTY_ROLE_PROTECTED`, `WATCH_PARTY_ROLE_NOT_FOUND`, `WATCH_PARTY_ROLE_LIMIT`, `WATCH_PARTY_SLOW_MODE`, `WATCH_PARTY_CHAT_OFF`, `WATCH_PARTY_TICKET_INVALID`, `WATCH_PARTY_CREDENTIAL_INVALID` (API) · `UNSUPPORTED_CODEC`, `CORRUPT_CONTAINER`, `DURATION_EXCEEDED`, `SOURCE_MISSING`, `FFMPEG_FAILED`, `FFMPEG_OOM`, `FFMPEG_TIMEOUT`, `STORAGE_UNAVAILABLE`, `SEGMENT_VERIFY_FAILED`, `DISK_FULL`, `ORPHANED`, `WHISPER_FAILED`, `WHISPER_KILLED`, `WHISPER_TIMEOUT`, `WHISPER_MODEL_INVALID`, `WHISPER_INPUT_REJECTED`, `NO_AUDIO_STREAM`, `LIVE_INGEST_UNAVAILABLE`, `CHANNEL_MEMBERSHIP_REQUIRED`, `CHANNEL_INVITE_NOT_FOUND`, `CHANNEL_INVITE_NOT_PENDING`, `CHANNEL_INVITE_ALREADY_PENDING`, `CHANNEL_MEMBER_EXISTS`, `CHANNEL_MEMBER_NOT_FOUND`, `CHANNEL_OWNER_IMMUTABLE`, `HANDLE_CHANGE_TOO_SOON`, `HANDLE_RESERVED`, `INVALID_SPOTLIGHT_VIDEO`, `IMAGE_TOO_SMALL`, `IMAGE_UPLOAD_NOT_FOUND`, `SERIES_VIDEO_NOT_OWNED` (pipeline; ORPHANED marks a video the processing reconciler found with nothing running and nothing queued).
+`UPLOAD_TOO_LARGE`, `UPLOAD_SIZE_MISMATCH`, `UNSUPPORTED_CONTENT_TYPE`, `UPLOAD_EXPIRED`, `UPLOAD_NOT_OPEN`, `QUOTA_EXCEEDED`, `VIDEO_NOT_FOUND`, `DLQ_ENTRY_NOT_FOUND`, `VERSION_CONFLICT`, `FORBIDDEN`, `RATE_LIMITED`, `UNAUTHORIZED`, `VALIDATION_FAILED`, `ROUTE_NOT_FOUND`, `INVALID_CURSOR`, `CATEGORY_NOT_FOUND`, `CATEGORY_SLUG_CONFLICT`, `CATEGORY_IN_USE`, `CHANNEL_NOT_FOUND`, `HANDLE_ALREADY_TAKEN`, `INVALID_HANDLE_FORMAT`, `CANNOT_SUBSCRIBE_TO_SELF`, `COMMENT_NOT_FOUND`, `COMMENT_NOT_PINNABLE`, `COMMENT_ALREADY_REPORTED`, `REPORT_NOT_FOUND`, `REPORT_ALREADY_RESOLVED`, `PLAYLIST_NOT_FOUND`, `PLAYLIST_ITEM_NOT_FOUND`, `SYSTEM_PLAYLIST_IMMUTABLE`, `DATABASE_UNAVAILABLE`, `CACHE_UNAVAILABLE`, `QUEUE_UNAVAILABLE`, `INTERNAL`, `FORMAT_UNSUPPORTED_LOCALE`, `FORMAT_UNKNOWN_OPTION`, `FORMAT_WRONG_KIND`, `FORMAT_UNRENDERABLE`, `CAPTION_NOT_FOUND`, `CAPTION_TRACK_LIMIT`, `CAPTION_OVERWRITE_UNCONFIRMED`, `SEARCH_HISTORY_NOT_FOUND`, `CLIP_NOT_FOUND`, `PICK_NOT_FOUND`, `PICK_WINDOW_OVERLAP`, `RECOMMENDATION_FEEDBACK_NOT_FOUND`, `WEBHOOK_NOT_FOUND`, `WEBHOOK_LIMIT_REACHED`, `WEBHOOK_DELIVERY_FAILED`, `WEBHOOK_DELIVERY_REJECTED`, `OEMBED_URL_UNSUPPORTED`, `OEMBED_FORMAT_UNSUPPORTED`, `LIVE_STREAM_NOT_FOUND`, `LIVE_STREAM_NOT_LIVE`, `LIVE_INGEST_REFUSED`, `LIVE_GATEWAY_UNAVAILABLE`, `LIVE_CHAT_SLOW_MODE`, `LIVE_CHAT_SUBSCRIBERS_ONLY`, `LIVE_CHAT_CLOSED`, `LIVE_CHAT_TICKET_INVALID`, `SCREENING_REJECTED`, `WATCH_PARTY_NOT_FOUND`, `WATCH_PARTY_CLOSED`, `WATCH_PARTY_FULL`, `WATCH_PARTY_BANNED`, `WATCH_PARTY_GUESTS_OFF`, `WATCH_PARTY_PASSWORD_REQUIRED`, `WATCH_PARTY_PASSWORD_INVALID`, `WATCH_PARTY_PASSWORD_LOCKED`, `WATCH_PARTY_INVITE_INVALID`, `WATCH_PARTY_LIMIT_REACHED`, `WATCH_PARTY_VIDEO_NOT_SHAREABLE`, `WATCH_PARTY_QUEUE_FULL`, `WATCH_PARTY_STATE_STALE`, `WATCH_PARTY_PERMISSION_MISSING`, `WATCH_PARTY_ROLE_ESCALATION`, `WATCH_PARTY_ROLE_PROTECTED`, `WATCH_PARTY_ROLE_NOT_FOUND`, `WATCH_PARTY_ROLE_LIMIT`, `WATCH_PARTY_SLOW_MODE`, `WATCH_PARTY_CHAT_OFF`, `WATCH_PARTY_TICKET_INVALID`, `WATCH_PARTY_CREDENTIAL_INVALID` (API) · `UNSUPPORTED_CODEC`, `CORRUPT_CONTAINER`, `DURATION_EXCEEDED`, `SOURCE_MISSING`, `FFMPEG_FAILED`, `FFMPEG_OOM`, `FFMPEG_TIMEOUT`, `STORAGE_UNAVAILABLE`, `SEGMENT_VERIFY_FAILED`, `DISK_FULL`, `ORPHANED`, `WHISPER_FAILED`, `WHISPER_KILLED`, `WHISPER_TIMEOUT`, `WHISPER_MODEL_INVALID`, `WHISPER_INPUT_REJECTED`, `NO_AUDIO_STREAM`, `SCREEN_MODEL_INVALID`, `SCREEN_MODEL_FAILED`, `LIVE_INGEST_UNAVAILABLE`, `CHANNEL_MEMBERSHIP_REQUIRED`, `CHANNEL_INVITE_NOT_FOUND`, `CHANNEL_INVITE_NOT_PENDING`, `CHANNEL_INVITE_ALREADY_PENDING`, `CHANNEL_MEMBER_EXISTS`, `CHANNEL_MEMBER_NOT_FOUND`, `CHANNEL_OWNER_IMMUTABLE`, `HANDLE_CHANGE_TOO_SOON`, `HANDLE_RESERVED`, `INVALID_SPOTLIGHT_VIDEO`, `IMAGE_TOO_SMALL`, `IMAGE_UPLOAD_NOT_FOUND`, `SERIES_VIDEO_NOT_OWNED` (pipeline; ORPHANED marks a video the processing reconciler found with nothing running and nothing queued).
 
 A code is declared in `@vp/errors` and carries two properties, each declared once over the whole `ErrorCode` union so that adding a code fails to compile until both are decided:
 
@@ -2242,9 +2344,10 @@ To maintain strict modularity, testability, and separation of concerns, the API 
 Two buckets, deterministic keys, no per-request randomness — this is what makes re-running any step safe.
 
 ```
-raw/                                   (private; lifecycle: expire objects after 7 days; abort incomplete multipart after 1 day)
+raw/                                   (private; lifecycle on this prefix: expire objects after 7 days; abort incomplete multipart after 1 day)
 └── {videoId}/
     └── source.{ext}                   ← original upload
+evidence/{videoId}/frame-{n}.jpg       ← small JPEGs of the frames that held or flagged a video; private, outside the 7-day rule
 tmp/captions/{videoId}/{modelVersion}/v{captionVersion}/w{n}.json   ← a captions window's cues, purged by its merge
 
 raw/channel-images/{channelId}/{kind}/{uploadId}    ← an avatar or banner file until the channel-image job has cut it (7-day lifecycle)
@@ -2387,6 +2490,7 @@ BullMQ has no exchanges; a *queue* is the routing unit and Redis key prefix. One
 | `transcode-720p` | probe | `transcode-720p` | 1 | 4 | exp 10 s | 120 s | 0.5–12 min |
 | `transcode-480p` | probe | `transcode-480p` | 1 (or 2) | 4 | exp 10 s | 120 s | 0.3–6 min |
 | `thumbnail` | probe; API (`channel-image`, `jobId = <uploadId>--channel-image`) | `thumbnail` | 2 | 4 | exp 5 s | 60 s | 5–60 s |
+| `screen` | probe (Flow child of `package`) | `screen` | 2 | 4 | exp 10 s, jitter 0.5 | 120 s | 10–60 s for 10 min of 1080p |
 | `package` | probe (Flow parent) | `package` | 4 | 5 | exp 5 s | 60 s | 1–5 s |
 | `notify` | package, failure handler | `notify` | 8, **rate limit 100/10 s** | 8 | exp 2 s | 30 s | < 1 s |
 | `housekeeping` | Job Schedulers (cron) | `housekeeping` | 1 | 3 | fixed 60 s | 300 s | seconds–minutes |
@@ -2411,6 +2515,7 @@ export const stagePolicies = {
   'transcode-720p': { attempts: 4, backoff: { type: 'exponential', delay: 10_000, jitter: 0.5 } },
   'transcode-480p': { attempts: 4, backoff: { type: 'exponential', delay: 10_000, jitter: 0.5 } },
   'thumbnail':      { attempts: 4, backoff: { type: 'exponential', delay: 5_000,  jitter: 0.5 } },
+  'screen':         { attempts: 4, backoff: { type: 'exponential', delay: 10_000, jitter: 0.5 } },
   'package':        { attempts: 5, backoff: { type: 'exponential', delay: 5_000,  jitter: 0.5 } },
   'notify':         { attempts: 8, backoff: { type: 'exponential', delay: 2_000,  jitter: 0.3 } },
   'captions':       { attempts: 3, backoff: { type: 'exponential', delay: 30_000, jitter: 0.5 }, priority: 1_000_000 },
@@ -2430,8 +2535,9 @@ Deterministic IDs are the first line of idempotency: BullMQ ignores an `add()` w
 | probe | `${videoId}--probe--g${generation}` | `{ videoId, sourceKey, generation, traceparent }` |
 | transcode | `${videoId}--transcode--720p--g${generation}` | `{ videoId, sourceKey, generation, rendition: LadderEntry, fps, durationMs, chunkIndex?, chunkCount?, traceparent }` |
 | thumbnail | `${videoId}--thumbnail--g${generation}` | `{ videoId, sourceKey, generation, durationMs, traceparent }` |
+| screen | `${videoId}--screen--g${generation}` | `{ videoId, sourceKey, generation, durationMs, hasAudio, traceparent }` |
 | channel-image | `${uploadId}--channel-image` | `{ type: 'channel-image', uploadId, channelId, kind, traceparent }` on the `thumbnail` queue, which routes it by `type`; the crops are read from the upload row, so a retry cuts the same image |
-| package | `${videoId}--package--g${generation}` | `{ videoId, generation, ladder, traceparent }` |
+| package | `${videoId}--package--g${generation}` | `{ videoId, generation, ladder, screened?, traceparent }` |
 | captions | `${videoId}--captions--${modelVersion}--v${captionVersion}`, a window `…--w${n}` | `{ videoId, captionId, captionVersion, sourceKey, durationMs, modelVersion, language, plan: single \| merge(windowCount) \| window(index, windowCount), traceparent }` |
 | notify | `${videoId}--notify--${event}--${eventSeq}` | `{ videoId, userId, event, payload, traceparent }` |
 | dlq | `${originQueue}--${originJobId}--a${attemptsMade}` | `{ originQueue, originJobId, payload, error, attemptsMade, workerId, failedAt }` |
@@ -2464,6 +2570,12 @@ await flowProducer.add({
       data: ThumbnailJob.parse({ videoId, sourceKey, generation, durationMs, traceparent }),
       opts: { jobId: ids.thumbnail(videoId, generation), ...stagePolicies.thumbnail, ...defaultJobOptions,
               failParentOnFailure: false, ignoreDependencyOnFailure: true },   // a missing sprite must not block READY
+    },
+    {
+      name: 'screen', queueName: 'screen',                       // only when SCREENING_ENABLED
+      data: ScreenJob.parse({ videoId, sourceKey, generation, durationMs, hasAudio, traceparent }),
+      opts: { jobId: ids.screen(videoId, generation), ...stagePolicies.screen, ...defaultJobOptions,
+              failParentOnFailure: false, ignoreDependencyOnFailure: true },   // `package` holds a video with no screen result
     },
   ],
 });
@@ -2577,6 +2689,7 @@ The watch party sweep (idle close, owner hand-over, purge) is not a scheduler: i
 | `tmp-sweep` | `*/30 * * * *` | Remove orphaned `/tmp/vp/*` dirs older than 2 h on the housekeeping pod (worker pods clean their own on exit). |
 | `reconcile-reaction-counters` | `0 * * * *` | Detect and repair drift between exact `video_reactions` counts and cached counter columns (`videos.likes_count`, `videos.dislikes_count`). |
 | `purge-search-history` | `15 3 * * *` | Delete `search_history` rows last searched more than 90 days ago (`SEARCH_HISTORY_RETENTION_DAYS`); the 100-row cap is enforced by each write. |
+| `purge-screening-evidence` | `0 4 * * *` | Remove `evidence/{videoId}/` from the raw bucket for every case decided more than 30 days ago (`SCREENING_EVIDENCE_RETENTION_DAYS`) and stamp `evidence_purged_at`; the result row and the fingerprints stay. |
 | `purge-channel-audit` | `45 3 * * *` | Delete `channel_audit_log` rows written more than 365 days ago (`CHANNEL_AUDIT_RETENTION_DAYS`); nothing else deletes or changes an audit row. |
 | `purge-channel-images` | `0 4 * * *` | Delete the raw file of a `channel_image_uploads` row settled for 7 days (`CHANNEL_IMAGE_RETENTION_DAYS`) and every variant of a version nothing shows any more, then mark the row `purged`; a row whose files are not all gone stays listed for the next run. |
 | `purge-handle-history` | `15 4 * * *` | Delete `channel_handle_history` rows retired more than 90 days ago (`HANDLE_RESERVATION_DAYS`), which frees the handle for anyone. |
@@ -2669,8 +2782,8 @@ data: {"type":"video.processing","payload":{"videoId":"…","change":{"kind":"pr
 The bell is `notifications` rows, written by jobs on the `notify` queue and announced on the user stream (§10.3).
 
 - **Producers enqueue through the outbox, in the transaction of their cause**, so a change that rolls back
-  notifies nobody (ADR-16): `VideoRepository.transition` writes `notify-processing` when a video reaches `READY` or
-  `FAILED` and `notify-subscribers` (kind `upload`) when it reaches `READY` while `public`, except a live archive, whose
+  notifies nobody (ADR-16): `VideoRepository.transition` writes `notify-processing` when a video reaches `READY`,
+  `FAILED` or `HELD`, and when a moderator moves it out of `HELD` (`approved`, `rejected`) and `notify-subscribers` (kind `upload`) when it reaches `READY` while `public`, except a live archive, whose
   subscribers heard `live` at go-live;
   `VideoStudioRepository.updateMetadata` writes `notify-subscribers` when a `READY` video becomes `public`;
   `CommentRepository.create` writes `notify-comment`; `CommentRepository.setHearted` writes `notify-heart` on a
@@ -2688,7 +2801,7 @@ The bell is `notifications` rows, written by jobs on the `notify` queue and anno
   `notify-comment` gives each person one notification for a comment, the most specific kind: a `mention` (an
   `@handle` in the text, up to 10), else a `reply` to their comment, else a `comment` on their video (top-level
   comments only); the author is never told about their own comment. `notify-heart` tells a comment's author the
-  creator hearted it, unless the creator wrote it. `notify-processing` tells the uploader.
+  creator hearted it, unless the creator wrote it. `notify-processing` tells the uploader how processing ended or how its screening went (`ready`, `failed`, `held`, `approved`, `rejected`); the moderators learn of an appeal from the queue, since a notification has one recipient and a team of moderators has no target.
 - **Never about what the recipient can't read.** A video's owner hears about it while it exists; anyone else only
   while it is `public` and `READY` (`mayHearAbout` in `@vp/domain`), so a mention on an unlisted or private video
   reaches nobody but the owner.
@@ -2956,6 +3069,10 @@ services:
     <<: *worker
     environment: { WORKER_STAGE: transcode-480p, FFMPEG_THREADS: "1" }
   worker-thumbnail:      { <<: *worker, environment: { WORKER_STAGE: thumbnail } }
+  worker-screen:
+    <<: *worker
+    environment: { WORKER_STAGE: screen, FFMPEG_THREADS: "2" }
+    deploy: { resources: { limits: { cpus: "2", memory: 1500m } } }
   worker-package:        { <<: *worker, environment: { WORKER_STAGE: package } }
   worker-notify:         { <<: *worker, environment: { WORKER_STAGE: notify } }
   worker-housekeeping:   { <<: *worker, environment: { WORKER_STAGE: housekeeping } }
@@ -3153,6 +3270,8 @@ Exposed by `packages/server/observability` (`prom-client` registry; API on `:946
 | `captions_realtime_factor` | histogram | `model` | captions | audio-seconds per whisper wall-second (>1 = faster than realtime) |
 | `captions_time_to_ready_seconds` | histogram | — | captions | from the generated track being asked for at probe to `ready` |
 | `captions_jobs_total` | counter | `outcome ∈ {ready, failed, disabled}` | captions | how runs end; queue age is `bullmq_queue_oldest_waiting_age_seconds{queue="captions"}` |
+| `screen_seconds` | histogram | `outcome ∈ {PASS, HOLD}` | screen | seconds the stage takes for one video; the target is under 60 s for 10 minutes of 1080p |
+| `screening_outcomes_total` | counter | `outcome, reason` | screen | videos by outcome and strongest reason (`none` for a pass); the hold rate is `HOLD` over the total |
 
 ### 13.2 KEDA ScaledObject (Prometheus scaler, primary)
 
@@ -3220,6 +3339,7 @@ Alert rules (`infra/observability/alerts/video-pipeline-alerts.yaml`, a Promethe
 | `R2ClassABudget` | `predict_linear(storage_ops_total{op="put"}[1d], 30*86400) > 900000` | 1h | info |
 | `APILatencyHigh` | `histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket[5m]))) > 0.2` | 10m | warning |
 | `WorkerTmpDiskHigh` | `worker_tmp_bytes / 8e9 > 0.8` | 5m | warning |
+| `ScreeningHoldRateHigh` | `sum(increase(screening_outcomes_total{outcome="HOLD"}[24h])) / sum(increase(screening_outcomes_total[24h])) > 0.2`, with at least 20 screened | 1h | warning |
 
 The compose Alertmanager (`infra/compose/alertmanager/alertmanager.yml`) routes by severity to placeholder webhooks on `http://localhost:5001`; no chat or paging receiver is configured, locally or in cloud.
 
@@ -3548,9 +3668,10 @@ The two bucket keys are the only spelling: every reader in both apps takes them 
 
 | Variable | Default | Notes |
 |---|---|---|
-| `WORKER_STAGE` | `probe` | `probe` · `transcode-1080p` · `transcode-720p` · `transcode-480p` · `thumbnail` · `package` · `notify` · `housekeeping` · `captions` · `live` |
+| `WORKER_STAGE` | `probe` | `probe` · `transcode-1080p` · `transcode-720p` · `transcode-480p` · `thumbnail` · `screen` · `package` · `notify` · `housekeeping` · `captions` · `live` |
 | `WORKER_CONCURRENCY` | empty = the stage's registry value | override |
 | `FFMPEG_PATH` / `FFPROBE_PATH` | `ffmpeg` / `ffprobe` | the binaries the stages spawn |
+| `FPCALC_PATH` | `fpcalc` | the Chromaprint binary the `screen` stage runs for the audio fingerprint, `libchromaprint-tools` in the worker image |
 | `FFMPEG_THREADS` | `2` | k8s sets it from the container's CPU limit (`resourceFieldRef`) |
 | `X264_PRESET` | `veryfast` | load-test variable |
 | `HLS_SEGMENT_SECONDS` | `6` | `-hls_time` |
@@ -3569,6 +3690,8 @@ The two bucket keys are the only spelling: every reader in both apps takes them 
 | `WHISPER_PATH` | `whisper-cli` | whisper.cpp binary, built from the tag pinned in `apps/server/worker/assets.lock` into the worker image |
 | `CAPTIONS_MODEL_PATH` / `CAPTIONS_VAD_MODEL_PATH` | `.models/ggml-small-q5_1.bin` / `.models/ggml-silero-v5.1.2.bin` | baked into the image at `/opt/whisper/` at build, SHA-256 checked; `pnpm models:fetch` fills `.models/` for a run outside Docker. The model file names the run (`small-q5_1`) |
 | `CAPTIONS_THREADS` | `4` | = the captions container CPU limit |
+| `SCREENING_ENABLED` | `true` | platform kill switch for upload screening; off, probe adds no `screen` child and nothing is held |
+| `SCREENING_MODEL_PATH` | `.models/vit-base-nsfw-detector-int8.onnx` | the upload-screening classifier, baked into the image at `/opt/screening/` at build, SHA-256 checked against `screening.lock`; the adapter checks it again at start and refuses a file that is not the pinned one. `pnpm models:fetch` fills `.models/` for a run outside Docker |
 | `WATCH_PARTY_MAX_MEMBERS` | `200` | the ceiling on a room's capacity (at least 2); a room with none set holds this many, and a larger `capacity` is `VALIDATION_FAILED` |
 | `WATCH_PARTY_MAX_OPEN_PER_USER` | `3` | open rooms one owner key holds before a create is `WATCH_PARTY_LIMIT_REACHED` |
 | `WATCH_PARTY_GUEST_SALT` 🔒 | none; `.env.example` ships `change-me-party-salt` | keys the guest IP hash kept for a ban (§10.7); unset, `loadEnv` fails, and production refuses the local value |
@@ -3578,6 +3701,20 @@ The two bucket keys are the only spelling: every reader in both apps takes them 
 | `LIVE_RTMP_PUBLIC_URL` / `LIVE_WHIP_PUBLIC_URL` | `rtmp://localhost:1935/live` / `http://localhost:8889/live` | what `POST /v1/me/live` hands a creator for OBS and the browser |
 
 The upload content types are a typed constant in `@vp/validation` that the browser shares, not configuration.
+
+The screening numbers are constants, not keys (the schema is closed, and an operator does not tune a Hamming distance): `SCREENING_THRESHOLDS`, `SCREENING_SAMPLING`, `SCREENING_PROCESS` and `SCREENING_MODEL` in `packages/server/env-schema/src/tuning.ts`, reaching the stage as `AppConfig.screening`. Each stored result names the `version` of the thresholds it was decided under, so a change is a new version and never rewrites a decided case.
+
+| Constant | Value | Meaning |
+|---|---|---|
+| `frameMaxHamming` | `3` | two frame hashes this close are the same frame; the four 16-bit bands make the lookup four index hits |
+| `duplicateCoverage` | `0.9` | a match covering this much of the new video holds it as `DUPLICATE` (or `KNOWN_REJECTED`) |
+| `partialCoverage` / `partialRunSeconds` | `0.3` / `30` | a smaller overlap is a `PARTIAL_MATCH` flag, never a hold |
+| `audioMaxBitErrorRate` | `0.35` | the audio fingerprint's agreement bar |
+| `nsfwFrameThreshold` / `nsfwShareThreshold` | `0.85` / `0.1` | a hold needs a frame over the first and this share of frames over it |
+| `blankFrameShare` | `0.95` | share of frames within `blankMaxHamming` 2 and `blankMaxLumaRange` 8 of the first, judged only when at least `blankMinFrames` 3 were sampled (a clip under 5 s has too few to call it frozen) |
+| `hashIntervalSeconds`, `classifyIntervalSeconds`, `classifyMaxFrames` | `2`, `10`, `120` | one hashed frame every 2 s; one classified frame every 10 s, at most 120, plus first, middle and last |
+| `audioIndexStride` | `8` | every 8th Chromaprint term is indexed, about 3 600 rows per hour of video |
+
 
 ### 16.7 Observability
 
@@ -3701,7 +3838,7 @@ Open issues carried from PRD §12: auth provider, public vs signed playback, sou
 import { z } from 'zod';
 
 export const QUEUES = ['probe', 'transcode-1080p', 'transcode-720p', 'transcode-480p',
-  'thumbnail', 'package', 'notify', 'housekeeping', 'captions', 'dlq'] as const;
+  'thumbnail', 'screen', 'package', 'notify', 'housekeeping', 'captions', 'dlq'] as const;
 export type QueueName = (typeof QUEUES)[number];
 export const RENDITIONS = ['1080p', '720p', '480p'] as const;
 export type RenditionName = (typeof RENDITIONS)[number];
@@ -3761,6 +3898,7 @@ export const ids = {
   probe:     (v: string, g: number) => `${v}--probe--g${g}`,
   transcode: (v: string, r: RenditionName, g: number) => `${v}--transcode--${r}--g${g}`,
   thumbnail: (v: string, g: number) => `${v}--thumbnail--g${g}`,
+  screen:    (v: string, g: number) => `${v}--screen--g${g}`,
   package:   (v: string, g: number) => `${v}--package--g${g}`,
   notify:    (v: string, e: string, seq: number) => `${v}--notify--${e}--${seq}`,
   dlq:       (q: string, j: string, a: number) => `${q}--${j}--a${a}`,

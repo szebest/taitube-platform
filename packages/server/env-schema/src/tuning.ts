@@ -8,6 +8,7 @@ import {
   SECONDS_PER_HOUR,
   SECONDS_PER_MINUTE,
 } from '@vp/domain/time';
+export * from './screening-tuning';
 
 /**
  * Tuning with no environment key of its own, declared once here so no service, stage or adapter holds

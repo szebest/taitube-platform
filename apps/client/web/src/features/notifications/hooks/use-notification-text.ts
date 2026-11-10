@@ -8,6 +8,14 @@ export interface NotificationText {
   detail: string | null;
 }
 
+const PROCESSING_TEXT = {
+  ready: 'notifications.processingReady',
+  failed: 'notifications.processingFailed',
+  held: 'notifications.processingHeld',
+  approved: 'notifications.processingApproved',
+  rejected: 'notifications.processingRejected',
+} as const;
+
 /** The words of a notification, as its row and its toast print them. */
 export function useNotificationText(): (notification: Notification) => NotificationText {
   const { tOr } = useT();
@@ -36,9 +44,7 @@ export function useNotificationText(): (notification: Notification) => Notificat
       case 'team_invite':
         return tOr('notifications.teamInvite', { name }, '');
       case 'processing':
-        return payload.outcome === 'failed'
-          ? tOr('notifications.processingFailed', {}, '')
-          : tOr('notifications.processingReady', {}, '');
+        return tOr(PROCESSING_TEXT[payload.outcome ?? 'ready'], {}, '');
       default:
         return assertNever(kind, 'NotificationKind');
     }

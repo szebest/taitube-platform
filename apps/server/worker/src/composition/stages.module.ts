@@ -3,6 +3,7 @@ import { type Container, token } from '@vp/composition';
 import type { JobQueue, QueueJob } from '@vp/core/ports';
 import { toPipelineError } from '@vp/errors';
 import type { MediaTools } from '@vp/ffmpeg';
+import type { FingerprintTools } from '@vp/fingerprint';
 import type { LogContext, Logger } from '@vp/logger';
 import { MetricsServer, type PipelineMetrics } from '@vp/observability';
 import { fromPromise, isErr, isOk, ok } from '@vp/result';
@@ -10,7 +11,8 @@ import type { SpeechTools } from '@vp/whisper';
 import { createFailureHandler } from '../failure-handler';
 import { Heartbeat, everyInterval } from '../heartbeat';
 import { validateJobId, validateQueueName } from '../job-identity';
-import { STAGE_REGISTRY, type StageDefinition, type StageProcessor } from '../registry';
+import { STAGE_REGISTRY, type StageDefinition } from '../registry';
+import type { StageProcessor } from '../stage-processors';
 import { housekeepingTasks } from '../stages/housekeeping/index';
 import { OutboxRelay } from '../stages/housekeeping/outbox-relay';
 import { withTelemetry } from '../with-telemetry';
@@ -21,6 +23,7 @@ export interface StageRuntime {
   workerId: string;
   media: MediaTools;
   speech: SpeechTools;
+  fingerprint: FingerprintTools;
   outboxRelay: { enabled: boolean };
 }
 
@@ -152,6 +155,8 @@ export function registerStages(c: Container, runtime: StageRuntime): Container {
           metrics: c.get(Adapters.Metrics),
           media: runtime.media,
           speech: runtime.speech,
+          fingerprint: runtime.fingerprint,
+          frameClassifier: () => c.get(Adapters.FrameClassifier),
           workerId: runtime.workerId,
           now: Date.now,
           every: everyInterval,

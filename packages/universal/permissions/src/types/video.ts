@@ -6,4 +6,5 @@ export interface VideoResource {
   readonly userId?: string;
   readonly visibility?: VideoVisibility;
   readonly status?: string;
+  readonly errorCode?: string | null;
 }

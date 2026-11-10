@@ -1,5 +1,6 @@
 import {
   InMemoryCacheClient,
+  InMemoryFrameClassifier,
   InMemoryLiveGateway,
   InMemoryMultipartStorage,
   InMemoryViewBuffer,
@@ -12,6 +13,7 @@ import { asCdnBase, inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import type { MediaTools } from '@vp/ffmpeg';
 import * as ffmpeg from '@vp/ffmpeg';
+import { fingerprintTools } from '@vp/fingerprint';
 import type { Logger } from '@vp/logger';
 import { createMetricsRegistry } from '@vp/observability';
 import { speechTools } from '@vp/whisper';
@@ -59,6 +61,9 @@ export const STAGE_SETTINGS = {
   },
   ffmpegPath: config.worker.ffmpegPath,
   ffprobePath: config.worker.ffprobePath,
+  fpcalcPath: config.worker.fpcalcPath,
+  screening: config.screening,
+  screeningThresholdVersion: config.screening.thresholds.version,
   maxDurationSeconds: config.limits.maxDurationSeconds,
   retentionDays: 7,
   maxInflightPerUser: 3,
@@ -70,7 +75,9 @@ export const STAGE_SETTINGS = {
   metrics: createMetricsRegistry(),
   media: mediaTools,
   speech: speechTools,
+  fingerprint: fingerprintTools,
   now: Date.now,
+  every: everyInterval,
   progressReporter: () => ({ report: async () => undefined }),
 };
 
@@ -145,6 +152,9 @@ export function registryDeps(
     metrics: STAGE_SETTINGS.metrics,
     media,
     speech: STAGE_SETTINGS.speech,
+    fingerprint: STAGE_SETTINGS.fingerprint,
+    frameClassifier: () =>
+      new InMemoryFrameClassifier({ inputSize: config.screening.model.inputSize }),
     workerId: STAGE_SETTINGS.workerId,
     now: Date.now,
     every: everyInterval,

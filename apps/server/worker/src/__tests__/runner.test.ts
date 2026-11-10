@@ -2,6 +2,7 @@ import { InMemoryJobQueue, InMemoryRepositories } from '@vp/adapters/in-memory';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { queueUnavailable } from '@vp/errors';
 import { mediaTools } from '@vp/ffmpeg';
+import { fingerprintTools } from '@vp/fingerprint';
 import { LogContext, createLogger } from '@vp/logger';
 import { err } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
@@ -14,6 +15,7 @@ const collaborators = {
   logContext: new LogContext(),
   media: mediaTools,
   speech: speechTools,
+  fingerprint: fingerprintTools,
   workerId: 'runner-spec',
 };
 

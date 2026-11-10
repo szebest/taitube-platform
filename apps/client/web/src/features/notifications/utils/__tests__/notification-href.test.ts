@@ -1,3 +1,4 @@
+import { VIDEO_ID } from '@vp/web-testing';
 import { notification } from '#app/features/notifications/__tests__/notification-fixtures';
 import { notificationHref } from '../notification-href';
 
@@ -23,7 +24,33 @@ describe('apps/client/web: notificationHref', () => {
       payload: {},
       href: undefined,
     },
-  ])('$case', ({ kind, payload, href }) => {
-    expect(notificationHref(notification({ kind }, payload))).toBe(href);
+    {
+      case: 'a video held by screening opens its editor in the studio',
+      kind: 'processing' as const,
+      payload: { outcome: 'held' as const },
+      href: `http://localhost:5174/videos/${VIDEO_ID}/edit`,
+    },
+    {
+      case: 'a screening rejection opens its editor, where the appeal is',
+      kind: 'processing' as const,
+      payload: { outcome: 'rejected' as const },
+      href: `http://localhost:5174/videos/${VIDEO_ID}/edit`,
+    },
+    {
+      case: 'an approved video opens in the viewer app, where it plays',
+      kind: 'processing' as const,
+      payload: { outcome: 'approved' as const },
+      href: undefined,
+    },
+    {
+      case: 'a held video with no video id opens nothing',
+      kind: 'processing' as const,
+      payload: { outcome: 'held' as const },
+      videoId: null,
+      href: undefined,
+    },
+  ])('$case', ({ kind, payload, href, ...rest }) => {
+    const videoId = 'videoId' in rest ? rest.videoId : VIDEO_ID;
+    expect(notificationHref(notification({ kind, videoId }, payload))).toBe(href);
   });
 });

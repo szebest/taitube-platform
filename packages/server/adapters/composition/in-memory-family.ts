@@ -5,6 +5,7 @@ import { ScryptPasswordHasher } from '../crypto/scrypt-password-hasher';
 import { InMemoryCacheClient } from '../in-memory/in-memory-cache-client';
 import { InMemoryDatabaseClient } from '../in-memory/in-memory-database-client';
 import { InMemoryFlowProducer } from '../in-memory/in-memory-flow-producer';
+import { InMemoryFrameClassifier } from '../in-memory/in-memory-frame-classifier';
 import { InMemoryJobQueue } from '../in-memory/in-memory-job-queue';
 import { InMemoryLiveChatGate } from '../in-memory/in-memory-live-chat-gate';
 import { InMemoryLiveGateway } from '../in-memory/in-memory-live-gateway';
@@ -57,6 +58,11 @@ export function registerFamily(c: Container): void {
         return new InMemoryFlowProducer((name) => queues.get(name));
       },
       closeOnDispose
+    )
+    .provide(
+      Adapters.FrameClassifier,
+      (c) =>
+        new InMemoryFrameClassifier({ inputSize: c.get(Adapters.Config).screening.model.inputSize })
     )
     .provide(Adapters.SubscriptionCache, () => new InMemorySubscriptionCache())
     .provide(

@@ -23,6 +23,7 @@ describe('packages/domain: status vocabulary', () => {
         'ABANDONED',
         'DELETED',
         'LIVE',
+        'HELD',
       ],
     },
     {

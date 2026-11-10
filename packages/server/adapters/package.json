@@ -66,6 +66,8 @@
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
     "test": "vp test run",
+    "test:integration": "vp test run --config integration.config.ts",
+    "test:perf": "vp test run --config perf.config.ts",
     "clean": "rimraf dist tsconfig.tsbuildinfo"
   },
   "dependencies": {
@@ -92,6 +94,7 @@
     "bullmq": "^6.3.11",
     "drizzle-orm": "^0.45.4",
     "ioredis": "^6.0.0",
+    "onnxruntime-node": "^1.31.1",
     "postgres": "^3.4.9",
     "uuidv7": "^1.2.1",
     "zod": "^4.6.5"

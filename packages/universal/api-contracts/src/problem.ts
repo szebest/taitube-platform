@@ -138,11 +138,14 @@ const PROBLEM_STATUS: Readonly<Record<ErrorCode, number>> = {
   [ErrorCodes.WHISPER_KILLED]: 500,
   [ErrorCodes.WHISPER_TIMEOUT]: 500,
   [ErrorCodes.WHISPER_MODEL_INVALID]: 500,
+  [ErrorCodes.SCREEN_MODEL_INVALID]: 500,
+  [ErrorCodes.SCREEN_MODEL_FAILED]: 500,
   [ErrorCodes.WHISPER_INPUT_REJECTED]: 422,
   [ErrorCodes.NO_AUDIO_STREAM]: 422,
   [ErrorCodes.CAPTION_NOT_FOUND]: 404,
   [ErrorCodes.CAPTION_TRACK_LIMIT]: 409,
   [ErrorCodes.CAPTION_OVERWRITE_UNCONFIRMED]: 409,
+  [ErrorCodes.SCREENING_REJECTED]: 422,
 };
 
 const UNCLASSIFIED_STATUS = 422;

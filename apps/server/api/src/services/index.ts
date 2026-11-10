@@ -20,6 +20,7 @@ export * from './request-identity';
 export * from './reaction-service';
 export * from './subscription-service';
 export * from './comment-report-service';
+export * from './screening-service';
 export * from './comment-service';
 export * from './creator-comment-service';
 export * from './view-service';

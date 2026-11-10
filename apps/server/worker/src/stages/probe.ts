@@ -3,7 +3,7 @@ import type { FlowProducerPort, JobQueue, QueueJob, StorageClient } from '@vp/co
 import type { Repositories, UserRecord } from '@vp/core/repositories';
 import { jobPriorityFor } from '@vp/domain';
 import { classifyVideoFormat } from '@vp/domain-rules';
-import type { CaptionsConfig } from '@vp/env-schema';
+import type { CaptionsConfig, ScreeningConfig } from '@vp/env-schema';
 import {
   type CacheUnavailable,
   type DatabaseUnavailable,
@@ -36,6 +36,7 @@ export interface ProbeProcessorDeps {
   ffprobePath: string;
   maxDurationSeconds: number;
   captions: Pick<CaptionsConfig, 'enabled' | 'modelVersion'>;
+  screening: Pick<ScreeningConfig, 'enabled'>;
   getQueue?: (name: string) => JobQueue;
   flowProducer?: FlowProducerPort;
 }
@@ -284,6 +285,7 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
         job,
         metadata,
         priority: job.opts?.priority ?? jobPriorityFor(await ownerTier(repositories, videoId)),
+        screening: deps.screening,
         flowProducer,
         getQueue,
         log,
