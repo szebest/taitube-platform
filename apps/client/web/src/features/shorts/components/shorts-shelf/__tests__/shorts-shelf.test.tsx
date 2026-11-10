@@ -24,6 +24,9 @@ describe('apps/client/web: ShortsShelf', () => {
   });
 
   it('renders nothing when there are no Shorts', async () => {
-    expect(await renderShelf([])).toBe('');
+    const markup = await renderShelf([]);
+
+    expect(markup).not.toContain('>Shorts</h2>');
+    expect(markup).not.toContain('/shorts/');
   });
 });

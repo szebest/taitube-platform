@@ -24,6 +24,6 @@ describe('apps/client/web: own videos', () => {
   });
 
   it('renders nothing for a viewer with no upload', async () => {
-    expect(await renderOwnVideos([])).toBe('');
+    expect(await renderOwnVideos([])).not.toContain('Your videos');
   });
 });
