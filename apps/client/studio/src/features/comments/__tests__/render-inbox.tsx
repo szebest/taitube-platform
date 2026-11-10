@@ -4,7 +4,10 @@ import {
   createComment,
   heartComment,
   listCreatorComments,
+  listSavedReplies,
+  type SavedReplyView,
   pinComment,
+  trustCommenter,
   unheartComment,
   unpinComment,
 } from '@vp/api-contracts';
@@ -22,6 +25,7 @@ interface InboxRequests {
   writes: string[];
   replies: { videoId: string; body: unknown }[];
   bulks: { ids: string[]; action: unknown }[];
+  savedRepliesAsked: number;
 }
 
 /**
@@ -31,9 +35,16 @@ interface InboxRequests {
 export async function renderInbox(
   url = '/comments',
   pages: InboxComment[][] = [[]],
-  refused: Record<string, ErrorCode> = {}
+  refused: Record<string, ErrorCode> = {},
+  savedReplies: SavedReplyView[] = []
 ) {
-  const requests: InboxRequests = { lists: [], writes: [], replies: [], bulks: [] };
+  const requests: InboxRequests = {
+    lists: [],
+    writes: [],
+    replies: [],
+    bulks: [],
+    savedRepliesAsked: 0,
+  };
   const recordWrite =
     (name: string): EndpointResolver<typeof heartComment> =>
     ({ params }) => {
@@ -65,6 +76,14 @@ export async function renderInbox(
             refused[id] ? { id, ok: false, code: refused[id] } : { id, ok: true }
           ),
         });
+      }),
+      mockEndpoint(listSavedReplies, () => {
+        requests.savedRepliesAsked += 1;
+        return HttpResponse.json({ items: savedReplies });
+      }),
+      mockEndpoint(trustCommenter, ({ params }) => {
+        requests.writes.push(`trust ${String(params.userId)}`);
+        return new HttpResponse(null, { status: 204 });
       }),
       mockEndpoint(heartComment, recordWrite('heart')),
       mockEndpoint(unheartComment, recordWrite('unheart')),

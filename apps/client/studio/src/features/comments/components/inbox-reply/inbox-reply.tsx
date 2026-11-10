@@ -4,6 +4,7 @@ import { Button, Textarea, useToast, useUiCopy } from '@vp/ui';
 import { useState } from 'react';
 import type { InboxComment } from '#app/features/comments/api/inbox-queries';
 import { useReplyToComment } from '#app/features/comments/hooks/use-reply-to-comment';
+import { SavedRepliesPicker } from '../saved-replies-picker/saved-replies-picker';
 
 export interface InboxReplyProps {
   comment: InboxComment;
@@ -44,6 +45,9 @@ export function InboxReply({ comment, onDone }: InboxReplyProps) {
         onChange={(event) => setDraft(event.target.value)}
       />
       <span className="flex justify-end gap-inline">
+        <SavedRepliesPicker
+          onPick={(body) => setDraft(draft.trim() === '' ? body : `${draft.trimEnd()} ${body}`)}
+        />
         <Button variant="ghost" size="sm" onClick={onDone}>
           {cancel}
         </Button>

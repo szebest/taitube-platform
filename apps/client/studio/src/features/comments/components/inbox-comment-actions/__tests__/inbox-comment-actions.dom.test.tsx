@@ -20,6 +20,15 @@ describe('apps/client/studio: InboxCommentActions', () => {
     await vi.waitFor(() => expect(requests.writes).toEqual([write]));
   });
 
+  it('trusts the author of a comment and says so', async () => {
+    const { user, requests } = await renderInbox('/comments', [[TOP]]);
+
+    await user.click(rowOf(TOP.content).getByRole('button', { name: 'Trust author' }));
+
+    expect(await screen.findByText('The author is trusted')).toBeInTheDocument();
+    expect(requests.writes).toEqual([`trust ${TOP.author.userId}`]);
+  });
+
   it('offers no pin on a reply', async () => {
     await renderInbox('/comments', [[REPLY]]);
 
