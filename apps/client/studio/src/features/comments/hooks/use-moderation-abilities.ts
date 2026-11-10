@@ -2,8 +2,15 @@ import { canModerateComment, canRestrictChannelUser } from '@vp/permissions';
 import { useCan } from '@vp/permissions-react';
 import { useModerationChannel } from './use-moderation-channel';
 
+export interface ModerationAbilities {
+  approve: boolean;
+  hide: boolean;
+  remove: boolean;
+  restrict: boolean;
+}
+
 /** What the viewer may do to a comment or its author on the channel being moderated, one answer per action. */
-export function useModerationAbilities() {
+export function useModerationAbilities(): ModerationAbilities {
   const channel = useModerationChannel();
   const { ownerId } = channel;
 

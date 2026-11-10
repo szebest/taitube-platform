@@ -1,10 +1,11 @@
 import type { BulkActionBody } from '@vp/api-contracts';
-import { banExpiry, type Disclosure } from '@vp/domain';
+import type { Disclosure } from '@vp/domain';
 import { useT } from '@vp/intl-react';
 import { useState } from 'react';
 import { BulkActionBar } from '#app/components/comments/bulk-action-bar';
 import { useBulkModeration } from '#app/features/comments/hooks/use-bulk-moderation';
 import { useModerationAbilities } from '#app/features/comments/hooks/use-moderation-abilities';
+import { reasonedAction } from '#app/features/comments/utils/reasoned-action';
 import {
   ModerationReasonDialog,
   type ModerationReason,
@@ -29,17 +30,12 @@ export function InboxBulkActions({ ids, onSettled }: InboxBulkActionsProps) {
   const choose = (action: 'hide' | 'remove') =>
     disclosure === 'visible' ? setAsking(action) : apply({ action, disclosure });
 
-  const confirm = async ({ reason, note, duration }: ModerationReason) => {
+  const confirm = (details: ModerationReason) => {
     const action = asking;
     setAsking(null);
-    if (action === 'ban') {
-      await apply({
-        action,
-        reason: note ?? tOr('studio.moderationReasonOption', { reason }, ''),
-        expiresAt: banExpiry(duration, new Date()),
-      });
-    } else if (action !== null) {
-      await apply({ action, disclosure, reason, note });
+    if (action !== null) {
+      const label = tOr('studio.moderationReasonOption', { reason: details.reason }, '');
+      void apply(reasonedAction(action, details, disclosure, label));
     }
   };
 

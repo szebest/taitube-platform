@@ -1,9 +1,13 @@
 import { mutationOptions, useMutation } from '@tanstack/react-query';
 import type { ApiClient } from '@vp/api-client';
+import type { ContractQuery, listCreatorComments } from '@vp/api-contracts';
 import { useApi } from './api-provider';
 
 export const creatorCommentKeys = {
   all: ['creator', 'comments'] as const,
+  list: (filter: ContractQuery<typeof listCreatorComments>['filter']) =>
+    [...creatorCommentKeys.all, filter] as const,
+  byAuthor: (authorId: string) => [...creatorCommentKeys.all, 'author', authorId] as const,
 };
 
 const VIDEO_COMMENTS_KEY = ['comments'] as const;

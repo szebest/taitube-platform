@@ -36,8 +36,8 @@ describe('apps/client/studio: studio shell', () => {
       within(studioNav())
         .getAllByRole('link')
         .map((link) => link.textContent)
-        .slice(0, 4)
-    ).toEqual(['Videos', 'Analytics', 'Comments', 'Live']);
+        .slice(0, 5)
+    ).toEqual(['Videos', 'Analytics', 'Comments', 'Review queue', 'Live']);
     expect(within(studioNav()).getByRole('link', { name: 'Videos' })).toHaveAttribute(
       'aria-current',
       'page'

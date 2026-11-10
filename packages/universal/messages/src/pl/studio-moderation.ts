@@ -70,4 +70,68 @@ export const studioModeration = {
       },
     },
   }),
+  queueNav: dt('Kolejka do przejrzenia'),
+  queueTitle: dt('Kolejka do przejrzenia'),
+  queueListLabel: dt('Wstrzymane komentarze'),
+  queueEmptyTitle: dt('Nic do przejrzenia'),
+  queueEmptyDescription: dt('Tutaj czekają komentarze wstrzymane do przejrzenia.'),
+  queueFailed: dt('Nie udało się wczytać kolejki.'),
+  queueHeldReason: dt('{reason:enum}', {
+    enum: {
+      reason: {
+        review_all: 'Wstrzymany do przejrzenia',
+        link: 'Zawiera link',
+        blocked_word: 'Zawiera zablokowane słowo',
+        unknown: 'Wstrzymany',
+      },
+    },
+  }),
+  queueOnVideo: dt('Pod filmem {title}'),
+  queueInThread: dt('Odpowiedź w wątku'),
+  queueWatch: dt('Otwórz film'),
+  queueHistoryTitle: dt('Ostatnie komentarze tego autora'),
+  queueHistoryEmpty: dt('Brak innych komentarzy na Twoim kanale.'),
+  queueHistoryFailed: dt('Nie udało się wczytać jego innych komentarzy.'),
+  queueState: dt('{state:enum}', {
+    enum: { state: { published: 'Opublikowany', held: 'Wstrzymany', hidden: 'Ukryty' } },
+  }),
+  queueActionsLabel: dt('Działania na otwartym komentarzu'),
+  queueSelection: dt('{count:plural}', {
+    plural: {
+      count: {
+        one: 'Działanie na {?} zaznaczonym komentarzu',
+        few: 'Działanie na {?} zaznaczonych komentarzach',
+        many: 'Działanie na {?} zaznaczonych komentarzach',
+        other: 'Działanie na {?} zaznaczonego komentarza',
+      },
+    },
+  }),
+  queueSelect: dt('Zaznacz'),
+  queueUnselect: dt('Odznacz'),
+  queuePrevious: dt('Poprzedni'),
+  queueNext: dt('Następny'),
+  queueDisclosure: dt('{disclosure:enum}', {
+    enum: { disclosure: { silent: 'Po cichu', visible: 'Widocznie' } },
+  }),
+  queueFlip: dt('Następne działanie: {disclosure:enum}', {
+    enum: { disclosure: { silent: 'Po cichu', visible: 'Widocznie' } },
+  }),
+  queueHelp: dt('Skróty'),
+  queueHelpTitle: dt('Skróty klawiszowe'),
+  queueHelpDescription: dt('Działają wszędzie na stronie poza polem tekstowym.'),
+  queueKey: dt('{key:enum}', {
+    enum: {
+      key: {
+        j: 'Następny komentarz',
+        k: 'Poprzedni komentarz',
+        a: 'Zatwierdź',
+        r: 'Usuń, z powodem',
+        h: 'Ukryj',
+        b: 'Zbanuj autora',
+        v: 'Przełącz następne działanie między po cichu a widocznie',
+        x: 'Zaznacz lub odznacz',
+        '?': 'Pokaż tę listę',
+      },
+    },
+  }),
 } as const;

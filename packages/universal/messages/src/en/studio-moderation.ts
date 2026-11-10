@@ -63,4 +63,63 @@ export const studioModeration = {
       },
     },
   }),
+  queueNav: dt('Review queue'),
+  queueTitle: dt('Review queue'),
+  queueListLabel: dt('Held comments'),
+  queueEmptyTitle: dt('Nothing to review'),
+  queueEmptyDescription: dt('Comments held for review wait here.'),
+  queueFailed: dt('The review queue did not load.'),
+  queueHeldReason: dt('{reason:enum}', {
+    enum: {
+      reason: {
+        review_all: 'Held for review',
+        link: 'Contains a link',
+        blocked_word: 'Matched a blocked word',
+        unknown: 'Held',
+      },
+    },
+  }),
+  queueOnVideo: dt('On {title}'),
+  queueInThread: dt('A reply in a thread'),
+  queueWatch: dt('Open the video'),
+  queueHistoryTitle: dt('Recent comments by this author'),
+  queueHistoryEmpty: dt('No other comments on your channel.'),
+  queueHistoryFailed: dt('Their other comments did not load.'),
+  queueState: dt('{state:enum}', {
+    enum: { state: { published: 'Published', held: 'Held', hidden: 'Hidden' } },
+  }),
+  queueActionsLabel: dt('Actions on the open comment'),
+  queueSelection: dt('{count:plural}', {
+    plural: {
+      count: { one: 'Acting on {?} selected comment', other: 'Acting on {?} selected comments' },
+    },
+  }),
+  queueSelect: dt('Select'),
+  queueUnselect: dt('Unselect'),
+  queuePrevious: dt('Previous'),
+  queueNext: dt('Next'),
+  queueDisclosure: dt('{disclosure:enum}', {
+    enum: { disclosure: { silent: 'Silent', visible: 'Visible' } },
+  }),
+  queueFlip: dt('Next action: {disclosure:enum}', {
+    enum: { disclosure: { silent: 'Silent', visible: 'Visible' } },
+  }),
+  queueHelp: dt('Shortcuts'),
+  queueHelpTitle: dt('Keyboard shortcuts'),
+  queueHelpDescription: dt('They work anywhere on the page except in a field.'),
+  queueKey: dt('{key:enum}', {
+    enum: {
+      key: {
+        j: 'Next comment',
+        k: 'Previous comment',
+        a: 'Approve',
+        r: 'Remove, with a reason',
+        h: 'Hide',
+        b: 'Ban the author',
+        v: 'Switch the next action between silent and visible',
+        x: 'Select or unselect',
+        '?': 'Show this list',
+      },
+    },
+  }),
 } as const;

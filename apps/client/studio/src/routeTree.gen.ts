@@ -24,6 +24,7 @@ import { Route as AuthedAdminCategoriesRouteImport } from './routes/_authed/admi
 import { Route as AuthedAdminCurationRouteImport } from './routes/_authed/admin/curation';
 import { Route as AuthedAdminModerationRouteImport } from './routes/_authed/admin/moderation';
 import { Route as AuthedAdminQueuesRouteImport } from './routes/_authed/admin/queues';
+import { Route as AuthedCommentsQueueRouteImport } from './routes/_authed/comments_.queue';
 import { Route as AuthedUploadIndexRouteImport } from './routes/_authed/upload/index';
 import { Route as AuthedVideosIndexRouteImport } from './routes/_authed/videos/index';
 import { Route as LiveOverlayTokenRouteImport } from './routes/live.overlay.$token';
@@ -105,6 +106,11 @@ const AuthedAdminQueuesRoute = AuthedAdminQueuesRouteImport.update({
   path: '/queues',
   getParentRoute: () => AuthedAdminRoute,
 } as any);
+const AuthedCommentsQueueRoute = AuthedCommentsQueueRouteImport.update({
+  id: '/comments_/queue',
+  path: '/comments/queue',
+  getParentRoute: () => AuthedRoute,
+} as any);
 const AuthedUploadIndexRoute = AuthedUploadIndexRouteImport.update({
   id: '/upload/',
   path: '/upload/',
@@ -151,6 +157,7 @@ export interface FileRoutesByFullPath {
   '/admin/curation': typeof AuthedAdminCurationRoute;
   '/admin/moderation': typeof AuthedAdminModerationRoute;
   '/admin/queues': typeof AuthedAdminQueuesRoute;
+  '/comments/queue': typeof AuthedCommentsQueueRoute;
   '/live/overlay/$token': typeof LiveOverlayTokenRoute;
   '/admin/': typeof AuthedAdminIndexRoute;
   '/upload/': typeof AuthedUploadIndexRoute;
@@ -172,6 +179,7 @@ export interface FileRoutesByTo {
   '/admin/curation': typeof AuthedAdminCurationRoute;
   '/admin/moderation': typeof AuthedAdminModerationRoute;
   '/admin/queues': typeof AuthedAdminQueuesRoute;
+  '/comments/queue': typeof AuthedCommentsQueueRoute;
   '/live/overlay/$token': typeof LiveOverlayTokenRoute;
   '/admin': typeof AuthedAdminIndexRoute;
   '/upload': typeof AuthedUploadIndexRoute;
@@ -196,6 +204,7 @@ export interface FileRoutesById {
   '/_authed/admin/curation': typeof AuthedAdminCurationRoute;
   '/_authed/admin/moderation': typeof AuthedAdminModerationRoute;
   '/_authed/admin/queues': typeof AuthedAdminQueuesRoute;
+  '/_authed/comments_/queue': typeof AuthedCommentsQueueRoute;
   '/live/overlay/$token': typeof LiveOverlayTokenRoute;
   '/_authed/admin/': typeof AuthedAdminIndexRoute;
   '/_authed/upload/': typeof AuthedUploadIndexRoute;
@@ -220,6 +229,7 @@ export interface FileRouteTypes {
     | '/admin/curation'
     | '/admin/moderation'
     | '/admin/queues'
+    | '/comments/queue'
     | '/live/overlay/$token'
     | '/admin/'
     | '/upload/'
@@ -241,6 +251,7 @@ export interface FileRouteTypes {
     | '/admin/curation'
     | '/admin/moderation'
     | '/admin/queues'
+    | '/comments/queue'
     | '/live/overlay/$token'
     | '/admin'
     | '/upload'
@@ -264,6 +275,7 @@ export interface FileRouteTypes {
     | '/_authed/admin/curation'
     | '/_authed/admin/moderation'
     | '/_authed/admin/queues'
+    | '/_authed/comments_/queue'
     | '/live/overlay/$token'
     | '/_authed/admin/'
     | '/_authed/upload/'
@@ -387,6 +399,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedAdminQueuesRouteImport;
       parentRoute: typeof AuthedAdminRoute;
     };
+    '/_authed/comments_/queue': {
+      id: '/_authed/comments_/queue';
+      path: '/comments/queue';
+      fullPath: '/comments/queue';
+      preLoaderRoute: typeof AuthedCommentsQueueRouteImport;
+      parentRoute: typeof AuthedRoute;
+    };
     '/_authed/upload/': {
       id: '/_authed/upload/';
       path: '/upload';
@@ -460,6 +479,7 @@ interface AuthedRouteChildren {
   AuthedInvitesRoute: typeof AuthedInvitesRoute;
   AuthedLiveRoute: typeof AuthedLiveRoute;
   AuthedTeamRoute: typeof AuthedTeamRoute;
+  AuthedCommentsQueueRoute: typeof AuthedCommentsQueueRoute;
   AuthedUploadIndexRoute: typeof AuthedUploadIndexRoute;
   AuthedVideosIndexRoute: typeof AuthedVideosIndexRoute;
   AuthedUploadEditVideoIdRoute: typeof AuthedUploadEditVideoIdRoute;
@@ -475,6 +495,7 @@ const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedInvitesRoute: AuthedInvitesRoute,
   AuthedLiveRoute: AuthedLiveRoute,
   AuthedTeamRoute: AuthedTeamRoute,
+  AuthedCommentsQueueRoute: AuthedCommentsQueueRoute,
   AuthedUploadIndexRoute: AuthedUploadIndexRoute,
   AuthedVideosIndexRoute: AuthedVideosIndexRoute,
   AuthedUploadEditVideoIdRoute: AuthedUploadEditVideoIdRoute,

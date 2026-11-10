@@ -20,7 +20,7 @@ import {
   mockEndpoint,
   problemReply,
 } from '@vp/web-testing';
-import { runMutation } from '@vp/web-testing/dom';
+import { heldReply, renderMutation, runMutation } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
 import type { PropsWithChildren } from 'react';
 import { ApiProvider } from '../api-provider';
@@ -212,5 +212,51 @@ describe('@vp/queries: moderation queries', () => {
     await expect(
       createQueryClient().fetchQuery(ownRestrictionQueryOptions(api, CHANNEL_ID))
     ).rejects.toThrow();
+  });
+
+  describe('the held queue while a bulk action runs', () => {
+    const HELD = creatorCommentKeys.list('held');
+    const OTHER = '0190c3a0-5e1d-7000-8000-00000000d0aa';
+    const page = (...ids: string[]) => ({
+      pages: [{ items: ids.map((id) => ({ id })), nextCursor: null }],
+      pageParams: [undefined],
+    });
+    const idsLeft = (client: ReturnType<typeof createQueryClient>) =>
+      client
+        .getQueryData<ReturnType<typeof page>>(HELD)
+        ?.pages.flatMap(({ items }) => items.map(({ id }) => id));
+
+    it('drops the acted comments at once, and keeps the rest', async () => {
+      const held = heldReply(() => ({ results: [{ id: COMMENT_ID, ok: true }] }));
+      apiServer.use(
+        mockEndpoint(bulkModerateComments, async () => HttpResponse.json(await held.answer()))
+      );
+      const client = createQueryClient();
+      client.setQueryData(HELD, page(COMMENT_ID, OTHER));
+      const hook = renderMutation(useBulkModerate, client, WithApi);
+
+      const running = hook.current.mutateAsync({
+        ids: [COMMENT_ID],
+        action: { action: 'approve' },
+      });
+      await vi.waitFor(() => expect(idsLeft(client)).toEqual([OTHER]));
+      held.release();
+      await running;
+    });
+
+    it('puts them back when the call fails', async () => {
+      apiServer.use(mockEndpoint(bulkModerateComments, () => problemReply(ErrorCodes.INTERNAL)));
+      const client = createQueryClient();
+      client.setQueryData(HELD, page(COMMENT_ID, OTHER));
+
+      await runMutation(
+        client,
+        useBulkModerate as never,
+        { ids: [COMMENT_ID], action: { action: 'approve' } } as never,
+        WithApi
+      );
+
+      expect(idsLeft(client)).toEqual([COMMENT_ID, OTHER]);
+    });
   });
 });

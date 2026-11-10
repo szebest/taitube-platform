@@ -14,7 +14,7 @@ import type {
 import { ErrorCodes } from '@vp/errors';
 import { fromPromise } from '@vp/result';
 import { useApi } from './api-provider';
-import { commentListKeys } from './comment-queries';
+import { commentListKeys, creatorCommentKeys } from './comment-queries';
 import { failureCode } from './failure-code';
 import { KEYSET_PAGE_SIZE, keysetPaging } from './keyset-paging';
 
@@ -128,10 +128,33 @@ function liftRestrictionMutationOptions(api: ApiClient) {
   });
 }
 
+interface HeldPages {
+  pages: { items: { id: string }[] }[];
+}
+
+const without = (held: HeldPages, ids: readonly string[]): HeldPages => ({
+  ...held,
+  pages: held.pages.map((page) => ({
+    ...page,
+    items: page.items.filter(({ id }) => !ids.includes(id)),
+  })),
+});
+
 function bulkModerateMutationOptions(api: ApiClient) {
+  const heldKey = creatorCommentKeys.list('held');
+
   return mutationOptions({
     mutationFn: ({ ids, action }: BulkModerate) =>
       api.creatorComments.bulkModerateComments({ body: { ids, action } }),
+    onMutate: async ({ ids }, { client }) => {
+      await client.cancelQueries({ queryKey: heldKey });
+      const held = client.getQueryData<HeldPages>(heldKey);
+      if (held) client.setQueryData(heldKey, without(held, ids));
+      return held;
+    },
+    onError: (_error, _variables, held, { client }) => {
+      if (held) client.setQueryData(heldKey, held);
+    },
     onSettled: (_result, _error, _variables, _snapshot, { client }) =>
       Promise.all(commentListKeys.map((queryKey) => client.invalidateQueries({ queryKey }))),
   });
@@ -163,7 +186,10 @@ export function useLiftRestriction() {
   return useMutation(liftRestrictionMutationOptions(api));
 }
 
-/** One action over up to 100 comments; each id answers on its own, so the lists reload even when some were refused. */
+/**
+ * One action over up to 100 comments; each id answers on its own, so the lists reload even when some
+ * were refused. The held queue drops the comments at once and gets them back when the call fails.
+ */
 export function useBulkModerate() {
   const api = useApi();
   return useMutation(bulkModerateMutationOptions(api));

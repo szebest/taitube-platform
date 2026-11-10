@@ -9,6 +9,7 @@ import {
 } from '@vp/permissions';
 import { Can } from '@vp/permissions-react';
 import { useAccount } from '@vp/queries';
+import type { ReactNode } from 'react';
 import { StudioWorkspace } from '#app/components/workspace/studio-workspace';
 import { ChannelSwitcher } from '#app/features/team/components/channel-switcher/channel-switcher';
 import { useActiveChannel } from '#app/features/team/hooks/use-active-channel';
@@ -17,9 +18,11 @@ import { InvitesNavItem } from '../invites-nav-item/invites-nav-item';
 export interface ActingNavItemsProps {
   /** A comment arrived on a page other than the inbox. */
   newComments: boolean;
+  /** The review queue's entry, shown beside the inbox to whoever moderates comments. */
+  reviewQueue?: ReactNode;
 }
 
-function SignedInNavItems({ newComments }: ActingNavItemsProps) {
+function SignedInNavItems({ newComments, reviewQueue }: ActingNavItemsProps) {
   const matchRoute = useMatchRoute();
   const { tOr } = useT();
   const { channelId, ownerId } = useActiveChannel();
@@ -60,6 +63,9 @@ function SignedInNavItems({ newComments }: ActingNavItemsProps) {
             {tOr('studio.commentsNav', {}, '')}
           </Link>
         </StudioWorkspace.NavItem>
+      </Can>
+      <Can type="rule" I={canModerateComments} this={{ videoOwnerId: ownerId }}>
+        {reviewQueue}
       </Can>
       <Can type="rule" I={canUpdateLiveStream} this={{ stream: { ownerId } }}>
         <StudioWorkspace.NavItem asChild icon="live" active={Boolean(matchRoute({ to: '/live' }))}>

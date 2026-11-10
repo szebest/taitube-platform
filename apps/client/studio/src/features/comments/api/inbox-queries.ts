@@ -9,7 +9,7 @@ export type InboxComment = CreatorInboxCommentView;
 /** The comments on the creator's videos under one filter, newest first, keyset-paged. */
 export function inboxQueryOptions(api: ApiClient, filter: CreatorInboxFilter) {
   return infiniteQueryOptions({
-    queryKey: [...creatorCommentKeys.all, filter],
+    queryKey: creatorCommentKeys.list(filter),
     queryFn: ({ pageParam }) =>
       api.creatorComments.listCreatorComments({
         query: { filter, limit: KEYSET_PAGE_SIZE, cursor: pageParam },
