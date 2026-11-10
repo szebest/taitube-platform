@@ -59,7 +59,7 @@
         "src/**/*.{ts,tsx}!",
         "!src/**/__tests__/**!",
         "!src/**/*.test.{ts,tsx}!",
-        "!src/**/__stories__/**!"
+        "!src/**/*.stories.tsx!"
       ]
     },
     "apps/client/studio": {

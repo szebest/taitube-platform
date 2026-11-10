@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { withPartyIntl } from '#app/components/party/__stories__/with-party-intl';
+import { withPartyIntl } from '#app/__tests__/with-party-intl';
 import { PartyJoinPanel } from '..';
 
 const POSTER = `data:image/svg+xml,${encodeURIComponent(

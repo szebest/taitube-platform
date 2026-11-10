@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useState } from 'react';
-import { withPartyIntl } from '#app/components/party/__stories__/with-party-intl';
+import { withPartyIntl } from '#app/__tests__/with-party-intl';
 import { PartyRoom, type PartyRoomRootProps, type PartyRoomTab } from '..';
 import { PartyRoomRoot } from '../party-room';
 

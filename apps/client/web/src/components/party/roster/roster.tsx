@@ -72,16 +72,16 @@ export function RosterMember({
     <li
       data-slot="roster-member"
       data-away={away || undefined}
-      className={`flex items-center gap-inline data-away:opacity-60 ${className ?? ''}`}
+      className={`group flex items-center gap-inline ${className ?? ''}`}
       {...props}
     >
-      <Avatar.Root size="sm" aria-hidden="true" className="shrink-0">
+      <Avatar.Root size="sm" aria-hidden="true" className="shrink-0 group-data-away:opacity-60">
         {avatarUrl && <Avatar.Image src={avatarUrl} alt="" />}
         <Avatar.Fallback>{name.slice(0, 1)}</Avatar.Fallback>
       </Avatar.Root>
       <div className="flex min-w-0 flex-1 flex-col">
         <span className="flex min-w-0 flex-wrap items-center gap-inline">
-          <span className="truncate text-label">{name}</span>
+          <span className="truncate text-label group-data-away:opacity-60">{name}</span>
           {owner && (
             <Badge size="sm" variant="soft" tone="accent">
               {tOr('party.rosterOwnerBadge', {}, '')}
