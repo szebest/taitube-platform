@@ -1,4 +1,11 @@
-import { frameBands, hammingDistance, isLowEntropy, lookupBands, popcount32 } from '../frame-hash';
+import {
+  frameBands,
+  hammingDistance,
+  isLowEntropy,
+  isLowEntropyTerm,
+  lookupBands,
+  popcount32,
+} from '../frame-hash';
 
 describe('@vp/domain: hammingDistance', () => {
   it.each([
@@ -74,6 +81,16 @@ describe('@vp/domain: isLowEntropy', () => {
     { name: 'a mixed term', value: 0x1234_5678, width: 32, low: false },
   ])('judges $name', ({ value, width, low }) => {
     expect(isLowEntropy(value, width, width === 16 ? 2 : 4)).toBe(low);
+  });
+});
+
+describe('@vp/domain: isLowEntropyTerm', () => {
+  it.each([
+    { name: 'a zero term', term: 0, low: true },
+    { name: 'an all-ones term', term: -1, low: true },
+    { name: 'a mixed term', term: 0x1234_5678, low: false },
+  ])('judges $name', ({ term, low }) => {
+    expect(isLowEntropyTerm(term, 4)).toBe(low);
   });
 });
 

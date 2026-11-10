@@ -22,6 +22,7 @@ export function hammingDistance(a: bigint, b: bigint): number {
 const BAND_BITS = 16n;
 const BAND_MASK = 0xffffn;
 const BAND_BITS_COUNT = 16;
+const AUDIO_TERM_BITS = 32;
 
 /**
  * The four 16-bit bands of a frame hash, low band first. A frame within Hamming distance 3 of another
@@ -45,6 +46,11 @@ export function frameBands(hash: bigint): [number, number, number, number] {
 export function isLowEntropy(value: number, width: number, minSetBits: number): boolean {
   const set = popcount32(value);
   return set < minSetBits || width - set < minSetBits;
+}
+
+/** An audio fingerprint term is a 32-bit word. */
+export function isLowEntropyTerm(term: number, minSetBits: number): boolean {
+  return isLowEntropy(term, AUDIO_TERM_BITS, minSetBits);
 }
 
 /** The distinct bands of `hashes` per position, without the low-entropy ones. */

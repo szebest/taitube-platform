@@ -7,13 +7,12 @@ import {
   FingerprintRepository,
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
-import { frameBands, isLowEntropy, lookupBands } from '@vp/domain';
+import { frameBands, isLowEntropyTerm, lookupBands } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { type Result, fromPromise, ok } from '@vp/result';
 import { and, asc, eq, inArray, ne, or } from 'drizzle-orm';
 import type { PostgresDatabase } from './types';
 
-const TERM_BITS = 32;
 const { videoFrameHashes: vf, videoAudioFingerprints: va } = schema;
 
 export class PostgresFingerprintRepository extends FingerprintRepository {
@@ -87,7 +86,7 @@ export class PostgresFingerprintRepository extends FingerprintRepository {
     limits: FingerprintLookupLimits
   ): Promise<Result<AudioTermHit[], DatabaseUnavailable>> {
     const wanted = [
-      ...new Set(terms.filter((term) => !isLowEntropy(term, TERM_BITS, limits.minTermSetBits))),
+      ...new Set(terms.filter((term) => !isLowEntropyTerm(term, limits.minTermSetBits))),
     ];
     if (wanted.length === 0) return ok([]);
     return fromPromise(

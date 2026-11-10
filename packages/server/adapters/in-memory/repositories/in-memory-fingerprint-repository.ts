@@ -6,11 +6,9 @@ import {
   type FrameFingerprintHit,
   FingerprintRepository,
 } from '@vp/core/repositories';
-import { frameBands, isLowEntropy, lookupBands } from '@vp/domain';
+import { frameBands, isLowEntropyTerm, lookupBands } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { type Result, ok } from '@vp/result';
-
-const TERM_BITS = 32;
 
 export class InMemoryFingerprintRepository extends FingerprintRepository {
   private readonly frames = new Map<string, readonly FrameFingerprint[]>();
@@ -56,9 +54,7 @@ export class InMemoryFingerprintRepository extends FingerprintRepository {
     excludeVideoId: string,
     limits: FingerprintLookupLimits
   ): Promise<Result<AudioTermHit[], DatabaseUnavailable>> {
-    const wanted = new Set(
-      terms.filter((term) => !isLowEntropy(term, TERM_BITS, limits.minTermSetBits))
-    );
+    const wanted = new Set(terms.filter((term) => !isLowEntropyTerm(term, limits.minTermSetBits)));
     const hits = [...this.audio]
       .filter(([videoId]) => videoId !== excludeVideoId)
       .flatMap(([videoId, stored]) =>
