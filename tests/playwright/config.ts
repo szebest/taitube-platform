@@ -90,7 +90,7 @@ export function clientAppPlaywrightConfig({ devPort, defaultPortBase, alongside 
     outputDir: 'e2e/test-results',
     forbidOnly: true,
     fullyParallel: true,
-    workers: ci ? 2 : undefined,
+    workers: ci ? 3 : undefined,
     retries: ci ? 1 : 0,
     reporter: ci
       ? [
