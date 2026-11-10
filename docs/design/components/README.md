@@ -18,6 +18,7 @@ The specs for every component in `@vp/components` (client, T3), the package that
 | [EmptyState](empty-state.md) | One editorial line and one action | `Button` | feeds, queue, comments, search | empty library, no analytics yet, empty table |
 | [ErrorState](error-state.md) | A whole page or route that failed, with a retry | `Button`, `Callout`, `Spinner`, `Tooltip` | route error and not-found | route error and not-found |
 | [SectionError](section-error.md) | One section failed inside a page that did not | `Callout`, `Button`, `Spinner` | shelves, discussion | tables and charts |
+| [DisclosureControl](disclosure-control.md) | Silent or Visible: whether the author of a moderated comment is told | `SegmentedControl` | moderation dialog | bulk bar, queue, settings defaults |
 | [Skeletons](skeletons.md) | The loading layout of each component above | `Skeleton` | every page | every page |
 
 Each component exports its own `<Name>Skeleton` from its folder. [skeletons.md](skeletons.md) holds the rule and the dimensions of the shared ones.

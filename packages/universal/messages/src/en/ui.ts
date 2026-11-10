@@ -134,4 +134,10 @@ export const ui = {
   nextPage: dt('Next page'),
   studioNavigation: dt('Studio'),
   inspectorEmpty: dt('Select a video to see its details'),
+  disclosureLabel: dt('Visibility to the author'),
+  disclosureSilent: dt('Silent'),
+  disclosureVisible: dt('Visible'),
+  commentHeld: dt('Waiting for review'),
+  commentHidden: dt('Hidden by moderators'),
+  commentSilent: dt('Silent'),
 } as const;

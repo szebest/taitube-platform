@@ -134,6 +134,12 @@ export const UI_COPY_KEYS = [
   'nextPage',
   'studioNavigation',
   'inspectorEmpty',
+  'disclosureLabel',
+  'disclosureSilent',
+  'disclosureVisible',
+  'commentHeld',
+  'commentHidden',
+  'commentSilent',
 ] as const;
 
 export type UiCopyKey = (typeof UI_COPY_KEYS)[number];
