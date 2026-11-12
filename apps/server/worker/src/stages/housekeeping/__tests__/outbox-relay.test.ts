@@ -83,7 +83,9 @@ describe('housekeeping: outbox relay', () => {
   });
 
   it('records an attempt and keeps the entry pending when the queue is unavailable', async () => {
-    await repositories.outbox.enqueue(queueOutboxEntry('non_existent_queue'));
+    const { id } = expectOk(
+      await repositories.outbox.enqueue(queueOutboxEntry('non_existent_queue'))
+    );
     const unavailable = new InMemoryJobQueue('non_existent_queue');
     vi.spyOn(unavailable, 'add').mockResolvedValue(err(queueUnavailable('add')));
 
@@ -92,7 +94,10 @@ describe('housekeeping: outbox relay', () => {
       successCount: 0,
       failureCount: 1,
     });
-    expect(expectOk(await repositories.outbox.claimBatch(10))[0]?.attempts).toBe(1);
+    expect(expectOk(await repositories.outbox.findById(id))).toMatchObject({
+      attempts: 1,
+      status: 'PENDING',
+    });
   });
 
   it('publishes the probe committed with a transition even when the direct enqueue never ran', async () => {

@@ -180,6 +180,28 @@ stateDiagram-v2
   ENDED --> [*]
 ```
 
+### outbox-row
+
+`OUTBOX_ROW`, defined in `packages/universal/domain-rules/src/outbox/outbox-row.machine.ts`.
+
+Initial: `PENDING`. Final: `PUBLISHED`, `DEAD`.
+
+| Event | From | To | Recorded as |
+| --- | --- | --- | --- |
+| `publish` | `PENDING` | `PUBLISHED` | - |
+| `retry` | `PENDING` | `PENDING` | - |
+| `bury` | `PENDING` | `DEAD` | - |
+
+```mermaid
+stateDiagram-v2
+  [*] --> PENDING
+  PENDING --> PUBLISHED: publish
+  PENDING --> PENDING: retry
+  PENDING --> DEAD: bury
+  PUBLISHED --> [*]
+  DEAD --> [*]
+```
+
 ### upload-session
 
 `UPLOAD_SESSION`, defined in `packages/universal/domain-rules/src/uploads/upload-session.machine.ts`.
@@ -218,7 +240,7 @@ Initial: `UPLOADING`, `LIVE`. Final: `DELETED`.
 | `completeThumbnail` | `PROCESSING` | `PROCESSING` | `thumbnail.completed` |
 | `package` | `PROCESSING` | `READY` | `video.ready` |
 | `fail` | `PROCESSING`, `PROBING` | `FAILED` | `video.failed` |
-| `reconcileFail` | `PROCESSING` | `FAILED` | `video.failed` |
+| `reconcileFail` | `PROBING`, `PROCESSING` | `FAILED` | `video.failed` |
 | `reprocess` | `READY`, `FAILED`, `PROCESSING` | `PROBING` | `video.reprocessing` |
 | `delete` | `UPLOADING`, `UPLOADED`, `PROBING`, `PROCESSING`, `READY`, `HELD`, `FAILED`, `REJECTED`, `ABANDONED` | `DELETED` | `video.deleted` |
 | `takedown` | `UPLOADING`, `UPLOADED`, `PROBING`, `PROCESSING`, `READY`, `HELD`, `FAILED`, `REJECTED`, `ABANDONED` | `REJECTED` | `video.taken_down` |
@@ -244,6 +266,7 @@ stateDiagram-v2
   PROCESSING --> READY: package
   PROCESSING --> FAILED: fail
   PROBING --> FAILED: fail
+  PROBING --> FAILED: reconcileFail
   PROCESSING --> FAILED: reconcileFail
   READY --> PROBING: reprocess
   FAILED --> PROBING: reprocess

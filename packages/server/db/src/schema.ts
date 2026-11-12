@@ -269,16 +269,3 @@ export const dlqEntries = pgTable(
     ),
   ]
 );
-
-export const outbox = pgTable(
-  'outbox',
-  {
-    id: uuid('id').primaryKey(),
-    kind: text('kind').notNull(),
-    payload: jsonb('payload').notNull(),
-    createdAt: timestamptz('created_at').notNull().defaultNow(),
-    publishedAt: timestamptz('published_at'),
-    attempts: integer('attempts').notNull().default(0),
-  },
-  (table) => [index('outbox_drain_idx').on(table.publishedAt, table.createdAt)]
-);

@@ -511,7 +511,7 @@ Free tiers moved a lot in 2026; the table reflects the state verified on 2026-09
 
 | Rank | Option | Status | Reason |
 |---|---|---|---|
-| **1 (Phase 4)** | **Transactional outbox** (`outbox` table written atomically with state changes; housekeeping relay polls `SKIP LOCKED` and publishes to BullMQ) | **Implemented** | Removes the dual-write window entirely; atomic with CAS state changes; relay ensures effectively-once publishing with deterministic job IDs; records older than 7 days pruned. |
+| **1 (Phase 4)** | **Transactional outbox** (`outbox` table written atomically with state changes; housekeeping relay claims rows with `SKIP LOCKED` in the transaction that leases them, and publishes to BullMQ) | **Implemented** | Removes the dual-write window entirely; atomic with CAS state changes; relay ensures effectively-once publishing with deterministic job IDs; a row moves `PENDING -> PUBLISHED`, or `PENDING -> DEAD` after `OUTBOX_MAX_ATTEMPTS` failed publishes on a doubling backoff (`OUTBOX_ROW`); published records older than 7 days pruned, dead ones kept for an operator. |
 | 2 (MVP) | Commit DB → enqueue with deterministic `jobId` → reconciler re-enqueues gaps | Superseded / Fallback | Reconciler remains as belt-and-braces fallback (`reconciler_repairs_total` stays 0 under normal outbox operation). |
 | 3 | pg-boss (queue in Postgres) | Rejected | Solves it by construction, but loses BullMQ (ADR-03). |
 
