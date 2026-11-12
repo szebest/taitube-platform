@@ -6,9 +6,10 @@ import {
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import type { UploadStatus } from '@vp/domain';
+import { uploadSourcesInto } from '@vp/domain-rules';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { type Result, andThen, err, fromPromise, map, ok } from '@vp/result';
-import { eq } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import { toUploadInsert, toUploadStatusUpdate } from '../mappers/index';
 import type { PostgresDatabase } from './types';
 
@@ -77,7 +78,12 @@ export class PostgresUploadRepository extends UploadRepository {
         this.db
           .update(schema.uploads)
           .set(toUploadStatusUpdate(status))
-          .where(eq(schema.uploads.id, uploadId))
+          .where(
+            and(
+              eq(schema.uploads.id, uploadId),
+              inArray(schema.uploads.status, [...uploadSourcesInto(status)])
+            )
+          )
           .returning(),
       databaseUnavailable.during('updateStatus')
     );

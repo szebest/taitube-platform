@@ -4,6 +4,7 @@ import {
   type NotMultipart,
   type PartManifestMismatch,
   type SourceMissing,
+  type UploadNotOpen,
   type UploadOpenFailure,
   type UploadPart,
   type UploadSizeMismatch,
@@ -18,7 +19,12 @@ import { createTraceparent, getActiveTraceparent } from '@vp/observability';
 import type { UserContext } from '@vp/permissions';
 import { type Result, err, isErr, ok, unwrapOr } from '@vp/result';
 import { type DispatchOrigin, buildProbeDispatch, enqueueProbe } from './probe-dispatch';
-import { type LoadOwnedUploadFailure, type UploadContext, loadOwnedUpload } from './upload-context';
+import {
+  type LoadOwnedUploadFailure,
+  type UploadContext,
+  closeUpload,
+  loadOwnedUpload,
+} from './upload-context';
 
 export interface CompleteUploadResult {
   videoId: string;
@@ -63,12 +69,14 @@ async function rejectSizeMismatch(
   uploadId: string,
   video: VideoRecord,
   mismatch: UploadSizeMismatch
-): Promise<Result<never, UploadSizeMismatch | StorageUnavailable | DatabaseUnavailable>> {
+): Promise<
+  Result<never, UploadSizeMismatch | UploadNotOpen | StorageUnavailable | DatabaseUnavailable>
+> {
   const { actualSizeBytes } = mismatch;
   const removed = await ctx.storage.deleteObject(ctx.rawBucket, video.sourceKey);
   if (isErr(removed)) return removed;
 
-  const aborted = await ctx.uploads.updateStatus(uploadId, 'ABORTED');
+  const aborted = await closeUpload(ctx, uploadId, 'ABORTED');
   if (isErr(aborted)) return aborted;
 
   const transitioned = await ctx.videos.transition({
@@ -122,7 +130,7 @@ export async function completeUpload(
   if (isErr(size)) return rejectSizeMismatch(ctx, uploadId, video, size.error);
   const actualSizeBytes = size.value;
 
-  const completed = await ctx.uploads.updateStatus(uploadId, 'COMPLETED');
+  const completed = await closeUpload(ctx, uploadId, 'COMPLETED');
   if (isErr(completed)) return completed;
 
   const traceparent = getActiveTraceparent() ?? createTraceparent();

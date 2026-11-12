@@ -59,6 +59,19 @@ describe('apps/server/api/services: abort upload', () => {
     });
   });
 
+  it('refuses to abort an upload a completion closed while its object was removed', async () => {
+    const { uploadId, videoId } = expectOk(await start(MB));
+    const remove = storage.deleteObject.bind(storage);
+    vi.spyOn(storage, 'deleteObject').mockImplementation(async (bucket, key) => {
+      await repositories.uploads.updateStatus(uploadId, 'COMPLETED');
+      return remove(bucket, key);
+    });
+
+    expect(expectErr(await service.abort(OWNER, uploadId)).code).toBe(ErrorCodes.UPLOAD_NOT_OPEN);
+    expect(expectOk(await repositories.uploads.findById(uploadId))?.status).toBe('COMPLETED');
+    expect(expectOk(await repositories.videos.findById(videoId))?.status).toBe('UPLOADING');
+  });
+
   it('refuses to abandon a multipart upload whose object storage already assembled', async () => {
     const { uploadId, videoId } = expectOk(await start(50 * MB));
     const video = expectOk(await repositories.videos.findById(videoId));

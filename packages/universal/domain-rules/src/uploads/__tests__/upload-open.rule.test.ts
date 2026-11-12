@@ -1,7 +1,7 @@
 import { ErrorCodes } from '@vp/errors';
 import { isErr, isOk } from '@vp/result';
 import { anUpload } from '../../__tests__/entities';
-import { decideUploadOpen } from '../upload-open.rule';
+import { decideUploadOpen, uploadSourcesInto } from '../upload-open.rule';
 
 const before = new Date('2026-01-01T00:30:00.000Z');
 const after = new Date('2026-01-01T02:00:00.000Z');
@@ -37,5 +37,13 @@ describe('@vp/domain-rules: decideUploadOpen', () => {
     expect(isOk(decideUploadOpen({ upload, now: new Date('2026-01-01T01:00:00.000Z') }))).toBe(
       false
     );
+  });
+
+  it.each([
+    { status: 'COMPLETED', sources: ['OPEN'] },
+    { status: 'ABORTED', sources: ['OPEN'] },
+    { status: 'OPEN', sources: [] },
+  ] as const)('lets an upload become $status only from $sources', ({ status, sources }) => {
+    expect(uploadSourcesInto(status)).toEqual(sources);
   });
 });

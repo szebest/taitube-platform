@@ -41,7 +41,6 @@
 1 apps/server/api/src/services/live-views.ts
 2 apps/server/api/src/services/screening-service.ts
 4 apps/server/api/src/services/sse-service.ts
-1 apps/server/api/src/services/upload-abort.ts
 1 apps/server/api/src/services/upload-complete.ts
 1 apps/server/api/src/services/video-lifecycle.ts
 3 apps/server/api/src/services/video-views.ts
@@ -125,7 +124,6 @@
 2 packages/universal/domain-rules/src/picks/pick-video.rule.ts
 1 packages/universal/domain-rules/src/screening/appeal-screening.rule.ts
 1 packages/universal/domain-rules/src/screening/review-case.rule.ts
-2 packages/universal/domain-rules/src/uploads/upload-open.rule.ts
 1 packages/universal/domain-rules/src/videos/update-metadata.rule.ts
 1 packages/universal/domain-rules/src/watch-parties/join.rule.ts
 2 packages/universal/domain-rules/src/watch-parties/shareable.rule.ts

@@ -139,6 +139,26 @@ stateDiagram-v2
   removed --> [*]
 ```
 
+### dlq-entry
+
+`DLQ_ENTRY`, defined in `packages/universal/domain-rules/src/dlq/dlq-entry.machine.ts`.
+
+Initial: `PARKED`. Final: `REPLAYED`, `DISCARDED`.
+
+| Event | From | To | Recorded as |
+| --- | --- | --- | --- |
+| `replay` | `PARKED` | `REPLAYED` | - |
+| `discard` | `PARKED` | `DISCARDED` | - |
+
+```mermaid
+stateDiagram-v2
+  [*] --> PARKED
+  PARKED --> REPLAYED: replay
+  PARKED --> DISCARDED: discard
+  REPLAYED --> [*]
+  DISCARDED --> [*]
+```
+
 ### live-stream
 
 `LIVE_STREAM`, defined in `packages/universal/domain-rules/src/live/live-stream.machine.ts`.
@@ -158,6 +178,26 @@ stateDiagram-v2
   LIVE --> ENDED: end
   LIVE --> LIVE: requestStop
   ENDED --> [*]
+```
+
+### upload-session
+
+`UPLOAD_SESSION`, defined in `packages/universal/domain-rules/src/uploads/upload-session.machine.ts`.
+
+Initial: `OPEN`. Final: `COMPLETED`, `ABORTED`.
+
+| Event | From | To | Recorded as |
+| --- | --- | --- | --- |
+| `complete` | `OPEN` | `COMPLETED` | - |
+| `abort` | `OPEN` | `ABORTED` | - |
+
+```mermaid
+stateDiagram-v2
+  [*] --> OPEN
+  OPEN --> COMPLETED: complete
+  OPEN --> ABORTED: abort
+  COMPLETED --> [*]
+  ABORTED --> [*]
 ```
 
 ### video-lifecycle
