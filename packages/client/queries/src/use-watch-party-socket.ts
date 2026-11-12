@@ -8,10 +8,9 @@ import { clockOffsetMs, type ClockSample } from '@vp/domain';
 import { fromPromise, isOk, parseJson } from '@vp/result';
 import { useEffect, useReducer, useRef } from 'react';
 import { useApi } from './api-provider';
+import { createReconnectTimer } from './reconnect-timer';
 import { INITIAL_WATCH_PARTY, type WatchPartyState, watchPartyReducer } from './watch-party-state';
 
-const FIRST_RETRY_MS = 1_000;
-const LAST_RETRY_MS = 30_000;
 const CLOCK_PING_MS = 30_000;
 const CLOCK_SAMPLES_KEPT = 8;
 
@@ -71,22 +70,17 @@ export function useWatchPartySocket({
     const stopped = new AbortController();
     const connection: {
       lastLineId?: string;
-      retries: number;
       ended: boolean;
-      retryTimer?: ReturnType<typeof setTimeout>;
       pingTimer?: ReturnType<typeof setInterval>;
-    } = { retries: 0, ended: false };
+    } = { ended: false };
+    const reconnect = createReconnectTimer(() => void open());
 
     const retryLater = () => {
       dispatch({ type: 'connection', connection: 'closed' });
       if (connection.ended) {
         return;
       }
-      connection.retryTimer = setTimeout(
-        open,
-        Math.min(FIRST_RETRY_MS * 2 ** connection.retries, LAST_RETRY_MS)
-      );
-      connection.retries += 1;
+      reconnect.schedule();
     };
 
     const ping = (opened: WebSocket) => {
@@ -113,7 +107,6 @@ export function useWatchPartySocket({
         socketUrl(apiUrl, roomId, issued.value.ticket, connection.lastLineId)
       );
       opened.addEventListener('open', () => {
-        connection.retries = 0;
         ping(opened);
         connection.pingTimer = setInterval(() => ping(opened), CLOCK_PING_MS);
       });
@@ -121,6 +114,9 @@ export function useWatchPartySocket({
         const frame = readFrame(data);
         if (!frame) {
           return;
+        }
+        if (frame.type === 'hello') {
+          reconnect.reset();
         }
         if (frame.type === 'clock') {
           samples.current = [
@@ -150,7 +146,7 @@ export function useWatchPartySocket({
 
     return () => {
       stopped.abort();
-      clearTimeout(connection.retryTimer);
+      reconnect.cancel();
       clearInterval(connection.pingTimer);
       socket.current?.close();
       socket.current = null;

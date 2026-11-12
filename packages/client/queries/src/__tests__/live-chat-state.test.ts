@@ -124,6 +124,28 @@ describe('packages/queries: liveChatReducer', () => {
     expect(state.refusal).toBe(refusal);
   });
 
+  it('forgets the last refusal once a new socket says hello', () => {
+    const state = fold(
+      { type: 'sending', ref: 'ref-1', text: 'hi' },
+      frame({
+        type: 'error',
+        ref: 'ref-1',
+        problem: {
+          type: 'about:blank',
+          title: 'Slow mode',
+          status: 429,
+          detail: 'wait',
+          code: 'LIVE_CHAT_SLOW_MODE',
+          instance: '/v1/live/x/chat',
+        },
+      }),
+      { type: 'connection', connection: 'closed' },
+      frame({ type: 'hello', resume: 'replayed', mode: MODE, canSend: true, canModerate: false })
+    );
+
+    expect(state.refusal).toBeNull();
+  });
+
   it('keeps a removed line removed when the socket repeats it', () => {
     const state = fold(
       frame({ type: 'message', message: message(1) }),

@@ -132,7 +132,7 @@ function applyFrame(state: WatchPartyState, frame: WatchPartyServerFrame): Watch
         ...state,
         playback: frame.playback,
         version: frame.version,
-        countdownEndsAt: frame.playback.phase === 'playing' ? null : state.countdownEndsAt,
+        countdownEndsAt: null,
       };
     case 'countdown':
       return { ...state, countdownEndsAt: frame.startsAt };
@@ -212,11 +212,9 @@ function applyFrame(state: WatchPartyState, frame: WatchPartyServerFrame): Watch
         refusal: isErrorCode(frame.problem.code) ? frame.problem.code : ErrorCodes.INTERNAL,
       };
     case 'kicked':
-      return { ...state, ended: 'kicked' };
     case 'superseded':
-      return { ...state, ended: 'superseded' };
     case 'closed':
-      return { ...state, ended: 'closed' };
+      return { ...state, ended: frame.type, connection: 'closed' };
     default:
       return assertNever(frame, 'WatchPartyServerFrame');
   }

@@ -80,7 +80,6 @@
 1 packages/client/queries/src/session-changes.ts
 1 packages/client/queries/src/session-provider.tsx
 1 packages/client/queries/src/session.ts
-1 packages/client/queries/src/watch-party-state.ts
 1 packages/client/web-testing/src/test-settle.ts
 1 packages/server/adapters/bullmq/connection.ts
 2 packages/server/adapters/in-memory/repositories/in-memory-caption-repository.ts
