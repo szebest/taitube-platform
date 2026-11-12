@@ -18,6 +18,7 @@ describe('@vp/vite-preset: client app test config', () => {
           '@vp/web-testing/server-functions.setup',
           '@vp/web-testing/api-server.setup',
         ],
+        env: { VITE_DEMO_PERSONAS: 'true' },
       },
     },
     {
@@ -31,11 +32,13 @@ describe('@vp/vite-preset: client app test config', () => {
           '@testing-library/jest-dom/vitest',
           '@vp/web-testing/jsdom.setup',
           '@vp/web-testing/api-server.setup',
+          '@vp/web-testing/settle.setup',
         ],
+        env: { VITE_DEMO_PERSONAS: 'true', RTL_SKIP_AUTO_CLEANUP: 'true' },
       },
     },
   ])(
-    'builds the $environment project with its specs, isolation and setup files',
+    'builds the $environment project with its specs, isolation, setup files and environment',
     async ({ environment, project }) => {
       const config = await clientAppTestConfig(viteConfig, {
         app: 'studio',
@@ -70,12 +73,6 @@ describe('@vp/vite-preset: client app test config', () => {
     expect(config.plugins?.flat()).not.toContainEqual(
       expect.objectContaining({ name: 'vite:react-compiler' })
     );
-  });
-
-  it('builds with the demo personas on, which the specs of both apps render', async () => {
-    const { test } = await clientAppTestConfig(viteConfig, { app: 'web', environment: 'jsdom' });
-
-    expect(test?.env).toEqual({ VITE_DEMO_PERSONAS: 'true' });
   });
 
   it('restores stubbed globals and environment after every test, in a shared worker pool', async () => {

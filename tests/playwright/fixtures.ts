@@ -1,5 +1,13 @@
+import { randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
-import { type APIRequestContext, type Page, test as base, expect } from '@playwright/test';
+import {
+  type APIRequestContext,
+  type Locator,
+  type Page,
+  test as base,
+  expect,
+} from '@playwright/test';
+import { mintToken } from '../../packages/server/dev-token/src/index';
 import { sessionCookie } from './session-cookie';
 import type { Persona, Stack } from './stack';
 
@@ -15,11 +23,15 @@ type WorkerFixtures = {
   devUrl: string;
 };
 
+/** `stranger` is a viewer this test alone signs in as, for state no other test may share. */
+type TestPersona = Persona | 'stranger';
+
 type TestFixtures = {
   offMachineRequests: string[];
-  signIn: (persona: Persona) => Promise<void>;
+  tokens: Record<TestPersona, string>;
+  signIn: (persona: TestPersona) => Promise<void>;
   /** `channelId` acts on that channel through `X-Channel-Id`, as the studio does for a team member. */
-  api: (persona?: Persona, options?: { channelId?: string }) => Promise<APIRequestContext>;
+  api: (persona?: TestPersona, options?: { channelId?: string }) => Promise<APIRequestContext>;
 };
 
 const LOCAL_HOSTS = new Set(['127.0.0.1', 'localhost', '[::1]']);
@@ -58,19 +70,23 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
     { auto: true },
   ],
 
-  signIn: async ({ context, stack, baseURL }, use) => {
+  tokens: async ({ stack }, use) => {
+    await use({ ...stack.personas, stranger: mintToken({ sub: randomUUID() }) });
+  },
+
+  signIn: async ({ context, tokens, baseURL }, use) => {
     await use(async (persona) => {
-      await context.addCookies([sessionCookie(stack.personas[persona], baseURL ?? '')]);
+      await context.addCookies([sessionCookie(tokens[persona], baseURL ?? '')]);
     });
   },
 
-  api: async ({ playwright, stack }, use) => {
+  api: async ({ playwright, stack, tokens }, use) => {
     const contexts: APIRequestContext[] = [];
     await use(async (persona, { channelId } = {}) => {
       const context = await playwright.request.newContext({
         baseURL: stack.apiUrl,
         extraHTTPHeaders: {
-          ...(persona && { authorization: `Bearer ${stack.personas[persona]}` }),
+          ...(persona && { authorization: `Bearer ${tokens[persona]}` }),
           ...(channelId && { 'x-channel-id': channelId }),
         },
       });
@@ -87,4 +103,15 @@ export async function serverHtml(page: Page, path: string): Promise<string> {
   const response = await page.request.get(path);
   expect(response.status()).toBe(200);
   return response.text();
+}
+
+/** Resolves once React has hydrated the element: a click before that is a full page load, or lost. */
+export async function hydrated(locator: Locator): Promise<void> {
+  await expect
+    .poll(() =>
+      locator.evaluate((element) =>
+        Object.keys(element).some((key) => key.startsWith('__reactFiber'))
+      )
+    )
+    .toBe(true);
 }

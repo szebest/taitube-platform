@@ -1,7 +1,7 @@
-import type { Reporter, TestCase, TestResult } from '@playwright/test/reporter';
+import type { FullResult, Reporter, TestCase, TestResult } from '@playwright/test/reporter';
 import { publish, type Retried, repoPath } from './retried/publish';
 
-/** Names every Playwright test that failed and passed on its retry, so a retry never hides a flake. */
+/** Names every Playwright test that failed and passed on its retry, and fails the run on one. */
 export default class PlaywrightRetriedReporter implements Reporter {
   private readonly retried: Retried[] = [];
 
@@ -13,7 +13,8 @@ export default class PlaywrightRetriedReporter implements Reporter {
     });
   }
 
-  onEnd(): void {
+  async onEnd(): Promise<{ status: FullResult['status'] } | undefined> {
     publish('playwright', this.retried, process.env.GITHUB_STEP_SUMMARY);
+    return this.retried.length > 0 ? { status: 'failed' } : undefined;
   }
 }

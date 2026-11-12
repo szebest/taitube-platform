@@ -7,6 +7,7 @@ import {
   getCurrentPick,
   getFeed,
   getHome,
+  getMyReaction,
   getPreferences,
   getRelatedVideos,
   getShorts,
@@ -142,6 +143,9 @@ export function loaderApi(answered: string[] = []): HttpHandler[] {
     recorded(getChannelSpotlight, () => HttpResponse.json({ source: null, video: null })),
     recorded(getVideo, ({ params }) =>
       HttpResponse.json(video({ id: String(params.id), title: 'Launch day' }))
+    ),
+    recorded(getMyReaction, ({ params }) =>
+      HttpResponse.json({ videoId: String(params.id), reaction: null })
     ),
   ];
 }

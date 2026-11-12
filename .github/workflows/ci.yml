@@ -445,7 +445,7 @@ jobs:
         run: docker compose -f infra/compose/docker-compose.yml -f infra/compose/docker-compose.offline.yml --profile '*' logs --tail=200 || true
 
   e2e-client:
-    name: e2e-${{ matrix.app }}
+    name: e2e-${{ matrix.app }}-${{ matrix.shard }}
     needs: [build]
     if: needs.build.outputs.code == 'true'
     runs-on: ubuntu-latest
@@ -454,6 +454,7 @@ jobs:
       fail-fast: false
       matrix:
         app: [web, studio]
+        shard: [1, 2]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -484,14 +485,14 @@ jobs:
         if: steps.chromium.outputs.cache-hit != 'true'
         run: pnpm --filter @vp/${{ matrix.app }} exec playwright install --only-shell chromium
 
-      - name: Run the app's browser suite
-        run: pnpm --filter @vp/${{ matrix.app }} test:e2e
+      - name: Run this shard of the app's browser suite
+        run: pnpm --filter @vp/${{ matrix.app }} test:e2e --shard=${{ matrix.shard }}/2
 
       - name: Keep the report, traces and screenshots of a failed run
         if: failure()
         uses: actions/upload-artifact@v7
         with:
-          name: e2e-${{ matrix.app }}-report
+          name: e2e-${{ matrix.app }}-${{ matrix.shard }}-report
           path: |
             apps/client/${{ matrix.app }}/e2e/playwright-report
             apps/client/${{ matrix.app }}/e2e/test-results

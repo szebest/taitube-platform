@@ -15,15 +15,27 @@ const test = {
 
 describe('PlaywrightRetriedReporter', () => {
   it.each([
-    { scenario: 'a pass on its retry', status: 'passed', retry: 1, reported: 1 },
-    { scenario: 'a first-time pass', status: 'passed', retry: 0, reported: 0 },
-    { scenario: 'a failure on its retry', status: 'failed', retry: 1, reported: 0 },
-  ])('reports $scenario: $reported', ({ status, retry, reported }) => {
+    {
+      scenario: 'a pass on its retry',
+      status: 'passed',
+      retry: 1,
+      reported: 1,
+      ends: { status: 'failed' },
+    },
+    { scenario: 'a first-time pass', status: 'passed', retry: 0, reported: 0, ends: undefined },
+    {
+      scenario: 'a failure on its retry',
+      status: 'failed',
+      retry: 1,
+      reported: 0,
+      ends: undefined,
+    },
+  ])('reports $scenario: $reported', async ({ status, retry, reported, ends }) => {
     vi.stubEnv('GITHUB_STEP_SUMMARY', '/summary.md');
     const reporter = new PlaywrightRetriedReporter();
 
     reporter.onTestEnd(test, { status, retry } as TestResult);
-    reporter.onEnd();
+    const result = await reporter.onEnd();
 
     const expected = [
       {
@@ -32,5 +44,6 @@ describe('PlaywrightRetriedReporter', () => {
       },
     ];
     expect(publish).toHaveBeenCalledWith('playwright', reported ? expected : [], '/summary.md');
+    expect(result).toEqual(ends);
   });
 });
