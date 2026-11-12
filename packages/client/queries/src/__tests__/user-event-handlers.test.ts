@@ -49,6 +49,18 @@ describe('@vp/queries: user event handlers', () => {
     expect(detail()).toMatchObject(patched);
   });
 
+  it('keeps the progress of a video that is no longer processing when a late tick arrives', () => {
+    const ready = video({
+      status: 'READY',
+      progress: { overall: 100, byRendition: { '720p': 100 } },
+    });
+    const { apply, detail } = cacheWith(ready);
+
+    apply({ kind: 'progress', rendition: '720p', percent: 40, overall: 40 });
+
+    expect(detail()).toEqual(ready);
+  });
+
   it('refetches the video and the caller list on a status change, for what the status brought', () => {
     const { apply, isInvalidated } = cacheWith(PROCESSING);
 

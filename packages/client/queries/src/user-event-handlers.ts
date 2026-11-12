@@ -1,5 +1,6 @@
 import type { QueryClient } from '@tanstack/react-query';
 import type { PreferencesView, UserEvent, Video } from '@vp/api-contracts';
+import { VIDEO_LIFECYCLE_EDGES, type VideoStatus } from '@vp/domain';
 import { assertNever } from '@vp/result';
 import { creatorCommentKeys } from './comment-queries';
 import { notificationKeys, setUnreadCount } from './notification-queries';
@@ -11,6 +12,8 @@ const PREFERENCES_KEY = ['preferences'] as const;
 const LIVE_KEY = ['live'] as const;
 const PARTY_CONTROLS_KEY = ['watch-party-controls'] as const;
 const CHANNEL_DETAIL_KEY = ['channels', 'detail'] as const;
+
+const TRANSCODING: readonly VideoStatus[] = VIDEO_LIFECYCLE_EDGES.package.from;
 
 type UserEventHandlers = {
   [Type in keyof UserEventPayloads]: (
@@ -34,13 +37,17 @@ function applyVideoProcessing(
       void queryClient.invalidateQueries({ queryKey: videoKeys.mine() });
       return;
     case 'progress':
-      patchVideo(queryClient, videoId, (video) => ({
-        ...video,
-        progress: {
-          overall: change.overall,
-          byRendition: { ...video.progress.byRendition, [change.rendition]: change.percent },
-        },
-      }));
+      patchVideo(queryClient, videoId, (video) =>
+        TRANSCODING.includes(video.status)
+          ? {
+              ...video,
+              progress: {
+                overall: change.overall,
+                byRendition: { ...video.progress.byRendition, [change.rendition]: change.percent },
+              },
+            }
+          : video
+      );
       return;
     default:
       assertNever(change, 'VideoProcessingChange');
