@@ -47,3 +47,12 @@ export function defineMachine<const S extends string, const E extends string>(
       ),
   };
 }
+
+export function isMachine(value: unknown): value is Machine<string, string> {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    Array.isArray(Reflect.get(value, 'eventNames')) &&
+    typeof Reflect.get(value, 'next') === 'function'
+  );
+}

@@ -41,6 +41,7 @@
     "test:live": "tsx tests/live/live-smoke.ts",
     "gen:platform-icons": "tsx scripts/gen-platform-icons.ts",
     "gen:tokens": "turbo run build --filter=@vp/design-tokens --output-logs=errors-only && tsx scripts/gen-tokens.ts",
+    "gen:state-machines": "turbo run build --filter=@vp/domain-rules^... --output-logs=errors-only && tsx scripts/gen-state-machines.ts",
     "gen:env-docs": "turbo run build --filter=@vp/env-schema^... --output-logs=errors-only && tsx scripts/gen-env-docs.ts",
     "gen:theme": "turbo run build --filter=@vp/design-tokens --output-logs=errors-only && tsx scripts/gen-theme.ts",
     "gen:token-set": "turbo run build --filter=@vp/design-tokens --output-logs=errors-only && tsx scripts/gen-token-set.ts",

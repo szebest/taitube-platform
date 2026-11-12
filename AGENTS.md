@@ -106,6 +106,7 @@ import rules; each tier directory has its own: [universal](packages/universal/AG
 - **File Discipline & Sizing:** [docs/standards/file-discipline.md](docs/standards/file-discipline.md)
 - **Package Boundaries — tiers & layers:** [packages/AGENTS.md](packages/AGENTS.md)
 - **Frontend Structure, the folders, layers, component shape and names of both client apps:** [docs/standards/frontend-structure.md](docs/standards/frontend-structure.md)
+- **State machines, lifecycles as tables:** [docs/state-machines.md](docs/state-machines.md)
 - **Error handling, `Result` at the domain seam:** [docs/standards/error-handling.md](docs/standards/error-handling.md)
 - **Formatting & i18n, `Intl` and the catalogues:** [docs/standards/formatting-and-i18n.md](docs/standards/formatting-and-i18n.md)
 - **Machine-enforced invariants:** [ARCHITECTURE.md §6](ARCHITECTURE.md) · `tests/architecture/`

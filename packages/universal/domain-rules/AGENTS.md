@@ -57,3 +57,7 @@ sit above the policy and the validation they compose.
 pnpm --filter @vp/domain-rules typecheck
 pnpm --filter @vp/domain-rules test
 ```
+
+## State machines
+
+A value whose legal moves depend on its status is a `defineMachine` table in a `*.machine.ts` beside the rule that uses it; see [docs/state-machines.md](../../../docs/state-machines.md).

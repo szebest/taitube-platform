@@ -17,7 +17,8 @@ state, final state with an exit, event with no source) and `toMermaid` draws the
 It knows nothing about `ErrorCode`, `Result`, a video or a comment. A miss is `undefined`; the rule that
 consults the table in `@vp/domain-rules` maps it to its own failure, adds the guards that depend on input
 (a reason, a lock) and returns the `Result`. The CAS helper persists the move. Definitions live in
-`*.machine.ts` files next to that rule.
+`*.machine.ts` files next to that rule; the authority is
+[docs/state-machines.md](../../../docs/state-machines.md).
 
 ---
 

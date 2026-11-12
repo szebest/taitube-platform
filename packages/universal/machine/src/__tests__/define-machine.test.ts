@@ -1,4 +1,4 @@
-import { defineMachine } from '../define-machine';
+import { defineMachine, isMachine } from '../define-machine';
 
 const door = () =>
   defineMachine({
@@ -54,5 +54,17 @@ describe('@vp/machine: defineMachine', () => {
     const cells = machine.matrix();
     expect(cells).toHaveLength(machine.states.length * machine.eventNames.length);
     expect(cells.every((cell) => cell.next === machine.next(cell.state, cell.event))).toBe(true);
+  });
+});
+
+describe('@vp/machine: isMachine', () => {
+  it.each([
+    { value: door(), expected: true },
+    { value: null, expected: false },
+    { value: 'door', expected: false },
+    { value: { eventNames: [] }, expected: false },
+    { value: { next: () => undefined }, expected: false },
+  ])('is $expected for $value', ({ value, expected }) => {
+    expect(isMachine(value)).toBe(expected);
   });
 });
