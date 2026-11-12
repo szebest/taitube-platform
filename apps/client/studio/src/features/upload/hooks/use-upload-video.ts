@@ -11,6 +11,7 @@ import {
   uploadVideo,
 } from '../api/upload-video';
 
+/** @internal */
 export interface UploadVariables {
   id: string;
   request: UploadRequest;
