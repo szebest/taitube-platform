@@ -9,6 +9,7 @@ const routers: AnyRouter[] = [];
 /** The test that ended last, until the next one starts. */
 const ended: { test?: string } = {};
 
+/** @internal */
 export class LeakedUpdateError extends Error {
   constructor(test: string) {
     super(
