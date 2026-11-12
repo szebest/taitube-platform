@@ -1,4 +1,5 @@
 import type { VideoStudioRepository } from '@vp/core/repositories';
+import { videoStatusChanged } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import { expectErr, expectOk } from '@vp/testing/result';
 import {
@@ -249,21 +250,10 @@ export function describeVideoStudioRepositoryContract(makeSubject: MakeRepositor
         expectOk(await studio.takeDown({ videoId: VIDEO_IDS.a, moderatorId: OTHER_OWNER_ID }));
 
         const told = expectOk(await subject.repositories.userEvents.listFrom(OWNER_ID, 0, 10));
-        expect(told.map(({ type, payload }) => ({ type, payload }))).toEqual([
-          {
-            type: 'video.processing',
-            payload: { videoId: VIDEO_IDS.a, change: { kind: 'status', status: 'REJECTED' } },
-          },
-        ]);
+        expect(told).toMatchObject([videoStatusChanged(VIDEO_IDS.a, 'REJECTED')]);
         const queued = expectOk(await subject.repositories.outbox.claimBatch(10));
-        expect(
-          queued.filter((row) => row.kind === 'notification').map((row) => row.payload)
-        ).toEqual([
-          expect.objectContaining({
-            job: expect.objectContaining({
-              data: { videoId: VIDEO_IDS.a, outcome: 'rejected' },
-            }),
-          }),
+        expect(queued.filter(({ kind }) => kind === 'notification')).toMatchObject([
+          { payload: { job: { data: { videoId: VIDEO_IDS.a, outcome: 'rejected' } } } },
         ]);
       });
 

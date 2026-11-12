@@ -10,7 +10,7 @@ import type {
   VideoEventRecord,
   VideoRepository,
 } from '@vp/core/repositories';
-import { VIDEO_LIFECYCLE_EDGES, type VideoStatus } from '@vp/domain';
+import { VIDEO_LIFECYCLE_EDGES } from '@vp/domain';
 import { type ReadVideoFailure, decideVideoRead, publicReadFailure } from '@vp/domain-rules';
 import type { CdnBase } from '@vp/env-schema';
 import type { CacheUnavailable, DatabaseUnavailable } from '@vp/errors';
@@ -56,16 +56,14 @@ export interface SseServiceDeps {
 
 export type OpenVideoStreamFailure = ReadVideoFailure | DatabaseUnavailable;
 
-const STATUS_BY_EVENT = new Map<string, VideoStatus>(
-  Object.values(VIDEO_LIFECYCLE_EDGES).map(({ event, to }) => [event, to])
-);
-
 /** A lifecycle event replays as its status, `progress` as itself; any other event has no frame. */
 function mapEventToSse(record: VideoEventRecord): SseFrame[] {
   if (record.type === 'progress') {
     return [{ id: record.id, event: 'progress', data: record.payload }];
   }
-  const status = STATUS_BY_EVENT.get(record.type);
+  const status = Object.values(VIDEO_LIFECYCLE_EDGES).find(
+    ({ event }) => event === record.type
+  )?.to;
   if (status === undefined) return [];
 
   const text = (key: string): string | undefined => {
