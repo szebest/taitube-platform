@@ -35,7 +35,7 @@ async function loadFile(root: string, file: string): Promise<LoadedMachine[]> {
   );
 }
 
-async function loadMachines(root: string): Promise<LoadedMachine[]> {
+export async function loadMachines(root: string): Promise<LoadedMachine[]> {
   const files = await findMachineFiles(root);
   const loaded = await Promise.all(files.map((file) => loadFile(root, file)));
   return loaded.flat();
