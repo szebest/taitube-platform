@@ -95,6 +95,7 @@ taitube-platform/
 │   │   ├── domain-rules/        # Pure rules over input plus an entity, returning Result
 │   │   ├── errors/              # ErrorCode vocabulary, Failure types, retry classes
 │   │   ├── intl/                # Every user-facing number, date and duration format, on Intl
+│   │   ├── machine/             # Lifecycles as typed edge tables: legal moves, findings, Mermaid
 │   │   ├── messages/            # Typed messages, the en catalogue and the copy for every error code
 │   │   ├── pagination/          # Keyset cursor codec and page shapes
 │   │   ├── permissions/         # CASL ability rules shared by the API and the frontend

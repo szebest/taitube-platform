@@ -55,6 +55,7 @@ An asynchronous video ingestion, transcoding, and streaming platform: Fastify AP
     See [docs/standards/error-handling.md](docs/standards/error-handling.md) and [SDD ADR-24](docs/SDD.md#adr-24--result-typed-error-handling-domain-returns-the-edge-decides).
 
 15. **Setup & environment are documented in the PR that changes them:** every environment key carries a `description`, an `example`, `secret` or `public`, and the apps that read it, in `ENV_DOCS` (`packages/server/env-schema`; a missing entry is a type error); `docs/ENVIRONMENT.md` is generated (`pnpm gen:env-docs --check` runs in CI) and `.env.example` may not drift from the schema. A new service, port, seed entity or demo scenario updates `docs/GETTING_STARTED.md`, `docs/DEMO.md` and the seed in the same PR, and a key production requires is listed in `infra/environments/production/environment.yaml`. See [docs/agents/making-changes.md](docs/agents/making-changes.md#setup--environment).
+16. **Lifecycles are tables.** A value whose legal moves depend on its current status, phase or state is a `defineMachine` table (`@vp/machine`) in a `*.machine.ts` beside the rule that uses it (`@vp/domain-rules` for domain state). The machine answers which edge is legal; the rule adds the guards that depend on input and returns the `Result`; the CAS helper persists. No new `status === 'X'` branching outside a machine: `tests/architecture/state-machines.test.ts` holds the existing sites as a ratchet that only moves down, and `docs/state-machines.md` is generated (`pnpm gen:state-machines --check` runs in CI). Small client flags are exempt. See [docs/state-machines.md](docs/state-machines.md).
 
 ---
 
@@ -106,6 +107,7 @@ import rules; each tier directory has its own: [universal](packages/universal/AG
 - **File Discipline & Sizing:** [docs/standards/file-discipline.md](docs/standards/file-discipline.md)
 - **Package Boundaries — tiers & layers:** [packages/AGENTS.md](packages/AGENTS.md)
 - **Frontend Structure, the folders, layers, component shape and names of both client apps:** [docs/standards/frontend-structure.md](docs/standards/frontend-structure.md)
+- **State machines, lifecycles as tables:** [docs/state-machines.md](docs/state-machines.md)
 - **Error handling, `Result` at the domain seam:** [docs/standards/error-handling.md](docs/standards/error-handling.md)
 - **Formatting & i18n, `Intl` and the catalogues:** [docs/standards/formatting-and-i18n.md](docs/standards/formatting-and-i18n.md)
 - **Machine-enforced invariants:** [ARCHITECTURE.md §6](ARCHITECTURE.md) · `tests/architecture/`

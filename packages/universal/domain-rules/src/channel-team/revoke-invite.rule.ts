@@ -2,6 +2,7 @@ import type { ActingChannel, ChannelInvite } from '@vp/domain';
 import { type UserContext, canRevokeChannelInvite } from '@vp/permissions';
 import { type Result, andThen, err, ok } from '@vp/result';
 import { type AuthorizationFailure, authorize } from '../authorize';
+import { CHANNEL_INVITE } from './channel-invite.machine';
 import {
   type ChannelInviteNotFound,
   type ChannelInviteNotPending,
@@ -44,7 +45,9 @@ export function decideInviteRevoke({
           REVOKE
         ),
         (): Result<ChannelInvite, RevokeInviteFailure> =>
-          invite.status === 'pending' ? ok(invite) : err(channelInviteNotPending(inviteId))
+          CHANNEL_INVITE.next(invite.status, 'revoke')
+            ? ok(invite)
+            : err(channelInviteNotPending(inviteId))
       );
     }
   );

@@ -617,3 +617,4 @@ server or `build` and commit the regenerated `src/routeTree.gen.ts`; CI fails wh
 - [docs/standards/testing.md](../../../docs/standards/testing.md)
 - The TanStack skills shipped in `node_modules/@tanstack/*/skills/` match the installed versions; read them
   before reaching for an API from memory.
+- [docs/state-machines.md](../../../docs/state-machines.md) - a status, phase or mode with legal moves is a `*.machine.ts` table; small client flags are exempt

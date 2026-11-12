@@ -11,6 +11,7 @@
 - [ ] No new external runtime dependency (local-first, SDD P9 / PRD G11)
 - [ ] SDD/PRD updated if a decision changed
 - [ ] Setup & environment: a new env key, service, port, migration, queue, seed entity or demo scenario updates the schema docs (`pnpm gen:env-docs`), `.env.example`, `docs/GETTING_STARTED.md`, `docs/DEMO.md`, the demo seed and `infra/environments/*` where relevant, or this PR adds none
+- [ ] New status, phase or mode? It is a `*.machine.ts` table, and `pnpm gen:state-machines` is committed, or this PR adds none
 - [ ] A bump of `oxc-transform-react`, `@vitejs/plugin-react`, `oxlint`, `oxfmt` or `vite-plus` passes `pnpm react-compiler:report` and the compiled and uncompiled differential specs
 - [ ] Ticket `**Status:**` set to `done` and `python3 docs/tickets/gen-index.py` re-run
 

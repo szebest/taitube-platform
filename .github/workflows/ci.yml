@@ -136,6 +136,9 @@ jobs:
       - name: Fail when docs/ENVIRONMENT.md differs from the environment schema and its docs
         run: pnpm gen:env-docs --check
 
+      - name: Fail when docs/state-machines.md differs from the machine definitions
+        run: pnpm gen:state-machines --check
+
       # --only: the builds just replayed from the build job's cache, so this cache holds typecheck results alone.
       - name: Run TypeScript typecheck
         run: pnpm exec turbo run typecheck typecheck:repo --only --cache-dir .turbo/typecheck-cache

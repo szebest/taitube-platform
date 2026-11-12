@@ -1,4 +1,3 @@
-import type { LiveStream } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { aLiveStream } from '../../__tests__/entities';
@@ -25,37 +24,42 @@ const readBy = (user: string, password: string) => ({
 });
 
 describe('@vp/domain-rules: decideLiveGatewayCall', () => {
-  it('takes an idle stream live when its key publishes', () => {
-    const stream = aLiveStream();
+  it.each([
+    ['IDLE', 'publish', false, 'go-live'],
+    ['IDLE', 'publish', true, 'go-live'],
+    ['LIVE', 'publish', false, 'admit'],
+    ['LIVE', 'publish', true, 'refuse:stopping'],
+    ['ENDED', 'publish', false, 'refuse:not-idle'],
+    ['ENDED', 'publish', true, 'refuse:not-idle'],
+    ['IDLE', 'read', false, 'admit'],
+    ['IDLE', 'read', true, 'admit'],
+    ['LIVE', 'read', false, 'admit'],
+    ['LIVE', 'read', true, 'admit'],
+    ['ENDED', 'read', false, 'admit'],
+    ['ENDED', 'read', true, 'admit'],
+  ] as const)(
+    'a %s stream, call %s, stop requested %s: %s',
+    (status, action, stopRequested, expected) => {
+      const stream = aLiveStream({
+        status,
+        stopRequestedAt: stopRequested ? new Date(1) : null,
+      });
+      const call =
+        action === 'read'
+          ? readBy(LIVE_READER_USER, SECRET)
+          : { call: { action, path: 'live/key-1', user: '', password: '' } };
 
-    expect(expectOk(decideLiveGatewayCall(input({ stream })))).toEqual({ type: 'go-live', stream });
-  });
+      const decided = decideLiveGatewayCall(input({ stream, ...call }));
 
-  it.each<{
-    scenario: string;
-    stream: Partial<LiveStream>;
-    type: 'admit' | undefined;
-    reason?: string;
-  }>([
-    { scenario: 'a LIVE stream', stream: { status: 'LIVE' }, type: 'admit' },
-    {
-      scenario: 'a LIVE stream its creator stopped',
-      stream: { status: 'LIVE', stopRequestedAt: new Date(1) },
-      type: undefined,
-      reason: 'stopping',
-    },
-    {
-      scenario: 'an ENDED stream',
-      stream: { status: 'ENDED' },
-      type: undefined,
-      reason: 'not-idle',
-    },
-  ])('answers a publisher on $scenario', ({ stream, type, reason }) => {
-    const decided = decideLiveGatewayCall(input({ stream: aLiveStream(stream) }));
-
-    if (type) expect(expectOk(decided)).toEqual({ type });
-    else expect(expectErr(decided)).toMatchObject({ reason });
-  });
+      if (expected.startsWith('refuse:')) {
+        expect(expectErr(decided)).toMatchObject({ reason: expected.slice('refuse:'.length) });
+      } else {
+        expect(expectOk(decided)).toEqual(
+          expected === 'go-live' ? { type: expected, stream } : { type: expected }
+        );
+      }
+    }
+  );
 
   it.each([
     {
