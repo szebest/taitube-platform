@@ -9,6 +9,7 @@ import { checkPrerequisites } from './prereqs';
 import { mediaPath, readState, statePath, summarizeSeed, writeState } from './state';
 import { IMAGES_PRESENT, STACK_DOWN, STACK_STATUS, STACK_STOP, stackUp } from './targets';
 import type { SeedHost, SeedReport, DemoOptions } from './types';
+import { runLabel } from './up-steps';
 import { CREDENTIAL_FALLBACKS, type Credentials, endpoints } from './urls';
 
 export type SeedFn = (options: DemoOptions, host: SeedHost) => Promise<SeedReport>;
@@ -116,11 +117,13 @@ export async function runUp(
   const timings: string[] = [];
   const mark = (name: string, ms: number) => timings.push(`${name} ${seconds(ms)}`);
 
-  const prereq = await step(host, '[1/5] prerequisites', () => prerequisites(host, options, style));
+  const prereq = await step(host, runLabel('prerequisites'), () =>
+    prerequisites(host, options, style)
+  );
   mark('prerequisites', prereq.ms);
   if (!prereq.value) return EXIT.prerequisite;
 
-  const env = await step(host, '[2/5] .env', async () => ensureEnv(host));
+  const env = await step(host, runLabel('.env'), async () => ensureEnv(host));
   mark('.env', env.ms);
   if (!env.value) {
     host.print('    .env.example is missing: run this from the repository root');
@@ -129,7 +132,7 @@ export async function runUp(
 
   if (options.reset && (await wipe(host, options)) !== 0) return EXIT.failure;
 
-  const stack = await step(host, '[3/5] stack', async () => {
+  const stack = await step(host, runLabel('stack'), async () => {
     const haveImages =
       options.noBuild &&
       (await host.capture(IMAGES_PRESENT.command, IMAGES_PRESENT.args)).code === 0;
@@ -141,7 +144,7 @@ export async function runUp(
   mark('stack', stack.ms);
   if (stack.value !== 0) return EXIT.failure;
 
-  const seeded = await step(host, '[4/5] seed', async () => {
+  const seeded = await step(host, runLabel('seed'), async () => {
     if (options.profile === 'full' && MODELS.some((m) => !host.fileExists(m))) {
       host.print(
         '    warning: .models/ lacks the captions and screening models. The worker image carries its own, downloaded once at build; for host runs: pnpm models:fetch (needs network, once)'
@@ -152,7 +155,7 @@ export async function runUp(
   mark('seed', seeded.ms);
   host.print(`    ${summarizeSeed(seeded.value)}`);
 
-  host.print('[5/5] ready');
+  host.print(runLabel('ready'));
   host.print(renderSummary(endpoints(options, credentials(host)), style));
   host.print(style.dim(`\n${timings.join(', ')}, total ${seconds(host.now() - total)}`));
   return seeded.value.steps.some((s) => s.status === 'failed') ? EXIT.failure : EXIT.ok;

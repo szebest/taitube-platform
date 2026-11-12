@@ -9,6 +9,7 @@ import {
   STACK_STATUS,
   STACK_STOP,
 } from './targets';
+import { planLabel, UP_STEPS, type UpStep } from './up-steps';
 import { type Endpoint } from './urls';
 
 /** @internal Exported for its spec. */
@@ -19,13 +20,14 @@ export function seedLine(options: DemoRunOptions): string {
 
 function upSteps(options: DemoRunOptions, build: boolean): string[] {
   const prereqs = `node 24, pnpm 12, docker daemon, compose v2, ffmpeg, disk (pnpm --silent preflight), ports ${requiredPorts(options).join(' ')}`;
-  return [
-    `1 prerequisites: ${prereqs}`,
-    '2 .env: copy .env.example when .env is absent, never overwrite',
-    `3 stack: ${render(stackUp(options, build))}`,
-    `4 ${seedLine(options)}`,
-    '5 print the URLs and the persona logins',
-  ];
+  const details: Record<UpStep, string> = {
+    prerequisites: prereqs,
+    '.env': 'copy .env.example when .env is absent, never overwrite',
+    stack: render(stackUp(options, build)),
+    seed: seedLine(options),
+    ready: 'print the URLs and the persona logins',
+  };
+  return UP_STEPS.map((step) => `${planLabel(step)}: ${details[step]}`);
 }
 
 export function render(command: Command): string {
