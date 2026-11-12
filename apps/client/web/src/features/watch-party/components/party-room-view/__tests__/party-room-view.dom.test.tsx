@@ -53,7 +53,7 @@ describe('apps/client/web: PartyRoomView', () => {
     'says "$shown" when the room ends the visit with $frame',
     async ({ frame, shown }) => {
       const { socket } = await renderPartyRoute({ preview: SEATED });
-      await screen.findByText('Hosted by Ana');
+      await vi.waitFor(() => expect(socket.urls).toHaveLength(1));
 
       act(() => socket.push(frame));
 
