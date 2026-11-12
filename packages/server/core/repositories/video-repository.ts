@@ -78,6 +78,8 @@ export interface ListPublicVideosResult {
 /** One compare-and-set over the lifecycle: the update lands only while the video is in the edge's sources. */
 export type TransitionVideoOptions = VideoTransitionTarget & {
   videoId: string;
+  /** Fences the move to this run: a job a reprocess superseded moves nothing. */
+  generation?: number;
   eventPayload?: Record<string, unknown>;
   traceId?: string | null;
   patch?: Partial<

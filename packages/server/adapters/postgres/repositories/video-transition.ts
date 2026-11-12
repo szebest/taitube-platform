@@ -20,7 +20,7 @@ export async function commitVideoTransition(
   tx: PostgresDatabase,
   options: TransitionVideoOptions
 ): Promise<boolean> {
-  const { videoId, patch = {}, eventPayload = {}, traceId } = options;
+  const { videoId, generation, patch = {}, eventPayload = {}, traceId } = options;
   const { edge, from, to, event } = resolveVideoTransition(options);
   const effectiveTraceId = traceId || trace.getActiveSpan()?.spanContext().traceId || null;
 
@@ -32,7 +32,13 @@ export async function commitVideoTransition(
       updatedAt: new Date(),
       ...(to === 'READY' ? { readyAt: new Date() } : {}),
     } as VideoInsert)
-    .where(and(eq(v.id, videoId), inArray(v.status, [...from])))
+    .where(
+      and(
+        eq(v.id, videoId),
+        inArray(v.status, [...from]),
+        generation === undefined ? undefined : eq(v.generation, generation)
+      )
+    )
     .returning({ ownerId: v.ownerId, visibility: v.visibility });
 
   const [owner] = rows;

@@ -137,10 +137,11 @@ export class InMemoryVideoRepository extends VideoRepository {
   }
 
   async transition(options: TransitionVideoOptions): Promise<Result<boolean, DatabaseUnavailable>> {
-    const { videoId, patch = {}, eventPayload = {}, traceId } = options;
+    const { videoId, generation, patch = {}, eventPayload = {}, traceId } = options;
     const { edge, from, to, event } = resolveVideoTransition(options);
     const video = this.videosMap.get(videoId);
     if (!video || !from.includes(video.status)) return ok(false);
+    if (generation !== undefined && video.generation !== generation) return ok(false);
 
     const activeSpan = trace.getActiveSpan();
     const effectiveTraceId = traceId || (activeSpan ? activeSpan.spanContext().traceId : null);
