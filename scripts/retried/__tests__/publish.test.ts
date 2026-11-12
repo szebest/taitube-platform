@@ -8,9 +8,9 @@ const RETRIED = [
 ];
 
 describe('publish', () => {
-  it('names the file and the test in a warning titled for ci:health', () => {
+  it('names the file and the test in an error titled for ci:health', () => {
     expect(annotations([{ file: 'a.test.ts', test: 'line one\nline two' }])).toEqual([
-      '::warning file=a.test.ts,title=passed on retry::a.test.ts > line one%0Aline two',
+      '::error file=a.test.ts,title=passed on retry::a.test.ts > line one%0Aline two',
     ]);
   });
 
@@ -21,14 +21,26 @@ describe('publish', () => {
     expect(summary('playwright', [])).toBe('');
   });
 
-  it('appends the table to the summary file and prints the annotations', () => {
+  it('appends the table to the summary file, prints the annotations and fails the run', () => {
     const file = join(mkdtempSync(join(tmpdir(), 'summary-')), 'summary.md');
     const write = vi.spyOn(process.stdout, 'write').mockReturnValue(true);
+    const exitCode = process.exitCode;
 
-    publish('vitest', RETRIED, file);
+    try {
+      publish('vitest', RETRIED, file);
 
-    expect(readFileSync(file, 'utf8')).toContain('### vitest: 1 passed on retry');
-    expect(write).toHaveBeenCalledWith(`${annotations(RETRIED)[0]}\n`);
+      expect(readFileSync(file, 'utf8')).toContain('### vitest: 1 passed on retry');
+      expect(write).toHaveBeenCalledWith(`${annotations(RETRIED)[0]}\n`);
+      expect(process.exitCode).toBe(1);
+    } finally {
+      process.exitCode = exitCode;
+    }
+  });
+
+  it('leaves the run as it is when no test needed its retry', () => {
+    publish('vitest', [], undefined);
+
+    expect(process.exitCode).toBeUndefined();
   });
 
   it('reads a spec path from the repository root', () => {
