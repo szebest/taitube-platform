@@ -9,7 +9,8 @@ interface ShortsScrollOptions {
 
 /**
  * The scroll of the Shorts container: which Short fills it, a move to another, and the Short kept in view
- * when the container changes size. The container snaps; this reads where it came to rest.
+ * when the container changes size. The container snaps; this reads where it came to rest. Chromium can end
+ * a smooth move between two snap positions, so where a move a key asked for ends, its Short is put in view.
  */
 export function useShortsScroll({ count, initialIndex, onIndexChange }: ShortsScrollOptions) {
   const reduced = useReducedMotion();
@@ -62,6 +63,17 @@ export function useShortsScroll({ count, initialIndex, onIndexChange }: ShortsSc
     }
   };
 
+  const finishMove = () => {
+    const node = element.current;
+    const target = heading.current;
+    if (!node || target === undefined) {
+      return;
+    }
+
+    heading.current = undefined;
+    node.scrollTop = target * node.clientHeight;
+  };
+
   const takeOver = () => {
     heading.current = undefined;
   };
@@ -83,6 +95,11 @@ export function useShortsScroll({ count, initialIndex, onIndexChange }: ShortsSc
     index,
     attach,
     goTo,
-    handlers: { onScroll: handleScroll, onTouchStart: takeOver, onWheel: takeOver },
+    handlers: {
+      onScroll: handleScroll,
+      onScrollEnd: finishMove,
+      onTouchStart: takeOver,
+      onWheel: takeOver,
+    },
   };
 }

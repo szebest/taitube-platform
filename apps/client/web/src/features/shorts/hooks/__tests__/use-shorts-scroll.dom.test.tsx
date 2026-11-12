@@ -152,6 +152,25 @@ describe('apps/client/web: useShortsScroll', () => {
     expect(onIndexChange).toHaveBeenCalledExactlyOnceWith(2);
   });
 
+  it('puts the Short a key asked for in view where the move ends short of it', () => {
+    const { feed } = renderScroll();
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+
+    feed.scrollTop = 1.06 * HEIGHT;
+    fireEvent(feed, new Event('scrollend'));
+
+    expect(feed.scrollTop).toBe(HEIGHT);
+  });
+
+  it('leaves a swipe where the container snapped it', () => {
+    const { feed } = renderScroll();
+
+    feed.scrollTop = 1.5 * HEIGHT;
+    fireEvent(feed, new Event('scrollend'));
+
+    expect(feed.scrollTop).toBe(1.5 * HEIGHT);
+  });
+
   it('reads nothing while the container has no height', () => {
     stubHeight(0);
     const { feed, onIndexChange } = renderScroll();
