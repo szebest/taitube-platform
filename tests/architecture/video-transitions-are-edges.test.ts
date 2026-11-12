@@ -65,10 +65,16 @@ function valuesOf(
   return undefined;
 }
 
+const isVideos = (node: ts.Expression): boolean =>
+  (ts.isIdentifier(node) && node.text === 'videos') ||
+  (ts.isPropertyAccessExpression(node) && node.name.text === 'videos');
+
 function isTransitionCall(node: ts.CallExpression): boolean {
   const callee = node.expression;
   return (
-    (ts.isPropertyAccessExpression(callee) && callee.name.text === 'transition') ||
+    (ts.isPropertyAccessExpression(callee) &&
+      callee.name.text === 'transition' &&
+      isVideos(callee.expression)) ||
     (ts.isIdentifier(callee) && callee.text === 'commitVideoTransition')
   );
 }
@@ -152,6 +158,13 @@ describe('architecture: video transitions are edges of VIDEO_LIFECYCLE', () => {
     },
   ])('accepts $shape', ({ source }) => {
     expect(nonEdges('fixture.ts', source)).toMatchObject({ checked: 1, problems: [] });
+  });
+
+  it('leaves the transition of another table alone', () => {
+    expect(nonEdges('fixture.ts', 'dlq.transition({ id, from: allowed, to: next });')).toEqual({
+      checked: 0,
+      problems: [],
+    });
   });
 
   it.each([
