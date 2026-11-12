@@ -451,7 +451,7 @@ jobs:
       fail-fast: false
       matrix:
         app: [web, studio]
-        shard: [1, 2]
+        shard: [1, 2, 3]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -483,7 +483,7 @@ jobs:
         run: pnpm --filter @vp/${{ matrix.app }} exec playwright install --only-shell chromium
 
       - name: Run this shard of the app's browser suite
-        run: pnpm --filter @vp/${{ matrix.app }} test:e2e --shard=${{ matrix.shard }}/2
+        run: pnpm --filter @vp/${{ matrix.app }} test:e2e --shard=${{ matrix.shard }}/3
 
       - name: Keep the report, traces and screenshots of a failed run
         if: failure()

@@ -49,8 +49,8 @@ rule below that can be checked by a machine is, and the check is named next to i
   `make e2e`) for the in-process acceptance suite. Every fixture the e2e specs read comes out of a plain
   `pnpm gen-video` (`tests/in-process/e2e-fixtures.test.ts`).
 - `pnpm --filter @vp/web test:e2e` and `pnpm --filter @vp/studio test:e2e` (or `make e2e-web`, `make e2e-studio`,
-  the `e2e-web-1`, `e2e-web-2`, `e2e-studio-1` and `e2e-studio-2` checks of the `e2e-client` CI job, each app's suite
-  in two Playwright shards) for each client app's Playwright suite in its
+  the `e2e-web-<n>` and `e2e-studio-<n>` checks of the `e2e-client` CI job, each app's suite
+  in three Playwright shards) for each client app's Playwright suite in its
   `e2e/`, against the same in-process stack plus that app built and served. The stack fixture, the config
   factory and the security suites both import live in `tests/playwright/`. The specs are held to the spec
   discipline below, apart from the Vitest rules. Where a page ticket adds its flows:
