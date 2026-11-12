@@ -118,7 +118,7 @@ the same after each test. No spec needs an `afterEach` to undo a spy.
 
 Each project config chooses its own pool and isolation, because a project config inherits nothing from the root
 `vitest.config.ts`: `pool: 'threads'` and `isolate: false` (`definePackageTestConfig` sets both, `clientAppTestConfig`
-in `@vp/vite-preset` sets them per project for the client apps, and no command line passes `--pool`). `architecture-typed` runs on
+in `@vp/vite-preset` sets them per project for the client apps, and no command line passes `--pool`). The two projects that run PGlite, `@vp/adapters` and `@vp/db`, use `pool: 'forks'`: PGlite is WebAssembly, and WebAssembly in worker threads races V8's process-wide JIT page registry, which aborts the whole run with `Check failed: jit_page.has_value()` (exit 133). `architecture-typed` runs on
 one fork in `sequence.groupOrder` 1 and `architecture` on two threads in group 2, both after every other
 project's group 0: Vitest 5 gives a group one `maxWorkers` and batches a project into a single task only at one
 worker, so that is how the typed specs build their `ts.Program` once. The files of one project share a worker
@@ -216,7 +216,7 @@ own budget through `.github/actions/budget`: `unit-tests` 240 s in each unit sha
 aggregates 1, and 9 minutes for the longest `needs` chain. A budget names the step it measures by its `id`, and its
 limit sits below its job's `timeout-minutes`, so the budget fires first and names the step.
 
-`unit` (vitest, `--shard=i/N`, N derived below) and `unit-bun` (`bun test --shard=i/4`) are matrix jobs named `unit-shard-<i>` and
+`unit` (vitest, `--shard=i/N`, N derived below) and `unit-bun` (`bun test --shard=i/5`) are matrix jobs named `unit-shard-<i>` and
 `unit-bun-shard-<i>`. Two one-step jobs named `unit` and `unit-bun` follow them, fail unless every shard passed
 and print which shard did not, so the required checks in branch protection keep their names. Vitest assigns spec
 files to shards by their recorded cost, not by a hash of the path: `scripts/timings/sequencer.ts` reads
