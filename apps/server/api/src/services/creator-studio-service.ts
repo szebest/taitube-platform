@@ -19,7 +19,6 @@ import type {
 import {
   type AuthorizationFailure,
   type CategoryNotFound,
-  DELETABLE_STATUSES,
   type UpdateVideoMetadataFailure,
   type VideoLifecycleFailure,
   type VideoMetadataPatch,
@@ -289,7 +288,6 @@ export class CreatorStudioService {
 
     const taken = await this.deps.studio.takeDown({
       videoId,
-      from: DELETABLE_STATUSES,
       moderatorId: moderator.id,
       reason,
     });

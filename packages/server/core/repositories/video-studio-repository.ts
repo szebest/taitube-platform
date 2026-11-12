@@ -55,7 +55,6 @@ export interface VideoLibraryQuery {
 
 export interface TakeDownVideoOptions {
   videoId: string;
-  from: readonly VideoStatus[];
   moderatorId: string;
   reason?: string;
 }
@@ -73,7 +72,10 @@ export abstract class VideoStudioRepository {
   abstract updateMetadata(
     options: UpdateStudioMetadataOptions
   ): Promise<Result<StudioMetadataOutcome, DatabaseUnavailable | VersionConflict>>;
-  /** `REJECTED` and `private` together, with a `video.taken_down` event; `ok(null)` if `from` missed. */
+  /**
+   * The lifecycle's `takedown` edge, `private` with it, announced to the owner like any other status
+   * change; `ok(null)` when the video was in none of its sources.
+   */
   abstract takeDown(
     options: TakeDownVideoOptions
   ): Promise<Result<VideoRecord | null, DatabaseUnavailable>>;
