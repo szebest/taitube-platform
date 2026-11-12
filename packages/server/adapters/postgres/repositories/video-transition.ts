@@ -1,7 +1,7 @@
 import { trace } from '@opentelemetry/api';
 import type { TransitionVideoOptions } from '@vp/core/repositories';
 import * as schema from '@vp/db';
-import { videoStatusChanged } from '@vp/domain';
+import { videoLifecycleEdgeOf, videoStatusChanged } from '@vp/domain';
 import { transitionNotificationJobs } from '@vp/job-contracts';
 import { and, eq, inArray, sql } from 'drizzle-orm';
 import { enqueueNotificationJobs } from './notification-jobs';
@@ -60,10 +60,10 @@ export async function commitVideoTransition(
     userId: owner.ownerId,
     ...videoStatusChanged(videoId, to),
   });
-  await enqueueNotificationJobs(
-    tx,
-    transitionNotificationJobs(videoId, from, to, owner.visibility)
-  );
+  const edge = videoLifecycleEdgeOf(from, to);
+  if (edge) {
+    await enqueueNotificationJobs(tx, transitionNotificationJobs(videoId, edge, owner.visibility));
+  }
 
   return true;
 }

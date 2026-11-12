@@ -118,7 +118,7 @@ describe('job-contracts: notification jobs', () => {
     },
     {
       scenario: 'a finished upload',
-      outbox: transitionNotificationJobs(VIDEO_ID, 'PROCESSING', 'READY', 'private')[0],
+      outbox: transitionNotificationJobs(VIDEO_ID, 'package', 'private')[0],
       name: NOTIFY_PROCESSING,
       jobId: `${VIDEO_ID}--notify-processing--ready`,
     },
@@ -135,29 +135,30 @@ describe('job-contracts: notification jobs', () => {
   });
 
   it.each([
-    {
-      from: 'PROCESSING',
-      to: 'READY',
-      visibility: 'public',
-      names: [NOTIFY_PROCESSING, NOTIFY_SUBSCRIBERS],
-    },
-    { from: 'PROCESSING', to: 'READY', visibility: 'unlisted', names: [NOTIFY_PROCESSING] },
-    { from: 'PROCESSING', to: 'READY', visibility: 'private', names: [NOTIFY_PROCESSING] },
-    { from: 'LIVE', to: 'READY', visibility: 'public', names: [NOTIFY_PROCESSING] },
-    { from: 'PROCESSING', to: 'FAILED', visibility: 'public', names: [NOTIFY_PROCESSING] },
-    { from: 'PROCESSING', to: 'HELD', visibility: 'public', names: [NOTIFY_PROCESSING] },
-    { from: 'HELD', to: 'PROCESSING', visibility: 'public', names: [NOTIFY_PROCESSING] },
-    { from: 'HELD', to: 'REJECTED', visibility: 'public', names: [NOTIFY_PROCESSING] },
-    { from: 'REJECTED', to: 'HELD', visibility: 'public', names: [NOTIFY_PROCESSING] },
-    { from: 'READY', to: 'REJECTED', visibility: 'public', names: [] },
-    { from: 'PROBING', to: 'PROCESSING', visibility: 'public', names: [] },
-    { from: 'READY', to: 'DELETED', visibility: 'public', names: [] },
+    { edge: 'package', visibility: 'public', jobs: ['processing--ready', 'subscribers'] },
+    { edge: 'package', visibility: 'unlisted', jobs: ['processing--ready'] },
+    { edge: 'package', visibility: 'private', jobs: ['processing--ready'] },
+    { edge: 'finalizeLive', visibility: 'public', jobs: ['processing--ready'] },
+    { edge: 'fail', visibility: 'public', jobs: ['processing--failed'] },
+    { edge: 'failProbe', visibility: 'public', jobs: ['processing--failed'] },
+    { edge: 'reconcileFail', visibility: 'public', jobs: ['processing--failed'] },
+    { edge: 'failLive', visibility: 'public', jobs: ['processing--failed'] },
+    { edge: 'hold', visibility: 'public', jobs: ['processing--held'] },
+    { edge: 'approve', visibility: 'public', jobs: ['processing--approved'] },
+    { edge: 'rejectScreening', visibility: 'public', jobs: ['processing--rejected'] },
+    { edge: 'appeal', visibility: 'public', jobs: ['processing--held'] },
+    { edge: 'takedown', visibility: 'public', jobs: ['processing--rejected'] },
+    { edge: 'reject', visibility: 'public', jobs: [] },
+    { edge: 'completeProbe', visibility: 'public', jobs: [] },
+    { edge: 'delete', visibility: 'public', jobs: [] },
   ] as const)(
-    'a video that goes $from to $to while $visibility enqueues $names',
-    ({ from, to, visibility, names }) => {
-      const jobs = transitionNotificationJobs(VIDEO_ID, from, to, visibility);
+    'the $edge edge of a $visibility video enqueues $jobs',
+    ({ edge, visibility, jobs }) => {
+      const enqueued = transitionNotificationJobs(VIDEO_ID, edge, visibility);
 
-      expect(jobs.map((job) => job.payload.job.name)).toEqual(names);
+      expect(enqueued.map((job) => job.payload.job.opts.jobId)).toEqual(
+        jobs.map((job) => expect.stringContaining(`notify-${job}`))
+      );
     }
   );
 

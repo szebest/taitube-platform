@@ -20,7 +20,7 @@ import {
   type VideoScanAbsence,
   type VideoWithDetails,
 } from '@vp/core/repositories';
-import { videoStatusChanged } from '@vp/domain';
+import { videoLifecycleEdgeOf, videoStatusChanged } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { transitionNotificationJobs } from '@vp/job-contracts';
 import { canReadVideo } from '@vp/permissions';
@@ -164,7 +164,8 @@ export class InMemoryVideoRepository extends VideoRepository {
       const enqueued = await this.outboxRepo.enqueue(options.outbox);
       if (isErr(enqueued)) return enqueued;
     }
-    for (const job of transitionNotificationJobs(videoId, from, to, video.visibility)) {
+    const edge = videoLifecycleEdgeOf(from, to);
+    for (const job of edge ? transitionNotificationJobs(videoId, edge, video.visibility) : []) {
       const enqueued = await this.outboxRepo?.enqueue(job);
       if (enqueued && isErr(enqueued)) return enqueued;
     }

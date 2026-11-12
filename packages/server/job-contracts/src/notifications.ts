@@ -1,4 +1,4 @@
-import type { VideoStatus, VideoVisibility } from '@vp/domain';
+import type { VideoLifecycleEdge, VideoStatus, VideoVisibility } from '@vp/domain';
 import { z } from 'zod';
 import { defaultJobOptions, stagePolicies } from './policies';
 
@@ -177,37 +177,53 @@ const processingOutbox = (job: NotifyProcessingJob) =>
     jobId: notificationJobIds.processing(job.videoId, job.outcome),
   });
 
+type TransitionNotifications = (
+  videoId: string,
+  visibility: VideoVisibility
+) => ReturnType<typeof notificationOutbox>[];
+
+const none: TransitionNotifications = () => [];
+const owner =
+  (outcome: NotifyProcessingJob['outcome']): TransitionNotifications =>
+  (videoId) => [processingOutbox({ videoId, outcome })];
+
 /**
- * What a status change tells people: the owner when it ends, the subscribers when it goes public.
- * A live archive tells the subscribers nothing: they heard `live` when the broadcast started.
+ * What each edge tells people: the owner when processing ends or a reviewer acts, the subscribers
+ * when it goes public. A live archive tells the subscribers nothing: they heard `live` when the
+ * broadcast started.
  */
+const NOTIFICATIONS_BY_EDGE = {
+  reject: none,
+  complete: none,
+  abort: none,
+  abandon: none,
+  startProbe: none,
+  completeProbe: none,
+  failProbe: owner('failed'),
+  completeThumbnail: none,
+  package: (videoId, visibility) => [
+    processingOutbox({ videoId, outcome: 'ready' }),
+    ...(visibility === 'public' ? [subscribersOutbox({ kind: 'upload', videoId })] : []),
+  ],
+  fail: owner('failed'),
+  reconcileFail: owner('failed'),
+  reprocess: none,
+  delete: none,
+  takedown: owner('rejected'),
+  finalizeLive: owner('ready'),
+  failLive: owner('failed'),
+  hold: owner('held'),
+  approve: owner('approved'),
+  rejectScreening: owner('rejected'),
+  appeal: owner('held'),
+} satisfies Record<VideoLifecycleEdge, TransitionNotifications>;
+
 export function transitionNotificationJobs(
   videoId: string,
-  from: VideoStatus | readonly VideoStatus[],
-  status: VideoStatus,
+  edge: VideoLifecycleEdge,
   visibility: VideoVisibility
 ) {
-  const archive = [from].flat().includes('LIVE');
-  const wasHeld = [from].flat().includes('HELD');
-  switch (status) {
-    case 'READY':
-      return [
-        processingOutbox({ videoId, outcome: 'ready' }),
-        ...(visibility === 'public' && !archive
-          ? [subscribersOutbox({ kind: 'upload', videoId })]
-          : []),
-      ];
-    case 'FAILED':
-      return [processingOutbox({ videoId, outcome: 'failed' })];
-    case 'HELD':
-      return [processingOutbox({ videoId, outcome: 'held' })];
-    case 'REJECTED':
-      return wasHeld ? [processingOutbox({ videoId, outcome: 'rejected' })] : [];
-    case 'PROCESSING':
-      return wasHeld ? [processingOutbox({ videoId, outcome: 'approved' })] : [];
-    default:
-      return [];
-  }
+  return NOTIFICATIONS_BY_EDGE[edge](videoId, visibility);
 }
 
 /** A ready video that was not public and now is: the subscribers hear about it then. */
