@@ -135,6 +135,7 @@ export const HousekeepingJob = z.object({
   task: z.enum([
     'reconcile-uploads',
     'reconcile-processing',
+    'reconcile-live',
     'purge-deleted',
     'expire-raw',
     'tmp-sweep',

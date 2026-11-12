@@ -36,7 +36,7 @@ export const VIDEO_LIFECYCLE_EDGES = {
   completeThumbnail: { from: ['PROCESSING'], to: 'PROCESSING', event: 'thumbnail.completed' },
   package: { from: ['PROCESSING'], to: 'READY', event: 'video.ready' },
   fail: { from: ['PROCESSING', 'PROBING'], to: 'FAILED', event: 'video.failed' },
-  reconcileFail: { from: ['PROCESSING'], to: 'FAILED', event: 'video.failed' },
+  reconcileFail: { from: ['PROBING', 'PROCESSING'], to: 'FAILED', event: 'video.failed' },
   reprocess: {
     from: ['READY', 'FAILED', 'PROCESSING'],
     to: 'PROBING',

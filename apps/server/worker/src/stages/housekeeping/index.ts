@@ -30,6 +30,7 @@ import { runPurgeHandleHistory } from './purge-handle-history';
 import { runPurgeScreeningEvidence } from './purge-screening-evidence';
 import { runPurgeSearchHistory } from './purge-search-history';
 import { runReconcileCaptions } from './reconcile-captions';
+import { runReconcileLive } from './reconcile-live';
 import { runReconcileProcessing } from './reconcile-processing';
 import { runReconcileReactionCounters } from './reconcile-reaction-counters';
 import { runReconcileUploads } from './reconcile-uploads';
@@ -37,6 +38,7 @@ import { runTmpSweep } from './tmp-sweep';
 
 export * from './reconcile-uploads';
 export * from './reconcile-processing';
+export * from './reconcile-live';
 export * from './reconcile-reaction-counters';
 export * from './purge-deleted';
 export * from './expire-raw';
@@ -148,6 +150,15 @@ export function createHousekeepingProcessor(
 
       case 'reconcile-processing':
         return await runReconcileProcessing({
+          repositories,
+          getQueue,
+          workerId,
+          ...tasks.processing,
+          logger,
+        });
+
+      case 'reconcile-live':
+        return await runReconcileLive({
           repositories,
           getQueue,
           workerId,
