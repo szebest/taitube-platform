@@ -1,0 +1,54 @@
+name: staging
+kind: k3s
+description: "The rehearsal for production: the cloud overlay on its own cluster, managed Postgres and its own R2 account or bucket names, deployed from main."
+production: true
+protected: true
+images:
+  source: registry
+  registry: ghcr.io/szebest
+  tag: "{sha}"
+hosts:
+  web: staging.taitube.example.com
+  studio: studio.staging.taitube.example.com
+  api: api.staging.taitube.example.com
+  cdn: cdn.staging.taitube.example.com
+features:
+  captions: true
+  screening: true
+config:
+  AUTH_JWKS_URL: https://auth.staging.taitube.example.com/.well-known/jwks.json
+  AUTH_ISSUER: https://auth.staging.taitube.example.com/
+  AUTH_AUDIENCE: taitube
+  S3_BUCKET_RAW: vp-raw
+  S3_BUCKET_PUBLIC: vp-public
+secrets:
+  source: external-secrets
+  keys:
+    - DATABASE_URL
+    - DATABASE_URL_MIGRATIONS
+    - REDIS_PASSWORD
+    - S3_ENDPOINT
+    - S3_ACCESS_KEY_ID
+    - S3_SECRET_ACCESS_KEY
+    - GRAFANA_OTLP_ENDPOINT
+    - GRAFANA_OTLP_HEADERS
+    - CLOUDFLARE_TUNNEL_TOKEN
+health:
+  readyzTimeoutSec: 300
+  smoke: false
+cluster:
+  context: k3s-staging
+  namespace: video-pipeline
+  backing: managed
+scaling:
+  maxReplicas:
+    probe: 2
+    transcode-1080p: 1
+    transcode-720p: 1
+    transcode-480p: 2
+    captions: 1
+    live: 1
+  budget:
+    cpu: "4"
+    memory: 8Gi
+    pods: 30

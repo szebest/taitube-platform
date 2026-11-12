@@ -8,7 +8,7 @@ function fileInputOf(dialog: HTMLElement): HTMLInputElement {
 }
 
 async function openUploadDialog() {
-  const { started } = serveUpload();
+  const { started, finishTransfer } = serveUpload();
   const { user } = await renderStudio();
   const banner = within(await screen.findByRole('banner'));
   await user.click(banner.getByRole('button', { name: 'Upload' }));
@@ -16,13 +16,14 @@ async function openUploadDialog() {
   return {
     user,
     dialog,
+    finishTransfer,
     snapshot: () => ({ dom: dialog.innerHTML, started: [...started] }),
   };
 }
 
 describe('apps/client/studio: UploadDialog, compiled and uncompiled', () => {
   it('fills in and starts an upload the same way in both builds', async () => {
-    const { user, dialog, snapshot } = await openUploadDialog();
+    const { user, dialog, snapshot, finishTransfer } = await openUploadDialog();
     const steps = [snapshot()];
 
     await user.upload(fileInputOf(dialog), CLIP);
@@ -36,5 +37,6 @@ describe('apps/client/studio: UploadDialog, compiled and uncompiled', () => {
     steps.push(snapshot());
 
     expect(steps).toMatchSnapshot();
+    finishTransfer();
   });
 });

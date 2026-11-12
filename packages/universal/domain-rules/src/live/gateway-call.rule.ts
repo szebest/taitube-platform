@@ -1,6 +1,7 @@
 import type { LiveStream } from '@vp/domain';
 import { err, ok, type Result } from '@vp/result';
 import { type LiveIngestRefused, liveIngestRefused } from './failures';
+import { LIVE_STREAM } from './live-stream.machine';
 
 /** The one account that reads a publisher's stream back from the gateway: the live worker. */
 export const LIVE_READER_USER = 'vp-worker';
@@ -53,8 +54,8 @@ export function decideLiveGatewayCall(
   switch (call.action) {
     case 'publish':
       if (stream === null) return err(liveIngestRefused('unknown-key'));
-      if (stream.status === 'IDLE') return ok({ type: 'go-live', stream });
-      if (stream.status !== 'LIVE') return err(liveIngestRefused('not-idle'));
+      if (LIVE_STREAM.next(stream.status, 'goLive')) return ok({ type: 'go-live', stream });
+      if (!LIVE_STREAM.next(stream.status, 'end')) return err(liveIngestRefused('not-idle'));
       return stream.stopRequestedAt === null
         ? ok({ type: 'admit' })
         : err(liveIngestRefused('stopping'));

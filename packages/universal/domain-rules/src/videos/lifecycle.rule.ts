@@ -13,21 +13,12 @@ import {
   videoNotFound,
   videoStatusNotEligible,
 } from './failures';
+import { VIDEO_LIFECYCLE } from './video-lifecycle.machine';
 
 /** A reprocess re-runs the pipeline over the same source, so the source has to have survived. */
-export const REPROCESSABLE_STATUSES: readonly VideoStatus[] = ['READY', 'FAILED', 'PROCESSING'];
+export const REPROCESSABLE_STATUSES: readonly VideoStatus[] = VIDEO_LIFECYCLE.sources('reprocess');
 
-export const DELETABLE_STATUSES: readonly VideoStatus[] = [
-  'UPLOADING',
-  'UPLOADED',
-  'PROBING',
-  'PROCESSING',
-  'READY',
-  'HELD',
-  'FAILED',
-  'REJECTED',
-  'ABANDONED',
-];
+export const DELETABLE_STATUSES: readonly VideoStatus[] = VIDEO_LIFECYCLE.sources('delete');
 
 export interface VideoLifecycleInput {
   readonly actor: UserContext | null;

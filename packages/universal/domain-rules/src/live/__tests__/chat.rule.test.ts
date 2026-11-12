@@ -22,11 +22,11 @@ describe('@vp/domain-rules: decideLiveChatPost', () => {
   });
 
   it.each([
-    {
-      scenario: 'a stream that is not live',
-      overrides: { actor: OWNER, stream: aLiveStream({ status: 'ENDED' }) },
+    ...(['IDLE', 'ENDED'] as const).map((status) => ({
+      scenario: `a ${status} stream`,
+      overrides: { actor: OWNER, stream: aLiveStream({ status }) },
       code: ErrorCodes.LIVE_CHAT_CLOSED,
-    },
+    })),
     {
       scenario: 'a viewer who does not subscribe, in subscribers-only',
       overrides: { isSubscriber: false },

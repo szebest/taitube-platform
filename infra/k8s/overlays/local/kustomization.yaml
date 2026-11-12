@@ -6,6 +6,9 @@ namespace: video-pipeline
 resources:
   - ../../base
 
+components:
+  - ../../components/dev-mode
+
 images:
   - name: ghcr.io/szebest/vp-api
     newName: vp-api
@@ -19,36 +22,3 @@ images:
   - name: ghcr.io/szebest/vp-studio
     newName: vp-studio
     newTag: local
-
-patches:
-  - target:
-      kind: ConfigMap
-      name: vp-config
-    patch: |-
-      - op: replace
-        path: /data/NODE_ENV
-        value: "development"
-      - op: replace
-        path: /data/AUTH_MODE
-        value: "dev"
-  - target:
-      kind: Secret
-      name: vp-secrets
-    patch: |-
-      - op: add
-        path: /stringData/ADMIN_TOKEN
-        value: "change-me-admin-token-local-cluster"
-  - target:
-      kind: Deployment
-      name: vp-api
-    patch: |-
-      - op: replace
-        path: /spec/template/spec/containers/0/imagePullPolicy
-        value: IfNotPresent
-  - target:
-      kind: Deployment
-      name: .*
-    patch: |-
-      - op: add
-        path: /spec/template/spec/containers/0/imagePullPolicy
-        value: IfNotPresent

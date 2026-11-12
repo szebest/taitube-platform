@@ -20,7 +20,8 @@
     },
     "./api-server.setup": "./src/api-server.setup.ts",
     "./jsdom.setup": "./src/jsdom.setup.ts",
-    "./server-functions.setup": "./src/server-functions.setup.ts"
+    "./server-functions.setup": "./src/server-functions.setup.ts",
+    "./settle.setup": "./src/settle.setup.ts"
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",

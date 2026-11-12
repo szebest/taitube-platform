@@ -44,6 +44,7 @@ describe('useAccountPreference', () => {
   });
 
   it('saves the one field that changed', () => {
+    apiServer.use(holds(preferencesView()));
     const { result, save } = renderPreference(signedIn());
 
     act(() => result.current[1](true));

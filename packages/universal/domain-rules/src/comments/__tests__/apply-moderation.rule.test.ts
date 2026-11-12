@@ -13,64 +13,58 @@ const withDisclosure = (
 
 describe('@vp/domain-rules: applyModeration', () => {
   it.each([
-    { action: 'hold', from: 'published', next: 'held' },
-    { action: 'approve', from: 'held', next: 'published' },
-    { action: 'hide', from: 'published', next: 'hidden' },
-    { action: 'unhide', from: 'hidden', next: 'published' },
-    { action: 'remove', from: 'published', next: 'removed' },
-    { action: 'remove', from: 'held', next: 'removed' },
-    { action: 'remove', from: 'hidden', next: 'removed' },
+    ['published', 'hold', true, 'held'],
+    ['published', 'hold', false, 'held'],
+    ['published', 'approve', true, 'refuse:state'],
+    ['published', 'approve', false, 'refuse:state'],
+    ['published', 'hide', true, 'hidden'],
+    ['published', 'hide', false, 'refuse:reason_required'],
+    ['published', 'unhide', true, 'refuse:state'],
+    ['published', 'unhide', false, 'refuse:state'],
+    ['published', 'remove', true, 'removed'],
+    ['published', 'remove', false, 'refuse:reason_required'],
+    ['held', 'hold', true, 'refuse:state'],
+    ['held', 'hold', false, 'refuse:state'],
+    ['held', 'approve', true, 'published'],
+    ['held', 'approve', false, 'published'],
+    ['held', 'hide', true, 'refuse:state'],
+    ['held', 'hide', false, 'refuse:state'],
+    ['held', 'unhide', true, 'refuse:state'],
+    ['held', 'unhide', false, 'refuse:state'],
+    ['held', 'remove', true, 'removed'],
+    ['held', 'remove', false, 'refuse:reason_required'],
+    ['hidden', 'hold', true, 'refuse:state'],
+    ['hidden', 'hold', false, 'refuse:state'],
+    ['hidden', 'approve', true, 'refuse:state'],
+    ['hidden', 'approve', false, 'refuse:state'],
+    ['hidden', 'hide', true, 'refuse:state'],
+    ['hidden', 'hide', false, 'refuse:state'],
+    ['hidden', 'unhide', true, 'published'],
+    ['hidden', 'unhide', false, 'published'],
+    ['hidden', 'remove', true, 'removed'],
+    ['hidden', 'remove', false, 'refuse:reason_required'],
   ] as const)(
-    'moves $from to $next on $action, for either disclosure',
-    ({ action, from, next }) => {
-      const actions: CommentModerationAction[] =
+    'a %s comment, action %s, reason given %s: %s',
+    (from, action, reasonGiven, expected) => {
+      const given: CommentModerationAction =
         action === 'approve' || action === 'unhide'
-          ? [{ action }]
-          : (['silent', 'visible'] as const).map((disclosure) =>
-              withDisclosure(action, disclosure, 'spam')
-            );
+          ? { action }
+          : withDisclosure(action, 'visible', reasonGiven ? 'spam' : undefined);
 
-      for (const given of actions) {
-        const result = applyModeration(from, given);
+      const result = applyModeration(from, given);
 
-        expect(isOk(result) && result.value.state).toBe(next);
+      if (expected.startsWith('refuse:')) {
+        expect(isErr(result) && result.error).toMatchObject({
+          code: ErrorCodes.MODERATION_NOT_APPLICABLE,
+          action,
+          state: from,
+          why: expected.slice('refuse:'.length),
+        });
+      } else {
+        expect(isOk(result) && result.value.state).toBe(expected);
       }
     }
   );
-
-  it.each([
-    ...(['held', 'hidden'] as const).map((from) => ({ action: 'hold' as const, from })),
-    ...(['published', 'hidden'] as const).map((from) => ({ action: 'approve' as const, from })),
-    ...(['held', 'hidden'] as const).map((from) => ({ action: 'hide' as const, from })),
-    ...(['published', 'held'] as const).map((from) => ({ action: 'unhide' as const, from })),
-  ])('refuses $action on a $from comment', ({ action, from }) => {
-    const given: CommentModerationAction =
-      action === 'approve' || action === 'unhide'
-        ? { action }
-        : withDisclosure(action, 'visible', 'spam');
-
-    const result = applyModeration(from, given);
-
-    expect(isErr(result) && result.error).toMatchObject({
-      code: ErrorCodes.MODERATION_NOT_APPLICABLE,
-      action,
-      state: from,
-      why: 'state',
-    });
-  });
-
-  it.each([
-    { action: 'hide' as const, from: 'published' as const },
-    { action: 'remove' as const, from: 'published' as const },
-    { action: 'remove' as const, from: 'held' as const },
-  ])('wants a reason for a visible $action', ({ action, from }) => {
-    const result = applyModeration(from, withDisclosure(action, 'visible'));
-
-    expect(isErr(result) && result.error).toMatchObject({
-      code: ErrorCodes.MODERATION_NOT_APPLICABLE,
-      why: 'reason_required',
-    });
-  });
 
   it.each([
     {

@@ -1,0 +1,28 @@
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+patches:
+  - target:
+      kind: ConfigMap
+      name: vp-config
+    patch: |-
+      - op: replace
+        path: /data/NODE_ENV
+        value: "development"
+      - op: replace
+        path: /data/AUTH_MODE
+        value: "dev"
+  - target:
+      kind: Secret
+      name: vp-secrets
+    patch: |-
+      - op: add
+        path: /stringData/ADMIN_TOKEN
+        value: "change-me-admin-token-local-cluster"
+  - target:
+      kind: Deployment
+      name: .*
+    patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/imagePullPolicy
+        value: IfNotPresent

@@ -29,6 +29,9 @@ Instructions for any coding agent working on `@vp/db`.
 - **Development Seeds:** `seedDatabase(url, log)` (`src/seed.ts`, `@vp/db/seed`) upserts two users, two
   READY videos (the dev user's public one, the other user's private one) and the public one's three
   renditions.
+- **Demo Identities:** `upsertIdentities(url, identities, log)` (`src/seed-identities.ts`,
+  `@vp/db/seed-identities`) upserts users with a role and tier, the one thing the public API cannot grant;
+  the `@vp/demo` seed calls it before it signs in as them.
 - **Connection Client:** `createDbClient(url, { max })` (the `postgres.js` pool plus the Drizzle
   instance) and `waitForDatabase` (`src/client.ts`, `@vp/db/client`).
 

@@ -6,6 +6,7 @@ import type {
   ModerationState,
 } from '@vp/domain';
 import { type Result, assertNever, err, ok } from '@vp/result';
+import { COMMENT_MODERATION } from './comment-moderation.machine';
 import { type ModerationNotApplicable, moderationNotApplicable } from './failures';
 
 const PUBLISHED: ModerationOutcome = {
@@ -37,18 +38,18 @@ export function applyModeration(
   const needsReason = (given: { disclosure: Disclosure; reason?: CommentModerationReason }) =>
     given.disclosure === 'visible' && given.reason === undefined;
 
+  const next = COMMENT_MODERATION.next(state, action.action);
+  if (next === undefined) return refuse('state');
+
   switch (action.action) {
     case 'hold':
-      return state === 'published' ? ok(outcome('held', action)) : refuse('state');
+      return ok(outcome(next, action));
     case 'approve':
-      return state === 'held' ? ok(PUBLISHED) : refuse('state');
-    case 'hide':
-      if (state !== 'published') return refuse('state');
-      return needsReason(action) ? refuse('reason_required') : ok(outcome('hidden', action));
     case 'unhide':
-      return state === 'hidden' ? ok(PUBLISHED) : refuse('state');
+      return ok(PUBLISHED);
+    case 'hide':
     case 'remove':
-      return needsReason(action) ? refuse('reason_required') : ok(outcome('removed', action));
+      return needsReason(action) ? refuse('reason_required') : ok(outcome(next, action));
     default:
       return assertNever(action, 'CommentModerationAction');
   }

@@ -54,6 +54,9 @@ An asynchronous video ingestion, transcoding, and streaming platform: Fastify AP
     exact line an SDK is called. The discriminant is the existing `ErrorCode`: never a second vocabulary.
     See [docs/standards/error-handling.md](docs/standards/error-handling.md) and [SDD ADR-24](docs/SDD.md#adr-24--result-typed-error-handling-domain-returns-the-edge-decides).
 
+15. **Setup & environment are documented in the PR that changes them:** every environment key carries a `description`, an `example`, `secret` or `public`, and the apps that read it, in `ENV_DOCS` (`packages/server/env-schema`; a missing entry is a type error); `docs/ENVIRONMENT.md` is generated (`pnpm gen:env-docs --check` runs in CI) and `.env.example` may not drift from the schema. A new service, port, seed entity or demo scenario updates `docs/GETTING_STARTED.md`, `docs/DEMO.md` and the seed in the same PR, and a key production requires is listed in `infra/environments/production/environment.yaml`. See [docs/agents/making-changes.md](docs/agents/making-changes.md#setup--environment).
+16. **Lifecycles are tables.** A value whose legal moves depend on its current status, phase or state is a `defineMachine` table (`@vp/machine`) in a `*.machine.ts` beside the rule that uses it (`@vp/domain-rules` for domain state). The machine answers which edge is legal; the rule adds the guards that depend on input and returns the `Result`; the CAS helper persists. No new `status === 'X'` branching outside a machine: `tests/architecture/state-machines.test.ts` holds the existing sites as a ratchet that only moves down, and `docs/state-machines.md` is generated (`pnpm gen:state-machines --check` runs in CI). Small client flags are exempt. See [docs/state-machines.md](docs/state-machines.md).
+
 ---
 
 ## Area-Specific Agent Instructions (Directory Index)
@@ -70,6 +73,10 @@ Agents working in a specific package or app MUST follow its dedicated `AGENTS.md
   *BullMQ pipeline stages, FFmpeg transcoding, dual-runtime Node/Bun, fencing tokens, temp dir cleanup.*
 - **Core Domain (`@vp/core`, server/T3):** [packages/server/core/AGENTS.md](packages/server/core/AGENTS.md)  
   *Zero-dependency abstract ports, repository interfaces, domain entities and policy.*
+- **Demo (`@vp/demo`, server/T8):** [packages/server/demo/AGENTS.md](packages/server/demo/AGENTS.md)  
+  *`make demo`: prerequisites, the stack tier by tier, and a deterministic demo world seeded through the public API.*
+- **Deploy (`@vp/deploy`, server/T4):** [packages/server/deploy/AGENTS.md](packages/server/deploy/AGENTS.md)  
+  *The typed environment spec, secrets check and overlay renderer behind `pnpm envctl` and `make deploy`.*
 - **Adapters (`@vp/adapters`, server/T4):** [packages/server/adapters/AGENTS.md](packages/server/adapters/AGENTS.md)  
   *Postgres, Redis, S3, BullMQ concrete adapters and autonomous in-memory test doubles.*
 
@@ -100,12 +107,15 @@ import rules; each tier directory has its own: [universal](packages/universal/AG
 - **File Discipline & Sizing:** [docs/standards/file-discipline.md](docs/standards/file-discipline.md)
 - **Package Boundaries — tiers & layers:** [packages/AGENTS.md](packages/AGENTS.md)
 - **Frontend Structure, the folders, layers, component shape and names of both client apps:** [docs/standards/frontend-structure.md](docs/standards/frontend-structure.md)
+- **State machines, lifecycles as tables:** [docs/state-machines.md](docs/state-machines.md)
 - **Error handling, `Result` at the domain seam:** [docs/standards/error-handling.md](docs/standards/error-handling.md)
 - **Formatting & i18n, `Intl` and the catalogues:** [docs/standards/formatting-and-i18n.md](docs/standards/formatting-and-i18n.md)
 - **Machine-enforced invariants:** [ARCHITECTURE.md §6](ARCHITECTURE.md) · `tests/architecture/`
 - **Declarative Authorization:** [docs/standards/authorization.md](docs/standards/authorization.md)
 - **Domain Glossary:** [CONTEXT.md](CONTEXT.md)
 - **Local-First Guide:** [docs/LOCAL_FIRST.md](docs/LOCAL_FIRST.md)
+- **Getting started (zero to a seeded demo):** [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) · **The demo world:** [docs/DEMO.md](docs/DEMO.md)
+- **Environment reference (generated):** [docs/ENVIRONMENT.md](docs/ENVIRONMENT.md) · **Deployment and environments:** [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
 - **Issue Tracker Conventions:** [docs/agents/issue-tracker.md](docs/agents/issue-tracker.md)
 - **Making a change, read before editing any file:** [docs/agents/making-changes.md](docs/agents/making-changes.md) · the whole-file pass and its limits, code shape no linter holds, writing specs and tickets
 - **Working with the maintainer:** [docs/agents/collaboration.md](docs/agents/collaboration.md) · reading a request, when to ask, reports, no AI credit, the maintainer's voice
@@ -114,4 +124,4 @@ import rules; each tier directory has its own: [universal](packages/universal/AG
 
 ## Global Commands Quick Reference
 
-`make up` (infra) · `make up all` (everything; `make up api|web|worker|worker:<stage>` for less) · `make status` · `make down` · `make smoke` · `make smoke-offline` · `pnpm dev` · `pnpm test` · `pnpm test:bun` · `pnpm test:architecture` (the invariant suite) · `pnpm lint` (oxlint, type-aware) · `pnpm format` / `pnpm format:check` (oxfmt) · `pnpm typecheck` · `pnpm boundaries` (tiers, layers, `CLAUDE.md` symlinks) · `pnpm sync:claude` · `pnpm gen:contracts` (the committed OpenAPI document) · `pnpm gen:tokens` (`tokens.json` and `@vp/ui`'s generated CSS; `--check` in CI) · `pnpm gen:theme <id> [--from sand]` · `pnpm gen:token-set <group> <id> --from <id>` (scaffold, register, regenerate) · `make k3d-up && make k3d-deploy` (Kubernetes) · `make e2e` (acceptance suite; `E2E_REDUCED=true` for the CI set).
+`make demo` (zero to a seeded demo) · `make demo-reset` · `make deploy ENV=<env>` / `make deploy-plan` / `make secrets-check` (environments in `infra/environments`) · `pnpm gen:env-docs` (`--check` in CI) · `make up` (infra) · `make up all` (everything; `make up api|web|worker|worker:<stage>` for less) · `make status` · `make down` · `make smoke` · `make smoke-offline` · `pnpm dev` · `pnpm test` · `pnpm test:bun` · `pnpm test:architecture` (the invariant suite) · `pnpm lint` (oxlint, type-aware) · `pnpm format` / `pnpm format:check` (oxfmt) · `pnpm typecheck` · `pnpm boundaries` (tiers, layers, `CLAUDE.md` symlinks) · `pnpm sync:claude` · `pnpm gen:contracts` (the committed OpenAPI document) · `pnpm gen:tokens` (`tokens.json` and `@vp/ui`'s generated CSS; `--check` in CI) · `pnpm gen:theme <id> [--from sand]` · `pnpm gen:token-set <group> <id> --from <id>` (scaffold, register, regenerate) · `make k3d-up && make k3d-deploy` (Kubernetes) · `make e2e` (acceptance suite; `E2E_REDUCED=true` for the CI set).

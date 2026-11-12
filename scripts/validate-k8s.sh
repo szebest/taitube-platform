@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# scripts/validate-k8s.sh — Validate k8s manifests across overlays
+# scripts/validate-k8s.sh [environment] — Validate k8s manifests: every overlay and environment, or only the named environment
 # Uses kubeconform if installed (or via docker), falls back to kubectl kustomize schema validation
 
+ONLY_ENV="${1:-}"
 LOCAL_OVERLAY="infra/k8s/overlays/local"
 CLOUD_OVERLAY="infra/k8s/overlays/cloud"
 
@@ -23,23 +24,44 @@ fi
 
 echo "==> Validating Kubernetes manifests with kubectl kustomize..."
 
-echo "==> Building local overlay..."
-"$KUBECTL_CMD" kustomize "$LOCAL_OVERLAY" > /dev/null
-echo "Local overlay successfully rendered."
+TARGETS=()
+if [ -z "$ONLY_ENV" ]; then
+  echo "==> Building local overlay..."
+  "$KUBECTL_CMD" kustomize "$LOCAL_OVERLAY" > /dev/null
+  echo "Local overlay successfully rendered."
 
-echo "==> Building cloud overlay..."
-"$KUBECTL_CMD" kustomize "$CLOUD_OVERLAY" > /dev/null
-echo "Cloud overlay successfully rendered."
+  echo "==> Building cloud overlay..."
+  "$KUBECTL_CMD" kustomize "$CLOUD_OVERLAY" > /dev/null
+  echo "Cloud overlay successfully rendered."
+  TARGETS+=("$LOCAL_OVERLAY" "$CLOUD_OVERLAY")
+fi
+
+if command -v pnpm >/dev/null 2>&1 && [ -d node_modules ]; then
+  if [ -n "$ONLY_ENV" ]; then
+    ENVIRONMENTS="$ONLY_ENV"
+  else
+    ENVIRONMENTS="$(pnpm --silent envctl list | awk -F '\t' '$2 != "compose" {print $1}')"
+  fi
+  for env in $ENVIRONMENTS; do
+    echo "==> Building environment $env..."
+    dir="$(pnpm --silent envctl render "$env" --slug validate --tag validate)"
+    "$KUBECTL_CMD" kustomize "$dir" > /dev/null
+    echo "Environment $env successfully rendered."
+    TARGETS+=("$dir")
+  done
+fi
 
 if command -v kubeconform >/dev/null 2>&1; then
   echo "==> Validating with kubeconform..."
-  "$KUBECTL_CMD" kustomize "$LOCAL_OVERLAY" | kubeconform -strict -summary -ignore-missing-schemas -
-  "$KUBECTL_CMD" kustomize "$CLOUD_OVERLAY" | kubeconform -strict -summary -ignore-missing-schemas -
+  for target in "${TARGETS[@]}"; do
+    "$KUBECTL_CMD" kustomize "$target" | kubeconform -strict -summary -ignore-missing-schemas -
+  done
   echo "==> kubeconform validation passed!"
 elif command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
   echo "==> Validating with kubeconform via Docker..."
-  "$KUBECTL_CMD" kustomize "$LOCAL_OVERLAY" | docker run --rm -i ghcr.io/yannh/kubeconform:latest -strict -summary -ignore-missing-schemas -
-  "$KUBECTL_CMD" kustomize "$CLOUD_OVERLAY" | docker run --rm -i ghcr.io/yannh/kubeconform:latest -strict -summary -ignore-missing-schemas -
+  for target in "${TARGETS[@]}"; do
+    "$KUBECTL_CMD" kustomize "$target" | docker run --rm -i ghcr.io/yannh/kubeconform:latest -strict -summary -ignore-missing-schemas -
+  done
   echo "==> kubeconform Docker validation passed!"
 else
   echo "==> kubeconform not available in environment; rendered manifests verified via kubectl kustomize."

@@ -8,7 +8,7 @@ CLUSTER_NAME ?= vp
 LOCAL_SECRETS := infra/k8s/overlays/local/secrets.env
 DEV_TOKEN := pnpm --silent dev-token mint --raw
 
-.PHONY: help up doctor setup dev down status logs prune psql redis-cli mc check-redis nuke test check-bun test-bun test-r2 lint format typecheck clean smoke smoke-fast smoke-infra smoke-offline live-smoke e2e e2e-web e2e-studio lighthouse chaos-kill obs-check k8s-local-secrets k8s-validate k3d-up k3d-down k3d-deploy load-s1 load-s2 load-s3 load-smoke chaos-readiness hls-sample toxiproxy-up chaos-s4 chaos-s5 chaos-s6 chaos-s7
+.PHONY: help demo demo-seed demo-reset demo-down demo-status demo-login up doctor setup dev down status logs prune psql redis-cli mc check-redis nuke test check-bun test-bun test-r2 lint format typecheck clean smoke smoke-fast smoke-infra smoke-offline live-smoke e2e e2e-web e2e-studio lighthouse chaos-kill obs-check k8s-local-secrets k8s-validate k3d-up k3d-down k3d-deploy load-s1 load-s2 load-s3 load-smoke chaos-readiness hls-sample toxiproxy-up chaos-s4 chaos-s5 chaos-s6 chaos-s7 deploy deploy-list deploy-plan deploy-status deploy-rollback deploy-logs deploy-preflight deploy-expire-previews secrets-check new-environment
 
 # `make up web`, `make up worker:thumbnail`: the words after up, down or status are its targets, not goals.
 ifneq ($(filter up down status,$(firstword $(MAKECMDGOALS))),)
@@ -19,6 +19,24 @@ endif
 
 help: ## Show help for each target
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-18s\033[0m %s\n", $$1, $$2}'
+
+demo: ## One command to a running, seeded platform: build, start tier by tier, seed, print URLs and logins (DEMO_PROFILE=full for every app; ARGS=--dry-run to preview)
+	@bash scripts/demo.sh $(ARGS)
+
+demo-seed: ## Seed the demo world into a running stack, idempotent (DEMO_VIDEOS, DEMO_USERS, DEMO_CHANNELS, DEMO_SEED)
+	@bash scripts/demo.sh seed $(ARGS)
+
+demo-reset: ## Wipe the stack volumes and the demo state, then run the demo again from empty
+	@bash scripts/demo.sh reset $(ARGS)
+
+demo-down: ## Stop the demo containers and keep the data, so make demo starts again in seconds
+	@bash scripts/demo.sh down $(ARGS)
+
+demo-status: ## Show the demo stack, its URLs and the last seed summary
+	@bash scripts/demo.sh status $(ARGS)
+
+demo-login: ## Print a persona's token, curl line and cookie one-liner: make demo-login PERSONA=creator (viewer, creator, moderator, admin)
+	@bash scripts/demo.sh login $(or $(PERSONA),viewer) $(ARGS)
 
 up: ## Build and start, tier by tier, gated on health: no target = infra; api, web, studio, worker, worker:<stage>, all, observability
 	@pnpm --silent preflight
@@ -226,3 +244,36 @@ chaos-s6: ## Run S6 SSE Fan-out load & reconnect test
 chaos-s7: ## Run S7 Soak test (4h duration, configurable with SOAK_DURATION)
 	@API="http://localhost:3000" TOKEN=$$($(DEV_TOKEN)) k6 run tests/load/s7-soak.js
 
+
+DEPLOY := bash scripts/deploy.sh
+DEPLOY_FLAGS = --env "$(ENV)" $(if $(SLUG),--slug "$(SLUG)") $(if $(TAG),--tag "$(TAG)") $(if $(YES),--yes) $(if $(CONFIRM),--confirm "$(CONFIRM)") $(if $(DRY_RUN),--dry-run)
+
+deploy: ## Deploy an environment: preflight, apply, health gate, rollback on failure (ENV=local|preview|staging|production|compose-vm, SLUG=, TAG=, YES=1, CONFIRM=<name> for production, DRY_RUN=1)
+	@$(DEPLOY) deploy $(DEPLOY_FLAGS)
+
+deploy-list: ## List the environments and what each is for
+	@$(DEPLOY) list
+
+deploy-plan: ## Render an environment and diff it against its cluster, applying nothing (ENV=, SLUG=, TAG=)
+	@$(DEPLOY) plan $(DEPLOY_FLAGS)
+
+deploy-status: ## Show what an environment is running (ENV=, SLUG=)
+	@$(DEPLOY) status $(DEPLOY_FLAGS)
+
+deploy-rollback: ## Return an environment to its previous revision (ENV=, YES=1 for a protected one, CONFIRM=production for production)
+	@$(DEPLOY) rollback $(DEPLOY_FLAGS)
+
+deploy-logs: ## Recent logs of one service of an environment (ENV=, SERVICE=api, FOLLOW=1)
+	@$(DEPLOY) logs $(DEPLOY_FLAGS) $(if $(SERVICE),--service "$(SERVICE)") $(if $(FOLLOW),--follow)
+
+deploy-preflight: ## Run every check a deploy runs first, changing nothing (ENV=, TAG=)
+	@$(DEPLOY) preflight $(DEPLOY_FLAGS)
+
+deploy-expire-previews: ## List preview namespaces past their expiry, delete them with APPLY=1
+	@$(DEPLOY) expire-previews --env "$(or $(ENV),preview)" $(if $(APPLY),--apply) $(if $(DRY_RUN),--dry-run)
+
+secrets-check: ## List the secrets an environment expects and .secrets/<env>.env lacks, names only, never values (ENV=)
+	@$(DEPLOY) secrets-check $(DEPLOY_FLAGS)
+
+new-environment: ## Scaffold infra/environments/<NAME> from the template
+	@bash scripts/new-environment.sh "$(NAME)" $(if $(DRY_RUN),--dry-run)

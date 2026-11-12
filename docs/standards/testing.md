@@ -49,7 +49,8 @@ rule below that can be checked by a machine is, and the check is named next to i
   `make e2e`) for the in-process acceptance suite. Every fixture the e2e specs read comes out of a plain
   `pnpm gen-video` (`tests/in-process/e2e-fixtures.test.ts`).
 - `pnpm --filter @vp/web test:e2e` and `pnpm --filter @vp/studio test:e2e` (or `make e2e-web`, `make e2e-studio`,
-  the `e2e-web` and `e2e-studio` checks of the `e2e-client` CI job) for each client app's Playwright suite in its
+  the `e2e-web-<n>` and `e2e-studio-<n>` checks of the `e2e-client` CI job, each app's suite
+  in three Playwright shards) for each client app's Playwright suite in its
   `e2e/`, against the same in-process stack plus that app built and served. The stack fixture, the config
   factory and the security suites both import live in `tests/playwright/`. The specs are held to the spec
   discipline below, apart from the Vitest rules. Where a page ticket adds its flows:
@@ -117,7 +118,7 @@ the same after each test. No spec needs an `afterEach` to undo a spy.
 
 Each project config chooses its own pool and isolation, because a project config inherits nothing from the root
 `vitest.config.ts`: `pool: 'threads'` and `isolate: false` (`definePackageTestConfig` sets both, `clientAppTestConfig`
-in `@vp/vite-preset` sets them per project for the client apps, and no command line passes `--pool`). `architecture-typed` runs on
+in `@vp/vite-preset` sets them per project for the client apps, and no command line passes `--pool`). The two projects that run PGlite, `@vp/adapters` and `@vp/db`, use `pool: 'forks'`: PGlite is WebAssembly, and WebAssembly in worker threads races V8's process-wide JIT page registry, which aborts the whole run with `Check failed: jit_page.has_value()` (exit 133). `architecture-typed` runs on
 one fork in `sequence.groupOrder` 1 and `architecture` on two threads in group 2, both after every other
 project's group 0: Vitest 5 gives a group one `maxWorkers` and batches a project into a single task only at one
 worker, so that is how the typed specs build their `ts.Program` once. The files of one project share a worker
@@ -215,13 +216,19 @@ own budget through `.github/actions/budget`: `unit-tests` 240 s in each unit sha
 aggregates 1, and 9 minutes for the longest `needs` chain. A budget names the step it measures by its `id`, and its
 limit sits below its job's `timeout-minutes`, so the budget fires first and names the step.
 
-`unit` (vitest, `--shard=i/6`) and `unit-bun` (`bun test --shard=i/3`) are matrix jobs named `unit-shard-<i>` and
+`unit` (vitest, `--shard=i/N`, N derived below) and `unit-bun` (`bun test --shard=i/5`) are matrix jobs named `unit-shard-<i>` and
 `unit-bun-shard-<i>`. Two one-step jobs named `unit` and `unit-bun` follow them, fail unless every shard passed
 and print which shard did not, so the required checks in branch protection keep their names. Vitest assigns spec
 files to shards by their recorded cost, not by a hash of the path: `scripts/timings/sequencer.ts` reads
 `tests/timings/unit.json` (milliseconds per spec file: environment, import and tests) and deals the files out
 longest first, each to the cheapest shard so far; a file with no entry costs the median. The two suites that
 repeat 20 times under Bun run in `unit-bun-shard-1` only.
+
+The vitest shard count is derived, not set. The `build` job runs `pnpm unit-shards --github-output`, which reads
+`tests/timings/unit.json` and plans the fewest shards whose expected wall time stays under 150 s each
+(`ceil(total cost / (150 s * 3.2))`, 3.2 being the cost-seconds one shard runs per wall second at `--maxWorkers=4`,
+measured). It exposes `unit-shards` (the matrix) and `unit-shard-count` (the `/N`), which `unit-shards` reads;
+`ci-shape` fails a hand-set matrix or denominator. The 150 s target leaves 40% under the 240 s budget.
 
 ### Budgets, shards and retries: when to change what
 
@@ -237,13 +244,17 @@ repeat 20 times under Bun run in `unit-bun-shard-1` only.
   spec file older than 7 days that the file does not list. The sequencer balances recorded cost to within 1%;
   what remains between shards is the runner (the same files run 0.8 to 1.15 times their recorded cost on different
   hosted runners).
-- **Add a shard** only when the slowest shard's `unit-tests` p90 passes 70% of its budget after the timings were
-  regenerated: add its number to the `shard` list, raise the `/N` in the run step (`ci-shape` fails when they
-  differ) and regenerate the timings.
-- **One retry, always reported.** CI retries a failed test once (`--retry=1` for vitest, `retries: 1` under `CI`
-  for Playwright and the visual suite). A test that passes on its retry leaves a `passed on retry` warning naming
-  the spec and the test, a table in the job summary, and `ci-health` counts it as a flip: the nightly fails above
-  2% of commits. A pass on retry is a flaky spec to fix or quarantine, never accepted.
+- **Add specs freely; never add a shard by hand.** The shard count follows from `tests/timings/unit.json`
+  (`pnpm unit-shards` prints it), so a suite that grows gets more shards once its timings are refreshed. A new spec
+  costs the median until then. Refresh with `pnpm timings:update --run <id> --run <id>`; `refresh-unit-timings.yml`
+  also does it every Monday (or on `workflow_dispatch`) from the last two green `main` runs and opens a pull
+  request, which needs "Allow GitHub Actions to create and approve pull requests" on; close and reopen it to run CI
+  on it. Do not raise the 240 s budget when a shard misses it: refresh the timings, or lower the target in
+  `scripts/timings/plan-shards.ts` if the measured parallelism fell.
+- **One retry, and a pass on it fails the job.** CI retries a failed test once (`--retry=1` for vitest,
+  `retries: 1` under `CI` for Playwright and the visual suite), so the report tells a flaky test from a broken
+  one. A test that passes on its retry leaves a `passed on retry` error naming the spec and the test, a table in
+  the job summary, `ci-health` counts it as a flip, and `scripts/retried/publish.ts` fails the run.
 - **Quarantine** a flaky spec only while it is being fixed: add `{ spec, owner, reason, expires, ticket }` to
   `tests/quarantine.json` (at most five, `quarantine.test.ts` fails an incomplete or expired entry). CI skips it
   (`pnpm quarantine` prints the vitest `--exclude`, `tests/playwright/config.ts` ignores it) and the nightly
@@ -252,6 +263,29 @@ repeat 20 times under Bun run in `unit-bun-shard-1` only.
 - **A jsdom test ends once its requests settle**: `@vp/web-testing` waits for the requests a test left in flight
   before it drops the test's handlers, and an unanswered request names the contract to mock
   (`mock it with mockEndpoint(getPreferences, ...)`); answer it in the app's one loader API helper.
+
+### Flaky tests: root-cause, do not retry
+
+A spec that fails on one run and passes on the next has a cause in the spec or the code: find it and fix it. A
+raised timeout, a retry, a sleep or a skip hides it and a later run finds it again; a quarantine (below) only
+buys the time to fix it.
+
+- **A test ends once its work has.** Every client app's jsdom project runs `@vp/web-testing/settle.setup` last:
+  before it unmounts, it waits for the fetching queries and pending mutations of every mounted `QueryClient`, and
+  for every `renderRoute` router, to go idle, and fails the test with what is still running after 5 s. A test
+  that holds a request on purpose releases it before it ends (`heldReply`); an upload it starts, it finishes or
+  cancels. Testing Library's own cleanup is off there (`RTL_SKIP_AUTO_CLEANUP`), since it would unmount first.
+- **A React update after the test ended fails that test** by name (`LeakedUpdateError`). Left alone it surfaces
+  after jsdom's teardown as `window is not defined`, in whichever file ran last on that worker.
+- **A request after the test ended** fails as `UnhandledRequestError ... from "<the test that made it>"`.
+- **Wait for the thing itself** (section 3), never for a proxy that settles earlier: a recorded request is not
+  its handled answer, a server-rendered text is not a hydrated page (`hydrated(locator)` in
+  `tests/playwright/fixtures.ts`), an open room socket is not its preview, and a performance entry's `element` is
+  `null` once hydration replaced the node.
+- **No state shared between tests.** The e2e stack is one per run and its personas outlive a test: a spec that
+  changes what a persona sees signs in as `stranger`, a viewer no other test shares.
+- **Prove a fix by repetition**: the spec 100 times or more, in parallel and under CPU load (Playwright's
+  `--repeat-each`, copies of a vitest spec), before and after, with both pass rates in the PR.
 
 `pnpm ci:health` (`scripts/ci-health.ts`, the nightly `ci-health.yml`) prints green first time per branch, failures
 per job, every budget's margin, flips and passes on retry, merges behind main or merged red (`--merges`) and the

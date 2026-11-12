@@ -1,0 +1,75 @@
+# One environment: everything that differs from infra/k8s/base lives here, and nothing else does.
+# `pnpm envctl validate` checks this file against packages/server/deploy/src/environment-spec.ts.
+# README.md beside this file explains every field.
+
+# The directory name, lower case, letters, digits and dashes.
+name: example
+# k3d (a local cluster the deploy script creates), k3s (a cluster you already have) or compose (one VM).
+kind: k3s
+description: "What this environment is for, in one sentence."
+
+# true when the pods run with NODE_ENV=production: every key a production boot requires must then be listed.
+production: true
+# true to make a deploy need --yes (or --confirm <name>) and a pinned image tag.
+protected: true
+# optional, true to make the deploy need --confirm <name> instead of --yes. Only for a protected environment.
+# typedConfirmation: true
+
+images:
+  # registry pulls <registry>/vp-api:<tag> and friends; build builds this checkout and imports it into k3d.
+  source: registry
+  registry: ghcr.io/szebest
+  # latest, a release tag, or "{sha}" for sha-<HEAD>, the tag images.yml pushes for a commit.
+  tag: "{sha}"
+
+# Bare host names. web and studio become CORS_ORIGINS, cdn becomes CDN_BASE_URL.
+hosts:
+  web: app.example.com
+  cdn: cdn.example.com
+
+features:
+  captions: true
+  screening: true
+
+# Non-secret keys, written into the vp-config ConfigMap. Every name must exist in the env schema.
+config:
+  AUTH_JWKS_URL: https://auth.example.com/.well-known/jwks.json
+  AUTH_ISSUER: https://auth.example.com/
+  AUTH_AUDIENCE: taitube
+
+secrets:
+  # env-file: .secrets/<name>.env is the source. external-secrets: the cluster's secret store holds them
+  # and .secrets/<name>.env is the file you keep to seed it.
+  source: external-secrets
+  # Names only. A production-mode environment must list every secret the schema requires in production.
+  keys:
+    - DATABASE_URL
+    - REDIS_PASSWORD
+    - S3_ACCESS_KEY_ID
+    - S3_SECRET_ACCESS_KEY
+
+health:
+  readyzTimeoutSec: 300
+  # true to run scripts/e2e-smoke.sh after /readyz answers: it mints a dev token and uploads a clip, so never on a production-mode or JWKS environment.
+  smoke: false
+
+# Only for kind k3d and k3s; a compose environment has `compose:` instead (see compose-vm).
+cluster:
+  # The kubectl context the deploy must run against; any other context is refused.
+  context: k3s-example
+  # A fixed name, or preview-{slug} with a `preview` block for one namespace per branch.
+  namespace: video-pipeline
+  # helm: install Postgres, Redis and MinIO in the namespace. managed: they exist outside (Neon, R2).
+  backing: managed
+scaling:
+  # Ceilings for the KEDA ScaledObjects, by worker stage. A stage left out keeps the base's.
+  maxReplicas:
+    probe: 2
+    transcode-1080p: 1
+  # Optional: becomes a ResourceQuota on the namespace.
+  budget:
+    cpu: "4"
+    memory: 8Gi
+    pods: 30
+# preview:
+#   ttlHours: 48

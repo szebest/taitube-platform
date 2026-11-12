@@ -1,3 +1,4 @@
+import { focusManager, onlineManager } from '@tanstack/react-query';
 import type { createIsomorphicFn } from '@tanstack/react-start';
 import { parse, serialize } from 'cookie-es';
 import { installTextTracks } from './text-tracks';
@@ -86,8 +87,11 @@ Object.defineProperty(globalThis, 'BroadcastChannel', {
   configurable: true,
 });
 
-// A server function sets cookies in jsdom's jar, and the stores keep what a preference or an intent wrote, all of which outlive the test.
+// A server function sets cookies in jsdom's jar, the stores keep what a preference or an intent wrote, and
+// TanStack Query's online and focus managers keep the last event a test dispatched, all of which outlive the test.
 afterEach(() => {
+  onlineManager.setOnline(true);
+  focusManager.setFocused(undefined);
   window.localStorage.clear();
   window.sessionStorage.clear();
   for (const name of Object.keys(parse(document.cookie))) {
