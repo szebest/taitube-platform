@@ -50,9 +50,7 @@ export async function abortUpload(
   return map(
     await ctx.videos.transition({
       videoId: video.id,
-      from: 'UPLOADING',
-      to: 'ABANDONED',
-      eventType: 'upload.aborted',
+      edge: 'abort',
       eventPayload: { uploadId, strategy: upload.strategy },
     }),
     () => undefined

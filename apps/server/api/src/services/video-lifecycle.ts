@@ -1,8 +1,6 @@
 import type { JobQueue } from '@vp/core/ports';
 import type { VideoRepository } from '@vp/core/repositories';
 import {
-  DELETABLE_STATUSES,
-  REPROCESSABLE_STATUSES,
   type VideoLifecycleFailure,
   decideVideoDelete,
   decideVideoReprocess,
@@ -61,9 +59,7 @@ export async function reprocessVideo(
 
   const transitioned = await deps.videos.transition({
     videoId,
-    from: [...REPROCESSABLE_STATUSES],
-    to: 'PROBING',
-    eventType: 'video.reprocessing',
+    edge: 'reprocess',
     eventPayload: { generation, requestedBy: user.id },
     patch: { generation, errorCode: null, errorMessage: null },
     outbox: dispatch.outbox,
@@ -92,9 +88,7 @@ export async function softDeleteVideo(
 
   const transitioned = await deps.videos.transition({
     videoId,
-    from: [...DELETABLE_STATUSES],
-    to: 'DELETED',
-    eventType: 'video.deleted',
+    edge: 'delete',
     eventPayload: { requestedBy: user.id },
     patch: { deletedAt: new Date() },
   });

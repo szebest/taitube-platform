@@ -14,7 +14,6 @@ import {
   ScreeningRepository,
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
-import { SCREENING_TRANSITIONS } from '@vp/domain';
 import { type DatabaseUnavailable, ErrorCodes, databaseUnavailable } from '@vp/errors';
 import { type Result, fromPromise, map } from '@vp/result';
 import { and, desc, eq, isNotNull, isNull, lt } from 'drizzle-orm';
@@ -79,7 +78,6 @@ export class PostgresScreeningRepository extends ScreeningRepository {
 
   async hold(input: HoldVideoInput): Promise<Result<boolean, DatabaseUnavailable>> {
     const { videoId, traceId } = input;
-    const edge = SCREENING_TRANSITIONS.hold;
 
     return fromPromise(
       () =>
@@ -87,9 +85,7 @@ export class PostgresScreeningRepository extends ScreeningRepository {
           const screening = await latestOf(tx, videoId);
           return commitVideoTransition(tx, {
             videoId,
-            from: edge.from,
-            to: edge.to,
-            eventType: edge.event,
+            edge: 'hold',
             eventPayload: {
               screeningId: screening?.id ?? null,
               reasons: screening?.reasons.map((finding) => finding.reason) ?? [],
@@ -103,16 +99,13 @@ export class PostgresScreeningRepository extends ScreeningRepository {
 
   async approve(input: ApproveHeldVideoInput): Promise<Result<boolean, DatabaseUnavailable>> {
     const { videoId, moderatorId, outbox } = input;
-    const edge = SCREENING_TRANSITIONS.approve;
 
     return fromPromise(
       () =>
         this.db.transaction(async (tx) => {
           const moved = await commitVideoTransition(tx, {
             videoId,
-            from: edge.from,
-            to: edge.to,
-            eventType: edge.event,
+            edge: 'approve',
             eventPayload: { moderatorId },
             outbox,
           });
@@ -128,16 +121,13 @@ export class PostgresScreeningRepository extends ScreeningRepository {
 
   async reject(input: RejectHeldVideoInput): Promise<Result<boolean, DatabaseUnavailable>> {
     const { videoId, moderatorId, reason } = input;
-    const edge = SCREENING_TRANSITIONS.reject;
 
     return fromPromise(
       () =>
         this.db.transaction(async (tx) => {
           const moved = await commitVideoTransition(tx, {
             videoId,
-            from: edge.from,
-            to: edge.to,
-            eventType: edge.event,
+            edge: 'rejectScreening',
             eventPayload: { moderatorId, reason },
             patch: { errorCode: ErrorCodes.SCREENING_REJECTED },
           });
@@ -153,7 +143,6 @@ export class PostgresScreeningRepository extends ScreeningRepository {
 
   async appeal(input: AppealRejectionInput): Promise<Result<boolean, DatabaseUnavailable>> {
     const { id, videoId, authorId, message } = input;
-    const edge = SCREENING_TRANSITIONS.appeal;
 
     return fromPromise(
       () =>
@@ -168,9 +157,7 @@ export class PostgresScreeningRepository extends ScreeningRepository {
 
           const moved = await commitVideoTransition(tx, {
             videoId,
-            from: edge.from,
-            to: edge.to,
-            eventType: edge.event,
+            edge: 'appeal',
             eventPayload: { appealId: id, authorId },
             patch: { errorCode: null },
           });

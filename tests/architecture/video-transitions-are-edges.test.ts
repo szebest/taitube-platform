@@ -73,7 +73,7 @@ function isTransitionCall(node: ts.CallExpression): boolean {
   );
 }
 
-/** Every `from` to `to` pair a call writes that is not an edge, and every call whose pair cannot be read. */
+/** Every edge a call names that is not in the table, every pair it writes that is not an edge, and every pair it cannot read. */
 function nonEdges(file: string, source: string): { checked: number; problems: string[] } {
   const sourceFile = parseSource(file, source);
   const problems: string[] = [];
@@ -82,6 +82,17 @@ function nonEdges(file: string, source: string): { checked: number; problems: st
     if (ts.isCallExpression(node) && isTransitionCall(node)) {
       for (const argument of node.arguments) {
         if (!ts.isObjectLiteralExpression(argument)) continue;
+        const edge = property(argument, 'edge');
+        if (edge !== undefined) {
+          checked += 1;
+          if (
+            !ts.isStringLiteralLike(edge) ||
+            !VIDEO_LIFECYCLE.eventNames.some((name) => name === edge.text)
+          ) {
+            problems.push(`${file}: ${edge.getText()} is not an edge of VIDEO_LIFECYCLE`);
+          }
+          continue;
+        }
         const from = property(argument, 'from');
         const to = property(argument, 'to');
         if (from === undefined || to === undefined) continue;
@@ -119,6 +130,10 @@ function nonEdges(file: string, source: string): { checked: number; problems: st
 describe('architecture: video transitions are edges of VIDEO_LIFECYCLE', () => {
   it.each([
     {
+      shape: 'a named edge',
+      source: "videos.transition({ videoId, edge: 'takedown' });",
+    },
+    {
       shape: 'a literal pair',
       source: "videos.transition({ videoId, from: 'UPLOADING', to: 'UPLOADED' });",
     },
@@ -149,6 +164,11 @@ describe('architecture: video transitions are edges of VIDEO_LIFECYCLE', () => {
       shape: 'one illegal source in a list',
       source: "videos.transition({ videoId, from: ['UPLOADING', 'READY'], to: 'PROBING' });",
       problem: 'UPLOADING to PROBING is not an edge',
+    },
+    {
+      shape: 'an edge that is not in the table',
+      source: "videos.transition({ videoId, edge: 'resurrect' });",
+      problem: "'resurrect' is not an edge of VIDEO_LIFECYCLE",
     },
     {
       shape: 'a pair it cannot read',

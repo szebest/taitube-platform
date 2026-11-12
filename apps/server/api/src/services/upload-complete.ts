@@ -73,9 +73,7 @@ async function rejectSizeMismatch(
 
   const transitioned = await ctx.videos.transition({
     videoId: video.id,
-    from: 'UPLOADING',
-    to: 'REJECTED',
-    eventType: 'upload.rejected',
+    edge: 'reject',
     eventPayload: {
       declaredSizeBytes: mismatch.declaredSizeBytes,
       actualSizeBytes,
@@ -140,9 +138,7 @@ export async function completeUpload(
 
   const transitioned = await ctx.videos.transition({
     videoId: video.id,
-    from: 'UPLOADING',
-    to: 'UPLOADED',
-    eventType: 'upload.completed',
+    edge: 'complete',
     eventPayload: { uploadId, sizeBytes: actualSizeBytes },
     traceId: traceparent.split('-')[1],
     outbox: dispatch.outbox,

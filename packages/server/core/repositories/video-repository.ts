@@ -5,6 +5,7 @@ import type {
   Video,
   VideoFormat,
   VideoStatus,
+  VideoTransitionTarget,
   VideoVisibility,
 } from '@vp/domain';
 import type { DatabaseUnavailable, ErrorCode } from '@vp/errors';
@@ -74,11 +75,9 @@ export interface ListPublicVideosResult {
   instant: number;
 }
 
-export interface TransitionVideoOptions {
+/** One compare-and-set over the lifecycle: the update lands only while the video is in the edge's sources. */
+export type TransitionVideoOptions = VideoTransitionTarget & {
   videoId: string;
-  from: VideoStatus | VideoStatus[];
-  to: VideoStatus;
-  eventType: string;
   eventPayload?: Record<string, unknown>;
   traceId?: string | null;
   patch?: Partial<
@@ -88,7 +87,7 @@ export interface TransitionVideoOptions {
     > & { errorCode: ErrorCode | null }
   >;
   outbox?: NewOutboxInput;
-}
+};
 
 type VideoIdleClock = 'updatedAt' | 'deletedAt' | 'readyAt';
 

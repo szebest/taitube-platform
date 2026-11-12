@@ -58,16 +58,38 @@ export const VIDEO_LIFECYCLE_EDGES = {
 export type VideoLifecycleEdge = keyof typeof VIDEO_LIFECYCLE_EDGES;
 
 /**
- * The first edge into `to` that leaves from every state in `from`, for a caller that still writes
- * the pair instead of naming its edge.
+ * A status change named by its edge, or by the `from` to `to` pair a caller that has not named its
+ * edge still writes; the pair resolves to the first edge into `to` that leaves every state in `from`.
  */
-export function videoLifecycleEdgeOf(
-  from: VideoStatus | readonly VideoStatus[],
-  to: VideoStatus
-): VideoLifecycleEdge | undefined {
-  const sources: readonly VideoStatus[] = [from].flat();
-  return (Object.keys(VIDEO_LIFECYCLE_EDGES) as VideoLifecycleEdge[]).find((edge) => {
-    const spec: { from: readonly VideoStatus[]; to: VideoStatus } = VIDEO_LIFECYCLE_EDGES[edge];
-    return spec.to === to && sources.every((source) => spec.from.includes(source));
+export type VideoTransitionTarget =
+  | { edge: VideoLifecycleEdge }
+  | {
+      edge?: undefined;
+      from: VideoStatus | readonly VideoStatus[];
+      to: VideoStatus;
+      eventType: string;
+    };
+
+interface ResolvedVideoTransition {
+  edge: VideoLifecycleEdge | undefined;
+  from: readonly VideoStatus[];
+  to: VideoStatus;
+  event: string;
+}
+
+const EDGE_NAMES = Object.keys(VIDEO_LIFECYCLE_EDGES) as VideoLifecycleEdge[];
+
+export function resolveVideoTransition(target: VideoTransitionTarget): ResolvedVideoTransition {
+  if (target.edge !== undefined) {
+    const { from, to, event }: { from: readonly VideoStatus[]; to: VideoStatus; event: string } =
+      VIDEO_LIFECYCLE_EDGES[target.edge];
+    return { edge: target.edge, from, to, event };
+  }
+
+  const from: readonly VideoStatus[] = [target.from].flat();
+  const edge = EDGE_NAMES.find((name) => {
+    const spec: { from: readonly VideoStatus[]; to: VideoStatus } = VIDEO_LIFECYCLE_EDGES[name];
+    return spec.to === target.to && from.every((source) => spec.from.includes(source));
   });
+  return { edge, from, to: target.to, event: target.eventType };
 }
