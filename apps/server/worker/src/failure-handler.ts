@@ -1,6 +1,6 @@
 import type { JobQueue, QueueJob } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
-import { classifyError, errorCodeOf, isErrorCode } from '@vp/errors';
+import { attemptsFor, classifyError, errorCodeOf, isErrorCode } from '@vp/errors';
 import {
   CaptionsJob,
   DlqJob,
@@ -35,6 +35,7 @@ export function createFailureHandler(deps: FailureHandlerDeps) {
     const payload = (job.data || {}) as Record<string, unknown>;
     const videoId = (payload.videoId as string) || null;
     const attemptsMade = job.attemptsMade ?? 1;
+    if (attemptsMade < attemptsFor(err, job.opts?.attempts ?? 1)) return;
 
     const errorCode = errorCodeOf(err);
     const errorMessage = err.message || 'Job failed';

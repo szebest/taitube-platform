@@ -1,12 +1,12 @@
 import type { QueueJob } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
-import { type DatabaseUnavailable, classifyError, errorCodeOf } from '@vp/errors';
+import { type DatabaseUnavailable, errorCodeOf } from '@vp/errors';
 import { CaptionsJob } from '@vp/job-contracts';
 import type { PipelineMetrics } from '@vp/observability';
 import { type Result, isErr, ok } from '@vp/result';
 
 /**
- * A run that spent its last attempt marks its track `failed`, and the creator can retry it. Only the
+ * A run the failure handler parked marks its track `failed`, and the creator can retry it. Only the
  * track changes: the video's status and version are never touched by captions.
  */
 export async function failCaptionsRun(
@@ -16,9 +16,7 @@ export async function failCaptionsRun(
   error: Error
 ): Promise<Result<void, DatabaseUnavailable>> {
   const parsed = CaptionsJob.safeParse(job.data);
-  const exhausted =
-    classifyError(error) === 'permanent' || (job.attemptsMade ?? 1) >= (job.opts?.attempts ?? 1);
-  if (!(parsed.success && exhausted)) return ok();
+  if (!parsed.success) return ok();
 
   const failed = await repositories.captions.fail({
     id: parsed.data.captionId,

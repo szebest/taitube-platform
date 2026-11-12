@@ -97,6 +97,7 @@ export abstract class JobQueue implements HealthCheckable<QueueUnavailable> {
     return ok([]);
   }
   abstract close(): Promise<Result<void, QueueUnavailable>>;
+  /** BullMQ calls it for every failed attempt, a retried one included: the handler decides which was the last. */
   onFailed?(handler: (job: QueueJob<unknown>, err: Error) => Promise<void> | void): void;
   /** A job whose lock expired before its worker finished: it goes back to waiting, or fails. */
   onStalled?(handler: (jobId: string) => void): void;
