@@ -1,7 +1,12 @@
 import type { ChannelImageCommit } from '@vp/core/repositories';
 import { channelImageUploads as up, channels } from '@vp/db';
-import { channelImageFailed, channelImageReady, type ChannelImageUpload } from '@vp/domain';
-import { and, eq, lt, sql } from 'drizzle-orm';
+import {
+  CHANNEL_IMAGE_UPLOAD_EDGES as EDGES,
+  channelImageFailed,
+  channelImageReady,
+  type ChannelImageUpload,
+} from '@vp/domain';
+import { and, eq, inArray, lt, sql } from 'drizzle-orm';
 import { appendChannelAudit } from './channel-audit-writes';
 import { appendUserEvent } from './postgres-user-event-repository';
 import type { PostgresDatabase } from './types';
@@ -71,7 +76,7 @@ export async function commitUpload(
   const [row] = await tx
     .update(up)
     .set({ status: applied ? 'ready' : 'superseded', updatedAt: new Date() })
-    .where(eq(up.id, upload.id))
+    .where(and(eq(up.id, upload.id), inArray(up.status, [...EDGES.commit.from])))
     .returning();
   if (!row) throw new Error('channel_image_uploads update returned no row');
 
@@ -105,7 +110,7 @@ export async function failUpload(
   const [row] = await tx
     .update(up)
     .set({ status: 'failed', failure: reason, updatedAt: new Date() })
-    .where(eq(up.id, upload.id))
+    .where(and(eq(up.id, upload.id), inArray(up.status, [...EDGES.fail.from])))
     .returning();
   if (!row) throw new Error('channel_image_uploads update returned no row');
 

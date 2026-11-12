@@ -56,6 +56,35 @@ template asks it.
 
 ## Machines
 
+### channel-image-upload
+
+`CHANNEL_IMAGE_UPLOAD`, defined in `packages/universal/domain-rules/src/channels/channel-image-upload.machine.ts`.
+
+Initial: `issued`. Final: `purged`.
+
+| Event | From | To | Recorded as |
+| --- | --- | --- | --- |
+| `queue` | `issued` | `queued` | - |
+| `commit` | `queued` | `ready` | - |
+| `supersede` | `queued` | `superseded` | - |
+| `fail` | `issued`, `queued` | `failed` | - |
+| `purge` | `issued`, `failed`, `superseded`, `ready` | `purged` | - |
+
+```mermaid
+stateDiagram-v2
+  [*] --> issued
+  issued --> queued: queue
+  queued --> ready: commit
+  queued --> superseded: supersede
+  issued --> failed: fail
+  queued --> failed: fail
+  issued --> purged: purge
+  failed --> purged: purge
+  superseded --> purged: purge
+  ready --> purged: purge
+  purged --> [*]
+```
+
 ### channel-invite
 
 `CHANNEL_INVITE`, defined in `packages/universal/domain-rules/src/channel-team/channel-invite.machine.ts`.

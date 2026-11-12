@@ -260,6 +260,18 @@ export function describeChannelImageRepositoryContract(makeSubject: MakeReposito
         expect(expectOk(await images.findById(FIRST))?.status).toBe('purged');
       });
 
+      it('leaves an upload that moved on since it was listed, and the image in use', async () => {
+        await issue(FIRST);
+        await queue(SECOND);
+        expectOk(await images.commit(SECOND, DEFAULT_URL));
+        await images.queue(FIRST, BANNER_DONE);
+
+        expectOk(await images.markPurged([FIRST, SECOND]));
+
+        expect(expectOk(await images.findById(FIRST))?.status).toBe('queued');
+        expect(expectOk(await images.findById(SECOND))?.status).toBe('ready');
+      });
+
       it('accepts an empty list', async () => {
         expectOk(await images.markPurged([]));
       });

@@ -1,4 +1,5 @@
 import * as schema from '@vp/db';
+import { eq } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/pglite';
 import { migratedPglite } from '../../../__tests__/contract/pglite-snapshot';
 import {
@@ -8,6 +9,9 @@ import {
   nextVersion,
   toChannelImageUpload,
 } from '../channel-image-writes';
+
+type Db = Parameters<typeof lockUpload>[0];
+type Row = Parameters<typeof failUpload>[1];
 
 const OWNER_ID = '00000000-0000-7000-8000-0000000000a1';
 const CHANNEL_ID = '00000000-0000-7000-8000-0000000000c1';
@@ -91,6 +95,30 @@ describe('postgres: channel image writes', () => {
 
       expect(failed).toMatchObject({ status: 'failed', failure: 'unreadable' });
       expect(await db.select().from(schema.userEvents)).toHaveLength(1);
+    } finally {
+      await engine.close();
+    }
+  });
+
+  it.each([
+    { name: 'commit', write: (db: Db, row: Row) => commitUpload(db, row, URL) },
+    { name: 'fail', write: (db: Db, row: Row) => failUpload(db, row, 'late') },
+  ])('does not flip a purged upload back on a $name', async ({ write }) => {
+    const { engine, db } = await seeded();
+    try {
+      const stale = expectRow(await lockUpload(db, uploadId(1)));
+      await db
+        .update(schema.channelImageUploads)
+        .set({ status: 'purged' })
+        .where(eq(schema.channelImageUploads.id, uploadId(1)));
+
+      await expect(write(db, stale)).rejects.toThrow();
+
+      const [row] = await db
+        .select()
+        .from(schema.channelImageUploads)
+        .where(eq(schema.channelImageUploads.id, uploadId(1)));
+      expect(row?.status).toBe('purged');
     } finally {
       await engine.close();
     }
