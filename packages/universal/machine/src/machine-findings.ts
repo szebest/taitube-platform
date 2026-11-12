@@ -1,5 +1,6 @@
 import type { Machine } from './define-machine';
 
+/** @internal */
 export function machineFindings<S extends string, E extends string>(
   machine: Machine<S, E>
 ): string[] {

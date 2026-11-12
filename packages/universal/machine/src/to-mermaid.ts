@@ -1,5 +1,6 @@
 import type { Machine } from './define-machine';
 
+/** @internal */
 export function toMermaid<S extends string, E extends string>(machine: Machine<S, E>): string {
   const lines = ['stateDiagram-v2'];
   for (const state of machine.initial) lines.push(`  [*] --> ${state}`);

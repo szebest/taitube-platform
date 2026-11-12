@@ -48,6 +48,7 @@ export function defineMachine<const S extends string, const E extends string>(
   };
 }
 
+/** @internal */
 export function isMachine(value: unknown): value is Machine<string, string> {
   return (
     typeof value === 'object' &&
