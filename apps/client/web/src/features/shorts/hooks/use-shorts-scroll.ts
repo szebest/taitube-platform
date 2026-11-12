@@ -96,7 +96,10 @@ export function useShortsScroll({ count, initialIndex, onIndexChange }: ShortsSc
       return;
     }
 
-    const observer = new ResizeObserver(() => keepInView(node));
+    const observer = new ResizeObserver(() => {
+      laidOutAt.current = node.clientHeight;
+      node.scrollTop = current.current * node.clientHeight;
+    });
     observer.observe(node);
     return () => observer.disconnect();
   }, []);
