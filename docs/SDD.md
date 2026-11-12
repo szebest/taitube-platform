@@ -3240,10 +3240,12 @@ Developer loop: `pnpm dev` runs API + all workers with hot reload against the co
 **Offline mode (local-first, PRD G11/FR-19).** After a one-time `pnpm install` and image pull, the whole stack — upload, probe, transcode, package, SSE, playback, Bull Board, `/docs`, and the observability profile — runs with the network unplugged. Guarantees: every runtime dependency has a compose container (including the dev JWKS issuer from `packages/server/dev-token`); `.env.example` defaults are all-local and work unedited; browser libraries in `tools/hls-test-page` are vendored (no CDN references); the OTel exporter is a no-op when `OTEL_EXPORTER_OTLP_ENDPOINT` is empty; library telemetry is disabled (`TURBO_TELEMETRY_DISABLED=1`, `DO_NOT_TRACK=1`); images contain everything they need at start (no `apt`/`npm` at runtime). `make smoke-offline` runs the smoke test on a compose network with `internal: true` (no egress) and is a CI gate. The external providers in §15.3 exist only for Rung 3.
 
 **One Dockerfile, four images (multi-arch).** The root `Dockerfile` builds `api`, `worker` (runtime-switchable),
-`web` and `studio` as targets; `docker buildx bake` (`docker-bake.hcl`) builds the four side by side.
+`web` and `studio` as targets; `docker buildx bake` (`docker-bake.hcl`) builds the four side by side. The base
+images are pinned by digest (`NODE_IMAGE`, `BUN_IMAGE`): CI builds from main's layer cache, which a moved tag misses
+from the first layer on, so a base image moves only in a commit of its own.
 
 ```dockerfile
-FROM node:24-slim AS toolchain             # pnpm and turbo
+FROM ${NODE_IMAGE} AS toolchain            # node:24-slim@sha256:..., pnpm and turbo
 FROM toolchain AS pruner                   # turbo prune: once for the four apps, once per app
 FROM toolchain AS deps                     # ONE pnpm install, from the joint pruned manifests
 FROM deps AS build-api                     # each app builds from its own pruned source, then
@@ -3251,12 +3253,12 @@ FROM deps AS build-worker                  #   scripts/bundle-app.sh writes what
 FROM deps AS build-web
 FROM deps AS build-studio
 FROM scratch AS api-bundle                 # CI swaps these for bundles it built on the runner
-FROM node:24-slim AS node-runtime          # tini, curl, no npm or corepack, user 10001
+FROM ${NODE_IMAGE} AS node-runtime         # tini, curl, no npm or corepack, user 10001
 FROM node-runtime AS api                   # CMD node --import ./dist/instrument.js dist/main.js
 FROM node-runtime AS client-runtime        # CMD node --run start
 FROM client-runtime AS web                 # srvx on :5173
 FROM client-runtime AS studio              # srvx on :5174
-FROM worker-base-${WORKER_RUNTIME} AS worker   # oven/bun:1.4-slim or node:24-slim, plus ffmpeg
+FROM worker-base-${WORKER_RUNTIME} AS worker   # BUN_IMAGE or NODE_IMAGE, plus ffmpeg
 ```
 
 What an image copies is a bundle, never a workspace package's `dist/`. The API and the worker build with

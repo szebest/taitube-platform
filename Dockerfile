@@ -2,8 +2,11 @@
 # `--target api|worker|web|studio`. They share the toolchain and one `pnpm install`; each app then builds
 # from its own pruned source, so a change to one app leaves the other images' layers where they were.
 ARG WORKER_RUNTIME=bun
+# Pinned by digest: the CI image build reads main's layer cache, which a moved tag misses from its first layer on.
+ARG NODE_IMAGE=node:24-slim@sha256:01d566e8d94d8c619591d78652babfccd3c6992a3dffa9ed5ab39e11cf6c70e9
+ARG BUN_IMAGE=oven/bun:1.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4
 
-FROM node:24-slim AS toolchain
+FROM ${NODE_IMAGE} AS toolchain
 ARG TURBO_VERSION=2.11.7
 WORKDIR /repo
 COPY package.json .
@@ -71,7 +74,7 @@ FROM scratch AS studio-bundle
 COPY --from=build-studio /out /
 
 # The runtimes run the app, not a package manager: npm, corepack and yarn only carry CVEs in here.
-FROM node:24-slim AS node-runtime
+FROM ${NODE_IMAGE} AS node-runtime
 RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends ca-certificates tini curl \
  && rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack /opt/yarn-* \
     /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack /usr/local/bin/yarn /usr/local/bin/yarnpkg \
@@ -104,7 +107,7 @@ EXPOSE 5174
 # whisper.cpp and its models are pinned in apps/server/worker/assets.lock, the screening classifier in screening.lock;
 # a bump is a deliberate commit and Renovate does not read the files. The build runs on bookworm, the older libc
 # of the two worker bases, and links libstdc++ statically, so one binary runs under both.
-FROM node:24-slim AS whisper-build
+FROM ${NODE_IMAGE} AS whisper-build
 RUN apt-get update && apt-get install -y --no-install-recommends build-essential cmake ca-certificates curl \
  && rm -rf /var/lib/apt/lists/*
 WORKDIR /src
@@ -118,7 +121,7 @@ RUN . /assets.lock \
  && cmake --build build --config Release --target whisper-cli -j "$(nproc)" \
  && strip -o /whisper-cli build/bin/whisper-cli
 
-FROM node:24-slim AS fetcher
+FROM ${NODE_IMAGE} AS fetcher
 RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl \
  && rm -rf /var/lib/apt/lists/*
 
@@ -137,8 +140,8 @@ RUN . /screening.lock \
  && curl -fsSL -o "${SCREENING_MODEL_FILE}" "${SCREENING_MODEL_URL}" \
  && printf '%s  %s\n' "${SCREENING_MODEL_SHA256}" "${SCREENING_MODEL_FILE}" | sha256sum -c -
 
-FROM oven/bun:1.4-slim AS worker-base-bun
-FROM node:24-slim AS worker-base-node
+FROM ${BUN_IMAGE} AS worker-base-bun
+FROM ${NODE_IMAGE} AS worker-base-node
 
 FROM worker-base-${WORKER_RUNTIME:-bun} AS worker
 ARG WORKER_RUNTIME=bun
