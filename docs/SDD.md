@@ -281,32 +281,9 @@ Workers publish to Redis channel `video:{videoId}`; each API instance holds one 
 
 ### 3.5 State machine
 
-```mermaid
-stateDiagram-v2
-    [*] --> UPLOADING: POST /uploads
-    UPLOADING --> UPLOADED: complete + HEAD ok
-    UPLOADING --> REJECTED: HEAD mismatch / over cap / bad type
-    UPLOADING --> ABANDONED: reconciler, >24h
-    UPLOADED --> PROBING: probe job starts
-    PROBING --> PROCESSING: probe ok, flow created
-    PROBING --> FAILED: UnrecoverableError
-    PROCESSING --> READY: package ok
-    PROCESSING --> HELD: screening result HOLD, or none
-    HELD --> PROCESSING: moderator approves, package re-enqueued
-    HELD --> REJECTED: moderator rejects
-    REJECTED --> HELD: creator appeals a screening rejection
-    PROCESSING --> FAILED: child exhausted retries / unrecoverable
-    FAILED --> PROBING: admin re-process
-    READY --> DELETED: soft delete + purge job
-    [*] --> LIVE: a stream key publishes (ADR-29)
-    LIVE --> READY: broadcast ends, archive closed
-    LIVE --> FAILED: ended with no segment recorded
-    REJECTED --> [*]
-    ABANDONED --> [*]
-    DELETED --> [*]
-```
+The lifecycle of `videos.status` is data: `VIDEO_LIFECYCLE` in `packages/universal/domain-rules/src/videos/video-lifecycle.machine.ts`, a `defineMachine` table of every edge the pipeline takes, keyed by event, with the `video_events.type` each one writes. Its four screening edges (`hold`, `approve`, `reject`, `appeal`) are `SCREENING_TRANSITIONS`, spread in by name. `UPLOADING` and `LIVE` are the initial states, `DELETED` is final, and `REJECTED` is not, because a creator can appeal a screening rejection. The reprocess and delete eligibility lists (`REPROCESSABLE_STATUSES`, `DELETABLE_STATUSES`) are read off the table, and `tests/architecture/video-transitions-are-edges.test.ts` fails when a production `transition` call writes a pair that is not an edge.
 
-Transitions are enforced in SQL with compare-and-set (`UPDATE … WHERE id = $1 AND status = $expected`), and every transition writes a `video_events` row in the same transaction.
+Transitions are enforced in SQL with compare-and-set (`UPDATE … WHERE id = $1 AND status = $expected`), and every transition writes a `video_events` row in the same transaction. The table says which edge is legal; the compare-and-set persists it.
 
 ---
 

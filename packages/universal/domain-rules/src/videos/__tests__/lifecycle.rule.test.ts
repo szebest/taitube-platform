@@ -11,6 +11,33 @@ import {
 
 const video = aVideo();
 
+describe('@vp/domain-rules: eligible statuses', () => {
+  it.each([
+    {
+      name: 'REPROCESSABLE_STATUSES',
+      actual: REPROCESSABLE_STATUSES,
+      expected: ['READY', 'FAILED', 'PROCESSING'],
+    },
+    {
+      name: 'DELETABLE_STATUSES',
+      actual: DELETABLE_STATUSES,
+      expected: [
+        'UPLOADING',
+        'UPLOADED',
+        'PROBING',
+        'PROCESSING',
+        'READY',
+        'HELD',
+        'FAILED',
+        'REJECTED',
+        'ABANDONED',
+      ],
+    },
+  ])('$name keeps the contents and order the literal list had', ({ actual, expected }) => {
+    expect(actual).toEqual(expected);
+  });
+});
+
 describe('@vp/domain-rules: decideVideoReprocess', () => {
   it.each(REPROCESSABLE_STATUSES.map((status) => ({ status })))(
     'lets the owner reprocess a video in $status',

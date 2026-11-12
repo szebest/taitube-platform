@@ -24,6 +24,7 @@ export interface Machine<S extends string, E extends string> extends MachineSpec
   sources(event: E): readonly S[];
   target(event: E): S;
   matrix(): readonly MatrixCell<S, E>[];
+  hasEdge(from: S, to: S): boolean;
 }
 
 export function defineMachine<const S extends string, const E extends string>(
@@ -39,6 +40,7 @@ export function defineMachine<const S extends string, const E extends string>(
     next,
     sources: (event) => spec.events[event].from,
     target: (event) => spec.events[event].to,
+    hasEdge: (from, to) => eventNames.some((event) => next(from, event) === to),
     matrix: () =>
       spec.states.flatMap((state) =>
         eventNames.map((event) => ({ state, event, next: next(state, event) }))

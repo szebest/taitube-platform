@@ -27,6 +27,15 @@ describe('@vp/machine: defineMachine', () => {
     expect(door().next(state, event)).toBe(next);
   });
 
+  it.each([
+    { from: 'closed', to: 'open', expected: true },
+    { from: 'closed', to: 'closed', expected: true },
+    { from: 'open', to: 'locked', expected: false },
+    { from: 'locked', to: 'open', expected: false },
+  ] as const)('hasEdge($from, $to) is $expected', ({ from, to, expected }) => {
+    expect(door().hasEdge(from, to)).toBe(expected);
+  });
+
   it('reads the sources and the target of an event off the table', () => {
     expect(door().sources('slam')).toEqual(['open', 'closed']);
     expect(door().target('slam')).toBe('closed');
