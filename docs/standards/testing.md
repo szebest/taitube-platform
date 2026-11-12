@@ -216,7 +216,7 @@ own budget through `.github/actions/budget`: `unit-tests` 240 s in each unit sha
 aggregates 1, and 9 minutes for the longest `needs` chain. A budget names the step it measures by its `id`, and its
 limit sits below its job's `timeout-minutes`, so the budget fires first and names the step.
 
-`unit` (vitest, `--shard=i/N`, N derived below) and `unit-bun` (`bun test --shard=i/3`) are matrix jobs named `unit-shard-<i>` and
+`unit` (vitest, `--shard=i/N`, N derived below) and `unit-bun` (`bun test --shard=i/4`) are matrix jobs named `unit-shard-<i>` and
 `unit-bun-shard-<i>`. Two one-step jobs named `unit` and `unit-bun` follow them, fail unless every shard passed
 and print which shard did not, so the required checks in branch protection keep their names. Vitest assigns spec
 files to shards by their recorded cost, not by a hash of the path: `scripts/timings/sequencer.ts` reads
