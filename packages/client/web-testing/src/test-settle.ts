@@ -3,8 +3,11 @@ import type { AnyRouter } from '@tanstack/react-router';
 
 const SETTLE_TIMEOUT_MS = 5_000;
 
-const clients = new Set<QueryClient>();
-const routers = new Set<AnyRouter>();
+const clients: QueryClient[] = [];
+const routers: AnyRouter[] = [];
+
+/** The test that ended last, until the next one starts. */
+const ended: { test?: string } = {};
 
 export class LeakedUpdateError extends Error {
   constructor(test: string) {
@@ -19,30 +22,30 @@ export class LeakedUpdateError extends Error {
 export function trackQueryClients(): void {
   const mount = QueryClient.prototype.mount;
   QueryClient.prototype.mount = function (this: QueryClient) {
-    clients.add(this);
+    if (!clients.includes(this)) clients.push(this);
     mount.call(this);
   };
 }
 
 /** A router the test rendered, which ends the test only once it is idle. */
 export function trackRouter(router: AnyRouter): void {
-  routers.add(router);
+  if (!routers.includes(router)) routers.push(router);
 }
 
 function busy(): string[] {
-  const queries = [...clients].flatMap((client) =>
+  const queries = clients.flatMap((client) =>
     client
       .getQueryCache()
       .findAll({ fetchStatus: 'fetching' })
       .map(({ queryKey }) => `query ${JSON.stringify(queryKey)}`)
   );
-  const mutations = [...clients].flatMap((client) =>
+  const mutations = clients.flatMap((client) =>
     client
       .getMutationCache()
       .findAll({ status: 'pending' })
       .map(({ options }) => `mutation ${JSON.stringify(options.mutationKey ?? 'without a key')}`)
   );
-  const loads = [...routers]
+  const loads = routers
     .filter(({ state }) => state.status !== 'idle' || state.isLoading)
     .map(({ state }) => `navigation to ${state.location.href}`);
   return [...queries, ...mutations, ...loads];
@@ -62,12 +65,10 @@ export async function settle(timeout = SETTLE_TIMEOUT_MS): Promise<void> {
       { timeout }
     );
   } finally {
-    clients.clear();
-    routers.clear();
+    clients.length = 0;
+    routers.length = 0;
   }
 }
-
-let ended: string | undefined;
 
 /**
  * From the end of a test until the next starts, a React update throws `LeakedUpdateError` naming
@@ -79,8 +80,8 @@ export function trapLeakedUpdates(): void {
     configurable: true,
     get() {
       // React reads the event for its own scheduler work too; only a state update is the test's.
-      if (ended !== undefined && /\brequestUpdateLane\b/.test(new Error().stack ?? '')) {
-        throw new LeakedUpdateError(ended);
+      if (ended.test !== undefined && /\brequestUpdateLane\b/.test(new Error().stack ?? '')) {
+        throw new LeakedUpdateError(ended.test);
       }
       return event?.get?.call(window) ?? event?.value;
     },
@@ -88,9 +89,9 @@ export function trapLeakedUpdates(): void {
 }
 
 export function endUpdates(test: string): void {
-  ended = test;
+  ended.test = test;
 }
 
 export function startUpdates(): void {
-  ended = undefined;
+  ended.test = undefined;
 }

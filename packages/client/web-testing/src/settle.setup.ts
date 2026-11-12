@@ -16,6 +16,7 @@ trapLeakedUpdates();
 beforeEach(startUpdates);
 
 afterEach(async ({ task }) => {
+  vi.useRealTimers();
   try {
     await settle();
   } finally {
