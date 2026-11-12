@@ -3,7 +3,7 @@
 # from its own pruned source, so a change to one app leaves the other images' layers where they were.
 ARG WORKER_RUNTIME=bun
 # Pinned by digest: the CI image build reads main's layer cache, which a moved tag misses from its first layer on.
-ARG NODE_IMAGE=node:24-slim@sha256:01d566e8d94d8c619591d78652babfccd3c6992a3dffa9ed5ab39e11cf6c70e9
+ARG NODE_IMAGE=node:24-slim@sha256:dc26ae92c9fb15cf6b1d63e20f0944b2efe0f115b20e00be48fb23fceb061c54
 ARG BUN_IMAGE=oven/bun:1.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4
 
 FROM ${NODE_IMAGE} AS toolchain
