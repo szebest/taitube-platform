@@ -10,7 +10,7 @@ export const VIEWER: UserContext = { id: '22222222-2222-7222-8222-222222222222',
 export const OTHER: UserContext = { id: '55555555-5555-7555-8555-555555555555', role: 'USER' };
 export const VIDEO_ID = '33333333-3333-7333-8333-333333333333';
 export const MISSING_ID = '44444444-4444-7444-8444-444444444444';
-export const START = Date.now() + 1000;
+export const START = Date.UTC(2030, 0, 1);
 
 /** A channel with one public video, three accounts and a clock the spec moves by assigning `clock`. */
 export async function setUpCommentCreate() {
@@ -31,13 +31,14 @@ export async function setUpCommentCreate() {
     await repositories.channels.create({ userId: OWNER.id, handle: 'owner', displayName: 'Owner' })
   ).id;
   for (const user of [OWNER, VIEWER, OTHER]) {
-    expectOk(
+    const record = expectOk(
       await repositories.users.upsert({
         id: user.id,
         email: `${user.id}@example.com`,
         tier: 'free',
       })
     );
+    record.createdAt = new Date(START);
   }
 
   return {
