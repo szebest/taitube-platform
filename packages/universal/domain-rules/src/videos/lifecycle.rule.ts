@@ -15,9 +15,13 @@ import {
 } from './failures';
 import { VIDEO_LIFECYCLE } from './video-lifecycle.machine';
 
-/** A reprocess re-runs the pipeline over the same source, so the source has to have survived. */
+/**
+ * A reprocess re-runs the pipeline over the same source, so the source has to have survived.
+ * @internal
+ */
 export const REPROCESSABLE_STATUSES: readonly VideoStatus[] = VIDEO_LIFECYCLE.sources('reprocess');
 
+/** @internal */
 export const DELETABLE_STATUSES: readonly VideoStatus[] = VIDEO_LIFECYCLE.sources('delete');
 
 export interface VideoLifecycleInput {
