@@ -97,6 +97,7 @@ export function registerServices(c: Container): Container {
       (c) =>
         new VideoService({
           videos: repositories().videos,
+          steps: repositories().steps,
           probeQueue: c.get(Adapters.ProbeQueue),
           channels: repositories().channels,
           cdn: config().cdn,

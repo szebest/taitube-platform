@@ -111,12 +111,12 @@ answer with a `HeadBucket` on the raw bucket.
 ### Domain Repositories (`@vp/core/repositories`)
 - **`VideoRepository`**: `findById`, `findWithDetails`, `create`, `listByOwner`, `listPublic`, `updateMetadata` (optimistic version check), `transition` (atomic CAS that appends to `video_events` and announces the new status to the owner in `user_events`), `scan`, `hardDelete`, `countByStatus`, `countInFlightByOwner`, `updateReactionCounters`.
 - **`UploadRepository`**: `findById`, `findByVideoId`, `findWithVideo`, `create`, `updateStatus`.
-- **`StepRepository`**: `claim`, `complete`, `fail`, `markDead` (all fenced by the worker's token), `heartbeat`, `findByVideoId`, `countRunningStale`.
+- **`StepRepository`**: `claim`, `complete`, `fail`, `markDead` (all fenced by the worker's token), `heartbeat`, `reset` (a reprocess forgets the previous run's steps), `findByVideoId`, `countRunningStale`.
 - **`RenditionRepository`**: `create`, `findByVideoId`, `findByVideoIds`, `update`.
 - **`EventRepository`**: `create`, `findByVideoId`, `findAfterId`, `getLatestEventId`.
 - **`UserEventRepository`**: `append` (the event and the outbox row that publishes it, in one transaction), `listFrom`, `prune`.
 - **`UserRepository`**: `findById`, `upsert`.
-- **`DlqRepository`**: `create`, `findById`, `list`, `updateStatus`.
+- **`DlqRepository`**: `create`, `findById`, `list`, `transition` (a compare-and-set over `DLQ_ENTRY`).
 - **`OutboxRepository`**: `enqueue`, `claimBatch`, `markPublished`, `recordAttempt`, `prune`, `findById`.
 - **`CategoryRepositoryPort`**, **`ChannelRepositoryPort`**, **`VideoReactionRepositoryPort`**, **`SubscriptionRepositoryPort`**: category taxonomy, channel identity, reactions with their counters, and subscriptions with the subscription feed.
 - **`LiveStreamRepositoryPort`**: `ensureIdle`, `findById`, `findByKey`, `findOpenByChannel`, `findByVideoId`, `goLive` (`IDLE -> LIVE` with its `LIVE` video, the video event and the outbox rows in one transaction), `end` (`LIVE -> ENDED`, handing the stream key to the next `IDLE` row), `update` (SDD ADR-29).

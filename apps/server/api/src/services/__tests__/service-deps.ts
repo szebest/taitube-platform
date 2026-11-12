@@ -6,6 +6,7 @@ import {
   InMemoryJobQueue,
   InMemoryMultipartStorage,
   type InMemoryRepositories,
+  InMemoryStepRepository,
   InMemoryVideoRepository,
 } from '@vp/adapters/in-memory';
 import { RedisReactionCacheAdapter } from '@vp/adapters/redis/redis-reaction-cache.adapter';
@@ -54,6 +55,7 @@ export function videoServiceDeps(
     }),
     authorization: new CaslAuthorizationAdapter(),
     paginator: new Paginator(),
+    steps: new InMemoryStepRepository(),
     probeQueue: new InMemoryJobQueue('probe'),
     ...overrides,
   };
