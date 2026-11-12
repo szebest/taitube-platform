@@ -3,7 +3,6 @@ import ts from 'typescript';
 import { loadMachines, renderFor } from '../../scripts/state-machines/run';
 import { parseSource } from './parsed-sources';
 import { productionSources, read, ROOT } from './repo-files';
-import { STATE_LITERAL_COMPARES } from './state-literal-compares';
 import { countStateLiteralCompares } from './state-literal-count';
 
 const RULE_START = '**Lifecycles are tables.**';
@@ -27,6 +26,19 @@ function misplacedDefinitions(file: string, source: string): string[] {
 }
 
 type Counts = Readonly<Record<string, number>>;
+
+/** `<count> <path>` per line: production files with literal status comparisons, a ratchet that only moves down. */
+function readBaseline(): Counts {
+  return Object.fromEntries(
+    read('tests/architecture/state-literal-compares.txt')
+      .split('\n')
+      .filter(Boolean)
+      .map((line) => {
+        const [count = '', file = ''] = line.split(' ');
+        return [file, Number(count)];
+      })
+  );
+}
 
 function ratchetFindings(actual: Counts, baseline: Counts): string[] {
   const findings: string[] = [];
@@ -143,7 +155,7 @@ describe('architecture: state machines', () => {
         .filter(([, count]) => count > 0)
     );
 
-    expect(ratchetFindings(actual, STATE_LITERAL_COMPARES)).toEqual([]);
+    expect(ratchetFindings(actual, readBaseline())).toEqual([]);
   });
 
   it.each([
