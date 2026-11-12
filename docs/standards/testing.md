@@ -49,7 +49,8 @@ rule below that can be checked by a machine is, and the check is named next to i
   `make e2e`) for the in-process acceptance suite. Every fixture the e2e specs read comes out of a plain
   `pnpm gen-video` (`tests/in-process/e2e-fixtures.test.ts`).
 - `pnpm --filter @vp/web test:e2e` and `pnpm --filter @vp/studio test:e2e` (or `make e2e-web`, `make e2e-studio`,
-  the `e2e-web` and `e2e-studio` checks of the `e2e-client` CI job) for each client app's Playwright suite in its
+  the `e2e-web-1`, `e2e-web-2`, `e2e-studio-1` and `e2e-studio-2` checks of the `e2e-client` CI job, each app's suite
+  in two Playwright shards) for each client app's Playwright suite in its
   `e2e/`, against the same in-process stack plus that app built and served. The stack fixture, the config
   factory and the security suites both import live in `tests/playwright/`. The specs are held to the spec
   discipline below, apart from the Vitest rules. Where a page ticket adds its flows:
@@ -250,10 +251,10 @@ measured). It exposes `unit-shards` (the matrix) and `unit-shard-count` (the `/N
   request, which needs "Allow GitHub Actions to create and approve pull requests" on; close and reopen it to run CI
   on it. Do not raise the 240 s budget when a shard misses it: refresh the timings, or lower the target in
   `scripts/timings/plan-shards.ts` if the measured parallelism fell.
-- **One retry, always reported.** CI retries a failed test once (`--retry=1` for vitest, `retries: 1` under `CI`
-  for Playwright and the visual suite). A test that passes on its retry leaves a `passed on retry` warning naming
-  the spec and the test, a table in the job summary, and `ci-health` counts it as a flip: the nightly fails above
-  2% of commits. A pass on retry is a flaky spec to fix or quarantine, never accepted.
+- **One retry, and a pass on it fails the job.** CI retries a failed test once (`--retry=1` for vitest,
+  `retries: 1` under `CI` for Playwright and the visual suite), so the report tells a flaky test from a broken
+  one. A test that passes on its retry leaves a `passed on retry` error naming the spec and the test, a table in
+  the job summary, `ci-health` counts it as a flip, and `scripts/retried/publish.ts` fails the run.
 - **Quarantine** a flaky spec only while it is being fixed: add `{ spec, owner, reason, expires, ticket }` to
   `tests/quarantine.json` (at most five, `quarantine.test.ts` fails an incomplete or expired entry). CI skips it
   (`pnpm quarantine` prints the vitest `--exclude`, `tests/playwright/config.ts` ignores it) and the nightly
@@ -262,6 +263,29 @@ measured). It exposes `unit-shards` (the matrix) and `unit-shard-count` (the `/N
 - **A jsdom test ends once its requests settle**: `@vp/web-testing` waits for the requests a test left in flight
   before it drops the test's handlers, and an unanswered request names the contract to mock
   (`mock it with mockEndpoint(getPreferences, ...)`); answer it in the app's one loader API helper.
+
+### Flaky tests: root-cause, do not retry
+
+A spec that fails on one run and passes on the next has a cause in the spec or the code: find it and fix it. A
+raised timeout, a retry, a sleep or a skip hides it and a later run finds it again; a quarantine (below) only
+buys the time to fix it.
+
+- **A test ends once its work has.** Every client app's jsdom project runs `@vp/web-testing/settle.setup` last:
+  before it unmounts, it waits for the fetching queries and pending mutations of every mounted `QueryClient`, and
+  for every `renderRoute` router, to go idle, and fails the test with what is still running after 5 s. A test
+  that holds a request on purpose releases it before it ends (`heldReply`); an upload it starts, it finishes or
+  cancels. Testing Library's own cleanup is off there (`RTL_SKIP_AUTO_CLEANUP`), since it would unmount first.
+- **A React update after the test ended fails that test** by name (`LeakedUpdateError`). Left alone it surfaces
+  after jsdom's teardown as `window is not defined`, in whichever file ran last on that worker.
+- **A request after the test ended** fails as `UnhandledRequestError ... from "<the test that made it>"`.
+- **Wait for the thing itself** (section 3), never for a proxy that settles earlier: a recorded request is not
+  its handled answer, a server-rendered text is not a hydrated page (`hydrated(locator)` in
+  `tests/playwright/fixtures.ts`), an open room socket is not its preview, and a performance entry's `element` is
+  `null` once hydration replaced the node.
+- **No state shared between tests.** The e2e stack is one per run and its personas outlive a test: a spec that
+  changes what a persona sees signs in as `stranger`, a viewer no other test shares.
+- **Prove a fix by repetition**: the spec 100 times or more, in parallel and under CPU load (Playwright's
+  `--repeat-each`, copies of a vitest spec), before and after, with both pass rates in the PR.
 
 `pnpm ci:health` (`scripts/ci-health.ts`, the nightly `ci-health.yml`) prints green first time per branch, failures
 per job, every budget's margin, flips and passes on retry, merges behind main or merged red (`--merges`) and the
