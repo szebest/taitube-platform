@@ -140,6 +140,9 @@ test.describe('pwa: background sync', () => {
     api,
   }) => {
     const { canvas } = stack.videos;
+    const viewer = await api('viewer');
+    const reset = await viewer.put(`/v1/videos/${canvas.id}/reactions`, { data: { type: 'NONE' } });
+    expect(reset.ok()).toBe(true);
     await signIn('viewer');
     await controlledAt(page, `/watch/${canvas.id}`);
     const cdp = await context.newCDPSession(page);
@@ -169,7 +172,6 @@ test.describe('pwa: background sync', () => {
       lastChance: false,
     });
 
-    const viewer = await api('viewer');
     await expect
       .poll(async () => (await viewer.get(`/v1/videos/${canvas.id}/reactions/me`)).json())
       .toMatchObject({ reaction: 'LIKE' });

@@ -39,15 +39,18 @@ test.describe('watch vitals', () => {
   test('the poster is the largest contentful paint of the server render', async ({
     page,
     stack,
+    api,
   }) => {
+    const { id } = stack.videos.watchable;
+    const { posterUrl } = await (await (await api()).get(`/v1/videos/${id}`)).json();
     await observeVitals(page);
 
-    await page.goto(`/watch/${stack.videos.watchable.id}`);
+    await page.goto(`/watch/${id}`);
     await page.waitForLoadState('networkidle');
 
     const { lcp } = await readVitals(page);
     test.info().annotations.push({ type: 'lcp', description: JSON.stringify(lcp) });
-    expect(lcp?.slot).toBe('stage-poster');
+    expect(lcp?.url).toBe(posterUrl);
   });
 
   test(`loading the discussion shifts the layout by less than ${CLS_BUDGET}`, async ({
