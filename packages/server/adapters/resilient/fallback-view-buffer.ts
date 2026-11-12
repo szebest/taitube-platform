@@ -97,6 +97,6 @@ export class FallbackViewBuffer implements ViewBufferPort {
 
   private failed(): void {
     this.breaker.recordFailure();
-    this.metrics.viewBufferCircuitOpen.set(this.breaker.allows() ? 0 : 1);
+    this.metrics.viewBufferCircuitOpen.set(this.breaker.state() === 'open' ? 1 : 0);
   }
 }
