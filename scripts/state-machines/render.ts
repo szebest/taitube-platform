@@ -35,8 +35,7 @@ No library: it is about 120 lines, and it adds no second error vocabulary and no
 5. **No new \`status === 'X'\` branching outside a machine.** \`tests/architecture/state-machines.test.ts\` counts
    the existing sites per file and fails on growth, and fails again when a count drops without the baseline
    being lowered.
-6. **A behaviour fix is not part of converting a lifecycle.** A conversion reads the table instead of the
-   branches and changes no outcome; a bug it exposes goes to the backlog below.
+6. **A conversion changes no outcome.** It reads the table instead of the branches. A bug it exposes is fixed in its own commit, with a failing spec first, never inside the conversion.
 
 ## Adding one
 
@@ -88,7 +87,7 @@ function backlog(): string {
   );
   return [
     '## Backlog',
-    'Not part of the conversions above, and ranked by value over cost (S up to a day, M two or three days, L a week). Each one changes behaviour or needs an integration run first, so none was folded into a conversion. Lines marked PLAUSIBLE come from reading the code only.',
+    'Not done yet, ranked by value over cost (S up to a day, M two or three days, L a week). Each one changes behaviour or needs a design call or an integration run first.',
     items.join('\n'),
   ].join('\n\n');
 }
