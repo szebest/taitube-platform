@@ -256,7 +256,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4]
+        shard: [1, 2, 3, 4, 5]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -278,7 +278,7 @@ jobs:
           only: *unit-fixtures
 
       - name: Run the api, worker and packages unit tests under Bun (runtime parity gate)
-        run: pnpm test:bun --shard=${{ matrix.shard }}/4
+        run: pnpm test:bun --shard=${{ matrix.shard }}/5
 
       - name: Run the two suites that once raced a real clock twenty times over
         if: matrix.shard == 1
