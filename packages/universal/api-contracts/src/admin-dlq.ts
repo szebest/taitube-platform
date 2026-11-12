@@ -1,9 +1,8 @@
+import { DLQ_STATUSES } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import { z } from 'zod';
 import { defineEndpoint } from './endpoint';
 import { CursorSchema, OptionalPageLimitSchema } from './pagination';
-
-const DLQ_STATUSES = ['PARKED', 'REPLAYED', 'DISCARDED'] as const;
 
 const DlqEntrySchema = z.object({
   id: z.string(),
@@ -73,6 +72,7 @@ export const replayDlqEntry = defineEndpoint({
     401: [ErrorCodes.UNAUTHORIZED],
     403: [ErrorCodes.FORBIDDEN],
     404: [ErrorCodes.DLQ_ENTRY_NOT_FOUND],
+    409: [ErrorCodes.VERSION_CONFLICT],
   },
 });
 
@@ -90,5 +90,6 @@ export const discardDlqEntry = defineEndpoint({
     401: [ErrorCodes.UNAUTHORIZED],
     403: [ErrorCodes.FORBIDDEN],
     404: [ErrorCodes.DLQ_ENTRY_NOT_FOUND],
+    409: [ErrorCodes.VERSION_CONFLICT],
   },
 });

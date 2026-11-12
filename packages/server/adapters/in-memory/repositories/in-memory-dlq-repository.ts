@@ -1,10 +1,9 @@
 import {
   type DlqEntryRecord,
   DlqRepository,
-  type DlqStatus,
+  type DlqTransition,
   type ListDlqEntriesOptions,
   type NewDlqEntryInput,
-  type NewOutboxInput,
   type OutboxRepository,
 } from '@vp/core/repositories';
 import type { DatabaseUnavailable } from '@vp/errors';
@@ -86,19 +85,15 @@ export class InMemoryDlqRepository extends DlqRepository {
     );
   }
 
-  async updateStatus(
-    id: string,
-    status: DlqStatus,
-    patch?: { replayedAt?: Date },
-    outbox?: NewOutboxInput
+  async transition(
+    options: DlqTransition
   ): Promise<Result<DlqEntryRecord | null, DatabaseUnavailable>> {
+    const { id, from, to, replayedAt, outbox } = options;
     const entry = this.entriesMap.get(id);
-    if (!entry) return ok(null);
+    if (!entry || !from.includes(entry.status)) return ok(null);
 
-    entry.status = status;
-    if (patch?.replayedAt !== undefined) {
-      entry.replayedAt = patch.replayedAt;
-    }
+    entry.status = to;
+    if (replayedAt) entry.replayedAt = replayedAt;
 
     if (outbox && this.outboxRepo) {
       const enqueued = await this.outboxRepo.enqueue(outbox);

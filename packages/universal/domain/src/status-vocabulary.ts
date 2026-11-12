@@ -22,6 +22,8 @@ export const UPLOAD_STATUSES = ['OPEN', 'COMPLETED', 'ABORTED'] as const;
 
 export const RENDITION_STATUSES = ['PENDING', 'RUNNING', 'DONE', 'FAILED', 'SKIPPED'] as const;
 
+export const DLQ_STATUSES = ['PARKED', 'REPLAYED', 'DISCARDED'] as const;
+
 export const USER_ROLES = ['USER', 'CREATOR', 'MODERATOR', 'ADMIN'] as const;
 
 export type VideoStatus = (typeof VIDEO_STATUSES)[number];
@@ -30,4 +32,5 @@ export type VideoFormat = (typeof VIDEO_FORMATS)[number];
 export type StepStatus = (typeof STEP_STATUSES)[number];
 export type UploadStatus = (typeof UPLOAD_STATUSES)[number];
 export type RenditionStatus = (typeof RENDITION_STATUSES)[number];
+export type DlqStatus = (typeof DLQ_STATUSES)[number];
 export type UserRole = (typeof USER_ROLES)[number];

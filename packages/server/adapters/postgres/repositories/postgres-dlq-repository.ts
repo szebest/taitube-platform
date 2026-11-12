@@ -1,15 +1,14 @@
 import {
   type DlqEntryRecord,
   DlqRepository,
-  type DlqStatus,
+  type DlqTransition,
   type ListDlqEntriesOptions,
   type NewDlqEntryInput,
-  type NewOutboxInput,
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { type Result, err, fromPromise, map, ok } from '@vp/result';
-import { desc, eq, sql } from 'drizzle-orm';
+import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 import { drizzleWhere, keysetBefore } from '../scopes/index';
 import type { PostgresDatabase } from './types';
 
@@ -92,44 +91,30 @@ export class PostgresDlqRepository extends DlqRepository {
     return map(rows, (found) => found as DlqEntryRecord[]);
   }
 
-  async updateStatus(
-    id: string,
-    status: DlqStatus,
-    patch?: { replayedAt?: Date },
-    outbox?: NewOutboxInput
+  async transition(
+    options: DlqTransition
   ): Promise<Result<DlqEntryRecord | null, DatabaseUnavailable>> {
-    const updateData: { status: DlqStatus; replayedAt?: Date } = { status };
-    if (patch?.replayedAt !== undefined) {
-      updateData.replayedAt = patch.replayedAt;
-    }
-
-    if (!outbox) {
-      const rows = await fromPromise(
-        () => this.db.update(dlq).set(updateData).where(eq(dlq.id, id)).returning(),
-        databaseUnavailable.during('updateStatus')
-      );
-
-      return map(rows, ([row]) => row ?? null);
-    }
-
-    const committed = await fromPromise(
+    const { id, from, to, replayedAt, outbox } = options;
+    return fromPromise(
       () =>
         this.db.transaction(async (tx) => {
-          const rows = await tx.update(dlq).set(updateData).where(eq(dlq.id, id)).returning();
-
-          await tx.insert(schema.outbox).values({
-            id: outbox.id || sql`gen_random_uuid()`,
-            kind: outbox.kind,
-            payload: outbox.payload,
-            createdAt: new Date(),
-            attempts: 0,
-          });
-
-          return rows[0] ?? null;
+          const [row] = await tx
+            .update(dlq)
+            .set({ status: to, ...(replayedAt ? { replayedAt } : {}) })
+            .where(and(eq(dlq.id, id), inArray(dlq.status, [...from])))
+            .returning();
+          if (row && outbox) {
+            await tx.insert(schema.outbox).values({
+              id: outbox.id || sql`gen_random_uuid()`,
+              kind: outbox.kind,
+              payload: outbox.payload,
+              createdAt: new Date(),
+              attempts: 0,
+            });
+          }
+          return row ?? null;
         }),
-      databaseUnavailable.during('updateStatus')
+      databaseUnavailable.during('transition')
     );
-
-    return committed;
   }
 }

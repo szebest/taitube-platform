@@ -1,8 +1,7 @@
+import type { DlqStatus } from '@vp/domain';
 import type { DatabaseUnavailable, ErrorCode } from '@vp/errors';
 import type { Result } from '@vp/result';
 import type { NewOutboxInput } from './outbox-repository';
-
-export type DlqStatus = 'PARKED' | 'REPLAYED' | 'DISCARDED';
 
 export interface DlqEntryRecord {
   id: string;
@@ -40,6 +39,15 @@ export interface ListDlqEntriesOptions {
   status?: DlqStatus;
 }
 
+/** A compare-and-set: the entry moves only while its status is one of `from`. */
+export interface DlqTransition {
+  id: string;
+  from: readonly DlqStatus[];
+  to: DlqStatus;
+  replayedAt?: Date;
+  outbox?: NewOutboxInput;
+}
+
 export abstract class DlqRepository {
   abstract create(entry: NewDlqEntryInput): Promise<Result<DlqEntryRecord, DatabaseUnavailable>>;
   abstract findById(id: string): Promise<Result<DlqEntryRecord | null, DatabaseUnavailable>>;
@@ -47,10 +55,8 @@ export abstract class DlqRepository {
   abstract list(
     options: ListDlqEntriesOptions
   ): Promise<Result<DlqEntryRecord[], DatabaseUnavailable>>;
-  abstract updateStatus(
-    id: string,
-    status: DlqStatus,
-    patch?: { replayedAt?: Date },
-    outbox?: NewOutboxInput
+  /** `null` for an unknown entry or one no longer in `from`; the outbox row is written only on a move. */
+  abstract transition(
+    options: DlqTransition
   ): Promise<Result<DlqEntryRecord | null, DatabaseUnavailable>>;
 }
