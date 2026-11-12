@@ -24,6 +24,12 @@ const variables: UploadVariables = {
   },
 };
 
+const SECOND_ID = 'upload-2';
+
+const SECOND_FILE = new File(['wxyz'], 'second.mp4', { type: 'video/mp4' });
+
+const secondRequest = { ...variables.request, file: SECOND_FILE, filename: 'second.mp4' };
+
 function answerUpload({
   completion = async () => {},
   onComplete = () => {},
@@ -77,6 +83,11 @@ function storageStalls() {
         config?.signal?.addEventListener?.('abort', () => reject(new axios.CanceledError()))
       )
   );
+}
+
+function signalOfPut(file: File) {
+  const call = vi.mocked(axios.put).mock.calls.find(([, body]) => body === file);
+  return call?.[2]?.signal as AbortSignal | undefined;
 }
 
 function keepaliveOfAborts() {
@@ -174,7 +185,7 @@ describe('apps/client/studio: useUploadVideo', () => {
 
     act(() => upload.current.start(ID, variables.request));
     await vi.waitFor(() => expect(axios.put).toHaveBeenCalled());
-    act(() => upload.current.cancel());
+    act(() => upload.current.cancel(ID));
 
     await vi.waitFor(() => expect(aborts).toEqual([UPLOAD_ID]));
   });
@@ -186,10 +197,43 @@ describe('apps/client/studio: useUploadVideo', () => {
 
     act(() => upload.current.start(ID, variables.request));
     await vi.waitFor(() => expect(axios.put).toHaveBeenCalledTimes(4));
-    act(() => upload.current.cancel());
+    act(() => upload.current.cancel(ID));
 
     await vi.waitFor(() => expect(aborts).toEqual([UPLOAD_ID]));
     expect(axios.put).toHaveBeenCalledTimes(4);
+  });
+
+  it('cancels only the upload it names and lets the other one go on', async () => {
+    answerUpload();
+    storageStalls();
+    const upload = renderMutation(() => useUploadVideo(), createQueryClient(), AppProviders);
+
+    act(() => {
+      upload.current.start(ID, variables.request);
+      upload.current.start(SECOND_ID, secondRequest);
+    });
+    await vi.waitFor(() => expect(axios.put).toHaveBeenCalledTimes(2));
+    act(() => upload.current.cancel(ID));
+
+    expect(signalOfPut(variables.request.file)?.aborted).toBe(true);
+    expect(signalOfPut(SECOND_FILE)?.aborted).toBe(false);
+    act(() => upload.current.cancel(SECOND_ID));
+  });
+
+  it('settles every upload it starts, not only the latest', async () => {
+    answerUpload();
+    storageReportsHalfway();
+    const settled: string[] = [];
+    const upload = renderMutation(() => useUploadVideo(), createQueryClient(), AppProviders);
+
+    act(() => {
+      upload.current.start(ID, variables.request, { onSuccess: () => settled.push(ID) });
+      upload.current.start(SECOND_ID, secondRequest, {
+        onSuccess: () => settled.push(SECOND_ID),
+      });
+    });
+
+    await vi.waitFor(() => expect(settled.toSorted()).toEqual([ID, SECOND_ID]));
   });
 
   it.each([
@@ -208,7 +252,7 @@ describe('apps/client/studio: useUploadVideo', () => {
       pageHide(persisted);
 
       expect(keepalives()).toEqual(expected);
-      act(() => upload.current.cancel());
+      act(() => upload.current.cancel(ID));
     }
   );
 
