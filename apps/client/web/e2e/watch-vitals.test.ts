@@ -1,4 +1,4 @@
-import { expect, type Page, test } from '../../../../tests/playwright/fixtures';
+import { expect, hydrated, type Page, test } from '../../../../tests/playwright/fixtures';
 import { CLS_BUDGET, observeVitals, readVitals } from '../../../../tests/playwright/vitals';
 import { videoCard } from './video-card';
 
@@ -83,7 +83,7 @@ test.describe('watch view transition', () => {
     const { id } = stack.videos.watchable;
     await recordTransitions(page);
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await hydrated(videoCard(page, id));
 
     await videoCard(page, id).click();
     await page.waitForURL(`**/watch/${id}`);
@@ -101,7 +101,7 @@ test.describe('watch view transition', () => {
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await recordTransitions(page);
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await hydrated(videoCard(page, id));
 
     await videoCard(page, id).click();
     await page.waitForURL(`**/watch/${id}`);
