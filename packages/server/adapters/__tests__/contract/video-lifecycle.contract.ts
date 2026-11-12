@@ -64,8 +64,8 @@ export function describeVideoLifecycleContract(ctx: VideoContractContext): void 
           await ctx.videos.transition({
             videoId: VIDEO_IDS.a,
             from: ['UPLOADED', 'UPLOADING'],
-            to: 'PROBING',
-            eventType: 'video.probing',
+            to: 'DELETED',
+            eventType: 'video.deleted',
           })
         )
       ).toBe(true);

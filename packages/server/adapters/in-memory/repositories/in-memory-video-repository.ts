@@ -21,6 +21,7 @@ import {
   type VideoWithDetails,
 } from '@vp/core/repositories';
 import { resolveVideoTransition, videoStatusChanged } from '@vp/domain';
+import { VIDEO_LIFECYCLE } from '@vp/domain-rules';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { transitionNotificationJobs } from '@vp/job-contracts';
 import { canReadVideo } from '@vp/permissions';
@@ -142,6 +143,9 @@ export class InMemoryVideoRepository extends VideoRepository {
     const video = this.videosMap.get(videoId);
     if (!video || !from.includes(video.status)) return ok(false);
     if (generation !== undefined && video.generation !== generation) return ok(false);
+    if (!VIDEO_LIFECYCLE.hasEdge(video.status, to)) {
+      throw new Error(`${video.status} -> ${to} is not an edge of VIDEO_LIFECYCLE`);
+    }
 
     const activeSpan = trace.getActiveSpan();
     const effectiveTraceId = traceId || (activeSpan ? activeSpan.spanContext().traceId : null);

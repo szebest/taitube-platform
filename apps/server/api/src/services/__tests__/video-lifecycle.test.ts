@@ -75,13 +75,11 @@ describe('apps/server/api/services: video lifecycle', () => {
     });
 
     it('clears the previous failure so a retried video stops reporting a stale error', async () => {
-      await seed('FAILED');
+      await seed('PROCESSING');
       expectOk(
         await repositories.videos.transition({
           videoId: VIDEO_ID,
-          from: 'FAILED',
-          to: 'FAILED',
-          eventType: 'video.failed',
+          edge: 'fail',
           patch: { errorCode: 'CORRUPT_CONTAINER', errorMessage: 'boom' },
         })
       );

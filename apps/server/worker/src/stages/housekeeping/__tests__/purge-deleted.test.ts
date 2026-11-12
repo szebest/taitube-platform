@@ -162,12 +162,11 @@ describe('housekeeping: purge-deleted', () => {
         outbox: [],
       })
     );
+    expectOk(await repositories.videos.transition({ videoId, edge: 'finalizeLive' }));
     expectOk(
       await repositories.videos.transition({
         videoId,
-        from: 'LIVE',
-        to: 'DELETED',
-        eventType: 'video.deleted',
+        edge: 'delete',
         patch: { deletedAt: hoursAgo(2) },
       })
     );
