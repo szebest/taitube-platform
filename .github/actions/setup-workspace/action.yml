@@ -1,5 +1,5 @@
 name: Set up the workspace
-description: Vite+, pnpm, Node 24 and optionally Bun, the locked install, and the build, replayed from what the `build` job left in the turbo cache for this commit.
+description: Vite+, pnpm, Node 24 and optionally Bun, the locked install, and the build, replayed from what the `build` job of this run handed on, or main's last build.
 
 inputs:
   bun:
@@ -9,7 +9,7 @@ inputs:
     description: Save the pnpm store for this lockfile when the restore missed it; one job per run sets it
     default: 'false'
   build:
-    description: Build every package, which replays the build job's turbo cache for this commit
+    description: Build every package, which replays the turbo cache the build job of this run handed on
     default: 'true'
 
 runs:
@@ -45,13 +45,22 @@ runs:
         path: ${{ runner.temp }}/pnpm-store
         key: ${{ steps.pnpm-store.outputs.cache-primary-key }}
 
-    - name: Restore the turbo cache
+    - name: Restore main's last turbo cache
       uses: actions/cache/restore@v6
       with:
         path: .turbo/cache
         key: turbo-${{ runner.os }}-${{ github.sha }}
         restore-keys: |
           turbo-${{ runner.os }}-
+
+    # Not the Actions cache: a per-commit entry would outlive its run and push the image layers and the
+    # pnpm store out of the repo's 10 GB, so the build job hands its turbo cache on as a one-day artifact.
+    - name: Take the turbo cache the build job of this run handed on
+      continue-on-error: true
+      uses: actions/download-artifact@v8
+      with:
+        name: turbo-cache
+        path: .turbo/cache
 
     - name: Build every package, replayed from the turbo cache when the build job built this commit
       if: inputs.build == 'true'

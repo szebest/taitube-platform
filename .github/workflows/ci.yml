@@ -62,8 +62,17 @@ jobs:
         if: github.event_name != 'pull_request' || steps.changes.outputs.code == 'true'
         run: pnpm -s unit-shards --github-output
 
-      - name: Save the build for the jobs that follow
+      - name: Hand the build to the jobs that follow, for this run only
         if: github.event_name != 'pull_request' || steps.changes.outputs.code == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: turbo-cache
+          path: .turbo/cache
+          include-hidden-files: true
+          retention-days: 1
+
+      - name: Keep main's build as the starting point of the next run's
+        if: github.ref == 'refs/heads/main'
         uses: actions/cache/save@v6
         with:
           path: .turbo/cache
