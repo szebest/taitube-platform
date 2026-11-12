@@ -180,6 +180,17 @@ describe('apps/client/web: useShortsScroll', () => {
     expect(onIndexChange).not.toHaveBeenCalled();
   });
 
+  it('keeps the Short in view when a resize scrolls before the observer reports it', () => {
+    const { feed, onIndexChange } = renderScroll({ initialIndex: 1 });
+    stubHeight(300);
+
+    feed.scrollTop = 800;
+    fireEvent.scroll(feed);
+
+    expect(feed.scrollTop).toBe(300);
+    expect(onIndexChange).not.toHaveBeenCalled();
+  });
+
   it('keeps the Short in view when the container is resized', () => {
     const { feed } = renderScroll({ initialIndex: 1 });
     stubHeight(500);

@@ -9,8 +9,9 @@ interface ShortsScrollOptions {
 
 /**
  * The scroll of the Shorts container: which Short fills it, a move to another, and the Short kept in view
- * when the container changes size. The container snaps; this reads where it came to rest. Chromium can end
- * a smooth move between two snap positions, so where a move a key asked for ends, its Short is put in view.
+ * when the container changes size. The container snaps; this reads where it came to rest. A scroll the
+ * resize itself causes reads an offset of the old height, so it puts the same Short back instead. Chromium can
+ * end a smooth move between two snap positions, so where a move a key asked for ends, its Short is put in view.
  */
 export function useShortsScroll({ count, initialIndex, onIndexChange }: ShortsScrollOptions) {
   const reduced = useReducedMotion();
@@ -18,6 +19,7 @@ export function useShortsScroll({ count, initialIndex, onIndexChange }: ShortsSc
   const heading = useRef<number | undefined>(undefined);
   const [index, setIndex] = useState(initialIndex);
   const current = useRef(index);
+  const laidOutAt = useRef(0);
 
   const show = (next: number) => {
     current.current = next;
@@ -25,10 +27,15 @@ export function useShortsScroll({ count, initialIndex, onIndexChange }: ShortsSc
     onIndexChange(next);
   };
 
+  const keepInView = (node: HTMLElement) => {
+    laidOutAt.current = node.clientHeight;
+    node.scrollTop = current.current * node.clientHeight;
+  };
+
   const attach = (node: HTMLElement | null) => {
     element.current = node;
     if (node) {
-      node.scrollTop = current.current * node.clientHeight;
+      keepInView(node);
     }
   };
 
@@ -47,6 +54,11 @@ export function useShortsScroll({ count, initialIndex, onIndexChange }: ShortsSc
   const handleScroll = () => {
     const node = element.current;
     if (!node || node.clientHeight === 0) {
+      return;
+    }
+
+    if (node.clientHeight !== laidOutAt.current) {
+      keepInView(node);
       return;
     }
 
@@ -84,9 +96,7 @@ export function useShortsScroll({ count, initialIndex, onIndexChange }: ShortsSc
       return;
     }
 
-    const observer = new ResizeObserver(() => {
-      node.scrollTop = current.current * node.clientHeight;
-    });
+    const observer = new ResizeObserver(() => keepInView(node));
     observer.observe(node);
     return () => observer.disconnect();
   }, []);
