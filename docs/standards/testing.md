@@ -279,9 +279,13 @@ buys the time to fix it.
   after jsdom's teardown as `window is not defined`, in whichever file ran last on that worker.
 - **A request after the test ended** fails as `UnhandledRequestError ... from "<the test that made it>"`.
 - **Wait for the thing itself** (section 3), never for a proxy that settles earlier: a recorded request is not
-  its handled answer, a server-rendered text is not a hydrated page (`hydrated(locator)` in
-  `tests/playwright/fixtures.ts`), an open room socket is not its preview, and a performance entry's `element` is
-  `null` once hydration replaced the node.
+  its handled answer, an open room socket is not its preview, a performance entry's `element` is `null` once
+  hydration replaced the node, and `networkidle` is not a hydrated page.
+- **A browser spec acts on a hydrated page.** The shared fixtures' `context` makes every `page.goto` and
+  `page.reload` on an app origin resolve only once React has hydrated the document (`hydrateEveryPage` in
+  `tests/playwright/fixtures.ts`); `hydrated(locator)` waits for one element a later boundary hydrates. Spec
+  discipline fails `waitForTimeout`, Playwright's own `test` in an app browser spec, and a `browser.newContext`
+  whose pages skip the wait.
 - **No state shared between tests.** The e2e stack is one per run and its personas outlive a test: a spec that
   changes what a persona sees signs in as `stranger`, a viewer no other test shares.
 - **Prove a fix by repetition**: the spec 100 times or more, in parallel and under CPU load (Playwright's
