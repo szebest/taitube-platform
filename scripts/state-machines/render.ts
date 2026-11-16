@@ -11,7 +11,7 @@ an invite, a live stream. In this repo each one is a table, not a chain of \`sta
 
 ## Approach
 
-\`@vp/machine\` (\`packages/universal/machine\`, no dependencies) holds \`defineMachine\`. A machine is data: its
+\`@vp/machine\` (\`packages/platform/universal/machine\`, no dependencies) holds \`defineMachine\`. A machine is data: its
 states (reused from the \`*_VALUES\` tuples of \`@vp/domain\`), its initial and final states, and one edge per
 event, \`{ from, to, event? }\`. It answers one question, "is this edge legal from this state":
 

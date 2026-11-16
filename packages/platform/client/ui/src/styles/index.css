@@ -1,0 +1,11 @@
+@import "tailwindcss";
+@import "./fonts.css";
+@import "./generated/themes.css";
+@import "./generated/sets.css";
+@import "./generated/tailwind-theme.css";
+@import "./base.css";
+
+/* The app scans its own tree for classes; these primitives sit outside it. */
+@source "../";
+@source "../../../../../client/components/src";
+@source "../../../forms/src";

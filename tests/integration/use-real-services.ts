@@ -1,8 +1,8 @@
+import { loadEnv } from '../../packages/platform/server/config/src/index';
 import {
   realServiceClaims,
   useRealServices,
 } from '../../packages/server/adapters/__tests__/contract/real-services';
-import { loadEnv } from '../../packages/server/config/src/index';
 
 const env = loadEnv();
 

@@ -1,7 +1,10 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { type TokenFiles, tokenFiles } from '../packages/universal/design-tokens/src/index';
+import {
+  type TokenFiles,
+  tokenFiles,
+} from '../packages/platform/universal/design-tokens/src/index';
 import { UI_SRC } from './scaffold';
 
 const GENERATED_CSS = `${UI_SRC}/styles/generated`;

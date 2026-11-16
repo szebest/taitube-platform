@@ -94,13 +94,13 @@ document is stale — fix it.
 |---|---|---|
 | `@vp/domain` | universal | `packages/universal/domain` |
 | `@vp/errors` | universal | `packages/universal/errors` |
-| `@vp/machine` | universal | `packages/universal/machine` |
-| `@vp/result` | universal | `packages/universal/result` |
-| `@vp/tsconfig` | universal | `packages/universal/tsconfig` |
-| `@vp/concurrency` | server | `packages/server/concurrency` |
-| `@vp/logger` | server | `packages/server/logger` |
+| `@vp/machine` | universal | `packages/platform/universal/machine` |
+| `@vp/result` | universal | `packages/platform/universal/result` |
+| `@vp/tsconfig` | universal | `packages/platform/universal/tsconfig` |
+| `@vp/concurrency` | server | `packages/platform/server/concurrency` |
+| `@vp/logger` | server | `packages/platform/server/logger` |
 | `@vp/storage` | server | `packages/server/storage` |
-| `@vp/vite-preset` | server | `packages/server/vite-preset` |
+| `@vp/vite-preset` | server | `packages/platform/server/vite-preset` |
 
 ### T2 — Contracts & policy
 

@@ -13,7 +13,12 @@ import { read, trackedFiles } from './repo-files';
 
 const KIT: Pkg = { name: '@kit/ok', dir: 'packages/platform/universal/ok', layer: 2, deps: [] };
 const APP: Pkg = { name: '@vp/domain', dir: 'packages/universal/domain', layer: 2, deps: [] };
-const MOVING: Pkg = { name: '@vp/result', dir: 'packages/universal/result', layer: 1, deps: [] };
+const MOVING: Pkg = {
+  name: '@vp/result',
+  dir: 'packages/platform/universal/result',
+  layer: 1,
+  deps: [],
+};
 
 const CONTEXT: Context = {
   byName: new Map([KIT, APP, MOVING].map((pkg) => [pkg.name, pkg])),

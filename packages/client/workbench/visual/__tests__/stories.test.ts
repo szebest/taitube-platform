@@ -22,7 +22,7 @@ describe('@vp/workbench: the stories a change can move', () => {
     { label: 'no diff (main)', changed: undefined, picked: [BUTTON, CARD] },
     {
       label: 'a change beside a story',
-      changed: ['packages/client/ui/src/button/button.variants.ts'],
+      changed: ['packages/platform/client/ui/src/button/button.variants.ts'],
       picked: [BUTTON],
     },
     {
@@ -42,7 +42,7 @@ describe('@vp/workbench: the stories a change can move', () => {
     },
     {
       label: 'a theme change',
-      changed: ['packages/client/ui/src/themes/sand/index.ts'],
+      changed: ['packages/platform/client/ui/src/themes/sand/index.ts'],
       picked: [BUTTON, CARD],
     },
     {

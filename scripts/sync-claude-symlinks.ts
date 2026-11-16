@@ -1,7 +1,7 @@
 import { lstatSync, readlinkSync, rmSync, symlinkSync } from 'node:fs';
 import { glob } from 'node:fs/promises';
 import { dirname, join, relative, resolve } from 'node:path';
-import { createLogger } from '../packages/server/logger/src/index';
+import { createLogger } from '../packages/platform/server/logger/src/index';
 
 const ROOT = resolve(import.meta.dirname, '..');
 const check = process.argv.includes('--check');

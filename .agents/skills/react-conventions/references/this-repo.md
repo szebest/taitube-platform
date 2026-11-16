@@ -1,6 +1,6 @@
 # This repo
 
-React lives in `apps/client/web` and `packages/client/intl-react`. The web app's own rules
+React lives in `apps/client/web` and `packages/platform/client/intl-react`. The web app's own rules
 are `apps/client/web/AGENTS.md`, which wins over SKILL.md: its stack table, folders
 (`routes/`, `features/<feature>/`, `integrations/`), loaders and query factories, `#app/`
 imports, the design system and its numbered rules.

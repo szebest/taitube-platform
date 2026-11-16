@@ -9,7 +9,7 @@ Instructions for any coding agent working on `@vp/observability`.
 ## 1. Scope & Purpose
 
 `@vp/observability` provides the shared metrics and tracing for the API and the worker. Logging is not
-here: it lives in [`@vp/logger`](../logger/AGENTS.md), and this package neither re-exports it nor imports
+here: it lives in [`@vp/logger`](../../platform/server/logger/AGENTS.md), and this package neither re-exports it nor imports
 `pino` (`zero-matches.test.ts`).
 
 Tier `server`, `vp.layer` 2 (it depends on `@vp/result`); its dependencies are in [package.json](package.json).

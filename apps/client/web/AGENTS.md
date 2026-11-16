@@ -344,7 +344,7 @@ for a signed-in viewer ([ticket 99](../../../docs/tickets/99-notifications.md)).
 
 ### The design system (`@vp/ui`)
 
-The primitives, the tokens and the theme live in `@vp/ui`; its [AGENTS.md](../../../packages/client/ui/AGENTS.md)
+The primitives, the tokens and the theme live in `@vp/ui`; its [AGENTS.md](../../../packages/platform/client/ui/AGENTS.md)
 holds the rules. This app links `@vp/ui/styles.css` and mounts the root providers once, in
 `__root.tsx`; every primitive and kit component is shown in the workbench (`@vp/workbench`), not in the app.
 

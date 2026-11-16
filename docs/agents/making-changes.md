@@ -13,7 +13,7 @@ this repo:
 - `pnpm knip` already fails an unused export; dead fields still go in the report.
 - **Generated files are read only where you touch them**: `pnpm-lock.yaml`,
   `packages/universal/api-contracts/openapi.yaml` (`pnpm gen:contracts`), `docs/design/tokens.json` and
-  `packages/client/ui/src/styles/generated/` (`pnpm gen:tokens`), the generated sections of `docs/tickets/README.md`.
+  `packages/platform/client/ui/src/styles/generated/` (`pnpm gen:tokens`), the generated sections of `docs/tickets/README.md`.
 
 ## Code shape, here
 

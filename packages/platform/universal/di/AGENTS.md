@@ -1,7 +1,7 @@
 # AGENTS.md - @kit/di (tokens and registry)
 
 > Tier rules for this directory: [packages/AGENTS.md](../../../AGENTS.md) · composition on top of it:
-> [@vp/composition](../../../server/composition/AGENTS.md)
+> [@vp/composition](../../server/composition/AGENTS.md)
 
 ## 1. Scope
 

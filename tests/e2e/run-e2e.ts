@@ -1,4 +1,4 @@
-import { type Logger, createLogger } from '../../packages/server/logger/src/index';
+import { type Logger, createLogger } from '../../packages/platform/server/logger/src/index';
 import { E2ERunner } from './e2e-runner';
 
 async function main(log: Logger) {

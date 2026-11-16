@@ -2,7 +2,7 @@ import { type ChildProcess, execFileSync, spawn } from 'node:child_process';
 import { once } from 'node:events';
 import { parseArgs } from 'node:util';
 import type { LiveChatMessageView, LiveChatServerFrame, LiveStreamView } from '@vp/api-contracts';
-import { mintToken } from '../../packages/server/dev-token/src/index';
+import { mintToken } from '../../packages/platform/server/dev-token/src/index';
 
 const { values } = parseArgs({
   options: {

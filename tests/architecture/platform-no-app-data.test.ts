@@ -38,7 +38,7 @@ function appData(file: string, source: string): string[] {
 const PACKAGES: Pkg[] = [
   { name: '@vp/domain', dir: 'packages/universal/domain', layer: 2, deps: [] },
   { name: '@vp/web', dir: 'apps/client/web', layer: 6, deps: [] },
-  { name: '@vp/result', dir: 'packages/universal/result', layer: 1, deps: [] },
+  { name: '@vp/result', dir: 'packages/platform/universal/result', layer: 1, deps: [] },
   { name: '@kit/di', dir: 'packages/platform/universal/di', layer: 2, deps: [] },
 ];
 const PENDING = new Set(['@vp/result']);

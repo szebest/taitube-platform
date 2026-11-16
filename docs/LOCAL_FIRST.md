@@ -13,7 +13,7 @@ The `video-pipeline` system is engineered from the ground up to be **local-first
 | **Database** | PostgreSQL 18 (local or compose) | Drizzle ORM, atomic migrations |
 | **Queue & Pub/Sub** | Redis 8 (`noeviction` + AOF) | Local BullMQ and SSE fanout |
 | **Object Storage** | MinIO (`raw` and `public` buckets) | Full S3 API parity with presigned PUT |
-| **Authentication** | Ed25519 JWT issuer (`packages/server/dev-token`) | Deterministic offline dev keypair & JWKS |
+| **Authentication** | Ed25519 JWT issuer (`packages/platform/server/dev-token`) | Deterministic offline dev keypair & JWKS |
 | **Video Processing** | Local FFmpeg 6/7 binary | Bundled inside worker Docker image |
 | **Captions** | whisper.cpp `whisper-cli` with the Whisper small and Silero VAD models | Built and fetched at image build, pinned and checksummed in `apps/server/worker/assets.lock`; `/opt/whisper` in the worker image |
 | **HLS Player** | Vendored `hls.js` (`tools/hls-test-page`) | Zero CDN scripts or remote fonts |

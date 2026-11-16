@@ -1,9 +1,9 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { parseTokenSet } from '../../packages/platform/universal/design-tokens/src/index';
 import { expectOk } from '../../packages/server/testing/src/result';
 import { runEntrypoint } from '../../packages/server/testing/src/run-entrypoint';
-import { parseTokenSet } from '../../packages/universal/design-tokens/src/index';
 import { REGISTRY, UI_SRC } from '../scaffold';
 import { uiTree } from './ui-tree';
 

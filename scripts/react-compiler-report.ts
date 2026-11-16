@@ -1,7 +1,7 @@
 import { spawnSync } from 'node:child_process';
 import { glob, readFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
-import { compilerDiagnostics } from '../packages/server/vite-preset/src/react-plugins';
+import { compilerDiagnostics } from '../packages/platform/server/vite-preset/src/react-plugins';
 import { tierGlob } from './workspace-packages';
 
 const SOURCES = ['apps/client/*/src/**/*.{ts,tsx}', `${tierGlob('client')}/*/src/**/*.{ts,tsx}`];

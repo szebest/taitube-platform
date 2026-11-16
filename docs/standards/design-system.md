@@ -9,11 +9,11 @@ architecture tests hold. Ticket: [95](../tickets/95-design-system-2.md).
 
 | What | Where | Import |
 |---|---|---|
-| Schemas, generators, option unions | `packages/universal/design-tokens` | `@vp/design-tokens` |
-| A token set | `packages/client/ui/src/tokens/<kebab-group>/<id>/` | `@vp/ui/tokens/<kebab-group>/<id>` |
-| A theme | `packages/client/ui/src/themes/<name>/` | `@vp/ui/themes/<name>` |
-| What ships | `packages/client/ui/src/appearance/registry.ts` | `@vp/ui/appearance/registry` |
-| A primitive | `packages/client/ui/src/primitives/<name>/` | `@vp/ui` |
+| Schemas, generators, option unions | `packages/platform/universal/design-tokens` | `@vp/design-tokens` |
+| A token set | `packages/platform/client/ui/src/tokens/<kebab-group>/<id>/` | `@vp/ui/tokens/<kebab-group>/<id>` |
+| A theme | `packages/platform/client/ui/src/themes/<name>/` | `@vp/ui/themes/<name>` |
+| What ships | `packages/platform/client/ui/src/appearance/registry.ts` | `@vp/ui/appearance/registry` |
+| A primitive | `packages/platform/client/ui/src/primitives/<name>/` | `@vp/ui` |
 | A shared component | `packages/client/components/src/<area>/<name>/` | `@vp/components` |
 | An app kit component | `apps/client/<app>/src/components/<area>/<name>/` | `#app/components/...` |
 | A smart wrapper | `apps/client/<app>/src/features/<feature>/components/` | the feature |

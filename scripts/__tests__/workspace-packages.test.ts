@@ -57,7 +57,7 @@ describe('scripts: workspace packages', () => {
   });
 
   it.each([
-    { path: 'packages/client/ui', tier: 'client' },
+    { path: 'packages/platform/client/ui', tier: 'client' },
     { path: 'packages/platform/client/ui/src/index.ts', tier: 'client' },
     { path: 'apps/server/api', tier: 'server' },
     { path: 'apps/universal/x', tier: null },
@@ -71,7 +71,7 @@ describe('scripts: workspace packages', () => {
     { path: 'packages/server/db/src/client.ts', inTier: true },
     { path: 'packages/platform/server/logger/src/index.ts', inTier: true },
     { path: 'apps/server/api/src/main.ts', inTier: false },
-    { path: 'packages/universal/result/src/index.ts', inTier: false },
+    { path: 'packages/platform/universal/result/src/index.ts', inTier: false },
   ])('counts $path as a server package: $inTier', ({ path, inTier }) => {
     expect(inPackageTier(path, 'server')).toBe(inTier);
   });

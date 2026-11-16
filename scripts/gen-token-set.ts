@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
-import { tokenGroups } from '../packages/universal/design-tokens/src/index';
+import { tokenGroups } from '../packages/platform/universal/design-tokens/src/index';
 import {
   copySetModule,
   groupNamed,

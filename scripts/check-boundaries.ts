@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import { createLogger } from '../packages/server/logger/src/index';
+import { createLogger } from '../packages/platform/server/logger/src/index';
 import { directoryTier, isPlatform, load, type Pkg, type Tier } from './workspace-packages';
 
 const TIER_MAY_IMPORT: Record<Tier, Tier[]> = {
@@ -47,11 +47,23 @@ export function pendingPlatformMoves(
   );
 }
 
+/** Edges from a moved package to an app package that a seam in the same ticket removes; deleted with the last seam. */
+const PENDING_APP_EDGES: ReadonlySet<string> = new Set([
+  '@vp/forms>@vp/web-testing',
+  '@vp/ui>@vp/web-testing',
+  '@vp/web-telemetry>@vp/web-testing',
+  '@vp/web-telemetry>@vp/api-contracts',
+]);
+
 export const dependsOnAppPackage = (
-  pkg: Pick<Pkg, 'dir'>,
+  pkg: Pick<Pkg, 'dir' | 'name'>,
   dep: Pick<Pkg, 'dir' | 'name'>,
   pendingMoves: ReadonlySet<string>
-): boolean => isPlatform(pkg.dir) && !isPlatform(dep.dir) && !pendingMoves.has(dep.name);
+): boolean =>
+  isPlatform(pkg.dir) &&
+  !isPlatform(dep.dir) &&
+  !pendingMoves.has(dep.name) &&
+  !PENDING_APP_EDGES.has(`${pkg.name}>${dep.name}`);
 
 export function checkBoundaries(
   packages: Pkg[] = load(),

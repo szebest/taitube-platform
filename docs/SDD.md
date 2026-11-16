@@ -2152,7 +2152,7 @@ One migration, `0035_watch_parties`, holds every table of ticket [140](tickets/1
 
 ## 6. API Contract
 
-Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>` (RS256/EdDSA, verified against `AUTH_JWKS_URL`; a token signed with the public `packages/server/dev-token` seed is accepted only outside production). Errors follow RFC 9457 `application/problem+json` with a stable `code`.
+Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>` (RS256/EdDSA, verified against `AUTH_JWKS_URL`; a token signed with the public `packages/platform/server/dev-token` seed is accepted only outside production). Errors follow RFC 9457 `application/problem+json` with a stable `code`.
 
 ### 6.1 Endpoints
 
@@ -3264,7 +3264,7 @@ containers' origins.
 
 Developer loop: `pnpm dev` runs API + all workers with hot reload against the compose infrastructure (`make up`); `make up observability` adds the monitoring stack; `pnpm compose-autoscaler` is the Phase-3-lite scaler (§13.2).
 
-**Offline mode (local-first, PRD G11/FR-19).** After a one-time `pnpm install` and image pull, the whole stack — upload, probe, transcode, package, SSE, playback, Bull Board, `/docs`, and the observability profile — runs with the network unplugged. Guarantees: every runtime dependency has a compose container (including the dev JWKS issuer from `packages/server/dev-token`); `.env.example` defaults are all-local and work unedited; browser libraries in `tools/hls-test-page` are vendored (no CDN references); the OTel exporter is a no-op when `OTEL_EXPORTER_OTLP_ENDPOINT` is empty; library telemetry is disabled (`TURBO_TELEMETRY_DISABLED=1`, `DO_NOT_TRACK=1`); images contain everything they need at start (no `apt`/`npm` at runtime). `make smoke-offline` runs the smoke test on a compose network with `internal: true` (no egress) and is a CI gate. The external providers in §15.3 exist only for Rung 3.
+**Offline mode (local-first, PRD G11/FR-19).** After a one-time `pnpm install` and image pull, the whole stack — upload, probe, transcode, package, SSE, playback, Bull Board, `/docs`, and the observability profile — runs with the network unplugged. Guarantees: every runtime dependency has a compose container (including the dev JWKS issuer from `packages/platform/server/dev-token`); `.env.example` defaults are all-local and work unedited; browser libraries in `tools/hls-test-page` are vendored (no CDN references); the OTel exporter is a no-op when `OTEL_EXPORTER_OTLP_ENDPOINT` is empty; library telemetry is disabled (`TURBO_TELEMETRY_DISABLED=1`, `DO_NOT_TRACK=1`); images contain everything they need at start (no `apt`/`npm` at runtime). `make smoke-offline` runs the smoke test on a compose network with `internal: true` (no egress) and is a CI gate. The external providers in §15.3 exist only for Rung 3.
 
 **One Dockerfile, four images (multi-arch).** The root `Dockerfile` builds `api`, `worker` (runtime-switchable),
 `web` and `studio` as targets; `docker buildx bake` (`docker-bake.hcl`) builds the four side by side. The base
@@ -3451,7 +3451,7 @@ Every API replica polls every queue and exports the same depth, so the query tak
 
 The `captions` queue has its own `vp-worker-captions` ScaledObject (min 0, max 4) on the same query, so caption pods scale apart from the transcodes and never take their jobs.
 
-**Compose-level scaler (Phase 3-lite, no Kubernetes):** `packages/server/compose-autoscaler` polls `bullmq_queue_jobs` from the API's `/metrics` every 10 s and runs `docker compose --profile '*' up -d --scale worker-transcode-1080p=N --no-recreate --no-deps worker-transcode-1080p` with the same `min/max/cooldown` semantics — a 120-line TypeScript script that demonstrates the control loop on a laptop.
+**Compose-level scaler (Phase 3-lite, no Kubernetes):** `packages/platform/server/compose-autoscaler` polls `bullmq_queue_jobs` from the API's `/metrics` every 10 s and runs `docker compose --profile '*' up -d --scale worker-transcode-1080p=N --no-recreate --no-deps worker-transcode-1080p` with the same `min/max/cooldown` semantics — a 120-line TypeScript script that demonstrates the control loop on a laptop.
 
 ### 13.3 Tracing (OpenTelemetry)
 
@@ -3464,7 +3464,7 @@ The `captions` queue has its own `vp-worker-captions` ScaledObject (min 0, max 4
 
 ### 13.4 Logging
 
-One `createLogger` in `@vp/logger` (`packages/server/logger`, pino) with two formats. `json`, for the deployables, writes to stdout with an ISO timestamp, the `service` name, and the active span's `traceId`/`spanId` on every line, and redacts `authorization`, `cookie` and `x-admin-token` wherever a headers object is logged. `pretty`, for the CLIs, writes one `level message key=value` line to stderr through a destination of our own. The API hands the `json` logger to Fastify with Fastify's request logging off: the request id is the caller's `x-request-id` when it is a plain token, otherwise a UUID, and is echoed back on the response; `plugins/access-log.ts` writes one `request completed` line per request with `method`, `route` (the template, `unmatched` on a 404), `status` and `durationMs`, and an unhandled error writes one `unhandled exception` line, both carrying `reqId`. The id travels into job payloads as `requestId` beside `traceparent`, and a worker's `LogContext` puts it on every line of that job; stage loggers also bind `videoId`, `jobId` and `attempt`. Nothing in this repo ships the lines anywhere: the SDK exports traces only, so the collector's and Alloy's OTLP log pipelines receive nothing from the apps, and Loki sees only what a log agent outside this repo collects from stdout. `ffmpeg` stderr is not logged: the last 50 lines are kept, and the last 300 characters of them go into the classified error's message, which the failure record stores.
+One `createLogger` in `@vp/logger` (`packages/platform/server/logger`, pino) with two formats. `json`, for the deployables, writes to stdout with an ISO timestamp, the `service` name, and the active span's `traceId`/`spanId` on every line, and redacts `authorization`, `cookie` and `x-admin-token` wherever a headers object is logged. `pretty`, for the CLIs, writes one `level message key=value` line to stderr through a destination of our own. The API hands the `json` logger to Fastify with Fastify's request logging off: the request id is the caller's `x-request-id` when it is a plain token, otherwise a UUID, and is echoed back on the response; `plugins/access-log.ts` writes one `request completed` line per request with `method`, `route` (the template, `unmatched` on a 404), `status` and `durationMs`, and an unhandled error writes one `unhandled exception` line, both carrying `reqId`. The id travels into job payloads as `requestId` beside `traceparent`, and a worker's `LogContext` puts it on every line of that job; stage loggers also bind `videoId`, `jobId` and `attempt`. Nothing in this repo ships the lines anywhere: the SDK exports traces only, so the collector's and Alloy's OTLP log pipelines receive nothing from the apps, and Loki sees only what a log agent outside this repo collects from stdout. `ffmpeg` stderr is not logged: the last 50 lines are kept, and the last 300 characters of them go into the classified error's message, which the failure record stores.
 
 ### 13.5 Dashboards & alerts (committed under `infra/observability/`)
 
@@ -3738,7 +3738,7 @@ Useful references (bookmarks): docs.bullmq.io (Flows, Retrying failing jobs, Goi
 
 ## 16. Environment Variables
 
-One contract for both apps, declared with zod in `packages/server/env-schema` and loaded by `packages/server/config` (fail fast on boot with a readable list of missing/invalid keys). Full annotated template: `.env.example` at the repo root. Secrets are marked 🔒 and carry no default (§11).
+One contract for both apps, declared with zod in `packages/server/env-schema` and loaded by `packages/platform/server/config` (fail fast on boot with a readable list of missing/invalid keys). Full annotated template: `.env.example` at the repo root. Secrets are marked 🔒 and carry no default (§11).
 
 Two schemas, each with named consumers. `AppEnv` (`app-env.ts`) is what `toAppConfig()` reads, and every key in it reaches a consumer: `env-keys-consumed.test.ts` checks every `AppEnv` key is read by `toAppConfig` and every `AppConfig` leaf is read by production source outside `env-schema`. `platform-env.json` is the short list of keys this repo hands to something else, each naming the consumer beside it: data, since no code of ours reads them. Tuning with no key of its own (cache TTLs, housekeeping thresholds, the outbox cadence, the segment uploader's retries) is declared once, as a named constant in `tuning.ts`; no service, stage or adapter holds a numeric default (`no-tuning-literals.test.ts`).
 
@@ -3924,7 +3924,7 @@ Each phase ends with a demo and a **Definition of Done** that is binary. Estimat
 
 ### Phase 0 — Bootstrap (≈ 1 week)
 
-Build: monorepo (pnpm + Turborepo + Biome + vitest), `packages/server/{config,job-contracts,db,storage,ffmpeg,observability,events}` and `packages/universal/errors` skeletons with tests, compose infra (`postgres`, `redis`, `minio`, `minio-init`), Drizzle migration 0001, CI (`typecheck`, `lint`, `unit`, `integration` with service containers), multi-arch image build to GHCR, `packages/server/gen-video`, `packages/server/dev-token`, `tools/hls-test-page`.
+Build: monorepo (pnpm + Turborepo + Biome + vitest), `packages/server/{config,job-contracts,db,storage,ffmpeg,observability,events}` and `packages/universal/errors` skeletons with tests, compose infra (`postgres`, `redis`, `minio`, `minio-init`), Drizzle migration 0001, CI (`typecheck`, `lint`, `unit`, `integration` with service containers), multi-arch image build to GHCR, `packages/server/gen-video`, `packages/platform/server/dev-token`, `tools/hls-test-page`.
 
 **DoD:** `git clone && make up && pnpm test` green on a fresh machine; `pnpm gen-video 60s` produces a playable synthetic MP4; images published for `amd64`+`arm64`.
 
@@ -3942,7 +3942,7 @@ Build: multipart uploads with resume + sweeper + lifecycle rules; ladder selecti
 
 ### Phase 3 — Observe & scale (≈ 3 weeks)
 
-Build: full metrics catalogue; OTel tracing across API → workers (traceparent in job data); Grafana dashboards + alert rules; Loki/Tempo via otel-collector; k3d overlay (Kustomize) with KEDA `ScaledObject`s (Prometheus scaler), HPA for API, graceful shutdown with long grace periods, liveness via heartbeat file; `packages/server/compose-autoscaler` for the non-k8s path; k6 S1–S3 with thresholds; nightly `load-smoke` workflow.
+Build: full metrics catalogue; OTel tracing across API → workers (traceparent in job data); Grafana dashboards + alert rules; Loki/Tempo via otel-collector; k3d overlay (Kustomize) with KEDA `ScaledObject`s (Prometheus scaler), HPA for API, graceful shutdown with long grace periods, liveness via heartbeat file; `packages/platform/server/compose-autoscaler` for the non-k8s path; k6 S1–S3 with thresholds; nightly `load-smoke` workflow.
 
 **DoD:** On k3d: backlog of 1 000 probe jobs → KEDA scales `probe` and `transcode-*` to max within 60 s, drains, returns to 0 after cooldown — captured as a Grafana panel PNG in `docs/load-tests/results/`. One trace shows the full journey of a video. S1–S3 pass thresholds; results table committed.
 

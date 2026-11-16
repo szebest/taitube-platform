@@ -1,5 +1,5 @@
 {
-  "extends": "./packages/universal/tsconfig/base.json",
+  "extends": "./packages/platform/universal/tsconfig/base.json",
   "compilerOptions": {
     "noEmit": true,
     "lib": ["ES2023"],

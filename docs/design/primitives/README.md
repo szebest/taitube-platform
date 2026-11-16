@@ -88,4 +88,4 @@ Each spec ends with the stories it must have. A component is done when the workb
 
 ## Where today's code and the target differ
 
-Today's primitives live in `packages/client/ui/src/*.tsx` with flat exports (`DialogContent`, `TabsTrigger`) and use classes that are not roles (`bg-popover`, `bg-overlay`, `bg-surface-elevated`, `danger-solid`). The specs describe the target; each file names its renames where it matters.
+Today's primitives live in `packages/platform/client/ui/src/*.tsx` with flat exports (`DialogContent`, `TabsTrigger`) and use classes that are not roles (`bg-popover`, `bg-overlay`, `bg-surface-elevated`, `danger-solid`). The specs describe the target; each file names its renames where it matters.

@@ -1,7 +1,7 @@
 # Frontend Structure
 
 How `apps/client/web` and `apps/client/studio` are laid out, what each folder may import and what a file is called.
-Both apps follow the same rules. The kits they share live in `packages/client/ui` and `packages/client/components`
+Both apps follow the same rules. The kits they share live in `packages/platform/client/ui` and `packages/client/components`
 ([design-system.md](design-system.md)); the tiers and layers of the packages are [packages/AGENTS.md](../../packages/AGENTS.md).
 Ticket [131](../tickets/131-frontend-folder-structure-names-and-boundaries.md) introduced the shape.
 

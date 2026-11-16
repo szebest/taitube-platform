@@ -56,7 +56,7 @@ The values are in [tokens.json](tokens.json) under `set.<group>.<implementation>
 ### Each implementation is its own tiny module
 
 ```
-packages/client/ui/src/tokens/
+packages/platform/client/ui/src/tokens/
   shadow/flat/index.ts        exported as @vp/ui/tokens/shadow/flat
   shadow/soft/index.ts        exported as @vp/ui/tokens/shadow/soft
   shadow/deep/index.ts
@@ -124,7 +124,7 @@ theme can never leave a dimension undefined.
 ### One registry decides what ships
 
 ```ts
-// packages/client/ui/src/appearance/registry.ts
+// packages/platform/client/ui/src/appearance/registry.ts
 export const appearance = defineAppearance({
   themes: [sand, nocturne],
   defaultTheme: sand,

@@ -52,7 +52,7 @@ describe('scripts: strip-tw-prefix', () => {
   it('reaches every client app and package, and nothing else', () => {
     const { root, read } = treeOf({
       'apps/client/studio/src/b.ts': "'tw:flex'",
-      'packages/client/ui/src/c.tsx': "'tw:flex'",
+      'packages/platform/client/ui/src/c.tsx': "'tw:flex'",
       'packages/server/core/src/d.ts': "'tw:flex'",
       'docs/design/e.tsx': "'tw:flex'",
     });
@@ -61,7 +61,7 @@ describe('scripts: strip-tw-prefix', () => {
 
     expect(run.stdout).toBe('strip-tw-prefix: 2 files rewritten\n');
     expect(read('apps/client/studio/src/b.ts')).toBe("'flex'");
-    expect(read('packages/client/ui/src/c.tsx')).toBe("'flex'");
+    expect(read('packages/platform/client/ui/src/c.tsx')).toBe("'flex'");
     expect(read('packages/server/core/src/d.ts')).toBe("'tw:flex'");
     expect(read('docs/design/e.tsx')).toBe("'tw:flex'");
   });
