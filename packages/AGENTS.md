@@ -131,6 +131,7 @@ document is stale — fix it.
 | `@vp/domain-rules` | universal | `@vp/domain`, `@vp/errors`, `@vp/permissions`, `@vp/result`, `@vp/validation` |
 | `@vp/messages` | universal | `@vp/errors`, `@vp/intl`, `@vp/result` |
 | `@kit/runtime` | universal | `@kit/di` |
+| `@kit/i18n` | universal | `@kit/di`, `@vp/intl`, `@vp/result` |
 | `@vp/composition` | server | `@kit/di`, `@vp/result` |
 | `@vp/ui` | client | `@vp/design-tokens`, `@vp/result` |
 | `@vp/permissions-react` | client | `@vp/permissions`, `@vp/result` |

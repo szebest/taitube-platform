@@ -91,6 +91,7 @@ taitube-platform/
 │   ├── platform/                # Reusable outside this product: depends on platform packages only
 │   │   └── universal/           # Runs in a browser AND on a server
 │   │       ├── di/              # Typed tokens and an immutable registry whose get returns a Result
+│   │       ├── i18n/            # The typed message engine: kinds, presets, param names, catalogue parity; no words
 │   │       └── runtime/         # Clock, Random, EnvSource, Fetch and CookieJar tokens; node and browser entries
 │   ├── universal/               # Runs in a browser AND on a server
 │   │   ├── api-contracts/       # Zod request/response schemas for every HTTP endpoint

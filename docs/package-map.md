@@ -36,6 +36,7 @@ scope (platform or app) and the tier are the directory and the layer is `vp.laye
 | `@vp/validation` | `packages/universal/validation` | app | universal | T2 | `@vp/errors`, `@vp/result` | `@vp/testing`, `@vp/tsconfig` |
 | `@vp/permissions-react` | `packages/client/permissions-react` | app | client | T3 | `@vp/permissions`, `@vp/result` | `@vp/testing`, `@vp/tsconfig`, `@vp/vite-preset` |
 | `@vp/ui` | `packages/client/ui` | app | client | T3 | `@vp/design-tokens`, `@vp/domain`, `@vp/errors`, `@vp/result` | `@vp/testing`, `@vp/tsconfig`, `@vp/vite-preset`, `@vp/web-testing` |
+| `@kit/i18n` | `packages/platform/universal/i18n` | platform | universal | T3 | `@kit/di`, `@vp/intl`, `@vp/result` | `@vp/testing`, `@vp/tsconfig` |
 | `@kit/runtime` | `packages/platform/universal/runtime` | platform | universal | T3 | `@kit/di` | `@vp/result`, `@vp/testing`, `@vp/tsconfig` |
 | `@vp/composition` | `packages/server/composition` | app | server | T3 | `@kit/di`, `@vp/result` | `@vp/testing`, `@vp/tsconfig` |
 | `@vp/core` | `packages/server/core` | app | server | T3 | `@vp/domain`, `@vp/errors`, `@vp/permissions`, `@vp/result` | `@vp/testing`, `@vp/tsconfig` |

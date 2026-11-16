@@ -228,6 +228,16 @@
         "!dist/**"
       ]
     },
+    "packages/platform/universal/i18n": {
+      "includeEntryExports": false,
+      "entry": ["src/**/type-fixtures/*.ts"],
+      "project": [
+        "**/*.{ts,tsx,mts,mjs,js}!",
+        "!**/__tests__/**!",
+        "!**/*.test.{ts,tsx}!",
+        "!dist/**"
+      ]
+    },
     "packages/platform/*/*": {
       "includeEntryExports": false,
       "project": [
