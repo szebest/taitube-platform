@@ -1,4 +1,5 @@
-import { dirname } from 'node:path';
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import { createLogger } from '../packages/server/logger/src/index';
 import { directoryTier, isPlatform, load, type Pkg, type Tier } from './workspace-packages';
 
@@ -24,7 +25,32 @@ export const BUILD_TOOLING: ReadonlySet<string> = new Set([
   '@vp/web-testing',
 ]);
 
-export function checkBoundaries(packages: Pkg[] = load()): string[] {
+type Destinations = string | { readonly [key: string]: Destinations };
+
+const destinations = (move: Destinations): string[] =>
+  typeof move === 'string' ? [move] : Object.values(move).flatMap(destinations);
+
+/**
+ * The pending-move allowance: an app package that `scripts/package-moves.json` sends, whole or in part,
+ * to a `@kit/*` package still counts as platform for the platform rule. It holds nothing once every
+ * move has landed, and goes with the file.
+ */
+export function pendingPlatformMoves(
+  moves: Readonly<Record<string, Destinations>> = JSON.parse(
+    readFileSync(join(import.meta.dirname, 'package-moves.json'), 'utf8')
+  )
+): ReadonlySet<string> {
+  return new Set(
+    Object.entries(moves)
+      .filter(([, move]) => destinations(move).some((name) => name.startsWith('@kit/')))
+      .map(([name]) => name)
+  );
+}
+
+export function checkBoundaries(
+  packages: Pkg[] = load(),
+  pendingMoves: ReadonlySet<string> = pendingPlatformMoves()
+): string[] {
   const byName = new Map(packages.map((p) => [p.name, p]));
   const errors: string[] = [];
 
@@ -51,7 +77,7 @@ export function checkBoundaries(packages: Pkg[] = load()): string[] {
       if (!dep) continue;
       const how = dev ? 'dev-depends on' : 'depends on';
 
-      if (isPlatform(pkg.dir) && !isPlatform(dep.dir)) {
+      if (isPlatform(pkg.dir) && !isPlatform(dep.dir) && !pendingMoves.has(dep.name)) {
         errors.push(
           `${pkg.name} (platform) ${how} ${dep.name} (app) — a platform package depends, peer-depends and dev-depends only on platform packages`
         );

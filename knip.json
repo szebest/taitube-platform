@@ -229,6 +229,7 @@
       ]
     },
     "packages/platform/*/*": {
+      "includeEntryExports": false,
       "project": [
         "**/*.{ts,tsx,mts,mjs,js}!",
         "!**/__tests__/**!",

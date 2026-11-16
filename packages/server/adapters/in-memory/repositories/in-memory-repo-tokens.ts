@@ -1,4 +1,4 @@
-import { token } from '@vp/composition';
+import { token } from '@kit/di';
 import type { InMemoryCaptionRepository } from './in-memory-caption-repository';
 import type { InMemoryCategoryRepository } from './in-memory-category-repository';
 import type { InMemoryChannelAuditRepository } from './in-memory-channel-audit-repository';

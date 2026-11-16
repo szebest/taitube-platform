@@ -1,7 +1,7 @@
+import { token } from '@kit/di';
 import { err, ok } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { Container, DisposeFailed, closeOnDispose } from '../container';
-import { token } from '../token';
 
 class VideoService {
   constructor(readonly storage: string) {}
@@ -35,6 +35,14 @@ describe('packages/composition: Container', () => {
     const service: VideoService = c.get(VideoServiceToken);
 
     expect(service.storage).toBe('raw');
+  });
+
+  it('resolves by identity, so two tokens sharing a name never collide', () => {
+    const raw = token<string>('Bucket');
+    const published = token<string>('Bucket');
+    const c = new Container().provide(raw, () => 'raw').provide(published, () => 'public');
+
+    expect([c.get(raw), c.get(published)]).toEqual(['raw', 'public']);
   });
 
   it('invokes a factory at most once, and never one that is not resolved', () => {

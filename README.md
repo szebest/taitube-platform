@@ -88,6 +88,10 @@ taitube-platform/
 │       ├── web/                 # The viewer app: React 19 on TanStack Start (SSR, Vite) — see apps/client/web/AGENTS.md
 │       └── studio/              # The creator app on its own origin, the same stack — see apps/client/studio/AGENTS.md
 ├── packages/                    # Shared libraries. The directory IS the runtime tier.
+│   ├── platform/                # Reusable outside this product: depends on platform packages only
+│   │   └── universal/           # Runs in a browser AND on a server
+│   │       ├── di/              # Typed tokens and an immutable registry whose get returns a Result
+│   │       └── runtime/         # Clock, Random, EnvSource, Fetch and CookieJar tokens; node and browser entries
 │   ├── universal/               # Runs in a browser AND on a server
 │   │   ├── api-contracts/       # Zod request/response schemas for every HTTP endpoint
 │   │   ├── design-tokens/       # Design system engine: the token group schemas

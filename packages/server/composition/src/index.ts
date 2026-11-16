@@ -1,3 +1,3 @@
 export * from './container';
 export * from './shutdown';
-export * from './token';
+export { type Token, token } from '@kit/di';

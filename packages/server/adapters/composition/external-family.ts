@@ -1,4 +1,5 @@
-import { type Container, closeOnDispose, token } from '@vp/composition';
+import { token } from '@kit/di';
+import { type Container, closeOnDispose } from '@vp/composition';
 import { CircuitBreaker } from '@vp/concurrency';
 import type { FrameClassifier } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';

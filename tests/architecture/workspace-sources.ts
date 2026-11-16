@@ -12,7 +12,7 @@ export interface WorkspaceSource {
 
 /**
  * Every workspace package by the name its manifest declares, with the directory its source lives in.
- * The architecture suite runs before anything is built, so it resolves `@vp/*` here, not to `dist`.
+ * The architecture suite runs before anything is built, so it resolves workspace packages here, not to `dist`.
  */
 export function workspaceSources(): WorkspaceSource[] {
   return load(REPO)
@@ -23,7 +23,7 @@ export function workspaceSources(): WorkspaceSource[] {
     });
 }
 
-/** `@vp/*` mapped to source, for a Vite config that runs specs against the workspace unbuilt. */
+/** Workspace packages mapped to source, for a Vite config that runs specs against the workspace unbuilt. */
 export function sourceAliases(): { find: RegExp; replacement: string }[] {
   return workspaceSources().flatMap(({ name, src }) => [
     ...(existsSync(join(src, 'index.ts'))

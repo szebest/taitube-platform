@@ -54,6 +54,11 @@ function libSource(file: string, version: ts.ScriptTarget): ts.SourceFile | unde
   return source;
 }
 
+const WORKSPACE_PACKAGES = new Set(workspaceSources().map(({ name }) => name));
+
+const isWorkspaceModule = (specifier: string) =>
+  WORKSPACE_PACKAGES.has(specifier.split('/').slice(0, 2).join('/'));
+
 /**
  * Only this repo's modules and Fastify resolve: a third-party import reads as `any`, which keeps the
  * SDK declarations out of the program. Fastify stays, because `app.config` is typed by augmenting it.
@@ -66,7 +71,7 @@ function workspaceOnlyHost(): ts.CompilerHost {
     libSource(file, ts.ScriptTarget.ES2022) ?? parse(file, version, ...rest);
   host.resolveModuleNameLiterals = (literals, containingFile, redirected, options) =>
     literals.map(({ text }) =>
-      text.startsWith('.') || text.startsWith('@vp/') || text === 'fastify'
+      text.startsWith('.') || isWorkspaceModule(text) || text === 'fastify'
         ? ts.resolveModuleName(text, containingFile, options, host, resolutions, redirected)
         : { resolvedModule: undefined }
     );

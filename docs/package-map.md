@@ -18,8 +18,8 @@ scope (platform or app) and the tier are the directory and the layer is `vp.laye
 | `@vp/result` | `packages/universal/result` | app | universal | T1 | - | `@vp/tsconfig` |
 | `@vp/tsconfig` | `packages/universal/tsconfig` | app | universal | T1 | - | - |
 | `@vp/security-headers` | `packages/client/security-headers` | app | client | T2 | `@vp/result` | `@vp/testing`, `@vp/tsconfig` |
+| `@kit/di` | `packages/platform/universal/di` | platform | universal | T2 | `@vp/result` | `@vp/testing`, `@vp/tsconfig` |
 | `@vp/compose-autoscaler` | `packages/server/compose-autoscaler` | app | server | T2 | `@vp/logger` | `@vp/testing`, `@vp/tsconfig` |
-| `@vp/composition` | `packages/server/composition` | app | server | T2 | `@vp/result` | `@vp/testing`, `@vp/tsconfig` |
 | `@vp/dev-token` | `packages/server/dev-token` | app | server | T2 | `@vp/logger` | `@vp/testing`, `@vp/tsconfig` |
 | `@vp/events` | `packages/server/events` | app | server | T2 | `@vp/errors`, `@vp/result` | `@vp/testing`, `@vp/tsconfig` |
 | `@vp/gen-video` | `packages/server/gen-video` | app | server | T2 | `@vp/logger` | `@vp/testing`, `@vp/tsconfig` |
@@ -36,6 +36,8 @@ scope (platform or app) and the tier are the directory and the layer is `vp.laye
 | `@vp/validation` | `packages/universal/validation` | app | universal | T2 | `@vp/errors`, `@vp/result` | `@vp/testing`, `@vp/tsconfig` |
 | `@vp/permissions-react` | `packages/client/permissions-react` | app | client | T3 | `@vp/permissions`, `@vp/result` | `@vp/testing`, `@vp/tsconfig`, `@vp/vite-preset` |
 | `@vp/ui` | `packages/client/ui` | app | client | T3 | `@vp/design-tokens`, `@vp/domain`, `@vp/errors`, `@vp/result` | `@vp/testing`, `@vp/tsconfig`, `@vp/vite-preset`, `@vp/web-testing` |
+| `@kit/runtime` | `packages/platform/universal/runtime` | platform | universal | T3 | `@kit/di` | `@vp/result`, `@vp/testing`, `@vp/tsconfig` |
+| `@vp/composition` | `packages/server/composition` | app | server | T3 | `@kit/di`, `@vp/result` | `@vp/testing`, `@vp/tsconfig` |
 | `@vp/core` | `packages/server/core` | app | server | T3 | `@vp/domain`, `@vp/errors`, `@vp/permissions`, `@vp/result` | `@vp/testing`, `@vp/tsconfig` |
 | `@vp/db` | `packages/server/db` | app | server | T3 | `@vp/domain`, `@vp/job-contracts`, `@vp/result`, `@vp/storage`, `@vp/validation` | `@vp/testing`, `@vp/tsconfig` |
 | `@vp/env-schema` | `packages/server/env-schema` | app | server | T3 | `@vp/domain`, `@vp/observability`, `@vp/pagination`, `@vp/result` | `@vp/testing`, `@vp/tsconfig` |
@@ -48,7 +50,7 @@ scope (platform or app) and the tier are the directory and the layer is `vp.laye
 | `@vp/forms` | `packages/client/forms` | app | client | T4 | `@vp/errors`, `@vp/result`, `@vp/ui` | `@vp/testing`, `@vp/tsconfig`, `@vp/validation`, `@vp/vite-preset`, `@vp/web-testing` |
 | `@vp/intl-react` | `packages/client/intl-react` | app | client | T4 | `@vp/intl`, `@vp/messages`, `@vp/result` | `@vp/testing`, `@vp/tsconfig`, `@vp/vite-preset` |
 | `@vp/web-telemetry` | `packages/client/web-telemetry` | app | client | T4 | `@vp/api-contracts`, `@vp/result` | `@vp/testing`, `@vp/tsconfig`, `@vp/vite-preset`, `@vp/web-testing` |
-| `@vp/adapters` | `packages/server/adapters` | app | server | T4 | `@vp/composition`, `@vp/concurrency`, `@vp/core`, `@vp/db`, `@vp/dev-token`, `@vp/domain`, `@vp/domain-rules`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/job-contracts`, `@vp/observability`, `@vp/permissions`, `@vp/result`, `@vp/storage`, `@vp/validation` | `@vp/testing`, `@vp/tsconfig` |
+| `@vp/adapters` | `packages/server/adapters` | app | server | T4 | `@kit/di`, `@vp/composition`, `@vp/concurrency`, `@vp/core`, `@vp/db`, `@vp/dev-token`, `@vp/domain`, `@vp/domain-rules`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/job-contracts`, `@vp/observability`, `@vp/permissions`, `@vp/result`, `@vp/storage`, `@vp/validation` | `@vp/testing`, `@vp/tsconfig` |
 | `@vp/config` | `packages/server/config` | app | server | T4 | `@vp/composition`, `@vp/env-schema`, `@vp/logger`, `@vp/result` | `@vp/testing`, `@vp/tsconfig` |
 | `@vp/deploy` | `packages/server/deploy` | app | server | T4 | `@vp/env-schema`, `@vp/job-contracts`, `@vp/result` | `@vp/testing`, `@vp/tsconfig` |
 | `@vp/fingerprint` | `packages/server/fingerprint` | app | server | T4 | `@vp/core`, `@vp/domain`, `@vp/errors`, `@vp/ffmpeg`, `@vp/result` | `@vp/testing`, `@vp/tsconfig` |

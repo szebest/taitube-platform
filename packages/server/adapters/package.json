@@ -75,6 +75,7 @@
     "@aws-sdk/s3-request-presigner": "^3.1148.0",
     "@bull-board/api": "^9.10.4",
     "@casl/ability": "^7.0.1",
+    "@kit/di": "workspace:*",
     "@opentelemetry/api": "^1.9.1",
     "@vp/composition": "workspace:*",
     "@vp/concurrency": "workspace:*",

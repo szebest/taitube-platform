@@ -112,8 +112,8 @@ document is stale — fix it.
 | `@vp/permissions` | universal | `@vp/domain`, `@vp/errors` |
 | `@vp/validation` | universal | `@vp/errors`, `@vp/result` |
 | `@vp/security-headers` | client | `@vp/result` |
+| `@kit/di` | universal | `@vp/result` |
 | `@vp/compose-autoscaler` | server | `@vp/logger` |
-| `@vp/composition` | server | `@vp/result` |
 | `@vp/dev-token` | server | `@vp/logger` |
 | `@vp/events` | server | `@vp/errors`, `@vp/result` |
 | `@vp/gen-video` | server | `@vp/logger` |
@@ -130,6 +130,8 @@ document is stale — fix it.
 | `@vp/api-contracts` | universal | `@vp/domain`, `@vp/errors`, `@vp/pagination`, `@vp/permissions`, `@vp/result`, `@vp/validation` |
 | `@vp/domain-rules` | universal | `@vp/domain`, `@vp/errors`, `@vp/permissions`, `@vp/result`, `@vp/validation` |
 | `@vp/messages` | universal | `@vp/errors`, `@vp/intl`, `@vp/result` |
+| `@kit/runtime` | universal | `@kit/di` |
+| `@vp/composition` | server | `@kit/di`, `@vp/result` |
 | `@vp/ui` | client | `@vp/design-tokens`, `@vp/result` |
 | `@vp/permissions-react` | client | `@vp/permissions`, `@vp/result` |
 | `@vp/core` | server | `@vp/domain`, `@vp/errors`, `@vp/permissions`, `@vp/result` |
@@ -217,10 +219,11 @@ The remaining hole is someone *adding the declaration* to `package.json`. TypeSc
 
 - tier compatibility of every `@vp/*` dependency, peerDependency and devDependency
 - layer direction (strictly down; same-layer is a violation), over the same three groups
-- every manifest sits under `packages/<tier>/`, packages/platform/<tier>/ or `apps/<server|client>/`, and none
+- every manifest sits under `packages/<tier>/`, `packages/platform/<tier>/` or `apps/<server|client>/`, and none
   declares a `vp.tier`
-- a package under packages/platform/ (a platform package, reusable outside this product) depends, peer-depends and
-  dev-depends only on other platform packages, build tooling included
+- a package under `packages/platform/` (a platform package, reusable outside this product) depends, peer-depends and
+  dev-depends only on other platform packages, build tooling included; until its move lands, an app package that
+  `scripts/package-moves.json` sends to `@kit/*` counts as platform
 
 `pnpm boundaries` then runs `scripts/sync-claude-symlinks.ts --check`, which fails when an `AGENTS.md` has no
 `CLAUDE.md` symlink beside it.

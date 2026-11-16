@@ -535,7 +535,11 @@ kept in their own commits, apart from content edits**, so `git log --follow` and
    check; add `scripts/package-moves.json` (old export to new package) and `pnpm gen:package-map`. No moves.
 1. `@kit/di` and `@kit/runtime` as new packages (under `packages/platform/universal/`); `@vp/composition` imports `Token`
    from `@kit/di`. `check-boundaries.ts` learns `packages/platform/<tier>/<name>` and the platform-never-depends-on-app
-   rule (vacuously true, nothing is there yet).
+   rule, with a **pending-move allowance**: an app package that `scripts/package-moves.json` sends, whole or in part, to
+   `@kit/*` counts as platform (so `@kit/di` may depend on `@vp/result`, and a whole move need not wait for the splits
+   its package depends on). The allowance empties as the moves land and is deleted in commit 8. The `node` entry takes
+   the env record `main.ts` read; the `browser` entry adds a `CookieJar` over the page's `cookieStore`; on a server a
+   request owns the cookies, so the app provides that token per request.
 2. **Path indirection** (content): configs and architecture tests that name `packages/<tier>/<pkg>` by literal path find
    packages through the package map instead, and `pnpm-workspace.yaml` gains `packages/platform/*/*`, so the move below
    breaks nothing.
