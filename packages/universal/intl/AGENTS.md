@@ -13,7 +13,7 @@ platform's own `Intl` constructors and nothing else. A formatter takes a tagged 
 `FormatContext` and returns `Result<string, FormatFailure>`.
 
 It is `universal`, layer T2, because ticket 89's server render runs it in Node and the browser runs it
-again on hydration. It depends on `@vp/result` and `@vp/errors` only. The words around a value (the
+again on hydration. It depends on `@vp/result` only, and owns its four failure codes. The words around a value (the
 `views` in `1.2M views`) are copy and live in `@vp/messages`, not here.
 
 ---
