@@ -75,7 +75,8 @@ describe('apps/server/api: serve', () => {
     const log = captureLog();
     const composed = await composeApp({ config: config(), logger: loggerTo(log) });
     const handlers: Array<() => void> = [];
-    const exit = vi.fn();
+    const exited = Promise.withResolvers<void>();
+    const exit = vi.fn(() => exited.resolve());
     const realListen = composed.app.listen.bind(composed.app);
     vi.spyOn(composed.app, 'listen').mockImplementation(((
       ...args: Parameters<typeof realListen>
@@ -88,7 +89,7 @@ describe('apps/server/api: serve', () => {
       ...TIMINGS,
       signals: { env: {}, onSignal: (_signal, handler) => handlers.push(handler), exit },
     });
-    await vi.waitFor(() => expect(exit).toHaveBeenCalled());
+    await exited.promise;
 
     expect(log.text()).not.toContain('API listening');
   });
