@@ -32,7 +32,7 @@ Instructions for any coding agent working on the Taitube distributed worker runt
 
 ### Rule 3: The Consumer Is the Only Throw
 - A stage returns `Result<T, E>` and decides nothing about retries (SDD ADR-24). `composition/stages.module.ts` converts:
-  `if (isErr(outcome)) throw toPipelineError(outcome.error)`, because BullMQ's retry contract *is* the exception
+  `if (isErr(outcome)) throw toPipelineError(errorCodeRegistry, outcome.error)`, because BullMQ's retry contract *is* the exception
   - a stage that returns normally is a completed job.
 - `toPipelineError` lives in `@vp/errors` and reads `RETRY_CLASS`, so ADR-18's classification is decided once
   per code in the vocabulary and the throw site has no judgement left to make. Never classify by inspecting

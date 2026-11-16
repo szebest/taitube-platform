@@ -1,4 +1,4 @@
-import { asThrowable } from '@vp/errors';
+import { asThrowable, errorCodeRegistry } from '@vp/errors';
 import { type Result, err, fromPromise, isErr, ok, tryCatch } from '@vp/result';
 import { z } from 'zod';
 import type { SeedFailure } from './failure';
@@ -93,7 +93,7 @@ export function createApi(ports: SeedPorts, baseUrl: string): Api {
         kind: 'network',
         method,
         path,
-        message: asThrowable(cause).message,
+        message: asThrowable(errorCodeRegistry, cause).message,
       })
     );
     if (isErr(response)) return response;

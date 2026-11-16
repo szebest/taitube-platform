@@ -1,10 +1,8 @@
-import type { ErrorCode } from './error-codes';
-
 export abstract class PipelineError extends Error {
   abstract readonly isRetryable: boolean;
 
   constructor(
-    public readonly code: ErrorCode | string,
+    public readonly code: string,
     message: string,
     public readonly details?: Record<string, unknown>
   ) {
@@ -18,7 +16,7 @@ export class PermanentError extends PipelineError {
   readonly isRetryable = false;
 
   constructor(
-    public readonly code: ErrorCode | string,
+    public readonly code: string,
     message: string,
     public readonly details?: Record<string, unknown>
   ) {

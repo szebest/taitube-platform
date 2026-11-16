@@ -1,5 +1,6 @@
 import { Adapters, queueNamed } from '@vp/adapters/composition';
 import type { Container } from '@vp/composition';
+import { ErrorCodeRegistry, errorCodeRegistry } from '@vp/errors';
 import { createLogger } from '@vp/logger';
 import { MetricsServer } from '@vp/observability';
 import { Paginator } from '@vp/pagination';
@@ -88,6 +89,7 @@ export function registerServices(c: Container): Container {
       )
     )
   )
+    .provide(ErrorCodeRegistry, () => errorCodeRegistry)
     .provide(Services.Logger, () =>
       createLogger({ format: 'json', service: 'vp-api', level: config().logLevel })
     )

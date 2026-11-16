@@ -1,4 +1,5 @@
-import { type InvalidField, type LengthBounds, invalidField, invalidLength } from '../failures';
+import type { LengthBounds } from '../failures';
+import { type InvalidField, invalidField, invalidLength } from '../field-failures';
 
 export type InvalidSlug = InvalidField<{ slug: string; pattern: string; maxLength: number }>;
 export type InvalidCategoryName = InvalidField<LengthBounds>;

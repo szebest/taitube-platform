@@ -90,6 +90,6 @@
     "workbox-build": "7.4.1"
   },
   "vp": {
-    "layer": 6
+    "layer": 9
   }
 }

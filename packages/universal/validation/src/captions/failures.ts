@@ -1,4 +1,4 @@
-import { type InvalidField, invalidField } from '../failures';
+import { type InvalidField, invalidField } from '../field-failures';
 
 export type InvalidCaptionLanguage = InvalidField<{ language: string }>;
 export type InvalidCaptionFile = InvalidField<{ line: number }>;

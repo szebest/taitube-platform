@@ -1,5 +1,5 @@
 import type { QueueJob } from '@vp/core/ports';
-import { type AnyFailure, toPipelineError } from '@vp/errors';
+import { type AnyFailure, errorCodeRegistry, toPipelineError } from '@vp/errors';
 import { type Result, isErr } from '@vp/result';
 
 /**
@@ -12,7 +12,7 @@ export function throughRunner<T, R>(
 ): (job: QueueJob<T>) => Promise<R> {
   return async (job) => {
     const outcome = await processor(job);
-    if (isErr(outcome)) throw toPipelineError(outcome.error);
+    if (isErr(outcome)) throw toPipelineError(errorCodeRegistry, outcome.error);
     return outcome.value;
   };
 }

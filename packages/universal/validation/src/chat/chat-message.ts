@@ -1,5 +1,6 @@
 import { err, ok, type Result } from '@vp/result';
-import { type InvalidField, invalidLength, type LengthBounds } from '../failures';
+import type { LengthBounds } from '../failures';
+import { type InvalidField, invalidLength } from '../field-failures';
 import { normalizePlainText, withinLength } from '../plain-text';
 
 /** Also the `char_length` check every chat table puts on a line. */

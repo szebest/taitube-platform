@@ -17,7 +17,7 @@ export interface CommentBulkServiceDeps {
 
 type Outcome = { ok: true } | { ok: false; code: ErrorCode };
 
-const outcomeOf = (result: Result<unknown, AnyFailure>): Outcome =>
+const outcomeOf = (result: Result<unknown, AnyFailure<ErrorCode>>): Outcome =>
   isErr(result) ? { ok: false, code: result.error.code } : { ok: true };
 
 const isCommentAction = (action: BulkActionBody): action is CommentActionBody =>

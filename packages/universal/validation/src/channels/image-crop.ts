@@ -1,5 +1,5 @@
 import { type Result, err, ok } from '@vp/result';
-import { type InvalidField, invalidField } from '../failures';
+import { type InvalidField, invalidField } from '../field-failures';
 import type { ImageDimensions } from './channel-image-upload';
 
 export interface CropRectInput {

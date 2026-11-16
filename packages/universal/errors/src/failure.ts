@@ -1,6 +1,4 @@
-import type { ErrorCode } from './error-codes';
-
-export type Failure<C extends ErrorCode, D extends object = Record<never, never>> = Readonly<
+export type Failure<C extends string, D extends object = Record<never, never>> = Readonly<
   { code: C; message: string } & D
 >;
 
@@ -9,22 +7,24 @@ export type Failure<C extends ErrorCode, D extends object = Record<never, never>
  * limit it broke. Wire safety is this type, not a per-field judgement at each call site: an input
  * failure names a field, and nothing that reads an entity or an adapter can.
  */
-export type InputFailure<C extends ErrorCode, D extends object = Record<never, never>> = Failure<
+export type InputFailure<C extends string, D extends object = Record<never, never>> = Failure<
   C,
   { field: string } & D
 >;
 
-export interface AnyFailure {
-  readonly code: ErrorCode;
+export interface AnyFailure<C extends string = string> {
+  readonly code: C;
   readonly message: string;
 }
 
-export interface AnyInputFailure extends AnyFailure {
+export interface AnyInputFailure<C extends string = string> extends AnyFailure<C> {
   readonly field: string;
 }
 
-export function isInputFailure(failure: AnyFailure): failure is AnyInputFailure {
-  return typeof (failure as Partial<AnyInputFailure>).field === 'string';
+export function isInputFailure<C extends string>(
+  failure: AnyFailure<C>
+): failure is AnyInputFailure<C> {
+  return typeof Reflect.get(failure, 'field') === 'string';
 }
 
 const OFF_THE_WIRE: ReadonlySet<string> = new Set(['code', 'message', 'cause']);

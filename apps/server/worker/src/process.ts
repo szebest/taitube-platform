@@ -6,7 +6,7 @@ import {
 } from '@vp/composition';
 import { loadEnv } from '@vp/config';
 import { toAppConfig } from '@vp/env-schema';
-import { asThrowable } from '@vp/errors';
+import { asThrowable, errorCodeRegistry } from '@vp/errors';
 import { mediaTools } from '@vp/ffmpeg';
 import { fingerprintTools } from '@vp/fingerprint';
 import { LogContext, type Logger, createLogger } from '@vp/logger';
@@ -62,7 +62,8 @@ async function start(host: ProcessHost): Promise<WorkerProcess> {
   exitOnSignals(host, shutdown);
 
   const started = await runner.start();
-  if (isErr(started) && started.error.type === 'failed') throw asThrowable(started.error.cause);
+  if (isErr(started) && started.error.type === 'failed')
+    throw asThrowable(errorCodeRegistry, started.error.cause);
 
   logger.info(
     { started: runner.started(), queue: runner.worker.name, metricsPort: runner.metricsPort() },

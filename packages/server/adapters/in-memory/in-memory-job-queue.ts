@@ -9,7 +9,12 @@ import {
   type UpsertJobSchedulerOptions,
 } from '@vp/core/ports';
 import { JOB_PRIORITY } from '@vp/domain';
-import { type QueueUnavailable, attemptsFor, queueUnavailable } from '@vp/errors';
+import {
+  type QueueUnavailable,
+  attemptsFor,
+  errorCodeRegistry,
+  queueUnavailable,
+} from '@vp/errors';
 import { type Result, err, ok } from '@vp/result';
 
 export class InMemoryJobQueue extends JobQueue {
@@ -157,7 +162,7 @@ export class InMemoryJobQueue extends JobQueue {
       }
       return;
     } catch (err: unknown) {
-      if ((job.attemptsMade ?? 1) < attemptsFor(err, job.opts?.attempts ?? 1)) {
+      if ((job.attemptsMade ?? 1) < attemptsFor(errorCodeRegistry, err, job.opts?.attempts ?? 1)) {
         this.jobStates.set(job.id, 'delayed');
         this.enqueueWaiting(job);
         if (!this.paused) {
