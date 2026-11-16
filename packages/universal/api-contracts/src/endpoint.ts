@@ -1,3 +1,4 @@
+import type { ApiScope } from '@vp/domain';
 import type { ErrorCode } from '@vp/errors';
 import { z } from 'zod';
 
@@ -9,6 +10,12 @@ type ErrorResponses = Readonly<Record<number, readonly ErrorCode[]>>;
 
 /** Names the channel a studio request acts on; absent, the caller acts on their own. */
 export const CHANNEL_HEADER = 'x-channel-id';
+
+/**
+ * The one session cookie both client apps keep the API bearer token in. The API never reads a
+ * session from it, and refuses a request that carries it beside a personal access token.
+ */
+export const SESSION_COOKIE = 'vp.session';
 
 export interface EndpointContract {
   readonly method: HttpMethod;
@@ -35,6 +42,11 @@ export interface EndpointContract {
    * there does not cover it.
    */
   readonly channelScoped?: true;
+  /**
+   * The scope a personal access token needs to call this route. A route without one is out of a
+   * token's reach: a token never manages tokens, the channel, its team or the session.
+   */
+  readonly scope?: ApiScope;
   readonly params?: z.ZodType;
   readonly query?: z.ZodType;
   readonly body?: z.ZodType;

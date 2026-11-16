@@ -1,6 +1,7 @@
 import type { APIRequestContext } from '@playwright/test';
 import { type Stack, expect, test } from '../../../../../tests/playwright/fixtures';
 import { CHANNEL_ATTEMPTS } from './channel-attempts';
+import { TOKEN_ATTEMPTS } from './token-attempts';
 
 const CALLERS = [
   { caller: 'a normal user', persona: 'viewer', status: 403, code: 'FORBIDDEN' },
@@ -106,6 +107,7 @@ const ATTEMPTS: Attempt[] = [
     target: 'watchable',
   },
   ...CHANNEL_ATTEMPTS,
+  ...TOKEN_ATTEMPTS,
   { name: 'read the comment report queue', method: 'GET', path: () => '/v1/admin/reports' },
   {
     name: 'resolve a comment report',

@@ -253,6 +253,7 @@ export class CreatorStudioService {
       expectedVersion: version,
       patch: toStudioPatch(decided.value),
       userId: user.id,
+      tokenId: user.token?.id,
       auditFields: auditFieldsOf(decided.value),
     });
     if (isErr(outcome)) return outcome;

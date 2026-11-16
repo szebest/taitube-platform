@@ -11,8 +11,9 @@ import {
   type NewCommentRemoval,
   PUBLISHED_AT_CREATION,
 } from '@vp/domain';
-import { commentOutbox } from '@vp/job-contracts';
+import { commentHeldOutbox, commentOutbox } from '@vp/job-contracts';
 import { type SQL, and, eq, ne, or, sql } from 'drizzle-orm';
+import { uuidv7 } from 'uuidv7';
 import { drizzleWhere, notDeletedScope, publicCommentScope } from '../scopes/index';
 import { appendChannelAudit, appendModerationRecord } from './channel-audit-writes';
 import { threadById } from './comment-thread-query';
@@ -86,6 +87,20 @@ export async function publish(
   }
 }
 
+/** The moderators but the author, on their stream and through one job to their `comment.held` webhooks. */
+async function tellHeld(
+  tx: PostgresDatabase,
+  held: CommentThread,
+  moderators: readonly string[]
+): Promise<void> {
+  const recipients = moderators.filter((userId) => userId !== held.authorId);
+  if (recipients.length === 0) return;
+  for (const userId of recipients) await appendUserEvent(tx, { userId, ...commentHeld(held) });
+  await enqueueNotificationJobs(tx, [
+    commentHeldOutbox({ holdId: uuidv7(), commentId: held.id, videoId: held.videoId, recipients }),
+  ]);
+}
+
 export async function insertComment(
   tx: PostgresDatabase,
   input: NewCommentInput
@@ -110,11 +125,7 @@ export async function insertComment(
   }
   const created = await threadById(tx, input.id, { id: input.authorId });
   if (counted && created && video) await publish(tx, created, video);
-  if (created && moderation?.moderationState === 'held') {
-    for (const userId of moderators) {
-      if (userId !== input.authorId) await appendUserEvent(tx, { userId, ...commentHeld(created) });
-    }
-  }
+  if (created && moderation?.moderationState === 'held') await tellHeld(tx, created, moderators);
   return created;
 }
 
@@ -164,11 +175,7 @@ export async function editComment(
   }
 
   const thread = await threadById(tx, id, { id: found.authorId });
-  if (thread && hold) {
-    for (const userId of hold.moderators) {
-      if (userId !== found.authorId) await appendUserEvent(tx, { userId, ...commentHeld(thread) });
-    }
-  }
+  if (thread && hold) await tellHeld(tx, thread, hold.moderators);
   return thread;
 }
 

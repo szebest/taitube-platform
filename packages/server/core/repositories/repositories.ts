@@ -1,3 +1,4 @@
+import type { ApiTokenRepositoryPort } from './api-token-repository';
 import type { CaptionRepository } from './caption-repository';
 import type { CategoryRepositoryPort } from './category-repository';
 import type { ChannelAuditRepositoryPort } from './channel-audit-repository';
@@ -74,6 +75,7 @@ export interface Repositories {
   channelAudit: ChannelAuditRepositoryPort;
   dataExports: DataExportRepositoryPort;
   exportRows: ExportRowRepositoryPort;
+  apiTokens: ApiTokenRepositoryPort;
   videoReactions: VideoReactionRepositoryPort;
   subscriptions: SubscriptionRepositoryPort;
   videoViews: VideoViewRepositoryPort;

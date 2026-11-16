@@ -4,6 +4,7 @@ import { COMMENT_SETTINGS_FIELDS, VIDEO_AUDIT_FIELDS } from '@vp/domain';
 import { publishedAt } from '@vp/intl';
 import { Format, useT } from '@vp/intl-react';
 import { assertNever } from '@vp/result';
+import { Badge } from '@vp/ui';
 import { AuditLogList } from '#app/components/team/audit-log-list';
 import { RoleBadge } from '#app/components/team/role-badge';
 
@@ -116,7 +117,14 @@ export function AuditEntry({ entry }: { entry: AuditEntryView }) {
     <AuditLogList.Item>
       <AuditLogList.Avatar name={actor} imageUrl={entry.actor?.avatarUrl} />
       <AuditLogList.Body>
-        <AuditLogList.Actor>{actor}</AuditLogList.Actor>
+        <AuditLogList.Actor>
+          {actor}
+          {entry.actorTokenId && (
+            <Badge size="sm" variant="outline" className="ms-inline">
+              {tOr('studio.teamAuditViaToken', {}, '')}
+            </Badge>
+          )}
+        </AuditLogList.Actor>
         <AuditLogList.Action>
           {tOr('studio.teamAuditAction', { action: entry.action }, '')}
           <AuditDetail entry={entry} />

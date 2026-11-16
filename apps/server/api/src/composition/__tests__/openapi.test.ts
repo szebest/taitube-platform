@@ -19,7 +19,7 @@ async function buildDocumentedApp() {
 }
 
 describe('apps/server/api/composition: OpenAPI', () => {
-  it('serves a 3.1.0 document with both security schemes', async () => {
+  it('serves a 3.1.0 document with the session, token and admin security schemes', async () => {
     const app = await buildDocumentedApp();
 
     const res = await app.inject({ method: 'GET', url: '/openapi.json' });
@@ -31,6 +31,7 @@ describe('apps/server/api/composition: OpenAPI', () => {
     expect(Object.keys(spec.components.securitySchemes).sort()).toEqual([
       'adminToken',
       'bearerAuth',
+      'personalAccessToken',
     ]);
 
     await app.close();

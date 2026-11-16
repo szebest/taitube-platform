@@ -33,6 +33,7 @@ describe('apps/server/api/composition: services module', () => {
 
     expect(Object.keys(c.get(Services.ServiceSet)).sort()).toEqual([
       'analyticsService',
+      'apiTokenService',
       'bootstrapService',
       'captionService',
       'captionTrackService',

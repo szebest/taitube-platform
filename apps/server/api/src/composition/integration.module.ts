@@ -1,7 +1,13 @@
 import { randomBytes } from 'node:crypto';
 import { Adapters } from '@vp/adapters/composition';
 import type { Container } from '@vp/composition';
-import { ChannelExportService, OEmbedService, WebhookService } from '../services/index';
+import {
+  ApiTokenService,
+  ChannelExportService,
+  OEmbedService,
+  WebhookService,
+} from '../services/index';
+import { nodeApiTokenSecrets } from './api-token-secrets';
 import { Services } from './service-tokens';
 
 export function registerIntegrationServices(c: Container): Container {
@@ -22,6 +28,7 @@ export function registerIntegrationServices(c: Container): Container {
         new WebhookService({
           webhooks: c.get(Adapters.Repositories).webhooks,
           policy: { allowPrivateHosts: c.get(Adapters.Config).webhooks.allowPrivateHosts },
+          dispatcher: c.get(Adapters.WebhookDispatcher),
           newSecret: () => randomBytes(32).toString('hex'),
           now: Date.now,
         })
@@ -35,6 +42,15 @@ export function registerIntegrationServices(c: Container): Container {
           bucket: c.get(Adapters.Config).buckets.raw,
           downloadTtlSeconds: c.get(Adapters.Config).limits.presignTtlSeconds,
           paginator: c.get(Services.Paginator),
+          now: Date.now,
+        })
+    )
+    .provide(
+      Services.ApiTokenService,
+      (c) =>
+        new ApiTokenService({
+          tokens: c.get(Adapters.Repositories).apiTokens,
+          secrets: nodeApiTokenSecrets,
           now: Date.now,
         })
     );

@@ -82,4 +82,30 @@ describe('apps/server/api/routes: contract schema', () => {
     ]).toEqual([true, true]);
     expect(contractSchema(contract).headers).toBeUndefined();
   });
+
+  it('names the scope a token needs, and answers a token refused on it', () => {
+    const schema = contractSchema({ ...contract, scope: 'videos:read' });
+    const answers = (status: number, code: string) =>
+      schema.response[status]?.safeParse({
+        type: 'about:blank',
+        title: 'Refused',
+        status,
+        detail: 'no',
+        code,
+        instance: '/v1/things/1',
+      }).success;
+
+    expect(schema.security).toEqual([{ bearerAuth: [] }, { personalAccessToken: ['videos:read'] }]);
+    expect(contractSchema({ ...contract, anonymous: true, scope: 'videos:read' }).security).toEqual(
+      [{}, { personalAccessToken: ['videos:read'] }]
+    );
+    expect([
+      answers(400, ErrorCodes.API_TOKEN_WITH_SESSION),
+      answers(401, ErrorCodes.UNAUTHORIZED),
+      answers(403, ErrorCodes.API_TOKEN_SCOPE_MISSING),
+      answers(404, ErrorCodes.VIDEO_NOT_FOUND),
+      answers(429, ErrorCodes.RATE_LIMITED),
+    ]).toEqual([true, true, true, true, true]);
+    expect(contractSchema(contract).response[429]).toBeUndefined();
+  });
 });

@@ -14,7 +14,12 @@ export class InMemoryChannelAuditRepository implements ChannelAuditRepositoryPor
   async append(
     entry: NewChannelAuditEntry
   ): Promise<Result<ChannelAuditEntry, DatabaseUnavailable>> {
-    const row: ChannelAuditEntry = { ...entry, id: uuidv7(), createdAt: new Date() };
+    const row: ChannelAuditEntry = {
+      ...entry,
+      actorTokenId: entry.actorTokenId ?? null,
+      id: uuidv7(),
+      createdAt: new Date(),
+    };
     this.rows.push(row);
     return ok({ ...row });
   }

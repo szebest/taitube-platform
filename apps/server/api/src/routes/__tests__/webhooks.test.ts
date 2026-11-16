@@ -74,4 +74,13 @@ describe('webhook routes', () => {
       code: ErrorCodes.WEBHOOK_NOT_FOUND,
     });
   });
+
+  it('sends a test delivery to the caller webhook and answers 404 for another user', async () => {
+    const { id } = (await create('owner')).json();
+
+    expect((await ctx.call('stranger', 'POST', `/v1/me/webhooks/${id}/test`)).statusCode).toBe(404);
+    const res = await ctx.call('owner', 'POST', `/v1/me/webhooks/${id}/test`);
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual({ outcome: 'delivered' });
+  });
 });

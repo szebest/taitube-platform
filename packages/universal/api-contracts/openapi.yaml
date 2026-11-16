@@ -11,6 +11,11 @@ components:
       scheme: bearer
       bearerFormat: JWT
       description: Dev or production bearer JWT
+    personalAccessToken:
+      type: http
+      scheme: bearer
+      bearerFormat: tt_pat_{prefix}_{secret}
+      description: A personal access token from POST /v1/me/api-tokens; the roles listed on a route are the scopes it needs
     adminToken:
       type: apiKey
       in: header
@@ -4726,6 +4731,10 @@ paths:
           name: status
           required: false
           description: Filter videos by pipeline status
+      security:
+        - bearerAuth: []
+        - personalAccessToken:
+            - videos:read
       responses:
         '200':
           description: Default Response
@@ -4890,6 +4899,7 @@ paths:
                     type: string
                     enum:
                       - VALIDATION_FAILED
+                      - API_TOKEN_WITH_SESSION
                     description: Machine-readable error code
                   instance:
                     type: string
@@ -4947,6 +4957,86 @@ paths:
                   - instance
                 additionalProperties: false
                 description: Problem Details (RFC 9457)
+        '403':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - API_TOKEN_SCOPE_MISSING
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '429':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - RATE_LIMITED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
   /v1/videos/{id}:
     get:
       summary: Get video details
@@ -4961,7 +5051,10 @@ paths:
           in: path
           name: id
           required: true
-      security: []
+      security:
+        - {}
+        - personalAccessToken:
+            - videos:read
       responses:
         '200':
           description: Default Response
@@ -5219,6 +5312,7 @@ paths:
                     type: string
                     enum:
                       - VALIDATION_FAILED
+                      - API_TOKEN_WITH_SESSION
                     description: Machine-readable error code
                   instance:
                     type: string
@@ -5259,6 +5353,46 @@ paths:
                     type: string
                     enum:
                       - UNAUTHORIZED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '403':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - API_TOKEN_SCOPE_MISSING
                     description: Machine-readable error code
                   instance:
                     type: string
@@ -5316,6 +5450,46 @@ paths:
                   - instance
                 additionalProperties: false
                 description: Problem Details (RFC 9457)
+        '429':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - RATE_LIMITED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
     patch:
       summary: Edit video metadata with optimistic locking
       tags:
@@ -5356,6 +5530,10 @@ paths:
           in: path
           name: id
           required: true
+      security:
+        - bearerAuth: []
+        - personalAccessToken:
+            - videos:write
       responses:
         '200':
           description: Default Response
@@ -5613,6 +5791,7 @@ paths:
                     type: string
                     enum:
                       - VALIDATION_FAILED
+                      - API_TOKEN_WITH_SESSION
                     description: Machine-readable error code
                   instance:
                     type: string
@@ -5693,6 +5872,7 @@ paths:
                     type: string
                     enum:
                       - FORBIDDEN
+                      - API_TOKEN_SCOPE_MISSING
                     description: Machine-readable error code
                   instance:
                     type: string
@@ -5813,6 +5993,46 @@ paths:
                     type: string
                     enum:
                       - VALIDATION_FAILED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '429':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - RATE_LIMITED
                     description: Machine-readable error code
                   instance:
                     type: string
@@ -7351,6 +7571,10 @@ paths:
           in: path
           name: id
           required: true
+      security:
+        - bearerAuth: []
+        - personalAccessToken:
+            - analytics:read
       responses:
         '200':
           description: Default Response
@@ -7505,6 +7729,7 @@ paths:
                     type: string
                     enum:
                       - VALIDATION_FAILED
+                      - API_TOKEN_WITH_SESSION
                     description: Machine-readable error code
                   instance:
                     type: string
@@ -7585,6 +7810,7 @@ paths:
                     type: string
                     enum:
                       - FORBIDDEN
+                      - API_TOKEN_SCOPE_MISSING
                     description: Machine-readable error code
                   instance:
                     type: string
@@ -7642,6 +7868,46 @@ paths:
                   - instance
                 additionalProperties: false
                 description: Problem Details (RFC 9457)
+        '429':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - RATE_LIMITED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
   /v1/creator/videos/{id}/retention:
     get:
       summary: Audience retention curve of one owned video
@@ -7656,6 +7922,10 @@ paths:
           in: path
           name: id
           required: true
+      security:
+        - bearerAuth: []
+        - personalAccessToken:
+            - analytics:read
       responses:
         '200':
           description: Default Response
@@ -7716,6 +7986,7 @@ paths:
                     type: string
                     enum:
                       - VALIDATION_FAILED
+                      - API_TOKEN_WITH_SESSION
                     description: Machine-readable error code
                   instance:
                     type: string
@@ -7796,6 +8067,7 @@ paths:
                     type: string
                     enum:
                       - FORBIDDEN
+                      - API_TOKEN_SCOPE_MISSING
                     description: Machine-readable error code
                   instance:
                     type: string
@@ -7853,6 +8125,46 @@ paths:
                   - instance
                 additionalProperties: false
                 description: Problem Details (RFC 9457)
+        '429':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - RATE_LIMITED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
   /v1/creator/channel/analytics:
     get:
       summary: Views across the caller's channel
@@ -7879,6 +8191,10 @@ paths:
           in: header
           name: x-channel-id
           required: false
+      security:
+        - bearerAuth: []
+        - personalAccessToken:
+            - analytics:read
       responses:
         '200':
           description: Default Response
@@ -8068,6 +8384,7 @@ paths:
                     type: string
                     enum:
                       - VALIDATION_FAILED
+                      - API_TOKEN_WITH_SESSION
                     description: Machine-readable error code
                   instance:
                     type: string
@@ -8149,6 +8466,47 @@ paths:
                     enum:
                       - FORBIDDEN
                       - CHANNEL_MEMBERSHIP_REQUIRED
+                      - API_TOKEN_SCOPE_MISSING
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '429':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - RATE_LIMITED
                     description: Machine-readable error code
                   instance:
                     type: string
@@ -8242,6 +8600,10 @@ paths:
           in: header
           name: x-channel-id
           required: false
+      security:
+        - bearerAuth: []
+        - personalAccessToken:
+            - videos:write
       responses:
         '200':
           description: Default Response
@@ -8423,6 +8785,7 @@ paths:
                     enum:
                       - VALIDATION_FAILED
                       - INVALID_CURSOR
+                      - API_TOKEN_WITH_SESSION
                     description: Machine-readable error code
                   instance:
                     type: string
@@ -8504,6 +8867,47 @@ paths:
                     enum:
                       - CHANNEL_MEMBERSHIP_REQUIRED
                       - FORBIDDEN
+                      - API_TOKEN_SCOPE_MISSING
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '429':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - RATE_LIMITED
                     description: Machine-readable error code
                   instance:
                     type: string
@@ -8588,6 +8992,10 @@ paths:
           in: path
           name: id
           required: true
+      security:
+        - bearerAuth: []
+        - personalAccessToken:
+            - videos:write
       responses:
         '200':
           description: Default Response
@@ -8845,6 +9253,7 @@ paths:
                     type: string
                     enum:
                       - VALIDATION_FAILED
+                      - API_TOKEN_WITH_SESSION
                     description: Machine-readable error code
                   instance:
                     type: string
@@ -8925,6 +9334,7 @@ paths:
                     type: string
                     enum:
                       - FORBIDDEN
+                      - API_TOKEN_SCOPE_MISSING
                     description: Machine-readable error code
                   instance:
                     type: string
@@ -9046,6 +9456,46 @@ paths:
                     type: string
                     enum:
                       - VALIDATION_FAILED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '429':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - RATE_LIMITED
                     description: Machine-readable error code
                   instance:
                     type: string
@@ -9351,7 +9801,10 @@ paths:
           in: path
           name: id
           required: true
-      security: []
+      security:
+        - {}
+        - personalAccessToken:
+            - comments:read
       responses:
         '200':
           description: Default Response
@@ -9554,6 +10007,7 @@ paths:
                     enum:
                       - VALIDATION_FAILED
                       - INVALID_CURSOR
+                      - API_TOKEN_WITH_SESSION
                     description: Machine-readable error code
                   instance:
                     type: string
@@ -9611,6 +10065,46 @@ paths:
                   - instance
                 additionalProperties: false
                 description: Problem Details (RFC 9457)
+        '403':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - API_TOKEN_SCOPE_MISSING
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
         '404':
           description: Problem Details (RFC 9457)
           content:
@@ -9634,6 +10128,46 @@ paths:
                     type: string
                     enum:
                       - VIDEO_NOT_FOUND
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '429':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - RATE_LIMITED
                     description: Machine-readable error code
                   instance:
                     type: string
@@ -10114,7 +10648,10 @@ paths:
           in: path
           name: id
           required: true
-      security: []
+      security:
+        - {}
+        - personalAccessToken:
+            - comments:read
       responses:
         '200':
           description: Default Response
@@ -10311,6 +10848,7 @@ paths:
                     enum:
                       - VALIDATION_FAILED
                       - INVALID_CURSOR
+                      - API_TOKEN_WITH_SESSION
                     description: Machine-readable error code
                   instance:
                     type: string
@@ -10368,6 +10906,46 @@ paths:
                   - instance
                 additionalProperties: false
                 description: Problem Details (RFC 9457)
+        '403':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - API_TOKEN_SCOPE_MISSING
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
         '404':
           description: Problem Details (RFC 9457)
           content:
@@ -10391,6 +10969,46 @@ paths:
                     type: string
                     enum:
                       - COMMENT_NOT_FOUND
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '429':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - RATE_LIMITED
                     description: Machine-readable error code
                   instance:
                     type: string
@@ -10810,6 +11428,10 @@ paths:
           in: path
           name: id
           required: true
+      security:
+        - bearerAuth: []
+        - personalAccessToken:
+            - comments:moderate
       responses:
         '204':
           description: Comment deleted
@@ -10836,6 +11458,7 @@ paths:
                     type: string
                     enum:
                       - VALIDATION_FAILED
+                      - API_TOKEN_WITH_SESSION
                     description: Machine-readable error code
                   instance:
                     type: string
@@ -10916,6 +11539,7 @@ paths:
                     type: string
                     enum:
                       - FORBIDDEN
+                      - API_TOKEN_SCOPE_MISSING
                     description: Machine-readable error code
                   instance:
                     type: string
@@ -10956,6 +11580,46 @@ paths:
                     type: string
                     enum:
                       - COMMENT_NOT_FOUND
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '429':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - RATE_LIMITED
                     description: Machine-readable error code
                   instance:
                     type: string
@@ -12761,6 +13425,10 @@ paths:
           in: header
           name: x-channel-id
           required: false
+      security:
+        - bearerAuth: []
+        - personalAccessToken:
+            - comments:moderate
       responses:
         '200':
           description: Default Response
@@ -12972,6 +13640,7 @@ paths:
                     enum:
                       - VALIDATION_FAILED
                       - INVALID_CURSOR
+                      - API_TOKEN_WITH_SESSION
                     description: Machine-readable error code
                   instance:
                     type: string
@@ -13053,6 +13722,47 @@ paths:
                     enum:
                       - CHANNEL_MEMBERSHIP_REQUIRED
                       - FORBIDDEN
+                      - API_TOKEN_SCOPE_MISSING
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '429':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - RATE_LIMITED
                     description: Machine-readable error code
                   instance:
                     type: string
@@ -13241,6 +13951,10 @@ paths:
           in: header
           name: x-channel-id
           required: false
+      security:
+        - bearerAuth: []
+        - personalAccessToken:
+            - comments:moderate
       responses:
         '200':
           description: Default Response
@@ -13330,6 +14044,10 @@ paths:
                             - EXPORT_IN_PROGRESS
                             - EXPORT_DAILY_LIMIT
                             - EXPORT_TOO_LARGE
+                            - API_TOKEN_NOT_FOUND
+                            - API_TOKEN_LIMIT_REACHED
+                            - API_TOKEN_SCOPE_MISSING
+                            - API_TOKEN_WITH_SESSION
                             - OEMBED_URL_UNSUPPORTED
                             - OEMBED_FORMAT_UNSUPPORTED
                             - CAPTION_NOT_FOUND
@@ -13424,6 +14142,7 @@ paths:
                     type: string
                     enum:
                       - VALIDATION_FAILED
+                      - API_TOKEN_WITH_SESSION
                     description: Machine-readable error code
                   instance:
                     type: string
@@ -13505,6 +14224,47 @@ paths:
                     enum:
                       - FORBIDDEN
                       - CHANNEL_MEMBERSHIP_REQUIRED
+                      - API_TOKEN_SCOPE_MISSING
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '429':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - RATE_LIMITED
                     description: Machine-readable error code
                   instance:
                     type: string
@@ -30772,7 +31532,7 @@ paths:
                   description: https, on a public host, without credentials
                 events:
                   minItems: 1
-                  maxItems: 3
+                  maxItems: 4
                   type: array
                   items:
                     type: string
@@ -30780,10 +31540,15 @@ paths:
                       - video.ready
                       - live.started
                       - export.ready
-                  description: video.ready fires when processing finishes, export.ready when a channel export file can be downloaded; live.started is accepted and reserved
+                      - comment.held
+                  description: video.ready fires when processing finishes, export.ready when a channel export file can be downloaded, comment.held when a comment on one of your videos is held for review (its id, the video and the channel, never the text); live.started is accepted and reserved
               required:
                 - url
                 - events
+      security:
+        - bearerAuth: []
+        - personalAccessToken:
+            - webhooks:manage
       responses:
         '201':
           description: Default Response
@@ -30808,6 +31573,7 @@ paths:
                         - video.ready
                         - live.started
                         - export.ready
+                        - comment.held
                     description: The events it is told about
                   createdAt:
                     type: string
@@ -30847,6 +31613,7 @@ paths:
                     type: string
                     enum:
                       - VALIDATION_FAILED
+                      - API_TOKEN_WITH_SESSION
                     description: Machine-readable error code
                   instance:
                     type: string
@@ -30887,6 +31654,46 @@ paths:
                     type: string
                     enum:
                       - UNAUTHORIZED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '403':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - API_TOKEN_SCOPE_MISSING
                     description: Machine-readable error code
                   instance:
                     type: string
@@ -30984,11 +31791,55 @@ paths:
                   - instance
                 additionalProperties: false
                 description: Problem Details (RFC 9457)
+        '429':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - RATE_LIMITED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
     get:
       summary: List my webhooks
       tags:
         - Webhooks
       description: The webhooks the caller registered, oldest first. Secrets are never returned.
+      security:
+        - bearerAuth: []
+        - personalAccessToken:
+            - webhooks:manage
       responses:
         '200':
           description: Default Response
@@ -31018,6 +31869,7 @@ paths:
                               - video.ready
                               - live.started
                               - export.ready
+                              - comment.held
                           description: The events it is told about
                         createdAt:
                           type: string
@@ -31033,6 +31885,46 @@ paths:
                 required:
                   - items
                 additionalProperties: false
+        '400':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - API_TOKEN_WITH_SESSION
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
         '401':
           description: Problem Details (RFC 9457)
           content:
@@ -31056,6 +31948,86 @@ paths:
                     type: string
                     enum:
                       - UNAUTHORIZED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '403':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - API_TOKEN_SCOPE_MISSING
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '429':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - RATE_LIMITED
                     description: Machine-readable error code
                   instance:
                     type: string
@@ -31087,6 +32059,10 @@ paths:
           in: path
           name: id
           required: true
+      security:
+        - bearerAuth: []
+        - personalAccessToken:
+            - webhooks:manage
       responses:
         '204':
           description: Webhook removed
@@ -31113,6 +32089,7 @@ paths:
                     type: string
                     enum:
                       - VALIDATION_FAILED
+                      - API_TOKEN_WITH_SESSION
                     description: Machine-readable error code
                   instance:
                     type: string
@@ -31153,6 +32130,46 @@ paths:
                     type: string
                     enum:
                       - UNAUTHORIZED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '403':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - API_TOKEN_SCOPE_MISSING
                     description: Machine-readable error code
                   instance:
                     type: string
@@ -31193,6 +32210,307 @@ paths:
                     type: string
                     enum:
                       - WEBHOOK_NOT_FOUND
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '429':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - RATE_LIMITED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+  /v1/me/webhooks/{id}/test:
+    post:
+      summary: Send a test delivery
+      tags:
+        - Webhooks
+      description: Sends one signed delivery of `webhook.test` with `{ webhookId, sentAt }` now, as every other delivery is sent, and answers what the receiver did with it. Answers 404 for a webhook the caller did not register.
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+          in: path
+          name: id
+          required: true
+      security:
+        - bearerAuth: []
+        - personalAccessToken:
+            - webhooks:manage
+      responses:
+        '200':
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: object
+                    properties:
+                      outcome:
+                        type: string
+                        enum:
+                          - delivered
+                    required:
+                      - outcome
+                    additionalProperties: false
+                  - type: object
+                    properties:
+                      outcome:
+                        type: string
+                        enum:
+                          - failed
+                      reason:
+                        type: string
+                        enum:
+                          - timeout
+                          - network
+                          - status
+                          - blocked-host
+                          - redirect
+                      status:
+                        anyOf:
+                          - type: integer
+                            minimum: -9007199254740991
+                            maximum: 9007199254740991
+                          - type: 'null'
+                        description: What the receiver answered, when it answered
+                    required:
+                      - outcome
+                      - reason
+                      - status
+                    additionalProperties: false
+        '400':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_FAILED
+                      - API_TOKEN_WITH_SESSION
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '401':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '403':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - API_TOKEN_SCOPE_MISSING
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '404':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - WEBHOOK_NOT_FOUND
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '429':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - RATE_LIMITED
                     description: Machine-readable error code
                   instance:
                     type: string
@@ -36816,6 +38134,13 @@ paths:
                                   pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
                                 - type: 'null'
                               description: null once the actor deleted their account
+                            actorTokenId:
+                              anyOf:
+                                - type: string
+                                  format: uuid
+                                  pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                - type: 'null'
+                              description: The personal access token the actor used; null for a session or a deleted token
                             actor:
                               anyOf:
                                 - type: object
@@ -36846,6 +38171,7 @@ paths:
                             - targetId
                             - meta
                             - actorUserId
+                            - actorTokenId
                             - actor
                             - createdAt
                           additionalProperties: false
@@ -36890,6 +38216,13 @@ paths:
                                   pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
                                 - type: 'null'
                               description: null once the actor deleted their account
+                            actorTokenId:
+                              anyOf:
+                                - type: string
+                                  format: uuid
+                                  pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                - type: 'null'
+                              description: The personal access token the actor used; null for a session or a deleted token
                             actor:
                               anyOf:
                                 - type: object
@@ -36920,6 +38253,7 @@ paths:
                             - targetId
                             - meta
                             - actorUserId
+                            - actorTokenId
                             - actor
                             - createdAt
                           additionalProperties: false
@@ -36964,6 +38298,13 @@ paths:
                                   pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
                                 - type: 'null'
                               description: null once the actor deleted their account
+                            actorTokenId:
+                              anyOf:
+                                - type: string
+                                  format: uuid
+                                  pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                - type: 'null'
+                              description: The personal access token the actor used; null for a session or a deleted token
                             actor:
                               anyOf:
                                 - type: object
@@ -36994,6 +38335,7 @@ paths:
                             - targetId
                             - meta
                             - actorUserId
+                            - actorTokenId
                             - actor
                             - createdAt
                           additionalProperties: false
@@ -37038,6 +38380,13 @@ paths:
                                   pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
                                 - type: 'null'
                               description: null once the actor deleted their account
+                            actorTokenId:
+                              anyOf:
+                                - type: string
+                                  format: uuid
+                                  pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                - type: 'null'
+                              description: The personal access token the actor used; null for a session or a deleted token
                             actor:
                               anyOf:
                                 - type: object
@@ -37068,6 +38417,7 @@ paths:
                             - targetId
                             - meta
                             - actorUserId
+                            - actorTokenId
                             - actor
                             - createdAt
                           additionalProperties: false
@@ -37115,6 +38465,13 @@ paths:
                                   pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
                                 - type: 'null'
                               description: null once the actor deleted their account
+                            actorTokenId:
+                              anyOf:
+                                - type: string
+                                  format: uuid
+                                  pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                - type: 'null'
+                              description: The personal access token the actor used; null for a session or a deleted token
                             actor:
                               anyOf:
                                 - type: object
@@ -37145,6 +38502,7 @@ paths:
                             - targetId
                             - meta
                             - actorUserId
+                            - actorTokenId
                             - actor
                             - createdAt
                           additionalProperties: false
@@ -37184,6 +38542,13 @@ paths:
                                   pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
                                 - type: 'null'
                               description: null once the actor deleted their account
+                            actorTokenId:
+                              anyOf:
+                                - type: string
+                                  format: uuid
+                                  pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                - type: 'null'
+                              description: The personal access token the actor used; null for a session or a deleted token
                             actor:
                               anyOf:
                                 - type: object
@@ -37214,6 +38579,7 @@ paths:
                             - targetId
                             - meta
                             - actorUserId
+                            - actorTokenId
                             - actor
                             - createdAt
                           additionalProperties: false
@@ -37253,6 +38619,13 @@ paths:
                                   pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
                                 - type: 'null'
                               description: null once the actor deleted their account
+                            actorTokenId:
+                              anyOf:
+                                - type: string
+                                  format: uuid
+                                  pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                - type: 'null'
+                              description: The personal access token the actor used; null for a session or a deleted token
                             actor:
                               anyOf:
                                 - type: object
@@ -37283,6 +38656,7 @@ paths:
                             - targetId
                             - meta
                             - actorUserId
+                            - actorTokenId
                             - actor
                             - createdAt
                           additionalProperties: false
@@ -37319,6 +38693,13 @@ paths:
                                   pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
                                 - type: 'null'
                               description: null once the actor deleted their account
+                            actorTokenId:
+                              anyOf:
+                                - type: string
+                                  format: uuid
+                                  pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                - type: 'null'
+                              description: The personal access token the actor used; null for a session or a deleted token
                             actor:
                               anyOf:
                                 - type: object
@@ -37349,6 +38730,7 @@ paths:
                             - targetId
                             - meta
                             - actorUserId
+                            - actorTokenId
                             - actor
                             - createdAt
                           additionalProperties: false
@@ -37385,6 +38767,13 @@ paths:
                                   pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
                                 - type: 'null'
                               description: null once the actor deleted their account
+                            actorTokenId:
+                              anyOf:
+                                - type: string
+                                  format: uuid
+                                  pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                - type: 'null'
+                              description: The personal access token the actor used; null for a session or a deleted token
                             actor:
                               anyOf:
                                 - type: object
@@ -37415,6 +38804,7 @@ paths:
                             - targetId
                             - meta
                             - actorUserId
+                            - actorTokenId
                             - actor
                             - createdAt
                           additionalProperties: false
@@ -37449,6 +38839,13 @@ paths:
                                   pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
                                 - type: 'null'
                               description: null once the actor deleted their account
+                            actorTokenId:
+                              anyOf:
+                                - type: string
+                                  format: uuid
+                                  pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                - type: 'null'
+                              description: The personal access token the actor used; null for a session or a deleted token
                             actor:
                               anyOf:
                                 - type: object
@@ -37479,6 +38876,7 @@ paths:
                             - targetId
                             - meta
                             - actorUserId
+                            - actorTokenId
                             - actor
                             - createdAt
                           additionalProperties: false
@@ -37521,6 +38919,13 @@ paths:
                                   pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
                                 - type: 'null'
                               description: null once the actor deleted their account
+                            actorTokenId:
+                              anyOf:
+                                - type: string
+                                  format: uuid
+                                  pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                - type: 'null'
+                              description: The personal access token the actor used; null for a session or a deleted token
                             actor:
                               anyOf:
                                 - type: object
@@ -37551,6 +38956,7 @@ paths:
                             - targetId
                             - meta
                             - actorUserId
+                            - actorTokenId
                             - actor
                             - createdAt
                           additionalProperties: false
@@ -37593,6 +38999,13 @@ paths:
                                   pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
                                 - type: 'null'
                               description: null once the actor deleted their account
+                            actorTokenId:
+                              anyOf:
+                                - type: string
+                                  format: uuid
+                                  pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                - type: 'null'
+                              description: The personal access token the actor used; null for a session or a deleted token
                             actor:
                               anyOf:
                                 - type: object
@@ -37623,6 +39036,7 @@ paths:
                             - targetId
                             - meta
                             - actorUserId
+                            - actorTokenId
                             - actor
                             - createdAt
                           additionalProperties: false
@@ -37665,6 +39079,13 @@ paths:
                                   pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
                                 - type: 'null'
                               description: null once the actor deleted their account
+                            actorTokenId:
+                              anyOf:
+                                - type: string
+                                  format: uuid
+                                  pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                - type: 'null'
+                              description: The personal access token the actor used; null for a session or a deleted token
                             actor:
                               anyOf:
                                 - type: object
@@ -37695,6 +39116,7 @@ paths:
                             - targetId
                             - meta
                             - actorUserId
+                            - actorTokenId
                             - actor
                             - createdAt
                           additionalProperties: false
@@ -37737,6 +39159,13 @@ paths:
                                   pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
                                 - type: 'null'
                               description: null once the actor deleted their account
+                            actorTokenId:
+                              anyOf:
+                                - type: string
+                                  format: uuid
+                                  pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                - type: 'null'
+                              description: The personal access token the actor used; null for a session or a deleted token
                             actor:
                               anyOf:
                                 - type: object
@@ -37767,6 +39196,7 @@ paths:
                             - targetId
                             - meta
                             - actorUserId
+                            - actorTokenId
                             - actor
                             - createdAt
                           additionalProperties: false
@@ -37809,6 +39239,13 @@ paths:
                                   pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
                                 - type: 'null'
                               description: null once the actor deleted their account
+                            actorTokenId:
+                              anyOf:
+                                - type: string
+                                  format: uuid
+                                  pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                - type: 'null'
+                              description: The personal access token the actor used; null for a session or a deleted token
                             actor:
                               anyOf:
                                 - type: object
@@ -37839,6 +39276,7 @@ paths:
                             - targetId
                             - meta
                             - actorUserId
+                            - actorTokenId
                             - actor
                             - createdAt
                           additionalProperties: false
@@ -37878,6 +39316,13 @@ paths:
                                   pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
                                 - type: 'null'
                               description: null once the actor deleted their account
+                            actorTokenId:
+                              anyOf:
+                                - type: string
+                                  format: uuid
+                                  pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                - type: 'null'
+                              description: The personal access token the actor used; null for a session or a deleted token
                             actor:
                               anyOf:
                                 - type: object
@@ -37908,6 +39353,7 @@ paths:
                             - targetId
                             - meta
                             - actorUserId
+                            - actorTokenId
                             - actor
                             - createdAt
                           additionalProperties: false
@@ -37938,6 +39384,13 @@ paths:
                                   pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
                                 - type: 'null'
                               description: null once the actor deleted their account
+                            actorTokenId:
+                              anyOf:
+                                - type: string
+                                  format: uuid
+                                  pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                - type: 'null'
+                              description: The personal access token the actor used; null for a session or a deleted token
                             actor:
                               anyOf:
                                 - type: object
@@ -37968,6 +39421,7 @@ paths:
                             - targetId
                             - meta
                             - actorUserId
+                            - actorTokenId
                             - actor
                             - createdAt
                           additionalProperties: false
@@ -38006,6 +39460,13 @@ paths:
                                   pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
                                 - type: 'null'
                               description: null once the actor deleted their account
+                            actorTokenId:
+                              anyOf:
+                                - type: string
+                                  format: uuid
+                                  pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                - type: 'null'
+                              description: The personal access token the actor used; null for a session or a deleted token
                             actor:
                               anyOf:
                                 - type: object
@@ -38036,6 +39497,7 @@ paths:
                             - targetId
                             - meta
                             - actorUserId
+                            - actorTokenId
                             - actor
                             - createdAt
                           additionalProperties: false
@@ -38073,6 +39535,13 @@ paths:
                                   pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
                                 - type: 'null'
                               description: null once the actor deleted their account
+                            actorTokenId:
+                              anyOf:
+                                - type: string
+                                  format: uuid
+                                  pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                - type: 'null'
+                              description: The personal access token the actor used; null for a session or a deleted token
                             actor:
                               anyOf:
                                 - type: object
@@ -38103,6 +39572,7 @@ paths:
                             - targetId
                             - meta
                             - actorUserId
+                            - actorTokenId
                             - actor
                             - createdAt
                           additionalProperties: false
@@ -38133,6 +39603,13 @@ paths:
                                   pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
                                 - type: 'null'
                               description: null once the actor deleted their account
+                            actorTokenId:
+                              anyOf:
+                                - type: string
+                                  format: uuid
+                                  pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                - type: 'null'
+                              description: The personal access token the actor used; null for a session or a deleted token
                             actor:
                               anyOf:
                                 - type: object
@@ -38163,6 +39640,7 @@ paths:
                             - targetId
                             - meta
                             - actorUserId
+                            - actorTokenId
                             - actor
                             - createdAt
                           additionalProperties: false
@@ -38193,6 +39671,13 @@ paths:
                                   pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
                                 - type: 'null'
                               description: null once the actor deleted their account
+                            actorTokenId:
+                              anyOf:
+                                - type: string
+                                  format: uuid
+                                  pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                - type: 'null'
+                              description: The personal access token the actor used; null for a session or a deleted token
                             actor:
                               anyOf:
                                 - type: object
@@ -38223,6 +39708,7 @@ paths:
                             - targetId
                             - meta
                             - actorUserId
+                            - actorTokenId
                             - actor
                             - createdAt
                           additionalProperties: false
@@ -38267,6 +39753,13 @@ paths:
                                   pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
                                 - type: 'null'
                               description: null once the actor deleted their account
+                            actorTokenId:
+                              anyOf:
+                                - type: string
+                                  format: uuid
+                                  pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                - type: 'null'
+                              description: The personal access token the actor used; null for a session or a deleted token
                             actor:
                               anyOf:
                                 - type: object
@@ -38297,6 +39790,7 @@ paths:
                             - targetId
                             - meta
                             - actorUserId
+                            - actorTokenId
                             - actor
                             - createdAt
                           additionalProperties: false
@@ -38342,6 +39836,13 @@ paths:
                                   pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
                                 - type: 'null'
                               description: null once the actor deleted their account
+                            actorTokenId:
+                              anyOf:
+                                - type: string
+                                  format: uuid
+                                  pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                - type: 'null'
+                              description: The personal access token the actor used; null for a session or a deleted token
                             actor:
                               anyOf:
                                 - type: object
@@ -38372,6 +39873,7 @@ paths:
                             - targetId
                             - meta
                             - actorUserId
+                            - actorTokenId
                             - actor
                             - createdAt
                           additionalProperties: false
@@ -38417,6 +39919,13 @@ paths:
                                   pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
                                 - type: 'null'
                               description: null once the actor deleted their account
+                            actorTokenId:
+                              anyOf:
+                                - type: string
+                                  format: uuid
+                                  pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                - type: 'null'
+                              description: The personal access token the actor used; null for a session or a deleted token
                             actor:
                               anyOf:
                                 - type: object
@@ -38447,6 +39956,7 @@ paths:
                             - targetId
                             - meta
                             - actorUserId
+                            - actorTokenId
                             - actor
                             - createdAt
                           additionalProperties: false
@@ -38632,6 +40142,10 @@ paths:
           in: header
           name: x-channel-id
           required: false
+      security:
+        - bearerAuth: []
+        - personalAccessToken:
+            - exports:create
       responses:
         '202':
           description: Default Response
@@ -38743,6 +40257,7 @@ paths:
                     type: string
                     enum:
                       - VALIDATION_FAILED
+                      - API_TOKEN_WITH_SESSION
                     description: Machine-readable error code
                   instance:
                     type: string
@@ -38824,6 +40339,7 @@ paths:
                     enum:
                       - CHANNEL_MEMBERSHIP_REQUIRED
                       - FORBIDDEN
+                      - API_TOKEN_SCOPE_MISSING
                     description: Machine-readable error code
                   instance:
                     type: string
@@ -38904,6 +40420,7 @@ paths:
                     type: string
                     enum:
                       - EXPORT_DAILY_LIMIT
+                      - RATE_LIMITED
                     description: Machine-readable error code
                   instance:
                     type: string
@@ -38949,6 +40466,10 @@ paths:
           in: header
           name: x-channel-id
           required: false
+      security:
+        - bearerAuth: []
+        - personalAccessToken:
+            - exports:read
       responses:
         '200':
           description: Default Response
@@ -39074,6 +40595,7 @@ paths:
                     enum:
                       - VALIDATION_FAILED
                       - INVALID_CURSOR
+                      - API_TOKEN_WITH_SESSION
                     description: Machine-readable error code
                   instance:
                     type: string
@@ -39155,6 +40677,47 @@ paths:
                     enum:
                       - CHANNEL_MEMBERSHIP_REQUIRED
                       - FORBIDDEN
+                      - API_TOKEN_SCOPE_MISSING
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '429':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - RATE_LIMITED
                     description: Machine-readable error code
                   instance:
                     type: string
@@ -39193,6 +40756,10 @@ paths:
           in: header
           name: x-channel-id
           required: false
+      security:
+        - bearerAuth: []
+        - personalAccessToken:
+            - exports:read
       responses:
         '200':
           description: Default Response
@@ -39310,6 +40877,7 @@ paths:
                     type: string
                     enum:
                       - VALIDATION_FAILED
+                      - API_TOKEN_WITH_SESSION
                     description: Machine-readable error code
                   instance:
                     type: string
@@ -39391,6 +40959,7 @@ paths:
                     enum:
                       - CHANNEL_MEMBERSHIP_REQUIRED
                       - FORBIDDEN
+                      - API_TOKEN_SCOPE_MISSING
                     description: Machine-readable error code
                   instance:
                     type: string
@@ -39448,6 +41017,46 @@ paths:
                   - instance
                 additionalProperties: false
                 description: Problem Details (RFC 9457)
+        '429':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - RATE_LIMITED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
     delete:
       summary: Delete an export and its file
       tags:
@@ -39468,9 +41077,343 @@ paths:
           in: header
           name: x-channel-id
           required: false
+      security:
+        - bearerAuth: []
+        - personalAccessToken:
+            - exports:create
       responses:
         '204':
           description: Export deleted
+        '400':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_FAILED
+                      - API_TOKEN_WITH_SESSION
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '401':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '403':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - CHANNEL_MEMBERSHIP_REQUIRED
+                      - FORBIDDEN
+                      - API_TOKEN_SCOPE_MISSING
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '404':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - EXPORT_NOT_FOUND
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '429':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - RATE_LIMITED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+  /v1/me/api-tokens:
+    post:
+      summary: Create a personal access token
+      tags:
+        - Personal access tokens
+      description: 'A token for scripts, acting as the caller on the acting channel and never doing more than the caller may there. Send it as `Authorization: Bearer tt_pat_...` on a route that names one of its scopes; a request with both a token and a session cookie is refused. 60 requests a minute per token, at most 10 active per user. A session only: a request made with a token is refused.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  minLength: 1
+                  maxLength: 60
+                scopes:
+                  minItems: 1
+                  maxItems: 8
+                  type: array
+                  items:
+                    type: string
+                    enum:
+                      - videos:read
+                      - videos:write
+                      - analytics:read
+                      - comments:read
+                      - comments:moderate
+                      - exports:read
+                      - exports:create
+                      - webhooks:manage
+                expiry:
+                  default: 90d
+                  description: 30 days, 90 days or a year; never unlimited
+                  type: string
+                  enum:
+                    - 30d
+                    - 90d
+                    - 1y
+              required:
+                - name
+                - scopes
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+          in: header
+          name: x-channel-id
+          required: false
+      responses:
+        '201':
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                    pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                  name:
+                    type: string
+                  prefix:
+                    type: string
+                    description: The 8 characters after `tt_pat_`, to tell tokens apart
+                  channelId:
+                    type: string
+                    format: uuid
+                    pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                    description: The channel the token acts on
+                  scopes:
+                    type: array
+                    items:
+                      type: string
+                      enum:
+                        - videos:read
+                        - videos:write
+                        - analytics:read
+                        - comments:read
+                        - comments:moderate
+                        - exports:read
+                        - exports:create
+                        - webhooks:manage
+                  expiresAt:
+                    type: string
+                    format: date-time
+                    pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+                  lastUsedAt:
+                    anyOf:
+                      - type: string
+                        format: date-time
+                        pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+                      - type: 'null'
+                  requestsToday:
+                    type: integer
+                    minimum: 0
+                    maximum: 9007199254740991
+                    description: Requests made with it since midnight UTC
+                  status:
+                    type: string
+                    enum:
+                      - active
+                      - expired
+                      - revoked
+                  createdAt:
+                    type: string
+                    format: date-time
+                    pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+                  token:
+                    type: string
+                    description: '`tt_pat_{prefix}_{secret}`. Shown here once and never returned again'
+                required:
+                  - id
+                  - name
+                  - prefix
+                  - channelId
+                  - scopes
+                  - expiresAt
+                  - lastUsedAt
+                  - requestsToday
+                  - status
+                  - createdAt
+                  - token
+                additionalProperties: false
         '400':
           description: Problem Details (RFC 9457)
           content:
@@ -39573,7 +41516,349 @@ paths:
                   code:
                     type: string
                     enum:
+                      - FORBIDDEN
                       - CHANNEL_MEMBERSHIP_REQUIRED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '409':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - API_TOKEN_LIMIT_REACHED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+    get:
+      summary: List my personal access tokens
+      tags:
+        - Personal access tokens
+      description: 'Active and expired tokens of every channel, newest first; revoked ones are gone. Secrets are never returned. A session only: a request made with a token is refused.'
+      responses:
+        '200':
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                        name:
+                          type: string
+                        prefix:
+                          type: string
+                          description: The 8 characters after `tt_pat_`, to tell tokens apart
+                        channelId:
+                          type: string
+                          format: uuid
+                          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                          description: The channel the token acts on
+                        scopes:
+                          type: array
+                          items:
+                            type: string
+                            enum:
+                              - videos:read
+                              - videos:write
+                              - analytics:read
+                              - comments:read
+                              - comments:moderate
+                              - exports:read
+                              - exports:create
+                              - webhooks:manage
+                        expiresAt:
+                          type: string
+                          format: date-time
+                          pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+                        lastUsedAt:
+                          anyOf:
+                            - type: string
+                              format: date-time
+                              pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+                            - type: 'null'
+                        requestsToday:
+                          type: integer
+                          minimum: 0
+                          maximum: 9007199254740991
+                          description: Requests made with it since midnight UTC
+                        status:
+                          type: string
+                          enum:
+                            - active
+                            - expired
+                            - revoked
+                        createdAt:
+                          type: string
+                          format: date-time
+                          pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+                      required:
+                        - id
+                        - name
+                        - prefix
+                        - channelId
+                        - scopes
+                        - expiresAt
+                        - lastUsedAt
+                        - requestsToday
+                        - status
+                        - createdAt
+                      additionalProperties: false
+                required:
+                  - items
+                additionalProperties: false
+        '401':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '403':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - FORBIDDEN
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+  /v1/me/api-tokens/{id}:
+    delete:
+      summary: Revoke a personal access token
+      tags:
+        - Personal access tokens
+      description: 'The next request made with it is a 401. Answers 404 for a token the caller does not hold or already revoked. A session only: a request made with a token is refused.'
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+          in: path
+          name: id
+          required: true
+      responses:
+        '204':
+          description: Token revoked
+        '400':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_FAILED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '401':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '403':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
                       - FORBIDDEN
                     description: Machine-readable error code
                   instance:
@@ -39614,7 +41899,7 @@ paths:
                   code:
                     type: string
                     enum:
-                      - EXPORT_NOT_FOUND
+                      - API_TOKEN_NOT_FOUND
                     description: Machine-readable error code
                   instance:
                     type: string
@@ -40646,6 +42931,10 @@ paths:
           in: path
           name: id
           required: true
+      security:
+        - bearerAuth: []
+        - personalAccessToken:
+            - comments:moderate
       responses:
         '200':
           description: Default Response
@@ -40845,6 +43134,7 @@ paths:
                     type: string
                     enum:
                       - VALIDATION_FAILED
+                      - API_TOKEN_WITH_SESSION
                     description: Machine-readable error code
                   instance:
                     type: string
@@ -40925,6 +43215,7 @@ paths:
                     type: string
                     enum:
                       - FORBIDDEN
+                      - API_TOKEN_SCOPE_MISSING
                     description: Machine-readable error code
                   instance:
                     type: string
@@ -41005,6 +43296,46 @@ paths:
                     type: string
                     enum:
                       - MODERATION_NOT_APPLICABLE
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '429':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - RATE_LIMITED
                     description: Machine-readable error code
                   instance:
                     type: string
