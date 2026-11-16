@@ -1,6 +1,7 @@
 import {
   HOURLY_WINDOW_HOURS,
   fillHourly,
+  firstHoursWindow,
   hourlyWindow,
   inFirstHours,
   mergeHourlyCounts,
@@ -54,5 +55,12 @@ describe('domain: hourly views', () => {
     ['long after', '2026-04-01T00:00:00.000Z', false],
   ])('knows a video is in its first hours %s: %s', (_when, at, expected) => {
     expect(inFirstHours(NOW, new Date(at))).toBe(expected);
+  });
+
+  it('spans the 48 hours from the hour a video became ready and ends 48 hours after the instant', () => {
+    expect(firstHoursWindow(NOW)).toEqual({
+      range: { from: '2026-03-10T13:00:00.000Z', to: '2026-03-12T12:00:00.000Z' },
+      endsAt: '2026-03-12T13:42:07.120Z',
+    });
   });
 });

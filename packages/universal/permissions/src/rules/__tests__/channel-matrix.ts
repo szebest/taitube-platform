@@ -7,6 +7,7 @@ type SubjectType =
   | 'Comment'
   | 'Channel'
   | 'Analytics'
+  | 'VideoStats'
   | 'Caption'
   | 'Upload'
   | 'Team'
@@ -64,6 +65,7 @@ const CAPABILITY_PROBES: Record<ChannelCapability, Probe[] | { pending: '118' }>
   ],
   'analytics.read': [
     { type: 'Analytics', action: 'read', target: subject('Analytics', { ownerId: OWNER_ID }) },
+    { type: 'VideoStats', action: 'read', target: subject('VideoStats', { ownerId: OWNER_ID }) },
   ],
   'video.edit': [
     { type: 'Video', action: 'update', target: privateVideo },

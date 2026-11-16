@@ -2,6 +2,7 @@ import {
   type AnalyticsRange,
   analyticsPeriods,
   averageRetention,
+  averageViewDurationSeconds,
   mergeViewCounts,
   periodsSpan,
   summarizeViews,
@@ -141,4 +142,12 @@ describe('domain: views', () => {
       expect(averageRetention(totals, durationMs)).toBe(retention);
     }
   );
+
+  it.each([
+    { totals: { views: 4, watchSeconds: 90 }, seconds: 22.5 },
+    { totals: { views: 1, watchSeconds: 0 }, seconds: 0 },
+    { totals: { views: 0, watchSeconds: 0 }, seconds: 0 },
+  ])('averages $seconds seconds a view over $totals', ({ totals, seconds }) => {
+    expect(averageViewDurationSeconds(totals)).toBe(seconds);
+  });
 });

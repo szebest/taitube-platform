@@ -31,6 +31,21 @@ export function hourlyWindow(now: Date): ViewHourRange {
   return { from, to };
 }
 
+export interface FirstHoursWindow {
+  readonly range: ViewHourRange;
+  readonly endsAt: string;
+}
+
+/** The 48 hour slots from the hour a video became ready, and the instant its first 48 hours end. */
+export function firstHoursWindow(readyAt: Date): FirstHoursWindow {
+  const from = viewHourOf(readyAt);
+  const to = new Date(Date.parse(from) + (HOURLY_WINDOW_HOURS - 1) * MS_PER_HOUR).toISOString();
+  return {
+    range: { from, to },
+    endsAt: new Date(readyAt.getTime() + HOURLY_WINDOW_HOURS * MS_PER_HOUR).toISOString(),
+  };
+}
+
 /** Whether `now` is still inside the first 48 hours after `readyAt`, the hours a video's own stats show. */
 export function inFirstHours(readyAt: Date, now: Date): boolean {
   return now.getTime() < readyAt.getTime() + HOURLY_WINDOW_HOURS * MS_PER_HOUR;
