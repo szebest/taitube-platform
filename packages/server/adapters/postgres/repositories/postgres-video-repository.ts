@@ -17,6 +17,7 @@ import { type SQL, and, desc, eq, inArray, sql } from 'drizzle-orm';
 import {
   drizzleWhere,
   keysetBefore,
+  msTimestamp,
   notDeletedScope,
   ownerScope,
   videoReadScope,
@@ -80,7 +81,11 @@ export class PostgresVideoRepository extends VideoRepository {
       ownerScope(v, ownerId),
       videoReadScope(viewer ?? null),
       status ? eq(v.status, status) : notDeletedScope(v),
-      keysetBefore(v.createdAt, v.id, cursor && { sort: cursor.createdAt, tie: cursor.id })
+      keysetBefore(
+        msTimestamp(v.createdAt),
+        v.id,
+        cursor && { sort: cursor.createdAt, tie: cursor.id }
+      )
     );
 
     return await fromPromise(
@@ -89,7 +94,7 @@ export class PostgresVideoRepository extends VideoRepository {
           .select()
           .from(v)
           .where(whereClause)
-          .orderBy(desc(v.createdAt), desc(v.id))
+          .orderBy(desc(msTimestamp(v.createdAt)), desc(v.id))
           .limit(limit + 1),
       databaseUnavailable.during('listByOwner')
     );

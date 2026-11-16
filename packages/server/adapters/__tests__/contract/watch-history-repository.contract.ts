@@ -1,8 +1,10 @@
 import type { WatchHistoryRepositoryPort } from '@vp/core/repositories';
+import * as schema from '@vp/db';
 import type { WatchHistoryEntry } from '@vp/domain';
 import type { UserContext } from '@vp/permissions';
 import { expectOk } from '@vp/testing/result';
 import { HOUR_MS, OTHER_OWNER_ID, OWNER_ID, VIDEO_IDS, publicVideo, seedOwners } from './fixtures';
+import { walkOneAtATime } from './keyset-walk';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
 const VIEWER: UserContext = { id: OTHER_OWNER_ID, role: 'USER' };
@@ -106,6 +108,26 @@ export function describeWatchHistoryRepositoryContract(makeSubject: MakeReposito
       expect(first[0]?.video).toMatchObject({ id: VIDEO_IDS.b, status: 'READY' });
       expect(first[0]?.channel).toMatchObject({ handle: 'owner' });
       expect(videosOf(rest)).toEqual([VIDEO_IDS.c, VIDEO_IDS.a]);
+    });
+
+    it('walks on from a cursor through videos watched within one millisecond', async () => {
+      const videoIds = [VIDEO_IDS.a, VIDEO_IDS.b, VIDEO_IDS.c];
+      for (const videoId of videoIds) expectOk(await history.record(progress(videoId, 10, 1)));
+      await subject.spreadAcrossMicroseconds({
+        stamp: schema.watchHistory.watchedAt,
+        key: schema.watchHistory.id,
+        ids: videoIds.map(rowId),
+        at: new Date(BASE - HOUR_MS),
+      });
+
+      const served = await walkOneAtATime(
+        async (cursor: { watchedAt: Date; id: string } | null) =>
+          expectOk(await history.list(VIEWER, { cursor, limit: 1 })),
+        ({ watchedAt, id }) => ({ watchedAt, id }),
+        ({ video }) => video.id
+      );
+
+      expect(served.sort()).toEqual(videoIds.sort());
     });
 
     it('drops a video the viewer may no longer watch, and one that was deleted', async () => {

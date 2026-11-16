@@ -9,7 +9,7 @@ import {
 } from '@vp/domain';
 import type { UserContext } from '@vp/permissions';
 import { asc, count, desc, eq, getTableColumns, isNotNull, sql } from 'drizzle-orm';
-import { drizzleWhere, keysetBefore, watchableVideoScope } from '../scopes/index';
+import { drizzleWhere, keysetBefore, msTimestamp, watchableVideoScope } from '../scopes/index';
 import { type ChannelCardRow, channelCardColumns, toChannelCard } from './channel-card-query';
 import type { PostgresDatabase } from './types';
 
@@ -122,8 +122,7 @@ export function publicPlaylistsOf(
     .where(drizzleWhere(eq(pi.playlistId, p.id), isNotNull(v.posterKey), visible))
     .orderBy(asc(pi.position), asc(pi.id))
     .limit(PLAYLIST_PREVIEW_THUMBNAILS);
-  // `now()` stamps microseconds, a cursor carries milliseconds: on the raw column it skips rows.
-  const changedAt = sql`date_trunc('milliseconds', ${p.updatedAt})`;
+  const changedAt = msTimestamp(p.updatedAt);
 
   return db
     .select({
@@ -137,11 +136,7 @@ export function publicPlaylistsOf(
         eq(p.ownerId, ownerId),
         eq(p.visibility, 'public'),
         eq(p.isSystem, false),
-        keysetBefore(
-          changedAt,
-          p.id,
-          cursor && { sort: sql`${cursor.updatedAt.toISOString()}::timestamptz`, tie: cursor.id }
-        )
+        keysetBefore(changedAt, p.id, cursor && { sort: cursor.updatedAt, tie: cursor.id })
       )
     )
     .orderBy(desc(changedAt), desc(p.id))

@@ -1,4 +1,5 @@
 import type { VideoRecord, VideoRepository, VideoWithDetails } from '@vp/core/repositories';
+import * as schema from '@vp/db';
 import type { VideoStatus } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { Result } from '@vp/result';
@@ -12,6 +13,7 @@ import {
   publicVideo,
   seedOwners,
 } from './fixtures';
+import { SHARED_MILLISECOND, walkByCreatedAt } from './keyset-walk';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 import type { VideoContractContext } from './video-contract-context';
 import { describeVideoFeedContract } from './video-feed.contract';
@@ -106,6 +108,23 @@ export function describeVideoRepositoryContract(makeSubject: MakeRepositoriesSub
       ])('$scenario', async ({ status, expected }) => {
         const rows = expectOk(await videos.listByOwner({ ownerId: OWNER_ID, limit: 10, status }));
         expect(idsOf(rows)).toEqual(expected);
+      });
+
+      it('walks on from a cursor through videos created within one millisecond', async () => {
+        const tied = [VIDEO_IDS.d, VIDEO_IDS.e, VIDEO_IDS.f];
+        for (const id of tied) await subject.seedVideo(publicVideo({ id }), SHARED_MILLISECOND);
+        await subject.spreadAcrossMicroseconds({
+          stamp: schema.videos.createdAt,
+          key: schema.videos.id,
+          ids: tied,
+          at: SHARED_MILLISECOND,
+        });
+
+        const served = await walkByCreatedAt(async (cursor) =>
+          expectOk(await videos.listByOwner({ ownerId: OWNER_ID, cursor, limit: 1 }))
+        );
+
+        expect(served.sort()).toEqual([VIDEO_IDS.a, VIDEO_IDS.b, ...tied].sort());
       });
     });
 

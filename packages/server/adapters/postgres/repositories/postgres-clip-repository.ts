@@ -5,7 +5,7 @@ import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { fromPromise, map, type Result } from '@vp/result';
 import { desc, eq, getTableColumns } from 'drizzle-orm';
-import { drizzleWhere, keysetBefore, watchableVideoScope } from '../scopes/index';
+import { drizzleWhere, keysetBefore, msTimestamp, watchableVideoScope } from '../scopes/index';
 import { channelCardColumns, toChannelCard } from './channel-card-query';
 import type { PostgresDatabase } from './types';
 
@@ -45,10 +45,14 @@ export class PostgresClipRepository implements ClipRepositoryPort {
             drizzleWhere(
               eq(c.userId, viewer.id),
               watchableVideoScope(viewer),
-              keysetBefore(c.createdAt, c.id, cursor && { sort: cursor.createdAt, tie: cursor.id })
+              keysetBefore(
+                msTimestamp(c.createdAt),
+                c.id,
+                cursor && { sort: cursor.createdAt, tie: cursor.id }
+              )
             )
           )
-          .orderBy(desc(c.createdAt), desc(c.id))
+          .orderBy(desc(msTimestamp(c.createdAt)), desc(c.id))
           .limit(limit + 1),
       databaseUnavailable.during('listClips')
     );

@@ -1,8 +1,10 @@
 import type { Repositories } from '@vp/core/repositories';
+import * as schema from '@vp/db';
 import type { Channel, NewChannelAuditEntry, NewChannelUserRestriction } from '@vp/domain';
 import { expectOk } from '@vp/testing/result';
 import { INVITEE_ID, seedTeam } from './channel-team-fixtures';
 import { OTHER_OWNER_ID, OWNER_ID, publicVideo, seedOwners, VIDEO_IDS } from './fixtures';
+import { SHARED_MILLISECOND } from './keyset-walk';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
 const HOUR_MS = 3_600_000;
@@ -222,9 +224,15 @@ export function describeChannelUserRestrictionRepositoryContract(
       });
     });
 
-    it('pages by cursor, one more row than asked for so the caller sees a next page', async () => {
+    it('pages by cursor within one millisecond, one more row than asked for so the caller sees a next page', async () => {
       await apply(ban(OTHER_OWNER_ID));
       await apply(shadow(INVITEE_ID));
+      await subject.spreadAcrossMicroseconds({
+        stamp: schema.channelUserRestrictions.createdAt,
+        key: schema.channelUserRestrictions.userId,
+        ids: [OTHER_OWNER_ID, INVITEE_ID],
+        at: SHARED_MILLISECOND,
+      });
 
       const firstPage = await list(1);
       const [head] = firstPage;

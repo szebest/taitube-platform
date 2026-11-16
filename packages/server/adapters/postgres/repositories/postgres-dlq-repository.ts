@@ -10,7 +10,7 @@ import * as schema from '@vp/db';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { type Result, err, fromPromise, map, ok } from '@vp/result';
 import { desc, eq, sql } from 'drizzle-orm';
-import { drizzleWhere, keysetBefore } from '../scopes/index';
+import { drizzleWhere, keysetBefore, msTimestamp } from '../scopes/index';
 import type { PostgresDatabase } from './types';
 
 const { dlqEntries: dlq } = schema;
@@ -69,8 +69,7 @@ export class PostgresDlqRepository extends DlqRepository {
     options: ListDlqEntriesOptions
   ): Promise<Result<DlqEntryRecord[], DatabaseUnavailable>> {
     const { cursor, limit, status } = options;
-    // `now()` stamps microseconds, a cursor carries milliseconds: on the raw column it skips rows.
-    const parkedAt = sql`date_trunc('milliseconds', ${dlq.createdAt})`;
+    const parkedAt = msTimestamp(dlq.createdAt);
     const rows = await fromPromise(
       () =>
         this.db

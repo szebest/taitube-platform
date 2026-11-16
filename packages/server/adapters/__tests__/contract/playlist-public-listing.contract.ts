@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import * as schema from '@vp/db';
 import { PLAYLIST_PREVIEW_THUMBNAILS, type PlaylistVisibility } from '@vp/domain';
 import { expectOk } from '@vp/testing/result';
 import { OTHER_OWNER_ID, OWNER_ID, VIDEO_IDS, publicVideo } from './fixtures';
@@ -130,6 +131,12 @@ export function describePlaylistPublicListingContract(ctx: PlaylistContractConte
         }
         await ctx.subject.backdatePlaylist(ids[3] as string, AN_HOUR_AGO);
         await ctx.subject.backdatePlaylist(ids[2] as string, AN_HOUR_AGO);
+        await ctx.subject.spreadAcrossMicroseconds({
+          stamp: schema.playlists.updatedAt,
+          key: schema.playlists.id,
+          ids: ids.slice(2),
+          at: AN_HOUR_AGO,
+        });
 
         const walked = await walk(limit);
 

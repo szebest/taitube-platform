@@ -10,7 +10,7 @@ import type { CommentRemoval } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { fromPromise, map, type Result } from '@vp/result';
 import { and, desc, eq, gte, lt, or } from 'drizzle-orm';
-import { drizzleWhere, keysetBefore, notDeletedScope } from '../scopes/index';
+import { drizzleWhere, keysetBefore, msTimestamp, notDeletedScope } from '../scopes/index';
 import { moderateComment } from './comment-moderation-writes';
 import type { PostgresDatabase } from './types';
 
@@ -78,10 +78,14 @@ export class PostgresCommentModerationRepository implements CommentModerationRep
               eq(r.authorId, authorId),
               eq(r.disclosure, 'visible'),
               gte(r.createdAt, since),
-              keysetBefore(r.createdAt, r.id, cursor && { sort: cursor.createdAt, tie: cursor.id })
+              keysetBefore(
+                msTimestamp(r.createdAt),
+                r.id,
+                cursor && { sort: cursor.createdAt, tie: cursor.id }
+              )
             )
           )
-          .orderBy(desc(r.createdAt), desc(r.id))
+          .orderBy(desc(msTimestamp(r.createdAt)), desc(r.id))
           .limit(limit + 1),
       databaseUnavailable.during('listCommentRemovals')
     );

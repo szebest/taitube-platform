@@ -21,6 +21,7 @@ import { uuidv7 } from 'uuidv7';
 import {
   drizzleWhere,
   keysetBefore,
+  msTimestamp,
   notDeletedScope,
   publicVisibilityScope,
 } from '../scopes/index';
@@ -252,7 +253,7 @@ export class PostgresSubscriptionRepository implements SubscriptionRepositoryPor
             drizzleWhere(
               eq(cs.subscriberId, subscriberId),
               keysetBefore(
-                cs.createdAt,
+                msTimestamp(cs.createdAt),
                 cs.channelId,
                 options.cursor && {
                   sort: options.cursor.createdAt,
@@ -261,7 +262,7 @@ export class PostgresSubscriptionRepository implements SubscriptionRepositoryPor
               )
             )
           )
-          .orderBy(desc(cs.createdAt), desc(cs.channelId))
+          .orderBy(desc(msTimestamp(cs.createdAt)), desc(cs.channelId))
           .limit(options.limit + 1),
       databaseUnavailable.during('listUserSubscriptions')
     );
@@ -301,13 +302,13 @@ export class PostgresSubscriptionRepository implements SubscriptionRepositoryPor
             drizzleWhere(
               baseWhere,
               keysetBefore(
-                v.createdAt,
+                msTimestamp(v.createdAt),
                 v.id,
                 options.cursor && { sort: options.cursor.createdAt, tie: options.cursor.id }
               )
             )
           )
-          .orderBy(desc(v.createdAt), desc(v.id))
+          .orderBy(desc(msTimestamp(v.createdAt)), desc(v.id))
           .limit(options.limit + 1),
       databaseUnavailable.during('getSubscriptionFeed')
     );

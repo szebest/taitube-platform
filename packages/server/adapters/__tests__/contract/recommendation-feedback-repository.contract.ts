@@ -1,4 +1,5 @@
 import type { RecommendationFeedbackRepositoryPort } from '@vp/core/repositories';
+import * as schema from '@vp/db';
 import {
   type FeedbackTarget,
   RECOMMENDATION_FEEDBACK_LIMIT,
@@ -157,11 +158,17 @@ export function describeRecommendationFeedbackRepositoryContract(
       ).toEqual([]);
     });
 
-    it('walks on from a cursor, ties on the time broken by id', async () => {
+    it('walks on from a cursor, ties on the millisecond broken by id', async () => {
       expectOk(await feedback.put(entry(notInterested(VIDEO_IDS.a), 5, OTHER_OWNER_ID, 1)));
       expectOk(await feedback.put(entry(notInterested(VIDEO_IDS.b), 1, OTHER_OWNER_ID, 2)));
       expectOk(await feedback.put(entry(hideChannel(CHANNEL_ID), 1, OTHER_OWNER_ID, 3)));
       expectOk(await feedback.put(entry(hideChannel(OTHER_CHANNEL_ID), 9, OTHER_OWNER_ID, 4)));
+      await subject.spreadAcrossMicroseconds({
+        stamp: schema.recommendationFeedback.createdAt,
+        key: schema.recommendationFeedback.id,
+        ids: [rowId(2), rowId(3)],
+        at: new Date(BASE - 60_000),
+      });
 
       const first = expectOk(
         await feedback.list(viewerOf(OTHER_OWNER_ID), { kind: null, cursor: null, limit: 2 })

@@ -8,7 +8,7 @@ import type { NewChannelAuditEntry } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { fromPromise, map, type Result } from '@vp/result';
 import { and, desc, eq } from 'drizzle-orm';
-import { keysetBefore } from '../scopes/index';
+import { keysetBefore, msTimestamp } from '../scopes/index';
 import { appendChannelAudit } from './channel-audit-writes';
 import type { PostgresDatabase } from './types';
 
@@ -86,13 +86,13 @@ export class PostgresTrustedCommenterRepository implements TrustedCommenterRepos
             and(
               eq(t.channelId, channelId),
               keysetBefore(
-                t.createdAt,
+                msTimestamp(t.createdAt),
                 t.userId,
                 cursor && { sort: cursor.createdAt, tie: cursor.userId }
               )
             )
           )
-          .orderBy(desc(t.createdAt), desc(t.userId))
+          .orderBy(desc(msTimestamp(t.createdAt)), desc(t.userId))
           .limit(limit + 1),
       databaseUnavailable.during('listTrustedCommenters')
     );

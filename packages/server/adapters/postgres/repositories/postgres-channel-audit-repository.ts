@@ -4,7 +4,7 @@ import type { ChannelAuditEntry, NewChannelAuditEntry } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { fromPromise, map, type Result } from '@vp/result';
 import { and, desc, eq, lt } from 'drizzle-orm';
-import { keysetBefore } from '../scopes/index';
+import { keysetBefore, msTimestamp } from '../scopes/index';
 import { appendChannelAudit, toChannelAuditEntry } from './channel-audit-writes';
 import type { PostgresDatabase } from './types';
 
@@ -37,13 +37,13 @@ export class PostgresChannelAuditRepository implements ChannelAuditRepositoryPor
               actorUserId ? eq(log.actorUserId, actorUserId) : undefined,
               action ? eq(log.action, action) : undefined,
               keysetBefore(
-                log.createdAt,
+                msTimestamp(log.createdAt),
                 log.id,
                 cursor && { sort: cursor.createdAt, tie: cursor.id }
               )
             )
           )
-          .orderBy(desc(log.createdAt), desc(log.id))
+          .orderBy(desc(msTimestamp(log.createdAt)), desc(log.id))
           .limit(limit + 1),
       databaseUnavailable.during('listChannelAudit')
     );

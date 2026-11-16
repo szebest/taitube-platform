@@ -1,6 +1,8 @@
 import type { DlqRepository } from '@vp/core/repositories';
+import * as schema from '@vp/db';
 import { expectOk } from '@vp/testing/result';
 import { VIDEO_IDS, idsOf, publicVideo, seedOwners } from './fixtures';
+import { SHARED_MILLISECOND } from './keyset-walk';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
 const DLQ_IDS = {
@@ -77,7 +79,13 @@ export function describeDlqRepositoryContract(makeSubject: MakeRepositoriesSubje
       expect(idsOf(expectOk(await dlq.list({ limit: 10, status })))).toEqual(expected);
     });
 
-    it('over-fetches one row so the caller can detect a next page', async () => {
+    it('over-fetches one row so the caller can detect a next page, within one millisecond', async () => {
+      await subject.spreadAcrossMicroseconds({
+        stamp: schema.dlqEntries.createdAt,
+        key: schema.dlqEntries.id,
+        ids: [DLQ_IDS.first, DLQ_IDS.second],
+        at: SHARED_MILLISECOND,
+      });
       const window = expectOk(await dlq.list({ limit: 1 }));
       expect(idsOf(window)).toEqual([DLQ_IDS.second, DLQ_IDS.first]);
 

@@ -1,4 +1,5 @@
 import type { ListPublicVideosOptions, VideoRecord } from '@vp/core/repositories';
+import * as schema from '@vp/db';
 import type { PublicFeedCursor, PublicFeedFilter, PublicFeedSort, VideoFormat } from '@vp/domain';
 import { expectOk } from '@vp/testing/result';
 import {
@@ -12,6 +13,7 @@ import {
   publicVideo,
   seedCategories,
 } from './fixtures';
+import { walkOneAtATime } from './keyset-walk';
 import type { VideoContractContext } from './video-contract-context';
 
 interface FeedSeed {
@@ -241,6 +243,34 @@ export function describeVideoFeedContract(ctx: VideoContractContext): void {
         }
 
         expect(walked).toEqual(expected);
+      }
+    );
+
+    it.each(SORTS)(
+      'walks the $sort feed through videos created within one millisecond',
+      async ({ sort }) => {
+        const ids = FEED_SEEDS.map(({ id }) => id);
+        await ctx.subject.spreadAcrossMicroseconds({
+          stamp: schema.videos.createdAt,
+          key: schema.videos.id,
+          ids,
+          at: new Date(FEED_INSTANT_MS - HOUR_MS),
+        });
+        let instant = FEED_INSTANT_MS;
+
+        const served = await walkOneAtATime(
+          async (cursor: PublicFeedCursor | null) => {
+            const page = expectOk(
+              await ctx.videos.listPublic({ limit: 1, sort, ...(cursor ? { cursor } : {}) })
+            );
+            instant = page.instant;
+            return page.items;
+          },
+          (row) => cursorFor(row, instant),
+          ({ id }) => id
+        );
+
+        expect(served.sort()).toEqual(ids.sort());
       }
     );
 

@@ -21,6 +21,7 @@ import {
   containsScope,
   drizzleWhere,
   keysetPast,
+  msTimestamp,
   notDeletedScope,
   ownerScope,
 } from '../scopes/index';
@@ -31,7 +32,7 @@ import type { PostgresDatabase } from './types';
 const { videos: v, videoEvents: ve, categories: c, channels: ch } = schema;
 
 function sortKey(sort: LibrarySort) {
-  if (sort === 'newest') return v.createdAt;
+  if (sort === 'newest') return msTimestamp(v.createdAt);
   if (sort === 'title') return sql`${v.title} COLLATE "C"`;
   return v[CREATOR_LIBRARY_COUNTERS[sort]];
 }

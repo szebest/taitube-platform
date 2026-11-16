@@ -1,8 +1,10 @@
 import type { Repositories } from '@vp/core/repositories';
+import * as schema from '@vp/db';
 import type { Channel, ChannelRole } from '@vp/domain';
 import { expectOk } from '@vp/testing/result';
 import { INVITEE_ID, auditOf, expired, invite, inviteId, seedTeam } from './channel-team-fixtures';
 import { OTHER_OWNER_ID, OWNER_ID, seedOwners } from './fixtures';
+import { SHARED_MILLISECOND } from './keyset-walk';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
 export function describeChannelInviteRepositoryContract(
@@ -221,7 +223,7 @@ export function describeChannelInviteRepositoryContract(
         expect(await pendingIds()).toEqual([]);
       });
 
-      it('walks the invites by keyset, one more row than the limit', async () => {
+      it('walks the invites by keyset within one millisecond, one more row than the limit', async () => {
         const second = await otherChannel();
         const third = expectOk(
           await repositories.channels.create({
@@ -238,6 +240,12 @@ export function describeChannelInviteRepositoryContract(
             )
           );
         }
+        await subject.spreadAcrossMicroseconds({
+          stamp: schema.channelInvites.createdAt,
+          key: schema.channelInvites.id,
+          ids: [inviteId(1), inviteId(2), inviteId(3)],
+          at: SHARED_MILLISECOND,
+        });
         const all = await pendingIds();
 
         const firstPage = expectOk(
