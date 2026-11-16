@@ -40,6 +40,8 @@ export * from './in-memory-video-studio-repository';
 export * from './in-memory-video-view-repository';
 export * from './in-memory-watch-history-repository';
 export * from './in-memory-webhook-repository';
+export * from './in-memory-data-export-repository';
+export * from './in-memory-export-row-repository';
 export * from './public-feed-query';
 export * from './types';
 export * from './in-memory-trusted-commenter-repository';

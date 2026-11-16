@@ -23,6 +23,7 @@ export * from './watch-party-activity-schema';
 export * from './channel-team-schema';
 export * from './screening-schema';
 export * from './channel-identity-schema';
+export * from './exports-schema';
 export * from './client';
 export * from './migrate';
 export * from './seed';

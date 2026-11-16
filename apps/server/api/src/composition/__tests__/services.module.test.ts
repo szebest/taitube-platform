@@ -38,6 +38,7 @@ describe('apps/server/api/composition: services module', () => {
       'captionTrackService',
       'categoryService',
       'channelAuditService',
+      'channelExportService',
       'channelFeaturedService',
       'channelIdentityService',
       'channelImagePipelineService',

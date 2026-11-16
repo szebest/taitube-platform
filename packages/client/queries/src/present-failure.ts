@@ -28,6 +28,7 @@ function kindOf(code: ErrorCode): ErrorStateKind {
     case ErrorCodes.CLIP_NOT_FOUND:
     case ErrorCodes.PICK_NOT_FOUND:
     case ErrorCodes.WEBHOOK_NOT_FOUND:
+    case ErrorCodes.EXPORT_NOT_FOUND:
     case ErrorCodes.LIVE_STREAM_NOT_FOUND:
     case ErrorCodes.WATCH_PARTY_NOT_FOUND:
     case ErrorCodes.WATCH_PARTY_ROLE_NOT_FOUND:
@@ -62,6 +63,7 @@ function kindOf(code: ErrorCode): ErrorStateKind {
     case ErrorCodes.RATE_LIMITED:
     case ErrorCodes.LIVE_CHAT_SLOW_MODE:
     case ErrorCodes.COMMENTS_SLOW_MODE:
+    case ErrorCodes.EXPORT_DAILY_LIMIT:
     case ErrorCodes.WATCH_PARTY_PASSWORD_LOCKED:
     case ErrorCodes.WATCH_PARTY_SLOW_MODE:
       return 'rate-limited';
@@ -118,6 +120,8 @@ function kindOf(code: ErrorCode): ErrorStateKind {
     case ErrorCodes.CAPTION_OVERWRITE_UNCONFIRMED:
     case ErrorCodes.PICK_WINDOW_OVERLAP:
     case ErrorCodes.WEBHOOK_LIMIT_REACHED:
+    case ErrorCodes.EXPORT_IN_PROGRESS:
+    case ErrorCodes.EXPORT_TOO_LARGE:
     case ErrorCodes.WEBHOOK_DELIVERY_FAILED:
     case ErrorCodes.WEBHOOK_DELIVERY_REJECTED:
     case ErrorCodes.OEMBED_URL_UNSUPPORTED:

@@ -14,8 +14,10 @@ import type { CommentModerationRepositoryPort } from './comment-moderation-repos
 import type { CommentReportRepositoryPort } from './comment-report-repository';
 import type { CommentRepositoryPort } from './comment-repository';
 import type { CommentSettingsRepositoryPort } from './comment-settings-repository';
+import type { DataExportRepositoryPort } from './data-export-repository';
 import type { DlqRepository } from './dlq-repository';
 import type { EventRepository } from './event-repository';
+import type { ExportRowRepositoryPort } from './export-row-repository';
 import type { FingerprintRepository } from './fingerprint-repository';
 import type { LiveChatRepositoryPort } from './live-chat-repository';
 import type { LiveStreamRepositoryPort } from './live-stream-repository';
@@ -70,6 +72,8 @@ export interface Repositories {
   channelMembers: ChannelMemberRepositoryPort;
   channelInvites: ChannelInviteRepositoryPort;
   channelAudit: ChannelAuditRepositoryPort;
+  dataExports: DataExportRepositoryPort;
+  exportRows: ExportRowRepositoryPort;
   videoReactions: VideoReactionRepositoryPort;
   subscriptions: SubscriptionRepositoryPort;
   videoViews: VideoViewRepositoryPort;

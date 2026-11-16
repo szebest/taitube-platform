@@ -1,3 +1,4 @@
+import { WEBHOOK_EVENTS } from '@vp/domain';
 import { createWebhook, deleteWebhook, listWebhooks } from '../webhooks';
 
 describe('packages/api-contracts: webhooks', () => {
@@ -30,7 +31,7 @@ describe('packages/api-contracts: webhooks', () => {
     },
     {
       scenario: 'more events than exist',
-      body: { url: 'https://x.test/h', events: ['video.ready', 'live.started', 'video.ready'] },
+      body: { url: 'https://x.test/h', events: [...WEBHOOK_EVENTS, 'video.ready'] },
       ok: false,
     },
   ])('checks the create body of $scenario', ({ body, ok }) => {

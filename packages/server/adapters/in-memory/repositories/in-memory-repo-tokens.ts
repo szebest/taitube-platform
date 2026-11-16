@@ -15,6 +15,7 @@ import type { InMemoryCommentModerationRepository } from './in-memory-comment-mo
 import type { InMemoryCommentReportRepository } from './in-memory-comment-report-repository';
 import type { InMemoryCommentRepository } from './in-memory-comment-repository';
 import type { InMemoryCommentSettingsRepository } from './in-memory-comment-settings-repository';
+import type { InMemoryDataExportRepository } from './in-memory-data-export-repository';
 import type { InMemoryDlqRepository } from './in-memory-dlq-repository';
 import type { InMemoryEventRepository } from './in-memory-event-repository';
 import type { InMemoryFingerprintRepository } from './in-memory-fingerprint-repository';
@@ -62,6 +63,7 @@ export const Repo = {
   channelMembers: token<InMemoryChannelMemberRepository>('channelMembers'),
   channelInvites: token<InMemoryChannelInviteRepository>('channelInvites'),
   channelAudit: token<InMemoryChannelAuditRepository>('channelAudit'),
+  dataExports: token<InMemoryDataExportRepository>('dataExports'),
   commentSettings: token<InMemoryCommentSettingsRepository>('commentSettings'),
   channelUserRestrictions:
     token<InMemoryChannelUserRestrictionRepository>('channelUserRestrictions'),

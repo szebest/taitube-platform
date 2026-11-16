@@ -14,6 +14,7 @@ import { InMemoryClipRepository } from './in-memory-clip-repository';
 import { provideCommentRepositories } from './in-memory-comment-graph';
 import { InMemoryDlqRepository } from './in-memory-dlq-repository';
 import { InMemoryEventRepository } from './in-memory-event-repository';
+import { provideExports } from './in-memory-export-providers';
 import { InMemoryLiveStreamRepository } from './in-memory-live-stream-repository';
 import { InMemoryNotificationRepository } from './in-memory-notification-repository';
 import { InMemoryOutboxRepository } from './in-memory-outbox-repository';
@@ -47,7 +48,7 @@ import { InMemoryWebhookRepository } from './in-memory-webhook-repository';
  */
 export function graph(now: Clock = realClock): Container {
   return provideCommentRepositories(
-    provideScreening(new Container())
+    provideExports(provideScreening(new Container()), now)
       .provide(Repo.outbox, () => new InMemoryOutboxRepository(now))
       .provide(Repo.renditions, () => new InMemoryRenditionRepository())
       .provide(Repo.steps, () => new InMemoryStepRepository(now))

@@ -63,3 +63,4 @@ export * from './watch-party/index';
 export * from './channel-audit-service';
 export * from './channel-invite-service';
 export * from './channel-member-service';
+export * from './channel-export-service';

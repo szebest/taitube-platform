@@ -28,7 +28,7 @@ export const studioTeam = {
     enum: {
       capability: {
         'video.read': 'See private and unlisted videos and their captions',
-        'analytics.read': 'Read analytics and exports',
+        'analytics.read': 'Read analytics',
         'video.edit': 'Upload and edit videos, thumbnails and visibility',
         'video.delete': 'Delete videos',
         'channel.edit': 'Edit the channel page and identity',
@@ -37,7 +37,8 @@ export const studioTeam = {
         'comment.heart': 'Heart comments',
         'comment.moderate': 'Moderate comments',
         'comment.settings': 'Change comment settings and blocked words',
-        'data.export': 'Export comments, videos and posts',
+        'analytics.export': 'Export analytics',
+        'data.export': 'Export comments and videos',
         'team.manage': 'Invite people, change roles and read the audit log',
         'channel.own': 'Delete the channel and transfer ownership',
       },
@@ -116,6 +117,8 @@ export const studioTeam = {
         'trusted.added': 'Trusted a commenter',
         'trusted.removed': 'Stopped trusting a commenter',
         'settings.comments.updated': 'Changed the comment settings',
+        'export.requested': 'Requested an export',
+        'export.deleted': 'Deleted an export',
       },
     },
   }),
@@ -151,6 +154,17 @@ export const studioTeam = {
   }),
   teamAuditPinned: dt('{state:enum}', {
     enum: { state: { on: 'pinned', off: 'unpinned' } },
+  }),
+  teamAuditExport: dt('{kind:enum} as {format:enum}', {
+    enum: {
+      kind: {
+        video_analytics: 'video analytics',
+        channel_analytics: 'channel analytics',
+        comments: 'comments',
+        videos: 'videos',
+      },
+      format: { csv: 'CSV', json: 'JSON' },
+    },
   }),
   teamAuditSettingsFields: dt('{fields:list}', {
     list: { fields: { type: 'conjunction' } },

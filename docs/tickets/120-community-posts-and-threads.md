@@ -104,6 +104,9 @@ need the same model, so one table serves all three instead of two copies of 42, 
 the post card's click beacon; likes, replies and votes are read from their own tables. Only members with `read PostStats`
 see any of it, and nothing is on the public post resource.
 
+Posts also join [118](118-creator-data-portability-and-api.md)'s channel exports: this ticket adds the `posts` kind to
+`DATA_EXPORT_KINDS`, with its row schema (each post with its poll results) and the page reader the export job pulls.
+
 ### 5. Viewer threads on a video
 
 - Table `video_threads` (`id`, `video_id`, `author_id`, `anchor_ms`, `title` up to 100, `body` up to 1000, `pinned_at` (the `pin` action on `Thread`, up to 3 per video),

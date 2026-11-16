@@ -20,6 +20,8 @@ import {
   ANNOUNCE_LIVE,
   AnnounceLiveJob,
   CaptionsJob,
+  EXPORT_DATA,
+  ExportJob,
   HousekeepingJob,
   LiveJob,
   NOTIFY_COMMENT,
@@ -50,6 +52,7 @@ import { consuming } from './consuming';
 import type { Every } from './heartbeat';
 import { liveCollaborators } from './live-collaborators';
 import { createCaptionsStage } from './stages/captions/captions-stage';
+import { createExportProcessor } from './stages/exports/export-stage';
 import { createHousekeepingProcessor } from './stages/housekeeping/index';
 import { createLiveStage } from './stages/live/live-stage';
 import { createAnnounceLiveProcessor } from './stages/notifications/announce-live';
@@ -95,7 +98,7 @@ export interface StageDeps {
 
 export type StageProcessor = (job: QueueJob<unknown>) => Promise<Result<unknown, AnyFailure>>;
 
-/** The notify queue carries the SSE status job and the jobs that create notification rows. */
+/** The notify queue carries the SSE status job, the jobs that create notification rows and exports. */
 export const notify = (d: StageDeps): StageProcessor => {
   const { repositories, logger } = d;
   const status = consuming(
@@ -123,6 +126,18 @@ export const notify = (d: StageDeps): StageProcessor => {
     [NOTIFY_MODERATION]: consuming(NotifyModerationJob, createNotifyModerationProcessor(rowDeps)),
     [NOTIFY_TEAM_INVITE]: consuming(NotifyTeamInviteJob, createNotifyTeamInviteProcessor(rowDeps)),
     [NOTIFY_PROCESSING]: consuming(NotifyProcessingJob, createNotifyProcessingProcessor(rowDeps)),
+    [EXPORT_DATA]: consuming(
+      ExportJob,
+      createExportProcessor({
+        repositories,
+        storage: d.storage,
+        webhookDispatcher: d.webhookDispatcher,
+        bucket: d.config.buckets.raw,
+        tmpDir: d.config.worker.tmpDir,
+        logger,
+        now: d.now,
+      })
+    ),
   };
   return (job) => (byName[job.name] ?? status)(job);
 };

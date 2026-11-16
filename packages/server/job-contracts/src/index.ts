@@ -6,6 +6,7 @@ import { LadderEntry, RENDITIONS, type RenditionName } from './ladder';
 export * from './captions-flow';
 export * from './channel-images';
 export * from './chunks';
+export * from './exports';
 export * from './ladder';
 export * from './live';
 export * from './notifications';
@@ -148,6 +149,7 @@ export const HousekeepingJob = z.object({
     'purge-screening-evidence',
     'purge-channel-images',
     'purge-handle-history',
+    'purge-exports',
   ]),
 });
 export type HousekeepingJob = z.infer<typeof HousekeepingJob>;

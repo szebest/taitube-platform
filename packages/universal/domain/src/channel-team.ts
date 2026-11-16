@@ -1,5 +1,6 @@
 import type { RestrictionKind } from './channel-restriction';
 import type { CommentSettingsField, Disclosure } from './comment-settings';
+import type { DataExportFormat, DataExportKind } from './data-export';
 
 /** One per row of the channel role matrix; an action added to the matrix adds its capability here. */
 export const CHANNEL_CAPABILITIES = [
@@ -13,6 +14,7 @@ export const CHANNEL_CAPABILITIES = [
   'comment.heart',
   'comment.moderate',
   'comment.settings',
+  'analytics.export',
   'data.export',
   'team.manage',
   'channel.own',
@@ -33,12 +35,13 @@ const CHANNEL_ROLES = {
     'comment.heart',
     'comment.moderate',
     'comment.settings',
+    'analytics.export',
     'data.export',
     'team.manage',
   ],
   editor: ['video.read', 'analytics.read', 'video.edit', 'channel.edit', 'content.pin'],
   moderator: ['video.read', 'comment.pin', 'comment.moderate'],
-  analytics: ['video.read', 'analytics.read'],
+  analytics: ['video.read', 'analytics.read', 'analytics.export'],
 } as const satisfies Record<string, readonly ChannelCapability[]>;
 
 export type ChannelRole = keyof typeof CHANNEL_ROLES;
@@ -158,7 +161,9 @@ type ChannelAuditEvent =
       targetType: 'channel';
       targetId: string;
       meta: { fields: ChannelAuditField[] };
-    };
+    }
+  | { action: 'export.requested'; targetType: 'export'; targetId: string; meta: ExportMeta }
+  | { action: 'export.deleted'; targetType: 'export'; targetId: string; meta: ExportMeta };
 
 /** Type literals, not interfaces, so a meta stays assignable to the jsonb column's record type. */
 type InviteMeta = {
@@ -181,6 +186,8 @@ type UserMeta = Record<never, never>;
 type BanMeta = { expiresAt: string | null };
 
 type LiftMeta = { kind: RestrictionKind };
+
+type ExportMeta = { kind: DataExportKind; format: DataExportFormat };
 
 export type ChannelAuditAction = ChannelAuditEvent['action'];
 
@@ -231,6 +238,8 @@ const AUDIT_ACTIONS: Record<ChannelAuditAction, true> = {
   'trusted.removed': true,
   'settings.comments.updated': true,
   'channel.updated': true,
+  'export.requested': true,
+  'export.deleted': true,
 };
 
 export const CHANNEL_AUDIT_ACTIONS = Object.keys(AUDIT_ACTIONS) as ChannelAuditAction[];
