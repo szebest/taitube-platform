@@ -47,6 +47,11 @@ jobs:
               - '!**/*.md'
               - '!docs/**/!(tokens.json)'
 
+      - name: Install FFmpeg beside the workspace setup
+        uses: ./.github/actions/setup-ffmpeg
+        with:
+          background: 'true'
+
       - name: Set up the workspace
         if: github.event_name != 'pull_request' || steps.changes.outputs.code == 'true'
         uses: ./.github/actions/setup-workspace
@@ -181,9 +186,6 @@ jobs:
       - name: Set up the workspace
         uses: ./.github/actions/setup-workspace
 
-      - name: Set up FFmpeg
-        uses: ./.github/actions/setup-ffmpeg
-
       - name: Set up kustomize
         uses: ./.github/actions/setup-kustomize
 
@@ -199,6 +201,9 @@ jobs:
           key: vitest-results-${{ matrix.shard }}-${{ runner.os }}-${{ github.sha }}
           restore-keys: |
             vitest-results-${{ matrix.shard }}-${{ runner.os }}-
+
+      - name: Wait for FFmpeg
+        uses: ./.github/actions/ffmpeg-ready
 
       - name: Run unit tests (Node 24)
         id: unit-tests
@@ -261,13 +266,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v7
 
+      - name: Install FFmpeg beside the workspace setup
+        uses: ./.github/actions/setup-ffmpeg
+        with:
+          background: 'true'
+
       - name: Set up the workspace
         uses: ./.github/actions/setup-workspace
         with:
           bun: 'true'
-
-      - name: Set up FFmpeg
-        uses: ./.github/actions/setup-ffmpeg
 
       - name: Set up kustomize
         uses: ./.github/actions/setup-kustomize
@@ -276,6 +283,9 @@ jobs:
         uses: ./.github/actions/video-fixtures
         with:
           only: *unit-fixtures
+
+      - name: Wait for FFmpeg
+        uses: ./.github/actions/ffmpeg-ready
 
       - name: Run the api, worker and packages unit tests under Bun (runtime parity gate)
         run: pnpm test:bun --shard=${{ matrix.shard }}/5

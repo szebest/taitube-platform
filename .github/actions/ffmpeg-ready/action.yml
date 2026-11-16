@@ -1,0 +1,12 @@
+name: FFmpeg ready
+description: Waits for the FFmpeg install setup-ffmpeg started, in the background or not, and fails with its log when it failed.
+
+runs:
+  using: composite
+  steps:
+    - name: Wait for the FFmpeg install
+      shell: bash
+      run: |
+        until [ -f ~/ffmpeg-ready ] || [ -f ~/ffmpeg-failed ]; do sleep 1; done
+        cat ~/ffmpeg-install.log 2>/dev/null || true
+        [ -f ~/ffmpeg-ready ]
