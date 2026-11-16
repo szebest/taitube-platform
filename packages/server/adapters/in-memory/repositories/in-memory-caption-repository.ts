@@ -23,6 +23,7 @@ import {
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { isErr, ok, type Result } from '@vp/result';
+import { type Clock, realClock } from './clock';
 import { searchTokens } from './search-text';
 
 export interface CaptionDependencies {
@@ -30,6 +31,7 @@ export interface CaptionDependencies {
   channels: Pick<ChannelRepositoryPort, 'findByUserId'>;
   events: EventRepository;
   userEvents: UserEventRepository;
+  now?: Clock;
 }
 
 type CaptionEvent = `captions.${string}`;
@@ -253,7 +255,7 @@ export class InMemoryCaptionRepository extends CaptionRepository {
     olderThanMs: number,
     limit: number
   ): Promise<Result<CaptionRecord[], DatabaseUnavailable>> {
-    const cutoff = Date.now() - olderThanMs;
+    const cutoff = (this.deps.now ?? realClock)() - olderThanMs;
     const stalled = [...this.tracks.values()]
       .filter(
         (track) =>

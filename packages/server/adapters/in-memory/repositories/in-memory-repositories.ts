@@ -1,4 +1,5 @@
 import type { Repositories } from '@vp/core/repositories';
+import type { Clock } from './clock';
 import type { InMemoryCaptionRepository } from './in-memory-caption-repository';
 import type { InMemoryCategoryRepository } from './in-memory-category-repository';
 import type { InMemoryChannelAuditRepository } from './in-memory-channel-audit-repository';
@@ -97,8 +98,8 @@ export class InMemoryRepositories extends InMemoryWatchPartyRepositories impleme
   readonly liveStreams: InMemoryLiveStreamRepository;
   readonly liveChat: InMemoryLiveChatRepository;
 
-  constructor() {
-    const c = graph();
+  constructor({ now }: { now?: Clock } = {}) {
+    const c = graph(now);
     super(c.get(Repo.outbox), c.get(Repo.userEvents));
     this.events = c.get(Repo.events);
     this.renditions = c.get(Repo.renditions);

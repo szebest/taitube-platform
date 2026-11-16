@@ -10,13 +10,11 @@ import { ChannelInviteService } from '../channel-invite-service';
 const OWNER: UserContext = { id: '00000000-0000-7000-8000-0000000017a1', role: 'USER' };
 const INVITEE: UserContext = { id: '00000000-0000-7000-8000-0000000017a2', role: 'USER' };
 const STRANGER: UserContext = { id: '00000000-0000-7000-8000-0000000017a3', role: 'USER' };
-// The in-memory invites read the real clock to tell a pending invite from an expired one, so the
-// service's clock starts at the real now: a fixed past date expires its invites once the date passes.
-const NOW = Date.now();
+const NOW = Date.parse('2026-11-01T00:00:00Z');
 const EXPIRES_AT = new Date(NOW + CHANNEL_INVITE_TTL_DAYS * 86_400_000).toISOString();
 
 async function setup() {
-  const repositories = new InMemoryRepositories();
+  const repositories = new InMemoryRepositories({ now: () => NOW });
   const own = expectOk(
     await repositories.channels.create({ userId: OWNER.id, handle: 'owner', displayName: 'Owner' })
   );
@@ -233,7 +231,7 @@ describe('apps/server/api/services: ChannelInviteService', () => {
             inviteeUserId: INVITEE.id,
             role: 'analytics',
             invitedBy: STRANGER.id,
-            expiresAt: new Date(Date.now() + 86_400_000),
+            expiresAt: new Date(NOW + 86_400_000),
           },
           {
             channelId: second.id,

@@ -3,9 +3,14 @@ import { MS_PER_DAY } from '@vp/domain/time';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { type Result, ok } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
+import { type Clock, realClock } from './clock';
 
 export class InMemoryOutboxRepository extends OutboxRepository {
   private readonly items = new Map<string, OutboxRecord>();
+
+  constructor(private readonly now: Clock = realClock) {
+    super();
+  }
 
   async enqueue(item: NewOutboxInput): Promise<Result<OutboxRecord, DatabaseUnavailable>> {
     const id = item.id || uuidv7();
@@ -49,7 +54,7 @@ export class InMemoryOutboxRepository extends OutboxRepository {
   }
 
   async prune(retentionDays: number): Promise<Result<number, DatabaseUnavailable>> {
-    const cutoff = new Date(Date.now() - retentionDays * MS_PER_DAY);
+    const cutoff = new Date(this.now() - retentionDays * MS_PER_DAY);
     let count = 0;
     for (const [id, item] of this.items.entries()) {
       if (item.publishedAt !== null && item.publishedAt < cutoff) {

@@ -25,6 +25,7 @@ import type { DatabaseUnavailable } from '@vp/errors';
 import { transitionNotificationJobs } from '@vp/job-contracts';
 import { canReadVideo } from '@vp/permissions';
 import { type Result, assertNever, isErr, map, ok, unwrapOr } from '@vp/result';
+import { type Clock, realClock } from './clock';
 import { byKeysetDesc, isKeysetBefore } from './keyset';
 import { newVideoRecord } from './new-video-record';
 import { selectPublicFeed } from './public-feed-query';
@@ -40,9 +41,11 @@ export class InMemoryVideoRepository extends VideoRepository {
   private readonly uploadsRepo?: UploadLookup;
   private readonly outboxRepo?: OutboxRepository;
   private readonly userEventsRepo?: UserEventRepository;
+  private readonly now: Clock;
 
   constructor(options: InMemoryVideoRepositoryOptions = {}) {
     super();
+    this.now = options.now ?? realClock;
     this.eventsRepo = options.eventsRepo;
     this.renditionsRepo = options.renditionsRepo;
     this.stepsRepo = options.stepsRepo;
@@ -202,7 +205,7 @@ export class InMemoryVideoRepository extends VideoRepository {
     const { status, minGeneration, without, limit } = filter;
     const idle = filter.idleFor && {
       since: filter.idleFor.since,
-      before: new Date(Date.now() - filter.idleFor.ms),
+      before: new Date(this.now() - filter.idleFor.ms),
     };
     const results: VideoRecord[] = [];
 
