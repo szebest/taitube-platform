@@ -1,5 +1,5 @@
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
-import type { ActingChannel } from '@vp/domain';
+import { type ActingChannel, CHANNEL_INVITE_TTL_DAYS } from '@vp/domain';
 import { type AnyFailure, ErrorCodes } from '@vp/errors';
 import { Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
@@ -10,7 +10,10 @@ import { ChannelInviteService } from '../channel-invite-service';
 const OWNER: UserContext = { id: '00000000-0000-7000-8000-0000000017a1', role: 'USER' };
 const INVITEE: UserContext = { id: '00000000-0000-7000-8000-0000000017a2', role: 'USER' };
 const STRANGER: UserContext = { id: '00000000-0000-7000-8000-0000000017a3', role: 'USER' };
-const NOW = Date.parse('2099-11-01T00:00:00.000Z');
+// The in-memory invites read the real clock to tell a pending invite from an expired one, so the
+// service's clock starts at the real now: a fixed past date expires its invites once the date passes.
+const NOW = Date.now();
+const EXPIRES_AT = new Date(NOW + CHANNEL_INVITE_TTL_DAYS * 86_400_000).toISOString();
 
 async function setup() {
   const repositories = new InMemoryRepositories();
@@ -42,7 +45,7 @@ describe('apps/server/api/services: ChannelInviteService', () => {
       role: 'editor',
       status: 'pending',
       invitedBy: OWNER.id,
-      expiresAt: '2099-11-15T00:00:00.000Z',
+      expiresAt: EXPIRES_AT,
       invitee: { handle: 'ada', displayName: 'Ada', avatarUrl: null },
     });
     expect(expectOk(await repositories.outbox.claimBatch(10))).toHaveLength(1);
@@ -171,7 +174,7 @@ describe('apps/server/api/services: ChannelInviteService', () => {
             },
             role: 'editor',
             invitedByName: 'Owner',
-            expiresAt: '2099-11-15T00:00:00.000Z',
+            expiresAt: EXPIRES_AT,
           },
         ],
         nextCursor: null,

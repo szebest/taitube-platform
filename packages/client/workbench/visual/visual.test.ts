@@ -14,6 +14,9 @@ declare global {
 
 const SHOWN_MODES = ['dark', 'light', 'oled'];
 
+/** The instant every shot is taken at, so a story's "4 weeks ago" reads as it did when its baseline was drawn. */
+const SHOT_AT = new Date('2026-11-12T12:00:00.000Z');
+
 const index: { entries: Record<string, StoryEntry> } = JSON.parse(
   readFileSync(new URL('../storybook-static/index.json', import.meta.url), 'utf8')
 );
@@ -38,6 +41,7 @@ for (const shot of shots) {
   const variant = shotVariant(shot);
   test(`${story} at ${theme} ${mode}${variant}`, async ({ page }) => {
     const globals = `theme:${theme};mode:${mode};motion:${motion};direction:${direction};locale:${locale}`;
+    await page.clock.setFixedTime(SHOT_AT);
     await page.goto(`/iframe.html?id=${story}&viewMode=story&globals=${globals}`);
     const root = page.locator('#storybook-root');
     await expect(root.locator(':scope > *').first()).toBeAttached();

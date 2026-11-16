@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import {
   type APIRequestContext,
+  type BrowserContext,
   type Locator,
   type Page,
   test as base,
@@ -36,10 +37,68 @@ type TestFixtures = {
 
 const LOCAL_HOSTS = new Set(['127.0.0.1', 'localhost', '[::1]']);
 
+const HYDRATION_TIMEOUT_MS = 15_000;
+
+const isHydrated = () =>
+  Object.keys(document.body ?? {}).some((key) => key.startsWith('__reactFiber'));
+
+/** Resolves once React has hydrated the document the page shows, when it is one of `origins`. */
+async function documentHydrated(page: Page, origins: readonly string[]): Promise<void> {
+  if (!origins.includes(new URL(page.url()).origin)) return;
+  await expect
+    .poll(() => page.evaluate(isHydrated), { timeout: HYDRATION_TIMEOUT_MS, intervals: [50] })
+    .toBe(true);
+}
+
+/**
+ * Makes `goto` and `reload` resolve only once the app's document is hydrated: before that a click is
+ * a full page load or lost, a scroll is undone, and a measured box can still be swapped for another.
+ * Offline, a navigation shows what the service worker serves, which need not hydrate.
+ */
+function hydrateOnNavigation(page: Page, origins: readonly string[], online: () => boolean): void {
+  const goto = page.goto.bind(page);
+  const reload = page.reload.bind(page);
+  const untilHydrated = async () => {
+    if (online()) await documentHydrated(page, origins);
+  };
+  page.goto = async (...args) => {
+    const response = await goto(...args);
+    await untilHydrated();
+    return response;
+  };
+  page.reload = async (...args) => {
+    const response = await reload(...args);
+    await untilHydrated();
+    return response;
+  };
+}
+
+function appOrigins(...urls: (string | undefined)[]): string[] {
+  return urls.filter((url): url is string => Boolean(url)).map((url) => new URL(url).origin);
+}
+
+/** Every page `context` opens navigates as `hydrateOnNavigation` says, over the app's own origins. */
+export function hydrateEveryPage(context: BrowserContext, ...urls: (string | undefined)[]): void {
+  const origins = appOrigins(...urls);
+  let online = true;
+  const setOffline = context.setOffline.bind(context);
+  context.setOffline = async (offline) => {
+    online = !offline;
+    await setOffline(offline);
+  };
+  for (const page of context.pages()) hydrateOnNavigation(page, origins, () => online);
+  context.on('page', (page) => hydrateOnNavigation(page, origins, () => online));
+}
+
 export const test = base.extend<TestFixtures, WorkerFixtures>({
   stackUrl: ['', { scope: 'worker', option: true }],
   alongsideUrl: ['', { scope: 'worker', option: true }],
   devUrl: ['', { scope: 'worker', option: true }],
+
+  context: async ({ context, baseURL, alongsideUrl, javaScriptEnabled }, use) => {
+    if (javaScriptEnabled !== false) hydrateEveryPage(context, baseURL, alongsideUrl);
+    await use(context);
+  },
 
   stack: [
     async ({ playwright, stackUrl }, use) => {
