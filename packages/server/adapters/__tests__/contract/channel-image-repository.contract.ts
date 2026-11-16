@@ -38,12 +38,12 @@ export function describeChannelImageRepositoryContract(makeSubject: MakeReposito
     let images: ChannelImageRepositoryPort;
     let channelId: string;
 
-    const issue = async (id: string, kind: ChannelImageKind = 'banner') =>
+    const issue = async (id: string, kind: ChannelImageKind = 'banner', uploadedBy = OWNER_ID) =>
       expectOk(
         await images.create({
           id,
           channelId,
-          uploadedBy: OWNER_ID,
+          uploadedBy,
           kind,
           contentType: 'image/png',
           sizeBytes: 1000,
@@ -98,7 +98,7 @@ export function describeChannelImageRepositoryContract(makeSubject: MakeReposito
     });
 
     describe('queue', () => {
-      it('stores the dimensions and crops and numbers the upload after the newest version', async () => {
+      it('stores dimensions and crops, numbering each kind after its newest version', async () => {
         expect(await queue(FIRST)).toMatchObject({
           status: 'queued',
           width: 2560,
@@ -107,24 +107,16 @@ export function describeChannelImageRepositoryContract(makeSubject: MakeReposito
           version: 1,
         });
         expect(await queue(SECOND)).toMatchObject({ version: 2 });
+        expect(await queue(THIRD, 'avatar')).toMatchObject({ version: 1 });
       });
 
-      it('numbers each kind on its own', async () => {
-        await queue(FIRST, 'banner');
-
-        expect(await queue(SECOND, 'avatar')).toMatchObject({ version: 1 });
-      });
-
-      it('answers a second call for a queued upload with the same version', async () => {
+      it('repeats the version for a second call, and answers null once moved on or missing', async () => {
         await queue(FIRST);
 
         const again = expectOk(await images.queue(FIRST, { ...BANNER_DONE, width: 9999 }));
 
         expect(again).toMatchObject({ status: 'queued', version: 1, width: 2560 });
-      });
 
-      it('answers null for an upload that is missing or has moved on', async () => {
-        await queue(FIRST);
         expectOk(await images.commit(FIRST, DEFAULT_URL));
 
         expect(expectOk(await images.queue(SECOND, BANNER_DONE))).toBeNull();
@@ -133,7 +125,7 @@ export function describeChannelImageRepositoryContract(makeSubject: MakeReposito
     });
 
     describe('commit', () => {
-      it('moves the channel to the version, announces it and writes the audit row', async () => {
+      it('moves the channel to the version, announces it and audits it', async () => {
         await queue(FIRST);
 
         const commit = expectOk(await images.commit(FIRST, DEFAULT_URL));
@@ -160,7 +152,7 @@ export function describeChannelImageRepositoryContract(makeSubject: MakeReposito
         });
       });
 
-      it('repeats its outcome for an upload already committed and announces nothing more', async () => {
+      it('repeats its outcome for a committed upload and announces nothing more', async () => {
         await queue(FIRST);
         expectOk(await images.commit(FIRST, DEFAULT_URL));
 
@@ -171,7 +163,7 @@ export function describeChannelImageRepositoryContract(makeSubject: MakeReposito
         expect(await auditActions()).toEqual(['channel.updated']);
       });
 
-      it('never brings an older version back: the late one is superseded and says nothing', async () => {
+      it('never brings back an older version: the late one is superseded silently', async () => {
         await queue(FIRST);
         await queue(SECOND);
         expectOk(await images.commit(SECOND, DEFAULT_URL));
@@ -198,7 +190,7 @@ export function describeChannelImageRepositoryContract(makeSubject: MakeReposito
     });
 
     describe('fail', () => {
-      it('keeps the old image, records why and tells the uploader', async () => {
+      it('keeps the old image, records why, tells the uploader', async () => {
         await queue(FIRST);
 
         const failed = expectOk(await images.fail(FIRST, 'unreadable'));
@@ -208,7 +200,7 @@ export function describeChannelImageRepositoryContract(makeSubject: MakeReposito
         expect(await eventTypes()).toEqual(['channel.image.failed']);
       });
 
-      it('leaves an upload that already settled as it is', async () => {
+      it('leaves an upload that already settled as it is,, and null for an unknown one', async () => {
         await queue(FIRST);
         expectOk(await images.commit(FIRST, DEFAULT_URL));
 
@@ -217,9 +209,6 @@ export function describeChannelImageRepositoryContract(makeSubject: MakeReposito
           failure: null,
         });
         expect(await eventTypes()).toEqual(['channel.image.ready']);
-      });
-
-      it('answers null for an unknown upload', async () => {
         expect(expectOk(await images.fail(THIRD, 'x'))).toBeNull();
       });
     });
@@ -227,7 +216,7 @@ export function describeChannelImageRepositoryContract(makeSubject: MakeReposito
     describe('purging', () => {
       const future = () => new Date(Date.now() + DAY_MS);
 
-      it('lists replaced versions, failures and abandoned uploads, never the current image', async () => {
+      it('lists replaced versions, failures and abandoned uploads, not the current image', async () => {
         await queue(FIRST);
         expectOk(await images.commit(FIRST, DEFAULT_URL));
         await queue(SECOND);
@@ -250,33 +239,33 @@ export function describeChannelImageRepositoryContract(makeSubject: MakeReposito
         expect(expectOk(await images.listPurgeable(future(), 1))).toHaveLength(1);
       });
 
-      it('stops listing an upload once it is marked purged', async () => {
+      it('stops listing an upload once it is marked purged, and accepts an empty list', async () => {
         await queue(FIRST);
         expectOk(await images.fail(FIRST, 'bad'));
 
+        expectOk(await images.markPurged([]));
         expectOk(await images.markPurged([FIRST]));
 
         expect(expectOk(await images.listPurgeable(future(), 10))).toEqual([]);
         expect(expectOk(await images.findById(FIRST))?.status).toBe('purged');
       });
 
-      it('accepts an empty list', async () => {
-        expectOk(await images.markPurged([]));
+      it('leaves an upload that moved on since it was listed, and the live image', async () => {
+        await issue(FIRST);
+        await queue(SECOND);
+        expectOk(await images.commit(SECOND, DEFAULT_URL));
+        await images.queue(FIRST, BANNER_DONE);
+
+        expectOk(await images.markPurged([FIRST, SECOND]));
+
+        expect(expectOk(await images.findById(FIRST))?.status).toBe('queued');
+        expect(expectOk(await images.findById(SECOND))?.status).toBe('ready');
       });
     });
 
-    it('keeps the uploader of a team channel apart from its owner', async () => {
+    it('keeps a team uploader apart from the owner', async () => {
       await repositories.users.upsert({ id: OTHER_OWNER_ID, email: 'other@video-pipeline.local' });
-      expectOk(
-        await images.create({
-          id: FIRST,
-          channelId,
-          uploadedBy: OTHER_OWNER_ID,
-          kind: 'avatar',
-          contentType: 'image/png',
-          sizeBytes: 1,
-        })
-      );
+      await issue(FIRST, 'avatar', OTHER_OWNER_ID);
       expectOk(await images.queue(FIRST, AVATAR_DONE));
 
       expectOk(await images.commit(FIRST, DEFAULT_URL));

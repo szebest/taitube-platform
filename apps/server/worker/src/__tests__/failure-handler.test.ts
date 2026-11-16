@@ -231,4 +231,62 @@ describe('apps/server/worker: DLQ failure handler', () => {
     expect(entries).toHaveLength(1);
     expect(entries[0]).toMatchObject({ attemptsMade: row.attempts, errorCode: row.code });
   });
+
+  it.each([
+    {
+      failure: 'a transient error BullMQ will retry',
+      error: () => new TransientError(ErrorCodes.STORAGE_UNAVAILABLE, 'S3 timeout'),
+      attemptsMade: 1,
+      status: 'PROCESSING',
+      parked: 0,
+    },
+    {
+      failure: 'a transient error on its last attempt',
+      error: () => new TransientError(ErrorCodes.STORAGE_UNAVAILABLE, 'S3 timeout'),
+      attemptsMade: stagePolicies.package.attempts,
+      status: 'FAILED',
+      parked: 1,
+    },
+    {
+      failure: 'an unclassified error past its cap of 3',
+      error: () => new Error('Uncategorized'),
+      attemptsMade: 3,
+      status: 'FAILED',
+      parked: 1,
+    },
+    {
+      failure: 'a permanent error on its first attempt',
+      error: FAILURE,
+      attemptsMade: 1,
+      status: 'FAILED',
+      parked: 1,
+    },
+  ])('leaves a package job for $failure as $status', async (row) => {
+    const videoId = await uploadedVideo(world, 'raw/package.mp4');
+    for (const to of ['PROBING', 'PROCESSING'] as const) {
+      expectOk(
+        await world.repositories.videos.transition({
+          videoId,
+          from: ['UPLOADED', 'PROBING'],
+          to,
+          eventType: 'test.seed',
+        })
+      );
+    }
+
+    await handlerOver({}, 'package')(
+      {
+        id: `${videoId}--package--g1`,
+        name: 'package',
+        data: { videoId },
+        opts: { attempts: stagePolicies.package.attempts },
+        attemptsMade: row.attemptsMade,
+      },
+      row.error()
+    );
+
+    const video = expectOk(await world.repositories.videos.findById(videoId));
+    expect(video?.status).toBe(row.status);
+    expect(await dlqEntries()).toHaveLength(row.parked);
+  });
 });

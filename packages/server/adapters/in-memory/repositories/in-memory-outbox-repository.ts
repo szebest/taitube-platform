@@ -1,12 +1,20 @@
 import { type NewOutboxInput, type OutboxRecord, OutboxRepository } from '@vp/core/repositories';
+import type { OutboxStatus } from '@vp/domain';
+import { OUTBOX_CLAIM_LEASE_MS, OUTBOX_ROW, decideOutboxAttempt } from '@vp/domain-rules';
 import { MS_PER_DAY } from '@vp/domain/time';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { type Result, ok } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 import { type Clock, realClock } from './clock';
 
+interface StoredOutboxRow extends OutboxRecord {
+  claimableAt: Date | null;
+}
+
+const toRecord = ({ claimableAt: _lease, ...record }: StoredOutboxRow): OutboxRecord => record;
+
 export class InMemoryOutboxRepository extends OutboxRepository {
-  private readonly items = new Map<string, OutboxRecord>();
+  private readonly items = new Map<string, StoredOutboxRow>();
 
   constructor(private readonly now: Clock = realClock) {
     super();
@@ -14,43 +22,49 @@ export class InMemoryOutboxRepository extends OutboxRepository {
 
   async enqueue(item: NewOutboxInput): Promise<Result<OutboxRecord, DatabaseUnavailable>> {
     const id = item.id || uuidv7();
-    const record: OutboxRecord = {
+    const row: StoredOutboxRow = {
       id,
       kind: item.kind,
       payload: item.payload,
       createdAt: new Date(),
       publishedAt: null,
       attempts: 0,
+      status: 'PENDING',
+      claimableAt: null,
     };
-    this.items.set(id, record);
-    return ok({ ...record });
+    this.items.set(id, row);
+    return ok(toRecord(row));
   }
 
   async claimBatch(limit: number): Promise<Result<OutboxRecord[], DatabaseUnavailable>> {
-    const results: OutboxRecord[] = [];
-    const sorted = Array.from(this.items.values())
-      .filter((r) => r.publishedAt === null)
-      .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+    const now = new Date();
+    const claimed = Array.from(this.items.values())
+      .filter((row) => this.isPending(row) && (row.claimableAt === null || row.claimableAt <= now))
+      .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
+      .slice(0, limit);
 
-    for (const item of sorted) {
-      if (results.length >= limit) break;
-      results.push({ ...item });
-    }
-    return ok(results);
+    for (const row of claimed) row.claimableAt = new Date(now.getTime() + OUTBOX_CLAIM_LEASE_MS);
+    return ok(claimed.map(toRecord));
   }
 
   async markPublished(id: string): Promise<Result<boolean, DatabaseUnavailable>> {
-    const item = this.items.get(id);
-    if (!item) return ok(false);
-    item.publishedAt = new Date();
+    const row = this.items.get(id);
+    if (!(row && this.isPending(row))) return ok(false);
+    Object.assign(row, {
+      status: OUTBOX_ROW.target('publish'),
+      publishedAt: new Date(),
+      claimableAt: null,
+    });
     return ok(true);
   }
 
-  async recordAttempt(id: string): Promise<Result<boolean, DatabaseUnavailable>> {
-    const item = this.items.get(id);
-    if (!item) return ok(false);
-    item.attempts += 1;
-    return ok(true);
+  async recordAttempt(id: string): Promise<Result<OutboxStatus | null, DatabaseUnavailable>> {
+    const row = this.items.get(id);
+    if (!(row && this.isPending(row))) return ok(null);
+    const attempts = row.attempts + 1;
+    const { status, claimableAt } = decideOutboxAttempt(attempts, new Date());
+    Object.assign(row, { attempts, status, claimableAt });
+    return ok(status);
   }
 
   async prune(retentionDays: number): Promise<Result<number, DatabaseUnavailable>> {
@@ -67,7 +81,7 @@ export class InMemoryOutboxRepository extends OutboxRepository {
 
   async findById(id: string): Promise<Result<OutboxRecord | null, DatabaseUnavailable>> {
     const item = this.items.get(id);
-    return ok(item ? { ...item } : null);
+    return ok(item ? toRecord(item) : null);
   }
 
   seedPublished(id: string, publishedAt: Date): void {
@@ -82,6 +96,10 @@ export class InMemoryOutboxRepository extends OutboxRepository {
   }
 
   getAll(): OutboxRecord[] {
-    return Array.from(this.items.values()).map((r) => ({ ...r }));
+    return Array.from(this.items.values()).map(toRecord);
+  }
+
+  private isPending(row: StoredOutboxRow): boolean {
+    return OUTBOX_ROW.sources('publish').includes(row.status);
   }
 }

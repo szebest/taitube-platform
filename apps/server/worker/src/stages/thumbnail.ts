@@ -186,9 +186,7 @@ export function createThumbnailProcessor(deps: ThumbnailProcessorDeps) {
       return map(
         await repositories.videos.transition({
           videoId,
-          from: 'PROCESSING',
-          to: 'PROCESSING',
-          eventType: 'thumbnail.completed',
+          edge: 'completeThumbnail',
           eventPayload: { ...keys },
           patch: { posterKey: keys.posterKey, spriteKey: keys.spriteKey },
         }),

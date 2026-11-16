@@ -1,3 +1,4 @@
+import { runUp } from '../orchestrate';
 import { planLines, render, seedLine } from '../plan';
 import { CREDENTIAL_FALLBACKS, endpoints } from '../urls';
 import { fakeHost, optionsFrom } from './fake-host';
@@ -52,6 +53,21 @@ describe('demo: plan', () => {
     const text = plan(kind, argv);
     for (const part of expected) expect(text).toContain(part);
     expect(text).toContain('dry run');
+  });
+
+  it('plans the same steps, in the same order, that an up run executes', async () => {
+    const { host, printed } = fakeHost({
+      files: { '.env.example': 'ADMIN_TOKEN=change-me-32-bytes-random\n' },
+    });
+    await runUp(host, optionsFrom(), async () => ({ steps: [] }));
+    const executed = printed.flatMap((line) => /^\[(\d)\/\d\] (\S+)/.exec(line)?.slice(1) ?? []);
+    const options = optionsFrom();
+
+    const planned = planLines('up', options, endpoints(options, CREDENTIAL_FALLBACKS)).flatMap(
+      (line) => /^(\d) (\S+?):?(?:\s|$)/.exec(line)?.slice(1) ?? []
+    );
+
+    expect(planned).toEqual(executed);
   });
 
   it('plans the token mint for a persona', () => {

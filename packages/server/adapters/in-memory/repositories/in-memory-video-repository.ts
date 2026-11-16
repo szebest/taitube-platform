@@ -20,7 +20,8 @@ import {
   type VideoScanAbsence,
   type VideoWithDetails,
 } from '@vp/core/repositories';
-import { videoStatusChanged } from '@vp/domain';
+import { resolveVideoTransition, videoStatusChanged } from '@vp/domain';
+import { VIDEO_LIFECYCLE } from '@vp/domain-rules';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { transitionNotificationJobs } from '@vp/job-contracts';
 import { canReadVideo } from '@vp/permissions';
@@ -140,11 +141,14 @@ export class InMemoryVideoRepository extends VideoRepository {
   }
 
   async transition(options: TransitionVideoOptions): Promise<Result<boolean, DatabaseUnavailable>> {
-    const { videoId, from, to, patch = {}, eventType, eventPayload = {}, traceId } = options;
+    const { videoId, generation, patch = {}, eventPayload = {}, traceId } = options;
+    const { edge, from, to, event } = resolveVideoTransition(options);
     const video = this.videosMap.get(videoId);
-    if (!video) return ok(false);
-    const allowed = Array.isArray(from) ? from : [from];
-    if (!allowed.includes(video.status)) return ok(false);
+    if (!video || !from.includes(video.status)) return ok(false);
+    if (generation !== undefined && video.generation !== generation) return ok(false);
+    if (!VIDEO_LIFECYCLE.hasEdge(video.status, to)) {
+      throw new Error(`${video.status} -> ${to} is not an edge of VIDEO_LIFECYCLE`);
+    }
 
     const activeSpan = trace.getActiveSpan();
     const effectiveTraceId = traceId || (activeSpan ? activeSpan.spanContext().traceId : null);
@@ -158,7 +162,7 @@ export class InMemoryVideoRepository extends VideoRepository {
     });
     const recorded = await this.emitEvent(
       videoId,
-      eventType || `video.${to.toLowerCase()}`,
+      event || `video.${to.toLowerCase()}`,
       eventPayload,
       effectiveTraceId
     );
@@ -167,7 +171,7 @@ export class InMemoryVideoRepository extends VideoRepository {
       const enqueued = await this.outboxRepo.enqueue(options.outbox);
       if (isErr(enqueued)) return enqueued;
     }
-    for (const job of transitionNotificationJobs(videoId, from, to, video.visibility)) {
+    for (const job of edge ? transitionNotificationJobs(videoId, edge, video.visibility) : []) {
       const enqueued = await this.outboxRepo?.enqueue(job);
       if (enqueued && isErr(enqueued)) return enqueued;
     }

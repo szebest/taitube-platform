@@ -7,8 +7,10 @@ import type {
   RenditionRepository,
   UserEventRecord,
   UserEventRepository,
+  VideoEventRecord,
   VideoRepository,
 } from '@vp/core/repositories';
+import { VIDEO_LIFECYCLE_EDGES } from '@vp/domain';
 import { type ReadVideoFailure, decideVideoRead, publicReadFailure } from '@vp/domain-rules';
 import type { CdnBase } from '@vp/env-schema';
 import type { CacheUnavailable, DatabaseUnavailable } from '@vp/errors';
@@ -54,7 +56,16 @@ export interface SseServiceDeps {
 
 export type OpenVideoStreamFailure = ReadVideoFailure | DatabaseUnavailable;
 
-function mapEventToSse(record: { id: number; type: string; payload: unknown }): SseFrame {
+/** A lifecycle event replays as its status, `progress` as itself; any other event has no frame. */
+function mapEventToSse(record: VideoEventRecord): SseFrame[] {
+  if (record.type === 'progress') {
+    return [{ id: record.id, event: 'progress', data: record.payload }];
+  }
+  const status = Object.values(VIDEO_LIFECYCLE_EDGES).find(
+    ({ event }) => event === record.type
+  )?.to;
+  if (status === undefined) return [];
+
   const text = (key: string): string | undefined => {
     const value: unknown =
       record.payload && typeof record.payload === 'object'
@@ -62,32 +73,11 @@ function mapEventToSse(record: { id: number; type: string; payload: unknown }): 
         : undefined;
     return typeof value === 'string' && value !== '' ? value : undefined;
   };
-
-  switch (record.type) {
-    case 'progress':
-      return { id: record.id, event: 'progress', data: record.payload };
-    case 'video.ready':
-      return { id: record.id, event: 'status', data: { status: 'READY' } };
-    case 'video.failed':
-      return {
-        id: record.id,
-        event: 'status',
-        data: {
-          status: 'FAILED',
-          error: {
-            code: text('errorCode') ?? 'FAILED',
-            message: text('errorMessage') ?? '',
-          },
-        },
-      };
-    case 'video.processing':
-    case 'probe.completed':
-      return { id: record.id, event: 'status', data: { status: 'PROCESSING' } };
-    case 'probe.started':
-      return { id: record.id, event: 'status', data: { status: 'PROBING' } };
-    default:
-      return { id: record.id, event: 'status', data: record.payload };
-  }
+  const error =
+    status === 'FAILED'
+      ? { error: { code: text('errorCode') ?? 'FAILED', message: text('errorMessage') ?? '' } }
+      : {};
+  return [{ id: record.id, event: 'status', data: { status, ...error } }];
 }
 
 function lastIdOf(frames: SseFrame[], from: number): number {
@@ -178,7 +168,7 @@ export class SseService {
         if (afterId === null) return ok({ frames: [snapshot], lastEventId });
 
         return map(await this.deps.events.findAfterId(videoId, afterId), (rows) => {
-          const frames = [snapshot, ...rows.map(mapEventToSse)];
+          const frames = [snapshot, ...rows.flatMap(mapEventToSse)];
           return { frames, lastEventId: lastIdOf(frames, 0) };
         });
       },

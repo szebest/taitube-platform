@@ -35,6 +35,7 @@ describe('apps/server/api/services: housekeeping schedulers', () => {
       'purge-screening-evidence',
       'purge-search-history',
       'reconcile-captions',
+      'reconcile-live',
       'reconcile-processing',
       'reconcile-reaction-counters',
       'reconcile-uploads',

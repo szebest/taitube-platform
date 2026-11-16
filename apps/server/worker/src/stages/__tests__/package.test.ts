@@ -28,6 +28,7 @@ async function processingVideo(
       sourceKey: `raw/${videoId}`,
       sourceSizeBytes: 1_000,
       durationMs: 90_000,
+      generation,
     })
   );
   expectOk(
@@ -167,6 +168,25 @@ describe('apps/server/worker/stages: package time to ready', () => {
     expectOk(await processor(packageJob(videoId)));
 
     expect(await observedTimeToReady(metrics)).toEqual({ count: 1, sum: 42, bucket: '1-5' });
+  });
+
+  it('leaves a reprocessed video PROCESSING when a package of its previous generation finishes', async () => {
+    const repositories = new InMemoryRepositories();
+    const storage = new InMemoryStorageClient();
+    const videoId = await processingVideo(repositories, storage, 2);
+    expectOk(
+      await storage.uploadObject({
+        bucket: STAGE_SETTINGS.publicBucket,
+        key: renditionPlaylistKey(videoId, RENDITION.name, 1),
+        body: '#EXTM3U\n',
+        contentType: 'application/vnd.apple.mpegurl',
+      })
+    );
+    const processor = createPackageProcessor({ ...STAGE_SETTINGS, repositories, storage, logger });
+
+    expectOk(await processor(packageJob(videoId, 1)));
+
+    expect(expectOk(await repositories.videos.findById(videoId))?.status).toBe('PROCESSING');
   });
 
   it('observes nothing for a re-processed generation, whose upload completed long before', async () => {

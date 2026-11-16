@@ -1,4 +1,5 @@
 export * from './brand-color.rule';
+export * from './channel-image-upload.machine';
 export * from './claim-handle.rule';
 export * from './handle-change.rule';
 export * from './image-crops.rule';

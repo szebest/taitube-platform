@@ -53,6 +53,17 @@ describe('InMemoryJobQueue', () => {
     expect(expectOk(await queue.getJobState('job-a'))).toBe('failed');
   });
 
+  it('hands a job failed from outside to the failure handler with no attempt left', async () => {
+    const queue = new InMemoryJobQueue('package');
+    const failed = Promise.withResolvers<number | undefined>();
+    queue.onFailed((job) => failed.resolve(job.attemptsMade));
+    expectOk(await queue.add('package', {}, { jobId: 'parent', attempts: 5 }));
+
+    await queue.failJob('parent', new TransientError('X', 'child failed'));
+
+    expect(await failed.promise).toBe(5);
+  });
+
   it('reports a stall to the handler BullMQ would call', () => {
     const queue = new InMemoryJobQueue('probe');
     const stalled: string[] = [];

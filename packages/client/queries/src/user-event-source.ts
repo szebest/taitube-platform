@@ -2,6 +2,7 @@ import { onlineManager } from '@tanstack/react-query';
 import { type ContractResult, streamMyEvents } from '@vp/api-contracts';
 import { fromPromise, ignore, isOk, parseJson } from '@vp/result';
 import { API_PROXY_PATH } from './api-client';
+import { createReconnectTimer } from './reconnect-timer';
 
 export type UserStreamEvent = ContractResult<typeof streamMyEvents>;
 
@@ -39,8 +40,6 @@ interface Delivery {
 
 const USER_EVENTS_URL = `${API_PROXY_PATH}${streamMyEvents.path}`;
 const EVENT_TYPES = streamMyEvents.result.options.map((option) => option.shape.type.value);
-const FIRST_RETRY_MS = 1_000;
-const LAST_RETRY_MS = 30_000;
 
 function readEvent(data: string): UserStreamEvent | undefined {
   const json = parseJson(data);
@@ -78,8 +77,7 @@ export function connectUserEvents({
 
       let source: UserEventSource | undefined;
       let sourceLastId = '';
-      let retries = 0;
-      let retryTimer: ReturnType<typeof setTimeout> | undefined;
+      const reconnect = createReconnectTimer(() => open());
 
       const onFrame = (frame: MessageEvent<string>) => {
         // EventSource repeats the last id on a frame that carries none, such as a progress tick.
@@ -94,14 +92,9 @@ export function connectUserEvents({
       };
 
       const close = () => {
-        clearTimeout(retryTimer);
+        reconnect.cancel();
         source?.close();
         source = undefined;
-      };
-
-      const retryLater = () => {
-        retryTimer = setTimeout(open, Math.min(FIRST_RETRY_MS * 2 ** retries, LAST_RETRY_MS));
-        retries += 1;
       };
 
       const open = () => {
@@ -113,13 +106,11 @@ export function connectUserEvents({
         );
         sourceLastId = '';
         for (const type of EVENT_TYPES) opened.addEventListener(type, onFrame);
-        opened.addEventListener('open', () => {
-          retries = 0;
-        });
+        opened.addEventListener('open', reconnect.reset);
         opened.addEventListener('error', () => {
           if (opened.readyState !== opened.CLOSED || opened !== source) return;
 
-          retryLater();
+          reconnect.schedule();
         });
         source = opened;
       };

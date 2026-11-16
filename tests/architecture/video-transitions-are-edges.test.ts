@@ -65,15 +65,21 @@ function valuesOf(
   return undefined;
 }
 
+const isVideos = (node: ts.Expression): boolean =>
+  (ts.isIdentifier(node) && node.text === 'videos') ||
+  (ts.isPropertyAccessExpression(node) && node.name.text === 'videos');
+
 function isTransitionCall(node: ts.CallExpression): boolean {
   const callee = node.expression;
   return (
-    (ts.isPropertyAccessExpression(callee) && callee.name.text === 'transition') ||
+    (ts.isPropertyAccessExpression(callee) &&
+      callee.name.text === 'transition' &&
+      isVideos(callee.expression)) ||
     (ts.isIdentifier(callee) && callee.text === 'commitVideoTransition')
   );
 }
 
-/** Every `from` to `to` pair a call writes that is not an edge, and every call whose pair cannot be read. */
+/** Every edge a call names that is not in the table, every pair it writes that is not an edge, and every pair it cannot read. */
 function nonEdges(file: string, source: string): { checked: number; problems: string[] } {
   const sourceFile = parseSource(file, source);
   const problems: string[] = [];
@@ -82,6 +88,17 @@ function nonEdges(file: string, source: string): { checked: number; problems: st
     if (ts.isCallExpression(node) && isTransitionCall(node)) {
       for (const argument of node.arguments) {
         if (!ts.isObjectLiteralExpression(argument)) continue;
+        const edge = property(argument, 'edge');
+        if (edge !== undefined) {
+          checked += 1;
+          if (
+            !ts.isStringLiteralLike(edge) ||
+            !VIDEO_LIFECYCLE.eventNames.some((name) => name === edge.text)
+          ) {
+            problems.push(`${file}: ${edge.getText()} is not an edge of VIDEO_LIFECYCLE`);
+          }
+          continue;
+        }
         const from = property(argument, 'from');
         const to = property(argument, 'to');
         if (from === undefined || to === undefined) continue;
@@ -119,6 +136,10 @@ function nonEdges(file: string, source: string): { checked: number; problems: st
 describe('architecture: video transitions are edges of VIDEO_LIFECYCLE', () => {
   it.each([
     {
+      shape: 'a named edge',
+      source: "videos.transition({ videoId, edge: 'takedown' });",
+    },
+    {
       shape: 'a literal pair',
       source: "videos.transition({ videoId, from: 'UPLOADING', to: 'UPLOADED' });",
     },
@@ -139,6 +160,13 @@ describe('architecture: video transitions are edges of VIDEO_LIFECYCLE', () => {
     expect(nonEdges('fixture.ts', source)).toMatchObject({ checked: 1, problems: [] });
   });
 
+  it('leaves the transition of another table alone', () => {
+    expect(nonEdges('fixture.ts', 'dlq.transition({ id, from: allowed, to: next });')).toEqual({
+      checked: 0,
+      problems: [],
+    });
+  });
+
   it.each([
     {
       shape: 'a pair that is not an edge',
@@ -149,6 +177,11 @@ describe('architecture: video transitions are edges of VIDEO_LIFECYCLE', () => {
       shape: 'one illegal source in a list',
       source: "videos.transition({ videoId, from: ['UPLOADING', 'READY'], to: 'PROBING' });",
       problem: 'UPLOADING to PROBING is not an edge',
+    },
+    {
+      shape: 'an edge that is not in the table',
+      source: "videos.transition({ videoId, edge: 'resurrect' });",
+      problem: "'resurrect' is not an edge of VIDEO_LIFECYCLE",
     },
     {
       shape: 'a pair it cannot read',

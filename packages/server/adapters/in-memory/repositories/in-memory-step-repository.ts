@@ -119,6 +119,12 @@ export class InMemoryStepRepository extends StepRepository {
     return ok(false);
   }
 
+  async reset(videoId: string): Promise<Result<number, DatabaseUnavailable>> {
+    const keys = [...this.stepsMap].filter(([, step]) => step.videoId === videoId);
+    for (const [key] of keys) this.stepsMap.delete(key);
+    return ok(keys.length);
+  }
+
   async findByVideoId(
     videoId: string
   ): Promise<Result<ProcessingStepRecord[], DatabaseUnavailable>> {

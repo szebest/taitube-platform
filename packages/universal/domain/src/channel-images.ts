@@ -50,6 +50,18 @@ export const IMAGE_UPLOAD_STATUSES = [
 
 export type ImageUploadStatus = (typeof IMAGE_UPLOAD_STATUSES)[number];
 
+/**
+ * Every edge of an upload's status. `CHANNEL_IMAGE_UPLOAD` in `@vp/domain-rules` is the machine
+ * over it; the table lives here so the repositories can guard a write with the statuses it leaves.
+ */
+export const CHANNEL_IMAGE_UPLOAD_EDGES = {
+  queue: { from: ['issued'], to: 'queued' },
+  commit: { from: ['queued'], to: 'ready' },
+  supersede: { from: ['queued'], to: 'superseded' },
+  fail: { from: ['issued', 'queued'], to: 'failed' },
+  purge: { from: ['issued', 'failed', 'superseded', 'ready'], to: 'purged' },
+} as const satisfies Record<string, { from: readonly ImageUploadStatus[]; to: ImageUploadStatus }>;
+
 /** One file a creator uploaded for an avatar or banner, from the presigned URL to the version it became. */
 export interface ChannelImageUpload {
   id: string;

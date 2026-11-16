@@ -1,17 +1,19 @@
 import { toOutboxRecord } from '../outbox.mapper';
 
+const RECORD = {
+  id: 'obx-1',
+  kind: 'queue',
+  payload: { type: 'queue', queueName: 'probe', job: { name: 'probe', data: {} } },
+  createdAt: new Date('2026-01-01T00:00:00Z'),
+  publishedAt: null,
+  attempts: 0,
+  status: 'PENDING',
+} as const;
+
 describe('adapters/postgres/mappers: outbox', () => {
-  it('carries the row through and types the jsonb payload', () => {
-    const row = {
-      id: 'obx-1',
-      kind: 'queue',
-      payload: { type: 'queue', queueName: 'probe', job: { name: 'probe', data: {} } },
-      createdAt: new Date('2026-01-01T00:00:00Z'),
-      publishedAt: null,
-      attempts: 0,
-    };
-    const record = toOutboxRecord(row as Parameters<typeof toOutboxRecord>[0]);
-    expect(record).toEqual(row);
-    expect(record.payload.type).toBe('queue');
+  it('carries the row through without its claim lease', () => {
+    const record = toOutboxRecord({ ...RECORD, claimableAt: new Date('2026-01-01T00:01:00Z') });
+
+    expect(record).toEqual(RECORD);
   });
 });

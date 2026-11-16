@@ -1,4 +1,5 @@
 import type { VideoStudioRepository } from '@vp/core/repositories';
+import { videoStatusChanged } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import { expectErr, expectOk } from '@vp/testing/result';
 import {
@@ -228,7 +229,6 @@ export function describeVideoStudioRepositoryContract(makeSubject: MakeRepositor
         const taken = expectOk(
           await studio.takeDown({
             videoId: VIDEO_IDS.a,
-            from: ['READY'],
             moderatorId: OTHER_OWNER_ID,
             reason: 'Terms of service',
           })
@@ -246,22 +246,33 @@ export function describeVideoStudioRepositoryContract(makeSubject: MakeRepositor
         });
       });
 
-      it('answers null and changes nothing when the video is not in a from status', async () => {
+      it('tells the owner: a status event and a rejected notification', async () => {
+        expectOk(await studio.takeDown({ videoId: VIDEO_IDS.a, moderatorId: OTHER_OWNER_ID }));
+
+        const told = expectOk(await subject.repositories.userEvents.listFrom(OWNER_ID, 0, 10));
+        expect(told).toMatchObject([videoStatusChanged(VIDEO_IDS.a, 'REJECTED')]);
+        const queued = expectOk(await subject.repositories.outbox.claimBatch(10));
+        expect(queued.filter(({ kind }) => kind === 'notification')).toMatchObject([
+          { payload: { job: { data: { videoId: VIDEO_IDS.a, outcome: 'rejected' } } } },
+        ]);
+      });
+
+      it('answers null and changes nothing when the video is past every takedown source', async () => {
+        await subject.seedVideo(publicVideo({ id: VIDEO_IDS.b, status: 'DELETED' }));
+
         const taken = expectOk(
-          await studio.takeDown({ videoId: VIDEO_IDS.a, from: ['FAILED'], moderatorId: OWNER_ID })
+          await studio.takeDown({ videoId: VIDEO_IDS.b, moderatorId: OWNER_ID })
         );
 
         expect(taken).toBeNull();
-        expect(expectOk(await subject.repositories.videos.findById(VIDEO_IDS.a))?.status).toBe(
-          'READY'
+        expect(expectOk(await subject.repositories.videos.findById(VIDEO_IDS.b))?.status).toBe(
+          'DELETED'
         );
       });
 
       it('makes an edit read before the takedown a version conflict', async () => {
         const readBefore = await versionOf(VIDEO_IDS.a);
-        expectOk(
-          await studio.takeDown({ videoId: VIDEO_IDS.a, from: ['READY'], moderatorId: OWNER_ID })
-        );
+        expectOk(await studio.takeDown({ videoId: VIDEO_IDS.a, moderatorId: OWNER_ID }));
 
         const failure = expectErr(
           await studio.updateMetadata({

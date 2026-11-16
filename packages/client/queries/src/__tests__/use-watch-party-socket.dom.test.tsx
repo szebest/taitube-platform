@@ -15,6 +15,7 @@ import { HttpResponse } from 'msw/http';
 import type { PropsWithChildren } from 'react';
 import { ApiProvider } from '../api-provider';
 import { useWatchPartySocket } from '../use-watch-party-socket';
+import { scriptSockets } from './scripted-socket';
 
 const ticket = mockEndpoint(createWatchPartySocketTicket, () =>
   HttpResponse.json({ ticket: 'ticket-1', expiresAt: '2026-11-05T10:00:30.000Z' }, { status: 201 })
@@ -105,5 +106,30 @@ describe('packages/queries: useWatchPartySocket', () => {
     await vi.advanceTimersByTimeAsync(1500);
 
     expect(socket.urls).toHaveLength(2);
+  });
+
+  it('waits longer before each reconnect until the room says hello, then starts over', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    const sockets = scriptSockets();
+    renderRoom();
+    await vi.waitFor(() => expect(sockets).toHaveLength(1));
+    const reconnectsAfter = async (ms: number, { hello = false } = {}) => {
+      const opened = sockets.length;
+      const socket = sockets.at(-1);
+      act(() => {
+        socket?.open();
+        if (hello) socket?.speak(partyHello());
+        socket?.drop();
+      });
+      await act(() => vi.advanceTimersByTimeAsync(ms - 1));
+      expect(sockets).toHaveLength(opened);
+      await act(() => vi.advanceTimersByTimeAsync(1));
+      await vi.waitFor(() => expect(sockets).toHaveLength(opened + 1));
+    };
+
+    await reconnectsAfter(1_000);
+    await reconnectsAfter(2_000);
+    await reconnectsAfter(4_000);
+    await reconnectsAfter(1_000, { hello: true });
   });
 });

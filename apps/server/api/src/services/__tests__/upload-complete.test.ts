@@ -121,6 +121,22 @@ describe('apps/server/api/services: complete upload', () => {
     );
   });
 
+  it('refuses to complete an upload an abort closed while its object was checked', async () => {
+    const started = await startSingle();
+    await store(started.sourceKey, SIZE);
+    const head = storage.headObject.bind(storage);
+    vi.spyOn(storage, 'headObject').mockImplementation(async (bucket, key) => {
+      await repositories.uploads.updateStatus(started.uploadId, 'ABORTED');
+      return head(bucket, key);
+    });
+
+    expect(expectErr(await service.complete(OWNER, started.uploadId)).code).toBe(
+      ErrorCodes.UPLOAD_NOT_OPEN
+    );
+    expect(expectOk(await repositories.uploads.findById(started.uploadId))?.status).toBe('ABORTED');
+    expect(expectOk(await repositories.videos.findById(started.videoId))?.status).toBe('UPLOADING');
+  });
+
   it('refuses to complete an upload whose session has expired', async () => {
     const expired = build({ uploadSessionTtlSeconds: 0 });
     const started = expectOk(

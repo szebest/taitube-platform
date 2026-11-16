@@ -67,9 +67,7 @@ export async function finalizeBroadcast(
         const transitioned = recorded
           ? await repositories.videos.transition({
               videoId,
-              from: 'LIVE',
-              to: 'READY',
-              eventType: 'video.ready',
+              edge: 'finalizeLive',
               eventPayload: { liveStreamId: stream.id },
               patch: {
                 masterPlaylistKey: liveMasterKey(stream.id),
@@ -82,9 +80,7 @@ export async function finalizeBroadcast(
             })
           : await repositories.videos.transition({
               videoId,
-              from: 'LIVE',
-              to: 'FAILED',
-              eventType: 'video.failed',
+              edge: 'failLive',
               eventPayload: { liveStreamId: stream.id },
               patch: {
                 errorCode: ErrorCodes.LIVE_INGEST_UNAVAILABLE,

@@ -77,5 +77,19 @@ export function describeUploadRepositoryContract(makeSubject: MakeRepositoriesSu
       expect(expectOk(await uploads.findById(UPLOAD_ID))?.status).toBe('COMPLETED');
       expect(expectOk(await uploads.updateStatus(UNKNOWN_UPLOAD_ID, 'ABORTED'))).toBeNull();
     });
+
+    it.each([
+      { first: 'ABORTED', second: 'COMPLETED' },
+      { first: 'COMPLETED', second: 'ABORTED' },
+      { first: 'COMPLETED', second: 'COMPLETED' },
+    ] as const)(
+      'refuses to move an upload already $first to $second, and keeps it $first',
+      async ({ first, second }) => {
+        expectOk(await uploads.updateStatus(UPLOAD_ID, first));
+
+        expect(expectOk(await uploads.updateStatus(UPLOAD_ID, second))).toBeNull();
+        expect(expectOk(await uploads.findById(UPLOAD_ID))?.status).toBe(first);
+      }
+    );
   });
 }

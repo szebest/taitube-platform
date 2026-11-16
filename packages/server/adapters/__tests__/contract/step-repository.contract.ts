@@ -107,6 +107,22 @@ export function describeStepRepositoryContract(makeSubject: MakeRepositoriesSubj
       expect(expectOk(await claimProbe(RECLAIM_STEP_ID, TOKEN_B, 2)).fenced).toBe(true);
     });
 
+    it('reopens a finished step after a reset and fences the token from before it', async () => {
+      await claimProbe(STEP_ID, TOKEN_A, 1);
+      await steps.complete({
+        videoId: VIDEO_IDS.a,
+        step: 'probe',
+        rendition: '-',
+        lockToken: TOKEN_A,
+      });
+
+      expect(expectOk(await steps.reset(VIDEO_IDS.a))).toBe(1);
+
+      expect(expectOk(await steps.findByVideoId(VIDEO_IDS.a))).toEqual([]);
+      expect(expectOk(await steps.heartbeat(TOKEN_A))).toBe(false);
+      expect(expectOk(await claimProbe(RECLAIM_STEP_ID, TOKEN_B, 1)).fenced).toBe(false);
+    });
+
     it('records a failure only for the holder of the lock', async () => {
       await claimProbe(STEP_ID, TOKEN_A, 1);
 

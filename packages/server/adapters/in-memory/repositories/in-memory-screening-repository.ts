@@ -17,7 +17,6 @@ import {
 } from '@vp/core/repositories';
 import {
   FLAG_ONLY_CHECKSUM,
-  SCREENING_TRANSITIONS,
   type ScreeningDecision,
   isScreeningCaseOpen,
   mergeFlag,
@@ -77,14 +76,11 @@ export class InMemoryScreeningRepository extends ScreeningRepository {
 
   async hold(input: HoldVideoInput): Promise<Result<boolean, DatabaseUnavailable>> {
     const { videoId, traceId } = input;
-    const edge = SCREENING_TRANSITIONS.hold;
     const screening = this.latest(videoId);
 
     return this.deps.videos.transition({
       videoId,
-      from: edge.from,
-      to: edge.to,
-      eventType: edge.event,
+      edge: 'hold',
       eventPayload: {
         screeningId: screening?.id ?? null,
         reasons: screening?.reasons.map((finding) => finding.reason) ?? [],
@@ -95,13 +91,10 @@ export class InMemoryScreeningRepository extends ScreeningRepository {
 
   async approve(input: ApproveHeldVideoInput): Promise<Result<boolean, DatabaseUnavailable>> {
     const { videoId, moderatorId, outbox } = input;
-    const edge = SCREENING_TRANSITIONS.approve;
 
     const moved = await this.deps.videos.transition({
       videoId,
-      from: edge.from,
-      to: edge.to,
-      eventType: edge.event,
+      edge: 'approve',
       eventPayload: { moderatorId },
       outbox,
     });
@@ -114,13 +107,10 @@ export class InMemoryScreeningRepository extends ScreeningRepository {
 
   async reject(input: RejectHeldVideoInput): Promise<Result<boolean, DatabaseUnavailable>> {
     const { videoId, moderatorId, reason } = input;
-    const edge = SCREENING_TRANSITIONS.reject;
 
     const moved = await this.deps.videos.transition({
       videoId,
-      from: edge.from,
-      to: edge.to,
-      eventType: edge.event,
+      edge: 'rejectScreening',
       eventPayload: { moderatorId, reason },
       patch: { errorCode: ErrorCodes.SCREENING_REJECTED },
     });
@@ -133,7 +123,6 @@ export class InMemoryScreeningRepository extends ScreeningRepository {
 
   async appeal(input: AppealRejectionInput): Promise<Result<boolean, DatabaseUnavailable>> {
     const { id, videoId, authorId, message } = input;
-    const edge = SCREENING_TRANSITIONS.appeal;
 
     const video = await this.deps.videos.findById(videoId);
     const screening = this.latest(videoId);
@@ -142,9 +131,7 @@ export class InMemoryScreeningRepository extends ScreeningRepository {
 
     const moved = await this.deps.videos.transition({
       videoId,
-      from: edge.from,
-      to: edge.to,
-      eventType: edge.event,
+      edge: 'appeal',
       eventPayload: { appealId: id, authorId },
       patch: { errorCode: null },
     });

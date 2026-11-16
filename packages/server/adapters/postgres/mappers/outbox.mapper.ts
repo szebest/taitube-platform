@@ -3,7 +3,7 @@ import type { outbox } from '@vp/db';
 
 type OutboxRow = typeof outbox.$inferSelect;
 
-// jsonb is untyped on read; the writer side is what constrains the payload shape.
-export function toOutboxRecord(row: OutboxRow): OutboxRecord {
-  return { ...row, payload: row.payload as OutboxPayload };
+/** The claim lease is the relay's bookkeeping, not part of the record. jsonb is untyped on read. */
+export function toOutboxRecord({ claimableAt: _lease, payload, ...row }: OutboxRow): OutboxRecord {
+  return { ...row, payload: payload as OutboxPayload };
 }

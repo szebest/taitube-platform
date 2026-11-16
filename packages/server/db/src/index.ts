@@ -15,6 +15,7 @@ export * from './picks-schema';
 export * from './webhooks-schema';
 export * from './notifications-schema';
 export * from './user-events-schema';
+export * from './outbox-schema';
 export * from './captions-schema';
 export * from './live-schema';
 export * from './watch-parties-schema';

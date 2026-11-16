@@ -511,7 +511,7 @@ Free tiers moved a lot in 2026; the table reflects the state verified on 2026-09
 
 | Rank | Option | Status | Reason |
 |---|---|---|---|
-| **1 (Phase 4)** | **Transactional outbox** (`outbox` table written atomically with state changes; housekeeping relay polls `SKIP LOCKED` and publishes to BullMQ) | **Implemented** | Removes the dual-write window entirely; atomic with CAS state changes; relay ensures effectively-once publishing with deterministic job IDs; records older than 7 days pruned. |
+| **1 (Phase 4)** | **Transactional outbox** (`outbox` table written atomically with state changes; housekeeping relay claims rows with `SKIP LOCKED` in the transaction that leases them, and publishes to BullMQ) | **Implemented** | Removes the dual-write window entirely; atomic with CAS state changes; relay ensures effectively-once publishing with deterministic job IDs; a row moves `PENDING -> PUBLISHED`, or `PENDING -> DEAD` after `OUTBOX_MAX_ATTEMPTS` failed publishes on a doubling backoff (`OUTBOX_ROW`); published records older than 7 days pruned, dead ones kept for an operator. |
 | 2 (MVP) | Commit DB → enqueue with deterministic `jobId` → reconciler re-enqueues gaps | Superseded / Fallback | Reconciler remains as belt-and-braces fallback (`reconciler_repairs_total` stays 0 under normal outbox operation). |
 | 3 | pg-boss (queue in Postgres) | Rejected | Solves it by construction, but loses BullMQ (ADR-03). |
 
@@ -2796,7 +2796,8 @@ The watch party sweep (idle close, owner hand-over, purge) is not a scheduler: i
 | Scheduler ID | Cron | Action |
 |---|---|---|
 | `reconcile-uploads` | `*/15 * * * *` | Abort `UPLOADING > 24h` (→ `ABANDONED`); re-enqueue `UPLOADED` with no probe step > 5 min; release admission-held videos. |
-| `reconcile-processing` | `*/10 * * * *` | Videos `PROCESSING > 3h` with no RUNNING step and no waiting job → mark `FAILED('ORPHANED')` + DLQ entry (belt-and-braces for lost Redis state). |
+| `reconcile-processing` | `*/10 * * * *` | Videos `PROBING` or `PROCESSING > 3h` with no RUNNING step and no waiting job → mark `FAILED('ORPHANED')` + DLQ entry (belt-and-braces for lost Redis state). |
+| `reconcile-live` | `*/10 * * * *` | Videos `LIVE > 3h` since their last update whose stream is off air and has no live job left → mark `FAILED('ORPHANED')` + DLQ entry (a finalize that ran out of attempts). |
 | `purge-deleted` | `0 * * * *` | Delete objects for `DELETED` videos older than 1 h (paginated `DeleteObjects`), then hard-delete rows. |
 | `expire-raw` | `30 3 * * *` | Delete `raw/` sources of `READY` videos older than `RAW_RETENTION_DAYS` (lifecycle rule is the primary mechanism; this is the audit trail). |
 | `tmp-sweep` | `*/30 * * * *` | Remove orphaned `/tmp/vp/*` dirs older than 2 h on the housekeeping pod (worker pods clean their own on exit). |
@@ -3991,6 +3992,7 @@ export const HousekeepingJob = z.object({
   task: z.enum([
     'reconcile-uploads',
     'reconcile-processing',
+    'reconcile-live',
     'purge-deleted',
     'expire-raw',
     'tmp-sweep',

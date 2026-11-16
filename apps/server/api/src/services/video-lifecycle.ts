@@ -1,8 +1,6 @@
 import type { JobQueue } from '@vp/core/ports';
-import type { VideoRepository } from '@vp/core/repositories';
+import type { StepRepository, VideoRepository } from '@vp/core/repositories';
 import {
-  DELETABLE_STATUSES,
-  REPROCESSABLE_STATUSES,
   type VideoLifecycleFailure,
   decideVideoDelete,
   decideVideoReprocess,
@@ -15,6 +13,7 @@ import { type DispatchOrigin, buildProbeDispatch, enqueueProbe } from './probe-d
 
 export interface VideoLifecycleDeps {
   videos: VideoRepository;
+  steps: StepRepository;
   probeQueue: JobQueue;
 }
 
@@ -37,6 +36,8 @@ export type VideoLifecycleServiceFailure =
 /**
  * Re-runs the pipeline for an existing source under a fresh generation (SDD §6.3). The generation
  * bump is what keeps the new probe job id distinct from the one the first run already consumed.
+ * The steps are reset before the transition: once it commits, the outbox may start the new probe,
+ * which a step the old run left DONE would fence.
  */
 export async function reprocessVideo(
   deps: VideoLifecycleDeps,
@@ -59,11 +60,12 @@ export async function reprocessVideo(
     requestId: origin.requestId,
   });
 
+  const reset = await deps.steps.reset(videoId);
+  if (isErr(reset)) return reset;
+
   const transitioned = await deps.videos.transition({
     videoId,
-    from: [...REPROCESSABLE_STATUSES],
-    to: 'PROBING',
-    eventType: 'video.reprocessing',
+    edge: 'reprocess',
     eventPayload: { generation, requestedBy: user.id },
     patch: { generation, errorCode: null, errorMessage: null },
     outbox: dispatch.outbox,
@@ -92,9 +94,7 @@ export async function softDeleteVideo(
 
   const transitioned = await deps.videos.transition({
     videoId,
-    from: [...DELETABLE_STATUSES],
-    to: 'DELETED',
-    eventType: 'video.deleted',
+    edge: 'delete',
     eventPayload: { requestedBy: user.id },
     patch: { deletedAt: new Date() },
   });

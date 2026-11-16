@@ -118,22 +118,17 @@ describe('POST /videos/:id/reprocess', () => {
       sourceKey: `raw/${RATE_LIMIT_VIDEO_ID}/source.mp4`,
       generation: 1,
     });
-    const resetToReady = () =>
-      ctx.repositories.videos.transition({
-        videoId: RATE_LIMIT_VIDEO_ID,
-        from: ['PROBING', 'READY'],
-        to: 'READY',
-        eventType: 'test.reset',
-      });
+    const finishProbe = () =>
+      ctx.repositories.videos.transition({ videoId: RATE_LIMIT_VIDEO_ID, edge: 'completeProbe' });
 
     // The owner's reprocess in the test above already counts toward this window.
     for (let i = 0; i < 4; i++) {
-      await resetToReady();
+      await finishProbe();
       const res = await reprocess(RATE_LIMIT_VIDEO_ID, TOKENS.user);
       expect(res.statusCode).toBe(202);
     }
 
-    await resetToReady();
+    await finishProbe();
     const limitedRes = await reprocess(RATE_LIMIT_VIDEO_ID, TOKENS.user);
     expect(limitedRes.statusCode).toBe(429);
     expect(limitedRes.json().code).toBe(ErrorCodes.RATE_LIMITED);

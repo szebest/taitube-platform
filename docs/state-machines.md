@@ -32,8 +32,7 @@ No library: it is about 120 lines, and it adds no second error vocabulary and no
 5. **No new `status === 'X'` branching outside a machine.** `tests/architecture/state-machines.test.ts` counts
    the existing sites per file and fails on growth, and fails again when a count drops without the baseline
    being lowered.
-6. **A behaviour fix is not part of converting a lifecycle.** A conversion reads the table instead of the
-   branches and changes no outcome; a bug it exposes goes to the backlog below.
+6. **A conversion changes no outcome.** It reads the table instead of the branches. A bug it exposes is fixed in its own commit, with a failing spec first, never inside the conversion.
 
 ## Adding one
 
@@ -55,6 +54,35 @@ of booleans that encodes a mode has no deterministic check, so it is a review qu
 template asks it.
 
 ## Machines
+
+### channel-image-upload
+
+`CHANNEL_IMAGE_UPLOAD`, defined in `packages/universal/domain-rules/src/channels/channel-image-upload.machine.ts`.
+
+Initial: `issued`. Final: `purged`.
+
+| Event | From | To | Recorded as |
+| --- | --- | --- | --- |
+| `queue` | `issued` | `queued` | - |
+| `commit` | `queued` | `ready` | - |
+| `supersede` | `queued` | `superseded` | - |
+| `fail` | `issued`, `queued` | `failed` | - |
+| `purge` | `issued`, `failed`, `superseded`, `ready` | `purged` | - |
+
+```mermaid
+stateDiagram-v2
+  [*] --> issued
+  issued --> queued: queue
+  queued --> ready: commit
+  queued --> superseded: supersede
+  issued --> failed: fail
+  queued --> failed: fail
+  issued --> purged: purge
+  failed --> purged: purge
+  superseded --> purged: purge
+  ready --> purged: purge
+  purged --> [*]
+```
 
 ### channel-invite
 
@@ -110,6 +138,26 @@ stateDiagram-v2
   removed --> [*]
 ```
 
+### dlq-entry
+
+`DLQ_ENTRY`, defined in `packages/universal/domain-rules/src/dlq/dlq-entry.machine.ts`.
+
+Initial: `PARKED`. Final: `REPLAYED`, `DISCARDED`.
+
+| Event | From | To | Recorded as |
+| --- | --- | --- | --- |
+| `replay` | `PARKED` | `REPLAYED` | - |
+| `discard` | `PARKED` | `DISCARDED` | - |
+
+```mermaid
+stateDiagram-v2
+  [*] --> PARKED
+  PARKED --> REPLAYED: replay
+  PARKED --> DISCARDED: discard
+  REPLAYED --> [*]
+  DISCARDED --> [*]
+```
+
 ### live-stream
 
 `LIVE_STREAM`, defined in `packages/universal/domain-rules/src/live/live-stream.machine.ts`.
@@ -131,6 +179,48 @@ stateDiagram-v2
   ENDED --> [*]
 ```
 
+### outbox-row
+
+`OUTBOX_ROW`, defined in `packages/universal/domain-rules/src/outbox/outbox-row.machine.ts`.
+
+Initial: `PENDING`. Final: `PUBLISHED`, `DEAD`.
+
+| Event | From | To | Recorded as |
+| --- | --- | --- | --- |
+| `publish` | `PENDING` | `PUBLISHED` | - |
+| `retry` | `PENDING` | `PENDING` | - |
+| `bury` | `PENDING` | `DEAD` | - |
+
+```mermaid
+stateDiagram-v2
+  [*] --> PENDING
+  PENDING --> PUBLISHED: publish
+  PENDING --> PENDING: retry
+  PENDING --> DEAD: bury
+  PUBLISHED --> [*]
+  DEAD --> [*]
+```
+
+### upload-session
+
+`UPLOAD_SESSION`, defined in `packages/universal/domain-rules/src/uploads/upload-session.machine.ts`.
+
+Initial: `OPEN`. Final: `COMPLETED`, `ABORTED`.
+
+| Event | From | To | Recorded as |
+| --- | --- | --- | --- |
+| `complete` | `OPEN` | `COMPLETED` | - |
+| `abort` | `OPEN` | `ABORTED` | - |
+
+```mermaid
+stateDiagram-v2
+  [*] --> OPEN
+  OPEN --> COMPLETED: complete
+  OPEN --> ABORTED: abort
+  COMPLETED --> [*]
+  ABORTED --> [*]
+```
+
 ### video-lifecycle
 
 `VIDEO_LIFECYCLE`, defined in `packages/universal/domain-rules/src/videos/video-lifecycle.machine.ts`.
@@ -149,7 +239,7 @@ Initial: `UPLOADING`, `LIVE`. Final: `DELETED`.
 | `completeThumbnail` | `PROCESSING` | `PROCESSING` | `thumbnail.completed` |
 | `package` | `PROCESSING` | `READY` | `video.ready` |
 | `fail` | `PROCESSING`, `PROBING` | `FAILED` | `video.failed` |
-| `reconcileFail` | `PROCESSING` | `FAILED` | `video.failed` |
+| `reconcileFail` | `PROBING`, `PROCESSING` | `FAILED` | `video.failed` |
 | `reprocess` | `READY`, `FAILED`, `PROCESSING` | `PROBING` | `video.reprocessing` |
 | `delete` | `UPLOADING`, `UPLOADED`, `PROBING`, `PROCESSING`, `READY`, `HELD`, `FAILED`, `REJECTED`, `ABANDONED` | `DELETED` | `video.deleted` |
 | `takedown` | `UPLOADING`, `UPLOADED`, `PROBING`, `PROCESSING`, `READY`, `HELD`, `FAILED`, `REJECTED`, `ABANDONED` | `REJECTED` | `video.taken_down` |
@@ -175,6 +265,7 @@ stateDiagram-v2
   PROCESSING --> READY: package
   PROCESSING --> FAILED: fail
   PROBING --> FAILED: fail
+  PROBING --> FAILED: reconcileFail
   PROCESSING --> FAILED: reconcileFail
   READY --> PROBING: reprocess
   FAILED --> PROBING: reprocess
@@ -208,19 +299,13 @@ stateDiagram-v2
 
 ## Backlog
 
-Not part of the conversions above, and ranked by value over cost (S up to a day, M two or three days, L a week). Each one changes behaviour or needs an integration run first, so none was folded into a conversion. Lines marked PLAUSIBLE come from reading the code only.
+Not done yet, ranked by value over cost (S up to a day, M two or three days, L a week). Each one changes behaviour or needs a design call or an integration run first.
 
-1. **S1b. Video lifecycle, typed edges (M).** `TransitionVideoOptions` takes an edge name instead of from and to. The takedown path goes through `commitVideoTransition`, so it emits the user event and the notifications. `transitionNotificationJobs` and `mapEventToSse` become total over the machine.
-2. **S1d. Edge check in the in-memory video repository (S).** `transition` in the in-memory double would reject a pair that is not an edge of `VIDEO_LIFECYCLE`, giving every service and worker spec the check for free. Three worker specs (`captions-audio`, `dlq-stage-failures`, `purge-deleted`) seed a video in a state the pipeline would not have reached (UPLOADED then PROCESSING or READY, LIVE then DELETED), so their fixtures change first.
-3. **S9. Failure handler final-attempt gate (M).** PLAUSIBLE: a transient package failure marks the video FAILED while BullMQ still retries. Confirm with a BullMQ integration spec, then fix. The DLQ vocabulary (PARKED, REPLAYED, DISCARDED) is spelled three times and becomes one machine.
-4. **S1c, S8. Reprocess correctness (M).** PLAUSIBLE: a reprocess of a READY video gets stuck in PROBING, because a DONE step fences the new probe. Needs a generation check in the worker CAS, a step reset on reprocess, and reconcilers for PROBING and LIVE.
-5. **C5. Upload dock machine (M).** Per-item phases, cancel by item id (today it aborts the latest upload), and a server abort when completion fails.
-6. **C2, C3, C7. One reconnecting-socket machine and a `useMachine` hook (L).** Fixes the live chat retry reset (it resets on `open`, not on `hello`) once, and exposes a "stream down" state to the status badge, the live pages and the notifications bell.
-7. **S7. Upload session CAS (S).** `updateStatus` has no compare-and-set, so a racing write can flip ABORTED to COMPLETED. The window between a COMPLETED upload and an UPLOADING video is a separate, larger item.
-8. **S12, S13. Watch-party room phase (M).** Drop the duplicated `phase`, give a closed room a phase, make the clock exhaustive. Then the two socket booleans on the server.
-9. **S14. SSE connection booleans to one union (M).** Five booleans give 32 combinations for about 8 real states. Timers are involved, so it needs its own plan.
-10. **S10. Outbox dead state and a transactional claim (S).** A poison row loops forever, and `claimBatch` holds its lock outside any transaction.
-11. **C6, C13. Client status display reads the machine (S).** About 8 literal status comparisons in the studio, the web app and the embed route become table reads; the live pages follow.
-12. **C11, C17, C18. Composer, settings sections, table state (S).** The `saved = isSuccess && !dirty` idiom is repeated 7 times, and `fetching = isFetching && !isPending` in 7 tables.
-13. **C9, C10, C1, C8. Replay intent, PWA, preferences merge, playback host (L).** High blast radius, 12 or more files each, and their specs overlap the flaky-spec work.
-14. **S15, S16, S6b, S17, S19, S20. Captions, channel images, live stream DB edges, circuit breaker, API shutdown phase, demo plan (S).** The circuit breaker half-open state admits every caller instead of one trial call. The API shutdown phase is never set to `stopping`. The demo `--dry-run` plan is a hand-written copy of the step list.
+1. **S9b. A child failure never reaches the package failure handler in production (M).** BullMQ fails a parent through `failParentOnFailure` inside Lua, so the worker never emits `failed` for it and the video waits for `reconcile-processing` (3 h). The in-memory queue calls the handler anyway, which is why the flow spec passes. The failure handler's package FAILED transition and the screening HELD path are also not fenced by generation, and `bullmq-processor.ts` keeps its own copy of the unknown-error attempt cap.
+2. **S1e. Remove the pair form of `transition` (S).** The API and the screening repositories name an edge; the worker call sites in `failure-handler`, `probe*` and `reconcile-*` still write `from` and `to`, which resolve to the first matching edge.
+3. **S7b. Expired OPEN uploads and the COMPLETED upload with an UPLOADING video (M).** An OPEN upload whose video left UPLOADING another way, or a crash between the two writes, has no recovery path. It needs a scan port on the upload repository.
+4. **S12, S13. Watch-party room phase (M).** Drop the duplicated `phase`, give a closed room a phase, make the clock exhaustive. Then the two socket booleans on the server.
+5. **S14. SSE connection booleans to one union (M).** Five booleans give 32 combinations for about 8 real states. Timers are involved, so it needs its own plan.
+6. **C6, C13. Client status display reads one "watchable" concept (M).** About 8 literal status comparisons in the studio, the web app and the embed route mean "watchable" or "processing". A named predicate in `@vp/domain-rules` replaces them, and the live pages follow. The stale progress tick on a READY video is fixed.
+7. **C11, C17, C18. Composer, settings sections, table state (S).** The `saved = isSuccess && !dirty` idiom is repeated 7 times, and `fetching = isFetching && !isPending` in 7 tables.
+8. **C9, C10, C1, C8. Replay intent, PWA, preferences merge, playback host (L).** High blast radius, 12 or more files each, and their specs overlap the flaky-spec work.

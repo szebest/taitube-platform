@@ -1,4 +1,4 @@
-import { asThrowable, classifyError, errorCodeOf, toPipelineError } from '../classify';
+import { asThrowable, attemptsFor, classifyError, errorCodeOf, toPipelineError } from '../classify';
 import { ErrorCodes } from '../error-codes';
 import { databaseUnavailable } from '../infra-failures';
 import { PermanentError, TransientError } from '../pipeline-error';
@@ -45,6 +45,37 @@ describe('@vp/errors: classifyError', () => {
     { name: 'undefined', error: undefined },
   ])('calls $name unknown rather than guessing', ({ error }) => {
     expect(classifyError(error)).toBe('unknown');
+  });
+});
+
+describe('@vp/errors: attemptsFor', () => {
+  it.each([
+    {
+      name: 'a permanent error',
+      error: new PermanentError(ErrorCodes.CORRUPT_CONTAINER, 'x'),
+      allowed: 5,
+      expected: 1,
+    },
+    {
+      name: 'a transient error',
+      error: new TransientError(ErrorCodes.STORAGE_UNAVAILABLE, 'x'),
+      allowed: 5,
+      expected: 5,
+    },
+    {
+      name: 'an unknown error under a larger policy',
+      error: new Error('boom'),
+      allowed: 5,
+      expected: 3,
+    },
+    {
+      name: 'an unknown error under a smaller policy',
+      error: new Error('boom'),
+      allowed: 2,
+      expected: 2,
+    },
+  ])('gives $name $expected of $allowed attempts', ({ error, allowed, expected }) => {
+    expect(attemptsFor(error, allowed)).toBe(expected);
   });
 });
 

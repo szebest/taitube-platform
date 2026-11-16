@@ -1687,6 +1687,9 @@ importers:
       '@vp/domain':
         specifier: workspace:*
         version: link:../../universal/domain
+      '@vp/domain-rules':
+        specifier: workspace:*
+        version: link:../../universal/domain-rules
       '@vp/env-schema':
         specifier: workspace:*
         version: link:../env-schema

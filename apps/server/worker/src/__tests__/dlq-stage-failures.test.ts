@@ -34,14 +34,9 @@ describe('apps/server/worker: stage failures that end in the DLQ', () => {
   it("fails the parent package and the video with the child's code, and publishes video.failed", async () => {
     const sourceKey = 'raw/fail-parent.mp4';
     const videoId = await uploadedVideo(world, sourceKey);
-    expectOk(
-      await world.repositories.videos.transition({
-        videoId,
-        from: 'UPLOADED',
-        to: 'PROCESSING',
-        eventType: 'video.processing',
-      })
-    );
+    for (const edge of ['startProbe', 'completeProbe'] as const) {
+      expectOk(await world.repositories.videos.transition({ videoId, edge }));
+    }
     const packageParked = parkFailuresOf('package');
     parkFailuresOf('transcode-720p');
 

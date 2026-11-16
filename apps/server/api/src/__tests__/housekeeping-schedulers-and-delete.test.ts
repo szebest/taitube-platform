@@ -46,6 +46,7 @@ describe('housekeeping schedulers and video deletion', () => {
     it.each([
       { id: 'reconcile-uploads', repeat: { pattern: '*/15 * * * *' } },
       { id: 'reconcile-processing', repeat: { pattern: '*/10 * * * *' } },
+      { id: 'reconcile-live', repeat: { pattern: '*/10 * * * *' } },
       { id: 'purge-deleted', repeat: { pattern: '0 * * * *' } },
       { id: 'expire-raw', repeat: { pattern: '30 3 * * *' } },
       { id: 'tmp-sweep', repeat: { pattern: '*/30 * * * *' } },
@@ -82,6 +83,7 @@ describe('housekeeping schedulers and video deletion', () => {
         'purge-screening-evidence',
         'purge-search-history',
         'reconcile-captions',
+        'reconcile-live',
         'reconcile-processing',
         'reconcile-reaction-counters',
         'reconcile-uploads',

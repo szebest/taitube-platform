@@ -8,10 +8,8 @@ import {
   type LiveChatState,
   liveChatReducer,
 } from './live-chat-state';
+import { createReconnectTimer } from './reconnect-timer';
 import { useAccount } from './session-provider';
-
-const FIRST_RETRY_MS = 1_000;
-const LAST_RETRY_MS = 30_000;
 
 export interface LiveChatOptions {
   liveStreamId: string;
@@ -60,19 +58,12 @@ export function useLiveChat({ liveStreamId, apiUrl, enabled = true }: LiveChatOp
     }
 
     const stopped = new AbortController();
-    const connection: {
-      lastId?: string;
-      retries: number;
-      retryTimer?: ReturnType<typeof setTimeout>;
-    } = { retries: 0 };
+    const connection: { lastId?: string } = {};
+    const reconnect = createReconnectTimer(() => void open());
 
     const retryLater = () => {
       dispatch({ type: 'connection', connection: 'closed' });
-      connection.retryTimer = setTimeout(
-        open,
-        Math.min(FIRST_RETRY_MS * 2 ** connection.retries, LAST_RETRY_MS)
-      );
-      connection.retries += 1;
+      reconnect.schedule();
     };
 
     const issueTicket = () =>
@@ -94,13 +85,13 @@ export function useLiveChat({ liveStreamId, apiUrl, enabled = true }: LiveChatOp
 
       const ticket = issued && isOk(issued) ? issued.value.ticket : undefined;
       const opened = new WebSocket(socketUrl(apiUrl, liveStreamId, ticket, connection.lastId));
-      opened.addEventListener('open', () => {
-        connection.retries = 0;
-      });
       opened.addEventListener('message', ({ data }) => {
         const frame = readFrame(data);
         if (!frame) {
           return;
+        }
+        if (frame.type === 'hello') {
+          reconnect.reset();
         }
         if (frame.type === 'message') {
           connection.lastId = frame.message.id;
@@ -120,7 +111,7 @@ export function useLiveChat({ liveStreamId, apiUrl, enabled = true }: LiveChatOp
 
     return () => {
       stopped.abort();
-      clearTimeout(connection.retryTimer);
+      reconnect.cancel();
       socket.current?.close();
       socket.current = null;
     };

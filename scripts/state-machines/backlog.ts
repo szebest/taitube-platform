@@ -5,49 +5,24 @@ export interface BacklogItem {
   why: string;
 }
 
-/** Ranked by value over cost. Lines marked PLAUSIBLE come from reading the code and need an integration run first. */
 export const BACKLOG: readonly BacklogItem[] = [
   {
-    id: 'S1b',
+    id: 'S9b',
     size: 'M',
-    title: 'Video lifecycle, typed edges',
-    why: '`TransitionVideoOptions` takes an edge name instead of from and to. The takedown path goes through `commitVideoTransition`, so it emits the user event and the notifications. `transitionNotificationJobs` and `mapEventToSse` become total over the machine.',
+    title: 'A child failure never reaches the package failure handler in production',
+    why: "BullMQ fails a parent through `failParentOnFailure` inside Lua, so the worker never emits `failed` for it and the video waits for `reconcile-processing` (3 h). The in-memory queue calls the handler anyway, which is why the flow spec passes. The failure handler's package FAILED transition and the screening HELD path are also not fenced by generation, and `bullmq-processor.ts` keeps its own copy of the unknown-error attempt cap.",
   },
   {
-    id: 'S1d',
+    id: 'S1e',
     size: 'S',
-    title: 'Edge check in the in-memory video repository',
-    why: '`transition` in the in-memory double would reject a pair that is not an edge of `VIDEO_LIFECYCLE`, giving every service and worker spec the check for free. Three worker specs (`captions-audio`, `dlq-stage-failures`, `purge-deleted`) seed a video in a state the pipeline would not have reached (UPLOADED then PROCESSING or READY, LIVE then DELETED), so their fixtures change first.',
+    title: 'Remove the pair form of `transition`',
+    why: 'The API and the screening repositories name an edge; the worker call sites in `failure-handler`, `probe*` and `reconcile-*` still write `from` and `to`, which resolve to the first matching edge.',
   },
   {
-    id: 'S9',
+    id: 'S7b',
     size: 'M',
-    title: 'Failure handler final-attempt gate',
-    why: 'PLAUSIBLE: a transient package failure marks the video FAILED while BullMQ still retries. Confirm with a BullMQ integration spec, then fix. The DLQ vocabulary (PARKED, REPLAYED, DISCARDED) is spelled three times and becomes one machine.',
-  },
-  {
-    id: 'S1c, S8',
-    size: 'M',
-    title: 'Reprocess correctness',
-    why: 'PLAUSIBLE: a reprocess of a READY video gets stuck in PROBING, because a DONE step fences the new probe. Needs a generation check in the worker CAS, a step reset on reprocess, and reconcilers for PROBING and LIVE.',
-  },
-  {
-    id: 'C5',
-    size: 'M',
-    title: 'Upload dock machine',
-    why: 'Per-item phases, cancel by item id (today it aborts the latest upload), and a server abort when completion fails.',
-  },
-  {
-    id: 'C2, C3, C7',
-    size: 'L',
-    title: 'One reconnecting-socket machine and a `useMachine` hook',
-    why: 'Fixes the live chat retry reset (it resets on `open`, not on `hello`) once, and exposes a "stream down" state to the status badge, the live pages and the notifications bell.',
-  },
-  {
-    id: 'S7',
-    size: 'S',
-    title: 'Upload session CAS',
-    why: '`updateStatus` has no compare-and-set, so a racing write can flip ABORTED to COMPLETED. The window between a COMPLETED upload and an UPLOADING video is a separate, larger item.',
+    title: 'Expired OPEN uploads and the COMPLETED upload with an UPLOADING video',
+    why: 'An OPEN upload whose video left UPLOADING another way, or a crash between the two writes, has no recovery path. It needs a scan port on the upload repository.',
   },
   {
     id: 'S12, S13',
@@ -62,16 +37,10 @@ export const BACKLOG: readonly BacklogItem[] = [
     why: 'Five booleans give 32 combinations for about 8 real states. Timers are involved, so it needs its own plan.',
   },
   {
-    id: 'S10',
-    size: 'S',
-    title: 'Outbox dead state and a transactional claim',
-    why: 'A poison row loops forever, and `claimBatch` holds its lock outside any transaction.',
-  },
-  {
     id: 'C6, C13',
-    size: 'S',
-    title: 'Client status display reads the machine',
-    why: 'About 8 literal status comparisons in the studio, the web app and the embed route become table reads; the live pages follow.',
+    size: 'M',
+    title: 'Client status display reads one "watchable" concept',
+    why: 'About 8 literal status comparisons in the studio, the web app and the embed route mean "watchable" or "processing". A named predicate in `@vp/domain-rules` replaces them, and the live pages follow. The stale progress tick on a READY video is fixed.',
   },
   {
     id: 'C11, C17, C18',
@@ -84,12 +53,5 @@ export const BACKLOG: readonly BacklogItem[] = [
     size: 'L',
     title: 'Replay intent, PWA, preferences merge, playback host',
     why: 'High blast radius, 12 or more files each, and their specs overlap the flaky-spec work.',
-  },
-  {
-    id: 'S15, S16, S6b, S17, S19, S20',
-    size: 'S',
-    title:
-      'Captions, channel images, live stream DB edges, circuit breaker, API shutdown phase, demo plan',
-    why: 'The circuit breaker half-open state admits every caller instead of one trial call. The API shutdown phase is never set to `stopping`. The demo `--dry-run` plan is a hand-written copy of the step list.',
   },
 ];

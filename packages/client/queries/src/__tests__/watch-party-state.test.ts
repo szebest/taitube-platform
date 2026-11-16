@@ -187,8 +187,25 @@ describe('packages/queries: watchPartyReducer', () => {
     { frame: { type: 'kicked' }, end: 'kicked' },
     { frame: { type: 'superseded' }, end: 'superseded' },
     { frame: { type: 'closed', reason: 'owner' }, end: 'closed' },
-  ])('ends the visit on $frame.type', ({ frame: ended, end }) => {
-    expect(fold(frame(HELLO), frame(ended)).ended).toBe(end);
+  ])('ends the visit and the connection on $frame.type', ({ frame: ended, end }) => {
+    expect(fold(frame(HELLO), frame(ended))).toMatchObject({ ended: end, connection: 'closed' });
+  });
+
+  it('drops the countdown when the room stops before it ran out', () => {
+    const state = fold(
+      frame(HELLO),
+      frame({
+        type: 'state',
+        playback: { ...PLAYBACK, phase: 'playing', anchorAt: 5000 },
+        version: 8,
+        by: OTHER,
+        reason: 'command',
+      }),
+      frame({ type: 'countdown', startsAt: 5000 }),
+      frame({ type: 'state', playback: PLAYBACK, version: 9, by: OTHER, reason: 'command' })
+    );
+
+    expect(state.countdownEndsAt).toBeNull();
   });
 
   it('keeps requests for controllers and dismisses one', () => {
