@@ -47,6 +47,7 @@
     "gen:token-set": "turbo run build --filter=@vp/design-tokens --output-logs=errors-only && tsx scripts/gen-token-set.ts",
     "gen:component": "tsx scripts/gen-component.ts",
     "gen:package-map": "tsx scripts/gen-package-map.ts",
+    "codemod:specifiers": "tsx scripts/codemod/rewrite-specifiers.ts",
     "gen:api": "tsx scripts/gen-api.ts",
     "check:platform-changes": "tsx scripts/check-platform-changes.ts",
     "scan:message-keys": "tsx scripts/message-key-usage.ts",
