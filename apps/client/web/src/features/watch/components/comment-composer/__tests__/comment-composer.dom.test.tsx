@@ -17,6 +17,10 @@ vi.mock(import('#app/components/player/taitube-player/taitube-player'), async ()
   TaitubePlayer: (await import('#app/__tests__/stub-player')).StubPlayer,
 }));
 
+vi.mock(import('#app/features/creator-stats/components/creator-stats-panel/stats-panel'), () => ({
+  StatsPanel: () => <></>,
+}));
+
 const VIEWER = viewerAccount(AUTHOR_ID);
 
 const thread = mockEndpoint(listVideoComments, () =>
