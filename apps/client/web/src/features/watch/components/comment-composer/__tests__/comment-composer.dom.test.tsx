@@ -17,6 +17,9 @@ vi.mock(import('#app/components/player/taitube-player/taitube-player'), async ()
   TaitubePlayer: (await import('#app/__tests__/stub-player')).StubPlayer,
 }));
 
+/** The owner's page also mounts the creator stats panel, which a loaded CI shard takes seconds to render. */
+const OWNER_PAGE_TIMEOUT_MS = 4000;
+
 const VIEWER = viewerAccount(AUTHOR_ID);
 
 const thread = mockEndpoint(listVideoComments, () =>
@@ -70,8 +73,9 @@ describe('apps/client/web: CommentComposer', () => {
       });
 
       if (field) {
-        await vi.waitFor(() =>
-          expect(screen.getByRole('textbox', { name: 'Add a comment' })).toBeVisible()
+        await vi.waitFor(
+          () => expect(screen.getByRole('textbox', { name: 'Add a comment' })).toBeVisible(),
+          { timeout: OWNER_PAGE_TIMEOUT_MS }
         );
         return;
       }
