@@ -27,26 +27,31 @@ function tree(): string {
 }
 
 describe('scripts: pnpm gen:package-map', () => {
-  it('lists each package by layer then directory, with its tier and workspace edges', () => {
+  it('lists each package by layer then directory, with its scope, tier and workspace edges', () => {
     const packages: Pkg[] = [
-      { name: '@vp/web', dir: 'apps/client/web', layer: 6, deps: [{ name: '@vp/ui', dev: false }] },
       {
-        name: '@vp/ui',
-        dir: 'packages/client/ui',
+        name: '@vp/web',
+        dir: 'apps/client/web',
+        layer: 6,
+        deps: [{ name: '@kit/ui', dev: false }],
+      },
+      {
+        name: '@kit/ui',
+        dir: 'packages/platform/client/ui',
         layer: 3,
         deps: [
-          { name: '@vp/result', dev: false },
-          { name: '@vp/design-tokens', dev: false },
-          { name: '@vp/tsconfig', dev: true },
+          { name: '@kit/result', dev: false },
+          { name: '@kit/design-tokens', dev: false },
+          { name: '@kit/tsconfig', dev: true },
         ],
       },
       { name: '@vp/api', dir: 'apps/server/api', layer: 6, deps: [] },
     ];
 
     expect(renderPackageMap(packages).split('\n').slice(-4)).toEqual([
-      '| `@vp/ui` | `packages/client/ui` | client | T3 | `@vp/design-tokens`, `@vp/result` | `@vp/tsconfig` |',
-      '| `@vp/web` | `apps/client/web` | client | T6 | `@vp/ui` | - |',
-      '| `@vp/api` | `apps/server/api` | server | T6 | - | - |',
+      '| `@kit/ui` | `packages/platform/client/ui` | platform | client | T3 | `@kit/design-tokens`, `@kit/result` | `@kit/tsconfig` |',
+      '| `@vp/web` | `apps/client/web` | app | client | T6 | `@kit/ui` | - |',
+      '| `@vp/api` | `apps/server/api` | app | server | T6 | - | - |',
       '',
     ]);
   });

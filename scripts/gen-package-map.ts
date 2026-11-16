@@ -1,12 +1,13 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { directoryTier, load, type Pkg } from './check-boundaries';
+import { directoryTier, isPlatform, load, type Pkg } from './check-boundaries';
 
 const MAP_FILE = 'docs/package-map.md';
 
 const USAGE = `Usage: pnpm gen:package-map [--check] [root]
 
-Writes ${MAP_FILE} from every workspace manifest: name, directory, tier, layer and workspace edges.
+Writes ${MAP_FILE} from every workspace manifest: name, directory, scope, tier, layer and workspace
+edges.
 
   --check   write nothing; exit 1 when ${MAP_FILE} differs from what would be written
   --help    print this text
@@ -18,11 +19,12 @@ const HEADER = `# Package map
 
 Every workspace package and app, generated from the manifests by \`pnpm gen:package-map\`: edit a
 \`package.json\`, never this file, and \`pnpm gen:package-map --check\` fails CI when the two drift. The
-tier is the directory and the layer is \`vp.layer\` ([packages/AGENTS.md](../packages/AGENTS.md)); where
-each package's exports are headed is [scripts/package-moves.json](../scripts/package-moves.json).
+scope (platform or app) and the tier are the directory and the layer is \`vp.layer\`
+([packages/AGENTS.md](../packages/AGENTS.md)); where each package's exports are headed is
+[scripts/package-moves.json](../scripts/package-moves.json).
 
-| Package | Directory | Tier | Layer | Depends on | Dev-depends on |
-|---|---|---|---|---|---|
+| Package | Directory | Scope | Tier | Layer | Depends on | Dev-depends on |
+|---|---|---|---|---|---|---|
 `;
 
 const names = (deps: readonly string[]) =>
@@ -35,7 +37,8 @@ export function renderPackageMap(packages: readonly Pkg[]): string {
       const runtime = pkg.deps.filter((dep) => !dep.dev).map((dep) => dep.name);
       const dev = pkg.deps.filter((dep) => dep.dev).map((dep) => dep.name);
       const tier = directoryTier(pkg.dir) ?? '-';
-      return `| \`${pkg.name}\` | \`${pkg.dir}\` | ${tier} | T${pkg.layer} | ${names(runtime.sort())} | ${names(dev.sort())} |`;
+      const scope = isPlatform(pkg.dir) ? 'platform' : 'app';
+      return `| \`${pkg.name}\` | \`${pkg.dir}\` | ${scope} | ${tier} | T${pkg.layer} | ${names(runtime.sort())} | ${names(dev.sort())} |`;
     });
   return `${HEADER}${rows.join('\n')}\n`;
 }

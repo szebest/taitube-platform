@@ -217,7 +217,10 @@ The remaining hole is someone *adding the declaration* to `package.json`. TypeSc
 
 - tier compatibility of every `@vp/*` dependency, peerDependency and devDependency
 - layer direction (strictly down; same-layer is a violation), over the same three groups
-- every manifest sits under `packages/<tier>/` or `apps/<server|client>/`, and none declares a `vp.tier`
+- every manifest sits under `packages/<tier>/`, packages/platform/<tier>/ or `apps/<server|client>/`, and none
+  declares a `vp.tier`
+- a package under packages/platform/ (a platform package, reusable outside this product) depends, peer-depends and
+  dev-depends only on other platform packages, build tooling included
 
 `pnpm boundaries` then runs `scripts/sync-claude-symlinks.ts --check`, which fails when an `AGENTS.md` has no
 `CLAUDE.md` symlink beside it.

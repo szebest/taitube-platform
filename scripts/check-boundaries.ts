@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { createLogger } from '../packages/server/logger/src/index';
 
@@ -27,6 +27,7 @@ const TIER_DIRECTORIES: Record<string, Tier[]> = {
   packages: ['universal', 'server', 'client'],
   apps: ['server', 'client'],
 };
+const PLATFORM = 'packages/platform/';
 
 /**
  * The only packages a manifest may name as a devDependency regardless of tier and layer: none
@@ -46,7 +47,8 @@ export const BUILD_TOOLING: ReadonlySet<string> = new Set([
 
 function manifestDirs(root: string): string[] {
   const dirs: string[] = [];
-  for (const parent of ['packages', 'apps']) {
+  for (const parent of ['packages', PLATFORM, 'apps']) {
+    if (!existsSync(join(root, parent))) continue;
     for (const tier of readdirSync(join(root, parent))) {
       const tierDir = join(root, parent, tier);
       if (!statSync(tierDir).isDirectory()) continue;
@@ -67,23 +69,23 @@ export function load(root: string = ROOT): Pkg[] {
       dir: dir.slice(root.length + 1),
       declaredTier: vp.tier,
       layer: vp.layer,
-      deps: declaredDeps(raw),
+      deps: workspaceDeps(raw),
     };
   });
 }
 
-function declaredDeps(raw: {
+const workspaceNames = (deps: Record<string, string> = {}) =>
+  Object.entries(deps)
+    .filter(([, version]) => version.startsWith('workspace:'))
+    .map(([name]) => name);
+
+function workspaceDeps(raw: {
   dependencies?: Record<string, string>;
   peerDependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
 }): PkgDep[] {
-  const runtime = [
-    ...Object.keys(raw.dependencies ?? {}),
-    ...Object.keys(raw.peerDependencies ?? {}),
-  ].filter((d) => d.startsWith('@vp/'));
-  const dev = Object.keys(raw.devDependencies ?? {}).filter(
-    (d) => d.startsWith('@vp/') && !runtime.includes(d)
-  );
+  const runtime = [...workspaceNames(raw.dependencies), ...workspaceNames(raw.peerDependencies)];
+  const dev = workspaceNames(raw.devDependencies).filter((d) => !runtime.includes(d));
 
   return [
     ...runtime.map((name) => ({ name, dev: false })),
@@ -91,8 +93,11 @@ function declaredDeps(raw: {
   ];
 }
 
+export const isPlatform = (dir: string): boolean => dir.startsWith(PLATFORM);
+
 export function directoryTier(dir: string): Tier | null {
-  const [parent, tier, name] = dir.split('/');
+  const path = isPlatform(dir) ? `packages/${dir.slice(PLATFORM.length)}` : dir;
+  const [parent, tier, name] = path.split('/');
   if (!(parent && name)) return null;
   return TIER_DIRECTORIES[parent]?.find((t) => t === tier) ?? null;
 }
@@ -105,7 +110,7 @@ export function checkBoundaries(packages: Pkg[] = load()): string[] {
     const tier = directoryTier(pkg.dir);
     if (!tier) {
       errors.push(
-        `${pkg.name}: lives outside packages/<tier>/ and apps/<server|client>/, so it has no tier`
+        `${pkg.name}: lives outside packages/<tier>/, packages/platform/<tier>/ and apps/<server|client>/, so it has no tier`
       );
       continue;
     }
@@ -120,10 +125,16 @@ export function checkBoundaries(packages: Pkg[] = load()): string[] {
     }
 
     for (const { name: depName, dev } of pkg.deps) {
-      if (dev && BUILD_TOOLING.has(depName)) continue;
       const dep = byName.get(depName);
       if (!dep) continue;
       const how = dev ? 'dev-depends on' : 'depends on';
+
+      if (isPlatform(pkg.dir) && !isPlatform(dep.dir)) {
+        errors.push(
+          `${pkg.name} (platform) ${how} ${dep.name} (app) — a platform package depends, peer-depends and dev-depends only on platform packages`
+        );
+      }
+      if (dev && BUILD_TOOLING.has(depName)) continue;
 
       const depTier = directoryTier(dep.dir);
       if (depTier && !TIER_MAY_IMPORT[tier].includes(depTier)) {

@@ -15,7 +15,8 @@ describe('architecture: package boundaries', () => {
   it('loads every tracked app and package manifest', () => {
     const manifests = trackedFiles(
       ':(glob)apps/*/*/package.json',
-      ':(glob)packages/*/*/package.json'
+      ':(glob)packages/*/*/package.json',
+      ':(glob)packages/platform/*/*/package.json'
     );
 
     expect(
@@ -45,14 +46,51 @@ describe('architecture: package boundaries', () => {
     ]);
   });
 
-  it.each(['apps/web', 'apps/universal/web', 'packages/web'])(
+  it.each(['apps/web', 'apps/universal/web', 'packages/web', 'packages/platform/web'])(
     'reports a manifest at %s, outside a tier directory',
     (dir) => {
       expect(checkBoundaries([pkg({ name: '@vp/web', dir })])).toEqual([
-        '@vp/web: lives outside packages/<tier>/ and apps/<server|client>/, so it has no tier',
+        '@vp/web: lives outside packages/<tier>/, packages/platform/<tier>/ and apps/<server|client>/, so it has no tier',
       ]);
     }
   );
+
+  it.each([
+    { group: 'a dependency', dev: false, how: 'depends on', dep: '@vp/domain' },
+    { group: 'a devDependency', dev: true, how: 'dev-depends on', dep: '@vp/domain' },
+    { group: 'build tooling', dev: true, how: 'dev-depends on', dep: '@vp/tsconfig' },
+  ])('reports a platform package that names an app package as $group', ({ dev, how, dep }) => {
+    const errors = checkBoundaries([
+      pkg({ name: '@kit/di', dir: 'packages/platform/universal/di', deps: [{ name: dep, dev }] }),
+      pkg({ name: dep, dir: `packages/universal/${dep.slice(4)}`, layer: 1 }),
+    ]);
+
+    expect(errors).toEqual([
+      `@kit/di (platform) ${how} ${dep} (app) — a platform package depends, peer-depends and dev-depends only on platform packages`,
+    ]);
+  });
+
+  it('reads the tier of a platform package from its path, and lets an app depend on one', () => {
+    const errors = checkBoundaries([
+      pkg({
+        name: '@vp/web',
+        dir: 'apps/client/web',
+        layer: 6,
+        deps: [{ name: '@kit/ui', dev: false }],
+      }),
+      pkg({
+        name: '@kit/ui',
+        dir: 'packages/platform/client/ui',
+        layer: 3,
+        deps: [{ name: '@kit/logger', dev: false }],
+      }),
+      pkg({ name: '@kit/logger', dir: 'packages/platform/server/logger', layer: 1 }),
+    ]);
+
+    expect(errors).toEqual([
+      '@kit/ui (client) depends on @kit/logger (server) — a client package or app may only depend on universal or client',
+    ]);
+  });
 
   it.each([
     { dir: 'packages/server/node', parent: 'packages/server' },
