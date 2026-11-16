@@ -69,6 +69,8 @@ export class PostgresDlqRepository extends DlqRepository {
     options: ListDlqEntriesOptions
   ): Promise<Result<DlqEntryRecord[], DatabaseUnavailable>> {
     const { cursor, limit, status } = options;
+    // `now()` stamps microseconds, a cursor carries milliseconds: on the raw column it skips rows.
+    const parkedAt = sql`date_trunc('milliseconds', ${dlq.createdAt})`;
     const rows = await fromPromise(
       () =>
         this.db
@@ -77,14 +79,10 @@ export class PostgresDlqRepository extends DlqRepository {
           .where(
             drizzleWhere(
               status ? eq(dlq.status, status) : undefined,
-              keysetBefore(
-                dlq.createdAt,
-                dlq.id,
-                cursor && { sort: cursor.createdAt, tie: cursor.id }
-              )
+              keysetBefore(parkedAt, dlq.id, cursor && { sort: cursor.createdAt, tie: cursor.id })
             )
           )
-          .orderBy(desc(dlq.createdAt), desc(dlq.id))
+          .orderBy(desc(parkedAt), desc(dlq.id))
           .limit(limit + 1),
       databaseUnavailable.during('list')
     );
