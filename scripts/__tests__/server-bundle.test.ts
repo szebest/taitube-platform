@@ -5,6 +5,7 @@ import { dirname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { build } from 'vite-plus/pack';
 import { serverBundle } from '../server-bundle';
+import type { Pkg } from '../workspace-packages';
 
 const FIXTURE: Readonly<Record<string, string>> = {
   'app/src/main.ts': [
@@ -35,6 +36,8 @@ const FIXTURE: Readonly<Record<string, string>> = {
     "const { format } = require('node:util'); exports.pad = (text) => format('[%s] from npm', text);",
 };
 
+const workspacePackage = (name: string): Pkg => ({ name, dir: '', layer: 0, deps: [] });
+
 const ENTRIES = ['main.js', 'instrument.js'];
 const LEFT_BY_A_PREVIOUS_BUILD = 'shared-0ld0ld.js';
 
@@ -43,7 +46,7 @@ async function bundle(app: string): Promise<string> {
   mkdirSync(out, { recursive: true });
   writeFileSync(join(out, LEFT_BY_A_PREVIOUS_BUILD), 'export const stale = true;');
   await build({
-    ...serverBundle(['src/main.ts', 'src/instrument.ts']),
+    ...serverBundle(['src/main.ts', 'src/instrument.ts'], [workspacePackage('@vp/loud')]),
     cwd: app,
     config: false,
   });
@@ -101,5 +104,20 @@ describe('scripts: server-bundle', () => {
 
     expect(run.stderr).toBe('');
     expect(run.status).toBe(0);
+  });
+
+  it.each([
+    ['@vp/result', true],
+    ['@kit/di', true],
+    ['@kit/di/registry', true],
+    ['@kitx/di', false],
+    ['npm-pad', false],
+  ])('bundles %s: %s, whichever scope the workspace gives it', (specifier, bundled) => {
+    const { alwaysBundle } = serverBundle(
+      ['src/main.ts'],
+      ['@vp/result', '@kit/di'].map(workspacePackage)
+    ).deps as { alwaysBundle: RegExp[] };
+
+    expect(alwaysBundle.some((matcher) => matcher.test(specifier))).toBe(bundled);
   });
 });
