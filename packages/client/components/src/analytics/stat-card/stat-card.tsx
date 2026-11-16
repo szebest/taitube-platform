@@ -1,4 +1,3 @@
-import { SectionError } from '@vp/components';
 import { Badge, Card, type CardRootProps, Icon, Skeleton, useUiCopy } from '@vp/ui';
 import {
   type ComponentPropsWithRef,
@@ -6,7 +5,8 @@ import {
   isValidElement,
   type PropsWithChildren,
 } from 'react';
-import { seriesColor } from '../chart-frame';
+import { SectionError } from '../../states/section-error';
+import { seriesColor } from '../series-color';
 import { StatCardContext, useStatCard } from './stat-card.context';
 import { STAT_CARD_TREND_TONE, statCardStyles } from './stat-card.variants';
 import type { StatCardSeries, StatCardSize, StatCardStatus, StatCardTrend } from './types';

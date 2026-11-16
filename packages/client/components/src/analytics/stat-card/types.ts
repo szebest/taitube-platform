@@ -1,5 +1,5 @@
 import type { AvatarSize, BadgeTone } from '@vp/ui';
-import type { ChartSeries } from '../chart-frame';
+import type { ChartSeries } from '../series-color';
 
 export type StatCardSize = Extract<AvatarSize, 'md' | 'lg'>;
 export type StatCardState = 'ready' | 'loading' | 'error' | 'empty';

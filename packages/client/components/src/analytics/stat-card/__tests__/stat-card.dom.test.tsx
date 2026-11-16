@@ -2,24 +2,22 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { variantNames } from '@vp/ui';
 import { axeViolations } from '@vp/web-testing/dom';
-import { AppProviders } from '#app/__tests__/providers';
 import { STAT_CARD_TREND_TONE, StatCard, StatCardSkeleton, statCardStyles } from '..';
+import { renderWithCopy } from '../../../__tests__/render-with-copy';
 import type { StatCardRootProps } from '../stat-card';
 import type { StatCardTrend } from '../types';
 
 const renderCard = (props: StatCardRootProps = {}, trend: StatCardTrend = 'up') =>
-  render(
-    <AppProviders>
-      <StatCard.Root {...props}>
-        <StatCard.Label>Views, last 28 days</StatCard.Label>
-        <StatCard.Value>1.24M</StatCard.Value>
-        <StatCard.Delta trend={trend}>+8.4% vs previous 28 days</StatCard.Delta>
-        <StatCard.Spark values={[12, 14, 20]} series={2} />
-      </StatCard.Root>
-    </AppProviders>
+  renderWithCopy(
+    <StatCard.Root {...props}>
+      <StatCard.Label>Views, last 28 days</StatCard.Label>
+      <StatCard.Value>1.24M</StatCard.Value>
+      <StatCard.Delta trend={trend}>+8.4% vs previous 28 days</StatCard.Delta>
+      <StatCard.Spark values={[12, 14, 20]} series={2} />
+    </StatCard.Root>
   );
 
-describe('apps/client/studio: StatCard', () => {
+describe('@vp/components: StatCard', () => {
   it('captions the figure with its label and reads the value and delta after it', () => {
     renderCard();
 
@@ -55,7 +53,7 @@ describe('apps/client/studio: StatCard', () => {
   it('shows the no-data line and drops the delta and sparkline when empty', () => {
     const { container } = renderCard({ state: 'empty' });
 
-    expect(screen.getByText('No data yet')).toBeInTheDocument();
+    expect(screen.getByText('noDataYet')).toBeInTheDocument();
     expect(screen.queryByText('1.24M')).not.toBeInTheDocument();
     expect(container.querySelector('[data-slot="stat-card-delta"]')).not.toBeInTheDocument();
     expect(container.querySelector('[data-slot="stat-card-spark"]')).not.toBeInTheDocument();
@@ -67,9 +65,9 @@ describe('apps/client/studio: StatCard', () => {
     renderCard({ state: 'error', onRetry });
 
     expect(screen.getByText('Views, last 28 days')).toBeInTheDocument();
-    expect(screen.getByText('Could not load this')).toBeInTheDocument();
+    expect(screen.getByText('loadFailed')).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: 'Try again' }));
+    await user.click(screen.getByRole('button', { name: 'retry' }));
 
     expect(onRetry).toHaveBeenCalledOnce();
   });
@@ -91,15 +89,13 @@ describe('apps/client/studio: StatCard', () => {
   );
 
   it('becomes the link it is given, with a chevron, keeping the figure inside', () => {
-    render(
-      <AppProviders>
-        <StatCard.Root asChild>
-          <a href="/analytics/views">
-            <StatCard.Label>Views, last 28 days</StatCard.Label>
-            <StatCard.Value>1.24M</StatCard.Value>
-          </a>
-        </StatCard.Root>
-      </AppProviders>
+    renderWithCopy(
+      <StatCard.Root asChild>
+        <a href="/analytics/views">
+          <StatCard.Label>Views, last 28 days</StatCard.Label>
+          <StatCard.Value>1.24M</StatCard.Value>
+        </a>
+      </StatCard.Root>
     );
 
     const link = screen.getByRole('link', { name: /Views, last 28 days/ });

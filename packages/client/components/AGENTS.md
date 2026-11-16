@@ -13,6 +13,7 @@ never earlier.
 - `PageHeader`, `VideoThumbnail` (the frame with duration, progress and badges that web's cards and studio's
   library rows both draw), `EmptyState`, `ErrorState`, `SectionError`, and the skeleton of each
   that has one.
+- `StatCard` (one KPI with its delta and sparkline) and `seriesColor`, the categorical colour its sparkline and the studio's charts share (`src/analytics/`).
 - `Shelf`, `VideoCard` and `StartHereShelf` (a headed scroller of cards, the one video card, and the channel's Start here shelf), which web's pages draw and the studio's Start here section previews.
 - The eight state illustrations (`src/illustrations/`), plain SVG components drawn in `currentColor`: the parent's CSS
   colour tints them, so they take `accent` per theme.

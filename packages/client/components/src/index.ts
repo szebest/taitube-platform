@@ -1,4 +1,6 @@
 export * from './account-menu';
+export * from './analytics/series-color';
+export * from './analytics/stat-card';
 export * from './disclosure-control';
 export * from './illustrations';
 export * from './login-card';

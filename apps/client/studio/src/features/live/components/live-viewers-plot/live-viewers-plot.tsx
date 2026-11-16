@@ -1,3 +1,4 @@
+import { seriesColor } from '@vp/components';
 import type { FormatValue } from '@vp/intl';
 import { useFormat } from '@vp/intl-react';
 import { unwrapOr } from '@vp/result';
@@ -10,7 +11,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { seriesColor, useChartTheme } from '#app/components/analytics/chart-frame';
+import { useChartTheme } from '#app/components/analytics/chart-frame';
 
 const AXIS_TICK_SIZE = 12;
 
