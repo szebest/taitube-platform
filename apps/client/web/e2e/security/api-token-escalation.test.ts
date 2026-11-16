@@ -59,8 +59,8 @@ const OUT_OF_REACH: TokenAttempt[] = [
 /** Routes the scope covers, where the token is still no more than its user: the intersection. */
 const BEYOND_THE_USER: (TokenAttempt & { persona: Persona })[] = [
   {
-    name: "edit another creator's video",
-    persona: 'viewer',
+    name: "edit the creator's video as the channel's analytics viewer",
+    persona: 'analytics',
     method: 'PATCH',
     path: ({ videos }) => `/v1/videos/${videos.watchable.id}`,
     data: { title: 'hijacked', version: 1 },
