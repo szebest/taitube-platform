@@ -22,6 +22,22 @@ describe('apps/server/api/composition: integration module', () => {
     expectOk(await c.dispose());
   });
 
+  it('queues a channel export through the repositories the rest of the API shares', async () => {
+    const c = registerServices(await registerAdapters(new Container(), inProcessAppConfig()));
+    const { user, acting } = expectOk(await c.get(Services.RequestIdentity).resolve(VIEWER));
+
+    const created = expectOk(
+      await c
+        .get(Services.ChannelExportService)
+        .create(user, expectOk(acting), { kind: 'videos', format: 'csv', params: {} })
+    );
+
+    expect(
+      expectOk(await c.get(Adapters.Repositories).dataExports.findById(created.id))
+    ).toMatchObject({ status: 'queued', requestedBy: VIEWER.id });
+    expectOk(await c.dispose());
+  });
+
   it('refuses an oEmbed url of another site', async () => {
     const c = registerServices(await registerAdapters(new Container(), inProcessAppConfig()));
 

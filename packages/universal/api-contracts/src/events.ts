@@ -1,4 +1,10 @@
-import { CAPTION_KINDS, THUMBNAIL_PROGRESS, type UserEvent } from '@vp/domain';
+import {
+  CAPTION_KINDS,
+  DATA_EXPORT_FORMATS,
+  DATA_EXPORT_KINDS,
+  THUMBNAIL_PROGRESS,
+  type UserEvent,
+} from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import { CHANNEL_IMAGE_KINDS } from '@vp/validation';
 import { z } from 'zod';
@@ -125,6 +131,26 @@ const UserEventSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('party.controls.updated'),
     payload: z.object({ targetKey: MemberKeySchema, roomId: z.uuid().nullable() }),
+  }),
+  z.object({
+    type: z.literal('export.ready'),
+    payload: z.object({
+      exportId: z.uuid(),
+      channelId: z.uuid(),
+      kind: z.enum(DATA_EXPORT_KINDS),
+      format: z.enum(DATA_EXPORT_FORMATS),
+      rowCount: z.number().int().nonnegative(),
+      expiresAt: z.iso.datetime(),
+    }),
+  }),
+  z.object({
+    type: z.literal('export.failed'),
+    payload: z.object({
+      exportId: z.uuid(),
+      channelId: z.uuid(),
+      kind: z.enum(DATA_EXPORT_KINDS),
+      reason: z.string(),
+    }),
   }),
 ]) satisfies z.ZodType<UserEvent>;
 

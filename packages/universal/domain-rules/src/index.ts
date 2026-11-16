@@ -24,3 +24,4 @@ export * from './oembed/index';
 export * from './live/index';
 export * from './screening/index';
 export * from './watch-parties/index';
+export * from './exports/index';

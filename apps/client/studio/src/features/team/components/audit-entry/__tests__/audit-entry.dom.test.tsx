@@ -138,6 +138,17 @@ const entries: { scenario: string; entry: Entry; shown: string[] }[] = [
     },
     shown: ['Banned a user'],
   },
+  {
+    scenario: 'a requested export',
+    entry: {
+      ...base,
+      id: id(14),
+      action: 'export.requested',
+      targetType: 'export',
+      meta: { kind: 'comments', format: 'csv' },
+    },
+    shown: ['Requested an export', 'comments as CSV'],
+  },
 ];
 
 describe('apps/client/studio: AuditEntry', () => {

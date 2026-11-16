@@ -22,6 +22,9 @@ describe('@vp/domain: channel team', () => {
     ['moderator', 'comment.moderate', true],
     ['moderator', 'video.edit', false],
     ['analytics', 'analytics.read', true],
+    ['analytics', 'analytics.export', true],
+    ['analytics', 'data.export', false],
+    ['editor', 'analytics.export', false],
     ['analytics', 'comment.pin', false],
   ])('a %s holding %s: %s', (role, capability, expected) => {
     expect(roleHas(role, capability)).toBe(expected);
@@ -61,6 +64,8 @@ describe('@vp/domain: channel team', () => {
     'trusted.added',
     'trusted.removed',
     'settings.comments.updated',
+    'export.requested',
+    'export.deleted',
   ] as const)('audits %s', (action) => {
     expect(CHANNEL_AUDIT_ACTIONS).toContain(action);
   });
