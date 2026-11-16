@@ -43,8 +43,6 @@ export const studioLive = {
   liveRevealField: dt('Pokaż: {label}'),
   liveHideField: dt('Ukryj: {label}'),
   liveCopyField: dt('Kopiuj: {label}'),
-  liveCopied: dt('Skopiowano: {label}'),
-  liveCopyFailed: dt('Nie udało się skopiować: {label}'),
   liveIdleLine: dt(
     'Nie nadajesz teraz. Rozpocznij transmisję w OBS, a ta strona przejdzie na żywo razem z Tobą.'
   ),

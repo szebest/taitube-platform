@@ -15,8 +15,8 @@ export function useCopyField() {
 
     toast(
       isOk(copied)
-        ? { tone: 'success', title: tOr('studio.liveCopied', { label }, '') }
-        : { tone: 'danger', title: tOr('studio.liveCopyFailed', { label }, '') }
+        ? { tone: 'success', title: tOr('studio.copiedField', { label }, '') }
+        : { tone: 'danger', title: tOr('studio.copyFieldFailed', { label }, '') }
     );
   };
 }

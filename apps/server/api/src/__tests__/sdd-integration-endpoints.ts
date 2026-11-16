@@ -44,4 +44,11 @@ export const SDD_INTEGRATION_ENDPOINTS: SddEndpointContract[] = [
     expectedErrorCodes: [VALIDATION_FAILED, UNAUTHORIZED, WEBHOOK_NOT_FOUND],
     hasPathParams: true,
   },
+  {
+    path: '/v1/me/webhooks/{id}/test',
+    method: 'post',
+    expectedStatuses: [200, 400, 401, 404],
+    expectedErrorCodes: [VALIDATION_FAILED, UNAUTHORIZED, WEBHOOK_NOT_FOUND],
+    hasPathParams: true,
+  },
 ];

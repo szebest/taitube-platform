@@ -28,6 +28,7 @@ export function registerIntegrationServices(c: Container): Container {
         new WebhookService({
           webhooks: c.get(Adapters.Repositories).webhooks,
           policy: { allowPrivateHosts: c.get(Adapters.Config).webhooks.allowPrivateHosts },
+          dispatcher: c.get(Adapters.WebhookDispatcher),
           newSecret: () => randomBytes(32).toString('hex'),
           now: Date.now,
         })

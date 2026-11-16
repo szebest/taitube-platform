@@ -5,6 +5,7 @@ import { studioCaptions } from './studio-captions';
 import { studioChannel } from './studio-channel';
 import { studioCommentSettings } from './studio-comment-settings';
 import { studioComments } from './studio-comments';
+import { studioDevelopers } from './studio-developers';
 import { studioImages } from './studio-images';
 import { studioLive } from './studio-live';
 import { studioModeration } from './studio-moderation';
@@ -73,6 +74,7 @@ export const studio = {
   ...studioCaptions,
   ...studioComments,
   ...studioCommentSettings,
+  ...studioDevelopers,
   ...studioModeration,
   ...studioChannel,
   ...studioImages,
@@ -80,6 +82,8 @@ export const studio = {
   ...studioPicks,
   ...studioScreening,
   ...studioTeam,
+  copiedField: dt('Skopiowano: {label}'),
+  copyFieldFailed: dt('Nie udało się skopiować: {label}'),
   deleteVideo: dt('Usuń'),
   setVisibility: dt('Widoczność'),
   deleteConfirmTitle: dt('{count:plural}', {
