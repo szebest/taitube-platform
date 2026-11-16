@@ -6,10 +6,10 @@ import {
   type PropsWithChildren,
 } from 'react';
 import { SectionError } from '../../states/section-error';
-import { seriesColor } from '../series-color';
 import { StatCardContext, useStatCard } from './stat-card.context';
 import { STAT_CARD_TREND_TONE, statCardStyles } from './stat-card.variants';
 import type { StatCardSeries, StatCardSize, StatCardStatus, StatCardTrend } from './types';
+import { seriesColor } from './utils/series-color';
 
 const SPARK_WIDTH = 100;
 const SPARK_HEIGHT = 32;

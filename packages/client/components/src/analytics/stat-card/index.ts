@@ -16,4 +16,5 @@ export const StatCard = {
 export { StatCardSkeleton } from './stat-card';
 export { useStatCard } from './stat-card.context';
 export { STAT_CARD_TREND_TONE, statCardStyles } from './stat-card.variants';
-export type { StatCardTrend } from './types';
+export type { ChartSeries, StatCardTrend } from './types';
+export { CHART_SERIES, seriesColor } from './utils/series-color';

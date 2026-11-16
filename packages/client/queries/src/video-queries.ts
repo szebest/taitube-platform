@@ -25,6 +25,13 @@ export function videoRetentionQueryOptions(api: ApiClient, videoId: string) {
   });
 }
 
+export function creatorStatsQueryOptions(api: ApiClient, videoId: string) {
+  return queryOptions({
+    queryKey: videoKeys.creatorStats(videoId),
+    queryFn: () => api.creatorStats.getCreatorStats({ params: { id: videoId } }),
+  });
+}
+
 export function captionsQueryOptions(api: ApiClient, videoId: string) {
   return queryOptions({
     queryKey: videoKeys.captions(videoId),

@@ -3,6 +3,7 @@ import {
   getChannel,
   getClip,
   getFeed,
+  getCreatorStats,
   getVideo,
   heartComment,
   listCreatorComments,
@@ -13,6 +14,7 @@ import {
   channel,
   clip,
   comment,
+  creatorStats,
   feedPages,
   inboxComment,
   subscribedChannel,
@@ -24,6 +26,7 @@ describe('@vp/web-testing: fixtures', () => {
   it.each([
     { fixture: 'video', contract: getVideo, body: video() },
     { fixture: 'clip', contract: getClip, body: clip() },
+    { fixture: 'creatorStats', contract: getCreatorStats, body: creatorStats() },
     { fixture: 'channel', contract: getChannel, body: channel() },
     { fixture: 'account', contract: getAccount, body: account() },
     { fixture: 'comment', contract: heartComment, body: comment() },

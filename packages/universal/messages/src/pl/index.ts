@@ -3,6 +3,7 @@ import { auth } from './auth';
 import { browse } from './browse';
 import { channels } from './channels';
 import { clips } from './clips';
+import { creatorStats } from './creator-stats';
 import { errorPage } from './error-page';
 import { errors } from './errors';
 import { home } from './home';
@@ -28,6 +29,7 @@ export const pl = {
   browse,
   channels,
   clips,
+  creatorStats,
   errorPage,
   errors,
   home,

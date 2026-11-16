@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { variantNames } from '@vp/ui';
 import { StatCard, StatCardSkeleton, statCardStyles } from '..';
-import { CHART_SERIES } from '../../series-color';
 import { StatCardRoot } from '../stat-card';
 import type { StatCardTrend } from '../types';
+import { CHART_SERIES } from '../utils/series-color';
 
 const meta = {
   title: 'Components/StatCard',

@@ -125,6 +125,7 @@ function applyVideoStatsUpdated(
   queryClient: QueryClient
 ) {
   void queryClient.invalidateQueries({ queryKey: videoKeys.creatorStats(videoId) });
+  void queryClient.invalidateQueries({ queryKey: videoKeys.retention(videoId) });
 }
 
 const userEventHandlers: UserEventHandlers = {

@@ -4,6 +4,7 @@ import type {
   ClipView,
   CommentView,
   CreatorInboxCommentView,
+  CreatorStats,
   CurrentPickView,
   LiveChatMessageView,
   LiveChatServerFrame,
@@ -271,6 +272,39 @@ export function transcript(overrides: Partial<TranscriptView> = {}): TranscriptV
       { index: 1, startMs: 2000, endMs: 5000, text: 'Today we bake bread' },
       { index: 2, startMs: 5000, endMs: 9000, text: 'First the flour' },
     ],
+    ...overrides,
+  };
+}
+
+/** A video ready a day ago with a first-48-hours window still open and two drop-offs. */
+export function creatorStats(overrides: Partial<CreatorStats> = {}): CreatorStats {
+  return {
+    videoId: VIDEO_ID,
+    generatedAt: '2026-01-02T12:00:00.000Z',
+    lifetime: { views: 1_200, watchSeconds: 54_000, likes: 24, comments: 6, subscribersGained: 3 },
+    last30Days: {
+      views: 1_200,
+      watchSeconds: 54_000,
+      averageViewDurationSeconds: 45,
+      daily: [
+        { date: '2026-01-01', views: 900 },
+        { date: '2026-01-02', views: 300 },
+      ],
+    },
+    first48Hours: {
+      hours: [
+        { hour: '2026-01-01T12:00:00.000Z', views: 40 },
+        { hour: '2026-01-01T13:00:00.000Z', views: 90 },
+      ],
+      windowEndsAt: '2026-01-03T12:00:00.000Z',
+    },
+    retention: {
+      average: 0.42,
+      dropOffs: [
+        { percent: 10, positionSeconds: 42, lostShare: 0.18 },
+        { percent: 50, positionSeconds: 210, lostShare: 0.09 },
+      ],
+    },
     ...overrides,
   };
 }

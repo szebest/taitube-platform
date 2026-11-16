@@ -1,4 +1,4 @@
-import type { ChartSeries } from './types';
+import type { ChartSeries } from '../types';
 
 export const CHART_SERIES = [0, 1, 2, 3, 4, 5] as const satisfies readonly ChartSeries[];
 
