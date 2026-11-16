@@ -45,19 +45,55 @@ function covers<T extends string>(granted: T | T[] | undefined, wanted: T, wildc
   return list.includes(wanted) || list.includes(wildcard);
 }
 
-/** A token acts on its own channel only: the user's roles on every other team are left out. */
+/**
+ * A token acts on its own channel only: the user's roles on every other team are left out, and a
+ * platform role above the signed-in base (admin, moderator) is not carried into the token.
+ */
 export function onTokenChannel(user: UserContext, { channelId }: TokenGrant): UserContext {
   const grant = user.memberships?.[channelId];
-  return { ...user, memberships: grant ? { [channelId]: grant } : {} };
+  const role = user.role === 'ADMIN' || user.role === 'MODERATOR' ? 'USER' : user.role;
+  return { ...user, role, memberships: grant ? { [channelId]: grant } : {} };
+}
+
+const OWNER_FIELD: Readonly<Partial<Record<SubjectName, string>>> = {
+  Video: 'ownerId',
+  Comment: 'videoOwnerId',
+  Analytics: 'ownerId',
+  ChannelExport: 'ownerId',
+  ChannelUser: 'ownerId',
+};
+
+/**
+ * Takes back what a scope grant would reach outside the token's channel: rules keyed on the user's
+ * own id would otherwise let a team token act on the user's own channel. Public reads stay open.
+ */
+function pinnedToChannel(
+  [action, subject]: ScopeGrant,
+  channelOwner: string
+): RawRuleOf<AppAbility> | null {
+  const field = OWNER_FIELD[subject];
+  if (!field || (action === 'read' && subject === 'Comment')) return null;
+  const outside = { [field]: { $ne: channelOwner } };
+  const conditions =
+    action === 'read' && subject === 'Video'
+      ? { ...outside, visibility: { $nin: ['public', 'unlisted'] } }
+      : outside;
+  return { inverted: true, action, subject, conditions };
 }
 
 /**
  * The intersection of the user's ability and the token's scopes. A `can` rule survives once per
  * scope action it covers, narrowed to that action and subject with its conditions intact; a
- * `cannot` rule survives whole, because it only ever takes away. A demoted user's ability shrinks
- * first, so their token's does too on the next call.
+ * `cannot` rule survives whole, because it only ever takes away. Last, each grant is pinned to the
+ * token channel's owner. A demoted user's ability shrinks first, so their token's does too on the
+ * next call.
  */
-export function withinScopes(ability: AppAbility, scopes: readonly ApiScope[]): AppAbility {
+export function withinScopes(
+  ability: AppAbility,
+  user: UserContext,
+  { channelId, scopes }: TokenGrant
+): AppAbility {
+  const channelOwner = user.memberships?.[channelId]?.ownerId ?? user.id;
   const grants = [...new Set(scopes)].flatMap((scope) => SCOPE_ABILITIES[scope]);
   const rules = ability.rules.flatMap((rule): RawRuleOf<AppAbility>[] => {
     if (rule.inverted) return [rule];
@@ -69,5 +105,6 @@ export function withinScopes(ability: AppAbility, scopes: readonly ApiScope[]): 
       )
       .map(([action, subject]) => ({ ...rule, action, subject }));
   });
-  return createMongoAbility<AppAbility>(rules);
+  const pins = grants.flatMap((grant) => pinnedToChannel(grant, channelOwner) ?? []);
+  return createMongoAbility<AppAbility>([...rules, ...pins]);
 }

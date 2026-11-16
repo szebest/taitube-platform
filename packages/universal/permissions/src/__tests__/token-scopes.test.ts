@@ -1,7 +1,7 @@
 import { subject } from '@casl/ability';
 import { API_SCOPES, type ApiScope, type DataExportKind } from '@vp/domain';
 import { getUserPermissions } from '../ability';
-import type { AppAction, AppSubjects, UserContext } from '../types/index';
+import type { AppAction, AppSubjects, Role, UserContext } from '../types/index';
 
 const OWNER_ID = 'owner-1';
 const OWN_CHANNEL = 'chan-own';
@@ -30,6 +30,15 @@ function tokenOf(
     token: { id: 'tok-1', channelId, scopes },
   };
 }
+
+const foreign = video(OTHER_OWNER);
+const as = (role: Role, scope: ApiScope) => tokenOf([scope], { role });
+const onTeam = (scope: ApiScope) => tokenOf([scope], manager, TEAM_CHANNEL);
+const publicVideo = subject('Video', {
+  id: 'v-2',
+  ownerId: OTHER_OWNER,
+  visibility: 'public' as const,
+});
 
 const manager: Partial<UserContext> = {
   memberships: {
@@ -196,14 +205,79 @@ describe('permissions: a token is its user cut down to its scopes', () => {
       target: comment(OTHER_OWNER),
       allowed: false,
     },
-    {
-      scenario: "an admin's videos:read token reads any video, as the admin can",
-      user: tokenOf(['videos:read'], { role: 'ADMIN' }),
-      action: 'read',
-      target: video(OTHER_OWNER),
-      allowed: true,
-    },
   ])('$scenario: $allowed', ({ user, action, target, allowed }) => {
+    expect(getUserPermissions(user).can(action, target)).toBe(allowed);
+  });
+
+  it.each<[string, UserContext, AppAction, AppSubjects, boolean]>([
+    ['admin reads no private video elsewhere', as('ADMIN', 'videos:read'), 'read', foreign, false],
+    ['admin reads a public video', as('ADMIN', 'videos:read'), 'read', publicVideo, true],
+    ['admin edits no video elsewhere', as('ADMIN', 'videos:write'), 'update', foreign, false],
+    [
+      'admin edits a video of the channel',
+      as('ADMIN', 'videos:write'),
+      'update',
+      video(OWNER_ID),
+      true,
+    ],
+    [
+      'moderator deletes no comment elsewhere',
+      as('MODERATOR', 'comments:moderate'),
+      'delete',
+      comment(OTHER_OWNER),
+      false,
+    ],
+    [
+      'moderator deletes a comment on the channel',
+      as('MODERATOR', 'comments:moderate'),
+      'delete',
+      comment(OWNER_ID),
+      true,
+    ],
+    [
+      'moderator reads no private video elsewhere',
+      as('MODERATOR', 'videos:read'),
+      'read',
+      foreign,
+      false,
+    ],
+    ['team token edits no own video', onTeam('videos:write'), 'update', video(OWNER_ID), false],
+    [
+      'team token reads no own private video',
+      onTeam('videos:read'),
+      'read',
+      video(OWNER_ID),
+      false,
+    ],
+    [
+      'team token moderates no own comment',
+      onTeam('comments:moderate'),
+      'moderate',
+      comment(OWNER_ID),
+      false,
+    ],
+    [
+      'team token reads no own analytics',
+      onTeam('analytics:read'),
+      'read',
+      analytics(OWNER_ID),
+      false,
+    ],
+    [
+      'team token exports no own channel',
+      onTeam('exports:create'),
+      'create',
+      channelExport(OWN_CHANNEL, OWNER_ID, 'videos'),
+      false,
+    ],
+    [
+      'team token moderates the team comment',
+      onTeam('comments:moderate'),
+      'moderate',
+      comment(TEAM_OWNER),
+      true,
+    ],
+  ])('a token stays on its channel: %s', (_scenario, user, action, target, allowed) => {
     expect(getUserPermissions(user).can(action, target)).toBe(allowed);
   });
 

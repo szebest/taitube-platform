@@ -29,7 +29,8 @@ import type { AppAbility, UserContext } from './types/index';
 export function getUserPermissions(user: UserContext | null): AppAbility {
   const token = user?.token;
   if (!(user && token)) return buildAbility(user);
-  return withinScopes(buildAbility(onTokenChannel(user, token)), token.scopes);
+  const onChannel = onTokenChannel(user, token);
+  return withinScopes(buildAbility(onChannel), onChannel, token);
 }
 
 function buildAbility(user: UserContext | null): AppAbility {
