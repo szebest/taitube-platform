@@ -10,7 +10,7 @@ import { ChannelInviteService } from '../channel-invite-service';
 const OWNER: UserContext = { id: '00000000-0000-7000-8000-0000000017a1', role: 'USER' };
 const INVITEE: UserContext = { id: '00000000-0000-7000-8000-0000000017a2', role: 'USER' };
 const STRANGER: UserContext = { id: '00000000-0000-7000-8000-0000000017a3', role: 'USER' };
-const NOW = Date.parse('2026-11-01T00:00:00.000Z');
+const NOW = Date.parse('2099-11-01T00:00:00.000Z');
 
 async function setup() {
   const repositories = new InMemoryRepositories();
@@ -42,7 +42,7 @@ describe('apps/server/api/services: ChannelInviteService', () => {
       role: 'editor',
       status: 'pending',
       invitedBy: OWNER.id,
-      expiresAt: '2026-11-15T00:00:00.000Z',
+      expiresAt: '2099-11-15T00:00:00.000Z',
       invitee: { handle: 'ada', displayName: 'Ada', avatarUrl: null },
     });
     expect(expectOk(await repositories.outbox.claimBatch(10))).toHaveLength(1);
@@ -171,7 +171,7 @@ describe('apps/server/api/services: ChannelInviteService', () => {
             },
             role: 'editor',
             invitedByName: 'Owner',
-            expiresAt: '2026-11-15T00:00:00.000Z',
+            expiresAt: '2099-11-15T00:00:00.000Z',
           },
         ],
         nextCursor: null,
