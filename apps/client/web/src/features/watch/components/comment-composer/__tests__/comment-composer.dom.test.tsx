@@ -10,15 +10,12 @@ import {
 import { ErrorCodes } from '@vp/errors';
 import { CHANNEL_ID, comment, mockEndpoint, OWNER_ID, problemReply } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
+import '#app/__tests__/stub-stats-panel';
 import { AUTHOR_ID, membershipOn, OTHER_ID, viewerAccount } from '#app/__tests__/comment-fixtures';
 import { renderDiscussion } from '#app/features/watch/__tests__/render-discussion';
 
 vi.mock(import('#app/components/player/taitube-player/taitube-player'), async () => ({
   TaitubePlayer: (await import('#app/__tests__/stub-player')).StubPlayer,
-}));
-
-vi.mock(import('#app/features/creator-stats/components/creator-stats-panel/stats-panel'), () => ({
-  StatsPanel: () => <></>,
 }));
 
 const VIEWER = viewerAccount(AUTHOR_ID);
