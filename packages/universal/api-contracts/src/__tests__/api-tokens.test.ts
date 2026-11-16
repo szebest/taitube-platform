@@ -98,6 +98,7 @@ describe('packages/api-contracts: api tokens', () => {
       'GET /v1/me/channel/exports/:id': 'exports:read',
       'DELETE /v1/me/channel/exports/:id': 'exports:create',
       'POST /v1/me/webhooks': 'webhooks:manage',
+      'POST /v1/me/webhooks/:id/test': 'webhooks:manage',
       'GET /v1/me/webhooks': 'webhooks:manage',
       'DELETE /v1/me/webhooks/:id': 'webhooks:manage',
     });

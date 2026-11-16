@@ -155,6 +155,7 @@ export const studioTeam = {
   teamAuditPinned: dt('{state:enum}', {
     enum: { state: { on: 'pinned', off: 'unpinned' } },
   }),
+  teamAuditViaToken: dt('with a token'),
   teamAuditExport: dt('{kind:enum} as {format:enum}', {
     enum: {
       kind: {
