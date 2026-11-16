@@ -13,7 +13,14 @@
       "@vp/domain/*": ["./packages/universal/domain/src/*"],
       "@vp/storage/*": ["./packages/server/storage/src/*"],
       "@vp/testing/*": ["./packages/server/testing/src/*"],
-      "@vp/*": ["./packages/universal/*/src", "./packages/server/*/src", "./packages/client/*/src"]
+      "@vp/*": [
+        "./packages/universal/*/src",
+        "./packages/server/*/src",
+        "./packages/client/*/src",
+        "./packages/platform/universal/*/src",
+        "./packages/platform/server/*/src",
+        "./packages/platform/client/*/src"
+      ]
     }
   },
   "include": ["scripts/**/*.ts", "tests/**/*.ts"],

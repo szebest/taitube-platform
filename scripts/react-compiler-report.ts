@@ -2,8 +2,9 @@ import { spawnSync } from 'node:child_process';
 import { glob, readFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { compilerDiagnostics } from '../packages/server/vite-preset/src/react-plugins';
+import { tierGlob } from './workspace-packages';
 
-const SOURCES = ['apps/client/*/src/**/*.{ts,tsx}', 'packages/client/*/src/**/*.{ts,tsx}'];
+const SOURCES = ['apps/client/*/src/**/*.{ts,tsx}', `${tierGlob('client')}/*/src/**/*.{ts,tsx}`];
 const SKIPPED = ['**/__tests__/**', '**/*.d.ts', '**/routeTree.gen.ts'];
 const BASELINE = 'tests/react-compiler/baseline.json';
 const VP = join(import.meta.dirname, '../node_modules/.bin/vp');

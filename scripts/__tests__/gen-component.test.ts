@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, mkdtempSync, readdirSync, rmSync } from 'node:fs
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { runEntrypoint } from '../../packages/server/testing/src/run-entrypoint';
+import { UI_SRC } from '../scaffold';
 
 const genComponent = (...argv: string[]) =>
   runEntrypoint(resolve(import.meta.dirname, '../gen-component.ts'), argv, {
@@ -12,7 +13,7 @@ const genComponent = (...argv: string[]) =>
 function repoRoot() {
   const root = mkdtempSync(join(tmpdir(), 'gen-component-'));
   onTestFinished(() => rmSync(root, { recursive: true, force: true }));
-  for (const folder of ['apps/client/web/src', 'packages/client/ui/src']) {
+  for (const folder of ['apps/client/web/src', UI_SRC]) {
     mkdirSync(join(root, folder), { recursive: true });
   }
   return root;

@@ -8,6 +8,7 @@ import {
   parseTheme,
   resolveTheme,
 } from '../../packages/universal/design-tokens/src/index';
+import { UI_SRC } from '../scaffold';
 import { uiTree } from './ui-tree';
 
 const genTheme = (...argv: string[]) =>
@@ -17,7 +18,7 @@ describe('scripts: pnpm gen:theme', () => {
   it('scaffolds a theme from Sand that parses, clears the contrast walk and shows in the CSS', async () => {
     const { root, remove } = uiTree();
     onTestFinished(remove);
-    const ui = join(root, 'packages/client/ui/src');
+    const ui = join(root, UI_SRC);
 
     const scaffold = genTheme('late-dusk', root);
     const { lateDusk } = await import(pathToFileURL(join(ui, 'themes/late-dusk/index.ts')).href);

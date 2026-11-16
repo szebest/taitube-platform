@@ -1,33 +1,12 @@
-import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
+import { dirname } from 'node:path';
 import { createLogger } from '../packages/server/logger/src/index';
+import { directoryTier, isPlatform, load, type Pkg, type Tier } from './workspace-packages';
 
-type Tier = 'universal' | 'server' | 'client';
-
-interface PkgDep {
-  name: string;
-  dev: boolean;
-}
-
-export interface Pkg {
-  name: string;
-  dir: string;
-  declaredTier?: Tier;
-  layer: number;
-  deps: PkgDep[];
-}
-
-const ROOT = resolve(import.meta.dirname, '..');
 const TIER_MAY_IMPORT: Record<Tier, Tier[]> = {
   universal: ['universal'],
   server: ['universal', 'server'],
   client: ['universal', 'client'],
 };
-const TIER_DIRECTORIES: Record<string, Tier[]> = {
-  packages: ['universal', 'server', 'client'],
-  apps: ['server', 'client'],
-};
-const PLATFORM = 'packages/platform/';
 
 /**
  * The only packages a manifest may name as a devDependency regardless of tier and layer: none
@@ -44,63 +23,6 @@ export const BUILD_TOOLING: ReadonlySet<string> = new Set([
   '@vp/vite-preset',
   '@vp/web-testing',
 ]);
-
-function manifestDirs(root: string): string[] {
-  const dirs: string[] = [];
-  for (const parent of ['packages', PLATFORM, 'apps']) {
-    if (!existsSync(join(root, parent))) continue;
-    for (const tier of readdirSync(join(root, parent))) {
-      const tierDir = join(root, parent, tier);
-      if (!statSync(tierDir).isDirectory()) continue;
-      dirs.push(tierDir, ...readdirSync(tierDir).map((name) => join(tierDir, name)));
-    }
-  }
-  return dirs.filter(
-    (d) => statSync(join(d, 'package.json'), { throwIfNoEntry: false })?.isFile() ?? false
-  );
-}
-
-export function load(root: string = ROOT): Pkg[] {
-  return manifestDirs(root).map((dir) => {
-    const raw = JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8'));
-    const vp = raw.vp ?? {};
-    return {
-      name: raw.name,
-      dir: dir.slice(root.length + 1),
-      declaredTier: vp.tier,
-      layer: vp.layer,
-      deps: workspaceDeps(raw),
-    };
-  });
-}
-
-const workspaceNames = (deps: Record<string, string> = {}) =>
-  Object.entries(deps)
-    .filter(([, version]) => version.startsWith('workspace:'))
-    .map(([name]) => name);
-
-function workspaceDeps(raw: {
-  dependencies?: Record<string, string>;
-  peerDependencies?: Record<string, string>;
-  devDependencies?: Record<string, string>;
-}): PkgDep[] {
-  const runtime = [...workspaceNames(raw.dependencies), ...workspaceNames(raw.peerDependencies)];
-  const dev = workspaceNames(raw.devDependencies).filter((d) => !runtime.includes(d));
-
-  return [
-    ...runtime.map((name) => ({ name, dev: false })),
-    ...dev.map((name) => ({ name, dev: true })),
-  ];
-}
-
-export const isPlatform = (dir: string): boolean => dir.startsWith(PLATFORM);
-
-export function directoryTier(dir: string): Tier | null {
-  const path = isPlatform(dir) ? `packages/${dir.slice(PLATFORM.length)}` : dir;
-  const [parent, tier, name] = path.split('/');
-  if (!(parent && name)) return null;
-  return TIER_DIRECTORIES[parent]?.find((t) => t === tier) ?? null;
-}
 
 export function checkBoundaries(packages: Pkg[] = load()): string[] {
   const byName = new Map(packages.map((p) => [p.name, p]));

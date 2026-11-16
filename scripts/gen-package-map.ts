@@ -1,6 +1,6 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { directoryTier, isPlatform, load, type Pkg } from './check-boundaries';
+import { directoryTier, isPlatform, load, type Pkg } from './workspace-packages';
 
 const MAP_FILE = 'docs/package-map.md';
 

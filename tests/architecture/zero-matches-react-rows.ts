@@ -1,7 +1,11 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { tierGlob } from '../../scripts/workspace-packages';
 import { ROOT } from './repo-files';
 import type { Row } from './zero-matches-rows';
+
+const CLIENT = tierGlob('client');
+const UNIVERSAL = tierGlob('universal');
 
 /** The memoization the React Compiler cannot stand in for, each file with its reason. */
 export const MANUAL_MEMO_ALLOWLIST: Readonly<Record<string, string>> = JSON.parse(
@@ -11,10 +15,10 @@ export const MANUAL_MEMO_ALLOWLIST: Readonly<Record<string, string>> = JSON.pars
 const CLIENT_SOURCE = [
   ':(glob)apps/client/**/*.ts',
   ':(glob)apps/client/**/*.tsx',
-  ':(glob)packages/client/**/*.ts',
-  ':(glob)packages/client/**/*.tsx',
-  ':(glob)packages/universal/**/*.ts',
-  ':(glob)packages/universal/**/*.tsx',
+  `:(glob)${CLIENT}/**/*.ts`,
+  `:(glob)${CLIENT}/**/*.tsx`,
+  `:(glob)${UNIVERSAL}/**/*.ts`,
+  `:(glob)${UNIVERSAL}/**/*.tsx`,
   ':(exclude,glob)**/*.test.ts',
   ':(exclude,glob)**/*.test.tsx',
   ':(exclude,glob)**/__tests__/**',
@@ -45,8 +49,8 @@ export const REACT_ROWS: readonly Row[] = [
     pattern: /\b\w*Context\.Provider\b/g,
     scope: [
       ':(glob)apps/client/**/*.tsx',
-      ':(glob)packages/client/**/*.tsx',
-      ':(glob)packages/universal/**/*.tsx',
+      `:(glob)${CLIENT}/**/*.tsx`,
+      `:(glob)${UNIVERSAL}/**/*.tsx`,
     ],
     expected: 0,
     fires: '<IntlContext.Provider value={bindings}>{children}</IntlContext.Provider>',

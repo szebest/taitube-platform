@@ -10,6 +10,8 @@ on:
       - "apps/server/worker/**"
       - "packages/server/**"
       - "packages/universal/**"
+      - "packages/platform/server/**"
+      - "packages/platform/universal/**"
       - "infra/compose/docker-compose.yml"
       - ".github/workflows/load-smoke.yml"
       - "!**/*.md"

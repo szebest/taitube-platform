@@ -1,3 +1,4 @@
+import { tierRoots } from '../../scripts/workspace-packages';
 import { clientApps } from './client-apps';
 import { read, trackedFiles } from './repo-files';
 import { workspaceClosure } from './workspace-closure';
@@ -21,7 +22,7 @@ const SERVER_VOCABULARY = [
   'redis://',
 ];
 
-const BROWSER_TIERS = ['packages/universal/', 'packages/client/'];
+const BROWSER_TIERS = [...tierRoots('universal'), ...tierRoots('client')];
 
 function frontendSources(): string[] {
   const roots = new Set(clientApps().flatMap((app) => [...workspaceClosure(app, 'runtime'), app]));

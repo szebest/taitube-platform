@@ -3,11 +3,10 @@ import { join, relative } from 'node:path';
 import ts from 'typescript';
 import { workspacePaths } from '../tests/architecture/program';
 import { productionSources, ROOT } from '../tests/architecture/repo-files';
-import { load } from './check-boundaries';
+import { load, runsInBrowser } from './workspace-packages';
 
 const KEY_MODULE = 'packages/universal/messages/src/catalogue.ts';
 const FIXTURE = 'tests/architecture/message-key-usage.json';
-const BROWSER_REACHABLE = /^(apps\/client|packages\/client|packages\/universal)\//;
 
 export type KeyUsage = ReadonlyMap<string, ReadonlySet<string>>;
 
@@ -114,7 +113,7 @@ function browserProgram(roots: readonly string[]): ts.Program {
 
 function render(): string {
   const roots = productionSources()
-    .filter((file) => BROWSER_REACHABLE.test(file))
+    .filter(runsInBrowser)
     .map((file) => join(ROOT, file));
   const usage = messageKeyUsage(browserProgram(roots), join(ROOT, KEY_MODULE), roots);
   const relativeUsage = new Map(

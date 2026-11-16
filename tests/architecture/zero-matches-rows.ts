@@ -1,7 +1,12 @@
+import { packageDir, tierGlob } from '../../scripts/workspace-packages';
 import { WEB_ROWS } from './zero-matches-client-rows';
 import { DESIGN_ROWS } from './zero-matches-design-rows';
 import { REACT_ROWS } from './zero-matches-react-rows';
 import { RETIRED_TOOL_ROWS } from './zero-matches-retired-tool-rows';
+
+const LOGGER = packageDir('@vp/logger');
+const CLIENT = tierGlob('client');
+const UNIVERSAL = tierGlob('universal');
 
 /** `apps`, `packages` and `scripts`, without specs, `__tests__` or `__mocks__`. */
 export const PRODUCTION_SOURCE = [
@@ -180,7 +185,7 @@ export const ROWS: readonly Row[] = [
   {
     name: 'pino outside @vp/logger',
     pattern: /from 'pino'/g,
-    scope: [...PRODUCTION_SOURCE, 'tests/e2e', ':(exclude)packages/server/logger'],
+    scope: [...PRODUCTION_SOURCE, 'tests/e2e', `:(exclude)${LOGGER}`],
     expected: 0,
     fires: "import pino from 'pino';",
   },
@@ -285,11 +290,7 @@ export const ROWS: readonly Row[] = [
   {
     name: 'a doc asking for an import extension',
     pattern: /\.js`? (extension|specifier)|carr(y|ies) `\.js`/g,
-    scope: [
-      'ARCHITECTURE.md',
-      ':(glob)packages/universal/**/AGENTS.md',
-      ':(glob)packages/client/**/AGENTS.md',
-    ],
+    scope: ['ARCHITECTURE.md', `:(glob)${UNIVERSAL}/**/AGENTS.md`, `:(glob)${CLIENT}/**/AGENTS.md`],
     expected: 0,
     fires: 'Relative imports carry `.js` so Node resolves them.',
   },

@@ -1,4 +1,7 @@
+import { packageDir } from '../../scripts/workspace-packages';
 import { read } from './repo-files';
+
+const COMPOSITION = packageDir('@vp/composition');
 
 /**
  * Readiness has to fail while the listener still accepts, or a load balancer keeps routing to a
@@ -32,9 +35,7 @@ describe('architecture: a process drains before it closes', () => {
   });
 
   it('flips readiness before it closes, in the one shutdown both processes run', () => {
-    expect(drainsBeforeClosing(runBody(read('packages/server/composition/src/shutdown.ts')))).toBe(
-      true
-    );
+    expect(drainsBeforeClosing(runBody(read(`${COMPOSITION}/src/shutdown.ts`)))).toBe(true);
   });
 
   it.each(['apps/server/api/src/serve.ts', 'apps/server/worker/src/process.ts'])(

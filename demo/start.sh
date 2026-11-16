@@ -8,7 +8,7 @@ colima status >/dev/null 2>&1 || colima start
 C=(docker compose -f infra/compose/docker-compose.yml -f demo/compose.override.yml)
 "${C[@]}" up -d --wait postgres redis minio
 "${C[@]}" run --rm minio-init >/dev/null
-pnpm turbo run build --filter='./packages/server/*' --filter='./packages/universal/*' --filter=@vp/api --filter=@vp/worker >/dev/null
+pnpm turbo run build --filter='./packages/**/server/*' --filter='./packages/**/universal/*' --filter=@vp/api --filter=@vp/worker >/dev/null
 pnpm db:migrate >/dev/null
 start() { # name, command...
   local name=$1; shift

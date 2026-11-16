@@ -1,6 +1,9 @@
+import { packageDir } from '../../scripts/workspace-packages';
 import { read } from './repo-files';
 
-const BASE = 'packages/client/ui/src/styles/base.css';
+const UI = packageDir('@vp/ui');
+
+const BASE = `${UI}/src/styles/base.css`;
 const PLAYER = 'apps/client/web/src/integrations/video-js/video-js-engine.tsx';
 
 /** The rules that paint the page's ground: one for `html` and `body`, with the colour and the page background role. */

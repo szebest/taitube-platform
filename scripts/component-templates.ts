@@ -1,12 +1,13 @@
-import { camel, pascal } from './scaffold';
+import { camel, pascal, UI_SRC } from './scaffold';
+import { packageDir } from './workspace-packages';
 
 export const COMPONENT_KINDS = ['primitive', 'shared', 'web', 'studio'] as const;
 
 export type ComponentKind = (typeof COMPONENT_KINDS)[number];
 
 const KIND_HOME: Readonly<Record<ComponentKind, string>> = {
-  primitive: 'packages/client/ui/src/primitives',
-  shared: 'packages/client/components/src',
+  primitive: `${UI_SRC}/primitives`,
+  shared: `${packageDir('@vp/components')}/src`,
   web: 'apps/client/web/src/components',
   studio: 'apps/client/studio/src/components',
 };

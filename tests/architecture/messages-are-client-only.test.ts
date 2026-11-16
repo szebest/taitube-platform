@@ -1,10 +1,11 @@
+import { tierRoots } from '../../scripts/workspace-packages';
 import { productionSources, read, trackedFiles } from './repo-files';
 
 /**
  * The API returns a code and a wire-safe payload; the client chooses the words (SDD ADR-24). A
  * server source that imports the catalogues has started choosing wording, and the two sides drift.
  */
-const SERVER_ROOTS = ['apps/server/api/', 'apps/server/worker/', 'packages/server/'];
+const SERVER_ROOTS = ['apps/server/api', 'apps/server/worker', ...tierRoots('server')];
 const MESSAGES = /(?:from|import)\s*\(?\s*['"]@vp\/messages(?:\/[^'"]*)?['"]/;
 
 function importsMessages(source: string): boolean {
@@ -12,13 +13,13 @@ function importsMessages(source: string): boolean {
 }
 
 function serverSources(): string[] {
-  return productionSources().filter((file) => SERVER_ROOTS.some((root) => file.startsWith(root)));
+  return productionSources().filter((file) =>
+    SERVER_ROOTS.some((root) => file.startsWith(`${root}/`))
+  );
 }
 
 function serverManifests(): string[] {
-  return trackedFiles(...SERVER_ROOTS.map((root) => root.slice(0, -1))).filter((file) =>
-    file.endsWith('/package.json')
-  );
+  return trackedFiles(...SERVER_ROOTS).filter((file) => file.endsWith('/package.json'));
 }
 
 function declaresMessages(manifest: string): boolean {

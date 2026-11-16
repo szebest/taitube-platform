@@ -1,7 +1,11 @@
 import ts from 'typescript';
+import { packageDir } from '../../scripts/workspace-packages';
 import { clientApps } from './client-apps';
 import { parseSource } from './parsed-sources';
 import { productionSources, read } from './repo-files';
+
+const COMPONENTS = packageDir('@vp/components');
+const UI = packageDir('@vp/ui');
 
 const isStringLiteralUnion = (node: ts.Node): node is ts.UnionTypeNode =>
   ts.isUnionTypeNode(node) &&
@@ -48,8 +52,8 @@ function inlineUnions(file: string, source: string): string[] {
 /** `@vp/ui`, `@vp/components` and each app kit, `types.ts` aside: that is where a shared union is narrowed. */
 function kitSources(): string[] {
   const roots = [
-    'packages/client/ui/src/',
-    'packages/client/components/src/',
+    `${UI}/src/`,
+    `${COMPONENTS}/src/`,
     ...clientApps().map((app) => `${app}/src/components/`),
   ];
   return productionSources()

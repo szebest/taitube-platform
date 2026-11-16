@@ -1,5 +1,6 @@
 import { posix } from 'node:path';
-import { BUILD_TOOLING, checkBoundaries, load, type Pkg } from '../../scripts/check-boundaries';
+import { BUILD_TOOLING, checkBoundaries } from '../../scripts/check-boundaries';
+import { load, type Pkg } from '../../scripts/workspace-packages';
 import { trackedFiles } from './repo-files';
 
 function pkg(overrides: Partial<Pkg> & { name: string }): Pkg {

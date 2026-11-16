@@ -1,5 +1,9 @@
+import { packageDir, tierGlob } from '../../scripts/workspace-packages';
 import { clientApps } from './client-apps';
 import type { Row } from './zero-matches-rows';
+
+const UI = packageDir('@vp/ui');
+const CLIENT = tierGlob('client');
 
 const APPS = clientApps();
 
@@ -26,7 +30,7 @@ export const WEB_ROWS: readonly Row[] = [
       ':(exclude,glob)**/*.test.tsx',
       ':(exclude,glob)**/__tests__/**',
       ':(exclude,glob)**/*.lazy.ts',
-      ':(exclude)packages/client/ui/src/lib/lazy-component.tsx',
+      `:(exclude)${UI}/src/lib/lazy-component.tsx`,
     ],
     expected: 0,
     fires: "const Player = lazyComponent(() => import('./player'), { name: 'Player' });",
@@ -109,8 +113,8 @@ export const WEB_ROWS: readonly Row[] = [
     scope: [
       ...inEachApp('src/**/*.ts'),
       ...inEachApp('src/**/*.tsx'),
-      ':(glob)packages/client/*/src/**/*.ts',
-      ':(glob)packages/client/*/src/**/*.tsx',
+      `:(glob)${CLIENT}/*/src/**/*.ts`,
+      `:(glob)${CLIENT}/*/src/**/*.tsx`,
     ],
     expected: 0,
     fires: "const token = window.localStorage.getItem('AUTH_TOKEN');",
@@ -125,8 +129,8 @@ export const WEB_ROWS: readonly Row[] = [
       ':(glob)packages/**/package.json',
       ':(glob)apps/client/**/*.ts',
       ':(glob)apps/client/**/*.tsx',
-      ':(glob)packages/client/**/*.ts',
-      ':(glob)packages/client/**/*.tsx',
+      `:(glob)${CLIENT}/**/*.ts`,
+      `:(glob)${CLIENT}/**/*.tsx`,
     ],
     expected: 0,
     fires: '    "react-bootstrap": "^2.10.10",',
@@ -137,9 +141,9 @@ export const WEB_ROWS: readonly Row[] = [
     scope: [
       ...inEachApp('src/**/*.ts'),
       ...inEachApp('src/**/*.tsx'),
-      ':(glob)packages/client/*/src/**/*.ts',
-      ':(glob)packages/client/*/src/**/*.tsx',
-      ':(glob)packages/client/ui/src/styles/**/*.css',
+      `:(glob)${CLIENT}/*/src/**/*.ts`,
+      `:(glob)${CLIENT}/*/src/**/*.tsx`,
+      `:(glob)${UI}/src/styles/**/*.css`,
     ],
     expected: 0,
     fires: "import { VideosContainer } from '#app/modules/shared/components';",

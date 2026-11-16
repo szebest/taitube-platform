@@ -46,6 +46,16 @@ describe('@vp/workbench: the stories a change can move', () => {
       picked: [BUTTON, CARD],
     },
     {
+      label: 'a token change in a platform package',
+      changed: ['packages/platform/client/ui/src/tokens/ref/index.ts'],
+      picked: [BUTTON, CARD],
+    },
+    {
+      label: 'a platform universal package change',
+      changed: ['packages/platform/universal/result/src/index.ts'],
+      picked: [BUTTON, CARD],
+    },
+    {
       label: 'a universal package change',
       changed: ['packages/universal/messages/src/en/ui.ts'],
       picked: [BUTTON, CARD],

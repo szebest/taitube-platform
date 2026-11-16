@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import ts from 'typescript';
-import { load } from '../../scripts/check-boundaries';
+import { load } from '../../scripts/workspace-packages';
 import { productionProgram } from './program';
 import { read, ROOT } from './repo-files';
 

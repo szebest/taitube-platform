@@ -47,7 +47,9 @@ describe('@vp/vite-preset: client app config', () => {
 
     expect(entries).toEqual([
       expect.stringMatching(/\/packages\/universal\/\*\/src\/\*\*\/\*\.\{ts,tsx\}$/),
+      expect.stringMatching(/\/packages\/platform\/universal\/\*\/src\/\*\*\/\*\.\{ts,tsx\}$/),
       expect.stringMatching(/\/packages\/client\/\*\/src\/\*\*\/\*\.\{ts,tsx\}$/),
+      expect.stringMatching(/\/packages\/platform\/client\/\*\/src\/\*\*\/\*\.\{ts,tsx\}$/),
       '!**/__tests__/**',
       '!**/__stories__/**',
     ]);

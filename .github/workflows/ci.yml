@@ -552,7 +552,7 @@ jobs:
         uses: actions/cache@v6
         with:
           path: packages/client/workbench/storybook-static
-          key: storybook-${{ runner.os }}-${{ hashFiles('packages/client/*/src/**', 'packages/universal/*/src/**', 'apps/client/*/src/**', 'packages/server/vite-preset/src/**', 'packages/client/workbench/.storybook/**', 'pnpm-lock.yaml') }}
+          key: storybook-${{ runner.os }}-${{ hashFiles('packages/client/*/src/**', 'packages/universal/*/src/**', 'packages/platform/client/*/src/**', 'packages/platform/universal/*/src/**', 'apps/client/*/src/**', 'packages/**/vite-preset/src/**', 'packages/client/workbench/.storybook/**', 'pnpm-lock.yaml') }}
 
       - name: Build the workbench
         if: steps.storybook.outputs.cache-hit != 'true'

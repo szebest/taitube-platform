@@ -1,5 +1,5 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { type BundleRules, bundleGuard } from '@vp/vite-preset/bundle-guard';
 import { type ReactCompiler, reactPlugins } from '@vp/vite-preset/react-plugins';
@@ -9,8 +9,15 @@ import { type Alias, defineConfig, loadEnv, type PluginOption, type SSROptions }
 // relative import between two of its source files: the bundle guard and the React plugins are reached
 // by their package subpaths.
 
-const PACKAGES_DIR = fileURLToPath(new URL('../../..', import.meta.url));
-const BROWSER_TIERS = ['universal', 'client'];
+function packagesDirAbove(file: string): string {
+  const parent = dirname(file);
+  if (parent === file)
+    throw new Error('@vp/vite-preset is not inside the workspace packages/ directory');
+  return basename(parent) === 'packages' ? parent : packagesDirAbove(parent);
+}
+
+const PACKAGES_DIR = packagesDirAbove(fileURLToPath(import.meta.url));
+const BROWSER_TIERS = ['universal', 'client'].flatMap((tier) => [tier, `platform/${tier}`]);
 
 type ExportTarget = string | { import?: string };
 
@@ -75,17 +82,19 @@ function toAlias({ specifier, source }: SourceExport): SourceAlias {
 }
 
 /**
- * Points each browser-tier package's exports at their TypeScript source, so the dev server, the
- * build and the specs read the code itself, with HMR, instead of a `dist` a build must refresh.
- * A package with no `src` is one the app does not use: an image build installs from every app's
- * pruned manifests but copies only this app's sources.
+ * Points each browser-tier package's exports, under `packages/<tier>/` and
+ * `packages/platform/<tier>/`, at their TypeScript source, so the dev server, the build and the
+ * specs read the code itself, with HMR, instead of a `dist` a build must refresh. A package with no
+ * `src` is one the app does not use: an image build installs from every app's pruned manifests but
+ * copies only this app's sources.
  */
-export function workspaceSourceAliases(packagesDir: string): SourceAlias[] {
-  const exports = BROWSER_TIERS.flatMap((tier) =>
-    readdirSync(join(packagesDir, tier))
-      .map((dir) => join(packagesDir, tier, dir))
-      .filter((packageDir) => existsSync(join(packageDir, 'src')))
-      .flatMap(sourceExports)
+export function workspaceSourceAliases(packagesDir: string = PACKAGES_DIR): SourceAlias[] {
+  const exports = BROWSER_TIERS.filter((tier) => existsSync(join(packagesDir, tier))).flatMap(
+    (tier) =>
+      readdirSync(join(packagesDir, tier))
+        .map((dir) => join(packagesDir, tier, dir))
+        .filter((packageDir) => existsSync(join(packageDir, 'src')))
+        .flatMap(sourceExports)
   );
   const patterns = exports.filter(({ specifier }) => specifier.includes('*'));
   const exact = exports.filter(({ specifier }) => !specifier.includes('*'));
@@ -95,7 +104,7 @@ export function workspaceSourceAliases(packagesDir: string): SourceAlias[] {
 /** The workspace sources are aliased in, so the dev server's dependency scan reads them too and bundles their packages before the first load, not after it. */
 const WORKSPACE_ENTRIES = [
   ...BROWSER_TIERS.map(
-    (tier) => `${PACKAGES_DIR.replaceAll('\\', '/')}${tier}/*/src/**/*.{ts,tsx}`
+    (tier) => `${PACKAGES_DIR.replaceAll('\\', '/')}/${tier}/*/src/**/*.{ts,tsx}`
   ),
   '!**/__tests__/**',
   '!**/__stories__/**',
@@ -181,7 +190,7 @@ export function clientAppConfig({
     const { VITE_DEMO_PERSONAS } = loadEnv(mode, dirname(fileURLToPath(configUrl)), 'VITE_');
     const guarded = { ...rules, demoPersonas: VITE_DEMO_PERSONAS === 'true' };
     return {
-      resolve: { alias: workspaceSourceAliases(PACKAGES_DIR) },
+      resolve: { alias: workspaceSourceAliases() },
       ssr,
       css: {
         preprocessorOptions: {

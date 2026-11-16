@@ -1,14 +1,19 @@
+import { packageDir, tierGlob } from '../../scripts/workspace-packages';
 import { read, trackedFiles } from './repo-files';
 
-const BASE = 'packages/client/ui/src/styles/base.css';
+const COMPONENTS = packageDir('@vp/components');
+const UI = packageDir('@vp/ui');
+const CLIENT = tierGlob('client');
+
+const BASE = `${UI}/src/styles/base.css`;
 
 const VARIANTS = [
-  ':(glob)packages/client/ui/src/primitives/*/*.variants.ts',
-  ':(glob)packages/client/components/src/*/*.variants.ts',
+  `:(glob)${UI}/src/primitives/*/*.variants.ts`,
+  `:(glob)${COMPONENTS}/src/*/*.variants.ts`,
 ];
 
 const STYLESHEETS = [
-  ':(glob)packages/client/*/src/**/*.css',
+  `:(glob)${CLIENT}/*/src/**/*.css`,
   ':(glob)apps/client/*/src/**/*.css',
   ':(glob)apps/client/*/src/**/*.scss',
 ];

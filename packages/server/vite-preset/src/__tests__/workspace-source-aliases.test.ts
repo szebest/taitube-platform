@@ -1,10 +1,7 @@
 import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { workspaceSourceAliases } from '../client-app-config';
-
-const PACKAGES = fileURLToPath(new URL('../../../..', import.meta.url));
 
 type Fixture = {
   name: string;
@@ -13,10 +10,12 @@ type Fixture = {
   files?: string[];
 };
 
-function packagesWith({ name, src = true, exports, files = [] }: Fixture): string {
+function packagesWith(
+  { name, src = true, exports, files = [] }: Fixture,
+  tier = 'universal'
+): string {
   const packages = mkdtempSync(join(tmpdir(), 'vite-preset-'));
-  const packageDir = join(packages, 'universal', name.replace('@vp/', ''));
-  mkdirSync(join(packages, 'client'));
+  const packageDir = join(packages, tier, name.replace('@vp/', ''));
   mkdirSync(src ? join(packageDir, 'src') : packageDir, { recursive: true });
   const manifest = {
     name,
@@ -33,7 +32,7 @@ function packagesWith({ name, src = true, exports, files = [] }: Fixture): strin
 const fixture = (exports: Record<string, string>, files: string[] = []) =>
   packagesWith({ name: '@vp/fixture', exports, files });
 
-function resolveSpecifier(packages: string, specifier: string): string | undefined {
+function resolveSpecifier(packages: string | undefined, specifier: string): string | undefined {
   const alias = workspaceSourceAliases(packages).find(({ find }) => find.test(specifier));
   return alias && specifier.replace(alias.find, alias.replacement);
 }
@@ -45,13 +44,24 @@ type Resolution = Record<'label' | 'specifier' | 'source', string> & {
 
 describe('@vp/vite-preset: workspace source aliases', () => {
   it.each([
-    { name: '@vp/intl-react', source: 'packages/client/intl-react/src/index.ts' },
-    { name: '@vp/api-client', source: 'packages/client/api-client/src/index.ts' },
-    { name: '@vp/result', source: 'packages/universal/result/src/index.ts' },
-    { name: '@vp/domain/time', source: 'packages/universal/domain/src/time.ts' },
-    { name: '@vp/web-testing/server', source: 'packages/client/web-testing/src/server/index.ts' },
-  ])('resolves $name to its source', ({ name, source }) => {
-    expect(resolveSpecifier(PACKAGES, name)?.endsWith(source)).toBe(true);
+    { name: '@vp/intl-react', source: '/intl-react/src/index.ts' },
+    { name: '@vp/api-client', source: '/api-client/src/index.ts' },
+    { name: '@vp/result', source: '/result/src/index.ts' },
+    { name: '@vp/domain/time', source: '/domain/src/time.ts' },
+    { name: '@vp/web-testing/server', source: '/web-testing/src/server/index.ts' },
+  ])('resolves $name to its source in the workspace', ({ name, source }) => {
+    expect(resolveSpecifier(undefined, name)?.endsWith(source)).toBe(true);
+  });
+
+  it('reads a browser-tier package under packages/platform/<tier>/ too', () => {
+    const packages = packagesWith(
+      { name: '@vp/fixture', exports: { '.': './dist/index.js' }, files: ['src/index.ts'] },
+      'platform/client'
+    );
+
+    expect(resolveSpecifier(packages, '@vp/fixture')).toBe(
+      join(packages, 'platform/client/fixture/src/index.ts')
+    );
   });
 
   it.each([
@@ -142,7 +152,7 @@ describe('@vp/vite-preset: workspace source aliases', () => {
     { label: 'a server package', specifier: '@vp/adapters', inRepo: true },
   ])('leaves $label to the package exports', ({ specifier, inRepo }) => {
     const packages = inRepo
-      ? PACKAGES
+      ? undefined
       : fixture({ './tokens/*': './dist/tokens/*/index.js' }, ['src/tokens/color/index.ts']);
 
     expect(resolveSpecifier(packages, specifier)).toBeUndefined();

@@ -1,10 +1,13 @@
 import { posix } from 'node:path';
 import ts from 'typescript';
+import { packageDir } from '../../scripts/workspace-packages';
 import { clientApps } from './client-apps';
 import { parseSource } from './parsed-sources';
 import { productionSources, read, trackedFiles } from './repo-files';
 
-const BARREL = 'packages/client/components/src/index.ts';
+const COMPONENTS = packageDir('@vp/components');
+
+const BARREL = `${COMPONENTS}/src/index.ts`;
 const PACKAGE = '@vp/components';
 
 const isTypeOnly = (node: ts.Node) =>
@@ -110,10 +113,10 @@ describe('architecture: @vp/components holds only what both apps render', () => 
   it('reads each component of the barrel, through a nested export *, values only', () => {
     const planted: Record<string, string> = {
       [BARREL]: "export * from './states/empty-state';\nexport * from './illustrations';",
-      'packages/client/components/src/states/empty-state/index.ts':
+      [`${COMPONENTS}/src/states/empty-state/index.ts`]:
         "export const EmptyState = {};\nexport { useEmptyState } from './ctx';\nexport type { EmptyStateSize } from './types';",
-      'packages/client/components/src/illustrations/index.ts': "export * from './illustrations';",
-      'packages/client/components/src/illustrations/illustrations.tsx':
+      [`${COMPONENTS}/src/illustrations/index.ts`]: "export * from './illustrations';",
+      [`${COMPONENTS}/src/illustrations/illustrations.tsx`]:
         'export function EmptyIllustration() {}\nexport interface IllustrationProps {}',
     };
 
@@ -168,7 +171,7 @@ describe('architecture: @vp/components holds only what both apps render', () => 
       clientApps().map((app) => [app, new Set([...importedBy(`${app}/src/`), ...throughQueries])])
     );
 
-    const tracked = new Set(trackedFiles('packages/client/components/src'));
+    const tracked = new Set(trackedFiles(`${COMPONENTS}/src`));
     const readTracked = (file: string) => (tracked.has(file) ? read(file) : undefined);
 
     expect(appOnly(components(readTracked), importsByApp)).toEqual([]);

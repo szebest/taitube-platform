@@ -1,8 +1,8 @@
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import type { Pkg } from '../check-boundaries';
 import { renderPackageMap, run } from '../gen-package-map';
+import type { Pkg } from '../workspace-packages';
 
 const MAP = 'docs/package-map.md';
 

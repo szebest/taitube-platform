@@ -82,7 +82,7 @@
       "includeEntryExports": false,
       "project": ["src/**/*.ts"]
     },
-    "packages/client/components": {
+    "packages/**/client/components": {
       "includeEntryExports": false,
       "project": [
         "**/*.{ts,tsx}!",
@@ -92,7 +92,7 @@
         "!dist/**"
       ]
     },
-    "packages/client/ui": {
+    "packages/**/client/ui": {
       "includeEntryExports": false,
       "ignoreDependencies": ["simple-icons", "simple-icons-linkedin"],
       "project": [
@@ -128,11 +128,11 @@
       "includeEntryExports": false,
       "project": ["src/**/*.{ts,tsx}!", "!src/**/__tests__/**!"]
     },
-    "packages/server/vite-preset": {
+    "packages/**/server/vite-preset": {
       "includeEntryExports": false,
       "project": ["src/**/*.{ts,css}!", "!src/**/__tests__/**!"]
     },
-    "packages/server/dev-token": {
+    "packages/**/server/dev-token": {
       "entry": ["src/main.ts!"],
       "project": [
         "**/*.{ts,tsx,mts,mjs,js}!",
@@ -150,7 +150,7 @@
         "!dist/**"
       ]
     },
-    "packages/universal/design-tokens": {
+    "packages/**/universal/design-tokens": {
       "includeEntryExports": false,
       "project": [
         "**/*.{ts,tsx,mts,mjs,js}!",
@@ -177,7 +177,7 @@
         "!dist/**"
       ]
     },
-    "packages/client/intl-react": {
+    "packages/**/client/intl-react": {
       "project": [
         "**/*.{ts,tsx,mts,mjs,js}!",
         "!**/__tests__/**!",
@@ -202,7 +202,7 @@
         "!dist/**"
       ]
     },
-    "packages/universal/machine": {
+    "packages/**/universal/machine": {
       "entry": ["src/**/type-fixtures/*.ts"],
       "project": [
         "**/*.{ts,tsx,mts,mjs,js}!",
@@ -211,7 +211,7 @@
         "!dist/**"
       ]
     },
-    "packages/universal/result": {
+    "packages/**/universal/result": {
       "entry": ["src/**/type-fixtures/*.ts"],
       "project": [
         "**/*.{ts,tsx,mts,mjs,js}!",
@@ -228,7 +228,15 @@
         "!dist/**"
       ]
     },
-    "packages/universal/tsconfig": {
+    "packages/platform/*/*": {
+      "project": [
+        "**/*.{ts,tsx,mts,mjs,js}!",
+        "!**/__tests__/**!",
+        "!**/*.test.{ts,tsx}!",
+        "!dist/**"
+      ]
+    },
+    "packages/**/universal/tsconfig": {
       "entry": [],
       "project": []
     }

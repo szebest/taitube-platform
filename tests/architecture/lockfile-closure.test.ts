@@ -1,7 +1,6 @@
+import { inPackageTier } from '../../scripts/workspace-packages';
 import { clientApps } from './client-apps';
 import { workspaceClosure } from './workspace-closure';
-
-const SERVER_TIER = 'packages/server/';
 
 describe('architecture: resolved workspace closures', () => {
   it('still reads the workspace links the lockfile records', () => {
@@ -12,7 +11,7 @@ describe('architecture: resolved workspace closures', () => {
   });
 
   it.each(clientApps())('keeps every server-tier package out of the closure of %s', (app) => {
-    const server = workspaceClosure(app, 'runtime').filter((dep) => dep.startsWith(SERVER_TIER));
+    const server = workspaceClosure(app, 'runtime').filter((dep) => inPackageTier(dep, 'server'));
 
     expect(server).toEqual([]);
   });
@@ -20,7 +19,7 @@ describe('architecture: resolved workspace closures', () => {
   it.each(clientApps())(
     'keeps them out of %s once devDependencies count too, build tooling aside',
     (app) => {
-      const server = workspaceClosure(app, 'dev').filter((dep) => dep.startsWith(SERVER_TIER));
+      const server = workspaceClosure(app, 'dev').filter((dep) => inPackageTier(dep, 'server'));
 
       expect(server).toEqual([]);
     }

@@ -12,7 +12,7 @@
     "test:coverage": "vp test run --project '!architecture*' --coverage",
     "test:architecture": "vp test run --project 'architecture*' --no-isolate",
     "test:integration": "turbo run test:integration && vp test run --config tests/integration/vitest.config.ts",
-    "test:bun": "bun test --timeout 30000 --path-ignore-patterns='**/__tests__/integration/**' apps/server/api apps/server/worker packages/universal packages/server",
+    "test:bun": "bun test --timeout 30000 --path-ignore-patterns='**/__tests__/integration/**' apps/server/api apps/server/worker packages/universal packages/server packages/platform/universal packages/platform/server",
     "lint": "vp lint --deny-warnings",
     "react-compiler:report": "tsx scripts/react-compiler-report.ts",
     "knip": "knip",

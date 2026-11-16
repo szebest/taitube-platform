@@ -1,10 +1,13 @@
+import { packageDir } from '../../scripts/workspace-packages';
 import { read, trackedFiles } from './repo-files';
+
+const PAGINATION = packageDir('@vp/pagination');
 
 const BARRELS = [
   'packages/server/core/ports',
   'packages/server/core/repositories',
   'packages/universal/domain/src',
-  'packages/universal/pagination/src',
+  `${PAGINATION}/src`,
 ];
 const RE_EXPORT = /export\s+\*\s+from\s+['"]([^'"]+)['"]/g;
 
