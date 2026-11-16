@@ -1,8 +1,10 @@
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { ChannelRole } from '@vp/domain';
 import { MS_PER_HOUR } from '@vp/domain/time';
+import { databaseUnavailable } from '@vp/errors';
+import { err } from '@vp/result';
 import { SEEDED } from '@vp/testing';
-import { expectOk } from '@vp/testing/result';
+import { expectErr, expectOk } from '@vp/testing/result';
 import { announceStatsUpdated } from '../announce-stats-updated';
 
 const NOW = new Date('2026-03-10T13:42:00.000Z');
@@ -13,6 +15,7 @@ const MEMBERS: readonly { userId: string; role: ChannelRole }[] = [
   { userId: '00000000-0000-7000-8000-000000000a03', role: 'analytics' },
   { userId: '00000000-0000-7000-8000-000000000a04', role: 'moderator' },
 ];
+const OTHER_VIDEO_ID = '00000000-0000-7000-8000-0000000000bb';
 const batch = { hourly: [{ videoId: VIDEO_ID, viewHour: '2026-03-10T13:00:00.000Z', views: 1 }] };
 
 describe('housekeeping: announce-stats-updated', () => {
@@ -74,6 +77,33 @@ describe('housekeeping: announce-stats-updated', () => {
     expectOk(await announceStatsUpdated(repositories, batch, NOW));
 
     expect(await told(SEEDED.userId)).toEqual([]);
+  });
+
+  it('reads the videos of the batch in one query', async () => {
+    await readyAgo(3);
+    const listReadyAfter = vi.spyOn(repositories.videos, 'listReadyAfter');
+    const findById = vi.spyOn(repositories.videos, 'findById');
+    const twoVideos = {
+      hourly: [
+        ...batch.hourly,
+        { videoId: OTHER_VIDEO_ID, viewHour: '2026-03-10T13:00:00.000Z', views: 1 },
+        { videoId: VIDEO_ID, viewHour: '2026-03-10T12:00:00.000Z', views: 1 },
+      ],
+    };
+
+    expectOk(await announceStatsUpdated(repositories, twoVideos, NOW));
+
+    expect(listReadyAfter).toHaveBeenCalledOnce();
+    expect(findById).not.toHaveBeenCalled();
+  });
+
+  it('reports a failed event append', async () => {
+    await readyAgo(3);
+    vi.spyOn(repositories.userEvents, 'append').mockResolvedValue(
+      err(databaseUnavailable('append'))
+    );
+
+    expectErr(await announceStatsUpdated(repositories, batch, NOW));
   });
 
   it('tells nobody about a video that is not ready or not known', async () => {

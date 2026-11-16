@@ -1,5 +1,5 @@
 import type { Repositories } from '@vp/core/repositories';
-import { type ViewBatch, inFirstHours, roleHas, videoStatsUpdated } from '@vp/domain';
+import { type ViewBatch, firstHoursSince, roleHas, videoStatsUpdated } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { type Result, isErr, ok } from '@vp/result';
 
@@ -15,18 +15,19 @@ export async function announceStatsUpdated(
 ): Promise<Result<void, DatabaseUnavailable>> {
   const readersByOwner = new Map<string, string[]>();
 
-  for (const videoId of new Set(batch.hourly.map((count) => count.videoId))) {
-    const found = await repositories.videos.findById(videoId);
-    if (isErr(found)) return found;
-    const video = found.value;
-    if (!video?.readyAt || !inFirstHours(video.readyAt, now)) continue;
+  const inWindow = await repositories.videos.listReadyAfter(
+    [...new Set(batch.hourly.map((count) => count.videoId))],
+    firstHoursSince(now)
+  );
+  if (isErr(inWindow)) return inWindow;
 
-    let readers = readersByOwner.get(video.ownerId);
+  for (const { id: videoId, ownerId } of inWindow.value) {
+    let readers = readersByOwner.get(ownerId);
     if (!readers) {
-      const resolved = await statsReaders(repositories, video.ownerId);
+      const resolved = await statsReaders(repositories, ownerId);
       if (isErr(resolved)) return resolved;
       readers = resolved.value;
-      readersByOwner.set(video.ownerId, readers);
+      readersByOwner.set(ownerId, readers);
     }
 
     for (const userId of readers) {

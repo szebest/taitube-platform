@@ -27,7 +27,7 @@ export type FlushVideoViewsResult =
  * Drains the view, hourly view and retention buffers into Postgres as one batch. The batch is released only after it commits, and the
  * commit records the batch id, so a flush that dies at any step leaves a batch the next run
  * either applies or recognises as applied: views are neither lost nor counted twice.
- * Panels showing a video's first 48 hours are told after the commit, and again when a batch is replayed.
+ * Panels showing a video's first 48 hours are told after the commit, best effort: a failed announcement is logged and never holds the batch back, and the open panel refetches on its own.
  */
 export async function runFlushVideoViews(
   options: FlushVideoViewsOptions
@@ -45,7 +45,11 @@ export async function runFlushVideoViews(
     if (isErr(applied)) return applied;
 
     const announced = await announceStatsUpdated(repositories, batch, new Date(now()));
-    if (isErr(announced)) return announced;
+    if (isErr(announced))
+      logger?.warn(
+        { batchId: batch.batchId, error: announced.error },
+        'could not announce updated video stats'
+      );
 
     const released = await viewBuffer.release(batch.batchId);
     if (isErr(released)) return released;

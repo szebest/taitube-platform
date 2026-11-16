@@ -3,7 +3,7 @@ import {
   fillHourly,
   firstHoursWindow,
   hourlyWindow,
-  inFirstHours,
+  firstHoursSince,
   mergeHourlyCounts,
   viewHourOf,
 } from '../hourly-views';
@@ -48,13 +48,8 @@ describe('domain: hourly views', () => {
     ]);
   });
 
-  it.each([
-    ['the moment it is ready', '2026-03-10T13:42:07.120Z', true],
-    ['one millisecond before the 48th hour ends', '2026-03-12T13:42:07.119Z', true],
-    ['the 48th hour ending', '2026-03-12T13:42:07.120Z', false],
-    ['long after', '2026-04-01T00:00:00.000Z', false],
-  ])('knows a video is in its first hours %s: %s', (_when, at, expected) => {
-    expect(inFirstHours(NOW, new Date(at))).toBe(expected);
+  it('starts the first-hours window 48 hours before now', () => {
+    expect(firstHoursSince(new Date('2026-03-12T13:42:07.120Z'))).toEqual(NOW);
   });
 
   it('spans the 48 hours from the hour a video became ready and ends 48 hours after the instant', () => {

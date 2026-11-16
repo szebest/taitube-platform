@@ -159,6 +159,18 @@ describe('housekeeping: flush-video-views', () => {
     ]);
   });
 
+  it('releases the batch even when telling the stats panels fails', async () => {
+    const video = expectOk(await repositories.videos.findById(videoId));
+    if (video) video.readyAt = new Date(now);
+    await record('viewer-1');
+    vi.spyOn(repositories.userEvents, 'append').mockResolvedValue(
+      err(databaseUnavailable('append'))
+    );
+
+    expect(expectOk(await flush())).toMatchObject({ type: 'applied', views: 1 });
+    expect(expectOk(await flush())).toEqual({ type: 'idle' });
+  });
+
   it('forgets applied batches once they are older than the retention', async () => {
     const forget = vi.spyOn(repositories.videoViews, 'forgetBatchesBefore');
 
