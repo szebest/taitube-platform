@@ -1638,7 +1638,7 @@ CREATE TABLE channel_subscriptions (
 );
 CREATE INDEX channel_subscriptions_subscriber_idx ON channel_subscriptions (subscriber_id, created_at DESC);
 CREATE INDEX channel_subscriptions_channel_idx ON channel_subscriptions (channel_id, created_at DESC);
--- 0040 (ticket 114): the video of the channel the viewer subscribed from, for a video's "subscribers gained"
+-- 0042 (ticket 114): the video of the channel the viewer subscribed from, for a video's "subscribers gained"
 ALTER TABLE channel_subscriptions ADD COLUMN source_video_id uuid REFERENCES videos(id) ON DELETE SET NULL;
 CREATE INDEX channel_subscriptions_source_video_idx ON channel_subscriptions (source_video_id) WHERE source_video_id IS NOT NULL;
 
