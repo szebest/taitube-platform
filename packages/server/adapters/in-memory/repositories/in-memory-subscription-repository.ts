@@ -138,6 +138,10 @@ export class InMemorySubscriptionRepository implements SubscriptionRepositoryPor
     );
   }
 
+  subscriptionEvents(): { channelId: string; delta: 1 | -1; occurredAt: Date }[] {
+    return this.events.map((event) => ({ ...event }));
+  }
+
   async getSubscriberCount(channelId: string): Promise<Result<number, DatabaseUnavailable>> {
     return ok((await this.findChannel(channelId))?.subscriberCount ?? 0);
   }

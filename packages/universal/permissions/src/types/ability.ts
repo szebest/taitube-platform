@@ -3,6 +3,7 @@ import type { AnalyticsResource } from './analytics';
 import type { CaptionResource } from './caption';
 import type { CategoryResource } from './category';
 import type { ChannelResource } from './channel';
+import type { ChannelExportResource } from './channel-export';
 import type {
   ChannelAuditResource,
   ChannelInviteResource,
@@ -65,6 +66,7 @@ export type AppSubjects =
       | (ChannelAuditResource & ForcedSubject<'ChannelAudit'>)
       | (ChannelUserResource & ForcedSubject<'ChannelUser'>)
       | (CommentSettingsResource & ForcedSubject<'CommentSettings'>)
+      | (ChannelExportResource & ForcedSubject<'ChannelExport'>)
     >
   | 'Video'
   | 'Upload'
@@ -87,6 +89,7 @@ export type AppSubjects =
   | 'ChannelInvite'
   | 'ChannelAudit'
   | 'ChannelUser'
-  | 'CommentSettings';
+  | 'CommentSettings'
+  | 'ChannelExport';
 
 export type AppAbility = MongoAbility<[AppAction, AppSubjects]>;

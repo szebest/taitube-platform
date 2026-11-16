@@ -26,6 +26,7 @@ import { runPurgeChannelAudit } from './purge-channel-audit';
 import { runPurgeChannelImages } from './purge-channel-images';
 import { runPurgeCommentModeration } from './purge-comment-moderation';
 import { runPurgeDeleted } from './purge-deleted';
+import { runPurgeExports } from './purge-exports';
 import { runPurgeHandleHistory } from './purge-handle-history';
 import { runPurgeScreeningEvidence } from './purge-screening-evidence';
 import { runPurgeSearchHistory } from './purge-search-history';
@@ -51,6 +52,7 @@ export * from './purge-comment-moderation';
 export * from './purge-screening-evidence';
 export * from './purge-channel-images';
 export * from './purge-handle-history';
+export * from './purge-exports';
 export * from './purge-search-history';
 
 interface HousekeepingSettings {
@@ -260,6 +262,16 @@ export function createHousekeepingProcessor(
           repositories,
           now,
           ...tasks.handleHistory,
+          logger,
+        });
+
+      case 'purge-exports':
+        return await runPurgeExports({
+          repositories,
+          storage,
+          rawBucket,
+          now,
+          ...tasks.expire,
           logger,
         });
 

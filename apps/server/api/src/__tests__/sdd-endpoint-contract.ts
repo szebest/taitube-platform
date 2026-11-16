@@ -4,6 +4,7 @@ import { SDD_CAPTION_ENDPOINTS } from './sdd-caption-endpoints';
 import { SDD_CHANNEL_ENDPOINTS } from './sdd-channel-endpoints';
 import { SDD_CLIP_ENDPOINTS } from './sdd-clip-endpoints';
 import { SDD_COMMENT_ENDPOINTS } from './sdd-comment-endpoints';
+import { SDD_EXPORT_ENDPOINTS } from './sdd-export-endpoints';
 import { SDD_INTEGRATION_ENDPOINTS } from './sdd-integration-endpoints';
 import { SDD_LIBRARY_ENDPOINTS } from './sdd-library-endpoints';
 import { SDD_LIVE_ENDPOINTS } from './sdd-live-endpoints';
@@ -324,6 +325,7 @@ export const SDD_ENDPOINT_CONTRACT: SddEndpointContract[] = [
   ...SDD_PICK_ENDPOINTS,
   ...SDD_INTEGRATION_ENDPOINTS,
   ...SDD_TEAM_ENDPOINTS,
+  ...SDD_EXPORT_ENDPOINTS,
   ...SDD_LIVE_ENDPOINTS,
   ...SDD_SCREENING_ENDPOINTS,
   ...SDD_WATCH_PARTY_ENDPOINTS,

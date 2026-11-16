@@ -4,6 +4,7 @@ export * from './comment.rules';
 export * from './comment-moderation.rules';
 export * from './channel.rules';
 export * from './channel-team.rules';
+export * from './channel-export.rules';
 export * from './upload.rules';
 export * from './analytics.rules';
 export * from './playlist.rules';

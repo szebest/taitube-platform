@@ -108,6 +108,14 @@ export class InMemoryVideoViewRepository implements VideoViewRepositoryPort {
     return ok(forgotten);
   }
 
+  dailyCounts(): ViewCount[] {
+    return [...this.daily.values()].map((count) => ({ ...count }));
+  }
+
+  retentionCounts(): RetentionCount[] {
+    return [...this.retention.values()].map((count) => ({ ...count }));
+  }
+
   async retentionCurve(videoId: string): Promise<Result<RetentionPoint[], DatabaseUnavailable>> {
     return ok(
       [...this.retention.values()]

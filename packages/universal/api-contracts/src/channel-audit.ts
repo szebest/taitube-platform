@@ -1,4 +1,10 @@
-import { CHANNEL_ROLE_NAMES, COMMENT_SETTINGS_FIELDS, DISCLOSURES } from '@vp/domain';
+import {
+  CHANNEL_ROLE_NAMES,
+  COMMENT_SETTINGS_FIELDS,
+  DATA_EXPORT_FORMATS,
+  DATA_EXPORT_KINDS,
+  DISCLOSURES,
+} from '@vp/domain';
 import { z } from 'zod';
 
 export const ChannelRoleSchema = z.enum(CHANNEL_ROLE_NAMES);
@@ -15,6 +21,10 @@ const InviteMetaSchema = z.object({ inviteeUserId: z.uuid(), role: ChannelRoleSc
 const MemberMetaSchema = z.object({ role: ChannelRoleSchema });
 const CommentMetaSchema = z.object({ videoId: z.uuid(), disclosure: z.enum(DISCLOSURES) });
 const NoMetaSchema = z.object({});
+const ExportMetaSchema = z.object({
+  kind: z.enum(DATA_EXPORT_KINDS),
+  format: z.enum(DATA_EXPORT_FORMATS),
+});
 
 function auditEntry<A extends string, T extends string, M extends z.ZodType>(
   action: A,
@@ -64,6 +74,8 @@ const AuditEntrySchema = z.discriminatedUnion('action', [
     'settings',
     z.object({ fields: z.array(z.enum(COMMENT_SETTINGS_FIELDS)) })
   ),
+  auditEntry('export.requested', 'export', ExportMetaSchema),
+  auditEntry('export.deleted', 'export', ExportMetaSchema),
 ]);
 
 export const AuditPageSchema = z.object({

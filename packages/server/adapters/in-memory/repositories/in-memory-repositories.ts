@@ -16,8 +16,10 @@ import type { InMemoryCommentModerationRepository } from './in-memory-comment-mo
 import type { InMemoryCommentReportRepository } from './in-memory-comment-report-repository';
 import type { InMemoryCommentRepository } from './in-memory-comment-repository';
 import type { InMemoryCommentSettingsRepository } from './in-memory-comment-settings-repository';
+import type { InMemoryDataExportRepository } from './in-memory-data-export-repository';
 import type { InMemoryDlqRepository } from './in-memory-dlq-repository';
 import type { InMemoryEventRepository } from './in-memory-event-repository';
+import { InMemoryExportRowRepository } from './in-memory-export-row-repository';
 import type { InMemoryFingerprintRepository } from './in-memory-fingerprint-repository';
 import { graph } from './in-memory-graph';
 import { InMemoryLiveChatRepository } from './in-memory-live-chat-repository';
@@ -66,6 +68,8 @@ export class InMemoryRepositories extends InMemoryWatchPartyRepositories impleme
   readonly channelMembers: InMemoryChannelMemberRepository;
   readonly channelInvites: InMemoryChannelInviteRepository;
   readonly channelAudit: InMemoryChannelAuditRepository;
+  readonly dataExports: InMemoryDataExportRepository;
+  readonly exportRows: InMemoryExportRowRepository;
   readonly commentSettings: InMemoryCommentSettingsRepository;
   readonly channelUserRestrictions: InMemoryChannelUserRestrictionRepository;
   readonly trustedCommenters: InMemoryTrustedCommenterRepository;
@@ -116,6 +120,15 @@ export class InMemoryRepositories extends InMemoryWatchPartyRepositories impleme
     this.channelMembers = c.get(Repo.channelMembers);
     this.channelInvites = c.get(Repo.channelInvites);
     this.channelAudit = c.get(Repo.channelAudit);
+    this.dataExports = c.get(Repo.dataExports);
+    this.exportRows = new InMemoryExportRowRepository({
+      videos: c.get(Repo.videos),
+      views: c.get(Repo.videoViews),
+      comments: c.get(Repo.comments),
+      channels: c.get(Repo.channels),
+      subscriptions: c.get(Repo.subscriptions),
+      categories: c.get(Repo.categories),
+    });
     this.commentSettings = c.get(Repo.commentSettings);
     this.channelUserRestrictions = c.get(Repo.channelUserRestrictions);
     this.trustedCommenters = c.get(Repo.trustedCommenters);

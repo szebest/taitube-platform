@@ -11,7 +11,8 @@ type SubjectType =
   | 'Upload'
   | 'Team'
   | 'ChannelUser'
-  | 'CommentSettings';
+  | 'CommentSettings'
+  | 'ChannelExport';
 
 interface Probe {
   type: SubjectType;
@@ -48,8 +49,18 @@ const editorInvite = subject('ChannelInvite', {
   role: 'editor' as const,
 });
 
-/** Every capability is probed or marked pending until its first action exists: the Record keeps it complete. */
-const CAPABILITY_PROBES: Record<ChannelCapability, Probe[] | { pending: '118' }> = {
+const exportOf = (kind: 'channel_analytics' | 'comments') =>
+  subject('ChannelExport', { channelId: CHANNEL_ID, ownerId: OWNER_ID, kind });
+
+const exportProbes = (kind: 'channel_analytics' | 'comments'): Probe[] =>
+  (['create', 'read', 'delete'] as const).map((action) => ({
+    type: 'ChannelExport',
+    action,
+    target: exportOf(kind),
+  }));
+
+/** Every capability is probed: the Record keeps it complete. */
+const CAPABILITY_PROBES: Record<ChannelCapability, Probe[]> = {
   'video.read': [
     { type: 'Video', action: 'read', target: privateVideo },
     {
@@ -97,7 +108,8 @@ const CAPABILITY_PROBES: Record<ChannelCapability, Probe[] | { pending: '118' }>
     { type: 'CommentSettings', action: 'read', target: commentSettings },
     { type: 'CommentSettings', action: 'update', target: commentSettings },
   ],
-  'data.export': { pending: '118' },
+  'analytics.export': exportProbes('channel_analytics'),
+  'data.export': exportProbes('comments'),
   'team.manage': [
     {
       type: 'Team',
@@ -138,10 +150,7 @@ export interface MatrixCell {
 /** One cell per capability, action and persona: the owner, each role and an unrelated user. */
 export function matrixCells(type: SubjectType): MatrixCell[] {
   return (Object.keys(CAPABILITY_PROBES) as ChannelCapability[]).flatMap((capability) => {
-    const probes = CAPABILITY_PROBES[capability];
-    if (!Array.isArray(probes)) return [];
-
-    return probes
+    return CAPABILITY_PROBES[capability]
       .filter((probe) => probe.type === type)
       .flatMap(({ action, target }) => [
         { persona: 'owner', capability, action, user: owner, target, expected: true },

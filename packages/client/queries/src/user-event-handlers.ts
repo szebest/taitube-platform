@@ -120,6 +120,8 @@ function applyChannelImageReady(
 /** A failed upload changes nothing a query holds; the studio's own upload state reads the event. */
 function ignoreChannelImageFailed() {}
 
+function ignoreExportChange() {}
+
 const userEventHandlers: UserEventHandlers = {
   'video.processing': applyVideoProcessing,
   'preferences.updated': applyPreferencesUpdated,
@@ -133,6 +135,8 @@ const userEventHandlers: UserEventHandlers = {
   'channel.image.ready': applyChannelImageReady,
   'channel.image.failed': ignoreChannelImageFailed,
   'party.controls.updated': applyPartyControlsUpdated,
+  'export.ready': ignoreExportChange,
+  'export.failed': ignoreExportChange,
 };
 
 // Mapped rather than `UserEvent`, so `type` and `payload` stay correlated once the union grows.

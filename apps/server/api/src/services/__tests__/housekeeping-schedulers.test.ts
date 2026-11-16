@@ -31,6 +31,7 @@ describe('apps/server/api/services: housekeeping schedulers', () => {
       'purge-channel-images',
       'purge-comment-moderation',
       'purge-deleted',
+      'purge-exports',
       'purge-handle-history',
       'purge-screening-evidence',
       'purge-search-history',

@@ -17,3 +17,4 @@ export * from './picks';
 export * from './webhooks';
 export * from './watch-parties';
 export * from './channel-team';
+export * from './channel-exports';
