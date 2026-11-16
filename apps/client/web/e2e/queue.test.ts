@@ -28,10 +28,12 @@ test.describe('the queue: add, undo, reorder with the keyboard, play next', () =
     await signIn('viewer');
     await page.goto(`/watch/${stack.videos.watchable.id}`, { waitUntil: 'networkidle' });
     const more = page.getByRole('region', { name: 'More like this' });
+    const items = page.getByRole('region', { name: 'Your queue' }).getByRole('listitem');
+    const before = await items.count();
     for (let added = 0; added < 2; added += 1) {
       await more.getByRole('button', { name: 'Add to queue' }).nth(added).click();
     }
-    const items = page.getByRole('region', { name: 'Your queue' }).getByRole('listitem');
+    await expect(items).toHaveCount(before + 2);
     const first = await items.nth(1).getAttribute('aria-label');
 
     await items
