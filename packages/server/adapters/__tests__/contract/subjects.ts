@@ -23,7 +23,7 @@ export interface RepositoriesSubject {
   close(): Promise<void>;
 }
 
-export interface MicrosecondSpread {
+interface MicrosecondSpread {
   stamp: AnyPgColumn;
   key: AnyPgColumn;
   ids: readonly string[];
