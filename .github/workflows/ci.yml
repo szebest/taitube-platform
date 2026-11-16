@@ -148,6 +148,9 @@ jobs:
       - name: Fail when docs/state-machines.md differs from the machine definitions
         run: pnpm gen:state-machines --check
 
+      - name: Fail when docs/package-map.md differs from the workspace manifests
+        run: pnpm gen:package-map --check
+
       # --only: the builds just replayed from the build job's cache, so this cache holds typecheck results alone.
       - name: Run TypeScript typecheck
         run: pnpm exec turbo run typecheck typecheck:repo --only --cache-dir .turbo/typecheck-cache

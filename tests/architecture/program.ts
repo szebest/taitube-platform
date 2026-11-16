@@ -3,7 +3,7 @@ import ts from 'typescript';
 import { productionSources, ROOT } from './repo-files';
 import { workspaceSources } from './workspace-sources';
 
-function workspacePaths(): Record<string, string[]> {
+export function workspacePaths(): Record<string, string[]> {
   return Object.fromEntries(
     workspaceSources().flatMap(({ name, root, src }) => [
       [name, [join(src, 'index.ts')]],

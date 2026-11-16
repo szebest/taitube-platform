@@ -44,11 +44,11 @@ export const BUILD_TOOLING: ReadonlySet<string> = new Set([
   '@vp/web-testing',
 ]);
 
-function manifestDirs(): string[] {
+function manifestDirs(root: string): string[] {
   const dirs: string[] = [];
   for (const parent of ['packages', 'apps']) {
-    for (const tier of readdirSync(join(ROOT, parent))) {
-      const tierDir = join(ROOT, parent, tier);
+    for (const tier of readdirSync(join(root, parent))) {
+      const tierDir = join(root, parent, tier);
       if (!statSync(tierDir).isDirectory()) continue;
       dirs.push(tierDir, ...readdirSync(tierDir).map((name) => join(tierDir, name)));
     }
@@ -58,13 +58,13 @@ function manifestDirs(): string[] {
   );
 }
 
-export function load(): Pkg[] {
-  return manifestDirs().map((dir) => {
+export function load(root: string = ROOT): Pkg[] {
+  return manifestDirs(root).map((dir) => {
     const raw = JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8'));
     const vp = raw.vp ?? {};
     return {
       name: raw.name,
-      dir: dir.slice(ROOT.length + 1),
+      dir: dir.slice(root.length + 1),
       declaredTier: vp.tier,
       layer: vp.layer,
       deps: declaredDeps(raw),
@@ -91,7 +91,7 @@ function declaredDeps(raw: {
   ];
 }
 
-function directoryTier(dir: string): Tier | null {
+export function directoryTier(dir: string): Tier | null {
   const [parent, tier, name] = dir.split('/');
   if (!(parent && name)) return null;
   return TIER_DIRECTORIES[parent]?.find((t) => t === tier) ?? null;
