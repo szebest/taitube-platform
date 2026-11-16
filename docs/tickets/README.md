@@ -11,7 +11,6 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 - [118: Creator data portability and API - exports, personal access tokens and a developer page](118-creator-data-portability-and-api.md)
 - [129: Multiple accounts and channels - signed in at once, one switcher, per-tab identity](129-multiple-accounts-and-channels.md)
 - [138: Type-aware lint backlog, the twelve oxlint rules 110 left off](138-type-aware-lint-backlog.md)
-- [170: Platform packages - reusable, app-independent, extractable; the app registers its data through injection tokens](170-platform-packages-open-closed-extractable.md)
 - [172: One ECMAScript baseline per tier - presets, a browser floor, a guard, and the cleanup it enables](172-ecmascript-baseline-per-tier-presets-browser-floor-and-cleanup.md)
 
 ## How to work a ticket (humans and agents)
@@ -182,7 +181,7 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 | 144 | [Invitee accept from the studio - pending invites, accept and decline, and leaving a team](144-invitee-accept-from-studio.md) | 5 - Developer experience & growth | M | 117 | — | done |
 | 145 | [Stories and visual baselines for the app kit folders that have none](145-kit-stories-and-visual-baselines.md) | 5 - Developer experience & growth | S | 131 | — | done |
 | 146 | [Word-level caption timestamps so per-cue edges meet 100 ms](146-word-level-caption-timestamps.md) | 5 - Developer experience & growth | S | 139 | — | blocked |
-| 170 | [Platform packages - reusable, app-independent, extractable; the app registers its data through injection tokens](170-platform-packages-open-closed-extractable.md) | 5 - Developer experience & growth | XL (one PR, ordered commits, see *Delivery*) | 82, 85, 86, 87, 88, 131 | 48, 171 | ready |
+| 170 | [Platform packages - reusable, app-independent, extractable; the app registers its data through injection tokens](170-platform-packages-open-closed-extractable.md) | 5 - Developer experience & growth | XL (one PR, ordered commits, see *Delivery*) | 82, 85, 86, 87, 88, 131 | 48, 171 | in-progress |
 | 171 | [Intl formatters - one open contract, lists that collapse into "and N more" with a tooltip, richer formatters, a duration conformance suite](171-intl-formatters-open-extensible-list-more-tooltip-and-duration-conformance.md) | 5 - Developer experience & growth | XL (one PR, ordered commits, see *Delivery*) | 170 | — | blocked |
 | 172 | [One ECMAScript baseline per tier - presets, a browser floor, a guard, and the cleanup it enables](172-ecmascript-baseline-per-tier-presets-browser-floor-and-cleanup.md) | 5 - Developer experience & growth | M (one PR, ordered commits, see *Delivery*) | 85, 110 | — | ready |
 
