@@ -83,6 +83,7 @@ describe('packages/api-contracts: events', () => {
       'a personal control change everywhere',
       { type: 'party.controls.updated', payload: { targetKey: `user:${VIDEO_ID}`, roomId: null } },
     ],
+    ['fresh video stats', { type: 'video.stats.updated', payload: { videoId: VIDEO_ID } }],
     [
       'every notification read',
       { type: 'notification.read', payload: { scope: 'all', unreadCount: 0 } },

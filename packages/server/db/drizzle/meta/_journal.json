@@ -281,6 +281,13 @@
       "when": 1794490184391,
       "tag": "0039_outbox_dead_state",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1794822372660,
+      "tag": "0040_subscription_source_video",
+      "breakpoints": true
     }
   ]
 }

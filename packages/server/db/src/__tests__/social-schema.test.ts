@@ -37,6 +37,16 @@ describe('db: social schema', () => {
     ]);
   });
 
+  it('keeps the subscription but forgets the video it came from when that video goes', () => {
+    expect(referenceFrom(channelSubscriptions, 'source_video_id')).toEqual({
+      table: 'videos',
+      onDelete: 'set null',
+    });
+    expect(
+      getTableConfig(channelSubscriptions).indexes.map((index) => index.config.name)
+    ).toContain('channel_subscriptions_source_video_idx');
+  });
+
   it('reads a channel subscription events in time order, each one a gain or a loss', () => {
     const config = getTableConfig(subscriptionEvents);
 

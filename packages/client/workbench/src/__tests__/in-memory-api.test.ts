@@ -31,7 +31,7 @@ describe('@vp/workbench: inMemoryApi', () => {
       },
     ]);
 
-    await api.subscriptions.subscribeToChannel({ params: { id: CHANNEL_ID } });
+    await api.subscriptions.subscribeToChannel({ params: { id: CHANNEL_ID }, body: undefined });
 
     await expect(
       api.subscriptions.isSubscribedToChannel({ params: { id: CHANNEL_ID } })

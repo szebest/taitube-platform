@@ -7,6 +7,8 @@ import { transcriptQueryOptions, videoKeys } from '../video-queries';
 
 type Change = Extract<UserEvent, { type: 'video.processing' }>['payload']['change'];
 
+const OTHER_VIDEO_ID = '00000000-0000-7000-8000-0000000000ff';
+
 const PROCESSING = video({
   status: 'PROCESSING',
   progress: { overall: 10, byRendition: { '480p': 20 } },
@@ -262,5 +264,18 @@ describe('@vp/queries: user event handlers', () => {
     });
 
     expect(queryClient.getQueryState(['watch-party-controls'])?.isInvalidated).toBe(true);
+  });
+
+  it('refetches the creator stats of the video the event names, no other', () => {
+    const queryClient = createQueryClient();
+    queryClient.setQueryData(videoKeys.creatorStats(VIDEO_ID), {});
+    queryClient.setQueryData(videoKeys.creatorStats(OTHER_VIDEO_ID), {});
+
+    applyUserEvent(queryClient, { type: 'video.stats.updated', payload: { videoId: VIDEO_ID } });
+
+    expect(queryClient.getQueryState(videoKeys.creatorStats(VIDEO_ID))?.isInvalidated).toBe(true);
+    expect(queryClient.getQueryState(videoKeys.creatorStats(OTHER_VIDEO_ID))?.isInvalidated).toBe(
+      false
+    );
   });
 });

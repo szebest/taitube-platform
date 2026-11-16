@@ -58,7 +58,8 @@ export class InMemorySubscriptionRepository implements SubscriptionRepositoryPor
    */
   async subscribe(
     subscriberId: string,
-    channelId: string
+    channelId: string,
+    sourceVideoId: string | null = null
   ): Promise<Result<SubscriptionChangeResult, DatabaseUnavailable>> {
     const channel = await this.findChannel(channelId);
     if (!channel) return ok({ subscriberCount: 0, changed: false });
@@ -73,6 +74,7 @@ export class InMemorySubscriptionRepository implements SubscriptionRepositoryPor
       subscriberId,
       channelId,
       notificationLevel: 'all',
+      sourceVideoId,
       createdAt: new Date(),
     });
     channel.subscriberCount += 1;
@@ -140,6 +142,12 @@ export class InMemorySubscriptionRepository implements SubscriptionRepositoryPor
 
   async getSubscriberCount(channelId: string): Promise<Result<number, DatabaseUnavailable>> {
     return ok((await this.findChannel(channelId))?.subscriberCount ?? 0);
+  }
+
+  async countFromVideo(videoId: string): Promise<Result<number, DatabaseUnavailable>> {
+    return ok(
+      Array.from(this.subscriptions.values()).filter((sub) => sub.sourceVideoId === videoId).length
+    );
   }
 
   async netSubscribers(

@@ -31,6 +31,11 @@ export function hourlyWindow(now: Date): ViewHourRange {
   return { from, to };
 }
 
+/** Whether `now` is still inside the first 48 hours after `readyAt`, the hours a video's own stats show. */
+export function inFirstHours(readyAt: Date, now: Date): boolean {
+  return now.getTime() < readyAt.getTime() + HOURLY_WINDOW_HOURS * MS_PER_HOUR;
+}
+
 export function fillHourly(range: ViewHourRange, rows: readonly HourlyViews[]): HourlyViews[] {
   const byHour = new Map(rows.map((row) => [row.viewHour, row.views]));
   const hours: HourlyViews[] = [];

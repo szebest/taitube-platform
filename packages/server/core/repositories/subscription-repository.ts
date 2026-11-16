@@ -30,9 +30,11 @@ export interface ListSubscriptionsOptions {
  * further page and mint the opaque cursor; encoding it is a transport concern.
  */
 export interface SubscriptionRepositoryPort {
+  /** `sourceVideoId` is stored only on the call that creates the subscription. */
   subscribe(
     subscriberId: string,
-    channelId: string
+    channelId: string,
+    sourceVideoId?: string | null
   ): Promise<Result<SubscriptionChangeResult, DatabaseUnavailable>>;
   unsubscribe(
     subscriberId: string,
@@ -65,6 +67,8 @@ export interface SubscriptionRepositoryPort {
     options: ListSubscribersOptions
   ): Promise<Result<ChannelSubscriber[], DatabaseUnavailable>>;
   getSubscriberCount(channelId: string): Promise<Result<number, DatabaseUnavailable>>;
+  /** Subscriptions that exist now and were made from `videoId`'s watch page: a net count, an unsubscribe leaves it. */
+  countFromVideo(videoId: string): Promise<Result<number, DatabaseUnavailable>>;
   /** Gains minus losses of the owner's channel over the days of `range`, UTC. */
   netSubscribers(
     ownerId: string,

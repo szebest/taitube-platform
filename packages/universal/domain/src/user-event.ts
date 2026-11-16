@@ -46,7 +46,8 @@ export type UserEvent =
   | { type: 'live.started'; payload: LiveStartedPayload }
   | { type: 'channel.image.ready'; payload: ChannelImageReadyPayload }
   | { type: 'channel.image.failed'; payload: ChannelImageFailedPayload }
-  | { type: 'party.controls.updated'; payload: PartyControlsUpdatedPayload };
+  | { type: 'party.controls.updated'; payload: PartyControlsUpdatedPayload }
+  | { type: 'video.stats.updated'; payload: { videoId: string } };
 
 /** An avatar or banner upload became the channel's image at `version`. */
 export interface ChannelImageReadyPayload {
@@ -145,4 +146,9 @@ export function channelImageFailed(payload: ChannelImageFailedPayload): UserEven
 
 export function partyControlsUpdated(targetKey: string, roomId: string | null): UserEvent {
   return { type: 'party.controls.updated', payload: { targetKey, roomId } };
+}
+
+/** The id only: whoever holds the panel refetches the numbers, so none travel on the stream. */
+export function videoStatsUpdated(videoId: string): UserEvent {
+  return { type: 'video.stats.updated', payload: { videoId } };
 }

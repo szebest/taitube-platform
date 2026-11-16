@@ -1,0 +1,3 @@
+ALTER TABLE "channel_subscriptions" ADD COLUMN "source_video_id" uuid;--> statement-breakpoint
+ALTER TABLE "channel_subscriptions" ADD CONSTRAINT "channel_subscriptions_source_video_id_videos_id_fk" FOREIGN KEY ("source_video_id") REFERENCES "public"."videos"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+CREATE INDEX "channel_subscriptions_source_video_idx" ON "channel_subscriptions" USING btree ("source_video_id") WHERE "channel_subscriptions"."source_video_id" IS NOT NULL;

@@ -41823,7 +41823,21 @@ paths:
       summary: Subscribe to channel
       tags:
         - Subscriptions
-      description: Idempotently subscribes the authenticated caller to the channel. Increments subscriber count and updates Redis cache.
+      description: Idempotently subscribes the authenticated caller to the channel, crediting `fromVideoId` when it qualifies. Increments subscriber count and updates Redis cache.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              anyOf:
+                - type: object
+                  properties:
+                    fromVideoId:
+                      description: The video whose watch page the call came from. Kept only when it is a public video of this channel, otherwise dropped without an error
+                      type: string
+                      format: uuid
+                      pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                - type: 'null'
       parameters:
         - schema:
             type: string
@@ -43894,6 +43908,26 @@ paths:
                         required:
                           - targetKey
                           - roomId
+                        additionalProperties: false
+                    required:
+                      - type
+                      - payload
+                    additionalProperties: false
+                  - type: object
+                    properties:
+                      type:
+                        type: string
+                        enum:
+                          - video.stats.updated
+                      payload:
+                        type: object
+                        properties:
+                          videoId:
+                            type: string
+                            format: uuid
+                            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                        required:
+                          - videoId
                         additionalProperties: false
                     required:
                       - type

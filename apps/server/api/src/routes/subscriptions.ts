@@ -23,6 +23,7 @@ export async function subscriptionsRoutes(app: FastifyInstance): Promise<void> {
         schema: {
           ...contractSchema(subscribeToChannel, { hide }),
           params: subscribeToChannel.params,
+          body: subscribeToChannel.body,
         },
       },
       async (request, reply) => {
@@ -30,7 +31,7 @@ export async function subscriptionsRoutes(app: FastifyInstance): Promise<void> {
         return sendResult(
           reply,
           request,
-          await subscriptionService.subscribe(user, request.params.id)
+          await subscriptionService.subscribe(user, request.params.id, request.body?.fromVideoId)
         );
       }
     );

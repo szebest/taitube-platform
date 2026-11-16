@@ -31,6 +31,8 @@ function coalesceKey(event: UserEventFrame): string | undefined {
     case 'channel.image.failed':
     case 'party.controls.updated':
       return undefined;
+    case 'video.stats.updated':
+      return `stats:${event.payload.videoId}`;
     default:
       return assertNever(event, 'UserEventFrame');
   }

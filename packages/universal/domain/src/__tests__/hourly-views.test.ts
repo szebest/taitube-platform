@@ -2,6 +2,7 @@ import {
   HOURLY_WINDOW_HOURS,
   fillHourly,
   hourlyWindow,
+  inFirstHours,
   mergeHourlyCounts,
   viewHourOf,
 } from '../hourly-views';
@@ -44,5 +45,14 @@ describe('domain: hourly views', () => {
       { videoId: 'a', viewHour: '2026-03-10T13:00:00.000Z', views: 4 },
       { videoId: 'b', viewHour: '2026-03-10T13:00:00.000Z', views: 2 },
     ]);
+  });
+
+  it.each([
+    ['the moment it is ready', '2026-03-10T13:42:07.120Z', true],
+    ['one millisecond before the 48th hour ends', '2026-03-12T13:42:07.119Z', true],
+    ['the 48th hour ending', '2026-03-12T13:42:07.120Z', false],
+    ['long after', '2026-04-01T00:00:00.000Z', false],
+  ])('knows a video is in its first hours %s: %s', (_when, at, expected) => {
+    expect(inFirstHours(NOW, new Date(at))).toBe(expected);
   });
 });

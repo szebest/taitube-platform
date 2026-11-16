@@ -126,6 +126,10 @@ const UserEventSchema = z.discriminatedUnion('type', [
     type: z.literal('party.controls.updated'),
     payload: z.object({ targetKey: MemberKeySchema, roomId: z.uuid().nullable() }),
   }),
+  z.object({
+    type: z.literal('video.stats.updated'),
+    payload: z.object({ videoId: z.uuid() }),
+  }),
 ]) satisfies z.ZodType<UserEvent>;
 
 export type { UserEvent };

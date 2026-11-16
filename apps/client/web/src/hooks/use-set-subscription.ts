@@ -14,7 +14,11 @@ function recount(channel: PublicChannel, subscribed: boolean): PublicChannel {
   return { ...channel, subscriberCount: channel.subscriberCount + (subscribed ? 1 : -1) };
 }
 
-function setSubscriptionMutationOptions(api: ApiClient, channelId: string) {
+function setSubscriptionMutationOptions(
+  api: ApiClient,
+  channelId: string,
+  fromVideoId: string | undefined
+) {
   const statusKey = subscriptionStatusQueryOptions(api, channelId).queryKey;
   const channelKey = channelQueryOptions(api, channelId).queryKey;
   const target = { params: { id: channelId } };
@@ -22,7 +26,10 @@ function setSubscriptionMutationOptions(api: ApiClient, channelId: string) {
   return mutationOptions({
     mutationFn: (subscribed: boolean) =>
       subscribed
-        ? api.subscriptions.subscribeToChannel(target)
+        ? api.subscriptions.subscribeToChannel({
+            ...target,
+            body: fromVideoId ? { fromVideoId } : undefined,
+          })
         : api.subscriptions.unsubscribeFromChannel(target),
     onMutate: async (subscribed, { client }) => {
       await Promise.all([
@@ -52,7 +59,8 @@ function setSubscriptionMutationOptions(api: ApiClient, channelId: string) {
   });
 }
 
-export function useSetSubscription(channelId: string) {
+/** `fromVideoId` credits the subscription to the video of the watch page it was made on. */
+export function useSetSubscription(channelId: string, fromVideoId?: string) {
   const api = useApi();
-  return useMutation(setSubscriptionMutationOptions(api, channelId));
+  return useMutation(setSubscriptionMutationOptions(api, channelId, fromVideoId));
 }

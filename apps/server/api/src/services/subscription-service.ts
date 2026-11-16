@@ -1,5 +1,9 @@
 import type { SubscriptionCachePort } from '@vp/core/ports';
-import type { ChannelRepositoryPort, SubscriptionRepositoryPort } from '@vp/core/repositories';
+import type {
+  ChannelRepositoryPort,
+  SubscriptionRepositoryPort,
+  VideoRepository,
+} from '@vp/core/repositories';
 import type { NotificationLevel, SubscribedChannelItem } from '@vp/domain';
 import {
   type SubscribeFailure,
@@ -7,6 +11,7 @@ import {
   decideSubscribe,
   channelNotFound,
   decideUnsubscribe,
+  subscriptionSourceOf,
 } from '@vp/domain-rules';
 import type { CdnBase } from '@vp/env-schema';
 import type { DatabaseUnavailable } from '@vp/errors';
@@ -41,6 +46,7 @@ export interface SubscriptionStatusView {
 export interface SubscriptionServiceDeps {
   subscriptions: SubscriptionRepositoryPort;
   channels: ChannelRepositoryPort;
+  videos: VideoRepository;
   subscriptionCache: SubscriptionCachePort;
   home: Pick<HomeService, 'forget'>;
   cdn: CdnBase;
@@ -62,7 +68,8 @@ export class SubscriptionService {
    */
   async subscribe(
     user: UserContext,
-    channelId: string
+    channelId: string,
+    fromVideoId?: string
   ): Promise<Result<SubscriptionStatusView, SubscribeServiceFailure>> {
     const found = await this.deps.channels.findById(channelId);
     if (isErr(found)) return found;
@@ -70,7 +77,14 @@ export class SubscriptionService {
     const decided = decideSubscribe({ subscriber: user, channel: found.value, channelId });
     if (isErr(decided)) return decided;
 
-    const written = await this.deps.subscriptions.subscribe(user.id, channelId);
+    const source = fromVideoId ? await this.deps.videos.findById(fromVideoId) : ok(null);
+    if (isErr(source)) return source;
+
+    const written = await this.deps.subscriptions.subscribe(
+      user.id,
+      channelId,
+      subscriptionSourceOf(decided.value, source.value)
+    );
     if (isErr(written)) return written;
 
     const { subscriberCount, changed } = written.value;

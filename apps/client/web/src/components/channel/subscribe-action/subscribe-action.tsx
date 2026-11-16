@@ -8,11 +8,13 @@ import { subscriptionStatusQueryOptions } from '#app/lib/query-keys/subscription
 
 export interface SubscribeActionProps {
   channelId: string;
+  /** The video whose watch page this sits on, credited with the subscription. */
+  fromVideoId?: string;
   className?: string;
 }
 
 /** Subscribe for a channel, wherever it is shown; a guest who presses it gets the sign-in prompt and subscribes once signed in, a failed write offers a retry. */
-export function SubscribeAction({ channelId, className }: SubscribeActionProps) {
+export function SubscribeAction({ channelId, fromVideoId, className }: SubscribeActionProps) {
   const api = useApi();
   const { tOr } = useT();
   const showFailure = useFailureToast();
@@ -21,7 +23,7 @@ export function SubscribeAction({ channelId, className }: SubscribeActionProps) 
     ...subscriptionStatusQueryOptions(api, channelId),
     enabled: canSubscribe,
   });
-  const setSubscription = useSetSubscription(channelId);
+  const setSubscription = useSetSubscription(channelId, fromVideoId);
 
   const subscribed = status.data?.subscribed ?? false;
   const toggle = () => {
