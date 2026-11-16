@@ -33,7 +33,7 @@ const CreateWebhookBodySchema = z.object({
     .min(1)
     .max(WEBHOOK_EVENTS.length)
     .describe(
-      'video.ready fires when processing finishes, export.ready when a channel export file can be downloaded; live.started is accepted and reserved'
+      'video.ready fires when processing finishes, export.ready when a channel export file can be downloaded, comment.held when a comment on one of your videos is held for review (its id, the video and the channel, never the text); live.started is accepted and reserved'
     ),
 });
 
@@ -45,6 +45,7 @@ const AUTHENTICATED = {
 export const createWebhook = defineEndpoint({
   method: 'POST',
   path: '/v1/me/webhooks',
+  scope: 'webhooks:manage',
   tag: 'Webhooks',
   summary: 'Register a webhook',
   description:
@@ -62,6 +63,7 @@ export const createWebhook = defineEndpoint({
 export const listWebhooks = defineEndpoint({
   method: 'GET',
   path: '/v1/me/webhooks',
+  scope: 'webhooks:manage',
   tag: 'Webhooks',
   summary: 'List my webhooks',
   description: 'The webhooks the caller registered, oldest first. Secrets are never returned.',
@@ -73,6 +75,7 @@ export const listWebhooks = defineEndpoint({
 export const deleteWebhook = defineEndpoint({
   method: 'DELETE',
   path: '/v1/me/webhooks/:id',
+  scope: 'webhooks:manage',
   tag: 'Webhooks',
   summary: 'Remove a webhook',
   description: 'Answers 404 for a webhook the caller did not register.',

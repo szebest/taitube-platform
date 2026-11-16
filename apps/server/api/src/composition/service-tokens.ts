@@ -16,14 +16,11 @@ import type {
   ChannelImagePipelineService,
   ChannelSpotlightService,
   ChannelAuditService,
-  ChannelExportService,
   ChannelInviteService,
   ChannelMemberService,
   ChannelService,
   RequestIdentity,
   ClipService,
-  OEmbedService,
-  WebhookService,
   CreatorCommentService,
   CreatorLiveService,
   CreatorStudioService,
@@ -83,9 +80,10 @@ import type {
   WatchPartyControlsService,
 } from '../services/watch-party/index';
 import { type CommentServiceSet, CommentServices } from './comment-tokens';
+import { type IntegrationServiceSet, IntegrationServices } from './integration-tokens';
 import { ScreeningServices } from './screening-tokens';
 
-export interface ServiceSet extends CommentServiceSet {
+export interface ServiceSet extends CommentServiceSet, IntegrationServiceSet {
   videoService: VideoService;
   creatorStudioService: CreatorStudioService;
   searchService: SearchService;
@@ -104,10 +102,7 @@ export interface ServiceSet extends CommentServiceSet {
   channelInviteService: ChannelInviteService;
   channelMemberService: ChannelMemberService;
   channelAuditService: ChannelAuditService;
-  channelExportService: ChannelExportService;
   clipService: ClipService;
-  oembedService: OEmbedService;
-  webhookService: WebhookService;
   liveIngestService: LiveIngestService;
   creatorLiveService: CreatorLiveService;
   liveService: LiveService;
@@ -175,10 +170,7 @@ export const Services = {
   ChannelInviteService: token<ChannelInviteService>('ChannelInviteService'),
   ChannelMemberService: token<ChannelMemberService>('ChannelMemberService'),
   ChannelAuditService: token<ChannelAuditService>('ChannelAuditService'),
-  ChannelExportService: token<ChannelExportService>('ChannelExportService'),
   ClipService: token<ClipService>('ClipService'),
-  OEmbedService: token<OEmbedService>('OEmbedService'),
-  WebhookService: token<WebhookService>('WebhookService'),
   LiveIngestService: token<LiveIngestService>('LiveIngestService'),
   CreatorLiveService: token<CreatorLiveService>('CreatorLiveService'),
   LiveService: token<LiveService>('LiveService'),
@@ -193,6 +185,7 @@ export const Services = {
   SubscriptionService: token<SubscriptionService>('SubscriptionService'),
   ...CommentServices,
   ...ScreeningServices,
+  ...IntegrationServices,
   CreatorCommentService: token<CreatorCommentService>('CreatorCommentService'),
   ViewService: token<ViewService>('ViewService'),
   WebVitalsService: token<WebVitalsService>('WebVitalsService'),

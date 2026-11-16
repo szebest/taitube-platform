@@ -10,6 +10,7 @@ const entry = (action: string, targetType: string, meta: object) => ({
   targetId: ID,
   meta,
   actorUserId: ID,
+  actorTokenId: null,
   actor: null,
   createdAt: '2026-03-01T12:00:00.000Z',
 });
@@ -41,6 +42,14 @@ describe('packages/api-contracts: the channel audit entry', () => {
     { scenario: 'an action nobody audits', row: entry('comment.liked', 'comment', {}) },
   ])('refuses $scenario', ({ row }) => {
     expect(AuditPageSchema.safeParse({ items: [row], nextCursor: null }).success).toBe(false);
+  });
+
+  it('names the token an actor used, when they used one', () => {
+    const row = { ...entry('video.updated', 'video', { fields: ['title'] }), actorTokenId: ID };
+
+    expect(AuditPageSchema.parse({ items: [row], nextCursor: null }).items[0]?.actorTokenId).toBe(
+      ID
+    );
   });
 
   it('describes every action the log can hold', () => {

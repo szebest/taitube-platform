@@ -2,11 +2,13 @@ import { DevTokenVerifier } from '@vp/adapters/auth';
 import { InMemoryPartyGuestSessions, InMemoryRepositories } from '@vp/adapters/in-memory';
 import { CHANNEL_HEADER } from '@vp/api-contracts';
 import { getDevJwks, mintToken } from '@vp/dev-token';
+import { apiTokenRefused } from '@vp/domain-rules';
 import { type AuthConfig, inProcessAppConfig } from '@vp/env-schema';
 import { databaseUnavailable } from '@vp/errors';
-import { err } from '@vp/result';
+import { err, ok } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import fastify, { type FastifyInstance } from 'fastify';
+import { seedTeamMember } from '../../__tests__/test-app';
 import { channelServiceDeps } from '../../services/__tests__/service-deps';
 import { ChannelService } from '../../services/channel-service';
 import { RequestIdentity } from '../../services/request-identity';
@@ -60,6 +62,8 @@ async function appWith(
     auth,
     guestSessions,
     partyCredentialTtlSeconds: 60,
+    tokens: { authenticate: async () => err(apiTokenRefused('none')), recordUse: async () => ok() },
+    tokenRateLimit: async () => null,
   });
   for (const url of ['/whoami', '/v1/watch-parties/:id']) {
     app.get(url, async (request) => ({ user: request.user, party: request.party }));
@@ -178,7 +182,6 @@ describe('apps/server/api/plugins: auth', () => {
   describe('the acting channel', () => {
     const OWNER_ID = '00000000-0000-7000-8000-0000000000c1';
     const MEMBER_ID = '00000000-0000-7000-8000-0000000000c2';
-    const INVITE_ID = '00000000-0000-7000-8000-0000000000c3';
     const bearer = (sub: string) => ({
       authorization: `Bearer ${mintToken({ sub, role: 'user' })}`,
     });
@@ -187,39 +190,16 @@ describe('apps/server/api/plugins: auth', () => {
       const repositories = new InMemoryRepositories();
       const identity = identityOver(repositories);
       const owner = expectOk(await identity.resolve({ id: OWNER_ID, role: 'USER' }));
-      const { channelId } = expectOk(owner.acting);
       expectOk(await identity.resolve({ id: MEMBER_ID, role: 'USER' }));
-      const audit = {
-        channelId,
-        actorUserId: OWNER_ID,
-        targetType: 'invite',
-        targetId: INVITE_ID,
-        meta: { inviteeUserId: MEMBER_ID, role: 'editor' },
-      } as const;
-      expectOk(
-        await repositories.channelInvites.create(
-          {
-            id: INVITE_ID,
-            channelId,
-            inviteeUserId: MEMBER_ID,
-            role: 'editor',
-            invitedBy: OWNER_ID,
-            expiresAt: new Date(Date.now() + 60_000),
-          },
-          { ...audit, action: 'invite.created' }
-        )
-      );
-      expectOk(
-        await repositories.channelInvites.accept(INVITE_ID, MEMBER_ID, {
-          ...audit,
-          actorUserId: MEMBER_ID,
-          action: 'invite.accepted',
-        })
-      );
+      await seedTeamMember(repositories, {
+        ownerId: OWNER_ID,
+        memberId: MEMBER_ID,
+        role: 'editor',
+      });
       return {
         app: await appWith(devAuth(undefined), identity),
         repositories,
-        channelId,
+        channelId: expectOk(owner.acting).channelId,
       };
     }
 

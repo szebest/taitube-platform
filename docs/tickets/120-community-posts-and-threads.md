@@ -105,7 +105,9 @@ the post card's click beacon; likes, replies and votes are read from their own t
 see any of it, and nothing is on the public post resource.
 
 Posts also join [118](118-creator-data-portability-and-api.md)'s channel exports: this ticket adds the `posts` kind to
-`DATA_EXPORT_KINDS`, with its row schema (each post with its poll results) and the page reader the export job pulls.
+`DATA_EXPORT_KINDS`, with its row schema (each post with its poll results) and the page reader the export job pulls. It
+also adds the `posts:write` scope to 118's `API_SCOPES`, granting the post actions in `SCOPE_ABILITIES`, and names it on the
+post write routes, so a personal access token can publish.
 
 ### 5. Viewer threads on a video
 

@@ -1,5 +1,5 @@
 import type { ChannelUserRestriction, RestrictionKind } from './channel-restriction';
-import type { NewChannelAuditEntry } from './channel-team';
+import type { AuditActor, NewChannelAuditEntry } from './channel-team';
 import { COMMENT_REPORT_REASONS } from './comment-report';
 import type { Disclosure } from './comment-settings';
 
@@ -79,18 +79,19 @@ const COMMENT_AUDIT_ACTIONS = {
 } as const satisfies Record<CommentModerationAction['action'], string>;
 
 /** The audit row of a comment action: the disclosure the author was given, never the reason text. */
-export function commentModerationAudit(entry: {
-  channelId: string;
-  actorUserId: string;
-  action: CommentModerationAction['action'];
-  commentId: string;
-  videoId: string;
-  disclosure: Disclosure;
-}): NewChannelAuditEntry {
-  const { channelId, actorUserId, action, commentId, videoId, disclosure } = entry;
+export function commentModerationAudit(
+  entry: AuditActor & {
+    channelId: string;
+    action: CommentModerationAction['action'];
+    commentId: string;
+    videoId: string;
+    disclosure: Disclosure;
+  }
+): NewChannelAuditEntry {
+  const { channelId, action, commentId, videoId, disclosure, ...actor } = entry;
   return {
     channelId,
-    actorUserId,
+    ...actor,
     action: COMMENT_AUDIT_ACTIONS[action],
     targetType: 'comment',
     targetId: commentId,
@@ -117,14 +118,15 @@ export interface ModerationRecord {
 }
 
 /** The audit row of a restriction: a ban carries its end, and nothing else says why. */
-export function restrictionAudit(entry: {
-  channelId: string;
-  actorUserId: string;
-  userId: string;
-  restriction: Pick<ChannelUserRestriction, 'kind' | 'expiresAt'>;
-}): NewChannelAuditEntry {
-  const { channelId, actorUserId, userId, restriction } = entry;
-  const base = { channelId, actorUserId, targetType: 'user', targetId: userId } as const;
+export function restrictionAudit(
+  entry: AuditActor & {
+    channelId: string;
+    userId: string;
+    restriction: Pick<ChannelUserRestriction, 'kind' | 'expiresAt'>;
+  }
+): NewChannelAuditEntry {
+  const { channelId, userId, restriction, ...actor } = entry;
+  const base = { channelId, ...actor, targetType: 'user', targetId: userId } as const;
   return restriction.kind === 'ban'
     ? {
         ...base,
@@ -134,16 +136,13 @@ export function restrictionAudit(entry: {
     : { ...base, action: 'user.shadow_banned', meta: {} };
 }
 
-export function liftAudit(entry: {
-  channelId: string;
-  actorUserId: string;
-  userId: string;
-  kind: RestrictionKind;
-}): NewChannelAuditEntry {
-  const { channelId, actorUserId, userId, kind } = entry;
+export function liftAudit(
+  entry: AuditActor & { channelId: string; userId: string; kind: RestrictionKind }
+): NewChannelAuditEntry {
+  const { channelId, userId, kind, ...actor } = entry;
   return {
     channelId,
-    actorUserId,
+    ...actor,
     action: 'user.restriction_lifted',
     targetType: 'user',
     targetId: userId,

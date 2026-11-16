@@ -17,3 +17,4 @@ export * from './recommendation-feedback';
 export * from './watch-party';
 export * from './channel-team';
 export * from './channel-export';
+export * from './api-token';
