@@ -15,7 +15,7 @@ const registry = createRegistry().provide(provide(Greeter, { greet: (name) => `H
 
 const greeter = registry.get(Greeter);
 if (greeter.ok) greeter.value.greet('Ada');
-else throw new Error(greeter.error.message);
+else throw new Error(`No provider for ${greeter.error.token}`);
 ```
 
 `get` returns a `Result` from `@vp/result`; a token nobody provided is `MissingProvider`, never an exception.

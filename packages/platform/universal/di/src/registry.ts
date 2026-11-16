@@ -15,7 +15,6 @@ export interface Provider<T> extends AnyProvider {
 export interface MissingProvider {
   readonly code: 'MISSING_PROVIDER';
   readonly token: string;
-  readonly message: string;
 }
 
 export interface Registry {
@@ -30,13 +29,7 @@ function registryOf(providers: readonly AnyProvider[]): Registry {
     provide: (...more: readonly AnyProvider[]) => registryOf([...more, ...providers]),
     get: <T>(wanted: Token<T>): Result<T, MissingProvider> => {
       const found = providers.find((p): p is Provider<T> => p.token === wanted);
-      return found
-        ? ok(found.value)
-        : err({
-            code: 'MISSING_PROVIDER',
-            token: wanted.name,
-            message: `No provider for ${wanted.name}`,
-          });
+      return found ? ok(found.value) : err({ code: 'MISSING_PROVIDER', token: wanted.name });
     },
   });
 }

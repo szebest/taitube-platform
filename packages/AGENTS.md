@@ -309,8 +309,11 @@ is deliberate by design — a tier change should be a visible commit, not a one-
 
 Stated plainly so nobody assumes more coverage than exists:
 
-- **Deep relative imports across package roots** (`../../other-package/src/thing`) bypass the manifest.
-  Nothing in the repo does this today; it is not currently asserted. The one declared exception is
+- **Deep imports into a platform package are asserted.** `platform-no-deep-imports.test.ts` fails on an
+  import of `@kit/<pkg>/src/...` or any subpath the target's `exports` does not list, anywhere in the repository,
+  and on a relative import that leaves a platform package's root. A relative import across the roots of two
+  app packages (`../../other-package/src/thing`) bypasses the manifest and is still not asserted; nothing in the
+  repo does it today. The one declared exception is
   `packages/client/workbench/src/web-providers.tsx`, the only file that imports the web app's source by relative
   path: the workbench already reads every app's stories, and a story of a web component needs the web app's own
   providers.

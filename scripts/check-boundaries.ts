@@ -47,6 +47,12 @@ export function pendingPlatformMoves(
   );
 }
 
+export const dependsOnAppPackage = (
+  pkg: Pick<Pkg, 'dir'>,
+  dep: Pick<Pkg, 'dir' | 'name'>,
+  pendingMoves: ReadonlySet<string>
+): boolean => isPlatform(pkg.dir) && !isPlatform(dep.dir) && !pendingMoves.has(dep.name);
+
 export function checkBoundaries(
   packages: Pkg[] = load(),
   pendingMoves: ReadonlySet<string> = pendingPlatformMoves()
@@ -77,7 +83,7 @@ export function checkBoundaries(
       if (!dep) continue;
       const how = dev ? 'dev-depends on' : 'depends on';
 
-      if (isPlatform(pkg.dir) && !isPlatform(dep.dir) && !pendingMoves.has(dep.name)) {
+      if (dependsOnAppPackage(pkg, dep, pendingMoves)) {
         errors.push(
           `${pkg.name} (platform) ${how} ${dep.name} (app) — a platform package depends, peer-depends and dev-depends only on platform packages`
         );

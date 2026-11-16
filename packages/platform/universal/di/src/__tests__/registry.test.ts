@@ -13,9 +13,7 @@ describe('@kit/di: registry', () => {
   });
 
   it('returns MissingProvider, never throws, for a token nobody provided', () => {
-    expect(registryWith(8080).get(Host)).toEqual(
-      err({ code: 'MISSING_PROVIDER', token: 'Host', message: 'No provider for Host' })
-    );
+    expect(registryWith(8080).get(Host)).toEqual(err({ code: 'MISSING_PROVIDER', token: 'Host' }));
   });
 
   it('resolves by identity, so two tokens sharing a name never collide', () => {
