@@ -1,6 +1,8 @@
+import * as schema from '@vp/db';
 import { expectOk } from '@vp/testing/result';
 import { OWNER_ID, publicVideo, VIDEO_IDS } from './fixtures';
-import { finding, MODERATOR_A, screening } from './screening-fixtures';
+import { SHARED_MILLISECOND } from './keyset-walk';
+import { finding, MODERATOR_A, SCREENING_ID, screening } from './screening-fixtures';
 import type { RepositoriesSubject } from './subjects';
 
 const FLAG_ID = '00000000-0000-7000-8000-0000000005d1';
@@ -143,12 +145,18 @@ export function describeScreeningCases(subject: () => RepositoriesSubject): void
       expect(decided.map(({ screening: row }) => row.id)).toEqual([SECOND_ID]);
     });
 
-    it('resumes after a cursor', async () => {
+    it('resumes after a cursor within one millisecond', async () => {
       await seed();
       await screenings().record(screening());
       await screenings().record(
         screening({ id: SECOND_ID, videoId: VIDEO_IDS.b, sourceChecksum: 'sum-2' })
       );
+      await subject().spreadAcrossMicroseconds({
+        stamp: schema.videoScreenings.createdAt,
+        key: schema.videoScreenings.id,
+        ids: [SCREENING_ID, SECOND_ID],
+        at: SHARED_MILLISECOND,
+      });
       const [newest, older] = expectOk(await screenings().listCases({ cursor: null, limit: 10 }));
       if (!(newest && older)) throw new Error('two cases expected');
 

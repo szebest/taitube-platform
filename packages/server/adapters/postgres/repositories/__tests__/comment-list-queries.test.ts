@@ -18,7 +18,7 @@ describe('comment list queries', () => {
     expect(sql).toContain('"video_comments"."author_id" = $1');
     expect(sql).toContain('"video_comments"."deleted_at" IS NULL');
     expect(sql).toContain(
-      'order by "video_comments"."created_at" desc, "video_comments"."id" desc'
+      `order by date_trunc('milliseconds', "video_comments"."created_at") desc, "video_comments"."id" desc`
     );
     expect(params).toContain('viewer-1');
     expect(params).toContain(25);

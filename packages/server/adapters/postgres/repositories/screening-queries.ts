@@ -8,6 +8,7 @@ import type {
 import * as schema from '@vp/db';
 import { FLAG_ONLY_CHECKSUM, type ScreeningDecision, mergeFlag } from '@vp/domain';
 import { type SQL, and, desc, eq, inArray, isNull, sql } from 'drizzle-orm';
+import { msTimestamp } from '../scopes/index';
 import type { PostgresDatabase } from './types';
 
 const { videoScreenings: vs, screeningAppeals: sa } = schema;
@@ -17,6 +18,7 @@ export type Tx = PostgresDatabase;
 const hasFlags = sql`${vs.flags} <> '[]'::jsonb`;
 const isCase = sql`(${vs.outcome} = 'HOLD' OR ${hasFlags})`;
 const isOpen = sql<boolean>`((${vs.decision} IS NULL AND ${vs.outcome} = 'HOLD') OR (${hasFlags} AND ${vs.flagsClearedAt} IS NULL))`;
+const screenedAt = msTimestamp(vs.createdAt);
 
 function caseScope(options: ListScreeningCasesOptions): SQL {
   const { cursor, state } = options;
@@ -31,7 +33,7 @@ function caseScope(options: ListScreeningCasesOptions): SQL {
 function cursorScope(cursor: ScreeningCaseCursor | null): SQL | undefined {
   if (!cursor) return undefined;
   const { open, createdAt, id } = cursor;
-  return sql`(${isOpen}, ${vs.createdAt}, ${vs.id}) < (${open}::boolean, ${createdAt.toISOString()}::timestamptz, ${id}::uuid)`;
+  return sql`(${isOpen}, ${screenedAt}, ${vs.id}) < (${open}::boolean, ${createdAt.toISOString()}::timestamptz, ${id}::uuid)`;
 }
 
 export async function latestOf(db: Tx, videoId: string): Promise<ScreeningRecord | undefined> {
@@ -122,7 +124,7 @@ export async function selectCases(
     .select()
     .from(vs)
     .where(caseScope(options))
-    .orderBy(desc(isOpen), desc(vs.createdAt), desc(vs.id))
+    .orderBy(desc(isOpen), desc(screenedAt), desc(vs.id))
     .limit(options.limit + 1);
 
   const videoIds = [...new Set(screenings.map((screening) => screening.videoId))];

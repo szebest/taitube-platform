@@ -15,7 +15,10 @@ import { UNMODERATED } from './comment-row';
 const CREATED_AT = new Date('2026-03-01T12:00:00.000Z');
 const CURSOR = { isPinned: true, likeCount: 4, createdAt: CREATED_AT, id: 'c-9' };
 
-const col = (name: string) => `"video_comments"."${name}"`;
+const col = (name: string) =>
+  name === 'created_at'
+    ? `date_trunc('milliseconds', "video_comments"."created_at")`
+    : `"video_comments"."${name}"`;
 
 describe('adapters/postgres: comment thread SQL query', () => {
   it.each([

@@ -1,7 +1,9 @@
 import type { CommentReportRepositoryPort } from '@vp/core/repositories';
+import * as schema from '@vp/db';
 import { expectOk } from '@vp/testing/result';
 import { C, seedComment, type CommentContractContext } from './comment-contract-context';
 import { OTHER_OWNER_ID, OWNER_ID, VIDEO_IDS, idsOf, publicVideo, seedOwners } from './fixtures';
+import { SHARED_MILLISECOND } from './keyset-walk';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
 const R = {
@@ -90,9 +92,15 @@ export function describeCommentReportRepositoryContract(
       });
     });
 
-    it('resumes after a cursor and flags a removed comment', async () => {
+    it('resumes after a cursor within one millisecond and flags a removed comment', async () => {
       await report(R.first, C.old);
       await report(R.second, C.fresh);
+      await subject.spreadAcrossMicroseconds({
+        stamp: schema.commentReports.createdAt,
+        key: schema.commentReports.id,
+        ids: [R.first, R.second],
+        at: SHARED_MILLISECOND,
+      });
       expectOk(await subject.repositories.comments.remove({ id: C.old, videoId: VIDEO_IDS.a }));
 
       const page = expectOk(await reports.list({ cursor: null, limit: 1 }));

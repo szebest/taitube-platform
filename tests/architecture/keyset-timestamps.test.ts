@@ -1,169 +1,7 @@
-import ts from 'typescript';
-import { parseSource } from './parsed-sources';
+import { violations } from './keyset-timestamps-rules';
 import { productionSources, read } from './repo-files';
 
-/**
- * `now()` stamps microseconds and a keyset cursor round-trips through a JS `Date`, which keeps
- * milliseconds, so a walk ordered or compared on a raw timestamp column skips the rows that share
- * the cursor row's millisecond. Its sort key and the `orderBy` beside it go through `msTimestamp`.
- */
-const KEYSET_CALLS = new Set(['keysetBefore', 'keysetPast']);
-const TRUNCATION = new Set(['msTimestamp']);
-const SCHEMA_MODULE = '@vp/db';
 const POSTGRES = 'packages/server/adapters/postgres/';
-
-interface FileScope {
-  /** `schema` in `import * as schema from '@vp/db'`. */
-  namespaces: Set<string>;
-  /** Tables imported by name, or destructured from a namespace: `const { videos: v } = schema`. */
-  tables: Set<string>;
-  /** What a name in the file stands for: a `const` initializer or a function's returned values. */
-  meanings: Map<string, ts.Node[]>;
-}
-
-function returnedValues(fn: ts.FunctionLikeDeclaration): ts.Node[] {
-  if (!fn.body) return [];
-  if (!ts.isBlock(fn.body)) return [fn.body];
-  const values: ts.Node[] = [];
-  const visit = (node: ts.Node): void => {
-    if (ts.isFunctionLike(node)) return;
-    if (ts.isReturnStatement(node) && node.expression) values.push(node.expression);
-    ts.forEachChild(node, visit);
-  };
-  ts.forEachChild(fn.body, visit);
-  return values;
-}
-
-function scopeOf(sourceFile: ts.SourceFile): FileScope {
-  const scope: FileScope = { namespaces: new Set(), tables: new Set(), meanings: new Map() };
-  const mean = (name: string, nodes: ts.Node[]) =>
-    scope.meanings.set(name, [...(scope.meanings.get(name) ?? []), ...nodes]);
-
-  const visit = (node: ts.Node): void => {
-    if (
-      ts.isImportDeclaration(node) &&
-      ts.isStringLiteral(node.moduleSpecifier) &&
-      node.moduleSpecifier.text === SCHEMA_MODULE
-    ) {
-      const bindings = node.importClause?.namedBindings;
-      if (bindings && ts.isNamespaceImport(bindings)) scope.namespaces.add(bindings.name.text);
-      if (bindings && ts.isNamedImports(bindings)) {
-        for (const element of bindings.elements) scope.tables.add(element.name.text);
-      }
-    }
-    if (ts.isVariableDeclaration(node) && node.initializer) {
-      const { name, initializer } = node;
-      if (ts.isIdentifier(name)) {
-        mean(
-          name.text,
-          [
-            ts.isArrowFunction(initializer) || ts.isFunctionExpression(initializer)
-              ? returnedValues(initializer)
-              : [initializer],
-          ].flat()
-        );
-      }
-      if (
-        ts.isObjectBindingPattern(name) &&
-        ts.isIdentifier(initializer) &&
-        scope.namespaces.has(initializer.text)
-      ) {
-        for (const element of name.elements) {
-          if (ts.isIdentifier(element.name)) scope.tables.add(element.name.text);
-        }
-      }
-    }
-    if (ts.isFunctionDeclaration(node) && node.name) mean(node.name.text, returnedValues(node));
-    ts.forEachChild(node, visit);
-  };
-  visit(sourceFile);
-  return scope;
-}
-
-function isTable(node: ts.Expression, scope: FileScope): boolean {
-  if (ts.isIdentifier(node)) return scope.tables.has(node.text);
-  return (
-    ts.isPropertyAccessExpression(node) &&
-    ts.isIdentifier(node.expression) &&
-    scope.namespaces.has(node.expression.text)
-  );
-}
-
-function isCallTo(node: ts.Node, names: ReadonlySet<string>): node is ts.CallExpression {
-  return (
-    ts.isCallExpression(node) && ts.isIdentifier(node.expression) && names.has(node.expression.text)
-  );
-}
-
-/**
- * The nodes under `root` that `matches`, following each name to what it stands for in the file,
- * and never into a `msTimestamp(...)`, which is what makes a timestamp safe to page on.
- */
-function reach(root: ts.Node, scope: FileScope, matches: (node: ts.Node) => boolean): ts.Node[] {
-  const found: ts.Node[] = [];
-  const followed = new Set<string>();
-  const visit = (node: ts.Node): void => {
-    if (isCallTo(node, TRUNCATION)) return;
-    if (matches(node)) {
-      found.push(node);
-      return;
-    }
-    if (ts.isPropertyAccessExpression(node)) {
-      visit(node.expression);
-      return;
-    }
-    if (ts.isIdentifier(node) && !followed.has(node.text)) {
-      followed.add(node.text);
-      for (const meaning of scope.meanings.get(node.text) ?? []) visit(meaning);
-      return;
-    }
-    ts.forEachChild(node, visit);
-  };
-  visit(root);
-  return found;
-}
-
-function rawTimestamps(root: ts.Node, scope: FileScope): ts.Node[] {
-  return reach(
-    root,
-    scope,
-    (node) =>
-      ts.isPropertyAccessExpression(node) &&
-      /At$/.test(node.name.text) &&
-      isTable(node.expression, scope)
-  );
-}
-
-function violations(file: string, source: string): string[] {
-  const sourceFile = parseSource(file, source);
-  const scope = scopeOf(sourceFile);
-  const found: string[] = [];
-  const report = (node: ts.Node, rule: string, columns: ts.Node[]) => {
-    const { line } = sourceFile.getLineAndCharacterOfPosition(node.getStart());
-    const names = columns.map((column) => column.getText()).join(', ');
-    found.push(`${file}:${line + 1}: ${rule}: ${names}`);
-  };
-
-  const visit = (node: ts.Node): void => {
-    if (isCallTo(node, KEYSET_CALLS)) {
-      const [sortKey] = node.arguments;
-      const raw = sortKey ? rawTimestamps(sortKey, scope) : [];
-      if (raw.length > 0) report(node, 'pages on a raw timestamp', raw);
-    }
-    if (
-      ts.isCallExpression(node) &&
-      ts.isPropertyAccessExpression(node.expression) &&
-      node.expression.name.text === 'orderBy' &&
-      reach(node.expression.expression, scope, (inner) => isCallTo(inner, KEYSET_CALLS)).length > 0
-    ) {
-      const raw = node.arguments.flatMap((argument) => rawTimestamps(argument, scope));
-      if (raw.length > 0) report(node, 'orders a keyset walk on a raw timestamp', raw);
-    }
-    ts.forEachChild(node, visit);
-  };
-  visit(sourceFile);
-  return found;
-}
 
 const PREAMBLE = [
   "import * as schema from '@vp/db';",
@@ -216,6 +54,62 @@ describe('architecture: keyset walks page on millisecond timestamps', () => {
   });
 
   it.each([
+    {
+      shape: 'a row value beside a null test',
+      body: [
+        'const isOpen = sql`(${v.deletedAt} IS NULL)`;',
+        'function after(cursor) {',
+        '  const { open, createdAt, id } = cursor;',
+        '  return sql`(${isOpen}, ${v.createdAt}, ${v.id}) < (${open}::boolean, ${createdAt.toISOString()}::timestamptz, ${id}::uuid)`;',
+        '}',
+      ].join('\n'),
+    },
+    {
+      shape: 'one timestamp',
+      body: 'const after = (cursor) => sql`${v.updatedAt} >= ${cursor.updatedAt}`;',
+    },
+    {
+      shape: 'sort keys handed to a local row comparison',
+      body: [
+        'const CREATED = { column: v.createdAt, at: (k) => sql`${k.createdAt.toISOString()}::timestamptz` };',
+        'function rowCompare(keys, op, cursor) {',
+        '  const columns = sql.join(keys.map((key) => key.column), sql`, `);',
+        '  const values = sql.join(keys.map((key) => key.at(cursor)), sql`, `);',
+        '  return sql`(${columns}) ${sql.raw(op)} (${values})`;',
+        '}',
+        "const after = (cursor) => rowCompare([CREATED], '<', cursor);",
+      ].join('\n'),
+    },
+  ])('fires on a hand-written cursor comparison of $shape', ({ body }) => {
+    expect(ruleNames(body)).toEqual(['compares a raw timestamp to a cursor']);
+  });
+
+  it('fires on an orderBy beside a hand-written cursor comparison', () => {
+    const body = [
+      'const after = (cursor) => sql`(${msTimestamp(v.createdAt)}, ${v.id}) < (${cursor.createdAt}, ${cursor.id})`;',
+      'db.select().from(v).where(after(cursor)).orderBy(desc(v.createdAt), desc(v.id));',
+    ].join('\n');
+
+    expect(ruleNames(body)).toEqual(['orders a keyset walk on a raw timestamp']);
+  });
+
+  it.each([
+    {
+      shape: 'a truncated hand-written comparison and order',
+      body: [
+        'const at = msTimestamp(v.createdAt);',
+        'const after = (cursor) => sql`(${at}, ${v.id}) < (${cursor.createdAt}, ${cursor.id})`;',
+        'db.select().from(v).where(after(cursor)).orderBy(desc(at), desc(v.id));',
+      ].join('\n'),
+    },
+    {
+      shape: 'a cutoff from the clock',
+      body: 'db.select().from(v).where(sql`COALESCE(${v.publishedAt}, ${v.updatedAt}) < ${cutoff.toISOString()}::timestamptz`).orderBy(asc(v.updatedAt));',
+    },
+    {
+      shape: 'a row compared with another row',
+      body: 'const answered = sql`(answer.created_at, answer.id) > (${v.createdAt}, ${v.id})`;',
+    },
     {
       shape: 'a truncated timestamp in the scope and the order',
       body: 'db.select().from(v).where(keysetBefore(msTimestamp(v.createdAt), v.id, cursor)).orderBy(desc(msTimestamp(v.createdAt)), desc(v.id));',
