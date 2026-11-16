@@ -41,6 +41,7 @@ export * from './in-memory-video-view-repository';
 export * from './in-memory-watch-history-repository';
 export * from './in-memory-webhook-repository';
 export * from './in-memory-data-export-repository';
+export * from './in-memory-api-token-repository';
 export * from './in-memory-export-row-repository';
 export * from './public-feed-query';
 export * from './types';

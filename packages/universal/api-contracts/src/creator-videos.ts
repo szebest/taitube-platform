@@ -79,6 +79,7 @@ const CREATOR_VIDEO_ERRORS = {
 export const listCreatorVideos = defineEndpoint({
   method: 'GET',
   path: '/v1/creator/videos',
+  scope: 'videos:write',
   channelScoped: true,
   tag: 'Creator Studio',
   summary: 'List the caller video library',
@@ -96,6 +97,7 @@ export const listCreatorVideos = defineEndpoint({
 export const updateCreatorVideo = defineEndpoint({
   method: 'PATCH',
   path: '/v1/creator/videos/:id',
+  scope: 'videos:write',
   tag: 'Creator Studio',
   summary: 'Edit video metadata, tags, category and thumbnail',
   description:

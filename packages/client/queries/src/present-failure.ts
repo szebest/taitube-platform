@@ -29,6 +29,7 @@ function kindOf(code: ErrorCode): ErrorStateKind {
     case ErrorCodes.PICK_NOT_FOUND:
     case ErrorCodes.WEBHOOK_NOT_FOUND:
     case ErrorCodes.EXPORT_NOT_FOUND:
+    case ErrorCodes.API_TOKEN_NOT_FOUND:
     case ErrorCodes.LIVE_STREAM_NOT_FOUND:
     case ErrorCodes.WATCH_PARTY_NOT_FOUND:
     case ErrorCodes.WATCH_PARTY_ROLE_NOT_FOUND:
@@ -39,6 +40,7 @@ function kindOf(code: ErrorCode): ErrorStateKind {
       return 'not-found';
     case ErrorCodes.FORBIDDEN:
     case ErrorCodes.CHANNEL_MEMBERSHIP_REQUIRED:
+    case ErrorCodes.API_TOKEN_SCOPE_MISSING:
     case ErrorCodes.LIVE_CHAT_SUBSCRIBERS_ONLY:
     case ErrorCodes.COMMENTS_BANNED:
     case ErrorCodes.COMMENTS_DISABLED:
@@ -122,6 +124,8 @@ function kindOf(code: ErrorCode): ErrorStateKind {
     case ErrorCodes.WEBHOOK_LIMIT_REACHED:
     case ErrorCodes.EXPORT_IN_PROGRESS:
     case ErrorCodes.EXPORT_TOO_LARGE:
+    case ErrorCodes.API_TOKEN_LIMIT_REACHED:
+    case ErrorCodes.API_TOKEN_WITH_SESSION:
     case ErrorCodes.WEBHOOK_DELIVERY_FAILED:
     case ErrorCodes.WEBHOOK_DELIVERY_REJECTED:
     case ErrorCodes.OEMBED_URL_UNSUPPORTED:

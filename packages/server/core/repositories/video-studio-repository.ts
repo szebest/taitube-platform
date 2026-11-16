@@ -25,6 +25,8 @@ export interface UpdateStudioMetadataOptions {
   expectedVersion: number;
   patch: StudioMetadataPatch;
   userId: string;
+  /** The personal access token the edit was made with, named in the audit entries beside `userId`. */
+  tokenId?: string;
   /**
    * Audited as `video.updated` by `userId` on the channel of the video owner, in the edit transaction,
    * unless empty; a `commentsEnabled` in the patch is audited on its own as `video.comments.toggled`.

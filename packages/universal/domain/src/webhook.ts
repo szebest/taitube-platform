@@ -1,5 +1,10 @@
 /** `live.started` is accepted and stored; nothing emits it until a live backend exists. */
-export const WEBHOOK_EVENTS = ['video.ready', 'live.started', 'export.ready'] as const;
+export const WEBHOOK_EVENTS = [
+  'video.ready',
+  'live.started',
+  'export.ready',
+  'comment.held',
+] as const;
 
 export type WebhookEvent = (typeof WEBHOOK_EVENTS)[number];
 

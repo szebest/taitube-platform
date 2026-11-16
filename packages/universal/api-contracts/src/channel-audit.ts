@@ -38,6 +38,10 @@ function auditEntry<A extends string, T extends string, M extends z.ZodType>(
     targetId: z.string(),
     meta,
     actorUserId: z.uuid().nullable().describe('null once the actor deleted their account'),
+    actorTokenId: z
+      .uuid()
+      .nullable()
+      .describe('The personal access token the actor used; null for a session or a deleted token'),
     actor: ProfileSchema.nullable(),
     createdAt: z.iso.datetime(),
   });

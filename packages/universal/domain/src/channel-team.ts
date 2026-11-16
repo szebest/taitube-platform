@@ -244,16 +244,20 @@ const AUDIT_ACTIONS: Record<ChannelAuditAction, true> = {
 
 export const CHANNEL_AUDIT_ACTIONS = Object.keys(AUDIT_ACTIONS) as ChannelAuditAction[];
 
-/** An audit row before the store stamps its id and time; `actorUserId` is who acted, never "the channel". */
-export type NewChannelAuditEntry = ChannelAuditEvent & {
-  channelId: string;
+/** Who acted, never "the channel"; a write made with a personal access token also names the token. */
+export interface AuditActor {
   actorUserId: string;
-};
+  actorTokenId?: string;
+}
 
-/** The actor is `null` once their account is deleted; the row outlives them. */
+/** An audit row before the store stamps its id and time. */
+export type NewChannelAuditEntry = ChannelAuditEvent & AuditActor & { channelId: string };
+
+/** The actor is `null` once their account is deleted, the token once it is; the row outlives both. */
 export type ChannelAuditEntry = ChannelAuditEvent & {
   id: string;
   channelId: string;
   actorUserId: string | null;
+  actorTokenId: string | null;
   createdAt: Date;
 };

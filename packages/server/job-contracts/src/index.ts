@@ -6,6 +6,7 @@ import { LadderEntry, RENDITIONS, type RenditionName } from './ladder';
 export * from './captions-flow';
 export * from './channel-images';
 export * from './chunks';
+export * from './comment-held';
 export * from './exports';
 export * from './ladder';
 export * from './live';

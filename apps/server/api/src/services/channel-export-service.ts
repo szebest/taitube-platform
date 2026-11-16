@@ -22,6 +22,7 @@ import type { InvalidCursor, Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
 import { type Result, err, isErr, map, ok } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
+import { auditActor } from './audit-actor';
 import { createdAtCursorPayload, decodeCreatedAtCursor } from './cursor';
 
 export interface ChannelExportServiceDeps {
@@ -41,11 +42,11 @@ export interface ChannelExportQuery {
 function auditOf(
   action: 'export.requested' | 'export.deleted',
   { id, channelId, kind, format }: Pick<DataExport, 'id' | 'channelId' | 'kind' | 'format'>,
-  actorUserId: string
+  actor: UserContext
 ): NewChannelAuditEntry {
   return {
     channelId,
-    actorUserId,
+    ...auditActor(actor),
     action,
     targetType: 'export',
     targetId: id,
@@ -90,7 +91,7 @@ export class ChannelExportService {
       params,
       format,
     };
-    const created = await exports.create(request, auditOf('export.requested', request, user.id));
+    const created = await exports.create(request, auditOf('export.requested', request, user));
     if (isErr(created)) return created;
     const outcome = created.value;
     return outcome.type === 'created' ? ok(toView(outcome.dataExport)) : err(exportInProgress());
@@ -173,10 +174,7 @@ export class ChannelExportService {
       const deleted = await storage.deleteObject(bucket, objectKey);
       if (isErr(deleted)) return deleted;
     }
-    const removed = await exports.remove(
-      exportId,
-      auditOf('export.deleted', allowed.value, user.id)
-    );
+    const removed = await exports.remove(exportId, auditOf('export.deleted', allowed.value, user));
     return map(removed, () => undefined);
   }
 }

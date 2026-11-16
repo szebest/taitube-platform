@@ -28,6 +28,7 @@ import type { InvalidCursor, Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
 import { type Result, err, ignore, isErr, map, ok } from '@vp/result';
 import { type InvalidRestriction, invalidRestriction, validateBan } from '@vp/validation';
+import { auditActor } from './audit-actor';
 import { type Profiles, profilesOf } from './channel-team-views';
 import { createdAtCursorPayload, decodeCreatedAtCursor } from './cursor';
 
@@ -136,7 +137,7 @@ export class ChannelRestrictionService {
     const written = await restrictions.apply(restriction.value, {
       audit: restrictionAudit({
         channelId,
-        actorUserId: user.id,
+        ...auditActor(user),
         userId: targetUserId,
         restriction: restriction.value,
       }),
@@ -185,7 +186,7 @@ export class ChannelRestrictionService {
       targetUserId,
       liftAudit({
         channelId,
-        actorUserId: user.id,
+        ...auditActor(user),
         userId: targetUserId,
         kind: current.value.kind,
       })

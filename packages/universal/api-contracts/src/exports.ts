@@ -163,6 +163,7 @@ const WHO =
 export const createChannelExport = defineEndpoint({
   method: 'POST',
   path: '/v1/me/channel/exports',
+  scope: 'exports:create',
   channelScoped: true,
   tag: TAG,
   summary: 'Request an export of channel data',
@@ -180,6 +181,7 @@ export const createChannelExport = defineEndpoint({
 export const listChannelExports = defineEndpoint({
   method: 'GET',
   path: '/v1/me/channel/exports',
+  scope: 'exports:read',
   channelScoped: true,
   tag: TAG,
   summary: 'List the channel exports',
@@ -193,6 +195,7 @@ export const listChannelExports = defineEndpoint({
 export const getChannelExport = defineEndpoint({
   method: 'GET',
   path: '/v1/me/channel/exports/:id',
+  scope: 'exports:read',
   channelScoped: true,
   tag: TAG,
   summary: 'Read one export',
@@ -206,6 +209,7 @@ export const getChannelExport = defineEndpoint({
 export const deleteChannelExport = defineEndpoint({
   method: 'DELETE',
   path: '/v1/me/channel/exports/:id',
+  scope: 'exports:create',
   channelScoped: true,
   tag: TAG,
   summary: 'Delete an export and its file',

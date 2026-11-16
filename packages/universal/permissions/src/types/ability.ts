@@ -1,5 +1,6 @@
 import type { ForcedSubject, InferSubjects, MongoAbility } from '@casl/ability';
 import type { AnalyticsResource } from './analytics';
+import type { ApiTokenResource } from './api-token';
 import type { CaptionResource } from './caption';
 import type { CategoryResource } from './category';
 import type { ChannelResource } from './channel';
@@ -67,6 +68,7 @@ export type AppSubjects =
       | (ChannelUserResource & ForcedSubject<'ChannelUser'>)
       | (CommentSettingsResource & ForcedSubject<'CommentSettings'>)
       | (ChannelExportResource & ForcedSubject<'ChannelExport'>)
+      | (ApiTokenResource & ForcedSubject<'ApiToken'>)
     >
   | 'Video'
   | 'Upload'
@@ -90,6 +92,7 @@ export type AppSubjects =
   | 'ChannelAudit'
   | 'ChannelUser'
   | 'CommentSettings'
-  | 'ChannelExport';
+  | 'ChannelExport'
+  | 'ApiToken';
 
 export type AppAbility = MongoAbility<[AppAction, AppSubjects]>;

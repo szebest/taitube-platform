@@ -83,6 +83,7 @@ export const roleChanged = (id: string): ChannelAuditPageView['items'][number] =
   targetId: EDITOR_ID,
   meta: { from: 'editor', to: 'manager' },
   actorUserId: OWNER_ID,
+  actorTokenId: null,
   actor: profile('creator', 'The Creator'),
   createdAt: CREATED_AT,
 });

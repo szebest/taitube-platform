@@ -10,6 +10,7 @@ const id = (n: number) => `0190c3a0-5e1d-7000-8000-0000000ee0${String(n).padStar
 const base = {
   targetId: EDITOR_ID,
   actorUserId: null,
+  actorTokenId: null,
   actor: null,
   createdAt: '2026-01-01T00:00:00.000Z',
 } as const;

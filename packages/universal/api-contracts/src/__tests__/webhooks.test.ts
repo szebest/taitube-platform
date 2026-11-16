@@ -17,6 +17,11 @@ describe('packages/api-contracts: webhooks', () => {
       body: { url: 'https://x.test/h', events: ['video.ready', 'live.started'] },
       ok: true,
     },
+    {
+      scenario: 'a held comment',
+      body: { url: 'https://x.test/h', events: ['comment.held'] },
+      ok: true,
+    },
     { scenario: 'no events', body: { url: 'https://x.test/h', events: [] }, ok: false },
     {
       scenario: 'a reserved event',

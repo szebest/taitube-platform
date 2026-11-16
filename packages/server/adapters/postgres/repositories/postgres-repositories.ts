@@ -16,10 +16,12 @@ import {
   createCommentRepositories,
 } from './postgres-comment-repositories';
 import { connectPostgres, type PostgresRepositoriesConfig } from './postgres-connection';
-import { PostgresDataExportRepository } from './postgres-data-export-repository';
+import {
+  type CreatorDataRepositories,
+  createCreatorDataRepositories,
+} from './postgres-creator-data-repositories';
 import { PostgresDlqRepository } from './postgres-dlq-repository';
 import { PostgresEventRepository } from './postgres-event-repository';
-import { PostgresExportRowRepository } from './postgres-export-row-repository';
 import { PostgresFingerprintRepository } from './postgres-fingerprint-repository';
 import { PostgresLiveChatRepository } from './postgres-live-chat-repository';
 import { PostgresLiveStreamRepository } from './postgres-live-stream-repository';
@@ -67,8 +69,9 @@ export class PostgresRepositories implements Repositories {
   readonly channelMembers: PostgresChannelMemberRepository;
   readonly channelInvites: PostgresChannelInviteRepository;
   readonly channelAudit: PostgresChannelAuditRepository;
-  readonly dataExports: PostgresDataExportRepository;
-  readonly exportRows: PostgresExportRowRepository;
+  declare readonly dataExports: CreatorDataRepositories['dataExports'];
+  declare readonly exportRows: CreatorDataRepositories['exportRows'];
+  declare readonly apiTokens: CreatorDataRepositories['apiTokens'];
   declare readonly commentSettings: CommentRepositories['commentSettings'];
   declare readonly channelUserRestrictions: CommentRepositories['channelUserRestrictions'];
   declare readonly trustedCommenters: CommentRepositories['trustedCommenters'];
@@ -131,8 +134,7 @@ export class PostgresRepositories implements Repositories {
     this.channelMembers = new PostgresChannelMemberRepository(db);
     this.channelInvites = new PostgresChannelInviteRepository(db);
     this.channelAudit = new PostgresChannelAuditRepository(db);
-    this.dataExports = new PostgresDataExportRepository(db);
-    this.exportRows = new PostgresExportRowRepository(db);
+    Object.assign(this, createCreatorDataRepositories(db));
     Object.assign(this, createCommentRepositories(db));
     this.videoReactions = new PostgresVideoReactionRepository(db);
     this.subscriptions = new PostgresSubscriptionRepository(db);

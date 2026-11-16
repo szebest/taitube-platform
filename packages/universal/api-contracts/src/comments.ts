@@ -97,6 +97,7 @@ const ListCommentsQuerySchema = z.object({
 export const listVideoComments = defineEndpoint({
   method: 'GET',
   path: '/v1/videos/:id/comments',
+  scope: 'comments:read',
   tag: 'Comments',
   summary: 'List top-level comments of a video',
   description:
@@ -114,6 +115,7 @@ export const listVideoComments = defineEndpoint({
 export const listCommentReplies = defineEndpoint({
   method: 'GET',
   path: '/v1/comments/:id/replies',
+  scope: 'comments:read',
   tag: 'Comments',
   summary: 'List replies to a comment',
   description: 'Replies under a root comment, oldest first, keyset-paginated.',
@@ -184,6 +186,7 @@ export const updateComment = defineEndpoint({
 export const deleteComment = defineEndpoint({
   method: 'DELETE',
   path: '/v1/comments/:id',
+  scope: 'comments:moderate',
   tag: 'Comments',
   summary: 'Delete a comment',
   description:

@@ -16,6 +16,7 @@ import {
   uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
+import { apiTokens } from './api-tokens-schema';
 import { listOf, timestamptz } from './columns';
 import { channels, users } from './schema';
 
@@ -79,6 +80,7 @@ export const channelAuditLog = pgTable(
       .notNull()
       .references(() => channels.id, { onDelete: 'cascade' }),
     actorUserId: uuid('actor_user_id').references(() => users.id, { onDelete: 'set null' }),
+    actorTokenId: uuid('actor_token_id').references(() => apiTokens.id, { onDelete: 'set null' }),
     action: text('action').$type<ChannelAuditAction>().notNull(),
     targetType: text('target_type').notNull(),
     targetId: uuid('target_id').notNull(),
