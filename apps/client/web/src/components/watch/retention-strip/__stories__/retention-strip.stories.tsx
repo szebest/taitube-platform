@@ -16,7 +16,7 @@ const frame: Decorator = (Story) => (
 const meta = {
   title: 'Web/RetentionStrip',
   component: RetentionStripRoot,
-  args: { values: CURVE, 'aria-label': 'Retention' },
+  args: { values: CURVE, role: 'group', 'aria-label': 'Retention' },
   decorators: [frame],
 } satisfies Meta<typeof RetentionStripRoot>;
 
