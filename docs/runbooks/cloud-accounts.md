@@ -157,10 +157,14 @@ No credential is committed to git, encrypted or not:
 1. **Install External Secrets Operator** and point a `ClusterSecretStore` named `vp-secret-store` at your
    secret manager. The repo holds no credential: `infra/k8s/overlays/cloud/external-secret.yaml` names the
    keys the store must hold under `video-pipeline/<KEY>` (see `infra/k8s/overlays/cloud/README.md`).
-2. **Deploying** needs no decryption step:
+2. **Deploying** needs no decryption step. List what the environment expects and what your
+   `.secrets/production.env` lacks (names only), then plan and deploy:
    ```bash
-   kubectl kustomize infra/k8s/overlays/cloud | kubectl apply -f -
+   make secrets-check ENV=production
+   make deploy-plan ENV=production TAG=v1.2.3
+   make deploy ENV=production TAG=v1.2.3 CONFIRM=production
    ```
+   [docs/DEPLOYMENT.md](../DEPLOYMENT.md) covers the environments, the gates and the first deploy on Hetzner.
 
 ---
 
@@ -177,5 +181,6 @@ Print or copy this checklist when provisioning:
 - [ ] `terraform.tfvars` created from `infra/terraform/terraform.tfvars.example` and filled in
 - [ ] `terraform plan` executed with 0 errors
 - [ ] `terraform apply` completed; outputs saved
-- [ ] Cloud secrets stored in the secret manager behind `vp-secret-store`
+- [ ] Cloud secrets stored in the secret manager behind `vp-secret-store`, and `make secrets-check ENV=production` is clean
+- [ ] `make deploy-preflight ENV=production TAG=<tag>` is clean (see the [go-live checklist](../DEPLOYMENT.md#go-live-checklist))
 - [ ] R2 live compatibility test executed: `STORAGE_E2E_R2=1 pnpm test`

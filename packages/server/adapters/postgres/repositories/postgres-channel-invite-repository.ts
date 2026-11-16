@@ -16,7 +16,7 @@ import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { teamInviteOutbox } from '@vp/job-contracts';
 import { fromPromise, type Result } from '@vp/result';
 import { and, asc, desc, eq, gt, inArray, lte, sql } from 'drizzle-orm';
-import { keysetBefore } from '../scopes/index';
+import { keysetBefore, msTimestamp } from '../scopes/index';
 import { appendChannelAudit } from './channel-audit-writes';
 import { enqueueNotificationJobs } from './notification-jobs';
 import type { PostgresDatabase } from './types';
@@ -126,10 +126,14 @@ export class PostgresChannelInviteRepository implements ChannelInviteRepositoryP
               eq(i.inviteeUserId, inviteeUserId),
               eq(i.status, 'pending'),
               gt(i.expiresAt, sql`now()`),
-              keysetBefore(i.createdAt, i.id, cursor && { sort: cursor.createdAt, tie: cursor.id })
+              keysetBefore(
+                msTimestamp(i.createdAt),
+                i.id,
+                cursor && { sort: cursor.createdAt, tie: cursor.id }
+              )
             )
           )
-          .orderBy(desc(i.createdAt), desc(i.id))
+          .orderBy(desc(msTimestamp(i.createdAt)), desc(i.id))
           .limit(limit + 1),
       databaseUnavailable.during('listPendingInvitesFor')
     );

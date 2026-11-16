@@ -1,7 +1,9 @@
+import * as schema from '@vp/db';
 import { expectOk } from '@vp/testing/result';
 import { C, seedComment, seedThreads } from './comment-contract-context';
 import { HELD_AT_CREATION, describeModerationFixture } from './comment-moderation-fixture';
 import { OWNER_ID } from './fixtures';
+import { SHARED_MILLISECOND, walkByCreatedAt } from './keyset-walk';
 import type { MakeRepositoriesSubject } from './subjects';
 
 const DAY_MS = 86_400_000;
@@ -41,6 +43,37 @@ export function describeCommentRemovalsContract(makeSubject: MakeRepositoriesSub
         'comment.removed',
         'comment.removed',
       ]);
+    });
+
+    it('walks the removals on from a cursor through ones made within one millisecond', async () => {
+      const ids = [C.old, C.liked, C.fresh];
+      for (const id of ids) {
+        await seedComment(ctx, id);
+        expectOk(
+          await ctx.comments.remove(target(id), {
+            audit: audit('remove', id, 'visible'),
+            removal: removal(id, 'visible'),
+          })
+        );
+      }
+      await ctx.subject.spreadAcrossMicroseconds({
+        stamp: schema.commentRemovals.createdAt,
+        key: schema.commentRemovals.id,
+        ids,
+        at: SHARED_MILLISECOND,
+      });
+
+      const served = await walkByCreatedAt(async (cursor) =>
+        expectOk(
+          await ctx.subject.repositories.commentModeration.listRemovals(ctx.authorId, {
+            since: new Date(Date.now() - DAY_MS),
+            cursor,
+            limit: 1,
+          })
+        )
+      );
+
+      expect(served.sort()).toEqual(ids.sort());
     });
 
     it('names the ids of a thread and of an author under a video owner, never a removed one', async () => {

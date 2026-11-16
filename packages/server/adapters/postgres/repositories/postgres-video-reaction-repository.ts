@@ -13,7 +13,7 @@ import type { UserContext } from '@vp/permissions';
 import { type Result, fromPromise, map } from '@vp/result';
 import { and, desc, eq, getTableColumns, sql } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
-import { drizzleWhere, keysetBefore, watchableVideoScope } from '../scopes/index';
+import { drizzleWhere, keysetBefore, msTimestamp, watchableVideoScope } from '../scopes/index';
 import { channelCardColumns, toChannelCard } from './channel-card-query';
 import type { PostgresDatabase } from './types';
 
@@ -224,10 +224,14 @@ export class PostgresVideoReactionRepository implements VideoReactionRepositoryP
               eq(vr.userId, viewer.id),
               eq(vr.type, 'LIKE'),
               watchableVideoScope(viewer),
-              keysetBefore(vr.updatedAt, vr.id, cursor && { sort: cursor.likedAt, tie: cursor.id })
+              keysetBefore(
+                msTimestamp(vr.updatedAt),
+                vr.id,
+                cursor && { sort: cursor.likedAt, tie: cursor.id }
+              )
             )
           )
-          .orderBy(desc(vr.updatedAt), desc(vr.id))
+          .orderBy(desc(msTimestamp(vr.updatedAt)), desc(vr.id))
           .limit(limit + 1),
       databaseUnavailable.during('listLikedVideos')
     );

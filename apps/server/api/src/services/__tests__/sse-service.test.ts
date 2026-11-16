@@ -173,15 +173,34 @@ describe('apps/server/api/services: SseService', () => {
     }
 
     it.each([
-      ['progress', { percent: 40 }, 'progress', { percent: 40 }],
-      ['video.ready', {}, 'status', { status: 'READY' }],
-      ['probe.started', {}, 'status', { status: 'PROBING' }],
-      ['video.processing', {}, 'status', { status: 'PROCESSING' }],
-      ['probe.completed', {}, 'status', { status: 'PROCESSING' }],
-      ['upload.initiated', { a: 1 }, 'status', { a: 1 }],
-    ])('replays %s as the %s event', async (type, payload, event, data) => {
+      { type: 'progress', payload: { percent: 40 }, event: 'progress', data: { percent: 40 } },
+      { type: 'video.ready', payload: {}, event: 'status', data: { status: 'READY' } },
+      { type: 'probe.started', payload: {}, event: 'status', data: { status: 'PROBING' } },
+      { type: 'probe.completed', payload: {}, event: 'status', data: { status: 'PROCESSING' } },
+      {
+        type: 'video.held',
+        payload: { reasons: ['NSFW'] },
+        event: 'status',
+        data: { status: 'HELD' },
+      },
+      {
+        type: 'video.taken_down',
+        payload: { requestedBy: OWNER.id },
+        event: 'status',
+        data: { status: 'REJECTED' },
+      },
+      { type: 'video.deleted', payload: {}, event: 'status', data: { status: 'DELETED' } },
+      { type: 'video.reprocessing', payload: {}, event: 'status', data: { status: 'PROBING' } },
+    ])('replays $type as the $event event', async ({ type, payload, event, data }) => {
       expect(await replayed(type, payload)).toEqual({ id: expect.any(Number), event, data });
     });
+
+    it.each(['upload.initiated', 'video.metadata_updated'])(
+      'replays no frame for %s, which changes no status',
+      async (type) => {
+        expect(await replayed(type, { a: 1 })).toBeUndefined();
+      }
+    );
 
     it('defaults a failure without codes to a bare FAILED status', async () => {
       expect(await replayed('video.failed')).toEqual({

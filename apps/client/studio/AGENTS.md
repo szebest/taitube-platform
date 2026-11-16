@@ -70,3 +70,4 @@ in web. `/login` offers the demo personas as web's does (`VITE_DEMO_PERSONAS`, `
 - [apps/client/web/AGENTS.md](../web/AGENTS.md) — the stack and the rules, which this app shares
 - [packages/AGENTS.md](../../../packages/AGENTS.md) — tiers, layers and what a client app may depend on
 - [docs/standards/testing.md](../../../docs/standards/testing.md)
+- [docs/state-machines.md](../../../docs/state-machines.md) - a status, phase or mode with legal moves is a `*.machine.ts` table; small client flags are exempt

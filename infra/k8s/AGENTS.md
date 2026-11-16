@@ -20,11 +20,15 @@ Instructions for any coding agent working on Kubernetes manifests and autoscalin
   - one worker Deployment per stage (`probe`, `transcode-1080p`, `transcode-720p`, `transcode-480p`,
     `thumbnail`, `screen`, `captions`, `package`, `notify`, `housekeeping`), each with a KEDA `ScaledObject`;
   - ServiceMonitors and the Grafana dashboard ConfigMaps.
+- `infra/k8s/components/dev-mode/`: the dev-mode patches (`NODE_ENV=development`, `AUTH_MODE=dev`, the placeholder
+  `ADMIN_TOKEN`, `imagePullPolicy: IfNotPresent`) the local overlay and the `preview` environment share.
+- `infra/k8s/charts.env`: the Helm chart versions `scripts/deploy/k8s.sh` installs for a preview;
+  `tests/architecture/environments.test.ts` holds them equal to the Makefile's.
 - `infra/k8s/overlays/local/`: the k3d/kind overlay.
-  - Swaps the images for `vp-api:local` / `vp-worker:local` / `vp-web:local` / `vp-studio:local` with
-    `imagePullPolicy: IfNotPresent`.
-  - Sets `NODE_ENV=development` and `AUTH_MODE=dev`.
-  - Adds a placeholder `ADMIN_TOKEN` that `make k3d-deploy` replaces with the git-ignored `secrets.env` value.
+  - Swaps the images for `vp-api:local` / `vp-worker:local` / `vp-web:local` / `vp-studio:local`.
+  - Takes the `dev-mode` component: `NODE_ENV=development`, `AUTH_MODE=dev`, `imagePullPolicy: IfNotPresent`, and a
+    placeholder `ADMIN_TOKEN` that `make k3d-deploy` replaces with the git-ignored `secrets.env` value (and
+    `make deploy ENV=local` with `.secrets/local.env`).
   - Postgres, Redis and MinIO come from Helm, not from the overlay.
 - `infra/k8s/overlays/cloud/`: the cloud overlay.
   - Replaces the base `Secret` with an `ExternalSecret` (database URL, Redis password, R2 endpoint and keys,
@@ -63,7 +67,9 @@ Instructions for any coding agent working on Kubernetes manifests and autoscalin
    `resources.limits` for CPU and memory. The cloud overlay's `alloy.yaml` is the one container that sets
    none yet.
 3. **Kustomize Discipline:** never duplicate manifest definitions; place base specs in `base/` and apply
-   transformations in overlays (`kustomization.yaml`).
+   transformations in overlays (`kustomization.yaml`). A value that differs per environment (an image tag, a
+   replica ceiling, a host, a flag) is written in `infra/environments/<env>/environment.yaml`, not in an overlay;
+   see [infra/environments](../environments/README.md) and [docs/DEPLOYMENT.md](../../docs/DEPLOYMENT.md).
 4. **Validation:** both overlays must render and pass kubeconform.
    - `make k8s-validate` runs `scripts/validate-k8s.sh`, which falls back to rendering only when kubeconform
      is neither installed nor runnable in Docker.
@@ -92,4 +98,8 @@ make k8s-validate
 
 # Tear down local k3d cluster
 make k3d-down
+
+# The same flow for any environment, with preflight, a health gate and rollback
+make deploy-plan ENV=local
+make deploy ENV=local
 ```

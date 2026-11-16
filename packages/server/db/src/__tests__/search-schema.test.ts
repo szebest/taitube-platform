@@ -26,7 +26,11 @@ describe('db: search migration', () => {
   beforeAll(async () => {
     database = await startSocketDatabase();
     await runMigrations(database.url, quiet);
+  });
+
+  beforeEach(async () => {
     await database.engine.exec(`
+      truncate users cascade;
       insert into users (id, email) values ('${USER}', 'search@x.local');
       insert into channels (id, user_id, handle, display_name, bio)
         values ('${USER}', '${USER}', 'fireship', 'Fire Ship', 'short videos');

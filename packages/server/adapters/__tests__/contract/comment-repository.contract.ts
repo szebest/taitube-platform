@@ -11,6 +11,7 @@ import {
   seedThreads,
 } from './comment-contract-context';
 import { describeCommentInboxContract } from './comment-inbox.contract';
+import { describeCommentKeysetWalksContract } from './comment-keyset-walks.contract';
 import { describeCommentListingContract } from './comment-listing.contract';
 import { describeCommentPublicScopeContract } from './comment-public-scope.contract';
 import { OTHER_OWNER_ID, OWNER_ID, VIDEO_IDS, idsOf, publicVideo, seedOwners } from './fixtures';
@@ -286,6 +287,7 @@ export function describeCommentRepositoryContract(makeSubject: MakeRepositoriesS
     describeCommentListingContract(ctx);
     describeCommentInboxContract(ctx);
     describeAuthoredCommentsContract(ctx);
+    describeCommentKeysetWalksContract(ctx);
     describeCommentPublicScopeContract(ctx);
   });
 }

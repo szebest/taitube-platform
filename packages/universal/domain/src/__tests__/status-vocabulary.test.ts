@@ -1,4 +1,5 @@
 import {
+  OUTBOX_STATUSES,
   RENDITION_STATUSES,
   STEP_STATUSES,
   UPLOAD_STATUSES,
@@ -45,6 +46,11 @@ describe('packages/domain: status vocabulary', () => {
       scenario: 'rendition statuses',
       vocabulary: RENDITION_STATUSES,
       spelling: ['PENDING', 'RUNNING', 'DONE', 'FAILED', 'SKIPPED'],
+    },
+    {
+      scenario: 'outbox statuses',
+      vocabulary: OUTBOX_STATUSES,
+      spelling: ['PENDING', 'PUBLISHED', 'DEAD'],
     },
     {
       scenario: 'user roles',

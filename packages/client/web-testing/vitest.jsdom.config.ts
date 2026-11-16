@@ -12,6 +12,8 @@ export default definePackageTestConfig({
       '@testing-library/jest-dom/vitest',
       'src/jsdom.setup.ts',
       'src/api-server.setup.ts',
+      'src/settle.setup.ts',
     ],
+    env: { RTL_SKIP_AUTO_CLEANUP: 'true' },
   },
 });

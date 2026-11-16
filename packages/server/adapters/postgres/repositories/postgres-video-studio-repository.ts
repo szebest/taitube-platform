@@ -16,22 +16,24 @@ import {
 } from '@vp/errors';
 import { visibilityNotificationJobs } from '@vp/job-contracts';
 import { err, fromPromise, ok, type Result } from '@vp/result';
-import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, sql } from 'drizzle-orm';
 import {
   containsScope,
   drizzleWhere,
   keysetPast,
+  msTimestamp,
   notDeletedScope,
   ownerScope,
 } from '../scopes/index';
 import { appendChannelAudit } from './channel-audit-writes';
 import { enqueueNotificationJobs } from './notification-jobs';
 import type { PostgresDatabase } from './types';
+import { commitVideoTransition } from './video-transition';
 
 const { videos: v, videoEvents: ve, categories: c, channels: ch } = schema;
 
 function sortKey(sort: LibrarySort) {
-  if (sort === 'newest') return v.createdAt;
+  if (sort === 'newest') return msTimestamp(v.createdAt);
   if (sort === 'title') return sql`${v.title} COLLATE "C"`;
   return v[CREATOR_LIBRARY_COUNTERS[sort]];
 }
@@ -158,29 +160,25 @@ export class PostgresVideoStudioRepository extends VideoStudioRepository {
   async takeDown(
     options: TakeDownVideoOptions
   ): Promise<Result<VideoRecord | null, DatabaseUnavailable>> {
-    const { videoId, from, moderatorId, reason } = options;
+    const { videoId, moderatorId, reason } = options;
 
     return fromPromise(
       () =>
         this.db.transaction(async (tx) => {
-          const [taken] = await tx
-            .update(v)
-            .set({
-              status: 'REJECTED',
-              visibility: 'private',
-              version: sql`${v.version} + 1`,
-              updatedAt: new Date(),
-            })
-            .where(and(eq(v.id, videoId), inArray(v.status, [...from])))
-            .returning();
+          const taken = await commitVideoTransition(tx, {
+            videoId,
+            edge: 'takedown',
+            patch: { visibility: 'private' },
+            eventPayload: { requestedBy: moderatorId, ...(reason ? { reason } : {}) },
+          });
           if (!taken) return null;
 
-          await tx.insert(ve).values({
-            videoId,
-            type: 'video.taken_down',
-            payload: { requestedBy: moderatorId, ...(reason ? { reason } : {}) },
-          });
-          return taken;
+          const [bumped] = await tx
+            .update(v)
+            .set({ version: sql`${v.version} + 1` })
+            .where(eq(v.id, videoId))
+            .returning();
+          return bumped ?? null;
         }),
       databaseUnavailable.during('takeDown')
     );

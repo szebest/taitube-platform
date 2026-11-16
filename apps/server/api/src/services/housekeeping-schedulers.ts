@@ -8,6 +8,7 @@ type HousekeepingTask = HousekeepingJob['task'];
 const CRON_SCHEDULERS = [
   { id: 'reconcile-uploads', pattern: '*/15 * * * *' },
   { id: 'reconcile-processing', pattern: '*/10 * * * *' },
+  { id: 'reconcile-live', pattern: '*/10 * * * *' },
   { id: 'purge-deleted', pattern: '0 * * * *' },
   { id: 'expire-raw', pattern: '30 3 * * *' },
   { id: 'tmp-sweep', pattern: '*/30 * * * *' },

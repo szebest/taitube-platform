@@ -17,11 +17,11 @@ export const RETRIED_TITLE = 'passed on retry';
 const encoded = (text: string): string =>
   text.replace(/%/g, '%25').replace(/\r/g, '%0D').replace(/\n/g, '%0A');
 
-/** A GitHub warning annotation per test that failed once and passed on its retry. */
+/** A GitHub error annotation per test that failed once and passed on its retry. */
 export function annotations(retried: readonly Retried[]): string[] {
   return retried.map(
     ({ file, test }) =>
-      `::warning file=${encoded(file)},title=${RETRIED_TITLE}::${encoded(`${file} > ${test}`)}`
+      `::error file=${encoded(file)},title=${RETRIED_TITLE}::${encoded(`${file} > ${test}`)}`
   );
 }
 
@@ -37,7 +37,10 @@ export function summary(suite: string, retried: readonly Retried[]): string {
   ].join('\n');
 }
 
-/** Prints the annotations and, in a GitHub job, appends the table to its summary. */
+/**
+ * Prints the annotations, in a GitHub job appends the table to its summary, and fails the run: a test
+ * that needed its retry is a flaky spec, and the retry only tells it apart from a broken one.
+ */
 export function publish(
   suite: string,
   retried: readonly Retried[],
@@ -46,4 +49,5 @@ export function publish(
   if (retried.length === 0) return;
   process.stdout.write(`${annotations(retried).join('\n')}\n`);
   if (summaryFile) appendFileSync(summaryFile, `${summary(suite, retried)}\n`);
+  process.exitCode = 1;
 }

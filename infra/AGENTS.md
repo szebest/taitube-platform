@@ -27,6 +27,7 @@ Instructions for any coding agent working on infrastructure, orchestration, and 
 
 - **Docker Compose:** [infra/compose/AGENTS.md](compose/AGENTS.md)
 - **Kubernetes Manifests:** [infra/k8s/AGENTS.md](k8s/AGENTS.md)
+- **Environments (local, preview, staging, production, compose-vm):** [infra/environments/README.md](environments/README.md), deployed with `make deploy ENV=<name>`; the model is [docs/DEPLOYMENT.md](../docs/DEPLOYMENT.md)
 - **Terraform IAC:** [infra/terraform/AGENTS.md](terraform/AGENTS.md)
 
 ---

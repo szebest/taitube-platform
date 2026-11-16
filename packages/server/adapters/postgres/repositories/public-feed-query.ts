@@ -10,7 +10,13 @@ import {
   TRENDING_GRAVITY,
 } from '@vp/domain';
 import { type SQL, desc, eq, isNull, notInArray, sql } from 'drizzle-orm';
-import { drizzleWhere, keysetBefore, ownerScope, publicVisibilityScope } from '../scopes/index';
+import {
+  drizzleWhere,
+  keysetBefore,
+  msTimestamp,
+  ownerScope,
+  publicVisibilityScope,
+} from '../scopes/index';
 import { constant } from './sql-constant';
 
 interface RankInput {
@@ -19,7 +25,7 @@ interface RankInput {
 }
 
 const ROW_RANK_INPUT: RankInput = {
-  createdAt: sql`${videos.createdAt}`,
+  createdAt: msTimestamp(videos.createdAt),
   viewsCount: sql`${videos.viewsCount}`,
 };
 

@@ -1,4 +1,5 @@
 import { AppEnvSchema } from '../../packages/server/env-schema/src/index';
+import { type ExampleEntry, parseEnvExample } from '../../scripts/env-docs/parse-example';
 import { read } from './repo-files';
 
 const KEY = /^[A-Z][A-Z0-9_]*$/;
@@ -15,9 +16,16 @@ export function schemaKeys(): Set<string> {
   return new Set([...Object.keys(AppEnvSchema.shape), ...platformKeys()]);
 }
 
+/** Every `KEY=value` line of `.env.example`, live or commented out as documentation. */
+export function exampleEntries(): ExampleEntry[] {
+  return parseEnvExample(read('.env.example'));
+}
+
 export function exampleKeys(): Set<string> {
   return new Set(
-    [...read('.env.example').matchAll(/^([A-Z][A-Z0-9_]+)=/gm)].map((m) => m[1] as string)
+    exampleEntries()
+      .filter((entry) => !entry.commented)
+      .map((entry) => entry.key)
   );
 }
 

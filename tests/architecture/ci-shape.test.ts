@@ -116,8 +116,53 @@ describe('architecture: the CI pipeline holds its budgets', () => {
     'terraform: does not check fmt, init and validate',
     'terraform: no provider cache keyed by the lock file',
     'lint-typecheck: tokens.json and the generated stylesheets are not checked for drift',
+    'lint-typecheck: docs/ENVIRONMENT.md is not checked for drift',
+    'lint-typecheck: docs/state-machines.md is not checked for drift',
   ])('fires on a workflow where %s', (finding) => {
     expect(shapeFindings(BAD_WORKFLOW)).toContain(finding);
+  });
+
+  describe('a unit matrix planned by pnpm unit-shards in build', () => {
+    const MATRIX = "${{ fromJSON(needs.build.outputs.unit-shards || '[1]') }}";
+    const COUNT = '${{ needs.build.outputs.unit-shard-count }}';
+    const PLAN = 'pnpm -s unit-shards --github-output';
+    const OUTPUTS = '{ unit-shards: a, unit-shard-count: b }';
+    const workflow = ({ matrix = MATRIX, count = COUNT, plan = PLAN, outputs = OUTPUTS } = {}) =>
+      [
+        'on: [pull_request]',
+        'jobs:',
+        '  build:',
+        '    name: build',
+        `    outputs: ${outputs}`,
+        `    steps: [{ run: ${JSON.stringify(plan)} }]`,
+        '  unit-shards:',
+        '    name: unit-shard-${{ matrix.shard }}',
+        '    needs: [build]',
+        `    strategy: { matrix: { shard: ${JSON.stringify(matrix)} } }`,
+        `    steps: [{ run: "pnpm test:unit --shard=\${{ matrix.shard }}/${count}" }]`,
+      ].join('\n');
+    const finding =
+      'unit-shards: its matrix and --shard denominator are not the outputs of pnpm unit-shards in build';
+
+    it('is accepted, and named unit-shard-N', () => {
+      expect(shapeFindings(workflow())).not.toContain(finding);
+      expect(shapeFindings(workflow())).toContain('unit-shard-N: does not skip a docs-only change');
+    });
+
+    it('fires on a hand-set denominator the matrix does not match', () => {
+      expect(shapeFindings(workflow({ count: '6' }))).toContain(
+        'unit-shards: its matrix does not run every one of the 6 shards'
+      );
+    });
+
+    it.each([
+      { case: 'a static matrix against the build count', matrix: '[1, 2]' },
+      { case: 'a denominator from another job', count: '${{ needs.other.outputs.count }}' },
+      { case: 'a build that does not plan the shards', plan: 'pnpm build' },
+      { case: 'a build that does not export the outputs', outputs: '{}' },
+    ])('fires on $case', (overrides) => {
+      expect(shapeFindings(workflow(overrides))).toContain(finding);
+    });
   });
 
   it.each([

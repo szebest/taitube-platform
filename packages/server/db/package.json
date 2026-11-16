@@ -31,6 +31,11 @@
       "import": "./dist/seed.js",
       "default": "./dist/seed.js"
     },
+    "./seed-identities": {
+      "types": "./dist/seed-identities.d.ts",
+      "import": "./dist/seed-identities.js",
+      "default": "./dist/seed-identities.js"
+    },
     "./client": {
       "types": "./dist/client.d.ts",
       "import": "./dist/client.js",

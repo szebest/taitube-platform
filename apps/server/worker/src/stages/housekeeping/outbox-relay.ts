@@ -75,7 +75,7 @@ export class OutboxRelay {
         const recorded = await repositories.outbox.recordAttempt(item.id);
         if (isErr(recorded)) return recorded;
         logger?.error(
-          { id: item.id, kind: item.kind, code: published.error.code },
+          { id: item.id, kind: item.kind, code: published.error.code, status: recorded.value },
           'failed to publish outbox item'
         );
         continue;

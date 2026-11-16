@@ -8,6 +8,7 @@ import {
   liveStreamNotFound,
   liveStreamNotLive,
 } from './failures';
+import { LIVE_STREAM } from './live-stream.machine';
 
 export interface ManageLiveStreamInput {
   readonly actor: UserContext | null;
@@ -35,6 +36,6 @@ export function decideLiveStreamStop(
   input: ManageLiveStreamInput
 ): Result<LiveStream, ManageLiveStreamFailure | LiveStreamNotLive> {
   return andThen(decideLiveStreamUpdate(input), (stream) =>
-    stream.status === 'LIVE' ? ok(stream) : err(liveStreamNotLive(stream.id))
+    LIVE_STREAM.next(stream.status, 'requestStop') ? ok(stream) : err(liveStreamNotLive(stream.id))
   );
 }

@@ -222,9 +222,8 @@ export function createPackageProcessor(deps: PackageProcessorDeps) {
 
     const transitionedResult = await repositories.videos.transition({
       videoId,
-      from: 'PROCESSING',
-      to: 'READY',
-      eventType: 'video.ready',
+      edge: 'package',
+      generation,
       eventPayload: { playbackUrl, masterKey },
       patch,
       outbox: notifyJobData

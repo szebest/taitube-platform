@@ -9,14 +9,15 @@ import {
   type UpdateStudioMetadataOptions,
   type VideoLibraryQuery,
   type VideoRecord,
+  type VideoRepository,
   VideoStudioRepository,
 } from '@vp/core/repositories';
 import { type CreatorLibraryCursor, creatorLibraryCursorOf, videoEditAudit } from '@vp/domain';
 import { type DatabaseUnavailable, type VersionConflict, versionConflict } from '@vp/errors';
 import { visibilityNotificationJobs } from '@vp/job-contracts';
-import { err, isErr, map, ok, type Result } from '@vp/result';
+import { err, isErr, ok, type Result } from '@vp/result';
 
-interface StudioVideos {
+interface StudioVideos extends Pick<VideoRepository, 'transition'> {
   getAllVideos(): VideoRecord[];
 }
 
@@ -127,22 +128,19 @@ export class InMemoryVideoStudioRepository extends VideoStudioRepository {
   async takeDown(
     options: TakeDownVideoOptions
   ): Promise<Result<VideoRecord | null, DatabaseUnavailable>> {
-    const { videoId, from, moderatorId, reason } = options;
-    const video = this.find(videoId);
-    if (!(video && from.includes(video.status))) return ok(null);
-
-    Object.assign(video, {
-      status: 'REJECTED',
-      visibility: 'private',
-      version: video.version + 1,
-      updatedAt: new Date(),
-    });
-    const recorded = await this.deps.events.create({
+    const { videoId, moderatorId, reason } = options;
+    const taken = await this.deps.videos.transition({
       videoId,
-      type: 'video.taken_down',
-      payload: { requestedBy: moderatorId, ...(reason ? { reason } : {}) },
+      edge: 'takedown',
+      patch: { visibility: 'private' },
+      eventPayload: { requestedBy: moderatorId, ...(reason ? { reason } : {}) },
     });
-    return map(recorded, () => video);
+    if (isErr(taken)) return taken;
+
+    const video = this.find(videoId);
+    if (!(taken.value && video)) return ok(null);
+    video.version += 1;
+    return ok(video);
   }
 
   clear(): void {}

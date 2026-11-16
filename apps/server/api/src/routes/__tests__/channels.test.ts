@@ -15,7 +15,7 @@ describe('public channel route', () => {
   let app: FastifyInstance;
   let repositories: InMemoryRepositories;
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     const testApp = await buildTestApp();
     app = testApp.app;
     ({ repositories } = testApp);
@@ -54,7 +54,7 @@ describe('public channel route', () => {
     await repositories.playlists.addItem(PUBLIC_PLAYLIST, { id: VIDEO_ITEM, videoId: VIDEO });
   });
 
-  afterAll(async () => {
+  afterEach(async () => {
     await app.close();
   });
 

@@ -1,8 +1,8 @@
 import { screen, within } from '@testing-library/react';
-import { listMyInvites } from '@vp/api-contracts';
+import { type ContractResult, listMyInvites } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { mockEndpoint, problemReply } from '@vp/web-testing';
-import { axeViolations } from '@vp/web-testing/dom';
+import { axeViolations, heldReply } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
 import { renderTeam } from '#app/features/team/__tests__/render-team';
 import { MY_INVITE_ID, myInvite } from '#app/features/team/__tests__/team-api.fixture';
@@ -32,11 +32,13 @@ describe('apps/client/studio: InvitesPage', () => {
   });
 
   it('shows a skeleton while the invites load', async () => {
-    await renderTeam('/invites', {
-      handlers: [mockEndpoint(listMyInvites, () => new Promise(() => undefined))],
-    });
+    const invites = heldReply(() =>
+      HttpResponse.json<ContractResult<typeof listMyInvites>>({ items: [], nextCursor: null })
+    );
+    await renderTeam('/invites', { handlers: [mockEndpoint(listMyInvites, invites.answer)] });
 
     expect(document.querySelector('[data-slot="skeleton"]')).toBeInTheDocument();
+    invites.release();
   });
 
   it('says there is nothing to answer', async () => {

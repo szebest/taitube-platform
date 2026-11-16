@@ -21,7 +21,7 @@ import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { fromPromise, map, ok, type Result } from '@vp/result';
 import { and, desc, eq, gt, inArray, isNull, lt, sql } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
-import { drizzleWhere, keysetBefore } from '../scopes/index';
+import { drizzleWhere, keysetBefore, msTimestamp } from '../scopes/index';
 import { appendUserEvent, lockUserEvents } from './postgres-user-event-repository';
 import type { PostgresDatabase } from './types';
 
@@ -117,10 +117,14 @@ export class PostgresNotificationRepository implements NotificationRepositoryPor
             drizzleWhere(
               eq(n.userId, userId),
               filter === 'all' ? undefined : inArray(n.kind, [...kindsOfFilter(filter)]),
-              keysetBefore(n.createdAt, n.id, cursor && { sort: cursor.createdAt, tie: cursor.id })
+              keysetBefore(
+                msTimestamp(n.createdAt),
+                n.id,
+                cursor && { sort: cursor.createdAt, tie: cursor.id }
+              )
             )
           )
-          .orderBy(desc(n.createdAt), desc(n.id))
+          .orderBy(desc(msTimestamp(n.createdAt)), desc(n.id))
           .limit(limit + 1),
       databaseUnavailable.during('listNotifications')
     );

@@ -22,6 +22,7 @@
   "dependencies": {
     "@vp/domain": "workspace:*",
     "@vp/errors": "workspace:*",
+    "@vp/machine": "workspace:*",
     "@vp/permissions": "workspace:*",
     "@vp/result": "workspace:*",
     "@vp/validation": "workspace:*"

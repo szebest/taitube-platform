@@ -44,11 +44,11 @@ describe('@vp/domain-rules: decideInviteRevoke', () => {
       input: ['owner', { channelId: 'chan-2' }],
       code: ErrorCodes.CHANNEL_INVITE_NOT_FOUND,
     },
-    {
-      scenario: 'the invite was answered',
-      input: ['owner', { status: 'accepted' }],
+    ...(['accepted', 'declined', 'revoked', 'expired'] as const).map((status) => ({
+      scenario: `the invite is ${status}`,
+      input: ['owner', { status }] as Parameters<typeof decide>,
       code: ErrorCodes.CHANNEL_INVITE_NOT_PENDING,
-    },
+    })),
   ])('refuses when $scenario', ({ input, code }) => {
     expect(expectErr(decide(...input)).code).toBe(code);
   });

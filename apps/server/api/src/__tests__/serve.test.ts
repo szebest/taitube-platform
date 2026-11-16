@@ -71,6 +71,29 @@ describe('apps/server/api: serve', () => {
     expect(await shutdown).toBe('drained');
   });
 
+  it('does not report listening when a signal arrives while the port is being bound', async () => {
+    const log = captureLog();
+    const composed = await composeApp({ config: config(), logger: loggerTo(log) });
+    const handlers: Array<() => void> = [];
+    const exited = Promise.withResolvers<void>();
+    const exit = vi.fn(() => exited.resolve());
+    const realListen = composed.app.listen.bind(composed.app);
+    vi.spyOn(composed.app, 'listen').mockImplementation(((
+      ...args: Parameters<typeof realListen>
+    ) => {
+      for (const handler of handlers) handler();
+      return realListen(...args);
+    }) as typeof composed.app.listen);
+
+    await serve(composed, config(), {
+      ...TIMINGS,
+      signals: { env: {}, onSignal: (_signal, handler) => handlers.push(handler), exit },
+    });
+    await exited.promise;
+
+    expect(log.text()).not.toContain('API listening');
+  });
+
   it('releases every resource exactly once, in reverse construction order', async () => {
     const composed = await composeApp({ config: config() });
     const { container } = composed;

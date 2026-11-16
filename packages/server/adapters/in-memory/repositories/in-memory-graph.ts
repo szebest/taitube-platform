@@ -1,4 +1,5 @@
 import { Container } from '@vp/composition';
+import { type Clock, realClock } from './clock';
 import { InMemoryCaptionRepository } from './in-memory-caption-repository';
 import { InMemoryCategoryRepository } from './in-memory-category-repository';
 import { InMemoryChannelAuditRepository } from './in-memory-channel-audit-repository';
@@ -44,14 +45,14 @@ import { InMemoryWebhookRepository } from './in-memory-webhook-repository';
  * Videos and uploads each need the other. The back-edge is a delegate that resolves on first call,
  * after both are built, so no repository needs a setter to be wired.
  */
-export function graph(): Container {
+export function graph(now: Clock = realClock): Container {
   return provideCommentRepositories(
     provideScreening(new Container())
-      .provide(Repo.outbox, () => new InMemoryOutboxRepository())
+      .provide(Repo.outbox, () => new InMemoryOutboxRepository(now))
       .provide(Repo.renditions, () => new InMemoryRenditionRepository())
-      .provide(Repo.steps, () => new InMemoryStepRepository())
+      .provide(Repo.steps, () => new InMemoryStepRepository(now))
       .provide(Repo.users, () => new InMemoryUserRepository())
-      .provide(Repo.userEvents, (c) => new InMemoryUserEventRepository(c.get(Repo.outbox)))
+      .provide(Repo.userEvents, (c) => new InMemoryUserEventRepository(c.get(Repo.outbox), now))
       .provide(Repo.channelHandleHistory, () => new InMemoryChannelHandleHistoryRepository())
       .provide(
         Repo.channels,
@@ -77,6 +78,7 @@ export function graph(): Container {
             channels: c.get(Repo.channels),
             audit: c.get(Repo.channelAudit),
             outbox: c.get(Repo.outbox),
+            now,
           })
       )
       .provide(
@@ -88,6 +90,7 @@ export function graph(): Container {
             stepsRepo: c.get(Repo.steps),
             outboxRepo: c.get(Repo.outbox),
             userEventsRepo: c.get(Repo.userEvents),
+            now,
             uploadsRepo: { findByVideoId: (id) => c.get(Repo.uploads).findByVideoId(id) },
           })
       )
@@ -151,7 +154,7 @@ export function graph(): Container {
       )
       .provide(
         Repo.notifications,
-        (c) => new InMemoryNotificationRepository(c.get(Repo.userEvents))
+        (c) => new InMemoryNotificationRepository(c.get(Repo.userEvents), now)
       )
       .provide(
         Repo.search,
@@ -207,6 +210,7 @@ export function graph(): Container {
             channels: c.get(Repo.channels),
             events: c.get(Repo.events),
             userEvents: c.get(Repo.userEvents),
+            now,
           })
       )
       .provide(

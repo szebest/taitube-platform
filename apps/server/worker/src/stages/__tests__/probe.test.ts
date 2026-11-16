@@ -45,9 +45,9 @@ describe('probe stage', () => {
   const uploaded = (sourceKey: string, body?: Buffer) =>
     uploadedVideo({ repositories, storage }, sourceKey, body);
 
-  function probeJob(videoId: string, sourceKey: string): QueueJob<ProbeJob> {
-    const data = { videoId, sourceKey, generation: 1, traceparent: '00-01-01-01' };
-    return createMockJob('probe', data, { id: `${videoId}--probe--g1` });
+  function probeJob(videoId: string, sourceKey: string, generation = 1): QueueJob<ProbeJob> {
+    const data = { videoId, sourceKey, generation, traceparent: '00-01-01-01' };
+    return createMockJob('probe', data, { id: `${videoId}--probe--g${generation}` });
   }
 
   function processorProbing(probe: MediaTools['probe']) {
@@ -182,6 +182,21 @@ describe('probe stage', () => {
     expect(eventTypes).toEqual(expect.arrayContaining(['probe.started', 'probe.completed']));
     const tmpEntries = await fs.readdir(os.tmpdir());
     expect(tmpEntries.filter((entry) => entry.includes(`vp-probe-${videoId}`))).toEqual([]);
+  });
+
+  it('probes a reprocessed video again once the reprocess reset its steps', async () => {
+    const videoId = await uploaded('raw/again.mp4', Buffer.from('mock-media-content'));
+    const processor = processorProbing(() => Promise.resolve(metadata({})));
+    expectOk(await processor(probeJob(videoId, 'raw/again.mp4')));
+    expectOk(await repositories.steps.reset(videoId));
+    expectOk(
+      await repositories.videos.transition({ videoId, edge: 'reprocess', patch: { generation: 2 } })
+    );
+
+    expect(expectOk(await processor(probeJob(videoId, 'raw/again.mp4', 2)))).toMatchObject({
+      status: 'PROCESSING',
+    });
+    expect(expectOk(await repositories.videos.findById(videoId))?.status).toBe('PROCESSING');
   });
 
   it.each([

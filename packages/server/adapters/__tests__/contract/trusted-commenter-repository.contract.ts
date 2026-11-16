@@ -1,8 +1,10 @@
 import type { Repositories } from '@vp/core/repositories';
+import * as schema from '@vp/db';
 import type { Channel } from '@vp/domain';
 import { expectOk } from '@vp/testing/result';
 import { INVITEE_ID, seedTeam } from './channel-team-fixtures';
 import { OTHER_OWNER_ID, OWNER_ID, seedOwners } from './fixtures';
+import { SHARED_MILLISECOND } from './keyset-walk';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
 export function describeTrustedCommenterRepositoryContract(
@@ -87,9 +89,15 @@ export function describeTrustedCommenterRepositoryContract(
       );
     });
 
-    it('pages by cursor, one more row than asked for so the caller sees a next page', async () => {
+    it('pages by cursor within one millisecond, one more row than asked for so the caller sees a next page', async () => {
       await add(OTHER_OWNER_ID);
       await add(INVITEE_ID);
+      await subject.spreadAcrossMicroseconds({
+        stamp: schema.channelTrustedCommenters.createdAt,
+        key: schema.channelTrustedCommenters.userId,
+        ids: [OTHER_OWNER_ID, INVITEE_ID],
+        at: SHARED_MILLISECOND,
+      });
       const page = async (cursor: { createdAt: Date; userId: string } | null) =>
         expectOk(await repositories.trustedCommenters.list(channel.id, { cursor, limit: 1 }));
 

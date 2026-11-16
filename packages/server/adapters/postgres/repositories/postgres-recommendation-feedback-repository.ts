@@ -17,7 +17,7 @@ import { type Result, fromPromise, isErr, map } from '@vp/result';
 import { and, desc, eq, sql } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import { toFeedback } from '../mappers/index';
-import { drizzleWhere, keysetBefore, watchableVideoScope } from '../scopes/index';
+import { drizzleWhere, keysetBefore, msTimestamp, watchableVideoScope } from '../scopes/index';
 import type { PostgresDatabase } from './types';
 
 const { recommendationFeedback: rf, videos: v, channels: ch } = schema;
@@ -106,13 +106,13 @@ export class PostgresRecommendationFeedbackRepository implements RecommendationF
               eq(rf.userId, viewer.id),
               kind ? eq(rf.kind, kind) : undefined,
               keysetBefore(
-                rf.createdAt,
+                msTimestamp(rf.createdAt),
                 rf.id,
                 cursor && { sort: cursor.createdAt, tie: cursor.id }
               )
             )
           )
-          .orderBy(desc(rf.createdAt), desc(rf.id))
+          .orderBy(desc(msTimestamp(rf.createdAt)), desc(rf.id))
           .limit(limit + 1),
       databaseUnavailable.during('listRecommendationFeedback')
     );

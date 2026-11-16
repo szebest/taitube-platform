@@ -7,7 +7,12 @@ import type {
   NewChannelImageUpload,
   UserEventRepository,
 } from '@vp/core/repositories';
-import { channelImageFailed, channelImageReady, type ChannelImageUpload } from '@vp/domain';
+import {
+  CHANNEL_IMAGE_UPLOAD_EDGES,
+  channelImageFailed,
+  channelImageReady,
+  type ChannelImageUpload,
+} from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { isErr, ok, type Result } from '@vp/result';
 import type { InMemoryChannelRepository } from './in-memory-channel-repository';
@@ -124,8 +129,7 @@ export class InMemoryChannelImageRepository implements ChannelImageRepositoryPor
     const purgeable: ChannelImageUpload[] = [];
     for (const upload of this.uploads.values()) {
       if (upload.updatedAt >= olderThan) continue;
-      if (['issued', 'failed', 'superseded'].includes(upload.status)) purgeable.push(upload);
-      else if (upload.status === 'ready' && (await this.isReplaced(upload))) purgeable.push(upload);
+      if (await this.isPurgeable(upload)) purgeable.push(upload);
     }
     purgeable.sort((a, b) => a.updatedAt.getTime() - b.updatedAt.getTime());
     return ok(purgeable.slice(0, limit).map((upload) => ({ ...upload })));
@@ -134,7 +138,7 @@ export class InMemoryChannelImageRepository implements ChannelImageRepositoryPor
   async markPurged(ids: readonly string[]): Promise<Result<void, DatabaseUnavailable>> {
     for (const id of ids) {
       const upload = this.uploads.get(id);
-      if (upload) {
+      if (upload && (await this.isPurgeable(upload))) {
         upload.status = 'purged';
         upload.updatedAt = new Date();
       }
@@ -165,6 +169,12 @@ export class InMemoryChannelImageRepository implements ChannelImageRepositoryPor
       .filter((other) => other.channelId === upload.channelId && other.kind === upload.kind)
       .map((other) => other.version ?? 0);
     return ok(Math.max(current.value, ...queued) + 1);
+  }
+
+  private async isPurgeable(upload: ChannelImageUpload): Promise<boolean> {
+    const purgeable: readonly string[] = CHANNEL_IMAGE_UPLOAD_EDGES.purge.from;
+    if (!purgeable.includes(upload.status)) return false;
+    return upload.status !== 'ready' || this.isReplaced(upload);
   }
 
   private async isReplaced(upload: ChannelImageUpload): Promise<boolean> {

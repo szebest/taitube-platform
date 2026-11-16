@@ -27,6 +27,10 @@ runs:
       if: steps.cache.outputs.cache-hit != 'true'
       uses: ./.github/actions/setup-ffmpeg
 
+    - name: Wait for FFmpeg
+      if: steps.cache.outputs.cache-hit != 'true'
+      uses: ./.github/actions/ffmpeg-ready
+
     - name: Generate the fixtures
       if: steps.cache.outputs.cache-hit != 'true'
       shell: bash

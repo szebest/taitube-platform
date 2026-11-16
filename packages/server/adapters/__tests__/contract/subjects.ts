@@ -1,6 +1,7 @@
 import type { NewVideoInput, Repositories, VideoRecord } from '@vp/core/repositories';
 import type { CommentModerationFields } from '@vp/domain';
 import { expectOk } from '@vp/testing/result';
+import type { AnyPgColumn } from 'drizzle-orm/pg-core';
 import { InMemoryRepositories } from '../../in-memory/repositories/in-memory-repositories';
 export interface RepositoriesSubject {
   readonly repositories: Repositories;
@@ -12,8 +13,21 @@ export interface RepositoriesSubject {
   backdatePlaylist(id: string, updatedAt: Date): Promise<void>;
   /** Notifications are stamped by the clock; specs move what exists into the past instead of waiting. */
   ageNotifications(ms: number): Promise<void>;
+  /**
+   * Stamps the rows whose `key` is one of `ids` at distinct microseconds of the millisecond `at`, as
+   * `now()` can while a cursor carries milliseconds; the lowest `key` gets the latest microsecond,
+   * against a walk that breaks ties on it descending. A double holds a `Date`, nothing finer.
+   */
+  spreadAcrossMicroseconds(spread: MicrosecondSpread): Promise<void>;
   reset(): Promise<void>;
   close(): Promise<void>;
+}
+
+interface MicrosecondSpread {
+  stamp: AnyPgColumn;
+  key: AnyPgColumn;
+  ids: readonly string[];
+  at: Date;
 }
 
 type CommentAdjustment = Partial<{ likeCount: number; createdAt: Date }> &
@@ -41,6 +55,7 @@ export async function inMemorySubject(): Promise<RepositoriesSubject> {
       stored.updatedAt = updatedAt;
     },
     ageNotifications: async (ms) => repositories.notifications.age(ms),
+    spreadAcrossMicroseconds: async () => {},
     reset: async () => {
       repositories.clear();
     },

@@ -74,12 +74,13 @@ describe('outbox writes', () => {
       status: 'PARKED',
     });
 
-    await repositories.dlq.updateStatus(
-      dlqId,
-      'REPLAYED',
-      { replayedAt: new Date() },
-      queueOutboxEntry('probe', { test: true }, 'failed-job-1--replay--1', 'dlq_replay')
-    );
+    await repositories.dlq.transition({
+      id: dlqId,
+      from: ['PARKED'],
+      to: 'REPLAYED',
+      replayedAt: new Date(),
+      outbox: queueOutboxEntry('probe', { test: true }, 'failed-job-1--replay--1', 'dlq_replay'),
+    });
 
     expect(expectOk(await repositories.dlq.findById(dlqId))?.status).toBe('REPLAYED');
     expect((await pending()).map((item) => item.kind)).toContain('dlq_replay');

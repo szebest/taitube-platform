@@ -42,6 +42,7 @@ describe('housekeeping: createHousekeepingProcessor', () => {
   it.each([
     { task: 'reconcile-uploads', result: { abandonedCount: 0, reenqueuedCount: 0 } },
     { task: 'reconcile-captions', result: { requeued: 0 } },
+    { task: 'reconcile-live', result: { orphanedCount: 0 } },
     { task: 'purge-search-history', result: { purgedCount: 0 } },
     { task: 'purge-channel-audit', result: { purgedCount: 0 } },
     { task: 'purge-comment-moderation', result: { removals: 0, restrictions: 0 } },

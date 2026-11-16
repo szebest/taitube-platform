@@ -202,6 +202,15 @@
         "!dist/**"
       ]
     },
+    "packages/universal/machine": {
+      "entry": ["src/**/type-fixtures/*.ts"],
+      "project": [
+        "**/*.{ts,tsx,mts,mjs,js}!",
+        "!**/__tests__/**!",
+        "!**/*.test.{ts,tsx}!",
+        "!dist/**"
+      ]
+    },
     "packages/universal/result": {
       "entry": ["src/**/type-fixtures/*.ts"],
       "project": [

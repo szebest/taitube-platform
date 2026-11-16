@@ -43,13 +43,14 @@ describe('@vp/domain-rules: decideLiveStreamUpdate', () => {
 });
 
 describe('@vp/domain-rules: decideLiveStreamStop', () => {
-  it('stops a live stream', () => {
-    expect(
-      expectOk(decideLiveStreamStop(input({ stream: aLiveStream({ status: 'LIVE' }) }))).status
-    ).toBe('LIVE');
-  });
+  it.each([
+    ['IDLE', ErrorCodes.LIVE_STREAM_NOT_LIVE],
+    ['LIVE', undefined],
+    ['ENDED', ErrorCodes.LIVE_STREAM_NOT_LIVE],
+  ] as const)('a %s stream: refused with %s', (status, code) => {
+    const decided = decideLiveStreamStop(input({ stream: aLiveStream({ status }) }));
 
-  it('refuses a stream that is not live', () => {
-    expect(expectErr(decideLiveStreamStop(input())).code).toBe(ErrorCodes.LIVE_STREAM_NOT_LIVE);
+    if (code) expect(expectErr(decided).code).toBe(code);
+    else expect(expectOk(decided).status).toBe(status);
   });
 });

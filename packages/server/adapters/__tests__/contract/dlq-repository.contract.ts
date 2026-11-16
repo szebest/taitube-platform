@@ -1,7 +1,13 @@
 import type { DlqRepository } from '@vp/core/repositories';
+import * as schema from '@vp/db';
 import { expectOk } from '@vp/testing/result';
 import { VIDEO_IDS, idsOf, publicVideo, seedOwners } from './fixtures';
+import { SHARED_MILLISECOND } from './keyset-walk';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
+
+const REPLAY = { from: ['PARKED'], to: 'REPLAYED' } as const;
+const DISCARD = { from: ['PARKED'], to: 'DISCARDED' } as const;
+const REPLAY_JOB = { type: 'queue', queueName: 'probe', job: { name: 'probe', data: {} } } as const;
 
 const DLQ_IDS = {
   first: '00000000-0000-7000-8000-000000000801',
@@ -72,12 +78,18 @@ export function describeDlqRepositoryContract(makeSubject: MakeRepositoriesSubje
       { status: 'REPLAYED' as const, expected: [DLQ_IDS.first] },
       { status: 'PARKED' as const, expected: [DLQ_IDS.second] },
     ])('filters the listing down to $status entries', async ({ status, expected }) => {
-      await dlq.updateStatus(DLQ_IDS.first, 'REPLAYED', { replayedAt: new Date() });
+      await dlq.transition({ ...REPLAY, id: DLQ_IDS.first, replayedAt: new Date() });
 
       expect(idsOf(expectOk(await dlq.list({ limit: 10, status })))).toEqual(expected);
     });
 
-    it('over-fetches one row so the caller can detect a next page', async () => {
+    it('over-fetches one row so the caller can detect a next page, within one millisecond', async () => {
+      await subject.spreadAcrossMicroseconds({
+        stamp: schema.dlqEntries.createdAt,
+        key: schema.dlqEntries.id,
+        ids: [DLQ_IDS.first, DLQ_IDS.second],
+        at: SHARED_MILLISECOND,
+      });
       const window = expectOk(await dlq.list({ limit: 1 }));
       expect(idsOf(window)).toEqual([DLQ_IDS.second, DLQ_IDS.first]);
 
@@ -93,27 +105,50 @@ export function describeDlqRepositoryContract(makeSubject: MakeRepositoriesSubje
       expect(idsOf(next)).toEqual([DLQ_IDS.first]);
     });
 
-    it('updates the status and reports an unknown entry as null', async () => {
+    it('moves a parked entry and reports an unknown entry as null', async () => {
       const replayedAt = new Date();
-      const updated = expectOk(await dlq.updateStatus(DLQ_IDS.first, 'REPLAYED', { replayedAt }));
+      const updated = expectOk(await dlq.transition({ ...REPLAY, id: DLQ_IDS.first, replayedAt }));
 
       expect(updated?.status).toBe('REPLAYED');
       expect(updated?.replayedAt).not.toBeNull();
-      expect(expectOk(await dlq.updateStatus(DLQ_IDS.unknown, 'DISCARDED'))).toBeNull();
+      expect(expectOk(await dlq.transition({ ...DISCARD, id: DLQ_IDS.unknown }))).toBeNull();
+    });
+
+    it.each([
+      { name: 'replay', edge: REPLAY },
+      { name: 'discard', edge: DISCARD },
+    ])('refuses to $name an entry that already moved, writing no outbox row', async ({ edge }) => {
+      await dlq.transition({ ...REPLAY, id: DLQ_IDS.first });
+      const outboxId = '00000000-0000-7000-8000-000000000804';
+
+      const moved = await dlq.transition({
+        ...edge,
+        id: DLQ_IDS.first,
+        outbox: { id: outboxId, kind: 'dlq_replay', payload: REPLAY_JOB },
+      });
+
+      expect(expectOk(moved)).toBeNull();
+      expect(expectOk(await dlq.findById(DLQ_IDS.first))?.status).toBe('REPLAYED');
+      expect(expectOk(await subject.repositories.outbox.findById(outboxId))).toBeNull();
+    });
+
+    it('lets one of two concurrent replays win', async () => {
+      const moves = await Promise.all([
+        dlq.transition({ ...REPLAY, id: DLQ_IDS.first }),
+        dlq.transition({ ...REPLAY, id: DLQ_IDS.first }),
+      ]);
+
+      expect(moves.map((move) => expectOk(move) !== null).sort()).toEqual([false, true]);
     });
 
     it('writes the outbox row in the same call when one is supplied', async () => {
       const outboxId = '00000000-0000-7000-8000-000000000803';
-      await dlq.updateStatus(
-        DLQ_IDS.first,
-        'REPLAYED',
-        { replayedAt: new Date() },
-        {
-          id: outboxId,
-          kind: 'job.enqueue',
-          payload: { type: 'queue', queueName: 'probe', job: { name: 'probe', data: {} } },
-        }
-      );
+      await dlq.transition({
+        ...REPLAY,
+        id: DLQ_IDS.first,
+        replayedAt: new Date(),
+        outbox: { id: outboxId, kind: 'job.enqueue', payload: REPLAY_JOB },
+      });
 
       expect(expectOk(await subject.repositories.outbox.findById(outboxId))).toMatchObject({
         kind: 'job.enqueue',

@@ -9,7 +9,7 @@ import {
   type UpsertJobSchedulerOptions,
 } from '@vp/core/ports';
 import { JOB_PRIORITY } from '@vp/domain';
-import { type QueueUnavailable, classifyError, queueUnavailable } from '@vp/errors';
+import { type QueueUnavailable, attemptsFor, queueUnavailable } from '@vp/errors';
 import { type Result, err, ok } from '@vp/result';
 
 export class InMemoryJobQueue extends JobQueue {
@@ -157,16 +157,7 @@ export class InMemoryJobQueue extends JobQueue {
       }
       return;
     } catch (err: unknown) {
-      const classification = classifyError(err);
-      let maxAttempts = job.opts?.attempts ?? 1;
-      if (classification === 'permanent') {
-        maxAttempts = 1;
-      } else if (classification === 'unknown') {
-        // ADR-18: retry an unrecognised error a little, then park it.
-        maxAttempts = Math.min(maxAttempts, 3);
-      }
-
-      if ((job.attemptsMade ?? 1) < maxAttempts) {
+      if ((job.attemptsMade ?? 1) < attemptsFor(err, job.opts?.attempts ?? 1)) {
         this.jobStates.set(job.id, 'delayed');
         this.enqueueWaiting(job);
         if (!this.paused) {
@@ -198,7 +189,7 @@ export class InMemoryJobQueue extends JobQueue {
     if (index !== -1) {
       this.enqueuedJobs.splice(index, 1);
     }
-    job.attemptsMade = job.attemptsMade || 1;
+    job.attemptsMade = Math.max(job.attemptsMade ?? 0, job.opts?.attempts ?? 1);
     this.jobStates.set(jobId, 'failed');
     this.failedJobs.push({ job, error: err });
     if (this.failedHandler) {

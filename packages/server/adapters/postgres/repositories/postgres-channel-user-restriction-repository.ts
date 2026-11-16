@@ -14,7 +14,7 @@ import type {
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { fromPromise, map, type Result } from '@vp/result';
 import { and, desc, eq, gt, isNull, lt, or } from 'drizzle-orm';
-import { keysetBefore } from '../scopes/index';
+import { keysetBefore, msTimestamp } from '../scopes/index';
 import { appendChannelAudit, appendModerationRecord } from './channel-audit-writes';
 import { recountAuthored } from './comment-recount';
 import type { PostgresDatabase } from './types';
@@ -103,13 +103,13 @@ export class PostgresChannelUserRestrictionRepository implements ChannelUserRest
               eq(r.channelId, channelId),
               activeAt(now),
               keysetBefore(
-                r.createdAt,
+                msTimestamp(r.createdAt),
                 r.userId,
                 cursor && { sort: cursor.createdAt, tie: cursor.userId }
               )
             )
           )
-          .orderBy(desc(r.createdAt), desc(r.userId))
+          .orderBy(desc(msTimestamp(r.createdAt)), desc(r.userId))
           .limit(limit + 1),
       databaseUnavailable.during('listRestrictions')
     );

@@ -156,6 +156,19 @@ export class PostgresStepRepository extends StepRepository {
     return map(updated, (rows) => rows.length > 0);
   }
 
+  async reset(videoId: string): Promise<Result<number, DatabaseUnavailable>> {
+    const removed = await fromPromise(
+      () =>
+        this.db
+          .delete(schema.processingSteps)
+          .where(eq(schema.processingSteps.videoId, videoId))
+          .returning(CLAIMED),
+      databaseUnavailable.during('reset')
+    );
+
+    return map(removed, (rows) => rows.length);
+  }
+
   async findByVideoId(
     videoId: string
   ): Promise<Result<ProcessingStepRecord[], DatabaseUnavailable>> {

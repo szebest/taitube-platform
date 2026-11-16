@@ -5,13 +5,14 @@ import {
 } from '@vp/core/repositories';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { type Result, ok } from '@vp/result';
+import { uuidv7 } from 'uuidv7';
 
 export class InMemoryRenditionRepository extends RenditionRepository {
   private readonly renditionsMap = new Map<string, RenditionRecord>();
 
   async create(data: NewRenditionInput): Promise<Result<RenditionRecord, DatabaseUnavailable>> {
     const now = new Date();
-    const id = data.id ?? `rend-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+    const id = data.id ?? `rend-${uuidv7()}`;
     const record: RenditionRecord = {
       id,
       videoId: data.videoId,

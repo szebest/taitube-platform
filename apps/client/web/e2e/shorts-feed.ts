@@ -1,4 +1,4 @@
-import { expect, type Page } from '../../../../tests/playwright/fixtures';
+import { expect, hydrated, type Page } from '../../../../tests/playwright/fixtures';
 
 export const EXPANDED = { width: 1280, height: 900 };
 
@@ -50,6 +50,11 @@ export async function openShorts(page: Page) {
   await serveShortDetails(page);
   await page.setViewportSize(EXPANDED);
   await page.goto('/');
-  await page.getByRole('link', { name: 'Shorts', exact: true }).first().click();
-  await expect(page.getByRole('region', { name: 'Shorts player' })).toContainText('Short 1');
+  const link = page.getByRole('link', { name: 'Shorts', exact: true }).first();
+  await hydrated(link);
+  await link.click();
+  const feed = page.getByRole('region', { name: 'Shorts player' });
+  await expect(feed).toContainText('Short 1');
+  await expect(feed).toBeFocused();
+  await expect(page).toHaveURL(`/shorts/${idOf(1)}`);
 }

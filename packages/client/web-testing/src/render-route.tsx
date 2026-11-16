@@ -9,6 +9,7 @@ import { type RenderResult, type queries, render, waitFor } from '@testing-libra
 import { type UserEvent, userEvent } from '@testing-library/user-event';
 import type { HttpHandler } from 'msw/http';
 import { apiServer } from './api-server';
+import { trackRouter } from './test-settle';
 
 /** An app's router: TanStack Router with the `QueryClient` its loaders fill in router context. */
 export type QueryRouter = AnyRouter & { options: { context: { queryClient: QueryClient } } };
@@ -35,6 +36,7 @@ export async function renderRoute<TRouter extends QueryRouter>(
 ): Promise<RenderedRoute<TRouter>> {
   apiServer.use(...handlers);
   const router = getRouter({ history: createMemoryHistory({ initialEntries: [url] }) });
+  trackRouter(router);
   const { queryClient } = router.options.context;
   const { queries } = queryClient.getDefaultOptions();
   queryClient.setDefaultOptions({ queries: { ...queries, retry: false } });

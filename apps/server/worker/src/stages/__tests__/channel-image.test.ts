@@ -214,7 +214,10 @@ describe('channel image stage', () => {
     },
     {
       settled: 'purged',
-      settle: async (id: string) => expectOk(await repositories.channelImages.markPurged([id])),
+      settle: async (id: string) => {
+        expectOk(await repositories.channelImages.fail(id, 'unreadable'));
+        return expectOk(await repositories.channelImages.markPurged([id]));
+      },
     },
   ])('is a no-op for an upload already $settled', async ({ settle }) => {
     const id = await queued('avatar');

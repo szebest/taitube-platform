@@ -84,6 +84,7 @@ test.describe('shorts', () => {
     await openShorts(page);
     await page.keyboard.press('ArrowDown');
     await expect(page.getByRole('status')).toHaveText('Short 2, by Marta');
+    await expect(page).toHaveURL(`/shorts/${idOf(2)}`);
 
     for (const size of [
       { width: 375, height: 700 },

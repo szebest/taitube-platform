@@ -10,6 +10,7 @@ export default defineConfig({
     './src/view-schema.ts',
     './src/library-schema.ts',
     './src/user-events-schema.ts',
+    './src/outbox-schema.ts',
     './src/preferences-schema.ts',
     './src/captions-schema.ts',
     './src/notifications-schema.ts',

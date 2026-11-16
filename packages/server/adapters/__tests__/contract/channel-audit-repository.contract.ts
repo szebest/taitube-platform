@@ -1,8 +1,10 @@
 import type { ChannelAuditRepositoryPort } from '@vp/core/repositories';
+import * as schema from '@vp/db';
 import type { Channel } from '@vp/domain';
 import { expectOk } from '@vp/testing/result';
 import { auditOf, memberAudit, seedTeam } from './channel-team-fixtures';
 import { OTHER_OWNER_ID, seedOwners } from './fixtures';
+import { SHARED_MILLISECOND, walkByCreatedAt } from './keyset-walk';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
 const MINUTE_MS = 60_000;
@@ -59,6 +61,25 @@ export function describeChannelAuditRepositoryContract(makeSubject: MakeReposito
         second.id,
       ]);
       expect((await listAll({ action: 'member.left' })).map((row) => row.id)).toEqual([second.id]);
+    });
+
+    it('walks on from a cursor through rows written within one millisecond', async () => {
+      const ids: string[] = [];
+      for (const n of [1, 2, 3]) {
+        ids.push(expectOk(await audit.append(auditOf(channel, 'invite.created', n))).id);
+      }
+      await subject.spreadAcrossMicroseconds({
+        stamp: schema.channelAuditLog.createdAt,
+        key: schema.channelAuditLog.id,
+        ids,
+        at: SHARED_MILLISECOND,
+      });
+
+      const served = await walkByCreatedAt(async (cursor) =>
+        expectOk(await audit.list(channel.id, { cursor, limit: 1 }))
+      );
+
+      expect(served.sort()).toEqual(ids.sort());
     });
 
     it('purges only what was written before the cutoff', async () => {

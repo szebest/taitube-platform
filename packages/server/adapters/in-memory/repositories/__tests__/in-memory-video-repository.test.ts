@@ -18,4 +18,13 @@ describe('InMemoryVideoRepository', () => {
     expect(expectOk(await videos.findById(video.id))?.viewsCount).toBe(5);
     expect(videos.getAllVideos()).toHaveLength(1);
   });
+
+  it('fails the spec that moves a video along a pair the lifecycle has no edge for', async () => {
+    const videos = new InMemoryVideoRepository();
+    const video = expectOk(await videos.create(publicVideo({ id: 'video-1', status: 'UPLOADED' })));
+
+    await expect(
+      videos.transition({ videoId: video.id, from: 'UPLOADED', to: 'READY', eventType: 'test' })
+    ).rejects.toThrow('UPLOADED -> READY is not an edge of VIDEO_LIFECYCLE');
+  });
 });

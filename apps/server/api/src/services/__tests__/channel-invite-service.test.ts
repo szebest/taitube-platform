@@ -1,5 +1,5 @@
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
-import type { ActingChannel } from '@vp/domain';
+import { type ActingChannel, CHANNEL_INVITE_TTL_DAYS } from '@vp/domain';
 import { type AnyFailure, ErrorCodes } from '@vp/errors';
 import { Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
@@ -10,10 +10,11 @@ import { ChannelInviteService } from '../channel-invite-service';
 const OWNER: UserContext = { id: '00000000-0000-7000-8000-0000000017a1', role: 'USER' };
 const INVITEE: UserContext = { id: '00000000-0000-7000-8000-0000000017a2', role: 'USER' };
 const STRANGER: UserContext = { id: '00000000-0000-7000-8000-0000000017a3', role: 'USER' };
-const NOW = Date.parse('2026-11-01T00:00:00.000Z');
+const NOW = Date.parse('2026-11-01T00:00:00Z');
+const EXPIRES_AT = new Date(NOW + CHANNEL_INVITE_TTL_DAYS * 86_400_000).toISOString();
 
 async function setup() {
-  const repositories = new InMemoryRepositories();
+  const repositories = new InMemoryRepositories({ now: () => NOW });
   const own = expectOk(
     await repositories.channels.create({ userId: OWNER.id, handle: 'owner', displayName: 'Owner' })
   );
@@ -42,7 +43,7 @@ describe('apps/server/api/services: ChannelInviteService', () => {
       role: 'editor',
       status: 'pending',
       invitedBy: OWNER.id,
-      expiresAt: '2026-11-15T00:00:00.000Z',
+      expiresAt: EXPIRES_AT,
       invitee: { handle: 'ada', displayName: 'Ada', avatarUrl: null },
     });
     expect(expectOk(await repositories.outbox.claimBatch(10))).toHaveLength(1);
@@ -171,7 +172,7 @@ describe('apps/server/api/services: ChannelInviteService', () => {
             },
             role: 'editor',
             invitedByName: 'Owner',
-            expiresAt: '2026-11-15T00:00:00.000Z',
+            expiresAt: EXPIRES_AT,
           },
         ],
         nextCursor: null,
@@ -230,7 +231,7 @@ describe('apps/server/api/services: ChannelInviteService', () => {
             inviteeUserId: INVITEE.id,
             role: 'analytics',
             invitedBy: STRANGER.id,
-            expiresAt: new Date(Date.now() + 86_400_000),
+            expiresAt: new Date(NOW + 86_400_000),
           },
           {
             channelId: second.id,

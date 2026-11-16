@@ -5,6 +5,8 @@ import {
   type UploadWithVideo,
   type VideoRepository,
 } from '@vp/core/repositories';
+import type { UploadStatus } from '@vp/domain';
+import { uploadSourcesInto } from '@vp/domain-rules';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { type Result, ok, unwrapOr } from '@vp/result';
 
@@ -70,11 +72,11 @@ export class InMemoryUploadRepository extends UploadRepository {
 
   async updateStatus(
     uploadId: string,
-    status: string
+    status: UploadStatus
   ): Promise<Result<UploadRecord | null, DatabaseUnavailable>> {
     const upload = this.uploadsMap.get(uploadId);
-    if (!upload) return ok(null);
-    upload.status = status as UploadRecord['status'];
+    if (!(upload && uploadSourcesInto(status).includes(upload.status))) return ok(null);
+    upload.status = status;
     if (status === 'COMPLETED') {
       upload.completedAt = new Date();
     }

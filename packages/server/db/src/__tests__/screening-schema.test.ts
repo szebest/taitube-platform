@@ -33,7 +33,11 @@ describe('db: screening migration', () => {
   beforeAll(async () => {
     database = await startSocketDatabase();
     await runMigrations(database.url, quiet);
+  });
+
+  beforeEach(async () => {
     await database.engine.exec(`
+      truncate users cascade;
       insert into users (id, email) values ('${USER}', 'screening@x.local');
       insert into videos (id, owner_id, source_key, status)
         values ('${VIDEO}', '${USER}', 'raw/x.mp4', 'HELD');

@@ -22,44 +22,46 @@ describe('housekeeping: reconcile-processing', () => {
       })
     );
 
-  const seedStaleProcessing = async () =>
-    (await seedVideo(repositories, { status: 'PROCESSING', generation: 1, idleSince: hoursAgo(4) }))
-      .id;
+  const seedStale = async (status: 'PROBING' | 'PROCESSING' = 'PROCESSING') =>
+    (await seedVideo(repositories, { status, generation: 1, idleSince: hoursAgo(4) })).id;
 
   beforeEach(() => {
     repositories = new InMemoryRepositories();
     getQueue = inMemoryQueues();
   });
 
-  it('fails an orphaned PROCESSING video as ORPHANED and parks it in the DLQ', async () => {
-    const videoId = await seedStaleProcessing();
-    const lockToken = uuidv7();
-    await repositories.steps.claim({
-      id: uuidv7(),
-      videoId,
-      step: 'probe',
-      rendition: '-',
-      jobId: ids.probe(videoId, 1),
-      attempt: 1,
-      workerId: 'worker-1',
-      lockToken,
-    });
-    await repositories.steps.complete({ videoId, step: 'probe', rendition: '-', lockToken });
-
-    expect((await reconcile()).orphanedCount).toBe(1);
-
-    const video = expectOk(await repositories.videos.findById(videoId));
-    expect(video?.status).toBe('FAILED');
-    expect(video?.errorCode).toBe('ORPHANED');
-    expect(expectOk(await repositories.dlq.list({ limit: 100 }))).toEqual([
-      expect.objectContaining({
+  it.each(['PROBING', 'PROCESSING'] as const)(
+    'fails an orphaned %s video as ORPHANED and parks it in the DLQ',
+    async (status) => {
+      const videoId = await seedStale(status);
+      const lockToken = uuidv7();
+      await repositories.steps.claim({
+        id: uuidv7(),
         videoId,
-        errorCode: 'ORPHANED',
-        status: 'PARKED',
-        queue: 'housekeeping',
-      }),
-    ]);
-  });
+        step: 'probe',
+        rendition: '-',
+        jobId: ids.probe(videoId, 1),
+        attempt: 1,
+        workerId: 'worker-1',
+        lockToken,
+      });
+      await repositories.steps.complete({ videoId, step: 'probe', rendition: '-', lockToken });
+
+      expect((await reconcile()).orphanedCount).toBe(1);
+
+      const video = expectOk(await repositories.videos.findById(videoId));
+      expect(video?.status).toBe('FAILED');
+      expect(video?.errorCode).toBe('ORPHANED');
+      expect(expectOk(await repositories.dlq.list({ limit: 100 }))).toEqual([
+        expect.objectContaining({
+          videoId,
+          errorCode: 'ORPHANED',
+          status: 'PARKED',
+          queue: 'housekeeping',
+        }),
+      ]);
+    }
+  );
 
   it.each([
     {
@@ -98,7 +100,7 @@ describe('housekeeping: reconcile-processing', () => {
       },
     },
   ])('keeps the video PROCESSING when $scenario', async ({ arrange }) => {
-    const videoId = await seedStaleProcessing();
+    const videoId = await seedStale();
     await arrange(videoId);
 
     expect((await reconcile()).orphanedCount).toBe(0);

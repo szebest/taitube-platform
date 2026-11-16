@@ -32,7 +32,7 @@ describe('video reactions routes', () => {
   const otherUserToken = mintToken({ sub: otherUser.id, role: 'USER', ttl: '1h' });
   const guestUserToken = mintToken({ sub: guestUser.id, role: 'GUEST', ttl: '1h' });
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     ({ app, repositories: repos } = await buildTestApp());
 
     await repos.users.upsert({
@@ -51,9 +51,17 @@ describe('video reactions routes', () => {
     await seedVideo(repos, { id: testVideoId, ownerId: testUser.id, title: 'Awesome Video' });
   });
 
-  afterAll(async () => {
+  afterEach(async () => {
     await app.close();
   });
+
+  const react = (token: string, type: string) =>
+    app.inject({
+      method: 'PUT',
+      url: `/v1/videos/${testVideoId}/reactions`,
+      headers: bearer(token),
+      payload: { type },
+    });
 
   it('PUT /v1/videos/:id/reactions requires authentication (401)', async () => {
     const res = await app.inject({
@@ -107,6 +115,8 @@ describe('video reactions routes', () => {
   });
 
   it('GET /v1/videos/:id/reactions/me returns the caller reaction state (200)', async () => {
+    await react(testUserToken, 'LIKE');
+
     const res = await app.inject({
       method: 'GET',
       url: `/v1/videos/${testVideoId}/reactions/me`,
@@ -120,6 +130,8 @@ describe('video reactions routes', () => {
   });
 
   it('GET /v1/videos/:id details is enriched with likesCount and dislikesCount', async () => {
+    await react(testUserToken, 'LIKE');
+
     const res = await app.inject({
       method: 'GET',
       url: `/v1/videos/${testVideoId}`,
@@ -138,6 +150,8 @@ describe('video reactions routes', () => {
   ])(
     'moves a second user to $type with likes $likesCount and dislikes $dislikesCount',
     async ({ type, likesCount, dislikesCount }) => {
+      await react(testUserToken, 'LIKE');
+
       const res = await app.inject({
         method: 'PUT',
         url: `/v1/videos/${testVideoId}/reactions`,
@@ -151,6 +165,9 @@ describe('video reactions routes', () => {
   );
 
   it('PUT /v1/videos/:id/reactions with type NONE clears reaction', async () => {
+    await react(testUserToken, 'LIKE');
+    await react(otherUserToken, 'DISLIKE');
+
     const res = await app.inject({
       method: 'PUT',
       url: `/v1/videos/${testVideoId}/reactions`,

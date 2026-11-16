@@ -2,6 +2,7 @@ import type { ChannelInvite } from '@vp/domain';
 import { type UserContext, canAnswerChannelInvite } from '@vp/permissions';
 import { type Result, andThen, err, ok } from '@vp/result';
 import { type AuthorizationFailure, authorize } from '../authorize';
+import { CHANNEL_INVITE } from './channel-invite.machine';
 import {
   type ChannelInviteNotFound,
   type ChannelInviteNotPending,
@@ -40,6 +41,8 @@ export function decideInviteAnswer<I extends OwnedInvite>({
       subject: 'ChannelInvite',
     }),
     (): Result<I, AnswerInviteFailure> =>
-      invite.status === 'pending' ? ok(invite) : err(channelInviteNotPending(inviteId))
+      CHANNEL_INVITE.next(invite.status, 'accept')
+        ? ok(invite)
+        : err(channelInviteNotPending(inviteId))
   );
 }

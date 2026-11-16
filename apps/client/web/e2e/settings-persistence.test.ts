@@ -51,9 +51,12 @@ test.describe('a guest keeps settings on the device, and the sign-in carries the
     await page.getByRole('option', { name: '1.5x' }).click();
 
     await signIn('viewer');
-    await page.reload({ waitUntil: 'networkidle' });
+    const kept = expect(page.getByText('Kept your choice for Speed', { exact: true })).toBeVisible({
+      timeout: 15_000,
+    });
+    await page.reload();
 
-    await expect(page.getByText('Kept your choice for Speed', { exact: true })).toBeVisible();
+    await kept;
     await expect(page.getByRole('combobox', { name: 'Default speed' })).toContainText('1.5x');
   });
 });

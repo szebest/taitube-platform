@@ -7,9 +7,8 @@ import type {
 import * as schema from '@vp/db';
 import type { Comment, CommentSort, CommentThread } from '@vp/domain';
 import { assertNever } from '@vp/result';
-import { type SQL, asc, desc, eq, getTableColumns, sql } from 'drizzle-orm';
-import type { AnyPgColumn } from 'drizzle-orm/pg-core';
-import { aliasedTable, ownOrPublicScope } from '../scopes/index';
+import { type SQL, type SQLWrapper, asc, desc, eq, getTableColumns, sql } from 'drizzle-orm';
+import { aliasedTable, msTimestamp, ownOrPublicScope } from '../scopes/index';
 import type { PostgresDatabase } from './types';
 
 const { videoComments: c, channels: ch } = schema;
@@ -70,7 +69,7 @@ export function toCommentThread({
 }
 
 interface SortKey<Cursor> {
-  column: AnyPgColumn;
+  column: SQLWrapper;
   at: (cursor: Cursor) => SQL;
 }
 
@@ -83,12 +82,12 @@ const LIKES: SortKey<CommentThreadCursor> = {
   at: (k) => sql`${k.likeCount}::integer`,
 };
 const CREATED: SortKey<CommentReplyCursor> = {
-  column: c.createdAt,
+  column: msTimestamp(c.createdAt),
   at: (k) => sql`${k.createdAt.toISOString()}::timestamptz`,
 };
 const ID: SortKey<CommentReplyCursor> = { column: c.id, at: (k) => sql`${k.id}::uuid` };
 
-/** Every key descends, so one row comparison resumes the walk down the matching index. */
+/** Every key descends, so one row comparison resumes the walk. */
 const THREAD_KEYS: Readonly<Record<CommentSort, readonly SortKey<CommentThreadCursor>[]>> = {
   top: [PINNED, LIKES, CREATED, ID],
   newest: [PINNED, CREATED, ID],

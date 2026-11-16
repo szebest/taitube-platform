@@ -44,6 +44,36 @@ describe('CircuitBreaker', () => {
     expect(breaker.allows()).toBe(true);
   });
 
+  it('admits one trial call while half-open and refuses the rest until it settles', () => {
+    failTimes(3);
+    now = 1_000;
+
+    expect([breaker.allows(), breaker.allows(), breaker.allows()]).toEqual([true, false, false]);
+  });
+
+  it.each([
+    { outcome: 'success', record: (b: CircuitBreaker) => b.recordSuccess(), admitted: true },
+    { outcome: 'failure', record: (b: CircuitBreaker) => b.recordFailure(), admitted: false },
+  ])('admits $admitted after the trial ends in a $outcome', ({ record, admitted }) => {
+    failTimes(3);
+    now = 1_000;
+    breaker.allows();
+
+    record(breaker);
+
+    expect(breaker.allows()).toBe(admitted);
+  });
+
+  it('admits a new trial after the next cooldown when the trial failed', () => {
+    failTimes(3);
+    now = 1_000;
+    breaker.allows();
+    breaker.recordFailure();
+    now = 2_000;
+
+    expect([breaker.allows(), breaker.allows()]).toEqual([true, false]);
+  });
+
   it.each([
     { outcome: 'success', record: (b: CircuitBreaker) => b.recordSuccess(), state: 'closed' },
     { outcome: 'failure', record: (b: CircuitBreaker) => b.recordFailure(), state: 'open' },

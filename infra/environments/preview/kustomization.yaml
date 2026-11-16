@@ -1,0 +1,19 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../k8s/base
+
+components:
+  - ../../k8s/components/dev-mode
+
+patches:
+  - target:
+      kind: Ingress
+      name: vp-ingress
+    patch: |-
+      $patch: delete
+      apiVersion: networking.k8s.io/v1
+      kind: Ingress
+      metadata:
+        name: vp-ingress

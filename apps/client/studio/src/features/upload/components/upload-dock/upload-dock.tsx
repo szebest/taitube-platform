@@ -64,7 +64,7 @@ export function UploadDockProvider({ children }: PropsWithChildren) {
   };
 
   const cancel = (id: string) => {
-    upload.cancel();
+    upload.cancel(id);
     remove(id);
   };
 

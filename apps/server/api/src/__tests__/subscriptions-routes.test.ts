@@ -14,11 +14,11 @@ import {
 describe('channel subscription routes', () => {
   let ctx: SubscriptionsApp;
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     ctx = await buildSubscriptionsApp();
   });
 
-  afterAll(async () => {
+  afterEach(async () => {
     await ctx.app.close();
   });
 
@@ -62,6 +62,8 @@ describe('channel subscription routes', () => {
     });
 
     it('does not count a repeated subscribe twice', async () => {
+      await subscription(ctx.app, 'POST', CHANNEL_1.id);
+
       const res = await subscription(ctx.app, 'POST', CHANNEL_1.id);
 
       expect(res.statusCode).toBe(200);
@@ -77,6 +79,8 @@ describe('channel subscription routes', () => {
     { channelId: CHANNEL_1.id, subscribed: true },
     { channelId: CHANNEL_2.id, subscribed: false },
   ])('reports subscribed: $subscribed on /subscribers/me', async ({ channelId, subscribed }) => {
+    await subscription(ctx.app, 'POST', CHANNEL_1.id);
+
     const res = await getAs(ctx.app, `/v1/channels/${channelId}/subscribers/me`);
 
     expect(res.statusCode).toBe(200);
@@ -85,6 +89,7 @@ describe('channel subscription routes', () => {
 
   describe('GET /v1/me/subscriptions', () => {
     it('lists channels user is subscribed to with channel metadata', async () => {
+      await subscription(ctx.app, 'POST', CHANNEL_1.id);
       await subscription(ctx.app, 'POST', CHANNEL_2.id);
 
       const res = await getAs(ctx.app, '/v1/me/subscriptions');
@@ -98,6 +103,9 @@ describe('channel subscription routes', () => {
     });
 
     it('supports keyset pagination limit and cursor', async () => {
+      await subscription(ctx.app, 'POST', CHANNEL_1.id);
+      await subscription(ctx.app, 'POST', CHANNEL_2.id);
+
       const page1 = await getAs(ctx.app, '/v1/me/subscriptions?limit=1');
 
       expect(page1.statusCode).toBe(200);
@@ -116,6 +124,8 @@ describe('channel subscription routes', () => {
 
   describe('unsubscribe', () => {
     it('unsubscribes, decrements the count and drops the cached membership', async () => {
+      await subscription(ctx.app, 'POST', CHANNEL_1.id);
+
       const res = await subscription(ctx.app, 'DELETE', CHANNEL_1.id);
 
       expect(res.statusCode).toBe(200);
@@ -124,12 +134,15 @@ describe('channel subscription routes', () => {
         subscribed: false,
         subscriberCount: 0,
       });
-      expect(expectOk(await ctx.subscriptionCache.isSubscribed(SUBSCRIBER_ID, CHANNEL_1.id))).toBe(
-        false
-      );
+      expect(
+        expectOk(await ctx.subscriptionCache.isSubscribed(SUBSCRIBER_ID, CHANNEL_1.id))
+      ).toBeNull();
     });
 
     it('stays at 0 when unsubscribing again', async () => {
+      await subscription(ctx.app, 'POST', CHANNEL_1.id);
+      await subscription(ctx.app, 'DELETE', CHANNEL_1.id);
+
       const res = await subscription(ctx.app, 'DELETE', CHANNEL_1.id);
 
       expect(res.statusCode).toBe(200);
@@ -139,8 +152,6 @@ describe('channel subscription routes', () => {
 
   describe('concurrent requests from one user', () => {
     it('resolve 10 concurrent subscribes to a count of 1', async () => {
-      await subscription(ctx.app, 'DELETE', CHANNEL_1.id);
-
       const responses = await Promise.all(
         Array.from({ length: 10 }, () => subscription(ctx.app, 'POST', CHANNEL_1.id))
       );
@@ -155,6 +166,8 @@ describe('channel subscription routes', () => {
     });
 
     it('resolve 10 concurrent unsubscribes to a count of 0', async () => {
+      await subscription(ctx.app, 'POST', CHANNEL_1.id);
+
       const responses = await Promise.all(
         Array.from({ length: 10 }, () => subscription(ctx.app, 'DELETE', CHANNEL_1.id))
       );

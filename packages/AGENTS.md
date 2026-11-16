@@ -94,6 +94,7 @@ document is stale — fix it.
 |---|---|---|
 | `@vp/domain` | universal | `packages/universal/domain` |
 | `@vp/errors` | universal | `packages/universal/errors` |
+| `@vp/machine` | universal | `packages/universal/machine` |
 | `@vp/result` | universal | `packages/universal/result` |
 | `@vp/tsconfig` | universal | `packages/universal/tsconfig` |
 | `@vp/concurrency` | server | `packages/server/concurrency` |

@@ -8,12 +8,14 @@ export interface CircuitBreakerOptions {
 
 /**
  * Stops calling a dependency after `failureThreshold` failures in a row and lets a call through
- * again once `cooldownMs` has passed. That trial call decides: a success closes the circuit, a
- * failure opens it for another cooldown.
+ * again once `cooldownMs` has passed. Exactly one trial call is admitted: `allows()` hands out
+ * that slot, and the caller must report the outcome with `recordSuccess` or `recordFailure`.
+ * A success closes the circuit, a failure opens it for another cooldown.
  */
 export class CircuitBreaker {
   private consecutiveFailures = 0;
   private openedAt: number | undefined;
+  private trialInFlight = false;
 
   constructor(private readonly options: CircuitBreakerOptions) {}
 
@@ -23,15 +25,21 @@ export class CircuitBreaker {
   }
 
   allows(): boolean {
-    return this.state() !== 'open';
+    const state = this.state();
+    if (state !== 'half-open') return state === 'closed';
+    if (this.trialInFlight) return false;
+    this.trialInFlight = true;
+    return true;
   }
 
   recordSuccess(): void {
     this.consecutiveFailures = 0;
     this.openedAt = undefined;
+    this.trialInFlight = false;
   }
 
   recordFailure(): void {
+    this.trialInFlight = false;
     this.consecutiveFailures += 1;
     if (this.state() === 'half-open' || this.consecutiveFailures >= this.options.failureThreshold) {
       this.openedAt = this.options.now();

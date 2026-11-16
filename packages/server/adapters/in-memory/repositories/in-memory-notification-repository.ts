@@ -21,12 +21,16 @@ import { MS_PER_DAY } from '@vp/domain/time';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { isErr, ok, type Result } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
+import { type Clock, realClock } from './clock';
 import { byKeysetDesc, isKeysetBefore } from './keyset';
 
 export class InMemoryNotificationRepository implements NotificationRepositoryPort {
   private notifications = new Map<string, Notification>();
 
-  constructor(private readonly userEvents: UserEventRepository) {}
+  constructor(
+    private readonly userEvents: UserEventRepository,
+    private readonly now: Clock = realClock
+  ) {}
 
   async record(
     input: NewNotificationInput
@@ -120,7 +124,7 @@ export class InMemoryNotificationRepository implements NotificationRepositoryPor
   }
 
   async prune(retentionDays: number): Promise<Result<number, DatabaseUnavailable>> {
-    const cutoff = Date.now() - retentionDays * MS_PER_DAY;
+    const cutoff = this.now() - retentionDays * MS_PER_DAY;
     let pruned = 0;
     for (const [id, notification] of this.notifications) {
       if (notification.createdAt.getTime() >= cutoff) continue;

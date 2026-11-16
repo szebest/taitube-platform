@@ -1,4 +1,5 @@
 import type { SubscriptionRepositoryPort } from '@vp/core/repositories';
+import * as schema from '@vp/db';
 import { viewDateOf } from '@vp/domain';
 import { MS_PER_DAY } from '@vp/domain/time';
 import { expectOk } from '@vp/testing/result';
@@ -11,6 +12,7 @@ import {
   publicVideo,
   seedOwners,
 } from './fixtures';
+import { SHARED_MILLISECOND, walkByCreatedAt } from './keyset-walk';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
 const SUBSCRIBER_ID = '00000000-0000-7000-8000-000000000103';
@@ -30,6 +32,9 @@ export function describeSubscriptionRepositoryContract(makeSubject: MakeReposito
     afterAll(async () => {
       await subject.close();
     });
+
+    const listed = async (limit: number, cursor?: { createdAt: Date; channelId: string }) =>
+      expectOk(await subscriptions.listUserSubscriptions(SUBSCRIBER_ID, { limit, cursor }));
 
     beforeEach(async () => {
       await subject.reset();
@@ -111,7 +116,7 @@ export function describeSubscriptionRepositoryContract(makeSubject: MakeReposito
       await subscriptions.subscribe(SUBSCRIBER_ID, CHANNEL_ID);
       await subscriptions.subscribe(SUBSCRIBER_ID, OTHER_CHANNEL_ID);
 
-      const page = expectOk(await subscriptions.listUserSubscriptions(SUBSCRIBER_ID, { limit: 1 }));
+      const page = await listed(1);
       expect(page).toHaveLength(2);
       expect(page[0]?.id).toBe(OTHER_CHANNEL_ID);
       expect(page[0]?.handle).toBe('other-channel');
@@ -121,9 +126,7 @@ export function describeSubscriptionRepositoryContract(makeSubject: MakeReposito
     it('carries the channel profile and its count on each listed subscription', async () => {
       await subscriptions.subscribe(SUBSCRIBER_ID, CHANNEL_ID);
 
-      const [row] = expectOk(
-        await subscriptions.listUserSubscriptions(SUBSCRIBER_ID, { limit: 10 })
-      );
+      const [row] = await listed(10);
 
       expect(row).toMatchObject({
         id: CHANNEL_ID,
@@ -134,20 +137,19 @@ export function describeSubscriptionRepositoryContract(makeSubject: MakeReposito
       });
     });
 
-    it('resumes the subscription listing from a keyset cursor without repeating a channel', async () => {
+    it('resumes the subscriptions from a cursor within one millisecond without repeating a channel', async () => {
       await subscriptions.subscribe(SUBSCRIBER_ID, CHANNEL_ID);
       await subscriptions.subscribe(SUBSCRIBER_ID, OTHER_CHANNEL_ID);
-      const [first] = expectOk(
-        await subscriptions.listUserSubscriptions(SUBSCRIBER_ID, { limit: 1 })
-      );
+      await subject.spreadAcrossMicroseconds({
+        stamp: schema.channelSubscriptions.createdAt,
+        key: schema.channelSubscriptions.channelId,
+        ids: [CHANNEL_ID, OTHER_CHANNEL_ID],
+        at: SHARED_MILLISECOND,
+      });
+      const [first] = await listed(1);
       if (!first) throw new Error('the first page is empty');
 
-      const next = expectOk(
-        await subscriptions.listUserSubscriptions(SUBSCRIBER_ID, {
-          limit: 1,
-          cursor: { createdAt: first.subscribedAt, channelId: first.id },
-        })
-      );
+      const next = await listed(1, { createdAt: first.subscribedAt, channelId: first.id });
 
       expect(next.map((row) => row.id)).toEqual([CHANNEL_ID]);
     });
@@ -171,6 +173,30 @@ export function describeSubscriptionRepositoryContract(makeSubject: MakeReposito
       expect(feed.total).toBe(1);
     });
 
+    it('walks the feed on from a cursor through videos that share a millisecond', async () => {
+      const ids = [VIDEO_IDS.a, VIDEO_IDS.b, VIDEO_IDS.c];
+      for (const id of ids) await subject.seedVideo(publicVideo({ id }), SHARED_MILLISECOND);
+      await subscriptions.subscribe(SUBSCRIBER_ID, CHANNEL_ID);
+      await subject.spreadAcrossMicroseconds({
+        stamp: schema.videos.createdAt,
+        key: schema.videos.id,
+        ids,
+        at: SHARED_MILLISECOND,
+      });
+
+      const served = await walkByCreatedAt(
+        async (cursor) =>
+          expectOk(
+            await subscriptions.getSubscriptionFeed(SUBSCRIBER_ID, {
+              limit: 1,
+              cursor: cursor ?? undefined,
+            })
+          ).items
+      );
+
+      expect(served.sort()).toEqual(ids.sort());
+    });
+
     it('returns an empty feed for a user with no subscriptions', async () => {
       const feed = expectOk(await subscriptions.getSubscriptionFeed(OWNER_ID, { limit: 10 }));
       expect(feed.items).toEqual([]);
@@ -179,10 +205,7 @@ export function describeSubscriptionRepositoryContract(makeSubject: MakeReposito
 
     it('stores a notification level per subscription, all by default', async () => {
       await subscriptions.subscribe(SUBSCRIBER_ID, CHANNEL_ID);
-      const levels = async () =>
-        expectOk(await subscriptions.listUserSubscriptions(SUBSCRIBER_ID, { limit: 10 })).map(
-          (item) => item.notificationLevel
-        );
+      const levels = async () => (await listed(10)).map((item) => item.notificationLevel);
       expect(await levels()).toEqual(['all']);
 
       expect(

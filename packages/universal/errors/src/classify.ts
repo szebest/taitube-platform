@@ -36,6 +36,20 @@ export function classifyError(error: unknown): ErrorClassification {
   return 'unknown';
 }
 
+const UNKNOWN_ATTEMPT_CAP = 3;
+
+/** How many of a policy's `allowed` attempts a failure gets before it is parked (ADR-18). */
+export function attemptsFor(error: unknown, allowed: number): number {
+  switch (classifyError(error)) {
+    case 'permanent':
+      return 1;
+    case 'unknown':
+      return Math.min(allowed, UNKNOWN_ATTEMPT_CAP);
+    case 'transient':
+      return allowed;
+  }
+}
+
 export function isErrorCode(code: unknown): code is ErrorCode {
   return typeof code === 'string' && Object.hasOwn(RETRY_CLASS, code);
 }

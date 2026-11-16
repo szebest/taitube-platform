@@ -29,6 +29,16 @@ dependency on its current major) are `senior-engineering-practices`, section 4. 
 - **A rule that slipped gets a check, not louder prose**: the assertion goes into `tests/architecture/` with a
   fixture proving it fires, and its row into [ARCHITECTURE.md section 6](../../ARCHITECTURE.md#6-verification--enforcement).
 
+## Setup & environment
+
+A change that adds an environment key, a service, a port, a migration, a queue, a seed entity or a demo scenario
+updates, in the same PR: the schema entry **and its `ENV_DOCS` entry** (`description`, `example`,
+`secret`/`public`, `readBy`) in `packages/server/env-schema`, `.env.example`, `docs/ENVIRONMENT.md` (`pnpm gen:env-docs`),
+`docs/GETTING_STARTED.md` for anything a newcomer must know, `docs/DEMO.md` and the seed in
+`packages/server/demo` for new demo-visible features, and `infra/environments/<env>/environment.yaml` for a key
+production requires. The architecture suite fails the key, `.env.example`, generated-doc and production-environment
+parts; review holds the rest.
+
 ## Docs
 
 For specs (written by `to-spec`), tickets (`docs/tickets/`), the SDD and the agent docs:

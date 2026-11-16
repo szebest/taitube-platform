@@ -1,5 +1,5 @@
 import type { Locator } from '@playwright/test';
-import { type Page, type Persona, type Stack, expect, test } from './fixtures';
+import { expect, hydrated, type Page, type Persona, type Stack, test } from './fixtures';
 
 export type LockingOverlay = Readonly<{
   name: string;
@@ -41,6 +41,7 @@ export function describeLayoutStability(
         await page.goto(typeof path === 'string' ? path : path(stack), {
           waitUntil: 'networkidle',
         });
+        await hydrated(overlay.trigger?.(page) ?? page.locator('main'));
         await page.addStyleTag({
           content:
             'body { min-height: 3000px; } html::-webkit-scrollbar { width: 15px; } html::-webkit-scrollbar-thumb { background: #888; }',

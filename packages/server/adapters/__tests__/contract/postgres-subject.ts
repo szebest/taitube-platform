@@ -1,6 +1,6 @@
 import * as schema from '@vp/db';
 import { expectOk } from '@vp/testing/result';
-import { eq, sql } from 'drizzle-orm';
+import { eq, inArray, sql } from 'drizzle-orm';
 import { drizzle as drizzlePglite } from 'drizzle-orm/pglite';
 import { drizzle as drizzlePostgres } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
@@ -45,6 +45,18 @@ function subjectOver(db: PostgresDatabase, close: () => Promise<void>): Reposito
       await db.execute(
         sql`update notifications set created_at = created_at - make_interval(secs => ${ms / 1000})`
       );
+    },
+    spreadAcrossMicroseconds: async ({ stamp, key, ids, at }) => {
+      const { table } = stamp;
+      await db.execute(sql`
+        update ${table}
+        set ${sql.identifier(stamp.name)} =
+          ${at.toISOString()}::timestamptz + ranked.n * interval '100 microseconds'
+        from (
+          select ${key} as key, row_number() over (order by ${key} desc) as n
+          from ${table} where ${inArray(key, [...ids])}
+        ) ranked
+        where ${key} = ranked.key`);
     },
     reset: async () => {
       await db.execute(EMPTY_EVERY_TABLE);

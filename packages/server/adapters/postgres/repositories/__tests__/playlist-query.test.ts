@@ -15,7 +15,7 @@ describe('adapters/postgres: playlist query', () => {
   let engine: PGlite;
   let db: PostgresDatabase;
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     engine = await migratedPglite();
     db = drizzle(engine, { schema });
     await db.insert(schema.users).values([
@@ -42,7 +42,7 @@ describe('adapters/postgres: playlist query', () => {
     );
   });
 
-  afterAll(async () => {
+  afterEach(async () => {
     await engine.close();
   });
 

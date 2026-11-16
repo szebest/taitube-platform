@@ -1,5 +1,6 @@
 import type { VideoLibraryQuery, VideoStudioRepository } from '@vp/core/repositories';
-import { creatorLibraryCursorOf, type LibrarySort } from '@vp/domain';
+import * as schema from '@vp/db';
+import { type CreatorLibraryCursor, creatorLibraryCursorOf, type LibrarySort } from '@vp/domain';
 import { expectOk } from '@vp/testing/result';
 import {
   CATEGORY_GAMING_ID,
@@ -13,10 +14,11 @@ import {
   seedOwners,
   VIDEO_IDS,
 } from './fixtures';
+import { SHARED_MILLISECOND, walkOneAtATime } from './keyset-walk';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
 export function describeVideoStudioLibraryContract(makeSubject: MakeRepositoriesSubject): void {
-  describe('VideoStudioRepository.listLibrary contract', () => {
+  describe('VideoStudioLibrary contract', () => {
     let subject: RepositoriesSubject;
     let studio: VideoStudioRepository;
 
@@ -97,6 +99,36 @@ export function describeVideoStudioLibraryContract(makeSubject: MakeRepositories
 
         expect(await list({ sort: 'views', cursor })).toEqual([VIDEO_IDS.b, VIDEO_IDS.a]);
       });
+
+      it.each([{ order: 'desc' as const }, { order: 'asc' as const }])(
+        'walks the newest sort $order through videos created within one millisecond',
+        async ({ order }) => {
+          const ids = [VIDEO_IDS.a, VIDEO_IDS.b, VIDEO_IDS.c];
+          await subject.spreadAcrossMicroseconds({
+            stamp: schema.videos.createdAt,
+            key: schema.videos.id,
+            ids,
+            at: SHARED_MILLISECOND,
+          });
+
+          const served = await walkOneAtATime(
+            async (cursor: CreatorLibraryCursor | null) =>
+              expectOk(
+                await studio.listLibrary({
+                  ownerId: OWNER_ID,
+                  sort: 'newest',
+                  order,
+                  cursor,
+                  limit: 1,
+                })
+              ),
+            (row) => creatorLibraryCursorOf(row, 'newest'),
+            ({ id }) => id
+          );
+
+          expect(served.sort()).toEqual(ids.sort());
+        }
+      );
     });
 
     describe('listLibrary across owners', () => {

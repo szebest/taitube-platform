@@ -119,6 +119,7 @@ function applyFrame(
         canSend: frame.canSend,
         canModerate: frame.canModerate,
         connection: 'open',
+        refusal: null,
       };
     case 'message':
       return { ...state, lines: withMessage(state.lines, frame.message, self) };

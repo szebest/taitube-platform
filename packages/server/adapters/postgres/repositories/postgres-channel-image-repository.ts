@@ -5,7 +5,7 @@ import type {
   NewChannelImageUpload,
 } from '@vp/core/repositories';
 import { channelImageUploads as up, channels } from '@vp/db';
-import type { ChannelImageUpload } from '@vp/domain';
+import { CHANNEL_IMAGE_UPLOAD_EDGES, type ChannelImageUpload } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { type Result, err, fromPromise, map, ok } from '@vp/result';
 import { and, asc, eq, inArray, lt, or, sql } from 'drizzle-orm';
@@ -17,6 +17,20 @@ import {
   toChannelImageUpload,
 } from './channel-image-writes';
 import type { PostgresDatabase } from './types';
+
+const UNUSED_STATUSES = CHANNEL_IMAGE_UPLOAD_EDGES.purge.from.filter(
+  (status): status is Exclude<(typeof CHANNEL_IMAGE_UPLOAD_EDGES.purge.from)[number], 'ready'> =>
+    status !== 'ready'
+);
+
+const isPurgeable = () =>
+  or(
+    inArray(up.status, UNUSED_STATUSES),
+    and(
+      eq(up.status, 'ready'),
+      sql`${up.version} < (select case ${up.kind} when 'avatar' then ${channels.avatarVersion} else ${channels.bannerVersion} end from ${channels} where ${channels.id} = ${up.channelId})`
+    )
+  );
 
 export class PostgresChannelImageRepository implements ChannelImageRepositoryPort {
   constructor(private readonly db: PostgresDatabase) {}
@@ -60,7 +74,7 @@ export class PostgresChannelImageRepository implements ChannelImageRepositoryPor
           version: await nextVersion(tx, row),
           updatedAt: new Date(),
         })
-        .where(eq(up.id, id))
+        .where(and(eq(up.id, id), inArray(up.status, [...CHANNEL_IMAGE_UPLOAD_EDGES.queue.from])))
         .returning();
       return queued ? toChannelImageUpload(queued) : null;
     });
@@ -96,22 +110,12 @@ export class PostgresChannelImageRepository implements ChannelImageRepositoryPor
     olderThan: Date,
     limit: number
   ): Promise<Result<ChannelImageUpload[], DatabaseUnavailable>> {
-    const currentVersion = sql`case ${up.kind} when 'avatar' then ${channels.avatarVersion} else ${channels.bannerVersion} end`;
     const rows = await fromPromise(
       () =>
         this.db
           .select({ upload: up })
           .from(up)
-          .innerJoin(channels, eq(channels.id, up.channelId))
-          .where(
-            and(
-              lt(up.updatedAt, olderThan),
-              or(
-                inArray(up.status, ['issued', 'failed', 'superseded']),
-                and(eq(up.status, 'ready'), sql`${up.version} < ${currentVersion}`)
-              )
-            )
-          )
+          .where(and(lt(up.updatedAt, olderThan), isPurgeable()))
           .orderBy(asc(up.updatedAt), asc(up.id))
           .limit(limit),
       databaseUnavailable.during('listPurgeableChannelImages')
@@ -126,7 +130,7 @@ export class PostgresChannelImageRepository implements ChannelImageRepositoryPor
         this.db
           .update(up)
           .set({ status: 'purged', updatedAt: new Date() })
-          .where(inArray(up.id, [...ids])),
+          .where(and(inArray(up.id, [...ids]), isPurgeable())),
       databaseUnavailable.during('markChannelImagesPurged')
     );
     return map(written, () => undefined);

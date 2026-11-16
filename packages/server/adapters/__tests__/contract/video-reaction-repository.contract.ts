@@ -1,8 +1,10 @@
 import type { VideoReactionRepositoryPort } from '@vp/core/repositories';
+import * as schema from '@vp/db';
 import type { LikedVideoEntry } from '@vp/domain';
 import type { UserContext } from '@vp/permissions';
 import { expectOk } from '@vp/testing/result';
 import { OTHER_OWNER_ID, OWNER_ID, VIDEO_IDS, publicVideo, seedOwners } from './fixtures';
+import { SHARED_MILLISECOND, walkOneAtATime } from './keyset-walk';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
 export function describeVideoReactionRepositoryContract(
@@ -147,6 +149,26 @@ export function describeVideoReactionRepositoryContract(
         expect(first[0]?.video).toMatchObject({ id: VIDEO_IDS.c, status: 'READY' });
         expect(first[0]?.channel).toMatchObject({ handle: 'owner' });
         expect(videosOf(rest)).toEqual([VIDEO_IDS.b, VIDEO_IDS.a]);
+      });
+
+      it('walks on from a cursor through likes that share a millisecond', async () => {
+        const videoIds = [VIDEO_IDS.a, VIDEO_IDS.b, VIDEO_IDS.c];
+        for (const videoId of videoIds) await reactions.setReaction(videoId, VIEWER.id, 'LIKE');
+        await subject.spreadAcrossMicroseconds({
+          stamp: schema.videoReactions.updatedAt,
+          key: schema.videoReactions.videoId,
+          ids: videoIds,
+          at: SHARED_MILLISECOND,
+        });
+
+        const served = await walkOneAtATime(
+          async (cursor: { likedAt: Date; id: string } | null) =>
+            expectOk(await reactions.listLiked(VIEWER, { cursor, limit: 1 })),
+          ({ likedAt, id }) => ({ likedAt, id }),
+          ({ video }) => video.id
+        );
+
+        expect(served.sort()).toEqual(videoIds.sort());
       });
 
       it('lists only the caller likes, and no dislike or withdrawn like', async () => {

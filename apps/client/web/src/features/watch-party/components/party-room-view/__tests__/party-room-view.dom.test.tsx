@@ -28,9 +28,9 @@ describe('apps/client/web: PartyRoomView', () => {
   it('names the room, its host, its phase and how many are here', async () => {
     await renderPartyRoute({ preview: SEATED });
 
-    expect(await screen.findByText('Hosted by Ana')).toBeInTheDocument();
+    expect(await screen.findByText('2 here')).toBeInTheDocument();
+    expect(screen.getByText('Hosted by Ana')).toBeInTheDocument();
     expect(screen.getByText('Waiting to start', { selector: 'span' })).toBeInTheDocument();
-    expect(screen.getByText('2 here')).toBeInTheDocument();
   });
 
   it('moves the panel with the layout the viewer picks', async () => {
@@ -53,7 +53,7 @@ describe('apps/client/web: PartyRoomView', () => {
     'says "$shown" when the room ends the visit with $frame',
     async ({ frame, shown }) => {
       const { socket } = await renderPartyRoute({ preview: SEATED });
-      await screen.findByText('Hosted by Ana');
+      await vi.waitFor(() => expect(socket.urls).toHaveLength(1));
 
       act(() => socket.push(frame));
 

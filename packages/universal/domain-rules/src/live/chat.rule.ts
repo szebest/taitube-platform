@@ -8,6 +8,7 @@ import {
   liveChatClosed,
   liveChatSubscribersOnly,
 } from './failures';
+import { LIVE_STREAM } from './live-stream.machine';
 
 export interface LiveChatPostInput {
   readonly actor: UserContext;
@@ -27,7 +28,7 @@ export function decideLiveChatPost(
   input: LiveChatPostInput
 ): Result<LiveChatPostGrant, LiveChatClosed | LiveChatSubscribersOnly> {
   const { actor, stream, ownerId, isSubscriber } = input;
-  if (stream.status !== 'LIVE') return err(liveChatClosed(stream.id));
+  if (!LIVE_STREAM.next(stream.status, 'end')) return err(liveChatClosed(stream.id));
 
   const moderator = canModerateLiveStream({ user: actor, stream: { ownerId } });
   if (moderator) return ok({ slowModeSeconds: 0 });

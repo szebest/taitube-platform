@@ -125,8 +125,12 @@ test.describe('watch', () => {
     await expect.poll(async () => Number(await seekBar.getAttribute('max'))).toBeGreaterThan(1);
     await seekBar.fill('1');
     await expect
-      .poll(() => page.locator('video').evaluate((video: HTMLVideoElement) => video.currentTime))
-      .toBeGreaterThanOrEqual(1);
+      .poll(() =>
+        page
+          .locator('video')
+          .evaluate((video: HTMLVideoElement) => !video.seeking && video.currentTime >= 1)
+      )
+      .toBe(true);
 
     await page.getByRole('button', { name: 'Share', exact: true }).click();
     const dialog = page.getByRole('dialog', { name: 'Share this video' });

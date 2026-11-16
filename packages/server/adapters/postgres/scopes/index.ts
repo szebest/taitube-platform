@@ -2,6 +2,7 @@ export * from './accessible-by';
 export * from './aliased-table';
 export * from './contains';
 export * from './keyset';
+export * from './ms-timestamp';
 export * from './public-comment';
 export * from './rules-to-sql';
 export * from './soft-delete';

@@ -5,7 +5,8 @@ import {
   issueUploadParts,
   startUpload,
 } from '@vp/api-contracts';
-import { api, apiServer, mockEndpoint, VIDEO_ID } from '@vp/web-testing';
+import { ErrorCodes } from '@vp/errors';
+import { api, apiServer, mockEndpoint, problemReply, VIDEO_ID } from '@vp/web-testing';
 import axios from 'axios';
 import { HttpResponse } from 'msw/http';
 import type { UploadProgress } from '../upload-progress';
@@ -256,6 +257,18 @@ describe('apps/client/studio: uploadVideo', () => {
 
     expect(started).toEqual([1, 2, 3, 4, 5]);
     expect(completions).toEqual([]);
+    expect(aborts).toEqual([UPLOAD_ID]);
+  });
+
+  it('aborts the upload once when the API refuses to complete it', async () => {
+    storageAnswers();
+    const { aborts } = answerUpload(multipart(2, 2));
+    apiServer.use(
+      mockEndpoint(completeUpload, () => problemReply(ErrorCodes.UPLOAD_SIZE_MISMATCH))
+    );
+
+    await expect(uploadVideo(api, fileOf(2), () => {})).rejects.toThrow();
+
     expect(aborts).toEqual([UPLOAD_ID]);
   });
 

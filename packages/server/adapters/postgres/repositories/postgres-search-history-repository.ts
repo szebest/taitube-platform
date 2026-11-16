@@ -8,7 +8,7 @@ import {
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { fromPromise, map, type Result } from '@vp/result';
 import { and, desc, eq, lt, sql } from 'drizzle-orm';
-import { keysetBefore } from '../scopes/index';
+import { keysetBefore, msTimestamp } from '../scopes/index';
 import type { PostgresDatabase } from './types';
 
 const { searchHistory: sh } = schema;
@@ -58,13 +58,13 @@ export class PostgresSearchHistoryRepository implements SearchHistoryRepositoryP
             and(
               eq(sh.userId, userId),
               keysetBefore(
-                sh.searchedAt,
+                msTimestamp(sh.searchedAt),
                 sh.id,
                 cursor && { sort: cursor.searchedAt, tie: cursor.id }
               )
             )
           )
-          .orderBy(desc(sh.searchedAt), desc(sh.id))
+          .orderBy(desc(msTimestamp(sh.searchedAt)), desc(sh.id))
           .limit(limit + 1),
       databaseUnavailable.during('listSearchHistory')
     );

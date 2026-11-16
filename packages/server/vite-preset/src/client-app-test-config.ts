@@ -8,6 +8,7 @@ import { defineConfig, mergeConfig, type ViteUserConfig } from 'vitest/config';
 const ALL_SPECS = 'src/**/__tests__/**/*.test.{ts,tsx}';
 const DOM_SPECS = 'src/**/__tests__/**/*.dom.test.{ts,tsx}';
 const API_SERVER_SETUP = '@vp/web-testing/api-server.setup';
+const SETTLE_SETUP = '@vp/web-testing/settle.setup';
 const SERVER_FUNCTIONS_SETUP = '@vp/web-testing/server-functions.setup';
 const JSDOM_SETUP = ['@testing-library/jest-dom/vitest', '@vp/web-testing/jsdom.setup'];
 
@@ -33,7 +34,8 @@ function project({ app, environment, setupFiles = [], compiler, include }: Clien
       environment,
       isolate: true,
       include: [...(include ?? [DOM_SPECS])],
-      setupFiles: [...setupFiles, ...JSDOM_SETUP, API_SERVER_SETUP],
+      setupFiles: [...setupFiles, ...JSDOM_SETUP, API_SERVER_SETUP, SETTLE_SETUP],
+      env: { VITE_DEMO_PERSONAS: 'true', RTL_SKIP_AUTO_CLEANUP: 'true' },
     };
   }
   return {
@@ -43,6 +45,7 @@ function project({ app, environment, setupFiles = [], compiler, include }: Clien
     include: [ALL_SPECS],
     exclude: ['**/node_modules/**', DOM_SPECS],
     setupFiles: [...setupFiles, SERVER_FUNCTIONS_SETUP, API_SERVER_SETUP],
+    env: { VITE_DEMO_PERSONAS: 'true' },
   };
 }
 
@@ -62,7 +65,6 @@ export async function clientAppTestConfig(
     defineConfig({
       test: {
         ...project(options),
-        env: { VITE_DEMO_PERSONAS: 'true' },
         pool: 'threads',
         css: { include: [/\.s?css\?url/] },
         globals: true,
