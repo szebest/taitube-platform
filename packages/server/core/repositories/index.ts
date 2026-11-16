@@ -17,6 +17,8 @@ export * from './channel-page-repository';
 export * from './channel-member-repository';
 export * from './channel-invite-repository';
 export * from './channel-audit-repository';
+export * from './data-export-repository';
+export * from './export-row-repository';
 export * from './video-reaction-repository';
 export * from './subscription-repository';
 export * from './video-view-repository';

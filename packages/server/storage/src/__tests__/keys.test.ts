@@ -19,6 +19,7 @@ import {
   liveRelativeUri,
   liveSegmentKey,
   evidenceFrameKey,
+  exportObjectKey,
   evidencePrefix,
   masterPlaylistKey,
   posterKey,
@@ -38,6 +39,10 @@ describe('packages/storage: object keys', () => {
   const videoId = SEEDED.videoId;
   const segmentKeyOf = (generation: number) =>
     renditionObjectKey(videoId, '720p', 'seg_00001.ts', generation);
+
+  it('keeps a channel export under the exports prefix of its channel, named by its format', () => {
+    expect(exportObjectKey('ch1', 'e1', 'csv')).toBe('exports/ch1/e1.csv');
+  });
 
   it('keeps evidence under a prefix of its own, outside the raw uploads', () => {
     expect(evidencePrefix(videoId)).toBe(`evidence/${videoId}/`);

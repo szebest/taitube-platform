@@ -2,6 +2,7 @@ import type { CaptionKind } from './captions';
 import type { ChannelCard } from './channel';
 import type { ChannelImageKind } from './channel-images';
 import type { Comment, CommentThread, CommentVideoSummary } from './comment';
+import type { DataExportFormat, DataExportKind } from './data-export';
 import type { NotificationReadScope, NotificationView } from './notification';
 import type { PreferenceSection } from './settings';
 import type { VideoStatus } from './status-vocabulary';
@@ -47,7 +48,27 @@ export type UserEvent =
   | { type: 'channel.image.ready'; payload: ChannelImageReadyPayload }
   | { type: 'channel.image.failed'; payload: ChannelImageFailedPayload }
   | { type: 'party.controls.updated'; payload: PartyControlsUpdatedPayload }
-  | { type: 'video.stats.updated'; payload: { videoId: string } };
+  | { type: 'video.stats.updated'; payload: { videoId: string } }
+  | { type: 'export.ready'; payload: ExportReadyPayload }
+  | { type: 'export.failed'; payload: ExportFailedPayload };
+
+/** An export's file can be downloaded until `expiresAt` (ISO 8601). */
+export interface ExportReadyPayload {
+  exportId: string;
+  channelId: string;
+  kind: DataExportKind;
+  format: DataExportFormat;
+  rowCount: number;
+  expiresAt: string;
+}
+
+/** The job gave up on an export; `reason` is what the requester is told. */
+export interface ExportFailedPayload {
+  exportId: string;
+  channelId: string;
+  kind: DataExportKind;
+  reason: string;
+}
 
 /** An avatar or banner upload became the channel's image at `version`. */
 export interface ChannelImageReadyPayload {
@@ -151,4 +172,12 @@ export function partyControlsUpdated(targetKey: string, roomId: string | null): 
 /** The id only: whoever holds the panel refetches the numbers, so none travel on the stream. */
 export function videoStatsUpdated(videoId: string): UserEvent {
   return { type: 'video.stats.updated', payload: { videoId } };
+}
+
+export function exportReady(payload: ExportReadyPayload): UserEvent {
+  return { type: 'export.ready', payload };
+}
+
+export function exportFailed(payload: ExportFailedPayload): UserEvent {
+  return { type: 'export.failed', payload };
 }

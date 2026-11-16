@@ -12,6 +12,7 @@ import { analyticsRoutes } from './analytics';
 import { bootstrapRoutes } from './bootstrap';
 import { captionsRoutes } from './captions';
 import { categoriesRoutes } from './categories';
+import { channelExportRoutes } from './channel-exports';
 import { channelFeaturedRoutes } from './channel-featured';
 import { channelRestrictionsRoutes } from './channel-restrictions';
 import { channelTeamRoutes } from './channel-team';
@@ -108,6 +109,7 @@ const ROUTES: readonly FastifyPluginAsync[] = [
   channelsRoutes,
   channelFeaturedRoutes,
   channelTeamRoutes,
+  channelExportRoutes,
   channelRestrictionsRoutes,
   commentModerationRoutes,
   commentRemovalsRoutes,

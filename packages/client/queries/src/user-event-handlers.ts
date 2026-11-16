@@ -128,6 +128,8 @@ function applyVideoStatsUpdated(
   void queryClient.invalidateQueries({ queryKey: videoKeys.retention(videoId) });
 }
 
+function ignoreExportChange() {}
+
 const userEventHandlers: UserEventHandlers = {
   'video.processing': applyVideoProcessing,
   'preferences.updated': applyPreferencesUpdated,
@@ -142,6 +144,8 @@ const userEventHandlers: UserEventHandlers = {
   'channel.image.failed': ignoreChannelImageFailed,
   'party.controls.updated': applyPartyControlsUpdated,
   'video.stats.updated': applyVideoStatsUpdated,
+  'export.ready': ignoreExportChange,
+  'export.failed': ignoreExportChange,
 };
 
 // Mapped rather than `UserEvent`, so `type` and `payload` stay correlated once the union grows.

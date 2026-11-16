@@ -7,7 +7,6 @@ Tracer-bullet tickets generated from [`PRD.md`](../PRD.md) and [`SDD.md`](../SDD
 Every ticket whose blockers are all `done` and which nobody has started, computed from the `**Status:**` lines.
 
 - [116: Video management power tools - bulk edit, history, replace file, corrections, share links, passwords, tests, chapters, trim and clip suggestions](116-video-management-power-tools.md)
-- [118: Creator data portability and API - exports, personal access tokens and a developer page](118-creator-data-portability-and-api.md)
 - [128: Creator analytics that hold up - views the player really sends, a device split and a first-week benchmark](128-creator-analytics-device-split-and-benchmark.md)
 - [129: Multiple accounts and channels - signed in at once, one switcher, per-tab identity](129-multiple-accounts-and-channels.md)
 - [138: Type-aware lint backlog, the twelve oxlint rules 110 left off](138-type-aware-lint-backlog.md)
@@ -154,7 +153,7 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 | 115 | [Channel identity - banner and avatar upload, handle change, trailer, links and series](115-channel-page-customisation.md) | 5 - Developer experience & growth | L | 05, 41, 44, 46, 58, 72, 73, 86, 95, 104, 117 | 119, 120, 121, 122 | done |
 | 116 | [Video management power tools - bulk edit, history, replace file, corrections, share links, passwords, tests, chapters, trim and clip suggestions](116-video-management-power-tools.md) | 5 - Developer experience & growth | XL (one stack of three slices, see *Delivery*) | 05, 11, 12, 16, 17, 43, 44, 57, 59, 60, 65, 95, 105, 111, 113, 117 | 119, 120, 121, 122 | ready |
 | 117 | [Channel team roles - invite managers, editors, moderators and analytics viewers](117-channel-team-roles.md) | 5 - Developer experience & growth | L | 38, 39, 44, 81, 93, 95, 99 | 113, 114, 115, 116, 118, 120, 121, 122, 129, 144 | done |
-| 118 | [Creator data portability and API - exports, personal access tokens and a developer page](118-creator-data-portability-and-api.md) | 5 - Developer experience & growth | L | 38, 39, 42, 43, 60, 65, 77, 95, 98, 113, 117 | — | ready |
+| 118 | [Creator data portability and API - exports, personal access tokens and a developer page](118-creator-data-portability-and-api.md) | 5 - Developer experience & growth | L | 38, 39, 42, 43, 60, 65, 77, 95, 98, 113, 117 | — | in-progress |
 | 119 | [Playlists and lists - collaboration, segments, sections, smart playlists, watch lists, import and export](119-playlists-customisation-and-collaboration.md) | 5 - Developer experience & growth | XL (one stack of three slices, see *Delivery*) | 46, 57, 59, 73, 95, 98, 99, 104, 105, 115, 116 | 121, 122 | blocked |
 | 120 | [Community - channel posts, polls and quizzes, and timestamped viewer threads](120-community-posts-and-threads.md) | 5 - Developer experience & growth | XL (one stack of three slices, see *Delivery*) | 17, 38, 39, 40, 41, 42, 57, 58, 59, 95, 98, 99, 103, 113, 115, 116, 117 | 121, 122 | blocked |
 | 121 | [Channel page builder - configurable sections, tabs and custom pages with drafts, scheduling and preview](121-channel-page-builder.md) | 5 - Developer experience & growth | XL (one stack of three slices, see *Delivery*) | 17, 41, 58, 72, 76, 86, 95, 96, 102, 104, 106, 115, 116, 117, 119, 120 | 122 | blocked |

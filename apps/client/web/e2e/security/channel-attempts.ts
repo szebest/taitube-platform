@@ -56,4 +56,29 @@ export const CHANNEL_ATTEMPTS: ChannelAttempt[] = [
     target: 'watchable',
     callers: ['an anonymous caller'],
   },
+  {
+    name: 'export the channel comments',
+    method: 'POST',
+    path: () => '/v1/me/channel/exports',
+    data: { kind: 'comments', format: 'csv' },
+    callers: ['an anonymous caller'],
+  },
+  {
+    name: 'list the channel exports',
+    method: 'GET',
+    path: () => '/v1/me/channel/exports',
+    callers: ['an anonymous caller'],
+  },
+  {
+    name: 'download a channel export',
+    method: 'GET',
+    path: () => '/v1/me/channel/exports/00000000-0000-7000-8000-000000000000',
+    callers: ['an anonymous caller'],
+  },
+  {
+    name: 'delete a channel export',
+    method: 'DELETE',
+    path: () => '/v1/me/channel/exports/00000000-0000-7000-8000-000000000000',
+    callers: ['an anonymous caller'],
+  },
 ];

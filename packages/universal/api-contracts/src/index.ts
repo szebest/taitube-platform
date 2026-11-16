@@ -23,6 +23,7 @@ import * as creatorLive from './creator-live';
 import * as creatorStats from './creator-stats';
 import * as creatorVideos from './creator-videos';
 import * as events from './events';
+import * as channelExports from './exports';
 import * as feed from './feed';
 import * as health from './health';
 import * as live from './live';
@@ -89,6 +90,7 @@ export * from './creator-stats';
 export * from './creator-videos';
 export * from './endpoint';
 export * from './events';
+export * from './exports';
 export * from './feed';
 export * from './health';
 export * from './live';
@@ -141,6 +143,7 @@ export const contracts = {
   bootstrap,
   captions,
   categories,
+  channelExports,
   channelFeatured,
   channelIdentity,
   channelPlaylists,

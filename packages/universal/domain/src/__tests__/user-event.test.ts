@@ -6,6 +6,8 @@ import {
   captionsReady,
   commentCreated,
   commentHeld,
+  exportFailed,
+  exportReady,
   partyControlsUpdated,
   preferencesUpdated,
   videoStatsUpdated,
@@ -103,6 +105,25 @@ describe('domain: user event', () => {
     };
 
     expect(channelImageFailed(payload)).toEqual({ type: 'channel.image.failed', payload });
+  });
+
+  it('announces a ready export with when its file expires', () => {
+    const payload = {
+      exportId: 'e1',
+      channelId: 'ch1',
+      kind: 'comments' as const,
+      format: 'csv' as const,
+      rowCount: 3,
+      expiresAt: '2026-03-08T12:00:00.000Z',
+    };
+
+    expect(exportReady(payload)).toEqual({ type: 'export.ready', payload });
+  });
+
+  it('announces an export the job gave up on, with the reason', () => {
+    const payload = { exportId: 'e1', channelId: 'ch1', kind: 'videos' as const, reason: 'big' };
+
+    expect(exportFailed(payload)).toEqual({ type: 'export.failed', payload });
   });
 
   it.each([

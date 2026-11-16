@@ -88,6 +88,13 @@ function AuditDetail({ entry }: { entry: AuditEntryView }) {
           )}
         </AuditLogList.Detail>
       );
+    case 'export.requested':
+    case 'export.deleted':
+      return (
+        <AuditLogList.Detail>
+          {tOr('studio.teamAuditExport', { kind: entry.meta.kind, format: entry.meta.format }, '')}
+        </AuditLogList.Detail>
+      );
     case 'user.shadow_banned':
     case 'user.banned':
     case 'user.restriction_lifted':

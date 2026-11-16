@@ -16,6 +16,7 @@ import type {
   ChannelImagePipelineService,
   ChannelSpotlightService,
   ChannelAuditService,
+  ChannelExportService,
   ChannelInviteService,
   ChannelMemberService,
   ChannelService,
@@ -103,6 +104,7 @@ export interface ServiceSet extends CommentServiceSet {
   channelInviteService: ChannelInviteService;
   channelMemberService: ChannelMemberService;
   channelAuditService: ChannelAuditService;
+  channelExportService: ChannelExportService;
   clipService: ClipService;
   oembedService: OEmbedService;
   webhookService: WebhookService;
@@ -173,6 +175,7 @@ export const Services = {
   ChannelInviteService: token<ChannelInviteService>('ChannelInviteService'),
   ChannelMemberService: token<ChannelMemberService>('ChannelMemberService'),
   ChannelAuditService: token<ChannelAuditService>('ChannelAuditService'),
+  ChannelExportService: token<ChannelExportService>('ChannelExportService'),
   ClipService: token<ClipService>('ClipService'),
   OEmbedService: token<OEmbedService>('OEmbedService'),
   WebhookService: token<WebhookService>('WebhookService'),

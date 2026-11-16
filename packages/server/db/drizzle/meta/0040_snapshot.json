@@ -1,5 +1,5 @@
 {
-  "id": "a0a2f270-ed97-463e-bd4f-dec36a339fdf",
+  "id": "89fdb718-a3ff-4712-8437-a1221f6e69ea",
   "prevId": "c9228e43-a1f5-4992-a7a6-4c9f1664f9fe",
   "version": "7",
   "dialect": "postgresql",
@@ -1358,12 +1358,6 @@
           "notNull": true,
           "default": "'all'"
         },
-        "source_video_id": {
-          "name": "source_video_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp with time zone",
@@ -1414,22 +1408,6 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
-        },
-        "channel_subscriptions_source_video_idx": {
-          "name": "channel_subscriptions_source_video_idx",
-          "columns": [
-            {
-              "expression": "source_video_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "where": "\"channel_subscriptions\".\"source_video_id\" IS NOT NULL",
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
         }
       },
       "foreignKeys": {
@@ -1457,19 +1435,6 @@
             "id"
           ],
           "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "channel_subscriptions_source_video_id_videos_id_fk": {
-          "name": "channel_subscriptions_source_video_id_videos_id_fk",
-          "tableFrom": "channel_subscriptions",
-          "tableTo": "videos",
-          "columnsFrom": [
-            "source_video_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
           "onUpdate": "no action"
         }
       },
@@ -4862,7 +4827,7 @@
         },
         "webhooks_events_check": {
           "name": "webhooks_events_check",
-          "value": "cardinality(\"webhooks\".\"events\") >= 1 AND \"webhooks\".\"events\" <@ ARRAY['video.ready', 'live.started']::text[]"
+          "value": "cardinality(\"webhooks\".\"events\") >= 1 AND \"webhooks\".\"events\" <@ ARRAY['video.ready', 'live.started', 'export.ready']::text[]"
         }
       },
       "isRLSEnabled": false
@@ -8447,6 +8412,194 @@
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.data_exports": {
+      "name": "data_exports",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "channel_id": {
+          "name": "channel_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "requested_by": {
+          "name": "requested_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "kind": {
+          "name": "kind",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "params": {
+          "name": "params",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::jsonb"
+        },
+        "format": {
+          "name": "format",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'queued'"
+        },
+        "object_key": {
+          "name": "object_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "row_count": {
+          "name": "row_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "failure": {
+          "name": "failure",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "data_exports_one_active_idx": {
+          "name": "data_exports_one_active_idx",
+          "columns": [
+            {
+              "expression": "channel_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"data_exports\".\"status\" IN ('queued', 'running')",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "data_exports_channel_newest_idx": {
+          "name": "data_exports_channel_newest_idx",
+          "columns": [
+            {
+              "expression": "channel_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": false,
+              "nulls": "last"
+            },
+            {
+              "expression": "id",
+              "isExpression": false,
+              "asc": false,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "data_exports_ready_expiry_idx": {
+          "name": "data_exports_ready_expiry_idx",
+          "columns": [
+            {
+              "expression": "expires_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"data_exports\".\"status\" = 'ready'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "data_exports_channel_id_channels_id_fk": {
+          "name": "data_exports_channel_id_channels_id_fk",
+          "tableFrom": "data_exports",
+          "tableTo": "channels",
+          "columnsFrom": [
+            "channel_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "data_exports_requested_by_users_id_fk": {
+          "name": "data_exports_requested_by_users_id_fk",
+          "tableFrom": "data_exports",
+          "tableTo": "users",
+          "columnsFrom": [
+            "requested_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "data_exports_kind_check": {
+          "name": "data_exports_kind_check",
+          "value": "\"data_exports\".\"kind\" IN ('video_analytics', 'channel_analytics', 'comments', 'videos')"
+        },
+        "data_exports_format_check": {
+          "name": "data_exports_format_check",
+          "value": "\"data_exports\".\"format\" IN ('csv', 'json')"
+        },
+        "data_exports_status_check": {
+          "name": "data_exports_status_check",
+          "value": "\"data_exports\".\"status\" IN ('queued', 'running', 'ready', 'failed', 'expired')"
+        }
+      },
       "isRLSEnabled": false
     }
   },

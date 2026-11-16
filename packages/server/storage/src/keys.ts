@@ -20,6 +20,15 @@ export function evidenceFrameKey(videoId: string, index: number): string {
   return `${evidencePrefix(videoId)}frame-${index}.jpg`;
 }
 
+/** A channel export, in the raw bucket: private, presigned per download, purged after its expiry. */
+export function exportObjectKey(
+  channelId: string,
+  exportId: string,
+  format: 'csv' | 'json'
+): string {
+  return `exports/${channelId}/${exportId}.${format}`;
+}
+
 export function videoPrefix(videoId: string): string {
   return `videos/${videoId}/`;
 }

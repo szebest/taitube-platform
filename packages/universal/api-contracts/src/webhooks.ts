@@ -32,7 +32,9 @@ const CreateWebhookBodySchema = z.object({
     .array(WebhookEventSchema)
     .min(1)
     .max(WEBHOOK_EVENTS.length)
-    .describe('video.ready fires when processing finishes; live.started is accepted and reserved'),
+    .describe(
+      'video.ready fires when processing finishes, export.ready when a channel export file can be downloaded; live.started is accepted and reserved'
+    ),
 });
 
 const AUTHENTICATED = {

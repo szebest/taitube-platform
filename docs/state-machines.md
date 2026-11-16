@@ -138,6 +138,32 @@ stateDiagram-v2
   removed --> [*]
 ```
 
+### data-export
+
+`DATA_EXPORT`, defined in `packages/universal/domain-rules/src/exports/data-export.machine.ts`.
+
+Initial: `queued`. Final: `failed`, `expired`.
+
+| Event | From | To | Recorded as |
+| --- | --- | --- | --- |
+| `start` | `queued`, `running` | `running` | - |
+| `finish` | `running` | `ready` | - |
+| `fail` | `queued`, `running` | `failed` | - |
+| `expire` | `ready` | `expired` | - |
+
+```mermaid
+stateDiagram-v2
+  [*] --> queued
+  queued --> running: start
+  running --> running: start
+  running --> ready: finish
+  queued --> failed: fail
+  running --> failed: fail
+  ready --> expired: expire
+  failed --> [*]
+  expired --> [*]
+```
+
 ### dlq-entry
 
 `DLQ_ENTRY`, defined in `packages/universal/domain-rules/src/dlq/dlq-entry.machine.ts`.

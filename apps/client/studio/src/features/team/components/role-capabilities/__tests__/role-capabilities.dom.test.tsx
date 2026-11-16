@@ -13,7 +13,7 @@ describe('apps/client/studio: RoleCapabilities', () => {
     },
     { role: 'Editor', can: ['Upload and edit videos, thumbnails and visibility'] },
     { role: 'Moderator', can: ['Moderate comments', 'Pin comments'] },
-    { role: 'Analytics viewer', can: ['Read analytics and exports'] },
+    { role: 'Analytics viewer', can: ['Read analytics', 'Export analytics'] },
   ])('lists what a $role can do, and never the ownership of the channel', async ({ role, can }) => {
     const { user } = await renderTeam();
     await user.click(

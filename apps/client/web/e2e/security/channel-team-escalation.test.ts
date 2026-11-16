@@ -86,6 +86,35 @@ const MODERATION_ATTEMPTS: TeamAttempt[] = [
   },
 ];
 
+/** The owner and managers export every kind and the analytics role the analytics kinds, so these refuse it too. */
+const EXPORT_ATTEMPTS: TeamAttempt[] = [
+  {
+    name: 'export the comments',
+    method: 'POST',
+    path: () => '/v1/me/channel/exports',
+    data: { kind: 'comments', format: 'csv' },
+  },
+  {
+    name: 'export the videos',
+    method: 'POST',
+    path: () => '/v1/me/channel/exports',
+    data: { kind: 'videos', format: 'json' },
+  },
+];
+
+/** Exports a role without `data.export` or `analytics.export` cannot reach at all. */
+const ANY_EXPORT_ATTEMPTS: TeamAttempt[] = [
+  ...EXPORT_ATTEMPTS,
+  {
+    name: 'export the analytics',
+    method: 'POST',
+    path: () => '/v1/me/channel/exports',
+    data: { kind: 'channel_analytics', format: 'csv' },
+  },
+  { name: 'list the exports', method: 'GET', path: () => '/v1/me/channel/exports' },
+  { name: 'delete an export', method: 'DELETE', path: () => `/v1/me/channel/exports/${NO_ID}` },
+];
+
 const SIGNED_IN_ATTEMPTS: TeamAttempt[] = [
   ...TEAM_ATTEMPTS,
   { name: 'accept an invite', method: 'POST', path: () => `/v1/invites/${NO_ID}/accept`, data: {} },
@@ -167,6 +196,17 @@ const REFUSALS: Refusal[] = [
     status: 401,
     code: 'UNAUTHORIZED',
   })),
+  ...OFF_ROLES.filter(({ persona }) => persona !== 'analytics').flatMap(
+    ({ caller, persona, code }) =>
+      ANY_EXPORT_ATTEMPTS.map((attempt) => ({ caller, persona, attempt, status: 403, code }))
+  ),
+  ...EXPORT_ATTEMPTS.map((attempt) => ({
+    caller: 'an analytics viewer',
+    persona: 'analytics' as const,
+    attempt,
+    status: 403,
+    code: 'FORBIDDEN',
+  })),
   ...MANAGER_ATTEMPTS.map(({ status, code, ...attempt }) => ({
     caller: 'a manager',
     persona: 'manager' as const,
@@ -176,7 +216,7 @@ const REFUSALS: Refusal[] = [
   })),
 ];
 
-test.describe('only the owner and managers run a channel team', () => {
+test.describe('only the owner and managers run a channel team or export its data', () => {
   for (const { caller, persona, attempt, status, code } of REFUSALS) {
     test(`${caller} cannot ${attempt.name}`, async ({ api, stack }) => {
       const client = await api(persona, { channelId: stack.team.channelId });
