@@ -7,6 +7,10 @@ runs:
     - name: Wait for the FFmpeg install
       shell: bash
       run: |
+        if [ "$FFMPEG_SET_UP" != true ]; then
+          echo "::error::no FFmpeg install was started: run setup-ffmpeg first"
+          exit 1
+        fi
         until [ -f ~/ffmpeg-ready ] || [ -f ~/ffmpeg-failed ]; do sleep 1; done
         cat ~/ffmpeg-install.log 2>/dev/null || true
         [ -f ~/ffmpeg-ready ]

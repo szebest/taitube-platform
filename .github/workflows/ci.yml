@@ -47,11 +47,6 @@ jobs:
               - '!**/*.md'
               - '!docs/**/!(tokens.json)'
 
-      - name: Install FFmpeg beside the workspace setup
-        uses: ./.github/actions/setup-ffmpeg
-        with:
-          background: 'true'
-
       - name: Set up the workspace
         if: github.event_name != 'pull_request' || steps.changes.outputs.code == 'true'
         uses: ./.github/actions/setup-workspace
@@ -182,6 +177,11 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
+
+      - name: Install FFmpeg beside the workspace setup
+        uses: ./.github/actions/setup-ffmpeg
+        with:
+          background: 'true'
 
       - name: Set up the workspace
         uses: ./.github/actions/setup-workspace
