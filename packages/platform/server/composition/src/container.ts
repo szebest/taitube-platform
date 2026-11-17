@@ -55,7 +55,11 @@ const toCause = (cause: unknown): unknown => cause;
 const AsyncFunction = (async () => {}).constructor;
 
 function isThenable(value: unknown): boolean {
-  return value instanceof Promise;
+  return (
+    (typeof value === 'object' || typeof value === 'function') &&
+    value !== null &&
+    typeof Reflect.get(value, 'then') === 'function'
+  );
 }
 
 function bind<T>(name: string, value: T, lifecycle: Lifecycle<T> | undefined): Constructed {

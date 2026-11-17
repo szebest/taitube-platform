@@ -1,5 +1,6 @@
-import { ThemeSchema } from '../theme';
-import { THEME_NAMES, themeFromTokens, tokenSetValues } from './tokens-json';
+import { RefSchema } from '../ref';
+import { resolvedThemeSchema, ThemeSchema } from '../theme';
+import { refFromTokens, THEME_NAMES, themeFromTokens, tokenSetValues } from './tokens-json';
 
 type Theme = ReturnType<typeof themeFromTokens>;
 
@@ -84,4 +85,15 @@ describe('ThemeSchema', () => {
   ])('rejects a theme with $label', ({ theme }) => {
     expect(ThemeSchema.safeParse(theme).success).toBe(false);
   });
+
+  it.each(['{ref.sand.960}', '{ref.constructor.name}'])(
+    'names the alias %s that has no ref step',
+    (alias) => {
+      const sand = themeFromTokens('sand');
+      const theme = { ...sand, color: { ...sand.color, dark: { ...sand.color.dark, fg: alias } } };
+      const parsed = resolvedThemeSchema(RefSchema.parse(refFromTokens())).safeParse(theme);
+
+      expect(JSON.stringify(parsed.error?.issues)).toContain(`${alias} names no ref step`);
+    }
+  );
 });

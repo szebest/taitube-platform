@@ -39,13 +39,15 @@ export const ThemeSchema = themeSchema(z.union([ColorSchema, RefAliasSchema]));
 
 export type Theme = z.output<typeof ThemeSchema>;
 
+const noRefStep = (alias: string): string => `${alias} names no ref step`;
+
 const resolvedColour = (ramps: Ref) =>
   z.union([
     ColorSchema,
     RefAliasSchema.transform((alias, context): HexColor => {
       const step = refStep(ramps, alias);
       if (step === undefined) {
-        context.addIssue({ code: 'custom', params: { ref: alias } });
+        context.addIssue({ code: 'custom', message: noRefStep(alias) });
         return z.NEVER;
       }
       return step;

@@ -104,8 +104,11 @@ describe('packages/composition: Container', () => {
     expect(c.get(Storage)).toBe('raw');
   });
 
-  it('refuses a factory that hands back a promise, naming the token', () => {
-    const promised = (() => Promise.resolve('raw')) as unknown as () => string;
+  it.each([
+    { label: 'a promise', value: Promise.resolve('raw') },
+    { label: 'a thenable that is not a promise', value: { then: () => undefined } },
+  ])('refuses a factory that hands back $label, naming the token', ({ value }) => {
+    const promised = (() => value) as unknown as () => string;
     const c = new Container().provide(Storage, promised);
 
     expect(() => c.get(Storage)).toThrow('Storage');
