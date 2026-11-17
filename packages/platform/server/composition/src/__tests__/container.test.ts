@@ -106,7 +106,11 @@ describe('packages/composition: Container', () => {
 
   it.each([
     { label: 'a promise', value: Promise.resolve('raw') },
-    { label: 'a thenable that is not a promise', value: { then: () => undefined } },
+    {
+      label: 'a thenable that is not a promise',
+      // oxlint-disable-next-line unicorn/no-thenable -- the row is a thenable on purpose, the container must refuse it.
+      value: { then: () => undefined },
+    },
   ])('refuses a factory that hands back $label, naming the token', ({ value }) => {
     const promised = (() => value) as unknown as () => string;
     const c = new Container().provide(Storage, promised);
