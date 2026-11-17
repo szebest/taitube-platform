@@ -1,12 +1,12 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { act, renderHook } from '@testing-library/react';
-import { DEFAULT_PREFERENCES } from '@vp/domain/settings';
 import {
   AppearanceProvider,
   requestAppearancePreference,
   useAppearance,
   writeCookie,
-} from '@vp/ui';
+} from '@kit/ui';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { act, renderHook } from '@testing-library/react';
+import { DEFAULT_PREFERENCES } from '@vp/domain/settings';
 import type { PropsWithChildren } from 'react';
 import { DEFAULT_DEVICE_PREFERENCES } from '#app/__tests__/device-preferences-fixtures';
 import { preferencesView } from '#app/__tests__/preferences-fixtures';

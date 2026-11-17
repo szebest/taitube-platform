@@ -1,6 +1,6 @@
+import { useT } from '@kit/intl-react';
 import { useQuery } from '@tanstack/react-query';
 import { Shelf } from '@vp/components';
-import { useT } from '@vp/intl-react';
 import { useAccount, useApi } from '@vp/queries';
 import { FeedVideoCard } from '#app/components/video/feed-video-card';
 import { uploadsShelfQueryOptions } from '#app/features/library/api/library-queries';

@@ -2,7 +2,7 @@ import { fileURLToPath } from 'node:url';
 import type { PluginOption } from 'vite';
 import { clientAppConfig, vendorChunkOf } from '../client-app-config';
 
-describe('@vp/vite-preset: vendor chunks', () => {
+describe('@kit/vite-preset: vendor chunks', () => {
   it.each([
     ['vendor-react', '/r/node_modules/.pnpm/react-dom@19/node_modules/react-dom/client.js'],
     ['vendor-react', '/r/node_modules/.pnpm/scheduler@1/node_modules/scheduler/index.js'],
@@ -31,7 +31,7 @@ function resolveConfig(
   return config({ command, mode });
 }
 
-describe('@vp/vite-preset: client app config', () => {
+describe('@kit/vite-preset: client app config', () => {
   it("serves dev and preview on the app's port only, with Sass reading the app's src", async () => {
     const config = await resolveConfig(5174);
 

@@ -1,8 +1,8 @@
+import { useT } from '@kit/intl-react';
+import { DropdownMenu, Icon, useUiCopy } from '@kit/ui';
 import type { CommentView } from '@vp/api-contracts';
-import { useT } from '@vp/intl-react';
 import { canDeleteComment, canPinComment, canUpdateComment } from '@vp/permissions';
 import { useCan } from '@vp/permissions-react';
-import { DropdownMenu, Icon, useUiCopy } from '@vp/ui';
 import { useState } from 'react';
 import { CommentItem } from '#app/components/discussion/comment-item';
 import { useCommentModeration } from '#app/features/watch/hooks/use-comment-moderation';

@@ -1,8 +1,10 @@
+import { useFormat, useT } from '@kit/intl-react';
+import { unwrapOr } from '@kit/result';
+import { useUiCopy } from '@kit/ui';
 import { useSuspenseInfiniteQuery, useSuspenseQuery } from '@tanstack/react-query';
 import type { CommentView } from '@vp/api-contracts';
 import { threadRootId } from '@vp/domain';
 import { publishedAt } from '@vp/intl';
-import { useFormat, useT } from '@vp/intl-react';
 import { canHeartComment } from '@vp/permissions';
 import { useCan } from '@vp/permissions-react';
 import {
@@ -12,8 +14,6 @@ import {
   useHeartComment,
   videoQueryOptions,
 } from '@vp/queries';
-import { unwrapOr } from '@vp/result';
-import { useUiCopy } from '@vp/ui';
 import { Suspense, useEffect, useEffectEvent, useState } from 'react';
 import { CommentItem, CommentItemSkeleton } from '#app/components/discussion/comment-item';
 import { usePlayerSeek } from '#app/components/player/taitube-player';

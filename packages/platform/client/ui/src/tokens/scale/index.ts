@@ -1,4 +1,4 @@
-import type { Scale } from '@vp/design-tokens';
+import type { Scale } from '@kit/design-tokens';
 
 export const scale = {
   space: {

@@ -3,7 +3,7 @@ import { lazyComponent } from '../lazy-component';
 
 const Greeting = () => <p>Hello</p>;
 
-describe('@vp/ui: lazyComponent on the server', () => {
+describe('@kit/ui: lazyComponent on the server', () => {
   it('renders the fallback before the module has loaded and the component after, with no window, in the same boundary either way', async () => {
     const Lazy = lazyComponent(async () => ({ default: Greeting }), {
       name: 'Greeting',

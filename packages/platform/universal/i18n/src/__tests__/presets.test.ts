@@ -1,4 +1,4 @@
-import { ok } from '@vp/result';
+import { ok } from '@kit/result';
 import { definePresets, resolveEntry } from '../presets';
 
 const presets = definePresets({

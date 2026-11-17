@@ -1,7 +1,7 @@
+import { useT } from '@kit/intl-react';
+import { Card, Icon, IconButton } from '@kit/ui';
 import type { LiveStreamView } from '@vp/api-contracts';
-import { useT } from '@vp/intl-react';
 import { type LiveChatLine, useLiveChat } from '@vp/queries';
-import { Card, Icon, IconButton } from '@vp/ui';
 import { API_PUBLIC_URL } from '#app/lib/config';
 
 export interface LiveChatModerationProps {

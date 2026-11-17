@@ -19,7 +19,7 @@ const renderDensity = (defaults?: { spacing: 'compact'; sizing: 'small' }) =>
 const shownSets = ({ appearance }: ReturnType<typeof renderDensity>['result']['current']) =>
   `${appearance.resolved.sets.spacing.id} ${appearance.resolved.sets.sizing.id}`;
 
-describe('@vp/ui: useDensity', () => {
+describe('@kit/ui: useDensity', () => {
   beforeEach(() => {
     stubMediaQueries();
   });

@@ -1,8 +1,8 @@
+import { createLogger } from '@kit/logger';
 import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
 import type { QueueJob } from '@vp/core/ports';
 import { ErrorCodes } from '@vp/errors';
 import { CANONICAL_LADDER, type LadderEntry, type PackageJob } from '@vp/job-contracts';
-import { createLogger } from '@vp/logger';
 import { createMetricsRegistry } from '@vp/observability';
 import { renditionPlaylistKey } from '@vp/storage';
 import { expectErr, expectOk } from '@vp/testing/result';

@@ -1,6 +1,6 @@
+import { useT } from '@kit/intl-react';
 import { useNavigate, useSearch } from '@tanstack/react-router';
 import { PageHeader } from '@vp/components';
-import { useT } from '@vp/intl-react';
 import {
   type ModerationChannel,
   ModerationChannelProvider,

@@ -1,11 +1,24 @@
 import { createHash } from 'node:crypto';
+import type { Singleflight } from '@kit/concurrency';
+import type { Paginator } from '@kit/pagination';
+import {
+  andThen,
+  andThenAsync,
+  err,
+  ignore,
+  isErr,
+  isOk,
+  map,
+  ok,
+  parseJson,
+  unwrapOr,
+} from '@kit/result';
 import {
   type SearchRequest,
   type SearchResponse,
   type SearchSuggestionsResponse,
   search,
 } from '@vp/api-contracts';
-import type { Singleflight } from '@vp/concurrency';
 import type { CacheClient, SearchSuggestionIndexPort } from '@vp/core/ports';
 import type {
   ChannelRepositoryPort,
@@ -27,20 +40,7 @@ import {
 import { decideSearchHistoryRecord } from '@vp/domain-rules';
 import type { CdnBase } from '@vp/env-schema';
 import { CacheKeys } from '@vp/events';
-import type { Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
-import {
-  andThen,
-  andThenAsync,
-  err,
-  ignore,
-  isErr,
-  isOk,
-  map,
-  ok,
-  parseJson,
-  unwrapOr,
-} from '@vp/result';
 import { isPlainSearchQuery, searchQueryWithoutTerms, validateSearchQuery } from '@vp/validation';
 import { uuidv7 } from 'uuidv7';
 import { decodeSearchCursor, searchCursorPayload } from './cursor';

@@ -1,5 +1,5 @@
+import { TOKEN_GROUPS } from '@kit/design-tokens';
 import { act, renderHook } from '@testing-library/react';
-import { TOKEN_GROUPS } from '@vp/design-tokens';
 import { readCookie, writeCookie } from '../../cookies/cookie';
 import { sand } from '../../themes/sand';
 import {
@@ -33,7 +33,7 @@ const setIds = ({ resolved }: ReturnType<typeof useAppearance>) =>
 
 const storedCookie = () => JSON.parse(readCookie('vp.appearance') ?? 'null');
 
-describe('@vp/ui: AppearanceProvider', () => {
+describe('@kit/ui: AppearanceProvider', () => {
   beforeEach(() => {
     stubMediaQueries();
   });

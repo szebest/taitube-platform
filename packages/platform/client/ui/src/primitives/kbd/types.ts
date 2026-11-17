@@ -1,4 +1,4 @@
-import type { SizeOption } from '@vp/design-tokens';
+import type { SizeOption } from '@kit/design-tokens';
 import type { FillOption } from '../../types';
 
 export type KbdFill = Extract<FillOption, 'outline' | 'soft'>;

@@ -1,5 +1,5 @@
+import { readCookie, writeCookie } from '@kit/ui';
 import { screen } from '@testing-library/react';
-import { readCookie, writeCookie } from '@vp/ui';
 import { renderRoute } from '@vp/web-testing/dom';
 import { channelApi } from '#app/__tests__/channel-api.fixture';
 import { featuredApi } from '#app/__tests__/featured-api.fixture';

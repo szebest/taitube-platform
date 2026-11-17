@@ -1,6 +1,6 @@
+import { err } from '@kit/result';
 import type { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { ErrorCodes, queueUnavailable } from '@vp/errors';
-import { err } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
 import { type FakeS3, startFakeS3 } from './fake-s3';

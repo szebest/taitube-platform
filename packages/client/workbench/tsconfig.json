@@ -1,5 +1,5 @@
 {
-  "extends": "@vp/tsconfig/client.json",
+  "extends": "@kit/tsconfig/client.json",
   "compilerOptions": {
     "noEmit": true,
     "declaration": false,

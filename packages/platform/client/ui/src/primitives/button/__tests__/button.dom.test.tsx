@@ -23,7 +23,7 @@ function renderButton(
   };
 }
 
-describe('@vp/ui: Button', () => {
+describe('@kit/ui: Button', () => {
   it('renders a button of type button, named by its label', () => {
     renderButton();
 

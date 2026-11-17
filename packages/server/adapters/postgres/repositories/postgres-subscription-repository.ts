@@ -1,3 +1,4 @@
+import { type Result, fromPromise, isErr, map } from '@kit/result';
 import type {
   ListSubscribersOptions,
   ListSubscriptionsOptions,
@@ -15,7 +16,6 @@ import type {
 } from '@vp/domain';
 import { MS_PER_DAY } from '@vp/domain/time';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
-import { type Result, fromPromise, isErr, map } from '@vp/result';
 import { and, asc, desc, eq, gt, gte, lt, sql } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
 import {

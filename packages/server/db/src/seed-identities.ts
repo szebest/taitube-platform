@@ -1,5 +1,5 @@
+import { type Result, fromPromise, isErr, ok } from '@kit/result';
 import type { UserRole, UserTier } from '@vp/domain';
-import { type Result, fromPromise, isErr, ok } from '@vp/result';
 import { type Log, createDbClient, waitForDatabase } from './client';
 import { users } from './schema';
 

@@ -1,5 +1,5 @@
 {
-  "name": "@vp/web-telemetry",
+  "name": "@kit/web-telemetry",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -21,6 +21,7 @@
     "clean": "rimraf dist tsconfig.tsbuildinfo"
   },
   "dependencies": {
+    "@kit/result": "workspace:*",
     "@opentelemetry/api": "^1.9.1",
     "@opentelemetry/exporter-trace-otlp-http": "^0.223.0",
     "@opentelemetry/instrumentation": "^0.223.0",
@@ -29,17 +30,16 @@
     "@opentelemetry/sdk-trace-web": "^2.12.0",
     "@opentelemetry/semantic-conventions": "^1.43.0",
     "@vp/api-contracts": "workspace:*",
-    "@vp/result": "workspace:*",
     "web-vitals": "^6.2.3"
   },
   "devDependencies": {
+    "@kit/tsconfig": "workspace:*",
+    "@kit/vite-preset": "workspace:*",
     "@tanstack/react-router": "^1.170.41",
     "@testing-library/react": "^16.3.3",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vp/testing": "workspace:*",
-    "@vp/tsconfig": "workspace:*",
-    "@vp/vite-preset": "workspace:*",
     "@vp/web-testing": "workspace:*",
     "jsdom": "^30.1.2",
     "msw": "~3.0.2",

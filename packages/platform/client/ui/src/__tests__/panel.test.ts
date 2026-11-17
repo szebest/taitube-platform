@@ -1,6 +1,6 @@
 import { panelVariants } from '../panel';
 
-describe('@vp/ui: panel', () => {
+describe('@kit/ui: panel', () => {
   it('opens a select on the popover surface, from its trigger', () => {
     const content = panelVariants({ kind: 'select' }).content();
 

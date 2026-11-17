@@ -1,11 +1,11 @@
+import { Format, useT } from '@kit/intl-react';
+import { Button } from '@kit/ui';
 import { useSuspenseInfiniteQuery } from '@tanstack/react-query';
 import { useSearch } from '@tanstack/react-router';
 import { EmptyState } from '@vp/components';
 import type { CommentSort } from '@vp/domain';
-import { Format, useT } from '@vp/intl-react';
 import { useCan } from '@vp/permissions-react';
 import { SectionBoundary, useAccount, useApi } from '@vp/queries';
-import { Button } from '@vp/ui';
 import { Suspense, useDeferredValue, useEffect, useRef, useState } from 'react';
 import { CommentItem } from '#app/components/discussion/comment-item';
 import {

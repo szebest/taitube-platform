@@ -1,7 +1,7 @@
+import { Format, useT } from '@kit/intl-react';
 import { Link } from '@tanstack/react-router';
 import { VideoCard } from '@vp/components';
 import { publishedAt } from '@vp/intl';
-import { Format, useT } from '@vp/intl-react';
 import type { VideoHit } from '#app/features/search/utils/search-hits';
 import { useDurationText } from '#app/hooks/use-duration-text';
 import { useVideoActions } from '#app/hooks/use-video-actions';

@@ -1,4 +1,4 @@
-import { err, ok } from '@vp/result';
+import { err, ok } from '@kit/result';
 import type { FetchPort, UploaderPort } from '../ports';
 import { catalogRoutes } from './fake-api-catalog-routes';
 import { channelRoutes } from './fake-api-channel-routes';

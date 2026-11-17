@@ -1,6 +1,6 @@
-import { useAppForm } from '@vp/forms';
-import { useT } from '@vp/intl-react';
-import { isErr } from '@vp/result';
+import { useAppForm } from '@kit/forms';
+import { useT } from '@kit/intl-react';
+import { isErr } from '@kit/result';
 import {
   CHANNEL_IMAGE_CONTENT_TYPES,
   type ChannelImageKind,

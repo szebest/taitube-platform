@@ -1,11 +1,11 @@
+import { useT } from '@kit/intl-react';
+import { Button, Dialog, Field, Kbd, Select, Textarea, ToggleGroup, useUiCopy } from '@kit/ui';
 import {
   BAN_DURATIONS,
   type BanDuration,
   COMMENT_MODERATION_REASONS,
   type CommentModerationReason,
 } from '@vp/domain';
-import { useT } from '@vp/intl-react';
-import { Button, Dialog, Field, Kbd, Select, Textarea, ToggleGroup, useUiCopy } from '@vp/ui';
 import { type KeyboardEvent, useState } from 'react';
 
 export type ReasonedAction = 'hide' | 'remove' | 'ban';

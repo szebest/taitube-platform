@@ -1,4 +1,4 @@
-# AGENTS.md — @vp/composition (The Container)
+# AGENTS.md — @kit/composition (The Container)
 
 > Tier rules for this directory: [../AGENTS.md](../../../server/AGENTS.md) · full tier & layer reference: [packages/AGENTS.md](../../../AGENTS.md)
 
@@ -20,7 +20,7 @@ Decision record: [SDD ADR-25](../../../../docs/SDD.md#adr-25--composition-one-co
 
 ## 2. Invariants
 
-1. **No reflection, no decorators, no dependency beyond `@kit/di` and `@vp/result`.** The token carries the type, so
+1. **No reflection, no decorators, no dependency beyond `@kit/di` and `@kit/result`.** The token carries the type, so
    `get(VideoService)` types as `VideoService` without a cast and a missing edge is a compile error.
 2. **A factory is synchronous.** I/O a value needs before it is usable goes in its `start` hook, which
    `start()` runs in construction order. `composeApp()` in a test therefore opens nothing.
@@ -28,15 +28,15 @@ Decision record: [SDD ADR-25](../../../../docs/SDD.md#adr-25--composition-one-co
 4. **The container disposes what its factories built, never an override.** An override belongs to the
    caller that handed it in. Disposal runs in reverse construction order and is idempotent.
 5. **Server, layer 3.** Nothing client-side imports it; its `Token` comes from `@kit/di` (layer 2), and `start()` /
-   `dispose()` speak `Result` from `@vp/result` (layer 1).
+   `dispose()` speak `Result` from `@kit/result` (layer 1).
 6. **No logger dependency.** `ShutdownPlan.log` is a structural `ShutdownLog` (`info` / `error`), so a
-   `@vp/logger` logger fits without this package importing it.
+   `@kit/logger` logger fits without this package importing it.
 
 ---
 
 ## 3. Local Commands
 
 ```bash
-pnpm --filter @vp/composition typecheck
-pnpm --filter @vp/composition test
+pnpm --filter @kit/composition typecheck
+pnpm --filter @kit/composition test
 ```

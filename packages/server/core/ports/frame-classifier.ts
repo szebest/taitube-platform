@@ -1,5 +1,5 @@
+import type { Result } from '@kit/result';
 import type { MediaFailure } from '@vp/errors';
-import type { Result } from '@vp/result';
 
 /** The planes of a decoded frame and the largest value a byte of one holds. */
 export const RGB_CHANNELS = 3;

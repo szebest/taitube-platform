@@ -1,4 +1,4 @@
-import type { ControlSize } from '@vp/design-tokens';
+import type { ControlSize } from '@kit/design-tokens';
 import type { FillOption, ShapeOption } from '../../types';
 
 export type ToggleFill = Extract<FillOption, 'outline' | 'ghost' | 'soft'>;

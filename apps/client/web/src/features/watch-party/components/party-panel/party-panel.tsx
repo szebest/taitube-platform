@@ -1,7 +1,7 @@
-import { useFormat, useT } from '@vp/intl-react';
+import { useFormat, useT } from '@kit/intl-react';
+import { unwrapOr } from '@kit/result';
 import { usePartyCan } from '@vp/permissions-react';
 import type { PartyChatLine, WatchPartySocket } from '@vp/queries';
-import { unwrapOr } from '@vp/result';
 import { MemberMenu, type MemberMuteDuration } from '#app/components/party/member-menu';
 import { PartyChat } from '#app/components/party/party-chat';
 import { PartyQueue } from '#app/components/party/party-queue';

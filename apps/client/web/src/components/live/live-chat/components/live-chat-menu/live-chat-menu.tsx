@@ -1,4 +1,12 @@
-import { Icon, IconButton, Popover, type PortalContainer, Slider, Switch, useUiCopy } from '@vp/ui';
+import {
+  Icon,
+  IconButton,
+  Popover,
+  type PortalContainer,
+  Slider,
+  Switch,
+  useUiCopy,
+} from '@kit/ui';
 import { type ComponentPropsWithRef, useId } from 'react';
 import { useLiveChat } from '#app/components/live/live-chat/live-chat.context';
 import { liveChatStyles } from '#app/components/live/live-chat/live-chat.variants';

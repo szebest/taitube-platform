@@ -1,4 +1,4 @@
-import { Card, Skeleton } from '@vp/ui';
+import { Card, Skeleton } from '@kit/ui';
 import { StatCard } from '#app/components/analytics/stat-card';
 
 /** The dashboard's loaded layout in grey: the header, the three figures, the chart and the two columns. */

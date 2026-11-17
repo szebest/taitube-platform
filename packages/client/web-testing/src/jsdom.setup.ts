@@ -36,7 +36,7 @@ class UnobservedSize implements ResizeObserver {
 }
 
 // jsdom implements none of these; the legacy chrome, the router and the Radix primitives in
-// @vp/ui call them while rendering or handling a key.
+// @kit/ui call them while rendering or handling a key.
 window.matchMedia = unmatchedQuery;
 window.scrollTo = () => undefined;
 window.IntersectionObserver = NeverIntersecting;

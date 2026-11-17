@@ -1,4 +1,4 @@
-import { ok } from '@vp/result';
+import { ok } from '@kit/result';
 import { defineKind, isConfigKey, isRecord, type KindContext } from '../kind';
 import { intlFor } from './fixtures';
 

@@ -1,6 +1,6 @@
+import type { Result } from '@kit/result';
 import type { OutboxStatus } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import type { Result } from '@vp/result';
 import type { FlowJobNode } from '../ports/flow-producer';
 import type { QueueJobOptions } from '../ports/job-queue';
 

@@ -1,4 +1,4 @@
-import type { ToneOption } from '@vp/design-tokens';
+import type { ToneOption } from '@kit/design-tokens';
 import type { IconId } from '../icons/inventory';
 
 export const TONE_ICONS = {

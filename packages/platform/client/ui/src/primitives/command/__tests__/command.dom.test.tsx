@@ -39,7 +39,7 @@ const renderPalette = (
   };
 };
 
-describe('@vp/ui: Command', () => {
+describe('@kit/ui: Command', () => {
   it('filters its items as the viewer types and says so when nothing matches', async () => {
     const { user } = renderPalette();
 

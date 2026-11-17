@@ -1,3 +1,4 @@
+import { type Result, andThen, isErr, ok } from '@kit/result';
 import type { CommentSettingsView } from '@vp/api-contracts';
 import type { CommentSettingsRepositoryPort } from '@vp/core/repositories';
 import {
@@ -9,7 +10,6 @@ import {
 import { type AuthorizationFailure, decideChannelTask } from '@vp/domain-rules';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { type Result, andThen, isErr, ok } from '@vp/result';
 import { type InvalidCommentSettings, validateCommentSettings } from '@vp/validation';
 
 export interface CommentSettingsServiceDeps {

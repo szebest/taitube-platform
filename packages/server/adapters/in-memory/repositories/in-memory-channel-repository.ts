@@ -1,3 +1,4 @@
+import { type Result, err, ok } from '@kit/result';
 import type { ChannelRepositoryPort } from '@vp/core/repositories';
 import {
   type Channel,
@@ -15,7 +16,6 @@ import {
   PermanentError,
   handleTaken,
 } from '@vp/errors';
-import { type Result, err, ok } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 import type { InMemoryChannelHandleHistoryRepository } from './in-memory-channel-handle-history-repository';
 import type { InMemoryVideoRepository } from './in-memory-video-repository';

@@ -1,3 +1,4 @@
+import { type Result, isErr, ok } from '@kit/result';
 import {
   type AppealRejectionInput,
   type ApproveHeldVideoInput,
@@ -22,7 +23,6 @@ import {
   mergeFlag,
 } from '@vp/domain';
 import { type DatabaseUnavailable, ErrorCodes } from '@vp/errors';
-import { type Result, isErr, ok } from '@vp/result';
 
 export interface ScreeningDependencies {
   videos: Pick<VideoRepository, 'findById' | 'transition'>;

@@ -1,3 +1,4 @@
+import { isErr, type Result } from '@kit/result';
 import type { WatchPartyServerFrame } from '@vp/api-contracts';
 import type { NewSystemLine, QueueSnapshot, RoomWrite } from '@vp/core/repositories';
 import {
@@ -7,7 +8,6 @@ import {
   type WatchPartyRoom,
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { isErr, type Result } from '@vp/result';
 import { dropUnavailable } from './watch-party-availability';
 import type { WatchPartyDeps } from './watch-party-deps';
 import { announce, announceLine } from './watch-party-moderation-effects';

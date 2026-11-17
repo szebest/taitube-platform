@@ -94,70 +94,70 @@ document is stale — fix it.
 |---|---|---|
 | `@vp/domain` | universal | `packages/universal/domain` |
 | `@vp/errors` | universal | `packages/universal/errors` |
-| `@vp/machine` | universal | `packages/platform/universal/machine` |
-| `@vp/result` | universal | `packages/platform/universal/result` |
-| `@vp/tsconfig` | universal | `packages/platform/universal/tsconfig` |
-| `@vp/concurrency` | server | `packages/platform/server/concurrency` |
-| `@vp/logger` | server | `packages/platform/server/logger` |
+| `@kit/machine` | universal | `packages/platform/universal/machine` |
+| `@kit/result` | universal | `packages/platform/universal/result` |
+| `@kit/tsconfig` | universal | `packages/platform/universal/tsconfig` |
+| `@kit/concurrency` | server | `packages/platform/server/concurrency` |
+| `@kit/logger` | server | `packages/platform/server/logger` |
 | `@vp/storage` | server | `packages/server/storage` |
-| `@vp/vite-preset` | server | `packages/platform/server/vite-preset` |
+| `@kit/vite-preset` | server | `packages/platform/server/vite-preset` |
 
 ### T2 — Contracts & policy
 
 | Package | Tier | Depends on |
 |---|---|---|
-| `@vp/design-tokens` | universal | `@vp/domain`, `@vp/errors`, `@vp/result` |
-| `@vp/intl` | universal | `@vp/errors`, `@vp/result` |
-| `@vp/pagination` | universal | `@vp/errors`, `@vp/result` |
+| `@kit/design-tokens` | universal | `@vp/domain`, `@vp/errors`, `@kit/result` |
+| `@vp/intl` | universal | `@vp/errors`, `@kit/result` |
+| `@kit/pagination` | universal | `@vp/errors`, `@kit/result` |
 | `@vp/permissions` | universal | `@vp/domain`, `@vp/errors` |
-| `@vp/validation` | universal | `@vp/errors`, `@vp/result` |
-| `@vp/security-headers` | client | `@vp/result` |
-| `@kit/di` | universal | `@vp/result` |
-| `@vp/compose-autoscaler` | server | `@vp/logger` |
-| `@vp/dev-token` | server | `@vp/logger` |
-| `@vp/events` | server | `@vp/errors`, `@vp/result` |
-| `@vp/gen-video` | server | `@vp/logger` |
+| `@vp/validation` | universal | `@vp/errors`, `@kit/result` |
+| `@kit/security-headers` | client | `@kit/result` |
+| `@kit/di` | universal | `@kit/result` |
+| `@kit/compose-autoscaler` | server | `@kit/logger` |
+| `@kit/dev-token` | server | `@kit/logger` |
+| `@vp/events` | server | `@vp/errors`, `@kit/result` |
+| `@vp/gen-video` | server | `@kit/logger` |
 | `@vp/job-contracts` | server | `@vp/domain` |
 | `@vp/lighthouse` | server | `@vp/domain` |
-| `@vp/observability` | server | `@vp/result` |
-| `@vp/testing` | server | `@vp/result` |
-| `@vp/whisper` | server | `@vp/domain`, `@vp/errors`, `@vp/result` |
+| `@vp/observability` | server | `@kit/result` |
+| `@vp/testing` | server | `@kit/result` |
+| `@vp/whisper` | server | `@vp/domain`, `@vp/errors`, `@kit/result` |
 
 ### T3 — Domain capability
 
 | Package | Tier | Depends on |
 |---|---|---|
-| `@vp/api-contracts` | universal | `@vp/domain`, `@vp/errors`, `@vp/pagination`, `@vp/permissions`, `@vp/result`, `@vp/validation` |
-| `@vp/domain-rules` | universal | `@vp/domain`, `@vp/errors`, `@vp/permissions`, `@vp/result`, `@vp/validation` |
-| `@vp/messages` | universal | `@vp/errors`, `@vp/intl`, `@vp/result` |
+| `@vp/api-contracts` | universal | `@vp/domain`, `@vp/errors`, `@kit/pagination`, `@vp/permissions`, `@kit/result`, `@vp/validation` |
+| `@vp/domain-rules` | universal | `@vp/domain`, `@vp/errors`, `@vp/permissions`, `@kit/result`, `@vp/validation` |
+| `@vp/messages` | universal | `@vp/errors`, `@vp/intl`, `@kit/result` |
 | `@kit/runtime` | universal | `@kit/di` |
-| `@kit/i18n` | universal | `@kit/di`, `@vp/intl`, `@vp/result` |
-| `@vp/composition` | server | `@kit/di`, `@vp/result` |
-| `@vp/ui` | client | `@vp/design-tokens`, `@vp/result` |
-| `@vp/permissions-react` | client | `@vp/permissions`, `@vp/result` |
-| `@vp/core` | server | `@vp/domain`, `@vp/errors`, `@vp/permissions`, `@vp/result` |
-| `@vp/db` | server | `@vp/domain`, `@vp/job-contracts`, `@vp/result`, `@vp/storage` |
-| `@vp/env-schema` | server | `@vp/domain`, `@vp/observability` (the `TraceSamplerName` type), `@vp/pagination`, `@vp/result` |
-| `@vp/ffmpeg` | server | `@vp/domain`, `@vp/errors`, `@vp/job-contracts`, `@vp/result`, `@vp/storage` |
+| `@kit/i18n` | universal | `@kit/di`, `@vp/intl`, `@kit/result` |
+| `@kit/composition` | server | `@kit/di`, `@kit/result` |
+| `@kit/ui` | client | `@kit/design-tokens`, `@kit/result` |
+| `@vp/permissions-react` | client | `@vp/permissions`, `@kit/result` |
+| `@vp/core` | server | `@vp/domain`, `@vp/errors`, `@vp/permissions`, `@kit/result` |
+| `@vp/db` | server | `@vp/domain`, `@vp/job-contracts`, `@kit/result`, `@vp/storage` |
+| `@vp/env-schema` | server | `@vp/domain`, `@vp/observability` (the `TraceSamplerName` type), `@kit/pagination`, `@kit/result` |
+| `@vp/ffmpeg` | server | `@vp/domain`, `@vp/errors`, `@vp/job-contracts`, `@kit/result`, `@vp/storage` |
 
 ### T4 — Integration
 
 | Package | Tier | Depends on |
 |---|---|---|
 | `@vp/api-client` | client | `@vp/api-contracts` |
-| `@vp/components` | client | `@vp/design-tokens`, `@vp/ui` |
-| `@vp/forms` | client | `@vp/errors`, `@vp/result` (T4 by design: above `@vp/ui` at T3, whose primitives its fields move onto) |
-| `@vp/intl-react` | client | `@vp/intl`, `@vp/messages`, `@vp/result` |
-| `@vp/web-telemetry` | client | `@vp/api-contracts`, `@vp/result` |
-| `@vp/adapters` | server | `@vp/composition`, `@vp/concurrency`, `@vp/core`, `@vp/db`, `@vp/dev-token`, `@vp/domain`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/job-contracts`, `@vp/observability`, `@vp/permissions`, `@vp/result`, `@vp/storage` |
-| `@vp/config` | server | `@vp/composition`, `@vp/env-schema`, `@vp/logger`, `@vp/result` |
-| `@vp/fingerprint` | server | `@vp/core`, `@vp/domain`, `@vp/errors`, `@vp/ffmpeg`, `@vp/result` |
+| `@vp/components` | client | `@kit/design-tokens`, `@kit/ui` |
+| `@kit/forms` | client | `@vp/errors`, `@kit/result` (T4 by design: above `@kit/ui` at T3, whose primitives its fields move onto) |
+| `@kit/intl-react` | client | `@vp/intl`, `@vp/messages`, `@kit/result` |
+| `@kit/web-telemetry` | client | `@vp/api-contracts`, `@kit/result` |
+| `@vp/adapters` | server | `@kit/composition`, `@kit/concurrency`, `@vp/core`, `@vp/db`, `@kit/dev-token`, `@vp/domain`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/job-contracts`, `@vp/observability`, `@vp/permissions`, `@kit/result`, `@vp/storage` |
+| `@kit/config` | server | `@kit/composition`, `@vp/env-schema`, `@kit/logger`, `@kit/result` |
+| `@vp/fingerprint` | server | `@vp/core`, `@vp/domain`, `@vp/errors`, `@vp/ffmpeg`, `@kit/result` |
 
 ### T5 — App modules
 
 | Package | Tier | Depends on | Dev-depends on |
 |---|---|---|---|
-| `@vp/queries` | client | `@vp/api-client`, `@vp/api-contracts`, `@vp/intl-react`, `@vp/permissions`, `@vp/permissions-react`, `@vp/result`, `@vp/security-headers`, `@vp/ui` | `@vp/errors`, `@vp/web-testing` |
+| `@vp/queries` | client | `@vp/api-client`, `@vp/api-contracts`, `@kit/intl-react`, `@vp/permissions`, `@vp/permissions-react`, `@kit/result`, `@kit/security-headers`, `@kit/ui` | `@vp/errors`, `@vp/web-testing` |
 | `@vp/web-testing` | client | `@vp/api-contracts`, `@vp/errors` | `@vp/api-client` |
 
 `@vp/web-testing` is spec-only build tooling (section 6): its own dev edge on `@vp/api-client` (T4) is what
@@ -167,24 +167,24 @@ puts it at T5.
 
 | App | Tier | Depends on |
 |---|---|---|
-| `@vp/web` | client | `@vp/api-client`, `@vp/api-contracts`, `@vp/components`, `@vp/domain`, `@vp/intl`, `@vp/intl-react`, `@vp/permissions`, `@vp/permissions-react`, `@vp/queries`, `@vp/result`, `@vp/security-headers`, `@vp/ui`, `@vp/web-telemetry` |
-| `@vp/studio` | client | `@vp/api-client`, `@vp/api-contracts`, `@vp/components`, `@vp/errors`, `@vp/forms`, `@vp/intl`, `@vp/intl-react`, `@vp/permissions`, `@vp/permissions-react`, `@vp/queries`, `@vp/result`, `@vp/security-headers`, `@vp/ui`, `@vp/validation`, `@vp/web-telemetry` |
-| `@vp/api` | server | `@vp/adapters`, `@vp/api-contracts`, `@vp/composition`, `@vp/concurrency`, `@vp/config`, `@vp/core`, `@vp/db`, `@vp/dev-token`, `@vp/domain`, `@vp/domain-rules`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/job-contracts`, `@vp/logger`, `@vp/observability`, `@vp/pagination`, `@vp/permissions`, `@vp/result`, `@vp/storage`, `@vp/validation`, `@vp/whisper` |
-| `@vp/worker` | server | `@vp/adapters`, `@vp/composition`, `@vp/config`, `@vp/core`, `@vp/domain`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/ffmpeg`, `@vp/job-contracts`, `@vp/logger`, `@vp/observability`, `@vp/result`, `@vp/storage`, `@vp/validation`, `@vp/whisper` |
+| `@vp/web` | client | `@vp/api-client`, `@vp/api-contracts`, `@vp/components`, `@vp/domain`, `@vp/intl`, `@kit/intl-react`, `@vp/permissions`, `@vp/permissions-react`, `@vp/queries`, `@kit/result`, `@kit/security-headers`, `@kit/ui`, `@kit/web-telemetry` |
+| `@vp/studio` | client | `@vp/api-client`, `@vp/api-contracts`, `@vp/components`, `@vp/errors`, `@kit/forms`, `@vp/intl`, `@kit/intl-react`, `@vp/permissions`, `@vp/permissions-react`, `@vp/queries`, `@kit/result`, `@kit/security-headers`, `@kit/ui`, `@vp/validation`, `@kit/web-telemetry` |
+| `@vp/api` | server | `@vp/adapters`, `@vp/api-contracts`, `@kit/composition`, `@kit/concurrency`, `@kit/config`, `@vp/core`, `@vp/db`, `@kit/dev-token`, `@vp/domain`, `@vp/domain-rules`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/job-contracts`, `@kit/logger`, `@vp/observability`, `@kit/pagination`, `@vp/permissions`, `@kit/result`, `@vp/storage`, `@vp/validation`, `@vp/whisper` |
+| `@vp/worker` | server | `@vp/adapters`, `@kit/composition`, `@kit/config`, `@vp/core`, `@vp/domain`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/ffmpeg`, `@vp/job-contracts`, `@kit/logger`, `@vp/observability`, `@kit/result`, `@vp/storage`, `@vp/validation`, `@vp/whisper` |
 
 ### T7 — Reference tools
 
 | Package | Tier | Depends on | Dev-depends on |
 |---|---|---|---|
-| `@vp/upload-client` | server | `@vp/logger`, `@vp/result` | `@vp/adapters`, `@vp/api`, `@vp/dev-token`, `@vp/env-schema` |
-| `@vp/workbench` | client | nothing (Storybook: it ships nothing and nothing imports it) | `@vp/components`, `@vp/design-tokens`, `@vp/messages`, `@vp/ui`, the stories of both client apps |
+| `@vp/upload-client` | server | `@kit/logger`, `@kit/result` | `@vp/adapters`, `@vp/api`, `@kit/dev-token`, `@vp/env-schema` |
+| `@vp/workbench` | client | nothing (Storybook: it ships nothing and nothing imports it) | `@vp/components`, `@kit/design-tokens`, `@vp/messages`, `@kit/ui`, the stories of both client apps |
 
 `@vp/upload-client`'s acceptance suite boots `apps/server/api` and a stub S3, so the package sits above the application it drives. `@vp/workbench` typechecks the apps' stories, which import `@vp/components`, so it sits above the apps too: below them, a cold `pnpm typecheck` checked it before `@vp/components` was built.
 What it *ships* is two runtime dependencies; the layer records the whole manifest, dev edges included.
 
 **Every package in `@vp/web`'s runtime closure is `universal` or `client`** - seventeen of them, eight `client`
-and nine `universal`, counting what the direct ones pull in (`@vp/domain`, `@vp/pagination`, `@vp/messages`);
-its devDependencies are build tooling only (`@vp/tsconfig`, `@vp/vite-preset`, `@vp/web-testing`). That is
+and nine `universal`, counting what the direct ones pull in (`@vp/domain`, `@kit/pagination`, `@vp/messages`);
+its devDependencies are build tooling only (`@kit/tsconfig`, `@kit/vite-preset`, `@vp/web-testing`). That is
 the invariant the whole scheme exists to protect. Verify it any time
 with `pnpm why bullmq` from `apps/client/web` — it returns nothing.
 
@@ -240,7 +240,7 @@ error package runtime tiers and dependency layers are inconsistent violations=3 
 
 ### 4.3 The type system — tsconfig presets
 
-`@vp/tsconfig` exposes one preset per tier. `universal.json` and `client.json` set `lib` to include `DOM` and
+`@kit/tsconfig` exposes one preset per tier. `universal.json` and `client.json` set `lib` to include `DOM` and
 `types` to `[]`, so a Node builtin or global in a `universal` package is a type error:
 
 ```
@@ -251,7 +251,7 @@ src/mime.ts(3,20): error TS2591: Cannot find name 'process'
 A subtlety worth knowing: `types: []` alone is not enough, because the vitest types a spec needs pull
 `@types/node` into the whole program and `node:fs` starts resolving again. Universal and client packages
 therefore exclude their specs from `tsconfig.json` and typecheck them through a sibling `tsconfig.spec.json`,
-which extends `@vp/tsconfig/spec.json`.
+which extends `@kit/tsconfig/spec.json`.
 
 `tests/architecture/package-boundaries.test.ts` asserts the same rules in the unit suite, so a violation also
 shows up as a failing test.
@@ -268,7 +268,7 @@ shows up as a failing test.
 3. Decide the **layer**: one more than the highest layer it depends on. If that forces a sibling edge, the
    design is wrong — fix the dependency, not the number.
 4. `package.json` gets `"vp": { "layer": ... }` - **not a `tier`**, the directory already fixes that and
-   declaring one fails `pnpm boundaries`. `tsconfig.json` extends `@vp/tsconfig/<tier>.json`.
+   declaring one fails `pnpm boundaries`. `tsconfig.json` extends `@kit/tsconfig/<tier>.json`.
 5. Write `AGENTS.md` and run `pnpm sync:claude` for the symlink.
 6. `pnpm boundaries` must pass.
 
@@ -318,8 +318,8 @@ Stated plainly so nobody assumes more coverage than exists:
   path: the workbench already reads every app's stories, and a story of a web component needs the web app's own
   providers.
 - **The build tooling is exempt from both rules as a devDependency**, `BUILD_TOOLING` in
-  `scripts/check-boundaries.ts`: `@vp/tsconfig` (JSON presets), `@vp/testing` (a vitest config factory plus
-  fixtures), `@vp/vite-preset` (the client apps' Vite config) and `@vp/web-testing` (browser spec helpers).
+  `scripts/check-boundaries.ts`: `@kit/tsconfig` (JSON presets), `@vp/testing` (a vitest config factory plus
+  fixtures), `@kit/vite-preset` (the client apps' Vite config) and `@vp/web-testing` (browser spec helpers).
   None ships code, so none can reach a runtime bundle; a runtime dependency on one is still checked. Every
   other devDependency is checked like a dependency — it resolves in CI, and a type it carries lands in the
   emitted `.d.ts` where `pnpm deploy --prod` cannot resolve it.

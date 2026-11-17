@@ -1,6 +1,6 @@
+import { err, ok } from '@kit/result';
 import { storageUnavailable } from '@vp/errors';
 import { createMetricsRegistry } from '@vp/observability';
-import { err, ok } from '@vp/result';
 import { meterStorageOp } from '../storage-op-meter';
 
 describe('@vp/adapters: meterStorageOp', () => {

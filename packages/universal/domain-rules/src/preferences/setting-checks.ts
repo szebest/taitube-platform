@@ -1,3 +1,4 @@
+import { assertNever, isOk, tryCatch } from '@kit/result';
 import {
   ACCENT_PATTERN,
   MAX_APPEARANCE_OVERRIDES,
@@ -6,7 +7,6 @@ import {
   type TextKind,
   TOKEN_GROUP_PATTERN,
 } from '@vp/domain/settings';
-import { assertNever, isOk, tryCatch } from '@vp/result';
 
 function isLanguageTag(tag: string): boolean {
   return isOk(

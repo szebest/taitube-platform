@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { InlineStyle } from '../inline-style';
 
-describe('@vp/ui: InlineStyle', () => {
+describe('@kit/ui: InlineStyle', () => {
   it.each([
     { nonce: 'n0nce', tag: '<style nonce="n0nce">' },
     { nonce: undefined, tag: '<style>' },

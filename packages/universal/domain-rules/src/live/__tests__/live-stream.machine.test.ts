@@ -1,4 +1,4 @@
-import { machineFindings } from '@vp/machine';
+import { machineFindings } from '@kit/machine';
 import { LIVE_STREAM } from '../live-stream.machine';
 
 describe('@vp/domain-rules: LIVE_STREAM', () => {

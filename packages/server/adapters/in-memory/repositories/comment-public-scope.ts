@@ -1,5 +1,5 @@
+import { unwrapOr } from '@kit/result';
 import type { CommentViewer, VideoRepository } from '@vp/core/repositories';
-import { unwrapOr } from '@vp/result';
 import { compareKeys, rowKey } from './comment-order';
 import type { StoredComment } from './comment-visibility';
 import type { InMemoryChannelRepository } from './in-memory-channel-repository';

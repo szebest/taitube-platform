@@ -1,6 +1,6 @@
+import { assertNever } from '@kit/result';
 import { linkOptions } from '@tanstack/react-router';
 import type { Notification } from '@vp/api-contracts';
-import { assertNever } from '@vp/result';
 
 function watch(videoId: string | null, commentId?: string | null) {
   if (!videoId) {

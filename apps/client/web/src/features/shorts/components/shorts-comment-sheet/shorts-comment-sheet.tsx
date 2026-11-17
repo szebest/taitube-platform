@@ -1,5 +1,5 @@
-import { useT } from '@vp/intl-react';
-import { Drawer } from '@vp/ui';
+import { useT } from '@kit/intl-react';
+import { Drawer } from '@kit/ui';
 import type { ReactNode } from 'react';
 
 export interface ShortsCommentSheetProps {

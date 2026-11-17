@@ -60,7 +60,7 @@ describe('architecture: package boundaries', () => {
     }
   );
 
-  const PENDING = new Set(['@vp/result']);
+  const PENDING = new Set(['@vp/moving']);
 
   function platformEdge(dep: string, dev: boolean): string[] {
     return checkBoundaries(
@@ -75,7 +75,7 @@ describe('architecture: package boundaries', () => {
   it.each([
     { group: 'a dependency', dev: false, how: 'depends on', dep: '@vp/domain' },
     { group: 'a devDependency', dev: true, how: 'dev-depends on', dep: '@vp/domain' },
-    { group: 'build tooling', dev: true, how: 'dev-depends on', dep: '@vp/tsconfig' },
+    { group: 'build tooling', dev: true, how: 'dev-depends on', dep: '@vp/lint-config' },
   ])('reports a platform package that names an app package as $group', ({ dev, how, dep }) => {
     expect(platformEdge(dep, dev)).toEqual([
       `@kit/di (platform) ${how} ${dep} (app) — a platform package depends, peer-depends and dev-depends only on platform packages`,
@@ -83,7 +83,7 @@ describe('architecture: package boundaries', () => {
   });
 
   it('lets a platform package depend on an app package whose move to @kit/* is pending', () => {
-    expect(platformEdge('@vp/result', false)).toEqual([]);
+    expect(platformEdge('@vp/moving', false)).toEqual([]);
   });
 
   it('counts a package as pending when package-moves.json sends it, or any export of it, to @kit/*', () => {

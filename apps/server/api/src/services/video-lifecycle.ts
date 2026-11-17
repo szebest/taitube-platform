@@ -1,3 +1,4 @@
+import { type Result, err, isErr, ok } from '@kit/result';
 import type { JobQueue } from '@vp/core/ports';
 import type { StepRepository, VideoRepository } from '@vp/core/repositories';
 import {
@@ -8,7 +9,6 @@ import {
 import { type DatabaseUnavailable, type VersionConflict, versionConflict } from '@vp/errors';
 import { createTraceparent, getActiveTraceparent } from '@vp/observability';
 import type { UserContext } from '@vp/permissions';
-import { type Result, err, isErr, ok } from '@vp/result';
 import { type DispatchOrigin, buildProbeDispatch, enqueueProbe } from './probe-dispatch';
 
 export interface VideoLifecycleDeps {

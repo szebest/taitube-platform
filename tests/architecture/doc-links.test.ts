@@ -117,7 +117,7 @@ describe('architecture: doc-links', () => {
     const documents = trackedDocuments();
 
     expect(documents).toContain('docs/SDD.md');
-    expect(documents).toContain(`${packageDir('@vp/logger')}/AGENTS.md`);
+    expect(documents).toContain(`${packageDir('@kit/logger')}/AGENTS.md`);
     expect(documents.filter((file) => file.startsWith('.agents/'))).toEqual([]);
     expect(documents.filter((file) => file.endsWith('CLAUDE.md'))).toEqual([]);
   });

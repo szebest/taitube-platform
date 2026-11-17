@@ -11,7 +11,7 @@ const renderSide = (side: Side, dir: 'ltr' | 'rtl') =>
     ),
   }).result.current;
 
-describe('@vp/ui: usePhysicalSide', () => {
+describe('@kit/ui: usePhysicalSide', () => {
   it.each([
     { side: 'block-start', dir: 'ltr', physical: 'top' },
     { side: 'block-end', dir: 'rtl', physical: 'bottom' },

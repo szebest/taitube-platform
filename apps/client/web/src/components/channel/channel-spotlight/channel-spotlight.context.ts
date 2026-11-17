@@ -1,4 +1,4 @@
-import { createCompoundContext } from '@vp/ui';
+import { createCompoundContext } from '@kit/ui';
 import type { ChannelSpotlightSource } from './types';
 
 export const [ChannelSpotlightContext, useChannelSpotlight] = createCompoundContext<{

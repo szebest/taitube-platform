@@ -1,5 +1,5 @@
+import { andThen, err, map } from '@kit/result';
 import { unrenderable } from '@vp/intl';
-import { andThen, err, map } from '@vp/result';
 import { type EntryOf, defineKind, isRecord } from '../kind';
 
 const COUNT = '{?}';

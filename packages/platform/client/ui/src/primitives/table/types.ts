@@ -1,4 +1,4 @@
-import type { ControlSize } from '@vp/design-tokens';
+import type { ControlSize } from '@kit/design-tokens';
 import type { Align } from '../../types';
 
 export type TableSize = Extract<ControlSize, 'sm' | 'md'>;

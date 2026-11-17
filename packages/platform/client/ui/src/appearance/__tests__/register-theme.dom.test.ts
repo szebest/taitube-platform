@@ -1,4 +1,4 @@
-import type { Theme } from '@vp/design-tokens';
+import type { Theme } from '@kit/design-tokens';
 import { ErrorCodes } from '@vp/errors';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { sand } from '../../themes/sand';
@@ -28,7 +28,7 @@ const cssOf = (host: ReturnType<typeof emptyHost>) =>
     .flatMap((sheet) => [...sheet.cssRules].map((rule) => rule.cssText))
     .join('\n');
 
-describe('@vp/ui: registerTheme', () => {
+describe('@kit/ui: registerTheme', () => {
   it('installs a passing theme as a stylesheet with its ramp steps resolved', () => {
     const host = emptyHost();
 

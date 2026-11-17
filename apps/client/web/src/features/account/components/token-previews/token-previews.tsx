@@ -1,5 +1,5 @@
-import { useT } from '@vp/intl-react';
-import { cn } from '@vp/ui';
+import { useT } from '@kit/intl-react';
+import { cn } from '@kit/ui';
 import { useEffect, useState } from 'react';
 
 const CARD =

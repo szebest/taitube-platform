@@ -1,5 +1,5 @@
+import { Button, Callout, cn, Dialog, Progress, SegmentedControl, Slider } from '@kit/ui';
 import type { CropRect, ImageCrops } from '@vp/domain';
-import { Button, Callout, cn, Dialog, Progress, SegmentedControl, Slider } from '@vp/ui';
 import {
   type ComponentPropsWithRef,
   type KeyboardEvent,

@@ -1,5 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { createLogger } from '@kit/logger';
+import { ok } from '@kit/result';
 import {
   InMemoryCacheClient,
   InMemoryFrameClassifier,
@@ -18,9 +20,7 @@ import { AppEnvSchema, inProcessAppConfig } from '@vp/env-schema';
 import { mediaTools } from '@vp/ffmpeg';
 import { fingerprintTools } from '@vp/fingerprint';
 import { QUEUES } from '@vp/job-contracts';
-import { createLogger } from '@vp/logger';
 import { createMetricsRegistry } from '@vp/observability';
-import { ok } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import { speechTools } from '@vp/whisper';
 import { everyInterval } from '../heartbeat';

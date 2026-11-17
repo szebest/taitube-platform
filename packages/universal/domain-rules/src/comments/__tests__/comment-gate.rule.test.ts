@@ -1,6 +1,6 @@
+import { isErr, isOk } from '@kit/result';
 import { DEFAULT_COMMENT_SETTINGS, type CommentSettings } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
-import { isErr, isOk } from '@vp/result';
 import { type CommentGateContext, evaluateCommentGate } from '../comment-gate.rule';
 
 const NOW = new Date('2026-06-15T12:00:00.000Z');

@@ -1,6 +1,6 @@
+import { useT } from '@kit/intl-react';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { PageHeader } from '@vp/components';
-import { useT } from '@vp/intl-react';
 import { canManageCaptions } from '@vp/permissions';
 import { Can } from '@vp/permissions-react';
 import { useApi, videoQueryOptions } from '@vp/queries';

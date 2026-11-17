@@ -1,3 +1,4 @@
+import { type Result, fromPromise, map, ok } from '@kit/result';
 import type {
   RelatedVideo,
   RelatedVideosOptions,
@@ -6,7 +7,6 @@ import type {
 import * as schema from '@vp/db';
 import { RELATED_CANDIDATES, compareRelated } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
-import { type Result, fromPromise, map, ok } from '@vp/result';
 import { type SQL, arrayOverlaps, count, desc, eq, inArray, ne, sql } from 'drizzle-orm';
 import { union } from 'drizzle-orm/pg-core';
 import { drizzleWhere } from '../scopes/index';

@@ -12,7 +12,7 @@ const renderInput = (props: InputProps = {}) => {
   return { user, ...render(<Input aria-label="Title" {...props} />) };
 };
 
-describe('@vp/ui: Input', () => {
+describe('@kit/ui: Input', () => {
   it.each(variantNames(inputStyles.variants.size))(
     'is a %s text box typed into from the keyboard, with the focus ring',
     async (size) => {

@@ -1,3 +1,4 @@
+import { fromPromise, isOk, parseJson } from '@kit/result';
 import {
   buildPath,
   type WatchPartyClientFrame,
@@ -5,7 +6,6 @@ import {
   watchPartySocket,
 } from '@vp/api-contracts';
 import { clockOffsetMs, type ClockSample } from '@vp/domain';
-import { fromPromise, isOk, parseJson } from '@vp/result';
 import { useEffect, useReducer, useRef } from 'react';
 import { useApi } from './api-provider';
 import { createReconnectTimer } from './reconnect-timer';

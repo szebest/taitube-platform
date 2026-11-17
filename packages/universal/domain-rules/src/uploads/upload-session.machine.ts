@@ -1,5 +1,5 @@
+import { defineMachine } from '@kit/machine';
 import { UPLOAD_STATUSES } from '@vp/domain';
-import { defineMachine } from '@vp/machine';
 
 export const UPLOAD_SESSION = defineMachine({
   name: 'upload-session',

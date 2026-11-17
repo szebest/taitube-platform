@@ -8,7 +8,7 @@ function renderIcon(props: Partial<IconProps> = {}) {
 
 const iconIn = (container: HTMLElement) => container.querySelector('[data-slot="icon"]');
 
-describe('@vp/ui: Icon', () => {
+describe('@kit/ui: Icon', () => {
   it('hides a decorative icon from assistive technology', () => {
     const { container } = renderIcon();
 

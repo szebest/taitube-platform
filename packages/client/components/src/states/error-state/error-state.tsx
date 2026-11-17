@@ -1,4 +1,4 @@
-import { Button, type ButtonProps, Slot, useUiCopy, VisuallyHidden } from '@vp/ui';
+import { Button, type ButtonProps, Slot, useUiCopy, VisuallyHidden } from '@kit/ui';
 import { type ComponentPropsWithRef, type ComponentType, useEffect, useState } from 'react';
 import {
   ErrorIllustration,

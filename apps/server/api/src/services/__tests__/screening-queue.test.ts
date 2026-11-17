@@ -1,5 +1,5 @@
+import type { Result } from '@kit/result';
 import { ErrorCodes } from '@vp/errors';
-import type { Result } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
 import {
   FRAME_KEY,

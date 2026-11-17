@@ -1,4 +1,4 @@
-import { useT } from '@vp/intl-react';
+import { useT } from '@kit/intl-react';
 import { AppShell } from '#app/components/shell/app-shell';
 import { useIsCurrent } from '#app/features/shell/hooks/use-is-current';
 import { useShellDestinations } from '#app/hooks/use-shell-destinations';

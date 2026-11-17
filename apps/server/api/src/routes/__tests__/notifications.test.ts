@@ -1,4 +1,4 @@
-import { mintToken } from '@vp/dev-token';
+import { mintToken } from '@kit/dev-token';
 import type { NewNotificationInput } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import { SEEDED } from '@vp/testing';

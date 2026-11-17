@@ -1,5 +1,5 @@
+import { type Result, err, ok } from '@kit/result';
 import { CLIP_MAX_MS, CLIP_MIN_MS } from '@vp/domain';
-import { type Result, err, ok } from '@vp/result';
 import { type InvalidClipRange, invalidClipRange } from './failures';
 
 export interface ClipRange {

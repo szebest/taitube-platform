@@ -1,6 +1,6 @@
+import { useT } from '@kit/intl-react';
+import { Card, Icon, Input, InputGroup } from '@kit/ui';
 import { Link, useNavigate, useSearch } from '@tanstack/react-router';
-import { useT } from '@vp/intl-react';
-import { Card, Icon, Input, InputGroup } from '@vp/ui';
 import { useState } from 'react';
 import { useSettingsIndex } from '#app/features/account/hooks/use-settings-index';
 import {

@@ -1,3 +1,4 @@
+import { fromPromise, map, ok, type Result } from '@kit/result';
 import type {
   ListNotificationsOptions,
   MarkedRead,
@@ -18,7 +19,6 @@ import {
 } from '@vp/domain';
 import { MS_PER_DAY } from '@vp/domain/time';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
-import { fromPromise, map, ok, type Result } from '@vp/result';
 import { and, desc, eq, gt, inArray, isNull, lt, sql } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
 import { drizzleWhere, keysetBefore, msTimestamp } from '../scopes/index';

@@ -1,9 +1,9 @@
+import { useT } from '@kit/intl-react';
+import { Logo } from '@kit/ui';
 import { Link, Outlet, useMatchRoute } from '@tanstack/react-router';
-import { useT } from '@vp/intl-react';
 import { canAccessAdmin } from '@vp/permissions';
 import { Can } from '@vp/permissions-react';
 import { useLayoutMaxWidth, useUserEvent } from '@vp/queries';
-import { Logo } from '@vp/ui';
 import { type ReactNode, useState } from 'react';
 import { StudioWorkspace } from '#app/components/workspace/studio-workspace';
 import { useAccessDeniedToast } from '#app/features/shell/hooks/use-access-denied-toast';

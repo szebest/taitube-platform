@@ -1,4 +1,4 @@
-import type { AvatarSize, BadgeTone } from '@vp/ui';
+import type { AvatarSize, BadgeTone } from '@kit/ui';
 import type { ChartSeries } from '../chart-frame';
 
 export type StatCardSize = Extract<AvatarSize, 'md' | 'lg'>;

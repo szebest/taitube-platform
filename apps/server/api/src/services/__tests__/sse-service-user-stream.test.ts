@@ -1,7 +1,7 @@
+import { createLogger } from '@kit/logger';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { NewUserEventInput } from '@vp/core/repositories';
 import { userChannel } from '@vp/events';
-import { createLogger } from '@vp/logger';
 import type { UserContext } from '@vp/permissions';
 import { expectOk } from '@vp/testing/result';
 import type { SseFrame } from '../sse-connection';

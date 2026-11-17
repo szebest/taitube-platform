@@ -1,5 +1,5 @@
+import { err, ok } from '@kit/result';
 import { ErrorCodes } from '@vp/errors';
-import { err, ok } from '@vp/result';
 import { compositeOver, formatHex, parseGround, toGamma, toLinear } from '../rgb';
 
 const invalidColour = (field: string, value: string) =>

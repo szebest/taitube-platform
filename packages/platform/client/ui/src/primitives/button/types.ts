@@ -1,4 +1,4 @@
-import type { ControlSize, ToneOption } from '@vp/design-tokens';
+import type { ControlSize, ToneOption } from '@kit/design-tokens';
 import type { FillOption, ShapeOption } from '../../types';
 
 export type ButtonFill = Exclude<FillOption, 'plain'>;

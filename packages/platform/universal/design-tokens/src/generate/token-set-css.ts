@@ -1,4 +1,4 @@
-import { assertNever } from '@vp/result';
+import { assertNever } from '@kit/result';
 import { ELEVATION_OPTIONS } from '../schema/shadow';
 import {
   type TokenGroup,

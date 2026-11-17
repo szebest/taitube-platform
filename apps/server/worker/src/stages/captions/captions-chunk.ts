@@ -1,7 +1,7 @@
+import { type Result, isErr, ok } from '@kit/result';
 import type { QueueJob } from '@vp/core/ports';
 import { ErrorCodes } from '@vp/errors';
 import { type CaptionsJob, captionsWindow } from '@vp/job-contracts';
-import { type Result, isErr, ok } from '@vp/result';
 import { captionsChunkKey } from '@vp/storage';
 import { type WindowTranscript, ownedCues } from '@vp/whisper';
 import type { TranscribeFailure } from './captions-audio';

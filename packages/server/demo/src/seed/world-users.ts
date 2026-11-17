@@ -21,7 +21,7 @@ interface Persona {
   displayName: string;
 }
 
-/** The ids and token roles are the ones `@vp/dev-token` signs in as. */
+/** The ids and token roles are the ones `@kit/dev-token` signs in as. */
 const PERSONAS: readonly Persona[] = [
   {
     kind: 'creator',

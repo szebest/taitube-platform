@@ -1,6 +1,6 @@
+import { assertNever } from '@kit/result';
 import * as schema from '@vp/db';
 import type { CreatorInboxComment, CreatorInboxFilter } from '@vp/domain';
-import { assertNever } from '@vp/result';
 import { type SQL, sql } from 'drizzle-orm';
 import { moderatedThreadColumns, toCommentThread } from './comment-thread-query';
 

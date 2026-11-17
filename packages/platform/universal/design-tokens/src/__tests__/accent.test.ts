@@ -1,5 +1,5 @@
+import { err } from '@kit/result';
 import { ErrorCodes } from '@vp/errors';
-import { err } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import { ACCENT_GROUNDS, deriveAccent, groundsInsideAccentBand } from '../accent';
 import { toOklch } from '../color/oklch';

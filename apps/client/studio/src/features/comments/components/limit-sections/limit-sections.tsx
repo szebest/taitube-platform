@@ -1,6 +1,6 @@
+import { useT } from '@kit/intl-react';
+import { Field, Select, Switch } from '@kit/ui';
 import type { CommentSettingsView } from '@vp/api-contracts';
-import { useT } from '@vp/intl-react';
-import { Field, Select, Switch } from '@vp/ui';
 import { useSettingsSection } from '#app/features/comments/hooks/use-settings-section';
 import { SettingsSection } from '../settings-section/settings-section';
 

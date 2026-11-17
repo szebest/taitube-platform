@@ -74,7 +74,7 @@ const cases: { label: string; overrides: Partial<Spec>; finding: string }[] = [
   },
 ];
 
-describe('@vp/machine: machineFindings', () => {
+describe('@kit/machine: machineFindings', () => {
   it('is empty for a sound machine', () => {
     expect(build()).toEqual([]);
   });

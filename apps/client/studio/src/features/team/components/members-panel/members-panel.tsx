@@ -1,11 +1,11 @@
+import { Format, useT } from '@kit/intl-react';
+import { Button, Icon, IconButton } from '@kit/ui';
 import { useQuery } from '@tanstack/react-query';
 import { createColumnHelper, useTable } from '@tanstack/react-table';
 import type { ChannelMemberView } from '@vp/api-contracts';
 import { EmptyState, SectionError } from '@vp/components';
 import { publishedAt } from '@vp/intl';
-import { Format, useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
-import { Button, Icon, IconButton } from '@vp/ui';
 import { useState } from 'react';
 import {
   DataTable,

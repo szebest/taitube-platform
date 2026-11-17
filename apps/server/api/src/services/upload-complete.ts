@@ -1,3 +1,4 @@
+import { type Result, err, isErr, ok, unwrapOr } from '@kit/result';
 import type { UploadRecord, VideoRecord } from '@vp/core/repositories';
 import { jobPriorityFor } from '@vp/domain';
 import {
@@ -17,7 +18,6 @@ import {
 import { type DatabaseUnavailable, ErrorCodes, type StorageUnavailable } from '@vp/errors';
 import { createTraceparent, getActiveTraceparent } from '@vp/observability';
 import type { UserContext } from '@vp/permissions';
-import { type Result, err, isErr, ok, unwrapOr } from '@vp/result';
 import { type DispatchOrigin, buildProbeDispatch, enqueueProbe } from './probe-dispatch';
 import {
   type LoadOwnedUploadFailure,

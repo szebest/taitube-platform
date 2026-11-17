@@ -2,9 +2,9 @@ import * as fs from 'node:fs/promises';
 import * as net from 'node:net';
 import * as os from 'node:os';
 import * as path from 'node:path';
+import type { ProcessHost } from '@kit/composition';
+import { createLogger } from '@kit/logger';
 import { InMemoryJobQueue } from '@vp/adapters/in-memory';
-import type { ProcessHost } from '@vp/composition';
-import { createLogger } from '@vp/logger';
 import { captureLog } from '@vp/testing/log-capture';
 import { run } from '../process';
 

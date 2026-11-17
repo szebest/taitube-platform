@@ -97,11 +97,11 @@ describe('scripts: workspace packages', () => {
 
   it('finds a package directory by name, on either axis', () => {
     const root = tree({
-      'packages/platform/client/ui': { name: '@vp/ui' },
+      'packages/platform/client/ui': { name: '@kit/ui' },
       'packages/client/queries': { name: '@vp/queries' },
     });
 
-    expect(packageDir('@vp/ui', load(root))).toBe('packages/platform/client/ui');
+    expect(packageDir('@kit/ui', load(root))).toBe('packages/platform/client/ui');
     expect(packageDir('@vp/queries', load(root))).toBe('packages/client/queries');
     expect(() => packageDir('@vp/missing', load(root))).toThrow(
       '@vp/missing: no workspace package by that name'

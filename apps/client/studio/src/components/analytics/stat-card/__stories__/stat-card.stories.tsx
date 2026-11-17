@@ -1,5 +1,5 @@
+import { variantNames } from '@kit/ui';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { variantNames } from '@vp/ui';
 import { CHART_SERIES } from '#app/components/analytics/chart-frame';
 import { StatCard, StatCardSkeleton, statCardStyles } from '..';
 import { StatCardRoot } from '../stat-card';

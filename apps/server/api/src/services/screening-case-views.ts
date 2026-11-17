@@ -1,3 +1,4 @@
+import { type Result, isErr, ok } from '@kit/result';
 import type {
   ScreeningCaseView,
   ScreeningFindingView,
@@ -13,7 +14,6 @@ import type {
 import { type ScreeningFinding, isScreeningCaseOpen } from '@vp/domain';
 import type { CdnBase } from '@vp/env-schema';
 import type { DatabaseUnavailable, StorageUnavailable } from '@vp/errors';
-import { type Result, isErr, ok } from '@vp/result';
 import { z } from 'zod';
 import { type ChannelOf, loadChannelsOf, thumbnailUrl } from './video-views';
 

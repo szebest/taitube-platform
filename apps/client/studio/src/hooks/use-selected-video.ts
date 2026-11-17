@@ -1,4 +1,4 @@
-import { createCompoundContext } from '@vp/ui';
+import { createCompoundContext } from '@kit/ui';
 
 export const [SelectedVideoContext, useSelectedVideo] = createCompoundContext<{
   videoId: string | undefined;

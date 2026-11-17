@@ -1,3 +1,4 @@
+import { andThen, err, fromPromise, map, ok, type Result } from '@kit/result';
 import type {
   OwnerTransfer,
   PlaybackChange,
@@ -10,7 +11,6 @@ import type {
 import * as schema from '@vp/db';
 import { renumberPositions, type WatchPartyCloseReason, type WatchPartyRoom } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
-import { andThen, err, fromPromise, map, ok, type Result } from '@vp/result';
 import { and, desc, eq, sql } from 'drizzle-orm';
 import type { PostgresDatabase } from './types';
 import { replacePermissions, type RolePermissions } from './watch-party-role-permissions';

@@ -1,6 +1,6 @@
-import { buildTheme, resolveTheme, type ThemeColours } from '@vp/design-tokens';
+import { buildTheme, resolveTheme, type ThemeColours } from '@kit/design-tokens';
+import { err, type Result } from '@kit/result';
 import { ErrorCodes } from '@vp/errors';
-import { err, type Result } from '@vp/result';
 import { ramps } from '../tokens/ref';
 import {
   type InvalidTheme,

@@ -1,10 +1,10 @@
+import { type Result, err, isErr, ok } from '@kit/result';
 import type {
   ChannelRepositoryPort,
   ChannelUserRestrictionRepositoryPort,
 } from '@vp/core/repositories';
 import { type CommentsBanned, commentsBanned } from '@vp/domain-rules';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { type Result, err, isErr, ok } from '@vp/result';
 
 export interface ChannelBanLookups {
   channels: Pick<ChannelRepositoryPort, 'findByUserId'>;

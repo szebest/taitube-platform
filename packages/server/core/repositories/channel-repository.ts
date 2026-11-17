@@ -1,6 +1,6 @@
+import type { Result } from '@kit/result';
 import type { Channel, ChannelStats, CreateChannelInput, UpdateChannelInput } from '@vp/domain';
 import type { DatabaseUnavailable, HandleTaken } from '@vp/errors';
-import type { Result } from '@vp/result';
 
 /**
  * A handle collision is a constraint the store reports; whether a missing channel is an error is a

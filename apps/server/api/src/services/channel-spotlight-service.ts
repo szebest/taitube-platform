@@ -1,3 +1,4 @@
+import { type Result, andThenAsync, err, isErr, map, ok } from '@kit/result';
 import type { ChannelSpotlight, ChannelSpotlightSettings } from '@vp/api-contracts';
 import type {
   ChannelAuditRepositoryPort,
@@ -24,7 +25,6 @@ import {
 } from '@vp/domain-rules';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { type Result, andThenAsync, err, isErr, map, ok } from '@vp/result';
 import { type InvalidField, invalidField } from '@vp/validation';
 import type { ChannelIdentityService } from './channel-identity-service';
 import type { VideoService, VideoSummaryView } from './video-service';

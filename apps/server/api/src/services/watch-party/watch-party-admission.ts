@@ -1,3 +1,4 @@
+import { map, type Result } from '@kit/result';
 import {
   admissionLimit,
   effectiveCapacity,
@@ -6,7 +7,6 @@ import {
 } from '@vp/domain';
 import type { WatchPartyJoinInput } from '@vp/domain-rules';
 import type { CacheUnavailable } from '@vp/errors';
-import { map, type Result } from '@vp/result';
 import type { RoomContext } from './watch-party-context';
 import type { WatchPartyDeps } from './watch-party-deps';
 

@@ -1,5 +1,5 @@
+import { type Result, err, fromPromise, isErr, ok } from '@kit/result';
 import { type AuthFailure, type Principal, TokenVerifier } from '@vp/core/ports';
-import { type Result, err, fromPromise, isErr, ok } from '@vp/result';
 import { type Jwks, decodeJwt, unauthorized, verifyJwt } from './jwt';
 
 export interface JwksTokenVerifierDeps {

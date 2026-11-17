@@ -1,8 +1,8 @@
+import { useT } from '@kit/intl-react';
 import { composeStory } from '@storybook/react-vite';
 import { Link } from '@tanstack/react-router';
 import { render, screen } from '@testing-library/react';
 import { isSubscribedToChannel } from '@vp/api-contracts';
-import { useT } from '@vp/intl-react';
 import { useAccount, useApi } from '@vp/queries';
 import { useEffect, useState } from 'react';
 import { type AppParameters, withApp } from '../app-decorator';

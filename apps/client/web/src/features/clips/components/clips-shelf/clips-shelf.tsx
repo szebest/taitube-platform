@@ -1,6 +1,6 @@
+import { useT } from '@kit/intl-react';
 import { useSuspenseInfiniteQuery } from '@tanstack/react-query';
 import { EmptyLibraryIllustration, EmptyState, Shelf } from '@vp/components';
-import { useT } from '@vp/intl-react';
 import { myClipsQueryOptions, useApi } from '@vp/queries';
 import { ClipCard } from '../clip-card/clip-card';
 

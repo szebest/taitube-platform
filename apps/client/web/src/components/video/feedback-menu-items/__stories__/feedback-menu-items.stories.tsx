@@ -1,6 +1,6 @@
+import { DropdownMenu, Icon, IconButton } from '@kit/ui';
 import type { Decorator, Meta, StoryObj } from '@storybook/react-vite';
 import { screen } from '@testing-library/dom';
-import { DropdownMenu, Icon, IconButton } from '@vp/ui';
 import { FeedbackMenuItems } from '..';
 
 const CHANNEL = {

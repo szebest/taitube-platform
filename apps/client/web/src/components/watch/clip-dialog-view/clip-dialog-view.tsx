@@ -1,4 +1,4 @@
-import { Button, Field, Input, ResponsiveModal, useUiCopy } from '@vp/ui';
+import { Button, Field, Input, ResponsiveModal, useUiCopy } from '@kit/ui';
 import type { ComponentProps, ComponentPropsWithRef } from 'react';
 
 export interface ClipDialogViewRootProps extends ComponentProps<typeof ResponsiveModal.Root> {

@@ -1,6 +1,6 @@
+import { type Result, andThen, err, ok } from '@kit/result';
 import type { Category } from '@vp/domain';
 import { type UserContext, canManageCategory } from '@vp/permissions';
-import { type Result, andThen, err, ok } from '@vp/result';
 import { type CategoryFormFailure, validateCategoryName, validateSlug } from '@vp/validation';
 import { type AuthorizationFailure, authorize } from '../authorize';
 import { type CategoryNotFound, categoryNotFound } from './failures';

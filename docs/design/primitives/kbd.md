@@ -18,7 +18,7 @@ A combination is several `Kbd` in a row with a parent `gap`.
 
 ```ts
 // types.ts
-import type { SizeOption } from '@vp/design-tokens';
+import type { SizeOption } from '@kit/design-tokens';
 import type { FillOption } from '../../types';
 
 export type KbdFill = Extract<FillOption, 'outline' | 'soft'>;

@@ -1,9 +1,9 @@
+import { useT } from '@kit/intl-react';
+import { Button, Icon } from '@kit/ui';
 import type { WatchPartyClientFrame } from '@vp/api-contracts';
 import { expectedPositionMs } from '@vp/domain';
-import { useT } from '@vp/intl-react';
 import { usePartyCan } from '@vp/permissions-react';
 import type { PartyRequest, WatchPartySocket } from '@vp/queries';
-import { Button, Icon } from '@vp/ui';
 
 const MS_PER_SECOND = 1000;
 

@@ -1,6 +1,6 @@
+import type { Container } from '@kit/composition';
 import { Adapters } from '@vp/adapters/composition';
 import { MAX_WEB_VITALS_PER_BATCH } from '@vp/api-contracts';
-import type { Container } from '@vp/composition';
 import { type AppConfigOverrides, inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes } from '@vp/errors';
 import type { FastifyInstance } from 'fastify';

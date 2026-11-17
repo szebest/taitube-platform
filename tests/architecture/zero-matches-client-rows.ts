@@ -2,7 +2,7 @@ import { packageDir, tierGlob } from '../../scripts/workspace-packages';
 import { clientApps } from './client-apps';
 import type { Row } from './zero-matches-rows';
 
-const UI = packageDir('@vp/ui');
+const UI = packageDir('@kit/ui');
 const CLIENT = tierGlob('client');
 
 const APPS = clientApps();

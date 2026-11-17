@@ -8,7 +8,7 @@ import {
 import { PREFERENCE_ID_PATTERN } from '../packages/universal/domain/src/settings/index';
 import { packageDir } from './workspace-packages';
 
-export const UI_SRC = `${packageDir('@vp/ui')}/src`;
+export const UI_SRC = `${packageDir('@kit/ui')}/src`;
 
 export const REGISTRY = `${UI_SRC}/appearance/registry.ts`;
 

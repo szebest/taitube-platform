@@ -1,4 +1,4 @@
-import { defineTheme, type Theme } from '@vp/design-tokens';
+import { defineTheme, type Theme } from '@kit/design-tokens';
 import { ambientCinematic } from '../../tokens/ambient/cinematic';
 import { borderHairline } from '../../tokens/border/hairline';
 import { fontSizeDefault } from '../../tokens/font-size/default';

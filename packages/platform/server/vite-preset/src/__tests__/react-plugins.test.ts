@@ -27,7 +27,7 @@ async function buildGreeting(compiler: ReactCompiler): Promise<string> {
   return output[0]?.output[0].code ?? '';
 }
 
-describe('@vp/vite-preset: React Compiler', () => {
+describe('@kit/vite-preset: React Compiler', () => {
   it.each([
     { compiler: 'oxc' as const, compiled: true },
     { compiler: 'babel' as const, compiled: true },
@@ -37,7 +37,7 @@ describe('@vp/vite-preset: React Compiler', () => {
   });
 });
 
-describe('@vp/vite-preset: compiler diagnostics', () => {
+describe('@kit/vite-preset: compiler diagnostics', () => {
   it.each([
     {
       shape: 'a hook called conditionally',

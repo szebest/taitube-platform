@@ -81,7 +81,7 @@ const renderVideoMenu = async (props: VideoMenuProps = {}) => {
   return user;
 };
 
-describe('@vp/ui: DropdownMenu', () => {
+describe('@kit/ui: DropdownMenu', () => {
   it('opens from its named trigger with the first item focused', async () => {
     await renderVideoMenu();
 

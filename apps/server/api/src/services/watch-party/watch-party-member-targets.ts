@@ -1,3 +1,4 @@
+import { andThen, andThenAsync, err, ok, type Result } from '@kit/result';
 import {
   effectivePermissions,
   parseMemberKey,
@@ -12,7 +13,6 @@ import {
   watchPartyRoleNotFound,
 } from '@vp/errors';
 import type { WatchPartyMemberSubject } from '@vp/permissions';
-import { andThen, andThenAsync, err, ok, type Result } from '@vp/result';
 import type { PartyCaller } from './party-caller';
 import type { RoomContext, WatchPartyContextLoader } from './watch-party-context';
 import type { WatchPartyDeps } from './watch-party-deps';

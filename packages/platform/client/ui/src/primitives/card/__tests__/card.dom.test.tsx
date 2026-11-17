@@ -22,7 +22,7 @@ const renderStatsCard = (props: CardRootProps = {}) =>
     </Card.Root>
   );
 
-describe('@vp/ui: Card', () => {
+describe('@kit/ui: Card', () => {
   it.each(variantNames(cardStyles.variants.variant))(
     'heads a %s card with the title at the level the caller picks',
     (variant) => {

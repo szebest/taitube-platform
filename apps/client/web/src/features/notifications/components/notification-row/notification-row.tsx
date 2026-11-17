@@ -1,8 +1,8 @@
+import { useFormat } from '@kit/intl-react';
+import { unwrapOr } from '@kit/result';
 import { Link } from '@tanstack/react-router';
 import type { Notification } from '@vp/api-contracts';
 import { publishedAt } from '@vp/intl';
-import { useFormat } from '@vp/intl-react';
-import { unwrapOr } from '@vp/result';
 import {
   NotificationCentre,
   notificationCentreStyles,

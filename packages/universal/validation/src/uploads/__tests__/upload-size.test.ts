@@ -1,4 +1,4 @@
-import { err, ok } from '@vp/result';
+import { err, ok } from '@kit/result';
 import { uploadTooLarge } from '../failures';
 import { validateUploadSize } from '../upload-size';
 

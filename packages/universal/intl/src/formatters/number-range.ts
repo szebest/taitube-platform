@@ -1,4 +1,4 @@
-import { all, andThen, map } from '@vp/result';
+import { all, andThen, map } from '@kit/result';
 import { finite } from '../inputs';
 import { withOptions } from '../with-options';
 import { NUMBER_OPTION_KEYS, type NumberOptions, numberFormatOptions } from './number';

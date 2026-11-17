@@ -1,4 +1,4 @@
-import { type Result, err, isErr, ok } from '@vp/result';
+import { type Result, err, isErr, ok } from '@kit/result';
 import { normalizePlainText, withinLength } from '../plain-text';
 import { foldForMatching } from './blocked-words';
 import { type InvalidCommentSettings, invalidCommentSettings } from './failures';

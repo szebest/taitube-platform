@@ -1,4 +1,4 @@
-import { isErr, isOk } from '@vp/result';
+import { isErr, isOk } from '@kit/result';
 import { anUpload } from '../../__tests__/entities';
 import { decidePartManifest } from '../part-manifest.rule';
 

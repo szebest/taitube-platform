@@ -1,6 +1,6 @@
+import { andThen, err, ok, type Result } from '@kit/result';
 import type { LiveStream } from '@vp/domain';
 import { canUpdateLiveStream, type UserContext } from '@vp/permissions';
-import { andThen, err, ok, type Result } from '@vp/result';
 import { type AuthorizationFailure, authorize } from '../authorize';
 import {
   type LiveStreamNotFound,

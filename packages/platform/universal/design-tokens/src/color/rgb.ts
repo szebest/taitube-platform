@@ -1,5 +1,5 @@
+import { andThen, err, map, ok, type Result } from '@kit/result';
 import { ErrorCodes, type InputFailure } from '@vp/errors';
-import { andThen, err, map, ok, type Result } from '@vp/result';
 import { ColorSchema } from '../schema/values';
 
 export type Rgba = Readonly<{ r: number; g: number; b: number; alpha: number }>;

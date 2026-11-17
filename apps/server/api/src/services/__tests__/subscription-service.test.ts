@@ -1,3 +1,5 @@
+import { Paginator } from '@kit/pagination';
+import { err } from '@kit/result';
 import {
   InMemoryChannelHandleHistoryRepository,
   InMemoryChannelRepository,
@@ -11,9 +13,7 @@ import {
   InMemoryWatchHistoryRepository,
 } from '@vp/adapters/in-memory';
 import { ErrorCodes, cacheUnavailable } from '@vp/errors';
-import { Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
-import { err } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { SubscriptionService } from '../subscription-service';
 import { ViewerProgress } from '../viewer-progress';

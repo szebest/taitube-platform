@@ -1,6 +1,6 @@
-import { useT } from '@vp/intl-react';
+import { useT } from '@kit/intl-react';
+import { Avatar, Button, DropdownMenu, Icon } from '@kit/ui';
 import { useAccount } from '@vp/queries';
-import { Avatar, Button, DropdownMenu, Icon } from '@vp/ui';
 import { useState } from 'react';
 import { RoleBadge } from '#app/components/team/role-badge';
 import { useSwitchChannel } from '#app/features/team/hooks/use-switch-channel';

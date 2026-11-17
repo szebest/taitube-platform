@@ -1,8 +1,8 @@
+import { useT } from '@kit/intl-react';
+import { useToast } from '@kit/ui';
 import { useMutation } from '@tanstack/react-query';
 import type { VideoVisibility } from '@vp/domain';
-import { useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
-import { useToast } from '@vp/ui';
 import {
   type BatchOutcome,
   type BatchVideo,

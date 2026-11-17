@@ -1,4 +1,4 @@
-import type { ControlSize } from '@vp/design-tokens';
+import type { ControlSize } from '@kit/design-tokens';
 import type { Orientation } from '../../types';
 
 export type FieldOrientation = Orientation;

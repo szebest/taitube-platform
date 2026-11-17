@@ -1,7 +1,7 @@
+import { type Result, isErr, ok } from '@kit/result';
 import type { Repositories } from '@vp/core/repositories';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { ScreenResult } from '@vp/job-contracts';
-import { type Result, isErr, ok } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 
 export type ScreeningGate = 'proceed' | 'held';

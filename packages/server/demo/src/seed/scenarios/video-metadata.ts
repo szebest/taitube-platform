@@ -1,4 +1,4 @@
-import { type Result, err, isErr, ok } from '@vp/result';
+import { type Result, err, isErr, ok } from '@kit/result';
 import type { Actor, Api } from '../api';
 import type { SeedFailure } from '../failure';
 import { AnySchema, VideoDetailSchema } from '../responses';

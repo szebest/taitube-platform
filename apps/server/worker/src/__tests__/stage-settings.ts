@@ -1,3 +1,4 @@
+import type { Logger } from '@kit/logger';
 import {
   InMemoryCacheClient,
   InMemoryFrameClassifier,
@@ -14,7 +15,6 @@ import { ErrorCodes, PermanentError } from '@vp/errors';
 import type { MediaTools } from '@vp/ffmpeg';
 import * as ffmpeg from '@vp/ffmpeg';
 import { fingerprintTools } from '@vp/fingerprint';
-import type { Logger } from '@vp/logger';
 import { createMetricsRegistry } from '@vp/observability';
 import { speechTools } from '@vp/whisper';
 import { everyInterval } from '../heartbeat';

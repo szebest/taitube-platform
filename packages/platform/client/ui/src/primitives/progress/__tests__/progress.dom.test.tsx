@@ -7,7 +7,7 @@ import { progressStyles } from '../progress.variants';
 const renderProgress = (props: ProgressProps = {}) =>
   render(<Progress aria-label="Uploading launch.mp4" {...props} />);
 
-describe('@vp/ui: Progress', () => {
+describe('@kit/ui: Progress', () => {
   it.each(variantNames(progressStyles.variants.size))(
     'reports how far a %s bar has got and fills that share of it',
     (size) => {

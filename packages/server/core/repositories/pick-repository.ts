@@ -1,6 +1,6 @@
+import type { Result } from '@kit/result';
 import type { EditorPick, EditorPickEntry } from '@vp/domain';
 import type { DatabaseUnavailable, PickWindowOverlap } from '@vp/errors';
-import type { Result } from '@vp/result';
 
 export interface PickRange {
   from: Date;

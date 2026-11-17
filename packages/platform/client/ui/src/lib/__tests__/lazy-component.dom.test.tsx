@@ -21,7 +21,7 @@ afterEach(() => {
   sessionStorage.clear();
 });
 
-describe('@vp/ui: lazyComponent', () => {
+describe('@kit/ui: lazyComponent', () => {
   it('imports the module once however it is asked, and renders it with its props', async () => {
     const load = vi.fn(async () => ({ default: Greeting }));
     const Lazy = lazyComponent(load, { name: 'Greeting', pick: (module) => module.default });

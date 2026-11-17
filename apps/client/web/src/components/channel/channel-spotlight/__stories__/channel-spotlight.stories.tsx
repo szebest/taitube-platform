@@ -1,6 +1,6 @@
+import { Button, Icon } from '@kit/ui';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { VideoCard } from '@vp/components';
-import { Button, Icon } from '@vp/ui';
 import { ChannelSpotlight, ChannelSpotlightSkeleton } from '..';
 import { ChannelSpotlightRoot, type ChannelSpotlightRootProps } from '../channel-spotlight';
 

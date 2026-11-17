@@ -1,6 +1,6 @@
+import { fromPromise, ignore, isOk, parseJson } from '@kit/result';
 import { onlineManager } from '@tanstack/react-query';
 import { type ContractResult, streamMyEvents } from '@vp/api-contracts';
-import { fromPromise, ignore, isOk, parseJson } from '@vp/result';
 import { API_PROXY_PATH } from './api-client';
 import { createReconnectTimer } from './reconnect-timer';
 

@@ -1,6 +1,6 @@
+import { AppearanceProvider, DEFAULT_APPEARANCE } from '@kit/ui';
 import type { Channel, ChannelSpotlight } from '@vp/api-contracts';
 import { createQueryClient, myVideosQueryOptions } from '@vp/queries';
-import { AppearanceProvider, DEFAULT_APPEARANCE } from '@vp/ui';
 import { api, CHANNEL_ID, channel, feedPages, videoSummary } from '@vp/web-testing';
 import { renderPage } from '@vp/web-testing/server';
 import type { PropsWithChildren } from 'react';

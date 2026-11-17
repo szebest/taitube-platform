@@ -12,7 +12,7 @@ function renderUseT(withProvider = true) {
   return renderHook(useT, withProvider ? { wrapper } : undefined);
 }
 
-describe('@vp/intl-react: useT', () => {
+describe('@kit/intl-react: useT', () => {
   it('translates in the provider locale', () => {
     const { t } = renderUseT().result.current;
 

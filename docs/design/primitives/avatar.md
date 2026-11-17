@@ -22,7 +22,7 @@ A person or channel as a picture, falling back to a monogram, in a fixed set of 
 
 ```ts
 // types.ts
-import type { SizeOption, ToneOption } from '@vp/design-tokens';
+import type { SizeOption, ToneOption } from '@kit/design-tokens';
 
 export type AvatarSize = SizeOption;
 export type AvatarShape = 'circle' | 'square';

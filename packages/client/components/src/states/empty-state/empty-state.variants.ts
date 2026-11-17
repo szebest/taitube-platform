@@ -1,4 +1,4 @@
-import { tv } from '@vp/ui';
+import { tv } from '@kit/ui';
 import type { EmptyStateSize, EmptyStateTitleStyle } from './types';
 
 export const emptyStateStyles = tv({

@@ -1,5 +1,5 @@
+import { Button, Checkbox, Icon, Table, useUiCopy, VisuallyHidden } from '@kit/ui';
 import { FlexRender, type Header, type RowData, type SortDirection } from '@tanstack/react-table';
-import { Button, Checkbox, Icon, Table, useUiCopy, VisuallyHidden } from '@vp/ui';
 import type { ComponentPropsWithRef } from 'react';
 import { columnLook, useDataTable } from '#app/components/table/data-table/data-table.context';
 import { dataTableStyles } from '#app/components/table/data-table/data-table.variants';

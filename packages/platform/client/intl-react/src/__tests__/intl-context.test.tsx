@@ -11,7 +11,7 @@ function renderBindings(hookName: string, bindings?: IntlBindings) {
   return renderHook(() => useIntlBindings(hookName), bindings ? { wrapper } : undefined);
 }
 
-describe('@vp/intl-react: useIntlBindings', () => {
+describe('@kit/intl-react: useIntlBindings', () => {
   it('hands back what the context holds', () => {
     const intl = createIntl({ locale: 'en', timeZone: 'UTC', cache: createIntlCache() });
     const bindings = { intl, translator: createTranslator({ intl, catalogues: { en } }) };

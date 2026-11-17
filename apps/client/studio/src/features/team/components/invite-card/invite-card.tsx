@@ -1,9 +1,9 @@
+import { Format, useT } from '@kit/intl-react';
+import { fromPromise, isOk } from '@kit/result';
+import { Avatar, Button, cn, useToast } from '@kit/ui';
 import { ApiError } from '@vp/api-client';
 import type { MyInviteView } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
-import { Format, useT } from '@vp/intl-react';
-import { fromPromise, isOk } from '@vp/result';
-import { Avatar, Button, cn, useToast } from '@vp/ui';
 import { RoleBadge } from '#app/components/team/role-badge';
 import { useAcceptInvite, useDeclineInvite } from '#app/features/team/hooks/use-answer-invite';
 

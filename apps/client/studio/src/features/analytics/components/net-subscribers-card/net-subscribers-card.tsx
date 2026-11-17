@@ -1,4 +1,4 @@
-import { Format, useT } from '@vp/intl-react';
+import { Format, useT } from '@kit/intl-react';
 import { StatCard } from '#app/components/analytics/stat-card';
 import { kpiChange } from '#app/features/analytics/api/kpi-change';
 import { useChannelAnalytics } from '#app/features/analytics/hooks/use-analytics';

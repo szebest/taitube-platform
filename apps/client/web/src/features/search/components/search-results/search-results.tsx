@@ -1,10 +1,10 @@
+import { useT } from '@kit/intl-react';
+import { Callout } from '@kit/ui';
 import { useSuspenseInfiniteQuery } from '@tanstack/react-query';
 import { getRouteApi } from '@tanstack/react-router';
 import { PageHeader, SectionError, VideoCardSkeleton } from '@vp/components';
 import { isExactChannelMatch } from '@vp/domain';
-import { useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
-import { Callout } from '@vp/ui';
 import { Suspense, useId, useRef } from 'react';
 import { FeedSentinel } from '#app/components/feed/feed-sentinel';
 import { searchQueryOptions } from '#app/features/search/api/search-queries';

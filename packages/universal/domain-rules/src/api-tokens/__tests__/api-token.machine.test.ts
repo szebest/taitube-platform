@@ -1,4 +1,4 @@
-import { machineFindings } from '@vp/machine';
+import { machineFindings } from '@kit/machine';
 import { API_TOKEN } from '../api-token.machine';
 
 describe('@vp/domain-rules: API_TOKEN', () => {

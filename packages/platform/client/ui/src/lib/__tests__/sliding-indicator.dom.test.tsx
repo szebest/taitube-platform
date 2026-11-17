@@ -62,7 +62,7 @@ const renderOptions = (
   return { options, box, select };
 };
 
-describe('@vp/ui: useSlidingIndicator', () => {
+describe('@kit/ui: useSlidingIndicator', () => {
   it.each([
     { dir: 'ltr', x: '4px' },
     { dir: 'rtl', x: '-236px' },

@@ -1,5 +1,5 @@
-import { useT } from '@vp/intl-react';
-import { Card } from '@vp/ui';
+import { useT } from '@kit/intl-react';
+import { Card } from '@kit/ui';
 import type { PropsWithChildren } from 'react';
 import { CustomizationSection } from '#app/components/section/customization-section';
 import type { useSettingsSection } from '#app/features/comments/hooks/use-settings-section';

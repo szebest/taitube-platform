@@ -6,7 +6,7 @@ import { separatorStyles } from '../separator.variants';
 
 const renderSeparator = (props: SeparatorProps = {}) => render(<Separator {...props} />);
 
-describe('@vp/ui: Separator', () => {
+describe('@kit/ui: Separator', () => {
   it.each(variantNames(separatorStyles.variants.orientation))(
     'is a %s separator when it divides content',
     (orientation) => {

@@ -1,12 +1,12 @@
+import { type Container, token } from '@kit/composition';
+import type { LogContext, Logger } from '@kit/logger';
+import { fromPromise, isErr, isOk, ok } from '@kit/result';
 import { Adapters } from '@vp/adapters/composition';
-import { type Container, token } from '@vp/composition';
 import type { JobQueue, QueueJob } from '@vp/core/ports';
 import { ErrorCodeRegistry, errorCodeRegistry, toPipelineError } from '@vp/errors';
 import type { MediaTools } from '@vp/ffmpeg';
 import type { FingerprintTools } from '@vp/fingerprint';
-import type { LogContext, Logger } from '@vp/logger';
 import { MetricsServer, type PipelineMetrics } from '@vp/observability';
-import { fromPromise, isErr, isOk, ok } from '@vp/result';
 import type { SpeechTools } from '@vp/whisper';
 import { createFailureHandler } from '../failure-handler';
 import { Heartbeat, everyInterval } from '../heartbeat';

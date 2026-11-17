@@ -1,5 +1,5 @@
 import type { Token } from '@kit/di';
-import { type Result, err, fromPromise, ignore, isErr, ok } from '@vp/result';
+import { type Result, err, fromPromise, ignore, isErr, ok } from '@kit/result';
 
 export interface Lifecycle<T> {
   start?: (value: T) => Promise<Result<void, unknown>>;

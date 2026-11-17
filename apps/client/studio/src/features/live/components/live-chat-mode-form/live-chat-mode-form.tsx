@@ -1,7 +1,7 @@
+import { useT } from '@kit/intl-react';
+import { Button, Card, Field, Select, Switch, useToast } from '@kit/ui';
 import type { LiveStreamView } from '@vp/api-contracts';
-import { useT } from '@vp/intl-react';
 import { useFailureToast } from '@vp/queries';
-import { Button, Card, Field, Select, Switch, useToast } from '@vp/ui';
 import { type SubmitEvent, useState } from 'react';
 import { useUpdateLiveStream } from '#app/features/live/hooks/use-update-live-stream';
 

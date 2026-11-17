@@ -1,3 +1,4 @@
+import { ToastProvider } from '@kit/ui';
 import { QueryClientProvider } from '@tanstack/react-query';
 import {
   createMemoryHistory,
@@ -12,7 +13,6 @@ import { userEvent } from '@testing-library/user-event';
 import { getMyReaction, setReaction } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { createQueryClient } from '@vp/queries';
-import { ToastProvider } from '@vp/ui';
 import { account, apiServer, mockEndpoint, problemReply, VIDEO_ID } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
 import type { ComponentType, PropsWithChildren } from 'react';

@@ -1,7 +1,7 @@
+import { err, ok } from '@kit/result';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ErrorCodes } from '@vp/errors';
-import { err, ok } from '@vp/result';
 import { useAppForm } from '../use-app-form';
 import { validateWith } from '../validate-with';
 import { WithUiCopy } from './with-ui-copy';
@@ -24,7 +24,7 @@ function renderNoteForm(props: Parameters<typeof NoteForm>[0] = {}) {
   return { user, ...render(<NoteForm {...props} />, { wrapper: WithUiCopy }) };
 }
 
-describe('@vp/forms: TextField', () => {
+describe('@kit/forms: TextField', () => {
   it.each([
     { control: 'a text input', multiline: false, tag: 'INPUT' },
     { control: 'a textarea', multiline: true, tag: 'TEXTAREA' },

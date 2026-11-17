@@ -1,3 +1,4 @@
+import { err, type Result, unwrapOr } from '@kit/result';
 import { ErrorCodes } from '@vp/errors';
 import {
   FALLBACK_LOCALE,
@@ -6,7 +7,6 @@ import {
   localeChain,
   type Unrenderable,
 } from '@vp/intl';
-import { err, type Result, unwrapOr } from '@vp/result';
 import { type ArgsOf, type Catalogues, findMessage, type MessageKey } from './catalogue';
 import { substitute } from './substitute';
 

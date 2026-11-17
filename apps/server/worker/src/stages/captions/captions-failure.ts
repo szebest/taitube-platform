@@ -1,9 +1,9 @@
+import { type Result, isErr, ok } from '@kit/result';
 import type { QueueJob } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import { type DatabaseUnavailable, errorCodeOf, errorCodeRegistry } from '@vp/errors';
 import { CaptionsJob } from '@vp/job-contracts';
 import type { PipelineMetrics } from '@vp/observability';
-import { type Result, isErr, ok } from '@vp/result';
 
 /**
  * A run the failure handler parked marks its track `failed`, and the creator can retry it. Only the

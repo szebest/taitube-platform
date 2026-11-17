@@ -12,7 +12,7 @@ The design library, all in this folder:
 | [`tokens.json`](tokens.json) | every value, in the W3C Design Tokens (DTCG) format: `ref` ramps, `set` implementations per token group, `theme` roles and defaults, `scale` |
 | [`data-sources.md`](data-sources.md) | where every surface and component gets its data, the transport (REST, SSE, WebSocket) and the fallback until its ticket lands |
 | [`foundations/`](foundations/README.md) | colour, type, token sets, spacing and layout, shape and elevation, motion, icons, accessibility, voice and copy |
-| [`primitives/`](primitives/README.md) | a spec per `@vp/ui` primitive |
+| [`primitives/`](primitives/README.md) | a spec per `@kit/ui` primitive |
 | [`components/`](components/README.md) | a spec per `@vp/components` component (only what both apps share) |
 | [`apps/web/`](apps/web/README.md), [`apps/studio/`](apps/studio/README.md) | a spec per component of each app's own kit, with its smart wrappers |
 | [`index.html`](index.html) | the library board: every screen, live, with the appearance switcher |
@@ -24,7 +24,7 @@ The design library, all in this folder:
 Serve the folder to open the pages: `python3 -m http.server -d docs/design 8123`, then
 `http://localhost:8123/`. They read `tokens.json` with `fetch`, which a `file://` page cannot do.
 
-Until 95 lands, `tokens.json` is the source of the values. Once `@vp/design-tokens` and the token sets exist,
+Until 95 lands, `tokens.json` is the source of the values. Once `@kit/design-tokens` and the token sets exist,
 they are the source and `tokens.json` is generated from them (95, slice 1), so the two never disagree.
 
 ---
@@ -75,7 +75,7 @@ What makes a screen read as Taitube rather than a YouTube clone. Each is a patte
 A **theme** is an identity: its colour roles per mode (section 3), its dataviz palettes, and a default for each
 of nine **token sets**, the swappable implementations of every other dimension of the look: `typography`,
 `fontSize`, `spacing`, `sizing`, `radius`, `border`, `shadow`, `ambient`, `motion`. Each set implementation is
-its own module (`@vp/ui/tokens/shadow/soft`), a theme names its defaults by import, and one registry lists the
+its own module (`@kit/ui/tokens/shadow/soft`), a theme names its defaults by import, and one registry lists the
 themes and the sets a viewer may switch to. How it is built:
 [architecture.md section 2](architecture.md#2-themes-and-token-sets); every set and value:
 [foundations/token-sets.md](foundations/token-sets.md). Two themes ship:
@@ -304,7 +304,7 @@ still works), and partial (a section that failed inside a page that did not).
 
 A UI ticket is done when its surfaces meet every line. Tickets cite this section rather than restating it.
 
-- [ ] Built from `@vp/ui` primitives, `@vp/components` and the app's kit, and every placement is a smart wrapper
+- [ ] Built from `@kit/ui` primitives, `@vp/components` and the app's kit, and every placement is a smart wrapper
       taking the entity and its placement and reading the rest from hooks
       ([architecture section 5](architecture.md#5-smart-wrappers-in-the-apps)).
 - [ ] Compound components for anything with more than one region, and every union prop typed by a shared
@@ -323,7 +323,7 @@ A UI ticket is done when its surfaces meet every line. Tickets cite this section
 - [ ] Text meets 4.5:1 (3:1 at 24 px and up, and for control outlines and icons) in every theme and mode.
 - [ ] Motion uses the motion tokens and stops under reduced motion; no layout shift on hover.
 - [ ] CLS under 0.05 on the page's first load; hover and press respond within one frame.
-- [ ] Copy from the message catalogue (`@vp/messages`), numbers and dates through `@vp/intl-react`, logical
+- [ ] Copy from the message catalogue (`@vp/messages`), numbers and dates through `@kit/intl-react`, logical
       properties only (`inline-start`, never `left`).
 
 ---

@@ -17,7 +17,7 @@ const renderCallout = (props: CalloutRootProps = {}) =>
     </Callout.Root>
   );
 
-describe('@vp/ui: Callout', () => {
+describe('@kit/ui: Callout', () => {
   it.each([
     { tone: 'success', icon: 'check' },
     { tone: 'warning', icon: 'alert' },

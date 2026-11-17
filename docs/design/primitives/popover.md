@@ -25,7 +25,7 @@ A floating panel anchored to a trigger that holds interactive content, such as a
 
 ```ts
 // types.ts
-import type { SizeOption } from '@vp/design-tokens';
+import type { SizeOption } from '@kit/design-tokens';
 import type { Align, Side } from '../../types';
 
 export type PopoverSize = Extract<SizeOption, 'sm' | 'md' | 'lg'>;

@@ -1,4 +1,4 @@
-import { mintToken } from '@vp/dev-token';
+import { mintToken } from '@kit/dev-token';
 import { SEEDED } from '@vp/testing';
 import type { FastifyInstance } from 'fastify';
 import { buildTestApp } from '../../__tests__/test-app';

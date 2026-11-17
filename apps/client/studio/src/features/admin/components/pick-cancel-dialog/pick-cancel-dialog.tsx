@@ -1,6 +1,6 @@
-import { useT } from '@vp/intl-react';
-import { fromPromise, isOk } from '@vp/result';
-import { AlertDialog, Button, useToast } from '@vp/ui';
+import { useT } from '@kit/intl-react';
+import { fromPromise, isOk } from '@kit/result';
+import { AlertDialog, Button, useToast } from '@kit/ui';
 import type { AdminPick } from '#app/features/admin/api/admin-picks';
 import { useCancelPick } from '#app/features/admin/hooks/use-pick-mutations';
 import { usePickWindowText } from '#app/features/admin/hooks/use-pick-window-text';

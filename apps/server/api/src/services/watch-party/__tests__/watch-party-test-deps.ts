@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { createLogger } from '@kit/logger';
 import { ScryptPasswordHasher } from '@vp/adapters';
 import {
   InMemoryCacheClient,
@@ -10,7 +11,6 @@ import {
 import type { CreateWatchPartyBody, WatchPartyView } from '@vp/api-contracts';
 import type { PartyGuestSession } from '@vp/core/ports';
 import { type AppConfigOverrides, asCdnBase, inProcessAppConfig } from '@vp/env-schema';
-import { createLogger } from '@vp/logger';
 import { createMetricsRegistry, createWatchPartyMetrics } from '@vp/observability';
 import type { UserContext } from '@vp/permissions';
 import { captureLog } from '@vp/testing/log-capture';

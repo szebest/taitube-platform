@@ -1,6 +1,6 @@
 # CommentItem
 
-Location: `apps/client/web/src/components/discussion/comment-item/`. Web's app kit, presentational and compound, built from `@vp/ui` primitives. Only web renders it today; it moves to `@vp/components` the day studio's comment moderation needs it.
+Location: `apps/client/web/src/components/discussion/comment-item/`. Web's app kit, presentational and compound, built from `@kit/ui` primitives. Only web renders it today; it moves to `@vp/components` the day studio's comment moderation needs it.
 
 One comment: avatar, author, time, text, reactions and a reply control. It is a shell: the text arrives pre-sanitised and tokenised, and the actions arrive as callbacks.
 
@@ -34,7 +34,7 @@ Plus the standard props. Author, body and actions are parts; the text arrives as
 
 ```ts
 // types.ts
-import type { SizeOption } from '@vp/design-tokens';
+import type { SizeOption } from '@kit/design-tokens';
 import type { ReactionType } from '@vp/domain';
 
 export type CommentLevel = 'comment' | 'reply';

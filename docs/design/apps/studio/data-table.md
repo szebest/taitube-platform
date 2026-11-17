@@ -1,6 +1,6 @@
 # DataTable
 
-The studio's table: the `Table` primitive from `@vp/ui` ([primitives/table.md](../../primitives/table.md), parts and styling only) wired to TanStack Table state, with a batch bar, sortable headers, row selection and a paginated footer. It lives in the studio's kit, `apps/client/studio/src/components/table/data-table/` ([README](README.md)). The primitive draws; `DataTable` owns the behaviour (sorting, selection and pagination wiring, keyboard model) and nothing about which table it is.
+The studio's table: the `Table` primitive from `@kit/ui` ([primitives/table.md](../../primitives/table.md), parts and styling only) wired to TanStack Table state, with a batch bar, sortable headers, row selection and a paginated footer. It lives in the studio's kit, `apps/client/studio/src/components/table/data-table/` ([README](README.md)). The primitive draws; `DataTable` owns the behaviour (sorting, selection and pagination wiring, keyboard model) and nothing about which table it is.
 
 ## Anatomy
 
@@ -31,7 +31,7 @@ Plus the standard props. The caller builds the TanStack `table` instance (column
 ```ts
 // types.ts
 import type { Table } from '@tanstack/react-table';
-import type { Align } from '@vp/ui';
+import type { Align } from '@kit/ui';
 
 export type DataTableState = 'ready' | 'loading' | 'empty' | 'error';
 export type DataTableSort = 'ascending' | 'descending' | 'none';

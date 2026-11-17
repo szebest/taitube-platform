@@ -1,4 +1,4 @@
-import { createCompoundContext } from '@vp/ui';
+import { createCompoundContext } from '@kit/ui';
 import type { CommentThreadLayout, CommentThreadSort } from './types';
 
 export const [CommentThreadContext, useCommentThread] = createCompoundContext<{

@@ -1,4 +1,4 @@
-import type { IconSize } from '@vp/design-tokens';
+import type { IconSize } from '@kit/design-tokens';
 import type { LinkPlatform } from '@vp/domain';
 import type { ComponentPropsWithRef } from 'react';
 import PLATFORM_ICON_PATHS from '../../icons/platform-icon-paths.generated.json';

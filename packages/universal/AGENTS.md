@@ -12,7 +12,7 @@ A package belongs in `universal/` when **something client-side actually imports 
 
 Current members: `api-contracts`, `design-tokens`, `domain`, `domain-rules`, `errors`, `intl`, `machine`, `messages`, `pagination`,
 `permissions`, `result`, `tsconfig`, `validation`. `apps/client/web` reaches eight of them at runtime (through
-`@vp/api-client` and `@vp/intl-react` plus its direct `@vp/intl`, `@vp/permissions` and `@vp/result`); `domain-rules` and `validation` qualify through
+`@vp/api-client` and `@kit/intl-react` plus its direct `@vp/intl`, `@vp/permissions` and `@kit/result`); `domain-rules` and `validation` qualify through
 `packages/client/api-client/src/__tests__/universal-rules.test.ts`, which runs both from the client tier.
 
 `storage`, `job-contracts` and `events` live in `server/` because their only consumers are `apps/server/api`,
@@ -31,10 +31,10 @@ whose bulk is server vocabulary is a server module however small the part the br
 
 1. **May depend on `universal` packages only.** Never `server`, never `client`. A `server` dependency
    here is what puts a Redis client in the browser bundle.
-2. **No `node:*`, no `process`, no `Buffer`, no `NodeJS.*` types.** The `@vp/tsconfig/universal.json`
+2. **No `node:*`, no `process`, no `Buffer`, no `NodeJS.*` types.** The `@kit/tsconfig/universal.json`
    preset sets `lib` with `DOM` and `types: []`, so these are compile errors, not review comments.
 3. **Specs are typechecked separately.** `types: []` alone is not enough: the vitest globals a spec
-   uses (`vitest/globals` in `@vp/tsconfig/spec.json`) pull `@types/node` into the program, and `node:fs`
+   uses (`vitest/globals` in `@kit/tsconfig/spec.json`) pull `@types/node` into the program, and `node:fs`
    starts resolving again. Each package excludes its specs from `tsconfig.json` and typechecks them through a
    sibling `tsconfig.spec.json`. Keep that shape when adding a package.
 4. **Relative imports are extensionless**, as in every tier. `apps/client/web` reads the package from its

@@ -1,3 +1,4 @@
+import { all, andThenAsync, assertNever, err, map, ok, type Result } from '@kit/result';
 import type { CreateWatchPartyBody } from '@vp/api-contracts';
 import type { NewWatchPartyQueueItem } from '@vp/core/repositories';
 import { WATCH_PARTY_LIMITS, type WatchPartyVisibility } from '@vp/domain';
@@ -8,7 +9,6 @@ import {
   watchPartyVideoNotShareable,
 } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { all, andThenAsync, assertNever, err, map, ok, type Result } from '@vp/result';
 import type { WatchPartyDeps } from './watch-party-deps';
 
 type RoomSource = NonNullable<CreateWatchPartyBody['source']>;

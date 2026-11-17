@@ -32,7 +32,7 @@ Semantic table markup with the system's density, borders and states. It draws an
 
 ```ts
 // types.ts
-import type { ControlSize } from '@vp/design-tokens';
+import type { ControlSize } from '@kit/design-tokens';
 import type { Align } from '../../types';
 
 export type TableSize = Extract<ControlSize, 'sm' | 'md'>;

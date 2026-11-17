@@ -1,6 +1,6 @@
-# AGENTS.md - @vp/result (Result type & combinators)
+# AGENTS.md - @kit/result (Result type & combinators)
 
-Instructions for any coding agent working on `@vp/result`.
+Instructions for any coding agent working on `@kit/result`.
 
 > Tier rules for this directory: [../AGENTS.md](../../../universal/AGENTS.md) · full tier & layer reference: [packages/AGENTS.md](../../../AGENTS.md)
 
@@ -8,7 +8,7 @@ Instructions for any coding agent working on `@vp/result`.
 
 ## 1. Scope & Purpose
 
-`@vp/result` is the mechanism every layer below the edge uses to return a failure instead of throwing it (SDD
+`@kit/result` is the mechanism every layer below the edge uses to return a failure instead of throwing it (SDD
 ADR-24). It is `Result<T, E>` with `ok` / `err` and `isOk` / `isErr` (`result.ts`), `map`, `andThen`,
 `unwrapOr`, `all` and `ignore` (`combinators.ts`), `andThenAsync` (`async.ts`), `tryCatch`, `fromPromise` and
 `parseJson` (`try-catch.ts`), and `assertNever` (`assert-never.ts`).
@@ -37,7 +37,7 @@ The authority on how the three layers use it is
   allows a caller to reach.
 - Every source file except the `index.ts` barrel has its own `__tests__/<name>.test.ts`, and every
   compile-time guarantee has a `@ts-expect-error` fixture in `src/__tests__/type-fixtures/`. A guarantee
-  asserted only at runtime is not the guarantee this package promises, so `pnpm --filter @vp/result typecheck`
+  asserted only at runtime is not the guarantee this package promises, so `pnpm --filter @kit/result typecheck`
   is part of its test suite, not a separate step.
 
 ---
@@ -45,7 +45,7 @@ The authority on how the three layers use it is
 ## 3. Local Commands
 
 ```bash
-pnpm --filter @vp/result typecheck
-pnpm --filter @vp/result test
+pnpm --filter @kit/result typecheck
+pnpm --filter @kit/result test
 bun test packages/platform/universal/result
 ```

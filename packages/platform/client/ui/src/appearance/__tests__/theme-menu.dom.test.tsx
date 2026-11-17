@@ -32,7 +32,7 @@ async function openMenu() {
   await userEvent.keyboard('{Enter}');
 }
 
-describe('@vp/ui: ThemeMenu', () => {
+describe('@kit/ui: ThemeMenu', () => {
   afterEach(() => {
     writeCookie('vp.appearance', '', { maxAge: 0 });
   });

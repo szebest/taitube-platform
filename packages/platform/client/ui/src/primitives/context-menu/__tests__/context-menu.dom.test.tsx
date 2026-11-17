@@ -38,7 +38,7 @@ const renderVideoArea = async ({
   return user;
 };
 
-describe('@vp/ui: ContextMenu', () => {
+describe('@kit/ui: ContextMenu', () => {
   it('opens on a right click of its trigger with its items named', async () => {
     await renderVideoArea();
 

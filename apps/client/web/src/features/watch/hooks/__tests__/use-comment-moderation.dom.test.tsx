@@ -11,7 +11,7 @@ import { useCommentModeration } from '../use-comment-moderation';
 
 const showToast = vi.fn();
 
-vi.mock(import('@vp/ui'), async (importOriginal) => ({
+vi.mock(import('@kit/ui'), async (importOriginal) => ({
   ...(await importOriginal()),
   useToast: () => showToast,
 }));

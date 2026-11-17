@@ -6,7 +6,7 @@ import { kbdStyles } from '../kbd.variants';
 
 const renderKbd = (props: KbdProps = {}) => render(<Kbd {...props}>Esc</Kbd>);
 
-describe('@vp/ui: Kbd', () => {
+describe('@kit/ui: Kbd', () => {
   it.each(variantNames(kbdStyles.variants.variant))('prints its key as a %s keycap', (variant) => {
     renderKbd({ variant });
 

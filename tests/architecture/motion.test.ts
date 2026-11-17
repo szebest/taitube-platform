@@ -2,7 +2,7 @@ import { packageDir, tierGlob } from '../../scripts/workspace-packages';
 import { read, trackedFiles } from './repo-files';
 
 const COMPONENTS = packageDir('@vp/components');
-const UI = packageDir('@vp/ui');
+const UI = packageDir('@kit/ui');
 const CLIENT = tierGlob('client');
 
 const BASE = `${UI}/src/styles/base.css`;

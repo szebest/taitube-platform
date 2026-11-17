@@ -4,7 +4,7 @@ import { DESIGN_ROWS } from './zero-matches-design-rows';
 import { REACT_ROWS } from './zero-matches-react-rows';
 import { RETIRED_TOOL_ROWS } from './zero-matches-retired-tool-rows';
 
-const LOGGER = packageDir('@vp/logger');
+const LOGGER = packageDir('@kit/logger');
 const CLIENT = tierGlob('client');
 const UNIVERSAL = tierGlob('universal');
 
@@ -183,7 +183,7 @@ export const ROWS: readonly Row[] = [
     fires: "console.error('fatal', err);",
   },
   {
-    name: 'pino outside @vp/logger',
+    name: 'pino outside @kit/logger',
     pattern: /from 'pino'/g,
     scope: [...PRODUCTION_SOURCE, 'tests/e2e', `:(exclude)${LOGGER}`],
     expected: 0,

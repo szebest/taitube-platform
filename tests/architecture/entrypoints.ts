@@ -1,9 +1,9 @@
 import { packageDir } from '../../scripts/workspace-packages';
 
-const WEB_TELEMETRY = packageDir('@vp/web-telemetry');
-const COMPOSE_AUTOSCALER = packageDir('@vp/compose-autoscaler');
-const CONFIG = packageDir('@vp/config');
-const DEV_TOKEN = packageDir('@vp/dev-token');
+const WEB_TELEMETRY = packageDir('@kit/web-telemetry');
+const COMPOSE_AUTOSCALER = packageDir('@kit/compose-autoscaler');
+const CONFIG = packageDir('@kit/config');
+const DEV_TOKEN = packageDir('@kit/dev-token');
 
 /**
  * Where a process starts. Module-level side effects, `console` and reading the environment belong

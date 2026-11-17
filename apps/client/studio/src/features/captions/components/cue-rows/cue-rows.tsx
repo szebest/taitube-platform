@@ -1,8 +1,8 @@
+import { useFormat, useT } from '@kit/intl-react';
+import { unwrapOr } from '@kit/result';
+import { Input } from '@kit/ui';
 import type { TranscriptView } from '@vp/api-contracts';
 import { videoDuration } from '@vp/intl';
-import { useFormat, useT } from '@vp/intl-react';
-import { unwrapOr } from '@vp/result';
-import { Input } from '@vp/ui';
 import { useCueWindow } from '#app/features/captions/hooks/use-cue-window';
 
 export interface CueRowsProps {

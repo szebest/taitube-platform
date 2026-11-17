@@ -1,4 +1,4 @@
-import type { SizeOption, ToneOption } from '@vp/design-tokens';
+import type { SizeOption, ToneOption } from '@kit/design-tokens';
 import type { FillOption } from '../../types';
 
 export type BadgeFill = Exclude<FillOption, 'ghost' | 'plain'> | 'scrim';

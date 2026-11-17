@@ -1,5 +1,5 @@
+import { useT } from '@kit/intl-react';
 import { EmptyLibraryIllustration, EmptyState, Shelf } from '@vp/components';
-import { useT } from '@vp/intl-react';
 import type { ReactElement, ReactNode } from 'react';
 
 type YouShelfId = 'history' | 'watchLater' | 'playlists' | 'videos';

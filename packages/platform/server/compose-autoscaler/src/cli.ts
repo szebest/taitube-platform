@@ -1,6 +1,6 @@
 import * as fs from 'node:fs';
 import { parseArgs } from 'node:util';
-import type { Logger } from '@vp/logger';
+import type { Logger } from '@kit/logger';
 import { type AutoscalerOptions, ComposeAutoscaler } from './runner';
 import { DEFAULT_STAGE_CONFIGS, type ScalerStageConfig } from './scaler';
 
@@ -56,7 +56,7 @@ function parseCliArgs(argv: readonly string[], env: Env): CliArgs {
 
 function printHelp(host: CliHost): void {
   host.print(`
-@vp/compose-autoscaler — Docker Compose Queue-Depth Autoscaler
+@kit/compose-autoscaler — Docker Compose Queue-Depth Autoscaler
 
 Polls Prometheus metrics (/metrics) from the API and dynamically scales
 worker stages via

@@ -13,7 +13,7 @@ Instructions for any coding agent working on `@vp/env-schema`.
 `src/app-config.ts`, `inProcessAppConfig` in `src/in-process-config.ts`). It parses a plain
 `Record<string, string | undefined>` and knows nothing about where that record came from.
 
-Validating a live environment and reporting the failure belongs to `@vp/config` (`parseEnv`, `loadEnv`,
+Validating a live environment and reporting the failure belongs to `@kit/config` (`parseEnv`, `loadEnv`,
 `loadEnvOrExit`), one layer up. Before the split the two
 lived in one file and the boundary was drawn at runtime by `typeof process !== 'undefined'` — a
 feature-detect standing in for a tier.
@@ -44,9 +44,9 @@ declares its own default now.
    time and no server process reads it, so it is declared in `apps/client/web/src/lib/config/index.ts` and left
    commented in `.env.example`. Declaring it here is what put the whole schema in the frontend bundle.
 6. **A default the wire contract also states comes from the package that owns it.** `PAGE_SIZE_DEFAULT`
-   and `PAGE_SIZE_MAX` are imported from `@vp/pagination`, which `@vp/api-contracts` reads too, so the
-   env default and the advertised page bound cannot drift. That edge, and `@vp/pagination` being layer 2, is
-   why this package is layer 3 (its other dependencies, `@vp/domain`, `@vp/result` and `zod`, sit lower).
+   and `PAGE_SIZE_MAX` are imported from `@kit/pagination`, which `@vp/api-contracts` reads too, so the
+   env default and the advertised page bound cannot drift. That edge, and `@kit/pagination` being layer 2, is
+   why this package is layer 3 (its other dependencies, `@vp/domain`, `@kit/result` and `zod`, sit lower).
    `OTEL_TRACES_SAMPLER` is the same kind of edge: its names are `TraceSamplerName` from `@vp/observability`
    (layer 2), imported as a type only, so loading the schema loads no OpenTelemetry module.
 7. **A secret has no default.** `SECRET_KEYS` (`DATABASE_URL`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`,

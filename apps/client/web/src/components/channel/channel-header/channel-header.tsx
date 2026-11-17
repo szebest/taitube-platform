@@ -1,4 +1,4 @@
-import { Avatar, Badge, Button, Icon, IconButton, Slot, useUiCopy } from '@vp/ui';
+import { Avatar, Badge, Button, Icon, IconButton, Slot, useUiCopy } from '@kit/ui';
 import type { ComponentPropsWithRef, ReactNode } from 'react';
 import { ChannelHeaderContext, useChannelHeader } from './channel-header.context';
 import { channelHeaderStyles } from './channel-header.variants';

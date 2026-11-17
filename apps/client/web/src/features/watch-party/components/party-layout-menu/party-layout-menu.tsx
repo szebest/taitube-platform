@@ -1,5 +1,5 @@
-import { useT } from '@vp/intl-react';
-import { Button, DropdownMenu, Icon } from '@vp/ui';
+import { useT } from '@kit/intl-react';
+import { Button, DropdownMenu, Icon } from '@kit/ui';
 import type { PartyRoomLayout } from '#app/components/party/party-room';
 
 const LAYOUTS = [

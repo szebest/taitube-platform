@@ -6,7 +6,7 @@ import { badgeStyles } from '../badge.variants';
 
 const renderBadge = (props: BadgeProps = {}) => render(<Badge {...{ children: '4K', ...props }} />);
 
-describe('@vp/ui: Badge', () => {
+describe('@kit/ui: Badge', () => {
   it.each(variantNames(badgeStyles.variants.variant))(
     'reads its %s label as plain text',
     (variant) => {

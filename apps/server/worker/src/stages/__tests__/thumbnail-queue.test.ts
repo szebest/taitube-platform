@@ -1,6 +1,6 @@
+import { createLogger } from '@kit/logger';
 import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
 import { inProcessAppConfig } from '@vp/env-schema';
-import { createLogger } from '@vp/logger';
 import { createMockJob } from '@vp/testing';
 import { expectErr } from '@vp/testing/result';
 import { STAGE_SETTINGS } from '../../__tests__/stage-settings';

@@ -1,7 +1,7 @@
 import { packageDir } from '../../scripts/workspace-packages';
 import { read } from './repo-files';
 
-const COMPOSITION = packageDir('@vp/composition');
+const COMPOSITION = packageDir('@kit/composition');
 
 /**
  * Readiness has to fail while the listener still accepts, or a load balancer keeps routing to a

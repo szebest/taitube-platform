@@ -1,10 +1,10 @@
+import type { Result } from '@kit/result';
 import {
   canCreateRecommendationFeedback,
   canDeleteRecommendationFeedback,
   canReadRecommendationFeedback,
   type UserContext,
 } from '@vp/permissions';
-import type { Result } from '@vp/result';
 import { type AuthorizationFailure, authorize } from '../authorize';
 
 const CAN = {

@@ -1,5 +1,5 @@
 {
-  "extends": "@vp/tsconfig/client.json",
+  "extends": "@kit/tsconfig/client.json",
   "compilerOptions": {
     "lib": ["ES2023", "WebWorker"],
     "types": [],

@@ -1,7 +1,7 @@
+import type { Result } from '@kit/result';
 import { type Attributes, SpanStatusCode } from '@opentelemetry/api';
 import { ErrorCodes, type WatchPartyPermissionMissing } from '@vp/errors';
 import { getTracer } from '@vp/observability';
-import type { Result } from '@vp/result';
 import type { WatchPartyDeps } from './watch-party-deps';
 
 type Failing = { readonly code: string };

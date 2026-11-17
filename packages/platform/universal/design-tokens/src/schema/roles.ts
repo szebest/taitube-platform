@@ -1,4 +1,4 @@
-import { unwrapOr } from '@vp/result';
+import { unwrapOr } from '@kit/result';
 import { compositeOver } from '../color/rgb';
 import { checkContrast, NON_TEXT_FLOOR, TEXT_FLOOR } from '../contrast';
 import type { HexColor } from './values';

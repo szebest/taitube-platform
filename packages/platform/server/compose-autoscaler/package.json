@@ -1,5 +1,5 @@
 {
-  "name": "@vp/compose-autoscaler",
+  "name": "@kit/compose-autoscaler",
   "version": "0.0.0",
   "private": true,
   "bin": {
@@ -21,12 +21,12 @@
     "test": "vp test run"
   },
   "dependencies": {
-    "@vp/logger": "workspace:*"
+    "@kit/logger": "workspace:*"
   },
   "devDependencies": {
+    "@kit/tsconfig": "workspace:*",
     "@types/node": "^24.19.1",
     "@vp/testing": "workspace:*",
-    "@vp/tsconfig": "workspace:*",
     "typescript": "^6.0.3",
     "vite-plus": "catalog:"
   },

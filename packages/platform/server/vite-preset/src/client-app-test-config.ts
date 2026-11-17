@@ -1,4 +1,4 @@
-import { reactPlugins } from '@vp/vite-preset/react-plugins';
+import { reactPlugins } from '@kit/vite-preset/react-plugins';
 import type { ConfigEnv, UserConfig } from 'vite';
 import { defineConfig, mergeConfig, type ViteUserConfig } from 'vitest/config';
 

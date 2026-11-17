@@ -1,4 +1,4 @@
-import type { IconSize } from '@vp/design-tokens';
+import type { IconSize } from '@kit/design-tokens';
 import { tv } from '../../lib/class-names';
 import type { SpinnerTone } from './types';
 

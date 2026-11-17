@@ -1,4 +1,4 @@
-import { ignore, isOk, tryCatch } from '@vp/result';
+import { ignore, isOk, tryCatch } from '@kit/result';
 import { z } from 'zod';
 
 const DIRTY_KEY = 'vp.prefs.dirty';

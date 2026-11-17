@@ -10,7 +10,7 @@ const renderNotificationsButton = () =>
     </button>
   );
 
-describe('@vp/ui: VisuallyHidden', () => {
+describe('@kit/ui: VisuallyHidden', () => {
   it('names a control for assistive technology while it stays off the screen', () => {
     renderNotificationsButton();
 

@@ -1,5 +1,5 @@
+import { useT } from '@kit/intl-react';
 import type { Channel } from '@vp/api-contracts';
-import { useT } from '@vp/intl-react';
 import { CustomizationSection } from '#app/components/section/customization-section';
 import { ChannelImageEditor } from '../channel-image-editor/channel-image-editor';
 

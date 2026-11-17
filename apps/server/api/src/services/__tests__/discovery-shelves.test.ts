@@ -1,11 +1,11 @@
+import { Singleflight } from '@kit/concurrency';
+import { Paginator } from '@kit/pagination';
 import {
   InMemoryCacheClient,
   InMemoryRepositories,
   InMemorySearchSuggestionIndex,
 } from '@vp/adapters/in-memory';
-import { Singleflight } from '@vp/concurrency';
 import { RISING, SEARCH_SUGGESTIONS } from '@vp/domain';
-import { Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
 import { expectOk } from '@vp/testing/result';
 import { DiscoveryShelves } from '../discovery-shelves';

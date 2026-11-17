@@ -1,4 +1,4 @@
-import type { Container } from '@vp/composition';
+import type { Container } from '@kit/composition';
 import { InMemoryFingerprintRepository } from './in-memory-fingerprint-repository';
 import { Repo } from './in-memory-repo-tokens';
 import { InMemoryScreeningRepository } from './in-memory-screening-repository';

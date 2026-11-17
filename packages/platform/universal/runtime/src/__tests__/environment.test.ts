@@ -1,5 +1,5 @@
 import { createRegistry } from '@kit/di';
-import { ok } from '@vp/result';
+import { ok } from '@kit/result';
 import { environmentProviders } from '../environment';
 import { Clock, EnvSource, Fetch, Random } from '../tokens';
 

@@ -1,6 +1,6 @@
+import { Paginator } from '@kit/pagination';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { ErrorCodes } from '@vp/errors';
-import { Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { seedVideo } from '../../__tests__/test-app';

@@ -1,3 +1,6 @@
+import { createLocaleStore, type LocaleStore } from '@kit/intl-react';
+import { requestNonce } from '@kit/security-headers';
+import { createToaster, type Toaster } from '@kit/ui';
 import type { QueryClient } from '@tanstack/react-query';
 import {
   type AnyRoute,
@@ -8,10 +11,7 @@ import {
 } from '@tanstack/react-router';
 import { setupRouterSsrQueryIntegration } from '@tanstack/react-router-ssr-query';
 import type { ApiClient } from '@vp/api-client';
-import { createLocaleStore, type LocaleStore } from '@vp/intl-react';
 import { isSupportedLocale } from '@vp/messages';
-import { requestNonce } from '@vp/security-headers';
-import { createToaster, type Toaster } from '@vp/ui';
 import { type PropsWithChildren, useSyncExternalStore } from 'react';
 import { type ActingChannelStore, createActingChannelStore } from './acting-channel';
 import { createAppApiClient } from './api-client';

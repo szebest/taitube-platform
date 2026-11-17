@@ -1,10 +1,10 @@
+import { Singleflight } from '@kit/concurrency';
+import { Paginator } from '@kit/pagination';
+import { err } from '@kit/result';
 import { InMemoryCacheClient, InMemoryRepositories } from '@vp/adapters/in-memory';
-import { Singleflight } from '@vp/concurrency';
 import { publicFeedInstant } from '@vp/domain';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { cacheUnavailable } from '@vp/errors';
-import { Paginator } from '@vp/pagination';
-import { err } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import { feedCursorPayload } from '../cursor';
 import { FeedService, type FeedServiceDeps } from '../feed-service';

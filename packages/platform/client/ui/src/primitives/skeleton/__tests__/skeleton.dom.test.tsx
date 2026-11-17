@@ -7,7 +7,7 @@ function renderSkeleton(props: SkeletonProps = {}) {
   return container.firstElementChild;
 }
 
-describe('@vp/ui: Skeleton', () => {
+describe('@kit/ui: Skeleton', () => {
   it('is hidden from assistive technology, which waits for the content instead', () => {
     expect(renderSkeleton()).toHaveAttribute('aria-hidden', 'true');
   });

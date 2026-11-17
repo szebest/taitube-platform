@@ -1,5 +1,5 @@
-import { useT } from '@vp/intl-react';
-import { ResponsiveModal } from '@vp/ui';
+import { useT } from '@kit/intl-react';
+import { ResponsiveModal } from '@kit/ui';
 import { SecretReveal } from '#app/components/developers/secret-reveal';
 import { useCopyField } from '#app/hooks/use-copy-field';
 

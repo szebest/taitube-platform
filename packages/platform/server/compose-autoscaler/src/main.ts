@@ -1,6 +1,6 @@
 import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
-import { createLogger } from '@vp/logger';
+import { createLogger } from '@kit/logger';
 import { run } from './cli';
 import type { Attempt } from './runner';
 

@@ -1,6 +1,6 @@
-# AGENTS.md — @vp/pagination (Keyset Cursors & the Paginator)
+# AGENTS.md — @kit/pagination (Keyset Cursors & the Paginator)
 
-Instructions for any coding agent working on `@vp/pagination`.
+Instructions for any coding agent working on `@kit/pagination`.
 
 > Tier rules for this directory: [../AGENTS.md](../../../universal/AGENTS.md) · full tier & layer reference: [packages/AGENTS.md](../../../AGENTS.md)
 
@@ -8,7 +8,7 @@ Instructions for any coding agent working on `@vp/pagination`.
 
 ## 1. Scope & Purpose
 
-`@vp/pagination` is the one keyset pagination mechanism in the repo: `Paginator`, the `limit + 1`
+`@kit/pagination` is the one keyset pagination mechanism in the repo: `Paginator`, the `limit + 1`
 protocol, and the pluggable `CursorCodec` (default `Base64UrlCursorCodec`) that decides how a cursor
 travels over HTTP. `invalidCursor` is its `INVALID_CURSOR` input failure.
 
@@ -42,6 +42,6 @@ built in `apps/server/api/src/composition/services.module.ts`.
 ## 3. Local Commands
 
 ```bash
-pnpm --filter @vp/pagination typecheck
-pnpm --filter @vp/pagination test
+pnpm --filter @kit/pagination typecheck
+pnpm --filter @kit/pagination test
 ```

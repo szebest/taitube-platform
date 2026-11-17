@@ -1,4 +1,4 @@
-import { mintToken } from '@vp/dev-token';
+import { mintToken } from '@kit/dev-token';
 import { CANONICAL_LADDER } from '@vp/job-contracts';
 import { expectOk } from '@vp/testing/result';
 import { AS, CREATOR, VIDEO, type CommentsApp, sharedCommentsApp } from './comments-app';

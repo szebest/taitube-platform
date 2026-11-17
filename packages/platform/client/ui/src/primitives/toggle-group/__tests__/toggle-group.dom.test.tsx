@@ -22,7 +22,7 @@ const renderToggleGroup = (props: { variant?: ToggleFill } = {}) => {
   };
 };
 
-describe('@vp/ui: ToggleGroup', () => {
+describe('@kit/ui: ToggleGroup', () => {
   it.each(variantNames(toggleGroupStyles.variants.variant))(
     'toggles a %s item on and off with Space, as one tab stop',
     async (variant) => {

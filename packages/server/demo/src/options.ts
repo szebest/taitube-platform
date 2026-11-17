@@ -1,5 +1,5 @@
 import { parseArgs } from 'node:util';
-import { type Result, err, ok, tryCatch } from '@vp/result';
+import { type Result, err, ok, tryCatch } from '@kit/result';
 import { PERSONAS, findPersona } from './logins';
 import { COMMANDS, DEFAULTS, PROFILE_DEFAULTS } from './option-table';
 import type { DemoOptions } from './types';

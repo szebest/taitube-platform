@@ -20,7 +20,7 @@ const renderCheckbox = (props: CheckboxProps = {}) => {
   };
 };
 
-describe('@vp/ui: Checkbox', () => {
+describe('@kit/ui: Checkbox', () => {
   it('is a checkbox named by its field, toggled with Space', async () => {
     const { user } = renderCheckbox();
 

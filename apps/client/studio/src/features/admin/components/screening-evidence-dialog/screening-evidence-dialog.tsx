@@ -1,5 +1,5 @@
-import { useT } from '@vp/intl-react';
-import { Button, Dialog, useUiCopy } from '@vp/ui';
+import { useT } from '@kit/intl-react';
+import { Button, Dialog, useUiCopy } from '@kit/ui';
 import type { ScreeningCase } from '#app/features/admin/api/admin-screening';
 import { ScreeningFinding } from '../screening-finding/screening-finding';
 

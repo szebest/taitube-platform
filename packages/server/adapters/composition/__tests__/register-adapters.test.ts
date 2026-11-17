@@ -1,4 +1,4 @@
-import { Container } from '@vp/composition';
+import { Container } from '@kit/composition';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { QUEUES } from '@vp/job-contracts';
 import { expectOk } from '@vp/testing/result';

@@ -1,4 +1,4 @@
-import type { RadiusOption } from '@vp/design-tokens';
+import type { RadiusOption } from '@kit/design-tokens';
 import { tv } from '../../lib/class-names';
 import type { SkeletonShape } from './types';
 

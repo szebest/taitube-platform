@@ -1,6 +1,6 @@
+import { type Result, err, ok } from '@kit/result';
 import { CHANNEL_MAX, RGB_CHANNELS, type RgbFrame } from '@vp/core/ports';
 import { ErrorCodes, type MediaFailure, mediaFailure } from '@vp/errors';
-import { type Result, err, ok } from '@vp/result';
 
 export interface FrameNormalization {
   inputSize: number;

@@ -1,5 +1,5 @@
+import { ThemedDocument } from '@kit/ui';
 import { getRouteApi } from '@tanstack/react-router';
-import { ThemedDocument } from '@vp/ui';
 import type { ReactNode } from 'react';
 import { ThemeColorMeta } from '#app/features/pwa';
 import { COOKIE_DOMAIN } from '#app/lib/config';

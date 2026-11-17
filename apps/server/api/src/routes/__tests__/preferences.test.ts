@@ -1,4 +1,4 @@
-import { mintToken } from '@vp/dev-token';
+import { mintToken } from '@kit/dev-token';
 import { type AppearancePreferences, DEFAULT_PREFERENCES } from '@vp/domain/settings';
 import { ErrorCodes } from '@vp/errors';
 import { SEEDED } from '@vp/testing';

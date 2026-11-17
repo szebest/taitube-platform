@@ -5,10 +5,10 @@ import { packageDir } from '../workspace-packages';
 
 export const REPO = resolve(import.meta.dirname, '../..');
 
-const UI = join(REPO, packageDir('@vp/ui'));
+const UI = join(REPO, packageDir('@kit/ui'));
 
 /**
- * A copy of `@vp/ui`'s sources laid out as a repo root, made inside that package's directory so its
+ * A copy of `@kit/ui`'s sources laid out as a repo root, made inside that package's directory so its
  * imports still resolve through that package's `node_modules`. `remove` deletes it.
  */
 export function uiTree(): Readonly<{ root: string; remove: () => void }> {

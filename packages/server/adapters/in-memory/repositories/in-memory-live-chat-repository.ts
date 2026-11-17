@@ -1,7 +1,7 @@
+import { isErr, map, ok, type Result } from '@kit/result';
 import type { LiveChatOffsetRange, LiveChatRepositoryPort } from '@vp/core/repositories';
 import type { LiveChatMessage, NewLiveChatMessage } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { isErr, map, ok, type Result } from '@vp/result';
 import type { InMemoryChannelRepository } from './in-memory-channel-repository';
 
 interface StoredMessage extends NewLiveChatMessage {

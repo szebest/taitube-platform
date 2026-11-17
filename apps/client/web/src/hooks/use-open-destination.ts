@@ -1,5 +1,5 @@
+import { assertNever } from '@kit/result';
 import { useNavigate } from '@tanstack/react-router';
-import { assertNever } from '@vp/result';
 import { STUDIO_URL } from '#app/lib/config';
 import type { ShellTarget } from './use-shell-destinations';
 

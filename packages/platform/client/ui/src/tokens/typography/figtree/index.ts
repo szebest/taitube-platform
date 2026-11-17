@@ -1,4 +1,4 @@
-import { defineTokenSet } from '@vp/design-tokens';
+import { defineTokenSet } from '@kit/design-tokens';
 
 export const typographyFigtree = defineTokenSet('typography', 'figtree', {
   font: {

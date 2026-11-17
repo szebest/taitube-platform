@@ -1,4 +1,4 @@
-import { parseJson } from '@vp/result';
+import { parseJson } from '@kit/result';
 import { z } from 'zod';
 import { EXIT, type ExitCode } from './exit-codes';
 import type { DeployHost } from './host';

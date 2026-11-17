@@ -1,5 +1,5 @@
+import type { Container } from '@kit/composition';
 import { Adapters, queueNamed } from '@vp/adapters/composition';
-import type { Container } from '@vp/composition';
 import { MetadataScreening } from '../services/metadata-screening';
 import { ScreeningCaseViews } from '../services/screening-case-views';
 import { ScreeningService } from '../services/screening-service';

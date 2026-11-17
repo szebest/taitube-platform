@@ -1,4 +1,4 @@
-import { Container } from '@vp/composition';
+import { Container } from '@kit/composition';
 import { type Clock, realClock } from './clock';
 import { InMemoryCaptionRepository } from './in-memory-caption-repository';
 import { InMemoryCategoryRepository } from './in-memory-category-repository';

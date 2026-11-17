@@ -1,3 +1,5 @@
+import type { InvalidCursor, Paginator } from '@kit/pagination';
+import { andThen, andThenAsync, err, isErr, map, type Result } from '@kit/result';
 import type { ClipPageView, ClipView, CreateClipBody } from '@vp/api-contracts';
 import type {
   ChannelRepositoryPort,
@@ -19,9 +21,7 @@ import {
 } from '@vp/domain-rules';
 import type { CdnBase } from '@vp/env-schema';
 import type { DatabaseUnavailable } from '@vp/errors';
-import type { InvalidCursor, Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
-import { andThen, andThenAsync, err, isErr, map, type Result } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 import { createdAtCursorPayload, decodeCreatedAtCursor } from './cursor';
 import { type SpriteGeometry, toVideoSummaryView } from './video-views';

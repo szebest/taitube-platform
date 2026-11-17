@@ -1,5 +1,5 @@
+import { assertNever } from '@kit/result';
 import { ChildResult, type ScreenResult, type ThumbnailResult } from '@vp/job-contracts';
-import { assertNever } from '@vp/result';
 
 interface MeasuredRendition {
   bytes?: number;

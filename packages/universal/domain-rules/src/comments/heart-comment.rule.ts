@@ -1,6 +1,6 @@
+import { type Result, andThen, ok } from '@kit/result';
 import type { Comment } from '@vp/domain';
 import { canHeartComment } from '@vp/permissions';
-import { type Result, andThen, ok } from '@vp/result';
 import { authorize } from '../authorize';
 import { locateComment } from './located-comment';
 import type { DeleteCommentFailure, ModerateCommentInput } from './moderate-comment.rule';

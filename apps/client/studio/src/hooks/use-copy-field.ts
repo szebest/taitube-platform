@@ -1,6 +1,6 @@
-import { useT } from '@vp/intl-react';
-import { fromPromise, isOk } from '@vp/result';
-import { useToast } from '@vp/ui';
+import { useT } from '@kit/intl-react';
+import { fromPromise, isOk } from '@kit/result';
+import { useToast } from '@kit/ui';
 
 /** Copies a value to the clipboard and toasts which field it was, or that the browser refused. */
 export function useCopyField() {

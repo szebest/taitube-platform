@@ -1,3 +1,12 @@
+import {
+  requestAppearancePreference,
+  ThemedDocument,
+  ToastProvider,
+  type TokenSetIds,
+  Tooltip,
+} from '@kit/ui';
+import uiStyles from '@kit/ui/styles.css?url';
+import { useWebTelemetry } from '@kit/web-telemetry';
 import { createRootRouteWithContext } from '@tanstack/react-router';
 import {
   ApiProvider,
@@ -7,15 +16,6 @@ import {
   SessionProvider,
   UserEventStream,
 } from '@vp/queries';
-import {
-  requestAppearancePreference,
-  ThemedDocument,
-  ToastProvider,
-  type TokenSetIds,
-  Tooltip,
-} from '@vp/ui';
-import uiStyles from '@vp/ui/styles.css?url';
-import { useWebTelemetry } from '@vp/web-telemetry';
 import type { ReactNode } from 'react';
 import { API_BASE_URL, COOKIE_DOMAIN, OTEL_TRACES_URL } from '#app/lib/config';
 import { AccessDeniedSearchSchema } from '#app/utils/access-denied-search';

@@ -1,3 +1,5 @@
+import type { InvalidCursor, Paginator } from '@kit/pagination';
+import { type Result, assertNever, err, isErr, ok } from '@kit/result';
 import type { ChannelInviteView, ChannelMembershipView, MyInvitePageView } from '@vp/api-contracts';
 import type {
   ChannelInviteRepositoryPort,
@@ -23,9 +25,7 @@ import {
   decideInviteRevoke,
 } from '@vp/domain-rules';
 import type { DatabaseUnavailable } from '@vp/errors';
-import type { InvalidCursor, Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
-import { type Result, assertNever, err, isErr, ok } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 import { profileOf, profilesOf, toInviteView } from './channel-team-views';
 import { createdAtCursorPayload, decodeCreatedAtCursor } from './cursor';

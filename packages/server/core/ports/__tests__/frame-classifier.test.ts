@@ -1,4 +1,4 @@
-import { ok } from '@vp/result';
+import { ok } from '@kit/result';
 import { CHANNEL_MAX, FrameClassifier, RGB_CHANNELS, type RgbFrame } from '../frame-classifier';
 
 class WhiteIsExplicit extends FrameClassifier {

@@ -1,5 +1,5 @@
-import { useT } from '@vp/intl-react';
-import { Badge } from '@vp/ui';
+import { useT } from '@kit/intl-react';
+import { Badge } from '@kit/ui';
 import { useId } from 'react';
 import type { ScreeningFinding as Finding } from '#app/features/admin/api/admin-screening';
 import {

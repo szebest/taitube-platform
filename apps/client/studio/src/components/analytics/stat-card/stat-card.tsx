@@ -1,5 +1,5 @@
+import { Badge, Card, type CardRootProps, Icon, Skeleton, useUiCopy } from '@kit/ui';
 import { SectionError } from '@vp/components';
-import { Badge, Card, type CardRootProps, Icon, Skeleton, useUiCopy } from '@vp/ui';
 import {
   type ComponentPropsWithRef,
   cloneElement,

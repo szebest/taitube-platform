@@ -1,3 +1,4 @@
+import { type Result, ignore, isOk, map, ok, parseJson, unwrapOr } from '@kit/result';
 import type { CacheClient, CommentCachePort, HotComments } from '@vp/core/ports';
 import {
   COMMENT_MODERATION_REASONS,
@@ -7,7 +8,6 @@ import {
 } from '@vp/domain';
 import type { CacheUnavailable } from '@vp/errors';
 import { CacheKeys } from '@vp/events';
-import { type Result, ignore, isOk, map, ok, parseJson, unwrapOr } from '@vp/result';
 import { z } from 'zod';
 
 const HotCommentsSchema = z.object({

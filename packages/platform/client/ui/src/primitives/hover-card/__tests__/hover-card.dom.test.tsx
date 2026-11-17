@@ -22,7 +22,7 @@ const renderChannelLink = (size?: HoverCardSize) => {
   };
 };
 
-describe('@vp/ui: HoverCard', () => {
+describe('@kit/ui: HoverCard', () => {
   it('scrolls inside the space the viewport leaves it, so it never runs off a short screen', async () => {
     const { user } = renderChannelLink();
 

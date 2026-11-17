@@ -1,7 +1,7 @@
 import { inPackageTier, packageDir } from '../../scripts/workspace-packages';
 import { workspaceClosure, workspaceLinks } from './workspace-closure';
 
-const TSCONFIG = packageDir('@vp/tsconfig');
+const TSCONFIG = packageDir('@kit/tsconfig');
 
 const PLANTED = `lockfileVersion: '9.0'
 
@@ -16,7 +16,7 @@ importers:
         specifier: workspace:*
         version: link:../../../packages/server/testing
     devDependencies:
-      '@vp/tsconfig':
+      '@kit/tsconfig':
         specifier: workspace:*
         version: link:../../../${TSCONFIG}
 

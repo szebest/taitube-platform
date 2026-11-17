@@ -1,6 +1,6 @@
+import { useT } from '@kit/intl-react';
+import { assertNever } from '@kit/result';
 import type { Notification } from '@vp/api-contracts';
-import { useT } from '@vp/intl-react';
-import { assertNever } from '@vp/result';
 
 export interface NotificationText {
   headline: string;

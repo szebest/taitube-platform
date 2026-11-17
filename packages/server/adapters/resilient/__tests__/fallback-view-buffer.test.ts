@@ -1,8 +1,8 @@
-import { CircuitBreaker } from '@vp/concurrency';
+import { CircuitBreaker } from '@kit/concurrency';
+import { type Result, err } from '@kit/result';
 import type { ViewEvent, ViewRecordOutcome } from '@vp/core/ports';
 import { type CacheUnavailable, cacheUnavailable } from '@vp/errors';
 import { type PipelineMetrics, createMetricsRegistry } from '@vp/observability';
-import { type Result, err } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import { InMemoryViewBuffer } from '../../in-memory/in-memory-view-buffer';
 import { FallbackViewBuffer } from '../fallback-view-buffer';

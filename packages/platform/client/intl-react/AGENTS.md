@@ -1,6 +1,6 @@
-# AGENTS.md — @vp/intl-react (The Browser Binding for Formatting & Messages)
+# AGENTS.md — @kit/intl-react (The Browser Binding for Formatting & Messages)
 
-Instructions for any coding agent working on `@vp/intl-react`.
+Instructions for any coding agent working on `@kit/intl-react`.
 
 > Tier rules for this directory: [../AGENTS.md](../../../client/AGENTS.md) · full tier & layer reference: [packages/AGENTS.md](../../../AGENTS.md) · authority: [docs/standards/formatting-and-i18n.md](../../../../docs/standards/formatting-and-i18n.md)
 
@@ -36,6 +36,6 @@ The `.test.tsx` specs render with Testing Library under jsdom. Like every `packa
 is browser-only, so `pnpm test:bun` leaves it out.
 
 ```bash
-pnpm --filter @vp/intl-react typecheck
-pnpm --filter @vp/intl-react test
+pnpm --filter @kit/intl-react typecheck
+pnpm --filter @kit/intl-react test
 ```

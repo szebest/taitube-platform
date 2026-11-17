@@ -1,3 +1,4 @@
+import type { Result } from '@kit/result';
 import type {
   ChannelUserRestriction,
   ModerationRecord,
@@ -5,7 +6,6 @@ import type {
   NewChannelUserRestriction,
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import type { Result } from '@vp/result';
 
 export interface ChannelUserRestrictionQuery {
   cursor: { createdAt: Date; userId: string } | null;

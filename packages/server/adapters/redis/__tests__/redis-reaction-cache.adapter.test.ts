@@ -1,6 +1,6 @@
+import { ok } from '@kit/result';
 import type { ReactionCounts } from '@vp/domain';
 import { inProcessAppConfig } from '@vp/env-schema';
-import { ok } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import { InMemoryCacheClient } from '../../in-memory/in-memory-cache-client';
 import { RedisReactionCacheAdapter } from '../redis-reaction-cache.adapter';

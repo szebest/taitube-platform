@@ -1,6 +1,6 @@
+import { createLogger } from '@kit/logger';
 import { InMemoryCacheClient } from '@vp/adapters/in-memory';
 import type { LiveChatBroadcast } from '@vp/api-contracts';
-import { createLogger } from '@vp/logger';
 import { expectOk } from '@vp/testing/result';
 import { LiveChatHub, publishLiveChat } from '../live-chat-hub';
 

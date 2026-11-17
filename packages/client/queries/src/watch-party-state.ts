@@ -1,3 +1,4 @@
+import { assertNever } from '@kit/result';
 import type { PartyQueueView, WatchPartyServerFrame, WatchPartyView } from '@vp/api-contracts';
 import {
   type RoomRole,
@@ -6,7 +7,6 @@ import {
   lobbyPlayback,
 } from '@vp/domain';
 import { type ErrorCode, ErrorCodes, isErrorCode } from '@vp/errors';
-import { assertNever } from '@vp/result';
 
 type PartyFrame<T extends WatchPartyServerFrame['type']> = Extract<
   WatchPartyServerFrame,

@@ -1,4 +1,4 @@
-import type { Result } from '@vp/result';
+import type { Result } from '@kit/result';
 import type { FormatContext } from './context';
 import type { FormatFailure } from './failures';
 import { type FormatValue, formatValue } from './format-value';

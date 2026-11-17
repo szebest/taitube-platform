@@ -1,3 +1,4 @@
+import { fromPromise, type Result } from '@kit/result';
 import type {
   ChannelMemberRepositoryPort,
   ChannelRoleChange,
@@ -11,7 +12,6 @@ import {
   roleHas,
 } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
-import { fromPromise, type Result } from '@vp/result';
 import { and, asc, eq } from 'drizzle-orm';
 import { appendChannelAudit } from './channel-audit-writes';
 import { revokeInvitesSentBy } from './channel-invite-writes';

@@ -11,7 +11,7 @@ const renderIconButton = (props: Partial<IconButtonProps> = {}) =>
     </IconButton>
   );
 
-describe('@vp/ui: IconButton', () => {
+describe('@kit/ui: IconButton', () => {
   it('is a quiet square button named by its label', () => {
     renderIconButton();
 

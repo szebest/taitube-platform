@@ -1,5 +1,5 @@
+import { err, ok, type Result } from '@kit/result';
 import type { LiveStream } from '@vp/domain';
-import { err, ok, type Result } from '@vp/result';
 import { type LiveIngestRefused, liveIngestRefused } from './failures';
 import { LIVE_STREAM } from './live-stream.machine';
 

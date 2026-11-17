@@ -1,6 +1,6 @@
+import type { Result } from '@kit/result';
 import type { CommentThread } from '@vp/domain';
 import type { CacheUnavailable } from '@vp/errors';
-import type { Result } from '@vp/result';
 
 /** The first page of a video's top comments, over-fetched by one row, and its comment count. */
 export interface HotComments {

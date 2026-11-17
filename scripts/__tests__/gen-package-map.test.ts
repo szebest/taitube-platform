@@ -7,11 +7,11 @@ import type { Pkg } from '../workspace-packages';
 const MAP = 'docs/package-map.md';
 
 const MANIFESTS = {
-  'packages/platform/universal/result': { name: '@vp/result', vp: { layer: 1 } },
+  'packages/platform/universal/result': { name: '@kit/result', vp: { layer: 1 } },
   'apps/server/api': {
     name: '@vp/api',
     vp: { layer: 6 },
-    dependencies: { '@vp/result': 'workspace:*', zod: '^4.0.0' },
+    dependencies: { '@kit/result': 'workspace:*', zod: '^4.0.0' },
   },
 };
 

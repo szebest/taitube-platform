@@ -23,7 +23,7 @@ function renderCountedSelect() {
   return { rerender: () => view.rerender(<Field.Root>{parts}</Field.Root>), commitsOf };
 }
 
-describe('@vp/ui: Select render count, compiled', () => {
+describe('@kit/ui: Select render count, compiled', () => {
   it('commits the trigger no more than at mount when its field renders again with the same props', () => {
     const { rerender, commitsOf } = renderCountedSelect();
 

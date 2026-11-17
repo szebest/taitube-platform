@@ -1,3 +1,4 @@
+import { map, type Result } from '@kit/result';
 import {
   WatchPartyPermissionSchema,
   type WatchPartyServerFrame,
@@ -7,7 +8,6 @@ import type { CacheClient } from '@vp/core/ports';
 import type { WatchPartyPermission } from '@vp/domain';
 import type { CacheUnavailable } from '@vp/errors';
 import { watchPartyChannel } from '@vp/events';
-import { map, type Result } from '@vp/result';
 import { z } from 'zod';
 
 /**

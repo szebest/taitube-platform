@@ -1,7 +1,7 @@
+import { useT } from '@kit/intl-react';
 import type { CommentSettingsView } from '@vp/api-contracts';
 import { DisclosureControl } from '@vp/components';
 import { DISCLOSURE_RULES, type DisclosureRule } from '@vp/domain';
-import { useT } from '@vp/intl-react';
 import { useId } from 'react';
 import { useSettingsSection } from '#app/features/comments/hooks/use-settings-section';
 import { SettingsSection } from '../settings-section/settings-section';

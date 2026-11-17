@@ -1,6 +1,6 @@
+import { isErr } from '@kit/result';
 import type { WatchPartyServerFrame } from '@vp/api-contracts';
 import { parseMemberKey, type RosterEntry, rosterFor } from '@vp/domain';
-import { isErr } from '@vp/result';
 import type { WatchPartyDeps } from './watch-party-deps';
 import { announce } from './watch-party-moderation-effects';
 

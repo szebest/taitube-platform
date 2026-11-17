@@ -1,8 +1,8 @@
+import { fromPromise, map, type Result } from '@kit/result';
 import type { ChannelAuditQuery, ChannelAuditRepositoryPort } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import type { ChannelAuditEntry, NewChannelAuditEntry } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
-import { fromPromise, map, type Result } from '@vp/result';
 import { and, desc, eq, lt } from 'drizzle-orm';
 import { keysetBefore, msTimestamp } from '../scopes/index';
 import { appendChannelAudit, toChannelAuditEntry } from './channel-audit-writes';

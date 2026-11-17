@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { join } from 'node:path';
-import { type Result, andThen, ok } from '@vp/result';
+import { type Result, andThen, ok } from '@kit/result';
 import type { SeedFailure } from './failure';
 import type { SeedPorts } from './ports';
 import type { UserSpec, VideoSpec } from './world-types';

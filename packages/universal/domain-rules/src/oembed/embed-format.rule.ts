@@ -1,4 +1,4 @@
-import { type Result, err, ok } from '@vp/result';
+import { type Result, err, ok } from '@kit/result';
 import { type OEmbedFormatUnsupported, oembedFormatUnsupported } from './failures';
 
 /** The oEmbed spec lets a provider answer a format it does not serve with 501. */

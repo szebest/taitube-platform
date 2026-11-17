@@ -1,4 +1,4 @@
-import { Callout, Card } from '@vp/ui';
+import { Callout, Card } from '@kit/ui';
 import { type ComponentPropsWithRef, useEffect, useId, useRef } from 'react';
 import { EmptyState } from '../states/empty-state';
 import { LoginCardContext, useLoginCard } from './login-card.context';

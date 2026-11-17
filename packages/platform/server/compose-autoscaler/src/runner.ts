@@ -1,4 +1,4 @@
-import type { Logger } from '@vp/logger';
+import type { Logger } from '@kit/logger';
 import {
   DEFAULT_STAGE_CONFIGS,
   type ScalerStageConfig,

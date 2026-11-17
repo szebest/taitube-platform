@@ -7,7 +7,7 @@ import {
   SPACE_STEPS,
   TYPE_STYLE_OPTIONS,
   Z_LAYERS,
-} from '@vp/design-tokens';
+} from '@kit/design-tokens';
 import { type ClassValue, cnMerge, createTV } from 'tailwind-variants';
 
 const LAYOUT_MEASURES = [

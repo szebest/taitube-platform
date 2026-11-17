@@ -1,3 +1,4 @@
+import { PAGE_SIZE_MAX } from '@kit/pagination';
 import {
   COMMENT_MODERATION_REASONS,
   COMMENT_SORTS,
@@ -6,7 +7,6 @@ import {
   MODERATION_STATES,
 } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
-import { PAGE_SIZE_MAX } from '@vp/pagination';
 import { z } from 'zod';
 import { defineEndpoint } from './endpoint';
 import { CursorSchema, KeysetQuerySchema, PageLimitSchema } from './pagination';

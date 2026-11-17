@@ -1,4 +1,4 @@
-import { isErr, isOk } from '@vp/result';
+import { isErr, isOk } from '@kit/result';
 import { handleCandidates, isReservedHandle, validateHandle } from '../handle-format';
 
 describe('@vp/validation: isReservedHandle', () => {

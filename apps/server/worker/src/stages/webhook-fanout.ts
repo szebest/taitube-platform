@@ -1,8 +1,8 @@
+import type { Logger } from '@kit/logger';
+import { isErr } from '@kit/result';
 import type { WebhookDispatcher } from '@vp/core/ports';
 import type { WebhookRepositoryPort } from '@vp/core/repositories';
 import type { WebhookEvent } from '@vp/domain';
-import type { Logger } from '@vp/logger';
-import { isErr } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 
 export interface WebhookFanoutDeps {

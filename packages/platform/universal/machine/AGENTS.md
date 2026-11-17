@@ -1,6 +1,6 @@
-# AGENTS.md - @vp/machine (lifecycles as tables)
+# AGENTS.md - @kit/machine (lifecycles as tables)
 
-Instructions for any coding agent working on `@vp/machine`.
+Instructions for any coding agent working on `@kit/machine`.
 
 > Tier rules for this directory: [../AGENTS.md](../../../universal/AGENTS.md) · full tier & layer reference: [packages/AGENTS.md](../../../AGENTS.md)
 
@@ -8,7 +8,7 @@ Instructions for any coding agent working on `@vp/machine`.
 
 ## 1. Scope & Purpose
 
-`@vp/machine` turns a lifecycle into data: `defineMachine({ name, states, initial, final, events })` holds the
+`@kit/machine` turns a lifecycle into data: `defineMachine({ name, states, initial, final, events })` holds the
 legal moves as a typed table, keyed by event, each edge `{ from, to, event? }`. It answers one question,
 "is this edge legal from this state": `next(state, event)` (a state or `undefined`), `sources(event)`,
 `target(event)` and `matrix()`. `machineFindings` lists structural faults (unreachable state, dead non-final
@@ -29,7 +29,7 @@ consults the table in `@vp/domain-rules` maps it to its own failure, adds the gu
 - **Data, not an interpreter.** No actors, timers, listeners or guards here. A guard that needs input stays in
   the rule.
 - **A state or event outside the table does not compile.** `src/__tests__/type-fixtures/define-machine.ts`
-  holds the `@ts-expect-error` proofs, so `pnpm --filter @vp/machine typecheck` is part of its test suite.
+  holds the `@ts-expect-error` proofs, so `pnpm --filter @kit/machine typecheck` is part of its test suite.
 - Every source file except the `index.ts` barrel has its own `__tests__/<name>.test.ts`.
 
 ---
@@ -37,7 +37,7 @@ consults the table in `@vp/domain-rules` maps it to its own failure, adds the gu
 ## 3. Local Commands
 
 ```bash
-pnpm --filter @vp/machine typecheck
-pnpm --filter @vp/machine test
+pnpm --filter @kit/machine typecheck
+pnpm --filter @kit/machine test
 bun test packages/platform/universal/machine
 ```

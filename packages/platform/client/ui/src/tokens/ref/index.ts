@@ -1,4 +1,4 @@
-import { defineRef } from '@vp/design-tokens';
+import { defineRef } from '@kit/design-tokens';
 
 export const { ramps, ref } = defineRef({
   sand: {

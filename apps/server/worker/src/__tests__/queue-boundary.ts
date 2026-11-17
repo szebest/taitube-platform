@@ -1,6 +1,6 @@
+import { type Result, isErr } from '@kit/result';
 import type { QueueJob } from '@vp/core/ports';
 import { type AnyFailure, errorCodeRegistry, toPipelineError } from '@vp/errors';
-import { type Result, isErr } from '@vp/result';
 
 /**
  * The line `runner.ts` runs on every job outcome. A suite that drives a stage through a real queue

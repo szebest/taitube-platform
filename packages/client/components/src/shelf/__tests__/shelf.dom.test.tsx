@@ -1,6 +1,6 @@
+import { variantNames } from '@kit/ui';
 import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { variantNames } from '@vp/ui';
 import { axeViolations } from '@vp/web-testing/dom';
 import { Shelf, ShelfSkeleton, shelfStyles } from '..';
 import { renderWithCopy } from '../../__tests__/render-with-copy';

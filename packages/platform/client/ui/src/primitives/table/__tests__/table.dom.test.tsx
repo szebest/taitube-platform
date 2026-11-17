@@ -32,7 +32,7 @@ const renderVideoTable = (props: TableRootProps = {}, selected = false) =>
     </Table.Root>
   );
 
-describe('@vp/ui: Table', () => {
+describe('@kit/ui: Table', () => {
   it('is a native table named by its caption, with column and row headers', () => {
     renderVideoTable();
 

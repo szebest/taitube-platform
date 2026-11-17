@@ -1,7 +1,7 @@
+import { type Result, isErr, ok } from '@kit/result';
 import type { FingerprintLookupLimits, FingerprintRepository } from '@vp/core/repositories';
 import type { ScreeningThresholds } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { type Result, isErr, ok } from '@vp/result';
 import { type AudioMatch, alignAudio, verifyAudio } from './audio-match';
 import { audioIndexTerms } from './audio-terms';
 import type { FrameSample } from './frame-hash';

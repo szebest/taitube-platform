@@ -1,4 +1,4 @@
-import { fromPromise, isOk } from '@vp/result';
+import { fromPromise, isOk } from '@kit/result';
 import { useEffect, useState } from 'react';
 import { NOTHING_CACHED, type OfflineCache, readOfflineCache } from '../utils/offline-cache';
 

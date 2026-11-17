@@ -1,3 +1,4 @@
+import { fromPromise } from '@kit/result';
 import {
   infiniteQueryOptions,
   mutationOptions,
@@ -12,7 +13,6 @@ import type {
   RestrictionActionBody,
 } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
-import { fromPromise } from '@vp/result';
 import { useApi } from './api-provider';
 import { commentListKeys, creatorCommentKeys } from './comment-queries';
 import { failureCode } from './failure-code';

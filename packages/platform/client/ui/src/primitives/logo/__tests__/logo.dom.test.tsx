@@ -6,7 +6,7 @@ import { logoStyles } from '../logo.variants';
 
 const renderLogo = (props: LogoProps = {}) => render(<Logo {...props} />);
 
-describe('@vp/ui: Logo', () => {
+describe('@kit/ui: Logo', () => {
   it.each(variantNames(logoStyles.variants.variant))(
     'is one image named Taitube as a %s',
     (variant) => {

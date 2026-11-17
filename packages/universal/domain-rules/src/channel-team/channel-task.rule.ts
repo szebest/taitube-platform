@@ -1,3 +1,4 @@
+import { type Result, assertNever, map } from '@kit/result';
 import type { ActingChannel } from '@vp/domain';
 import {
   type UserContext,
@@ -12,7 +13,6 @@ import {
   canUpdateChannel,
   canUpdateVideo,
 } from '@vp/permissions';
-import { type Result, assertNever, map } from '@vp/result';
 import { type AuthorizationFailure, authorize } from '../authorize';
 
 type ChannelTask =

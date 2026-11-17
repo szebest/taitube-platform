@@ -1,7 +1,7 @@
+import { ok, type Result } from '@kit/result';
 import type { NewWatchPartyMessage, WatchPartyMessageRepositoryPort } from '@vp/core/repositories';
 import type { WatchPartyMessage } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { ok, type Result } from '@vp/result';
 import type { InMemoryWatchPartyStore } from './in-memory-watch-party-store';
 
 const byId = (a: WatchPartyMessage, b: WatchPartyMessage) => (a.id < b.id ? -1 : 1);

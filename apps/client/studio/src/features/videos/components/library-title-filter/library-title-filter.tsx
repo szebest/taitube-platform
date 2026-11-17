@@ -1,5 +1,5 @@
-import { useT } from '@vp/intl-react';
-import { Input } from '@vp/ui';
+import { useT } from '@kit/intl-react';
+import { Input } from '@kit/ui';
 import { type ChangeEvent, useEffect, useRef } from 'react';
 
 const SETTLE_MS = 300;

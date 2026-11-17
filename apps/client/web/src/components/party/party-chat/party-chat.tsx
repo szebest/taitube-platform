@@ -1,5 +1,5 @@
-import { useT } from '@vp/intl-react';
-import { Avatar, Button } from '@vp/ui';
+import { useT } from '@kit/intl-react';
+import { Avatar, Button } from '@kit/ui';
 import type { ComponentPropsWithRef, ReactNode } from 'react';
 import { LiveChat } from '#app/components/live/live-chat';
 import type { LiveChatRootProps } from '#app/components/live/live-chat/live-chat';

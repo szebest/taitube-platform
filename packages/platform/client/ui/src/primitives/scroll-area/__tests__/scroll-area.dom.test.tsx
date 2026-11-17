@@ -12,7 +12,7 @@ const renderQueue = (props: ScrollAreaProps = {}) =>
     </ScrollArea>
   );
 
-describe('@vp/ui: ScrollArea', () => {
+describe('@kit/ui: ScrollArea', () => {
   it('puts the focus stop and the name on the scrolling viewport, so a keyboard can scroll it', async () => {
     renderQueue({ tabIndex: 0, 'aria-label': 'Up next' });
 

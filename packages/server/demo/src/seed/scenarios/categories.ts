@@ -1,4 +1,4 @@
-import { isErr } from '@vp/result';
+import { isErr } from '@kit/result';
 import { CategoryListSchema, CreatedCategorySchema } from '../responses';
 import { actorOf, type Scenario, userByKind } from '../scenario';
 import { createTally } from '../tally';

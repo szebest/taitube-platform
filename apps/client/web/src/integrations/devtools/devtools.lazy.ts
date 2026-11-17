@@ -1,4 +1,4 @@
-import { lazyComponent } from '@vp/ui';
+import { lazyComponent } from '@kit/ui';
 
 export const LazyDevtools = import.meta.env.DEV
   ? lazyComponent(() => import('./devtools'), {

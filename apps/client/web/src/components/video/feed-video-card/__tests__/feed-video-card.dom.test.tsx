@@ -1,3 +1,4 @@
+import { DEFAULT_APPEARANCE, writeCookie } from '@kit/ui';
 import { act, fireEvent, screen, within } from '@testing-library/react';
 import {
   getCurrentPick,
@@ -9,7 +10,6 @@ import {
   type VideoSummary,
 } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
-import { DEFAULT_APPEARANCE, writeCookie } from '@vp/ui';
 import { CHANNEL_ID, mockEndpoint, problemReply, VIDEO_ID, videoSummary } from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';

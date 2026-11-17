@@ -1,5 +1,5 @@
+import { err, ok } from '@kit/result';
 import { ErrorCodes } from '@vp/errors';
-import { err, ok } from '@vp/result';
 import { Base64UrlCursorCodec, type CursorPayload } from '../cursor-codec';
 
 describe('packages/pagination: Base64UrlCursorCodec', () => {

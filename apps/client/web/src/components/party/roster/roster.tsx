@@ -1,5 +1,5 @@
-import { useT } from '@vp/intl-react';
-import { Avatar, Badge, Icon, VisuallyHidden } from '@vp/ui';
+import { useT } from '@kit/intl-react';
+import { Avatar, Badge, Icon, VisuallyHidden } from '@kit/ui';
 import type { ComponentPropsWithRef, ReactNode } from 'react';
 import { SYNC_COPY } from './constants';
 import type { RosterSource, RosterSync } from './types';

@@ -1,6 +1,6 @@
 import { spawn } from 'node:child_process';
+import { tryCatch } from '@kit/result';
 import { ErrorCodes, PermanentError, TransientError } from '@vp/errors';
-import { tryCatch } from '@vp/result';
 import {
   type ChannelImageProbe,
   type RawImageProbe,

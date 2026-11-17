@@ -1,4 +1,4 @@
-# AGENTS.md — @vp/compose-autoscaler (server tier)
+# AGENTS.md — @kit/compose-autoscaler (server tier)
 
 Instructions for any coding agent working on `packages/platform/server/compose-autoscaler`.
 
@@ -20,7 +20,7 @@ This is a **workspace package with a CLI**, not a loose script — which is why 
 `packages/server/` rather than `tools/`. `tools/` is for assets with no `package.json`.
 
 - **Tier `server`** — Node/Bun only.
-- **Layer 2** (`vp.layer` in `package.json`, authoritative): it logs through `@vp/logger` (layer 1), its
+- **Layer 2** (`vp.layer` in `package.json`, authoritative): it logs through `@kit/logger` (layer 1), its
   only `@vp/*` dependency.
 
 ---
@@ -37,6 +37,6 @@ This is a **workspace package with a CLI**, not a loose script — which is why 
 
 ```bash
 pnpm compose-autoscaler            # from the repo root
-pnpm --filter @vp/compose-autoscaler typecheck
-pnpm --filter @vp/compose-autoscaler test
+pnpm --filter @kit/compose-autoscaler typecheck
+pnpm --filter @kit/compose-autoscaler test
 ```

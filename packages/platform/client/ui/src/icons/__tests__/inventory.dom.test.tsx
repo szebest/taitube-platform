@@ -15,7 +15,7 @@ const drawnIds = () => {
   return [...symbols].map(({ id }) => id).filter((id) => id !== LOGO);
 };
 
-describe('@vp/ui: the icon inventory', () => {
+describe('@kit/ui: the icon inventory', () => {
   it('draws every id of the design library sprite but the logo, and nothing else', () => {
     expect(Object.keys(ICONS).sort()).toEqual(drawnIds().sort());
   });

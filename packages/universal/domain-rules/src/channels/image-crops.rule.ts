@@ -1,5 +1,5 @@
+import { type Result, all, andThen, map } from '@kit/result';
 import { BANNER_ASPECTS, BANNER_TARGETS, type BannerCrops, type ImageCrops } from '@vp/domain';
-import { type Result, all, andThen, map } from '@vp/result';
 import {
   type ChannelImageKind,
   type ImageDimensions,

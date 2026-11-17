@@ -1,6 +1,6 @@
+import type { Result } from '@kit/result';
 import type { WatchPartyInvite } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import type { Result } from '@vp/result';
 import type { NewOutboxInput } from './outbox-repository';
 
 export type InviteWrite =

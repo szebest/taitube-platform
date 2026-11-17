@@ -1,4 +1,4 @@
-import { Button, type ButtonProps, Slot } from '@vp/ui';
+import { Button, type ButtonProps, Slot } from '@kit/ui';
 import type { ComponentPropsWithRef } from 'react';
 import { EmptyStateContext, useEmptyState } from './empty-state.context';
 import { emptyStateStyles } from './empty-state.variants';

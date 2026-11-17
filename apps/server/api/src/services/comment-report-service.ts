@@ -1,3 +1,5 @@
+import type { InvalidCursor, Paginator } from '@kit/pagination';
+import { type Result, err, isErr, map, ok } from '@kit/result';
 import type { CommentReportQueueItemView, CommentReportView } from '@vp/api-contracts';
 import type {
   CommentReportRepositoryPort,
@@ -20,9 +22,7 @@ import {
   reportAlreadyResolved,
 } from '@vp/domain-rules';
 import { type DatabaseUnavailable, ErrorCodes } from '@vp/errors';
-import type { InvalidCursor, Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
-import { type Result, err, isErr, map, ok } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 import { commentWithVideo } from './comment-lookup';
 import { toCommentReportQueueItemView, toCommentReportView } from './comment-report-views';

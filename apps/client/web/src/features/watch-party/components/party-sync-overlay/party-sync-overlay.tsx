@@ -1,6 +1,6 @@
-import { useT } from '@vp/intl-react';
+import { useT } from '@kit/intl-react';
+import { Badge, Button } from '@kit/ui';
 import type { WatchPartySocket } from '@vp/queries';
-import { Badge, Button } from '@vp/ui';
 import { usePartySync } from '#app/features/watch-party/hooks/use-party-sync';
 import { getSyncBadge } from '#app/features/watch-party/utils/get-sync-badge';
 

@@ -1,5 +1,5 @@
+import { cn, Slider } from '@kit/ui';
 import { CLIP_MAX_MS, CLIP_MIN_MS } from '@vp/domain';
-import { cn, Slider } from '@vp/ui';
 import type { ComponentPropsWithRef } from 'react';
 import { ClipEditorContext, useClipEditor } from './clip-editor.context';
 import type { ClipEditorSprite, ClipEditorValue } from './types';

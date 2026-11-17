@@ -1,4 +1,4 @@
-import { createCompoundContext } from '@vp/ui';
+import { createCompoundContext } from '@kit/ui';
 import type { CommandPaletteVariant } from './types';
 
 export const [CommandPaletteContext, useCommandPalette] = createCompoundContext<{

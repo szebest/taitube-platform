@@ -1,3 +1,4 @@
+import type { Result } from '@kit/result';
 import type {
   DataExport,
   DataExportKind,
@@ -6,7 +7,6 @@ import type {
   NewDataExport,
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import type { Result } from '@vp/result';
 
 export type CreateExportOutcome =
   | { type: 'created'; dataExport: DataExport }

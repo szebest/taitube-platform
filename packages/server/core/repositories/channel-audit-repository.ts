@@ -1,6 +1,6 @@
+import type { Result } from '@kit/result';
 import type { ChannelAuditAction, ChannelAuditEntry, NewChannelAuditEntry } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import type { Result } from '@vp/result';
 
 export interface ChannelAuditQuery {
   cursor: { createdAt: Date; id: string } | null;

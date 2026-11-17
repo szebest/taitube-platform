@@ -34,7 +34,7 @@ const renderQueueDrawer = (size?: DrawerSize) => {
   };
 };
 
-describe('@vp/ui: Drawer', () => {
+describe('@kit/ui: Drawer', () => {
   beforeEach(() => {
     Element.prototype.setPointerCapture = () => undefined;
   });

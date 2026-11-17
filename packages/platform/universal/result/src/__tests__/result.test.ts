@@ -1,6 +1,6 @@
 import { type Result, err, isErr, isOk, ok } from '../result';
 
-describe('@vp/result: constructors and guards', () => {
+describe('@kit/result: constructors and guards', () => {
   it('wraps a value as a success', () => {
     expect(ok(42)).toEqual({ ok: true, value: 42 });
   });

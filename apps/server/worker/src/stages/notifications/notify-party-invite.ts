@@ -1,10 +1,10 @@
+import type { Logger } from '@kit/logger';
+import { isErr, ok, type Result } from '@kit/result';
 import type { QueueJob } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import { mayHearAbout, type NotificationActor } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { NotifyPartyInviteJob } from '@vp/job-contracts';
-import type { Logger } from '@vp/logger';
-import { isErr, ok, type Result } from '@vp/result';
 import { usersSwitchedOn } from './notification-switches';
 
 export interface NotifyPartyInviteDeps {

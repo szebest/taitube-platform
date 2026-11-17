@@ -1,6 +1,6 @@
 import * as path from 'node:path';
 import { parseArgs } from 'node:util';
-import type { Logger } from '@vp/logger';
+import type { Logger } from '@kit/logger';
 import { checkFixture } from './check-fixture';
 import { generateAllFixtures, selectFixtures } from './generator';
 import { loadManifest } from './probe';

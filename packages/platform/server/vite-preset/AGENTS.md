@@ -1,4 +1,4 @@
-# AGENTS.md — @vp/vite-preset (the Vite config of every client app)
+# AGENTS.md — @kit/vite-preset (the Vite config of every client app)
 
 > Tier rules for this directory: [../AGENTS.md](../../../server/AGENTS.md) · full tier & layer reference: [packages/AGENTS.md](../../../AGENTS.md)
 
@@ -12,7 +12,7 @@ allows across tiers (`BUILD_TOOLING`), and nothing of it reaches a bundle.
 
 - the TanStack Start plugin (file routes, `__tests__` ignored), React and Tailwind; a `test` mode loads React
   alone, so Vitest never starts the route crawler;
-- the React Compiler, through `reactPlugins(compiler)` in `src/react-plugins.ts` (`@vp/vite-preset/react-plugins`,
+- the React Compiler, through `reactPlugins(compiler)` in `src/react-plugins.ts` (`@kit/vite-preset/react-plugins`,
   which the client packages' Vitest configs and the workbench's `viteFinal` call too): `'oxc'` by default
   (`oxc-transform-react`), `'babel'` (`babel-plugin-react-compiler` through `@rolldown/plugin-babel`) for a package
   the Oxc port breaks, `false` only while an Oxc issue is open and nothing else builds; each use but `'oxc'` names
@@ -40,6 +40,6 @@ allows across tiers (`BUILD_TOOLING`), and nothing of it reaches a bundle.
 - **Not here:** runtime code, test helpers (`@vp/web-testing`), anything that reads an app's `src/config`.
 
 ```bash
-pnpm --filter @vp/vite-preset typecheck
-pnpm --filter @vp/vite-preset test
+pnpm --filter @kit/vite-preset typecheck
+pnpm --filter @kit/vite-preset test
 ```

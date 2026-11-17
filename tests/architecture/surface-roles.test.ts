@@ -1,7 +1,7 @@
 import { packageDir } from '../../scripts/workspace-packages';
 import { read } from './repo-files';
 
-const UI = packageDir('@vp/ui');
+const UI = packageDir('@kit/ui');
 
 const BASE = `${UI}/src/styles/base.css`;
 const PLAYER = 'apps/client/web/src/integrations/video-js/video-js-engine.tsx';

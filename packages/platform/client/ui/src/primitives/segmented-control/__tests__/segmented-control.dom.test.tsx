@@ -29,7 +29,7 @@ const renderSegmentedControl = (props: SegmentedControlRootProps = {}) => {
   };
 };
 
-describe('@vp/ui: SegmentedControl', () => {
+describe('@kit/ui: SegmentedControl', () => {
   it.each(variantNames(segmentedControlStyles.variants.tone))(
     'is a %s radio group with one tab stop on the selected option, and selecting changes it',
     async (tone) => {

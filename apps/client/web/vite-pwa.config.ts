@@ -1,5 +1,5 @@
 import { fileURLToPath } from 'node:url';
-import { workspaceSourceAliases } from '@vp/vite-preset';
+import { workspaceSourceAliases } from '@kit/vite-preset';
 import { type Plugin, type PluginOption, runnerImport } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import type { WebManifest } from './src/features/pwa/utils/manifest';
@@ -10,7 +10,7 @@ const MANIFEST_MODULE = fileURLToPath(
   new URL('./src/features/pwa/utils/manifest.ts', import.meta.url)
 );
 
-/** Loads the manifest module through Vite, so `@vp/ui` and `@vp/design-tokens` resolve from source. */
+/** Loads the manifest module through Vite, so `@kit/ui` and `@kit/design-tokens` resolve from source. */
 async function loadManifest(): Promise<WebManifest> {
   const { module } = await runnerImport<{ webManifest: () => WebManifest }>(MANIFEST_MODULE, {
     configFile: false,

@@ -1,6 +1,6 @@
+import { type Result, andThen, err, map, ok } from '@kit/result';
 import { type Comment, type Video, threadRootId } from '@vp/domain';
 import { type UserContext, canCreateComment } from '@vp/permissions';
-import { type Result, andThen, err, map, ok } from '@vp/result';
 import { type InvalidCommentContent, validateCommentContent } from '@vp/validation';
 import { type AuthorizationFailure, authorize } from '../authorize';
 import { type ReadVideoFailure, decideVideoRead } from '../videos/index';

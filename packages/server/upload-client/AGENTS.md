@@ -19,8 +19,8 @@ This is a **workspace package with a CLI**, not a loose script, which is why it 
 
 - **Tier `server`**, Node/Bun only.
 - **`vp.layer` 6**, above the applications, because its spec boots `apps/server/api` (`composeApp`) against a
-  stub S3 to drive a real resumable upload end to end. What the package *ships* is `@vp/logger` and
-  `@vp/result`; the layer records the whole manifest, devDependencies included.
+  stub S3 to drive a real resumable upload end to end. What the package *ships* is `@kit/logger` and
+  `@kit/result`; the layer records the whole manifest, devDependencies included.
 
 ---
 

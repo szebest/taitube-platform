@@ -2,7 +2,7 @@
 
 Taitube speaks like a curator, not a marketer: warm, plain, and specific. It is the voice behind the principles
 in [README section 1](../README.md#1-who-taitube-is), especially "Say why". All copy comes from the message
-catalogue (`@vp/messages`); numbers and dates go through `@vp/intl-react`.
+catalogue (`@vp/messages`); numbers and dates go through `@kit/intl-react`.
 
 ## The voice
 
@@ -78,7 +78,7 @@ Never imply you know more than you do ("We think you are into...").
 
 ## Numbers, dates and time
 
-All through `@vp/intl-react` (`Intl` under the hood, [formatting-and-i18n](../../standards/formatting-and-i18n.md)),
+All through `@kit/intl-react` (`Intl` under the hood, [formatting-and-i18n](../../standards/formatting-and-i18n.md)),
 never string concatenation or a hand-rolled abbreviation.
 
 | Thing | Format | Example |

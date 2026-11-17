@@ -1,5 +1,5 @@
+import { ok } from '@kit/result';
 import { ErrorCodes } from '@vp/errors';
-import { ok } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { z } from 'zod';
 import { consuming } from '../consuming';

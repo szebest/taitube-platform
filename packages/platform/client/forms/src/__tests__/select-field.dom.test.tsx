@@ -34,7 +34,7 @@ function renderSizeForm(
   };
 }
 
-describe('@vp/forms: SelectField', () => {
+describe('@kit/forms: SelectField', () => {
   it('shows the field value in a combobox named by the label, and lists every option', async () => {
     const { user } = renderSizeForm();
 

@@ -1,4 +1,4 @@
-import { Badge, Button, useUiCopy } from '@vp/ui';
+import { Badge, Button, useUiCopy } from '@kit/ui';
 import {
   type ComponentPropsWithRef,
   type RefObject,

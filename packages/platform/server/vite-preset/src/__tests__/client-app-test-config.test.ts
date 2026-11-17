@@ -4,7 +4,7 @@ const viteConfig = async () => ({ resolve: { alias: [{ find: '#app', replacement
 
 const DOM_SPECS = 'src/**/__tests__/**/*.dom.test.{ts,tsx}';
 
-describe('@vp/vite-preset: client app test config', () => {
+describe('@kit/vite-preset: client app test config', () => {
   it.each([
     {
       environment: 'node' as const,

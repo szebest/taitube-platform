@@ -1,9 +1,9 @@
+import { type Result, isErr, ok } from '@kit/result';
 import type { ChannelMemberRepositoryPort } from '@vp/core/repositories';
 import type { ActingChannel } from '@vp/domain';
 import { type ChannelMembershipRequired, decideActingChannel } from '@vp/domain-rules';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { type Result, isErr, ok } from '@vp/result';
 import type { ProvisionFailure } from './channel-lookup';
 import type { ChannelService } from './channel-service';
 

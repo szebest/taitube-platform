@@ -1,5 +1,5 @@
+import { fromPromise, isOk } from '@kit/result';
 import { useRouter } from '@tanstack/react-router';
-import { fromPromise, isOk } from '@vp/result';
 import { useActionState } from 'react';
 import { z } from 'zod';
 import { settleSession } from '../session-changes';

@@ -21,7 +21,7 @@ const renderTextarea = (props: TextareaProps = {}, invalid = false) => {
   };
 };
 
-describe('@vp/ui: Textarea', () => {
+describe('@kit/ui: Textarea', () => {
   it('is a multi-line text box named by its field', async () => {
     const { user } = renderTextarea();
 

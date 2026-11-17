@@ -1,4 +1,4 @@
-import { tryCatch } from '@vp/result';
+import { tryCatch } from '@kit/result';
 import { load } from 'js-yaml';
 import { z } from 'zod';
 

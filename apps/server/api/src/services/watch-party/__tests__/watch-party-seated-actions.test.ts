@@ -1,5 +1,5 @@
+import { ok, type Result } from '@kit/result';
 import { ErrorCodes, watchPartyClosed } from '@vp/errors';
-import { ok, type Result } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { actingAsMember, loadSeated } from '../watch-party-seated-actions';
 import { keyOf, ROOM_ID, seatUser, seedRoom } from './watch-party-moderation-fixture';

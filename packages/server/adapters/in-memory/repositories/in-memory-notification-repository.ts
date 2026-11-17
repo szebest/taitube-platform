@@ -1,3 +1,4 @@
+import { isErr, ok, type Result } from '@kit/result';
 import type {
   ListNotificationsOptions,
   MarkedRead,
@@ -19,7 +20,6 @@ import {
 } from '@vp/domain';
 import { MS_PER_DAY } from '@vp/domain/time';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { isErr, ok, type Result } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 import { type Clock, realClock } from './clock';
 import { byKeysetDesc, isKeysetBefore } from './keyset';

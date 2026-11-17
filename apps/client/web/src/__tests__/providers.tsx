@@ -1,3 +1,10 @@
+import {
+  AppearanceProvider,
+  createToaster,
+  DEFAULT_APPEARANCE,
+  ToastProvider,
+  Tooltip,
+} from '@kit/ui';
 import type { Account, ChannelMembershipView } from '@vp/api-contracts';
 import {
   getAccount,
@@ -16,13 +23,6 @@ import {
   SessionProvider,
 } from '@vp/queries';
 import { DEV_TOKEN_URL } from '@vp/queries/demo-personas';
-import {
-  AppearanceProvider,
-  createToaster,
-  DEFAULT_APPEARANCE,
-  ToastProvider,
-  Tooltip,
-} from '@vp/ui';
 import { account, api, apiServer, mockEndpoint } from '@vp/web-testing';
 import { HttpResponse, http } from 'msw/http';
 import type { ComponentType, PropsWithChildren } from 'react';

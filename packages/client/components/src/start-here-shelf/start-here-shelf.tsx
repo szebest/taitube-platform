@@ -1,4 +1,4 @@
-import { Skeleton, Slot, useUiCopy } from '@vp/ui';
+import { Skeleton, Slot, useUiCopy } from '@kit/ui';
 import type { ComponentPropsWithRef } from 'react';
 import {
   Shelf,

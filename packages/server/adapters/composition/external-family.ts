@@ -1,6 +1,6 @@
+import { type Container, closeOnDispose } from '@kit/composition';
+import { CircuitBreaker } from '@kit/concurrency';
 import { token } from '@kit/di';
-import { type Container, closeOnDispose } from '@vp/composition';
-import { CircuitBreaker } from '@vp/concurrency';
 import type { FrameClassifier } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import { SEARCH_SUGGESTIONS } from '@vp/domain';

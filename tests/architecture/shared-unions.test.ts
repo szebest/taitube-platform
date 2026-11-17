@@ -5,7 +5,7 @@ import { parseSource } from './parsed-sources';
 import { productionSources, read } from './repo-files';
 
 const COMPONENTS = packageDir('@vp/components');
-const UI = packageDir('@vp/ui');
+const UI = packageDir('@kit/ui');
 
 const isStringLiteralUnion = (node: ts.Node): node is ts.UnionTypeNode =>
   ts.isUnionTypeNode(node) &&
@@ -49,7 +49,7 @@ function inlineUnions(file: string, source: string): string[] {
   return found;
 }
 
-/** `@vp/ui`, `@vp/components` and each app kit, `types.ts` aside: that is where a shared union is narrowed. */
+/** `@kit/ui`, `@vp/components` and each app kit, `types.ts` aside: that is where a shared union is narrowed. */
 function kitSources(): string[] {
   const roots = [
     `${UI}/src/`,
@@ -97,7 +97,7 @@ describe('architecture: props types use the shared option unions', () => {
     expect(inlineUnions('fixture.tsx', source)).toEqual([]);
   });
 
-  it('finds none in @vp/ui, @vp/components or an app kit', () => {
+  it('finds none in @kit/ui, @vp/components or an app kit', () => {
     expect(kitSources().flatMap((file) => inlineUnions(file, read(file)))).toEqual([]);
   });
 });

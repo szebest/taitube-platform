@@ -1,3 +1,4 @@
+import { type Result, isErr, ok, unwrapOr } from '@kit/result';
 import type {
   AddPlaylistItemOutcome,
   ListPublicPlaylistsOptions,
@@ -22,7 +23,6 @@ import {
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { type UserContext, canReadPlaylist } from '@vp/permissions';
-import { type Result, isErr, ok, unwrapOr } from '@vp/result';
 import { byKeysetDesc, isKeysetBefore } from './keyset';
 import { type VideoLookups, channelCard, watchableVideo } from './watchable-video';
 

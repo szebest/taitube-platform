@@ -1,7 +1,7 @@
+import { useT } from '@kit/intl-react';
+import { Command } from '@kit/ui';
 import { useQuery } from '@tanstack/react-query';
-import { useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
-import { Command } from '@vp/ui';
 import { useDeferredValue, useState } from 'react';
 import { channelLookupQueryOptions } from '#app/features/team/api/team-queries';
 

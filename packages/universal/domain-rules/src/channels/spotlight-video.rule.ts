@@ -1,5 +1,5 @@
+import { type Result, err, ok } from '@kit/result';
 import type { Video } from '@vp/domain';
-import { type Result, err, ok } from '@vp/result';
 import {
   type InvalidSpotlightVideo,
   type SpotlightVideoProblem,

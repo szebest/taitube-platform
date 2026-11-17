@@ -1,3 +1,4 @@
+import { type Result, andThen, err, fromPromise, isErr, map, ok } from '@kit/result';
 import type {
   AddPlaylistItemOutcome,
   ListPublicPlaylistsOptions,
@@ -20,7 +21,6 @@ import {
 } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { type Result, andThen, err, fromPromise, isErr, map, ok } from '@vp/result';
 import { and, asc, count, desc, eq, getTableColumns, inArray, max, sql } from 'drizzle-orm';
 import { drizzleWhere, playlistReadScope, watchableVideoScope } from '../scopes/index';
 import { channelCardColumns, toChannelCard } from './channel-card-query';

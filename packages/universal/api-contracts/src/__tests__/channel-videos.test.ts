@@ -1,4 +1,4 @@
-import { PAGE_SIZE_DEFAULT } from '@vp/pagination';
+import { PAGE_SIZE_DEFAULT } from '@kit/pagination';
 import { listChannelVideos } from '../channel-videos';
 
 describe('packages/api-contracts: channel videos', () => {

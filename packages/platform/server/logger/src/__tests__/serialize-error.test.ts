@@ -1,6 +1,6 @@
 import { serializeError } from '../serialize-error';
 
-describe('@vp/logger: serializeError', () => {
+describe('@kit/logger: serializeError', () => {
   it('keeps the message, the pipeline code and the whole cause chain', () => {
     const root = Object.assign(new TypeError('bucket did not answer'), {
       code: 'STORAGE_UNAVAILABLE',

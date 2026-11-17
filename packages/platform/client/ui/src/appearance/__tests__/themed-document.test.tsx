@@ -34,7 +34,7 @@ const renderDocument = (
 const htmlTag = (html: string) =>
   html.slice(html.indexOf('<html'), html.indexOf('>', html.indexOf('<html')) + 1);
 
-describe('@vp/ui: ThemedDocument', () => {
+describe('@kit/ui: ThemedDocument', () => {
   it('server-renders the theme, mode, contrast and every token group from the cookie on <html>', async () => {
     const { html } = await renderDocument({
       theme: 'nocturne',

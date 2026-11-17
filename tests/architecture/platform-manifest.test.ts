@@ -14,7 +14,7 @@ import { read, trackedFiles } from './repo-files';
 const KIT: Pkg = { name: '@kit/ok', dir: 'packages/platform/universal/ok', layer: 2, deps: [] };
 const APP: Pkg = { name: '@vp/domain', dir: 'packages/universal/domain', layer: 2, deps: [] };
 const MOVING: Pkg = {
-  name: '@vp/result',
+  name: '@kit/result',
   dir: 'packages/platform/universal/result',
   layer: 1,
   deps: [],
@@ -22,8 +22,8 @@ const MOVING: Pkg = {
 
 const CONTEXT: Context = {
   byName: new Map([KIT, APP, MOVING].map((pkg) => [pkg.name, pkg])),
-  pending: new Set(['@vp/result']),
-  preset: '@vp/tsconfig',
+  pending: new Set(['@kit/result']),
+  preset: '@kit/tsconfig',
 };
 
 const GOOD: PackageFiles = {
@@ -35,15 +35,15 @@ const GOOD: PackageFiles = {
     types: './dist/index.d.ts',
     sideEffects: false,
     exports: { '.': { types: './dist/index.d.ts', import: './dist/index.js' } },
-    dependencies: { '@vp/result': 'workspace:*' },
+    dependencies: { '@kit/result': 'workspace:*' },
     peerDependencies: { zod: '^4.0.0' },
     devDependencies: { typescript: '^6.0.3' },
   },
   files: new Set(['README.md', 'AGENTS.md', 'api/ok.api.txt']),
   changelog: '# Changelog\n\n## 0.1.0\n\n- First release.\n',
   tsconfigs: {
-    'tsconfig.json': { extends: '@vp/tsconfig/universal.json' },
-    'tsconfig.build.json': { extends: ['./tsconfig.json', '@vp/tsconfig/build.json'] },
+    'tsconfig.json': { extends: '@kit/tsconfig/universal.json' },
+    'tsconfig.build.json': { extends: ['./tsconfig.json', '@kit/tsconfig/build.json'] },
   },
 };
 
@@ -124,13 +124,13 @@ describe('architecture: platform manifests', () => {
         tsconfigs: { 'tsconfig.json': { extends: '../../../../tsconfig.base.json' } },
       },
       problem:
-        'tsconfig.json extends ../../../../tsconfig.base.json, not a sibling tsconfig or a @vp/tsconfig preset',
+        'tsconfig.json extends ../../../../tsconfig.base.json, not a sibling tsconfig or a @kit/tsconfig preset',
     },
     {
       shape: 'a tsconfig extending another package',
       input: { ...GOOD, tsconfigs: { 'tsconfig.json': { extends: ['@vp/domain/tsconfig.json'] } } },
       problem:
-        'tsconfig.json extends @vp/domain/tsconfig.json, not a sibling tsconfig or a @vp/tsconfig preset',
+        'tsconfig.json extends @vp/domain/tsconfig.json, not a sibling tsconfig or a @kit/tsconfig preset',
     },
     {
       shape: 'a third-party runtime dependency',
@@ -180,12 +180,12 @@ describe('architecture: platform manifests', () => {
     expect(manifestProblems(presets, CONTEXT)).toEqual([]);
   });
 
-  it('follows @vp/tsconfig to the package package-moves.json names once that package exists', () => {
-    const moves = { '@vp/tsconfig': '@kit/tsconfig' };
+  it('follows @kit/tsconfig to the package package-moves.json names once that package exists', () => {
+    const moves = { '@kit/tsconfig': '@kit/tsconfig' };
 
-    expect(tsconfigPreset(moves, new Set(['@vp/tsconfig']))).toBe('@vp/tsconfig');
     expect(tsconfigPreset(moves, new Set(['@kit/tsconfig']))).toBe('@kit/tsconfig');
-    expect(tsconfigPreset({}, new Set())).toBe('@vp/tsconfig');
+    expect(tsconfigPreset(moves, new Set(['@kit/tsconfig']))).toBe('@kit/tsconfig');
+    expect(tsconfigPreset({}, new Set())).toBe('@kit/tsconfig');
   });
 
   it('holds every platform package to the manifest', () => {

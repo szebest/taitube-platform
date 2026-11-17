@@ -22,7 +22,7 @@ dependency on its current major) are `senior-engineering-practices`, section 4. 
 
 - **Parsers in use**: PromQL through `@prometheus-io/lezer-promql`, YAML through `js-yaml`, TypeScript through
   the compiler API, as a devDependency when only tests need them.
-- **A tagged union** ends its `switch` in `assertNever` from `@vp/result`. `PostgresRepositoriesConfig` in
+- **A tagged union** ends its `switch` in `assertNever` from `@kit/result`. `PostgresRepositoriesConfig` in
   `packages/server/adapters/postgres/repositories/postgres-repositories.ts` is the shape;
   `no-in-probes.test.ts` rejects the `'x' in value` alternative.
 - **A dependency's current major** (`senior-engineering-practices`, section 4): check it with `npm view <pkg> version`.

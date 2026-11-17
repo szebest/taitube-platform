@@ -1,6 +1,6 @@
+import { useT } from '@kit/intl-react';
+import { Skeleton } from '@kit/ui';
 import { getRouteApi } from '@tanstack/react-router';
-import { useT } from '@vp/intl-react';
-import { Skeleton } from '@vp/ui';
 import { ChipBarSkeleton } from '#app/components/discovery/chip-bar';
 import { SearchResults, SearchResultsSkeleton } from '../search-results/search-results';
 

@@ -17,7 +17,7 @@ const entry = chunk('assets/main.js', ['/repo/apps/client/web/src/router.tsx'], 
 const watch = chunk('assets/watch.js', [`${ROUTES}/watch.$videoId.tsx?tsr-split=component`]);
 const trending = chunk('assets/trending.js', [`${ROUTES}/trending.tsx?tsr-split=component`]);
 
-describe('@vp/vite-preset: bundle guard', () => {
+describe('@kit/vite-preset: bundle guard', () => {
   it('passes a bundle with every route in its own chunk and no devtools', () => {
     expect(bundleViolations([entry, watch, trending], RULES)).toEqual([]);
   });
@@ -116,7 +116,7 @@ describe('@vp/vite-preset: bundle guard', () => {
   });
 });
 
-describe('@vp/vite-preset: bundle budget and vendor chunks', () => {
+describe('@kit/vite-preset: bundle budget and vendor chunks', () => {
   const NOISE = Array.from({ length: 4000 }, (_, i) => `v${i}=${(i * 2654435761) % 1000003}`).join(
     ';'
   );

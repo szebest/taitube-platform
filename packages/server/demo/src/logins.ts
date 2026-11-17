@@ -1,4 +1,4 @@
-import { DEV_PERSONAS } from '@vp/dev-token';
+import { DEV_PERSONAS } from '@kit/dev-token';
 
 /** @internal Exported for its spec. */
 export const SESSION_COOKIE = 'vp.session';
@@ -19,7 +19,7 @@ const DEMO_PERSONAS = [
 
 function personaOf({ name, devPersona, about }: (typeof DEMO_PERSONAS)[number]): Persona {
   const claims = DEV_PERSONAS.get(devPersona);
-  if (!claims) throw new Error(`@vp/dev-token has no "${devPersona}" persona`);
+  if (!claims) throw new Error(`@kit/dev-token has no "${devPersona}" persona`);
   return { name, id: claims.sub, role: claims.role, about };
 }
 

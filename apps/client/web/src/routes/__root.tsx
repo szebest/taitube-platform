@@ -1,7 +1,7 @@
+import { requestAppearancePreference } from '@kit/ui';
+import uiStyles from '@kit/ui/styles.css?url';
 import { createRootRouteWithContext, useRouterState } from '@tanstack/react-router';
 import { type AppRouterContext, ensureSession, requestLocale } from '@vp/queries';
-import { requestAppearancePreference } from '@vp/ui';
-import uiStyles from '@vp/ui/styles.css?url';
 import { AppShellSkeleton } from '#app/components/shell/app-shell';
 import { isEmbedPath } from '#app/features/embed';
 import { requestSidebarState } from '#app/features/shell';

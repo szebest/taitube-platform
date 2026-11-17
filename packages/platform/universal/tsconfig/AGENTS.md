@@ -1,6 +1,6 @@
-# AGENTS.md — @vp/tsconfig (TypeScript Presets)
+# AGENTS.md — @kit/tsconfig (TypeScript Presets)
 
-Instructions for any coding agent working on `@vp/tsconfig`.
+Instructions for any coding agent working on `@kit/tsconfig`.
 
 > Tier rules for this directory: [../AGENTS.md](../../../universal/AGENTS.md) · full tier & layer reference: [packages/AGENTS.md](../../../AGENTS.md)
 
@@ -8,7 +8,7 @@ Instructions for any coding agent working on `@vp/tsconfig`.
 
 ## 1. Scope & Purpose
 
-`@vp/tsconfig` ships JSON presets only — no source, no build step. It is `universal` / T1 because every tier
+`@kit/tsconfig` ships JSON presets only — no source, no build step. It is `universal` / T1 because every tier
 extends it.
 
 | Preset | Extended by | What it adds on top of `base.json` |

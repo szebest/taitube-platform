@@ -33,7 +33,7 @@ const renderVisibilitySelect = (onValueChange: (value: string) => void = () => u
   };
 };
 
-describe('@vp/ui: Select', () => {
+describe('@kit/ui: Select', () => {
   it('is a combobox named and described by its field, showing the chosen value', () => {
     renderVisibilitySelect();
 

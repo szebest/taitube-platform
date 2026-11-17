@@ -175,7 +175,7 @@ const LINT_IGNORES = [
   '**/fixtures/**',
   'scripts/__tests__/lint-fixtures/**',
   'apps/client/*/src/routeTree.gen.ts',
-  `${packageDir('@vp/ui')}/src/styles/generated/**`,
+  `${packageDir('@kit/ui')}/src/styles/generated/**`,
 ];
 
 const OVERRIDES: NonNullable<OxlintConfig['overrides']> = [

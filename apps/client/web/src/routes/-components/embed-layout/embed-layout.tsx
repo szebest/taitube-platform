@@ -1,6 +1,6 @@
+import { Tooltip } from '@kit/ui';
 import { getRouteApi, Outlet } from '@tanstack/react-router';
 import { ApiProvider } from '@vp/queries';
-import { Tooltip } from '@vp/ui';
 
 const rootRoute = getRouteApi('__root__');
 

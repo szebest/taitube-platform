@@ -1,5 +1,5 @@
+import { err, ok } from '@kit/result';
 import { databaseUnavailable } from '@vp/errors';
-import { err, ok } from '@vp/result';
 import { stepLease } from '../step-lease';
 
 describe('apps/server/worker/stages: step lease', () => {

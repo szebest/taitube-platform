@@ -1,4 +1,4 @@
-import { isErr, isOk } from '@vp/result';
+import { isErr, isOk } from '@kit/result';
 import { ALLOWED_CONTENT_TYPES, validateContentType } from '../allowed-content-type';
 
 describe('@vp/validation: allowed content types', () => {

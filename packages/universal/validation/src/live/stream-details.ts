@@ -1,4 +1,4 @@
-import { err, ok, type Result } from '@vp/result';
+import { err, ok, type Result } from '@kit/result';
 import type { LengthBounds } from '../failures';
 import { type InvalidField, invalidLength } from '../field-failures';
 import { normalizePlainText, withinLength } from '../plain-text';

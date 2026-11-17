@@ -1,5 +1,5 @@
+import { err } from '@kit/result';
 import { databaseUnavailable } from '@vp/errors';
-import { err } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { audioIndexTerms } from '../audio-terms';
 import {

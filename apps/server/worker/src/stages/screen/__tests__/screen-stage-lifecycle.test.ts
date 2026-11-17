@@ -1,6 +1,6 @@
+import { err } from '@kit/result';
 import { InMemoryFrameClassifier } from '@vp/adapters/in-memory';
 import { ErrorCodes, mediaFailure } from '@vp/errors';
-import { err } from '@vp/result';
 import { SEEDED } from '@vp/testing';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';

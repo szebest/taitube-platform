@@ -20,7 +20,7 @@ function renderSettingsTabs() {
   };
 }
 
-describe('@vp/ui: Tabs, compiled and uncompiled', () => {
+describe('@kit/ui: Tabs, compiled and uncompiled', () => {
   it('renders and switches panels the same way in both builds', async () => {
     const { user, snapshot } = renderSettingsTabs();
     const steps = [snapshot()];

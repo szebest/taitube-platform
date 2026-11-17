@@ -1,7 +1,7 @@
+import { useT } from '@kit/intl-react';
 import { Link } from '@tanstack/react-router';
 import type { ReasonedVideo, VideoSummary } from '@vp/api-contracts';
 import { VideoCard } from '@vp/components';
-import { useT } from '@vp/intl-react';
 import { FeedbackMenuItems } from '#app/components/video/feedback-menu-items';
 import { useDurationText } from '#app/hooks/use-duration-text';
 import { useVideoActions } from '#app/hooks/use-video-actions';

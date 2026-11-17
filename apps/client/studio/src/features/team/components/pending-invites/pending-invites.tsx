@@ -1,8 +1,8 @@
+import { Format, useT } from '@kit/intl-react';
+import { fromPromise, isOk } from '@kit/result';
+import { Icon, IconButton, useToast } from '@kit/ui';
 import { createColumnHelper, useTable } from '@tanstack/react-table';
 import type { ChannelInviteView } from '@vp/api-contracts';
-import { Format, useT } from '@vp/intl-react';
-import { fromPromise, isOk } from '@vp/result';
-import { Icon, IconButton, useToast } from '@vp/ui';
 import {
   DataTable,
   type DataTableFeatures,

@@ -1,4 +1,4 @@
-import { tv } from '@vp/ui';
+import { tv } from '@kit/ui';
 import type { ReactNode } from 'react';
 import { usePlayerTheater } from '#app/components/player/taitube-player';
 

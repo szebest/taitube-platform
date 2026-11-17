@@ -3,7 +3,7 @@ import { createServer } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { verifyToken } from '@vp/dev-token';
+import { verifyToken } from '@kit/dev-token';
 import { expectErr, expectOk } from '@vp/testing/result';
 import {
   aliasingFetch,

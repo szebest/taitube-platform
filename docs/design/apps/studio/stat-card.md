@@ -26,7 +26,7 @@ Plus the standard props.
 
 ```ts
 // types.ts
-import type { SizeOption, ToneOption } from '@vp/design-tokens';
+import type { SizeOption, ToneOption } from '@kit/design-tokens';
 
 export type StatCardSize = Extract<SizeOption, 'md' | 'lg'>;
 export type StatCardState = 'ready' | 'loading' | 'error' | 'empty';

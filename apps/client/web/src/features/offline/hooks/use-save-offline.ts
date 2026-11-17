@@ -1,6 +1,6 @@
+import { ok, type Result } from '@kit/result';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Video } from '@vp/api-contracts';
-import { ok, type Result } from '@vp/result';
 import { removeSavedVideo } from '../utils/remove-saved-video';
 import { saveVideoOffline } from '../utils/save-video-offline';
 import type { SaveFailure } from '../utils/saved-video';

@@ -1,15 +1,15 @@
+import { Singleflight } from '@kit/concurrency';
+import { Paginator } from '@kit/pagination';
+import { err, ok } from '@kit/result';
 import {
   InMemoryCacheClient,
   InMemoryRepositories,
   InMemorySearchSuggestionIndex,
 } from '@vp/adapters/in-memory';
-import { Singleflight } from '@vp/concurrency';
 import { SEARCH_CACHE_TTL_SECONDS, SEARCH_SUGGESTIONS } from '@vp/domain';
 import { DEFAULT_PREFERENCES } from '@vp/domain/settings';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes, cacheUnavailable, databaseUnavailable } from '@vp/errors';
-import { Paginator } from '@vp/pagination';
-import { err, ok } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { HistoryPause } from '../history-pause';
 import { type SearchResult, SearchService } from '../search-service';

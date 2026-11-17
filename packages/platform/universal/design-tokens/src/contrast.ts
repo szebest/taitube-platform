@@ -1,4 +1,4 @@
-import { unwrapOr } from '@vp/result';
+import { unwrapOr } from '@kit/result';
 import { composite, overGround, type Rgba, toLinear } from './color/rgb';
 
 export const TEXT_FLOOR = 4.5;

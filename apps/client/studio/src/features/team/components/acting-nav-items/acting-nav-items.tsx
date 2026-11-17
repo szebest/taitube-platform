@@ -1,5 +1,5 @@
+import { useT } from '@kit/intl-react';
 import { Link, useMatchRoute } from '@tanstack/react-router';
-import { useT } from '@vp/intl-react';
 import {
   canModerateComments,
   canReadAnalytics,

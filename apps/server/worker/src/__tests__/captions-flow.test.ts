@@ -1,7 +1,7 @@
+import { err } from '@kit/result';
 import type { QueueJob } from '@vp/core/ports';
 import { ErrorCodes, mediaFailure } from '@vp/errors';
 import type { ProbeJob } from '@vp/job-contracts';
-import { err } from '@vp/result';
 import { captionsTmpPrefix } from '@vp/storage';
 import { createMockJob } from '@vp/testing';
 import { expectOk } from '@vp/testing/result';

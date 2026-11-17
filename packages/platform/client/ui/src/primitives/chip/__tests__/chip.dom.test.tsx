@@ -18,7 +18,7 @@ const renderChipGroup = () => {
   };
 };
 
-describe('@vp/ui: Chip', () => {
+describe('@kit/ui: Chip', () => {
   it.each(variantNames(chipStyles.variants.variant))(
     'is a %s toggle button reporting its pressed state',
     (variant) => {

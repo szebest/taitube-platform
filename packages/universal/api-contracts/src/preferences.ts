@@ -1,3 +1,4 @@
+import { assertNever } from '@kit/result';
 import {
   APPEARANCE_SETTINGS,
   type AppearancePreferences,
@@ -17,7 +18,6 @@ import {
   type TokenOverridesSetting,
 } from '@vp/domain/settings';
 import { ErrorCodes } from '@vp/errors';
-import { assertNever } from '@vp/result';
 import { z } from 'zod';
 import { defineEndpoint } from './endpoint';
 

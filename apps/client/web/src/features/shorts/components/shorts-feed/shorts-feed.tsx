@@ -1,6 +1,6 @@
+import { useT } from '@kit/intl-react';
+import { useMediaQuery, useUiCopy, VisuallyHidden } from '@kit/ui';
 import type { VideoSummary } from '@vp/api-contracts';
-import { useT } from '@vp/intl-react';
-import { useMediaQuery, useUiCopy, VisuallyHidden } from '@vp/ui';
 import { type KeyboardEvent, type ReactNode, useEffect, useRef } from 'react';
 import { useShortsPlayback } from '#app/features/shorts/hooks/use-shorts-playback';
 import { useShortsScroll } from '#app/features/shorts/hooks/use-shorts-scroll';

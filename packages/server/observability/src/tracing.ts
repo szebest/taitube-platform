@@ -1,4 +1,5 @@
 import { randomBytes } from 'node:crypto';
+import { type Result, fromPromise, ok } from '@kit/result';
 import {
   type Context,
   ProxyTracerProvider,
@@ -11,7 +12,6 @@ import {
 } from '@opentelemetry/api';
 import { W3CTraceContextPropagator } from '@opentelemetry/core';
 import { TracerProvider as SdkTracerProvider } from '@opentelemetry/sdk-trace';
-import { type Result, fromPromise, ok } from '@vp/result';
 
 /** What a process flushes its spans through on shutdown. */
 export interface Tracing {

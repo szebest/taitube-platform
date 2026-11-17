@@ -1,4 +1,4 @@
-import type { RadiusOption } from '@vp/design-tokens';
+import type { RadiusOption } from '@kit/design-tokens';
 import type { ComponentPropsWithRef } from 'react';
 import { skeletonStyles } from './skeleton.variants';
 import type { SkeletonShape } from './types';

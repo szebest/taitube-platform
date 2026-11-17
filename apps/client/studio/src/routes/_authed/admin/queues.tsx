@@ -1,7 +1,7 @@
+import { useT } from '@kit/intl-react';
+import { Button } from '@kit/ui';
 import { createFileRoute } from '@tanstack/react-router';
-import { useT } from '@vp/intl-react';
 import { prefetched } from '@vp/queries';
-import { Button } from '@vp/ui';
 import { useId } from 'react';
 import {
   AdminPageSkeleton,

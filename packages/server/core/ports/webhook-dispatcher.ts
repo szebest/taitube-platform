@@ -1,6 +1,6 @@
+import type { Result } from '@kit/result';
 import type { Webhook, WebhookDeliveryEvent } from '@vp/domain';
 import type { WebhookDeliveryFailure } from '@vp/errors';
-import type { Result } from '@vp/result';
 
 export interface WebhookDelivery {
   /** One per attempt; the receiver can use it, sent also as `Idempotency-Key`, to drop a repeat. */

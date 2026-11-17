@@ -1,3 +1,4 @@
+import { Paginator } from '@kit/pagination';
 import {
   InMemoryJobQueue,
   InMemoryRepositories,
@@ -6,7 +7,6 @@ import {
 import type { NewScreeningInput } from '@vp/core/repositories';
 import type { ScreeningFinding } from '@vp/domain';
 import { CANONICAL_LADDER } from '@vp/job-contracts';
-import { Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
 import { expectOk } from '@vp/testing/result';
 import { ScreeningCaseViews } from '../screening-case-views';

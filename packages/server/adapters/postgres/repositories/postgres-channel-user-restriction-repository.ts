@@ -1,3 +1,4 @@
+import { fromPromise, map, type Result } from '@kit/result';
 import type {
   ChannelUserRestrictionQuery,
   ChannelUserRestrictionRepositoryPort,
@@ -12,7 +13,6 @@ import type {
   NewChannelUserRestriction,
 } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
-import { fromPromise, map, type Result } from '@vp/result';
 import { and, desc, eq, gt, isNull, lt, or } from 'drizzle-orm';
 import { keysetBefore, msTimestamp } from '../scopes/index';
 import { appendChannelAudit, appendModerationRecord } from './channel-audit-writes';

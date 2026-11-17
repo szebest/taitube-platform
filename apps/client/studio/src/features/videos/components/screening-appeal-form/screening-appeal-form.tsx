@@ -1,5 +1,5 @@
-import { useT } from '@vp/intl-react';
-import { Button, Field, Textarea, useToast } from '@vp/ui';
+import { useT } from '@kit/intl-react';
+import { Button, Field, Textarea, useToast } from '@kit/ui';
 import { useState } from 'react';
 import { useAppealScreening } from '#app/features/videos/hooks/use-appeal-screening';
 

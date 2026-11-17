@@ -1,6 +1,6 @@
+import { type Result, andThen, map } from '@kit/result';
 import type { Comment, CommentModerationAction, ModerationOutcome, Video } from '@vp/domain';
 import { type UserContext, canModerateComment } from '@vp/permissions';
-import { type Result, andThen, map } from '@vp/result';
 import { type AuthorizationFailure, authorize } from '../authorize';
 import { applyModeration } from './apply-moderation.rule';
 import type { CommentNotFound, ModerationNotApplicable } from './failures';

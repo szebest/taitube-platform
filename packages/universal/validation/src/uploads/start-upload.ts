@@ -1,4 +1,4 @@
-import { type Result, andThen, err, map, ok } from '@vp/result';
+import { type Result, andThen, err, map, ok } from '@kit/result';
 import { VIDEO_TITLE_BOUNDS } from '../videos/metadata';
 import { validateContentType } from './allowed-content-type';
 import { type StartUploadFailure, invalidTitle } from './failures';

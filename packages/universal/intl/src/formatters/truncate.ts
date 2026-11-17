@@ -1,4 +1,4 @@
-import { type Result, err, map } from '@vp/result';
+import { type Result, err, map } from '@kit/result';
 import type { FormatContext } from '../context';
 import { type FormatFailure, unrenderable } from '../failures';
 

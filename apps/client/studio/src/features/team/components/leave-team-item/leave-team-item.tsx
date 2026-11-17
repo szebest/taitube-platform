@@ -1,9 +1,9 @@
+import { useT } from '@kit/intl-react';
+import { DropdownMenu } from '@kit/ui';
 import type { ChannelMembershipView } from '@vp/api-contracts';
-import { useT } from '@vp/intl-react';
 import { canRemoveChannelMember } from '@vp/permissions';
 import { useCan } from '@vp/permissions-react';
 import { useAccount } from '@vp/queries';
-import { DropdownMenu } from '@vp/ui';
 
 export interface LeaveTeamItemProps {
   membership: ChannelMembershipView;

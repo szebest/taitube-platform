@@ -1,5 +1,5 @@
+import { Tooltip } from '@kit/ui';
 import type { Decorator, Meta, StoryObj } from '@storybook/react-vite';
-import { Tooltip } from '@vp/ui';
 import type { ReactNode } from 'react';
 import { NowPlayingBar } from '#app/components/shell/now-playing-bar';
 import { AppShell, AppShellSkeleton } from '..';

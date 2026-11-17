@@ -1,5 +1,5 @@
+import { assertNever } from '@kit/result';
 import type { AuthConfig } from '@vp/env-schema';
-import { assertNever } from '@vp/result';
 import type { FastifyPluginAsync } from 'fastify';
 import { adminCategoriesRoutes } from './admin/categories';
 import { adminDlqRoutes } from './admin/dlq';

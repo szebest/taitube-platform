@@ -43,7 +43,7 @@ const openFromKeyboard = async (props?: DialogContentProps) => {
   return { ...rendered, dialog: screen.getByRole('dialog', { name: 'Share video' }) };
 };
 
-describe('@vp/ui: Dialog', () => {
+describe('@kit/ui: Dialog', () => {
   it('opens from its trigger as a dialog named by its title and described by its text', async () => {
     const { dialog } = await openFromKeyboard();
 

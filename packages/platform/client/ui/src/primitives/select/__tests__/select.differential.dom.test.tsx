@@ -32,7 +32,7 @@ function renderVisibilitySelect() {
   };
 }
 
-describe('@vp/ui: Select, compiled and uncompiled', () => {
+describe('@kit/ui: Select, compiled and uncompiled', () => {
   it('opens, moves and picks the same way in both builds', async () => {
     const { user, snapshot } = renderVisibilitySelect();
     const steps = [snapshot()];

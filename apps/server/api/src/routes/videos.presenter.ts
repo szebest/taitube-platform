@@ -1,6 +1,6 @@
+import { assertNever } from '@kit/result';
 import { type Problem, problemFor } from '@vp/api-contracts';
 import { publicReadFailure } from '@vp/domain-rules';
-import { assertNever } from '@vp/result';
 import type { UpdateVideoServiceFailure } from '../services/creator-studio-service';
 import type { ReadVideoServiceFailure } from '../services/video-service';
 

@@ -1,9 +1,9 @@
+import { useT } from '@kit/intl-react';
+import { Skeleton } from '@kit/ui';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { EmptyState, SectionError } from '@vp/components';
 import { CHANNEL_AUDIT_ACTIONS } from '@vp/domain';
-import { useT } from '@vp/intl-react';
 import { useAccount, useApi } from '@vp/queries';
-import { Skeleton } from '@vp/ui';
 import { FilterSelect } from '#app/components/table/filter-select';
 import { LoadMore } from '#app/components/table/load-more';
 import { AuditLogList } from '#app/components/team/audit-log-list';

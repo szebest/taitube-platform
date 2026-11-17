@@ -31,7 +31,7 @@ const renderSave = (
   };
 };
 
-describe('@vp/ui: ToastProvider', () => {
+describe('@kit/ui: ToastProvider', () => {
   it.each(['neutral', 'success', 'warning', 'danger', 'info'] as const)(
     'announces a %s toast with its title and text',
     async (tone) => {

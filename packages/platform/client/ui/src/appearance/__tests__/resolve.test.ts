@@ -1,4 +1,4 @@
-import { type Theme, TOKEN_GROUPS } from '@vp/design-tokens';
+import { type Theme, TOKEN_GROUPS } from '@kit/design-tokens';
 import { nocturne } from '../../themes/nocturne';
 import { type AppearancePreference, DEFAULT_APPEARANCE, type TokenSetIds } from '../preference';
 import { resolveAppearance } from '../resolve';
@@ -53,7 +53,7 @@ const NOCTURNE = {
 
 const STUDIO: TokenSetIds = { spacing: 'compact', sizing: 'small' };
 
-describe('@vp/ui: resolving the appearance', () => {
+describe('@kit/ui: resolving the appearance', () => {
   it.each([
     { label: 'no theme chosen: the default theme and its sets', preference: {}, resolved: SAND },
     {

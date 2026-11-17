@@ -1,3 +1,4 @@
+import { err, fromPromise, map, ok, type Result } from '@kit/result';
 import type { CategoryRepositoryPort } from '@vp/core/repositories';
 import { categories, videos } from '@vp/db';
 import type {
@@ -13,7 +14,6 @@ import {
   type DatabaseUnavailable,
   databaseUnavailable,
 } from '@vp/errors';
-import { err, fromPromise, map, ok, type Result } from '@vp/result';
 import { and, asc, eq, isNull, ne, sql } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
 import { isUniqueViolation } from '../pg-errors';

@@ -1,6 +1,6 @@
+import { andThenAsync, err, map, ok, type Result } from '@kit/result';
 import type { PersonalControlView, putWatchPartyControl } from '@vp/api-contracts';
 import { NO_PERSONAL_CONTROL, type PersonalControlRecord, parseMemberKey } from '@vp/domain';
-import { andThenAsync, err, map, ok, type Result } from '@vp/result';
 import { type InvalidField, invalidField } from '@vp/validation';
 import type { z } from 'zod';
 import type { WatchPartyDeps } from './watch-party-deps';

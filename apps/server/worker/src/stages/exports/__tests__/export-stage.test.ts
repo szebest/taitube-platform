@@ -1,4 +1,6 @@
 import * as os from 'node:os';
+import { createLogger } from '@kit/logger';
+import { err, ok } from '@kit/result';
 import {
   InMemoryRepositories,
   InMemoryStorageClient,
@@ -8,8 +10,6 @@ import type { QueueJob } from '@vp/core/ports';
 import type { CommentExportRow, DataExportFormat, DataExportKind } from '@vp/domain';
 import { ErrorCodes, databaseUnavailable } from '@vp/errors';
 import type { ExportJob } from '@vp/job-contracts';
-import { createLogger } from '@vp/logger';
-import { err, ok } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { type ExportProcessorDeps, createExportProcessor } from '../export-stage';

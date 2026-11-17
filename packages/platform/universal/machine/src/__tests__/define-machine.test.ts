@@ -15,7 +15,7 @@ const door = () =>
     },
   });
 
-describe('@vp/machine: defineMachine', () => {
+describe('@kit/machine: defineMachine', () => {
   it.each([
     { state: 'closed', event: 'open', next: 'open' },
     { state: 'open', event: 'open', next: undefined },
@@ -57,7 +57,7 @@ describe('@vp/machine: defineMachine', () => {
   });
 });
 
-describe('@vp/machine: isMachine', () => {
+describe('@kit/machine: isMachine', () => {
   it.each([
     { value: door(), expected: true },
     { value: null, expected: false },

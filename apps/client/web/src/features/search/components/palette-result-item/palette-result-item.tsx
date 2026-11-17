@@ -1,7 +1,7 @@
+import { useT } from '@kit/intl-react';
+import { assertNever } from '@kit/result';
+import { Avatar, Icon } from '@kit/ui';
 import { useNavigate } from '@tanstack/react-router';
-import { useT } from '@vp/intl-react';
-import { assertNever } from '@vp/result';
-import { Avatar, Icon } from '@vp/ui';
 import type { ReactNode } from 'react';
 import { CommandPalette } from '#app/components/shell/command-palette';
 import { type PaletteResult, paletteResultKey } from '#app/features/search/utils/palette-results';

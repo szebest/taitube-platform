@@ -1,4 +1,4 @@
-import { andThen, map } from '@vp/result';
+import { andThen, map } from '@kit/result';
 import { type User, resolveCurrency } from '../context';
 import { finite } from '../inputs';
 import { type OptionKeys, withOptions } from '../with-options';

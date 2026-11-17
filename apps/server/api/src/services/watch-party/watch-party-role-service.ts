@@ -1,3 +1,4 @@
+import { andThen, andThenAsync, err, map, ok, type Result } from '@kit/result';
 import type {
   applyWatchPartyPreset,
   assignWatchPartyRole,
@@ -15,7 +16,6 @@ import {
   requireRoomPermission,
 } from '@vp/domain-rules';
 import { type DatabaseUnavailable, type WatchPartyNotFound, watchPartyNotFound } from '@vp/errors';
-import { andThen, andThenAsync, err, map, ok, type Result } from '@vp/result';
 import { validateRoleName } from '@vp/validation';
 import type { z } from 'zod';
 import type { PartyCaller } from './party-caller';

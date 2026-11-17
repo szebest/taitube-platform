@@ -1,4 +1,4 @@
-import { Card } from '@vp/ui';
+import { Card } from '@kit/ui';
 import { type PropsWithChildren, type ReactNode, useId } from 'react';
 
 export interface DeveloperSectionProps extends PropsWithChildren {

@@ -1,5 +1,5 @@
 import { readdirSync } from 'node:fs';
-import { parseTokenSet, type TokenSet, tokenGroups } from '@vp/design-tokens';
+import { parseTokenSet, type TokenSet, tokenGroups } from '@kit/design-tokens';
 import { expectOk } from '@vp/testing/result';
 
 const folders = readdirSync(new URL('..', import.meta.url), { encoding: 'utf8', recursive: true })
@@ -12,7 +12,7 @@ const exportedSets = async ({ kebabGroup, id }: (typeof folders)[number]) => {
   return Object.values(exports);
 };
 
-describe('@vp/ui: the token set modules', () => {
+describe('@kit/ui: the token set modules', () => {
   it.each(folders)(
     '$kebabGroup/$id exports one set that parses against its group',
     async (folder) => {

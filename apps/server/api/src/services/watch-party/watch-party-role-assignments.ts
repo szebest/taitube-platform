@@ -1,3 +1,4 @@
+import { andThen, andThenAsync, err, ok, type Result } from '@kit/result';
 import type { NewSystemLine, RoleWrite } from '@vp/core/repositories';
 import { type BuiltInRoleKey, ROLE_EXPIRY_MS, type RoleExpiry, type RoomRole } from '@vp/domain';
 import { decideRoleAssign, decideRoleRevoke } from '@vp/domain-rules';
@@ -6,7 +7,6 @@ import {
   type WatchPartyRoleNotFound,
   watchPartyRoleNotFound,
 } from '@vp/errors';
-import { andThen, andThenAsync, err, ok, type Result } from '@vp/result';
 import { type InvalidField, invalidField } from '@vp/validation';
 import type { PartyCaller } from './party-caller';
 import type { RoomContext } from './watch-party-context';

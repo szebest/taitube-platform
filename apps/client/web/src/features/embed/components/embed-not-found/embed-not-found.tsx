@@ -1,4 +1,4 @@
-import { useT } from '@vp/intl-react';
+import { useT } from '@kit/intl-react';
 
 export function EmbedNotFound() {
   const { tOr } = useT();

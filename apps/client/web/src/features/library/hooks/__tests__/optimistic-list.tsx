@@ -1,8 +1,8 @@
+import { createToaster, ToastProvider } from '@kit/ui';
 import type { InfiniteData, QueryClient, QueryKey } from '@tanstack/react-query';
 import type { EndpointContract } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { createQueryClient } from '@vp/queries';
-import { createToaster, ToastProvider } from '@vp/ui';
 import { apiServer, mockEndpoint, problemReply } from '@vp/web-testing';
 import { heldReply, runMutation } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';

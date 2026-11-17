@@ -11,7 +11,7 @@ function renderPoster(props: AspectRatioProps = {}) {
   return screen.getByRole('img', { name: 'Lisbon at night' }).parentElement;
 }
 
-describe('@vp/ui: AspectRatio', () => {
+describe('@kit/ui: AspectRatio', () => {
   it.each([
     { shape: 'video', ratio: undefined, padding: `${100 / (16 / 9)}%` },
     { shape: 'poster', ratio: undefined, padding: `${100 / (9 / 16)}%` },

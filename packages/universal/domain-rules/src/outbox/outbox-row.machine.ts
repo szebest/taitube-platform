@@ -1,5 +1,5 @@
+import { defineMachine } from '@kit/machine';
 import { OUTBOX_STATUSES } from '@vp/domain';
-import { defineMachine } from '@vp/machine';
 
 export const OUTBOX_ROW = defineMachine({
   name: 'outbox-row',

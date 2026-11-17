@@ -1,4 +1,4 @@
-import { ok } from '@vp/result';
+import { ok } from '@kit/result';
 import { enumKind } from '../enum';
 import { contextFor } from './context';
 

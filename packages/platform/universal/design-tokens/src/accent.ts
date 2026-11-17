@@ -1,4 +1,4 @@
-import { map, type Result, unwrapOr } from '@vp/result';
+import { map, type Result, unwrapOr } from '@kit/result';
 import { fromOklch, type Oklch, toOklch } from './color/oklch';
 import {
   composite,

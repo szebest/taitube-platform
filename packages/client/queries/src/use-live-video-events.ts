@@ -1,10 +1,10 @@
+import { isOk, parseJson } from '@kit/result';
 import {
   buildPath,
   type LiveStreamPublicView,
   LiveVideoEventSchemas,
   streamVideoEvents,
 } from '@vp/api-contracts';
-import { isOk, parseJson } from '@vp/result';
 import { useEffect, useState } from 'react';
 import type { z } from 'zod';
 import { API_PROXY_PATH } from './api-client';

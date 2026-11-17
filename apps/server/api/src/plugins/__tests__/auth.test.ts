@@ -1,11 +1,11 @@
+import { getDevJwks, mintToken } from '@kit/dev-token';
+import { err, ok } from '@kit/result';
 import { DevTokenVerifier } from '@vp/adapters/auth';
 import { InMemoryPartyGuestSessions, InMemoryRepositories } from '@vp/adapters/in-memory';
 import { CHANNEL_HEADER } from '@vp/api-contracts';
-import { getDevJwks, mintToken } from '@vp/dev-token';
 import { apiTokenRefused } from '@vp/domain-rules';
 import { type AuthConfig, inProcessAppConfig } from '@vp/env-schema';
 import { databaseUnavailable } from '@vp/errors';
-import { err, ok } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import fastify, { type FastifyInstance } from 'fastify';
 import { seedTeamMember } from '../../__tests__/test-app';

@@ -1,4 +1,4 @@
-import { type Result, andThen, err, tryCatch } from '@vp/result';
+import { type Result, andThen, err, tryCatch } from '@kit/result';
 import {
   type DurationFormatLike,
   type DurationFormatOptions,

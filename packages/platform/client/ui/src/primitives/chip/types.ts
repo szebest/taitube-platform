@@ -1,4 +1,4 @@
-import type { ControlSize } from '@vp/design-tokens';
+import type { ControlSize } from '@kit/design-tokens';
 import type { FillOption } from '../../types';
 
 export type ChipFill = Extract<FillOption, 'soft' | 'outline'>;

@@ -1,5 +1,5 @@
+import { IntlProvider } from '@kit/intl-react';
 import type { Decorator, Meta, StoryObj } from '@storybook/react-vite';
-import { IntlProvider } from '@vp/intl-react';
 import { VideoJsEngine } from '#app/integrations/video-js/video-js-engine';
 import { ControlBar } from '..';
 

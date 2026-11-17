@@ -34,7 +34,7 @@ CLI packages live here rather than in `tools/` because they are workspace packag
 
 Ask whether the portable part is separable, and whether anything client-side would import it. `@vp/core`
 was 38 of 39 files portable — only `ports/storage-client.ts` needs `Buffer` and `NodeJS.ReadableStream` —
-so the entities and policy left as `@vp/domain` and the keyset cursors left as `@vp/pagination`, both
+so the entities and policy left as `@vp/domain` and the keyset cursors left as `@kit/pagination`, both
 `universal`, and each deleted a copy `@vp/api-contracts` had been keeping.
 
 Two packages were looked at and deliberately kept whole:

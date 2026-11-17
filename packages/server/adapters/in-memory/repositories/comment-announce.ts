@@ -1,8 +1,8 @@
+import { isErr, ok, type Result } from '@kit/result';
 import type { OutboxRepository, UserEventRepository } from '@vp/core/repositories';
 import { type CommentThread, commentCreated, commentHeld, type NewCommentInput } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { commentHeldOutbox } from '@vp/job-contracts';
-import { isErr, ok, type Result } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 
 export interface AnnounceDeps {

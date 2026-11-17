@@ -7,7 +7,7 @@ type Gone = { readonly code: 'GONE' };
 const boom: Boom = { code: 'BOOM', at: 'here' };
 const gone: Gone = { code: 'GONE' };
 
-describe('@vp/result: synchronous combinators', () => {
+describe('@kit/result: synchronous combinators', () => {
   it('maps the value of a success', () => {
     expect(map(ok(2), (n) => n * 3)).toEqual(ok(6));
   });
@@ -44,7 +44,7 @@ describe('@vp/result: synchronous combinators', () => {
   });
 });
 
-describe('@vp/result: all', () => {
+describe('@kit/result: all', () => {
   it('collects every value in order', () => {
     expect(all([ok(1), ok(2), ok(3)])).toEqual(ok([1, 2, 3]));
   });
@@ -60,7 +60,7 @@ describe('@vp/result: all', () => {
   });
 });
 
-describe('@vp/result: ignore', () => {
+describe('@kit/result: ignore', () => {
   it.each([
     { shape: 'a settled failure', result: err(gone) },
     { shape: 'a settled success', result: ok(1) },

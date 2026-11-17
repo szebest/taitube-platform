@@ -1,6 +1,6 @@
+import { lazyComponent } from '@kit/ui';
 import { createRootRouteWithContext, createRoute, Link, Outlet } from '@tanstack/react-router';
 import { type AppRouterContext, type AppRouterOptions, createAppRouter } from '@vp/queries';
-import { lazyComponent } from '@vp/ui';
 import type { ReactElement, ReactNode } from 'react';
 import { z } from 'zod';
 import { createUrlModals } from '../create-url-modals';

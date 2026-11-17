@@ -1,5 +1,5 @@
+import { useT } from '@kit/intl-react';
 import { Link } from '@tanstack/react-router';
-import { useT } from '@vp/intl-react';
 import { OfflineState } from '#app/components/states/offline-state';
 import { useOfflineCache } from '#app/features/offline/hooks/use-offline-cache';
 import { useQueuedChanges } from '#app/features/offline/hooks/use-queued-changes';

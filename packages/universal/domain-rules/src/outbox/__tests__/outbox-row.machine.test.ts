@@ -1,4 +1,4 @@
-import { machineFindings } from '@vp/machine';
+import { machineFindings } from '@kit/machine';
 import { OUTBOX_ROW } from '../outbox-row.machine';
 
 describe('@vp/domain-rules: OUTBOX_ROW', () => {

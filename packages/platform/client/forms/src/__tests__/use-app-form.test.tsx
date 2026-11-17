@@ -27,7 +27,7 @@ function renderEveryField(): string {
   );
 }
 
-describe('@vp/forms: useAppForm', () => {
+describe('@kit/forms: useAppForm', () => {
   it('hands every field the text, select and file components, bound to its value', () => {
     const markup = renderEveryField();
 

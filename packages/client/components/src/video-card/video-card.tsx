@@ -1,4 +1,4 @@
-import { Avatar, Icon, Slot } from '@vp/ui';
+import { Avatar, Icon, Slot } from '@kit/ui';
 import { type ComponentPropsWithRef, useState } from 'react';
 import { useFramePreview } from './hooks/use-frame-preview';
 import { useVideoCardHover } from './hooks/use-video-card-hover';

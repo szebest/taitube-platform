@@ -1,7 +1,7 @@
+import { ok, type Result } from '@kit/result';
 import type { ChannelHandleHistoryRepositoryPort } from '@vp/core/repositories';
 import type { ChannelHandleRetirement } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { ok, type Result } from '@vp/result';
 
 /** Written by `InMemoryChannelRepository.update`, as the postgres channel update writes the table. */
 export class InMemoryChannelHandleHistoryRepository implements ChannelHandleHistoryRepositoryPort {

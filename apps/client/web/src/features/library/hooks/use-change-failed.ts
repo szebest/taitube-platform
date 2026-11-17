@@ -1,4 +1,4 @@
-import { useT } from '@vp/intl-react';
+import { useT } from '@kit/intl-react';
 import { useFailureToast } from '@vp/queries';
 
 /** The toast a list change shows when the server refused it, after the list has rolled back. */

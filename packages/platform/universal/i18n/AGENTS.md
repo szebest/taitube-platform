@@ -64,7 +64,7 @@ composition root):
     public generic has a type-level spec under `src/__tests__/type-fixtures/` (run by `typecheck`), including a second
     engine with its own kinds and presets.
 12. **Universal, T3** (above `@kit/di` and `@vp/intl`), ESM only, `sideEffects: false`; runs under `vitest` and
-    `bun test`. `@vp/intl` and `@vp/result` become `@kit/intl` and `@kit/result` when they move.
+    `bun test`. `@vp/intl` and `@kit/result` become `@kit/intl` and `@kit/result` when they move.
 
 ## 3. Local Commands
 

@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`@vp/ui: Dialog, compiled and uncompiled > opens and closes the same way in both builds 1`] = `
+exports[`@kit/ui: Dialog, compiled and uncompiled > opens and closes the same way in both builds 1`] = `
 [
   {
     "dom": "<div><button data-slot="button" type="button" class="group/button relative inline-flex shrink-0 cursor-pointer items-center justify-center gap-inline border-0 font-sans text-label whitespace-nowrap no-underline transition duration-fast ease-standard touch-target focus-ring active:scale-97 motion-reduce:transition-none motion-reduce:active:scale-100 disabled:cursor-not-allowed disabled:bg-tint disabled:text-fg-subtle disabled:active:scale-100 aria-disabled:cursor-not-allowed aria-disabled:bg-tint aria-disabled:text-fg-subtle aria-busy:cursor-progress aria-pressed:bg-accent-soft aria-pressed:text-accent-ink [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 h-control-md [&amp;_svg]:size-icon-md rounded-control px-inset-control bg-tint text-fg hover:bg-tint-strong" aria-haspopup="dialog" aria-expanded="false" data-state="closed"><span class="inline-flex items-center gap-inline group-aria-busy/button:opacity-0">Share</span></button></div>",

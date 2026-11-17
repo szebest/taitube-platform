@@ -1,6 +1,6 @@
-import { TOKEN_GROUPS } from '@vp/design-tokens';
-import { useT } from '@vp/intl-react';
-import { Button, useAppearance } from '@vp/ui';
+import { TOKEN_GROUPS } from '@kit/design-tokens';
+import { useT } from '@kit/intl-react';
+import { Button, useAppearance } from '@kit/ui';
 import { AdvancedPreviewPanel } from '../advanced-preview-panel/advanced-preview-panel';
 import { SettingsSectionPage } from '../settings-section-page/settings-section-page';
 import { TokenGroupRow } from '../token-group-row/token-group-row';

@@ -1,4 +1,4 @@
-import { tv } from '@vp/ui';
+import { tv } from '@kit/ui';
 import type { PartyRoomLayout } from './types';
 
 export const partyRoomStyles = tv({

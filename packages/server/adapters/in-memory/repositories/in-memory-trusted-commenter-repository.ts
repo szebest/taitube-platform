@@ -1,3 +1,4 @@
+import { isErr, ok, type Result } from '@kit/result';
 import type {
   TrustedCommenter,
   TrustedCommenterQuery,
@@ -5,7 +6,6 @@ import type {
 } from '@vp/core/repositories';
 import type { NewChannelAuditEntry } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { isErr, ok, type Result } from '@vp/result';
 import type { InMemoryChannelAuditRepository } from './in-memory-channel-audit-repository';
 import { byKeysetDesc, isKeysetBefore } from './keyset';
 

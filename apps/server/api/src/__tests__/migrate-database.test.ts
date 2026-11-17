@@ -1,5 +1,5 @@
+import { createLogger } from '@kit/logger';
 import { inProcessAppConfig } from '@vp/env-schema';
-import { createLogger } from '@vp/logger';
 import { migrateDatabase } from '../migrate-database';
 
 const config = inProcessAppConfig({ postgres: { migrationsUrl: 'postgres://migrator@db/vp' } });

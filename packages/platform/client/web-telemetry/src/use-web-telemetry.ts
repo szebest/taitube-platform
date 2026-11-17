@@ -1,6 +1,6 @@
+import { fromPromise, ignore } from '@kit/result';
 import { rootRouteId, useRouter } from '@tanstack/react-router';
 import { type TelemetryApp, recordWebVitals } from '@vp/api-contracts';
-import { fromPromise, ignore } from '@vp/result';
 import { useEffect, useEffectEvent } from 'react';
 
 export interface WebTelemetryOptions {

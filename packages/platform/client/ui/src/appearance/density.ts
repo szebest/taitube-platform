@@ -1,4 +1,4 @@
-import type { TokenGroup, TokenSet } from '@vp/design-tokens';
+import type { TokenGroup, TokenSet } from '@kit/design-tokens';
 
 export const COMPACT = { spacing: 'compact', sizing: 'small' } as const;
 

@@ -1,4 +1,4 @@
-import { err, ok, type Result } from '@vp/result';
+import { err, ok, type Result } from '@kit/result';
 import type { Token } from './token';
 
 /** `Provider<T>` is invariant in `T`, so a list of providers of different types takes this. */

@@ -1,7 +1,7 @@
 import { ICONS } from '../../icons/inventory';
 import { TONE_ICONS } from '../tone-icons';
 
-describe('@vp/ui: tone-icons', () => {
+describe('@kit/ui: tone-icons', () => {
   it.each(Object.entries(TONE_ICONS))(
     'draws the %s tone with the %s glyph of the inventory',
     (_tone, glyph) => {

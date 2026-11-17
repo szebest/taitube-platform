@@ -1,4 +1,4 @@
-import type { ElevationOption, SizeOption } from '@vp/design-tokens';
+import type { ElevationOption, SizeOption } from '@kit/design-tokens';
 import type { FillOption } from '../../types';
 
 export type CardFill = Extract<FillOption, 'solid' | 'outline' | 'ghost'>;

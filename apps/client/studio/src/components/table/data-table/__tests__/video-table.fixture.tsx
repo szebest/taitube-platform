@@ -1,6 +1,6 @@
+import { Button, Input } from '@kit/ui';
 import { createColumnHelper, type SortingState, useTable } from '@tanstack/react-table';
 import { render, screen, within } from '@testing-library/react';
-import { Button, Input } from '@vp/ui';
 import type { ReactNode } from 'react';
 import { AppProviders } from '#app/__tests__/providers';
 import { DataTable, type DataTableFeatures, dataTableFeatures } from '..';

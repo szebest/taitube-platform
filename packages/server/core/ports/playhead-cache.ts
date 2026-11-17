@@ -1,6 +1,6 @@
+import type { Result } from '@kit/result';
 import type { BufferedPlayhead } from '@vp/domain';
 import type { CacheUnavailable } from '@vp/errors';
-import type { Result } from '@vp/result';
 
 /**
  * The write buffer in front of `watch_history`: playback heartbeats land here, and the database

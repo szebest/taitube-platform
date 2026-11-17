@@ -1,4 +1,4 @@
-import { Avatar, DropdownMenu, type MenuItemProps, useUiCopy, VisuallyHidden } from '@vp/ui';
+import { Avatar, DropdownMenu, type MenuItemProps, useUiCopy, VisuallyHidden } from '@kit/ui';
 import type { ComponentPropsWithRef } from 'react';
 import { accountMenuStyles } from './account-menu.variants';
 

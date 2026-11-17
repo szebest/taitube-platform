@@ -14,7 +14,7 @@ function loggerTo(format: LoggerConfig['format'], context?: LogContext) {
   return { log, logger };
 }
 
-describe('@vp/logger: createLogger', () => {
+describe('@kit/logger: createLogger', () => {
   it.each([
     ['json', '{"level":"info"', 'probe queued'],
     ['pretty', 'info probe queued videoId=v1', 'videoId=v1'],

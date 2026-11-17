@@ -1,8 +1,8 @@
+import { useT } from '@kit/intl-react';
+import { Icon, useMediaQuery } from '@kit/ui';
 import { useNavigate, useSearch } from '@tanstack/react-router';
 import { SectionError } from '@vp/components';
-import { useT } from '@vp/intl-react';
 import { useAccount } from '@vp/queries';
-import { Icon, useMediaQuery } from '@vp/ui';
 import { useState } from 'react';
 import { CommandPalette } from '#app/components/shell/command-palette';
 import { useCommandActions } from '#app/features/search/hooks/use-command-actions';

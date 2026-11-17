@@ -8,7 +8,7 @@ import { spinnerStyles } from '../spinner.variants';
 const renderSpinner = (props: Partial<SpinnerProps> = {}) =>
   render(<Spinner {...{ children: 'Loading comments', ...props }} />, { wrapper: WithUiCopy });
 
-describe('@vp/ui: Spinner', () => {
+describe('@kit/ui: Spinner', () => {
   it.each(variantNames(spinnerStyles.variants.size))(
     'announces what is loading at size %s',
     (size) => {

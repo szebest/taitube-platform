@@ -1,5 +1,5 @@
+import type { Result } from '@kit/result';
 import { ErrorCodes } from '@vp/errors';
-import type { Result } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { type InvalidDefinition, parseTheme, parseTokenSet, resolveTheme } from '../parse';
 import { refFromTokens, themeFromTokens, tokenSetValues } from '../schema/__tests__/tokens-json';

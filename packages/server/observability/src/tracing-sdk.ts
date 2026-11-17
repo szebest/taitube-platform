@@ -1,10 +1,10 @@
 import { register } from 'node:module';
+import { type Result, ok, tryCatch } from '@kit/result';
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { resourceFromAttributes } from '@opentelemetry/resources';
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import { ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
-import { type Result, ok, tryCatch } from '@vp/result';
 import { type TraceSamplerName, resolveSampler } from './sampler';
 
 interface TracingConfig {

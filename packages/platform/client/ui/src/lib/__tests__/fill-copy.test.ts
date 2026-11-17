@@ -1,6 +1,6 @@
 import { fillCopy } from '../fill-copy';
 
-describe('@vp/ui: fill-copy', () => {
+describe('@kit/ui: fill-copy', () => {
   it.each([
     { template: 'Reorder {name}', expected: 'Reorder Lisbon at night' },
     { template: 'Moved to position {position}', expected: 'Moved to position 3' },

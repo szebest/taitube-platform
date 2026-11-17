@@ -2,7 +2,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { packageDir } from './workspace-packages';
 
-const UI = packageDir('@vp/ui');
+const UI = packageDir('@kit/ui');
 const OUT = `${UI}/src/icons/platform-icon-paths.generated.json`;
 const MODULES = join(import.meta.dirname, '..', UI, 'node_modules');
 

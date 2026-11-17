@@ -22,7 +22,7 @@ function renderCountedTabs() {
   return { rerender: () => view.rerender(tabs()), commitsOf };
 }
 
-describe('@vp/ui: Tabs render count, compiled', () => {
+describe('@kit/ui: Tabs render count, compiled', () => {
   it.each(['list', 'panel'])(
     'commits the %s no more than at mount when the tabs render again with the same props',
     (part) => {

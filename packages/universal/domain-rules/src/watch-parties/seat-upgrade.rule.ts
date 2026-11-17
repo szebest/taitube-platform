@@ -1,3 +1,4 @@
+import { err, ok, type Result } from '@kit/result';
 import type { MemberKind } from '@vp/domain';
 import {
   type WatchPartyBanned,
@@ -7,7 +8,6 @@ import {
   watchPartyCredentialInvalid,
   watchPartyNotFound,
 } from '@vp/errors';
-import { err, ok, type Result } from '@vp/result';
 
 export interface WatchPartySeatUpgradeInput {
   readonly roomId: string;

@@ -1,5 +1,5 @@
+import { type Result, andThen, err, ok } from '@kit/result';
 import { type UserContext, canRestrictChannelUser } from '@vp/permissions';
-import { type Result, andThen, err, ok } from '@vp/result';
 import { type AuthorizationFailure, authorize } from '../authorize';
 import { type CannotRestrictMember, cannotRestrictMember } from './failures';
 

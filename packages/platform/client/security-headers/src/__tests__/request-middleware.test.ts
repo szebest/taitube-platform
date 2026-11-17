@@ -30,7 +30,7 @@ async function answerOf(
   return { status: response?.status, rendered: next.mock.calls.length > 0 };
 }
 
-describe('@vp/security-headers: client app request middleware', () => {
+describe('@kit/security-headers: client app request middleware', () => {
   it.each([
     { call: 'a server function', handlerType: 'serverFn' as const, method: 'GET' },
     { call: 'a write through the /api proxy', handlerType: 'router' as const, method: 'POST' },

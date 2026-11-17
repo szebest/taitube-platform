@@ -27,7 +27,7 @@ const renderSettingsTabs = (props: TabsRootProps = {}) => {
   };
 };
 
-describe('@vp/ui: Tabs', () => {
+describe('@kit/ui: Tabs', () => {
   it.each(variantNames(tabsStyles.variants.variant))(
     'shows the selected panel of a %s list, named by its tab',
     (variant) => {

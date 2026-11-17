@@ -1,3 +1,6 @@
+import type { Container } from '@kit/composition';
+import { mintToken } from '@kit/dev-token';
+import type { Logger } from '@kit/logger';
 import {
   InMemoryCacheClient,
   InMemoryJobQueue,
@@ -5,13 +8,10 @@ import {
   InMemorySearchSuggestionIndex,
   InMemoryStorageClient,
 } from '@vp/adapters/in-memory';
-import type { Container } from '@vp/composition';
 import type { JobQueue, StorageClient } from '@vp/core/ports';
-import { mintToken } from '@vp/dev-token';
 import { type ChannelRole, SEARCH_SUGGESTIONS } from '@vp/domain';
 import { type AppConfig, inProcessAppConfig } from '@vp/env-schema';
 import { QUEUES } from '@vp/job-contracts';
-import type { Logger } from '@vp/logger';
 import { SEEDED } from '@vp/testing';
 import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';

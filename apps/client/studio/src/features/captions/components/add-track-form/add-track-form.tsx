@@ -1,7 +1,7 @@
+import { useT } from '@kit/intl-react';
+import { Field, Input, useToast } from '@kit/ui';
 import { useMutation } from '@tanstack/react-query';
-import { useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
-import { Field, Input, useToast } from '@vp/ui';
 import { useState } from 'react';
 import { uploadTrackMutationOptions } from '#app/features/captions/api/caption-mutations';
 import { useLanguageLabel } from '#app/features/captions/hooks/use-language-label';

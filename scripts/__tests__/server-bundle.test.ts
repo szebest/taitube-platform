@@ -107,7 +107,7 @@ describe('scripts: server-bundle', () => {
   });
 
   it.each([
-    ['@vp/result', true],
+    ['@kit/result', true],
     ['@kit/di', true],
     ['@kit/di/registry', true],
     ['@kitx/di', false],
@@ -115,7 +115,7 @@ describe('scripts: server-bundle', () => {
   ])('bundles %s: %s, whichever scope the workspace gives it', (specifier, bundled) => {
     const { alwaysBundle } = serverBundle(
       ['src/main.ts'],
-      ['@vp/result', '@kit/di'].map(workspacePackage)
+      ['@kit/result', '@kit/di'].map(workspacePackage)
     ).deps as { alwaysBundle: RegExp[] };
 
     expect(alwaysBundle.some((matcher) => matcher.test(specifier))).toBe(bundled);

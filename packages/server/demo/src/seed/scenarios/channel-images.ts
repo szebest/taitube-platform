@@ -1,5 +1,5 @@
 import { join } from 'node:path';
-import { type Result, err, fromPromise, isErr, ok } from '@vp/result';
+import { type Result, err, fromPromise, isErr, ok } from '@kit/result';
 import type { Actor } from '../api';
 import type { SeedFailure } from '../failure';
 import { IMAGE_CROPS, IMAGE_SIZES, ensureImage } from '../media';

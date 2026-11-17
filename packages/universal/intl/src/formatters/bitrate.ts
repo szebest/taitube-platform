@@ -1,4 +1,4 @@
-import { andThen, map } from '@vp/result';
+import { andThen, map } from '@kit/result';
 import { finite } from '../inputs';
 import { type OptionKeys, withOptions } from '../with-options';
 import { scale } from './bytes';

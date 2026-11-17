@@ -1,6 +1,6 @@
+import { useT } from '@kit/intl-react';
+import { Button, Field, Input } from '@kit/ui';
 import { getRouteApi } from '@tanstack/react-router';
-import { useT } from '@vp/intl-react';
-import { Button, Field, Input } from '@vp/ui';
 import type { SubmitEvent } from 'react';
 import { FilterSelect } from '#app/components/table/filter-select';
 import { STATUS_OPTIONS, VISIBILITY_OPTIONS } from '#app/features/admin/api/moderation-search';

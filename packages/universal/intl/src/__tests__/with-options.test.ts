@@ -1,4 +1,4 @@
-import { ok } from '@vp/result';
+import { ok } from '@kit/result';
 import { findUnknownOption, withOptions } from '../with-options';
 import { contextFor } from './fixtures';
 

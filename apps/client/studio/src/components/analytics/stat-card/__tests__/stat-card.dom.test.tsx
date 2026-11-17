@@ -1,6 +1,6 @@
+import { variantNames } from '@kit/ui';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { variantNames } from '@vp/ui';
 import { axeViolations } from '@vp/web-testing/dom';
 import { AppProviders } from '#app/__tests__/providers';
 import { STAT_CARD_TREND_TONE, StatCard, StatCardSkeleton, statCardStyles } from '..';

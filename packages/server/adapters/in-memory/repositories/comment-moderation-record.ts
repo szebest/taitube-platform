@@ -1,8 +1,8 @@
+import { isErr, ok, type Result } from '@kit/result';
 import type { OutboxRepository } from '@vp/core/repositories';
 import type { ModerationRecord } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { moderationOutbox } from '@vp/job-contracts';
-import { isErr, ok, type Result } from '@vp/result';
 import type { InMemoryChannelAuditRepository } from './in-memory-channel-audit-repository';
 
 export interface ModerationSinks {

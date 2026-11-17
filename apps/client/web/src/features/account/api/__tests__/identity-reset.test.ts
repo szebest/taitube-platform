@@ -1,6 +1,6 @@
+import { DEFAULT_APPEARANCE } from '@kit/ui';
 import { QueryClient } from '@tanstack/react-query';
 import { DEFAULT_PREFERENCES } from '@vp/domain/settings';
-import { DEFAULT_APPEARANCE } from '@vp/ui';
 import { preferencesView } from '#app/__tests__/preferences-fixtures';
 import { type MergeState, resetIdentityState } from '../identity-reset';
 

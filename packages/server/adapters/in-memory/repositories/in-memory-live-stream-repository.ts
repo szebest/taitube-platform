@@ -1,3 +1,4 @@
+import { err, isErr, ok, type Result } from '@kit/result';
 import type {
   EndLiveInput,
   EventRepository,
@@ -16,7 +17,6 @@ import {
   videoStatusChanged,
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { err, isErr, ok, type Result } from '@vp/result';
 import type { InMemoryVideoRepository } from './in-memory-video-repository';
 
 interface InMemoryLiveStreamRepositoryDeps {

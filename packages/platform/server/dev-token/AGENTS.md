@@ -1,4 +1,4 @@
-# AGENTS.md — @vp/dev-token (server tier)
+# AGENTS.md — @kit/dev-token (server tier)
 
 Instructions for any coding agent working on `packages/platform/server/dev-token`.
 
@@ -21,7 +21,7 @@ This is a **workspace package with a CLI**, not a loose script — which is why 
 `packages/server/` rather than `tools/`. `tools/` is for assets with no `package.json`.
 
 - **Tier `server`** — Node/Bun only.
-- **Layer 2** (`vp.layer` in `package.json`, authoritative): the CLI logs through `@vp/logger` (layer 1),
+- **Layer 2** (`vp.layer` in `package.json`, authoritative): the CLI logs through `@kit/logger` (layer 1),
   its only `@vp/*` dependency.
 
 ---
@@ -38,6 +38,6 @@ This is a **workspace package with a CLI**, not a loose script — which is why 
 
 ```bash
 pnpm dev-token            # from the repo root
-pnpm --filter @vp/dev-token typecheck
-pnpm --filter @vp/dev-token test
+pnpm --filter @kit/dev-token typecheck
+pnpm --filter @kit/dev-token test
 ```

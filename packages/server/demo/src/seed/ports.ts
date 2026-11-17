@@ -1,4 +1,4 @@
-import type { Result } from '@vp/result';
+import type { Result } from '@kit/result';
 import type { SeedFailure } from './failure';
 import type { RouteIndex } from './openapi-routes';
 

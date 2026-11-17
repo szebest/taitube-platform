@@ -1,5 +1,5 @@
 import { createRegistry } from '@kit/di';
-import { err, ok } from '@vp/result';
+import { err, ok } from '@kit/result';
 import { defineEngine } from '../engine';
 import { defineKind } from '../kind';
 import { defineParams } from '../params';

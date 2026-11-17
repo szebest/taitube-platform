@@ -1,4 +1,4 @@
-import { Drawer, Skeleton, useUiCopy } from '@vp/ui';
+import { Drawer, Skeleton, useUiCopy } from '@kit/ui';
 import {
   type ComponentPropsWithRef,
   type MouseEvent,

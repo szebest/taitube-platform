@@ -1,6 +1,6 @@
+import { Button, useUiCopy } from '@kit/ui';
 import { composeStory } from '@storybook/react-vite';
 import { render, screen } from '@testing-library/react';
-import { Button, useUiCopy } from '@vp/ui';
 import { loadCatalogue, withAppearance } from '../decorator';
 import { initialAppearanceGlobals } from '../toolbars';
 

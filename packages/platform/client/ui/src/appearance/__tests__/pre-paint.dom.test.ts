@@ -13,7 +13,7 @@ const runBeforePaint = (followsSystem: boolean, followsContrast: boolean) => {
 const OS = { scheme: 'dark', reducedMotion: false, moreContrast: false } as const;
 const STANDARD = { mode: 'dark', motion: 'standard', contrast: 'standard' } as const;
 
-describe('@vp/ui: the pre-paint script', () => {
+describe('@kit/ui: the pre-paint script', () => {
   it.each([
     {
       label: 'a system mode on a light OS',

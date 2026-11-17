@@ -29,7 +29,7 @@ const renderQueue = (props: Partial<SortableListRootProps> = {}) => {
 
 const ROW_HEIGHT = 40;
 
-describe('@vp/ui: SortableList', () => {
+describe('@kit/ui: SortableList', () => {
   beforeEach(() => {
     vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(function (
       this: Element

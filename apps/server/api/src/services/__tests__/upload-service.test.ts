@@ -1,6 +1,6 @@
+import type { Result } from '@kit/result';
 import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
 import type { UserContext } from '@vp/permissions';
-import type { Result } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
 import type { UploadContext } from '../upload-context';
 import { UploadService } from '../upload-service';

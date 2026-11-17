@@ -1,4 +1,4 @@
-import { defineAppearance } from '@vp/design-tokens';
+import { defineAppearance } from '@kit/design-tokens';
 import { nocturne } from '../themes/nocturne';
 import { sand } from '../themes/sand';
 import { ambientCinematic } from '../tokens/ambient/cinematic';

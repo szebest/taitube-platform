@@ -1,7 +1,7 @@
+import { ToastProvider, Tooltip } from '@kit/ui';
+import { useWebTelemetry } from '@kit/web-telemetry';
 import { getRouteApi } from '@tanstack/react-router';
 import { ApiProvider, SessionProvider, UserEventStream } from '@vp/queries';
-import { ToastProvider, Tooltip } from '@vp/ui';
-import { useWebTelemetry } from '@vp/web-telemetry';
 import { Suspense } from 'react';
 import {
   AccountMenu,

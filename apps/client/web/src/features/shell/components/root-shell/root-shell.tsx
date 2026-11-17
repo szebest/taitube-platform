@@ -1,7 +1,7 @@
+import { useT } from '@kit/intl-react';
+import { Logo, ThemeMenu } from '@kit/ui';
 import { Link, Outlet } from '@tanstack/react-router';
-import { useT } from '@vp/intl-react';
 import { useLayoutMaxWidth } from '@vp/queries';
-import { Logo, ThemeMenu } from '@vp/ui';
 import { type ReactNode, useState } from 'react';
 import { AmbientLayer } from '#app/components/shell/ambient-layer';
 import { AppShell } from '#app/components/shell/app-shell';

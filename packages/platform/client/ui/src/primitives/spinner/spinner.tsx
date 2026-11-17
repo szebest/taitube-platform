@@ -1,4 +1,4 @@
-import type { IconSize } from '@vp/design-tokens';
+import type { IconSize } from '@kit/design-tokens';
 import { LoaderCircle } from 'lucide-react';
 import type { ComponentPropsWithRef } from 'react';
 import { useUiCopy } from '../../copy/ui-copy';

@@ -1,3 +1,4 @@
+import { ToastProvider } from '@kit/ui';
 import type { InfiniteData, QueryClient } from '@tanstack/react-query';
 import { markNotificationsRead, type Notification } from '@vp/api-contracts';
 import type { NotificationReadScope } from '@vp/domain';
@@ -7,7 +8,6 @@ import {
   notificationKeys,
   unreadNotificationCountQueryOptions,
 } from '@vp/queries';
-import { ToastProvider } from '@vp/ui';
 import { api, apiServer, mockEndpoint, problemReply } from '@vp/web-testing';
 import { heldReply, runMutation } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';

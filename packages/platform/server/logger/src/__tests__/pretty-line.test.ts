@@ -1,6 +1,6 @@
 import { prettyLine } from '../pretty-line';
 
-describe('@vp/logger: prettyLine', () => {
+describe('@kit/logger: prettyLine', () => {
   it('writes the level, the message and every field that is not bookkeeping', () => {
     const json =
       '{"level":"info","time":1,"service":"dev-token","msg":"minted","sub":"u1","ttl":60}';

@@ -1,3 +1,4 @@
+import { assertNever, err, isErr, ok, type Result } from '@kit/result';
 import type { WatchPartyPreviewView } from '@vp/api-contracts';
 import {
   type MemberKind,
@@ -20,7 +21,6 @@ import {
   watchPartyNotFound,
 } from '@vp/errors';
 import { canReadWatchParty } from '@vp/permissions';
-import { assertNever, err, isErr, ok, type Result } from '@vp/result';
 import { holdsJoinWhenFull, isRoomMember, joinCapacity } from './watch-party-admission';
 import type { RoomContext } from './watch-party-context';
 import type { WatchPartyDeps } from './watch-party-deps';

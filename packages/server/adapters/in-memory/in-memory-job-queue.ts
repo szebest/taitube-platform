@@ -1,3 +1,4 @@
+import { type Result, err, ok } from '@kit/result';
 import {
   JobQueue,
   type JobSchedulerInfo,
@@ -15,7 +16,6 @@ import {
   errorCodeRegistry,
   queueUnavailable,
 } from '@vp/errors';
-import { type Result, err, ok } from '@vp/result';
 
 export class InMemoryJobQueue extends JobQueue {
   private readonly name: string;

@@ -1,4 +1,4 @@
-import { createCompoundContext } from '@vp/ui';
+import { createCompoundContext } from '@kit/ui';
 
 export const [ModerationQueueContext, useModerationQueue] = createCompoundContext<{
   active: string | undefined;

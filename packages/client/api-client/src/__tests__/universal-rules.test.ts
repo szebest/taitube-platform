@@ -1,5 +1,5 @@
+import { isErr, isOk } from '@kit/result';
 import { decideVideoRead } from '@vp/domain-rules';
-import { isErr, isOk } from '@vp/result';
 import { ALLOWED_CONTENT_TYPES, validateStartUpload } from '@vp/validation';
 
 /**

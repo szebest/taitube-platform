@@ -1,4 +1,4 @@
-import { type Result, assertNever, ok } from '@vp/result';
+import { type Result, assertNever, ok } from '@kit/result';
 import type { FormatContext } from './context';
 import type { FormatFailure } from './failures';
 import { type BitrateValue, bitrate } from './formatters/bitrate';

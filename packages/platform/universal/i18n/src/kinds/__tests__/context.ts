@@ -1,4 +1,4 @@
-import { ok } from '@vp/result';
+import { ok } from '@kit/result';
 import { intlFor } from '../../__tests__/fixtures';
 import type { KindContext } from '../../kind';
 

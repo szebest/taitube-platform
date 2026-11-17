@@ -2,8 +2,8 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { tryCatch } from '@kit/result';
 import { ENV_DOCS, EXTRA_ENV_DOCS, heldLocalCredentials } from '@vp/env-schema';
-import { tryCatch } from '@vp/result';
 import { run } from './cli';
 import type { KeyDocs } from './required-keys';
 

@@ -1,4 +1,4 @@
-import { andThen, err, map, ok, type Result } from '@vp/result';
+import { andThen, err, map, ok, type Result } from '@kit/result';
 import { type DerivedAccent, deriveAccent, groundsInsideAccentBand } from './accent';
 import {
   composite,

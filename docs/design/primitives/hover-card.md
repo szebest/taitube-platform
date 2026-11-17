@@ -25,7 +25,7 @@ A read-only preview that appears when a pointer rests on a link, so a viewer can
 
 ```ts
 // types.ts
-import type { SizeOption } from '@vp/design-tokens';
+import type { SizeOption } from '@kit/design-tokens';
 import type { Align, Side } from '../../types';
 
 export type HoverCardSize = Extract<SizeOption, 'sm' | 'md'>;

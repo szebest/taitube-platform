@@ -1,3 +1,4 @@
+import type { Result } from '@kit/result';
 import type {
   ScreeningAppeal,
   ScreeningFinding,
@@ -5,7 +6,6 @@ import type {
   VideoScreening,
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import type { Result } from '@vp/result';
 import type { NewOutboxInput } from './outbox-repository';
 
 export type ScreeningRecord = VideoScreening;

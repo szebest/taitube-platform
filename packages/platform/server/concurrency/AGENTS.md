@@ -1,4 +1,4 @@
-# AGENTS.md — @vp/concurrency (In-process Coalescing & Circuit Breaking)
+# AGENTS.md — @kit/concurrency (In-process Coalescing & Circuit Breaking)
 
 > Tier rules for this directory: [../AGENTS.md](../../../server/AGENTS.md) · full tier & layer reference: [packages/AGENTS.md](../../../AGENTS.md)
 
@@ -29,6 +29,6 @@ built by the external adapter family.
 ## 3. Local Commands
 
 ```bash
-pnpm --filter @vp/concurrency typecheck
-pnpm --filter @vp/concurrency test
+pnpm --filter @kit/concurrency typecheck
+pnpm --filter @kit/concurrency test
 ```

@@ -1,4 +1,4 @@
-import type { Container } from '@vp/composition';
+import type { Container } from '@kit/composition';
 import { Services } from './service-tokens';
 
 /** What `app.services` hands the routes: every service, resolved once the container is built. */

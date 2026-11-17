@@ -1,4 +1,4 @@
-import type { Container } from '@vp/composition';
+import type { Container } from '@kit/composition';
 import { InMemoryChannelUserRestrictionRepository } from './in-memory-channel-user-restriction-repository';
 import { InMemoryCommentModerationRepository } from './in-memory-comment-moderation-repository';
 import { InMemoryCommentReportRepository } from './in-memory-comment-report-repository';

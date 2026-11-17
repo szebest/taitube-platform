@@ -1,3 +1,4 @@
+import { type Result, andThen, err, ignore, isErr, ok } from '@kit/result';
 import type {
   CaptionCommit,
   CaptionRecord,
@@ -9,7 +10,6 @@ import type { CaptionsConfig } from '@vp/env-schema';
 import { type DatabaseUnavailable, type VersionConflict, versionConflict } from '@vp/errors';
 import { captionsFlow } from '@vp/job-contracts';
 import { createTraceparent, getActiveTraceparent } from '@vp/observability';
-import { type Result, andThen, err, ignore, isErr, ok } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 import type { DispatchOrigin } from './probe-dispatch';
 

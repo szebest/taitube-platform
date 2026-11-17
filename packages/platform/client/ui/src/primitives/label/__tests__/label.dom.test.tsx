@@ -20,7 +20,7 @@ function renderNameField(props: Partial<LabelProps> = {}) {
   };
 }
 
-describe('@vp/ui: Label', () => {
+describe('@kit/ui: Label', () => {
   it.each(variantNames(labelStyles.variants.size))(
     'names the control it points at and focuses it when clicked, at size %s',
     async (size) => {

@@ -1,5 +1,5 @@
+import { Paginator } from '@kit/pagination';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
-import { Paginator } from '@vp/pagination';
 import { expectOk } from '@vp/testing/result';
 import { CommentRemovalService } from '../comment-removal-service';
 

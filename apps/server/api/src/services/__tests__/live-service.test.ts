@@ -1,6 +1,6 @@
+import { ok } from '@kit/result';
 import type { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { ErrorCodes } from '@vp/errors';
-import { ok } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { LiveService } from '../live-service';
 import { liveWorld, OWNER, STARTED, STREAM_ID, VIEWER } from './live-harness';

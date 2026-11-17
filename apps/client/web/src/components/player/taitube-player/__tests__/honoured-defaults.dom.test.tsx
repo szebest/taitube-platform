@@ -1,6 +1,6 @@
+import { writeCookie } from '@kit/ui';
 import { screen } from '@testing-library/react';
 import { getVideo } from '@vp/api-contracts';
-import { writeCookie } from '@vp/ui';
 import { channel, mockEndpoint, VIDEO_ID, video } from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';

@@ -1,5 +1,5 @@
+import { assertNever } from '@kit/result';
 import type { TraceSamplerName } from '@vp/observability';
-import { assertNever } from '@vp/result';
 import type { AppEnv } from './app-env';
 import type { AuthConfig } from './auth-config';
 import { type CaptionsConfig, captionsConfig } from './captions-config';

@@ -1,4 +1,4 @@
-import { type Result, ok } from '@vp/result';
+import { type Result, ok } from '@kit/result';
 import {
   Base64UrlCursorCodec,
   type CursorCodec,

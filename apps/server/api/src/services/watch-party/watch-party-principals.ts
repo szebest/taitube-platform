@@ -1,8 +1,8 @@
+import { assertNever, err, ok, type Result } from '@kit/result';
 import type { NewWatchPartyMember } from '@vp/core/repositories';
 import { memberKeyOf, type PartyPrincipal, type WatchPartyJoinPath } from '@vp/domain';
 import type { AuthorizationFailure } from '@vp/domain-rules';
 import { ErrorCodes } from '@vp/errors';
-import { assertNever, err, ok, type Result } from '@vp/result';
 import { type PartyCaller, principalOf } from './party-caller';
 
 export type Unauthenticated = Extract<

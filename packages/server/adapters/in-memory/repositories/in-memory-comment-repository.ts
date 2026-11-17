@@ -1,3 +1,4 @@
+import { isErr, ok, type Result, unwrapOr } from '@kit/result';
 import type {
   CommentLocator,
   CommentViewer,
@@ -24,7 +25,6 @@ import {
 import type { DatabaseUnavailable } from '@vp/errors';
 import { commentOutbox } from '@vp/job-contracts';
 import type { UserContext } from '@vp/permissions';
-import { isErr, ok, type Result, unwrapOr } from '@vp/result';
 import { announceCreated } from './comment-announce';
 import { listAuthored } from './comment-authored';
 import { editStored } from './comment-edit';

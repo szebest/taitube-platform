@@ -20,7 +20,7 @@ const renderVolume = (props: SliderRootProps = {}) => {
   };
 };
 
-describe('@vp/ui: Slider', () => {
+describe('@kit/ui: Slider', () => {
   it.each(variantNames(sliderStyles.variants.tone))(
     'is a %s slider moved a step by the arrows and to the ends by Home and End',
     async (tone) => {

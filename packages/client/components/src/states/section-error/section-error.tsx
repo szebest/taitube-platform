@@ -1,4 +1,4 @@
-import { Button, Icon, useUiCopy } from '@vp/ui';
+import { Button, Icon, useUiCopy } from '@kit/ui';
 import type { ComponentPropsWithRef } from 'react';
 import { SectionErrorContext, useSectionError } from './section-error.context';
 import { sectionErrorStyles } from './section-error.variants';

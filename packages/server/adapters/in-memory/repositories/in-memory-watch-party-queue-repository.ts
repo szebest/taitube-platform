@@ -1,3 +1,4 @@
+import { ok, type Result } from '@kit/result';
 import type {
   NewSystemLine,
   NewWatchPartyQueueItem,
@@ -7,7 +8,6 @@ import type {
 } from '@vp/core/repositories';
 import { appendPositions, type PositionWrite, type WatchPartyQueueItem } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { ok, type Result } from '@vp/result';
 import type { InMemoryWatchPartyStore } from './in-memory-watch-party-store';
 
 const MISSING: QueueWrite = { type: 'missing' };

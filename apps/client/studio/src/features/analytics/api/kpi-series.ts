@@ -1,4 +1,4 @@
-import { assertNever } from '@vp/result';
+import { assertNever } from '@kit/result';
 import type { KpiMetric } from '../types';
 import type { RangeAnalytics } from './analytics-queries';
 

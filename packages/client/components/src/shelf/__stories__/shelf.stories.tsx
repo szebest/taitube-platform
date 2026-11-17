@@ -1,5 +1,5 @@
+import { Avatar } from '@kit/ui';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Avatar } from '@vp/ui';
 import { Shelf, ShelfSkeleton } from '..';
 import { EmptyState } from '../../states/empty-state';
 import { SectionError } from '../../states/section-error';

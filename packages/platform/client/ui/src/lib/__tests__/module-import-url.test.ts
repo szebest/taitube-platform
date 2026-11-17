@@ -1,6 +1,6 @@
 import { moduleUrlOf, retryUrl } from '../module-import-url';
 
-describe('@vp/ui: moduleUrlOf', () => {
+describe('@kit/ui: moduleUrlOf', () => {
   it.each([
     {
       name: 'Chrome',
@@ -27,7 +27,7 @@ describe('@vp/ui: moduleUrlOf', () => {
   });
 });
 
-describe('@vp/ui: retryUrl', () => {
+describe('@kit/ui: retryUrl', () => {
   it('adds the attempt to the query and keeps what was there', () => {
     expect(retryUrl('https://cdn.test/assets/a.js?v=1', 2)).toBe(
       'https://cdn.test/assets/a.js?v=1&vp-retry=2'

@@ -18,7 +18,7 @@ const renderTitle = ({ inRoot, part }: { inRoot: boolean; part?: string }) =>
     )
   );
 
-describe('@vp/ui: createCompoundContext', () => {
+describe('@kit/ui: createCompoundContext', () => {
   it('hands a part what its root shares', () => {
     renderTitle({ inRoot: true, part: 'Title' });
 

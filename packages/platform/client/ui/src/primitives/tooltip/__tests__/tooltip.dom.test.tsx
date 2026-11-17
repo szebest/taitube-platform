@@ -48,7 +48,7 @@ function renderActionBar({
   );
 }
 
-describe('@vp/ui: Tooltip', () => {
+describe('@kit/ui: Tooltip', () => {
   it('shows on keyboard focus and describes its trigger', async () => {
     renderActionBar();
 

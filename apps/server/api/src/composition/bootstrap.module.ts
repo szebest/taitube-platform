@@ -1,5 +1,5 @@
+import type { Container } from '@kit/composition';
 import { Adapters } from '@vp/adapters/composition';
-import type { Container } from '@vp/composition';
 import { BootstrapService } from '../services/bootstrap-service';
 import { Services } from './service-tokens';
 

@@ -1,5 +1,5 @@
 {
-  "extends": "@vp/tsconfig/spec.json",
+  "extends": "@kit/tsconfig/spec.json",
   "compilerOptions": {
     "lib": ["ES2023", "DOM"],
     "jsx": "react-jsx",

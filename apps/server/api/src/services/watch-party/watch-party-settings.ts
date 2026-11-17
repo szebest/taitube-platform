@@ -1,3 +1,4 @@
+import { andThenAsync, assertNever, err, isErr, ok, type Result } from '@kit/result';
 import type { PatchWatchPartyBody, WatchPartyView } from '@vp/api-contracts';
 import type { HashingFailed } from '@vp/core/ports';
 import type { RoomWrite, SettingsPatch } from '@vp/core/repositories';
@@ -13,7 +14,6 @@ import {
   watchPartyClosed,
   watchPartyNotFound,
 } from '@vp/errors';
-import { andThenAsync, assertNever, err, isErr, ok, type Result } from '@vp/result';
 import type { PartyCaller } from './party-caller';
 import type { RoomContext } from './watch-party-context';
 import type { WatchPartyDeps } from './watch-party-deps';

@@ -19,15 +19,15 @@
     "clean": "rimraf dist tsconfig.tsbuildinfo"
   },
   "dependencies": {
+    "@kit/pagination": "workspace:*",
+    "@kit/result": "workspace:*",
     "@vp/domain": "workspace:*",
     "@vp/observability": "workspace:*",
-    "@vp/pagination": "workspace:*",
-    "@vp/result": "workspace:*",
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@kit/tsconfig": "workspace:*",
     "@vp/testing": "workspace:*",
-    "@vp/tsconfig": "workspace:*",
     "rimraf": "^6.1.3",
     "typescript": "^6.0.3",
     "vite-plus": "catalog:"

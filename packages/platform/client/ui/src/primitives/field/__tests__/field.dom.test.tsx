@@ -20,7 +20,7 @@ const renderField = (props: FieldRootProps = {}, withHint = true) =>
     { wrapper: WithUiCopy }
   );
 
-describe('@vp/ui: Field', () => {
+describe('@kit/ui: Field', () => {
   it.each(variantNames(fieldStyles.variants.orientation))(
     'names its %s control by the label',
     (orientation) => {

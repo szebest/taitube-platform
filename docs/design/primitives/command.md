@@ -28,7 +28,7 @@ A filterable list with a search input: the base for the command palette and for 
 
 ```ts
 // types.ts
-import type { ControlSize } from '@vp/design-tokens';
+import type { ControlSize } from '@kit/design-tokens';
 
 export type CommandVariant = 'inline' | 'palette';
 export type CommandSize = Extract<ControlSize, 'sm' | 'md'>;

@@ -1,3 +1,4 @@
+import { type Result, err, isErr, map, ok } from '@kit/result';
 import type { CaptionListView, CaptionTrackView, TranscriptView } from '@vp/api-contracts';
 import type { VideoRepository } from '@vp/core/repositories';
 import { type ActingChannel, type CaptionTrack, type Video, autoCaptionsEnabled } from '@vp/domain';
@@ -17,7 +18,6 @@ import {
 import type { CdnBase } from '@vp/env-schema';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { type Result, err, isErr, map, ok } from '@vp/result';
 import { type InvalidCaptionLanguage, validateCaptionLanguage } from '@vp/validation';
 import { type CaptionAccessFailure, manageCaptions, readCaptions } from './caption-access';
 import { type CaptionRunDeps, type CaptionRunFailure, startCaptionRun } from './caption-runs';

@@ -1,7 +1,7 @@
+import { err } from '@kit/result';
 import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
 import { videoStatusChanged } from '@vp/domain';
 import { storageUnavailable } from '@vp/errors';
-import { err } from '@vp/result';
 import { masterPlaylistKey, renditionPlaylistKey } from '@vp/storage';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';

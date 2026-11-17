@@ -8,7 +8,7 @@ Enforcement: [ARCHITECTURE.md Invariant 10](../../ARCHITECTURE.md).
 |---|---|---|
 | `@vp/intl` | universal, T2 | formatters, the value union, option allowlists, `IntlCache`, `localeChain` |
 | `@vp/messages` | universal, T3 | `dt()`, `createTranslator()` (`t`, `tOr`), one catalogue per locale, `ERROR_COPY`, the supported-locale list (`SUPPORTED_LOCALES`, `LOCALE_DETAILS`) |
-| `@vp/intl-react` | client, T4 | `IntlProvider`, `useT`, `useFormat`, `<Format>`, `createLocaleStore()`, zone and clock detection |
+| `@kit/intl-react` | client, T4 | `IntlProvider`, `useT`, `useFormat`, `<Format>`, `createLocaleStore()`, zone and clock detection |
 | `@vp/queries` | client, T5 | `requestLocale()`: the negotiation chain, the one module that reads `Accept-Language` and `navigator.languages` |
 
 ---

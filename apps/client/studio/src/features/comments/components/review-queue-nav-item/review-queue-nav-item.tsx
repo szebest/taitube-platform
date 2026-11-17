@@ -1,6 +1,6 @@
+import { useT } from '@kit/intl-react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { Link, useMatchRoute } from '@tanstack/react-router';
-import { useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
 import { StudioWorkspace } from '#app/components/workspace/studio-workspace';
 import { inboxQueryOptions } from '#app/features/comments/api/inbox-queries';

@@ -1,6 +1,6 @@
 # CommandPalette
 
-Location: `apps/client/web/src/components/shell/command-palette/`. Web's app kit, presentational and compound, built from `@vp/ui` primitives (`Command`, `Dialog`, `Drawer`).
+Location: `apps/client/web/src/components/shell/command-palette/`. Web's app kit, presentational and compound, built from `@kit/ui` primitives (`Command`, `Dialog`, `Drawer`).
 
 A dialog with a field, grouped results and actions, opened by the header search, `/` or `Cmd K`. It carries the "Command palette" signature move: search that also runs actions ("Switch to Nocturne", "Open Watch later", "Upload a video").
 
@@ -109,7 +109,7 @@ Pointer open: fade and 8 px rise at `base` with `enter`, close `exit`. Keyboard 
 | `PaletteResultItem` | `search/components/` | `result: SearchResultItem` (its `kind` is a `SearchResultKind`) | `useFormat`, `useT` |
 | `PaletteActionItem` | `search/components/` | `action: CommandAction` | `useCan`, `useAppearance`, `useT` |
 
-The action list is built in `useCommandActions()`: appearance actions come from the registry (`@vp/ui/appearance`), and an action behind a permission is filtered by `useCan`.
+The action list is built in `useCommandActions()`: appearance actions come from the registry (`@kit/ui/appearance`), and an action behind a permission is filtered by `useCan`.
 
 ## Used by
 

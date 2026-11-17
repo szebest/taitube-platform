@@ -1,4 +1,4 @@
-import { lazyComponent } from '@vp/ui';
+import { lazyComponent } from '@kit/ui';
 
 // The flag is compared here, not read from `lib/config`, or Rolldown cannot drop the import of a build that leaves it off.
 export const LazyPersonaSwitcher =

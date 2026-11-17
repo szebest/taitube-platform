@@ -1,3 +1,4 @@
+import type { Result } from '@kit/result';
 import type {
   ChannelMembership,
   ChannelRole,
@@ -5,7 +6,6 @@ import type {
   NewChannelAuditEntry,
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import type { Result } from '@vp/result';
 
 export interface ChannelRoleChange {
   channelId: string;

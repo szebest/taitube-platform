@@ -2,7 +2,7 @@
 // A page loads it with <script src="../lib/design.js" data-tokens="../tokens.json" defer></script>
 // and waits on `TT.ready` before rendering anything that needs token values.
 //
-// It mirrors what @vp/ui's appearance engine does in the apps: a theme supplies the colour roles and a default
+// It mirrors what @kit/ui's appearance engine does in the apps: a theme supplies the colour roles and a default
 // implementation of every token set; the viewer may override any set; each set writes its own variables and a
 // data-* attribute on <html>.
 (() => {

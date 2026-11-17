@@ -1,3 +1,4 @@
+import { err, type Result, unwrapOr } from '@kit/result';
 import {
   type FormatFailure,
   type IntlBinding,
@@ -5,7 +6,6 @@ import {
   type Unrenderable,
   unrenderable,
 } from '@vp/intl';
-import { err, type Result, unwrapOr } from '@vp/result';
 import type { ArgsOf, LooseCatalogue, LooseCatalogueSet, MessageKey } from './catalogue';
 import { findMessage } from './catalogue';
 import type { Kind } from './kind';

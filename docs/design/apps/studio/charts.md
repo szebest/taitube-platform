@@ -30,7 +30,7 @@ Plus the standard props. The helpers are functions and one compound frame.
 
 ```ts
 // types.ts
-import type { SizeOption } from '@vp/design-tokens';
+import type { SizeOption } from '@kit/design-tokens';
 
 export type ChartFrameSize = Extract<SizeOption, 'sm' | 'md' | 'lg' | 'xl'>;
 export type ChartFrameState = 'ready' | 'loading' | 'error' | 'empty';

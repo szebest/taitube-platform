@@ -1,8 +1,8 @@
+import { sendJsonBeacon } from '@kit/web-telemetry';
 import { renderHook } from '@testing-library/react';
-import { sendJsonBeacon } from '@vp/web-telemetry';
 import { usePlaybackTelemetry } from '../use-playback-telemetry';
 
-vi.mock(import('@vp/web-telemetry'), async (importOriginal) => ({
+vi.mock(import('@kit/web-telemetry'), async (importOriginal) => ({
   ...(await importOriginal()),
   sendJsonBeacon: vi.fn(),
 }));

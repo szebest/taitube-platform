@@ -1,7 +1,7 @@
+import { Paginator } from '@kit/pagination';
+import { ok } from '@kit/result';
 import type { VideoScreening } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
-import { Paginator } from '@vp/pagination';
-import { ok } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { decodeScreeningCaseCursor, screeningCaseCursorPayload } from '../screening-cursor';
 

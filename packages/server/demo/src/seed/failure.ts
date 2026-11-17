@@ -1,4 +1,4 @@
-import { assertNever } from '@vp/result';
+import { assertNever } from '@kit/result';
 
 export type SeedFailure =
   | { kind: 'process'; message: string }

@@ -1,10 +1,10 @@
+import type { Logger } from '@kit/logger';
+import { isErr, ok, type Result } from '@kit/result';
 import type { JobQueue, QueueJob } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import { liveStarted, NOTIFICATION_FANOUT_BATCH, toChannelCard } from '@vp/domain';
 import type { DatabaseUnavailable, QueueUnavailable } from '@vp/errors';
 import { type AnnounceLiveJob, announceLiveOutbox } from '@vp/job-contracts';
-import type { Logger } from '@vp/logger';
-import { isErr, ok, type Result } from '@vp/result';
 
 export interface AnnounceLiveDeps {
   repositories: Repositories;

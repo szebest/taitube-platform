@@ -1,4 +1,4 @@
-import { type Result, ok } from '@vp/result';
+import { type Result, ok } from '@kit/result';
 import type { SeedFailure } from '../failure';
 import { ALL_ROUTES, type RouteIndex } from '../openapi-routes';
 import type { FetchPort, IdentityRow, SeedPorts, UploadRequest } from '../ports';

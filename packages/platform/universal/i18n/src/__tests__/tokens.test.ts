@@ -1,5 +1,5 @@
 import { createRegistry, provide } from '@kit/di';
-import { err, ok } from '@vp/result';
+import { err, ok } from '@kit/result';
 import { Catalogues, FormatPresets, ParamVocabulary } from '../tokens';
 import { catalogues, params, presets } from './fixtures';
 

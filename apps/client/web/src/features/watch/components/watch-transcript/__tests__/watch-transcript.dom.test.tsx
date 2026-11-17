@@ -1,7 +1,7 @@
+import { writeCookie } from '@kit/ui';
 import { screen, within } from '@testing-library/react';
 import { type CaptionTrackView, getTranscript, listCaptions } from '@vp/api-contracts';
 import { videoKeys } from '@vp/queries';
-import { writeCookie } from '@vp/ui';
 import { CAPTION_ID, VIDEO_ID, captionTrack, mockEndpoint, transcript } from '@vp/web-testing';
 import { HttpResponse, http } from 'msw/http';
 import { renderWatch } from '#app/__tests__/render-watch';

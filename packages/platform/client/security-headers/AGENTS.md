@@ -1,9 +1,9 @@
-# AGENTS.md — @vp/security-headers (CSP nonce and response headers)
+# AGENTS.md — @kit/security-headers (CSP nonce and response headers)
 
 > Tier rules for this directory: [../AGENTS.md](../../../client/AGENTS.md) · full tier & layer reference: [packages/AGENTS.md](../../../AGENTS.md)
 
 Owner: ticket [75](../../../../docs/tickets/75-fullstack-e2e-playwright-security-perf-validation.md). `client` tier,
-layer T2 (it depends on `@vp/result`).
+layer T2 (it depends on `@kit/result`).
 
 ## What it holds
 
@@ -29,6 +29,6 @@ layer T2 (it depends on `@vp/result`).
   `import.meta.env`.
 
 ```bash
-pnpm --filter @vp/security-headers typecheck
-pnpm --filter @vp/security-headers test
+pnpm --filter @kit/security-headers typecheck
+pnpm --filter @kit/security-headers test
 ```

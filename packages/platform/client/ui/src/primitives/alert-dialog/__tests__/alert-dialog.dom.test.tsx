@@ -32,7 +32,7 @@ const renderDeleteDialog = (onDelete: () => void = () => undefined) => {
   };
 };
 
-describe('@vp/ui: AlertDialog', () => {
+describe('@kit/ui: AlertDialog', () => {
   it('opens as an alert dialog named and described by its text', async () => {
     const { user } = renderDeleteDialog();
 

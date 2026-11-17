@@ -1,5 +1,5 @@
+import type { Container } from '@kit/composition';
 import { Adapters, queueNamed } from '@vp/adapters/composition';
-import type { Container } from '@vp/composition';
 import { SUPPORTED_LOCALES } from '@vp/intl';
 import {
   ChannelFeaturedService,

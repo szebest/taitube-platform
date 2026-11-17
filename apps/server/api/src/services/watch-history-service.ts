@@ -1,3 +1,5 @@
+import type { InvalidCursor, Paginator } from '@kit/pagination';
+import { type Result, err, ignore, isErr, isOk, map, ok } from '@kit/result';
 import type {
   RecordWatchProgressBody,
   WatchHistoryItemView,
@@ -9,9 +11,7 @@ import { type WatchProgress, clampProgress } from '@vp/domain';
 import { decideVideoRead, publicReadFailure } from '@vp/domain-rules';
 import type { CdnBase } from '@vp/env-schema';
 import type { DatabaseUnavailable } from '@vp/errors';
-import type { InvalidCursor, Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
-import { type Result, err, ignore, isErr, isOk, map, ok } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 import { createdAtCursorPayload, decodeCreatedAtCursor } from './cursor';
 import type { HistoryPause } from './history-pause';

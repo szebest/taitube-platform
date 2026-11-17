@@ -1,4 +1,4 @@
-import type { Container } from '@vp/composition';
+import type { Container } from '@kit/composition';
 import type { Clock } from './clock';
 import { InMemoryApiTokenRepository } from './in-memory-api-token-repository';
 import { InMemoryDataExportRepository } from './in-memory-data-export-repository';

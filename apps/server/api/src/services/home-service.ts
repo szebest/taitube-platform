@@ -1,3 +1,4 @@
+import { type Result, ignore, isErr, isOk, map, ok, parseJson, unwrapOr } from '@kit/result';
 import { type HomeResponse, type HomeShelf, getHome } from '@vp/api-contracts';
 import type { CacheClient } from '@vp/core/ports';
 import type {
@@ -17,7 +18,6 @@ import {
 } from '@vp/domain';
 import { CacheKeys } from '@vp/events';
 import type { UserContext } from '@vp/permissions';
-import { type Result, ignore, isErr, isOk, map, ok, parseJson, unwrapOr } from '@vp/result';
 import { type DiscoveryShelves, type ShelfFailure, reasoned } from './discovery-shelves';
 import type { RelatedService } from './related-service';
 import type { VideoService } from './video-service';

@@ -1,4 +1,4 @@
-import { lazyComponent } from '@vp/ui';
+import { lazyComponent } from '@kit/ui';
 
 export const LazyTaitubePreview = lazyComponent(() => import('./taitube-preview'), {
   name: 'TaitubePreview',

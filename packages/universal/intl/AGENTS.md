@@ -13,7 +13,7 @@ platform's own `Intl` constructors and nothing else. A formatter takes a tagged 
 `FormatContext` and returns `Result<string, FormatFailure>`.
 
 It is `universal`, layer T2, because ticket 89's server render runs it in Node and the browser runs it
-again on hydration. It depends on `@vp/result` only, and owns its four failure codes. The words around a value (the
+again on hydration. It depends on `@kit/result` only, and owns its four failure codes. The words around a value (the
 `views` in `1.2M views`) are copy and live in `@vp/messages`, not here.
 
 ---
@@ -28,7 +28,7 @@ again on hydration. It depends on `@vp/result` only, and owns its four failure c
    provider per locale, a container per process); never a module constant.
 3. **A formatter declines, it does not throw.** An unsupported locale, an unknown option, a value of the
    wrong shape and anything `Intl` refuses become one of the four `FORMAT_*` failures. `catch` stays in
-   `@vp/result`'s `tryCatch`.
+   `@kit/result`'s `tryCatch`.
 4. **Values carry one literal `type`.** `formatValue` switches on it exhaustively, with `assertNever` in
    the default. `FORMAT_KINDS` and the union are held equal at compile time by `KindsMatchUnion`.
 5. **Option names are allowlisted.** Each formatter declares its keys `as const satisfies OptionKeys<...>`

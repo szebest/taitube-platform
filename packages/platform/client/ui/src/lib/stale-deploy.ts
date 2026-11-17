@@ -1,4 +1,4 @@
-import { tryCatch } from '@vp/result';
+import { tryCatch } from '@kit/result';
 import { isModuleImportFailure } from './module-import-failure';
 
 const STORAGE_KEY = 'vp:stale-deploy-reloads';

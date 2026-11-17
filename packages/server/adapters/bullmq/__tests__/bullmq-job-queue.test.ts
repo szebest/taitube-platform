@@ -1,6 +1,6 @@
+import { isOk } from '@kit/result';
 import { QUEUE_JOB_STATES, type QueueJob } from '@vp/core/ports';
 import { ErrorCodes } from '@vp/errors';
-import { isOk } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { bullMqJobQueueSubject } from '../../__tests__/contract/bullmq-subjects';
 import { describeJobQueueContract } from '../../__tests__/contract/job-queue.contract';

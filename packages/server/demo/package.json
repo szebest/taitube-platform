@@ -9,20 +9,20 @@
     "test": "vp test run"
   },
   "dependencies": {
+    "@kit/dev-token": "workspace:*",
+    "@kit/result": "workspace:*",
     "@vp/db": "workspace:*",
-    "@vp/dev-token": "workspace:*",
     "@vp/domain": "workspace:*",
     "@vp/env-schema": "workspace:*",
     "@vp/errors": "workspace:*",
-    "@vp/result": "workspace:*",
     "@vp/upload-client": "workspace:*",
     "js-yaml": "^5.5.0",
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@kit/tsconfig": "workspace:*",
     "@types/node": "^24.19.1",
     "@vp/testing": "workspace:*",
-    "@vp/tsconfig": "workspace:*",
     "typescript": "^6.0.3",
     "vite-plus": "catalog:"
   },

@@ -1,5 +1,5 @@
+import { Container } from '@kit/composition';
 import { registerAdapters } from '@vp/adapters/composition';
-import { Container } from '@vp/composition';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { expectOk } from '@vp/testing/result';
 import { Services, registerServices } from '../services.module';

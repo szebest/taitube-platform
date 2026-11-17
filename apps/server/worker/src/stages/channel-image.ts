@@ -1,5 +1,7 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
+import type { Logger } from '@kit/logger';
+import { type Result, err, fromPromise, isErr, ok } from '@kit/result';
 import type { QueueJob, StorageClient } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import type { ChannelImageUpload, ImageCrops } from '@vp/domain';
@@ -17,9 +19,7 @@ import {
 } from '@vp/errors';
 import { type MediaTools, defaultChannelImageVariant, planChannelImageVariants } from '@vp/ffmpeg';
 import type { ChannelImageJob } from '@vp/job-contracts';
-import type { Logger } from '@vp/logger';
 import type { PipelineMetrics } from '@vp/observability';
-import { type Result, err, fromPromise, isErr, ok } from '@vp/result';
 import { channelImageUploadKey, channelImageVariantKey, getHeaderMapping } from '@vp/storage';
 import { createScratchDir, removeScratchDir } from './scratch-dir';
 

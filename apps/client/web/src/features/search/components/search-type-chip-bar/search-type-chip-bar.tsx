@@ -1,9 +1,9 @@
+import { useFormat, useT } from '@kit/intl-react';
+import { unwrapOr } from '@kit/result';
 import { keepPreviousData, useInfiniteQuery } from '@tanstack/react-query';
 import { getRouteApi } from '@tanstack/react-router';
 import { SEARCH_TYPES, type SearchType } from '@vp/domain';
-import { useFormat, useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
-import { unwrapOr } from '@vp/result';
 import { ChipBar } from '#app/components/discovery/chip-bar';
 import { searchQueryOptions } from '#app/features/search/api/search-queries';
 

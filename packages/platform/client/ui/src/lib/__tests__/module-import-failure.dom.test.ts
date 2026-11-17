@@ -1,6 +1,6 @@
 import { isModuleImportFailure, watchPreloadErrors } from '../module-import-failure';
 
-describe('@vp/ui: isModuleImportFailure', () => {
+describe('@kit/ui: isModuleImportFailure', () => {
   it.each([
     {
       name: 'a Chrome dynamic import',

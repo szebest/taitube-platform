@@ -1,5 +1,5 @@
 {
-  "extends": "@vp/tsconfig/server.json",
+  "extends": "@kit/tsconfig/server.json",
   "compilerOptions": {
     "rootDir": "src",
     "noEmit": true

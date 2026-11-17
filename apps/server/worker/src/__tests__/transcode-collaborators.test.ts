@@ -1,10 +1,10 @@
+import { createLogger } from '@kit/logger';
 import {
   InMemoryCacheClient,
   InMemoryRepositories,
   InMemoryStorageClient,
 } from '@vp/adapters/in-memory';
 import { inProcessAppConfig } from '@vp/env-schema';
-import { createLogger } from '@vp/logger';
 import { createMetricsRegistry } from '@vp/observability';
 import { everyInterval } from '../heartbeat';
 import { TranscodeProgressReporter } from '../stages/progress-reporter';

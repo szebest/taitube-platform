@@ -1,12 +1,12 @@
+import { useT } from '@kit/intl-react';
+import { useToast } from '@kit/ui';
 import type { CommentView } from '@vp/api-contracts';
-import { useT } from '@vp/intl-react';
 import {
   useFailureToast,
   useLiftRestriction,
   useModerateComment,
   usePinComment,
 } from '@vp/queries';
-import { useToast } from '@vp/ui';
 import type { ModerationChoice } from '#app/features/watch/hooks/use-moderation-choices';
 
 type Direct = Extract<ModerationChoice, 'approve' | 'unhide' | 'lift'>;

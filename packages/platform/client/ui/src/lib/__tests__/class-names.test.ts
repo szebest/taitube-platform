@@ -1,4 +1,4 @@
-import { tailwindUtilities } from '@vp/design-tokens';
+import { tailwindUtilities } from '@kit/design-tokens';
 import { appearance } from '../../appearance/registry';
 import { scale } from '../../tokens/scale';
 import { cn, tv } from '../class-names';
@@ -25,7 +25,7 @@ const TOKEN_UTILITIES = tailwindUtilities(appearance.defaultTheme.defaults, scal
   }
 );
 
-describe('@vp/ui: class names', () => {
+describe('@kit/ui: class names', () => {
   it('lets a caller raise a primitive onto another z-index token', () => {
     expect(cn('fixed z-popover', 'z-tooltip')).toBe('fixed z-tooltip');
   });

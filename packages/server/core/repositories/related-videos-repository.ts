@@ -1,6 +1,6 @@
+import type { Result } from '@kit/result';
 import type { RelatedSignals } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import type { Result } from '@vp/result';
 import type { VideoRecord } from './video-repository';
 
 export interface RelatedVideosOptions {

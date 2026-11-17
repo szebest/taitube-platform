@@ -1,4 +1,4 @@
-import { DEFAULT_APPEARANCE } from '@vp/ui';
+import { DEFAULT_APPEARANCE } from '@kit/ui';
 import { noteGuestChange } from '../guest-changes';
 
 const NOCTURNE = { ...DEFAULT_APPEARANCE, theme: 'nocturne' };

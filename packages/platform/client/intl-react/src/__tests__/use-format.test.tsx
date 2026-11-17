@@ -12,7 +12,7 @@ function renderUseFormat(withProvider = true) {
   return renderHook(useFormat, withProvider ? { wrapper } : undefined);
 }
 
-describe('@vp/intl-react: useFormat', () => {
+describe('@kit/intl-react: useFormat', () => {
   it('formats in the provider locale and zone', () => {
     const { format } = renderUseFormat().result.current;
 

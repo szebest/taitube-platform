@@ -1,3 +1,4 @@
+import type { Result } from '@kit/result';
 import type {
   CommentRemoval,
   CommentThread,
@@ -7,7 +8,6 @@ import type {
   NewChannelAuditEntry,
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import type { Result } from '@vp/result';
 import type { CommentLocator } from './comment-repository';
 
 /** A state change of one comment, from the state the decision was made on. */

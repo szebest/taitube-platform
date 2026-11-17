@@ -4,7 +4,7 @@ import { DEFAULT_APPEARANCE } from '../preference';
 import { AppearanceProvider, useAppearance } from '../provider';
 import { stubMediaQueries } from './media-queries';
 
-describe('@vp/ui: applyAppearance', () => {
+describe('@kit/ui: applyAppearance', () => {
   it('puts the attributes ThemedDocument renders on an element it does not render', () => {
     stubMediaQueries({ scheme: 'dark' });
     const { result } = renderHook(() => useAppearance(), {

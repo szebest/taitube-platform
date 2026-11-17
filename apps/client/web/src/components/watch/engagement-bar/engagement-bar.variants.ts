@@ -1,4 +1,4 @@
-import { tv } from '@vp/ui';
+import { tv } from '@kit/ui';
 import type { EngagementBarLayout } from './types';
 
 const BAR_ACTIONS = 'basis-auto ms-auto flex-wrap justify-end overflow-visible [mask-image:none]';

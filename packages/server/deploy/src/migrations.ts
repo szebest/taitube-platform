@@ -1,4 +1,4 @@
-import { parseJson } from '@vp/result';
+import { parseJson } from '@kit/result';
 import { z } from 'zod';
 
 export const MIGRATIONS_DIR = 'packages/server/db/drizzle';

@@ -53,7 +53,7 @@ export default defineConfig({
       '**/tests/fixtures',
       '**/fixtures',
       '**/apps/client/*/src/routeTree.gen.ts',
-      `**/${packageDir('@vp/ui')}/src/styles/generated`,
+      `**/${packageDir('@kit/ui')}/src/styles/generated`,
       'packages/server/db/drizzle/meta',
     ],
   },

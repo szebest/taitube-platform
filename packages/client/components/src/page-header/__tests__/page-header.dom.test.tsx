@@ -1,6 +1,6 @@
+import { variantNames } from '@kit/ui';
 import { act, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { variantNames } from '@vp/ui';
 import { axeViolations } from '@vp/web-testing/dom';
 import { PageHeader, PageHeaderSkeleton, pageHeaderStyles } from '..';
 import { renderWithCopy } from '../../__tests__/render-with-copy';

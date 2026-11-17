@@ -1,4 +1,4 @@
-import { defineTokenSet } from '@vp/design-tokens';
+import { defineTokenSet } from '@kit/design-tokens';
 
 export const spacingAiry = defineTokenSet('spacing', 'airy', {
   'inset-control': '22px',

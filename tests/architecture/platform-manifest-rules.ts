@@ -29,7 +29,7 @@ export interface PackageFiles {
 export interface Context {
   byName: ReadonlyMap<string, Pkg>;
   pending: ReadonlySet<string>;
-  /** The package whose presets a platform tsconfig may extend: `@vp/tsconfig` until it moves, then its `@kit` successor. */
+  /** The package whose presets a platform tsconfig may extend: `@kit/tsconfig` until it moves, then its `@kit` successor. */
   preset: string;
 }
 
@@ -46,8 +46,8 @@ export function tsconfigPreset(
   moves: Readonly<Record<string, unknown>>,
   workspaceNames: ReadonlySet<string>
 ): string {
-  const moved = moves['@vp/tsconfig'];
-  return typeof moved === 'string' && workspaceNames.has(moved) ? moved : '@vp/tsconfig';
+  const moved = moves['@kit/tsconfig'];
+  return typeof moved === 'string' && workspaceNames.has(moved) ? moved : '@kit/tsconfig';
 }
 
 export function manifestProblems(

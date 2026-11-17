@@ -1,3 +1,3 @@
-import type { SizeOption } from '@vp/design-tokens';
+import type { SizeOption } from '@kit/design-tokens';
 
 export type ScrollAreaSize = Extract<SizeOption, 'sm' | 'md'>;

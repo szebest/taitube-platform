@@ -1,10 +1,10 @@
+import { createLocaleStore } from '@kit/intl-react';
 import {
   createMemoryHistory,
   createRootRouteWithContext,
   createRoute,
   Outlet,
 } from '@tanstack/react-router';
-import { createLocaleStore } from '@vp/intl-react';
 import { serverRender } from '@vp/web-testing/server';
 import { createActingChannelStore } from '../acting-channel';
 import {

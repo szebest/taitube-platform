@@ -1,6 +1,6 @@
+import { accentCss } from '@kit/design-tokens';
+import { unwrapOr } from '@kit/result';
 import { HeadContent, ScriptOnce, Scripts, useRouter } from '@tanstack/react-router';
-import { accentCss } from '@vp/design-tokens';
-import { unwrapOr } from '@vp/result';
 import type { ComponentProps, ReactNode } from 'react';
 import { appearanceAttributes } from './attributes';
 import { InlineStyle } from './inline-style';

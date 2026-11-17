@@ -1,3 +1,4 @@
+import { all, err, isErr, map, ok, type Result } from '@kit/result';
 import type {
   CreateWatchPartyBody,
   PatchWatchPartyBody,
@@ -17,7 +18,6 @@ import {
   watchPartyClosed,
   watchPartyNotFound,
 } from '@vp/errors';
-import { all, err, isErr, map, ok, type Result } from '@vp/result';
 import type { PartyCaller } from './party-caller';
 import { isRoomMember } from './watch-party-admission';
 import { createRoom } from './watch-party-create';

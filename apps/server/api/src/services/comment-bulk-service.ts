@@ -1,10 +1,10 @@
+import { type Result, isErr, ok } from '@kit/result';
 import type { BulkActionBody, BulkResultView, CommentActionBody } from '@vp/api-contracts';
 import type { CommentRepositoryPort, VideoRepository } from '@vp/core/repositories';
 import type { ActingChannel } from '@vp/domain';
 import { commentNotFound } from '@vp/domain-rules';
 import type { AnyFailure, ErrorCode } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { type Result, isErr, ok } from '@vp/result';
 import type { ChannelRestrictionService } from './channel-restriction-service';
 import type { CommentModerationService } from './comment-moderation-service';
 

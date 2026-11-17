@@ -2,7 +2,7 @@ import { packageDir, tierGlob } from '../../scripts/workspace-packages';
 import { productionSources, read, trackedFiles } from './repo-files';
 
 const CLIENT = tierGlob('client');
-const UI = `${packageDir('@vp/ui')}/src/`;
+const UI = `${packageDir('@kit/ui')}/src/`;
 
 /** Where a token value may be written: the sets and the themes, each its own module. */
 const TOKEN_HOMES = [`${UI}tokens/`, `${UI}themes/`];
@@ -56,7 +56,7 @@ describe('architecture: token sets and themes stay data', () => {
     {
       shape: 'a theme imported by an app',
       file: 'apps/client/web/src/routes/__root.tsx',
-      source: "import { nocturne } from '@vp/ui/themes/nocturne';",
+      source: "import { nocturne } from '@kit/ui/themes/nocturne';",
     },
     {
       shape: 'a set imported outside the registry',

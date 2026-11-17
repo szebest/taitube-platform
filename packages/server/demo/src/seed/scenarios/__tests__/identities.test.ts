@@ -1,4 +1,4 @@
-import { err } from '@vp/result';
+import { err } from '@kit/result';
 import { createFakeApi } from '../../__tests__/fake-api';
 import { createFakePorts } from '../../__tests__/fake-ports';
 import { runScenariosOnFake } from '../../__tests__/fake-seed';

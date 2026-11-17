@@ -12,7 +12,7 @@ function rendered(value: FormatValue, fallback?: string): string | null {
   return container.textContent;
 }
 
-describe('@vp/intl-react: Format', () => {
+describe('@kit/intl-react: Format', () => {
   it.each([
     { value: { type: 'count', value: 12_345 } as const, expected: '12K' },
     { value: { type: 'duration', value: 765 } as const, expected: '12:45' },

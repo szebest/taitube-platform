@@ -1,4 +1,4 @@
 {
-  "extends": ["./tsconfig.json", "@vp/tsconfig/build.json"],
+  "extends": ["./tsconfig.json", "@kit/tsconfig/build.json"],
   "exclude": ["dist", "node_modules", "**/*.test.ts", "**/__tests__/**"]
 }

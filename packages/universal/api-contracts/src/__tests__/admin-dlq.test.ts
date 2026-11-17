@@ -1,4 +1,4 @@
-import { PAGE_SIZE_MAX } from '@vp/pagination';
+import { PAGE_SIZE_MAX } from '@kit/pagination';
 import { discardDlqEntry, listDlq, replayDlqEntry } from '../admin-dlq';
 
 describe('packages/api-contracts: admin dlq', () => {

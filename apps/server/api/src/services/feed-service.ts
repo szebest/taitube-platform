@@ -1,3 +1,5 @@
+import type { Singleflight } from '@kit/concurrency';
+import { type Result, ignore, isErr, isOk, ok, parseJson, unwrapOr } from '@kit/result';
 import {
   type FeedQuery,
   type FeedResponse,
@@ -5,12 +7,10 @@ import {
   VideoSummarySchema,
   getFeed,
 } from '@vp/api-contracts';
-import type { Singleflight } from '@vp/concurrency';
 import type { CacheClient } from '@vp/core/ports';
 import type { VideoFormat } from '@vp/domain';
 import { CacheKeys } from '@vp/events';
 import type { UserContext } from '@vp/permissions';
-import { type Result, ignore, isErr, isOk, ok, parseJson, unwrapOr } from '@vp/result';
 import { z } from 'zod';
 import type { FeedSort } from './cursor';
 import { buildCacheHeaders, generateEtag, isNotModified } from './http-cache';

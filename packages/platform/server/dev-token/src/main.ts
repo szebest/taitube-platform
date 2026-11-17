@@ -1,4 +1,4 @@
-import { createLogger } from '@vp/logger';
+import { createLogger } from '@kit/logger';
 import { run } from './cli';
 
 const log = createLogger({ service: 'dev-token', level: 'info', format: 'pretty' });

@@ -1,6 +1,6 @@
+import { isOk } from '@kit/result';
 import { BANNER_TARGETS, type CropRect } from '@vp/domain';
 import { decideImageCrops } from '@vp/domain-rules';
-import { isOk } from '@vp/result';
 import type { ImageCropperTarget } from '#app/components/image/image-cropper/types';
 import {
   MAX_ZOOM,

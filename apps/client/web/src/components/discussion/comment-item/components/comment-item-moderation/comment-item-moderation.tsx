@@ -1,4 +1,4 @@
-import { Badge, useUiCopy } from '@vp/ui';
+import { Badge, useUiCopy } from '@kit/ui';
 import type { ComponentPropsWithRef } from 'react';
 import { useCommentItem } from '#app/components/discussion/comment-item/comment-item.context';
 import { commentItemStyles } from '#app/components/discussion/comment-item/comment-item.variants';

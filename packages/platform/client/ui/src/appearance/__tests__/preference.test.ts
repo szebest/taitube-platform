@@ -1,5 +1,5 @@
+import { TOKEN_GROUPS } from '@kit/design-tokens';
 import { requestHandler } from '@tanstack/react-start/server';
-import { TOKEN_GROUPS } from '@vp/design-tokens';
 import {
   type AppearancePreference,
   AppearancePreferenceSchema,
@@ -39,7 +39,7 @@ const ELSEWHERE = {
   overrides: { spacing: 'roomy', radius: 'soft', glow: 'on' },
 };
 
-describe('@vp/ui: the appearance preference', () => {
+describe('@kit/ui: the appearance preference', () => {
   it('defaults to the catalogue: the registry default theme, system mode and contrast, no accent, no overrides', () => {
     expect(DEFAULT_APPEARANCE).toEqual({
       schema: 2,

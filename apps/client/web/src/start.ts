@@ -1,6 +1,6 @@
+import { clientAppRequestMiddlewareFor } from '@kit/security-headers';
 import { createStart } from '@tanstack/react-start';
 import { sessionMiddleware } from '@vp/queries';
-import { clientAppRequestMiddlewareFor } from '@vp/security-headers';
 import { EMBED_PATH_PREFIX } from '#app/features/embed';
 import { API_BASE_URL, COOKIE_DOMAIN, DEV_TOKEN_URL } from './lib/config';
 

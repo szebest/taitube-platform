@@ -1,5 +1,5 @@
+import { fromPromise, isErr } from '@kit/result';
 import { asThrowable, errorCodeRegistry } from '@vp/errors';
-import { fromPromise, isErr } from '@vp/result';
 import type { SeedStepReport } from '../types';
 import type { Scenario, ScenarioContext, StepOutcome } from './scenario';
 

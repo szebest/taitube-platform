@@ -1,4 +1,4 @@
-import { fromPromise, ignore } from '@vp/result';
+import { fromPromise, ignore } from '@kit/result';
 
 /**
  * A string body goes as `text/plain`, a simple request with no CORS preflight, so the beacon still

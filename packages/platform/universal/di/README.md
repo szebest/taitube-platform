@@ -18,5 +18,5 @@ if (greeter.ok) greeter.value.greet('Ada');
 else throw new Error(`No provider for ${greeter.error.token}`);
 ```
 
-`get` returns a `Result` from `@vp/result`; a token nobody provided is `MissingProvider`, never an exception.
+`get` returns a `Result` from `@kit/result`; a token nobody provided is `MissingProvider`, never an exception.
 In a spec, substitute a provider with `createRegistry().provide(provide(Token, fake))`.

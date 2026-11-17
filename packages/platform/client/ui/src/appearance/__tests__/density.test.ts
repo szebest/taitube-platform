@@ -5,7 +5,7 @@ import { resolveAppearance } from '../resolve';
 const sets = (overrides: Parameters<typeof resolveAppearance>[0]['overrides']) =>
   resolveAppearance({ ...DEFAULT_APPEARANCE, overrides }, { reducedMotion: false }).sets;
 
-describe('@vp/ui: density', () => {
+describe('@kit/ui: density', () => {
   it.each([
     { label: 'the theme own spacing and sizing', overrides: {}, density: 'comfortable' },
     {

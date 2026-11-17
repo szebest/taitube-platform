@@ -1,3 +1,4 @@
+import { createCompoundContext } from '@kit/ui';
 import {
   createPaginatedRowModel,
   type RowData,
@@ -13,7 +14,6 @@ import {
   sortFn_text,
   tableFeatures,
 } from '@tanstack/react-table';
-import { createCompoundContext } from '@vp/ui';
 import type { DataTableColumnMeta, DataTableInstance, DataTableState } from './types';
 
 /**

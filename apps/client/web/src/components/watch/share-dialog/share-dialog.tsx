@@ -1,8 +1,8 @@
+import { useFormat, useT } from '@kit/intl-react';
+import { fromPromise, unwrapOr } from '@kit/result';
+import { Button, Checkbox, Label, ResponsiveModal, useUiCopy } from '@kit/ui';
 import type { Video } from '@vp/api-contracts';
 import { videoDuration } from '@vp/intl';
-import { useFormat, useT } from '@vp/intl-react';
-import { fromPromise, unwrapOr } from '@vp/result';
-import { Button, Checkbox, Label, ResponsiveModal, useUiCopy } from '@vp/ui';
 import { useId, useState } from 'react';
 import { usePlayerSeek } from '#app/components/player/taitube-player';
 import { EngagementBar } from '#app/components/watch/engagement-bar';

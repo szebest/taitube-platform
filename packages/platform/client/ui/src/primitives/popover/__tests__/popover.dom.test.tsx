@@ -26,7 +26,7 @@ const renderSharePopover = (size?: PopoverSize, container?: HTMLElement) => {
   };
 };
 
-describe('@vp/ui: Popover', () => {
+describe('@kit/ui: Popover', () => {
   it('scrolls inside the space the viewport leaves it, so it never runs off a short screen', async () => {
     const { user } = renderSharePopover();
 

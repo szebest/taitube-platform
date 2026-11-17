@@ -1,5 +1,5 @@
+import type { Container } from '@kit/composition';
 import { Adapters } from '@vp/adapters/composition';
-import type { Container } from '@vp/composition';
 import { CurrentPickCache } from '../services/current-pick-cache';
 import { CurrentPickService, PickService } from '../services/index';
 import { Services } from './service-tokens';

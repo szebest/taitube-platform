@@ -11,7 +11,7 @@ Instructions for any coding agent working on the Taitube web client (`apps/clien
 | Framework | **TanStack Start** on **Vite 8**, **React 19**, server-rendered and hydrated, compiled by the **Oxc React Compiler** (`clientAppConfig`'s `compiler`, default `'oxc'`): no `useMemo`, `useCallback` or `memo` outside `tests/react-compiler/manual-memo-allowlist.json`, and what it skips is `tests/react-compiler/baseline.json` |
 | Routing | file-based **TanStack Router** under `src/routes/`; `src/routeTree.gen.ts` is generated and committed |
 | Data | **TanStack Query** (one `QueryClient` per request and per tab, in router context), filled by route loaders; **TanStack Form** for forms |
-| Styling | **Tailwind CSS 4** (`@tailwindcss/vite`, plain class names, preflight on) on the colour roles and token sets of `@vp/ui`, with its **Radix** primitives and `@vp/components`; no stylesheet outside `@vp/ui` |
+| Styling | **Tailwind CSS 4** (`@tailwindcss/vite`, plain class names, preflight on) on the colour roles and token sets of `@kit/ui`, with its **Radix** primitives and `@vp/components`; no stylesheet outside `@kit/ui` |
 | Playback | `<TaitubePlayer />` from `src/components/player/taitube-player`, on Video.js 10 (`@videojs/react`) and the `hls.js` its `@videojs/hlsjs-video` engine bundles; `integrations/video-js/video-js-engine.tsx` is the one module that imports either, so the engine swaps in one file; the skin in `components/player/` reads it through `usePlayerState` and `usePlayerCommands`, typed by `lib/player/player-port.ts` |
 | Tests | Vitest through the app's own Vite config, `globals: true`, in two projects: `node` (`vitest.config.ts`) and `jsdom` (`vitest.jsdom.config.ts`, the `*.dom.test.{ts,tsx}` specs) with Testing Library; MSW answers for the API in both |
 | Server | `vite build` writes `dist/client` and `dist/server/server.js` (a fetch handler); `start` serves it with `srvx`, and `src/server.ts` serves `dist/client` ahead of the app, `/assets/` immutable for a year (`withStaticAssets`) |
@@ -21,7 +21,7 @@ Instructions for any coding agent working on the Taitube web client (`apps/clien
 to it on `VITE_STUDIO_URL` (`src/lib/config`). It may import `packages/universal/*` and `packages/client/*` only;
 `pnpm boundaries` fails on anything else, and `tests/architecture/client-app-duplicates.test.ts` fails a source
 file byte-identical between the two apps. The browser-tier packages resolve **from their TypeScript
-source** through the aliases `@vp/vite-preset` sets up, so an edit to `@vp/intl-react` hot-reloads the app; `tsc`
+source** through the aliases `@kit/vite-preset` sets up, so an edit to `@kit/intl-react` hot-reloads the app; `tsc`
 still reads their built `.d.ts`, which is why `typecheck` depends on `^build`.
 
 ---
@@ -31,7 +31,7 @@ still reads their built `.d.ts`, which is why `typecheck` depends on `^build`.
 ```
 src/
 ├── routes/               file routes only: params, validateSearch, loader, head, component
-│   ├── __root.tsx        the document (ThemedDocument from @vp/ui), global styles, provider stack, the app shell, devtools
+│   ├── __root.tsx        the document (ThemedDocument from @kit/ui), global styles, provider stack, the app shell, devtools
 │   ├── _authed.tsx       pathless members-only layout: requireSignedIn sends a guest to /login
 │   ├── login.tsx         the `LoginPage` wrapper over `@vp/components`' sign-in card, the demo persona switcher behind `VITE_DEMO_PERSONAS`
 │   ├── upload/           redirects to the same path on the studio, server render and client navigation alike
@@ -95,7 +95,7 @@ export const Route = createFileRoute('/watch/$videoId')({
 - **Links are typed against the tree**: `<Link to="/channel/$channelId" params={{ channelId }}>`, never an
   interpolated string. `src/__tests__/router.test.tsx` holds `@ts-expect-error` cases the typecheck keeps.
 - **Code splitting is automatic** (the Start router plugin splits each route's component into its own
-  chunk). Write no `React.lazy` for a route. The bundle guard from `@vp/vite-preset` fails the build if a route
+  chunk). Write no `React.lazy` for a route. The bundle guard from `@kit/vite-preset` fails the build if a route
   lands in the entry chunk, two routes share one, devtools reach the production bundle, or the demo personas reach one built without `VITE_DEMO_PERSONAS=true`,
   or any chunk carries the upload and edit code that moved to the studio (the `forbiddenDirs`).
   - The exception is a dev-only route: its component is a `React.lazy` gated on
@@ -112,7 +112,7 @@ Everything under `src/` runs on the server first. A component that reads `window
 - **`useStoredState(key, schema, serverValue, clientDefault?)`** from `src/hooks/` for persisted UI state:
   the server and the hydration render `serverValue`, the stored value arrives once the page is live.
 - **A cookie read in the root `beforeLoad`** for UI state the first paint must already show, so the page
-  does not jump on hydration: the theme (`vp.theme`, `@vp/ui`) and the sidebar (`vp.sidebar`,
+  does not jump on hydration: the theme (`vp.theme`, `@kit/ui`) and the sidebar (`vp.sidebar`,
   `features/shell/sidebar-state.ts`).
 - **`ClientOnly` from TanStack Router** for a browser-only widget, with the server's markup as its
   `fallback`, as `WatchStage` does: the poster in a fixed 16:9 frame renders on the server, and the
@@ -167,7 +167,7 @@ no meta.
   Optimistic ones (`useSetReaction`, `useSetSubscription`) snapshot and write in `onMutate`, put the
   snapshot back with `restoreQueryData` in `onError` and invalidate in `onSettled`; the rest invalidate the
   detail and list keys they change. Per-call reactions (a toast, a navigation) go in `mutate(vars, { onSuccess })`.
-- **A form is `useAppForm`** from `@vp/forms`, which binds `TextField`, `SelectField`
+- **A form is `useAppForm`** from `@kit/forms`, which binds `TextField`, `SelectField`
   and `FileField` to `form.AppField`. A field validator is `validateWith(rule)` over a `@vp/validation`
   rule, so the browser runs the check the API runs. Web has no form today: the upload and edit forms, and
   the video field validators, live in the studio. Gate the submit button on
@@ -222,7 +222,7 @@ the `sign-in` url-modal with the action's reason (`?modal=sign-in&reason=like&re
 cannot use stays visible. The dialog's one call to action goes to `/login?redirect=` for the page the viewer was
 on; an idempotent intent (like, subscribe, save) is remembered in `sessionStorage` and replayed once by
 `ReplayIntent` after sign-in. The redirect stays for the member-only routes (`requireSignedIn`), and the header
-Sign in link keeps the `redirect` it is already on instead of nesting it. One toast system: `@vp/ui`'s `Toast`.
+Sign in link keeps the `redirect` it is already on instead of nesting it. One toast system: `@kit/ui`'s `Toast`.
 
 ### Queue and hover preview
 
@@ -342,17 +342,17 @@ for a signed-in viewer ([ticket 99](../../../docs/tickets/99-notifications.md)).
 - **Specs** drive the bell through `renderRoute` with the stream's lock granted and `stubEventSource` emitting the
   events (`features/notifications/components/__tests__/header-notification-centre.dom.test.tsx`).
 
-### The design system (`@vp/ui`)
+### The design system (`@kit/ui`)
 
-The primitives, the tokens and the theme live in `@vp/ui`; its [AGENTS.md](../../../packages/platform/client/ui/AGENTS.md)
-holds the rules. This app links `@vp/ui/styles.css` and mounts the root providers once, in
+The primitives, the tokens and the theme live in `@kit/ui`; its [AGENTS.md](../../../packages/platform/client/ui/AGENTS.md)
+holds the rules. This app links `@kit/ui/styles.css` and mounts the root providers once, in
 `__root.tsx`; every primitive and kit component is shown in the workbench (`@vp/workbench`), not in the app.
 
-The app kit (`src/components/<area>/<name>/`) is built from `@vp/ui` and `@vp/components`, takes data as props and
+The app kit (`src/components/<area>/<name>/`) is built from `@kit/ui` and `@vp/components`, takes data as props and
 calls no data hook. A placement is a smart wrapper in the feature that owns its data:
 `features/browse/components/feed-video-card.tsx` is the reference, and the shell wrappers (`RootShell`,
 `ShellRail`, `ShellAccountMenu`, `ShellTabBar`) mount `AppShell`. A page ticket owns the wrappers it uses.
-Forward a caller's element with `Slot` from `@vp/ui`, and honour reduced motion (`VideoCard.Expanded`'s
+Forward a caller's element with `Slot` from `@kit/ui`, and honour reduced motion (`VideoCard.Expanded`'s
 expand-on-hover, view transitions). How to add any of this:
 [docs/standards/design-system.md](../../../docs/standards/design-system.md).
 
@@ -365,7 +365,7 @@ viewer picks "Reload to update", and the reload waits while a video or audio ele
 colours the manifest from the `bg` role of the registry's default theme; `ThemeColorMeta` renders the `theme-color`
 tags (React hoists them, because the router's `head()` keeps one tag per `name`). `shouldPrefetch()` is the one
 save-data check: `getRouter` reads it for `defaultPreload` and `FeedSentinel` for its margin. The worker's UI is
-`Toast` and `Callout` from `@vp/ui` and nothing of its own. The studio is another origin and has no worker.
+`Toast` and `Callout` from `@kit/ui` and nothing of its own. The studio is another origin and has no worker.
 
 `src/sw.ts` only composes; each piece is a module of `src/sw/` with a spec beside it. The runtime routes
 (`runtime-caching.ts`, first match wins after the precache): scripts, styles and fonts of this origin the manifest
@@ -419,7 +419,7 @@ page by client-side navigation; a full page load of `/watch/...` is a server ren
 
 | Ticket | Where it plugs in |
 |---|---|
-| 55 design system | `@vp/ui`; global styles are linked once, in `__root.tsx` |
+| 55 design system | `@kit/ui`; global styles are linked once, in `__root.tsx` |
 | 69 URL state | the `validateSearch` every leaf route declares, and `features/url-modal/registry.ts` for a modal |
 | 57 player | `<TaitubePlayer />` and its prop, payload and event types from `#app/components/player/taitube-player`; `features/watch/components/watch-stage.tsx` mounts it on the watch page, and `PlayerChannelProvider` hands the page's other parts its seek, its playhead and its theater mode |
 | 73 library, queue | `features/library/` (above); `lib/playback-session` holds the queue and the one player's state for the whole session (`PlaybackSessionProvider`), and the now playing bar is the mini player |
@@ -451,7 +451,7 @@ the server it calls the API at `API_BASE_URL` with the session cookie's token; i
 origin's `/api`, which `sessionMiddleware` (mounted in `src/start.ts` after the CSRF check and the security
 headers) forwards there with the same token, so the browser never makes a cross-origin call and never holds the
 token (SDD §11, Transport). Nothing else makes an HTTP call (the upload's PUT of file bytes to storage lives in
-the studio), except `useWebTelemetry` (`@vp/web-telemetry`, mounted in `__root.tsx`): its vitals beacon to
+the studio), except `useWebTelemetry` (`@kit/web-telemetry`, mounted in `__root.tsx`): its vitals beacon to
 `POST /v1/telemetry/vitals` and its spans to `OTEL_TRACES_URL`. A component consumes a hook or a query and
 renders; it never calls the client itself.
 
@@ -469,7 +469,7 @@ validation literal.
 [docs/standards/error-handling.md](../../../docs/standards/error-handling.md).
 
 ### Rule 5: Components never format
-Every number, date, duration and count goes through `@vp/intl-react`: `<Format value={...} />`,
+Every number, date, duration and count goes through `@kit/intl-react`: `<Format value={...} />`,
 `useT().tOr(...)` or `useFormat()`. The root route negotiates the locale (`requestLocale`) and the router
 passes it with `timeZone="UTC"`, so the server and the hydration print the same text; a route's `head`
 words itself through `headWords(match.context.locales.snapshot())`. `no-adhoc-formatting.test.ts` fails
@@ -586,7 +586,7 @@ points the same specs at `make up api worker` and serves the app on 5173, the or
   a seeded row carrying `HOSTILE_TEXT`; a new creator or admin endpoint adds a row to
   `privilege-escalation.test.ts`.
 
-The server's security headers come from `securityHeadersMiddleware` (`@vp/security-headers`), which
+The server's security headers come from `securityHeadersMiddleware` (`@kit/security-headers`), which
 `src/start.ts` mounts: it makes a nonce per request, sets the CSP (`script-src 'nonce-…' 'strict-dynamic'`, `worker-src 'self'`),
 and `getRouter` reads it through `requestNonce()` so every script Start renders carries it. An inline script
 of your own takes `nonce={requestNonce()}`, or the browser refuses it.

@@ -1,4 +1,4 @@
-import { defineTokenSet } from '@vp/design-tokens';
+import { defineTokenSet } from '@kit/design-tokens';
 
 export const spacingDefault = defineTokenSet('spacing', 'default', {
   'inset-control': '18px',

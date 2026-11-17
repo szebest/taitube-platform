@@ -1,5 +1,5 @@
+import { assertNever } from '@kit/result';
 import * as schema from '@vp/db';
-import { assertNever } from '@vp/result';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres, { type Sql } from 'postgres';
 import type { PostgresDatabase } from './types';

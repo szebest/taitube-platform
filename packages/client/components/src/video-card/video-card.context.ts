@@ -1,4 +1,4 @@
-import { createCompoundContext } from '@vp/ui';
+import { createCompoundContext } from '@kit/ui';
 import type { VideoCardSize, VideoCardState, VideoCardVariant } from './types';
 
 export const [VideoCardContext, useVideoCard] = createCompoundContext<{

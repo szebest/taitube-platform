@@ -1,6 +1,6 @@
-import type { TokenGroup, TokenSet } from '@vp/design-tokens';
-import { useAppearance } from '@vp/ui';
-import { appearance } from '@vp/ui/appearance/registry';
+import type { TokenGroup, TokenSet } from '@kit/design-tokens';
+import { useAppearance } from '@kit/ui';
+import { appearance } from '@kit/ui/appearance/registry';
 
 /**
  * One token group as the viewer has it: the sets offered, the default a reset returns to, and the

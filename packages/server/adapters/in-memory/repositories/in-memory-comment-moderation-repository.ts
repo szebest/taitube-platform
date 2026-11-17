@@ -1,3 +1,4 @@
+import { isErr, ok, type Result, unwrapOr } from '@kit/result';
 import type {
   CommentLocator,
   CommentModerationRepositoryPort,
@@ -10,7 +11,6 @@ import type {
 import { type CommentRemoval, commentCreated } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { commentOutbox } from '@vp/job-contracts';
-import { isErr, ok, type Result, unwrapOr } from '@vp/result';
 import { recordModeration } from './comment-moderation-record';
 import { toThreadOf } from './comment-projections';
 import { isVisibleTo, publicScopeOf } from './comment-public-scope';

@@ -9,7 +9,7 @@ function renderFieldName(): string {
   return renderToStaticMarkup(<FieldName />);
 }
 
-describe('@vp/forms: form context', () => {
+describe('@kit/forms: form context', () => {
   it('refuses a field component rendered outside a form field', () => {
     expect(renderFieldName).toThrow(/fieldContext/);
   });

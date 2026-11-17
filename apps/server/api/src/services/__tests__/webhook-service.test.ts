@@ -1,7 +1,7 @@
+import { err } from '@kit/result';
 import { InMemoryRepositories, InMemoryWebhookDispatcher } from '@vp/adapters/in-memory';
 import { ErrorCodes, webhookDeliveryRejected } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { err } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { WebhookService } from '../webhook-service';
 

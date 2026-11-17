@@ -1,15 +1,15 @@
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
+import { TOKEN_GROUPS, type TokenGroup, tokenGroups } from '@kit/design-tokens';
+import { AppearanceProvider, DEFAULT_APPEARANCE } from '@kit/ui';
 import { render } from '@testing-library/react';
-import { TOKEN_GROUPS, type TokenGroup, tokenGroups } from '@vp/design-tokens';
-import { AppearanceProvider, DEFAULT_APPEARANCE } from '@vp/ui';
 import { AppProviders } from '#app/__tests__/providers';
 import { SETTING_ROWS } from '#app/features/account/utils/settings-index';
 import { SetPreview } from '../token-group-map';
 
 const SETS_CSS = readFileSync(
-  join(dirname(createRequire(import.meta.url).resolve('@vp/ui/styles.css')), 'generated/sets.css'),
+  join(dirname(createRequire(import.meta.url).resolve('@kit/ui/styles.css')), 'generated/sets.css'),
   'utf8'
 );
 

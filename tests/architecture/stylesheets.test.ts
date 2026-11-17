@@ -2,8 +2,8 @@ import { packageDir } from '../../scripts/workspace-packages';
 import { trackedFiles } from './repo-files';
 
 const COMPONENTS = packageDir('@vp/components');
-const FORMS = packageDir('@vp/forms');
-const UI = packageDir('@vp/ui');
+const FORMS = packageDir('@kit/forms');
+const UI = packageDir('@kit/ui');
 
 /** The homes a stylesheet may have: the design system's own, the workbench preview, and the design docs. */
 const STYLESHEET_HOMES = [`${UI}/src/styles/`, 'packages/client/workbench/.storybook/', 'docs/'];

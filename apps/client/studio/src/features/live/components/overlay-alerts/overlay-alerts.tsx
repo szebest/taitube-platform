@@ -1,4 +1,4 @@
-import { useT } from '@vp/intl-react';
+import { useT } from '@kit/intl-react';
 import { AlertBanner } from '#app/components/live/alert-banner';
 import { useSubscriberAlert } from '#app/features/live/hooks/use-subscriber-alert';
 

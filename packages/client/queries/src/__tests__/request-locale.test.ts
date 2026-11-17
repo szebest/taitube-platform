@@ -1,4 +1,4 @@
-import { createLocaleStore } from '@vp/intl-react';
+import { createLocaleStore } from '@kit/intl-react';
 import { type LocaleRequest, requestLocale } from '../request-locale';
 import { inRequest } from './in-request';
 

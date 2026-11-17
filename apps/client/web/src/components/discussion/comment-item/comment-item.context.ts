@@ -1,4 +1,4 @@
-import { createCompoundContext } from '@vp/ui';
+import { createCompoundContext } from '@kit/ui';
 import type { CommentLevel, CommentState } from './types';
 
 export const [CommentItemContext, useCommentItem] = createCompoundContext<{

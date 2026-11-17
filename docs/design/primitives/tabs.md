@@ -21,7 +21,7 @@ A set of peer views in the same place, one visible at a time, switched by a row 
 
 ```ts
 // types.ts
-import type { ControlSize } from '@vp/design-tokens';
+import type { ControlSize } from '@kit/design-tokens';
 import type { FillOption, Orientation } from '../../types';
 
 export type TabsFill = Extract<FillOption, 'ghost' | 'soft'>;
@@ -79,7 +79,7 @@ ground: it moves and resizes over `duration-base` with `ease-settle` from the mo
 direction change and (in a scrolling group) the scroll, and does not animate its first placement. The underline is `accent`, two pixels, on the block-end edge of the list. The
 selected option keeps its text colour change, so the state reads even before the indicator arrives. Under the
 `reduced` motion set (chosen, or forced by `prefers-reduced-motion`) the indicator changes position without
-sliding. One shared helper in `@vp/ui` measures the selected option and drives the indicator for every group
+sliding. One shared helper in `@kit/ui` measures the selected option and drives the indicator for every group
 that has one (`useSlidingIndicator`); no component positions its own.
 
 ## Tokens

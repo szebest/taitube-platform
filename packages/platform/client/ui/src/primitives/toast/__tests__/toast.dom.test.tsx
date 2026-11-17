@@ -29,7 +29,7 @@ const renderToast = (tone?: ToastTone, onClose: () => void = () => undefined) =>
   };
 };
 
-describe('@vp/ui: Toast', () => {
+describe('@kit/ui: Toast', () => {
   it.each([
     { tone: 'neutral', glyph: 'info' },
     { tone: 'success', glyph: 'check' },

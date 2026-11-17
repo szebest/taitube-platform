@@ -1,3 +1,4 @@
+import { andThenAsync, err, ok, type Result } from '@kit/result';
 import {
   type DatabaseUnavailable,
   type WatchPartyClosed,
@@ -5,7 +6,6 @@ import {
   watchPartyClosed,
   watchPartyNotFound,
 } from '@vp/errors';
-import { andThenAsync, err, ok, type Result } from '@vp/result';
 import type { PartyCaller } from './party-caller';
 import type { RoomContext, WatchPartyContextLoader } from './watch-party-context';
 

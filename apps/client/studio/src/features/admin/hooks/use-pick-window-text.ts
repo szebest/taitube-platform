@@ -1,5 +1,5 @@
-import { useFormat, useT } from '@vp/intl-react';
-import { unwrapOr } from '@vp/result';
+import { useFormat, useT } from '@kit/intl-react';
+import { unwrapOr } from '@kit/result';
 
 /** A pick's window as one line: its start and end, each with its date and time. */
 export function usePickWindowText() {

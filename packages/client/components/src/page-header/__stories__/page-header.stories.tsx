@@ -1,5 +1,5 @@
+import { Button, variantNames } from '@kit/ui';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Button, variantNames } from '@vp/ui';
 import { PageHeader, PageHeaderSkeleton, pageHeaderStyles } from '..';
 import { PageHeaderRoot } from '../page-header';
 

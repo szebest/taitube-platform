@@ -2,7 +2,7 @@ import { packageDir } from '../../scripts/workspace-packages';
 import { ENTRYPOINTS, ENV_HOMES, isListed } from './entrypoints';
 import { isSpec, read, trackedFiles } from './repo-files';
 
-const CONFIG = packageDir('@vp/config');
+const CONFIG = packageDir('@kit/config');
 
 const SCANNED = /\.(ts|tsx|mts|js|mjs)$/;
 

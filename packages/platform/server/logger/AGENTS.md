@@ -1,4 +1,4 @@
-# AGENTS.md — @vp/logger (the one logger)
+# AGENTS.md — @kit/logger (the one logger)
 
 > Tier rules for this directory: [../AGENTS.md](../../../server/AGENTS.md) · full tier & layer reference: [packages/AGENTS.md](../../../AGENTS.md)
 
@@ -39,6 +39,6 @@ Tier `server`, `vp.layer` 1; its dependencies are in [package.json](package.json
 ## 3. Local Commands
 
 ```bash
-pnpm --filter @vp/logger test
+pnpm --filter @kit/logger test
 bun test packages/platform/server/logger
 ```

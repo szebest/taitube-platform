@@ -1,6 +1,6 @@
-import { useT } from '@vp/intl-react';
+import { useT } from '@kit/intl-react';
+import { Button, Icon, IconButton } from '@kit/ui';
 import { PartyCan } from '@vp/permissions-react';
-import { Button, Icon, IconButton } from '@vp/ui';
 import type { ComponentPropsWithRef } from 'react';
 
 /** The Queue tab: what plays next, in the room's order. */

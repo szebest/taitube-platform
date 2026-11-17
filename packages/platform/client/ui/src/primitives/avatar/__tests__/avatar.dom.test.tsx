@@ -12,7 +12,7 @@ const renderAvatar = (props: AvatarRootProps = {}) =>
     </AvatarRoot>
   );
 
-describe('@vp/ui: Avatar', () => {
+describe('@kit/ui: Avatar', () => {
   it.each(variantNames(avatarStyles.variants.size))(
     'stands its monogram in for a %s picture that has not loaded, named after its owner',
     (size) => {

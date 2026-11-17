@@ -1,6 +1,6 @@
 # UiCopyProvider
 
-The one place a primitive gets the words it prints itself, so `@vp/ui` stays free of the message catalogue.
+The one place a primitive gets the words it prints itself, so `@kit/ui` stays free of the message catalogue.
 
 ## Anatomy
 
@@ -30,7 +30,7 @@ interface UiCopyProviderProps { copy: UiCopy; children: ReactNode }
 function useUiCopy(): UiCopy;   // throws outside a provider
 ```
 
-`UiCopy` is a type declared in `@vp/ui` (`UI_COPY_KEYS` the list); both apps fill it from the `ui` section of the `@vp/messages` catalogue through `AppWords` in `@vp/queries` (`IntlProvider` and this provider, the router's `Wrap` and every app spec's providers), so translation, plurals and locale live where they already do, and a spec there fails on a key the catalogue lacks. The provider is the only component in the package that is not visual.
+`UiCopy` is a type declared in `@kit/ui` (`UI_COPY_KEYS` the list); both apps fill it from the `ui` section of the `@vp/messages` catalogue through `AppWords` in `@vp/queries` (`IntlProvider` and this provider, the router's `Wrap` and every app spec's providers), so translation, plurals and locale live where they already do, and a spec there fails on a key the catalogue lacks. The provider is the only component in the package that is not visual.
 
 ```tsx
 <AppWords>
@@ -72,7 +72,7 @@ None: no role, radius, type style or motion. It styles nothing.
 - Do wrap the workbench and every spec with a provider of fixture strings.
 - Don't add a label prop to a primitive for a string the provider can hold.
 - Don't put product copy here; it holds control chrome only.
-- Don't import `@vp/messages` from `@vp/ui`.
+- Don't import `@vp/messages` from `@kit/ui`.
 
 ## In the workbench
 

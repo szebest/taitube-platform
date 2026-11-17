@@ -1,5 +1,5 @@
+import { Table, useUiCopy, VisuallyHidden } from '@kit/ui';
 import { type RowData, Subscribe, type TableState } from '@tanstack/react-table';
-import { Table, useUiCopy, VisuallyHidden } from '@vp/ui';
 import {
   Children,
   type ComponentPropsWithRef,

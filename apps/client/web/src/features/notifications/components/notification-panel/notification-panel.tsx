@@ -1,11 +1,11 @@
+import { useFormat, useT } from '@kit/intl-react';
+import { unwrapOr } from '@kit/result';
+import { Tabs } from '@kit/ui';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import { EmptyState, NoNotificationsIllustration, SectionError } from '@vp/components';
 import { NOTIFICATION_FILTERS, type NotificationFilter } from '@vp/domain';
-import { useFormat, useT } from '@vp/intl-react';
 import { unreadNotificationCountQueryOptions, useApi } from '@vp/queries';
-import { unwrapOr } from '@vp/result';
-import { Tabs } from '@vp/ui';
 import { useState } from 'react';
 import { PagedFooter } from '#app/components/feed/paged-footer';
 import {

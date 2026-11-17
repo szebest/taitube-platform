@@ -8,7 +8,7 @@ imports, the design system and its numbered rules.
 What it means for SKILL.md:
 
 - **The Oxc React Compiler is on** for both apps, every client package, their specs and the
-  stories (`reactPlugins()` in `@vp/vite-preset`), so hard rule 5 holds: the exceptions are
+  stories (`reactPlugins()` in `@kit/vite-preset`), so hard rule 5 holds: the exceptions are
   `tests/react-compiler/manual-memo-allowlist.json`, each with its reason, and a zero-matches
   row fails any other `useMemo`, `useCallback` or `memo`. What the compiler skips is
   `tests/react-compiler/baseline.json`, which may only shrink: fix the code (no mutation of

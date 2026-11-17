@@ -1,5 +1,5 @@
 {
-  "extends": "@vp/tsconfig/universal.json",
+  "extends": "@kit/tsconfig/universal.json",
   "compilerOptions": {
     "rootDir": "src",
     "outDir": "dist",

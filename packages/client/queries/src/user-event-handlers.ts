@@ -1,7 +1,7 @@
+import { assertNever } from '@kit/result';
 import type { QueryClient } from '@tanstack/react-query';
 import type { PreferencesView, UserEvent, Video } from '@vp/api-contracts';
 import { VIDEO_LIFECYCLE_EDGES, type VideoStatus } from '@vp/domain';
-import { assertNever } from '@vp/result';
 import { creatorCommentKeys } from './comment-queries';
 import { notificationKeys, setUnreadCount } from './notification-queries';
 import { videoKeys } from './video-queries';

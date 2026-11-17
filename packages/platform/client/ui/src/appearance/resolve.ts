@@ -1,4 +1,4 @@
-import type { Theme, TokenGroup, TokenSet } from '@vp/design-tokens';
+import type { Theme, TokenGroup, TokenSet } from '@kit/design-tokens';
 import type { AppearancePreference, TokenSetId, TokenSetIds } from './preference';
 import { appearance } from './registry';
 

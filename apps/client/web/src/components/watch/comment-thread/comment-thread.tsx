@@ -1,4 +1,3 @@
-import { COMMENT_SORTS } from '@vp/domain';
 import {
   Avatar,
   Button,
@@ -8,7 +7,8 @@ import {
   Slot,
   Textarea,
   useUiCopy,
-} from '@vp/ui';
+} from '@kit/ui';
+import { COMMENT_SORTS } from '@vp/domain';
 import {
   type ComponentPropsWithRef,
   type KeyboardEvent,

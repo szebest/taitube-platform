@@ -1,6 +1,6 @@
-import { useT } from '@vp/intl-react';
+import { useT } from '@kit/intl-react';
+import type { IconId } from '@kit/ui';
 import { useAccount } from '@vp/queries';
-import type { IconId } from '@vp/ui';
 
 export type ShellTarget =
   | {

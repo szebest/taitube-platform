@@ -1,5 +1,5 @@
+import type { Result } from '@kit/result';
 import type { PipelineMetrics } from '@vp/observability';
-import type { Result } from '@vp/result';
 
 export type StorageOp = 'put' | 'get' | 'head' | 'multipart' | 'delete' | 'list';
 

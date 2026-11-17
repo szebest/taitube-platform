@@ -1,11 +1,11 @@
+import type { InvalidCursor, Paginator } from '@kit/pagination';
+import { type Result, isErr, map } from '@kit/result';
 import type { CommentRemovalView } from '@vp/api-contracts';
 import type { CommentModerationRepositoryPort } from '@vp/core/repositories';
 import { COMMENT_REMOVAL_RETENTION_DAYS } from '@vp/domain';
 import { MS_PER_DAY } from '@vp/domain/time';
 import type { DatabaseUnavailable } from '@vp/errors';
-import type { InvalidCursor, Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
-import { type Result, isErr, map } from '@vp/result';
 import { createdAtCursorPayload, decodeCreatedAtCursor } from './cursor';
 
 export interface CommentRemovalServiceDeps {

@@ -1,7 +1,7 @@
+import { err, ok } from '@kit/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { databaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { err, ok } from '@vp/result';
 import { SEEDED } from '@vp/testing';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { AnalyticsService } from '../analytics-service';

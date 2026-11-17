@@ -1,8 +1,8 @@
 import { fileURLToPath } from 'node:url';
+import { workspaceSourceAliases } from '@kit/vite-preset';
+import { reactPlugins } from '@kit/vite-preset/react-plugins';
 import type { StorybookConfig } from '@storybook/react-vite';
 import tailwindcss from '@tailwindcss/vite';
-import { workspaceSourceAliases } from '@vp/vite-preset';
-import { reactPlugins } from '@vp/vite-preset/react-plugins';
 import { mergeConfig } from 'vite';
 
 const PACKAGES_DIR = fileURLToPath(new URL('../../../', import.meta.url));

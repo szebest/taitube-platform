@@ -1,5 +1,5 @@
-import { useT } from '@vp/intl-react';
-import { Button, createCompoundContext } from '@vp/ui';
+import { useT } from '@kit/intl-react';
+import { Button, createCompoundContext } from '@kit/ui';
 import type { PropsWithChildren } from 'react';
 import { ImagePreview } from '../image-preview/image-preview';
 

@@ -1,5 +1,5 @@
+import { ok, type Result } from '@kit/result';
 import { ErrorCodes } from '@vp/errors';
-import { ok, type Result } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
 import {
   actingInRoom,

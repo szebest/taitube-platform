@@ -1,9 +1,9 @@
-# AGENTS.md - @vp/web-telemetry (real-user vitals and browser traces)
+# AGENTS.md - @kit/web-telemetry (real-user vitals and browser traces)
 
 > Tier rules for this directory: [../AGENTS.md](../../../client/AGENTS.md) · full tier & layer reference: [packages/AGENTS.md](../../../AGENTS.md) · spec: [SDD §13.1, §13.3](../../../../docs/SDD.md#13-autoscaling--observability)
 
 Owner: ticket [64](../../../../docs/tickets/64-web-vitals-monitoring-inp-lcp-cls-real-user-measurement.md).
-`client` tier, layer T4 (it depends on `@vp/api-contracts`, T3, and `@vp/result`).
+`client` tier, layer T4 (it depends on `@vp/api-contracts`, T3, and `@kit/result`).
 
 ## What it holds
 
@@ -27,11 +27,11 @@ Owner: ticket [64](../../../../docs/tickets/64-web-vitals-monitoring-inp-lcp-cls
 - **The beacon is not an API client call.** `sendBeacon` cannot go through `@vp/api-client`; the path
   comes from `recordWebVitals` in `@vp/api-contracts`, so it cannot drift from the route.
 - **No user data in a span.** No user id, no session, no query string.
-- **App specs run without it.** Each app's `vitest.jsdom.config.ts` loads `@vp/web-telemetry/off.setup`, which
+- **App specs run without it.** Each app's `vitest.jsdom.config.ts` loads `@kit/web-telemetry/off.setup`, which
   mocks the hook, so no jsdom file loads the OpenTelemetry SDK; this package's specs and each app's
   `e2e/web-telemetry.test.ts` (web) cover it.
 
 ```bash
-pnpm --filter @vp/web-telemetry typecheck
-pnpm --filter @vp/web-telemetry test
+pnpm --filter @kit/web-telemetry typecheck
+pnpm --filter @kit/web-telemetry test
 ```

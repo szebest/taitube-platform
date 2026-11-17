@@ -1,6 +1,6 @@
+import { err } from '@kit/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { databaseUnavailable } from '@vp/errors';
-import { err } from '@vp/result';
 import { ViewerProgress } from '../viewer-progress';
 
 const VIEWER = { id: '00000000-0000-7000-8000-000000000101', role: 'USER' } as const;

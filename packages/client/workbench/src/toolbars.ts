@@ -1,15 +1,15 @@
-import type { Preview } from '@storybook/react-vite';
 import {
   CONTRAST_OPTIONS,
   MODE_OPTIONS,
   TOKEN_GROUPS,
   type TokenGroup,
   tokenGroups,
-} from '@vp/design-tokens';
+} from '@kit/design-tokens';
+import type { AppearancePreference } from '@kit/ui';
+import { appearance } from '@kit/ui/appearance/registry';
+import type { Preview } from '@storybook/react-vite';
 import { FALLBACK_LOCALE } from '@vp/intl';
 import { LOCALE_DETAILS, SUPPORTED_LOCALES } from '@vp/messages';
-import type { AppearancePreference } from '@vp/ui';
-import { appearance } from '@vp/ui/appearance/registry';
 
 /** A group's or the accent's toolbar entry for "no override": the theme's own. */
 export const THEME_DEFAULT = 'theme';

@@ -1,4 +1,4 @@
-import { err, ok } from '@vp/result';
+import { err, ok } from '@kit/result';
 import { createRegistry, provide } from '../registry';
 import { token } from '../token';
 

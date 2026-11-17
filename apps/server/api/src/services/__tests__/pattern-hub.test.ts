@@ -1,5 +1,5 @@
+import { createLogger } from '@kit/logger';
 import { InMemoryCacheClient } from '@vp/adapters/in-memory';
-import { createLogger } from '@vp/logger';
 import { expectOk } from '@vp/testing/result';
 import { z } from 'zod';
 import { PatternHub } from '../pattern-hub';

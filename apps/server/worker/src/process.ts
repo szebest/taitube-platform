@@ -3,15 +3,15 @@ import {
   type ShutdownOutcome,
   exitOnSignals,
   shutdownOnce,
-} from '@vp/composition';
-import { loadEnv } from '@vp/config';
+} from '@kit/composition';
+import { loadEnv } from '@kit/config';
+import { LogContext, type Logger, createLogger } from '@kit/logger';
+import { fromPromise, ignore, isErr } from '@kit/result';
 import { toAppConfig } from '@vp/env-schema';
 import { asThrowable, errorCodeRegistry } from '@vp/errors';
 import { mediaTools } from '@vp/ffmpeg';
 import { fingerprintTools } from '@vp/fingerprint';
-import { LogContext, type Logger, createLogger } from '@vp/logger';
 import { registeredTracing } from '@vp/observability';
-import { fromPromise, ignore, isErr } from '@vp/result';
 import { speechTools } from '@vp/whisper';
 import { STAGE_REGISTRY } from './registry';
 import { type WorkerRunner, composeWorker } from './runner';

@@ -1,4 +1,4 @@
-import { type Result, err, ok } from '@vp/result';
+import { type Result, err, ok } from '@kit/result';
 import { type InvalidField, invalidField } from '../field-failures';
 
 const CONTACT_EMAIL_MAX_LENGTH = 254;

@@ -4,7 +4,7 @@ function nextFrame(): Promise<void> {
   return new Promise((resolve) => requestAnimationFrame(() => resolve()));
 }
 
-describe('@vp/ui: pauseTransitions', () => {
+describe('@kit/ui: pauseTransitions', () => {
   it('marks the document while the theme swaps, and clears the mark once it has painted', async () => {
     pauseTransitions();
     expect(document.documentElement).toHaveAttribute('data-theme-switching');

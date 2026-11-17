@@ -1,4 +1,4 @@
-import { ok } from '@vp/result';
+import { ok } from '@kit/result';
 import { numberKind } from '../number';
 import { contextFor } from './context';
 

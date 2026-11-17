@@ -1,5 +1,5 @@
-import { useT } from '@vp/intl-react';
-import { ResponsiveModal, SortableList, useToast } from '@vp/ui';
+import { useT } from '@kit/intl-react';
+import { ResponsiveModal, SortableList, useToast } from '@kit/ui';
 import type { AdminCategory } from '#app/features/admin/api/admin-categories';
 import { useReorderCategories } from '#app/features/admin/hooks/use-reorder-categories';
 

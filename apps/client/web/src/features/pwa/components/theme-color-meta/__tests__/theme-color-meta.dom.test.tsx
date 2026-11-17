@@ -1,5 +1,5 @@
+import { AppearanceProvider, DEFAULT_APPEARANCE, useAppearance } from '@kit/ui';
 import { act, renderHook } from '@testing-library/react';
-import { AppearanceProvider, DEFAULT_APPEARANCE, useAppearance } from '@vp/ui';
 import { ThemeColorMeta } from '../theme-color-meta';
 
 const query = (media: string): MediaQueryList => ({

@@ -1,8 +1,8 @@
-import { clientAppTestConfig } from '@vp/vite-preset/vitest';
+import { clientAppTestConfig } from '@kit/vite-preset/vitest';
 import viteConfig from './vite.config';
 
 export default await clientAppTestConfig(viteConfig, {
   app: 'studio',
   environment: 'jsdom',
-  setupFiles: ['@vp/web-telemetry/off.setup'],
+  setupFiles: ['@kit/web-telemetry/off.setup'],
 });

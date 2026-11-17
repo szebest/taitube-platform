@@ -1,4 +1,4 @@
-import { type Result, err, ok } from '@vp/result';
+import { type Result, err, ok } from '@kit/result';
 import { type InvalidField, invalidField } from '../field-failures';
 import { normalizePlainText, withinLength } from '../plain-text';
 import { isHttpsUrl } from './https-url';

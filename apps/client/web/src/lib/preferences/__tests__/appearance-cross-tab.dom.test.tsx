@@ -1,11 +1,11 @@
-import { render, screen } from '@testing-library/react';
-import { userEvent } from '@testing-library/user-event';
 import {
   type AppearancePreference,
   AppearanceProvider,
   DEFAULT_APPEARANCE,
   useAppearance,
-} from '@vp/ui';
+} from '@kit/ui';
+import { render, screen } from '@testing-library/react';
+import { userEvent } from '@testing-library/user-event';
 import { AppearanceCrossTab } from '../appearance-cross-tab';
 
 function Probe() {

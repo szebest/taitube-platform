@@ -1,3 +1,4 @@
+import { err, isErr, ok, type Result } from '@kit/result';
 import { memberKeyOf, type MemberKey } from '@vp/domain';
 import { decideWatchPartySeatUpgrade } from '@vp/domain-rules';
 import {
@@ -9,7 +10,6 @@ import {
   type WatchPartyNotFound,
   watchPartyNotFound,
 } from '@vp/errors';
-import { err, isErr, ok, type Result } from '@vp/result';
 import type { PartyCaller } from './party-caller';
 import type { WatchPartyDeps } from './watch-party-deps';
 import { announce, logChange, systemLineFor } from './watch-party-moderation-effects';

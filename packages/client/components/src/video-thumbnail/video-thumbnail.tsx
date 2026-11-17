@@ -1,4 +1,4 @@
-import { Badge, Icon, Progress, Skeleton, Slot, useUiCopy, VisuallyHidden } from '@vp/ui';
+import { Badge, Icon, Progress, Skeleton, Slot, useUiCopy, VisuallyHidden } from '@kit/ui';
 import { type ComponentPropsWithRef, type CSSProperties, useState } from 'react';
 import type { VideoThumbnailAspect } from './types';
 import { useVideoThumbnail, VideoThumbnailContext } from './video-thumbnail.context';

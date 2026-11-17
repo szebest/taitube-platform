@@ -1,8 +1,8 @@
 import { randomUUID } from 'node:crypto';
+import type { Result } from '@kit/result';
 import type { ExportRowRepositoryPort, ExportScope, Repositories } from '@vp/core/repositories';
 import type { Channel, ExportRowPage } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import type { Result } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import { seedTeam } from './channel-team-fixtures';
 import {

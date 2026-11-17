@@ -1,4 +1,4 @@
-import { ok } from '@vp/result';
+import { ok } from '@kit/result';
 import type { CursorCodec, CursorPayload } from '../cursor-codec';
 import { PAGE_SIZE_DEFAULT, PAGE_SIZE_MAX, Paginator } from '../pagination';
 

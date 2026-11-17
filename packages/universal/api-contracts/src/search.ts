@@ -1,6 +1,6 @@
+import { PAGE_SIZE_DEFAULT } from '@kit/pagination';
 import { SEARCH_PAGE_SIZE_MAX, SEARCH_SORTS, SEARCH_TYPES } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
-import { PAGE_SIZE_DEFAULT } from '@vp/pagination';
 import { z } from 'zod';
 import { ChannelSchema } from './channels';
 import { defineEndpoint } from './endpoint';

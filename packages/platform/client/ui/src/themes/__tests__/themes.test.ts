@@ -5,7 +5,7 @@ import {
   parseTheme,
   resolveTheme,
   type Theme,
-} from '@vp/design-tokens';
+} from '@kit/design-tokens';
 import { expectOk } from '@vp/testing/result';
 import { ramps } from '../../tokens/ref';
 
@@ -20,7 +20,7 @@ const resolvedTheme = async (folder: string) => {
   return expectOk(resolveTheme(expectOk(parseTheme(theme)), ramps));
 };
 
-describe('@vp/ui: the themes', () => {
+describe('@kit/ui: the themes', () => {
   it.each(folders)(
     '%s exports one theme that parses, resolves and is the folder it sits in',
     async (folder) => {

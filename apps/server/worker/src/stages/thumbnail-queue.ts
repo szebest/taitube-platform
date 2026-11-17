@@ -1,9 +1,9 @@
+import type { Logger } from '@kit/logger';
 import type { StorageClient } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import type { AppConfig } from '@vp/env-schema';
 import type { MediaTools } from '@vp/ffmpeg';
 import { ThumbnailQueueJob } from '@vp/job-contracts';
-import type { Logger } from '@vp/logger';
 import type { PipelineMetrics } from '@vp/observability';
 import { consuming } from '../consuming';
 import { createChannelImageProcessor } from './channel-image';

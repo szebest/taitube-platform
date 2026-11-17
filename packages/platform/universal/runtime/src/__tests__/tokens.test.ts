@@ -1,5 +1,5 @@
 import { createRegistry, provide } from '@kit/di';
-import { ok } from '@vp/result';
+import { ok } from '@kit/result';
 import { Clock, CookieJar, EnvSource, Fetch, Random } from '../tokens';
 
 const clock = { now: () => 0 };

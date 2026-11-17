@@ -1,7 +1,7 @@
+import { useT } from '@kit/intl-react';
 import { Link } from '@tanstack/react-router';
 import type { VideoSummary } from '@vp/api-contracts';
 import { VideoCard } from '@vp/components';
-import { useT } from '@vp/intl-react';
 import { useVideoActions } from '#app/hooks/use-video-actions';
 
 export interface ShortPosterCardProps {

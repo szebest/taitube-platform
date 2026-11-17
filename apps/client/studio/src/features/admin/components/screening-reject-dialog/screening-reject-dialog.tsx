@@ -1,5 +1,5 @@
-import { useT } from '@vp/intl-react';
-import { Button, Dialog, Field, Textarea, useUiCopy } from '@vp/ui';
+import { useT } from '@kit/intl-react';
+import { Button, Dialog, Field, Textarea, useUiCopy } from '@kit/ui';
 import { useState } from 'react';
 import { useScreeningDecision } from '#app/features/admin/hooks/use-screening-decision';
 

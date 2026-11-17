@@ -1,4 +1,4 @@
-import { type Result, map, tryCatch } from '@vp/result';
+import { type Result, map, tryCatch } from '@kit/result';
 import { type FormatFailure, unsupportedLocale } from './failures';
 
 export const FALLBACK_LOCALE = 'en';

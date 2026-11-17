@@ -1,6 +1,6 @@
+import { useT } from '@kit/intl-react';
+import { useToast } from '@kit/ui';
 import type { VideoSummary } from '@vp/api-contracts';
-import { useT } from '@vp/intl-react';
-import { useToast } from '@vp/ui';
 import { use } from 'react';
 import { urlModals } from '#app/lib/url-modal/registry';
 import { PlaybackSessionContext } from '../lib/playback-session/playback-session.context';

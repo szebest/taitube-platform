@@ -9,10 +9,10 @@ Instructions for any coding agent working on `@vp/observability`.
 ## 1. Scope & Purpose
 
 `@vp/observability` provides the shared metrics and tracing for the API and the worker. Logging is not
-here: it lives in [`@vp/logger`](../../platform/server/logger/AGENTS.md), and this package neither re-exports it nor imports
+here: it lives in [`@kit/logger`](../../platform/server/logger/AGENTS.md), and this package neither re-exports it nor imports
 `pino` (`zero-matches.test.ts`).
 
-Tier `server`, `vp.layer` 2 (it depends on `@vp/result`); its dependencies are in [package.json](package.json).
+Tier `server`, `vp.layer` 2 (it depends on `@kit/result`); its dependencies are in [package.json](package.json).
 
 - **Metrics (`src/metrics.ts`):** `createMetricsRegistry()` returns `PipelineMetrics`, one `Registry` per
   process; the metric names are catalogued in [SDD §13.1](../../../docs/SDD.md#131-metrics-catalogue). The

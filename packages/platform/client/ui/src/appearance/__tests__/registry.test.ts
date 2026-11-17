@@ -1,9 +1,9 @@
-import { TOKEN_GROUPS } from '@vp/design-tokens';
+import { TOKEN_GROUPS } from '@kit/design-tokens';
 import { appearance } from '../registry';
 
 const { themes, defaultTheme, offer } = appearance;
 
-describe('@vp/ui: the appearance registry', () => {
+describe('@kit/ui: the appearance registry', () => {
   it('offers each theme once, the default theme among them', () => {
     const ids = themes.map(({ id }) => id);
 

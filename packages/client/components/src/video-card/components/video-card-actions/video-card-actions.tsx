@@ -1,4 +1,4 @@
-import { Button, DropdownMenu, Icon, IconButton, useUiCopy } from '@vp/ui';
+import { Button, DropdownMenu, Icon, IconButton, useUiCopy } from '@kit/ui';
 import type { ReactNode } from 'react';
 import { useVideoCard } from '../../video-card.context';
 import { videoCardStyles } from '../../video-card.variants';

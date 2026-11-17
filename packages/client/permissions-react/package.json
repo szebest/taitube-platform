@@ -20,15 +20,15 @@
     "clean": "rimraf dist tsconfig.tsbuildinfo"
   },
   "dependencies": {
-    "@vp/permissions": "workspace:*",
-    "@vp/result": "workspace:*"
+    "@kit/result": "workspace:*",
+    "@vp/permissions": "workspace:*"
   },
   "devDependencies": {
+    "@kit/tsconfig": "workspace:*",
+    "@kit/vite-preset": "workspace:*",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vp/testing": "workspace:*",
-    "@vp/tsconfig": "workspace:*",
-    "@vp/vite-preset": "workspace:*",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "rimraf": "^6.1.3",

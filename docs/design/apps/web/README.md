@@ -2,7 +2,7 @@
 
 Specs for the components in `apps/client/web/src/components/<area>/<name>/`. Each is presentational and compound,
 built from `@vp/components` (shared: `PageHeader`, `VideoThumbnail`, `EmptyState`, `ErrorState`, `SectionError`)
-and `@vp/ui` primitives. Nothing here goes into a package, and studio never imports it
+and `@kit/ui` primitives. Nothing here goes into a package, and studio never imports it
 ([architecture section 1](../../architecture.md#1-five-layers)). A piece moves to `@vp/components` the day studio
 needs it. [Ticket 95](../../../tickets/95-design-system-2.md) section 7 builds it.
 
@@ -41,7 +41,7 @@ Areas: `shell`, `video`, `watch`, `channel`, `discovery`, `discussion`, `states`
    context, one folder per component (`<name>.tsx`, `<name>.context.ts` with `useX()`, `<name>.variants.ts`,
    `types.ts`, story, test, `index.ts`). Content is children, never a `title` or `footer` prop.
 3. **Shared unions.** Every union prop is a shared one (`SizeOption`, `ControlSize`, `ToneOption`... from
-   `@vp/design-tokens`; `Side`, `Orientation`... from `@vp/ui`; `VideoStatus`, `ReactionType`, `CommentSort`,
+   `@kit/design-tokens`; `Side`, `Orientation`... from `@kit/ui`; `VideoStatus`, `ReactionType`, `CommentSort`,
    `SearchType`... from `@vp/domain`), narrowed with `Extract` or `Exclude` in the folder's `types.ts`. A union
    only this component uses lives in the same `types.ts`. No inline literal union in a props interface
    ([architecture section 3](../../architecture.md#3-shared-option-unions)).

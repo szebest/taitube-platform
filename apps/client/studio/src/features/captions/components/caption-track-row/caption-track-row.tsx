@@ -1,9 +1,9 @@
+import { useT } from '@kit/intl-react';
+import { Badge, Button, useToast } from '@kit/ui';
 import { useMutation } from '@tanstack/react-query';
 import type { CaptionTrackView } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
-import { useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
-import { Badge, Button, useToast } from '@vp/ui';
 import { useState } from 'react';
 import {
   deleteTrackMutationOptions,

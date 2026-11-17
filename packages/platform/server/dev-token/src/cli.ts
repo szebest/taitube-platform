@@ -1,7 +1,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { parseArgs } from 'node:util';
-import type { Logger } from '@vp/logger';
+import type { Logger } from '@kit/logger';
 import { mintToken, verifyToken } from './jwt';
 import { getDevJwks } from './keys';
 import { serveDevTokens } from './server';

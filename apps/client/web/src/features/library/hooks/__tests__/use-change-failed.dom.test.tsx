@@ -1,5 +1,5 @@
+import { ToastProvider } from '@kit/ui';
 import { renderHook } from '@testing-library/react';
-import { ToastProvider } from '@vp/ui';
 import type { PropsWithChildren } from 'react';
 import { AppProviders } from '#app/__tests__/providers';
 import { useChangeFailed } from '../use-change-failed';

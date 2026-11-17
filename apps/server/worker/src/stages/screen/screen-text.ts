@@ -1,8 +1,8 @@
+import { type Result, isErr, ok } from '@kit/result';
 import type { Repositories } from '@vp/core/repositories';
 import { screenTranscript } from '@vp/domain-rules';
 import type { ScreeningConfig } from '@vp/env-schema';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { type Result, isErr, ok } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 
 export interface ScreenTextDeps {

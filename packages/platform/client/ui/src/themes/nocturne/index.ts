@@ -1,4 +1,4 @@
-import { defineTheme, type Theme } from '@vp/design-tokens';
+import { defineTheme, type Theme } from '@kit/design-tokens';
 import { ambientSubtle } from '../../tokens/ambient/subtle';
 import { borderRegular } from '../../tokens/border/regular';
 import { fontSizeDefault } from '../../tokens/font-size/default';

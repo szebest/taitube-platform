@@ -19,7 +19,7 @@ const renderSwitch = () => {
   };
 };
 
-describe('@vp/ui: Switch', () => {
+describe('@kit/ui: Switch', () => {
   it.each(['[Space]', '{Enter}'])(
     'is a switch named by its field, flipped with %s',
     async (key) => {

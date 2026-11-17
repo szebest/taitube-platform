@@ -1,10 +1,10 @@
+import { createLogger } from '@kit/logger';
+import { ok } from '@kit/result';
 import {
   InMemoryCacheClient,
   InMemoryRepositories,
   InMemoryWebhookDispatcher,
 } from '@vp/adapters/in-memory';
-import { createLogger } from '@vp/logger';
-import { ok } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { OWNER_ID } from '../../__tests__/flow-harness';

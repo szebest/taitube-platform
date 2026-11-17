@@ -1,7 +1,7 @@
 import { packageDir, tierGlob } from '../../scripts/workspace-packages';
 import type { Row } from './zero-matches-rows';
 
-const UI = packageDir('@vp/ui');
+const UI = packageDir('@kit/ui');
 const CLIENT = tierGlob('client');
 
 const NOT_SPECS = [
@@ -20,7 +20,7 @@ const CLIENT_SOURCE = [
   ...NOT_SPECS,
 ];
 
-/** The stylesheets written by hand that outlive 62: `@vp/ui`'s own and the workbench preview's. */
+/** The stylesheets written by hand that outlive 62: `@kit/ui`'s own and the workbench preview's. */
 const SYSTEM_STYLESHEETS = [
   `:(glob)${UI}/src/styles/*.css`,
   'packages/client/workbench/.storybook/preview.css',
@@ -165,7 +165,7 @@ export const DESIGN_ROWS: readonly Row[] = [
     fires: '.rail { margin-left: 4px; text-align: left; }',
   },
   {
-    name: 'Radix or @dnd-kit outside @vp/ui, imported or declared: every app and package reaches them through its primitives',
+    name: 'Radix or @dnd-kit outside @kit/ui, imported or declared: every app and package reaches them through its primitives',
     pattern: /['"](?:radix-ui|@radix-ui\/[^'"]+|@dnd-kit\/[^'"]+)['"]/g,
     scope: [
       ':(glob)apps/**/*.ts',

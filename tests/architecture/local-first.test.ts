@@ -2,7 +2,7 @@ import { packageDir } from '../../scripts/workspace-packages';
 import { clientApps } from './client-apps';
 import { productionSources, read, trackedFiles } from './repo-files';
 
-const UI = packageDir('@vp/ui');
+const UI = packageDir('@kit/ui');
 
 const URL_LITERAL = /\bhttps?:\/\/[^\s'"`)\\<>]+/g;
 const HOST = /^https?:\/\/([^/:?#]+)/;

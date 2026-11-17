@@ -1,4 +1,4 @@
-import { defineTokenSet } from '@vp/design-tokens';
+import { defineTokenSet } from '@kit/design-tokens';
 
 export const borderRegular = defineTokenSet('border', 'regular', {
   divider: '1px',

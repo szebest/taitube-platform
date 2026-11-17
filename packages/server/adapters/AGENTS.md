@@ -49,7 +49,7 @@ adapters and the composition module; the doubles are reached only through `@vp/a
   foreign structures.
 
 ### Rule 3: Every SDK Call Is Wrapped Where It Is Made
-- Outside `@vp/result` and an entrypoint's top-level handler, this package is the only home for `catch`
+- Outside `@kit/result` and an entrypoint's top-level handler, this package is the only home for `catch`
   (`tests/architecture/catch-confinement.test.ts`). Write it as `tryCatch` / `fromPromise` **at the exact line
   the SDK is called** - never around a block. A wrapper around ten statements cannot say which one failed. Raw
   `catch` still exists in `bullmq/bullmq-processor.ts` (reclassifies a stage throw for BullMQ),

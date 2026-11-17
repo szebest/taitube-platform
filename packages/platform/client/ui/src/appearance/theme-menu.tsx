@@ -1,4 +1,4 @@
-import { MODE_OPTIONS, type ModeOption } from '@vp/design-tokens';
+import { MODE_OPTIONS, type ModeOption } from '@kit/design-tokens';
 import { useState } from 'react';
 import { type UiCopyKey, useUiCopy } from '../copy/ui-copy';
 import { DropdownMenu } from '../primitives/dropdown-menu';

@@ -1,3 +1,4 @@
+import { Container } from '@kit/composition';
 import { Adapters, registerAdapters } from '@vp/adapters/composition';
 import {
   InMemoryCacheClient,
@@ -5,7 +6,6 @@ import {
   InMemoryRepositories,
   InMemoryStorageClient,
 } from '@vp/adapters/in-memory';
-import { Container } from '@vp/composition';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { overrideAdapters } from '../adapter-set';
 

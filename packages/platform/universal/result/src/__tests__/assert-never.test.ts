@@ -1,6 +1,6 @@
 import { assertNever } from '../assert-never';
 
-describe('@vp/result: assertNever', () => {
+describe('@kit/result: assertNever', () => {
   it('throws naming the context and the unhandled value', () => {
     expect(() => assertNever('SURPRISE' as never, 'renderVideoFailure')).toThrow(
       'renderVideoFailure: unhandled variant "SURPRISE"'

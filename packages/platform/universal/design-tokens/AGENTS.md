@@ -1,6 +1,6 @@
-# AGENTS.md - @vp/design-tokens (the design system engine)
+# AGENTS.md - @kit/design-tokens (the design system engine)
 
-Instructions for any coding agent working on `@vp/design-tokens`.
+Instructions for any coding agent working on `@kit/design-tokens`.
 
 > Tier rules for this directory: [../AGENTS.md](../../../universal/AGENTS.md) · full tier & layer reference: [packages/AGENTS.md](../../../AGENTS.md)
 
@@ -8,9 +8,9 @@ Instructions for any coding agent working on `@vp/design-tokens`.
 
 ## 1. Scope & Purpose
 
-`@vp/design-tokens` is the engine of the design system ([ticket 95](../../../../docs/tickets/95-design-system-2.md),
+`@kit/design-tokens` is the engine of the design system ([ticket 95](../../../../docs/tickets/95-design-system-2.md),
 [docs/design/architecture.md](../../../../docs/design/architecture.md)): the schemas every token set and theme
-parses against. `@vp/ui` holds the concrete values and imports this package to check them.
+parses against. `@kit/ui` holds the concrete values and imports this package to check them.
 
 It holds the Zod schemas in `src/schema/`, one file per token group: `typography`, `font-size`, `spacing`,
 `sizing`, `radius`, `border`, `shadow`, `ambient` and `motion`. Each file exports its schema and the option arrays
@@ -46,7 +46,7 @@ names and Tailwind keys sit side by side in `WRITERS` in `token-set-css.ts`. `to
 defaultTheme, offer })` composes them into the four files `pnpm gen:tokens` writes (`tokens.json` and the themes,
 sets and Tailwind CSS, each CSS file under one generated header), or the `resolveTheme` failure.
 
-It is `universal` because `@vp/ui` (client) builds on it and the generators that write `tokens.json` and the
+It is `universal` because `@kit/ui` (client) builds on it and the generators that write `tokens.json` and the
 CSS run on a server. It is T2 because it takes the appearance vocabulary from `@vp/domain/settings` (T1); never
 import `@vp/domain-rules` (T3) or redeclare a pattern `@vp/domain/settings` exports.
 
@@ -55,9 +55,9 @@ import `@vp/domain-rules` (T3) or redeclare a pattern `@vp/domain/settings` expo
 ## 2. Invariants
 
 1. **No concrete value.** A schema says what a set must hold, never what it holds. Values live in
-   `@vp/ui/tokens/<path>/<id>`; `docs/design/tokens.json` is their image.
+   `@kit/ui/tokens/<path>/<id>`; `docs/design/tokens.json` is their image.
 2. **Group keys are camelCase** (`fontSize`) in TypeScript and `tokens.json`; module paths and HTML
-   attributes are kebab-case (`@vp/ui/tokens/font-size/<id>`, `data-font-size`). `tokenGroups` is the one
+   attributes are kebab-case (`@kit/ui/tokens/font-size/<id>`, `data-font-size`). `tokenGroups` is the one
    place that mapping lives: never derive a kebab name anywhere else.
 3. **A set names every key and nothing else.** Objects are strict and records are keyed by an enum, so a
    missing or misspelt key fails to parse, at any depth.
@@ -78,7 +78,7 @@ import `@vp/domain-rules` (T3) or redeclare a pattern `@vp/domain/settings` expo
 ## 3. Local Commands
 
 ```bash
-pnpm --filter @vp/design-tokens typecheck
-pnpm --filter @vp/design-tokens test
+pnpm --filter @kit/design-tokens typecheck
+pnpm --filter @kit/design-tokens test
 bun test packages/platform/universal/design-tokens
 ```

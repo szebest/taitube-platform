@@ -31,7 +31,7 @@ function renderTags(initial: string[] = []) {
   return { user, onTags };
 }
 
-describe('@vp/forms: ChipsField', () => {
+describe('@kit/forms: ChipsField', () => {
   it('lists the field value as chips under the label', () => {
     renderTags(['music', 'live']);
 

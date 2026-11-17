@@ -1,5 +1,5 @@
+import { ONE_YEAR_S, readCookie, writeCookie } from '@kit/ui';
 import { createIsomorphicFn } from '@tanstack/react-start';
-import { ONE_YEAR_S, readCookie, writeCookie } from '@vp/ui';
 
 /** The channel the studio last acted on, host-only: a preference the API checks against the caller's memberships on every call. */
 const ACTING_CHANNEL_COOKIE = 'vp.channel';

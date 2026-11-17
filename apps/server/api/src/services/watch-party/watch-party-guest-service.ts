@@ -1,3 +1,4 @@
+import { err, isErr, ok, type Result } from '@kit/result';
 import type { PartyGuestSession } from '@vp/core/ports';
 import { guestName, type MemberKey, pickGuestDigits, type WatchPartyMember } from '@vp/domain';
 import { decideWatchPartyJoin, type WatchPartyJoinFailure } from '@vp/domain-rules';
@@ -10,7 +11,6 @@ import {
   watchPartyFull,
   watchPartyGuestsOff,
 } from '@vp/errors';
-import { err, isErr, ok, type Result } from '@vp/result';
 import type { PartyCaller } from './party-caller';
 import { joinCapacity } from './watch-party-admission';
 import { consumeBudget, type RateLimited } from './watch-party-budgets';

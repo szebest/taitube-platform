@@ -1,4 +1,5 @@
-import type { TokenGroup } from '@vp/design-tokens';
+import type { TokenGroup } from '@kit/design-tokens';
+import { parseJson, unwrapOr } from '@kit/result';
 import {
   ACCENT_PATTERN,
   APPEARANCE_SETTINGS,
@@ -6,7 +7,6 @@ import {
   DEFAULT_PREFERENCES,
   PREFERENCE_ID_PATTERN,
 } from '@vp/domain/settings';
-import { parseJson, unwrapOr } from '@vp/result';
 import { z } from 'zod';
 import { ONE_YEAR_S, readCookie, writeCookie } from '../cookies/cookie';
 import type { appearance } from './registry';

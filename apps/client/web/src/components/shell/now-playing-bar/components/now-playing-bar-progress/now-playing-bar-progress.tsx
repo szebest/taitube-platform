@@ -1,4 +1,4 @@
-import { useUiCopy } from '@vp/ui';
+import { useUiCopy } from '@kit/ui';
 import type { ComponentPropsWithRef, KeyboardEvent, PointerEvent } from 'react';
 import { useNowPlayingBar } from '#app/components/shell/now-playing-bar/now-playing-bar.context';
 import { nowPlayingBarStyles } from '#app/components/shell/now-playing-bar/now-playing-bar.variants';

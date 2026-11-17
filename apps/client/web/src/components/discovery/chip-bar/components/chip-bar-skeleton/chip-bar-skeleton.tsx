@@ -1,4 +1,4 @@
-import { cn, Skeleton } from '@vp/ui';
+import { cn, Skeleton } from '@kit/ui';
 import { PILL_HEIGHT } from '#app/components/discovery/chip-bar/chip-bar.variants';
 
 const SKELETON_PILLS = [

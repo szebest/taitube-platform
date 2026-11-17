@@ -32,7 +32,7 @@ function renderShareDialog() {
   };
 }
 
-describe('@vp/ui: Dialog, compiled and uncompiled', () => {
+describe('@kit/ui: Dialog, compiled and uncompiled', () => {
   it('opens and closes the same way in both builds', async () => {
     const { user, snapshot } = renderShareDialog();
     const steps = [snapshot()];

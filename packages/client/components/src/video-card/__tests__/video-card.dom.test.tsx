@@ -1,6 +1,6 @@
+import { variantNames } from '@kit/ui';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { variantNames } from '@vp/ui';
 import { axeViolations } from '@vp/web-testing/dom';
 import type { ComponentPropsWithRef } from 'react';
 import { VideoCard, VideoCardSkeleton, videoCardStyles } from '..';

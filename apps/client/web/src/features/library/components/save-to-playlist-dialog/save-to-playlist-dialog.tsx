@@ -1,8 +1,8 @@
+import { useT } from '@kit/intl-react';
+import { Button, Checkbox, Icon, Label, Skeleton } from '@kit/ui';
 import { useQuery } from '@tanstack/react-query';
 import { SectionError } from '@vp/components';
-import { useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
-import { Button, Checkbox, Icon, Label, Skeleton } from '@vp/ui';
 import { useState } from 'react';
 import { saveTargetsQueryOptions } from '#app/features/library/api/library-queries';
 import { useTogglePlaylistItem } from '#app/features/library/hooks/use-toggle-playlist-item';

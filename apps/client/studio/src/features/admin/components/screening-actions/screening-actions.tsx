@@ -1,7 +1,7 @@
-import { useT } from '@vp/intl-react';
+import { useT } from '@kit/intl-react';
+import { Button } from '@kit/ui';
 import { canModerateVideo } from '@vp/permissions';
 import { useCan } from '@vp/permissions-react';
-import { Button } from '@vp/ui';
 import { useState } from 'react';
 import type { ScreeningCase } from '#app/features/admin/api/admin-screening';
 import { useScreeningDecision } from '#app/features/admin/hooks/use-screening-decision';

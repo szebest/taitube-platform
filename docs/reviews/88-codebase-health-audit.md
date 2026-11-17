@@ -90,7 +90,7 @@ destructuring defaults, `?? getMetrics()` and `app.ts`/`runner.ts` are outside i
 
 ## Errors
 
-- `@vp/result` has no `ignore()`.
+- `@kit/result` has no `ignore()`.
 - About 36 statement-level discards. Behaviour-changing ones: `apps/worker/src/stages/housekeeping/expire-raw.ts:47-50,60`, `reconcile-uploads.ts:72,124,140-142`, `reconcile-processing.ts:112`, `purge-deleted.ts:89-91,110`, `transcode.ts:231`. Cache writes: `apps/api/src/services/subscription-service.ts:67,68,88,89,115`, `reaction-service.ts:58,59`. Inconsistent pair: `video-lifecycle.ts:75` discards the `enqueueProbe` that `upload-complete.ts:198` checks.
 - `catch-confinement` regex `(^|[^\w.])catch\s*[({]` skips `.catch(`: 43 method catches, 20 in services and stages. `grep -rcE '\.catch\??\.?\s*\(' apps/api/src/services apps/worker/src/stages --include='*.ts'`.
 - `legacy-catch-sites.ts`: 22 entries.

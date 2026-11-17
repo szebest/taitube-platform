@@ -1,3 +1,4 @@
+import type { Result } from '@kit/result';
 import type {
   NewPlaylistInput,
   OwnedPlaylist,
@@ -10,7 +11,6 @@ import type {
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import type { Result } from '@vp/result';
 
 export type AddPlaylistItemOutcome = 'added' | 'present' | 'playlist-missing' | 'video-missing';
 

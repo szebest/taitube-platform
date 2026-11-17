@@ -1,4 +1,4 @@
-import { fromPromise, isErr, tryCatch } from '@vp/result';
+import { fromPromise, isErr, tryCatch } from '@kit/result';
 import { type Fmp4Fragment, Fmp4FragmentSplitter } from './fmp4-fragments';
 import { buildLiveArgs, type LiveArgsOptions } from './live-args';
 import { type FfmpegProcessLimits, runFfmpeg } from './run-ffmpeg';

@@ -1,4 +1,4 @@
-import { useT } from '@vp/intl-react';
+import { useT } from '@kit/intl-react';
 import Markdown from 'react-markdown';
 
 export function DescriptionPreview({ markdown }: { markdown: string }) {

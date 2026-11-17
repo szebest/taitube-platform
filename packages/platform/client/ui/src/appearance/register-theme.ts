@@ -6,9 +6,9 @@ import {
   type ThemeContrastFailure,
   TOKEN_GROUPS,
   themeCss,
-} from '@vp/design-tokens';
+} from '@kit/design-tokens';
+import { andThen, err, map, ok, type Result, tryCatch } from '@kit/result';
 import { ErrorCodes, type Failure, type InputFailure } from '@vp/errors';
-import { andThen, err, map, ok, type Result, tryCatch } from '@vp/result';
 import { ramps } from '../tokens/ref';
 import { appearance } from './registry';
 

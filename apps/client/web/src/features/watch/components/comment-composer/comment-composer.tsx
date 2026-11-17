@@ -1,10 +1,10 @@
+import { useFormat, useT } from '@kit/intl-react';
+import { unwrapOr } from '@kit/result';
+import { Button, Callout } from '@kit/ui';
 import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
-import { useFormat, useT } from '@vp/intl-react';
 import { isChannelTeamMember } from '@vp/permissions';
 import { useCan } from '@vp/permissions-react';
 import { ownRestrictionQueryOptions, useAccount, useApi, videoQueryOptions } from '@vp/queries';
-import { unwrapOr } from '@vp/result';
-import { Button, Callout } from '@vp/ui';
 import { CommentThread } from '#app/components/watch/comment-thread';
 import { useCountdown } from '#app/features/watch/hooks/use-countdown';
 import type { CommentRefusal } from '#app/features/watch/utils/comment-refusal';

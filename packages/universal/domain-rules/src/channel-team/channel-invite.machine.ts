@@ -1,5 +1,5 @@
+import { defineMachine } from '@kit/machine';
 import { CHANNEL_INVITE_STATUSES } from '@vp/domain';
-import { defineMachine } from '@vp/machine';
 
 export const CHANNEL_INVITE = defineMachine({
   name: 'channel-invite',

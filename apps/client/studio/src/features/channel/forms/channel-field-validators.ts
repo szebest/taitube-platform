@@ -1,8 +1,8 @@
+import { validateWith } from '@kit/forms';
+import { useT } from '@kit/intl-react';
+import { ok } from '@kit/result';
 import { updateMyChannel } from '@vp/api-contracts';
 import { validateBrandColor } from '@vp/domain-rules';
-import { validateWith } from '@vp/forms';
-import { useT } from '@vp/intl-react';
-import { ok } from '@vp/result';
 import {
   type ChannelImageKind,
   type ChannelLinkInput,

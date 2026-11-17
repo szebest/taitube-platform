@@ -1,7 +1,7 @@
+import { useT } from '@kit/intl-react';
+import { SegmentedControl } from '@kit/ui';
 import type { CommentSettingsView } from '@vp/api-contracts';
 import { REVIEW_MODES, type ReviewMode } from '@vp/domain';
-import { useT } from '@vp/intl-react';
-import { SegmentedControl } from '@vp/ui';
 import { useSettingsSection } from '#app/features/comments/hooks/use-settings-section';
 import { SettingsSection } from '../settings-section/settings-section';
 

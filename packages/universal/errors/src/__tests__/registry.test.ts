@@ -1,5 +1,5 @@
 import { createRegistry, provide } from '@kit/di';
-import { err, ok } from '@vp/result';
+import { err, ok } from '@kit/result';
 import { defineErrorCodes, ErrorCodeRegistry, isRegisteredCode, retryClass } from '../registry';
 import { codes } from './fixtures';
 

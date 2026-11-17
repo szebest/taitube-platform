@@ -1,7 +1,7 @@
 import { andThenAsync } from '../async';
 import { type Result, err, ok } from '../result';
 
-describe('@vp/result: andThenAsync', () => {
+describe('@kit/result: andThenAsync', () => {
   it('chains a success into the awaited next result', async () => {
     await expect(andThenAsync(ok(2), async (n) => ok(n + 1))).resolves.toEqual(ok(3));
   });

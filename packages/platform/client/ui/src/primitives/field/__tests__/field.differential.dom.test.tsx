@@ -20,7 +20,7 @@ function renderTitleField() {
   return { user: userEvent.setup(), snapshot, invalidate: () => view.rerender(field(true)) };
 }
 
-describe('@vp/ui: Field, compiled and uncompiled', () => {
+describe('@kit/ui: Field, compiled and uncompiled', () => {
   it('renders, takes input and shows its error the same way in both builds', async () => {
     const { user, snapshot, invalidate } = renderTitleField();
     const steps = [snapshot()];

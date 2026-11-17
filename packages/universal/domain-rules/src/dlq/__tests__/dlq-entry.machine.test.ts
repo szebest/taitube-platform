@@ -1,4 +1,4 @@
-import { machineFindings } from '@vp/machine';
+import { machineFindings } from '@kit/machine';
 import { DLQ_ENTRY } from '../dlq-entry.machine';
 
 describe('@vp/domain-rules: DLQ_ENTRY', () => {

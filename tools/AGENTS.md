@@ -20,8 +20,8 @@ The four CLI **packages** that used to live here are workspace packages, so they
 
 | Package | Location | What it does |
 |---|---|---|
-| `@vp/compose-autoscaler` | `packages/platform/server/compose-autoscaler` | Queue-depth autoscaler daemon for local Docker Compose |
-| `@vp/dev-token` | `packages/platform/server/dev-token` | Mints and verifies EdDSA dev JWTs, prints the dev JWKS and serves it over HTTP (`mint`, `verify`, `jwks`, `serve`) |
+| `@kit/compose-autoscaler` | `packages/platform/server/compose-autoscaler` | Queue-depth autoscaler daemon for local Docker Compose |
+| `@kit/dev-token` | `packages/platform/server/dev-token` | Mints and verifies EdDSA dev JWTs, prints the dev JWKS and serves it over HTTP (`mint`, `verify`, `jwks`, `serve`) |
 | `@vp/gen-video` | `packages/server/gen-video` | Deterministic synthetic video fixture generator (FFmpeg) |
 | `@vp/upload-client` | `packages/server/upload-client` | Reference CLI for resumable multipart uploads |
 

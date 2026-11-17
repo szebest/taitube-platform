@@ -23,7 +23,7 @@ function Harness({ initial = [], max }: { initial?: string[]; max?: number }) {
 const field = () => screen.getByRole('textbox', { name: 'Words' });
 const tags = () => screen.getByTestId('tags').textContent;
 
-describe('@vp/ui: TagInput', () => {
+describe('@kit/ui: TagInput', () => {
   it.each([
     { typed: 'spoiler{Enter}', expected: 'spoiler' },
     { typed: 'spoiler,', expected: 'spoiler' },

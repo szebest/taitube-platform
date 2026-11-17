@@ -1,4 +1,4 @@
-import { err, ok, type Result } from '@vp/result';
+import { err, ok, type Result } from '@kit/result';
 import { type InvalidField, invalidField } from '../field-failures';
 
 export type InvalidFeaturedSelection = InvalidField<{ readonly max: number }>;

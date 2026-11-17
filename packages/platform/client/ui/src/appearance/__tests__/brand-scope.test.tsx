@@ -26,7 +26,7 @@ const renderScope = (color: string | null, preference: Partial<AppearancePrefere
   return serverRender(() => createRouter({ routeTree, ssr: { nonce: NONCE } }), '/');
 };
 
-describe('@vp/ui: BrandScope', () => {
+describe('@kit/ui: BrandScope', () => {
   it.each(['#3366cc', '#FFFF00', '#fefefe', '#010101'])(
     'scopes the accent derived from %s to its subtree, under the request nonce',
     async (color) => {

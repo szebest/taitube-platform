@@ -1,4 +1,4 @@
-import { mintToken } from '@vp/dev-token';
+import { mintToken } from '@kit/dev-token';
 import type { BuiltInRoleKey, WatchPartyPreset } from '@vp/domain';
 import { watchPartyChannel } from '@vp/events';
 import type { UserContext } from '@vp/permissions';

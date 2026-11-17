@@ -18,7 +18,7 @@ The text that names a form control, clickable so it focuses or toggles that cont
 
 ```ts
 // types.ts
-import type { SizeOption } from '@vp/design-tokens';
+import type { SizeOption } from '@kit/design-tokens';
 
 export type LabelSize = Extract<SizeOption, 'sm' | 'md'>;
 ```

@@ -1,4 +1,5 @@
 import * as crypto from 'node:crypto';
+import { type Result, andThen, assertNever, err, ignore, isErr, ok } from '@kit/result';
 import {
   CHANNEL_HEADER,
   contracts,
@@ -34,7 +35,6 @@ import {
   watchPartyCredentialInvalid,
 } from '@vp/errors';
 import { type TokenGrant, type UserContext, canCallWithToken, parseRole } from '@vp/permissions';
-import { type Result, andThen, assertNever, err, ignore, isErr, ok } from '@vp/result';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import fp from 'fastify-plugin';
 import type { ServiceSet } from '../composition/services.module';

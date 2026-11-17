@@ -1,4 +1,4 @@
-import { lazyComponent } from '@vp/ui';
+import { lazyComponent } from '@kit/ui';
 import { createElement } from 'react';
 import { NotificationCentreSkeletonRows } from '#app/components/shell/notification-centre';
 

@@ -21,7 +21,7 @@ async function renderedHeaders(pathname = '/', middleware = securityHeadersMiddl
   return { headers: response?.headers, nonce: next.mock.calls[0]?.[0].context.nonce };
 }
 
-describe('@vp/security-headers: request middleware', () => {
+describe('@kit/security-headers: request middleware', () => {
   it('allows only scripts carrying the nonce it handed the render, and workers and a manifest from this origin', async () => {
     const { headers, nonce } = await renderedHeaders();
 

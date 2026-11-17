@@ -1,4 +1,4 @@
-import { Skeleton } from '@vp/ui';
+import { Skeleton } from '@kit/ui';
 import { type ComponentPropsWithRef, useId } from 'react';
 import { ChannelSpotlightContext, useChannelSpotlight } from './channel-spotlight.context';
 import { channelSpotlightStyles } from './channel-spotlight.variants';

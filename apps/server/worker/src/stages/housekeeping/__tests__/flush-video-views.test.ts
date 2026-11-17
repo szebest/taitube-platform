@@ -1,8 +1,8 @@
+import { err } from '@kit/result';
 import { InMemoryRepositories, InMemoryViewBuffer } from '@vp/adapters/in-memory';
 import type { ViewBatch } from '@vp/domain';
 import { cacheUnavailable, databaseUnavailable } from '@vp/errors';
 import { type PipelineMetrics, createMetricsRegistry } from '@vp/observability';
-import { err } from '@vp/result';
 import { SEEDED } from '@vp/testing';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { runFlushVideoViews } from '../flush-video-views';

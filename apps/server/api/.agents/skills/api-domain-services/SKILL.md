@@ -27,7 +27,7 @@ Every domain resource has a service in `apps/server/api/src/services/`:
 - Collaborators are injected and required; `composition/services.module.ts` builds them. A service never
   constructs or defaults one.
 - Shared helpers are imported: `http-cache.ts` (ETags, conditional requests, `Cache-Control`) and
-  `Singleflight` from `@vp/concurrency`.
+  `Singleflight` from `@kit/concurrency`.
 - Routes are plugins reading `app.services`, registered from `routes/index.ts`.
 
 ---

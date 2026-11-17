@@ -1,6 +1,6 @@
 import { readCookie, writeCookie } from '../cookie';
 
-describe('@vp/ui: cookie in the browser', () => {
+describe('@kit/ui: cookie in the browser', () => {
   afterEach(() => {
     writeCookie('vp.theme', '', { maxAge: 0 });
   });

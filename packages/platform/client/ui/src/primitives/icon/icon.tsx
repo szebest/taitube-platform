@@ -1,4 +1,4 @@
-import type { IconSize } from '@vp/design-tokens';
+import type { IconSize } from '@kit/design-tokens';
 import type { ComponentPropsWithRef } from 'react';
 import { ICONS, type IconId, MIRROR_IN_RTL } from '../../icons/inventory';
 import { iconStyles } from './icon.variants';

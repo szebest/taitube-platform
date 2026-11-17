@@ -1,4 +1,4 @@
-import { createCompoundContext } from '@vp/ui';
+import { createCompoundContext } from '@kit/ui';
 import { createContext } from 'react';
 import type { AppShellRailState, AppShellVariant } from './types';
 

@@ -38,10 +38,10 @@ function appData(file: string, source: string): string[] {
 const PACKAGES: Pkg[] = [
   { name: '@vp/domain', dir: 'packages/universal/domain', layer: 2, deps: [] },
   { name: '@vp/web', dir: 'apps/client/web', layer: 6, deps: [] },
-  { name: '@vp/result', dir: 'packages/platform/universal/result', layer: 1, deps: [] },
+  { name: '@kit/result', dir: 'packages/platform/universal/result', layer: 1, deps: [] },
   { name: '@kit/di', dir: 'packages/platform/universal/di', layer: 2, deps: [] },
 ];
-const PENDING = new Set(['@vp/result']);
+const PENDING = new Set(['@kit/result']);
 
 describe('architecture: platform packages hold no app data', () => {
   it.each([
@@ -65,7 +65,7 @@ describe('architecture: platform packages hold no app data', () => {
     { shape: 'a word that merely ends in vp', source: "export const a = 'rsvp.yes';" },
     { shape: 'a plain token', source: "export const a = 'default';" },
     { shape: 'a sentence with a slash', source: "export const a = 'on/off';" },
-    { shape: 'a scoped specifier', source: "import type { Result } from '@vp/result';" },
+    { shape: 'a scoped specifier', source: "import type { Result } from '@kit/result';" },
     { shape: 'a bare slash', source: "export const root = '/';" },
   ])('leaves $shape alone', ({ source }) => {
     expect(appData('fixture.ts', source)).toEqual([]);
@@ -84,7 +84,7 @@ describe('architecture: platform packages hold no app data', () => {
     { shape: 'a third-party package', source: "import { z } from 'zod';", found: 0 },
     {
       shape: 'a package whose move to @kit/* is pending',
-      source: "import '@vp/result';",
+      source: "import '@kit/result';",
       found: 0,
     },
   ])('counts $found app import(s) in $shape', ({ source, found }) => {

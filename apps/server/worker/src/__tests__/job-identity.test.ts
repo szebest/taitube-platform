@@ -1,4 +1,4 @@
-import { err, ok } from '@vp/result';
+import { err, ok } from '@kit/result';
 import { validateJobId, validateQueueName } from '../job-identity';
 
 describe('apps/server/worker: job identity', () => {

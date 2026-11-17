@@ -1,8 +1,8 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { type BundleRules, bundleGuard } from '@vp/vite-preset/bundle-guard';
-import { type ReactCompiler, reactPlugins } from '@vp/vite-preset/react-plugins';
+import { type BundleRules, bundleGuard } from '@kit/vite-preset/bundle-guard';
+import { type ReactCompiler, reactPlugins } from '@kit/vite-preset/react-plugins';
 import { type Alias, defineConfig, loadEnv, type PluginOption, type SSROptions } from 'vite';
 
 // Vite loads an app's config with this package external, and Node cannot resolve an extensionless
@@ -12,7 +12,7 @@ import { type Alias, defineConfig, loadEnv, type PluginOption, type SSROptions }
 function packagesDirAbove(file: string): string {
   const parent = dirname(file);
   if (parent === file)
-    throw new Error('@vp/vite-preset is not inside the workspace packages/ directory');
+    throw new Error('@kit/vite-preset is not inside the workspace packages/ directory');
   return basename(parent) === 'packages' ? parent : packagesDirAbove(parent);
 }
 

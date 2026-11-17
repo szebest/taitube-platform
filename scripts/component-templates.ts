@@ -38,7 +38,7 @@ export function componentFolder({ name, kind, area }: ComponentRequest): string 
   return [componentHome(kind), ...areaFolder, name].join('/');
 }
 
-/** Inside `@vp/ui` a primitive reaches the helpers through its own `lib/`; everything else imports `@vp/ui`. */
+/** Inside `@kit/ui` a primitive reaches the helpers through its own `lib/`; everything else imports `@kit/ui`. */
 function helperModules(kind: ComponentKind) {
   return kind === 'primitive'
     ? {
@@ -47,7 +47,7 @@ function helperModules(kind: ComponentKind) {
         types: '../../types',
         variantNames: '../../lib/variant-names',
       }
-    : { classNames: '@vp/ui', context: '@vp/ui', types: '@vp/ui', variantNames: '@vp/ui' };
+    : { classNames: '@kit/ui', context: '@kit/ui', types: '@kit/ui', variantNames: '@kit/ui' };
 }
 
 type Names = Readonly<{ name: string; Name: string; styles: string; shelf: string }>;

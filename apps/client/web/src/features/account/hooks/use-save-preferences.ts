@@ -1,9 +1,9 @@
+import { fromPromise, isOk } from '@kit/result';
 import type { QueryClient } from '@tanstack/react-query';
 import { useMutation } from '@tanstack/react-query';
 import { type ApiClient, ApiError } from '@vp/api-client';
 import type { PreferencesView } from '@vp/api-contracts';
 import { useApi } from '@vp/queries';
-import { fromPromise, isOk } from '@vp/result';
 import { restoreQueryData } from '#app/integrations/query/restore-query-data';
 import { applyChange, type PreferencesChange } from '#app/lib/preferences/preferences-change';
 import { preferencesQueryOptions } from '#app/lib/preferences/preferences-queries';

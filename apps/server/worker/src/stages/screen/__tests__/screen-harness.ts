@@ -1,3 +1,4 @@
+import { createLogger } from '@kit/logger';
 import {
   InMemoryFrameClassifier,
   InMemoryRepositories,
@@ -6,7 +7,6 @@ import {
 import type { QueueJob } from '@vp/core/ports';
 import type { FingerprintTools } from '@vp/fingerprint';
 import type { ScreenJob } from '@vp/job-contracts';
-import { createLogger } from '@vp/logger';
 import { SEEDED, createMockJob } from '@vp/testing';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';

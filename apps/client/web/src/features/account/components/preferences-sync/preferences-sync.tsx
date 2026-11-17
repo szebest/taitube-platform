@@ -1,14 +1,14 @@
-import { useQuery } from '@tanstack/react-query';
-import type { TokenGroup } from '@vp/design-tokens';
-import { useT } from '@vp/intl-react';
-import { useAccount, useApi } from '@vp/queries';
+import type { TokenGroup } from '@kit/design-tokens';
+import { useT } from '@kit/intl-react';
 import {
   type AppearancePreference,
   accountAppearance,
   appearanceFromAccount,
   useAppearance,
   useToast,
-} from '@vp/ui';
+} from '@kit/ui';
+import { useQuery } from '@tanstack/react-query';
+import { useAccount, useApi } from '@vp/queries';
 import { type PropsWithChildren, useEffect, useEffectEvent, useRef, useState } from 'react';
 import { appearanceChange } from '#app/features/account/api/appearance-change';
 import { noteGuestChange } from '#app/features/account/api/guest-changes';

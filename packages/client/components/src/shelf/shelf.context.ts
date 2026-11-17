@@ -1,4 +1,4 @@
-import { createCompoundContext } from '@vp/ui';
+import { createCompoundContext } from '@kit/ui';
 import type { ShelfChevronSide, ShelfVariant } from './types';
 
 export const [ShelfContext, useShelf] = createCompoundContext<{

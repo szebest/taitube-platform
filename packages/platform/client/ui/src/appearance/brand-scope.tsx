@@ -1,6 +1,6 @@
+import { brandAccentCss, brandKey } from '@kit/design-tokens';
+import { unwrapOr } from '@kit/result';
 import { useRouter } from '@tanstack/react-router';
-import { brandAccentCss, brandKey } from '@vp/design-tokens';
-import { unwrapOr } from '@vp/result';
 import type { PropsWithChildren } from 'react';
 import { InlineStyle } from './inline-style';
 import { useAppearance } from './provider';

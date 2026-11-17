@@ -1,10 +1,10 @@
+import { LogContext, createLogger } from '@kit/logger';
+import { err } from '@kit/result';
 import { InMemoryJobQueue, InMemoryRepositories } from '@vp/adapters/in-memory';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { queueUnavailable } from '@vp/errors';
 import { mediaTools } from '@vp/ffmpeg';
 import { fingerprintTools } from '@vp/fingerprint';
-import { LogContext, createLogger } from '@vp/logger';
-import { err } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import { speechTools } from '@vp/whisper';
 import { type WorkerRunnerOptions, composeWorker } from '../runner';

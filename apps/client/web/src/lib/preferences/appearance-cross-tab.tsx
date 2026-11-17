@@ -1,4 +1,4 @@
-import { AppearancePreferenceSchema, useAppearance } from '@vp/ui';
+import { AppearancePreferenceSchema, useAppearance } from '@kit/ui';
 import { useEffect, useEffectEvent, useRef } from 'react';
 import { postPref, subscribePrefs } from './prefs-channel';
 

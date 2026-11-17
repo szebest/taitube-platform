@@ -1,5 +1,5 @@
+import { fromPromise, isOk, parseJson } from '@kit/result';
 import { buildPath, type LiveChatServerFrame, liveChatSocket } from '@vp/api-contracts';
-import { fromPromise, isOk, parseJson } from '@vp/result';
 import { useEffect, useReducer, useRef } from 'react';
 import { useApi } from './api-provider';
 import {

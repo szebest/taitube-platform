@@ -1,3 +1,4 @@
+import { ok, type Result } from '@kit/result';
 import type {
   BudgetRule,
   GateAdmission,
@@ -6,7 +7,6 @@ import type {
   WatchPartyTicketGrant,
 } from '@vp/core/ports';
 import type { CacheUnavailable } from '@vp/errors';
-import { ok, type Result } from '@vp/result';
 
 interface Window {
   count: number;

@@ -1,4 +1,4 @@
-import { Field } from '@vp/ui';
+import { Field } from '@kit/ui';
 import { DEFAULT_MIME_TYPES, fromEvent } from 'file-selector';
 import Dropzone, { type Accept } from 'react-dropzone';
 import { fieldError } from './field-error';

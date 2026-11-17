@@ -1,5 +1,5 @@
-import { useT } from '@vp/intl-react';
-import { useToast } from '@vp/ui';
+import { useT } from '@kit/intl-react';
+import { useToast } from '@kit/ui';
 import { useEffect, useEffectEvent } from 'react';
 import { registerServiceWorker } from '#app/integrations/service-worker-client/register-service-worker';
 

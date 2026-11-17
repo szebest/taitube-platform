@@ -1,5 +1,5 @@
+import { type Result, err, map } from '@kit/result';
 import { type UserContext, canAccessUpload } from '@vp/permissions';
-import { type Result, err, map } from '@vp/result';
 import { type AuthorizationFailure, authorize } from '../authorize';
 import { type UploadNotFound, uploadNotFound } from './failures';
 

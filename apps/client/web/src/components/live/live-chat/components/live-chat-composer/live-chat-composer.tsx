@@ -1,4 +1,4 @@
-import { Icon, IconButton, Textarea, useUiCopy } from '@vp/ui';
+import { Icon, IconButton, Textarea, useUiCopy } from '@kit/ui';
 import { type ComponentPropsWithRef, type SubmitEvent, type KeyboardEvent, useState } from 'react';
 import { useLiveChat } from '#app/components/live/live-chat/live-chat.context';
 import { liveChatStyles } from '#app/components/live/live-chat/live-chat.variants';

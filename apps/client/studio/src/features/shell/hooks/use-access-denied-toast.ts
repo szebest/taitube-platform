@@ -1,6 +1,6 @@
+import { useT } from '@kit/intl-react';
+import { useToast } from '@kit/ui';
 import { useNavigate, useSearch } from '@tanstack/react-router';
-import { useT } from '@vp/intl-react';
-import { useToast } from '@vp/ui';
 import { useEffect, useEffectEvent } from 'react';
 
 /** Shows the denial a redirect carried in `?denied=` as a toast, once, and takes the param off the URL. */

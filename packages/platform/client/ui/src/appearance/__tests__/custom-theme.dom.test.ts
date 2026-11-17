@@ -4,7 +4,7 @@ import { CUSTOM_THEME_START, registerCustomTheme } from '../custom-theme';
 
 const emptyHost = (): { adoptedStyleSheets: CSSStyleSheet[] } => ({ adoptedStyleSheets: [] });
 
-describe('@vp/ui: registerCustomTheme', () => {
+describe('@kit/ui: registerCustomTheme', () => {
   it.each([
     { ground: '#101820', accent: '#3366cc' },
     { ground: '#000000', accent: '#ffff00' },

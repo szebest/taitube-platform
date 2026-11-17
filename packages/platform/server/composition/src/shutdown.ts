@@ -1,6 +1,6 @@
-import { fromPromise, isErr } from '@vp/result';
+import { fromPromise, isErr } from '@kit/result';
 
-/** The part of a `@vp/logger` logger a shutdown writes to. */
+/** The part of a `@kit/logger` logger a shutdown writes to. */
 interface ShutdownLog {
   info(fields: Record<string, unknown>, message: string): void;
   error(fields: Record<string, unknown>, message: string): void;

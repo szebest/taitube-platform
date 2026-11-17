@@ -1,3 +1,5 @@
+import type { Logger } from '@kit/logger';
+import { type Result, err, isErr, map, ok, unwrapOr } from '@kit/result';
 import { type StreamResume, UserEventFrameSchema } from '@vp/api-contracts';
 import type {
   EventRepository,
@@ -15,9 +17,7 @@ import { type ReadVideoFailure, decideVideoRead, publicReadFailure } from '@vp/d
 import type { CdnBase } from '@vp/env-schema';
 import type { CacheUnavailable, DatabaseUnavailable } from '@vp/errors';
 import { userChannel, videoChannel } from '@vp/events';
-import type { Logger } from '@vp/logger';
 import type { UserContext } from '@vp/permissions';
-import { type Result, err, isErr, map, ok, unwrapOr } from '@vp/result';
 import type { SseFrame, SseLogRead } from './sse-connection';
 import { helloFrame, userFrame } from './sse-frames';
 import { playbackUrl } from './video-views';

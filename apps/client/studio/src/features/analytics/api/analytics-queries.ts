@@ -1,7 +1,7 @@
+import { assertNever } from '@kit/result';
 import { queryOptions } from '@tanstack/react-query';
 import type { ApiClient } from '@vp/api-client';
 import type { VideoAnalytics } from '@vp/api-contracts';
-import { assertNever } from '@vp/result';
 import type { AnalyticsRange, AnalyticsScope } from '../types';
 
 export type RangeAnalytics = Pick<

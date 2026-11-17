@@ -1,12 +1,12 @@
+import { useT } from '@kit/intl-react';
+import { Button } from '@kit/ui';
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { useT } from '@vp/intl-react';
 import {
   trustedCommentersQueryOptions,
   useApi,
   useFailureToast,
   useTrustCommenter,
 } from '@vp/queries';
-import { Button } from '@vp/ui';
 import { LoadMore } from '#app/components/table/load-more';
 import { pagedRows } from '#app/utils/paged-rows';
 import { SettingsListSection } from '../settings-section/settings-section';

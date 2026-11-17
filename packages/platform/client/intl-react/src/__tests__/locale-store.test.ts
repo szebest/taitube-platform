@@ -8,7 +8,7 @@ function createWatchedStore() {
   return { store, notified };
 }
 
-describe('@vp/intl-react: createLocaleStore', () => {
+describe('@kit/intl-react: createLocaleStore', () => {
   it('starts on en with no translation loaded', () => {
     expect(createLocaleStore().snapshot()).toEqual({ locale: 'en', catalogues: {} });
   });

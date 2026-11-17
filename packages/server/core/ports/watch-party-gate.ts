@@ -1,7 +1,7 @@
+import type { Result } from '@kit/result';
 import type { PartyPrincipal } from '@vp/domain';
 import type { CacheUnavailable } from '@vp/errors';
 import type { Role } from '@vp/permissions';
-import type { Result } from '@vp/result';
 
 /** Who a one-time room socket token was issued to, and for which room. */
 export interface WatchPartyTicketGrant {

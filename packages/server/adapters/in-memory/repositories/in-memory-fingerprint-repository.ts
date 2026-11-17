@@ -1,3 +1,4 @@
+import { type Result, ok } from '@kit/result';
 import {
   type AudioTerm,
   type AudioTermHit,
@@ -8,7 +9,6 @@ import {
 } from '@vp/core/repositories';
 import { frameBands, isLowEntropyTerm, lookupBands } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { type Result, ok } from '@vp/result';
 
 export class InMemoryFingerprintRepository extends FingerprintRepository {
   private readonly frames = new Map<string, readonly FrameFingerprint[]>();

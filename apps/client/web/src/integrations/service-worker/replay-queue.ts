@@ -1,4 +1,4 @@
-import { fromPromise } from '@vp/result';
+import { fromPromise } from '@kit/result';
 import type { Queue } from 'workbox-background-sync';
 import type { SyncMessage } from './sync-messages';
 

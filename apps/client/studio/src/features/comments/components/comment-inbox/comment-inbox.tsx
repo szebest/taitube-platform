@@ -1,3 +1,4 @@
+import { Format, useT } from '@kit/intl-react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import {
   createColumnHelper,
@@ -9,7 +10,6 @@ import {
 import { EmptyState, SectionError } from '@vp/components';
 import type { CreatorInboxFilter } from '@vp/domain';
 import { publishedAt } from '@vp/intl';
-import { Format, useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
 import { useState } from 'react';
 import {

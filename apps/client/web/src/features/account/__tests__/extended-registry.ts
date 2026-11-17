@@ -1,5 +1,5 @@
-import { defineTokenSet } from '@vp/design-tokens';
-import type { appearance } from '@vp/ui/appearance/registry';
+import { defineTokenSet } from '@kit/design-tokens';
+import type { appearance } from '@kit/ui/appearance/registry';
 
 type Registry = typeof appearance;
 

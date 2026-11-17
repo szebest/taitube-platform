@@ -1,3 +1,4 @@
+import { andThenAsync, err, isErr, ok, type Result } from '@kit/result';
 import type { HashingFailed } from '@vp/core/ports';
 import {
   type MemberKey,
@@ -21,7 +22,6 @@ import {
   type WatchPartyPasswordLocked,
   watchPartyNotFound,
 } from '@vp/errors';
-import { andThenAsync, err, isErr, ok, type Result } from '@vp/result';
 import type { PartyCaller } from './party-caller';
 import { holdsJoinWhenFull, isRoomMember, joinCapacity } from './watch-party-admission';
 import type { RoomContext } from './watch-party-context';

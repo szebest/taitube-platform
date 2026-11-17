@@ -1,5 +1,5 @@
+import { type Container, closeOnDispose } from '@kit/composition';
 import { token } from '@kit/di';
-import { type Container, closeOnDispose } from '@vp/composition';
 import { SEARCH_SUGGESTIONS } from '@vp/domain';
 import { portBoardQueues } from '../bullmq/port-board-queues';
 import { ScryptPasswordHasher } from '../crypto/scrypt-password-hasher';

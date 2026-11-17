@@ -1,7 +1,7 @@
+import { Format, useT } from '@kit/intl-react';
+import { UI_COPY_KEYS, type UiCopy, useUiCopy } from '@kit/ui';
 import { act, render } from '@testing-library/react';
-import { Format, useT } from '@vp/intl-react';
 import { LOCALE_DETAILS, type SupportedLocale } from '@vp/messages';
-import { UI_COPY_KEYS, type UiCopy, useUiCopy } from '@vp/ui';
 import type { ReactNode } from 'react';
 import { hydrateRoot } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';

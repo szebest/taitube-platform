@@ -1,4 +1,4 @@
-import { TOKEN_GROUPS, tokenGroups } from '@vp/design-tokens';
+import { TOKEN_GROUPS, tokenGroups } from '@kit/design-tokens';
 import { densityOf } from './density';
 import type { ShownMode } from './provider';
 import type { ResolvedAppearance } from './resolve';

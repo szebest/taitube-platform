@@ -1,4 +1,4 @@
-import { fromPromise, isOk } from '@vp/result';
+import { fromPromise, isOk } from '@kit/result';
 
 /** The pixels the browser decodes from the file, or undefined when it cannot be decoded as an image. */
 export async function readImageSize(

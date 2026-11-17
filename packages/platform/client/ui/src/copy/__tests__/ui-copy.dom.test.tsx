@@ -17,7 +17,7 @@ const renderCloseWord = (copy?: UiCopy) =>
     )
   );
 
-describe('@vp/ui: UiCopyProvider', () => {
+describe('@kit/ui: UiCopyProvider', () => {
   it('hands its words to the primitives under it, and new words on a locale change', () => {
     const { rerender } = renderCloseWord(FIXTURE_UI_COPY);
     rerender(

@@ -1,5 +1,5 @@
+import { Checkbox, Table, useUiCopy } from '@kit/ui';
 import { FlexRender, type Row, type RowData } from '@tanstack/react-table';
-import { Checkbox, Table, useUiCopy } from '@vp/ui';
 import { type ComponentPropsWithRef, type KeyboardEvent, useId, useState } from 'react';
 import { columnLook, useDataTable } from '#app/components/table/data-table/data-table.context';
 import { dataTableStyles } from '#app/components/table/data-table/data-table.variants';

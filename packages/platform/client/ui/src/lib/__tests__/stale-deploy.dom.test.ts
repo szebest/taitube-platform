@@ -3,7 +3,7 @@ import { onStaleDeploy, reloadOnceForStaleDeploy } from '../stale-deploy';
 const failure = (message: string) =>
   new TypeError(`Failed to fetch dynamically imported module: ${message}`);
 
-describe('@vp/ui: reloadOnceForStaleDeploy', () => {
+describe('@kit/ui: reloadOnceForStaleDeploy', () => {
   afterEach(() => {
     sessionStorage.clear();
   });

@@ -1,4 +1,4 @@
-import { Field, Select } from '@vp/ui';
+import { Field, Select } from '@kit/ui';
 import { useFieldContext } from './form-context';
 
 export type SelectFieldProps<T extends string> = {

@@ -1,6 +1,6 @@
+import { assertNever } from '@kit/result';
 import type { CommentThreadCursor, CommentWindow } from '@vp/core/repositories';
 import type { CommentSort } from '@vp/domain';
-import { assertNever } from '@vp/result';
 
 export type SortKey = readonly (number | string)[];
 

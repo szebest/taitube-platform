@@ -1,7 +1,7 @@
+import { unwrapOr } from '@kit/result';
 import type { ChannelRepositoryPort, VideoRepository } from '@vp/core/repositories';
 import { type ChannelCard, type Video, toChannelCard } from '@vp/domain';
 import { type UserContext, canReadVideo } from '@vp/permissions';
-import { unwrapOr } from '@vp/result';
 
 export interface VideoLookups {
   videosRepo: Pick<VideoRepository, 'findById'>;

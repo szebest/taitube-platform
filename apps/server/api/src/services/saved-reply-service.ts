@@ -1,3 +1,4 @@
+import { type Result, andThen, err, isErr, map, ok } from '@kit/result';
 import type { SavedReplyView } from '@vp/api-contracts';
 import type { SavedReplyDraft, SavedReplyRepositoryPort } from '@vp/core/repositories';
 import { type ActingChannel, SAVED_REPLY_LIMITS, type SavedReply } from '@vp/domain';
@@ -11,7 +12,6 @@ import {
 } from '@vp/domain-rules';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { type Result, andThen, err, isErr, map, ok } from '@vp/result';
 
 export interface SavedReplyServiceDeps {
   replies: SavedReplyRepositoryPort;

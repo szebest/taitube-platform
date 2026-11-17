@@ -4,7 +4,7 @@ import { clientApps } from './client-apps';
 import { PENDING } from './component-folders-pending';
 import { trackedFiles } from './repo-files';
 
-const PRIMITIVES = `${packageDir('@vp/ui')}/src/primitives/`;
+const PRIMITIVES = `${packageDir('@kit/ui')}/src/primitives/`;
 const COMPONENTS = `${packageDir('@vp/components')}/src/`;
 
 const KEBAB = '[a-z0-9]+(?:-[a-z0-9]+)*';

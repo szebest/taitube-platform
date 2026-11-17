@@ -1,9 +1,9 @@
+import { useT } from '@kit/intl-react';
+import { Button, Icon, IconButton, Switch, useToast } from '@kit/ui';
 import { createColumnHelper, useTable } from '@tanstack/react-table';
 import { EmptyState, SectionError } from '@vp/components';
-import { useT } from '@vp/intl-react';
 import { canManageCategory } from '@vp/permissions';
 import { useCan } from '@vp/permissions-react';
-import { Button, Icon, IconButton, Switch, useToast } from '@vp/ui';
 import { useState } from 'react';
 import {
   DataTable,

@@ -1,3 +1,4 @@
+import { type Result, ok, unwrapOr } from '@kit/result';
 import type {
   ChannelRepositoryPort,
   ListRecommendationFeedbackOptions,
@@ -14,7 +15,6 @@ import {
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { type Result, ok, unwrapOr } from '@vp/result';
 import { byKeysetDesc, isKeysetBefore } from './keyset';
 import { watchableVideo } from './watchable-video';
 

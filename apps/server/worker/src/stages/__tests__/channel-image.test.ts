@@ -1,6 +1,8 @@
 import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
+import { createLogger } from '@kit/logger';
+import { err } from '@kit/result';
 import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
 import type { ChannelImageKind } from '@vp/domain';
 import {
@@ -11,8 +13,6 @@ import {
   storageUnavailable,
 } from '@vp/errors';
 import { type ChannelImageProbe, type MediaTools, planChannelImageVariants } from '@vp/ffmpeg';
-import { createLogger } from '@vp/logger';
-import { err } from '@vp/result';
 import { channelImageUploadKey, channelImageVariantKey } from '@vp/storage';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';

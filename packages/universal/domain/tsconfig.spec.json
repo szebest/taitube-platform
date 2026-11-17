@@ -1,5 +1,5 @@
 {
-  "extends": "@vp/tsconfig/spec.json",
+  "extends": "@kit/tsconfig/spec.json",
   "compilerOptions": {
     "paths": { "@vp/domain/*": ["./src/*"] }
   },

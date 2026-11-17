@@ -1,4 +1,4 @@
-import { UI_COPY_KEYS, type UiCopy, UiCopyProvider } from '@vp/ui';
+import { UI_COPY_KEYS, type UiCopy, UiCopyProvider } from '@kit/ui';
 import type { PropsWithChildren } from 'react';
 
 const KEY_AS_COPY = Object.fromEntries(UI_COPY_KEYS.map((key) => [key, key])) as UiCopy;

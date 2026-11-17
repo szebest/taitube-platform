@@ -1,3 +1,5 @@
+import type { Logger } from '@kit/logger';
+import { isErr, unwrapOr } from '@kit/result';
 import type { JobQueue, QueueJob } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import {
@@ -16,9 +18,7 @@ import {
   ids,
   stagePolicies,
 } from '@vp/job-contracts';
-import type { Logger } from '@vp/logger';
 import type { PipelineMetrics } from '@vp/observability';
-import { isErr, unwrapOr } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 import { failCaptionsRun } from './stages/captions/captions-failure';
 import { stepRenditionOf } from './stages/captions/captions-run';

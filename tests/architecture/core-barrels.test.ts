@@ -1,7 +1,7 @@
 import { packageDir } from '../../scripts/workspace-packages';
 import { read, trackedFiles } from './repo-files';
 
-const PAGINATION = packageDir('@vp/pagination');
+const PAGINATION = packageDir('@kit/pagination');
 
 const BARRELS = [
   'packages/server/core/ports',

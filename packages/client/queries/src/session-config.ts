@@ -1,5 +1,5 @@
+import { tryCatch, unwrapOr } from '@kit/result';
 import { getGlobalStartContext } from '@tanstack/react-start';
-import { tryCatch, unwrapOr } from '@vp/result';
 
 export { SESSION_COOKIE } from '@vp/api-contracts';
 

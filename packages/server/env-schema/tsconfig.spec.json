@@ -1,4 +1,4 @@
 {
-  "extends": "@vp/tsconfig/spec.json",
+  "extends": "@kit/tsconfig/spec.json",
   "include": ["src/**/*"]
 }

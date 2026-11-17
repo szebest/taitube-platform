@@ -1,6 +1,6 @@
+import { type Result, err, ok } from '@kit/result';
 import { DatabaseClient } from '@vp/core/ports';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
-import { type Result, err, ok } from '@vp/result';
 
 export class InMemoryDatabaseClient extends DatabaseClient {
   private healthy = true;

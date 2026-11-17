@@ -1,3 +1,4 @@
+import { andThenAsync, err, map, ok } from '@kit/result';
 import {
   INVITE_LINK_TTL_MS,
   type WatchPartyInviteLink,
@@ -5,7 +6,6 @@ import {
 } from '@vp/domain';
 import { requireRoomPermission } from '@vp/domain-rules';
 import { watchPartyClosed, watchPartyNotFound } from '@vp/errors';
-import { andThenAsync, err, map, ok } from '@vp/result';
 import type { PartyCaller } from './party-caller';
 import type { WatchPartyDeps } from './watch-party-deps';
 import { logChange } from './watch-party-moderation-effects';

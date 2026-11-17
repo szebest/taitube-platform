@@ -2,7 +2,7 @@
 
 > Tier rules for this directory: [../AGENTS.md](../AGENTS.md) · full tier & layer reference: [packages/AGENTS.md](../../AGENTS.md)
 
-Owner: ticket [95](../../../docs/tickets/95-design-system-2.md), section 6. `client` tier, layer T4: above `@vp/ui` (T3),
+Owner: ticket [95](../../../docs/tickets/95-design-system-2.md), section 6. `client` tier, layer T4: above `@kit/ui` (T3),
 whose primitives it composes, and below the apps. Specs: [docs/design/components/](../../../docs/design/components/README.md).
 
 ## What it holds
@@ -19,7 +19,7 @@ never earlier.
 - `LoginCard` and `AccountMenu`, the presentational parts of sign-in and the account menu; the session hooks
   (`useAccount`, `signOut`) stay in `@vp/queries` and each app wraps them in `features/account/components/`.
 
-Every component is a folder, `src/<area>/<name>/`, shaped like a `@vp/ui` primitive: `<name>.tsx`,
+Every component is a folder, `src/<area>/<name>/`, shaped like a `@kit/ui` primitive: `<name>.tsx`,
 `<name>.context.ts` and `<name>.variants.ts` for a compound one, `types.ts`, a story and a jsdom spec; the shape is [docs/standards/frontend-structure.md](../../../docs/standards/frontend-structure.md#3-a-component-folder). It reads the
 words it prints itself through `useUiCopy()` and takes product words as children.
 

@@ -1,6 +1,6 @@
+import { type Result, isErr } from '@kit/result';
 import type { Category } from '@vp/domain';
 import type { ErrorCodes, Failure } from '@vp/errors';
-import { type Result, isErr } from '@vp/result';
 import type { CreateCategoryServiceFailure } from '../../category-service';
 
 type CategoryQuarantined = Failure<typeof ErrorCodes.QUOTA_EXCEEDED, { slug: string }>;

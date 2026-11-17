@@ -22,7 +22,7 @@ A scrollable region with a themed scrollbar and optional edge fades, for content
 
 ```ts
 // types.ts
-import type { SizeOption } from '@vp/design-tokens';
+import type { SizeOption } from '@kit/design-tokens';
 
 export type ScrollAreaSize = Extract<SizeOption, 'sm' | 'md'>;
 ```

@@ -9,7 +9,7 @@ import {
   Spinner,
   useUiCopy,
   VisuallyHidden,
-} from '@vp/ui';
+} from '@kit/ui';
 import { type ComponentPropsWithRef, useId } from 'react';
 import { NowPlayingBarContext, useNowPlayingBar } from './now-playing-bar.context';
 import { nowPlayingBarStyles } from './now-playing-bar.variants';

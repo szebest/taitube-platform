@@ -1,4 +1,4 @@
-import { ok } from '@vp/result';
+import { ok } from '@kit/result';
 import { NOW } from '../../__tests__/fixtures';
 import { dateKind } from '../date';
 import { contextFor } from './context';

@@ -1,4 +1,4 @@
-import { all, map, type Result } from '@vp/result';
+import { all, map, type Result } from '@kit/result';
 import { type DerivedAccent, deriveAccent } from '../accent';
 import type { InvalidColour } from '../color/rgb';
 import { MODE_FAMILIES } from '../schema/values';

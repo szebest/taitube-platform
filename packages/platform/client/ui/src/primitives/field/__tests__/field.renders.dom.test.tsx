@@ -19,7 +19,7 @@ function renderCountedField() {
   return { rerender: () => view.rerender(<Field.Root>{parts}</Field.Root>), commitsOf };
 }
 
-describe('@vp/ui: Field render count, compiled', () => {
+describe('@kit/ui: Field render count, compiled', () => {
   it.each(['label', 'hint'])(
     'commits the %s no more than at mount when the field renders again with the same props',
     (part) => {

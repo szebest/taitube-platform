@@ -1,4 +1,4 @@
-import { Skeleton } from '@vp/ui';
+import { Skeleton } from '@kit/ui';
 import { queueStyles } from '#app/components/watch/queue/queue.variants';
 import type { QueueLayout } from '#app/components/watch/queue/types';
 

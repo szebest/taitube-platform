@@ -1,4 +1,4 @@
-import { tv } from '@vp/ui';
+import { tv } from '@kit/ui';
 import type { PickOfTheDayLayoutStyle } from './types';
 
 export const pickOfTheDayStyles = tv({

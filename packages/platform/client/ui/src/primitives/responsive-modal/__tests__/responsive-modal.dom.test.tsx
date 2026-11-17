@@ -38,7 +38,7 @@ const stubViewport = (compact: boolean) =>
 const renderShareModal = (onOpenChange?: (open: boolean) => void) =>
   render(shareModal(onOpenChange), { wrapper: WithUiCopy });
 
-describe('@vp/ui: ResponsiveModal', () => {
+describe('@kit/ui: ResponsiveModal', () => {
   beforeEach(() => {
     Element.prototype.setPointerCapture = () => undefined;
   });

@@ -1,4 +1,4 @@
-import { createCompoundContext } from '@vp/ui';
+import { createCompoundContext } from '@kit/ui';
 import type { NowPlayingBarStatus } from './types';
 
 export const [NowPlayingBarContext, useNowPlayingBar] = createCompoundContext<{

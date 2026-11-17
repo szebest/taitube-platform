@@ -1,6 +1,6 @@
+import { useT } from '@kit/intl-react';
 import { useQuery } from '@tanstack/react-query';
 import type { VideoSummary } from '@vp/api-contracts';
-import { useT } from '@vp/intl-react';
 import { captionsQueryOptions, useApi } from '@vp/queries';
 import { type ReactNode, useState } from 'react';
 import { SubscribeAction } from '#app/components/channel/subscribe-action';

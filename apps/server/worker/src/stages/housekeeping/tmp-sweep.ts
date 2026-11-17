@@ -1,7 +1,7 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
-import type { Logger } from '@vp/logger';
-import { fromPromise, isOk, unwrapOr } from '@vp/result';
+import type { Logger } from '@kit/logger';
+import { fromPromise, isOk, unwrapOr } from '@kit/result';
 
 export interface TmpSweepOptions {
   tmpDir: string;

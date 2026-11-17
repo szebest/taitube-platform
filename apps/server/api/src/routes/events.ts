@@ -1,5 +1,5 @@
+import { isErr } from '@kit/result';
 import { LastEventIdSchema, streamMyEvents, streamVideoEvents } from '@vp/api-contracts';
-import { isErr } from '@vp/result';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { requireAuth } from '../plugins/auth';

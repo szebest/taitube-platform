@@ -20,7 +20,7 @@ The Taitube mark and lowercase wordmark, in one ink, used in the header and on a
 
 ```ts
 // types.ts
-import type { SizeOption, ToneOption } from '@vp/design-tokens';
+import type { SizeOption, ToneOption } from '@kit/design-tokens';
 
 export type LogoVariant = 'lockup' | 'mark' | 'wordmark';
 export type LogoSize = Extract<SizeOption, 'sm' | 'md' | 'lg'>;

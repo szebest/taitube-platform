@@ -15,7 +15,7 @@ const FORMATTING_HOME = 'packages/universal/intl/';
  * (`Intl.Locale`). Each is the one module allowed to.
  */
 const DETECTION = [
-  `${packageDir('@vp/intl-react')}/src/browser-environment.ts`,
+  `${packageDir('@kit/intl-react')}/src/browser-environment.ts`,
   'packages/client/queries/src/request-locale.ts',
 ];
 

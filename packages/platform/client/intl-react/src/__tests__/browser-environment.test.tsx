@@ -1,6 +1,6 @@
 import { readBrowserEnvironment } from '../browser-environment';
 
-describe('@vp/intl-react: readBrowserEnvironment', () => {
+describe('@kit/intl-react: readBrowserEnvironment', () => {
   it("reads the runtime's zone and the time", () => {
     const environment = readBrowserEnvironment();
 

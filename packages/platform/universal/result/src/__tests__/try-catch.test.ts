@@ -3,7 +3,7 @@ import { fromPromise, parseJson, tryCatch } from '../try-catch';
 
 const describeCause = (cause: unknown) => ({ code: 'WRAPPED' as const, cause });
 
-describe('@vp/result: tryCatch', () => {
+describe('@kit/result: tryCatch', () => {
   it('returns the value when nothing throws', () => {
     expect(tryCatch(() => 'fine', describeCause)).toEqual(ok('fine'));
   });
@@ -21,7 +21,7 @@ describe('@vp/result: tryCatch', () => {
   });
 });
 
-describe('@vp/result: parseJson', () => {
+describe('@kit/result: parseJson', () => {
   it('returns the parsed value of JSON text', () => {
     expect(parseJson('{"a":[1]}')).toEqual(ok({ a: [1] }));
   });
@@ -33,7 +33,7 @@ describe('@vp/result: parseJson', () => {
   });
 });
 
-describe('@vp/result: fromPromise', () => {
+describe('@kit/result: fromPromise', () => {
   it('returns the resolved value', async () => {
     await expect(fromPromise(Promise.resolve(5), describeCause)).resolves.toEqual(ok(5));
   });

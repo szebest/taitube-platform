@@ -1,5 +1,5 @@
+import type { AvatarSize } from '@kit/ui';
 import type { ReactionType } from '@vp/domain';
-import type { AvatarSize } from '@vp/ui';
 
 export type CommentLevel = 'comment' | 'reply';
 export type CommentState =

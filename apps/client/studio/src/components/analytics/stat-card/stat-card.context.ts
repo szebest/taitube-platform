@@ -1,4 +1,4 @@
-import { createCompoundContext } from '@vp/ui';
+import { createCompoundContext } from '@kit/ui';
 import type { StatCardSize, StatCardState } from './types';
 
 export type StatCardShared = { size: StatCardSize } & (

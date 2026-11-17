@@ -1,4 +1,4 @@
-import { useT } from '@vp/intl-react';
+import { useT } from '@kit/intl-react';
 import { useApi } from '@vp/queries';
 import { subscriptionFeedQueryOptions } from '#app/lib/query-keys/feed-keys';
 import { VideoFeed } from '../video-feed/video-feed';

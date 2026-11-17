@@ -1,3 +1,4 @@
+import { type Result, ok } from '@kit/result';
 import {
   type ClaimStepOptions,
   type ClaimStepResult,
@@ -10,7 +11,6 @@ import {
   StepRepository,
 } from '@vp/core/repositories';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { type Result, ok } from '@vp/result';
 import { type Clock, realClock } from './clock';
 import type { InternalStep } from './types';
 

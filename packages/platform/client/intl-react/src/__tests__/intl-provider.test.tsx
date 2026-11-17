@@ -50,7 +50,7 @@ function renderIntlHook<Result>(hook: () => Result, props: ProviderProps = FIXED
   });
 }
 
-describe('@vp/intl-react: IntlProvider', () => {
+describe('@kit/intl-react: IntlProvider', () => {
   it('builds its bindings once per locale, not once per render', () => {
     const seen: IntlBinding[] = [];
     const probe = (key: number) => <Probe seen={seen} key={key} />;

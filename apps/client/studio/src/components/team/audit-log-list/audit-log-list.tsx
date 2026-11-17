@@ -1,4 +1,4 @@
-import { Avatar, cn } from '@vp/ui';
+import { Avatar, cn } from '@kit/ui';
 import type { ComponentPropsWithRef } from 'react';
 
 /** What the team changed, one row each, newest first; name the list with `aria-label`. */

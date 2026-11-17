@@ -1,6 +1,6 @@
+import { useT } from '@kit/intl-react';
 import { useNavigate, useParams, useSearch } from '@tanstack/react-router';
 import { PageHeader } from '@vp/components';
-import { useT } from '@vp/intl-react';
 import { AnalyticsOverview } from '../analytics-overview/analytics-overview';
 import { AnalyticsRangeSwitch } from '../analytics-range-switch/analytics-range-switch';
 import { RetentionHeatmap } from '../retention-heatmap/retention-heatmap';

@@ -1,4 +1,4 @@
-import type { SizeOption, ToneOption } from '@vp/design-tokens';
+import type { SizeOption, ToneOption } from '@kit/design-tokens';
 
 export type LogoVariant = 'lockup' | 'mark' | 'wordmark';
 export type LogoSize = Extract<SizeOption, 'sm' | 'md' | 'lg'>;

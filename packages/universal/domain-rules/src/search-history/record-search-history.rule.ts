@@ -1,6 +1,6 @@
+import { type Result, map } from '@kit/result';
 import { type NewSearchHistoryEntry, searchHistoryText } from '@vp/domain';
 import type { UserContext } from '@vp/permissions';
-import { type Result, map } from '@vp/result';
 import { type AuthorizationFailure, authorize } from '../authorize';
 
 export interface RecordSearchHistoryInput {

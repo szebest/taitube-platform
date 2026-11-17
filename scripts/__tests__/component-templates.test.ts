@@ -56,7 +56,7 @@ describe('scripts: the component templates', () => {
 
   it.each([
     { kind: 'primitive', from: "from '../../lib/class-names'" },
-    { kind: 'web', from: "from '@vp/ui'" },
+    { kind: 'web', from: "from '@kit/ui'" },
   ] as const)('takes the helpers of a $kind component $from', ({ kind, from }) => {
     expect(componentFiles(request({ kind }))['chip-bar.variants.ts']).toContain(from);
   });

@@ -43,7 +43,7 @@ Instructions for any coding agent working on the Taitube API server (`apps/serve
 - A service's dependencies are required. It never constructs, defaults or reads from `process.env` a
   collaborator or a setting it was not handed, and it imports nothing from `@vp/adapters`
   (`total-dependencies`, `adapter-instantiation` and `sdk-confinement` assert it). HTTP cache helpers are
-  three functions in `http-cache.ts`; `Singleflight` comes from `@vp/concurrency`.
+  three functions in `http-cache.ts`; `Singleflight` comes from `@kit/concurrency`.
 - Services must remain completely decoupled from Fastify transport objects (`FastifyRequest`, `FastifyReply`).
 - Routes are plugins: `export async function xRoutes(app: FastifyInstance)`, reading `app.services` and
   `app.config`, registered from `routes/index.ts`.
