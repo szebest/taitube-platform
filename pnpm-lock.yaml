@@ -697,6 +697,9 @@ importers:
       '@vp/whisper':
         specifier: workspace:*
         version: link:../../../packages/server/whisper
+      cookie-es:
+        specifier: ^3.1.1
+        version: 3.1.1
       fastify:
         specifier: ^5.12.5
         version: 5.12.5

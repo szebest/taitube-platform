@@ -38,6 +38,7 @@ const ModerationResultSchema = z.object({
 export const moderateComment = defineEndpoint({
   method: 'POST',
   path: '/v1/comments/:id/moderate',
+  scope: 'comments:moderate',
   tag: TAG,
   summary: 'Hold, approve, hide, unhide or remove a comment',
   description:

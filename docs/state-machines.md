@@ -55,6 +55,28 @@ template asks it.
 
 ## Machines
 
+### api-token
+
+`API_TOKEN`, defined in `packages/universal/domain-rules/src/api-tokens/api-token.machine.ts`.
+
+Initial: `active`. Final: `revoked`.
+
+| Event | From | To | Recorded as |
+| --- | --- | --- | --- |
+| `use` | `active` | `active` | - |
+| `expire` | `active` | `expired` | - |
+| `revoke` | `active`, `expired` | `revoked` | - |
+
+```mermaid
+stateDiagram-v2
+  [*] --> active
+  active --> active: use
+  active --> expired: expire
+  active --> revoked: revoke
+  expired --> revoked: revoke
+  revoked --> [*]
+```
+
 ### channel-image-upload
 
 `CHANNEL_IMAGE_UPLOAD`, defined in `packages/universal/domain-rules/src/channels/channel-image-upload.machine.ts`.

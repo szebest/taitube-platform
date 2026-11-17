@@ -14,6 +14,7 @@ import { registerOpenApi } from './composition/openapi';
 import { Services, registerServices, resolveBackground } from './composition/services.module';
 import { registerAccessLog } from './plugins/access-log';
 import { registerAuth } from './plugins/auth';
+import { corsOptionsFor } from './plugins/cors';
 import {
   problemClientErrorHandler,
   problemFrameworkErrorHandler,
@@ -23,16 +24,12 @@ import {
 import { registerHttpMetricsPlugin } from './plugins/http-metrics';
 import { requestIdFrom } from './plugins/request-id';
 import { registerRequestSpan } from './plugins/request-span';
+import { tokenRateLimit } from './plugins/token-rate-limit';
 import { routesFor } from './routes/index';
 
 export * from './composition/adapter-set';
 export * from './composition/services.module';
 export * from './services/index';
-
-const CORS_METHODS = ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE'];
-
-/** Chromium caps a cached preflight at two hours, so a longer value buys nothing. */
-const CORS_PREFLIGHT_MAX_AGE_SECONDS = 7200;
 
 export interface BuildAppOptions {
   config: AppConfig;
@@ -77,11 +74,7 @@ export async function composeApp(options: BuildAppOptions): Promise<ComposedApp>
   app.setValidatorCompiler(validatorCompiler);
   app.setSerializerCompiler(serializerCompiler);
 
-  await app.register(cors, {
-    origin: [...config.http.corsOrigins],
-    methods: CORS_METHODS,
-    maxAge: CORS_PREFLIGHT_MAX_AGE_SECONDS,
-  });
+  await app.register(cors, { delegator: corsOptionsFor(config.http.corsOrigins) });
   await app.register(helmet, { contentSecurityPolicy: false });
   await app.register(rateLimit, {
     global: false,
@@ -102,6 +95,8 @@ export async function composeApp(options: BuildAppOptions): Promise<ComposedApp>
     auth: config.auth,
     guestSessions: container.get(Adapters.PartyGuestSessions),
     partyCredentialTtlSeconds: config.watchParties.guestCredentialTtlSeconds,
+    tokens: services.apiTokenService,
+    tokenRateLimit: tokenRateLimit(app),
   });
   await app.register(registerHttpMetricsPlugin, { metrics: container.get(Adapters.Metrics) });
   await registerOpenApi(app);

@@ -14,6 +14,7 @@ const CreatorInboxCommentSchema = CommentSchema.extend({
 export const listCreatorComments = defineEndpoint({
   method: 'GET',
   path: '/v1/creator/comments',
+  scope: 'comments:moderate',
   channelScoped: true,
   tag: 'Creator Studio',
   summary: 'The creator comment inbox',
@@ -61,6 +62,7 @@ export type BulkResultView = z.infer<typeof BulkResultSchema>;
 export const bulkModerateComments = defineEndpoint({
   method: 'POST',
   path: '/v1/creator/comments/bulk',
+  scope: 'comments:moderate',
   channelScoped: true,
   tag: 'Creator Studio',
   summary: 'Moderate up to 100 comments at once',

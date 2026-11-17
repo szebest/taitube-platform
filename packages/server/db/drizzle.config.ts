@@ -27,6 +27,7 @@ export default defineConfig({
     './src/screening-schema.ts',
     './src/channel-identity-schema.ts',
     './src/exports-schema.ts',
+    './src/api-tokens-schema.ts',
   ],
   out: './drizzle',
   dialect: 'postgresql',

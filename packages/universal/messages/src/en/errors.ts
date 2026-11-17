@@ -41,6 +41,12 @@ export const errors = {
   exportInProgress: dt('An export of this channel is already running. Wait for it to finish.'),
   exportDailyLimit: dt('This channel has requested as many exports as it can today.'),
   exportTooLarge: dt('The export is too large. Choose a shorter range.'),
+  apiTokenNotFound: dt('This token does not exist or was already revoked.'),
+  apiTokenLimitReached: dt(
+    'You have reached the limit of active tokens. Revoke one to create another.'
+  ),
+  apiTokenScopeMissing: dt('This token is not allowed to do that.'),
+  apiTokenWithSession: dt('Send either a token or a session, not both.'),
   oembedUrlUnsupported: dt('This address is not a video page of this site.'),
   oembedFormatUnsupported: dt('Only the JSON format is supported.'),
   searchHistoryNotFound: dt('This search is no longer in your history.'),

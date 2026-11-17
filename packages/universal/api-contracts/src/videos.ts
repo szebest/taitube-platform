@@ -50,6 +50,7 @@ const UpdateVideoMetadataSchema = z.object({
 export const listVideos = defineEndpoint({
   method: 'GET',
   path: '/v1/videos',
+  scope: 'videos:read',
   tag: 'Videos',
   summary: 'List caller videos with keyset pagination',
   description:
@@ -66,6 +67,7 @@ export const listVideos = defineEndpoint({
 export const getVideo = defineEndpoint({
   method: 'GET',
   path: '/v1/videos/:id',
+  scope: 'videos:read',
   tag: 'Videos',
   summary: 'Get video details',
   description:
@@ -84,6 +86,7 @@ export const getVideo = defineEndpoint({
 export const updateVideo = defineEndpoint({
   method: 'PATCH',
   path: '/v1/videos/:id',
+  scope: 'videos:write',
   tag: 'Videos',
   summary: 'Edit video metadata with optimistic locking',
   description:

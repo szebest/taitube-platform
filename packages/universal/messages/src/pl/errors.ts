@@ -41,6 +41,12 @@ export const errors = {
   exportInProgress: dt('Eksport tego kanału już trwa. Poczekaj, aż się zakończy.'),
   exportDailyLimit: dt('Ten kanał zlecił dziś już wszystkie dostępne eksporty.'),
   exportTooLarge: dt('Eksport jest za duży. Wybierz krótszy zakres.'),
+  apiTokenNotFound: dt('Ten token nie istnieje albo został już unieważniony.'),
+  apiTokenLimitReached: dt(
+    'Osiągnięto limit aktywnych tokenów. Unieważnij jeden, aby utworzyć kolejny.'
+  ),
+  apiTokenScopeMissing: dt('Ten token nie ma uprawnień do tej operacji.'),
+  apiTokenWithSession: dt('Wyślij token albo sesję, nie oba naraz.'),
   oembedUrlUnsupported: dt('Ten adres nie jest stroną filmu w tym serwisie.'),
   oembedFormatUnsupported: dt('Obsługiwany jest tylko format JSON.'),
   searchHistoryNotFound: dt('Tego wyszukiwania nie ma już w Twojej historii.'),

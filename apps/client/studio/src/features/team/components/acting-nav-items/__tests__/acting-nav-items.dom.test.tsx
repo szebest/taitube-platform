@@ -19,6 +19,7 @@ describe('apps/client/studio: ActingNavItems', () => {
       'Review queue',
       'Live',
       'Team',
+      'Developers',
       'Back to Taitube',
     ]);
   });
@@ -34,6 +35,6 @@ describe('apps/client/studio: ActingNavItems', () => {
       actingOn: OTHER_CHANNEL_ID,
     });
 
-    expect(navLinks()).toEqual([...pages, 'Back to Taitube']);
+    expect(navLinks()).toEqual([...pages, 'Developers', 'Back to Taitube']);
   });
 });

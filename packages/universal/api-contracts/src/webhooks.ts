@@ -1,5 +1,5 @@
-import { WEBHOOK_EVENTS } from '@vp/domain';
-import { ErrorCodes } from '@vp/errors';
+import { WEBHOOK_EVENTS, WEBHOOK_TEST_EVENT } from '@vp/domain';
+import { ErrorCodes, type WebhookDeliveryFailure } from '@vp/errors';
 import { WEBHOOK_URL_MAX_LENGTH } from '@vp/validation';
 import { z } from 'zod';
 import { defineEndpoint } from './endpoint';
@@ -33,9 +33,26 @@ const CreateWebhookBodySchema = z.object({
     .min(1)
     .max(WEBHOOK_EVENTS.length)
     .describe(
-      'video.ready fires when processing finishes, export.ready when a channel export file can be downloaded; live.started is accepted and reserved'
+      'video.ready fires when processing finishes, export.ready when a channel export file can be downloaded, comment.held when a comment on one of your videos is held for review (its id, the video and the channel, never the text); live.started is accepted and reserved'
     ),
 });
+
+const DELIVERY_FAILURES = [
+  'timeout',
+  'network',
+  'status',
+  'blocked-host',
+  'redirect',
+] as const satisfies readonly WebhookDeliveryFailure['reason'][];
+
+const WebhookTestSchema = z.discriminatedUnion('outcome', [
+  z.object({ outcome: z.literal('delivered') }),
+  z.object({
+    outcome: z.literal('failed'),
+    reason: z.enum(DELIVERY_FAILURES),
+    status: z.number().int().nullable().describe('What the receiver answered, when it answered'),
+  }),
+]);
 
 const AUTHENTICATED = {
   400: [ErrorCodes.VALIDATION_FAILED],
@@ -45,6 +62,7 @@ const AUTHENTICATED = {
 export const createWebhook = defineEndpoint({
   method: 'POST',
   path: '/v1/me/webhooks',
+  scope: 'webhooks:manage',
   tag: 'Webhooks',
   summary: 'Register a webhook',
   description:
@@ -62,6 +80,7 @@ export const createWebhook = defineEndpoint({
 export const listWebhooks = defineEndpoint({
   method: 'GET',
   path: '/v1/me/webhooks',
+  scope: 'webhooks:manage',
   tag: 'Webhooks',
   summary: 'List my webhooks',
   description: 'The webhooks the caller registered, oldest first. Secrets are never returned.',
@@ -73,6 +92,7 @@ export const listWebhooks = defineEndpoint({
 export const deleteWebhook = defineEndpoint({
   method: 'DELETE',
   path: '/v1/me/webhooks/:id',
+  scope: 'webhooks:manage',
   tag: 'Webhooks',
   summary: 'Remove a webhook',
   description: 'Answers 404 for a webhook the caller did not register.',
@@ -82,6 +102,21 @@ export const deleteWebhook = defineEndpoint({
   errors: { ...AUTHENTICATED, 404: [ErrorCodes.WEBHOOK_NOT_FOUND] },
 });
 
+export const testWebhook = defineEndpoint({
+  method: 'POST',
+  path: '/v1/me/webhooks/:id/test',
+  scope: 'webhooks:manage',
+  tag: 'Webhooks',
+  summary: 'Send a test delivery',
+  description: `Sends one signed delivery of \`${WEBHOOK_TEST_EVENT}\` with \`{ webhookId, sentAt }\` now, as every other delivery is sent, and answers what the receiver did with it. Answers 404 for a webhook the caller did not register.`,
+  params: WebhookIdParamSchema,
+  status: 200,
+  result: WebhookTestSchema,
+  errors: { ...AUTHENTICATED, 404: [ErrorCodes.WEBHOOK_NOT_FOUND] },
+});
+
+export type WebhookView = z.infer<typeof WebhookSchema>;
+export type WebhookTestView = z.infer<typeof WebhookTestSchema>;
 export type CreatedWebhookView = z.infer<typeof CreatedWebhookSchema>;
 export type WebhookListView = z.infer<typeof WebhookListSchema>;
 export type CreateWebhookBody = z.infer<typeof CreateWebhookBodySchema>;

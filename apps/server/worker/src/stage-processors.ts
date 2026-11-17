@@ -17,7 +17,9 @@ import type { AnyFailure } from '@vp/errors';
 import type { MediaTools } from '@vp/ffmpeg';
 import type { FingerprintTools } from '@vp/fingerprint';
 import {
+  ANNOUNCE_COMMENT_HELD,
   ANNOUNCE_LIVE,
+  AnnounceCommentHeldJob,
   AnnounceLiveJob,
   CaptionsJob,
   EXPORT_DATA,
@@ -55,6 +57,7 @@ import { createCaptionsStage } from './stages/captions/captions-stage';
 import { createExportProcessor } from './stages/exports/export-stage';
 import { createHousekeepingProcessor } from './stages/housekeeping/index';
 import { createLiveStage } from './stages/live/live-stage';
+import { createAnnounceCommentHeldProcessor } from './stages/notifications/announce-comment-held';
 import { createAnnounceLiveProcessor } from './stages/notifications/announce-live';
 import { createNotifyCommentProcessor } from './stages/notifications/notify-comment';
 import { createNotifyHeartProcessor } from './stages/notifications/notify-heart';
@@ -117,6 +120,10 @@ export const notify = (d: StageDeps): StageProcessor => {
   const byName: Record<string, StageProcessor> = {
     [NOTIFY_SUBSCRIBERS]: consuming(NotifySubscribersJob, createNotifySubscribersProcessor(fanOut)),
     [ANNOUNCE_LIVE]: consuming(AnnounceLiveJob, createAnnounceLiveProcessor(fanOut)),
+    [ANNOUNCE_COMMENT_HELD]: consuming(
+      AnnounceCommentHeldJob,
+      createAnnounceCommentHeldProcessor({ ...rowDeps, webhookDispatcher: d.webhookDispatcher })
+    ),
     [NOTIFY_COMMENT]: consuming(NotifyCommentJob, createNotifyCommentProcessor(rowDeps)),
     [NOTIFY_HEART]: consuming(NotifyHeartJob, createNotifyHeartProcessor(rowDeps)),
     [NOTIFY_PARTY_INVITE]: consuming(

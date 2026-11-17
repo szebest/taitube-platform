@@ -85,7 +85,7 @@ export class PostgresVideoStudioRepository extends VideoStudioRepository {
   async updateMetadata(
     options: UpdateStudioMetadataOptions
   ): Promise<Result<StudioMetadataOutcome, DatabaseUnavailable | VersionConflict>> {
-    const { videoId, expectedVersion, patch, userId, auditFields } = options;
+    const { videoId, expectedVersion, patch, userId, tokenId, auditFields } = options;
 
     const committed = await fromPromise(
       () =>
@@ -137,6 +137,7 @@ export class PostgresVideoStudioRepository extends VideoStudioRepository {
                 ...entry,
                 channelId: channel.id,
                 actorUserId: userId,
+                actorTokenId: tokenId,
               });
             }
           }

@@ -16,6 +16,7 @@ import { type ExportProcessorDeps, createExportProcessor } from '../export-stage
 
 const OWNER_ID = uuidv7();
 const FAN_ID = uuidv7();
+const MANAGER_ID = uuidv7();
 const NOW = Date.parse('2026-03-01T12:00:00.000Z');
 const logger = createLogger({ format: 'json', service: 'export-spec', level: 'silent' });
 
@@ -46,14 +47,18 @@ describe('worker/exports: export stage', () => {
     attemptsMade: 0,
   });
 
-  async function requested(kind: DataExportKind = 'comments', format: DataExportFormat = 'csv') {
+  async function requested(
+    kind: DataExportKind = 'comments',
+    format: DataExportFormat = 'csv',
+    requestedBy = OWNER_ID
+  ) {
     const id = uuidv7();
     expectOk(
       await repositories.dataExports.create(
-        { id, channelId, requestedBy: OWNER_ID, kind, params: {}, format },
+        { id, channelId, requestedBy, kind, params: {}, format },
         {
           channelId,
-          actorUserId: OWNER_ID,
+          actorUserId: requestedBy,
           action: 'export.requested',
           targetType: 'export',
           targetId: id,
@@ -154,6 +159,36 @@ describe('worker/exports: export stage', () => {
         payload: expect.objectContaining({ exportId: id, channelId, rowCount: 2 }),
       }),
     ]);
+  });
+
+  describe('who hears export.ready', () => {
+    const hookOf = (ownerId: string, url: string) =>
+      repositories.webhooks.create({
+        id: uuidv7(),
+        ownerId,
+        url,
+        events: ['export.ready'],
+        secret: 'secret',
+        createdAt: new Date(NOW),
+      });
+    const urls = () => dispatcher.deliveries.map(({ webhook }) => webhook.url).sort();
+
+    it('announces to the team member who asked as well as to the owner', async () => {
+      expectOk(await hookOf(MANAGER_ID, 'https://hooks.example.com/manager'));
+      const id = await requested('comments', 'csv', MANAGER_ID);
+
+      expectOk(await processor()(jobOf(id)));
+
+      expect(urls()).toEqual(['https://hooks.example.com/in', 'https://hooks.example.com/manager']);
+    });
+
+    it('announces once to an owner who asked', async () => {
+      const id = await requested();
+
+      expectOk(await processor()(jobOf(id)));
+
+      expect(urls()).toEqual(['https://hooks.example.com/in']);
+    });
   });
 
   it('reads 100,000 rows a page at a time and writes every one', async () => {

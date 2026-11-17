@@ -82,6 +82,15 @@ function SignedInNavItems({ newComments, reviewQueue }: ActingNavItemsProps) {
         </StudioWorkspace.NavItem>
       </Can>
       <InvitesNavItem />
+      <StudioWorkspace.NavItem
+        asChild
+        icon="command"
+        active={Boolean(matchRoute({ to: '/developers' }))}
+      >
+        <Link to="/developers" search={{}}>
+          {tOr('studio.developersNav', {}, '')}
+        </Link>
+      </StudioWorkspace.NavItem>
     </>
   );
 }

@@ -1,4 +1,4 @@
-import type { NewUserEventInput } from '@vp/core/repositories';
+import type { NewOutboxInput, NewUserEventInput } from '@vp/core/repositories';
 import type { CommentThread, NewCommentInput } from '@vp/domain';
 import { ok } from '@vp/result';
 import { announceCreated } from '../comment-announce';
@@ -36,15 +36,25 @@ const held: NewCommentInput['moderation'] = {
 
 describe('adapters/in-memory: announce a created comment', () => {
   const told: NewUserEventInput[] = [];
-  const events = {
-    append: async (event: NewUserEventInput) => {
-      told.push(event);
-      return ok({ ...event, id: told.length, createdAt: new Date(0) });
+  const queued: NewOutboxInput[] = [];
+  const deps = {
+    userEventsRepo: {
+      append: async (event: NewUserEventInput) => {
+        told.push(event);
+        return ok({ ...event, id: told.length, createdAt: new Date(0) });
+      },
+    },
+    outboxRepo: {
+      enqueue: async (item: NewOutboxInput) => {
+        queued.push(item);
+        return ok(item as never);
+      },
     },
   };
 
   beforeEach(() => {
     told.length = 0;
+    queued.length = 0;
   });
 
   it.each([
@@ -76,8 +86,30 @@ describe('adapters/in-memory: announce a created comment', () => {
       expected: [],
     },
   ])('$scenario', async ({ counted, input, expected }) => {
-    await announceCreated(events, { created, video, input, counted });
+    await announceCreated(deps, { created, video, input, counted });
 
     expect(told.map(({ userId, type }) => [userId, type])).toEqual(expected);
+  });
+
+  it('queues one webhook announcement of a held comment, for the moderators but its author', async () => {
+    const input = { authorId: AUTHOR, moderation: held, moderators: [OWNER, MODERATOR, AUTHOR] };
+
+    await announceCreated(deps, { created, video, input, counted: false });
+
+    expect(queued).toHaveLength(1);
+    expect(queued[0]?.payload).toMatchObject({
+      job: {
+        name: 'announce-comment-held',
+        data: { commentId: 'c1', videoId: 'v1', recipients: [OWNER, MODERATOR] },
+      },
+    });
+  });
+
+  it('queues nothing when the only moderator wrote the held comment', async () => {
+    const input = { authorId: AUTHOR, moderation: held, moderators: [AUTHOR] };
+
+    await announceCreated(deps, { created, video, input, counted: false });
+
+    expect([told, queued]).toEqual([[], []]);
   });
 });

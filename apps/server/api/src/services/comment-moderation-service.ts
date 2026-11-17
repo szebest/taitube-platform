@@ -24,6 +24,7 @@ import {
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { type Result, err, ignore, isErr, ok } from '@vp/result';
+import { auditActor } from './audit-actor';
 import { type CommentLookupDeps, commentWithVideo } from './comment-lookup';
 import { toCommentView } from './comment-views';
 
@@ -90,7 +91,7 @@ export class CommentModerationService {
 
     const audit = commentModerationAudit({
       channelId,
-      actorUserId: actor.id,
+      ...auditActor(actor),
       action: action.action,
       commentId,
       videoId: video.id,

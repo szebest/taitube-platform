@@ -1,8 +1,7 @@
 import { getGlobalStartContext } from '@tanstack/react-start';
 import { tryCatch, unwrapOr } from '@vp/result';
 
-/** The one session cookie both client apps read, set and cleared by their servers alone. */
-export const SESSION_COOKIE = 'vp.session';
+export { SESSION_COOKIE } from '@vp/api-contracts';
 
 /** Exchanges the token the API refused for a fresh one, or says there is none to be had. */
 export type RefreshSession = (refused: string) => Promise<string | undefined>;

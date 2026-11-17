@@ -134,7 +134,7 @@ export class InMemoryCommentRepository implements CommentRepositoryPort {
     }
 
     const created = await this.toThread(stored, ownOrPublicTo({ id: input.authorId }, scope));
-    const told = await announceCreated(this.deps.userEventsRepo, {
+    const told = await announceCreated(this.deps, {
       created,
       video,
       input,
