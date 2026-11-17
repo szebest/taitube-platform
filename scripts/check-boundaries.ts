@@ -47,7 +47,7 @@ export function pendingPlatformMoves(
   );
 }
 
-/** Edges from a moved package to an app package that a seam in the same ticket removes; deleted with the last seam. */
+/** Edges from a moved package to an app package that a seam still has to remove; deleted with the last seam. */
 const PENDING_APP_EDGES: ReadonlySet<string> = new Set([
   '@vp/forms>@vp/web-testing',
   '@vp/ui>@vp/web-testing',

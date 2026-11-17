@@ -1,7 +1,7 @@
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
-import { isRewritableFile, runCodemod } from '../rewrite-specifiers';
+import { isRewritableFile, runCodemod, selectMoves } from '../rewrite-specifiers';
 
 let root: string;
 
@@ -31,6 +31,29 @@ describe('scripts: isRewritableFile', () => {
     ['logo.png', false],
   ])('%s: %s', (path, expected) => {
     expect(isRewritableFile(path)).toBe(expected);
+  });
+});
+
+describe('scripts: selectMoves', () => {
+  const ALL = { '@vp/a': '@kit/a', '@vp/b': '@kit/b' };
+
+  it.each([
+    { label: 'no flag', args: [], moves: ALL },
+    { label: 'one package', args: ['--packages', '@vp/b'], moves: { '@vp/b': '@kit/b' } },
+    { label: 'two packages', args: ['--packages', '@vp/a,@vp/b', '--dry-run'], moves: ALL },
+  ])('selects for $label', ({ args, moves }) => {
+    expect(selectMoves(ALL, args)).toEqual({ ok: true, moves });
+  });
+
+  it.each([
+    { label: 'an equals sign', args: ['--packages=@vp/a'], problem: 'not --packages=' },
+    { label: 'no value', args: ['--packages'], problem: 'names no package' },
+    { label: 'an unknown name', args: ['--packages', '@vp/a,@vp/z'], problem: 'no move for @vp/z' },
+  ])('refuses $label instead of running over every move', ({ args, problem }) => {
+    expect(selectMoves(ALL, args)).toEqual({
+      ok: false,
+      problem: expect.stringContaining(problem),
+    });
   });
 });
 

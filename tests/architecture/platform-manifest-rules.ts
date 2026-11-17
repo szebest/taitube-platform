@@ -66,14 +66,19 @@ export function manifestProblems(
   if (typeof manifest.version !== 'string' || !SEMVER.test(manifest.version)) {
     problems.push('has no semver version');
   }
-  if (!isRecord(manifest.exports) || !isRecord(manifest.exports['.'])) {
+  const presetsOnly =
+    isRecord(manifest.exports) &&
+    Object.keys(manifest.exports).length > 0 &&
+    Object.keys(manifest.exports).every((subpath) => subpath.endsWith('.json'));
+
+  if (!presetsOnly && (!isRecord(manifest.exports) || !isRecord(manifest.exports['.']))) {
     problems.push('has no exports map with a "." entry');
   }
-  if (typeof manifest.types !== 'string') problems.push('has no types entry');
+  if (!presetsOnly && typeof manifest.types !== 'string') problems.push('has no types entry');
   if (manifest.sideEffects !== false) problems.push('is not sideEffects: false');
   if (manifest.type !== 'module') problems.push('is not ESM ("type": "module")');
 
-  for (const file of [...REQUIRED_FILES, `api/${name}.api.txt`]) {
+  for (const file of presetsOnly ? REQUIRED_FILES : [...REQUIRED_FILES, `api/${name}.api.txt`]) {
     if (!files.has(file)) problems.push(`has no ${file}`);
   }
   if (changelog === undefined) {
@@ -85,7 +90,9 @@ export function manifestProblems(
     }
   }
 
-  if (!Object.hasOwn(tsconfigs, 'tsconfig.json')) problems.push('has no tsconfig.json');
+  if (!presetsOnly && !Object.hasOwn(tsconfigs, 'tsconfig.json')) {
+    problems.push('has no tsconfig.json');
+  }
   for (const [file, tsconfig] of Object.entries(tsconfigs)) {
     for (const target of extendsOf(tsconfig)) {
       const inside = /^\.\/tsconfig[\w.-]*\.json$/.test(target);

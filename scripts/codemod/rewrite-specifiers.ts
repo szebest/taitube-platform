@@ -73,14 +73,36 @@ const flag = (args: readonly string[], name: string): string | undefined => {
 
 const csv = (value: string | undefined): string[] => (value ? value.split(',') : []);
 
+/**
+ * The moves `--packages` selects, or every move when the flag is absent. A flag written another
+ * way (`--packages=a`), left empty or naming a package the moves do not list is an error, never a
+ * silent run over the whole repository.
+ */
+export type Selection = { ok: true; moves: Moves } | { ok: false; problem: string };
+
+export function selectMoves(all: Moves, args: readonly string[]): Selection {
+  if (args.some((arg) => arg.startsWith('--packages='))) {
+    return { ok: false, problem: 'write --packages <a,b>, not --packages=<a,b>' };
+  }
+  if (!args.includes('--packages')) return { ok: true, moves: all };
+  const only = csv(flag(args, '--packages'));
+  if (only.length === 0) return { ok: false, problem: '--packages names no package' };
+  const unknown = only.filter((name) => !Object.hasOwn(all, name));
+  if (unknown.length > 0) {
+    return { ok: false, problem: `--packages names no move for ${unknown.join(', ')}` };
+  }
+  const moves = Object.fromEntries(Object.entries(all).filter(([name]) => only.includes(name)));
+  return { ok: true, moves };
+}
+
 function main(args: readonly string[]): number {
   const movesFile = flag(args, '--moves') ?? join(ROOT, 'scripts/package-moves.json');
-  const only = new Set(csv(flag(args, '--packages')));
-  const all = loadMoves(movesFile);
-  const moves =
-    only.size === 0
-      ? all
-      : Object.fromEntries(Object.entries(all).filter(([name]) => only.has(name)));
+  const selected = selectMoves(loadMoves(movesFile), args);
+  if (!selected.ok) {
+    process.stderr.write(`${selected.problem}\n`);
+    return 1;
+  }
+  const { moves } = selected;
 
   if (args.includes('--plan-dirs')) {
     const excluded = new Set(csv(flag(args, '--exclude')));

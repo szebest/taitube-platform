@@ -4,7 +4,7 @@ const story = (id: string, importPath: string): StoryEntry => ({ id, type: 'stor
 
 const BUTTON = story(
   'primitives-button--default',
-  '../ui/src/button/__stories__/button.stories.tsx'
+  '../../platform/client/ui/src/button/__stories__/button.stories.tsx'
 );
 const CARD = story(
   'kit-video-card--default',

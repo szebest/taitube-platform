@@ -15,6 +15,7 @@ const config: StorybookConfig = {
   framework: '@storybook/react-vite',
   stories: [
     '../../../client/*/src/**/*.stories.tsx',
+    '../../../platform/client/*/src/**/*.stories.tsx',
     '../../../../apps/client/*/src/**/*.stories.tsx',
   ],
   addons: ['@storybook/addon-a11y', '@storybook/addon-vitest'],

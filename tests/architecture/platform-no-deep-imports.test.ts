@@ -23,7 +23,8 @@ const patternMatches = (pattern: string, subpath: string): boolean => {
 function deepImports(source: string, exported: ExportMap): string[] {
   if (![...exported.keys()].some((name) => source.includes(name))) return [];
   return moduleSpecifiers(source).filter((specifier) => {
-    const [scope = '', name = '', ...rest] = specifier.split('/');
+    const [path = ''] = specifier.split('?');
+    const [scope = '', name = '', ...rest] = path.split('/');
     const allowed = exported.get(`${scope}/${name}`);
     if (!allowed) return false;
     const subpath = rest.length === 0 ? '.' : `./${rest.join('/')}`;
@@ -52,6 +53,7 @@ describe('architecture: platform packages are entered through their exports', ()
     { shape: 'a subpath the manifest does not list', source: "import('@kit/runtime/server');" },
     { shape: 'a subpath outside a pattern', source: "import '@kit/ui/icons';" },
     { shape: 'a mocked deep module', source: "vi.mock(import('@kit/runtime/src/node'));" },
+    { shape: 'an unlisted subpath with a query', source: "import css from '@kit/di/x.css?url';" },
   ])('recognises $shape', ({ source }) => {
     expect(deepImports(source, FIXTURE_EXPORTS)).toHaveLength(1);
   });
@@ -60,6 +62,7 @@ describe('architecture: platform packages are entered through their exports', ()
     { shape: 'the root entry', source: "import { x } from '@kit/di';" },
     { shape: 'a listed subpath', source: "import '@kit/runtime/node';" },
     { shape: 'a subpath a pattern covers', source: "import '@kit/ui/icons/play';" },
+    { shape: 'a listed subpath with a query', source: "import css from '@kit/runtime/node?url';" },
     { shape: 'a package that is not a platform package', source: "import '@vp/core/src/x';" },
     { shape: 'a path named in a string', source: "const a = '@kit/di/src/registry';" },
   ])('leaves $shape alone', ({ source }) => {

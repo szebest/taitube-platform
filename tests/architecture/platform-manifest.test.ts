@@ -165,6 +165,21 @@ describe('architecture: platform manifests', () => {
     expect(manifestProblems(input, CONTEXT)).toEqual([`@kit/ok ${problem}`]);
   });
 
+  it('passes a package of tsconfig presets with no entry, types, api or tsconfig of its own', () => {
+    const presets: PackageFiles = {
+      ...GOOD,
+      manifest: {
+        ...GOOD.manifest,
+        types: undefined,
+        exports: { './base.json': './base.json', './build.json': './build.json' },
+      },
+      files: new Set(['README.md', 'AGENTS.md']),
+      tsconfigs: {},
+    };
+
+    expect(manifestProblems(presets, CONTEXT)).toEqual([]);
+  });
+
   it('follows @vp/tsconfig to the package package-moves.json names once that package exists', () => {
     const moves = { '@vp/tsconfig': '@kit/tsconfig' };
 

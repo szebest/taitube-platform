@@ -91,15 +91,10 @@ const sortedKeys = (block: Record<string, unknown>): Record<string, unknown> =>
  */
 export function sortManifestDependencies(before: string, after: string): string {
   if (after === before) return after;
-  try {
-    const original = JSON.parse(before);
-    if (`${JSON.stringify(original, null, 2)}\n` !== before) return after;
-    const manifest = JSON.parse(after);
-    for (const block of DEPENDENCY_BLOCKS) {
-      if (manifest[block]) manifest[block] = sortedKeys(manifest[block]);
-    }
-    return `${JSON.stringify(manifest, null, 2)}\n`;
-  } catch {
-    return after;
+  if (`${JSON.stringify(JSON.parse(before), null, 2)}\n` !== before) return after;
+  const manifest = JSON.parse(after);
+  for (const block of DEPENDENCY_BLOCKS) {
+    if (manifest[block]) manifest[block] = sortedKeys(manifest[block]);
   }
+  return `${JSON.stringify(manifest, null, 2)}\n`;
 }

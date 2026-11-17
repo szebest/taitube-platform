@@ -14,10 +14,17 @@ const COPY_PROPERTIES: ReadonlySet<string> = new Set([
 const CATALOGUE_DIRECTORY =
   /^(?:locales?|catalogues?|translations?|messages|lang|i18n-data|[a-z]{2}-[A-Z]{2})$/;
 const DATA_FILE = /\.(?:json|po|pot|xlf|xliff|ftl|properties|arb|yaml|yml)$/;
-const MANIFEST = /(?:^|\/)(?:package|tsconfig[\w.-]*)\.json$/;
+const MANIFEST = /(?:^|\/)(?:package|tsconfig[\w.-]*|tsconfig\/[\w.-]+)\.json$/;
+
+const isClassList = (text: string): boolean =>
+  text
+    .trim()
+    .split(/\s+/)
+    .every((word) => /^[a-z0-9]+(?:[-:/.[\]][a-z0-9.[\]%#()-]*)+$/.test(word));
 
 const isSentence = (text: string): boolean =>
-  /\p{L}{2,}\s+\p{L}+/u.test(text) || /\p{L}[.!?\u2026]$/u.test(text.trim());
+  !isClassList(text) &&
+  (/\p{L}{2,}\s+\p{L}+/u.test(text) || /\p{L}[.!?\u2026]$/u.test(text.trim()));
 
 function textOf(node: ts.Node): string | undefined {
   if (ts.isStringLiteralLike(node)) return node.text;
@@ -123,6 +130,11 @@ describe('architecture: platform packages ship no copy', () => {
       source: "export const a = { note: 'Not shown to users' };",
     },
     { shape: 'only a placeholder', source: 'export const a = { message: `${code} ${token}` };' },
+    {
+      shape: 'a class list under a copy-named slot',
+      source:
+        "export const a = { title: 'col-start-1 m-0 text-title', label: 'px-3 py-1.5 sm:text-sm' };",
+    },
     { shape: 'JSX without words', source: 'export const a = <i>{count}</i>;' },
   ])('leaves $shape alone', ({ source }) => {
     expect(copyIn('fixture.tsx', source)).toEqual([]);
@@ -143,6 +155,11 @@ describe('architecture: platform packages ship no copy', () => {
     { shape: 'a gettext file', file: 'packages/platform/client/ui/src/copy.po', found: 1 },
     { shape: 'a manifest', file: 'packages/platform/client/ui/package.json', found: 0 },
     { shape: 'a tsconfig', file: 'packages/platform/client/ui/tsconfig.build.json', found: 0 },
+    {
+      shape: 'a tsconfig preset',
+      file: 'packages/platform/universal/tsconfig/base.json',
+      found: 0,
+    },
     {
       shape: 'a spec fixture catalogue',
       file: 'packages/platform/universal/i18n/src/__tests__/locales/en.ts',
