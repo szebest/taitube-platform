@@ -133,6 +133,10 @@ const UserEventSchema = z.discriminatedUnion('type', [
     payload: z.object({ targetKey: MemberKeySchema, roomId: z.uuid().nullable() }),
   }),
   z.object({
+    type: z.literal('video.stats.updated'),
+    payload: z.object({ videoId: z.uuid() }),
+  }),
+  z.object({
     type: z.literal('export.ready'),
     payload: z.object({
       exportId: z.uuid(),

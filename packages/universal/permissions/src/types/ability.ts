@@ -1,5 +1,5 @@
 import type { ForcedSubject, InferSubjects, MongoAbility } from '@casl/ability';
-import type { AnalyticsResource } from './analytics';
+import type { AnalyticsResource, VideoStatsResource } from './analytics';
 import type { ApiTokenResource } from './api-token';
 import type { CaptionResource } from './caption';
 import type { CategoryResource } from './category';
@@ -54,6 +54,7 @@ export type AppSubjects =
       | (ChannelResource & ForcedSubject<'Channel'>)
       | (CategoryResource & ForcedSubject<'Category'>)
       | (AnalyticsResource & ForcedSubject<'Analytics'>)
+      | (VideoStatsResource & ForcedSubject<'VideoStats'>)
       | (PlaylistResource & ForcedSubject<'Playlist'>)
       | (PreferencesResource & ForcedSubject<'Preferences'>)
       | (CaptionResource & ForcedSubject<'Caption'>)
@@ -78,6 +79,7 @@ export type AppSubjects =
   | 'Playlist'
   | 'Queue'
   | 'Analytics'
+  | 'VideoStats'
   | 'Preferences'
   | 'Caption'
   | 'Notification'

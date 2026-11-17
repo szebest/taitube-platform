@@ -21,6 +21,7 @@ import * as commentSettings from './comment-settings';
 import * as comments from './comments';
 import * as creatorComments from './creator-comments';
 import * as creatorLive from './creator-live';
+import * as creatorStats from './creator-stats';
 import * as creatorVideos from './creator-videos';
 import * as events from './events';
 import * as channelExports from './exports';
@@ -87,6 +88,7 @@ export * from './comment-settings';
 export * from './comments';
 export * from './creator-comments';
 export * from './creator-live';
+export * from './creator-stats';
 export * from './creator-videos';
 export * from './endpoint';
 export * from './events';
@@ -160,6 +162,7 @@ export const contracts = {
   comments,
   creatorComments,
   creatorLive,
+  creatorStats,
   creatorVideos,
   events,
   feed,

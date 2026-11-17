@@ -1,86 +1,21 @@
-import {
-  InMemoryChannelHandleHistoryRepository,
-  InMemoryChannelRepository,
-  InMemoryEventRepository,
-  InMemoryOutboxRepository,
-  InMemoryRenditionRepository,
-  InMemoryStepRepository,
-  InMemorySubscriptionCache,
-  InMemorySubscriptionRepository,
-  InMemoryVideoRepository,
-  InMemoryWatchHistoryRepository,
-} from '@vp/adapters/in-memory';
+import { InMemorySubscriptionCache } from '@vp/adapters/in-memory';
 import { ErrorCodes, cacheUnavailable } from '@vp/errors';
-import { Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
 import { err } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
-import { SubscriptionService } from '../subscription-service';
-import { ViewerProgress } from '../viewer-progress';
-import { TEST_CDN, TEST_SPRITE } from './service-deps';
+import { creator, otherCreator, subscriber, subscriptionHarness } from './subscription-harness';
 
 describe('SubscriptionService', () => {
-  let channels: InMemoryChannelRepository;
-  let videos: InMemoryVideoRepository;
-  let subscriptions: InMemorySubscriptionRepository;
-  let cache: InMemorySubscriptionCache;
-  let service: SubscriptionService;
-  let viewerProgress: ViewerProgress;
+  let videos: Awaited<ReturnType<typeof subscriptionHarness>>['videos'];
+  let subscriptions: Awaited<ReturnType<typeof subscriptionHarness>>['subscriptions'];
+  let cache: Awaited<ReturnType<typeof subscriptionHarness>>['cache'];
+  let service: Awaited<ReturnType<typeof subscriptionHarness>>['service'];
+  let serviceOver: Awaited<ReturnType<typeof subscriptionHarness>>['serviceOver'];
 
-  const creator = {
-    userId: '11111111-1111-7111-8111-111111111111',
-    channelId: '22222222-2222-7222-8222-222222222222',
-  };
-  const otherCreator = {
-    userId: '33333333-3333-7333-8333-333333333333',
-    channelId: '44444444-4444-7444-8444-444444444444',
-  };
-  const subscriber: UserContext = {
-    id: '55555555-5555-7555-8555-555555555555',
-    email: 'subscriber@example.com',
-    role: 'USER',
-  };
   const missingChannelId = '00000000-0000-0000-0000-000000000000';
 
   beforeEach(async () => {
-    videos = new InMemoryVideoRepository({
-      eventsRepo: new InMemoryEventRepository(),
-      outboxRepo: new InMemoryOutboxRepository(),
-      renditionsRepo: new InMemoryRenditionRepository(),
-      stepsRepo: new InMemoryStepRepository(),
-    });
-    channels = new InMemoryChannelRepository(videos, new InMemoryChannelHandleHistoryRepository());
-    subscriptions = new InMemorySubscriptionRepository({
-      channelsRepo: channels,
-      videosRepo: videos,
-    });
-    cache = new InMemorySubscriptionCache();
-    viewerProgress = new ViewerProgress(
-      new InMemoryWatchHistoryRepository({ channelsRepo: channels, videosRepo: videos })
-    );
-    service = new SubscriptionService({
-      subscriptions,
-      channels,
-      subscriptionCache: cache,
-      viewerProgress,
-      home: { forget: async () => {} },
-      cdn: TEST_CDN,
-      sprite: TEST_SPRITE,
-      paginator: new Paginator(),
-    });
-
-    await channels.create({
-      id: creator.channelId,
-      userId: creator.userId,
-      handle: 'creator_one',
-      displayName: 'Creator One',
-    });
-    await channels.create({
-      id: otherCreator.channelId,
-      userId: otherCreator.userId,
-      handle: 'creator_two',
-      displayName: 'Creator Two',
-    });
+    ({ videos, subscriptions, cache, service, serviceOver } = await subscriptionHarness());
   });
 
   describe('subscribe / unsubscribe', () => {
@@ -248,18 +183,11 @@ describe('SubscriptionService', () => {
     });
 
     it('still serves the feed when the cache is down, which is why the union has no CacheUnavailable', async () => {
-      const broken = new SubscriptionService({
-        subscriptions,
-        channels,
-        viewerProgress,
-        home: { forget: async () => {} },
-        cdn: TEST_CDN,
-        sprite: TEST_SPRITE,
-        paginator: new Paginator(),
-        subscriptionCache: Object.assign(new InMemorySubscriptionCache(), {
+      const broken = serviceOver(
+        Object.assign(new InMemorySubscriptionCache(), {
           isSubscribed: async () => err(cacheUnavailable('isSubscribed')),
-        }),
-      });
+        })
+      );
 
       expect(expectOk(await broken.isSubscribed(subscriber, creator.channelId)).channelId).toBe(
         creator.channelId

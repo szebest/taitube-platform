@@ -1,6 +1,6 @@
 # StatCard
 
-One KPI: a label, a big number, a delta and an optional sparkline. It is a shell: the number and delta arrive formatted. It lives in the studio's kit, `apps/client/studio/src/components/analytics/stat-card/` ([README](README.md)); web does not render a KPI today.
+One KPI: a label, a big number, a delta and an optional sparkline. It is a shell: the number and delta arrive formatted. It lives in `@vp/components`, `packages/client/components/src/analytics/stat-card/`, because the studio's dashboard and the creator panel on web's watch page ([114](../../../tickets/114-creator-stats-on-the-watch-page.md)) both render it.
 
 ## Anatomy
 
@@ -131,6 +131,7 @@ interface StatCardSparkProps {
 ## Used by
 
 - [60, creator studio](../../../tickets/60-creator-studio-dashboard-video-management-ui.md): dashboard KPIs, through `KpiCard`
+- [114, creator stats on the watch page](../../../tickets/114-creator-stats-on-the-watch-page.md): the numbers of `CreatorStatsPanel` on web
 
 ## Workbench stories
 

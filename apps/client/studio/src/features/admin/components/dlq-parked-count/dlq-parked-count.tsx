@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
+import { StatCard } from '@vp/components';
 import { useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
-import { StatCard } from '#app/components/analytics/stat-card';
 import { parkedDlqQueryOptions } from '#app/features/admin/api/admin-dlq';
 
 /** How many dead-letter jobs wait, as a stat; "30+" when the first page is not all of them. */

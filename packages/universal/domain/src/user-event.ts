@@ -48,6 +48,7 @@ export type UserEvent =
   | { type: 'channel.image.ready'; payload: ChannelImageReadyPayload }
   | { type: 'channel.image.failed'; payload: ChannelImageFailedPayload }
   | { type: 'party.controls.updated'; payload: PartyControlsUpdatedPayload }
+  | { type: 'video.stats.updated'; payload: { videoId: string } }
   | { type: 'export.ready'; payload: ExportReadyPayload }
   | { type: 'export.failed'; payload: ExportFailedPayload };
 
@@ -166,6 +167,11 @@ export function channelImageFailed(payload: ChannelImageFailedPayload): UserEven
 
 export function partyControlsUpdated(targetKey: string, roomId: string | null): UserEvent {
   return { type: 'party.controls.updated', payload: { targetKey, roomId } };
+}
+
+/** The id only: whoever holds the panel refetches the numbers, so none travel on the stream. */
+export function videoStatsUpdated(videoId: string): UserEvent {
+  return { type: 'video.stats.updated', payload: { videoId } };
 }
 
 export function exportReady(payload: ExportReadyPayload): UserEvent {

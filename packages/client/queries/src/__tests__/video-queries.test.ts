@@ -1,4 +1,5 @@
 import {
+  getCreatorStats,
   getTranscript,
   getVideo,
   getVideoRetention,
@@ -10,6 +11,7 @@ import {
   api,
   apiServer,
   captionTrack,
+  creatorStats,
   mockEndpoint,
   transcript,
   video,
@@ -19,6 +21,7 @@ import { HttpResponse } from 'msw/http';
 import { createQueryClient } from '../create-query-client';
 import {
   captionsQueryOptions,
+  creatorStatsQueryOptions,
   myVideosQueryOptions,
   transcriptQueryOptions,
   videoKeys,
@@ -35,6 +38,7 @@ describe('@vp/queries: video queries', () => {
 
   it.each([
     { query: 'the detail', queryKey: videoQueryOptions(api, VIDEO_ID).queryKey },
+    { query: 'the creator stats', queryKey: creatorStatsQueryOptions(api, VIDEO_ID).queryKey },
     { query: 'the retention curve', queryKey: videoRetentionQueryOptions(api, VIDEO_ID).queryKey },
     { query: 'the caller list', queryKey: myVideosQueryOptions(api).queryKey },
     { query: 'the captions', queryKey: captionsQueryOptions(api, VIDEO_ID).queryKey },
@@ -52,6 +56,14 @@ describe('@vp/queries: video queries', () => {
     const loaded = await createQueryClient().query(videoQueryOptions(api, VIDEO_ID));
 
     expect(loaded).toMatchObject({ id: VIDEO_ID, title: 'Launch day' });
+  });
+
+  it('loads the creator stats of the video through the API client', async () => {
+    apiServer.use(mockEndpoint(getCreatorStats, () => HttpResponse.json(creatorStats())));
+
+    const loaded = await createQueryClient().query(creatorStatsQueryOptions(api, VIDEO_ID));
+
+    expect(loaded).toEqual(creatorStats());
   });
 
   it('loads the retention curve of the video through the API client', async () => {

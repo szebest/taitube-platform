@@ -154,6 +154,25 @@ describe('apps/client/web: watch engagement bar', () => {
     held.release();
   });
 
+  it('credits the video it is subscribed from', async () => {
+    const bodies: unknown[] = [];
+    const { user } = await renderWatch({
+      viewer: account(),
+      handlers: [
+        withFiveSubscribers,
+        mockEndpoint(subscribeToChannel, async ({ request }) => {
+          bodies.push(await request.json());
+          return subscribed();
+        }),
+      ],
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Subscribe' }));
+
+    expect(await screen.findByRole('button', { name: 'Subscribed' })).toBeInTheDocument();
+    expect(bodies).toEqual([{ fromVideoId: VIDEO_ID }]);
+  });
+
   it('puts the subscription back and says so when the API refuses it', async () => {
     const { user } = await renderWatch({
       viewer: account(),

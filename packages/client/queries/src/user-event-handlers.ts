@@ -120,6 +120,14 @@ function applyChannelImageReady(
 /** A failed upload changes nothing a query holds; the studio's own upload state reads the event. */
 function ignoreChannelImageFailed() {}
 
+function applyVideoStatsUpdated(
+  { videoId }: UserEventPayloads['video.stats.updated'],
+  queryClient: QueryClient
+) {
+  void queryClient.invalidateQueries({ queryKey: videoKeys.creatorStats(videoId) });
+  void queryClient.invalidateQueries({ queryKey: videoKeys.retention(videoId) });
+}
+
 function ignoreExportChange() {}
 
 const userEventHandlers: UserEventHandlers = {
@@ -135,6 +143,7 @@ const userEventHandlers: UserEventHandlers = {
   'channel.image.ready': applyChannelImageReady,
   'channel.image.failed': ignoreChannelImageFailed,
   'party.controls.updated': applyPartyControlsUpdated,
+  'video.stats.updated': applyVideoStatsUpdated,
   'export.ready': ignoreExportChange,
   'export.failed': ignoreExportChange,
 };

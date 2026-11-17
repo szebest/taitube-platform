@@ -183,6 +183,13 @@ export const SDD_ENDPOINT_CONTRACT: SddEndpointContract[] = [
     hasPathParams: true,
   },
   {
+    path: '/v1/videos/{id}/creator-stats',
+    method: 'get',
+    expectedStatuses: [200, 400, 401, 403, 404],
+    expectedErrorCodes: OWNED_VIDEO,
+    hasPathParams: true,
+  },
+  {
     path: '/v1/creator/channel/analytics',
     method: 'get',
     expectedStatuses: [200, 400, 401, 403],

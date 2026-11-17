@@ -7,6 +7,7 @@ import type { Logger } from '@vp/logger';
 import type { PipelineMetrics } from '@vp/observability';
 import { type Result, isErr, ok } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
+import { announceStatsUpdated } from './announce-stats-updated';
 
 export interface FlushVideoViewsOptions {
   repositories: Repositories;
@@ -26,6 +27,7 @@ export type FlushVideoViewsResult =
  * Drains the view, hourly view and retention buffers into Postgres as one batch. The batch is released only after it commits, and the
  * commit records the batch id, so a flush that dies at any step leaves a batch the next run
  * either applies or recognises as applied: views are neither lost nor counted twice.
+ * Panels showing a video's first 48 hours are told after the commit, best effort: a failed announcement is logged and never holds the batch back, and the open panel refetches on its own.
  */
 export async function runFlushVideoViews(
   options: FlushVideoViewsOptions
@@ -41,6 +43,13 @@ export async function runFlushVideoViews(
   if (batch) {
     const applied = await repositories.videoViews.applyBatch(batch);
     if (isErr(applied)) return applied;
+
+    const announced = await announceStatsUpdated(repositories, batch, new Date(now()));
+    if (isErr(announced))
+      logger?.warn(
+        { batchId: batch.batchId, error: announced.error },
+        'could not announce updated video stats'
+      );
 
     const released = await viewBuffer.release(batch.batchId);
     if (isErr(released)) return released;

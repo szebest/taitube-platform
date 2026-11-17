@@ -154,6 +154,7 @@ export function registerServices(c: Container): Container {
         new SubscriptionService({
           subscriptions: repositories().subscriptions,
           channels: repositories().channels,
+          videos: repositories().videos,
           subscriptionCache: c.get(Adapters.SubscriptionCache),
           viewerProgress: c.get(Services.ViewerProgress),
           home: c.get(Services.HomeService),

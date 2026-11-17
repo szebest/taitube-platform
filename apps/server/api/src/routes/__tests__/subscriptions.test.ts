@@ -1,15 +1,19 @@
+import type { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { mintToken } from '@vp/dev-token';
 import { ErrorCodes } from '@vp/errors';
+import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
 import { bearer, buildTestApp } from '../../__tests__/test-app';
 
 const CREATOR = '11111111-1111-7111-8111-111111111111';
 const CHANNEL = '22222222-2222-7222-8222-222222222222';
 const SUBSCRIBER = '55555555-5555-7555-8555-555555555555';
+const WATCHED_VIDEO = '66666666-6666-7666-8666-666666666601';
 const ABSENT_CHANNEL = '00000000-0000-7000-8000-000000000000';
 
 describe('subscription routes', () => {
   let app: FastifyInstance;
+  let subscriptions: InMemoryRepositories['subscriptions'];
   const creator = bearer(mintToken({ sub: CREATOR, role: 'CREATOR' }));
   const subscriber = bearer(mintToken({ sub: SUBSCRIBER, role: 'USER' }));
 
@@ -17,6 +21,7 @@ describe('subscription routes', () => {
     const testApp = await buildTestApp();
     app = testApp.app;
     const { repositories } = testApp;
+    subscriptions = repositories.subscriptions;
     await repositories.users.upsert({
       id: CREATOR,
       email: 'creator@example.com',
@@ -28,6 +33,13 @@ describe('subscription routes', () => {
       email: 'subscriber@example.com',
       role: 'USER',
       tier: 'free',
+    });
+    await repositories.videos.create({
+      id: WATCHED_VIDEO,
+      ownerId: CREATOR,
+      visibility: 'public',
+      status: 'READY',
+      sourceKey: 'raw/watched.mp4',
     });
     await repositories.channels.create({
       id: CHANNEL,
@@ -110,6 +122,29 @@ describe('subscription routes', () => {
     });
     expect(unsubscribed.statusCode).toBe(200);
     expect(unsubscribed.json().subscribed).toBe(false);
+  });
+
+  it.each([
+    { body: { fromVideoId: WATCHED_VIDEO }, status: 200, credited: 1 },
+    { body: { fromVideoId: ABSENT_CHANNEL }, status: 200, credited: 0 },
+    { body: { fromVideoId: 'not-a-uuid' }, status: 400, credited: 0 },
+    { body: {}, status: 200, credited: 0 },
+  ])('credits the watched video for $body with $status', async ({ body, status, credited }) => {
+    const res = await app.inject({
+      method: 'POST',
+      url: `/v1/channels/${CHANNEL}/subscribers`,
+      headers: subscriber,
+      payload: body,
+    });
+
+    expect(res.statusCode).toBe(status);
+    expect(expectOk(await subscriptions.countFromVideo(WATCHED_VIDEO))).toBe(credited);
+
+    await app.inject({
+      method: 'DELETE',
+      url: `/v1/channels/${CHANNEL}/subscribers`,
+      headers: subscriber,
+    });
   });
 
   describe('notification level', () => {
