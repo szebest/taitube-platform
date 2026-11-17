@@ -44,6 +44,12 @@ describe('apps/server/api/services: sse-frames', () => {
     });
   });
 
+  it('coalesces stats updates of one video into the newest', () => {
+    expect(
+      userFrame({ id: 4, type: 'video.stats.updated', payload: { videoId: VIDEO_ID } })
+    ).toMatchObject({ event: 'video.stats.updated', coalesceKey: `stats:${VIDEO_ID}` });
+  });
+
   it('opens a user stream with an id-less hello', () => {
     expect(helloFrame('expired', 3)).toEqual({
       event: 'hello',

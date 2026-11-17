@@ -1,10 +1,9 @@
 import { cn, Skeleton, useUiCopy } from '@kit/ui';
-import { EmptyState, SectionError } from '@vp/components';
+import { type ChartSeries, EmptyState, SectionError, seriesColor } from '@vp/components';
 import { type ComponentPropsWithRef, useId, useState } from 'react';
 import { ChartFrameContext, useChartFrame } from './chart-frame.context';
 import { chartFrameStyles } from './chart-frame.variants';
-import type { ChartFrameSize, ChartFrameStatus, ChartSeries } from './types';
-import { seriesColor } from './utils/series-color';
+import type { ChartFrameSize, ChartFrameStatus } from './types';
 
 const SKELETON_GRIDLINES = ['top', 'upper', 'middle', 'lower', 'base'];
 

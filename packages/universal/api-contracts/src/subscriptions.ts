@@ -46,14 +46,26 @@ const ListSubscriptionsResponseSchema = z.object({
   nextCursor: z.string().nullable(),
 });
 
+const SubscribeBodySchema = z
+  .object({
+    fromVideoId: z
+      .uuid()
+      .optional()
+      .describe(
+        'The video whose watch page the call came from. Kept only when it is a public video of this channel, otherwise dropped without an error'
+      ),
+  })
+  .nullish();
+
 export const subscribeToChannel = defineEndpoint({
   method: 'POST',
   path: '/v1/channels/:id/subscribers',
   tag: 'Subscriptions',
   summary: 'Subscribe to channel',
   description:
-    'Idempotently subscribes the authenticated caller to the channel. Increments subscriber count and updates Redis cache.',
+    'Idempotently subscribes the authenticated caller to the channel, crediting `fromVideoId` when it qualifies. Increments subscriber count and updates Redis cache.',
   params: ChannelIdParamSchema,
+  body: SubscribeBodySchema,
   status: 200,
   result: SubscriptionStateSchema,
   errors: {

@@ -424,6 +424,7 @@ page by client-side navigation; a full page load of `/watch/...` is a server ren
 | 57 player | `<TaitubePlayer />` and its prop, payload and event types from `#app/components/player/taitube-player`; `features/watch/components/watch-stage.tsx` mounts it on the watch page, and `PlayerChannelProvider` hands the page's other parts its seek, its playhead and its theater mode |
 | 73 library, queue | `features/library/` (above); `lib/playback-session` holds the queue and the one player's state for the whole session (`PlaybackSessionProvider`), and the now playing bar is the mini player |
 | 68 PWA | `src/sw.ts` (caching and sync land there), `features/pwa/` for the prompts and `shouldPrefetch()`, `vite-pwa.config.ts` for the build, `src/sw/` for the caching rules, `features/offline/` for the offline UI |
+| 114 creator stats | `features/creator-stats/`: `CreatorStatsPanel`, mounted by `WatchPage` above the description. `useCan(canReadVideoStats)` gates it, so another viewer's page asks for nothing; the numbers are one `getCreatorStats` query (`creatorStatsQueryOptions`) that `video.stats.updated` invalidates, the curve is the studio's `getVideoRetention`, and each quick action is its own component over the studio's `updateCreatorVideo` (with the page's `version`) or the comment pin endpoints, shown by the viewer's ability on it. `StatCard` is `@vp/components`; `RetentionStrip` is the web kit's |
 | 76 live | `features/live/` (above), `components/live/`, `TaitubePlayer`'s `live` and `overlay` |
 | every page ticket | its browser flows, in `e2e/` (Rule 10) |
 

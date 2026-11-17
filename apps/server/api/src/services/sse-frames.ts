@@ -33,6 +33,8 @@ function coalesceKey(event: UserEventFrame): string | undefined {
     case 'export.ready':
     case 'export.failed':
       return undefined;
+    case 'video.stats.updated':
+      return `stats:${event.payload.videoId}`;
     default:
       return assertNever(event, 'UserEventFrame');
   }

@@ -22,6 +22,13 @@ describe('rules/analytics.rules: Declarative Analytics Ability Rules', () => {
     expect(ability.can('read', subject('Analytics', { ownerId }))).toBe(expected);
   });
 
+  it.each(matrixCells('VideoStats'))(
+    'the channel matrix, for the stats of a video: $persona holding $capability may $action: $expected',
+    ({ user, action, target, expected }) => {
+      expect(buildAbility(defineAnalyticsRules, user).can(action, target)).toBe(expected);
+    }
+  );
+
   it.each(matrixCells('Analytics'))(
     'the channel matrix: $persona holding $capability may $action: $expected',
     ({ user, action, target, expected }) => {

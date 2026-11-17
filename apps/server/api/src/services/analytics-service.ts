@@ -1,5 +1,10 @@
 import { type Result, isErr, ok } from '@kit/result';
-import type { ChannelAnalytics, VideoAnalytics, VideoRetention } from '@vp/api-contracts';
+import type {
+  ChannelAnalytics,
+  CreatorStats,
+  VideoAnalytics,
+  VideoRetention,
+} from '@vp/api-contracts';
 import type {
   SubscriptionRepositoryPort,
   VideoRepository,
@@ -11,8 +16,10 @@ import {
   TOP_VIDEOS_LIMIT,
   analyticsPeriods,
   averageRetention,
+  averageViewDurationSeconds,
   fillHourly,
   fillRetentionCurve,
+  firstHoursWindow,
   hourlyWindow,
   periodsSpan,
   sumViews,
@@ -23,6 +30,8 @@ import {
   type ReadVideoFailure,
   decideChannelTask,
   decideVideoAnalyticsRead,
+  decideVideoStatsRead,
+  dropOffMoments,
 } from '@vp/domain-rules';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
@@ -75,6 +84,66 @@ export class AnalyticsService {
       previous: previous && {
         rangeViews: previous.views,
         rangeWatchSeconds: previous.watchSeconds,
+      },
+    });
+  }
+
+  /** The watch page's numbers in one read: the same functions as the studio's analytics, so the two agree. */
+  async creatorStats(
+    viewer: UserContext,
+    videoId: string
+  ): Promise<Result<CreatorStats, VideoAnalyticsFailure>> {
+    const found = await this.deps.videos.findById(videoId);
+    if (isErr(found)) return found;
+    const allowed = decideVideoStatsRead({ viewer, video: found.value, videoId });
+    if (isErr(allowed)) return allowed;
+    const video = allowed.value;
+
+    const now = new Date(this.deps.now());
+    const lifetime = analyticsPeriods('lifetime', now);
+    const rows = await this.deps.videoViews.videoTimeline(videoId, lifetime.current);
+    if (isErr(rows)) return rows;
+    const window = video.readyAt ? firstHoursWindow(video.readyAt) : null;
+    const open = window !== null && now.toISOString() < window.endsAt;
+    const hourly =
+      window && open ? await this.deps.videoViews.videoHourly(videoId, window.range) : ok([]);
+    if (isErr(hourly)) return hourly;
+    const points = await this.deps.videoViews.retentionCurve(videoId);
+    if (isErr(points)) return points;
+    const gained = await this.deps.subscriptions.countFromVideo(videoId);
+    if (isErr(gained)) return gained;
+
+    const lifetimeTotals = sumViews(rows.value);
+    const recent = summarizeViews(analyticsPeriods('30d', now), rows.value).timeline;
+    const recentTotals = sumViews(recent);
+    return ok({
+      videoId,
+      generatedAt: now.toISOString(),
+      lifetime: {
+        views: video.viewsCount ?? 0,
+        watchSeconds: lifetimeTotals.watchSeconds,
+        likes: video.likesCount ?? 0,
+        comments: video.commentsCount ?? 0,
+        subscribersGained: gained.value,
+      },
+      last30Days: {
+        ...recentTotals,
+        averageViewDurationSeconds: averageViewDurationSeconds(recentTotals),
+        daily: recent.map(({ viewDate, views }) => ({ date: viewDate, views })),
+      },
+      first48Hours:
+        window && open
+          ? {
+              hours: fillHourly(window.range, hourly.value).map(({ viewHour, views }) => ({
+                hour: viewHour,
+                views,
+              })),
+              windowEndsAt: window.endsAt,
+            }
+          : null,
+      retention: {
+        average: averageRetention(lifetimeTotals, video.durationMs),
+        dropOffs: dropOffMoments(fillRetentionCurve(points.value), (video.durationMs ?? 0) / 1000),
       },
     });
   }

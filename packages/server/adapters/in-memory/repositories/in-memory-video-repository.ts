@@ -59,6 +59,18 @@ export class InMemoryVideoRepository extends VideoRepository {
     return ok(this.videosMap.get(id) ?? null);
   }
 
+  async listReadyAfter(
+    videoIds: readonly string[],
+    readyAfter: Date
+  ): Promise<Result<VideoRecord[], DatabaseUnavailable>> {
+    const wanted = new Set(videoIds);
+    return ok(
+      this.getAllVideos().filter(
+        ({ id, readyAt }) => wanted.has(id) && readyAt !== null && readyAt > readyAfter
+      )
+    );
+  }
+
   getAllVideos(): VideoRecord[] {
     return Array.from(this.videosMap.values());
   }

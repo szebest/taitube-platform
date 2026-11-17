@@ -85,6 +85,30 @@ export function describeVideoRepositoryContract(makeSubject: MakeRepositoriesSub
       });
     });
 
+    describe('listReadyAfter', () => {
+      it('answers only the listed videos ready after the cutoff, in one read', async () => {
+        const cutoff = new Date(Date.now() - 48 * HOUR_MS);
+        await videos.create(
+          publicVideo({ id: VIDEO_IDS.a, readyAt: new Date(Date.now() - HOUR_MS) })
+        );
+        await videos.create(publicVideo({ id: VIDEO_IDS.b, readyAt: cutoff }));
+        await videos.create(publicVideo({ id: VIDEO_IDS.c, status: 'UPLOADING' }));
+        await videos.create(
+          publicVideo({ id: VIDEO_IDS.d, readyAt: new Date(Date.now() - HOUR_MS) })
+        );
+
+        const found = expectOk(
+          await videos.listReadyAfter([VIDEO_IDS.a, VIDEO_IDS.b, VIDEO_IDS.c, VIDEO_IDS.e], cutoff)
+        );
+
+        expect(idsOf(found)).toEqual([VIDEO_IDS.a]);
+      });
+
+      it('answers nothing for no ids', async () => {
+        expect(expectOk(await videos.listReadyAfter([], new Date(0)))).toEqual([]);
+      });
+    });
+
     describe('listByOwner', () => {
       beforeEach(async () => {
         const now = Date.now();

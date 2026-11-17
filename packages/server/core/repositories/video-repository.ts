@@ -120,6 +120,11 @@ export interface VideoWithDetails {
  */
 export abstract class VideoRepository {
   abstract findById(id: string): Promise<Result<VideoRecord | null, DatabaseUnavailable>>;
+  /** Of `videoIds`, the videos ready strictly after `readyAfter`, in one read. */
+  abstract listReadyAfter(
+    videoIds: readonly string[],
+    readyAfter: Date
+  ): Promise<Result<VideoRecord[], DatabaseUnavailable>>;
   abstract findWithDetails(
     id: string
   ): Promise<Result<VideoWithDetails | null, DatabaseUnavailable>>;

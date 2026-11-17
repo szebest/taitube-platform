@@ -142,6 +142,11 @@ export function averageRetention(totals: ViewTotals, durationMs: number | null):
   return Math.min(1, ratio);
 }
 
+/** Seconds one view watched on average, zero while nothing was viewed. */
+export function averageViewDurationSeconds(totals: ViewTotals): number {
+  return totals.views === 0 ? 0 : totals.watchSeconds / totals.views;
+}
+
 export function mergeViewCounts(counts: readonly ViewCount[]): ViewCount[] {
   const merged = new Map<string, ViewCount>();
   for (const count of counts) {

@@ -6,3 +6,4 @@ export * from './image-crops.rule';
 export * from './failures';
 export * from './spotlight-video.rule';
 export * from './subscribe.rule';
+export * from './subscription-source.rule';

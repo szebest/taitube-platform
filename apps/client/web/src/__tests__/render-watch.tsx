@@ -24,6 +24,7 @@ import { renderRoute } from '@vp/web-testing/dom';
 import { type HttpHandler, HttpResponse } from 'msw/http';
 import { loaderApi } from '#app/__tests__/loader-api';
 import { signInBrowser } from '#app/__tests__/providers';
+import { LazyStatsPanel } from '#app/features/creator-stats/components/creator-stats-panel/stats-panel.lazy';
 import { getRouter } from '#app/router';
 import { playlistDetail, seriesDetail, uuid } from './library-fixtures';
 
@@ -58,6 +59,11 @@ export async function renderWatch({
         mockEndpoint(getOwnRestriction, () => problemReply(ErrorCodes.RESTRICTION_NOT_FOUND)),
       ]
     : [];
+
+  // The team's panel is a lazy chunk; evaluating it inside a spec's wait would starve that wait.
+  if (viewer) {
+    await LazyStatsPanel.preload();
+  }
 
   const rendered = await renderRoute(getRouter, `/watch/${VIDEO_ID}${search}`, {
     handlers: [

@@ -1,7 +1,9 @@
 import {
   HOURLY_WINDOW_HOURS,
   fillHourly,
+  firstHoursWindow,
   hourlyWindow,
+  firstHoursSince,
   mergeHourlyCounts,
   viewHourOf,
 } from '../hourly-views';
@@ -44,5 +46,16 @@ describe('domain: hourly views', () => {
       { videoId: 'a', viewHour: '2026-03-10T13:00:00.000Z', views: 4 },
       { videoId: 'b', viewHour: '2026-03-10T13:00:00.000Z', views: 2 },
     ]);
+  });
+
+  it('starts the first-hours window 48 hours before now', () => {
+    expect(firstHoursSince(new Date('2026-03-12T13:42:07.120Z'))).toEqual(NOW);
+  });
+
+  it('spans the 48 hours from the hour a video became ready and ends 48 hours after the instant', () => {
+    expect(firstHoursWindow(NOW)).toEqual({
+      range: { from: '2026-03-10T13:00:00.000Z', to: '2026-03-12T12:00:00.000Z' },
+      endsAt: '2026-03-12T13:42:07.120Z',
+    });
   });
 });

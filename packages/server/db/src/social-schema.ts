@@ -44,6 +44,7 @@ export const channelSubscriptions = pgTable(
       .$type<NotificationLevel>()
       .notNull()
       .default('all'),
+    sourceVideoId: uuid('source_video_id').references(() => videos.id, { onDelete: 'set null' }),
     createdAt: timestamptz('created_at').notNull().defaultNow(),
   },
   (table) => [
@@ -56,6 +57,9 @@ export const channelSubscriptions = pgTable(
       table.createdAt.desc()
     ),
     index('channel_subscriptions_channel_created_idx').on(table.channelId, table.createdAt.desc()),
+    index('channel_subscriptions_source_video_idx')
+      .on(table.sourceVideoId)
+      .where(sql`${table.sourceVideoId} IS NOT NULL`),
   ]
 );
 

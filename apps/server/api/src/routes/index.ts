@@ -26,6 +26,7 @@ import { commentSettingsRoutes } from './comment-settings';
 import { commentsRoutes } from './comments';
 import { creatorCommentsRoutes } from './creator-comments';
 import { creatorLiveRoutes } from './creator-live';
+import { creatorStatsRoutes } from './creator-stats';
 import { creatorVideosRoutes } from './creator-videos';
 import { devJwksRoutes } from './dev-jwks';
 import { eventsRoutes } from './events';
@@ -75,6 +76,7 @@ const ROUTES: readonly FastifyPluginAsync[] = [
   viewsRoutes,
   telemetryRoutes,
   analyticsRoutes,
+  creatorStatsRoutes,
   creatorVideosRoutes,
   commentsRoutes,
   commentReportsRoutes,

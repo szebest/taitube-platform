@@ -17,9 +17,11 @@ import { WatchTranscript } from '../watch-transcript/watch-transcript';
 export interface WatchPageProps {
   /** More engagement actions for the loaded video, from the features the route composes in. */
   renderActions?: (video: Video) => ReactNode;
+  /** What the loaded video's team sees between the engagement bar and the description, from the feature the route composes in. */
+  renderCreatorStats?: (video: Video) => ReactNode;
 }
 
-export function WatchPage({ renderActions }: WatchPageProps) {
+export function WatchPage({ renderActions, renderCreatorStats }: WatchPageProps) {
   const { videoId } = useParams({ from: '/watch/$videoId' });
   const { t, list } = useSearch({ from: '/watch/$videoId' });
   const autoplay = useLocation({ select: ({ state }) => state.autoplay === true });
@@ -38,6 +40,7 @@ export function WatchPage({ renderActions }: WatchPageProps) {
             {video.title ?? tOr('browse.untitled', {}, '')}
           </h1>
           <WatchEngagementBar video={video} renderActions={renderActions} />
+          {renderCreatorStats?.(video)}
           <WatchLinerNotes video={video} />
         </>
       }

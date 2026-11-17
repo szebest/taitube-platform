@@ -13,7 +13,7 @@ import {
 import * as schema from '@vp/db';
 import { publicFeedWalkInstant } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
-import { type SQL, and, desc, eq, inArray, sql } from 'drizzle-orm';
+import { type SQL, and, desc, eq, gt, inArray, sql } from 'drizzle-orm';
 import {
   drizzleWhere,
   keysetBefore,
@@ -41,6 +41,21 @@ export class PostgresVideoRepository extends VideoRepository {
     );
 
     return map(rows, ([row]) => row ?? null);
+  }
+
+  async listReadyAfter(
+    videoIds: readonly string[],
+    readyAfter: Date
+  ): Promise<Result<VideoRecord[], DatabaseUnavailable>> {
+    if (videoIds.length === 0) return ok([]);
+    return fromPromise(
+      () =>
+        this.db
+          .select()
+          .from(v)
+          .where(and(inArray(v.id, [...videoIds]), gt(v.readyAt, readyAfter))),
+      databaseUnavailable.during('listReadyAfter')
+    );
   }
 
   async findWithDetails(id: string): Promise<Result<VideoWithDetails | null, DatabaseUnavailable>> {

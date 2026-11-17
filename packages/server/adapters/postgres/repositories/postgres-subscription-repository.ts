@@ -1,4 +1,4 @@
-import { type Result, fromPromise, isErr, map } from '@kit/result';
+import { type Result, fromPromise, map } from '@kit/result';
 import type {
   ListSubscribersOptions,
   ListSubscriptionsOptions,
@@ -18,16 +18,11 @@ import { MS_PER_DAY } from '@vp/domain/time';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { and, asc, desc, eq, gt, gte, lt, sql } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
-import {
-  drizzleWhere,
-  keysetBefore,
-  msTimestamp,
-  notDeletedScope,
-  publicVisibilityScope,
-} from '../scopes/index';
+import { drizzleWhere, keysetBefore, msTimestamp } from '../scopes/index';
+import { subscriptionFeed } from './subscription-feed-query';
 import type { PostgresDatabase } from './types';
 
-const { channelSubscriptions: cs, channels: ch, subscriptionEvents: se, videos: v } = schema;
+const { channelSubscriptions: cs, channels: ch, subscriptionEvents: se } = schema;
 
 export class PostgresSubscriptionRepository implements SubscriptionRepositoryPort {
   constructor(private readonly db: PostgresDatabase) {}
@@ -39,7 +34,8 @@ export class PostgresSubscriptionRepository implements SubscriptionRepositoryPor
    */
   async subscribe(
     subscriberId: string,
-    channelId: string
+    channelId: string,
+    sourceVideoId: string | null = null
   ): Promise<Result<SubscriptionChangeResult, DatabaseUnavailable>> {
     return await fromPromise(
       () =>
@@ -53,7 +49,7 @@ export class PostgresSubscriptionRepository implements SubscriptionRepositoryPor
 
           const [inserted] = await tx
             .insert(cs)
-            .values({ id: uuidv7(), subscriberId, channelId, createdAt: new Date() })
+            .values({ id: uuidv7(), subscriberId, channelId, sourceVideoId, createdAt: new Date() })
             .onConflictDoNothing()
             .returning({ id: cs.id });
 
@@ -205,6 +201,19 @@ export class PostgresSubscriptionRepository implements SubscriptionRepositoryPor
     return map(rows, ([channel]) => channel?.subscriberCount ?? 0);
   }
 
+  async countFromVideo(videoId: string): Promise<Result<number, DatabaseUnavailable>> {
+    const rows = await fromPromise(
+      () =>
+        this.db
+          .select({ count: sql<number>`count(*)::int` })
+          .from(cs)
+          .where(eq(cs.sourceVideoId, videoId)),
+      databaseUnavailable.during('countSubscriptionsFromVideo')
+    );
+
+    return map(rows, ([row]) => row?.count ?? 0);
+  }
+
   async netSubscribers(
     ownerId: string,
     range: ViewDateRange
@@ -272,50 +281,6 @@ export class PostgresSubscriptionRepository implements SubscriptionRepositoryPor
     subscriberId: string,
     options: SubscriptionFeedOptions
   ): Promise<Result<{ items: VideoRecord[]; total: number }, DatabaseUnavailable>> {
-    const baseWhere = drizzleWhere(
-      eq(cs.subscriberId, subscriberId),
-      publicVisibilityScope(v),
-      eq(v.status, 'READY'),
-      notDeletedScope(v)
-    );
-
-    const counted = await fromPromise(
-      () =>
-        this.db
-          .select({ count: sql<number>`count(*)::int` })
-          .from(v)
-          .innerJoin(ch, eq(v.ownerId, ch.userId))
-          .innerJoin(cs, eq(cs.channelId, ch.id))
-          .where(baseWhere),
-      databaseUnavailable.during('getSubscriptionFeed')
-    );
-    if (isErr(counted)) return counted;
-
-    const rows = await fromPromise(
-      () =>
-        this.db
-          .select({ video: v })
-          .from(v)
-          .innerJoin(ch, eq(v.ownerId, ch.userId))
-          .innerJoin(cs, eq(cs.channelId, ch.id))
-          .where(
-            drizzleWhere(
-              baseWhere,
-              keysetBefore(
-                msTimestamp(v.createdAt),
-                v.id,
-                options.cursor && { sort: options.cursor.createdAt, tie: options.cursor.id }
-              )
-            )
-          )
-          .orderBy(desc(msTimestamp(v.createdAt)), desc(v.id))
-          .limit(options.limit + 1),
-      databaseUnavailable.during('getSubscriptionFeed')
-    );
-
-    return map(rows, (found) => ({
-      items: found.map((r) => r.video),
-      total: counted.value[0]?.count ?? 0,
-    }));
+    return await subscriptionFeed(this.db, subscriberId, options);
   }
 }

@@ -146,6 +146,31 @@ describe('housekeeping: flush-video-views', () => {
     expect(expectOk(await flush())).toEqual({ type: 'idle' });
   });
 
+  it('tells the owner of a video in its first hours that the flush counted views for it', async () => {
+    const video = expectOk(await repositories.videos.findById(videoId));
+    if (video) video.readyAt = new Date(now);
+    await record('viewer-1');
+
+    expectOk(await flush());
+
+    const events = expectOk(await repositories.userEvents.listFrom(SEEDED.userId, 0, 10));
+    expect(events.map(({ type, payload }) => ({ type, payload }))).toEqual([
+      { type: 'video.stats.updated', payload: { videoId } },
+    ]);
+  });
+
+  it('releases the batch even when telling the stats panels fails', async () => {
+    const video = expectOk(await repositories.videos.findById(videoId));
+    if (video) video.readyAt = new Date(now);
+    await record('viewer-1');
+    vi.spyOn(repositories.userEvents, 'append').mockResolvedValue(
+      err(databaseUnavailable('append'))
+    );
+
+    expect(expectOk(await flush())).toMatchObject({ type: 'applied', views: 1 });
+    expect(expectOk(await flush())).toEqual({ type: 'idle' });
+  });
+
   it('forgets applied batches once they are older than the retention', async () => {
     const forget = vi.spyOn(repositories.videoViews, 'forgetBatchesBefore');
 

@@ -53,7 +53,7 @@ The permission engine is a pure domain package (`packages/universal/permissions`
   - `rules/comment.rules.ts`: Comment create, delete (author + video owner), pin, heart (video owner), report (any signed-in viewer).
   - `rules/channel.rules.ts`: Channel update and management.
   - `rules/upload.rules.ts`: Upload access and ingestion lifecycle.
-  - `rules/analytics.rules.ts`: A signed-in caller reads the view analytics of what they own (`read Analytics { ownerId }`).
+  - `rules/analytics.rules.ts`: A signed-in caller reads the view analytics of what they own (`read Analytics { ownerId }`), and the stats panel of a video of the channels where their role reads analytics (`read VideoStats { ownerId }`).
   - `rules/preferences.rules.ts`: A signed-in caller reads and saves their own preferences (`read` and `update Preferences { ownerId }`).
   - `rules/recommendation-feedback.rules.ts`: A signed-in caller reads, creates and deletes their own recommendation feedback (`read`, `create` and `delete RecommendationFeedback { ownerId }`).
   - `rules/caption.rules.ts`: A video's captions are read where the video is and managed by its owner (`read` and `manage Caption { videoId, ownerId, visibility }`).

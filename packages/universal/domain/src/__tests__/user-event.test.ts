@@ -10,6 +10,7 @@ import {
   exportReady,
   partyControlsUpdated,
   preferencesUpdated,
+  videoStatsUpdated,
   videoStatusChanged,
 } from '../user-event';
 
@@ -132,6 +133,13 @@ describe('domain: user event', () => {
     expect(partyControlsUpdated('user:u2', roomId)).toEqual({
       type: 'party.controls.updated',
       payload: { targetKey: 'user:u2', roomId },
+    });
+  });
+
+  it('announces fresh video stats by the video id alone, no counts', () => {
+    expect(videoStatsUpdated('v1')).toEqual({
+      type: 'video.stats.updated',
+      payload: { videoId: 'v1' },
     });
   });
 });

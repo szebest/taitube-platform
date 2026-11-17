@@ -14,7 +14,7 @@ import { useReaction } from '#app/hooks/use-reaction';
 import { useVideoActions } from '#app/hooks/use-video-actions';
 import { channelQueryOptions } from '#app/lib/query-keys/channel-keys';
 
-function ChannelSection({ channelId }: { channelId: string }) {
+function ChannelSection({ channelId, videoId }: { channelId: string; videoId: string }) {
   const api = useApi();
   const { tOr } = useT();
   const { data: channel } = useSuspenseQuery(channelQueryOptions(api, channelId));
@@ -29,7 +29,7 @@ function ChannelSection({ channelId }: { channelId: string }) {
       >
         <Link to="/channel/$channelId" params={{ channelId: channel.id }} />
       </EngagementBar.Channel>
-      <SubscribeAction channelId={channel.id} />
+      <SubscribeAction channelId={channel.id} fromVideoId={videoId} />
     </BrandScope>
   );
 }
@@ -97,7 +97,7 @@ export function WatchEngagementBar({ video, renderActions }: WatchEngagementBarP
           resetKey={video.channel.id}
           layout="bar"
         >
-          <ChannelSection channelId={video.channel.id} />
+          <ChannelSection channelId={video.channel.id} videoId={video.id} />
         </SectionBoundary>
       )}
       <EngagementBar.Actions>

@@ -3,6 +3,7 @@ import { type Video, VideoIdParamSchema } from '@vp/api-contracts';
 import { ensureFound, parseParam, videoQueryOptions, prefetched } from '@vp/queries';
 import { z } from 'zod';
 import { ClipAction } from '#app/features/clips';
+import { CreatorStatsPanel } from '#app/features/creator-stats';
 import { SaveOfflineToggle } from '#app/features/offline';
 import { WatchPage, WatchPending } from '#app/features/watch';
 import { WEB_URL } from '#app/lib/config';
@@ -35,7 +36,12 @@ function EngagementActions({ video }: { video: Video }) {
 }
 
 function Watch() {
-  return <WatchPage renderActions={(video) => <EngagementActions video={video} />} />;
+  return (
+    <WatchPage
+      renderActions={(video) => <EngagementActions video={video} />}
+      renderCreatorStats={(video) => <CreatorStatsPanel video={video} />}
+    />
+  );
 }
 
 export const Route = createFileRoute('/watch/$videoId')({

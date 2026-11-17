@@ -4,6 +4,7 @@ import {
   getChannel,
   getChannelFeatured,
   getChannelSpotlight,
+  getCreatorStats,
   getCurrentPick,
   getFeed,
   getHome,
@@ -14,6 +15,7 @@ import {
   getSubscriptionFeed,
   getUnreadNotificationCount,
   getVideo,
+  getVideoRetention,
   isSubscribedToChannel,
   listCategories,
   listCaptions,
@@ -26,6 +28,7 @@ import {
 import {
   account,
   channel,
+  creatorStats,
   type EndpointResolver,
   fallbackPick,
   mockEndpoint,
@@ -143,6 +146,10 @@ export function loaderApi(answered: string[] = []): HttpHandler[] {
     recorded(getChannelSpotlight, () => HttpResponse.json({ source: null, video: null })),
     recorded(getVideo, ({ params }) =>
       HttpResponse.json(video({ id: String(params.id), title: 'Launch day' }))
+    ),
+    recorded(getCreatorStats, () => HttpResponse.json(creatorStats())),
+    recorded(getVideoRetention, ({ params }) =>
+      HttpResponse.json({ videoId: String(params.id), curve: [] })
     ),
     recorded(getMyReaction, ({ params }) =>
       HttpResponse.json({ videoId: String(params.id), reaction: null })
