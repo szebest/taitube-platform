@@ -52,6 +52,7 @@ export default defineConfig({
       '**/tools/hls-test-page/vendor',
       '**/tests/fixtures',
       '**/fixtures',
+      '**/design-tokens/src/__tests__/tokens-document.json',
       '**/apps/client/*/src/routeTree.gen.ts',
       `**/${packageDir('@kit/ui')}/src/styles/generated`,
       'packages/server/db/drizzle/meta',

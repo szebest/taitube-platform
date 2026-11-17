@@ -21,7 +21,8 @@ const difference = (left: readonly string[], right: readonly string[]) =>
 function moveDrift(moves: Moves, workspace: Workspace): string[] {
   return Object.entries(moves).flatMap(([name, move]) => {
     const entries = workspace.entriesOf(name);
-    if (!entries) return [`${name}: no workspace package has this name`];
+    const landed = typeof move === 'string' && workspace.entriesOf(move) !== undefined;
+    if (!entries) return landed ? [] : [`${name}: no workspace package has this name`];
     if (typeof move === 'string') return [];
 
     const listed = Object.keys(move);
@@ -80,7 +81,8 @@ function repoWorkspace(): Workspace {
 }
 
 const PLANTED: Workspace = {
-  entriesOf: (name) => (name === '@vp/split' ? ['.', './extra'] : undefined),
+  entriesOf: (name) =>
+    name === '@vp/split' ? ['.', './extra'] : name === '@kit/landed' ? ['.'] : undefined,
   exportsOf: () => ['kept', 'added'],
 };
 
@@ -108,5 +110,9 @@ describe('architecture: package moves', () => {
     },
   ])('reports $planted', ({ moves, drift }) => {
     expect(moveDrift(moves, PLANTED)).toEqual(drift);
+  });
+
+  it('accepts a whole move that has landed, its old name gone and its new one present', () => {
+    expect(moveDrift({ '@vp/landed': '@kit/landed' }, PLANTED)).toEqual([]);
   });
 });

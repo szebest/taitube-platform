@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { REPO } from './ui-tree';
 
-const FIXTURE = 'packages/platform/universal/design-tokens/src/__tests__/fixtures/tokens.json';
+const FIXTURE = 'packages/platform/universal/design-tokens/src/__tests__/tokens-document.json';
 const DOCUMENT = 'docs/design/tokens.json';
 
 describe('scripts: the design-tokens spec fixture', () => {

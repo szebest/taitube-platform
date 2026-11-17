@@ -1,4 +1,4 @@
-import tokens from '../../__tests__/fixtures/tokens.json' with { type: 'json' };
+import tokens from '../../__tests__/tokens-document.json' with { type: 'json' };
 import { TOKEN_GROUPS, type TokenGroup } from '../token-group';
 
 export function isRecord(node: unknown): node is Record<string, unknown> {
