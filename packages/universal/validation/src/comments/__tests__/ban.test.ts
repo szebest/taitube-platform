@@ -1,4 +1,4 @@
-import { isErr, isOk } from '@vp/result';
+import { isErr, isOk } from '@kit/result';
 import { validateBan } from '../ban';
 
 const NOW = new Date('2026-03-01T12:00:00.000Z');

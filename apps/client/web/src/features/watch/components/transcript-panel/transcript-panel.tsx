@@ -1,9 +1,9 @@
+import { Format, useT } from '@kit/intl-react';
+import { Input } from '@kit/ui';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import type { TranscriptView } from '@vp/api-contracts';
 import { videoDuration } from '@vp/intl';
-import { Format, useT } from '@vp/intl-react';
 import { transcriptQueryOptions, useApi } from '@vp/queries';
-import { Input } from '@vp/ui';
 import { ChevronDown } from 'lucide-react';
 import { useEffect, useId, useRef, useState } from 'react';
 import { usePlayerSeek, usePlayerTime } from '#app/components/player/taitube-player';

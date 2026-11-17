@@ -1,4 +1,4 @@
-import { isErr } from '@vp/result';
+import { isErr } from '@kit/result';
 import type { DemoOptions, SeedHost, SeedReport, SeedStepReport } from '../types';
 import { createApi } from './api';
 import { describeFailure } from './failure';

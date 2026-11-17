@@ -1,8 +1,8 @@
+import { err, ok, type Result } from '@kit/result';
 import { WATCH_PARTY_LIMITS, type WatchPartyQueueItem } from '@vp/domain';
 import { requireRoomPermission } from '@vp/domain-rules';
 import { type WatchPartyPermissionMissing, watchPartyPermissionMissing } from '@vp/errors';
 import { canInRoom, type WatchPartyAbility } from '@vp/permissions';
-import { err, ok, type Result } from '@vp/result';
 
 /** A member holding `queue.add` alone keeps a few items pending; `queue.reorder` lifts the cap. */
 export function decideQueuePending(input: {

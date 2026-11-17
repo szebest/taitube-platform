@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite-plus';
 import { lint } from './lint.config';
+import { packageDir } from './scripts/workspace-packages';
 
 export default defineConfig({
   fmt: {
@@ -51,8 +52,9 @@ export default defineConfig({
       '**/tools/hls-test-page/vendor',
       '**/tests/fixtures',
       '**/fixtures',
+      '**/design-tokens/src/__tests__/tokens-document.json',
       '**/apps/client/*/src/routeTree.gen.ts',
-      '**/packages/client/ui/src/styles/generated',
+      `**/${packageDir('@kit/ui')}/src/styles/generated`,
       'packages/server/db/drizzle/meta',
     ],
   },

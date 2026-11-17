@@ -17,7 +17,7 @@ Design: `docs/SDD.md` §13.2, ADR-12, §9.4, §12.2. The ScaledObjects are
   not scale-out. The API is not KEDA-scaled.
 - **Grace periods** per stage in `infra/k8s/base/worker-*.yaml`, from 900 s for 1080p down to
   30 s for notify.
-- **Without Kubernetes**: `pnpm compose-autoscaler` (`packages/server/compose-autoscaler`)
+- **Without Kubernetes**: `pnpm compose-autoscaler` (`packages/platform/server/compose-autoscaler`)
   polls the same metric and scales Compose services with the same min, max and cooldown.
   Compose stops the newest containers on scale-in, so a busy one can go: the idempotent redo
   covers it.

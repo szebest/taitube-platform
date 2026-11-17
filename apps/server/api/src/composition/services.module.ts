@@ -1,8 +1,9 @@
+import type { Container } from '@kit/composition';
+import { createLogger } from '@kit/logger';
+import { Paginator } from '@kit/pagination';
 import { Adapters, queueNamed } from '@vp/adapters/composition';
-import type { Container } from '@vp/composition';
-import { createLogger } from '@vp/logger';
+import { ErrorCodeRegistry, errorCodeRegistry } from '@vp/errors';
 import { MetricsServer } from '@vp/observability';
-import { Paginator } from '@vp/pagination';
 import {
   AnalyticsService,
   CategoryService,
@@ -88,6 +89,7 @@ export function registerServices(c: Container): Container {
       )
     )
   )
+    .provide(ErrorCodeRegistry, () => errorCodeRegistry)
     .provide(Services.Logger, () =>
       createLogger({ format: 'json', service: 'vp-api', level: config().logLevel })
     )

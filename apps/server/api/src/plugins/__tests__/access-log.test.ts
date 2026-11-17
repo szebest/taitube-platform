@@ -1,4 +1,4 @@
-import { createLogger } from '@vp/logger';
+import { createLogger } from '@kit/logger';
 import { captureLog } from '@vp/testing/log-capture';
 import { buildTestApp } from '../../__tests__/test-app';
 import { abortMidRequest } from './abort-mid-request';

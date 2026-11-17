@@ -1,5 +1,5 @@
 import type { QueueJob } from '@vp/core/ports';
-import { classifyError } from '@vp/errors';
+import { classifyError, errorCodeRegistry } from '@vp/errors';
 import { type Job, UnrecoverableError } from 'bullmq';
 import { toQueueJob } from './job-mapping';
 
@@ -14,7 +14,7 @@ function rethrowClassified(cause: unknown, attemptsMade: number): never {
   // recognised by `instanceof` here rather than by name.
   if (cause instanceof UnrecoverableError) throw cause;
 
-  const classification = classifyError(cause);
+  const classification = classifyError(errorCodeRegistry, cause);
   const parks =
     classification === 'permanent' || (classification === 'unknown' && attemptsMade + 1 >= 3);
   if (!parks) throw cause;

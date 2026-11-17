@@ -1,5 +1,5 @@
+import { isErr, isOk } from '@kit/result';
 import { createWatchPartySocketTicket, watchPartySocket } from '@vp/api-contracts';
-import { isErr, isOk } from '@vp/result';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import type { RoomSession } from '../services/index';

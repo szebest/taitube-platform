@@ -1,6 +1,6 @@
+import { err } from '@kit/result';
 import { InMemoryFrameClassifier } from '@vp/adapters/in-memory';
 import { ErrorCodes, mediaFailure } from '@vp/errors';
-import { err } from '@vp/result';
 import { masterPlaylistKey } from '@vp/storage';
 import { expectOk } from '@vp/testing/result';
 import { createPackageProcessor } from '../stages/package';

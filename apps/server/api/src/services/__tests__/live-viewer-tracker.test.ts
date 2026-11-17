@@ -1,5 +1,5 @@
+import { createLogger } from '@kit/logger';
 import { InMemoryCacheClient, InMemoryLivePresence } from '@vp/adapters/in-memory';
-import { createLogger } from '@vp/logger';
 import { expectOk } from '@vp/testing/result';
 import { LiveViewerTracker } from '../live-viewer-tracker';
 import { STREAM_ID, VIDEO_ID } from './live-harness';

@@ -1,3 +1,4 @@
+import type { Result } from '@kit/result';
 import type {
   BuiltInRoleKey,
   WatchPartyMemberRole,
@@ -5,7 +6,6 @@ import type {
   WatchPartyRoleRecord,
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import type { Result } from '@vp/result';
 import type { NewSystemLine } from './watch-party-room-repository';
 
 /** Every role change bumps `roles_version` and writes its system line in the same transaction. */

@@ -1,5 +1,5 @@
+import { Button } from '@kit/ui';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Button } from '@vp/ui';
 import { LoginCard } from '..';
 import { LoginCardRoot } from '../login-card';
 

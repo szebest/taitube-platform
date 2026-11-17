@@ -4,7 +4,7 @@
 
 Owner: tickets [53](../../../docs/tickets/53-frontend-architecture-modernization-tanstack-query.md) (the data
 layer) and [56](../../../docs/tickets/56-frontend-universal-auth-session-security.md) (the session). `client`
-tier, layer T5, the app-module layer: it sits on `@vp/api-client` and `@vp/intl-react` (T4) and below the apps
+tier, layer T5, the app-module layer: it sits on `@vp/api-client` and `@kit/intl-react` (T4) and below the apps
 (T6).
 
 ## What it holds
@@ -82,7 +82,7 @@ The session (SDD §11, Transport and Origins and cookies):
 - `useSignOut()`, which ends the session on both apps and loads the routes again as a guest; the sign-in card and the account menu it feeds are `@vp/components`' parts, wrapped in each app's `features/auth/components/`. `@vp/queries/demo-personas` is for local demos: the
   `PersonaSwitcher` and its `signInAsPersona` server function, which signs in with a token `pnpm dev-token serve`
   mints, at the address `sessionMiddleware` was given as `devTokenUrl`. Each app imports it behind
-  `VITE_DEMO_PERSONAS` in its `/login` route, and the bundle guard in `@vp/vite-preset` fails a build with the
+  `VITE_DEMO_PERSONAS` in its `/login` route, and the bundle guard in `@kit/vite-preset` fails a build with the
   flag off in which anything under `src/demo-personas/` reaches a client or a server chunk.
 
 ## Rules

@@ -1,3 +1,4 @@
+import { err, isErr, map, ok, type Result } from '@kit/result';
 import type { WatchPartyServerFrame } from '@vp/api-contracts';
 import { expectedPositionMs, type WatchPartyMessage } from '@vp/domain';
 import {
@@ -17,7 +18,6 @@ import {
   type WatchPartySlowMode,
   watchPartySlowMode,
 } from '@vp/errors';
-import { err, isErr, map, ok, type Result } from '@vp/result';
 import { type InvalidChatMessage, validateChatMessage } from '@vp/validation';
 import { readChatBacklog } from '../live-chat-backlog';
 import type { PartyCaller } from './party-caller';

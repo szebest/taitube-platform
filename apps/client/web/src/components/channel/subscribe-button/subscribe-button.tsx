@@ -1,4 +1,4 @@
-import { Button, type ButtonProps, Icon, VisuallyHidden } from '@vp/ui';
+import { Button, type ButtonProps, Icon, VisuallyHidden } from '@kit/ui';
 
 export type SubscribeButtonProps = Omit<
   ButtonProps,

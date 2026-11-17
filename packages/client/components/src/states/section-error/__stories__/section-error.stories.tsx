@@ -1,5 +1,5 @@
+import { variantNames } from '@kit/ui';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { variantNames } from '@vp/ui';
 import { SectionError, sectionErrorStyles } from '..';
 import { SectionErrorRoot } from '../section-error';
 

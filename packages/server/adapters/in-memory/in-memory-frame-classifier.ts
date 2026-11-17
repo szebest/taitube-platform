@@ -1,6 +1,6 @@
+import { type Result, ok } from '@kit/result';
 import { CHANNEL_MAX, FrameClassifier, type FrameScores, type RgbFrame } from '@vp/core/ports';
 import type { MediaFailure } from '@vp/errors';
-import { type Result, ok } from '@vp/result';
 
 export type FrameScorer = (frame: RgbFrame) => number;
 

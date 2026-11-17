@@ -1,10 +1,10 @@
+import { ok } from '@kit/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { RenditionStatus } from '@vp/domain';
 import { asCdnBase } from '@vp/env-schema';
 import { ErrorCodes } from '@vp/errors';
 import { videoChannel } from '@vp/events';
 import type { UserContext } from '@vp/permissions';
-import { ok } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { SseService } from '../sse-service';
 import { liveWorld, STREAM_ID, VIDEO_ID as LIVE_VIDEO_ID } from './live-harness';

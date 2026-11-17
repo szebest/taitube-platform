@@ -1,6 +1,6 @@
+import type { Result } from '@kit/result';
 import type { Webhook, WebhookEvent } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import type { Result } from '@vp/result';
 
 /**
  * Every read and delete but the dispatch lookup is keyed by the owner's id, so another user's

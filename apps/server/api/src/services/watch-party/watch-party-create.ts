@@ -1,3 +1,4 @@
+import { andThenAsync, err, isErr, ok, type Result } from '@kit/result';
 import type { CreateWatchPartyBody, WatchPartyView } from '@vp/api-contracts';
 import type { HashingFailed } from '@vp/core/ports';
 import {
@@ -20,7 +21,6 @@ import {
   watchPartyLimitReached,
 } from '@vp/errors';
 import { canCreateWatchParty, type UserContext } from '@vp/permissions';
-import { andThenAsync, err, isErr, ok, type Result } from '@vp/result';
 import {
   type InvalidField,
   invalidField,

@@ -1,4 +1,4 @@
-import { type Result, andThen, err, ok, tryCatch } from '@vp/result';
+import { type Result, andThen, err, ok, tryCatch } from '@kit/result';
 import { type FormatContext, USER, type User, resolveCurrency } from '../context';
 import { type FormatFailure, unrenderable } from '../failures';
 

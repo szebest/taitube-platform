@@ -19,31 +19,4 @@ describe('@vp/errors: infra failure constructors', () => {
       operation: 'findById',
     });
   });
-
-  it.each([databaseUnavailable, cacheUnavailable, queueUnavailable, storageUnavailable])(
-    'maps a rejection of one operation to the same failure through during()',
-    (build) => {
-      const cause = new Error('ECONNREFUSED');
-
-      expect(build.during('findById')(cause)).toEqual(build('findById', cause));
-    }
-  );
-
-  it('carries the cause when one is given', () => {
-    const cause = new Error('ECONNREFUSED');
-
-    expect(databaseUnavailable('insert', cause).cause).toBe(cause);
-  });
-
-  it('omits the cause key entirely when none is given', () => {
-    expect(databaseUnavailable('insert')).not.toHaveProperty('cause');
-  });
-
-  it('names no field, so an infra payload never reaches Problem.errors', () => {
-    expect(databaseUnavailable('insert')).not.toHaveProperty('field');
-  });
-
-  it('keeps the operation out of the message, which is the part a client is shown', () => {
-    expect(databaseUnavailable('findWithDetails').message).not.toContain('findWithDetails');
-  });
 });

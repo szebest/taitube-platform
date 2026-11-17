@@ -1,5 +1,5 @@
+import { Switch } from '@kit/ui';
 import { render, screen } from '@testing-library/react';
-import { Switch } from '@vp/ui';
 import { axeViolations } from '@vp/web-testing/dom';
 import { SettingRow, type SettingRowRootProps } from '..';
 

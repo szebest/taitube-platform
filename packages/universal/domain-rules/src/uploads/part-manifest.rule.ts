@@ -1,5 +1,5 @@
+import { type Result, err, ok } from '@kit/result';
 import type { Upload } from '@vp/domain';
-import { type Result, err, ok } from '@vp/result';
 import { type PartManifestMismatch, partManifestMismatch } from './failures';
 
 export interface UploadPart {

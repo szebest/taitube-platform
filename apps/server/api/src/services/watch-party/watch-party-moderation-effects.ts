@@ -1,3 +1,4 @@
+import { assertNever, err, ok, type Result } from '@kit/result';
 import type { WatchPartyServerFrame } from '@vp/api-contracts';
 import type { NewSystemLine, RoleWrite } from '@vp/core/repositories';
 import {
@@ -13,7 +14,6 @@ import {
   versionConflict,
   watchPartyNotFound,
 } from '@vp/errors';
-import { assertNever, err, ok, type Result } from '@vp/result';
 import type { WatchPartyDeps } from './watch-party-deps';
 import { memberRolesFrame, toRoleView } from './watch-party-role-views';
 

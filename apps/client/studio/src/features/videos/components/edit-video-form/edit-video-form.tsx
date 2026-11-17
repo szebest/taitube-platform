@@ -1,12 +1,12 @@
+import { useAppForm } from '@kit/forms';
+import { useT } from '@kit/intl-react';
+import { Button, Field, Switch, useToast } from '@kit/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError } from '@vp/api-client';
 import { type Video, VIDEO_VISIBILITIES } from '@vp/api-contracts';
 import { VideoThumbnail } from '@vp/components';
 import { ErrorCodes } from '@vp/errors';
-import { useAppForm } from '@vp/forms';
-import { useT } from '@vp/intl-react';
 import { useApi, videoQueryOptions } from '@vp/queries';
-import { Button, Field, Switch, useToast } from '@vp/ui';
 import { useState } from 'react';
 import { VersionConflictDialog } from '#app/components/dialogs/version-conflict-dialog';
 import { categoriesQueryOptions } from '#app/features/videos/api/category-queries';

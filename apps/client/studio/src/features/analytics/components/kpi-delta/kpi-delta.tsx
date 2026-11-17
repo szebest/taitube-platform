@@ -1,6 +1,6 @@
+import { useFormat, useT } from '@kit/intl-react';
+import { unwrapOr } from '@kit/result';
 import { StatCard } from '@vp/components';
-import { useFormat, useT } from '@vp/intl-react';
-import { unwrapOr } from '@vp/result';
 import type { KpiChange } from '#app/features/analytics/api/kpi-change';
 
 export interface KpiDeltaProps {

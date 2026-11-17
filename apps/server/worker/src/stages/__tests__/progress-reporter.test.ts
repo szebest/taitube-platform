@@ -1,7 +1,7 @@
+import { createLogger } from '@kit/logger';
 import { InMemoryCacheClient, InMemoryRepositories } from '@vp/adapters/in-memory';
 import { THUMBNAIL_PROGRESS } from '@vp/domain';
 import { userChannel } from '@vp/events';
-import { createLogger } from '@vp/logger';
 import { createMetricsRegistry } from '@vp/observability';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';

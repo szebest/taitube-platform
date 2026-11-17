@@ -1,4 +1,3 @@
-import { PageHeaderSkeleton } from '@vp/components';
 import {
   Icon,
   IconButton,
@@ -7,7 +6,8 @@ import {
   Skeleton,
   useMediaQuery,
   useUiCopy,
-} from '@vp/ui';
+} from '@kit/ui';
+import { PageHeaderSkeleton } from '@vp/components';
 import { type ComponentPropsWithRef, type ReactNode, useId, useState } from 'react';
 import { StudioWorkspaceContext, useStudioWorkspace } from './studio-workspace.context';
 import { studioWorkspaceStyles } from './studio-workspace.variants';

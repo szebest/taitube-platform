@@ -1,3 +1,4 @@
+import { type Result, all, err, isErr, map, ok } from '@kit/result';
 import type { JobQueue, QueueJobCounts } from '@vp/core/ports';
 import {
   type AuthorizationFailure,
@@ -8,7 +9,6 @@ import {
 import type { QueueUnavailable } from '@vp/errors';
 import { QUEUES } from '@vp/job-contracts';
 import type { UserContext } from '@vp/permissions';
-import { type Result, all, err, isErr, map, ok } from '@vp/result';
 
 export interface QueueServiceDeps {
   queues: Map<string, JobQueue>;

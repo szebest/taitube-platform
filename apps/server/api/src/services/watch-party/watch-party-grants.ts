@@ -1,3 +1,4 @@
+import { andThenAsync, assertNever, err, isErr, map, ok, type Result } from '@kit/result';
 import type { WatchPartyInviteLink } from '@vp/domain';
 import type { JoinGrant } from '@vp/domain-rules';
 import {
@@ -5,7 +6,6 @@ import {
   type WatchPartyInviteInvalid,
   watchPartyInviteInvalid,
 } from '@vp/errors';
-import { andThenAsync, assertNever, err, isErr, map, ok, type Result } from '@vp/result';
 import type { WatchPartyDeps } from './watch-party-deps';
 
 export type Grant =

@@ -1,6 +1,6 @@
+import { useT } from '@kit/intl-react';
 import type { Video } from '@vp/api-contracts';
 import { CLIP_MIN_MS } from '@vp/domain';
-import { useT } from '@vp/intl-react';
 import { useRef, useState } from 'react';
 import { usePlayerSeek } from '#app/components/player/taitube-player';
 import { EngagementBar } from '#app/components/watch/engagement-bar';

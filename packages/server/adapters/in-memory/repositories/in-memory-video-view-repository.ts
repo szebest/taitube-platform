@@ -1,3 +1,4 @@
+import { type Result, ok } from '@kit/result';
 import type { VideoRecord, VideoViewRepositoryPort } from '@vp/core/repositories';
 import {
   type ChannelViewTotals,
@@ -18,7 +19,6 @@ import {
   viewsByVideo,
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { type Result, ok } from '@vp/result';
 
 /** The two things the view counters need from the videos they count. */
 export interface ViewedVideos {

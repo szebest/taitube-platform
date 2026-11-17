@@ -1,3 +1,4 @@
+import { ok, type Result } from '@kit/result';
 import type {
   NewSystemLine,
   OwnerTransfer,
@@ -14,7 +15,6 @@ import {
   type WatchPartyRoom,
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { ok, type Result } from '@vp/result';
 import {
   assignmentKey,
   type InMemoryWatchPartyStore,

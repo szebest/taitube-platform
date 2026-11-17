@@ -1,4 +1,4 @@
-import { writeCookie } from '@vp/ui';
+import { writeCookie } from '@kit/ui';
 import { DEFAULT_DEVICE_PREFERENCES } from '#app/__tests__/device-preferences-fixtures';
 import {
   adoptLegacyPlayback,

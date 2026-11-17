@@ -1,4 +1,4 @@
-import type { IconId } from '@vp/ui';
+import type { IconId } from '@kit/ui';
 
 export type SettingsSectionId =
   | 'appearance'

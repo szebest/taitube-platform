@@ -1,4 +1,4 @@
-import { isErr, isOk } from '@vp/result';
+import { isErr, isOk } from '@kit/result';
 import { validateSlug } from '../slug-format';
 
 describe('@vp/validation: validateSlug', () => {

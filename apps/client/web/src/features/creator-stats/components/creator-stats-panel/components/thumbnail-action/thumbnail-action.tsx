@@ -1,7 +1,7 @@
+import { useT } from '@kit/intl-react';
+import { Button, Icon, Popover, useToast } from '@kit/ui';
 import type { Video } from '@vp/api-contracts';
-import { useT } from '@vp/intl-react';
 import { useFailureToast } from '@vp/queries';
-import { Button, Icon, Popover, useToast } from '@vp/ui';
 import { useUpdateVideo } from '#app/features/creator-stats/hooks/use-update-video';
 
 /** The thumbnail choices the studio's editor offers, over the same request: today the generated frame. */

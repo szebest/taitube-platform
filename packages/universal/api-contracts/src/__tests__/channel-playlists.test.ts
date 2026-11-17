@@ -1,4 +1,4 @@
-import { PAGE_SIZE_DEFAULT } from '@vp/pagination';
+import { PAGE_SIZE_DEFAULT } from '@kit/pagination';
 import { listChannelPlaylists } from '../channel-playlists';
 
 const playlist = {

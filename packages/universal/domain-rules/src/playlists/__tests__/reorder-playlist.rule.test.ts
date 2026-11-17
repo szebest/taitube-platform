@@ -1,6 +1,6 @@
+import { isErr, isOk } from '@kit/result';
 import { POSITION_GAP, type PlaylistReorder } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
-import { isErr, isOk } from '@vp/result';
 import { decidePlaylistReorder } from '../reorder-playlist.rule';
 
 const items = ['a', 'b', 'c'].map((id, index) => ({

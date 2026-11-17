@@ -1,6 +1,6 @@
+import { isOk } from '@kit/result';
 import { createFileRoute } from '@tanstack/react-router';
 import { SEARCH_SORTS, SEARCH_TYPES } from '@vp/domain';
-import { isOk } from '@vp/result';
 import { validateSearchQuery } from '@vp/validation';
 import { z } from 'zod';
 import { SearchPage, SearchPageSkeleton, searchQueryOptions } from '#app/features/search';

@@ -1,6 +1,6 @@
 import type { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { CHANNEL_HEADER } from '@vp/api-contracts';
-import { mintToken } from '@vp/dev-token';
+import { mintToken } from '@vp/dev-identity';
 import type { Channel, ChannelRole } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import { SEEDED } from '@vp/testing';

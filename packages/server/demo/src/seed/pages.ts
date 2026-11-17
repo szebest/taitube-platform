@@ -1,4 +1,4 @@
-import { type Result, isErr, ok } from '@vp/result';
+import { type Result, isErr, ok } from '@kit/result';
 import type { z } from 'zod';
 import type { Api, ApiRequest } from './api';
 import type { SeedFailure } from './failure';

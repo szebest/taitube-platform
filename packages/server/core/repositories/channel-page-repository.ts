@@ -1,6 +1,6 @@
+import type { Result } from '@kit/result';
 import type { ChannelLocalization, ChannelPageSettings } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import type { Result } from '@vp/result';
 
 /**
  * What a channel page shows above its content: the trailer, the returning-subscriber video and the

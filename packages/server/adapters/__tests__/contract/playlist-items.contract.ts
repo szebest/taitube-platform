@@ -1,5 +1,5 @@
+import { err, ok } from '@kit/result';
 import { movePositions } from '@vp/domain';
-import { err, ok } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { OTHER_OWNER_ID, VIDEO_IDS, publicVideo } from './fixtures';
 import {

@@ -1,5 +1,6 @@
-import { err, ok, type Result } from '@vp/result';
-import { type InvalidField, invalidLength, type LengthBounds } from '../failures';
+import { err, ok, type Result } from '@kit/result';
+import type { LengthBounds } from '../failures';
+import { type InvalidField, invalidLength } from '../field-failures';
 import { normalizePlainText, withinLength } from '../plain-text';
 
 export const LIVE_STREAM_DETAILS_BOUNDS = {

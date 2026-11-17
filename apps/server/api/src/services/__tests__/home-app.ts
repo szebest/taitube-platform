@@ -1,12 +1,12 @@
+import { Singleflight } from '@kit/concurrency';
+import { Paginator } from '@kit/pagination';
 import {
   InMemoryCacheClient,
   InMemoryRepositories,
   InMemorySearchSuggestionIndex,
 } from '@vp/adapters/in-memory';
-import { Singleflight } from '@vp/concurrency';
 import type { NewVideoInput } from '@vp/core/repositories';
 import { SEARCH_SUGGESTIONS } from '@vp/domain';
-import { Paginator } from '@vp/pagination';
 import { expectOk } from '@vp/testing/result';
 import { DiscoveryShelves } from '../discovery-shelves';
 import { HistoryPause } from '../history-pause';

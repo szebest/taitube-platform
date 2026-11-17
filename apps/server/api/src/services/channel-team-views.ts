@@ -1,7 +1,7 @@
+import { map } from '@kit/result';
 import type { ChannelInviteView, ChannelMemberView, TeamProfileView } from '@vp/api-contracts';
 import type { ChannelRepositoryPort } from '@vp/core/repositories';
 import type { Channel, ChannelInvite, ChannelMembership } from '@vp/domain';
-import { map } from '@vp/result';
 
 export type Profiles = ReadonlyMap<string, TeamProfileView>;
 

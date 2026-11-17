@@ -1,4 +1,4 @@
-import { AlertDialog, Button, useUiCopy } from '@vp/ui';
+import { AlertDialog, Button, useUiCopy } from '@kit/ui';
 import type { ComponentProps } from 'react';
 
 export interface ClipDeleteDialogProps extends ComponentProps<typeof AlertDialog.Root> {

@@ -1,4 +1,4 @@
-import type { AppearancePreference } from '@vp/ui';
+import type { AppearancePreference } from '@kit/ui';
 import { changedPaths } from '#app/lib/preferences/preferences-change';
 import { appearanceChange } from './appearance-change';
 import type { MergeState } from './identity-reset';

@@ -1,5 +1,5 @@
+import { defineMachine } from '@kit/machine';
 import { VIDEO_LIFECYCLE_EDGES, VIDEO_STATUSES } from '@vp/domain';
-import { defineMachine } from '@vp/machine';
 
 export const VIDEO_LIFECYCLE = defineMachine({
   name: 'video-lifecycle',

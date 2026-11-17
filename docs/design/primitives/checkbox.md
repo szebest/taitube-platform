@@ -20,7 +20,7 @@ A binary or tri-state choice that is applied together with a form, not instantly
 
 ```ts
 // types.ts
-import type { SizeOption } from '@vp/design-tokens';
+import type { SizeOption } from '@kit/design-tokens';
 
 export type CheckboxSize = Extract<SizeOption, 'sm' | 'md'>;
 ```

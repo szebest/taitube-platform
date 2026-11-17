@@ -1,3 +1,4 @@
+import { isErr, ok, type Result } from '@kit/result';
 import type { WatchPartyClientFrame, WatchPartyServerFrame } from '@vp/api-contracts';
 import { effectivePermissions, parseMemberKey, type WatchPartyPermission } from '@vp/domain';
 import { requireRoomPermission } from '@vp/domain-rules';
@@ -14,7 +15,6 @@ import {
   toWatchPartyViewer,
   type WatchPartyAbility,
 } from '@vp/permissions';
-import { isErr, ok, type Result } from '@vp/result';
 import type { PartyCaller } from './party-caller';
 import type { RoomBatcher } from './room-batcher';
 import { consumeBudget, type RateLimited } from './watch-party-budgets';

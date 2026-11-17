@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { isMachine } from '../../packages/universal/machine/src/index';
+import { isMachine } from '../../packages/platform/universal/machine/src/index';
 import { findMachineFiles } from './discover';
 import { buildModel, type LoadedMachine } from './model';
 import { renderStateMachines } from './render';

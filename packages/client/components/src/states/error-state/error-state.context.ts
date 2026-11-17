@@ -1,4 +1,4 @@
-import { createCompoundContext } from '@vp/ui';
+import { createCompoundContext } from '@kit/ui';
 import type { ErrorStateKind } from './types';
 
 export const [ErrorStateContext, useErrorState] = createCompoundContext<{

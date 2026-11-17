@@ -1,5 +1,5 @@
+import { Checkbox, cn } from '@kit/ui';
 import type { ApiScope } from '@vp/domain';
-import { Checkbox, cn } from '@vp/ui';
 import { type ComponentPropsWithRef, useId } from 'react';
 import {
   ScopeGroupContext,

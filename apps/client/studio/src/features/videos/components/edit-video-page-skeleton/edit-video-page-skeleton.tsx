@@ -1,4 +1,4 @@
-import { Skeleton } from '@vp/ui';
+import { Skeleton } from '@kit/ui';
 
 const FIELDS = ['title', 'description', 'visibility', 'category'];
 

@@ -1,4 +1,4 @@
-import { tv } from '@vp/ui';
+import { tv } from '@kit/ui';
 import type { StatCardDeltaTone, StatCardSize, StatCardTrend } from './types';
 
 export const STAT_CARD_TREND_TONE = {

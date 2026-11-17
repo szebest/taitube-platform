@@ -1,9 +1,9 @@
+import { Paginator } from '@kit/pagination';
+import type { Result } from '@kit/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { NewNotificationInput } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
-import { Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
-import type { Result } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { NotificationService } from '../notification-service';
 

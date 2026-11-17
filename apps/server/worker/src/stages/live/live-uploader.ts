@@ -1,6 +1,6 @@
+import { isErr, map, ok, type Result } from '@kit/result';
 import type { StorageClient } from '@vp/core/ports';
 import type { StorageUnavailable } from '@vp/errors';
-import { isErr, map, ok, type Result } from '@vp/result';
 import type { HeaderMapping } from '@vp/storage';
 
 type Write = () => Promise<Result<void, StorageUnavailable>>;

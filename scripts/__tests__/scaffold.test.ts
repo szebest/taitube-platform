@@ -1,7 +1,7 @@
 import { copySetModule, copyThemeModule, groupNamed, invalidId, register } from '../scaffold';
 
 const REGISTRY = [
-  "import { defineAppearance } from '@vp/design-tokens';",
+  "import { defineAppearance } from '@kit/design-tokens';",
   "import { sand } from '../themes/sand';",
   "import { shadowDeep } from '../tokens/shadow/deep';",
   "import { shadowSoft } from '../tokens/shadow/soft';",
@@ -75,7 +75,7 @@ describe('scripts: the scaffolds', () => {
     });
 
     expect(registered?.split('\n')).toEqual([
-      "import { defineAppearance } from '@vp/design-tokens';",
+      "import { defineAppearance } from '@kit/design-tokens';",
       "import { sand } from '../themes/sand';",
       "import { shadowDeep } from '../tokens/shadow/deep';",
       "import { shadowDramatic } from '../tokens/shadow/dramatic';",

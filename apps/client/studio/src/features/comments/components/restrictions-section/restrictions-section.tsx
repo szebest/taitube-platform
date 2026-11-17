@@ -1,8 +1,8 @@
+import { useFormat, useT } from '@kit/intl-react';
+import { unwrapOr } from '@kit/result';
+import { Badge, Button, useToast } from '@kit/ui';
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { useFormat, useT } from '@vp/intl-react';
 import { restrictionsQueryOptions, useApi, useFailureToast, useLiftRestriction } from '@vp/queries';
-import { unwrapOr } from '@vp/result';
-import { Badge, Button, useToast } from '@vp/ui';
 import { LoadMore } from '#app/components/table/load-more';
 import { useModerationChannel } from '#app/features/comments/hooks/use-moderation-channel';
 import { pagedRows } from '#app/utils/paged-rows';

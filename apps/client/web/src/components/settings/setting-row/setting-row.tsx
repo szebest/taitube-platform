@@ -1,4 +1,4 @@
-import { cn, Icon } from '@vp/ui';
+import { cn, Icon } from '@kit/ui';
 import { type ComponentPropsWithRef, useId } from 'react';
 import { SettingRowContext, useSettingRow } from './setting-row.context';
 

@@ -24,7 +24,7 @@ rule below that can be checked by a machine is, and the check is named next to i
   picked and then released.
 - The doubles own their state and expose `.clear()`.
 - The client specs run the React Compiler's output, as the apps ship it: every client Vitest project builds with
-  `reactPlugins()` from `@vp/vite-preset`. Two more projects, `ui (jsdom, uncompiled)` and
+  `reactPlugins()` from `@kit/vite-preset`. Two more projects, `ui (jsdom, uncompiled)` and
   `studio (jsdom, uncompiled)`, run only the `*.differential.dom.test.tsx` specs (Field, Tabs, Select, Dialog,
   the studio upload dialog) without it; each records the DOM and a handler trace at every step into one
   committed snapshot, so a miscompile fails one of the two runs. `*.renders.dom.test.tsx` specs (Field, Tabs,
@@ -118,7 +118,7 @@ the same after each test. No spec needs an `afterEach` to undo a spy.
 
 Each project config chooses its own pool and isolation, because a project config inherits nothing from the root
 `vitest.config.ts`: `pool: 'threads'` and `isolate: false` (`definePackageTestConfig` sets both, `clientAppTestConfig`
-in `@vp/vite-preset` sets them per project for the client apps, and no command line passes `--pool`). The two projects that run PGlite, `@vp/adapters` and `@vp/db`, use `pool: 'forks'`: PGlite is WebAssembly, and WebAssembly in worker threads races V8's process-wide JIT page registry, which aborts the whole run with `Check failed: jit_page.has_value()` (exit 133). `architecture-typed` runs on
+in `@kit/vite-preset` sets them per project for the client apps, and no command line passes `--pool`). The two projects that run PGlite, `@vp/adapters` and `@vp/db`, use `pool: 'forks'`: PGlite is WebAssembly, and WebAssembly in worker threads races V8's process-wide JIT page registry, which aborts the whole run with `Check failed: jit_page.has_value()` (exit 133). `architecture-typed` runs on
 one fork in `sequence.groupOrder` 1 and `architecture` on two threads in group 2, both after every other
 project's group 0: Vitest 5 gives a group one `maxWorkers` and batches a project into a single task only at one
 worker, so that is how the typed specs build their `ts.Program` once. The files of one project share a worker
@@ -126,7 +126,7 @@ and its module cache, which is most of what makes `unit` fit its budget. A spec 
 behind: state lives in what `beforeEach` builds, not at module level, and a mock of a package outlives the file
 that registered it, so a helper that mock reads from keeps its state where every file sees the same copy
 (`apps/client/web/src/__tests__/live-page.ts`). The exception is every jsdom project that renders with Testing
-Library, the client apps' and `@vp/intl-react`'s (`isolate: true`): Testing
+Library, the client apps' and `@kit/intl-react`'s (`isolate: true`): Testing
 Library registers its automatic cleanup once per module load, so a jsdom file that shared a worker with another
 would keep the previous test's DOM. The e2e and integration configs (`tests/vitest.config.ts`,
 `tests/integration/vitest.config.ts`, `packages/server/ffmpeg/integration.config.ts`) are not root projects and

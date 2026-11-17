@@ -1,5 +1,5 @@
+import { defineMachine } from '@kit/machine';
 import { MODERATION_STATES } from '@vp/domain';
-import { defineMachine } from '@vp/machine';
 
 export const COMMENT_MODERATION = defineMachine({
   name: 'comment-moderation',

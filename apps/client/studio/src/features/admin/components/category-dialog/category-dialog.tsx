@@ -1,8 +1,8 @@
+import { useAppForm, validateWith } from '@kit/forms';
+import { useT } from '@kit/intl-react';
+import { fromPromise, isOk } from '@kit/result';
+import { Button, Field, Input, ResponsiveModal, Textarea, useToast, useUiCopy } from '@kit/ui';
 import { ApiError } from '@vp/api-client';
-import { useAppForm, validateWith } from '@vp/forms';
-import { useT } from '@vp/intl-react';
-import { fromPromise, isOk } from '@vp/result';
-import { Button, Field, Input, ResponsiveModal, Textarea, useToast, useUiCopy } from '@vp/ui';
 import { validateCategoryName, validateSlug } from '@vp/validation';
 import { useState } from 'react';
 import type { AdminCategory } from '#app/features/admin/api/admin-categories';

@@ -2,10 +2,10 @@ import { spawn } from 'node:child_process';
 import { mkdir, readFile, stat } from 'node:fs/promises';
 import { request as httpRequest } from 'node:http';
 import { basename } from 'node:path';
+import { type Result, err, fromPromise, isErr, ok } from '@kit/result';
 import { upsertIdentities } from '@vp/db/seed-identities';
-import { mintToken } from '@vp/dev-token';
-import { asThrowable } from '@vp/errors';
-import { type Result, err, fromPromise, isErr, ok } from '@vp/result';
+import { mintToken } from '@vp/dev-identity';
+import { asThrowable, errorCodeRegistry } from '@vp/errors';
 import { UploadClient } from '@vp/upload-client';
 import type { DemoOptions, SeedHost } from '../types';
 import type { SeedFailure } from './failure';
@@ -105,7 +105,7 @@ export function createUploader(apiUrl: string, send: FetchPort): UploaderPort {
           if (!put.ok) throw new Error(`Single upload failed (${put.status}): ${put.statusText}`);
           return client.completeUpload(started.uploadId);
         },
-        (cause) => failureFromUpload(asThrowable(cause).message)
+        (cause) => failureFromUpload(asThrowable(errorCodeRegistry, cause).message)
       );
       return isErr(uploaded) ? uploaded : ok({ videoId: uploaded.value.videoId });
     },

@@ -1,5 +1,5 @@
+import { type Result, err, ok } from '@kit/result';
 import type { EditorPick } from '@vp/domain';
-import { type Result, err, ok } from '@vp/result';
 import { type PickWindowOverlap, pickWindowOverlap } from './failures';
 import type { PickWindow } from './pick-window.rule';
 

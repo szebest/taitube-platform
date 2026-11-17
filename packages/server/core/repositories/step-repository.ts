@@ -1,6 +1,6 @@
+import type { Result } from '@kit/result';
 import type { StepStatus } from '@vp/domain';
 import type { DatabaseUnavailable, ErrorCode } from '@vp/errors';
-import type { Result } from '@vp/result';
 
 export interface ProcessingStepRecord {
   id: string;

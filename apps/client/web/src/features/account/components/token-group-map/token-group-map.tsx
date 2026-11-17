@@ -1,5 +1,5 @@
-import { type TokenGroup, tokenGroups } from '@vp/design-tokens';
-import { useAppearance } from '@vp/ui';
+import { type TokenGroup, tokenGroups } from '@kit/design-tokens';
+import { useAppearance } from '@kit/ui';
 import type { ComponentType } from 'react';
 import {
   AmbientPreview,

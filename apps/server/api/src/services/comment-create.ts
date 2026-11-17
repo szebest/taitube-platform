@@ -1,3 +1,4 @@
+import { type Result, err, ignore, isErr, ok } from '@kit/result';
 import type { CommentView } from '@vp/api-contracts';
 import type { CommentSlowModePort } from '@vp/core/ports';
 import type { ChannelMemberRepositoryPort, CommentRepositoryPort } from '@vp/core/repositories';
@@ -21,7 +22,6 @@ import {
 } from '@vp/domain-rules';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { type Result, err, ignore, isErr, ok } from '@vp/result';
 import { looksLikeQuestion } from '@vp/validation';
 import { uuidv7 } from 'uuidv7';
 import { type CommentGateLookups, loadCommentGate } from './comment-gate-context';

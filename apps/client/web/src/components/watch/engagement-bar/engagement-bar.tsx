@@ -9,7 +9,7 @@ import {
   Skeleton,
   Slot,
   useUiCopy,
-} from '@vp/ui';
+} from '@kit/ui';
 import {
   type ComponentProps,
   type ComponentPropsWithRef,

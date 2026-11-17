@@ -1,10 +1,10 @@
+import { Singleflight } from '@kit/concurrency';
+import { Paginator } from '@kit/pagination';
+import { ok } from '@kit/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
-import { Singleflight } from '@vp/concurrency';
 import type { CommentCachePort } from '@vp/core/ports';
 import { ErrorCodes } from '@vp/errors';
-import { Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
-import { ok } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { CommentReportService } from '../comment-report-service';
 import { CommentService } from '../comment-service';

@@ -1,6 +1,6 @@
+import { type Result, err, ok } from '@kit/result';
 import { HANDLE_CHANGE_COOLDOWN_DAYS } from '@vp/domain';
 import { MS_PER_DAY } from '@vp/domain/time';
-import { type Result, err, ok } from '@vp/result';
 import { type HandleChangeTooSoon, handleChangeTooSoon } from './failures';
 
 export interface DecideHandleChangeInput {

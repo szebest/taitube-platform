@@ -1,6 +1,6 @@
+import { isErr, isOk } from '@kit/result';
 import type { CommentModerationAction } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
-import { isErr, isOk } from '@vp/result';
 import { applyModeration } from '../apply-moderation.rule';
 
 type Disclosure = 'silent' | 'visible';

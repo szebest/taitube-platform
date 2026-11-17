@@ -1,4 +1,4 @@
-import { useT } from '@vp/intl-react';
+import { useT } from '@kit/intl-react';
 import { usePlayerSeek, usePlayerTime } from '#app/components/player/taitube-player';
 import { ShortsPlayerFrame } from '#app/components/shorts/shorts-player-frame';
 

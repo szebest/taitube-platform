@@ -4,10 +4,11 @@ import {
   TOKEN_GROUPS,
   type TokenGroup,
   tokenGroups,
-} from '../packages/universal/design-tokens/src/index';
+} from '../packages/platform/universal/design-tokens/src/index';
 import { PREFERENCE_ID_PATTERN } from '../packages/universal/domain/src/settings/index';
+import { packageDir } from './workspace-packages';
 
-export const UI_SRC = 'packages/client/ui/src';
+export const UI_SRC = `${packageDir('@kit/ui')}/src`;
 
 export const REGISTRY = `${UI_SRC}/appearance/registry.ts`;
 

@@ -1,5 +1,5 @@
+import { type Result, err, ok } from '@kit/result';
 import { type ApiToken, apiTokenStatus } from '@vp/domain';
-import { type Result, err, ok } from '@vp/result';
 import { API_TOKEN } from './api-token.machine';
 import { type ApiTokenRefused, apiTokenRefused } from './failures';
 

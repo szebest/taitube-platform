@@ -1,6 +1,6 @@
+import { type Result, andThen, err, isErr, ok } from '@kit/result';
 import type { Video } from '@vp/domain';
 import { type UserContext, canAppealVideo, canReadVideo, canUpdateVideo } from '@vp/permissions';
-import { type Result, andThen, err, isErr, ok } from '@vp/result';
 import { type AuthorizationFailure, authorize } from '../authorize';
 import {
   type VideoNotFound,

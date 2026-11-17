@@ -1,4 +1,4 @@
-import { cn } from '@vp/ui';
+import { cn } from '@kit/ui';
 import { type ComponentPropsWithRef, type KeyboardEvent, useEffect, useRef } from 'react';
 import { ModerationQueueContext, useModerationQueue } from './moderation-queue.context';
 

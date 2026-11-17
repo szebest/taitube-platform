@@ -1,3 +1,4 @@
+import { assertNever, unwrapOr } from '@kit/result';
 import type { ListCreatorInboxOptions } from '@vp/core/repositories';
 import type {
   CommentThread,
@@ -5,7 +6,6 @@ import type {
   CreatorInboxFilter,
   ModerationState,
 } from '@vp/domain';
-import { assertNever, unwrapOr } from '@vp/result';
 import { compareKeys, newestAfter, rowKey } from './comment-order';
 import type { StoredComment } from './comment-visibility';
 import type { InMemoryChannelRepository } from './in-memory-channel-repository';

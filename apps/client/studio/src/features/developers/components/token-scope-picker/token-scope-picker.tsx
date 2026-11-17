@@ -1,5 +1,5 @@
+import { useT } from '@kit/intl-react';
 import type { ApiScope } from '@vp/domain';
-import { useT } from '@vp/intl-react';
 import { ScopePicker } from '#app/components/developers/scope-picker';
 
 /** Every scope once, under what it touches, in the order a creator reads them. */

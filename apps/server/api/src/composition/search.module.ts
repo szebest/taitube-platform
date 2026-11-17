@@ -1,6 +1,6 @@
+import type { Container } from '@kit/composition';
+import { Singleflight } from '@kit/concurrency';
 import { Adapters } from '@vp/adapters/composition';
-import type { Container } from '@vp/composition';
-import { Singleflight } from '@vp/concurrency';
 import { SearchHistoryService, SearchService } from '../services/index';
 import { Services } from './service-tokens';
 

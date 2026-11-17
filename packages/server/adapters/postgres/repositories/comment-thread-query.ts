@@ -1,3 +1,4 @@
+import { assertNever } from '@kit/result';
 import type {
   CommentReplyCursor,
   CommentThreadCursor,
@@ -6,7 +7,6 @@ import type {
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import type { Comment, CommentSort, CommentThread } from '@vp/domain';
-import { assertNever } from '@vp/result';
 import { type SQL, type SQLWrapper, asc, desc, eq, getTableColumns, sql } from 'drizzle-orm';
 import { aliasedTable, msTimestamp, ownOrPublicScope } from '../scopes/index';
 import type { PostgresDatabase } from './types';

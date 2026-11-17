@@ -1,3 +1,4 @@
+import { type Result, fromPromise, ok } from '@kit/result';
 import {
   type AudioTerm,
   type AudioTermHit,
@@ -9,7 +10,6 @@ import {
 import * as schema from '@vp/db';
 import { frameBands, isLowEntropyTerm, lookupBands } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
-import { type Result, fromPromise, ok } from '@vp/result';
 import { and, asc, eq, inArray, ne, or } from 'drizzle-orm';
 import type { PostgresDatabase } from './types';
 

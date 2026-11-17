@@ -1,5 +1,5 @@
-import { useT } from '@vp/intl-react';
-import { AlertDialog, Button } from '@vp/ui';
+import { useT } from '@kit/intl-react';
+import { AlertDialog, Button } from '@kit/ui';
 
 export interface DeleteVideosDialogProps {
   open: boolean;

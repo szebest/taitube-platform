@@ -1,5 +1,5 @@
 import { parseArgs } from 'node:util';
-import { tryCatch } from '@vp/result';
+import { tryCatch } from '@kit/result';
 import {
   type CommandInput,
   confirm,

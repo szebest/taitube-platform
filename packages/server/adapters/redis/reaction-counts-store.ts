@@ -1,7 +1,3 @@
-import type { CacheClient } from '@vp/core/ports';
-import type { ReactionCounts } from '@vp/domain';
-import { type CacheUnavailable, cacheUnavailable } from '@vp/errors';
-import { CacheKeys } from '@vp/events';
 import {
   type Result,
   assertNever,
@@ -11,7 +7,11 @@ import {
   ok,
   tryCatch,
   unwrapOr,
-} from '@vp/result';
+} from '@kit/result';
+import type { CacheClient } from '@vp/core/ports';
+import type { ReactionCounts } from '@vp/domain';
+import { type CacheUnavailable, cacheUnavailable } from '@vp/errors';
+import { CacheKeys } from '@vp/events';
 import type { Redis } from 'ioredis';
 
 export interface CachedCounts {

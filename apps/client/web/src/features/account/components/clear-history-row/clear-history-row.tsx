@@ -1,5 +1,5 @@
-import { useT } from '@vp/intl-react';
-import { Button, ResponsiveModal, useToast, useUiCopy } from '@vp/ui';
+import { useT } from '@kit/intl-react';
+import { Button, ResponsiveModal, useToast, useUiCopy } from '@kit/ui';
 import { useState } from 'react';
 import { useClearWatchHistory } from '#app/features/account/hooks/use-clear-watch-history';
 import { SettingItem } from '../setting-item/setting-item';

@@ -1,0 +1,123 @@
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import { parseArgs } from 'node:util';
+import type { Logger } from '@kit/logger';
+import type { DevTokenConfig } from './config';
+import { mintToken, verifyToken } from './jwt';
+import { getDevJwks } from './keys';
+import { serveDevTokens } from './server';
+
+function readArgs(argv: readonly string[]) {
+  const { positionals, values } = parseArgs({
+    args: [...argv],
+    allowPositionals: true,
+    options: {
+      sub: { type: 'string', default: '00000000-0000-7000-8000-000000000001' },
+      role: { type: 'string', default: 'user' },
+      ttl: { type: 'string', default: '8h' },
+      out: { type: 'string' },
+      raw: { type: 'boolean', default: false },
+      port: { type: 'string', default: '3002' },
+      help: { type: 'boolean', short: 'h', default: false },
+    },
+  });
+  const [positional = 'help', token] = positionals;
+  const command = values.help ? 'help' : positional;
+  return { command, token, flags: values };
+}
+
+function printHelp(config: DevTokenConfig, host: CliHost): void {
+  host.print(`
+dev-token: EdDSA JWT issuer and JWKS provider for ${config.product}
+
+Usage:
+  pnpm dev-token mint [options]     Mint a signed dev JWT (EdDSA)
+  pnpm dev-token verify <token>     Verify an EdDSA dev token
+  pnpm dev-token jwks [options]     Output JWKS json
+  pnpm dev-token serve [options]    Serve the JWKS and the dev persona tokens over HTTP
+
+Mint Options:
+  --sub <uuid>       Subject/user ID (default: 00000000-0000-7000-8000-000000000001)
+  --role <role>      User role (default: user, e.g. admin)
+  --ttl <duration>   Token time-to-live (default: 8h, e.g. 1h, 30m, 3600s)
+  --out <file>       Write JWT to file instead of printing
+  --raw              Print only the raw token string (no formatting)
+
+JWKS Options:
+  --out <file>       Write JWKS to file (e.g. .well-known/jwks.json)
+
+Serve Options:
+  --port <port>      HTTP port (default: 3002)
+
+  --help, -h         Show this help message
+`);
+}
+
+export interface CliHost {
+  argv: readonly string[];
+  print: (text: string) => void;
+  log: Logger;
+}
+
+export async function run(config: DevTokenConfig, host: CliHost): Promise<void> {
+  const { command, token, flags } = readArgs(host.argv);
+
+  switch (command) {
+    case 'mint': {
+      const { sub, role, ttl } = flags;
+      const minted = mintToken(config, { sub, role, ttl });
+
+      if (flags.out) {
+        const outPath = path.resolve(process.cwd(), flags.out);
+        fs.mkdirSync(path.dirname(outPath), { recursive: true });
+        fs.writeFileSync(outPath, minted, 'utf-8');
+        host.log.info({ path: outPath }, 'token written');
+      } else if (flags.raw) {
+        process.stdout.write(minted);
+      } else {
+        host.print(
+          [
+            `Minted dev JWT (iss=${config.issuer}, aud=${config.audience})`,
+            `Subject: ${sub}`,
+            `Role:    ${role}`,
+            `TTL:     ${ttl}`,
+            '',
+            `Authorization: Bearer ${minted}`,
+          ].join('\n')
+        );
+      }
+      break;
+    }
+
+    case 'verify': {
+      if (!token) throw new Error('verify needs a token argument');
+      const payload = verifyToken(config, token);
+      host.print(JSON.stringify(payload, null, 2));
+      break;
+    }
+
+    case 'jwks': {
+      const jwks = getDevJwks(config);
+      const json = JSON.stringify(jwks, null, 2);
+
+      if (flags.out) {
+        const outPath = path.resolve(process.cwd(), flags.out);
+        fs.mkdirSync(path.dirname(outPath), { recursive: true });
+        fs.writeFileSync(outPath, json, 'utf-8');
+        host.log.info({ path: outPath }, 'jwks written');
+      } else {
+        host.print(json);
+      }
+      break;
+    }
+
+    case 'serve': {
+      const { url } = await serveDevTokens(config, Number.parseInt(flags.port, 10));
+      host.log.info({ url }, 'dev-token server listening');
+      break;
+    }
+
+    default:
+      printHelp(config, host);
+  }
+}

@@ -1,3 +1,4 @@
+import { fromPromise, map, type Result } from '@kit/result';
 import type {
   NewSystemLine,
   NewWatchPartyQueueItem,
@@ -8,7 +9,6 @@ import type {
 import * as schema from '@vp/db';
 import { appendPositions, type PositionWrite } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
-import { fromPromise, map, type Result } from '@vp/result';
 import { and, asc, eq, isNull, sql } from 'drizzle-orm';
 import type { PostgresDatabase } from './types';
 import { bumpQueueVersion, insertSystemLine, lockRoom } from './watch-party-writes';

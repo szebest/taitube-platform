@@ -1,5 +1,5 @@
 /**
- * The browser half of `@tanstack/react-start`, which a Storybook build cannot load: `@vp/ui` reads
+ * The browser half of `@tanstack/react-start`, which a Storybook build cannot load: `@kit/ui` reads
  * its cookies through `createIsomorphicFn`, and a story only ever runs the client side of one. The
  * server-only exports `@vp/queries` imports are present so it bundles; a story never calls them.
  */

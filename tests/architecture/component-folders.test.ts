@@ -1,10 +1,11 @@
 import { posix } from 'node:path';
+import { packageDir } from '../../scripts/workspace-packages';
 import { clientApps } from './client-apps';
 import { PENDING } from './component-folders-pending';
 import { trackedFiles } from './repo-files';
 
-const PRIMITIVES = 'packages/client/ui/src/primitives/';
-const COMPONENTS = 'packages/client/components/src/';
+const PRIMITIVES = `${packageDir('@kit/ui')}/src/primitives/`;
+const COMPONENTS = `${packageDir('@vp/components')}/src/`;
 
 const KEBAB = '[a-z0-9]+(?:-[a-z0-9]+)*';
 /** Beside the required four: the compound context, the `tv()` styles, a lazy entry, the narrowed unions, the constants, a sibling part. */

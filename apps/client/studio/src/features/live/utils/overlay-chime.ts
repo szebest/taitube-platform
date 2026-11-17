@@ -1,4 +1,4 @@
-import { fromPromise, isOk, tryCatch } from '@vp/result';
+import { fromPromise, isOk, tryCatch } from '@kit/result';
 
 interface ParamLike {
   setValueAtTime(value: number, at: number): unknown;

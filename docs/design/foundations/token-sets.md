@@ -77,7 +77,7 @@ registry, which a spec holds.
 
 Every implementation writes CSS custom properties under its attribute on `<html>` (`[data-radius="round"]`;
 `shadow` and `ambient` once per mode family, `:is([data-mode="dark"], [data-mode="oled"])` and the light one),
-with the same names [`lib/design.js`](../lib/design.js) writes for the stand-in. `@vp/design-tokens` generates
+with the same names [`lib/design.js`](../lib/design.js) writes for the stand-in. `@kit/design-tokens` generates
 that CSS and the Tailwind block below; slice h writes them to files. The `<html>` attributes are `data-theme`,
 `data-mode` and one per group: `data-typography`, `data-font-size`, `data-spacing`, `data-sizing`,
 `data-radius`, `data-border`, `data-shadow`, `data-ambient`, `data-motion`.

@@ -1,4 +1,4 @@
-import { type Result, andThen, err, ok } from '@vp/result';
+import { type Result, andThen, err, ok } from '@kit/result';
 import { validateContentType } from '../uploads/allowed-content-type';
 import type { UnsupportedContentType, UploadTooLarge } from '../uploads/failures';
 import { validateUploadSize } from '../uploads/upload-size';

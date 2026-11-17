@@ -1,8 +1,8 @@
+import { err } from '@kit/result';
 import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
 import { CHANNEL_IMAGE_RETENTION_DAYS, type ChannelImageKind } from '@vp/domain';
 import { MS_PER_DAY } from '@vp/domain/time';
 import { storageUnavailable } from '@vp/errors';
-import { err } from '@vp/result';
 import { channelImageUploadKey, channelImageVariantKey } from '@vp/storage';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';

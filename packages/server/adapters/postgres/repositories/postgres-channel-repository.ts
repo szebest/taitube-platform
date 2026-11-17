@@ -1,3 +1,4 @@
+import { type Result, err, fromPromise, map, ok } from '@kit/result';
 import type { ChannelRepositoryPort } from '@vp/core/repositories';
 import { channels, videos } from '@vp/db';
 import type { Channel, ChannelStats, CreateChannelInput, UpdateChannelInput } from '@vp/domain';
@@ -7,7 +8,6 @@ import {
   databaseUnavailable,
   handleTaken,
 } from '@vp/errors';
-import { type Result, err, fromPromise, map, ok } from '@vp/result';
 import { eq, inArray, sql } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
 import { isUniqueViolation } from '../pg-errors';

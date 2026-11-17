@@ -1,6 +1,6 @@
-import { useT } from '@vp/intl-react';
+import { useT } from '@kit/intl-react';
+import { Avatar, Button, Icon, VisuallyHidden } from '@kit/ui';
 import { PartyCan } from '@vp/permissions-react';
-import { Avatar, Button, Icon, VisuallyHidden } from '@vp/ui';
 import type { ComponentPropsWithRef } from 'react';
 
 export interface PartyLobbyRootProps extends ComponentPropsWithRef<'div'> {

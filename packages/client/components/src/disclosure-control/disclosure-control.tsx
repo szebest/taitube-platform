@@ -1,4 +1,4 @@
-import { SegmentedControl, type SegmentedControlRootProps, useUiCopy } from '@vp/ui';
+import { SegmentedControl, type SegmentedControlRootProps, useUiCopy } from '@kit/ui';
 import type { DisclosureOption } from './types';
 
 export interface DisclosureControlProps extends Omit<

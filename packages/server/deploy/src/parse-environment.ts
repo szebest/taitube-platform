@@ -1,4 +1,4 @@
-import { err, ok, type Result, tryCatch } from '@vp/result';
+import { err, ok, type Result, tryCatch } from '@kit/result';
 import { load } from 'js-yaml';
 import { type Environment, EnvironmentSpec } from './environment-spec';
 

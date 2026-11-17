@@ -20,21 +20,21 @@
     "clean": "rimraf dist tsconfig.tsbuildinfo"
   },
   "dependencies": {
+    "@kit/result": "workspace:*",
     "@opentelemetry/api": "^1.9.1",
     "@vp/domain": "workspace:*",
     "@vp/errors": "workspace:*",
     "@vp/job-contracts": "workspace:*",
-    "@vp/result": "workspace:*",
     "@vp/storage": "workspace:*"
   },
   "devDependencies": {
+    "@kit/tsconfig": "workspace:*",
     "@vp/testing": "workspace:*",
-    "@vp/tsconfig": "workspace:*",
     "rimraf": "^6.1.3",
     "typescript": "^6.0.3",
     "vite-plus": "catalog:"
   },
   "vp": {
-    "layer": 3
+    "layer": 5
   }
 }

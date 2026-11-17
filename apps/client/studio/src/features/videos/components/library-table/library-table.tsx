@@ -1,3 +1,4 @@
+import { useT } from '@kit/intl-react';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { Link, useNavigate, useSearch } from '@tanstack/react-router';
 import {
@@ -9,7 +10,6 @@ import {
   useTable,
 } from '@tanstack/react-table';
 import { EmptyLibraryIllustration, EmptyState } from '@vp/components';
-import { useT } from '@vp/intl-react';
 import { KEYSET_PAGE_SIZE, useApi } from '@vp/queries';
 import { useState } from 'react';
 import { DataTable, dataTableFeatures } from '#app/components/table/data-table';

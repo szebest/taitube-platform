@@ -1,3 +1,8 @@
+import { packageDir } from '../../scripts/workspace-packages';
+
+const WEB_TELEMETRY = packageDir('@kit/web-telemetry');
+const CONFIG = packageDir('@kit/config');
+
 /**
  * Where a process starts. Module-level side effects, `console` and reading the environment belong
  * here and nowhere else; every module below one takes what it needs as a value.
@@ -12,14 +17,12 @@ export const ENTRYPOINTS: readonly string[] = [
   'packages/client/workbench/visual/playwright.config.ts',
   'apps/server/worker/src/instrument.ts',
   'apps/server/worker/src/main.ts',
-  'packages/server/compose-autoscaler/src/main.ts',
   'packages/server/demo/src/main.ts',
   'packages/server/deploy/src/main.ts',
-  'packages/server/dev-token/src/main.ts',
   'packages/server/gen-video/src/main.ts',
   'packages/server/lighthouse/src/main.ts',
   'packages/server/upload-client/src/main.ts',
-  'packages/client/web-telemetry/src/*.setup.ts',
+  `${WEB_TELEMETRY}/src/*.setup.ts`,
   'packages/client/web-testing/src/*.setup.ts',
   'apps/client/web/src/sw.ts',
   'scripts/*.ts',
@@ -31,7 +34,7 @@ export const ENTRYPOINTS: readonly string[] = [
 
 /** Not entrypoints, and still allowed to touch the environment: the loader and the test harness. */
 export const ENV_HOMES: readonly string[] = [
-  'packages/server/config/src/load-env.ts',
+  `${CONFIG}/src/load-env.ts`,
   'packages/server/testing/src/index.ts',
   'apps/client/*/src/lib/config/index.ts',
   'tests/playwright/config.ts',

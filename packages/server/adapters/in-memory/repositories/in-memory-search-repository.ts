@@ -1,3 +1,4 @@
+import { type Result, ok, unwrapOr } from '@kit/result';
 import type {
   PlaylistRepositoryPort,
   SearchHit,
@@ -22,7 +23,6 @@ import {
 } from '@vp/domain';
 import { MS_PER_SECOND } from '@vp/domain/time';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { type Result, ok, unwrapOr } from '@vp/result';
 import { type WeightedField, lexicalScore, wordSimilarity } from './search-text';
 
 export interface SearchLookups {

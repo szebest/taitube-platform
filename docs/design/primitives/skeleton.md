@@ -22,7 +22,7 @@ A placeholder block shaped like the content that is loading, with the loaded lay
 
 ```ts
 // types.ts
-import type { RadiusOption } from '@vp/design-tokens';
+import type { RadiusOption } from '@kit/design-tokens';
 
 export type SkeletonShape = 'rect' | 'circle' | 'text';
 export type SkeletonRadius = RadiusOption;

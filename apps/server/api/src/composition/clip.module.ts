@@ -1,5 +1,5 @@
+import type { Container } from '@kit/composition';
 import { Adapters } from '@vp/adapters/composition';
-import type { Container } from '@vp/composition';
 import { ClipService } from '../services/index';
 import { registerIntegrationServices } from './integration.module';
 import { Services } from './service-tokens';

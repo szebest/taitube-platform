@@ -1,5 +1,6 @@
-import { type Result, err, ok } from '@vp/result';
-import { type InvalidField, type LengthBounds, invalidLength } from '../failures';
+import { type Result, err, ok } from '@kit/result';
+import type { LengthBounds } from '../failures';
+import { type InvalidField, invalidLength } from '../field-failures';
 import { normalizePlainText, withinLength } from '../plain-text';
 
 const CLIP_TITLE_BOUNDS: LengthBounds = { minLength: 1, maxLength: 100 };

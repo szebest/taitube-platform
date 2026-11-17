@@ -1,4 +1,4 @@
-import { machineFindings } from '@vp/machine';
+import { machineFindings } from '@kit/machine';
 import { CHANNEL_INVITE } from '../channel-invite.machine';
 
 describe('@vp/domain-rules: CHANNEL_INVITE', () => {

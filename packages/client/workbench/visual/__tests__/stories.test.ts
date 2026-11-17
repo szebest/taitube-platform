@@ -4,7 +4,7 @@ const story = (id: string, importPath: string): StoryEntry => ({ id, type: 'stor
 
 const BUTTON = story(
   'primitives-button--default',
-  '../ui/src/button/__stories__/button.stories.tsx'
+  '../../platform/client/ui/src/button/__stories__/button.stories.tsx'
 );
 const CARD = story(
   'kit-video-card--default',
@@ -22,7 +22,7 @@ describe('@vp/workbench: the stories a change can move', () => {
     { label: 'no diff (main)', changed: undefined, picked: [BUTTON, CARD] },
     {
       label: 'a change beside a story',
-      changed: ['packages/client/ui/src/button/button.variants.ts'],
+      changed: ['packages/platform/client/ui/src/button/button.variants.ts'],
       picked: [BUTTON],
     },
     {
@@ -42,7 +42,17 @@ describe('@vp/workbench: the stories a change can move', () => {
     },
     {
       label: 'a theme change',
-      changed: ['packages/client/ui/src/themes/sand/index.ts'],
+      changed: ['packages/platform/client/ui/src/themes/sand/index.ts'],
+      picked: [BUTTON, CARD],
+    },
+    {
+      label: 'a token change in a platform package',
+      changed: ['packages/platform/client/ui/src/tokens/ref/index.ts'],
+      picked: [BUTTON, CARD],
+    },
+    {
+      label: 'a platform universal package change',
+      changed: ['packages/platform/universal/result/src/index.ts'],
       picked: [BUTTON, CARD],
     },
     {

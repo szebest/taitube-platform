@@ -1,3 +1,6 @@
+import { createLogger } from '@kit/logger';
+import { Paginator } from '@kit/pagination';
+import { ok } from '@kit/result';
 import { CaslAuthorizationAdapter } from '@vp/adapters/authorization';
 import {
   InMemoryCacheClient,
@@ -14,9 +17,6 @@ import type { StorageClient } from '@vp/core/ports';
 import type { VideoRepository } from '@vp/core/repositories';
 import type { ActingChannel } from '@vp/domain';
 import { asCdnBase, inProcessAppConfig } from '@vp/env-schema';
-import { createLogger } from '@vp/logger';
-import { Paginator } from '@vp/pagination';
-import { ok } from '@vp/result';
 import {
   ChannelIdentityService,
   type ChannelIdentityServiceDeps,

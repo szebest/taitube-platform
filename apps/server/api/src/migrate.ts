@@ -1,8 +1,8 @@
 import { setTimeout as wait } from 'node:timers/promises';
-import { loadEnvOrExit } from '@vp/config';
+import { loadEnvOrExit } from '@kit/config';
+import { createLogger } from '@kit/logger';
 import { runMigrations } from '@vp/db/migrate';
 import { toAppConfig } from '@vp/env-schema';
-import { createLogger } from '@vp/logger';
 import { migrateDatabase } from './migrate-database';
 
 const env = loadEnvOrExit('vp-migrate', process);

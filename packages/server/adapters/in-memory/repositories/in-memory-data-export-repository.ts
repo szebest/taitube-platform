@@ -1,3 +1,4 @@
+import { isErr, map, ok, type Result } from '@kit/result';
 import type {
   CreateExportOutcome,
   DataExportListQuery,
@@ -18,7 +19,6 @@ import {
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { exportOutbox } from '@vp/job-contracts';
-import { isErr, map, ok, type Result } from '@vp/result';
 import type { Clock } from './clock';
 import type { InMemoryChannelAuditRepository } from './in-memory-channel-audit-repository';
 import { byKeysetDesc, isKeysetBefore } from './keyset';

@@ -1,8 +1,8 @@
+import { assertNever } from '@kit/result';
 import { mutationOptions, useMutation } from '@tanstack/react-query';
 import type { ApiClient } from '@vp/api-client';
 import type { RoleExpiry } from '@vp/domain';
 import { useApi } from '@vp/queries';
-import { assertNever } from '@vp/result';
 
 type PartyModeration =
   | { type: 'kick'; memberKey: string }

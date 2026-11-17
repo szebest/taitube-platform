@@ -1,9 +1,9 @@
+import type { LocaleStore } from '@kit/intl-react';
+import { tryCatch } from '@kit/result';
 import { createIsomorphicFn } from '@tanstack/react-start';
 import { getRequestHeader } from '@tanstack/react-start/server';
 import { FALLBACK_LOCALE } from '@vp/intl';
-import type { LocaleStore } from '@vp/intl-react';
 import { isSupportedLocale, LOCALE_DETAILS, type SupportedLocale } from '@vp/messages';
-import { tryCatch } from '@vp/result';
 
 /** The search param a link, or a crawler following an `hreflang` alternate, names a locale with. */
 export const LOCALE_PARAM = 'lang';

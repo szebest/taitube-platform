@@ -1,5 +1,5 @@
+import { useT } from '@kit/intl-react';
 import { Link, Outlet } from '@tanstack/react-router';
-import { useT } from '@vp/intl-react';
 
 const TAB =
   'rounded-control px-inset-control py-inline text-label text-fg-muted no-underline hover:bg-tint focus-ring';

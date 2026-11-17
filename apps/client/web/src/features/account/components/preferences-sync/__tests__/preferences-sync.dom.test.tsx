@@ -1,7 +1,7 @@
+import { DEFAULT_APPEARANCE, writeCookie } from '@kit/ui';
 import { act, screen, waitFor } from '@testing-library/react';
 import { DEFAULT_PREFERENCES } from '@vp/domain/settings';
 import { settleSession } from '@vp/queries';
-import { DEFAULT_APPEARANCE, writeCookie } from '@vp/ui';
 import { account, apiServer } from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
 import type { HttpHandler } from 'msw/http';

@@ -1,3 +1,4 @@
+import type { Result } from '@kit/result';
 import type {
   AuthoredComment,
   Comment,
@@ -13,7 +14,6 @@ import type {
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import type { Result } from '@vp/result';
 
 /** Every key either sort orders by; `newest` reads all but `likeCount`. */
 export interface CommentThreadCursor {

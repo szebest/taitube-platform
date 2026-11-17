@@ -1,3 +1,4 @@
+import { createToaster, ToastProvider } from '@kit/ui';
 import { QueryClientProvider } from '@tanstack/react-query';
 import {
   createMemoryHistory,
@@ -8,7 +9,6 @@ import {
 import { render, waitFor } from '@testing-library/react';
 import { putRecommendationFeedback } from '@vp/api-contracts';
 import { createQueryClient } from '@vp/queries';
-import { createToaster, ToastProvider } from '@vp/ui';
 import { apiServer, mockEndpoint } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
 import type { ComponentType, PropsWithChildren } from 'react';

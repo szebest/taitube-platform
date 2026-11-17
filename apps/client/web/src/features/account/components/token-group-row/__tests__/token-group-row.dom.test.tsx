@@ -1,6 +1,6 @@
+import { TOKEN_GROUPS } from '@kit/design-tokens';
+import { appearance } from '@kit/ui/appearance/registry';
 import { screen, within } from '@testing-library/react';
-import { TOKEN_GROUPS } from '@vp/design-tokens';
-import { appearance } from '@vp/ui/appearance/registry';
 import { renderRoute } from '@vp/web-testing/dom';
 import { getRouter } from '#app/router';
 

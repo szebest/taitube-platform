@@ -1,3 +1,4 @@
+import { isErr, ok, type Result } from '@kit/result';
 import type {
   ChannelRepositoryPort,
   ChannelUserRestrictionRepositoryPort,
@@ -10,7 +11,6 @@ import type { CommentSettings, Video } from '@vp/domain';
 import type { CommentGateContext } from '@vp/domain-rules';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { isChannelTeamMember, type UserContext } from '@vp/permissions';
-import { isErr, ok, type Result } from '@vp/result';
 
 /** An account with no row is as old as can be, so the age check never refuses it. */
 const oldestAccount = (): Date => new Date(0);

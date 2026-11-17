@@ -1,4 +1,8 @@
+import { packageDir, tierGlob } from '../../scripts/workspace-packages';
 import type { Row } from './zero-matches-rows';
+
+const UI = packageDir('@kit/ui');
+const CLIENT = tierGlob('client');
 
 const NOT_SPECS = [
   ':(exclude,glob)**/*.test.ts',
@@ -11,14 +15,14 @@ const NOT_SPECS = [
 const CLIENT_SOURCE = [
   ':(glob)apps/client/*/src/**/*.ts',
   ':(glob)apps/client/*/src/**/*.tsx',
-  ':(glob)packages/client/*/src/**/*.ts',
-  ':(glob)packages/client/*/src/**/*.tsx',
+  `:(glob)${CLIENT}/*/src/**/*.ts`,
+  `:(glob)${CLIENT}/*/src/**/*.tsx`,
   ...NOT_SPECS,
 ];
 
-/** The stylesheets written by hand that outlive 62: `@vp/ui`'s own and the workbench preview's. */
+/** The stylesheets written by hand that outlive 62: `@kit/ui`'s own and the workbench preview's. */
 const SYSTEM_STYLESHEETS = [
-  ':(glob)packages/client/ui/src/styles/*.css',
+  `:(glob)${UI}/src/styles/*.css`,
   'packages/client/workbench/.storybook/preview.css',
 ];
 
@@ -62,8 +66,8 @@ export const DESIGN_ROWS: readonly Row[] = [
     scope: [
       ...CLIENT_SOURCE,
       'packages/client/workbench/.storybook/preview.css',
-      ':(exclude,glob)packages/client/ui/src/tokens/**',
-      ':(exclude,glob)packages/client/ui/src/themes/**',
+      `:(exclude,glob)${UI}/src/tokens/**`,
+      `:(exclude,glob)${UI}/src/themes/**`,
       ':(exclude,glob)**/*.stories.tsx',
       ':(exclude)apps/client/web/src/hooks/use-ambient-sample.ts',
       ':(exclude)packages/client/workbench/src/toolbars.ts',
@@ -104,7 +108,7 @@ export const DESIGN_ROWS: readonly Row[] = [
     scope: [
       ...CLIENT_SOURCE,
       ...SYSTEM_STYLESHEETS,
-      ':(exclude)packages/client/ui/src/lib/sliding-indicator.ts',
+      `:(exclude)${UI}/src/lib/sliding-indicator.ts`,
     ],
     expected: 0,
     fires:
@@ -161,7 +165,7 @@ export const DESIGN_ROWS: readonly Row[] = [
     fires: '.rail { margin-left: 4px; text-align: left; }',
   },
   {
-    name: 'Radix or @dnd-kit outside @vp/ui, imported or declared: every app and package reaches them through its primitives',
+    name: 'Radix or @dnd-kit outside @kit/ui, imported or declared: every app and package reaches them through its primitives',
     pattern: /['"](?:radix-ui|@radix-ui\/[^'"]+|@dnd-kit\/[^'"]+)['"]/g,
     scope: [
       ':(glob)apps/**/*.ts',
@@ -170,7 +174,8 @@ export const DESIGN_ROWS: readonly Row[] = [
       ':(glob)packages/**/*.ts',
       ':(glob)packages/**/*.tsx',
       ':(glob)packages/*/*/package.json',
-      ':(exclude,glob)packages/client/ui/**',
+      ':(glob)packages/platform/*/*/package.json',
+      `:(exclude,glob)${UI}/**`,
     ],
     expected: 0,
     fires: "import { Slot } from 'radix-ui';",

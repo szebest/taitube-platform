@@ -1,5 +1,5 @@
+import { writeCookie } from '@kit/ui';
 import { act, renderHook } from '@testing-library/react';
-import { writeCookie } from '@vp/ui';
 import type { PropsWithChildren } from 'react';
 import { renderToString } from 'react-dom/server';
 import { DEFAULT_DEVICE_PREFERENCES } from '#app/__tests__/device-preferences-fixtures';

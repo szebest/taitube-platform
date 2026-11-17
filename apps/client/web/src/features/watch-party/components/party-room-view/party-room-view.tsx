@@ -1,10 +1,10 @@
+import { useT } from '@kit/intl-react';
+import { Badge } from '@kit/ui';
 import { useLocation, useNavigate } from '@tanstack/react-router';
 import type { WatchPartyPreviewView } from '@vp/api-contracts';
 import { EmptyState } from '@vp/components';
-import { useT } from '@vp/intl-react';
 import { PartyPermissionsProvider, usePermissions } from '@vp/permissions-react';
 import { selectPartyPermissions, useAccount, useWatchPartySocket } from '@vp/queries';
-import { Badge } from '@vp/ui';
 import { useState } from 'react';
 import {
   PartyRoom,

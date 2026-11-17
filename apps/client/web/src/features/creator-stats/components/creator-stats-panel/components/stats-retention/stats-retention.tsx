@@ -1,10 +1,10 @@
+import { useFormat, useT } from '@kit/intl-react';
+import { unwrapOr } from '@kit/result';
+import { Button } from '@kit/ui';
 import { useQuery } from '@tanstack/react-query';
 import type { CreatorStats } from '@vp/api-contracts';
 import { videoDuration } from '@vp/intl';
-import { useFormat, useT } from '@vp/intl-react';
 import { useApi, videoRetentionQueryOptions } from '@vp/queries';
-import { unwrapOr } from '@vp/result';
-import { Button } from '@vp/ui';
 import { usePlayerSeek } from '#app/components/player/taitube-player';
 import { RetentionStrip } from '#app/components/watch/retention-strip';
 

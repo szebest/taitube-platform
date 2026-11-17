@@ -1,5 +1,5 @@
-import { useT } from '@vp/intl-react';
-import { Button, Icon, useUiCopy } from '@vp/ui';
+import { useT } from '@kit/intl-react';
+import { Button, Icon, useUiCopy } from '@kit/ui';
 import { curlExamples } from '#app/features/developers/api/curl-examples';
 import { useCopyField } from '#app/hooks/use-copy-field';
 import { API_PUBLIC_URL } from '#app/lib/config';

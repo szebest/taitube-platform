@@ -1,7 +1,7 @@
+import { useT } from '@kit/intl-react';
+import { isErr } from '@kit/result';
 import { CLIP_MAX_MS, CLIP_MIN_MS } from '@vp/domain';
 import { validateClipRange } from '@vp/domain-rules';
-import { useT } from '@vp/intl-react';
-import { isErr } from '@vp/result';
 import { validateClipTitle } from '@vp/validation';
 import type { PlaybackRange } from '#app/components/player/taitube-player';
 

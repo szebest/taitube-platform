@@ -1,3 +1,10 @@
+import {
+  AppearanceProvider,
+  createToaster,
+  DEFAULT_APPEARANCE,
+  ToastProvider,
+  Tooltip,
+} from '@kit/ui';
 import type { Account, ChannelMembershipView } from '@vp/api-contracts';
 import {
   getAccount,
@@ -5,6 +12,7 @@ import {
   getUnreadNotificationCount,
   listMyMemberships,
 } from '@vp/api-contracts';
+import { APPEARANCE_COOKIES } from '@vp/domain/settings';
 import type { UserContext } from '@vp/permissions';
 import { PermissionsProvider } from '@vp/permissions-react';
 import {
@@ -16,13 +24,6 @@ import {
   SessionProvider,
 } from '@vp/queries';
 import { DEV_TOKEN_URL } from '@vp/queries/demo-personas';
-import {
-  AppearanceProvider,
-  createToaster,
-  DEFAULT_APPEARANCE,
-  ToastProvider,
-  Tooltip,
-} from '@vp/ui';
 import { account, api, apiServer, mockEndpoint } from '@vp/web-testing';
 import { HttpResponse, http } from 'msw/http';
 import type { ComponentType, PropsWithChildren } from 'react';
@@ -30,7 +31,11 @@ import { DevicePreferencesProvider } from '../lib/preferences/device-preferences
 import { PreferencesSyncContext } from '../lib/preferences/preferences-sync.context';
 import { DEFAULT_DEVICE_PREFERENCES } from './device-preferences-fixtures';
 
-const STORED_APPEARANCE = { preference: DEFAULT_APPEARANCE, source: 'none' } as const;
+const STORED_APPEARANCE = {
+  preference: DEFAULT_APPEARANCE,
+  source: 'none',
+  storage: APPEARANCE_COOKIES,
+} as const;
 
 const NO_SYNC = { signedIn: false, save: () => {}, notSaved: new Set<string>() };
 

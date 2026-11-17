@@ -1,4 +1,4 @@
-import { cn } from '@vp/ui';
+import { cn } from '@kit/ui';
 
 type ImageKind = 'avatar' | 'banner';
 

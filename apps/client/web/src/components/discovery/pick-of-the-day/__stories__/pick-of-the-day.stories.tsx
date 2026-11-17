@@ -1,6 +1,6 @@
+import { Badge, Button, Icon, IconButton } from '@kit/ui';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { VideoCard } from '@vp/components';
-import { Badge, Button, Icon, IconButton } from '@vp/ui';
 import { PickOfTheDay, PickOfTheDaySkeleton } from '..';
 import { PickOfTheDayRoot, type PickOfTheDayRootProps } from '../pick-of-the-day';
 

@@ -1,6 +1,6 @@
+import { useT } from '@kit/intl-react';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { SectionError } from '@vp/components';
-import { useT } from '@vp/intl-react';
 import { useApi, videoQueryOptions } from '@vp/queries';
 
 export type VideoProcessingStatusProps = { videoId: string };

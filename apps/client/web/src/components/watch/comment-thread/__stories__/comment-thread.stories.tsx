@@ -1,3 +1,4 @@
+import { Button, Callout, Drawer } from '@kit/ui';
 import type { Decorator, Meta, StoryObj } from '@storybook/react-vite';
 import {
   EmptyState,
@@ -5,7 +6,6 @@ import {
   SectionError,
   SignedOutIllustration,
 } from '@vp/components';
-import { Button, Callout, Drawer } from '@vp/ui';
 import { type ReactNode, useState } from 'react';
 import { CommentItem } from '#app/components/discussion/comment-item';
 import { CommentThread, CommentThreadSkeleton } from '..';

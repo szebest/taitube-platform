@@ -1,7 +1,7 @@
+import { useT } from '@kit/intl-react';
+import { Button } from '@kit/ui';
 import { Link } from '@tanstack/react-router';
-import { useT } from '@vp/intl-react';
 import type { MessageKey } from '@vp/messages';
-import { Button } from '@vp/ui';
 import type { AccountAction } from '#app/lib/account-action/account-actions';
 import { decodeIntent, forgetIntent, rememberIntent } from '#app/lib/account-action/replay-intent';
 import { urlModals } from '#app/lib/url-modal/registry';

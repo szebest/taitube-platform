@@ -96,7 +96,7 @@ Headings (`display` through `title-lg`) use `text-wrap: balance`. Body copy uses
   seekbar time, chapter timestamps and any counter in a column.
 - Counts in running text ("412K views", "1,284 comments") stay in the UI face; apply `tabular-nums` when the
   number changes live (viewer count, queue position "3 / 12"), so the width does not jitter.
-- Formatting is never typed by hand: compact counts, grouping, and relative dates come from `@vp/intl-react`
+- Formatting is never typed by hand: compact counts, grouping, and relative dates come from `@kit/intl-react`
   ([voice-and-copy.md](voice-and-copy.md)).
 - Stat figures in Studio use the UI face at `headline` weight with `tabular-nums` (the CSS stand-in uses a
   28 px figure; that size is not a step in any `fontSize` implementation, so build it from `headline` until the set gains one).

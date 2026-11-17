@@ -1,7 +1,7 @@
+import { ok, type Result } from '@kit/result';
 import type { WebhookRepositoryPort } from '@vp/core/repositories';
 import type { Webhook, WebhookEvent } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { ok, type Result } from '@vp/result';
 
 const copyOf = (webhook: Webhook): Webhook => ({ ...webhook, events: [...webhook.events] });
 

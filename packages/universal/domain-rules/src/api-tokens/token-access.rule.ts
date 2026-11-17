@@ -1,10 +1,10 @@
+import { type Result, assertNever } from '@kit/result';
 import {
   type UserContext,
   canCreateApiToken,
   canReadApiToken,
   canRevokeApiToken,
 } from '@vp/permissions';
-import { type Result, assertNever } from '@vp/result';
 import { type AuthorizationFailure, authorize } from '../authorize';
 
 type TokenAccess = 'create' | 'read' | 'delete';

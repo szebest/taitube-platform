@@ -1,8 +1,8 @@
+import { type Result, err, isErr, ok } from '@kit/result';
 import { SESSION_COOKIE, contracts, endpointKey, isEndpoint } from '@vp/api-contracts';
 import type { ApiScope } from '@vp/domain';
 import { type ApiTokenRefused, apiTokenRefused, channelMembershipRequired } from '@vp/domain-rules';
 import type { TokenGrant } from '@vp/permissions';
-import { type Result, err, isErr, ok } from '@vp/result';
 import { parseCookie } from 'cookie-es';
 import type { FastifyRequest } from 'fastify';
 import { contractPaths } from '../routes/contract-schema';

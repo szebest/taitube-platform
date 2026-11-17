@@ -1,6 +1,6 @@
+import { useT } from '@kit/intl-react';
 import { useQuery } from '@tanstack/react-query';
 import { ClientOnly } from '@tanstack/react-router';
-import { useT } from '@vp/intl-react';
 import { type WatchPartySocket, useApi, videoQueryOptions } from '@vp/queries';
 import { Suspense, type ReactNode } from 'react';
 import { PartyLobby } from '#app/components/party/party-lobby';

@@ -1,6 +1,6 @@
-import { useT } from '@vp/intl-react';
-import { fromPromise, isOk, unwrapOr } from '@vp/result';
-import { Button, ResponsiveModal, useToast, useUiCopy } from '@vp/ui';
+import { useT } from '@kit/intl-react';
+import { fromPromise, isOk, unwrapOr } from '@kit/result';
+import { Button, ResponsiveModal, useToast, useUiCopy } from '@kit/ui';
 import { validatePickNote } from '@vp/validation';
 import { useState } from 'react';
 import type { AdminPick } from '#app/features/admin/api/admin-picks';

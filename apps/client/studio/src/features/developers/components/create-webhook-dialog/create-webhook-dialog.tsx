@@ -1,9 +1,9 @@
+import { useT } from '@kit/intl-react';
+import { fromPromise, isOk } from '@kit/result';
+import { Button, Checkbox, Field, Input, ResponsiveModal, useUiCopy } from '@kit/ui';
 import type { CreatedWebhookView } from '@vp/api-contracts';
 import { WEBHOOK_EVENTS, type WebhookEvent } from '@vp/domain';
-import { useT } from '@vp/intl-react';
 import { useFailureToast } from '@vp/queries';
-import { fromPromise, isOk } from '@vp/result';
-import { Button, Checkbox, Field, Input, ResponsiveModal, useUiCopy } from '@vp/ui';
 import { type FormEvent, useId, useState } from 'react';
 import { useCreateWebhook } from '#app/features/developers/hooks/use-developer-mutations';
 import { SecretStep } from '../secret-step/secret-step';

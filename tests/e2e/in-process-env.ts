@@ -3,6 +3,12 @@ import { composeApp } from '../../apps/server/api/src/app';
 import { composeWorker } from '../../apps/server/worker/src/runner';
 import { runReconcileUploads } from '../../apps/server/worker/src/stages/housekeeping/reconcile-uploads';
 import {
+  LogContext,
+  type Logger,
+  createLogger,
+} from '../../packages/platform/server/logger/src/index';
+import { fromPromise, ignore } from '../../packages/platform/universal/result/src/index';
+import {
   InMemoryCacheClient,
   InMemoryFlowProducer,
   InMemoryJobQueue,
@@ -21,10 +27,8 @@ import { inProcessAppConfig } from '../../packages/server/env-schema/src/index';
 import { mediaTools } from '../../packages/server/ffmpeg/src/index';
 import { fingerprintTools } from '../../packages/server/fingerprint/src/index';
 import { QUEUES } from '../../packages/server/job-contracts/src/index';
-import { LogContext, type Logger, createLogger } from '../../packages/server/logger/src/index';
 import { createMetricsRegistry } from '../../packages/server/observability/src/index';
 import { speechTools } from '../../packages/server/whisper/src/index';
-import { fromPromise, ignore } from '../../packages/universal/result/src/index';
 import { startMockS3Server } from './s3-mock-server';
 
 export interface InProcessEnv {

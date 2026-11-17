@@ -3,18 +3,18 @@
 > Tier rules for this directory: [../AGENTS.md](../AGENTS.md) · full tier & layer reference: [packages/AGENTS.md](../../AGENTS.md)
 
 Owner: ticket [95](../../../docs/tickets/95-design-system-2.md). `client` tier, layer T4 (it depends on
-`@vp/ui`, `@vp/design-tokens` and `@vp/messages`). Nothing imports it: it is Storybook over every story in the
+`@kit/ui`, `@kit/design-tokens` and `@vp/messages`). Nothing imports it: it is Storybook over every story in the
 repo.
 
 ## What it holds
 
 - `.storybook/main.ts`: Storybook 10 on Vite, the stories of `packages/client/*/src` and `apps/client/*/src`
   (`__stories__/*.stories.tsx` in the component folder), the a11y and vitest addons, `@vp/*` resolved to source through
-  `@vp/vite-preset`'s `workspaceSourceAliases`, the React Compiler (`reactPlugins()`, so stories and story tests
+  `@kit/vite-preset`'s `workspaceSourceAliases`, the React Compiler (`reactPlugins()`, so stories and story tests
   run compiled), Tailwind, and telemetry off (local-first: Storybook phones
-  nowhere). `@tanstack/react-start` is aliased to `.storybook/tanstack-start.ts`, the browser half `@vp/ui`'s
+  nowhere). `@tanstack/react-start` is aliased to `.storybook/tanstack-start.ts`, the browser half `@kit/ui`'s
   cookies use, since a story never runs a server.
-- `.storybook/preview.tsx` and `preview.css`: `@vp/ui/styles.css`, the apps' folders as Tailwind sources,
+- `.storybook/preview.tsx` and `preview.css`: `@kit/ui/styles.css`, the apps' folders as Tailwind sources,
   and the toolbars.
 - `src/toolbars.ts`: one toolbar per axis, built from the appearance registry (themes, the shown modes,
   contrast, and per token group the theme default plus every offered set), the direction, the locale (every

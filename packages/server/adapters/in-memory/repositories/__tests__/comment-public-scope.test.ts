@@ -1,5 +1,5 @@
+import { ok } from '@kit/result';
 import type { CommentViewer } from '@vp/core/repositories';
-import { ok } from '@vp/result';
 import { isOwnOrPublic, isVisibleTo, ownOrPublicTo, publicScopeOf } from '../comment-public-scope';
 import type { StoredComment } from '../comment-visibility';
 import { UNMODERATED } from './stored-comment';

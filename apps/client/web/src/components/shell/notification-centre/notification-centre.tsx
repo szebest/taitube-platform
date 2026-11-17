@@ -1,4 +1,4 @@
-import { Avatar, Badge, Button, Drawer, Icon, Popover, Skeleton, Slot, useUiCopy } from '@vp/ui';
+import { Avatar, Badge, Button, Drawer, Icon, Popover, Skeleton, Slot, useUiCopy } from '@kit/ui';
 import {
   type ComponentPropsWithRef,
   type KeyboardEvent,

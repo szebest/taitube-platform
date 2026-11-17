@@ -1,4 +1,4 @@
-import { Button, Chip, Skeleton, Slot, useUiCopy, VisuallyHidden } from '@vp/ui';
+import { Button, Chip, Skeleton, Slot, useUiCopy, VisuallyHidden } from '@kit/ui';
 import { type ComponentPropsWithRef, useEffect, useId, useRef, useState } from 'react';
 import { LinerNotesContext, useLinerNotes } from './liner-notes.context';
 import { linerNotesStyles } from './liner-notes.variants';

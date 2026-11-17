@@ -1,14 +1,14 @@
 import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
+import { Container } from '@kit/composition';
+import { LogContext, createLogger } from '@kit/logger';
 import { Adapters, registerAdapters } from '@vp/adapters/composition';
 import { InMemoryJobQueue } from '@vp/adapters/in-memory';
-import { Container } from '@vp/composition';
 import type { WorkerStageName } from '@vp/env-schema';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { mediaTools } from '@vp/ffmpeg';
 import { fingerprintTools } from '@vp/fingerprint';
-import { LogContext, createLogger } from '@vp/logger';
 import { expectOk } from '@vp/testing/result';
 import { speechTools } from '@vp/whisper';
 import { completionOf } from '../../__tests__/flow-harness';

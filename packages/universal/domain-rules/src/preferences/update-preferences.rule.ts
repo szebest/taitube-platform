@@ -1,10 +1,10 @@
+import { err, ok, type Result } from '@kit/result';
 import {
   PREFERENCE_SECTIONS,
   type Preferences,
   type PreferencesPatch,
   type UserPreferences,
 } from '@vp/domain/settings';
-import { err, ok, type Result } from '@vp/result';
 import { type InvalidField, invalidField } from '@vp/validation';
 import { type PreferencesConflict, preferencesConflict } from './failures';
 import { mergePreferences } from './merge-preferences';

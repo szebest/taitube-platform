@@ -20,7 +20,7 @@ A single-line text field, with optional adornments at either end.
 
 ```ts
 // types.ts
-import type { ControlSize } from '@vp/design-tokens';
+import type { ControlSize } from '@kit/design-tokens';
 import type { FillOption, ShapeOption } from '../../types';
 
 export type InputFill = Extract<FillOption, 'outline' | 'soft'>;

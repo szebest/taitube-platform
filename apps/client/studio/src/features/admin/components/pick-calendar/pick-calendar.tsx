@@ -1,6 +1,6 @@
-import { useFormat, useT } from '@vp/intl-react';
-import { unwrapOr } from '@vp/result';
-import { cn } from '@vp/ui';
+import { useFormat, useT } from '@kit/intl-react';
+import { unwrapOr } from '@kit/result';
+import { cn } from '@kit/ui';
 import type { AdminPick } from '#app/features/admin/api/admin-picks';
 import { usePickWindowText } from '#app/features/admin/hooks/use-pick-window-text';
 import { calendarDays, picksOnDay } from '#app/features/admin/utils/pick-days';

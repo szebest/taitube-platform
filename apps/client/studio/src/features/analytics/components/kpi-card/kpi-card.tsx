@@ -1,6 +1,6 @@
+import { Format, useT } from '@kit/intl-react';
 import { type ChartSeries, StatCard } from '@vp/components';
 import type { FormatValue } from '@vp/intl';
-import { Format, useT } from '@vp/intl-react';
 import { type KpiChangeUnit, kpiChange } from '#app/features/analytics/api/kpi-change';
 import { kpiSeries } from '#app/features/analytics/api/kpi-series';
 import { useAnalytics } from '#app/features/analytics/hooks/use-analytics';

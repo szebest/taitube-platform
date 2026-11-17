@@ -1,6 +1,6 @@
 # VideoCard
 
-Location: `packages/client/components/src/video-card/` (`@vp/components`), presentational and compound, built from `VideoThumbnail` (`@vp/components`) and `@vp/ui` primitives.
+Location: `packages/client/components/src/video-card/` (`@vp/components`), presentational and compound, built from `VideoThumbnail` (`@vp/components`) and `@kit/ui` primitives.
 
 The one card for every video: thumbnail, byline, title, meta and a reason. It carries byline cards, reason labels, expand on hover and, through `spotlight`, Pick of the day.
 
@@ -34,7 +34,7 @@ The one card for every video: thumbnail, byline, title, meta and a reason. It ca
 
 ```ts
 // types.ts
-import type { SizeOption } from '@vp/design-tokens';
+import type { SizeOption } from '@kit/design-tokens';
 
 export type VideoCardVariant = 'grid' | 'shelf' | 'row' | 'poster' | 'spotlight';
 export type VideoCardState = 'rest' | 'live' | 'premiere' | 'unavailable';

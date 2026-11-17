@@ -1,4 +1,4 @@
-import { AlertDialog, Button, useUiCopy } from '@vp/ui';
+import { AlertDialog, Button, useUiCopy } from '@kit/ui';
 
 export interface ConfirmDialogProps {
   title: string;

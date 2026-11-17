@@ -1,6 +1,6 @@
+import { type Result, andThen, map } from '@kit/result';
 import type { Comment, CommentReportReason, Video } from '@vp/domain';
 import { type UserContext, canReportComment } from '@vp/permissions';
-import { type Result, andThen, map } from '@vp/result';
 import { type InvalidReportNote, validateReportNote } from '@vp/validation';
 import { type AuthorizationFailure, authorize } from '../authorize';
 import { type ReadVideoFailure, decideVideoRead } from '../videos/index';

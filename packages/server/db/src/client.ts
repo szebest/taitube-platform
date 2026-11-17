@@ -1,4 +1,4 @@
-import { type Result, err, fromPromise, isOk, ok } from '@vp/result';
+import { type Result, err, fromPromise, isOk, ok } from '@kit/result';
 import { type PostgresJsDatabase, drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as schema from './schema';
@@ -14,7 +14,7 @@ export function createDbClient(
   return { db: drizzle(sql, { schema }), sql };
 }
 
-/** Where a library function reports progress: the entrypoint hands it its `@vp/logger` logger. */
+/** Where a library function reports progress: the entrypoint hands it its `@kit/logger` logger. */
 export interface Log {
   info(fields: Record<string, unknown>, message: string): void;
   warn(fields: Record<string, unknown>, message: string): void;

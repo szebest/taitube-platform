@@ -1,5 +1,5 @@
+import { IconButton } from '@kit/ui';
 import { seriesColor } from '@vp/components';
-import { IconButton } from '@vp/ui';
 import type { ComponentPropsWithRef } from 'react';
 import { retentionStripStyles } from './retention-strip.variants';
 

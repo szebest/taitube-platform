@@ -1,4 +1,4 @@
-import { createCompoundContext } from '@vp/ui';
+import { createCompoundContext } from '@kit/ui';
 import type { InspectorSide, WorkspaceLayout } from './types';
 
 export const [StudioWorkspaceContext, useStudioWorkspace] = createCompoundContext<{

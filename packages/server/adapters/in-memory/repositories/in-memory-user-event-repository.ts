@@ -1,3 +1,4 @@
+import { type Result, map, ok } from '@kit/result';
 import {
   type NewUserEventInput,
   type OutboxRepository,
@@ -7,7 +8,6 @@ import {
 import { MS_PER_DAY } from '@vp/domain/time';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { userChannel } from '@vp/events';
-import { type Result, map, ok } from '@vp/result';
 import { type Clock, realClock } from './clock';
 
 export class InMemoryUserEventRepository extends UserEventRepository {

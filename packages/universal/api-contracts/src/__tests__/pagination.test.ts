@@ -1,4 +1,4 @@
-import { PAGE_SIZE_DEFAULT, PAGE_SIZE_MAX } from '@vp/pagination';
+import { PAGE_SIZE_DEFAULT, PAGE_SIZE_MAX } from '@kit/pagination';
 import { KeysetQuerySchema, OptionalPageLimitSchema, PageLimitSchema } from '../pagination';
 
 describe('packages/api-contracts: pagination', () => {

@@ -28,7 +28,7 @@ Plus the standard props. The title is the heading element the caller passes.
 
 ```ts
 // types.ts
-import type { TypeStyleOption } from '@vp/design-tokens';
+import type { TypeStyleOption } from '@kit/design-tokens';
 
 export type EmptyStateSize = 'page' | 'section' | 'inline';
 export type EmptyStateTitleStyle = Extract<TypeStyleOption, 'title-lg' | 'editorial'>;

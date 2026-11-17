@@ -1,10 +1,10 @@
-import type { Container } from '@vp/composition';
+import type { Container } from '@kit/composition';
+import { assertNever } from '@kit/result';
 import type { JobQueue, TokenVerifier } from '@vp/core/ports';
-import { getDevJwks } from '@vp/dev-token';
+import { getDevJwks } from '@vp/dev-identity';
 import type { AppConfig, AuthConfig } from '@vp/env-schema';
 import { QUEUES } from '@vp/job-contracts';
 import { createMetricsRegistry } from '@vp/observability';
-import { assertNever } from '@vp/result';
 import { DevTokenVerifier } from '../auth/dev-token-verifier';
 import { JwksTokenVerifier } from '../auth/jwks-token-verifier';
 import { CaslAuthorizationAdapter } from '../authorization/casl-authorization-adapter';

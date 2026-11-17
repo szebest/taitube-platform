@@ -1,3 +1,4 @@
+import { type Result, isErr, ok } from '@kit/result';
 import type {
   ChannelAnalytics,
   CreatorStats,
@@ -34,7 +35,6 @@ import {
 } from '@vp/domain-rules';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { type Result, isErr, ok } from '@vp/result';
 
 export interface AnalyticsServiceDeps {
   videos: VideoRepository;

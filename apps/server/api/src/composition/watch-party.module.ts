@@ -1,6 +1,6 @@
 import { createHash, createHmac, randomBytes } from 'node:crypto';
+import type { Container } from '@kit/composition';
 import { Adapters } from '@vp/adapters/composition';
-import type { Container } from '@vp/composition';
 import { WATCH_PARTY_WILDCARD_CHANNEL, roomIdOfWatchParty } from '@vp/events';
 import { createWatchPartyMetrics } from '@vp/observability';
 import { uuidv7 } from 'uuidv7';

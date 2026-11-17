@@ -1,3 +1,4 @@
+import type { Logger } from '@kit/logger';
 import type {
   PartyGuestSessionsPort,
   PasswordHasherPort,
@@ -6,7 +7,6 @@ import type {
 } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import type { CdnBase, WatchPartyConfig } from '@vp/env-schema';
-import type { Logger } from '@vp/logger';
 import type { WatchPartyMetrics } from '@vp/observability';
 import type { WatchPartyBroadcaster } from './watch-party-broadcaster';
 import type { WatchPartyContextLoader } from './watch-party-context';

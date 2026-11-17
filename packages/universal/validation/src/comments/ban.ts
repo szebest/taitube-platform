@@ -1,4 +1,4 @@
-import { type Result, err, ok } from '@vp/result';
+import { type Result, err, ok } from '@kit/result';
 import { normalizePlainText, withinLength } from '../plain-text';
 import { type InvalidRestriction, invalidRestriction } from './failures';
 

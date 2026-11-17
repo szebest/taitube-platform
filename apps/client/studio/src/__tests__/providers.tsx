@@ -1,10 +1,18 @@
 import {
+  AppearanceProvider,
+  DEFAULT_APPEARANCE,
+  ToastProvider,
+  Tooltip,
+  createToaster,
+} from '@kit/ui';
+import {
   type Account,
   getAccount,
   listCreatorComments,
   listMyInvites,
   listMyMemberships,
 } from '@vp/api-contracts';
+import { APPEARANCE_COOKIES } from '@vp/domain/settings';
 import {
   ApiProvider,
   AppWords,
@@ -14,13 +22,6 @@ import {
   SessionProvider,
 } from '@vp/queries';
 import { DEV_TOKEN_URL } from '@vp/queries/demo-personas';
-import {
-  AppearanceProvider,
-  DEFAULT_APPEARANCE,
-  ToastProvider,
-  Tooltip,
-  createToaster,
-} from '@vp/ui';
 import { account, api, apiServer, mockEndpoint } from '@vp/web-testing';
 import { http, HttpResponse } from 'msw/http';
 import type { ComponentType, PropsWithChildren } from 'react';
@@ -31,7 +32,11 @@ function providersFor(session: Session): ComponentType<PropsWithChildren> {
       <ApiProvider api={api}>
         <SessionProvider session={session}>
           <AppearanceProvider
-            stored={{ preference: { ...DEFAULT_APPEARANCE, mode: 'dark' }, source: 'none' }}
+            stored={{
+              preference: { ...DEFAULT_APPEARANCE, mode: 'dark' },
+              source: 'none',
+              storage: APPEARANCE_COOKIES,
+            }}
           >
             <Tooltip.Provider>
               <ToastProvider toaster={createToaster()}>{children}</ToastProvider>

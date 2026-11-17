@@ -1,6 +1,6 @@
+import { ResponsiveModal, type ResponsiveModalContentProps } from '@kit/ui';
 import type { SearchMiddleware } from '@tanstack/react-router';
 import { useNavigate, useRouter, useSearch } from '@tanstack/react-router';
-import { ResponsiveModal, type ResponsiveModalContentProps } from '@vp/ui';
 import { type ReactNode, useState } from 'react';
 import { z } from 'zod';
 import { keepFocus, rememberOpener, useRestoreFocusOnClose } from './restore-focus';

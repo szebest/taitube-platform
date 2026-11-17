@@ -1,9 +1,9 @@
+import { readCookie, writeCookie } from '@kit/ui';
 import { screen } from '@testing-library/react';
-import { readCookie, writeCookie } from '@vp/ui';
 import { renderRoute } from '@vp/web-testing/dom';
 import { getRouter } from '#app/router';
 
-vi.mock(import('@vp/ui/appearance/registry'), async (importOriginal) =>
+vi.mock(import('@kit/ui/appearance/registry'), async (importOriginal) =>
   (await import('#app/features/account/__tests__/extended-registry')).extendRegistry(
     await importOriginal()
   )

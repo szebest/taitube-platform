@@ -1,8 +1,8 @@
+import { err } from '@kit/result';
 import { InMemoryJobQueue } from '@vp/adapters/in-memory';
 import type { JobQueue } from '@vp/core/ports';
 import { queueUnavailable } from '@vp/errors';
 import { createMetricsRegistry } from '@vp/observability';
-import { err } from '@vp/result';
 import { pollQueueMetrics } from '../queue-poller';
 
 async function gauge(metrics: ReturnType<typeof createMetricsRegistry>, name: string) {

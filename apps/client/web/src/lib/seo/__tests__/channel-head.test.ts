@@ -1,4 +1,4 @@
-import { FALLBACK_ACTIVE_LOCALE } from '@vp/intl-react';
+import { FALLBACK_ACTIVE_LOCALE } from '@kit/intl-react';
 import { channel, videoSummary } from '@vp/web-testing';
 import { channelHead } from '../channel-head';
 import { headWords } from '../head-words';

@@ -1,8 +1,8 @@
-import { token } from '@vp/composition';
+import { token } from '@kit/composition';
+import type { Logger } from '@kit/logger';
+import type { Paginator } from '@kit/pagination';
 import type { JobQueue } from '@vp/core/ports';
-import type { Logger } from '@vp/logger';
 import type { MetricsServer, WatchPartyMetrics } from '@vp/observability';
-import type { Paginator } from '@vp/pagination';
 import type { FastifyPluginCallback } from 'fastify';
 import type { HistoryPause } from '../services/history-pause';
 import type {

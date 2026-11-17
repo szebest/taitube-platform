@@ -1,4 +1,4 @@
-import { Icon, IconButton, useUiCopy } from '@vp/ui';
+import { Icon, IconButton, useUiCopy } from '@kit/ui';
 
 export interface CommentItemHeartProps {
   hearted: boolean;

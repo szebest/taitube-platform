@@ -1,7 +1,7 @@
+import { ok } from '@kit/result';
 import { InMemoryCacheClient, InMemoryRepositories } from '@vp/adapters/in-memory';
 import { inProcessAppConfig } from '@vp/env-schema';
 import type { UserContext } from '@vp/permissions';
-import { ok } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import { seedVideo } from '../../__tests__/test-app';
 import { CurrentPickCache } from '../current-pick-cache';

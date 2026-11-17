@@ -1,6 +1,6 @@
+import { useT } from '@kit/intl-react';
 import { Link } from '@tanstack/react-router';
 import { EmptyLibraryIllustration, EmptyState } from '@vp/components';
-import { useT } from '@vp/intl-react';
 import type { ReactNode } from 'react';
 import { useShortsNavigation } from '#app/features/shorts/hooks/use-shorts-navigation';
 import { ShortsFeed } from '../shorts-feed/shorts-feed';

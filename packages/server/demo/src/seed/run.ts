@@ -1,5 +1,5 @@
-import { asThrowable } from '@vp/errors';
-import { fromPromise, isErr } from '@vp/result';
+import { fromPromise, isErr } from '@kit/result';
+import { asThrowable, errorCodeRegistry } from '@vp/errors';
 import type { SeedStepReport } from '../types';
 import type { Scenario, ScenarioContext, StepOutcome } from './scenario';
 
@@ -40,7 +40,7 @@ export async function runScenarios(
 async function runOne(scenario: Scenario, context: ScenarioContext): Promise<StepOutcome> {
   const ran = await fromPromise(
     () => scenario.run(context),
-    (cause) => asThrowable(cause).message
+    (cause) => asThrowable(errorCodeRegistry, cause).message
   );
   return isErr(ran) ? { status: 'failed', detail: `unexpected: ${ran.error}` } : ran.value;
 }

@@ -1,5 +1,5 @@
+import { createToaster, ResponsiveModal, ToastProvider } from '@kit/ui';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { createToaster, ResponsiveModal, ToastProvider } from '@vp/ui';
 import { useState } from 'react';
 import {
   ClipEditor,

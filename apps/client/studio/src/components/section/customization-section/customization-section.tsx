@@ -1,5 +1,5 @@
-import { useT } from '@vp/intl-react';
-import { Button, Card, createCompoundContext } from '@vp/ui';
+import { useT } from '@kit/intl-react';
+import { Button, Card, createCompoundContext } from '@kit/ui';
 import { type ComponentPropsWithRef, useId } from 'react';
 
 const [SectionContext, useSection] = createCompoundContext<{ titleId: string }>(

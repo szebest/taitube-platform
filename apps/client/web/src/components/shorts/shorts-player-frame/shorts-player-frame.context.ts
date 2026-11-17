@@ -1,4 +1,4 @@
-import { createCompoundContext } from '@vp/ui';
+import { createCompoundContext } from '@kit/ui';
 import type { ShortsActionsLayout, ShortsFrameState, ShortsPlayback } from './types';
 
 export const [ShortsPlayerFrameContext, useShortsPlayerFrame] = createCompoundContext<{

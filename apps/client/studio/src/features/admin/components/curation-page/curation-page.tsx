@@ -1,8 +1,8 @@
+import { useT } from '@kit/intl-react';
+import { Button, Icon, Skeleton } from '@kit/ui';
 import { EmptyState, PageHeader, SectionError } from '@vp/components';
-import { useT } from '@vp/intl-react';
 import { canManagePick } from '@vp/permissions';
 import { useCan } from '@vp/permissions-react';
-import { Button, Icon, Skeleton } from '@vp/ui';
 import { useState } from 'react';
 import type { AdminPick } from '#app/features/admin/api/admin-picks';
 import { useAdminPicks } from '#app/features/admin/hooks/use-admin-picks';

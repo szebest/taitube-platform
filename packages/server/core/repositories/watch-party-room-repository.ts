@@ -1,3 +1,4 @@
+import type { Result } from '@kit/result';
 import type {
   WatchPartyCloseReason,
   WatchPartyMember,
@@ -9,7 +10,6 @@ import type {
   WatchPartySystemLine,
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import type { Result } from '@vp/result';
 
 /** A system line written in the transaction of its cause, so a reconnect replays it. */
 export interface NewSystemLine {

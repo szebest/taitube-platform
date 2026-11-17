@@ -1,7 +1,7 @@
+import { err } from '@kit/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { DEFAULT_PREFERENCES } from '@vp/domain/settings';
 import { databaseUnavailable } from '@vp/errors';
-import { err } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { HistoryPause } from '../history-pause';
 

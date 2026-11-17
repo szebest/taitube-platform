@@ -1,4 +1,4 @@
-import { type Result, err, ok } from '@vp/result';
+import { type Result, err, ok } from '@kit/result';
 import { type InvalidPickWindow, invalidPickWindow } from './failures';
 
 export interface PickWindow {

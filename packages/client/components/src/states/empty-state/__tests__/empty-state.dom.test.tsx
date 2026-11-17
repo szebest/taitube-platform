@@ -1,5 +1,5 @@
+import { variantNames } from '@kit/ui';
 import { screen } from '@testing-library/react';
-import { variantNames } from '@vp/ui';
 import { axeViolations } from '@vp/web-testing/dom';
 import { EmptyState, emptyStateStyles } from '..';
 import { renderWithCopy } from '../../../__tests__/render-with-copy';

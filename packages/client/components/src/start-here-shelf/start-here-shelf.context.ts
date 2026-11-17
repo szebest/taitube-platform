@@ -1,4 +1,4 @@
-import { createCompoundContext } from '@vp/ui';
+import { createCompoundContext } from '@kit/ui';
 import type { StartHereSource } from './types';
 
 export const [StartHereShelfContext, useStartHereShelf] = createCompoundContext<{

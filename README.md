@@ -88,58 +88,66 @@ taitube-platform/
 │       ├── web/                 # The viewer app: React 19 on TanStack Start (SSR, Vite) — see apps/client/web/AGENTS.md
 │       └── studio/              # The creator app on its own origin, the same stack — see apps/client/studio/AGENTS.md
 ├── packages/                    # Shared libraries. The directory IS the runtime tier.
-│   ├── universal/               # Runs in a browser AND on a server
-│   │   ├── api-contracts/       # Zod request/response schemas for every HTTP endpoint
-│   │   ├── design-tokens/       # Design system engine: the token group schemas
-│   │   ├── domain/              # Entity types and the status and role vocabularies
-│   │   ├── domain-rules/        # Pure rules over input plus an entity, returning Result
-│   │   ├── errors/              # ErrorCode vocabulary, Failure types, retry classes
-│   │   ├── intl/                # Every user-facing number, date and duration format, on Intl
-│   │   ├── machine/             # Lifecycles as typed edge tables: legal moves, findings, Mermaid
-│   │   ├── messages/            # Typed messages, the en catalogue and the copy for every error code
-│   │   ├── pagination/          # Keyset cursor codec and page shapes
-│   │   ├── permissions/         # CASL ability rules shared by the API and the frontend
-│   │   ├── result/              # Result type, combinators, tryCatch/fromPromise
-│   │   ├── tsconfig/            # Shared TypeScript presets, one per tier
-│   │   └── validation/          # Pure input-only rules returning Result
-│   ├── client/                  # Browser only
-│   │   ├── api-client/          # Typed HTTP client whose calls are typed by api-contracts
-│   │   ├── components/          # Shared components both apps render: PageHeader, EmptyState, ErrorState, SectionError, the state illustrations
-│   │   ├── forms/               # useAppForm with the text, select and file fields, and validateWith
-│   │   ├── intl-react/          # IntlProvider, useT, useFormat and <Format> for the web app
-│   │   ├── permissions-react/   # PermissionsProvider, useCan and <Can> over the @vp/permissions rules
-│   │   ├── queries/             # QueryClient factory, ApiProvider, the auth seam and the shared query factories
-│   │   ├── security-headers/    # CSP nonce and the security headers request middleware each app mounts
-│   │   ├── ui/                  # Design system: Tailwind tokens, Radix primitives, the theme and the logo
-│   │   ├── web-telemetry/       # Core Web Vitals beacon and browser traces, started after hydration
-│   │   ├── web-testing/         # Spec helpers: contract-typed MSW handlers, renderRoute, serverRender, fixtures
-│   │   └── workbench/           # Storybook over every package's and app's stories, toolbars from the appearance registry
-│   └── server/                  # Node / Bun only
-│       ├── adapters/            # Concrete drivers (postgres, redis, bullmq, s3, auth, in-memory) and registerAdapters
-│       ├── compose-autoscaler/  # CLI: scales Compose worker services from the API's queue-depth metrics
-│       ├── composition/         # Typed dependency container, tokens, shutdown and signal handling
-│       ├── concurrency/         # Singleflight promise coalescing
-│       ├── config/              # loadEnv(): reads process.env once and validates it
-│       ├── core/                # Abstract class ports and repository interfaces
-│       ├── db/                  # Drizzle schema, client, migrations and migrate/seed functions
-│       ├── demo/                # CLI behind make demo: starts the stack, seeds a deterministic demo world through the API
-│       ├── deploy/              # Typed environment files and pnpm envctl, the typed half of scripts/deploy.sh
-│       ├── dev-token/           # CLI: mints local EdDSA JWTs and serves a dev JWKS
-│       ├── env-schema/          # Zod environment schema, AppConfig and toAppConfig
-│       ├── events/              # SSE envelope, pub/sub channels and Redis cache keys
-│       ├── ffmpeg/              # FFmpeg/ffprobe runners, ladder selection, master playlist, thumbnails
-│       ├── fingerprint/         # Frame dHash, Chromaprint, the offset-vote matcher for the duplicate check
-│       ├── gen-video/           # CLI: generates deterministic test video fixtures
-│       ├── job-contracts/       # BullMQ queue names, job payload schemas, retry policies, rendition ladder
-│       ├── lighthouse/          # CLI: Lighthouse CI on the built web app, offline, warn-only
-│       ├── logger/              # Pino logger with json and pretty formats, log context, serializeError
-│       ├── observability/       # OpenTelemetry tracing, Prometheus metrics and the metrics server
-│       ├── stack/               # CLI behind make up/down/status: starts the Compose stack a tier at a time
-│       ├── storage/             # S3 object key layout, MIME map and multipart part math
-│       ├── testing/             # Shared test config, fixtures and test helpers
-│       ├── upload-client/       # CLI: reference resumable multipart upload client
-│       ├── vite-preset/         # The Vite config of every client app: Start, React, Tailwind, the bundle guard
-│       └── whisper/             # whisper.cpp runner, transcript windows and the WebVTT a caption track is stored as
+│   ├── platform/                # Reusable outside this product: depends on platform packages only
+│   │   ├── universal/               # Runs in a browser AND on a server
+│   │   │   ├── design-tokens/       # Design system engine: the token group schemas
+│   │   │   ├── di/                  # Typed tokens and an immutable registry whose get returns a Result
+│   │   │   ├── i18n/                # The typed message engine: kinds, presets, param names, catalogue parity; no words
+│   │   │   ├── machine/             # Lifecycles as typed edge tables: legal moves, findings, Mermaid
+│   │   │   ├── pagination/          # Keyset cursor codec and page shapes
+│   │   │   ├── result/              # Result type, combinators, tryCatch/fromPromise
+│   │   │   ├── runtime/             # Clock, Random, EnvSource, Fetch and CookieJar tokens; node and browser entries
+│   │   │   └── tsconfig/            # Shared TypeScript presets, one per tier
+│   │   ├── client/                  # Browser only
+│   │   │   ├── forms/               # useAppForm with the text, select and file fields, and validateWith
+│   │   │   ├── intl-react/          # IntlProvider, useT, useFormat and <Format> for the web app
+│   │   │   ├── security-headers/    # CSP nonce and the security headers request middleware each app mounts
+│   │   │   ├── ui/                  # Design system: Tailwind tokens, Radix primitives, the theme and the logo
+│   │   │   └── web-telemetry/       # Core Web Vitals beacon and browser traces, started after hydration
+│   │   └── server/                  # Node / Bun only
+│   │       ├── compose-autoscaler/  # CLI: scales Compose worker services from the API's queue-depth metrics
+│   │       ├── composition/         # Typed dependency container, tokens, shutdown and signal handling
+│   │       ├── concurrency/         # Singleflight promise coalescing
+│   │       ├── config/              # loadEnv(): reads process.env once and validates it
+│   │       ├── dev-token/           # CLI: mints local EdDSA JWTs and serves a dev JWKS
+│   │       ├── logger/              # Pino logger with json and pretty formats, log context, serializeError
+│   │       └── vite-preset/         # The Vite config of every client app: Start, React, Tailwind, the bundle guard
+│   ├── universal/                   # Runs in a browser AND on a server
+│   │   ├── api-contracts/           # Zod request/response schemas for every HTTP endpoint
+│   │   ├── domain/                  # Entity types and the status and role vocabularies
+│   │   ├── domain-rules/            # Pure rules over input plus an entity, returning Result
+│   │   ├── errors/                  # ErrorCode vocabulary, Failure types, retry classes
+│   │   ├── intl/                    # Every user-facing number, date and duration format, on Intl
+│   │   ├── messages/                # Typed messages, the en catalogue and the copy for every error code
+│   │   ├── permissions/             # CASL ability rules shared by the API and the frontend
+│   │   └── validation/              # Pure input-only rules returning Result
+│   ├── client/                      # Browser only
+│   │   ├── api-client/              # Typed HTTP client whose calls are typed by api-contracts
+│   │   ├── components/              # Shared components both apps render: PageHeader, EmptyState, ErrorState, SectionError, the state illustrations
+│   │   ├── permissions-react/       # PermissionsProvider, useCan and <Can> over the @vp/permissions rules
+│   │   ├── queries/                 # QueryClient factory, ApiProvider, the auth seam and the shared query factories
+│   │   ├── web-testing/             # Spec helpers: contract-typed MSW handlers, renderRoute, serverRender, fixtures
+│   │   └── workbench/               # Storybook over every package's and app's stories, toolbars from the appearance registry
+│   └── server/                      # Node / Bun only
+│       ├── adapters/                # Concrete drivers (postgres, redis, bullmq, s3, auth, in-memory) and registerAdapters
+│       ├── core/                    # Abstract class ports and repository interfaces
+│       ├── db/                      # Drizzle schema, client, migrations and migrate/seed functions
+│       ├── demo/                    # CLI behind make demo: starts the stack, seeds a deterministic demo world through the API
+│       ├── deploy/                  # Typed environment files and pnpm envctl, the typed half of scripts/deploy.sh
+│       ├── dev-identity/            # This repo's dev token issuer, audience, key and the bound mint and verify
+│       ├── env-schema/              # Zod environment schema, AppConfig and toAppConfig
+│       ├── events/                  # SSE envelope, pub/sub channels and Redis cache keys
+│       ├── ffmpeg/                  # FFmpeg/ffprobe runners, ladder selection, master playlist, thumbnails
+│       ├── fingerprint/             # Frame dHash, Chromaprint, the offset-vote matcher for the duplicate check
+│       ├── gen-video/               # CLI: generates deterministic test video fixtures
+│       ├── job-contracts/           # BullMQ queue names, job payload schemas, retry policies, rendition ladder
+│       ├── lighthouse/              # CLI: Lighthouse CI on the built web app, offline, warn-only
+│       ├── observability/           # OpenTelemetry tracing, Prometheus metrics and the metrics server
+│       ├── stack/                   # CLI behind make up/down/status: starts the Compose stack a tier at a time
+│       ├── storage/                 # S3 object key layout, MIME map and multipart part math
+│       ├── testing/                 # Shared test config, fixtures and test helpers
+│       ├── upload-client/           # CLI: reference resumable multipart upload client
+│       └── whisper/                 # whisper.cpp runner, transcript windows and the WebVTT a caption track is stored as
 ├── infra/
 │   ├── compose/                 # Docker Compose manifests (local infra, full stack, observability)
 │   ├── k8s/                     # Kubernetes manifests (Kustomize base, local k3d, cloud overlays)
@@ -557,7 +565,7 @@ Manifests are organized with Kustomize under `infra/k8s/base` with overlays for 
 1. **Local-First Guarantees**: All core services function without internet access or third-party cloud accounts.
 2. **Dependency Inversion (Hexagonal Architecture)**: Domain business logic in `packages/server/core` depends only on abstract port interfaces. Concrete adapters (`postgres`, `redis`, `s3`, `bullmq`) are isolated in `packages/server/adapters` and wired at composition roots (`apps/server/api`, `apps/server/worker`).
 3. **Modular Repository Discipline**: Every repository implementation resides in its own dedicated file under `packages/server/adapters/{postgres,in-memory}/repositories/` with strict modularity (<= 250 lines target).
-4. **Single-Source Contracts**: Job payloads are defined in `@vp/job-contracts`, storage paths in `@vp/storage`, error codes in `@vp/errors`, and the environment schema in `@vp/env-schema` (read once by `loadEnv()` in `@vp/config`).
+4. **Single-Source Contracts**: Job payloads are defined in `@vp/job-contracts`, storage paths in `@vp/storage`, error codes in `@vp/errors`, and the environment schema in `@vp/env-schema` (read once by `loadEnv()` in `@kit/config`).
 5. **State Durability**: All entity mutations execute through compare-and-set transactions that record audit events in `video_events` with fencing tokens.
 6. **Dual-Runtime Compatibility**: All worker logic and shared libraries run cleanly under both Node.js and Bun without runtime-specific proprietary APIs.
 7. **Package Runtime Tiers**: A package's directory under `packages/{universal,server,client}`, and an app's under `apps/{server,client}`, declares where its code may run, and `vp.layer` declares which way its dependencies may point. `pnpm boundaries` fails the build on a violation. See [packages/AGENTS.md](packages/AGENTS.md).

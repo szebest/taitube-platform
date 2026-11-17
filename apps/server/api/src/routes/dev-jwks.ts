@@ -1,5 +1,5 @@
 import { jwks } from '@vp/api-contracts';
-import { getDevJwks } from '@vp/dev-token';
+import { getDevJwks } from '@vp/dev-identity';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { contractSchema } from './contract-schema';

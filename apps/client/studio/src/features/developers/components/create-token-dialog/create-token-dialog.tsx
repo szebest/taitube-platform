@@ -1,3 +1,6 @@
+import { useT } from '@kit/intl-react';
+import { fromPromise, isOk } from '@kit/result';
+import { Button, Field, Input, ResponsiveModal, Select, useUiCopy } from '@kit/ui';
 import type { CreatedApiTokenView } from '@vp/api-contracts';
 import {
   API_TOKEN_EXPIRIES,
@@ -6,10 +9,7 @@ import {
   type ApiTokenExpiry,
   DEFAULT_API_TOKEN_EXPIRY,
 } from '@vp/domain';
-import { useT } from '@vp/intl-react';
 import { useFailureToast } from '@vp/queries';
-import { fromPromise, isOk } from '@vp/result';
-import { Button, Field, Input, ResponsiveModal, Select, useUiCopy } from '@vp/ui';
 import { type FormEvent, useState } from 'react';
 import { useCreateToken } from '#app/features/developers/hooks/use-developer-mutations';
 import { SecretStep } from '../secret-step/secret-step';

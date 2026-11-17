@@ -1,6 +1,6 @@
+import { err } from '@kit/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { databaseUnavailable, ErrorCodes } from '@vp/errors';
-import { err } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { seedVideo } from '../../__tests__/test-app';
 import { OEmbedService } from '../oembed-service';

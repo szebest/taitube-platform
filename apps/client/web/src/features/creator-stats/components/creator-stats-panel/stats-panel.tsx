@@ -1,11 +1,11 @@
+import { useT } from '@kit/intl-react';
+import { Button, Icon, IconButton, useMediaQuery } from '@kit/ui';
 import { useQuery } from '@tanstack/react-query';
 import type { Video } from '@vp/api-contracts';
 import { SectionError, StatCardSkeleton } from '@vp/components';
-import { useT } from '@vp/intl-react';
 import { canPinComment, canUpdateVideo } from '@vp/permissions';
 import { useCan } from '@vp/permissions-react';
 import { creatorStatsQueryOptions, useApi } from '@vp/queries';
-import { Button, Icon, IconButton, useMediaQuery } from '@vp/ui';
 import { useId, useState } from 'react';
 import { useReducedMotion } from '#app/hooks/use-reduced-motion';
 import { STUDIO_URL } from '#app/lib/config';

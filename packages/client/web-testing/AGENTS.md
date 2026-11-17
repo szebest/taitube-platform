@@ -8,7 +8,7 @@ layer T5.
 **Spec-only.** A spec, a vitest config or a spec helper imports it; source never does, and a manifest names it
 under `devDependencies` only. Every entry point resolves to `src/`, so a package's own vitest run and an app's
 aliased one load the same `apiServer` its setup file listens on. That is why `check-boundaries.ts` lists it in `BUILD_TOOLING`: a lower package
-such as `@vp/ui` (T2) may dev-depend on it, and a runtime dependency on it still fails `pnpm boundaries`.
+such as `@kit/ui` (T2) may dev-depend on it, and a runtime dependency on it still fails `pnpm boundaries`.
 
 ## What it holds
 
@@ -49,7 +49,7 @@ handler, loaded by every node spec in a shared worker, left page renders in late
 - Anything an app's specs alone use (its `AppProviders`, `loader-api`, `signInBrowser`): it stays in that app's
   `src/__tests__/`.
 - A dependency on `@vp/queries` or any app: this package sits below them so every one of them may use it
-  (`@vp/queries` and `@vp/ui` dev-depend on it, and turbo refuses a cyclic package graph), which is why
+  (`@vp/queries` and `@kit/ui` dev-depend on it, and turbo refuses a cyclic package graph), which is why
   `signInBrowser` and `SESSION`, which need the session cookie's name, stay with each app.
 
 ```bash

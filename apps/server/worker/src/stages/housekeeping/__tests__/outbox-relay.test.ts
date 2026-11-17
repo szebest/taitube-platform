@@ -1,3 +1,4 @@
+import { err } from '@kit/result';
 import {
   InMemoryCacheClient,
   InMemoryFlowProducer,
@@ -9,7 +10,6 @@ import { queueUnavailable } from '@vp/errors';
 import { userChannel } from '@vp/events';
 import { ids } from '@vp/job-contracts';
 import { type PipelineMetrics, createMetricsRegistry } from '@vp/observability';
-import { err } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { manualInterval } from '../../../__tests__/manual-interval';

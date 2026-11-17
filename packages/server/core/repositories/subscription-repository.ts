@@ -1,3 +1,4 @@
+import type { Result } from '@kit/result';
 import type {
   ChannelSubscriber,
   NotificationLevel,
@@ -6,7 +7,6 @@ import type {
   ViewDateRange,
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import type { Result } from '@vp/result';
 import type { VideoRecord } from './video-repository';
 
 export interface SubscriptionFeedOptions {

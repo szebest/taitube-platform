@@ -1,6 +1,6 @@
+import { type ActiveLocale, FALLBACK_ACTIVE_LOCALE, IntlProvider, useT } from '@kit/intl-react';
+import { UiCopyProvider, uiCopyFrom } from '@kit/ui';
 import { useHydrated } from '@tanstack/react-router';
-import { type ActiveLocale, FALLBACK_ACTIVE_LOCALE, IntlProvider, useT } from '@vp/intl-react';
-import { UiCopyProvider, uiCopyFrom } from '@vp/ui';
 import type { PropsWithChildren } from 'react';
 
 /** The placeholders a primitive fills itself, kept in the word so the catalogue owns the sentence. */
@@ -30,7 +30,7 @@ export type AppWordsProps = PropsWithChildren<{
 }>;
 
 /**
- * The locale and `@vp/ui`'s built-in words, from the `ui` section of the catalogue: the router's
+ * The locale and `@kit/ui`'s built-in words, from the `ui` section of the catalogue: the router's
  * `Wrap`, so the pending and error pages have them too, and what an app's spec providers mount.
  */
 export function AppWords({ renderedAt, active = FALLBACK_ACTIVE_LOCALE, children }: AppWordsProps) {

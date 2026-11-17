@@ -1,5 +1,5 @@
-import { useT } from '@vp/intl-react';
-import { IconButton } from '@vp/ui';
+import { useT } from '@kit/intl-react';
+import { IconButton } from '@kit/ui';
 import { Captions } from 'lucide-react';
 import { usePlayerCommands, usePlayerState } from '#app/integrations/video-js/video-js-engine';
 

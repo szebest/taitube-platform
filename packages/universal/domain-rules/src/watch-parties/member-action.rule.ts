@@ -1,3 +1,4 @@
+import { andThen, err, ok, type Result } from '@kit/result';
 import type { WatchPartyPermission } from '@vp/domain';
 import {
   type WatchPartyPermissionMissing,
@@ -9,7 +10,6 @@ import {
   type WatchPartyAbility,
   type WatchPartyMemberSubject,
 } from '@vp/permissions';
-import { andThen, err, ok, type Result } from '@vp/result';
 import { requireRoomPermission } from './permission.rule';
 
 export type MemberAction = 'kick' | 'ban' | 'moderate';

@@ -1,5 +1,5 @@
+import { useT } from '@kit/intl-react';
 import { Link } from '@tanstack/react-router';
-import { useT } from '@vp/intl-react';
 import { useAccount } from '@vp/queries';
 import type { PropsWithChildren, ReactNode } from 'react';
 import { SettingsSection } from '#app/components/settings/settings-section';

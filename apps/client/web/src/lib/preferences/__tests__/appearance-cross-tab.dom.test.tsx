@@ -1,11 +1,12 @@
-import { render, screen } from '@testing-library/react';
-import { userEvent } from '@testing-library/user-event';
 import {
   type AppearancePreference,
   AppearanceProvider,
   DEFAULT_APPEARANCE,
   useAppearance,
-} from '@vp/ui';
+} from '@kit/ui';
+import { render, screen } from '@testing-library/react';
+import { userEvent } from '@testing-library/user-event';
+import { APPEARANCE_COOKIES } from '@vp/domain/settings';
 import { AppearanceCrossTab } from '../appearance-cross-tab';
 
 function Probe() {
@@ -23,7 +24,9 @@ function Probe() {
 
 function renderTab() {
   render(
-    <AppearanceProvider stored={{ preference: DEFAULT_APPEARANCE, source: 'none' }}>
+    <AppearanceProvider
+      stored={{ preference: DEFAULT_APPEARANCE, source: 'none', storage: APPEARANCE_COOKIES }}
+    >
       <AppearanceCrossTab />
       <Probe />
     </AppearanceProvider>

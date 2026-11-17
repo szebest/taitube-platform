@@ -1,4 +1,4 @@
-import { Button, type ButtonProps, Callout, Checkbox, cn, Input, useUiCopy } from '@vp/ui';
+import { Button, type ButtonProps, Callout, Checkbox, cn, Input, useUiCopy } from '@kit/ui';
 import { type ComponentPropsWithRef, useId, useState } from 'react';
 import { SecretRevealContext, useSecretReveal } from './secret-reveal.context';
 

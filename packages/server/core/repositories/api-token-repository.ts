@@ -1,6 +1,6 @@
+import type { Result } from '@kit/result';
 import type { ApiToken, ApiTokenSummary, UserRole } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import type { Result } from '@vp/result';
 
 /** A row whose prefix matched, with the role its user holds now, so a demotion counts at once. */
 export interface ApiTokenCandidate {

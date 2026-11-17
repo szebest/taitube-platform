@@ -1,7 +1,7 @@
+import { useT } from '@kit/intl-react';
+import { Badge, Spinner } from '@kit/ui';
 import { useQuery } from '@tanstack/react-query';
-import { useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
-import { Badge, Spinner } from '@vp/ui';
 import { authorCommentsQueryOptions } from '#app/features/comments/api/author-queries';
 import type { InboxComment } from '#app/features/comments/api/inbox-queries';
 import { WEB_URL } from '#app/lib/config';

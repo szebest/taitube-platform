@@ -1,5 +1,5 @@
+import type { Result } from '@kit/result';
 import type { CacheUnavailable } from '@vp/errors';
-import type { Result } from '@vp/result';
 
 /**
  * Popular queries filed under each of their prefixes, so completing one is a single ranged read.

@@ -1,3 +1,4 @@
+import { type Result, err, ok } from '@kit/result';
 import {
   type CommentSettings,
   type Disclosure,
@@ -5,7 +6,6 @@ import {
   type HeldReason,
 } from '@vp/domain';
 import { MS_PER_DAY } from '@vp/domain/time';
-import { type Result, err, ok } from '@vp/result';
 import { hasLinkOutsideAllowlist, matchesBlockedWord } from '@vp/validation';
 import {
   type CommentsAccountTooNew,

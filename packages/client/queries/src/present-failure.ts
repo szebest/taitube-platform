@@ -1,7 +1,7 @@
+import { assertNever } from '@kit/result';
 import type { ErrorStateKind } from '@vp/components';
 import { type ErrorCode, ErrorCodes, RETRY_CLASS } from '@vp/errors';
 import { ERROR_COPY } from '@vp/messages';
-import { assertNever } from '@vp/result';
 
 export interface FailurePresentation {
   kind: ErrorStateKind;

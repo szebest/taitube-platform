@@ -1,6 +1,6 @@
+import { useT } from '@kit/intl-react';
 import { useSearch } from '@tanstack/react-router';
 import { LoginCard } from '@vp/components';
-import { useT } from '@vp/intl-react';
 import type { ReactNode } from 'react';
 
 export type LoginPageProps = {

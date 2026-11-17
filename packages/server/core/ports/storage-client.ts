@@ -1,5 +1,5 @@
+import type { Result } from '@kit/result';
 import type { StorageUnavailable } from '@vp/errors';
-import type { Result } from '@vp/result';
 import type { HealthCheckable } from './health-checkable';
 
 type StorageBody = Buffer | Uint8Array | NodeJS.ReadableStream | string;

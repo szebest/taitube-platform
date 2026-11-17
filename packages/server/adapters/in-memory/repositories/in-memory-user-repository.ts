@@ -1,6 +1,6 @@
+import { type Result, ok } from '@kit/result';
 import { type UpsertUserInput, type UserRecord, UserRepository } from '@vp/core/repositories';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { type Result, ok } from '@vp/result';
 
 export class InMemoryUserRepository extends UserRepository {
   private readonly usersMap = new Map<string, UserRecord>();

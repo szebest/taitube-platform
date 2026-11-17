@@ -1,7 +1,7 @@
+import { useFormat } from '@kit/intl-react';
+import { unwrapOr } from '@kit/result';
 import { seriesColor } from '@vp/components';
 import type { FormatValue } from '@vp/intl';
-import { useFormat } from '@vp/intl-react';
-import { unwrapOr } from '@vp/result';
 import {
   CartesianGrid,
   Line,

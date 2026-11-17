@@ -1,3 +1,4 @@
+import { type Result, fromPromise, map } from '@kit/result';
 import type {
   RisingVideosOptions,
   RisingVideosRepositoryPort,
@@ -6,7 +7,6 @@ import type {
 import * as schema from '@vp/db';
 import { RISING, rankRising } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
-import { type Result, fromPromise, map } from '@vp/result';
 import { and, desc, eq, gte, lte, notInArray, ne } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import { drizzleWhere } from '../scopes/index';

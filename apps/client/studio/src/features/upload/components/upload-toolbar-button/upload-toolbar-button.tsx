@@ -1,5 +1,5 @@
-import { useT } from '@vp/intl-react';
-import { Button } from '@vp/ui';
+import { useT } from '@kit/intl-react';
+import { Button } from '@kit/ui';
 import { useUploadDock } from '../upload-dock/upload-dock';
 
 /** The toolbar's way into the upload dialog, on every page of the studio. */

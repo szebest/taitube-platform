@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { PAGE_SIZE_DEFAULT, PAGE_SIZE_MAX } from '@vp/pagination';
+import { PAGE_SIZE_DEFAULT, PAGE_SIZE_MAX } from '@kit/pagination';
 import { AppEnvSchema } from '../app-env';
 import { SECRET_KEYS } from '../secret-keys';
 

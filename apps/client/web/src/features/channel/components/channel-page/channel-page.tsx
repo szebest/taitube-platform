@@ -1,7 +1,7 @@
+import { useT } from '@kit/intl-react';
+import { BrandScope } from '@kit/ui';
 import { useSuspenseQuery } from '@tanstack/react-query';
-import { useT } from '@vp/intl-react';
 import { useAccount, useApi } from '@vp/queries';
-import { BrandScope } from '@vp/ui';
 import { Suspense } from 'react';
 import { ChannelHeader } from '#app/components/channel/channel-header';
 import { SubscribeAction } from '#app/components/channel/subscribe-action';

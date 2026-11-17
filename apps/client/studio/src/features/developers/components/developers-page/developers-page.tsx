@@ -1,5 +1,5 @@
+import { useT } from '@kit/intl-react';
 import { PageHeader } from '@vp/components';
-import { useT } from '@vp/intl-react';
 import { useExportableKinds } from '#app/features/developers/hooks/use-exportable-kinds';
 import { ApiReferenceSection } from '../api-reference-section/api-reference-section';
 import { ExportsSection } from '../exports-section/exports-section';

@@ -1,7 +1,11 @@
 import ts from 'typescript';
+import { packageDir } from '../../scripts/workspace-packages';
 import { clientApps } from './client-apps';
 import { parseSource } from './parsed-sources';
 import { productionSources, read } from './repo-files';
+
+const COMPONENTS = packageDir('@vp/components');
+const UI = packageDir('@kit/ui');
 
 const isStringLiteralUnion = (node: ts.Node): node is ts.UnionTypeNode =>
   ts.isUnionTypeNode(node) &&
@@ -45,11 +49,11 @@ function inlineUnions(file: string, source: string): string[] {
   return found;
 }
 
-/** `@vp/ui`, `@vp/components` and each app kit, `types.ts` aside: that is where a shared union is narrowed. */
+/** `@kit/ui`, `@vp/components` and each app kit, `types.ts` aside: that is where a shared union is narrowed. */
 function kitSources(): string[] {
   const roots = [
-    'packages/client/ui/src/',
-    'packages/client/components/src/',
+    `${UI}/src/`,
+    `${COMPONENTS}/src/`,
     ...clientApps().map((app) => `${app}/src/components/`),
   ];
   return productionSources()
@@ -93,7 +97,7 @@ describe('architecture: props types use the shared option unions', () => {
     expect(inlineUnions('fixture.tsx', source)).toEqual([]);
   });
 
-  it('finds none in @vp/ui, @vp/components or an app kit', () => {
+  it('finds none in @kit/ui, @vp/components or an app kit', () => {
     expect(kitSources().flatMap((file) => inlineUnions(file, read(file)))).toEqual([]);
   });
 });

@@ -1,3 +1,4 @@
+import { isErr, map, ok, type Result } from '@kit/result';
 import {
   memberKeyOf,
   type RosterPreviewMember,
@@ -11,7 +12,6 @@ import {
 import type { UserPreferences } from '@vp/domain/settings';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { partyInviteOutbox } from '@vp/job-contracts';
-import { isErr, map, ok, type Result } from '@vp/result';
 import type { WatchPartyDeps } from './watch-party-deps';
 import {
   acceptsPartyInvite,

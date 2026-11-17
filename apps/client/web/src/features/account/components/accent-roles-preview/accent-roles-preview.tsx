@@ -1,7 +1,7 @@
-import { ACCENT_GROUNDS, compositeOver, contrastRatio, deriveAccent } from '@vp/design-tokens';
-import { useT } from '@vp/intl-react';
-import { unwrapOr } from '@vp/result';
-import { useAppearance } from '@vp/ui';
+import { ACCENT_GROUNDS, compositeOver, contrastRatio, deriveAccent } from '@kit/design-tokens';
+import { useT } from '@kit/intl-react';
+import { unwrapOr } from '@kit/result';
+import { useAppearance } from '@kit/ui';
 
 interface RoleSample {
   role: 'accent' | 'accentHover' | 'accentSoft' | 'onAccent' | 'accentInk';

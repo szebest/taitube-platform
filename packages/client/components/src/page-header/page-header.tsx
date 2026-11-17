@@ -1,4 +1,4 @@
-import { DropdownMenu, Icon, IconButton, Skeleton, Slot, useUiCopy } from '@vp/ui';
+import { DropdownMenu, Icon, IconButton, Skeleton, Slot, useUiCopy } from '@kit/ui';
 import { Children, type ComponentPropsWithRef, useEffect, useRef, useState } from 'react';
 import { PageHeaderContext, usePageHeader } from './page-header.context';
 import { pageHeaderStyles } from './page-header.variants';

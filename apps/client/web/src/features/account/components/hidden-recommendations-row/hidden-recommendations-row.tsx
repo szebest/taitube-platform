@@ -1,8 +1,8 @@
+import { useT } from '@kit/intl-react';
+import { Button } from '@kit/ui';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import type { RecommendationFeedbackItemView } from '@vp/api-contracts';
-import { useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
-import { Button } from '@vp/ui';
 import { useUndoRecommendationFeedback } from '#app/hooks/use-undo-recommendation-feedback';
 import { hiddenRecommendationsQueryOptions } from '#app/lib/query-keys/recommendation-feedback-keys';
 import { SettingItem } from '../setting-item/setting-item';

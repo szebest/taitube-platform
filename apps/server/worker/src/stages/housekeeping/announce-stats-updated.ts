@@ -1,7 +1,7 @@
+import { type Result, isErr, ok } from '@kit/result';
 import type { Repositories } from '@vp/core/repositories';
 import { type ViewBatch, firstHoursSince, roleHas, videoStatsUpdated } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { type Result, isErr, ok } from '@vp/result';
 
 /**
  * Tells everyone who may read a video's stats that a flush counted views for it, for videos still in

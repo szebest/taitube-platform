@@ -1,9 +1,9 @@
+import type { Logger } from '@kit/logger';
+import { type Result, isErr, ok } from '@kit/result';
 import type { Repositories } from '@vp/core/repositories';
 import { COMMENT_REMOVAL_RETENTION_DAYS, RESTRICTION_RETENTION_DAYS } from '@vp/domain';
 import { MS_PER_DAY } from '@vp/domain/time';
 import type { DatabaseUnavailable } from '@vp/errors';
-import type { Logger } from '@vp/logger';
-import { type Result, isErr, ok } from '@vp/result';
 
 export interface PurgeCommentModerationOptions {
   repositories: Repositories;

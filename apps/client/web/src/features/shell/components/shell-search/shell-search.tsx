@@ -1,4 +1,4 @@
-import { useT } from '@vp/intl-react';
+import { useT } from '@kit/intl-react';
 import { AppShell } from '#app/components/shell/app-shell';
 import { useCommandPaletteStore } from '#app/lib/command-palette/command-palette-store';
 

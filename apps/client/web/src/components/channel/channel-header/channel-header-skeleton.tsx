@@ -1,4 +1,4 @@
-import { Skeleton } from '@vp/ui';
+import { Skeleton } from '@kit/ui';
 import { channelHeaderStyles } from './channel-header.variants';
 import type { ChannelHeaderLayout } from './types';
 

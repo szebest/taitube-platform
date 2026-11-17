@@ -1,6 +1,6 @@
+import { type Err, type Result, andThen, err, ok } from '@kit/result';
 import { type Channel, type ChannelHandleRetirement, HANDLE_RESERVATION_DAYS } from '@vp/domain';
 import { MS_PER_DAY } from '@vp/domain/time';
-import { type Err, type Result, andThen, err, ok } from '@vp/result';
 import { type InvalidHandleFormat, isReservedHandle, validateHandle } from '@vp/validation';
 import { type HandleReserved, type HandleTaken, handleReserved, handleTaken } from './failures';
 

@@ -26,3 +26,6 @@ export const APPEARANCE_SETTINGS = defineSection({
 });
 
 export type AppearancePreferences = SectionValues<typeof APPEARANCE_SETTINGS>;
+
+/** The cookies the viewer's appearance lives in on every client app: the current one and the one it replaced. */
+export const APPEARANCE_COOKIES = { cookie: 'vp.appearance', legacyCookie: 'vp.theme' } as const;

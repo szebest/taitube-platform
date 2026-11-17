@@ -1,3 +1,4 @@
+import { ok, type Result } from '@kit/result';
 import type {
   NewSystemLine,
   NewWatchPartyMember,
@@ -6,7 +7,6 @@ import type {
 } from '@vp/core/repositories';
 import type { WatchPartyBan, WatchPartyMember } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { ok, type Result } from '@vp/result';
 import {
   assignmentKey,
   type InMemoryWatchPartyStore,

@@ -1,6 +1,6 @@
+import { type Result, andThen, err, map } from '@kit/result';
 import type { Comment } from '@vp/domain';
 import { type UserContext, canUpdateComment } from '@vp/permissions';
-import { type Result, andThen, err, map } from '@vp/result';
 import { type InvalidCommentContent, validateCommentContent } from '@vp/validation';
 import { type AuthorizationFailure, authorize } from '../authorize';
 import { type CommentNotFound, commentNotFound } from './failures';

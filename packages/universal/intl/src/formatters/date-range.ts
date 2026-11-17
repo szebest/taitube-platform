@@ -1,4 +1,4 @@
-import { andThen, map } from '@vp/result';
+import { andThen, map } from '@kit/result';
 import { parseInstant } from '../inputs';
 import { withOptions } from '../with-options';
 import { DATE_OPTION_KEYS, type DateOptions, dateFormatOptions } from './date';

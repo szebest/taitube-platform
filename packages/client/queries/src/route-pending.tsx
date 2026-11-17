@@ -1,4 +1,4 @@
-import { Spinner } from '@vp/ui';
+import { Spinner } from '@kit/ui';
 
 /** The page a route shows while its loader runs, once the router's pending delay has passed. */
 export function RoutePending() {

@@ -10,7 +10,7 @@ import {
 } from '@vp/adapters/in-memory';
 import { S3MultipartStorage, S3StorageClient } from '@vp/adapters/s3';
 import { composeApp } from '@vp/api';
-import { mintToken } from '@vp/dev-token';
+import { mintToken } from '@vp/dev-identity';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { SEEDED } from '@vp/testing';
 import { expectOk } from '@vp/testing/result';

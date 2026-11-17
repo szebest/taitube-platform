@@ -1,4 +1,4 @@
-import { isOk } from '@vp/result';
+import { isOk } from '@kit/result';
 import { validateCategoryForm, validateCategoryName } from '../category-form';
 
 const form = { name: 'Music', slug: 'music', description: 'Tunes' };

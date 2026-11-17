@@ -1,5 +1,5 @@
+import { assertNever } from '@kit/result';
 import { Link } from '@tanstack/react-router';
-import { assertNever } from '@vp/result';
 import type { ComponentPropsWithRef } from 'react';
 import type { ShellTarget } from '#app/hooks/use-shell-destinations';
 import { STUDIO_URL } from '#app/lib/config';

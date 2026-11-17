@@ -2,13 +2,13 @@ import { execFileSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { createLogger } from '@kit/logger';
 import {
   InMemoryFrameClassifier,
   InMemoryRepositories,
   InMemoryStorageClient,
 } from '@vp/adapters/in-memory';
 import { fingerprintTools } from '@vp/fingerprint';
-import { createLogger } from '@vp/logger';
 import { SEEDED, createMockJob } from '@vp/testing';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';

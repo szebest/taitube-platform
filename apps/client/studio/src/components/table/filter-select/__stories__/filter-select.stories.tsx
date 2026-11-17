@@ -1,5 +1,5 @@
+import { FALLBACK_ACTIVE_LOCALE, IntlProvider } from '@kit/intl-react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { FALLBACK_ACTIVE_LOCALE, IntlProvider } from '@vp/intl-react';
 import { FilterSelect } from '../filter-select';
 
 const meta = {

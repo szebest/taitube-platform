@@ -1,4 +1,4 @@
-import { APPEARANCE_SETTINGS } from '../appearance';
+import { APPEARANCE_COOKIES, APPEARANCE_SETTINGS } from '../appearance';
 
 describe('domain/settings: appearance', () => {
   it.each(Object.entries(APPEARANCE_SETTINGS))(
@@ -18,5 +18,9 @@ describe('domain/settings: appearance', () => {
   it('follows the system contrast until the viewer picks one', () => {
     expect(APPEARANCE_SETTINGS.contrast.default).toBe('auto');
     expect(APPEARANCE_SETTINGS.contrast.options).toEqual(['auto', 'standard', 'more']);
+  });
+
+  it('keeps the appearance in the cookies every client app has always written', () => {
+    expect(APPEARANCE_COOKIES).toEqual({ cookie: 'vp.appearance', legacyCookie: 'vp.theme' });
   });
 });

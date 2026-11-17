@@ -1,6 +1,6 @@
+import type { Result } from '@kit/result';
 import type { Category } from '@vp/domain';
 import type { CacheUnavailable } from '@vp/errors';
-import type { Result } from '@vp/result';
 
 /**
  * A read-through cache for the active taxonomy. A miss or a dead cache falls through to the

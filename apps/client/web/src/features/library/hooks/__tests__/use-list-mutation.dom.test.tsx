@@ -1,5 +1,5 @@
+import { ToastProvider } from '@kit/ui';
 import { createQueryClient } from '@vp/queries';
-import { ToastProvider } from '@vp/ui';
 import { renderMutation } from '@vp/web-testing/dom';
 import type { PropsWithChildren } from 'react';
 import { AppProviders } from '#app/__tests__/providers';

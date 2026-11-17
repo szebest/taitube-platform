@@ -1,7 +1,7 @@
 # Frontend Structure
 
 How `apps/client/web` and `apps/client/studio` are laid out, what each folder may import and what a file is called.
-Both apps follow the same rules. The kits they share live in `packages/client/ui` and `packages/client/components`
+Both apps follow the same rules. The kits they share live in `packages/platform/client/ui` and `packages/client/components`
 ([design-system.md](design-system.md)); the tiers and layers of the packages are [packages/AGENTS.md](../../packages/AGENTS.md).
 Ticket [131](../tickets/131-frontend-folder-structure-names-and-boundaries.md) introduced the shape.
 
@@ -77,7 +77,7 @@ lib -> lib
 
 ## 3. A component folder
 
-The shape of a `@vp/ui` primitive, of a `@vp/components` component, of an app's kit and of a feature's components:
+The shape of a `@kit/ui` primitive, of a `@vp/components` component, of an app's kit and of a feature's components:
 
 ```
 video-card/
@@ -101,7 +101,7 @@ video-card/
   `hooks/__tests__/use-x.test.ts`. A route spec stays in `routes/__tests__/`.
 - A feature-private component folder is imported by file path; `index.ts` is required at a feature root and at a kit or
   package component root.
-- Styling is Tailwind and the tokens of `@vp/ui`, plus a `<name>.variants.ts` when classes follow a prop. No `.scss`,
+- Styling is Tailwind and the tokens of `@kit/ui`, plus a `<name>.variants.ts` when classes follow a prop. No `.scss`,
   no CSS module, no Bootstrap; the one stylesheet an app may own is `styles/app.css`.
 
 ---

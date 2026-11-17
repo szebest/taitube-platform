@@ -1,5 +1,5 @@
-import { useT } from '@vp/intl-react';
-import { Button, useUiCopy } from '@vp/ui';
+import { useT } from '@kit/intl-react';
+import { Button, useUiCopy } from '@kit/ui';
 import { useDeletePlaylist } from '#app/features/library/hooks/use-delete-playlist';
 import { urlModals } from '#app/lib/url-modal/registry';
 

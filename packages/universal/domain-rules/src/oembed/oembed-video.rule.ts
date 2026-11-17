@@ -1,5 +1,5 @@
+import { type Result, err, ok } from '@kit/result';
 import type { Video } from '@vp/domain';
-import { type Result, err, ok } from '@vp/result';
 import { type VideoNotFound, videoNotFound } from '../videos/index';
 
 /** Only what anyone can watch is embeddable; every other state answers as if the video did not exist. */

@@ -1,3 +1,5 @@
+import type { Logger } from '@kit/logger';
+import { type Result, err } from '@kit/result';
 import { InMemoryDlqRepository, InMemoryJobQueue } from '@vp/adapters/in-memory';
 import type { QueueJob, QueueJobOptions } from '@vp/core/ports';
 import type { DlqEntryRecord, NewDlqEntryInput, Repositories } from '@vp/core/repositories';
@@ -11,8 +13,6 @@ import {
   queueUnavailable,
 } from '@vp/errors';
 import { ids, stagePolicies } from '@vp/job-contracts';
-import type { Logger } from '@vp/logger';
-import { type Result, err } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { createFailureHandler } from '../failure-handler';

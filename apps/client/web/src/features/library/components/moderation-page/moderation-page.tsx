@@ -1,12 +1,12 @@
+import { useFormat, useT } from '@kit/intl-react';
+import { unwrapOr } from '@kit/result';
+import { Callout, Skeleton } from '@kit/ui';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useSearch } from '@tanstack/react-router';
 import type { CommentRemovalView } from '@vp/api-contracts';
 import { EmptyState, PageHeader, PageHeaderSkeleton } from '@vp/components';
 import { publishedAt } from '@vp/intl';
-import { useFormat, useT } from '@vp/intl-react';
 import { myCommentRemovalsQueryOptions, ownRestrictionQueryOptions, useApi } from '@vp/queries';
-import { unwrapOr } from '@vp/result';
-import { Callout, Skeleton } from '@vp/ui';
 import { PagedFooter } from '#app/components/feed/paged-footer';
 import { usePagedItems } from '#app/features/library/hooks/use-paged-items';
 import { channelQueryOptions } from '#app/lib/query-keys/channel-keys';

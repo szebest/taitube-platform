@@ -1,6 +1,6 @@
+import { err } from '@kit/result';
 import { CurrentPickSchema } from '@vp/api-contracts';
 import { databaseUnavailable, ErrorCodes } from '@vp/errors';
-import { err } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
 import type { CurrentPickService } from '../current-pick-service';
 import { generateEtag } from '../http-cache';

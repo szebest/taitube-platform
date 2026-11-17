@@ -1,4 +1,4 @@
-import type { AvatarSize } from '@vp/ui';
+import type { AvatarSize } from '@kit/ui';
 
 export type ChartFrameSize = Extract<AvatarSize, 'sm' | 'md' | 'lg' | 'xl'>;
 export type ChartFrameState = 'ready' | 'loading' | 'error' | 'empty';

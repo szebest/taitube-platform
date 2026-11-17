@@ -1,5 +1,5 @@
+import { useT } from '@kit/intl-react';
 import { createFileRoute } from '@tanstack/react-router';
-import { useT } from '@vp/intl-react';
 import { prefetched } from '@vp/queries';
 import { useId } from 'react';
 import {

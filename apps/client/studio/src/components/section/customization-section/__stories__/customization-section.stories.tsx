@@ -1,6 +1,6 @@
+import { FALLBACK_ACTIVE_LOCALE, IntlProvider } from '@kit/intl-react';
+import { Field, Input } from '@kit/ui';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { FALLBACK_ACTIVE_LOCALE, IntlProvider } from '@vp/intl-react';
-import { Field, Input } from '@vp/ui';
 import { CustomizationSection } from '../index';
 
 const meta = {

@@ -1,4 +1,4 @@
-import { type Result, err, ok, tryCatch } from '@vp/result';
+import { type Result, err, ok, tryCatch } from '@kit/result';
 import { type InvalidCaptionLanguage, invalidCaptionLanguage } from './failures';
 
 /**

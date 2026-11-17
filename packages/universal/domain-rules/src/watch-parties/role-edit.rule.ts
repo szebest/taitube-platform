@@ -1,3 +1,4 @@
+import { andThen, err, ok, type Result } from '@kit/result';
 import {
   GUEST_CEILING,
   MAX_CUSTOM_ROLES,
@@ -16,7 +17,6 @@ import {
   watchPartyRoleProtected,
 } from '@vp/errors';
 import { canGrantPermission, canTouchRole, type WatchPartyAbility } from '@vp/permissions';
-import { andThen, err, ok, type Result } from '@vp/result';
 import { type InvalidField, invalidField } from '@vp/validation';
 import { requireRoomPermission } from './permission.rule';
 

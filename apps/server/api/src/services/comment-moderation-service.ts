@@ -1,3 +1,4 @@
+import { type Result, err, ignore, isErr, ok } from '@kit/result';
 import type { CommentActionBody, ModerationResultView } from '@vp/api-contracts';
 import type { CommentCachePort } from '@vp/core/ports';
 import type {
@@ -23,7 +24,6 @@ import {
 } from '@vp/domain-rules';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { type Result, err, ignore, isErr, ok } from '@vp/result';
 import { auditActor } from './audit-actor';
 import { type CommentLookupDeps, commentWithVideo } from './comment-lookup';
 import { toCommentView } from './comment-views';

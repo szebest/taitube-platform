@@ -1,5 +1,5 @@
+import { createCompoundContext } from '@kit/ui';
 import type { ApiScope } from '@vp/domain';
-import { createCompoundContext } from '@vp/ui';
 
 export const [ScopePickerContext, useScopePicker] = createCompoundContext<{
   value: readonly ApiScope[];

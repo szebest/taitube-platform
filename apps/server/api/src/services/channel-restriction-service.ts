@@ -1,3 +1,5 @@
+import type { InvalidCursor, Paginator } from '@kit/pagination';
+import { type Result, err, ignore, isErr, map, ok } from '@kit/result';
 import type { OwnRestrictionView, RestrictionActionBody, RestrictionView } from '@vp/api-contracts';
 import type { CommentCachePort } from '@vp/core/ports';
 import type {
@@ -24,9 +26,7 @@ import {
   restrictionNotFound,
 } from '@vp/domain-rules';
 import type { DatabaseUnavailable } from '@vp/errors';
-import type { InvalidCursor, Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
-import { type Result, err, ignore, isErr, map, ok } from '@vp/result';
 import { type InvalidRestriction, invalidRestriction, validateBan } from '@vp/validation';
 import { auditActor } from './audit-actor';
 import { type Profiles, profilesOf } from './channel-team-views';

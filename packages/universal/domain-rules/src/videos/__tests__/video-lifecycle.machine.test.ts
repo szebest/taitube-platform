@@ -1,5 +1,5 @@
+import { machineFindings } from '@kit/machine';
 import { SCREENING_TRANSITIONS } from '@vp/domain';
-import { machineFindings } from '@vp/machine';
 import { VIDEO_LIFECYCLE } from '../video-lifecycle.machine';
 
 describe('@vp/domain-rules: VIDEO_LIFECYCLE', () => {

@@ -1,3 +1,4 @@
+import { type Result, all, andThen, fromPromise, map, ok } from '@kit/result';
 import type {
   SearchHit,
   SearchPage,
@@ -7,7 +8,6 @@ import type {
 import * as schema from '@vp/db';
 import { type Channel, type SearchResultKind, compareSearchPositions } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
-import { type Result, all, andThen, fromPromise, map, ok } from '@vp/result';
 import { desc, or, sql } from 'drizzle-orm';
 import { restrictsQuery } from './search-query';
 import { type SearchSource, channelSource, playlistSource, videoSource } from './search-sources';

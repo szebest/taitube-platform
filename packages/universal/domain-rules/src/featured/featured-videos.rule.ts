@@ -1,6 +1,6 @@
+import { andThen, err, isErr, ok, type Result } from '@kit/result';
 import type { Video } from '@vp/domain';
 import { canPinVideo, type UserContext } from '@vp/permissions';
-import { andThen, err, isErr, ok, type Result } from '@vp/result';
 import { type AuthorizationFailure, authorize } from '../authorize';
 import {
   decideVideoRead,

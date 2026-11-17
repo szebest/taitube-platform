@@ -1,6 +1,6 @@
+import { useT } from '@kit/intl-react';
+import { Card } from '@kit/ui';
 import type { LiveStreamView } from '@vp/api-contracts';
-import { useT } from '@vp/intl-react';
-import { Card } from '@vp/ui';
 import { useId } from 'react';
 import { CredentialField } from '#app/components/live/credential-field';
 import { useOrigin } from '#app/features/live/hooks/use-origin';

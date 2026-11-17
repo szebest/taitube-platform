@@ -1,3 +1,4 @@
+import { IntlProvider } from '@kit/intl-react';
 import {
   RouterProvider,
   createMemoryHistory,
@@ -5,7 +6,6 @@ import {
 } from '@tanstack/react-router';
 import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
-import { IntlProvider } from '@vp/intl-react';
 import { api, apiServer } from '@vp/web-testing';
 import { http, HttpResponse } from 'msw/http';
 import { type AppRouterContext, createAppRouter } from '../../app-router';

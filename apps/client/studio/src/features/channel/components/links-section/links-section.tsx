@@ -1,8 +1,8 @@
+import { fieldError, useAppForm } from '@kit/forms';
+import { useT } from '@kit/intl-react';
+import { Button, Field, Input, PlatformIcon } from '@kit/ui';
 import type { OwnerChannel } from '@vp/api-contracts';
 import { platformOfUrl } from '@vp/domain';
-import { fieldError, useAppForm } from '@vp/forms';
-import { useT } from '@vp/intl-react';
-import { Button, Field, Input, PlatformIcon } from '@vp/ui';
 import { CustomizationSection } from '#app/components/section/customization-section';
 import {
   validateBannerLinkField,

@@ -1,8 +1,8 @@
+import { useT } from '@kit/intl-react';
+import { Button, Icon, Popover } from '@kit/ui';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import type { CommentView } from '@vp/api-contracts';
-import { useT } from '@vp/intl-react';
 import { useApi, useFailureToast, usePinComment } from '@vp/queries';
-import { Button, Icon, Popover } from '@vp/ui';
 import { useState } from 'react';
 import { commentsQueryOptions } from '#app/lib/query-keys/comment-keys';
 

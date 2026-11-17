@@ -1,4 +1,4 @@
-import { Badge, Card, type CardRootProps, Icon, Skeleton, useUiCopy } from '@vp/ui';
+import { Badge, Card, type CardRootProps, Icon, Skeleton, useUiCopy } from '@kit/ui';
 import {
   type ComponentPropsWithRef,
   cloneElement,

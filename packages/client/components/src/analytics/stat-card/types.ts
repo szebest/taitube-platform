@@ -1,4 +1,4 @@
-import type { AvatarSize, BadgeTone } from '@vp/ui';
+import type { AvatarSize, BadgeTone } from '@kit/ui';
 
 export type StatCardSize = Extract<AvatarSize, 'md' | 'lg'>;
 export type StatCardState = 'ready' | 'loading' | 'error' | 'empty';

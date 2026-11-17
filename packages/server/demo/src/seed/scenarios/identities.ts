@@ -1,4 +1,4 @@
-import { isErr } from '@vp/result';
+import { isErr } from '@kit/result';
 import { describeFailure } from '../failure';
 import type { Scenario } from '../scenario';
 

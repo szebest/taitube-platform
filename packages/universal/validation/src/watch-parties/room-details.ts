@@ -1,5 +1,6 @@
-import { type Result, err, ok } from '@vp/result';
-import { type InvalidField, type LengthBounds, invalidField, invalidLength } from '../failures';
+import { type Result, err, ok } from '@kit/result';
+import type { LengthBounds } from '../failures';
+import { type InvalidField, invalidField, invalidLength } from '../field-failures';
 import { normalizePlainText, withinLength } from '../plain-text';
 
 export const ROOM_NAME_BOUNDS = { minLength: 1, maxLength: 60 } as const satisfies LengthBounds;

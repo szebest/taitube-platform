@@ -1,6 +1,6 @@
+import type { Result } from '@kit/result';
 import type { ChannelHandleRetirement } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import type { Result } from '@vp/result';
 
 /**
  * Handles channels gave up. A row is written by the channel update that changes the handle, in the

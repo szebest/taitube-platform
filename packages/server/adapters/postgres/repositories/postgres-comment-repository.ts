@@ -1,3 +1,4 @@
+import { fromPromise, map, type Result } from '@kit/result';
 import type {
   CommentLocator,
   CommentViewer,
@@ -22,7 +23,6 @@ import {
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { heartOutbox } from '@vp/job-contracts';
 import type { UserContext } from '@vp/permissions';
-import { fromPromise, map, type Result } from '@vp/result';
 import { eq, not, sql } from 'drizzle-orm';
 import { drizzleWhere, notDeletedScope, publicCommentScope } from '../scopes/index';
 import { toCreatorInboxComment } from './comment-inbox-query';

@@ -1,5 +1,5 @@
+import { Base64UrlCursorCodec } from '@kit/pagination';
 import { ErrorCodes } from '@vp/errors';
-import { Base64UrlCursorCodec } from '@vp/pagination';
 import { VIDEO_DESCRIPTION_MAX_LENGTH, VIDEO_TITLE_BOUNDS } from '@vp/validation';
 import { z } from 'zod';
 import { defineEndpoint } from './endpoint';

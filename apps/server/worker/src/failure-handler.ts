@@ -1,6 +1,14 @@
+import type { Logger } from '@kit/logger';
+import { isErr, unwrapOr } from '@kit/result';
 import type { JobQueue, QueueJob } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
-import { attemptsFor, classifyError, errorCodeOf, isErrorCode } from '@vp/errors';
+import {
+  attemptsFor,
+  classifyError,
+  errorCodeOf,
+  errorCodeRegistry,
+  isErrorCode,
+} from '@vp/errors';
 import {
   CaptionsJob,
   DlqJob,
@@ -10,9 +18,7 @@ import {
   ids,
   stagePolicies,
 } from '@vp/job-contracts';
-import type { Logger } from '@vp/logger';
 import type { PipelineMetrics } from '@vp/observability';
-import { isErr, unwrapOr } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 import { failCaptionsRun } from './stages/captions/captions-failure';
 import { stepRenditionOf } from './stages/captions/captions-run';
@@ -35,9 +41,9 @@ export function createFailureHandler(deps: FailureHandlerDeps) {
     const payload = (job.data || {}) as Record<string, unknown>;
     const videoId = (payload.videoId as string) || null;
     const attemptsMade = job.attemptsMade ?? 1;
-    if (attemptsMade < attemptsFor(err, job.opts?.attempts ?? 1)) return;
+    if (attemptsMade < attemptsFor(errorCodeRegistry, err, job.opts?.attempts ?? 1)) return;
 
-    const errorCode = errorCodeOf(err);
+    const errorCode = errorCodeOf(errorCodeRegistry, err);
     const errorMessage = err.message || 'Job failed';
     const stack = err.stack ?? null;
 
@@ -76,7 +82,7 @@ export function createFailureHandler(deps: FailureHandlerDeps) {
           code: errorCode,
           message: errorMessage,
           stack: stack ?? undefined,
-          unrecoverable: classifyError(err) === 'permanent',
+          unrecoverable: classifyError(errorCodeRegistry, err) === 'permanent',
         },
         attemptsMade,
         workerId,

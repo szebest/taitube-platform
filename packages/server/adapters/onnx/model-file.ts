@@ -1,8 +1,8 @@
 import { createHash } from 'node:crypto';
 import { createReadStream } from 'node:fs';
 import { pipeline } from 'node:stream/promises';
+import { type Result, err, fromPromise, ok } from '@kit/result';
 import { ErrorCodes, type MediaFailure, mediaFailure } from '@vp/errors';
-import { type Result, err, fromPromise, ok } from '@vp/result';
 
 const STAGE = 'screen';
 

@@ -1,6 +1,6 @@
+import { useFormat, useT } from '@kit/intl-react';
+import { unwrapOr } from '@kit/result';
 import { videoDuration } from '@vp/intl';
-import { useFormat, useT } from '@vp/intl-react';
-import { unwrapOr } from '@vp/result';
 
 const PERCENT = 100;
 

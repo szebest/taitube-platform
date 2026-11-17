@@ -1,4 +1,4 @@
-import { Drawer, Icon, type IconId, Slot, Tooltip, useUiCopy, VisuallyHidden } from '@vp/ui';
+import { Drawer, Icon, type IconId, Slot, Tooltip, useUiCopy, VisuallyHidden } from '@kit/ui';
 import {
   type ComponentPropsWithRef,
   isValidElement,

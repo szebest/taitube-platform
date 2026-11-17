@@ -1,9 +1,9 @@
+import { Format, useT } from '@kit/intl-react';
+import { Icon, IconButton } from '@kit/ui';
 import { Link } from '@tanstack/react-router';
 import type { AuthoredCommentView } from '@vp/api-contracts';
 import { publishedAt } from '@vp/intl';
-import { Format, useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
-import { Icon, IconButton } from '@vp/ui';
 import { PagedFooter } from '#app/components/feed/paged-footer';
 import { myCommentsQueryOptions } from '#app/features/library/api/library-queries';
 import { useDeleteMyComment } from '#app/features/library/hooks/use-delete-my-comment';

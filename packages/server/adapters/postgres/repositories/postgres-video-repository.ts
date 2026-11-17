@@ -1,3 +1,4 @@
+import { type Result, err, fromPromise, map, ok } from '@kit/result';
 import {
   type ListPublicVideosOptions,
   type ListPublicVideosResult,
@@ -12,7 +13,6 @@ import {
 import * as schema from '@vp/db';
 import { publicFeedWalkInstant } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
-import { type Result, err, fromPromise, map, ok } from '@vp/result';
 import { type SQL, and, desc, eq, gt, inArray, sql } from 'drizzle-orm';
 import {
   drizzleWhere,

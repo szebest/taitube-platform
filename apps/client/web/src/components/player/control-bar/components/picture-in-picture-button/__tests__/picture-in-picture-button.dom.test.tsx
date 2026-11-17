@@ -1,6 +1,6 @@
+import { IntlProvider } from '@kit/intl-react';
 import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
-import { IntlProvider } from '@vp/intl-react';
 import { PictureInPictureButton } from '../picture-in-picture-button';
 
 function renderButton(props: { available: boolean; active?: boolean }) {

@@ -25,7 +25,7 @@ A sheet that rises from the bottom edge on compact screens, draggable to dismiss
 
 ```ts
 // types.ts
-import type { SizeOption } from '@vp/design-tokens';
+import type { SizeOption } from '@kit/design-tokens';
 
 export type DrawerSize = Extract<SizeOption, 'sm' | 'md' | 'lg'>;
 ```

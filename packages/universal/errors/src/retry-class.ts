@@ -1,6 +1,5 @@
 import { type ErrorCode, ErrorCodes } from './error-codes';
-
-export type RetryClass = 'permanent' | 'transient';
+import type { RetryClass } from './registry';
 
 /**
  * ADR-18's classification, declared once per code instead of judged at each throw site. The
@@ -144,8 +143,3 @@ export const RETRY_CLASS: Readonly<Record<ErrorCode, RetryClass>> = {
   [ErrorCodes.CHANNEL_MEMBER_NOT_FOUND]: 'permanent',
   [ErrorCodes.CHANNEL_OWNER_IMMUTABLE]: 'permanent',
 };
-
-/** ADR-18's "when unsure, retry a little, then park" applies to anything not in the table. */
-export function retryClass(code: ErrorCode | string): RetryClass {
-  return RETRY_CLASS[code as ErrorCode] ?? 'transient';
-}

@@ -1,3 +1,4 @@
+import { isErr, ok, type Result } from '@kit/result';
 import {
   type CaptionCommit,
   type CaptionRecord,
@@ -22,7 +23,6 @@ import {
   type UserEvent,
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { isErr, ok, type Result } from '@vp/result';
 import { type Clock, realClock } from './clock';
 import { searchTokens } from './search-text';
 

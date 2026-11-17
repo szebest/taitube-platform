@@ -1,3 +1,5 @@
+import type { Logger } from '@kit/logger';
+import type { Result } from '@kit/result';
 import type {
   CacheClient,
   FlowProducerPort,
@@ -46,9 +48,7 @@ import {
   ScreenJob,
   TranscodeJob,
 } from '@vp/job-contracts';
-import type { Logger } from '@vp/logger';
 import type { PipelineMetrics } from '@vp/observability';
-import type { Result } from '@vp/result';
 import type { SpeechTools } from '@vp/whisper';
 import { consuming } from './consuming';
 import type { Every } from './heartbeat';

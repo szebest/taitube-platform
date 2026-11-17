@@ -1,7 +1,7 @@
+import type { Result } from '@kit/result';
 import type { NewWatchProgress, WatchHistoryEntry, WatchProgress } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import type { Result } from '@vp/result';
 
 interface WatchHistoryCursor {
   watchedAt: Date;

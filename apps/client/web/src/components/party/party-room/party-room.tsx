@@ -1,5 +1,5 @@
-import { useT } from '@vp/intl-react';
-import { Tabs } from '@vp/ui';
+import { useT } from '@kit/intl-react';
+import { Tabs } from '@kit/ui';
 import type { ComponentPropsWithRef } from 'react';
 import { PARTY_ROOM_TABS } from './constants';
 import { PartyRoomContext, usePartyRoom } from './party-room.context';

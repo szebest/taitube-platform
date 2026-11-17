@@ -32,7 +32,7 @@ Instructions for any coding agent working on the Taitube distributed worker runt
 
 ### Rule 3: The Consumer Is the Only Throw
 - A stage returns `Result<T, E>` and decides nothing about retries (SDD ADR-24). `composition/stages.module.ts` converts:
-  `if (isErr(outcome)) throw toPipelineError(outcome.error)`, because BullMQ's retry contract *is* the exception
+  `if (isErr(outcome)) throw toPipelineError(errorCodeRegistry, outcome.error)`, because BullMQ's retry contract *is* the exception
   - a stage that returns normally is a completed job.
 - `toPipelineError` lives in `@vp/errors` and reads `RETRY_CLASS`, so ADR-18's classification is decided once
   per code in the vocabulary and the throw site has no judgement left to make. Never classify by inspecting
@@ -44,14 +44,14 @@ Instructions for any coding agent working on the Taitube distributed worker runt
   `safeParse` before the stage runs, and `instrument` validates the job id; a stage receives a typed job.
 - The unknown-error default is unchanged: anything that escapes a stage as a raw throw is transient with an
   attempt cap of 3.
-- Dual-runtime parity is unaffected: `@vp/result` is plain TypeScript with no `Bun.*` and no `node:*`.
+- Dual-runtime parity is unaffected: `@kit/result` is plain TypeScript with no `Bun.*` and no `node:*`.
 
 ### Rule 4: Bounded Temp File Cleanup
 - FFmpeg work happens in a per-job directory from `createScratchDir(tmpRoot, prefix)` (`src/stages/scratch-dir.ts`), under `config.worker.tmpDir` (`TMP_DIR`, default `/tmp/vp`, a tmpfs in compose).
 - The stage removes it with `removeScratchDir` in a `finally` (`probe.ts`, `thumbnail.ts`, `transcode.ts`); a directory left behind is removed by the `tmp-sweep` housekeeping task.
 
 ### Rule 5: Graceful Shutdown & Liveness
-- `SIGTERM` and `SIGINT` run `shutdownOnce` from `@vp/composition`, the same drained shutdown as the API: the runner's container disposes in reverse construction order and a close that outlives the stage's `shutdownTimeoutMs` is abandoned with the pending disposer named. `shutdownTimeoutMs` is the pod's `terminationGracePeriodSeconds` less the 5 s preStop and a 5 s margin; `registry.test.ts` reads the manifests to hold them together.
+- `SIGTERM` and `SIGINT` run `shutdownOnce` from `@kit/composition`, the same drained shutdown as the API: the runner's container disposes in reverse construction order and a close that outlives the stage's `shutdownTimeoutMs` is abandoned with the pending disposer named. `shutdownTimeoutMs` is the pod's `terminationGracePeriodSeconds` less the 5 s preStop and a 5 s margin; `registry.test.ts` reads the manifests to hold them together.
 - The handlers are installed before `start()`, so a signal while the worker boots drains too. `start()` runs the metrics server and the heartbeat before the consumer (`resolveStartOrder`, held by `tests/in-process/start-order.test.ts`), so a bound metrics port fails the boot before a job is taken.
 - `Heartbeat` (`src/heartbeat.ts`) is the only writer of `WORKER_HEARTBEAT_PATH` (default `/tmp/vp/heartbeat`): integer epoch seconds and a newline, every 15 s (the `WORKER_HEARTBEAT_INTERVAL_MS` constant in `@vp/env-schema`'s `tuning.ts`). Liveness fails when the file is missing or 45 s old; readiness is `/readyz` on the metrics port, which asks the consume queue's Redis connection.
 

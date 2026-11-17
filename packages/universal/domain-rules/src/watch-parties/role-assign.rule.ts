@@ -1,3 +1,4 @@
+import { andThen, err, ok, type Result } from '@kit/result';
 import { IMPLICIT_ROLE_KEYS, type RoomRole, type WatchPartyPermission } from '@vp/domain';
 import {
   type WatchPartyPermissionMissing,
@@ -10,7 +11,6 @@ import {
   type WatchPartyAbility,
   type WatchPartyMemberSubject,
 } from '@vp/permissions';
-import { andThen, err, ok, type Result } from '@vp/result';
 import { requireRoomPermission } from './permission.rule';
 
 export interface RoleAssignInput {

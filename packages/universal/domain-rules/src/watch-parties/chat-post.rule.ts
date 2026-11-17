@@ -1,3 +1,4 @@
+import { andThen, err, ok, type Result } from '@kit/result';
 import type { WatchPartyRoom } from '@vp/domain';
 import {
   type WatchPartyChatOff,
@@ -5,7 +6,6 @@ import {
   watchPartyChatOff,
 } from '@vp/errors';
 import { canInRoom, type WatchPartyAbility } from '@vp/permissions';
-import { andThen, err, ok, type Result } from '@vp/result';
 import { requireRoomPermission } from './permission.rule';
 
 export interface WatchPartyChatPostInput {

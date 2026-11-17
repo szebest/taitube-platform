@@ -1,7 +1,7 @@
 import { randomBytes, type ScryptOptions, scrypt, timingSafeEqual } from 'node:crypto';
+import { fromPromise, ok, type Result } from '@kit/result';
 import type { HashingFailed, PasswordHasherPort } from '@vp/core/ports';
 import { ErrorCodes } from '@vp/errors';
-import { fromPromise, ok, type Result } from '@vp/result';
 
 export interface ScryptCost {
   readonly N: number;

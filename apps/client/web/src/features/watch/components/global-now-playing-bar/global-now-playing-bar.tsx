@@ -1,7 +1,7 @@
+import { useT } from '@kit/intl-react';
+import { Icon, IconButton, useUiCopy } from '@kit/ui';
 import { Link, useNavigate } from '@tanstack/react-router';
 import type { VideoSummary } from '@vp/api-contracts';
-import { useT } from '@vp/intl-react';
-import { Icon, IconButton, useUiCopy } from '@vp/ui';
 import { PictureInPicture2 } from 'lucide-react';
 import {
   usePlayerPictureInPicture,

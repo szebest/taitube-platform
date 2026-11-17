@@ -1,3 +1,4 @@
+import { err, isErr, ok, type Result } from '@kit/result';
 import {
   type CategoryRepositoryPort,
   type ChannelAuditRepositoryPort,
@@ -15,7 +16,6 @@ import {
 import { type CreatorLibraryCursor, creatorLibraryCursorOf, videoEditAudit } from '@vp/domain';
 import { type DatabaseUnavailable, type VersionConflict, versionConflict } from '@vp/errors';
 import { visibilityNotificationJobs } from '@vp/job-contracts';
-import { err, isErr, ok, type Result } from '@vp/result';
 
 interface StudioVideos extends Pick<VideoRepository, 'transition'> {
   getAllVideos(): VideoRecord[];

@@ -1,5 +1,8 @@
+import { packageDir } from '../../scripts/workspace-packages';
 import { clientApps } from './client-apps';
 import { productionSources, read, trackedFiles } from './repo-files';
+
+const UI = packageDir('@kit/ui');
 
 const URL_LITERAL = /\bhttps?:\/\/[^\s'"`)\\<>]+/g;
 const HOST = /^https?:\/\/([^/:?#]+)/;
@@ -61,12 +64,12 @@ describe('architecture: local-first', () => {
   });
 
   it('imports no stylesheet or font from another host in the design system styles', () => {
-    const styles = trackedFiles(':(glob)packages/client/ui/src/styles/**/*.css');
+    const styles = trackedFiles(`:(glob)${UI}/src/styles/**/*.css`);
     const offenders = styles.flatMap((file) =>
       externalHosts(read(file)).map((url) => `${file}: ${url}`)
     );
 
-    expect(styles).toContain('packages/client/ui/src/styles/fonts.css');
+    expect(styles).toContain(`${UI}/src/styles/fonts.css`);
     expect(offenders).toEqual([]);
   });
 

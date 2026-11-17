@@ -1,5 +1,5 @@
-import { useT } from '@vp/intl-react';
-import { Field, Select } from '@vp/ui';
+import { useT } from '@kit/intl-react';
+import { Field, Select } from '@kit/ui';
 
 const ANY = 'any';
 

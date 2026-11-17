@@ -1,4 +1,4 @@
-import { isOk } from '@vp/result';
+import { isOk } from '@kit/result';
 import { validateVideoMetadata } from '../metadata';
 
 describe('@vp/validation: validateVideoMetadata', () => {

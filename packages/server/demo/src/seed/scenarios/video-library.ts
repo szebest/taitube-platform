@@ -1,4 +1,4 @@
-import type { Result } from '@vp/result';
+import type { Result } from '@kit/result';
 import type { z } from 'zod';
 import type { Actor, Api } from '../api';
 import type { SeedFailure } from '../failure';

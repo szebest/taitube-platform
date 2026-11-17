@@ -1,6 +1,6 @@
+import type { Result } from '@kit/result';
 import type { PositionWrite, WatchPartyQueueItem } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import type { Result } from '@vp/result';
 import type { NewSystemLine, NewWatchPartyQueueItem } from './watch-party-room-repository';
 
 export interface QueueSnapshot {

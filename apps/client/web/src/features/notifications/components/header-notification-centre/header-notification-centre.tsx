@@ -1,10 +1,10 @@
+import { useFormat, useT } from '@kit/intl-react';
+import { unwrapOr } from '@kit/result';
+import { Button, Icon, useMediaQuery, useToast, useUiCopy } from '@kit/ui';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import type { Notification } from '@vp/api-contracts';
-import { useFormat, useT } from '@vp/intl-react';
 import { unreadNotificationCountQueryOptions, useAccount, useApi, useUserEvent } from '@vp/queries';
-import { unwrapOr } from '@vp/result';
-import { Button, Icon, useMediaQuery, useToast, useUiCopy } from '@vp/ui';
 import { useState } from 'react';
 import { NotificationCentre } from '#app/components/shell/notification-centre';
 import { useMarkRead } from '#app/features/notifications/hooks/use-mark-read';

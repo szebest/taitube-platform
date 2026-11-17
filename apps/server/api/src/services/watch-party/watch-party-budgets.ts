@@ -1,3 +1,4 @@
+import { assertNever, err, isErr, ok, type Result } from '@kit/result';
 import type {
   BudgetRule,
   GateAdmission,
@@ -5,7 +6,6 @@ import type {
   WatchPartyGatePort,
 } from '@vp/core/ports';
 import { type CacheUnavailable, ErrorCodes, type Failure } from '@vp/errors';
-import { assertNever, err, isErr, ok, type Result } from '@vp/result';
 
 export type RateLimited = Failure<typeof ErrorCodes.RATE_LIMITED, { retryAfterSeconds: number }>;
 

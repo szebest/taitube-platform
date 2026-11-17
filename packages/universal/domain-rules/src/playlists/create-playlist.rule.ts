@@ -1,10 +1,10 @@
+import { type Result, andThen, map } from '@kit/result';
 import {
   DEFAULT_PLAYLIST_VISIBILITY,
   type PlaylistKind,
   type PlaylistVisibility,
 } from '@vp/domain';
 import { type UserContext, canCreatePlaylist } from '@vp/permissions';
-import { type Result, andThen, map } from '@vp/result';
 import {
   type InvalidPlaylistDetails,
   validatePlaylistDescription,

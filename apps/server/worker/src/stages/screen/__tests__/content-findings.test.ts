@@ -1,6 +1,6 @@
+import { err } from '@kit/result';
 import { InMemoryFrameClassifier, InMemoryStorageClient } from '@vp/adapters/in-memory';
 import { ErrorCodes, mediaFailure } from '@vp/errors';
-import { err } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { STAGE_SETTINGS } from '../../../__tests__/stage-settings';
 import { contentFindings } from '../content-findings';

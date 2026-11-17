@@ -1,5 +1,5 @@
+import type { Result } from '@kit/result';
 import type { CacheUnavailable } from '@vp/errors';
-import type { Result } from '@vp/result';
 
 /**
  * Who is watching a stream, counted across pods. A viewer is present until it leaves or stops

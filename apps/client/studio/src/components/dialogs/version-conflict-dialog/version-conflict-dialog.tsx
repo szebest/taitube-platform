@@ -1,5 +1,5 @@
-import { useT } from '@vp/intl-react';
-import { Button, ResponsiveModal } from '@vp/ui';
+import { useT } from '@kit/intl-react';
+import { Button, ResponsiveModal } from '@kit/ui';
 
 export interface VersionConflictDialogProps {
   open: boolean;

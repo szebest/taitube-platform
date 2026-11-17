@@ -1,4 +1,4 @@
-import { map } from '@vp/result';
+import { map } from '@kit/result';
 import { type OptionKeys, withOptions } from '../with-options';
 
 const LIST_OPTION_KEYS = ['type', 'style'] as const satisfies OptionKeys<Intl.ListFormatOptions>;

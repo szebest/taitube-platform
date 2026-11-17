@@ -1,6 +1,6 @@
+import { Paginator } from '@kit/pagination';
 import { RedisPlayheadCacheAdapter } from '@vp/adapters/redis';
 import { RISING } from '@vp/domain';
-import { Paginator } from '@vp/pagination';
 import { expectOk } from '@vp/testing/result';
 import { HistoryPause } from '../history-pause';
 import { WatchHistoryService } from '../watch-history-service';

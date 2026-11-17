@@ -1,5 +1,5 @@
+import { isErr } from '@kit/result';
 import { ErrorCodes } from '@vp/errors';
-import { isErr } from '@vp/result';
 import { ADMIN, OWNER, STRANGER, aVideo } from '../../__tests__/entities';
 import { decideScreeningAppeal, decideScreeningRead } from '../appeal-screening.rule';
 

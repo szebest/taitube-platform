@@ -1,4 +1,4 @@
-import { type Result, err, ok } from '@vp/result';
+import { type Result, err, ok } from '@kit/result';
 import { normalizePlainText } from '../plain-text';
 import { type ChannelLinkLimits, type InvalidChannelLinks, invalidChannelLinks } from './failures';
 import { isHttpsUrl } from './https-url';

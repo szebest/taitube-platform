@@ -1,5 +1,5 @@
+import { Badge, type BadgeProps, type BadgeTone } from '@kit/ui';
 import type { ChannelRole } from '@vp/domain';
-import { Badge, type BadgeProps, type BadgeTone } from '@vp/ui';
 
 const TONE: Record<ChannelRole, BadgeTone> = {
   manager: 'accent',

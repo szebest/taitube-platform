@@ -1,3 +1,4 @@
+import { andThenAsync, err, map, ok, type Result } from '@kit/result';
 import type { banWatchPartyMember, transferWatchPartyOwnership } from '@vp/api-contracts';
 import type { RoomWrite } from '@vp/core/repositories';
 import { decideMemberAction, decideOwnerTransfer, requireRoomPermission } from '@vp/domain-rules';
@@ -9,7 +10,6 @@ import {
   versionConflict,
   watchPartyNotFound,
 } from '@vp/errors';
-import { andThenAsync, err, map, ok, type Result } from '@vp/result';
 import type { z } from 'zod';
 import type { PartyCaller } from './party-caller';
 import type { RoomContext } from './watch-party-context';

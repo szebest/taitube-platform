@@ -1,5 +1,5 @@
+import { err, ok, type Result } from '@kit/result';
 import { ErrorCodes, watchPartyFull, watchPartyPermissionMissing } from '@vp/errors';
-import { err, ok, type Result } from '@vp/result';
 import {
   countCommand,
   countDenial,

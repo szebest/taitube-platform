@@ -1,6 +1,6 @@
+import type { Logger } from '@kit/logger';
+import { fromPromise, isOk } from '@kit/result';
 import type { AppConfig } from '@vp/env-schema';
-import type { Logger } from '@vp/logger';
-import { fromPromise, isOk } from '@vp/result';
 
 const MAX_ATTEMPTS = 10;
 const RETRY_DELAY_MS = 2_000;

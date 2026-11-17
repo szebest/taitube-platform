@@ -1,5 +1,5 @@
-import { type Result, err, ok } from '@vp/result';
-import { type InvalidField, invalidField } from '../failures';
+import { type Result, err, ok } from '@kit/result';
+import { type InvalidField, invalidField } from '../field-failures';
 
 const MS_PER_MINUTE = 60_000;
 const MS_PER_DAY = 24 * 60 * MS_PER_MINUTE;

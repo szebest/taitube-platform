@@ -1,4 +1,4 @@
-import { isErr } from '@vp/result';
+import { isErr } from '@kit/result';
 import { OWNER_ID, seedOwners } from '../../../__tests__/contract/fixtures';
 import { postgresSubject } from '../../../__tests__/contract/postgres-subject';
 import { describeRecommendationFeedbackRepositoryContract } from '../../../__tests__/contract/recommendation-feedback-repository.contract';

@@ -1,5 +1,5 @@
+import { Icon, Slot, useUiCopy } from '@kit/ui';
 import { EmptyState } from '@vp/components';
-import { Icon, Slot, useUiCopy } from '@vp/ui';
 import { type ComponentPropsWithRef, type CSSProperties, useRef, useState } from 'react';
 import { DEFAULT_OPACITY } from './components/live-chat-menu/live-chat-menu';
 import { LiveChatContext, useLiveChat } from './live-chat.context';

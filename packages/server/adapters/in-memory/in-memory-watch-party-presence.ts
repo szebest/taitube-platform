@@ -1,3 +1,4 @@
+import { ok, type Result } from '@kit/result';
 import type {
   PresenceAdmission,
   PresenceAdmissionRequest,
@@ -5,7 +6,6 @@ import type {
   WatchPartyPresencePort,
 } from '@vp/core/ports';
 import type { CacheUnavailable } from '@vp/errors';
-import { ok, type Result } from '@vp/result';
 
 interface Presence {
   touchedMs: number;

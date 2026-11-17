@@ -1,5 +1,5 @@
+import { isOk } from '@kit/result';
 import { ErrorCodes } from '@vp/errors';
-import { isOk } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
 import type { FlowProducer } from 'bullmq';
 import { bullMqFlowProducerSubject } from '../../__tests__/contract/bullmq-subjects';

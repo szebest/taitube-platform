@@ -1,6 +1,6 @@
+import { useT } from '@kit/intl-react';
+import { Button, Icon, Input, Switch } from '@kit/ui';
 import { useNavigate } from '@tanstack/react-router';
-import { useT } from '@vp/intl-react';
-import { Button, Icon, Input, Switch } from '@vp/ui';
 import { useId, useState } from 'react';
 import { useAccountPreference } from '#app/hooks/use-account-preference';
 import { urlModals } from '#app/lib/url-modal/registry';

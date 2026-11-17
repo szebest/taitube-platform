@@ -1,6 +1,6 @@
+import { err } from '@kit/result';
 import { type InMemoryJobQueue, InMemoryRepositories } from '@vp/adapters/in-memory';
 import { ErrorCodes, queueUnavailable } from '@vp/errors';
-import { err } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { runReconcileLive } from '../reconcile-live';

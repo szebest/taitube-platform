@@ -1,3 +1,4 @@
+import { fromPromise, map, type Result } from '@kit/result';
 import type {
   TrustedCommenter,
   TrustedCommenterQuery,
@@ -6,7 +7,6 @@ import type {
 import * as schema from '@vp/db';
 import type { NewChannelAuditEntry } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
-import { fromPromise, map, type Result } from '@vp/result';
 import { and, desc, eq } from 'drizzle-orm';
 import { keysetBefore, msTimestamp } from '../scopes/index';
 import { appendChannelAudit } from './channel-audit-writes';

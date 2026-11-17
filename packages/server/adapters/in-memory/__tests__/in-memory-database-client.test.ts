@@ -1,5 +1,5 @@
+import { ok } from '@kit/result';
 import { ErrorCodes } from '@vp/errors';
-import { ok } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { InMemoryDatabaseClient } from '../in-memory-database-client';
 

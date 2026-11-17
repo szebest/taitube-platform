@@ -1,4 +1,4 @@
-import { andThen, map, ok, type Result } from '@vp/result';
+import { andThen, map, ok, type Result } from '@kit/result';
 import {
   type InvalidCapacity,
   type InvalidRoomName,

@@ -1,4 +1,4 @@
-import { type Machine, toMermaid } from '../../packages/universal/machine/src/index';
+import { type Machine, toMermaid } from '../../packages/platform/universal/machine/src/index';
 
 export interface LoadedMachine {
   file: string;

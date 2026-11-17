@@ -1,6 +1,6 @@
+import { isErr, isOk } from '@kit/result';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { isErr, isOk } from '@vp/result';
 import { OWNER, STRANGER } from '../../__tests__/entities';
 import { decideChannelUserRestriction } from '../restrict-channel-user.rule';
 

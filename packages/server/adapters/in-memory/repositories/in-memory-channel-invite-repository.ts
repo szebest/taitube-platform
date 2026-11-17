@@ -1,3 +1,4 @@
+import { isErr, map, ok, type Result } from '@kit/result';
 import type {
   AcceptInviteOutcome,
   ChannelInviteRepositoryPort,
@@ -9,7 +10,6 @@ import type {
 import { type ChannelInvite, type NewChannelAuditEntry, roleHas } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { teamInviteOutbox } from '@vp/job-contracts';
-import { isErr, map, ok, type Result } from '@vp/result';
 import type { Clock } from './clock';
 import type { InMemoryChannelAuditRepository } from './in-memory-channel-audit-repository';
 import type { InMemoryChannelMemberRepository } from './in-memory-channel-member-repository';

@@ -1,4 +1,4 @@
-import { tv } from '@vp/ui';
+import { tv } from '@kit/ui';
 import { Suspense, useEffect, useState, useSyncExternalStore } from 'react';
 import { useIsWatching, useOwnsPlayer } from '#app/features/watch/hooks/use-is-watching';
 import { useMediaSession } from '#app/features/watch/hooks/use-media-session';

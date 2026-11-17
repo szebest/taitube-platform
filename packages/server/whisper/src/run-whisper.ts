@@ -1,8 +1,8 @@
 import { spawn } from 'node:child_process';
 import { readFile, stat } from 'node:fs/promises';
+import { type Result, err, fromPromise, isErr, isOk } from '@kit/result';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
 import { ErrorCodes, type MediaFailure, mediaFailure } from '@vp/errors';
-import { type Result, err, fromPromise, isErr, isOk } from '@vp/result';
 import { classifyWhisperFailure } from './classify-whisper-failure';
 import { type WhisperArgsOptions, buildWhisperArgs } from './whisper-args';
 import { type WhisperTranscript, parseWhisperOutput } from './whisper-output';

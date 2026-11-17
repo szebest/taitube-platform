@@ -1,4 +1,4 @@
-import { tv } from '@vp/ui';
+import { tv } from '@kit/ui';
 import type { OfflineStateSize, OfflineStateTone } from './types';
 
 export const offlineStateStyles = tv({

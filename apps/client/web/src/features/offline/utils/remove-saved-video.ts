@@ -1,4 +1,4 @@
-import { err, fromPromise, type Result } from '@vp/result';
+import { err, fromPromise, type Result } from '@kit/result';
 import { CACHE_NAMES } from '#app/integrations/service-worker/cache-names';
 import { putAll } from './put-all';
 import { readSavedIndex, savedIndexEntry } from './saved-index';

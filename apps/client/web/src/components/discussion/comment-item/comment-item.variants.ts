@@ -1,4 +1,4 @@
-import { tv } from '@vp/ui';
+import { tv } from '@kit/ui';
 import type { CommentAvatarSize, CommentLevel, CommentState } from './types';
 
 export const COMMENT_AVATAR = {

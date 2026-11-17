@@ -1,11 +1,11 @@
+import { Container } from '@kit/composition';
+import { err, type Result } from '@kit/result';
 import { Adapters, registerAdapters } from '@vp/adapters/composition';
 import { InMemoryCacheClient } from '@vp/adapters/in-memory';
-import { Container } from '@vp/composition';
 import type { PatternMessageListener } from '@vp/core/ports';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { type CacheUnavailable, cacheUnavailable, ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { err, type Result } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { registerServices, resolveBackground, Services } from '../services.module';
 

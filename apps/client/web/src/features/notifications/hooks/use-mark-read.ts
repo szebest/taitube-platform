@@ -1,8 +1,9 @@
+import { useT } from '@kit/intl-react';
+import { assertNever } from '@kit/result';
 import { type InfiniteData, mutationOptions, useMutation } from '@tanstack/react-query';
 import type { ApiClient } from '@vp/api-client';
 import type { Notification } from '@vp/api-contracts';
 import type { NotificationReadScope } from '@vp/domain';
-import { useT } from '@vp/intl-react';
 import {
   notificationKeys,
   setUnreadCount,
@@ -10,7 +11,6 @@ import {
   useApi,
   useFailureToast,
 } from '@vp/queries';
-import { assertNever } from '@vp/result';
 import { restoreQueryData } from '#app/integrations/query/restore-query-data';
 
 type NotificationPages = InfiniteData<{ items: Notification[]; nextCursor: string | null }>;

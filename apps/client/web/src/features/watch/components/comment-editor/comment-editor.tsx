@@ -1,5 +1,5 @@
-import { useT } from '@vp/intl-react';
-import { Button, Textarea, useUiCopy } from '@vp/ui';
+import { useT } from '@kit/intl-react';
+import { Button, Textarea, useUiCopy } from '@kit/ui';
 import { useState } from 'react';
 
 export interface CommentEditorProps {

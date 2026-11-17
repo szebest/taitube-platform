@@ -1,3 +1,4 @@
+import { type Result, ok } from '@kit/result';
 import type {
   PlaybackWatch,
   PlaybackWatchOutcome,
@@ -15,7 +16,6 @@ import {
   mergeHourlyCounts,
 } from '@vp/domain';
 import type { CacheUnavailable } from '@vp/errors';
-import { type Result, ok } from '@vp/result';
 
 type MutableCount = { -readonly [K in keyof ViewCount]: ViewCount[K] };
 

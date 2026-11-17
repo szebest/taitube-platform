@@ -1,4 +1,4 @@
-import { lazyComponent } from '@vp/ui';
+import { lazyComponent } from '@kit/ui';
 
 export const LazySaveToPlaylistDialog = lazyComponent(() => import('./save-to-playlist-dialog'), {
   name: 'SaveToPlaylistDialog',

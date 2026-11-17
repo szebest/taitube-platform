@@ -1,4 +1,4 @@
-import { Container } from '@vp/composition';
+import { Container } from '@kit/composition';
 import { graph } from '../in-memory-graph';
 import { Repo } from '../in-memory-repo-tokens';
 import { provideScreening } from '../in-memory-screening-providers';

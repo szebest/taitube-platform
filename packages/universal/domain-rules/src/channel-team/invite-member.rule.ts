@@ -1,3 +1,4 @@
+import { type Result, andThen, err, ok } from '@kit/result';
 import {
   type ActingChannel,
   CHANNEL_INVITE_TTL_DAYS,
@@ -5,7 +6,6 @@ import {
   type ChannelRole,
 } from '@vp/domain';
 import { type UserContext, canInviteChannelMember } from '@vp/permissions';
-import { type Result, andThen, err, ok } from '@vp/result';
 import { type AuthorizationFailure, authorize } from '../authorize';
 import { type ChannelNotFound, channelNotFound } from '../channels/failures';
 import { type ChannelMemberExists, channelMemberExists } from './failures';

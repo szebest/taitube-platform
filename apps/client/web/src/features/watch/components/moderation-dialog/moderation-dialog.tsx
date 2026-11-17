@@ -1,3 +1,6 @@
+import { useAppForm, validateWith } from '@kit/forms';
+import { useT } from '@kit/intl-react';
+import { Button, ResponsiveModal, useToast, useUiCopy } from '@kit/ui';
 import { useQuery } from '@tanstack/react-query';
 import type { CommentView } from '@vp/api-contracts';
 import { DisclosureControl } from '@vp/components';
@@ -10,8 +13,6 @@ import {
   type Disclosure,
   type DisclosureRule,
 } from '@vp/domain';
-import { useAppForm, validateWith } from '@vp/forms';
-import { useT } from '@vp/intl-react';
 import { canReadCommentSettings } from '@vp/permissions';
 import { useCan } from '@vp/permissions-react';
 import {
@@ -21,7 +22,6 @@ import {
   useModerateComment,
   useRestrictUser,
 } from '@vp/queries';
-import { Button, ResponsiveModal, useToast, useUiCopy } from '@vp/ui';
 import { validateModerationNote } from '@vp/validation';
 import { useId } from 'react';
 

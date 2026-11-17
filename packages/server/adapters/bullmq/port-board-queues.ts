@@ -9,8 +9,8 @@ import type {
   QueueWorker,
   Status,
 } from '@bull-board/api/typings/app';
+import { type Result, isErr, unwrapOr } from '@kit/result';
 import type { JobQueue, QueueJobCounts } from '@vp/core/ports';
-import { type Result, isErr, unwrapOr } from '@vp/result';
 
 const IDLE_COUNTS: QueueJobCounts = {
   active: 0,

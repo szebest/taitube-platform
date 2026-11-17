@@ -19,7 +19,7 @@ repository interfaces every persistence adapter satisfies. It holds no I/O, no S
   `Promise<Result<Buffer, StorageUnavailable>>`. That is what a real object store hands back, and it is why
   this package cannot be `universal`.
 - **The portable half already left.** Entities and value objects are `@vp/domain`, pure rules are
-  `@vp/domain-rules` and `@vp/validation`, and the keyset cursor mechanism is `@vp/pagination`. All are
+  `@vp/domain-rules` and `@vp/validation`, and the keyset cursor mechanism is `@kit/pagination`. All are
   `universal`. Do not add any of that code back here, where nothing client-side could reach it.
 
 ---

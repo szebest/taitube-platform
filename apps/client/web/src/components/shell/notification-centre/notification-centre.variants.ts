@@ -1,4 +1,4 @@
-import { tv } from '@vp/ui';
+import { tv } from '@kit/ui';
 import type { NotificationCentreLayout } from './types';
 
 export const notificationCentreStyles = tv({

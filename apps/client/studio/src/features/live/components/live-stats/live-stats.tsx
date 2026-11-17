@@ -1,6 +1,6 @@
+import { Format, useT } from '@kit/intl-react';
 import type { LiveStreamView } from '@vp/api-contracts';
 import { StatCard } from '@vp/components';
-import { Format, useT } from '@vp/intl-react';
 import { useNow } from '#app/features/live/hooks/use-now';
 
 const MS_PER_SECOND = 1000;

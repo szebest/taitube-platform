@@ -1,6 +1,6 @@
+import { ResponsiveModal } from '@kit/ui';
 import type { Decorator, Meta, StoryObj } from '@storybook/react-vite';
 import { screen } from '@testing-library/dom';
-import { ResponsiveModal } from '@vp/ui';
 import { ShareDialog, ShareDialogContent } from '..';
 
 const VIDEO_ID = '0190c3a0-5e1d-7000-8000-00000000a001';

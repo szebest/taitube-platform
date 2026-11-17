@@ -1,6 +1,6 @@
+import { variantNames } from '@kit/ui';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { CHART_SERIES } from '@vp/components';
-import { variantNames } from '@vp/ui';
 import { ChartFrame, ChartSkeleton, chartFrameStyles, useChartFrame, useChartTheme } from '..';
 import { ChartFrameRoot, type ChartFrameRootProps } from '../chart-frame';
 

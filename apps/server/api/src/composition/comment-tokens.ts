@@ -1,4 +1,4 @@
-import { token } from '@vp/composition';
+import { token } from '@kit/composition';
 import type {
   ChannelRestrictionService,
   CommentBulkService,

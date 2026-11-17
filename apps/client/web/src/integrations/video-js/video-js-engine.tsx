@@ -1,7 +1,7 @@
+import { fromPromise, ignore, isOk } from '@kit/result';
 import { liveFeature, videoFeatures } from '@videojs/core/dom';
 import { Container, createPlayer, Gesture, LiveButton, Poster, useContainer } from '@videojs/react';
 import { HlsJsVideo } from '@videojs/react/media/hlsjs-video';
-import { fromPromise, ignore, isOk } from '@vp/result';
 import {
   type ReactNode,
   type RefObject,

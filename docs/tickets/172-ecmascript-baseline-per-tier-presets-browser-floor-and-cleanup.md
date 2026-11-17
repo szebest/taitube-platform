@@ -6,7 +6,7 @@
 | Size | M (one PR, ordered commits, see *Delivery*) |
 | Blocked by | 85 - Universal intl and message core · 110 - Oxc and Vite+ toolchain |
 | Blocks | — |
-| Spec | [packages/universal/tsconfig/AGENTS.md](../../packages/universal/tsconfig/AGENTS.md) · [packages/AGENTS.md](../../packages/AGENTS.md) · [SDD ADR-23](../SDD.md#adr-23--package-runtime-tiers-the-directory-is-the-tier) · [testing.md, dual runtime](../standards/testing.md) · [170](170-platform-packages-open-closed-extractable.md) · [171](171-intl-formatters-open-extensible-list-more-tooltip-and-duration-conformance.md) |
+| Spec | [packages/universal/tsconfig/AGENTS.md](../../packages/platform/universal/tsconfig/AGENTS.md) · [packages/AGENTS.md](../../packages/AGENTS.md) · [SDD ADR-23](../SDD.md#adr-23--package-runtime-tiers-the-directory-is-the-tier) · [testing.md, dual runtime](../standards/testing.md) · [170](170-platform-packages-open-closed-extractable.md) · [171](171-intl-formatters-open-extensible-list-more-tooltip-and-duration-conformance.md) |
 
 **Status:** ready
 

@@ -1,5 +1,5 @@
+import { useT } from '@kit/intl-react';
 import { useQuery } from '@tanstack/react-query';
-import { useT } from '@vp/intl-react';
 import { useApi, useFailureToast } from '@vp/queries';
 import { SubscribeButton } from '#app/components/channel/subscribe-button';
 import { useRequireAccount } from '#app/hooks/use-require-account';

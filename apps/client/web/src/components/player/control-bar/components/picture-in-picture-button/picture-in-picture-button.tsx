@@ -1,5 +1,5 @@
-import { useT } from '@vp/intl-react';
-import { IconButton } from '@vp/ui';
+import { useT } from '@kit/intl-react';
+import { IconButton } from '@kit/ui';
 import { PictureInPicture2 } from 'lucide-react';
 
 export interface PictureInPictureButtonProps {

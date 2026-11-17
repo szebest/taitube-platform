@@ -1,4 +1,4 @@
-import { DropdownMenu } from '@vp/ui';
+import { DropdownMenu } from '@kit/ui';
 import { AccountMenuItem, AccountMenuTrigger } from './account-menu';
 
 type MenuParts = Pick<typeof DropdownMenu, 'Root' | 'Content' | 'Label' | 'Separator'>;

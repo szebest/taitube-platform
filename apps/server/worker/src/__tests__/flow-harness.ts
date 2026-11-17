@@ -1,5 +1,6 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
+import { createLogger, type Logger } from '@kit/logger';
 import {
   InMemoryFlowProducer,
   InMemoryJobQueue,
@@ -13,7 +14,6 @@ import type {
   TranscodeOptions,
 } from '@vp/ffmpeg';
 import { CANONICAL_LADDER, type LadderEntry } from '@vp/job-contracts';
-import { createLogger, type Logger } from '@vp/logger';
 import { SEEDED } from '@vp/testing';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';

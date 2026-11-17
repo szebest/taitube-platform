@@ -1,6 +1,6 @@
+import { ok, type Result } from '@kit/result';
 import { LiveGatewayPort } from '@vp/core/ports';
 import type { LiveGatewayUnavailable } from '@vp/errors';
-import { ok, type Result } from '@vp/result';
 
 /** A gateway whose publishers a spec sets: `publish` puts one on a path, a kick takes it off. */
 export class InMemoryLiveGateway extends LiveGatewayPort {

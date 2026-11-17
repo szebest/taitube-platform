@@ -1,7 +1,7 @@
+import { Format, useFormat, useT } from '@kit/intl-react';
+import { unwrapOr } from '@kit/result';
+import { Badge, IconButton } from '@kit/ui';
 import { videoDuration } from '@vp/intl';
-import { Format, useFormat, useT } from '@vp/intl-react';
-import { unwrapOr } from '@vp/result';
-import { Badge, IconButton } from '@vp/ui';
 import {
   Maximize,
   Minimize,

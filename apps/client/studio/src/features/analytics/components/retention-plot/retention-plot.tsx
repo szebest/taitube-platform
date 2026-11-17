@@ -1,7 +1,7 @@
+import { useFormat } from '@kit/intl-react';
+import { unwrapOr } from '@kit/result';
 import type { VideoRetention } from '@vp/api-contracts';
 import { seriesColor } from '@vp/components';
-import { useFormat } from '@vp/intl-react';
-import { unwrapOr } from '@vp/result';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { useChartTheme } from '#app/components/analytics/chart-frame';
 

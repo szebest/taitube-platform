@@ -1,3 +1,5 @@
+import type { InvalidCursor, Paginator } from '@kit/pagination';
+import { type Result, err, isErr, map, ok } from '@kit/result';
 import type { Account, ChannelPlaylistView, OwnerChannel } from '@vp/api-contracts';
 import type {
   CaptionRepository,
@@ -24,9 +26,7 @@ import {
 } from '@vp/domain-rules';
 import type { CdnBase } from '@vp/env-schema';
 import { type DatabaseUnavailable, ErrorCodes } from '@vp/errors';
-import type { InvalidCursor, Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
-import { type Result, err, isErr, map, ok } from '@vp/result';
 import type { ChannelIdentityService, IdentityFailure } from './channel-identity-service';
 import { type ProvisionFailure, findChannelByIdOrHandle, provisionAccount } from './channel-lookup';
 import { type ChannelView, toChannelView, toOwnerExtras } from './channel-views';

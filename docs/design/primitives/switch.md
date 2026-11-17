@@ -20,7 +20,7 @@ The label is a separate [label](label.md) or a [field](field.md) with `orientati
 
 ```ts
 // types.ts
-import type { SizeOption } from '@vp/design-tokens';
+import type { SizeOption } from '@kit/design-tokens';
 
 export type SwitchSize = Extract<SizeOption, 'sm' | 'md'>;
 ```

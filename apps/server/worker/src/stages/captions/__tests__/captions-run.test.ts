@@ -1,4 +1,4 @@
-import { err, isErr, ok } from '@vp/result';
+import { err, isErr, ok } from '@kit/result';
 import { expectOk } from '@vp/testing/result';
 import { inClaimedStep, stepRenditionOf } from '../captions-run';
 import { captionsWorld } from './captions-harness';

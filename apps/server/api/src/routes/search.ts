@@ -1,6 +1,6 @@
+import { isOk, map } from '@kit/result';
 import { search, searchSuggestions } from '@vp/api-contracts';
 import { SEARCH_RATE_LIMITS } from '@vp/domain';
-import { isOk, map } from '@vp/result';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { contractSchema } from './contract-schema';

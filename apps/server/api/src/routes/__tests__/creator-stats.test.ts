@@ -1,5 +1,5 @@
 import type { InMemoryRepositories } from '@vp/adapters/in-memory';
-import { mintToken } from '@vp/dev-token';
+import { mintToken } from '@vp/dev-identity';
 import type { ChannelRole } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import { SEEDED } from '@vp/testing';

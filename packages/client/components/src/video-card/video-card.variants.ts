@@ -1,4 +1,4 @@
-import { tv } from '@vp/ui';
+import { tv } from '@kit/ui';
 import type { VideoCardSize, VideoCardState, VideoCardVariant } from './types';
 
 const BODY = 'col-start-1 min-w-0';

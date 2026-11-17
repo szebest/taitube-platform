@@ -1,8 +1,8 @@
+import { useT } from '@kit/intl-react';
+import { Button, Icon } from '@kit/ui';
 import { Link, useNavigate, useRouter } from '@tanstack/react-router';
 import type { PlaylistView } from '@vp/api-contracts';
 import { VideoThumbnail } from '@vp/components';
-import { useT } from '@vp/intl-react';
-import { Button, Icon } from '@vp/ui';
 import { useState } from 'react';
 import { useCopyLink } from '#app/hooks/use-copy-link';
 import { useDurationText } from '#app/hooks/use-duration-text';

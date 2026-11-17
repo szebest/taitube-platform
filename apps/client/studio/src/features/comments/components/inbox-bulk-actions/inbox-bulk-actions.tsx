@@ -1,6 +1,6 @@
+import { useT } from '@kit/intl-react';
 import type { BulkActionBody } from '@vp/api-contracts';
 import type { Disclosure } from '@vp/domain';
-import { useT } from '@vp/intl-react';
 import { useState } from 'react';
 import { BulkActionBar } from '#app/components/comments/bulk-action-bar';
 import { useBulkModeration } from '#app/features/comments/hooks/use-bulk-moderation';

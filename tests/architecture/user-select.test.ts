@@ -1,10 +1,14 @@
+import { packageDir } from '../../scripts/workspace-packages';
 import { read, trackedFiles } from './repo-files';
 
-const BASE = 'packages/client/ui/src/styles/base.css';
+const COMPONENTS = packageDir('@vp/components');
+const UI = packageDir('@kit/ui');
+
+const BASE = `${UI}/src/styles/base.css`;
 
 const VARIANTS = [
-  ':(glob)packages/client/ui/src/primitives/*/*.variants.ts',
-  ':(glob)packages/client/components/src/*/*.variants.ts',
+  `:(glob)${UI}/src/primitives/*/*.variants.ts`,
+  `:(glob)${COMPONENTS}/src/*/*.variants.ts`,
 ];
 
 /** A class that paints an element as a control: the pointer cursor and the touch handle, unprefixed. */
@@ -87,10 +91,10 @@ describe('architecture: one user-select rule over chrome', () => {
 
   it('keeps the per-primitive select-none utility out of the shared packages', () => {
     const sources = trackedFiles(
-      ':(glob)packages/client/ui/src/**/*.ts',
-      ':(glob)packages/client/ui/src/**/*.tsx',
-      ':(glob)packages/client/components/src/**/*.ts',
-      ':(glob)packages/client/components/src/**/*.tsx',
+      `:(glob)${UI}/src/**/*.ts`,
+      `:(glob)${UI}/src/**/*.tsx`,
+      `:(glob)${COMPONENTS}/src/**/*.ts`,
+      `:(glob)${COMPONENTS}/src/**/*.tsx`,
       ':(exclude,glob)**/__tests__/**'
     );
 

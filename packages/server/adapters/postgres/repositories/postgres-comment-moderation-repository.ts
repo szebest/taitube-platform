@@ -1,3 +1,4 @@
+import { fromPromise, map, type Result } from '@kit/result';
 import type {
   CommentLocator,
   CommentModerationRepositoryPort,
@@ -8,7 +9,6 @@ import type {
 import * as schema from '@vp/db';
 import type { CommentRemoval } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
-import { fromPromise, map, type Result } from '@vp/result';
 import { and, desc, eq, gte, lt, or } from 'drizzle-orm';
 import { drizzleWhere, keysetBefore, msTimestamp, notDeletedScope } from '../scopes/index';
 import { moderateComment } from './comment-moderation-writes';

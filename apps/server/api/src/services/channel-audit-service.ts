@@ -1,11 +1,11 @@
+import type { InvalidCursor, Paginator } from '@kit/pagination';
+import { type Result, isErr, map } from '@kit/result';
 import type { ChannelAuditPageView } from '@vp/api-contracts';
 import type { ChannelAuditRepositoryPort, ChannelRepositoryPort } from '@vp/core/repositories';
 import type { ActingChannel, ChannelAuditAction } from '@vp/domain';
 import { type AuthorizationFailure, decideChannelTask } from '@vp/domain-rules';
 import type { DatabaseUnavailable } from '@vp/errors';
-import type { InvalidCursor, Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
-import { type Result, isErr, map } from '@vp/result';
 import { profilesOf } from './channel-team-views';
 import { createdAtCursorPayload, decodeCreatedAtCursor } from './cursor';
 

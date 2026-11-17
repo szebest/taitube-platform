@@ -1,3 +1,4 @@
+import { createLogger } from '@kit/logger';
 import {
   InMemoryCacheClient,
   InMemoryLiveChatGate,
@@ -6,7 +7,6 @@ import {
 import type { LiveChatServerFrame } from '@vp/api-contracts';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes } from '@vp/errors';
-import { createLogger } from '@vp/logger';
 import type { UserContext } from '@vp/permissions';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { LiveChatHub } from '../live-chat-hub';

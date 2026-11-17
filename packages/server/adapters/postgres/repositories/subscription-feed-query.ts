@@ -1,7 +1,7 @@
+import { type Result, fromPromise, isErr, map } from '@kit/result';
 import type { SubscriptionFeedOptions, VideoRecord } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
-import { type Result, fromPromise, isErr, map } from '@vp/result';
 import { desc, eq, sql } from 'drizzle-orm';
 import {
   drizzleWhere,

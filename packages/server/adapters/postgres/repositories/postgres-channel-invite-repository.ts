@@ -1,3 +1,4 @@
+import { fromPromise, type Result } from '@kit/result';
 import type {
   AcceptInviteOutcome,
   ChannelInviteRepositoryPort,
@@ -14,7 +15,6 @@ import {
 } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { teamInviteOutbox } from '@vp/job-contracts';
-import { fromPromise, type Result } from '@vp/result';
 import { and, asc, desc, eq, gt, inArray, lte, sql } from 'drizzle-orm';
 import { keysetBefore, msTimestamp } from '../scopes/index';
 import { appendChannelAudit } from './channel-audit-writes';

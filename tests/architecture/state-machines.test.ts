@@ -1,4 +1,4 @@
-import { machineFindings } from '@vp/machine';
+import { machineFindings } from '@kit/machine';
 import ts from 'typescript';
 import { loadMachines, renderFor } from '../../scripts/state-machines/run';
 import { parseSource } from './parsed-sources';

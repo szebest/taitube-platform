@@ -1,4 +1,4 @@
-import { AspectRatio, Icon, Spinner, useUiCopy } from '@vp/ui';
+import { AspectRatio, Icon, Spinner, useUiCopy } from '@kit/ui';
 import { type ComponentPropsWithRef, type ReactNode, useEffect, useState } from 'react';
 import { useShortsPlayerFrame } from '#app/components/shorts/shorts-player-frame/shorts-player-frame.context';
 import { shortsPlayerFrameStyles } from '#app/components/shorts/shorts-player-frame/shorts-player-frame.variants';

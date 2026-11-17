@@ -1,6 +1,6 @@
-import { useT } from '@vp/intl-react';
-import { isErr } from '@vp/result';
-import { cn, Field, Textarea } from '@vp/ui';
+import { useT } from '@kit/intl-react';
+import { isErr } from '@kit/result';
+import { cn, Field, Textarea } from '@kit/ui';
 import { PICK_NOTE_MAX_LENGTH, validatePickNote } from '@vp/validation';
 
 export interface PickNoteFieldProps {

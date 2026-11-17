@@ -18,7 +18,7 @@ export function mediaFailure(
 }
 
 function isPipelineErrorCode(code: unknown): code is PipelineErrorCode {
-  return typeof code === 'string' && code in PipelineErrorCodes;
+  return typeof code === 'string' && Object.hasOwn(PipelineErrorCodes, code);
 }
 
 /**

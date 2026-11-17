@@ -1,6 +1,6 @@
 import * as fs from 'node:fs';
 import { parseArgs } from 'node:util';
-import type { Logger } from '@vp/logger';
+import type { Logger } from '@kit/logger';
 import { UploadClient } from './client';
 
 type Env = Readonly<Record<string, string | undefined>>;

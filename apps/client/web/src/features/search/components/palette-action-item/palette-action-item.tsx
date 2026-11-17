@@ -1,7 +1,7 @@
+import { useT } from '@kit/intl-react';
+import { assertNever } from '@kit/result';
+import { Icon, type IconId, useAppearance } from '@kit/ui';
 import { useRouter } from '@tanstack/react-router';
-import { useT } from '@vp/intl-react';
-import { assertNever } from '@vp/result';
-import { Icon, type IconId, useAppearance } from '@vp/ui';
 import { CommandPalette } from '#app/components/shell/command-palette';
 import type { CommandAction } from '#app/features/search/utils/command-actions';
 import { useCommandPaletteStore } from '#app/lib/command-palette/command-palette-store';

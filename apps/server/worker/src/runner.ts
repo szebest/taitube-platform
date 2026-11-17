@@ -1,5 +1,7 @@
+import { Container, DisposeFailed, type StartupFailed } from '@kit/composition';
+import type { LogContext, Logger } from '@kit/logger';
+import { type Result, isErr, ok } from '@kit/result';
 import { Adapters, registerAdapters } from '@vp/adapters/composition';
-import { Container, DisposeFailed, type StartupFailed } from '@vp/composition';
 import type {
   CacheClient,
   FlowProducerPort,
@@ -11,9 +13,7 @@ import type { Repositories } from '@vp/core/repositories';
 import type { AppConfig } from '@vp/env-schema';
 import type { MediaTools } from '@vp/ffmpeg';
 import type { FingerprintTools } from '@vp/fingerprint';
-import type { LogContext, Logger } from '@vp/logger';
 import type { PipelineMetrics } from '@vp/observability';
-import { type Result, isErr, ok } from '@vp/result';
 import type { SpeechTools } from '@vp/whisper';
 import { Worker, registerStages, resolveStartOrder } from './composition/stages.module';
 import type { OutboxRelay } from './stages/housekeeping/outbox-relay';

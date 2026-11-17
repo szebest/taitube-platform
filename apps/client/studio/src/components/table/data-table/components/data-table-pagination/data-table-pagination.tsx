@@ -1,4 +1,4 @@
-import { Button, DropdownMenu, Icon, IconButton, useUiCopy } from '@vp/ui';
+import { Button, DropdownMenu, Icon, IconButton, useUiCopy } from '@kit/ui';
 import { type ComponentPropsWithRef, useId } from 'react';
 import { useDataTable } from '#app/components/table/data-table/data-table.context';
 import { dataTableStyles } from '#app/components/table/data-table/data-table.variants';

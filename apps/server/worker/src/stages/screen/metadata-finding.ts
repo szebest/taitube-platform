@@ -1,9 +1,9 @@
+import { type Result, isErr, ok } from '@kit/result';
 import type { VideoRepository, VideoRecord } from '@vp/core/repositories';
 import type { ScreeningFinding, ScreeningThresholds } from '@vp/domain';
 import { screenMetadataInLocales } from '@vp/domain-rules';
 import type { ScreeningConfig } from '@vp/env-schema';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { type Result, isErr, ok } from '@vp/result';
 
 /**
  * Title, description and tags against the profanity lists and the spam signals, once per language the

@@ -1,4 +1,4 @@
-import { tv } from '@vp/ui';
+import { tv } from '@kit/ui';
 
 export const dataTableStyles = tv({
   slots: {

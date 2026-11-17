@@ -1,9 +1,9 @@
+import { useAppForm } from '@kit/forms';
+import { useT } from '@kit/intl-react';
+import { isErr } from '@kit/result';
+import { Button, ResponsiveModal, useToast, useUiCopy } from '@kit/ui';
 import { COMMENT_REPORT_REASONS, type CommentReportReason } from '@vp/domain';
-import { useAppForm } from '@vp/forms';
-import { useT } from '@vp/intl-react';
 import { useFailureToast } from '@vp/queries';
-import { isErr } from '@vp/result';
-import { Button, ResponsiveModal, useToast, useUiCopy } from '@vp/ui';
 import { validateReportNote } from '@vp/validation';
 import { useReportComment } from '#app/features/watch/hooks/use-report-comment';
 

@@ -1,5 +1,5 @@
+import { PREFERS_MORE_CONTRAST, PREFERS_REDUCED_MOTION, readCookie, writeCookie } from '@kit/ui';
 import { screen, within } from '@testing-library/react';
-import { PREFERS_MORE_CONTRAST, PREFERS_REDUCED_MOTION, readCookie, writeCookie } from '@vp/ui';
 import { renderRoute } from '@vp/web-testing/dom';
 import { getRouter } from '#app/router';
 

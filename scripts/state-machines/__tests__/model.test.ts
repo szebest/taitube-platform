@@ -1,4 +1,4 @@
-import { defineMachine } from '../../../packages/universal/machine/src/index';
+import { defineMachine } from '../../../packages/platform/universal/machine/src/index';
 import { buildModel, type LoadedMachine } from '../model';
 
 const loaded = (name: string, file: string): LoadedMachine => ({

@@ -1,4 +1,6 @@
 import * as path from 'node:path';
+import type { Logger } from '@kit/logger';
+import { type Result, err, fromPromise, isErr, ok, unwrapOr } from '@kit/result';
 import type { FlowProducerPort, JobQueue, QueueJob, StorageClient } from '@vp/core/ports';
 import type { Repositories, UserRecord } from '@vp/core/repositories';
 import { jobPriorityFor } from '@vp/domain';
@@ -16,9 +18,7 @@ import {
 } from '@vp/errors';
 import type { MediaTools, ProbeMetadata } from '@vp/ffmpeg';
 import type { ProbeJob } from '@vp/job-contracts';
-import type { Logger } from '@vp/logger';
 import type { PipelineMetrics } from '@vp/observability';
-import { type Result, err, fromPromise, isErr, ok, unwrapOr } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 import { captionsOutboxEntry, enqueueFollowUpJobs } from './probe-enqueue';
 import { recordProbeFailure } from './probe-failure';

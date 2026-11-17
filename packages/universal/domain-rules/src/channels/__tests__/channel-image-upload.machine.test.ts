@@ -1,4 +1,4 @@
-import { machineFindings } from '@vp/machine';
+import { machineFindings } from '@kit/machine';
 import { CHANNEL_IMAGE_UPLOAD } from '../channel-image-upload.machine';
 
 describe('@vp/domain-rules: CHANNEL_IMAGE_UPLOAD', () => {

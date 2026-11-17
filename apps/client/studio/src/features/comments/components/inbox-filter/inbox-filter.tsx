@@ -1,5 +1,5 @@
+import { useT } from '@kit/intl-react';
 import { CREATOR_INBOX_FILTERS, type CreatorInboxFilter } from '@vp/domain';
-import { useT } from '@vp/intl-react';
 import { FilterSelect } from '#app/components/table/filter-select';
 
 export interface InboxFilterProps {

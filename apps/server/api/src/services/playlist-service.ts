@@ -1,3 +1,4 @@
+import { type Result, assertNever, err, isErr, map, ok } from '@kit/result';
 import type { OwnedPlaylistView, PlaylistView } from '@vp/api-contracts';
 import type { PlaylistRepositoryPort, VideoRepository } from '@vp/core/repositories';
 import {
@@ -32,7 +33,6 @@ import {
 import type { CdnBase } from '@vp/env-schema';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { type Result, assertNever, err, isErr, map, ok } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 import { toOwnedPlaylistView, toPlaylistView } from './library-views';
 import type { SpriteGeometry } from './video-views';

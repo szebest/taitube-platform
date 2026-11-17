@@ -1,7 +1,7 @@
+import { useT } from '@kit/intl-react';
+import { Button, Popover, Spinner } from '@kit/ui';
 import { useQuery } from '@tanstack/react-query';
-import { useT } from '@vp/intl-react';
 import { savedRepliesQueryOptions, useApi } from '@vp/queries';
-import { Button, Popover, Spinner } from '@vp/ui';
 import { useState } from 'react';
 
 export interface SavedRepliesPickerProps {

@@ -1,7 +1,8 @@
+import { requestAppearancePreference } from '@kit/ui';
+import uiStyles from '@kit/ui/styles.css?url';
 import { createRootRouteWithContext, useRouterState } from '@tanstack/react-router';
+import { APPEARANCE_COOKIES } from '@vp/domain/settings';
 import { type AppRouterContext, ensureSession, requestLocale } from '@vp/queries';
-import { requestAppearancePreference } from '@vp/ui';
-import uiStyles from '@vp/ui/styles.css?url';
 import { AppShellSkeleton } from '#app/components/shell/app-shell';
 import { isEmbedPath } from '#app/features/embed';
 import { requestSidebarState } from '#app/features/shell';
@@ -16,7 +17,7 @@ export const Route = createRootRouteWithContext<AppRouterContext>()({
   beforeLoad: async ({ context, location }) => {
     const devicePreferences = requestDevicePreferences();
     return {
-      appearance: requestAppearancePreference(),
+      appearance: requestAppearancePreference(APPEARANCE_COOKIES),
       devicePreferences,
       sidebarState: requestSidebarState(),
       ...(await requestLocale(context.locales, {

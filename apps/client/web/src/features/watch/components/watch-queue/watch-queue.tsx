@@ -1,7 +1,7 @@
+import { useT } from '@kit/intl-react';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useParams } from '@tanstack/react-router';
 import { EmptyLibraryIllustration, EmptyState, SectionError } from '@vp/components';
-import { useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
 import { usePlayerTheater } from '#app/components/player/taitube-player';
 import { Queue } from '#app/components/watch/queue';

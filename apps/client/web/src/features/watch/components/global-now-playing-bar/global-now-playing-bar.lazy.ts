@@ -1,4 +1,4 @@
-import { lazyComponent } from '@vp/ui';
+import { lazyComponent } from '@kit/ui';
 
 export const LazyGlobalNowPlayingBar = lazyComponent(() => import('./global-now-playing-bar'), {
   name: 'GlobalNowPlayingBar',

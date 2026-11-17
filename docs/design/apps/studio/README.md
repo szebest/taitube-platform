@@ -1,6 +1,6 @@
 # Studio kit
 
-The specs for the creator studio's own components, in `apps/client/studio/src/components/<area>/<name>/` ([architecture section 1](../../architecture.md#1-five-layers), app kit layer). They are presentational and compound, built from the [`@vp/ui` primitives](../../primitives/README.md) and the [`@vp/components`](../../components/README.md) shared components, and they follow the same rules as the shared ones: `X.Root` and parts, shared option unions in a `types.ts`, tokens by role from the token sets, copy through `useUiCopy()`, formatting by the app. [Ticket 95](../../../tickets/95-design-system-2.md) section 8 builds them; [60](../../../tickets/60-creator-studio-dashboard-video-management-ui.md) and [61](../../../tickets/61-admin-control-panel-category-moderation-ui.md) use them.
+The specs for the creator studio's own components, in `apps/client/studio/src/components/<area>/<name>/` ([architecture section 1](../../architecture.md#1-five-layers), app kit layer). They are presentational and compound, built from the [`@kit/ui` primitives](../../primitives/README.md) and the [`@vp/components`](../../components/README.md) shared components, and they follow the same rules as the shared ones: `X.Root` and parts, shared option unions in a `types.ts`, tokens by role from the token sets, copy through `useUiCopy()`, formatting by the app. [Ticket 95](../../../tickets/95-design-system-2.md) section 8 builds them; [60](../../../tickets/60-creator-studio-dashboard-video-management-ui.md) and [61](../../../tickets/61-admin-control-panel-category-moderation-ui.md) use them.
 
 ## Where things live
 
@@ -59,7 +59,7 @@ A wrapper is the one place a kit component meets data ([architecture section 5](
 
 ## Rules, as for every component
 
-- **Shared unions**: a props type never spells an inline literal union; shared ones come from `@vp/design-tokens`, `@vp/ui` types, `@vp/domain` and `@vp/api-contracts`, narrowed with `Extract` and `Exclude` in `types.ts`; a component-only union lives there too.
+- **Shared unions**: a props type never spells an inline literal union; shared ones come from `@kit/design-tokens`, `@kit/ui` types, `@vp/domain` and `@vp/api-contracts`, narrowed with `Extract` and `Exclude` in `types.ts`; a component-only union lives there too.
 - **Density is a token set, not a prop.** The studio's defaults are `spacing: compact` and `sizing: small`; every component follows through spacing roles and the sizing set.
 - **Every component owns its skeleton**, with the loaded layout's exact dimensions; each studio spec has a Skeleton section.
 - **Extension points** on every component: `className`, `asChild`, the exported context hook, `tv({ extend })`.

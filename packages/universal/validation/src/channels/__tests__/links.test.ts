@@ -1,4 +1,4 @@
-import { isErr, isOk } from '@vp/result';
+import { isErr, isOk } from '@kit/result';
 import { validateChannelLinks } from '../links';
 
 const link = (n: number) => ({ label: `Link ${n}`, url: `https://example.com/${n}` });

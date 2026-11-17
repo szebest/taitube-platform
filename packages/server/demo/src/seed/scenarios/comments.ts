@@ -1,4 +1,4 @@
-import { isErr } from '@vp/result';
+import { isErr } from '@kit/result';
 import { AnySchema, CommentSchema } from '../responses';
 import { type Scenario, type ScenarioContext, actorOf, userById } from '../scenario';
 import { createTally } from '../tally';

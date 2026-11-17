@@ -1,6 +1,6 @@
+import { isErr } from '@kit/result';
 import type { WatchHistoryRepositoryPort } from '@vp/core/repositories';
 import type { UserContext } from '@vp/permissions';
-import { isErr } from '@vp/result';
 import type { VideoSummaryView, ViewerProgressView } from './video-views';
 
 /** One batched read decorates a whole page of cards with how far the signed-in caller got. */

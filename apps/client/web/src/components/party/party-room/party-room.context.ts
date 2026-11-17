@@ -1,4 +1,4 @@
-import { createCompoundContext } from '@vp/ui';
+import { createCompoundContext } from '@kit/ui';
 import type { PartyRoomLayout } from './types';
 
 export const [PartyRoomContext, usePartyRoom] = createCompoundContext<{

@@ -1,6 +1,6 @@
+import { type Result, andThen, map } from '@kit/result';
 import type { EditorPick, Video } from '@vp/domain';
 import { type UserContext, canManagePick } from '@vp/permissions';
-import { type Result, andThen, map } from '@vp/result';
 import { type InvalidPickNote, validatePickNote } from '@vp/validation';
 import { type AuthorizationFailure, authorize } from '../authorize';
 import type { InvalidPickWindow, PickWindowOverlap } from './failures';

@@ -111,6 +111,10 @@ jobs:
         if: github.event_name == 'pull_request'
         run: pnpm envctl migrations-check --base HEAD^1
 
+      - name: Fail when a platform package's API changed without a changelog entry and a version bump
+        if: github.event_name == 'pull_request'
+        run: pnpm check:platform-changes --base HEAD^1
+
       - name: Check architectural invariants
         id: architecture
         run: pnpm test:architecture --reporter=default --reporter=json --outputFile.json="$RUNNER_TEMP/architecture.json"
@@ -147,6 +151,12 @@ jobs:
 
       - name: Fail when docs/state-machines.md differs from the machine definitions
         run: pnpm gen:state-machines --check
+
+      - name: Fail when docs/package-map.md differs from the workspace manifests
+        run: pnpm gen:package-map --check
+
+      - name: Fail when a platform package's api/*.api.txt differs from its exports
+        run: pnpm gen:api --check
 
       # --only: the builds just replayed from the build job's cache, so this cache holds typecheck results alone.
       - name: Run TypeScript typecheck
@@ -549,7 +559,7 @@ jobs:
         uses: actions/cache@v6
         with:
           path: packages/client/workbench/storybook-static
-          key: storybook-${{ runner.os }}-${{ hashFiles('packages/client/*/src/**', 'packages/universal/*/src/**', 'apps/client/*/src/**', 'packages/server/vite-preset/src/**', 'packages/client/workbench/.storybook/**', 'pnpm-lock.yaml') }}
+          key: storybook-${{ runner.os }}-${{ hashFiles('packages/client/*/src/**', 'packages/universal/*/src/**', 'packages/platform/client/*/src/**', 'packages/platform/universal/*/src/**', 'apps/client/*/src/**', 'packages/**/vite-preset/src/**', 'packages/client/workbench/.storybook/**', 'pnpm-lock.yaml') }}
 
       - name: Build the workbench
         if: steps.storybook.outputs.cache-hit != 'true'

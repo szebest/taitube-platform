@@ -1,12 +1,13 @@
-import { camel, pascal } from './scaffold';
+import { camel, pascal, UI_SRC } from './scaffold';
+import { packageDir } from './workspace-packages';
 
 export const COMPONENT_KINDS = ['primitive', 'shared', 'web', 'studio'] as const;
 
 export type ComponentKind = (typeof COMPONENT_KINDS)[number];
 
 const KIND_HOME: Readonly<Record<ComponentKind, string>> = {
-  primitive: 'packages/client/ui/src/primitives',
-  shared: 'packages/client/components/src',
+  primitive: `${UI_SRC}/primitives`,
+  shared: `${packageDir('@vp/components')}/src`,
   web: 'apps/client/web/src/components',
   studio: 'apps/client/studio/src/components',
 };
@@ -37,7 +38,7 @@ export function componentFolder({ name, kind, area }: ComponentRequest): string 
   return [componentHome(kind), ...areaFolder, name].join('/');
 }
 
-/** Inside `@vp/ui` a primitive reaches the helpers through its own `lib/`; everything else imports `@vp/ui`. */
+/** Inside `@kit/ui` a primitive reaches the helpers through its own `lib/`; everything else imports `@kit/ui`. */
 function helperModules(kind: ComponentKind) {
   return kind === 'primitive'
     ? {
@@ -46,7 +47,7 @@ function helperModules(kind: ComponentKind) {
         types: '../../types',
         variantNames: '../../lib/variant-names',
       }
-    : { classNames: '@vp/ui', context: '@vp/ui', types: '@vp/ui', variantNames: '@vp/ui' };
+    : { classNames: '@kit/ui', context: '@kit/ui', types: '@kit/ui', variantNames: '@kit/ui' };
 }
 
 type Names = Readonly<{ name: string; Name: string; styles: string; shelf: string }>;

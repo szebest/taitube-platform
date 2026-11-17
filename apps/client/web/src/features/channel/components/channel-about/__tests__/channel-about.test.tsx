@@ -1,4 +1,4 @@
-import { createToaster, ToastProvider } from '@vp/ui';
+import { createToaster, ToastProvider } from '@kit/ui';
 import { channel } from '@vp/web-testing';
 import { renderPage } from '@vp/web-testing/server';
 import { AppProviders } from '#app/__tests__/providers';

@@ -1,5 +1,5 @@
+import { Button, type ButtonProps, cn } from '@kit/ui';
 import { DisclosureControl, type DisclosureControlProps } from '@vp/components';
-import { Button, type ButtonProps, cn } from '@vp/ui';
 import type { ComponentPropsWithRef } from 'react';
 import { BulkActionBarContext, useBulkActionBar } from './bulk-action-bar.context';
 

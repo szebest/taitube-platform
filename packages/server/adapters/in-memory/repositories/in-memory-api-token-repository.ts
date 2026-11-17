@@ -1,7 +1,7 @@
+import { type Result, isErr, ok } from '@kit/result';
 import type { ApiTokenCandidate, ApiTokenRepositoryPort } from '@vp/core/repositories';
 import type { ApiToken, ApiTokenSummary } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { type Result, isErr, ok } from '@vp/result';
 import type { InMemoryUserRepository } from './in-memory-user-repository';
 
 const copyOf = (token: ApiToken): ApiToken => ({ ...token, scopes: [...token.scopes] });

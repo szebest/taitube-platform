@@ -1,3 +1,4 @@
+import { type Result, andThen, err, isErr, ok } from '@kit/result';
 import type {
   ChannelAuditRepositoryPort,
   ChannelHandleHistoryRepositoryPort,
@@ -23,7 +24,6 @@ import {
 import { MS_PER_DAY } from '@vp/domain/time';
 import { type DatabaseUnavailable, ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { type Result, andThen, err, isErr, ok } from '@vp/result';
 import {
   type InvalidBannerLink,
   type InvalidChannelLinks,

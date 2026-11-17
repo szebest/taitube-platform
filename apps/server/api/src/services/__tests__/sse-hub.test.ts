@@ -1,12 +1,12 @@
 import type { ServerResponse } from 'node:http';
 import { PassThrough, Writable } from 'node:stream';
+import { createLogger } from '@kit/logger';
+import { type Result, err } from '@kit/result';
 import { InMemoryCacheClient } from '@vp/adapters/in-memory';
 import type { PatternMessageListener } from '@vp/core/ports';
 import { type CacheUnavailable, ErrorCodes, cacheUnavailable } from '@vp/errors';
 import { userChannel, videoChannel } from '@vp/events';
-import { createLogger } from '@vp/logger';
 import { createMetricsRegistry } from '@vp/observability';
-import { type Result, err } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { SseHub, type SseHubOptions } from '../sse-hub';
 

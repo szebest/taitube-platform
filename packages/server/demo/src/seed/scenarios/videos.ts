@@ -1,4 +1,4 @@
-import { err, isErr } from '@vp/result';
+import { err, isErr } from '@kit/result';
 import type { SeedFailure } from '../failure';
 import { AnySchema } from '../responses';
 import { type Scenario, type ScenarioContext, actorOf, userById } from '../scenario';

@@ -1,6 +1,6 @@
+import { type Result, err, ok } from '@kit/result';
 import type { Channel } from '@vp/domain';
 import { type UserContext, canSubscribeChannel } from '@vp/permissions';
-import { type Result, err, ok } from '@vp/result';
 import {
   type SubscribeFailure,
   type UnsubscribeFailure,

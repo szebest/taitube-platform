@@ -1,7 +1,7 @@
+import { useT } from '@kit/intl-react';
+import { Button, DropdownMenu } from '@kit/ui';
 import { VIDEO_VISIBILITIES } from '@vp/domain';
-import { useT } from '@vp/intl-react';
 import { useCan } from '@vp/permissions-react';
-import { Button, DropdownMenu } from '@vp/ui';
 import { useState } from 'react';
 import type { BatchOutcome } from '#app/features/videos/api/batch-actions';
 import { useBatchActions } from '#app/features/videos/hooks/use-batch-actions';

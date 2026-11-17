@@ -1,5 +1,5 @@
 import type { InMemoryCacheClient, InMemoryRepositories } from '@vp/adapters/in-memory';
-import { mintToken } from '@vp/dev-token';
+import { mintToken } from '@vp/dev-identity';
 import { ErrorCodes } from '@vp/errors';
 import { SEEDED } from '@vp/testing';
 import { expectOk } from '@vp/testing/result';

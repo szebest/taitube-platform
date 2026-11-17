@@ -1,5 +1,5 @@
+import { isErr, ok } from '@kit/result';
 import { applyPlaybackCommand } from '@vp/domain';
-import { isErr, ok } from '@vp/result';
 import type { WatchPartyDeps } from './watch-party-deps';
 import { commitState, pausedNow } from './watch-party-playback';
 

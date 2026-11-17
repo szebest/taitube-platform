@@ -1,5 +1,4 @@
-import { ErrorCodes } from '@vp/errors';
-import { assertNever } from '@vp/result';
+import { assertNever } from '@kit/result';
 import {
   type FormatFailure,
   unknownOption,
@@ -10,13 +9,13 @@ import {
 
 function subjectOf(failure: FormatFailure): string {
   switch (failure.code) {
-    case ErrorCodes.FORMAT_UNSUPPORTED_LOCALE:
+    case 'FORMAT_UNSUPPORTED_LOCALE':
       return failure.locale;
-    case ErrorCodes.FORMAT_UNKNOWN_OPTION:
+    case 'FORMAT_UNKNOWN_OPTION':
       return failure.option;
-    case ErrorCodes.FORMAT_WRONG_KIND:
+    case 'FORMAT_WRONG_KIND':
       return failure.received;
-    case ErrorCodes.FORMAT_UNRENDERABLE:
+    case 'FORMAT_UNRENDERABLE':
       return failure.reason;
     default:
       return assertNever(failure, 'subjectOf');

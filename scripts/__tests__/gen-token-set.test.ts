@@ -1,16 +1,16 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { parseTokenSet } from '../../packages/platform/universal/design-tokens/src/index';
 import { expectOk } from '../../packages/server/testing/src/result';
 import { runEntrypoint } from '../../packages/server/testing/src/run-entrypoint';
-import { parseTokenSet } from '../../packages/universal/design-tokens/src/index';
+import { REGISTRY, UI_SRC } from '../scaffold';
 import { uiTree } from './ui-tree';
 
 const run = (script: string, ...argv: string[]) =>
   runEntrypoint(resolve(import.meta.dirname, `../${script}`), argv, { PATH: process.env.PATH });
 
-const SETS_CSS = 'packages/client/ui/src/styles/generated/sets.css';
-const REGISTRY = 'packages/client/ui/src/appearance/registry.ts';
+const SETS_CSS = `${UI_SRC}/styles/generated/sets.css`;
 
 describe('scripts: pnpm gen:token-set', () => {
   it('scaffolds a set that parses, is offered and shows in the CSS, and is absent once no longer offered', async () => {
@@ -19,7 +19,7 @@ describe('scripts: pnpm gen:token-set', () => {
     const registry = readFileSync(join(root, REGISTRY), 'utf8');
 
     const scaffold = run('gen-token-set.ts', 'shadow', 'dramatic', '--from', 'deep', root);
-    const module = join(root, 'packages/client/ui/src/tokens/shadow/dramatic/index.ts');
+    const module = join(root, UI_SRC, 'tokens/shadow/dramatic/index.ts');
     const { shadowDramatic } = await import(pathToFileURL(module).href);
 
     expect(scaffold.status).toBe(0);

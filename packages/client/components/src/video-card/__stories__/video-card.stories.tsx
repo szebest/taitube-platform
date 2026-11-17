@@ -1,5 +1,5 @@
+import { Badge, variantNames } from '@kit/ui';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Badge, variantNames } from '@vp/ui';
 import { VideoCard, VideoCardSkeleton, videoCardStyles } from '..';
 import type { VideoCardVariant } from '../types';
 import { VideoCardRoot } from '../video-card';

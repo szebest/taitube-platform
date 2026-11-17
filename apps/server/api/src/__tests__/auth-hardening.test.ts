@@ -1,8 +1,8 @@
 import * as http from 'node:http';
-import { loadEnv } from '@vp/config';
-import { mintToken } from '@vp/dev-token';
+import { loadEnv } from '@kit/config';
+import { createLogger } from '@kit/logger';
+import { mintToken } from '@vp/dev-identity';
 import { toAppConfig } from '@vp/env-schema';
-import { createLogger } from '@vp/logger';
 import { PRODUCTION_ENV } from '@vp/testing/env';
 import { signJwt, signingKey } from '@vp/testing/jwt';
 import type { FastifyInstance } from 'fastify';

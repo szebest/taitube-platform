@@ -1,4 +1,4 @@
-import { type Result, err } from '@vp/result';
+import { type Result, err } from '@kit/result';
 import type { FormatContext } from './context';
 import { type FormatFailure, unrenderable } from './failures';
 import { parseInstant } from './inputs';

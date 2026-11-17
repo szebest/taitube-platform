@@ -1,4 +1,4 @@
-import { cardStyles, tv } from '@vp/ui';
+import { cardStyles, tv } from '@kit/ui';
 import type { LinerNotesLayout } from './types';
 
 export const linerNotesStyles = tv({

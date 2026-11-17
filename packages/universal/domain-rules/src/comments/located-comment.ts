@@ -1,5 +1,5 @@
+import { type Result, err, ok } from '@kit/result';
 import type { Comment, Video } from '@vp/domain';
-import { type Result, err, ok } from '@vp/result';
 import { type CommentNotFound, commentNotFound } from './failures';
 
 export interface LocatedCommentInput {

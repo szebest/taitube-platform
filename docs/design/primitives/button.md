@@ -23,7 +23,7 @@ While `loading`, the label keeps its width (hidden, not removed) and a `Spinner`
 
 ```ts
 // types.ts
-import type { ControlSize, ToneOption } from '@vp/design-tokens';
+import type { ControlSize, ToneOption } from '@kit/design-tokens';
 import type { FillOption, ShapeOption } from '../../types';
 
 export type ButtonFill = Exclude<FillOption, 'plain'>;

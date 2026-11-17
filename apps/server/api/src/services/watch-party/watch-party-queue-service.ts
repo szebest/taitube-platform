@@ -1,3 +1,4 @@
+import { andThen, andThenAsync, assertNever, err, map, ok, type Result } from '@kit/result';
 import type {
   addToWatchPartyQueue,
   moveWatchPartyQueueItem,
@@ -15,7 +16,6 @@ import {
   watchPartyQueueFull,
   watchPartyVideoNotShareable,
 } from '@vp/errors';
-import { andThen, andThenAsync, assertNever, err, map, ok, type Result } from '@vp/result';
 import type { z } from 'zod';
 import type { PartyCaller } from './party-caller';
 import type { RoomContext } from './watch-party-context';

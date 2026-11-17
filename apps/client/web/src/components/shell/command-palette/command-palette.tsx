@@ -9,7 +9,7 @@ import {
   Skeleton,
   Slot,
   useUiCopy,
-} from '@vp/ui';
+} from '@kit/ui';
 import { type ComponentPropsWithRef, type KeyboardEvent, type ReactNode, useRef } from 'react';
 import { CommandPaletteContext, useCommandPalette } from './command-palette.context';
 import { commandPaletteStyles } from './command-palette.variants';

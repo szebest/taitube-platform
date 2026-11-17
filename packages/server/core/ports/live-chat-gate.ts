@@ -1,6 +1,6 @@
+import type { Result } from '@kit/result';
 import type { CacheUnavailable } from '@vp/errors';
 import type { Role } from '@vp/permissions';
-import type { Result } from '@vp/result';
 
 /** Who a one-time chat token was issued to, and for which stream. */
 export interface LiveChatTicketGrant {

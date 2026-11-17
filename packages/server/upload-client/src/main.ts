@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { createLogger } from '@vp/logger';
+import { createLogger } from '@kit/logger';
 import { run } from './cli';
 
 const log = createLogger({ service: 'upload-client', level: 'info', format: 'pretty' });

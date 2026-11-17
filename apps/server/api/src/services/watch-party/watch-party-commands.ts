@@ -1,3 +1,4 @@
+import { assertNever, err, isErr, ok, type Result } from '@kit/result';
 import type { WatchPartyClientFrame, WatchPartyServerFrame } from '@vp/api-contracts';
 import type { RoomWrite } from '@vp/core/repositories';
 import {
@@ -19,7 +20,6 @@ import {
   watchPartyStateStale,
 } from '@vp/errors';
 import { canInRoom } from '@vp/permissions';
-import { assertNever, err, isErr, ok, type Result } from '@vp/result';
 import type { PartyCaller } from './party-caller';
 import { consumeBudget, type RateLimited } from './watch-party-budgets';
 import type { RoomContext } from './watch-party-context';

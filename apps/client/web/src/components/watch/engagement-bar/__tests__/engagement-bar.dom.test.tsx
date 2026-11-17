@@ -1,6 +1,6 @@
+import { DropdownMenu } from '@kit/ui';
 import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
-import { DropdownMenu } from '@vp/ui';
 import { axeViolations } from '@vp/web-testing/dom';
 import { AppProviders } from '#app/__tests__/providers';
 import { SubscribeButton } from '#app/components/channel/subscribe-button';

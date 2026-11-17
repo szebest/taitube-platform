@@ -1,7 +1,7 @@
+import { isErr } from '@kit/result';
 import { SEARCH_SUGGESTIONS } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import { CacheKeys } from '@vp/events';
-import { isErr } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import { redisSearchSuggestionIndexSubject } from '../../__tests__/contract/redis-subjects';
 import { describeSearchSuggestionIndexContract } from '../../__tests__/contract/search-suggestion-index.contract';

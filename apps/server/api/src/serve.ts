@@ -3,11 +3,11 @@ import {
   type ShutdownOutcome,
   exitOnSignals,
   shutdownOnce,
-} from '@vp/composition';
+} from '@kit/composition';
+import { assertNever, fromPromise, ignore, isErr } from '@kit/result';
 import type { AppConfig } from '@vp/env-schema';
-import { asThrowable } from '@vp/errors';
+import { asThrowable, errorCodeRegistry } from '@vp/errors';
 import type { Tracing } from '@vp/observability';
-import { assertNever, fromPromise, ignore, isErr } from '@vp/result';
 import type { ComposedApp } from './app';
 import { Services } from './composition/services.module';
 
@@ -78,7 +78,7 @@ export async function serve(
       case 'failed':
         logger.error({ token: started.error.token, err: started.error.cause }, 'startup failed');
         await app.close();
-        throw asThrowable(started.error.cause);
+        throw asThrowable(errorCodeRegistry, started.error.cause);
       default:
         return assertNever(started.error, 'StartupFailed');
     }

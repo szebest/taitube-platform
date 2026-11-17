@@ -1,6 +1,6 @@
+import { type Result, err, ok } from '@kit/result';
 import type { ActingChannel } from '@vp/domain';
 import type { UserContext } from '@vp/permissions';
-import { type Result, err, ok } from '@vp/result';
 import { type ChannelMembershipRequired, channelMembershipRequired } from './failures';
 
 export interface ActingChannelInput {

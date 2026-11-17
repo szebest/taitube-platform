@@ -1,3 +1,4 @@
+import { type Result, err, ignore, isErr, isOk, map, ok } from '@kit/result';
 import type { CategoryCachePort } from '@vp/core/ports';
 import type { CategoryRepositoryPort } from '@vp/core/repositories';
 import type {
@@ -19,7 +20,6 @@ import {
 } from '@vp/domain-rules';
 import type { CategorySlugConflict, DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { type Result, err, ignore, isErr, isOk, map, ok } from '@vp/result';
 import { buildCacheHeaders, generateEtag, isNotModified } from './http-cache';
 
 export interface CategoryServiceDeps {

@@ -17,7 +17,7 @@ Current members: `api-client`, `components`, `forms`, `intl-react`, `permissions
 
 1. **May depend on `universal` and `client` packages.** Never `server` — `client` and `server` are
    siblings that can never see each other, which is the invariant the whole scheme protects.
-2. **No `node:*`, no `process`, no `Buffer`.** The `@vp/tsconfig/client.json` preset gives `lib` with
+2. **No `node:*`, no `process`, no `Buffer`.** The `@kit/tsconfig/client.json` preset gives `lib` with
    `DOM` and `types: []`, so these are compile errors.
 3. **Nothing is hand-written that a contract already owns.** `@vp/api-client` derives every fetcher from
    the `@vp/api-contracts` registry, so an endpoint cannot exist in the client without existing in the
@@ -29,7 +29,7 @@ Current members: `api-client`, `components`, `forms`, `intl-react`, `permissions
 6. **Declare `"sideEffects": false`**, or the bundler keeps every module the frontend touches whole and an
    unused export still ships. `tests/architecture/frontend-vocabulary.test.ts` asserts it.
 7. **The React Compiler compiles every package here**: in the apps, which alias them to source, and in each
-   package's own specs (`plugins: reactPlugins()` from `@vp/vite-preset/react-plugins` in its Vitest configs).
+   package's own specs (`plugins: reactPlugins()` from `@kit/vite-preset/react-plugins` in its Vitest configs).
    No `useMemo`, `useCallback` or `memo` outside `tests/react-compiler/manual-memo-allowlist.json`; a function
    the compiler skips is listed in `tests/react-compiler/baseline.json` with an issue link, and the target for
    every package here is an empty list (`pnpm react-compiler:report`).

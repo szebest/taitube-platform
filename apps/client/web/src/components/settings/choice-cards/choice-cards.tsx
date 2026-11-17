@@ -1,4 +1,4 @@
-import { cn } from '@vp/ui';
+import { cn } from '@kit/ui';
 import { type ComponentPropsWithRef, useId } from 'react';
 import { ChoiceCardsContext, useChoiceCards } from './choice-cards.context';
 

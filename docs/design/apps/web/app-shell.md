@@ -1,6 +1,6 @@
 # AppShell
 
-Location: `apps/client/web/src/components/shell/app-shell/`. Web's app kit (58c's shell, moved here by a move-only commit), presentational and compound, built from `@vp/ui` primitives.
+Location: `apps/client/web/src/components/shell/app-shell/`. Web's app kit (58c's shell, moved here by a move-only commit), presentational and compound, built from `@kit/ui` primitives.
 
 The frame around every page: header, rail, drawer and bottom tab bar that swap by breakpoint. It is the quiet chrome the signature moves sit in, and it reserves room for the [Now playing bar](now-playing-bar.md).
 

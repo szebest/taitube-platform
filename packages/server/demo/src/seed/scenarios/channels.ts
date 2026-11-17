@@ -1,4 +1,4 @@
-import { isErr } from '@vp/result';
+import { isErr } from '@kit/result';
 import { z } from 'zod';
 import { AccountSchema } from '../responses';
 import { type Scenario, actorOf } from '../scenario';

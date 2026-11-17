@@ -1,5 +1,5 @@
 import type { BaseAdapter } from '@bull-board/api/baseAdapter';
-import { token } from '@vp/composition';
+import { token } from '@kit/di';
 import type {
   AuthorizationPort,
   CacheClient,

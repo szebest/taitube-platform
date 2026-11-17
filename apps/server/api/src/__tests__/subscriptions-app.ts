@@ -1,5 +1,5 @@
 import { InMemorySubscriptionCache } from '@vp/adapters/in-memory';
-import { mintToken } from '@vp/dev-token';
+import { mintToken } from '@vp/dev-identity';
 import { inProcessAppConfig } from '@vp/env-schema';
 import type { FastifyInstance } from 'fastify';
 import { type TestApp, bearer, buildTestApp } from './test-app';

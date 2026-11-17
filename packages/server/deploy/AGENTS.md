@@ -32,7 +32,7 @@ the logic that needs a test.
 - `src/cli.ts` parses arguments over a `DeployHost`; `src/main.ts` wires the file system, git and the
   process. Exit codes: 0 ok, 1 failure, 2 usage, 3 prerequisite missing.
 
-- **Tier `server`**, **layer 4**: it reads `@vp/env-schema` (3), `@vp/job-contracts` (2) and `@vp/result` (1).
+- **Tier `server`**, **layer 4**: it reads `@vp/env-schema` (3), `@vp/job-contracts` (2) and `@kit/result` (1).
 
 ---
 

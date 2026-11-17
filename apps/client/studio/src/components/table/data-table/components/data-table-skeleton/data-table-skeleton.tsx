@@ -1,4 +1,4 @@
-import { Skeleton, Table } from '@vp/ui';
+import { Skeleton, Table } from '@kit/ui';
 import { columnLook } from '#app/components/table/data-table/data-table.context';
 import { dataTableStyles } from '#app/components/table/data-table/data-table.variants';
 import type { DataTableColumnMeta } from '#app/components/table/data-table/types';

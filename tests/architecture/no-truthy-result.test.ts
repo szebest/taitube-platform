@@ -1,3 +1,4 @@
+import { inPackageTier } from '../../scripts/workspace-packages';
 import { productionSources, read, trackedFiles } from './repo-files';
 
 /**
@@ -170,7 +171,7 @@ describe('architecture: nobody reads a Result as the thing it wraps', () => {
   it('finds no misuse of a converted repository result in any production source', () => {
     const properties = convertedProperties();
     const offenders = productionSources()
-      .filter((file) => file.startsWith('apps/') || file.startsWith('packages/server/'))
+      .filter((file) => file.startsWith('apps/') || inPackageTier(file, 'server'))
       .flatMap((file) => misuses(file, properties));
 
     expect(offenders).toEqual([]);

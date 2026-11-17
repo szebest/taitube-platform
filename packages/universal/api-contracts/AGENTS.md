@@ -22,7 +22,7 @@ It also carries the OpenAPI 3.1 document those routes render, `openapi.yaml`, an
 
 - **Tier `universal`** — this runs in a browser. No `node:*`, no server SDK, no `@types/node`.
   A Node builtin here is a compile error, not a review comment.
-- **Layer T3** - one above `@vp/pagination` (T2); its dependencies are in [package.json](package.json).
+- **Layer T3** - one above `@kit/pagination` (T2); its dependencies are in [package.json](package.json).
 
 ---
 

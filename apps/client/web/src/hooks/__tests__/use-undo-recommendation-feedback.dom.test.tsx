@@ -1,7 +1,7 @@
+import { createToaster, ToastProvider } from '@kit/ui';
 import { screen } from '@testing-library/react';
 import { removeRecommendationFeedback } from '@vp/api-contracts';
 import { createQueryClient } from '@vp/queries';
-import { createToaster, ToastProvider } from '@vp/ui';
 import { apiServer, mockEndpoint } from '@vp/web-testing';
 import { runMutation } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';

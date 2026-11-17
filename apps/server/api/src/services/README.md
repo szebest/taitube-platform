@@ -9,7 +9,7 @@ Services are deep modules that encapsulate business rules, domain invariants, re
 ### Composition: shared helpers are imported, collaborators are injected
 A service's collaborators arrive through its deps and are required; `composition/services.module.ts` is the one place they are built. Shared stateless helpers are plain imports:
 - `CategoryService` and `FeedService` import `generateEtag`, `isNotModified` and `buildCacheHeaders` from `http-cache.ts`, the **only** ETag implementation in the repository.
-- `FeedService` composes `Singleflight` from `@vp/concurrency` to coalesce concurrent misses on the same feed page.
+- `FeedService` composes `Singleflight` from `@kit/concurrency` to coalesce concurrent misses on the same feed page.
 - `QueueService` reads queue state through the `JobQueue` port, pauses and resumes queues, and guards the Bull Board UI with `requireAdmin`.
 - Upload completion (`upload-complete.ts`) and reprocess (`video-lifecycle.ts`) share `probe-dispatch.ts`, so the probe job the CAS transition writes to the outbox is byte-for-byte the job the fast path enqueues.
 
@@ -22,7 +22,7 @@ A service's collaborators arrive through its deps and are required; `composition
 4. **Failures as values**: Return `Result<T, E>` whose failure carries an `ErrorCode` (`CATEGORY_NOT_FOUND`, `CHANNEL_NOT_FOUND`, `DLQ_ENTRY_NOT_FOUND`, …); the route renders it through `sendResult` (ADR-24).
 5. **Data Projection & DTO Formatting**: Transform database entities into API response views (converting `Date` to ISO string, attaching CDN URLs).
 6. **Caching & Invalidation**: Coordinate L1/L2 caches and invalidate caches upon state modifications.
-7. **Composition**: Delegate cross-cutting operations to `http-cache.ts` and to what the composition root hands in (ports, the `Singleflight` from `@vp/concurrency`); never construct or default a collaborator.
+7. **Composition**: Delegate cross-cutting operations to `http-cache.ts` and to what the composition root hands in (ports, the `Singleflight` from `@kit/concurrency`); never construct or default a collaborator.
 
 ---
 
@@ -86,5 +86,5 @@ A service's collaborators arrive through its deps and are required; `composition
 | `SseConnection` | `sse-connection.ts` | One open SSE stream: writes, heartbeat timer, close |
 | - | `sse-failures.ts` | The SSE failure values (`SseUnavailable`, `SseStreamLimitReached`) |
 
-`Singleflight` is not an `apps/server/api` service: it lives in `@vp/concurrency`, because it is a promise map with no
+`Singleflight` is not an `apps/server/api` service: it lives in `@kit/concurrency`, because it is a promise map with no
 driver behind it and a service importing it from `@vp/adapters` crossed the service-to-adapter edge.

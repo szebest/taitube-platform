@@ -1,12 +1,12 @@
+import type { InvalidCursor, Paginator } from '@kit/pagination';
+import { type Result, isErr, map, ok } from '@kit/result';
 import type { MarkNotificationsReadBody, Notification } from '@vp/api-contracts';
 import { readScopeOf } from '@vp/api-contracts';
 import type { NotificationRepositoryPort } from '@vp/core/repositories';
 import { type NotificationFilter, toNotificationView } from '@vp/domain';
 import { type AuthorizationFailure, decideNotificationAccess } from '@vp/domain-rules';
 import type { DatabaseUnavailable } from '@vp/errors';
-import type { InvalidCursor, Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
-import { type Result, isErr, map, ok } from '@vp/result';
 import { createdAtCursorPayload, decodeCreatedAtCursor } from './cursor';
 
 export interface NotificationServiceDeps {

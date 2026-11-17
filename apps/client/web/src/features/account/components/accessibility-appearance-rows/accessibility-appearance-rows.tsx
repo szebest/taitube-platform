@@ -1,11 +1,11 @@
-import { useT } from '@vp/intl-react';
+import { useT } from '@kit/intl-react';
 import {
   PREFERS_REDUCED_MOTION,
   SegmentedControl,
   Switch,
   useAppearance,
   useMediaQuery,
-} from '@vp/ui';
+} from '@kit/ui';
 import { useTokenOverride } from '#app/features/account/hooks/use-token-override';
 import { setName } from '#app/features/account/utils/set-name';
 import { SettingItem } from '../setting-item/setting-item';

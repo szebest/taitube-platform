@@ -1,4 +1,4 @@
-import { isErr } from '@vp/result';
+import { isErr } from '@kit/result';
 import { AnySchema, CaptionListSchema } from '../responses';
 import { type Scenario, actorOf, readyVideos, userById } from '../scenario';
 import { createTally } from '../tally';

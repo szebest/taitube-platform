@@ -13,6 +13,12 @@
     "test:stories": "vp test run --config .storybook/vitest.config.ts"
   },
   "devDependencies": {
+    "@kit/design-tokens": "workspace:*",
+    "@kit/intl-react": "workspace:*",
+    "@kit/result": "workspace:*",
+    "@kit/tsconfig": "workspace:*",
+    "@kit/ui": "workspace:*",
+    "@kit/vite-preset": "workspace:*",
     "@playwright/test": "^1.64.0",
     "@storybook/addon-a11y": "~10.6.2",
     "@storybook/addon-vitest": "~10.6.2",
@@ -29,16 +35,10 @@
     "@vp/api-client": "workspace:*",
     "@vp/api-contracts": "workspace:*",
     "@vp/components": "workspace:*",
-    "@vp/design-tokens": "workspace:*",
     "@vp/intl": "workspace:*",
-    "@vp/intl-react": "workspace:*",
     "@vp/messages": "workspace:*",
     "@vp/queries": "workspace:*",
-    "@vp/result": "workspace:*",
     "@vp/testing": "workspace:*",
-    "@vp/tsconfig": "workspace:*",
-    "@vp/ui": "workspace:*",
-    "@vp/vite-preset": "workspace:*",
     "@vp/web-testing": "workspace:*",
     "jsdom": "^30.1.2",
     "react": "^19.3.0",
@@ -51,6 +51,6 @@
     "vitest": "catalog:"
   },
   "vp": {
-    "layer": 7
+    "layer": 9
   }
 }

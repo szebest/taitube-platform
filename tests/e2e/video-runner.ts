@@ -1,9 +1,9 @@
 import * as fs from 'node:fs';
 import * as http from 'node:http';
 import * as path from 'node:path';
+import { unwrapOr } from '../../packages/platform/universal/result/src/index';
 import type { Repositories } from '../../packages/server/core/repositories/index';
 import { UploadClient } from '../../packages/server/upload-client/src/index';
-import { unwrapOr } from '../../packages/universal/result/src/index';
 import type { VideoTestResult, VideoTestSpec } from './specs';
 
 export interface VideoRunnerContext {

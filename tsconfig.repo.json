@@ -1,5 +1,5 @@
 {
-  "extends": "./packages/universal/tsconfig/base.json",
+  "extends": "./packages/platform/universal/tsconfig/base.json",
   "compilerOptions": {
     "noEmit": true,
     "lib": ["ES2023"],
@@ -13,6 +13,11 @@
       "@vp/domain/*": ["./packages/universal/domain/src/*"],
       "@vp/storage/*": ["./packages/server/storage/src/*"],
       "@vp/testing/*": ["./packages/server/testing/src/*"],
+      "@kit/*": [
+        "./packages/platform/universal/*/src",
+        "./packages/platform/server/*/src",
+        "./packages/platform/client/*/src"
+      ],
       "@vp/*": ["./packages/universal/*/src", "./packages/server/*/src", "./packages/client/*/src"]
     }
   },

@@ -1,4 +1,4 @@
-import { fromPromise } from '@vp/result';
+import { fromPromise } from '@kit/result';
 import { z } from 'zod';
 import type { SavedEntry } from './put-all';
 import { type SavedVideo, SavedVideoSchema } from './saved-video';

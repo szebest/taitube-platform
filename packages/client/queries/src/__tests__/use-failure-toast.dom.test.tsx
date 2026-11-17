@@ -1,8 +1,8 @@
+import { ToastProvider, createToaster } from '@kit/ui';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ApiError } from '@vp/api-client';
 import { ErrorCodes } from '@vp/errors';
-import { ToastProvider, createToaster } from '@vp/ui';
 import { AppWords } from '../app-words';
 import { useFailureToast } from '../use-failure-toast';
 

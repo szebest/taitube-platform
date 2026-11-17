@@ -1,10 +1,10 @@
+import { useT } from '@kit/intl-react';
+import { Button } from '@kit/ui';
 import { Link, useLocation } from '@tanstack/react-router';
 import type { LiveStreamPublicView } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
-import { useT } from '@vp/intl-react';
 import { ERROR_COPY } from '@vp/messages';
 import { type LiveChatLine, useAccount, useLiveChat } from '@vp/queries';
-import { Button } from '@vp/ui';
 import { CHAT_MESSAGE_BOUNDS } from '@vp/validation';
 import { LiveChat, type LiveChatLayout } from '#app/components/live/live-chat';
 import { API_PUBLIC_URL } from '#app/lib/config';

@@ -1,3 +1,4 @@
+import { createToaster, ToastProvider, Tooltip } from '@kit/ui';
 import type { Decorator } from '@storybook/react-vite';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
@@ -9,7 +10,6 @@ import {
 } from '@tanstack/react-router';
 import type { Account } from '@vp/api-contracts';
 import { ApiProvider, AppWords, GUEST, type Session, SessionProvider } from '@vp/queries';
-import { createToaster, ToastProvider, Tooltip } from '@vp/ui';
 import { createContext, type PropsWithChildren, type ReactNode, use, useState } from 'react';
 import { pickLocale } from './decorator';
 import { type ApiReply, inMemoryApi } from './in-memory-api';

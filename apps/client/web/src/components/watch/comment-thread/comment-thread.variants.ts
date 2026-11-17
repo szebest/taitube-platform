@@ -1,4 +1,4 @@
-import { tv } from '@vp/ui';
+import { tv } from '@kit/ui';
 import type { CommentThreadLayout } from './types';
 
 export const commentThreadStyles = tv({

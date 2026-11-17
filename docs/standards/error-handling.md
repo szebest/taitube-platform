@@ -42,7 +42,7 @@ That split decides three things a folder could not enforce:
 
 ## The API
 
-`@vp/result` is mechanism. It knows nothing about `ErrorCode`, HTTP or this domain.
+`@kit/result` is mechanism. It knows nothing about `ErrorCode`, HTTP or this domain.
 
 ```ts
 type Result<T, E> = { readonly ok: true; readonly value: T } | { readonly ok: false; readonly error: E };
@@ -250,7 +250,7 @@ transport check (`.max`), so the rule is the one place a limit is enforced.
 ### Who holds what
 
 - **A rule returns a `Result`**, and the code that calls it unwraps it with `isErr` / `isOk`. A form
-  field does that through `validateWith(rule)` (`@vp/forms`), which
+  field does that through `validateWith(rule)` (`@kit/forms`), which
   answers `failure.message` or nothing.
 - **TanStack Query owns loading and error state.** A loader fills the cache, a query hook reads it, a
   mutation hook (`useSetReaction`, `useUpdateVideo`, ...) carries `isPending` / `isError` and decides
@@ -291,7 +291,7 @@ gone and their assertions are flat:
 |---|---|
 | Every I/O method on a `@vp/core` port or repository returns `Promise<Result<T, InfraFailure>>` | `result-returning-ports.test.ts` |
 | No rule, service or stage throws its failure, and no helper converts one into a throw | `no-domain-throw.test.ts` |
-| `catch` - a `try` block or a `.catch(` - appears only in `@vp/result`, in an adapter, or in an entrypoint's exit-code handler | `catch-confinement.test.ts` |
+| `catch` - a `try` block or a `.catch(` - appears only in `@kit/result`, in an adapter, or in an entrypoint's exit-code handler | `catch-confinement.test.ts` |
 | `sendResult` and `sendSocketResult` are the only unwrap points under `routes/`, and a route imports no port | `routes-unwrap-at-send-result.test.ts` |
 | No statement drops a `Result`; a deliberate drop is `ignore(result, 'reason')` | `no-discarded-result.test.ts` |
 | Every persisted error code is an `ErrorCode` | `error-vocabulary.test.ts` |

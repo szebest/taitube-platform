@@ -1,5 +1,5 @@
-import { useT } from '@vp/intl-react';
-import { Callout, Field, Input } from '@vp/ui';
+import { useT } from '@kit/intl-react';
+import { Callout, Field, Input } from '@kit/ui';
 import { usePickWindowText } from '#app/features/admin/hooks/use-pick-window-text';
 import type { WindowIssue } from '#app/features/admin/utils/pick-schedule';
 

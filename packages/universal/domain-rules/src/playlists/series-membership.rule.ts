@@ -1,5 +1,5 @@
+import { type Result, err, ok } from '@kit/result';
 import type { Playlist, Video } from '@vp/domain';
-import { type Result, err, ok } from '@vp/result';
 import { type SeriesVideoNotOwned, seriesVideoNotOwned } from './failures';
 
 /** A series is made only of its owner's own videos; a plain playlist takes anyone's public ones. */

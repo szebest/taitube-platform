@@ -1,4 +1,5 @@
 import ts from 'typescript';
+import { packageDir, runsInBrowser } from '../../scripts/workspace-packages';
 import { parseSource } from './parsed-sources';
 import { productionSources, read } from './repo-files';
 
@@ -14,12 +15,9 @@ const FORMATTING_HOME = 'packages/universal/intl/';
  * (`Intl.Locale`). Each is the one module allowed to.
  */
 const DETECTION = [
-  'packages/client/intl-react/src/browser-environment.ts',
+  `${packageDir('@kit/intl-react')}/src/browser-environment.ts`,
   'packages/client/queries/src/request-locale.ts',
 ];
-
-/** Where a `toFixed` result can only be text a person reads; server-side it builds FFmpeg arguments. */
-const BROWSER_REACHABLE = ['apps/client/', 'packages/client/', 'packages/universal/'];
 
 function isMethodCall(node: ts.Node, matches: (name: string) => boolean): boolean {
   return (
@@ -90,11 +88,7 @@ describe('architecture: user-facing formatting happens in @vp/intl and nowhere e
 
   it('finds no locale method, hand-built Intl object or displayed toFixed outside @vp/intl', () => {
     const offenders = outsideTheHome().flatMap((file) =>
-      adhocFormatting(
-        file,
-        read(file),
-        BROWSER_REACHABLE.some((root) => file.startsWith(root))
-      )
+      adhocFormatting(file, read(file), runsInBrowser(file))
     );
 
     expect(offenders).toEqual([]);

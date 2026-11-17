@@ -1,3 +1,4 @@
+import { writeCookie } from '@kit/ui';
 import { screen } from '@testing-library/react';
 import {
   type ContractResult,
@@ -6,7 +7,6 @@ import {
   subscribeToChannel,
 } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
-import { writeCookie } from '@vp/ui';
 import {
   account,
   CHANNEL_ID,

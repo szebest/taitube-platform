@@ -1,6 +1,7 @@
 import { appendFileSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { runEntrypoint } from '../../packages/server/testing/src/run-entrypoint';
+import { UI_SRC } from '../scaffold';
 import { REPO, uiTree } from './ui-tree';
 
 const ENTRYPOINT = resolve(import.meta.dirname, '../gen-tokens.ts');
@@ -12,7 +13,7 @@ describe('scripts: pnpm gen:tokens', () => {
   it('writes the files the check reads, and the check names the one edited by hand', () => {
     const { root, remove } = uiTree();
     onTestFinished(remove);
-    const sets = 'packages/client/ui/src/styles/generated/sets.css';
+    const sets = `${UI_SRC}/styles/generated/sets.css`;
 
     expect(genTokens(root).status).toBe(0);
     expect(readFileSync(join(root, sets), 'utf8')).toBe(readFileSync(join(REPO, sets), 'utf8'));

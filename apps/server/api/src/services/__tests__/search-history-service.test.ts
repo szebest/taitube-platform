@@ -1,8 +1,8 @@
+import { Paginator } from '@kit/pagination';
+import { err } from '@kit/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { ErrorCodes, databaseUnavailable } from '@vp/errors';
-import { Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
-import { err } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { SearchHistoryService } from '../search-history-service';
 

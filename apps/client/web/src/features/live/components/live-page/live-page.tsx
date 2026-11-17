@@ -1,7 +1,7 @@
+import { useT } from '@kit/intl-react';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import { EmptyLibraryIllustration, EmptyState } from '@vp/components';
-import { useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
 import { liveNowQueryOptions } from '#app/features/live/api/live-queries';
 import { LiveStreamCard } from '../live-stream-card/live-stream-card';

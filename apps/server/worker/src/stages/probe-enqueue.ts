@@ -1,3 +1,5 @@
+import type { Logger } from '@kit/logger';
+import { type Result, isErr, ok } from '@kit/result';
 import type { FlowProducerPort, JobQueue, QueueJob } from '@vp/core/ports';
 import type { NewOutboxInput, Repositories } from '@vp/core/repositories';
 import { autoCaptionsEnabled } from '@vp/domain';
@@ -16,8 +18,6 @@ import {
   ids,
   stagePolicies,
 } from '@vp/job-contracts';
-import type { Logger } from '@vp/logger';
-import { type Result, isErr, ok } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 
 export interface EnqueueFollowUpsParams {

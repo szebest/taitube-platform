@@ -9,7 +9,7 @@ import {
   Spinner,
   useUiCopy,
   VisuallyHidden,
-} from '@vp/ui';
+} from '@kit/ui';
 import { type ComponentPropsWithRef, type ReactElement, type ReactNode, useId } from 'react';
 import { RollingCount } from '#app/components/watch/engagement-bar';
 import { CommentItemContext, useCommentItem } from './comment-item.context';

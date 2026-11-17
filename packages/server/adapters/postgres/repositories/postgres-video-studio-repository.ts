@@ -1,3 +1,4 @@
+import { err, fromPromise, ok, type Result } from '@kit/result';
 import {
   type StudioMetadataOutcome,
   type TakeDownVideoOptions,
@@ -15,7 +16,6 @@ import {
   versionConflict,
 } from '@vp/errors';
 import { visibilityNotificationJobs } from '@vp/job-contracts';
-import { err, fromPromise, ok, type Result } from '@vp/result';
 import { and, asc, desc, eq, sql } from 'drizzle-orm';
 import {
   containsScope,

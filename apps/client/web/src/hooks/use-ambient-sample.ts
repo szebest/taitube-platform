@@ -1,4 +1,4 @@
-import { tryCatch, unwrapOr } from '@vp/result';
+import { tryCatch, unwrapOr } from '@kit/result';
 import { useEffect, useState } from 'react';
 import { shouldPrefetch } from '#app/integrations/network/should-prefetch';
 import { useReducedMotion } from './use-reduced-motion';

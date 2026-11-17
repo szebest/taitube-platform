@@ -1,10 +1,10 @@
+import { type Result, err, fromPromise, map, ok } from '@kit/result';
 import { type NewOutboxInput, type OutboxRecord, OutboxRepository } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import type { OutboxStatus } from '@vp/domain';
 import { OUTBOX_CLAIM_LEASE_MS, OUTBOX_ROW, decideOutboxAttempt } from '@vp/domain-rules';
 import { MS_PER_DAY } from '@vp/domain/time';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
-import { type Result, err, fromPromise, map, ok } from '@vp/result';
 import { and, asc, eq, inArray, isNull, lt, lte, or, sql } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
 import { toOutboxRecord } from '../mappers/index';

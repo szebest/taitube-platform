@@ -1,4 +1,4 @@
-import { clientAppConfig } from '@vp/vite-preset';
+import { clientAppConfig } from '@kit/vite-preset';
 
 export default clientAppConfig({
   configUrl: import.meta.url,

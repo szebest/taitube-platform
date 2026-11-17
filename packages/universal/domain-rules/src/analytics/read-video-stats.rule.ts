@@ -1,6 +1,6 @@
+import { type Result, andThen, err, ok } from '@kit/result';
 import type { Video } from '@vp/domain';
 import { canReadVideoStats } from '@vp/permissions';
-import { type Result, andThen, err, ok } from '@vp/result';
 import { type ReadVideoFailure, decideVideoRead } from '../videos/index';
 import { analyticsForbidden } from './failures';
 import type { VideoAnalyticsInput } from './read-analytics.rule';

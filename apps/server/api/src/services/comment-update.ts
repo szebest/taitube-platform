@@ -1,3 +1,4 @@
+import { type Result, err, isErr, ok } from '@kit/result';
 import type {
   CommentModerationRepositoryPort,
   NotificationRepositoryPort,
@@ -11,7 +12,6 @@ import {
 } from '@vp/domain-rules';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { type Result, err, isErr, ok } from '@vp/result';
 import type { CommentCreateDeps } from './comment-create';
 import { decideCommentEdit } from './comment-edit';
 import { commentWithVideo } from './comment-lookup';

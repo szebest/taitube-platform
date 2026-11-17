@@ -1,10 +1,10 @@
+import { useAppForm } from '@kit/forms';
+import { Format, useFormat, useT } from '@kit/intl-react';
+import { unwrapOr } from '@kit/result';
+import { Callout, Field, Select } from '@kit/ui';
 import type { ContractBody, OwnerChannel, updateMyChannel } from '@vp/api-contracts';
 import { COUNTRIES, isCountryCode } from '@vp/domain';
 import { type ErrorCode, ErrorCodes } from '@vp/errors';
-import { useAppForm } from '@vp/forms';
-import { Format, useFormat, useT } from '@vp/intl-react';
-import { unwrapOr } from '@vp/result';
-import { Callout, Field, Select } from '@vp/ui';
 import { CustomizationSection } from '#app/components/section/customization-section';
 import {
   useChannelValidators,

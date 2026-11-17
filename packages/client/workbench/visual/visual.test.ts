@@ -1,8 +1,8 @@
 import { readFileSync } from 'node:fs';
+import { appearance } from '@kit/ui/appearance/registry';
 import { expect, test } from '@playwright/test';
 import { FALLBACK_LOCALE } from '@vp/intl';
 import { SUPPORTED_LOCALES } from '@vp/messages';
-import { appearance } from '@vp/ui/appearance/registry';
 import { THEME_DEFAULT } from '../src/toolbars';
 import { type StoryEntry, shotVariant, shotsFor, storiesFor } from './stories';
 

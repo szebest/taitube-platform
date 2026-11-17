@@ -1,7 +1,7 @@
+import { fromPromise, isOk } from '@kit/result';
 import type { EnsureQueryDataOptions, QueryClient, QueryKey } from '@tanstack/react-query';
 import { notFound } from '@tanstack/react-router';
 import { ApiError } from '@vp/api-client';
-import { fromPromise, isOk } from '@vp/result';
 
 const NOT_FOUND = 404;
 

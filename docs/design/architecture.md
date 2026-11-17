@@ -11,20 +11,20 @@ implements it.
 
 | Layer | Where | Owns | Knows nothing about |
 |---|---|---|---|
-| Engine | `@vp/design-tokens` (universal, T2: it takes the appearance vocabulary from `@vp/domain`, T1) | the token schemas, `defineTokenSet`, `defineTheme`, `defineAppearance`, the shared option unions tied to tokens, the CSS generators, the contrast gate | any concrete value |
-| Foundation | `@vp/ui` (client, T2) | every token set implementation, the themes, the appearance registry and engine, the primitives (including `Table`), the shared UI types, the copy provider | products, videos, data |
+| Engine | `@kit/design-tokens` (universal, T2: it takes the appearance vocabulary from `@vp/domain`, T1) | the token schemas, `defineTokenSet`, `defineTheme`, `defineAppearance`, the shared option unions tied to tokens, the CSS generators, the contrast gate | any concrete value |
+| Foundation | `@kit/ui` (client, T2) | every token set implementation, the themes, the appearance registry and engine, the primitives (including `Table`), the shared UI types, the copy provider | products, videos, data |
 | Shared components | `@vp/components` (client, T3) | only what both apps render today: `PageHeader`, `VideoThumbnail`, the empty, error and section-error states, their skeletons | data, routes, formatting, anything one app alone uses |
 | App kit | `apps/client/<app>/src/components/` | the app's own presentational components, shared across its features: web's `AppShell`, `VideoCard`, `Shelf`, `PickOfTheDay`, `Stage`, `Queue`...; studio's `StudioWorkspace`, `DataTable`, `StatCard`, charts | data, routes |
 | App features | `apps/client/<app>/src/features/<feature>/` | the smart wrappers (section 5), app-only behaviour (the player, the upload flow), pages | how a primitive is drawn |
 
-Dependencies point down only: an app kit component is built from `@vp/components` and `@vp/ui`, never from
+Dependencies point down only: an app kit component is built from `@vp/components` and `@kit/ui`, never from
 raw elements with its own styling; a smart wrapper is built from the app kit. The specs mirror this:
 [primitives/](primitives/README.md), [components/](components/README.md),
 [apps/web/](apps/web/README.md), [apps/studio/](apps/studio/README.md).
 
 **Where a new component goes**
 
-1. A generic, product-agnostic control (it would make sense in any app): a primitive in `@vp/ui`.
+1. A generic, product-agnostic control (it would make sense in any app): a primitive in `@kit/ui`.
 2. A presentational piece only one app renders: that app's kit, `src/components/<area>/<name>/`. This is the
    default for anything product-shaped.
 3. A presentational piece both apps render today: `@vp/components`. It moves there from an app kit the day the
@@ -51,22 +51,22 @@ token set. A **token set** is one small, swappable implementation of one design 
 | `ambient` | `off`, `subtle`, `cinematic` | glow on or off, opacity per mode family, blur, sample interval |
 | `motion` | `standard`, `calm`, `reduced` | durations and easings; `prefers-reduced-motion` forces `reduced` |
 
-The values are in [tokens.json](tokens.json) under `set.<group>.<implementation>`. The TypeScript and `tokens.json` keys are camelCase (`fontSize`); module paths and HTML attributes are kebab-case (`@vp/ui/tokens/font-size/<id>`, `data-font-size`), and the schema of each group exports its kebab name, the one place the mapping lives.
+The values are in [tokens.json](tokens.json) under `set.<group>.<implementation>`. The TypeScript and `tokens.json` keys are camelCase (`fontSize`); module paths and HTML attributes are kebab-case (`@kit/ui/tokens/font-size/<id>`, `data-font-size`), and the schema of each group exports its kebab name, the one place the mapping lives.
 
 ### Each implementation is its own tiny module
 
 ```
-packages/client/ui/src/tokens/
-  shadow/flat/index.ts        exported as @vp/ui/tokens/shadow/flat
-  shadow/soft/index.ts        exported as @vp/ui/tokens/shadow/soft
+packages/platform/client/ui/src/tokens/
+  shadow/flat/index.ts        exported as @kit/ui/tokens/shadow/flat
+  shadow/soft/index.ts        exported as @kit/ui/tokens/shadow/soft
   shadow/deep/index.ts
   typography/figtree/index.ts imports @fontsource-variable/figtree, newsreader, geist-mono
   ...
 ```
 
 ```ts
-// @vp/ui/tokens/shadow/soft
-import { defineTokenSet } from '@vp/design-tokens';
+// @kit/ui/tokens/shadow/soft
+import { defineTokenSet } from '@kit/design-tokens';
 
 export const shadowSoft = defineTokenSet('shadow', 'soft', {
   dark: [/* elevation 1 to 3 */],
@@ -81,18 +81,18 @@ unused one is never bundled.
 ### A theme names its defaults by import
 
 ```ts
-// @vp/ui/themes/sand
-import { defineTheme } from '@vp/design-tokens';
-import { ambientCinematic } from '@vp/ui/tokens/ambient/cinematic';
-import { borderHairline } from '@vp/ui/tokens/border/hairline';
-import { fontSizeDefault } from '@vp/ui/tokens/font-size/default';
-import { motionStandard } from '@vp/ui/tokens/motion/standard';
-import { radiusRound } from '@vp/ui/tokens/radius/round';
-import { shadowSoft } from '@vp/ui/tokens/shadow/soft';
-import { sizingMedium } from '@vp/ui/tokens/sizing/medium';
-import { spacingDefault } from '@vp/ui/tokens/spacing/default';
-import { typographyFigtree } from '@vp/ui/tokens/typography/figtree';
-import { ref } from '@vp/ui/tokens/ref';
+// @kit/ui/themes/sand
+import { defineTheme } from '@kit/design-tokens';
+import { ambientCinematic } from '@kit/ui/tokens/ambient/cinematic';
+import { borderHairline } from '@kit/ui/tokens/border/hairline';
+import { fontSizeDefault } from '@kit/ui/tokens/font-size/default';
+import { motionStandard } from '@kit/ui/tokens/motion/standard';
+import { radiusRound } from '@kit/ui/tokens/radius/round';
+import { shadowSoft } from '@kit/ui/tokens/shadow/soft';
+import { sizingMedium } from '@kit/ui/tokens/sizing/medium';
+import { spacingDefault } from '@kit/ui/tokens/spacing/default';
+import { typographyFigtree } from '@kit/ui/tokens/typography/figtree';
+import { ref } from '@kit/ui/tokens/ref';
 
 const color = { dark: { bg: ref('sand.950'), /* every role */ }, light: { /* ... */ }, oled: { /* ... */ } };
 
@@ -124,7 +124,7 @@ theme can never leave a dimension undefined.
 ### One registry decides what ships
 
 ```ts
-// packages/client/ui/src/appearance/registry.ts
+// packages/platform/client/ui/src/appearance/registry.ts
 export const appearance = defineAppearance({
   themes: [sand, nocturne],
   defaultTheme: sand,
@@ -170,7 +170,7 @@ re-render of React, and the server render already carries the right attributes f
 ### The viewer's preference
 
 ```ts
-// @vp/ui/appearance (shape; the Zod schema is built from the registry)
+// @kit/ui/appearance (shape; the Zod schema is built from the registry)
 interface AppearancePreference {
   schema: 2;
   theme: string | null;            // a theme id, kept even where not offered; null is defaultTheme
@@ -197,16 +197,16 @@ A prop's string union is a shared vocabulary, not something each component inven
 
 | Where | What | Examples |
 |---|---|---|
-| `@vp/design-tokens` | unions that are the keys of a token schema, so they cannot drift from the tokens | `SizeOption` (`xs` to `xl`), `ControlSize` (the keys of `sizing.control`), `IconSize`, `RadiusOption`, `ElevationOption`, `TypeStyleOption`, `SpaceStep`, `ColorRole`, `ToneOption`, `TokenGroup` |
-| `@vp/design-tokens`, from `@vp/domain`'s appearance vocabulary | unions the account preference shares with the server, so the engine builds on them rather than redefining them | `ModeOption` (`APPEARANCE_SETTINGS.mode.options`), `ContrastOption` (`APPEARANCE_SETTINGS.contrast.options`), both in `@vp/domain/settings` |
-| `@vp/ui` `types/` | UI vocabulary every primitive shares that no token defines | `FillOption` (`solid`, `soft`, `outline`, `ghost`, `plain`), `ShapeOption` (`text`, `icon`, `pill`), `Orientation`, `Align` (`start`, `center`, `end`), `Side` (logical: `block-start`, `block-end`, `inline-start`, `inline-end`) |
+| `@kit/design-tokens` | unions that are the keys of a token schema, so they cannot drift from the tokens | `SizeOption` (`xs` to `xl`), `ControlSize` (the keys of `sizing.control`), `IconSize`, `RadiusOption`, `ElevationOption`, `TypeStyleOption`, `SpaceStep`, `ColorRole`, `ToneOption`, `TokenGroup` |
+| `@kit/design-tokens`, from `@vp/domain`'s appearance vocabulary | unions the account preference shares with the server, so the engine builds on them rather than redefining them | `ModeOption` (`APPEARANCE_SETTINGS.mode.options`), `ContrastOption` (`APPEARANCE_SETTINGS.contrast.options`), both in `@vp/domain/settings` |
+| `@kit/ui` `types/` | UI vocabulary every primitive shares that no token defines | `FillOption` (`solid`, `soft`, `outline`, `ghost`, `plain`), `ShapeOption` (`text`, `icon`, `pill`), `Orientation`, `Align` (`start`, `center`, `end`), `Side` (logical: `block-start`, `block-end`, `inline-start`, `inline-end`) |
 | `@vp/domain`, `@vp/api-contracts` | product vocabulary: never redefined in UI code | `VideoStatus`, `VideoVisibility`, `ReactionType` |
 | a component's `types.ts` | a union only that component uses | `VideoCardVariant` (`grid`, `shelf`, `row`, `poster`, `spotlight`) |
 
 Every shared union is a `const` array first and a type second, so variant maps and specs iterate the same list:
 
 ```ts
-// @vp/design-tokens/schema/sizing.ts, where the avatar sizes are keyed by it
+// @kit/design-tokens/schema/sizing.ts, where the avatar sizes are keyed by it
 export const SIZE_OPTIONS = ['xs', 'sm', 'md', 'lg', 'xl'] as const;
 export type SizeOption = (typeof SIZE_OPTIONS)[number];
 ```
@@ -214,8 +214,8 @@ export type SizeOption = (typeof SIZE_OPTIONS)[number];
 A component narrows a shared union with `Extract` and widens one with a union, in its `types.ts`:
 
 ```ts
-// @vp/ui/primitives/button/types.ts
-import type { ControlSize, ToneOption } from '@vp/design-tokens';
+// @kit/ui/primitives/button/types.ts
+import type { ControlSize, ToneOption } from '@kit/design-tokens';
 import type { FillOption, ShapeOption } from '../../types';
 
 export type ButtonFill = Exclude<FillOption, 'plain'>;
@@ -229,7 +229,7 @@ export type ButtonShape = ShapeOption;
 - Widening (`SizeOption | 'hero'`) is for a genuinely new value one component needs; if a second component
   needs it, it moves into the shared union instead.
 - A props interface never spells a literal union inline. `tests/architecture/shared-unions.test.ts` reads the
-  props types of `@vp/ui`, `@vp/components` and the apps' components through the TypeScript compiler API and
+  props types of `@kit/ui`, `@vp/components` and the apps' components through the TypeScript compiler API and
   fails on an inline string-literal union outside a `types.ts` file.
 - The `tv()` variant maps are typed against the same unions (`satisfies Record<ButtonTone, string>`), so adding a
   member to a union is a type error until every component that accepts it styles it.
@@ -255,7 +255,7 @@ A component with more than one region is a root and its parts, sharing state thr
   context. Content is children, never a `title`, `hint` or `footer` prop.
 - Roots are always `X.Root`, as in Radix, so every compound component reads the same way.
 - A part outside its root throws a named error (`VideoCard.Title must be inside VideoCard.Root`), from the
-  shared `createCompoundContext(name)` helper in `@vp/ui/lib`.
+  shared `createCompoundContext(name)` helper in `@kit/ui/lib`.
 - Single-element primitives (`Button`, `Badge`, `Input`, `Switch`) are one component over the native element's
   props.
 
@@ -286,7 +286,7 @@ How the SOLID principles land here:
 ### One folder per component
 
 ```
-@vp/ui primitives/button/            packages/client/components/src/video-card/
+@kit/ui primitives/button/            packages/client/components/src/video-card/
   button.tsx                           video-card.tsx        Root and parts
   button.variants.ts                   video-card.context.ts createCompoundContext, useVideoCard
   types.ts                             video-card.variants.ts
@@ -365,8 +365,8 @@ Rules:
 
 | Shared through a package | Stays in an app |
 |---|---|
-| tokens, themes, token sets, the registry, the appearance engine (`@vp/design-tokens`, `@vp/ui`) | the app kit: web's `AppShell`, `VideoCard`, `Shelf`, `PickOfTheDay`, `Stage`, `Queue`, `CommandPalette`...; studio's `StudioWorkspace`, `DataTable`, `StatCard`, charts |
-| primitives, `Table` among them (`@vp/ui`) | smart wrappers, which read each app's own feature hooks |
+| tokens, themes, token sets, the registry, the appearance engine (`@kit/design-tokens`, `@kit/ui`) | the app kit: web's `AppShell`, `VideoCard`, `Shelf`, `PickOfTheDay`, `Stage`, `Queue`, `CommandPalette`...; studio's `StudioWorkspace`, `DataTable`, `StatCard`, charts |
+| primitives, `Table` among them (`@kit/ui`) | smart wrappers, which read each app's own feature hooks |
 | `PageHeader`, `VideoThumbnail`, `EmptyState`, `ErrorState`, `SectionError` (`@vp/components`) | the player (web), the upload flow and its progress widget (studio) |
 | query factories both apps read (`@vp/queries`) | page layouts, routes, studio-only queries and mutations |
 

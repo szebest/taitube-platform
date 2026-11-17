@@ -1,11 +1,11 @@
+import { Singleflight } from '@kit/concurrency';
+import { Paginator } from '@kit/pagination';
+import { type Result, err, isOk, ok } from '@kit/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
-import { Singleflight } from '@vp/concurrency';
 import type { CommentCachePort, HotComments } from '@vp/core/ports';
 import { DEFAULT_COMMENT_SETTINGS } from '@vp/domain';
 import { ErrorCodes, cacheUnavailable } from '@vp/errors';
-import { Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
-import { type Result, err, isOk, ok } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { CommentService } from '../comment-service';
 import { commentUpdateDeps, saveSettings } from './comment-deps';

@@ -1,7 +1,7 @@
+import { ok, type Result } from '@kit/result';
 import type { WatchPartyInviteLinkRepositoryPort } from '@vp/core/repositories';
 import type { WatchPartyInviteLink } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { ok, type Result } from '@vp/result';
 import type { InMemoryWatchPartyStore } from './in-memory-watch-party-store';
 
 export class InMemoryWatchPartyInviteLinkRepository implements WatchPartyInviteLinkRepositoryPort {

@@ -1,5 +1,5 @@
+import { Badge } from '@kit/ui';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Badge } from '@vp/ui';
 import { LiveChat, LiveChatSkeleton } from '#app/components/live/live-chat';
 import { Stage, StageSkeleton } from '#app/components/watch/stage';
 import { LiveLayout } from '..';

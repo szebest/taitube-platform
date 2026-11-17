@@ -1,10 +1,10 @@
+import { useFormat, useT } from '@kit/intl-react';
+import { unwrapOr } from '@kit/result';
+import { BrandScope, useUiCopy } from '@kit/ui';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import type { Video } from '@vp/api-contracts';
-import { useFormat, useT } from '@vp/intl-react';
 import { SectionBoundary, useApi } from '@vp/queries';
-import { unwrapOr } from '@vp/result';
-import { BrandScope, useUiCopy } from '@vp/ui';
 import type { ReactNode } from 'react';
 import { SubscribeAction } from '#app/components/channel/subscribe-action';
 import { EngagementBar } from '#app/components/watch/engagement-bar';

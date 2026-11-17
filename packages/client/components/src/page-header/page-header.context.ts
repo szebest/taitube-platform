@@ -1,4 +1,4 @@
-import { createCompoundContext } from '@vp/ui';
+import { createCompoundContext } from '@kit/ui';
 import type { PageHeaderTitleStyle } from './types';
 
 export const [PageHeaderContext, usePageHeader] = createCompoundContext<{

@@ -1,7 +1,7 @@
+import { useT } from '@kit/intl-react';
+import { Icon, IconButton, SortableList } from '@kit/ui';
 import type { VideoSummary } from '@vp/api-contracts';
 import { VideoThumbnail } from '@vp/components';
-import { useT } from '@vp/intl-react';
-import { Icon, IconButton, SortableList } from '@vp/ui';
 
 interface StartHerePinsProps {
   pins: readonly VideoSummary[];

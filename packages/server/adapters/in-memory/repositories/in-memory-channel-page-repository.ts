@@ -1,7 +1,7 @@
+import { err, isErr, ok, type Result } from '@kit/result';
 import type { ChannelPageRepositoryPort, VideoRepository } from '@vp/core/repositories';
 import type { ChannelLocalization, ChannelPageSettings } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
-import { err, isErr, ok, type Result } from '@vp/result';
 
 interface PageRow {
   settings: ChannelPageSettings;

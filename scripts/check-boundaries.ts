@@ -1,103 +1,74 @@
-import { readdirSync, readFileSync, statSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
-import { createLogger } from '../packages/server/logger/src/index';
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { createLogger } from '../packages/platform/server/logger/src/index';
+import { directoryTier, isPlatform, load, type Pkg, type Tier } from './workspace-packages';
 
-type Tier = 'universal' | 'server' | 'client';
-
-interface PkgDep {
-  name: string;
-  dev: boolean;
-}
-
-export interface Pkg {
-  name: string;
-  dir: string;
-  declaredTier?: Tier;
-  layer: number;
-  deps: PkgDep[];
-}
-
-const ROOT = resolve(import.meta.dirname, '..');
 const TIER_MAY_IMPORT: Record<Tier, Tier[]> = {
   universal: ['universal'],
   server: ['universal', 'server'],
   client: ['universal', 'client'],
 };
-const TIER_DIRECTORIES: Record<string, Tier[]> = {
-  packages: ['universal', 'server', 'client'],
-  apps: ['server', 'client'],
-};
 
 /**
  * The only packages a manifest may name as a devDependency regardless of tier and layer: none
- * ships code, so none can reach a runtime bundle or a `pnpm deploy --prod` tree. `@vp/tsconfig`
+ * ships code, so none can reach a runtime bundle or a `pnpm deploy --prod` tree. `@kit/tsconfig`
  * is a set of JSON presets, `@vp/testing` a vitest config factory plus fixtures,
- * `@vp/vite-preset` the Vite config a client app builds with, and `@vp/web-testing` the spec
+ * `@kit/vite-preset` the Vite config a client app builds with, and `@vp/web-testing` the spec
  * helpers of the browser packages and apps, which only specs import. Every other devDependency is a
  * real edge — it resolves in CI and it lands in the emitted `.d.ts` — so it is checked exactly
  * like a dependency, and a runtime dependency on one of these is checked too.
  */
 export const BUILD_TOOLING: ReadonlySet<string> = new Set([
-  '@vp/tsconfig',
+  '@kit/tsconfig',
   '@vp/testing',
-  '@vp/vite-preset',
+  '@kit/vite-preset',
   '@vp/web-testing',
 ]);
 
-function manifestDirs(): string[] {
-  const dirs: string[] = [];
-  for (const parent of ['packages', 'apps']) {
-    for (const tier of readdirSync(join(ROOT, parent))) {
-      const tierDir = join(ROOT, parent, tier);
-      if (!statSync(tierDir).isDirectory()) continue;
-      dirs.push(tierDir, ...readdirSync(tierDir).map((name) => join(tierDir, name)));
-    }
-  }
-  return dirs.filter(
-    (d) => statSync(join(d, 'package.json'), { throwIfNoEntry: false })?.isFile() ?? false
+type Destinations = string | { readonly [key: string]: Destinations };
+
+const destinations = (move: Destinations): string[] =>
+  typeof move === 'string' ? [move] : Object.values(move).flatMap(destinations);
+
+/**
+ * The pending-move allowance: an app package that `scripts/package-moves.json` sends, whole or in part,
+ * to a `@kit/*` package still counts as platform for the platform rule. It holds nothing once every
+ * move has landed, and goes with the file.
+ */
+export function pendingPlatformMoves(
+  moves: Readonly<Record<string, Destinations>> = JSON.parse(
+    readFileSync(join(import.meta.dirname, 'package-moves.json'), 'utf8')
+  )
+): ReadonlySet<string> {
+  return new Set(
+    Object.entries(moves)
+      .filter(([, move]) => destinations(move).some((name) => name.startsWith('@kit/')))
+      .map(([name]) => name)
   );
 }
 
-export function load(): Pkg[] {
-  return manifestDirs().map((dir) => {
-    const raw = JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8'));
-    const vp = raw.vp ?? {};
-    return {
-      name: raw.name,
-      dir: dir.slice(ROOT.length + 1),
-      declaredTier: vp.tier,
-      layer: vp.layer,
-      deps: declaredDeps(raw),
-    };
-  });
-}
+/** Edges from a moved package to an app package that a seam still has to remove; deleted with the last seam. */
+const PENDING_APP_EDGES: ReadonlySet<string> = new Set([
+  '@kit/forms>@vp/web-testing',
+  '@kit/ui>@vp/web-testing',
+  '@kit/web-telemetry>@vp/web-testing',
+  '@kit/web-telemetry>@vp/api-contracts',
+]);
 
-function declaredDeps(raw: {
-  dependencies?: Record<string, string>;
-  peerDependencies?: Record<string, string>;
-  devDependencies?: Record<string, string>;
-}): PkgDep[] {
-  const runtime = [
-    ...Object.keys(raw.dependencies ?? {}),
-    ...Object.keys(raw.peerDependencies ?? {}),
-  ].filter((d) => d.startsWith('@vp/'));
-  const dev = Object.keys(raw.devDependencies ?? {}).filter(
-    (d) => d.startsWith('@vp/') && !runtime.includes(d)
-  );
+export const dependsOnAppPackage = (
+  pkg: Pick<Pkg, 'dir' | 'name'>,
+  dep: Pick<Pkg, 'dir' | 'name'>,
+  pendingMoves: ReadonlySet<string>
+): boolean =>
+  isPlatform(pkg.dir) &&
+  !isPlatform(dep.dir) &&
+  !pendingMoves.has(dep.name) &&
+  !PENDING_APP_EDGES.has(`${pkg.name}>${dep.name}`);
 
-  return [
-    ...runtime.map((name) => ({ name, dev: false })),
-    ...dev.map((name) => ({ name, dev: true })),
-  ];
-}
-
-function directoryTier(dir: string): Tier | null {
-  const [parent, tier, name] = dir.split('/');
-  if (!(parent && name)) return null;
-  return TIER_DIRECTORIES[parent]?.find((t) => t === tier) ?? null;
-}
-
-export function checkBoundaries(packages: Pkg[] = load()): string[] {
+export function checkBoundaries(
+  packages: Pkg[] = load(),
+  pendingMoves: ReadonlySet<string> = pendingPlatformMoves()
+): string[] {
   const byName = new Map(packages.map((p) => [p.name, p]));
   const errors: string[] = [];
 
@@ -105,7 +76,7 @@ export function checkBoundaries(packages: Pkg[] = load()): string[] {
     const tier = directoryTier(pkg.dir);
     if (!tier) {
       errors.push(
-        `${pkg.name}: lives outside packages/<tier>/ and apps/<server|client>/, so it has no tier`
+        `${pkg.name}: lives outside packages/<tier>/, packages/platform/<tier>/ and apps/<server|client>/, so it has no tier`
       );
       continue;
     }
@@ -120,10 +91,16 @@ export function checkBoundaries(packages: Pkg[] = load()): string[] {
     }
 
     for (const { name: depName, dev } of pkg.deps) {
-      if (dev && BUILD_TOOLING.has(depName)) continue;
       const dep = byName.get(depName);
       if (!dep) continue;
       const how = dev ? 'dev-depends on' : 'depends on';
+
+      if (dependsOnAppPackage(pkg, dep, pendingMoves)) {
+        errors.push(
+          `${pkg.name} (platform) ${how} ${dep.name} (app) — a platform package depends, peer-depends and dev-depends only on platform packages`
+        );
+      }
+      if (dev && BUILD_TOOLING.has(depName)) continue;
 
       const depTier = directoryTier(dep.dir);
       if (depTier && !TIER_MAY_IMPORT[tier].includes(depTier)) {

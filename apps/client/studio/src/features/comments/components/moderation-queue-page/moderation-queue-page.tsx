@@ -1,9 +1,9 @@
+import { useT } from '@kit/intl-react';
+import { Badge, Spinner } from '@kit/ui';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import type { BulkActionBody } from '@vp/api-contracts';
 import { EmptyState, PageHeader, SectionError } from '@vp/components';
-import { useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
-import { Badge, Spinner } from '@vp/ui';
 import { useState } from 'react';
 import { ModerationQueue } from '#app/components/comments/moderation-queue';
 import { LoadMore } from '#app/components/table/load-more';

@@ -1,3 +1,4 @@
+import { isErr, ok } from '@kit/result';
 import {
   joinWatchPartyAsGuest,
   PARTY_CREDENTIAL_HEADER,
@@ -5,7 +6,6 @@ import {
   upgradeWatchPartySeat,
 } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
-import { isErr, ok } from '@vp/result';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { contractSchema } from './contract-schema';

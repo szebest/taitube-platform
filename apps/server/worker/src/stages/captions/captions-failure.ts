@@ -1,9 +1,9 @@
+import { type Result, isErr, ok } from '@kit/result';
 import type { QueueJob } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
-import { type DatabaseUnavailable, errorCodeOf } from '@vp/errors';
+import { type DatabaseUnavailable, errorCodeOf, errorCodeRegistry } from '@vp/errors';
 import { CaptionsJob } from '@vp/job-contracts';
 import type { PipelineMetrics } from '@vp/observability';
-import { type Result, isErr, ok } from '@vp/result';
 
 /**
  * A run the failure handler parked marks its track `failed`, and the creator can retry it. Only the
@@ -22,7 +22,7 @@ export async function failCaptionsRun(
     id: parsed.data.captionId,
     expectedVersion: parsed.data.captionVersion,
     status: 'failed',
-    reason: errorCodeOf(error),
+    reason: errorCodeOf(errorCodeRegistry, error),
   });
   if (isErr(failed)) return failed;
   if (failed.value.type === 'committed') metrics.captionsJobsTotal.inc({ outcome: 'failed' });

@@ -590,10 +590,10 @@ into the `PermanentError` / `TransientError` BullMQ needs (ADR-24). Never by reg
 In place since ticket 89: `apps/client/web` runs on TanStack Start over Vite 8 with React 19, file-based TanStack
 Router and TanStack Query, server-rendered and hydrated, and `vite build` emits a Node fetch handler that
 `srvx` serves. Since ticket 53 every page loads its data through a route loader into TanStack Query, and
-forms run on TanStack Form. Styling is Tailwind CSS on the `@vp/ui` design system (ticket 55).
+forms run on TanStack Form. Styling is Tailwind CSS on the `@kit/ui` design system (ticket 55).
 Since ticket 93 the same stack runs twice: `apps/client/studio` is the creator app on `:5174`, built with the
-same `@vp/vite-preset`, router factory (`createAppRouter` in `@vp/queries`), request middleware
-(`@vp/security-headers`) and themed document (`@vp/ui`); web's `/upload` and `/upload/edit/:id` redirect to it
+same `@kit/vite-preset`, router factory (`createAppRouter` in `@vp/queries`), request middleware
+(`@kit/security-headers`) and themed document (`@kit/ui`); web's `/upload` and `/upload/edit/:id` redirect to it
 through `VITE_STUDIO_URL`, and the studio links back through `VITE_WEB_URL`, which is also the origin web's canonical, OpenGraph and sitemap URLs are absolute on (ticket 63).
 
 ---
@@ -640,9 +640,9 @@ point **strictly down** — a T2 package may not depend on another T2. Sibling i
 they are how a layer quietly becomes a cycle. The layer is *declared* rather than derived from the graph: a
 derived depth cannot contradict itself, which would make the check vacuous. `devDependencies` count: a
 test-only edge resolves in CI and its types land in the emitted `.d.ts`, so only the build tooling, none of
-which ships code, is exempt, and only on a dev edge: `@vp/tsconfig`, `@vp/testing`, `@vp/vite-preset` (the
+which ships code, is exempt, and only on a dev edge: `@kit/tsconfig`, `@vp/testing`, `@kit/vite-preset` (the
 Vite config of the client apps) and `@vp/web-testing` (the spec helpers of the browser packages and apps).
-`@vp/web-testing` is the one the 93 ticket's table did not list as tooling: `@vp/ui` (T2) runs its own specs
+`@vp/web-testing` is the one the 93 ticket's table did not list as tooling: `@kit/ui` (T2) runs its own specs
 on its jsdom stubs and axe helper, and the alternative to the exemption was a copy of both.
 
 **Consequences:**
@@ -651,7 +651,7 @@ on its jsdom stubs and axe helper, and the alternative to the exemption was a co
 - `pnpm boundaries` validates tier compatibility, layer direction, tier-vs-directory agreement and
   `CLAUDE.md` symlink drift. `pnpm build` and `pnpm typecheck` run it first, so a bad *declaration* — the one
   thing TypeScript cannot catch — fails the build.
-- `@vp/tsconfig` presets give `universal`/`client` packages `lib` with `DOM` and `types: []`, so a Node
+- `@kit/tsconfig` presets give `universal`/`client` packages `lib` with `DOM` and `types: []`, so a Node
   builtin is a type error.
 - `tests/architecture/package-boundaries.test.ts` asserts the same rules in the unit suite.
 - Package **names** are unchanged by the move, so no source import specifier changed; only `package.json`
@@ -668,7 +668,7 @@ fourth was a non-breaking change no caller handled. It also threw `VIDEO_NOT_FOU
 for a CASL refusal, so a service three layers below HTTP had decided that a private video looks like a missing
 one and no second consumer could choose differently.
 
-**Decision.** Domain code returns `Result<T, E>` from `@vp/result`; only the edge unwraps it.
+**Decision.** Domain code returns `Result<T, E>` from `@kit/result`; only the edge unwraps it.
 
 - **Rules are pure and universal.** `@vp/validation` (T2) takes the input and nothing else and returns
   wire-safe `InputFailure`s; `@vp/domain-rules` (T3) takes input plus an entity plus policy. The split is what
@@ -706,13 +706,13 @@ one and no second consumer could choose differently.
 **Consequences.** Every port, repository, service and stage is converted. The three shrink-only allowlists
 that carried the migration are gone and their assertions are flat: `result-returning-ports.test.ts`,
 `no-domain-throw.test.ts` and `routes-unwrap-at-send-result.test.ts` simply fail on an offender.
-No exception list is left: `catch-confinement.test.ts` allows a `catch` only in `@vp/result`, an adapter and
+No exception list is left: `catch-confinement.test.ts` allows a `catch` only in `@kit/result`, an adapter and
 an entrypoint's exit-code handler, and `no-discarded-result.test.ts` fails on a `Result` left unread unless it
 goes through `ignore(result, reason)`. Wire format is unchanged: a client cannot tell that the server
 stopped throwing, apart from four additive codes.
 
-`@vp/pagination` composes `@vp/result` to answer `Result<CursorPayload, InvalidCursor>` from its codec, which
-moved it to T2 and carried `@vp/api-contracts` and `@vp/env-schema` to T3 and `@vp/config` to T4. A pipeline
+`@kit/pagination` composes `@kit/result` to answer `Result<CursorPayload, InvalidCursor>` from its codec, which
+moved it to T2 and carried `@vp/api-contracts` and `@vp/env-schema` to T3 and `@kit/config` to T4. A pipeline
 stage reports a media verdict as `MediaFailure`, whose discriminant is the `PipelineErrorCode` the process
 reported and which `RETRY_CLASS` already classifies.
 
@@ -722,7 +722,7 @@ Authority: [docs/standards/error-handling.md](standards/error-handling.md).
 
 | Rank | Option | Status | Reason |
 |---|---|---|---|
-| 1 | Typed tokens and a hand-written `Container` (`@vp/composition`, server, T2) | **Accepted** | The token carries the type, so `get(VideoService)` types without a cast and a missing edge is a compile error; no dependency, no reflection, same behaviour under Node and Bun |
+| 1 | Typed tokens and a hand-written `Container` (`@kit/composition`, server, T2) | **Accepted** | The token carries the type, so `get(VideoService)` types without a cast and a missing edge is a compile error; no dependency, no reflection, same behaviour under Node and Bun |
 | 2 | A decorator container resolving by type (`@Injectable`, NestJS-style) | Rejected | Needs `emitDecoratorMetadata` plus a `reflect-metadata` polyfill in the eager path of both deployables; TC39 decorators carry no parameter types, so it pins the legacy flag indefinitely, and transpiler-level behaviour is what dual-runtime parity (Rule 2) exists to keep out. It also trades a compile error for a runtime one |
 | 3 | Keep constructors with optional collaborators and in-service fallbacks | Rejected | Delete a line from the composition root and a different graph boots silently: that is a service locator wearing a constructor |
 
@@ -740,7 +740,7 @@ anyone who sent it. The API installed no `SIGTERM` handler, and the worker infer
   synchronous; I/O a value needs before it is usable runs in its `start` hook, in construction order.
   `dispose()` runs in reverse construction order, aggregates failures, is idempotent, and releases only what
   a factory built, never an override. `shutdownOnce` is the drain both processes share.
-- **Configuration is a value.** `loadEnv()` (`@vp/config`) parses `process.env` once at `main.ts`;
+- **Configuration is a value.** `loadEnv()` (`@kit/config`) parses `process.env` once at `main.ts`;
   `toAppConfig()` (`@vp/env-schema`, T3, so `@vp/adapters` at T4 can take it) shapes it into `AppConfig`.
   `CdnBase` is branded and normalised once. Nothing below `main.ts` reads the environment.
 - **`AdapterKind` is the single environment switch.** `config.kind` is derived from `NODE_ENV` in
@@ -773,7 +773,7 @@ collaborators a case touches and build the app through `buildApp({ config, adapt
 
 | Rank | Option | Status | Reason |
 |---|---|---|---|
-| 1 | Three packages on the platform's own `Intl`: `@vp/intl` (universal, T2), `@vp/messages` (universal, T3), `@vp/intl-react` (client, T4) | **Accepted** | No runtime dependency; the core runs in Node for a server render and in the browser for its hydration; the API can format a byte count without linking the product's copy |
+| 1 | Three packages on the platform's own `Intl`: `@vp/intl` (universal, T2), `@vp/messages` (universal, T3), `@kit/intl-react` (client, T4) | **Accepted** | No runtime dependency; the core runs in Node for a server render and in the browser for its hydration; the API can format a byte count without linking the product's copy |
 | 2 | `react-intl` / FormatJS | Rejected | About 50 KB gzipped to wrap built-ins the platform ships, ICU message syntax the repo uses nowhere else, and React-coupled, which the universal core must not be |
 | 3 | `i18next` | Rejected | A runtime and plugin ecosystem for loading and interpolation the repo does not need, with untyped keys and arguments unless a codegen step is added |
 | 4 | `date-fns` plus hand-rolled number helpers | Rejected | A dependency for what `Intl.RelativeTimeFormat` and `Intl.DateTimeFormat` do natively, and the hand-rolled half is exactly what `format-numbers.helper.ts` was |
@@ -796,13 +796,13 @@ would grow its own helper, and no home for the copy that renders a failure code 
 - **The context is an argument.** Locale, time zone, currency and the reference instant arrive in
   `FormatContext`; nothing in `@vp/intl` or `@vp/messages` reads `navigator`, the clock, `process` or a
   `toLocale*` method. The locale is negotiated in one client module, `@vp/queries`' `request-locale.ts`, and
-  handed to `IntlProvider`; the zone and the clock are read in `@vp/intl-react` alone.
+  handed to `IntlProvider`; the zone and the clock are read in `@kit/intl-react` alone.
 - **Options are allowlisted.** Each formatter declares its keys `as const satisfies OptionKeys<...>` and its
   option type is derived from them; `withOptions` declines an unnamed key instead of letting `Intl` ignore it.
 - **`Intl` objects are memoised by an `IntlCache` value**, per `(locale, kind, options)`, bounded per kind, with
   failures cached too. The cache is created by the owner of its lifetime: `IntlProvider` makes one per locale
   in the browser. This departs from the ticket 87 note, which asked for the cache in the container:
-  `@vp/composition` is server tier and no server code formats anything yet, so a container registration would
+  `@kit/composition` is server tier and no server code formats anything yet, so a container registration would
   have no consumer. When an API call site appears, `services.module.ts` provides one `createIntlCache()` value
   like any other collaborator. It is never a module singleton either way (`no-module-state.test.ts`).
 - **Messages are typed by their template.** `dt('{count:plural}', { plural: { count: { one, other } } })`; the
@@ -873,7 +873,7 @@ an id sequence. A browser shares one connection across its tabs and feeds the qu
 
 | Rank | Option | Status | Reason |
 |---|---|---|---|
-| 1 | Token sets and themes as typed TypeScript values checked by Zod schemas in `@vp/design-tokens` (universal, T2); CSS, Tailwind and `tokens.json` generated from them | **Accepted** | One source per value; a missing key fails the build, a runtime theme fails a `Result`; the server render, both apps and the workbench read the same object |
+| 1 | Token sets and themes as typed TypeScript values checked by Zod schemas in `@kit/design-tokens` (universal, T2); CSS, Tailwind and `tokens.json` generated from them | **Accepted** | One source per value; a missing key fails the build, a runtime theme fails a `Result`; the server render, both apps and the workbench read the same object |
 | 2 | Hand-written CSS per theme (today's `design-system.css`) | Rejected | Every dimension of the look is welded to the theme, nothing checks a theme is complete, and the server cannot read a value |
 | 3 | `tokens.json` as the source, compiled by Style Dictionary | Rejected | A build-time dependency and a second vocabulary; the option unions and the contrast gate would be generated rather than typed, and a runtime theme (`registerTheme`) would need the compiler in the browser |
 
@@ -901,7 +901,7 @@ check said whether a theme's text was readable on its grounds.
   text 4.5:1, outlines and the focus ring 3:1, translucent grounds composited over `bg`), and a viewer's
   accent is derived in OKLCH to clear its floors on every theme of its mode family (`deriveAccent`).
 
-**Consequences.** Values live in `@vp/ui` as one module per set and one folder per theme, with one registry
+**Consequences.** Values live in `@kit/ui` as one module per set and one folder per theme, with one registry
 naming what ships. `docs/design/tokens.json` becomes generated from them, with a drift check in CI, and the
 CSS a switch needs is attribute-scoped, so changing a set or a theme is an attribute change with no reload.
 [docs/design/architecture.md](design/architecture.md) is the build; [ticket 95](tickets/95-design-system-2.md)
@@ -980,7 +980,7 @@ Turborepo ran and cached tasks, lefthook ran the pre-commit, an esbuild script b
   run in the editor and in `pnpm lint`; a file that breaks one is listed in `tests/react-compiler/baseline.json`
   with the rule, a reason and an issue link, the one list the lint config and the bailout report both read.
 - **The Oxc React Compiler builds every client app, package, spec and story.** `reactPlugins()` in
-  `@vp/vite-preset` picks it: `'oxc'` (`oxc-transform-react` 0.156.0, experimental, the newest inside
+  `@kit/vite-preset` picks it: `'oxc'` (`oxc-transform-react` 0.156.0, experimental, the newest inside
   `@vitejs/plugin-react` 6.2.1's peer range), `'babel'` (`babel-plugin-react-compiler` through
   `@rolldown/plugin-babel`) for a package the Rust port breaks, or `false` while an Oxc issue is open; every
   compiler package is an exact version and a bump passes the guard first. The guard: `pnpm react-compiler:report`
@@ -2181,7 +2181,7 @@ One migration, `0035_watch_parties`, holds every table of ticket [140](tickets/1
 
 ## 6. API Contract
 
-Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>` (RS256/EdDSA, verified against `AUTH_JWKS_URL`; a token signed with the public `packages/server/dev-token` seed is accepted only outside production), or `Authorization: Bearer tt_pat_...`, a personal access token, on a route whose contract names a `scope` (the OpenAPI document lists it as the role the `personalAccessToken` scheme needs; §11). Errors follow RFC 9457 `application/problem+json` with a stable `code`.
+Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>` (RS256/EdDSA, verified against `AUTH_JWKS_URL`; a token signed with the public `packages/platform/server/dev-token` seed is accepted only outside production), or `Authorization: Bearer tt_pat_...`, a personal access token, on a route whose contract names a `scope` (the OpenAPI document lists it as the role the `personalAccessToken` scheme needs; §11). Errors follow RFC 9457 `application/problem+json` with a stable `code`.
 
 ### 6.1 Endpoints
 
@@ -2411,7 +2411,7 @@ Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>`
 
 ### 6.1.1 Keyset pagination & cursors
 
-Every paginated endpoint shares one mechanism, in `@vp/pagination`, rather than
+Every paginated endpoint shares one mechanism, in `@kit/pagination`, rather than
 re-deriving page maths per service:
 
 - **`Paginator`** owns the page bounds and the cursor codec. `limit(requested)` clamps a
@@ -2424,7 +2424,7 @@ re-deriving page maths per service:
   opaque URL-safe token; `JsonCursorCodec` renders it readable for tests and debugging.
   Swapping the codec changes no call site. It uses `btoa`/`atob` rather than `Buffer`, so the
   same code runs under Node, Bun and the browser.
-- **Bounds are configuration over one shared default.** `@vp/pagination` exports
+- **Bounds are configuration over one shared default.** `@kit/pagination` exports
   `PAGE_SIZE_DEFAULT` (20) and `PAGE_SIZE_MAX` (100); `@vp/api-contracts` builds
   `PageLimitSchema` from them and `@vp/env-schema` uses them as the defaults of the env keys of
   the same name, which the composition root (`apps/server/api/src/app.ts`) reads once and injects.
@@ -3145,13 +3145,13 @@ flowchart LR
 | Personal access tokens | `Authorization: Bearer tt_pat_{prefix}_{secret}` acts as the user who made it, on the channel it was made on, and never as more: `getUserPermissions` in `@vp/permissions` is the one place a token is narrowed, building the user's ability with only their role on the token's channel and keeping each rule only for the actions its scopes grant (`SCOPE_ABILITIES`: `videos:read`, `videos:write`, `analytics:read`, `comments:read`, `comments:moderate`, `exports:read`, `exports:create`, `webhooks:manage`). Memberships and the user's role are read on every request, so a demoted member's token shrinks with them and a removed member's token is a `401` on its next request. A route a token may call names its `scope` in its contract; the auth hook answers a token on any other route, or without that scope, `403 API_TOKEN_SCOPE_MISSING`, so a token never manages tokens, changes the handle or the team, opens the event stream or a chat ticket. A malformed, unknown, expired or revoked token is `401 UNAUTHORIZED`; a request carrying a token and the `vp.session` cookie is `400 API_TOKEN_WITH_SESSION`; an `X-Channel-Id` naming another channel is `403 CHANNEL_MEMBERSHIP_REQUIRED`. The secret is compared by SHA-256 in constant time (`timingSafeEqual`) against every row with its prefix. Each token is limited to 60 requests a minute by its id in `@fastify/rate-limit`'s store (per API process, like the other limits), answered `429 RATE_LIMITED` with `Retry-After`. A token request gets no CORS headers, so a page cannot read what it answers. A write made with a token is audited with the member and `actor_token_id`. |
 | Rate limiting | `@fastify/rate-limit`, registered with `global: false`, limits each personal access token to 60 requests a minute by its id, and four routes, keyed by user (fallback `req.ip`): `POST /v1/uploads` at `UPLOAD_RATE_LIMIT_MAX` per minute (30), reprocess at 5 per minute with admins on its `allowList`, and the two anonymous search reads, `GET /v1/search` at 60 and `GET /v1/search/suggestions` at 120 per minute (`SEARCH_RATE_LIMITS`). Other reads are not rate-limited. The counters live in each API process's memory, so a limit is per replica until a shared limiter store lands (follow-up). The client IP is read through `X-Forwarded-For` only from the proxies `TRUST_PROXY` names (`uniquelocal` in compose and the k8s base: the ingress and the client apps' `/api` proxy; kept as is, because spoofing the header needs a foothold inside the private network and only skews the rate-limit identity, and per-environment CIDRs belong with the forwarded-header follow-up of ticket 47), and a JSON body over `HTTP_BODY_LIMIT_BYTES` answers 413. |
 | Transport | TLS terminated by Cloudflare (`cloudflared` tunnel) in cloud; `@fastify/helmet` sets its default headers, HSTS included, with CSP off; CORS allows exactly the `CORS_ORIGINS` list, and production refuses an empty list or `*`. The profile echoes the one listed origin that asked (never `*`) with `Vary: Origin`, allows `GET`, `HEAD`, `POST`, `PUT`, `PATCH` and `DELETE` with whatever request headers the preflight names, and caches a preflight for 7200 s (`Access-Control-Max-Age`, Chromium's cap). The SSE routes write their head on the raw response, so they copy the reply's headers onto it first and a stream answers a listed origin like any other route. It sends no `Access-Control-Allow-Credentials`: the API reads a bearer header, never a cookie. The browser never calls the API itself: each client app's server answers `/api/...` on the app's own origin (`sessionMiddleware` in `@vp/queries`, mounted from `src/start.ts` after the CSRF check and the security headers) and forwards the call to the API at `SSR_API_BASE_URL`, else `VITE_API_BASE_URL`, where the server render calls it too. The proxy forwards an allowlist of request headers (`accept`, `accept-language`, `content-type`, `if-none-match`, `last-event-id`, `traceparent`, `tracestate`, and `x-channel-id`, which the studio sets from its acting-channel cookie on channel-scoped calls and the API checks against the caller's memberships), never the app origin's cookies or the browser's own `Authorization`, sends the session cookie's token as the bearer, appends the browser's address to `X-Forwarded-For`, and drops `Set-Cookie` and the framing headers `fetch` consumed from the answer. It holds a write's body whole to retry it after a refresh, so it answers 413 itself once the body passes 1 MiB (the API's `HTTP_BODY_LIMIT_BYTES` default, mirrored in the proxy because a client package cannot read `@vp/env-schema`), by the declared `Content-Length` before reading or by the bytes that arrive when the body is chunked. A token the API refuses (401) goes through one refresh seam (`refresh` in `sessionMiddleware`'s config): a fresh token is written to the cookie and the call retried once, and the seam is single-flight per refused token, so parallel 401s on one token make one refresh call; with none to be had the cookie is cleared and the 401 passes on, and the browser's client sends a viewer it believed signed in to `/login?redirect=<where they were>` without a reload. A write through it (any method but `GET` and `HEAD`) passes the same `Sec-Fetch-Site`/`Origin` check as a server function. The API trusts that header from `TRUST_PROXY`, which compose and the k8s base set to `uniquelocal`, the private network the app servers call from; without it every viewer's anonymous search would share the app server's rate-limit bucket. The single-flight is per app-server process: across replicas two refreshes of one rotating refresh token can still race, so the OIDC client must absorb it (accept the previous refresh token's result for a short grace, or refresh near expiry rather than on the first 401). `CORS_ORIGINS` still lists both client origins for a caller that reaches the API directly. |
-| Origins and cookies | Two client origins: the viewer app (`:5173` locally, `<domain>` in cloud) and the creator studio (`:5174`, `studio.localhost` on k3d, `studio.<domain>`). A separate origin, not a path prefix: each app has its own CSP, a service worker on web's origin can never intercept a studio navigation, and a script on one origin cannot read the other's storage. The theme cookie `vp.theme` (`@vp/ui`) is `SameSite=Lax`, a year long, and carries `Domain=<VITE_COOKIE_DOMAIN>` when that build-time key names the parent domain both hosts share (empty locally, where a cookie already spans ports), so a theme picked on one host holds on the other. The session is one cookie, `vp.session`, holding the API bearer token: `HttpOnly` (no script reads it), `SameSite=Lax`, `Secure` off localhost, `Path=/`, eight hours, and the same `Domain` as the theme cookie, so both apps read it and a sign-out on either clears it for both. Only the apps' servers write it, through server functions (`signOut`, the dev personas' sign-in) and the `/api` proxy; the browser learns whether there is one from the `hasSession` server function, and the root route loads the account it reaches (`GET /v1/me/account`) on the server, so the server renders the signed-in page and the session lands in router context as `auth`. A guest on a members-only page is sent to that app's own `/login?redirect=<path>` (the studio never sends one to web), and a `redirect` that would leave the origin is dropped. `/login` offers the demo personas, which `dev-token serve` mints, in the dev servers and in a build that sets `VITE_DEMO_PERSONAS=true` (the demo stack, `demo/start.sh`); the switcher sits in `@vp/queries/demo-personas` behind that flag, which a build leaves off everywhere else, and the bundle guard fails a build with the flag off whose client or server chunks carry it. Its server function reaches `dev-token serve` at `SSR_DEV_TOKEN_URL`. The studio serves `robots.txt: Disallow: /` and `<meta name="robots" content="noindex, nofollow">` on every page. |
+| Origins and cookies | Two client origins: the viewer app (`:5173` locally, `<domain>` in cloud) and the creator studio (`:5174`, `studio.localhost` on k3d, `studio.<domain>`). A separate origin, not a path prefix: each app has its own CSP, a service worker on web's origin can never intercept a studio navigation, and a script on one origin cannot read the other's storage. The theme cookie `vp.theme` (`@kit/ui`) is `SameSite=Lax`, a year long, and carries `Domain=<VITE_COOKIE_DOMAIN>` when that build-time key names the parent domain both hosts share (empty locally, where a cookie already spans ports), so a theme picked on one host holds on the other. The session is one cookie, `vp.session`, holding the API bearer token: `HttpOnly` (no script reads it), `SameSite=Lax`, `Secure` off localhost, `Path=/`, eight hours, and the same `Domain` as the theme cookie, so both apps read it and a sign-out on either clears it for both. Only the apps' servers write it, through server functions (`signOut`, the dev personas' sign-in) and the `/api` proxy; the browser learns whether there is one from the `hasSession` server function, and the root route loads the account it reaches (`GET /v1/me/account`) on the server, so the server renders the signed-in page and the session lands in router context as `auth`. A guest on a members-only page is sent to that app's own `/login?redirect=<path>` (the studio never sends one to web), and a `redirect` that would leave the origin is dropped. `/login` offers the demo personas, which `dev-token serve` mints, in the dev servers and in a build that sets `VITE_DEMO_PERSONAS=true` (the demo stack, `demo/start.sh`); the switcher sits in `@vp/queries/demo-personas` behind that flag, which a build leaves off everywhere else, and the bundle guard fails a build with the flag off whose client or server chunks carry it. Its server function reaches `dev-token serve` at `SSR_DEV_TOKEN_URL`. The studio serves `robots.txt: Disallow: /` and `<meta name="robots" content="noindex, nofollow">` on every page. |
 | Secrets | Env only; `.env` git-ignored; no secrets in images. The cloud overlay holds no credential at all: an `ExternalSecret` (External Secrets Operator, `ClusterSecretStore` `vp-secret-store`) materialises `vp-secrets`, and the overlay deletes the base's local Secret. **No secret-shaped key has a default.** `SECRET_KEYS` (`DATABASE_URL`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `REDIS_PASSWORD`) are required under `NODE_ENV=production`, and every secret and every `*_URL` key is refused there if it holds a credential this repo ships for local use (`vp`, `minioadmin`, `admin`, `change-me*`, bare or as URL userinfo). No schema default and no production literal carries URL userinfo. `production-secrets.test.ts` renders the base and the cloud overlay with kustomize and holds both; `no-defaulted-secrets.test.ts` holds the schema. |
 | Containers | Non-root user (uid 10001), `runAsNonRoot` and `readOnlyRootFilesystem` in the k8s base, `/tmp/vp` on an `emptyDir` (8 Gi for transcode) or compose `tmpfs`, `resources.limits` on every pod. The API runs on `node:24-slim`; the worker on `oven/bun:1.4-slim` (default) or `node:24-slim`, with Debian's `ffmpeg` package. Both images remove npm and corepack and start under `tini`. |
 | Redis | `requirepass` everywhere; a cluster-internal Service in k8s (compose publishes 6379 to the host for local tools); `noeviction`, set in compose and the k3d chart and Redis's own default in the cloud overlay. |
 | Watch party credentials | A guest or a Discord member holds an opaque, Redis-backed party credential (`PartyGuestSessionsPort`), set as the httpOnly `vp.party-guest` cookie and sent as `x-party-credential`. The auth plugin resolves it only on a route whose contract says `partyGuest: true`, so on every other route it is never read and the caller is anonymous; one that resolves to nothing is `WATCH_PARTY_CREDENTIAL_INVALID` rather than dropped. `tests/architecture/party-guest-confined.test.ts` fails on `partyGuest: true` outside the watch party contracts. A guest IP is only ever stored as a salted hash (`WATCH_PARTY_GUEST_SALT`), for a ban, and the password hasher is scrypt behind `PasswordHasherPort`. |
 | Supply chain | Renovate (`renovate.json`); `pnpm install --frozen-lockfile` in CI; images built in CI and scanned with Trivy (`images.yml`); MinIO images pinned by digest (`minio-images-pinned.test.ts`). The app images are referenced by tag (`latest`), not digest, in the k8s manifests. |
-| Privacy | No PII beyond email. `@vp/logger` redacts the `authorization`, `cookie` and `x-admin-token` headers wherever a headers object is logged, and the access log records the route template, never the URL. |
+| Privacy | No PII beyond email. `@kit/logger` redacts the `authorization`, `cookie` and `x-admin-token` headers wherever a headers object is logged, and the access log records the route template, never the URL. |
 
 ---
 
@@ -3294,13 +3294,13 @@ the service and prints its last 40 log lines.
 build-time `VITE_API_BASE_URL` (default `http://localhost:3000`, the port compose publishes and the k3d load
 balancer maps). The SSR server reads `SSR_API_BASE_URL` when it starts (`http://api:3000` in compose,
 `http://vp-api:3000` in the cluster), falls back to the browser's address when it is unset, and the build
-drops that read from the client bundle, which the bundle guard in `@vp/vite-preset` holds. The studio does the
+drops that read from the client bundle, which the bundle guard in `@kit/vite-preset` holds. The studio does the
 same on `:5174`. The API's CORS default (`http://localhost:5173`, `:5174`, `:8080`) already allows both
 containers' origins.
 
 Developer loop: `pnpm dev` runs API + all workers with hot reload against the compose infrastructure (`make up`); `make up observability` adds the monitoring stack; `pnpm compose-autoscaler` is the Phase-3-lite scaler (§13.2).
 
-**Offline mode (local-first, PRD G11/FR-19).** After a one-time `pnpm install` and image pull, the whole stack — upload, probe, transcode, package, SSE, playback, Bull Board, `/docs`, and the observability profile — runs with the network unplugged. Guarantees: every runtime dependency has a compose container (including the dev JWKS issuer from `packages/server/dev-token`); `.env.example` defaults are all-local and work unedited; browser libraries in `tools/hls-test-page` are vendored (no CDN references); the OTel exporter is a no-op when `OTEL_EXPORTER_OTLP_ENDPOINT` is empty; library telemetry is disabled (`TURBO_TELEMETRY_DISABLED=1`, `DO_NOT_TRACK=1`); images contain everything they need at start (no `apt`/`npm` at runtime). `make smoke-offline` runs the smoke test on a compose network with `internal: true` (no egress) and is a CI gate. The external providers in §15.3 exist only for Rung 3.
+**Offline mode (local-first, PRD G11/FR-19).** After a one-time `pnpm install` and image pull, the whole stack — upload, probe, transcode, package, SSE, playback, Bull Board, `/docs`, and the observability profile — runs with the network unplugged. Guarantees: every runtime dependency has a compose container (including the dev JWKS issuer from `packages/platform/server/dev-token`); `.env.example` defaults are all-local and work unedited; browser libraries in `tools/hls-test-page` are vendored (no CDN references); the OTel exporter is a no-op when `OTEL_EXPORTER_OTLP_ENDPOINT` is empty; library telemetry is disabled (`TURBO_TELEMETRY_DISABLED=1`, `DO_NOT_TRACK=1`); images contain everything they need at start (no `apt`/`npm` at runtime). `make smoke-offline` runs the smoke test on a compose network with `internal: true` (no egress) and is a CI gate. The external providers in §15.3 exist only for Rung 3.
 
 **One Dockerfile, four images (multi-arch).** The root `Dockerfile` builds `api`, `worker` (runtime-switchable),
 `web` and `studio` as targets; `docker buildx bake` (`docker-bake.hcl`) builds the four side by side. The base
@@ -3487,7 +3487,7 @@ Every API replica polls every queue and exports the same depth, so the query tak
 
 The `captions` queue has its own `vp-worker-captions` ScaledObject (min 0, max 4) on the same query, so caption pods scale apart from the transcodes and never take their jobs.
 
-**Compose-level scaler (Phase 3-lite, no Kubernetes):** `packages/server/compose-autoscaler` polls `bullmq_queue_jobs` from the API's `/metrics` every 10 s and runs `docker compose --profile '*' up -d --scale worker-transcode-1080p=N --no-recreate --no-deps worker-transcode-1080p` with the same `min/max/cooldown` semantics — a 120-line TypeScript script that demonstrates the control loop on a laptop.
+**Compose-level scaler (Phase 3-lite, no Kubernetes):** `packages/platform/server/compose-autoscaler` polls `bullmq_queue_jobs` from the API's `/metrics` every 10 s and runs `docker compose --profile '*' up -d --scale worker-transcode-1080p=N --no-recreate --no-deps worker-transcode-1080p` with the same `min/max/cooldown` semantics — a 120-line TypeScript script that demonstrates the control loop on a laptop.
 
 ### 13.3 Tracing (OpenTelemetry)
 
@@ -3495,12 +3495,12 @@ The `captions` queue has its own `vp-worker-captions` ScaledObject (min 0, max 4
 - The API's HTTP server span is its own Fastify hook, `plugins/request-span.ts`: named `{method} {route template}`, parented on the caller's `traceparent`, and started from the root context, because the HTTP instrumentation hands a request it ignores over with tracing suppressed. The handler runs inside it, so `ioredis` spans and the `traceparent` a handler writes into a job both belong to the request's trace. `postgres` (postgres.js) has no OpenTelemetry instrumentation, so SQL is not a span.
 - BullMQ is instrumented by hand: producers inject `traceparent` into `job.data` (`packages/server/job-contracts` makes it a required field); the worker wrapper `withTelemetry(processor)` extracts it and starts a span `bullmq.process {queue}` as a **child of the producer's span**, with `job.id`, `attemptsMade`, `videoId` attributes. Work nothing traced asked for, such as a reconciler repair, starts a root span of its own (`rootTraceparent`). Each `ffmpeg` run is a child span `ffmpeg` carrying `ffmpeg.stage`, the argv with URLs redacted (`ffmpeg.command`) and `ffmpeg.exit_code`.
 - Result: one trace = `POST /v1/uploads/:uploadId/complete` -> `probe` -> three `transcode-*` -> `thumbnail` -> `package` -> `notify`, viewable in Tempo (compose `observability` profile, through the otel-collector); the video repository writes the active `trace_id` into `video_events`, so an operator can go from a video row to its trace.
-- The browser is the first span. `@vp/web-telemetry` starts `@opentelemetry/sdk-trace-web` in each client app after hydration, from a dynamic import, with the fetch instrumentation: it adds `traceparent` to calls to the API origin (`propagateTraceHeaderCorsUrls`) and to the page's own origin, which the instrumentation always does, and to no other host, so the API's request span is the browser span's child. Spans go over OTLP/HTTP to the build-time `VITE_OTEL_TRACES_URL`; with the key unset no tracer loads. Browser tracing is local only: each app's `.env.development` and the compose build set it to the local collector (`http://localhost:4318/v1/traces`, whose receiver allows the two app origins through CORS), and cloud builds leave it unset. Turning it on in the cloud takes a build arg and a CORS block on the Alloy OTLP receiver. The span attributes are the fetch instrumentation's own (method, URL with its query string dropped, status) and `service.name` `taitube-web` or `taitube-studio`: no user id, no session, nothing a viewer typed.
+- The browser is the first span. `@kit/web-telemetry` starts `@opentelemetry/sdk-trace-web` in each client app after hydration, from a dynamic import, with the fetch instrumentation: it adds `traceparent` to calls to the API origin (`propagateTraceHeaderCorsUrls`) and to the page's own origin, which the instrumentation always does, and to no other host, so the API's request span is the browser span's child. Spans go over OTLP/HTTP to the build-time `VITE_OTEL_TRACES_URL`; with the key unset no tracer loads. Browser tracing is local only: each app's `.env.development` and the compose build set it to the local collector (`http://localhost:4318/v1/traces`, whose receiver allows the two app origins through CORS), and cloud builds leave it unset. Turning it on in the cloud takes a build arg and a CORS block on the Alloy OTLP receiver. The span attributes are the fetch instrumentation's own (method, URL with its query string dropped, status) and `service.name` `taitube-web` or `taitube-studio`: no user id, no session, nothing a viewer typed.
 - Sampling: `OTEL_TRACES_SAMPLER` takes the OpenTelemetry names `always_on`, `always_off`, `traceidratio` and their `parentbased_` forms, and `OTEL_TRACES_SAMPLER_ARG` is the ratio (0 to 1); any other value fails `loadEnv()`. Local runs default to `parentbased_always_on`; the cloud overlay sets `parentbased_traceidratio` at `0.2`, so a new trace is kept one time in five and a child follows its parent's decision (`resolveSampler` in `@vp/observability`, `sampler.test.ts`).
 
 ### 13.4 Logging
 
-One `createLogger` in `@vp/logger` (`packages/server/logger`, pino) with two formats. `json`, for the deployables, writes to stdout with an ISO timestamp, the `service` name, and the active span's `traceId`/`spanId` on every line, and redacts `authorization`, `cookie` and `x-admin-token` wherever a headers object is logged. `pretty`, for the CLIs, writes one `level message key=value` line to stderr through a destination of our own. The API hands the `json` logger to Fastify with Fastify's request logging off: the request id is the caller's `x-request-id` when it is a plain token, otherwise a UUID, and is echoed back on the response; `plugins/access-log.ts` writes one `request completed` line per request with `method`, `route` (the template, `unmatched` on a 404), `status` and `durationMs`, and an unhandled error writes one `unhandled exception` line, both carrying `reqId`. The id travels into job payloads as `requestId` beside `traceparent`, and a worker's `LogContext` puts it on every line of that job; stage loggers also bind `videoId`, `jobId` and `attempt`. Nothing in this repo ships the lines anywhere: the SDK exports traces only, so the collector's and Alloy's OTLP log pipelines receive nothing from the apps, and Loki sees only what a log agent outside this repo collects from stdout. `ffmpeg` stderr is not logged: the last 50 lines are kept, and the last 300 characters of them go into the classified error's message, which the failure record stores.
+One `createLogger` in `@kit/logger` (`packages/platform/server/logger`, pino) with two formats. `json`, for the deployables, writes to stdout with an ISO timestamp, the `service` name, and the active span's `traceId`/`spanId` on every line, and redacts `authorization`, `cookie` and `x-admin-token` wherever a headers object is logged. `pretty`, for the CLIs, writes one `level message key=value` line to stderr through a destination of our own. The API hands the `json` logger to Fastify with Fastify's request logging off: the request id is the caller's `x-request-id` when it is a plain token, otherwise a UUID, and is echoed back on the response; `plugins/access-log.ts` writes one `request completed` line per request with `method`, `route` (the template, `unmatched` on a 404), `status` and `durationMs`, and an unhandled error writes one `unhandled exception` line, both carrying `reqId`. The id travels into job payloads as `requestId` beside `traceparent`, and a worker's `LogContext` puts it on every line of that job; stage loggers also bind `videoId`, `jobId` and `attempt`. Nothing in this repo ships the lines anywhere: the SDK exports traces only, so the collector's and Alloy's OTLP log pipelines receive nothing from the apps, and Loki sees only what a log agent outside this repo collects from stdout. `ffmpeg` stderr is not logged: the last 50 lines are kept, and the last 300 characters of them go into the classified error's message, which the failure record stores.
 
 ### 13.5 Dashboards & alerts (committed under `infra/observability/`)
 
@@ -3631,7 +3631,7 @@ video-pipeline/
 │       ├── events/                         # Redis Pub/Sub channels, SSE envelope schemas, cache keys
 │       ├── ffmpeg/                         # probe, transcode/thumbnail/sprite args, runFfmpeg, error classification, master playlist
 │       ├── job-contracts/                  # job payload schemas, jobId builders, stage policies, queue names, the rendition ladder
-│       ├── logger/                         # @vp/logger: pino, json and pretty formats, LogContext
+│       ├── logger/                         # @kit/logger: pino, json and pretty formats, LogContext
 │       ├── observability/                  # prom-client registry and metrics server, OpenTelemetry bootstrap
 │       ├── storage/                        # keys.ts, mime.ts, multipart.ts (part math/constants)
 │       ├── testing/                        # vitest config factory + shared fixtures and helpers
@@ -3727,7 +3727,7 @@ Package naming: `@vp/<name>` for every package, `@vp/api`, `@vp/worker` and `@vp
 | Media | FFmpeg 7.x (system package in image), `packages/server/ffmpeg` wrapper (argv builder + progress parser) | | no fluent-ffmpeg (unmaintained) |
 | Validation | zod 4 | | |
 | IDs | `uuidv7` | | |
-| Logging | pino 10 through `@vp/logger`, JSON or its own pretty destination | | |
+| Logging | pino 10 through `@kit/logger`, JSON or its own pretty destination | | |
 | Metrics | prom-client 15 | | |
 | Tracing | `@opentelemetry/sdk-node`, auto-instrumentations-node, exporter-trace-otlp-http | | |
 | Testing | vitest 5 through `vp test`, PGlite for the Postgres repositories in unit specs, `bun test` for worker and package parity, `app.inject()` for routes | | the `integration` job's services are CI service containers |
@@ -3774,7 +3774,7 @@ Useful references (bookmarks): docs.bullmq.io (Flows, Retrying failing jobs, Goi
 
 ## 16. Environment Variables
 
-One contract for both apps, declared with zod in `packages/server/env-schema` and loaded by `packages/server/config` (fail fast on boot with a readable list of missing/invalid keys). Full annotated template: `.env.example` at the repo root. Secrets are marked 🔒 and carry no default (§11).
+One contract for both apps, declared with zod in `packages/server/env-schema` and loaded by `packages/platform/server/config` (fail fast on boot with a readable list of missing/invalid keys). Full annotated template: `.env.example` at the repo root. Secrets are marked 🔒 and carry no default (§11).
 
 Two schemas, each with named consumers. `AppEnv` (`app-env.ts`) is what `toAppConfig()` reads, and every key in it reaches a consumer: `env-keys-consumed.test.ts` checks every `AppEnv` key is read by `toAppConfig` and every `AppConfig` leaf is read by production source outside `env-schema`. `platform-env.json` is the short list of keys this repo hands to something else, each naming the consumer beside it: data, since no code of ours reads them. Tuning with no key of its own (cache TTLs, housekeeping thresholds, the outbox cadence, the segment uploader's retries) is declared once, as a named constant in `tuning.ts`; no service, stage or adapter holds a numeric default (`no-tuning-literals.test.ts`).
 
@@ -3960,7 +3960,7 @@ Each phase ends with a demo and a **Definition of Done** that is binary. Estimat
 
 ### Phase 0 — Bootstrap (≈ 1 week)
 
-Build: monorepo (pnpm + Turborepo + Biome + vitest), `packages/server/{config,job-contracts,db,storage,ffmpeg,observability,events}` and `packages/universal/errors` skeletons with tests, compose infra (`postgres`, `redis`, `minio`, `minio-init`), Drizzle migration 0001, CI (`typecheck`, `lint`, `unit`, `integration` with service containers), multi-arch image build to GHCR, `packages/server/gen-video`, `packages/server/dev-token`, `tools/hls-test-page`.
+Build: monorepo (pnpm + Turborepo + Biome + vitest), `packages/server/{config,job-contracts,db,storage,ffmpeg,observability,events}` and `packages/universal/errors` skeletons with tests, compose infra (`postgres`, `redis`, `minio`, `minio-init`), Drizzle migration 0001, CI (`typecheck`, `lint`, `unit`, `integration` with service containers), multi-arch image build to GHCR, `packages/server/gen-video`, `packages/platform/server/dev-token`, `tools/hls-test-page`.
 
 **DoD:** `git clone && make up && pnpm test` green on a fresh machine; `pnpm gen-video 60s` produces a playable synthetic MP4; images published for `amd64`+`arm64`.
 
@@ -3978,7 +3978,7 @@ Build: multipart uploads with resume + sweeper + lifecycle rules; ladder selecti
 
 ### Phase 3 — Observe & scale (≈ 3 weeks)
 
-Build: full metrics catalogue; OTel tracing across API → workers (traceparent in job data); Grafana dashboards + alert rules; Loki/Tempo via otel-collector; k3d overlay (Kustomize) with KEDA `ScaledObject`s (Prometheus scaler), HPA for API, graceful shutdown with long grace periods, liveness via heartbeat file; `packages/server/compose-autoscaler` for the non-k8s path; k6 S1–S3 with thresholds; nightly `load-smoke` workflow.
+Build: full metrics catalogue; OTel tracing across API → workers (traceparent in job data); Grafana dashboards + alert rules; Loki/Tempo via otel-collector; k3d overlay (Kustomize) with KEDA `ScaledObject`s (Prometheus scaler), HPA for API, graceful shutdown with long grace periods, liveness via heartbeat file; `packages/platform/server/compose-autoscaler` for the non-k8s path; k6 S1–S3 with thresholds; nightly `load-smoke` workflow.
 
 **DoD:** On k3d: backlog of 1 000 probe jobs → KEDA scales `probe` and `transcode-*` to max within 60 s, drains, returns to 0 after cooldown — captured as a Grafana panel PNG in `docs/load-tests/results/`. One trace shows the full journey of a video. S1–S3 pass thresholds; results table committed.
 

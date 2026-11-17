@@ -1,4 +1,4 @@
-import { Button, cn, Icon, IconButton, Input } from '@vp/ui';
+import { Button, cn, Icon, IconButton, Input } from '@kit/ui';
 import { type ComponentPropsWithRef, useId, useState } from 'react';
 import { CredentialFieldContext, useCredentialField } from './credential-field.context';
 

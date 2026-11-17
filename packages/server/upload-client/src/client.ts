@@ -1,5 +1,5 @@
 import * as fs from 'node:fs';
-import { fromPromise, isErr } from '@vp/result';
+import { fromPromise, isErr } from '@kit/result';
 
 export interface UploadClientOptions {
   apiBaseUrl: string;

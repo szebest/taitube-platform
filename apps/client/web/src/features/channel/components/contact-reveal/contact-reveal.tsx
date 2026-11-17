@@ -1,6 +1,6 @@
-import { useT } from '@vp/intl-react';
+import { useT } from '@kit/intl-react';
+import { Button } from '@kit/ui';
 import { SignInButton, useAccount, useFailureToast } from '@vp/queries';
-import { Button } from '@vp/ui';
 import { useRevealContact } from '#app/features/channel/hooks/use-reveal-contact';
 
 /** A signed-in viewer's button that shows the channel's contact email as a `mailto:` link; a guest gets the way to sign in. */

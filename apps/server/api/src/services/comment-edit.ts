@@ -1,8 +1,8 @@
+import { type Result, isErr, ok } from '@kit/result';
 import type { Comment, CommentEditWrite, Video } from '@vp/domain';
 import { type CommentGateFailure, evaluateCommentGate } from '@vp/domain-rules';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { type Result, isErr, ok } from '@vp/result';
 import { looksLikeQuestion } from '@vp/validation';
 import { moderatorsOf, type CommentCreateDeps } from './comment-create';
 import { loadCommentGate } from './comment-gate-context';

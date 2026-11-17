@@ -1,5 +1,5 @@
+import { Button } from '@kit/ui';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Button } from '@vp/ui';
 import type { ReactNode } from 'react';
 import { SubscribeButton } from '#app/components/channel/subscribe-button';
 import { ChannelHeader, ChannelHeaderSkeleton } from '..';

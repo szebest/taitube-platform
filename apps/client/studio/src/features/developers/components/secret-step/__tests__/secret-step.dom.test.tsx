@@ -1,6 +1,6 @@
+import { ResponsiveModal } from '@kit/ui';
 import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
-import { ResponsiveModal } from '@vp/ui';
 import { AppProviders } from '#app/__tests__/providers';
 import { SecretStep } from '../secret-step';
 

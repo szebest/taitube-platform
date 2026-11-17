@@ -1,3 +1,4 @@
+import type { Result } from '@kit/result';
 import type {
   CreatorLibraryCursor,
   LibrarySort,
@@ -7,7 +8,6 @@ import type {
   VideoVisibility,
 } from '@vp/domain';
 import type { DatabaseUnavailable, VersionConflict } from '@vp/errors';
-import type { Result } from '@vp/result';
 import type { VideoRecord } from './video-repository';
 
 export interface StudioMetadataPatch {

@@ -1,5 +1,5 @@
+import { createCompoundContext } from '@kit/ui';
 import type { CropRect } from '@vp/domain';
-import { createCompoundContext } from '@vp/ui';
 import type { ImageCropperKind, ImageCropperStatus, ImageCropperTarget } from './types';
 import type { CropView, ImageSize } from './utils/crop-geometry';
 

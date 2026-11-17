@@ -1,6 +1,6 @@
+import { err } from '@kit/result';
 import { InMemoryCacheClient, InMemoryDatabaseClient } from '@vp/adapters/in-memory';
 import { databaseUnavailable } from '@vp/errors';
-import { err } from '@vp/result';
 import { ReadinessService } from '../readiness-service';
 
 describe('apps/server/api/services: ReadinessService', () => {

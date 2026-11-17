@@ -1,3 +1,4 @@
+import { err, map, ok, type Result } from '@kit/result';
 import type { CategoryRepositoryPort } from '@vp/core/repositories';
 import type {
   Category,
@@ -11,7 +12,6 @@ import {
   categorySlugConflict,
   type DatabaseUnavailable,
 } from '@vp/errors';
-import { err, map, ok, type Result } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 import type { InMemoryVideoRepository } from './in-memory-video-repository';
 

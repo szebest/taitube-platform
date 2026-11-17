@@ -1,5 +1,5 @@
 import { join } from 'node:path';
-import { isErr } from '@vp/result';
+import { isErr } from '@kit/result';
 import { ensureClip } from '../media';
 import type { Scenario } from '../scenario';
 import { createTally } from '../tally';

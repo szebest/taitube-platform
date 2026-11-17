@@ -1,8 +1,8 @@
 import type { ServerResponse } from 'node:http';
 import { PassThrough } from 'node:stream';
+import { type Result, err, ok } from '@kit/result';
 import { cacheUnavailable } from '@vp/errors';
 import { videoChannel } from '@vp/events';
-import { type Result, err, ok } from '@vp/result';
 import {
   SseConnection,
   type SseConnectionOptions,

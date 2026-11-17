@@ -1,4 +1,4 @@
-import { machineFindings } from '@vp/machine';
+import { machineFindings } from '@kit/machine';
 import { DATA_EXPORT } from '../data-export.machine';
 
 describe('@vp/domain-rules: DATA_EXPORT', () => {

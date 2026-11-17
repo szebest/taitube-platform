@@ -1,8 +1,8 @@
-import { loadEnvOrExit } from '@vp/config';
+import { loadEnvOrExit } from '@kit/config';
+import { createLogger } from '@kit/logger';
+import { isErr } from '@kit/result';
 import { toAppConfig } from '@vp/env-schema';
-import { createLogger } from '@vp/logger';
 import { initTracing } from '@vp/observability/tracing-sdk';
-import { isErr } from '@vp/result';
 
 const env = loadEnvOrExit('vp-api', process);
 if (env) {

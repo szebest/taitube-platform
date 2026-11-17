@@ -1,9 +1,9 @@
+import { type Result, assertNever, ignore, isErr, ok } from '@kit/result';
 import type { QueueJob } from '@vp/core/ports';
 import type { CaptionRecord } from '@vp/core/repositories';
 import { MS_PER_SECOND } from '@vp/domain/time';
 import { type DatabaseUnavailable, ErrorCodes, type StorageUnavailable } from '@vp/errors';
 import type { CaptionsJob } from '@vp/job-contracts';
-import { type Result, assertNever, ignore, isErr, ok } from '@vp/result';
 import {
   CAPTIONS_TRACK_HEADERS,
   captionsChunkKey,

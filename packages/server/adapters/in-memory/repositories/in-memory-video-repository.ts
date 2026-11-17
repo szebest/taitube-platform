@@ -1,3 +1,4 @@
+import { type Result, assertNever, isErr, map, ok, unwrapOr } from '@kit/result';
 import { trace } from '@opentelemetry/api';
 import {
   type EventRepository,
@@ -25,7 +26,6 @@ import { VIDEO_LIFECYCLE } from '@vp/domain-rules';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { transitionNotificationJobs } from '@vp/job-contracts';
 import { canReadVideo } from '@vp/permissions';
-import { type Result, assertNever, isErr, map, ok, unwrapOr } from '@vp/result';
 import { type Clock, realClock } from './clock';
 import { byKeysetDesc, isKeysetBefore } from './keyset';
 import { newVideoRecord } from './new-video-record';

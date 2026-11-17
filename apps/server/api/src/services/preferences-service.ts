@@ -1,3 +1,4 @@
+import { err, isErr, map, ok, type Result } from '@kit/result';
 import type { PreferencesView, UpdatePreferencesBody } from '@vp/api-contracts';
 import type { UserPreferencesRepositoryPort } from '@vp/core/repositories';
 import {
@@ -10,7 +11,6 @@ import {
 import { PREFERENCE_SECTIONS, type PreferenceSection } from '@vp/domain/settings';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { err, isErr, map, ok, type Result } from '@vp/result';
 import { toPreferencesView } from './preferences-views';
 
 export interface PreferencesServiceDeps {

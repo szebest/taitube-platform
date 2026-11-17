@@ -1,7 +1,7 @@
+import { useT } from '@kit/intl-react';
+import { Button, Command, Popover } from '@kit/ui';
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
-import { Button, Command, Popover } from '@vp/ui';
 import { pickableVideosQueryOptions } from '#app/features/channel/api/channel-featured';
 
 interface SpotlightVideoPickerProps {

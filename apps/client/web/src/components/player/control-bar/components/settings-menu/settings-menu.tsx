@@ -1,6 +1,6 @@
+import { useT } from '@kit/intl-react';
+import { DropdownMenu, IconButton, type PortalContainer } from '@kit/ui';
 import { PLAYBACK_SETTINGS } from '@vp/domain/settings';
-import { useT } from '@vp/intl-react';
-import { DropdownMenu, IconButton, type PortalContainer } from '@vp/ui';
 import { Captions, Gauge, Settings, SlidersHorizontal, Type } from 'lucide-react';
 import { type ReactNode, useEffect, useState } from 'react';
 import {

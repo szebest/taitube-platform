@@ -1,4 +1,4 @@
-import { mintToken } from '@vp/dev-token';
+import { mintToken } from '@vp/dev-identity';
 import type { LightMyRequestResponse } from 'fastify';
 import { type TestApp, bearer, buildTestApp, seedVideo } from './test-app';
 

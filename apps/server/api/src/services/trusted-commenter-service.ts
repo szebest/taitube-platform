@@ -1,3 +1,5 @@
+import type { InvalidCursor, Paginator } from '@kit/pagination';
+import { type Result, err, isErr, map, ok } from '@kit/result';
 import type { TrustedCommenterView } from '@vp/api-contracts';
 import type {
   ChannelRepositoryPort,
@@ -7,9 +9,7 @@ import type {
 import { type ActingChannel, trustAudit } from '@vp/domain';
 import { type AuthorizationFailure, decideChannelTask } from '@vp/domain-rules';
 import type { DatabaseUnavailable } from '@vp/errors';
-import type { InvalidCursor, Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
-import { type Result, err, isErr, map, ok } from '@vp/result';
 import { type InvalidRestriction, invalidRestriction } from '@vp/validation';
 import { profilesOf } from './channel-team-views';
 import { createdAtCursorPayload, decodeCreatedAtCursor } from './cursor';

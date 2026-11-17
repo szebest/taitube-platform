@@ -1,5 +1,5 @@
+import { map } from '@kit/result';
 import { getHome, getRelatedVideos } from '@vp/api-contracts';
-import { map } from '@vp/result';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { contractSchema } from './contract-schema';

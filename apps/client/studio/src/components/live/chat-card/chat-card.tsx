@@ -1,4 +1,4 @@
-import { cn } from '@vp/ui';
+import { cn } from '@kit/ui';
 import type { ComponentPropsWithRef } from 'react';
 
 /** One chat line over video, popped in and still under reduced motion. */

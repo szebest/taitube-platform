@@ -1,9 +1,9 @@
+import { type Result, fromPromise, map, ok } from '@kit/result';
 import type { ListWatchHistoryOptions, WatchHistoryRepositoryPort } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import type { NewWatchProgress, WatchHistoryEntry, WatchProgress } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { type Result, fromPromise, map, ok } from '@vp/result';
 import { and, desc, eq, getTableColumns, inArray, sql } from 'drizzle-orm';
 import { drizzleWhere, keysetBefore, msTimestamp, watchableVideoScope } from '../scopes/index';
 import { channelCardColumns, toChannelCard } from './channel-card-query';

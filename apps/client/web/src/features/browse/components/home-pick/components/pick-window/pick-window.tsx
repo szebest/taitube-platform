@@ -1,5 +1,5 @@
-import { useFormat, useT } from '@vp/intl-react';
-import { unwrapOr } from '@vp/result';
+import { useFormat, useT } from '@kit/intl-react';
+import { unwrapOr } from '@kit/result';
 import { PickOfTheDay } from '#app/components/discovery/pick-of-the-day';
 import { usePickWindow } from '#app/features/browse/hooks/use-pick-window';
 

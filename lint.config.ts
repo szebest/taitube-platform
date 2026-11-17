@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import type { OxlintConfig } from 'vite-plus/lint';
+import { packageDir } from './scripts/workspace-packages';
 
 const BIOME_TWINS = [
   'eslint/array-callback-return',
@@ -174,7 +175,7 @@ const LINT_IGNORES = [
   '**/fixtures/**',
   'scripts/__tests__/lint-fixtures/**',
   'apps/client/*/src/routeTree.gen.ts',
-  'packages/client/ui/src/styles/generated/**',
+  `${packageDir('@kit/ui')}/src/styles/generated/**`,
 ];
 
 const OVERRIDES: NonNullable<OxlintConfig['overrides']> = [

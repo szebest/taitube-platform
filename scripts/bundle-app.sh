@@ -3,8 +3,8 @@
 # it on the runner against the build it already has, and hands the directory to the image as its
 # `<app>-bundle` context.
 #   api, worker: the esbuild bundle in dist/, and the npm packages it leaves external, every one linked
-#                at the top of node_modules so the bundle resolves it. Workspace packages are inside the
-#                bundle, so their copies go.
+#                at the top of node_modules so the bundle resolves it. Every workspace package is inside
+#                the bundle, so their copies go.
 #   web, studio: Vite's client assets and SSR server, which already holds every npm dependency, so
 #                the image needs only srvx, which serves them through the `start` script. Every server
 #                module is imported once here, so one that cannot link or load fails the build, not the
@@ -26,7 +26,9 @@ case $app in
   *)
     pnpm deploy --legacy --filter="@vp/$app" --prod --config.public-hoist-pattern='*' "$out"
     find "$out" -mindepth 1 -maxdepth 1 ! -name node_modules ! -name package.json -exec rm -rf {} +
-    rm -rf "$out/node_modules/@vp" "$out"/node_modules/.pnpm/@vp+*
+    for name in $(node --input-type=module -e "const { load } = await import('./scripts/workspace-packages.ts'); console.log(load().map((pkg) => pkg.name).join(' '))"); do
+      rm -rf "$out/node_modules/$name" "$out"/node_modules/.pnpm/"$(printf %s "$name" | tr / +)"@*
+    done
     cp -r "apps/server/$app/dist/bundle" "$out/dist"
     ;;
 esac

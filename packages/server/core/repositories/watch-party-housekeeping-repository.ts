@@ -1,6 +1,6 @@
+import type { Result } from '@kit/result';
 import type { WatchPartyRoom } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import type { Result } from '@vp/result';
 
 /** What the sweep reads and removes across every room, never the rows of one. */
 export interface WatchPartyHousekeepingRepositoryPort {

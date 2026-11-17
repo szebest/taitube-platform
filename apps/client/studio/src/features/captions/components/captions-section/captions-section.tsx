@@ -1,8 +1,8 @@
+import { useT } from '@kit/intl-react';
+import { Card, Skeleton } from '@kit/ui';
 import { useQuery } from '@tanstack/react-query';
 import { SectionError } from '@vp/components';
-import { useT } from '@vp/intl-react';
 import { captionsQueryOptions, useApi } from '@vp/queries';
-import { Card, Skeleton } from '@vp/ui';
 import { useId } from 'react';
 import { AddTrackForm } from '../add-track-form/add-track-form';
 import { AutoCaptionsSelect } from '../auto-captions-select/auto-captions-select';

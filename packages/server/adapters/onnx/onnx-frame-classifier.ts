@@ -1,7 +1,7 @@
+import { type Result, assertNever, err, fromPromise, isErr, map, ok } from '@kit/result';
 import { FrameClassifier, type FrameScores, RGB_CHANNELS, type RgbFrame } from '@vp/core/ports';
 import type { ScreeningModelTuning } from '@vp/env-schema';
 import { ErrorCodes, type MediaFailure, mediaFailure } from '@vp/errors';
-import { type Result, assertNever, err, fromPromise, isErr, map, ok } from '@vp/result';
 import type { InferenceSession, Tensor } from 'onnxruntime-node';
 import { packFrames } from './frame-tensor';
 import { verifyModelFile } from './model-file';

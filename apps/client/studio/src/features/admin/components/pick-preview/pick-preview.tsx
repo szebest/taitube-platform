@@ -1,6 +1,6 @@
+import { useT } from '@kit/intl-react';
+import { useUiCopy } from '@kit/ui';
 import { VideoThumbnail } from '@vp/components';
-import { useT } from '@vp/intl-react';
-import { useUiCopy } from '@vp/ui';
 import type { PickVideo } from '#app/features/admin/api/pick-videos';
 
 export interface PickPreviewProps {

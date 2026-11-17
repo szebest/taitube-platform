@@ -1,6 +1,6 @@
+import { DropdownMenu } from '@kit/ui';
 import { render, screen, within } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
-import { DropdownMenu } from '@vp/ui';
 import { axeViolations } from '@vp/web-testing/dom';
 import type { ReactNode } from 'react';
 import { AppProviders } from '#app/__tests__/providers';

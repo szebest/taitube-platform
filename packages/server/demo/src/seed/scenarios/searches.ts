@@ -1,4 +1,4 @@
-import { isErr } from '@vp/result';
+import { isErr } from '@kit/result';
 import { PAGE_LIMIT, collectPages } from '../pages';
 import { AnySchema, SearchesPageSchema } from '../responses';
 import { type Scenario, actorOf, userById } from '../scenario';

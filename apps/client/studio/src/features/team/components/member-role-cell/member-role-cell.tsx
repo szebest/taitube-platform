@@ -1,8 +1,8 @@
+import { useT } from '@kit/intl-react';
+import { fromPromise, isOk } from '@kit/result';
+import { Select, useToast } from '@kit/ui';
 import type { ChannelMemberView } from '@vp/api-contracts';
 import { CHANNEL_ROLE_NAMES } from '@vp/domain';
-import { useT } from '@vp/intl-react';
-import { fromPromise, isOk } from '@vp/result';
-import { Select, useToast } from '@vp/ui';
 import { RoleBadge } from '#app/components/team/role-badge';
 import { useRoleRules } from '#app/features/team/hooks/use-role-rules';
 import { useChangeMemberRole } from '#app/features/team/hooks/use-team-mutations';

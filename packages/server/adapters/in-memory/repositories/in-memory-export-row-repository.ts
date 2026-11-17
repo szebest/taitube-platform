@@ -1,3 +1,4 @@
+import { isErr, ok, type Result } from '@kit/result';
 import type { ExportRowRepositoryPort, ExportScope, VideoRecord } from '@vp/core/repositories';
 import {
   type ChannelAnalyticsExportRow,
@@ -8,7 +9,6 @@ import {
   viewDateOf,
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { isErr, ok, type Result } from '@vp/result';
 import type { InMemoryCategoryRepository } from './in-memory-category-repository';
 import type { InMemoryChannelRepository } from './in-memory-channel-repository';
 import type { InMemoryCommentRepository } from './in-memory-comment-repository';

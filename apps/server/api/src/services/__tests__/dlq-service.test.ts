@@ -1,9 +1,9 @@
+import { Paginator } from '@kit/pagination';
+import type { Result } from '@kit/result';
 import { InMemoryJobQueue, InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { JobQueue } from '@vp/core/ports';
 import { type AnyFailure, ErrorCodes } from '@vp/errors';
-import { Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
-import type { Result } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { DlqService } from '../dlq-service';
 

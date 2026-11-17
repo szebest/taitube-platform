@@ -1,4 +1,4 @@
-import { tv } from '@vp/ui';
+import { tv } from '@kit/ui';
 import type { VideoThumbnailAspect, VideoThumbnailRadius } from './types';
 
 const LIVE_SHOWN = 'group-has-[[data-slot=video-thumbnail-live]]/thumbnail:hidden';

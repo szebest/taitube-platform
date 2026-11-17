@@ -1,12 +1,12 @@
+import { Format, useT } from '@kit/intl-react';
+import { Button, Skeleton } from '@kit/ui';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import type { Video } from '@vp/api-contracts';
 import { publishedAt } from '@vp/intl';
-import { Format, useT } from '@vp/intl-react';
 import { canReadAnalytics, canUpdateVideo } from '@vp/permissions';
 import { useCan } from '@vp/permissions-react';
 import { useApi, videoQueryOptions } from '@vp/queries';
-import { Button, Skeleton } from '@vp/ui';
 import { VideoStatusBadge } from '#app/components/video/video-status-badge';
 
 function VideoDetails({ video }: { video: Video }) {

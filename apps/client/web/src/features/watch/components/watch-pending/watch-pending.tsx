@@ -1,4 +1,4 @@
-import { Skeleton } from '@vp/ui';
+import { Skeleton } from '@kit/ui';
 import { CommentThreadSkeleton } from '#app/components/watch/comment-thread';
 import { EngagementBarSkeleton } from '#app/components/watch/engagement-bar';
 import { LinerNotesSkeleton } from '#app/components/watch/liner-notes';

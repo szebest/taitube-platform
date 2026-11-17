@@ -1,3 +1,4 @@
+import { err, ok, type Result } from '@kit/result';
 import {
   hasSpace,
   type MemberKind,
@@ -22,7 +23,6 @@ import {
   watchPartyPasswordInvalid,
   watchPartyPasswordRequired,
 } from '@vp/errors';
-import { err, ok, type Result } from '@vp/result';
 
 /** What the caller presented beside the link: a grant already checked against its row, or one that failed. */
 export type JoinGrant = 'invite' | 'invite_link' | 'invalid' | null;

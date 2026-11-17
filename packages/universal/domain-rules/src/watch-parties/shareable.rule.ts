@@ -1,10 +1,10 @@
+import { err, ok, type Result } from '@kit/result';
 import type { Video, WatchPartyVisibility } from '@vp/domain';
 import {
   type NotShareableReason,
   type WatchPartyVideoNotShareable,
   watchPartyVideoNotShareable,
 } from '@vp/errors';
-import { err, ok, type Result } from '@vp/result';
 
 export type ShareableVideo = Pick<Video, 'id' | 'status' | 'visibility' | 'deletedAt'>;
 

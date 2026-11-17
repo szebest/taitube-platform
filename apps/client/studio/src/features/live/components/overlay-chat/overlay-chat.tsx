@@ -1,4 +1,4 @@
-import { useT } from '@vp/intl-react';
+import { useT } from '@kit/intl-react';
 import { type LiveChatLine, useLiveChat } from '@vp/queries';
 import { ChatCard } from '#app/components/live/chat-card';
 import { API_PUBLIC_URL } from '#app/lib/config';

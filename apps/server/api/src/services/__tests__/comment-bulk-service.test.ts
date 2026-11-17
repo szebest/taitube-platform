@@ -1,6 +1,6 @@
+import { err, ok } from '@kit/result';
 import type { BulkActionBody } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
-import { err, ok } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import { CommentBulkService } from '../comment-bulk-service';
 

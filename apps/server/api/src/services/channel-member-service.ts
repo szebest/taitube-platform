@@ -1,3 +1,4 @@
+import { type Result, err, isErr, map, ok } from '@kit/result';
 import type { ChannelMembershipView, ChannelMemberView, ChannelTeamView } from '@vp/api-contracts';
 import type {
   ChannelInviteRepositoryPort,
@@ -16,7 +17,6 @@ import {
 } from '@vp/domain-rules';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { type Result, err, isErr, map, ok } from '@vp/result';
 import { profileOf, profilesOf, toInviteView, toMemberView } from './channel-team-views';
 
 export interface ChannelMemberServiceDeps {

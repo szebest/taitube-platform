@@ -1,8 +1,8 @@
+import { useT } from '@kit/intl-react';
+import { fromPromise, isOk } from '@kit/result';
+import { AlertDialog, Button, Field, Textarea, useToast, useUiCopy } from '@kit/ui';
 import { ApiError } from '@vp/api-client';
 import { ErrorCodes } from '@vp/errors';
-import { useT } from '@vp/intl-react';
-import { fromPromise, isOk } from '@vp/result';
-import { AlertDialog, Button, Field, Textarea, useToast, useUiCopy } from '@vp/ui';
 import { useState } from 'react';
 import type { AdminVideo } from '#app/features/admin/api/admin-videos';
 import {

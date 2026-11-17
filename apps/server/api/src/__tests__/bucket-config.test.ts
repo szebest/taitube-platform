@@ -1,4 +1,4 @@
-import { loadEnv } from '@vp/config';
+import { loadEnv } from '@kit/config';
 import { toAppConfig } from '@vp/env-schema';
 import { TOKENS, bearer, buildTestApp } from './test-app';
 

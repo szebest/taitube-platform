@@ -1,6 +1,6 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
-import { fromPromise, ignore } from '@vp/result';
+import { fromPromise, ignore } from '@kit/result';
 
 /** A per-job directory under the worker's tmp root; the caller removes it in its `finally`. */
 export async function createScratchDir(root: string, prefix: string): Promise<string> {

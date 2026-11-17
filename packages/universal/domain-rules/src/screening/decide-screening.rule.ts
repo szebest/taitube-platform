@@ -1,3 +1,4 @@
+import { type Result, assertNever, err, ok } from '@kit/result';
 import {
   SCREENING_REASONS,
   type ScreeningFinding,
@@ -5,7 +6,6 @@ import {
   type ScreeningReason,
   type ScreeningThresholds,
 } from '@vp/domain';
-import { type Result, assertNever, err, ok } from '@vp/result';
 import { type InvalidScreeningFinding, invalidScreeningFinding } from './failures';
 
 export interface ScreeningVerdict {

@@ -1,9 +1,9 @@
+import { useT } from '@kit/intl-react';
+import { fromPromise, isOk } from '@kit/result';
+import { Button, Field, ResponsiveModal, SegmentedControl, useToast, useUiCopy } from '@kit/ui';
 import { ApiError } from '@vp/api-client';
 import { CHANNEL_ROLE_NAMES, type ChannelRole } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
-import { useT } from '@vp/intl-react';
-import { fromPromise, isOk } from '@vp/result';
-import { Button, Field, ResponsiveModal, SegmentedControl, useToast, useUiCopy } from '@vp/ui';
 import { type FormEvent, useState } from 'react';
 import { useRoleRules } from '#app/features/team/hooks/use-role-rules';
 import { useInviteMember } from '#app/features/team/hooks/use-team-mutations';

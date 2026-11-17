@@ -1,5 +1,5 @@
-import { useT } from '@vp/intl-react';
-import { Button, useAppearance } from '@vp/ui';
+import { useT } from '@kit/intl-react';
+import { Button, useAppearance } from '@kit/ui';
 import { useState } from 'react';
 import { AccentRolesPreview } from '../accent-roles-preview/accent-roles-preview';
 import { SettingItem } from '../setting-item/setting-item';

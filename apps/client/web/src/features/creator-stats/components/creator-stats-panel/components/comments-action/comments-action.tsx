@@ -1,7 +1,7 @@
+import { useT } from '@kit/intl-react';
+import { Switch } from '@kit/ui';
 import type { Video } from '@vp/api-contracts';
-import { useT } from '@vp/intl-react';
 import { useFailureToast } from '@vp/queries';
-import { Switch } from '@vp/ui';
 import { useUpdateVideo } from '#app/features/creator-stats/hooks/use-update-video';
 
 /** Comments on or off for the video, over the studio's `commentsEnabled`. */

@@ -1,5 +1,5 @@
+import { err, ok, type Result } from '@kit/result';
 import { ACCENT_PATTERN } from '@vp/domain/settings';
-import { err, ok, type Result } from '@vp/result';
 import { type InvalidField, invalidField } from '@vp/validation';
 
 export type InvalidBrandColor = InvalidField<{ pattern: string }>;

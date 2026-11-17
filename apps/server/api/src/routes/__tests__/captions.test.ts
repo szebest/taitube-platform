@@ -1,4 +1,4 @@
-import { mintToken } from '@vp/dev-token';
+import { mintToken } from '@vp/dev-identity';
 import { MAX_CAPTION_FILE_BYTES } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import { expectOk } from '@vp/testing/result';

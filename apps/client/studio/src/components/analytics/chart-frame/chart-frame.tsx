@@ -1,5 +1,5 @@
+import { cn, Skeleton, useUiCopy } from '@kit/ui';
 import { type ChartSeries, EmptyState, SectionError, seriesColor } from '@vp/components';
-import { cn, Skeleton, useUiCopy } from '@vp/ui';
 import { type ComponentPropsWithRef, useId, useState } from 'react';
 import { ChartFrameContext, useChartFrame } from './chart-frame.context';
 import { chartFrameStyles } from './chart-frame.variants';

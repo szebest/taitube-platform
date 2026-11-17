@@ -1,3 +1,4 @@
+import { andThen, andThenAsync, err, map, ok, type Result } from '@kit/result';
 import type { Repositories } from '@vp/core/repositories';
 import {
   type EffectivePermissions,
@@ -17,7 +18,6 @@ import {
   toWatchPartyViewer,
   type WatchPartyAbility,
 } from '@vp/permissions';
-import { andThen, andThenAsync, err, map, ok, type Result } from '@vp/result';
 import { memberKeyOfCaller, type PartyCaller, principalOf } from './party-caller';
 
 /** A room as one caller sees it: their seat, their roles and the ability built from them. */

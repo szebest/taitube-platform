@@ -1,5 +1,5 @@
+import { COMPACT_QUERY } from '@kit/ui';
 import { screen, within } from '@testing-library/react';
-import { COMPACT_QUERY } from '@vp/ui';
 import { VIDEO_ID } from '@vp/web-testing';
 import { renderWatch } from '#app/__tests__/render-watch';
 

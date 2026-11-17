@@ -1,4 +1,4 @@
-import { tryCatch } from '@vp/result';
+import { tryCatch } from '@kit/result';
 
 /** Stops a process group; one that already exited (`ESRCH`) is already stopped, anything else is a fault. */
 export function stopProcessGroup(pid: number): void {

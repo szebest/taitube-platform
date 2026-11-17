@@ -1,4 +1,5 @@
-import type { CircuitBreaker } from '@vp/concurrency';
+import type { CircuitBreaker } from '@kit/concurrency';
+import { type Result, isOk, map, ok } from '@kit/result';
 import type {
   PlaybackWatch,
   PlaybackWatchOutcome,
@@ -10,7 +11,6 @@ import type {
 import type { ViewBatch } from '@vp/domain';
 import type { CacheUnavailable } from '@vp/errors';
 import type { PipelineMetrics } from '@vp/observability';
-import { type Result, isOk, map, ok } from '@vp/result';
 import { HeldViews } from './held-views';
 
 export interface FallbackViewBufferConfig {

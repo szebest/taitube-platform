@@ -25,7 +25,7 @@ and then runs `pnpm --silent demo`. Exit codes: 0 ok, 1 failure, 2 bad usage, 3 
 - `src/state.ts` keeps `.demo/state.json` (options, timestamps, last seed report); `.demo/media` is the clip
   cache `reset` keeps unless `--purge-media`. `.demo/` is git-ignored and nothing is written outside it.
 - `src/logins.ts` names the four demo personas (viewer, creator, moderator, admin) over `DEV_PERSONAS` from
-  `@vp/dev-token`, which owns the ids and roles, and holds the `vp.session` cookie name, copied from `@vp/queries`
+  `@kit/dev-token`, which owns the ids and roles, and holds the `vp.session` cookie name, copied from `@vp/queries`
   because a server package may not import a client one. Tokens come from `pnpm dev-token mint`. The ids and
   roles must equal what the seed creates.
 - The summary table prints `ADMIN_TOKEN` and `S3_SECRET_ACCESS_KEY` only when `heldLocalCredentials`
@@ -56,7 +56,7 @@ Re-running it adds nothing: each step looks before it creates. It refuses `host.
   routes, token signer) is injected, so every spec runs on fakes and the in-process `__tests__/fake-api.ts`.
 - **World** (pure, from `options.seed` alone): `rng.ts` (mulberry32, `deriveSeed` per stream), `catalog.ts` (word
   banks), `world-users.ts`, `world-videos.ts`, `world-engagement.ts`, assembled by `world.ts`. The viewer
-  (`...0002`), creator (`...0001`) and admin (`...000a`) ids equal `@vp/dev-token`'s personas, the moderator
+  (`...0002`), creator (`...0001`) and admin (`...000a`) ids equal `@kit/dev-token`'s personas, the moderator
   (`...000b`, `MODERATOR`) has no dev persona; extra creators and fans follow. A spec hashes the seed 1729 world:
   changing a bank or a draw order changes every demo world and the hash with it, on purpose.
 - **Media** (`media.ts`): clips come from `lavfi` sources (`testsrc2`, `gradients`, `life`, `mandelbrot`,

@@ -1,3 +1,4 @@
+import { isErr, ok, type Result } from '@kit/result';
 import type {
   SavePreferencesOptions,
   UserEventRepository,
@@ -6,7 +7,6 @@ import type {
 import { preferencesUpdated } from '@vp/domain';
 import type { UserPreferences } from '@vp/domain/settings';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { isErr, ok, type Result } from '@vp/result';
 
 export class InMemoryUserPreferencesRepository implements UserPreferencesRepositoryPort {
   private readonly documents = new Map<string, UserPreferences>();

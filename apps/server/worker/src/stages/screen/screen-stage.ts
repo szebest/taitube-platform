@@ -1,4 +1,6 @@
 import * as path from 'node:path';
+import type { Logger } from '@kit/logger';
+import { type Result, err, isErr, ok } from '@kit/result';
 import type { FrameClassifier, QueueJob, StorageClient } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import type { ScreeningFinding } from '@vp/domain';
@@ -15,9 +17,7 @@ import {
 import type { FfmpegProcessLimits } from '@vp/ffmpeg';
 import type { FingerprintTools } from '@vp/fingerprint';
 import type { ScreenJob, ScreenResult } from '@vp/job-contracts';
-import type { Logger } from '@vp/logger';
 import type { PipelineMetrics } from '@vp/observability';
-import { type Result, err, isErr, ok } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 import type { Every } from '../../heartbeat';
 import { createScratchDir, removeScratchDir } from '../scratch-dir';

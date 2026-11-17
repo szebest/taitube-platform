@@ -1,3 +1,4 @@
+import { err, isErr, ok, type Result } from '@kit/result';
 import type { WatchPartyTicketGrant } from '@vp/core/ports';
 import { admissionLimit, effectiveCapacity, memberKeyOf, type MemberKind } from '@vp/domain';
 import {
@@ -16,7 +17,6 @@ import {
   watchPartyNotFound,
   watchPartyTicketInvalid,
 } from '@vp/errors';
-import { err, isErr, ok, type Result } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 import type { PatternHub } from '../pattern-hub';
 import type { PartyCaller } from './party-caller';

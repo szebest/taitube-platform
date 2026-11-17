@@ -1,6 +1,6 @@
+import { IntlProvider } from '@kit/intl-react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import type { CaptionTrackView } from '@vp/api-contracts';
-import { IntlProvider } from '@vp/intl-react';
 import { captionTrack } from '@vp/web-testing';
 import { usePlayerState, VideoJsEngine } from '#app/integrations/video-js/video-js-engine';
 import { PlayerHotkeys } from '../player-hotkeys';

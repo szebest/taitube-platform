@@ -90,7 +90,7 @@ checked against `surface`, so a chart sits on `surface`, not on `bg`; OLED uses 
 
 ## Enforced contrast pairs
 
-Measured from the resolved values of `@vp/ui/themes/sand` and `@vp/ui/themes/nocturne` (WCAG relative
+Measured from the resolved values of `@kit/ui/themes/sand` and `@kit/ui/themes/nocturne` (WCAG relative
 luminance; translucent roles composited over `bg`).
 Floors: 4.5:1 text, 3:1 for control outlines, focus ring, icons and large text (24 px and up). Column order is
 Sand dark, light, oled, Nocturne dark, light, oled.
@@ -129,7 +129,7 @@ Sand dark, light, oled, Nocturne dark, light, oled.
 | `fg-subtle` on `surface` | 4.5 | 5.08 | 4.98 | 5.71 | 5.08 | 4.91 | 5.67 |
 | `fg-subtle` on `raised` | 4.5 | 4.58 | 4.98 | 5.08 | 4.56 | 4.91 | 5.08 |
 
-Every pair meets its floor in every theme and mode (checked by `src/themes/__tests__/themes.test.ts` in `@vp/ui`,
+Every pair meets its floor in every theme and mode (checked by `src/themes/__tests__/themes.test.ts` in `@kit/ui`,
 translucent roles composited over `bg`), and every chart series clears 3:1 on `surface`. `on-live` on `live` is
 4.99.
 
@@ -177,9 +177,9 @@ chapter label, badge) and white text, 19 to 20:1. The player gradient is black t
 
 ## Adding a role
 
-1. Add the name to `ROLES` in `@vp/design-tokens`, the one list; the `Theme` schema is built from it, so every
+1. Add the name to `ROLES` in `@kit/design-tokens`, the one list; the `Theme` schema is built from it, so every
    theme missing it fails to parse.
-2. Give it a value in `dark` and `light` in both `@vp/ui/themes/sand` and `@vp/ui/themes/nocturne`; add it to
+2. Give it a value in `dark` and `light` in both `@kit/ui/themes/sand` and `@kit/ui/themes/nocturne`; add it to
    `oled` only if it differs from dark.
 3. If it is text or a control boundary, add its pair to the contrast gate with the floor.
 4. Run `pnpm gen:tokens`, which regenerates the CSS, the Tailwind mapping and `tokens.json`; add the role to the

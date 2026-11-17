@@ -1,5 +1,5 @@
-import { useT } from '@vp/intl-react';
-import { Button, useUiCopy } from '@vp/ui';
+import { useT } from '@kit/intl-react';
+import { Button, useUiCopy } from '@kit/ui';
 import { useClearHistory } from '#app/features/library/hooks/use-clear-history';
 import { useClearSearches } from '#app/features/library/hooks/use-clear-searches';
 import { urlModals } from '#app/lib/url-modal/registry';

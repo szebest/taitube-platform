@@ -1,7 +1,7 @@
+import { useFormat, useT } from '@kit/intl-react';
+import { unwrapOr } from '@kit/result';
+import { Icon, ResponsiveModal, useUiCopy } from '@kit/ui';
 import type { VideoSummary } from '@vp/api-contracts';
-import { useFormat, useT } from '@vp/intl-react';
-import { unwrapOr } from '@vp/result';
-import { Icon, ResponsiveModal, useUiCopy } from '@vp/ui';
 import { type ReactNode, useState } from 'react';
 import { ShortsPlayerFrame } from '#app/components/shorts/shorts-player-frame';
 import { ShareDialogContent } from '#app/components/watch/share-dialog';

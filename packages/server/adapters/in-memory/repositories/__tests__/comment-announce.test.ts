@@ -1,6 +1,6 @@
+import { ok } from '@kit/result';
 import type { NewOutboxInput, NewUserEventInput } from '@vp/core/repositories';
 import type { CommentThread, NewCommentInput } from '@vp/domain';
-import { ok } from '@vp/result';
 import { announceCreated } from '../comment-announce';
 import { UNMODERATED } from './stored-comment';
 

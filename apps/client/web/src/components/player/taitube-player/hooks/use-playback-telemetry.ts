@@ -1,5 +1,5 @@
+import { sendJsonBeacon } from '@kit/web-telemetry';
 import { recordPlayback } from '@vp/api-contracts';
-import { sendJsonBeacon } from '@vp/web-telemetry';
 import { useEffect, useRef } from 'react';
 import { API_BASE_URL } from '#app/lib/config';
 import type {

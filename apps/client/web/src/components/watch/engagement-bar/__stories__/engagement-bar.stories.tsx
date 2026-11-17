@@ -1,5 +1,5 @@
+import { DropdownMenu, Icon } from '@kit/ui';
 import type { Decorator, Meta, StoryObj } from '@storybook/react-vite';
-import { DropdownMenu, Icon } from '@vp/ui';
 import { SubscribeButton } from '#app/components/channel/subscribe-button';
 import { EngagementBar, EngagementBarSkeleton } from '..';
 import { EngagementBarRoot } from '../engagement-bar';

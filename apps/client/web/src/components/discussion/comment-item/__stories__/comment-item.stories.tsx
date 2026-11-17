@@ -1,5 +1,5 @@
+import { DropdownMenu, Icon, Textarea } from '@kit/ui';
 import type { Decorator, Meta, StoryObj } from '@storybook/react-vite';
-import { DropdownMenu, Icon, Textarea } from '@vp/ui';
 import type { ReactNode } from 'react';
 import { CommentItem, CommentItemSkeleton } from '..';
 import { CommentItemRoot } from '../comment-item';

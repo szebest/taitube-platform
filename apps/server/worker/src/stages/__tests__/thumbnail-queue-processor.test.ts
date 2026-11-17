@@ -1,5 +1,5 @@
+import { ok } from '@kit/result';
 import { type ChannelImageJob, ThumbnailQueueJob } from '@vp/job-contracts';
-import { ok } from '@vp/result';
 import { createMockJob } from '@vp/testing';
 import { createThumbnailQueueProcessor } from '../thumbnail-queue-processor';
 

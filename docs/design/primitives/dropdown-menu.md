@@ -31,7 +31,7 @@ A list of actions opened from a button, with items, checkable items, radio group
 
 ```ts
 // types.ts
-import type { ControlSize, ToneOption } from '@vp/design-tokens';
+import type { ControlSize, ToneOption } from '@kit/design-tokens';
 import type { Align, Side } from '../../types';
 
 export type MenuSize = Extract<ControlSize, 'sm' | 'md'>;

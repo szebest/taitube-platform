@@ -21,7 +21,7 @@ A horizontal bar that shows how far a task or a video has got, determinate or in
 
 ```ts
 // types.ts
-import type { SizeOption, ToneOption } from '@vp/design-tokens';
+import type { SizeOption, ToneOption } from '@kit/design-tokens';
 
 export type ProgressSize = Extract<SizeOption, 'sm' | 'md' | 'lg'>;
 export type ProgressTone = Extract<ToneOption, 'accent' | 'neutral'>;

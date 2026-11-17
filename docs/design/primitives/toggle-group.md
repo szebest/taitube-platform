@@ -20,7 +20,7 @@ A row of related buttons that each toggle on or off, with single or multiple sel
 
 ```ts
 // types.ts
-import type { ControlSize } from '@vp/design-tokens';
+import type { ControlSize } from '@kit/design-tokens';
 import type { FillOption, Orientation, ShapeOption } from '../../types';
 
 export type ToggleFill = Extract<FillOption, 'outline' | 'ghost' | 'soft'>;

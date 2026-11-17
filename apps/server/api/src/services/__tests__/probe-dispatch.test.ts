@@ -1,8 +1,8 @@
+import { err } from '@kit/result';
 import { InMemoryJobQueue } from '@vp/adapters/in-memory';
 import { JOB_PRIORITY } from '@vp/domain';
 import { queueUnavailable } from '@vp/errors';
 import { ids, stagePolicies } from '@vp/job-contracts';
-import { err } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import { buildProbeDispatch, enqueueProbe } from '../probe-dispatch';
 

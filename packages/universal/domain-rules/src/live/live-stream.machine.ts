@@ -1,5 +1,5 @@
+import { defineMachine } from '@kit/machine';
 import { LIVE_STREAM_STATUSES } from '@vp/domain';
-import { defineMachine } from '@vp/machine';
 
 export const LIVE_STREAM = defineMachine({
   name: 'live-stream',

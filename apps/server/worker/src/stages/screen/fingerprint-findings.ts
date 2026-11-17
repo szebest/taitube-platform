@@ -1,3 +1,4 @@
+import { type Result, fromPromise, isErr, ok } from '@kit/result';
 import type { Repositories } from '@vp/core/repositories';
 import type { ScreeningFinding } from '@vp/domain';
 import { screenBlankVideo } from '@vp/domain-rules';
@@ -7,7 +8,6 @@ import type { DatabaseUnavailable, MediaFailure } from '@vp/errors';
 import { mediaFailureFrom } from '@vp/errors';
 import { type FfmpegProcessLimits } from '@vp/ffmpeg';
 import { type FingerprintTools, findMatches, storeFingerprint } from '@vp/fingerprint';
-import { type Result, fromPromise, isErr, ok } from '@vp/result';
 import { matchFinding } from './match-finding';
 
 export interface FingerprintFindingsDeps {

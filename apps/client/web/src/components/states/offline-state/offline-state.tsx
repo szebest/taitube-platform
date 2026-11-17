@@ -6,7 +6,7 @@ import {
   Slot,
   useUiCopy,
   VisuallyHidden,
-} from '@vp/ui';
+} from '@kit/ui';
 import { type ComponentPropsWithRef, useEffect, useEffectEvent, useState } from 'react';
 import { OfflineStateContext, useOfflineState } from './offline-state.context';
 import { offlineStateStyles } from './offline-state.variants';

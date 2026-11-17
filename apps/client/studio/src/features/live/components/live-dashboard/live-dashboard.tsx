@@ -1,9 +1,9 @@
+import { useT } from '@kit/intl-react';
+import { Badge, Button } from '@kit/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { LiveStreamView } from '@vp/api-contracts';
 import { PageHeader, SectionError } from '@vp/components';
-import { useT } from '@vp/intl-react';
 import { useApi, useLiveVideoEvents } from '@vp/queries';
-import { Badge, Button } from '@vp/ui';
 import { useEffect, useEffectEvent, useState } from 'react';
 import { liveKeys, myLiveStreamQueryOptions } from '#app/features/live/api/live-queries';
 import { WEB_URL } from '#app/lib/config';

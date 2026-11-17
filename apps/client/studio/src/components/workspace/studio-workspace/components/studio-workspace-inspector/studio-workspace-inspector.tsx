@@ -1,4 +1,4 @@
-import { Dialog, Drawer, useUiCopy } from '@vp/ui';
+import { Dialog, Drawer, useUiCopy } from '@kit/ui';
 import type { ComponentPropsWithRef } from 'react';
 import { useStudioWorkspace } from '#app/components/workspace/studio-workspace/studio-workspace.context';
 import { studioWorkspaceStyles } from '#app/components/workspace/studio-workspace/studio-workspace.variants';

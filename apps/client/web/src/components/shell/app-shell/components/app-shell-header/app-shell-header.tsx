@@ -1,4 +1,4 @@
-import { Icon, IconButton, Kbd, useUiCopy } from '@vp/ui';
+import { Icon, IconButton, Kbd, useUiCopy } from '@kit/ui';
 import type { ComponentPropsWithRef, ReactNode } from 'react';
 import { appShellStyles } from '#app/components/shell/app-shell/app-shell.variants';
 import { useHasScrolled } from '#app/components/shell/app-shell/hooks/use-has-scrolled';

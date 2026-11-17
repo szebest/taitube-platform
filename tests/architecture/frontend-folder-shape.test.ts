@@ -1,8 +1,12 @@
 import { posix } from 'node:path';
+import { packageDir } from '../../scripts/workspace-packages';
 import { clientApps } from './client-apps';
 import { isSpec, trackedFiles } from './repo-files';
 
-const PACKAGE_ROOTS = ['packages/client/ui/src/', 'packages/client/components/src/'];
+const COMPONENTS = packageDir('@vp/components');
+const UI = packageDir('@kit/ui');
+
+const PACKAGE_ROOTS = [`${UI}/src/`, `${COMPONENTS}/src/`];
 
 const KEBAB = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
@@ -57,7 +61,7 @@ describe('architecture: every client app and component package keeps the folder 
     `${WEB}styles/app.css`,
     `${STUDIO}features/videos/hooks/__tests__/__snapshots__/use-update-video.dom.test.tsx.snap`,
     `${STUDIO}components/table/data-table/__stories__/data-table.stories.tsx`,
-    'packages/client/ui/src/styles/index.css',
+    `${UI}/src/styles/index.css`,
   ])('passes %s', (file) => {
     expect(shapeFindings([file], [WEB, STUDIO])).toEqual([]);
   });
@@ -84,7 +88,7 @@ describe('architecture: every client app and component package keeps the folder 
       finding: 'a story outside __stories__/',
     },
     {
-      file: 'packages/client/ui/src/primitives/button/button.stories.tsx',
+      file: `${UI}/src/primitives/button/button.stories.tsx`,
       finding: 'a story outside __stories__/',
     },
     {
@@ -103,7 +107,7 @@ describe('architecture: every client app and component package keeps the folder 
     expect(shapeFindings([file], [WEB, STUDIO])).toEqual([`${file}: ${finding}`]);
   });
 
-  it('holds over every client app, @vp/ui and @vp/components', () => {
+  it('holds over every client app, @kit/ui and @vp/components', () => {
     const appRoots = clientApps().map((app) => `${app}/src/`);
     const files = trackedFiles(...appRoots, ...PACKAGE_ROOTS);
 

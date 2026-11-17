@@ -1,3 +1,4 @@
+import { type Result, isErr, ok } from '@kit/result';
 import {
   type DlqEntryRecord,
   DlqRepository,
@@ -7,7 +8,6 @@ import {
   type OutboxRepository,
 } from '@vp/core/repositories';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { type Result, isErr, ok } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 import { byKeysetDesc, isKeysetBefore } from './keyset';
 

@@ -9,20 +9,20 @@
     "test": "vp test run"
   },
   "dependencies": {
+    "@kit/result": "workspace:*",
     "@vp/env-schema": "workspace:*",
     "@vp/job-contracts": "workspace:*",
-    "@vp/result": "workspace:*",
     "js-yaml": "^5.4.3",
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@kit/tsconfig": "workspace:*",
     "@types/node": "^24.19.1",
     "@vp/testing": "workspace:*",
-    "@vp/tsconfig": "workspace:*",
     "typescript": "^6.0.3",
     "vite-plus": "catalog:"
   },
   "vp": {
-    "layer": 4
+    "layer": 7
   }
 }

@@ -1,3 +1,4 @@
+import { Paginator } from '@kit/pagination';
 import {
   InMemoryChannelHandleHistoryRepository,
   InMemoryChannelRepository,
@@ -10,7 +11,6 @@ import {
   InMemoryVideoRepository,
   InMemoryWatchHistoryRepository,
 } from '@vp/adapters/in-memory';
-import { Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
 import { SubscriptionService } from '../subscription-service';
 import { ViewerProgress } from '../viewer-progress';

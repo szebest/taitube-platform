@@ -1,4 +1,4 @@
-import { AspectRatio, Button, Icon, IconButton, Skeleton, Slider, Slot, useUiCopy } from '@vp/ui';
+import { AspectRatio, Button, Icon, IconButton, Skeleton, Slider, Slot, useUiCopy } from '@kit/ui';
 import type { ComponentPropsWithRef } from 'react';
 import { ShortsPlayerFrameContext, useShortsPlayerFrame } from './shorts-player-frame.context';
 import { shortsPlayerFrameStyles } from './shorts-player-frame.variants';

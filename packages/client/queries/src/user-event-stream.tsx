@@ -1,6 +1,6 @@
+import { assertNever } from '@kit/result';
 import { type QueryClient, useQueryClient } from '@tanstack/react-query';
 import type { UserEvent } from '@vp/api-contracts';
-import { assertNever } from '@vp/result';
 import {
   type PropsWithChildren,
   createContext,

@@ -1,4 +1,6 @@
 export * from './failures';
+export * from './field-failures';
+export * from './plain-text';
 export * from './uploads/failures';
 export * from './uploads/allowed-content-type';
 export * from './uploads/upload-size';

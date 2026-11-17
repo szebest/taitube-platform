@@ -4,10 +4,10 @@ import {
   parseTheme,
   type ResolvedTheme,
   resolveTheme,
-} from '@vp/design-tokens';
+} from '@kit/design-tokens';
+import { appearance } from '@kit/ui/appearance/registry';
+import { ramps } from '@kit/ui/tokens/ref';
 import { expectOk } from '@vp/testing/result';
-import { appearance } from '@vp/ui/appearance/registry';
-import { ramps } from '@vp/ui/tokens/ref';
 import { CHART_SERIES, seriesColor } from '../series-color';
 
 const MODE_PALETTES = [

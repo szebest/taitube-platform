@@ -1,7 +1,7 @@
+import { ok } from '@kit/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { ok } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { CommentModerationService } from '../comment-moderation-service';
 

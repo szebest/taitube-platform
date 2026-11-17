@@ -1,4 +1,4 @@
-import { createCompoundContext } from '@vp/ui';
+import { createCompoundContext } from '@kit/ui';
 import type { ChannelHeaderLayout } from './types';
 
 export const [ChannelHeaderContext, useChannelHeader] = createCompoundContext<{

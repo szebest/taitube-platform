@@ -1,3 +1,4 @@
+import { type Result, andThen, err, isErr, map, ok } from '@kit/result';
 import type { JobQueue, StorageClient } from '@vp/core/ports';
 import type { ChannelImageRepositoryPort, ChannelRepositoryPort } from '@vp/core/repositories';
 import type { BannerCrops, ChannelImageKind, ChannelImageUpload, CropRect } from '@vp/domain';
@@ -21,7 +22,6 @@ import {
 import { defaultJobOptions, ids, stagePolicies, type ChannelImageJob } from '@vp/job-contracts';
 import { createTraceparent, getActiveTraceparent } from '@vp/observability';
 import type { UserContext } from '@vp/permissions';
-import { type Result, andThen, err, isErr, map, ok } from '@vp/result';
 import { channelImageUploadKey } from '@vp/storage';
 import {
   type ImageDimensions,

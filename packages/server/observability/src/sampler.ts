@@ -1,3 +1,4 @@
+import { assertNever } from '@kit/result';
 import {
   AlwaysOffSampler,
   AlwaysOnSampler,
@@ -5,7 +6,6 @@ import {
   type Sampler,
   TraceIdRatioBasedSampler,
 } from '@opentelemetry/sdk-trace-base';
-import { assertNever } from '@vp/result';
 
 export type TraceSamplerName =
   | 'always_on'

@@ -1,5 +1,5 @@
+import { ok } from '@kit/result';
 import type { CommentThread, Video } from '@vp/domain';
-import { ok } from '@vp/result';
 import { editStored } from '../comment-edit';
 import type { StoredComment } from '../comment-visibility';
 

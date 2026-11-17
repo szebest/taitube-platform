@@ -1,8 +1,8 @@
+import { useFormat, useT } from '@kit/intl-react';
+import { unwrapOr } from '@kit/result';
+import { SegmentedControl } from '@kit/ui';
 import type { CreatorStats } from '@vp/api-contracts';
 import { seriesColor } from '@vp/components';
-import { useFormat, useT } from '@vp/intl-react';
-import { unwrapOr } from '@vp/result';
-import { SegmentedControl } from '@vp/ui';
 import { useState } from 'react';
 
 type Range = 'hours' | 'days';

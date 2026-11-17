@@ -1,5 +1,5 @@
-import { fieldError } from '@vp/forms';
-import { Field, Input, Textarea } from '@vp/ui';
+import { fieldError } from '@kit/forms';
+import { Field, Input, Textarea } from '@kit/ui';
 
 interface TextFieldApi {
   name: string;

@@ -1,7 +1,7 @@
 import { execFile, spawn } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
-import { fromPromise } from '@vp/result';
+import { fromPromise } from '@kit/result';
 import { run } from './cli';
 import type { DemoHost, ExecResult } from './host';
 import { seedDemo } from './seed';

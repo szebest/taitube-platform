@@ -1,6 +1,6 @@
+import { useAppForm } from '@kit/forms';
+import { useT } from '@kit/intl-react';
 import type { Channel } from '@vp/api-contracts';
-import { useAppForm } from '@vp/forms';
-import { useT } from '@vp/intl-react';
 import { CustomizationSection } from '#app/components/section/customization-section';
 import { useChannelValidators } from '#app/features/channel/forms/channel-field-validators';
 import { useUpdateChannel } from '#app/features/channel/hooks/use-update-channel';

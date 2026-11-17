@@ -1,5 +1,5 @@
+import { writeCookie } from '@kit/ui';
 import { renderHook } from '@testing-library/react';
-import { writeCookie } from '@vp/ui';
 import type { ComponentType, PropsWithChildren } from 'react';
 import { AppProviders } from '#app/__tests__/providers';
 import { saveStoredPlayback } from '#app/lib/preferences/device-preferences';

@@ -1,6 +1,6 @@
+import { isOk, parseJson, tryCatch, unwrapOr } from '@kit/result';
+import { ONE_YEAR_S, readCookie, writeCookie } from '@kit/ui';
 import { PLAYBACK_SETTINGS, type PlaybackPreferences } from '@vp/domain/settings';
-import { isOk, parseJson, tryCatch, unwrapOr } from '@vp/result';
-import { ONE_YEAR_S, readCookie, writeCookie } from '@vp/ui';
 import { z } from 'zod';
 import { COOKIE_MIGRATIONS, migrate, STORAGE_MIGRATIONS, type Stored } from './migrations';
 
@@ -178,7 +178,7 @@ export function adoptLegacyPlayback(): PlaybackPreferences | undefined {
   return playback;
 }
 
-/** The locale `@vp/intl-react` kept in `localStorage` before the store existed, removed once read. */
+/** The locale `@kit/intl-react` kept in `localStorage` before the store existed, removed once read. */
 export function takeLegacyLocale(): string | undefined {
   const legacy = tryCatch(
     () => {

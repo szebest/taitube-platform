@@ -1,6 +1,6 @@
 import { Adapters } from '@vp/adapters/composition';
 import { InMemoryLiveGateway } from '@vp/adapters/in-memory';
-import { mintToken } from '@vp/dev-token';
+import { mintToken } from '@vp/dev-identity';
 import { ErrorCodes } from '@vp/errors';
 import { expectOk } from '@vp/testing/result';
 import { type TestApp, bearer, buildTestApp } from '../../__tests__/test-app';

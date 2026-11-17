@@ -1,4 +1,4 @@
-import { machineFindings } from '@vp/machine';
+import { machineFindings } from '@kit/machine';
 import { UPLOAD_SESSION } from '../upload-session.machine';
 
 describe('@vp/domain-rules: UPLOAD_SESSION', () => {
