@@ -8,6 +8,8 @@ import {
 import uiStyles from '@kit/ui/styles.css?url';
 import { useWebTelemetry } from '@kit/web-telemetry';
 import { createRootRouteWithContext } from '@tanstack/react-router';
+import { MAX_WEB_VITALS_PER_BATCH, recordWebVitals } from '@vp/api-contracts';
+import { APPEARANCE_COOKIES } from '@vp/domain/settings';
 import {
   ApiProvider,
   type AppRouterContext,
@@ -24,10 +26,12 @@ import { StudioRoot } from './-components/studio-root/studio-root';
 /** The studio is a dense workspace: it starts on compact spacing and small sizing. */
 const STUDIO_SETS: TokenSetIds = { spacing: 'compact', sizing: 'small' };
 
+const VITALS_ENDPOINT = { path: recordWebVitals.path, maxBatchSize: MAX_WEB_VITALS_PER_BATCH };
+
 export const Route = createRootRouteWithContext<AppRouterContext>()({
   validateSearch: AccessDeniedSearchSchema,
   beforeLoad: async ({ context, location }) => ({
-    appearance: requestAppearancePreference(),
+    appearance: requestAppearancePreference(APPEARANCE_COOKIES),
     ...(await requestLocale(context.locales, { searchStr: location.searchStr })),
     auth: await ensureSession(context),
   }),
@@ -67,7 +71,13 @@ function RootDocument({ children }: { children: ReactNode }) {
 function RootLayout() {
   const { api, toaster, auth } = Route.useRouteContext();
 
-  useWebTelemetry({ app: 'studio', apiBaseUrl: API_BASE_URL, tracesUrl: OTEL_TRACES_URL });
+  useWebTelemetry({
+    app: 'studio',
+    serviceName: 'taitube-studio',
+    apiBaseUrl: API_BASE_URL,
+    vitals: VITALS_ENDPOINT,
+    tracesUrl: OTEL_TRACES_URL,
+  });
 
   return (
     <ApiProvider api={api}>

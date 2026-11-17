@@ -11,6 +11,10 @@ export interface PageHealth {
   largestShiftSource: () => string | undefined;
 }
 
+const isLayoutShift = (entry: PerformanceEntry): entry is LayoutShiftEntry =>
+  typeof Reflect.get(entry, 'value') === 'number' &&
+  typeof Reflect.get(entry, 'hadRecentInput') === 'boolean';
+
 const slotOf = (node: Node | null | undefined) => {
   const element = node instanceof Element ? node : node?.parentElement;
   return element?.closest('[data-slot]')?.getAttribute('data-slot') ?? undefined;
@@ -30,7 +34,7 @@ function observe(type: string, onEntries: (entries: PerformanceEntryList) => voi
 /** Watches the page's long tasks and layout shifts for the vitals that need an answer to "what", not only "how much". */
 export function observePageHealth(): PageHealth {
   let longTaskMs = 0;
-  let largest = { value: 0, source: undefined as string | undefined };
+  let largest: { value: number; source: string | undefined } = { value: 0, source: undefined };
 
   observe('longtask', (entries) => {
     for (const { duration } of entries) {
@@ -39,7 +43,7 @@ export function observePageHealth(): PageHealth {
   });
 
   observe('layout-shift', (entries) => {
-    for (const entry of entries as LayoutShiftEntry[]) {
+    for (const entry of entries.filter(isLayoutShift)) {
       if (!entry.hadRecentInput && entry.value > largest.value) {
         largest = { value: entry.value, source: slotOf(entry.sources?.[0]?.node) };
       }

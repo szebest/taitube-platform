@@ -1,13 +1,18 @@
 import type { TokenGroup } from '@kit/design-tokens';
 import { AppearanceProvider, DEFAULT_APPEARANCE } from '@kit/ui';
 import { act, renderHook } from '@testing-library/react';
+import { APPEARANCE_COOKIES } from '@vp/domain/settings';
 import { useTokenOverride } from '../use-token-override';
 
 const renderOverride = (group: TokenGroup, overrides: Record<string, string> = {}) =>
   renderHook(() => useTokenOverride(group), {
     wrapper: ({ children }) => (
       <AppearanceProvider
-        stored={{ preference: { ...DEFAULT_APPEARANCE, overrides }, source: 'none' }}
+        stored={{
+          preference: { ...DEFAULT_APPEARANCE, overrides },
+          source: 'none',
+          storage: APPEARANCE_COOKIES,
+        }}
       >
         {children}
       </AppearanceProvider>

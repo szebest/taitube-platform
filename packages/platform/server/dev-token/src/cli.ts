@@ -2,6 +2,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { parseArgs } from 'node:util';
 import type { Logger } from '@kit/logger';
+import type { DevTokenConfig } from './config';
 import { mintToken, verifyToken } from './jwt';
 import { getDevJwks } from './keys';
 import { serveDevTokens } from './server';
@@ -25,9 +26,9 @@ function readArgs(argv: readonly string[]) {
   return { command, token, flags: values };
 }
 
-function printHelp(host: CliHost): void {
+function printHelp(config: DevTokenConfig, host: CliHost): void {
   host.print(`
-dev-token: EdDSA JWT issuer and JWKS provider for video-pipeline
+dev-token: EdDSA JWT issuer and JWKS provider for ${config.product}
 
 Usage:
   pnpm dev-token mint [options]     Mint a signed dev JWT (EdDSA)
@@ -58,13 +59,13 @@ export interface CliHost {
   log: Logger;
 }
 
-export async function run(host: CliHost): Promise<void> {
+export async function run(config: DevTokenConfig, host: CliHost): Promise<void> {
   const { command, token, flags } = readArgs(host.argv);
 
   switch (command) {
     case 'mint': {
       const { sub, role, ttl } = flags;
-      const minted = mintToken({ sub, role, ttl });
+      const minted = mintToken(config, { sub, role, ttl });
 
       if (flags.out) {
         const outPath = path.resolve(process.cwd(), flags.out);
@@ -76,7 +77,7 @@ export async function run(host: CliHost): Promise<void> {
       } else {
         host.print(
           [
-            'Minted dev JWT (iss=vp-dev, aud=vp-api)',
+            `Minted dev JWT (iss=${config.issuer}, aud=${config.audience})`,
             `Subject: ${sub}`,
             `Role:    ${role}`,
             `TTL:     ${ttl}`,
@@ -90,13 +91,13 @@ export async function run(host: CliHost): Promise<void> {
 
     case 'verify': {
       if (!token) throw new Error('verify needs a token argument');
-      const payload = verifyToken(token);
+      const payload = verifyToken(config, token);
       host.print(JSON.stringify(payload, null, 2));
       break;
     }
 
     case 'jwks': {
-      const jwks = getDevJwks();
+      const jwks = getDevJwks(config);
       const json = JSON.stringify(jwks, null, 2);
 
       if (flags.out) {
@@ -111,12 +112,12 @@ export async function run(host: CliHost): Promise<void> {
     }
 
     case 'serve': {
-      const { url } = await serveDevTokens(Number.parseInt(flags.port, 10));
+      const { url } = await serveDevTokens(config, Number.parseInt(flags.port, 10));
       host.log.info({ url }, 'dev-token server listening');
       break;
     }
 
     default:
-      printHelp(host);
+      printHelp(config, host);
   }
 }

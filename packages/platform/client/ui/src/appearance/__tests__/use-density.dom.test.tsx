@@ -1,4 +1,5 @@
 import { act, renderHook } from '@testing-library/react';
+import { FIXTURE_APPEARANCE_STORAGE } from '../../__tests__/appearance-storage-fixture';
 import { DEFAULT_APPEARANCE } from '../preference';
 import { AppearanceProvider, useAppearance } from '../provider';
 import { useDensity } from '../use-density';
@@ -8,7 +9,11 @@ const renderDensity = (defaults?: { spacing: 'compact'; sizing: 'small' }) =>
   renderHook(() => ({ ...useDensity(), appearance: useAppearance() }), {
     wrapper: ({ children }) => (
       <AppearanceProvider
-        stored={{ preference: DEFAULT_APPEARANCE, source: 'none' }}
+        stored={{
+          preference: DEFAULT_APPEARANCE,
+          source: 'none',
+          storage: FIXTURE_APPEARANCE_STORAGE,
+        }}
         defaults={defaults}
       >
         {children}

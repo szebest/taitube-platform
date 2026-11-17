@@ -1,6 +1,7 @@
 import { ToastProvider, Tooltip } from '@kit/ui';
 import { useWebTelemetry } from '@kit/web-telemetry';
 import { getRouteApi } from '@tanstack/react-router';
+import { MAX_WEB_VITALS_PER_BATCH, recordWebVitals } from '@vp/api-contracts';
 import { ApiProvider, SessionProvider, UserEventStream } from '@vp/queries';
 import { Suspense } from 'react';
 import {
@@ -24,6 +25,8 @@ import { API_BASE_URL, OTEL_TRACES_URL } from '#app/lib/config';
 import { DevicePreferencesProvider } from '#app/lib/preferences/device-preferences-provider';
 import { urlModals } from '#app/lib/url-modal/registry';
 
+const VITALS_ENDPOINT = { path: recordWebVitals.path, maxBatchSize: MAX_WEB_VITALS_PER_BATCH };
+
 const { UrlModal } = urlModals;
 
 const rootRoute = getRouteApi('__root__');
@@ -31,7 +34,13 @@ const rootRoute = getRouteApi('__root__');
 export function AppLayout() {
   const { api, toaster, sidebarState, auth, devicePreferences } = rootRoute.useRouteContext();
 
-  useWebTelemetry({ app: 'web', apiBaseUrl: API_BASE_URL, tracesUrl: OTEL_TRACES_URL });
+  useWebTelemetry({
+    app: 'web',
+    serviceName: 'taitube-web',
+    apiBaseUrl: API_BASE_URL,
+    vitals: VITALS_ENDPOINT,
+    tracesUrl: OTEL_TRACES_URL,
+  });
 
   return (
     <>

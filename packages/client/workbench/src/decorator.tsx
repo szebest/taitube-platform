@@ -49,6 +49,8 @@ function OnDocument({
   );
 }
 
+const STORAGE = { cookie: 'vp.appearance', legacyCookie: 'vp.theme' };
+
 /**
  * Every story inside the appearance, the direction and the locale the toolbars pick, put on
  * `<html>` as the apps' document does, with the `ui` words of that locale's catalogue.
@@ -56,7 +58,10 @@ function OnDocument({
 export const withAppearance: Decorator = (Story, { globals, loaded }) => {
   const preference = preferenceFromGlobals(globals);
   return (
-    <AppearanceProvider key={JSON.stringify(preference)} stored={{ preference, source: 'none' }}>
+    <AppearanceProvider
+      key={JSON.stringify(preference)}
+      stored={{ preference, source: 'none', storage: STORAGE }}
+    >
       <UiCopyProvider copy={copyFrom(loaded.catalogue)}>
         <OnDocument
           direction={pickOption(DIRECTIONS, globals.direction, 'ltr')}

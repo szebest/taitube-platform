@@ -41,8 +41,14 @@ export type BundleRules = {
 /** The one-click sign-in modules, `@vp/queries/demo-personas`, which only a build with the flag on may carry. */
 const DEMO_PERSONAS_FOLDER = 'demo-personas/';
 
+const NODE_MODULES = 'node_modules';
+
+function directory(...segments: string[]): string {
+  return ['', ...segments, ''].join('/');
+}
+
 function devOnlyViolations(chunk: BundledChunk, rules: BundleRules): string[] {
-  const devtools = DEVTOOLS.filter((name) => carries(chunk, `/node_modules/${name}/`));
+  const devtools = DEVTOOLS.filter((name) => carries(chunk, directory(NODE_MODULES, name)));
   const personas =
     !rules.demoPersonas && carries(chunk, `/${DEMO_PERSONAS_FOLDER}`)
       ? [
@@ -72,7 +78,9 @@ function budgetViolations(chunk: BundledChunk, budgetKb: number | undefined): st
 function duplicatedModules(chunks: readonly BundledChunk[]): string[] {
   const owners = new Map<string, string[]>();
   for (const chunk of chunks) {
-    for (const id of chunk.moduleIds.filter((moduleId) => moduleId.includes('/node_modules/'))) {
+    for (const id of chunk.moduleIds.filter((moduleId) =>
+      moduleId.includes(directory(NODE_MODULES))
+    )) {
       owners.set(id, [...(owners.get(id) ?? []), chunk.fileName]);
     }
   }

@@ -1,4 +1,5 @@
 import { renderHook } from '@testing-library/react';
+import { FIXTURE_APPEARANCE_STORAGE } from '../../__tests__/appearance-storage-fixture';
 import { applyAppearance } from '../attributes';
 import { DEFAULT_APPEARANCE } from '../preference';
 import { AppearanceProvider, useAppearance } from '../provider';
@@ -13,6 +14,7 @@ describe('@kit/ui: applyAppearance', () => {
           stored={{
             preference: { ...DEFAULT_APPEARANCE, theme: 'nocturne', overrides: { radius: 'soft' } },
             source: 'none',
+            storage: FIXTURE_APPEARANCE_STORAGE,
           }}
         >
           {children}

@@ -90,7 +90,7 @@ export function AppearanceProvider({
       return;
     }
 
-    rewriteLegacyAppearance(stored.preference, cookieDomain);
+    rewriteLegacyAppearance(stored.preference, stored.storage, cookieDomain);
   }, [stored, cookieDomain]);
 
   const { customGround, customAccent } = preference;
@@ -105,9 +105,9 @@ export function AppearanceProvider({
   // Built on the cookie as it is now, not on this tab's state: another tab may have saved since,
   // and the swap waits for the view transition, so state lags a change made a moment ago.
   const commit = (change: (current: AppearancePreference) => AppearancePreference) => {
-    const saved = requestAppearancePreference();
+    const saved = requestAppearancePreference(stored.storage);
     const changed = change(saved.source === 'appearance' ? saved.preference : preference);
-    saveAppearancePreference(changed, cookieDomain);
+    saveAppearancePreference(changed, stored.storage, cookieDomain);
     swap(() => setPreference(changed));
   };
   const systemMode: ShownMode = prefersLight ? 'light' : 'dark';

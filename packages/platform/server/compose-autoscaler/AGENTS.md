@@ -14,7 +14,7 @@ the API's Prometheus queue metrics and runs
 stage (the workers sit behind the `worker` profile; naming the service keeps the other profiles stopped, and
 `--no-deps` keeps compose from rerunning `migrate` and the seed on every scale step).
 `src/scaler.ts` computes replicas, `src/runner.ts` (`ComposeAutoscaler`) runs the loop,
-`src/cli.ts` parses arguments and `src/main.ts` wires `child_process`, `fetch` and the process.
+`src/cli.ts` parses arguments; `scripts/compose-autoscaler.ts` wires `child_process`, `fetch` and the process, and `scripts/compose-autoscaler-config.ts` holds this repo's `AutoscalerConfig` (metrics path and per-stage defaults).
 
 This is a **workspace package with a CLI**, not a loose script — which is why it lives under
 `packages/server/` rather than `tools/`. `tools/` is for assets with no `package.json`.
@@ -40,3 +40,7 @@ pnpm compose-autoscaler            # from the repo root
 pnpm --filter @kit/compose-autoscaler typecheck
 pnpm --filter @kit/compose-autoscaler test
 ```
+
+## Tokens and registries
+
+None. An `AutoscalerConfig` the caller passes to `run` carries the metrics path and the default stage table.

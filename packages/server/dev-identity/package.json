@@ -1,0 +1,37 @@
+{
+  "name": "@vp/dev-identity",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "source": "./src/index.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "dev": "tsx --conditions=source ../../../scripts/dev-token.ts serve",
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.spec.json",
+    "test": "vp test run",
+    "clean": "rimraf dist tsconfig.tsbuildinfo"
+  },
+  "dependencies": {
+    "@kit/dev-token": "workspace:*"
+  },
+  "devDependencies": {
+    "@kit/tsconfig": "workspace:*",
+    "@types/node": "^24.19.1",
+    "@vp/testing": "workspace:*",
+    "rimraf": "^6.1.3",
+    "typescript": "^6.0.3",
+    "vite-plus": "catalog:"
+  },
+  "vp": {
+    "layer": 3
+  }
+}

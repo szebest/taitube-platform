@@ -62,7 +62,9 @@ import `@vp/domain-rules` (T3) or redeclare a pattern `@vp/domain/settings` expo
 3. **A set names every key and nothing else.** Objects are strict and records are keyed by an enum, so a
    missing or misspelt key fails to parse, at any depth.
 4. **Every group spec parses every set of `tokens.json`** for that group through
-   `describeTokenGroupContract`, and runs under node, jsdom and `bun test`.
+   `describeTokenGroupContract`, and runs under node, jsdom and `bun test`. The document the specs read is
+   `src/__tests__/fixtures/tokens.json`, a copy of `docs/design/tokens.json`; `scripts/__tests__/design-tokens-fixture.test.ts`
+   fails when the two differ, so refresh the copy after `pnpm gen:tokens`.
 5. **Relative imports are extensionless**, as in every tier.
 6. **An unmeasurable pair fails.** A malformed hex or a translucent background measures as `NaN`, and the gate
    reports it rather than passing it; composite a translucent ground with `compositeOver` first, which returns

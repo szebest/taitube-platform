@@ -1,5 +1,5 @@
-import { mintToken } from '@kit/dev-token';
 import type { InMemoryRepositories } from '@vp/adapters/in-memory';
+import { mintToken } from '@vp/dev-identity';
 import { ErrorCodes } from '@vp/errors';
 import type { FastifyInstance } from 'fastify';
 import { bearer, buildTestApp } from '../../__tests__/test-app';

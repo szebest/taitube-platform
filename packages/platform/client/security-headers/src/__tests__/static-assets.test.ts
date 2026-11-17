@@ -11,7 +11,7 @@ function serveBuild() {
   writeFileSync(join(dir, 'assets', 'index-1a2b3c.js'), 'export {}');
   writeFileSync(join(dir, 'robots.txt'), 'User-agent: *');
   const app = vi.fn(async () => new Response('<html></html>'));
-  const serve = withStaticAssets(dir, app);
+  const serve = withStaticAssets({ dir, hashedPrefix: '/assets/' }, app);
   return { app, get: (path: string) => serve(new Request(`http://localhost${path}`)) };
 }
 

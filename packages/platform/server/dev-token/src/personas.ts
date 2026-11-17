@@ -1,3 +1,4 @@
+import type { DevTokenConfig } from './config';
 import { mintToken } from './jwt';
 
 export const DEV_PERSONAS: ReadonlyMap<string, { sub: string; role: string }> = new Map([
@@ -9,7 +10,7 @@ export const DEV_PERSONAS: ReadonlyMap<string, { sub: string; role: string }> = 
 ]);
 
 /** A token for one of the client apps' dev personas, or nothing for a name that is none. */
-export function mintPersonaToken(persona: string): string | undefined {
+export function mintPersonaToken(config: DevTokenConfig, persona: string): string | undefined {
   const claims = DEV_PERSONAS.get(persona);
-  return claims && mintToken(claims);
+  return claims && mintToken(config, claims);
 }

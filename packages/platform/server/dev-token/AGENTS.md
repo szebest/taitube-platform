@@ -10,9 +10,9 @@ Instructions for any coding agent working on `packages/platform/server/dev-token
 
 Ed25519 (EdDSA) JWT generator and a local standalone server. Mints the bearer tokens the API and the
 e2e suite authenticate with. The library (`src/jwt.ts`: `mintToken`, `verifyToken`; `src/keys.ts`:
-`getDevKeyPair`, `getDevJwks`, `DEV_KEY_ID`) derives its key pair from a fixed seed; `@vp/adapters` uses
+`getDevKeyPair`, `getDevJwks`) derives its key pair from the seed in a `DevTokenConfig` (`src/config.ts`); `@vp/adapters` uses
 `getDevJwks` for its `DevTokenVerifier`. `src/cli.ts` implements the `mint`, `verify`, `jwks` and `serve`
-commands and `src/main.ts` runs them. `serve` (`src/server.ts`, port 3002 on loopback only, started by the root `pnpm dev`)
+commands; `scripts/dev-token.ts` runs them with this repo's `DEV_TOKEN_CONFIG` (from `@vp/dev-identity`: issuer, audience, key id, seed, product name, routes). `serve` (`src/server.ts`, port 3002 on loopback only, started by the root `pnpm dev`)
 serves the key set and `GET /token?persona=user|creator|creator2|moderator|admin`, the token of a demo persona
 (`src/personas.ts`), which the client apps' persona switcher signs in with when a build sets
 `VITE_DEMO_PERSONAS=true` (SDD §11).
@@ -41,3 +41,7 @@ pnpm dev-token            # from the repo root
 pnpm --filter @kit/dev-token typecheck
 pnpm --filter @kit/dev-token test
 ```
+
+## Tokens and registries
+
+None. A `DevTokenConfig` the caller passes to `mintToken`, `verifyToken`, `getDevJwks`, `serveDevTokens` and `run` carries the issuer, audience, key id, seed, product name and routes.

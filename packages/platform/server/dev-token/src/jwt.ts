@@ -1,5 +1,6 @@
 import * as crypto from 'node:crypto';
-import { DEV_KEY_ID, getDevKeyPair } from './keys';
+import type { DevTokenConfig } from './config';
+import { getDevKeyPair } from './keys';
 
 export interface MintTokenOptions {
   sub?: string;
@@ -58,13 +59,13 @@ function parseTtlSeconds(ttl: string | number | undefined): number {
   }
 }
 
-export function mintToken(options: MintTokenOptions = {}): string {
+export function mintToken(config: DevTokenConfig, options: MintTokenOptions = {}): string {
   const {
     sub = '00000000-0000-7000-8000-000000000001',
     role = 'user',
     ttl = '8h',
-    iss = 'vp-dev',
-    aud = 'vp-api',
+    iss = config.issuer,
+    aud = config.audience,
     seed,
   } = options;
 
@@ -75,7 +76,7 @@ export function mintToken(options: MintTokenOptions = {}): string {
   const header = {
     alg: 'EdDSA',
     typ: 'JWT',
-    kid: DEV_KEY_ID,
+    kid: config.keyId,
   };
 
   const payload: TokenPayload = {
@@ -91,27 +92,51 @@ export function mintToken(options: MintTokenOptions = {}): string {
   const encPayload = Buffer.from(JSON.stringify(payload)).toString('base64url');
   const data = `${encHeader}.${encPayload}`;
 
-  const { privateKey } = getDevKeyPair(seed);
+  const { privateKey } = getDevKeyPair(config, seed);
   const sig = crypto.sign(null, Buffer.from(data), privateKey).toString('base64url');
 
   return `${data}.${sig}`;
 }
 
-export function verifyToken(token: string, options: VerifyTokenOptions = {}): TokenPayload {
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function isTokenPayload(value: unknown): value is TokenPayload {
+  return (
+    isRecord(value) &&
+    typeof value.sub === 'string' &&
+    typeof value.role === 'string' &&
+    typeof value.iss === 'string' &&
+    typeof value.aud === 'string' &&
+    typeof value.iat === 'number' &&
+    typeof value.exp === 'number'
+  );
+}
+
+function decodeSegment(segment: string): unknown {
+  return JSON.parse(Buffer.from(segment, 'base64url').toString('utf-8'));
+}
+
+export function verifyToken(
+  config: DevTokenConfig,
+  token: string,
+  options: VerifyTokenOptions = {}
+): TokenPayload {
   const parts = token.split('.');
-  if (parts.length !== 3) {
+  const [encHeader, encPayload, encSig] = parts;
+  if (parts.length !== 3 || !encHeader || !encPayload || !encSig) {
     throw new Error('Invalid JWT format: expected 3 dot-separated segments');
   }
 
-  const [encHeader, encPayload, encSig] = parts as [string, string, string];
-  const headerJson = Buffer.from(encHeader, 'base64url').toString('utf-8');
-  const header = JSON.parse(headerJson) as { alg?: string; typ?: string; kid?: string };
+  const header = decodeSegment(encHeader);
+  const alg = isRecord(header) ? header.alg : undefined;
 
-  if (header.alg !== 'EdDSA') {
-    throw new Error(`Unsupported JWT algorithm: expected EdDSA, got "${header.alg}"`);
+  if (alg !== 'EdDSA') {
+    throw new Error(`Unsupported JWT algorithm: expected EdDSA, got "${alg}"`);
   }
 
-  const { publicKey } = getDevKeyPair(options.seed);
+  const { publicKey } = getDevKeyPair(config, options.seed);
   const data = `${encHeader}.${encPayload}`;
   const sigBytes = Buffer.from(encSig, 'base64url');
 
@@ -120,15 +145,17 @@ export function verifyToken(token: string, options: VerifyTokenOptions = {}): To
     throw new Error('JWT signature verification failed');
   }
 
-  const payloadJson = Buffer.from(encPayload, 'base64url').toString('utf-8');
-  const payload = JSON.parse(payloadJson) as TokenPayload;
+  const payload = decodeSegment(encPayload);
+  if (!isTokenPayload(payload)) {
+    throw new Error('Invalid JWT payload: missing sub, role, iss, aud, iat or exp');
+  }
 
-  const expectedIss = options.iss ?? 'vp-dev';
+  const expectedIss = options.iss ?? config.issuer;
   if (payload.iss !== expectedIss) {
     throw new Error(`Invalid token issuer: expected "${expectedIss}", got "${payload.iss}"`);
   }
 
-  const expectedAud = options.aud ?? 'vp-api';
+  const expectedAud = options.aud ?? config.audience;
   if (payload.aud !== expectedAud) {
     throw new Error(`Invalid token audience: expected "${expectedAud}", got "${payload.aud}"`);
   }

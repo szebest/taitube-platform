@@ -10,6 +10,10 @@ const MODE_PALETTES = [
   { mode: 'oled', palette: 'categorical-dark' },
 ] as const satisfies readonly { mode: ThemeMode; palette: keyof ResolvedTheme['dataviz'] }[];
 
+const SERIES_GROUND = 'surface';
+
+const seriesName = (index: number) => `series ${index + 1}`;
+
 type LabelledPair = Readonly<{
   label: string;
   foreground: string;
@@ -31,9 +35,9 @@ export const checkThemeContrast = (
   MODE_PALETTES.flatMap(({ mode, palette }) => {
     const roles = mode === 'oled' ? { ...color.dark, ...color.oled } : color[mode];
     const series = dataviz[palette].map((foreground, index) => ({
-      label: `series ${index + 1} on surface`,
+      label: `${seriesName(index)} on ${SERIES_GROUND}`,
       foreground,
-      background: roles.surface,
+      background: roles[SERIES_GROUND],
       floor: NON_TEXT_FLOOR,
     }));
     return [

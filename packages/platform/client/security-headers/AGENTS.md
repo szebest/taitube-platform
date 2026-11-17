@@ -18,8 +18,8 @@ layer T2 (it depends on `@kit/result`).
   and every request that is not a `GET` or `HEAD`, the writes through the app's `/api` proxy among them, then
   the headers; every app's `src/start.ts` hands it to `createStart` ahead of `sessionMiddleware`.
 
-- `withStaticAssets(dir, app)`: what an app's `src/server.ts` wraps its Start `fetch` in. It serves the client build, the
-  content-hashed `/assets/` with `Cache-Control: max-age=31536000, immutable` and everything else (the service worker,
+- `withStaticAssets({ dir, hashedPrefix }, app)`: what an app's `src/server.ts` wraps its Start `fetch` in. It serves the client build, the
+  content-hashed files under `hashedPrefix` (the app names it, for example `/assets/`) with `Cache-Control: max-age=31536000, immutable` and everything else (the service worker,
   the offline page) with none, and hands any request with no file to the app.
 
 ## What does not belong here

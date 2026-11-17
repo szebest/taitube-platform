@@ -1,5 +1,6 @@
 import type { Token } from '@kit/di';
 import { type Result, err, fromPromise, ignore, isErr, ok } from '@kit/result';
+import { type Cell, TokenCells } from './token-cells';
 
 export interface Lifecycle<T> {
   start?: (value: T) => Promise<Result<void, unknown>>;
@@ -40,10 +41,13 @@ type Factory<T> = (c: Container) => T;
 
 type Key = { readonly name: string };
 
+type Started = () => Promise<Result<void, unknown>>;
+type Disposed = () => Promise<Result<void, unknown> | void> | Result<void, unknown> | void;
+
 interface Constructed {
   readonly name: string;
-  readonly value: unknown;
-  readonly lifecycle: Lifecycle<unknown> | undefined;
+  readonly start: Started | undefined;
+  readonly dispose: Disposed | undefined;
 }
 
 const toCause = (cause: unknown): unknown => cause;
@@ -51,13 +55,22 @@ const toCause = (cause: unknown): unknown => cause;
 const AsyncFunction = (async () => {}).constructor;
 
 function isThenable(value: unknown): boolean {
-  return typeof (value as { then?: unknown } | null)?.then === 'function';
+  return value instanceof Promise;
+}
+
+function bind<T>(name: string, value: T, lifecycle: Lifecycle<T> | undefined): Constructed {
+  const { start, dispose } = lifecycle ?? {};
+  return {
+    name,
+    start: start && (() => start(value)),
+    dispose: dispose && (() => dispose(value)),
+  };
 }
 
 export class Container {
-  private readonly providers = new Map<Key, [Factory<unknown>, Lifecycle<unknown>?]>();
-  private readonly overrides = new Map<Key, unknown>();
-  private readonly values = new Map<Key, unknown>();
+  private readonly providers = new TokenCells();
+  private readonly overrides = new TokenCells();
+  private readonly resolved = new Set<Key>();
   private readonly constructed: Constructed[] = [];
   private readonly path: Key[] = [];
   private disposal: Promise<Result<void, ShutdownFailed>> | undefined;
@@ -70,36 +83,23 @@ export class Container {
       throw new Error(`${t.name}: a factory is synchronous; I/O belongs in its start()`);
     }
     this.refuseResolved(t, 'provide');
-    this.providers.set(t, [make, lifecycle as Lifecycle<unknown> | undefined]);
+    this.providers.set(t, this.lazily(t, make, lifecycle));
     return this;
   }
 
   override<T>(t: Token<T>, value: T): this {
     this.refuseResolved(t, 'override');
-    this.overrides.set(t, value);
+    this.overrides.set(t, { value });
     return this;
   }
 
   get<T>(t: Token<T>): T {
-    if (this.values.has(t)) return this.values.get(t) as T;
-    if (this.overrides.has(t)) return this.remember(t, this.overrides.get(t));
-    if (this.path.includes(t)) {
-      throw new Error(`Cycle: ${[...this.path, t].map((step) => step.name).join(' → ')}`);
-    }
+    const cell = this.overrides.get(t) ?? this.providers.get(t);
+    if (!cell) throw new Error(`No provider for ${t.name}`);
 
-    const provider = this.providers.get(t);
-    if (!provider) throw new Error(`No provider for ${t.name}`);
-
-    this.path.push(t);
-    let value: T;
-    try {
-      value = this.build(t, provider[0]);
-    } finally {
-      this.path.pop();
-    }
-
-    this.constructed.push({ name: t.name, value, lifecycle: provider[1] });
-    return this.remember(t, value);
+    const { value } = cell;
+    this.resolved.add(t);
+    return value;
   }
 
   start(): Promise<Result<void, StartupFailed>> {
@@ -123,13 +123,11 @@ export class Container {
   }
 
   private async startAll(): Promise<Result<void, StartupFailed>> {
-    for (const { name, value, lifecycle } of [...this.constructed]) {
+    for (const { name, start } of [...this.constructed]) {
       if (this.disposal) return err({ type: 'interrupted' });
-
-      const start = lifecycle?.start;
       if (!start) continue;
 
-      const started = await fromPromise(() => start(value), toCause);
+      const started = await fromPromise(start, toCause);
       const failure = isErr(started) ? started.error : !started.value.ok && started.value.error;
       if (failure !== false) {
         this.disposal ??= this.disposeAll();
@@ -148,12 +146,11 @@ export class Container {
   private async disposeAll(): Promise<Result<void, ShutdownFailed>> {
     const failed: TokenFailed[] = [];
 
-    for (const { name, value, lifecycle } of [...this.constructed].reverse()) {
-      const dispose = lifecycle?.dispose;
+    for (const { name, dispose } of [...this.constructed].reverse()) {
       if (!dispose) continue;
 
       this.pendingDisposer = name;
-      const settled = await fromPromise(async () => dispose(value), toCause);
+      const settled = await fromPromise(async () => dispose(), toCause);
       this.pendingDisposer = undefined;
 
       if (isErr(settled)) failed.push({ token: name, cause: settled.error });
@@ -165,21 +162,47 @@ export class Container {
     return failed.length === 0 ? ok() : err({ failed });
   }
 
-  private build<T>(t: Token<T>, make: Factory<unknown>): T {
+  private lazily<T, V extends T>(
+    t: Token<T>,
+    make: Factory<V>,
+    lifecycle: Lifecycle<V> | undefined
+  ): Cell<V> {
+    let built: Cell<V> | undefined;
+    const construct = (): V => {
+      if (this.path.includes(t)) {
+        throw new Error(`Cycle: ${[...this.path, t].map((step) => step.name).join(' → ')}`);
+      }
+
+      this.path.push(t);
+      let value: V;
+      try {
+        value = this.build(t, make);
+      } finally {
+        this.path.pop();
+      }
+
+      this.constructed.push(bind(t.name, value, lifecycle));
+      return value;
+    };
+
+    return {
+      get value() {
+        built ??= { value: construct() };
+        return built.value;
+      },
+    };
+  }
+
+  private build<V>(t: Key, make: Factory<V>): V {
     const built = make(this);
     if (isThenable(built)) {
       throw new Error(`${t.name}: a factory returned a promise; I/O belongs in its start()`);
     }
-    return built as T;
-  }
-
-  private remember<T>(t: Token<T>, value: unknown): T {
-    this.values.set(t, value);
-    return value as T;
+    return built;
   }
 
   private refuseResolved(t: Key, action: string): void {
-    if (this.values.has(t)) {
+    if (this.resolved.has(t)) {
       throw new Error(`${t.name} is already resolved; ${action} it before the first get()`);
     }
   }

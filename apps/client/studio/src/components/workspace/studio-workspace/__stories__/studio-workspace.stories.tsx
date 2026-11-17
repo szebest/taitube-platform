@@ -23,7 +23,7 @@ function Workspace({ uploading = false }: { uploading?: boolean }) {
     <>
       <StudioWorkspace.Nav>
         <a href="/" aria-label="Taitube Studio" className="flex h-header items-center px-inline">
-          <Logo />
+          <Logo name="Taitube" />
         </a>
         {NAV.map(({ icon, label, href }) => (
           <StudioWorkspace.NavItem

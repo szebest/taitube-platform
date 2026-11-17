@@ -58,7 +58,7 @@ const install = (host: StyleHost, { id }: Theme, css: string) =>
     },
     (cause): ThemeNotInstalled => ({
       code: ErrorCodes.INTERNAL,
-      message: `the ${id} stylesheet could not be installed: ${String(cause)}`,
+      message: `${id}: ${String(cause)}`,
     })
   );
 

@@ -26,7 +26,13 @@ const renderTelemetry = async ({ inServer = false, ...overrides }: TelemetryOpti
   const { tracesUrl } = { tracesUrl: TRACES_URL, ...overrides };
 
   function Root() {
-    useWebTelemetry({ app: 'studio', apiBaseUrl: 'http://localhost:3000', tracesUrl });
+    useWebTelemetry({
+      app: 'studio',
+      serviceName: 'taitube-studio',
+      apiBaseUrl: 'http://localhost:3000',
+      vitals: { path: '/v1/telemetry/vitals', maxBatchSize: 32 },
+      tracesUrl,
+    });
 
     return <Outlet />;
   }
@@ -68,6 +74,7 @@ describe('useWebTelemetry', () => {
     expect(startWebVitals).toHaveBeenCalledExactlyOnceWith({
       app: 'studio',
       vitalsUrl: 'http://localhost:3000/v1/telemetry/vitals',
+      maxBatchSize: 32,
       routeId: expect.any(Function),
     });
     expect(vi.mocked(startWebVitals).mock.lastCall?.[0].routeId()).toBe('/watch/$videoId');

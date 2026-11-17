@@ -1,12 +1,5 @@
 import { fromPromise } from '@kit/result';
-import {
-  type ComponentProps,
-  type ComponentType,
-  createElement,
-  lazy,
-  type ReactNode,
-  Suspense,
-} from 'react';
+import { type ComponentType, createElement, lazy, type ReactNode, Suspense } from 'react';
 import { isModuleImportFailure, watchPreloadErrors } from './module-import-failure';
 import { moduleUrlOf, retryUrl } from './module-import-url';
 import { reloadOnceForStaleDeploy } from './stale-deploy';
@@ -83,7 +76,7 @@ export function lazyComponent<TModule, TProps extends object>(
     pick,
     fallback = null,
     retry = DEFAULT_RETRY,
-    importUrl = (url) => import(/* @vite-ignore */ url) as Promise<TModule>,
+    importUrl = (url) => import(/* @vite-ignore */ url),
   }: LazyComponentOptions<TModule, TProps>
 ): LazyComponent<TProps> {
   let loading: Promise<ComponentType<TProps>> | undefined;
@@ -112,13 +105,12 @@ export function lazyComponent<TModule, TProps extends object>(
     return loading;
   };
 
-  const deferredFor = () => lazy(() => start().then((component) => ({ default: component })));
+  const deferredFor = (): ComponentType<TProps> =>
+    lazy(() => start().then((component) => ({ default: component })));
   let Deferred = deferredFor();
 
   function LazyBoundary(props: TProps) {
-    const content = loaded
-      ? createElement(loaded, props)
-      : createElement(Deferred, props as ComponentProps<typeof Deferred>);
+    const content = loaded ? createElement(loaded, props) : createElement(Deferred, props);
     return fallback === false ? content : <Suspense fallback={fallback}>{content}</Suspense>;
   }
 

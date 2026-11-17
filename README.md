@@ -134,6 +134,7 @@ taitube-platform/
 │       ├── db/                      # Drizzle schema, client, migrations and migrate/seed functions
 │       ├── demo/                    # CLI behind make demo: starts the stack, seeds a deterministic demo world through the API
 │       ├── deploy/                  # Typed environment files and pnpm envctl, the typed half of scripts/deploy.sh
+│       ├── dev-identity/            # This repo's dev token issuer, audience, key and the bound mint and verify
 │       ├── env-schema/              # Zod environment schema, AppConfig and toAppConfig
 │       ├── events/                  # SSE envelope, pub/sub channels and Redis cache keys
 │       ├── ffmpeg/                  # FFmpeg/ffprobe runners, ladder selection, master playlist, thumbnails

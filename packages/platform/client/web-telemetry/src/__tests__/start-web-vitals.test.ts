@@ -39,7 +39,12 @@ const startOnPage = ({
   vi.stubGlobal('window', window);
   vi.stubGlobal('navigator', { sendBeacon });
 
-  startWebVitals({ app: 'web', vitalsUrl: VITALS_URL, routeId: () => page.route });
+  startWebVitals({
+    app: 'web',
+    vitalsUrl: VITALS_URL,
+    maxBatchSize: 32,
+    routeId: () => page.route,
+  });
 
   const report = (name: Metric['name'], value: number) =>
     reporters.get(name)?.({ name, value } as Metric);

@@ -1,5 +1,6 @@
 import { TOKEN_GROUPS } from '@kit/design-tokens';
 import { requestHandler } from '@tanstack/react-start/server';
+import { FIXTURE_APPEARANCE_STORAGE } from '../../__tests__/appearance-storage-fixture';
 import {
   type AppearancePreference,
   AppearancePreferenceSchema,
@@ -20,7 +21,9 @@ const preference = (overrides: Partial<AppearancePreference> = {}): AppearancePr
 });
 
 async function storedFor(cookie: string): Promise<StoredAppearance> {
-  const answer = requestHandler(async () => Response.json(requestAppearancePreference()));
+  const answer = requestHandler(async () =>
+    Response.json(requestAppearancePreference(FIXTURE_APPEARANCE_STORAGE))
+  );
   const response = await answer(new Request('http://localhost:5173/', { headers: { cookie } }), {});
   return response.json();
 }
@@ -57,7 +60,11 @@ describe('@kit/ui: the appearance preference', () => {
     {
       label: 'a schema 2 cookie as it is',
       cookie: appearanceCookie(NOCTURNE_AIRY),
-      stored: { preference: NOCTURNE_AIRY, source: 'appearance' },
+      stored: {
+        preference: NOCTURNE_AIRY,
+        source: 'appearance',
+        storage: FIXTURE_APPEARANCE_STORAGE,
+      },
     },
     {
       label: 'a theme and a set this app does not offer as they are, dropping an unknown group',
@@ -65,6 +72,7 @@ describe('@kit/ui: the appearance preference', () => {
       stored: {
         preference: { ...ELSEWHERE, overrides: { spacing: 'roomy', radius: 'soft' } },
         source: 'appearance',
+        storage: FIXTURE_APPEARANCE_STORAGE,
       },
     },
     {
@@ -77,6 +85,7 @@ describe('@kit/ui: the appearance preference', () => {
       stored: {
         preference: { ...NOCTURNE_AIRY, theme: null, overrides: { radius: 'soft' } },
         source: 'appearance',
+        storage: FIXTURE_APPEARANCE_STORAGE,
       },
     },
     {
@@ -89,32 +98,53 @@ describe('@kit/ui: the appearance preference', () => {
       stored: {
         preference: { ...NOCTURNE_AIRY, customGround: '#101820', customAccent: '#3366cc' },
         source: 'appearance',
+        storage: FIXTURE_APPEARANCE_STORAGE,
       },
     },
     {
       label: 'colours that are not #rrggbb as no built theme',
       cookie: appearanceCookie({ ...NOCTURNE_AIRY, customGround: 'dark', customAccent: '#36c' }),
-      stored: { preference: NOCTURNE_AIRY, source: 'appearance' },
+      stored: {
+        preference: NOCTURNE_AIRY,
+        source: 'appearance',
+        storage: FIXTURE_APPEARANCE_STORAGE,
+      },
     },
     {
       label: 'a vp.theme cookie from before schema 2 as the default theme in that mode',
       cookie: 'vp.theme=light',
-      stored: { preference: preference({ mode: 'light' }), source: 'legacy' },
+      stored: {
+        preference: preference({ mode: 'light' }),
+        source: 'legacy',
+        storage: FIXTURE_APPEARANCE_STORAGE,
+      },
     },
     {
       label: 'a cookie that is not JSON as the vp.theme beside it',
       cookie: 'vp.appearance=%7Bnot-json; vp.theme=dark',
-      stored: { preference: preference({ mode: 'dark' }), source: 'legacy' },
+      stored: {
+        preference: preference({ mode: 'dark' }),
+        source: 'legacy',
+        storage: FIXTURE_APPEARANCE_STORAGE,
+      },
     },
     {
       label: 'another schema as the defaults',
       cookie: appearanceCookie({ ...NOCTURNE_AIRY, schema: 1 }),
-      stored: { preference: DEFAULT_APPEARANCE, source: 'none' },
+      stored: {
+        preference: DEFAULT_APPEARANCE,
+        source: 'none',
+        storage: FIXTURE_APPEARANCE_STORAGE,
+      },
     },
     {
       label: 'no cookie as the defaults',
       cookie: '',
-      stored: { preference: DEFAULT_APPEARANCE, source: 'none' },
+      stored: {
+        preference: DEFAULT_APPEARANCE,
+        source: 'none',
+        storage: FIXTURE_APPEARANCE_STORAGE,
+      },
     },
   ])('reads $label', async ({ cookie, stored }) => {
     expect(await storedFor(cookie)).toEqual(stored);
@@ -124,7 +154,7 @@ describe('@kit/ui: the appearance preference', () => {
     const document = { cookie: '' };
     vi.stubGlobal('document', document);
 
-    saveAppearancePreference(NOCTURNE_AIRY, 'taitube.local');
+    saveAppearancePreference(NOCTURNE_AIRY, FIXTURE_APPEARANCE_STORAGE, 'taitube.local');
 
     expect(document.cookie).toBe(
       `${appearanceCookie(NOCTURNE_AIRY)}; Max-Age=31536000; Domain=taitube.local; Path=/; SameSite=Lax`
@@ -132,6 +162,7 @@ describe('@kit/ui: the appearance preference', () => {
     expect(await storedFor(appearanceCookie(NOCTURNE_AIRY))).toEqual({
       preference: NOCTURNE_AIRY,
       source: 'appearance',
+      storage: FIXTURE_APPEARANCE_STORAGE,
     });
   });
 
@@ -140,7 +171,7 @@ describe('@kit/ui: the appearance preference', () => {
     vi.stubGlobal('document', document);
     const { preference: read } = await storedFor(appearanceCookie(ELSEWHERE));
 
-    saveAppearancePreference(read);
+    saveAppearancePreference(read, FIXTURE_APPEARANCE_STORAGE);
 
     expect(document.cookie).toContain(
       appearanceCookie({ ...ELSEWHERE, overrides: { spacing: 'roomy', radius: 'soft' } })

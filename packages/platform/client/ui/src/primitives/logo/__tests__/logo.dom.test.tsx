@@ -4,7 +4,7 @@ import { variantNames } from '../../../lib/variant-names';
 import { Logo, type LogoProps } from '../logo';
 import { logoStyles } from '../logo.variants';
 
-const renderLogo = (props: LogoProps = {}) => render(<Logo {...props} />);
+const renderLogo = (props: Partial<LogoProps> = {}) => render(<Logo name="Taitube" {...props} />);
 
 describe('@kit/ui: Logo', () => {
   it.each(variantNames(logoStyles.variants.variant))(
@@ -19,7 +19,7 @@ describe('@kit/ui: Logo', () => {
   it('steps aside for the home link that names it', () => {
     render(
       <a href="/" aria-label="Taitube home">
-        <Logo aria-hidden="true" tone="accent" />
+        <Logo name="Taitube" aria-hidden="true" tone="accent" />
       </a>
     );
 

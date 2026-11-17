@@ -1,5 +1,6 @@
 import { AppearanceProvider, DEFAULT_APPEARANCE } from '@kit/ui';
 import type { Channel, ChannelSpotlight } from '@vp/api-contracts';
+import { APPEARANCE_COOKIES } from '@vp/domain/settings';
 import { createQueryClient, myVideosQueryOptions } from '@vp/queries';
 import { api, CHANNEL_ID, channel, feedPages, videoSummary } from '@vp/web-testing';
 import { renderPage } from '@vp/web-testing/server';
@@ -17,7 +18,11 @@ function viewerWithAccent(accent: string) {
   return ({ children }: PropsWithChildren) => (
     <ToastedProviders>
       <AppearanceProvider
-        stored={{ preference: { ...DEFAULT_APPEARANCE, accent }, source: 'appearance' }}
+        stored={{
+          preference: { ...DEFAULT_APPEARANCE, accent },
+          source: 'appearance',
+          storage: APPEARANCE_COOKIES,
+        }}
       >
         {children}
       </AppearanceProvider>

@@ -1,5 +1,5 @@
-import type { WebVitalsBatch } from '@vp/api-contracts';
 import { sendJsonBeacon } from '../send-json-beacon';
+import type { WebVitalsBatch } from '../vitals-queue';
 
 const URL = 'http://localhost:3000/v1/telemetry/vitals';
 const BATCH: WebVitalsBatch = { app: 'web', vitals: [{ name: 'INP', value: 96, route: '/' }] };

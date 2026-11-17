@@ -1,20 +1,21 @@
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { runEntrypoint } from '@vp/testing/run-entrypoint';
+import { runEntrypoint } from '../../packages/server/testing/src/run-entrypoint';
 
-const ENTRYPOINT = path.resolve(import.meta.dirname, '../main.ts');
+const ENTRYPOINT = path.resolve(import.meta.dirname, '../compose-autoscaler.ts');
 
 function autoscaler(...argv: string[]) {
   return runEntrypoint(ENTRYPOINT, argv, { PATH: process.env.PATH });
 }
 
-describe('packages/compose-autoscaler: pnpm compose-autoscaler', () => {
+describe('scripts: pnpm compose-autoscaler', () => {
   it('runs the command it is given', () => {
     const help = autoscaler('--help');
 
     expect(help.status).toBe(0);
     expect(help.stdout).toContain('pnpm compose-autoscaler [options]');
+    expect(help.stdout).toContain('http://localhost:9464/metrics');
   });
 
   it('logs why it could not start and exits 1', () => {

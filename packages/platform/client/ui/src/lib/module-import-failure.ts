@@ -1,11 +1,9 @@
 const IMPORT_MESSAGE = /dynamically imported module|importing a module script failed/i;
-const PRELOAD_FAILURE = Symbol.for('vp.preload-failure');
+const PRELOAD_FAILURE = Symbol('preload-failure');
 
 function markPreloadFailure(event: Event): void {
-  const { payload } = event as Event & { payload?: unknown };
-  if (typeof payload === 'object' && payload !== null) {
-    Reflect.set(payload, PRELOAD_FAILURE, true);
-  }
+  const payload: unknown = Reflect.get(event, 'payload');
+  if (typeof payload === 'object' && payload !== null) Reflect.set(payload, PRELOAD_FAILURE, true);
 }
 
 /** Vite reports a failed chunk preload on `window`; its error is a module import failure whatever it says. */

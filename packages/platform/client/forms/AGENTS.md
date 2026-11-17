@@ -12,8 +12,8 @@ layer T4: above `@kit/ui` (T3), whose primitives its fields render.
 - `validateWith(rule)`: a field validator over a `@vp/validation` rule, so the browser runs the check the API
   runs, answering the failure's message or nothing.
 
-The fields render `@kit/ui`'s `Field`, `Input`, `Textarea` and `Select` and nothing else: no CSS module. `FileField` styles its dropzone with token classes, which `@kit/ui`'s stylesheet scans through its
-`@source` list.
+The fields render `@kit/ui`'s `Field`, `Input`, `Textarea` and `Select` and nothing else: no CSS module. `FileField` styles its dropzone with token classes, which each app's stylesheet scans through its
+`@source` list. `FileField` takes its words as props (`placeholderText`, `selectedText`).
 
 ## What does not belong here
 

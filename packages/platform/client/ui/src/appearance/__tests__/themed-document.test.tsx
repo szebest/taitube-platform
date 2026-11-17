@@ -2,6 +2,7 @@ import { createRootRoute, createRoute, createRouter } from '@tanstack/react-rout
 import { expectOk } from '@vp/testing/result';
 import { serverRender } from '@vp/web-testing/server';
 import type { ReactNode } from 'react';
+import { FIXTURE_APPEARANCE_STORAGE } from '../../__tests__/appearance-storage-fixture';
 import { nocturne } from '../../themes/nocturne';
 import { type AppearancePreference, DEFAULT_APPEARANCE } from '../preference';
 import { registerTheme } from '../register-theme';
@@ -16,7 +17,11 @@ const renderDocument = (
   const rootRoute = createRootRoute({
     shellComponent: ({ children }: { children: ReactNode }) => (
       <ThemedDocument
-        stored={{ preference: { ...DEFAULT_APPEARANCE, ...preference }, source: 'appearance' }}
+        stored={{
+          preference: { ...DEFAULT_APPEARANCE, ...preference },
+          source: 'appearance',
+          storage: FIXTURE_APPEARANCE_STORAGE,
+        }}
         lang="en"
         dir="ltr"
         {...props}

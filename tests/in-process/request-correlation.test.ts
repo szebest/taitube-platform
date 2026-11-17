@@ -1,7 +1,6 @@
 import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { mintToken } from '@kit/dev-token';
 import { LogContext, createLogger } from '@kit/logger';
 import {
   InMemoryJobQueue,
@@ -16,6 +15,7 @@ import { expectOk } from '@vp/testing/result';
 import { speechTools } from '@vp/whisper';
 import { composeApp } from '../../apps/server/api/src/app';
 import { composeWorker } from '../../apps/server/worker/src/runner';
+import { mintToken } from '../../packages/server/dev-identity/src/index';
 
 const OWNER_ID = '0190a000-0000-7000-8000-0000000000c1';
 const RAW_BUCKET = 'raw';

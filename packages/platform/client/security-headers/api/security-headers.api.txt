@@ -12,4 +12,8 @@ export function requestNonce(): string | undefined
 export const securityHeadersMiddleware: RequestMiddlewareAfterServer<{}, undefined, { nonce: string; }>
 
 ## @kit/security-headers/static-assets
-export function withStaticAssets(dir: string, app: Fetch): Fetch
+export interface StaticAssetsOptions {
+    dir: string;
+    hashedPrefix: string;
+}
+export function withStaticAssets({ dir, hashedPrefix }: StaticAssetsOptions, app: Fetch): Fetch

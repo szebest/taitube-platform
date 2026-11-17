@@ -1,4 +1,4 @@
-import { mintToken } from '@kit/dev-token';
+import { mintToken } from '@vp/dev-identity';
 import type { WatchPartyPermission, WatchPartyVisibility } from '@vp/domain';
 import { DEFAULT_PREFERENCES, type NotificationPreferences } from '@vp/domain/settings';
 import { NOTIFY_PARTY_INVITE } from '@vp/job-contracts';

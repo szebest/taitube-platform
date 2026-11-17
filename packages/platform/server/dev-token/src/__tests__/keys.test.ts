@@ -1,5 +1,9 @@
 import * as crypto from 'node:crypto';
-import { DEV_KEY_ID, getDevJwks, getDevKeyPair } from '../keys';
+import { getDevJwks as jwks, getDevKeyPair as keyPair } from '../keys';
+import { TEST_CONFIG } from './test-config';
+
+const getDevJwks = () => jwks(TEST_CONFIG);
+const getDevKeyPair = (seed?: string) => keyPair(TEST_CONFIG, seed);
 
 describe('dev-token: keys', () => {
   it('publishes one Ed25519 signing key under the dev key id', () => {
@@ -11,8 +15,8 @@ describe('dev-token: keys', () => {
         crv: 'Ed25519',
         alg: 'EdDSA',
         use: 'sig',
-        kid: DEV_KEY_ID,
-        x: 'RK4aIkyx7UG377h43wCmaUcV4W8yjojQjbrjc2lPU5g',
+        kid: TEST_CONFIG.keyId,
+        x: '-jYX7f-9uJyxScqozBHRIxU0wiMXooyzzojJR8eFiXc',
       },
     ]);
   });

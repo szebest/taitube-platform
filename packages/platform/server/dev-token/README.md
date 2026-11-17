@@ -1,37 +1,30 @@
-# packages/platform/server/dev-token — EdDSA JWT Issuer & JWKS Provider
+# @kit/dev-token
 
-`dev-token` provides offline, local-first JWT issuance and verification using the **EdDSA (Ed25519)** algorithm. It allows developers, tests, and load test scripts (k6) to authenticate against the API without requiring any external Identity Provider (PRD FR-15, SDD §11).
+Offline EdDSA (Ed25519) JWT issuer, JWKS provider and persona token server for local development. Every function
+takes a `DevTokenConfig`; the package holds no issuer, audience, key id, seed or route of its own.
 
-## Commands
-
-```bash
-# Mint an admin JWT with 8-hour TTL
-pnpm dev-token mint --sub 00000000-0000-7000-8000-000000000001 --role admin --ttl 8h
-
-# Output only the raw JWT string (useful for shell scripting and curl)
-TOKEN=$(pnpm dev-token mint --role admin --raw)
-curl -H "Authorization: Bearer $TOKEN" http://localhost:3000/v1/videos
-
-# Print JWKS JSON
-pnpm dev-token jwks
-
-# Serve the JWKS and the dev persona tokens over HTTP (port 3002 by default; `pnpm dev` starts it)
-pnpm dev-token serve
+```sh
+pnpm add @kit/dev-token
 ```
 
-## Architecture & Design Decision
+Tokens and registries: none. The caller passes a `DevTokenConfig`:
+`{ product, issuer, audience, keyId, seed, routes: { jwks, token } }`.
 
-### JWKS Serving in Development
-As outlined in **SDD §11** and **Ticket 03**:
-- In development (`NODE_ENV=development`), `apps/server/api` serves the dev JWKS directly at `GET /.well-known/jwks.json` on its own port (e.g. `http://localhost:3000/.well-known/jwks.json`), backed by the deterministic Ed25519 key definition from `packages/platform/server/dev-token`.
-- `pnpm dev-token serve` (started by `pnpm dev`, port 3002 on loopback only, clear of Grafana's 3001) serves the same JWKS, and `GET /token?persona=user|creator|admin` answers `{ token }` for the client apps' dev persona switcher (SDD §11). Nothing in a production build calls it.
-- The keypair is deterministically derived from a fixed seed, guaranteeing byte-identical keys across every clone, machine, and CI runner without committing private keys to git.
+```ts
+import { type DevTokenConfig, getDevJwks, mintToken, verifyToken } from '@kit/dev-token';
 
-### Token Claims
-Every minted token contains:
-- `iss`: `vp-dev` (matches `AUTH_ISSUER` default)
-- `aud`: `vp-api` (matches `AUTH_AUDIENCE` default)
-- `sub`: User ID UUID (defaults to dev user `00000000-0000-7000-8000-000000000001`)
-- `role`: Role claim (`user` or `admin`)
-- `iat`: Issued-at UNIX timestamp
-- `exp`: Expiration UNIX timestamp calculated from `--ttl`
+const config: DevTokenConfig = {
+  product: 'acme',
+  issuer: 'acme-dev',
+  audience: 'acme-api',
+  keyId: 'acme-key-1',
+  seed: 'acme-seed',
+  routes: { jwks: ['/jwks.json'], token: '/token' },
+};
+
+const token = mintToken(config, { sub: 'user-1', role: 'admin', ttl: '1h' });
+verifyToken(config, token);
+getDevJwks(config);
+```
+
+`run(config, host)` is the CLI (`mint`, `verify`, `jwks`, `serve`); the app wires it to the process.

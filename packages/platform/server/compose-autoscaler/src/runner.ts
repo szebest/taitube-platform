@@ -1,6 +1,5 @@
 import type { Logger } from '@kit/logger';
 import {
-  DEFAULT_STAGE_CONFIGS,
   type ScalerStageConfig,
   type StageScalingState,
   computeReplicas,
@@ -17,7 +16,7 @@ export interface AutoscalerOptions {
   composeFile?: string;
   dryRun?: boolean;
   pollIntervalMs?: number;
-  stageConfigs?: Record<string, ScalerStageConfig>;
+  stageConfigs: Record<string, ScalerStageConfig>;
   logger: Logger;
   executor: (cmd: string) => Promise<Attempt<unknown>>;
   fetcher: (url: string) => Promise<Attempt<string>>;
@@ -41,7 +40,7 @@ export class ComposeAutoscaler {
     this.composeFile = options.composeFile;
     this.dryRun = options.dryRun ?? false;
     this.pollIntervalMs = options.pollIntervalMs ?? 10_000;
-    this.configs = options.stageConfigs ?? DEFAULT_STAGE_CONFIGS;
+    this.configs = options.stageConfigs;
     this.log = options.logger;
     this.execCmd = options.executor;
     this.fetchMetrics = options.fetcher;

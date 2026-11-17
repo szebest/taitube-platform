@@ -1,4 +1,8 @@
-import { mintToken, verifyToken } from '../jwt';
+import { type MintTokenOptions, mintToken as mint, verifyToken as verify } from '../jwt';
+import { TEST_CONFIG } from './test-config';
+
+const mintToken = (options?: MintTokenOptions) => mint(TEST_CONFIG, options);
+const verifyToken = (token: string) => verify(TEST_CONFIG, token);
 
 const SUB = '11111111-2222-3333-4444-555555555555';
 
@@ -17,19 +21,19 @@ describe('dev-token: jwt', () => {
   it('mints an EdDSA token for the dev key with the dev issuer and audience', () => {
     const [header, payload] = mintToken({ sub: SUB, role: 'admin', ttl: '8h' }).split('.');
 
-    expect(decodeSegment(header)).toEqual({ alg: 'EdDSA', typ: 'JWT', kid: 'vp-dev-key-1' });
+    expect(decodeSegment(header)).toEqual({ alg: 'EdDSA', typ: 'JWT', kid: 'acme-key-1' });
     expect(decodeSegment(payload)).toMatchObject({
       sub: SUB,
       role: 'admin',
-      iss: 'vp-dev',
-      aud: 'vp-api',
+      iss: 'acme-dev',
+      aud: 'acme-api',
     });
   });
 
   it('verifies a token it minted', () => {
     const payload = verifyToken(mintToken({ sub: SUB, role: 'admin' }));
 
-    expect(payload).toMatchObject({ sub: SUB, role: 'admin', iss: 'vp-dev', aud: 'vp-api' });
+    expect(payload).toMatchObject({ sub: SUB, role: 'admin', iss: 'acme-dev', aud: 'acme-api' });
   });
 
   it.each([

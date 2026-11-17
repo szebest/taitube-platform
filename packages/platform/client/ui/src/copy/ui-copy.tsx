@@ -150,9 +150,16 @@ export type UiCopyKey = (typeof UI_COPY_KEYS)[number];
 
 export type UiCopy = Readonly<Record<UiCopyKey, string>>;
 
+const isComplete = (copy: Record<string, unknown>): copy is UiCopy =>
+  UI_COPY_KEYS.every((key) => typeof copy[key] === 'string');
+
 /** Every key's word, from the app's catalogue: one lookup, so a new key is never left out. */
 export function uiCopyFrom(word: (key: UiCopyKey) => string): UiCopy {
-  return Object.fromEntries(UI_COPY_KEYS.map((key) => [key, word(key)])) as UiCopy;
+  const copy = Object.fromEntries(UI_COPY_KEYS.map((key) => [key, word(key)]));
+  if (!isComplete(copy)) {
+    throw new TypeError('uiCopyFrom: the lookup answered a key with something other than a string');
+  }
+  return copy;
 }
 
 const UiCopyContext = createContext<UiCopy | undefined>(undefined);

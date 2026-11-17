@@ -1,12 +1,13 @@
-import { MAX_WEB_VITALS_PER_BATCH, type WebVital } from '@vp/api-contracts';
-import { createVitalsQueue } from '../vitals-queue';
+import { createVitalsQueue, type WebVital } from '../vitals-queue';
+
+const MAX_WEB_VITALS_PER_BATCH = 32;
 
 const LCP: WebVital = { name: 'LCP', value: 1800, route: '/' };
 const CLS: WebVital = { name: 'CLS', value: 0.02, route: '/watch/$videoId' };
 
 const createQueue = () => {
   const send = vi.fn();
-  return { send, queue: createVitalsQueue('studio', send) };
+  return { send, queue: createVitalsQueue('studio', MAX_WEB_VITALS_PER_BATCH, send) };
 };
 
 describe('createVitalsQueue', () => {

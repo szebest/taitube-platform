@@ -631,9 +631,6 @@ importers:
       '@kit/config':
         specifier: workspace:*
         version: link:../../../packages/platform/server/config
-      '@kit/dev-token':
-        specifier: workspace:*
-        version: link:../../../packages/platform/server/dev-token
       '@kit/logger':
         specifier: workspace:*
         version: link:../../../packages/platform/server/logger
@@ -661,6 +658,9 @@ importers:
       '@vp/db':
         specifier: workspace:*
         version: link:../../../packages/server/db
+      '@vp/dev-identity':
+        specifier: workspace:*
+        version: link:../../../packages/server/dev-identity
       '@vp/domain':
         specifier: workspace:*
         version: link:../../../packages/universal/domain
@@ -1298,18 +1298,9 @@ importers:
       '@kit/ui':
         specifier: workspace:*
         version: link:../ui
-      '@tanstack/react-form':
-        specifier: ^1.33.5
-        version: 1.33.5(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       '@vp/errors':
         specifier: workspace:*
         version: link:../../../universal/errors
-      file-selector:
-        specifier: ^5.0.1
-        version: 5.0.1
-      react-dropzone:
-        specifier: ^20.1.2
-        version: 20.1.2(@types/react@19.3.0)(react@19.3.0)
     devDependencies:
       '@kit/tsconfig':
         specifier: workspace:*
@@ -1317,6 +1308,9 @@ importers:
       '@kit/vite-preset':
         specifier: workspace:*
         version: link:../../server/vite-preset
+      '@tanstack/react-form':
+        specifier: ^1.33.5
+        version: 1.33.5(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       '@testing-library/dom':
         specifier: ^10.4.2
         version: 10.4.2
@@ -1344,6 +1338,9 @@ importers:
       '@vp/web-testing':
         specifier: workspace:*
         version: link:../../../client/web-testing
+      file-selector:
+        specifier: ^5.0.1
+        version: 5.0.1
       jsdom:
         specifier: ^30.1.2
         version: 30.1.2
@@ -1353,6 +1350,9 @@ importers:
       react-dom:
         specifier: ^19.3.0
         version: 19.3.0(react@19.3.0)
+      react-dropzone:
+        specifier: ^20.1.2
+        version: 20.1.2(@types/react@19.3.0)(react@19.3.0)
       rimraf:
         specifier: ^6.1.3
         version: 6.1.3
@@ -1426,9 +1426,6 @@ importers:
       '@kit/result':
         specifier: workspace:*
         version: link:../../universal/result
-      srvx:
-        specifier: ^1.0.5
-        version: 1.0.5
     devDependencies:
       '@kit/tsconfig':
         specifier: workspace:*
@@ -1442,6 +1439,9 @@ importers:
       rimraf:
         specifier: ^6.1.3
         version: 6.1.3
+      srvx:
+        specifier: ^1.0.5
+        version: 1.0.5
       typescript:
         specifier: ^6.0.3
         version: 6.0.3
@@ -1451,6 +1451,19 @@ importers:
 
   packages/platform/client/ui:
     dependencies:
+      '@kit/design-tokens':
+        specifier: workspace:*
+        version: link:../../universal/design-tokens
+      '@kit/result':
+        specifier: workspace:*
+        version: link:../../universal/result
+      '@vp/domain':
+        specifier: workspace:*
+        version: link:../../../universal/domain
+      '@vp/errors':
+        specifier: workspace:*
+        version: link:../../../universal/errors
+    devDependencies:
       '@dnd-kit/core':
         specifier: ^6.3.1
         version: 6.3.1(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
@@ -1472,37 +1485,6 @@ importers:
       '@fontsource-variable/newsreader':
         specifier: ^5.3.0
         version: 5.3.0
-      '@kit/design-tokens':
-        specifier: workspace:*
-        version: link:../../universal/design-tokens
-      '@kit/result':
-        specifier: workspace:*
-        version: link:../../universal/result
-      '@vp/domain':
-        specifier: workspace:*
-        version: link:../../../universal/domain
-      '@vp/errors':
-        specifier: workspace:*
-        version: link:../../../universal/errors
-      cmdk:
-        specifier: ^1.1.1
-        version: 1.1.1(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
-      cookie-es:
-        specifier: ^3.1.1
-        version: 3.1.1
-      lucide-react:
-        specifier: ^1.54.0
-        version: 1.54.0(@types/react@19.3.0)(react@19.3.0)
-      radix-ui:
-        specifier: ^1.7.0
-        version: 1.7.0(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
-      tailwind-variants:
-        specifier: ^3.3.1
-        version: 3.3.1(tailwindcss@4.3.3)
-      zod:
-        specifier: ^4.6.5
-        version: 4.6.5
-    devDependencies:
       '@kit/tsconfig':
         specifier: workspace:*
         version: link:../../universal/tsconfig
@@ -1545,9 +1527,21 @@ importers:
       '@vp/web-testing':
         specifier: workspace:*
         version: link:../../../client/web-testing
+      cmdk:
+        specifier: ^1.1.1
+        version: 1.1.1(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      cookie-es:
+        specifier: ^3.1.1
+        version: 3.1.1
       jsdom:
         specifier: ^30.1.2
         version: 30.1.2
+      lucide-react:
+        specifier: ^1.54.0
+        version: 1.54.0(@types/react@19.3.0)(react@19.3.0)
+      radix-ui:
+        specifier: ^1.7.0
+        version: 1.7.0(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       react:
         specifier: ^19.3.0
         version: 19.3.0
@@ -1563,6 +1557,9 @@ importers:
       simple-icons-linkedin:
         specifier: npm:simple-icons@13.21.0
         version: simple-icons@13.21.0
+      tailwind-variants:
+        specifier: ^3.3.1
+        version: 3.3.1(tailwindcss@4.3.3)
       tailwindcss:
         specifier: ^4.3.3
         version: 4.3.3
@@ -1575,12 +1572,22 @@ importers:
       vitest:
         specifier: 'catalog:'
         version: 5.1.0(@opentelemetry/api@1.9.1)(@types/node@24.19.1)(@vitest/browser-playwright@5.1.0)(@vitest/browser-preview@5.1.0)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(@voidzero-dev/vite-plus-core@1.5.0(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.1)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1))(jsdom@30.1.2)(msw@3.0.2(@types/node@24.19.1)(@voidzero-dev/vite-plus-core@1.5.0(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.1)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1))(supports-color@10.2.2)(typescript@6.0.3))
+      zod:
+        specifier: ^4.6.5
+        version: 4.6.5
 
   packages/platform/client/web-telemetry:
     dependencies:
       '@kit/result':
         specifier: workspace:*
         version: link:../../universal/result
+    devDependencies:
+      '@kit/tsconfig':
+        specifier: workspace:*
+        version: link:../../universal/tsconfig
+      '@kit/vite-preset':
+        specifier: workspace:*
+        version: link:../../server/vite-preset
       '@opentelemetry/api':
         specifier: ^1.9.1
         version: 1.9.1
@@ -1602,19 +1609,6 @@ importers:
       '@opentelemetry/semantic-conventions':
         specifier: ^1.43.0
         version: 1.43.0
-      '@vp/api-contracts':
-        specifier: workspace:*
-        version: link:../../../universal/api-contracts
-      web-vitals:
-        specifier: ^6.2.3
-        version: 6.2.3
-    devDependencies:
-      '@kit/tsconfig':
-        specifier: workspace:*
-        version: link:../../universal/tsconfig
-      '@kit/vite-preset':
-        specifier: workspace:*
-        version: link:../../server/vite-preset
       '@tanstack/react-router':
         specifier: ^1.170.41
         version: 1.170.41(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
@@ -1657,6 +1651,9 @@ importers:
       vitest:
         specifier: 'catalog:'
         version: 5.1.0(@opentelemetry/api@1.9.1)(@types/node@24.19.1)(@vitest/browser-playwright@5.1.0)(@vitest/browser-preview@5.1.0)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(@voidzero-dev/vite-plus-core@1.5.0(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.1)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1))(jsdom@30.1.2)(msw@3.0.2(@types/node@24.19.1)(@voidzero-dev/vite-plus-core@1.5.0(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.1)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1))(supports-color@10.2.2)(typescript@6.0.3))
+      web-vitals:
+        specifier: ^6.2.3
+        version: 6.2.3
 
   packages/platform/server/compose-autoscaler:
     dependencies:
@@ -1780,23 +1777,22 @@ importers:
         version: 1.5.0(@opentelemetry/api@1.9.1)(@types/node@24.19.1)(@vitest/browser-playwright@5.1.0)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.28.2)(jiti@2.7.0)(jsdom@30.1.2)(msw@3.0.2(@types/node@24.19.1)(supports-color@10.2.2)(typescript@6.0.3)(vite@8.3.4(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)))(playwright@1.64.0)(sass@1.105.1)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1)
 
   packages/platform/server/logger:
-    dependencies:
-      '@opentelemetry/api':
-        specifier: ^1.9.1
-        version: 1.9.1
-      pino:
-        specifier: ^10.4.0
-        version: 10.4.0
     devDependencies:
       '@kit/tsconfig':
         specifier: workspace:*
         version: link:../../universal/tsconfig
+      '@opentelemetry/api':
+        specifier: ^1.9.1
+        version: 1.9.1
       '@types/node':
         specifier: ^24.19.1
         version: 24.19.1
       '@vp/testing':
         specifier: workspace:*
         version: link:../../../server/testing
+      pino:
+        specifier: ^10.4.0
+        version: 10.4.0
       rimraf:
         specifier: ^6.1.3
         version: 6.1.3
@@ -1809,12 +1805,6 @@ importers:
 
   packages/platform/server/vite-preset:
     dependencies:
-      '@tailwindcss/vite':
-        specifier: ^4.3.3
-        version: 4.3.3(@voidzero-dev/vite-plus-core@1.5.0(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.1)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1))
-      '@vitejs/plugin-react':
-        specifier: 6.2.1
-        version: 6.2.1(@rolldown/plugin-babel@0.3.0(@babel/core@8.1.0)(@babel/runtime@7.29.7)(@voidzero-dev/vite-plus-core@1.5.0(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.1)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1))(rolldown@1.2.13))(@voidzero-dev/vite-plus-core@1.5.0(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.1)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1))(babel-plugin-react-compiler@1.0.0)(oxc-transform-react@0.156.0)
       vite:
         specifier: npm:@voidzero-dev/vite-plus-core@1.5.0
         version: '@voidzero-dev/vite-plus-core@1.5.0(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.1)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1)'
@@ -1831,12 +1821,18 @@ importers:
       '@rolldown/plugin-babel':
         specifier: 0.3.0
         version: 0.3.0(@babel/core@8.1.0)(@babel/runtime@7.29.7)(@voidzero-dev/vite-plus-core@1.5.0(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.1)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1))(rolldown@1.2.13)
+      '@tailwindcss/vite':
+        specifier: ^4.3.3
+        version: 4.3.3(@voidzero-dev/vite-plus-core@1.5.0(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.1)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1))
       '@tanstack/react-start':
         specifier: ^1.168.60
         version: 1.168.60(@voidzero-dev/vite-plus-core@1.5.0(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.1)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1))(esbuild@0.28.2)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(rolldown@1.2.13)(rollup@4.63.1)(supports-color@10.2.2)(webpack@5.110.3(esbuild@0.28.2)(lightningcss@1.33.0)(postcss@8.5.32))
       '@types/node':
         specifier: ^24.19.1
         version: 24.19.1
+      '@vitejs/plugin-react':
+        specifier: 6.2.1
+        version: 6.2.1(@rolldown/plugin-babel@0.3.0(@babel/core@8.1.0)(@babel/runtime@7.29.7)(@voidzero-dev/vite-plus-core@1.5.0(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.1)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1))(rolldown@1.2.13))(@voidzero-dev/vite-plus-core@1.5.0(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.1)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1))(babel-plugin-react-compiler@1.0.0)(oxc-transform-react@0.156.0)
       '@vp/testing':
         specifier: workspace:*
         version: link:../../../server/testing
@@ -1867,9 +1863,6 @@ importers:
       '@vp/errors':
         specifier: workspace:*
         version: link:../../../universal/errors
-      zod:
-        specifier: ^4.6.5
-        version: 4.6.5
     devDependencies:
       '@kit/tsconfig':
         specifier: workspace:*
@@ -1889,6 +1882,9 @@ importers:
       vite-plus:
         specifier: 'catalog:'
         version: 1.5.0(@opentelemetry/api@1.9.1)(@types/node@24.19.1)(@vitest/browser-playwright@5.1.0)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.28.2)(jiti@2.7.0)(jsdom@30.1.2)(msw@3.0.2(@types/node@24.19.1)(supports-color@10.2.2)(typescript@6.0.3)(vite@8.3.4(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)))(playwright@1.64.0)(sass@1.105.1)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1)
+      zod:
+        specifier: ^4.6.5
+        version: 4.6.5
 
   packages/platform/universal/di:
     dependencies:
@@ -2042,9 +2038,6 @@ importers:
       '@kit/concurrency':
         specifier: workspace:*
         version: link:../../platform/server/concurrency
-      '@kit/dev-token':
-        specifier: workspace:*
-        version: link:../../platform/server/dev-token
       '@kit/di':
         specifier: workspace:*
         version: link:../../platform/universal/di
@@ -2060,6 +2053,9 @@ importers:
       '@vp/db':
         specifier: workspace:*
         version: link:../db
+      '@vp/dev-identity':
+        specifier: workspace:*
+        version: link:../dev-identity
       '@vp/domain':
         specifier: workspace:*
         version: link:../../universal/domain
@@ -2219,15 +2215,15 @@ importers:
 
   packages/server/demo:
     dependencies:
-      '@kit/dev-token':
-        specifier: workspace:*
-        version: link:../../platform/server/dev-token
       '@kit/result':
         specifier: workspace:*
         version: link:../../platform/universal/result
       '@vp/db':
         specifier: workspace:*
         version: link:../db
+      '@vp/dev-identity':
+        specifier: workspace:*
+        version: link:../dev-identity
       '@vp/domain':
         specifier: workspace:*
         version: link:../../universal/domain
@@ -2296,6 +2292,31 @@ importers:
       vite-plus:
         specifier: 'catalog:'
         version: 1.5.0(@opentelemetry/api@1.9.1)(@types/node@24.19.1)(@vitest/browser-playwright@5.1.0)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.28.2)(jiti@2.7.0)(jsdom@30.1.2)(msw@3.0.2(@types/node@24.19.1)(supports-color@10.2.2)(typescript@6.0.3)(vite@8.3.4(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)))(playwright@1.64.0)(sass@1.105.1)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1)
+
+  packages/server/dev-identity:
+    dependencies:
+      '@kit/dev-token':
+        specifier: workspace:*
+        version: link:../../platform/server/dev-token
+    devDependencies:
+      '@kit/tsconfig':
+        specifier: workspace:*
+        version: link:../../platform/universal/tsconfig
+      '@types/node':
+        specifier: ^24.19.1
+        version: 24.19.1
+      '@vp/testing':
+        specifier: workspace:*
+        version: link:../testing
+      rimraf:
+        specifier: ^6.1.3
+        version: 6.1.3
+      typescript:
+        specifier: ^6.0.3
+        version: 6.0.3
+      vite-plus:
+        specifier: 'catalog:'
+        version: 1.5.0(@opentelemetry/api@1.9.1)(@types/node@24.19.1)(@vitest/browser-playwright@5.1.0)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.28.2)(jiti@2.7.0)(jsdom@30.1.2)(msw@3.0.2(@types/node@24.19.1)(@voidzero-dev/vite-plus-core@1.5.0(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.1)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1))(supports-color@10.2.2)(typescript@6.0.3))(playwright@1.64.0)(sass@1.105.1)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1)
 
   packages/server/env-schema:
     dependencies:
@@ -2658,9 +2679,6 @@ importers:
         specifier: workspace:*
         version: link:../../platform/universal/result
     devDependencies:
-      '@kit/dev-token':
-        specifier: workspace:*
-        version: link:../../platform/server/dev-token
       '@kit/tsconfig':
         specifier: workspace:*
         version: link:../../platform/universal/tsconfig
@@ -2673,6 +2691,9 @@ importers:
       '@vp/api':
         specifier: workspace:*
         version: link:../../../apps/server/api
+      '@vp/dev-identity':
+        specifier: workspace:*
+        version: link:../dev-identity
       '@vp/env-schema':
         specifier: workspace:*
         version: link:../env-schema

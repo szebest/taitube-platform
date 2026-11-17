@@ -55,7 +55,7 @@ export function RootShell({
         <AppShell.Header
           logo={
             <Link to="/" aria-label={tOr('shell.brandHome', {}, '')} className="flex">
-              <Logo className="[&>span]:hidden medium:[&>span]:block" />
+              <Logo name="Taitube" className="[&>span]:hidden medium:[&>span]:block" />
             </Link>
           }
           search={<ShellSearch />}

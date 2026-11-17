@@ -1,5 +1,5 @@
-import { mintToken } from '@kit/dev-token';
 import { ok } from '@kit/result';
+import { mintToken } from '@vp/dev-identity';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { SEEDED } from '@vp/testing';
 import type { FastifyInstance } from 'fastify';

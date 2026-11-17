@@ -37,6 +37,13 @@ function tree(): string {
     }),
     'packages/platform/universal/other/src/index.ts':
       'export const double = (n: number): number => n * 2;\n',
+    'packages/platform/universal/presets/package.json': JSON.stringify({
+      name: '@kit/presets',
+      vp: { layer: 1 },
+      exports: { './base.json': './base.json', './client.json': './client.json' },
+    }),
+    'packages/platform/universal/presets/base.json': '{}',
+    'packages/platform/universal/presets/client.json': '{}',
     'packages/universal/app/package.json': JSON.stringify({ name: '@vp/app', vp: { layer: 1 } }),
     'packages/universal/app/src/index.ts': 'export const app = 1;\n',
   });
@@ -44,7 +51,7 @@ function tree(): string {
 }
 
 describe('scripts: pnpm gen:api', () => {
-  it('describes each platform package by its exports map, the source of every entry, and no app package', () => {
+  it('describes each platform package by its exports map, the source of every entry, and neither an app package nor a presets-only one', () => {
     const rendered = renderApis(tree());
 
     expect([...rendered.keys()]).toEqual([

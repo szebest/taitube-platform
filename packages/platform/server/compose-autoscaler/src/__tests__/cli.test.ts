@@ -4,6 +4,12 @@ import * as path from 'node:path';
 import { createLogger } from '@kit/logger';
 import { captureLog } from '@vp/testing/log-capture';
 import { type CliHost, run } from '../cli';
+import type { AutoscalerConfig } from '../config';
+
+const CONFIG: AutoscalerConfig = {
+  metricsPath: '/stats',
+  stages: { 'stage-a': { minReplicas: 0, maxReplicas: 2, threshold: 1, cooldownSeconds: 30 } },
+};
 
 function host(argv: string[]): CliHost {
   return {
@@ -38,23 +44,26 @@ describe('packages/compose-autoscaler: run', () => {
   it.each(['--help', '-h'])('prints its usage for %s and starts nothing', (flag) => {
     const cli = host([flag]);
 
-    run(cli);
+    run(CONFIG, cli);
 
     expect(cli.print).toHaveBeenCalledWith(
       expect.stringContaining('pnpm compose-autoscaler [options]')
     );
+    expect(cli.print).toHaveBeenCalledWith(expect.stringContaining('localhost:9464/stats'));
     expect(cli.onSignal).not.toHaveBeenCalled();
   });
 
   it.each([
     { config: 'missing', write: undefined, error: /ENOENT/ },
     { config: 'malformed', write: '{ not json', error: SyntaxError },
+    { config: 'mistyped', write: '{ "stage-a": { "minReplicas": "1" } }', error: TypeError },
+    { config: 'non-object', write: 'null', error: TypeError },
   ])('refuses to start with a $config --config file', ({ write, error }) => {
     const configFile = path.join(dir, 'stages.json');
     if (write !== undefined) fs.writeFileSync(configFile, write);
     const cli = host(['--config', configFile]);
 
-    expect(() => run(cli)).toThrow(error);
+    expect(() => run(CONFIG, cli)).toThrow(error);
     expect(cli.onSignal).not.toHaveBeenCalled();
   });
 });

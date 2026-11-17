@@ -68,7 +68,7 @@ export function StudioShell({ toolbarAction, navigation, inspector }: StudioShel
           search={{}}
           className="flex items-center gap-inline text-fg no-underline"
         >
-          <Logo className="[&>span]:hidden medium:[&>span]:block" />
+          <Logo name="Taitube" className="[&>span]:hidden medium:[&>span]:block" />
           <span className="sr-only text-label medium:not-sr-only">
             {tOr('studio.title', {}, '')}
           </span>

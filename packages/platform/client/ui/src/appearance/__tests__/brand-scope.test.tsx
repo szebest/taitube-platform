@@ -1,6 +1,7 @@
 import { createRootRoute, createRoute, createRouter } from '@tanstack/react-router';
 import { serverRender } from '@vp/web-testing/server';
 import type { ReactNode } from 'react';
+import { FIXTURE_APPEARANCE_STORAGE } from '../../__tests__/appearance-storage-fixture';
 import { BrandScope } from '../brand-scope';
 import { type AppearancePreference, DEFAULT_APPEARANCE } from '../preference';
 import { AppearanceProvider } from '../provider';
@@ -11,7 +12,11 @@ const renderScope = (color: string | null, preference: Partial<AppearancePrefere
   const rootRoute = createRootRoute({
     shellComponent: ({ children }: { children: ReactNode }) => (
       <AppearanceProvider
-        stored={{ preference: { ...DEFAULT_APPEARANCE, ...preference }, source: 'appearance' }}
+        stored={{
+          preference: { ...DEFAULT_APPEARANCE, ...preference },
+          source: 'appearance',
+          storage: FIXTURE_APPEARANCE_STORAGE,
+        }}
       >
         <BrandScope color={color}>
           <a href="/channel">Channel</a>

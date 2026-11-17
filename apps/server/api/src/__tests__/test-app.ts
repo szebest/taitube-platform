@@ -1,5 +1,4 @@
 import type { Container } from '@kit/composition';
-import { mintToken } from '@kit/dev-token';
 import type { Logger } from '@kit/logger';
 import {
   InMemoryCacheClient,
@@ -9,6 +8,7 @@ import {
   InMemoryStorageClient,
 } from '@vp/adapters/in-memory';
 import type { JobQueue, StorageClient } from '@vp/core/ports';
+import { mintToken } from '@vp/dev-identity';
 import { type ChannelRole, SEARCH_SUGGESTIONS } from '@vp/domain';
 import { type AppConfig, inProcessAppConfig } from '@vp/env-schema';
 import { QUEUES } from '@vp/job-contracts';

@@ -9,9 +9,9 @@
     "test": "vp test run"
   },
   "dependencies": {
-    "@kit/dev-token": "workspace:*",
     "@kit/result": "workspace:*",
     "@vp/db": "workspace:*",
+    "@vp/dev-identity": "workspace:*",
     "@vp/domain": "workspace:*",
     "@vp/env-schema": "workspace:*",
     "@vp/errors": "workspace:*",

@@ -1,4 +1,5 @@
 import {
+  isScalerStageConfig,
   type ScalerStageConfig,
   type StageScalingState,
   computeReplicas,
@@ -188,5 +189,19 @@ bullmq_queue_jobs{queue="probe",state="waiting"} 0
     });
 
     expect(parsed['transcode-480p']?.completed).toBe(40);
+  });
+});
+
+describe('isScalerStageConfig', () => {
+  const valid = { minReplicas: 0, maxReplicas: 2, threshold: 1, cooldownSeconds: 30 };
+
+  it.each([
+    { input: 'a full config', value: valid, accepted: true },
+    { input: 'null', value: null, accepted: false },
+    { input: 'a string', value: 'stage', accepted: false },
+    { input: 'a missing field', value: { ...valid, threshold: undefined }, accepted: false },
+    { input: 'a mistyped field', value: { ...valid, maxReplicas: '2' }, accepted: false },
+  ])('answers $accepted for $input', ({ value, accepted }) => {
+    expect(isScalerStageConfig(value)).toBe(accepted);
   });
 });

@@ -6,6 +6,7 @@ import { logoStyles } from '../logo.variants';
 const meta = {
   title: 'Primitives/Logo',
   component: Logo,
+  args: { name: 'Taitube' },
 } satisfies Meta<typeof Logo>;
 
 export default meta;

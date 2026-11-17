@@ -4,6 +4,8 @@ import type { Accept } from 'react-dropzone';
 import { useAppForm } from '../use-app-form';
 import { WithUiCopy } from './with-ui-copy';
 
+const selectedText = (count: number) => (count > 1 ? 'Selected files:' : 'Selected file:');
+
 function FilesForm({ multiple = false, accept }: { multiple?: boolean; accept?: Accept }) {
   const form = useAppForm({ defaultValues: { files: [] as File[] } });
   return (
@@ -14,6 +16,7 @@ function FilesForm({ multiple = false, accept }: { multiple?: boolean; accept?: 
             accept={accept}
             multiple={multiple}
             placeholderText="Drop a video here"
+            selectedText={selectedText}
           />
           <output>{field.state.value.map((file) => file.type).join(',')}</output>
         </>

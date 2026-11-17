@@ -13,7 +13,7 @@ function EveryField() {
         {(field) => <field.SelectField label="Size" options={['small', 'large']} />}
       </form.AppField>
       <form.AppField name="files">
-        {(field) => <field.FileField placeholderText="Drop here" />}
+        {(field) => <field.FileField placeholderText="Drop here" selectedText={() => 'Selected'} />}
       </form.AppField>
     </>
   );

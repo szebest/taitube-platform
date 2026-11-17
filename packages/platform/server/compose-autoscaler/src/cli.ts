@@ -1,8 +1,9 @@
 import * as fs from 'node:fs';
 import { parseArgs } from 'node:util';
 import type { Logger } from '@kit/logger';
+import type { AutoscalerConfig } from './config';
 import { type AutoscalerOptions, ComposeAutoscaler } from './runner';
-import { DEFAULT_STAGE_CONFIGS, type ScalerStageConfig } from './scaler';
+import { isScalerStageConfig, type ScalerStageConfig } from './scaler';
 
 type Env = Readonly<Record<string, string | undefined>>;
 
@@ -28,7 +29,7 @@ interface CliArgs {
   help?: boolean;
 }
 
-function parseCliArgs(argv: readonly string[], env: Env): CliArgs {
+function parseCliArgs(config: AutoscalerConfig, argv: readonly string[], env: Env): CliArgs {
   const { values } = parseArgs({
     args: [...argv],
     options: {
@@ -42,7 +43,7 @@ function parseCliArgs(argv: readonly string[], env: Env): CliArgs {
   });
 
   const metricsPort = env.METRICS_PORT || '9464';
-  const defaultMetricsUrl = `http://localhost:${metricsPort}/metrics`;
+  const defaultMetricsUrl = `http://localhost:${metricsPort}${config.metricsPath}`;
 
   return {
     metricsUrl: values.url || env.METRICS_URL || defaultMetricsUrl,
@@ -54,11 +55,11 @@ function parseCliArgs(argv: readonly string[], env: Env): CliArgs {
   };
 }
 
-function printHelp(host: CliHost): void {
+function printHelp(config: AutoscalerConfig, host: CliHost): void {
   host.print(`
-@kit/compose-autoscaler — Docker Compose Queue-Depth Autoscaler
+compose-autoscaler: Docker Compose Queue-Depth Autoscaler
 
-Polls Prometheus metrics (/metrics) from the API and dynamically scales
+Polls Prometheus metrics (${config.metricsPath}) from the API and dynamically scales
 worker stages via
 'docker compose --profile '*' up -d --scale <service>=N --no-recreate --no-deps <service>'.
 
@@ -66,7 +67,7 @@ Usage:
   pnpm compose-autoscaler [options]
 
 Options:
-  --url <url>              Metrics URL (default: http://localhost:9464/metrics or env METRICS_URL)
+  --url <url>              Metrics URL (default: http://localhost:9464${config.metricsPath} or env METRICS_URL)
   --file <path>            Path to docker-compose.yml file (optional)
   --dry-run                Print intended scale actions without executing docker commands
   --interval <seconds>     Polling interval in seconds (default: 10)
@@ -74,7 +75,7 @@ Options:
   --help, -h               Show this help message
 
 Environment Variables:
-  METRICS_URL              Full URL to Prometheus /metrics endpoint
+  METRICS_URL              Full URL to Prometheus ${config.metricsPath} endpoint
   METRICS_PORT             Port for default metrics endpoint (default: 9464)
   COMPOSE_FILE             Path to compose file
   AUTOSCALER_DRY_RUN       Set to "true" to run in dry-run mode
@@ -82,22 +83,36 @@ Environment Variables:
 `);
 }
 
+function parseStageOverrides(text: string): StageOverrides {
+  const parsed: unknown = JSON.parse(text);
+  if (typeof parsed !== 'object' || parsed === null) {
+    throw new TypeError('stage configs must be a JSON object keyed by service');
+  }
+  const overrides: StageOverrides = {};
+  for (const [service, stage] of Object.entries(parsed)) {
+    if (!isScalerStageConfig(stage)) {
+      throw new TypeError(`stage config for ${service} is missing min, max, threshold or cooldown`);
+    }
+    overrides[service] = stage;
+  }
+  return overrides;
+}
+
 function readStageOverrides(env: Env, configFile?: string): StageOverrides {
   if (configFile) {
-    const text = fs.readFileSync(configFile, 'utf-8');
-    return JSON.parse(text) as StageOverrides;
+    return parseStageOverrides(fs.readFileSync(configFile, 'utf-8'));
   }
   if (env.AUTOSCALER_CONFIG) {
-    return JSON.parse(env.AUTOSCALER_CONFIG) as StageOverrides;
+    return parseStageOverrides(env.AUTOSCALER_CONFIG);
   }
   return {};
 }
 
-export function run(host: CliHost): void {
-  const args = parseCliArgs(host.argv, host.env);
+export function run(config: AutoscalerConfig, host: CliHost): void {
+  const args = parseCliArgs(config, host.argv, host.env);
 
   if (args.help) {
-    printHelp(host);
+    printHelp(config, host);
     return;
   }
 
@@ -108,7 +123,7 @@ export function run(host: CliHost): void {
     composeFile: args.composeFile,
     dryRun: args.dryRun || host.env.AUTOSCALER_DRY_RUN === 'true',
     pollIntervalMs: args.intervalSec * 1000,
-    stageConfigs: { ...DEFAULT_STAGE_CONFIGS, ...overrides },
+    stageConfigs: { ...config.stages, ...overrides },
     logger: host.log,
     executor: host.executor,
     fetcher: host.fetcher,

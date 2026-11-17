@@ -1,9 +1,7 @@
 import { packageDir } from '../../scripts/workspace-packages';
 
 const WEB_TELEMETRY = packageDir('@kit/web-telemetry');
-const COMPOSE_AUTOSCALER = packageDir('@kit/compose-autoscaler');
 const CONFIG = packageDir('@kit/config');
-const DEV_TOKEN = packageDir('@kit/dev-token');
 
 /**
  * Where a process starts. Module-level side effects, `console` and reading the environment belong
@@ -19,10 +17,8 @@ export const ENTRYPOINTS: readonly string[] = [
   'packages/client/workbench/visual/playwright.config.ts',
   'apps/server/worker/src/instrument.ts',
   'apps/server/worker/src/main.ts',
-  `${COMPOSE_AUTOSCALER}/src/main.ts`,
   'packages/server/demo/src/main.ts',
   'packages/server/deploy/src/main.ts',
-  `${DEV_TOKEN}/src/main.ts`,
   'packages/server/gen-video/src/main.ts',
   'packages/server/lighthouse/src/main.ts',
   'packages/server/upload-client/src/main.ts',

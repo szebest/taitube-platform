@@ -9,15 +9,29 @@ export type Attempt<T> = {
     readonly type: 'failed';
     readonly reason: string;
 };
+export interface AutoscalerConfig {
+    readonly metricsPath: string;
+    readonly stages: Readonly<Record<string, ScalerStageConfig>>;
+}
 export interface AutoscalerOptions {
     metricsUrl: string;
     composeFile?: string;
     dryRun?: boolean;
     pollIntervalMs?: number;
-    stageConfigs?: Record<string, ScalerStageConfig>;
+    stageConfigs: Record<string, ScalerStageConfig>;
     logger: Logger;
     executor: (cmd: string) => Promise<Attempt<unknown>>;
     fetcher: (url: string) => Promise<Attempt<string>>;
+}
+export interface CliHost {
+    argv: readonly string[];
+    env: Env;
+    executor: AutoscalerOptions['executor'];
+    fetcher: AutoscalerOptions['fetcher'];
+    onSignal: (signal: 'SIGINT' | 'SIGTERM', handler: () => void) => void;
+    exit: (code: number) => void;
+    print: (text: string) => void;
+    log: Logger;
 }
 export class ComposeAutoscaler
   constructor(options: AutoscalerOptions): ComposeAutoscaler
@@ -31,7 +45,6 @@ export interface ComputeReplicasParams {
     queueDepth: QueueDepth;
     nowMs: number;
 }
-export const DEFAULT_STAGE_CONFIGS: Record<string, ScalerStageConfig>
 export interface QueueDepth {
     waiting: number;
     prioritized: number;
@@ -58,4 +71,6 @@ export interface StageScalingState {
     scaleDownCandidateSinceMs: number | null;
 }
 export function computeReplicas(params: ComputeReplicasParams): ScalingDecision
+export function isScalerStageConfig(value: unknown): value is ScalerStageConfig
 export function parsePrometheusQueueMetrics(prometheusText: string): Record<string, QueueDepth>
+export function run(config: AutoscalerConfig, host: CliHost): void

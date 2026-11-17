@@ -1,8 +1,9 @@
 {
   "name": "@kit/dev-token",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
+  "sideEffects": false,
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
@@ -15,9 +16,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
-    "test": "vp test run",
-    "dev": "tsx --conditions=source src/main.ts serve",
-    "dev-token": "node --experimental-strip-types src/main.ts"
+    "test": "vp test run"
   },
   "dependencies": {
     "@kit/logger": "workspace:*"

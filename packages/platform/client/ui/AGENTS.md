@@ -46,8 +46,8 @@ series at 3:1 on `surface`; a failing pair is fixed in the theme and in `tokens.
 from an existing one, register it here and regenerate the CSS; tune the copy's values after.
 
 `src/appearance/registry.ts` (exported as `@kit/ui/appearance/registry`, like `preference` and `resolve` beside it) is the one file that names themes and
-sets to ship: `themes`, `defaultTheme` (Sand) and `offer`, the sets a viewer may switch to per group; `preference.ts` (the `vp.appearance` cookie, schema 2,
-which keeps any well-formed id so one app never drops another's choice, and the legacy `vp.theme` read once) and
+sets to ship: `themes`, `defaultTheme` (Sand) and `offer`, the sets a viewer may switch to per group; `preference.ts` (the schema 2 cookie, named by the app's `AppearanceStorage`,
+which keeps any well-formed id so one app never drops another's choice, and the legacy cookie read once) and
 `resolve.ts` (override, else the app's defaults, else the theme's, an id the registry does not offer counted as
 absent, reduced motion forced) build on it. `register-theme.ts` adds a theme that arrives as data: checked by
 the contrast gate, installed as a constructed stylesheet, and selectable through `resolveAppearance`'s
@@ -75,21 +75,22 @@ names a part used outside its root. The shared UI unions (`FillOption`, `ShapeOp
   `bg-raised` menus and dialogs, `text-fg-muted`, `text-danger-ink`, `shadow-2`, `z-popover`),
   never a hex value or a Tailwind palette colour ([docs/design/foundations/color.md](../../../../docs/design/foundations/color.md)).
 
-- **The stylesheet names this package as a Tailwind source** (`@source "../../../client/"` in `src/styles/index.css`): an app's build scans its own
-  tree, and these primitives sit outside it, so without the line their classes are never generated.
+- **The stylesheet names this package as a Tailwind source** (`@source "../"` in `src/styles/index.css`): an app's build scans its own
+  tree, and these primitives sit outside it, so without the line their classes are never generated. The package names no other
+  package: each app's `src/styles.css` imports `@kit/ui/styles.css` and adds a `@source` for every package it renders.
 - **`tv()` only for real variants.** `tv()` from `tailwind-variants` is for a component that picks its classes
   by a prop (`variant`, `size`, `side`), and its variant names drive the specs' `it.each` through
   `variantNames`. Static classes go inline on the element, with `cn(..., className)` where a caller's class
   merges in. Both come from `src/lib/class-names.ts`, which teaches tailwind-merge the z-index tokens.
 - **Radix through the one `radix-ui` package**: `import { Dialog as DialogPrimitive } from 'radix-ui'`.
-- **The appearance** is the `vp.appearance` cookie (`src/appearance/preference.ts`) the root route reads in
+- **The appearance** is the cookie the app's `AppearanceStorage` names (`src/appearance/preference.ts`) the root route reads in
   `beforeLoad` and hands `ThemedDocument`, which renders `data-theme`, `data-mode`, `data-contrast`, `data-density`
   (compact spacing with small sizing, read by `densityOf`) and one `data-<kebab-group>` per token group on `<html>`,
   the accent override and registered themes as inline styles under the request nonce, and a pre-paint script for a
   `system` mode, an `auto` contrast (it follows `prefers-contrast` until the viewer picks `standard` or `more`)
   and reduced motion. `useAppearance()`
   reads the resolved state and changes any axis or override; a change writes the cookie and swaps the attributes
-  through a view transition, with no reload. A legacy `vp.theme` is rewritten once and deleted.
+  through a view transition, with no reload. A legacy cookie is rewritten once and deleted.
 - **Root providers** (`ThemedDocument`'s `AppearanceProvider`, `TooltipProvider`, `ToastProvider`, and
   `@vp/queries`' `AppWords` as the router's `Wrap`) are mounted once; a component never mounts its own.
 - **Motion** uses the `animate-*` tokens and the `duration-*` and `ease-*` ones, and stops under `motion: reduced`
@@ -120,3 +121,9 @@ snapshot, and Field, Tabs and Select a `*.renders.dom.test.tsx` that counts comm
 pnpm --filter @kit/ui typecheck
 pnpm --filter @kit/ui test
 ```
+
+## Tokens and registries
+
+- `AppearanceStorage`: the cookie names the app hands `requestAppearancePreference`; `StoredAppearance` carries them to `AppearanceProvider`.
+- `UiCopyProvider`: the words every primitive prints.
+- `Logo` takes the product `name` as a prop.

@@ -30,7 +30,7 @@ describe('packages/pagination: Base64UrlCursorCodec', () => {
     expect(codec.decode(cursor)).toEqual(
       err({
         code: ErrorCodes.INVALID_CURSOR,
-        message: 'Invalid pagination cursor',
+        message: ErrorCodes.INVALID_CURSOR,
         field: 'cursor',
       })
     );
@@ -50,6 +50,7 @@ describe('packages/pagination: Base64UrlCursorCodec', () => {
     { scenario: 'a JSON array', raw: '["not","an","object"]' },
     { scenario: 'a JSON scalar', raw: '"just-a-string"' },
     { scenario: 'JSON null', raw: 'null' },
+    { scenario: 'an object with a nested value', raw: '{"id":{"nested":1}}' },
   ])('rejects $scenario that is not a keyset object', ({ raw }) => {
     expect(codec.decode(btoa(raw)).ok).toBe(false);
   });

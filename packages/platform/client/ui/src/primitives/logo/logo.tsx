@@ -2,23 +2,23 @@ import type { ComponentPropsWithRef } from 'react';
 import { logoStyles } from './logo.variants';
 import type { LogoSize, LogoTone, LogoVariant } from './types';
 
-const BRAND = 'Taitube';
-
 export interface LogoProps extends ComponentPropsWithRef<'span'> {
+  /** The product's name: the accessible name of the mark, and, lowercased, the wordmark beside it. */
+  name: string;
   variant?: LogoVariant;
   size?: LogoSize;
   tone?: LogoTone;
 }
 
 /** The mark (a 16:9 frame with a rising sun) and the live-text wordmark; `aria-hidden` inside a named home link. */
-export function Logo({ variant, size, tone, className, ...props }: LogoProps) {
+export function Logo({ name, variant, size, tone, className, ...props }: LogoProps) {
   const styles = logoStyles({ variant, size, tone });
 
   return (
     <span
       data-slot="logo"
       role="img"
-      aria-label={BRAND}
+      aria-label={name}
       className={styles.root({ className })}
       {...props}
     >
@@ -27,7 +27,7 @@ export function Logo({ variant, size, tone, className, ...props }: LogoProps) {
         <path d="M10 19.5a6 6 0 0 1 12 0z" fill="currentColor" />
       </svg>
       <span aria-hidden="true" className={styles.wordmark()}>
-        taitube
+        {name.toLowerCase()}
       </span>
     </span>
   );

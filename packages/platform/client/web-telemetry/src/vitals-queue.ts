@@ -1,9 +1,14 @@
-import {
-  MAX_WEB_VITALS_PER_BATCH,
-  type TelemetryApp,
-  type WebVital,
-  type WebVitalsBatch,
-} from '@vp/api-contracts';
+export interface WebVital {
+  name: 'LCP' | 'INP' | 'CLS' | 'FCP' | 'TTFB' | 'LONG_TASKS';
+  value: number;
+  route: string;
+  source?: string;
+}
+
+export interface WebVitalsBatch {
+  app: string;
+  vitals: WebVital[];
+}
 
 export interface VitalsQueue {
   add(vital: WebVital): void;
@@ -11,7 +16,8 @@ export interface VitalsQueue {
 }
 
 export function createVitalsQueue(
-  app: TelemetryApp,
+  app: string,
+  maxBatchSize: number,
   send: (batch: WebVitalsBatch) => void
 ): VitalsQueue {
   let queued: WebVital[] = [];
@@ -28,7 +34,7 @@ export function createVitalsQueue(
   return {
     add(vital) {
       queued.push(vital);
-      if (queued.length === MAX_WEB_VITALS_PER_BATCH) {
+      if (queued.length === maxBatchSize) {
         flush();
       }
     },

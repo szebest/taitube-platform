@@ -1,7 +1,7 @@
 import type { IconSize } from '@kit/design-tokens';
 import type { LinkPlatform } from '@vp/domain';
 import type { ComponentPropsWithRef } from 'react';
-import PLATFORM_ICON_PATHS from '../../icons/platform-icon-paths.generated.json';
+import { PLATFORM_ICON_PATHS } from '../../icons/platform-icon-paths.generated';
 import { Icon } from '../icon';
 import { platformIconStyles } from './platform-icon.variants';
 
@@ -27,7 +27,7 @@ export function PlatformIcon({ platform, size, className, ...props }: PlatformIc
       className={platformIconStyles({ size, className })}
       {...props}
     >
-      <path d={PLATFORM_ICON_PATHS[platform as keyof typeof PLATFORM_ICON_PATHS]} />
+      <path d={PLATFORM_ICON_PATHS[platform]} />
     </svg>
   );
 }

@@ -1,8 +1,8 @@
 import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
-import { createLogger } from '@kit/logger';
-import { run } from './cli';
-import type { Attempt } from './runner';
+import { type Attempt, run } from '../packages/platform/server/compose-autoscaler/src/index';
+import { createLogger } from '../packages/platform/server/logger/src/index';
+import { COMPOSE_AUTOSCALER_CONFIG } from './compose-autoscaler-config';
 
 const execAsync = promisify(exec);
 
@@ -24,7 +24,7 @@ async function fetchMetricsText(url: string): Promise<string> {
 const log = createLogger({ service: 'compose-autoscaler', level: 'info', format: 'pretty' });
 
 try {
-  run({
+  run(COMPOSE_AUTOSCALER_CONFIG, {
     argv: process.argv.slice(2),
     env: process.env,
     executor: (cmd) => attempt(() => execAsync(cmd)),

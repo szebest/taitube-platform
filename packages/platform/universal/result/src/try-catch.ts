@@ -12,7 +12,7 @@ export function tryCatch<T, E>(fn: () => T, onThrow: (cause: unknown) => E): Res
 export function parseJson(text: string): Result<unknown, SyntaxError> {
   return tryCatch(
     (): unknown => JSON.parse(text),
-    (cause) => cause as SyntaxError
+    (cause) => (cause instanceof SyntaxError ? cause : new SyntaxError(String(cause)))
   );
 }
 

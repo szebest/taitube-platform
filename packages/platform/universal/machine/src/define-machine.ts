@@ -30,7 +30,7 @@ export interface Machine<S extends string, E extends string> extends MachineSpec
 export function defineMachine<const S extends string, const E extends string>(
   spec: MachineSpec<S, E>
 ): Machine<S, E> {
-  const eventNames = Object.keys(spec.events) as E[];
+  const eventNames = Object.keys(spec.events).filter((name): name is E => name in spec.events);
   const next = (state: S, event: E): S | undefined =>
     spec.events[event].from.includes(state) ? spec.events[event].to : undefined;
 

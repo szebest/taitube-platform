@@ -1,17 +1,18 @@
-import type { TelemetryApp } from '@vp/api-contracts';
 import { type Metric, onCLS, onFCP, onINP, onLCP, onTTFB } from 'web-vitals';
 import { observePageHealth } from './observe-page-health';
 import { sendJsonBeacon } from './send-json-beacon';
 import { createVitalsQueue } from './vitals-queue';
 
 export interface WebVitalsOptions {
-  app: TelemetryApp;
+  app: string;
   vitalsUrl: string;
+  /** The most vitals the endpoint takes in one batch. */
+  maxBatchSize: number;
   routeId: () => string;
 }
 
-export function startWebVitals({ app, vitalsUrl, routeId }: WebVitalsOptions): void {
-  const queue = createVitalsQueue(app, (batch) => sendJsonBeacon(vitalsUrl, batch));
+export function startWebVitals({ app, vitalsUrl, maxBatchSize, routeId }: WebVitalsOptions): void {
+  const queue = createVitalsQueue(app, maxBatchSize, (batch) => sendJsonBeacon(vitalsUrl, batch));
   // LCP, CLS, FCP and TTFB measure the page the browser loaded, which a client navigation has
   // usually left by the time they are reported; INP belongs to the route the interaction was on.
   const landingRoute = routeId();

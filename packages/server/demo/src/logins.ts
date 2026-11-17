@@ -1,4 +1,4 @@
-import { DEV_PERSONAS } from '@kit/dev-token';
+import { DEV_PERSONAS } from '@vp/dev-identity';
 
 /** @internal Exported for its spec. */
 export const SESSION_COOKIE = 'vp.session';

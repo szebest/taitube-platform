@@ -1,5 +1,9 @@
-import { verifyToken } from '../jwt';
-import { mintPersonaToken } from '../personas';
+import { verifyToken as verify } from '../jwt';
+import { mintPersonaToken as mintPersona } from '../personas';
+import { TEST_CONFIG } from './test-config';
+
+const verifyToken = (token: string) => verify(TEST_CONFIG, token);
+const mintPersonaToken = (persona: string) => mintPersona(TEST_CONFIG, persona);
 
 describe('packages/dev-token: personas', () => {
   it.each([

@@ -45,7 +45,7 @@ const resolvedColour = (ramps: Ref) =>
     RefAliasSchema.transform((alias, context): HexColor => {
       const step = refStep(ramps, alias);
       if (step === undefined) {
-        context.addIssue({ code: 'custom', message: `${alias} names no ref step` });
+        context.addIssue({ code: 'custom', params: { ref: alias } });
         return z.NEVER;
       }
       return step;

@@ -1,4 +1,4 @@
-import { getDevJwks, mintToken } from '@kit/dev-token';
+import { getDevJwks, mintToken } from '@vp/dev-identity';
 import { signJwt, signingKey } from '@vp/testing/jwt';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { DevTokenVerifier } from '../dev-token-verifier';

@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import { axeViolations } from '@vp/web-testing/dom';
+import { FIXTURE_APPEARANCE_STORAGE } from '../../__tests__/appearance-storage-fixture';
 import { WithUiCopy } from '../../__tests__/ui-copy-fixture';
 import { readCookie, writeCookie } from '../../cookies/cookie';
 import { DropdownMenu } from '../../primitives/dropdown-menu';
@@ -20,7 +21,13 @@ async function openMenu() {
   stubMediaQueries({ scheme: 'dark' });
   render(
     <WithUiCopy>
-      <AppearanceProvider stored={{ preference: DEFAULT_APPEARANCE, source: 'none' }}>
+      <AppearanceProvider
+        stored={{
+          preference: DEFAULT_APPEARANCE,
+          source: 'none',
+          storage: FIXTURE_APPEARANCE_STORAGE,
+        }}
+      >
         <Tooltip.Provider>
           <ThemeMenu />
         </Tooltip.Provider>
@@ -85,7 +92,13 @@ describe('@kit/ui: ThemeMenu', () => {
     const onModePicked = vi.fn();
     render(
       <WithUiCopy>
-        <AppearanceProvider stored={{ preference: DEFAULT_APPEARANCE, source: 'none' }}>
+        <AppearanceProvider
+          stored={{
+            preference: DEFAULT_APPEARANCE,
+            source: 'none',
+            storage: FIXTURE_APPEARANCE_STORAGE,
+          }}
+        >
           <DropdownMenu.Root open>
             <DropdownMenu.Trigger>Open</DropdownMenu.Trigger>
             <DropdownMenu.Content>

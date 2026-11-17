@@ -8,6 +8,16 @@ export interface ScalerStageConfig {
   cooldownSeconds: number;
 }
 
+const STAGE_CONFIG_FIELDS = ['minReplicas', 'maxReplicas', 'threshold', 'cooldownSeconds'] as const;
+
+export function isScalerStageConfig(value: unknown): value is ScalerStageConfig {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    STAGE_CONFIG_FIELDS.every((field) => typeof Reflect.get(value, field) === 'number')
+  );
+}
+
 /**
  * Ephemeral scaling state tracked per stage across polling intervals.
  */
@@ -48,79 +58,6 @@ export interface ComputeReplicasParams {
   queueDepth: QueueDepth;
   nowMs: number;
 }
-
-/**
- * Default autoscaler configuration for video-pipeline worker stages.
- * Matching KEDA ScaledObject parameters from SDD §13.2.
- */
-export const DEFAULT_STAGE_CONFIGS: Record<string, ScalerStageConfig> = {
-  'worker-probe': {
-    minReplicas: 0,
-    maxReplicas: 4,
-    threshold: 1,
-    cooldownSeconds: 300,
-  },
-  'worker-transcode-1080p': {
-    minReplicas: 0,
-    maxReplicas: 6,
-    threshold: 1,
-    cooldownSeconds: 300,
-  },
-  'worker-transcode-720p': {
-    minReplicas: 0,
-    maxReplicas: 6,
-    threshold: 1,
-    cooldownSeconds: 300,
-  },
-  'worker-transcode-480p': {
-    minReplicas: 0,
-    maxReplicas: 6,
-    threshold: 1,
-    cooldownSeconds: 300,
-  },
-  'worker-thumbnail': {
-    minReplicas: 0,
-    maxReplicas: 4,
-    threshold: 1,
-    cooldownSeconds: 300,
-  },
-  'worker-screen': {
-    minReplicas: 0,
-    maxReplicas: 4,
-    threshold: 1,
-    cooldownSeconds: 300,
-  },
-  'worker-captions': {
-    minReplicas: 0,
-    maxReplicas: 4,
-    threshold: 1,
-    cooldownSeconds: 300,
-  },
-  'worker-live': {
-    minReplicas: 0,
-    maxReplicas: 4,
-    threshold: 4,
-    cooldownSeconds: 1800,
-  },
-  'worker-package': {
-    minReplicas: 0,
-    maxReplicas: 4,
-    threshold: 1,
-    cooldownSeconds: 300,
-  },
-  'worker-notify': {
-    minReplicas: 0,
-    maxReplicas: 4,
-    threshold: 1,
-    cooldownSeconds: 300,
-  },
-  'worker-housekeeping': {
-    minReplicas: 0,
-    maxReplicas: 2,
-    threshold: 1,
-    cooldownSeconds: 300,
-  },
-};
 
 /**
  * Pure decision function computing desired replica count based on:

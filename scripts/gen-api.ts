@@ -6,7 +6,8 @@ import { isPlatform, load, type Pkg } from './workspace-packages';
 
 const USAGE = `Usage: pnpm gen:api [--check] [root]
 
-Writes api/<name>.api.txt in every package under packages/platform/: the names its exports map
+Writes api/<name>.api.txt in every package under packages/platform/ except one that only ships
+JSON presets: the names its exports map
 makes public, each with its type, read through the TypeScript compiler API.
 
   --check   write nothing; exit 1 when a snapshot differs from what would be written
@@ -49,6 +50,9 @@ function entriesOf(root: string, pkg: Pkg): Entry[] {
     });
 }
 
+const isPresetsOnly = (entries: readonly Entry[]): boolean =>
+  entries.length > 0 && entries.every(({ file }) => file?.endsWith('.json'));
+
 function createProgram(root: string, files: string[]): ts.Program {
   const paths = Object.fromEntries(
     load(root).flatMap(({ name, dir }) => [
@@ -77,8 +81,13 @@ function createProgram(root: string, files: string[]): ts.Program {
 
 /** The snapshot file of each platform package, keyed by its path from the repository root. */
 export function renderApis(root: string): Map<string, string> {
-  const packages = load(root).filter(({ dir }) => isPlatform(dir));
-  const entries = new Map(packages.map((pkg) => [pkg, entriesOf(root, pkg)]));
+  const entries = new Map(
+    load(root)
+      .filter(({ dir }) => isPlatform(dir))
+      .map((pkg) => [pkg, entriesOf(root, pkg)] as const)
+      .filter(([, list]) => !isPresetsOnly(list))
+  );
+  const packages = [...entries.keys()];
   const files = [...entries.values()].flatMap((list) => list.flatMap(({ file }) => file ?? []));
   const program = createProgram(root, files);
 

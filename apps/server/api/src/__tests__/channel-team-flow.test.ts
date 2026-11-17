@@ -1,6 +1,6 @@
-import { mintToken } from '@kit/dev-token';
 import type { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { CHANNEL_HEADER, contracts, isEndpoint } from '@vp/api-contracts';
+import { mintToken } from '@vp/dev-identity';
 import { NOTIFY_TEAM_INVITE } from '@vp/job-contracts';
 import { SEEDED } from '@vp/testing';
 import { expectOk } from '@vp/testing/result';

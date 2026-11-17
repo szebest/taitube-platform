@@ -60,43 +60,57 @@ export const DEFAULT_APPEARANCE: AppearancePreference = AppearancePreferenceSche
   schema: 2,
 });
 
-const APPEARANCE_COOKIE = 'vp.appearance';
-
-const LEGACY_THEME_COOKIE = 'vp.theme';
+/** The cookie names an app keeps its appearance under: both apps of one product share them, so a choice reaches each. */
+export type AppearanceStorage = Readonly<{
+  /** The cookie that holds the schema 2 preference. */
+  cookie: string;
+  /** The cookie from before schema 2, which only held the mode. */
+  legacyCookie: string;
+}>;
 
 export type StoredAppearance = Readonly<{
   preference: AppearancePreference;
-  /** `legacy` is a `vp.theme` cookie from before schema 2, which the caller rewrites once. */
+  /** `legacy` is the `legacyCookie` from before schema 2, which the caller rewrites once. */
   source: 'appearance' | 'legacy' | 'none';
+  storage: AppearanceStorage;
 }>;
 
 const parseStored = (raw: string) =>
   AppearancePreferenceSchema.safeParse(unwrapOr(parseJson(raw), undefined));
 
-export function requestAppearancePreference(): StoredAppearance {
-  const stored = readCookie(APPEARANCE_COOKIE);
+export function requestAppearancePreference(storage: AppearanceStorage): StoredAppearance {
+  const stored = readCookie(storage.cookie);
   const parsed = stored === undefined ? undefined : parseStored(stored);
   if (parsed?.success) {
-    return { preference: parsed.data, source: 'appearance' };
+    return { preference: parsed.data, source: 'appearance', storage };
   }
-  const legacy = readCookie(LEGACY_THEME_COOKIE);
+  const legacy = readCookie(storage.legacyCookie);
   if (legacy !== undefined) {
     return {
       preference: AppearancePreferenceSchema.parse({ schema: 2, mode: legacy }),
       source: 'legacy',
+      storage,
     };
   }
-  return { preference: DEFAULT_APPEARANCE, source: 'none' };
+  return { preference: DEFAULT_APPEARANCE, source: 'none', storage };
 }
 
-export function saveAppearancePreference(preference: AppearancePreference, domain?: string): void {
-  writeCookie(APPEARANCE_COOKIE, JSON.stringify(preference), { maxAge: ONE_YEAR_S, domain });
+export function saveAppearancePreference(
+  preference: AppearancePreference,
+  { cookie }: AppearanceStorage,
+  domain?: string
+): void {
+  writeCookie(cookie, JSON.stringify(preference), { maxAge: ONE_YEAR_S, domain });
 }
 
-/** Rewrites a `vp.theme` read as `source: 'legacy'` as `vp.appearance`, and deletes `vp.theme`. */
-export function rewriteLegacyAppearance(preference: AppearancePreference, domain?: string): void {
-  saveAppearancePreference(preference, domain);
-  writeCookie(LEGACY_THEME_COOKIE, '', { maxAge: 0, domain });
+/** Rewrites a legacy cookie read as `source: 'legacy'` under the current one, and deletes it. */
+export function rewriteLegacyAppearance(
+  preference: AppearancePreference,
+  storage: AppearanceStorage,
+  domain?: string
+): void {
+  saveAppearancePreference(preference, storage, domain);
+  writeCookie(storage.legacyCookie, '', { maxAge: 0, domain });
 }
 
 /** The account's shape (97's endpoint): no `schema`, which only versions the cookie. */

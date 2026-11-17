@@ -8,7 +8,7 @@ import {
   test as base,
   expect,
 } from '@playwright/test';
-import { mintToken } from '../../packages/platform/server/dev-token/src/index';
+import { mintToken } from '../../packages/server/dev-identity/src/index';
 import { sessionCookie } from './session-cookie';
 import type { Persona, Stack } from './stack';
 

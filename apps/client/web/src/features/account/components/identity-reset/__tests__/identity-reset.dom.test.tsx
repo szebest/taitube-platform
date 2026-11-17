@@ -1,6 +1,7 @@
 import { AppearanceProvider, requestAppearancePreference, writeCookie } from '@kit/ui';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render } from '@testing-library/react';
+import { APPEARANCE_COOKIES } from '@vp/domain/settings';
 import { DEFAULT_DEVICE_PREFERENCES } from '#app/__tests__/device-preferences-fixtures';
 import type { MergeState } from '#app/features/account/api/identity-reset';
 import { MergeStateContext } from '#app/features/account/components/preferences-sync/merge-state.context';
@@ -16,7 +17,7 @@ function renderReset(userId: string | undefined) {
   const tree = (id: string | undefined) => (
     <QueryClientProvider client={new QueryClient()}>
       <MergeStateContext value={merge}>
-        <AppearanceProvider stored={requestAppearancePreference()}>
+        <AppearanceProvider stored={requestAppearancePreference(APPEARANCE_COOKIES)}>
           <DevicePreferencesProvider initial={DEFAULT_DEVICE_PREFERENCES}>
             <IdentityReset userId={id} />
           </DevicePreferencesProvider>

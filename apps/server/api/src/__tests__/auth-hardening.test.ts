@@ -1,7 +1,7 @@
 import * as http from 'node:http';
 import { loadEnv } from '@kit/config';
-import { mintToken } from '@kit/dev-token';
 import { createLogger } from '@kit/logger';
+import { mintToken } from '@vp/dev-identity';
 import { toAppConfig } from '@vp/env-schema';
 import { PRODUCTION_ENV } from '@vp/testing/env';
 import { signJwt, signingKey } from '@vp/testing/jwt';

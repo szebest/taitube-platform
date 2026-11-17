@@ -133,7 +133,6 @@
       "project": ["src/**/*.{ts,css}!", "!src/**/__tests__/**!"]
     },
     "packages/**/server/dev-token": {
-      "entry": ["src/main.ts!"],
       "project": [
         "**/*.{ts,tsx,mts,mjs,js}!",
         "!**/__tests__/**!",

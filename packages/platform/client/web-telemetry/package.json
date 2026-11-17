@@ -1,6 +1,6 @@
 {
   "name": "@kit/web-telemetry",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
   "sideEffects": false,
@@ -21,7 +21,11 @@
     "clean": "rimraf dist tsconfig.tsbuildinfo"
   },
   "dependencies": {
-    "@kit/result": "workspace:*",
+    "@kit/result": "workspace:*"
+  },
+  "devDependencies": {
+    "@kit/tsconfig": "workspace:*",
+    "@kit/vite-preset": "workspace:*",
     "@opentelemetry/api": "^1.9.1",
     "@opentelemetry/exporter-trace-otlp-http": "^0.223.0",
     "@opentelemetry/instrumentation": "^0.223.0",
@@ -29,12 +33,6 @@
     "@opentelemetry/resources": "^2.12.0",
     "@opentelemetry/sdk-trace-web": "^2.12.0",
     "@opentelemetry/semantic-conventions": "^1.43.0",
-    "@vp/api-contracts": "workspace:*",
-    "web-vitals": "^6.2.3"
-  },
-  "devDependencies": {
-    "@kit/tsconfig": "workspace:*",
-    "@kit/vite-preset": "workspace:*",
     "@tanstack/react-router": "^1.170.41",
     "@testing-library/react": "^16.3.3",
     "@types/react": "^19.3.0",
@@ -48,11 +46,20 @@
     "rimraf": "^6.1.3",
     "typescript": "^6.0.3",
     "vite-plus": "catalog:",
-    "vitest": "catalog:"
+    "vitest": "catalog:",
+    "web-vitals": "^6.2.3"
   },
   "peerDependencies": {
+    "@opentelemetry/api": "^1.9.1",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.223.0",
+    "@opentelemetry/instrumentation": "^0.223.0",
+    "@opentelemetry/instrumentation-fetch": "^0.223.0",
+    "@opentelemetry/resources": "^2.12.0",
+    "@opentelemetry/sdk-trace-web": "^2.12.0",
+    "@opentelemetry/semantic-conventions": "^1.43.0",
     "@tanstack/react-router": "^1.170.41",
-    "react": "^19.3.0"
+    "react": "^19.3.0",
+    "web-vitals": "^6.2.3"
   },
   "vp": {
     "layer": 7

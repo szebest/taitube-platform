@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { LINK_PLATFORMS } from '@vp/domain';
 import { axeViolations } from '@vp/web-testing/dom';
-import PLATFORM_ICON_PATHS from '../../../icons/platform-icon-paths.generated.json';
+import { PLATFORM_ICON_PATHS } from '../../../icons/platform-icon-paths.generated';
 import { PlatformIcon, type PlatformIconProps } from '../platform-icon';
 
 const renderIcon = (props: Partial<PlatformIconProps> = {}) =>
@@ -25,7 +25,7 @@ describe('PlatformIcon', () => {
       const { container } = renderIcon({ platform });
 
       expect(container.querySelector('path')?.getAttribute('d')).toBe(
-        PLATFORM_ICON_PATHS[platform as keyof typeof PLATFORM_ICON_PATHS]
+        PLATFORM_ICON_PATHS[platform]
       );
     }
   );

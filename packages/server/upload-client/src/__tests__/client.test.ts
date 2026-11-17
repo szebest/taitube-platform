@@ -3,7 +3,6 @@ import * as http from 'node:http';
 import type { AddressInfo } from 'node:net';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { mintToken } from '@kit/dev-token';
 import {
   InMemoryCacheClient,
   InMemoryDatabaseClient,
@@ -11,6 +10,7 @@ import {
 } from '@vp/adapters/in-memory';
 import { S3MultipartStorage, S3StorageClient } from '@vp/adapters/s3';
 import { composeApp } from '@vp/api';
+import { mintToken } from '@vp/dev-identity';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { SEEDED } from '@vp/testing';
 import { expectOk } from '@vp/testing/result';

@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { packageDir } from './workspace-packages';
 
 const UI = packageDir('@kit/ui');
-const OUT = `${UI}/src/icons/platform-icon-paths.generated.json`;
+const OUT = `${UI}/src/icons/platform-icon-paths.generated.ts`;
 const MODULES = join(import.meta.dirname, '..', UI, 'node_modules');
 
 const BRANDS = [
@@ -30,7 +30,13 @@ async function pathOf(slug: string, pkg: string): Promise<string> {
 const paths = Object.fromEntries(
   await Promise.all(BRANDS.map(async ([slug, pkg]) => [slug, await pathOf(slug, pkg)] as const))
 );
-const source = `${JSON.stringify(paths, null, 2)}\n`;
+const PRINT_WIDTH = 100;
+const TAB_WIDTH = 2;
+const entries = Object.entries(paths).map(([slug, path]) => {
+  const line = `  ${slug}: '${path}',`;
+  return `${line.length - 1 > PRINT_WIDTH && slug.length > TAB_WIDTH ? `  ${slug}:\n    '${path}',` : line}\n`;
+});
+const source = `export const PLATFORM_ICON_PATHS = {\n${entries.join('')}} as const;\n`;
 
 const check = process.argv.includes('--check');
 const existing = await readFile(OUT, 'utf8').catch(() => undefined);

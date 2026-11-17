@@ -1,5 +1,6 @@
 import { TOKEN_GROUPS } from '@kit/design-tokens';
 import { act, renderHook } from '@testing-library/react';
+import { FIXTURE_APPEARANCE_STORAGE } from '../../__tests__/appearance-storage-fixture';
 import { readCookie, writeCookie } from '../../cookies/cookie';
 import { sand } from '../../themes/sand';
 import {
@@ -17,6 +18,7 @@ const stored = (
 ): StoredAppearance => ({
   preference: { ...DEFAULT_APPEARANCE, ...preference },
   source,
+  storage: FIXTURE_APPEARANCE_STORAGE,
 });
 
 const renderAppearance = (from: StoredAppearance = stored(), defaults?: TokenSetIds) =>

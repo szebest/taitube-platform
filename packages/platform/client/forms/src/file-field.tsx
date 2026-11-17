@@ -7,7 +7,10 @@ import { useFieldContext } from './form-context';
 export type FileFieldProps = {
   accept?: Accept;
   multiple?: boolean;
-  placeholderText?: string;
+  /** Shown while no file is chosen. */
+  placeholderText: string;
+  /** The heading over the chosen files, worded for how many there are. */
+  selectedText: (count: number) => string;
 };
 
 function mimeTypesFor(accept: Accept = {}): Map<string, string> {
@@ -20,7 +23,8 @@ function mimeTypesFor(accept: Accept = {}): Map<string, string> {
 export function FileField({
   accept,
   multiple = false,
-  placeholderText = "Drag 'n' drop some files here, or click to select files",
+  placeholderText,
+  selectedText,
 }: FileFieldProps) {
   const field = useFieldContext<File[]>();
   const files = field.state.value;
@@ -44,7 +48,7 @@ export function FileField({
               <p>{placeholderText}</p>
             ) : (
               <>
-                <p>Selected file{files.length > 1 ? 's' : ''}:</p>
+                <p>{selectedText(files.length)}</p>
                 {files.map((file) => (
                   <p key={file.name}>{file.name}</p>
                 ))}

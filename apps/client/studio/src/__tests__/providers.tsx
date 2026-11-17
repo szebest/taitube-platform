@@ -12,6 +12,7 @@ import {
   listMyInvites,
   listMyMemberships,
 } from '@vp/api-contracts';
+import { APPEARANCE_COOKIES } from '@vp/domain/settings';
 import {
   ApiProvider,
   AppWords,
@@ -31,7 +32,11 @@ function providersFor(session: Session): ComponentType<PropsWithChildren> {
       <ApiProvider api={api}>
         <SessionProvider session={session}>
           <AppearanceProvider
-            stored={{ preference: { ...DEFAULT_APPEARANCE, mode: 'dark' }, source: 'none' }}
+            stored={{
+              preference: { ...DEFAULT_APPEARANCE, mode: 'dark' },
+              source: 'none',
+              storage: APPEARANCE_COOKIES,
+            }}
           >
             <Tooltip.Provider>
               <ToastProvider toaster={createToaster()}>{children}</ToastProvider>

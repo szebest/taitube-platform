@@ -1,4 +1,4 @@
-import { mintToken } from '@kit/dev-token';
+import { mintToken } from '@vp/dev-identity';
 import { expectOk } from '@vp/testing/result';
 import { type TestApp, bearer, buildTestApp } from '../../__tests__/test-app';
 

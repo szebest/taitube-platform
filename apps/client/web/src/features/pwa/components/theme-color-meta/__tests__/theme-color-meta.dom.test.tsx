@@ -1,5 +1,6 @@
 import { AppearanceProvider, DEFAULT_APPEARANCE, useAppearance } from '@kit/ui';
 import { act, renderHook } from '@testing-library/react';
+import { APPEARANCE_COOKIES } from '@vp/domain/settings';
 import { ThemeColorMeta } from '../theme-color-meta';
 
 const query = (media: string): MediaQueryList => ({
@@ -18,7 +19,11 @@ function renderMeta(mode: 'system' | 'dark' | 'light') {
   return renderHook(() => useAppearance(), {
     wrapper: ({ children }) => (
       <AppearanceProvider
-        stored={{ preference: { ...DEFAULT_APPEARANCE, mode }, source: 'appearance' }}
+        stored={{
+          preference: { ...DEFAULT_APPEARANCE, mode },
+          source: 'appearance',
+          storage: APPEARANCE_COOKIES,
+        }}
       >
         {children}
         <ThemeColorMeta />

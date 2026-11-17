@@ -1,9 +1,11 @@
-import { verifyToken } from '../jwt';
-import { DEV_KEY_ID } from '../keys';
+import { verifyToken as verify } from '../jwt';
 import { serveDevTokens } from '../server';
+import { TEST_CONFIG } from './test-config';
+
+const verifyToken = (token: string) => verify(TEST_CONFIG, token);
 
 async function serve() {
-  const { server, url } = await serveDevTokens(0);
+  const { server, url } = await serveDevTokens(TEST_CONFIG, 0);
   const get = (path: string) => fetch(`${url}${path}`);
   return {
     url,
@@ -26,22 +28,19 @@ describe('packages/dev-token: server', () => {
     expect(new URL(server.url).hostname).toBe('127.0.0.1');
   });
 
-  it.each(['/.well-known/jwks.json', '/jwks.json'])(
-    'serves the dev key set at %s',
-    async (path) => {
-      expect((await server.getJson(path)).keys[0].kid).toBe(DEV_KEY_ID);
-    }
-  );
+  it.each(TEST_CONFIG.routes.jwks)('serves the dev key set at %s', async (path) => {
+    expect((await server.getJson(path)).keys[0].kid).toBe(TEST_CONFIG.keyId);
+  });
 
-  it('answers /token with the token of the persona it names', async () => {
-    const { token } = await server.getJson('/token?persona=admin');
+  it('answers the token route with the token of the persona it names', async () => {
+    const { token } = await server.getJson(`${TEST_CONFIG.routes.token}?persona=admin`);
 
     expect(verifyToken(token).role).toBe('admin');
   });
 
   it.each([
-    { path: '/.well-known/jwks.json', allowed: '*' },
-    { path: '/token?persona=admin', allowed: null },
+    { path: '/keys.json', allowed: '*' },
+    { path: `${TEST_CONFIG.routes.token}?persona=admin`, allowed: null },
   ])('lets another origin read $path: $allowed', async ({ path, allowed }) => {
     const response = await server.get(path);
 
@@ -49,8 +48,8 @@ describe('packages/dev-token: server', () => {
   });
 
   it.each([
-    { asked: 'an unknown persona', path: '/token?persona=root' },
-    { asked: 'no persona', path: '/token' },
+    { asked: 'an unknown persona', path: `${TEST_CONFIG.routes.token}?persona=root` },
+    { asked: 'no persona', path: TEST_CONFIG.routes.token },
   ])('answers $asked with 404', async ({ path }) => {
     expect((await server.get(path)).status).toBe(404);
   });

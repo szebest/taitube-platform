@@ -6,7 +6,7 @@ import {
 } from '@kit/ui';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, renderHook } from '@testing-library/react';
-import { DEFAULT_PREFERENCES } from '@vp/domain/settings';
+import { DEFAULT_PREFERENCES, APPEARANCE_COOKIES } from '@vp/domain/settings';
 import type { PropsWithChildren } from 'react';
 import { DEFAULT_DEVICE_PREFERENCES } from '#app/__tests__/device-preferences-fixtures';
 import { preferencesView } from '#app/__tests__/preferences-fixtures';
@@ -41,7 +41,7 @@ function renderReset() {
         <QueryClientProvider client={queryClient}>
           <PreferencesSyncContext value={{ signedIn: true, save: vi.fn(), notSaved: new Set() }}>
             <MergeStateContext value={merge}>
-              <AppearanceProvider stored={requestAppearancePreference()}>
+              <AppearanceProvider stored={requestAppearancePreference(APPEARANCE_COOKIES)}>
                 <DevicePreferencesProvider initial={DEFAULT_DEVICE_PREFERENCES}>
                   {children}
                 </DevicePreferencesProvider>

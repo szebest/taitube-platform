@@ -42,8 +42,9 @@ build. There is **no** `build.json` preset in this package.
   package by adding `node` to `types`; that error is the boundary working.
 - **Adding a preset means adding a tier.** The preset set mirrors `packages/universal | server | client`
   one-for-one, plus `spec`. A new preset without a matching tier is a smell — say why in the PR.
-- Every preset listed in `package.json`'s `files` array must exist, and vice versa; the array is what pnpm
-  publishes into consumers' `node_modules`.
+- Every preset in `package.json`'s `exports` map must exist, and vice versa; the map is what a consumer's
+  `extends: "@kit/tsconfig/<preset>.json"` resolves through. The package has no api snapshot: `gen:api` skips a
+  package whose exports are all JSON.
 
 ---
 

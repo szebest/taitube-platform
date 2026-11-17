@@ -14,7 +14,7 @@ export type CursorPayload = Record<string, string | number>;
 export type InvalidCursor = InputFailure<typeof ErrorCodes.INVALID_CURSOR>;
 
 export function invalidCursor(field = 'cursor'): InvalidCursor {
-  return { code: ErrorCodes.INVALID_CURSOR, message: 'Invalid pagination cursor', field };
+  return { code: ErrorCodes.INVALID_CURSOR, message: ErrorCodes.INVALID_CURSOR, field };
 }
 
 /**
@@ -26,9 +26,14 @@ export interface CursorCodec {
   decode(cursor: string): Result<CursorPayload, InvalidCursor>;
 }
 
+const isPayload = (value: object): value is CursorPayload =>
+  Object.values(value).every((entry) => typeof entry === 'string' || typeof entry === 'number');
+
 function asPayload(parsed: unknown): Result<CursorPayload, InvalidCursor> {
-  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return err(invalidCursor());
-  return ok(parsed as CursorPayload);
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed) || !isPayload(parsed)) {
+    return err(invalidCursor());
+  }
+  return ok(parsed);
 }
 
 /**
@@ -48,7 +53,7 @@ export class Base64UrlCursorCodec implements CursorCodec {
         const base64 = cursor.replace(/-/g, '+').replace(/_/g, '/');
         const binary = atob(base64.padEnd(Math.ceil(base64.length / 4) * 4, '='));
         const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
-        return JSON.parse(new TextDecoder().decode(bytes)) as unknown;
+        return JSON.parse(new TextDecoder().decode(bytes));
       },
       () => invalidCursor()
     );

@@ -20,6 +20,10 @@ export type AppearanceProviderProps = PropsWithChildren<{
     registered?: readonly Theme[];
     cookieDomain?: string;
 }>;
+export type AppearanceStorage = Readonly<{
+    cookie: string;
+    legacyCookie: string;
+}>;
 export function AspectRatio({ shape, ratio, className, ...props }: AspectRatioProps): JSX.Element
 export interface AspectRatioProps extends ComponentPropsWithRef<typeof AspectRatioPrimitive.Root> {
     shape?: MediaShape;
@@ -208,8 +212,9 @@ export type LazyComponentOptions<TModule, TProps extends object> = {
     };
     importUrl?: (url: string) => Promise<TModule>;
 };
-export function Logo({ variant, size, tone, className, ...props }: LogoProps): JSX.Element
+export function Logo({ name, variant, size, tone, className, ...props }: LogoProps): JSX.Element
 export interface LogoProps extends ComponentPropsWithRef<'span'> {
+    name: string;
     variant?: LogoVariant;
     size?: LogoSize;
     tone?: LogoTone;
@@ -326,6 +331,7 @@ export type SpinnerTone = Extract<ToneOption, 'neutral' | 'accent'>;
 export type StoredAppearance = Readonly<{
     preference: AppearancePreference;
     source: 'appearance' | 'legacy' | 'none';
+    storage: AppearanceStorage;
 }>;
 export function Switch({ size, className, ...props }: SwitchProps): JSX.Element
 export interface SwitchProps extends ComponentPropsWithRef<typeof SwitchPrimitive.Root> {
@@ -446,7 +452,7 @@ export const popoverStyles: TVReturnType<{ size: { sm: string; md: string; lg: s
 export const progressStyles: TVReturnType<{ size: { sm: { root: string; }; md: { root: string; }; lg: { root: string; }; }; tone: { accent: { root: string; indicator: string; }; neutral: { root: string; indicator: string; }; }; }, { root: string; indicator: string; }, undefined, { size: { sm: { root: string; }; md: { root: string; }; lg: { root: string; }; }; tone: { accent: { root: string; indicator: string; }; neutral: { root: string; indicator: string; }; }; }, { root: string; indicator: string; }, TVReturnTypeLike<{ size: { sm: { root: string; }; md: { root: string; }; lg: { root: string; }; }; tone: { accent: { root: string; indicator: string; }; neutral: { root: string; indicator: string; }; }; }, { root: string; indicator: string; }>>
 export const readCookie: IsomorphicFn<[name: string], string | undefined, string | undefined>
 export function registerCustomTheme(colours: ThemeColours, host?: Parameters<typeof registerTheme>[1]): Result<RegisteredTheme, InvalidTheme | ThemeNotInstalled>
-export function requestAppearancePreference(): StoredAppearance
+export function requestAppearancePreference(storage: AppearanceStorage): StoredAppearance
 export const scrollAreaStyles: TVReturnType<{ size: { sm: { scrollbar: string; }; md: { scrollbar: string; }; }; fade: { true: { viewport: string; }; }; }, { root: string; viewport: string; scrollbar: string; thumb: string; }, undefined, { size: { sm: { scrollbar: string; }; md: { scrollbar: string; }; }; fade: { true: { viewport: string; }; }; }, { root: string; viewport: string; scrollbar: string; thumb: string; }, TVReturnTypeLike<{ size: { sm: { scrollbar: string; }; md: { scrollbar: string; }; }; fade: { true: { viewport: string; }; }; }, { root: string; viewport: string; scrollbar: string; thumb: string; }>>
 export const segmentedControlStyles: TVReturnType<{ tone: { neutral: { item: string; indicator: string; }; accent: { item: string; indicator: string; }; }; size: { sm: { root: string; }; md: { root: string; }; lg: { root: string; }; }; }, { root: string; item: string; indicator: string; }, undefined, { tone: { neutral: { item: string; indicator: string; }; accent: { item: string; indicator: string; }; }; size: { sm: { root: string; }; md: { root: string; }; lg: { root: string; }; }; }, { root: string; item: string; indicator: string; }, TVReturnTypeLike<{ tone: { neutral: { item: string; indicator: string; }; accent: { item: string; indicator: string; }; }; size: { sm: { root: string; }; md: { root: string; }; lg: { root: string; }; }; }, { root: string; item: string; indicator: string; }>>
 export const selectStyles: TVReturnType<{ [key: string]: { [key: string]: ClassNameValue | SlotsClassValue<{ root: string; chevron: string; indicator: string; }, undefined>; }; } | { variant: { outline: ClassNameValue | SlotsClassValue<{ root: string; chevron: string; indicator: string; }, undefined>; soft: ClassNameValue | SlotsClassValue<{ root: string; chevron: string; indicator: string; }, undefined>; }; size: { sm: ClassNameValue | SlotsClassValue<{ root: string; chevron: string; indicator: string; }, undefined>; md: ClassNameValue | SlotsClassValue<{ root: string; chevron: string; indicator: string; }, undefined>; lg: ClassNameValue | SlotsClassValue<{ root: string; chevron: string; indicator: string; }, undefined>; }; shape: { text: ClassNameValue | SlotsClassValue<{ root: string; chevron: string; indicator: string; }, undefined>; pill: ClassNameValue | SlotsClassValue<{ root: string; chevron: string; indicator: string; }, undefined>; }; }, { root: string; chevron: string; indicator: string; }, undefined, { variant: { outline: { root: string; }; soft: { root: string; }; }; size: { sm: { root: string; }; md: { root: string; }; lg: { root: string; }; }; shape: { text: { root: string; }; pill: { root: string; }; }; }, { root: string; input: string; adornment: string; }, TVReturnType<{ variant: { outline: { root: string; }; soft: { root: string; }; }; size: { sm: { root: string; }; md: { root: string; }; lg: { root: string; }; }; shape: { text: { root: string; }; pill: { root: string; }; }; }, { root: string; input: string; adornment: string; }, undefined, { variant: { outline: { root: string; }; soft: { root: string; }; }; size: { sm: { root: string; }; md: { root: string; }; lg: { root: string; }; }; shape: { text: { root: string; }; pill: { root: string; }; }; }, { root: string; input: string; adornment: string; }, TVReturnTypeLike<{ variant: { outline: { root: string; }; soft: { root: string; }; }; size: { sm: { root: string; }; md: { root: string; }; lg: { root: string; }; }; shape: { text: { root: string; }; pill: { root: string; }; }; }, { root: string; input: string; adornment: string; }>>>
@@ -495,10 +501,15 @@ export function writeCookie(name: string, value: string, { maxAge, domain }: Coo
 ## @kit/ui/appearance/preference
 export type AppearancePreference = z.output<typeof AppearancePreferenceSchema>;
 export const AppearancePreferenceSchema: z.ZodObject<{ schema: z.ZodLiteral<2>; theme: z.ZodDefault<z.ZodUnion<readonly [z.ZodType<string | null, unknown, z.core.$ZodTypeInternals<string | null, unknown>>, z.ZodPipe<z.ZodUnknown, z.ZodTransform<string | null, unknown>>]>>; mode: z.ZodDefault<z.ZodUnion<readonly [z.ZodType<"system" | "dark" | "light" | "oled", unknown, z.core.$ZodTypeInternals<"system" | "dark" | "light" | "oled", unknown>>, z.ZodPipe<z.ZodUnknown, z.ZodTransform<"system" | "dark" | "light" | "oled", unknown>>]>>; accent: z.ZodDefault<z.ZodUnion<readonly [z.ZodType<string | null, unknown, z.core.$ZodTypeInternals<string | null, unknown>>, z.ZodPipe<z.ZodUnknown, z.ZodTransform<string | null, unknown>>]>>; customGround: z.ZodDefault<z.ZodUnion<readonly [z.ZodType<string | null, unknown, z.core.$ZodTypeInternals<string | null, unknown>>, z.ZodPipe<z.ZodUnknown, z.ZodTransform<string | null, unknown>>]>>; customAccent: z.ZodDefault<z.ZodUnion<readonly [z.ZodType<string | null, unknown, z.core.$ZodTypeInternals<string | null, unknown>>, z.ZodPipe<z.ZodUnknown, z.ZodTransform<string | null, unknown>>]>>; contrast: z.ZodDefault<z.ZodUnion<readonly [z.ZodType<"auto" | "standard" | "more", unknown, z.core.$ZodTypeInternals<"auto" | "standard" | "more", unknown>>, z.ZodPipe<z.ZodUnknown, z.ZodTransform<"auto" | "standard" | "more", unknown>>]>>; overrides: z.ZodDefault<z.ZodUnion<readonly [z.ZodType<{ typography?: string | undefined; fontSize?: string | undefined; spacing?: string | undefined; sizing?: string | undefined; radius?: string | undefined; border?: string | undefined; shadow?: string | undefined; ambient?: string | undefined; motion?: string | undefined; }, unknown, z.core.$ZodTypeInternals<{ typography?: string | undefined; fontSize?: string | undefined; spacing?: string | undefined; sizing?: string | undefined; radius?: string | undefined; border?: string | undefined; shadow?: string | undefined; ambient?: string | undefined; motion?: string | undefined; }, unknown>>, z.ZodPipe<z.ZodUnknown, z.ZodTransform<{ typography?: string | undefined; fontSize?: string | undefined; spacing?: string | undefined; sizing?: string | undefined; radius?: string | undefined; border?: string | undefined; shadow?: string | undefined; ambient?: string | undefined; motion?: string | undefined; }, unknown>>]>>; }, z.core.$strip>
+export type AppearanceStorage = Readonly<{
+    cookie: string;
+    legacyCookie: string;
+}>;
 export const DEFAULT_APPEARANCE: { schema: 2; theme: string | null; mode: "system" | "dark" | "light" | "oled"; accent: string | null; customGround: string | null; customAccent: string | null; contrast: "auto" | "standard" | "more"; overrides: { typography?: string | undefined; fontSize?: string | undefined; spacing?: string | undefined; sizing?: string | undefined; radius?: string | undefined; border?: string | undefined; shadow?: string | undefined; ambient?: string | undefined; motion?: string | undefined; }; }
 export type StoredAppearance = Readonly<{
     preference: AppearancePreference;
     source: 'appearance' | 'legacy' | 'none';
+    storage: AppearanceStorage;
 }>;
 export type TokenSetId<G extends TokenGroup> = Registry['offer'][G][number]['id'];
 export type TokenSetIds = Partial<{
@@ -506,9 +517,9 @@ export type TokenSetIds = Partial<{
 }>;
 export function accountAppearance({ schema: _schema, overrides, ...axes }: AppearancePreference): AppearancePreferences
 export function appearanceFromAccount(saved: AppearancePreferences): AppearancePreference
-export function requestAppearancePreference(): StoredAppearance
-export function rewriteLegacyAppearance(preference: AppearancePreference, domain?: string): void
-export function saveAppearancePreference(preference: AppearancePreference, domain?: string): void
+export function requestAppearancePreference(storage: AppearanceStorage): StoredAppearance
+export function rewriteLegacyAppearance(preference: AppearancePreference, storage: AppearanceStorage, domain?: string): void
+export function saveAppearancePreference(preference: AppearancePreference, { cookie }: AppearanceStorage, domain?: string): void
 
 ## @kit/ui/appearance/register-theme
 export type InvalidTheme = InputFailure<typeof ErrorCodes.VALIDATION_FAILED, {
