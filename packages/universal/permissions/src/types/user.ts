@@ -1,4 +1,4 @@
-import type { ChannelRole } from '@vp/domain';
+import type { ApiScope, ChannelRole } from '@vp/domain';
 
 export const ROLES = ['GUEST', 'USER', 'CREATOR', 'MODERATOR', 'ADMIN'] as const;
 export type Role = (typeof ROLES)[number];
@@ -31,6 +31,14 @@ export interface UserContext {
   readonly email?: string;
   /** Channel id to the caller's role there and the channel owner's user id; loaded per request. */
   readonly memberships?: Readonly<Record<string, ChannelGrant>>;
+  /** Set when the request carries a personal access token: what it may do, on which channel. */
+  readonly token?: TokenGrant;
+}
+
+export interface TokenGrant {
+  readonly id: string;
+  readonly channelId: string;
+  readonly scopes: readonly ApiScope[];
 }
 
 interface ChannelGrant {

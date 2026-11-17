@@ -2,6 +2,7 @@ import * as adminCategories from './admin-categories';
 import * as adminDlq from './admin-dlq';
 import * as adminVideos from './admin-videos';
 import * as analytics from './analytics';
+import * as apiTokens from './api-tokens';
 import * as bootstrap from './bootstrap';
 import * as captions from './captions';
 import * as categories from './categories';
@@ -67,6 +68,7 @@ export * from './admin-categories';
 export * from './admin-dlq';
 export * from './admin-videos';
 export * from './analytics';
+export * from './api-tokens';
 export * from './bootstrap';
 export * from './captions';
 export * from './categories';
@@ -140,6 +142,7 @@ export const contracts = {
   adminDlq,
   adminVideos,
   analytics,
+  apiTokens,
   bootstrap,
   captions,
   categories,

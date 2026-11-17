@@ -41,8 +41,6 @@ export const studioLive = {
   liveRevealField: dt('Reveal {label}'),
   liveHideField: dt('Hide {label}'),
   liveCopyField: dt('Copy {label}'),
-  liveCopied: dt('Copied: {label}'),
-  liveCopyFailed: dt('Could not copy: {label}'),
   liveIdleLine: dt('You are not live. Start streaming from OBS and this page goes live with you.'),
   liveEndedLine: dt(
     'This broadcast has ended. The recording is published once it finishes processing.'

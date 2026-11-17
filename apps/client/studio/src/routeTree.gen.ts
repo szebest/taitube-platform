@@ -16,6 +16,7 @@ import { Route as AuthedAdminRouteImport } from './routes/_authed/admin';
 import { Route as AuthedAnalyticsRouteImport } from './routes/_authed/analytics';
 import { Route as AuthedCommentsRouteImport } from './routes/_authed/comments';
 import { Route as AuthedCustomizationRouteImport } from './routes/_authed/customization';
+import { Route as AuthedDevelopersRouteImport } from './routes/_authed/developers';
 import { Route as AuthedInvitesRouteImport } from './routes/_authed/invites';
 import { Route as AuthedLiveRouteImport } from './routes/_authed/live';
 import { Route as AuthedTeamRouteImport } from './routes/_authed/team';
@@ -67,6 +68,11 @@ const AuthedCommentsRoute = AuthedCommentsRouteImport.update({
 const AuthedCustomizationRoute = AuthedCustomizationRouteImport.update({
   id: '/customization',
   path: '/customization',
+  getParentRoute: () => AuthedRoute,
+} as any);
+const AuthedDevelopersRoute = AuthedDevelopersRouteImport.update({
+  id: '/developers',
+  path: '/developers',
   getParentRoute: () => AuthedRoute,
 } as any);
 const AuthedInvitesRoute = AuthedInvitesRouteImport.update({
@@ -169,6 +175,7 @@ export interface FileRoutesByFullPath {
   '/analytics': typeof AuthedAnalyticsRoute;
   '/comments': typeof AuthedCommentsRoute;
   '/customization': typeof AuthedCustomizationRoute;
+  '/developers': typeof AuthedDevelopersRoute;
   '/invites': typeof AuthedInvitesRoute;
   '/live': typeof AuthedLiveRoute;
   '/team': typeof AuthedTeamRoute;
@@ -194,6 +201,7 @@ export interface FileRoutesByTo {
   '/analytics': typeof AuthedAnalyticsRoute;
   '/comments': typeof AuthedCommentsRoute;
   '/customization': typeof AuthedCustomizationRoute;
+  '/developers': typeof AuthedDevelopersRoute;
   '/invites': typeof AuthedInvitesRoute;
   '/live': typeof AuthedLiveRoute;
   '/team': typeof AuthedTeamRoute;
@@ -222,6 +230,7 @@ export interface FileRoutesById {
   '/_authed/analytics': typeof AuthedAnalyticsRoute;
   '/_authed/comments': typeof AuthedCommentsRoute;
   '/_authed/customization': typeof AuthedCustomizationRoute;
+  '/_authed/developers': typeof AuthedDevelopersRoute;
   '/_authed/invites': typeof AuthedInvitesRoute;
   '/_authed/live': typeof AuthedLiveRoute;
   '/_authed/team': typeof AuthedTeamRoute;
@@ -250,6 +259,7 @@ export interface FileRouteTypes {
     | '/analytics'
     | '/comments'
     | '/customization'
+    | '/developers'
     | '/invites'
     | '/live'
     | '/team'
@@ -275,6 +285,7 @@ export interface FileRouteTypes {
     | '/analytics'
     | '/comments'
     | '/customization'
+    | '/developers'
     | '/invites'
     | '/live'
     | '/team'
@@ -302,6 +313,7 @@ export interface FileRouteTypes {
     | '/_authed/analytics'
     | '/_authed/comments'
     | '/_authed/customization'
+    | '/_authed/developers'
     | '/_authed/invites'
     | '/_authed/live'
     | '/_authed/team'
@@ -378,6 +390,13 @@ declare module '@tanstack/react-router' {
       path: '/customization';
       fullPath: '/customization';
       preLoaderRoute: typeof AuthedCustomizationRouteImport;
+      parentRoute: typeof AuthedRoute;
+    };
+    '/_authed/developers': {
+      id: '/_authed/developers';
+      path: '/developers';
+      fullPath: '/developers';
+      preLoaderRoute: typeof AuthedDevelopersRouteImport;
       parentRoute: typeof AuthedRoute;
     };
     '/_authed/invites': {
@@ -536,6 +555,7 @@ interface AuthedRouteChildren {
   AuthedAnalyticsRoute: typeof AuthedAnalyticsRoute;
   AuthedCommentsRoute: typeof AuthedCommentsRoute;
   AuthedCustomizationRoute: typeof AuthedCustomizationRoute;
+  AuthedDevelopersRoute: typeof AuthedDevelopersRoute;
   AuthedInvitesRoute: typeof AuthedInvitesRoute;
   AuthedLiveRoute: typeof AuthedLiveRoute;
   AuthedTeamRoute: typeof AuthedTeamRoute;
@@ -554,6 +574,7 @@ const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedAnalyticsRoute: AuthedAnalyticsRoute,
   AuthedCommentsRoute: AuthedCommentsRoute,
   AuthedCustomizationRoute: AuthedCustomizationRoute,
+  AuthedDevelopersRoute: AuthedDevelopersRoute,
   AuthedInvitesRoute: AuthedInvitesRoute,
   AuthedLiveRoute: AuthedLiveRoute,
   AuthedTeamRoute: AuthedTeamRoute,

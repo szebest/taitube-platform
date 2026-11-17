@@ -41,9 +41,16 @@ function setUp({ withVideo = true } = {}) {
       return ok(event as never);
     },
   };
+  const queued: unknown[] = [];
+  const outbox = {
+    enqueue: async (item: unknown) => {
+      queued.push(item);
+      return ok(item as never);
+    },
+  };
   const edit = (changes: Parameters<typeof editStored>[5], content = 'new') =>
     editStored(
-      { videosRepo: videos, userEventsRepo: events },
+      { videosRepo: videos, userEventsRepo: events, outboxRepo: outbox },
       root,
       [reply],
       { shadowed: new Map(), comments },
@@ -51,12 +58,12 @@ function setUp({ withVideo = true } = {}) {
       changes,
       async () => THREAD
     );
-  return { root, reply, video, told, edit };
+  return { root, reply, video, told, queued, edit };
 }
 
 describe('in-memory: editStored', () => {
   it('rewrites the text and the question flag and leaves the state and the count alone', async () => {
-    const { root, video, told, edit } = setUp();
+    const { root, video, told, queued, edit } = setUp();
 
     await edit({ looksLikeQuestion: true });
 
@@ -68,11 +75,11 @@ describe('in-memory: editStored', () => {
       isPinned: true,
     });
     expect(video?.commentsCount).toBe(2);
-    expect(told).toEqual([]);
+    expect([told, queued]).toEqual([[], []]);
   });
 
   it('holds the comment, clears what a moderator wrote, takes it and its reply off the count and tells the moderators', async () => {
-    const { root, reply, video, told, edit } = setUp();
+    const { root, reply, video, told, queued, edit } = setUp();
 
     const written = await edit({
       looksLikeQuestion: false,
@@ -92,6 +99,7 @@ describe('in-memory: editStored', () => {
     expect(reply.moderationState).toBe('published');
     expect(video?.commentsCount).toBe(0);
     expect(told).toMatchObject([{ userId: 'owner', type: 'comment.held' }]);
+    expect(queued).toMatchObject([{ payload: { job: { name: 'announce-comment-held' } } }]);
     expect(written).toEqual(ok(THREAD));
   });
 

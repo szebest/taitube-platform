@@ -9,6 +9,7 @@ import { adminReportsRoutes } from './admin/reports';
 import { adminScreeningRoutes } from './admin/screening';
 import { adminVideosRoutes } from './admin/videos';
 import { analyticsRoutes } from './analytics';
+import { apiTokenRoutes } from './api-tokens';
 import { bootstrapRoutes } from './bootstrap';
 import { captionsRoutes } from './captions';
 import { categoriesRoutes } from './categories';
@@ -110,6 +111,7 @@ const ROUTES: readonly FastifyPluginAsync[] = [
   channelFeaturedRoutes,
   channelTeamRoutes,
   channelExportRoutes,
+  apiTokenRoutes,
   channelRestrictionsRoutes,
   commentModerationRoutes,
   commentRemovalsRoutes,

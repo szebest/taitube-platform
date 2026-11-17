@@ -167,14 +167,16 @@ export function createExportProcessor(deps: ExportProcessorDeps) {
       return ok({ exportId: id, rowCount: null });
     }
 
-    await announce(ownerId, 'export.ready', {
+    const payload = {
       exportId: id,
       channelId,
       kind,
       format,
       rowCount: written.value,
       expiresAt: expiresAt.toISOString(),
-    });
+    };
+    const listeners = new Set([ownerId, ...(started.requestedBy ? [started.requestedBy] : [])]);
+    await Promise.all([...listeners].map((userId) => announce(userId, 'export.ready', payload)));
     return ok({ exportId: id, rowCount: written.value });
   }
 

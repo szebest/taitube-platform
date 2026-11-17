@@ -203,6 +203,10 @@ export function describeCommentRepositoryContract(makeSubject: MakeRepositoriesS
       expect(events.map(({ type }) => type).filter((type) => type === 'comment.held')).toEqual([
         'comment.held',
       ]);
+      const queued = expectOk(await subject.repositories.outbox.claimBatch(9)).map(({ payload }) =>
+        payload.type === 'queue' ? payload.job.name : ''
+      );
+      expect(queued).toContain('announce-comment-held');
     });
 
     it('answers null and writes nothing when editing a comment that is gone', async () => {

@@ -10,6 +10,7 @@ const id = (n: number) => `0190c3a0-5e1d-7000-8000-0000000ee0${String(n).padStar
 const base = {
   targetId: EDITOR_ID,
   actorUserId: null,
+  actorTokenId: null,
   actor: null,
   createdAt: '2026-01-01T00:00:00.000Z',
 } as const;
@@ -175,5 +176,23 @@ describe('apps/client/studio: AuditEntry', () => {
       'href',
       `/videos/${EDITOR_ID}/edit`
     );
+  });
+
+  it.each([
+    { scenario: 'a session', actorTokenId: null, marked: false },
+    { scenario: 'a token', actorTokenId: '0190c3a0-5e1d-7000-8000-0000000ee099', marked: true },
+  ])('says a member acted with $scenario: $marked', async ({ actorTokenId, marked }) => {
+    const entry = {
+      ...editedVideo,
+      actor: { handle: 'ed', displayName: 'Ed', avatarUrl: null },
+      actorTokenId,
+    };
+    await renderTeam('/team?tab=audit', { state: { auditPages: [[entry]] } });
+
+    const row = await within(
+      await screen.findByRole('list', { name: 'Audit log entries' })
+    ).findByRole('listitem');
+
+    expect(within(row).queryByText('with a token') !== null).toBe(marked);
   });
 });

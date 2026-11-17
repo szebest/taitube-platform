@@ -77,7 +77,7 @@ export class InMemoryVideoStudioRepository extends VideoStudioRepository {
   async updateMetadata(
     options: UpdateStudioMetadataOptions
   ): Promise<Result<StudioMetadataOutcome, DatabaseUnavailable | VersionConflict>> {
-    const { videoId, expectedVersion, patch, userId, auditFields } = options;
+    const { videoId, expectedVersion, patch, userId, tokenId, auditFields } = options;
     const { categoryId } = patch;
 
     if (categoryId) {
@@ -108,6 +108,7 @@ export class InMemoryVideoStudioRepository extends VideoStudioRepository {
           ...entry,
           channelId: channel.value.id,
           actorUserId: userId,
+          actorTokenId: tokenId,
         });
         if (isErr(audited)) return audited;
       }

@@ -1,5 +1,6 @@
 import { type Comment, type NewChannelAuditEntry, commentModerationAudit } from '@vp/domain';
 import type { UserContext } from '@vp/permissions';
+import { auditActor } from './audit-actor';
 
 /** Deleting a comment is silent in the log, and the author's own delete is not moderation at all. */
 export function deletionAudit(
@@ -12,7 +13,7 @@ export function deletionAudit(
   return {
     audit: commentModerationAudit({
       channelId,
-      actorUserId: actor.id,
+      ...auditActor(actor),
       action: 'remove',
       commentId: comment.id,
       videoId: comment.videoId,
@@ -31,7 +32,7 @@ export function pinAudit(
 
   return {
     channelId,
-    actorUserId: actor.id,
+    ...auditActor(actor),
     action: 'comment.pinned',
     targetType: 'comment',
     targetId: comment.id,

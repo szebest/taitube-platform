@@ -27,6 +27,13 @@ export async function registerOpenApi(app: FastifyInstance): Promise<void> {
             bearerFormat: 'JWT',
             description: 'Dev or production bearer JWT',
           },
+          personalAccessToken: {
+            type: 'http',
+            scheme: 'bearer',
+            bearerFormat: 'tt_pat_{prefix}_{secret}',
+            description:
+              'A personal access token from POST /v1/me/api-tokens; the roles listed on a route are the scopes it needs',
+          },
           adminToken: {
             type: 'apiKey',
             in: 'header',

@@ -14,6 +14,8 @@ apps/client/studio/src/
     comments/moderation-queue/     ModerationQueue
     section/customization-section/ CustomizationSection
     image/image-cropper/           ImageCropper
+    developers/secret-reveal/      SecretReveal
+    developers/scope-picker/       ScopePicker
   features/<feature>/components/   smart wrappers (below): data, formatting, permissions
 ```
 
@@ -34,6 +36,8 @@ These components exist for the studio alone today, so they stay in the studio's 
 | [ModerationQueue](moderation-queue.md) | The held comments as a listbox, one open | none | [113](../../../tickets/113-channel-comment-moderation.md) |
 | [CustomizationSection](customization-section.md) | A settings block with its own save | `Card`, `Button` | [72](../../../tickets/72-frontend-settings-customization-system.md), [113](../../../tickets/113-channel-comment-moderation.md) |
 | [ImageCropper](image-cropper.md) | Frame a picture or banner: crop frame, zoom, safe-area guides, previews, job progress | `Dialog`, `SegmentedControl`, `Slider`, `Progress`, `Callout`, `Button` | [115](../../../tickets/115-channel-page-customisation.md) |
+| [SecretReveal](secret-reveal.md) | A secret shown once: warning, value, Copy and a Done gated on "I saved it" | `Callout`, `Input`, `Button`, `Checkbox` | [118](../../../tickets/118-creator-data-portability-and-api.md) |
+| [ScopePicker](scope-picker.md) | A token's scopes as checkboxes grouped by what they touch | `Checkbox` | [118](../../../tickets/118-creator-data-portability-and-api.md) |
 | [Charts](charts.md) | `ChartFrame` and the palette helpers every chart follows | `Skeleton`, `Badge` | [60](../../../tickets/60-creator-studio-dashboard-video-management-ui.md) |
 
 ## Smart wrappers the studio needs

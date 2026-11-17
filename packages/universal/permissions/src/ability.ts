@@ -1,6 +1,7 @@
 import { AbilityBuilder, createMongoAbility } from '@casl/ability';
 import { defineAdminRules } from './rules/admin.rules';
 import { defineAnalyticsRules } from './rules/analytics.rules';
+import { defineApiTokenRules } from './rules/api-token.rules';
 import { defineCaptionRules } from './rules/caption.rules';
 import { defineChannelExportRules } from './rules/channel-export.rules';
 import { defineChannelTeamRules } from './rules/channel-team.rules';
@@ -18,9 +19,21 @@ import { defineUploadRules } from './rules/upload.rules';
 import { defineVideoRules } from './rules/video.rules';
 import { defineWatchPartyRules } from './rules/watch-party.rules';
 import { defineWebhookRules } from './rules/webhook.rules';
+import { onTokenChannel, withinScopes } from './token-scopes';
 import type { AppAbility, UserContext } from './types/index';
 
+/**
+ * The one place a token is narrowed: the ability is built for the user on the token's channel, then
+ * cut down to the token's scopes, so a token never does more than its user can.
+ */
 export function getUserPermissions(user: UserContext | null): AppAbility {
+  const token = user?.token;
+  if (!(user && token)) return buildAbility(user);
+  const onChannel = onTokenChannel(user, token);
+  return withinScopes(buildAbility(onChannel), onChannel, token);
+}
+
+function buildAbility(user: UserContext | null): AppAbility {
   const builder = new AbilityBuilder<AppAbility>(createMongoAbility);
 
   defineVideoRules(user, builder);
@@ -29,6 +42,7 @@ export function getUserPermissions(user: UserContext | null): AppAbility {
   defineChannelRules(user, builder);
   defineChannelTeamRules(user, builder);
   defineChannelExportRules(user, builder);
+  defineApiTokenRules(user, builder);
   defineUploadRules(user, builder);
   defineAnalyticsRules(user, builder);
   definePlaylistRules(user, builder);
