@@ -1,7 +1,8 @@
+import { getTracer } from '@kit/observability';
 import type { Result } from '@kit/result';
 import { type Attributes, SpanStatusCode } from '@opentelemetry/api';
 import { ErrorCodes, type WatchPartyPermissionMissing } from '@vp/errors';
-import { TRACER_NAME, getTracer } from '@vp/observability';
+import { TRACER_NAME } from '@vp/pipeline-metrics';
 import type { WatchPartyDeps } from './watch-party-deps';
 
 type Failing = { readonly code: string };

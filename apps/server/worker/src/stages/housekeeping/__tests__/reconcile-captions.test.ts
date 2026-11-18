@@ -1,5 +1,5 @@
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
-import { createPipelineMetrics } from '@vp/observability';
+import { createPipelineMetrics } from '@vp/pipeline-metrics';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { runReconcileCaptions } from '../reconcile-captions';

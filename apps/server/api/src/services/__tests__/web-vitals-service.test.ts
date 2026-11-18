@@ -1,5 +1,5 @@
 import type { WebVital, WebVitalsBatch } from '@vp/api-contracts';
-import { type PipelineMetrics, createPipelineMetrics } from '@vp/observability';
+import { type PipelineMetrics, createPipelineMetrics } from '@vp/pipeline-metrics';
 import { expectOk } from '@vp/testing/result';
 import { WebVitalsService } from '../web-vitals-service';
 

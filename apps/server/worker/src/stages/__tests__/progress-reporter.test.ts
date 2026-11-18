@@ -2,7 +2,7 @@ import { createLogger } from '@kit/logger';
 import { InMemoryCacheClient, InMemoryRepositories } from '@vp/adapters/in-memory';
 import { THUMBNAIL_PROGRESS } from '@vp/domain';
 import { userChannel } from '@vp/events';
-import { createPipelineMetrics } from '@vp/observability';
+import { createPipelineMetrics } from '@vp/pipeline-metrics';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { TranscodeProgressReporter } from '../progress-reporter';

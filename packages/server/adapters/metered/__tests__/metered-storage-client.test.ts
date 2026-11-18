@@ -1,4 +1,4 @@
-import { type PipelineMetrics, createPipelineMetrics } from '@vp/observability';
+import { type PipelineMetrics, createPipelineMetrics } from '@vp/pipeline-metrics';
 import { expectOk } from '@vp/testing/result';
 import { InMemoryStorageClient } from '../../in-memory/in-memory-storage-client';
 import { MeteredStorageClient } from '../metered-storage-client';

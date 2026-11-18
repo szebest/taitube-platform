@@ -3,7 +3,7 @@ import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-mem
 import type { QueueJob } from '@vp/core/ports';
 import { ErrorCodes } from '@vp/errors';
 import { CANONICAL_LADDER, type LadderEntry, type PackageJob } from '@vp/job-contracts';
-import { createPipelineMetrics } from '@vp/observability';
+import { createPipelineMetrics } from '@vp/pipeline-metrics';
 import { renditionPlaylistKey } from '@vp/storage';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';

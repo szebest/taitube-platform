@@ -11,8 +11,8 @@ import {
 import type { CreateWatchPartyBody, WatchPartyView } from '@vp/api-contracts';
 import type { PartyGuestSession } from '@vp/core/ports';
 import { type AppConfigOverrides, asCdnBase, inProcessAppConfig } from '@vp/env-schema';
-import { createPipelineMetrics, createWatchPartyMetrics } from '@vp/observability';
 import type { UserContext } from '@vp/permissions';
+import { createPipelineMetrics, createWatchPartyMetrics } from '@vp/pipeline-metrics';
 import { captureLog } from '@vp/testing/log-capture';
 import { expectOk } from '@vp/testing/result';
 import type { PartyCaller } from '../party-caller';

@@ -6,7 +6,7 @@ import { InMemoryCacheClient } from '@vp/adapters/in-memory';
 import type { PatternMessageListener } from '@vp/core/ports';
 import { type CacheUnavailable, ErrorCodes, cacheUnavailable } from '@vp/errors';
 import { userChannel, videoChannel } from '@vp/events';
-import { createPipelineMetrics } from '@vp/observability';
+import { createPipelineMetrics } from '@vp/pipeline-metrics';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { SseHub, type SseHubOptions } from '../sse-hub';
 

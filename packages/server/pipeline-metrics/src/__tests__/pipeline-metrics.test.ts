@@ -1,7 +1,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { MetricsServer } from '@kit/observability';
 import { createPipelineMetrics } from '../pipeline-metrics';
-import { MetricsServer } from '../server';
 
 /**
  * Extracts metric names from the markdown table in docs/SDD.md §13.1.

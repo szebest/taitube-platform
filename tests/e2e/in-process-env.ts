@@ -27,7 +27,7 @@ import { inProcessAppConfig } from '../../packages/server/env-schema/src/index';
 import { mediaTools } from '../../packages/server/ffmpeg/src/index';
 import { fingerprintTools } from '../../packages/server/fingerprint/src/index';
 import { QUEUES } from '../../packages/server/job-contracts/src/index';
-import { createPipelineMetrics } from '../../packages/server/observability/src/index';
+import { createPipelineMetrics } from '../../packages/server/pipeline-metrics/src/index';
 import { speechTools } from '../../packages/server/whisper/src/index';
 import { startMockS3Server } from './s3-mock-server';
 

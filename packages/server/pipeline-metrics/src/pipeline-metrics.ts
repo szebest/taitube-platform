@@ -1,6 +1,6 @@
+import { createMetricsRegistry } from '@kit/observability';
 import { Counter, Gauge, Histogram, type Registry } from 'prom-client';
 import { type CaptionsMetrics, createCaptionsMetrics } from './captions-metrics';
-import { createMetricsRegistry } from './metrics';
 import { type PlaybackMetrics, createPlaybackMetrics } from './playback-metrics';
 import { type ScreeningMetrics, createScreeningMetrics } from './screening-metrics';
 import { type WebVitalsMetrics, createWebVitalsMetrics } from './web-vitals-metrics';

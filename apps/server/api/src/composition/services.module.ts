@@ -1,9 +1,9 @@
 import type { Container } from '@kit/composition';
 import { createLogger } from '@kit/logger';
+import { MetricsServer } from '@kit/observability';
 import { Paginator } from '@kit/pagination';
 import { Adapters, queueNamed } from '@vp/adapters/composition';
 import { ErrorCodeRegistry, errorCodeRegistry } from '@vp/errors';
-import { MetricsServer } from '@vp/observability';
 import {
   AnalyticsService,
   CategoryService,

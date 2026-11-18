@@ -2,7 +2,7 @@ import { createHash, createHmac, randomBytes } from 'node:crypto';
 import type { Container } from '@kit/composition';
 import { Adapters } from '@vp/adapters/composition';
 import { WATCH_PARTY_WILDCARD_CHANNEL, roomIdOfWatchParty } from '@vp/events';
-import { createWatchPartyMetrics } from '@vp/observability';
+import { createWatchPartyMetrics } from '@vp/pipeline-metrics';
 import { uuidv7 } from 'uuidv7';
 import {
   BufferingWait,

@@ -9,7 +9,7 @@ import { videoStatusChanged } from '@vp/domain';
 import { queueUnavailable } from '@vp/errors';
 import { userChannel } from '@vp/events';
 import { ids } from '@vp/job-contracts';
-import { type PipelineMetrics, createPipelineMetrics } from '@vp/observability';
+import { type PipelineMetrics, createPipelineMetrics } from '@vp/pipeline-metrics';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { manualInterval } from '../../../__tests__/manual-interval';

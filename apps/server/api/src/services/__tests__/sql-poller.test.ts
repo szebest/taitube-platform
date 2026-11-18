@@ -1,6 +1,6 @@
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { inProcessAppConfig } from '@vp/env-schema';
-import { createPipelineMetrics } from '@vp/observability';
+import { createPipelineMetrics } from '@vp/pipeline-metrics';
 import { SEEDED } from '@vp/testing';
 import { pollSqlMetrics } from '../sql-poller';
 

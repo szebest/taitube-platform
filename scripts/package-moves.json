@@ -386,16 +386,19 @@
   "@vp/observability": {
     ".": {
       "createMetricsRegistry": "@kit/observability",
+      "createPipelineMetrics": "@vp/pipeline-metrics",
       "createTraceparent": "@kit/observability",
       "createWatchPartyMetrics": "@vp/pipeline-metrics",
       "extractContextFromTraceparent": "@kit/observability",
       "getActiveTraceparent": "@kit/observability",
       "getTracer": "@kit/observability",
+      "MetricsConfig": "@kit/observability",
       "MetricsServer": "@kit/observability",
       "MetricsServerOptions": "@kit/observability",
       "PipelineMetrics": "@vp/pipeline-metrics",
       "registeredTracing": "@kit/observability",
       "rootTraceparent": "@kit/observability",
+      "TRACER_NAME": "@vp/pipeline-metrics",
       "TraceSamplerName": "@kit/observability",
       "Tracing": "@kit/observability",
       "WatchPartyMetrics": "@vp/pipeline-metrics"

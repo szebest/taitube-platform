@@ -20,7 +20,7 @@ import { AppEnvSchema, inProcessAppConfig } from '@vp/env-schema';
 import { mediaTools } from '@vp/ffmpeg';
 import { fingerprintTools } from '@vp/fingerprint';
 import { QUEUES } from '@vp/job-contracts';
-import { createPipelineMetrics } from '@vp/observability';
+import { createPipelineMetrics } from '@vp/pipeline-metrics';
 import { expectOk } from '@vp/testing/result';
 import { speechTools } from '@vp/whisper';
 import { everyInterval } from '../heartbeat';

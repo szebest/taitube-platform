@@ -1,6 +1,6 @@
 import type { PresentMember } from '@vp/core/ports';
 import { MEMBER_KINDS, parseMemberKey, WATCH_PARTY_PHASES, type WatchPartyRoom } from '@vp/domain';
-import type { WatchPartyMetrics } from '@vp/observability';
+import type { WatchPartyMetrics } from '@vp/pipeline-metrics';
 
 /** What one sweep pass saw: open rooms by phase and members present by kind. */
 export interface SweepTally {

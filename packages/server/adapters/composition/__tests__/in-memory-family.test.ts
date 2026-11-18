@@ -1,6 +1,6 @@
 import { Container } from '@kit/composition';
 import { inProcessAppConfig } from '@vp/env-schema';
-import { createPipelineMetrics } from '@vp/observability';
+import { createPipelineMetrics } from '@vp/pipeline-metrics';
 import { expectOk } from '@vp/testing/result';
 import { InMemoryFlowProducer } from '../../in-memory/in-memory-flow-producer';
 import { InMemoryFrameClassifier } from '../../in-memory/in-memory-frame-classifier';

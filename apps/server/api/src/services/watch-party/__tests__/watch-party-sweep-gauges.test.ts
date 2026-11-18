@@ -1,4 +1,4 @@
-import { createPipelineMetrics, createWatchPartyMetrics } from '@vp/observability';
+import { createPipelineMetrics, createWatchPartyMetrics } from '@vp/pipeline-metrics';
 import { addToTally, emptyTally, publishTally } from '../watch-party-sweep-gauges';
 import { reading } from './watch-party-test-deps';
 

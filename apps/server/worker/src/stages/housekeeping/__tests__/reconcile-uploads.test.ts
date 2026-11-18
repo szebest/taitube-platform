@@ -7,7 +7,7 @@ import {
 } from '@vp/adapters/in-memory';
 import { queueUnavailable } from '@vp/errors';
 import { ids } from '@vp/job-contracts';
-import { type PipelineMetrics, createPipelineMetrics } from '@vp/observability';
+import { type PipelineMetrics, createPipelineMetrics } from '@vp/pipeline-metrics';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { runReconcileUploads } from '../reconcile-uploads';

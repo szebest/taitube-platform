@@ -1,7 +1,8 @@
+import { extractContextFromTraceparent, getTracer } from '@kit/observability';
 import { fromPromise } from '@kit/result';
 import { SpanKind, SpanStatusCode, context, trace } from '@opentelemetry/api';
 import type { QueueJob } from '@vp/core/ports';
-import { TRACER_NAME, extractContextFromTraceparent, getTracer } from '@vp/observability';
+import { TRACER_NAME } from '@vp/pipeline-metrics';
 
 /**
  * Runs a processor inside a `bullmq.process {queue}` span, a child of the producer's `traceparent`

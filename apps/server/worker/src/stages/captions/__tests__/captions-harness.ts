@@ -3,7 +3,7 @@ import type { CaptionRecord } from '@vp/core/repositories';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import type { MediaTools } from '@vp/ffmpeg';
 import { type CaptionsJob, captionsFlow } from '@vp/job-contracts';
-import { createPipelineMetrics } from '@vp/observability';
+import { createPipelineMetrics } from '@vp/pipeline-metrics';
 import { expectOk } from '@vp/testing/result';
 import type { SpeechTools } from '@vp/whisper';
 import { uuidv7 } from 'uuidv7';

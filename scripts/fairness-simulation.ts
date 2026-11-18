@@ -22,7 +22,7 @@ import {
 } from '../packages/server/adapters/in-memory/index';
 import type { QueueJob } from '../packages/server/core/ports/index';
 import { ids } from '../packages/server/job-contracts/src/index';
-import { createPipelineMetrics } from '../packages/server/observability/src/index';
+import { createPipelineMetrics } from '../packages/server/pipeline-metrics/src/index';
 import { rawSourceKey } from '../packages/server/storage/src/index';
 
 /** The simulation has nothing to recover from, so a failed step ends it. */

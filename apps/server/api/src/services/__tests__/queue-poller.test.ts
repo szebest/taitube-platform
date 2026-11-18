@@ -2,7 +2,7 @@ import { err } from '@kit/result';
 import { InMemoryJobQueue } from '@vp/adapters/in-memory';
 import type { JobQueue } from '@vp/core/ports';
 import { queueUnavailable } from '@vp/errors';
-import { createPipelineMetrics } from '@vp/observability';
+import { createPipelineMetrics } from '@vp/pipeline-metrics';
 import { pollQueueMetrics } from '../queue-poller';
 
 async function gauge(metrics: ReturnType<typeof createPipelineMetrics>, name: string) {

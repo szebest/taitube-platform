@@ -2,7 +2,7 @@ import { err } from '@kit/result';
 import { InMemoryViewBuffer } from '@vp/adapters/in-memory';
 import type { PlaybackEvent } from '@vp/api-contracts';
 import { cacheUnavailable } from '@vp/errors';
-import { type PipelineMetrics, createPipelineMetrics } from '@vp/observability';
+import { type PipelineMetrics, createPipelineMetrics } from '@vp/pipeline-metrics';
 import { expectOk } from '@vp/testing/result';
 import { PlaybackTelemetryService } from '../playback-telemetry-service';
 

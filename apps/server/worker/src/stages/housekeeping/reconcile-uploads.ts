@@ -1,11 +1,12 @@
 import type { Logger } from '@kit/logger';
+import { getTracer, rootTraceparent } from '@kit/observability';
 import { type Result, isErr, ok, unwrapOr } from '@kit/result';
 import type { JobQueue, MultipartStorage } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import { jobPriorityFor } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { defaultJobOptions, ids, stagePolicies } from '@vp/job-contracts';
-import { type PipelineMetrics, TRACER_NAME, getTracer, rootTraceparent } from '@vp/observability';
+import { type PipelineMetrics, TRACER_NAME } from '@vp/pipeline-metrics';
 
 export interface ReconcileUploadsOptions {
   repositories: Repositories;

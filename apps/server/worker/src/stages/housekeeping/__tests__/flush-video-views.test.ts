@@ -2,7 +2,7 @@ import { err } from '@kit/result';
 import { InMemoryRepositories, InMemoryViewBuffer } from '@vp/adapters/in-memory';
 import type { ViewBatch } from '@vp/domain';
 import { cacheUnavailable, databaseUnavailable } from '@vp/errors';
-import { type PipelineMetrics, createPipelineMetrics } from '@vp/observability';
+import { type PipelineMetrics, createPipelineMetrics } from '@vp/pipeline-metrics';
 import { SEEDED } from '@vp/testing';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { runFlushVideoViews } from '../flush-video-views';

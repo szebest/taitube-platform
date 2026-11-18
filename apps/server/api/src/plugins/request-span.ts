@@ -1,3 +1,4 @@
+import { extractContextFromTraceparent, getTracer } from '@kit/observability';
 import {
   ROOT_CONTEXT,
   type Span,
@@ -7,7 +8,7 @@ import {
   context,
   trace,
 } from '@opentelemetry/api';
-import { TRACER_NAME, extractContextFromTraceparent, getTracer } from '@vp/observability';
+import { TRACER_NAME } from '@vp/pipeline-metrics';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import fp from 'fastify-plugin';
 import { routeLabel } from './route-label';

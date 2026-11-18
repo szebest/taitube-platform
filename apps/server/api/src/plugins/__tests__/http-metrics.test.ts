@@ -1,4 +1,4 @@
-import { createPipelineMetrics } from '@vp/observability';
+import { createPipelineMetrics } from '@vp/pipeline-metrics';
 import fastify from 'fastify';
 import { registerHttpMetricsPlugin } from '../http-metrics';
 

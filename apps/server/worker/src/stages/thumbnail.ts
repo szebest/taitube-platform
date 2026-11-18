@@ -15,7 +15,7 @@ import {
 } from '@vp/errors';
 import type { MediaTools, SpriteLayout } from '@vp/ffmpeg';
 import type { ThumbnailJob, ThumbnailResult } from '@vp/job-contracts';
-import type { PipelineMetrics } from '@vp/observability';
+import type { PipelineMetrics } from '@vp/pipeline-metrics';
 import {
   getHeaderMapping,
   posterKey as getPosterKey,

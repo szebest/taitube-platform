@@ -5,7 +5,7 @@ import {
   InMemoryStorageClient,
 } from '@vp/adapters/in-memory';
 import { inProcessAppConfig } from '@vp/env-schema';
-import { createPipelineMetrics } from '@vp/observability';
+import { createPipelineMetrics } from '@vp/pipeline-metrics';
 import { everyInterval } from '../heartbeat';
 import { TranscodeProgressReporter } from '../stages/progress-reporter';
 import { StreamingSegmentUploader } from '../stages/segment-uploader';

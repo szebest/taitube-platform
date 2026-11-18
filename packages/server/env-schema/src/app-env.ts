@@ -1,5 +1,5 @@
+import type { TraceSamplerName } from '@kit/observability';
 import { PAGE_SIZE_DEFAULT, PAGE_SIZE_MAX } from '@kit/pagination';
-import type { TraceSamplerName } from '@vp/observability';
 import { z } from 'zod';
 import { heldLocalCredentials } from './local-credentials';
 import { SECRET_KEYS } from './secret-keys';

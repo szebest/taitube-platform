@@ -4,7 +4,7 @@ import type { CacheClient, FlowProducerPort, JobQueue } from '@vp/core/ports';
 import type { OutboxPayload, Repositories } from '@vp/core/repositories';
 import { MS_PER_SECOND } from '@vp/domain/time';
 import type { CacheUnavailable, DatabaseUnavailable, QueueUnavailable } from '@vp/errors';
-import type { PipelineMetrics } from '@vp/observability';
+import type { PipelineMetrics } from '@vp/pipeline-metrics';
 import type { Every, Repeating } from '../../heartbeat';
 
 export interface OutboxRelayOptions {

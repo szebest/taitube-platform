@@ -1,7 +1,7 @@
 import { Container } from '@kit/composition';
 import { ok } from '@kit/result';
 import { inProcessAppConfig } from '@vp/env-schema';
-import { createPipelineMetrics } from '@vp/observability';
+import { createPipelineMetrics } from '@vp/pipeline-metrics';
 import { expectOk } from '@vp/testing/result';
 import { InMemoryCacheClient } from '../../in-memory/in-memory-cache-client';
 import type { MeteredMultipartStorage } from '../../metered/metered-multipart-storage';

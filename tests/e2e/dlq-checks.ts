@@ -6,7 +6,7 @@ import { unwrapOr } from '../../packages/platform/universal/result/src/index';
 import { InMemoryJobQueue } from '../../packages/server/adapters/in-memory/in-memory-job-queue';
 import type { MultipartStorage, StorageClient } from '../../packages/server/core/ports/index';
 import type { Repositories } from '../../packages/server/core/repositories/index';
-import { createPipelineMetrics } from '../../packages/server/observability/src/index';
+import { createPipelineMetrics } from '../../packages/server/pipeline-metrics/src/index';
 import { expectOk } from '../../packages/server/testing/src/result';
 import { UploadClient } from '../../packages/server/upload-client/src/index';
 import { ErrorCodes } from '../../packages/universal/errors/src/index';
