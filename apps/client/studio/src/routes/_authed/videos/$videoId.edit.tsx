@@ -5,9 +5,9 @@ import { z } from 'zod';
 import { LazyCaptionsSection } from '#app/features/captions';
 import {
   categoriesQueryOptions,
-  EDIT_TABS,
   EditVideoPage,
   EditVideoPageSkeleton,
+  parseEditTab,
 } from '#app/features/videos';
 
 export const Route = createFileRoute('/_authed/videos/$videoId/edit')({
@@ -16,10 +16,7 @@ export const Route = createFileRoute('/_authed/videos/$videoId/edit')({
     stringify: ({ videoId }) => ({ videoId }),
   },
   validateSearch: z.object({
-    tab: z
-      .unknown()
-      .optional()
-      .transform((tab) => EDIT_TABS.find((name) => name === tab)),
+    tab: z.unknown().optional().transform(parseEditTab),
   }),
   loader: async ({ context: { queryClient, api }, params: { videoId } }) => {
     await Promise.all([

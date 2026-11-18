@@ -7,14 +7,13 @@ import { canManageCaptions } from '@vp/permissions';
 import { Can } from '@vp/permissions-react';
 import { useApi, videoQueryOptions } from '@vp/queries';
 import type { ReactNode } from 'react';
+import { parseEditTab } from '#app/features/videos/utils/edit-tabs';
 import { ChaptersPanel } from '../chapters-panel/chapters-panel';
 import { CorrectionsPanel } from '../corrections-panel/corrections-panel';
 import { EditVideoForm } from '../edit-video-form/edit-video-form';
 import { HistoryPanel } from '../history-panel/history-panel';
 import { VideoProcessingStatus } from '../video-processing-status/video-processing-status';
 import { VideoScreeningPanel } from '../video-screening-panel/video-screening-panel';
-
-export const EDIT_TABS = ['details', 'chapters', 'corrections', 'history'] as const;
 
 export type EditVideoPageProps = {
   videoId: string;
@@ -41,7 +40,7 @@ export function EditVideoPage({ videoId, captions }: EditVideoPageProps) {
       <Tabs.Root
         value={tab ?? 'details'}
         onValueChange={(next) => {
-          const known = EDIT_TABS.find((name) => name === next);
+          const known = parseEditTab(next);
           if (known)
             void navigate({ search: (previous) => ({ ...previous, tab: known }), replace: true });
         }}
