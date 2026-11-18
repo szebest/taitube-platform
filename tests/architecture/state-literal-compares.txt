@@ -124,7 +124,7 @@
 2 packages/universal/domain-rules/src/picks/pick-video.rule.ts
 1 packages/universal/domain-rules/src/screening/appeal-screening.rule.ts
 1 packages/universal/domain-rules/src/screening/review-case.rule.ts
-1 packages/universal/domain-rules/src/videos/update-metadata.rule.ts
+1 packages/universal/domain-rules/src/videos/edit-access.rule.ts
 1 packages/universal/domain-rules/src/watch-parties/join.rule.ts
 2 packages/universal/domain-rules/src/watch-parties/shareable.rule.ts
 2 packages/universal/domain/src/home.ts

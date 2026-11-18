@@ -1,10 +1,10 @@
-import { type Result, err, isErr, ok } from '@kit/result';
+import { type Result, isErr, ok } from '@kit/result';
 import type { Chapter, ThumbnailSelection, Video, VideoVisibility } from '@vp/domain';
-import { type UserContext, canUpdateVideo } from '@vp/permissions';
+import type { UserContext } from '@vp/permissions';
 import { type VideoMetadataFailure, validateVideoMetadata } from '@vp/validation';
 import { type InvalidChapters, decideChapters } from '../chapters/index';
-import { type ReadVideoFailure, videoEditForbidden } from './failures';
-import { decideVideoRead } from './read-video.rule';
+import { decideVideoEditAccess } from './edit-access.rule';
+import type { ReadVideoFailure } from './failures';
 
 export interface VideoMetadataPatch {
   readonly title?: string;
@@ -34,17 +34,13 @@ export type UpdateVideoMetadataFailure = ReadVideoFailure | VideoMetadataFailure
 export function decideVideoMetadataUpdate(
   input: UpdateVideoMetadataInput
 ): Result<VideoMetadataPatch, UpdateVideoMetadataFailure> {
-  const readable = decideVideoRead({
-    viewer: input.editor,
-    video: input.video?.status === 'DELETED' ? null : input.video,
+  const readable = decideVideoEditAccess({
+    editor: input.editor,
+    video: input.video,
     videoId: input.videoId,
+    fields: Object.keys(input.patch),
   });
   if (isErr(readable)) return readable;
-
-  const fields = Object.keys(input.patch);
-  if (!canUpdateVideo({ user: input.editor, video: readable.value, fields })) {
-    return err(videoEditForbidden(input.videoId));
-  }
 
   const metadata = validateVideoMetadata(input.patch);
   if (isErr(metadata) || metadata.value.chapters === undefined) return metadata;

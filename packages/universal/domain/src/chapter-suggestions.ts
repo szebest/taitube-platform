@@ -3,11 +3,11 @@ import type { Chapter } from './chapters';
 import { CHAPTER_MIN_GAP_MS, CHAPTER_TITLE_MAX_LENGTH } from './chapters';
 import { stopWordsFor } from './stop-words';
 
-export const SUGGESTION_WINDOW_MS = 30_000;
-export const SUGGESTION_MIN_SPAN_MS = 90_000;
-export const SUGGESTION_SILENCE_MS = 2_500;
-export const SUGGESTION_SIMILARITY_THRESHOLD = 0.2;
-export const SUGGESTION_MAX_COUNT = 12;
+const SUGGESTION_WINDOW_MS = 30_000;
+const SUGGESTION_MIN_SPAN_MS = 90_000;
+const SUGGESTION_SILENCE_MS = 2_500;
+const SUGGESTION_SIMILARITY_THRESHOLD = 0.2;
+const SUGGESTION_MAX_COUNT = 12;
 const TITLE_TERMS = 3;
 const MIN_UNLISTED_TERM_LENGTH = 4;
 

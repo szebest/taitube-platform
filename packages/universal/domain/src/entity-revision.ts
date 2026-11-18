@@ -40,7 +40,7 @@ export interface EntityRevision<T extends EntityRevisionType = EntityRevisionTyp
 
 export type VideoMetadataField = keyof VideoMetadataSnapshot;
 
-export const VIDEO_METADATA_FIELDS: readonly VideoMetadataField[] = [
+const VIDEO_METADATA_FIELDS: readonly VideoMetadataField[] = [
   'title',
   'description',
   'tags',

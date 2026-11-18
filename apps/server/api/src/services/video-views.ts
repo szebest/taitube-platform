@@ -2,6 +2,7 @@ import { type Result, map } from '@kit/result';
 import type { ChannelRepositoryPort, RenditionRecord, VideoRecord } from '@vp/core/repositories';
 import {
   type ChannelCard,
+  type Chapter,
   THUMBNAIL_PROGRESS,
   type VideoFormat,
   type VideoStatus,
@@ -60,6 +61,7 @@ export interface VideoDetailView {
   categoryId: string | null;
   tags: string[];
   commentsEnabled: boolean;
+  chapters: Chapter[];
   channel?: ChannelCard | null;
   viewsCount: number;
   likesCount: number;
@@ -284,6 +286,7 @@ export function toVideoDetailView(
     categoryId: video.categoryId ?? null,
     tags: video.tags ?? [],
     commentsEnabled: video.commentsEnabled ?? true,
+    chapters: [],
     viewsCount: video.viewsCount ?? 0,
     likesCount: video.likesCount ?? 0,
     dislikesCount: video.dislikesCount ?? 0,

@@ -1,7 +1,11 @@
 import type { InvalidCursor, Paginator } from '@kit/pagination';
 import { type Result, err, isErr, map, ok, unwrapOr } from '@kit/result';
 import type { AuthorizationPort, ReactionCachePort } from '@vp/core/ports';
-import type { ChannelRepositoryPort, VideoRecord } from '@vp/core/repositories';
+import type {
+  ChannelRepositoryPort,
+  VideoChapterRepository,
+  VideoRecord,
+} from '@vp/core/repositories';
 import { PUBLIC_FEED_SEEN_LIMIT, type VideoFormat, type VideoStatus } from '@vp/domain';
 import { type ReadVideoFailure, decideVideoRead, videoNotFound } from '@vp/domain-rules';
 import type { CdnBase } from '@vp/env-schema';
@@ -42,6 +46,7 @@ export interface VideoServiceDeps extends VideoLifecycleDeps {
   cdn: CdnBase;
   sprite: SpriteGeometry;
   channels: ChannelRepositoryPort;
+  chapters: VideoChapterRepository;
   reactionCache: ReactionCachePort;
   authorization: AuthorizationPort;
   paginator: Paginator;
@@ -196,6 +201,10 @@ export class VideoService {
     const channelOf = await loadChannelsOf(this.deps.channels, [view.ownerId]);
     if (isErr(channelOf)) return channelOf;
     view.channel = channelOf.value(view.ownerId);
+
+    const chapters = await this.deps.chapters.listFor([videoId]);
+    if (isErr(chapters)) return chapters;
+    view.chapters = chapters.value.get(videoId) ?? [];
 
     return ok(view);
   }
