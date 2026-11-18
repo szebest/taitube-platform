@@ -5,7 +5,7 @@ import {
   LIVE_PLAYLIST_HEADERS,
 } from '../mime';
 
-describe('packages/storage: mime header mapping', () => {
+describe('@kit/object-storage: mime header mapping', () => {
   it.each([
     ['master.m3u8', 'application/vnd.apple.mpegurl', 'public, max-age=60'],
     ['seg_00001.ts', 'video/MP2T', 'public, max-age=31536000, immutable'],

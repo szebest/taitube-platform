@@ -634,6 +634,9 @@ importers:
       '@kit/logger':
         specifier: workspace:*
         version: link:../../../packages/platform/server/logger
+      '@kit/object-storage':
+        specifier: workspace:*
+        version: link:../../../packages/platform/server/object-storage
       '@kit/pagination':
         specifier: workspace:*
         version: link:../../../packages/platform/universal/pagination
@@ -764,6 +767,9 @@ importers:
       '@kit/logger':
         specifier: workspace:*
         version: link:../../../packages/platform/server/logger
+      '@kit/object-storage':
+        specifier: workspace:*
+        version: link:../../../packages/platform/server/object-storage
       '@kit/result':
         specifier: workspace:*
         version: link:../../../packages/platform/universal/result
@@ -1809,6 +1815,24 @@ importers:
         specifier: 'catalog:'
         version: 1.5.0(@opentelemetry/api@1.9.1)(@types/node@24.19.1)(@vitest/browser-playwright@5.1.0)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.28.2)(jiti@2.7.0)(jsdom@30.1.2)(msw@3.0.2(@types/node@24.19.1)(supports-color@10.2.2)(typescript@6.0.3)(vite@8.3.4(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)))(playwright@1.64.0)(sass@1.105.1)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1)
 
+  packages/platform/server/object-storage:
+    devDependencies:
+      '@kit/testing':
+        specifier: workspace:*
+        version: link:../testing
+      '@kit/tsconfig':
+        specifier: workspace:*
+        version: link:../../universal/tsconfig
+      rimraf:
+        specifier: ^6.1.3
+        version: 6.1.3
+      typescript:
+        specifier: ^6.0.3
+        version: 6.0.3
+      vite-plus:
+        specifier: 'catalog:'
+        version: 1.5.0(@opentelemetry/api@1.9.1)(@types/node@24.19.1)(@vitest/browser-playwright@5.1.0)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.28.2)(jiti@2.7.0)(jsdom@30.1.2)(msw@3.0.2(@types/node@24.19.1)(supports-color@10.2.2)(typescript@6.0.3)(vite@8.3.4(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)))(playwright@1.64.0)(sass@1.105.1)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1)
+
   packages/platform/server/testing:
     dependencies:
       '@kit/result':
@@ -2069,6 +2093,9 @@ importers:
       '@kit/di':
         specifier: workspace:*
         version: link:../../platform/universal/di
+      '@kit/object-storage':
+        specifier: workspace:*
+        version: link:../../platform/server/object-storage
       '@kit/result':
         specifier: workspace:*
         version: link:../../platform/universal/result
@@ -2108,9 +2135,6 @@ importers:
       '@vp/permissions':
         specifier: workspace:*
         version: link:../../universal/permissions
-      '@vp/storage':
-        specifier: workspace:*
-        version: link:../storage
       '@vp/validation':
         specifier: workspace:*
         version: link:../../universal/validation

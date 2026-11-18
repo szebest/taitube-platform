@@ -5,7 +5,7 @@ const GIB = 1024 * MIB;
 const TIB = 1024 * GIB;
 const BOUNDS = { minBytes: 8 * MIB, maxBytes: 64 * MIB };
 
-describe('packages/storage: multipart sizing', () => {
+describe('@kit/object-storage: multipart sizing', () => {
   it.each([
     { size: 100_000_000, bounds: BOUNDS, expected: 8 * MIB },
     { size: GIB, bounds: BOUNDS, expected: 8 * MIB },

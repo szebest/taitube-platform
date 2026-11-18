@@ -16,6 +16,7 @@
     "@kit/composition": "workspace:*",
     "@kit/config": "workspace:*",
     "@kit/logger": "workspace:*",
+    "@kit/object-storage": "workspace:*",
     "@kit/result": "workspace:*",
     "@opentelemetry/api": "^1.9.1",
     "@vp/adapters": "workspace:*",
