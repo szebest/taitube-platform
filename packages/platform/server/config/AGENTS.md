@@ -8,15 +8,15 @@ Instructions for any coding agent working on `@kit/config`.
 
 ## 1. Scope & Purpose
 
-`@kit/config` validates an environment record against `AppEnvSchema` from `@vp/env-schema` and reports
+`@kit/config` validates an environment record against a Zod schema the caller hands it and reports
 every invalid key, redacted, before a process can boot half-configured. That is all it does:
-`parseEnv`, `loadEnv` (`src/load-env.ts`) and `loadEnvOrExit` (`src/load-env-or-exit.ts`). The apps hand it
-`host.env` (`apps/server/api/src/process.ts`, `apps/server/worker/src/process.ts`) and pass the `AppEnv` it returns to
-`toAppConfig`.
+`parseEnv`, `loadEnv` (`src/load-env.ts`) and `loadEnvOrExit` (`src/load-env-or-exit.ts`), plus
+`describeEnvKey` (`src/env-introspection.ts`), which reads a key's input type and default from its schema.
+The apps hand it `AppEnvSchema` and `host.env` (`apps/server/api/src/process.ts`,
+`apps/server/worker/src/process.ts`) and pass the `AppEnv` it returns to `toAppConfig`.
 
-The schema, `AppConfig` and `toAppConfig` are **not** here. They are `@vp/env-schema` (layer 3, one below
-this package's layer 4). Anything that names an environment key belongs there; anything that touches a
-runtime belongs here.
+The schema, `AppConfig` and `toAppConfig` are **not** here. They are `@vp/env-schema`. Anything that names
+an environment key belongs there; anything that touches a runtime belongs here. `zod` is a peer dependency.
 
 ---
 
@@ -29,7 +29,7 @@ runtime belongs here.
    `parseEnv` returns that report as a `Result`, `loadEnv` throws it for an entrypoint that already has
    a logger, and `loadEnvOrExit` is for one that has none yet (the preloaded `instrument.ts` of both apps,
    `apps/server/api/src/migrate.ts`, `apps/server/api/src/seed.ts`): one JSON `fatal` line through `@kit/logger` at
-   `DEFAULT_LOG_LEVEL`, no stack, and the `ProcessHost` (`@kit/composition`) exits 1.
+   the level the caller hands it (the app passes `DEFAULT_LOG_LEVEL`), no stack, and the `ProcessHost` (`@kit/composition`) exits 1.
 3. **No `typeof process` guard.** Server tier means `process` is there. A feature-detect standing in for
    a boundary is what this split removed; do not reintroduce one.
 

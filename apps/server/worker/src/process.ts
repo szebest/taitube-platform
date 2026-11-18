@@ -7,7 +7,7 @@ import {
 import { loadEnv } from '@kit/config';
 import { LogContext, type Logger, createLogger } from '@kit/logger';
 import { fromPromise, ignore, isErr } from '@kit/result';
-import { toAppConfig } from '@vp/env-schema';
+import { AppEnvSchema, toAppConfig } from '@vp/env-schema';
 import { asThrowable, errorCodeRegistry } from '@vp/errors';
 import { mediaTools } from '@vp/ffmpeg';
 import { fingerprintTools } from '@vp/fingerprint';
@@ -23,7 +23,7 @@ interface WorkerProcess {
 }
 
 async function start(host: ProcessHost): Promise<WorkerProcess> {
-  const config = toAppConfig(loadEnv(host.env));
+  const config = toAppConfig(loadEnv(AppEnvSchema, host.env));
   const { stage } = config.worker;
   const logContext = new LogContext();
   const logger = createLogger({

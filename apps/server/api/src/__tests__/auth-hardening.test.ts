@@ -2,7 +2,7 @@ import * as http from 'node:http';
 import { loadEnv } from '@kit/config';
 import { createLogger } from '@kit/logger';
 import { mintToken } from '@vp/dev-identity';
-import { toAppConfig } from '@vp/env-schema';
+import { AppEnvSchema, toAppConfig } from '@vp/env-schema';
 import { PRODUCTION_ENV } from '@vp/testing/env';
 import { signJwt, signingKey } from '@vp/testing/jwt';
 import type { FastifyInstance } from 'fastify';
@@ -38,7 +38,7 @@ describe('apps/server/api: authentication under a production configuration', () 
     await new Promise<void>((resolve) => idp.listen(0, '127.0.0.1', resolve));
     const port = boundPort(idp);
 
-    const env = loadEnv({
+    const env = loadEnv(AppEnvSchema, {
       ...PRODUCTION_ENV,
       ADAPTER_FAMILY: 'in-memory',
       AUTH_ALGORITHMS: 'RS256,RS512,ES256',
