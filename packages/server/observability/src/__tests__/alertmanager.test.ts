@@ -1,5 +1,5 @@
 import * as fs from 'node:fs';
-import { createMetricsRegistry } from '../metrics';
+import { createPipelineMetrics } from '../pipeline-metrics';
 import { alertmanagerPath } from './prometheus-rules';
 
 describe('Alertmanager configuration', () => {
@@ -22,7 +22,7 @@ describe('Alertmanager configuration', () => {
   });
 
   it('simulates hostile upload producing DLQ entry and triggering Alertmanager webhook notification payload', async () => {
-    const metrics = createMetricsRegistry();
+    const metrics = createPipelineMetrics();
 
     metrics.dlqEntriesTotal.inc({ queue: 'probe', error_code: 'UNSUPPORTED_CODEC' });
 

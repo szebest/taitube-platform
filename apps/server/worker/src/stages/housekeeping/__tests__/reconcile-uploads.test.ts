@@ -7,7 +7,7 @@ import {
 } from '@vp/adapters/in-memory';
 import { queueUnavailable } from '@vp/errors';
 import { ids } from '@vp/job-contracts';
-import { type PipelineMetrics, createMetricsRegistry } from '@vp/observability';
+import { type PipelineMetrics, createPipelineMetrics } from '@vp/observability';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { runReconcileUploads } from '../reconcile-uploads';
@@ -77,7 +77,7 @@ describe('housekeeping: reconcile-uploads', () => {
     repositories = new InMemoryRepositories();
     multipart = new InMemoryMultipartStorage(new InMemoryStorageClient());
     probeQueue = new InMemoryJobQueue('probe');
-    metrics = createMetricsRegistry();
+    metrics = createPipelineMetrics();
   });
 
   it('abandons an upload idle past the threshold and aborts its multipart upload', async () => {

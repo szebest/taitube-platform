@@ -11,7 +11,7 @@ import {
 import type { CreateWatchPartyBody, WatchPartyView } from '@vp/api-contracts';
 import type { PartyGuestSession } from '@vp/core/ports';
 import { type AppConfigOverrides, asCdnBase, inProcessAppConfig } from '@vp/env-schema';
-import { createMetricsRegistry, createWatchPartyMetrics } from '@vp/observability';
+import { createPipelineMetrics, createWatchPartyMetrics } from '@vp/observability';
 import type { UserContext } from '@vp/permissions';
 import { captureLog } from '@vp/testing/log-capture';
 import { expectOk } from '@vp/testing/result';
@@ -88,7 +88,7 @@ export function watchPartyTestDeps({ config, secrets }: WatchPartyTestOptions = 
   const guestSessions = new InMemoryPartyGuestSessions(() => clock.nowMs);
   const cache = new InMemoryCacheClient();
   const log = captureLog();
-  const metrics = createWatchPartyMetrics(createMetricsRegistry().registry);
+  const metrics = createWatchPartyMetrics(createPipelineMetrics().registry);
 
   const deps: WatchPartyDeps = {
     repositories,

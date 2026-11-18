@@ -1,5 +1,5 @@
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
-import { createMetricsRegistry } from '@vp/observability';
+import { createPipelineMetrics } from '@vp/observability';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { runReconcileCaptions } from '../reconcile-captions';
@@ -11,7 +11,7 @@ describe('housekeeping: reconcile-captions', () => {
   const reconcile = (enabled = true) =>
     runReconcileCaptions({
       repositories,
-      metrics: createMetricsRegistry(),
+      metrics: createPipelineMetrics(),
       captions: { enabled, modelVersion: 'small-q5_1' },
       thresholdMs: -1000,
       scanLimit: 10,

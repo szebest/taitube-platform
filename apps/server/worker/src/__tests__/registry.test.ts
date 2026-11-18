@@ -20,7 +20,7 @@ import { AppEnvSchema, inProcessAppConfig } from '@vp/env-schema';
 import { mediaTools } from '@vp/ffmpeg';
 import { fingerprintTools } from '@vp/fingerprint';
 import { QUEUES } from '@vp/job-contracts';
-import { createMetricsRegistry } from '@vp/observability';
+import { createPipelineMetrics } from '@vp/observability';
 import { expectOk } from '@vp/testing/result';
 import { speechTools } from '@vp/whisper';
 import { everyInterval } from '../heartbeat';
@@ -64,7 +64,7 @@ function deps(): StageDeps {
     webhookDispatcher: new InMemoryWebhookDispatcher(),
     liveGateway: new InMemoryLiveGateway(),
     logger: createLogger({ format: 'json', service: 'registry-test', level: 'silent' }),
-    metrics: createMetricsRegistry(),
+    metrics: createPipelineMetrics(),
     media: mediaTools,
     speech: speechTools,
     fingerprint: fingerprintTools,

@@ -9,6 +9,7 @@ import {
   createTraceparent,
   extractContextFromTraceparent,
   getActiveTraceparent,
+  getTracer,
   registeredTracing,
   rootTraceparent,
 } from '../tracing';
@@ -72,8 +73,8 @@ describe('@vp/observability: tracing', () => {
     const outer = provider.getTracer('test').startSpan('housekeeping');
 
     const [first, second] = context.with(trace.setSpan(context.active(), outer), () => [
-      rootTraceparent('reconcile.repair'),
-      rootTraceparent('reconcile.repair'),
+      rootTraceparent(getTracer('test'), 'reconcile.repair'),
+      rootTraceparent(getTracer('test'), 'reconcile.repair'),
     ]);
 
     const traceIdOf = (traceparent?: string) => traceparent?.split('-')[1];
@@ -86,8 +87,12 @@ describe('@vp/observability: tracing', () => {
   });
 
   it('gives every root fresh ids when tracing is off', () => {
-    expect(rootTraceparent('reconcile.repair')).toMatch(/^00-[0-9a-f]{32}-[0-9a-f]{16}-01$/);
-    expect(rootTraceparent('a')).not.toBe(rootTraceparent('a'));
+    expect(rootTraceparent(getTracer('test'), 'reconcile.repair')).toMatch(
+      /^00-[0-9a-f]{32}-[0-9a-f]{16}-01$/
+    );
+    expect(rootTraceparent(getTracer('test'), 'a')).not.toBe(
+      rootTraceparent(getTracer('test'), 'a')
+    );
   });
 
   it('flushes the registered provider on shutdown', async () => {

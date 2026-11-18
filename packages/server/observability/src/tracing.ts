@@ -18,8 +18,6 @@ export interface Tracing {
   shutdown(): Promise<Result<void, Error>>;
 }
 
-const TRACER_NAME = 'video-pipeline';
-
 const toError = (cause: unknown): Error => new Error('tracing failed', { cause });
 
 /**
@@ -40,7 +38,7 @@ export const registeredTracing: Tracing = {
   },
 };
 
-export function getTracer(name = TRACER_NAME, version = '1.0.0'): Tracer {
+export function getTracer(name: string, version = '1.0.0'): Tracer {
   return trace.getTracer(name, version);
 }
 
@@ -80,8 +78,8 @@ export function createTraceparent(traceId?: string, spanId?: string): string {
  * A traceparent for work nothing traced asked for, such as a repair the reconciler makes: a root
  * span of its own when tracing is on, otherwise fresh ids, so no two repairs share a trace.
  */
-export function rootTraceparent(name: string): string {
-  const span = getTracer().startSpan(name, { root: true });
+export function rootTraceparent(tracer: Tracer, name: string): string {
+  const span = tracer.startSpan(name, { root: true });
   const spanContext = span.spanContext();
   span.end();
   return isSpanContextValid(spanContext) ? toTraceparent(spanContext) : createTraceparent();

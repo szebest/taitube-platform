@@ -1,5 +1,5 @@
 import type { WebVital, WebVitalsBatch } from '@vp/api-contracts';
-import { type PipelineMetrics, createMetricsRegistry } from '@vp/observability';
+import { type PipelineMetrics, createPipelineMetrics } from '@vp/observability';
 import { expectOk } from '@vp/testing/result';
 import { WebVitalsService } from '../web-vitals-service';
 
@@ -10,7 +10,7 @@ describe('WebVitalsService', () => {
   let service: WebVitalsService;
 
   const createService = (maxRoutesPerApp = 2) => {
-    metrics = createMetricsRegistry();
+    metrics = createPipelineMetrics();
     service = new WebVitalsService({ metrics, maxRoutesPerApp });
   };
 

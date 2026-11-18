@@ -1,4 +1,4 @@
-import { createMetricsRegistry, createWatchPartyMetrics } from '@vp/observability';
+import { createPipelineMetrics, createWatchPartyMetrics } from '@vp/observability';
 import { addToTally, emptyTally, publishTally } from '../watch-party-sweep-gauges';
 import { reading } from './watch-party-test-deps';
 
@@ -7,7 +7,7 @@ const U2 = '00000000-0000-7000-8000-00000000f002';
 
 describe('the sweep gauges', () => {
   it('counts rooms by phase and members by kind, and zeroes what nobody holds', async () => {
-    const metrics = createWatchPartyMetrics(createMetricsRegistry().registry);
+    const metrics = createWatchPartyMetrics(createPipelineMetrics().registry);
     metrics.watchPartyRooms.set({ phase: 'finished' }, 9);
     const tally = emptyTally();
 

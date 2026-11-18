@@ -1,7 +1,7 @@
 import type { Result } from '@kit/result';
 import { type Attributes, SpanStatusCode } from '@opentelemetry/api';
 import { ErrorCodes, type WatchPartyPermissionMissing } from '@vp/errors';
-import { getTracer } from '@vp/observability';
+import { TRACER_NAME, getTracer } from '@vp/observability';
 import type { WatchPartyDeps } from './watch-party-deps';
 
 type Failing = { readonly code: string };
@@ -31,16 +31,20 @@ export async function inSpan<T, E extends Failing>(
   attributes: Attributes,
   run: () => Promise<Result<T, E>>
 ): Promise<Result<T, E>> {
-  return getTracer().startActiveSpan(`watch_party.${name}`, { attributes }, async (span) => {
-    try {
-      const result = await run();
-      span.setAttribute('result', result.ok ? 'ok' : result.error.code);
-      if (!result.ok) span.setStatus({ code: SpanStatusCode.ERROR, message: result.error.code });
-      return result;
-    } finally {
-      span.end();
+  return getTracer(TRACER_NAME).startActiveSpan(
+    `watch_party.${name}`,
+    { attributes },
+    async (span) => {
+      try {
+        const result = await run();
+        span.setAttribute('result', result.ok ? 'ok' : result.error.code);
+        if (!result.ok) span.setStatus({ code: SpanStatusCode.ERROR, message: result.error.code });
+        return result;
+      } finally {
+        span.end();
+      }
     }
-  });
+  );
 }
 
 /** One join attempt counted by its outcome; a failure that is not about the room's rules is not a join outcome. */

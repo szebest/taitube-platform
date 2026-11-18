@@ -1,7 +1,7 @@
 import { Container } from '@kit/composition';
 import { ok } from '@kit/result';
 import { inProcessAppConfig } from '@vp/env-schema';
-import { createMetricsRegistry } from '@vp/observability';
+import { createPipelineMetrics } from '@vp/observability';
 import { expectOk } from '@vp/testing/result';
 import { InMemoryCacheClient } from '../../in-memory/in-memory-cache-client';
 import type { MeteredMultipartStorage } from '../../metered/metered-multipart-storage';
@@ -23,7 +23,7 @@ function family(): Container {
   const config = inProcessAppConfig({ kind: 'external', postgres: { poolMax: 3 } });
   const c = new Container()
     .provide(Adapters.Config, () => config)
-    .provide(Adapters.Metrics, () => createMetricsRegistry());
+    .provide(Adapters.Metrics, () => createPipelineMetrics());
   registerFamily(c);
   return c;
 }

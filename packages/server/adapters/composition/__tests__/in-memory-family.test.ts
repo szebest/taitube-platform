@@ -1,6 +1,6 @@
 import { Container } from '@kit/composition';
 import { inProcessAppConfig } from '@vp/env-schema';
-import { createMetricsRegistry } from '@vp/observability';
+import { createPipelineMetrics } from '@vp/observability';
 import { expectOk } from '@vp/testing/result';
 import { InMemoryFlowProducer } from '../../in-memory/in-memory-flow-producer';
 import { InMemoryFrameClassifier } from '../../in-memory/in-memory-frame-classifier';
@@ -21,7 +21,7 @@ import { registerFamily } from '../in-memory-family';
 function family(): Container {
   const c = new Container()
     .provide(Adapters.Config, () => inProcessAppConfig())
-    .provide(Adapters.Metrics, () => createMetricsRegistry());
+    .provide(Adapters.Metrics, () => createPipelineMetrics());
   registerFamily(c);
   return c;
 }

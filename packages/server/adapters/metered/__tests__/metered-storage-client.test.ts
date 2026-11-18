@@ -1,4 +1,4 @@
-import { type PipelineMetrics, createMetricsRegistry } from '@vp/observability';
+import { type PipelineMetrics, createPipelineMetrics } from '@vp/observability';
 import { expectOk } from '@vp/testing/result';
 import { InMemoryStorageClient } from '../../in-memory/in-memory-storage-client';
 import { MeteredStorageClient } from '../metered-storage-client';
@@ -14,7 +14,7 @@ describe('@vp/adapters: MeteredStorageClient', () => {
   let storage: MeteredStorageClient;
 
   beforeEach(async () => {
-    metrics = createMetricsRegistry();
+    metrics = createPipelineMetrics();
     storage = new MeteredStorageClient(new InMemoryStorageClient(), metrics);
     expectOk(
       await storage.uploadObject({ bucket: 'raw', key: 'a', body: 'x', contentType: 'video/mp4' })

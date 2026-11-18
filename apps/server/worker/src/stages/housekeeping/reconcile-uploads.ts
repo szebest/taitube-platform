@@ -5,7 +5,7 @@ import type { Repositories } from '@vp/core/repositories';
 import { jobPriorityFor } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { defaultJobOptions, ids, stagePolicies } from '@vp/job-contracts';
-import { type PipelineMetrics, rootTraceparent } from '@vp/observability';
+import { type PipelineMetrics, TRACER_NAME, getTracer, rootTraceparent } from '@vp/observability';
 
 export interface ReconcileUploadsOptions {
   repositories: Repositories;
@@ -131,7 +131,10 @@ export async function runReconcileUploads(
         videoId: video.id,
         sourceKey: video.sourceKey,
         generation: video.generation ?? 1,
-        traceparent: rootTraceparent('housekeeping.reconcile-uploads.repair'),
+        traceparent: rootTraceparent(
+          getTracer(TRACER_NAME),
+          'housekeeping.reconcile-uploads.repair'
+        ),
       },
       {
         jobId: probeJobId,

@@ -7,7 +7,7 @@ import {
   context,
   trace,
 } from '@opentelemetry/api';
-import { extractContextFromTraceparent, getTracer } from '@vp/observability';
+import { TRACER_NAME, extractContextFromTraceparent, getTracer } from '@vp/observability';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import fp from 'fastify-plugin';
 import { routeLabel } from './route-label';
@@ -43,7 +43,7 @@ async function requestSpanPlugin(app: FastifyInstance) {
       ROOT_CONTEXT
     );
     const route = routeLabel(request);
-    const span = getTracer().startSpan(
+    const span = getTracer(TRACER_NAME).startSpan(
       `${request.method} ${route}`,
       {
         kind: SpanKind.SERVER,

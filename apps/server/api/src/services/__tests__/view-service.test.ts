@@ -1,7 +1,7 @@
 import { err } from '@kit/result';
 import { InMemoryViewBuffer } from '@vp/adapters/in-memory';
 import { cacheUnavailable } from '@vp/errors';
-import { type PipelineMetrics, createMetricsRegistry } from '@vp/observability';
+import { type PipelineMetrics, createPipelineMetrics } from '@vp/observability';
 import type { UserContext } from '@vp/permissions';
 import { expectOk } from '@vp/testing/result';
 import { ViewService } from '../view-service';
@@ -18,7 +18,7 @@ describe('ViewService', () => {
 
   beforeEach(() => {
     viewBuffer = new InMemoryViewBuffer();
-    metrics = createMetricsRegistry();
+    metrics = createPipelineMetrics();
     service = new ViewService({
       viewBuffer,
       metrics,

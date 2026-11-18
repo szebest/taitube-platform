@@ -6,7 +6,7 @@ import { InMemoryCacheClient } from '@vp/adapters/in-memory';
 import type { PatternMessageListener } from '@vp/core/ports';
 import { type CacheUnavailable, ErrorCodes, cacheUnavailable } from '@vp/errors';
 import { userChannel, videoChannel } from '@vp/events';
-import { createMetricsRegistry } from '@vp/observability';
+import { createPipelineMetrics } from '@vp/observability';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { SseHub, type SseHubOptions } from '../sse-hub';
 
@@ -35,7 +35,7 @@ describe('apps/server/api/services: SseHub', () => {
   function newHub(overrides: Partial<SseHubOptions> = {}): SseHub {
     return new SseHub({
       cache,
-      metrics: createMetricsRegistry(),
+      metrics: createPipelineMetrics(),
       maxConnectionsPerUser: 20,
       maxPodConnections: 5000,
       heartbeatMs: 10_000,

@@ -3101,7 +3101,7 @@ flowchart LR
 
 #### Metrics, traces and logs
 
-`createWatchPartyMetrics` (`packages/server/observability/src/watch-party-metrics.ts`) registers these on the API's registry. They are not in the §13.1 table: `metrics.test.ts` diffs that table against `createMetricsRegistry` and fails on a name found in one and not the other.
+`createWatchPartyMetrics` (`packages/server/observability/src/watch-party-metrics.ts`) registers these on the API's registry. They are not in the §13.1 table: `pipeline-metrics.test.ts` diffs that table against `createPipelineMetrics` and fails on a name found in one and not the other.
 
 | Metric | Type | Labels | Source |
 |---|---|---|---|

@@ -1,4 +1,4 @@
-import { type PipelineMetrics, createMetricsRegistry } from '@vp/observability';
+import { type PipelineMetrics, createPipelineMetrics } from '@vp/observability';
 import { expectOk } from '@vp/testing/result';
 import { InMemoryMultipartStorage } from '../../in-memory/in-memory-multipart-storage';
 import { InMemoryStorageClient } from '../../in-memory/in-memory-storage-client';
@@ -9,7 +9,7 @@ describe('@vp/adapters: MeteredMultipartStorage', () => {
   let multipart: MeteredMultipartStorage;
 
   beforeEach(() => {
-    metrics = createMetricsRegistry();
+    metrics = createPipelineMetrics();
     multipart = new MeteredMultipartStorage(
       new InMemoryMultipartStorage(new InMemoryStorageClient()),
       metrics
