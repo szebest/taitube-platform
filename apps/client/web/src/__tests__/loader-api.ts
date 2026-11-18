@@ -21,6 +21,7 @@ import {
   listCaptions,
   listChannelVideos,
   listLiveStreams,
+  listVideoCorrections,
   listMySubscriptions,
   listVideos,
   search,
@@ -128,6 +129,7 @@ export function loaderApi(answered: string[] = []): HttpHandler[] {
     recorded(getSubscriptionFeed, () => HttpResponse.json(FEED)),
     recorded(getShorts, () => HttpResponse.json(SHORTS_FEED)),
     recorded(listLiveStreams, () => HttpResponse.json({ items: [] })),
+    recorded(listVideoCorrections, () => HttpResponse.json({ items: [] })),
     recorded(search, () => HttpResponse.json(SEARCH)),
     recorded(listVideos, () => HttpResponse.json(FEED)),
     recorded(isSubscribedToChannel, ({ params }) =>

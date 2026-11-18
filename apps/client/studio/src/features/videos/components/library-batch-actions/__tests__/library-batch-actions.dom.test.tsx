@@ -93,12 +93,13 @@ describe('apps/client/studio: LibraryBatchActions', () => {
 
       expect(await screen.findByText('2 videos updated')).toBeInTheDocument();
       const visibility = label.toLowerCase();
-      expect(requests).toEqual(
-        expect.arrayContaining([
-          { method: 'PATCH', id: videoIdOf(0), body: { visibility, version: 2 } },
-          { method: 'PATCH', id: videoIdOf(2), body: { visibility, version: 4 } },
-        ])
-      );
+      expect(requests).toEqual([
+        {
+          method: 'POST',
+          id: 'bulk',
+          body: { ids: [videoIdOf(0), videoIdOf(2)], patch: { visibility } },
+        },
+      ]);
     }
   );
 
@@ -153,7 +154,11 @@ describe('apps/client/studio: LibraryBatchActions', () => {
 
     expect(await screen.findByText('1 video updated')).toBeInTheDocument();
     expect(requests).toEqual([
-      { method: 'PATCH', id: videoIdOf(1), body: { visibility: 'unlisted', version: 3 } },
+      {
+        method: 'POST',
+        id: 'bulk',
+        body: { ids: [videoIdOf(1)], patch: { visibility: 'unlisted' } },
+      },
     ]);
   });
 });

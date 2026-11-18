@@ -23,6 +23,14 @@ export interface PlaybackRange {
   endMs: number;
 }
 
+/** A note drawn over the picture while the playhead is inside `startMs` to `endMs`. */
+export interface PlayerCard {
+  id: string;
+  startMs: number;
+  endMs: number;
+  text: string;
+}
+
 type PlayerLayout = 'landscape' | 'vertical' | 'fill';
 
 /** The playback a caller owns: the engine plays or pauses and mutes to match, and reports back through the callbacks. */
@@ -70,6 +78,8 @@ export interface TaitubePlayerProps extends Pick<Video, 'posterUrl' | 'title'> {
   defaults?: PlaybackDefaults;
   /** The video's caption tracks; the ready ones are side-loaded and offered in the captions menu. */
   captionTracks?: readonly CaptionTrackView[];
+  /** Corrections and other timed notes drawn over the picture, one at a time. */
+  cards?: readonly PlayerCard[];
   onPlay?: (progress: PlaybackProgress) => void;
   onPause?: (progress: PlaybackProgress) => void;
   onWaiting?: () => void;

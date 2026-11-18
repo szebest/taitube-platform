@@ -12,6 +12,7 @@ import { studioModeration } from './studio-moderation';
 import { studioPicks } from './studio-picks';
 import { studioScreening } from './studio-screening';
 import { studioTeam } from './studio-team';
+import { studioVideoTools } from './studio-video-tools';
 
 const VIDEO_STATUS = {
   UPLOADING: 'Przesyłanie',
@@ -71,6 +72,7 @@ export const studio = {
   watchOnWeb: dt('Obejrzyj w Taitube'),
   ...studioAdmin,
   ...studioBatch,
+  ...studioVideoTools,
   ...studioCaptions,
   ...studioComments,
   ...studioCommentSettings,

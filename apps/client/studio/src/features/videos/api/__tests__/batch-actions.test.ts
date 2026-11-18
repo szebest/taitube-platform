@@ -25,11 +25,11 @@ describe('apps/client/studio: batch actions', () => {
     ]);
   });
 
-  it('sets the visibility against the version each video was listed with', async () => {
+  it('sets the visibility with one bulk request for every video', async () => {
     const requests = serveManagement();
     const client = createQueryClient();
 
-    await new MutationObserver(client, setVisibilityMutationOptions(api)).mutate({
+    const outcome = await new MutationObserver(client, setVisibilityMutationOptions(api)).mutate({
       videos: [
         { id: first, version: 3 },
         { id: second, version: 7 },
@@ -37,12 +37,14 @@ describe('apps/client/studio: batch actions', () => {
       visibility: 'unlisted',
     });
 
-    expect(requests).toEqual(
-      expect.arrayContaining([
-        { method: 'PATCH', id: first, body: { visibility: 'unlisted', version: 3 } },
-        { method: 'PATCH', id: second, body: { visibility: 'unlisted', version: 7 } },
-      ])
-    );
+    expect(outcome).toEqual({ succeeded: [first, second], failed: [] });
+    expect(requests).toEqual([
+      {
+        method: 'POST',
+        id: 'bulk',
+        body: { ids: [first, second], patch: { visibility: 'unlisted' } },
+      },
+    ]);
   });
 
   it.each([

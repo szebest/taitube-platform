@@ -42,12 +42,18 @@ export function deleteVideosMutationOptions(api: ApiClient) {
   });
 }
 
+/** One bulk edit: each id is its own edit on the server, so a refusal fails that video only. */
 export function setVisibilityMutationOptions(api: ApiClient) {
   return mutationOptions({
-    mutationFn: ({ videos, visibility }: VisibilityBatch) =>
-      eachVideo(videos, ({ id, version }) =>
-        api.creatorVideos.updateCreatorVideo({ params: { id }, body: { visibility, version } })
-      ),
+    mutationFn: async ({ videos, visibility }: VisibilityBatch): Promise<BatchOutcome> => {
+      const { items } = await api.videoTools.bulkEditCreatorVideos({
+        body: { ids: videos.map(({ id }) => id), patch: { visibility } },
+      });
+      return {
+        succeeded: items.filter(({ ok }) => ok).map(({ id }) => id),
+        failed: items.filter(({ ok }) => !ok).map(({ id }) => id),
+      };
+    },
     onSettled: (_outcome, _error, _batch, _snapshot, { client }) => refetchVideos(client),
   });
 }

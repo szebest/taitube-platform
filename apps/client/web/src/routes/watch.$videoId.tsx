@@ -1,6 +1,12 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { type Video, VideoIdParamSchema } from '@vp/api-contracts';
-import { ensureFound, parseParam, videoQueryOptions, prefetched } from '@vp/queries';
+import {
+  correctionsQueryOptions,
+  ensureFound,
+  parseParam,
+  prefetched,
+  videoQueryOptions,
+} from '@vp/queries';
 import { z } from 'zod';
 import { ClipAction } from '#app/features/clips';
 import { CreatorStatsPanel } from '#app/features/creator-stats';
@@ -61,6 +67,7 @@ export const Route = createFileRoute('/watch/$videoId')({
     await Promise.all([
       video.channel && prefetched(queryClient.query(channelQueryOptions(api, video.channel.id))),
       prefetched(queryClient.query(relatedQueryOptions(api, videoId))),
+      prefetched(queryClient.query(correctionsQueryOptions(api, videoId))),
       list && prefetched(queryClient.query(playlistQueryOptions(api, list))),
     ]);
     return video;

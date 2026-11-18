@@ -1,5 +1,5 @@
 import { screen } from '@testing-library/react';
-import { getVideo } from '@vp/api-contracts';
+import { getVideo, listVideoCorrections } from '@vp/api-contracts';
 import { mockEndpoint, VIDEO_ID, video } from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
 import { HttpResponse, http } from 'msw/http';
@@ -23,6 +23,7 @@ async function renderEmbed(search = '', overrides: Parameters<typeof video>[0] =
           })
         )
       ),
+      mockEndpoint(listVideoCorrections, () => HttpResponse.json({ items: [] })),
       http.get(PLAYLIST, () => new HttpResponse(null, { status: 404 })),
     ],
   });

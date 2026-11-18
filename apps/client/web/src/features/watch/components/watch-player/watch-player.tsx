@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { captionsQueryOptions, useApi } from '@vp/queries';
+import { captionsQueryOptions, correctionsQueryOptions, useApi } from '@vp/queries';
 import type { TaitubePlayerWithTelemetryProps } from '#app/components/player/taitube-player';
 import { LazyTaitubePlayer } from '#app/components/player/taitube-player/taitube-player.lazy';
 import { useProgressWriter } from '#app/hooks/use-progress-writer';
@@ -17,6 +17,7 @@ export function WatchPlayer({ onPause, ...props }: TaitubePlayerWithTelemetryPro
   const api = useApi();
   const progressWriter = useProgressWriter(props.videoId);
   const { data: captions } = useQuery(captionsQueryOptions(api, props.videoId));
+  const { data: corrections } = useQuery(correctionsQueryOptions(api, props.videoId));
 
   return (
     <LazyTaitubePlayer
@@ -30,6 +31,7 @@ export function WatchPlayer({ onPause, ...props }: TaitubePlayerWithTelemetryPro
         statsOverlay,
       }}
       captionTracks={captions?.tracks}
+      cards={corrections?.items}
       {...progressWriter}
       {...props}
       onPause={(progress) => {
