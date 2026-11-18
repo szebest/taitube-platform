@@ -35,7 +35,8 @@ describe('packages/env-schema: env-docs', () => {
       .filter(([, doc]) => doc.requiredIn?.includes('always'))
       .map(([key]) => key);
     const required = Object.keys(ENV_DOCS).filter(
-      (key) => describeEnvKey(key as keyof typeof ENV_DOCS).default.kind === 'required'
+      (key) =>
+        describeEnvKey(AppEnvSchema.shape[key as keyof typeof ENV_DOCS]).default.kind === 'required'
     );
 
     expect(always.sort()).toEqual(required.sort());

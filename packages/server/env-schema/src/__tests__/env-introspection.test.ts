@@ -1,4 +1,8 @@
+import { AppEnvSchema } from '../app-env';
 import { describeEnvKey } from '../env-introspection';
+
+const describeKey = (key: keyof typeof AppEnvSchema.shape) =>
+  describeEnvKey(AppEnvSchema.shape[key]);
 
 describe('packages/env-schema: env-introspection', () => {
   it.each([
@@ -13,7 +17,7 @@ describe('packages/env-schema: env-introspection', () => {
     { key: 'TRUST_PROXY', type: 'comma list', value: '' },
     { key: 'REDIS_URL', type: 'string', value: 'redis://localhost:6379/0' },
   ] as const)('reads $key as $type defaulting to $value', ({ key, type, value }) => {
-    const shape = describeEnvKey(key);
+    const shape = describeKey(key);
 
     expect(shape.type).toBe(type);
     expect(shape.default).toMatchObject({ kind: 'value', value });
@@ -25,10 +29,10 @@ describe('packages/env-schema: env-introspection', () => {
     'WORKER_CONCURRENCY',
     'DATABASE_URL_MIGRATIONS',
   ] as const)('reads %s as unset when the environment omits it', (key) => {
-    expect(describeEnvKey(key).default).toEqual({ kind: 'unset' });
+    expect(describeKey(key).default).toEqual({ kind: 'unset' });
   });
 
   it('reads DATABASE_URL as required', () => {
-    expect(describeEnvKey('DATABASE_URL')).toEqual({ type: 'url', default: { kind: 'required' } });
+    expect(describeKey('DATABASE_URL')).toEqual({ type: 'url', default: { kind: 'required' } });
   });
 });

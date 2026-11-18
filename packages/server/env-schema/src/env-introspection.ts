@@ -1,6 +1,4 @@
 import { z } from 'zod';
-import { AppEnvSchema } from './app-env';
-import type { AppEnvKey } from './env-doc';
 
 type EnvDefault =
   | { kind: 'required' }
@@ -43,8 +41,7 @@ function textOf(value: unknown): string {
 }
 
 /** @internal The input type and the default of one key, read from the schema itself rather than retyped. */
-export function describeEnvKey(key: AppEnvKey): EnvKeyShape {
-  const schema = AppEnvSchema.shape[key];
+export function describeEnvKey(schema: z.ZodType): EnvKeyShape {
   const outcome = schema.safeParse(undefined);
   const parsed = outcome.success ? outcome.data : undefined;
   const json = z.toJSONSchema(schema, { io: 'input', unrepresentable: 'any' });
