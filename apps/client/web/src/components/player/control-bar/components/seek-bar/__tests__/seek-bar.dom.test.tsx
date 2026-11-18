@@ -1,6 +1,6 @@
 import { fireEvent, screen } from '@testing-library/react';
 import { axeViolations } from '@vp/web-testing/dom';
-import { renderBar } from '../../../__tests__/render-bar';
+import { renderBar } from '#app/components/player/control-bar/__tests__/render-bar';
 
 const CHAPTERS = [
   { startMs: 0, title: 'Intro' },

@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import type { ClipEditorSprite } from '../types';
+import type { SpriteSheet } from '../types';
 
 function percentAlong(index: number, count: number): number {
   return count > 1 ? (index / (count - 1)) * 100 : 0;
@@ -7,7 +7,7 @@ function percentAlong(index: number, count: number): number {
 
 /** The style that shows the sprite tile holding `seconds` in an element as wide as one tile. */
 export function spriteFrameStyle(
-  sprite: ClipEditorSprite,
+  sprite: SpriteSheet,
   durationSeconds: number,
   seconds: number
 ): CSSProperties {

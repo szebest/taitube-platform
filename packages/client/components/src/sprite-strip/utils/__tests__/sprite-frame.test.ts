@@ -8,7 +8,7 @@ const SPRITE = {
   tileHeight: 90,
 };
 
-describe('apps/client/web: spriteFrameStyle', () => {
+describe('@vp/components: spriteFrameStyle', () => {
   it.each([
     {
       scenario: 'the first tile',

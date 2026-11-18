@@ -4,12 +4,15 @@ import { Button, Input, Skeleton, useToast } from '@kit/ui';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import type { Video } from '@vp/api-contracts';
 import { EmptyState } from '@vp/components';
-import { decideCorrection } from '@vp/domain-rules';
+import { CORRECTION_MAX_MS, CORRECTION_MIN_MS } from '@vp/domain';
+import { decideCorrection, decideCorrectionFields } from '@vp/domain-rules';
 import { correctionsQueryOptions, useApi } from '@vp/queries';
 import { useState } from 'react';
+import { TimelineRangeEditor } from '#app/components/video/timeline-range-editor';
 import {
   addCorrectionMutationOptions,
   removeCorrectionMutationOptions,
+  updateCorrectionMutationOptions,
 } from '#app/features/videos/api/video-tool-mutations';
 import { formatTimecode, parseTimecode } from '#app/utils/timecode';
 
@@ -20,29 +23,81 @@ export function CorrectionsPanel({ video }: { video: Video }) {
   const { tOr } = useT();
   const corrections = useQuery(correctionsQueryOptions(api, video.id));
   const add = useMutation(addCorrectionMutationOptions(api, video.id));
+  const update = useMutation(updateCorrectionMutationOptions(api, video.id));
   const remove = useMutation(removeCorrectionMutationOptions(api, video.id));
+  const [editing, setEditing] = useState<string | null>(null);
   const [start, setStart] = useState('0:00');
   const [end, setEnd] = useState('0:05');
   const [text, setText] = useState('');
   const [problem, setProblem] = useState<string | null>(null);
 
   const items = corrections.data?.items ?? [];
+  const durationMs = video.durationMs ?? 0;
+  const startMs = parseTimecode(start);
+  const endMs = parseTimecode(end);
+  const markers = items.map(({ id, startMs: ms }) => ({
+    id,
+    ms,
+    label: tOr('studio.correctionsMarkerLabel', { start: formatTimecode(ms) }, ''),
+    active: id === editing,
+  }));
+
+  const reset = () => {
+    setEditing(null);
+    setText('');
+    setProblem(null);
+  };
+
+  const edit = (item: (typeof items)[number]) => {
+    setEditing(item.id);
+    setStart(formatTimecode(item.startMs));
+    setEnd(formatTimecode(item.endMs));
+    setText(item.text);
+    setProblem(null);
+  };
+
+  const removeCorrection = (id: string) =>
+    remove.mutate(id, {
+      onSuccess: () => {
+        if (editing === id) reset();
+        toast({ tone: 'success', title: tOr('studio.correctionsRemoved', {}, '') });
+      },
+      onError: () =>
+        toast({ tone: 'danger', title: tOr('studio.correctionsRemoveFailed', {}, '') }),
+    });
 
   const submit = () => {
-    const startMs = parseTimecode(start);
-    const endMs = parseTimecode(end);
-    const decided =
-      startMs === null || endMs === null
-        ? null
-        : decideCorrection(
-            { startMs, endMs, text },
-            { videoId: video.id, durationMs: video.durationMs ?? null, existing: items.length }
-          );
-    if (decided === null || isErr(decided)) {
+    if (startMs === null || endMs === null) {
+      setProblem(tOr('studio.correctionsInvalid', {}, ''));
+      return;
+    }
+    const fields = { startMs, endMs, text };
+    const decided = editing
+      ? decideCorrectionFields(fields, { durationMs: video.durationMs ?? null })
+      : decideCorrection(fields, {
+          videoId: video.id,
+          durationMs: video.durationMs ?? null,
+          existing: items.length,
+        });
+    if (isErr(decided)) {
       setProblem(tOr('studio.correctionsInvalid', {}, ''));
       return;
     }
     setProblem(null);
+    if (editing) {
+      update.mutate(
+        { correctionId: editing, changes: decided.value },
+        {
+          onSuccess: () => {
+            reset();
+            toast({ tone: 'success', title: tOr('studio.correctionsSaved', {}, '') });
+          },
+          onError: () =>
+            toast({ tone: 'danger', title: tOr('studio.correctionsSaveFailed', {}, '') }),
+        }
+      );
+      return;
+    }
     add.mutate(decided.value, {
       onSuccess: () => {
         setText('');
@@ -78,27 +133,55 @@ export function CorrectionsPanel({ video }: { video: Video }) {
                 </span>{' '}
                 {item.text}
               </span>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={remove.isPending}
-                onClick={() =>
-                  remove.mutate(item.id, {
-                    onSuccess: () =>
-                      toast({ tone: 'success', title: tOr('studio.correctionsRemoved', {}, '') }),
-                    onError: () =>
-                      toast({
-                        tone: 'danger',
-                        title: tOr('studio.correctionsRemoveFailed', {}, ''),
-                      }),
-                  })
-                }
-              >
-                {tOr('studio.correctionsRemove', { start: formatTimecode(item.startMs) }, '')}
-              </Button>
+              <span className="flex gap-inline">
+                <Button variant="outline" size="sm" onClick={() => edit(item)}>
+                  {tOr('studio.correctionsEdit', { start: formatTimecode(item.startMs) }, '')}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={remove.isPending}
+                  onClick={() => removeCorrection(item.id)}
+                >
+                  {tOr('studio.correctionsRemove', { start: formatTimecode(item.startMs) }, '')}
+                </Button>
+              </span>
             </li>
           ))}
         </ul>
+      )}
+      {durationMs > 0 && (
+        <TimelineRangeEditor
+          aria-label={tOr('studio.correctionsTimelineLabel', {}, '')}
+          durationMs={durationMs}
+          sprite={video.sprite}
+          markers={markers}
+          summary={tOr('studio.correctionsRangeSummary', { start, end }, '')}
+          control={{
+            mode: 'range',
+            range: {
+              startMs: Math.min(startMs ?? 0, durationMs),
+              endMs: Math.min(endMs ?? 0, durationMs),
+            },
+            onRangeChange: (range) => {
+              setStart(formatTimecode(range.startMs));
+              setEnd(formatTimecode(range.endMs));
+            },
+            minSpanMs: CORRECTION_MIN_MS,
+            maxSpanMs: CORRECTION_MAX_MS,
+            startLabel: tOr('studio.correctionsStartLabel', {}, ''),
+            endLabel: tOr('studio.correctionsEndLabel', {}, ''),
+          }}
+        />
+      )}
+      {editing && (
+        <p className="m-0 text-fg-muted">
+          {tOr(
+            'studio.correctionsEditing',
+            { start: formatTimecode(items.find(({ id }) => id === editing)?.startMs ?? 0) },
+            ''
+          )}
+        </p>
       )}
       <div className="flex flex-wrap items-center gap-stack">
         <Input
@@ -118,9 +201,14 @@ export function CorrectionsPanel({ video }: { video: Video }) {
           value={text}
           onChange={(event) => setText(event.target.value)}
         />
-        <Button variant="solid" loading={add.isPending} onClick={submit}>
-          {tOr('studio.correctionsAdd', {}, '')}
+        <Button variant="solid" loading={add.isPending || update.isPending} onClick={submit}>
+          {editing ? tOr('studio.correctionsSave', {}, '') : tOr('studio.correctionsAdd', {}, '')}
         </Button>
+        {editing && (
+          <Button variant="outline" onClick={reset}>
+            {tOr('studio.correctionsCancel', {}, '')}
+          </Button>
+        )}
       </div>
       {problem && <p role="alert">{problem}</p>}
     </section>

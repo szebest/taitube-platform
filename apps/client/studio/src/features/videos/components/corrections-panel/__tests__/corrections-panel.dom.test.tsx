@@ -8,11 +8,11 @@ import { getRouter } from '#app/router';
 
 async function renderCorrections() {
   const served = serveVideoTools(video({ title: 'Launch day', durationMs: 120_000 }));
-  await renderRoute(getRouter, `/videos/${VIDEO_ID}/edit?tab=corrections`, {
+  const rendered = await renderRoute(getRouter, `/videos/${VIDEO_ID}/edit?tab=corrections`, {
     handlers: [signInBrowser()],
   });
   await screen.findByRole('heading', { name: 'Corrections' });
-  return { ...served, user: userEvent.setup() };
+  return { ...served, ...rendered, user: userEvent.setup() };
 }
 
 const field = (name: string) => screen.getByRole('textbox', { name });
@@ -56,6 +56,60 @@ describe('apps/client/studio: CorrectionsPanel', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Use a range of 2 to 30 seconds');
     expect(state.created).toEqual([]);
+  });
+
+  it('moves the range fields with the thumbs on the timeline, and the thumbs with the fields', async () => {
+    const { user } = await renderCorrections();
+    const end = () => screen.getByRole('slider', { name: 'Ends at' });
+
+    end().focus();
+    await user.keyboard('{ArrowRight}');
+
+    expect((field('Ends at') as HTMLInputElement).value).toBe('0:06');
+
+    await user.clear(field('Ends at'));
+    await user.type(field('Ends at'), '0:20');
+
+    expect(end()).toHaveAttribute('aria-valuenow', '20');
+  });
+
+  it('ticks the start of each card on the timeline', async () => {
+    const { container } = await renderCorrections();
+    await screen.findByText('It costs 5 dollars');
+
+    expect(container.querySelector('[data-slot="timeline-marker"]')?.getAttribute('title')).toBe(
+      'Correction at 0:10'
+    );
+  });
+
+  it('edits a card in the same form and saves only through the update', async () => {
+    const { state, user } = await renderCorrections();
+
+    await user.click(await screen.findByRole('button', { name: 'Edit the correction at 0:10' }));
+
+    expect((field('Starts at') as HTMLInputElement).value).toBe('0:10');
+    expect((field('Correction') as HTMLInputElement).value).toBe('It costs 5 dollars');
+
+    await user.clear(field('Correction'));
+    await user.type(field('Correction'), 'It costs 6 dollars');
+    await user.click(screen.getByRole('button', { name: 'Save the correction' }));
+
+    expect(await screen.findByText('Correction saved')).toBeInTheDocument();
+    expect(state.updated).toMatchObject([
+      { changes: { startMs: 10_000, endMs: 15_000, text: 'It costs 6 dollars' } },
+    ]);
+    expect(state.created).toEqual([]);
+    expect(await screen.findByText('It costs 6 dollars')).toBeInTheDocument();
+  });
+
+  it('goes back to adding a card when the edit is cancelled', async () => {
+    const { user } = await renderCorrections();
+
+    await user.click(await screen.findByRole('button', { name: 'Edit the correction at 0:10' }));
+    await user.click(screen.getByRole('button', { name: 'Cancel the edit' }));
+
+    expect(screen.getByRole('button', { name: 'Add the correction' })).toBeInTheDocument();
+    expect((field('Correction') as HTMLInputElement).value).toBe('');
   });
 
   it('removes a card', async () => {

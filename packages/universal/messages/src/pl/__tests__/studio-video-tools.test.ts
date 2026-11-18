@@ -14,6 +14,16 @@ describe('@vp/messages: pl studio video tools', () => {
       expected: 'Przywrócono z wersji 3',
     },
     {
+      key: 'studio.chaptersUsePlayheadFor',
+      values: { number: 2 },
+      expected: 'Użyj pozycji podglądu dla rozdziału 2',
+    },
+    {
+      key: 'studio.correctionsRangeSummary',
+      values: { start: '0:10', end: '0:15' },
+      expected: '0:10 do 0:15',
+    },
+    {
       key: 'studio.correctionsRemove',
       values: { start: '0:10' },
       expected: 'Usuń korektę od 0:10',

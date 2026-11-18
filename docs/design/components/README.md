@@ -19,6 +19,7 @@ The specs for every component in `@vp/components` (client, T3), the package that
 | [ErrorState](error-state.md) | A whole page or route that failed, with a retry | `Button`, `Callout`, `Spinner`, `Tooltip` | route error and not-found | route error and not-found |
 | [SectionError](section-error.md) | One section failed inside a page that did not | `Callout`, `Button`, `Spinner` | shelves, discussion | tables and charts |
 | [DisclosureControl](disclosure-control.md) | Silent or Visible: whether the author of a moderated comment is told | `SegmentedControl` | moderation dialog | bulk bar, queue, settings defaults |
+| [SpriteStrip](sprite-strip.md) | Frames of a video side by side along its length, an optional range left clear | none | the clip editor's range | `TimelineRangeEditor` |
 | [StatCard](../apps/studio/stat-card.md) | One KPI with a delta and a sparkline | `Card`, `Badge`, `Icon` | the creator stats panel on the watch page | dashboard KPIs |
 | [Skeletons](skeletons.md) | The loading layout of each component above | `Skeleton` | every page | every page |
 

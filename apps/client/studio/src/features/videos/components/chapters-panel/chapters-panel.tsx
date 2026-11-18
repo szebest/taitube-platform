@@ -8,6 +8,7 @@ import { validateChapters } from '@vp/domain-rules';
 import { useApi, videoQueryOptions } from '@vp/queries';
 import { useState } from 'react';
 import { VersionConflictDialog } from '#app/components/dialogs/version-conflict-dialog';
+import { TimelineRangeEditor } from '#app/components/video/timeline-range-editor';
 import { isVersionConflict } from '#app/features/videos/api/is-version-conflict';
 import {
   replaceChaptersMutationOptions,
@@ -34,8 +35,25 @@ export function ChaptersPanel({ video }: { video: Video }) {
   const [nextKey, setNextKey] = useState(video.chapters.length);
   const [problem, setProblem] = useState<string | null>(null);
   const [conflict, setConflict] = useState(false);
+  const [scrubMs, setScrubMs] = useState(0);
+  const [focusedKey, setFocusedKey] = useState<number | null>(null);
   const replace = useMutation(replaceChaptersMutationOptions(api, video.id));
   const suggest = useMutation(suggestChaptersMutationOptions(api, video.id));
+
+  const durationMs = video.durationMs ?? 0;
+  const markers = rows.flatMap((row, index) => {
+    const ms = parseTimecode(row.time);
+    return ms === null
+      ? []
+      : [
+          {
+            id: row.key,
+            ms,
+            label: tOr('studio.chaptersMarkerLabel', { number: index + 1, time: row.time }, ''),
+            active: row.key === focusedKey,
+          },
+        ];
+  });
 
   const change = (key: number, patch: Partial<Row>) =>
     setRows((current) => current.map((row) => (row.key === key ? { ...row, ...patch } : row)));
@@ -116,10 +134,29 @@ export function ChaptersPanel({ video }: { video: Video }) {
         <h2 id="chapters-title">{tOr('studio.chaptersTitle', {}, '')}</h2>
         <p className="text-fg-muted">{tOr('studio.chaptersDescription', {}, '')}</p>
       </header>
+      {durationMs > 0 && (
+        <TimelineRangeEditor
+          aria-label={tOr('studio.chaptersTimelineLabel', {}, '')}
+          durationMs={durationMs}
+          sprite={video.sprite}
+          markers={markers}
+          summary={tOr('studio.chaptersScrubSummary', { time: formatTimecode(scrubMs) }, '')}
+          control={{
+            mode: 'position',
+            positionMs: Math.min(scrubMs, durationMs),
+            onPositionChange: setScrubMs,
+            label: tOr('studio.chaptersScrubLabel', {}, ''),
+          }}
+        />
+      )}
       {rows.length === 0 && <p>{tOr('studio.chaptersEmpty', {}, '')}</p>}
       <ol className="m-0 flex list-none flex-col gap-stack p-0">
         {rows.map((row, index) => (
-          <li key={row.key} className="flex items-center gap-stack">
+          <li
+            key={row.key}
+            className="flex items-center gap-stack"
+            onFocus={() => setFocusedKey(row.key)}
+          >
             <Input
               className="w-24"
               aria-label={tOr('studio.chaptersTimeLabel', { number: index + 1 }, '')}
@@ -131,6 +168,16 @@ export function ChaptersPanel({ video }: { video: Video }) {
               value={row.title}
               onChange={(event) => change(row.key, { title: event.target.value })}
             />
+            {durationMs > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                aria-label={tOr('studio.chaptersUsePlayheadFor', { number: index + 1 }, '')}
+                onClick={() => change(row.key, { time: formatTimecode(scrubMs) })}
+              >
+                {tOr('studio.chaptersUsePlayhead', {}, '')}
+              </Button>
+            )}
             <Button
               variant="outline"
               size="sm"

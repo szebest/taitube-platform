@@ -1,13 +1,14 @@
 import type { Decorator, Meta, StoryObj } from '@storybook/react-vite';
+import type { SpriteSheet } from '@vp/components';
 import { useState } from 'react';
-import { ClipEditor, type ClipEditorSprite, type ClipEditorValue } from '..';
+import { ClipEditor, type ClipEditorValue } from '..';
 import { ClipEditorRoot } from '../clip-editor';
 
 const SHEET = `data:image/svg+xml,${encodeURIComponent(
   '<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="180" viewBox="0 0 10 1"><defs><linearGradient id="g"><stop offset="0" stop-color="#8a3d17"/><stop offset="1" stop-color="#17508a"/></linearGradient></defs><rect width="10" height="1" fill="url(#g)"/></svg>'
 )}`;
 
-const SPRITE: ClipEditorSprite = {
+const SPRITE: SpriteSheet = {
   url: SHEET,
   intervalSec: 10,
   columns: 10,
@@ -18,7 +19,7 @@ const SPRITE: ClipEditorSprite = {
 const clock = (ms: number) =>
   `${Math.floor(ms / 60_000)}:${String((ms / 1000) % 60).padStart(2, '0')}`;
 
-function Editor({ sprite, initial }: { sprite?: ClipEditorSprite; initial: ClipEditorValue }) {
+function Editor({ sprite, initial }: { sprite?: SpriteSheet; initial: ClipEditorValue }) {
   const [range, setRange] = useState(initial);
 
   return (

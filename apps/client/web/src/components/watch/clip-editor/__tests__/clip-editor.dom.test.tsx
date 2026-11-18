@@ -1,11 +1,12 @@
 import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
+import type { SpriteSheet } from '@vp/components';
 import { axeViolations } from '@vp/web-testing/dom';
 import { useState } from 'react';
 import { AppProviders } from '#app/__tests__/providers';
-import { ClipEditor, type ClipEditorSprite, type ClipEditorValue } from '..';
+import { ClipEditor, type ClipEditorValue } from '..';
 
-const SPRITE: ClipEditorSprite = {
+const SPRITE: SpriteSheet = {
   url: 'http://localhost:9000/sprites/s.jpg',
   intervalSec: 10,
   columns: 10,
@@ -13,7 +14,7 @@ const SPRITE: ClipEditorSprite = {
   tileHeight: 90,
 };
 
-function Harness({ sprite, initial }: { sprite?: ClipEditorSprite; initial: ClipEditorValue }) {
+function Harness({ sprite, initial }: { sprite?: SpriteSheet; initial: ClipEditorValue }) {
   const [range, setRange] = useState(initial);
 
   return (
@@ -46,14 +47,12 @@ describe('apps/client/web: ClipEditor', () => {
   });
 
   it.each([
-    { scenario: 'with a sprite', sprite: SPRITE, frames: 8 },
-    { scenario: 'without one', sprite: undefined, frames: 0 },
-  ])('lays $frames frames under the slider $scenario', ({ sprite, frames }) => {
+    { scenario: 'with a sprite', sprite: SPRITE, drawn: true },
+    { scenario: 'without one', sprite: undefined, drawn: false },
+  ])('draws the frame strip under the slider $scenario: $drawn', ({ sprite, drawn }) => {
     const { container } = render(<Harness sprite={sprite} initial={INITIAL} />);
 
-    const strip = container.querySelector('[data-slot="clip-editor-frames"]');
-
-    expect(strip?.querySelectorAll('div[style*="background-image"]').length ?? 0).toBe(frames);
+    expect(container.querySelector('[data-slot="sprite-strip"]') !== null).toBe(drawn);
   });
 
   it.each([

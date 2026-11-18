@@ -8,14 +8,18 @@ import { getRouter } from '#app/router';
 
 async function renderChapters(
   options: Parameters<typeof serveVideoTools>[1] = {},
-  chapters = CHAPTERS
+  chapters = CHAPTERS,
+  durationMs: number | null = 120_000
 ) {
-  const served = serveVideoTools(video({ title: 'Launch day', chapters }), options);
-  await renderRoute(getRouter, `/videos/${VIDEO_ID}/edit?tab=chapters`, {
+  const served = serveVideoTools(
+    video({ title: 'Launch day', chapters, durationMs: durationMs ?? undefined }),
+    options
+  );
+  const rendered = await renderRoute(getRouter, `/videos/${VIDEO_ID}/edit?tab=chapters`, {
     handlers: [signInBrowser()],
   });
   await screen.findByRole('heading', { name: 'Chapters' });
-  return { ...served, user: userEvent.setup() };
+  return { ...served, ...rendered, user: userEvent.setup() };
 }
 
 const start = (n: number) => screen.getByRole('textbox', { name: `Start of chapter ${n}` });
@@ -29,6 +33,33 @@ describe('apps/client/studio: ChaptersPanel', () => {
       [start(1), start(2), start(3)].map((field) => (field as HTMLInputElement).value)
     ).toEqual(['0:00', '0:20', '1:00']);
     expect((title(2) as HTMLInputElement).value).toBe('Middle');
+  });
+
+  it('ticks each chapter on the timeline by its time', async () => {
+    const { container } = await renderChapters();
+
+    expect(
+      [...container.querySelectorAll('[data-slot="timeline-marker"]')].map((tick) =>
+        tick.getAttribute('title')
+      )
+    ).toEqual(['Chapter 1 at 0:00', 'Chapter 2 at 0:20', 'Chapter 3 at 1:00']);
+  });
+
+  it('sets the start of a chapter from the scrub position', async () => {
+    const { user } = await renderChapters();
+
+    screen.getByRole('slider', { name: 'Scrub position' }).focus();
+    await user.keyboard('{ArrowRight>5/}');
+    await user.click(screen.getByRole('button', { name: 'Use the playhead for chapter 2' }));
+
+    expect((start(2) as HTMLInputElement).value).toBe('0:05');
+  });
+
+  it('leaves the timeline and its buttons out when the length of the video is unknown', async () => {
+    await renderChapters({}, CHAPTERS, null);
+
+    expect(screen.queryByRole('slider', { name: 'Scrub position' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Use the playhead/ })).not.toBeInTheDocument();
   });
 
   it('saves the rows sorted by time against the video version', async () => {

@@ -2,10 +2,16 @@ import { useFormat, useT } from '@kit/intl-react';
 import { unwrapOr } from '@kit/result';
 import { videoDuration } from '@vp/intl';
 import type { CSSProperties } from 'react';
+import {
+  chapterAt,
+  chapterMarkers,
+} from '#app/components/player/control-bar/utils/chapter-markers';
+import {
+  fromClipTime,
+  toClipPlayhead,
+} from '#app/components/player/control-bar/utils/clip-playhead';
 import { usePlayerCommands, usePlayerState } from '#app/integrations/video-js/video-js-engine';
 import type { PlaybackRange, PlayerChapter } from '#app/lib/player/taitube-player-props';
-import { chapterAt, chapterMarkers } from '../../utils/chapter-markers';
-import { fromClipTime, toClipPlayhead } from '../../utils/clip-playhead';
 
 export interface SeekBarProps {
   /** A clip: the bar shows only this range of the video. */

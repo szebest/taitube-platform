@@ -13,6 +13,16 @@ describe('@vp/messages: en studio video tools', () => {
       expected: 'Restored from version 3',
     },
     {
+      key: 'studio.chaptersUsePlayheadFor',
+      values: { number: 2 },
+      expected: 'Use the playhead for chapter 2',
+    },
+    {
+      key: 'studio.correctionsRangeSummary',
+      values: { start: '0:10', end: '0:15' },
+      expected: '0:10 to 0:15',
+    },
+    {
       key: 'studio.correctionsRemove',
       values: { start: '0:10' },
       expected: 'Remove the correction at 0:10',
