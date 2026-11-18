@@ -24,8 +24,6 @@ interface TracingConfig {
 const WORKSPACE_PACKAGE = /\/node_modules\/@(vp|kit)\//;
 const APP_SOURCE = /^file:\/\/(?!.*\/node_modules\/)/;
 
-const OTLP_TRACES_PATH = ['v1', 'traces'];
-
 const toError = (cause: unknown): Error => new Error('tracing failed', { cause });
 
 /** `OTEL_RESOURCE_ATTRIBUTES` is `key=value` pairs joined by commas; a pair with no `=` is dropped. */
@@ -62,7 +60,7 @@ export function initTracing(config: TracingConfig): Result<void, Error> {
         ...resourceAttributes(config.resourceAttributes),
       }),
       traceExporter: new OTLPTraceExporter({
-        url: [config.endpoint.replace(/\/$/, ''), ...OTLP_TRACES_PATH].join('/'),
+        url: `${config.endpoint.replace(/\/$/, '')}/v1/traces`,
       }),
       sampler: resolveSampler(config.sampler, config.samplerArg),
       metricReaders: [],
