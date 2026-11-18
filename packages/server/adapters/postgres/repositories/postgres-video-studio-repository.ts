@@ -28,6 +28,7 @@ import {
 import { appendChannelAudit } from './channel-audit-writes';
 import { enqueueNotificationJobs } from './notification-jobs';
 import type { PostgresDatabase } from './types';
+import { appendVideoRevisions, replaceChapters, selectChapters } from './video-revision-writes';
 import { commitVideoTransition } from './video-transition';
 
 const { videos: v, videoEvents: ve, categories: c, channels: ch } = schema;
@@ -85,7 +86,8 @@ export class PostgresVideoStudioRepository extends VideoStudioRepository {
   async updateMetadata(
     options: UpdateStudioMetadataOptions
   ): Promise<Result<StudioMetadataOutcome, DatabaseUnavailable | VersionConflict>> {
-    const { videoId, expectedVersion, patch, userId, tokenId, auditFields } = options;
+    const { videoId, expectedVersion, userId, tokenId, auditFields, revision } = options;
+    const { chapters, ...patch } = options.patch;
 
     const committed = await fromPromise(
       () =>
@@ -95,13 +97,8 @@ export class PostgresVideoStudioRepository extends VideoStudioRepository {
             return ok({ type: 'category-missing', categoryId });
           }
 
-          const [before] = patch.visibility
-            ? await tx
-                .select({ visibility: v.visibility })
-                .from(v)
-                .where(eq(v.id, videoId))
-                .for('update')
-            : [];
+          const [before] = await tx.select().from(v).where(eq(v.id, videoId)).for('update');
+          const beforeChapters = before ? await selectChapters(tx, videoId) : [];
 
           const [updated] = await tx
             .update(v)
@@ -120,6 +117,15 @@ export class PostgresVideoStudioRepository extends VideoStudioRepository {
               : ok({ type: 'video-missing' });
           }
 
+          if (chapters !== undefined) await replaceChapters(tx, videoId, chapters);
+          await appendVideoRevisions(tx, {
+            before: before ?? updated,
+            beforeChapters,
+            after: updated,
+            afterChapters: chapters ?? beforeChapters,
+            authorUserId: userId,
+            note: revision?.note,
+          });
           await tx.insert(ve).values({
             videoId,
             type: 'video.metadata_updated',
@@ -131,7 +137,12 @@ export class PostgresVideoStudioRepository extends VideoStudioRepository {
             .where(eq(ch.userId, updated.ownerId))
             .limit(1);
           if (channel) {
-            const edit = { videoId, fields: auditFields, commentsEnabled: patch.commentsEnabled };
+            const edit = {
+              videoId,
+              fields: auditFields,
+              commentsEnabled: patch.commentsEnabled,
+              restoredFromVersion: revision?.restoredFromVersion,
+            };
             for (const entry of videoEditAudit(edit)) {
               await appendChannelAudit(tx, {
                 ...entry,

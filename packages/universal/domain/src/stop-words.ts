@@ -146,12 +146,13 @@ const ENGLISH = [
   'theres',
 ];
 
-const STOP_WORDS_BY_LANGUAGE: Readonly<Record<string, ReadonlySet<string>>> = {
-  en: new Set(ENGLISH),
+const STOP_WORDS_BY_LANGUAGE: Readonly<Record<string, readonly string[]>> = {
+  en: ENGLISH,
 };
 
 /** `null` when the language has no list, which makes the chapter function rely on pauses alone. */
 export function stopWordsFor(language: string | null): ReadonlySet<string> | null {
   const primary = language?.toLowerCase().split('-')[0];
-  return (primary && STOP_WORDS_BY_LANGUAGE[primary]) || null;
+  const words = primary ? STOP_WORDS_BY_LANGUAGE[primary] : undefined;
+  return words ? new Set(words) : null;
 }

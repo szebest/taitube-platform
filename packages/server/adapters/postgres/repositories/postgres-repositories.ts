@@ -45,6 +45,7 @@ import { PostgresUserRepository } from './postgres-user-repository';
 import { PostgresVideoReactionRepository } from './postgres-video-reaction-repository';
 import { PostgresVideoRepository } from './postgres-video-repository';
 import { PostgresVideoStudioRepository } from './postgres-video-studio-repository';
+import { PostgresVideoToolsRepositories } from './postgres-video-tools-repositories';
 import { PostgresVideoViewRepository } from './postgres-video-view-repository';
 import { PostgresWatchHistoryRepository } from './postgres-watch-history-repository';
 import {
@@ -53,7 +54,7 @@ import {
 } from './postgres-watch-party-repositories';
 import { PostgresWebhookRepository } from './postgres-webhook-repository';
 
-export class PostgresRepositories implements Repositories {
+export class PostgresRepositories extends PostgresVideoToolsRepositories implements Repositories {
   readonly videos: PostgresVideoRepository;
   readonly videoStudio: PostgresVideoStudioRepository;
   readonly uploads: PostgresUploadRepository;
@@ -117,6 +118,7 @@ export class PostgresRepositories implements Repositories {
 
   constructor(config: PostgresRepositoriesConfig) {
     const { db, ownedPool } = connectPostgres(config);
+    super(db);
     this.ownedPool = ownedPool;
 
     this.videos = new PostgresVideoRepository(db);

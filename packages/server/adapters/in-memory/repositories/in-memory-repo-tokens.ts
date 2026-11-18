@@ -18,6 +18,7 @@ import type { InMemoryCommentRepository } from './in-memory-comment-repository';
 import type { InMemoryCommentSettingsRepository } from './in-memory-comment-settings-repository';
 import type { InMemoryDataExportRepository } from './in-memory-data-export-repository';
 import type { InMemoryDlqRepository } from './in-memory-dlq-repository';
+import type { InMemoryEntityRevisionRepository } from './in-memory-entity-revision-repository';
 import type { InMemoryEventRepository } from './in-memory-event-repository';
 import type { InMemoryFingerprintRepository } from './in-memory-fingerprint-repository';
 import type { InMemoryLiveStreamRepository } from './in-memory-live-stream-repository';
@@ -40,6 +41,8 @@ import type { InMemoryUploadRepository } from './in-memory-upload-repository';
 import type { InMemoryUserEventRepository } from './in-memory-user-event-repository';
 import type { InMemoryUserPreferencesRepository } from './in-memory-user-preferences-repository';
 import type { InMemoryUserRepository } from './in-memory-user-repository';
+import type { InMemoryVideoChapterRepository } from './in-memory-video-chapter-repository';
+import type { InMemoryVideoCorrectionRepository } from './in-memory-video-correction-repository';
 import type { InMemoryVideoReactionRepository } from './in-memory-video-reaction-repository';
 import type { InMemoryVideoRepository } from './in-memory-video-repository';
 import type { InMemoryVideoStudioRepository } from './in-memory-video-studio-repository';
@@ -90,6 +93,9 @@ export const Repo = {
   screenings: token<InMemoryScreeningRepository>('screenings'),
   fingerprints: token<InMemoryFingerprintRepository>('fingerprints'),
   clips: token<InMemoryClipRepository>('clips'),
+  entityRevisions: token<InMemoryEntityRevisionRepository>('entityRevisions'),
+  videoChapters: token<InMemoryVideoChapterRepository>('videoChapters'),
+  videoCorrections: token<InMemoryVideoCorrectionRepository>('videoCorrections'),
   channelFeatured: token<InMemoryChannelFeaturedRepository>('channelFeatured'),
   channelHandleHistory: token<InMemoryChannelHandleHistoryRepository>('channelHandleHistory'),
   channelImages: token<InMemoryChannelImageRepository>('channelImages'),
