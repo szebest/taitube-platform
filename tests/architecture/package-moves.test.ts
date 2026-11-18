@@ -40,11 +40,20 @@ function moveDrift(moves: Moves, workspace: Workspace): string[] {
       const specifier = entry === '.' ? name : `${name}/${entry.slice(2)}`;
       const exported = workspace.exportsOf(specifier);
       const named = Object.keys(entryMove);
+      const movedOut = (n: string) => {
+        const to = entryMove[n];
+        return (
+          entry === '.' &&
+          typeof to === 'string' &&
+          to !== name &&
+          workspace.exportsOf(to).includes(n)
+        );
+      };
       return [
         ...difference(exported, named).map((n) => `${specifier}: export ${n} has no destination`),
-        ...difference(named, exported).map(
-          (n) => `${specifier}: lists ${n}, which it no longer exports`
-        ),
+        ...difference(named, exported)
+          .filter((n) => !movedOut(n))
+          .map((n) => `${specifier}: lists ${n}, which it no longer exports`),
       ];
     });
     return [...entryDrift, ...nameDrift];
@@ -90,7 +99,7 @@ const PLANTED: Workspace = {
       : name === '@kit/landed' || name === '@vp/landed-app'
         ? ['.']
         : undefined,
-  exportsOf: () => ['kept', 'added'],
+  exportsOf: (specifier) => (specifier === '@kit/landed' ? ['moved'] : ['kept', 'added']),
 };
 
 describe('architecture: package moves', () => {
@@ -135,5 +144,11 @@ describe('architecture: package moves', () => {
     expect(moveDrift({ '@vp/landed-split': split }, PLANTED)).toEqual([
       '@vp/landed-split: no workspace package has this name',
     ]);
+  });
+
+  it('accepts a listed export that now lives in its destination package', () => {
+    const split = { '.': { kept: '@vp/split', added: '@vp/split', moved: '@kit/landed' } };
+
+    expect(moveDrift({ '@vp/split': { ...split, './extra': '@vp/split' } }, PLANTED)).toEqual([]);
   });
 });

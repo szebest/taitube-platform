@@ -111,6 +111,8 @@ taitube-platform/
 │   │       ├── config/              # loadEnv(): reads process.env once and validates it
 │   │       ├── dev-token/           # CLI: mints local EdDSA JWTs and serves a dev JWKS
 │   │       ├── logger/              # Pino logger with json and pretty formats, log context, serializeError
+│   │       ├── object-storage/      # S3 object headers by extension and multipart part sizing
+│   │       ├── testing/             # definePackageTestConfig, withEnv, Result, JWT, log capture and entrypoint helpers
 │   │       └── vite-preset/         # The Vite config of every client app: Start, React, Tailwind, the bundle guard
 │   ├── universal/                   # Runs in a browser AND on a server
 │   │   ├── api-contracts/           # Zod request/response schemas for every HTTP endpoint
@@ -144,8 +146,8 @@ taitube-platform/
 │       ├── lighthouse/              # CLI: Lighthouse CI on the built web app, offline, warn-only
 │       ├── observability/           # OpenTelemetry tracing, Prometheus metrics and the metrics server
 │       ├── stack/                   # CLI behind make up/down/status: starts the Compose stack a tier at a time
-│       ├── storage/                 # S3 object key layout (header and multipart helpers: platform/server/object-storage)
-│       ├── testing/                 # Shared test config, fixtures and test helpers
+│       ├── storage/                 # S3 object key layout
+│       ├── testing-fixtures/        # The seeded rows, the production-shaped env and the infra specs
 │       ├── upload-client/           # CLI: reference resumable multipart upload client
 │       └── whisper/                 # whisper.cpp runner, transcript windows and the WebVTT a caption track is stored as
 ├── infra/

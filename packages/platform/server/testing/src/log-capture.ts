@@ -23,6 +23,6 @@ export function captureLog(): LogCapture {
     text()
       .split('\n')
       .filter(Boolean)
-      .map((line) => JSON.parse(line) as LogLine);
+      .map((line): LogLine => JSON.parse(line));
   return { destination, lines, text };
 }
