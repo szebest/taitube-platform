@@ -50,8 +50,17 @@ describe('video tool routes', () => {
       ...body,
     });
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     ctx = await buildTestApp();
+  });
+
+  afterAll(async () => {
+    await ctx.app.close();
+  });
+
+  beforeEach(async () => {
+    ctx.repositories.clear();
+    ctx.cache.clear();
     await seedVideo(ctx.repositories, {
       id: VIDEO,
       ownerId: OWNER,
@@ -70,10 +79,6 @@ describe('video tool routes', () => {
       memberId: MODERATOR,
       role: 'moderator',
     });
-  });
-
-  afterEach(async () => {
-    await ctx.app.close();
   });
 
   describe('chapters', () => {

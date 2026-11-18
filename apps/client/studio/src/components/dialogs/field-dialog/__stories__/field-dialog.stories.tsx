@@ -1,10 +1,18 @@
+import { createToaster, ToastProvider } from '@kit/ui';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useState } from 'react';
 import { FieldDialog, type FieldDialogProps } from '../field-dialog';
 
+const toaster = createToaster();
+
 const meta = {
   title: 'Studio/FieldDialog',
   component: FieldDialog,
+  render: (args) => (
+    <ToastProvider toaster={toaster}>
+      <FieldDialog {...args} />
+    </ToastProvider>
+  ),
   args: {
     open: true,
     onOpenChange: () => undefined,
@@ -32,16 +40,18 @@ function Opened(props: Partial<FieldDialogProps>) {
   const [open, setOpen] = useState(true);
 
   return (
-    <FieldDialog
-      title="Add tags"
-      label="Tags to add"
-      submitLabel="Apply"
-      input={{ kind: 'text', hint: 'Separate tags with commas.' }}
-      onSubmit={() => setOpen(false)}
-      {...props}
-      open={open}
-      onOpenChange={setOpen}
-    />
+    <ToastProvider toaster={toaster}>
+      <FieldDialog
+        title="Add tags"
+        label="Tags to add"
+        submitLabel="Apply"
+        input={{ kind: 'text', hint: 'Separate tags with commas.' }}
+        onSubmit={() => setOpen(false)}
+        {...props}
+        open={open}
+        onOpenChange={setOpen}
+      />
+    </ToastProvider>
   );
 }
 
