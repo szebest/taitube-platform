@@ -5,13 +5,16 @@ describe('@vp/messages: pl studio batch', () => {
   const { t } = translatorFor('pl', { pl });
 
   it.each([
-    { key: 'studio.batchDeleted', args: { count: 22 }, expected: '22 filmy usunięte' },
-    { key: 'studio.batchUpdated', args: { count: 1 }, expected: '1 film zaktualizowany' },
-  ] as const)('writes $key', ({ key, args, expected }) => {
-    expect(t(key, args)).toEqual({ ok: true, value: expected });
-  });
-
-  it.each([
+    {
+      key: 'batchDeleted',
+      rendered: t('studio.batchDeleted', { count: 22 }),
+      expected: '22 filmy usunięte',
+    },
+    {
+      key: 'batchUpdated',
+      rendered: t('studio.batchUpdated', { count: 1 }),
+      expected: '1 film zaktualizowany',
+    },
     {
       key: 'batchAction',
       rendered: t('studio.batchAction', { field: 'removeTags' }),
