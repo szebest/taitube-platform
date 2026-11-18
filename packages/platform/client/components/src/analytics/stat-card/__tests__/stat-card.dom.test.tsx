@@ -17,7 +17,7 @@ const renderCard = (props: StatCardRootProps = {}, trend: StatCardTrend = 'up') 
     </StatCard.Root>
   );
 
-describe('@vp/components: StatCard', () => {
+describe('@kit/components: StatCard', () => {
   it('captions the figure with its label and reads the value and delta after it', () => {
     renderCard();
 

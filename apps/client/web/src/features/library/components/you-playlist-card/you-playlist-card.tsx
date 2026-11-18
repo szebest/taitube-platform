@@ -1,6 +1,6 @@
+import { VideoCard } from '@kit/components';
 import { useT } from '@kit/intl-react';
 import { Link } from '@tanstack/react-router';
-import { VideoCard } from '@vp/components';
 
 export interface YouPlaylistCardProps {
   id: string;

@@ -20,7 +20,7 @@ const renderWith = (expanded: boolean, ui: React.ReactNode) =>
     </VideoCardContext>
   );
 
-describe('@vp/components: video-card.actions', () => {
+describe('@kit/components: video-card.actions', () => {
   it('renders no menu when there are no actions', () => {
     const { container } = renderWith(false, <VideoCardMenu />);
 

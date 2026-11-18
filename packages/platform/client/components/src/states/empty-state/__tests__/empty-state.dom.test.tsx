@@ -22,7 +22,7 @@ const renderEmptyState = (props: EmptyStateRootProps = {}) =>
     </EmptyState.Root>
   );
 
-describe('@vp/components: EmptyState', () => {
+describe('@kit/components: EmptyState', () => {
   it.each(variantNames(emptyStateStyles.variants.size))(
     'says what is missing and offers the way on at the %s size',
     (size) => {

@@ -33,7 +33,7 @@ const renderShelf = (source: StartHereSource) =>
     </StartHereShelf.Root>
   );
 
-describe('@vp/components: StartHereShelf', () => {
+describe('@kit/components: StartHereShelf', () => {
   it.each([
     {
       source: 'pinned',

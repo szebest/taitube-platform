@@ -1,9 +1,9 @@
-# AGENTS.md - @vp/components (the shared components)
+# AGENTS.md - @kit/components (the shared components)
 
-> Tier rules for this directory: [../AGENTS.md](../AGENTS.md) · full tier & layer reference: [packages/AGENTS.md](../../AGENTS.md)
+> Tier rules for this directory: [../AGENTS.md](../../../client/AGENTS.md) · full tier & layer reference: [packages/AGENTS.md](../../../AGENTS.md)
 
-Owner: ticket [95](../../../docs/tickets/95-design-system-2.md), section 6. `client` tier, layer T4: above `@kit/ui` (T3),
-whose primitives it composes, and below the apps. Specs: [docs/design/components/](../../../docs/design/components/README.md).
+Owner: ticket [95](../../../../docs/tickets/95-design-system-2.md), section 6. `client` tier, layer T4: above `@kit/ui` (T3),
+whose primitives it composes, and below the apps. Specs: [docs/design/components/](../../../../docs/design/components/README.md).
 
 ## What it holds
 
@@ -21,11 +21,11 @@ never earlier.
   (`useAccount`, `signOut`) stay in `@vp/queries` and each app wraps them in `features/account/components/`.
 
 Every component is a folder, `src/<area>/<name>/`, shaped like a `@kit/ui` primitive: `<name>.tsx`,
-`<name>.context.ts` and `<name>.variants.ts` for a compound one, `types.ts`, a story and a jsdom spec; the shape is [docs/standards/frontend-structure.md](../../../docs/standards/frontend-structure.md#3-a-component-folder). It reads the
+`<name>.context.ts` and `<name>.variants.ts` for a compound one, `types.ts`, a story and a jsdom spec; the shape is [docs/standards/frontend-structure.md](../../../../docs/standards/frontend-structure.md#3-a-component-folder). It reads the
 words it prints itself through `useUiCopy()` and takes product words as children.
 
 Every component is imported by both apps (`tests/architecture/shared-components-used-by-both-apps.test.ts`). How to
-add one: [docs/standards/design-system.md](../../../docs/standards/design-system.md).
+add one: [docs/standards/design-system.md](../../../../docs/standards/design-system.md).
 
 ## What does not belong here
 
@@ -33,6 +33,6 @@ add one: [docs/standards/design-system.md](../../../docs/standards/design-system
 - A data hook, the router or the API client: a smart wrapper in the app owns them.
 
 ```bash
-pnpm --filter @vp/components typecheck
-pnpm --filter @vp/components test
+pnpm --filter @kit/components typecheck
+pnpm --filter @kit/components test
 ```

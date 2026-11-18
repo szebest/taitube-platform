@@ -1,5 +1,5 @@
+import { type StatCardTrend } from '@kit/components';
 import type { FormatValue } from '@kit/intl';
-import { type StatCardTrend } from '@vp/components';
 
 /** `percent` for a figure that is never negative, `count` for one that can cross zero. */
 export type KpiChangeUnit = 'percent' | 'count';

@@ -1,7 +1,7 @@
+import { EmptyLibraryIllustration, EmptyState } from '@kit/components';
 import { useT } from '@kit/intl-react';
 import { DropdownMenu, Icon, Progress, SortableList } from '@kit/ui';
 import type { PlaylistView } from '@vp/api-contracts';
-import { EmptyLibraryIllustration, EmptyState } from '@vp/components';
 import { useRemovePlaylistItem } from '#app/features/library/hooks/use-remove-playlist-item';
 import { useReorderPlaylist } from '#app/features/library/hooks/use-reorder-playlist';
 import { type PlaylistEdge, moveToEdge } from '#app/features/library/utils/playlist-order';

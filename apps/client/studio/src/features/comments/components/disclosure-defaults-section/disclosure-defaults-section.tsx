@@ -1,6 +1,6 @@
+import { DisclosureControl } from '@kit/components';
 import { useT } from '@kit/intl-react';
 import type { CommentSettingsView } from '@vp/api-contracts';
-import { DisclosureControl } from '@vp/components';
 import { DISCLOSURE_RULES, type DisclosureRule } from '@vp/domain';
 import { useId } from 'react';
 import { useSettingsSection } from '#app/features/comments/hooks/use-settings-section';

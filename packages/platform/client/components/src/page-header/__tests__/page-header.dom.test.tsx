@@ -57,7 +57,7 @@ const renderActions = (...actions: string[]) => {
   return { ...view, clicked };
 };
 
-describe('@vp/components: PageHeader', () => {
+describe('@kit/components: PageHeader', () => {
   it.each(variantNames(pageHeaderStyles.variants.titleStyle))(
     'makes the heading the caller passes the title in the %s style',
     (titleStyle) => {

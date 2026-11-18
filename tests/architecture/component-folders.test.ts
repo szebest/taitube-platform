@@ -5,7 +5,7 @@ import { PENDING } from './component-folders-pending';
 import { trackedFiles } from './repo-files';
 
 const PRIMITIVES = `${packageDir('@kit/ui')}/src/primitives/`;
-const COMPONENTS = `${packageDir('@vp/components')}/src/`;
+const COMPONENTS = `${packageDir('@kit/components')}/src/`;
 
 const KEBAB = '[a-z0-9]+(?:-[a-z0-9]+)*';
 /** Beside the required four: the compound context, the `tv()` styles, a lazy entry, the narrowed unions, the constants, a sibling part. */
@@ -29,7 +29,7 @@ const isStoryless = (folder: string) => PLAYER.test(folder) || MOVED_DOWN.has(fo
 
 const kitOf = (app: string) => `${app}/src/components/`;
 
-/** The folder of each component: `primitives/<name>/`, an app kit's `<area>/<name>/`, or one holding an `index.ts` in `@vp/components`. */
+/** The folder of each component: `primitives/<name>/`, an app kit's `<area>/<name>/`, or one holding an `index.ts` in `@kit/components`. */
 function componentFolders(files: readonly string[], apps: readonly string[]): string[] {
   const atDepth = (root: string, depth: number) =>
     files
@@ -92,7 +92,7 @@ function folderFindings(folder: string, files: readonly string[]): string[] {
   return [...missing, ...stray];
 }
 
-/** A source in a kit or `@vp/components` outside any component folder: specs and the barrel aside. */
+/** A source in a kit or `@kit/components` outside any component folder: specs and the barrel aside. */
 function looseFiles(files: readonly string[], folders: readonly string[], apps: readonly string[]) {
   const roots = [PRIMITIVES, COMPONENTS, ...apps.map(kitOf)];
   return files

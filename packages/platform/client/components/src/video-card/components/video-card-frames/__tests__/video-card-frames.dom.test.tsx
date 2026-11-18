@@ -12,7 +12,7 @@ const SPRITE: VideoCardSprite = {
 
 const sheet = (container: HTMLElement) => container.querySelector('img') as HTMLImageElement;
 
-describe('@vp/components: VideoCardFrames', () => {
+describe('@kit/components: VideoCardFrames', () => {
   beforeEach(() => vi.useFakeTimers());
   afterEach(() => vi.useRealTimers());
 

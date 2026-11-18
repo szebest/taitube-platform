@@ -1,7 +1,7 @@
+import { VideoCard } from '@kit/components';
 import { Format, useT } from '@kit/intl-react';
 import { Link } from '@tanstack/react-router';
 import type { VideoSummary } from '@vp/api-contracts';
-import { VideoCard } from '@vp/components';
 import { publishedAt } from '@vp/intl-formats';
 import type { ReactNode } from 'react';
 import { useDurationText } from '#app/hooks/use-duration-text';

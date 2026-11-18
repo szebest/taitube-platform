@@ -49,7 +49,7 @@ export function pendingPlatformMoves(
 
 /** Edges from a moved package to an app package that a seam still has to remove; deleted with the last seam. */
 const PENDING_APP_EDGES: ReadonlySet<string> = new Set([
-  '@vp/components>@vp/web-testing',
+  '@kit/components>@vp/web-testing',
   '@kit/forms>@vp/web-testing',
   '@kit/ui>@vp/web-testing',
   '@kit/web-telemetry>@vp/web-testing',

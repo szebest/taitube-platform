@@ -105,7 +105,7 @@
     },
     "packages/client/workbench": {
       "includeEntryExports": false,
-      "ignoreDependencies": ["@vp/components"],
+      "ignoreDependencies": ["@kit/components"],
       "project": ["{src,.storybook}/**/*.{ts,tsx,css}", "!src/**/__tests__/**"],
       "vitest": ["vitest.jsdom.config.ts", ".storybook/vitest.config.ts"]
     },

@@ -19,7 +19,7 @@ const renderMenu = () =>
     </AccountMenu.Root>
   );
 
-describe('@vp/components: AccountMenu', () => {
+describe('@kit/components: AccountMenu', () => {
   it.each([
     { name: 'The Creator', initials: 'TC' },
     { name: 'taitube', initials: 'T' },

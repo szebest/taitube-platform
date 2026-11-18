@@ -1,10 +1,10 @@
+import { EmptyState, SectionError } from '@kit/components';
 import { Format, useFormat, useT } from '@kit/intl-react';
 import { unwrapOr } from '@kit/result';
 import { Badge, Button, Icon, IconButton, useToast } from '@kit/ui';
 import { useQuery } from '@tanstack/react-query';
 import { createColumnHelper, useTable } from '@tanstack/react-table';
 import type { ApiTokenView } from '@vp/api-contracts';
-import { EmptyState, SectionError } from '@vp/components';
 import { API_TOKEN_LIMITS, type ApiTokenStatus } from '@vp/domain';
 import { API_TOKEN } from '@vp/domain-rules';
 import { publishedAt } from '@vp/intl-formats';

@@ -1,6 +1,6 @@
+import { VideoCard } from '@kit/components';
 import { useT } from '@kit/intl-react';
 import { Link } from '@tanstack/react-router';
-import { VideoCard } from '@vp/components';
 import type { PlaylistHit } from '#app/features/search/utils/search-hits';
 import { MatchedText } from '../matched-text/matched-text';
 

@@ -43,7 +43,7 @@ const renderThumb = (
     </VideoCardContext>
   );
 
-describe('@vp/components: VideoCardThumb', () => {
+describe('@kit/components: VideoCardThumb', () => {
   it('prints the duration', () => {
     renderThumb();
 

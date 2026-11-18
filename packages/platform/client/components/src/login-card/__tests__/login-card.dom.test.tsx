@@ -34,7 +34,7 @@ function FailingForm() {
   );
 }
 
-describe('@vp/components: LoginCard', () => {
+describe('@kit/components: LoginCard', () => {
   it('is the region its title names, with the ways to sign in inside', () => {
     renderLogin();
 

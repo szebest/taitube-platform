@@ -1,7 +1,7 @@
+import { StatCard } from '@kit/components';
 import { useFormat, useT } from '@kit/intl-react';
 import { unwrapOr } from '@kit/result';
 import type { CreatorStats } from '@vp/api-contracts';
-import { StatCard } from '@vp/components';
 import { videoDuration } from '@vp/intl-formats';
 import type { ReactNode } from 'react';
 

@@ -14,7 +14,7 @@ const renderSectionError = (props: Partial<SectionErrorRootProps> = {}) =>
     </SectionError.Root>
   );
 
-describe('@vp/components: SectionError', () => {
+describe('@kit/components: SectionError', () => {
   it.each(variantNames(sectionErrorStyles.variants.layout))(
     'names the section and reloads only it from the %s layout',
     async (layout) => {

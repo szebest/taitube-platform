@@ -37,7 +37,7 @@ const overflowing = () => {
 const track = () => screen.getByRole('list', { name: 'From channels you follow' });
 const chevron = (name: string) => screen.getByRole('button', { name, hidden: true });
 
-describe('@vp/components: Shelf', () => {
+describe('@kit/components: Shelf', () => {
   it('names the section and its track by the heading', () => {
     renderShelf();
 

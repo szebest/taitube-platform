@@ -48,7 +48,7 @@ const renderCard = (
 
 const card = () => screen.getByRole('article');
 
-describe('@vp/components: VideoCard', () => {
+describe('@kit/components: VideoCard', () => {
   afterEach(() => {
     vi.useRealTimers();
   });

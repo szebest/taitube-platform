@@ -14,7 +14,7 @@ const renderThumbnail = (children: ReactNode, props: VideoThumbnailRootProps = {
     </VideoThumbnail.Root>
   );
 
-describe('@vp/components: VideoThumbnail', () => {
+describe('@kit/components: VideoThumbnail', () => {
   it('names the frame for the view transition into the stage', () => {
     renderThumbnail(<VideoThumbnail.Image src="/poster.jpg" />);
 

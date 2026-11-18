@@ -1,6 +1,6 @@
+import { VideoCard } from '@kit/components';
 import { Format, useT } from '@kit/intl-react';
 import { Link } from '@tanstack/react-router';
-import { VideoCard } from '@vp/components';
 import { publishedAt } from '@vp/intl-formats';
 import type { VideoHit } from '#app/features/search/utils/search-hits';
 import { useDurationText } from '#app/hooks/use-duration-text';

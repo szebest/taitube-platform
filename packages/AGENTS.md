@@ -149,7 +149,7 @@ document is stale — fix it.
 | Package | Tier | Depends on |
 |---|---|---|
 | `@vp/api-client` | client | `@vp/api-contracts` |
-| `@vp/components` | client | `@kit/design-tokens`, `@kit/ui` |
+| `@kit/components` | client | `@kit/design-tokens`, `@kit/ui` |
 | `@kit/forms` | client | `@vp/errors`, `@kit/result` (T4 by design: above `@kit/ui` at T3, whose primitives its fields move onto) |
 | `@kit/intl-react` | client | `@kit/intl`, `@vp/messages`, `@kit/result` |
 | `@kit/web-telemetry` | client | `@vp/api-contracts`, `@kit/result` |
@@ -171,8 +171,8 @@ puts it at T5.
 
 | App | Tier | Depends on |
 |---|---|---|
-| `@vp/web` | client | `@vp/api-client`, `@vp/api-contracts`, `@vp/components`, `@vp/domain`, `@kit/intl`, `@vp/intl-formats`, `@kit/intl-react`, `@vp/permissions`, `@vp/permissions-react`, `@vp/queries`, `@kit/result`, `@kit/security-headers`, `@kit/ui`, `@kit/web-telemetry` |
-| `@vp/studio` | client | `@vp/api-client`, `@vp/api-contracts`, `@vp/components`, `@vp/errors`, `@kit/forms`, `@kit/intl`, `@vp/intl-formats`, `@kit/intl-react`, `@vp/permissions`, `@vp/permissions-react`, `@vp/queries`, `@kit/result`, `@kit/security-headers`, `@kit/ui`, `@vp/validation`, `@kit/web-telemetry` |
+| `@vp/web` | client | `@vp/api-client`, `@vp/api-contracts`, `@kit/components`, `@vp/domain`, `@kit/intl`, `@vp/intl-formats`, `@kit/intl-react`, `@vp/permissions`, `@vp/permissions-react`, `@vp/queries`, `@kit/result`, `@kit/security-headers`, `@kit/ui`, `@kit/web-telemetry` |
+| `@vp/studio` | client | `@vp/api-client`, `@vp/api-contracts`, `@kit/components`, `@vp/errors`, `@kit/forms`, `@kit/intl`, `@vp/intl-formats`, `@kit/intl-react`, `@vp/permissions`, `@vp/permissions-react`, `@vp/queries`, `@kit/result`, `@kit/security-headers`, `@kit/ui`, `@vp/validation`, `@kit/web-telemetry` |
 | `@vp/api` | server | `@vp/adapters`, `@vp/api-contracts`, `@kit/composition`, `@kit/concurrency`, `@kit/config`, `@vp/core`, `@vp/db`, `@kit/dev-token`, `@vp/domain`, `@vp/domain-rules`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/job-contracts`, `@kit/logger`, `@vp/observability`, `@kit/pagination`, `@vp/permissions`, `@kit/result`, `@vp/storage`, `@vp/validation`, `@vp/whisper` |
 | `@vp/worker` | server | `@vp/adapters`, `@kit/composition`, `@kit/config`, `@vp/core`, `@vp/domain`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/ffmpeg`, `@vp/job-contracts`, `@kit/logger`, `@vp/observability`, `@kit/result`, `@vp/storage`, `@vp/validation`, `@vp/whisper` |
 
@@ -181,9 +181,9 @@ puts it at T5.
 | Package | Tier | Depends on | Dev-depends on |
 |---|---|---|---|
 | `@vp/upload-client` | server | `@kit/logger`, `@kit/result` | `@vp/adapters`, `@vp/api`, `@kit/dev-token`, `@vp/env-schema` |
-| `@vp/workbench` | client | nothing (Storybook: it ships nothing and nothing imports it) | `@vp/components`, `@kit/design-tokens`, `@vp/messages`, `@kit/ui`, the stories of both client apps |
+| `@vp/workbench` | client | nothing (Storybook: it ships nothing and nothing imports it) | `@kit/components`, `@kit/design-tokens`, `@vp/messages`, `@kit/ui`, the stories of both client apps |
 
-`@vp/upload-client`'s acceptance suite boots `apps/server/api` and a stub S3, so the package sits above the application it drives. `@vp/workbench` typechecks the apps' stories, which import `@vp/components`, so it sits above the apps too: below them, a cold `pnpm typecheck` checked it before `@vp/components` was built.
+`@vp/upload-client`'s acceptance suite boots `apps/server/api` and a stub S3, so the package sits above the application it drives. `@vp/workbench` typechecks the apps' stories, which import `@kit/components`, so it sits above the apps too: below them, a cold `pnpm typecheck` checked it before `@kit/components` was built.
 What it *ships* is two runtime dependencies; the layer records the whole manifest, dev edges included.
 
 **Every package in `@vp/web`'s runtime closure is `universal` or `client`** - seventeen of them, eight `client`

@@ -22,6 +22,7 @@
     "typecheck": "tsc --noEmit && tsc -p tsconfig.spec.json && tsc -p tsconfig.e2e.json && tsc -p tsconfig.sw.json"
   },
   "dependencies": {
+    "@kit/components": "workspace:*",
     "@kit/design-tokens": "workspace:*",
     "@kit/forms": "workspace:*",
     "@kit/intl": "workspace:*",
@@ -41,7 +42,6 @@
     "@videojs/react": "^10.1.0",
     "@vp/api-client": "workspace:*",
     "@vp/api-contracts": "workspace:*",
-    "@vp/components": "workspace:*",
     "@vp/domain": "workspace:*",
     "@vp/domain-rules": "workspace:*",
     "@vp/intl-formats": "workspace:*",

@@ -41,7 +41,7 @@ const renderWithExtras = () =>
     </ErrorState.Root>
   );
 
-describe('@vp/components: ErrorState', () => {
+describe('@kit/components: ErrorState', () => {
   it('retries through the root, and shows the button only when there is a retry', async () => {
     const onRetry = vi.fn();
     const { unmount } = renderErrorState({ kind: 'server', onRetry });

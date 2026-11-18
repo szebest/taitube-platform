@@ -1,7 +1,7 @@
 import { act, renderHook } from '@testing-library/react';
 import { useFramePreview } from '../use-frame-preview';
 
-describe('@vp/components: useFramePreview', () => {
+describe('@kit/components: useFramePreview', () => {
   beforeEach(() => vi.useFakeTimers());
   afterEach(() => vi.useRealTimers());
 

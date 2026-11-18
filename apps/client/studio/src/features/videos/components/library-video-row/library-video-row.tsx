@@ -1,9 +1,9 @@
+import { VideoThumbnail } from '@kit/components';
 import { useFormat, useT } from '@kit/intl-react';
 import { unwrapOr } from '@kit/result';
 import { DropdownMenu, Icon, IconButton } from '@kit/ui';
 import { Link } from '@tanstack/react-router';
 import type { ContractResult, listCreatorVideos } from '@vp/api-contracts';
-import { VideoThumbnail } from '@vp/components';
 import { VIDEO_VISIBILITIES } from '@vp/domain';
 import { videoDuration } from '@vp/intl-formats';
 import { canDeleteVideo, canReadAnalytics, canUpdateVideo } from '@vp/permissions';

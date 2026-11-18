@@ -3,7 +3,7 @@ import { packageDir } from '../../scripts/workspace-packages';
 import { clientApps } from './client-apps';
 import { isSpec, trackedFiles } from './repo-files';
 
-const COMPONENTS = packageDir('@vp/components');
+const COMPONENTS = packageDir('@kit/components');
 const UI = packageDir('@kit/ui');
 
 const PACKAGE_ROOTS = [`${UI}/src/`, `${COMPONENTS}/src/`];
@@ -107,7 +107,7 @@ describe('architecture: every client app and component package keeps the folder 
     expect(shapeFindings([file], [WEB, STUDIO])).toEqual([`${file}: ${finding}`]);
   });
 
-  it('holds over every client app, @kit/ui and @vp/components', () => {
+  it('holds over every client app, @kit/ui and @kit/components', () => {
     const appRoots = clientApps().map((app) => `${app}/src/`);
     const files = trackedFiles(...appRoots, ...PACKAGE_ROOTS);
 

@@ -101,6 +101,7 @@ taitube-platform/
 │   │   │   ├── runtime/             # Clock, Random, EnvSource, Fetch and CookieJar tokens; node and browser entries
 │   │   │   └── tsconfig/            # Shared TypeScript presets, one per tier
 │   │   ├── client/                  # Browser only
+│   │   │   ├── components/          # Shared components both apps render: PageHeader, EmptyState, ErrorState, SectionError, the state illustrations
 │   │   │   ├── forms/               # useAppForm with the text, select and file fields, and validateWith
 │   │   │   ├── intl-react/          # IntlProvider, useT, useFormat and <Format> for the web app
 │   │   │   ├── security-headers/    # CSP nonce and the security headers request middleware each app mounts
@@ -125,7 +126,6 @@ taitube-platform/
 │   │   └── validation/              # Pure input-only rules returning Result
 │   ├── client/                      # Browser only
 │   │   ├── api-client/              # Typed HTTP client whose calls are typed by api-contracts
-│   │   ├── components/              # Shared components both apps render: PageHeader, EmptyState, ErrorState, SectionError, the state illustrations
 │   │   ├── permissions-react/       # PermissionsProvider, useCan and <Can> over the @vp/permissions rules
 │   │   ├── queries/                 # QueryClient factory, ApiProvider, the auth seam and the shared query factories
 │   │   ├── web-testing/             # Spec helpers: contract-typed MSW handlers, renderRoute, serverRender, fixtures

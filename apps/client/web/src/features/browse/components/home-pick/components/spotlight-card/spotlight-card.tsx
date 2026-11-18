@@ -1,7 +1,7 @@
+import { VideoCard } from '@kit/components';
 import { Format, useT } from '@kit/intl-react';
 import { Button, Icon, useUiCopy } from '@kit/ui';
 import { Link } from '@tanstack/react-router';
-import { VideoCard } from '@vp/components';
 import { publishedAt } from '@vp/intl-formats';
 import { PickOfTheDay } from '#app/components/discovery/pick-of-the-day';
 import type { Spotlight } from '#app/features/browse/utils/spotlight';

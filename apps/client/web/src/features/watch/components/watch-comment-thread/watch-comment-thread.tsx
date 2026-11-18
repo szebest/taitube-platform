@@ -1,8 +1,8 @@
+import { EmptyState } from '@kit/components';
 import { Format, useT } from '@kit/intl-react';
 import { Button } from '@kit/ui';
 import { useSuspenseInfiniteQuery } from '@tanstack/react-query';
 import { useSearch } from '@tanstack/react-router';
-import { EmptyState } from '@vp/components';
 import type { CommentSort } from '@vp/domain';
 import { useCan } from '@vp/permissions-react';
 import { SectionBoundary, useAccount, useApi } from '@vp/queries';
