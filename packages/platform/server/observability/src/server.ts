@@ -20,8 +20,10 @@ export interface MetricsServerOptions {
 
 type Reply = { status: number; contentType: string; body: string };
 
-const toError = (cause: unknown): Error =>
-  cause instanceof Error ? cause : new Error('metrics server failed', { cause });
+function toError(cause: unknown): Error {
+  if (cause instanceof Error) return cause;
+  return new Error('metrics server failed', { cause });
+}
 
 const text = (status: number, body: string): Reply => ({
   status,
