@@ -3,7 +3,6 @@ import {
   type DevTokenConfig,
   getDevJwks as jwksFor,
   type MintTokenOptions,
-  mintPersonaToken as mintPersonaFor,
   mintToken as mintFor,
   type TokenPayload,
   type VerifyTokenOptions,
@@ -32,7 +31,3 @@ export const verifyToken = (token: string, options?: VerifyTokenOptions): TokenP
   verifyFor(DEV_TOKEN_CONFIG, token, options);
 
 export const getDevJwks = () => jwksFor(DEV_TOKEN_CONFIG);
-
-/** @public */
-export const mintPersonaToken = (persona: string): string | undefined =>
-  mintPersonaFor(DEV_TOKEN_CONFIG, persona);
