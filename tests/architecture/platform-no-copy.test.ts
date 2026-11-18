@@ -16,12 +16,14 @@ const CATALOGUE_DIRECTORY =
 const DATA_FILE = /\.(?:json|po|pot|xlf|xliff|ftl|properties|arb|yaml|yml)$/;
 const MANIFEST = /(?:^|\/)(?:package|tsconfig[\w.-]*|tsconfig\/[\w.-]+)\.json$/;
 
-const UTILITY = /^[a-z0-9]+(?:[-:/.[\]'][a-z0-9.[\]%#()'-]*)*$/;
+const PLAIN_UTILITIES: ReadonlySet<string> = new Set(['absolute', 'grid']);
+const SEPARATED_UTILITY = /^[a-z0-9]+(?:[-:/.[\]'][a-z0-9.[\]%#()'-]*)+$/;
 
-const isClassList = (text: string): boolean => {
-  const words = text.trim().split(/\s+/);
-  return words.every((word) => UTILITY.test(word)) && words.some((word) => /[-:/.[\]]/.test(word));
-};
+const isClassList = (text: string): boolean =>
+  text
+    .trim()
+    .split(/\s+/)
+    .every((word) => PLAIN_UTILITIES.has(word) || SEPARATED_UTILITY.test(word));
 
 const hasLetters = (jsxText: string): boolean =>
   /\p{L}/u.test(jsxText.replace(/&(?:[a-z]+|#\d+|#x[\da-f]+);/gi, ''));
@@ -111,6 +113,18 @@ describe('architecture: platform packages ship no copy', () => {
     {
       shape: 'a braced placeholder',
       source: "export const a = <input placeholder={'Search videos'} />;",
+    },
+    {
+      shape: 'lowercase copy ending in a full stop',
+      source: "export const a = <i aria-label='close the dialog.' />;",
+    },
+    {
+      shape: 'lowercase copy ending in an ellipsis',
+      source: "export const a = <input placeholder='search videos...' />;",
+    },
+    {
+      shape: 'lowercase copy with a hyphenated word',
+      source: "export const a = { label: 're-upload the file' };",
     },
     { shape: 'a label property', source: "export const a = { label: 'Sign in to continue' };" },
     { shape: 'a title property', source: "export const a = { title: 'Something went wrong.' };" },
