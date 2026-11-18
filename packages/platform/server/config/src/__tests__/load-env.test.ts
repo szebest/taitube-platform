@@ -41,8 +41,13 @@ describe('packages/config: loadEnv', () => {
   });
 
   it('reads process.env when it is handed no record', () => {
-    vi.stubEnv('DATABASE_URL', VALID_ENV.DATABASE_URL);
-
-    expect(loadEnv(Schema).DATABASE_URL).toBe(VALID_ENV.DATABASE_URL);
+    const previous = process.env['DATABASE_URL'];
+    process.env['DATABASE_URL'] = VALID_ENV.DATABASE_URL;
+    try {
+      expect(loadEnv(Schema).DATABASE_URL).toBe(VALID_ENV.DATABASE_URL);
+    } finally {
+      if (previous === undefined) delete process.env['DATABASE_URL'];
+      else process.env['DATABASE_URL'] = previous;
+    }
   });
 });
