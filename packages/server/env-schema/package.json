@@ -26,6 +26,7 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@kit/config": "workspace:*",
     "@kit/tsconfig": "workspace:*",
     "@vp/testing": "workspace:*",
     "rimraf": "^6.1.3",

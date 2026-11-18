@@ -1,6 +1,6 @@
+import { describeEnvKey } from '../../packages/platform/server/config/src/index';
 import {
   AppEnvSchema,
-  describeEnvKey,
   ENV_DOCS,
   ENV_GROUPS,
   EXTRA_ENV_DOCS,

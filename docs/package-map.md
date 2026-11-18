@@ -32,6 +32,7 @@ scope (platform or app) and the tier are the directory and the layer is `vp.laye
 | `@kit/i18n` | `packages/platform/universal/i18n` | platform | universal | T3 | `@kit/di`, `@kit/result`, `@vp/intl` | `@kit/tsconfig`, `@vp/testing` |
 | `@kit/runtime` | `packages/platform/universal/runtime` | platform | universal | T3 | `@kit/di` | `@kit/result`, `@kit/tsconfig`, `@vp/testing` |
 | `@vp/dev-identity` | `packages/server/dev-identity` | app | server | T3 | `@kit/dev-token` | `@kit/tsconfig`, `@vp/testing` |
+| `@kit/config` | `packages/platform/server/config` | platform | server | T4 | `@kit/composition`, `@kit/logger`, `@kit/result` | `@kit/tsconfig`, `@vp/testing` |
 | `@vp/errors` | `packages/universal/errors` | app | universal | T4 | `@kit/di` | `@kit/result`, `@kit/tsconfig`, `@vp/testing` |
 | `@kit/design-tokens` | `packages/platform/universal/design-tokens` | platform | universal | T5 | `@kit/result`, `@vp/domain`, `@vp/errors` | `@kit/tsconfig`, `@vp/testing` |
 | `@kit/pagination` | `packages/platform/universal/pagination` | platform | universal | T5 | `@kit/result`, `@vp/errors` | `@kit/tsconfig`, `@vp/testing` |
@@ -46,14 +47,13 @@ scope (platform or app) and the tier are the directory and the layer is `vp.laye
 | `@kit/ui` | `packages/platform/client/ui` | platform | client | T6 | `@kit/design-tokens`, `@kit/result`, `@vp/domain`, `@vp/errors` | `@kit/tsconfig`, `@kit/vite-preset`, `@vp/testing`, `@vp/web-testing` |
 | `@vp/core` | `packages/server/core` | app | server | T6 | `@kit/result`, `@vp/domain`, `@vp/errors`, `@vp/permissions` | `@kit/tsconfig`, `@vp/testing` |
 | `@vp/db` | `packages/server/db` | app | server | T6 | `@kit/result`, `@vp/domain`, `@vp/job-contracts`, `@vp/storage`, `@vp/validation` | `@kit/tsconfig`, `@vp/testing` |
-| `@vp/env-schema` | `packages/server/env-schema` | app | server | T6 | `@kit/pagination`, `@kit/result`, `@vp/domain`, `@vp/observability` | `@kit/tsconfig`, `@vp/testing` |
+| `@vp/env-schema` | `packages/server/env-schema` | app | server | T6 | `@kit/pagination`, `@kit/result`, `@vp/domain`, `@vp/observability` | `@kit/config`, `@kit/tsconfig`, `@vp/testing` |
 | `@vp/api-contracts` | `packages/universal/api-contracts` | app | universal | T6 | `@kit/pagination`, `@kit/result`, `@vp/domain`, `@vp/errors`, `@vp/permissions`, `@vp/validation` | `@kit/tsconfig`, `@vp/testing` |
 | `@vp/domain-rules` | `packages/universal/domain-rules` | app | universal | T6 | `@kit/machine`, `@kit/result`, `@vp/domain`, `@vp/errors`, `@vp/permissions`, `@vp/validation` | `@kit/tsconfig`, `@vp/testing` |
 | `@vp/api-client` | `packages/client/api-client` | app | client | T7 | `@vp/api-contracts` | `@kit/result`, `@kit/tsconfig`, `@vp/domain-rules`, `@vp/testing`, `@vp/validation` |
 | `@vp/components` | `packages/client/components` | app | client | T7 | `@kit/design-tokens`, `@kit/ui` | `@kit/tsconfig`, `@kit/vite-preset`, `@vp/testing`, `@vp/web-testing` |
 | `@kit/forms` | `packages/platform/client/forms` | platform | client | T7 | `@kit/result`, `@kit/ui`, `@vp/errors` | `@kit/tsconfig`, `@kit/vite-preset`, `@vp/testing`, `@vp/validation`, `@vp/web-testing` |
 | `@kit/web-telemetry` | `packages/platform/client/web-telemetry` | platform | client | T7 | `@kit/result` | `@kit/tsconfig`, `@kit/vite-preset`, `@vp/testing`, `@vp/web-testing` |
-| `@kit/config` | `packages/platform/server/config` | platform | server | T7 | `@kit/composition`, `@kit/logger`, `@kit/result`, `@vp/env-schema` | `@kit/tsconfig`, `@vp/testing` |
 | `@vp/adapters` | `packages/server/adapters` | app | server | T7 | `@kit/composition`, `@kit/concurrency`, `@kit/di`, `@kit/result`, `@vp/core`, `@vp/db`, `@vp/dev-identity`, `@vp/domain`, `@vp/domain-rules`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/job-contracts`, `@vp/observability`, `@vp/permissions`, `@vp/storage`, `@vp/validation` | `@kit/tsconfig`, `@vp/testing` |
 | `@vp/deploy` | `packages/server/deploy` | app | server | T7 | `@kit/result`, `@vp/env-schema`, `@vp/job-contracts` | `@kit/tsconfig`, `@vp/testing` |
 | `@vp/fingerprint` | `packages/server/fingerprint` | app | server | T7 | `@kit/result`, `@vp/core`, `@vp/domain`, `@vp/errors`, `@vp/ffmpeg` | `@kit/tsconfig`, `@vp/testing` |

@@ -1,7 +1,7 @@
+import { describeEnvKey } from '@kit/config';
 import { AppEnvSchema } from '../app-env';
 import { ENV_GROUPS } from '../env-doc';
 import { ENV_DOCS } from '../env-docs';
-import { describeEnvKey } from '../env-introspection';
 import { SECRET_KEYS } from '../secret-keys';
 
 const entries = Object.entries(ENV_DOCS);

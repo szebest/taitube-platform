@@ -1,4 +1,4 @@
-import type { EnvKeyShape } from '../../../packages/server/env-schema/src/index';
+import type { EnvKeyShape } from '../../../packages/platform/server/config/src/index';
 import { buildModel, type EnvModelInput } from '../model';
 import { parseEnvExample } from '../parse-example';
 

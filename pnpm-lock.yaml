@@ -2360,6 +2360,9 @@ importers:
         specifier: ^4.6.5
         version: 4.6.5
     devDependencies:
+      '@kit/config':
+        specifier: workspace:*
+        version: link:../../platform/server/config
       '@kit/tsconfig':
         specifier: workspace:*
         version: link:../../platform/universal/tsconfig
