@@ -120,7 +120,8 @@ document is stale — fix it.
 | `@vp/job-contracts` | server | `@vp/domain` |
 | `@vp/lighthouse` | server | `@vp/domain` |
 | `@vp/observability` | server | `@kit/result` |
-| `@vp/testing` | server | `@kit/result` |
+| `@kit/testing` | server | `@kit/result` |
+| `@vp/testing-fixtures` | server | none |
 | `@vp/whisper` | server | `@vp/domain`, `@vp/errors`, `@kit/result` |
 
 ### T3 — Domain capability
@@ -318,8 +319,8 @@ Stated plainly so nobody assumes more coverage than exists:
   path: the workbench already reads every app's stories, and a story of a web component needs the web app's own
   providers.
 - **The build tooling is exempt from both rules as a devDependency**, `BUILD_TOOLING` in
-  `scripts/check-boundaries.ts`: `@kit/tsconfig` (JSON presets), `@vp/testing` (a vitest config factory plus
-  fixtures), `@kit/vite-preset` (the client apps' Vite config) and `@vp/web-testing` (browser spec helpers).
+  `scripts/check-boundaries.ts`: `@kit/tsconfig` (JSON presets), `@kit/testing` (a vitest config factory plus
+  spec helpers), `@vp/testing-fixtures` (the seeded rows and the shared environment), `@kit/vite-preset` (the client apps' Vite config) and `@vp/web-testing` (browser spec helpers).
   None ships code, so none can reach a runtime bundle; a runtime dependency on one is still checked. Every
   other devDependency is checked like a dependency — it resolves in CI, and a type it carries lands in the
   emitted `.d.ts` where `pnpm deploy --prod` cannot resolve it.

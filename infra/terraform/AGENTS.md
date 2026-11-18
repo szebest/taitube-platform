@@ -50,5 +50,5 @@ terraform -chdir=infra/terraform validate
 cd infra/terraform && terraform plan
 
 # Run the specs that read the HCL
-pnpm --filter @vp/testing test cloud-terraform cloud-r2-tokens
+pnpm --filter @vp/testing-fixtures test cloud-terraform cloud-r2-tokens
 ```

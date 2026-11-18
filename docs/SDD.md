@@ -640,7 +640,7 @@ point **strictly down** — a T2 package may not depend on another T2. Sibling i
 they are how a layer quietly becomes a cycle. The layer is *declared* rather than derived from the graph: a
 derived depth cannot contradict itself, which would make the check vacuous. `devDependencies` count: a
 test-only edge resolves in CI and its types land in the emitted `.d.ts`, so only the build tooling, none of
-which ships code, is exempt, and only on a dev edge: `@kit/tsconfig`, `@vp/testing`, `@kit/vite-preset` (the
+which ships code, is exempt, and only on a dev edge: `@kit/tsconfig`, `@kit/testing`, `@vp/testing-fixtures`, `@kit/vite-preset` (the
 Vite config of the client apps) and `@vp/web-testing` (the spec helpers of the browser packages and apps).
 `@vp/web-testing` is the one the 93 ticket's table did not list as tooling: `@kit/ui` (T2) runs its own specs
 on its jsdom stubs and axe helper, and the alternative to the exemption was a copy of both.
