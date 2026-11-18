@@ -84,23 +84,25 @@ test.describe('video tools answer to the right to edit the video, with problem+j
     }
   }
 
-  test('an editor of the channel can add and remove a correction, and a bulk edit reports the moderator as refused', async ({
+  test('an editor of the channel can add, change and remove a correction, and a bulk edit reports the moderator as refused', async ({
     api,
     stack,
   }) => {
     const editor = await api('editor', { channelId: stack.team.channelId });
     const moderator = await api('moderator', { channelId: stack.team.channelId });
-    const videoId = stack.videos.watchable.id;
+    const videoId = stack.videos.clippable.id;
 
     const added = await editor.post(`/v1/videos/${videoId}/corrections`, { data: CARD });
-    const removed = await editor.delete(
-      `/v1/videos/${videoId}/corrections/${(await added.json()).id}`
-    );
+    const cardUrl = `/v1/videos/${videoId}/corrections/${(await added.json()).id}`;
+    const changed = await editor.patch(cardUrl, { data: { text: 'A better correction' } });
+    const removed = await editor.delete(cardUrl);
     const bulk = await moderator.post('/v1/creator/videos/bulk', {
       data: { ids: [videoId], patch: { commentsEnabled: true } },
     });
 
     expect(added.status()).toBe(201);
+    expect(changed.status()).toBe(200);
+    expect((await changed.json()).text).toBe('A better correction');
     expect(removed.status()).toBe(204);
     expect(bulk.status()).toBe(200);
     expect((await bulk.json()).items).toEqual([{ id: videoId, ok: false, code: 'FORBIDDEN' }]);

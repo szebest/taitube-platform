@@ -1,3 +1,4 @@
+import { FALLBACK_ACTIVE_LOCALE, IntlProvider } from '@kit/intl-react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { RevisionList, type RevisionListItem } from '../index';
 
@@ -32,6 +33,15 @@ const meta = {
   title: 'Studio/RevisionList',
   component: RevisionList,
   args: { 'aria-label': 'Versions of this video', items, onRestore: () => {} },
+  render: (args) => (
+    <IntlProvider
+      locale={FALLBACK_ACTIVE_LOCALE.locale}
+      catalogues={FALLBACK_ACTIVE_LOCALE.catalogues}
+      timeZone="UTC"
+    >
+      <RevisionList {...args} />
+    </IntlProvider>
+  ),
 } satisfies Meta<typeof RevisionList>;
 
 export default meta;

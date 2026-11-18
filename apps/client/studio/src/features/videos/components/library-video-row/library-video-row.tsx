@@ -8,10 +8,8 @@ import { VIDEO_VISIBILITIES } from '@vp/domain';
 import { videoDuration } from '@vp/intl';
 import { canDeleteVideo, canReadAnalytics, canUpdateVideo } from '@vp/permissions';
 import { useCan } from '@vp/permissions-react';
-import { useFailureToast } from '@vp/queries';
 import { useState } from 'react';
 import { useBatchActions } from '#app/features/videos/hooks/use-batch-actions';
-import { useUpdateVideo } from '#app/features/videos/hooks/use-update-video';
 import { WEB_URL } from '#app/lib/config';
 import { DeleteVideosDialog } from '../delete-videos-dialog/delete-videos-dialog';
 
@@ -72,17 +70,12 @@ export function LibraryVideoActions({ video }: LibraryVideoPartProps) {
   const canEdit = useCan(canUpdateVideo, { video });
   const canDelete = useCan(canDeleteVideo, { video });
   const canSeeAnalytics = useCan(canReadAnalytics, { analytics: { ownerId: video.ownerId } });
-  const { deleteVideos, setVisibility } = useBatchActions();
-  const updateVideo = useUpdateVideo(video.id);
-  const showFailure = useFailureToast();
+  const { deleteVideos, editVideos } = useBatchActions();
   const [confirming, setConfirming] = useState(false);
 
   const title = video.title ?? tOr('browse.untitled', {}, '');
   const toggleComments = () =>
-    updateVideo.mutate(
-      { commentsEnabled: !video.commentsEnabled, version: video.version },
-      { onError: (error) => showFailure(tOr('studio.commentsSwitchFailed', {}, ''), error) }
-    );
+    void editVideos([video], { commentsEnabled: !video.commentsEnabled });
   const watchable = video.status === 'READY' && video.visibility !== 'private';
 
   return (
@@ -110,7 +103,7 @@ export function LibraryVideoActions({ video }: LibraryVideoPartProps) {
                 {VISIBILITY_ORDER.map((visibility) => (
                   <DropdownMenu.Item
                     key={visibility}
-                    onSelect={() => void setVisibility([video], visibility)}
+                    onSelect={() => void editVideos([video], { visibility })}
                   >
                     {tOr('videos.visibility', { visibility }, '')}
                   </DropdownMenu.Item>

@@ -137,7 +137,7 @@ studio's analytics page and the editor list them with a preview loop and a "Crea
 
 ### 9. Studio
 
-The library table's selection gets a bulk bar over the bulk endpoint (a `Dialog` per field, a result `Toast` listing failures);
+The library table's selection gets a bulk bar over the bulk endpoint (one generic field `Dialog` for visibility, category, add tags, remove tags and comments, a result `Toast` listing each failure by video and code);
 the editor gains tabs (`Tabs`): Details, Chapters, Corrections, Sharing, Tests, Edit video, History (the revisions list with a
 diff of changed fields and Restore). New kit parts, specified under `docs/design/` and built here: `PlayerCardLayer` (web
 kit), `TimelineRangeEditor` (studio kit; a range plus markers over sprite frames, used by corrections, trim, blur and chapters),

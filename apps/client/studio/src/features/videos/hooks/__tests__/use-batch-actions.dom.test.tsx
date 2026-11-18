@@ -19,7 +19,7 @@ const wrapper = ({ children }: PropsWithChildren) => (
 );
 
 const listed = (...indexes: number[]) =>
-  indexes.map((index) => ({ id: videoIdOf(index), version: 1 }));
+  indexes.map((index) => ({ id: videoIdOf(index), title: `Video ${index}` }));
 
 describe('apps/client/studio: useBatchActions', () => {
   it('answers which videos a delete went through for, and which not', async () => {
@@ -28,27 +28,34 @@ describe('apps/client/studio: useBatchActions', () => {
 
     const outcome = await result.current.deleteVideos(listed(0, 1));
 
-    expect(outcome).toEqual({ succeeded: [videoIdOf(0)], failed: [videoIdOf(1)] });
+    expect(outcome.succeeded).toEqual([videoIdOf(0)]);
+    expect(outcome.failed.map(({ id }) => id)).toEqual([videoIdOf(1)]);
   });
 
-  it('answers the same for a visibility change', async () => {
+  it('answers the same for a bulk edit', async () => {
     serveManagement();
     const { result } = renderHook(() => useBatchActions(), { wrapper });
 
-    const outcome = await result.current.setVisibility(listed(0, 2), 'private');
+    const outcome = await result.current.editVideos(listed(0, 2), { visibility: 'private' });
 
     expect(outcome).toEqual({ succeeded: [videoIdOf(0), videoIdOf(2)], failed: [] });
   });
 
   it.each([
-    { name: 'every video', failing: [], toast: '2 videos deleted' },
+    { name: 'every video', failing: [], toast: '2 videos deleted', named: [] },
     {
       name: 'some videos',
       failing: [1],
       toast: '1 of 2 done, 1 failed. The failed ones stay selected.',
+      named: ['Video 1'],
     },
-    { name: 'no video', failing: [0, 1], toast: 'Nothing was changed. Try again.' },
-  ])('toasts what happened when it deletes $name', async ({ failing, toast }) => {
+    {
+      name: 'no video',
+      failing: [0, 1],
+      toast: 'Nothing was changed. Try again.',
+      named: ['Video 0', 'Video 1'],
+    },
+  ])('toasts what happened when it deletes $name', async ({ failing, toast, named }) => {
     serveManagement(failing.map(videoIdOf));
     function Probe() {
       const { deleteVideos } = useBatchActions();
@@ -63,6 +70,29 @@ describe('apps/client/studio: useBatchActions', () => {
     screen.getByRole('button', { name: 'go' }).click();
 
     expect(await screen.findByText(toast)).toBeInTheDocument();
+    for (const title of ['Video 0', 'Video 1']) {
+      if (named.includes(title)) expect(document.body).toHaveTextContent(title);
+      else expect(document.body).not.toHaveTextContent(title);
+    }
+  });
+
+  it('lists at most five failures and counts the rest', async () => {
+    const indexes = [0, 1, 2, 3, 4, 5, 6];
+    serveManagement(indexes.map(videoIdOf));
+    function Probe() {
+      const { deleteVideos } = useBatchActions();
+      return (
+        <button type="button" onClick={() => void deleteVideos(listed(...indexes))}>
+          go
+        </button>
+      );
+    }
+    render(<Probe />, { wrapper });
+
+    screen.getByRole('button', { name: 'go' }).click();
+
+    expect(await screen.findByText(/and 2 more/)).toBeInTheDocument();
+    expect(document.body).not.toHaveTextContent('Video 6');
   });
 
   it('is pending while a batch is in flight', async () => {

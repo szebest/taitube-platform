@@ -12,6 +12,7 @@ apps/client/studio/src/
     analytics/chart-frame/         ChartFrame and the chart helpers
     table/bulk-action-bar/         BulkActionBar
     history/revision-list/         RevisionList
+    dialogs/field-dialog/          FieldDialog
     video/timeline-range-editor/   TimelineRangeEditor
     comments/moderation-queue/     ModerationQueue
     section/customization-section/ CustomizationSection
@@ -36,6 +37,7 @@ These components exist for the studio alone today, so they stay in the studio's 
 | [StatCard](stat-card.md) | One KPI with delta and sparkline, in `@vp/components` | `Card`, `Badge`, `Icon` | [60](../../../tickets/60-creator-studio-dashboard-video-management-ui.md) |
 | [BulkActionBar](bulk-action-bar.md) | The actions on selected rows and the disclosure they share | `Button`, `DisclosureControl` | [113](../../../tickets/113-channel-comment-moderation.md) |
 | [RevisionList](revision-list.md) | The saved versions of a record, what each changed, and a way back | `Badge`, `Button` | [116](../../../tickets/116-video-management-power-tools.md) |
+| [FieldDialog](field-dialog.md) | A dialog that asks for one field's value, a choice or a line of text | `ResponsiveModal`, `Field`, `Select`, `Input` | [116](../../../tickets/116-video-management-power-tools.md) |
 | [TimelineRangeEditor](timeline-range-editor.md) | A range or a position over a video's frames, with ticks for the points already set | `Slider`, `SpriteStrip` | [116](../../../tickets/116-video-management-power-tools.md) |
 | [ModerationQueue](moderation-queue.md) | The held comments as a listbox, one open | none | [113](../../../tickets/113-channel-comment-moderation.md) |
 | [CustomizationSection](customization-section.md) | A settings block with its own save | `Card`, `Button` | [72](../../../tickets/72-frontend-settings-customization-system.md), [113](../../../tickets/113-channel-comment-moderation.md) |
