@@ -101,7 +101,9 @@ document is stale — fix it.
 | `@kit/result` | universal | `packages/platform/universal/result` |
 | `@kit/tsconfig` | universal | `packages/platform/universal/tsconfig` |
 | `@kit/concurrency` | server | `packages/platform/server/concurrency` |
+| `@kit/keyspace` | server | `packages/platform/server/keyspace` |
 | `@kit/logger` | server | `packages/platform/server/logger` |
+| `@kit/object-storage` | server | `packages/platform/server/object-storage` |
 | `@vp/storage` | server | `packages/server/storage` |
 | `@kit/vite-preset` | server | `packages/platform/server/vite-preset` |
 
@@ -118,11 +120,11 @@ document is stale — fix it.
 | `@kit/di` | universal | `@kit/result` |
 | `@kit/compose-autoscaler` | server | `@kit/logger` |
 | `@kit/dev-token` | server | `@kit/logger` |
-| `@vp/events` | server | `@vp/errors`, `@kit/result` |
+| `@vp/events` | server | `@kit/keyspace`, `@vp/errors`, `@kit/result` |
 | `@vp/gen-video` | server | `@kit/logger` |
 | `@vp/job-contracts` | server | `@vp/domain` |
 | `@vp/lighthouse` | server | `@vp/domain` |
-| `@vp/observability` | server | `@kit/result` |
+| `@kit/observability` | server | `@kit/result` |
 | `@kit/testing` | server | `@kit/result` |
 | `@vp/testing-fixtures` | server | none |
 | `@vp/whisper` | server | `@vp/domain`, `@vp/errors`, `@kit/result` |
@@ -142,7 +144,8 @@ document is stale — fix it.
 | `@vp/permissions-react` | client | `@vp/permissions`, `@kit/result` |
 | `@vp/core` | server | `@vp/domain`, `@vp/errors`, `@vp/permissions`, `@kit/result` |
 | `@vp/db` | server | `@vp/domain`, `@vp/job-contracts`, `@kit/result`, `@vp/storage` |
-| `@vp/env-schema` | server | `@vp/domain`, `@vp/observability` (the `TraceSamplerName` type), `@kit/pagination`, `@kit/result` |
+| `@vp/env-schema` | server | `@vp/domain`, `@kit/observability` (the `TraceSamplerName` type), `@kit/pagination`, `@kit/result` |
+| `@vp/pipeline-metrics` | server | `@kit/observability` |
 | `@vp/ffmpeg` | server | `@vp/domain`, `@vp/errors`, `@vp/job-contracts`, `@kit/result`, `@vp/storage` |
 
 ### T4 — Integration
@@ -154,8 +157,8 @@ document is stale — fix it.
 | `@kit/forms` | client | `@vp/errors`, `@kit/result` (T4 by design: above `@kit/ui` at T3, whose primitives its fields move onto) |
 | `@kit/intl-react` | client | `@kit/intl`, `@vp/messages`, `@kit/result` |
 | `@kit/web-telemetry` | client | `@vp/api-contracts`, `@kit/result` |
-| `@vp/adapters` | server | `@kit/composition`, `@kit/concurrency`, `@vp/core`, `@vp/db`, `@kit/dev-token`, `@vp/domain`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/job-contracts`, `@vp/observability`, `@vp/permissions`, `@kit/result`, `@vp/storage` |
-| `@kit/config` | server | `@kit/composition`, `@vp/env-schema`, `@kit/logger`, `@kit/result` |
+| `@vp/adapters` | server | `@kit/composition`, `@kit/concurrency`, `@vp/core`, `@vp/db`, `@kit/dev-token`, `@vp/domain`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/job-contracts`, `@kit/object-storage`, `@vp/permissions`, `@vp/pipeline-metrics`, `@kit/result`, `@vp/storage` |
+| `@kit/config` | server | `@kit/composition`, `@kit/logger`, `@kit/result` |
 | `@vp/fingerprint` | server | `@vp/core`, `@vp/domain`, `@vp/errors`, `@vp/ffmpeg`, `@kit/result` |
 
 ### T5 — App modules
@@ -174,8 +177,8 @@ puts it at T5.
 |---|---|---|
 | `@vp/web` | client | `@vp/api-client`, `@vp/api-contracts`, `@kit/components`, `@vp/domain`, `@kit/intl`, `@vp/intl-formats`, `@kit/intl-react`, `@vp/permissions`, `@vp/permissions-react`, `@vp/queries`, `@kit/result`, `@kit/security-headers`, `@kit/ui`, `@kit/web-telemetry` |
 | `@vp/studio` | client | `@vp/api-client`, `@vp/api-contracts`, `@kit/components`, `@vp/errors`, `@kit/forms`, `@kit/intl`, `@vp/intl-formats`, `@kit/intl-react`, `@vp/permissions`, `@vp/permissions-react`, `@vp/queries`, `@kit/result`, `@kit/security-headers`, `@kit/ui`, `@vp/validation`, `@kit/web-telemetry` |
-| `@vp/api` | server | `@vp/adapters`, `@vp/api-contracts`, `@kit/composition`, `@kit/concurrency`, `@kit/config`, `@vp/core`, `@vp/db`, `@kit/dev-token`, `@vp/domain`, `@vp/domain-rules`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/job-contracts`, `@kit/logger`, `@vp/observability`, `@kit/pagination`, `@vp/permissions`, `@kit/result`, `@vp/storage`, `@vp/validation`, `@vp/whisper` |
-| `@vp/worker` | server | `@vp/adapters`, `@kit/composition`, `@kit/config`, `@vp/core`, `@vp/domain`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/ffmpeg`, `@vp/job-contracts`, `@kit/logger`, `@vp/observability`, `@kit/result`, `@vp/storage`, `@vp/validation`, `@vp/whisper` |
+| `@vp/api` | server | `@vp/adapters`, `@vp/api-contracts`, `@kit/composition`, `@kit/concurrency`, `@kit/config`, `@vp/core`, `@vp/db`, `@kit/dev-token`, `@vp/domain`, `@vp/domain-rules`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/job-contracts`, `@kit/logger`, `@kit/object-storage`, `@kit/observability`, `@kit/pagination`, `@vp/pipeline-metrics`, `@vp/permissions`, `@kit/result`, `@vp/storage`, `@vp/validation`, `@vp/whisper` |
+| `@vp/worker` | server | `@vp/adapters`, `@kit/composition`, `@kit/config`, `@vp/core`, `@vp/domain`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/ffmpeg`, `@vp/job-contracts`, `@kit/logger`, `@kit/object-storage`, `@kit/observability`, `@vp/pipeline-metrics`, `@kit/result`, `@vp/storage`, `@vp/validation`, `@vp/whisper` |
 
 ### T7 — Reference tools
 

@@ -20,7 +20,7 @@ import {
 } from '@vp/errors';
 import { type MediaTools, defaultChannelImageVariant, planChannelImageVariants } from '@vp/ffmpeg';
 import type { ChannelImageJob } from '@vp/job-contracts';
-import type { PipelineMetrics } from '@vp/observability';
+import type { PipelineMetrics } from '@vp/pipeline-metrics';
 import { channelImageUploadKey, channelImageVariantKey } from '@vp/storage';
 import { createScratchDir, removeScratchDir } from './scratch-dir';
 

@@ -9,13 +9,13 @@ import {
   storageUnavailable,
   toPipelineError,
 } from '@vp/errors';
-import { createMetricsRegistry } from '@vp/observability';
+import { createPipelineMetrics } from '@vp/pipeline-metrics';
 import { uuidv7 } from 'uuidv7';
 import { createFailureHandler } from '../failure-handler';
 import { STAGE_SETTINGS } from './stage-settings';
 
 const logger = createLogger({ format: 'json', service: 'queue-boundary-test', level: 'error' });
-const metrics = createMetricsRegistry();
+const metrics = createPipelineMetrics();
 
 const corruptContainer = {
   code: ErrorCodes.CORRUPT_CONTAINER,

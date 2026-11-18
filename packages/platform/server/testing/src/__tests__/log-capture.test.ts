@@ -1,6 +1,6 @@
 import { captureLog } from '../log-capture';
 
-describe('@vp/testing: captureLog', () => {
+describe('@kit/testing: captureLog', () => {
   it('parses each written line, however the writes were split', () => {
     const log = captureLog();
 

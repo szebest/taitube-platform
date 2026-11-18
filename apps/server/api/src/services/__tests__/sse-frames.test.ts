@@ -1,5 +1,5 @@
+import type { SseMessageEnvelope } from '@kit/keyspace';
 import type { UserEventFrame } from '@vp/api-contracts';
-import type { SseMessageEnvelope } from '@vp/events';
 import { helloFrame, userFrame, videoFrame } from '../sse-frames';
 
 const VIDEO_ID = '018f0000-0000-7000-8000-000000000020';

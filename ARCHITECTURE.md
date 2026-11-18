@@ -70,13 +70,17 @@ taitube-platform/
 │   ├── config/                     # @kit/config - loadEnv(), the one reader of process.env
 │   ├── db/                         # @vp/db - Drizzle schema, client, migrations, the seed functions
 │   ├── env-schema/                 # @vp/env-schema - the zod schema, AppConfig and toAppConfig
-│   ├── events/                     # @vp/events - publishVideoEvent, SSE framing, channels, cache keys
+│   ├── events/                     # @vp/events - publishVideoEvent, channels, cache keys
 │   ├── ffmpeg/                     # @vp/ffmpeg - argument builders, progress parsers, probe rules
 │   ├── fingerprint/                # @vp/fingerprint - frame dHash, Chromaprint, the offset-vote matcher
 │   ├── job-contracts/              # @vp/job-contracts - BullMQ payloads, queue names, the ladder
+│   ├── keyspace/                   # @kit/keyspace - the SSE message envelope, frame and keep-alive comment
 │   ├── logger/                     # @kit/logger - createLogger (pino), json and pretty formats
-│   ├── observability/              # @vp/observability - OpenTelemetry and Prometheus metrics
+│   ├── object-storage/             # @kit/object-storage - S3 object headers and multipart part sizing
+│   ├── observability/              # @kit/observability - OpenTelemetry tracing, the metrics registry and server
+│   ├── pipeline-metrics/           # @vp/pipeline-metrics - the product's Prometheus metrics and tracer name
 │   ├── storage/                    # @vp/storage - the S3 object key layout
+│   ├── testing/                    # @kit/testing - definePackageTestConfig, withEnv, Result and log helpers
 │   ├── testing-fixtures/           # @vp/testing-fixtures - the seeded rows, the production-shaped env, the infra specs
 │   ├── whisper/                    # @vp/whisper - whisper.cpp runner, caption windows, WebVTT
 │   └── compose-autoscaler/ dev-token/ gen-video/ upload-client/   # developer CLIs

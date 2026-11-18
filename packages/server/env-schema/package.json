@@ -19,14 +19,15 @@
     "clean": "rimraf dist tsconfig.tsbuildinfo"
   },
   "dependencies": {
+    "@kit/observability": "workspace:*",
     "@kit/pagination": "workspace:*",
     "@kit/primitives": "workspace:*",
     "@kit/result": "workspace:*",
     "@vp/domain": "workspace:*",
-    "@vp/observability": "workspace:*",
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@kit/config": "workspace:*",
     "@kit/testing": "workspace:*",
     "@kit/tsconfig": "workspace:*",
     "@vp/testing-fixtures": "workspace:*",

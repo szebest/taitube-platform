@@ -3,7 +3,7 @@ import { type Result, err } from '@kit/result';
 import { expectOk } from '@kit/testing/result';
 import type { ViewEvent, ViewRecordOutcome } from '@vp/core/ports';
 import { type CacheUnavailable, cacheUnavailable } from '@vp/errors';
-import { type PipelineMetrics, createMetricsRegistry } from '@vp/observability';
+import { type PipelineMetrics, createPipelineMetrics } from '@vp/pipeline-metrics';
 import { InMemoryViewBuffer } from '../../in-memory/in-memory-view-buffer';
 import { FallbackViewBuffer } from '../fallback-view-buffer';
 
@@ -33,7 +33,7 @@ describe('FallbackViewBuffer', () => {
     now = 0;
     viewers = 0;
     primary = new FlakyBuffer();
-    metrics = createMetricsRegistry();
+    metrics = createPipelineMetrics();
     buffer = new FallbackViewBuffer({
       primary,
       breaker: new CircuitBreaker({ failureThreshold: 2, cooldownMs: 1_000, now: () => now }),

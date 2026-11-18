@@ -1,4 +1,4 @@
-import type { PipelineMetrics } from '@vp/observability';
+import type { PipelineMetrics } from '@vp/pipeline-metrics';
 import type { FastifyInstance } from 'fastify';
 import fp from 'fastify-plugin';
 import { routeLabel } from './route-label';

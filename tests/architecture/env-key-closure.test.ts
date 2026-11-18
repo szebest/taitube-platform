@@ -1,6 +1,6 @@
+import { describeEnvKey } from '../../packages/platform/server/config/src/index';
 import {
   AppEnvSchema,
-  describeEnvKey,
   ENV_DOCS,
   ENV_GROUPS,
   EXTRA_ENV_DOCS,
@@ -202,7 +202,7 @@ describe('architecture: the environment schema is closed over what the platform 
     );
     const keys = live.map((entry) => entry.key as keyof typeof ENV_DOCS);
     const differing = live.filter((entry, at) => {
-      const shape = describeEnvKey(keys[at] as keyof typeof ENV_DOCS);
+      const shape = describeEnvKey(AppEnvSchema.shape[keys[at] as keyof typeof ENV_DOCS]);
       const parsed = AppEnvSchema.shape[keys[at] as keyof typeof ENV_DOCS].safeParse(entry.value);
       return (
         shape.default.kind === 'value' &&

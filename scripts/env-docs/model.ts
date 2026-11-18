@@ -1,8 +1,8 @@
+import type { EnvKeyShape } from '../../packages/platform/server/config/src/index';
 import type {
   AppEnvKey,
   EnvGroup,
   EnvKeyDoc,
-  EnvKeyShape,
   EnvRequirement,
   ExtraEnvKeyDoc,
 } from '../../packages/server/env-schema/src/index';

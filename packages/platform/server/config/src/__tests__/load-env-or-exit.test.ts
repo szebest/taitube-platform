@@ -1,5 +1,12 @@
 import { captureLog } from '@kit/testing/log-capture';
+import { z } from 'zod';
 import { loadEnvOrExit } from '../load-env-or-exit';
+
+const Schema = z.object({
+  DATABASE_URL: z.url(),
+  PORT: z.coerce.number().int().optional(),
+  ADMIN_TOKEN: z.string().min(12).optional(),
+});
 
 const LOCAL_ENV = { DATABASE_URL: 'postgres://localhost:5432/vp' };
 
@@ -7,6 +14,8 @@ function boot(env: Record<string, string>) {
   const log = captureLog();
   const exits: number[] = [];
   const loaded = loadEnvOrExit(
+    Schema,
+    'debug',
     'vp-test',
     { env, exit: (code) => exits.push(code) },
     log.destination

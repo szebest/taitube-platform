@@ -113,8 +113,10 @@ taitube-platform/
 │   │       ├── concurrency/         # Singleflight promise coalescing
 │   │       ├── config/              # loadEnv(): reads process.env once and validates it
 │   │       ├── dev-token/           # CLI: mints local EdDSA JWTs and serves a dev JWKS
+│   │       ├── keyspace/            # The SSE message envelope, frame and keep-alive comment
 │   │       ├── logger/              # Pino logger with json and pretty formats, log context, serializeError
 │   │       ├── object-storage/      # S3 object headers by extension and multipart part sizing
+│   │       ├── observability/       # OpenTelemetry tracing, the Prometheus registry and the metrics server
 │   │       ├── testing/             # definePackageTestConfig, withEnv, Result, JWT, log capture and entrypoint helpers
 │   │       └── vite-preset/         # The Vite config of every client app: Start, React, Tailwind, the bundle guard
 │   ├── universal/                   # Runs in a browser AND on a server
@@ -140,13 +142,13 @@ taitube-platform/
 │       ├── deploy/                  # Typed environment files and pnpm envctl, the typed half of scripts/deploy.sh
 │       ├── dev-identity/            # This repo's dev token issuer, audience, key and the bound mint and verify
 │       ├── env-schema/              # Zod environment schema, AppConfig and toAppConfig
-│       ├── events/                  # SSE envelope, pub/sub channels and Redis cache keys
+│       ├── events/                  # Pub/sub channels, Redis cache keys and publishVideoEvent
 │       ├── ffmpeg/                  # FFmpeg/ffprobe runners, ladder selection, master playlist, thumbnails
 │       ├── fingerprint/             # Frame dHash, Chromaprint, the offset-vote matcher for the duplicate check
 │       ├── gen-video/               # CLI: generates deterministic test video fixtures
 │       ├── job-contracts/           # BullMQ queue names, job payload schemas, retry policies, rendition ladder
 │       ├── lighthouse/              # CLI: Lighthouse CI on the built web app, offline, warn-only
-│       ├── observability/           # OpenTelemetry tracing, Prometheus metrics and the metrics server
+│       ├── pipeline-metrics/        # The product's Prometheus metrics, the metric prefix and the tracer name
 │       ├── stack/                   # CLI behind make up/down/status: starts the Compose stack a tier at a time
 │       ├── storage/                 # S3 object key layout
 │       ├── testing-fixtures/        # The seeded rows, the production-shaped env and the infra specs

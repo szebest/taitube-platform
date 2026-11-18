@@ -1,9 +1,9 @@
 import { createLogger } from '@kit/logger';
+import type { Tracing } from '@kit/observability';
 import { err, ok } from '@kit/result';
 import { captureLog } from '@kit/testing/log-capture';
 import { Adapters } from '@vp/adapters/composition';
 import { type AppConfig, inProcessAppConfig } from '@vp/env-schema';
-import type { Tracing } from '@vp/observability';
 import { composeApp } from '../app';
 import { Services } from '../composition/services.module';
 import { serve } from '../serve';

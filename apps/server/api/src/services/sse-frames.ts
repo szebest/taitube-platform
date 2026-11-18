@@ -1,6 +1,6 @@
+import type { SseMessageEnvelope } from '@kit/keyspace';
 import { assertNever } from '@kit/result';
 import type { StreamResume, UserEventFrame } from '@vp/api-contracts';
-import type { SseMessageEnvelope } from '@vp/events';
 import type { SseFrame } from './sse-connection';
 
 export function videoFrame({ id, event, data }: SseMessageEnvelope): SseFrame {

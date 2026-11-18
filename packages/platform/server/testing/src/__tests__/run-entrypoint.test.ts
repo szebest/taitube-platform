@@ -3,7 +3,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { runEntrypoint } from '../run-entrypoint';
 
-describe('@vp/testing: runEntrypoint', () => {
+describe('@kit/testing: runEntrypoint', () => {
   let dir: string;
 
   beforeEach(() => {

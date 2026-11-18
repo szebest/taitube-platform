@@ -17,7 +17,7 @@ import {
 import type { FfmpegProcessLimits } from '@vp/ffmpeg';
 import type { FingerprintTools } from '@vp/fingerprint';
 import type { ScreenJob, ScreenResult } from '@vp/job-contracts';
-import type { PipelineMetrics } from '@vp/observability';
+import type { PipelineMetrics } from '@vp/pipeline-metrics';
 import { uuidv7 } from 'uuidv7';
 import type { Every } from '../../heartbeat';
 import { createScratchDir, removeScratchDir } from '../scratch-dir';

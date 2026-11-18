@@ -10,7 +10,7 @@ import { videoStatusChanged } from '@vp/domain';
 import { queueUnavailable } from '@vp/errors';
 import { userChannel } from '@vp/events';
 import { ids } from '@vp/job-contracts';
-import { type PipelineMetrics, createMetricsRegistry } from '@vp/observability';
+import { type PipelineMetrics, createPipelineMetrics } from '@vp/pipeline-metrics';
 import { uuidv7 } from 'uuidv7';
 import { manualInterval } from '../../../__tests__/manual-interval';
 import { OutboxRelay } from '../outbox-relay';
@@ -51,7 +51,7 @@ describe('housekeeping: outbox relay', () => {
   beforeEach(() => {
     repositories = new InMemoryRepositories();
     getQueue = inMemoryQueues();
-    metrics = createMetricsRegistry();
+    metrics = createPipelineMetrics();
     cache = new InMemoryCacheClient();
   });
 

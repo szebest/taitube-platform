@@ -4,7 +4,7 @@ import { type Result, assertNever, isErr, map, ok } from '@kit/result';
 import type { CacheClient, FlowProducerPort, JobQueue } from '@vp/core/ports';
 import type { OutboxPayload, Repositories } from '@vp/core/repositories';
 import type { CacheUnavailable, DatabaseUnavailable, QueueUnavailable } from '@vp/errors';
-import type { PipelineMetrics } from '@vp/observability';
+import type { PipelineMetrics } from '@vp/pipeline-metrics';
 import type { Every, Repeating } from '../../heartbeat';
 
 export interface OutboxRelayOptions {

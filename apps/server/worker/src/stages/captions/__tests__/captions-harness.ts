@@ -4,7 +4,7 @@ import type { CaptionRecord } from '@vp/core/repositories';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import type { MediaTools } from '@vp/ffmpeg';
 import { type CaptionsJob, captionsFlow } from '@vp/job-contracts';
-import { createMetricsRegistry } from '@vp/observability';
+import { createPipelineMetrics } from '@vp/pipeline-metrics';
 import type { SpeechTools } from '@vp/whisper';
 import { uuidv7 } from 'uuidv7';
 import { type FlowWorld, flowWorld, uploadedVideo } from '../../../__tests__/flow-harness';
@@ -77,7 +77,7 @@ export async function captionsWorld(
     repositories: world.repositories,
     storage: world.storage,
     logger: world.logger,
-    metrics: createMetricsRegistry(),
+    metrics: createPipelineMetrics(),
     media: { ...STAGE_SETTINGS.media, audio: fakeAudio(spans, options.silent ?? false) },
     speech: fakeSpeech(spans, options.language ?? 'en'),
     ffmpeg: {

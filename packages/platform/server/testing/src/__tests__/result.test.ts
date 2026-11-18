@@ -1,7 +1,7 @@
 import { err, ok } from '@kit/result';
 import { expectErr, expectOk } from '../result';
 
-describe('@vp/testing: result unwrapping', () => {
+describe('@kit/testing: result unwrapping', () => {
   it('returns the value of a success', () => {
     expect(expectOk(ok(7))).toBe(7);
   });

@@ -4,7 +4,7 @@ import type { Repositories } from '@vp/core/repositories';
 import type { AppConfig } from '@vp/env-schema';
 import type { MediaTools } from '@vp/ffmpeg';
 import { ThumbnailQueueJob } from '@vp/job-contracts';
-import type { PipelineMetrics } from '@vp/observability';
+import type { PipelineMetrics } from '@vp/pipeline-metrics';
 import { consuming } from '../consuming';
 import { createChannelImageProcessor } from './channel-image';
 import type { ProgressReporter, ProgressTarget } from './progress-reporter';

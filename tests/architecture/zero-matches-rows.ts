@@ -190,9 +190,9 @@ export const ROWS: readonly Row[] = [
     fires: "import pino from 'pino';",
   },
   {
-    name: 'logging re-exported from @vp/observability',
+    name: 'logging re-exported from @kit/observability',
     pattern: /createLogger|LogContext|from 'pino'/g,
-    scope: productionUnder('packages/server/observability'),
+    scope: productionUnder(packageDir('@kit/observability')),
     expected: 0,
     fires: "export { createLogger } from './logger';",
   },
