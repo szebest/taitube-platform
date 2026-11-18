@@ -33,11 +33,11 @@ describe('packages/api-contracts: video audience', () => {
     expect(getVideoAudience.query.parse({})).toEqual({ range: '30d' });
   });
 
-  it.each(['7d', '30d', '90d'])('accepts the %s range', (range) => {
+  it.each(['7d', '30d', '90d', 'lifetime'])('accepts the %s range', (range) => {
     expect(getVideoAudience.query.parse({ range }).range).toBe(range);
   });
 
-  it.each(['lifetime', '365d'])('rejects the %s range', (range) => {
+  it.each(['365d'])('rejects the %s range', (range) => {
     expect(getVideoAudience.query.safeParse({ range }).success).toBe(false);
   });
 

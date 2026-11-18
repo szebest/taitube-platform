@@ -113,11 +113,18 @@ describe('analytics routes', () => {
     }
   );
 
-  it('refuses an audience range outside 7, 30 and 90 days with 400', async () => {
+  it('serves the device split over a lifetime', async () => {
     const res = await get(
       `/v1/creator/videos/${PUBLIC_VIDEO}/audience?range=lifetime`,
       TOKENS.user
     );
+
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toMatchObject({ videoId: PUBLIC_VIDEO, range: 'lifetime' });
+  });
+
+  it('refuses an audience range outside the ones offered with 400', async () => {
+    const res = await get(`/v1/creator/videos/${PUBLIC_VIDEO}/audience?range=365d`, TOKENS.user);
 
     expect(res.statusCode).toBe(400);
     expect(res.json().code).toBe(ErrorCodes.VALIDATION_FAILED);

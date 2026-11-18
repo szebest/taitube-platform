@@ -6,7 +6,6 @@ import {
 } from '#app/features/analytics/__tests__/analytics-api.fixture';
 import {
   analyticsQueryOptions,
-  audienceRangeOf,
   videoAudienceQueryOptions,
   videoBenchmarkQueryOptions,
 } from '../analytics-queries';
@@ -45,7 +44,7 @@ describe('apps/client/studio: analytics queries', () => {
   it.each([
     { range: '7d', asked: '7d' },
     { range: '90d', asked: '90d' },
-    { range: 'lifetime', asked: '90d' },
+    { range: 'lifetime', asked: 'lifetime' },
   ] as const)(
     'asks for the $asked device split under the $range range',
     async ({ range, asked }) => {
@@ -58,19 +57,15 @@ describe('apps/client/studio: analytics queries', () => {
 
       expect(audienceRanges).toEqual([asked]);
       expect(audience.devices.map(({ device }) => device)).toEqual(['mobile', 'desktop']);
-      expect(audienceRangeOf(range)).toBe(asked);
     }
   );
 
-  it('keeps the audience of two ranges apart in the cache', () => {
-    expect(videoAudienceQueryOptions(api, VIDEO_ID, '7d').queryKey).not.toEqual(
-      videoAudienceQueryOptions(api, VIDEO_ID, '30d').queryKey
-    );
-  });
-
-  it('shares one audience entry between the lifetime and the 90 day range', () => {
-    expect(videoAudienceQueryOptions(api, VIDEO_ID, 'lifetime').queryKey).toEqual(
-      videoAudienceQueryOptions(api, VIDEO_ID, '90d').queryKey
+  it.each([
+    { left: '7d', right: '30d' },
+    { left: '90d', right: 'lifetime' },
+  ] as const)('keeps the audience of $left and $right apart in the cache', ({ left, right }) => {
+    expect(videoAudienceQueryOptions(api, VIDEO_ID, left).queryKey).not.toEqual(
+      videoAudienceQueryOptions(api, VIDEO_ID, right).queryKey
     );
   });
 

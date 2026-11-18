@@ -8187,10 +8187,11 @@ paths:
               - 7d
               - 30d
               - 90d
+              - lifetime
           in: query
           name: range
           required: false
-          description: How many days back the split reaches, today included
+          description: How far back the split reaches, today included; lifetime reaches every counted day
         - schema:
             type: string
             format: uuid
@@ -8221,6 +8222,7 @@ paths:
                       - 7d
                       - 30d
                       - 90d
+                      - lifetime
                     description: The range the split covers
                   from:
                     type: string

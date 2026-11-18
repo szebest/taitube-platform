@@ -174,7 +174,7 @@ export class AnalyticsService {
   async videoAudience(
     viewer: UserContext,
     videoId: string,
-    range: Exclude<AnalyticsRange, 'lifetime'>
+    range: AnalyticsRange
   ): Promise<Result<VideoAudience, VideoAnalyticsFailure>> {
     const found = await this.deps.videos.findById(videoId);
     if (isErr(found)) return found;

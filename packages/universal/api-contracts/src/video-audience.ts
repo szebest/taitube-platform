@@ -1,21 +1,19 @@
-import { BENCHMARK_PEER_LIMIT, FIRST_WEEK_DAYS, VIEW_DEVICES } from '@vp/domain';
+import { ANALYTICS_RANGES, BENCHMARK_PEER_LIMIT, FIRST_WEEK_DAYS, VIEW_DEVICES } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import { z } from 'zod';
 import { defineEndpoint } from './endpoint';
 import { VideoIdParamSchema } from './video-resource';
 
-const AUDIENCE_RANGES = ['7d', '30d', '90d'] as const;
-
 const AudienceQuerySchema = z.object({
   range: z
-    .enum(AUDIENCE_RANGES)
+    .enum(ANALYTICS_RANGES)
     .default('30d')
-    .describe('How many days back the split reaches, today included'),
+    .describe('How far back the split reaches, today included; lifetime reaches every counted day'),
 });
 
 const VideoAudienceSchema = z.object({
   videoId: z.uuid().describe('Video UUID identifier'),
-  range: z.enum(AUDIENCE_RANGES).describe('The range the split covers'),
+  range: z.enum(ANALYTICS_RANGES).describe('The range the split covers'),
   from: z.iso.date().describe('First day of the range, UTC'),
   to: z.iso.date().describe('Last day of the range, today, UTC'),
   devices: z

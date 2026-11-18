@@ -107,6 +107,9 @@ describe('AnalyticsService: audience and benchmark', () => {
       expect(expectOk(await service.videoAudience(OWNER, VIDEO, '30d')).devices).toEqual([
         { device: 'tablet', views: 5, share: 1 },
       ]);
+      expect(expectOk(await service.videoAudience(OWNER, VIDEO, 'lifetime')).devices).toEqual([
+        { device: 'tablet', views: 5, share: 1 },
+      ]);
     });
 
     it.each([

@@ -130,11 +130,11 @@ export function analyticsHandlers({
     }),
     mockEndpoint(getVideoRetention, () => HttpResponse.json(retentionCurve(retention))),
     mockEndpoint(getVideoAudience, ({ request }) => {
-      const range = new URL(request.url).searchParams.get('range');
-      audienceRanges.push(range);
+      const asked = new URL(request.url).searchParams.get('range');
+      audienceRanges.push(asked);
       return HttpResponse.json({
         videoId: VIDEO_ID,
-        range: range === '7d' || range === '90d' ? range : '30d',
+        range: getVideoAudience.query.parse({ range: asked ?? undefined }).range,
         from: '2026-10-01',
         to: '2026-10-30',
         devices,
