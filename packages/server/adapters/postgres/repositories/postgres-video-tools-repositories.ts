@@ -9,7 +9,7 @@ export abstract class PostgresVideoToolsRepositories {
   readonly videoChapters: PostgresVideoChapterRepository;
   readonly videoCorrections: PostgresVideoCorrectionRepository;
 
-  protected constructor(db: PostgresDatabase) {
+  constructor(db: PostgresDatabase) {
     this.entityRevisions = new PostgresEntityRevisionRepository(db);
     this.videoChapters = new PostgresVideoChapterRepository(db);
     this.videoCorrections = new PostgresVideoCorrectionRepository(db);

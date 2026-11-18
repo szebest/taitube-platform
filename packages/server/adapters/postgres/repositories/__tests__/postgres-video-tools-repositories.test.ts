@@ -4,11 +4,7 @@ import { PostgresVideoCorrectionRepository } from '../postgres-video-correction-
 import { PostgresVideoToolsRepositories } from '../postgres-video-tools-repositories';
 import type { PostgresDatabase } from '../types';
 
-class Tools extends PostgresVideoToolsRepositories {
-  constructor(db: PostgresDatabase) {
-    super(db);
-  }
-}
+class Tools extends PostgresVideoToolsRepositories {}
 
 describe('PostgresVideoToolsRepositories', () => {
   it('builds the revision, chapter and correction repositories over the handle it is given', () => {
