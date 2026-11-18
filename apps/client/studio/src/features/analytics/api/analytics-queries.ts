@@ -9,11 +9,20 @@ export type RangeAnalytics = Pick<
   'range' | 'from' | 'to' | 'timeline' | 'hourly' | 'rangeViews' | 'rangeWatchSeconds' | 'previous'
 >;
 
+export type AudienceRange = Exclude<AnalyticsRange, 'lifetime'>;
+
+/** The split is kept for 90 days at most, so a lifetime range asks for the longest one. */
+export const audienceRangeOf = (range: AnalyticsRange): AudienceRange =>
+  range === 'lifetime' ? '90d' : range;
+
 const analyticsKeys = {
   all: ['studio', 'analytics'] as const,
   channel: (range: AnalyticsRange) => [...analyticsKeys.all, 'channel', range] as const,
   video: (videoId: string, range: AnalyticsRange) =>
     [...analyticsKeys.all, 'video', videoId, range] as const,
+  audience: (videoId: string, range: AudienceRange) =>
+    [...analyticsKeys.all, 'audience', videoId, range] as const,
+  benchmark: (videoId: string) => [...analyticsKeys.all, 'benchmark', videoId] as const,
 };
 
 const fetchChannelAnalytics = (api: ApiClient, range: AnalyticsRange, signal: AbortSignal) =>
@@ -58,5 +67,25 @@ export function channelAnalyticsQueryOptions(api: ApiClient, range: AnalyticsRan
   return queryOptions({
     queryKey: analyticsKeys.channel(range),
     queryFn: ({ signal }) => fetchChannelAnalytics(api, range, signal),
+  });
+}
+
+export function videoAudienceQueryOptions(api: ApiClient, videoId: string, range: AnalyticsRange) {
+  const audienceRange = audienceRangeOf(range);
+  return queryOptions({
+    queryKey: analyticsKeys.audience(videoId, audienceRange),
+    queryFn: ({ signal }) =>
+      api.analytics.getVideoAudience({
+        params: { id: videoId },
+        query: { range: audienceRange },
+        signal,
+      }),
+  });
+}
+
+export function videoBenchmarkQueryOptions(api: ApiClient, videoId: string) {
+  return queryOptions({
+    queryKey: analyticsKeys.benchmark(videoId),
+    queryFn: ({ signal }) => api.analytics.getVideoBenchmark({ params: { id: videoId }, signal }),
   });
 }

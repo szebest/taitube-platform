@@ -1,7 +1,15 @@
 import { createQueryClient } from '@vp/queries';
-import { api, VIDEO_ID } from '@vp/web-testing';
-import { serveAnalytics } from '#app/features/analytics/__tests__/analytics-api.fixture';
-import { analyticsQueryOptions } from '../analytics-queries';
+import { api, apiServer, VIDEO_ID } from '@vp/web-testing';
+import {
+  analyticsHandlers,
+  serveAnalytics,
+} from '#app/features/analytics/__tests__/analytics-api.fixture';
+import {
+  analyticsQueryOptions,
+  audienceRangeOf,
+  videoAudienceQueryOptions,
+  videoBenchmarkQueryOptions,
+} from '../analytics-queries';
 
 describe('apps/client/studio: analytics queries', () => {
   it.each([
@@ -32,5 +40,46 @@ describe('apps/client/studio: analytics queries', () => {
       );
 
     expect(options(left).queryKey).not.toEqual(options(right).queryKey);
+  });
+
+  it.each([
+    { range: '7d', asked: '7d' },
+    { range: '90d', asked: '90d' },
+    { range: 'lifetime', asked: '90d' },
+  ] as const)(
+    'asks for the $asked device split under the $range range',
+    async ({ range, asked }) => {
+      const { handlers, audienceRanges } = analyticsHandlers();
+      apiServer.use(...handlers);
+
+      const audience = await createQueryClient().query(
+        videoAudienceQueryOptions(api, VIDEO_ID, range)
+      );
+
+      expect(audienceRanges).toEqual([asked]);
+      expect(audience.devices.map(({ device }) => device)).toEqual(['mobile', 'desktop']);
+      expect(audienceRangeOf(range)).toBe(asked);
+    }
+  );
+
+  it('keeps the audience of two ranges apart in the cache', () => {
+    expect(videoAudienceQueryOptions(api, VIDEO_ID, '7d').queryKey).not.toEqual(
+      videoAudienceQueryOptions(api, VIDEO_ID, '30d').queryKey
+    );
+  });
+
+  it('shares one audience entry between the lifetime and the 90 day range', () => {
+    expect(videoAudienceQueryOptions(api, VIDEO_ID, 'lifetime').queryKey).toEqual(
+      videoAudienceQueryOptions(api, VIDEO_ID, '90d').queryKey
+    );
+  });
+
+  it('answers the first week of the video with the days of the benchmark', async () => {
+    serveAnalytics({ peerCount: 4 });
+
+    const benchmark = await createQueryClient().query(videoBenchmarkQueryOptions(api, VIDEO_ID));
+
+    expect(benchmark.days).toHaveLength(7);
+    expect(benchmark.peerCount).toBe(4);
   });
 });
