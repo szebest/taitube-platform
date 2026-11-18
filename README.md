@@ -144,7 +144,7 @@ taitube-platform/
 │       ├── lighthouse/              # CLI: Lighthouse CI on the built web app, offline, warn-only
 │       ├── observability/           # OpenTelemetry tracing, Prometheus metrics and the metrics server
 │       ├── stack/                   # CLI behind make up/down/status: starts the Compose stack a tier at a time
-│       ├── storage/                 # S3 object key layout, MIME map and multipart part math
+│       ├── storage/                 # S3 object key layout (header and multipart helpers: platform/server/object-storage)
 │       ├── testing/                 # Shared test config, fixtures and test helpers
 │       ├── upload-client/           # CLI: reference resumable multipart upload client
 │       └── whisper/                 # whisper.cpp runner, transcript windows and the WebVTT a caption track is stored as
