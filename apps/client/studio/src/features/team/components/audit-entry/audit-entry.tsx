@@ -59,6 +59,14 @@ function AuditDetail({ entry }: { entry: AuditEntryView }) {
           {tOr('studio.teamAuditCommentsToggled', { state: entry.meta.enabled ? 'on' : 'off' }, '')}
         </AuditLogList.Detail>
       );
+    case 'video.restored':
+      return (
+        <AuditLogList.Detail>
+          <Link to="/videos/$videoId/edit" params={{ videoId: entry.targetId }}>
+            {tOr('studio.teamAuditRestored', { version: entry.meta.fromVersion }, '')}
+          </Link>
+        </AuditLogList.Detail>
+      );
     case 'comment.held':
     case 'comment.approved':
     case 'comment.hidden':

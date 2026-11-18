@@ -1,7 +1,8 @@
-import { type Result, err, isErr } from '@kit/result';
-import type { ThumbnailSelection, Video, VideoVisibility } from '@vp/domain';
+import { type Result, err, isErr, ok } from '@kit/result';
+import type { Chapter, ThumbnailSelection, Video, VideoVisibility } from '@vp/domain';
 import { type UserContext, canUpdateVideo } from '@vp/permissions';
 import { type VideoMetadataFailure, validateVideoMetadata } from '@vp/validation';
+import { type InvalidChapters, decideChapters } from '../chapters/index';
 import { type ReadVideoFailure, videoEditForbidden } from './failures';
 import { decideVideoRead } from './read-video.rule';
 
@@ -13,6 +14,7 @@ export interface VideoMetadataPatch {
   readonly tags?: string[];
   readonly selectedThumbnail?: ThumbnailSelection;
   readonly commentsEnabled?: boolean;
+  readonly chapters?: Chapter[];
 }
 
 export interface UpdateVideoMetadataInput {
@@ -22,7 +24,7 @@ export interface UpdateVideoMetadataInput {
   readonly patch: VideoMetadataPatch;
 }
 
-export type UpdateVideoMetadataFailure = ReadVideoFailure | VideoMetadataFailure;
+export type UpdateVideoMetadataFailure = ReadVideoFailure | VideoMetadataFailure | InvalidChapters;
 
 /**
  * Composes the read rather than restating it, so an editor who cannot even see the video gets the
@@ -44,5 +46,9 @@ export function decideVideoMetadataUpdate(
     return err(videoEditForbidden(input.videoId));
   }
 
-  return validateVideoMetadata(input.patch);
+  const metadata = validateVideoMetadata(input.patch);
+  if (isErr(metadata) || metadata.value.chapters === undefined) return metadata;
+
+  const chapters = decideChapters(metadata.value.chapters, readable.value);
+  return isErr(chapters) ? chapters : ok({ ...metadata.value, chapters: chapters.value });
 }

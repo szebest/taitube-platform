@@ -128,6 +128,7 @@ const AUDIT_FIELD_OF: Record<AuditedField, VideoAuditField> = {
   categoryId: 'categoryId',
   tags: 'tags',
   selectedThumbnail: 'thumbnail',
+  chapters: 'chapters',
 };
 
 function auditFieldsOf(patch: VideoMetadataPatch): VideoAuditField[] {

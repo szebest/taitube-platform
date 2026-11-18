@@ -47,11 +47,13 @@ describe('@vp/domain: channel team', () => {
       'categoryId',
       'tags',
       'thumbnail',
+      'chapters',
     ]);
   });
 
   it.each([
     'video.comments.toggled',
+    'video.restored',
     'comment.held',
     'comment.approved',
     'comment.hidden',
@@ -81,6 +83,11 @@ describe('@vp/domain: channel team', () => {
       scenario: 'both, as two rows',
       edit: { fields: ['tags'], commentsEnabled: true },
       actions: ['video.updated', 'video.comments.toggled'],
+    },
+    {
+      scenario: 'a restore, as its own row first',
+      edit: { fields: ['chapters'], restoredFromVersion: 3 },
+      actions: ['video.restored', 'video.updated'],
     },
     { scenario: 'nothing', edit: { fields: [] }, actions: [] },
   ] as const)('audits an edit of $scenario', ({ edit, actions }) => {
