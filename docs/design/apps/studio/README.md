@@ -10,7 +10,7 @@ apps/client/studio/src/
     workspace/studio-workspace/    StudioWorkspace
     table/data-table/              DataTable
     analytics/chart-frame/         ChartFrame and the chart helpers
-    comments/bulk-action-bar/      BulkActionBar
+    table/bulk-action-bar/         BulkActionBar
     history/revision-list/         RevisionList
     video/timeline-range-editor/   TimelineRangeEditor
     comments/moderation-queue/     ModerationQueue

@@ -1,6 +1,6 @@
 # BulkActionBar
 
-The actions on the rows a table has selected, with the one choice they share: whether the authors are told. It sits in the batch bar of the [DataTable](data-table.md) and is used by the comment inbox over `POST /v1/creator/comments/bulk`. It lives in the studio's kit, `apps/client/studio/src/components/comments/bulk-action-bar/` ([README](README.md)); web has no bulk surface.
+The actions on the rows a table has selected, with the one choice they share: whether the authors are told. It sits in the batch bar of the [DataTable](data-table.md) and is used by the comment inbox over `POST /v1/creator/comments/bulk`. It lives in the studio's kit, `apps/client/studio/src/components/table/bulk-action-bar/` ([README](README.md)); web has no bulk surface.
 
 ## Anatomy
 
