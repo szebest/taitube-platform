@@ -10,7 +10,7 @@ function cut(text: string, max: number, locale = 'en') {
   return cutText.ok ? cutText.value : cutText.error.code;
 }
 
-describe('@vp/intl: truncate', () => {
+describe('@kit/intl: truncate', () => {
   it.each([
     {
       scenario: 'an emoji sequence',

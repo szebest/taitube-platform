@@ -107,7 +107,7 @@ document is stale — fix it.
 | Package | Tier | Depends on |
 |---|---|---|
 | `@kit/design-tokens` | universal | `@vp/domain`, `@vp/errors`, `@kit/result` |
-| `@vp/intl` | universal | `@vp/errors`, `@kit/result` |
+| `@kit/intl` | universal | `@kit/result` |
 | `@kit/pagination` | universal | `@vp/errors`, `@kit/result` |
 | `@vp/permissions` | universal | `@vp/domain`, `@vp/errors` |
 | `@vp/validation` | universal | `@vp/errors`, `@kit/result` |
@@ -129,9 +129,10 @@ document is stale — fix it.
 |---|---|---|
 | `@vp/api-contracts` | universal | `@vp/domain`, `@vp/errors`, `@kit/pagination`, `@vp/permissions`, `@kit/result`, `@vp/validation` |
 | `@vp/domain-rules` | universal | `@vp/domain`, `@vp/errors`, `@vp/permissions`, `@kit/result`, `@vp/validation` |
-| `@vp/messages` | universal | `@vp/errors`, `@vp/intl`, `@kit/result` |
+| `@vp/intl-formats` | universal | `@kit/intl` |
+| `@vp/messages` | universal | `@vp/errors`, `@kit/intl`, `@kit/result` |
 | `@kit/runtime` | universal | `@kit/di` |
-| `@kit/i18n` | universal | `@kit/di`, `@vp/intl`, `@kit/result` |
+| `@kit/i18n` | universal | `@kit/di`, `@kit/intl`, `@kit/result` |
 | `@kit/composition` | server | `@kit/di`, `@kit/result` |
 | `@kit/ui` | client | `@kit/design-tokens`, `@kit/result` |
 | `@vp/permissions-react` | client | `@vp/permissions`, `@kit/result` |
@@ -147,7 +148,7 @@ document is stale — fix it.
 | `@vp/api-client` | client | `@vp/api-contracts` |
 | `@vp/components` | client | `@kit/design-tokens`, `@kit/ui` |
 | `@kit/forms` | client | `@vp/errors`, `@kit/result` (T4 by design: above `@kit/ui` at T3, whose primitives its fields move onto) |
-| `@kit/intl-react` | client | `@vp/intl`, `@vp/messages`, `@kit/result` |
+| `@kit/intl-react` | client | `@kit/intl`, `@vp/messages`, `@kit/result` |
 | `@kit/web-telemetry` | client | `@vp/api-contracts`, `@kit/result` |
 | `@vp/adapters` | server | `@kit/composition`, `@kit/concurrency`, `@vp/core`, `@vp/db`, `@kit/dev-token`, `@vp/domain`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/job-contracts`, `@vp/observability`, `@vp/permissions`, `@kit/result`, `@vp/storage` |
 | `@kit/config` | server | `@kit/composition`, `@vp/env-schema`, `@kit/logger`, `@kit/result` |
@@ -167,8 +168,8 @@ puts it at T5.
 
 | App | Tier | Depends on |
 |---|---|---|
-| `@vp/web` | client | `@vp/api-client`, `@vp/api-contracts`, `@vp/components`, `@vp/domain`, `@vp/intl`, `@kit/intl-react`, `@vp/permissions`, `@vp/permissions-react`, `@vp/queries`, `@kit/result`, `@kit/security-headers`, `@kit/ui`, `@kit/web-telemetry` |
-| `@vp/studio` | client | `@vp/api-client`, `@vp/api-contracts`, `@vp/components`, `@vp/errors`, `@kit/forms`, `@vp/intl`, `@kit/intl-react`, `@vp/permissions`, `@vp/permissions-react`, `@vp/queries`, `@kit/result`, `@kit/security-headers`, `@kit/ui`, `@vp/validation`, `@kit/web-telemetry` |
+| `@vp/web` | client | `@vp/api-client`, `@vp/api-contracts`, `@vp/components`, `@vp/domain`, `@kit/intl`, `@vp/intl-formats`, `@kit/intl-react`, `@vp/permissions`, `@vp/permissions-react`, `@vp/queries`, `@kit/result`, `@kit/security-headers`, `@kit/ui`, `@kit/web-telemetry` |
+| `@vp/studio` | client | `@vp/api-client`, `@vp/api-contracts`, `@vp/components`, `@vp/errors`, `@kit/forms`, `@kit/intl`, `@vp/intl-formats`, `@kit/intl-react`, `@vp/permissions`, `@vp/permissions-react`, `@vp/queries`, `@kit/result`, `@kit/security-headers`, `@kit/ui`, `@vp/validation`, `@kit/web-telemetry` |
 | `@vp/api` | server | `@vp/adapters`, `@vp/api-contracts`, `@kit/composition`, `@kit/concurrency`, `@kit/config`, `@vp/core`, `@vp/db`, `@kit/dev-token`, `@vp/domain`, `@vp/domain-rules`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/job-contracts`, `@kit/logger`, `@vp/observability`, `@kit/pagination`, `@vp/permissions`, `@kit/result`, `@vp/storage`, `@vp/validation`, `@vp/whisper` |
 | `@vp/worker` | server | `@vp/adapters`, `@kit/composition`, `@kit/config`, `@vp/core`, `@vp/domain`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/ffmpeg`, `@vp/job-contracts`, `@kit/logger`, `@vp/observability`, `@kit/result`, `@vp/storage`, `@vp/validation`, `@vp/whisper` |
 

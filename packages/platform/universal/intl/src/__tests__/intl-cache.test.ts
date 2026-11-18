@@ -1,6 +1,6 @@
 import { createIntlCache } from '../intl-cache';
 
-describe('@vp/intl: the Intl cache', () => {
+describe('@kit/intl: the Intl cache', () => {
   it('hands back the same instance for the same locale and options, whatever their order', () => {
     const cache = createIntlCache();
     const first = cache.numberFormat('en', { maximumFractionDigits: 1, notation: 'compact' });

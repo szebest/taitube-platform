@@ -6,7 +6,7 @@ function render(locale: string, value: number, options?: PercentValue['options']
   return rendered.ok ? rendered.value : rendered.error.code;
 }
 
-describe('@vp/intl: percent', () => {
+describe('@kit/intl: percent', () => {
   it.each([
     { locale: 'en', value: 7, expected: /^7%$/ },
     { locale: 'en', value: 12.5, expected: /^12\.5%$/ },

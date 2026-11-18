@@ -22,7 +22,7 @@ function subjectOf(failure: FormatFailure): string {
   }
 }
 
-describe('@vp/intl: format failures', () => {
+describe('@kit/intl: format failures', () => {
   it.each([
     { failure: unsupportedLocale('xx'), code: 'FORMAT_UNSUPPORTED_LOCALE', subject: 'xx' },
     { failure: unknownOption('date', 'stlye'), code: 'FORMAT_UNKNOWN_OPTION', subject: 'stlye' },

@@ -8,7 +8,7 @@ function render(locale: string, options?: TimeValue['options'], timeZone = 'UTC'
   return rendered.ok ? rendered.value : rendered.error.code;
 }
 
-describe('@vp/intl: time', () => {
+describe('@kit/intl: time', () => {
   it.each([
     { locale: 'en-US', expected: /^6:30\sPM$/u },
     { locale: 'en-GB', expected: /^18:30$/ },

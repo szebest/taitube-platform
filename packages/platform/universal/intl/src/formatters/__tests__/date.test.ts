@@ -8,7 +8,7 @@ function render(locale: string, options?: DateOptions, timeZone = 'UTC') {
   return rendered.ok ? rendered.value : rendered.error.code;
 }
 
-describe('@vp/intl: date', () => {
+describe('@kit/intl: date', () => {
   it.each([
     { locale: 'en-US', expected: /^9\/22\/26$/ },
     { locale: 'en-GB', expected: /^22\/09\/2026$/ },

@@ -6,7 +6,7 @@ function render(locale: string, value: number, options?: BytesValue['options']) 
   return rendered.ok ? rendered.value : rendered.error.code;
 }
 
-describe('@vp/intl: bytes', () => {
+describe('@kit/intl: bytes', () => {
   it.each([
     { locale: 'en', value: 4_500_000, expected: /^4\.5 MB$/ },
     { locale: 'en', value: 1_200_000_000, expected: /^1\.2 GB$/ },

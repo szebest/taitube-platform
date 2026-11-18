@@ -7,7 +7,7 @@ function render(locale: string, value: MoneyValue, currency?: string) {
   return rendered.ok ? rendered.value : rendered.error.code;
 }
 
-describe('@vp/intl: money', () => {
+describe('@kit/intl: money', () => {
   it.each([
     {
       locale: 'en-GB',

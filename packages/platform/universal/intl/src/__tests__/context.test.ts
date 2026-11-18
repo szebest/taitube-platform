@@ -1,7 +1,7 @@
 import { USER, resolveCurrency } from '../context';
 import { contextFor } from './fixtures';
 
-describe('@vp/intl: the format context', () => {
+describe('@kit/intl: the format context', () => {
   it.each([
     { requested: USER, configured: 'SEK', expected: 'SEK' },
     { requested: undefined, configured: 'GBP', expected: 'GBP' },

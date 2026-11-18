@@ -1,6 +1,6 @@
 import { FALLBACK_LOCALE, localeChain } from '../locale-chain';
 
-describe('@vp/intl: localeChain', () => {
+describe('@kit/intl: localeChain', () => {
   it.each([
     { tag: 'sv-FI', expected: ['sv-FI', 'sv', 'en'] },
     { tag: 'en-GB', expected: ['en-GB', 'en'] },

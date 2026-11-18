@@ -24,7 +24,7 @@ const ONE_OF_EACH: readonly { value: FormatValue; expected: RegExp }[] = [
   { value: { type: 'displayName', value: 'sv', of: 'language' }, expected: /^Swedish$/ },
 ];
 
-describe('@vp/intl: formatValue', () => {
+describe('@kit/intl: formatValue', () => {
   it.each(ONE_OF_EACH)('routes $value to its own formatter', ({ value, expected }) => {
     const rendered = formatValue(value, contextFor('en-GB', { currency: 'GBP' }));
 

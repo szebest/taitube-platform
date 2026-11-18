@@ -6,7 +6,7 @@ function render(locale: string, value: number) {
   return rendered.ok ? rendered.value : rendered.error.code;
 }
 
-describe('@vp/intl: bitrate', () => {
+describe('@kit/intl: bitrate', () => {
   it.each([
     { locale: 'en', value: 4_500_000, expected: /^4\.5 Mb\/s$/ },
     { locale: 'en', value: 800, expected: /^800 bit\/s$/ },

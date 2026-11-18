@@ -773,7 +773,7 @@ collaborators a case touches and build the app through `buildApp({ config, adapt
 
 | Rank | Option | Status | Reason |
 |---|---|---|---|
-| 1 | Three packages on the platform's own `Intl`: `@vp/intl` (universal, T2), `@vp/messages` (universal, T3), `@kit/intl-react` (client, T4) | **Accepted** | No runtime dependency; the core runs in Node for a server render and in the browser for its hydration; the API can format a byte count without linking the product's copy |
+| 1 | Three packages on the platform's own `Intl`: `@kit/intl` (universal, T2), `@vp/messages` (universal, T3), `@kit/intl-react` (client, T4) | **Accepted** | No runtime dependency; the core runs in Node for a server render and in the browser for its hydration; the API can format a byte count without linking the product's copy |
 | 2 | `react-intl` / FormatJS | Rejected | About 50 KB gzipped to wrap built-ins the platform ships, ICU message syntax the repo uses nowhere else, and React-coupled, which the universal core must not be |
 | 3 | `i18next` | Rejected | A runtime and plugin ecosystem for loading and interpolation the repo does not need, with untyped keys and arguments unless a codegen step is added |
 | 4 | `date-fns` plus hand-rolled number helpers | Rejected | A dependency for what `Intl.RelativeTimeFormat` and `Intl.DateTimeFormat` do natively, and the hand-rolled half is exactly what `format-numbers.helper.ts` was |
@@ -794,7 +794,7 @@ would grow its own helper, and no home for the copy that renders a failure code 
   `FORMAT_WRONG_KIND` and `FORMAT_UNRENDERABLE` (§6.2): 422 and permanent, authoring faults that surface in
   tests and warnings rather than responses.
 - **The context is an argument.** Locale, time zone, currency and the reference instant arrive in
-  `FormatContext`; nothing in `@vp/intl` or `@vp/messages` reads `navigator`, the clock, `process` or a
+  `FormatContext`; nothing in `@kit/intl` or `@vp/messages` reads `navigator`, the clock, `process` or a
   `toLocale*` method. The locale is negotiated in one client module, `@vp/queries`' `request-locale.ts`, and
   handed to `IntlProvider`; the zone and the clock are read in `@kit/intl-react` alone.
 - **Options are allowlisted.** Each formatter declares its keys `as const satisfies OptionKeys<...>` and its
@@ -807,7 +807,7 @@ would grow its own helper, and no home for the copy that renders a failure code 
   like any other collaborator. It is never a module singleton either way (`no-module-state.test.ts`).
 - **Messages are typed by their template.** `dt('{count:plural}', { plural: { count: { one, other } } })`; the
   argument names and types are read off `{name:type}` tokens by template literal types, and a runtime regex
-  over the same flat grammar substitutes them through `@vp/intl`. Plural and ordinal branches select through
+  over the same flat grammar substitutes them through `@kit/intl`. Plural and ordinal branches select through
   `Intl.PluralRules`, so ordinal suffixes are catalogue copy, not formatter data. The grammar has no nesting
   and no escapes; anything richer takes a real parser.
 - **The API returns codes, the client chooses words.** `@vp/messages` is unreachable from a server package,
@@ -819,7 +819,7 @@ would grow its own helper, and no home for the copy that renders a failure code 
 `catalogue-parity` and `single-locale-source`. **Adding a language** is a catalogue directory under
 `packages/universal/messages/src/<tag>/` holding every `en` key, plus one entry in `SUPPORTED_LOCALES` and
 `LOCALE_DETAILS` (its name in itself, its `direction`, its OpenGraph name, its dynamic import); Polish needed no other change to
-`@vp/intl` or `@vp/messages` source, which is the proof the seam holds. A right-to-left language is the same
+`@kit/intl` or `@vp/messages` source, which is the proof the seam holds. A right-to-left language is the same
 data change with `direction: 'rtl'`. Each language past `en` costs its own lazy chunk, and every new message
 costs a translation in the same change, which the parity test enforces.
 

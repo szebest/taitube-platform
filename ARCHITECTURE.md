@@ -37,7 +37,7 @@ taitube-platform/
 │   ├── domain/                     # @vp/domain - entities, value objects, status vocabulary, ranking policy
 │   ├── domain-rules/               # @vp/domain-rules - pure rules over input plus an entity
 │   ├── errors/                     # @vp/errors - the ErrorCode vocabulary, failures, RFC 9457 mapping
-│   ├── intl/                       # @vp/intl - every user-facing format, on Intl, context as an argument
+│   ├── intl/                       # @kit/intl - every user-facing format, on Intl, context as an argument
 │   ├── messages/                   # @vp/messages - typed dt()/t, the en catalogue, ERROR_COPY
 │   ├── pagination/                 # @kit/pagination - the one keyset Paginator and cursor codec
 │   ├── permissions/                # @vp/permissions - the pure CASL authorization engine
@@ -363,15 +363,15 @@ Both deployables build one object graph from one `Container` (`@kit/composition`
 - `terminationGracePeriodSeconds`, the `preStop` hook, compose's `stop_grace_period` and each process's
   grace window are derived from one another (SDD ADR-25).
 
-### Invariant 10: User-Facing Formatting Happens in `@vp/intl`
+### Invariant 10: User-Facing Formatting Happens in `@kit/intl`
 
-Every number, date, duration, list and count a person reads is formatted by `@vp/intl` (SDD ADR-26), and
+Every number, date, duration, list and count a person reads is formatted by `@kit/intl` (SDD ADR-26), and
 every word around it comes from `@vp/messages`.
 
-- **No ad-hoc formatting.** No `toLocale*` call and no hand-built `Intl` object outside `@vp/intl`, and no
+- **No ad-hoc formatting.** No `toLocale*` call and no hand-built `Intl` object outside `@kit/intl`, and no
   `toFixed` as display text in browser-reachable code. `@kit/intl-react`'s `browser-environment.ts` reads the
   runtime's time zone and is the one named exception.
-- **The context is an argument.** Neither `@vp/intl` nor `@vp/messages` reads `navigator`, the clock,
+- **The context is an argument.** Neither `@kit/intl` nor `@vp/messages` reads `navigator`, the clock,
   `process` or a `toLocale*` method, so a server render and its hydration produce the same text.
 - **The server returns codes.** No `apps/server/api`, `apps/server/worker` or `packages/server` source or manifest names
   `@vp/messages`; the client renders a failure through `ERROR_COPY`, which covers every `ErrorCode`.
@@ -482,8 +482,8 @@ fails.
 | `result-returning-ports.test.ts` | regex over method signatures: every `Promise`-returning abstract or interface method in `@vp/core` `ports/` and `repositories/`, and every `export async function` in `@vp/events`, returns `Promise<Result<...>>` | none - reads the repo |
 | `no-discarded-result.test.ts` | no expression statement in production source leaves a `Result` or a promise of one unread, through `await`, `void`, parentheses or a trailing `.catch`/`.finally` (type-aware, on the shared `ts.Program`); a deliberate drop is `ignore(result, 'reason')` | a fixture program with `await repo.remove();`, `void repo.remove();`, `repo.remove().catch(() => {});` and `check();` |
 | `error-vocabulary.test.ts` | AST: no string literal assigned to a `code` / `errorCode` / `error_code` property in `apps/server/api`, `apps/server/worker`, `packages/server`, `packages/universal` or `scripts` is outside `ErrorCodes` (metric labels aside), and every `*Options`/`*Input` interface in `@vp/core` `repositories/` types its `errorCode` as `ErrorCode` | `{ errorCode: 'ORPHANED_VIDEO' }`; `interface FailStepOptions { errorCode: string }` |
-| `intl-purity.test.ts` | AST over production source in `@vp/intl` and `@vp/messages`: no `navigator`, `window`, `document`, `localStorage` or `process` identifier, no `Date.now()`, no zero-argument `new Date()`, no `toLocale*` call | `const locale = navigator.language;`, `const today = new Date();` |
-| `no-adhoc-formatting.test.ts` | AST over production source outside `@vp/intl` (and `@kit/intl-react`'s `browser-environment.ts`, which reads the runtime zone, and `@vp/queries`' `request-locale.ts`, which parses the tags it negotiates): no `toLocale*` call, no `new Intl.X(...)` or `Intl.X(...)` construction; in `apps/client/*`, `packages/client` and `packages/universal`, no `toFixed` | `new Date(x).toLocaleDateString()`, `` `${size.toFixed(1)} MB` `` |
+| `intl-purity.test.ts` | AST over production source in `@kit/intl` and `@vp/messages`: no `navigator`, `window`, `document`, `localStorage` or `process` identifier, no `Date.now()`, no zero-argument `new Date()`, no `toLocale*` call | `const locale = navigator.language;`, `const today = new Date();` |
+| `no-adhoc-formatting.test.ts` | AST over production source outside `@kit/intl` (and `@kit/intl-react`'s `browser-environment.ts`, which reads the runtime zone, and `@vp/queries`' `request-locale.ts`, which parses the tags it negotiates): no `toLocale*` call, no `new Intl.X(...)` or `Intl.X(...)` construction; in `apps/client/*`, `packages/client` and `packages/universal`, no `toFixed` | `new Date(x).toLocaleDateString()`, `` `${size.toFixed(1)} MB` `` |
 | `messages-are-client-only.test.ts` | regex over import specifiers and manifests: no production source under `apps/server/api`, `apps/server/worker` or `packages/server` imports `@vp/messages`, and no manifest there declares it | `import { en } from '@vp/messages';` |
 | `error-copy-coverage.test.ts` | regex over text: every code in `api-error-codes.ts` and `pipeline-error-codes.ts` has an `[ErrorCodes.X]` entry in `ERROR_COPY`, and every entry names a message `src/en/errors.ts` declares | a planted map holding only `INTERNAL` |
 | `catalogue-parity.test.ts` | every catalogue `SUPPORTED_LOCALES` lists, loaded through `LOCALE_DETAILS`, holds exactly the `feature.key` set `en` holds, in both directions | a planted translation missing `videos.title`, and one declaring `videos.gone` |

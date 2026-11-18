@@ -6,7 +6,7 @@ function category(locale: string, count: number, type?: Intl.PluralRuleType) {
   return selected.ok ? selected.value : selected.error.code;
 }
 
-describe('@vp/intl: pluralCategory', () => {
+describe('@kit/intl: pluralCategory', () => {
   it.each([
     { locale: 'en', count: 1, expected: 'one' },
     { locale: 'en', count: 2, expected: 'other' },

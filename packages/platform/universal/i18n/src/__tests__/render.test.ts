@@ -60,7 +60,7 @@ describe('@kit/i18n: renderMessage', () => {
       args: { names: ['a', 'b', 'c'] },
       direct: { type: 'list', value: ['a', 'b', 'c'], options: { type: 'disjunction' } } as const,
     },
-  ])('renders {x:$token} exactly as @vp/intl does on its own', ({ message, args, direct }) => {
+  ])('renders {x:$token} exactly as @kit/intl does on its own', ({ message, args, direct }) => {
     for (const locale of ['en', 'de', 'ar-EG']) {
       const alone = intlFor(locale).format(direct);
       expect(render(message, args, locale)).toBe(alone.ok ? alone.value : 'unreachable');

@@ -6,7 +6,7 @@ function render(locale: string, value: number) {
   return rendered.ok ? rendered.value : rendered.error.code;
 }
 
-describe('@vp/intl: compact', () => {
+describe('@kit/intl: compact', () => {
   it.each([
     { locale: 'en', value: 1_234_567, expected: /^1\.2M$/ },
     { locale: 'en', value: 12_345, expected: /^12K$/ },

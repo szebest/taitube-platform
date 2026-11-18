@@ -6,7 +6,7 @@ function render(locale: string, value: string, timeZone = 'UTC') {
   return rendered.ok ? rendered.value : rendered.error.code;
 }
 
-describe('@vp/intl: calendarDay', () => {
+describe('@kit/intl: calendarDay', () => {
   it.each([
     { locale: 'en-GB', value: '2026-09-22T09:15:00.000Z', expected: /^today 09:15$/ },
     { locale: 'en-GB', value: '2026-09-21T23:59:00.000Z', expected: /^yesterday$/ },

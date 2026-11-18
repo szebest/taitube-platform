@@ -9,7 +9,7 @@ const FIXED = {
   now: '2026-09-22T18:30:00.000Z',
 } as const;
 
-describe('@vp/intl: createIntl', () => {
+describe('@kit/intl: createIntl', () => {
   it('reads nothing from the runtime: a fixed context renders fixed text in node and jsdom alike', () => {
     const intl = createIntl({ ...FIXED, cache: createIntlCache() });
     const rendered = [

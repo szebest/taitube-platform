@@ -18,7 +18,7 @@ function render(locale: string, value: string, now?: string, context = contextFo
   return rendered.ok ? rendered.value : rendered.error.code;
 }
 
-describe('@vp/intl: relative', () => {
+describe('@kit/intl: relative', () => {
   it.each([
     { locale: 'en', value: ago(3 * DAY), expected: '3 days ago' },
     { locale: 'en', value: ago(-2 * HOUR), expected: 'in 2 hours' },

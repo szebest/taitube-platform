@@ -1,20 +1,21 @@
-# AGENTS.md — @vp/intl (Formatting on `Intl`, One Universal Core)
+# AGENTS.md — @kit/intl (Formatting on `Intl`, One Universal Core)
 
-Instructions for any coding agent working on `@vp/intl`.
+Instructions for any coding agent working on `@kit/intl`.
 
-> Tier rules for this directory: [../AGENTS.md](../AGENTS.md) · full tier & layer reference: [packages/AGENTS.md](../../AGENTS.md) · authority: [docs/standards/formatting-and-i18n.md](../../../docs/standards/formatting-and-i18n.md)
+> Tier rules for this directory: [packages/AGENTS.md](../../../AGENTS.md) · authority: [docs/standards/formatting-and-i18n.md](../../../../docs/standards/formatting-and-i18n.md) · the product's values: [@vp/intl-formats](../../../universal/intl-formats/AGENTS.md)
 
 ---
 
 ## 1. Scope & Purpose
 
-Every number, date, count, duration and list the product shows a person is formatted here, on the
+Every number, date, count, duration and list an app shows a person is formatted here, on the
 platform's own `Intl` constructors and nothing else. A formatter takes a tagged value and a
 `FormatContext` and returns `Result<string, FormatFailure>`.
 
-It is `universal`, layer T2, because ticket 89's server render runs it in Node and the browser runs it
+A platform package (`packages/platform/`): no app vocabulary, platform dependencies only (`pnpm boundaries`). It is `universal`, layer T2, because ticket 89's server render runs it in Node and the browser runs it
 again on hydration. It depends on `@kit/result` only, and owns its four failure codes. The words around a value (the
-`views` in `1.2M views`) are copy and live in `@vp/messages`, not here.
+`views` in `1.2M views`) are copy and live in the app's catalogue, not here. The app's own tagged values
+(`views`, `videoDuration`, `publishedAt`) live in `@vp/intl-formats`.
 
 ---
 
@@ -34,8 +35,8 @@ again on hydration. It depends on `@kit/result` only, and owns its four failure 
 5. **Option names are allowlisted.** Each formatter declares its keys `as const satisfies OptionKeys<...>`
    and wraps itself in `withOptions`, so a misspelt key fails to compile at the declaration and declines at
    runtime with the key.
-6. **Domain values compose, they do not format.** `views`, `videoDuration`, `publishedAt` and the rest
-   return tagged values; none builds an `Intl` object or a string.
+6. **Values compose, they do not format.** A value constructor returns a tagged value; none builds an `Intl`
+   object or a string. An app writes its own (`@vp/intl-formats`).
 7. **One file per formatter, one spec per file.** A new formatter goes in `src/formatters/`, gets a
    member in `TaggedValue`, a kind in `FORMAT_KINDS` and a case in `formatValue`.
 
@@ -49,6 +50,6 @@ abbreviation. The suites run under node and again under jsdom (`vitest.jsdom.con
 `bun test`.
 
 ```bash
-pnpm --filter @vp/intl typecheck
-pnpm --filter @vp/intl test
+pnpm --filter @kit/intl typecheck
+pnpm --filter @kit/intl test
 ```

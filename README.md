@@ -93,6 +93,7 @@ taitube-platform/
 │   │   │   ├── design-tokens/       # Design system engine: the token group schemas
 │   │   │   ├── di/                  # Typed tokens and an immutable registry whose get returns a Result
 │   │   │   ├── i18n/                # The typed message engine: kinds, presets, param names, catalogue parity; no words
+│   │   │   ├── intl/                # Formatters on Intl over a tagged value union, IntlCache and the locale chain
 │   │   │   ├── machine/             # Lifecycles as typed edge tables: legal moves, findings, Mermaid
 │   │   │   ├── pagination/          # Keyset cursor codec and page shapes
 │   │   │   ├── result/              # Result type, combinators, tryCatch/fromPromise
@@ -117,7 +118,7 @@ taitube-platform/
 │   │   ├── domain/                  # Entity types and the status and role vocabularies
 │   │   ├── domain-rules/            # Pure rules over input plus an entity, returning Result
 │   │   ├── errors/                  # ErrorCode vocabulary, Failure types, retry classes
-│   │   ├── intl/                    # Every user-facing number, date and duration format, on Intl
+│   │   ├── intl-formats/            # The product's tagged values: views, durations, published-at, file size
 │   │   ├── messages/                # Typed messages, the en catalogue and the copy for every error code
 │   │   ├── permissions/             # CASL ability rules shared by the API and the frontend
 │   │   └── validation/              # Pure input-only rules returning Result

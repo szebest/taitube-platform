@@ -83,7 +83,7 @@ function placeholders(template: string): Placeholder[] {
   }));
 }
 
-/** Renders every placeholder through `@vp/intl`, so a message and a direct format agree. */
+/** Renders every placeholder through `@kit/intl`, so a message and a direct format agree. */
 export function substitute(
   message: Message,
   args: Readonly<Record<string, unknown>>,

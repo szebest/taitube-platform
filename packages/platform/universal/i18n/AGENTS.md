@@ -1,7 +1,7 @@
 # AGENTS.md - @kit/i18n (the typed message engine)
 
 > Tier rules for this directory: [packages/AGENTS.md](../../../AGENTS.md) · tokens and registry:
-> [@kit/di](../di/AGENTS.md) · formatting: [@vp/intl](../../../universal/intl/AGENTS.md) · authority:
+> [@kit/di](../di/AGENTS.md) · formatting: [@kit/intl](../intl/AGENTS.md) · authority:
 > [docs/standards/formatting-and-i18n.md](../../../../docs/standards/formatting-and-i18n.md)
 
 ## 1. Scope
@@ -41,7 +41,7 @@ composition root):
 2. **The placeholder grammar is flat.** `{name}` or `{name:kind}` and nothing nested; `ParseTemplate` (types) and
    `placeholders` (run time) read it the same way. A plural's branches live in its config and select through
    `Intl.PluralRules`; `{?}` in a branch is the count and the only placeholder a branch may hold.
-3. **Every placeholder renders through its kind, and the built-ins through `@vp/intl`**, so a message and a direct
+3. **Every placeholder renders through its kind, and the built-ins through `@kit/intl`**, so a message and a direct
    format agree byte for byte.
 4. **`t` returns a `Result`.** A missing key is a failure carrying the key; `tOr(key, args, fallback)` is the
    render-path form. Nothing here throws.
@@ -63,8 +63,8 @@ composition root):
 11. **Platform strictness.** No `any`, no type assertion except `as const`, no non-null `!`, no `@ts-ignore`. Every
     public generic has a type-level spec under `src/__tests__/type-fixtures/` (run by `typecheck`), including a second
     engine with its own kinds and presets.
-12. **Universal, T3** (above `@kit/di` and `@vp/intl`), ESM only, `sideEffects: false`; runs under `vitest` and
-    `bun test`. `@vp/intl` and `@kit/result` become `@kit/intl` and `@kit/result` when they move.
+12. **Universal, T3** (above `@kit/di` and `@kit/intl`), ESM only, `sideEffects: false`; runs under `vitest` and
+    `bun test`.
 
 ## 3. Local Commands
 

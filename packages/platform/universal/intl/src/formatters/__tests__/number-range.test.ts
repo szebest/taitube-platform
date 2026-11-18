@@ -6,7 +6,7 @@ function render(locale: string, value: readonly [number, number]) {
   return rendered.ok ? rendered.value : rendered.error.code;
 }
 
-describe('@vp/intl: numberRange', () => {
+describe('@kit/intl: numberRange', () => {
   it.each([
     { locale: 'en', value: [1, 5] as const, expected: /^1\s?[–-]\s?5$/u },
     { locale: 'de', value: [1500, 2500] as const, expected: /^1\.500\s?[–-]\s?2\.500$/u },

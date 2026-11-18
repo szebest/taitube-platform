@@ -11,7 +11,7 @@ function render(locale: string, value: readonly [string, string] = RANGE) {
   return rendered.ok ? rendered.value : rendered.error.code;
 }
 
-describe('@vp/intl: dateRange', () => {
+describe('@kit/intl: dateRange', () => {
   it.each([
     { locale: 'en-GB', expected: /^22\s?[–-]\s?24 Sept?$/u },
     { locale: 'de', expected: /^22\.\s?[–-]\s?24\. Sept\.$/u },

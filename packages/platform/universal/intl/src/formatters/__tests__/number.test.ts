@@ -5,7 +5,7 @@ function render(locale: string, value: number, options = {}) {
   return number({ type: 'number', value, options }, contextFor(locale));
 }
 
-describe('@vp/intl: number', () => {
+describe('@kit/intl: number', () => {
   it.each([
     { locale: 'en', grouped: /^1,500$/ },
     { locale: 'de', grouped: /^1\.500$/ },

@@ -3,7 +3,7 @@ import { contextFor } from './fixtures';
 
 const ISO = '2026-09-22T23:30:00.000Z';
 
-describe('@vp/intl: formatInstant', () => {
+describe('@kit/intl: formatInstant', () => {
   it.each([
     { timeZone: 'UTC', expected: '22/09/2026' },
     { timeZone: 'Europe/Stockholm', expected: '23/09/2026' },

@@ -8,7 +8,7 @@ function render(locale: string, options?: ListOptions) {
   return rendered.ok ? rendered.value : rendered.error.code;
 }
 
-describe('@vp/intl: list', () => {
+describe('@kit/intl: list', () => {
   it.each([
     { locale: 'en', expected: 'Action, Comedy, and Drama' },
     { locale: 'en-GB', expected: 'Action, Comedy and Drama' },

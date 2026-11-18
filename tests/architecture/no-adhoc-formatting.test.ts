@@ -58,7 +58,7 @@ function outsideTheHome(): string[] {
   );
 }
 
-describe('architecture: user-facing formatting happens in @vp/intl and nowhere else', () => {
+describe('architecture: user-facing formatting happens in @kit/intl and nowhere else', () => {
   it.each([
     { shape: 'a locale-less date', source: 'const s = new Date(x).toLocaleDateString();' },
     { shape: 'a locale-less number', source: 'const s = views.toLocaleString();' },
@@ -86,7 +86,7 @@ describe('architecture: user-facing formatting happens in @vp/intl and nowhere e
     expect(outsideTheHome()).toContain('apps/client/studio/src/routes/__root.tsx');
   });
 
-  it('finds no locale method, hand-built Intl object or displayed toFixed outside @vp/intl', () => {
+  it('finds no locale method, hand-built Intl object or displayed toFixed outside @kit/intl', () => {
     const offenders = outsideTheHome().flatMap((file) =>
       adhocFormatting(file, read(file), runsInBrowser(file))
     );

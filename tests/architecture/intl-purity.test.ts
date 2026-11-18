@@ -92,7 +92,7 @@ describe('architecture: the formatting core reads nothing from the runtime', () 
     expect(pureSources().length).toBeGreaterThan(20);
   });
 
-  it('finds no ambient read in @vp/intl or @vp/messages', () => {
+  it('finds no ambient read in @kit/intl or @vp/messages', () => {
     expect(pureSources().flatMap((file) => impurities(file, read(file)))).toEqual([]);
   });
 });

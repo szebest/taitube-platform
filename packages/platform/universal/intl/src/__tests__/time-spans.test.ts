@@ -9,7 +9,7 @@ import {
   YEAR,
 } from '../time-spans';
 
-describe('@vp/intl: time spans', () => {
+describe('@kit/intl: time spans', () => {
   it.each([
     { span: 'SECOND', seconds: SECOND, expected: 1 },
     { span: 'MINUTE', seconds: MINUTE, expected: 60 },

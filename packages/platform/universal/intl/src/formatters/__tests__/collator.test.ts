@@ -8,7 +8,7 @@ function sortedIn(locale: string): string[] {
   return compare.ok ? [...WORDS].sort(compare.value) : [];
 }
 
-describe('@vp/intl: collator', () => {
+describe('@kit/intl: collator', () => {
   it.each([
     { locale: 'de', expected: ['apple', 'Ärger', 'Öl', 'Zebra'] },
     { locale: 'sv', expected: ['apple', 'Zebra', 'Ärger', 'Öl'] },

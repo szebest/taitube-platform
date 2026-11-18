@@ -3,7 +3,7 @@ import { NOW, contextFor } from './fixtures';
 
 const LATER = '2026-09-25T00:00:00.000Z';
 
-describe('@vp/intl: referenceInstant', () => {
+describe('@kit/intl: referenceInstant', () => {
   it.each([
     { scenario: "the value's own", now: LATER, context: contextFor('en'), expected: LATER },
     { scenario: "the context's", now: undefined, context: contextFor('en'), expected: NOW },

@@ -18,10 +18,15 @@ const sorted = (names: Iterable<string>) => [...names].sort();
 const difference = (left: readonly string[], right: readonly string[]) =>
   left.filter((name) => !right.includes(name));
 
+type Nested = string | { readonly [key: string]: Nested };
+
+const destinationsOf = (move: Nested): string[] =>
+  typeof move === 'string' ? [move] : Object.values(move).flatMap(destinationsOf);
+
 function moveDrift(moves: Moves, workspace: Workspace): string[] {
   return Object.entries(moves).flatMap(([name, move]) => {
     const entries = workspace.entriesOf(name);
-    const landed = typeof move === 'string' && workspace.entriesOf(move) !== undefined;
+    const landed = destinationsOf(move).every((to) => workspace.entriesOf(to) !== undefined);
     if (!entries) return landed ? [] : [`${name}: no workspace package has this name`];
     if (typeof move === 'string') return [];
 
@@ -110,6 +115,12 @@ describe('architecture: package moves', () => {
     },
   ])('reports $planted', ({ moves, drift }) => {
     expect(moveDrift(moves, PLANTED)).toEqual(drift);
+  });
+
+  it('accepts a split that has landed, its old name gone and every destination present', () => {
+    expect(
+      moveDrift({ '@vp/old': { '.': { a: '@kit/landed', b: '@kit/landed' } } }, PLANTED)
+    ).toEqual([]);
   });
 
   it('accepts a whole move that has landed, its old name gone and its new one present', () => {

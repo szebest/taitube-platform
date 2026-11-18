@@ -32,7 +32,7 @@ const cases = [
   { locale: 'de', value: 3720, options: { style: 'words' } as const, expected: '1 Std., 2 Min.' },
 ];
 
-describe('@vp/intl: duration', () => {
+describe('@kit/intl: duration', () => {
   it.each(cases)(
     'renders $value seconds in $locale as $expected',
     ({ locale, value, options, expected }) => {

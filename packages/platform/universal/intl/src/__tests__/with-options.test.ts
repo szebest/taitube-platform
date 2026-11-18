@@ -9,7 +9,7 @@ interface Probe {
 
 const probe = withOptions<Probe>('probe', ['style'], () => ok('rendered'));
 
-describe('@vp/intl: withOptions', () => {
+describe('@kit/intl: withOptions', () => {
   it.each([
     { scenario: 'no options', value: { type: 'probe' } as const },
     { scenario: 'a named option', value: { type: 'probe', options: { style: 'short' } } as const },

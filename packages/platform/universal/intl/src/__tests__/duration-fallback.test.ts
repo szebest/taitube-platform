@@ -32,7 +32,7 @@ const cases = LOCALES.flatMap((locale) =>
   OPTIONS.flatMap((options) => DURATIONS.map((duration) => ({ locale, options, duration })))
 );
 
-describe('@vp/intl: the Intl.DurationFormat fallback', () => {
+describe('@kit/intl: the Intl.DurationFormat fallback', () => {
   it('runs where the engine ships the native constructor to compare against', () => {
     expect(typeof DurationFormat).toBe('function');
   });

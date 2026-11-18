@@ -8,7 +8,7 @@ function render(locale: string, options?: DateTimeValue['options']) {
   return rendered.ok ? rendered.value : rendered.error.code;
 }
 
-describe('@vp/intl: dateTime', () => {
+describe('@kit/intl: dateTime', () => {
   it.each([
     { locale: 'en-GB', expected: /^22 Sept? 2026(,| at) 18:30$/ },
     { locale: 'de', expected: /^22\.09\.2026, 18:30$/ },

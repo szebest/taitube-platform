@@ -3,7 +3,7 @@ import { defineKind, isRecord } from '../kind';
 
 const isNumber = (value: unknown): value is number => typeof value === 'number';
 
-/** `{n:number}`: a number, options from `NumberOptions`, which `@vp/intl` checks key by key. */
+/** `{n:number}`: a number, options from `NumberOptions`, which `@kit/intl` checks key by key. */
 export const numberKind = defineKind({
   name: 'number',
   config: 'optional',

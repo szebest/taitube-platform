@@ -1,6 +1,6 @@
 import { finite, parseInstant } from '../inputs';
 
-describe('@vp/intl: formatter inputs', () => {
+describe('@kit/intl: formatter inputs', () => {
   it.each(['2026-09-22T18:30:00.000Z', '2026-09-22', '2026-09-22T20:30:00+02:00'])(
     'reads %s as an instant',
     (iso) => {
