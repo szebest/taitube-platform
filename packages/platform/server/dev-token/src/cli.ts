@@ -53,12 +53,14 @@ Serve Options:
 `);
 }
 
+/** @public */
 export interface CliHost {
   argv: readonly string[];
   print: (text: string) => void;
   log: Logger;
 }
 
+/** @public */
 export async function run(config: DevTokenConfig, host: CliHost): Promise<void> {
   const { command, token, flags } = readArgs(host.argv);
 
