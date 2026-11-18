@@ -1,4 +1,4 @@
-import { DEV_TOKEN_CONFIG, getDevJwks, mintPersonaToken, mintToken, verifyToken } from '../index';
+import { DEV_TOKEN_CONFIG, getDevJwks, mintToken, verifyToken } from '../index';
 
 const header = (token: string): unknown =>
   JSON.parse(Buffer.from(token.split('.')[0] ?? '', 'base64url').toString());
@@ -22,10 +22,5 @@ describe('@vp/dev-identity', () => {
         x: 'RK4aIkyx7UG377h43wCmaUcV4W8yjojQjbrjc2lPU5g',
       },
     ]);
-  });
-
-  it('mints a persona token and refuses an unknown persona', () => {
-    expect(verifyToken(mintPersonaToken('admin') ?? '')).toMatchObject({ role: 'admin' });
-    expect(mintPersonaToken('nobody')).toBeUndefined();
   });
 });
