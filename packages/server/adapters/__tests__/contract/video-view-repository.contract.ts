@@ -4,6 +4,7 @@ import type { RetentionCount, ViewCount } from '@vp/domain';
 import { expectOk } from '@vp/testing/result';
 import { OTHER_OWNER_ID, OWNER_ID, VIDEO_IDS, publicVideo, seedOwners } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
+import { describeVideoViewDeviceContract } from './video-view-device.contract';
 import { describeVideoViewHourlyContract } from './video-view-hourly.contract';
 
 const DAY = '2026-03-10';
@@ -43,12 +44,24 @@ export function describeVideoViewRepositoryContract(makeSubject: MakeRepositorie
 
     const apply = async (...counts: ViewCount[]) =>
       expectOk(
-        await views.applyBatch({ batchId: randomUUID(), counts, retention: [], hourly: [] })
+        await views.applyBatch({
+          batchId: randomUUID(),
+          counts,
+          retention: [],
+          hourly: [],
+          devices: [],
+        })
       );
 
     const applySteps = async (...retention: RetentionCount[]) =>
       expectOk(
-        await views.applyBatch({ batchId: randomUUID(), counts: [], retention, hourly: [] })
+        await views.applyBatch({
+          batchId: randomUUID(),
+          counts: [],
+          retention,
+          hourly: [],
+          devices: [],
+        })
       );
 
     const viewsCountOf = async (videoId: string) =>
@@ -76,6 +89,7 @@ export function describeVideoViewRepositoryContract(makeSubject: MakeRepositorie
         counts: [count(VIDEO_IDS.a, DAY, 4)],
         retention: [],
         hourly: [],
+        devices: [],
       };
       expectOk(await views.applyBatch(batch));
 
@@ -106,7 +120,7 @@ export function describeVideoViewRepositoryContract(makeSubject: MakeRepositorie
     });
 
     it('records an empty batch as applied', async () => {
-      const batch = { batchId: randomUUID(), counts: [], retention: [], hourly: [] };
+      const batch = { batchId: randomUUID(), counts: [], retention: [], hourly: [], devices: [] };
 
       expect(expectOk(await views.applyBatch(batch))).toEqual({ type: 'applied', views: 0 });
       expect(expectOk(await views.applyBatch(batch))).toEqual({ type: 'already-applied' });
@@ -125,6 +139,7 @@ export function describeVideoViewRepositoryContract(makeSubject: MakeRepositorie
         counts: [count(VIDEO_IDS.a, DAY, 1)],
         retention: [],
         hourly: [],
+        devices: [],
       };
       expectOk(await views.applyBatch(batch));
 
@@ -224,6 +239,7 @@ export function describeVideoViewRepositoryContract(makeSubject: MakeRepositorie
           counts: [count(VIDEO_IDS.a, DAY, 2)],
           retention: [{ videoId: VIDEO_IDS.a, percent: 0, viewers: 2 }],
           hourly: [],
+          devices: [],
         };
 
         expectOk(await views.applyBatch(batch));
@@ -245,4 +261,5 @@ export function describeVideoViewRepositoryContract(makeSubject: MakeRepositorie
   });
 
   describeVideoViewHourlyContract(makeSubject);
+  describeVideoViewDeviceContract(makeSubject);
 }

@@ -46,6 +46,7 @@ export * from './user';
 export * from './user-event';
 export * from './video';
 export * from './video-lifecycle';
+export * from './view-devices';
 export * from './viewer-activity';
 export * from './views';
 export * from './watch-history';

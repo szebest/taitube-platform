@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import type { PlaybackWatch, ViewBufferPort, ViewEvent } from '@vp/core/ports';
 import type { ViewBatch, ViewCount } from '@vp/domain';
 import { expectOk } from '@vp/testing/result';
+import { describeViewBufferDeviceContract } from './view-buffer-device.contract';
 
 export interface ViewBufferSubject {
   readonly buffer: ViewBufferPort;
@@ -108,6 +109,7 @@ export function describeViewBufferContract(makeSubject: MakeViewBufferSubject): 
         counts: [expect.objectContaining({ views: 1 })],
         retention: [],
         hourly: [{ videoId, viewHour: HOUR, views: 1 }],
+        devices: [],
       });
       expect(next?.batchId).not.toBe(first);
       expect(next?.counts).toEqual([expect.objectContaining({ videoId, views: 1 })]);
@@ -155,6 +157,7 @@ export function describeViewBufferContract(makeSubject: MakeViewBufferSubject): 
         sessionId: randomUUID(),
         viewDate: DAY,
         viewHour: HOUR,
+        device: 'desktop',
         watchedSeconds: 3,
         requiredSeconds: 5,
         ...overrides,
@@ -255,6 +258,7 @@ export function describeViewBufferContract(makeSubject: MakeViewBufferSubject): 
           counts: [],
           retention: expect.arrayContaining([{ videoId, percent: 5, viewers: 1 }]),
           hourly: [],
+          devices: [],
         });
         expect(again).toEqual(batch);
         expect(expectOk(await buffer.snapshot(randomUUID()))).toBeNull();
@@ -275,4 +279,6 @@ export function describeViewBufferContract(makeSubject: MakeViewBufferSubject): 
       });
     });
   });
+
+  describeViewBufferDeviceContract(makeSubject);
 }

@@ -7415,6 +7415,14 @@ paths:
                   type: string
                   maxLength: 16
                   pattern: ^[\w-]+$
+                device:
+                  description: Coarse device class the client decided from its pointer and screen; absent counts as unknown
+                  type: string
+                  enum:
+                    - desktop
+                    - mobile
+                    - tablet
+                    - unknown
               required:
                 - videoId
                 - sessionUuid

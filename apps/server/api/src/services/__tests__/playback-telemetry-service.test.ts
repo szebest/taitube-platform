@@ -90,6 +90,31 @@ describe('PlaybackTelemetryService', () => {
     expect(await recorded('duplicate')).toBe(0);
   });
 
+  it.each([
+    ['the device the client reported', 'mobile', 'mobile'],
+    ['unknown for a beacon without one', undefined, 'unknown'],
+  ] as const)('buffers %s with the counted view', async (_name, device, expected) => {
+    await record({ watchedSeconds: 9, device });
+
+    expect((await batch())?.devices).toEqual([
+      { videoId: VIDEO, viewDate: '2026-03-10', device: expected, views: 1 },
+    ]);
+  });
+
+  it('buffers no device for a session under the minimum or one already counted', async () => {
+    await record({
+      sessionUuid: '7c9e6679-7425-40de-944b-e07fc1f90ae7',
+      watchedSeconds: 2,
+      device: 'tablet',
+    });
+    await record({ watchedSeconds: 9, device: 'desktop' });
+    await record({ watchedSeconds: 9, device: 'mobile' });
+
+    expect((await batch())?.devices).toEqual([
+      { videoId: VIDEO, viewDate: '2026-03-10', device: 'desktop', views: 1 },
+    ]);
+  });
+
   it('counts no view for a session under the minimum, and keeps its watch time', async () => {
     await record({ watchedSeconds: 2 });
 

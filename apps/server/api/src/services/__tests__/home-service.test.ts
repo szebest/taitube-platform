@@ -137,6 +137,7 @@ describe('apps/server/api/services: HomeService', () => {
         { videoId: CLIP, percent: RISING.completedPercent, viewers: 10 },
       ],
       hourly: [],
+      devices: [],
     });
 
     const kinds = expectOk(await app.service.get(VIEWER)).shelves.map(({ kind }) => kind);

@@ -3,6 +3,7 @@ import {
   videoRetentionMilestones,
   videoViewBatches,
   videoViewsDaily,
+  videoViewsDeviceDaily,
   videoViewsHourly,
 } from '../view-schema';
 
@@ -57,6 +58,20 @@ describe('db: view schema', () => {
     expect(config.foreignKeys[0]?.onDelete).toBe('cascade');
     expect(config.indexes.map((index) => index.config.name)).toEqual([
       'video_views_hourly_hour_idx',
+    ]);
+  });
+
+  it('keys device views by video, day and device, dropped with the video, the device CHECKed', () => {
+    const config = getTableConfig(videoViewsDeviceDaily);
+
+    expect(config.primaryKeys[0]?.columns.map((column) => column.name)).toEqual([
+      'video_id',
+      'view_date',
+      'device',
+    ]);
+    expect(config.foreignKeys[0]?.onDelete).toBe('cascade');
+    expect(config.checks.map((check) => check.name)).toEqual([
+      'video_views_device_daily_device_check',
     ]);
   });
 });

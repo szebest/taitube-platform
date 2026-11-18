@@ -16,6 +16,7 @@ const PLAYBACK = {
   sessionId: 'session-1',
   viewDate: '2026-03-10',
   viewHour: HOUR,
+  device: 'mobile' as const,
   watchedSeconds: 12,
   requiredSeconds: 5,
 };
@@ -38,11 +39,12 @@ describe('RedisViewBufferAdapter', () => {
     expect(redis.ttls.get(DEDUP_KEY)).toBe(86_400);
   });
 
-  it('buffers views and watch time as separate fields of one hash', async () => {
+  it('buffers views, the device of the counted view and watch time as separate fields of one hash', async () => {
     expectOk(await buffer.recordPlayback(PLAYBACK));
 
     expect(Object.fromEntries(redis.hashes.get('taitube:views:buffer') ?? [])).toEqual({
       [`${VIDEO}|2026-03-10|views`]: '1',
+      [`${VIDEO}|2026-03-10|device:mobile`]: '1',
       [`${VIDEO}|2026-03-10|watch`]: '12',
     });
   });

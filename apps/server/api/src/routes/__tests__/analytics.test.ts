@@ -32,6 +32,7 @@ describe('analytics routes', () => {
         counts: [{ videoId: PUBLIC_VIDEO, viewDate: today, views: 5, watchSeconds: 50 }],
         retention: [],
         hourly: [],
+        devices: [],
       })
     );
   });
@@ -58,6 +59,7 @@ describe('analytics routes', () => {
           { videoId: PUBLIC_VIDEO, percent: 50, viewers: 78 },
         ],
         hourly: [],
+        devices: [],
       })
     );
 
