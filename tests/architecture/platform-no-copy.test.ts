@@ -16,11 +16,15 @@ const CATALOGUE_DIRECTORY =
 const DATA_FILE = /\.(?:json|po|pot|xlf|xliff|ftl|properties|arb|yaml|yml)$/;
 const MANIFEST = /(?:^|\/)(?:package|tsconfig[\w.-]*|tsconfig\/[\w.-]+)\.json$/;
 
-const isClassList = (text: string): boolean =>
-  text
-    .trim()
-    .split(/\s+/)
-    .every((word) => /^[a-z0-9]+(?:[-:/.[\]][a-z0-9.[\]%#()-]*)+$/.test(word));
+const UTILITY = /^[a-z0-9]+(?:[-:/.[\]'][a-z0-9.[\]%#()'-]*)*$/;
+
+const isClassList = (text: string): boolean => {
+  const words = text.trim().split(/\s+/);
+  return words.every((word) => UTILITY.test(word)) && words.some((word) => /[-:/.[\]]/.test(word));
+};
+
+const hasLetters = (jsxText: string): boolean =>
+  /\p{L}/u.test(jsxText.replace(/&(?:[a-z]+|#\d+|#x[\da-f]+);/gi, ''));
 
 const isSentence = (text: string): boolean =>
   !isClassList(text) &&
@@ -71,7 +75,7 @@ function copyIn(file: string, source: string): string[] {
   const visit = (node: ts.Node): void => {
     const value = copyValue(node);
     if (isDtCall(node)) found.push(`${file}: a dt( call`);
-    if (ts.isJsxText(node) && /\p{L}/u.test(node.text)) {
+    if (ts.isJsxText(node) && hasLetters(node.text)) {
       found.push(`${file}: JSX text ${node.text.trim()}`);
     }
     if (value !== undefined && isSentence(value)) found.push(`${file}: copy ${value}`);
@@ -136,6 +140,12 @@ describe('architecture: platform packages ship no copy', () => {
         "export const a = { title: 'col-start-1 m-0 text-title', label: 'px-3 py-1.5 sm:text-sm' };",
     },
     { shape: 'JSX without words', source: 'export const a = <i>{count}</i>;' },
+    { shape: 'JSX holding only an entity', source: 'export const a = <i>&nbsp;</i>;' },
+    {
+      shape: 'a class list with plain utilities and a quoted arbitrary value',
+      source:
+        "export const a = { title: \"absolute grid after:content-[''] text-fg\", label: 'grid place-items-center' };",
+    },
   ])('leaves $shape alone', ({ source }) => {
     expect(copyIn('fixture.tsx', source)).toEqual([]);
   });
