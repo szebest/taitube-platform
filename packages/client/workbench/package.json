@@ -14,6 +14,7 @@
   },
   "devDependencies": {
     "@kit/design-tokens": "workspace:*",
+    "@kit/intl": "workspace:*",
     "@kit/intl-react": "workspace:*",
     "@kit/result": "workspace:*",
     "@kit/tsconfig": "workspace:*",
@@ -35,7 +36,6 @@
     "@vp/api-client": "workspace:*",
     "@vp/api-contracts": "workspace:*",
     "@vp/components": "workspace:*",
-    "@vp/intl": "workspace:*",
     "@vp/messages": "workspace:*",
     "@vp/queries": "workspace:*",
     "@vp/testing": "workspace:*",

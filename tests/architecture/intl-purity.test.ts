@@ -1,4 +1,5 @@
 import ts from 'typescript';
+import { packageDir } from '../../scripts/workspace-packages';
 import { parseSource } from './parsed-sources';
 import { productionSources, read } from './repo-files';
 
@@ -7,7 +8,9 @@ import { productionSources, read } from './repo-files';
  * server container and another in the browser, and a server render's hydration reports the
  * difference as an error. The locale, the zone and the reference instant are arguments.
  */
-const PURE_PACKAGES = ['packages/universal/intl/', 'packages/universal/messages/'];
+const PURE_PACKAGES = ['@kit/intl', '@vp/intl-formats', '@vp/messages'].map(
+  (name) => `${packageDir(name)}/`
+);
 
 const AMBIENT_GLOBALS = new Set(['navigator', 'process', 'window', 'document', 'localStorage']);
 

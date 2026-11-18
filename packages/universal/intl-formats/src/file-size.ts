@@ -1,4 +1,4 @@
-import type { BytesValue } from '../formatters/bytes';
+import type { BytesValue } from '@kit/intl';
 
 /** @public */
 export function fileSize(byteCount: number): BytesValue {

@@ -1,8 +1,8 @@
-import { contextFor } from '../../__tests__/fixtures';
-import { createIntl } from '../../create-intl';
+import { createIntl } from '@kit/intl';
 import { fileSize } from '../file-size';
+import { contextFor } from './fixtures';
 
-describe('@vp/intl: fileSize', () => {
+describe('@vp/intl-formats: fileSize', () => {
   it('is a decimal bytes value', () => {
     expect(fileSize(5_000_000_000)).toEqual({
       type: 'bytes',

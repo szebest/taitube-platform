@@ -1,8 +1,8 @@
-import { contextFor } from '../../__tests__/fixtures';
-import { createIntl } from '../../create-intl';
+import { createIntl } from '@kit/intl';
 import { subscribers } from '../subscribers';
+import { contextFor } from './fixtures';
 
-describe('@vp/intl: subscribers', () => {
+describe('@vp/intl-formats: subscribers', () => {
   it('is a count value', () => {
     expect(subscribers(12_345)).toEqual({ type: 'count', value: 12_345 });
   });

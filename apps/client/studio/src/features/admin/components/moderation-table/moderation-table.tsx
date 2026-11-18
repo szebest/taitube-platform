@@ -9,7 +9,7 @@ import {
   useTable,
 } from '@tanstack/react-table';
 import { EmptyState, SectionError } from '@vp/components';
-import { publishedAt } from '@vp/intl';
+import { publishedAt } from '@vp/intl-formats';
 import { canDeleteVideo, canModerateVideo, canUpdateVideo } from '@vp/permissions';
 import { useCan } from '@vp/permissions-react';
 import { useApi } from '@vp/queries';

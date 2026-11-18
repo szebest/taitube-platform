@@ -1,8 +1,8 @@
-import { contextFor } from '../../__tests__/fixtures';
-import { createIntl } from '../../create-intl';
+import { createIntl } from '@kit/intl';
 import { resolution } from '../resolution';
+import { contextFor } from './fixtures';
 
-describe('@vp/intl: resolution', () => {
+describe('@vp/intl-formats: resolution', () => {
   it('is an ungrouped number value', () => {
     expect(resolution(2160)).toEqual({
       type: 'number',

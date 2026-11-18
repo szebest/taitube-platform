@@ -1,4 +1,4 @@
-import type { PercentValue } from '../formatters/percent';
+import type { PercentValue } from '@kit/intl';
 
 /** In percentage points, as the transfer reports it: `42.6` reads `43%`. */
 export function uploadProgress(percentagePoints: number): PercentValue {

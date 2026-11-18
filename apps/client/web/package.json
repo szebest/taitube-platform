@@ -24,6 +24,7 @@
   "dependencies": {
     "@kit/design-tokens": "workspace:*",
     "@kit/forms": "workspace:*",
+    "@kit/intl": "workspace:*",
     "@kit/intl-react": "workspace:*",
     "@kit/result": "workspace:*",
     "@kit/security-headers": "workspace:*",
@@ -42,7 +43,7 @@
     "@vp/components": "workspace:*",
     "@vp/domain": "workspace:*",
     "@vp/domain-rules": "workspace:*",
-    "@vp/intl": "workspace:*",
+    "@vp/intl-formats": "workspace:*",
     "@vp/messages": "workspace:*",
     "@vp/permissions": "workspace:*",
     "@vp/permissions-react": "workspace:*",

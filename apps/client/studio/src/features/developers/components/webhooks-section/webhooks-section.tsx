@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { createColumnHelper, useTable } from '@tanstack/react-table';
 import type { WebhookTestView, WebhookView } from '@vp/api-contracts';
 import { EmptyState, SectionError } from '@vp/components';
-import { publishedAt } from '@vp/intl';
+import { publishedAt } from '@vp/intl-formats';
 import { useApi, useFailureToast } from '@vp/queries';
 import { useState } from 'react';
 import {

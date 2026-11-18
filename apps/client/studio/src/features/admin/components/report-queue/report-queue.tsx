@@ -4,7 +4,7 @@ import { Button, useToast } from '@kit/ui';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { createColumnHelper, useTable } from '@tanstack/react-table';
 import { EmptyState, SectionError } from '@vp/components';
-import { publishedAt } from '@vp/intl';
+import { publishedAt } from '@vp/intl-formats';
 import { canDeleteComment } from '@vp/permissions';
 import { useCan } from '@vp/permissions-react';
 import { useApi } from '@vp/queries';

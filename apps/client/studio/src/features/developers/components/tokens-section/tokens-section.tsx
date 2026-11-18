@@ -7,7 +7,7 @@ import type { ApiTokenView } from '@vp/api-contracts';
 import { EmptyState, SectionError } from '@vp/components';
 import { API_TOKEN_LIMITS, type ApiTokenStatus } from '@vp/domain';
 import { API_TOKEN } from '@vp/domain-rules';
-import { publishedAt } from '@vp/intl';
+import { publishedAt } from '@vp/intl-formats';
 import { useApi, useFailureToast } from '@vp/queries';
 import { useState } from 'react';
 import {

@@ -24,12 +24,3 @@ export * from './formatters/plural';
 export * from './formatters/relative';
 export * from './formatters/time';
 export * from './formatters/truncate';
-
-export * from './domain/comment-count';
-export * from './domain/file-size';
-export * from './domain/published-at';
-export * from './domain/resolution';
-export * from './domain/subscribers';
-export * from './domain/upload-progress';
-export * from './domain/video-duration';
-export * from './domain/views';

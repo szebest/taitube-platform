@@ -1,5 +1,5 @@
+import { type IntlBinding, unrenderable, wrongKind } from '@kit/intl';
 import { all, andThen, err, map, ok } from '@kit/result';
-import { type IntlBinding, unrenderable, wrongKind } from '@vp/intl';
 import { describeValue, isRecord, type Kind, type KindContext, type Rendered } from './kind';
 import type { AnyMessage } from './message';
 import { type PresetTable, resolveEntry } from './presets';

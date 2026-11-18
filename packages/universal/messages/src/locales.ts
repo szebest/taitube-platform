@@ -1,4 +1,4 @@
-import { SUPPORTED_LOCALES } from '@vp/intl';
+import { SUPPORTED_LOCALES } from '@kit/intl';
 import type { Catalogues } from './catalogue';
 import { en } from './en';
 

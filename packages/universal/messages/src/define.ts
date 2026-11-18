@@ -1,4 +1,4 @@
-import type { DateOptions, ListOptions, NumberOptions } from '@vp/intl';
+import type { DateOptions, ListOptions, NumberOptions } from '@kit/intl';
 
 /** The branches a count selects between; `{?}` in a branch is the count, formatted. */
 interface PluralBranches {

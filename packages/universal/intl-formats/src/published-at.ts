@@ -1,5 +1,4 @@
-import type { DateTimeValue } from '../formatters/date-time';
-import type { RelativeValue } from '../formatters/relative';
+import type { DateTimeValue, RelativeValue } from '@kit/intl';
 
 export interface PublishedAt {
   readonly relative: RelativeValue;

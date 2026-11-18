@@ -1,8 +1,8 @@
-import { contextFor } from '../../__tests__/fixtures';
-import { createIntl } from '../../create-intl';
+import { createIntl } from '@kit/intl';
 import { views } from '../views';
+import { contextFor } from './fixtures';
 
-describe('@vp/intl: views', () => {
+describe('@vp/intl-formats: views', () => {
   it('is a count value, so the words around it stay in the catalogue', () => {
     expect(views(1_234_567)).toEqual({ type: 'count', value: 1_234_567 });
   });

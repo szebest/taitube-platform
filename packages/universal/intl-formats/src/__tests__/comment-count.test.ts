@@ -1,8 +1,8 @@
-import { contextFor } from '../../__tests__/fixtures';
-import { createIntl } from '../../create-intl';
+import { createIntl } from '@kit/intl';
 import { commentCount } from '../comment-count';
+import { contextFor } from './fixtures';
 
-describe('@vp/intl: commentCount', () => {
+describe('@vp/intl-formats: commentCount', () => {
   it('is a count value', () => {
     expect(commentCount(4_200)).toEqual({ type: 'count', value: 4_200 });
   });

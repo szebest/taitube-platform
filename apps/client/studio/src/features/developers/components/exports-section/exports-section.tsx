@@ -5,7 +5,7 @@ import { createColumnHelper, useTable } from '@tanstack/react-table';
 import type { DataExportView } from '@vp/api-contracts';
 import { EmptyState, SectionError } from '@vp/components';
 import { DATA_EXPORT_LIMITS, type DataExportKind, type DataExportStatus } from '@vp/domain';
-import { publishedAt } from '@vp/intl';
+import { publishedAt } from '@vp/intl-formats';
 import { useApi, useFailureToast } from '@vp/queries';
 import { useState } from 'react';
 import {

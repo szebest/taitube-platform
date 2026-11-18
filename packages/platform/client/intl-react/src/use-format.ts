@@ -1,4 +1,4 @@
-import type { IntlBinding } from '@vp/intl';
+import type { IntlBinding } from '@kit/intl';
 import { useIntlBindings } from './intl-context';
 
 export function useFormat(): IntlBinding {

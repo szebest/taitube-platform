@@ -1,4 +1,4 @@
-import type { NumberOptions } from '@vp/intl';
+import type { NumberOptions } from '@kit/intl';
 import { defineKind, isRecord } from '../kind';
 
 const isNumber = (value: unknown): value is number => typeof value === 'number';

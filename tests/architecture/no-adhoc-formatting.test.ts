@@ -7,7 +7,7 @@ import { productionSources, read } from './repo-files';
  * User-facing formatting has one home. `toLocaleString()` with no locale renders in whatever
  * locale the runtime has, and a hand-built `Intl` object skips the cache and the allowlists.
  */
-const FORMATTING_HOME = 'packages/universal/intl/';
+const FORMATTING_HOME = `${packageDir('@kit/intl')}/`;
 
 /**
  * Detection, not formatting: the browser binding reads the runtime's own time zone

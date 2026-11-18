@@ -1,4 +1,4 @@
-import type { CountValue } from '../formatters/compact';
+import type { CountValue } from '@kit/intl';
 
 /** @public */
 export function commentCount(count: number): CountValue {

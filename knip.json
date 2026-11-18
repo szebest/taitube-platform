@@ -158,7 +158,7 @@
         "!dist/**"
       ]
     },
-    "packages/universal/intl": {
+    "packages/**/universal/intl": {
       "entry": ["src/**/type-fixtures/*.ts"],
       "project": [
         "**/*.{ts,tsx,mts,mjs,js}!",

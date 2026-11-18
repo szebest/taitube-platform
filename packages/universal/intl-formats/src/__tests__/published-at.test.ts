@@ -1,10 +1,10 @@
-import { NOW, contextFor } from '../../__tests__/fixtures';
-import { createIntl } from '../../create-intl';
+import { createIntl } from '@kit/intl';
 import { publishedAt } from '../published-at';
+import { NOW, contextFor } from './fixtures';
 
 const THREE_DAYS_EARLIER = '2026-09-19T18:30:00.000Z';
 
-describe('@vp/intl: publishedAt', () => {
+describe('@vp/intl-formats: publishedAt', () => {
   it('pairs a relative value with an absolute one', () => {
     expect(publishedAt(THREE_DAYS_EARLIER, NOW)).toEqual({
       relative: {

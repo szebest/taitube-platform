@@ -1,4 +1,4 @@
-import { createIntl, createIntlCache, type IntlBinding } from '@vp/intl';
+import { createIntl, createIntlCache, type IntlBinding } from '@kit/intl';
 import type { Catalogues } from '../catalogue';
 import { createTranslator, type Translator } from '../create-translator';
 import { en } from '../en';

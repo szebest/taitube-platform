@@ -1,8 +1,8 @@
-import { contextFor } from '../../__tests__/fixtures';
-import { createIntl } from '../../create-intl';
+import { createIntl } from '@kit/intl';
 import { videoDuration } from '../video-duration';
+import { contextFor } from './fixtures';
 
-describe('@vp/intl: videoDuration', () => {
+describe('@vp/intl-formats: videoDuration', () => {
   it('is a clock duration value', () => {
     expect(videoDuration(765)).toEqual({
       type: 'duration',

@@ -2,7 +2,7 @@ import { useFormat } from '@kit/intl-react';
 import { unwrapOr } from '@kit/result';
 import { Link } from '@tanstack/react-router';
 import type { Notification } from '@vp/api-contracts';
-import { publishedAt } from '@vp/intl';
+import { publishedAt } from '@vp/intl-formats';
 import {
   NotificationCentre,
   notificationCentreStyles,

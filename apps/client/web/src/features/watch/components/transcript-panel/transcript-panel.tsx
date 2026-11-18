@@ -2,7 +2,7 @@ import { Format, useT } from '@kit/intl-react';
 import { Input } from '@kit/ui';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import type { TranscriptView } from '@vp/api-contracts';
-import { videoDuration } from '@vp/intl';
+import { videoDuration } from '@vp/intl-formats';
 import { transcriptQueryOptions, useApi } from '@vp/queries';
 import { ChevronDown } from 'lucide-react';
 import { useEffect, useId, useRef, useState } from 'react';

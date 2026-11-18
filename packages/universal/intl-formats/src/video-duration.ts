@@ -1,4 +1,4 @@
-import type { DurationValue } from '../formatters/duration';
+import type { DurationValue } from '@kit/intl';
 
 /** @public */
 export function videoDuration(seconds: number): DurationValue {

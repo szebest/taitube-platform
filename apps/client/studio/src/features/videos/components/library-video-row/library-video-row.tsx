@@ -5,7 +5,7 @@ import { Link } from '@tanstack/react-router';
 import type { ContractResult, listCreatorVideos } from '@vp/api-contracts';
 import { VideoThumbnail } from '@vp/components';
 import { VIDEO_VISIBILITIES } from '@vp/domain';
-import { videoDuration } from '@vp/intl';
+import { videoDuration } from '@vp/intl-formats';
 import { canDeleteVideo, canReadAnalytics, canUpdateVideo } from '@vp/permissions';
 import { useCan } from '@vp/permissions-react';
 import { useFailureToast } from '@vp/queries';

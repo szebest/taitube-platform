@@ -1,8 +1,8 @@
-import { contextFor } from '../../__tests__/fixtures';
-import { createIntl } from '../../create-intl';
+import { createIntl } from '@kit/intl';
 import { uploadProgress } from '../upload-progress';
+import { contextFor } from './fixtures';
 
-describe('@vp/intl: uploadProgress', () => {
+describe('@vp/intl-formats: uploadProgress', () => {
   it.each([
     { points: 0, expected: '0%' },
     { points: 42.6, expected: '43%' },

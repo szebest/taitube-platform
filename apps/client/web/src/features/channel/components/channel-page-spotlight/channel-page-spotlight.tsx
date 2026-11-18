@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import type { VideoSummary } from '@vp/api-contracts';
 import { VideoCard } from '@vp/components';
-import { publishedAt } from '@vp/intl';
+import { publishedAt } from '@vp/intl-formats';
 import { useAccount, useApi } from '@vp/queries';
 import {
   ChannelSpotlight,

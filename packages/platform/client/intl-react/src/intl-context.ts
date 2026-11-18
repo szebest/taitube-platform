@@ -1,4 +1,4 @@
-import type { IntlBinding } from '@vp/intl';
+import type { IntlBinding } from '@kit/intl';
 import type { Translator } from '@vp/messages';
 import { createContext, useContext } from 'react';
 

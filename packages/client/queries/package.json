@@ -25,6 +25,7 @@
     "clean": "rimraf dist tsconfig.tsbuildinfo"
   },
   "dependencies": {
+    "@kit/intl": "workspace:*",
     "@kit/intl-react": "workspace:*",
     "@kit/result": "workspace:*",
     "@kit/security-headers": "workspace:*",
@@ -34,7 +35,6 @@
     "@vp/components": "workspace:*",
     "@vp/domain": "workspace:*",
     "@vp/errors": "workspace:*",
-    "@vp/intl": "workspace:*",
     "@vp/messages": "workspace:*",
     "@vp/permissions": "workspace:*",
     "@vp/permissions-react": "workspace:*",
