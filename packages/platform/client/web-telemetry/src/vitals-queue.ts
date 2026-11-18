@@ -1,3 +1,4 @@
+/** @public */
 export interface WebVital {
   name: 'LCP' | 'INP' | 'CLS' | 'FCP' | 'TTFB' | 'LONG_TASKS';
   value: number;
