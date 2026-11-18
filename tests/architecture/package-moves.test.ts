@@ -23,6 +23,9 @@ type Nested = string | { readonly [key: string]: Nested };
 const destinationsOf = (move: Nested): string[] =>
   typeof move === 'string' ? [move] : Object.values(move).flatMap(destinationsOf);
 
+const landedEntry = (move: Nested | undefined, workspace: Workspace): boolean =>
+  typeof move === 'string' && workspace.entriesOf(move) !== undefined;
+
 function moveDrift(moves: Moves, workspace: Workspace): string[] {
   return Object.entries(moves).flatMap(([name, move]) => {
     const entries = workspace.entriesOf(name);
@@ -30,7 +33,9 @@ function moveDrift(moves: Moves, workspace: Workspace): string[] {
     if (!entries) return landed ? [] : [`${name}: no workspace package has this name`];
     if (typeof move === 'string') return [];
 
-    const listed = Object.keys(move);
+    const listed = Object.keys(move).filter(
+      (entry) => entries.includes(entry) || !landedEntry(move[entry], workspace)
+    );
     const entryDrift = [
       ...difference(entries, listed).map((entry) => `${name}: export entry ${entry} is not listed`),
       ...difference(listed, entries).map(
@@ -121,6 +126,12 @@ describe('architecture: package moves', () => {
     expect(
       moveDrift({ '@vp/old': { '.': { a: '@kit/landed', b: '@kit/landed' } } }, PLANTED)
     ).toEqual([]);
+  });
+
+  it('ignores a subpath that has landed in another package and is no longer exported', () => {
+    expect(
+      moveDrift({ '@vp/split': { '.': '@vp/split', './gone': '@kit/landed' } }, PLANTED)
+    ).toEqual(['@vp/split: export entry ./extra is not listed']);
   });
 
   it('accepts a whole move that has landed, its old name gone and its new one present', () => {

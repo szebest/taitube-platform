@@ -63,6 +63,8 @@ package is `server`, where its Postgres, Redis, S3 and auth vocabulary belongs.
 | **T6** Application | Deployables. No library may depend on these. |
 | **T7** Reference tool | Drives a running application from its acceptance suite. |
 
+Layer 0 is one package, `@kit/primitives`, below T1 so `@vp/domain` (T1) can import its time units without a same-layer edge.
+
 T5 exists because a module two apps share can sit above `@vp/api-client` (T4) and still be a library. Without
 it the module would share the applications' layer, and an app depending on it would be a sibling edge.
 
@@ -88,10 +90,11 @@ with it.
 Copied from the manifests by hand. If this table and `package.json` disagree, the manifest wins and this
 document is stale — fix it.
 
-### T1 — Foundation (no `@vp/*` dependency)
+### T0 and T1 — Foundation (no `@vp/*` dependency)
 
 | Package | Tier | Location |
 |---|---|---|
+| `@kit/primitives` (T0) | universal | `packages/platform/universal/primitives` |
 | `@vp/domain` | universal | `packages/universal/domain` |
 | `@vp/errors` | universal | `packages/universal/errors` |
 | `@kit/machine` | universal | `packages/platform/universal/machine` |
