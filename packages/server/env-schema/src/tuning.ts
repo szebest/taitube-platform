@@ -1,4 +1,3 @@
-import { NOTIFICATION_RETENTION_DAYS } from '@vp/domain';
 import {
   MS_PER_DAY,
   MS_PER_HOUR,
@@ -7,7 +6,8 @@ import {
   SECONDS_PER_DAY,
   SECONDS_PER_HOUR,
   SECONDS_PER_MINUTE,
-} from '@vp/domain/time';
+} from '@kit/primitives';
+import { NOTIFICATION_RETENTION_DAYS } from '@vp/domain';
 export * from './screening-tuning';
 
 /**

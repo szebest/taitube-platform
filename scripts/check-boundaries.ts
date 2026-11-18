@@ -12,15 +12,16 @@ const TIER_MAY_IMPORT: Record<Tier, Tier[]> = {
 /**
  * The only packages a manifest may name as a devDependency regardless of tier and layer: none
  * ships code, so none can reach a runtime bundle or a `pnpm deploy --prod` tree. `@kit/tsconfig`
- * is a set of JSON presets, `@vp/testing` a vitest config factory plus fixtures,
- * `@kit/vite-preset` the Vite config a client app builds with, and `@vp/web-testing` the spec
+ * is a set of JSON presets, `@kit/testing` a vitest config factory plus spec helpers,
+ * `@vp/testing-fixtures` the seeded ids and production-shaped environment the specs share, `@kit/vite-preset` the Vite config a client app builds with, and `@vp/web-testing` the spec
  * helpers of the browser packages and apps, which only specs import. Every other devDependency is a
  * real edge — it resolves in CI and it lands in the emitted `.d.ts` — so it is checked exactly
  * like a dependency, and a runtime dependency on one of these is checked too.
  */
 export const BUILD_TOOLING: ReadonlySet<string> = new Set([
   '@kit/tsconfig',
-  '@vp/testing',
+  '@kit/testing',
+  '@vp/testing-fixtures',
   '@kit/vite-preset',
   '@vp/web-testing',
 ]);
@@ -49,6 +50,7 @@ export function pendingPlatformMoves(
 
 /** Edges from a moved package to an app package that a seam still has to remove; deleted with the last seam. */
 const PENDING_APP_EDGES: ReadonlySet<string> = new Set([
+  '@kit/components>@vp/web-testing',
   '@kit/forms>@vp/web-testing',
   '@kit/ui>@vp/web-testing',
   '@kit/web-telemetry>@vp/web-testing',

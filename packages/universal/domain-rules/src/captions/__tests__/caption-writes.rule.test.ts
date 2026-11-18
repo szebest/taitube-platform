@@ -1,6 +1,6 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import { MAX_CAPTION_TRACKS } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { aCaptionTrack } from '../../__tests__/entities';
 import { decideCaptionGenerate, decideCaptionUpload } from '../caption-writes.rule';
 

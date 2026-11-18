@@ -1,5 +1,5 @@
+import { FALLBACK_LOCALE, localeChain } from '@kit/intl';
 import { isOk } from '@kit/result';
-import { FALLBACK_LOCALE, localeChain } from '@vp/intl';
 
 function tagsOf(acceptLanguage: string | undefined): string[] {
   return (acceptLanguage ?? '')

@@ -1,6 +1,6 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import type { ChannelFeaturedRepositoryPort } from '@vp/core/repositories';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { OTHER_OWNER_ID, OWNER_ID, publicVideo, seedOwners, VIDEO_IDS } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 

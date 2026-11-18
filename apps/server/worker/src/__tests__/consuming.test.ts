@@ -1,6 +1,6 @@
 import { ok } from '@kit/result';
+import { expectErr, expectOk } from '@kit/testing/result';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { z } from 'zod';
 import { consuming } from '../consuming';
 

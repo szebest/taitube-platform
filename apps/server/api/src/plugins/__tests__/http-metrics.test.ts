@@ -1,9 +1,9 @@
-import { createMetricsRegistry } from '@vp/observability';
+import { createPipelineMetrics } from '@vp/pipeline-metrics';
 import fastify from 'fastify';
 import { registerHttpMetricsPlugin } from '../http-metrics';
 
 async function recordedRoutes(url: string): Promise<string[]> {
-  const metrics = createMetricsRegistry();
+  const metrics = createPipelineMetrics();
   const app = fastify();
   await app.register(registerHttpMetricsPlugin, { metrics });
   app.get('/v1/videos/:id', async () => ({ ok: true }));

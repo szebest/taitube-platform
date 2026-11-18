@@ -1,4 +1,4 @@
-import { expectErr, expectOk } from '@vp/testing/result';
+import { expectErr, expectOk } from '@kit/testing/result';
 import { validateBrandColor } from '../brand-color.rule';
 
 describe('validateBrandColor', () => {

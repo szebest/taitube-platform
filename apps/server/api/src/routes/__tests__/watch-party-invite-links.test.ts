@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
+import { expectOk } from '@kit/testing/result';
 import { INVITE_LINK_TTL_MS } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
-import { expectOk } from '@vp/testing/result';
 import {
   type Account,
   buildRoomApp,

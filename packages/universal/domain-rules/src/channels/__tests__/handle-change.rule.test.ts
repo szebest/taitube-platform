@@ -1,4 +1,4 @@
-import { expectErr, expectOk } from '@vp/testing/result';
+import { expectErr, expectOk } from '@kit/testing/result';
 import { decideHandleChange } from '../handle-change.rule';
 
 const DAY = 24 * 60 * 60 * 1000;

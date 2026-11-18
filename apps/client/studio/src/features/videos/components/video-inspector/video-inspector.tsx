@@ -3,7 +3,7 @@ import { Button, Skeleton } from '@kit/ui';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import type { Video } from '@vp/api-contracts';
-import { publishedAt } from '@vp/intl';
+import { publishedAt } from '@vp/intl-formats';
 import { canReadAnalytics, canUpdateVideo } from '@vp/permissions';
 import { useCan } from '@vp/permissions-react';
 import { useApi, videoQueryOptions } from '@vp/queries';

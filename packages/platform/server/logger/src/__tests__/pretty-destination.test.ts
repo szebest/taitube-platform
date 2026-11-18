@@ -1,4 +1,4 @@
-import { captureLog } from '@vp/testing/log-capture';
+import { captureLog } from '@kit/testing/log-capture';
 import { prettyDestination } from '../pretty-destination';
 
 describe('@kit/logger: prettyDestination', () => {

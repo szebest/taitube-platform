@@ -1,6 +1,6 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import * as schema from '@vp/db';
 import { DEFAULT_PREFERENCES } from '@vp/domain/settings';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/pglite';
 import { OWNER_ID, seedOwners } from '../../../__tests__/contract/fixtures';

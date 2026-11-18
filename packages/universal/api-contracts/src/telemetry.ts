@@ -1,4 +1,4 @@
-import { MS_PER_MINUTE } from '@vp/domain/time';
+import { MS_PER_MINUTE } from '@kit/primitives';
 import { ErrorCodes } from '@vp/errors';
 import { z } from 'zod';
 import { defineEndpoint } from './endpoint';

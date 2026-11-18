@@ -1,7 +1,7 @@
+import { EmptyState, PageHeader } from '@kit/components';
 import { useT } from '@kit/intl-react';
 import { Tabs } from '@kit/ui';
 import { useNavigate, useSearch } from '@tanstack/react-router';
-import { EmptyState, PageHeader } from '@vp/components';
 import { canReadChannelTeam } from '@vp/permissions';
 import { useCan } from '@vp/permissions-react';
 import { useActiveChannel } from '#app/hooks/use-active-channel';

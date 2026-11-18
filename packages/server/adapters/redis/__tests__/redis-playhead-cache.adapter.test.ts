@@ -1,5 +1,5 @@
+import { expectOk } from '@kit/testing/result';
 import { CacheKeys } from '@vp/events';
-import { expectOk } from '@vp/testing/result';
 import { InMemoryCacheClient } from '../../in-memory/in-memory-cache-client';
 import { RedisPlayheadCacheAdapter } from '../redis-playhead-cache.adapter';
 

@@ -1,5 +1,5 @@
 import { ErrorCodes } from '@vp/errors';
-import { SEEDED } from '@vp/testing';
+import { SEEDED } from '@vp/testing-fixtures';
 import {
   type CategoriesApp,
   buildCategoriesApp,

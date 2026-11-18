@@ -1,6 +1,6 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import { ErrorCodes } from '@vp/errors';
 import { getWatchPartyPermissions, toWatchPartyViewer } from '@vp/permissions';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { foldReactions, react, requestPlayback, voteSkip } from '../watch-party-signals';
 import { keyOf, ROOM_ID } from './watch-party-moderation-fixture';
 import { socketRoom } from './watch-party-socket-fixture';

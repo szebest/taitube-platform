@@ -1,6 +1,6 @@
+import { PageHeader } from '@kit/components';
 import { Button, Icon, Input, Logo, Tooltip } from '@kit/ui';
 import type { Decorator, Meta, StoryObj } from '@storybook/react-vite';
-import { PageHeader } from '@vp/components';
 import { StudioWorkspace, StudioWorkspaceSkeleton } from '..';
 import { StudioWorkspaceRoot } from '../studio-workspace';
 

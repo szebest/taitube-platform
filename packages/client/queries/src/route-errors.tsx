@@ -1,6 +1,6 @@
+import { ErrorState, type ErrorStateKind } from '@kit/components';
 import { useT } from '@kit/intl-react';
 import { Link, useRouter } from '@tanstack/react-router';
-import { ErrorState, type ErrorStateKind } from '@vp/components';
 import { type ErrorCode, ErrorCodes } from '@vp/errors';
 import type { MessageKey } from '@vp/messages';
 import { failureCode } from './failure-code';

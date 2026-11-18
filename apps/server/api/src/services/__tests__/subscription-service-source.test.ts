@@ -1,4 +1,4 @@
-import { expectOk } from '@vp/testing/result';
+import { expectOk } from '@kit/testing/result';
 import { creator, otherCreator, subscriber, subscriptionHarness } from './subscription-harness';
 
 const ABSENT_VIDEO_ID = '00000000-0000-7000-8000-0000000000ff';

@@ -1,7 +1,7 @@
 import { packageDir, tierGlob } from '../../scripts/workspace-packages';
 import { read, trackedFiles } from './repo-files';
 
-const COMPONENTS = packageDir('@vp/components');
+const COMPONENTS = packageDir('@kit/components');
 const UI = packageDir('@kit/ui');
 const CLIENT = tierGlob('client');
 

@@ -6,6 +6,7 @@ import { read } from './repo-files';
 
 const PRODUCT_NAME = /taitube|video-pipeline|vp-dev|(?<![a-z0-9])vp[._]/i;
 const ROUTE = /^\/[a-z][\w:{}.~-]*(?:\/[\w:{}.~-]*)*$/i;
+const OTLP_SPEC_PATH = '/v1/traces';
 const ENV_KEYS: ReadonlySet<string> = new Set(Object.keys(AppEnvSchema.shape));
 
 function packageName(specifier: string): string {
@@ -30,7 +31,7 @@ function appData(file: string, source: string): string[] {
   return stringTexts(file, source).flatMap((text) => {
     if (PRODUCT_NAME.test(text)) return [`${file}: names the product: ${text}`];
     if (ENV_KEYS.has(text)) return [`${file}: names the app env key ${text}`];
-    if (ROUTE.test(text)) return [`${file}: holds the route ${text}`];
+    if (text !== OTLP_SPEC_PATH && ROUTE.test(text)) return [`${file}: holds the route ${text}`];
     return [];
   });
 }
@@ -55,6 +56,7 @@ describe('architecture: platform packages hold no app data', () => {
       source: 'export const a = <p>Welcome to Taitube</p>;',
     },
     { shape: 'an app env key', source: "export const key = 'DATABASE_URL';" },
+    { shape: 'another /v1 route', source: "export const path = '/v1/metrics';" },
     { shape: 'a route', source: "export const path = '/v1/categories';" },
     { shape: 'a route with a parameter', source: "export const path = '/videos/:id/comments';" },
   ])('recognises $shape', ({ source }) => {
@@ -66,6 +68,10 @@ describe('architecture: platform packages hold no app data', () => {
     { shape: 'a plain token', source: "export const a = 'default';" },
     { shape: 'a sentence with a slash', source: "export const a = 'on/off';" },
     { shape: 'a scoped specifier', source: "import type { Result } from '@kit/result';" },
+    {
+      shape: 'the OpenTelemetry traces path',
+      source: 'export const url = `${endpoint}/v1/traces`;',
+    },
     { shape: 'a bare slash', source: "export const root = '/';" },
   ])('leaves $shape alone', ({ source }) => {
     expect(appData('fixture.ts', source)).toEqual([]);

@@ -1,7 +1,7 @@
+import { EmptyState, SectionError } from '@kit/components';
 import { useT } from '@kit/intl-react';
 import { Button, Icon, IconButton, Switch, useToast } from '@kit/ui';
 import { createColumnHelper, useTable } from '@tanstack/react-table';
-import { EmptyState, SectionError } from '@vp/components';
 import { canManageCategory } from '@vp/permissions';
 import { useCan } from '@vp/permissions-react';
 import { useState } from 'react';

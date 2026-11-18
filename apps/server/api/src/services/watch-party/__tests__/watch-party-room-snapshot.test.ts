@@ -1,4 +1,4 @@
-import { expectOk } from '@vp/testing/result';
+import { expectOk } from '@kit/testing/result';
 import { roomSnapshot, seatedRoster } from '../watch-party-room-snapshot';
 import { keyOf, ROOM_ID, seatGuest } from './watch-party-moderation-fixture';
 import { socketRoom } from './watch-party-socket-fixture';

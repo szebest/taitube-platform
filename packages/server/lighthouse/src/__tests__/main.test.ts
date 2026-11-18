@@ -1,5 +1,5 @@
 import { resolve } from 'node:path';
-import { runEntrypoint } from '@vp/testing/run-entrypoint';
+import { runEntrypoint } from '@kit/testing/run-entrypoint';
 
 const ENTRYPOINT = resolve(import.meta.dirname, '../main.ts');
 

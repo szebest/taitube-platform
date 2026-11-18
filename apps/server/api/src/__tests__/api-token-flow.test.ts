@@ -1,9 +1,9 @@
+import { expectOk } from '@kit/testing/result';
 import type { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { CHANNEL_HEADER } from '@vp/api-contracts';
 import { type ApiScope, formatApiToken } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
-import { SEEDED } from '@vp/testing';
-import { expectOk } from '@vp/testing/result';
+import { SEEDED } from '@vp/testing-fixtures';
 import type { FastifyInstance, InjectOptions } from 'fastify';
 import { nodeApiTokenSecrets } from '../composition/api-token-secrets';
 import { TOKENS, bearer, buildTestApp, seedTeamMember, seedVideo } from './test-app';

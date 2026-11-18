@@ -1,10 +1,10 @@
+import { FALLBACK_LOCALE, SUPPORTED_LOCALES } from '@kit/intl';
 import { Format, useFormat, useT } from '@kit/intl-react';
 import { unwrapOr } from '@kit/result';
 import { Field, Tabs, Textarea } from '@kit/ui';
 import { useQuery } from '@tanstack/react-query';
 import type { ChannelSpotlightSettings } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
-import { FALLBACK_LOCALE, SUPPORTED_LOCALES } from '@vp/intl';
 import { useApi } from '@vp/queries';
 import { useState } from 'react';
 import { CustomizationSection } from '#app/components/section/customization-section';

@@ -1,6 +1,6 @@
 # ErrorState
 
-A whole page or whole route that failed: what went wrong in plain words, and a retry. For a section of a page that failed, use [SectionError](section-error.md). In `@vp/components` because both apps render it for route errors and not-found.
+A whole page or whole route that failed: what went wrong in plain words, and a retry. For a section of a page that failed, use [SectionError](section-error.md). In `@kit/components` because both apps render it for route errors and not-found.
 
 ## Anatomy
 

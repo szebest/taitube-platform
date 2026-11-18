@@ -2,12 +2,12 @@ import type { ServerResponse } from 'node:http';
 import { PassThrough, Writable } from 'node:stream';
 import { createLogger } from '@kit/logger';
 import { type Result, err } from '@kit/result';
+import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryCacheClient } from '@vp/adapters/in-memory';
 import type { PatternMessageListener } from '@vp/core/ports';
 import { type CacheUnavailable, ErrorCodes, cacheUnavailable } from '@vp/errors';
 import { userChannel, videoChannel } from '@vp/events';
-import { createMetricsRegistry } from '@vp/observability';
-import { expectErr, expectOk } from '@vp/testing/result';
+import { createPipelineMetrics } from '@vp/pipeline-metrics';
 import { SseHub, type SseHubOptions } from '../sse-hub';
 
 const VIDEO_ID = '00000000-0000-7000-8000-0000000000e1';
@@ -35,7 +35,7 @@ describe('apps/server/api/services: SseHub', () => {
   function newHub(overrides: Partial<SseHubOptions> = {}): SseHub {
     return new SseHub({
       cache,
-      metrics: createMetricsRegistry(),
+      metrics: createPipelineMetrics(),
       maxConnectionsPerUser: 20,
       maxPodConnections: 5000,
       heartbeatMs: 10_000,

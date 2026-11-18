@@ -1,4 +1,4 @@
-import { expectOk } from '@vp/testing/result';
+import { expectOk } from '@kit/testing/result';
 import { InMemoryJobQueue } from '../../in-memory/in-memory-job-queue';
 import { portBoardQueues } from '../port-board-queues';
 

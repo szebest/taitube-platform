@@ -1,6 +1,6 @@
+import { SectionError } from '@kit/components';
 import { Avatar, Icon } from '@kit/ui';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { SectionError } from '@vp/components';
 import type { ReactNode } from 'react';
 import { CommandPalette, CommandPaletteSkeleton } from '..';
 import { CommandPaletteRoot, type CommandPaletteRootProps } from '../command-palette';

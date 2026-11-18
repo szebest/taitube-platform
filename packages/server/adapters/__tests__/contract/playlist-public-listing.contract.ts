@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
+import { expectOk } from '@kit/testing/result';
 import * as schema from '@vp/db';
 import { PLAYLIST_PREVIEW_THUMBNAILS, type PlaylistVisibility } from '@vp/domain';
-import { expectOk } from '@vp/testing/result';
 import { OTHER_OWNER_ID, OWNER_ID, VIDEO_IDS, publicVideo } from './fixtures';
 import {
   AN_HOUR_AGO,

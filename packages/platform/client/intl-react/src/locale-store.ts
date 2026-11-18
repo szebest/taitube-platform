@@ -1,4 +1,4 @@
-import { FALLBACK_LOCALE } from '@vp/intl';
+import { FALLBACK_LOCALE } from '@kit/intl';
 import { type Catalogues, LOCALE_DETAILS, type SupportedLocale } from '@vp/messages';
 
 export interface ActiveLocale {

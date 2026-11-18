@@ -2,8 +2,8 @@ import { createHash } from 'node:crypto';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { expectErr, expectOk } from '@kit/testing/result';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { verifyModelFile } from '../model-file';
 
 const BYTES = Buffer.from('model bytes');

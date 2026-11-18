@@ -1,7 +1,7 @@
+import { expectOk } from '@kit/testing/result';
 import type { CommentWindow } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import type { CommentSort } from '@vp/domain';
-import { expectOk } from '@vp/testing/result';
 import {
   C,
   type CommentContractContext,

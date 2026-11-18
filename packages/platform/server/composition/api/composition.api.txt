@@ -16,9 +16,6 @@ export class Container
   started: () => readonly string[]
 export class DisposeFailed
   constructor(failure: ShutdownFailed): DisposeFailed
-  static captureStackTrace: (targetObject: object, constructorOpt?: Function) => void
-  static prepareStackTrace: (err: Error, stackTraces: NodeJS.CallSite[]) => any
-  static stackTraceLimit: number
   cause?: unknown
   failure: ShutdownFailed
   message: string

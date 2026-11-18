@@ -1,5 +1,5 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { pinChat, readRoomChat, removeChat, sendChat } from '../watch-party-chat';
 import { keyOf, ROOM_ID, roleIdsOf } from './watch-party-moderation-fixture';
 import { socketRoom } from './watch-party-socket-fixture';

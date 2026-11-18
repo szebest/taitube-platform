@@ -1,9 +1,9 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { ChannelSpotlightSettings } from '@vp/api-contracts';
 import type { ActingChannel } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { ChannelIdentityService } from '../channel-identity-service';
 import { ChannelSpotlightService } from '../channel-spotlight-service';
 import { VideoService } from '../video-service';

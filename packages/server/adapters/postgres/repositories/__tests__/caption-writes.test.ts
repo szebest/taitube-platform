@@ -1,6 +1,6 @@
+import { expectOk } from '@kit/testing/result';
 import * as schema from '@vp/db';
 import { captionsReady } from '@vp/domain';
-import { expectOk } from '@vp/testing/result';
 import { asc, eq } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/pglite';
 import { OWNER_ID, seedOwners, VIDEO_IDS } from '../../../__tests__/contract/fixtures';

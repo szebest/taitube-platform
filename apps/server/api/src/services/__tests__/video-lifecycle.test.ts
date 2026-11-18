@@ -1,9 +1,9 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryJobQueue, InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { VideoStatus } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import { ids } from '@vp/job-contracts';
 import type { UserContext } from '@vp/permissions';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { VideoService } from '../video-service';
 import { videoServiceDeps } from './service-deps';
 

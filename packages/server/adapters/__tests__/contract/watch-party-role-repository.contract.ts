@@ -1,5 +1,5 @@
+import { expectOk } from '@kit/testing/result';
 import type { WatchPartyRoleRepositoryPort } from '@vp/core/repositories';
-import { expectOk } from '@vp/testing/result';
 import type { MakeRepositoriesSubject } from './subjects';
 import {
   AT,

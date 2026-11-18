@@ -1,7 +1,7 @@
+import { expectOk } from '@kit/testing/result';
 import type { NewUserEventInput, UserEventRepository } from '@vp/core/repositories';
 import { videoStatusChanged } from '@vp/domain';
 import { userChannel } from '@vp/events';
-import { expectOk } from '@vp/testing/result';
 import { OTHER_OWNER_ID, OWNER_ID, VIDEO_IDS, seedOwners } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 

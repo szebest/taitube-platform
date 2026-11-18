@@ -1,4 +1,4 @@
-import { MICROSECONDS_PER_MS, MS_PER_SECOND } from '@vp/domain/time';
+import { MICROSECONDS_PER_MS, MS_PER_SECOND } from '@kit/primitives';
 import type { LadderEntry } from '@vp/job-contracts';
 import { audioEncodeArgs, videoEncodeArgs } from './transcode-args';
 

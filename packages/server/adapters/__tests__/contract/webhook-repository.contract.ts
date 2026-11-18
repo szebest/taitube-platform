@@ -1,6 +1,6 @@
+import { expectOk } from '@kit/testing/result';
 import type { WebhookRepositoryPort } from '@vp/core/repositories';
 import type { Webhook } from '@vp/domain';
-import { expectOk } from '@vp/testing/result';
 import { OTHER_OWNER_ID, OWNER_ID, seedOwners } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 

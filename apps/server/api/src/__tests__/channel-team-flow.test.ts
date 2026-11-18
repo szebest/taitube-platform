@@ -1,9 +1,9 @@
+import { expectOk } from '@kit/testing/result';
 import type { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { CHANNEL_HEADER, contracts, isEndpoint } from '@vp/api-contracts';
 import { mintToken } from '@vp/dev-identity';
 import { NOTIFY_TEAM_INVITE } from '@vp/job-contracts';
-import { SEEDED } from '@vp/testing';
-import { expectOk } from '@vp/testing/result';
+import { SEEDED } from '@vp/testing-fixtures';
 import type { FastifyInstance } from 'fastify';
 import { TOKENS, bearer, buildTestApp, seedVideo } from './test-app';
 

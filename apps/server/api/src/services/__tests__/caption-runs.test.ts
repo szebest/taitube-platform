@@ -1,6 +1,6 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { committed, startCaptionRun } from '../caption-runs';
 import { CAPTIONED, UNPROBED, seedCaptionVideos, seedTrack } from './caption-fixture';
 

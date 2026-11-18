@@ -1,5 +1,5 @@
+import { expectOk } from '@kit/testing/result';
 import { ErrorCodes, PermanentError } from '@vp/errors';
-import { expectOk } from '@vp/testing/result';
 import { failCaptionsRun } from '../captions-failure';
 import { captionsWorld } from './captions-harness';
 

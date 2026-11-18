@@ -53,7 +53,7 @@ The catalogue of `@kit/ui` primitives that [ticket 95](../../tickets/95-design-s
 
 ## Primitive or component
 
-A thing is a **primitive** in `@kit/ui` when all of these hold; otherwise it is a component, in `@vp/components` when
+A thing is a **primitive** in `@kit/ui` when all of these hold; otherwise it is a component, in `@kit/components` when
 both apps render it and in an app's kit when one does ([architecture section 1](../architecture.md#1-five-layers);
 specs in [../components/](../components/README.md), [../apps/web/](../apps/web/README.md) and
 [../apps/studio/](../apps/studio/README.md)):

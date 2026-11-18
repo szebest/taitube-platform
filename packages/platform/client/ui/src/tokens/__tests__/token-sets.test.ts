@@ -1,6 +1,6 @@
 import { readdirSync } from 'node:fs';
 import { parseTokenSet, type TokenSet, tokenGroups } from '@kit/design-tokens';
-import { expectOk } from '@vp/testing/result';
+import { expectOk } from '@kit/testing/result';
 
 const folders = readdirSync(new URL('..', import.meta.url), { encoding: 'utf8', recursive: true })
   .map((entry) => /^([^/]+)\/([^/]+)\/index\.ts$/.exec(entry))

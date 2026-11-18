@@ -1,6 +1,6 @@
 # CommentItem
 
-Location: `apps/client/web/src/components/discussion/comment-item/`. Web's app kit, presentational and compound, built from `@kit/ui` primitives. Only web renders it today; it moves to `@vp/components` the day studio's comment moderation needs it.
+Location: `apps/client/web/src/components/discussion/comment-item/`. Web's app kit, presentational and compound, built from `@kit/ui` primitives. Only web renders it today; it moves to `@kit/components` the day studio's comment moderation needs it.
 
 One comment: avatar, author, time, text, reactions and a reply control. It is a shell: the text arrives pre-sanitised and tokenised, and the actions arrive as callbacks.
 

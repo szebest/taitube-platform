@@ -1,10 +1,10 @@
+import { expectOk } from '@kit/testing/result';
 import type {
   ChannelImageCompletion,
   ChannelImageRepositoryPort,
   Repositories,
 } from '@vp/core/repositories';
 import type { BannerCrops, ChannelImageKind } from '@vp/domain';
-import { expectOk } from '@vp/testing/result';
 import { OTHER_OWNER_ID, OWNER_ID, seedOwners } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 

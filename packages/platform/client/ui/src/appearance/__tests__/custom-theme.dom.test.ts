@@ -1,5 +1,5 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { CUSTOM_THEME_START, registerCustomTheme } from '../custom-theme';
 
 const emptyHost = (): { adoptedStyleSheets: CSSStyleSheet[] } => ({ adoptedStyleSheets: [] });

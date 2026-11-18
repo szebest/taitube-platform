@@ -1,4 +1,4 @@
-import { expectErr, expectOk } from '@vp/testing/result';
+import { expectErr, expectOk } from '@kit/testing/result';
 import { parseWebVtt, toWebVtt } from '../webvtt';
 
 const CUES = [

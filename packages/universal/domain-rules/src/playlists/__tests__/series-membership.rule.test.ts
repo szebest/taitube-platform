@@ -1,4 +1,4 @@
-import { expectErr, expectOk } from '@vp/testing/result';
+import { expectErr, expectOk } from '@kit/testing/result';
 import { OWNER, aPlaylist, aVideo } from '../../__tests__/entities';
 import { decideSeriesMembership } from '../series-membership.rule';
 

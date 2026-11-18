@@ -1,6 +1,6 @@
+import { expectOk } from '@kit/testing/result';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes } from '@vp/errors';
-import { expectOk } from '@vp/testing/result';
 import { type TestApp, buildTestApp } from '../../__tests__/test-app';
 
 const SECRET = 'hook-secret';

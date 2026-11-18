@@ -1,10 +1,10 @@
 import { Paginator } from '@kit/pagination';
 import type { Result } from '@kit/result';
+import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { NewNotificationInput } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { NotificationService } from '../notification-service';
 
 const OWNER: UserContext = { id: '00000000-0000-7000-8000-00000000f001', role: 'USER' };

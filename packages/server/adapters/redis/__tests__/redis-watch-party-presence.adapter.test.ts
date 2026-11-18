@@ -1,5 +1,5 @@
+import { expectOk } from '@kit/testing/result';
 import { CacheKeys } from '@vp/events';
-import { expectOk } from '@vp/testing/result';
 import { redisWatchPartyPresenceSubject } from '../../__tests__/contract/redis-subjects';
 import { describeWatchPartyPresenceContract } from '../../__tests__/contract/watch-party-presence.contract';
 import { RedisWatchPartyPresenceAdapter } from '../redis-watch-party-presence.adapter';

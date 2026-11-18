@@ -1,11 +1,11 @@
 import type { Logger } from '@kit/logger';
+import { MS_PER_SECOND } from '@kit/primitives';
 import { type Result, isErr, ok } from '@kit/result';
 import type { ViewBufferPort } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import { hourlyWindow } from '@vp/domain';
-import { MS_PER_SECOND } from '@vp/domain/time';
 import type { CacheUnavailable, DatabaseUnavailable } from '@vp/errors';
-import type { PipelineMetrics } from '@vp/observability';
+import type { PipelineMetrics } from '@vp/pipeline-metrics';
 import { uuidv7 } from 'uuidv7';
 import { announceStatsUpdated } from './announce-stats-updated';
 
