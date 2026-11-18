@@ -1,6 +1,6 @@
+import { MS_PER_SECOND } from '@kit/primitives';
 import { expectErr, expectOk } from '@kit/testing/result';
 import { lobbyPlayback } from '@vp/domain';
-import { MS_PER_SECOND } from '@vp/domain/time';
 import { ErrorCodes } from '@vp/errors';
 import { joinRoom } from '../watch-party-join';
 import { WatchPartyService } from '../watch-party-service';

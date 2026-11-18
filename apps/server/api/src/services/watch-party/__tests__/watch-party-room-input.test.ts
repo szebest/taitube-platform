@@ -1,5 +1,5 @@
+import { MS_PER_DAY, MS_PER_HOUR } from '@kit/primitives';
 import { expectErr, expectOk } from '@kit/testing/result';
-import { MS_PER_DAY, MS_PER_HOUR } from '@vp/domain/time';
 import { ErrorCodes } from '@vp/errors';
 import { checkRoomInput } from '../watch-party-room-input';
 import { START } from './watch-party-test-deps';

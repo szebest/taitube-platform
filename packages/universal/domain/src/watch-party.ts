@@ -1,4 +1,4 @@
-import { MS_PER_HOUR, MS_PER_MINUTE } from './time';
+import { MS_PER_HOUR, MS_PER_MINUTE } from '@kit/primitives';
 import type { WatchPartyPlayback } from './watch-party-clock';
 
 export const WATCH_PARTY_VISIBILITIES = ['public', 'unlisted', 'private'] as const;

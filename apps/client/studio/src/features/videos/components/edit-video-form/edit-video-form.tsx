@@ -1,10 +1,10 @@
+import { VideoThumbnail } from '@kit/components';
 import { useAppForm } from '@kit/forms';
 import { useT } from '@kit/intl-react';
 import { Button, Field, Switch, useToast } from '@kit/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError } from '@vp/api-client';
 import { type Video, VIDEO_VISIBILITIES } from '@vp/api-contracts';
-import { VideoThumbnail } from '@vp/components';
 import { ErrorCodes } from '@vp/errors';
 import { useApi, videoQueryOptions } from '@vp/queries';
 import { useState } from 'react';

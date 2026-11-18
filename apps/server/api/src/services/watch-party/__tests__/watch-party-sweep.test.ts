@@ -1,7 +1,7 @@
+import { MS_PER_DAY, MS_PER_MINUTE } from '@kit/primitives';
 import { err } from '@kit/result';
 import { expectOk } from '@kit/testing/result';
 import type { WatchPartyRoom } from '@vp/domain';
-import { MS_PER_DAY, MS_PER_MINUTE } from '@vp/domain/time';
 import { cacheUnavailable } from '@vp/errors';
 import { idleCloseReason, WatchPartySweep } from '../watch-party-sweep';
 import { GUEST_KEY, keyOf, ROOM_ID } from './watch-party-moderation-fixture';

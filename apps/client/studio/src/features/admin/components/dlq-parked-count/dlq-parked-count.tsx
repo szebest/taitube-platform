@@ -1,6 +1,6 @@
+import { StatCard } from '@kit/components';
 import { useT } from '@kit/intl-react';
 import { useQuery } from '@tanstack/react-query';
-import { StatCard } from '@vp/components';
 import { useApi } from '@vp/queries';
 import { parkedDlqQueryOptions } from '#app/features/admin/api/admin-dlq';
 

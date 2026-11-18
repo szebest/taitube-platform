@@ -1,6 +1,6 @@
 # EmptyState
 
-One editorial line and one action, for any place that has nothing yet. Every surface designs it before it ships. In `@vp/components` because both apps render it.
+One editorial line and one action, for any place that has nothing yet. Every surface designs it before it ships. In `@kit/components` because both apps render it.
 
 ## Anatomy
 

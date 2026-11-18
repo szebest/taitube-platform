@@ -1,10 +1,10 @@
 import { createHash } from 'node:crypto';
+import { MS_PER_HOUR } from '@kit/primitives';
 import { expectOk } from '@kit/testing/result';
 import { Adapters } from '@vp/adapters/composition';
 import { PARTY_CREDENTIAL_HEADER } from '@vp/api-contracts';
 import type { PartyGuestSession } from '@vp/core/ports';
 import type { WatchPartyInviteLink } from '@vp/domain';
-import { MS_PER_HOUR } from '@vp/domain/time';
 import type { AppConfigOverrides } from '@vp/env-schema';
 import { SEEDED } from '@vp/testing-fixtures';
 import { uuidv7 } from 'uuidv7';

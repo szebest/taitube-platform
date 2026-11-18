@@ -1,4 +1,4 @@
-import { MS_PER_SECOND } from './time';
+import { MS_PER_SECOND } from '@kit/primitives';
 
 /**
  * 250 ms because two people talking over a call notice a gap of about a third of a second; 2 s

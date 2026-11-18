@@ -1,6 +1,6 @@
+import { AccountMenu as Menu } from '@kit/components';
 import { useT } from '@kit/intl-react';
 import { Link } from '@tanstack/react-router';
-import { AccountMenu as Menu } from '@vp/components';
 import { canAccessAdmin } from '@vp/permissions';
 import { Can } from '@vp/permissions-react';
 import { SignInButton, useAccount, useSignOut } from '@vp/queries';

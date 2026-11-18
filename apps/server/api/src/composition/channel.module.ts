@@ -1,6 +1,6 @@
 import type { Container } from '@kit/composition';
+import { SUPPORTED_LOCALES } from '@kit/intl';
 import { Adapters, queueNamed } from '@vp/adapters/composition';
-import { SUPPORTED_LOCALES } from '@vp/intl';
 import {
   ChannelFeaturedService,
   ChannelIdentityService,

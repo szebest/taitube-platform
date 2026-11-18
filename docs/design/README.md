@@ -13,7 +13,7 @@ The design library, all in this folder:
 | [`data-sources.md`](data-sources.md) | where every surface and component gets its data, the transport (REST, SSE, WebSocket) and the fallback until its ticket lands |
 | [`foundations/`](foundations/README.md) | colour, type, token sets, spacing and layout, shape and elevation, motion, icons, accessibility, voice and copy |
 | [`primitives/`](primitives/README.md) | a spec per `@kit/ui` primitive |
-| [`components/`](components/README.md) | a spec per `@vp/components` component (only what both apps share) |
+| [`components/`](components/README.md) | a spec per `@kit/components` component (only what both apps share) |
 | [`apps/web/`](apps/web/README.md), [`apps/studio/`](apps/studio/README.md) | a spec per component of each app's own kit, with its smart wrappers |
 | [`index.html`](index.html) | the library board: every screen, live, with the appearance switcher |
 | [`screens/`](screens) | web, studio, settings and states mockups |
@@ -304,7 +304,7 @@ still works), and partial (a section that failed inside a page that did not).
 
 A UI ticket is done when its surfaces meet every line. Tickets cite this section rather than restating it.
 
-- [ ] Built from `@kit/ui` primitives, `@vp/components` and the app's kit, and every placement is a smart wrapper
+- [ ] Built from `@kit/ui` primitives, `@kit/components` and the app's kit, and every placement is a smart wrapper
       taking the entity and its placement and reading the rest from hooks
       ([architecture section 5](architecture.md#5-smart-wrappers-in-the-apps)).
 - [ ] Compound components for anything with more than one region, and every union prop typed by a shared

@@ -5,10 +5,10 @@ import {
   type TokenGroup,
   tokenGroups,
 } from '@kit/design-tokens';
+import { FALLBACK_LOCALE } from '@kit/intl';
 import type { AppearancePreference } from '@kit/ui';
 import { appearance } from '@kit/ui/appearance/registry';
 import type { Preview } from '@storybook/react-vite';
-import { FALLBACK_LOCALE } from '@vp/intl';
 import { LOCALE_DETAILS, SUPPORTED_LOCALES } from '@vp/messages';
 
 /** A group's or the accent's toolbar entry for "no override": the theme's own. */

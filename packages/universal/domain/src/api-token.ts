@@ -1,4 +1,4 @@
-import { MS_PER_DAY } from '@vp/domain/time';
+import { MS_PER_DAY } from '@kit/primitives';
 
 /** What a personal access token may touch; each one maps to abilities in `@vp/permissions`. */
 export const API_SCOPES = [

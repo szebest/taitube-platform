@@ -1,8 +1,8 @@
+import { SectionError } from '@kit/components';
 import { useT } from '@kit/intl-react';
 import { Button, ResponsiveModal, Skeleton, useToast } from '@kit/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { CaptionTrackView } from '@vp/api-contracts';
-import { SectionError } from '@vp/components';
 import { ErrorCodes } from '@vp/errors';
 import { captionsQueryOptions, transcriptQueryOptions, useApi } from '@vp/queries';
 import { useState } from 'react';

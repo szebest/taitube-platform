@@ -1,4 +1,4 @@
-import { createIntl, createIntlCache, type IntlBinding } from '@vp/intl';
+import { createIntl, createIntlCache, type IntlBinding } from '@kit/intl';
 import { defineEngine } from '../engine';
 import { builtInKinds } from '../kinds';
 import { defineParams } from '../params';

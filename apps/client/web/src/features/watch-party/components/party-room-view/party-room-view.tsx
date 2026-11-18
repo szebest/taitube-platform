@@ -1,8 +1,8 @@
+import { EmptyState } from '@kit/components';
 import { useT } from '@kit/intl-react';
 import { Badge } from '@kit/ui';
 import { useLocation, useNavigate } from '@tanstack/react-router';
 import type { WatchPartyPreviewView } from '@vp/api-contracts';
-import { EmptyState } from '@vp/components';
 import { PartyPermissionsProvider, usePermissions } from '@vp/permissions-react';
 import { selectPartyPermissions, useAccount, useWatchPartySocket } from '@vp/queries';
 import { useState } from 'react';

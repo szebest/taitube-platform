@@ -21,14 +21,35 @@ const difference = (left: readonly string[], right: readonly string[]) =>
 const destinationsOf = (move: PackageMove | EntryMove): string[] =>
   typeof move === 'string' ? [move] : Object.values(move).flatMap(destinationsOf);
 
+const exportedAt = (workspace: Workspace, destination: string, symbol: string): boolean =>
+  workspace.exportsOf(destination).includes(symbol);
+
+function landedDrift(name: string, move: PackageMove, workspace: Workspace): string[] {
+  const absent = destinationsOf(move).filter((to) => workspace.entriesOf(to) === undefined);
+  if (absent.length > 0) return [`${name}: no workspace package has this name`];
+  if (typeof move === 'string') return [];
+  return Object.values(move).flatMap((entryMove) =>
+    typeof entryMove === 'string'
+      ? []
+      : Object.entries(entryMove)
+          .filter(([symbol, to]) => !exportedAt(workspace, to, symbol))
+          .map(([symbol, to]) => `${name}: ${symbol} is not exported by ${to}`)
+  );
+}
+
 function moveDrift(moves: Moves, workspace: Workspace): string[] {
   return Object.entries(moves).flatMap(([name, move]) => {
     const entries = workspace.entriesOf(name);
-    const landed = destinationsOf(move).every((to) => workspace.entriesOf(to) !== undefined);
-    if (!entries) return landed ? [] : [`${name}: no workspace package has this name`];
+    if (!entries) return landedDrift(name, move, workspace);
     if (typeof move === 'string') return [];
 
-    const listed = Object.keys(move);
+    const landedElsewhere = (entry: string) => {
+      const to = move[entry];
+      return typeof to === 'string' && to !== name && workspace.entriesOf(to) !== undefined;
+    };
+    const listed = Object.keys(move).filter(
+      (entry) => entries.includes(entry) || !landedElsewhere(entry)
+    );
     const entryDrift = [
       ...difference(entries, listed).map((entry) => `${name}: export entry ${entry} is not listed`),
       ...difference(listed, entries).map(
@@ -40,14 +61,9 @@ function moveDrift(moves: Moves, workspace: Workspace): string[] {
       const specifier = entry === '.' ? name : `${name}/${entry.slice(2)}`;
       const exported = workspace.exportsOf(specifier);
       const named = Object.keys(entryMove);
-      const movedOut = (n: string) => {
-        const to = entryMove[n];
-        return (
-          entry === '.' &&
-          typeof to === 'string' &&
-          to !== name &&
-          workspace.exportsOf(to).includes(n)
-        );
+      const movedOut = (symbol: string) => {
+        const to = entryMove[symbol];
+        return to !== undefined && to !== name && exportedAt(workspace, to, symbol);
       };
       return [
         ...difference(exported, named).map((n) => `${specifier}: export ${n} has no destination`),
@@ -128,12 +144,24 @@ describe('architecture: package moves', () => {
     expect(moveDrift(moves, PLANTED)).toEqual(drift);
   });
 
+  it('ignores a subpath that has landed in another package and is no longer exported', () => {
+    expect(
+      moveDrift({ '@vp/split': { '.': '@vp/split', './gone': '@kit/landed' } }, PLANTED)
+    ).toEqual(['@vp/split: export entry ./extra is not listed']);
+  });
+
+  it('reports a symbol of a landed split that its destination does not export', () => {
+    const moves: Moves = { '@vp/old': { '.': { moved: '@kit/landed', ghost: '@kit/landed' } } };
+
+    expect(moveDrift(moves, PLANTED)).toEqual(['@vp/old: ghost is not exported by @kit/landed']);
+  });
+
   it('accepts a whole move that has landed, its old name gone and its new one present', () => {
     expect(moveDrift({ '@vp/landed': '@kit/landed' }, PLANTED)).toEqual([]);
   });
 
   it('accepts a split package that has landed, its old name gone and every destination present', () => {
-    const split = { '.': { a: '@kit/landed', b: '@vp/landed-app' }, './sub': '@kit/landed' };
+    const split = { '.': { moved: '@kit/landed', kept: '@vp/landed-app' }, './sub': '@kit/landed' };
 
     expect(moveDrift({ '@vp/landed-split': split }, PLANTED)).toEqual([]);
   });

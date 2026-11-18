@@ -1,6 +1,6 @@
+import { EmptyLibraryIllustration, EmptyState } from '@kit/components';
 import { Icon, IconButton } from '@kit/ui';
 import type { Decorator, Meta, StoryObj } from '@storybook/react-vite';
-import { EmptyLibraryIllustration, EmptyState } from '@vp/components';
 import { ShortsPlayerFrame, ShortsPlayerFrameSkeleton } from '..';
 import { ShortsPlayerFrameRoot, type ShortsPlayerFrameRootProps } from '../shorts-player-frame';
 

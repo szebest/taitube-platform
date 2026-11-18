@@ -6,7 +6,7 @@
 | Size | XL (one PR, ordered commits, see *Delivery*) |
 | Blocked by | 170 - Platform packages, open/closed and extractable |
 | Blocks | — |
-| Spec | [170](170-platform-packages-open-closed-extractable.md) (*Formatters*, *Token and provider model*, platform packages ship no words) · [85](85-universal-intl-formatting-message-core.md) · [86](86-localisation-rollout-locale-negotiation-rtl.md) · [docs/standards/formatting-and-i18n.md](../standards/formatting-and-i18n.md) · [packages/universal/intl/AGENTS.md](../../packages/universal/intl/AGENTS.md) |
+| Spec | [170](170-platform-packages-open-closed-extractable.md) (*Formatters*, *Token and provider model*, platform packages ship no words) · [85](85-universal-intl-formatting-message-core.md) · [86](86-localisation-rollout-locale-negotiation-rtl.md) · [docs/standards/formatting-and-i18n.md](../standards/formatting-and-i18n.md) · [packages/platform/universal/intl/AGENTS.md](../../packages/platform/universal/intl/AGENTS.md) |
 
 **Status:** blocked
 

@@ -1,7 +1,7 @@
+import { MS_PER_DAY } from '@kit/primitives';
 import { err } from '@kit/result';
 import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
-import { MS_PER_DAY } from '@vp/domain/time';
 import { storageUnavailable } from '@vp/errors';
 import { uuidv7 } from 'uuidv7';
 import { runPurgeExports } from '../purge-exports';

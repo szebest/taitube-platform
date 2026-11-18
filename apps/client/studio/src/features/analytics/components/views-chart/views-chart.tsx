@@ -1,7 +1,7 @@
+import type { FormatValue } from '@kit/intl';
 import { Format, useT } from '@kit/intl-react';
 import { Skeleton } from '@kit/ui';
 import { HOURLY_WINDOW_HOURS } from '@vp/domain';
-import type { FormatValue } from '@vp/intl';
 import { Suspense } from 'react';
 import { ChartFrame } from '#app/components/analytics/chart-frame';
 import type { RangeAnalytics } from '#app/features/analytics/api/analytics-queries';

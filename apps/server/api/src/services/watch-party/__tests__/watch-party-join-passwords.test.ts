@@ -1,5 +1,5 @@
+import { MS_PER_MINUTE } from '@kit/primitives';
 import { expectErr, expectOk } from '@kit/testing/result';
-import { MS_PER_MINUTE } from '@vp/domain/time';
 import { ErrorCodes } from '@vp/errors';
 import { leaveRoom } from '../watch-party-join';
 import { userOf } from './watch-party-access-fixture';

@@ -1,3 +1,4 @@
+import { EmptyState, SectionError } from '@kit/components';
 import { Format, useT } from '@kit/intl-react';
 import { DropdownMenu, Icon, IconButton } from '@kit/ui';
 import { useInfiniteQuery } from '@tanstack/react-query';
@@ -8,8 +9,7 @@ import {
   type SortingState,
   useTable,
 } from '@tanstack/react-table';
-import { EmptyState, SectionError } from '@vp/components';
-import { publishedAt } from '@vp/intl';
+import { publishedAt } from '@vp/intl-formats';
 import { canDeleteVideo, canModerateVideo, canUpdateVideo } from '@vp/permissions';
 import { useCan } from '@vp/permissions-react';
 import { useApi } from '@vp/queries';

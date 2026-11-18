@@ -1,6 +1,6 @@
 # Shelf
 
-Location: `packages/client/components/src/shelf/` (`@vp/components`), presentational and compound, built from `@kit/ui` primitives (`IconButton`, `ScrollArea`).
+Location: `packages/platform/client/components/src/shelf/` (`@kit/components`), presentational and compound, built from `@kit/ui` primitives (`IconButton`, `ScrollArea`).
 
 A headed horizontal scroller of cards with an edge fade, chevrons and snap. It carries curated-before-infinite: every shelf has a heading that says why it is there, and Home is a stack of them.
 

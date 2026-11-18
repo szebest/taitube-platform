@@ -22,8 +22,8 @@
   },
   "dependencies": {
     "@kit/di": "workspace:*",
-    "@kit/result": "workspace:*",
-    "@vp/intl": "workspace:*"
+    "@kit/intl": "workspace:*",
+    "@kit/result": "workspace:*"
   },
   "devDependencies": {
     "@kit/testing": "workspace:*",

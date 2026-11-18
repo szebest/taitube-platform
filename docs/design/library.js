@@ -406,7 +406,7 @@ const LIBRARY = {
   {
    "path": "components/skeletons.md",
    "title": "Skeletons",
-   "summary": "The loading layout of the @vp/components components, at the loaded layout's exact dimensions, so a pendingComp"
+   "summary": "The loading layout of the @kit/components components, at the loaded layout's exact dimensions, so a pendingComp"
   },
   {
    "path": "components/video-thumbnail.md",

@@ -1,4 +1,4 @@
-import { MS_PER_SECOND } from '@vp/domain/time';
+import { MS_PER_SECOND } from '@kit/primitives';
 
 /** The source-duration bands `time_to_ready_seconds` is split by (SDD §13.1). */
 export function durationBucket(durationMs: number): '<1min' | '1-5' | '5-15' | '15-60' {

@@ -1,5 +1,5 @@
+import { EmptyState, NoResultsIllustration } from '@kit/components';
 import { useFormat, useT } from '@kit/intl-react';
-import { EmptyState, NoResultsIllustration } from '@vp/components';
 import { useApi } from '@vp/queries';
 import { PagedFooter } from '#app/components/feed/paged-footer';
 import { watchHistoryQueryOptions } from '#app/features/library/api/library-queries';

@@ -1,8 +1,8 @@
 import type { Logger } from '@kit/logger';
+import { MS_PER_SECOND } from '@kit/primitives';
 import { type Result, assertNever, isErr, map, ok } from '@kit/result';
 import type { CacheClient, FlowProducerPort, JobQueue } from '@vp/core/ports';
 import type { OutboxPayload, Repositories } from '@vp/core/repositories';
-import { MS_PER_SECOND } from '@vp/domain/time';
 import type { CacheUnavailable, DatabaseUnavailable, QueueUnavailable } from '@vp/errors';
 import type { PipelineMetrics } from '@vp/observability';
 import type { Every, Repeating } from '../../heartbeat';

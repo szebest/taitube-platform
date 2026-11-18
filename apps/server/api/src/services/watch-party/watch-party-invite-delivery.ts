@@ -1,10 +1,10 @@
+import { MS_PER_HOUR } from '@kit/primitives';
 import {
   DEFAULT_PREFERENCES,
   type NotificationPreferences,
   type PrivacyPreferences,
   type UserPreferences,
 } from '@vp/domain/settings';
-import { MS_PER_HOUR } from '@vp/domain/time';
 
 const INVITE_TTL_MS = 24 * MS_PER_HOUR;
 const AFTER_SCHEDULE_MS = 6 * MS_PER_HOUR;

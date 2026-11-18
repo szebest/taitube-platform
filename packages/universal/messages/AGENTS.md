@@ -11,7 +11,7 @@ Instructions for any coding agent working on `@vp/messages`.
 The product's user-facing words: `dt()` to declare a message, `createTranslator()` for `t` / `tOr`, one
 catalogue per locale organised per feature (`src/en/`, `src/pl/`), and `ERROR_COPY`, the copy for every `ErrorCode`.
 
-`universal`, layer T3, on top of `@vp/intl`. The browser renders it today and ticket 89's server render
+`universal`, layer T3, on top of `@kit/intl`. The browser renders it today and ticket 89's server render
 will too. **No server package or app may import it**: the API returns a `code`, the client chooses the
 words (`tests/architecture/messages-are-client-only.test.ts`).
 
@@ -25,7 +25,7 @@ words (`tests/architecture/messages-are-client-only.test.ts`).
 2. **The placeholder grammar is flat.** `{name}` or `{name:type}` and nothing nested. A plural's branches
    live in the config and select through `Intl.PluralRules`; `{?}` in a branch is the count. Anything
    richer needs a real parser, not a longer regex.
-3. **Every placeholder renders through `@vp/intl`**, so a message and a direct format agree byte for byte.
+3. **Every placeholder renders through `@kit/intl`**, so a message and a direct format agree byte for byte.
 4. **`t` returns a `Result`.** A missing key is a failure carrying the key; `tOr(key, args, fallback)` is
    the render-path form.
 5. **The chain is walked per key**: `sv-FI`, `sv`, `en`. A partial catalogue is useful, never broken.

@@ -16,11 +16,6 @@
       "types": "./dist/settings/index.d.ts",
       "import": "./dist/settings/index.js",
       "default": "./dist/settings/index.js"
-    },
-    "./time": {
-      "types": "./dist/time.d.ts",
-      "import": "./dist/time.js",
-      "default": "./dist/time.js"
     }
   },
   "scripts": {
@@ -28,6 +23,9 @@
     "typecheck": "tsc --noEmit && tsc -p tsconfig.spec.json",
     "test": "vp test run",
     "clean": "rimraf dist tsconfig.tsbuildinfo"
+  },
+  "dependencies": {
+    "@kit/primitives": "workspace:*"
   },
   "devDependencies": {
     "@kit/testing": "workspace:*",

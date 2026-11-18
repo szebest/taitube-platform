@@ -13,7 +13,9 @@
     "test:stories": "vp test run --config .storybook/vitest.config.ts"
   },
   "devDependencies": {
+    "@kit/components": "workspace:*",
     "@kit/design-tokens": "workspace:*",
+    "@kit/intl": "workspace:*",
     "@kit/intl-react": "workspace:*",
     "@kit/result": "workspace:*",
     "@kit/testing": "workspace:*",
@@ -35,8 +37,6 @@
     "@vitest/browser-playwright": "catalog:",
     "@vp/api-client": "workspace:*",
     "@vp/api-contracts": "workspace:*",
-    "@vp/components": "workspace:*",
-    "@vp/intl": "workspace:*",
     "@vp/messages": "workspace:*",
     "@vp/queries": "workspace:*",
     "@vp/web-testing": "workspace:*",

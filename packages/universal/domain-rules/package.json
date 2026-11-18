@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@kit/machine": "workspace:*",
+    "@kit/primitives": "workspace:*",
     "@kit/result": "workspace:*",
     "@vp/domain": "workspace:*",
     "@vp/errors": "workspace:*",

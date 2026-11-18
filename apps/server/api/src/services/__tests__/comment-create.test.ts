@@ -1,5 +1,5 @@
+import { MS_PER_DAY } from '@kit/primitives';
 import { expectErr, expectOk } from '@kit/testing/result';
-import { MS_PER_DAY } from '@vp/domain/time';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { createComment } from '../comment-create';

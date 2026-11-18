@@ -1,5 +1,5 @@
+import { MS_PER_HOUR } from '@kit/primitives';
 import { expectErr, expectOk } from '@kit/testing/result';
-import { MS_PER_HOUR } from '@vp/domain/time';
 import { ErrorCodes } from '@vp/errors';
 import { banKey, fillPresence, GUEST_KEY, seedLink } from './watch-party-access-fixture';
 import { guestJoined, setUpGuests } from './watch-party-guest-fixture';

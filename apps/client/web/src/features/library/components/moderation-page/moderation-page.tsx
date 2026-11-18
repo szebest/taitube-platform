@@ -1,11 +1,11 @@
+import { EmptyState, PageHeader, PageHeaderSkeleton } from '@kit/components';
 import { useFormat, useT } from '@kit/intl-react';
 import { unwrapOr } from '@kit/result';
 import { Callout, Skeleton } from '@kit/ui';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useSearch } from '@tanstack/react-router';
 import type { CommentRemovalView } from '@vp/api-contracts';
-import { EmptyState, PageHeader, PageHeaderSkeleton } from '@vp/components';
-import { publishedAt } from '@vp/intl';
+import { publishedAt } from '@vp/intl-formats';
 import { myCommentRemovalsQueryOptions, ownRestrictionQueryOptions, useApi } from '@vp/queries';
 import { PagedFooter } from '#app/components/feed/paged-footer';
 import { usePagedItems } from '#app/features/library/hooks/use-paged-items';

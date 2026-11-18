@@ -1,6 +1,6 @@
+import { MS_PER_DAY } from '@kit/primitives';
 import { expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
-import { MS_PER_DAY } from '@vp/domain/time';
 import { uuidv7 } from 'uuidv7';
 import { runPurgeSearchHistory } from '../purge-search-history';
 

@@ -6,7 +6,8 @@ Enforcement: [ARCHITECTURE.md Invariant 10](../../ARCHITECTURE.md).
 
 | Package | Tier, layer | Holds |
 |---|---|---|
-| `@vp/intl` | universal, T2 | formatters, the value union, option allowlists, `IntlCache`, `localeChain` |
+| `@kit/intl` | universal, T2 | formatters, the value union, option allowlists, `IntlCache`, `localeChain` |
+| `@vp/intl-formats` | universal, T3 | the product's tagged values: `views`, `videoDuration`, `publishedAt`, `fileSize` and the rest |
 | `@vp/messages` | universal, T3 | `dt()`, `createTranslator()` (`t`, `tOr`), one catalogue per locale, `ERROR_COPY`, the supported-locale list (`SUPPORTED_LOCALES`, `LOCALE_DETAILS`) |
 | `@kit/intl-react` | client, T4 | `IntlProvider`, `useT`, `useFormat`, `<Format>`, `createLocaleStore()`, zone and clock detection |
 | `@vp/queries` | client, T5 | `requestLocale()`: the negotiation chain, the one module that reads `Accept-Language` and `navigator.languages` |
@@ -99,7 +100,7 @@ render-path form. Keys walk the locale chain per key: `sv-FI`, `sv`, `en`.
 
 ## 5. SSR rules
 
-- The locale, time zone, currency and reference instant are arguments. `@vp/intl` and `@vp/messages` never
+- The locale, time zone, currency and reference instant are arguments. `@kit/intl` and `@vp/messages` never
   read `navigator`, the clock, `process` or a `toLocale*` method (`intl-purity.test.ts`).
 - `relative` and `calendarDay` measure from the value's `now`, else the context's.
 - `IntlProvider` is told its `locale`, it never detects one. A server render passes `locale`, `timeZone` and
@@ -148,17 +149,17 @@ cache stays.
   A story that shows catalogue words (a `ui` word, a retry label) is also tagged `translated` and shot
   once per translation; a story whose words are all props stays untagged, its translated shot would
   repeat the English one.
-- Numbers and dates go through `@vp/intl`, which picks the locale's digits and separators.
+- Numbers and dates go through `@kit/intl`, which picks the locale's digits and separators.
 
 ## 9. Where a new one goes
 - Specs assert shape, not glyphs: ICU data moves between Node versions and differs in Bun.
 
 
 
-- A formatter: `packages/universal/intl/src/formatters/<name>.ts` and its spec, a member in `TaggedValue`, a
+- A formatter: `packages/platform/universal/intl/src/formatters/<name>.ts` and its spec, a member in `TaggedValue`, a
   tag in `FORMAT_KINDS`, a case in `formatValue`. Test at least three locales, one with a different grouping
   separator and one non-Latin script.
-- A domain value: `packages/universal/intl/src/domain/<name>.ts`, returning a tagged value.
+- A domain value: `packages/universal/intl-formats/src/<name>.ts`, returning a tagged value.
 - A message: the feature file under `packages/universal/messages/src/en/` and the same key in every other
   catalogue (`pl/`), or `catalogue-parity.test.ts` fails. A new `ErrorCode` needs its entry in `ERROR_COPY`
   and a message in `en/errors.ts`, or it does not compile.

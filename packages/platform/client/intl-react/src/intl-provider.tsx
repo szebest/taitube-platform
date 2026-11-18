@@ -1,4 +1,4 @@
-import { createIntl, createIntlCache } from '@vp/intl';
+import { createIntl, createIntlCache } from '@kit/intl';
 import { type Catalogues, createTranslator, en } from '@vp/messages';
 import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import { currentInstant, readBrowserEnvironment } from './browser-environment';

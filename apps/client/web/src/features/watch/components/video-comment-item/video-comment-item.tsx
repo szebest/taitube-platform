@@ -4,7 +4,7 @@ import { useUiCopy } from '@kit/ui';
 import { useSuspenseInfiniteQuery, useSuspenseQuery } from '@tanstack/react-query';
 import type { CommentView } from '@vp/api-contracts';
 import { threadRootId } from '@vp/domain';
-import { publishedAt } from '@vp/intl';
+import { publishedAt } from '@vp/intl-formats';
 import { canHeartComment } from '@vp/permissions';
 import { useCan } from '@vp/permissions-react';
 import {

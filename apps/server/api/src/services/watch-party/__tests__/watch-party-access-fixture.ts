@@ -1,7 +1,7 @@
+import { MS_PER_DAY, MS_PER_HOUR } from '@kit/primitives';
 import { expectOk } from '@kit/testing/result';
 import type { PartyGuestSession } from '@vp/core/ports';
 import type { WatchPartyInvite, WatchPartyInviteLink, WatchPartyPermission } from '@vp/domain';
-import { MS_PER_DAY, MS_PER_HOUR } from '@vp/domain/time';
 import type { UserContext } from '@vp/permissions';
 import { OWNER, type WatchPartyTest } from './watch-party-test-deps';
 

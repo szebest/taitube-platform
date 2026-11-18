@@ -93,12 +93,15 @@ taitube-platform/
 │   │   │   ├── design-tokens/       # Design system engine: the token group schemas
 │   │   │   ├── di/                  # Typed tokens and an immutable registry whose get returns a Result
 │   │   │   ├── i18n/                # The typed message engine: kinds, presets, param names, catalogue parity; no words
+│   │   │   ├── intl/                # Formatters on Intl over a tagged value union, IntlCache and the locale chain
 │   │   │   ├── machine/             # Lifecycles as typed edge tables: legal moves, findings, Mermaid
 │   │   │   ├── pagination/          # Keyset cursor codec and page shapes
+│   │   │   ├── primitives/          # Time-unit constants every package reads by name
 │   │   │   ├── result/              # Result type, combinators, tryCatch/fromPromise
 │   │   │   ├── runtime/             # Clock, Random, EnvSource, Fetch and CookieJar tokens; node and browser entries
 │   │   │   └── tsconfig/            # Shared TypeScript presets, one per tier
 │   │   ├── client/                  # Browser only
+│   │   │   ├── components/          # Shared components both apps render: PageHeader, EmptyState, ErrorState, SectionError, the state illustrations
 │   │   │   ├── forms/               # useAppForm with the text, select and file fields, and validateWith
 │   │   │   ├── intl-react/          # IntlProvider, useT, useFormat and <Format> for the web app
 │   │   │   ├── security-headers/    # CSP nonce and the security headers request middleware each app mounts
@@ -119,13 +122,12 @@ taitube-platform/
 │   │   ├── domain/                  # Entity types and the status and role vocabularies
 │   │   ├── domain-rules/            # Pure rules over input plus an entity, returning Result
 │   │   ├── errors/                  # ErrorCode vocabulary, Failure types, retry classes
-│   │   ├── intl/                    # Every user-facing number, date and duration format, on Intl
+│   │   ├── intl-formats/            # The product's tagged values: views, durations, published-at, file size
 │   │   ├── messages/                # Typed messages, the en catalogue and the copy for every error code
 │   │   ├── permissions/             # CASL ability rules shared by the API and the frontend
 │   │   └── validation/              # Pure input-only rules returning Result
 │   ├── client/                      # Browser only
 │   │   ├── api-client/              # Typed HTTP client whose calls are typed by api-contracts
-│   │   ├── components/              # Shared components both apps render: PageHeader, EmptyState, ErrorState, SectionError, the state illustrations
 │   │   ├── permissions-react/       # PermissionsProvider, useCan and <Can> over the @vp/permissions rules
 │   │   ├── queries/                 # QueryClient factory, ApiProvider, the auth seam and the shared query factories
 │   │   ├── web-testing/             # Spec helpers: contract-typed MSW handlers, renderRoute, serverRender, fixtures

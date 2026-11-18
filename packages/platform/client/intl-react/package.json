@@ -20,8 +20,8 @@
     "clean": "rimraf dist tsconfig.tsbuildinfo"
   },
   "dependencies": {
+    "@kit/intl": "workspace:*",
     "@kit/result": "workspace:*",
-    "@vp/intl": "workspace:*",
     "@vp/messages": "workspace:*"
   },
   "devDependencies": {

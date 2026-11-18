@@ -1,7 +1,7 @@
+import { MS_PER_DAY } from '@kit/primitives';
 import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { type Channel, HANDLE_CHANGE_COOLDOWN_DAYS, HANDLE_RESERVATION_DAYS } from '@vp/domain';
-import { MS_PER_DAY } from '@vp/domain/time';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { ChannelIdentityService } from '../channel-identity-service';

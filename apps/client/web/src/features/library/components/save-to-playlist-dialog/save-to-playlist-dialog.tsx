@@ -1,7 +1,7 @@
+import { SectionError } from '@kit/components';
 import { useT } from '@kit/intl-react';
 import { Button, Checkbox, Icon, Label, Skeleton } from '@kit/ui';
 import { useQuery } from '@tanstack/react-query';
-import { SectionError } from '@vp/components';
 import { useApi } from '@vp/queries';
 import { useState } from 'react';
 import { saveTargetsQueryOptions } from '#app/features/library/api/library-queries';
