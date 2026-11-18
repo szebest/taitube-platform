@@ -4,7 +4,7 @@ import { userEvent } from '@testing-library/user-event';
 import { Fragment } from 'react';
 import { VideoJsEngine } from '#app/integrations/video-js/video-js-engine';
 import { PlayerChannelProvider, usePlayerTheater } from '#app/lib/player/player-channel';
-import type { PlaybackRange } from '#app/lib/player/taitube-player-props';
+import type { PlaybackRange, PlayerChapter } from '#app/lib/player/taitube-player-props';
 import { ControlBar } from '../control-bar';
 
 type Fullscreen = 'unsupported' | 'inline' | 'fullscreen';
@@ -51,11 +51,13 @@ export function renderBar({
   channel = false,
   live = false,
   range,
+  chapters,
   title,
 }: Partial<Playhead> & {
   channel?: boolean;
   live?: boolean;
   range?: PlaybackRange;
+  chapters?: readonly PlayerChapter[];
   title?: string;
 } = {}) {
   vi.spyOn(HTMLMediaElement.prototype, 'paused', 'get').mockReturnValue(paused);
@@ -75,7 +77,7 @@ export function renderBar({
           posterUrl="http://localhost:9000/posters/p.jpg"
           title="Launch day"
         >
-          <ControlBar title={title} live={live} range={range} />
+          <ControlBar title={title} live={live} range={range} chapters={chapters} />
         </VideoJsEngine>
         <TheaterProbe />
       </Channel>

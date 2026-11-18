@@ -55,6 +55,21 @@ describe('apps/client/web: the embed page', () => {
     expect(element?.muted).toBe(muted);
   });
 
+  it('marks the stored chapters on the seek bar', async () => {
+    vi.spyOn(HTMLMediaElement.prototype, 'duration', 'get').mockReturnValue(600);
+    const chapters = [
+      { startMs: 0, title: 'Intro' },
+      { startMs: 300_000, title: 'Middle' },
+      { startMs: 450_000, title: 'End' },
+    ];
+
+    const { container } = await renderEmbed('', { chapters });
+
+    await vi.waitFor(() =>
+      expect(container.querySelectorAll('[data-slot="chapter-marker"]')).toHaveLength(2)
+    );
+  });
+
   it('shows only a not-available note for a video that is not public', async () => {
     await renderRoute(getRouter, `/embed/${VIDEO_ID}`, {
       handlers: [mockEndpoint(getVideo, () => HttpResponse.json(video({ visibility: 'private' })))],

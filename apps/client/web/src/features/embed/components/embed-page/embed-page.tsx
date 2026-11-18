@@ -28,6 +28,7 @@ export function EmbedPage() {
                 playbackUrl={video.playbackUrl}
                 posterUrl={video.posterUrl}
                 title={video.title}
+                chapters={video.chapters}
                 layout="fill"
                 startTime={t}
                 controls={controls !== 0}

@@ -13,6 +13,7 @@ vi.mock(import('#app/components/player/taitube-player/taitube-player'), async ()
       data-testid="player"
       data-defaults={JSON.stringify(props.defaults)}
       data-caption-tracks={JSON.stringify(props.captionTracks ?? [])}
+      data-chapters={JSON.stringify(props.chapters ?? [])}
       data-handlers={[props.onTimeUpdate, props.onPause, props.onEnded]
         .map((handler) => typeof handler)
         .join()}
@@ -63,5 +64,17 @@ describe('apps/client/web: WatchPlayer', () => {
     });
 
     await vi.waitFor(() => expect(readPlayer('data-caption-tracks')).toEqual(tracks));
+  });
+
+  it('hands the player the stored chapters of the video', async () => {
+    const chapters = [
+      { startMs: 0, title: 'Intro' },
+      { startMs: 20_000, title: 'Middle' },
+      { startMs: 60_000, title: 'End' },
+    ];
+
+    await renderWatch({ video: { chapters } });
+
+    await vi.waitFor(() => expect(readPlayer('data-chapters')).toEqual(chapters));
   });
 });

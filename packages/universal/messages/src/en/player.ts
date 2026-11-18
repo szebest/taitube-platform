@@ -10,6 +10,7 @@ export const player = {
   unmute: dt('Unmute'),
   volume: dt('Volume'),
   seek: dt('Seek'),
+  seekInChapter: dt('{time}, {chapter}'),
   settings: dt('Settings'),
   quality: dt('Quality'),
   autoQuality: dt('Auto'),

@@ -60,6 +60,7 @@ export function TaitubePlayer({
             title={props.title ?? undefined}
             live={props.live}
             range={props.range}
+            chapters={props.chapters}
             onPrevious={props.onPrevious}
             onNext={props.onNext}
           />
