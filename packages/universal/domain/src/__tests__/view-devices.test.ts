@@ -1,4 +1,4 @@
-import { VIEW_DEVICES, mergeDeviceCounts } from '../view-devices';
+import { VIEW_DEVICES, deviceShares, mergeDeviceCounts } from '../view-devices';
 
 const VIDEO = '00000000-0000-7000-8000-00000000000a';
 
@@ -20,5 +20,21 @@ describe('domain: view devices', () => {
       { videoId: VIDEO, viewDate: '2026-03-10', device: 'desktop', views: 1 },
       { videoId: VIDEO, viewDate: '2026-03-11', device: 'mobile', views: 4 },
     ]);
+  });
+
+  it.each([
+    [
+      'shares that add up to one, in the order given',
+      [
+        { device: 'mobile', views: 3 },
+        { device: 'desktop', views: 1 },
+      ],
+      [0.75, 0.25],
+    ],
+    ['one device', [{ device: 'tablet', views: 4 }], [1]],
+    ['no views at all', [{ device: 'mobile', views: 0 }], [0]],
+    ['no devices', [], []],
+  ] as const)('gives %s', (_name, devices, shares) => {
+    expect(deviceShares(devices).map(({ share }) => share)).toEqual(shares);
   });
 });

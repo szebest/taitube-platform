@@ -5,6 +5,8 @@ import {
   type DailyViews,
   type DeviceViewCount,
   type DeviceViews,
+  type FirstWeekRow,
+  type PeerVideo,
   type HourlyViewCount,
   type HourlyViews,
   type RetentionCount,
@@ -23,6 +25,7 @@ import {
   viewsByVideo,
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
+import { firstWeekRowsOf, recentPeersOf } from './in-memory-first-week';
 
 /** The two things the view counters need from the videos they count. */
 export interface ViewedVideos {
@@ -190,6 +193,27 @@ export class InMemoryVideoViewRepository implements VideoViewRepositoryPort {
     range: ViewHourRange
   ): Promise<Result<HourlyViews[], DatabaseUnavailable>> {
     return ok(this.hoursFor(this.ownedIds(ownerId), range));
+  }
+
+  async firstWeekViews(
+    videoIds: readonly string[]
+  ): Promise<Result<FirstWeekRow[], DatabaseUnavailable>> {
+    const wanted = new Set(videoIds);
+    return ok(
+      firstWeekRowsOf(
+        this.videos.getAllVideos().filter((video) => wanted.has(video.id)),
+        [...this.daily.values()]
+      )
+    );
+  }
+
+  async recentPeers(
+    ownerId: string,
+    excludeVideoId: string,
+    readyBefore: Date,
+    limit: number
+  ): Promise<Result<PeerVideo[], DatabaseUnavailable>> {
+    return ok(recentPeersOf(this.live(), ownerId, excludeVideoId, readyBefore).slice(0, limit));
   }
 
   async channelTotals(ownerId: string): Promise<Result<ChannelViewTotals, DatabaseUnavailable>> {

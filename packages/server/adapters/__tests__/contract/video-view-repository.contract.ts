@@ -5,6 +5,7 @@ import { expectOk } from '@vp/testing/result';
 import { OTHER_OWNER_ID, OWNER_ID, VIDEO_IDS, publicVideo, seedOwners } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 import { describeVideoViewDeviceContract } from './video-view-device.contract';
+import { describeVideoViewFirstWeekContract } from './video-view-first-week.contract';
 import { describeVideoViewHourlyContract } from './video-view-hourly.contract';
 
 const DAY = '2026-03-10';
@@ -262,4 +263,5 @@ export function describeVideoViewRepositoryContract(makeSubject: MakeRepositorie
 
   describeVideoViewHourlyContract(makeSubject);
   describeVideoViewDeviceContract(makeSubject);
+  describeVideoViewFirstWeekContract(makeSubject);
 }

@@ -24,3 +24,17 @@ export function mergeDeviceCounts(counts: readonly DeviceViewCount[]): DeviceVie
   }
   return [...merged.values()];
 }
+
+export interface DeviceShare extends DeviceViews {
+  readonly share: number;
+}
+
+/** Each device's part of the counted views, in the order given; every share is 0 while nothing is counted. */
+export function deviceShares(devices: readonly DeviceViews[]): DeviceShare[] {
+  const total = devices.reduce((sum, { views }) => sum + views, 0);
+  return devices.map(({ device, views }) => ({
+    device,
+    views,
+    share: total === 0 ? 0 : views / total,
+  }));
+}

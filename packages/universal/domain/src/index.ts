@@ -18,6 +18,7 @@ export * from './creator-library';
 export * from './data-export';
 export * from './data-export-rows';
 export * from './featured-videos';
+export * from './first-week';
 export * from './frame-hash';
 export * from './home';
 export * from './hourly-views';

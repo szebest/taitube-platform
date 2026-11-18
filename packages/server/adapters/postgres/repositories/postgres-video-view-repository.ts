@@ -5,6 +5,8 @@ import {
   type ChannelViewTotals,
   type DailyViews,
   type DeviceViews,
+  type FirstWeekRow,
+  type PeerVideo,
   type HourlyViews,
   type RetentionPoint,
   type TopVideo,
@@ -15,6 +17,7 @@ import {
 } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { and, asc, between, desc, eq, isNull, lt, sql } from 'drizzle-orm';
+import { firstWeekRows, recentPeerVideos } from './first-week-queries';
 import type { PostgresDatabase } from './types';
 import { applyViewBatch } from './view-batch-writes';
 
@@ -187,6 +190,27 @@ export class PostgresVideoViewRepository implements VideoViewRepositoryPort {
 
     return map(rows, (found) =>
       found.map((row) => ({ viewHour: row.viewHour.toISOString(), views: Number(row.views) }))
+    );
+  }
+
+  async firstWeekViews(
+    videoIds: readonly string[]
+  ): Promise<Result<FirstWeekRow[], DatabaseUnavailable>> {
+    return await fromPromise(
+      () => firstWeekRows(this.db, videoIds),
+      databaseUnavailable.during('firstWeekViews')
+    );
+  }
+
+  async recentPeers(
+    ownerId: string,
+    excludeVideoId: string,
+    readyBefore: Date,
+    limit: number
+  ): Promise<Result<PeerVideo[], DatabaseUnavailable>> {
+    return await fromPromise(
+      () => recentPeerVideos(this.db, ownerId, excludeVideoId, readyBefore, limit),
+      databaseUnavailable.during('recentPeers')
     );
   }
 

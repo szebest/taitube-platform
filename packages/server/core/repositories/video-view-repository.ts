@@ -3,7 +3,9 @@ import type {
   ChannelViewTotals,
   DailyViews,
   DeviceViews,
+  FirstWeekRow,
   HourlyViews,
+  PeerVideo,
   RetentionPoint,
   TopVideo,
   ViewBatch,
@@ -46,6 +48,15 @@ export interface VideoViewRepositoryPort {
     ownerId: string,
     range: ViewHourRange
   ): Promise<Result<HourlyViews[], DatabaseUnavailable>>;
+  /** Views per UTC day offset (0 to 6) from each video's `ready_at` day, for the videos that have one; a day without views is absent. */
+  firstWeekViews(videoIds: readonly string[]): Promise<Result<FirstWeekRow[], DatabaseUnavailable>>;
+  /** The owner's most recently ready public videos that became ready at or before `readyBefore`, newest first, never `excludeVideoId`. */
+  recentPeers(
+    ownerId: string,
+    excludeVideoId: string,
+    readyBefore: Date,
+    limit: number
+  ): Promise<Result<PeerVideo[], DatabaseUnavailable>>;
   channelTotals(ownerId: string): Promise<Result<ChannelViewTotals, DatabaseUnavailable>>;
   topVideos(
     ownerId: string,
