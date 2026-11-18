@@ -1,5 +1,5 @@
+import { MS_PER_HOUR, MS_PER_SECOND } from '@kit/primitives';
 import type { OutboxStatus } from '@vp/domain';
-import { MS_PER_HOUR, MS_PER_SECOND } from '@vp/domain/time';
 import { OUTBOX_ROW } from './outbox-row.machine';
 
 /**

@@ -1,5 +1,5 @@
+import { MS_PER_MINUTE } from '@kit/primitives';
 import { API_TOKEN_LIMITS } from '@vp/domain';
-import { MS_PER_MINUTE } from '@vp/domain/time';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 
 /** Seconds to wait when the request's token is over its limit; `null` while it is under. */

@@ -1,3 +1,4 @@
+import { MS_PER_SECOND } from '@kit/primitives';
 import { type Result, ok, unwrapOr } from '@kit/result';
 import type {
   PlaylistRepositoryPort,
@@ -21,7 +22,6 @@ import {
   playlistSearchScore,
   videoSearchScore,
 } from '@vp/domain';
-import { MS_PER_SECOND } from '@vp/domain/time';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { type WeightedField, lexicalScore, wordSimilarity } from './search-text';
 

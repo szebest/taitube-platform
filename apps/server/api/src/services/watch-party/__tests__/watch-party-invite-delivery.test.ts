@@ -1,5 +1,5 @@
+import { MS_PER_HOUR } from '@kit/primitives';
 import { DEFAULT_PREFERENCES, type NotificationPreferences } from '@vp/domain/settings';
-import { MS_PER_HOUR } from '@vp/domain/time';
 import {
   acceptsPartyInvite,
   inviteExpiry,

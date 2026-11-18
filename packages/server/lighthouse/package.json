@@ -9,6 +9,7 @@
     "test": "vp test run"
   },
   "dependencies": {
+    "@kit/primitives": "workspace:*",
     "@kit/result": "workspace:*",
     "@vp/domain": "workspace:*",
     "playwright-core": "^1.64.0",

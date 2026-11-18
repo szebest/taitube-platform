@@ -1,6 +1,6 @@
+import { MS_PER_DAY } from '@kit/primitives';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { CHANNEL_AUDIT_RETENTION_DAYS } from '@vp/domain';
-import { MS_PER_DAY } from '@vp/domain/time';
 import { expectOk } from '@vp/testing/result';
 import { runPurgeChannelAudit } from '../purge-channel-audit';
 

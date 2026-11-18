@@ -1,6 +1,6 @@
+import { MS_PER_SECOND } from '@kit/primitives';
 import { isOk } from '@kit/result';
 import { type JobQueue, QUEUE_JOB_STATES, type QueueJob } from '@vp/core/ports';
-import { MS_PER_SECOND } from '@vp/domain/time';
 import type { PipelineMetrics } from '@vp/observability';
 
 /** A pipeline job has a priority, so BullMQ keeps it in `prioritized`; both hold jobs not started. */

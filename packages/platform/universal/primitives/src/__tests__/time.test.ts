@@ -7,9 +7,9 @@ import {
   SECONDS_PER_DAY,
   SECONDS_PER_HOUR,
   SECONDS_PER_MINUTE,
-} from '@vp/domain/time';
+} from '../time';
 
-describe('packages/domain: time units', () => {
+describe('@kit/primitives: time units', () => {
   it.each([
     { unit: 'MS_PER_SECOND', value: MS_PER_SECOND, expected: 1_000 },
     { unit: 'MS_PER_MINUTE', value: MS_PER_MINUTE, expected: 60_000 },

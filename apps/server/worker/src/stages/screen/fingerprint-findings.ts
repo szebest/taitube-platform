@@ -1,8 +1,8 @@
+import { MS_PER_SECOND } from '@kit/primitives';
 import { type Result, fromPromise, isErr, ok } from '@kit/result';
 import type { Repositories } from '@vp/core/repositories';
 import type { ScreeningFinding } from '@vp/domain';
 import { screenBlankVideo } from '@vp/domain-rules';
-import { MS_PER_SECOND } from '@vp/domain/time';
 import type { ScreeningConfig } from '@vp/env-schema';
 import type { DatabaseUnavailable, MediaFailure } from '@vp/errors';
 import { mediaFailureFrom } from '@vp/errors';

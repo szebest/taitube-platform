@@ -1,7 +1,7 @@
 import * as crypto from 'node:crypto';
+import { MS_PER_SECOND } from '@kit/primitives';
 import { type Result, err, isErr, ok, tryCatch } from '@kit/result';
 import type { AuthFailure, Principal } from '@vp/core/ports';
-import { MS_PER_SECOND } from '@vp/domain/time';
 import { ErrorCodes } from '@vp/errors';
 
 interface Jwk extends crypto.JsonWebKey {

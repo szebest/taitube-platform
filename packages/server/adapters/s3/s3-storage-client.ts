@@ -11,6 +11,7 @@ import {
   type S3Client,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { MS_PER_SECOND } from '@kit/primitives';
 import { type Result, assertNever, err, fromPromise, map, ok } from '@kit/result';
 import {
   StorageClient,
@@ -24,7 +25,6 @@ import {
   type StorageUploadParams,
   type StorageUploadResult,
 } from '@vp/core/ports';
-import { MS_PER_SECOND } from '@vp/domain/time';
 import { type StorageUnavailable, storageUnavailable } from '@vp/errors';
 import { S3_MAX_KEYS_PER_REQUEST } from '@vp/storage';
 import { type S3ConnectionConfig, isNotFound, s3ClientFrom } from './s3-config';

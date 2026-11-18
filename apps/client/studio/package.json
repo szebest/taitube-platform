@@ -57,6 +57,7 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@kit/primitives": "workspace:*",
     "@kit/tsconfig": "workspace:*",
     "@kit/vite-preset": "workspace:*",
     "@playwright/test": "^1.64.0",

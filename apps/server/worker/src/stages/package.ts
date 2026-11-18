@@ -1,8 +1,8 @@
 import type { Logger } from '@kit/logger';
+import { MS_PER_SECOND } from '@kit/primitives';
 import { type Result, err, isErr, ok, unwrapOr } from '@kit/result';
 import type { JobQueue, QueueJob, StorageClient } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
-import { MS_PER_SECOND } from '@vp/domain/time';
 import type { CdnBase } from '@vp/env-schema';
 import {
   type DatabaseUnavailable,

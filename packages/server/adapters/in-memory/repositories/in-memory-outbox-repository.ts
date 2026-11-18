@@ -1,8 +1,8 @@
+import { MS_PER_DAY } from '@kit/primitives';
 import { type Result, ok } from '@kit/result';
 import { type NewOutboxInput, type OutboxRecord, OutboxRepository } from '@vp/core/repositories';
 import type { OutboxStatus } from '@vp/domain';
 import { OUTBOX_CLAIM_LEASE_MS, OUTBOX_ROW, decideOutboxAttempt } from '@vp/domain-rules';
-import { MS_PER_DAY } from '@vp/domain/time';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { uuidv7 } from 'uuidv7';
 import { type Clock, realClock } from './clock';

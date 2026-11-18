@@ -1,3 +1,4 @@
+import { MS_PER_SECOND } from '@kit/primitives';
 import { assertNever, err, isErr, map, ok, parseJson, type Result } from '@kit/result';
 import {
   type WatchPartyClientFrame,
@@ -5,7 +6,6 @@ import {
   type WatchPartyServerFrame,
 } from '@vp/api-contracts';
 import { parseMemberKey, type RosterEntry } from '@vp/domain';
-import { MS_PER_SECOND } from '@vp/domain/time';
 import type { WatchPartyAbility } from '@vp/permissions';
 import { type InvalidField, invalidField } from '@vp/validation';
 import type { PartyCaller } from './party-caller';

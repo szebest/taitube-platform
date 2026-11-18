@@ -33,6 +33,7 @@
     "@kit/intl": "workspace:*",
     "@kit/logger": "workspace:*",
     "@kit/pagination": "workspace:*",
+    "@kit/primitives": "workspace:*",
     "@kit/result": "workspace:*",
     "@opentelemetry/api": "^1.9.1",
     "@scalar/fastify-api-reference": "^1.73.1",

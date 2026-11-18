@@ -1,11 +1,11 @@
 import * as path from 'node:path';
 import type { Logger } from '@kit/logger';
+import { MS_PER_SECOND } from '@kit/primitives';
 import { type Result, err, isErr, ok } from '@kit/result';
 import type { FrameClassifier, QueueJob, StorageClient } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import type { ScreeningFinding } from '@vp/domain';
 import { decideScreening } from '@vp/domain-rules';
-import { MS_PER_SECOND } from '@vp/domain/time';
 import type { ScreeningConfig } from '@vp/env-schema';
 import {
   type DatabaseUnavailable,

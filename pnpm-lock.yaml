@@ -348,6 +348,9 @@ importers:
         specifier: ^4.6.5
         version: 4.6.5
     devDependencies:
+      '@kit/primitives':
+        specifier: workspace:*
+        version: link:../../../packages/platform/universal/primitives
       '@kit/tsconfig':
         specifier: workspace:*
         version: link:../../../packages/platform/universal/tsconfig
@@ -420,6 +423,9 @@ importers:
       '@kit/intl-react':
         specifier: workspace:*
         version: link:../../../packages/platform/client/intl-react
+      '@kit/primitives':
+        specifier: workspace:*
+        version: link:../../../packages/platform/universal/primitives
       '@kit/result':
         specifier: workspace:*
         version: link:../../../packages/platform/universal/result
@@ -646,6 +652,9 @@ importers:
       '@kit/pagination':
         specifier: workspace:*
         version: link:../../../packages/platform/universal/pagination
+      '@kit/primitives':
+        specifier: workspace:*
+        version: link:../../../packages/platform/universal/primitives
       '@kit/result':
         specifier: workspace:*
         version: link:../../../packages/platform/universal/result
@@ -767,6 +776,9 @@ importers:
       '@kit/logger':
         specifier: workspace:*
         version: link:../../../packages/platform/server/logger
+      '@kit/primitives':
+        specifier: workspace:*
+        version: link:../../../packages/platform/universal/primitives
       '@kit/result':
         specifier: workspace:*
         version: link:../../../packages/platform/universal/result
@@ -1965,7 +1977,7 @@ importers:
         version: 6.0.3
       vite-plus:
         specifier: 'catalog:'
-        version: 1.5.0(@opentelemetry/api@1.9.1)(@types/node@24.19.1)(@vitest/browser-playwright@5.1.0)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.28.2)(jiti@2.7.0)(jsdom@30.1.2)(msw@3.0.2(@types/node@24.19.1)(@voidzero-dev/vite-plus-core@1.5.0(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.1)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1))(supports-color@10.2.2)(typescript@6.0.3))(playwright@1.64.0)(sass@1.105.1)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1)
+        version: 1.5.0(@opentelemetry/api@1.9.1)(@types/node@24.19.1)(@vitest/browser-playwright@5.1.0)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.28.2)(jiti@2.7.0)(jsdom@30.1.2)(msw@3.0.2(@types/node@24.19.1)(supports-color@10.2.2)(typescript@6.0.3)(vite@8.3.4(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)))(playwright@1.64.0)(sass@1.105.1)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1)
 
   packages/platform/universal/machine:
     devDependencies:
@@ -1990,6 +2002,24 @@ importers:
       '@vp/errors':
         specifier: workspace:*
         version: link:../../../universal/errors
+    devDependencies:
+      '@kit/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+      '@vp/testing':
+        specifier: workspace:*
+        version: link:../../../server/testing
+      rimraf:
+        specifier: ^6.1.3
+        version: 6.1.3
+      typescript:
+        specifier: ^6.0.3
+        version: 6.0.3
+      vite-plus:
+        specifier: 'catalog:'
+        version: 1.5.0(@opentelemetry/api@1.9.1)(@types/node@24.19.1)(@vitest/browser-playwright@5.1.0)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.28.2)(jiti@2.7.0)(jsdom@30.1.2)(msw@3.0.2(@types/node@24.19.1)(supports-color@10.2.2)(typescript@6.0.3)(vite@8.3.4(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)))(playwright@1.64.0)(sass@1.105.1)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1)
+
+  packages/platform/universal/primitives:
     devDependencies:
       '@kit/tsconfig':
         specifier: workspace:*
@@ -2072,6 +2102,9 @@ importers:
       '@kit/di':
         specifier: workspace:*
         version: link:../../platform/universal/di
+      '@kit/primitives':
+        specifier: workspace:*
+        version: link:../../platform/universal/primitives
       '@kit/result':
         specifier: workspace:*
         version: link:../../platform/universal/result
@@ -2354,6 +2387,9 @@ importers:
       '@kit/pagination':
         specifier: workspace:*
         version: link:../../platform/universal/pagination
+      '@kit/primitives':
+        specifier: workspace:*
+        version: link:../../platform/universal/primitives
       '@kit/result':
         specifier: workspace:*
         version: link:../../platform/universal/result
@@ -2413,6 +2449,9 @@ importers:
 
   packages/server/ffmpeg:
     dependencies:
+      '@kit/primitives':
+        specifier: workspace:*
+        version: link:../../platform/universal/primitives
       '@kit/result':
         specifier: workspace:*
         version: link:../../platform/universal/result
@@ -2534,6 +2573,9 @@ importers:
 
   packages/server/lighthouse:
     dependencies:
+      '@kit/primitives':
+        specifier: workspace:*
+        version: link:../../platform/universal/primitives
       '@kit/result':
         specifier: workspace:*
         version: link:../../platform/universal/result
@@ -2786,6 +2828,9 @@ importers:
       '@kit/pagination':
         specifier: workspace:*
         version: link:../../platform/universal/pagination
+      '@kit/primitives':
+        specifier: workspace:*
+        version: link:../../platform/universal/primitives
       '@kit/result':
         specifier: workspace:*
         version: link:../../platform/universal/result
@@ -2825,6 +2870,10 @@ importers:
         version: 1.5.0(@opentelemetry/api@1.9.1)(@types/node@24.19.1)(@vitest/browser-playwright@5.1.0)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.28.2)(jiti@2.7.0)(jsdom@30.1.2)(msw@3.0.2(@types/node@24.19.1)(supports-color@10.2.2)(typescript@6.0.3)(vite@8.3.4(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)))(playwright@1.64.0)(sass@1.105.1)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1)
 
   packages/universal/domain:
+    dependencies:
+      '@kit/primitives':
+        specifier: workspace:*
+        version: link:../../platform/universal/primitives
     devDependencies:
       '@kit/tsconfig':
         specifier: workspace:*
@@ -2847,6 +2896,9 @@ importers:
       '@kit/machine':
         specifier: workspace:*
         version: link:../../platform/universal/machine
+      '@kit/primitives':
+        specifier: workspace:*
+        version: link:../../platform/universal/primitives
       '@kit/result':
         specifier: workspace:*
         version: link:../../platform/universal/result
@@ -2930,7 +2982,7 @@ importers:
         version: 6.0.3
       vite-plus:
         specifier: 'catalog:'
-        version: 1.5.0(@opentelemetry/api@1.9.1)(@types/node@24.19.1)(@vitest/browser-playwright@5.1.0)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.28.2)(jiti@2.7.0)(jsdom@30.1.2)(msw@3.0.2(@types/node@24.19.1)(@voidzero-dev/vite-plus-core@1.5.0(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.1)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1))(supports-color@10.2.2)(typescript@6.0.3))(playwright@1.64.0)(sass@1.105.1)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1)
+        version: 1.5.0(@opentelemetry/api@1.9.1)(@types/node@24.19.1)(@vitest/browser-playwright@5.1.0)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.28.2)(jiti@2.7.0)(jsdom@30.1.2)(msw@3.0.2(@types/node@24.19.1)(supports-color@10.2.2)(typescript@6.0.3)(vite@8.3.4(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)))(playwright@1.64.0)(sass@1.105.1)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1)
 
   packages/universal/messages:
     dependencies:

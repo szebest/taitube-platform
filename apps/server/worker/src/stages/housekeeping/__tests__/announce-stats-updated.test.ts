@@ -1,7 +1,7 @@
+import { MS_PER_HOUR } from '@kit/primitives';
 import { err } from '@kit/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { ChannelRole } from '@vp/domain';
-import { MS_PER_HOUR } from '@vp/domain/time';
 import { databaseUnavailable } from '@vp/errors';
 import { SEEDED } from '@vp/testing';
 import { expectErr, expectOk } from '@vp/testing/result';

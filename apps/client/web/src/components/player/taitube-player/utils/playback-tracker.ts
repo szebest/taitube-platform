@@ -1,5 +1,5 @@
+import { MS_PER_SECOND } from '@kit/primitives';
 import type { PlaybackEvent, PlaybackEventType } from '@vp/api-contracts';
-import { MS_PER_SECOND } from '@vp/domain/time';
 import type { PlaybackProgress } from '#app/lib/player/taitube-player-props';
 
 const HEARTBEAT_SECONDS = 30;

@@ -1,5 +1,5 @@
 import * as path from 'node:path';
-import { MICROSECONDS_PER_MS } from '@vp/domain/time';
+import { MICROSECONDS_PER_MS } from '@kit/primitives';
 import { type FfmpegProcessLimits, runFfmpeg } from './run-ffmpeg';
 import { buildTranscodeArgs, type TranscodeArgsOptions } from './transcode-args';
 

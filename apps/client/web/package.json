@@ -26,6 +26,7 @@
     "@kit/forms": "workspace:*",
     "@kit/intl": "workspace:*",
     "@kit/intl-react": "workspace:*",
+    "@kit/primitives": "workspace:*",
     "@kit/result": "workspace:*",
     "@kit/security-headers": "workspace:*",
     "@kit/ui": "workspace:*",

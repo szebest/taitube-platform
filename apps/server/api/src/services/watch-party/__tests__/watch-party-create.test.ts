@@ -1,5 +1,5 @@
+import { MS_PER_HOUR } from '@kit/primitives';
 import { WATCH_PARTY_PERMISSIONS_VERSION } from '@vp/domain';
-import { MS_PER_HOUR } from '@vp/domain/time';
 import { ErrorCodes } from '@vp/errors';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { createRoom } from '../watch-party-create';

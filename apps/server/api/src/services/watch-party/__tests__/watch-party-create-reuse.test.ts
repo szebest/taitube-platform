@@ -1,4 +1,4 @@
-import { MS_PER_HOUR } from '@vp/domain/time';
+import { MS_PER_HOUR } from '@kit/primitives';
 import { expectOk } from '@vp/testing/result';
 import { type CreateContext, OWNER_KEY, setUpCreate } from './watch-party-create-fixture';
 import { MEMBER, partyBody, VIDEO_A, VIDEO_C } from './watch-party-test-deps';

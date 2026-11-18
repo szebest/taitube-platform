@@ -78,6 +78,7 @@
     "@kit/composition": "workspace:*",
     "@kit/concurrency": "workspace:*",
     "@kit/di": "workspace:*",
+    "@kit/primitives": "workspace:*",
     "@kit/result": "workspace:*",
     "@opentelemetry/api": "^1.9.1",
     "@vp/core": "workspace:*",

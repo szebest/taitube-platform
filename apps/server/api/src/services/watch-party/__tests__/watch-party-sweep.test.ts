@@ -1,6 +1,6 @@
+import { MS_PER_DAY, MS_PER_MINUTE } from '@kit/primitives';
 import { err } from '@kit/result';
 import type { WatchPartyRoom } from '@vp/domain';
-import { MS_PER_DAY, MS_PER_MINUTE } from '@vp/domain/time';
 import { cacheUnavailable } from '@vp/errors';
 import { expectOk } from '@vp/testing/result';
 import { idleCloseReason, WatchPartySweep } from '../watch-party-sweep';

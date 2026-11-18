@@ -1,5 +1,5 @@
+import { MS_PER_DAY } from '@kit/primitives';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
-import { MS_PER_DAY } from '@vp/domain/time';
 import { expectOk } from '@vp/testing/result';
 import { runPurgeCommentModeration } from '../purge-comment-moderation';
 

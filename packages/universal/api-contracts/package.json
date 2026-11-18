@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "@kit/pagination": "workspace:*",
+    "@kit/primitives": "workspace:*",
     "@kit/result": "workspace:*",
     "@vp/domain": "workspace:*",
     "@vp/errors": "workspace:*",

@@ -1,6 +1,6 @@
+import { MS_PER_DAY } from '@kit/primitives';
 import { err } from '@kit/result';
 import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
-import { MS_PER_DAY } from '@vp/domain/time';
 import { storageUnavailable } from '@vp/errors';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';

@@ -1,3 +1,4 @@
+import { MS_PER_DAY } from '@kit/primitives';
 import type { NotificationRepositoryPort } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import {
@@ -7,7 +8,6 @@ import {
   notificationRead,
   toNotificationView,
 } from '@vp/domain';
-import { MS_PER_DAY } from '@vp/domain/time';
 import { expectOk } from '@vp/testing/result';
 import { HOUR_MS, OTHER_OWNER_ID, OWNER_ID, publicVideo, seedOwners, VIDEO_IDS } from './fixtures';
 import { type CreatedAtCursor, SHARED_MILLISECOND, walkByCreatedAt } from './keyset-walk';

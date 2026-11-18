@@ -1,6 +1,6 @@
+import { MS_PER_SECOND } from '@kit/primitives';
 import { type Result, ok } from '@kit/result';
 import type { TelemetryApp, WebVital, WebVitalsBatch } from '@vp/api-contracts';
-import { MS_PER_SECOND } from '@vp/domain/time';
 import type { PipelineMetrics } from '@vp/observability';
 
 export interface WebVitalsServiceDeps {

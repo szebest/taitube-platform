@@ -1,6 +1,6 @@
+import { MS_PER_DAY, MS_PER_HOUR } from '@kit/primitives';
 import { WATCH_PARTY_LIMITS, type WatchPartyRoom } from '@vp/domain';
 import { DEFAULT_PREFERENCES } from '@vp/domain/settings';
-import { MS_PER_DAY, MS_PER_HOUR } from '@vp/domain/time';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { sendInvites } from '../watch-party-invite-sending';

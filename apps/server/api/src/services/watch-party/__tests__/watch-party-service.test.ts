@@ -1,5 +1,5 @@
+import { MS_PER_SECOND } from '@kit/primitives';
 import { lobbyPlayback } from '@vp/domain';
-import { MS_PER_SECOND } from '@vp/domain/time';
 import { ErrorCodes } from '@vp/errors';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { joinRoom } from '../watch-party-join';
