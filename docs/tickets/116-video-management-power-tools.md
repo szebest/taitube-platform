@@ -29,7 +29,7 @@
 ### 1. One revisions model
 
 Table `entity_revisions` (`id`, `entity_type` a literal union in `@vp/domain` (`video_metadata`, and 121's
-`channel_layout`), `entity_id`, `version`, `snapshot` jsonb, `author_user_id`, `note`, `created_at`; unique
+`channel_layout`), `entity_id`, `version`, `snapshot` jsonb, `author_user_id`, `restored_from_version` (null unless the revision is a restore), `created_at`; unique
 `(entity_type, entity_id, version)`; the last 50 per entity kept by housekeeping). A generic repository interface in
 `@vp/core/repositories` with postgres and in-memory implementations: `append`, `list` (keyset), `get`. Restoring writes a
 new revision from an old snapshot, so history is never rewritten. Other tickets add an entity type and a snapshot schema,

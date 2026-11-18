@@ -124,7 +124,7 @@ export class PostgresVideoStudioRepository extends VideoStudioRepository {
             after: updated,
             afterChapters: chapters ?? beforeChapters,
             authorUserId: userId,
-            note: revision?.note,
+            restoredFromVersion: revision?.restoredFromVersion,
           });
           await tx.insert(ve).values({
             videoId,

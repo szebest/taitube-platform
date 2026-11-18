@@ -8,7 +8,8 @@ export interface RevisionListItem {
   id: string;
   version: number;
   createdAt: string;
-  note: string | null;
+  /** The version a restore went back to; `null` for an ordinary edit. */
+  restoredFromVersion: number | null;
   /** The fields that differ from the version before; `null` for the oldest one. */
   changedFields: VideoMetadataField[] | null;
   current: boolean;
@@ -47,6 +48,11 @@ export function RevisionList({
                 <Format value={publishedAt(item.createdAt).relative} />
               </time>
             </span>
+            {item.restoredFromVersion !== null && (
+              <span className="text-caption text-fg-muted">
+                {tOr('studio.historyRestoredFrom', { version: item.restoredFromVersion }, '')}
+              </span>
+            )}
             <span className="text-caption text-fg-muted">
               {item.changedFields === null
                 ? tOr('studio.historyOriginal', {}, '')

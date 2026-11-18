@@ -54,6 +54,24 @@ export function addCorrectionMutationOptions(api: ApiClient, videoId: string) {
   });
 }
 
+export function updateCorrectionMutationOptions(api: ApiClient, videoId: string) {
+  return mutationOptions({
+    mutationFn: ({
+      correctionId,
+      changes,
+    }: {
+      correctionId: string;
+      changes: { startMs?: number; endMs?: number; text?: string };
+    }) =>
+      api.videoTools.updateVideoCorrection({
+        params: { id: videoId, correctionId },
+        body: changes,
+      }),
+    onSettled: (_data, _error, _variables, _snapshot, { client }) =>
+      client.invalidateQueries({ queryKey: videoToolKeys.corrections(videoId) }),
+  });
+}
+
 export function removeCorrectionMutationOptions(api: ApiClient, videoId: string) {
   return mutationOptions({
     mutationFn: (correctionId: string) =>

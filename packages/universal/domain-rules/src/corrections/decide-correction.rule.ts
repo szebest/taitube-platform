@@ -1,4 +1,4 @@
-import { type Result, err, ok } from '@kit/result';
+import { type Result, err, isErr, ok } from '@kit/result';
 import {
   CORRECTION_MAX_MS,
   CORRECTION_MIN_MS,
@@ -19,18 +19,22 @@ export interface CorrectionInput {
   readonly text: string;
 }
 
-export interface CorrectionContext {
-  readonly videoId: string;
+export interface CorrectionFieldsContext {
   readonly durationMs: number | null;
+}
+
+export interface CorrectionContext extends CorrectionFieldsContext {
+  readonly videoId: string;
   readonly existing: number;
 }
 
 export type DecideCorrectionFailure = InvalidCorrection | CorrectionLimit;
 
-export function decideCorrection(
+/** The range and the text of a correction, with the limit left to the caller: an edit adds no card. */
+export function decideCorrectionFields(
   input: CorrectionInput,
-  context: CorrectionContext
-): Result<CorrectionInput, DecideCorrectionFailure> {
+  context: CorrectionFieldsContext
+): Result<CorrectionInput, InvalidCorrection> {
   const length = input.endMs - input.startMs;
   const inside =
     input.startMs >= 0 && (context.durationMs === null || input.endMs <= context.durationMs);
@@ -48,6 +52,15 @@ export function decideCorrection(
       invalidCorrection('text', `The text is 1 to ${CORRECTION_TEXT_MAX_LENGTH} characters`)
     );
   }
-  if (context.existing >= MAX_CORRECTIONS_PER_VIDEO) return err(correctionLimit(context.videoId));
   return ok({ startMs: input.startMs, endMs: input.endMs, text });
+}
+
+export function decideCorrection(
+  input: CorrectionInput,
+  context: CorrectionContext
+): Result<CorrectionInput, DecideCorrectionFailure> {
+  const decided = decideCorrectionFields(input, context);
+  if (isErr(decided)) return decided;
+  if (context.existing >= MAX_CORRECTIONS_PER_VIDEO) return err(correctionLimit(context.videoId));
+  return decided;
 }

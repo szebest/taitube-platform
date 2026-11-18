@@ -32,7 +32,7 @@ const revision = (version: number) => ({
     commentsEnabled: true,
   },
   authorUserId: null,
-  note: null,
+  restoredFromVersion: null,
   createdAt: '2026-03-01T12:00:00.000Z',
 });
 

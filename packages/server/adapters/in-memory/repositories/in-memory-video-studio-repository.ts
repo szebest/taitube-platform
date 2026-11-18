@@ -112,7 +112,7 @@ export class InMemoryVideoStudioRepository extends VideoStudioRepository {
       baseline,
       baselineVersion,
       userId,
-      note: revision?.note,
+      restoredFromVersion: revision?.restoredFromVersion,
     });
     if (isErr(revised)) return revised;
     const recorded = await this.deps.events.create({
@@ -159,9 +159,9 @@ export class InMemoryVideoStudioRepository extends VideoStudioRepository {
     baseline: VideoMetadataSnapshot;
     baselineVersion: number;
     userId: string;
-    note?: string;
+    restoredFromVersion?: number;
   }): Promise<Result<void, DatabaseUnavailable>> {
-    const { video, baseline, baselineVersion, userId, note } = edit;
+    const { video, baseline, baselineVersion, userId, restoredFromVersion } = edit;
     const { revisions, chapters } = this.deps;
     const known = await revisions.list('video_metadata', video.id, {
       beforeVersion: null,
@@ -175,7 +175,7 @@ export class InMemoryVideoStudioRepository extends VideoStudioRepository {
         version: baselineVersion,
         snapshot: baseline,
         authorUserId: null,
-        note: null,
+        restoredFromVersion: null,
       });
       if (isErr(recorded)) return recorded;
     }
@@ -185,7 +185,7 @@ export class InMemoryVideoStudioRepository extends VideoStudioRepository {
       version: video.version,
       snapshot: videoMetadataSnapshot(video, chapters.chaptersOf(video.id)),
       authorUserId: userId,
-      note: note ?? null,
+      restoredFromVersion: restoredFromVersion ?? null,
     });
   }
 

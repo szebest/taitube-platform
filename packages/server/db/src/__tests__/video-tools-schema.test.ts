@@ -32,7 +32,7 @@ describe('db: video tools schema', () => {
   it.each([
     {
       table: entityRevisions,
-      checks: ['entity_revisions_type_check', 'entity_revisions_note_check'],
+      checks: ['entity_revisions_type_check', 'entity_revisions_restored_from_check'],
     },
     { table: videoChapters, checks: ['video_chapters_start_check', 'video_chapters_title_check'] },
     {

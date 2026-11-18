@@ -22,7 +22,7 @@ function revision(version: number, videoId: string = VIDEO_IDS.a): NewEntityRevi
     version,
     snapshot: snapshot(`v${version}`),
     authorUserId: OWNER_ID,
-    note: null,
+    restoredFromVersion: null,
   };
 }
 
@@ -69,7 +69,7 @@ export function describeEntityRevisionRepositoryContract(
         entityId: VIDEO_IDS.a,
         snapshot: snapshot('v5'),
         authorUserId: OWNER_ID,
-        note: null,
+        restoredFromVersion: null,
       });
       expect(found[0]?.createdAt).toBeInstanceOf(Date);
     });

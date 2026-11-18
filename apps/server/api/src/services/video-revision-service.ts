@@ -39,7 +39,7 @@ export interface RevisionView {
   version: number;
   snapshot: EntityRevision['snapshot'];
   authorUserId: string | null;
-  note: string | null;
+  restoredFromVersion: number | null;
   createdAt: string;
 }
 
@@ -50,8 +50,15 @@ export type RestoreRevisionFailure =
   | ListRevisionsFailure;
 
 function toRevisionView(revision: EntityRevision): RevisionView {
-  const { id, version, snapshot, authorUserId, note, createdAt } = revision;
-  return { id, version, snapshot, authorUserId, note, createdAt: isoOf(createdAt) };
+  const { id, version, snapshot, authorUserId, restoredFromVersion, createdAt } = revision;
+  return {
+    id,
+    version,
+    snapshot,
+    authorUserId,
+    restoredFromVersion,
+    createdAt: isoOf(createdAt),
+  };
 }
 
 export class VideoRevisionService {
@@ -111,7 +118,7 @@ export class VideoRevisionService {
           user,
           videoId,
           { ...patch, version },
-          { note: `Restored version ${target.version}`, restoredFromVersion: target.version }
+          { restoredFromVersion: target.version }
         );
       }
     );

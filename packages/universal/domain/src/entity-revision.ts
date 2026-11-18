@@ -5,7 +5,6 @@ export const ENTITY_REVISION_TYPES = ['video_metadata'] as const;
 export type EntityRevisionType = (typeof ENTITY_REVISION_TYPES)[number];
 
 export const ENTITY_REVISION_KEEP = 50;
-export const REVISION_NOTE_MAX_LENGTH = 200;
 
 export interface SnapshotChapter {
   startMs: number;
@@ -34,7 +33,7 @@ export interface EntityRevision<T extends EntityRevisionType = EntityRevisionTyp
   version: number;
   snapshot: EntitySnapshots[T];
   authorUserId: string | null;
-  note: string | null;
+  restoredFromVersion: number | null;
   createdAt: Date;
 }
 

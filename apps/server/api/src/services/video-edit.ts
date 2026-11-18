@@ -39,7 +39,6 @@ export interface CreatorVideoEdit {
 }
 
 export interface VideoEditOptions {
-  note?: string;
   restoredFromVersion?: number;
 }
 

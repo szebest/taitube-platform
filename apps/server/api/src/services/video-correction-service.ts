@@ -9,6 +9,7 @@ import {
   correctionLimit,
   correctionNotFound,
   decideCorrection,
+  decideCorrectionFields,
   decideVideoEditAccess,
   decideVideoRead,
   publicReadFailure,
@@ -36,6 +37,7 @@ export interface CorrectionView {
 type ReadFailure = ReadVideoFailure | DatabaseUnavailable;
 
 export type CreateCorrectionFailure = ReadFailure | InvalidCorrection | CorrectionLimit;
+export type UpdateCorrectionFailure = ReadFailure | InvalidCorrection | CorrectionNotFound;
 export type RemoveCorrectionFailure = ReadFailure | CorrectionNotFound;
 
 function toCorrectionView(correction: Correction): CorrectionView {
@@ -86,6 +88,35 @@ export class VideoCorrectionService {
     const created = await this.deps.corrections.create(correction, MAX_CORRECTIONS_PER_VIDEO);
     if (isErr(created)) return created;
     return created.value ? ok(toCorrectionView(correction)) : err(correctionLimit(videoId));
+  }
+
+  async update(
+    user: UserContext,
+    videoId: string,
+    correctionId: string,
+    changes: Partial<{ startMs: number; endMs: number; text: string }>
+  ): Promise<Result<CorrectionView, UpdateCorrectionFailure>> {
+    const found = await this.deps.videos.findById(videoId);
+    if (isErr(found)) return found;
+    const video = decideVideoEditAccess({ editor: user, video: found.value, videoId });
+    if (isErr(video)) return video;
+
+    const existing = await this.deps.corrections.list(videoId);
+    if (isErr(existing)) return existing;
+    const current = existing.value.find(({ id }) => id === correctionId);
+    if (!current) return err(correctionNotFound(correctionId));
+
+    const decided = decideCorrectionFields(
+      { startMs: current.startMs, endMs: current.endMs, text: current.text, ...changes },
+      { durationMs: video.value.durationMs }
+    );
+    if (isErr(decided)) return decided;
+
+    const updated = await this.deps.corrections.update(videoId, correctionId, decided.value);
+    if (isErr(updated)) return updated;
+    return updated.value
+      ? ok(toCorrectionView(updated.value))
+      : err(correctionNotFound(correctionId));
   }
 
   async remove(

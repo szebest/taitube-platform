@@ -51,12 +51,14 @@ describe('apps/server/api/services: applyVideoEdit', () => {
     );
   });
 
-  it('writes the edit and a revision at the new version, with the note it was given', async () => {
-    const view = expectOk(await apply(OWNER, { title: 'After', version: 1 }, { note: 'why' }));
+  it('writes the edit and a revision at the new version, with the version a restore went back to', async () => {
+    const view = expectOk(
+      await apply(OWNER, { title: 'After', version: 1 }, { restoredFromVersion: 1 })
+    );
 
     const [latest] = await history();
     expect(view).toMatchObject({ title: 'After', version: 2 });
-    expect(latest).toMatchObject({ version: 2, note: 'why', authorUserId: OWNER.id });
+    expect(latest).toMatchObject({ version: 2, restoredFromVersion: 1, authorUserId: OWNER.id });
   });
 
   it.each([

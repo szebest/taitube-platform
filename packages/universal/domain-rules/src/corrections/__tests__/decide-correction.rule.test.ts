@@ -1,6 +1,6 @@
 import { ErrorCodes } from '@vp/errors';
 import { expectErr, expectOk } from '@vp/testing/result';
-import { decideCorrection } from '../decide-correction.rule';
+import { decideCorrection, decideCorrectionFields } from '../decide-correction.rule';
 
 const context = { videoId: 'v1', durationMs: 120_000, existing: 0 };
 const input = { startMs: 10_000, endMs: 15_000, text: 'The price is 5 dollars' };
@@ -35,6 +35,12 @@ describe('@vp/domain-rules: decideCorrection', () => {
 
   it('accepts any range inside an unknown duration', () => {
     expect(expectOk(decideCorrection(input, { ...context, durationMs: null }))).toEqual(input);
+  });
+
+  it('decides the fields of an edit without counting the limit', () => {
+    expect(
+      expectOk(decideCorrectionFields({ ...input, text: ' fixed ' }, { durationMs: 120_000 }))
+    ).toEqual({ ...input, text: 'fixed' });
   });
 
   it('refuses the eleventh correction', () => {

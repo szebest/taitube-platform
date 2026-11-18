@@ -37,7 +37,7 @@ describe('video tool routes', () => {
 
   const call = (
     who: Who,
-    method: 'GET' | 'POST' | 'PUT' | 'DELETE',
+    method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
     url: string,
     payload?: object
   ) => ctx.app.inject({ method, url, headers: AS[who], ...(payload ? { payload } : {}) });
@@ -252,6 +252,31 @@ describe('video tool routes', () => {
       expect(created.statusCode).toBe(201);
       expect(listed.json().items).toMatchObject([card]);
       expect(removed.statusCode).toBe(204);
+    });
+
+    it('changes a card and answers the card as it now stands', async () => {
+      const created = await add('owner');
+
+      const changed = await call(
+        'editor',
+        'PATCH',
+        `/v1/videos/${VIDEO}/corrections/${created.json().id}`,
+        { text: 'Fixed' }
+      );
+
+      expect(changed.statusCode).toBe(200);
+      expect(changed.json()).toMatchObject({ ...card, text: 'Fixed' });
+    });
+
+    it.each([
+      { who: 'moderator' as const, status: 403 },
+      { who: 'anonymous' as const, status: 401 },
+    ])('answers $status to $who changing one', async ({ who, status }) => {
+      const res = await call(who, 'PATCH', `/v1/videos/${VIDEO}/corrections/${VIDEO}`, {
+        text: 'Fixed',
+      });
+
+      expect(res.statusCode).toBe(status);
     });
 
     it.each([

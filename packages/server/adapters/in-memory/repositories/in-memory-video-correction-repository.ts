@@ -19,6 +19,18 @@ export class InMemoryVideoCorrectionRepository extends VideoCorrectionRepository
     return ok(true);
   }
 
+  async update(
+    videoId: string,
+    correctionId: string,
+    fields: Pick<Correction, 'startMs' | 'endMs' | 'text'>
+  ): Promise<Result<Correction | null, DatabaseUnavailable>> {
+    const found = this.rows.get(correctionId);
+    if (found?.videoId !== videoId) return ok(null);
+    const updated = { ...found, ...fields };
+    this.rows.set(correctionId, updated);
+    return ok({ ...updated });
+  }
+
   async remove(
     videoId: string,
     correctionId: string

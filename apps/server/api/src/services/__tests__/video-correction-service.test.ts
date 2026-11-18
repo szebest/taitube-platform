@@ -1,3 +1,4 @@
+import type { Result } from '@kit/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
@@ -77,6 +78,28 @@ describe('apps/server/api/services: corrections', () => {
     ).toBe(ErrorCodes.VALIDATION_FAILED);
   });
 
+  it('changes the text and the range of a correction and keeps the rest', async () => {
+    const { id } = expectOk(await corrections.create(OWNER, VIDEO_ID, body(1)));
+
+    const changed = expectOk(
+      await corrections.update(OWNER, VIDEO_ID, id, { text: ' Fixed ', endMs: 20_000 })
+    );
+
+    expect(changed).toMatchObject({ id, startMs: body(1).startMs, endMs: 20_000, text: 'Fixed' });
+    expect(expectOk(await corrections.list(null, VIDEO_ID)).items).toMatchObject([changed]);
+  });
+
+  it('refuses a change that leaves the range invalid, and an unknown correction', async () => {
+    const { id } = expectOk(await corrections.create(OWNER, VIDEO_ID, body(1)));
+
+    expect(expectErr(await corrections.update(OWNER, VIDEO_ID, id, { endMs: 11_000 })).code).toBe(
+      ErrorCodes.VALIDATION_FAILED
+    );
+    expect(expectErr(await corrections.update(OWNER, VIDEO_ID, VIDEO_ID, { text: 'x' })).code).toBe(
+      ErrorCodes.CORRECTION_NOT_FOUND
+    );
+  });
+
   it('removes a correction, then reports it gone', async () => {
     const { id } = expectOk(await corrections.create(OWNER, VIDEO_ID, body(1)));
 
@@ -86,12 +109,13 @@ describe('apps/server/api/services: corrections', () => {
     );
   });
 
-  it.each(['create', 'remove'] as const)('refuses a stranger on %s', async (action) => {
-    const failure =
-      action === 'create'
-        ? expectErr(await corrections.create(STRANGER, VIDEO_ID, body(1)))
-        : expectErr(await corrections.remove(STRANGER, VIDEO_ID, VIDEO_ID));
+  it.each(['create', 'update', 'remove'] as const)('refuses a stranger on %s', async (action) => {
+    const attempt: Record<typeof action, () => Promise<Result<unknown, { code: string }>>> = {
+      create: async () => corrections.create(STRANGER, VIDEO_ID, body(1)),
+      update: async () => corrections.update(STRANGER, VIDEO_ID, VIDEO_ID, { text: 'x' }),
+      remove: async () => corrections.remove(STRANGER, VIDEO_ID, VIDEO_ID),
+    };
 
-    expect(failure.code).toBe(ErrorCodes.FORBIDDEN);
+    expect(expectErr(await attempt[action]()).code).toBe(ErrorCodes.FORBIDDEN);
   });
 });

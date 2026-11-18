@@ -1,5 +1,5 @@
 {
-  "id": "49ba7d6b-8f02-4e6c-9fe5-b4656ec10ca4",
+  "id": "67a13e30-04d1-462e-94b6-7e824c351776",
   "prevId": "1a3180ed-6c0d-4d2d-a9a1-f48edfaea25d",
   "version": "7",
   "dialect": "postgresql",
@@ -8906,9 +8906,9 @@
           "primaryKey": false,
           "notNull": false
         },
-        "note": {
-          "name": "note",
-          "type": "text",
+        "restored_from_version": {
+          "name": "restored_from_version",
+          "type": "integer",
           "primaryKey": false,
           "notNull": false
         },
@@ -8972,9 +8972,9 @@
           "name": "entity_revisions_type_check",
           "value": "\"entity_revisions\".\"entity_type\" IN ('video_metadata')"
         },
-        "entity_revisions_note_check": {
-          "name": "entity_revisions_note_check",
-          "value": "\"entity_revisions\".\"note\" IS NULL OR char_length(\"entity_revisions\".\"note\") <= 200"
+        "entity_revisions_restored_from_check": {
+          "name": "entity_revisions_restored_from_check",
+          "value": "\"entity_revisions\".\"restored_from_version\" IS NULL OR \"entity_revisions\".\"restored_from_version\" >= 0"
         }
       },
       "isRLSEnabled": false

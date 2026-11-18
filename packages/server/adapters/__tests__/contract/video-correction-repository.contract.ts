@@ -64,6 +64,18 @@ export function describeVideoCorrectionRepositoryContract(
       expect(await create(correction(4, { videoId: VIDEO_IDS.b }), 2)).toBe(true);
     });
 
+    it('changes the range and text of a correction in its own video only', async () => {
+      await create(correction(1));
+      const fields = { startMs: 40_000, endMs: 46_000, text: 'Fixed' };
+
+      expect(expectOk(await corrections.update(VIDEO_IDS.b, correctionId(1), fields))).toBeNull();
+      expect(expectOk(await corrections.update(VIDEO_IDS.a, correctionId(9), fields))).toBeNull();
+      expect(expectOk(await corrections.update(VIDEO_IDS.a, correctionId(1), fields))).toEqual(
+        correction(1, fields)
+      );
+      expect(await list()).toEqual([correction(1, fields)]);
+    });
+
     it('removes a correction only from its own video', async () => {
       await create(correction(1));
 

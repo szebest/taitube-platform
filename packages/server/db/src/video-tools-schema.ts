@@ -6,7 +6,6 @@ import {
   ENTITY_REVISION_TYPES,
   type EntityRevisionType,
   type EntitySnapshots,
-  REVISION_NOTE_MAX_LENGTH,
 } from '@vp/domain';
 import { sql } from 'drizzle-orm';
 import {
@@ -32,7 +31,7 @@ export const entityRevisions = pgTable(
     version: integer('version').notNull(),
     snapshot: jsonb('snapshot').$type<EntitySnapshots[EntityRevisionType]>().notNull(),
     authorUserId: uuid('author_user_id').references(() => users.id, { onDelete: 'set null' }),
-    note: text('note'),
+    restoredFromVersion: integer('restored_from_version'),
     createdAt: timestamptz('created_at').notNull().defaultNow(),
   },
   (table) => [
@@ -46,8 +45,8 @@ export const entityRevisions = pgTable(
       sql`${table.entityType} IN (${listOf(ENTITY_REVISION_TYPES)})`
     ),
     check(
-      'entity_revisions_note_check',
-      sql`${table.note} IS NULL OR char_length(${table.note}) <= ${sql.raw(String(REVISION_NOTE_MAX_LENGTH))}`
+      'entity_revisions_restored_from_check',
+      sql`${table.restoredFromVersion} IS NULL OR ${table.restoredFromVersion} >= 0`
     ),
   ]
 );

@@ -8,7 +8,7 @@ export interface NewEntityRevision<T extends EntityRevisionType = EntityRevision
   version: number;
   snapshot: EntitySnapshots[T];
   authorUserId: string | null;
-  note: string | null;
+  restoredFromVersion: number | null;
 }
 
 export interface ListRevisionsOptions {

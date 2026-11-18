@@ -8,7 +8,7 @@ const item = (patch: Partial<RevisionListItem>): RevisionListItem => ({
   id: 'r',
   version: 1,
   createdAt: '2026-03-01T12:00:00.000Z',
-  note: null,
+  restoredFromVersion: null,
   changedFields: [],
   current: false,
   ...patch,
@@ -16,7 +16,7 @@ const item = (patch: Partial<RevisionListItem>): RevisionListItem => ({
 
 const items = [
   item({ id: 'a', version: 3, current: true, changedFields: ['title', 'tags'] }),
-  item({ id: 'b', version: 2, changedFields: [] }),
+  item({ id: 'b', version: 2, changedFields: [], restoredFromVersion: 1 }),
   item({ id: 'c', version: 1, changedFields: null }),
 ];
 
@@ -36,6 +36,7 @@ describe('apps/client/studio: RevisionList', () => {
     { row: 0, text: 'Version 3' },
     { row: 0, text: 'Current' },
     { row: 0, text: 'title and tags' },
+    { row: 1, text: 'Restored from version 1' },
     { row: 1, text: 'No field differs from the version before it' },
     { row: 2, text: 'Before the first edit' },
   ])('shows "$text" on row $row', ({ row, text }) => {

@@ -52,14 +52,16 @@ describe('postgres: video revision writes', () => {
         version: 2,
         snapshot,
         authorUserId: USER_ID,
-        note: null,
+        restoredFromVersion: null,
       };
 
       await appendEntityRevision(db, revision);
-      await appendEntityRevision(db, { ...revision, note: 'again' });
+      await appendEntityRevision(db, { ...revision, restoredFromVersion: 1 });
 
       const rows = await db.select().from(schema.entityRevisions);
-      expect(rows.map(toEntityRevision)).toMatchObject([{ version: 2, note: null, snapshot }]);
+      expect(rows.map(toEntityRevision)).toMatchObject([
+        { version: 2, restoredFromVersion: null, snapshot },
+      ]);
     });
   });
 

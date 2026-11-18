@@ -91,6 +91,7 @@ describe('packages/api-contracts: api tokens', () => {
       'PUT /v1/videos/:id/chapters': 'videos:write',
       'GET /v1/videos/:id/corrections': 'videos:read',
       'POST /v1/videos/:id/corrections': 'videos:write',
+      'PATCH /v1/videos/:id/corrections/:correctionId': 'videos:write',
       'DELETE /v1/videos/:id/corrections/:correctionId': 'videos:write',
       'GET /v1/creator/videos/:id/analytics': 'analytics:read',
       'GET /v1/creator/videos/:id/retention': 'analytics:read',

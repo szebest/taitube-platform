@@ -29,7 +29,7 @@ export function HistoryPanel({ video }: { video: Video }) {
       id: revision.id,
       version: revision.version,
       createdAt: revision.createdAt,
-      note: revision.note,
+      restoredFromVersion: revision.restoredFromVersion,
       changedFields: older ? diffSnapshots(older.snapshot, revision.snapshot) : null,
       current: revision.version === video.version,
     };

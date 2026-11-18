@@ -6,6 +6,7 @@ import {
   listVideoRevisions,
   replaceVideoChapters,
   restoreVideoRevision,
+  updateVideoCorrection,
   type Video,
 } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
@@ -63,6 +64,7 @@ export function serveVideoTools(
       },
     ],
     created: [] as unknown[],
+    updated: [] as { id: string; changes: unknown }[],
     removed: [] as string[],
   };
 
@@ -90,7 +92,7 @@ export function serveVideoTools(
             version: editor.api.stored.version,
             snapshot: snapshot('Launch day', editor.api.stored.chapters),
             authorUserId: null,
-            note: null,
+            restoredFromVersion: null,
             createdAt: '2026-03-02T12:00:00.000Z',
           },
           {
@@ -98,7 +100,7 @@ export function serveVideoTools(
             version: editor.api.stored.version - 1,
             snapshot: snapshot('Before'),
             authorUserId: null,
-            note: null,
+            restoredFromVersion: null,
             createdAt: '2026-03-01T12:00:00.000Z',
           },
         ],
@@ -130,6 +132,15 @@ export function serveVideoTools(
       };
       state.corrections = [...state.corrections, created];
       return HttpResponse.json(created, { status: 201 });
+    }),
+    mockEndpoint(updateVideoCorrection, async ({ request, params }) => {
+      const changes = (await request.json()) as object;
+      const id = String(params['correctionId']);
+      state.updated.push({ id, changes });
+      state.corrections = state.corrections.map((row) =>
+        row.id === id ? { ...row, ...changes } : row
+      );
+      return HttpResponse.json(state.corrections.find((row) => row.id === id));
     }),
     mockEndpoint(deleteVideoCorrection, ({ params }) => {
       state.removed.push(String(params['correctionId']));

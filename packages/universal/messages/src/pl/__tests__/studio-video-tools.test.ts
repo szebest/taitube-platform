@@ -9,6 +9,11 @@ describe('@vp/messages: pl studio video tools', () => {
     { key: 'studio.historyVersion', values: { version: 7 }, expected: 'Wersja 7' },
     { key: 'studio.historyRestore', values: { version: 3 }, expected: 'Przywróć wersję 3' },
     {
+      key: 'studio.historyRestoredFrom',
+      values: { version: 3 },
+      expected: 'Przywrócono z wersji 3',
+    },
+    {
       key: 'studio.correctionsRemove',
       values: { start: '0:10' },
       expected: 'Usuń korektę od 0:10',

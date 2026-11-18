@@ -68,7 +68,12 @@ const RevisionSchema = z.object({
     .uuid()
     .nullable()
     .describe('Who saved it; null for the state before the first edit'),
-  note: z.string().nullable(),
+  restoredFromVersion: z
+    .number()
+    .int()
+    .nonnegative()
+    .nullable()
+    .describe('The version a restore went back to; null for an ordinary edit'),
   createdAt: z.string().describe('ISO 8601 timestamp'),
 });
 
@@ -123,6 +128,11 @@ const CorrectionBodySchema = z.object({
     ),
   text: z.string().describe(`The correction, up to ${CORRECTION_TEXT_MAX_LENGTH} characters`),
 });
+
+const CorrectionChangesSchema = CorrectionBodySchema.partial().refine(
+  (changes) => Object.keys(changes).length > 0,
+  { message: 'Name at least one field to change' }
+);
 
 const CorrectionParamsSchema = VideoIdParamSchema.extend({ correctionId: z.uuid() });
 
@@ -250,6 +260,25 @@ export const createVideoCorrection = defineEndpoint({
   errors: {
     ...AUTHENTICATED,
     409: [ErrorCodes.CORRECTION_LIMIT],
+    422: [ErrorCodes.VALIDATION_FAILED],
+  },
+});
+
+export const updateVideoCorrection = defineEndpoint({
+  method: 'PATCH',
+  path: '/v1/videos/:id/corrections/:correctionId',
+  scope: 'videos:write',
+  tag: 'Videos',
+  summary: 'Change a correction',
+  description:
+    'Changes the range or the text; the fields left out stay. The same permission as adding one.',
+  params: CorrectionParamsSchema,
+  body: CorrectionChangesSchema,
+  status: 200,
+  result: CorrectionSchema,
+  errors: {
+    ...AUTHENTICATED,
+    404: [ErrorCodes.VIDEO_NOT_FOUND, ErrorCodes.CORRECTION_NOT_FOUND],
     422: [ErrorCodes.VALIDATION_FAILED],
   },
 });

@@ -37,9 +37,9 @@ export interface UpdateStudioMetadataOptions {
   auditFields: VideoAuditField[];
   /**
    * Every landed edit appends a `video_metadata` revision at its new version in the same
-   * transaction; a restore names the version it went back to, and either may carry a note.
+   * transaction; a restore names the version it went back to.
    */
-  revision?: { note?: string; restoredFromVersion?: number };
+  revision?: { restoredFromVersion?: number };
 }
 
 /** Absence is an answer, not a failure: the service decides which error each one becomes. */

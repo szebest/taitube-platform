@@ -69,6 +69,7 @@ export const studioVideoTools = {
       },
     },
   }),
+  historyRestoredFrom: dt('Restored from version {version}'),
   historyRestore: dt('Restore version {version}'),
   historyRestored: dt('Version restored'),
   historyRestoreFailed: dt('The version was not restored.'),

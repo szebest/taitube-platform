@@ -11,7 +11,7 @@ const CARD = { startMs: 1_000, endMs: 4_000, text: 'A correction' };
 
 type Attempt = {
   name: string;
-  method: 'GET' | 'POST' | 'PUT' | 'DELETE';
+  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   path: (videoId: string) => string;
   data?: Record<string, unknown>;
 };
@@ -40,6 +40,12 @@ const ATTEMPTS: Attempt[] = [
     method: 'POST',
     path: (id) => `/v1/videos/${id}/corrections`,
     data: CARD,
+  },
+  {
+    name: 'change a correction',
+    method: 'PATCH',
+    path: (id) => `/v1/videos/${id}/corrections/${NO_ID}`,
+    data: { text: 'Fixed' },
   },
   {
     name: 'remove a correction',

@@ -5,10 +5,10 @@ CREATE TABLE "entity_revisions" (
 	"version" integer NOT NULL,
 	"snapshot" jsonb NOT NULL,
 	"author_user_id" uuid,
-	"note" text,
+	"restored_from_version" integer,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "entity_revisions_type_check" CHECK ("entity_revisions"."entity_type" IN ('video_metadata')),
-	CONSTRAINT "entity_revisions_note_check" CHECK ("entity_revisions"."note" IS NULL OR char_length("entity_revisions"."note") <= 200)
+	CONSTRAINT "entity_revisions_restored_from_check" CHECK ("entity_revisions"."restored_from_version" IS NULL OR "entity_revisions"."restored_from_version" >= 0)
 );
 --> statement-breakpoint
 CREATE TABLE "video_chapters" (

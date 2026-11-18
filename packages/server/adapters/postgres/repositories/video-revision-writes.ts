@@ -60,10 +60,10 @@ export async function appendVideoRevisions(
     after: VideoRow;
     afterChapters: readonly Chapter[];
     authorUserId: string;
-    note?: string;
+    restoredFromVersion?: number;
   }
 ): Promise<void> {
-  const { before, beforeChapters, after, afterChapters, authorUserId, note } = edit;
+  const { before, beforeChapters, after, afterChapters, authorUserId, restoredFromVersion } = edit;
   const [recorded] = await tx
     .select({ id: er.id })
     .from(er)
@@ -76,7 +76,7 @@ export async function appendVideoRevisions(
       version: before.version,
       snapshot: videoMetadataSnapshot(before, beforeChapters),
       authorUserId: null,
-      note: null,
+      restoredFromVersion: null,
     });
   }
   await appendEntityRevision(tx, {
@@ -85,6 +85,6 @@ export async function appendVideoRevisions(
     version: after.version,
     snapshot: videoMetadataSnapshot(after, afterChapters),
     authorUserId,
-    note: note ?? null,
+    restoredFromVersion: restoredFromVersion ?? null,
   });
 }

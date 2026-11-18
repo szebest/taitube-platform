@@ -7,6 +7,7 @@ import {
   listVideoRevisions,
   replaceVideoChapters,
   restoreVideoRevision,
+  updateVideoCorrection,
 } from '@vp/api-contracts';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
@@ -131,6 +132,26 @@ export async function videoToolsRoutes(app: FastifyInstance): Promise<void> {
         await corrections.create(requireAuth(request), request.params.id, request.body),
         { status: createVideoCorrection.status }
       )
+  );
+
+  server.patch(
+    updateVideoCorrection.path,
+    {
+      schema: {
+        ...contractSchema(updateVideoCorrection),
+        params: updateVideoCorrection.params,
+        body: updateVideoCorrection.body,
+      },
+    },
+    async (request, reply) => {
+      const { id, correctionId } = request.params;
+      return sendResult(
+        reply,
+        request,
+        await corrections.update(requireAuth(request), id, correctionId, request.body),
+        { status: updateVideoCorrection.status }
+      );
+    }
   );
 
   server.delete(

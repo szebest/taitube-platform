@@ -110,7 +110,7 @@ export function describeVideoChapterRepositoryContract(makeSubject: MakeReposito
       expect(found.at(-1)?.authorUserId).toBeNull();
     });
 
-    it('stores the note of the edit on its revision', async () => {
+    it('stores the version a restore went back to on its revision', async () => {
       expectOk(
         await studio.updateMetadata({
           videoId: VIDEO_IDS.a,
@@ -118,11 +118,11 @@ export function describeVideoChapterRepositoryContract(makeSubject: MakeReposito
           patch: { title: 'Back' },
           userId: OWNER_ID,
           auditFields: ['title'],
-          revision: { note: 'Restored version 3', restoredFromVersion: 3 },
+          revision: { restoredFromVersion: 3 },
         })
       );
 
-      expect((await history())[0]?.note).toBe('Restored version 3');
+      expect((await history())[0]?.restoredFromVersion).toBe(3);
     });
 
     it('records nothing and changes no chapter when the write loses its compare-and-set', async () => {

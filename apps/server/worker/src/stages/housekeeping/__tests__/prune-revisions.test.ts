@@ -27,7 +27,7 @@ describe('housekeeping: prune-revisions', () => {
           version,
           snapshot,
           authorUserId: null,
-          note: null,
+          restoredFromVersion: null,
         })
       );
     }

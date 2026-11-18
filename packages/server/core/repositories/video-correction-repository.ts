@@ -10,6 +10,12 @@ export abstract class VideoCorrectionRepository {
     correction: Correction,
     limit: number
   ): Promise<Result<boolean, DatabaseUnavailable>>;
+  /** The changed correction, or `null` when the video holds none with that id. */
+  abstract update(
+    videoId: string,
+    correctionId: string,
+    fields: Pick<Correction, 'startMs' | 'endMs' | 'text'>
+  ): Promise<Result<Correction | null, DatabaseUnavailable>>;
   abstract remove(
     videoId: string,
     correctionId: string

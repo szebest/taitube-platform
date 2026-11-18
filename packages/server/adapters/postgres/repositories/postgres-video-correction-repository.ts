@@ -47,6 +47,23 @@ export class PostgresVideoCorrectionRepository extends VideoCorrectionRepository
     );
   }
 
+  async update(
+    videoId: string,
+    correctionId: string,
+    fields: Pick<Correction, 'startMs' | 'endMs' | 'text'>
+  ): Promise<Result<Correction | null, DatabaseUnavailable>> {
+    const updated = await fromPromise(
+      () =>
+        this.db
+          .update(vco)
+          .set(fields)
+          .where(and(eq(vco.id, correctionId), eq(vco.videoId, videoId)))
+          .returning(),
+      databaseUnavailable.during('updateVideoCorrection')
+    );
+    return map(updated, ([row]) => row ?? null);
+  }
+
   async remove(
     videoId: string,
     correctionId: string

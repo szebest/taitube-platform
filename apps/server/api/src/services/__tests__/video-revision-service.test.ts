@@ -62,7 +62,7 @@ describe('apps/server/api/services: video revisions', () => {
 
     expect(items.map((item) => item.snapshot.title)).toEqual(['Two', 'One', 'Original']);
     expect(items.map((item) => item.version)).toEqual([3, 2, 1]);
-    expect(items[0]).toMatchObject({ authorUserId: OWNER.id, note: null });
+    expect(items[0]).toMatchObject({ authorUserId: OWNER.id, restoredFromVersion: null });
     expect(nextCursor).toBeNull();
   });
 
@@ -90,7 +90,7 @@ describe('apps/server/api/services: video revisions', () => {
     expect(view).toMatchObject({ title: 'Original', description: 'First words', chapters: [] });
     const after = (await list()).items;
     expect(after.map((item) => item.version)).toEqual([3, 2, 1]);
-    expect(after[0]).toMatchObject({ note: 'Restored version 1', snapshot: { title: 'Original' } });
+    expect(after[0]).toMatchObject({ restoredFromVersion: 1, snapshot: { title: 'Original' } });
   });
 
   it('audits the restore beside the edit', async () => {

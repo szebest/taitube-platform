@@ -16,6 +16,7 @@ The saved versions of one record, newest first, each with the fields it changed 
 | Part | Notes |
 |---|---|
 | Version | `Version n`, a `Badge` when it is the current one, and the time as a `<time>` |
+| Restored from | `Restored from version n` when the revision is a restore; the API stores the number, the label comes from the catalogue |
 | What changed | the fields that differ from the version before it, listed; `null` for the oldest loaded one reads "Before the first edit" |
 | Restore | an `outline` small `Button`; absent on the current version |
 
@@ -26,7 +27,7 @@ interface RevisionListItem {
   id: string;
   version: number;
   createdAt: string;
-  note: string | null;
+  restoredFromVersion: number | null; // the version a restore went back to
   changedFields: VideoMetadataField[] | null; // from diffSnapshots against the older version
   current: boolean;
 }

@@ -4,6 +4,7 @@ import { VIDEO_ID, api, video } from '@vp/web-testing';
 import { serveVideoTools } from '#app/features/videos/__tests__/video-tools-api.fixture';
 import {
   addCorrectionMutationOptions,
+  updateCorrectionMutationOptions,
   removeCorrectionMutationOptions,
   replaceChaptersMutationOptions,
   restoreRevisionMutationOptions,
@@ -62,6 +63,15 @@ describe('apps/client/studio: video tool mutations', () => {
           startMs: 0,
           endMs: 5000,
           text: 'x',
+        }),
+    },
+    {
+      name: 'changing a correction',
+      key: videoToolKeys.corrections(VIDEO_ID),
+      run: (client: ReturnType<typeof createQueryClient>) =>
+        new MutationObserver(client, updateCorrectionMutationOptions(api, VIDEO_ID)).mutate({
+          correctionId: '0190c3a0-5e1d-7000-8000-00000000d001',
+          changes: { text: 'y' },
         }),
     },
     {

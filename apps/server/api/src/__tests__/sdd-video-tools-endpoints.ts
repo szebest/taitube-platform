@@ -96,6 +96,20 @@ export const SDD_VIDEO_TOOLS_ENDPOINTS: SddEndpointContract[] = [
   },
   {
     path: '/v1/videos/{id}/corrections/{correctionId}',
+    method: 'patch',
+    expectedStatuses: [200, 400, 401, 403, 404, 422],
+    expectedErrorCodes: [
+      VALIDATION_FAILED,
+      UNAUTHORIZED,
+      FORBIDDEN,
+      VIDEO_NOT_FOUND,
+      CORRECTION_NOT_FOUND,
+    ],
+    hasPathParams: true,
+    hasBody: true,
+  },
+  {
+    path: '/v1/videos/{id}/corrections/{correctionId}',
     method: 'delete',
     expectedStatuses: [204, 400, 401, 403, 404],
     expectedErrorCodes: [

@@ -2,6 +2,7 @@ import {
   bulkEditCreatorVideos,
   createVideoCorrection,
   deleteVideoCorrection,
+  updateVideoCorrection,
   getChapterSuggestions,
   listVideoCorrections,
   listVideoRevisions,
@@ -49,6 +50,12 @@ describe('packages/api-contracts: video tools', () => {
       method: 'POST',
       path: '/v1/videos/:id/corrections',
       status: 201,
+    },
+    {
+      endpoint: updateVideoCorrection,
+      method: 'PATCH',
+      path: '/v1/videos/:id/corrections/:correctionId',
+      status: 200,
     },
     {
       endpoint: deleteVideoCorrection,
@@ -109,6 +116,14 @@ describe('packages/api-contracts: video tools', () => {
       createVideoCorrection.body.safeParse({ startMs: 0, endMs: 5000, text: 'x' }).success
     ).toBe(true);
     expect(createVideoCorrection.body.safeParse({ startMs: 0, endMs: 5000 }).success).toBe(false);
+  });
+
+  it.each([
+    { scenario: 'a new text', body: { text: 'Fixed' }, ok: true },
+    { scenario: 'a new range', body: { startMs: 1000, endMs: 5000 }, ok: true },
+    { scenario: 'nothing', body: {}, ok: false },
+  ])('checks the correction changes of $scenario', ({ body, ok }) => {
+    expect(updateVideoCorrection.body.safeParse(body).success).toBe(ok);
   });
 
   it('pages the history with a cursor and an optional limit', () => {

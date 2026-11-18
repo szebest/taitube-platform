@@ -67,6 +67,7 @@ export const studioVideoTools = {
       },
     },
   }),
+  historyRestoredFrom: dt('Przywrócono z wersji {version}'),
   historyRestore: dt('Przywróć wersję {version}'),
   historyRestored: dt('Wersja przywrócona'),
   historyRestoreFailed: dt('Nie udało się przywrócić wersji.'),
