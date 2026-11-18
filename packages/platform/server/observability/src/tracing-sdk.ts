@@ -21,7 +21,7 @@ interface TracingConfig {
  * The hook wraps third-party modules only. It re-reads a module's `export *` itself, without the
  * loader that resolves this repo's extensionless specifiers, so wrapping our own code fails.
  */
-const WORKSPACE_PACKAGE = /\/node_modules\/@vp\//;
+const WORKSPACE_PACKAGE = /\/node_modules\/@(vp|kit)\//;
 const APP_SOURCE = /^file:\/\/(?!.*\/node_modules\/)/;
 
 const toError = (cause: unknown): Error => new Error('tracing failed', { cause });

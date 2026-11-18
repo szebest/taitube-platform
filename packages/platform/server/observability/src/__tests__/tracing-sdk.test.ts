@@ -1,6 +1,6 @@
 import { initTracing } from '../tracing-sdk';
 
-describe('@vp/observability: tracing SDK', () => {
+describe('@kit/observability: tracing SDK', () => {
   it('starts nothing when tracing is disabled', () => {
     const started = initTracing({
       serviceName: 'vp-test',

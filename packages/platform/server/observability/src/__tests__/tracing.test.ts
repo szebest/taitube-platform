@@ -26,7 +26,7 @@ function installProvider(): { provider: BasicTracerProvider; exporter: InMemoryS
   return { provider, exporter };
 }
 
-describe('@vp/observability: tracing', () => {
+describe('@kit/observability: tracing', () => {
   afterEach(() => {
     trace.disable();
     context.disable();

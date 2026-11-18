@@ -1,6 +1,6 @@
-# AGENTS.md — @vp/observability (Prometheus & OpenTelemetry)
+# AGENTS.md — @vp/pipeline-metrics (The Product's Metrics)
 
-Instructions for any coding agent working on `@vp/observability`.
+Instructions for any coding agent working on `@vp/pipeline-metrics`.
 
 > Tier rules for this directory: [../AGENTS.md](../AGENTS.md) · full tier & layer reference: [packages/AGENTS.md](../../AGENTS.md)
 
@@ -8,34 +8,30 @@ Instructions for any coding agent working on `@vp/observability`.
 
 ## 1. Scope & Purpose
 
-`@vp/observability` provides the shared metrics and tracing for the API and the worker. Logging is not
-here: it lives in [`@kit/logger`](../../platform/server/logger/AGENTS.md), and this package neither re-exports it nor imports
-`pino` (`zero-matches.test.ts`).
+The metrics the API and the worker record, and the names the product gives its telemetry. The engine
+(registry, scrape server, tracing) is [`@kit/observability`](../../platform/server/observability/AGENTS.md).
 
-Tier `server`, `vp.layer` 2 (it depends on `@kit/result`); its dependencies are in [package.json](package.json).
+Tier `server`, `vp.layer` 3 (it depends on `@kit/observability`); its dependencies are in
+[package.json](package.json).
 
-- **Metrics (`src/metrics.ts`):** `createMetricsRegistry()` returns `PipelineMetrics`, one `Registry` per
-  process; the metric names are catalogued in [SDD §13.1](../../../docs/SDD.md#131-metrics-catalogue). The
-  composition root builds it and hands it to everything that records.
-- **Scrape server (`src/server.ts`):** `MetricsServer` serves `/metrics`, `/healthz` and, when given a
-  `ready` probe, `/readyz`. Constructing it opens nothing; `listen()` and `close()` return a `Result`.
-- **Tracing (`src/tracing.ts`):** `initTracing` starts the Node SDK with auto-instrumentation and an OTLP
-  HTTP trace exporter, from the module a process preloads with `--import`. Traces only: metrics stay with
-  Prometheus. `resolveSampler` (`src/sampler.ts`) turns an `OTEL_TRACES_SAMPLER` name, typed
-  `TraceSamplerName`, and its ratio into the SDK sampler. `registeredTracing.shutdown()` flushes;
-  `getActiveTraceparent`, `extractContextFromTraceparent`, `createTraceparent` and `rootTraceparent` carry
-  the W3C `traceparent` that job payloads hold.
+- **`src/pipeline-metrics.ts`:** `createPipelineMetrics()` builds the registry with the `vp_` process-metric
+  prefix and returns `PipelineMetrics`, one per process; the metric names are catalogued in
+  [SDD §13.1](../../../docs/SDD.md#131-metrics-catalogue). The composition root builds it and hands it to
+  everything that records. The groups it spreads in: `src/web-vitals-metrics.ts`, `src/playback-metrics.ts`,
+  `src/captions-metrics.ts`, `src/screening-metrics.ts`. `createWatchPartyMetrics`
+  (`src/watch-party-metrics.ts`) registers the watch-party series on the API's registry.
+- **`src/tracer-name.ts`:** `TRACER_NAME`, the instrumentation scope every span of the product is recorded
+  under; callers pass it to `getTracer`.
 
 ---
 
 ## 2. Invariants
 
-- Local-first: tracing exports to `OTEL_EXPORTER_OTLP_ENDPOINT`, which defaults to a local collector, and
-  `initTracing` is a no-op when `config.otel.enabled` is false (it is under `NODE_ENV=test`).
-- The auto-instrumentation hook wraps third-party modules only, never `@vp/*` packages or app source.
-- `createMetricsRegistry` and the table in `docs/SDD.md` §13.1 name the same metrics, none missing and
-  none extra (`metrics-catalogue.test.ts`). The package's specs also hold the alert rules in
+- `createPipelineMetrics` and the table in `docs/SDD.md` §13.1 name the same metrics, none missing and none
+  extra (`pipeline-metrics.test.ts`). The package's specs also hold the alert rules in
   `infra/observability/alerts/video-pipeline-alerts.yaml` and `infra/compose/alertmanager/alertmanager.yml`.
+- A metric name, label, bucket, the `vp_` prefix and `TRACER_NAME` are what dashboards and alerts query:
+  changing one is a change to them.
 
 ---
 
@@ -43,13 +39,12 @@ Tier `server`, `vp.layer` 2 (it depends on `@kit/result`); its dependencies are 
 
 - **`observability-and-instrumentation`**
 - **`prometheus`**
-- **`opentelemetry`**
 
 ---
 
 ## 4. Local Commands
 
 ```bash
-pnpm --filter @vp/observability typecheck
-pnpm --filter @vp/observability test
+pnpm --filter @vp/pipeline-metrics typecheck
+pnpm --filter @vp/pipeline-metrics test
 ```

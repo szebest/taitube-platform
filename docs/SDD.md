@@ -3101,7 +3101,7 @@ flowchart LR
 
 #### Metrics, traces and logs
 
-`createWatchPartyMetrics` (`packages/server/observability/src/watch-party-metrics.ts`) registers these on the API's registry. They are not in the §13.1 table: `pipeline-metrics.test.ts` diffs that table against `createPipelineMetrics` and fails on a name found in one and not the other.
+`createWatchPartyMetrics` (`packages/server/pipeline-metrics/src/watch-party-metrics.ts`) registers these on the API's registry. They are not in the §13.1 table: `pipeline-metrics.test.ts` diffs that table against `createPipelineMetrics` and fails on a name found in one and not the other.
 
 | Metric | Type | Labels | Source |
 |---|---|---|---|
@@ -3412,7 +3412,7 @@ Guardrails: R2 Class A ops are the metric to watch (every segment upload is one 
 
 ### 13.1 Metrics catalogue
 
-Exposed by `packages/server/observability` (`prom-client` registry; API on `:9464/metrics`, workers likewise; scraped by Prometheus/Alloy).
+Exposed by `@kit/observability`, with the metrics of `@vp/pipeline-metrics` (`prom-client` registry; API on `:9464/metrics`, workers likewise; scraped by Prometheus/Alloy).
 
 | Metric | Type | Labels | Source | Used for |
 |---|---|---|---|---|
@@ -3491,12 +3491,12 @@ The `captions` queue has its own `vp-worker-captions` ScaledObject (min 0, max 4
 
 ### 13.3 Tracing (OpenTelemetry)
 
-- `initTracing` in `@vp/observability` starts `@opentelemetry/sdk-node` with the OTLP/HTTP trace exporter (`OTEL_EXPORTER_OTLP_ENDPOINT`) and the Node auto-instrumentations, `fs`, `dns` and `net` off; it is off under `NODE_ENV=test`. It is **preloaded**: each app's `src/instrument.ts` is the first module the process loads (`node --import ./dist/instrument.js dist/main.js`, the same flag under Bun), because the instrumentations patch only what is imported after them. The ESM hook wraps third-party modules only; this repo's own modules are excluded, since the hook cannot resolve their extensionless `export *`. The SDK exports traces only - metrics stay with Prometheus, logs with pino.
+- `initTracing` in `@kit/observability` starts `@opentelemetry/sdk-node` with the OTLP/HTTP trace exporter (`OTEL_EXPORTER_OTLP_ENDPOINT`) and the Node auto-instrumentations, `fs`, `dns` and `net` off; it is off under `NODE_ENV=test`. It is **preloaded**: each app's `src/instrument.ts` is the first module the process loads (`node --import ./dist/instrument.js dist/main.js`, the same flag under Bun), because the instrumentations patch only what is imported after them. The ESM hook wraps third-party modules only; this repo's own modules are excluded, since the hook cannot resolve their extensionless `export *`. The SDK exports traces only - metrics stay with Prometheus, logs with pino.
 - The API's HTTP server span is its own Fastify hook, `plugins/request-span.ts`: named `{method} {route template}`, parented on the caller's `traceparent`, and started from the root context, because the HTTP instrumentation hands a request it ignores over with tracing suppressed. The handler runs inside it, so `ioredis` spans and the `traceparent` a handler writes into a job both belong to the request's trace. `postgres` (postgres.js) has no OpenTelemetry instrumentation, so SQL is not a span.
 - BullMQ is instrumented by hand: producers inject `traceparent` into `job.data` (`packages/server/job-contracts` makes it a required field); the worker wrapper `withTelemetry(processor)` extracts it and starts a span `bullmq.process {queue}` as a **child of the producer's span**, with `job.id`, `attemptsMade`, `videoId` attributes. Work nothing traced asked for, such as a reconciler repair, starts a root span of its own (`rootTraceparent`). Each `ffmpeg` run is a child span `ffmpeg` carrying `ffmpeg.stage`, the argv with URLs redacted (`ffmpeg.command`) and `ffmpeg.exit_code`.
 - Result: one trace = `POST /v1/uploads/:uploadId/complete` -> `probe` -> three `transcode-*` -> `thumbnail` -> `package` -> `notify`, viewable in Tempo (compose `observability` profile, through the otel-collector); the video repository writes the active `trace_id` into `video_events`, so an operator can go from a video row to its trace.
 - The browser is the first span. `@kit/web-telemetry` starts `@opentelemetry/sdk-trace-web` in each client app after hydration, from a dynamic import, with the fetch instrumentation: it adds `traceparent` to calls to the API origin (`propagateTraceHeaderCorsUrls`) and to the page's own origin, which the instrumentation always does, and to no other host, so the API's request span is the browser span's child. Spans go over OTLP/HTTP to the build-time `VITE_OTEL_TRACES_URL`; with the key unset no tracer loads. Browser tracing is local only: each app's `.env.development` and the compose build set it to the local collector (`http://localhost:4318/v1/traces`, whose receiver allows the two app origins through CORS), and cloud builds leave it unset. Turning it on in the cloud takes a build arg and a CORS block on the Alloy OTLP receiver. The span attributes are the fetch instrumentation's own (method, URL with its query string dropped, status) and `service.name` `taitube-web` or `taitube-studio`: no user id, no session, nothing a viewer typed.
-- Sampling: `OTEL_TRACES_SAMPLER` takes the OpenTelemetry names `always_on`, `always_off`, `traceidratio` and their `parentbased_` forms, and `OTEL_TRACES_SAMPLER_ARG` is the ratio (0 to 1); any other value fails `loadEnv()`. Local runs default to `parentbased_always_on`; the cloud overlay sets `parentbased_traceidratio` at `0.2`, so a new trace is kept one time in five and a child follows its parent's decision (`resolveSampler` in `@vp/observability`, `sampler.test.ts`).
+- Sampling: `OTEL_TRACES_SAMPLER` takes the OpenTelemetry names `always_on`, `always_off`, `traceidratio` and their `parentbased_` forms, and `OTEL_TRACES_SAMPLER_ARG` is the ratio (0 to 1); any other value fails `loadEnv()`. Local runs default to `parentbased_always_on`; the cloud overlay sets `parentbased_traceidratio` at `0.2`, so a new trace is kept one time in five and a child follows its parent's decision (`resolveSampler` in `@kit/observability`, `sampler.test.ts`).
 
 ### 13.4 Logging
 

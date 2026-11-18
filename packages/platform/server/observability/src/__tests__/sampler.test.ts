@@ -23,7 +23,7 @@ function sampled(name: TraceSamplerName, ratio: number, parent = ROOT_CONTEXT): 
   return decision === SamplingDecision.RECORD_AND_SAMPLED;
 }
 
-describe('@vp/observability: resolveSampler', () => {
+describe('@kit/observability: resolveSampler', () => {
   it.each<[TraceSamplerName, number, boolean, boolean]>([
     ['always_on', 0, true, true],
     ['always_off', 1, false, false],

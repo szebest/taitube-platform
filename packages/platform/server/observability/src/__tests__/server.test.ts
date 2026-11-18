@@ -2,7 +2,7 @@ import * as net from 'node:net';
 import { Registry } from 'prom-client';
 import { MetricsServer, type MetricsServerOptions } from '../server';
 
-describe('@vp/observability: MetricsServer', () => {
+describe('@kit/observability: MetricsServer', () => {
   const servers: MetricsServer[] = [];
 
   async function listening(options: Partial<MetricsServerOptions> = {}): Promise<MetricsServer> {
