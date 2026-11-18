@@ -1908,6 +1908,45 @@ CREATE TABLE clips (
 CREATE INDEX clips_user_created_idx ON clips (user_id, created_at DESC, id DESC);   -- GET /me/clips
 CREATE INDEX clips_video_idx ON clips (video_id);
 
+-- 0043: one history for every entity that keeps one (ticket 116). A kind adds a value to the type CHECK and a snapshot shape in @vp/domain.
+CREATE TABLE entity_revisions (
+  id             uuid PRIMARY KEY,                                       -- UUIDv7
+  entity_type    text NOT NULL,                                          -- 'video_metadata'
+  entity_id      uuid NOT NULL,
+  version        integer NOT NULL,                                       -- the entity's own version after the change
+  snapshot       jsonb NOT NULL,                                         -- video_metadata: title, description, tags, categoryId, visibility, thumbnail, chapters, commentsEnabled
+  author_user_id uuid REFERENCES users(id) ON DELETE SET NULL,           -- null for the state recorded before a video's first edit
+  note           text,                                                   -- up to 200 characters
+  created_at     timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT entity_revisions_type_check CHECK (entity_type IN ('video_metadata')),
+  CONSTRAINT entity_revisions_note_check CHECK (note IS NULL OR char_length(note) <= 200)
+);
+CREATE UNIQUE INDEX entity_revisions_entity_version_idx ON entity_revisions (entity_type, entity_id, version);
+-- Written in the edit's own transaction, after its CAS, so a lost write leaves neither a revision nor an audit row; `prune-revisions` keeps the newest 50 per entity.
+
+CREATE TABLE video_chapters (
+  video_id uuid NOT NULL REFERENCES videos(id) ON DELETE CASCADE,
+  position integer NOT NULL,                                             -- the order the set was saved in, which is start order
+  start_ms integer NOT NULL,
+  title    text NOT NULL,                                                -- 1 to 60 characters
+  PRIMARY KEY (video_id, position),
+  CONSTRAINT video_chapters_start_check CHECK (start_ms >= 0),
+  CONSTRAINT video_chapters_title_check CHECK (char_length(title) BETWEEN 1 AND 60)
+);
+-- The set is replaced whole inside `updateMetadata`; at least three, the first at 0, 10 seconds apart is `decideChapters`'s rule, and an empty set clears.
+
+CREATE TABLE video_corrections (
+  id         uuid PRIMARY KEY,                                           -- UUIDv7
+  video_id   uuid NOT NULL REFERENCES videos(id) ON DELETE CASCADE,
+  start_ms   integer NOT NULL,
+  end_ms     integer NOT NULL,
+  text       text NOT NULL,                                              -- 1 to 200 characters
+  created_at timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT video_corrections_range_check CHECK (start_ms >= 0 AND end_ms - start_ms BETWEEN 2000 AND 30000),
+  CONSTRAINT video_corrections_text_check CHECK (char_length(text) BETWEEN 1 AND 200)
+);
+CREATE INDEX video_corrections_video_idx ON video_corrections (video_id, start_ms);   -- at most 10 per video, counted under an advisory lock
+
 -- 0026: pick of the day, one editor-scheduled video per window. Windows are half-open and never overlap.
 CREATE TABLE picks (
   id         uuid PRIMARY KEY,                                           -- UUIDv7
