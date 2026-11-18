@@ -1,9 +1,9 @@
 import { err } from '@kit/result';
+import { expectOk } from '@kit/testing/result';
 import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
 import { videoStatusChanged } from '@vp/domain';
 import { storageUnavailable } from '@vp/errors';
 import { masterPlaylistKey, renditionPlaylistKey } from '@vp/storage';
-import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { type PurgeDeletedOptions, runPurgeDeleted } from '../purge-deleted';
 import { hoursAgo, seedVideo } from './housekeeping-harness';

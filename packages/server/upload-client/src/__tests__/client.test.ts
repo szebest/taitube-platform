@@ -3,6 +3,7 @@ import * as http from 'node:http';
 import type { AddressInfo } from 'node:net';
 import * as os from 'node:os';
 import * as path from 'node:path';
+import { expectOk } from '@kit/testing/result';
 import {
   InMemoryCacheClient,
   InMemoryDatabaseClient,
@@ -12,8 +13,7 @@ import { S3MultipartStorage, S3StorageClient } from '@vp/adapters/s3';
 import { composeApp } from '@vp/api';
 import { mintToken } from '@vp/dev-identity';
 import { inProcessAppConfig } from '@vp/env-schema';
-import { SEEDED } from '@vp/testing';
-import { expectOk } from '@vp/testing/result';
+import { SEEDED } from '@vp/testing-fixtures';
 import type { FastifyInstance } from 'fastify';
 import { UploadClient } from '../client';
 

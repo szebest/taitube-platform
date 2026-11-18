@@ -35,7 +35,7 @@ export const ENTRYPOINTS: readonly string[] = [
 /** Not entrypoints, and still allowed to touch the environment: the loader and the test harness. */
 export const ENV_HOMES: readonly string[] = [
   `${CONFIG}/src/load-env.ts`,
-  'packages/server/testing/src/index.ts',
+  'packages/platform/server/testing/src/index.ts',
   'apps/client/*/src/lib/config/index.ts',
   'tests/playwright/config.ts',
 ];

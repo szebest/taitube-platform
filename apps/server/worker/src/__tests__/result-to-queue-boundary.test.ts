@@ -1,5 +1,6 @@
 import { createLogger } from '@kit/logger';
 import { type Result, err, isErr, ok } from '@kit/result';
+import { expectOk } from '@kit/testing/result';
 import { InMemoryJobQueue, InMemoryRepositories } from '@vp/adapters/in-memory';
 import {
   type AnyFailure,
@@ -9,7 +10,6 @@ import {
   toPipelineError,
 } from '@vp/errors';
 import { createMetricsRegistry } from '@vp/observability';
-import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { createFailureHandler } from '../failure-handler';
 import { STAGE_SETTINGS } from './stage-settings';

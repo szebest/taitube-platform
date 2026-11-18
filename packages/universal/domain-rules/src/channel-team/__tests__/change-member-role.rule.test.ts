@@ -1,6 +1,6 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import type { ActingRole, ChannelMembership, ChannelRole } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { decideMemberRoleChange } from '../change-member-role.rule';
 import { CHANNEL_ID, OWNER_ID, actingAs, membership } from './team-personas';
 

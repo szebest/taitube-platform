@@ -1,6 +1,6 @@
+import { expectOk } from '@kit/testing/result';
 import type { WebVital, WebVitalsBatch } from '@vp/api-contracts';
 import { type PipelineMetrics, createMetricsRegistry } from '@vp/observability';
-import { expectOk } from '@vp/testing/result';
 import { WebVitalsService } from '../web-vitals-service';
 
 const ROUTE = '/watch/$videoId';

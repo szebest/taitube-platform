@@ -64,7 +64,7 @@ export const ROWS: readonly Row[] = [
       ':(glob)apps/**/*.ts',
       ':(glob)apps/**/*.tsx',
       ':(glob)packages/**/*.ts',
-      ':(exclude,glob)packages/server/testing/**',
+      ':(exclude,glob)packages/server/testing-fixtures/**',
     ],
     expected: 1,
     fires: 'async function uploadedVideo(sourceKey: string): Promise<string> {',

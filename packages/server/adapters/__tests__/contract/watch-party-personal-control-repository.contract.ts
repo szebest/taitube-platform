@@ -1,5 +1,5 @@
+import { expectOk } from '@kit/testing/result';
 import { NO_PERSONAL_CONTROL, type PersonalControlRecord } from '@vp/domain';
-import { expectOk } from '@vp/testing/result';
 import { OWNER_ID } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 import {

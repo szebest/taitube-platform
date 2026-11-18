@@ -1,5 +1,5 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { describeMultipartStorageContract } from '../../__tests__/contract/multipart-storage.contract';
 import { s3MultipartStorageSubject } from '../../__tests__/contract/s3-subjects';
 import { S3MultipartStorage } from '../s3-multipart-storage';

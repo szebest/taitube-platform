@@ -1,3 +1,4 @@
+import { expectOk } from '@kit/testing/result';
 import type {
   NewSystemLine,
   NewWatchPartyRole,
@@ -15,7 +16,6 @@ import {
   type WatchPartyRoleRecord,
   type WatchPartyRoom,
 } from '@vp/domain';
-import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { OTHER_OWNER_ID, OWNER_ID, publicVideo, seedOwners, VIDEO_IDS } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';

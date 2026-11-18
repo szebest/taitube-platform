@@ -1,5 +1,5 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import type { Clip } from '@vp/domain';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { ADMIN, OWNER, STRANGER, aVideo } from '../../__tests__/entities';
 import { decideClipRead } from '../read-clip.rule';
 

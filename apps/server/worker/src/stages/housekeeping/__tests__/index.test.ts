@@ -1,3 +1,4 @@
+import { expectOk } from '@kit/testing/result';
 import {
   InMemoryCacheClient,
   InMemoryMultipartStorage,
@@ -8,7 +9,6 @@ import {
 import { RedisReactionCacheAdapter } from '@vp/adapters/redis/redis-reaction-cache.adapter';
 import { inProcessAppConfig } from '@vp/env-schema';
 import type { HousekeepingJob } from '@vp/job-contracts';
-import { expectOk } from '@vp/testing/result';
 import { STAGE_SETTINGS } from '../../../__tests__/stage-settings';
 import { createHousekeepingProcessor } from '../index';
 import { inMemoryQueues } from './housekeeping-harness';

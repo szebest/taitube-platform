@@ -1,5 +1,5 @@
 import { fileURLToPath } from 'node:url';
-import { runEntrypoint } from '@vp/testing/run-entrypoint';
+import { runEntrypoint } from '@kit/testing/run-entrypoint';
 
 const MAIN = fileURLToPath(new URL('../main.ts', import.meta.url));
 

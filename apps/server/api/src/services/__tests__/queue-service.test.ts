@@ -1,9 +1,9 @@
 import { err } from '@kit/result';
+import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryJobQueue } from '@vp/adapters/in-memory';
 import type { JobQueue } from '@vp/core/ports';
 import { ErrorCodes, queueUnavailable } from '@vp/errors';
 import { QUEUES } from '@vp/job-contracts';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { QueueService } from '../queue-service';
 
 function serviceWith(...names: string[]): { service: QueueService; queues: InMemoryJobQueue[] } {

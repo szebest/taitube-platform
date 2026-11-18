@@ -1,5 +1,5 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { ScryptPasswordHasher, type ScryptCost } from '../scrypt-password-hasher';
 
 const CHEAP: ScryptCost = { N: 16, r: 8, p: 1, keyLength: 32, saltLength: 16 };

@@ -1,4 +1,4 @@
-import { expectErr, expectOk } from '@vp/testing/result';
+import { expectErr, expectOk } from '@kit/testing/result';
 import { validateContactEmail } from '../contact-email';
 
 describe('@vp/validation: validateContactEmail', () => {

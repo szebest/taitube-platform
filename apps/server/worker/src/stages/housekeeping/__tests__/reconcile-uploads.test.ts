@@ -1,4 +1,5 @@
 import { err } from '@kit/result';
+import { expectOk } from '@kit/testing/result';
 import {
   InMemoryJobQueue,
   InMemoryMultipartStorage,
@@ -8,7 +9,6 @@ import {
 import { queueUnavailable } from '@vp/errors';
 import { ids } from '@vp/job-contracts';
 import { type PipelineMetrics, createMetricsRegistry } from '@vp/observability';
-import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { runReconcileUploads } from '../reconcile-uploads';
 import { hoursAgo, seedVideo } from './housekeeping-harness';

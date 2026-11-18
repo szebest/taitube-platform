@@ -1,8 +1,8 @@
 import { Container } from '@kit/composition';
 import { ok } from '@kit/result';
+import { expectOk } from '@kit/testing/result';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { createMetricsRegistry } from '@vp/observability';
-import { expectOk } from '@vp/testing/result';
 import { InMemoryCacheClient } from '../../in-memory/in-memory-cache-client';
 import type { MeteredMultipartStorage } from '../../metered/metered-multipart-storage';
 import type { MeteredStorageClient } from '../../metered/metered-storage-client';

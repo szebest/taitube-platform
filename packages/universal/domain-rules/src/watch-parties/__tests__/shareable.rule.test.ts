@@ -1,5 +1,5 @@
+import { expectErr } from '@kit/testing/result';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr } from '@vp/testing/result';
 import { aVideo } from '../../__tests__/entities';
 import { decideWatchPartyShareable } from '../shareable.rule';
 

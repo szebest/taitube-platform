@@ -3,8 +3,8 @@ import { createServer } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { expectErr, expectOk } from '@kit/testing/result';
 import { verifyToken } from '@vp/dev-identity';
-import { expectErr, expectOk } from '@vp/testing/result';
 import {
   aliasingFetch,
   createNodePorts,

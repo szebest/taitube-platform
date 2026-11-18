@@ -1,10 +1,10 @@
 import { err } from '@kit/result';
+import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories, InMemoryViewBuffer } from '@vp/adapters/in-memory';
 import type { ViewBatch } from '@vp/domain';
 import { cacheUnavailable, databaseUnavailable } from '@vp/errors';
 import { type PipelineMetrics, createMetricsRegistry } from '@vp/observability';
-import { SEEDED } from '@vp/testing';
-import { expectErr, expectOk } from '@vp/testing/result';
+import { SEEDED } from '@vp/testing-fixtures';
 import { runFlushVideoViews } from '../flush-video-views';
 
 const DAY = '2026-03-10';

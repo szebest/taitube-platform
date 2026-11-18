@@ -1,7 +1,7 @@
+import { expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { HANDLE_RESERVATION_DAYS } from '@vp/domain';
 import { MS_PER_DAY } from '@vp/domain/time';
-import { expectOk } from '@vp/testing/result';
 import { runPurgeHandleHistory } from '../purge-handle-history';
 
 describe('housekeeping: purge-handle-history', () => {

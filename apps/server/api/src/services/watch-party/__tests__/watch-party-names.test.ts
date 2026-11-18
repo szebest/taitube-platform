@@ -1,4 +1,4 @@
-import { expectOk } from '@vp/testing/result';
+import { expectOk } from '@kit/testing/result';
 import { resolvePeople } from '../watch-party-names';
 import { MEMBER, OTHER, OWNER, seedParty, watchPartyTestDeps } from './watch-party-test-deps';
 

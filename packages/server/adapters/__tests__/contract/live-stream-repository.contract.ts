@@ -1,6 +1,6 @@
+import { expectOk } from '@kit/testing/result';
 import type { GoLiveInput, LiveStreamRepositoryPort } from '@vp/core/repositories';
 import { liveOutbox } from '@vp/job-contracts';
-import { expectOk } from '@vp/testing/result';
 import { OWNER_ID, seedOwners } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 

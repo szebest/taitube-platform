@@ -1,4 +1,4 @@
-import { definePackageTestConfig } from '@vp/testing';
+import { definePackageTestConfig } from '@kit/testing';
 import { configDefaults } from 'vite-plus';
 
 export default definePackageTestConfig({

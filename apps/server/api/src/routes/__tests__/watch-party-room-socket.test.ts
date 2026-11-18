@@ -1,6 +1,6 @@
 import type { WatchPartyServerFrame } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
-import { SEEDED } from '@vp/testing';
+import { SEEDED } from '@vp/testing-fixtures';
 import { dial, type SocketClient } from './socket-client';
 import { buildWatchPartyApp, type WatchPartyApp, type Who } from './watch-party-app';
 

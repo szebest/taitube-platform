@@ -1,9 +1,9 @@
 import { err } from '@kit/result';
+import { expectOk } from '@kit/testing/result';
 import { InMemoryViewBuffer } from '@vp/adapters/in-memory';
 import type { PlaybackEvent } from '@vp/api-contracts';
 import { cacheUnavailable } from '@vp/errors';
 import { type PipelineMetrics, createMetricsRegistry } from '@vp/observability';
-import { expectOk } from '@vp/testing/result';
 import { PlaybackTelemetryService } from '../playback-telemetry-service';
 
 const VIDEO = '00000000-0000-7000-8000-0000000000a1';

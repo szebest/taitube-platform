@@ -1,5 +1,5 @@
+import { expectOk } from '@kit/testing/result';
 import type { WatchPartyInviteLink } from '@vp/domain';
-import { expectOk } from '@vp/testing/result';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 import {
   AT,

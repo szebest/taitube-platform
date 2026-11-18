@@ -18,10 +18,13 @@ const sorted = (names: Iterable<string>) => [...names].sort();
 const difference = (left: readonly string[], right: readonly string[]) =>
   left.filter((name) => !right.includes(name));
 
+const destinationsOf = (move: PackageMove | EntryMove): string[] =>
+  typeof move === 'string' ? [move] : Object.values(move).flatMap(destinationsOf);
+
 function moveDrift(moves: Moves, workspace: Workspace): string[] {
   return Object.entries(moves).flatMap(([name, move]) => {
     const entries = workspace.entriesOf(name);
-    const landed = typeof move === 'string' && workspace.entriesOf(move) !== undefined;
+    const landed = destinationsOf(move).every((to) => workspace.entriesOf(to) !== undefined);
     if (!entries) return landed ? [] : [`${name}: no workspace package has this name`];
     if (typeof move === 'string') return [];
 
@@ -82,7 +85,11 @@ function repoWorkspace(): Workspace {
 
 const PLANTED: Workspace = {
   entriesOf: (name) =>
-    name === '@vp/split' ? ['.', './extra'] : name === '@kit/landed' ? ['.'] : undefined,
+    name === '@vp/split'
+      ? ['.', './extra']
+      : name === '@kit/landed' || name === '@vp/landed-app'
+        ? ['.']
+        : undefined,
   exportsOf: () => ['kept', 'added'],
 };
 
@@ -114,5 +121,19 @@ describe('architecture: package moves', () => {
 
   it('accepts a whole move that has landed, its old name gone and its new one present', () => {
     expect(moveDrift({ '@vp/landed': '@kit/landed' }, PLANTED)).toEqual([]);
+  });
+
+  it('accepts a split package that has landed, its old name gone and every destination present', () => {
+    const split = { '.': { a: '@kit/landed', b: '@vp/landed-app' }, './sub': '@kit/landed' };
+
+    expect(moveDrift({ '@vp/landed-split': split }, PLANTED)).toEqual([]);
+  });
+
+  it('reports a split package whose old name is gone but a destination is missing', () => {
+    const split = { '.': { a: '@kit/landed', b: '@vp/missing' } };
+
+    expect(moveDrift({ '@vp/landed-split': split }, PLANTED)).toEqual([
+      '@vp/landed-split: no workspace package has this name',
+    ]);
   });
 });

@@ -1,5 +1,5 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { ipHashOf, requirePrincipal, toNewSeat } from '../watch-party-principals';
 import { guestSession } from './watch-party-access-fixture';
 import {

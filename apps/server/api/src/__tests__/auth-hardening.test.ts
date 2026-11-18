@@ -1,10 +1,10 @@
 import * as http from 'node:http';
 import { loadEnv } from '@kit/config';
 import { createLogger } from '@kit/logger';
+import { signJwt, signingKey } from '@kit/testing/jwt';
 import { mintToken } from '@vp/dev-identity';
 import { toAppConfig } from '@vp/env-schema';
-import { PRODUCTION_ENV } from '@vp/testing/env';
-import { signJwt, signingKey } from '@vp/testing/jwt';
+import { PRODUCTION_ENV } from '@vp/testing-fixtures/env';
 import type { FastifyInstance } from 'fastify';
 import { boundPort } from './bound-port';
 import { bearer, buildTestApp } from './test-app';

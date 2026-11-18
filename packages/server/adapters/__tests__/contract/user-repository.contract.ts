@@ -1,5 +1,5 @@
+import { expectOk } from '@kit/testing/result';
 import type { UserRepository } from '@vp/core/repositories';
-import { expectOk } from '@vp/testing/result';
 import { OWNER_ID } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 

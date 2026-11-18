@@ -1,7 +1,7 @@
+import { expectOk } from '@kit/testing/result';
 import type { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes } from '@vp/errors';
-import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
 import { type FakeS3, startFakeS3 } from './fake-s3';
 import { MockProbeJobQueue } from './mock-probe-queue';

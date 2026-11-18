@@ -1,4 +1,4 @@
-import { expectOk } from '@vp/testing/result';
+import { expectOk } from '@kit/testing/result';
 import { VIDEO_IDS } from '../../../__tests__/contract/fixtures';
 import {
   AT,

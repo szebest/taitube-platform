@@ -1,3 +1,4 @@
+import { expectOk } from '@kit/testing/result';
 import type { Repositories } from '@vp/core/repositories';
 import {
   type Channel,
@@ -5,7 +6,6 @@ import {
   DEFAULT_COMMENT_SETTINGS,
   type NewChannelAuditEntry,
 } from '@vp/domain';
-import { expectOk } from '@vp/testing/result';
 import { seedTeam } from './channel-team-fixtures';
 import { OWNER_ID, seedOwners } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';

@@ -1,6 +1,6 @@
+import { expectOk } from '@kit/testing/result';
 import { ErrorCodes } from '@vp/errors';
 import { CacheKeys } from '@vp/events';
-import { expectOk } from '@vp/testing/result';
 import {
   ABSENT,
   AS,

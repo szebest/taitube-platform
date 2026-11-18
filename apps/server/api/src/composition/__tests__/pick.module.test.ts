@@ -1,7 +1,7 @@
 import { Container } from '@kit/composition';
+import { expectOk } from '@kit/testing/result';
 import { Adapters, registerAdapters } from '@vp/adapters/composition';
 import { inProcessAppConfig } from '@vp/env-schema';
-import { expectOk } from '@vp/testing/result';
 import { registerServices, Services } from '../services.module';
 
 const ADMIN = { id: '00000000-0000-7000-8000-00000000f501', role: 'ADMIN' } as const;

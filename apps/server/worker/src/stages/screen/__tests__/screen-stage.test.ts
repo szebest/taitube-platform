@@ -1,5 +1,5 @@
+import { expectOk } from '@kit/testing/result';
 import { InMemoryFrameClassifier } from '@vp/adapters/in-memory';
-import { expectOk } from '@vp/testing/result';
 import { STAGE_SETTINGS } from '../../../__tests__/stage-settings';
 import {
   BLANK_FRAMES,

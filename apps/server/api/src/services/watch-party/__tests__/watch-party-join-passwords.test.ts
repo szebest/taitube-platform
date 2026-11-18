@@ -1,6 +1,6 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import { MS_PER_MINUTE } from '@vp/domain/time';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { leaveRoom } from '../watch-party-join';
 import { userOf } from './watch-party-access-fixture';
 import { PASSWORD, setUpJoin } from './watch-party-join-fixture';

@@ -1,4 +1,4 @@
-import { captureLog } from '@vp/testing/log-capture';
+import { captureLog } from '@kit/testing/log-capture';
 import { loadEnvOrExit } from '../load-env-or-exit';
 
 const LOCAL_ENV = { DATABASE_URL: 'postgres://localhost:5432/vp' };

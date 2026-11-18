@@ -78,7 +78,7 @@
         "!src/**/*.stories.tsx!"
       ]
     },
-    "packages/server/testing": {
+    "packages/server/testing-fixtures": {
       "includeEntryExports": false,
       "project": ["src/**/*.ts"]
     },

@@ -1,7 +1,7 @@
 import { ok } from '@kit/result';
 import { mintToken } from '@vp/dev-identity';
 import { inProcessAppConfig } from '@vp/env-schema';
-import { SEEDED } from '@vp/testing';
+import { SEEDED } from '@vp/testing-fixtures';
 import type { FastifyInstance } from 'fastify';
 import { composeApp } from '../app';
 import { serve } from '../serve';

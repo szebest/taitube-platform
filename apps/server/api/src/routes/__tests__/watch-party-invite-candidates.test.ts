@@ -1,6 +1,6 @@
+import { expectOk } from '@kit/testing/result';
 import { MS_PER_DAY, MS_PER_HOUR } from '@vp/domain/time';
 import { ErrorCodes } from '@vp/errors';
-import { expectOk } from '@vp/testing/result';
 import {
   type Account,
   buildRoomApp,

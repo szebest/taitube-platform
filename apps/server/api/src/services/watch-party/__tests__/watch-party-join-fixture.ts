@@ -1,4 +1,4 @@
-import { expectOk } from '@vp/testing/result';
+import { expectOk } from '@kit/testing/result';
 import { joinRoom } from '../watch-party-join';
 import {
   type PartyBodyOverrides,

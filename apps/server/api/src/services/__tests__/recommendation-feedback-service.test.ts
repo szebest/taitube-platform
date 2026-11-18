@@ -1,9 +1,9 @@
 import { Paginator } from '@kit/pagination';
 import type { Result } from '@kit/result';
+import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { expectErr, expectOk } from '@vp/testing/result';
 import type { Mock } from 'vite-plus/test';
 import { RecommendationFeedbackService } from '../recommendation-feedback-service';
 import { TEST_CDN, TEST_SPRITE } from './service-deps';

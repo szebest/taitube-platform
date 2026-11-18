@@ -1,7 +1,7 @@
 import { Container } from '@kit/composition';
+import { expectOk } from '@kit/testing/result';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { createMetricsRegistry } from '@vp/observability';
-import { expectOk } from '@vp/testing/result';
 import { InMemoryFlowProducer } from '../../in-memory/in-memory-flow-producer';
 import { InMemoryFrameClassifier } from '../../in-memory/in-memory-frame-classifier';
 import { InMemoryJobQueue } from '../../in-memory/in-memory-job-queue';

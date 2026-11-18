@@ -1,5 +1,5 @@
 {
-  "name": "@vp/testing",
+  "name": "@vp/testing-fixtures",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -11,30 +11,10 @@
       "import": "./src/index.ts",
       "default": "./dist/index.js"
     },
-    "./result": {
-      "types": "./dist/result.d.ts",
-      "import": "./src/result.ts",
-      "default": "./dist/result.js"
-    },
-    "./jwt": {
-      "types": "./dist/jwt.d.ts",
-      "import": "./src/jwt.ts",
-      "default": "./dist/jwt.js"
-    },
     "./env": {
       "types": "./dist/env.d.ts",
       "import": "./src/env.ts",
       "default": "./dist/env.js"
-    },
-    "./log-capture": {
-      "types": "./dist/log-capture.d.ts",
-      "import": "./src/log-capture.ts",
-      "default": "./dist/log-capture.js"
-    },
-    "./run-entrypoint": {
-      "types": "./dist/run-entrypoint.d.ts",
-      "import": "./src/run-entrypoint.ts",
-      "default": "./dist/run-entrypoint.js"
     }
   },
   "scripts": {
@@ -43,11 +23,9 @@
     "test": "vp test run",
     "clean": "rimraf dist tsconfig.tsbuildinfo"
   },
-  "dependencies": {
-    "@kit/result": "workspace:*"
-  },
   "devDependencies": {
     "@cdktf/hcl2json": "^0.21.0",
+    "@kit/testing": "workspace:*",
     "@kit/tsconfig": "workspace:*",
     "@types/node": "^24.19.1",
     "js-yaml": "^5.4.3",

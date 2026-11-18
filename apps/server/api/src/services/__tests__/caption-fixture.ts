@@ -1,7 +1,7 @@
+import { expectOk } from '@kit/testing/result';
 import type { CaptionRecord, NewVideoInput, Repositories } from '@vp/core/repositories';
 import type { CaptionKind, TranscriptCue } from '@vp/domain';
 import type { UserContext } from '@vp/permissions';
-import { expectOk } from '@vp/testing/result';
 
 export const CAPTION_OWNER: UserContext = {
   id: '00000000-0000-7000-8000-00000000ca01',

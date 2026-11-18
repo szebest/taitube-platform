@@ -1,5 +1,5 @@
+import { expectOk } from '@kit/testing/result';
 import { SEARCH_SUGGESTIONS } from '@vp/domain';
-import { expectOk } from '@vp/testing/result';
 import { inMemorySearchSuggestionIndexSubject } from '../../__tests__/contract/in-memory-port-subjects';
 import { describeSearchSuggestionIndexContract } from '../../__tests__/contract/search-suggestion-index.contract';
 import { InMemorySearchSuggestionIndex } from '../in-memory-search-suggestion-index';

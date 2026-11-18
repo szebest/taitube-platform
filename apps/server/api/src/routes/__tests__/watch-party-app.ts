@@ -1,12 +1,12 @@
 import { createHash } from 'node:crypto';
+import { expectOk } from '@kit/testing/result';
 import { Adapters } from '@vp/adapters/composition';
 import { PARTY_CREDENTIAL_HEADER } from '@vp/api-contracts';
 import type { PartyGuestSession } from '@vp/core/ports';
 import type { WatchPartyInviteLink } from '@vp/domain';
 import { MS_PER_HOUR } from '@vp/domain/time';
 import type { AppConfigOverrides } from '@vp/env-schema';
-import { SEEDED } from '@vp/testing';
-import { expectOk } from '@vp/testing/result';
+import { SEEDED } from '@vp/testing-fixtures';
 import { uuidv7 } from 'uuidv7';
 import { bearer, buildTestApp, type TestApp, TOKENS } from '../../__tests__/test-app';
 import { watchPartyTestConfig } from '../../services/watch-party/__tests__/watch-party-test-deps';

@@ -1,7 +1,7 @@
+import { expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { CHANNEL_AUDIT_RETENTION_DAYS } from '@vp/domain';
 import { MS_PER_DAY } from '@vp/domain/time';
-import { expectOk } from '@vp/testing/result';
 import { runPurgeChannelAudit } from '../purge-channel-audit';
 
 const CHANNEL_ID = '00000000-0000-7000-8000-00000000c001';

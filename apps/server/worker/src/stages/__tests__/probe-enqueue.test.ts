@@ -1,6 +1,6 @@
 import { ok } from '@kit/result';
+import { expectOk } from '@kit/testing/result';
 import { PackageJob, ScreenJob, ThumbnailJob, TranscodeJob } from '@vp/job-contracts';
-import { expectOk } from '@vp/testing/result';
 import { fakeMedia, flowWorld, probed, rungs, uploadedVideo } from '../../__tests__/flow-harness';
 import { STAGE_SETTINGS } from '../../__tests__/stage-settings';
 import { createProbeProcessor } from '../probe';

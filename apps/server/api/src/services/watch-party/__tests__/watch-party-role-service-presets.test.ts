@@ -1,6 +1,6 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import { WATCH_PARTY_PERMISSION_IDS } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { keyOf, ROOM_ID } from './watch-party-moderation-fixture';
 import {
   FRIENDS_MEMBER,

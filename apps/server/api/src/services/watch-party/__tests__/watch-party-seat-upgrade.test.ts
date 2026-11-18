@@ -1,5 +1,5 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { upgradeSeat } from '../watch-party-seat-upgrade';
 import { assignRole, banKey } from './watch-party-access-fixture';
 import { guestJoined, setUpGuests } from './watch-party-guest-fixture';

@@ -1,7 +1,7 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import type { WatchPartyServerFrame } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { getWatchPartyPermissions, toWatchPartyViewer } from '@vp/permissions';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { answerFrame, type FrameSender, readFrame } from '../watch-party-frames';
 import { keyOf, ROOM_ID } from './watch-party-moderation-fixture';
 import { socketRoom } from './watch-party-socket-fixture';

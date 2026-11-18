@@ -202,7 +202,7 @@ const OVERRIDES: NonNullable<OxlintConfig['overrides']> = [
   {
     files: [
       'tests/architecture/**',
-      'packages/server/testing/src/__tests__/cloud-terraform.test.ts',
+      'packages/server/testing-fixtures/src/__tests__/cloud-terraform.test.ts',
       'scripts/__tests__/server-bundle.test.ts',
     ],
     rules: { 'eslint/no-template-curly-in-string': 'off' },

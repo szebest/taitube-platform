@@ -1,6 +1,6 @@
 import { loadEnv } from '@kit/config';
 import { inProcessAppConfig, toAppConfig } from '@vp/env-schema';
-import { PRODUCTION_ENV } from '@vp/testing/env';
+import { PRODUCTION_ENV } from '@vp/testing-fixtures/env';
 import { seedDevelopment } from '../seed-development';
 
 describe('apps/server/api: seedDevelopment', () => {

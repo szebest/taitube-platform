@@ -1,6 +1,5 @@
 import { readdirSync } from 'node:fs';
 import { join, matchesGlob, resolve } from 'node:path';
-import { createMockJob, definePackageTestConfig, withEnv } from '../index';
 
 type ProjectTest = { maxWorkers?: number | string; sequence?: { groupOrder?: number } };
 
@@ -11,6 +10,9 @@ const PACKAGE_PARENTS = [
   'packages/universal',
   'packages/server',
   'packages/client',
+  'packages/platform/universal',
+  'packages/platform/server',
+  'packages/platform/client',
 ];
 const OTHER_DIRS = ['tests', 'scripts/__tests__'];
 const TEST_CONFIG = /^(vitest.*|integration)\.config\.ts$/;
@@ -35,19 +37,7 @@ function testConfigs(): string[] {
   );
 }
 
-describe('@vp/testing', () => {
-  it('restores spies and stubbed env vars before every test', () => {
-    const { test } = definePackageTestConfig();
-
-    expect(test).toMatchObject({ restoreMocks: true, unstubEnvs: true });
-  });
-
-  it('keeps the defaults a package does not override', () => {
-    const { test } = definePackageTestConfig({ test: { testTimeout: 60_000 } });
-
-    expect(test).toMatchObject({ testTimeout: 60_000, restoreMocks: true, globals: true });
-  });
-
+describe('test configs', () => {
   it('reads the e2e and both integration configs as well as the projects', () => {
     expect(testConfigs()).toEqual(
       expect.arrayContaining([
@@ -81,23 +71,5 @@ describe('@vp/testing', () => {
 
     expect(projects).toContain('tests/architecture/vitest.config.ts');
     expect(caps.filter((cap) => cap.length > 1)).toEqual([]);
-  });
-
-  it('builds a first-attempt job that reports progress', async () => {
-    const job = createMockJob('probe', { videoId: 'v1' });
-
-    expect(job).toMatchObject({ name: 'probe', data: { videoId: 'v1' }, attemptsMade: 0 });
-    await expect(job.updateProgress(50)).resolves.toBeUndefined();
-  });
-
-  it('sets and unsets env vars for one call and restores them after', async () => {
-    const seen = await withEnv({ VP_SPEC_SET: 'set', PATH: undefined }, () => ({
-      set: process.env.VP_SPEC_SET,
-      path: process.env.PATH,
-    }));
-
-    expect(seen).toEqual({ set: 'set', path: undefined });
-    expect(process.env.VP_SPEC_SET).toBeUndefined();
-    expect(process.env.PATH).toBeDefined();
   });
 });

@@ -15,10 +15,10 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@kit/testing": "workspace:*",
     "@kit/tsconfig": "workspace:*",
     "@lhci/cli": "^0.15.1",
     "@types/node": "^24.19.1",
-    "@vp/testing": "workspace:*",
     "typescript": "^6.0.3",
     "vite-plus": "catalog:"
   },

@@ -1,5 +1,5 @@
+import { expectOk } from '@kit/testing/result';
 import { CacheKeys } from '@vp/events';
-import { expectOk } from '@vp/testing/result';
 import { redisWatchPartyGateSubject } from '../../__tests__/contract/redis-subjects';
 import { describeWatchPartyGateContract } from '../../__tests__/contract/watch-party-gate.contract';
 import { RedisWatchPartyGateAdapter } from '../redis-watch-party-gate.adapter';

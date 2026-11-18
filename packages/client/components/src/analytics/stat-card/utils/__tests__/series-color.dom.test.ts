@@ -5,9 +5,9 @@ import {
   type ResolvedTheme,
   resolveTheme,
 } from '@kit/design-tokens';
+import { expectOk } from '@kit/testing/result';
 import { appearance } from '@kit/ui/appearance/registry';
 import { ramps } from '@kit/ui/tokens/ref';
-import { expectOk } from '@vp/testing/result';
 import { CHART_SERIES, seriesColor } from '../series-color';
 
 const MODE_PALETTES = [

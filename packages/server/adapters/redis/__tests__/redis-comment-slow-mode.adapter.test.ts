@@ -1,5 +1,5 @@
+import { expectOk } from '@kit/testing/result';
 import { CacheKeys } from '@vp/events';
-import { expectOk } from '@vp/testing/result';
 import { describeCommentSlowModeContract } from '../../__tests__/contract/comment-slow-mode.contract';
 import { redisCommentSlowModeSubject } from '../../__tests__/contract/redis-subjects';
 import { RedisCommentSlowModeAdapter } from '../redis-comment-slow-mode.adapter';

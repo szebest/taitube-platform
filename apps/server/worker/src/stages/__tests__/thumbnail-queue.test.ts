@@ -1,8 +1,8 @@
 import { createLogger } from '@kit/logger';
+import { expectErr } from '@kit/testing/result';
 import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
 import { inProcessAppConfig } from '@vp/env-schema';
-import { createMockJob } from '@vp/testing';
-import { expectErr } from '@vp/testing/result';
+import { createMockJob } from '@vp/testing-fixtures';
 import { STAGE_SETTINGS } from '../../__tests__/stage-settings';
 import { createThumbnailQueueStage } from '../thumbnail-queue';
 
