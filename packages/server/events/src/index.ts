@@ -1,11 +1,10 @@
+import type { SseMessageEnvelope } from '@kit/keyspace';
 import type { Result } from '@kit/result';
 import type { CacheUnavailable } from '@vp/errors';
 import { videoChannel } from './channels';
-import type { SseMessageEnvelope } from './sse';
 
 export * from './channels';
 export * from './keys';
-export * from './sse';
 
 export interface PublishVideoEventOptions {
   cache: {

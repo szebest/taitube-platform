@@ -30,6 +30,7 @@
     "@kit/composition": "workspace:*",
     "@kit/concurrency": "workspace:*",
     "@kit/config": "workspace:*",
+    "@kit/keyspace": "workspace:*",
     "@kit/logger": "workspace:*",
     "@kit/pagination": "workspace:*",
     "@kit/result": "workspace:*",

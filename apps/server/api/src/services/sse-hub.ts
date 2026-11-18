@@ -1,4 +1,5 @@
 import type { ServerResponse } from 'node:http';
+import { SseMessageEnvelope } from '@kit/keyspace';
 import type { Logger } from '@kit/logger';
 import {
   type Result,
@@ -14,12 +15,7 @@ import {
 import { UserEventFrameSchema } from '@vp/api-contracts';
 import type { CacheClient } from '@vp/core/ports';
 import type { CacheUnavailable } from '@vp/errors';
-import {
-  SseMessageEnvelope,
-  USER_WILDCARD_CHANNEL,
-  VIDEO_WILDCARD_CHANNEL,
-  channelType,
-} from '@vp/events';
+import { USER_WILDCARD_CHANNEL, VIDEO_WILDCARD_CHANNEL, channelType } from '@vp/events';
 import type { PipelineMetrics } from '@vp/observability';
 import { SseConnection, type SseFrame, type SseResync } from './sse-connection';
 import { type SseRegisterFailure, sseStreamLimitReached, sseUnavailable } from './sse-failures';

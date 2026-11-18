@@ -9,6 +9,7 @@ scope (platform or app) and the tier are the directory and the layer is `vp.laye
 | Package | Directory | Scope | Tier | Layer | Depends on | Dev-depends on |
 |---|---|---|---|---|---|---|
 | `@kit/concurrency` | `packages/platform/server/concurrency` | platform | server | T1 | - | `@kit/tsconfig`, `@vp/testing` |
+| `@kit/keyspace` | `packages/platform/server/keyspace` | platform | server | T1 | - | `@kit/tsconfig`, `@vp/testing` |
 | `@kit/logger` | `packages/platform/server/logger` | platform | server | T1 | - | `@kit/tsconfig`, `@vp/testing` |
 | `@kit/vite-preset` | `packages/platform/server/vite-preset` | platform | server | T1 | - | `@kit/tsconfig`, `@vp/testing` |
 | `@kit/machine` | `packages/platform/universal/machine` | platform | universal | T1 | - | `@kit/tsconfig` |
@@ -34,7 +35,7 @@ scope (platform or app) and the tier are the directory and the layer is `vp.laye
 | `@vp/errors` | `packages/universal/errors` | app | universal | T4 | `@kit/di` | `@kit/result`, `@kit/tsconfig`, `@vp/testing` |
 | `@kit/design-tokens` | `packages/platform/universal/design-tokens` | platform | universal | T5 | `@kit/result`, `@vp/domain`, `@vp/errors` | `@kit/tsconfig`, `@vp/testing` |
 | `@kit/pagination` | `packages/platform/universal/pagination` | platform | universal | T5 | `@kit/result`, `@vp/errors` | `@kit/tsconfig`, `@vp/testing` |
-| `@vp/events` | `packages/server/events` | app | server | T5 | `@kit/result`, `@vp/errors` | `@kit/tsconfig`, `@vp/testing` |
+| `@vp/events` | `packages/server/events` | app | server | T5 | `@kit/keyspace`, `@kit/result`, `@vp/errors` | `@kit/tsconfig`, `@vp/testing` |
 | `@vp/ffmpeg` | `packages/server/ffmpeg` | app | server | T5 | `@kit/result`, `@vp/domain`, `@vp/errors`, `@vp/job-contracts`, `@vp/storage` | `@kit/tsconfig`, `@vp/testing` |
 | `@vp/whisper` | `packages/server/whisper` | app | server | T5 | `@kit/result`, `@vp/domain`, `@vp/errors` | `@kit/tsconfig`, `@vp/testing` |
 | `@vp/messages` | `packages/universal/messages` | app | universal | T5 | `@kit/result`, `@vp/errors`, `@vp/intl` | `@kit/tsconfig`, `@vp/testing` |
@@ -56,7 +57,7 @@ scope (platform or app) and the tier are the directory and the layer is `vp.laye
 | `@vp/adapters` | `packages/server/adapters` | app | server | T7 | `@kit/composition`, `@kit/concurrency`, `@kit/di`, `@kit/result`, `@vp/core`, `@vp/db`, `@vp/dev-identity`, `@vp/domain`, `@vp/domain-rules`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/job-contracts`, `@vp/observability`, `@vp/permissions`, `@vp/storage`, `@vp/validation` | `@kit/tsconfig`, `@vp/testing` |
 | `@vp/deploy` | `packages/server/deploy` | app | server | T7 | `@kit/result`, `@vp/env-schema`, `@vp/job-contracts` | `@kit/tsconfig`, `@vp/testing` |
 | `@vp/fingerprint` | `packages/server/fingerprint` | app | server | T7 | `@kit/result`, `@vp/core`, `@vp/domain`, `@vp/errors`, `@vp/ffmpeg` | `@kit/tsconfig`, `@vp/testing` |
-| `@vp/api` | `apps/server/api` | app | server | T8 | `@kit/composition`, `@kit/concurrency`, `@kit/config`, `@kit/logger`, `@kit/pagination`, `@kit/result`, `@vp/adapters`, `@vp/api-contracts`, `@vp/core`, `@vp/db`, `@vp/dev-identity`, `@vp/domain`, `@vp/domain-rules`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/intl`, `@vp/job-contracts`, `@vp/observability`, `@vp/permissions`, `@vp/storage`, `@vp/validation`, `@vp/whisper` | `@kit/tsconfig`, `@vp/testing` |
+| `@vp/api` | `apps/server/api` | app | server | T8 | `@kit/composition`, `@kit/concurrency`, `@kit/config`, `@kit/keyspace`, `@kit/logger`, `@kit/pagination`, `@kit/result`, `@vp/adapters`, `@vp/api-contracts`, `@vp/core`, `@vp/db`, `@vp/dev-identity`, `@vp/domain`, `@vp/domain-rules`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/intl`, `@vp/job-contracts`, `@vp/observability`, `@vp/permissions`, `@vp/storage`, `@vp/validation`, `@vp/whisper` | `@kit/tsconfig`, `@vp/testing` |
 | `@vp/worker` | `apps/server/worker` | app | server | T8 | `@kit/composition`, `@kit/config`, `@kit/logger`, `@kit/result`, `@vp/adapters`, `@vp/api-contracts`, `@vp/core`, `@vp/domain`, `@vp/domain-rules`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/ffmpeg`, `@vp/fingerprint`, `@vp/job-contracts`, `@vp/observability`, `@vp/storage`, `@vp/validation`, `@vp/whisper` | `@kit/tsconfig`, `@vp/testing` |
 | `@vp/queries` | `packages/client/queries` | app | client | T8 | `@kit/intl-react`, `@kit/result`, `@kit/security-headers`, `@kit/ui`, `@vp/api-client`, `@vp/api-contracts`, `@vp/components`, `@vp/domain`, `@vp/errors`, `@vp/intl`, `@vp/messages`, `@vp/permissions`, `@vp/permissions-react` | `@kit/tsconfig`, `@kit/vite-preset`, `@vp/testing`, `@vp/web-testing` |
 | `@vp/web-testing` | `packages/client/web-testing` | app | client | T8 | `@vp/api-client`, `@vp/api-contracts`, `@vp/errors` | `@kit/tsconfig`, `@kit/vite-preset`, `@vp/testing` |
