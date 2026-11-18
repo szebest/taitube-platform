@@ -1,18 +1,17 @@
 # @kit/keyspace
 
-The wire format of a server-sent event stream: the message envelope a publisher serialises, the frame a
-connection writes, and the comment that keeps it open.
+The wire format of a server-sent event stream: the frame a connection writes and the comment that keeps it
+open.
 
 ```sh
-pnpm add @kit/keyspace zod
+pnpm add @kit/keyspace
 ```
 
 Tokens and registries: none.
 
 ```ts
-import { formatSseFrame, SSE_PING_COMMENT, SseMessageEnvelope } from '@kit/keyspace';
+import { formatSseFrame, SSE_PING_COMMENT } from '@kit/keyspace';
 
-const envelope = SseMessageEnvelope.parse(JSON.parse(message));
-response.write(formatSseFrame({ id: envelope.id, event: envelope.event, data: envelope.data }));
+response.write(formatSseFrame({ id: 7, event: 'status', data: { state: 'ready' } }));
 response.write(SSE_PING_COMMENT);
 ```

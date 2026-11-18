@@ -3,6 +3,4 @@
 
 ## @kit/keyspace
 export const SSE_PING_COMMENT: ": ping\n\n"
-export type SseMessageEnvelope = z.infer<typeof SseMessageEnvelope>;
-export const SseMessageEnvelope: ZodObject<{ id: ZodOptional<ZodNumber>; event: ZodEnum<{ progress: "progress"; status: "status"; snapshot: "snapshot"; "live.status": "live.status"; "live.viewers": "live.viewers"; }>; data: ZodRecord<ZodString, ZodUnknown>; ts: ZodOptional<ZodNumber>; }, $strip>
 export function formatSseFrame(options: { id?: number | string; event?: string; data?: unknown; }): string

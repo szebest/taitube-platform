@@ -1,4 +1,4 @@
-import { formatSseFrame, SSE_PING_COMMENT, SseMessageEnvelope } from '../sse';
+import { formatSseFrame, SSE_PING_COMMENT } from '../sse';
 
 describe('formatSseFrame', () => {
   it.each([
@@ -18,15 +18,5 @@ describe('formatSseFrame', () => {
 describe('SSE_PING_COMMENT', () => {
   it('is a comment frame', () => {
     expect(SSE_PING_COMMENT).toBe(': ping\n\n');
-  });
-});
-
-describe('SseMessageEnvelope', () => {
-  it.each([
-    ['a known event', { event: 'progress', data: {} }, true],
-    ['an unknown event', { event: 'nope', data: {} }, false],
-    ['a fractional id', { event: 'status', data: {}, id: 1.5 }, false],
-  ])('parses %s', (_label, input, success) => {
-    expect(SseMessageEnvelope.safeParse(input).success).toBe(success);
   });
 });

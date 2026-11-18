@@ -19,7 +19,6 @@
     "clean": "rimraf dist tsconfig.tsbuildinfo"
   },
   "dependencies": {
-    "@kit/keyspace": "workspace:*",
     "@kit/result": "workspace:*",
     "@vp/errors": "workspace:*",
     "zod": "^4.6.5"

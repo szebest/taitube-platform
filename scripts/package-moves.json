@@ -261,7 +261,7 @@
       "PublishVideoEventOptions": "@vp/events",
       "roomIdOfWatchParty": "@vp/events",
       "SSE_PING_COMMENT": "@kit/keyspace",
-      "SseMessageEnvelope": "@kit/keyspace",
+      "SseMessageEnvelope": "@vp/events",
       "USER_WILDCARD_CHANNEL": "@vp/events",
       "userChannel": "@vp/events",
       "VIDEO_WILDCARD_CHANNEL": "@vp/events",

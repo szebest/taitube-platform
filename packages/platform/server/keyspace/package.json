@@ -19,16 +19,12 @@
     "test": "vp test run",
     "clean": "rimraf dist tsconfig.tsbuildinfo"
   },
-  "peerDependencies": {
-    "zod": "^4.6.5"
-  },
   "devDependencies": {
     "@kit/testing": "workspace:*",
     "@kit/tsconfig": "workspace:*",
     "rimraf": "^6.1.3",
     "typescript": "^6.0.3",
-    "vite-plus": "catalog:",
-    "zod": "^4.6.5"
+    "vite-plus": "catalog:"
   },
   "vp": {
     "layer": 1
