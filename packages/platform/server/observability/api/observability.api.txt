@@ -5,6 +5,11 @@
 export interface MetricsConfig {
     prefix: string;
 }
+export interface MetricsRoutes {
+    metrics: string;
+    health: string;
+    ready: string;
+}
 export class MetricsServer
   constructor(options: MetricsServerOptions): MetricsServer
   close: () => Promise<Result<void, Error>>
@@ -14,6 +19,7 @@ export interface MetricsServerOptions {
     port: number;
     host: string;
     registry: Registry;
+    routes: MetricsRoutes;
     ready?: () => Promise<boolean>;
 }
 export type TraceSamplerName = 'always_on' | 'always_off' | 'traceidratio' | 'parentbased_always_on' | 'parentbased_always_off' | 'parentbased_traceidratio';

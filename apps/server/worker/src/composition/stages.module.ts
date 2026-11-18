@@ -7,7 +7,7 @@ import type { JobQueue, QueueJob } from '@vp/core/ports';
 import { ErrorCodeRegistry, errorCodeRegistry, toPipelineError } from '@vp/errors';
 import type { MediaTools } from '@vp/ffmpeg';
 import type { FingerprintTools } from '@vp/fingerprint';
-import { type PipelineMetrics } from '@vp/pipeline-metrics';
+import { METRICS_ROUTES, type PipelineMetrics } from '@vp/pipeline-metrics';
 import type { SpeechTools } from '@vp/whisper';
 import { createFailureHandler } from '../failure-handler';
 import { Heartbeat, everyInterval } from '../heartbeat';
@@ -121,6 +121,7 @@ export function registerStages(c: Container, runtime: StageRuntime): Container {
           port: config().http.metricsPort,
           host: '0.0.0.0',
           registry: c.get(Adapters.Metrics).registry,
+          routes: METRICS_ROUTES,
           ready: async () => isOk(await queue.checkHealth()),
         });
       },

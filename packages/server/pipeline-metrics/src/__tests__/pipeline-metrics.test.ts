@@ -1,6 +1,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { MetricsServer } from '@kit/observability';
+import { METRICS_ROUTES } from '../metrics-routes';
 import { createPipelineMetrics } from '../pipeline-metrics';
 
 /**
@@ -173,7 +174,12 @@ describe('Metrics Catalogue Conformance (SDD §13.1)', () => {
     metrics.viewsFlushed.inc(3);
     metrics.viewFlushDuration.observe(0.02);
 
-    const server = new MetricsServer({ port: 0, host: '127.0.0.1', registry: metrics.registry });
+    const server = new MetricsServer({
+      port: 0,
+      host: '127.0.0.1',
+      registry: metrics.registry,
+      routes: METRICS_ROUTES,
+    });
     expect((await server.listen()).ok).toBe(true);
 
     try {

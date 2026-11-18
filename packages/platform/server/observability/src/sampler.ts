@@ -31,6 +31,6 @@ export function resolveSampler(name: TraceSamplerName, ratio: number): Sampler {
     case 'parentbased_traceidratio':
       return new ParentBasedSampler({ root: new TraceIdRatioBasedSampler(ratio) });
     default:
-      return assertNever(name, 'OTEL_TRACES_SAMPLER');
+      return assertNever(name, 'trace sampler');
   }
 }

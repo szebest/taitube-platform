@@ -4,6 +4,7 @@ import { MetricsServer } from '@kit/observability';
 import { Paginator } from '@kit/pagination';
 import { Adapters, queueNamed } from '@vp/adapters/composition';
 import { ErrorCodeRegistry, errorCodeRegistry } from '@vp/errors';
+import { METRICS_ROUTES } from '@vp/pipeline-metrics';
 import {
   AnalyticsService,
   CategoryService,
@@ -283,6 +284,7 @@ export function registerServices(c: Container): Container {
           port: config().http.metricsPort,
           host: '0.0.0.0',
           registry: c.get(Adapters.Metrics).registry,
+          routes: METRICS_ROUTES,
         }),
       { start: (server) => server.listen(), dispose: (server) => server.close() }
     );
