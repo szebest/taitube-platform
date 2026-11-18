@@ -1,5 +1,6 @@
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { expectOk } from '@vp/testing/result';
+import { seedPrimaryChannel } from '../../__tests__/test-app';
 import { commentWithVideo } from '../comment-lookup';
 
 const OWNER = '11111111-1111-7111-8111-111111111111';
@@ -14,6 +15,7 @@ describe('apps/server/api/services: comment lookup', () => {
     await repositories.videos.create({
       id: VIDEO_ID,
       ownerId: OWNER,
+      channelId: await seedPrimaryChannel(repositories, OWNER),
       sourceKey: `raw/${VIDEO_ID}/source.mp4`,
       visibility: 'public',
       status: 'READY',
@@ -22,6 +24,7 @@ describe('apps/server/api/services: comment lookup', () => {
       id: COMMENT_ID,
       videoId: VIDEO_ID,
       authorId: OWNER,
+      authorChannelId: await seedPrimaryChannel(repositories, OWNER),
       parentId: null,
       content: 'hello',
     });

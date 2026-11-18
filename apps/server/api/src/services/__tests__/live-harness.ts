@@ -5,6 +5,7 @@ import { expectOk } from '@vp/testing/result';
 
 export const OWNER: UserContext = { id: '00000000-0000-7000-8000-0000000000c0', role: 'USER' };
 export const VIEWER: UserContext = { id: '00000000-0000-7000-8000-0000000000d0', role: 'USER' };
+export const VIEWER_CHANNEL_ID = '00000000-0000-7000-8000-0000000000d9';
 export const MODERATOR: UserContext = {
   id: '00000000-0000-7000-8000-0000000000e0',
   role: 'MODERATOR',
@@ -41,7 +42,13 @@ export async function liveWorld(
     expectOk(
       await repositories.liveStreams.goLive({
         streamId: STREAM_ID,
-        video: { id: VIDEO_ID, ownerId: OWNER.id, visibility, sourceKey: `live/${STREAM_ID}/` },
+        video: {
+          id: VIDEO_ID,
+          ownerId: OWNER.id,
+          channelId: channel.id,
+          visibility,
+          sourceKey: `live/${STREAM_ID}/`,
+        },
         startedAt: STARTED,
         outbox: [],
       })
@@ -54,6 +61,7 @@ export function aChannel(overrides: Partial<Channel> = {}): Channel {
   return {
     id: '00000000-0000-7000-8000-0000000000c1',
     userId: OWNER.id,
+    isPrimary: true,
     handle: 'night-kitchen',
     displayName: 'Night Kitchen',
     avatarUrl: null,

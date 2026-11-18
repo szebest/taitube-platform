@@ -2,6 +2,7 @@ import { Container } from '@kit/composition';
 import { Adapters, registerAdapters } from '@vp/adapters/composition';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { expectOk } from '@vp/testing/result';
+import { seedPrimaryChannel } from '../../__tests__/test-app';
 import { registerServices, Services } from '../services.module';
 
 const VIEWER = { id: '00000000-0000-7000-8000-00000000f401', role: 'USER' } as const;
@@ -17,6 +18,7 @@ describe('apps/server/api/composition: clip module', () => {
       await c.get(Adapters.Repositories).videos.create({
         id: VIDEO,
         ownerId: OWNER,
+        channelId: await seedPrimaryChannel(c.get(Adapters.Repositories), OWNER),
         title: 'Match',
         visibility: 'public',
         status: 'READY',

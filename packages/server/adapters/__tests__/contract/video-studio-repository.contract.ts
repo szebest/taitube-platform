@@ -7,10 +7,11 @@ import {
   CATEGORY_MUSIC_ID,
   OTHER_OWNER_ID,
   OWNER_ID,
+  VIDEO_IDS,
   publicVideo,
   seedCategories,
   seedOwners,
-  VIDEO_IDS,
+  seededChannel,
 } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
@@ -84,13 +85,7 @@ export function describeVideoStudioRepositoryContract(makeSubject: MakeRepositor
       });
 
       it('audits the edit on the channel of the video owner, as whoever made it', async () => {
-        const channel = expectOk(
-          await subject.repositories.channels.create({
-            userId: OWNER_ID,
-            handle: 'owner',
-            displayName: 'Owner',
-          })
-        );
+        const channel = await seededChannel(subject.repositories, OWNER_ID);
 
         expectOk(
           await studio.updateMetadata({
@@ -129,13 +124,7 @@ export function describeVideoStudioRepositoryContract(makeSubject: MakeRepositor
           actions: ['video.comments.toggled', 'video.updated'],
         },
       ])('turns comments off and audits $scenario', async ({ fields, actions }) => {
-        const channel = expectOk(
-          await subject.repositories.channels.create({
-            userId: OWNER_ID,
-            handle: 'owner',
-            displayName: 'Owner',
-          })
-        );
+        const channel = await seededChannel(subject.repositories, OWNER_ID);
 
         const outcome = expectOk(
           await studio.updateMetadata({

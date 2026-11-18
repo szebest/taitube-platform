@@ -119,7 +119,7 @@ describe('apps/server/api/services: create comment under moderation', () => {
   describe('a shadow ban', () => {
     const view = async (author: UserContext) => expectOk(await h.create(author, 'same words'));
 
-    it('answers the same body as an ordinary comment and stores it as the author only sees it', async () => {
+    it('answers the same body as an ordinary comment, each under its own channel, and stores it as the author only sees it', async () => {
       const ordinary = await view(OTHER);
       expectOk(
         await h.repositories.channelUserRestrictions.apply({
@@ -139,7 +139,7 @@ describe('apps/server/api/services: create comment under moderation', () => {
         id: '',
         createdAt: '',
         updatedAt: '',
-        author: { ...comment.author, userId: '' },
+        author: { ...comment.author, userId: '', channelId: '', handle: '', displayName: '' },
       });
       expect(shape(shadowed)).toEqual(shape(ordinary));
       expect(
@@ -161,7 +161,10 @@ describe('apps/server/api/services: create comment under moderation', () => {
       h.setClock(START + 10_000);
 
       const failure = expectErr(
-        await createComment(deps, VIEWER, VIDEO_ID, { content: 'again', parentId: first.id })
+        await createComment(deps, VIEWER, h.acting(VIEWER), VIDEO_ID, {
+          content: 'again',
+          parentId: first.id,
+        })
       );
 
       expect(failure).toMatchObject({ code: ErrorCodes.COMMENTS_SLOW_MODE, retryAfterSeconds: 20 });
@@ -169,15 +172,18 @@ describe('apps/server/api/services: create comment under moderation', () => {
 
     it('lets the next comment through once the window ends', async () => {
       const deps = commentCreateDeps(h.repositories, h.now);
-      expectOk(await createComment(deps, VIEWER, VIDEO_ID, { content: 'one' }));
-      expect(expectErr(await createComment(deps, VIEWER, VIDEO_ID, { content: 'two' })).code).toBe(
-        ErrorCodes.COMMENTS_SLOW_MODE
-      );
+      expectOk(await createComment(deps, VIEWER, h.acting(VIEWER), VIDEO_ID, { content: 'one' }));
+      expect(
+        expectErr(await createComment(deps, VIEWER, h.acting(VIEWER), VIDEO_ID, { content: 'two' }))
+          .code
+      ).toBe(ErrorCodes.COMMENTS_SLOW_MODE);
 
       h.setClock(START + 30_000);
 
       expect(
-        expectOk(await createComment(deps, VIEWER, VIDEO_ID, { content: 'three' })).status
+        expectOk(
+          await createComment(deps, VIEWER, h.acting(VIEWER), VIDEO_ID, { content: 'three' })
+        ).status
       ).toBe('published');
     });
 
@@ -186,21 +192,22 @@ describe('apps/server/api/services: create comment under moderation', () => {
       const deps = commentCreateDeps(h.repositories, h.now);
 
       for (const author of [VIEWER, OWNER]) {
-        expectOk(await createComment(deps, author, VIDEO_ID, { content: 'one' }));
-        expectOk(await createComment(deps, author, VIDEO_ID, { content: 'two' }));
+        expectOk(await createComment(deps, author, h.acting(author), VIDEO_ID, { content: 'one' }));
+        expectOk(await createComment(deps, author, h.acting(author), VIDEO_ID, { content: 'two' }));
       }
     });
 
     it('claims the window last, so a refused comment does not start it', async () => {
       await h.configure({ slowModeSeconds: 30, minAccountAgeDays: 7 });
       const deps = commentCreateDeps(h.repositories, h.now);
-      expect(expectErr(await createComment(deps, VIEWER, VIDEO_ID, { content: 'a' })).code).toBe(
-        ErrorCodes.COMMENTS_ACCOUNT_TOO_NEW
-      );
+      expect(
+        expectErr(await createComment(deps, VIEWER, h.acting(VIEWER), VIDEO_ID, { content: 'a' }))
+          .code
+      ).toBe(ErrorCodes.COMMENTS_ACCOUNT_TOO_NEW);
 
       await h.configure({ slowModeSeconds: 30 });
 
-      expectOk(await createComment(deps, VIEWER, VIDEO_ID, { content: 'b' }));
+      expectOk(await createComment(deps, VIEWER, h.acting(VIEWER), VIDEO_ID, { content: 'b' }));
     });
 
     it('releases the window when the comment is not stored', async () => {
@@ -212,11 +219,13 @@ describe('apps/server/api/services: create comment under moderation', () => {
         }),
       };
 
-      expect(expectErr(await createComment(failing, VIEWER, VIDEO_ID, { content: 'a' })).code).toBe(
-        ErrorCodes.DATABASE_UNAVAILABLE
-      );
+      expect(
+        expectErr(
+          await createComment(failing, VIEWER, h.acting(VIEWER), VIDEO_ID, { content: 'a' })
+        ).code
+      ).toBe(ErrorCodes.DATABASE_UNAVAILABLE);
 
-      expectOk(await createComment(deps, VIEWER, VIDEO_ID, { content: 'b' }));
+      expectOk(await createComment(deps, VIEWER, h.acting(VIEWER), VIDEO_ID, { content: 'b' }));
     });
 
     it('fails open when the window cannot be claimed', async () => {
@@ -226,8 +235,8 @@ describe('apps/server/api/services: create comment under moderation', () => {
       };
       const deps = { ...commentCreateDeps(h.repositories, h.now), slowMode: dead };
 
-      expectOk(await createComment(deps, VIEWER, VIDEO_ID, { content: 'a' }));
-      expectOk(await createComment(deps, VIEWER, VIDEO_ID, { content: 'b' }));
+      expectOk(await createComment(deps, VIEWER, h.acting(VIEWER), VIDEO_ID, { content: 'a' }));
+      expectOk(await createComment(deps, VIEWER, h.acting(VIEWER), VIDEO_ID, { content: 'b' }));
     });
   });
 });

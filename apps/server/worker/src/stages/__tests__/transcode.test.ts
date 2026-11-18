@@ -70,6 +70,7 @@ describe('apps/server/worker/stages: transcode', () => {
       await repositories.videos.create({
         id: videoId,
         ownerId: uuidv7(),
+        channelId: '00000000-0000-7000-8000-00000000c4a1',
         sourceKey: 'raw/source.mp4',
         status: 'PROCESSING',
       })

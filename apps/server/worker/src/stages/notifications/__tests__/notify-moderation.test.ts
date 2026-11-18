@@ -5,6 +5,7 @@ import { expectOk } from '@vp/testing/result';
 import { createNotifyModerationProcessor } from '../notify-moderation';
 import {
   CHANNEL_ID,
+  channelOf,
   CREATOR_ID,
   logger,
   notificationsOf,
@@ -47,6 +48,7 @@ describe('apps/server/worker/stages: notify-moderation', () => {
       await repositories.videos.create({
         id: VIDEO,
         ownerId: CREATOR_ID,
+        channelId: CHANNEL_ID,
         sourceKey: 'raw/v/source.mp4',
         title: 'Open',
         visibility: 'public',
@@ -58,6 +60,7 @@ describe('apps/server/worker/stages: notify-moderation', () => {
         id: COMMENT,
         videoId: VIDEO,
         authorId: AUTHOR,
+        authorChannelId: channelOf(AUTHOR),
         parentId: null,
         content: 'hello',
       })

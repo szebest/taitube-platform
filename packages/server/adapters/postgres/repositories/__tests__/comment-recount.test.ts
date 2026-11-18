@@ -2,11 +2,12 @@ import * as schema from '@vp/db';
 import { expectOk } from '@vp/testing/result';
 import { drizzle } from 'drizzle-orm/pglite';
 import {
+  OTHER_OWNER_CHANNEL_ID,
   OTHER_OWNER_ID,
-  OWNER_ID,
+  OWNER_CHANNEL_ID,
+  VIDEO_IDS,
   publicVideo,
   seedOwners,
-  VIDEO_IDS,
 } from '../../../__tests__/contract/fixtures';
 import { migratedPglite } from '../../../__tests__/contract/pglite-snapshot';
 import { recountAuthored } from '../comment-recount';
@@ -20,13 +21,6 @@ describe('adapters/postgres: recountAuthored', () => {
     const db = drizzle(engine, { schema });
     const repositories = new PostgresRepositories({ type: 'drizzle', db });
     await seedOwners(repositories);
-    const channel = expectOk(
-      await repositories.channels.create({
-        userId: OWNER_ID,
-        handle: 'owner',
-        displayName: 'Owner',
-      })
-    );
     expectOk(await repositories.videos.create(publicVideo({ id: VIDEO_IDS.a })));
     expectOk(await repositories.videos.create(publicVideo({ id: VIDEO_IDS.b })));
     expectOk(
@@ -34,13 +28,14 @@ describe('adapters/postgres: recountAuthored', () => {
         id: COMMENT_ID,
         videoId: VIDEO_IDS.a,
         authorId: OTHER_OWNER_ID,
+        authorChannelId: OTHER_OWNER_CHANNEL_ID,
         parentId: null,
         content: 'hello',
       })
     );
     await db.update(schema.videos).set({ commentsCount: 7 });
 
-    const touched = await recountAuthored(db, channel.id, OTHER_OWNER_ID);
+    const touched = await recountAuthored(db, OWNER_CHANNEL_ID, OTHER_OWNER_ID);
 
     expect(touched).toEqual([VIDEO_IDS.a]);
     expect(expectOk(await repositories.videos.findById(VIDEO_IDS.a))?.commentsCount).toBe(1);

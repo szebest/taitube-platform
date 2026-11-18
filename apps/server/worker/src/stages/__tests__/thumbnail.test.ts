@@ -30,6 +30,7 @@ describe('thumbnail stage', () => {
     await repositories.videos.create({
       id: videoId,
       ownerId: SEEDED.userId,
+      channelId: SEEDED.channelId,
       title: 'Thumbnail Video',
       status: 'PROCESSING',
       sourceKey,

@@ -3,6 +3,7 @@ import { RedisReactionCacheAdapter } from '@vp/adapters/redis/redis-reaction-cac
 import { inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes } from '@vp/errors';
 import { expectErr, expectOk } from '@vp/testing/result';
+import { seedPrimaryChannel } from '../../__tests__/test-app';
 import { ReactionService } from '../reaction-service';
 
 const CACHES = inProcessAppConfig().caches;
@@ -19,7 +20,6 @@ function makeService(repositories: InMemoryRepositories): ReactionService {
       backend: { type: 'cache', cache: new InMemoryCacheClient() },
     }),
     videos: repositories.videos,
-    channels: repositories.channels,
     restrictions: repositories.channelUserRestrictions,
     now: Date.now,
   });
@@ -29,6 +29,7 @@ async function seedVideo(repositories: InMemoryRepositories): Promise<void> {
   await repositories.videos.create({
     id: VIDEO_ID,
     ownerId: OWNER_ID,
+    channelId: await seedPrimaryChannel(repositories, OWNER_ID),
     title: 'Reactions fixture',
     visibility: 'public',
     status: 'READY',
@@ -94,16 +95,9 @@ describe('apps/server/api/services: ReactionService', () => {
   ])(
     'refuses a reaction from a user with a $kind only for a ban: $refused',
     async ({ kind, refused }) => {
-      const channel = expectOk(
-        await repositories.channels.create({
-          userId: OWNER_ID,
-          handle: 'owner',
-          displayName: 'Owner',
-        })
-      );
       expectOk(
         await repositories.channelUserRestrictions.apply({
-          channelId: channel.id,
+          channelId: await seedPrimaryChannel(repositories, OWNER_ID),
           userId: REACTOR_ID,
           kind,
           reason: 'spam',

@@ -3,7 +3,7 @@ import type {
   ChannelRepositoryPort,
 } from '@vp/core/repositories';
 import { expectOk } from '@vp/testing/result';
-import { OWNER_ID, seedOwners } from './fixtures';
+import { OWNER_CHANNEL_ID, seedOwners } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
 const DAY_MS = 86_400_000;
@@ -35,9 +35,8 @@ export function describeChannelHandleHistoryRepositoryContract(
       await seedOwners(subject.repositories);
       channels = subject.repositories.channels;
       history = subject.repositories.channelHandleHistory;
-      channelId = expectOk(
-        await channels.create({ userId: OWNER_ID, handle: 'first', displayName: 'Owner' })
-      ).id;
+      channelId = OWNER_CHANNEL_ID;
+      expectOk(await channels.update(channelId, { handle: 'first', handleChangedAt: new Date() }));
     });
 
     it('knows no handle nobody gave up', async () => {

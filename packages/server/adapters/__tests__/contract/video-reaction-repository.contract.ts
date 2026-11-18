@@ -122,11 +122,6 @@ export function describeVideoReactionRepositoryContract(
 
       beforeEach(async () => {
         await subject.repositories.videos.create(publicVideo({ id: VIDEO_IDS.c }));
-        await subject.repositories.channels.create({
-          userId: OWNER_ID,
-          handle: 'owner',
-          displayName: 'The Owner',
-        });
       });
 
       it('lists the likes newest first with the video and its channel, and walks on from a cursor', async () => {

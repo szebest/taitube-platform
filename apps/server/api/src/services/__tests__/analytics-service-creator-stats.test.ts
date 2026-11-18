@@ -8,6 +8,7 @@ import { AnalyticsService } from '../analytics-service';
 
 const OWNER: UserContext = { id: SEEDED.userId, role: 'CREATOR' };
 const STRANGER: UserContext = { id: SEEDED.otherUserId, role: 'USER' };
+const STRANGER_CHANNEL_ID = '00000000-0000-7000-8000-0000000000f9';
 const VIDEO = '00000000-0000-7000-8000-0000000000a1';
 const NOW = Date.parse('2026-03-10T08:00:00.000Z');
 const READY_AT = new Date('2026-03-09T20:30:00.000Z');
@@ -41,6 +42,7 @@ describe('AnalyticsService: creatorStats', () => {
       await repositories.videos.create({
         id: VIDEO,
         ownerId: OWNER.id,
+        channelId: SEEDED.channelId,
         visibility: 'public',
         status: 'READY',
         sourceKey: 'raw/a1/source.mp4',
@@ -69,7 +71,14 @@ describe('AnalyticsService: creatorStats', () => {
         ],
       })
     );
-    expectOk(await repositories.subscriptions.subscribe(OWNER.id, SEEDED.otherChannelId, VIDEO));
+    expectOk(
+      await repositories.subscriptions.subscribe(
+        OWNER.id,
+        SEEDED.channelId,
+        SEEDED.otherChannelId,
+        VIDEO
+      )
+    );
   });
 
   it('reads the totals, the 30 day range and the retention in one answer', async () => {
@@ -113,12 +122,17 @@ describe('AnalyticsService: creatorStats', () => {
 
   it('counts the subscribers gained from the video net of those who left', async () => {
     const subscribe = expectOk(
-      await repositories.subscriptions.subscribe(STRANGER.id, SEEDED.channelId, VIDEO)
+      await repositories.subscriptions.subscribe(
+        STRANGER.id,
+        STRANGER_CHANNEL_ID,
+        SEEDED.channelId,
+        VIDEO
+      )
     );
     expect(subscribe.changed).toBe(true);
     expect((await statsAt(NOW)).lifetime.subscribersGained).toBe(2);
 
-    expectOk(await repositories.subscriptions.unsubscribe(STRANGER.id, SEEDED.channelId));
+    expectOk(await repositories.subscriptions.unsubscribe(STRANGER_CHANNEL_ID, SEEDED.channelId));
 
     expect((await statsAt(NOW)).lifetime.subscribersGained).toBe(1);
   });
@@ -129,6 +143,7 @@ describe('AnalyticsService: creatorStats', () => {
       await repositories.videos.create({
         id: other,
         ownerId: OWNER.id,
+        channelId: SEEDED.channelId,
         sourceKey: 'raw/a2/source.mp4',
         durationMs: 100_000,
       })

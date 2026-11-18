@@ -18,12 +18,13 @@ describe('db: 0026 picks never overlap', () => {
   beforeAll(async () => {
     database = await startSocketDatabase();
     await runMigrations(database.url, silent);
-    await database.engine.query(
-      `insert into users (id, email) values ('${editorId}', 'editor@example.com')`
+    await database.engine.exec(
+      `insert into users (id, email) values ('${editorId}', 'editor@example.com');
+       insert into channels (id, user_id, handle, display_name) values ('${editorId}', '${editorId}', 'editor', 'Editor')`
     );
     await database.engine.query(
-      `insert into videos (id, owner_id, title, status, visibility, source_key, source_size_bytes)
-       values ('${videoId}', '${editorId}', 'Pick', 'READY', 'public', 'k', 1)`
+      `insert into videos (id, owner_id, channel_id, title, status, visibility, source_key, source_size_bytes)
+       values ('${videoId}', '${editorId}', '${editorId}', 'Pick', 'READY', 'public', 'k', 1)`
     );
     await insert('2026-03-01T00:00:00Z', '2026-03-02T00:00:00Z');
   });

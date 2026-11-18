@@ -8,14 +8,16 @@ import {
   InMemoryStorageClient,
 } from '@vp/adapters/in-memory';
 import type { JobQueue, StorageClient } from '@vp/core/ports';
+import type { Repositories } from '@vp/core/repositories';
 import { mintToken } from '@vp/dev-identity';
-import { type ChannelRole, SEARCH_SUGGESTIONS } from '@vp/domain';
+import { type ChannelRole, SEARCH_SUGGESTIONS, type ActingChannel } from '@vp/domain';
 import { type AppConfig, inProcessAppConfig } from '@vp/env-schema';
 import { QUEUES } from '@vp/job-contracts';
 import { SEEDED } from '@vp/testing';
 import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
 import { type AdapterOverrides, composeApp } from '../app';
+import { provisionAccount } from '../services/channel-lookup';
 
 export const ADMIN_TOKEN = 'operator-token-for-tests';
 
@@ -80,13 +82,38 @@ type VideoInput = Parameters<InMemoryRepositories['videos']['create']>[0];
 
 type SeedVideo = Pick<VideoInput, 'id' | 'ownerId' | 'title'> & Partial<VideoInput>;
 
+/** The user's primary channel, provisioned the way their first request would when they have none. */
+export async function seedPrimaryChannel(
+  repositories: Pick<Repositories, 'users' | 'channels' | 'playlists'>,
+  userId: string
+): Promise<string> {
+  const [primary] = expectOk(await provisionAccount(repositories, userId));
+  if (!primary) throw new Error(`no primary channel was provisioned for ${userId}`);
+  return primary.id;
+}
+
+/** The user acting as their primary channel, which is what a request without `X-Channel-Id` acts as. */
+export async function actingAsPrimary(
+  repositories: Pick<Repositories, 'users' | 'channels' | 'playlists'>,
+  userId: string
+): Promise<ActingChannel> {
+  return {
+    channelId: await seedPrimaryChannel(repositories, userId),
+    ownerId: userId,
+    role: 'owner',
+  };
+}
+
+/** Published on the owner's primary channel unless `channelId` names another. */
 export async function seedVideo(repositories: InMemoryRepositories, video: SeedVideo) {
+  const channelId = video.channelId ?? (await seedPrimaryChannel(repositories, video.ownerId));
   return expectOk(
     await repositories.videos.create({
       visibility: 'public',
       status: 'READY',
       sourceKey: `raw/${video.id}/source.mp4`,
       ...video,
+      channelId,
     })
   );
 }
@@ -101,18 +128,18 @@ export async function seedTeamMember(
   repositories: InMemoryRepositories,
   { ownerId, memberId, role }: { ownerId: string; memberId: string; role: ChannelRole }
 ): Promise<string> {
-  const found = expectOk(await repositories.channels.findByUserId(ownerId));
-  const channel =
-    found ??
+  const found = expectOk(await repositories.channels.findPrimaryByUserId(ownerId));
+  const channelId =
+    found?.id ??
     expectOk(
       await repositories.channels.create({
         userId: ownerId,
         handle: 'team-owner',
         displayName: 'Owner',
       })
-    );
+    ).id;
   const audit = {
-    channelId: channel.id,
+    channelId,
     actorUserId: ownerId,
     targetType: 'invite',
     targetId: TEAM_INVITE_ID,
@@ -122,7 +149,7 @@ export async function seedTeamMember(
     await repositories.channelInvites.create(
       {
         id: TEAM_INVITE_ID,
-        channelId: channel.id,
+        channelId,
         inviteeUserId: memberId,
         role,
         invitedBy: ownerId,
@@ -138,7 +165,7 @@ export async function seedTeamMember(
       action: 'invite.accepted',
     })
   );
-  return channel.id;
+  return channelId;
 }
 
 export async function backdate(

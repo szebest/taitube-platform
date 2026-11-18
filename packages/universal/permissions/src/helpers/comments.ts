@@ -22,35 +22,47 @@ export function canDeleteComment({
   user,
   comment,
   videoOwnerId,
+  videoChannelId,
 }: {
   user: UserContext | null;
   comment: CommentResource;
   videoOwnerId: string;
+  videoChannelId: string;
 }): boolean {
   if (!user) return false;
-  return getUserPermissions(user).can('delete', subject('Comment', { ...comment, videoOwnerId }));
+  return getUserPermissions(user).can(
+    'delete',
+    subject('Comment', { ...comment, videoOwnerId, videoChannelId })
+  );
 }
 
 export function canPinComment({
   user,
   videoOwnerId,
+  videoChannelId,
 }: {
   user: UserContext | null;
   videoOwnerId: string;
+  videoChannelId: string;
 }): boolean {
   if (!user) return false;
-  return getUserPermissions(user).can('pin', subject('Comment', { videoOwnerId }));
+  return getUserPermissions(user).can('pin', subject('Comment', { videoOwnerId, videoChannelId }));
 }
 
 export function canHeartComment({
   user,
   videoOwnerId,
+  videoChannelId,
 }: {
   user: UserContext | null;
   videoOwnerId: string;
+  videoChannelId: string;
 }): boolean {
   if (!user) return false;
-  return getUserPermissions(user).can('heart', subject('Comment', { videoOwnerId }));
+  return getUserPermissions(user).can(
+    'heart',
+    subject('Comment', { videoOwnerId, videoChannelId })
+  );
 }
 
 export function canReportComment({ user }: { user: UserContext | null }): boolean {
@@ -62,10 +74,15 @@ export function canReportComment({ user }: { user: UserContext | null }): boolea
 export function canModerateComments({
   user,
   videoOwnerId,
+  videoChannelId,
 }: {
   user: UserContext | null;
   videoOwnerId: string;
+  videoChannelId: string;
 }): boolean {
   if (!user) return false;
-  return getUserPermissions(user).can('moderate', subject('Comment', { videoOwnerId }));
+  return getUserPermissions(user).can(
+    'moderate',
+    subject('Comment', { videoOwnerId, videoChannelId })
+  );
 }

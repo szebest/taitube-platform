@@ -1,10 +1,11 @@
 import type { LiveChatRepositoryPort } from '@vp/core/repositories';
 import type { NewLiveChatMessage } from '@vp/domain';
 import { expectOk } from '@vp/testing/result';
-import { OTHER_OWNER_ID, OWNER_ID, seedOwners } from './fixtures';
+import { OTHER_OWNER_ID, OWNER_CHANNEL_ID, OWNER_ID, seedOwners } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
 const STREAM_ID = '00000000-0000-7000-8000-00000000f301';
+const VIEWER_ID = '00000000-0000-7000-8000-000000000104';
 const AT = new Date('2026-03-01T12:00:00.000Z');
 
 const messageId = (n: number) => `00000000-0000-7000-8000-${String(n).padStart(12, '0')}`;
@@ -38,15 +39,12 @@ export function describeLiveChatRepositoryContract(makeSubject: MakeRepositories
     beforeEach(async () => {
       await subject.reset();
       await seedOwners(subject.repositories);
-      const channel = expectOk(
-        await subject.repositories.channels.create({
-          userId: OWNER_ID,
-          handle: 'owner',
-          displayName: 'The Owner',
-        })
-      );
+      await subject.repositories.users.upsert({
+        id: VIEWER_ID,
+        email: 'viewer@video-pipeline.local',
+      });
       expectOk(
-        await subject.repositories.liveStreams.ensureIdle(channel.id, {
+        await subject.repositories.liveStreams.ensureIdle(OWNER_CHANNEL_ID, {
           id: STREAM_ID,
           streamKey: 'chat-key',
           overlayToken: 'chat-overlay',
@@ -58,15 +56,15 @@ export function describeLiveChatRepositoryContract(makeSubject: MakeRepositories
 
     it("appends a line with its author's channel, and no channel reads as null", async () => {
       const owned = expectOk(await chat.append(line(1, 0, OWNER_ID)));
-      const plain = expectOk(await chat.append(line(2, 10)));
+      const plain = expectOk(await chat.append(line(2, 10, VIEWER_ID)));
 
       expect(owned).toMatchObject({
         id: messageId(1),
         message: 'line 1',
-        author: { userId: OWNER_ID, handle: 'owner', displayName: 'The Owner' },
+        author: { userId: OWNER_ID, handle: 'owner', displayName: 'Owner' },
       });
       expect(plain.author).toEqual({
-        userId: OTHER_OWNER_ID,
+        userId: VIEWER_ID,
         handle: null,
         displayName: null,
         avatarUrl: null,

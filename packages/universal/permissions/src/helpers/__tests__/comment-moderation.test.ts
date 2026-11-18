@@ -32,7 +32,9 @@ describe('helpers/comment-moderation: who may moderate a channel', () => {
       { action, scenario: 'an anonymous caller', user: null, expected: false },
     ])
   )('lets $scenario $action a comment: $expected', ({ action, user, expected }) => {
-    expect(canModerateComment({ user, action, videoOwnerId: OWNER_ID })).toBe(expected);
+    expect(
+      canModerateComment({ user, action, videoOwnerId: OWNER_ID, videoChannelId: CHANNEL_ID })
+    ).toBe(expected);
   });
 
   it.each([

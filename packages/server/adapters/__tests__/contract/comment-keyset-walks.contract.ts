@@ -9,7 +9,7 @@ import {
   nextWindow,
   seedComment,
 } from './comment-contract-context';
-import { OWNER_ID, VIDEO_IDS } from './fixtures';
+import { OWNER_CHANNEL_ID, OWNER_ID, VIDEO_IDS } from './fixtures';
 import { SHARED_MILLISECOND, walkByCreatedAt, walkOneAtATime } from './keyset-walk';
 
 const ROOTS = [C.old, C.liked, C.fresh];
@@ -62,7 +62,14 @@ export function describeCommentKeysetWalksContract(ctx: CommentContractContext):
       await seedInOneMillisecond(ROOTS);
 
       const served = await walkByCreatedAt(async (cursor) =>
-        expectOk(await ctx.comments.listForOwner(OWNER_ID, { filter: 'all', cursor, limit: 1 }))
+        expectOk(
+          await ctx.comments.listForOwner(OWNER_ID, {
+            channelId: OWNER_CHANNEL_ID,
+            filter: 'all',
+            cursor,
+            limit: 1,
+          })
+        )
       );
 
       expect(served.sort()).toEqual([...ROOTS].sort());

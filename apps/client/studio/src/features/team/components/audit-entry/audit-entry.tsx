@@ -102,6 +102,11 @@ function AuditDetail({ entry }: { entry: AuditEntryView }) {
     case 'trusted.added':
     case 'trusted.removed':
     case 'channel.updated':
+    case 'channel.created':
+    case 'channel.promoted':
+    case 'comment.posted':
+    case 'channel.subscribed':
+    case 'video.uploaded':
       return null;
     default:
       return assertNever(entry, 'ChannelAuditAction');

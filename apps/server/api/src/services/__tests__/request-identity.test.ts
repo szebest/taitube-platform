@@ -22,9 +22,32 @@ describe('RequestIdentity', () => {
 
     const { user, acting } = expectOk(await identityOver(repositories).resolve(OWNER));
 
-    const own = expectOk(await repositories.channels.findByUserId(OWNER.id));
+    const own = expectOk(await repositories.channels.findPrimaryByUserId(OWNER.id));
     expect(user.memberships).toEqual({});
+    expect(user.channels).toEqual({ primaryId: own?.id, ownedIds: [own?.id] });
     expect(expectOk(acting)).toEqual({ channelId: own?.id, ownerId: OWNER.id, role: 'owner' });
+  });
+
+  it('acts as another owned channel the header names, and refuses one the caller has no tie to', async () => {
+    const repositories = new InMemoryRepositories();
+    const identity = identityOver(repositories);
+    expectOk(await identity.resolve(OWNER));
+    const second = expectOk(
+      await repositories.channels.createOwned(
+        { userId: OWNER.id, handle: 'second', displayName: 'Second' },
+        5
+      )
+    );
+
+    const named = expectOk(await identity.resolve(OWNER, second.id));
+    const stranger = expectOk(await identity.resolve(MEMBER, second.id));
+
+    expect(expectOk(named.acting)).toEqual({
+      channelId: second.id,
+      ownerId: OWNER.id,
+      role: 'owner',
+    });
+    expect(expectErr(stranger.acting).code).toBe(ErrorCodes.CHANNEL_MEMBERSHIP_REQUIRED);
   });
 
   it('reads the memberships from the store on every call', async () => {

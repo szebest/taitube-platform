@@ -20,10 +20,10 @@ describe('apps/server/api/services: refuseWhileBanned', () => {
       expiresAt,
       createdBy: OWNER,
     });
-  const refuse = (ownerId = OWNER) =>
+  const refuse = (onChannel = channelId) =>
     refuseWhileBanned(
-      { channels: repositories.channels, restrictions: repositories.channelUserRestrictions },
-      ownerId,
+      { restrictions: repositories.channelUserRestrictions },
+      onChannel,
       USER,
       new Date()
     );
@@ -35,8 +35,13 @@ describe('apps/server/api/services: refuseWhileBanned', () => {
     ).id;
   });
 
-  it('lets a user with no restriction through, and an owner with no channel', async () => {
+  it('lets a user with no restriction through', async () => {
     expect((await refuse()).ok).toBe(true);
+  });
+
+  it('reads the ban of the channel the video is on only', async () => {
+    await restrict('ban');
+
     expect((await refuse('00000000-0000-7000-8000-0000000000b0')).ok).toBe(true);
   });
 

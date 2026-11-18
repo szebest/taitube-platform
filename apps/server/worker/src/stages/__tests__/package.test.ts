@@ -23,6 +23,7 @@ async function processingVideo(
     await repositories.videos.create({
       id: videoId,
       ownerId: OWNER_ID,
+      channelId: '00000000-0000-7000-8000-00000000c4a1',
       title: 'packaged',
       status: 'PROCESSING',
       sourceKey: `raw/${videoId}`,
@@ -95,6 +96,7 @@ describe('apps/server/worker/stages: package', () => {
       await world.repositories.videos.create({
         id: videoId,
         ownerId: OWNER_ID,
+        channelId: '00000000-0000-7000-8000-00000000c4a1',
         title: 'Package Video',
         status: 'PROCESSING',
         sourceKey: 'raw/s60.mp4',

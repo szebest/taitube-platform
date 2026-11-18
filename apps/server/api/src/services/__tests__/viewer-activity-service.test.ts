@@ -3,7 +3,7 @@ import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { expectErr, expectOk } from '@vp/testing/result';
-import { seedVideo } from '../../__tests__/test-app';
+import { seedPrimaryChannel, seedVideo } from '../../__tests__/test-app';
 import { ViewerActivityService } from '../viewer-activity-service';
 import { ViewerProgress } from '../viewer-progress';
 import { TEST_CDN, TEST_SPRITE } from './service-deps';
@@ -74,11 +74,12 @@ describe('apps/server/api/services: ViewerActivityService', () => {
   });
 
   describe('my comments', () => {
-    const comment = (id: string, videoId: string, parentId: string | null = null) =>
+    const comment = async (id: string, videoId: string, parentId: string | null = null) =>
       repositories.comments.create({
         id,
         videoId,
         authorId: VIEWER.id,
+        authorChannelId: await seedPrimaryChannel(repositories, VIEWER.id),
         parentId,
         content: `says ${id.slice(-1)}`,
       });

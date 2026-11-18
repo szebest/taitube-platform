@@ -7,6 +7,7 @@ const stored = (id: string, parentId: string | null = null): StoredComment => ({
   id,
   videoId: 'video',
   authorId: 'author',
+  authorChannelId: 'channel-author',
   parentId,
   content: 'old',
   moderationState: 'published',

@@ -24,6 +24,7 @@ describe('crash safety and effectively-once completion', () => {
     await repositories.videos.create({
       id: videoId,
       ownerId: SEEDED.userId,
+      channelId: SEEDED.channelId,
       title: 'Crash Safety Video',
       status: 'PROCESSING',
       sourceKey,

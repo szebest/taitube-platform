@@ -7,7 +7,7 @@ import {
   searchHandleOf,
 } from '@vp/domain';
 import { SECONDS_PER_DAY } from '@vp/domain/time';
-import { type SQL, count, desc, eq, getTableColumns, or, sql } from 'drizzle-orm';
+import { type SQL, and, count, desc, eq, getTableColumns, or, sql } from 'drizzle-orm';
 import { type AnyPgColumn, type PgTable, QueryBuilder } from 'drizzle-orm/pg-core';
 import {
   drizzleWhere,
@@ -195,7 +195,7 @@ export const playlistSource = sourceOf({
       })
       .from(p)
       .innerJoinLateral(stats, sql`true`)
-      .leftJoin(ch, eq(ch.userId, p.ownerId))
+      .leftJoin(ch, and(eq(ch.userId, p.ownerId), eq(ch.isPrimary, true)))
       .where(where)
       .orderBy(desc(key), desc(p.id))
       .limit(limit);

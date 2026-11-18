@@ -1,9 +1,7 @@
 import { DEFAULT_COMMENT_SETTINGS } from '@vp/domain';
-import { expectOk } from '@vp/testing/result';
 import {
   AS,
   AUTHOR,
-  CREATOR,
   type CommentsApp,
   closeSharedCommentsApp,
   sharedCommentsApp,
@@ -60,13 +58,6 @@ describe('creator comment inbox routes: the moderation filters', () => {
   });
 
   it('lists held and hidden comments only under their own filter, with their state', async () => {
-    expectOk(
-      await ctx.repositories.channels.create({
-        userId: CREATOR,
-        handle: 'creator',
-        displayName: 'Creator',
-      })
-    );
     const saved = await ctx.app.inject({
       method: 'PUT',
       url: '/v1/me/channel/comment-settings',

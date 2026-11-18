@@ -34,18 +34,19 @@ describe('subscription routes', () => {
       role: 'USER',
       tier: 'free',
     });
-    await repositories.videos.create({
-      id: WATCHED_VIDEO,
-      ownerId: CREATOR,
-      visibility: 'public',
-      status: 'READY',
-      sourceKey: 'raw/watched.mp4',
-    });
     await repositories.channels.create({
       id: CHANNEL,
       userId: CREATOR,
       handle: 'creator1',
       displayName: 'Creator One',
+    });
+    await repositories.videos.create({
+      id: WATCHED_VIDEO,
+      ownerId: CREATOR,
+      channelId: CHANNEL,
+      visibility: 'public',
+      status: 'READY',
+      sourceKey: 'raw/watched.mp4',
     });
   });
 

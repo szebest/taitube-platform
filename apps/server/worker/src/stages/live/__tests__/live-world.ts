@@ -41,6 +41,7 @@ export async function liveWorld() {
       video: {
         id: VIDEO_ID,
         ownerId: OWNER_ID,
+        channelId: channel.id,
         visibility: 'public',
         sourceKey: `live/${STREAM_ID}/`,
       },

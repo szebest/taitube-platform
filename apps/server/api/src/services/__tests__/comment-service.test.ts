@@ -7,6 +7,7 @@ import { DEFAULT_COMMENT_SETTINGS } from '@vp/domain';
 import { ErrorCodes, cacheUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { expectErr, expectOk } from '@vp/testing/result';
+import { actingAsPrimary, seedPrimaryChannel } from '../../__tests__/test-app';
 import { CommentService } from '../comment-service';
 import { commentUpdateDeps, saveSettings } from './comment-deps';
 
@@ -50,12 +51,17 @@ describe('CommentService', () => {
       await repositories.videos.create({
         id: VIDEO_ID,
         ownerId: OWNER.id,
+        channelId: await seedPrimaryChannel(repositories, OWNER.id),
         sourceKey: `raw/${VIDEO_ID}/source.mp4`,
         visibility: 'public',
         status: 'READY',
       })
     );
-    expectOk(await service.create(VIEWER, VIDEO_ID, { content: 'hello' }));
+    expectOk(
+      await service.create(VIEWER, await actingAsPrimary(repositories, VIEWER.id), VIDEO_ID, {
+        content: 'hello',
+      })
+    );
   });
 
   it('serves the first top page from the hot cache after one read', async () => {
@@ -95,7 +101,12 @@ describe('CommentService', () => {
     const [root] = expectOk(await service.listForVideo(null, VIDEO_ID, {})).items;
     vi.spyOn(repositories.comments, 'create').mockResolvedValue(ok(null));
 
-    const reply = await service.create(VIEWER, VIDEO_ID, { content: 'late', parentId: root?.id });
+    const reply = await service.create(
+      VIEWER,
+      await actingAsPrimary(repositories, VIEWER.id),
+      VIDEO_ID,
+      { content: 'late', parentId: root?.id }
+    );
 
     expect(expectErr(reply).code).toBe(ErrorCodes.COMMENT_NOT_FOUND);
   });
@@ -103,21 +114,19 @@ describe('CommentService', () => {
   it('keeps a write that could not purge the cache', async () => {
     cache.invalidation = err(cacheUnavailable('del'));
 
-    const created = await service.create(VIEWER, VIDEO_ID, { content: 'still saved' });
+    const created = await service.create(
+      VIEWER,
+      await actingAsPrimary(repositories, VIEWER.id),
+      VIDEO_ID,
+      { content: 'still saved' }
+    );
 
     expect(isOk(created)).toBe(true);
   });
 
   describe("an author's own comments that nobody else sees", () => {
     const holdEverything = async () => {
-      const channel = expectOk(
-        await repositories.channels.create({
-          userId: OWNER.id,
-          handle: 'owner',
-          displayName: 'Owner',
-        })
-      );
-      await saveSettings(repositories, channel.id, {
+      await saveSettings(repositories, await seedPrimaryChannel(repositories, OWNER.id), {
         ...DEFAULT_COMMENT_SETTINGS,
         reviewMode: 'all',
       });
@@ -131,7 +140,11 @@ describe('CommentService', () => {
       'shows a held comment to viewer $viewer as $shown of $total, from the shared page too',
       async ({ viewer, shown, total }) => {
         await holdEverything();
-        const held = expectOk(await service.create(VIEWER, VIDEO_ID, { content: 'later' }));
+        const held = expectOk(
+          await service.create(VIEWER, await actingAsPrimary(repositories, VIEWER.id), VIDEO_ID, {
+            content: 'later',
+          })
+        );
         expect(held.status).toBe('held');
 
         const hot = expectOk(await service.listForVideo(viewer, VIDEO_ID, {}));
@@ -146,7 +159,10 @@ describe('CommentService', () => {
       const [root] = expectOk(await service.listForVideo(null, VIDEO_ID, {})).items;
       await holdEverything();
       expectOk(
-        await service.create(VIEWER, VIDEO_ID, { content: 'held reply', parentId: root?.id })
+        await service.create(VIEWER, await actingAsPrimary(repositories, VIEWER.id), VIDEO_ID, {
+          content: 'held reply',
+          parentId: root?.id,
+        })
       );
 
       const author = expectOk(await service.listForVideo(VIEWER, VIDEO_ID, {}));

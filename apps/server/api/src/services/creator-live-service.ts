@@ -66,7 +66,7 @@ export class CreatorLiveService {
   ): Promise<Result<LiveStreamView, ChannelNotFound | DatabaseUnavailable>> {
     const { channels, liveStreams, newSecret } = this.deps;
 
-    const channel = await channels.findByUserId(viewer.id);
+    const channel = await channels.findPrimaryByUserId(viewer.id);
     if (isErr(channel)) return channel;
     if (channel.value === null) return err(channelNotFound(viewer.id));
 
@@ -84,7 +84,7 @@ export class CreatorLiveService {
   ): Promise<Result<LiveStreamView, LiveStreamNotFound | DatabaseUnavailable>> {
     const { channels, liveStreams } = this.deps;
 
-    const channel = await channels.findByUserId(viewer.id);
+    const channel = await channels.findPrimaryByUserId(viewer.id);
     if (isErr(channel)) return channel;
     const open = channel.value && (await liveStreams.findOpenByChannel(channel.value.id));
     if (open && isErr(open)) return open;

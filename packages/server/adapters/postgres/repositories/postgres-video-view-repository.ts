@@ -158,7 +158,7 @@ export class PostgresVideoViewRepository implements VideoViewRepositoryPort {
   }
 
   async channelTimeline(
-    ownerId: string,
+    channelId: string,
     range: ViewDateRange
   ): Promise<Result<DailyViews[], DatabaseUnavailable>> {
     const rows = await fromPromise(
@@ -173,7 +173,7 @@ export class PostgresVideoViewRepository implements VideoViewRepositoryPort {
           .innerJoin(v, eq(v.id, d.videoId))
           .where(
             and(
-              eq(v.ownerId, ownerId),
+              eq(v.channelId, channelId),
               isNull(v.deletedAt),
               between(d.viewDate, range.from, range.to)
             )
@@ -212,7 +212,7 @@ export class PostgresVideoViewRepository implements VideoViewRepositoryPort {
   }
 
   async channelHourly(
-    ownerId: string,
+    channelId: string,
     range: ViewHourRange
   ): Promise<Result<HourlyViews[], DatabaseUnavailable>> {
     const rows = await fromPromise(
@@ -223,7 +223,7 @@ export class PostgresVideoViewRepository implements VideoViewRepositoryPort {
           .innerJoin(v, eq(v.id, h.videoId))
           .where(
             and(
-              eq(v.ownerId, ownerId),
+              eq(v.channelId, channelId),
               isNull(v.deletedAt),
               between(h.viewHour, ...hourBounds(range))
             )
@@ -238,7 +238,7 @@ export class PostgresVideoViewRepository implements VideoViewRepositoryPort {
     );
   }
 
-  async channelTotals(ownerId: string): Promise<Result<ChannelViewTotals, DatabaseUnavailable>> {
+  async channelTotals(channelId: string): Promise<Result<ChannelViewTotals, DatabaseUnavailable>> {
     const rows = await fromPromise(
       () =>
         this.db
@@ -247,7 +247,7 @@ export class PostgresVideoViewRepository implements VideoViewRepositoryPort {
             videoCount: sql<string>`count(*)`,
           })
           .from(v)
-          .where(and(eq(v.ownerId, ownerId), isNull(v.deletedAt))),
+          .where(and(eq(v.channelId, channelId), isNull(v.deletedAt))),
       databaseUnavailable.during('channelTotals')
     );
 
@@ -258,7 +258,7 @@ export class PostgresVideoViewRepository implements VideoViewRepositoryPort {
   }
 
   async topVideos(
-    ownerId: string,
+    channelId: string,
     range: ViewDateRange,
     limit: number
   ): Promise<Result<TopVideo[], DatabaseUnavailable>> {
@@ -271,7 +271,7 @@ export class PostgresVideoViewRepository implements VideoViewRepositoryPort {
           .innerJoin(d, eq(d.videoId, v.id))
           .where(
             and(
-              eq(v.ownerId, ownerId),
+              eq(v.channelId, channelId),
               isNull(v.deletedAt),
               between(d.viewDate, range.from, range.to)
             )

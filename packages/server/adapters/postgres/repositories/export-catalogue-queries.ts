@@ -49,10 +49,10 @@ export async function commentRows(
     })
     .from(c)
     .innerJoin(v, eq(v.id, c.videoId))
-    .leftJoin(ch, eq(ch.userId, c.authorId))
+    .leftJoin(ch, eq(ch.id, c.authorChannelId))
     .where(
       and(
-        eq(v.ownerId, scope.ownerId),
+        eq(v.channelId, scope.channelId),
         isNull(v.deletedAt),
         isNull(c.deletedAt),
         madeWithin(c.createdAt, scope.range),
@@ -96,7 +96,7 @@ export async function videoRows(
     .leftJoin(cat, eq(cat.id, v.categoryId))
     .where(
       and(
-        eq(v.ownerId, scope.ownerId),
+        eq(v.channelId, scope.channelId),
         isNull(v.deletedAt),
         madeWithin(v.createdAt, scope.range),
         keysetPast(msTimestamp(v.createdAt), v.id, keyOf(after), 'asc')

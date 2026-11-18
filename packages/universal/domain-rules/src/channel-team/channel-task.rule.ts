@@ -3,6 +3,7 @@ import type { ActingChannel } from '@vp/domain';
 import {
   type UserContext,
   canAccessUpload,
+  canActAsChannel,
   canModerateComments,
   canPinVideo,
   canRestrictChannelUser,
@@ -25,7 +26,9 @@ type ChannelTask =
   | 'read-team'
   | 'read-audit'
   | 'edit-comment-settings'
-  | 'restrict-users';
+  | 'restrict-users'
+  | 'comment-as'
+  | 'subscribe-as';
 
 export interface ChannelTaskInput {
   readonly user: UserContext | null;
@@ -40,17 +43,17 @@ function allows(
 ) {
   switch (task) {
     case 'read-analytics':
-      return canReadAnalytics({ user, analytics: { ownerId } });
+      return canReadAnalytics({ user, analytics: { ownerId, channelId } });
     case 'read-library':
-      return canUpdateVideo({ user, video: { ownerId } });
+      return canUpdateVideo({ user, video: { ownerId, channelId } });
     case 'read-inbox':
-      return canModerateComments({ user, videoOwnerId: ownerId });
+      return canModerateComments({ user, videoOwnerId: ownerId, videoChannelId: channelId });
     case 'edit-channel':
       return canUpdateChannel({ user, channel: { id: channelId, userId: ownerId, ownerId } });
     case 'pin-content':
-      return canPinVideo({ user, video: { ownerId } });
+      return canPinVideo({ user, video: { ownerId, channelId } });
     case 'upload':
-      return canAccessUpload({ user, upload: { ownerId } });
+      return canAccessUpload({ user, upload: { ownerId, channelId } });
     case 'read-team':
       return canReadChannelTeam({ user, channel: { channelId, ownerId } });
     case 'read-audit':
@@ -59,6 +62,9 @@ function allows(
       return canUpdateCommentSettings({ user, channel: { channelId, ownerId } });
     case 'restrict-users':
       return canRestrictChannelUser({ user, channel: { channelId, ownerId } });
+    case 'comment-as':
+    case 'subscribe-as':
+      return canActAsChannel({ user, channel: { id: channelId, ownerId } });
     default:
       return assertNever(task, 'ChannelTask');
   }

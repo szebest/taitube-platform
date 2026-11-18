@@ -1,7 +1,15 @@
 import type { CreatorInboxFilter, NewCommentModeration } from '@vp/domain';
 import { expectOk } from '@vp/testing/result';
 import { C, type CommentContractContext, seedComment } from './comment-contract-context';
-import { OTHER_OWNER_ID, OWNER_ID, VIDEO_IDS, idsOf, publicVideo } from './fixtures';
+import {
+  OTHER_OWNER_ID,
+  OWNER_CHANNEL_ID,
+  OWNER_ID,
+  VIDEO_IDS,
+  idsOf,
+  publicVideo,
+  seededChannel,
+} from './fixtures';
 
 const REPORT_ID = '00000000-0000-7000-8000-000000000d01';
 const NOBODY = '00000000-0000-7000-8000-0000000000ff';
@@ -9,7 +17,14 @@ const OWNER_REPLY_ID = '00000000-0000-7000-8000-000000000c0a';
 
 export function describeCommentInboxContract(ctx: CommentContractContext): void {
   const inbox = async (filter: CreatorInboxFilter = 'all', limit = 10) =>
-    expectOk(await ctx.comments.listForOwner(OWNER_ID, { filter, cursor: null, limit }));
+    expectOk(
+      await ctx.comments.listForOwner(OWNER_ID, {
+        channelId: OWNER_CHANNEL_ID,
+        filter,
+        cursor: null,
+        limit,
+      })
+    );
 
   async function ownerReplies(parentId: string, hoursAgo: number): Promise<void> {
     expectOk(
@@ -17,6 +32,7 @@ export function describeCommentInboxContract(ctx: CommentContractContext): void 
         id: OWNER_REPLY_ID,
         videoId: VIDEO_IDS.a,
         authorId: OWNER_ID,
+        authorChannelId: OWNER_CHANNEL_ID,
         parentId,
         content: 'thanks',
       })
@@ -89,6 +105,22 @@ export function describeCommentInboxContract(ctx: CommentContractContext): void 
       });
     });
 
+    it("leaves out the comments on the owner's other channel", async () => {
+      const second = expectOk(
+        await ctx.subject.repositories.channels.createOwned(
+          { userId: OWNER_ID, handle: 'second-channel', displayName: 'Second' },
+          5
+        )
+      );
+      await ctx.subject.repositories.videos.create(
+        publicVideo({ id: VIDEO_IDS.d, channelId: second.id })
+      );
+      await seedComment(ctx, C.old, { hoursAgo: 2 });
+      await seedComment(ctx, C.fresh, { hoursAgo: 1, videoId: VIDEO_IDS.d });
+
+      expect(idsOf(await inbox())).toEqual([C.old]);
+    });
+
     it('leaves out the comments of a removed video and of a removed comment', async () => {
       await seedComment(ctx, C.old, { hoursAgo: 3 });
       await seedComment(ctx, C.fresh, { hoursAgo: 1, videoId: VIDEO_IDS.b });
@@ -103,6 +135,7 @@ export function describeCommentInboxContract(ctx: CommentContractContext): void 
       const by = async (authorId: string) =>
         expectOk(
           await ctx.comments.listForOwner(OWNER_ID, {
+            channelId: OWNER_CHANNEL_ID,
             filter: 'all',
             authorId,
             cursor: null,
@@ -123,6 +156,7 @@ export function describeCommentInboxContract(ctx: CommentContractContext): void 
       const last = page[1];
       const rest = expectOk(
         await ctx.comments.listForOwner(OWNER_ID, {
+          channelId: OWNER_CHANNEL_ID,
           filter: 'all',
           cursor: last ? { createdAt: last.createdAt, id: last.id } : null,
           limit: 2,
@@ -208,13 +242,7 @@ export function describeCommentInboxContract(ctx: CommentContractContext): void 
       { scenario: 'a ban that has not ended', kind: 'ban', hours: 1, listed: true },
       { scenario: 'a ban that has ended', kind: 'ban', hours: -1, listed: false },
     ] as const)('lists the comments of an author with $scenario: $listed', async (given) => {
-      const channel = expectOk(
-        await ctx.subject.repositories.channels.create({
-          userId: OWNER_ID,
-          handle: 'video-owner',
-          displayName: 'Video Owner',
-        })
-      );
+      const channel = await seededChannel(ctx.subject.repositories, OWNER_ID);
       await seedComment(ctx, C.old);
       expectOk(
         await ctx.subject.repositories.channelUserRestrictions.apply({
@@ -257,6 +285,7 @@ export function describeCommentInboxContract(ctx: CommentContractContext): void 
           id: C.old,
           videoId: VIDEO_IDS.a,
           authorId: OWNER_ID,
+          authorChannelId: OWNER_CHANNEL_ID,
           parentId: null,
           content: 'mine',
         })

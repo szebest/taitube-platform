@@ -163,7 +163,10 @@ export function VideoCommentItem({
   const postReply = usePostComment(comment.videoId);
   const heartComment = useHeartComment();
   const reply = useRequireAccount('reply');
-  const canHeart = useCan(canHeartComment, { videoOwnerId: video.ownerId });
+  const canHeart = useCan(canHeartComment, {
+    videoOwnerId: video.ownerId,
+    videoChannelId: video.channelId,
+  });
 
   const level = comment.parentId === null ? 'comment' : 'reply';
   const state = deleteComment.isSuccess

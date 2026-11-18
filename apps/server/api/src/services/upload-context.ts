@@ -1,6 +1,7 @@
 import { type Result, err, isErr, map, ok } from '@kit/result';
 import type { JobQueue, MultipartStorage, StorageClient } from '@vp/core/ports';
 import type {
+  ChannelAuditRepositoryPort,
   EventRepository,
   UploadRecord,
   UploadRepository,
@@ -21,6 +22,7 @@ export interface UploadContext {
   uploads: UploadRepository;
   videos: VideoRepository;
   events: EventRepository;
+  audit: Pick<ChannelAuditRepositoryPort, 'append'>;
   users: UserRepository;
   storage: StorageClient;
   multipart: MultipartStorage;
@@ -57,7 +59,9 @@ export async function loadOwnedUpload(
   const record = found.value;
   const decided = decideUploadAccess({
     actor: user,
-    upload: record ? { id: record.upload.id, ownerId: record.video.ownerId } : null,
+    upload: record
+      ? { id: record.upload.id, ownerId: record.video.ownerId, channelId: record.video.channelId }
+      : null,
     uploadId,
     action,
   });

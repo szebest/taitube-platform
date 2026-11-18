@@ -218,7 +218,7 @@ export class PostgresVideoReactionRepository implements VideoReactionRepositoryP
           })
           .from(vr)
           .innerJoin(v, eq(v.id, vr.videoId))
-          .leftJoin(ch, eq(ch.userId, v.ownerId))
+          .leftJoin(ch, eq(ch.id, v.channelId))
           .where(
             drizzleWhere(
               eq(vr.userId, viewer.id),

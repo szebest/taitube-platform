@@ -20,6 +20,10 @@ describe('apps/server/api/plugins: api token auth', () => {
     { cookie: 'vp.theme=sand; vp.session=abc', carries: true },
     { cookie: 'vp.theme=sand', carries: false },
     { cookie: 'vp.sessionx=abc', carries: false },
+    { cookie: 'vp.session.0=abc', carries: true },
+    { cookie: 'vp.theme=sand; vp.session.9=abc', carries: true },
+    { cookie: 'vp.session.10=abc', carries: false },
+    { cookie: 'vp.session.a=abc', carries: false },
     { cookie: undefined, carries: false },
   ])('tells the session cookie in $cookie: $carries', ({ cookie, carries }) => {
     expect(carriesSession(withCookie(cookie))).toBe(carries);

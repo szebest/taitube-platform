@@ -42,6 +42,17 @@ describe('db: seedDatabase', () => {
     ]);
   });
 
+  it('gives every seeded user one primary channel and files each video under it', async () => {
+    expect(
+      await rows(
+        'select c.id, c.user_id, c.is_primary, count(v.id)::int as videos from channels c left join videos v on v.channel_id = c.id group by c.id order by c.id'
+      )
+    ).toEqual([
+      { id: SEEDED.channelId, user_id: SEEDED.userId, is_primary: true, videos: 1 },
+      { id: SEEDED.otherChannelId, user_id: SEEDED.otherUserId, is_primary: true, videos: 1 },
+    ]);
+  });
+
   it('seeds a finished rendition of the public video for every rung of the ladder', async () => {
     expect(await rows('select name, status from renditions order by height desc')).toEqual([
       { name: '1080p', status: 'DONE' },

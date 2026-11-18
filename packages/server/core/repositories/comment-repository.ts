@@ -49,6 +49,8 @@ export interface ListCommentRepliesOptions {
 }
 
 export interface ListCreatorInboxOptions {
+  /** The owner's channel the inbox reads; an owner of several reads one at a time. */
+  channelId: string;
   filter: CreatorInboxFilter;
   /** Only this author's comments, for the moderator who looks at who wrote one. */
   authorId?: string;
@@ -141,7 +143,8 @@ export interface CommentRepositoryPort {
     options: ListAuthoredCommentsOptions
   ): Promise<Result<AuthoredComment[], DatabaseUnavailable>>;
   /**
-   * Live comments on `ownerId`'s videos that the owner did not write, newest first. `unanswered`
+   * Live comments on the videos of `options.channelId`, a channel of `ownerId`, that the owner did
+   * not write, newest first. `unanswered`
    * keeps those without a later reply from the owner in the same thread; `reported` keeps those
    * with an open report.
    */

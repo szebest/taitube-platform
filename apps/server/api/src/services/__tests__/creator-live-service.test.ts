@@ -20,6 +20,7 @@ describe('apps/server/api/services: CreatorLiveService', () => {
   let repositories: InMemoryRepositories;
   let gateway: InMemoryLiveGateway;
   let service: CreatorLiveService;
+  let channelId: string;
 
   beforeEach(async () => {
     repositories = new InMemoryRepositories();
@@ -34,13 +35,13 @@ describe('apps/server/api/services: CreatorLiveService', () => {
       cache: new InMemoryCacheClient(),
       now: () => STOPPED_AT.getTime(),
     });
-    expectOk(
+    channelId = expectOk(
       await repositories.channels.create({
         userId: OWNER.id,
         handle: 'owner',
         displayName: 'Owner',
       })
-    );
+    ).id;
   });
 
   const goLive = async (streamId: string) => {
@@ -50,6 +51,7 @@ describe('apps/server/api/services: CreatorLiveService', () => {
         video: {
           id: '00000000-0000-7000-8000-00000000f201',
           ownerId: OWNER.id,
+          channelId,
           sourceKey: 'live/',
         },
         startedAt: new Date(),

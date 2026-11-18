@@ -42,6 +42,7 @@ describe('fingerprintFindings', () => {
       await repositories.videos.create({
         id: videoId,
         ownerId: SEEDED.userId,
+        channelId: SEEDED.channelId,
         title: 't',
         status: 'READY',
         sourceKey: 'raw/x.mp4',

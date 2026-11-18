@@ -103,7 +103,6 @@ export function graph(now: Clock = realClock): Container {
             categories: c.get(Repo.categories),
             events: c.get(Repo.events),
             outbox: c.get(Repo.outbox),
-            channels: c.get(Repo.channels),
             audit: c.get(Repo.channelAudit),
           })
       )

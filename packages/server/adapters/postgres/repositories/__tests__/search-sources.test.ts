@@ -45,6 +45,7 @@ describe('adapters/postgres: search sources', () => {
       ids('f').map((id): typeof schema.videos.$inferInsert => ({
         id,
         ownerId: OWNER,
+        channelId: OWNER,
         title: 'Alpha',
         visibility: 'public',
         status: 'READY',

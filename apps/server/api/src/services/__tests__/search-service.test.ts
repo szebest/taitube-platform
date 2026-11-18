@@ -34,6 +34,7 @@ describe('apps/server/api/services: SearchService', () => {
       await repositories.videos.create({
         id: '00000000-0000-7000-8000-0000000047a2',
         ownerId: OWNER,
+        channelId: CHANNEL,
         title: 'Rust async explained',
         visibility: 'public',
         status: 'READY',
@@ -64,6 +65,7 @@ describe('apps/server/api/services: SearchService', () => {
       await repositories.videos.create({
         id: VIDEO,
         ownerId: OWNER,
+        channelId: CHANNEL,
         title: 'Rust ownership explained',
         visibility: 'public',
         status: 'READY',

@@ -49,6 +49,11 @@ export type CreateFailure =
 
 const REUSE_WINDOW_MS = MS_PER_HOUR;
 const FALLBACK_NAME = 'Watch party';
+const noPublicVideo = invalidField(
+  'hostAs',
+  'hostAs channel needs a channel with a public ready video',
+  {}
+);
 
 type CreateDeps = WatchPartyDeps;
 
@@ -58,13 +63,15 @@ async function hostedChannelId(
   hostAs: CreateWatchPartyBody['hostAs']
 ): Promise<Result<string | null, InvalidField | DatabaseUnavailable>> {
   if (hostAs === 'user') return ok(null);
-  const channel = await repositories.channels.findByUserId(owner.id);
+  const channel = await repositories.channels.findPrimaryByUserId(owner.id);
   if (isErr(channel)) return channel;
-  const published = await repositories.videos.listPublic({ ownerId: owner.id, limit: 1 });
+  if (channel.value === null) return err(noPublicVideo);
+  const published = await repositories.videos.listPublic({
+    channelId: channel.value.id,
+    limit: 1,
+  });
   if (isErr(published)) return published;
-  return channel.value === null || published.value.items.length === 0
-    ? err(invalidField('hostAs', 'hostAs channel needs a channel with a public ready video', {}))
-    : ok(channel.value.id);
+  return published.value.items.length === 0 ? err(noPublicVideo) : ok(channel.value.id);
 }
 
 async function reusableRoom(

@@ -6,6 +6,7 @@ import { ErrorCodes } from '@vp/errors';
 import { videoChannel } from '@vp/events';
 import type { UserContext } from '@vp/permissions';
 import { expectErr, expectOk } from '@vp/testing/result';
+import { seedPrimaryChannel } from '../../__tests__/test-app';
 import { SseService } from '../sse-service';
 import { liveWorld, STREAM_ID, VIDEO_ID as LIVE_VIDEO_ID } from './live-harness';
 import { sseServiceDeps } from './service-deps';
@@ -26,6 +27,7 @@ describe('apps/server/api/services: SseService', () => {
     await repositories.videos.create({
       id: VIDEO_ID,
       ownerId: OWNER.id,
+      channelId: await seedPrimaryChannel(repositories, OWNER.id),
       title: 'Stream fixture',
       visibility,
       status,

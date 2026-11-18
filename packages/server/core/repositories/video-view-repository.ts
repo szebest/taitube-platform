@@ -29,7 +29,7 @@ export interface VideoViewRepositoryPort {
     range: ViewDateRange
   ): Promise<Result<DailyViews[], DatabaseUnavailable>>;
   channelTimeline(
-    ownerId: string,
+    channelId: string,
     range: ViewDateRange
   ): Promise<Result<DailyViews[], DatabaseUnavailable>>;
   videoHourly(
@@ -37,12 +37,12 @@ export interface VideoViewRepositoryPort {
     range: ViewHourRange
   ): Promise<Result<HourlyViews[], DatabaseUnavailable>>;
   channelHourly(
-    ownerId: string,
+    channelId: string,
     range: ViewHourRange
   ): Promise<Result<HourlyViews[], DatabaseUnavailable>>;
-  channelTotals(ownerId: string): Promise<Result<ChannelViewTotals, DatabaseUnavailable>>;
+  channelTotals(channelId: string): Promise<Result<ChannelViewTotals, DatabaseUnavailable>>;
   topVideos(
-    ownerId: string,
+    channelId: string,
     range: ViewDateRange,
     limit: number
   ): Promise<Result<TopVideo[], DatabaseUnavailable>>;

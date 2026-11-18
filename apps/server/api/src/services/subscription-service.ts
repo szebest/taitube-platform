@@ -1,23 +1,27 @@
 import type { InvalidCursor, Paginator } from '@kit/pagination';
-import { type Result, err, ignore, isErr, map, ok, unwrapOr } from '@kit/result';
+import { type Result, err, ignore, isErr, isOk, map, ok, unwrapOr } from '@kit/result';
 import type { SubscriptionCachePort } from '@vp/core/ports';
 import type {
+  ChannelAuditRepositoryPort,
   ChannelRepositoryPort,
   SubscriptionRepositoryPort,
   VideoRepository,
 } from '@vp/core/repositories';
-import type { NotificationLevel, SubscribedChannelItem } from '@vp/domain';
+import type { ActingChannel, Channel, NotificationLevel, SubscribedChannelItem } from '@vp/domain';
 import {
+  type AuthorizationFailure,
   type SubscribeFailure,
   type UnsubscribeFailure,
-  decideSubscribe,
   channelNotFound,
+  decideChannelTask,
+  decideSubscribe,
   decideUnsubscribe,
   subscriptionSourceOf,
 } from '@vp/domain-rules';
 import type { CdnBase } from '@vp/env-schema';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
+import { auditActor } from './audit-actor';
 import {
   createdAtCursorPayload,
   decodeCreatedAtCursor,
@@ -47,6 +51,7 @@ export interface SubscriptionServiceDeps {
   subscriptions: SubscriptionRepositoryPort;
   channels: ChannelRepositoryPort;
   videos: VideoRepository;
+  audit: Pick<ChannelAuditRepositoryPort, 'append'>;
   subscriptionCache: SubscriptionCachePort;
   home: Pick<HomeService, 'forget'>;
   cdn: CdnBase;
@@ -55,8 +60,11 @@ export interface SubscriptionServiceDeps {
   viewerProgress: ViewerProgress;
 }
 
-export type SubscribeServiceFailure = SubscribeFailure | DatabaseUnavailable;
-export type UnsubscribeServiceFailure = UnsubscribeFailure | DatabaseUnavailable;
+export type SubscribeServiceFailure = AuthorizationFailure | SubscribeFailure | DatabaseUnavailable;
+export type UnsubscribeServiceFailure =
+  | AuthorizationFailure
+  | UnsubscribeFailure
+  | DatabaseUnavailable;
 export type ReadSubscriptionFailure = UnsubscribeFailure | DatabaseUnavailable;
 
 export class SubscriptionService {
@@ -66,15 +74,24 @@ export class SubscriptionService {
    * `CacheUnavailable` is absent from every signature here on purpose: a dead cache costs a query,
    * not an answer, so this service handles it rather than passing it on.
    */
+  /** Subscribes the acting channel; a new subscription lands in that channel's audit log. */
   async subscribe(
     user: UserContext,
+    acting: ActingChannel,
     channelId: string,
     fromVideoId?: string
   ): Promise<Result<SubscriptionStatusView, SubscribeServiceFailure>> {
+    const allowed = decideChannelTask({ user, acting, task: 'subscribe-as' });
+    if (isErr(allowed)) return allowed;
     const found = await this.deps.channels.findById(channelId);
     if (isErr(found)) return found;
 
-    const decided = decideSubscribe({ subscriber: user, channel: found.value, channelId });
+    const decided = decideSubscribe({
+      subscriber: user,
+      channel: found.value,
+      channelId,
+      subscriberChannelId: acting.channelId,
+    });
     if (isErr(decided)) return decided;
 
     const source = fromVideoId ? await this.deps.videos.findById(fromVideoId) : ok(null);
@@ -82,6 +99,7 @@ export class SubscriptionService {
 
     const written = await this.deps.subscriptions.subscribe(
       user.id,
+      acting.channelId,
       channelId,
       subscriptionSourceOf(decided.value, source.value)
     );
@@ -89,6 +107,15 @@ export class SubscriptionService {
 
     const { subscriberCount, changed } = written.value;
     if (changed) {
+      const audited = await this.deps.audit.append({
+        channelId: acting.channelId,
+        ...auditActor(user),
+        action: 'channel.subscribed',
+        targetType: 'channel',
+        targetId: channelId,
+        meta: {},
+      });
+      if (isErr(audited)) return audited;
       await this.deps.home.forget(user.id);
       ignore(
         await this.deps.subscriptionCache.addSubscription(user.id, channelId),
@@ -104,24 +131,19 @@ export class SubscriptionService {
 
   async unsubscribe(
     user: UserContext,
+    acting: ActingChannel,
     channelId: string
   ): Promise<Result<SubscriptionStatusView, UnsubscribeServiceFailure>> {
-    const found = await this.deps.channels.findById(channelId);
-    if (isErr(found)) return found;
-
-    const decided = decideUnsubscribe({ subscriber: user, channel: found.value, channelId });
+    const decided = await this.decideAs(user, acting, channelId);
     if (isErr(decided)) return decided;
 
-    const written = await this.deps.subscriptions.unsubscribe(user.id, channelId);
+    const written = await this.deps.subscriptions.unsubscribe(acting.channelId, channelId);
     if (isErr(written)) return written;
 
     const { subscriberCount, changed } = written.value;
     if (changed) {
       await this.deps.home.forget(user.id);
-      ignore(
-        await this.deps.subscriptionCache.removeSubscription(user.id, channelId),
-        'the unsubscription is written; the cache heals on its TTL'
-      );
+      await this.resyncSubscriptions(user.id, channelId);
       ignore(
         await this.deps.subscriptionCache.setSubscriberCount(channelId, subscriberCount),
         'the count is written; the cache heals on its TTL'
@@ -160,19 +182,44 @@ export class SubscriptionService {
 
   async setNotificationLevel(
     user: UserContext,
+    acting: ActingChannel,
     channelId: string,
     level: NotificationLevel
-  ): Promise<Result<{ channelId: string; level: NotificationLevel }, ReadSubscriptionFailure>> {
-    const found = await this.deps.channels.findById(channelId);
-    if (isErr(found)) return found;
-
-    const decided = decideUnsubscribe({ subscriber: user, channel: found.value, channelId });
+  ): Promise<Result<{ channelId: string; level: NotificationLevel }, UnsubscribeServiceFailure>> {
+    const decided = await this.decideAs(user, acting, channelId);
     if (isErr(decided)) return decided;
 
-    const written = await this.deps.subscriptions.setNotificationLevel(user.id, channelId, level);
+    const written = await this.deps.subscriptions.setNotificationLevel(
+      acting.channelId,
+      channelId,
+      level
+    );
     if (isErr(written)) return written;
 
     return written.value ? ok({ channelId, level }) : err(channelNotFound(channelId));
+  }
+
+  /** A write on the acting channel's subscription to `channelId`, which must be there. */
+  private async decideAs(
+    user: UserContext,
+    acting: ActingChannel,
+    channelId: string
+  ): Promise<Result<Channel, UnsubscribeServiceFailure>> {
+    const allowed = decideChannelTask({ user, acting, task: 'subscribe-as' });
+    if (isErr(allowed)) return allowed;
+    const found = await this.deps.channels.findById(channelId);
+    if (isErr(found)) return found;
+    return decideUnsubscribe({ subscriber: user, channel: found.value, channelId });
+  }
+
+  /** The cache holds what the account follows from any of its channels, so it drops a channel last. */
+  private async resyncSubscriptions(userId: string, channelId: string): Promise<void> {
+    const followed = await this.deps.subscriptions.getUserSubscriptionChannelIds(userId);
+    if (isOk(followed) && followed.value.includes(channelId)) return;
+    ignore(
+      await this.deps.subscriptionCache.removeSubscription(userId, channelId),
+      'the unsubscription is written; the cache heals on its TTL'
+    );
   }
 
   async listSubscriptions(
@@ -225,14 +272,19 @@ export class SubscriptionService {
     const { items, total } = feed.value;
     const channelOf = await loadChannelsOf(
       this.deps.channels,
-      items.map((video) => video.ownerId)
+      items.map((video) => video.channelId)
     );
     if (isErr(channelOf)) return channelOf;
 
     const page = this.deps.paginator.paginate(items, limit, {
       cursorOf: createdAtCursorPayload,
       toItem: (video) =>
-        toVideoSummaryView(video, this.deps.cdn, this.deps.sprite, channelOf.value(video.ownerId)),
+        toVideoSummaryView(
+          video,
+          this.deps.cdn,
+          this.deps.sprite,
+          channelOf.value(video.channelId)
+        ),
     });
     return ok({
       ...page,

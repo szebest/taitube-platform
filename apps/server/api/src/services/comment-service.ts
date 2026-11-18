@@ -4,7 +4,7 @@ import { type Result, err, ignore, isErr, map, ok } from '@kit/result';
 import type { CommentView, ListCommentsQuery } from '@vp/api-contracts';
 import type { CommentCachePort, HotComments } from '@vp/core/ports';
 import type { CommentWindow } from '@vp/core/repositories';
-import type { CommentSort, CommentThread, Video } from '@vp/domain';
+import type { ActingChannel, CommentSort, CommentThread, Video } from '@vp/domain';
 import {
   type CommentNotFound,
   type DeleteCommentFailure,
@@ -101,7 +101,7 @@ export class CommentService {
     return ok({
       ...this.deps.paginator.paginate(threads, request.value.window.limit, {
         cursorOf: commentThreadCursorPayload,
-        toItem: (thread) => toCommentView(thread, video.value.ownerId, viewer),
+        toItem: (thread) => toCommentView(thread, video.value, viewer),
       }),
       total,
     });
@@ -136,17 +136,18 @@ export class CommentService {
     return map(rows, (replies): CommentPage =>
       this.deps.paginator.paginate(replies, limit, {
         cursorOf: createdAtCursorPayload,
-        toItem: (reply) => toCommentView(reply, video.ownerId, viewer),
+        toItem: (reply) => toCommentView(reply, video, viewer),
       })
     );
   }
 
   async create(
     author: UserContext,
+    acting: ActingChannel,
     videoId: string,
     body: { content: string; parentId?: string }
   ): Promise<Result<CommentView, CreateCommentServiceFailure>> {
-    const created = await createComment(this.deps, author, videoId, body);
+    const created = await createComment(this.deps, author, acting, videoId, body);
     if (!isErr(created)) await this.purge(videoId);
     return created;
   }
@@ -161,7 +162,7 @@ export class CommentService {
 
     const { thread, video } = updated.value;
     await this.purge(video.id);
-    return ok(toCommentView(thread, video.ownerId, actor));
+    return ok(toCommentView(thread, video, actor));
   }
 
   async remove(
@@ -175,11 +176,9 @@ export class CommentService {
     if (isErr(decided)) return decided;
     const { video } = found.value;
 
-    const channelId = await this.channelIdOf(video);
-    if (isErr(channelId)) return channelId;
     const removed = await this.deps.comments.remove(
       decided.value,
-      deletionAudit(channelId.value, actor, decided.value)
+      deletionAudit(video?.channelId, actor, decided.value)
     );
     if (isErr(removed)) return removed;
 
@@ -199,12 +198,10 @@ export class CommentService {
     const decided = decideCommentPin({ actor, commentId, ...found.value });
     if (isErr(decided)) return decided;
 
-    const channelId = await this.channelIdOf(video);
-    if (isErr(channelId)) return channelId;
     const updated = await this.deps.comments.setPinned(
       decided.value,
       pinned,
-      pinAudit(channelId.value, actor, decided.value, pinned)
+      pinAudit(video?.channelId, actor, decided.value, pinned)
     );
     return await this.settled(updated, commentId, video, actor);
   }
@@ -223,13 +220,6 @@ export class CommentService {
 
     const updated = await this.deps.comments.setHearted(decided.value, hearted);
     return await this.settled(updated, commentId, video, actor);
-  }
-
-  private async channelIdOf(
-    video: Video | null
-  ): Promise<Result<string | undefined, DatabaseUnavailable>> {
-    if (!video) return ok(undefined);
-    return map(await this.deps.channels.findByUserId(video.ownerId), (channel) => channel?.id);
   }
 
   private threadsRequest(query: ListCommentsQuery) {
@@ -287,7 +277,7 @@ export class CommentService {
     if (!(written.value && video)) return err(commentNotFound(commentId));
 
     await this.purge(video.id);
-    return ok(toCommentView(written.value, video.ownerId, viewer));
+    return ok(toCommentView(written.value, video, viewer));
   }
 
   private async purge(videoId: string): Promise<void> {

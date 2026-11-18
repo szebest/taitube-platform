@@ -44,10 +44,20 @@ export async function runForcedTransientDlqReplay(ctx: DlqCheckContext): Promise
   }
 
   const videoId = uuidv7();
+  const channel =
+    expectOk(await repositories.channels.findPrimaryByUserId(adminId)) ??
+    expectOk(
+      await repositories.channels.create({
+        userId: adminId,
+        handle: `dlq-${videoId.slice(-8)}`,
+        displayName: 'DLQ checks',
+      })
+    );
   expectOk(
     await repositories.videos.create({
       id: videoId,
       ownerId: adminId,
+      channelId: channel.id,
       title: 'Forced Transient Replay Video',
       status: 'PROCESSING',
       sourceKey: 'raw/s15.mp4',

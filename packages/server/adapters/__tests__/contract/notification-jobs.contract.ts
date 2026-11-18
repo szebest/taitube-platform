@@ -1,5 +1,13 @@
 import { expectOk } from '@vp/testing/result';
-import { OTHER_OWNER_ID, OWNER_ID, publicVideo, seedOwners, VIDEO_IDS } from './fixtures';
+import {
+  OTHER_OWNER_CHANNEL_ID,
+  OTHER_OWNER_ID,
+  OWNER_CHANNEL_ID,
+  OWNER_ID,
+  VIDEO_IDS,
+  publicVideo,
+  seedOwners,
+} from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
 const COMMENT_ID = '00000000-0000-7000-8000-0000000000c1';
@@ -71,6 +79,7 @@ export function describeNotificationJobsContract(makeSubject: MakeRepositoriesSu
           id: COMMENT_ID,
           videoId: VIDEO_IDS.a,
           authorId: OWNER_ID,
+          authorChannelId: OWNER_CHANNEL_ID,
           parentId: null,
           content: 'first',
         })
@@ -86,6 +95,7 @@ export function describeNotificationJobsContract(makeSubject: MakeRepositoriesSu
           id: COMMENT_ID,
           videoId: VIDEO_IDS.a,
           authorId: OTHER_OWNER_ID,
+          authorChannelId: OTHER_OWNER_CHANNEL_ID,
           parentId: null,
           content: 'first',
         })

@@ -3,6 +3,7 @@ import { VideoIdParamSchema, VideoListResponseSchema, VideoSummarySchema } from 
 const summary = {
   id: '00000000-0000-7000-8000-0000000000f1',
   ownerId: '00000000-0000-7000-8000-000000000002',
+  channelId: '00000000-0000-7000-8000-000000000003',
   title: 'A video',
   description: null,
   visibility: 'public',

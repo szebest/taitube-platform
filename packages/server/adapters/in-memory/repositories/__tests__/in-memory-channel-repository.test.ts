@@ -30,7 +30,7 @@ describe('InMemoryChannelRepository dev seed', () => {
       userId: SEEDED.userId,
       displayName: 'Dev Channel',
     });
-    expect(expectOk(await channels.findByUserId(SEEDED.otherUserId))?.id).toBe(
+    expect(expectOk(await channels.findPrimaryByUserId(SEEDED.otherUserId))?.id).toBe(
       SEEDED.otherChannelId
     );
   });

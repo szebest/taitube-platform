@@ -3,6 +3,7 @@ import type { NotificationLevel } from './notification';
 export interface ChannelSubscription {
   id: string;
   subscriberId: string;
+  subscriberChannelId: string;
   channelId: string;
   notificationLevel: NotificationLevel;
   /** The video of the channel the viewer subscribed from, when the request said so and it held. */

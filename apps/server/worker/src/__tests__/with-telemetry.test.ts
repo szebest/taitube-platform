@@ -88,6 +88,7 @@ describe('withTelemetry across the pipeline', () => {
     await repositories.videos.create({
       id: videoId,
       ownerId: SEEDED.userId,
+      channelId: SEEDED.channelId,
       title: 's60 E2E Traced Video',
       status: 'UPLOADING',
       sourceKey,

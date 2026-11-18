@@ -1,5 +1,6 @@
 import {
   categorySlugConflict,
+  channelLimitReached,
   handleTaken,
   pickWindowOverlap,
   versionConflict,
@@ -20,6 +21,11 @@ describe('@vp/errors: conflict failures', () => {
       code: ErrorCodes.PICK_WINDOW_OVERLAP,
     },
     {
+      name: 'channelLimitReached',
+      failure: channelLimitReached(5),
+      code: ErrorCodes.CHANNEL_LIMIT_REACHED,
+    },
+    {
       name: 'versionConflict',
       failure: versionConflict('v1', 3),
       code: ErrorCodes.VERSION_CONFLICT,
@@ -32,6 +38,7 @@ describe('@vp/errors: conflict failures', () => {
   it('names the value the constraint rejected', () => {
     expect(handleTaken('ada').handle).toBe('ada');
     expect(categorySlugConflict('music').slug).toBe('music');
+    expect(channelLimitReached(5).limit).toBe(5);
   });
 
   it('names the window that was refused, as ISO instants', () => {

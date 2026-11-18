@@ -40,7 +40,7 @@ export function createNotifyHeartProcessor(deps: NotifyHeartDeps) {
     if (isErr(switchedOn)) return switchedOn;
     if (!switchedOn.value.has(authorId)) return skipped;
 
-    const creator = await repositories.channels.findByUserId(video.value.ownerId);
+    const creator = await repositories.channels.findById(video.value.channelId);
     if (isErr(creator)) return creator;
     const actor: NotificationActor | null = creator.value && {
       handle: creator.value.handle,

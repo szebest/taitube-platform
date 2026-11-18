@@ -253,7 +253,6 @@ export class InMemoryCommentRepository implements CommentRepositoryPort {
   private scope(videoIds: readonly string[]): Promise<PublicScopeContext> {
     return publicScopeOf(this.comments, videoIds, {
       videos: this.deps.videosRepo,
-      channels: this.deps.channelsRepo,
       restrictions: this.deps.restrictionsRepo,
     });
   }
@@ -269,7 +268,7 @@ export class InMemoryCommentRepository implements CommentRepositoryPort {
     stored: StoredComment,
     countsReply: (reply: StoredComment) => boolean
   ): Promise<CommentThread> {
-    const channel = unwrapOr(await this.deps.channelsRepo.findByUserId(stored.authorId), null);
+    const channel = unwrapOr(await this.deps.channelsRepo.findById(stored.authorChannelId), null);
     return toThreadOf(stored, channel, this.repliesOf(stored.id).filter(countsReply).length);
   }
 }

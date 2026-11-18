@@ -7,6 +7,7 @@ import { expectOk } from '@vp/testing/result';
 import { seedTeam } from './channel-team-fixtures';
 import {
   CATEGORY_MUSIC_ID,
+  OTHER_OWNER_CHANNEL_ID,
   OTHER_OWNER_ID,
   OWNER_ID,
   publicVideo,
@@ -137,8 +138,9 @@ export function describeExportRowRepositoryContract(makeSubject: MakeRepositorie
       await view(subject.repositories, VIDEO_IDS.a, '2026-03-02', 3);
       await view(subject.repositories, VIDEO_IDS.b, '2026-03-02', 2);
       await view(subject.repositories, VIDEO_IDS.c, '2026-03-04', 9);
-      expectOk(await subject.repositories.subscriptions.subscribe(OTHER_OWNER_ID, channel.id));
-      expectOk(await subject.repositories.subscriptions.unsubscribe(OTHER_OWNER_ID, channel.id));
+      const { subscriptions } = subject.repositories;
+      expectOk(await subscriptions.subscribe(OTHER_OWNER_ID, OTHER_OWNER_CHANNEL_ID, channel.id));
+      expectOk(await subscriptions.unsubscribe(OTHER_OWNER_CHANNEL_ID, channel.id));
 
       const read = await walk(rows.channelAnalytics.bind(rows), scope);
       const today = new Date().toISOString().slice(0, 10);
@@ -151,19 +153,15 @@ export function describeExportRowRepositoryContract(makeSubject: MakeRepositorie
 
     it('reads the comments by public identity, held ones included and removed ones not', async () => {
       const { repositories } = subject;
-      const fan = expectOk(
-        await repositories.channels.create({
-          userId: OTHER_OWNER_ID,
-          handle: 'fan',
-          displayName: 'Fan',
-        })
-      );
+      const fan = expectOk(await repositories.channels.findById(OTHER_OWNER_CHANNEL_ID));
+      if (!fan) throw new Error('seedOwners made no channel for the other owner');
       for (const n of [1, 2, 3]) {
         expectOk(
           await repositories.comments.create({
             id: COMMENT(n),
             videoId: VIDEO_IDS.a,
             authorId: fan.userId,
+            authorChannelId: fan.id,
             parentId: n === 2 ? COMMENT(1) : null,
             content: `=cmd ${n}`,
           })
@@ -183,8 +181,8 @@ export function describeExportRowRepositoryContract(makeSubject: MakeRepositorie
           commentId: COMMENT(1),
           videoTitle: 'First',
           parentId: null,
-          authorHandle: 'fan',
-          authorDisplayName: 'Fan',
+          authorHandle: 'other',
+          authorDisplayName: 'Other',
           text: '=cmd 1',
           createdAt: new Date(BASE + 1000).toISOString(),
           hearted: false,

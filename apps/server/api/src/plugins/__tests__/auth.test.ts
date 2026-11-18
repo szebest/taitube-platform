@@ -128,7 +128,7 @@ describe('apps/server/api/plugins: auth', () => {
       status: 200,
       user: { id: OPERATOR_ID, role: 'ADMIN', memberships: {} },
     });
-    expect(expectOk(await repositories.channels.findByUserId(OPERATOR_ID))).not.toBeNull();
+    expect(expectOk(await repositories.channels.findPrimaryByUserId(OPERATOR_ID))).not.toBeNull();
   });
 
   it.each([

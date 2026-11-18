@@ -55,25 +55,26 @@ export function onTokenChannel(user: UserContext, { channelId }: TokenGrant): Us
   return { ...user, role, memberships: grant ? { [channelId]: grant } : {} };
 }
 
-const OWNER_FIELD: Readonly<Partial<Record<SubjectName, string>>> = {
-  Video: 'ownerId',
-  Comment: 'videoOwnerId',
-  Analytics: 'ownerId',
-  ChannelExport: 'ownerId',
-  ChannelUser: 'ownerId',
+const CHANNEL_FIELD: Readonly<Partial<Record<SubjectName, string>>> = {
+  Video: 'channelId',
+  Comment: 'videoChannelId',
+  Analytics: 'channelId',
+  ChannelExport: 'channelId',
+  ChannelUser: 'channelId',
 };
 
 /**
  * Takes back what a scope grant would reach outside the token's channel: rules keyed on the user's
- * own id would otherwise let a team token act on the user's own channel. Public reads stay open.
+ * own id would otherwise let a token act on every channel its owner has. Pinned on the channel,
+ * not its owner, because one owner holds several. Public reads stay open.
  */
 function pinnedToChannel(
   [action, subject]: ScopeGrant,
-  channelOwner: string
+  channelId: string
 ): RawRuleOf<AppAbility> | null {
-  const field = OWNER_FIELD[subject];
+  const field = CHANNEL_FIELD[subject];
   if (!field || (action === 'read' && subject === 'Comment')) return null;
-  const outside = { [field]: { $ne: channelOwner } };
+  const outside = { [field]: { $ne: channelId } };
   const conditions =
     action === 'read' && subject === 'Video'
       ? { ...outside, visibility: { $nin: ['public', 'unlisted'] } }
@@ -85,15 +86,10 @@ function pinnedToChannel(
  * The intersection of the user's ability and the token's scopes. A `can` rule survives once per
  * scope action it covers, narrowed to that action and subject with its conditions intact; a
  * `cannot` rule survives whole, because it only ever takes away. Last, each grant is pinned to the
- * token channel's owner. A demoted user's ability shrinks first, so their token's does too on the
+ * token's channel. A demoted user's ability shrinks first, so their token's does too on the
  * next call.
  */
-export function withinScopes(
-  ability: AppAbility,
-  user: UserContext,
-  { channelId, scopes }: TokenGrant
-): AppAbility {
-  const channelOwner = user.memberships?.[channelId]?.ownerId ?? user.id;
+export function withinScopes(ability: AppAbility, { channelId, scopes }: TokenGrant): AppAbility {
   const grants = [...new Set(scopes)].flatMap((scope) => SCOPE_ABILITIES[scope]);
   const rules = ability.rules.flatMap((rule): RawRuleOf<AppAbility>[] => {
     if (rule.inverted) return [rule];
@@ -105,6 +101,6 @@ export function withinScopes(
       )
       .map(([action, subject]) => ({ ...rule, action, subject }));
   });
-  const pins = grants.flatMap((grant) => pinnedToChannel(grant, channelOwner) ?? []);
+  const pins = grants.flatMap((grant) => pinnedToChannel(grant, channelId) ?? []);
   return createMongoAbility<AppAbility>([...rules, ...pins]);
 }

@@ -38,12 +38,10 @@ export function createAnnounceCommentHeldProcessor(deps: AnnounceCommentHeldDeps
     const video = await repositories.videos.findById(videoId);
     if (isErr(video)) return video;
     if (!video.value) return ok({ commentId, channelId: null });
-    const channel = await repositories.channels.findByUserId(video.value.ownerId);
-    if (isErr(channel)) return channel;
-    if (!channel.value) return ok({ commentId, channelId: null });
+    const { channelId } = video.value;
 
-    const payload = { commentId, videoId, channelId: channel.value.id };
+    const payload = { commentId, videoId, channelId };
     for (const userId of recipients) await announce(userId, 'comment.held', payload);
-    return ok({ commentId, channelId: channel.value.id });
+    return ok({ commentId, channelId });
   };
 }

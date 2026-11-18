@@ -3,6 +3,7 @@ import type { NewVideoInput } from '@vp/core/repositories';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { expectErr, expectOk } from '@vp/testing/result';
+import { seedPrimaryChannel } from '../../__tests__/test-app';
 import type { CreatorLibraryOptions, CreatorStudioService } from '../creator-studio-service';
 import { creatorStudioOf, ownerActing, TEST_CDN } from './service-deps';
 
@@ -18,14 +19,19 @@ describe('apps/server/api/services: creator studio', () => {
   let repositories: InMemoryRepositories;
   let studio: CreatorStudioService;
 
-  const library = (user: UserContext, options: CreatorLibraryOptions) =>
-    studio.library(user, ownerActing(user.id, 'chan'), options);
+  const library = async (user: UserContext, options: CreatorLibraryOptions) =>
+    studio.library(
+      user,
+      ownerActing(user.id, await seedPrimaryChannel(repositories, user.id)),
+      options
+    );
 
   async function seed(overrides: Partial<NewVideoInput> = {}) {
     return expectOk(
       await repositories.videos.create({
         id: VIDEO_ID,
         ownerId: OWNER.id,
+        channelId: await seedPrimaryChannel(repositories, overrides.ownerId ?? OWNER.id),
         title: 'Studio fixture',
         visibility: 'public',
         status: 'READY',
@@ -121,7 +127,7 @@ describe('apps/server/api/services: creator studio', () => {
       const second = expectOk(
         await studio.libraryOfAll(ADMIN, { sort: 'views', order: 'desc', limit: 1, cursor })
       );
-      expect(second).toMatchObject({ items: [{ id: VIDEO_ID, channel: null }], nextCursor: null });
+      expect(second).toMatchObject({ items: [{ id: VIDEO_ID }], nextCursor: null });
     });
 
     it('filters by title text and walks a title ascending', async () => {

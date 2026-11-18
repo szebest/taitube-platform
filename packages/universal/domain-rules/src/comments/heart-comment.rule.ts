@@ -13,10 +13,18 @@ export function decideCommentHeart(
 ): Result<Comment, HeartCommentFailure> {
   return andThen(locateComment(input), ({ comment, video }) =>
     andThen(
-      authorize(input.actor, canHeartComment({ user: input.actor, videoOwnerId: video.ownerId }), {
-        action: 'heart',
-        subject: 'Comment',
-      }),
+      authorize(
+        input.actor,
+        canHeartComment({
+          user: input.actor,
+          videoOwnerId: video.ownerId,
+          videoChannelId: video.channelId,
+        }),
+        {
+          action: 'heart',
+          subject: 'Comment',
+        }
+      ),
       () => ok(comment)
     )
   );

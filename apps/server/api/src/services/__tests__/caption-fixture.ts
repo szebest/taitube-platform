@@ -7,6 +7,7 @@ export const CAPTION_OWNER: UserContext = {
   id: '00000000-0000-7000-8000-00000000ca01',
   role: 'USER',
 };
+export const CAPTION_CHANNEL_ID = '00000000-0000-7000-8000-00000000ca0d';
 export const CAPTION_STRANGER: UserContext = {
   id: '00000000-0000-7000-8000-00000000ca02',
   role: 'USER',
@@ -25,14 +26,15 @@ export const VTT =
 
 /** The owner's channel, a public and a private video probe has measured, and one it has not. */
 export async function seedCaptionVideos(repositories: Repositories): Promise<void> {
-  expectOk(
+  const channel = expectOk(
     await repositories.channels.create({
+      id: CAPTION_CHANNEL_ID,
       userId: CAPTION_OWNER.id,
       handle: 'captioner',
       displayName: 'Captioner',
     })
   );
-  const videos: Omit<NewVideoInput, 'ownerId'>[] = [
+  const videos: Omit<NewVideoInput, 'ownerId' | 'channelId'>[] = [
     { id: CAPTIONED, sourceKey: 'raw/bread.mp4', durationMs: 60_000 },
     {
       id: PRIVATE_CAPTIONED,
@@ -45,6 +47,7 @@ export async function seedCaptionVideos(repositories: Repositories): Promise<voi
   for (const video of videos) {
     const owned = {
       ownerId: CAPTION_OWNER.id,
+      channelId: channel.id,
       status: 'READY',
       visibility: 'public',
       ...video,

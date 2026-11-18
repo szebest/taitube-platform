@@ -6,6 +6,7 @@ import {
   CATEGORY_GAMING_ID,
   CATEGORY_MUSIC_ID,
   HOUR_MS,
+  OTHER_OWNER_CHANNEL_ID,
   OTHER_OWNER_ID,
   OWNER_ID,
   VIDEO_IDS,
@@ -165,8 +166,8 @@ export function describeVideoFeedContract(ctx: VideoContractContext): void {
       },
       {
         sort: 'recent',
-        scope: 'owner',
-        filter: { ownerId: OTHER_OWNER_ID },
+        scope: 'channel',
+        filter: { channelId: OTHER_OWNER_CHANNEL_ID },
         expected: [VIDEO_IDS.b, VIDEO_IDS.d],
       },
     ])('restricts $sort to the requested $scope', async ({ sort, filter, expected }) => {
@@ -219,9 +220,9 @@ export function describeVideoFeedContract(ctx: VideoContractContext): void {
         expected: EXPECTED_ORDER[sort],
       })),
       {
-        feed: "one owner's recent",
+        feed: "one channel's recent",
         sort: 'recent',
-        filter: { ownerId: OTHER_OWNER_ID },
+        filter: { channelId: OTHER_OWNER_CHANNEL_ID },
         expected: [VIDEO_IDS.b, VIDEO_IDS.d],
       },
     ])(

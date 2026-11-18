@@ -123,7 +123,7 @@ export function describeCommentListingContract(ctx: CommentContractContext): voi
       );
 
       expect(idsOf(all)).toEqual([C.reply1, C.reply2]);
-      expect(all[0]?.author.handle).toBe('commenter');
+      expect(all[0]?.author.handle).toBe('other');
       expect(idsOf(rest)).toEqual([C.reply2]);
     });
   });

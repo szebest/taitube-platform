@@ -43,7 +43,7 @@ export function createNotifySubscribersProcessor(deps: NotifySubscribersDeps) {
       (kind === 'live' || video.value.status === 'READY');
     if (!(video.value && announceable)) return skipped;
 
-    const channel = await repositories.channels.findByUserId(video.value.ownerId);
+    const channel = await repositories.channels.findById(video.value.channelId);
     if (isErr(channel)) return channel;
     if (!channel.value) return skipped;
 

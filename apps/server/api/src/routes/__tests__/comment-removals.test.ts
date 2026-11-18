@@ -1,9 +1,7 @@
 import type { CommentActionBody } from '@vp/api-contracts';
-import { expectOk } from '@vp/testing/result';
 import {
   AS,
   VIDEO,
-  CREATOR,
   type CommentsApp,
   type Who,
   buildCommentsApp,
@@ -28,13 +26,6 @@ describe('GET /v1/me/comment-removals', () => {
 
   beforeEach(async () => {
     ctx = await buildCommentsApp();
-    expectOk(
-      await ctx.repositories.channels.create({
-        userId: CREATOR,
-        handle: 'creator',
-        displayName: 'Creator',
-      })
-    );
   });
 
   afterEach(async () => {

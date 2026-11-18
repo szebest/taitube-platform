@@ -10,15 +10,43 @@ import {
   isPublicFeedEligible,
 } from '@vp/domain';
 import {
+  type ChannelLimitReached,
   type DatabaseUnavailable,
   ErrorCodes,
   type HandleTaken,
   PermanentError,
+  channelLimitReached,
   handleTaken,
 } from '@vp/errors';
 import { uuidv7 } from 'uuidv7';
 import type { InMemoryChannelHandleHistoryRepository } from './in-memory-channel-handle-history-repository';
 import type { InMemoryVideoRepository } from './in-memory-video-repository';
+
+function newChannel(input: CreateChannelInput, isPrimary: boolean): Channel {
+  const now = new Date();
+  return {
+    id: input.id ?? uuidv7(),
+    userId: input.userId,
+    isPrimary,
+    handle: input.handle.toLowerCase(),
+    displayName: input.displayName,
+    avatarUrl: input.avatarUrl ?? null,
+    bannerUrl: input.bannerUrl ?? null,
+    brandColor: input.brandColor ?? null,
+    bio: input.bio ?? null,
+    links: [],
+    avatarVersion: 0,
+    bannerVersion: 0,
+    bannerCrops: null,
+    country: null,
+    contactEmail: null,
+    bannerLink: null,
+    handleChangedAt: null,
+    subscriberCount: input.subscriberCount ?? 0,
+    createdAt: now,
+    updatedAt: now,
+  };
+}
 
 export class InMemoryChannelRepository implements ChannelRepositoryPort {
   private readonly channels = new Map<string, Channel>();
@@ -31,49 +59,24 @@ export class InMemoryChannelRepository implements ChannelRepositoryPort {
   }
 
   seedDevChannels(): void {
-    const now = new Date();
-    this.channels.set('00000000-0000-7000-8000-000000000101', {
-      id: '00000000-0000-7000-8000-000000000101',
-      userId: '00000000-0000-7000-8000-000000000001',
-      handle: 'dev',
-      displayName: 'Dev Channel',
-      avatarUrl: null,
-      bannerUrl: null,
-      brandColor: null,
-      bio: 'Development testing channel',
-      links: [],
-      avatarVersion: 0,
-      bannerVersion: 0,
-      bannerCrops: null,
-      country: null,
-      contactEmail: null,
-      bannerLink: null,
-      handleChangedAt: null,
-      subscriberCount: 42,
-      createdAt: now,
-      updatedAt: now,
-    });
-    this.channels.set('00000000-0000-7000-8000-000000000102', {
-      id: '00000000-0000-7000-8000-000000000102',
-      userId: '00000000-0000-7000-8000-000000000002',
-      handle: 'user',
-      displayName: 'Standard User',
-      avatarUrl: null,
-      bannerUrl: null,
-      brandColor: null,
-      bio: null,
-      links: [],
-      avatarVersion: 0,
-      bannerVersion: 0,
-      bannerCrops: null,
-      country: null,
-      contactEmail: null,
-      bannerLink: null,
-      handleChangedAt: null,
-      subscriberCount: 0,
-      createdAt: now,
-      updatedAt: now,
-    });
+    for (const input of [
+      {
+        id: '00000000-0000-7000-8000-000000000101',
+        userId: '00000000-0000-7000-8000-000000000001',
+        handle: 'dev',
+        displayName: 'Dev Channel',
+        bio: 'Development testing channel',
+        subscriberCount: 42,
+      },
+      {
+        id: '00000000-0000-7000-8000-000000000102',
+        userId: '00000000-0000-7000-8000-000000000002',
+        handle: 'user',
+        displayName: 'Standard User',
+      },
+    ]) {
+      this.channels.set(input.id, newChannel(input, true));
+    }
   }
 
   clear(): void {
@@ -89,13 +92,36 @@ export class InMemoryChannelRepository implements ChannelRepositoryPort {
     return ok(this.channels.get(id) ?? null);
   }
 
-  async findByUserId(userId: string): Promise<Result<Channel | null, DatabaseUnavailable>> {
-    return ok(this.find((channel) => channel.userId === userId));
+  async listByUserId(userId: string): Promise<Result<Channel[], DatabaseUnavailable>> {
+    return ok(this.ownedBy(userId));
   }
 
-  async findByUserIds(userIds: readonly string[]): Promise<Result<Channel[], DatabaseUnavailable>> {
+  async findPrimaryByUserId(userId: string): Promise<Result<Channel | null, DatabaseUnavailable>> {
+    return ok(this.primaryOf(userId));
+  }
+
+  async findPrimaryByUserIds(
+    userIds: readonly string[]
+  ): Promise<Result<Channel[], DatabaseUnavailable>> {
     const wanted = new Set(userIds);
-    return ok(this.getAllChannels().filter((channel) => wanted.has(channel.userId)));
+    return ok(
+      this.getAllChannels().filter((channel) => channel.isPrimary && wanted.has(channel.userId))
+    );
+  }
+
+  private ownedBy(userId: string): Channel[] {
+    return this.getAllChannels()
+      .filter((channel) => channel.userId === userId)
+      .sort(
+        (a, b) =>
+          Number(b.isPrimary) - Number(a.isPrimary) ||
+          a.createdAt.getTime() - b.createdAt.getTime() ||
+          a.id.localeCompare(b.id)
+      );
+  }
+
+  private primaryOf(userId: string): Channel | null {
+    return this.find((channel) => channel.isPrimary && channel.userId === userId);
   }
 
   async findByIds(ids: readonly string[]): Promise<Result<Channel[], DatabaseUnavailable>> {
@@ -118,42 +144,49 @@ export class InMemoryChannelRepository implements ChannelRepositoryPort {
   async create(
     input: CreateChannelInput
   ): Promise<Result<Channel, DatabaseUnavailable | HandleTaken>> {
-    const normalized = input.handle.toLowerCase();
-    const colliding = this.find(
-      (channel) => channel.handle.toLowerCase() === normalized || channel.userId === input.userId
-    );
-    if (colliding) return err(handleTaken(normalized));
+    if (this.primaryOf(input.userId)) return err(handleTaken(input.handle.toLowerCase()));
+    return this.insert(input, true);
+  }
+
+  async createOwned(
+    input: CreateChannelInput,
+    limit: number
+  ): Promise<Result<Channel, DatabaseUnavailable | HandleTaken | ChannelLimitReached>> {
+    const owned = this.ownedBy(input.userId);
+    if (owned.length >= limit) return err(channelLimitReached(limit));
+    return this.insert(input, !owned.some((channel) => channel.isPrimary));
+  }
+
+  async promote(
+    userId: string,
+    channelId: string
+  ): Promise<Result<Channel | null, DatabaseUnavailable>> {
+    const target = this.channels.get(channelId);
+    if (!target || target.userId !== userId) return ok(null);
 
     const now = new Date();
-    const channel: Channel = {
-      id: input.id ?? uuidv7(),
-      userId: input.userId,
-      handle: normalized,
-      displayName: input.displayName,
-      avatarUrl: input.avatarUrl ?? null,
-      bannerUrl: input.bannerUrl ?? null,
-      brandColor: input.brandColor ?? null,
-      bio: input.bio ?? null,
-      links: [],
-      avatarVersion: 0,
-      bannerVersion: 0,
-      bannerCrops: null,
-      country: null,
-      contactEmail: null,
-      bannerLink: null,
-      handleChangedAt: null,
-      subscriberCount: input.subscriberCount ?? 0,
-      createdAt: now,
-      updatedAt: now,
-    };
+    for (const channel of this.ownedBy(userId)) {
+      const isPrimary = channel.id === channelId;
+      if (channel.isPrimary !== isPrimary) Object.assign(channel, { isPrimary, updatedAt: now });
+    }
+    return ok(target);
+  }
+
+  private insert(input: CreateChannelInput, isPrimary: boolean): Result<Channel, HandleTaken> {
+    const normalized = input.handle.toLowerCase();
+    if (this.find((channel) => channel.handle.toLowerCase() === normalized)) {
+      return err(handleTaken(normalized));
+    }
+
+    const channel = newChannel(input, isPrimary);
     this.channels.set(channel.id, channel);
     return ok(channel);
   }
 
-  async statsOf(userId: string): Promise<Result<ChannelStats, DatabaseUnavailable>> {
+  async statsOf(channelId: string): Promise<Result<ChannelStats, DatabaseUnavailable>> {
     const counted = this.videosRepo
       .getAllVideos()
-      .filter((video) => isPublicFeedEligible(video, { ownerId: userId }));
+      .filter((video) => isPublicFeedEligible(video, { channelId }));
     return ok({
       videoCount: counted.length,
       totalViews: counted.reduce((sum, video) => sum + (video.viewsCount ?? 0), 0),

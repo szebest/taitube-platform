@@ -107,6 +107,7 @@ export function screenWorld() {
       await repositories.videos.create({
         id: videoId,
         ownerId: overrides.ownerId ?? SEEDED.userId,
+        channelId: SEEDED.channelId,
         title: overrides.title ?? 'A calm walk',
         status: overrides.status ?? 'PROCESSING',
         sourceKey,

@@ -9,6 +9,7 @@ import type { ScreeningFinding } from '@vp/domain';
 import { CANONICAL_LADDER } from '@vp/job-contracts';
 import type { UserContext } from '@vp/permissions';
 import { expectOk } from '@vp/testing/result';
+import { seedPrimaryChannel } from '../../__tests__/test-app';
 import { ScreeningCaseViews } from '../screening-case-views';
 import { ScreeningService } from '../screening-service';
 import { TEST_CDN } from './service-deps';
@@ -75,8 +76,15 @@ export function screeningHarness() {
     paginator: new Paginator(),
   });
 
-  const video = async (overrides: Parameters<InMemoryRepositories['videos']['create']>[0]) =>
-    expectOk(await repositories.videos.create(overrides));
+  type VideoInput = Parameters<InMemoryRepositories['videos']['create']>[0];
+  const video = async (overrides: Omit<VideoInput, 'channelId'> & Partial<VideoInput>) =>
+    expectOk(
+      await repositories.videos.create({
+        ...overrides,
+        channelId:
+          overrides.channelId ?? (await seedPrimaryChannel(repositories, overrides.ownerId)),
+      })
+    );
 
   async function seedHeld(
     screening: Partial<NewScreeningInput> = {},

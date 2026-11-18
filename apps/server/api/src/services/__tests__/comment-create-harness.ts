@@ -1,5 +1,5 @@
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
-import { type CommentSettings, DEFAULT_COMMENT_SETTINGS } from '@vp/domain';
+import { type ActingChannel, type CommentSettings, DEFAULT_COMMENT_SETTINGS } from '@vp/domain';
 import type { UserContext } from '@vp/permissions';
 import { expectOk } from '@vp/testing/result';
 import { createComment } from '../comment-create';
@@ -12,24 +12,41 @@ export const VIDEO_ID = '33333333-3333-7333-8333-333333333333';
 export const MISSING_ID = '44444444-4444-7444-8444-444444444444';
 export const START = Date.UTC(2030, 0, 1);
 
-/** A channel with one public video, three accounts and a clock the spec moves by assigning `clock`. */
+/**
+ * A channel with one public video, three accounts each with their own channel, and a clock the
+ * spec moves by assigning `clock`.
+ */
 export async function setUpCommentCreate() {
   const repositories = new InMemoryRepositories();
-  const harness = { repositories, clock: START, channelId: '' };
+  const channelOf = new Map<string, string>();
+  for (const [user, handle] of [
+    [OWNER, 'owner'],
+    [VIEWER, 'viewer'],
+    [OTHER, 'other'],
+  ] as const) {
+    const created = expectOk(
+      await repositories.channels.create({ userId: user.id, handle, displayName: handle })
+    );
+    channelOf.set(user.id, created.id);
+  }
+  const acting = (user: UserContext): ActingChannel => ({
+    channelId: channelOf.get(user.id) ?? '',
+    ownerId: user.id,
+    role: 'owner',
+  });
+  const harness = { repositories, clock: START, channelId: acting(OWNER).channelId };
   const now = () => harness.clock;
 
   expectOk(
     await repositories.videos.create({
       id: VIDEO_ID,
       ownerId: OWNER.id,
+      channelId: harness.channelId,
       sourceKey: `raw/${VIDEO_ID}/source.mp4`,
       visibility: 'public',
       status: 'READY',
     })
   );
-  harness.channelId = expectOk(
-    await repositories.channels.create({ userId: OWNER.id, handle: 'owner', displayName: 'Owner' })
-  ).id;
   for (const user of [OWNER, VIEWER, OTHER]) {
     const record = expectOk(
       await repositories.users.upsert({
@@ -44,11 +61,15 @@ export async function setUpCommentCreate() {
   return {
     ...harness,
     now,
+    acting,
     setClock: (at: number) => {
       harness.clock = at;
     },
     create: (author: UserContext, content = 'hi', parentId?: string) =>
-      createComment(commentCreateDeps(repositories, now), author, VIDEO_ID, { content, parentId }),
+      createComment(commentCreateDeps(repositories, now), author, acting(author), VIDEO_ID, {
+        content,
+        parentId,
+      }),
     configure: (changes: Partial<CommentSettings>) =>
       saveSettings(repositories, harness.channelId, { ...DEFAULT_COMMENT_SETTINGS, ...changes }),
     storedState: async (id: string) =>

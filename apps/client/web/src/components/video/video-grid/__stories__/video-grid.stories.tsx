@@ -22,6 +22,7 @@ const videos = (count: number): VideoSummary[] =>
   Array.from({ length: count }, (_, index) => ({
     id: `0190c3a0-5e1d-7000-8000-${String(index + 1).padStart(12, '0')}`,
     ownerId: '0190c3a0-5e1d-7000-8000-00000000b001',
+    channelId: '0190c3a0-5e1d-7000-8000-00000000c001',
     title: `Lisbon at night, part ${index + 1}`,
     description: null,
     visibility: 'public',

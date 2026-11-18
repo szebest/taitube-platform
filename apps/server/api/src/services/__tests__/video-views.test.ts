@@ -139,7 +139,7 @@ describe('apps/server/api/services: video views', () => {
   });
 
   describe('loadChannelsOf', () => {
-    it('reads the channel of each owner, null for an owner without one', async () => {
+    it('reads the card of each channel, null for an id with no channel', async () => {
       const channels = new InMemoryChannelRepository(
         new InMemoryVideoRepository(),
         new InMemoryChannelHandleHistoryRepository()
@@ -147,9 +147,9 @@ describe('apps/server/api/services: video views', () => {
       const owner = '00000000-0000-7000-8000-0000000000e2';
       expectOk(await channels.create({ ...CHANNEL, userId: owner }));
 
-      const channelOf = expectOk(await loadChannelsOf(channels, [owner, VIDEO_ID]));
+      const channelOf = expectOk(await loadChannelsOf(channels, [CHANNEL.id, VIDEO_ID]));
 
-      expect([channelOf(owner), channelOf(VIDEO_ID)]).toEqual([CHANNEL, null]);
+      expect([channelOf(CHANNEL.id), channelOf(VIDEO_ID)]).toEqual([CHANNEL, null]);
     });
   });
 

@@ -1,3 +1,4 @@
+import * as accountSecurity from './account-security';
 import * as adminCategories from './admin-categories';
 import * as adminDlq from './admin-dlq';
 import * as adminVideos from './admin-videos';
@@ -32,6 +33,7 @@ import * as liveChat from './live-chat';
 import * as liveCompanion from './live-companion';
 import * as liveIngest from './live-ingest';
 import * as me from './me';
+import * as myChannels from './my-channels';
 import * as notifications from './notifications';
 import * as oembed from './oembed';
 import * as picks from './picks';
@@ -64,6 +66,7 @@ import * as watchPartyRoles from './watch-party-roles';
 import * as watchPartySocket from './watch-party-socket';
 import * as webhooks from './webhooks';
 
+export * from './account-security';
 export * from './admin-categories';
 export * from './admin-dlq';
 export * from './admin-videos';
@@ -100,6 +103,7 @@ export * from './live-chat';
 export * from './live-companion';
 export * from './live-ingest';
 export * from './me';
+export * from './my-channels';
 export * from './notifications';
 export * from './oembed';
 export * from './pagination';
@@ -138,6 +142,7 @@ export * from './watch-party-socket';
 export * from './webhooks';
 
 export const contracts = {
+  accountSecurity,
   adminCategories,
   adminDlq,
   adminVideos,
@@ -172,6 +177,7 @@ export const contracts = {
   liveCompanion,
   liveIngest,
   me,
+  myChannels,
   notifications,
   oembed,
   picks,

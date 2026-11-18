@@ -3,7 +3,6 @@ import { expectOk } from '@vp/testing/result';
 import { describeAuthoredCommentsContract } from './comment-authored.contract';
 import {
   C,
-  CHANNEL_ID,
   type CommentContractContext,
   commentsCount,
   keyset,
@@ -14,7 +13,15 @@ import { describeCommentInboxContract } from './comment-inbox.contract';
 import { describeCommentKeysetWalksContract } from './comment-keyset-walks.contract';
 import { describeCommentListingContract } from './comment-listing.contract';
 import { describeCommentPublicScopeContract } from './comment-public-scope.contract';
-import { OTHER_OWNER_ID, OWNER_ID, VIDEO_IDS, idsOf, publicVideo, seedOwners } from './fixtures';
+import {
+  OTHER_OWNER_CHANNEL_ID,
+  OTHER_OWNER_ID,
+  OWNER_ID,
+  VIDEO_IDS,
+  idsOf,
+  publicVideo,
+  seedOwners,
+} from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
 export function describeCommentRepositoryContract(makeSubject: MakeRepositoriesSubject): void {
@@ -45,12 +52,6 @@ export function describeCommentRepositoryContract(makeSubject: MakeRepositoriesS
       comments = subject.repositories.comments;
       await subject.repositories.videos.create(publicVideo({ id: VIDEO_IDS.a }));
       await subject.repositories.videos.create(publicVideo({ id: VIDEO_IDS.b }));
-      await subject.repositories.channels.create({
-        id: CHANNEL_ID,
-        userId: OTHER_OWNER_ID,
-        handle: 'commenter',
-        displayName: 'The Commenter',
-      });
     });
 
     it('creates a comment with its author profile and counts it on the video', async () => {
@@ -59,6 +60,7 @@ export function describeCommentRepositoryContract(makeSubject: MakeRepositoriesS
           id: C.old,
           videoId: VIDEO_IDS.a,
           authorId: OTHER_OWNER_ID,
+          authorChannelId: OTHER_OWNER_CHANNEL_ID,
           parentId: null,
           content: 'first',
         })
@@ -75,34 +77,14 @@ export function describeCommentRepositoryContract(makeSubject: MakeRepositoriesS
         replyCount: 0,
         author: {
           userId: OTHER_OWNER_ID,
-          channelId: CHANNEL_ID,
-          handle: 'commenter',
-          displayName: 'The Commenter',
+          channelId: OTHER_OWNER_CHANNEL_ID,
+          handle: 'other',
+          displayName: 'Other',
           avatarUrl: null,
         },
       });
       expect(created?.createdAt).toBeInstanceOf(Date);
       expect(await commentsCount(ctx, VIDEO_IDS.a)).toBe(1);
-    });
-
-    it('leaves the channel fields empty for an author without a channel', async () => {
-      const created = expectOk(
-        await comments.create({
-          id: C.old,
-          videoId: VIDEO_IDS.a,
-          authorId: OWNER_ID,
-          parentId: null,
-          content: 'no channel',
-        })
-      );
-
-      expect(created?.author).toEqual({
-        userId: OWNER_ID,
-        channelId: null,
-        handle: null,
-        displayName: null,
-        avatarUrl: null,
-      });
     });
 
     it('keeps every write to comments_count exact under concurrent creates', async () => {
@@ -117,6 +99,7 @@ export function describeCommentRepositoryContract(makeSubject: MakeRepositoriesS
             id,
             videoId: VIDEO_IDS.a,
             authorId: OTHER_OWNER_ID,
+            authorChannelId: OTHER_OWNER_CHANNEL_ID,
             parentId: null,
             content: id,
           })
@@ -131,6 +114,7 @@ export function describeCommentRepositoryContract(makeSubject: MakeRepositoriesS
         id,
         videoId: VIDEO_IDS.a,
         authorId: OTHER_OWNER_ID,
+        authorChannelId: OTHER_OWNER_CHANNEL_ID,
         parentId,
         content: 'reply',
       });

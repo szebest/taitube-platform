@@ -2,8 +2,9 @@ import type { ChannelRepositoryPort } from '@vp/core/repositories';
 import type { UpdateChannelInput } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import { expectErr, expectOk } from '@vp/testing/result';
+import { describeChannelOwnershipContract } from './channel-ownership.contract';
 import { describeChannelStatsContract } from './channel-stats.contract';
-import { OTHER_OWNER_ID, OWNER_ID, seedOwners } from './fixtures';
+import { OTHER_OWNER_ID, OWNER_ID, seedOwnerAccounts } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
 const CHANNEL_ID = '00000000-0000-7000-8000-000000000301';
@@ -36,7 +37,7 @@ export function describeChannelRepositoryContract(makeSubject: MakeRepositoriesS
 
     beforeEach(async () => {
       await subject.reset();
-      await seedOwners(subject.repositories);
+      await seedOwnerAccounts(subject.repositories);
       channels = subject.repositories.channels;
       expectOk(
         await channels.create({
@@ -69,7 +70,7 @@ export function describeChannelRepositoryContract(makeSubject: MakeRepositoriesS
     });
 
     it('looks a channel up by id, user and handle, case-insensitively', async () => {
-      expect(expectOk(await channels.findByUserId(OWNER_ID))?.id).toBe(CHANNEL_ID);
+      expect(expectOk(await channels.findPrimaryByUserId(OWNER_ID))?.id).toBe(CHANNEL_ID);
       expect(expectOk(await channels.findByHandle('OWNERHANDLE'))?.id).toBe(CHANNEL_ID);
     });
 
@@ -77,14 +78,14 @@ export function describeChannelRepositoryContract(makeSubject: MakeRepositoriesS
       { name: 'an unknown handle', read: (c: ChannelRepositoryPort) => c.findByHandle('missing') },
       {
         name: 'an unknown user',
-        read: (c: ChannelRepositoryPort) => c.findByUserId(OTHER_OWNER_ID),
+        read: (c: ChannelRepositoryPort) => c.findPrimaryByUserId(OTHER_OWNER_ID),
       },
       { name: 'an unknown id', read: (c: ChannelRepositoryPort) => c.findById(ABSENT_ID) },
     ])('answers ok(null) for $name, because absence is not a failure', async ({ read }) => {
       expect(expectOk(await read(channels))).toBeNull();
     });
 
-    describe('findByUserIds', () => {
+    describe('findPrimaryByUserIds', () => {
       beforeEach(createOtherChannel);
 
       it.each([
@@ -100,7 +101,7 @@ export function describeChannelRepositoryContract(makeSubject: MakeRepositoriesS
           expected: [CHANNEL_ID],
         },
       ])('finds the channels of $name in one call', async ({ userIds, expected }) => {
-        const found = expectOk(await channels.findByUserIds(userIds));
+        const found = expectOk(await channels.findPrimaryByUserIds(userIds));
 
         expect(found.map((channel) => channel.id).sort()).toEqual(expected);
       });
@@ -137,7 +138,7 @@ export function describeChannelRepositoryContract(makeSubject: MakeRepositoriesS
       expect(failure.code).toBe(ErrorCodes.HANDLE_ALREADY_TAKEN);
     });
 
-    it('reports a second channel for the same user as HANDLE_ALREADY_TAKEN', async () => {
+    it('reports a second primary channel for the same user as HANDLE_ALREADY_TAKEN', async () => {
       const failure = expectErr(
         await channels.create({
           id: OTHER_CHANNEL_ID,
@@ -273,5 +274,6 @@ export function describeChannelRepositoryContract(makeSubject: MakeRepositoriesS
     });
   });
 
+  describeChannelOwnershipContract(makeSubject);
   describeChannelStatsContract(makeSubject);
 }

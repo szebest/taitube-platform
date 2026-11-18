@@ -1,6 +1,12 @@
 import type { Container } from '@kit/composition';
 import { Adapters } from '@vp/adapters/composition';
-import { ChannelAuditService, ChannelInviteService, ChannelMemberService } from '../services/index';
+import {
+  AccountSecurityService,
+  ChannelAuditService,
+  ChannelInviteService,
+  ChannelMemberService,
+  MyChannelsService,
+} from '../services/index';
 import { Services } from './service-tokens';
 
 export function registerTeamServices(c: Container): Container {
@@ -31,6 +37,27 @@ export function registerTeamServices(c: Container): Container {
         new ChannelAuditService({
           audit: c.get(Adapters.Repositories).channelAudit,
           channels: c.get(Adapters.Repositories).channels,
+          paginator: c.get(Services.Paginator),
+        })
+    )
+    .provide(
+      Services.MyChannelsService,
+      (c) =>
+        new MyChannelsService({
+          users: c.get(Adapters.Repositories).users,
+          channels: c.get(Adapters.Repositories).channels,
+          handleHistory: c.get(Adapters.Repositories).channelHandleHistory,
+          members: c.get(Adapters.Repositories).channelMembers,
+          audit: c.get(Adapters.Repositories).channelAudit,
+          maxOwned: c.get(Adapters.Config).limits.channelsMaxOwned,
+          now: Date.now,
+        })
+    )
+    .provide(
+      Services.AccountSecurityService,
+      (c) =>
+        new AccountSecurityService({
+          audit: c.get(Adapters.Repositories).accountAudit,
           paginator: c.get(Services.Paginator),
         })
     );

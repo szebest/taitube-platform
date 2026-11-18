@@ -21,7 +21,7 @@ const EDITOR: UserContext = {
   id: 'editor-1',
   role: 'USER',
   memberships: {
-    'chan-owner': { role: 'editor', ownerId: OWNER.id },
+    'channel-1': { role: 'editor', ownerId: OWNER.id },
     'chan-other': { role: 'editor', ownerId: STRANGER.id },
   },
 };

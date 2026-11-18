@@ -22,6 +22,7 @@ export type VideoRecord = Video;
 export interface NewVideoInput {
   id: string;
   ownerId: string;
+  channelId: string;
   title?: string;
   description?: string;
   visibility?: VideoVisibility;

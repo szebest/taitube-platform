@@ -4,7 +4,7 @@ import { notDeletedScope } from '../scopes/index';
 import { countedAmong, lockVideo } from './comment-writes';
 import type { PostgresDatabase } from './types';
 
-const { videoComments: c, videos: v, channels: ch } = schema;
+const { videoComments: c, videos: v } = schema;
 
 /**
  * A shadow ban moves what is public across every video the user commented on, so each of the
@@ -19,8 +19,7 @@ export async function recountAuthored(
     .selectDistinct({ id: v.id })
     .from(c)
     .innerJoin(v, eq(v.id, c.videoId))
-    .innerJoin(ch, eq(ch.userId, v.ownerId))
-    .where(and(eq(ch.id, channelId), eq(c.authorId, userId), notDeletedScope(c)))
+    .where(and(eq(v.channelId, channelId), eq(c.authorId, userId), notDeletedScope(c)))
     .orderBy(v.id);
 
   for (const { id } of rows) {

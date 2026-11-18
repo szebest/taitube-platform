@@ -25,6 +25,7 @@ describe('AnalyticsService', () => {
       await repositories.videos.create({
         id,
         ownerId: OWNER.id,
+        channelId: SEEDED.channelId,
         title: `Video ${id.slice(-2)}`,
         visibility: 'public',
         status: 'READY',
@@ -207,8 +208,8 @@ describe('AnalyticsService', () => {
       expect(analytics.netSubscribers).toBe(3);
       expect(analytics.previous?.netSubscribers).toBe(-1);
       expect(netSubscribers.mock.calls).toEqual([
-        [OWNER.id, { from: '2026-03-04', to: '2026-03-10' }],
-        [OWNER.id, { from: '2026-02-25', to: '2026-03-03' }],
+        [SEEDED.channelId, { from: '2026-03-04', to: '2026-03-10' }],
+        [SEEDED.channelId, { from: '2026-02-25', to: '2026-03-03' }],
       ]);
     });
 

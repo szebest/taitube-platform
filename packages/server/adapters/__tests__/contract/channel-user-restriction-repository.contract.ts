@@ -3,7 +3,15 @@ import * as schema from '@vp/db';
 import type { Channel, NewChannelAuditEntry, NewChannelUserRestriction } from '@vp/domain';
 import { expectOk } from '@vp/testing/result';
 import { INVITEE_ID, seedTeam } from './channel-team-fixtures';
-import { OTHER_OWNER_ID, OWNER_ID, publicVideo, seedOwners, VIDEO_IDS } from './fixtures';
+import {
+  OTHER_OWNER_CHANNEL_ID,
+  OTHER_OWNER_ID,
+  OWNER_ID,
+  VIDEO_IDS,
+  publicVideo,
+  seedOwners,
+  seededChannel,
+} from './fixtures';
 import { SHARED_MILLISECOND } from './keyset-walk';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
@@ -101,13 +109,7 @@ export function describeChannelUserRestrictionRepositoryContract(
     });
 
     it('restricts a user on one channel without touching another', async () => {
-      const other = expectOk(
-        await repositories.channels.create({
-          userId: OTHER_OWNER_ID,
-          handle: 'other',
-          displayName: 'Other',
-        })
-      );
+      const other = await seededChannel(repositories, OTHER_OWNER_ID);
       await apply(ban(INVITEE_ID));
 
       expect(
@@ -163,6 +165,7 @@ export function describeChannelUserRestrictionRepositoryContract(
               id,
               videoId: VIDEO_IDS.a,
               authorId: OTHER_OWNER_ID,
+              authorChannelId: OTHER_OWNER_CHANNEL_ID,
               parentId: null,
               content: 'hello',
             })

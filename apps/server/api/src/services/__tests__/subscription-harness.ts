@@ -1,5 +1,6 @@
 import { Paginator } from '@kit/pagination';
 import {
+  InMemoryChannelAuditRepository,
   InMemoryChannelHandleHistoryRepository,
   InMemoryChannelRepository,
   InMemoryEventRepository,
@@ -11,6 +12,7 @@ import {
   InMemoryVideoRepository,
   InMemoryWatchHistoryRepository,
 } from '@vp/adapters/in-memory';
+import type { ActingChannel } from '@vp/domain';
 import type { UserContext } from '@vp/permissions';
 import { SubscriptionService } from '../subscription-service';
 import { ViewerProgress } from '../viewer-progress';
@@ -28,6 +30,12 @@ export const subscriber: UserContext = {
   id: '55555555-5555-7555-8555-555555555555',
   email: 'subscriber@example.com',
   role: 'USER',
+};
+/** The subscriber acting as their own channel, the default when no channel is named. */
+export const asSubscriber: ActingChannel = {
+  channelId: '66666666-6666-7666-8666-666666666666',
+  ownerId: subscriber.id,
+  role: 'owner',
 };
 
 /** A service over in-memory repositories and the two creators' channels. */
@@ -47,6 +55,7 @@ export async function subscriptionHarness() {
     videosRepo: videos,
   });
   const cache = new InMemorySubscriptionCache();
+  const audit = new InMemoryChannelAuditRepository();
   const viewerProgress = new ViewerProgress(
     new InMemoryWatchHistoryRepository({ channelsRepo: channels, videosRepo: videos })
   );
@@ -55,6 +64,7 @@ export async function subscriptionHarness() {
       subscriptions,
       channels,
       videos,
+      audit,
       subscriptionCache,
       viewerProgress,
       home: { forget: async () => {} },
@@ -75,6 +85,12 @@ export async function subscriptionHarness() {
     handle: 'creator_two',
     displayName: 'Creator Two',
   });
+  await channels.create({
+    id: asSubscriber.channelId,
+    userId: subscriber.id,
+    handle: 'subscriber',
+    displayName: 'Subscriber',
+  });
 
-  return { videos, subscriptions, cache, service: serviceOver(cache), serviceOver };
+  return { videos, subscriptions, cache, audit, service: serviceOver(cache), serviceOver };
 }

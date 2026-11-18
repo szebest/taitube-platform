@@ -33,17 +33,19 @@ export interface SubscriptionRepositoryPort {
   /** `sourceVideoId` is stored only on the call that creates the subscription. */
   subscribe(
     subscriberId: string,
+    subscriberChannelId: string,
     channelId: string,
     sourceVideoId?: string | null
   ): Promise<Result<SubscriptionChangeResult, DatabaseUnavailable>>;
   unsubscribe(
-    subscriberId: string,
+    subscriberChannelId: string,
     channelId: string
   ): Promise<Result<SubscriptionChangeResult, DatabaseUnavailable>>;
   isSubscribed(
-    subscriberId: string,
+    subscriberChannelId: string,
     channelId: string
   ): Promise<Result<boolean, DatabaseUnavailable>>;
+  /** The account-wide reads below name each channel once, however many of the account's channels subscribe to it. */
   getUserSubscriptionChannelIds(
     subscriberId: string
   ): Promise<Result<string[], DatabaseUnavailable>>;
@@ -57,11 +59,14 @@ export interface SubscriptionRepositoryPort {
   ): Promise<Result<{ items: VideoRecord[]; total: number }, DatabaseUnavailable>>;
   /** `false` when the caller is not subscribed, and nothing was written. */
   setNotificationLevel(
-    subscriberId: string,
+    subscriberChannelId: string,
     channelId: string,
     level: NotificationLevel
   ): Promise<Result<boolean, DatabaseUnavailable>>;
-  /** Up to `limit` subscribers after `after`, for a fan-out that walks the channel in batches. */
+  /**
+   * Up to `limit` subscribing accounts after `after`, for a fan-out that walks the channel in
+   * batches; an account subscribed from two channels is listed once, at its loudest level.
+   */
   listSubscribers(
     channelId: string,
     options: ListSubscribersOptions
@@ -69,9 +74,9 @@ export interface SubscriptionRepositoryPort {
   getSubscriberCount(channelId: string): Promise<Result<number, DatabaseUnavailable>>;
   /** Subscriptions that exist now and were made from `videoId`'s watch page: a net count, an unsubscribe leaves it. */
   countFromVideo(videoId: string): Promise<Result<number, DatabaseUnavailable>>;
-  /** Gains minus losses of the owner's channel over the days of `range`, UTC. */
+  /** Gains minus losses of the channel over the days of `range`, UTC. */
   netSubscribers(
-    ownerId: string,
+    channelId: string,
     range: ViewDateRange
   ): Promise<Result<number, DatabaseUnavailable>>;
 }

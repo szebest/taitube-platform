@@ -3,7 +3,7 @@ import * as schema from '@vp/db';
 import type { Channel, ChannelRole } from '@vp/domain';
 import { expectOk } from '@vp/testing/result';
 import { INVITEE_ID, auditOf, expired, invite, inviteId, seedTeam } from './channel-team-fixtures';
-import { OTHER_OWNER_ID, OWNER_ID, seedOwners } from './fixtures';
+import { OTHER_OWNER_ID, OWNER_ID, seedOwners, seededChannel } from './fixtures';
 import { SHARED_MILLISECOND } from './keyset-walk';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
@@ -181,14 +181,7 @@ export function describeChannelInviteRepositoryContract(
     });
 
     describe('listPendingFor', () => {
-      const otherChannel = async () =>
-        expectOk(
-          await repositories.channels.create({
-            userId: OTHER_OWNER_ID,
-            handle: 'other',
-            displayName: 'Other',
-          })
-        );
+      const otherChannel = async () => await seededChannel(repositories, OTHER_OWNER_ID);
 
       const pendingIds = async (
         cursor: { createdAt: Date; id: string } | null = null,

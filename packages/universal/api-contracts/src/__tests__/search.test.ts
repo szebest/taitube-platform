@@ -3,6 +3,7 @@ import { search, searchSuggestions } from '../search';
 const VIDEO = {
   id: '00000000-0000-7000-8000-0000000047a1',
   ownerId: '00000000-0000-7000-8000-0000000047e1',
+  channelId: '00000000-0000-7000-8000-0000000047c1',
   title: 'Learn React',
   description: null,
   visibility: 'public',

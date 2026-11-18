@@ -3,7 +3,7 @@ import type { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { ErrorCodes } from '@vp/errors';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { LiveService } from '../live-service';
-import { liveWorld, OWNER, STARTED, STREAM_ID, VIEWER } from './live-harness';
+import { liveWorld, OWNER, STARTED, STREAM_ID, VIEWER, VIEWER_CHANNEL_ID } from './live-harness';
 import { TEST_CDN } from './service-deps';
 
 describe('apps/server/api/services: LiveService', () => {
@@ -48,8 +48,10 @@ describe('apps/server/api/services: LiveService', () => {
 
   it('shows an overlay its stream and the subscriber count, before it goes live too', async () => {
     await setUp({ live: false });
-    const channel = expectOk(await repositories.channels.findByUserId(OWNER.id));
-    expectOk(await repositories.subscriptions.subscribe(VIEWER.id, channel?.id ?? ''));
+    const channel = expectOk(await repositories.channels.findPrimaryByUserId(OWNER.id));
+    expectOk(
+      await repositories.subscriptions.subscribe(VIEWER.id, VIEWER_CHANNEL_ID, channel?.id ?? '')
+    );
 
     expect(expectOk(await service.overlay('overlay-token'))).toMatchObject({
       stream: { id: STREAM_ID, status: 'IDLE', viewers: 0 },

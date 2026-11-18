@@ -7,6 +7,7 @@ import { inProcessAppConfig } from '@vp/env-schema';
 import { type CacheUnavailable, cacheUnavailable, ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { expectErr, expectOk } from '@vp/testing/result';
+import { actingAsPrimary, seedPrimaryChannel } from '../../__tests__/test-app';
 import { registerServices, resolveBackground, Services } from '../services.module';
 
 class UnsubscribableCache extends InMemoryCacheClient {
@@ -32,6 +33,7 @@ describe('apps/server/api/composition: services module', () => {
     const c = await services();
 
     expect(Object.keys(c.get(Services.ServiceSet)).sort()).toEqual([
+      'accountSecurityService',
       'analyticsService',
       'apiTokenService',
       'bootstrapService',
@@ -67,6 +69,7 @@ describe('apps/server/api/composition: services module', () => {
       'liveIngestService',
       'liveService',
       'liveViewerTracker',
+      'myChannelsService',
       'notificationService',
       'oembedService',
       'pickService',
@@ -121,6 +124,7 @@ describe('apps/server/api/composition: services module', () => {
       await repositories.videos.create({
         id: VIDEO_ID,
         ownerId: CREATOR.id,
+        channelId: await seedPrimaryChannel(repositories, CREATOR.id),
         title: 'Thumbnail fixture',
         visibility: 'public',
         status: 'READY',
@@ -129,7 +133,13 @@ describe('apps/server/api/composition: services module', () => {
       })
     );
     const { subscriptionService, videoService } = c.get(Services.ServiceSet);
-    expectOk(await subscriptionService.subscribe(VIEWER, CHANNEL_ID));
+    expectOk(
+      await subscriptionService.subscribe(
+        VIEWER,
+        await actingAsPrimary(repositories, VIEWER.id),
+        CHANNEL_ID
+      )
+    );
 
     const feed = expectOk(await subscriptionService.getFeed(VIEWER, {}));
     const video = expectOk(await videoService.get(VIEWER, VIDEO_ID));

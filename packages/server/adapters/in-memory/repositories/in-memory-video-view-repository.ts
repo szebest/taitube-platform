@@ -137,11 +137,11 @@ export class InMemoryVideoViewRepository implements VideoViewRepositoryPort {
   }
 
   async channelTimeline(
-    ownerId: string,
+    channelId: string,
     range: ViewDateRange
   ): Promise<Result<DailyViews[], DatabaseUnavailable>> {
     const days = new Map<string, DailyViews[]>();
-    for (const row of this.rowsFor(this.ownedIds(ownerId), range)) {
+    for (const row of this.rowsFor(this.ownedIds(channelId), range)) {
       days.set(row.viewDate, [...(days.get(row.viewDate) ?? []), row]);
     }
     return ok(
@@ -157,14 +157,14 @@ export class InMemoryVideoViewRepository implements VideoViewRepositoryPort {
   }
 
   async channelHourly(
-    ownerId: string,
+    channelId: string,
     range: ViewHourRange
   ): Promise<Result<HourlyViews[], DatabaseUnavailable>> {
-    return ok(this.hoursFor(this.ownedIds(ownerId), range));
+    return ok(this.hoursFor(this.ownedIds(channelId), range));
   }
 
-  async channelTotals(ownerId: string): Promise<Result<ChannelViewTotals, DatabaseUnavailable>> {
-    const owned = this.live().filter((video) => video.ownerId === ownerId);
+  async channelTotals(channelId: string): Promise<Result<ChannelViewTotals, DatabaseUnavailable>> {
+    const owned = this.live().filter((video) => video.channelId === channelId);
     return ok({
       totalViews: owned.reduce((sum, video) => sum + (video.viewsCount ?? 0), 0),
       videoCount: owned.length,
@@ -172,12 +172,12 @@ export class InMemoryVideoViewRepository implements VideoViewRepositoryPort {
   }
 
   async topVideos(
-    ownerId: string,
+    channelId: string,
     range: ViewDateRange,
     limit: number
   ): Promise<Result<TopVideo[], DatabaseUnavailable>> {
     const views = new Map(
-      viewsByVideo(this.rowsFor(this.ownedIds(ownerId), range)).map((row) => [
+      viewsByVideo(this.rowsFor(this.ownedIds(channelId), range)).map((row) => [
         row.videoId,
         row.views,
       ])
@@ -205,10 +205,10 @@ export class InMemoryVideoViewRepository implements VideoViewRepositoryPort {
     return this.videos.getAllVideos().filter((video) => !video.deletedAt);
   }
 
-  private ownedIds(ownerId: string): Set<string> {
+  private ownedIds(channelId: string): Set<string> {
     return new Set(
       this.live()
-        .filter((video) => video.ownerId === ownerId)
+        .filter((video) => video.channelId === channelId)
         .map((video) => video.id)
     );
   }

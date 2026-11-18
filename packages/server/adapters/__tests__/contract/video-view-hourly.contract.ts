@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import type { VideoViewRepositoryPort } from '@vp/core/repositories';
 import type { HourlyViewCount } from '@vp/domain';
 import { expectOk } from '@vp/testing/result';
-import { OTHER_OWNER_ID, OWNER_ID, VIDEO_IDS, publicVideo, seedOwners } from './fixtures';
+import { OTHER_OWNER_ID, OWNER_CHANNEL_ID, VIDEO_IDS, publicVideo, seedOwners } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
 const HOUR = '2026-03-10T13:00:00.000Z';
@@ -83,7 +83,7 @@ export function describeVideoViewHourlyContract(makeSubject: MakeRepositoriesSub
         hour(VIDEO_IDS.d, HOUR, 7)
       );
 
-      expect(expectOk(await views.channelHourly(OWNER_ID, WINDOW))).toEqual([
+      expect(expectOk(await views.channelHourly(OWNER_CHANNEL_ID, WINDOW))).toEqual([
         { viewHour: HOUR, views: 5 },
         { viewHour: NEXT_HOUR, views: 1 },
       ]);

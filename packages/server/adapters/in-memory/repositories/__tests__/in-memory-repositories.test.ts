@@ -11,6 +11,7 @@ async function seeded(): Promise<InMemoryRepositories> {
     await repositories.videos.create({
       id: VIDEO,
       ownerId: OWNER,
+      channelId: 'owner-channel',
       title: 'Wiring fixture',
       visibility: 'public',
       status: 'UPLOADED',

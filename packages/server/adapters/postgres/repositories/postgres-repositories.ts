@@ -72,6 +72,7 @@ export class PostgresRepositories implements Repositories {
   declare readonly dataExports: CreatorDataRepositories['dataExports'];
   declare readonly exportRows: CreatorDataRepositories['exportRows'];
   declare readonly apiTokens: CreatorDataRepositories['apiTokens'];
+  declare readonly accountAudit: CreatorDataRepositories['accountAudit'];
   declare readonly commentSettings: CommentRepositories['commentSettings'];
   declare readonly channelUserRestrictions: CommentRepositories['channelUserRestrictions'];
   declare readonly trustedCommenters: CommentRepositories['trustedCommenters'];

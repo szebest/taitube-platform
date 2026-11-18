@@ -1,7 +1,13 @@
 import type { ChannelFeaturedRepositoryPort } from '@vp/core/repositories';
 import { ErrorCodes } from '@vp/errors';
 import { expectErr, expectOk } from '@vp/testing/result';
-import { OTHER_OWNER_ID, OWNER_ID, publicVideo, seedOwners, VIDEO_IDS } from './fixtures';
+import {
+  OTHER_OWNER_CHANNEL_ID,
+  OWNER_CHANNEL_ID,
+  VIDEO_IDS,
+  publicVideo,
+  seedOwners,
+} from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
 const { a, b, c, d, e, f } = VIDEO_IDS;
@@ -34,13 +40,8 @@ export function describeChannelFeaturedRepositoryContract(
       for (const id of Object.values(VIDEO_IDS)) {
         await subject.repositories.videos.create(publicVideo({ id }));
       }
-      const { channels } = subject.repositories;
-      channelId = expectOk(
-        await channels.create({ userId: OWNER_ID, handle: 'owner', displayName: 'Owner' })
-      ).id;
-      otherChannelId = expectOk(
-        await channels.create({ userId: OTHER_OWNER_ID, handle: 'other', displayName: 'Other' })
-      ).id;
+      channelId = OWNER_CHANNEL_ID;
+      otherChannelId = OTHER_OWNER_CHANNEL_ID;
       featured = subject.repositories.channelFeatured;
     });
 

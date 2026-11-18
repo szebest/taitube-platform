@@ -7,7 +7,7 @@ import {
 } from '@vp/domain';
 import { expectOk } from '@vp/testing/result';
 import { seedTeam } from './channel-team-fixtures';
-import { OWNER_ID, seedOwners } from './fixtures';
+import { OTHER_OWNER_ID, OWNER_ID, seedOwners, seededChannel } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
 const STRICT: CommentSettings = {
@@ -87,13 +87,7 @@ export function describeCommentSettingsRepositoryContract(
     });
 
     it('keeps one channel settings apart from another', async () => {
-      const other = expectOk(
-        await repositories.channels.create({
-          userId: '00000000-0000-7000-8000-000000000102',
-          handle: 'other',
-          displayName: 'Other',
-        })
-      );
+      const other = await seededChannel(repositories, OTHER_OWNER_ID);
       expectOk(await repositories.commentSettings.save(channel.id, STRICT, auditOf(channel)));
 
       expect(expectOk(await repositories.commentSettings.get(other.id))).toEqual(

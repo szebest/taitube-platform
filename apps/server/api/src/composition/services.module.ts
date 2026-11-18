@@ -116,6 +116,7 @@ export function registerServices(c: Container): Container {
           uploads: repositories().uploads,
           videos: repositories().videos,
           events: repositories().events,
+          audit: repositories().channelAudit,
           users: repositories().users,
           storage: c.get(Adapters.Storage),
           multipart: c.get(Adapters.Multipart),
@@ -145,7 +146,6 @@ export function registerServices(c: Container): Container {
           videoReactions: repositories().videoReactions,
           reactionCache: c.get(Adapters.ReactionCache),
           videos: repositories().videos,
-          channels: repositories().channels,
           restrictions: repositories().channelUserRestrictions,
           now: () => Date.now(),
         })
@@ -157,6 +157,7 @@ export function registerServices(c: Container): Container {
           subscriptions: repositories().subscriptions,
           channels: repositories().channels,
           videos: repositories().videos,
+          audit: repositories().channelAudit,
           subscriptionCache: c.get(Adapters.SubscriptionCache),
           viewerProgress: c.get(Services.ViewerProgress),
           home: c.get(Services.HomeService),

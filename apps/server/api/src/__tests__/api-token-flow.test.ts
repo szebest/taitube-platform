@@ -36,7 +36,7 @@ describe('personal access tokens, end to end', () => {
   }
 
   const ownChannelId = async () =>
-    expectOk(await repositories.channels.findByUserId(SEEDED.userId))?.id ?? '';
+    expectOk(await repositories.channels.findPrimaryByUserId(SEEDED.userId))?.id ?? '';
 
   beforeAll(async () => {
     ({ app, repositories } = await buildTestApp());

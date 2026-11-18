@@ -14,17 +14,18 @@ const AS = {
 };
 
 describe('creator live routes', () => {
+  let channelId: string;
   let ctx: TestApp;
 
   beforeEach(async () => {
     ctx = await buildTestApp();
-    expectOk(
+    channelId = expectOk(
       await ctx.repositories.channels.create({
         userId: OWNER_ID,
         handle: 'owner',
         displayName: 'Owner',
       })
-    );
+    ).id;
   });
 
   afterEach(async () => {
@@ -44,7 +45,7 @@ describe('creator live routes', () => {
     expectOk(
       await ctx.repositories.liveStreams.goLive({
         streamId: opened.id,
-        video: { id: videoId, ownerId: OWNER_ID, sourceKey: 'live/' },
+        video: { id: videoId, ownerId: OWNER_ID, channelId, sourceKey: 'live/' },
         startedAt: new Date(),
         outbox: [],
       })

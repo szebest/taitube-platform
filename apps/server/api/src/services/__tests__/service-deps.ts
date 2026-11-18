@@ -114,6 +114,7 @@ export function uploadContext(
     uploads: repositories.uploads,
     videos: repositories.videos,
     events: repositories.events,
+    audit: repositories.channelAudit,
     users: repositories.users,
     storage,
     multipart: new InMemoryMultipartStorage(storage),

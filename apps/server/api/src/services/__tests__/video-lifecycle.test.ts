@@ -4,6 +4,7 @@ import { ErrorCodes } from '@vp/errors';
 import { ids } from '@vp/job-contracts';
 import type { UserContext } from '@vp/permissions';
 import { expectErr, expectOk } from '@vp/testing/result';
+import { seedPrimaryChannel } from '../../__tests__/test-app';
 import { VideoService } from '../video-service';
 import { videoServiceDeps } from './service-deps';
 
@@ -22,6 +23,7 @@ describe('apps/server/api/services: video lifecycle', () => {
       await repositories.videos.create({
         id: VIDEO_ID,
         ownerId: OWNER.id,
+        channelId: await seedPrimaryChannel(repositories, OWNER.id),
         title: 'Reprocess fixture',
         visibility: 'public',
         status,

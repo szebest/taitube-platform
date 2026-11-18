@@ -6,6 +6,7 @@ import { publicFeedInstant } from '@vp/domain';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { cacheUnavailable } from '@vp/errors';
 import { expectOk } from '@vp/testing/result';
+import { seedPrimaryChannel } from '../../__tests__/test-app';
 import { feedCursorPayload } from '../cursor';
 import { FeedService, type FeedServiceDeps } from '../feed-service';
 import { generateEtag } from '../http-cache';
@@ -42,6 +43,7 @@ describe('apps/server/api/services: FeedService', () => {
     await repositories.videos.create({
       id,
       ownerId: OWNER_ID,
+      channelId: await seedPrimaryChannel(repositories, OWNER_ID),
       title: `Video ${id}`,
       visibility: 'public',
       status: 'READY',

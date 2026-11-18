@@ -2,6 +2,7 @@ import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { expectErr, expectOk } from '@vp/testing/result';
+import { seedPrimaryChannel } from '../../__tests__/test-app';
 import { ChannelService, type UpdateChannelCommand } from '../channel-service';
 import { channelServiceDeps, ownerActing } from './service-deps';
 
@@ -74,7 +75,7 @@ describe('ChannelService', () => {
         expectOk(await channelService.getAccount({ id: USER_ID, role: 'CREATOR' })).channel
       ).toMatchObject({ autoCaptionsDefault: false });
 
-      expectOk(await repositories.captions.setChannelDefault(USER_ID, true));
+      expectOk(await repositories.captions.setChannelDefault(CHANNEL_ID, true));
 
       expect(
         expectOk(await channelService.getAccount({ id: USER_ID, role: 'CREATOR' })).channel
@@ -243,6 +244,7 @@ describe('ChannelService', () => {
       await repositories.videos.create({
         id: '018f0000-0000-7000-8000-0000000000b1',
         ownerId: USER_ID,
+        channelId: await seedPrimaryChannel(repositories, USER_ID),
         sourceKey: 'raw/b1/source.mp4',
         visibility: 'public',
         status: 'READY',
@@ -251,6 +253,7 @@ describe('ChannelService', () => {
       await repositories.videos.create({
         id: '018f0000-0000-7000-8000-0000000000b2',
         ownerId: USER_ID,
+        channelId: await seedPrimaryChannel(repositories, USER_ID),
         sourceKey: 'raw/b2/source.mp4',
         visibility: 'private',
         status: 'READY',

@@ -11,6 +11,7 @@ const noChannel = () => null;
 const CHANNEL: Channel = {
   id: 'c-1',
   userId: 'u-1',
+  isPrimary: true,
   handle: 'fireship',
   displayName: 'Fireship',
   avatarUrl: null,
@@ -94,11 +95,12 @@ describe('apps/server/api/services: search views', () => {
     });
   });
 
-  it("puts a video hit under its owner's channel", () => {
+  it('puts a video hit under the channel it is on', () => {
     const { id, handle, displayName, avatarUrl } = CHANNEL;
     const video = {
       id: 'v-1',
       ownerId: CHANNEL.userId,
+      channelId: CHANNEL.id,
       status: 'READY',
       createdAt: AT,
       updatedAt: AT,
@@ -108,7 +110,7 @@ describe('apps/server/api/services: search views', () => {
       { kind: 'video', key: 1, id: 'v-1', video: video as VideoRecord },
       CDN,
       SPRITE,
-      (ownerId) => (ownerId === CHANNEL.userId ? { id, handle, displayName, avatarUrl } : null)
+      (channelId) => (channelId === CHANNEL.id ? { id, handle, displayName, avatarUrl } : null)
     );
 
     expect(item).toMatchObject({ type: 'video', data: { channel: { id, handle } } });

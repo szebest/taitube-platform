@@ -87,7 +87,10 @@ export interface ChannelPlaylistsPage {
 export class ChannelService {
   constructor(private readonly deps: ChannelServiceDeps) {}
 
-  /** The caller's account; its role is the one the verified token carries, which no table stores. */
+  /**
+   * The caller's account with its primary channel and every channel it owns; its role is the one
+   * the verified token carries, which no table stores.
+   */
   async getAccount(caller: UserContext): Promise<Result<UserAccountView, GetAccountFailure>> {
     const user = await this.deps.users.findById(caller.id);
     if (isErr(user)) return user;
@@ -95,9 +98,10 @@ export class ChannelService {
       return err({ code: ErrorCodes.UNAUTHORIZED, message: 'User record not found' });
     }
 
-    const channel = await this.deps.channels.findByUserId(caller.id);
-    if (isErr(channel)) return channel;
-    if (!channel.value) return err(channelNotFound(caller.id));
+    const owned = await this.deps.channels.listByUserId(caller.id);
+    if (isErr(owned)) return owned;
+    const [primary] = owned.value;
+    if (!primary) return err(channelNotFound(caller.id));
 
     const account = {
       id: user.value.id,
@@ -106,10 +110,16 @@ export class ChannelService {
       createdAt: user.value.createdAt.toISOString(),
     };
 
-    const view = await this.ownerChannelView(channel.value);
+    const view = await this.ownerChannelView(primary);
     if (isErr(view)) return view;
 
-    return ok({ ...account, role: caller.role, user: account, channel: view.value });
+    return ok({
+      ...account,
+      role: caller.role,
+      user: account,
+      channel: view.value,
+      channels: owned.value.map(toChannelCard),
+    });
   }
 
   async updateChannel(
@@ -188,7 +198,7 @@ export class ChannelService {
     const cards = await this.deps.videoService.listPublic({
       ...page,
       sort: 'recent',
-      ownerId: channel.value.userId,
+      channelId: channel.value.id,
     });
     const card = toChannelCard(channel.value);
     return map(cards, (found) => ({
@@ -225,7 +235,7 @@ export class ChannelService {
     channel: Channel,
     localization: ChannelLocalization | null = null
   ): Promise<Result<ChannelView, DatabaseUnavailable>> {
-    const stats = await this.deps.channels.statsOf(channel.userId);
+    const stats = await this.deps.channels.statsOf(channel.id);
     if (isErr(stats)) return stats;
     return map(await this.deps.liveStreams.findOpenByChannel(channel.id), (stream) =>
       toChannelView(channel, stats.value, stream, { cdn: this.deps.cdn, localization })
@@ -237,7 +247,7 @@ export class ChannelService {
   ): Promise<Result<OwnerChannel, DatabaseUnavailable>> {
     const view = await this.channelView(channel);
     if (isErr(view)) return view;
-    return map(await this.deps.captions.channelDefault(channel.userId), (autoCaptionsDefault) => ({
+    return map(await this.deps.captions.channelDefault(channel.id), (autoCaptionsDefault) => ({
       ...view.value,
       ...toOwnerExtras(channel, new Date(this.deps.now())),
       autoCaptionsDefault,
@@ -245,10 +255,10 @@ export class ChannelService {
   }
 
   /**
-   * Creates the user, channel and Watch Later rows a verified identity implies, on its first
-   * authenticated request, and answers the caller's channel.
+   * Creates the user, primary channel and Watch Later rows a verified identity implies, on its
+   * first authenticated request, and answers every channel the caller owns, the primary first.
    */
-  ensureProvisioned(userId: string, email?: string): Promise<Result<Channel, ProvisionFailure>> {
+  ensureProvisioned(userId: string, email?: string): Promise<Result<Channel[], ProvisionFailure>> {
     return provisionAccount(this.deps, userId, email);
   }
 }

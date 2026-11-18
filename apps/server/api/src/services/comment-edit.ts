@@ -24,9 +24,9 @@ export async function decideCommentEdit(
   const edit: CommentEditWrite = { looksLikeQuestion: looksLikeQuestion(content) };
   if (!video) return ok(edit);
 
-  const gate = await loadCommentGate(deps, actor, video, new Date(deps.now()));
+  const now = new Date(deps.now());
+  const gate = await loadCommentGate(deps, actor, comment.authorChannelId, video, now);
   if (isErr(gate)) return gate;
-  if (!gate.value) return ok(edit);
 
   const verdict = evaluateCommentGate(gate.value.settings, gate.value.context, content);
   if (isErr(verdict)) return verdict;
@@ -34,7 +34,7 @@ export async function decideCommentEdit(
   if (comment.moderationState !== 'published' || decision !== 'hold') return ok(edit);
   if (!(heldReason && disclosure)) return ok(edit);
 
-  const moderators = await moderatorsOf(deps, gate.value.channelId, video.ownerId);
+  const moderators = await moderatorsOf(deps, video.channelId, video.ownerId);
   if (isErr(moderators)) return moderators;
   return ok({
     ...edit,

@@ -15,18 +15,23 @@ export interface SubscribeInput {
   readonly channelId: string;
 }
 
+export interface SubscribeAsInput extends SubscribeInput {
+  /** The channel the subscriber acts as; another channel of the same account may subscribe. */
+  readonly subscriberChannelId: string;
+}
+
 /**
  * Permission first, so an anonymous caller cannot probe which channel ids exist; then existence,
  * because a self-check against a channel that is not there is meaningless. The repositories used to
  * decide the last two - one copy each in the Postgres adapter and the in-memory double, which is two
  * places for them to disagree.
  */
-export function decideSubscribe(input: SubscribeInput): Result<Channel, SubscribeFailure> {
-  const { subscriber, channel, channelId } = input;
+export function decideSubscribe(input: SubscribeAsInput): Result<Channel, SubscribeFailure> {
+  const { subscriber, channel, channelId, subscriberChannelId } = input;
 
   if (!canSubscribeChannel({ user: subscriber })) return err(channelForbidden(channelId));
   if (!channel) return err(channelNotFound(channelId));
-  if (subscriber?.id === channel.userId) return err(cannotSubscribeToSelf(channel.id));
+  if (subscriberChannelId === channel.id) return err(cannotSubscribeToSelf(channel.id));
   return ok(channel);
 }
 

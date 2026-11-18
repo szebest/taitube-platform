@@ -5,7 +5,7 @@ import type {
 } from '@vp/core/repositories';
 import type { BannerCrops, ChannelImageKind } from '@vp/domain';
 import { expectOk } from '@vp/testing/result';
-import { OTHER_OWNER_ID, OWNER_ID, seedOwners } from './fixtures';
+import { OTHER_OWNER_ID, OWNER_CHANNEL_ID, OWNER_ID, seedOwners } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
 const UPLOADS = [1, 2, 3].map((n) => `00000000-0000-7000-8000-0000000004${n}0`);
@@ -73,13 +73,7 @@ export function describeChannelImageRepositoryContract(makeSubject: MakeReposito
       await subject.reset();
       repositories = subject.repositories;
       await seedOwners(repositories);
-      channelId = expectOk(
-        await repositories.channels.create({
-          userId: OWNER_ID,
-          handle: 'owner',
-          displayName: 'Owner',
-        })
-      ).id;
+      channelId = OWNER_CHANNEL_ID;
       images = repositories.channelImages;
     });
 

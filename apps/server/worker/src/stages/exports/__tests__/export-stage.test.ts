@@ -25,6 +25,7 @@ describe('worker/exports: export stage', () => {
   let storage: InMemoryStorageClient;
   let dispatcher: InMemoryWebhookDispatcher;
   let channelId: string;
+  let fanChannelId: string;
   let videoId: string;
 
   const processor = (overrides: Partial<ExportProcessorDeps> = {}) =>
@@ -85,13 +86,14 @@ describe('worker/exports: export stage', () => {
         displayName: 'Owner',
       })
     ).id;
-    expectOk(
+    fanChannelId = expectOk(
       await repositories.channels.create({ userId: FAN_ID, handle: 'fan', displayName: 'Fan' })
-    );
+    ).id;
     videoId = expectOk(
       await repositories.videos.create({
         id: uuidv7(),
         ownerId: OWNER_ID,
+        channelId,
         sourceKey: 'raw/v/source.mp4',
         title: 'Clip',
         visibility: 'public',
@@ -116,6 +118,7 @@ describe('worker/exports: export stage', () => {
         id: uuidv7(),
         videoId,
         authorId: FAN_ID,
+        authorChannelId: fanChannelId,
         parentId: null,
         content,
       })

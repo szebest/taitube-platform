@@ -12,8 +12,8 @@ export function commentCreateDeps(
   return {
     comments: repositories.comments,
     videos: repositories.videos,
-    channels: repositories.channels,
     members: repositories.channelMembers,
+    audit: repositories.channelAudit,
     settings: repositories.commentSettings,
     restrictions: repositories.channelUserRestrictions,
     trusted: repositories.trustedCommenters,

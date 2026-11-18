@@ -15,6 +15,7 @@ import { createMetricsRegistry, createWatchPartyMetrics } from '@vp/observabilit
 import type { UserContext } from '@vp/permissions';
 import { captureLog } from '@vp/testing/log-capture';
 import { expectOk } from '@vp/testing/result';
+import { seedPrimaryChannel } from '../../../__tests__/test-app';
 import type { PartyCaller } from '../party-caller';
 import { type RoomEnvelope, WatchPartyBroadcaster } from '../watch-party-broadcaster';
 import { WatchPartyContextLoader } from '../watch-party-context';
@@ -192,6 +193,7 @@ export async function seedParty({ repositories }: WatchPartyTest): Promise<void>
       await repositories.videos.create({
         id,
         ownerId: OWNER.id,
+        channelId: await seedPrimaryChannel(repositories, OWNER.id),
         title,
         visibility,
         status: 'READY',

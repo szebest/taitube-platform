@@ -2,7 +2,15 @@ import type { CommentViewer } from '@vp/core/repositories';
 import type { ModerationState } from '@vp/domain';
 import { expectOk } from '@vp/testing/result';
 import { C, type CommentContractContext, commentsCount, keyset } from './comment-contract-context';
-import { OTHER_OWNER_ID, OWNER_ID, VIDEO_IDS, idsOf } from './fixtures';
+import {
+  OTHER_OWNER_CHANNEL_ID,
+  OTHER_OWNER_ID,
+  OWNER_CHANNEL_ID,
+  OWNER_ID,
+  VIDEO_IDS,
+  idsOf,
+  primaryChannelOf,
+} from './fixtures';
 
 const STRANGER_ID = '00000000-0000-7000-8000-000000000f01';
 const VIEWERS = {
@@ -18,11 +26,9 @@ const ROOT = { id: C.old, videoId: VIDEO_IDS.a };
 export function describeCommentPublicScopeContract(ctx: CommentContractContext): void {
   describe('public scope', () => {
     const shadowBan = async (userId = OTHER_OWNER_ID) => {
-      const channel = expectOk(await ctx.subject.repositories.channels.findByUserId(OWNER_ID));
-      if (!channel) throw new Error('the video owner has no channel to ban on');
       expectOk(
         await ctx.subject.repositories.channelUserRestrictions.apply({
-          channelId: channel.id,
+          channelId: OWNER_CHANNEL_ID,
           userId,
           kind: 'shadow',
           reason: null,
@@ -32,22 +38,13 @@ export function describeCommentPublicScopeContract(ctx: CommentContractContext):
       );
     };
     const lift = async () => {
-      const channel = expectOk(await ctx.subject.repositories.channels.findByUserId(OWNER_ID));
       expectOk(
         await ctx.subject.repositories.channelUserRestrictions.lift(
-          channel?.id ?? '',
+          OWNER_CHANNEL_ID,
           OTHER_OWNER_ID
         )
       );
     };
-
-    beforeEach(async () => {
-      await ctx.subject.repositories.channels.create({
-        userId: OWNER_ID,
-        handle: 'video-owner',
-        displayName: 'Video Owner',
-      });
-    });
 
     const write = async (
       id: string,
@@ -58,6 +55,7 @@ export function describeCommentPublicScopeContract(ctx: CommentContractContext):
           id,
           videoId: VIDEO_IDS.a,
           authorId: options.authorId ?? OTHER_OWNER_ID,
+          authorChannelId: primaryChannelOf(options.authorId ?? OTHER_OWNER_ID),
           parentId: options.parentId ?? null,
           content: `comment ${id.slice(-2)}`,
           moderation: {
@@ -209,6 +207,7 @@ export function describeCommentPublicScopeContract(ctx: CommentContractContext):
           id: C.old,
           videoId: VIDEO_IDS.a,
           authorId: OTHER_OWNER_ID,
+          authorChannelId: OTHER_OWNER_CHANNEL_ID,
           parentId: null,
           content: 'is this a question?',
           moderation: {

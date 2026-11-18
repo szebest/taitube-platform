@@ -2,7 +2,7 @@ import { type Result, fromPromise, isErr, map } from '@kit/result';
 import type { SubscriptionFeedOptions, VideoRecord } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
-import { desc, eq, sql } from 'drizzle-orm';
+import { desc, eq, inArray, sql } from 'drizzle-orm';
 import {
   drizzleWhere,
   keysetBefore,
@@ -12,7 +12,7 @@ import {
 } from '../scopes/index';
 import type { PostgresDatabase } from './types';
 
-const { channelSubscriptions: cs, channels: ch, videos: v } = schema;
+const { channelSubscriptions: cs, videos: v } = schema;
 
 /** The public `READY` videos of the channels `subscriberId` follows, newest first, with the unpaged total. */
 export async function subscriptionFeed(
@@ -20,8 +20,12 @@ export async function subscriptionFeed(
   subscriberId: string,
   options: SubscriptionFeedOptions
 ): Promise<Result<{ items: VideoRecord[]; total: number }, DatabaseUnavailable>> {
+  const followed = db
+    .select({ channelId: cs.channelId })
+    .from(cs)
+    .where(eq(cs.subscriberId, subscriberId));
   const baseWhere = drizzleWhere(
-    eq(cs.subscriberId, subscriberId),
+    inArray(v.channelId, followed),
     publicVisibilityScope(v),
     eq(v.status, 'READY'),
     notDeletedScope(v)
@@ -32,8 +36,6 @@ export async function subscriptionFeed(
       db
         .select({ count: sql<number>`count(*)::int` })
         .from(v)
-        .innerJoin(ch, eq(v.ownerId, ch.userId))
-        .innerJoin(cs, eq(cs.channelId, ch.id))
         .where(baseWhere),
     databaseUnavailable.during('getSubscriptionFeed')
   );
@@ -44,8 +46,6 @@ export async function subscriptionFeed(
       db
         .select({ video: v })
         .from(v)
-        .innerJoin(ch, eq(v.ownerId, ch.userId))
-        .innerJoin(cs, eq(cs.channelId, ch.id))
         .where(
           drizzleWhere(
             baseWhere,

@@ -14,11 +14,11 @@ describe('db: comments schema', () => {
     expect(referenceFrom(videoComments, column)).toEqual({ table, onDelete: 'cascade' });
   });
 
-  it('refuses to delete a user who still authors a comment', () => {
-    expect(referenceFrom(videoComments, 'author_id')).toEqual({
-      table: 'users',
-      onDelete: 'no action',
-    });
+  it.each([
+    { scenario: 'a user', column: 'author_id', table: 'users' },
+    { scenario: 'a channel', column: 'author_channel_id', table: 'channels' },
+  ])('refuses to delete $scenario who still authors a comment', ({ column, table }) => {
+    expect(referenceFrom(videoComments, column)).toEqual({ table, onDelete: 'no action' });
   });
 
   it('holds at most one live pinned comment per video', () => {

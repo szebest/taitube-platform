@@ -6,6 +6,7 @@ import { expectOk } from '@vp/testing/result';
 import { createNotifyHeartProcessor } from '../notify-heart';
 import {
   CHANNEL_ID,
+  channelOf,
   CREATOR_ID,
   logger,
   notificationsOf,
@@ -39,6 +40,7 @@ describe('apps/server/worker/stages: notify-heart', () => {
         id: COMMENT,
         videoId: VIDEO,
         authorId: options.author ?? FAN,
+        authorChannelId: channelOf(options.author ?? FAN),
         parentId: null,
         content: 'lovely video',
         moderation: options.moderation,

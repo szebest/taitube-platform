@@ -9,13 +9,20 @@ import {
 } from '@vp/domain';
 import { MS_PER_DAY } from '@vp/domain/time';
 import { expectOk } from '@vp/testing/result';
-import { HOUR_MS, OTHER_OWNER_ID, OWNER_ID, publicVideo, seedOwners, VIDEO_IDS } from './fixtures';
+import {
+  HOUR_MS,
+  OTHER_OWNER_ID,
+  OWNER_CHANNEL_ID as CHANNEL_ID,
+  OWNER_ID,
+  publicVideo,
+  seedOwners,
+  VIDEO_IDS,
+} from './fixtures';
 import { type CreatedAtCursor, SHARED_MILLISECOND, walkByCreatedAt } from './keyset-walk';
 import { describeNotificationPartyInvitesContract } from './notification-party-invites.contract';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
-const CHANNEL_ID = '00000000-0000-7000-8000-000000000901';
-const ACTOR = { handle: 'night-kitchen', displayName: 'Night Kitchen', avatarUrl: null };
+const ACTOR = { handle: 'owner', displayName: 'Owner', avatarUrl: null };
 
 function upload(
   videoId: string,
@@ -79,12 +86,6 @@ export function describeNotificationRepositoryContract(makeSubject: MakeReposito
     beforeEach(async () => {
       await subject.reset();
       await seedOwners(subject.repositories);
-      await subject.repositories.channels.create({
-        id: CHANNEL_ID,
-        userId: OWNER_ID,
-        handle: 'night-kitchen',
-        displayName: 'Night Kitchen',
-      });
       for (const id of Object.values(VIDEO_IDS)) await subject.seedVideo(publicVideo({ id }));
       notifications = subject.repositories.notifications;
     });

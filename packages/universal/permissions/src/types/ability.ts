@@ -36,6 +36,8 @@ export type AppAction =
   | 'heart'
   | 'report'
   | 'subscribe'
+  | 'act'
+  | 'own'
   | 'queue'
   | 'access'
   | 'hold'

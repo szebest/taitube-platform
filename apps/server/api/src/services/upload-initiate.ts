@@ -13,6 +13,7 @@ import {
   rawSourceKey,
 } from '@vp/storage';
 import { uuidv7 } from 'uuidv7';
+import { auditActor } from './audit-actor';
 import type { UploadContext } from './upload-context';
 
 export interface InitiateUploadParams {
@@ -39,7 +40,10 @@ export interface InitiateUploadResult {
 
 export type InitiateUploadFailure = AuthorizationFailure | StorageUnavailable | DatabaseUnavailable;
 
-/** A member's upload is the channel owner's video; the member stays on record as its uploader. */
+/**
+ * A member's upload is the channel owner's video on the acting channel; the member stays on record
+ * as its uploader, and the channel's audit log names them.
+ */
 export async function initiateUpload(
   ctx: UploadContext,
   user: UserContext,
@@ -62,16 +66,28 @@ export async function initiateUpload(
     ? params.strategy === 'multipart'
     : sizeBytes > ctx.multipartThresholdBytes;
 
-  const createVideoRow = () =>
-    ctx.videos.create({
+  const { channelId, ownerId } = allowed.value;
+  const createVideoRow = async () => {
+    const created = await ctx.videos.create({
       id: videoId,
-      ownerId: allowed.value.ownerId,
+      ownerId,
+      channelId,
       title: title || filename,
       visibility: visibility || 'private',
       status: 'UPLOADING',
       sourceKey,
       sourceSizeBytes: sizeBytes,
     });
+    if (isErr(created)) return created;
+    return ctx.audit.append({
+      channelId,
+      ...auditActor(user),
+      action: 'video.uploaded',
+      targetType: 'video',
+      targetId: videoId,
+      meta: {},
+    });
+  };
 
   if (!isMultipart) {
     const presigned = await ctx.storage.createPresignedPutUrl({

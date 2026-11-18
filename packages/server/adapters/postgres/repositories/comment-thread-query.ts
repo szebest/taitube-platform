@@ -25,14 +25,13 @@ const replyCountOf = (scope: SQL | undefined) => sql<number>`(
 
 const channelColumns = {
   ...getTableColumns(c),
-  channelId: ch.id,
   handle: ch.handle,
   displayName: ch.displayName,
   avatarUrl: ch.avatarUrl,
 };
 
 /**
- * Selected over `video_comments LEFT JOIN channels ON channels.user_id = author_id`. The reply
+ * Selected over `video_comments LEFT JOIN channels ON channels.id = author_channel_id`. The reply
  * count is what the viewer may see of the replies, so it matches the thread they open.
  */
 const publicThreadColumns = (viewer: CommentViewer) => ({
@@ -44,7 +43,6 @@ const publicThreadColumns = (viewer: CommentViewer) => ({
 export const moderatedThreadColumns = { ...channelColumns, replyCount: replyCountOf(undefined) };
 
 type ThreadRow = CommentRow & {
-  channelId: string | null;
   handle: string | null;
   displayName: string | null;
   avatarUrl: string | null;
@@ -56,7 +54,6 @@ export function toComment({ deletedAt: _deletedAt, ...comment }: CommentRow): Co
 }
 
 export function toCommentThread({
-  channelId,
   handle,
   displayName,
   avatarUrl,
@@ -64,7 +61,13 @@ export function toCommentThread({
   ...row
 }: ThreadRow): CommentThread {
   const comment = toComment(row);
-  const author = { userId: comment.authorId, channelId, handle, displayName, avatarUrl };
+  const author = {
+    userId: comment.authorId,
+    channelId: comment.authorChannelId,
+    handle,
+    displayName,
+    avatarUrl,
+  };
   return { ...comment, author, replyCount };
 }
 
@@ -152,7 +155,7 @@ export function selectThreads(db: PostgresDatabase, viewer: CommentViewer) {
   return db
     .select(publicThreadColumns(viewer))
     .from(c)
-    .leftJoin(ch, eq(ch.userId, c.authorId))
+    .leftJoin(ch, eq(ch.id, c.authorChannelId))
     .$dynamic();
 }
 

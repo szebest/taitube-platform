@@ -1,3 +1,4 @@
+export * from './account-audit';
 export * from './api-token';
 export * from './captions';
 export * from './category';

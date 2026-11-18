@@ -33,7 +33,7 @@ describe('user and channel identity profile with universal auth', () => {
       const newToken = mintToken({ sub: NEW_USER_ID, role: 'user', ttl: '1h' });
 
       expect(expectOk(await repositories.users.findById(NEW_USER_ID))).toBeNull();
-      expect(expectOk(await repositories.channels.findByUserId(NEW_USER_ID))).toBeNull();
+      expect(expectOk(await repositories.channels.findPrimaryByUserId(NEW_USER_ID))).toBeNull();
 
       const response = await app.inject({
         method: 'GET',
@@ -57,7 +57,7 @@ describe('user and channel identity profile with universal auth', () => {
 
       const dbUser = expectOk(await repositories.users.findById(NEW_USER_ID));
       expect(dbUser).not.toBeNull();
-      const dbChannel = expectOk(await repositories.channels.findByUserId(NEW_USER_ID));
+      const dbChannel = expectOk(await repositories.channels.findPrimaryByUserId(NEW_USER_ID));
       expect(dbChannel).not.toBeNull();
       expect(dbChannel?.handle).toBe(body.channel.handle);
     });
@@ -118,7 +118,7 @@ describe('user and channel identity profile with universal auth', () => {
       expect(body.bannerUrl).toBe('https://example.com/banner.jpg');
       expect(body.handle).toBe('dev');
 
-      const inDb = expectOk(await repositories.channels.findByUserId(DEV_USER_ID));
+      const inDb = expectOk(await repositories.channels.findPrimaryByUserId(DEV_USER_ID));
       expect(inDb?.displayName).toBe('Updated Dev Name');
       expect(inDb?.bio).toBe('Updated channel bio description');
     });
@@ -197,7 +197,7 @@ describe('user and channel identity profile with universal auth', () => {
     );
 
     it('retrieves creator profile by channel UUID without authentication', async () => {
-      const devChannel = expectOk(await repositories.channels.findByUserId(DEV_USER_ID));
+      const devChannel = expectOk(await repositories.channels.findPrimaryByUserId(DEV_USER_ID));
       expect(devChannel).not.toBeNull();
 
       const response = await app.inject({

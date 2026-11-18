@@ -1,6 +1,5 @@
 import { CHANNEL_HEADER } from '@vp/api-contracts';
 import type { ChannelRole } from '@vp/domain';
-import { expectOk } from '@vp/testing/result';
 import {
   AS,
   CREATOR,
@@ -30,13 +29,7 @@ describe('saved replies routes', () => {
 
   beforeEach(async () => {
     ctx = await buildCommentsApp();
-    channelId = expectOk(
-      await ctx.repositories.channels.create({
-        userId: CREATOR,
-        handle: 'creator',
-        displayName: 'Creator',
-      })
-    ).id;
+    channelId = ctx.creatorChannelId;
   });
 
   afterEach(async () => {

@@ -6,6 +6,7 @@ import { expectOk } from '@vp/testing/result';
 import { createNotifyCommentProcessor } from '../notify-comment';
 import {
   CHANNEL_ID,
+  channelOf,
   CREATOR_ID,
   logger,
   notificationsOf,
@@ -37,6 +38,7 @@ describe('apps/server/worker/stages: notify-comment', () => {
         id,
         videoId: VIDEO,
         authorId: author,
+        authorChannelId: channelOf(author),
         parentId,
         content,
         moderation,
@@ -61,7 +63,7 @@ describe('apps/server/worker/stages: notify-comment', () => {
     expectOk(await repositories.users.upsert({ id, email: `${handle}@example.com` }));
     expectOk(
       await repositories.channels.create({
-        id: userId(500 + Number(id.slice(-3))),
+        id: channelOf(id),
         userId: id,
         handle,
         displayName: handle,
