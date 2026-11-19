@@ -33,7 +33,7 @@ and then runs `pnpm --silent demo`. Exit codes: 0 ok, 1 failure, 2 bad usage, 3 
 - `down` runs `docker compose stop`, so volumes survive and the next `up` is quick; `reset` is `pnpm stack down`
   (volumes deleted) plus the state, then `up`.
 
-Tests: every file has a spec; orchestrator branches run against `__tests__/fake-host.ts`, no real Docker. The
+Tests: orchestrator branches run against `__tests__/fake-host.ts`, no real Docker. The
 bootstrap is covered by `scripts/__tests__/demo-sh.test.ts`.
 
 Sign-in: `pnpm demo login <persona>` prints a token, a curl line and a DevTools cookie one-liner, and is the path on

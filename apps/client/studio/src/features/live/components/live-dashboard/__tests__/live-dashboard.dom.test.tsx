@@ -12,7 +12,10 @@ import {
   liveNow,
   liveStream,
 } from '#app/features/live/__tests__/live-api.fixture';
+import { LazyLiveViewersPlot } from '#app/features/live/components/live-viewers-plot/live-viewers-plot.lazy';
 import { getRouter } from '#app/router';
+
+beforeAll(() => LazyLiveViewersPlot.preload());
 
 type Stream = ReturnType<typeof liveStream>;
 

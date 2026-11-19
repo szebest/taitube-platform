@@ -25,6 +25,7 @@ import { type HttpHandler, HttpResponse } from 'msw/http';
 import { loaderApi } from '#app/__tests__/loader-api';
 import { signInBrowser } from '#app/__tests__/providers';
 import { LazyStatsPanel } from '#app/features/creator-stats/components/creator-stats-panel/stats-panel.lazy';
+import { LazyGlobalNowPlayingBar } from '#app/features/watch/components/global-now-playing-bar/global-now-playing-bar.lazy';
 import { getRouter } from '#app/router';
 import { playlistDetail, seriesDetail, uuid } from './library-fixtures';
 
@@ -60,10 +61,11 @@ export async function renderWatch({
       ]
     : [];
 
-  // The team's panel is a lazy chunk; evaluating it inside a spec's wait would starve that wait.
-  if (viewer) {
-    await LazyStatsPanel.preload();
-  }
+  // Lazy chunks evaluate on first render; evaluating one inside a spec's wait would starve that wait.
+  await Promise.all([
+    LazyGlobalNowPlayingBar.preload(),
+    viewer ? LazyStatsPanel.preload() : undefined,
+  ]);
 
   const rendered = await renderRoute(getRouter, `/watch/${VIDEO_ID}${search}`, {
     handlers: [

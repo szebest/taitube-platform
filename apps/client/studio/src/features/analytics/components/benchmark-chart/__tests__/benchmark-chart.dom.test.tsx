@@ -5,7 +5,10 @@ import { ErrorCodes } from '@vp/errors';
 import { apiServer, mockEndpoint, problemReply, VIDEO_ID } from '@vp/web-testing';
 import { serveAnalytics } from '#app/features/analytics/__tests__/analytics-api.fixture';
 import { renderAnalytics } from '#app/features/analytics/__tests__/render-analytics';
+import { LazyBenchmarkPlot } from '#app/features/analytics/components/benchmark-plot/benchmark-plot.lazy';
 import { BenchmarkChart } from '../benchmark-chart';
+
+beforeAll(() => LazyBenchmarkPlot.preload());
 
 const renderChart = () => renderAnalytics(<BenchmarkChart videoId={VIDEO_ID} />);
 

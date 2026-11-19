@@ -15,7 +15,7 @@ Everything in [apps/client/web/AGENTS.md](../web/AGENTS.md) applies here: TanSta
 file routes under `src/routes/` with a committed `src/routeTree.gen.ts`, TanStack Query filled by loaders, TanStack
 Form, the `#app/` import alias, the design system from `@kit/ui`, the two Vitest projects and the Playwright suite in
 `e2e/`. Its rules (declarative authorization, the API client from router context, rules from packages, formatting
-through `@kit/intl-react`, nothing phones home, one spec per source, MSW typed by the contracts) hold here word for
+through `@kit/intl-react`, nothing phones home, specs where behaviour matters, MSW typed by the contracts) hold here word for
 word. This file lists only what differs. The folder layers, the component folder and the names both apps share are
 [docs/standards/frontend-structure.md](../../../docs/standards/frontend-structure.md).
 

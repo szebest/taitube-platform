@@ -9,12 +9,15 @@ import {
   partyMembership,
 } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
+import { LazyTaitubePlayer } from '#app/components/player/taitube-player/taitube-player.lazy';
 import { renderPartyRoute } from '#app/features/watch-party/__tests__/render-party-route';
 
 vi.mock(import('#app/components/player/taitube-player/taitube-player'), async () => ({
   TaitubePlayer: (await import('#app/features/watch-party/__tests__/stub-party-player'))
     .StubPartyPlayer,
 }));
+
+beforeAll(() => LazyTaitubePlayer.preload());
 
 const SEATED = {
   viewer: { memberKey: PARTY_VIEWER_KEY, canJoin: 'member', actions: [] },
