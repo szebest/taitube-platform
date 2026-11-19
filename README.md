@@ -100,7 +100,8 @@ taitube-platform/
 │   │   │   ├── primitives/          # Time-unit constants every package reads by name
 │   │   │   ├── result/              # Result type, combinators, tryCatch/fromPromise
 │   │   │   ├── runtime/             # Clock, Random, EnvSource, Fetch and CookieJar tokens; node and browser entries
-│   │   │   └── tsconfig/            # Shared TypeScript presets, one per tier
+│   │   │   ├── tsconfig/            # Shared TypeScript presets, one per tier
+│   │   │   └── validation/          # Field failures bound to one code, plain text normalised and counted in code points
 │   │   ├── client/                  # Browser only
 │   │   │   ├── components/          # Shared components both apps render: PageHeader, EmptyState, ErrorState, SectionError, the state illustrations
 │   │   │   ├── forms/               # useAppForm with the text, select and file fields, and validateWith

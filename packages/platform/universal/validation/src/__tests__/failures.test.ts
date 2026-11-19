@@ -3,7 +3,7 @@ import { defineFieldFailures } from '../failures';
 
 const { invalidField, invalidLength } = defineFieldFailures('BAD_INPUT');
 
-describe('@vp/validation: defineFieldFailures', () => {
+describe('@kit/validation: defineFieldFailures', () => {
   it('builds a failure carrying the bound code and the field it rejected, wire-safe by construction', () => {
     const failure = invalidField('slug', 'bad slug', { maxLength: 100 });
 
