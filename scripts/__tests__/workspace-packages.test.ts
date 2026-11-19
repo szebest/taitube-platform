@@ -44,6 +44,7 @@ describe('scripts: workspace packages', () => {
           { name: '@vp/db', dev: false },
           { name: '@kit/logger', dev: true },
         ],
+        pathDeps: [],
       },
       {
         name: '@kit/logger',
@@ -51,10 +52,49 @@ describe('scripts: workspace packages', () => {
         declaredTier: undefined,
         layer: 1,
         deps: [],
+        pathDeps: [],
       },
-      { name: '@vp/db', dir: 'packages/server/db', declaredTier: undefined, layer: 2, deps: [] },
+      {
+        name: '@vp/db',
+        dir: 'packages/server/db',
+        declaredTier: undefined,
+        layer: 2,
+        deps: [],
+        pathDeps: [],
+      },
     ]);
   });
+
+  it.each([
+    { spec: 'link:../../../server/db', target: 'packages/server/db' },
+    { spec: 'file:../ui', target: 'packages/platform/client/ui' },
+    { spec: 'workspace:../../../server/db', target: 'packages/server/db' },
+  ])('resolves a $spec spec against the manifest directory', ({ spec, target }) => {
+    const root = tree({
+      'packages/platform/client/leaky': {
+        name: '@kit/leaky',
+        vp: { layer: 1 },
+        dependencies: { q: spec },
+      },
+    });
+
+    expect(load(root)[0]?.pathDeps).toEqual([{ name: 'q', spec, target }]);
+  });
+
+  it.each(['workspace:*', 'workspace:^', '^1.0.0', 'npm:other@1'])(
+    'reads %s as no path',
+    (spec) => {
+      const root = tree({
+        'packages/platform/client/leaky': {
+          name: '@kit/leaky',
+          vp: { layer: 1 },
+          dependencies: { q: spec },
+        },
+      });
+
+      expect(load(root)[0]?.pathDeps).toEqual([]);
+    }
+  );
 
   it.each([
     { path: 'packages/platform/client/ui', tier: 'client' },

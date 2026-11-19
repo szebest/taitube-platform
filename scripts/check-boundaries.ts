@@ -50,6 +50,15 @@ export function checkBoundaries(packages: Pkg[] = load()): string[] {
       continue;
     }
 
+    if (isPlatform(pkg.dir)) {
+      for (const { name, spec, target } of pkg.pathDeps ?? []) {
+        if (isPlatform(`${target}/`)) continue;
+        errors.push(
+          `${pkg.name} (platform) lists ${name} as "${spec}", a path that resolves to ${target} outside packages/platform/ — a platform package reaches app code through no path either`
+        );
+      }
+    }
+
     for (const { name: depName, dev } of pkg.deps) {
       const dep = byName.get(depName);
       if (!dep) continue;

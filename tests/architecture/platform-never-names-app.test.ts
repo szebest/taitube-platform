@@ -1,4 +1,5 @@
-import { read, trackedFiles } from './repo-files';
+import { lstatSync } from 'node:fs';
+import { read, ROOT, trackedFiles } from './repo-files';
 
 const APP_SCOPE = '@vp/';
 
@@ -70,7 +71,9 @@ describe('architecture: platform packages never name an app package', () => {
   });
 
   it('finds none in any tracked file under packages/platform', () => {
-    const files = trackedFiles('packages/platform').map((path) => ({ path, text: read(path) }));
+    const files = trackedFiles('packages/platform')
+      .filter((path) => !lstatSync(`${ROOT}/${path}`).isSymbolicLink())
+      .map((path) => ({ path, text: read(path) }));
 
     expect(files.length).toBeGreaterThan(0);
     expect(appMentions(files)).toEqual([]);

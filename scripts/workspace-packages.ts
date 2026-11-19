@@ -1,5 +1,5 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { join, posix, resolve } from 'node:path';
 
 export type Tier = 'universal' | 'server' | 'client';
 
@@ -8,12 +8,19 @@ interface PkgDep {
   dev: boolean;
 }
 
+export interface PathDep {
+  name: string;
+  spec: string;
+  target: string;
+}
+
 export interface Pkg {
   name: string;
   dir: string;
   declaredTier?: Tier;
   layer: number;
   deps: PkgDep[];
+  pathDeps?: PathDep[];
 }
 
 const ROOT = resolve(import.meta.dirname, '..');
@@ -56,6 +63,26 @@ function workspaceDeps(raw: {
   ];
 }
 
+const PATH_SPEC = /^(?:link:|file:|workspace:(?=[./~]))/;
+
+function pathDeps(
+  dir: string,
+  raw: Record<
+    'dependencies' | 'peerDependencies' | 'devDependencies',
+    Record<string, string> | undefined
+  >
+): PathDep[] {
+  return Object.values(raw).flatMap((deps = {}) =>
+    Object.entries(deps)
+      .filter(([, spec]) => PATH_SPEC.test(spec))
+      .map(([name, spec]) => ({
+        name,
+        spec,
+        target: posix.normalize(posix.join(dir, spec.replace(/^[a-z]+:/, ''))),
+      }))
+  );
+}
+
 export function load(root: string = ROOT): Pkg[] {
   return manifestDirs(root).map((dir) => {
     const raw = JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8'));
@@ -66,6 +93,7 @@ export function load(root: string = ROOT): Pkg[] {
       declaredTier: vp.tier,
       layer: vp.layer,
       deps: workspaceDeps(raw),
+      pathDeps: pathDeps(dir.slice(root.length + 1), raw),
     };
   });
 }

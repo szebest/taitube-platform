@@ -91,7 +91,7 @@ const specFile = (
   { parts, props, subject }: Readonly<{ parts: string; props: string; subject: string }>,
   variantNamesFrom: string
 ) => `import { render, screen } from '@testing-library/react';
-import { axeViolations } from '@vp/web-testing/dom';
+import { axeViolations } from '@kit/web-testing/dom';
 import { variantNames } from '${variantNamesFrom}';
 import { ${parts}, type ${props} } from '../${name}';
 import { ${styles} } from '../${name}.variants';

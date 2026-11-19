@@ -1,4 +1,6 @@
-import { posix } from 'node:path';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, posix } from 'node:path';
 import { BUILD_TOOLING, checkBoundaries } from '../../scripts/check-boundaries';
 import { load, type Pkg } from '../../scripts/workspace-packages';
 import { read, trackedFiles } from './repo-files';
@@ -158,6 +160,71 @@ describe('architecture: package boundaries', () => {
     expect(errors).toEqual([
       `@vp/browser (client) depends on ${name} (server) — a client package or app may only depend on universal or client`,
       `@vp/browser (T1) depends on ${name} (T1) — the same layer. Dependencies must point strictly down.`,
+    ]);
+  });
+
+  it.each([
+    {
+      shape: 'a link: path into app code',
+      spec: 'link:../../../server/core',
+      target: 'packages/server/core',
+    },
+    {
+      shape: 'a file: path into app code',
+      spec: 'file:../../../client/queries',
+      target: 'packages/client/queries',
+    },
+    {
+      shape: 'a workspace: path into app code',
+      spec: 'workspace:../../../../apps/client/web',
+      target: 'apps/client/web',
+    },
+  ])('reports $shape in a platform manifest', ({ spec, target }) => {
+    const errors = checkBoundaries([
+      pkg({
+        name: '@kit/leaky',
+        dir: 'packages/platform/client/leaky',
+        pathDeps: [{ name: 'q', spec, target }],
+      }),
+    ]);
+
+    expect(errors).toEqual([
+      `@kit/leaky (platform) lists q as "${spec}", a path that resolves to ${target} outside packages/platform/ — a platform package reaches app code through no path either`,
+    ]);
+  });
+
+  it('lets a platform manifest path to another platform package pass', () => {
+    const errors = checkBoundaries([
+      pkg({
+        name: '@kit/leaky',
+        dir: 'packages/platform/client/leaky',
+        pathDeps: [{ name: 'q', spec: 'link:../ui', target: 'packages/platform/client/ui' }],
+      }),
+    ]);
+
+    expect(errors).toEqual([]);
+  });
+
+  it.each([
+    { shape: 'link:', spec: 'link:../../../server/core' },
+    { shape: 'file:', spec: 'file:../../../client/queries' },
+    { shape: 'workspace: path', spec: 'workspace:../../../../apps/client/web' },
+  ])('reads a $shape spec from a manifest', ({ spec }) => {
+    const dir = mkdtempSync(join(tmpdir(), 'boundaries-'));
+    onTestFinished(() => rmSync(dir, { recursive: true, force: true }));
+    const manifest = join(dir, 'packages/platform/client/leaky');
+    mkdirSync(manifest, { recursive: true });
+    writeFileSync(
+      join(manifest, 'package.json'),
+      JSON.stringify({
+        name: '@kit/leaky',
+        vp: { layer: 1 },
+        devDependencies: { q: spec, ok: 'workspace:*' },
+      })
+    );
+
+    expect(checkBoundaries(load(dir))).toEqual([
+      expect.stringContaining('outside packages/platform/'),
     ]);
   });
 });
