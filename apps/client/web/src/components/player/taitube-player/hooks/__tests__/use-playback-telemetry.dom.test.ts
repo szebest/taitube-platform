@@ -17,7 +17,18 @@ function setVisibility(state: DocumentVisibilityState) {
   document.dispatchEvent(new Event('visibilitychange'));
 }
 
+function reportPointer(coarse: boolean, screen: { width: number; height: number }) {
+  vi.spyOn(window, 'matchMedia').mockImplementation(
+    (query) => ({ matches: coarse && query === '(pointer: coarse)' }) as MediaQueryList
+  );
+  vi.spyOn(window, 'screen', 'get').mockReturnValue(screen as Screen);
+}
+
 describe('apps/client/web: usePlaybackTelemetry', () => {
+  beforeEach(() => {
+    reportPointer(false, { width: 1920, height: 1080 });
+  });
+
   afterEach(() => {
     setVisibility('visible');
   });
@@ -37,6 +48,18 @@ describe('apps/client/web: usePlaybackTelemetry', () => {
         }),
       },
     ]);
+  });
+
+  it.each([
+    ['a phone', true, { width: 390, height: 844 }, 'mobile'],
+    ['a tablet', true, { width: 820, height: 1180 }, 'tablet'],
+    ['a desktop', false, { width: 1920, height: 1080 }, 'desktop'],
+  ])('tells the endpoint it is %s', (_name, coarse, screen, device) => {
+    reportPointer(coarse, screen);
+
+    renderHook(() => usePlaybackTelemetry(VIDEO_ID)).result.current.onPlay(PROGRESS);
+
+    expect(sent()[0]?.event).toMatchObject({ device });
   });
 
   it('starts a new session for the next video load', () => {
