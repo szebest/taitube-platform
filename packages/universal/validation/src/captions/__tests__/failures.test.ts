@@ -1,4 +1,5 @@
-import { ErrorCodes, isInputFailure } from '@vp/errors';
+import { isInputFailure } from '@kit/errors';
+import { ErrorCodes } from '@vp/errors';
 import { invalidCaptionFile, invalidCaptionLanguage } from '../failures';
 
 describe('@vp/validation: caption failures', () => {

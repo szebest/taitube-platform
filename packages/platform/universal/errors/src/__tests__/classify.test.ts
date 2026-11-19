@@ -5,7 +5,7 @@ import { codes } from './fixtures';
 
 const down = unavailable('DOWN', 'Store unavailable');
 
-describe('@vp/errors: classifyError', () => {
+describe('@kit/errors: classifyError', () => {
   it.each([
     {
       name: 'a PermanentError',
@@ -46,7 +46,7 @@ describe('@vp/errors: classifyError', () => {
   });
 });
 
-describe('@vp/errors: attemptsFor', () => {
+describe('@kit/errors: attemptsFor', () => {
   it.each([
     {
       name: 'a permanent error',
@@ -72,7 +72,7 @@ describe('@vp/errors: attemptsFor', () => {
   });
 });
 
-describe('@vp/errors: toPipelineError', () => {
+describe('@kit/errors: toPipelineError', () => {
   it.each([
     { code: 'NOT_FOUND', Expected: PermanentError, retryable: false },
     { code: 'DOWN', Expected: TransientError, retryable: true },
@@ -95,7 +95,7 @@ describe('@vp/errors: toPipelineError', () => {
   });
 });
 
-describe('@vp/errors: errorCodeOf', () => {
+describe('@kit/errors: errorCodeOf', () => {
   it.each([
     { shape: 'a pipeline error', error: new PermanentError('NOT_FOUND', 'x') },
     {
@@ -118,7 +118,7 @@ describe('@vp/errors: errorCodeOf', () => {
   });
 });
 
-describe('@vp/errors: asThrowable', () => {
+describe('@kit/errors: asThrowable', () => {
   it('keeps an Error it was handed, EADDRINUSE included', () => {
     const bound = Object.assign(new Error('listen EADDRINUSE'), { code: 'EADDRINUSE' });
 

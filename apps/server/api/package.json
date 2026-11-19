@@ -30,6 +30,7 @@
     "@kit/composition": "workspace:*",
     "@kit/concurrency": "workspace:*",
     "@kit/config": "workspace:*",
+    "@kit/errors": "workspace:*",
     "@kit/intl": "workspace:*",
     "@kit/keyspace": "workspace:*",
     "@kit/logger": "workspace:*",
@@ -86,6 +87,6 @@
     "vite-plus": "catalog:"
   },
   "vp": {
-    "layer": 8
+    "layer": 9
   }
 }

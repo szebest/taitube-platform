@@ -12,7 +12,7 @@ const unavailable: AnyFailure = {
   message: 'Database unavailable during findById',
 };
 
-describe('@vp/errors: isInputFailure', () => {
+describe('@kit/errors: isInputFailure', () => {
   it.each([
     { name: 'an input failure naming a field', failure: tooLarge, expected: true },
     { name: 'an infra failure', failure: unavailable, expected: false },
@@ -21,7 +21,7 @@ describe('@vp/errors: isInputFailure', () => {
   });
 });
 
-describe('@vp/errors: failurePayload', () => {
+describe('@kit/errors: failurePayload', () => {
   it('keeps the field and the constraint the caller broke', () => {
     expect(failurePayload(tooLarge)).toEqual({ field: 'file', limitBytes: 5_000_000_000 });
   });

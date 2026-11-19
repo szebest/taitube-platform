@@ -1,3 +1,4 @@
+import type { AnyFailure } from '@kit/errors';
 import type { Logger } from '@kit/logger';
 import type { Result } from '@kit/result';
 import type {
@@ -15,7 +16,6 @@ import type {
 } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import type { AppConfig } from '@vp/env-schema';
-import type { AnyFailure } from '@vp/errors';
 import type { MediaTools } from '@vp/ffmpeg';
 import type { FingerprintTools } from '@vp/fingerprint';
 import {

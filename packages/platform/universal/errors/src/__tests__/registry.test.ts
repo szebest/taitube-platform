@@ -3,7 +3,7 @@ import { err, ok } from '@kit/result';
 import { defineErrorCodes, ErrorCodeRegistry, isRegisteredCode, retryClass } from '../registry';
 import { codes } from './fixtures';
 
-describe('@vp/errors: the error code registry', () => {
+describe('@kit/errors: the error code registry', () => {
   it('freezes what the app defined', () => {
     expect([Object.isFrozen(codes), Object.isFrozen(codes.retryClass)]).toEqual([true, true]);
   });

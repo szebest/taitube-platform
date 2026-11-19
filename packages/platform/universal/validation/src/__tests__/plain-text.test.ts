@@ -1,6 +1,6 @@
 import { normalizePlainText, withinLength } from '../plain-text';
 
-describe('@vp/validation: plain text', () => {
+describe('@kit/validation: plain text', () => {
   it.each([
     { name: 'surrounding whitespace', value: '  clip \n', normalized: 'clip' },
     { name: 'inner line breaks and tabs', value: 'a\nb\tc', normalized: 'a\nb\tc' },

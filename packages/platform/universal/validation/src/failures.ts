@@ -1,4 +1,4 @@
-import type { InputFailure } from '@vp/errors';
+import type { InputFailure } from '@kit/errors';
 
 export interface LengthBounds {
   readonly minLength: number;

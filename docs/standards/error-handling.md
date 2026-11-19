@@ -65,11 +65,16 @@ error vocabulary.** A failure whose `code` is a bare string is a review rejectio
 code `ErrorCodes` does not have, add it to `ErrorCodes`, `PROBLEM_STATUS`, `RETRY_CLASS` and SDD §6.2
 or do not add it at all.
 
+The types and the machinery are `@kit/errors`; the vocabulary is the app's `@vp/errors`. A platform package
+owns the codes it emits (`CommonErrorCodes` in `@kit/errors`: `VALIDATION_FAILED`, `INTERNAL`;
+`PaginationErrorCodes` in `@kit/pagination`; `FormatErrorCodes` in `@kit/intl`), and `ApiErrorCodes` spreads
+them in, so each code is written once and no platform package imports the app's codes.
+
 ```ts
-export type Failure<C extends ErrorCode, D extends object = Record<never, never>> =
+export type Failure<C extends string, D extends object = Record<never, never>> =
   Readonly<{ code: C; message: string } & D>;
 
-export type InputFailure<C extends ErrorCode, D extends object = Record<never, never>> =
+export type InputFailure<C extends string, D extends object = Record<never, never>> =
   Readonly<{ code: C; message: string; field: string } & D>;
 ```
 
@@ -191,7 +196,7 @@ runner converts, and it is the only place in `apps/server/worker` that throws.
 
 ```ts
 const outcome = await stage(job);
-if (isErr(outcome)) throw toPipelineError(outcome.error); // RETRY_CLASS -> Permanent | Transient
+if (isErr(outcome)) throw toPipelineError(errorCodeRegistry, outcome.error); // RETRY_CLASS -> Permanent | Transient
 ```
 
 `toPipelineError` reads `RETRY_CLASS`, so ADR-18's "decided at the throw site, never by regex on
@@ -204,7 +209,7 @@ itself: a parent flow job reads its children's return values, and the wrapper st
 
 ### Classifying something that is already an exception
 
-`classifyError(error)` in `@vp/errors` is the one place that answers "is this permanent". It returns
+`classifyError(set, error)` in `@kit/errors`, called with the app's `errorCodeRegistry`, is the one place that answers "is this permanent". It returns
 `'permanent' | 'transient' | 'unknown'`, and **`unknown` is a third answer on purpose**: ADR-18
 retries an unrecognised error a little and then parks it, which needs a lower attempt cap than a
 failure positively classified as transient. Collapsing the two silently gives every unrecognised
@@ -216,7 +221,7 @@ It decides in this order:
 2. `name === 'UnrecoverableError'` - the one foreign class recognised structurally. `bullmq` is
    confined to `packages/server/adapters/**`, so `apps/server/worker` and the in-memory queue double
    *cannot* import it. The BullMQ adapter, which may, uses a real `instanceof`.
-3. `RETRY_CLASS[code]` for anything carrying a code.
+3. The set's retry class (`RETRY_CLASS` for this app) for anything carrying a code.
 4. Otherwise `unknown`.
 
 **Never read a class name, a message or an `isRetryable` field yourself.**

@@ -9,6 +9,7 @@
     "test": "vp test run"
   },
   "dependencies": {
+    "@kit/errors": "workspace:*",
     "@kit/result": "workspace:*",
     "@vp/db": "workspace:*",
     "@vp/dev-identity": "workspace:*",
@@ -28,6 +29,6 @@
     "vite-plus": "catalog:"
   },
   "vp": {
-    "layer": 10
+    "layer": 11
   }
 }

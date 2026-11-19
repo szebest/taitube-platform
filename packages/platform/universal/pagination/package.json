@@ -1,6 +1,6 @@
 {
   "name": "@kit/pagination",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "sideEffects": false,
@@ -20,8 +20,8 @@
     "clean": "rimraf dist tsconfig.tsbuildinfo"
   },
   "dependencies": {
-    "@kit/result": "workspace:*",
-    "@vp/errors": "workspace:*"
+    "@kit/errors": "workspace:*",
+    "@kit/result": "workspace:*"
   },
   "devDependencies": {
     "@kit/testing": "workspace:*",
@@ -31,6 +31,6 @@
     "vite-plus": "catalog:"
   },
   "vp": {
-    "layer": 5
+    "layer": 4
   }
 }

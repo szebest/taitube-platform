@@ -26,6 +26,7 @@
   },
   "dependencies": {
     "@kit/components": "workspace:*",
+    "@kit/errors": "workspace:*",
     "@kit/intl": "workspace:*",
     "@kit/intl-react": "workspace:*",
     "@kit/result": "workspace:*",
@@ -72,6 +73,6 @@
     "react": "^19.3.0"
   },
   "vp": {
-    "layer": 8
+    "layer": 9
   }
 }

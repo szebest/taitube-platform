@@ -1,10 +1,11 @@
+import { isInputFailure } from '@kit/errors';
 import {
   categorySlugConflict,
   handleTaken,
   pickWindowOverlap,
   versionConflict,
 } from '../conflict-failures';
-import { ErrorCodes, isInputFailure } from '../index';
+import { ErrorCodes } from '../index';
 
 describe('@vp/errors: conflict failures', () => {
   it.each([

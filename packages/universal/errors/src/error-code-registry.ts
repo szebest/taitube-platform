@@ -1,5 +1,5 @@
+import { defineErrorCodes, isRegisteredCode } from '@kit/errors';
 import { type ErrorCode, ErrorCodes } from './error-codes';
-import { defineErrorCodes, isRegisteredCode } from './registry';
 import { RETRY_CLASS } from './retry-class';
 
 export const errorCodeRegistry = defineErrorCodes({

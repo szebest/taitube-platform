@@ -1,6 +1,6 @@
 import { LogContext } from '../log-context';
 
-describe('@vp/observability: LogContext', () => {
+describe('@kit/logger: LogContext', () => {
   it('carries its bindings across an await and drops them outside the run', async () => {
     const context = new LogContext();
 

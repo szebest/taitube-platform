@@ -1,9 +1,10 @@
+import { type AnyFailure } from '@kit/errors';
 import { Paginator } from '@kit/pagination';
 import type { Result } from '@kit/result';
 import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { type ActingChannel, CHANNEL_INVITE_TTL_DAYS } from '@vp/domain';
-import { type AnyFailure, ErrorCodes } from '@vp/errors';
+import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { ChannelInviteService } from '../channel-invite-service';
 

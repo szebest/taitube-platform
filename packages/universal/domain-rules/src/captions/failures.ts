@@ -1,4 +1,5 @@
-import { ErrorCodes, type Failure } from '@vp/errors';
+import { type Failure } from '@kit/errors';
+import { ErrorCodes } from '@vp/errors';
 
 export type CaptionNotFound = Failure<
   typeof ErrorCodes.CAPTION_NOT_FOUND,

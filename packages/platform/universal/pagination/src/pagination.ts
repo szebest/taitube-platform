@@ -16,8 +16,8 @@ export interface PaginationDefaults {
 }
 
 /**
- * `@vp/api-contracts` advertises these on the wire; a deployment configuring `PAGE_SIZE_MAX`
- * lower clamps a request rather than rejecting it.
+ * An app advertises these on the wire; a deployment that configures a lower `maxLimit` clamps a
+ * request rather than rejecting it.
  */
 export const PAGE_SIZE_DEFAULT = 20;
 export const PAGE_SIZE_MAX = 100;

@@ -2,7 +2,7 @@ import { unavailable } from '../unavailable';
 
 const down = unavailable('DOWN', 'Store unavailable');
 
-describe('@vp/errors: unavailable', () => {
+describe('@kit/errors: unavailable', () => {
   it('builds the failure naming the operation, with no field and the operation out of the message', () => {
     expect(down('findById')).toEqual({
       code: 'DOWN',

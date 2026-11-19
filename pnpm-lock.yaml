@@ -643,6 +643,9 @@ importers:
       '@kit/config':
         specifier: workspace:*
         version: link:../../../packages/platform/server/config
+      '@kit/errors':
+        specifier: workspace:*
+        version: link:../../../packages/platform/universal/errors
       '@kit/intl':
         specifier: workspace:*
         version: link:../../../packages/platform/universal/intl
@@ -809,6 +812,9 @@ importers:
       '@kit/config':
         specifier: workspace:*
         version: link:../../../packages/platform/server/config
+      '@kit/errors':
+        specifier: workspace:*
+        version: link:../../../packages/platform/universal/errors
       '@kit/logger':
         specifier: workspace:*
         version: link:../../../packages/platform/server/logger
@@ -1013,6 +1019,9 @@ importers:
       '@kit/components':
         specifier: workspace:*
         version: link:../../platform/client/components
+      '@kit/errors':
+        specifier: workspace:*
+        version: link:../../platform/universal/errors
       '@kit/intl':
         specifier: workspace:*
         version: link:../../platform/universal/intl
@@ -1382,15 +1391,15 @@ importers:
 
   packages/platform/client/forms:
     dependencies:
+      '@kit/errors':
+        specifier: workspace:*
+        version: link:../../universal/errors
       '@kit/result':
         specifier: workspace:*
         version: link:../../universal/result
       '@kit/ui':
         specifier: workspace:*
         version: link:../ui
-      '@vp/errors':
-        specifier: workspace:*
-        version: link:../../../universal/errors
     devDependencies:
       '@kit/testing':
         specifier: workspace:*
@@ -1398,6 +1407,9 @@ importers:
       '@kit/tsconfig':
         specifier: workspace:*
         version: link:../../universal/tsconfig
+      '@kit/validation':
+        specifier: workspace:*
+        version: link:../../universal/validation
       '@kit/vite-preset':
         specifier: workspace:*
         version: link:../../server/vite-preset
@@ -1422,9 +1434,6 @@ importers:
       '@types/react-dom':
         specifier: ^19.3.0
         version: 19.3.0(@types/react@19.3.0)
-      '@vp/validation':
-        specifier: workspace:*
-        version: link:../../../universal/validation
       '@vp/web-testing':
         specifier: workspace:*
         version: link:../../../client/web-testing
@@ -1544,15 +1553,15 @@ importers:
       '@kit/design-tokens':
         specifier: workspace:*
         version: link:../../universal/design-tokens
+      '@kit/errors':
+        specifier: workspace:*
+        version: link:../../universal/errors
       '@kit/result':
         specifier: workspace:*
         version: link:../../universal/result
       '@vp/domain':
         specifier: workspace:*
         version: link:../../../universal/domain
-      '@vp/errors':
-        specifier: workspace:*
-        version: link:../../../universal/errors
     devDependencies:
       '@dnd-kit/core':
         specifier: ^6.3.1
@@ -2060,15 +2069,15 @@ importers:
 
   packages/platform/universal/design-tokens:
     dependencies:
+      '@kit/errors':
+        specifier: workspace:*
+        version: link:../errors
       '@kit/result':
         specifier: workspace:*
         version: link:../result
       '@vp/domain':
         specifier: workspace:*
         version: link:../../../universal/domain
-      '@vp/errors':
-        specifier: workspace:*
-        version: link:../../../universal/errors
     devDependencies:
       '@kit/testing':
         specifier: workspace:*
@@ -2098,6 +2107,31 @@ importers:
         specifier: workspace:*
         version: link:../result
     devDependencies:
+      '@kit/testing':
+        specifier: workspace:*
+        version: link:../../server/testing
+      '@kit/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+      rimraf:
+        specifier: ^6.1.3
+        version: 6.1.3
+      typescript:
+        specifier: ^6.0.3
+        version: 6.0.3
+      vite-plus:
+        specifier: 'catalog:'
+        version: 1.5.0(@opentelemetry/api@1.9.1)(@types/node@24.19.1)(@vitest/browser-playwright@5.1.0)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.28.2)(jiti@2.7.0)(jsdom@30.1.2)(msw@3.0.2(@types/node@24.19.1)(supports-color@10.2.2)(typescript@6.0.3)(vite@8.3.4(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)))(playwright@1.64.0)(sass@1.105.1)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1)
+
+  packages/platform/universal/errors:
+    dependencies:
+      '@kit/di':
+        specifier: workspace:*
+        version: link:../di
+    devDependencies:
+      '@kit/result':
+        specifier: workspace:*
+        version: link:../result
       '@kit/testing':
         specifier: workspace:*
         version: link:../../server/testing
@@ -2184,12 +2218,12 @@ importers:
 
   packages/platform/universal/pagination:
     dependencies:
+      '@kit/errors':
+        specifier: workspace:*
+        version: link:../errors
       '@kit/result':
         specifier: workspace:*
         version: link:../result
-      '@vp/errors':
-        specifier: workspace:*
-        version: link:../../../universal/errors
     devDependencies:
       '@kit/testing':
         specifier: workspace:*
@@ -2267,6 +2301,31 @@ importers:
 
   packages/platform/universal/tsconfig: {}
 
+  packages/platform/universal/validation:
+    dependencies:
+      '@kit/errors':
+        specifier: workspace:*
+        version: link:../errors
+    devDependencies:
+      '@kit/testing':
+        specifier: workspace:*
+        version: link:../../server/testing
+      '@kit/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+      jsdom:
+        specifier: ^30.1.2
+        version: 30.1.2
+      rimraf:
+        specifier: ^6.1.3
+        version: 6.1.3
+      typescript:
+        specifier: ^6.0.3
+        version: 6.0.3
+      vite-plus:
+        specifier: 'catalog:'
+        version: 1.5.0(@opentelemetry/api@1.9.1)(@types/node@24.19.1)(@vitest/browser-playwright@5.1.0)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.28.2)(jiti@2.7.0)(jsdom@30.1.2)(msw@3.0.2(@types/node@24.19.1)(supports-color@10.2.2)(typescript@6.0.3)(vite@8.3.4(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)))(playwright@1.64.0)(sass@1.105.1)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1)
+
   packages/server/adapters:
     dependencies:
       '@aws-sdk/client-s3':
@@ -2290,6 +2349,9 @@ importers:
       '@kit/di':
         specifier: workspace:*
         version: link:../../platform/universal/di
+      '@kit/errors':
+        specifier: workspace:*
+        version: link:../../platform/universal/errors
       '@kit/object-storage':
         specifier: workspace:*
         version: link:../../platform/server/object-storage
@@ -2387,6 +2449,9 @@ importers:
 
   packages/server/core:
     dependencies:
+      '@kit/errors':
+        specifier: workspace:*
+        version: link:../../platform/universal/errors
       '@kit/result':
         specifier: workspace:*
         version: link:../../platform/universal/result
@@ -2473,6 +2538,9 @@ importers:
 
   packages/server/demo:
     dependencies:
+      '@kit/errors':
+        specifier: workspace:*
+        version: link:../../platform/universal/errors
       '@kit/result':
         specifier: workspace:*
         version: link:../../platform/universal/result
@@ -2652,6 +2720,9 @@ importers:
 
   packages/server/ffmpeg:
     dependencies:
+      '@kit/errors':
+        specifier: workspace:*
+        version: link:../../platform/universal/errors
       '@kit/primitives':
         specifier: workspace:*
         version: link:../../platform/universal/primitives
@@ -2692,6 +2763,9 @@ importers:
 
   packages/server/fingerprint:
     dependencies:
+      '@kit/errors':
+        specifier: workspace:*
+        version: link:../../platform/universal/errors
       '@kit/result':
         specifier: workspace:*
         version: link:../../platform/universal/result
@@ -2997,6 +3071,9 @@ importers:
 
   packages/universal/api-contracts:
     dependencies:
+      '@kit/errors':
+        specifier: workspace:*
+        version: link:../../platform/universal/errors
       '@kit/pagination':
         specifier: workspace:*
         version: link:../../platform/universal/pagination
@@ -3065,6 +3142,9 @@ importers:
 
   packages/universal/domain-rules:
     dependencies:
+      '@kit/errors':
+        specifier: workspace:*
+        version: link:../../platform/universal/errors
       '@kit/machine':
         specifier: workspace:*
         version: link:../../platform/universal/machine
@@ -3108,13 +3188,16 @@ importers:
 
   packages/universal/errors:
     dependencies:
-      '@kit/di':
+      '@kit/errors':
         specifier: workspace:*
-        version: link:../../platform/universal/di
+        version: link:../../platform/universal/errors
+      '@kit/intl':
+        specifier: workspace:*
+        version: link:../../platform/universal/intl
+      '@kit/pagination':
+        specifier: workspace:*
+        version: link:../../platform/universal/pagination
     devDependencies:
-      '@kit/result':
-        specifier: workspace:*
-        version: link:../../platform/universal/result
       '@kit/testing':
         specifier: workspace:*
         version: link:../../platform/server/testing
@@ -3192,6 +3275,9 @@ importers:
       '@casl/ability':
         specifier: ^7.0.1
         version: 7.0.1
+      '@kit/errors':
+        specifier: workspace:*
+        version: link:../../platform/universal/errors
       '@vp/domain':
         specifier: workspace:*
         version: link:../domain
@@ -3217,9 +3303,15 @@ importers:
 
   packages/universal/validation:
     dependencies:
+      '@kit/errors':
+        specifier: workspace:*
+        version: link:../../platform/universal/errors
       '@kit/result':
         specifier: workspace:*
         version: link:../../platform/universal/result
+      '@kit/validation':
+        specifier: workspace:*
+        version: link:../../platform/universal/validation
       '@vp/errors':
         specifier: workspace:*
         version: link:../errors
