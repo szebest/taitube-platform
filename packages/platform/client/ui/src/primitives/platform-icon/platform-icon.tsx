@@ -20,7 +20,7 @@ export interface PlatformIconProps extends Omit<ComponentPropsWithRef<'svg'>, 'n
   size?: IconSize;
 }
 
-/** The mark of a platform a channel links to, vendored as a path: no request is made to draw it. */
+/** The mark of the brand a link points to, vendored as a path: no request is made to draw it. */
 export function PlatformIcon({ platform, size, className, ...props }: PlatformIconProps) {
   if (platform === 'website')
     return <Icon name="globe" size={size} className={className} {...props} />;
