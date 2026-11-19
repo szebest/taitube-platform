@@ -4848,6 +4848,24 @@ paths:
                         readyAt:
                           description: ISO 8601 ready timestamp if ready
                           type: string
+                        experiment:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              format: uuid
+                              pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                            variantId:
+                              type: string
+                              enum:
+                                - a
+                                - b
+                                - c
+                          required:
+                            - id
+                            - variantId
+                          additionalProperties: false
+                          description: The running test whose variant this response shows; absent without a viewer session, so the beacon reports only what was shown
                         viewer:
                           description: Absent for an anonymous caller, null when the caller has not watched the video
                           anyOf:
@@ -5042,7 +5060,7 @@ paths:
       summary: Get video details
       tags:
         - Videos
-      description: Retrieves full video details. Public/unlisted videos are readable by anyone; private videos require owner or admin authentication (returns 404 for non-owners). Public playback URL uses CDN (PRD OQ-2).
+      description: Retrieves full video details. Public/unlisted videos are readable by anyone; private videos require owner or admin authentication (returns 404 for non-owners), or a live share link token in `s`. A password-protected video answers 403 VIDEO_PASSWORD_REQUIRED until its unlock cookie or a live share link comes with the request; a dead link of this video answers 410 SHARE_LINK_EXPIRED. Public playback URL uses CDN (PRD OQ-2).
       parameters:
         - schema:
             type: string
@@ -5243,6 +5261,33 @@ paths:
                         - startMs
                         - title
                       additionalProperties: false
+                  passwordProtected:
+                    default: false
+                    description: A password guards this unlisted video; the hash is never answered
+                    type: boolean
+                  shareLinkId:
+                    description: The share link this read was let through by; the player beacon carries it
+                    type: string
+                    format: uuid
+                    pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                  experiment:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                        pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                      variantId:
+                        type: string
+                        enum:
+                          - a
+                          - b
+                          - c
+                    required:
+                      - id
+                      - variantId
+                    additionalProperties: false
+                    description: The running test whose variant this response shows; absent without a viewer session, so the beacon reports only what was shown
                   channel:
                     description: The owner channel; set when one video is read, absent on the studio writes
                     anyOf:
@@ -5303,6 +5348,7 @@ paths:
                   - renditions
                   - commentsEnabled
                   - chapters
+                  - passwordProtected
                   - likesCount
                   - dislikesCount
                   - version
@@ -5412,6 +5458,7 @@ paths:
                   code:
                     type: string
                     enum:
+                      - VIDEO_PASSWORD_REQUIRED
                       - API_TOKEN_SCOPE_MISSING
                     description: Machine-readable error code
                   instance:
@@ -5453,6 +5500,46 @@ paths:
                     type: string
                     enum:
                       - VIDEO_NOT_FOUND
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '410':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - SHARE_LINK_EXPIRED
                     description: Machine-readable error code
                   instance:
                     type: string
@@ -5742,6 +5829,33 @@ paths:
                         - startMs
                         - title
                       additionalProperties: false
+                  passwordProtected:
+                    default: false
+                    description: A password guards this unlisted video; the hash is never answered
+                    type: boolean
+                  shareLinkId:
+                    description: The share link this read was let through by; the player beacon carries it
+                    type: string
+                    format: uuid
+                    pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                  experiment:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                        pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                      variantId:
+                        type: string
+                        enum:
+                          - a
+                          - b
+                          - c
+                    required:
+                      - id
+                      - variantId
+                    additionalProperties: false
+                    description: The running test whose variant this response shows; absent without a viewer session, so the beacon reports only what was shown
                   channel:
                     description: The owner channel; set when one video is read, absent on the studio writes
                     anyOf:
@@ -5802,6 +5916,7 @@ paths:
                   - renditions
                   - commentsEnabled
                   - chapters
+                  - passwordProtected
                   - likesCount
                   - dislikesCount
                   - version
@@ -7463,6 +7578,28 @@ paths:
                     - mobile
                     - tablet
                     - unknown
+                shareLinkId:
+                  description: The share link the page was opened through, as the video read answered it
+                  type: string
+                  format: uuid
+                  pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                experiment:
+                  description: The test variant the video read answered; starts and watch seconds count toward it
+                  type: object
+                  properties:
+                    experimentId:
+                      type: string
+                      format: uuid
+                      pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                    variantId:
+                      type: string
+                      enum:
+                        - a
+                        - b
+                        - c
+                  required:
+                    - experimentId
+                    - variantId
               required:
                 - videoId
                 - sessionUuid
@@ -9699,6 +9836,24 @@ paths:
                         readyAt:
                           description: ISO 8601 ready timestamp if ready
                           type: string
+                        experiment:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              format: uuid
+                              pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                            variantId:
+                              type: string
+                              enum:
+                                - a
+                                - b
+                                - c
+                          required:
+                            - id
+                            - variantId
+                          additionalProperties: false
+                          description: The running test whose variant this response shows; absent without a viewer session, so the beacon reports only what was shown
                         viewer:
                           description: Absent for an anonymous caller, null when the caller has not watched the video
                           anyOf:
@@ -10166,6 +10321,33 @@ paths:
                         - startMs
                         - title
                       additionalProperties: false
+                  passwordProtected:
+                    default: false
+                    description: A password guards this unlisted video; the hash is never answered
+                    type: boolean
+                  shareLinkId:
+                    description: The share link this read was let through by; the player beacon carries it
+                    type: string
+                    format: uuid
+                    pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                  experiment:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                        pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                      variantId:
+                        type: string
+                        enum:
+                          - a
+                          - b
+                          - c
+                    required:
+                      - id
+                      - variantId
+                    additionalProperties: false
+                    description: The running test whose variant this response shows; absent without a viewer session, so the beacon reports only what was shown
                   channel:
                     description: The owner channel; set when one video is read, absent on the studio writes
                     anyOf:
@@ -10226,6 +10408,7 @@ paths:
                   - renditions
                   - commentsEnabled
                   - chapters
+                  - passwordProtected
                   - likesCount
                   - dislikesCount
                   - version
@@ -11623,6 +11806,33 @@ paths:
                         - startMs
                         - title
                       additionalProperties: false
+                  passwordProtected:
+                    default: false
+                    description: A password guards this unlisted video; the hash is never answered
+                    type: boolean
+                  shareLinkId:
+                    description: The share link this read was let through by; the player beacon carries it
+                    type: string
+                    format: uuid
+                    pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                  experiment:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                        pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                      variantId:
+                        type: string
+                        enum:
+                          - a
+                          - b
+                          - c
+                    required:
+                      - id
+                      - variantId
+                    additionalProperties: false
+                    description: The running test whose variant this response shows; absent without a viewer session, so the beacon reports only what was shown
                   channel:
                     description: The owner channel; set when one video is read, absent on the studio writes
                     anyOf:
@@ -11683,6 +11893,7 @@ paths:
                   - renditions
                   - commentsEnabled
                   - chapters
+                  - passwordProtected
                   - likesCount
                   - dislikesCount
                   - version
@@ -12457,6 +12668,33 @@ paths:
                         - startMs
                         - title
                       additionalProperties: false
+                  passwordProtected:
+                    default: false
+                    description: A password guards this unlisted video; the hash is never answered
+                    type: boolean
+                  shareLinkId:
+                    description: The share link this read was let through by; the player beacon carries it
+                    type: string
+                    format: uuid
+                    pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                  experiment:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                        pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                      variantId:
+                        type: string
+                        enum:
+                          - a
+                          - b
+                          - c
+                    required:
+                      - id
+                      - variantId
+                    additionalProperties: false
+                    description: The running test whose variant this response shows; absent without a viewer session, so the beacon reports only what was shown
                   channel:
                     description: The owner channel; set when one video is read, absent on the studio writes
                     anyOf:
@@ -12517,6 +12755,7 @@ paths:
                   - renditions
                   - commentsEnabled
                   - chapters
+                  - passwordProtected
                   - likesCount
                   - dislikesCount
                   - version
@@ -18273,6 +18512,15 @@ paths:
                             - REVISION_NOT_FOUND
                             - CORRECTION_NOT_FOUND
                             - CORRECTION_LIMIT
+                            - SHARE_LINK_NOT_FOUND
+                            - SHARE_LINK_EXPIRED
+                            - SHARE_LINK_LIMIT
+                            - VIDEO_PASSWORD_REQUIRED
+                            - VIDEO_PASSWORD_INVALID
+                            - VIDEO_PASSWORDS_OFF
+                            - EXPERIMENT_NOT_FOUND
+                            - EXPERIMENT_LIMIT
+                            - EXPERIMENT_NOT_RUNNING
                             - PICK_NOT_FOUND
                             - PICK_WINDOW_OVERLAP
                             - WEBHOOK_NOT_FOUND
@@ -18686,6 +18934,24 @@ paths:
                         readyAt:
                           description: ISO 8601 ready timestamp if ready
                           type: string
+                        experiment:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              format: uuid
+                              pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                            variantId:
+                              type: string
+                              enum:
+                                - a
+                                - b
+                                - c
+                          required:
+                            - id
+                            - variantId
+                          additionalProperties: false
+                          description: The running test whose variant this response shows; absent without a viewer session, so the beacon reports only what was shown
                         viewer:
                           description: Absent for an anonymous caller, null when the caller has not watched the video
                           anyOf:
@@ -18898,6 +19164,24 @@ paths:
                         readyAt:
                           description: ISO 8601 ready timestamp if ready
                           type: string
+                        experiment:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              format: uuid
+                              pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                            variantId:
+                              type: string
+                              enum:
+                                - a
+                                - b
+                                - c
+                          required:
+                            - id
+                            - variantId
+                          additionalProperties: false
+                          description: The running test whose variant this response shows; absent without a viewer session, so the beacon reports only what was shown
                         viewer:
                           description: Absent for an anonymous caller, null when the caller has not watched the video
                           anyOf:
@@ -19133,6 +19417,24 @@ paths:
                               readyAt:
                                 description: ISO 8601 ready timestamp if ready
                                 type: string
+                              experiment:
+                                type: object
+                                properties:
+                                  id:
+                                    type: string
+                                    format: uuid
+                                    pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                  variantId:
+                                    type: string
+                                    enum:
+                                      - a
+                                      - b
+                                      - c
+                                required:
+                                  - id
+                                  - variantId
+                                additionalProperties: false
+                                description: The running test whose variant this response shows; absent without a viewer session, so the beacon reports only what was shown
                               viewer:
                                 description: Absent for an anonymous caller, null when the caller has not watched the video
                                 anyOf:
@@ -19352,6 +19654,24 @@ paths:
                         readyAt:
                           description: ISO 8601 ready timestamp if ready
                           type: string
+                        experiment:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              format: uuid
+                              pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                            variantId:
+                              type: string
+                              enum:
+                                - a
+                                - b
+                                - c
+                          required:
+                            - id
+                            - variantId
+                          additionalProperties: false
+                          description: The running test whose variant this response shows; absent without a viewer session, so the beacon reports only what was shown
                         viewer:
                           description: Absent for an anonymous caller, null when the caller has not watched the video
                           anyOf:
@@ -19939,6 +20259,24 @@ paths:
                                     readyAt:
                                       description: ISO 8601 ready timestamp if ready
                                       type: string
+                                    experiment:
+                                      type: object
+                                      properties:
+                                        id:
+                                          type: string
+                                          format: uuid
+                                          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                        variantId:
+                                          type: string
+                                          enum:
+                                            - a
+                                            - b
+                                            - c
+                                      required:
+                                        - id
+                                        - variantId
+                                      additionalProperties: false
+                                      description: The running test whose variant this response shows; absent without a viewer session, so the beacon reports only what was shown
                                     viewer:
                                       description: Absent for an anonymous caller, null when the caller has not watched the video
                                       anyOf:
@@ -20494,6 +20832,24 @@ paths:
                                 readyAt:
                                   description: ISO 8601 ready timestamp if ready
                                   type: string
+                                experiment:
+                                  type: object
+                                  properties:
+                                    id:
+                                      type: string
+                                      format: uuid
+                                      pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                    variantId:
+                                      type: string
+                                      enum:
+                                        - a
+                                        - b
+                                        - c
+                                  required:
+                                    - id
+                                    - variantId
+                                  additionalProperties: false
+                                  description: The running test whose variant this response shows; absent without a viewer session, so the beacon reports only what was shown
                                 viewer:
                                   description: Absent for an anonymous caller, null when the caller has not watched the video
                                   anyOf:
@@ -22821,6 +23177,33 @@ paths:
                         - startMs
                         - title
                       additionalProperties: false
+                  passwordProtected:
+                    default: false
+                    description: A password guards this unlisted video; the hash is never answered
+                    type: boolean
+                  shareLinkId:
+                    description: The share link this read was let through by; the player beacon carries it
+                    type: string
+                    format: uuid
+                    pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                  experiment:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                        pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                      variantId:
+                        type: string
+                        enum:
+                          - a
+                          - b
+                          - c
+                    required:
+                      - id
+                      - variantId
+                    additionalProperties: false
+                    description: The running test whose variant this response shows; absent without a viewer session, so the beacon reports only what was shown
                   channel:
                     description: The owner channel; set when one video is read, absent on the studio writes
                     anyOf:
@@ -22881,6 +23264,7 @@ paths:
                   - renditions
                   - commentsEnabled
                   - chapters
+                  - passwordProtected
                   - likesCount
                   - dislikesCount
                   - version
@@ -23220,6 +23604,33 @@ paths:
                         - startMs
                         - title
                       additionalProperties: false
+                  passwordProtected:
+                    default: false
+                    description: A password guards this unlisted video; the hash is never answered
+                    type: boolean
+                  shareLinkId:
+                    description: The share link this read was let through by; the player beacon carries it
+                    type: string
+                    format: uuid
+                    pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                  experiment:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                        pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                      variantId:
+                        type: string
+                        enum:
+                          - a
+                          - b
+                          - c
+                    required:
+                      - id
+                      - variantId
+                    additionalProperties: false
+                    description: The running test whose variant this response shows; absent without a viewer session, so the beacon reports only what was shown
                   channel:
                     description: The owner channel; set when one video is read, absent on the studio writes
                     anyOf:
@@ -23280,6 +23691,7 @@ paths:
                   - renditions
                   - commentsEnabled
                   - chapters
+                  - passwordProtected
                   - likesCount
                   - dislikesCount
                   - version
@@ -30184,6 +30596,24 @@ paths:
                             readyAt:
                               description: ISO 8601 ready timestamp if ready
                               type: string
+                            experiment:
+                              type: object
+                              properties:
+                                id:
+                                  type: string
+                                  format: uuid
+                                  pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                variantId:
+                                  type: string
+                                  enum:
+                                    - a
+                                    - b
+                                    - c
+                              required:
+                                - id
+                                - variantId
+                              additionalProperties: false
+                              description: The running test whose variant this response shows; absent without a viewer session, so the beacon reports only what was shown
                             viewer:
                               description: Absent for an anonymous caller, null when the caller has not watched the video
                               anyOf:
@@ -30569,6 +30999,24 @@ paths:
                             readyAt:
                               description: ISO 8601 ready timestamp if ready
                               type: string
+                            experiment:
+                              type: object
+                              properties:
+                                id:
+                                  type: string
+                                  format: uuid
+                                  pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                variantId:
+                                  type: string
+                                  enum:
+                                    - a
+                                    - b
+                                    - c
+                              required:
+                                - id
+                                - variantId
+                              additionalProperties: false
+                              description: The running test whose variant this response shows; absent without a viewer session, so the beacon reports only what was shown
                             viewer:
                               description: Absent for an anonymous caller, null when the caller has not watched the video
                               anyOf:
@@ -30978,6 +31426,24 @@ paths:
                             readyAt:
                               description: ISO 8601 ready timestamp if ready
                               type: string
+                            experiment:
+                              type: object
+                              properties:
+                                id:
+                                  type: string
+                                  format: uuid
+                                  pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                variantId:
+                                  type: string
+                                  enum:
+                                    - a
+                                    - b
+                                    - c
+                              required:
+                                - id
+                                - variantId
+                              additionalProperties: false
+                              description: The running test whose variant this response shows; absent without a viewer session, so the beacon reports only what was shown
                             viewer:
                               description: Absent for an anonymous caller, null when the caller has not watched the video
                               anyOf:
@@ -31634,6 +32100,24 @@ paths:
                             readyAt:
                               description: ISO 8601 ready timestamp if ready
                               type: string
+                            experiment:
+                              type: object
+                              properties:
+                                id:
+                                  type: string
+                                  format: uuid
+                                  pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                variantId:
+                                  type: string
+                                  enum:
+                                    - a
+                                    - b
+                                    - c
+                              required:
+                                - id
+                                - variantId
+                              additionalProperties: false
+                              description: The running test whose variant this response shows; absent without a viewer session, so the beacon reports only what was shown
                             viewer:
                               description: Absent for an anonymous caller, null when the caller has not watched the video
                               anyOf:
@@ -32316,6 +32800,24 @@ paths:
                             readyAt:
                               description: ISO 8601 ready timestamp if ready
                               type: string
+                            experiment:
+                              type: object
+                              properties:
+                                id:
+                                  type: string
+                                  format: uuid
+                                  pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                variantId:
+                                  type: string
+                                  enum:
+                                    - a
+                                    - b
+                                    - c
+                              required:
+                                - id
+                                - variantId
+                              additionalProperties: false
+                              description: The running test whose variant this response shows; absent without a viewer session, so the beacon reports only what was shown
                             viewer:
                               description: Absent for an anonymous caller, null when the caller has not watched the video
                               anyOf:
@@ -33083,6 +33585,24 @@ paths:
                             readyAt:
                               description: ISO 8601 ready timestamp if ready
                               type: string
+                            experiment:
+                              type: object
+                              properties:
+                                id:
+                                  type: string
+                                  format: uuid
+                                  pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                variantId:
+                                  type: string
+                                  enum:
+                                    - a
+                                    - b
+                                    - c
+                              required:
+                                - id
+                                - variantId
+                              additionalProperties: false
+                              description: The running test whose variant this response shows; absent without a viewer session, so the beacon reports only what was shown
                             viewer:
                               description: Absent for an anonymous caller, null when the caller has not watched the video
                               anyOf:
@@ -33955,6 +34475,24 @@ paths:
                         readyAt:
                           description: ISO 8601 ready timestamp if ready
                           type: string
+                        experiment:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              format: uuid
+                              pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                            variantId:
+                              type: string
+                              enum:
+                                - a
+                                - b
+                                - c
+                          required:
+                            - id
+                            - variantId
+                          additionalProperties: false
+                          description: The running test whose variant this response shows; absent without a viewer session, so the beacon reports only what was shown
                         viewer:
                           description: Absent for an anonymous caller, null when the caller has not watched the video
                           anyOf:
@@ -34406,6 +34944,24 @@ paths:
                       readyAt:
                         description: ISO 8601 ready timestamp if ready
                         type: string
+                      experiment:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            format: uuid
+                            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                          variantId:
+                            type: string
+                            enum:
+                              - a
+                              - b
+                              - c
+                        required:
+                          - id
+                          - variantId
+                        additionalProperties: false
+                        description: The running test whose variant this response shows; absent without a viewer session, so the beacon reports only what was shown
                       viewer:
                         description: Absent for an anonymous caller, null when the caller has not watched the video
                         anyOf:
@@ -34789,6 +35345,24 @@ paths:
                       readyAt:
                         description: ISO 8601 ready timestamp if ready
                         type: string
+                      experiment:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            format: uuid
+                            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                          variantId:
+                            type: string
+                            enum:
+                              - a
+                              - b
+                              - c
+                        required:
+                          - id
+                          - variantId
+                        additionalProperties: false
+                        description: The running test whose variant this response shows; absent without a viewer session, so the beacon reports only what was shown
                       viewer:
                         description: Absent for an anonymous caller, null when the caller has not watched the video
                         anyOf:
@@ -35240,6 +35814,24 @@ paths:
                             readyAt:
                               description: ISO 8601 ready timestamp if ready
                               type: string
+                            experiment:
+                              type: object
+                              properties:
+                                id:
+                                  type: string
+                                  format: uuid
+                                  pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                variantId:
+                                  type: string
+                                  enum:
+                                    - a
+                                    - b
+                                    - c
+                              required:
+                                - id
+                                - variantId
+                              additionalProperties: false
+                              description: The running test whose variant this response shows; absent without a viewer session, so the beacon reports only what was shown
                             viewer:
                               description: Absent for an anonymous caller, null when the caller has not watched the video
                               anyOf:
@@ -35482,6 +36074,24 @@ paths:
                       readyAt:
                         description: ISO 8601 ready timestamp if ready
                         type: string
+                      experiment:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            format: uuid
+                            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                          variantId:
+                            type: string
+                            enum:
+                              - a
+                              - b
+                              - c
+                        required:
+                          - id
+                          - variantId
+                        additionalProperties: false
+                        description: The running test whose variant this response shows; absent without a viewer session, so the beacon reports only what was shown
                       viewer:
                         description: Absent for an anonymous caller, null when the caller has not watched the video
                         anyOf:
@@ -38917,6 +39527,24 @@ paths:
                           readyAt:
                             description: ISO 8601 ready timestamp if ready
                             type: string
+                          experiment:
+                            type: object
+                            properties:
+                              id:
+                                type: string
+                                format: uuid
+                                pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                              variantId:
+                                type: string
+                                enum:
+                                  - a
+                                  - b
+                                  - c
+                            required:
+                              - id
+                              - variantId
+                            additionalProperties: false
+                            description: The running test whose variant this response shows; absent without a viewer session, so the beacon reports only what was shown
                           viewer:
                             description: Absent for an anonymous caller, null when the caller has not watched the video
                             anyOf:
@@ -39363,6 +39991,24 @@ paths:
                         readyAt:
                           description: ISO 8601 ready timestamp if ready
                           type: string
+                        experiment:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              format: uuid
+                              pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                            variantId:
+                              type: string
+                              enum:
+                                - a
+                                - b
+                                - c
+                          required:
+                            - id
+                            - variantId
+                          additionalProperties: false
+                          description: The running test whose variant this response shows; absent without a viewer session, so the beacon reports only what was shown
                         viewer:
                           description: Absent for an anonymous caller, null when the caller has not watched the video
                           anyOf:
@@ -39778,6 +40424,24 @@ paths:
                         readyAt:
                           description: ISO 8601 ready timestamp if ready
                           type: string
+                        experiment:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              format: uuid
+                              pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                            variantId:
+                              type: string
+                              enum:
+                                - a
+                                - b
+                                - c
+                          required:
+                            - id
+                            - variantId
+                          additionalProperties: false
+                          description: The running test whose variant this response shows; absent without a viewer session, so the beacon reports only what was shown
                         viewer:
                           description: Absent for an anonymous caller, null when the caller has not watched the video
                           anyOf:
@@ -40031,6 +40695,24 @@ paths:
                         readyAt:
                           description: ISO 8601 ready timestamp if ready
                           type: string
+                        experiment:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              format: uuid
+                              pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                            variantId:
+                              type: string
+                              enum:
+                                - a
+                                - b
+                                - c
+                          required:
+                            - id
+                            - variantId
+                          additionalProperties: false
+                          description: The running test whose variant this response shows; absent without a viewer session, so the beacon reports only what was shown
                         viewer:
                           description: Absent for an anonymous caller, null when the caller has not watched the video
                           anyOf:
@@ -50793,6 +51475,24 @@ paths:
                         readyAt:
                           description: ISO 8601 ready timestamp if ready
                           type: string
+                        experiment:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              format: uuid
+                              pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                            variantId:
+                              type: string
+                              enum:
+                                - a
+                                - b
+                                - c
+                          required:
+                            - id
+                            - variantId
+                          additionalProperties: false
+                          description: The running test whose variant this response shows; absent without a viewer session, so the beacon reports only what was shown
                         viewer:
                           description: Absent for an anonymous caller, null when the caller has not watched the video
                           anyOf:
@@ -54560,6 +55260,24 @@ paths:
                             readyAt:
                               description: ISO 8601 ready timestamp if ready
                               type: string
+                            experiment:
+                              type: object
+                              properties:
+                                id:
+                                  type: string
+                                  format: uuid
+                                  pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                variantId:
+                                  type: string
+                                  enum:
+                                    - a
+                                    - b
+                                    - c
+                              required:
+                                - id
+                                - variantId
+                              additionalProperties: false
+                              description: The running test whose variant this response shows; absent without a viewer session, so the beacon reports only what was shown
                             viewer:
                               description: Absent for an anonymous caller, null when the caller has not watched the video
                               anyOf:
@@ -54895,6 +55613,24 @@ paths:
                       readyAt:
                         description: ISO 8601 ready timestamp if ready
                         type: string
+                      experiment:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            format: uuid
+                            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                          variantId:
+                            type: string
+                            enum:
+                              - a
+                              - b
+                              - c
+                        required:
+                          - id
+                          - variantId
+                        additionalProperties: false
+                        description: The running test whose variant this response shows; absent without a viewer session, so the beacon reports only what was shown
                       viewer:
                         description: Absent for an anonymous caller, null when the caller has not watched the video
                         anyOf:
@@ -55351,6 +56087,24 @@ paths:
                       readyAt:
                         description: ISO 8601 ready timestamp if ready
                         type: string
+                      experiment:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            format: uuid
+                            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                          variantId:
+                            type: string
+                            enum:
+                              - a
+                              - b
+                              - c
+                        required:
+                          - id
+                          - variantId
+                        additionalProperties: false
+                        description: The running test whose variant this response shows; absent without a viewer session, so the beacon reports only what was shown
                       viewer:
                         description: Absent for an anonymous caller, null when the caller has not watched the video
                         anyOf:

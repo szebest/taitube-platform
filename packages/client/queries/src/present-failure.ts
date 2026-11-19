@@ -28,6 +28,8 @@ function kindOf(code: ErrorCode): ErrorStateKind {
     case ErrorCodes.CLIP_NOT_FOUND:
     case ErrorCodes.REVISION_NOT_FOUND:
     case ErrorCodes.CORRECTION_NOT_FOUND:
+    case ErrorCodes.SHARE_LINK_NOT_FOUND:
+    case ErrorCodes.EXPERIMENT_NOT_FOUND:
     case ErrorCodes.PICK_NOT_FOUND:
     case ErrorCodes.WEBHOOK_NOT_FOUND:
     case ErrorCodes.EXPORT_NOT_FOUND:
@@ -52,6 +54,8 @@ function kindOf(code: ErrorCode): ErrorStateKind {
     case ErrorCodes.WATCH_PARTY_GUESTS_OFF:
     case ErrorCodes.WATCH_PARTY_PASSWORD_REQUIRED:
     case ErrorCodes.WATCH_PARTY_PASSWORD_INVALID:
+    case ErrorCodes.VIDEO_PASSWORD_REQUIRED:
+    case ErrorCodes.VIDEO_PASSWORD_INVALID:
     case ErrorCodes.WATCH_PARTY_INVITE_INVALID:
     case ErrorCodes.WATCH_PARTY_PERMISSION_MISSING:
     case ErrorCodes.WATCH_PARTY_ROLE_ESCALATION:
@@ -122,6 +126,11 @@ function kindOf(code: ErrorCode): ErrorStateKind {
     case ErrorCodes.NO_AUDIO_STREAM:
     case ErrorCodes.CAPTION_TRACK_LIMIT:
     case ErrorCodes.CORRECTION_LIMIT:
+    case ErrorCodes.SHARE_LINK_EXPIRED:
+    case ErrorCodes.SHARE_LINK_LIMIT:
+    case ErrorCodes.VIDEO_PASSWORDS_OFF:
+    case ErrorCodes.EXPERIMENT_LIMIT:
+    case ErrorCodes.EXPERIMENT_NOT_RUNNING:
     case ErrorCodes.CAPTION_OVERWRITE_UNCONFIRMED:
     case ErrorCodes.PICK_WINDOW_OVERLAP:
     case ErrorCodes.WEBHOOK_LIMIT_REACHED:

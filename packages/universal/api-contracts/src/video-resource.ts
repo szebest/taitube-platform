@@ -1,4 +1,9 @@
-import { VIDEO_FORMATS, VIDEO_STATUSES, VIDEO_VISIBILITIES } from '@vp/domain';
+import {
+  EXPERIMENT_VARIANT_IDS,
+  VIDEO_FORMATS,
+  VIDEO_STATUSES,
+  VIDEO_VISIBILITIES,
+} from '@vp/domain';
 import { z } from 'zod';
 import { ChannelCardSchema } from './channels';
 
@@ -73,6 +78,15 @@ export const VideoChapterSchema = z.object({
   title: z.string().describe('Chapter title, 1 to 60 characters'),
 });
 
+const ExperimentTagSchema = z
+  .object({
+    id: z.uuid(),
+    variantId: z.enum(EXPERIMENT_VARIANT_IDS),
+  })
+  .describe(
+    'The running test whose variant this response shows; absent without a viewer session, so the beacon reports only what was shown'
+  );
+
 export const VideoSchema = z.object({
   id: z.uuid().describe('Video UUIDv7 identifier'),
   ownerId: z.uuid().describe('Owning user UUID, for client-side ownership rules'),
@@ -110,6 +124,15 @@ export const VideoSchema = z.object({
     .array(VideoChapterSchema)
     .default([])
     .describe('The chapters the creator set, in order; empty when none are stored'),
+  passwordProtected: z
+    .boolean()
+    .default(false)
+    .describe('A password guards this unlisted video; the hash is never answered'),
+  shareLinkId: z
+    .uuid()
+    .optional()
+    .describe('The share link this read was let through by; the player beacon carries it'),
+  experiment: ExperimentTagSchema.optional(),
   channel: ChannelCardSchema.nullable()
     .optional()
     .describe('The owner channel; set when one video is read, absent on the studio writes'),
@@ -165,6 +188,7 @@ export const VideoSummarySchema = z.object({
   createdAt: z.string().describe('ISO 8601 creation timestamp'),
   updatedAt: z.string().describe('ISO 8601 last update timestamp'),
   readyAt: z.string().optional().describe('ISO 8601 ready timestamp if ready'),
+  experiment: ExperimentTagSchema.optional(),
   viewer: ViewerProgressSchema.nullable()
     .optional()
     .describe('Absent for an anonymous caller, null when the caller has not watched the video'),

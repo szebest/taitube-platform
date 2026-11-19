@@ -30,3 +30,6 @@ export * from './chapters/index';
 export * from './corrections/index';
 export * from './bulk-edit/index';
 export * from './revisions/index';
+export * from './share-links/index';
+export * from './video-access/index';
+export * from './experiments/index';
