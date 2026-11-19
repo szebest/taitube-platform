@@ -53,7 +53,7 @@ const neverGranted: LockManager = {
   request: () => new Promise<never>(() => undefined),
   query: async () => ({ held: [], pending: [] }),
 };
-Object.defineProperty(navigator, 'locks', { configurable: true, value: neverGranted });
+Object.assign(navigator, { locks: neverGranted });
 
 // The Start compiler keeps only an isomorphic function's `.client` branch in the browser bundle;
 // uncompiled, the runtime stub always runs `.server`.
@@ -75,17 +75,14 @@ vi.mock(import('@tanstack/react-start'), async (importOriginal) => {
   };
 });
 
-// Node's BroadcastChannel reaches the other test files running in worker threads of the same process, so the app's own channels are named per file.
+// Node's BroadcastChannel reaches the other test files running in worker threads of the same process, so every channel is named per file.
 const PerFileBroadcastChannel = ((Native, scope) =>
   class extends Native {
     constructor(name: string) {
-      super(name.startsWith('vp.') ? `${scope}:${name}` : name);
+      super(`${scope}:${name}`);
     }
   })(globalThis.BroadcastChannel, crypto.randomUUID());
-Object.defineProperty(globalThis, 'BroadcastChannel', {
-  value: PerFileBroadcastChannel,
-  configurable: true,
-});
+globalThis.BroadcastChannel = PerFileBroadcastChannel;
 
 // A server function sets cookies in jsdom's jar, the stores keep what a preference or an intent wrote, and
 // TanStack Query's online and focus managers keep the last event a test dispatched, all of which outlive the test.

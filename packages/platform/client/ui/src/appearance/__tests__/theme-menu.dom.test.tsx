@@ -1,6 +1,6 @@
+import { axeViolations } from '@kit/web-testing/dom';
 import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
-import { axeViolations } from '@vp/web-testing/dom';
 import { FIXTURE_APPEARANCE_STORAGE } from '../../__tests__/appearance-storage-fixture';
 import { WithUiCopy } from '../../__tests__/ui-copy-fixture';
 import { readCookie, writeCookie } from '../../cookies/cookie';

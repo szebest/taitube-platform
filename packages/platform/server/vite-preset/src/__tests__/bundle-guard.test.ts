@@ -1,7 +1,11 @@
 import { type BundledChunk, bundleViolations, serverBundleViolations } from '../bundle-guard';
 
 const ROUTES = '/repo/apps/client/web/src/routes';
-const RULES = { forbiddenDirs: ['src/modules/Upload'] };
+const FLAGGED = { dir: 'demo-personas', env: 'VITE_DEMO_PERSONAS' };
+const RULES = {
+  forbiddenDirs: ['src/modules/Upload'],
+  flaggedDirs: [{ ...FLAGGED, enabled: false }],
+};
 
 function chunk(
   fileName: string,
@@ -70,7 +74,7 @@ describe('@kit/vite-preset: bundle guard', () => {
     });
 
     it('are allowed in a build with the flag on', () => {
-      const on = { ...RULES, demoPersonas: true };
+      const on = { ...RULES, flaggedDirs: [{ ...FLAGGED, enabled: true }] };
 
       expect(bundleViolations([entry, watch, personas], on)).toEqual([]);
       expect(serverBundleViolations([serverPersonas], on)).toEqual([]);

@@ -15,7 +15,7 @@ function renderWith(ui: ReactElement) {
   return render(<QueryClientProvider client={new QueryClient()}>{ui}</QueryClientProvider>);
 }
 
-describe('@vp/web-testing: settle', () => {
+describe('@kit/web-testing: settle', () => {
   it.each([
     {
       work: 'query',

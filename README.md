@@ -109,7 +109,8 @@ taitube-platform/
 │   │   │   ├── intl-react/          # IntlProvider, useT, useFormat and <Format> for the web app
 │   │   │   ├── security-headers/    # CSP nonce and the security headers request middleware each app mounts
 │   │   │   ├── ui/                  # Design system: Tailwind tokens, Radix primitives, the theme and the logo
-│   │   │   └── web-telemetry/       # Core Web Vitals beacon and browser traces, started after hydration
+│   │   │   ├── web-telemetry/       # Core Web Vitals beacon and browser traces, started after hydration
+│   │   │   └── web-testing/         # Spec helpers that know no API: the jsdom and settle setup files, axe, the render counter, serverRender
 │   │   └── server/                  # Node / Bun only
 │   │       ├── compose-autoscaler/  # CLI: scales Compose worker services from the API's queue-depth metrics
 │   │       ├── composition/         # Typed dependency container, tokens, shutdown and signal handling

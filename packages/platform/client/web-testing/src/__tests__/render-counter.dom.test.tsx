@@ -22,7 +22,7 @@ function renderCounted(value: { tick: number }) {
   };
 }
 
-describe('@vp/web-testing: createRenderCounter', () => {
+describe('@kit/web-testing: createRenderCounter', () => {
   it.each([
     { change: 'the same value', next: (value: { tick: number }) => value, commits: 1 },
     { change: 'a new value', next: () => ({ tick: 0 }), commits: 2 },

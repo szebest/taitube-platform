@@ -1,8 +1,8 @@
-import { createIntl, createIntlCache } from '@kit/intl';
-import { type Catalogues, createTranslator, en } from '@vp/messages';
+import { createIntl, createIntlCache, type IntlBinding } from '@kit/intl';
+import type { Clock } from '@kit/runtime';
 import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import { currentInstant, readBrowserEnvironment } from './browser-environment';
-import { IntlContext } from './intl-context';
+import { IntlContext, type RegisteredTranslator } from './intl-context';
 
 /** How often "3 minutes ago" is measured again when no `now` prop pins the reference instant. */
 const CLOCK_TICK_MS = 30_000;
@@ -14,19 +14,21 @@ export interface IntlProviderProps {
   readonly currency?: string;
   /** Pins the instant relative times are measured from; without it the provider's clock ticks. */
   readonly now?: string;
-  /** Translations beside `en`; keep the object stable, a new one rebuilds every binding. */
-  readonly catalogues?: Omit<Catalogues, 'en'>;
+  /** Where the provider's clock reads the time; keep it stable. */
+  readonly clock: Clock;
+  /** Builds the translator over the binding for `locale`, from the catalogues the app holds. */
+  readonly createTranslator: (intl: IntlBinding) => RegisteredTranslator;
   readonly children: ReactNode;
 }
 
-function useTickingClock(pinned: string | undefined, initial: string): string {
-  const [clock, setClock] = useState(initial);
+function useTickingClock(pinned: string | undefined, initial: string, clock: Clock): string {
+  const [instant, setInstant] = useState(initial);
   useEffect(() => {
     if (pinned !== undefined) return;
-    const timer = setInterval(() => setClock(currentInstant()), CLOCK_TICK_MS);
+    const timer = setInterval(() => setInstant(currentInstant(clock)), CLOCK_TICK_MS);
     return () => clearInterval(timer);
-  }, [pinned]);
-  return pinned ?? clock;
+  }, [pinned, clock]);
+  return pinned ?? instant;
 }
 
 export function IntlProvider({
@@ -34,12 +36,13 @@ export function IntlProvider({
   timeZone,
   currency,
   now,
-  catalogues,
+  clock,
+  createTranslator,
   children,
 }: IntlProviderProps) {
-  const [environment] = useState(readBrowserEnvironment);
+  const [environment] = useState(() => readBrowserEnvironment(clock));
   const resolvedTimeZone = timeZone ?? environment.timeZone;
-  const referenceInstant = useTickingClock(now, environment.now);
+  const referenceInstant = useTickingClock(now, environment.now, clock);
 
   const cacheForLocale = useMemo(() => ({ locale, cache: createIntlCache() }), [locale]);
 
@@ -50,8 +53,7 @@ export function IntlProvider({
     now: referenceInstant,
     cache: cacheForLocale.cache,
   });
-  const translator = createTranslator({ intl, catalogues: { ...catalogues, en } });
-  const bindings = { intl, translator };
+  const bindings = { intl, translator: createTranslator(intl) };
 
   return <IntlContext value={bindings}>{children}</IntlContext>;
 }

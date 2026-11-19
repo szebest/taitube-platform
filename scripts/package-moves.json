@@ -699,7 +699,8 @@
       "WatchPartySocket": "@vp/queries",
       "WatchPartyState": "@vp/queries"
     },
-    "./demo-personas": "@vp/queries"
+    "./demo-personas": "@vp/queries",
+    "./intl": "@vp/queries"
   },
   "@vp/result": "@kit/result",
   "@vp/security-headers": "@kit/security-headers",
@@ -922,5 +923,30 @@
     }
   },
   "@vp/vite-preset": "@kit/vite-preset",
-  "@vp/web-telemetry": "@kit/web-telemetry"
+  "@vp/web-telemetry": "@kit/web-telemetry",
+  "@vp/web-testing": {
+    ".": "@vp/web-testing",
+    "./api-server.setup": "@vp/web-testing",
+    "./dom": {
+      "axeViolations": "@kit/web-testing/dom",
+      "createRenderCounter": "@kit/web-testing/dom",
+      "heldReply": "@vp/web-testing",
+      "HookProviders": "@vp/web-testing",
+      "mockLiveChatSocket": "@vp/web-testing",
+      "mockWatchPartySocket": "@vp/web-testing",
+      "QueryRouter": "@vp/web-testing",
+      "RenderedRoute": "@vp/web-testing",
+      "renderMutation": "@vp/web-testing",
+      "renderRoute": "@vp/web-testing",
+      "runMutation": "@vp/web-testing",
+      "showCues": "@kit/web-testing/dom",
+      "streamUserEvents": "@vp/web-testing",
+      "stubEventSource": "@vp/web-testing"
+    },
+    "./jsdom.setup": "@kit/web-testing",
+    "./server": "@vp/web-testing",
+    "./server-functions.setup": "@kit/web-testing",
+    "./settle.setup": "@kit/web-testing",
+    "./setup-files": "@vp/web-testing"
+  }
 }

@@ -92,7 +92,7 @@ The session (SDD §11, Transport and Origins and cookies):
 - **A factory moves here when a second app reads it**, and not before: a query only web reads (feed, channel,
   reactions, subscriptions, categories) stays in web's `features/`.
 - **A server function is a thin wrapper.** The cookie and the request are read in plain functions
-  (`session-cookie.ts`); a spec runs the wrapper through `@vp/web-testing`'s doubles, since vitest has no Start
+  (`session-cookie.ts`); a spec runs the wrapper through `@kit/web-testing`'s doubles, since vitest has no Start
   compiler.
 - **UI only for the session.** The login page (and the account menu) sit here because they render the session
   both apps share; a page or a layout of one app does not. Plain markup until the shell ticket styles it.

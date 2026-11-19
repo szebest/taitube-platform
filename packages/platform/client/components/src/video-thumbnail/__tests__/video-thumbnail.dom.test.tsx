@@ -1,5 +1,5 @@
+import { axeViolations } from '@kit/web-testing/dom';
 import { fireEvent, screen } from '@testing-library/react';
-import { axeViolations } from '@vp/web-testing/dom';
 import type { ReactNode } from 'react';
 import { VideoThumbnail, VideoThumbnailSkeleton, videoTransitionName } from '..';
 import { renderWithCopy } from '../../__tests__/render-with-copy';

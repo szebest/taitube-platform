@@ -1,5 +1,5 @@
+import { axeViolations } from '@kit/web-testing/dom';
 import { render } from '@testing-library/react';
-import { axeViolations } from '@vp/web-testing/dom';
 import { Skeleton, type SkeletonProps } from '../skeleton';
 
 function renderSkeleton(props: SkeletonProps = {}) {

@@ -1,5 +1,5 @@
+import { axeViolations } from '@kit/web-testing/dom';
 import { render, screen, within } from '@testing-library/react';
-import { axeViolations } from '@vp/web-testing/dom';
 import { StartHereShelf, StartHereShelfSkeleton, type StartHereSource } from '..';
 import { renderWithCopy } from '../../__tests__/render-with-copy';
 import { VideoCard } from '../../video-card';

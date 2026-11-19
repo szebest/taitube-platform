@@ -1,6 +1,6 @@
+import { axeViolations } from '@kit/web-testing/dom';
 import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
-import { axeViolations } from '@vp/web-testing/dom';
 import { renderToString } from 'react-dom/server';
 import { ResponsiveModal } from '..';
 import { WithUiCopy } from '../../../__tests__/ui-copy-fixture';

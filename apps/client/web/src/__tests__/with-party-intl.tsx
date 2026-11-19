@@ -1,5 +1,5 @@
-import { FALLBACK_ACTIVE_LOCALE, IntlProvider } from '@kit/intl-react';
 import type { Decorator } from '@storybook/react-vite';
+import { FALLBACK_ACTIVE_LOCALE, IntlProvider } from '@vp/queries/intl';
 
 export const withPartyIntl: Decorator = (Story) => (
   <IntlProvider

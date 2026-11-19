@@ -1,6 +1,5 @@
-import type { Translator } from '@vp/messages';
-import { useIntlBindings } from './intl-context';
+import { type RegisteredTranslator, useIntlBindings } from './intl-context';
 
-export function useT(): Translator {
+export function useT(): RegisteredTranslator {
   return useIntlBindings('useT').translator;
 }

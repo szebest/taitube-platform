@@ -1,5 +1,5 @@
+import { axeViolations } from '@kit/web-testing/dom';
 import { render } from '@testing-library/react';
-import { axeViolations } from '@vp/web-testing/dom';
 import { DataTableSkeleton } from '#app/components/table/data-table';
 import { VIDEO_COLUMNS } from '#app/components/table/data-table/__tests__/video-table.fixture';
 

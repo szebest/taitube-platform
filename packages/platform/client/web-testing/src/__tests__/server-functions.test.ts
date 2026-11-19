@@ -6,7 +6,7 @@ const createServerFn = inRenderedRequest(start);
 
 const recall = createServerFn().handler(() => getCookie('kept') ?? null);
 
-describe('@vp/web-testing: server functions on the server', () => {
+describe('@kit/web-testing: server functions on the server', () => {
   it('reads the request the spec is rendering', async () => {
     const answer = requestHandler(async () => Response.json(await recall()));
 

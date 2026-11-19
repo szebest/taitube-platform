@@ -1,13 +1,13 @@
 import { renderHook } from '@testing-library/react';
 import type { ReactNode } from 'react';
-import { IntlProvider } from '../intl-provider';
 import { useFormat } from '../use-format';
+import { SpecIntl } from './spec-intl';
 
 function renderUseFormat(withProvider = true) {
   const wrapper = ({ children }: { children: ReactNode }) => (
-    <IntlProvider locale="de" timeZone="Europe/Berlin">
+    <SpecIntl locale="de" timeZone="Europe/Berlin">
       {children}
-    </IntlProvider>
+    </SpecIntl>
   );
   return renderHook(useFormat, withProvider ? { wrapper } : undefined);
 }

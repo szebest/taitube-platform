@@ -1,8 +1,9 @@
+import { axeViolations } from '@kit/web-testing/dom';
 import { screen, within } from '@testing-library/react';
 import { type ContractResult, listMyInvites } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { mockEndpoint, problemReply } from '@vp/web-testing';
-import { axeViolations, heldReply } from '@vp/web-testing/dom';
+import { heldReply } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
 import { renderTeam } from '#app/features/team/__tests__/render-team';
 import { MY_INVITE_ID, myInvite } from '#app/features/team/__tests__/team-api.fixture';

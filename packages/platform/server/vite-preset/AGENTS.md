@@ -8,7 +8,7 @@ allows across tiers (`BUILD_TOOLING`), and nothing of it reaches a bundle.
 
 ## What it holds
 
-`clientAppConfig({ configUrl, port, forbiddenDirs })`, which an app's `vite.config.ts` default-exports:
+`clientAppConfig({ configUrl, port, forbiddenDirs, flaggedDirs })`, which an app's `vite.config.ts` default-exports:
 
 - the TanStack Start plugin (file routes, `__tests__` ignored), React and Tailwind; a `test` mode loads React
   alone, so Vitest never starts the route crawler;
@@ -24,8 +24,8 @@ allows across tiers (`BUILD_TOOLING`), and nothing of it reaches a bundle.
   an edit hot-reloads the app; a `"./x/*"` export pattern becomes one alias, its capture substituted into the
   source path, and its source directory must exist;
 - Sass `loadPaths` at the app's `src/`, and the dev and preview port, strict;
-- the bundle guard on the client build: no devtools in a production chunk, no `demo-personas/` folder in one built without
-  `VITE_DEMO_PERSONAS=true` (read with `loadEnv`), none of its `forbiddenDirs` (code that moved to another app) in any chunk, every route in a chunk
+- the bundle guard on the client build: no devtools in a production chunk, no `flaggedDirs` directory in a build whose
+  environment variable (read with `loadEnv`) is not `true`, none of its `forbiddenDirs` (code that moved to another app) in any chunk, every route in a chunk
   of its own, no `process.env` read, no module in two chunks, an entry chunk within its `entryBudgetKb` (gzip), and
   no `vendor-player` or `vendor-charts` chunk among the entry's static imports;
 - the `vendor-*` chunks (`react`, `tanstack`, `dnd`, `forms`, `player`, `charts`), so vendor code keeps its hash across a deploy.
@@ -37,7 +37,9 @@ allows across tiers (`BUILD_TOOLING`), and nothing of it reaches a bundle.
   its spec one file.
 - **No app knowledge here.** A rule one app needs (a forbidden module) is an option
   the app passes, never a path written into this package.
-- **Not here:** runtime code, test helpers (`@vp/web-testing`), anything that reads an app's `src/config`.
+- **The app names its spec setup.** `clientAppTestConfig({ app, environment, setupFiles, env })` takes the whole
+  ordered `setupFiles` list and the `env` of the project; no setup file or variable of an app is written here.
+- **Not here:** runtime code, spec helpers and their setup files, anything that reads an app's `src/config`.
 
 ```bash
 pnpm --filter @kit/vite-preset typecheck

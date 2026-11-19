@@ -10,9 +10,9 @@ export default definePackageTestConfig({
     include: ['src/**/__tests__/**/*.dom.test.{ts,tsx}'],
     setupFiles: [
       '@testing-library/jest-dom/vitest',
-      'src/jsdom.setup.ts',
+      '@kit/web-testing/jsdom.setup',
       'src/api-server.setup.ts',
-      'src/settle.setup.ts',
+      '@kit/web-testing/settle.setup',
     ],
     env: { RTL_SKIP_AUTO_CLEANUP: 'true' },
   },

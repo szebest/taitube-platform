@@ -1,4 +1,3 @@
-import { IntlProvider } from '@kit/intl-react';
 import {
   RouterProvider,
   createMemoryHistory,
@@ -9,6 +8,7 @@ import { userEvent } from '@testing-library/user-event';
 import { api, apiServer } from '@vp/web-testing';
 import { http, HttpResponse } from 'msw/http';
 import { type AppRouterContext, createAppRouter } from '../../app-router';
+import { IntlProvider } from '../../intl';
 import { DEV_TOKEN_URL } from '../persona-sign-in';
 import { PersonaSwitcher, type PersonaSwitcherProps } from '../persona-switcher';
 

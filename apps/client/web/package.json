@@ -67,6 +67,7 @@
   "devDependencies": {
     "@kit/tsconfig": "workspace:*",
     "@kit/vite-preset": "workspace:*",
+    "@kit/web-testing": "workspace:*",
     "@playwright/test": "^1.64.0",
     "@storybook/react-vite": "~10.6.2",
     "@tanstack/react-query-devtools": "^5.104.1",

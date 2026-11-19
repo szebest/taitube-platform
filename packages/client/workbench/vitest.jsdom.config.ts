@@ -7,6 +7,6 @@ export default definePackageTestConfig({
     name: 'workbench (jsdom)',
     environment: 'jsdom',
     include: ['{src,visual}/**/__tests__/**/*.test.{ts,tsx}'],
-    setupFiles: ['@testing-library/jest-dom/vitest', '@vp/web-testing/jsdom.setup'],
+    setupFiles: ['@testing-library/jest-dom/vitest', '@kit/web-testing/jsdom.setup'],
   },
 });

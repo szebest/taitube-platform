@@ -1,7 +1,7 @@
 import { variantNames } from '@kit/ui';
+import { axeViolations } from '@kit/web-testing/dom';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { axeViolations } from '@vp/web-testing/dom';
 import { STAT_CARD_TREND_TONE, StatCard, StatCardSkeleton, statCardStyles } from '..';
 import { renderWithCopy } from '../../../__tests__/render-with-copy';
 import type { StatCardRootProps } from '../stat-card';

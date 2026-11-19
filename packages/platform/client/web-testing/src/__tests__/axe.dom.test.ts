@@ -1,6 +1,6 @@
 import { axeViolations } from '../axe';
 
-describe('@vp/web-testing: axeViolations', () => {
+describe('@kit/web-testing: axeViolations', () => {
   afterEach(() => {
     document.body.replaceChildren();
   });

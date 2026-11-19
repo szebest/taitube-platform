@@ -7,18 +7,16 @@ import { defineConfig, mergeConfig, type ViteUserConfig } from 'vitest/config';
 
 const ALL_SPECS = 'src/**/__tests__/**/*.test.{ts,tsx}';
 const DOM_SPECS = 'src/**/__tests__/**/*.dom.test.{ts,tsx}';
-const API_SERVER_SETUP = '@vp/web-testing/api-server.setup';
-const SETTLE_SETUP = '@vp/web-testing/settle.setup';
-const SERVER_FUNCTIONS_SETUP = '@vp/web-testing/server-functions.setup';
-const JSDOM_SETUP = ['@testing-library/jest-dom/vitest', '@vp/web-testing/jsdom.setup'];
 
 export type ClientAppTestOptions = {
   /** The app's name, which names the project: `web`, `web (jsdom)`. */
   app: string;
   /** `node` runs every spec but the `*.dom.test.*` ones in a shared worker; `jsdom` runs those, isolated. */
   environment: 'node' | 'jsdom';
-  /** The app's own setup files, run before the shared ones. */
-  setupFiles?: readonly string[];
+  /** Every setup file of the project, in the order they run. */
+  setupFiles: readonly string[];
+  /** Environment variables every spec of the project runs with. */
+  env?: Readonly<Record<string, string>>;
   /** `false` builds the project without the React Compiler: the uncompiled half of a differential spec. */
   compiler?: false;
   /** The `jsdom` specs this project runs instead of every `*.dom.test.*` one. */
@@ -27,15 +25,22 @@ export type ClientAppTestOptions = {
 
 type AppViteConfig = (env: ConfigEnv) => Promise<UserConfig> | UserConfig;
 
-function project({ app, environment, setupFiles = [], compiler, include }: ClientAppTestOptions) {
+function project({
+  app,
+  environment,
+  setupFiles,
+  env = {},
+  compiler,
+  include,
+}: ClientAppTestOptions) {
   if (environment === 'jsdom') {
     return {
       name: compiler === false ? `${app} (jsdom, uncompiled)` : `${app} (jsdom)`,
       environment,
       isolate: true,
       include: [...(include ?? [DOM_SPECS])],
-      setupFiles: [...setupFiles, ...JSDOM_SETUP, API_SERVER_SETUP, SETTLE_SETUP],
-      env: { VITE_DEMO_PERSONAS: 'true', RTL_SKIP_AUTO_CLEANUP: 'true' },
+      setupFiles: [...setupFiles],
+      env: { ...env, RTL_SKIP_AUTO_CLEANUP: 'true' },
     };
   }
   return {
@@ -44,16 +49,15 @@ function project({ app, environment, setupFiles = [], compiler, include }: Clien
     isolate: false,
     include: [ALL_SPECS],
     exclude: ['**/node_modules/**', DOM_SPECS],
-    setupFiles: [...setupFiles, SERVER_FUNCTIONS_SETUP, API_SERVER_SETUP],
-    env: { VITE_DEMO_PERSONAS: 'true' },
+    setupFiles: [...setupFiles],
+    env: { ...env },
   };
 }
 
 /**
- * One of a client app's two Vitest projects, over the app's own Vite config: the MSW server answers
- * the API in both, server functions run without the Start compiler (inside the rendered request in
- * `node`, over the cookie jar in `jsdom`), the `?url` stylesheet imports resolve, and stubbed globals
- * and environment are restored after every test.
+ * One of a client app's two Vitest projects, over the app's own Vite config and the setup files the
+ * app names, the `?url` stylesheet imports resolve, and stubbed globals and environment are restored
+ * after every test.
  */
 export async function clientAppTestConfig(
   viteConfig: AppViteConfig,
