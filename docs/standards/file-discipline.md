@@ -89,6 +89,6 @@ Following deep module design principles (`codebase-design`):
 
 ---
 
-## 4. Mandatory 1:1 Test File Correspondence
+## 4. Tests
 
-Every single source file, helper, utility, normalizer, rule, or adapter across the monorepo MUST map to at least one dedicated test file matching its name (e.g. `video.normalizer.ts` -> `video.normalizer.test.ts`). Grouping tests for multiple separate source files into a single bundled test file is a strict architectural violation.
+No spec per source file is required. Tests follow behaviour, and the coverage floor is in [testing.md](testing.md).
