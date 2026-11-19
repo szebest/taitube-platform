@@ -1,11 +1,13 @@
-import { ACCENT_PATTERN, PREFERENCE_ID_PATTERN } from '@kit/appearance';
+import {
+  ACCENT_PATTERN,
+  CONTRAST_OPTIONS,
+  DEFAULT_CONTRAST,
+  DEFAULT_MODE,
+  MODE_OPTIONS,
+  PREFERENCE_ID_PATTERN,
+} from '@kit/appearance';
 import type { TokenGroup } from '@kit/design-tokens';
 import { parseJson, unwrapOr } from '@kit/result';
-import {
-  APPEARANCE_SETTINGS,
-  type AppearancePreferences,
-  DEFAULT_PREFERENCES,
-} from '@vp/domain/settings';
 import { z } from 'zod';
 import { ONE_YEAR_S, readCookie, writeCookie } from '../cookies/cookie';
 import type { appearance } from './registry';
@@ -16,8 +18,6 @@ export type TokenSetId<G extends TokenGroup> = Registry['offer'][G][number]['id'
 
 export type TokenSetIds = Partial<{ readonly [G in TokenGroup]: TokenSetId<G> }>;
 
-const DEFAULTS = DEFAULT_PREFERENCES.appearance;
-
 const anyOther = <T>(fallback: T) => z.unknown().transform((): T => fallback);
 
 const orElse = <T>(schema: z.ZodType<T>, fallback: Exclude<T, undefined>) =>
@@ -25,18 +25,20 @@ const orElse = <T>(schema: z.ZodType<T>, fallback: Exclude<T, undefined>) =>
 
 const PreferenceIdSchema = z.string().regex(PREFERENCE_ID_PATTERN);
 
+const AccentSchema = z.string().regex(ACCENT_PATTERN).nullable();
+
 const storedSet = z.union([PreferenceIdSchema, anyOther(undefined)]).optional();
 
-// Ids are kept whether or not this app offers them: web and studio offer different sets and a
-// theme can be registered at runtime, so dropping one here would overwrite it on the next save.
+// Ids are kept whether or not this app offers them: apps sharing the cookie offer different sets and
+// a theme can be registered at runtime, so dropping one here would overwrite it on the next save.
 export const AppearancePreferenceSchema = z.object({
   schema: z.literal(2),
-  theme: orElse(PreferenceIdSchema.nullable(), DEFAULTS.theme),
-  mode: orElse(z.enum(APPEARANCE_SETTINGS.mode.options), DEFAULTS.mode),
-  accent: orElse(z.string().regex(ACCENT_PATTERN).nullable(), DEFAULTS.accent),
-  customGround: orElse(z.string().regex(ACCENT_PATTERN).nullable(), DEFAULTS.customGround),
-  customAccent: orElse(z.string().regex(ACCENT_PATTERN).nullable(), DEFAULTS.customAccent),
-  contrast: orElse(z.enum(APPEARANCE_SETTINGS.contrast.options), DEFAULTS.contrast),
+  theme: orElse(PreferenceIdSchema.nullable(), null),
+  mode: orElse(z.enum(MODE_OPTIONS), DEFAULT_MODE),
+  accent: orElse(AccentSchema, null),
+  customGround: orElse(AccentSchema, null),
+  customAccent: orElse(AccentSchema, null),
+  contrast: orElse(z.enum(CONTRAST_OPTIONS), DEFAULT_CONTRAST),
   overrides: orElse(
     z.object({
       typography: storedSet,
@@ -54,6 +56,13 @@ export const AppearancePreferenceSchema = z.object({
 });
 
 export type AppearancePreference = z.output<typeof AppearancePreferenceSchema>;
+
+/** The shape an account stores: no `schema`, which only versions the cookie, and only the overrides set. */
+export type AccountAppearance = Readonly<
+  Omit<AppearancePreference, 'schema' | 'overrides'> & {
+    overrides: Readonly<Record<string, string>>;
+  }
+>;
 
 export const DEFAULT_APPEARANCE: AppearancePreference = AppearancePreferenceSchema.parse({
   schema: 2,
@@ -112,12 +121,11 @@ export function rewriteLegacyAppearance(
   writeCookie(storage.legacyCookie, '', { maxAge: 0, domain });
 }
 
-/** The account's shape (97's endpoint): no `schema`, which only versions the cookie. */
 export function accountAppearance({
   schema: _schema,
   overrides,
   ...axes
-}: AppearancePreference): AppearancePreferences {
+}: AppearancePreference): AccountAppearance {
   return {
     ...axes,
     overrides: Object.fromEntries(
@@ -127,6 +135,6 @@ export function accountAppearance({
 }
 
 /** The inverse of `accountAppearance`: an account's saved appearance as the cookie's preference. */
-export function appearanceFromAccount(saved: AppearancePreferences): AppearancePreference {
+export function appearanceFromAccount(saved: AccountAppearance): AppearancePreference {
   return AppearancePreferenceSchema.parse({ schema: 2, ...saved });
 }

@@ -50,7 +50,7 @@ scope (platform or app) and the tier are the directory and the layer is `vp.laye
 | `@vp/validation` | `packages/universal/validation` | app | universal | T5 | `@kit/result`, `@vp/errors` | `@kit/testing`, `@kit/tsconfig` |
 | `@vp/permissions-react` | `packages/client/permissions-react` | app | client | T6 | `@kit/result`, `@vp/permissions` | `@kit/testing`, `@kit/tsconfig`, `@kit/vite-preset` |
 | `@kit/intl-react` | `packages/platform/client/intl-react` | platform | client | T6 | `@kit/intl`, `@kit/result`, `@vp/messages` | `@kit/testing`, `@kit/tsconfig`, `@kit/vite-preset` |
-| `@kit/ui` | `packages/platform/client/ui` | platform | client | T6 | `@kit/appearance`, `@kit/design-tokens`, `@kit/result`, `@vp/domain`, `@vp/errors` | `@kit/testing`, `@kit/tsconfig`, `@kit/vite-preset`, `@vp/web-testing` |
+| `@kit/ui` | `packages/platform/client/ui` | platform | client | T6 | `@kit/appearance`, `@kit/design-tokens`, `@kit/result`, `@vp/errors` | `@kit/testing`, `@kit/tsconfig`, `@kit/vite-preset`, `@vp/web-testing` |
 | `@vp/core` | `packages/server/core` | app | server | T6 | `@kit/result`, `@vp/domain`, `@vp/errors`, `@vp/permissions` | `@kit/testing`, `@kit/tsconfig` |
 | `@vp/db` | `packages/server/db` | app | server | T6 | `@kit/result`, `@vp/domain`, `@vp/job-contracts`, `@vp/storage`, `@vp/validation` | `@kit/testing`, `@kit/tsconfig`, `@vp/testing-fixtures` |
 | `@vp/env-schema` | `packages/server/env-schema` | app | server | T6 | `@kit/observability`, `@kit/pagination`, `@kit/primitives`, `@kit/result`, `@vp/domain` | `@kit/config`, `@kit/testing`, `@kit/tsconfig`, `@vp/testing-fixtures` |

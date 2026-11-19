@@ -1,12 +1,22 @@
 import type { IconSize } from '@kit/design-tokens';
-import type { LinkPlatform } from '@vp/domain';
 import type { ComponentPropsWithRef } from 'react';
 import { PLATFORM_ICON_PATHS } from '../../icons/platform-icon-paths.generated';
 import { Icon } from '../icon';
 import { platformIconStyles } from './platform-icon.variants';
 
+/** A brand whose mark is vendored, or `website`, any other link, drawn as a globe. */
+export type PlatformIconName = keyof typeof PLATFORM_ICON_PATHS | 'website';
+
+const isVendored = (name: string): name is keyof typeof PLATFORM_ICON_PATHS =>
+  Object.hasOwn(PLATFORM_ICON_PATHS, name);
+
+export const PLATFORM_ICON_NAMES: readonly PlatformIconName[] = [
+  'website',
+  ...Object.keys(PLATFORM_ICON_PATHS).filter(isVendored),
+];
+
 export interface PlatformIconProps extends Omit<ComponentPropsWithRef<'svg'>, 'name'> {
-  platform: LinkPlatform;
+  platform: PlatformIconName;
   size?: IconSize;
 }
 

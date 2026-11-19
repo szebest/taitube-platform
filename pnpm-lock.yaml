@@ -1556,9 +1556,6 @@ importers:
       '@kit/result':
         specifier: workspace:*
         version: link:../../universal/result
-      '@vp/domain':
-        specifier: workspace:*
-        version: link:../../../universal/domain
       '@vp/errors':
         specifier: workspace:*
         version: link:../../../universal/errors
