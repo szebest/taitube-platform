@@ -70,7 +70,7 @@ export function mintToken(config: DevTokenConfig, options: MintTokenOptions = {}
   } = options;
 
   const ttlSeconds = parseTtlSeconds(ttl);
-  const iat = Math.floor(Date.now() / 1000);
+  const iat = Math.floor(config.now() / 1000);
   const exp = iat + ttlSeconds;
 
   const header = {
@@ -160,7 +160,7 @@ export function verifyToken(
     throw new Error(`Invalid token audience: expected "${expectedAud}", got "${payload.aud}"`);
   }
 
-  const now = Math.floor(Date.now() / 1000);
+  const now = Math.floor(config.now() / 1000);
   if (payload.exp && payload.exp <= now) {
     throw new Error(`Token has expired (exp=${payload.exp}, now=${now})`);
   }

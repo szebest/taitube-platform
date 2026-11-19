@@ -22,12 +22,14 @@ export interface AutoscalerOptions {
     logger: Logger;
     executor: (cmd: string) => Promise<Attempt<unknown>>;
     fetcher: (url: string) => Promise<Attempt<string>>;
+    now: () => number;
 }
 export interface CliHost {
     argv: readonly string[];
     env: Env;
     executor: AutoscalerOptions['executor'];
     fetcher: AutoscalerOptions['fetcher'];
+    now: AutoscalerOptions['now'];
     onSignal: (signal: 'SIGINT' | 'SIGTERM', handler: () => void) => void;
     exit: (code: number) => void;
     print: (text: string) => void;
@@ -38,7 +40,7 @@ export class ComposeAutoscaler
   getStates: () => Map<string, StageScalingState>
   start: () => void
   stop: () => void
-  tick: (nowMs?: number) => Promise<void>
+  tick: (nowMs: number) => Promise<void>
 export interface ComputeReplicasParams {
     config: ScalerStageConfig;
     state: StageScalingState;

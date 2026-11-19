@@ -20,6 +20,8 @@ export interface AutoscalerOptions {
   logger: Logger;
   executor: (cmd: string) => Promise<Attempt<unknown>>;
   fetcher: (url: string) => Promise<Attempt<string>>;
+  /** Milliseconds since the epoch, read once per poll. */
+  now: () => number;
 }
 
 export class ComposeAutoscaler {
@@ -32,6 +34,7 @@ export class ComposeAutoscaler {
   private readonly log: Logger;
   private readonly execCmd: AutoscalerOptions['executor'];
   private readonly fetchMetrics: AutoscalerOptions['fetcher'];
+  private readonly now: AutoscalerOptions['now'];
   private isRunning = false;
   private pollTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -44,6 +47,7 @@ export class ComposeAutoscaler {
     this.log = options.logger;
     this.execCmd = options.executor;
     this.fetchMetrics = options.fetcher;
+    this.now = options.now;
 
     for (const serviceName of Object.keys(this.configs)) {
       this.states.set(serviceName, {
@@ -58,7 +62,7 @@ export class ComposeAutoscaler {
     return new Map(this.states);
   }
 
-  public async tick(nowMs: number = Date.now()): Promise<void> {
+  public async tick(nowMs: number): Promise<void> {
     const metrics = await this.fetchMetrics(this.metricsUrl);
     if (metrics.type === 'failed') {
       this.log.warn({ reason: metrics.reason }, 'metrics poll failed');
@@ -117,7 +121,7 @@ export class ComposeAutoscaler {
 
     const loop = async () => {
       if (!this.isRunning) return;
-      await this.tick();
+      await this.tick(this.now());
       if (this.isRunning) {
         this.pollTimer = setTimeout(loop, this.pollIntervalMs);
       }

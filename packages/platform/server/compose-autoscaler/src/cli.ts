@@ -14,6 +14,7 @@ export interface CliHost {
   env: Env;
   executor: AutoscalerOptions['executor'];
   fetcher: AutoscalerOptions['fetcher'];
+  now: AutoscalerOptions['now'];
   onSignal: (signal: 'SIGINT' | 'SIGTERM', handler: () => void) => void;
   exit: (code: number) => void;
   print: (text: string) => void;
@@ -127,6 +128,7 @@ export function run(config: AutoscalerConfig, host: CliHost): void {
     logger: host.log,
     executor: host.executor,
     fetcher: host.fetcher,
+    now: host.now,
   });
 
   for (const signal of ['SIGINT', 'SIGTERM'] as const) {

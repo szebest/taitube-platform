@@ -22,6 +22,7 @@ export const DEV_TOKEN_CONFIG: DevTokenConfig = {
   keyId: 'vp-dev-key-1',
   seed: 'video-pipeline-dev-token-seed-ed25519-v1',
   routes: { jwks: ['/.well-known/jwks.json', '/jwks.json'], token: '/token' },
+  now: () => Date.now(),
 };
 
 export const mintToken = (options?: MintTokenOptions): string => mintFor(DEV_TOKEN_CONFIG, options);
