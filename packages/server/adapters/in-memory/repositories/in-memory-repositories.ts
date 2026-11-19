@@ -1,6 +1,5 @@
 import type { Repositories } from '@vp/core/repositories';
 import type { Clock } from './clock';
-import type { InMemoryApiTokenRepository } from './in-memory-api-token-repository';
 import type { InMemoryCaptionRepository } from './in-memory-caption-repository';
 import type { InMemoryCategoryRepository } from './in-memory-category-repository';
 import type { InMemoryChannelAuditRepository } from './in-memory-channel-audit-repository';
@@ -17,11 +16,9 @@ import type { InMemoryCommentModerationRepository } from './in-memory-comment-mo
 import type { InMemoryCommentReportRepository } from './in-memory-comment-report-repository';
 import type { InMemoryCommentRepository } from './in-memory-comment-repository';
 import type { InMemoryCommentSettingsRepository } from './in-memory-comment-settings-repository';
-import type { InMemoryDataExportRepository } from './in-memory-data-export-repository';
 import type { InMemoryDlqRepository } from './in-memory-dlq-repository';
 import type { InMemoryEventRepository } from './in-memory-event-repository';
-import { exportRowsOver } from './in-memory-export-providers';
-import type { InMemoryExportRowRepository } from './in-memory-export-row-repository';
+import { type AccountDataRepositories, accountDataOf } from './in-memory-export-providers';
 import type { InMemoryFingerprintRepository } from './in-memory-fingerprint-repository';
 import { graph } from './in-memory-graph';
 import { InMemoryLiveChatRepository } from './in-memory-live-chat-repository';
@@ -70,9 +67,10 @@ export class InMemoryRepositories extends InMemoryWatchPartyRepositories impleme
   readonly channelMembers: InMemoryChannelMemberRepository;
   readonly channelInvites: InMemoryChannelInviteRepository;
   readonly channelAudit: InMemoryChannelAuditRepository;
-  readonly dataExports: InMemoryDataExportRepository;
-  readonly exportRows: InMemoryExportRowRepository;
-  readonly apiTokens: InMemoryApiTokenRepository;
+  declare readonly accountAudit: AccountDataRepositories['accountAudit'];
+  declare readonly dataExports: AccountDataRepositories['dataExports'];
+  declare readonly exportRows: AccountDataRepositories['exportRows'];
+  declare readonly apiTokens: AccountDataRepositories['apiTokens'];
   readonly commentSettings: InMemoryCommentSettingsRepository;
   readonly channelUserRestrictions: InMemoryChannelUserRestrictionRepository;
   readonly trustedCommenters: InMemoryTrustedCommenterRepository;
@@ -123,9 +121,7 @@ export class InMemoryRepositories extends InMemoryWatchPartyRepositories impleme
     this.channelMembers = c.get(Repo.channelMembers);
     this.channelInvites = c.get(Repo.channelInvites);
     this.channelAudit = c.get(Repo.channelAudit);
-    this.dataExports = c.get(Repo.dataExports);
-    this.apiTokens = c.get(Repo.apiTokens);
-    this.exportRows = exportRowsOver(c);
+    Object.assign(this, accountDataOf(c));
     this.commentSettings = c.get(Repo.commentSettings);
     this.channelUserRestrictions = c.get(Repo.channelUserRestrictions);
     this.trustedCommenters = c.get(Repo.trustedCommenters);

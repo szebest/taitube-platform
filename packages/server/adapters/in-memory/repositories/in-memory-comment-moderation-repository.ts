@@ -55,7 +55,6 @@ export class InMemoryCommentModerationRepository implements CommentModerationRep
 
     const scope = await publicScopeOf(comments, [target.videoId], {
       videos: this.deps.videosRepo,
-      channels: this.deps.channelsRepo,
       restrictions: this.deps.restrictionsRepo,
     });
     const subtree = (): StoredComment[] =>
@@ -81,7 +80,7 @@ export class InMemoryCommentModerationRepository implements CommentModerationRep
     const recorded = await recordModeration(this.deps, { audit, ...(notice && { notice }) });
     if (isErr(recorded)) return recorded;
 
-    const channel = unwrapOr(await this.deps.channelsRepo.findByUserId(stored.authorId), null);
+    const channel = unwrapOr(await this.deps.channelsRepo.findById(stored.authorChannelId), null);
     const thread = toThreadOf(stored, channel, repliesOf(comments.values(), stored.id).length);
     const firstPublication = outcome.state === 'published' && from === 'held' && heldBefore;
     if (firstPublication) {
@@ -103,18 +102,14 @@ export class InMemoryCommentModerationRepository implements CommentModerationRep
   /** What a restriction runs after it changes: the channel's videos the user commented on, counted again. */
   async recount(channelId: string, userId: string): Promise<string[]> {
     const { comments } = this.deps.commentsRepo;
-    const channel = unwrapOr(await this.deps.channelsRepo.findById(channelId), null);
-    if (!channel) return [];
-
     const videos = this.deps.videosRepo
       .getAllVideos()
-      .filter((video) => video.ownerId === channel.userId && !video.deletedAt);
+      .filter((video) => video.channelId === channelId && !video.deletedAt);
     const scope = await publicScopeOf(
       comments,
       videos.map(({ id }) => id),
       {
         videos: this.deps.videosRepo,
-        channels: this.deps.channelsRepo,
         restrictions: this.deps.restrictionsRepo,
       }
     );

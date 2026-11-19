@@ -130,6 +130,7 @@ export const listCommentReplies = defineEndpoint({
 export const createComment = defineEndpoint({
   method: 'POST',
   path: '/v1/videos/:id/comments',
+  channelScoped: true,
   tag: 'Comments',
   summary: 'Comment on a video or reply to a comment',
   description:

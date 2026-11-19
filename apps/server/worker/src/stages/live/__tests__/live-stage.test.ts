@@ -113,7 +113,12 @@ describe('worker/live: createLiveStage', () => {
         if (nextLive) {
           await liveStreams.goLive({
             streamId: input.nextId,
-            video: { id: NEXT_VIDEO_ID, ownerId: OWNER_ID, sourceKey: `live/${input.nextId}/` },
+            video: {
+              id: NEXT_VIDEO_ID,
+              ownerId: OWNER_ID,
+              channelId: world.stream.channelId,
+              sourceKey: `live/${input.nextId}/`,
+            },
             startedAt: new Date(),
             outbox: [],
           });

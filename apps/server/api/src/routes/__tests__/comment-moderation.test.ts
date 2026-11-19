@@ -35,13 +35,7 @@ describe('POST /v1/comments/:id/moderate', () => {
 
   beforeEach(async () => {
     ctx = await buildCommentsApp();
-    channelId = expectOk(
-      await ctx.repositories.channels.create({
-        userId: CREATOR,
-        handle: 'creator',
-        displayName: 'Creator',
-      })
-    ).id;
+    channelId = ctx.creatorChannelId;
   });
 
   afterEach(async () => {

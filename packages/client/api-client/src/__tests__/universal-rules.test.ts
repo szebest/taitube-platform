@@ -28,6 +28,7 @@ describe('client tier: the shared rules are reachable from a browser-only packag
     const video = {
       id: 'video-1',
       ownerId: 'user-1',
+      channelId: 'channel-1',
       title: 'Clip',
       description: null,
       visibility: 'public',

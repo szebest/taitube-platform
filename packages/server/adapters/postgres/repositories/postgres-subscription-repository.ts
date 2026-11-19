@@ -8,21 +8,35 @@ import type {
   VideoRecord,
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
-import type {
-  ChannelSubscriber,
-  NotificationLevel,
-  SubscribedChannelItem,
-  SubscriptionChangeResult,
-  ViewDateRange,
+import {
+  type ChannelSubscriber,
+  type NewChannelAuditEntry,
+  NOTIFICATION_LEVELS,
+  type NotificationLevel,
+  type SubscribedChannelItem,
+  type SubscriptionChangeResult,
+  type ViewDateRange,
 } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
-import { and, asc, desc, eq, gt, gte, lt, sql } from 'drizzle-orm';
+import { type SQL, and, asc, eq, gt, gte, lt, sql } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
-import { drizzleWhere, keysetBefore, msTimestamp } from '../scopes/index';
-import { subscriptionFeed } from './subscription-feed-query';
+import { drizzleWhere } from '../scopes/index';
+import { appendChannelAudit } from './channel-audit-writes';
+import { subscribedChannels, subscriptionFeed } from './subscription-feed-query';
 import type { PostgresDatabase } from './types';
 
 const { channelSubscriptions: cs, channels: ch, subscriptionEvents: se } = schema;
+
+const subscriptionOf = (subscriberChannelId: string, channelId: string) =>
+  and(eq(cs.subscriberChannelId, subscriberChannelId), eq(cs.channelId, channelId));
+
+/** `NOTIFICATION_LEVELS` runs loudest first, so an account subscribed twice hears the louder one. */
+const loudestLevel = sql<NotificationLevel>`(array_agg(${cs.notificationLevel} order by array_position(
+  array[${sql.join(
+    NOTIFICATION_LEVELS.map((level) => sql`${level}`),
+    sql`, `
+  )}]::text[], ${cs.notificationLevel}
+)))[1]`;
 
 export class PostgresSubscriptionRepository implements SubscriptionRepositoryPort {
   constructor(private readonly db: PostgresDatabase) {}
@@ -34,14 +48,16 @@ export class PostgresSubscriptionRepository implements SubscriptionRepositoryPor
    */
   async subscribe(
     subscriberId: string,
+    subscriberChannelId: string,
     channelId: string,
-    sourceVideoId: string | null = null
+    sourceVideoId: string | null = null,
+    audit?: NewChannelAuditEntry
   ): Promise<Result<SubscriptionChangeResult, DatabaseUnavailable>> {
     return await fromPromise(
       () =>
         this.db.transaction(async (tx) => {
           const [channel] = await tx
-            .select({ userId: ch.userId, subscriberCount: ch.subscriberCount })
+            .select({ subscriberCount: ch.subscriberCount })
             .from(ch)
             .where(eq(ch.id, channelId));
 
@@ -49,7 +65,14 @@ export class PostgresSubscriptionRepository implements SubscriptionRepositoryPor
 
           const [inserted] = await tx
             .insert(cs)
-            .values({ id: uuidv7(), subscriberId, channelId, sourceVideoId, createdAt: new Date() })
+            .values({
+              id: uuidv7(),
+              subscriberId,
+              subscriberChannelId,
+              channelId,
+              sourceVideoId,
+              createdAt: new Date(),
+            })
             .onConflictDoNothing()
             .returning({ id: cs.id });
 
@@ -57,6 +80,7 @@ export class PostgresSubscriptionRepository implements SubscriptionRepositoryPor
             return { subscriberCount: channel.subscriberCount, changed: false };
           }
           await tx.insert(se).values({ id: uuidv7(), channelId, delta: 1, occurredAt: new Date() });
+          if (audit) await appendChannelAudit(tx, audit);
 
           const [updated] = await tx
             .update(ch)
@@ -74,7 +98,7 @@ export class PostgresSubscriptionRepository implements SubscriptionRepositoryPor
   }
 
   async unsubscribe(
-    subscriberId: string,
+    subscriberChannelId: string,
     channelId: string
   ): Promise<Result<SubscriptionChangeResult, DatabaseUnavailable>> {
     return await fromPromise(
@@ -89,7 +113,7 @@ export class PostgresSubscriptionRepository implements SubscriptionRepositoryPor
 
           const [deleted] = await tx
             .delete(cs)
-            .where(and(eq(cs.subscriberId, subscriberId), eq(cs.channelId, channelId)))
+            .where(subscriptionOf(subscriberChannelId, channelId))
             .returning({ id: cs.id });
 
           if (!deleted) {
@@ -118,7 +142,7 @@ export class PostgresSubscriptionRepository implements SubscriptionRepositoryPor
   }
 
   async isSubscribed(
-    subscriberId: string,
+    subscriberChannelId: string,
     channelId: string
   ): Promise<Result<boolean, DatabaseUnavailable>> {
     const rows = await fromPromise(
@@ -126,7 +150,7 @@ export class PostgresSubscriptionRepository implements SubscriptionRepositoryPor
         this.db
           .select({ id: cs.id })
           .from(cs)
-          .where(and(eq(cs.subscriberId, subscriberId), eq(cs.channelId, channelId)))
+          .where(subscriptionOf(subscriberChannelId, channelId))
           .limit(1),
       databaseUnavailable.during('isSubscribed')
     );
@@ -134,23 +158,38 @@ export class PostgresSubscriptionRepository implements SubscriptionRepositoryPor
     return map(rows, ([row]) => Boolean(row));
   }
 
+  async getChannelSubscriptionChannelIds(
+    subscriberChannelId: string
+  ): Promise<Result<string[], DatabaseUnavailable>> {
+    return await this.followedChannelIds(
+      eq(cs.subscriberChannelId, subscriberChannelId),
+      'getChannelSubscriptionChannelIds'
+    );
+  }
+
   async getUserSubscriptionChannelIds(
     subscriberId: string
   ): Promise<Result<string[], DatabaseUnavailable>> {
+    return await this.followedChannelIds(
+      eq(cs.subscriberId, subscriberId),
+      'getUserSubscriptionChannelIds'
+    );
+  }
+
+  private async followedChannelIds(
+    subscribers: SQL,
+    operation: string
+  ): Promise<Result<string[], DatabaseUnavailable>> {
     const rows = await fromPromise(
-      () =>
-        this.db
-          .select({ channelId: cs.channelId })
-          .from(cs)
-          .where(eq(cs.subscriberId, subscriberId)),
-      databaseUnavailable.during('getUserSubscriptionChannelIds')
+      () => this.db.selectDistinct({ channelId: cs.channelId }).from(cs).where(subscribers),
+      databaseUnavailable.during(operation)
     );
 
     return map(rows, (found) => found.map((r) => r.channelId));
   }
 
   async setNotificationLevel(
-    subscriberId: string,
+    subscriberChannelId: string,
     channelId: string,
     level: NotificationLevel
   ): Promise<Result<boolean, DatabaseUnavailable>> {
@@ -159,7 +198,7 @@ export class PostgresSubscriptionRepository implements SubscriptionRepositoryPor
         this.db
           .update(cs)
           .set({ notificationLevel: level })
-          .where(and(eq(cs.subscriberId, subscriberId), eq(cs.channelId, channelId)))
+          .where(subscriptionOf(subscriberChannelId, channelId))
           .returning({ id: cs.id }),
       databaseUnavailable.during('setNotificationLevel')
     );
@@ -174,7 +213,7 @@ export class PostgresSubscriptionRepository implements SubscriptionRepositoryPor
     return await fromPromise(
       () =>
         this.db
-          .select({ subscriberId: cs.subscriberId, notificationLevel: cs.notificationLevel })
+          .select({ subscriberId: cs.subscriberId, notificationLevel: loudestLevel })
           .from(cs)
           .where(
             drizzleWhere(
@@ -182,6 +221,7 @@ export class PostgresSubscriptionRepository implements SubscriptionRepositoryPor
               options.after ? gt(cs.subscriberId, options.after) : undefined
             )
           )
+          .groupBy(cs.subscriberId)
           .orderBy(asc(cs.subscriberId))
           .limit(options.limit),
       databaseUnavailable.during('listSubscribers')
@@ -215,7 +255,7 @@ export class PostgresSubscriptionRepository implements SubscriptionRepositoryPor
   }
 
   async netSubscribers(
-    ownerId: string,
+    channelId: string,
     range: ViewDateRange
   ): Promise<Result<number, DatabaseUnavailable>> {
     const rows = await fromPromise(
@@ -223,10 +263,9 @@ export class PostgresSubscriptionRepository implements SubscriptionRepositoryPor
         this.db
           .select({ net: sql<number>`coalesce(sum(${se.delta}), 0)::int` })
           .from(se)
-          .innerJoin(ch, eq(ch.id, se.channelId))
           .where(
             and(
-              eq(ch.userId, ownerId),
+              eq(se.channelId, channelId),
               gte(se.occurredAt, new Date(range.from)),
               lt(se.occurredAt, new Date(Date.parse(range.to) + MS_PER_DAY))
             )
@@ -241,40 +280,7 @@ export class PostgresSubscriptionRepository implements SubscriptionRepositoryPor
     subscriberId: string,
     options: ListSubscriptionsOptions
   ): Promise<Result<SubscribedChannelItem[], DatabaseUnavailable>> {
-    return await fromPromise(
-      () =>
-        this.db
-          .select({
-            id: ch.id,
-            userId: ch.userId,
-            handle: ch.handle,
-            displayName: ch.displayName,
-            avatarUrl: ch.avatarUrl,
-            bannerUrl: ch.bannerUrl,
-            bio: ch.bio,
-            subscriberCount: ch.subscriberCount,
-            subscribedAt: cs.createdAt,
-            notificationLevel: cs.notificationLevel,
-          })
-          .from(cs)
-          .innerJoin(ch, eq(cs.channelId, ch.id))
-          .where(
-            drizzleWhere(
-              eq(cs.subscriberId, subscriberId),
-              keysetBefore(
-                msTimestamp(cs.createdAt),
-                cs.channelId,
-                options.cursor && {
-                  sort: options.cursor.createdAt,
-                  tie: options.cursor.channelId,
-                }
-              )
-            )
-          )
-          .orderBy(desc(msTimestamp(cs.createdAt)), desc(cs.channelId))
-          .limit(options.limit + 1),
-      databaseUnavailable.during('listUserSubscriptions')
-    );
+    return await subscribedChannels(this.db, subscriberId, options);
   }
 
   async getSubscriptionFeed(

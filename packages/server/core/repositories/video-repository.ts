@@ -1,5 +1,6 @@
 import type { Result } from '@kit/result';
 import type {
+  NewChannelAuditEntry,
   PublicFeedCursor,
   PublicFeedFilter,
   PublicFeedSort,
@@ -22,6 +23,7 @@ export type VideoRecord = Video;
 export interface NewVideoInput {
   id: string;
   ownerId: string;
+  channelId: string;
   title?: string;
   description?: string;
   visibility?: VideoVisibility;
@@ -128,7 +130,11 @@ export abstract class VideoRepository {
   abstract findWithDetails(
     id: string
   ): Promise<Result<VideoWithDetails | null, DatabaseUnavailable>>;
-  abstract create(data: NewVideoInput): Promise<Result<VideoRecord, DatabaseUnavailable>>;
+  /** `audit` is written with the video, never without it. */
+  abstract create(
+    data: NewVideoInput,
+    audit?: NewChannelAuditEntry
+  ): Promise<Result<VideoRecord, DatabaseUnavailable>>;
   abstract listByOwner(
     options: ListVideosOptions
   ): Promise<Result<VideoRecord[], DatabaseUnavailable>>;

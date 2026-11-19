@@ -25,7 +25,6 @@ export function registerCommentServices(c: Container): Container {
         new CommentService({
           comments: repositories().comments,
           videos: repositories().videos,
-          channels: repositories().channels,
           members: repositories().channelMembers,
           settings: repositories().commentSettings,
           restrictions: repositories().channelUserRestrictions,
@@ -72,7 +71,6 @@ export function registerCommentServices(c: Container): Container {
         new CommentModerationService({
           comments: repositories().comments,
           videos: repositories().videos,
-          channels: repositories().channels,
           settings: repositories().commentSettings,
           moderation: repositories().commentModeration,
           notifications: repositories().notifications,

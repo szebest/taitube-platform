@@ -11,16 +11,24 @@ describe('comment inbox query', () => {
   });
 
   it.each([
-    { filter: 'unanswered' as const, mentions: ['not exists', 'answer.author_id'] },
-    { filter: 'reported' as const, mentions: ['exists', 'comment_reports'] },
-    { filter: 'restricted' as const, mentions: ['exists', 'channel_user_restrictions'] },
-  ])('narrows to $filter with a subquery', ({ filter, mentions }) => {
+    {
+      filter: 'unanswered' as const,
+      mentions: ['not exists', 'answer.author_id'],
+      params: ['owner-1'],
+    },
+    { filter: 'reported' as const, mentions: ['exists', 'comment_reports'], params: [] },
+    {
+      filter: 'restricted' as const,
+      mentions: ['exists', 'channel_user_restrictions', '"videos"."channel_id"'],
+      params: [],
+    },
+  ])('narrows to $filter with a subquery', ({ filter, mentions, params: expected }) => {
     const scope = creatorInboxFilterScope(filter, 'owner-1');
 
     const { sql, params } = dialect.sqlToQuery(scope ?? (undefined as never));
 
     for (const part of mentions) expect(sql).toContain(part);
-    expect(params).toEqual(filter === 'reported' ? [] : ['owner-1']);
+    expect(params).toEqual(expected);
   });
 
   it('keeps the video title out of the comment and puts it under video', () => {
@@ -29,6 +37,7 @@ describe('comment inbox query', () => {
       id: 'c-1',
       videoId: 'v-1',
       authorId: 'u-1',
+      authorChannelId: 'ch-1',
       parentId: null,
       content: 'hi',
       isPinned: false,
@@ -39,7 +48,6 @@ describe('comment inbox query', () => {
       updatedAt: at,
       deletedAt: null,
       ...UNMODERATED,
-      channelId: null,
       handle: null,
       displayName: null,
       avatarUrl: null,

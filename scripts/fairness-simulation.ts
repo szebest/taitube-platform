@@ -160,10 +160,16 @@ async function runFairnessSimulation(log: Logger) {
     const videoId = crypto.randomUUID();
     const sourceKey = rawSourceKey(videoId);
 
+    const channel = required(
+      await repositories.channels.findPrimaryByUserId(ownerId),
+      'owner channel'
+    );
+    if (!channel) throw new Error(`the in-memory seed has no channel for ${ownerId}`);
     const video = required(
       await repositories.videos.create({
         id: videoId,
         ownerId,
+        channelId: channel.id,
         title: `video-${index}`,
         status: 'UPLOADED',
         sourceKey,

@@ -23,14 +23,13 @@ import {
   keysetPast,
   msTimestamp,
   notDeletedScope,
-  ownerScope,
 } from '../scopes/index';
 import { appendChannelAudit } from './channel-audit-writes';
 import { enqueueNotificationJobs } from './notification-jobs';
 import type { PostgresDatabase } from './types';
 import { commitVideoTransition } from './video-transition';
 
-const { videos: v, videoEvents: ve, categories: c, channels: ch } = schema;
+const { videos: v, videoEvents: ve, categories: c } = schema;
 
 function sortKey(sort: LibrarySort) {
   if (sort === 'newest') return msTimestamp(v.createdAt);
@@ -55,7 +54,7 @@ export class PostgresVideoStudioRepository extends VideoStudioRepository {
   }
 
   async listLibrary(query: VideoLibraryQuery): Promise<Result<VideoRecord[], DatabaseUnavailable>> {
-    const { ownerId, sort, cursor, limit, status, visibility, categoryId, titleContains } = query;
+    const { channelId, sort, cursor, limit, status, visibility, categoryId, titleContains } = query;
     const order = query.order ?? 'desc';
     const key = sortKey(sort);
     const direction = order === 'asc' ? asc : desc;
@@ -67,7 +66,7 @@ export class PostgresVideoStudioRepository extends VideoStudioRepository {
           .from(v)
           .where(
             drizzleWhere(
-              ownerId ? ownerScope(v, ownerId) : undefined,
+              channelId ? eq(v.channelId, channelId) : undefined,
               notDeletedScope(v),
               status && eq(v.status, status),
               visibility && eq(v.visibility, visibility),
@@ -125,21 +124,14 @@ export class PostgresVideoStudioRepository extends VideoStudioRepository {
             type: 'video.metadata_updated',
             payload: { patch, expectedVersion, newVersion: updated.version, requestedBy: userId },
           });
-          const [channel] = await tx
-            .select({ id: ch.id })
-            .from(ch)
-            .where(eq(ch.userId, updated.ownerId))
-            .limit(1);
-          if (channel) {
-            const edit = { videoId, fields: auditFields, commentsEnabled: patch.commentsEnabled };
-            for (const entry of videoEditAudit(edit)) {
-              await appendChannelAudit(tx, {
-                ...entry,
-                channelId: channel.id,
-                actorUserId: userId,
-                actorTokenId: tokenId,
-              });
-            }
+          const edit = { videoId, fields: auditFields, commentsEnabled: patch.commentsEnabled };
+          for (const entry of videoEditAudit(edit)) {
+            await appendChannelAudit(tx, {
+              ...entry,
+              channelId: updated.channelId,
+              actorUserId: userId,
+              actorTokenId: tokenId,
+            });
           }
           await enqueueNotificationJobs(
             tx,

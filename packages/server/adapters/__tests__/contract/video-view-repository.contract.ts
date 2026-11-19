@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { expectOk } from '@kit/testing/result';
 import type { VideoViewRepositoryPort } from '@vp/core/repositories';
 import type { RetentionCount, ViewCount } from '@vp/domain';
-import { OTHER_OWNER_ID, OWNER_ID, VIDEO_IDS, publicVideo, seedOwners } from './fixtures';
+import { OTHER_OWNER_ID, OWNER_CHANNEL_ID, VIDEO_IDS, publicVideo, seedOwners } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 import { describeVideoViewDeviceContract } from './video-view-device.contract';
 import { describeVideoViewFirstWeekContract } from './video-view-first-week.contract';
@@ -169,7 +169,7 @@ export function describeVideoViewRepositoryContract(makeSubject: MakeRepositorie
         count(VIDEO_IDS.c, DAY, 50)
       );
 
-      expect(expectOk(await views.channelTimeline(OWNER_ID, WEEK))).toEqual([
+      expect(expectOk(await views.channelTimeline(OWNER_CHANNEL_ID, WEEK))).toEqual([
         { viewDate: DAY, views: 5, watchSeconds: 50 },
         { viewDate: NEXT_DAY, views: 1, watchSeconds: 10 },
       ]);
@@ -183,7 +183,7 @@ export function describeVideoViewRepositoryContract(makeSubject: MakeRepositorie
         count(VIDEO_IDS.d, DAY, 9)
       );
 
-      expect(expectOk(await views.channelTotals(OWNER_ID))).toEqual({
+      expect(expectOk(await views.channelTotals(OWNER_CHANNEL_ID))).toEqual({
         totalViews: 10,
         videoCount: 2,
       });
@@ -197,11 +197,11 @@ export function describeVideoViewRepositoryContract(makeSubject: MakeRepositorie
       await apply(count(VIDEO_IDS.a, '2026-03-01', 100), count(VIDEO_IDS.a, DAY, 1));
       await apply(count(VIDEO_IDS.b, DAY, 5), count(VIDEO_IDS.c, DAY, 50));
 
-      expect(expectOk(await views.topVideos(OWNER_ID, WEEK, 5))).toEqual([
+      expect(expectOk(await views.topVideos(OWNER_CHANNEL_ID, WEEK, 5))).toEqual([
         { videoId: VIDEO_IDS.b, title: 'Beta', views: 5, totalViews: 5 },
         { videoId: VIDEO_IDS.a, title: 'Alpha', views: 1, totalViews: 101 },
       ]);
-      expect(expectOk(await views.topVideos(OWNER_ID, WEEK, 1))).toHaveLength(1);
+      expect(expectOk(await views.topVideos(OWNER_CHANNEL_ID, WEEK, 1))).toHaveLength(1);
     });
 
     describe('retention', () => {

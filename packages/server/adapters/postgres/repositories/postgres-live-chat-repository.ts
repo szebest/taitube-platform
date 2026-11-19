@@ -50,7 +50,7 @@ export class PostgresLiveChatRepository implements LiveChatRepositoryPort {
           this.db
             .select({ handle: ch.handle, displayName: ch.displayName, avatarUrl: ch.avatarUrl })
             .from(ch)
-            .where(eq(ch.userId, message.userId))
+            .where(and(eq(ch.userId, message.userId), eq(ch.isPrimary, true)))
             .limit(1),
         databaseUnavailable.during('appendLiveChatMessage')
       );
@@ -145,7 +145,7 @@ export class PostgresLiveChatRepository implements LiveChatRepositoryPort {
         this.db
           .select(columns)
           .from(m)
-          .leftJoin(ch, eq(ch.userId, m.userId))
+          .leftJoin(ch, and(eq(ch.userId, m.userId), eq(ch.isPrimary, true)))
           .where(and(where, isNull(m.removedAt)))
           .orderBy(...orderBy)
           .limit(limit),

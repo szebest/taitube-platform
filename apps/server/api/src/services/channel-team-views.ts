@@ -11,12 +11,12 @@ export function profileOf({ handle, displayName, avatarUrl }: Channel): TeamProf
 
 /** Each user's own channel as the team pages show them, keyed by user id. */
 export async function profilesOf(
-  channels: Pick<ChannelRepositoryPort, 'findByUserIds'>,
+  channels: Pick<ChannelRepositoryPort, 'findPrimaryByUserIds'>,
   userIds: readonly (string | null)[]
 ) {
   const ids = [...new Set(userIds.filter((id) => id !== null))];
   return map(
-    await channels.findByUserIds(ids),
+    await channels.findPrimaryByUserIds(ids),
     (found): Profiles => new Map(found.map((channel) => [channel.userId, profileOf(channel)]))
   );
 }

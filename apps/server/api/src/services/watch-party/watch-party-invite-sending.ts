@@ -12,6 +12,7 @@ import {
 import type { UserPreferences } from '@vp/domain/settings';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { partyInviteOutbox } from '@vp/job-contracts';
+import { followsChannel } from '../account-subscription';
 import type { WatchPartyDeps } from './watch-party-deps';
 import {
   acceptsPartyInvite,
@@ -71,7 +72,7 @@ export async function sendInvites(
   const seatedUserIds = new Set(seated.value.flatMap(({ userId }) => userId ?? []));
 
   const [accounts, preferences, blocking, pending] = await Promise.all([
-    repositories.channels.findByUserIds([inviterId, ...invitees]),
+    repositories.channels.findPrimaryByUserIds([inviterId, ...invitees]),
     repositories.userPreferences.findMany([...seatedUserIds, ...invitees]),
     repositories.watchPartyControls.blockingInvitesFrom(
       memberKeyOf({ kind: 'user', userId: inviterId }),
@@ -96,7 +97,7 @@ export async function sendInvites(
     const subscribed =
       inviterChannel === undefined
         ? ok(false)
-        : await repositories.subscriptions.isSubscribed(inviteeId, inviterChannel.id);
+        : await followsChannel(repositories.subscriptions, inviteeId, inviterChannel.id);
     if (isErr(subscribed)) return subscribed;
     const wanted =
       known.has(inviteeId) &&

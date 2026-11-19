@@ -7,32 +7,55 @@ const channel = aChannel();
 const channelId = channel.id;
 
 describe('@vp/domain-rules: decideSubscribe', () => {
-  it('lets a signed-in stranger subscribe', () => {
-    expect(isOk(decideSubscribe({ subscriber: STRANGER, channel, channelId }))).toBe(true);
+  const otherChannelId = 'channel-2';
+
+  it.each([
+    { name: 'a signed-in stranger', subscriber: STRANGER },
+    { name: 'the owner acting as another of their channels', subscriber: OWNER },
+  ])('lets $name subscribe', ({ subscriber }) => {
+    const result = decideSubscribe({
+      subscriber,
+      channel,
+      channelId,
+      subscriberChannelId: otherChannelId,
+    });
+
+    expect(isOk(result)).toBe(true);
   });
 
-  it('refuses an anonymous subscriber', () => {
-    const result = decideSubscribe({ subscriber: null, channel, channelId });
+  it.each([
+    {
+      name: 'an anonymous subscriber',
+      subscriber: null,
+      chan: channel,
+      subscriberChannelId: otherChannelId,
+      code: ErrorCodes.FORBIDDEN,
+    },
+    {
+      name: 'a channel subscribing to itself',
+      subscriber: OWNER,
+      chan: channel,
+      subscriberChannelId: channelId,
+      code: ErrorCodes.CANNOT_SUBSCRIBE_TO_SELF,
+    },
+    {
+      name: 'an absent channel',
+      subscriber: STRANGER,
+      chan: null,
+      subscriberChannelId: otherChannelId,
+      code: ErrorCodes.CHANNEL_NOT_FOUND,
+    },
+    {
+      name: 'an anonymous caller probing an absent channel id',
+      subscriber: null,
+      chan: null,
+      subscriberChannelId: otherChannelId,
+      code: ErrorCodes.FORBIDDEN,
+    },
+  ])('refuses $name with $code', ({ subscriber, chan, subscriberChannelId, code }) => {
+    const result = decideSubscribe({ subscriber, channel: chan, channelId, subscriberChannelId });
 
-    expect(isErr(result) && result.error.code).toBe(ErrorCodes.FORBIDDEN);
-  });
-
-  it('refuses the channel owner subscribing to themselves', () => {
-    const result = decideSubscribe({ subscriber: OWNER, channel, channelId });
-
-    expect(isErr(result) && result.error.code).toBe(ErrorCodes.CANNOT_SUBSCRIBE_TO_SELF);
-  });
-
-  it('owns the absent-channel verdict the repositories used to keep two copies of', () => {
-    const result = decideSubscribe({ subscriber: STRANGER, channel: null, channelId });
-
-    expect(isErr(result) && result.error.code).toBe(ErrorCodes.CHANNEL_NOT_FOUND);
-  });
-
-  it('does not let an anonymous caller learn whether a channel id exists', () => {
-    const result = decideSubscribe({ subscriber: null, channel: null, channelId });
-
-    expect(isErr(result) && result.error.code).toBe(ErrorCodes.FORBIDDEN);
+    expect(isErr(result) && result.error.code).toBe(code);
   });
 });
 

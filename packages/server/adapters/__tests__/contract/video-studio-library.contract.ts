@@ -8,7 +8,7 @@ import {
   HOUR_MS,
   idsOf,
   OTHER_OWNER_ID,
-  OWNER_ID,
+  OWNER_CHANNEL_ID,
   publicVideo,
   seedCategories,
   seedOwners,
@@ -59,7 +59,12 @@ export function describeVideoStudioLibraryContract(makeSubject: MakeRepositories
       const list = async (query: Partial<VideoLibraryQuery> = {}) =>
         idsOf(
           expectOk(
-            await studio.listLibrary({ ownerId: OWNER_ID, sort: 'newest', limit: 10, ...query })
+            await studio.listLibrary({
+              channelId: OWNER_CHANNEL_ID,
+              sort: 'newest',
+              limit: 10,
+              ...query,
+            })
           )
         );
 
@@ -89,7 +94,7 @@ export function describeVideoStudioLibraryContract(makeSubject: MakeRepositories
 
       it('returns one row past the limit and resumes after the cursor without repeating', async () => {
         const firstPage = expectOk(
-          await studio.listLibrary({ ownerId: OWNER_ID, sort: 'views', limit: 1 })
+          await studio.listLibrary({ channelId: OWNER_CHANNEL_ID, sort: 'views', limit: 1 })
         );
         expect(idsOf(firstPage)).toEqual([VIDEO_IDS.c, VIDEO_IDS.b]);
 
@@ -115,7 +120,7 @@ export function describeVideoStudioLibraryContract(makeSubject: MakeRepositories
             async (cursor: CreatorLibraryCursor | null) =>
               expectOk(
                 await studio.listLibrary({
-                  ownerId: OWNER_ID,
+                  channelId: OWNER_CHANNEL_ID,
                   sort: 'newest',
                   order,
                   cursor,
@@ -152,7 +157,7 @@ export function describeVideoStudioLibraryContract(makeSubject: MakeRepositories
       const list = async (query: Partial<VideoLibraryQuery> = {}) =>
         idsOf(expectOk(await studio.listLibrary({ sort: 'newest', limit: 10, ...query })));
 
-      it('lists every owner except deleted videos when no owner is given', async () => {
+      it('lists every channel except deleted videos when no channel is given', async () => {
         expect(await list()).toEqual([VIDEO_IDS.a, VIDEO_IDS.b, VIDEO_IDS.c]);
       });
 

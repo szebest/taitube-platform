@@ -4,7 +4,7 @@ import { drizzle } from 'drizzle-orm/pglite';
 import {
   CATEGORY_MUSIC_ID,
   OTHER_OWNER_ID,
-  OWNER_ID,
+  OWNER_CHANNEL_ID,
   VIDEO_IDS,
   publicVideo,
   seedCategories,
@@ -28,7 +28,7 @@ describe('PostgresRelatedVideosRepository statements', () => {
     expectOk(
       await related.find({
         videoId: VIDEO_IDS.a,
-        ownerId: OWNER_ID,
+        channelId: OWNER_CHANNEL_ID,
         categoryId: CATEGORY_MUSIC_ID,
         tags: ['lisbon'],
         excludeOwnerId: null,
@@ -69,7 +69,7 @@ describe('PostgresRelatedVideosRepository statements', () => {
     expect(
       await find(2, {
         videoId: '00000000-0000-7000-8000-0000000000c1',
-        ownerId: '00000000-0000-7000-8000-0000000000c2',
+        channelId: '00000000-0000-7000-8000-0000000000c2',
         categoryId: null,
         tags: [],
       })

@@ -10,7 +10,7 @@ import {
   type Who,
   buildCommentsApp,
 } from '../../__tests__/comments-app';
-import { seedTeamMember, seedVideo } from '../../__tests__/test-app';
+import { seedPrimaryChannel, seedTeamMember, seedVideo } from '../../__tests__/test-app';
 
 const ELSEWHERE_VIDEO = '88888888-8888-7888-8888-888888888888';
 const ABSENT = '99999999-9999-7999-8999-999999999999';
@@ -33,13 +33,7 @@ describe('POST /v1/creator/comments/bulk', () => {
 
   beforeEach(async () => {
     ctx = await buildCommentsApp();
-    channelId = expectOk(
-      await ctx.repositories.channels.create({
-        userId: CREATOR,
-        handle: 'creator',
-        displayName: 'Creator',
-      })
-    ).id;
+    channelId = ctx.creatorChannelId;
   });
 
   afterEach(async () => {
@@ -83,6 +77,7 @@ describe('POST /v1/creator/comments/bulk', () => {
         id: '77777777-7777-7777-8777-777777777777',
         videoId: ELSEWHERE_VIDEO,
         authorId: STRANGER,
+        authorChannelId: await seedPrimaryChannel(ctx.repositories, STRANGER),
         parentId: null,
         content: 'not yours',
       })

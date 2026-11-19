@@ -1,5 +1,6 @@
 import { expectOk } from '@kit/testing/result';
 import type { InMemoryRepositories } from '@vp/adapters/in-memory';
+import { CHANNEL_HEADER } from '@vp/api-contracts';
 import { mintToken } from '@vp/dev-identity';
 import { ErrorCodes } from '@vp/errors';
 import type { FastifyInstance } from 'fastify';
@@ -34,18 +35,19 @@ describe('subscription routes', () => {
       role: 'USER',
       tier: 'free',
     });
-    await repositories.videos.create({
-      id: WATCHED_VIDEO,
-      ownerId: CREATOR,
-      visibility: 'public',
-      status: 'READY',
-      sourceKey: 'raw/watched.mp4',
-    });
     await repositories.channels.create({
       id: CHANNEL,
       userId: CREATOR,
       handle: 'creator1',
       displayName: 'Creator One',
+    });
+    await repositories.videos.create({
+      id: WATCHED_VIDEO,
+      ownerId: CREATOR,
+      channelId: CHANNEL,
+      visibility: 'public',
+      status: 'READY',
+      sourceKey: 'raw/watched.mp4',
     });
   });
 
@@ -90,6 +92,21 @@ describe('subscription routes', () => {
 
     expect(res.statusCode).toBe(status);
     expect(res.json().code).toBe(code);
+  });
+
+  it.each([
+    { method: 'POST' as const, url: `/v1/channels/${ABSENT_CHANNEL}/subscribers` },
+    { method: 'DELETE' as const, url: `/v1/channels/${ABSENT_CHANNEL}/subscribers` },
+    { method: 'PATCH' as const, url: `/v1/channels/${ABSENT_CHANNEL}/subscribers/me` },
+  ])('refuses $method as a channel the caller does not work on with 403', async (call) => {
+    const res = await app.inject({
+      ...call,
+      headers: { ...subscriber, [CHANNEL_HEADER]: CHANNEL },
+      payload: call.method === 'PATCH' ? { level: 'none' } : {},
+    });
+
+    expect(res.statusCode).toBe(403);
+    expect(res.json().code).toBe(ErrorCodes.CHANNEL_MEMBERSHIP_REQUIRED);
   });
 
   it('subscribes, reports it on the channel and in the list, then unsubscribes', async () => {

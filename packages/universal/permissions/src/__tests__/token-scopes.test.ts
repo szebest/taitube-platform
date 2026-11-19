@@ -1,54 +1,26 @@
 import { subject } from '@casl/ability';
-import { API_SCOPES, type ApiScope, type DataExportKind } from '@vp/domain';
+import { API_SCOPES } from '@vp/domain';
 import { getUserPermissions } from '../ability';
-import type { AppAction, AppSubjects, Role, UserContext } from '../types/index';
-
-const OWNER_ID = 'owner-1';
-const OWN_CHANNEL = 'chan-own';
-const TEAM_CHANNEL = 'chan-team';
-const TEAM_OWNER = 'owner-team';
-const OTHER_CHANNEL = 'chan-other';
-const OTHER_OWNER = 'owner-other';
-
-const video = (ownerId: string, status = 'READY') =>
-  subject('Video', { id: 'vid-1', ownerId, visibility: 'private' as const, status });
-const comment = (videoOwnerId: string) =>
-  subject('Comment', { id: 'c-1', authorId: 'fan-1', videoOwnerId });
-const analytics = (ownerId: string) => subject('Analytics', { ownerId });
-const channelExport = (channelId: string, ownerId: string, kind: DataExportKind) =>
-  subject('ChannelExport', { channelId, ownerId, kind });
-
-function tokenOf(
-  scopes: readonly ApiScope[],
-  overrides: Partial<UserContext> = {},
-  channelId = OWN_CHANNEL
-): UserContext {
-  return {
-    id: OWNER_ID,
-    role: 'CREATOR',
-    ...overrides,
-    token: { id: 'tok-1', channelId, scopes },
-  };
-}
-
-const foreign = video(OTHER_OWNER);
-const as = (role: Role, scope: ApiScope) => tokenOf([scope], { role });
-const onTeam = (scope: ApiScope) => tokenOf([scope], manager, TEAM_CHANNEL);
-const publicVideo = subject('Video', {
-  id: 'v-2',
-  ownerId: OTHER_OWNER,
-  visibility: 'public' as const,
-});
-
-const manager: Partial<UserContext> = {
-  memberships: {
-    [TEAM_CHANNEL]: { role: 'manager', ownerId: TEAM_OWNER },
-    [OTHER_CHANNEL]: { role: 'manager', ownerId: OTHER_OWNER },
-  },
-};
-const analyticsMember: Partial<UserContext> = {
-  memberships: { [TEAM_CHANNEL]: { role: 'analytics', ownerId: TEAM_OWNER } },
-};
+import type { AppAction, AppSubjects, UserContext } from '../types/index';
+import {
+  analytics,
+  analyticsMember,
+  as,
+  channelExport,
+  comment,
+  foreign,
+  manager,
+  onTeam,
+  OTHER_OWNER,
+  OWN_CHANNEL,
+  OWNER_ID,
+  publicVideo,
+  SECOND_CHANNEL,
+  TEAM_CHANNEL,
+  TEAM_OWNER,
+  tokenOf,
+  video,
+} from './token-fixtures';
 
 describe('permissions: a token is its user cut down to its scopes', () => {
   it.each<{
@@ -268,6 +240,20 @@ describe('permissions: a token is its user cut down to its scopes', () => {
       onTeam('exports:create'),
       'create',
       channelExport(OWN_CHANNEL, OWNER_ID, 'videos'),
+      false,
+    ],
+    [
+      "owner token edits no video of the owner's other channel",
+      as('CREATOR', 'videos:write'),
+      'update',
+      video(OWNER_ID, 'READY', SECOND_CHANNEL),
+      false,
+    ],
+    [
+      "owner token reads no analytics of the owner's other channel",
+      as('CREATOR', 'analytics:read'),
+      'read',
+      analytics(OWNER_ID, SECOND_CHANNEL),
       false,
     ],
     [

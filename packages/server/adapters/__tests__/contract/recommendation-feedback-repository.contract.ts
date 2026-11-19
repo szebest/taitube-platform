@@ -7,12 +7,18 @@ import {
   type RecommendationFeedbackEntry,
 } from '@vp/domain';
 import type { UserContext } from '@vp/permissions';
-import { OTHER_OWNER_ID, OWNER_ID, VIDEO_IDS, publicVideo, seedOwners } from './fixtures';
+import {
+  OTHER_OWNER_CHANNEL_ID as OTHER_CHANNEL_ID,
+  OTHER_OWNER_ID,
+  OWNER_CHANNEL_ID as CHANNEL_ID,
+  OWNER_ID,
+  VIDEO_IDS,
+  publicVideo,
+  seedOwners,
+} from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
 const BASE = Date.parse('2026-03-01T12:00:00.000Z');
-const CHANNEL_ID = '00000000-0000-7000-8000-000000000901';
-const OTHER_CHANNEL_ID = '00000000-0000-7000-8000-000000000902';
 
 const rowId = (n: number) => `00000000-0000-7000-8000-${String(n).padStart(12, '0')}`;
 const videoIdOf = (n: number) => `00000000-0000-7000-9000-${String(n).padStart(12, '0')}`;
@@ -59,18 +65,6 @@ export function describeRecommendationFeedbackRepositoryContract(
       const { repositories } = subject;
       await seedOwners(repositories);
       feedback = repositories.recommendationFeedback;
-      await repositories.channels.create({
-        id: CHANNEL_ID,
-        userId: OWNER_ID,
-        handle: 'owner-channel',
-        displayName: 'Owner Channel',
-      });
-      await repositories.channels.create({
-        id: OTHER_CHANNEL_ID,
-        userId: OTHER_OWNER_ID,
-        handle: 'other-channel',
-        displayName: 'Other Channel',
-      });
       await subject.seedVideo(publicVideo({ id: VIDEO_IDS.a }));
       await subject.seedVideo(publicVideo({ id: VIDEO_IDS.b }));
     });
@@ -126,7 +120,7 @@ export function describeRecommendationFeedbackRepositoryContract(
         id: rowId(2),
         kind: 'hide_channel',
         video: null,
-        channel: { id: CHANNEL_ID, handle: 'owner-channel' },
+        channel: { id: CHANNEL_ID, handle: 'owner' },
       });
       expect(videoRow).toMatchObject({
         id: rowId(1),

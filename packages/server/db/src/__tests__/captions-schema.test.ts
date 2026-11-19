@@ -31,7 +31,10 @@ describe('db: captions migration', () => {
     await runMigrations(database.url, quiet);
     await database.engine.exec(`
       insert into users (id, email) values ('${VIDEO}', 'captions@x.local');
-      insert into videos (id, owner_id, source_key) values ('${VIDEO}', '${VIDEO}', 'raw/x.mp4');
+      insert into channels (id, user_id, handle, display_name)
+        values ('${VIDEO}', '${VIDEO}', 'captions', 'Captions');
+      insert into videos (id, owner_id, channel_id, source_key)
+        values ('${VIDEO}', '${VIDEO}', '${VIDEO}', 'raw/x.mp4');
       insert into video_captions (id, video_id, kind, status)
         values ('${CAPTION}', '${VIDEO}', 'auto', 'pending');
       insert into video_transcript_cues (caption_id, cue_index, start_ms, end_ms, text)
@@ -61,12 +64,8 @@ describe('db: captions migration', () => {
   });
 
   it('starts a channel opted out and a video following its channel', async () => {
-    await database.engine.exec(`
-      insert into channels (id, user_id, handle, display_name)
-        values ('${VIDEO}', '${VIDEO}', 'captions', 'Captions')
-    `);
     const { rows } = await database.engine.query<{ channel: boolean; video: boolean | null }>(
-      'select c.auto_captions_default as channel, v.auto_captions as video from channels c join videos v on v.owner_id = c.user_id'
+      'select c.auto_captions_default as channel, v.auto_captions as video from channels c join videos v on v.channel_id = c.id'
     );
 
     expect(rows).toEqual([{ channel: false, video: null }]);

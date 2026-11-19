@@ -47,7 +47,7 @@ export async function videoDailyRows(
     .innerJoin(v, eq(v.id, d.videoId))
     .where(
       and(
-        eq(v.ownerId, scope.ownerId),
+        eq(v.channelId, scope.channelId),
         isNull(v.deletedAt),
         within(d.viewDate, scope.range),
         keysetPast(d.videoId, d.viewDate, after && { sort: after.videoId, tie: after.day }, 'asc')
@@ -76,7 +76,7 @@ export async function retentionRows(
     .innerJoin(v, eq(v.id, r.videoId))
     .where(
       and(
-        eq(v.ownerId, scope.ownerId),
+        eq(v.channelId, scope.channelId),
         isNull(v.deletedAt),
         keysetPast(
           r.videoId,
@@ -114,7 +114,7 @@ export async function channelDayRows(
     })
     .from(d)
     .innerJoin(v, eq(v.id, d.videoId))
-    .where(and(eq(v.ownerId, scope.ownerId), isNull(v.deletedAt)))
+    .where(and(eq(v.channelId, scope.channelId), isNull(v.deletedAt)))
     .groupBy(d.viewDate)
     .as('views_by_day');
   const subscribers = db

@@ -1,6 +1,13 @@
 import { expectOk } from '@kit/testing/result';
 import { notificationRead } from '@vp/domain';
-import { OTHER_OWNER_ID, OWNER_ID, publicVideo, seedOwners, VIDEO_IDS } from './fixtures';
+import {
+  OTHER_OWNER_ID,
+  OWNER_CHANNEL_ID,
+  OWNER_ID,
+  VIDEO_IDS,
+  publicVideo,
+  seedOwners,
+} from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
 const COMMENT_IDS = {
@@ -45,6 +52,7 @@ export function describeNotificationWithdrawalContract(makeSubject: MakeReposito
             id,
             videoId: VIDEO_IDS.a,
             authorId: OWNER_ID,
+            authorChannelId: OWNER_CHANNEL_ID,
             parentId: null,
             content: 'hello',
           })

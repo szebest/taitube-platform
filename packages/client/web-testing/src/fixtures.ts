@@ -32,6 +32,7 @@ export function videoSummary(overrides: Partial<VideoSummary> = {}): VideoSummar
   return {
     id: VIDEO_ID,
     ownerId: OWNER_ID,
+    channelId: CHANNEL_ID,
     title: 'A video',
     description: 'About something',
     visibility: 'public',
@@ -50,6 +51,7 @@ export function video(overrides: Partial<Video> = {}): Video {
   return {
     id: VIDEO_ID,
     ownerId: OWNER_ID,
+    channelId: CHANNEL_ID,
     title: 'A video',
     description: 'About something',
     visibility: 'public',
@@ -192,7 +194,15 @@ export function feedPages(items: VideoSummary[]) {
 export function account(overrides: Partial<Account> = {}): Account {
   const user = { id: OWNER_ID, email: 'creator@example.com', tier: 'free', createdAt: CREATED_AT };
   const { redirectedFrom: _redirectedFrom, ...owned } = channel();
-  return { ...user, role: 'CREATOR', user, channel: owned, ...overrides };
+  const { id, handle, displayName, avatarUrl } = owned;
+  return {
+    ...user,
+    role: 'CREATOR',
+    user,
+    channel: owned,
+    channels: [{ id, handle, displayName, avatarUrl }],
+    ...overrides,
+  };
 }
 
 export const LIVE_STREAM_ID = '0190c3a0-5e1d-7000-8000-00000000e001';

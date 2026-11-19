@@ -24,7 +24,7 @@ import {
 import type { DatabaseUnavailable } from '@vp/errors';
 import { type UserContext, canReadPlaylist } from '@vp/permissions';
 import { byKeysetDesc, isKeysetBefore } from './keyset';
-import { type VideoLookups, channelCard, watchableVideo } from './watchable-video';
+import { type VideoLookups, primaryChannelCard, watchableVideo } from './watchable-video';
 
 interface StoredItem {
   id: string;
@@ -120,7 +120,7 @@ export class InMemoryPlaylistRepository implements PlaylistRepositoryPort {
     );
     return ok({
       playlist: { ...playlist },
-      owner: await channelCard(this.lookups, playlist.ownerId),
+      owner: await primaryChannelCard(this.lookups, playlist.ownerId),
       items: entries.filter((entry): entry is PlaylistEntry => entry !== null),
     });
   }

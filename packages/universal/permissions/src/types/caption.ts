@@ -4,5 +4,6 @@ import type { VideoResource } from './video';
 export interface CaptionResource {
   readonly videoId: string;
   readonly ownerId: string;
+  readonly channelId: string;
   readonly visibility: NonNullable<VideoResource['visibility']>;
 }

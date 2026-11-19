@@ -44,4 +44,42 @@ export const SDD_ACCOUNT_ENDPOINTS: SddEndpointContract[] = [
     expectedErrorCodes: [VALIDATION_FAILED, UNAUTHORIZED, FORBIDDEN],
     hasBody: true,
   },
+  {
+    path: '/v1/me/channels',
+    method: 'post',
+    expectedStatuses: [201, 400, 401, 409, 422],
+    expectedErrorCodes: [
+      ...AUTHENTICATED,
+      ErrorCodes.INVALID_HANDLE_FORMAT,
+      ErrorCodes.CHANNEL_LIMIT_REACHED,
+      ErrorCodes.HANDLE_ALREADY_TAKEN,
+      ErrorCodes.HANDLE_RESERVED,
+    ],
+    hasBody: true,
+  },
+  {
+    path: '/v1/me/channels/{id}',
+    method: 'patch',
+    expectedStatuses: [200, 400, 401, 403, 404, 422],
+    expectedErrorCodes: [
+      ...AUTHENTICATED,
+      ErrorCodes.CHANNEL_NOT_OWNED,
+      ErrorCodes.CHANNEL_NOT_FOUND,
+    ],
+    hasBody: true,
+    hasPathParams: true,
+  },
+  {
+    path: '/v1/me/identities',
+    method: 'get',
+    expectedStatuses: [200, 401],
+    expectedErrorCodes: [UNAUTHORIZED],
+  },
+  {
+    path: '/v1/me/security/sign-ins',
+    method: 'get',
+    expectedStatuses: [200, 400, 401],
+    expectedErrorCodes: [...AUTHENTICATED, INVALID_CURSOR],
+    hasQueryParams: true,
+  },
 ];

@@ -5,16 +5,21 @@ const channel = aChannel();
 
 describe('@vp/domain-rules: subscriptionSourceOf', () => {
   it.each([
-    ['a public video of the channel', aVideo({ id: 'v1', ownerId: channel.userId }), 'v1'],
-    ['a video of another channel', aVideo({ ownerId: 'someone-else' }), null],
+    ['a public video of the channel', aVideo({ id: 'v1', channelId: channel.id }), 'v1'],
+    ['a video of another channel', aVideo({ channelId: 'another-channel' }), null],
+    [
+      "a video of the owner's other channel",
+      aVideo({ ownerId: channel.userId, channelId: 'another-channel' }),
+      null,
+    ],
     [
       'an unlisted video of the channel',
-      aVideo({ ownerId: channel.userId, visibility: 'unlisted' }),
+      aVideo({ channelId: channel.id, visibility: 'unlisted' }),
       null,
     ],
     [
       'a private video of the channel',
-      aVideo({ ownerId: channel.userId, visibility: 'private' }),
+      aVideo({ channelId: channel.id, visibility: 'private' }),
       null,
     ],
     ['no video', null, null],

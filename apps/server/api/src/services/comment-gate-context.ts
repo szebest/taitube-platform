@@ -1,6 +1,5 @@
 import { isErr, ok, type Result } from '@kit/result';
 import type {
-  ChannelRepositoryPort,
   ChannelUserRestrictionRepositoryPort,
   CommentSettingsRepositoryPort,
   SubscriptionRepositoryPort,
@@ -16,7 +15,6 @@ import { isChannelTeamMember, type UserContext } from '@vp/permissions';
 const oldestAccount = (): Date => new Date(0);
 
 export interface CommentGateLookups {
-  channels: Pick<ChannelRepositoryPort, 'findByUserId'>;
   settings: CommentSettingsRepositoryPort;
   restrictions: Pick<ChannelUserRestrictionRepositoryPort, 'findActive'>;
   trusted: Pick<TrustedCommenterRepositoryPort, 'isTrusted'>;
@@ -25,31 +23,27 @@ export interface CommentGateLookups {
 }
 
 export interface LoadedCommentGate {
-  channelId: string;
   settings: CommentSettings;
   context: CommentGateContext;
 }
 
 /**
- * Everything `evaluateCommentGate` reads, in one lookup. A video whose owner has no channel has no
- * settings, restrictions or trusted list, so it has no gate either.
+ * Everything `evaluateCommentGate` reads about the channel the video is on, in one lookup. Bans and
+ * trust name the account; a subscription names the channel `authorChannelId` the author writes as.
  */
 export async function loadCommentGate(
   lookups: CommentGateLookups,
   author: UserContext,
+  authorChannelId: string,
   video: Video,
   now: Date
-): Promise<Result<LoadedCommentGate | null, DatabaseUnavailable>> {
-  const channel = await lookups.channels.findByUserId(video.ownerId);
-  if (isErr(channel)) return channel;
-  if (!channel.value) return ok(null);
-  const channelId = channel.value.id;
-
+): Promise<Result<LoadedCommentGate, DatabaseUnavailable>> {
+  const { channelId } = video;
   const [settings, restriction, trusted, subscribed, account] = await Promise.all([
     lookups.settings.get(channelId),
     lookups.restrictions.findActive(channelId, author.id, now),
     lookups.trusted.isTrusted(channelId, author.id),
-    lookups.subscriptions.isSubscribed(author.id, channelId),
+    lookups.subscriptions.isSubscribed(authorChannelId, channelId),
     lookups.users.findById(author.id),
   ]);
   if (isErr(settings)) return settings;
@@ -59,7 +53,6 @@ export async function loadCommentGate(
   if (isErr(account)) return account;
 
   return ok({
-    channelId,
     settings: settings.value,
     context: {
       now,

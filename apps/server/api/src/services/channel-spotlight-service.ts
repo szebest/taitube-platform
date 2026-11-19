@@ -26,6 +26,7 @@ import {
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { type InvalidField, invalidField } from '@vp/validation';
+import { followsChannel } from './account-subscription';
 import type { ChannelIdentityService } from './channel-identity-service';
 import type { VideoService, VideoSummaryView } from './video-service';
 
@@ -33,7 +34,7 @@ export interface ChannelSpotlightServiceDeps {
   channels: ChannelRepositoryPort;
   pages: ChannelPageRepositoryPort;
   videos: VideoRepository;
-  subscriptions: Pick<SubscriptionRepositoryPort, 'isSubscribed'>;
+  subscriptions: Pick<SubscriptionRepositoryPort, 'getUserSubscriptionChannelIds'>;
   audit: ChannelAuditRepositoryPort;
   identity: Pick<ChannelIdentityService, 'findPublic' | 'recordChange'>;
   videoService: Pick<VideoService, 'summarize'>;
@@ -178,7 +179,9 @@ export class ChannelSpotlightService {
     viewer: UserContext | null,
     channel: Channel
   ): Promise<Result<boolean, DatabaseUnavailable>> {
-    return viewer ? await this.deps.subscriptions.isSubscribed(viewer.id, channel.id) : ok(false);
+    return viewer
+      ? await followsChannel(this.deps.subscriptions, viewer.id, channel.id)
+      : ok(false);
   }
 
   private async firstShowing(

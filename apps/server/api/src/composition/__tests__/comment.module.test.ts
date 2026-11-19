@@ -3,6 +3,7 @@ import { expectOk } from '@kit/testing/result';
 import { Adapters, registerAdapters } from '@vp/adapters/composition';
 import { inProcessAppConfig } from '@vp/env-schema';
 import type { UserContext } from '@vp/permissions';
+import { actingAsPrimary, seedPrimaryChannel } from '../../__tests__/test-app';
 import { Services, registerServices } from '../services.module';
 
 const CREATOR: UserContext = { id: '00000000-0000-7000-8000-00000000f201', role: 'CREATOR' };
@@ -13,17 +14,23 @@ const VIDEO_ID = '00000000-0000-7000-8000-00000000f204';
 describe('apps/server/api/composition: comment module', () => {
   it('hands the comment, report and inbox services one set of repositories', async () => {
     const c = registerServices(await registerAdapters(new Container(), inProcessAppConfig()));
+    const channelId = await seedPrimaryChannel(c.get(Adapters.Repositories), CREATOR.id);
     expectOk(
       await c.get(Adapters.Repositories).videos.create({
         id: VIDEO_ID,
         ownerId: CREATOR.id,
+        channelId,
         status: 'READY',
         sourceKey: 'raw/comments.mp4',
         visibility: 'public',
       })
     );
     const comment = expectOk(
-      await c.get(Services.CommentService).create(FAN, VIDEO_ID, { content: 'hello' })
+      await c
+        .get(Services.CommentService)
+        .create(FAN, await actingAsPrimary(c.get(Adapters.Repositories), FAN.id), VIDEO_ID, {
+          content: 'hello',
+        })
     );
 
     const report = expectOk(
@@ -33,7 +40,7 @@ describe('apps/server/api/composition: comment module', () => {
     const inbox = expectOk(
       await c.get(Services.CreatorCommentService).inbox(
         CREATOR,
-        { channelId: 'chan-creator', ownerId: CREATOR.id, role: 'owner' },
+        { channelId, ownerId: CREATOR.id, role: 'owner' },
         {
           filter: 'reported',
         }

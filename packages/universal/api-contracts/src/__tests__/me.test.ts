@@ -34,6 +34,8 @@ const user = {
   createdAt: '2026-01-01T00:00:00.000Z',
 };
 
+const channels = [{ id: channel.id, handle: 'creator', displayName: 'Creator', avatarUrl: null }];
+
 describe('packages/api-contracts: me', () => {
   it('serves the account under /v1/me/account and the edit under /v1/me/channel', () => {
     expect(getAccount).toMatchObject({ method: 'GET', path: '/v1/me/account' });
@@ -42,14 +44,14 @@ describe('packages/api-contracts: me', () => {
 
   it('nests the user and the channel inside the account payload', () => {
     expect(
-      getAccount.result.parse({ ...user, role: 'CREATOR', user, channel }).channel.handle
+      getAccount.result.parse({ ...user, role: 'CREATOR', user, channel, channels }).channel.handle
     ).toBe('creator');
   });
 
   it('refuses an account whose role is none of the roles', () => {
-    expect(getAccount.result.safeParse({ ...user, role: 'SUPERUSER', user, channel }).success).toBe(
-      false
-    );
+    expect(
+      getAccount.result.safeParse({ ...user, role: 'SUPERUSER', user, channel, channels }).success
+    ).toBe(false);
   });
 
   it('treats every channel edit field as optional but rejects a non-url avatar', () => {

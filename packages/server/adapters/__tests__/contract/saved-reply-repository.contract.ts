@@ -2,7 +2,7 @@ import { expectOk } from '@kit/testing/result';
 import type { Repositories } from '@vp/core/repositories';
 import type { Channel } from '@vp/domain';
 import { seedTeam } from './channel-team-fixtures';
-import { OTHER_OWNER_ID, seedOwners } from './fixtures';
+import { OTHER_OWNER_ID, seedOwners, seededChannel } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
 const LIMIT = 3;
@@ -87,13 +87,7 @@ export function describeSavedReplyRepositoryContract(makeSubject: MakeRepositori
     });
 
     it('keeps replies per channel, and touches another channel reply never', async () => {
-      const other = expectOk(
-        await repositories.channels.create({
-          userId: OTHER_OWNER_ID,
-          handle: 'other',
-          displayName: 'Other',
-        })
-      );
+      const other = await seededChannel(repositories, OTHER_OWNER_ID);
       const mine = await create('mine');
 
       const update = expectOk(

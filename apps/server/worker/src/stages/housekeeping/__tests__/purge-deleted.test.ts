@@ -157,7 +157,12 @@ describe('housekeeping: purge-deleted', () => {
     expectOk(
       await repositories.liveStreams.goLive({
         streamId,
-        video: { id: videoId, ownerId: channel.userId, sourceKey: `live/${streamId}/` },
+        video: {
+          id: videoId,
+          ownerId: channel.userId,
+          channelId: channel.id,
+          sourceKey: `live/${streamId}/`,
+        },
         startedAt: hoursAgo(3),
         outbox: [],
       })

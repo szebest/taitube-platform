@@ -4,7 +4,7 @@ import { listMyMemberships } from '@vp/api-contracts';
 import { canModerateComment } from '@vp/permissions';
 import { useCan } from '@vp/permissions-react';
 import { createQueryClient } from '@vp/queries';
-import { apiServer, mockEndpoint, OWNER_ID } from '@vp/web-testing';
+import { apiServer, CHANNEL_ID, mockEndpoint, OWNER_ID } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
 import type { ComponentType, PropsWithChildren } from 'react';
 import { membershipOn, OTHER_ID, viewerAccount } from '#app/__tests__/comment-fixtures';
@@ -13,15 +13,23 @@ import { ChannelPermissions } from '../channel-permissions';
 
 function mayHide(Session: ComponentType<PropsWithChildren>) {
   const queryClient = createQueryClient();
-  return renderHook(() => useCan(canModerateComment, { action: 'hide', videoOwnerId: OWNER_ID }), {
-    wrapper: ({ children }: PropsWithChildren) => (
-      <QueryClientProvider client={queryClient}>
-        <Session>
-          <ChannelPermissions>{children}</ChannelPermissions>
-        </Session>
-      </QueryClientProvider>
-    ),
-  }).result;
+  return renderHook(
+    () =>
+      useCan(canModerateComment, {
+        action: 'hide',
+        videoOwnerId: OWNER_ID,
+        videoChannelId: CHANNEL_ID,
+      }),
+    {
+      wrapper: ({ children }: PropsWithChildren) => (
+        <QueryClientProvider client={queryClient}>
+          <Session>
+            <ChannelPermissions>{children}</ChannelPermissions>
+          </Session>
+        </QueryClientProvider>
+      ),
+    }
+  ).result;
 }
 
 describe('apps/client/web: ChannelPermissions', () => {

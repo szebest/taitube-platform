@@ -2,6 +2,7 @@ import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { NewVideoInput } from '@vp/core/repositories';
 import { ErrorCodes } from '@vp/errors';
+import { seedPrimaryChannel } from '../../__tests__/test-app';
 import { RelatedService } from '../related-service';
 import { VideoService } from '../video-service';
 import { ViewerProgress } from '../viewer-progress';
@@ -19,10 +20,11 @@ describe('apps/server/api/services: RelatedService', () => {
   let repositories: InMemoryRepositories;
   let service: RelatedService;
 
-  const publish = (id: string, overrides: Partial<NewVideoInput> = {}) =>
+  const publish = async (id: string, overrides: Partial<NewVideoInput> = {}) =>
     repositories.videos.create({
       id,
       ownerId: OWNER,
+      channelId: await seedPrimaryChannel(repositories, overrides.ownerId ?? OWNER),
       title: `Video ${id.slice(-1)}`,
       visibility: 'public',
       status: 'READY',
@@ -42,6 +44,14 @@ describe('apps/server/api/services: RelatedService', () => {
       ),
       viewerProgress: new ViewerProgress(repositories.watchHistory),
     });
+    expectOk(
+      await repositories.channels.create({
+        id: OWNER_CHANNEL,
+        userId: OWNER,
+        handle: 'o',
+        displayName: 'O',
+      })
+    );
     await publish(ANCHOR);
     await publish(TAGGED);
     await publish(PRIVATE, { visibility: 'private' });
@@ -81,14 +91,6 @@ describe('apps/server/api/services: RelatedService', () => {
   ] as const)(
     'leaves out $scenario for the viewer who hid it, and for no one else',
     async ({ target }) => {
-      expectOk(
-        await repositories.channels.create({
-          id: OWNER_CHANNEL,
-          userId: OWNER,
-          handle: 'o',
-          displayName: 'O',
-        })
-      );
       expectOk(
         await repositories.recommendationFeedback.put({
           ...target,

@@ -20,6 +20,7 @@ export function aVideo(overrides: Partial<Video> = {}): Video {
   return {
     id: 'video-1',
     ownerId: OWNER.id,
+    channelId: 'channel-1',
     title: 'A clip',
     description: null,
     visibility: 'public',
@@ -63,6 +64,7 @@ export function aChannel(overrides: Partial<Channel> = {}): Channel {
   return {
     id: 'channel-1',
     userId: OWNER.id,
+    isPrimary: true,
     handle: 'owner',
     displayName: 'Owner',
     avatarUrl: null,
@@ -92,6 +94,7 @@ export function aComment(overrides: Partial<Comment> = {}): Comment {
     id: 'comment-1',
     videoId: 'video-1',
     authorId: AUTHOR.id,
+    authorChannelId: 'author-channel-1',
     parentId: null,
     content: 'A comment',
     isPinned: false,

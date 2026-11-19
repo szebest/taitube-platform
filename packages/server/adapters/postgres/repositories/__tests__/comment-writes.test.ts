@@ -2,8 +2,9 @@ import { expectOk } from '@kit/testing/result';
 import * as schema from '@vp/db';
 import { drizzle } from 'drizzle-orm/pglite';
 import {
-  OWNER_ID,
+  OTHER_OWNER_CHANNEL_ID,
   OTHER_OWNER_ID,
+  OWNER_ID,
   publicVideo,
   seedOwners,
   VIDEO_IDS,
@@ -29,6 +30,7 @@ const comment = (id: string, parentId: string | null) => ({
   id,
   videoId: VIDEO_IDS.a,
   authorId: OTHER_OWNER_ID,
+  authorChannelId: OTHER_OWNER_CHANNEL_ID,
   parentId,
   content: 'hello',
 });

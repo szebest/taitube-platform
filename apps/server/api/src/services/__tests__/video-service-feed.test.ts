@@ -1,6 +1,7 @@
 import { expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { SEEDED } from '@vp/testing-fixtures';
+import { seedPrimaryChannel } from '../../__tests__/test-app';
 import { VideoService } from '../video-service';
 import { videoServiceDeps } from './service-deps';
 
@@ -21,6 +22,7 @@ describe('VideoService.listPublic', () => {
     await repositories.videos.create({
       id: '018f0000-0000-7000-8000-000000000001',
       ownerId: OWNER_1,
+      channelId: await seedPrimaryChannel(repositories, OWNER_1),
       title: 'Public Ready 1',
       visibility: 'public',
       status: 'READY',
@@ -30,6 +32,7 @@ describe('VideoService.listPublic', () => {
     await repositories.videos.create({
       id: '018f0000-0000-7000-8000-000000000002',
       ownerId: OWNER_2,
+      channelId: await seedPrimaryChannel(repositories, OWNER_2),
       title: 'Public Ready 2',
       visibility: 'public',
       status: 'READY',
@@ -39,6 +42,7 @@ describe('VideoService.listPublic', () => {
     await repositories.videos.create({
       id: '018f0000-0000-7000-8000-000000000003',
       ownerId: OWNER_1,
+      channelId: await seedPrimaryChannel(repositories, OWNER_1),
       title: 'Private Ready',
       visibility: 'private',
       status: 'READY',
@@ -48,6 +52,7 @@ describe('VideoService.listPublic', () => {
     await repositories.videos.create({
       id: '018f0000-0000-7000-8000-000000000004',
       ownerId: OWNER_1,
+      channelId: await seedPrimaryChannel(repositories, OWNER_1),
       title: 'Unlisted Ready',
       visibility: 'unlisted',
       status: 'READY',
@@ -57,6 +62,7 @@ describe('VideoService.listPublic', () => {
     await repositories.videos.create({
       id: '018f0000-0000-7000-8000-000000000005',
       ownerId: OWNER_2,
+      channelId: await seedPrimaryChannel(repositories, OWNER_2),
       title: 'Public Processing',
       visibility: 'public',
       status: 'PROCESSING',
@@ -80,6 +86,7 @@ describe('VideoService.listPublic', () => {
     await repositories.videos.create({
       id: '018f0000-0000-7000-8000-000000000010',
       ownerId: OWNER_1,
+      channelId: await seedPrimaryChannel(repositories, OWNER_1),
       title: 'Category A Video',
       visibility: 'public',
       status: 'READY',
@@ -90,6 +97,7 @@ describe('VideoService.listPublic', () => {
     await repositories.videos.create({
       id: '018f0000-0000-7000-8000-000000000011',
       ownerId: OWNER_2,
+      channelId: await seedPrimaryChannel(repositories, OWNER_2),
       title: 'Category B Video',
       visibility: 'public',
       status: 'READY',
@@ -114,6 +122,7 @@ describe('VideoService.listPublic', () => {
     await repositories.videos.create({
       id: '018f0000-0000-7000-8000-000000000021',
       ownerId: OWNER_1,
+      channelId: await seedPrimaryChannel(repositories, OWNER_1),
       title: 'Low views',
       visibility: 'public',
       status: 'READY',
@@ -124,6 +133,7 @@ describe('VideoService.listPublic', () => {
     await repositories.videos.create({
       id: '018f0000-0000-7000-8000-000000000022',
       ownerId: OWNER_1,
+      channelId: await seedPrimaryChannel(repositories, OWNER_1),
       title: 'High views',
       visibility: 'public',
       status: 'READY',
@@ -134,6 +144,7 @@ describe('VideoService.listPublic', () => {
     await repositories.videos.create({
       id: '018f0000-0000-7000-8000-000000000023',
       ownerId: OWNER_2,
+      channelId: await seedPrimaryChannel(repositories, OWNER_2),
       title: 'Medium views',
       visibility: 'public',
       status: 'READY',
@@ -157,6 +168,7 @@ describe('VideoService.listPublic', () => {
       await repositories.videos.create({
         id: '018f0000-0000-7000-8000-000000000031',
         ownerId: OWNER_1,
+        channelId: await seedPrimaryChannel(repositories, OWNER_1),
         title: 'Fresh Video',
         visibility: 'public',
         status: 'READY',
@@ -170,6 +182,7 @@ describe('VideoService.listPublic', () => {
       await repositories.videos.create({
         id: '018f0000-0000-7000-8000-000000000032',
         ownerId: OWNER_1,
+        channelId: await seedPrimaryChannel(repositories, OWNER_1),
         title: 'Old Video',
         visibility: 'public',
         status: 'READY',
@@ -191,6 +204,7 @@ describe('VideoService.listPublic', () => {
       await repositories.videos.create({
         id: `018f0000-0000-7000-8000-0000000000${i}0`,
         ownerId: OWNER_1,
+        channelId: await seedPrimaryChannel(repositories, OWNER_1),
         title: `Video ${i}`,
         visibility: 'public',
         status: 'READY',

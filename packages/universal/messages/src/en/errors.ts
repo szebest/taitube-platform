@@ -118,6 +118,8 @@ export const errors = {
   watchPartyTicketInvalid: dt('Your party connection expired. Reconnect to keep watching.'),
   watchPartyCredentialInvalid: dt('Your guest seat expired. Join the party again.'),
   channelMembershipRequired: dt('You are not on the team of this channel any more.'),
+  channelLimitReached: dt('You own as many channels as an account can. Remove one to add another.'),
+  channelNotOwned: dt('Only the owner of this channel can do that.'),
   channelInviteNotFound: dt('This invite does not exist.'),
   channelInviteNotPending: dt(
     'This invite is no longer open: it was answered, revoked or has expired.'

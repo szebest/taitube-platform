@@ -5,7 +5,7 @@ import { SEEDED } from '@vp/testing-fixtures';
 import type { FastifyInstance } from 'fastify';
 import { composeApp } from '../app';
 import { serve } from '../serve';
-import { TOKENS, bearer, buildTestApp, seedVideo } from './test-app';
+import { TOKENS, bearer, buildTestApp, seedPrimaryChannel, seedVideo } from './test-app';
 
 describe('HTTP and auth foundations', () => {
   let app: FastifyInstance;
@@ -21,6 +21,7 @@ describe('HTTP and auth foundations', () => {
     await repositories.videos.create({
       id: SEED_VIDEO_ID,
       ownerId: SEEDED.userId,
+      channelId: await seedPrimaryChannel(repositories, SEEDED.userId),
       title: 'Test Sintel Trailer',
       description: 'Sintel trailer test video',
       visibility: 'public',

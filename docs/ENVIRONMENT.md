@@ -69,6 +69,7 @@ What every process reads: mode, logging, HTTP and CORS.
 | `METRICS_PORT` | integer >= 0 | `9464` | - | no | api, worker | The port the Prometheus metrics endpoint listens on, for the API and each worker. Two processes on one host need different values. | `9464` |
 | `PAGE_SIZE_DEFAULT` | integer > 0 | `20` | - | no | api | The keyset page size when a request omits ?limit. Keep it at or below PAGE_SIZE_MAX. | `20` |
 | `PAGE_SIZE_MAX` | integer > 0 | `100` | - | no | api | The largest page a request can ask for. A larger ?limit is clamped to it, never rejected. | `100` |
+| `CHANNELS_MAX_OWNED` | integer > 0 | `5` | - | no | api | How many channels one account may own. POST /v1/me/channels past it answers 409 CHANNEL_LIMIT_REACHED. | `5` |
 | `FEATURE_FLAGS` | comma list | *empty* | - | no | api | Comma list of flags GET /v1/bootstrap reports as enabled to the client apps. Empty means none. | `live,watch-party` |
 | `WEB_URL` | url | `http://localhost:5173` | - | no | api | The web app's public origin: oEmbed answers and webhook payloads link to it. Keep it equal to VITE_WEB_URL or shared links point at the wrong host. | `https://taitube.local` |
 | `WEBHOOK_ALLOW_PRIVATE_HOSTS` | true \| false | `false` | - | no | api | Lets a webhook URL be plain http or name a private host, for local receivers. Production refuses true because a webhook could then reach the internal network. | `false` |

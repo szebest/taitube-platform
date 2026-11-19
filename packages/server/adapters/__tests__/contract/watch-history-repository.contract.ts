@@ -45,11 +45,6 @@ export function describeWatchHistoryRepositoryContract(makeSubject: MakeReposito
       for (const id of Object.values(VIDEO_IDS)) {
         await subject.repositories.videos.create(publicVideo({ id }));
       }
-      await subject.repositories.channels.create({
-        userId: OWNER_ID,
-        handle: 'owner',
-        displayName: 'The Owner',
-      });
     });
 
     it('records a playhead and finds it again', async () => {

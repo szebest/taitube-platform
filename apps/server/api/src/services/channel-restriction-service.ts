@@ -36,7 +36,7 @@ export interface ChannelRestrictionServiceDeps {
   restrictions: ChannelUserRestrictionRepositoryPort;
   members: Pick<ChannelMemberRepositoryPort, 'listByChannel'>;
   users: Pick<UserRepository, 'findById'>;
-  channels: Pick<ChannelRepositoryPort, 'findByUserIds'>;
+  channels: Pick<ChannelRepositoryPort, 'findPrimaryByUserIds'>;
   moderation: Pick<CommentModerationRepositoryPort, 'idsByAuthor'>;
   notifications: Pick<NotificationRepositoryPort, 'withdrawUnread'>;
   commentCache: CommentCachePort;

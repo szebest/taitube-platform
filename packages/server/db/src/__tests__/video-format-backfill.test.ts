@@ -15,8 +15,9 @@ describe('db: 0025 video format backfill', () => {
   beforeAll(async () => {
     database = await startSocketDatabase();
     await runMigrations(database.url, silent);
-    await database.engine.query(
-      `insert into users (id, email) values ('${ownerId}', 'a@example.com')`
+    await database.engine.exec(
+      `insert into users (id, email) values ('${ownerId}', 'a@example.com');
+       insert into channels (id, user_id, handle, display_name) values ('${ownerId}', '${ownerId}', 'owner', 'Owner')`
     );
   });
 
@@ -77,8 +78,8 @@ describe('db: 0025 video format backfill', () => {
   ])('classifies $name as $format', async ({ status, w, h, ms, format }) => {
     const id = crypto.randomUUID();
     await database.engine.query(
-      `insert into videos (id, owner_id, source_key, status, width, height, duration_ms)
-       values ($1, '${ownerId}', 'k', $2, $3, $4, $5)`,
+      `insert into videos (id, owner_id, channel_id, source_key, status, width, height, duration_ms)
+       values ($1, '${ownerId}', '${ownerId}', 'k', $2, $3, $4, $5)`,
       [id, status, w, h, ms]
     );
 

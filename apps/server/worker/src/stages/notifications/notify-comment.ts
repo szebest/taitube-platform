@@ -96,7 +96,7 @@ export function createNotifyCommentProcessor(deps: NotifyCommentDeps) {
       for (const userId of switchedOn.value) allowed.set(userId, kind);
     }
 
-    const author = await repositories.channels.findByUserId(comment.value.authorId);
+    const author = await repositories.channels.findById(comment.value.authorChannelId);
     if (isErr(author)) return author;
     const actor: NotificationActor | null = author.value && {
       handle: author.value.handle,

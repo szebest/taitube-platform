@@ -195,11 +195,11 @@ export class AnalyticsService {
     if (isErr(found)) return found;
     const allowed = decideVideoAnalyticsRead({ viewer, video: found.value, videoId });
     if (isErr(allowed)) return allowed;
-    const { ownerId, readyAt } = allowed.value;
+    const { channelId, readyAt } = allowed.value;
 
     const now = new Date(this.deps.now());
     const peers = await this.deps.videoViews.recentPeers(
-      ownerId,
+      channelId,
       videoId,
       new Date(now.getTime() - FIRST_WEEK_DAYS * MS_PER_DAY),
       BENCHMARK_PEER_LIMIT
@@ -235,27 +235,27 @@ export class AnalyticsService {
   ): Promise<Result<ChannelAnalytics, ChannelAnalyticsFailure>> {
     const allowed = decideChannelTask({ user: viewer, acting, task: 'read-analytics' });
     if (isErr(allowed)) return allowed;
-    const { ownerId } = allowed.value;
+    const { channelId } = allowed.value;
 
     const now = new Date(this.deps.now());
     const periods = analyticsPeriods(range, now);
-    const rows = await this.deps.videoViews.channelTimeline(ownerId, periodsSpan(periods));
+    const rows = await this.deps.videoViews.channelTimeline(channelId, periodsSpan(periods));
     if (isErr(rows)) return rows;
-    const totals = await this.deps.videoViews.channelTotals(ownerId);
+    const totals = await this.deps.videoViews.channelTotals(channelId);
     if (isErr(totals)) return totals;
     const topVideos = await this.deps.videoViews.topVideos(
-      ownerId,
+      channelId,
       periods.current,
       TOP_VIDEOS_LIMIT
     );
     if (isErr(topVideos)) return topVideos;
     const hours = hourlyWindow(now);
-    const hourly = await this.deps.videoViews.channelHourly(ownerId, hours);
+    const hourly = await this.deps.videoViews.channelHourly(channelId, hours);
     if (isErr(hourly)) return hourly;
-    const netSubscribers = await this.deps.subscriptions.netSubscribers(ownerId, periods.current);
+    const netSubscribers = await this.deps.subscriptions.netSubscribers(channelId, periods.current);
     if (isErr(netSubscribers)) return netSubscribers;
     const previousSubscribers = periods.previous
-      ? await this.deps.subscriptions.netSubscribers(ownerId, periods.previous)
+      ? await this.deps.subscriptions.netSubscribers(channelId, periods.previous)
       : ok(null);
     if (isErr(previousSubscribers)) return previousSubscribers;
 

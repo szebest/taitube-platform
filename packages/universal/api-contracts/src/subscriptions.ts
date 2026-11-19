@@ -60,6 +60,7 @@ const SubscribeBodySchema = z
 export const subscribeToChannel = defineEndpoint({
   method: 'POST',
   path: '/v1/channels/:id/subscribers',
+  channelScoped: true,
   tag: 'Subscriptions',
   summary: 'Subscribe to channel',
   description:
@@ -79,6 +80,7 @@ export const subscribeToChannel = defineEndpoint({
 export const unsubscribeFromChannel = defineEndpoint({
   method: 'DELETE',
   path: '/v1/channels/:id/subscribers',
+  channelScoped: true,
   tag: 'Subscriptions',
   summary: 'Unsubscribe from channel',
   description:
@@ -97,6 +99,7 @@ export const unsubscribeFromChannel = defineEndpoint({
 export const isSubscribedToChannel = defineEndpoint({
   method: 'GET',
   path: '/v1/channels/:id/subscribers/me',
+  channelScoped: true,
   tag: 'Subscriptions',
   summary: 'Check if authenticated caller is subscribed to channel',
   description:
@@ -114,6 +117,7 @@ export const isSubscribedToChannel = defineEndpoint({
 export const updateSubscriptionLevel = defineEndpoint({
   method: 'PATCH',
   path: '/v1/channels/:id/subscribers/me',
+  channelScoped: true,
   tag: 'Subscriptions',
   summary: 'Set the notification level of a subscription',
   description:

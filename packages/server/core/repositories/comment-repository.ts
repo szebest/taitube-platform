@@ -49,6 +49,8 @@ export interface ListCommentRepliesOptions {
 }
 
 export interface ListCreatorInboxOptions {
+  /** The owner's channel the inbox reads; an owner of several reads one at a time. */
+  channelId: string;
   filter: CreatorInboxFilter;
   /** Only this author's comments, for the moderator who looks at who wrote one. */
   authorId?: string;
@@ -97,9 +99,12 @@ export interface CommentRepositoryPort {
   ): Promise<Result<CommentThread[], DatabaseUnavailable>>;
   /**
    * Answers null, and writes nothing, when the parent was removed before the reply landed. The
-   * thread counts the replies its author may see.
+   * thread counts the replies its author may see; `audit` is written with the comment, never without.
    */
-  create(input: NewCommentInput): Promise<Result<CommentThread | null, DatabaseUnavailable>>;
+  create(
+    input: NewCommentInput,
+    audit?: NewChannelAuditEntry
+  ): Promise<Result<CommentThread | null, DatabaseUnavailable>>;
   /**
    * A hold takes the comment, and the replies under it, off the count in the same transaction and
    * tells the moderators; the question flag is rewritten either way.
@@ -141,7 +146,8 @@ export interface CommentRepositoryPort {
     options: ListAuthoredCommentsOptions
   ): Promise<Result<AuthoredComment[], DatabaseUnavailable>>;
   /**
-   * Live comments on `ownerId`'s videos that the owner did not write, newest first. `unanswered`
+   * Live comments on the videos of `options.channelId`, a channel of `ownerId`, that the owner did
+   * not write, newest first. `unanswered`
    * keeps those without a later reply from the owner in the same thread; `reported` keeps those
    * with an open report.
    */

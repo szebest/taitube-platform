@@ -7,7 +7,14 @@ import {
   commentModerationAudit,
 } from '@vp/domain';
 import { type CommentContractContext, commentsCount } from './comment-contract-context';
-import { OTHER_OWNER_ID, OWNER_ID, VIDEO_IDS, publicVideo, seedOwners } from './fixtures';
+import {
+  OTHER_OWNER_ID,
+  OWNER_ID,
+  VIDEO_IDS,
+  publicVideo,
+  seedOwners,
+  seededChannel,
+} from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
 export const outcome = (
@@ -87,18 +94,7 @@ export function describeModerationFixture(
       await subject.reset();
       await seedOwners(subject.repositories);
       await subject.repositories.videos.create(publicVideo({ id: VIDEO_IDS.a }));
-      await subject.repositories.channels.create({
-        userId: OTHER_OWNER_ID,
-        handle: 'commenter',
-        displayName: 'The Commenter',
-      });
-      const channel = expectOk(
-        await subject.repositories.channels.create({
-          userId: OWNER_ID,
-          handle: 'video-owner',
-          displayName: 'Video Owner',
-        })
-      );
+      const channel = await seededChannel(subject.repositories, OWNER_ID);
       channelId = channel.id;
     });
 
