@@ -68,6 +68,11 @@ const VideoSpriteSchema = z
       'The thumbnail sprite sheet and its geometry for a hover preview, absent until the thumbnail stage has run',
   });
 
+export const VideoChapterSchema = z.object({
+  startMs: z.number().int().nonnegative().describe('Where the chapter starts'),
+  title: z.string().describe('Chapter title, 1 to 60 characters'),
+});
+
 export const VideoSchema = z.object({
   id: z.uuid().describe('Video UUIDv7 identifier'),
   ownerId: z.uuid().describe('Owning user UUID, for client-side ownership rules'),
@@ -101,6 +106,10 @@ export const VideoSchema = z.object({
     .boolean()
     .default(true)
     .describe('false when the creator turned comments off for this video'),
+  chapters: z
+    .array(VideoChapterSchema)
+    .default([])
+    .describe('The chapters the creator set, in order; empty when none are stored'),
   channel: ChannelCardSchema.nullable()
     .optional()
     .describe('The owner channel; set when one video is read, absent on the studio writes'),

@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { VideoJsEngine } from '#app/integrations/video-js/video-js-engine';
 import type { TaitubePlayerProps } from '#app/lib/player/taitube-player-props';
 import { ControlBar } from '../control-bar/control-bar';
+import { PlayerCardLayer } from '../player-card-layer';
 import { CaptionOverlay } from './components/caption-overlay/caption-overlay';
 import { PlayerHotkeys } from './components/player-hotkeys/player-hotkeys';
 import { StatsOverlay } from './components/stats-overlay/stats-overlay';
@@ -51,6 +52,7 @@ export function TaitubePlayer({
     >
       {props.defaults?.statsOverlay && <StatsOverlay />}
       <CaptionOverlay />
+      {props.cards && props.cards.length > 0 && <PlayerCardLayer cards={props.cards} />}
       {overlay}
       {controls && props.layout !== 'vertical' && (
         <>
@@ -58,6 +60,7 @@ export function TaitubePlayer({
             title={props.title ?? undefined}
             live={props.live}
             range={props.range}
+            chapters={props.chapters}
             onPrevious={props.onPrevious}
             onNext={props.onNext}
           />

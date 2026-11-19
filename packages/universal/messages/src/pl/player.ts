@@ -10,6 +10,7 @@ export const player = {
   unmute: dt('Włącz dźwięk'),
   volume: dt('Głośność'),
   seek: dt('Przewiń'),
+  seekInChapter: dt('{time}, {chapter}'),
   settings: dt('Ustawienia'),
   quality: dt('Jakość'),
   autoQuality: dt('Auto'),
@@ -36,6 +37,7 @@ export const player = {
       size: { small: 'Małe', medium: 'Średnie', large: 'Duże', xlarge: 'Bardzo duże' },
     },
   }),
+  cardDismiss: dt('Zamknij tę notatkę'),
   captionBackground: dt('Tło napisów'),
   captionBackgroundOption: dt('{background:enum}', {
     enum: { background: { none: 'Brak', translucent: 'Półprzezroczyste', solid: 'Pełne' } },

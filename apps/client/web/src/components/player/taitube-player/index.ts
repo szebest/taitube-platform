@@ -13,6 +13,7 @@ export { pickCaptionTrack } from '#app/lib/player/playback-defaults';
 export type { TaitubePlayerWithTelemetryProps } from './taitube-player';
 export type {
   PlaybackEnd,
+  PlayerCard,
   PlaybackProgress,
   PlaybackQuality,
   PlaybackRange,

@@ -22,6 +22,7 @@ import type { HousekeepingJob, QueueName } from '@vp/job-contracts';
 import type { PipelineMetrics } from '@vp/pipeline-metrics';
 import { runExpireRaw } from './expire-raw';
 import { runFlushVideoViews } from './flush-video-views';
+import { runPruneRevisions } from './prune-revisions';
 import { runPurgeChannelAudit } from './purge-channel-audit';
 import { runPurgeChannelImages } from './purge-channel-images';
 import { runPurgeCommentModeration } from './purge-comment-moderation';
@@ -53,6 +54,7 @@ export * from './purge-screening-evidence';
 export * from './purge-channel-images';
 export * from './purge-handle-history';
 export * from './purge-exports';
+export * from './prune-revisions';
 export * from './purge-search-history';
 
 interface HousekeepingSettings {
@@ -274,6 +276,9 @@ export function createHousekeepingProcessor(
           ...tasks.expire,
           logger,
         });
+
+      case 'prune-revisions':
+        return await runPruneRevisions({ repositories, logger });
 
       default:
         return assertNever(data.task, 'createHousekeepingProcessor');

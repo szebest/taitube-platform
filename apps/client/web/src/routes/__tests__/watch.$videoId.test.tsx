@@ -1,5 +1,5 @@
 import { hashKey } from '@tanstack/react-query';
-import { getChannel, getRelatedVideos, getVideo } from '@vp/api-contracts';
+import { getChannel, getRelatedVideos, getVideo, listVideoCorrections } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { videoQueryOptions } from '@vp/queries';
 import {
@@ -28,6 +28,10 @@ const CHANNEL_CARD = {
 
 const channelAnswer = mockEndpoint(getChannel, () =>
   HttpResponse.json(channel({ subscriberCount: 284_000 }))
+);
+
+const correctionsAnswer = mockEndpoint(listVideoCorrections, () =>
+  HttpResponse.json({ items: [] })
 );
 
 const relatedAnswer = mockEndpoint(getRelatedVideos, () =>
@@ -61,7 +65,7 @@ describe('apps/client/web: /watch/$videoId', () => {
     const asked: string[] = [];
 
     const { status, html } = await serverRender(getRouter, `/watch/${VIDEO_ID}`, {
-      handlers: [videoAnswer(asked), channelAnswer, relatedAnswer],
+      handlers: [videoAnswer(asked), channelAnswer, relatedAnswer, correctionsAnswer],
     });
 
     expect(status).toBe(200);
@@ -80,7 +84,7 @@ describe('apps/client/web: /watch/$videoId', () => {
     const asked: string[] = [];
 
     const { html } = await serverRender(getRouter, `/watch/${VIDEO_ID}`, {
-      handlers: [videoAnswer(asked), channelAnswer, relatedAnswer],
+      handlers: [videoAnswer(asked), channelAnswer, relatedAnswer, correctionsAnswer],
     });
 
     const head = headOf(html);
@@ -115,7 +119,7 @@ describe('apps/client/web: /watch/$videoId', () => {
     'server-renders the page and its meta in the locale "$acceptLanguage" negotiates, with every language as an hreflang alternate',
     async ({ acceptLanguage, lang, ogLocale, subscribers }) => {
       const { html } = await serverRender(getRouter, `/watch/${VIDEO_ID}`, {
-        handlers: [videoAnswer(), channelAnswer, relatedAnswer],
+        handlers: [videoAnswer(), channelAnswer, relatedAnswer, correctionsAnswer],
         headers: { 'accept-language': acceptLanguage },
       });
 
@@ -140,7 +144,7 @@ describe('apps/client/web: /watch/$videoId', () => {
     },
   ])('answers $scenario with $status', async ({ search, status, location }) => {
     const rendered = await serverRender(getRouter, `/watch/${VIDEO_ID}${search}`, {
-      handlers: [videoAnswer(), channelAnswer, relatedAnswer],
+      handlers: [videoAnswer(), channelAnswer, relatedAnswer, correctionsAnswer],
     });
 
     expect(rendered.status).toBe(status);
@@ -155,7 +159,7 @@ describe('apps/client/web: /watch/$videoId', () => {
     'dehydrates the loaded $name into the page, so hydration reads it instead of refetching',
     async ({ queryKey }) => {
       const { html } = await serverRender(getRouter, `/watch/${VIDEO_ID}`, {
-        handlers: [videoAnswer(), channelAnswer, relatedAnswer],
+        handlers: [videoAnswer(), channelAnswer, relatedAnswer, correctionsAnswer],
       });
 
       expect(html).toContain(`queryHash:${JSON.stringify(hashKey(queryKey))}`);
@@ -167,6 +171,7 @@ describe('apps/client/web: /watch/$videoId', () => {
       handlers: [
         videoAnswer(),
         channelAnswer,
+        correctionsAnswer,
         mockEndpoint(getRelatedVideos, () => problemReply(ErrorCodes.INTERNAL)),
       ],
     });

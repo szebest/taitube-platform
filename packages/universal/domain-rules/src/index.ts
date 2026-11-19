@@ -26,3 +26,7 @@ export * from './screening/index';
 export * from './watch-parties/index';
 export * from './exports/index';
 export * from './api-tokens/index';
+export * from './chapters/index';
+export * from './corrections/index';
+export * from './bulk-edit/index';
+export * from './revisions/index';

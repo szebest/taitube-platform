@@ -1,5 +1,6 @@
 import { ErrorCodes } from '@vp/errors';
 import type { SddEndpointContract } from './sdd-endpoint-contract';
+import { SDD_VIDEO_TOOLS_ENDPOINTS } from './sdd-video-tools-endpoints';
 
 const { VALIDATION_FAILED, UNAUTHORIZED, FORBIDDEN, VIDEO_NOT_FOUND, VERSION_CONFLICT } =
   ErrorCodes;
@@ -64,4 +65,5 @@ export const SDD_STUDIO_ENDPOINTS: SddEndpointContract[] = [
     hasBody: true,
     hasPathParams: true,
   },
+  ...SDD_VIDEO_TOOLS_ENDPOINTS,
 ];

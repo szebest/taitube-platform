@@ -58,6 +58,7 @@ export function video(overrides: Partial<Video> = {}): Video {
     progress: { overall: 100, byRendition: {} },
     renditions: [],
     commentsEnabled: true,
+    chapters: [],
     likesCount: 0,
     dislikesCount: 0,
     version: 3,

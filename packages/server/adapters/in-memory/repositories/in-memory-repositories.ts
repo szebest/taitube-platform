@@ -49,12 +49,12 @@ import type { InMemoryUserRepository } from './in-memory-user-repository';
 import type { InMemoryVideoReactionRepository } from './in-memory-video-reaction-repository';
 import type { InMemoryVideoRepository } from './in-memory-video-repository';
 import type { InMemoryVideoStudioRepository } from './in-memory-video-studio-repository';
+import { InMemoryVideoToolsRepositories } from './in-memory-video-tools-repositories';
 import type { InMemoryVideoViewRepository } from './in-memory-video-view-repository';
 import type { InMemoryWatchHistoryRepository } from './in-memory-watch-history-repository';
-import { InMemoryWatchPartyRepositories } from './in-memory-watch-party-repositories';
 import type { InMemoryWebhookRepository } from './in-memory-webhook-repository';
 
-export class InMemoryRepositories extends InMemoryWatchPartyRepositories implements Repositories {
+export class InMemoryRepositories extends InMemoryVideoToolsRepositories implements Repositories {
   readonly events: InMemoryEventRepository;
   readonly renditions: InMemoryRenditionRepository;
   readonly steps: InMemoryStepRepository;
@@ -107,7 +107,7 @@ export class InMemoryRepositories extends InMemoryWatchPartyRepositories impleme
 
   constructor({ now }: { now?: Clock } = {}) {
     const c = graph(now);
-    super(c.get(Repo.outbox), c.get(Repo.userEvents));
+    super(c);
     this.events = c.get(Repo.events);
     this.renditions = c.get(Repo.renditions);
     this.steps = c.get(Repo.steps);

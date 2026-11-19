@@ -6,6 +6,10 @@ export function registerServiceSet(c: Container): Container {
   return c.provide(Services.ServiceSet, (c) => ({
     videoService: c.get(Services.VideoService),
     creatorStudioService: c.get(Services.CreatorStudioService),
+    videoBulkEditService: c.get(Services.VideoBulkEditService),
+    videoRevisionService: c.get(Services.VideoRevisionService),
+    chapterService: c.get(Services.ChapterService),
+    videoCorrectionService: c.get(Services.VideoCorrectionService),
     searchService: c.get(Services.SearchService),
     searchHistoryService: c.get(Services.SearchHistoryService),
     uploadService: c.get(Services.UploadService),

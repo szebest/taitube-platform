@@ -2,7 +2,7 @@ import { useT } from '@kit/intl-react';
 import type { BulkActionBody } from '@vp/api-contracts';
 import type { Disclosure } from '@vp/domain';
 import { useState } from 'react';
-import { BulkActionBar } from '#app/components/comments/bulk-action-bar';
+import { BulkActionBar } from '#app/components/table/bulk-action-bar';
 import { useBulkModeration } from '#app/features/comments/hooks/use-bulk-moderation';
 import { useDisclosureDefaults } from '#app/features/comments/hooks/use-disclosure-defaults';
 import { useModerationAbilities } from '#app/features/comments/hooks/use-moderation-abilities';

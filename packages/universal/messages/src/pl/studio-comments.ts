@@ -39,6 +39,5 @@ export const studioComments = {
   commentsSwitchHint: dt('Widzowie mogą komentować ten film. Właściciel i zespół zawsze mogą.'),
   commentsTurnOff: dt('Wyłącz komentarze'),
   commentsTurnOn: dt('Włącz komentarze'),
-  commentsSwitchFailed: dt('Nie udało się zmienić ustawienia komentarzy.'),
   commentsFailed: dt('Nie udało się wczytać komentarzy.'),
 } as const;

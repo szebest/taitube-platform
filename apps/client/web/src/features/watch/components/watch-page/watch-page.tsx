@@ -6,6 +6,7 @@ import { useApi, videoQueryOptions } from '@vp/queries';
 import type { ReactNode } from 'react';
 import { useOpenInPlaybackSession } from '#app/features/watch/hooks/use-open-in-playback-session';
 import { WatchCommentThread } from '../watch-comment-thread/watch-comment-thread';
+import { WatchCorrections } from '../watch-corrections/watch-corrections';
 import { WatchEngagementBar } from '../watch-engagement-bar/watch-engagement-bar';
 import { WatchLayout } from '../watch-layout/watch-layout';
 import { WatchLinerNotes } from '../watch-liner-notes/watch-liner-notes';
@@ -42,6 +43,7 @@ export function WatchPage({ renderActions, renderCreatorStats }: WatchPageProps)
           <WatchEngagementBar video={video} renderActions={renderActions} />
           {renderCreatorStats?.(video)}
           <WatchLinerNotes video={video} />
+          <WatchCorrections videoId={video.id} />
         </>
       }
       discussion={<WatchCommentThread videoId={video.id} />}

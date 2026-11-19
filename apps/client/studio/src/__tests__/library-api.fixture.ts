@@ -1,4 +1,9 @@
-import { deleteCreatorVideo, listCreatorVideos, updateCreatorVideo } from '@vp/api-contracts';
+import {
+  bulkEditCreatorVideos,
+  deleteCreatorVideo,
+  listCreatorVideos,
+  updateCreatorVideo,
+} from '@vp/api-contracts';
 import { apiServer, mockEndpoint, video } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
 import type { CreatorVideo } from '../features/videos/components/library-video-row/library-video-row';
@@ -41,8 +46,9 @@ interface ManageRequest {
 }
 
 /**
- * The creator endpoints a batch fans out to: each delete and visibility PATCH is recorded, and a
- * video in `failing` answers 500 for both.
+ * The creator endpoints a batch reaches: each delete and each single edit is recorded, a bulk edit is
+ * recorded once as `POST bulk`, and a video in `failing` answers 500 for a delete and `ok: false` in a
+ * bulk edit.
  */
 export function serveManagement(failing: readonly string[] = []) {
   const requests: ManageRequest[] = [];
@@ -55,6 +61,15 @@ export function serveManagement(failing: readonly string[] = []) {
       return outcome(id, () =>
         HttpResponse.json({ videoId: id, status: 'DELETED' as const }, { status: 202 })
       );
+    }),
+    mockEndpoint(bulkEditCreatorVideos, async ({ request }) => {
+      const body = (await request.json()) as { ids: string[] };
+      requests.push({ method: 'POST', id: 'bulk', body });
+      return HttpResponse.json({
+        items: body.ids.map((id) =>
+          failing.includes(id) ? { id, ok: false, code: 'VIDEO_NOT_FOUND' } : { id, ok: true }
+        ),
+      });
     }),
     mockEndpoint(updateCreatorVideo, async ({ params, request }) => {
       const id = String(params['id']);

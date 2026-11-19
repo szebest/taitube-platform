@@ -13,6 +13,7 @@ import { studioModeration } from './studio-moderation';
 import { studioPicks } from './studio-picks';
 import { studioScreening } from './studio-screening';
 import { studioTeam } from './studio-team';
+import { studioVideoTools } from './studio-video-tools';
 
 const VIDEO_STATUS = {
   UPLOADING: 'Uploading',
@@ -73,6 +74,7 @@ export const studio = {
   ...studioAdmin,
   ...studioAudience,
   ...studioBatch,
+  ...studioVideoTools,
   ...studioCaptions,
   ...studioComments,
   ...studioCommentSettings,

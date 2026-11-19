@@ -20,6 +20,7 @@ describe('packages/api-contracts: the channel audit entry', () => {
     entry('invite.created', 'invite', { inviteeUserId: ID, role: 'editor' }),
     entry('video.updated', 'video', { fields: ['title'] }),
     entry('video.comments.toggled', 'video', { enabled: false }),
+    entry('video.restored', 'video', { fromVersion: 3 }),
     entry('comment.hidden', 'comment', { videoId: ID, disclosure: 'silent' }),
     entry('comment.pinned', 'comment', { videoId: ID, pinned: true }),
     entry('user.shadow_banned', 'user', {}),

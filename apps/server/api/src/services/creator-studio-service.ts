@@ -1,8 +1,7 @@
 import type { InvalidCursor, Paginator } from '@kit/pagination';
-import { type Result, assertNever, err, ignore, isErr, map } from '@kit/result';
+import { type Result, err, isErr, map } from '@kit/result';
 import type {
   ChannelRepositoryPort,
-  StudioMetadataPatch,
   VideoLibraryQuery,
   VideoRecord,
   VideoRepository,
@@ -13,29 +12,27 @@ import type {
   CreatorLibrarySort,
   LibrarySort,
   SortOrder,
-  ThumbnailSelection,
-  VideoAuditField,
   VideoStatus,
   VideoVisibility,
 } from '@vp/domain';
 import {
   type AuthorizationFailure,
-  type CategoryNotFound,
-  type UpdateVideoMetadataFailure,
   type VideoLifecycleFailure,
-  type VideoMetadataPatch,
-  categoryNotFound,
   decideAdminAccess,
   decideChannelTask,
-  decideVideoMetadataUpdate,
   decideVideoTakedown,
-  videoNotFound,
 } from '@vp/domain-rules';
 import type { CdnBase } from '@vp/env-schema';
 import { type DatabaseUnavailable, type VersionConflict, versionConflict } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { creatorLibraryCursorPayload, decodeCreatorLibraryCursor } from './cursor';
 import type { MetadataScreening } from './metadata-screening';
+import {
+  type CreatorVideoEdit,
+  type UpdateVideoServiceFailure,
+  type VideoEditOptions,
+  applyVideoEdit,
+} from './video-edit';
 import type { ReadVideoServiceFailure, VideoService } from './video-service';
 import {
   type CreatorVideoView,
@@ -88,64 +85,12 @@ interface LibraryWalk {
   cursor?: string;
 }
 
-export interface CreatorVideoEdit {
-  title?: string;
-  description?: string;
-  visibility?: VideoVisibility;
-  categoryId?: string | null;
-  tags?: string[];
-  selectedThumbnail?: ThumbnailSelection;
-  commentsEnabled?: boolean;
-  version: number;
-}
-
-export type UpdateVideoServiceFailure =
-  | UpdateVideoMetadataFailure
-  | CategoryNotFound
-  | ReadVideoServiceFailure
-  | VersionConflict;
+export type { CreatorVideoEdit, UpdateVideoServiceFailure, VideoEditOptions } from './video-edit';
 
 export type TakeDownServiceFailure =
   | VideoLifecycleFailure
   | ReadVideoServiceFailure
   | VersionConflict;
-
-function thumbnailKeyOf(selection: ThumbnailSelection): string | null {
-  switch (selection.source) {
-    case 'poster':
-      return null;
-    default:
-      return assertNever(selection.source, 'ThumbnailSelection');
-  }
-}
-
-type AuditedField = Exclude<keyof VideoMetadataPatch, 'commentsEnabled'>;
-
-const AUDIT_FIELD_OF: Record<AuditedField, VideoAuditField> = {
-  title: 'title',
-  description: 'description',
-  visibility: 'visibility',
-  categoryId: 'categoryId',
-  tags: 'tags',
-  selectedThumbnail: 'thumbnail',
-};
-
-function auditFieldsOf(patch: VideoMetadataPatch): VideoAuditField[] {
-  return (Object.keys(AUDIT_FIELD_OF) as AuditedField[])
-    .filter((field) => patch[field] !== undefined)
-    .map((field) => AUDIT_FIELD_OF[field]);
-}
-
-/** Only the words a screening reads: a visibility or category change raises nothing. */
-function editsText({ title, description, tags }: VideoMetadataPatch): boolean {
-  return [title, description, tags].some((field) => field !== undefined);
-}
-
-function toStudioPatch(patch: VideoMetadataPatch): StudioMetadataPatch {
-  const { selectedThumbnail, ...columns } = patch;
-  if (!selectedThumbnail) return columns;
-  return { ...columns, customThumbnailKey: thumbnailKeyOf(selectedThumbnail) };
-}
 
 export class CreatorStudioService {
   constructor(private readonly deps: CreatorStudioServiceDeps) {}
@@ -231,49 +176,13 @@ export class CreatorStudioService {
     return map(rows, (found) => ({ rows: found, limit }));
   }
 
-  /**
-   * The rule is decided against the row as read, so the write must land on that same row: the
-   * caller's version has to be the one read, and the repository's CAS on it rejects anything since.
-   */
-  async update(
+  update(
     user: UserContext,
     videoId: string,
-    edit: CreatorVideoEdit
+    edit: CreatorVideoEdit,
+    options?: VideoEditOptions
   ): Promise<Result<VideoDetailView, UpdateVideoServiceFailure>> {
-    const found = await this.deps.videos.findById(videoId);
-    if (isErr(found)) return found;
-
-    const { version, ...patch } = edit;
-    const decided = decideVideoMetadataUpdate({ editor: user, video: found.value, videoId, patch });
-    if (isErr(decided)) return decided;
-    if (found.value?.version !== version) return err(versionConflict(videoId, version));
-
-    const outcome = await this.deps.studio.updateMetadata({
-      videoId,
-      expectedVersion: version,
-      patch: toStudioPatch(decided.value),
-      userId: user.id,
-      tokenId: user.token?.id,
-      auditFields: auditFieldsOf(decided.value),
-    });
-    if (isErr(outcome)) return outcome;
-
-    switch (outcome.value.type) {
-      case 'updated':
-        if (editsText(decided.value)) {
-          ignore(
-            await this.deps.metadataScreening.flag(outcome.value.video),
-            'the edit is saved, and the next edit of the text raises the flag again'
-          );
-        }
-        return this.deps.videoService.get(user, videoId);
-      case 'video-missing':
-        return err(videoNotFound(videoId));
-      case 'category-missing':
-        return err(categoryNotFound(outcome.value.categoryId));
-      default:
-        return assertNever(outcome.value, 'StudioMetadataOutcome');
-    }
+    return applyVideoEdit(this.deps, user, videoId, edit, options);
   }
 
   async takeDown(

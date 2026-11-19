@@ -1,5 +1,5 @@
 import { screen } from '@testing-library/react';
-import { getVideo } from '@vp/api-contracts';
+import { getVideo, listVideoCorrections } from '@vp/api-contracts';
 import { mockEndpoint, VIDEO_ID, video } from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
 import { HttpResponse, http } from 'msw/http';
@@ -23,6 +23,7 @@ async function renderEmbed(search = '', overrides: Parameters<typeof video>[0] =
           })
         )
       ),
+      mockEndpoint(listVideoCorrections, () => HttpResponse.json({ items: [] })),
       http.get(PLAYLIST, () => new HttpResponse(null, { status: 404 })),
     ],
   });
@@ -52,6 +53,21 @@ describe('apps/client/web: the embed page', () => {
     expect(!!screen.queryByRole('group', { name: 'Player controls' })).toBe(controls);
     expect(element?.loop).toBe(loop);
     expect(element?.muted).toBe(muted);
+  });
+
+  it('marks the stored chapters on the seek bar', async () => {
+    vi.spyOn(HTMLMediaElement.prototype, 'duration', 'get').mockReturnValue(600);
+    const chapters = [
+      { startMs: 0, title: 'Intro' },
+      { startMs: 300_000, title: 'Middle' },
+      { startMs: 450_000, title: 'End' },
+    ];
+
+    const { container } = await renderEmbed('', { chapters });
+
+    await vi.waitFor(() =>
+      expect(container.querySelectorAll('[data-slot="chapter-marker"]')).toHaveLength(2)
+    );
   });
 
   it('shows only a not-available note for a video that is not public', async () => {

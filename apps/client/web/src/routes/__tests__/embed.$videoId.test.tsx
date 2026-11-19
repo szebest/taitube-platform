@@ -1,4 +1,4 @@
-import { getVideo } from '@vp/api-contracts';
+import { getVideo, listVideoCorrections } from '@vp/api-contracts';
 import { mockEndpoint, VIDEO_ID, video } from '@vp/web-testing';
 import { serverRender } from '@vp/web-testing/server';
 import { HttpResponse } from 'msw/http';
@@ -8,6 +8,7 @@ import { getRouter } from '#app/router';
 function embed(path: string, overrides: Parameters<typeof video>[0] = {}) {
   return serverRender(getRouter, path, {
     handlers: [
+      mockEndpoint(listVideoCorrections, () => HttpResponse.json({ items: [] })),
       mockEndpoint(getVideo, () =>
         HttpResponse.json(
           video({

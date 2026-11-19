@@ -103,6 +103,7 @@ export function registerServices(c: Container): Container {
           steps: repositories().steps,
           probeQueue: c.get(Adapters.ProbeQueue),
           channels: repositories().channels,
+          chapters: repositories().videoChapters,
           cdn: config().cdn,
           sprite: config().sprite,
           reactionCache: c.get(Adapters.ReactionCache),

@@ -1,6 +1,6 @@
 # BulkActionBar
 
-The actions on the rows a table has selected, with the one choice they share: whether the authors are told. It sits in the batch bar of the [DataTable](data-table.md) and is used by the comment inbox over `POST /v1/creator/comments/bulk`. It lives in the studio's kit, `apps/client/studio/src/components/comments/bulk-action-bar/` ([README](README.md)); web has no bulk surface.
+The actions on the rows a table has selected, and optionally the one choice they share, such as whether the authors are told. It sits in the batch bar of the [DataTable](data-table.md) and is used by the comment inbox over `POST /v1/creator/comments/bulk` and by the video library over `POST /v1/creator/videos/bulk`. It lives in the studio's kit, `apps/client/studio/src/components/table/bulk-action-bar/` ([README](README.md)); web has no bulk surface.
 
 ## Anatomy
 
@@ -35,8 +35,11 @@ The root is `role="toolbar"`: name it with `aria-label`. `pending` reaches the p
 | Wrapper | Feature folder | Props | Hooks |
 |---|---|---|---|
 | `InboxBulkActions` | `features/comments/components/` | `ids`, `onSettled(refused)` | `useBulkModeration`, `useModerationAbilities` |
+| `LibraryBatchActions` | `features/videos/components/` | `videos`, `onSettled(outcome)` | `useBatchActions`, `useCan` |
 
-It leaves out the actions the viewer's role may not take, applies Approve and Shadow ban at once, applies Hide and Remove at once when the disclosure is Silent and through the reason dialog when it is Visible (a visible action needs a reason), and always asks for the reason and the length before a Ban. A refused id is named in a `Toast` with why, and its row stays selected.
+`InboxBulkActions` leaves out the actions the viewer's role may not take, applies Approve and Shadow ban at once, applies Hide and Remove at once when the disclosure is Silent and through the reason dialog when it is Visible (a visible action needs a reason), and always asks for the reason and the length before a Ban. A refused id is named in a `Toast` with why, and its row stays selected.
+
+`LibraryBatchActions` offers visibility, category, add tags, remove tags and comments, each opening the one [FieldDialog](field-dialog.md), and a delete behind a confirmation; the bar has no disclosure. Every edit is one bulk request, and a `Toast` lists the first five failures as `title (code): reason` while the failed rows stay selected.
 
 ## States
 

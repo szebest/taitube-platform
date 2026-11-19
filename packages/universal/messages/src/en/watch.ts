@@ -170,4 +170,6 @@ export const watch = {
   transcriptSearch: dt('Search the transcript'),
   transcriptNoMatches: dt('Nothing in the transcript matches {query}'),
   transcriptFailed: dt('The transcript could not be loaded'),
+  correctionsTitle: dt('Corrections'),
+  correctionsSeek: dt('Go to {time}'),
 } as const;

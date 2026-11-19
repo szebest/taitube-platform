@@ -7,9 +7,9 @@ import {
 } from '@tanstack/react-router';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { updateCreatorVideo } from '@vp/api-contracts';
+import { bulkEditCreatorVideos } from '@vp/api-contracts';
 import { createQueryClient } from '@vp/queries';
-import { account, apiServer, mockEndpoint, VIDEO_ID, video } from '@vp/web-testing';
+import { account, apiServer, mockEndpoint, VIDEO_ID } from '@vp/web-testing';
 import { axeViolations } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
 import type { ComponentType, PropsWithChildren } from 'react';
@@ -105,21 +105,25 @@ describe('apps/client/studio: LibraryVideoRow', () => {
     { stored: true, label: 'Turn comments off', sent: false },
     { stored: false, label: 'Turn comments on', sent: true },
   ])(
-    'sends commentsEnabled $sent from "$label" against the version it shows',
+    'sends commentsEnabled $sent from "$label" through the bulk request',
     async ({ stored, label, sent }) => {
       const edits: unknown[] = [];
       apiServer.use(
-        mockEndpoint(updateCreatorVideo, async ({ request }) => {
-          edits.push(await request.json());
-          return HttpResponse.json(video());
+        mockEndpoint(bulkEditCreatorVideos, async ({ request }) => {
+          const body = (await request.json()) as { ids: string[] };
+          edits.push(body);
+          return HttpResponse.json({ items: body.ids.map((id) => ({ id, ok: true })) });
         })
       );
-      const { user } = await renderRow(creatorVideo({ commentsEnabled: stored, version: 5 }));
+      const row = creatorVideo({ commentsEnabled: stored });
+      const { user } = await renderRow(row);
 
       await openMenu(user);
       await user.click(screen.getByRole('menuitem', { name: label }));
 
-      await vi.waitFor(() => expect(edits).toEqual([{ commentsEnabled: sent, version: 5 }]));
+      await vi.waitFor(() =>
+        expect(edits).toEqual([{ ids: [row.id], patch: { commentsEnabled: sent } }])
+      );
     }
   );
 

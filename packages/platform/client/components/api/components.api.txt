@@ -83,6 +83,24 @@ export interface ShelfTrackProps extends ComponentPropsWithRef<'ul'> {
     busy?: boolean;
 }
 export function SignedOutIllustration(props: SVGProps<SVGSVGElement>): JSX.Element
+export interface SpriteSheet {
+    url: string;
+    intervalSec: number;
+    columns: number;
+    tileWidth: number;
+    tileHeight: number;
+}
+export function SpriteStrip({ sprite, durationMs, frames, shade, className, ...props }: SpriteStripProps): JSX.Element
+export interface SpriteStripProps extends Omit<ComponentPropsWithRef<'div'>, 'children'> {
+    sprite: SpriteSheet;
+    durationMs: number;
+    frames?: number;
+    shade?: SpriteStripShade;
+}
+export interface SpriteStripShade {
+    startMs: number;
+    endMs: number;
+}
 export const StartHereShelf: { Root: ({ source, ...props }: StartHereShelfRootProps) => JSX.Element; Header: ({ className, ...props }: ComponentPropsWithRef<"div">) => JSX.Element; Kicker: ({ className, children, ...props }: ShelfPartProps) => JSX.Element; Note: ({ className, ...props }: ShelfPartProps) => JSX.Element | null; Track: ({ className, ...props }: ShelfTrackProps) => JSX.Element; Item: ({ position, className, children, ...props }: StartHereShelfItemProps) => JSX.Element; Footer: ({ className, ...props }: ComponentPropsWithRef<"div">) => JSX.Element; Attribution: ({ asChild, className, children, ...props }: ShelfPartProps) => JSX.Element; }
 export function StartHereShelfSkeleton(): JSX.Element
 export type StartHereSource = 'pinned' | 'popular';
@@ -129,6 +147,7 @@ export const pageHeaderStyles: TVReturnType<{ titleStyle: { headline: {}; displa
 export const sectionErrorStyles: TVReturnType<{ layout: { bar: { root: string; }; block: { root: string; text: string; }; }; tone: { danger: { icon: string; }; warning: { icon: string; }; }; }, { root: string; icon: string; text: string; message: string; support: string; }, undefined, { layout: { bar: { root: string; }; block: { root: string; text: string; }; }; tone: { danger: { icon: string; }; warning: { icon: string; }; }; }, { root: string; icon: string; text: string; message: string; support: string; }, TVReturnTypeLike<{ layout: { bar: { root: string; }; block: { root: string; text: string; }; }; tone: { danger: { icon: string; }; warning: { icon: string; }; }; }, { root: string; icon: string; text: string; message: string; support: string; }>>
 export function seriesColor(index: ChartSeries): string
 export const shelfStyles: TVReturnType<{ variant: { card: { track: string; }; poster: { track: string; }; channel: { track: string; }; }; side: { 'inline-start': { chevron: string; }; 'inline-end': { chevron: string; }; }; }, { root: string; header: string; title: string; note: string; action: string; viewport: string; track: string; item: string; chevron: string; }, undefined, { variant: { card: { track: string; }; poster: { track: string; }; channel: { track: string; }; }; side: { 'inline-start': { chevron: string; }; 'inline-end': { chevron: string; }; }; }, { root: string; header: string; title: string; note: string; action: string; viewport: string; track: string; item: string; chevron: string; }, TVReturnTypeLike<{ variant: { card: { track: string; }; poster: { track: string; }; channel: { track: string; }; }; side: { 'inline-start': { chevron: string; }; 'inline-end': { chevron: string; }; }; }, { root: string; header: string; title: string; note: string; action: string; viewport: string; track: string; item: string; chevron: string; }>>
+export function spriteFrameStyle(sprite: SpriteSheet, durationSeconds: number, seconds: number): CSSProperties
 export const startHereShelfStyles: TVReturnType<{ source: { pinned: { kicker: string; }; popular: {}; }; }, { header: string; kicker: string; note: string; track: string; item: string; position: string; footer: string; attribution: string; }, undefined, { source: { pinned: { kicker: string; }; popular: {}; }; }, { header: string; kicker: string; note: string; track: string; item: string; position: string; footer: string; attribution: string; }, TVReturnTypeLike<{ source: { pinned: { kicker: string; }; popular: {}; }; }, { header: string; kicker: string; note: string; track: string; item: string; position: string; footer: string; attribution: string; }>>
 export const statCardStyles: TVReturnType<{ size: { md: { root: string; spark: string; }; lg: { root: string; value: string; spark: string; }; }; }, { root: string; figure: string; label: string; value: string; placeholder: string; delta: string; spark: string; chevron: string; }, undefined, { size: { md: { root: string; spark: string; }; lg: { root: string; value: string; spark: string; }; }; }, { root: string; figure: string; label: string; value: string; placeholder: string; delta: string; spark: string; chevron: string; }, TVReturnTypeLike<{ size: { md: { root: string; spark: string; }; lg: { root: string; value: string; spark: string; }; }; }, { root: string; figure: string; label: string; value: string; placeholder: string; delta: string; spark: string; chevron: string; }>>
 export const useEmptyState: (part?: string) => { size: EmptyStateSize; titleStyle: EmptyStateTitleStyle; }

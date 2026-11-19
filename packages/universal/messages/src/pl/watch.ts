@@ -170,5 +170,7 @@ export const watch = {
   transcript: dt('Transkrypcja'),
   transcriptSearch: dt('Szukaj w transkrypcji'),
   transcriptNoMatches: dt('Nic w transkrypcji nie pasuje do {query}'),
+  correctionsTitle: dt('Korekty'),
+  correctionsSeek: dt('Przejdź do {time}'),
   transcriptFailed: dt('Nie udało się wczytać transkrypcji'),
 } as const;
