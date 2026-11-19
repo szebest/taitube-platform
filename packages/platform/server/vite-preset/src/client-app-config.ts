@@ -215,6 +215,8 @@ export function clientAppConfig({
           optimizeDeps: { entries: WORKSPACE_ENTRIES },
           build: {
             rolldownOptions: {
+              // Merging fires only while it makes no chunk cycle, so any import edit could fold the shared chunks into the entry.
+              experimental: { chunkOptimization: { mergeCommonChunks: false } },
               output: { codeSplitting: { groups: VENDOR_GROUPS } },
             },
           },
