@@ -1,4 +1,4 @@
-import { expectOk } from '@vp/testing/result';
+import { expectOk } from '@kit/testing/result';
 import {
   CATEGORIES_CACHE_CONTROL,
   type CategoriesApp,

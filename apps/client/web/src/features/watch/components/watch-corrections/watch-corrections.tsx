@@ -1,7 +1,7 @@
 import { useFormat, useT } from '@kit/intl-react';
 import { unwrapOr } from '@kit/result';
 import { useQuery } from '@tanstack/react-query';
-import { videoDuration } from '@vp/intl';
+import { videoDuration } from '@vp/intl-formats';
 import { correctionsQueryOptions, useApi } from '@vp/queries';
 import { usePlayerSeek } from '#app/components/player/taitube-player';
 

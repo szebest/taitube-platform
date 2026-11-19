@@ -1,7 +1,7 @@
 import type { Logger } from '@kit/logger';
+import { MS_PER_DAY } from '@kit/primitives';
 import { type Result, isErr, ok } from '@kit/result';
 import type { Repositories } from '@vp/core/repositories';
-import { MS_PER_DAY } from '@vp/domain/time';
 import type { DatabaseUnavailable } from '@vp/errors';
 
 export interface PurgeChannelAuditOptions {

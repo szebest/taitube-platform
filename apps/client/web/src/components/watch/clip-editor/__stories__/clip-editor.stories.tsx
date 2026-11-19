@@ -1,5 +1,5 @@
+import type { SpriteSheet } from '@kit/components';
 import type { Decorator, Meta, StoryObj } from '@storybook/react-vite';
-import type { SpriteSheet } from '@vp/components';
 import { useState } from 'react';
 import { ClipEditor, type ClipEditorValue } from '..';
 import { ClipEditorRoot } from '../clip-editor';

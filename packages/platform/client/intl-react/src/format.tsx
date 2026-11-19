@@ -1,5 +1,5 @@
+import type { FormatValue } from '@kit/intl';
 import { unwrapOr } from '@kit/result';
-import type { FormatValue } from '@vp/intl';
 import { useFormat } from './use-format';
 
 export interface FormatProps {

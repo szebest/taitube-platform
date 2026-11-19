@@ -4,7 +4,7 @@ import type { JobQueue, TokenVerifier } from '@vp/core/ports';
 import { getDevJwks } from '@vp/dev-identity';
 import type { AppConfig, AuthConfig } from '@vp/env-schema';
 import { QUEUES } from '@vp/job-contracts';
-import { createMetricsRegistry } from '@vp/observability';
+import { createPipelineMetrics } from '@vp/pipeline-metrics';
 import { DevTokenVerifier } from '../auth/dev-token-verifier';
 import { JwksTokenVerifier } from '../auth/jwks-token-verifier';
 import { CaslAuthorizationAdapter } from '../authorization/casl-authorization-adapter';
@@ -43,7 +43,7 @@ export async function registerAdapters(c: Container, config: AppConfig): Promise
   family.registerFamily(
     c
       .provide(Adapters.Config, () => config)
-      .provide(Adapters.Metrics, () => createMetricsRegistry())
+      .provide(Adapters.Metrics, () => createPipelineMetrics())
   );
 
   return c

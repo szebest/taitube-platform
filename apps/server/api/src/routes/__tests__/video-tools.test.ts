@@ -1,6 +1,6 @@
+import { expectOk } from '@kit/testing/result';
 import { mintToken } from '@vp/dev-identity';
 import { ErrorCodes } from '@vp/errors';
-import { expectOk } from '@vp/testing/result';
 import {
   type TestApp,
   bearer,

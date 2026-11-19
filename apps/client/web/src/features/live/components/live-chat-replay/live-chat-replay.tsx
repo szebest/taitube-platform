@@ -1,5 +1,5 @@
+import { EmptyState } from '@kit/components';
 import { useT } from '@kit/intl-react';
-import { EmptyState } from '@vp/components';
 import { LiveChat, type LiveChatLayout } from '#app/components/live/live-chat';
 import { useChatReplay } from '#app/features/live/hooks/use-chat-replay';
 

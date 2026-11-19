@@ -1,3 +1,4 @@
+import { MS_PER_HOUR } from '@kit/primitives';
 import { andThenAsync, err, isErr, ok, type Result } from '@kit/result';
 import type { CreateWatchPartyBody, WatchPartyView } from '@vp/api-contracts';
 import type { HashingFailed } from '@vp/core/ports';
@@ -12,7 +13,6 @@ import {
   type WatchPartySettings,
 } from '@vp/domain';
 import { type AuthorizationFailure, authorize } from '@vp/domain-rules';
-import { MS_PER_HOUR } from '@vp/domain/time';
 import {
   type CacheUnavailable,
   type DatabaseUnavailable,

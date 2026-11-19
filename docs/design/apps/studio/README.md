@@ -1,6 +1,6 @@
 # Studio kit
 
-The specs for the creator studio's own components, in `apps/client/studio/src/components/<area>/<name>/` ([architecture section 1](../../architecture.md#1-five-layers), app kit layer). They are presentational and compound, built from the [`@kit/ui` primitives](../../primitives/README.md) and the [`@vp/components`](../../components/README.md) shared components, and they follow the same rules as the shared ones: `X.Root` and parts, shared option unions in a `types.ts`, tokens by role from the token sets, copy through `useUiCopy()`, formatting by the app. [Ticket 95](../../../tickets/95-design-system-2.md) section 8 builds them; [60](../../../tickets/60-creator-studio-dashboard-video-management-ui.md) and [61](../../../tickets/61-admin-control-panel-category-moderation-ui.md) use them.
+The specs for the creator studio's own components, in `apps/client/studio/src/components/<area>/<name>/` ([architecture section 1](../../architecture.md#1-five-layers), app kit layer). They are presentational and compound, built from the [`@kit/ui` primitives](../../primitives/README.md) and the [`@kit/components`](../../components/README.md) shared components, and they follow the same rules as the shared ones: `X.Root` and parts, shared option unions in a `types.ts`, tokens by role from the token sets, copy through `useUiCopy()`, formatting by the app. [Ticket 95](../../../tickets/95-design-system-2.md) section 8 builds them; [60](../../../tickets/60-creator-studio-dashboard-video-management-ui.md) and [61](../../../tickets/61-admin-control-panel-category-moderation-ui.md) use them.
 
 ## Where things live
 
@@ -24,9 +24,9 @@ apps/client/studio/src/
 
 Each folder is the standard component folder: the component, its context file, variants, `types.ts`, story, jsdom spec and `index.ts` (`pnpm gen:component <name> --kind studio [--compound]`).
 
-## Nothing here is in `@vp/components` until web needs it
+## Nothing here is in `@kit/components` until web needs it
 
-These components exist for the studio alone today, so they stay in the studio's kit ([the both-apps rule](../../components/README.md#the-both-apps-today-rule)). The day web renders one of them (an analytics card on a channel page, a table in an account page), the component moves to `@vp/components` in the PR that adds web's import, and its spec moves with it. `CommentItem` is web's alone, so it is in web's kit ([comment-item](../web/comment-item.md)). What the studio shares with web today is already shared: `PageHeader`, `VideoThumbnail`, the empty, error, offline and section-error states, and the primitives, `Table` among them.
+These components exist for the studio alone today, so they stay in the studio's kit ([the both-apps rule](../../components/README.md#the-both-apps-today-rule)). The day web renders one of them (an analytics card on a channel page, a table in an account page), the component moves to `@kit/components` in the PR that adds web's import, and its spec moves with it. `CommentItem` is web's alone, so it is in web's kit ([comment-item](../web/comment-item.md)). What the studio shares with web today is already shared: `PageHeader`, `VideoThumbnail`, the empty, error, offline and section-error states, and the primitives, `Table` among them.
 
 ## Catalogue
 
@@ -34,7 +34,7 @@ These components exist for the studio alone today, so they stay in the studio's 
 |---|---|---|---|
 | [StudioWorkspace](studio-workspace.md) | Navigation, toolbar, content, inspector | `ScrollArea`, `IconButton`, `Drawer`, `Dialog` (sheet), `Tooltip`, `Separator` | [60](../../../tickets/60-creator-studio-dashboard-video-management-ui.md), [93](../../../tickets/93-creator-studio-separate-app.md) |
 | [DataTable](data-table.md) | Studio table behaviour over the `Table` primitive and TanStack Table state | `Table`, `Checkbox`, `Badge`, `DropdownMenu`, `Button`, `Skeleton` | [60](../../../tickets/60-creator-studio-dashboard-video-management-ui.md), [61](../../../tickets/61-admin-control-panel-category-moderation-ui.md) |
-| [StatCard](stat-card.md) | One KPI with delta and sparkline, in `@vp/components` | `Card`, `Badge`, `Icon` | [60](../../../tickets/60-creator-studio-dashboard-video-management-ui.md) |
+| [StatCard](stat-card.md) | One KPI with delta and sparkline, in `@kit/components` | `Card`, `Badge`, `Icon` | [60](../../../tickets/60-creator-studio-dashboard-video-management-ui.md) |
 | [BulkActionBar](bulk-action-bar.md) | The actions on selected rows and the disclosure they share | `Button`, `DisclosureControl` | [113](../../../tickets/113-channel-comment-moderation.md) |
 | [RevisionList](revision-list.md) | The saved versions of a record, what each changed, and a way back | `Badge`, `Button` | [116](../../../tickets/116-video-management-power-tools.md) |
 | [FieldDialog](field-dialog.md) | A dialog that asks for one field's value, a choice or a line of text | `ResponsiveModal`, `Field`, `Select`, `Input` | [116](../../../tickets/116-video-management-power-tools.md) |

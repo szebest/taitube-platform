@@ -72,8 +72,8 @@ the contract against itself:
   way, against the double in unit and the real service in integration
 
 A double that drifts from the real thing fails the shared contract assertion in its own spec. The contracts
-live in `@vp/adapters` rather than `@vp/testing`, because `@vp/testing` depending on `@vp/core` would make a
-workspace cycle (every package dev-depends on `@vp/testing`).
+live in `@vp/adapters` rather than `@kit/testing`, because `@kit/testing` depending on `@vp/core` would make a
+workspace cycle (every package dev-depends on `@kit/testing`).
 
 Each Postgres spec file gets a PGlite of its own, loaded from one migrated snapshot the adapters project
 builds in its global setup (`__tests__/contract/pglite-snapshot.ts`): a fresh PGlite runs initdb, most of a
@@ -112,7 +112,7 @@ The e2e runners are the exception by nature: they poll a deployed stack on its o
 Sibling tests that differ only by input are one `it.each`.
 
 Every test config restores spies and stubbed env vars before each test (`restoreMocks`, `unstubEnvs` in
-`definePackageTestConfig`, and in the configs that do not use it; `@vp/testing`'s own spec holds every project
+`definePackageTestConfig`, and in the configs that do not use it; `@vp/testing-fixtures`' config sweep holds every project
 config to it). Bun reads no vitest config, so `bunfig.toml` preloads `tests/bun-restore-mocks.ts`, which does
 the same after each test. No spec needs an `afterEach` to undo a spy.
 
@@ -136,10 +136,10 @@ run on Vitest's defaults.
 
 ## 5. Shared fixtures
 
-`@vp/testing` owns what more than one package needs: `definePackageTestConfig`, `SEEDED` (the users, channels
-and videos the in-memory repositories and the development seed start with), `createMockJob`, `withEnv`,
-`expectOk` / `expectErr` (`@vp/testing/result`), log capture and `runEntrypoint` (a TypeScript entrypoint in a
-child of the runtime the spec runs on). A spec that acts as "the dev user" names `SEEDED.userId`; the literal
+`@kit/testing` owns what more than one package needs: `definePackageTestConfig`, `withEnv`,
+`expectOk` / `expectErr` (`@kit/testing/result`), log capture and `runEntrypoint` (a TypeScript entrypoint in a
+child of the runtime the spec runs on). `@vp/testing-fixtures` holds this product's `SEEDED` (the users,
+channels and videos the in-memory repositories and the development seed start with) and `createMockJob`. A spec that acts as "the dev user" names `SEEDED.userId`; the literal
 never appears in a spec (`zero-matches`).
 
 What needs a higher layer lives in the app that owns it: the API's test app is `buildTestApp` in

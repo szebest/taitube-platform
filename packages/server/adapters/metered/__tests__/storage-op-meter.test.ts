@@ -1,6 +1,6 @@
 import { err, ok } from '@kit/result';
 import { storageUnavailable } from '@vp/errors';
-import { createMetricsRegistry } from '@vp/observability';
+import { createPipelineMetrics } from '@vp/pipeline-metrics';
 import { meterStorageOp } from '../storage-op-meter';
 
 describe('@vp/adapters: meterStorageOp', () => {
@@ -8,7 +8,7 @@ describe('@vp/adapters: meterStorageOp', () => {
     { outcome: ok('uploaded'), result: 'success' },
     { outcome: err(storageUnavailable('uploadObject')), result: 'error' },
   ])('counts a $result by the Result the call returned', async ({ outcome, result }) => {
-    const metrics = createMetricsRegistry();
+    const metrics = createPipelineMetrics();
 
     expect(await meterStorageOp(metrics, 'put', 'raw', async () => outcome)).toBe(outcome);
 

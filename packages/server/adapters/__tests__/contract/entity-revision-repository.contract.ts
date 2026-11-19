@@ -1,6 +1,6 @@
+import { expectOk } from '@kit/testing/result';
 import type { EntityRevisionRepository, NewEntityRevision } from '@vp/core/repositories';
 import { ENTITY_REVISION_KEEP, type VideoMetadataSnapshot } from '@vp/domain';
-import { expectOk } from '@vp/testing/result';
 import { OWNER_ID, publicVideo, seedOwners, VIDEO_IDS } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 

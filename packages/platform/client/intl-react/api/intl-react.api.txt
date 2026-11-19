@@ -7,12 +7,12 @@ export interface ActiveLocale {
     readonly catalogues: Omit<Catalogues, 'en'>;
 }
 export const FALLBACK_ACTIVE_LOCALE: ActiveLocale
-export function Format({ value, fallback }: FormatProps): JSX.Element
+export function Format({ value, fallback }: FormatProps): React.JSX.Element
 export interface FormatProps {
     readonly value: FormatValue;
     readonly fallback?: string;
 }
-export function IntlProvider({ locale, timeZone, currency, now, catalogues, children, }: IntlProviderProps): JSX.Element
+export function IntlProvider({ locale, timeZone, currency, now, catalogues, children, }: IntlProviderProps): React.JSX.Element
 export interface IntlProviderProps {
     readonly locale: string;
     readonly timeZone?: string;

@@ -3,14 +3,14 @@ import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createLogger } from '@kit/logger';
+import { expectOk } from '@kit/testing/result';
 import {
   InMemoryFrameClassifier,
   InMemoryRepositories,
   InMemoryStorageClient,
 } from '@vp/adapters/in-memory';
 import { fingerprintTools } from '@vp/fingerprint';
-import { SEEDED, createMockJob } from '@vp/testing';
-import { expectOk } from '@vp/testing/result';
+import { SEEDED, createMockJob } from '@vp/testing-fixtures';
 import { uuidv7 } from 'uuidv7';
 import { STAGE_SETTINGS } from '../../../../__tests__/stage-settings';
 import { createScreenProcessor } from '../../screen-stage';

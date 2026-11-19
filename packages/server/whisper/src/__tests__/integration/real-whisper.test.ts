@@ -2,7 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { expectOk } from '@vp/testing/result';
+import { expectOk } from '@kit/testing/result';
 import { runWhisper } from '../../run-whisper';
 
 const MODELS = resolve(__dirname, '../../../../../../.models');

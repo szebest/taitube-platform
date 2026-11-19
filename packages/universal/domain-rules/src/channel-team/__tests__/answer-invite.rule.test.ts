@@ -1,7 +1,7 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import type { ChannelInvite } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { decideInviteAnswer } from '../answer-invite.rule';
 import { CHANNEL_ID, OWNER_ID } from './team-personas';
 

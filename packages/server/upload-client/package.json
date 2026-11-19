@@ -25,13 +25,14 @@
     "@kit/result": "workspace:*"
   },
   "devDependencies": {
+    "@kit/testing": "workspace:*",
     "@kit/tsconfig": "workspace:*",
     "@types/node": "^24.19.1",
     "@vp/adapters": "workspace:*",
     "@vp/api": "workspace:*",
     "@vp/dev-identity": "workspace:*",
     "@vp/env-schema": "workspace:*",
-    "@vp/testing": "workspace:*",
+    "@vp/testing-fixtures": "workspace:*",
     "fastify": "^5.12.5",
     "typescript": "^6.0.3",
     "vite-plus": "catalog:"

@@ -1,5 +1,5 @@
+import { expectOk } from '@kit/testing/result';
 import * as schema from '@vp/db';
-import { expectOk } from '@vp/testing/result';
 import { C, seedComment, seedThreads } from './comment-contract-context';
 import { HELD_AT_CREATION, describeModerationFixture } from './comment-moderation-fixture';
 import { OWNER_ID } from './fixtures';

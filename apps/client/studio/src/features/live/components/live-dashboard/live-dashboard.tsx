@@ -1,8 +1,8 @@
+import { PageHeader, SectionError } from '@kit/components';
 import { useT } from '@kit/intl-react';
 import { Badge, Button } from '@kit/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { LiveStreamView } from '@vp/api-contracts';
-import { PageHeader, SectionError } from '@vp/components';
 import { useApi, useLiveVideoEvents } from '@vp/queries';
 import { useEffect, useEffectEvent, useState } from 'react';
 import { liveKeys, myLiveStreamQueryOptions } from '#app/features/live/api/live-queries';

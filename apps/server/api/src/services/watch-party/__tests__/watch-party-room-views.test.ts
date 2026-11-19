@@ -1,4 +1,4 @@
-import { expectOk } from '@vp/testing/result';
+import { expectOk } from '@kit/testing/result';
 import { presentRoom, presentRooms } from '../watch-party-room-views';
 import {
   OTHER,

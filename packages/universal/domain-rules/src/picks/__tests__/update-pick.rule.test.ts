@@ -1,5 +1,5 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { ADMIN, PICK_NOW, STRANGER, aPick, aVideo } from '../../__tests__/entities';
 import { type UpdatePickInput, decidePickUpdate } from '../update-pick.rule';
 

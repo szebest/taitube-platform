@@ -1,6 +1,6 @@
 # TimelineRangeEditor
 
-One slider over a video's frames: two thumbs for a range, or one for a position, with a tick for each point already set. It is the editor's way of picking a moment without typing it: the corrections panel picks a 2 to 30 second range, and the chapters panel scrubs a position to take a chapter's start from. It lives in the studio's kit, `apps/client/studio/src/components/video/timeline-range-editor/` ([README](README.md)), and builds on the `Slider` primitive and `SpriteStrip` from `@vp/components` ([116](../../../tickets/116-video-management-power-tools.md)).
+One slider over a video's frames: two thumbs for a range, or one for a position, with a tick for each point already set. It is the editor's way of picking a moment without typing it: the corrections panel picks a 2 to 30 second range, and the chapters panel scrubs a position to take a chapter's start from. It lives in the studio's kit, `apps/client/studio/src/components/video/timeline-range-editor/` ([README](README.md)), and builds on the `Slider` primitive and `SpriteStrip` from `@kit/components` ([116](../../../tickets/116-video-management-power-tools.md)).
 
 ## Anatomy
 

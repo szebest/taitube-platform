@@ -1,8 +1,8 @@
 import { ok } from '@kit/result';
+import { expectOk } from '@kit/testing/result';
 import { InMemoryCacheClient, InMemoryRepositories } from '@vp/adapters/in-memory';
 import { inProcessAppConfig } from '@vp/env-schema';
 import type { UserContext } from '@vp/permissions';
-import { expectOk } from '@vp/testing/result';
 import { seedVideo } from '../../__tests__/test-app';
 import { CurrentPickCache } from '../current-pick-cache';
 import { CurrentPickService, type CurrentPickServiceDeps } from '../current-pick-service';

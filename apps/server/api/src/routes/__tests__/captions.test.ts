@@ -1,7 +1,7 @@
+import { expectOk } from '@kit/testing/result';
 import { mintToken } from '@vp/dev-identity';
 import { MAX_CAPTION_FILE_BYTES } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
-import { expectOk } from '@vp/testing/result';
 import type { LightMyRequestResponse } from 'fastify';
 import { type TestApp, bearer, buildTestApp } from '../../__tests__/test-app';
 import {

@@ -1,5 +1,7 @@
 import { createHash } from 'node:crypto';
 import { createLogger } from '@kit/logger';
+import { captureLog } from '@kit/testing/log-capture';
+import { expectOk } from '@kit/testing/result';
 import { ScryptPasswordHasher } from '@vp/adapters';
 import {
   InMemoryCacheClient,
@@ -11,10 +13,8 @@ import {
 import type { CreateWatchPartyBody, WatchPartyView } from '@vp/api-contracts';
 import type { PartyGuestSession } from '@vp/core/ports';
 import { type AppConfigOverrides, asCdnBase, inProcessAppConfig } from '@vp/env-schema';
-import { createMetricsRegistry, createWatchPartyMetrics } from '@vp/observability';
 import type { UserContext } from '@vp/permissions';
-import { captureLog } from '@vp/testing/log-capture';
-import { expectOk } from '@vp/testing/result';
+import { createPipelineMetrics, createWatchPartyMetrics } from '@vp/pipeline-metrics';
 import type { PartyCaller } from '../party-caller';
 import { type RoomEnvelope, WatchPartyBroadcaster } from '../watch-party-broadcaster';
 import { WatchPartyContextLoader } from '../watch-party-context';
@@ -88,7 +88,7 @@ export function watchPartyTestDeps({ config, secrets }: WatchPartyTestOptions = 
   const guestSessions = new InMemoryPartyGuestSessions(() => clock.nowMs);
   const cache = new InMemoryCacheClient();
   const log = captureLog();
-  const metrics = createWatchPartyMetrics(createMetricsRegistry().registry);
+  const metrics = createWatchPartyMetrics(createPipelineMetrics().registry);
 
   const deps: WatchPartyDeps = {
     repositories,

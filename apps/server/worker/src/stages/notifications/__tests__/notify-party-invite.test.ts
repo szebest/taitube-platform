@@ -1,3 +1,4 @@
+import { expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { QueueJob } from '@vp/core/ports';
 import {
@@ -8,7 +9,6 @@ import {
   WATCH_PARTY_PERMISSIONS_VERSION,
 } from '@vp/domain';
 import type { NotifyPartyInviteJob } from '@vp/job-contracts';
-import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { createNotifyPartyInviteProcessor } from '../notify-party-invite';
 import {

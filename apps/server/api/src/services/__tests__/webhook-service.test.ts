@@ -1,8 +1,8 @@
 import { err } from '@kit/result';
+import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories, InMemoryWebhookDispatcher } from '@vp/adapters/in-memory';
 import { ErrorCodes, webhookDeliveryRejected } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { WebhookService } from '../webhook-service';
 
 const VIEWER: UserContext = { id: '00000000-0000-7000-8000-00000000c001', role: 'USER' };

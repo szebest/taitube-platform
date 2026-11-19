@@ -1,4 +1,4 @@
-import { expectOk } from '@vp/testing/result';
+import { expectOk } from '@kit/testing/result';
 import { inMemoryWatchPartyGateSubject } from '../../__tests__/contract/in-memory-port-subjects';
 import { describeWatchPartyGateContract } from '../../__tests__/contract/watch-party-gate.contract';
 import { InMemoryWatchPartyGate } from '../in-memory-watch-party-gate';

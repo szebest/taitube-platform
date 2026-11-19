@@ -1,5 +1,5 @@
+import type { FormatValue } from '@kit/intl';
 import { render } from '@testing-library/react';
-import type { FormatValue } from '@vp/intl';
 import { Format } from '../format';
 import { IntlProvider } from '../intl-provider';
 

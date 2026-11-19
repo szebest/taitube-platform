@@ -7,7 +7,7 @@ import type { Repositories } from '@vp/core/repositories';
 import type { DatabaseUnavailable, MediaFailure, StorageUnavailable } from '@vp/errors';
 import type { MediaTools } from '@vp/ffmpeg';
 import { CHUNKED_TRANSCODE, type TranscodeJob } from '@vp/job-contracts';
-import type { PipelineMetrics } from '@vp/observability';
+import type { PipelineMetrics } from '@vp/pipeline-metrics';
 import { chunkKey } from '@vp/storage';
 import { uuidv7 } from 'uuidv7';
 import { createScratchDir, removeScratchDir } from './scratch-dir';

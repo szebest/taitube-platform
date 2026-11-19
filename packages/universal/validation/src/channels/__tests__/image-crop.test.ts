@@ -1,4 +1,4 @@
-import { expectErr, expectOk } from '@vp/testing/result';
+import { expectErr, expectOk } from '@kit/testing/result';
 import { validateCropRect } from '../image-crop';
 
 const IMAGE = { width: 2560, height: 1440 };

@@ -1,6 +1,6 @@
+import { EmptyState, PageHeader } from '@kit/components';
 import { useT } from '@kit/intl-react';
 import { useSuspenseQuery } from '@tanstack/react-query';
-import { EmptyState, PageHeader } from '@vp/components';
 import { canUpdateCommentSettings } from '@vp/permissions';
 import { useCan } from '@vp/permissions-react';
 import { commentSettingsQueryOptions, useApi } from '@vp/queries';

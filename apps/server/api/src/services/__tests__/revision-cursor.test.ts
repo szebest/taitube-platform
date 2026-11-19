@@ -1,5 +1,5 @@
 import { Paginator } from '@kit/pagination';
-import { expectErr, expectOk } from '@vp/testing/result';
+import { expectErr, expectOk } from '@kit/testing/result';
 import { decodeRevisionCursor, revisionCursorPayload } from '../revision-cursor';
 
 const paginator = new Paginator();

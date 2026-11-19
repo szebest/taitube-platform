@@ -1,7 +1,7 @@
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { runEntrypoint } from '../../packages/server/testing/src/run-entrypoint';
+import { runEntrypoint } from '../../packages/platform/server/testing/src/run-entrypoint';
 
 const ENTRYPOINT = resolve(import.meta.dirname, '../unit-shards.ts');
 

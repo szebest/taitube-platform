@@ -1,3 +1,4 @@
+import { expectOk } from '@kit/testing/result';
 import type { WatchPartyRoomSeed } from '@vp/core/repositories';
 import {
   builtInRoles,
@@ -6,7 +7,6 @@ import {
   WATCH_PARTY_PERMISSIONS_VERSION,
   type WatchPartyRoom,
 } from '@vp/domain';
-import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { OWNER_ID, publicVideo, seedOwners, VIDEO_IDS } from './fixtures';
 import type { RepositoriesSubject } from './subjects';

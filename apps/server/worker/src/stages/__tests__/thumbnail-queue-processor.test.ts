@@ -1,6 +1,6 @@
 import { ok } from '@kit/result';
 import { type ChannelImageJob, ThumbnailQueueJob } from '@vp/job-contracts';
-import { createMockJob } from '@vp/testing';
+import { createMockJob } from '@vp/testing-fixtures';
 import { createThumbnailQueueProcessor } from '../thumbnail-queue-processor';
 
 const VIDEO: Extract<ThumbnailQueueJob, { type: 'video-thumbnail' }> = {

@@ -22,9 +22,9 @@
     "@kit/logger": "workspace:*"
   },
   "devDependencies": {
+    "@kit/testing": "workspace:*",
     "@kit/tsconfig": "workspace:*",
     "@types/node": "^24.19.1",
-    "@vp/testing": "workspace:*",
     "typescript": "^6.0.3",
     "vite-plus": "catalog:"
   },

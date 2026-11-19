@@ -1,5 +1,5 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { decideCorrection, decideCorrectionFields } from '../decide-correction.rule';
 
 const context = { videoId: 'v1', durationMs: 120_000, existing: 0 };

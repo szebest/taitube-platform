@@ -1,6 +1,6 @@
+import { expectOk } from '@kit/testing/result';
 import type { WebVital, WebVitalsBatch } from '@vp/api-contracts';
-import { type PipelineMetrics, createMetricsRegistry } from '@vp/observability';
-import { expectOk } from '@vp/testing/result';
+import { type PipelineMetrics, createPipelineMetrics } from '@vp/pipeline-metrics';
 import { WebVitalsService } from '../web-vitals-service';
 
 const ROUTE = '/watch/$videoId';
@@ -10,7 +10,7 @@ describe('WebVitalsService', () => {
   let service: WebVitalsService;
 
   const createService = (maxRoutesPerApp = 2) => {
-    metrics = createMetricsRegistry();
+    metrics = createPipelineMetrics();
     service = new WebVitalsService({ metrics, maxRoutesPerApp });
   };
 

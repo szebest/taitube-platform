@@ -1,4 +1,4 @@
-﻿import { definePackageTestConfig } from '@vp/testing';
+﻿import { definePackageTestConfig } from '@kit/testing';
 import { configDefaults } from 'vite-plus';
 
 // Several stage tests shell out to real FFmpeg, which takes every core it can get. Under

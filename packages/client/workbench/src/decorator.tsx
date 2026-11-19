@@ -1,4 +1,5 @@
 import { accentCss } from '@kit/design-tokens';
+import { FALLBACK_LOCALE } from '@kit/intl';
 import { unwrapOr } from '@kit/result';
 import {
   AppearanceProvider,
@@ -8,7 +9,6 @@ import {
   useAppearance,
 } from '@kit/ui';
 import type { Decorator, Loader } from '@storybook/react-vite';
-import { FALLBACK_LOCALE } from '@vp/intl';
 import { type Catalogues, en, LOCALE_DETAILS, SUPPORTED_LOCALES } from '@vp/messages';
 import { type PropsWithChildren, useEffect } from 'react';
 import { DIRECTIONS, pickOption, preferenceFromGlobals } from './toolbars';

@@ -1,6 +1,6 @@
 import { appendFileSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { runEntrypoint } from '../../packages/server/testing/src/run-entrypoint';
+import { runEntrypoint } from '../../packages/platform/server/testing/src/run-entrypoint';
 import { UI_SRC } from '../scaffold';
 import { REPO, uiTree } from './ui-tree';
 

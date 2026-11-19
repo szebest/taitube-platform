@@ -1,4 +1,4 @@
-import { expectOk } from '@vp/testing/result';
+import { expectOk } from '@kit/testing/result';
 import { holdsJoinWhenFull, isRoomMember, joinCapacity } from '../watch-party-admission';
 import { toNewSeat } from '../watch-party-principals';
 import { assignRole, fillPresence, OWNER_KEY } from './watch-party-access-fixture';

@@ -70,9 +70,9 @@
 1 apps/server/worker/src/stages/progress-reporter.ts
 1 apps/server/worker/src/stages/screen/match-finding.ts
 2 apps/server/worker/src/stages/screen/screen-text.ts
-3 packages/client/components/src/analytics/stat-card/stat-card.tsx
-2 packages/client/components/src/video-card/components/video-card-thumb/video-card-thumb.tsx
-1 packages/client/components/src/video-card/video-card.tsx
+3 packages/platform/client/components/src/analytics/stat-card/stat-card.tsx
+2 packages/platform/client/components/src/video-card/components/video-card-thumb/video-card-thumb.tsx
+1 packages/platform/client/components/src/video-card/video-card.tsx
 1 packages/client/queries/src/api-proxy.ts
 7 packages/client/queries/src/live-chat-state.ts
 2 packages/client/queries/src/route-guards.ts

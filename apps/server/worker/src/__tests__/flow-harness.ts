@@ -1,6 +1,7 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import { createLogger, type Logger } from '@kit/logger';
+import { expectOk } from '@kit/testing/result';
 import {
   InMemoryFlowProducer,
   InMemoryJobQueue,
@@ -14,8 +15,7 @@ import type {
   TranscodeOptions,
 } from '@vp/ffmpeg';
 import { CANONICAL_LADDER, type LadderEntry } from '@vp/job-contracts';
-import { SEEDED } from '@vp/testing';
-import { expectOk } from '@vp/testing/result';
+import { SEEDED } from '@vp/testing-fixtures';
 import { uuidv7 } from 'uuidv7';
 
 export const OWNER_ID = SEEDED.userId;

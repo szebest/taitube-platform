@@ -16,7 +16,7 @@ describe('scripts: the component templates', () => {
     {
       kind: 'shared',
       area: 'states',
-      folder: `${packageDir('@vp/components')}/src/states/chip-bar`,
+      folder: `${packageDir('@kit/components')}/src/states/chip-bar`,
     },
     { kind: 'web', area: 'discovery', folder: 'apps/client/web/src/components/discovery/chip-bar' },
     { kind: 'studio', area: undefined, folder: 'apps/client/studio/src/components/chip-bar' },

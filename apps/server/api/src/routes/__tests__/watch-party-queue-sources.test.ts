@@ -1,6 +1,6 @@
+import { expectOk } from '@kit/testing/result';
 import { WATCH_PARTY_LIMITS } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
-import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import {
   type Account,

@@ -1,5 +1,5 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { joinRoom } from '../watch-party-join';
 import { closeRoom, updateRoom } from '../watch-party-settings';
 import { assignRole, assignRoleId, createRole, OWNER_KEY } from './watch-party-access-fixture';

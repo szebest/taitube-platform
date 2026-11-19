@@ -1,7 +1,7 @@
 import type { CacheClient, StorageClient } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import type { AppConfig } from '@vp/env-schema';
-import type { PipelineMetrics } from '@vp/observability';
+import type { PipelineMetrics } from '@vp/pipeline-metrics';
 import type { Every } from './heartbeat';
 import { TranscodeProgressReporter } from './stages/progress-reporter';
 import { StreamingSegmentUploader } from './stages/segment-uploader';

@@ -1,5 +1,5 @@
+import { PageHeader } from '@kit/components';
 import { useT } from '@kit/intl-react';
-import { PageHeader } from '@vp/components';
 import { Can } from '@vp/permissions-react';
 import { useActingChannel } from '#app/features/channel/hooks/use-acting-channel';
 import { BrandColourSection } from '../brand-colour-section/brand-colour-section';

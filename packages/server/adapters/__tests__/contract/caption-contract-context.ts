@@ -1,6 +1,6 @@
+import { expectOk } from '@kit/testing/result';
 import type { CaptionRecord, CaptionRepository } from '@vp/core/repositories';
 import type { TranscriptCue } from '@vp/domain';
-import { expectOk } from '@vp/testing/result';
 import { OWNER_ID, publicVideo, seedOwners, VIDEO_IDS } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 

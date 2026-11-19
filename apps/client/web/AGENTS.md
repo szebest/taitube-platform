@@ -11,7 +11,7 @@ Instructions for any coding agent working on the Taitube web client (`apps/clien
 | Framework | **TanStack Start** on **Vite 8**, **React 19**, server-rendered and hydrated, compiled by the **Oxc React Compiler** (`clientAppConfig`'s `compiler`, default `'oxc'`): no `useMemo`, `useCallback` or `memo` outside `tests/react-compiler/manual-memo-allowlist.json`, and what it skips is `tests/react-compiler/baseline.json` |
 | Routing | file-based **TanStack Router** under `src/routes/`; `src/routeTree.gen.ts` is generated and committed |
 | Data | **TanStack Query** (one `QueryClient` per request and per tab, in router context), filled by route loaders; **TanStack Form** for forms |
-| Styling | **Tailwind CSS 4** (`@tailwindcss/vite`, plain class names, preflight on) on the colour roles and token sets of `@kit/ui`, with its **Radix** primitives and `@vp/components`; no stylesheet outside `@kit/ui` |
+| Styling | **Tailwind CSS 4** (`@tailwindcss/vite`, plain class names, preflight on) on the colour roles and token sets of `@kit/ui`, with its **Radix** primitives and `@kit/components`; no stylesheet outside `@kit/ui` |
 | Playback | `<TaitubePlayer />` from `src/components/player/taitube-player`, on Video.js 10 (`@videojs/react`) and the `hls.js` its `@videojs/hlsjs-video` engine bundles; `integrations/video-js/video-js-engine.tsx` is the one module that imports either, so the engine swaps in one file; the skin in `components/player/` reads it through `usePlayerState` and `usePlayerCommands`, typed by `lib/player/player-port.ts` |
 | Tests | Vitest through the app's own Vite config, `globals: true`, in two projects: `node` (`vitest.config.ts`) and `jsdom` (`vitest.jsdom.config.ts`, the `*.dom.test.{ts,tsx}` specs) with Testing Library; MSW answers for the API in both |
 | Server | `vite build` writes `dist/client` and `dist/server/server.js` (a fetch handler); `start` serves it with `srvx`, and `src/server.ts` serves `dist/client` ahead of the app, `/assets/` immutable for a year (`withStaticAssets`) |
@@ -33,7 +33,7 @@ src/
 ├── routes/               file routes only: params, validateSearch, loader, head, component
 │   ├── __root.tsx        the document (ThemedDocument from @kit/ui), global styles, provider stack, the app shell, devtools
 │   ├── _authed.tsx       pathless members-only layout: requireSignedIn sends a guest to /login
-│   ├── login.tsx         the `LoginPage` wrapper over `@vp/components`' sign-in card, the demo persona switcher behind `VITE_DEMO_PERSONAS`
+│   ├── login.tsx         the `LoginPage` wrapper over `@kit/components`' sign-in card, the demo persona switcher behind `VITE_DEMO_PERSONAS`
 │   ├── upload/           redirects to the same path on the studio, server render and client navigation alike
 │   └── $.tsx             the legacy redirects for unmatched paths
 ├── features/<feature>/   one folder per domain, isolated: index.ts (its public face), api/ (query options and key
@@ -124,7 +124,7 @@ page: the root route's `beforeLoad` returns `auth` (`ensureSession`), `_authed`'
 `/login?redirect=<path>`, and its loaders run on the server with the cookie's token. No script reads the token: the
 browser's API calls go to this origin's `/api`, and only server functions (`signOut`, the demo personas' sign-in)
 set or clear the cookie. A 401 for a signed-in viewer lands them on `/login`, and back where they were once signed
-in. The shell header mounts `features/account/components/account-menu.tsx`: `@vp/components`' `AccountMenu` with the
+in. The shell header mounts `features/account/components/account-menu.tsx`: `@kit/components`' `AccountMenu` with the
 studio's upload and admin pages, a guest's sign-in link, and sign-out, which ends the session on both apps. Locally
 `/login` offers the demo personas (Guest, Viewer, Creator, Second creator, Moderator, Admin) in the dev server, where
 `pnpm dev` starts `dev-token serve`, and in a build made with `VITE_DEMO_PERSONAS=true`, which `demo/start.sh` makes
@@ -348,7 +348,7 @@ The primitives, the tokens and the theme live in `@kit/ui`; its [AGENTS.md](../.
 holds the rules. This app links `@kit/ui/styles.css` and mounts the root providers once, in
 `__root.tsx`; every primitive and kit component is shown in the workbench (`@vp/workbench`), not in the app.
 
-The app kit (`src/components/<area>/<name>/`) is built from `@kit/ui` and `@vp/components`, takes data as props and
+The app kit (`src/components/<area>/<name>/`) is built from `@kit/ui` and `@kit/components`, takes data as props and
 calls no data hook. A placement is a smart wrapper in the feature that owns its data:
 `features/browse/components/feed-video-card.tsx` is the reference, and the shell wrappers (`RootShell`,
 `ShellRail`, `ShellAccountMenu`, `ShellTabBar`) mount `AppShell`. A page ticket owns the wrappers it uses.
@@ -424,7 +424,7 @@ page by client-side navigation; a full page load of `/watch/...` is a server ren
 | 57 player | `<TaitubePlayer />` and its prop, payload and event types from `#app/components/player/taitube-player`; `features/watch/components/watch-stage.tsx` mounts it on the watch page, and `PlayerChannelProvider` hands the page's other parts its seek, its playhead and its theater mode |
 | 73 library, queue | `features/library/` (above); `lib/playback-session` holds the queue and the one player's state for the whole session (`PlaybackSessionProvider`), and the now playing bar is the mini player |
 | 68 PWA | `src/sw.ts` (caching and sync land there), `features/pwa/` for the prompts and `shouldPrefetch()`, `vite-pwa.config.ts` for the build, `src/sw/` for the caching rules, `features/offline/` for the offline UI |
-| 114 creator stats | `features/creator-stats/`: `CreatorStatsPanel`, mounted by `WatchPage` above the description. `useCan(canReadVideoStats)` gates it, so another viewer's page asks for nothing; the numbers are one `getCreatorStats` query (`creatorStatsQueryOptions`) that `video.stats.updated` invalidates, the curve is the studio's `getVideoRetention`, and each quick action is its own component over the studio's `updateCreatorVideo` (with the page's `version`) or the comment pin endpoints, shown by the viewer's ability on it. `StatCard` is `@vp/components`; `RetentionStrip` is the web kit's |
+| 114 creator stats | `features/creator-stats/`: `CreatorStatsPanel`, mounted by `WatchPage` above the description. `useCan(canReadVideoStats)` gates it, so another viewer's page asks for nothing; the numbers are one `getCreatorStats` query (`creatorStatsQueryOptions`) that `video.stats.updated` invalidates, the curve is the studio's `getVideoRetention`, and each quick action is its own component over the studio's `updateCreatorVideo` (with the page's `version`) or the comment pin endpoints, shown by the viewer's ability on it. `StatCard` is `@kit/components`; `RetentionStrip` is the web kit's |
 | 76 live | `features/live/` (above), `components/live/`, `TaitubePlayer`'s `live` and `overlay` |
 | 116 video tools | `TaitubePlayer`'s `cards` prop draws `PlayerCardLayer` (`components/player/player-card-layer/`: one card at a time over `usePlayerTime`, above the control bar, dismissed by its button or Escape, `motion-safe` entrance); `WatchPlayer` and the embed feed it from `correctionsQueryOptions`, which the watch and embed loaders prefetch, and `WatchCorrections` repeats the list under the description with a seek per row. `WatchLinerNotes` lists `video.chapters` first and falls back to `chaptersOf(description)` when none are stored. The same `video.chapters` go to `TaitubePlayer`'s `chapters` prop (`WatchPlayer` reads them from `videoQueryOptions`, the embed from its video): `SeekBar` (`control-bar/components/seek-bar/`) marks each chapter after the first with an `aria-hidden` tick placed by `chapterMarkers` (a clip's range keeps only its own) and speaks the chapter the playhead is in with the time (`player.seekInChapter`); the ticks never take focus and nothing animates |
 | every page ticket | its browser flows, in `e2e/` (Rule 10) |

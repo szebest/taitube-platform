@@ -1,8 +1,8 @@
 import { err } from '@kit/result';
+import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryFrameClassifier } from '@vp/adapters/in-memory';
 import { ErrorCodes, mediaFailure } from '@vp/errors';
-import { SEEDED } from '@vp/testing';
-import { expectErr, expectOk } from '@vp/testing/result';
+import { SEEDED } from '@vp/testing-fixtures';
 import { uuidv7 } from 'uuidv7';
 import { STAGE_SETTINGS } from '../../../__tests__/stage-settings';
 import {

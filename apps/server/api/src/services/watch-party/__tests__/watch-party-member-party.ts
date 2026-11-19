@@ -1,7 +1,7 @@
+import { expectOk } from '@kit/testing/result';
 import type { BuiltInRoleKey, WatchPartyRoom } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { expectOk } from '@vp/testing/result';
 import { WatchPartyMemberService } from '../watch-party-member-service';
 import {
   keyOf,

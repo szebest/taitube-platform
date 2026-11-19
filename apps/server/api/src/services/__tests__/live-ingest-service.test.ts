@@ -1,7 +1,7 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { LIVE_READER_USER } from '@vp/domain-rules';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { LiveIngestService } from '../live-ingest-service';
 
 const OWNER_ID = '00000000-0000-7000-8000-00000000c001';

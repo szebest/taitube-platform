@@ -1,7 +1,7 @@
+import { SectionError, type SectionErrorRootProps } from '@kit/components';
 import { useT } from '@kit/intl-react';
 import { QueryErrorResetBoundary } from '@tanstack/react-query';
 import { CatchBoundary } from '@tanstack/react-router';
-import { SectionError, type SectionErrorRootProps } from '@vp/components';
 import type { ReactNode } from 'react';
 import { failureCode } from './failure-code';
 import { present } from './present-failure';

@@ -1,6 +1,6 @@
 import { token } from '@kit/di';
 import { err, ok } from '@kit/result';
-import { expectErr, expectOk } from '@vp/testing/result';
+import { expectErr, expectOk } from '@kit/testing/result';
 import { Container, DisposeFailed, closeOnDispose } from '../container';
 
 class VideoService {

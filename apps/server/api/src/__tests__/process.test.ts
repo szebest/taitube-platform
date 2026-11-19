@@ -2,7 +2,7 @@ import * as http from 'node:http';
 import * as net from 'node:net';
 import type { ProcessHost } from '@kit/composition';
 import { createLogger } from '@kit/logger';
-import { captureLog } from '@vp/testing/log-capture';
+import { captureLog } from '@kit/testing/log-capture';
 import type { Mock } from 'vite-plus/test';
 import { run } from '../process';
 import { boundPort } from './bound-port';

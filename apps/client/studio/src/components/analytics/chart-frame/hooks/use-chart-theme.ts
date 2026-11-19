@@ -1,4 +1,4 @@
-import { CHART_SERIES, seriesColor } from '@vp/components';
+import { CHART_SERIES, seriesColor } from '@kit/components';
 import type { ChartPalette } from '../types';
 import { SEQUENTIAL } from '../utils/sequential-scale';
 

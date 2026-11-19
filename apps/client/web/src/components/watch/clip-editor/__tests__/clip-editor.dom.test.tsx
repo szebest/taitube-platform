@@ -1,6 +1,6 @@
+import type { SpriteSheet } from '@kit/components';
 import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
-import type { SpriteSheet } from '@vp/components';
 import { axeViolations } from '@vp/web-testing/dom';
 import { useState } from 'react';
 import { AppProviders } from '#app/__tests__/providers';

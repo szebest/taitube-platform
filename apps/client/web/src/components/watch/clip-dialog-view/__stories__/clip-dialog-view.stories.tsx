@@ -1,6 +1,6 @@
+import type { SpriteSheet } from '@kit/components';
 import { createToaster, ResponsiveModal, ToastProvider } from '@kit/ui';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import type { SpriteSheet } from '@vp/components';
 import { useState } from 'react';
 import { ClipEditor, type ClipEditorValue } from '#app/components/watch/clip-editor';
 import { ClipDialogView } from '..';

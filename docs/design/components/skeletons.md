@@ -1,12 +1,12 @@
 # Skeletons
 
-The loading layout of the `@vp/components` components, at the loaded layout's exact dimensions, so a `pendingComponent` shifts nothing when data arrives. It carries no signature move: it honours the polish bar's CLS under 0.05.
+The loading layout of the `@kit/components` components, at the loaded layout's exact dimensions, so a `pendingComponent` shifts nothing when data arrives. It carries no signature move: it honours the polish bar's CLS under 0.05.
 
 ## The rule
 
 **Each component owns its skeleton.** A component's folder exports `<Name>Skeleton` next to it, built from the same parts, spacing roles and sizing tokens as the loaded layout, so the two cannot drift. A skeleton is never written in a page, and never in a different package from its component:
 
-- the shared components' skeletons live in `@vp/components` and are specified here;
+- the shared components' skeletons live in `@kit/components` and are specified here;
 - a web kit component's skeleton is in that component's web spec ([apps/web/](../apps/web/README.md)), and a studio kit component's in a Skeleton section of its studio spec ([apps/studio/](../apps/studio/README.md));
 - a skeleton that composes components from a lower layer (a `ShelfSkeleton` of five `VideoCardSkeleton`s) uses their skeletons, never a copy of their CSS.
 

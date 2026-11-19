@@ -1,4 +1,4 @@
-import { MS_PER_HOUR } from '@vp/domain/time';
+import { MS_PER_HOUR } from '@kit/primitives';
 
 /** The start of a UTC hour as an ISO instant, `YYYY-MM-DDTHH:00:00.000Z`. */
 export type ViewHour = string;

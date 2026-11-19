@@ -1,7 +1,7 @@
+import { EmptyState, NoResultsIllustration } from '@kit/components';
 import { useT } from '@kit/intl-react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
-import { EmptyState, NoResultsIllustration } from '@vp/components';
 import { useApi } from '@vp/queries';
 import { ChipBar } from '#app/components/discovery/chip-bar';
 import { topicsQueryOptions } from '#app/features/search/api/search-queries';

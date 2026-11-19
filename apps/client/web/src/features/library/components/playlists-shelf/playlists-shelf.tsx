@@ -1,7 +1,7 @@
+import { Shelf } from '@kit/components';
 import { useT } from '@kit/intl-react';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
-import { Shelf } from '@vp/components';
 import { useApi } from '@vp/queries';
 import { myPlaylistsQueryOptions } from '#app/features/library/api/library-queries';
 import { YouPlaylistCard } from '../you-playlist-card/you-playlist-card';

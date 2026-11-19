@@ -1,6 +1,6 @@
+import { expectOk } from '@kit/testing/result';
 import type { VideoCorrectionRepository } from '@vp/core/repositories';
 import type { Correction } from '@vp/domain';
-import { expectOk } from '@vp/testing/result';
 import { publicVideo, seedOwners, VIDEO_IDS } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 

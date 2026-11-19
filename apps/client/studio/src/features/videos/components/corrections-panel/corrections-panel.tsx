@@ -1,9 +1,9 @@
+import { EmptyState } from '@kit/components';
 import { useT } from '@kit/intl-react';
 import { isErr } from '@kit/result';
 import { Button, Input, Skeleton, useToast } from '@kit/ui';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import type { Video } from '@vp/api-contracts';
-import { EmptyState } from '@vp/components';
 import { CORRECTION_MAX_MS, CORRECTION_MIN_MS } from '@vp/domain';
 import { decideCorrection, decideCorrectionFields } from '@vp/domain-rules';
 import { correctionsQueryOptions, useApi } from '@vp/queries';

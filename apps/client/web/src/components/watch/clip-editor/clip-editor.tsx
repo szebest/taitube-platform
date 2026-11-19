@@ -1,5 +1,5 @@
+import { type SpriteSheet, SpriteStrip } from '@kit/components';
 import { cn, Slider } from '@kit/ui';
-import { type SpriteSheet, SpriteStrip } from '@vp/components';
 import { CLIP_MAX_MS, CLIP_MIN_MS } from '@vp/domain';
 import type { ComponentPropsWithRef } from 'react';
 import { ClipEditorContext, useClipEditor } from './clip-editor.context';

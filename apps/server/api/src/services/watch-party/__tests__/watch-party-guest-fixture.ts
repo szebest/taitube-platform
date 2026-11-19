@@ -1,4 +1,4 @@
-import { expectOk } from '@vp/testing/result';
+import { expectOk } from '@kit/testing/result';
 import { WatchPartyGuestService } from '../watch-party-guest-service';
 import {
   GUEST_IP,

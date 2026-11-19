@@ -1,8 +1,8 @@
+import { EmptyState } from '@kit/components';
 import { useT } from '@kit/intl-react';
 import { Skeleton, useToast } from '@kit/ui';
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { type Video } from '@vp/api-contracts';
-import { EmptyState } from '@vp/components';
 import { diffSnapshots } from '@vp/domain';
 import { revisionsQueryOptions, useApi, videoQueryOptions } from '@vp/queries';
 import { useState } from 'react';

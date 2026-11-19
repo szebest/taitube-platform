@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "@kit/pagination": "workspace:*",
+    "@kit/primitives": "workspace:*",
     "@kit/result": "workspace:*",
     "@vp/domain": "workspace:*",
     "@vp/errors": "workspace:*",
@@ -32,8 +33,8 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@kit/testing": "workspace:*",
     "@kit/tsconfig": "workspace:*",
-    "@vp/testing": "workspace:*",
     "openapi-typescript": "^7.13.0",
     "rimraf": "^6.1.3",
     "typescript": "^6.0.3",

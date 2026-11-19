@@ -1,6 +1,6 @@
+import { expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { ENTITY_REVISION_KEEP, type VideoMetadataSnapshot } from '@vp/domain';
-import { expectOk } from '@vp/testing/result';
 import { runPruneRevisions } from '../prune-revisions';
 
 const VIDEO_ID = '00000000-0000-7000-8000-00000000a001';

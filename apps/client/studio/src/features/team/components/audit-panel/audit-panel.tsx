@@ -1,7 +1,7 @@
+import { EmptyState, SectionError } from '@kit/components';
 import { useT } from '@kit/intl-react';
 import { Skeleton } from '@kit/ui';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
-import { EmptyState, SectionError } from '@vp/components';
 import { CHANNEL_AUDIT_ACTIONS } from '@vp/domain';
 import { useAccount, useApi } from '@vp/queries';
 import { FilterSelect } from '#app/components/table/filter-select';

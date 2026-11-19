@@ -1,6 +1,6 @@
+import { EmptyState, PageHeader, SectionError } from '@kit/components';
 import { useT } from '@kit/intl-react';
 import { Button, Icon, Skeleton } from '@kit/ui';
-import { EmptyState, PageHeader, SectionError } from '@vp/components';
 import { canManagePick } from '@vp/permissions';
 import { useCan } from '@vp/permissions-react';
 import { useState } from 'react';

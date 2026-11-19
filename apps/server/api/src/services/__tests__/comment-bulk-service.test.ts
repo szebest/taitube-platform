@@ -1,7 +1,7 @@
 import { err, ok } from '@kit/result';
+import { expectOk } from '@kit/testing/result';
 import type { BulkActionBody } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
-import { expectOk } from '@vp/testing/result';
 import { CommentBulkService } from '../comment-bulk-service';
 
 const USER = { id: 'user-1', role: 'USER' } as const;

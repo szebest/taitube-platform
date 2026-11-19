@@ -1,6 +1,6 @@
 # SpriteStrip
 
-Frames of a video side by side along its length, from its thumbnail sprite sheet: the picture under a range control, so a creator can see what a position holds. It is decoration (`aria-hidden`) and carries no copy. In `@vp/components` because web's clip editor and studio's `TimelineRangeEditor` both draw it ([116](../../tickets/116-video-management-power-tools.md)).
+Frames of a video side by side along its length, from its thumbnail sprite sheet: the picture under a range control, so a creator can see what a position holds. It is decoration (`aria-hidden`) and carries no copy. In `@kit/components` because web's clip editor and studio's `TimelineRangeEditor` both draw it ([116](../../tickets/116-video-management-power-tools.md)).
 
 ## Props
 

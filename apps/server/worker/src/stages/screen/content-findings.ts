@@ -1,7 +1,7 @@
+import { MS_PER_SECOND } from '@kit/primitives';
 import { type Result, fromPromise, isErr, ok } from '@kit/result';
 import type { FrameClassifier, StorageClient } from '@vp/core/ports';
 import type { ScreeningFinding } from '@vp/domain';
-import { MS_PER_SECOND } from '@vp/domain/time';
 import type { ScreeningConfig } from '@vp/env-schema';
 import { type MediaFailure, type StorageUnavailable, mediaFailureFrom } from '@vp/errors';
 import type { FfmpegProcessLimits } from '@vp/ffmpeg';

@@ -1,5 +1,5 @@
+import { expectOk } from '@kit/testing/result';
 import type { ScreeningRecord } from '@vp/core/repositories';
-import { expectOk } from '@vp/testing/result';
 import { publicVideo, VIDEO_IDS } from './fixtures';
 import { finding, MODERATOR_A, screening } from './screening-fixtures';
 import type { RepositoriesSubject } from './subjects';

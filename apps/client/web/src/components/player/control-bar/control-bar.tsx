@@ -1,6 +1,6 @@
 import { Format, useT } from '@kit/intl-react';
 import { Badge, IconButton } from '@kit/ui';
-import { videoDuration } from '@vp/intl';
+import { videoDuration } from '@vp/intl-formats';
 import {
   Maximize,
   Minimize,

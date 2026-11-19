@@ -1,5 +1,5 @@
+import { expectOk } from '@kit/testing/result';
 import { DEFAULT_COMMENT_SETTINGS } from '@vp/domain';
-import { expectOk } from '@vp/testing/result';
 import {
   AS,
   AUTHOR,

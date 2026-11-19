@@ -1,6 +1,6 @@
+import { type SpriteSheet, SpriteStrip } from '@kit/components';
 import { assertNever } from '@kit/result';
 import { cn, Slider } from '@kit/ui';
-import { type SpriteSheet, SpriteStrip } from '@vp/components';
 import type { ComponentPropsWithRef } from 'react';
 import type { TimelineControl, TimelineMarker } from './types';
 import { clampRange } from './utils/clamp-range';

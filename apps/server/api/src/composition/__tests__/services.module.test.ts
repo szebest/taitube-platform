@@ -1,12 +1,12 @@
 import { Container } from '@kit/composition';
 import { err, type Result } from '@kit/result';
+import { expectErr, expectOk } from '@kit/testing/result';
 import { Adapters, registerAdapters } from '@vp/adapters/composition';
 import { InMemoryCacheClient } from '@vp/adapters/in-memory';
 import type { PatternMessageListener } from '@vp/core/ports';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { type CacheUnavailable, cacheUnavailable, ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { registerServices, resolveBackground, Services } from '../services.module';
 
 class UnsubscribableCache extends InMemoryCacheClient {

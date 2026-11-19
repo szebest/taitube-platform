@@ -1,9 +1,9 @@
 import { Paginator } from '@kit/pagination';
+import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { ActingRole } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { seedTeamMember } from '../../__tests__/test-app';
 import { ChannelAuditService, type ChannelAuditQuery } from '../channel-audit-service';
 

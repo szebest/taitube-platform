@@ -1,4 +1,4 @@
-import { expectOk } from '@vp/testing/result';
+import { expectOk } from '@kit/testing/result';
 import { Poller } from '../poller';
 
 describe('apps/server/api/services: Poller', () => {

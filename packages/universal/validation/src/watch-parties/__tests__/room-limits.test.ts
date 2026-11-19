@@ -1,5 +1,5 @@
+import { expectErr } from '@kit/testing/result';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr } from '@vp/testing/result';
 import { validateCapacity, validateSchedule } from '../room-limits';
 
 const NOW = new Date('2026-11-06T20:00:00Z');

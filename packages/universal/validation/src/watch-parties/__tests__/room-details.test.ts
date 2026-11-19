@@ -1,5 +1,5 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { validateRoleName, validateRoomName, validateRoomPassword } from '../room-details';
 
 describe('@vp/validation: watch party room details', () => {

@@ -1,5 +1,5 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { validateChapters } from '../validate-chapters.rule';
 
 const intro = { startMs: 0, title: 'Intro' };

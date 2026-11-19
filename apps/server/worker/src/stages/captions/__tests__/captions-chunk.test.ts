@@ -1,5 +1,5 @@
+import { expectOk } from '@kit/testing/result';
 import { captionsChunkKey } from '@vp/storage';
-import { expectOk } from '@vp/testing/result';
 import { parseWindowTranscript } from '@vp/whisper';
 import { createCaptionsChunkProcessor } from '../captions-chunk';
 import { captionsWorld } from './captions-harness';

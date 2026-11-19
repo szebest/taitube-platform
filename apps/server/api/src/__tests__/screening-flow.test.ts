@@ -1,5 +1,5 @@
+import { expectOk } from '@kit/testing/result';
 import { ErrorCodes } from '@vp/errors';
-import { expectOk } from '@vp/testing/result';
 import { AS, CREATOR, closeSharedCommentsApp, VIDEO } from './comments-app';
 import { AS_SCREENING, HELD, type ScreeningApp, sharedScreeningApp } from './screening-app';
 

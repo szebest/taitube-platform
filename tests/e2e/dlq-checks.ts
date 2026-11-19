@@ -2,12 +2,12 @@ import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { runReconcileUploads } from '../../apps/server/worker/src/stages/housekeeping/reconcile-uploads';
+import { expectOk } from '../../packages/platform/server/testing/src/result';
 import { unwrapOr } from '../../packages/platform/universal/result/src/index';
 import { InMemoryJobQueue } from '../../packages/server/adapters/in-memory/in-memory-job-queue';
 import type { MultipartStorage, StorageClient } from '../../packages/server/core/ports/index';
 import type { Repositories } from '../../packages/server/core/repositories/index';
-import { createMetricsRegistry } from '../../packages/server/observability/src/index';
-import { expectOk } from '../../packages/server/testing/src/result';
+import { createPipelineMetrics } from '../../packages/server/pipeline-metrics/src/index';
 import { UploadClient } from '../../packages/server/upload-client/src/index';
 import { ErrorCodes } from '../../packages/universal/errors/src/index';
 import type { VideoTestResult, VideoTestSpec } from './specs';
@@ -142,7 +142,7 @@ export async function runAbandonedUploadTest(ctx: DlqCheckContext): Promise<{
       repositories,
       multipart,
       probeQueue: new InMemoryJobQueue('probe'),
-      metrics: createMetricsRegistry(),
+      metrics: createPipelineMetrics(),
       uploadingThresholdMs: 10,
       uploadedThresholdMs: 60 * 60 * 1000,
       scanLimit: 100,

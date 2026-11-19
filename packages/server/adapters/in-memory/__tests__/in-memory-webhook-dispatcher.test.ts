@@ -1,4 +1,4 @@
-import { expectOk } from '@vp/testing/result';
+import { expectOk } from '@kit/testing/result';
 import { InMemoryWebhookDispatcher } from '../in-memory-webhook-dispatcher';
 
 const delivery = {

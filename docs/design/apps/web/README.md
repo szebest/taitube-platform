@@ -1,9 +1,9 @@
 # Web's app kit
 
 Specs for the components in `apps/client/web/src/components/<area>/<name>/`. Each is presentational and compound,
-built from `@vp/components` (shared: `PageHeader`, `VideoThumbnail`, `EmptyState`, `ErrorState`, `SectionError`)
+built from `@kit/components` (shared: `PageHeader`, `VideoThumbnail`, `EmptyState`, `ErrorState`, `SectionError`)
 and `@kit/ui` primitives. Nothing here goes into a package, and studio never imports it
-([architecture section 1](../../architecture.md#1-five-layers)). A piece moves to `@vp/components` the day studio
+([architecture section 1](../../architecture.md#1-five-layers)). A piece moves to `@kit/components` the day studio
 needs it. [Ticket 95](../../../tickets/95-design-system-2.md) section 7 builds it.
 
 Areas: `shell`, `video`, `watch`, `channel`, `discovery`, `discussion`, `states`, `live`, `shorts`.

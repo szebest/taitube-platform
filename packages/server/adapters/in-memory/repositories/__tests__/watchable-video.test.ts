@@ -1,5 +1,5 @@
+import { expectOk } from '@kit/testing/result';
 import type { VideoStatus, VideoVisibility } from '@vp/domain';
-import { expectOk } from '@vp/testing/result';
 import { InMemoryRepositories } from '../in-memory-repositories';
 import { keepWatchable, watchableVideo } from '../watchable-video';
 

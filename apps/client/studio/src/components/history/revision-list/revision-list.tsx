@@ -1,7 +1,7 @@
 import { Format, useT } from '@kit/intl-react';
 import { Badge, Button, cn } from '@kit/ui';
 import type { VideoMetadataField } from '@vp/domain';
-import { publishedAt } from '@vp/intl';
+import { publishedAt } from '@vp/intl-formats';
 import type { ComponentPropsWithRef } from 'react';
 
 export interface RevisionListItem {

@@ -1,5 +1,5 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { decideRecommendationFeedbackRemoval } from '../remove-recommendation-feedback.rule';
 
 describe('@vp/domain-rules: decideRecommendationFeedbackRemoval', () => {

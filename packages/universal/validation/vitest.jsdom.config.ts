@@ -1,4 +1,4 @@
-import { definePackageTestConfig } from '@vp/testing';
+import { definePackageTestConfig } from '@kit/testing';
 
 /**
  * The same suites again in a browser environment. A rule that reaches for a server global fails a

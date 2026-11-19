@@ -1,4 +1,4 @@
-import { expectOk } from '@vp/testing/result';
+import { expectOk } from '@kit/testing/result';
 import { describeLivePresenceContract } from '../../__tests__/contract/live-presence.contract';
 import { InMemoryLivePresence } from '../in-memory-live-presence';
 

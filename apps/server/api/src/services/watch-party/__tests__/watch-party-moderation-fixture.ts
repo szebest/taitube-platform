@@ -1,3 +1,4 @@
+import { expectOk } from '@kit/testing/result';
 import type { InMemoryRepositories } from '@vp/adapters/in-memory';
 import {
   BUILT_IN_ROLE_KEYS,
@@ -10,7 +11,6 @@ import {
   type WatchPartyRoom,
 } from '@vp/domain';
 import type { UserContext } from '@vp/permissions';
-import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 
 export const ROOM_ID = '018f0000-0000-7000-8000-00000000a001';

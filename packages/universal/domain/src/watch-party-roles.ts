@@ -1,4 +1,4 @@
-import { MS_PER_HOUR, MS_PER_MINUTE } from './time';
+import { MS_PER_HOUR, MS_PER_MINUTE } from '@kit/primitives';
 import {
   GUEST_CEILING,
   WATCH_PARTY_PERMISSION_IDS,

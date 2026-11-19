@@ -1,7 +1,7 @@
 import { Format, useFormat, useT } from '@kit/intl-react';
 import { unwrapOr } from '@kit/result';
 import type { Video } from '@vp/api-contracts';
-import { publishedAt, videoDuration } from '@vp/intl';
+import { publishedAt, videoDuration } from '@vp/intl-formats';
 import { usePlayerSeek, usePlayerTime } from '#app/components/player/taitube-player';
 import { LinerNotes } from '#app/components/watch/liner-notes';
 import {

@@ -1,9 +1,9 @@
+import { expectOk } from '@kit/testing/result';
 import { mintToken } from '@vp/dev-identity';
 import type { WatchPartyPermission, WatchPartyVisibility } from '@vp/domain';
 import { DEFAULT_PREFERENCES, type NotificationPreferences } from '@vp/domain/settings';
 import { NOTIFY_PARTY_INVITE } from '@vp/job-contracts';
 import type { UserContext } from '@vp/permissions';
-import { expectOk } from '@vp/testing/result';
 import type { LightMyRequestResponse } from 'fastify';
 import { uuidv7 } from 'uuidv7';
 import {

@@ -1,7 +1,7 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import type { ActingChannel, ActingRole } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { type ChannelTaskInput, decideChannelTask } from '../channel-task.rule';
 
 const OWNER_ID = 'owner-1';

@@ -1,5 +1,5 @@
+import { unrenderable } from '@kit/intl';
 import { err, ok } from '@kit/result';
-import { unrenderable } from '@vp/intl';
 import { defineKind, isConfigKey, isRecord } from '../kind';
 
 type Labels = Readonly<Record<string, string>>;

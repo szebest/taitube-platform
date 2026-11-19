@@ -3,7 +3,7 @@ import { unwrapOr } from '@kit/result';
 import { Button } from '@kit/ui';
 import { useQuery } from '@tanstack/react-query';
 import type { CreatorStats } from '@vp/api-contracts';
-import { videoDuration } from '@vp/intl';
+import { videoDuration } from '@vp/intl-formats';
 import { useApi, videoRetentionQueryOptions } from '@vp/queries';
 import { usePlayerSeek } from '#app/components/player/taitube-player';
 import { RetentionStrip } from '#app/components/watch/retention-strip';

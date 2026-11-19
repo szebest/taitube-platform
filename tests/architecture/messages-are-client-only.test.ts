@@ -38,7 +38,7 @@ describe('architecture: @vp/messages stays out of every server package', () => {
   });
 
   it('leaves the formatting core alone', () => {
-    expect(importsMessages("import { createIntl } from '@vp/intl';")).toBe(false);
+    expect(importsMessages("import { createIntl } from '@kit/intl';")).toBe(false);
   });
 
   it('reads the server sources and manifests it is asserting about', () => {
