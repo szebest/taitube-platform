@@ -1,6 +1,6 @@
+import { expectOk } from '@kit/testing/result';
 import type { OutboxPayload, OutboxRepository } from '@vp/core/repositories';
 import { OUTBOX_MAX_ATTEMPTS } from '@vp/domain-rules';
-import { expectOk } from '@vp/testing/result';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
 const OUTBOX_IDS = {

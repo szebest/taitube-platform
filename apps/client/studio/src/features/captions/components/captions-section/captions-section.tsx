@@ -1,7 +1,7 @@
+import { SectionError } from '@kit/components';
 import { useT } from '@kit/intl-react';
 import { Card, Skeleton } from '@kit/ui';
 import { useQuery } from '@tanstack/react-query';
-import { SectionError } from '@vp/components';
 import { captionsQueryOptions, useApi } from '@vp/queries';
 import { useId } from 'react';
 import { AddTrackForm } from '../add-track-form/add-track-form';

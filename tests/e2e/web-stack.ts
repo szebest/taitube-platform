@@ -6,7 +6,7 @@ import { setTimeout as wait } from 'node:timers/promises';
 import { parseArgs } from 'node:util';
 import { type Logger, createLogger } from '../../packages/platform/server/logger/src/index';
 import { mintToken } from '../../packages/server/dev-identity/src/index';
-import { SEEDED } from '../../packages/server/testing/src/index';
+import { SEEDED } from '../../packages/server/testing-fixtures/src/index';
 import { ensureRepoFixtureIds } from '../ensure-fixtures';
 import type { Stack, TeamRole } from '../playwright/stack';
 import { HOSTILE_CHANNEL_NAMES, HOSTILE_TEXT } from '../playwright/xss-payloads';

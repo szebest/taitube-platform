@@ -1,6 +1,6 @@
 import { err } from '@kit/result';
+import { expectOk } from '@kit/testing/result';
 import { ErrorCodes } from '@vp/errors';
-import { expectOk } from '@vp/testing/result';
 import { ACCENT_GROUNDS, deriveAccent, groundsInsideAccentBand } from '../accent';
 import { toOklch } from '../color/oklch';
 import { compositeOver, parseGround } from '../color/rgb';

@@ -1,5 +1,5 @@
+import { expectOk } from '@kit/testing/result';
 import { createRootRoute, createRoute, createRouter } from '@tanstack/react-router';
-import { expectOk } from '@vp/testing/result';
 import { serverRender } from '@vp/web-testing/server';
 import type { ReactNode } from 'react';
 import { FIXTURE_APPEARANCE_STORAGE } from '../../__tests__/appearance-storage-fixture';

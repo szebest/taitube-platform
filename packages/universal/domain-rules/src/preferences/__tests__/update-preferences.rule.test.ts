@@ -1,3 +1,4 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import {
   DEFAULT_PREFERENCES,
   MAX_APPEARANCE_OVERRIDES,
@@ -5,7 +6,6 @@ import {
   type UserPreferences,
 } from '@vp/domain/settings';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { decidePreferencesUpdate, type UpdatePreferencesInput } from '../update-preferences.rule';
 
 const STORED: UserPreferences = {

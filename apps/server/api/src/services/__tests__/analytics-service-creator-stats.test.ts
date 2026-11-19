@@ -1,9 +1,9 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { ChannelRole } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { SEEDED } from '@vp/testing';
-import { expectErr, expectOk } from '@vp/testing/result';
+import { SEEDED } from '@vp/testing-fixtures';
 import { AnalyticsService } from '../analytics-service';
 
 const OWNER: UserContext = { id: SEEDED.userId, role: 'CREATOR' };

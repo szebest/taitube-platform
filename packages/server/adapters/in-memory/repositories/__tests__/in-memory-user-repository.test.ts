@@ -1,5 +1,5 @@
-import { SEEDED } from '@vp/testing';
-import { expectOk } from '@vp/testing/result';
+import { expectOk } from '@kit/testing/result';
+import { SEEDED } from '@vp/testing-fixtures';
 import { inMemorySubject } from '../../../__tests__/contract/subjects';
 import { describeUserRepositoryContract } from '../../../__tests__/contract/user-repository.contract';
 import { InMemoryUserRepository } from '../in-memory-user-repository';

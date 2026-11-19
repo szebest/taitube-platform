@@ -3,7 +3,7 @@ import { unwrapOr } from '@kit/result';
 import { Badge } from '@kit/ui';
 import { useQuery } from '@tanstack/react-query';
 import { dropOffMoments } from '@vp/domain-rules';
-import { videoDuration } from '@vp/intl';
+import { videoDuration } from '@vp/intl-formats';
 import { useApi, videoQueryOptions, videoRetentionQueryOptions } from '@vp/queries';
 
 const MS_PER_SECOND = 1000;

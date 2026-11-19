@@ -1,7 +1,7 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import type { ActingChannel, DataExport } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { decideExportAccess, decideReadableExportKinds } from '../export-access.rule';
 
 const memberAs = (role: 'analytics' | 'moderator' | 'manager'): UserContext => ({

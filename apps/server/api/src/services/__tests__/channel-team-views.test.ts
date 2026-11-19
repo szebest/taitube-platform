@@ -1,5 +1,5 @@
+import { expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
-import { expectOk } from '@vp/testing/result';
 import { profilesOf, toInviteView, toMemberView } from '../channel-team-views';
 
 const ADA = '00000000-0000-7000-8000-0000000017d1';

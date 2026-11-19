@@ -1,3 +1,4 @@
+import { expectOk } from '@kit/testing/result';
 import type {
   InMemoryCacheClient,
   InMemoryRepositories,
@@ -5,8 +6,7 @@ import type {
 } from '@vp/adapters/in-memory';
 import { SEARCH_RATE_LIMITS } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
-import { SEEDED } from '@vp/testing';
-import { expectOk } from '@vp/testing/result';
+import { SEEDED } from '@vp/testing-fixtures';
 import type { FastifyInstance } from 'fastify';
 import { buildTestApp, seedVideo } from '../../__tests__/test-app';
 

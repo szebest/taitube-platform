@@ -1,5 +1,5 @@
+import { type FormatFailure, unrenderable } from '@kit/intl';
 import { err, ok, type Result } from '@kit/result';
-import { type FormatFailure, unrenderable } from '@vp/intl';
 import { isRecord } from './kind';
 
 /** One named option set: `default`, and any locale (`pl`, `pl-PL`) that needs its own. */

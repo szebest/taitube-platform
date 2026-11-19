@@ -1,3 +1,4 @@
+import { MS_PER_DAY } from '@kit/primitives';
 import type { VideoRecord } from '@vp/core/repositories';
 import {
   FIRST_WEEK_DAYS,
@@ -8,7 +9,6 @@ import {
   type ViewCount,
   viewDateOf,
 } from '@vp/domain';
-import { MS_PER_DAY } from '@vp/domain/time';
 
 export function firstWeekRowsOf(
   videos: readonly VideoRecord[],

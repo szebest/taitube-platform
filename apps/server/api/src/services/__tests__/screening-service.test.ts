@@ -1,6 +1,6 @@
 import type { Result } from '@kit/result';
+import { expectErr, expectOk } from '@kit/testing/result';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
 import {
   HELD_ID,
   MODERATOR_A,

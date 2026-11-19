@@ -1,8 +1,8 @@
+import { expectOk } from '@kit/testing/result';
 import { InMemoryJobQueue, InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { QueueJob } from '@vp/core/ports';
 import type { NotificationKind } from '@vp/domain';
 import type { NotifySubscribersJob } from '@vp/job-contracts';
-import { expectOk } from '@vp/testing/result';
 import { createNotifySubscribersProcessor } from '../notify-subscribers';
 import {
   CHANNEL_ID,

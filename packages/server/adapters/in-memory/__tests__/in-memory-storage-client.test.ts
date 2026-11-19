@@ -1,6 +1,6 @@
 import { Readable } from 'node:stream';
+import { expectErr, expectOk } from '@kit/testing/result';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { inMemoryStorageClientSubject } from '../../__tests__/contract/in-memory-port-subjects';
 import { describeStorageClientContract } from '../../__tests__/contract/storage-client.contract';
 import { InMemoryStorageClient } from '../in-memory-storage-client';

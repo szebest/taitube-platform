@@ -1,13 +1,13 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { expectOk } from '../../packages/platform/server/testing/src/result';
+import { runEntrypoint } from '../../packages/platform/server/testing/src/run-entrypoint';
 import {
   checkThemeContrast,
   parseTheme,
   resolveTheme,
 } from '../../packages/platform/universal/design-tokens/src/index';
-import { expectOk } from '../../packages/server/testing/src/result';
-import { runEntrypoint } from '../../packages/server/testing/src/run-entrypoint';
 import { UI_SRC } from '../scaffold';
 import { uiTree } from './ui-tree';
 

@@ -1,6 +1,6 @@
+import { expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { NotificationKind } from '@vp/domain';
-import { expectOk } from '@vp/testing/result';
 import { usersSwitchedOn } from '../notification-switches';
 import { saveSwitches, userId } from './notification-harness';
 

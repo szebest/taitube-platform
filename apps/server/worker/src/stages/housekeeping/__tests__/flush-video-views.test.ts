@@ -1,10 +1,10 @@
 import { err } from '@kit/result';
+import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories, InMemoryViewBuffer } from '@vp/adapters/in-memory';
 import type { ViewBatch, ViewDevice } from '@vp/domain';
 import { cacheUnavailable, databaseUnavailable } from '@vp/errors';
-import { type PipelineMetrics, createMetricsRegistry } from '@vp/observability';
-import { SEEDED } from '@vp/testing';
-import { expectErr, expectOk } from '@vp/testing/result';
+import { type PipelineMetrics, createPipelineMetrics } from '@vp/pipeline-metrics';
+import { SEEDED } from '@vp/testing-fixtures';
 import { runFlushVideoViews } from '../flush-video-views';
 
 const DAY = '2026-03-10';
@@ -51,7 +51,7 @@ describe('housekeeping: flush-video-views', () => {
   beforeEach(async () => {
     repositories = new InMemoryRepositories();
     viewBuffer = new InMemoryViewBuffer();
-    metrics = createMetricsRegistry();
+    metrics = createPipelineMetrics();
     now = 1_000_000;
     const video = expectOk(
       await repositories.videos.create({

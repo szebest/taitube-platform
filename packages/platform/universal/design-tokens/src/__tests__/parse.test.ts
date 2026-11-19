@@ -1,6 +1,6 @@
 import type { Result } from '@kit/result';
+import { expectErr, expectOk } from '@kit/testing/result';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { type InvalidDefinition, parseTheme, parseTokenSet, resolveTheme } from '../parse';
 import { refFromTokens, themeFromTokens, tokenSetValues } from '../schema/__tests__/tokens-json';
 import { RefSchema } from '../schema/ref';

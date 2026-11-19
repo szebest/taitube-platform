@@ -1,7 +1,7 @@
+import { expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { type CommentSettings, DEFAULT_COMMENT_SETTINGS } from '@vp/domain';
 import type { UserContext } from '@vp/permissions';
-import { expectOk } from '@vp/testing/result';
 import { createComment } from '../comment-create';
 import { commentCreateDeps, saveSettings } from './comment-deps';
 

@@ -1,3 +1,4 @@
+import { MS_PER_DAY } from '@kit/primitives';
 import { type Result, isErr, ok } from '@kit/result';
 import type {
   ChannelAnalytics,
@@ -41,7 +42,6 @@ import {
   decideVideoStatsRead,
   dropOffMoments,
 } from '@vp/domain-rules';
-import { MS_PER_DAY } from '@vp/domain/time';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 

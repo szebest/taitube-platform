@@ -95,6 +95,27 @@ describe('scripts: pnpm gen:api', () => {
     });
   });
 
+  it('records a package the same whatever other platform packages the tree holds', () => {
+    const root = tree();
+    write(root, {
+      'packages/platform/universal/ok/src/node.ts':
+        "export const runtime = (flag: boolean) => (flag ? 'node' : 'bun');\n",
+    });
+    const alone = renderApis(root).get(SNAPSHOT);
+
+    write(root, {
+      'packages/platform/universal/aaa/package.json': JSON.stringify({
+        name: '@kit/aaa',
+        vp: { layer: 0 },
+        exports: { '.': { source: './src/index.ts' } },
+      }),
+      'packages/platform/universal/aaa/src/index.ts':
+        "export const order = (flag: boolean) => (flag ? 'bun' : 'node');\n",
+    });
+
+    expect(renderApis(root).get(SNAPSHOT)).toBe(alone);
+  });
+
   it('calls a package with no snapshot stale', () => {
     const outcome = run(['--check', tree()], '/nowhere');
 

@@ -1,3 +1,4 @@
+import { MS_PER_HOUR } from '@kit/primitives';
 import {
   type ChannelAnalytics,
   getChannelAnalytics,
@@ -11,7 +12,6 @@ import {
   type VideoRetention,
 } from '@vp/api-contracts';
 import { HOURLY_WINDOW_HOURS } from '@vp/domain';
-import { MS_PER_HOUR } from '@vp/domain/time';
 import { apiServer, mockEndpoint, VIDEO_ID, video } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
 

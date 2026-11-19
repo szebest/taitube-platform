@@ -1,7 +1,7 @@
 import { Paginator } from '@kit/pagination';
 import { ok } from '@kit/result';
+import { expectErr, expectOk } from '@kit/testing/result';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { commentReportCursorPayload, decodeCommentReportCursor } from '../cursor';
 
 const paginator = new Paginator();

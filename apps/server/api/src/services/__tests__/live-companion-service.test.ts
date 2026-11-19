@@ -1,10 +1,10 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import {
   InMemoryCacheClient,
   InMemoryLiveGateway,
   type InMemoryRepositories,
 } from '@vp/adapters/in-memory';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { LiveCompanionService } from '../live-companion-service';
 import { liveWorld, STARTED, STREAM_ID } from './live-harness';
 

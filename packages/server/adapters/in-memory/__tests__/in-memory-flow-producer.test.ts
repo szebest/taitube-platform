@@ -1,5 +1,5 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { describeFlowProducerContract } from '../../__tests__/contract/flow-producer.contract';
 import { inMemoryFlowProducerSubject } from '../../__tests__/contract/in-memory-port-subjects';
 import { InMemoryFlowProducer } from '../in-memory-flow-producer';

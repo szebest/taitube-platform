@@ -1,5 +1,5 @@
 import { err } from '@kit/result';
-import { expectErr, expectOk } from '@vp/testing/result';
+import { expectErr, expectOk } from '@kit/testing/result';
 import { ensureClip, ensureImage, clipArgs, clipCacheKey, clipSpecOf } from '../media';
 import type { UserSpec, VideoSpec } from '../world-types';
 import { createFakePorts } from './fake-ports';

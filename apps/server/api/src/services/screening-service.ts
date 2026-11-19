@@ -1,3 +1,4 @@
+import { createTraceparent, getActiveTraceparent } from '@kit/observability';
 import type { InvalidCursor, Paginator } from '@kit/pagination';
 import { type Result, err, isErr, isOk, map, ok } from '@kit/result';
 import type {
@@ -30,7 +31,6 @@ import {
   type VersionConflict,
   versionConflict,
 } from '@vp/errors';
-import { createTraceparent, getActiveTraceparent } from '@vp/observability';
 import type { UserContext } from '@vp/permissions';
 import { uuidv7 } from 'uuidv7';
 import type { ScreeningCaseViewFailure, ScreeningCaseViews } from './screening-case-views';

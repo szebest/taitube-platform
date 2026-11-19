@@ -87,13 +87,13 @@ export function renderApis(root: string): Map<string, string> {
       .map((pkg) => [pkg, entriesOf(root, pkg)] as const)
       .filter(([, list]) => !isPresetsOnly(list))
   );
-  const packages = [...entries.keys()];
-  const files = [...entries.values()].flatMap((list) => list.flatMap(({ file }) => file ?? []));
-  const program = createProgram(root, files);
-
   return new Map(
-    packages.map((pkg) => {
-      const blocks = (entries.get(pkg) ?? []).map(({ specifier, file }) => {
+    [...entries].map(([pkg, list]) => {
+      const program = createProgram(
+        root,
+        list.flatMap(({ file }) => file ?? [])
+      );
+      const blocks = list.map(({ specifier, file }) => {
         const surface =
           file === undefined ? ['(pattern export, not enumerated)'] : surfaceOf(program, file);
         return [`## ${specifier}`, ...surface].join('\n');

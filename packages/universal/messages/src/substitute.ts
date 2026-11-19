@@ -1,5 +1,5 @@
+import { type FormatFailure, type IntlBinding, unrenderable, wrongKind } from '@kit/intl';
 import { all, andThen, err, map, ok, type Result } from '@kit/result';
-import { type FormatFailure, type IntlBinding, unrenderable, wrongKind } from '@vp/intl';
 import type { Message, MessageConfig } from './define';
 
 /** `{name}` or `{name:type}` - the whole placeholder grammar; branches carry `{?}` instead. */
@@ -83,7 +83,7 @@ function placeholders(template: string): Placeholder[] {
   }));
 }
 
-/** Renders every placeholder through `@vp/intl`, so a message and a direct format agree. */
+/** Renders every placeholder through `@kit/intl`, so a message and a direct format agree. */
 export function substitute(
   message: Message,
   args: Readonly<Record<string, unknown>>,

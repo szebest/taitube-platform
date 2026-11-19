@@ -1,10 +1,10 @@
 import { Paginator } from '@kit/pagination';
 import type { Result } from '@kit/result';
+import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryJobQueue, InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { JobQueue } from '@vp/core/ports';
 import { type AnyFailure, ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { DlqService } from '../dlq-service';
 
 const ADMIN: UserContext = { id: '00000000-0000-7000-8000-000000000003', role: 'ADMIN' };

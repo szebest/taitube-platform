@@ -1,4 +1,4 @@
-import { expectOk } from '@vp/testing/result';
+import { expectOk } from '@kit/testing/result';
 import { defineAppearance, defineRef, defineTheme, defineTokenSet } from '../define';
 import { parseTheme } from '../parse';
 import { themeFromTokens } from '../schema/__tests__/tokens-json';

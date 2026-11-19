@@ -1,10 +1,10 @@
+import { expectOk } from '@kit/testing/result';
 import {
   PENDING_ENFORCEMENT,
   WATCH_PARTY_PERMISSIONS,
   type WatchPartyPermission,
 } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
-import { expectOk } from '@vp/testing/result';
 import type { PartyCaller } from '../party-caller';
 import { pinChat, removeChat, sendChat } from '../watch-party-chat';
 import { runCommand } from '../watch-party-commands';

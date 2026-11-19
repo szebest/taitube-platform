@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { SEEDED } from '@vp/testing';
+import { SEEDED } from '@vp/testing-fixtures';
 import { toAppConfig } from '../app-config';
 import { AppEnvSchema } from '../app-env';
 

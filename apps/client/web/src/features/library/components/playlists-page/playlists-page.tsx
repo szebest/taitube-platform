@@ -1,7 +1,7 @@
+import { EmptyLibraryIllustration, EmptyState, PageHeader } from '@kit/components';
 import { useT } from '@kit/intl-react';
 import { Button, Icon } from '@kit/ui';
 import { useSuspenseQuery } from '@tanstack/react-query';
-import { EmptyLibraryIllustration, EmptyState, PageHeader } from '@vp/components';
 import { useApi } from '@vp/queries';
 import { myPlaylistsQueryOptions } from '#app/features/library/api/library-queries';
 import { urlModals } from '#app/lib/url-modal/registry';

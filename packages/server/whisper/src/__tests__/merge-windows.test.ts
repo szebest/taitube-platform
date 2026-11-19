@@ -1,5 +1,5 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { majorityLanguage, mergeWindows, ownedCues, parseWindowTranscript } from '../merge-windows';
 
 const cue = (startMs: number, endMs: number, text = `${startMs}`) => ({ startMs, endMs, text });

@@ -1,6 +1,6 @@
 import type { Theme } from '@kit/design-tokens';
+import { expectErr, expectOk } from '@kit/testing/result';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { sand } from '../../themes/sand';
 import { radiusSharp } from '../../tokens/radius/sharp';
 import { registerTheme } from '../register-theme';

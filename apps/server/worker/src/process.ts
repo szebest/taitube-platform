@@ -6,12 +6,12 @@ import {
 } from '@kit/composition';
 import { loadEnv } from '@kit/config';
 import { LogContext, type Logger, createLogger } from '@kit/logger';
+import { registeredTracing } from '@kit/observability';
 import { fromPromise, ignore, isErr } from '@kit/result';
-import { toAppConfig } from '@vp/env-schema';
+import { AppEnvSchema, toAppConfig } from '@vp/env-schema';
 import { asThrowable, errorCodeRegistry } from '@vp/errors';
 import { mediaTools } from '@vp/ffmpeg';
 import { fingerprintTools } from '@vp/fingerprint';
-import { registeredTracing } from '@vp/observability';
 import { speechTools } from '@vp/whisper';
 import { STAGE_REGISTRY } from './registry';
 import { type WorkerRunner, composeWorker } from './runner';
@@ -23,7 +23,7 @@ interface WorkerProcess {
 }
 
 async function start(host: ProcessHost): Promise<WorkerProcess> {
-  const config = toAppConfig(loadEnv(host.env));
+  const config = toAppConfig(loadEnv(AppEnvSchema, host.env));
   const { stage } = config.worker;
   const logContext = new LogContext();
   const logger = createLogger({

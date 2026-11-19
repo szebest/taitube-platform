@@ -1,5 +1,5 @@
+import { expectOk } from '@kit/testing/result';
 import * as schema from '@vp/db';
-import { expectOk } from '@vp/testing/result';
 import { eq, inArray, sql } from 'drizzle-orm';
 import { drizzle as drizzlePglite } from 'drizzle-orm/pglite';
 import { drizzle as drizzlePostgres } from 'drizzle-orm/postgres-js';

@@ -1,7 +1,7 @@
 import { Paginator } from '@kit/pagination';
+import { expectOk } from '@kit/testing/result';
 import { RedisPlayheadCacheAdapter } from '@vp/adapters/redis';
 import { RISING } from '@vp/domain';
-import { expectOk } from '@vp/testing/result';
 import { HistoryPause } from '../history-pause';
 import { WatchHistoryService } from '../watch-history-service';
 import {

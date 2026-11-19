@@ -1,8 +1,8 @@
+import { expectOk } from '@kit/testing/result';
 import { InMemoryJobQueue, type InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { StorageClient } from '@vp/core/ports';
 import { inProcessAppConfig } from '@vp/env-schema';
-import { SEEDED } from '@vp/testing';
-import { expectOk } from '@vp/testing/result';
+import { SEEDED } from '@vp/testing-fixtures';
 import type { FastifyInstance } from 'fastify';
 import { TOKENS, buildTestApp } from './test-app';
 import { completeUpload, postUpload } from './upload-requests';

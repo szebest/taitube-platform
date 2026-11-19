@@ -1,7 +1,7 @@
 import { packageDir } from '../../scripts/workspace-packages';
 import { read, trackedFiles } from './repo-files';
 
-const COMPONENTS = packageDir('@vp/components');
+const COMPONENTS = packageDir('@kit/components');
 const UI = packageDir('@kit/ui');
 
 const BASE = `${UI}/src/styles/base.css`;

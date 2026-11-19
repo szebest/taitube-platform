@@ -1,7 +1,7 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import type { ChannelRole } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { OWNER, STRANGER, aVideo } from '../../__tests__/entities';
 import { decideVideoStatsRead } from '../read-video-stats.rule';
 

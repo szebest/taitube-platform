@@ -1,6 +1,6 @@
+import { PageHeader } from '@kit/components';
 import { useT } from '@kit/intl-react';
 import { useNavigate, useParams, useSearch } from '@tanstack/react-router';
-import { PageHeader } from '@vp/components';
 import { AnalyticsOverview } from '../analytics-overview/analytics-overview';
 import { AnalyticsRangeSwitch } from '../analytics-range-switch/analytics-range-switch';
 import { BenchmarkChart } from '../benchmark-chart/benchmark-chart';

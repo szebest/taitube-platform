@@ -1,6 +1,6 @@
 import { Paginator } from '@kit/pagination';
+import { expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
-import { expectOk } from '@vp/testing/result';
 import { CommentRemovalService } from '../comment-removal-service';
 
 const AUTHOR = { id: '22222222-2222-7222-8222-222222222222', role: 'USER' } as const;

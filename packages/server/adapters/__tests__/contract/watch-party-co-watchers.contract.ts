@@ -1,4 +1,4 @@
-import { expectOk } from '@vp/testing/result';
+import { expectOk } from '@kit/testing/result';
 import { OTHER_OWNER_ID, OWNER_ID } from './fixtures';
 import type { MakeRepositoriesSubject } from './subjects';
 import { accountId, userKey } from './watch-party-activity-fixtures';

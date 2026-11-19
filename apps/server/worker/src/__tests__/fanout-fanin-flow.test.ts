@@ -1,8 +1,8 @@
+import { expectOk } from '@kit/testing/result';
 import type { QueueJob } from '@vp/core/ports';
 import { ErrorCodes } from '@vp/errors';
 import { LadderEntry, type ProbeJob } from '@vp/job-contracts';
-import { createMockJob } from '@vp/testing';
-import { expectOk } from '@vp/testing/result';
+import { createMockJob } from '@vp/testing-fixtures';
 import { createFailureHandler } from '../failure-handler';
 import { createPackageProcessor } from '../stages/package';
 import { createProbeProcessor } from '../stages/probe';

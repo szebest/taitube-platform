@@ -1,6 +1,6 @@
+import { expectOk } from '@kit/testing/result';
 import type { RisingVideosRepositoryPort } from '@vp/core/repositories';
 import { RISING } from '@vp/domain';
-import { expectOk } from '@vp/testing/result';
 import { HOUR_MS, VIDEO_IDS, idsOf, publicVideo } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 

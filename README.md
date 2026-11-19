@@ -93,12 +93,15 @@ taitube-platform/
 │   │   │   ├── design-tokens/       # Design system engine: the token group schemas
 │   │   │   ├── di/                  # Typed tokens and an immutable registry whose get returns a Result
 │   │   │   ├── i18n/                # The typed message engine: kinds, presets, param names, catalogue parity; no words
+│   │   │   ├── intl/                # Formatters on Intl over a tagged value union, IntlCache and the locale chain
 │   │   │   ├── machine/             # Lifecycles as typed edge tables: legal moves, findings, Mermaid
 │   │   │   ├── pagination/          # Keyset cursor codec and page shapes
+│   │   │   ├── primitives/          # Time-unit constants every package reads by name
 │   │   │   ├── result/              # Result type, combinators, tryCatch/fromPromise
 │   │   │   ├── runtime/             # Clock, Random, EnvSource, Fetch and CookieJar tokens; node and browser entries
 │   │   │   └── tsconfig/            # Shared TypeScript presets, one per tier
 │   │   ├── client/                  # Browser only
+│   │   │   ├── components/          # Shared components both apps render: PageHeader, EmptyState, ErrorState, SectionError, the state illustrations
 │   │   │   ├── forms/               # useAppForm with the text, select and file fields, and validateWith
 │   │   │   ├── intl-react/          # IntlProvider, useT, useFormat and <Format> for the web app
 │   │   │   ├── security-headers/    # CSP nonce and the security headers request middleware each app mounts
@@ -110,20 +113,23 @@ taitube-platform/
 │   │       ├── concurrency/         # Singleflight promise coalescing
 │   │       ├── config/              # loadEnv(): reads process.env once and validates it
 │   │       ├── dev-token/           # CLI: mints local EdDSA JWTs and serves a dev JWKS
+│   │       ├── keyspace/            # The SSE message envelope, frame and keep-alive comment
 │   │       ├── logger/              # Pino logger with json and pretty formats, log context, serializeError
+│   │       ├── object-storage/      # S3 object headers by extension and multipart part sizing
+│   │       ├── observability/       # OpenTelemetry tracing, the Prometheus registry and the metrics server
+│   │       ├── testing/             # definePackageTestConfig, withEnv, Result, JWT, log capture and entrypoint helpers
 │   │       └── vite-preset/         # The Vite config of every client app: Start, React, Tailwind, the bundle guard
 │   ├── universal/                   # Runs in a browser AND on a server
 │   │   ├── api-contracts/           # Zod request/response schemas for every HTTP endpoint
 │   │   ├── domain/                  # Entity types and the status and role vocabularies
 │   │   ├── domain-rules/            # Pure rules over input plus an entity, returning Result
 │   │   ├── errors/                  # ErrorCode vocabulary, Failure types, retry classes
-│   │   ├── intl/                    # Every user-facing number, date and duration format, on Intl
+│   │   ├── intl-formats/            # The product's tagged values: views, durations, published-at, file size
 │   │   ├── messages/                # Typed messages, the en catalogue and the copy for every error code
 │   │   ├── permissions/             # CASL ability rules shared by the API and the frontend
 │   │   └── validation/              # Pure input-only rules returning Result
 │   ├── client/                      # Browser only
 │   │   ├── api-client/              # Typed HTTP client whose calls are typed by api-contracts
-│   │   ├── components/              # Shared components both apps render: PageHeader, EmptyState, ErrorState, SectionError, the state illustrations
 │   │   ├── permissions-react/       # PermissionsProvider, useCan and <Can> over the @vp/permissions rules
 │   │   ├── queries/                 # QueryClient factory, ApiProvider, the auth seam and the shared query factories
 │   │   ├── web-testing/             # Spec helpers: contract-typed MSW handlers, renderRoute, serverRender, fixtures
@@ -136,16 +142,16 @@ taitube-platform/
 │       ├── deploy/                  # Typed environment files and pnpm envctl, the typed half of scripts/deploy.sh
 │       ├── dev-identity/            # This repo's dev token issuer, audience, key and the bound mint and verify
 │       ├── env-schema/              # Zod environment schema, AppConfig and toAppConfig
-│       ├── events/                  # SSE envelope, pub/sub channels and Redis cache keys
+│       ├── events/                  # Pub/sub channels, Redis cache keys and publishVideoEvent
 │       ├── ffmpeg/                  # FFmpeg/ffprobe runners, ladder selection, master playlist, thumbnails
 │       ├── fingerprint/             # Frame dHash, Chromaprint, the offset-vote matcher for the duplicate check
 │       ├── gen-video/               # CLI: generates deterministic test video fixtures
 │       ├── job-contracts/           # BullMQ queue names, job payload schemas, retry policies, rendition ladder
 │       ├── lighthouse/              # CLI: Lighthouse CI on the built web app, offline, warn-only
-│       ├── observability/           # OpenTelemetry tracing, Prometheus metrics and the metrics server
+│       ├── pipeline-metrics/        # The product's Prometheus metrics, the metric prefix and the tracer name
 │       ├── stack/                   # CLI behind make up/down/status: starts the Compose stack a tier at a time
-│       ├── storage/                 # S3 object key layout, MIME map and multipart part math
-│       ├── testing/                 # Shared test config, fixtures and test helpers
+│       ├── storage/                 # S3 object key layout
+│       ├── testing-fixtures/        # The seeded rows, the production-shaped env and the infra specs
 │       ├── upload-client/           # CLI: reference resumable multipart upload client
 │       └── whisper/                 # whisper.cpp runner, transcript windows and the WebVTT a caption track is stored as
 ├── infra/

@@ -13,11 +13,11 @@ implements it.
 |---|---|---|---|
 | Engine | `@kit/design-tokens` (universal, T2: it takes the appearance vocabulary from `@vp/domain`, T1) | the token schemas, `defineTokenSet`, `defineTheme`, `defineAppearance`, the shared option unions tied to tokens, the CSS generators, the contrast gate | any concrete value |
 | Foundation | `@kit/ui` (client, T2) | every token set implementation, the themes, the appearance registry and engine, the primitives (including `Table`), the shared UI types, the copy provider | products, videos, data |
-| Shared components | `@vp/components` (client, T3) | only what both apps render today: `PageHeader`, `VideoThumbnail`, the empty, error and section-error states, their skeletons | data, routes, formatting, anything one app alone uses |
+| Shared components | `@kit/components` (client, T3) | only what both apps render today: `PageHeader`, `VideoThumbnail`, the empty, error and section-error states, their skeletons | data, routes, formatting, anything one app alone uses |
 | App kit | `apps/client/<app>/src/components/` | the app's own presentational components, shared across its features: web's `AppShell`, `VideoCard`, `Shelf`, `PickOfTheDay`, `Stage`, `Queue`...; studio's `StudioWorkspace`, `DataTable`, `StatCard`, charts | data, routes |
 | App features | `apps/client/<app>/src/features/<feature>/` | the smart wrappers (section 5), app-only behaviour (the player, the upload flow), pages | how a primitive is drawn |
 
-Dependencies point down only: an app kit component is built from `@vp/components` and `@kit/ui`, never from
+Dependencies point down only: an app kit component is built from `@kit/components` and `@kit/ui`, never from
 raw elements with its own styling; a smart wrapper is built from the app kit. The specs mirror this:
 [primitives/](primitives/README.md), [components/](components/README.md),
 [apps/web/](apps/web/README.md), [apps/studio/](apps/studio/README.md).
@@ -27,7 +27,7 @@ raw elements with its own styling; a smart wrapper is built from the app kit. Th
 1. A generic, product-agnostic control (it would make sense in any app): a primitive in `@kit/ui`.
 2. A presentational piece only one app renders: that app's kit, `src/components/<area>/<name>/`. This is the
    default for anything product-shaped.
-3. A presentational piece both apps render today: `@vp/components`. It moves there from an app kit the day the
+3. A presentational piece both apps render today: `@kit/components`. It moves there from an app kit the day the
    second app needs it, never earlier, and nothing in it may exist for one app alone. A studio chart or web's
    Pick of the day never belongs there.
 4. Behaviour tied to data or one feature: the feature folder, as a smart wrapper or a feature component.
@@ -229,7 +229,7 @@ export type ButtonShape = ShapeOption;
 - Widening (`SizeOption | 'hero'`) is for a genuinely new value one component needs; if a second component
   needs it, it moves into the shared union instead.
 - A props interface never spells a literal union inline. `tests/architecture/shared-unions.test.ts` reads the
-  props types of `@kit/ui`, `@vp/components` and the apps' components through the TypeScript compiler API and
+  props types of `@kit/ui`, `@kit/components` and the apps' components through the TypeScript compiler API and
   fails on an inline string-literal union outside a `types.ts` file.
 - The `tv()` variant maps are typed against the same unions (`satisfies Record<ButtonTone, string>`), so adding a
   member to a union is a type error until every component that accepts it styles it.
@@ -281,12 +281,12 @@ How the SOLID principles land here:
   passes them through, so it can stand in wherever the element could.
 - **Interface segregation**: each part takes only its own props, and reads only the slice of context it needs.
 - **Dependency inversion**: components receive data and callbacks; links come through `asChild`; copy through
-  `useUiCopy()`. Nothing in `@vp/components` imports a router, a query client or the API.
+  `useUiCopy()`. Nothing in `@kit/components` imports a router, a query client or the API.
 
 ### One folder per component
 
 ```
-@kit/ui primitives/button/            packages/client/components/src/video-card/
+@kit/ui primitives/button/            packages/platform/client/components/src/video-card/
   button.tsx                           video-card.tsx        Root and parts
   button.variants.ts                   video-card.context.ts createCompoundContext, useVideoCard
   types.ts                             video-card.variants.ts
@@ -305,7 +305,7 @@ subcomponent a `components/<name>/` of the same shape; the whole shape is
 
 ## 5. Smart wrappers in the apps
 
-`@vp/components` and the app kits are presentational on purpose. Each app adds a thin wrapper per placement
+`@kit/components` and the app kits are presentational on purpose. Each app adds a thin wrapper per placement
 that is smart by design:
 
 - **Base settings are fixed inside the wrapper**: the variant, which parts render, the link target, the
@@ -353,7 +353,7 @@ Rules:
   take an id when the wrapper renders a single entity the cache already holds (`<ChannelChip channelId />`
   reading `useChannel(id)`).
 - **A wrapper lives in the feature that owns its data** (`features/browse/components/`), never in the app kit
-  or `@vp/components`, which have no data hooks to call.
+  or `@kit/components`, which have no data hooks to call.
 - **Every wrapper's source is in [data-sources.md](data-sources.md)**: the endpoint, the transport and the fallback
   until the backend ticket lands.
 - **Specs** render the wrapper through the app's route helpers with MSW (web Rule 7), and the presentational
@@ -367,9 +367,9 @@ Rules:
 |---|---|
 | tokens, themes, token sets, the registry, the appearance engine (`@kit/design-tokens`, `@kit/ui`) | the app kit: web's `AppShell`, `VideoCard`, `Shelf`, `PickOfTheDay`, `Stage`, `Queue`, `CommandPalette`...; studio's `StudioWorkspace`, `DataTable`, `StatCard`, charts |
 | primitives, `Table` among them (`@kit/ui`) | smart wrappers, which read each app's own feature hooks |
-| `PageHeader`, `VideoThumbnail`, `EmptyState`, `ErrorState`, `SectionError` (`@vp/components`) | the player (web), the upload flow and its progress widget (studio) |
+| `PageHeader`, `VideoThumbnail`, `EmptyState`, `ErrorState`, `SectionError` (`@kit/components`) | the player (web), the upload flow and its progress widget (studio) |
 | query factories both apps read (`@vp/queries`) | page layouts, routes, studio-only queries and mutations |
 
 Share when both apps render the same thing today. A piece one app needs stays in that app's kit, and the
-second app pulls it into `@vp/components` when it arrives. `@vp/components` staying small is the point: it is
+second app pulls it into `@kit/components` when it arrives. `@kit/components` staying small is the point: it is
 the contract between two apps, and every piece in it is one both must keep working.

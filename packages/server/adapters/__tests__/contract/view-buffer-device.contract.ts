@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
+import { expectOk } from '@kit/testing/result';
 import type { PlaybackWatch } from '@vp/core/ports';
 import type { ViewBatch } from '@vp/domain';
-import { expectOk } from '@vp/testing/result';
 import type { MakeViewBufferSubject, ViewBufferSubject } from './view-buffer.contract';
 
 const DAY = '2026-03-10';

@@ -1,5 +1,5 @@
+import type { VideoCardSprite } from '@kit/components';
 import type { VideoSummary } from '@vp/api-contracts';
-import type { VideoCardSprite } from '@vp/components';
 
 /** The thumbnail sprite of a video as a card plays it, or nothing until the thumbnail stage has run. */
 export function spriteOf({

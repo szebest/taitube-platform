@@ -1,5 +1,5 @@
 import { createLogger } from '@kit/logger';
-import { captureLog } from '@vp/testing/log-capture';
+import { captureLog } from '@kit/testing/log-capture';
 import { type CliHost, run } from '../cli';
 import { mintToken as mint } from '../jwt';
 import { TEST_CONFIG } from './test-config';

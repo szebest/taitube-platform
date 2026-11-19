@@ -1,6 +1,6 @@
+import { expectOk } from '@kit/testing/result';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { CacheKeys } from '@vp/events';
-import { expectOk } from '@vp/testing/result';
 import { Redis } from 'ioredis';
 import { FakeLiveRedis } from '../../redis/__tests__/fake-live-redis';
 import { FakeRedis } from '../../redis/__tests__/fake-redis';

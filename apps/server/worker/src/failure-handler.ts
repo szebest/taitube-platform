@@ -18,7 +18,7 @@ import {
   ids,
   stagePolicies,
 } from '@vp/job-contracts';
-import type { PipelineMetrics } from '@vp/observability';
+import type { PipelineMetrics } from '@vp/pipeline-metrics';
 import { uuidv7 } from 'uuidv7';
 import { failCaptionsRun } from './stages/captions/captions-failure';
 import { stepRenditionOf } from './stages/captions/captions-run';

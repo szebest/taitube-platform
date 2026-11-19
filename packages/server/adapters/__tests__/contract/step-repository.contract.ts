@@ -1,5 +1,5 @@
+import { expectOk } from '@kit/testing/result';
 import type { StepRepository } from '@vp/core/repositories';
-import { expectOk } from '@vp/testing/result';
 import { HOUR_MS, VIDEO_IDS, publicVideo, seedOwners } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 

@@ -1,6 +1,6 @@
+import { seriesColor } from '@kit/components';
 import { Format, useT } from '@kit/intl-react';
 import { useQuery } from '@tanstack/react-query';
-import { seriesColor } from '@vp/components';
 import { useApi } from '@vp/queries';
 import { ChartFrame } from '#app/components/analytics/chart-frame';
 import { videoAudienceQueryOptions } from '#app/features/analytics/api/analytics-queries';

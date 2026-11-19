@@ -15,7 +15,7 @@ import { ErrorCodes, PermanentError } from '@vp/errors';
 import type { MediaTools } from '@vp/ffmpeg';
 import * as ffmpeg from '@vp/ffmpeg';
 import { fingerprintTools } from '@vp/fingerprint';
-import { createMetricsRegistry } from '@vp/observability';
+import { createPipelineMetrics } from '@vp/pipeline-metrics';
 import { speechTools } from '@vp/whisper';
 import { everyInterval } from '../heartbeat';
 import type { StageDefinition } from '../registry';
@@ -72,7 +72,7 @@ export const STAGE_SETTINGS = {
   views: config.views,
   captions: config.captions,
   workerId: 'worker-spec',
-  metrics: createMetricsRegistry(),
+  metrics: createPipelineMetrics(),
   media: mediaTools,
   speech: speechTools,
   fingerprint: fingerprintTools,

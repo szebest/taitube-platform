@@ -1,5 +1,5 @@
+import { createIntl, createIntlCache } from '@kit/intl';
 import { renderHook } from '@testing-library/react';
-import { createIntl, createIntlCache } from '@vp/intl';
 import { createTranslator, en } from '@vp/messages';
 import type { ReactNode } from 'react';
 import { type IntlBindings, IntlContext, useIntlBindings } from '../intl-context';

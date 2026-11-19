@@ -25,9 +25,9 @@
   },
   "devDependencies": {
     "@kit/result": "workspace:*",
+    "@kit/testing": "workspace:*",
     "@kit/tsconfig": "workspace:*",
     "@vp/domain-rules": "workspace:*",
-    "@vp/testing": "workspace:*",
     "@vp/validation": "workspace:*",
     "rimraf": "^6.1.3",
     "typescript": "^6.0.3",

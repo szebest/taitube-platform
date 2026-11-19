@@ -6,7 +6,7 @@ import {
   resolveTheme,
   type Theme,
 } from '@kit/design-tokens';
-import { expectOk } from '@vp/testing/result';
+import { expectOk } from '@kit/testing/result';
 import { ramps } from '../../tokens/ref';
 
 const folders = readdirSync(new URL('..', import.meta.url), { withFileTypes: true })

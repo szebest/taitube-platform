@@ -1,5 +1,5 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { PICK_NOTE_MAX_LENGTH, validatePickNote } from '../note';
 
 describe('@vp/validation: validatePickNote', () => {

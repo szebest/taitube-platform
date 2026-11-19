@@ -1,5 +1,5 @@
+import { expectOk } from '@kit/testing/result';
 import { notificationRead } from '@vp/domain';
-import { expectOk } from '@vp/testing/result';
 import { OTHER_OWNER_ID, OWNER_ID, publicVideo, seedOwners, VIDEO_IDS } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 

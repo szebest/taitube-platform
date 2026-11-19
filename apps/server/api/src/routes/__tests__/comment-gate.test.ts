@@ -1,7 +1,7 @@
+import { expectOk } from '@kit/testing/result';
 import { CHANNEL_HEADER } from '@vp/api-contracts';
 import { DEFAULT_COMMENT_SETTINGS, type DisclosureRule } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
-import { expectOk } from '@vp/testing/result';
 import {
   AS,
   AUTHOR,

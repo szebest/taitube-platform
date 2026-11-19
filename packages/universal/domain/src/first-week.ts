@@ -1,4 +1,4 @@
-import { MS_PER_DAY } from '@vp/domain/time';
+import { MS_PER_DAY } from '@kit/primitives';
 import { viewDateOf } from './views';
 
 export const FIRST_WEEK_DAYS = 7;

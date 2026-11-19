@@ -6,7 +6,7 @@ import { productionSources, read, trackedFiles } from './repo-files';
  * An import only says a name is reachable; `new` is the decision. The adapters package builds its
  * own parts, composition modules build the graph, and nothing else constructs a concrete adapter.
  */
-const HOMES = ['packages/server/adapters/', 'packages/server/testing/'];
+const HOMES = ['packages/server/adapters/', 'packages/server/testing-fixtures/'];
 const COMPOSITION = /\/composition\//;
 const SCOPE = /^(apps|packages)\//;
 

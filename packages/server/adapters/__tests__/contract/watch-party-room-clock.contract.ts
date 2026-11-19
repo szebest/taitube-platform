@@ -1,4 +1,4 @@
-import { expectOk } from '@vp/testing/result';
+import { expectOk } from '@kit/testing/result';
 import { VIDEO_IDS } from './fixtures';
 import type { MakeRepositoriesSubject } from './subjects';
 import {

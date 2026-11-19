@@ -1,5 +1,5 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import * as schema from '@vp/db';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/pglite';
 import { OTHER_OWNER_ID, OWNER_ID, seedOwners } from '../../../__tests__/contract/fixtures';

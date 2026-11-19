@@ -1,5 +1,5 @@
+import { definePackageTestConfig } from '@kit/testing';
 import { reactPlugins } from '@kit/vite-preset/react-plugins';
-import { definePackageTestConfig } from '@vp/testing';
 
 /** The differential specs once more without the React Compiler, against the same snapshots. */
 export default definePackageTestConfig({

@@ -1,6 +1,6 @@
+import { seriesColor } from '@kit/components';
 import { useFormat } from '@kit/intl-react';
 import { unwrapOr } from '@kit/result';
-import { seriesColor } from '@vp/components';
 import {
   Area,
   CartesianGrid,

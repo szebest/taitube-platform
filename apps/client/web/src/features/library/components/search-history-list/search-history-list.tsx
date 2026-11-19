@@ -1,7 +1,7 @@
 import { Format, useT } from '@kit/intl-react';
 import { Icon, IconButton } from '@kit/ui';
 import { Link } from '@tanstack/react-router';
-import { publishedAt } from '@vp/intl';
+import { publishedAt } from '@vp/intl-formats';
 import { useApi } from '@vp/queries';
 import { PagedFooter } from '#app/components/feed/paged-footer';
 import { searchHistoryQueryOptions } from '#app/features/library/api/library-queries';

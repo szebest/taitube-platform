@@ -1,5 +1,5 @@
+import { expectOk } from '@kit/testing/result';
 import type { MediaTools } from '@vp/ffmpeg';
-import { expectOk } from '@vp/testing/result';
 import { createPackageProcessor } from '../stages/package';
 import { createProbeProcessor } from '../stages/probe';
 import { createThumbnailProcessor } from '../stages/thumbnail';

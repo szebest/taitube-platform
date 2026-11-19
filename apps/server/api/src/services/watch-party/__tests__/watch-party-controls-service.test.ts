@@ -1,4 +1,4 @@
-import { expectOk } from '@vp/testing/result';
+import { expectOk } from '@kit/testing/result';
 import { WatchPartyControlsService } from '../watch-party-controls-service';
 import { keyOf, ROOM_ID, seedRoom } from './watch-party-moderation-fixture';
 import { MEMBER, OWNER, watchPartyTestDeps } from './watch-party-test-deps';

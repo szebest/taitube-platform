@@ -1,5 +1,6 @@
 import { Singleflight } from '@kit/concurrency';
 import { Paginator } from '@kit/pagination';
+import { expectOk } from '@kit/testing/result';
 import {
   InMemoryCacheClient,
   InMemoryRepositories,
@@ -7,7 +8,6 @@ import {
 } from '@vp/adapters/in-memory';
 import type { NewVideoInput } from '@vp/core/repositories';
 import { SEARCH_SUGGESTIONS } from '@vp/domain';
-import { expectOk } from '@vp/testing/result';
 import { DiscoveryShelves } from '../discovery-shelves';
 import { HistoryPause } from '../history-pause';
 import { HomeService } from '../home-service';

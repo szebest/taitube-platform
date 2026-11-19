@@ -1,9 +1,9 @@
+import { DisclosureControl } from '@kit/components';
 import { useAppForm, validateWith } from '@kit/forms';
 import { useT } from '@kit/intl-react';
 import { Button, ResponsiveModal, useToast, useUiCopy } from '@kit/ui';
 import { useQuery } from '@tanstack/react-query';
 import type { CommentView } from '@vp/api-contracts';
-import { DisclosureControl } from '@vp/components';
 import {
   BAN_DURATIONS,
   type BanDuration,

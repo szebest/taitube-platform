@@ -1,4 +1,4 @@
-import { expectOk } from '@vp/testing/result';
+import { expectOk } from '@kit/testing/result';
 import type { ConnectionOptions } from 'bullmq';
 import { BullMqFlowProducer } from '../../bullmq/bullmq-flow-producer';
 import { BullMqJobQueue } from '../../bullmq/bullmq-job-queue';

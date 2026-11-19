@@ -1,6 +1,6 @@
 import type { Result } from '@kit/result';
+import { expectErr, expectOk } from '@kit/testing/result';
 import { type CacheUnavailable, ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
 import type { Redis } from 'ioredis';
 import { redisViewBufferSubject } from '../../__tests__/contract/redis-subjects';
 import { describeViewBufferContract } from '../../__tests__/contract/view-buffer.contract';

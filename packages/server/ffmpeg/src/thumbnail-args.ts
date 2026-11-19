@@ -1,4 +1,4 @@
-import { MS_PER_SECOND } from '@vp/domain/time';
+import { MS_PER_SECOND } from '@kit/primitives';
 import { type SpriteLayout, calculateSpriteGrid } from './sprite-sheet';
 
 interface PosterOptions {

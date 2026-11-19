@@ -1,7 +1,7 @@
+import { EmptyState } from '@kit/components';
 import { Format, useT } from '@kit/intl-react';
 import { Skeleton } from '@kit/ui';
 import { useQuery } from '@tanstack/react-query';
-import { EmptyState } from '@vp/components';
 import { useApi } from '@vp/queries';
 import { Suspense } from 'react';
 import { ChartFrame } from '#app/components/analytics/chart-frame';

@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
+import { expectOk } from '@kit/testing/result';
 import type { PlaybackWatch, ViewBufferPort, ViewEvent } from '@vp/core/ports';
 import type { ViewBatch, ViewCount } from '@vp/domain';
-import { expectOk } from '@vp/testing/result';
 import { describeViewBufferDeviceContract } from './view-buffer-device.contract';
 
 export interface ViewBufferSubject {

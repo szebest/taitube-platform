@@ -1,4 +1,4 @@
-import { expectOk } from '@vp/testing/result';
+import { expectOk } from '@kit/testing/result';
 import { publicVideo } from '../../../__tests__/contract/fixtures';
 import { inMemorySubject } from '../../../__tests__/contract/subjects';
 import { describeVideoRepositoryContract } from '../../../__tests__/contract/video-repository.contract';

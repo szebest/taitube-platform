@@ -1,3 +1,4 @@
+import { MS_PER_DAY } from '@kit/primitives';
 import { type Result, map, ok } from '@kit/result';
 import {
   type NewUserEventInput,
@@ -5,7 +6,6 @@ import {
   type UserEventRecord,
   UserEventRepository,
 } from '@vp/core/repositories';
-import { MS_PER_DAY } from '@vp/domain/time';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { userChannel } from '@vp/events';
 import { type Clock, realClock } from './clock';

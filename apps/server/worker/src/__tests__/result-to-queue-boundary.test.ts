@@ -1,5 +1,6 @@
 import { createLogger } from '@kit/logger';
 import { type Result, err, isErr, ok } from '@kit/result';
+import { expectOk } from '@kit/testing/result';
 import { InMemoryJobQueue, InMemoryRepositories } from '@vp/adapters/in-memory';
 import {
   type AnyFailure,
@@ -8,14 +9,13 @@ import {
   storageUnavailable,
   toPipelineError,
 } from '@vp/errors';
-import { createMetricsRegistry } from '@vp/observability';
-import { expectOk } from '@vp/testing/result';
+import { createPipelineMetrics } from '@vp/pipeline-metrics';
 import { uuidv7 } from 'uuidv7';
 import { createFailureHandler } from '../failure-handler';
 import { STAGE_SETTINGS } from './stage-settings';
 
 const logger = createLogger({ format: 'json', service: 'queue-boundary-test', level: 'error' });
-const metrics = createMetricsRegistry();
+const metrics = createPipelineMetrics();
 
 const corruptContainer = {
   code: ErrorCodes.CORRUPT_CONTAINER,

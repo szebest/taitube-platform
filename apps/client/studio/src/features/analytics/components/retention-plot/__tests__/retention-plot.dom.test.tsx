@@ -5,10 +5,10 @@ import {
   type ResolvedTheme,
   resolveTheme,
 } from '@kit/design-tokens';
+import { expectOk } from '@kit/testing/result';
 import { appearance } from '@kit/ui/appearance/registry';
 import { ramps } from '@kit/ui/tokens/ref';
 import { render } from '@testing-library/react';
-import { expectOk } from '@vp/testing/result';
 import { AppProviders } from '#app/__tests__/providers';
 import { RETENTION_FILL, RetentionPlot } from '../retention-plot';
 

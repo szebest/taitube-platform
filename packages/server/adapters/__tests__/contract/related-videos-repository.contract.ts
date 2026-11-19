@@ -1,5 +1,5 @@
+import { expectOk } from '@kit/testing/result';
 import type { RelatedVideosOptions, Repositories } from '@vp/core/repositories';
-import { expectOk } from '@vp/testing/result';
 import {
   CATEGORY_GAMING_ID,
   CATEGORY_MUSIC_ID,
