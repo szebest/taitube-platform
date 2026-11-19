@@ -70,11 +70,11 @@ export async function subscriptionsRoutes(app: FastifyInstance): Promise<void> {
         },
       },
       async (request, reply) => {
-        const user = requireAuth(request);
+        const { user, acting } = requireActingChannel(request);
         return sendResult(
           reply,
           request,
-          await subscriptionService.isSubscribed(user, request.params.id)
+          await subscriptionService.isSubscribed(user, acting, request.params.id)
         );
       }
     );

@@ -1,4 +1,5 @@
 import {
+  InMemoryChannelAuditRepository,
   InMemoryChannelHandleHistoryRepository,
   InMemoryChannelRepository,
   InMemoryVideoRepository,
@@ -142,7 +143,8 @@ describe('apps/server/api/services: video views', () => {
     it('reads the card of each channel, null for an id with no channel', async () => {
       const channels = new InMemoryChannelRepository(
         new InMemoryVideoRepository(),
-        new InMemoryChannelHandleHistoryRepository()
+        new InMemoryChannelHandleHistoryRepository(),
+        new InMemoryChannelAuditRepository()
       );
       const owner = '00000000-0000-7000-8000-0000000000e2';
       expectOk(await channels.create({ ...CHANNEL, userId: owner }));

@@ -1,11 +1,7 @@
 import { type Result, err, ignore, isErr, ok } from '@kit/result';
 import type { CommentView } from '@vp/api-contracts';
 import type { CommentSlowModePort } from '@vp/core/ports';
-import type {
-  ChannelAuditRepositoryPort,
-  ChannelMemberRepositoryPort,
-  CommentRepositoryPort,
-} from '@vp/core/repositories';
+import type { ChannelMemberRepositoryPort, CommentRepositoryPort } from '@vp/core/repositories';
 import {
   type ActingChannel,
   type CommentThread,
@@ -39,7 +35,6 @@ import { toCommentView } from './comment-views';
 export interface CommentCreateDeps extends CommentLookupDeps, CommentGateLookups {
   comments: CommentRepositoryPort;
   members: Pick<ChannelMemberRepositoryPort, 'listByChannel'>;
-  audit: Pick<ChannelAuditRepositoryPort, 'append'>;
   slowMode: CommentSlowModePort;
   now: () => number;
 }
@@ -94,28 +89,29 @@ async function store(
   const moderators = held ? await moderatorsOf(deps, video.channelId, video.ownerId) : ok([]);
   if (isErr(moderators)) return moderators;
 
-  const created = await deps.comments.create({
-    id: uuidv7(),
-    videoId: video.id,
-    authorId: author.id,
-    authorChannelId: acting.channelId,
-    parentId,
-    content,
-    moderation: moderationOf(verdict, content),
-    moderators: moderators.value,
-  });
+  const id = uuidv7();
+  const created = await deps.comments.create(
+    {
+      id,
+      videoId: video.id,
+      authorId: author.id,
+      authorChannelId: acting.channelId,
+      parentId,
+      content,
+      moderation: moderationOf(verdict, content),
+      moderators: moderators.value,
+    },
+    {
+      channelId: acting.channelId,
+      ...auditActor(author),
+      action: 'comment.posted',
+      targetType: 'comment',
+      targetId: id,
+      meta: { videoId: video.id },
+    }
+  );
   if (isErr(created)) return created;
-  if (!created.value) return err(commentNotFound(parentId ?? video.id));
-
-  const audited = await deps.audit.append({
-    channelId: acting.channelId,
-    ...auditActor(author),
-    action: 'comment.posted',
-    targetType: 'comment',
-    targetId: created.value.id,
-    meta: { videoId: video.id },
-  });
-  return isErr(audited) ? audited : ok(created.value);
+  return created.value ? ok(created.value) : err(commentNotFound(parentId ?? video.id));
 }
 
 export async function moderatorsOf(

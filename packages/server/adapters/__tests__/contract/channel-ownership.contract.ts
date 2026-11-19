@@ -1,11 +1,25 @@
 import type { ChannelRepositoryPort } from '@vp/core/repositories';
+import type { NewChannelAuditEntry } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { OTHER_OWNER_ID, OWNER_ID, seedOwnerAccounts } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
 const PRIMARY_ID = '00000000-0000-7000-8000-000000000401';
+const SECOND_ID = '00000000-0000-7000-8000-000000000402';
 const LIMIT = 3;
+
+const audited = (
+  channelId: string,
+  action: 'channel.created' | 'channel.promoted'
+): NewChannelAuditEntry => ({
+  channelId,
+  actorUserId: OWNER_ID,
+  action,
+  targetType: 'channel',
+  targetId: channelId,
+  meta: {},
+});
 
 export function describeChannelOwnershipContract(makeSubject: MakeRepositoriesSubject): void {
   describe('ChannelRepository ownership contract', () => {
@@ -20,6 +34,11 @@ export function describeChannelOwnershipContract(makeSubject: MakeRepositoriesSu
 
     const primaryOf = async (userId = OWNER_ID) =>
       expectOk(await channels.findPrimaryByUserId(userId))?.id;
+
+    const auditedOn = async (channelId: string) =>
+      expectOk(
+        await subject.repositories.channelAudit.list(channelId, { cursor: null, limit: 5 })
+      ).map(({ action }) => action);
 
     beforeAll(async () => {
       subject = await makeSubject();
@@ -125,6 +144,50 @@ export function describeChannelOwnershipContract(makeSubject: MakeRepositoriesSu
       async ({ userId, channelId }) => {
         expect(expectOk(await channels.promote(userId, channelId))).toBeNull();
         expect(await primaryOf()).toBe(PRIMARY_ID);
+      }
+    );
+
+    it('writes the audit rows it is handed with a create and a promotion, and none with a refused one', async () => {
+      const second = { id: SECOND_ID, userId: OWNER_ID, handle: 'second', displayName: 'Second' };
+      expectOk(await channels.createOwned(second, LIMIT, audited(SECOND_ID, 'channel.created')));
+      expectOk(await channels.promote(OWNER_ID, SECOND_ID, audited(SECOND_ID, 'channel.promoted')));
+      expectErr(
+        await channels.createOwned(
+          { ...second, handle: 'primary' },
+          LIMIT,
+          audited(SECOND_ID, 'channel.created')
+        )
+      );
+      expectOk(
+        await channels.promote(OTHER_OWNER_ID, PRIMARY_ID, audited(PRIMARY_ID, 'channel.promoted'))
+      );
+
+      expect(await auditedOn(SECOND_ID)).toEqual(['channel.promoted', 'channel.created']);
+      expect(await auditedOn(PRIMARY_ID)).toEqual([]);
+    });
+
+    it.each([
+      { scenario: 'a free handle', handle: 'renamed', written: ['channel.updated'] },
+      { scenario: 'a handle another channel holds', handle: 'held', written: [] },
+    ])(
+      'writes the audit row it is handed with a handle change to $scenario, or none',
+      async ({ handle, written }) => {
+        expectOk(await createOwned('held'));
+
+        await channels.update(
+          PRIMARY_ID,
+          { handle, handleChangedAt: new Date() },
+          {
+            channelId: PRIMARY_ID,
+            actorUserId: OWNER_ID,
+            action: 'channel.updated',
+            targetType: 'channel',
+            targetId: PRIMARY_ID,
+            meta: { fields: ['handle'] },
+          }
+        );
+
+        expect(await auditedOn(PRIMARY_ID)).toEqual(written);
       }
     );
 

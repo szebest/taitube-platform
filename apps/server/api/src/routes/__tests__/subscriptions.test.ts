@@ -1,4 +1,5 @@
 import type { InMemoryRepositories } from '@vp/adapters/in-memory';
+import { CHANNEL_HEADER } from '@vp/api-contracts';
 import { mintToken } from '@vp/dev-identity';
 import { ErrorCodes } from '@vp/errors';
 import { expectOk } from '@vp/testing/result';
@@ -91,6 +92,21 @@ describe('subscription routes', () => {
 
     expect(res.statusCode).toBe(status);
     expect(res.json().code).toBe(code);
+  });
+
+  it.each([
+    { method: 'POST' as const, url: `/v1/channels/${ABSENT_CHANNEL}/subscribers` },
+    { method: 'DELETE' as const, url: `/v1/channels/${ABSENT_CHANNEL}/subscribers` },
+    { method: 'PATCH' as const, url: `/v1/channels/${ABSENT_CHANNEL}/subscribers/me` },
+  ])('refuses $method as a channel the caller does not work on with 403', async (call) => {
+    const res = await app.inject({
+      ...call,
+      headers: { ...subscriber, [CHANNEL_HEADER]: CHANNEL },
+      payload: call.method === 'PATCH' ? { level: 'none' } : {},
+    });
+
+    expect(res.statusCode).toBe(403);
+    expect(res.json().code).toBe(ErrorCodes.CHANNEL_MEMBERSHIP_REQUIRED);
   });
 
   it('subscribes, reports it on the channel and in the list, then unsubscribes', async () => {

@@ -1,6 +1,6 @@
 import type { SubscriptionRepositoryPort } from '@vp/core/repositories';
 import * as schema from '@vp/db';
-import { viewDateOf } from '@vp/domain';
+import { type NewChannelAuditEntry, viewDateOf } from '@vp/domain';
 import { MS_PER_DAY } from '@vp/domain/time';
 import { expectOk } from '@vp/testing/result';
 import {
@@ -53,6 +53,26 @@ export function describeSubscriptionRepositoryContract(makeSubject: MakeReposito
 
       expect(expectOk(await subscriptions.isSubscribed(AS, CHANNEL_ID))).toBe(true);
       expect(expectOk(await subscriptions.getSubscriberCount(CHANNEL_ID))).toBe(1);
+    });
+
+    it('writes the audit row it is handed with the subscription it creates, and with no other', async () => {
+      const subscribed: NewChannelAuditEntry = {
+        channelId: AS,
+        actorUserId: SUBSCRIBER_ID,
+        action: 'channel.subscribed',
+        targetType: 'channel',
+        targetId: CHANNEL_ID,
+        meta: {},
+      };
+
+      for (let call = 0; call < 2; call++) {
+        expectOk(await subscriptions.subscribe(SUBSCRIBER_ID, AS, CHANNEL_ID, null, subscribed));
+      }
+
+      const audit = expectOk(
+        await subject.repositories.channelAudit.list(AS, { cursor: null, limit: 5 })
+      );
+      expect(audit).toEqual([expect.objectContaining(subscribed)]);
     });
 
     it('unsubscribes idempotently', async () => {

@@ -1,7 +1,8 @@
 import { channels, users } from '@vp/db';
-import type { CreateChannelInput } from '@vp/domain';
+import type { CreateChannelInput, NewChannelAuditEntry } from '@vp/domain';
 import { and, eq, sql } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
+import { appendChannelAudit } from './channel-audit-writes';
 import type { PostgresDatabase } from './types';
 
 type ChannelRow = typeof channels.$inferSelect;
@@ -33,7 +34,8 @@ async function lockOwner(tx: PostgresDatabase, userId: string): Promise<void> {
 export function insertOwnedChannel(
   db: PostgresDatabase,
   input: CreateChannelInput,
-  limit: number
+  limit: number,
+  audit?: NewChannelAuditEntry
 ): Promise<'limit' | ChannelRow> {
   return db.transaction(async (tx) => {
     await lockOwner(tx, input.userId);
@@ -51,6 +53,7 @@ export function insertOwnedChannel(
       .values(newChannelRow(input, (held?.primaries ?? 0) === 0))
       .returning();
     if (!row) throw new Error('channel insert returned no row');
+    if (audit) await appendChannelAudit(tx, audit);
     return row;
   });
 }
@@ -59,7 +62,8 @@ export function insertOwnedChannel(
 export function promoteChannel(
   db: PostgresDatabase,
   userId: string,
-  channelId: string
+  channelId: string,
+  audit?: NewChannelAuditEntry
 ): Promise<ChannelRow | undefined> {
   return db.transaction(async (tx) => {
     await lockOwner(tx, userId);
@@ -76,6 +80,7 @@ export function promoteChannel(
       .set({ isPrimary: true, updatedAt: new Date() })
       .where(owned)
       .returning();
+    if (row && audit) await appendChannelAudit(tx, audit);
     return row;
   });
 }

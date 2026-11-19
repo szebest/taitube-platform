@@ -67,27 +67,27 @@ export async function initiateUpload(
     : sizeBytes > ctx.multipartThresholdBytes;
 
   const { channelId, ownerId } = allowed.value;
-  const createVideoRow = async () => {
-    const created = await ctx.videos.create({
-      id: videoId,
-      ownerId,
-      channelId,
-      title: title || filename,
-      visibility: visibility || 'private',
-      status: 'UPLOADING',
-      sourceKey,
-      sourceSizeBytes: sizeBytes,
-    });
-    if (isErr(created)) return created;
-    return ctx.audit.append({
-      channelId,
-      ...auditActor(user),
-      action: 'video.uploaded',
-      targetType: 'video',
-      targetId: videoId,
-      meta: {},
-    });
-  };
+  const createVideoRow = () =>
+    ctx.videos.create(
+      {
+        id: videoId,
+        ownerId,
+        channelId,
+        title: title || filename,
+        visibility: visibility || 'private',
+        status: 'UPLOADING',
+        sourceKey,
+        sourceSizeBytes: sizeBytes,
+      },
+      {
+        channelId,
+        ...auditActor(user),
+        action: 'video.uploaded',
+        targetType: 'video',
+        targetId: videoId,
+        meta: {},
+      }
+    );
 
   if (!isMultipart) {
     const presigned = await ctx.storage.createPresignedPutUrl({

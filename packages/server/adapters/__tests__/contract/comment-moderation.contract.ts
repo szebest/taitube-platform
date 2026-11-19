@@ -1,7 +1,7 @@
 import { expectOk } from '@vp/testing/result';
 import { C, seedComment, seedThreads } from './comment-contract-context';
 import { HELD_AT_CREATION, describeModerationFixture, outcome } from './comment-moderation-fixture';
-import { OWNER_ID } from './fixtures';
+import { OTHER_OWNER_CHANNEL_ID, OWNER_ID, VIDEO_IDS } from './fixtures';
 import type { MakeRepositoriesSubject } from './subjects';
 
 export function describeCommentModerationRepositoryContract(
@@ -9,6 +9,37 @@ export function describeCommentModerationRepositoryContract(
 ): void {
   describeModerationFixture('CommentModerationRepository contract', makeSubject, (f) => {
     const { ctx, target, moderate, count, auditedActions } = f;
+
+    it.each([
+      { scenario: 'a live root', removed: false, written: ['comment.posted'] },
+      { scenario: 'a removed root', removed: true, written: [] },
+    ])(
+      'writes a reply to $scenario and the audit row it is handed together, or neither',
+      async ({ removed, written }) => {
+        await seedComment(ctx, C.liked);
+        if (removed) expectOk(await ctx.comments.remove(target(C.liked)));
+        const reply = {
+          ...target(C.reply1),
+          authorId: ctx.authorId,
+          authorChannelId: OTHER_OWNER_CHANNEL_ID,
+          parentId: C.liked,
+          content: 'reply',
+        };
+        const posted = {
+          channelId: f.channelId,
+          actorUserId: ctx.authorId,
+          action: 'comment.posted',
+          targetType: 'comment',
+          targetId: C.reply1,
+          meta: { videoId: VIDEO_IDS.a },
+        } as const;
+
+        const created = expectOk(await ctx.comments.create(reply, posted));
+
+        expect(created === null).toBe(removed);
+        expect(await auditedActions()).toEqual(written);
+      }
+    );
     it.each([
       { name: 'hides a root with its public replies', id: C.liked, away: 'hidden', leaves: 3 },
       { name: 'holds a root with its public replies', id: C.liked, away: 'held', leaves: 3 },

@@ -1,13 +1,17 @@
-import { type Result, err, isErr, ok } from '@kit/result';
+import { type Result, err, isErr, map, ok } from '@kit/result';
 import type { CreateChannelBody, IdentitiesView, OwnedChannelView } from '@vp/api-contracts';
 import type {
-  ChannelAuditRepositoryPort,
   ChannelHandleHistoryRepositoryPort,
   ChannelMemberRepositoryPort,
   ChannelRepositoryPort,
   UserRepository,
 } from '@vp/core/repositories';
-import { type Channel, type ChannelAuditAction, toChannelCard } from '@vp/domain';
+import {
+  type Channel,
+  type ChannelAuditAction,
+  type NewChannelAuditEntry,
+  toChannelCard,
+} from '@vp/domain';
 import {
   type ChannelNotFound,
   type ChannelNotOwned,
@@ -18,6 +22,7 @@ import {
 } from '@vp/domain-rules';
 import { type ChannelLimitReached, type DatabaseUnavailable, ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
+import { uuidv7 } from 'uuidv7';
 
 export interface MyChannelsServiceDeps {
   users: Pick<UserRepository, 'findById'>;
@@ -27,7 +32,6 @@ export interface MyChannelsServiceDeps {
   >;
   handleHistory: Pick<ChannelHandleHistoryRepositoryPort, 'findByHandle'>;
   members: Pick<ChannelMemberRepositoryPort, 'membershipsOf'>;
-  audit: Pick<ChannelAuditRepositoryPort, 'append'>;
   maxOwned: number;
   now: () => number;
 }
@@ -36,6 +40,21 @@ export type CreateChannelFailure = ClaimHandleFailure | ChannelLimitReached | Da
 export type PromoteChannelFailure = ChannelNotFound | ChannelNotOwned | DatabaseUnavailable;
 
 type AccountNotFound = { readonly code: 'UNAUTHORIZED'; readonly message: string };
+
+function auditOf(
+  user: UserContext,
+  channelId: string,
+  action: Extract<ChannelAuditAction, 'channel.created' | 'channel.promoted'>
+): NewChannelAuditEntry {
+  return {
+    channelId,
+    actorUserId: user.id,
+    action,
+    targetType: 'channel',
+    targetId: channelId,
+    meta: {},
+  };
+}
 
 function ownedView(channel: Channel): OwnedChannelView {
   return { ...toChannelCard(channel), isPrimary: channel.isPrimary };
@@ -66,12 +85,13 @@ export class MyChannelsService {
     });
     if (isErr(handle)) return handle;
 
+    const id = uuidv7();
     const created = await channels.createOwned(
-      { userId: user.id, handle: handle.value, displayName: body.displayName },
-      maxOwned
+      { id, userId: user.id, handle: handle.value, displayName: body.displayName },
+      maxOwned,
+      auditOf(user, id, 'channel.created')
     );
-    if (isErr(created)) return created;
-    return this.audited(user, created.value, 'channel.created');
+    return map(created, ownedView);
   }
 
   async promote(
@@ -83,10 +103,13 @@ export class MyChannelsService {
     const decided = decidePromote({ user, channelId, channel: found.value });
     if (isErr(decided)) return decided;
 
-    const promoted = await this.deps.channels.promote(user.id, channelId);
+    const promoted = await this.deps.channels.promote(
+      user.id,
+      channelId,
+      auditOf(user, channelId, 'channel.promoted')
+    );
     if (isErr(promoted)) return promoted;
-    if (!promoted.value) return err(channelNotOwned(channelId));
-    return this.audited(user, promoted.value, 'channel.promoted');
+    return promoted.value ? ok(ownedView(promoted.value)) : err(channelNotOwned(channelId));
   }
 
   async identities(
@@ -114,21 +137,5 @@ export class MyChannelsService {
         return channel ? [{ ...toChannelCard(channel), role, ownerId }] : [];
       }),
     });
-  }
-
-  private async audited(
-    user: UserContext,
-    channel: Channel,
-    action: Extract<ChannelAuditAction, 'channel.created' | 'channel.promoted'>
-  ): Promise<Result<OwnedChannelView, DatabaseUnavailable>> {
-    const appended = await this.deps.audit.append({
-      channelId: channel.id,
-      actorUserId: user.id,
-      action,
-      targetType: 'channel',
-      targetId: channel.id,
-      meta: {},
-    });
-    return isErr(appended) ? appended : ok(ownedView(channel));
   }
 }

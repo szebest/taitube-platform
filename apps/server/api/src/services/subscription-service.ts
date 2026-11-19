@@ -1,8 +1,7 @@
 import type { InvalidCursor, Paginator } from '@kit/pagination';
-import { type Result, err, ignore, isErr, isOk, map, ok, unwrapOr } from '@kit/result';
+import { type Result, err, ignore, isErr, map, ok, unwrapOr } from '@kit/result';
 import type { SubscriptionCachePort } from '@vp/core/ports';
 import type {
-  ChannelAuditRepositoryPort,
   ChannelRepositoryPort,
   SubscriptionRepositoryPort,
   VideoRepository,
@@ -51,7 +50,6 @@ export interface SubscriptionServiceDeps {
   subscriptions: SubscriptionRepositoryPort;
   channels: ChannelRepositoryPort;
   videos: VideoRepository;
-  audit: Pick<ChannelAuditRepositoryPort, 'append'>;
   subscriptionCache: SubscriptionCachePort;
   home: Pick<HomeService, 'forget'>;
   cdn: CdnBase;
@@ -67,13 +65,13 @@ export type UnsubscribeServiceFailure =
   | DatabaseUnavailable;
 export type ReadSubscriptionFailure = UnsubscribeFailure | DatabaseUnavailable;
 
+/**
+ * `CacheUnavailable` is absent from every signature here on purpose: a dead cache costs a query,
+ * not an answer, so this service handles it rather than passing it on.
+ */
 export class SubscriptionService {
   constructor(private readonly deps: SubscriptionServiceDeps) {}
 
-  /**
-   * `CacheUnavailable` is absent from every signature here on purpose: a dead cache costs a query,
-   * not an answer, so this service handles it rather than passing it on.
-   */
   /** Subscribes the acting channel; a new subscription lands in that channel's audit log. */
   async subscribe(
     user: UserContext,
@@ -101,24 +99,23 @@ export class SubscriptionService {
       user.id,
       acting.channelId,
       channelId,
-      subscriptionSourceOf(decided.value, source.value)
-    );
-    if (isErr(written)) return written;
-
-    const { subscriberCount, changed } = written.value;
-    if (changed) {
-      const audited = await this.deps.audit.append({
+      subscriptionSourceOf(decided.value, source.value),
+      {
         channelId: acting.channelId,
         ...auditActor(user),
         action: 'channel.subscribed',
         targetType: 'channel',
         targetId: channelId,
         meta: {},
-      });
-      if (isErr(audited)) return audited;
+      }
+    );
+    if (isErr(written)) return written;
+
+    const { subscriberCount, changed } = written.value;
+    if (changed) {
       await this.deps.home.forget(user.id);
       ignore(
-        await this.deps.subscriptionCache.addSubscription(user.id, channelId),
+        await this.deps.subscriptionCache.addSubscription(acting.channelId, channelId),
         'the subscription is written; the cache heals on its TTL'
       );
       ignore(
@@ -143,7 +140,10 @@ export class SubscriptionService {
     const { subscriberCount, changed } = written.value;
     if (changed) {
       await this.deps.home.forget(user.id);
-      await this.resyncSubscriptions(user.id, channelId);
+      ignore(
+        await this.deps.subscriptionCache.removeSubscription(acting.channelId, channelId),
+        'the unsubscription is written; the cache heals on its TTL'
+      );
       ignore(
         await this.deps.subscriptionCache.setSubscriberCount(channelId, subscriberCount),
         'the count is written; the cache heals on its TTL'
@@ -152,8 +152,10 @@ export class SubscriptionService {
     return ok({ channelId, subscribed: false, subscriberCount });
   }
 
+  /** Whether the acting channel follows `channelId`; another channel of the account may differ. */
   async isSubscribed(
     user: UserContext,
+    acting: ActingChannel,
     channelId: string
   ): Promise<Result<{ channelId: string; subscribed: boolean }, ReadSubscriptionFailure>> {
     const found = await this.deps.channels.findById(channelId);
@@ -163,18 +165,20 @@ export class SubscriptionService {
     if (isErr(decided)) return decided;
 
     const cached = unwrapOr(
-      await this.deps.subscriptionCache.isSubscribed(user.id, channelId),
+      await this.deps.subscriptionCache.isSubscribed(acting.channelId, channelId),
       null
     );
     if (cached !== null) return ok({ channelId, subscribed: cached });
 
     // On a miss, prime the whole set: one query answers this call and every
     // later one, instead of a point lookup that leaves the cache still cold.
-    const channelIds = await this.deps.subscriptions.getUserSubscriptionChannelIds(user.id);
+    const channelIds = await this.deps.subscriptions.getChannelSubscriptionChannelIds(
+      acting.channelId
+    );
     if (isErr(channelIds)) return channelIds;
 
     ignore(
-      await this.deps.subscriptionCache.setUserSubscriptions(user.id, channelIds.value),
+      await this.deps.subscriptionCache.setSubscriptions(acting.channelId, channelIds.value),
       'the set was read; a cold cache costs the next call one query'
     );
     return ok({ channelId, subscribed: channelIds.value.includes(channelId) });
@@ -210,16 +214,6 @@ export class SubscriptionService {
     const found = await this.deps.channels.findById(channelId);
     if (isErr(found)) return found;
     return decideUnsubscribe({ subscriber: user, channel: found.value, channelId });
-  }
-
-  /** The cache holds what the account follows from any of its channels, so it drops a channel last. */
-  private async resyncSubscriptions(userId: string, channelId: string): Promise<void> {
-    const followed = await this.deps.subscriptions.getUserSubscriptionChannelIds(userId);
-    if (isOk(followed) && followed.value.includes(channelId)) return;
-    ignore(
-      await this.deps.subscriptionCache.removeSubscription(userId, channelId),
-      'the unsubscription is written; the cache heals on its TTL'
-    );
   }
 
   async listSubscriptions(

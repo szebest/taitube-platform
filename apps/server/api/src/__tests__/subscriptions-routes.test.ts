@@ -3,7 +3,7 @@ import { expectOk } from '@vp/testing/result';
 import {
   CHANNEL_1,
   CHANNEL_2,
-  SUBSCRIBER_ID,
+  SUBSCRIBER_CHANNEL_ID,
   type SubscriptionsApp,
   buildSubscriptionsApp,
   creatorToken,
@@ -55,9 +55,9 @@ describe('channel subscription routes', () => {
         subscribed: true,
         subscriberCount: 1,
       });
-      expect(expectOk(await ctx.subscriptionCache.isSubscribed(SUBSCRIBER_ID, CHANNEL_1.id))).toBe(
-        true
-      );
+      expect(
+        expectOk(await ctx.subscriptionCache.isSubscribed(SUBSCRIBER_CHANNEL_ID, CHANNEL_1.id))
+      ).toBe(true);
       expect(expectOk(await ctx.subscriptionCache.getSubscriberCount(CHANNEL_1.id))).toBe(1);
     });
 
@@ -135,7 +135,7 @@ describe('channel subscription routes', () => {
         subscriberCount: 0,
       });
       expect(
-        expectOk(await ctx.subscriptionCache.isSubscribed(SUBSCRIBER_ID, CHANNEL_1.id))
+        expectOk(await ctx.subscriptionCache.isSubscribed(SUBSCRIBER_CHANNEL_ID, CHANNEL_1.id))
       ).toBeNull();
     });
 

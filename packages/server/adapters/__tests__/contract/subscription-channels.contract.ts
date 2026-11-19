@@ -52,6 +52,18 @@ export function describeSubscriptionChannelsContract(makeSubject: MakeRepositori
       expect(expectOk(await subscriptions.isSubscribed(AS, CHANNEL_ID))).toBe(true);
     });
 
+    it('lists the channel ids each subscribing channel follows, apart', async () => {
+      await subscribe(CHANNEL_ID);
+      await subscribe(OTHER_CHANNEL_ID, AS_SECOND);
+
+      expect(expectOk(await subscriptions.getChannelSubscriptionChannelIds(AS))).toEqual([
+        CHANNEL_ID,
+      ]);
+      expect(expectOk(await subscriptions.getChannelSubscriptionChannelIds(AS_SECOND))).toEqual([
+        OTHER_CHANNEL_ID,
+      ]);
+    });
+
     it('names a channel once in the account-wide reads, however many of its channels follow it', async () => {
       await subject.seedVideo(publicVideo({ id: VIDEO_IDS.a }));
       await subscribe(CHANNEL_ID);

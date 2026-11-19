@@ -48,7 +48,6 @@ export function registerTeamServices(c: Container): Container {
           channels: c.get(Adapters.Repositories).channels,
           handleHistory: c.get(Adapters.Repositories).channelHandleHistory,
           members: c.get(Adapters.Repositories).channelMembers,
-          audit: c.get(Adapters.Repositories).channelAudit,
           maxOwned: c.get(Adapters.Config).limits.channelsMaxOwned,
           now: Date.now,
         })

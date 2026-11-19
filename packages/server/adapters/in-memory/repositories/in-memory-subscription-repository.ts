@@ -1,4 +1,4 @@
-import { type Result, ok, unwrapOr } from '@kit/result';
+import { type Result, isErr, ok, unwrapOr } from '@kit/result';
 import type {
   ListSubscribersOptions,
   ListSubscriptionsOptions,
@@ -9,6 +9,7 @@ import type {
 import {
   type ChannelSubscriber,
   type ChannelSubscription,
+  type NewChannelAuditEntry,
   NOTIFICATION_LEVELS,
   type NotificationLevel,
   type SubscribedChannelItem,
@@ -18,6 +19,7 @@ import {
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { uuidv7 } from 'uuidv7';
+import type { InMemoryChannelAuditRepository } from './in-memory-channel-audit-repository';
 import type { InMemoryChannelRepository } from './in-memory-channel-repository';
 import type { InMemoryVideoRepository } from './in-memory-video-repository';
 import { byKeysetDesc, isKeysetBefore } from './keyset';
@@ -25,6 +27,7 @@ import { byKeysetDesc, isKeysetBefore } from './keyset';
 export interface InMemorySubscriptionRepositoryOptions {
   channelsRepo: InMemoryChannelRepository;
   videosRepo: InMemoryVideoRepository;
+  auditRepo: Pick<InMemoryChannelAuditRepository, 'append'>;
 }
 
 export class InMemorySubscriptionRepository implements SubscriptionRepositoryPort {
@@ -32,10 +35,12 @@ export class InMemorySubscriptionRepository implements SubscriptionRepositoryPor
   private readonly events: { channelId: string; delta: 1 | -1; occurredAt: Date }[] = [];
   private readonly channelsRepo: InMemoryChannelRepository;
   private readonly videosRepo: InMemoryVideoRepository;
+  private readonly auditRepo: Pick<InMemoryChannelAuditRepository, 'append'>;
 
   constructor(options: InMemorySubscriptionRepositoryOptions) {
     this.channelsRepo = options.channelsRepo;
     this.videosRepo = options.videosRepo;
+    this.auditRepo = options.auditRepo;
   }
 
   private key(subscriberChannelId: string, channelId: string): string {
@@ -52,16 +57,17 @@ export class InMemorySubscriptionRepository implements SubscriptionRepositoryPor
   }
 
   /**
-   * One await, then nothing. The claim and the counter move together with no yield between them,
-   * the way the Postgres adapter's transaction moves them, so ten concurrent subscribes cannot
-   * observe a half-step - which is exactly what they did when the counter update sat behind its
+   * One await before the claim, the audit row's after it. The claim and the counter move together
+   * with no yield between them, the way the Postgres adapter's transaction moves them, so ten
+   * concurrent subscribes cannot observe a half-step - which is exactly what they did when the counter update sat behind its
    * own `await` and every loser reported zero.
    */
   async subscribe(
     subscriberId: string,
     subscriberChannelId: string,
     channelId: string,
-    sourceVideoId: string | null = null
+    sourceVideoId: string | null = null,
+    audit?: NewChannelAuditEntry
   ): Promise<Result<SubscriptionChangeResult, DatabaseUnavailable>> {
     const channel = await this.findChannel(channelId);
     if (!channel) return ok({ subscriberCount: 0, changed: false });
@@ -83,6 +89,10 @@ export class InMemorySubscriptionRepository implements SubscriptionRepositoryPor
     channel.subscriberCount += 1;
     channel.updatedAt = new Date();
     this.events.push({ channelId, delta: 1, occurredAt: new Date() });
+    if (audit) {
+      const appended = await this.auditRepo.append(audit);
+      if (isErr(appended)) return appended;
+    }
     return ok({ subscriberCount: channel.subscriberCount, changed: true });
   }
 
@@ -109,6 +119,16 @@ export class InMemorySubscriptionRepository implements SubscriptionRepositoryPor
     channelId: string
   ): Promise<Result<boolean, DatabaseUnavailable>> {
     return ok(this.subscriptions.has(this.key(subscriberChannelId, channelId)));
+  }
+
+  async getChannelSubscriptionChannelIds(
+    subscriberChannelId: string
+  ): Promise<Result<string[], DatabaseUnavailable>> {
+    return ok(
+      [...this.subscriptions.values()]
+        .filter((sub) => sub.subscriberChannelId === subscriberChannelId)
+        .map((sub) => sub.channelId)
+    );
   }
 
   async getUserSubscriptionChannelIds(

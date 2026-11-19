@@ -1,6 +1,7 @@
 import type { Result } from '@kit/result';
 import type {
   ChannelSubscriber,
+  NewChannelAuditEntry,
   NotificationLevel,
   SubscribedChannelItem,
   SubscriptionChangeResult,
@@ -30,12 +31,13 @@ export interface ListSubscriptionsOptions {
  * further page and mint the opaque cursor; encoding it is a transport concern.
  */
 export interface SubscriptionRepositoryPort {
-  /** `sourceVideoId` is stored only on the call that creates the subscription. */
+  /** `sourceVideoId` and `audit` are written only by the call that creates the subscription. */
   subscribe(
     subscriberId: string,
     subscriberChannelId: string,
     channelId: string,
-    sourceVideoId?: string | null
+    sourceVideoId?: string | null,
+    audit?: NewChannelAuditEntry
   ): Promise<Result<SubscriptionChangeResult, DatabaseUnavailable>>;
   unsubscribe(
     subscriberChannelId: string,
@@ -45,6 +47,9 @@ export interface SubscriptionRepositoryPort {
     subscriberChannelId: string,
     channelId: string
   ): Promise<Result<boolean, DatabaseUnavailable>>;
+  getChannelSubscriptionChannelIds(
+    subscriberChannelId: string
+  ): Promise<Result<string[], DatabaseUnavailable>>;
   /** The account-wide reads below name each channel once, however many of the account's channels subscribe to it. */
   getUserSubscriptionChannelIds(
     subscriberId: string

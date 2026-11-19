@@ -37,6 +37,12 @@ export const asSubscriber: ActingChannel = {
   ownerId: subscriber.id,
   role: 'owner',
 };
+/** A second channel the subscriber owns. */
+export const asSubscriberSecond: ActingChannel = {
+  channelId: '77777777-7777-7777-8777-777777777777',
+  ownerId: subscriber.id,
+  role: 'owner',
+};
 
 /** A service over in-memory repositories and the two creators' channels. */
 export async function subscriptionHarness() {
@@ -46,16 +52,18 @@ export async function subscriptionHarness() {
     renditionsRepo: new InMemoryRenditionRepository(),
     stepsRepo: new InMemoryStepRepository(),
   });
+  const audit = new InMemoryChannelAuditRepository();
   const channels = new InMemoryChannelRepository(
     videos,
-    new InMemoryChannelHandleHistoryRepository()
+    new InMemoryChannelHandleHistoryRepository(),
+    audit
   );
   const subscriptions = new InMemorySubscriptionRepository({
     channelsRepo: channels,
     videosRepo: videos,
+    auditRepo: audit,
   });
   const cache = new InMemorySubscriptionCache();
-  const audit = new InMemoryChannelAuditRepository();
   const viewerProgress = new ViewerProgress(
     new InMemoryWatchHistoryRepository({ channelsRepo: channels, videosRepo: videos })
   );
@@ -64,7 +72,6 @@ export async function subscriptionHarness() {
       subscriptions,
       channels,
       videos,
-      audit,
       subscriptionCache,
       viewerProgress,
       home: { forget: async () => {} },
@@ -85,12 +92,17 @@ export async function subscriptionHarness() {
     handle: 'creator_two',
     displayName: 'Creator Two',
   });
-  await channels.create({
-    id: asSubscriber.channelId,
-    userId: subscriber.id,
-    handle: 'subscriber',
-    displayName: 'Subscriber',
-  });
+  for (const [acting, handle] of [
+    [asSubscriber, 'subscriber'],
+    [asSubscriberSecond, 'subscriber_two'],
+  ] as const) {
+    await channels.create({
+      id: acting.channelId,
+      userId: subscriber.id,
+      handle,
+      displayName: handle,
+    });
+  }
 
   return { videos, subscriptions, cache, audit, service: serviceOver(cache), serviceOver };
 }

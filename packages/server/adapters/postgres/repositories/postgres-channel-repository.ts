@@ -1,7 +1,13 @@
 import { type Result, err, fromPromise, map, ok } from '@kit/result';
 import type { ChannelRepositoryPort } from '@vp/core/repositories';
 import { channels, videos } from '@vp/db';
-import type { Channel, ChannelStats, CreateChannelInput, UpdateChannelInput } from '@vp/domain';
+import type {
+  Channel,
+  ChannelStats,
+  CreateChannelInput,
+  NewChannelAuditEntry,
+  UpdateChannelInput,
+} from '@vp/domain';
 import {
   type ChannelLimitReached,
   type DatabaseUnavailable,
@@ -12,6 +18,7 @@ import {
 } from '@vp/errors';
 import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm';
 import { isUniqueViolation } from '../pg-errors';
+import { appendChannelAudit } from './channel-audit-writes';
 import { insertOwnedChannel, newChannelRow, promoteChannel } from './channel-ownership';
 import { channelPatch, claimHandle } from './channel-writes';
 import { publicFeedScope } from './public-feed-query';
@@ -141,11 +148,12 @@ export class PostgresChannelRepository implements ChannelRepositoryPort {
 
   async createOwned(
     input: CreateChannelInput,
-    limit: number
+    limit: number,
+    audit?: NewChannelAuditEntry
   ): Promise<Result<Channel, DatabaseUnavailable | HandleTaken | ChannelLimitReached>> {
     const handle = input.handle.toLowerCase();
     const written = await fromPromise(
-      () => insertOwnedChannel(this.db, input, limit),
+      () => insertOwnedChannel(this.db, input, limit, audit),
       this.conflict(handle, 'createOwned')
     );
 
@@ -155,10 +163,11 @@ export class PostgresChannelRepository implements ChannelRepositoryPort {
 
   async promote(
     userId: string,
-    channelId: string
+    channelId: string,
+    audit?: NewChannelAuditEntry
   ): Promise<Result<Channel | null, DatabaseUnavailable>> {
     const promoted = await fromPromise(
-      () => promoteChannel(this.db, userId, channelId),
+      () => promoteChannel(this.db, userId, channelId, audit),
       databaseUnavailable.during('promote')
     );
 
@@ -167,7 +176,8 @@ export class PostgresChannelRepository implements ChannelRepositoryPort {
 
   async update(
     id: string,
-    input: UpdateChannelInput
+    input: UpdateChannelInput,
+    audit?: NewChannelAuditEntry
   ): Promise<Result<Channel | null, DatabaseUnavailable | HandleTaken>> {
     const handle = input.handle?.toLowerCase();
 
@@ -185,6 +195,7 @@ export class PostgresChannelRepository implements ChannelRepositoryPort {
             .set(values)
             .where(eq(channels.id, id))
             .returning();
+          if (row && audit) await appendChannelAudit(tx, audit);
           return row;
         }),
       this.conflict(handle ?? '', 'update')

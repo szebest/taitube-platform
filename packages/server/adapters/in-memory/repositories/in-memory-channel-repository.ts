@@ -1,4 +1,4 @@
-import { type Result, err, ok } from '@kit/result';
+import { type Result, err, isErr, ok } from '@kit/result';
 import type { ChannelRepositoryPort } from '@vp/core/repositories';
 import {
   type Channel,
@@ -6,6 +6,7 @@ import {
   type ChannelStats,
   type CreateChannelInput,
   type ImageCrops,
+  type NewChannelAuditEntry,
   type UpdateChannelInput,
   isPublicFeedEligible,
 } from '@vp/domain';
@@ -19,6 +20,7 @@ import {
   handleTaken,
 } from '@vp/errors';
 import { uuidv7 } from 'uuidv7';
+import type { InMemoryChannelAuditRepository } from './in-memory-channel-audit-repository';
 import type { InMemoryChannelHandleHistoryRepository } from './in-memory-channel-handle-history-repository';
 import type { InMemoryVideoRepository } from './in-memory-video-repository';
 
@@ -53,7 +55,8 @@ export class InMemoryChannelRepository implements ChannelRepositoryPort {
 
   constructor(
     private readonly videosRepo: Pick<InMemoryVideoRepository, 'getAllVideos'>,
-    private readonly history: Pick<InMemoryChannelHandleHistoryRepository, 'retire' | 'release'>
+    private readonly history: Pick<InMemoryChannelHandleHistoryRepository, 'retire' | 'release'>,
+    private readonly audit: Pick<InMemoryChannelAuditRepository, 'append'>
   ) {
     this.seedDevChannels();
   }
@@ -150,16 +153,19 @@ export class InMemoryChannelRepository implements ChannelRepositoryPort {
 
   async createOwned(
     input: CreateChannelInput,
-    limit: number
+    limit: number,
+    audit?: NewChannelAuditEntry
   ): Promise<Result<Channel, DatabaseUnavailable | HandleTaken | ChannelLimitReached>> {
     const owned = this.ownedBy(input.userId);
     if (owned.length >= limit) return err(channelLimitReached(limit));
-    return this.insert(input, !owned.some((channel) => channel.isPrimary));
+    const inserted = this.insert(input, !owned.some((channel) => channel.isPrimary));
+    return isErr(inserted) ? inserted : this.audited(inserted.value, audit);
   }
 
   async promote(
     userId: string,
-    channelId: string
+    channelId: string,
+    audit?: NewChannelAuditEntry
   ): Promise<Result<Channel | null, DatabaseUnavailable>> {
     const target = this.channels.get(channelId);
     if (!target || target.userId !== userId) return ok(null);
@@ -169,7 +175,18 @@ export class InMemoryChannelRepository implements ChannelRepositoryPort {
       const isPrimary = channel.id === channelId;
       if (channel.isPrimary !== isPrimary) Object.assign(channel, { isPrimary, updatedAt: now });
     }
-    return ok(target);
+    return this.audited(target, audit);
+  }
+
+  private async audited<T>(
+    written: T,
+    audit: NewChannelAuditEntry | undefined
+  ): Promise<Result<T, DatabaseUnavailable>> {
+    if (audit) {
+      const appended = await this.audit.append(audit);
+      if (isErr(appended)) return appended;
+    }
+    return ok(written);
   }
 
   private insert(input: CreateChannelInput, isPrimary: boolean): Result<Channel, HandleTaken> {
@@ -209,7 +226,8 @@ export class InMemoryChannelRepository implements ChannelRepositoryPort {
 
   async update(
     id: string,
-    input: UpdateChannelInput
+    input: UpdateChannelInput,
+    audit?: NewChannelAuditEntry
   ): Promise<Result<Channel | null, DatabaseUnavailable | HandleTaken>> {
     const channel = this.channels.get(id);
     if (!channel) return ok(null);
@@ -235,7 +253,7 @@ export class InMemoryChannelRepository implements ChannelRepositoryPort {
     if (input.bannerLink !== undefined) channel.bannerLink = input.bannerLink;
     channel.updatedAt = new Date();
 
-    return ok(channel);
+    return this.audited(channel, audit);
   }
 
   private changeHandle(channel: Channel, handle: string, at: Date): void {

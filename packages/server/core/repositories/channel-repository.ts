@@ -1,5 +1,11 @@
 import type { Result } from '@kit/result';
-import type { Channel, ChannelStats, CreateChannelInput, UpdateChannelInput } from '@vp/domain';
+import type {
+  Channel,
+  ChannelStats,
+  CreateChannelInput,
+  NewChannelAuditEntry,
+  UpdateChannelInput,
+} from '@vp/domain';
 import type { ChannelLimitReached, DatabaseUnavailable, HandleTaken } from '@vp/errors';
 
 /**
@@ -26,15 +32,22 @@ export interface ChannelRepositoryPort {
   /**
    * A further channel, refused once the user owns `limit`; concurrent calls for one user are
    * serialised, so they never pass the limit together. Primary only when the user had none.
+   * `audit`, here and on `promote` and `update`, is written with the change and never without it.
    */
   createOwned(
     input: CreateChannelInput,
-    limit: number
+    limit: number,
+    audit?: NewChannelAuditEntry
   ): Promise<Result<Channel, DatabaseUnavailable | HandleTaken | ChannelLimitReached>>;
   /** Makes the channel the user's one primary; `ok(null)` when the user does not own it. */
-  promote(userId: string, channelId: string): Promise<Result<Channel | null, DatabaseUnavailable>>;
+  promote(
+    userId: string,
+    channelId: string,
+    audit?: NewChannelAuditEntry
+  ): Promise<Result<Channel | null, DatabaseUnavailable>>;
   update(
     id: string,
-    input: UpdateChannelInput
+    input: UpdateChannelInput,
+    audit?: NewChannelAuditEntry
   ): Promise<Result<Channel | null, DatabaseUnavailable | HandleTaken>>;
 }

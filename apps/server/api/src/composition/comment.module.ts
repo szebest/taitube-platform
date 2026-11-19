@@ -26,7 +26,6 @@ export function registerCommentServices(c: Container): Container {
           comments: repositories().comments,
           videos: repositories().videos,
           members: repositories().channelMembers,
-          audit: repositories().channelAudit,
           settings: repositories().commentSettings,
           restrictions: repositories().channelUserRestrictions,
           trusted: repositories().trustedCommenters,

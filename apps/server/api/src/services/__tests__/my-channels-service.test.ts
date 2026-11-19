@@ -14,7 +14,6 @@ function serviceOver(repositories: InMemoryRepositories, maxOwned = 3) {
     channels: repositories.channels,
     handleHistory: repositories.channelHandleHistory,
     members: repositories.channelMembers,
-    audit: repositories.channelAudit,
     maxOwned,
     now: () => AT,
   });

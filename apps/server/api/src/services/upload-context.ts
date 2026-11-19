@@ -1,7 +1,6 @@
 import { type Result, err, isErr, map, ok } from '@kit/result';
 import type { JobQueue, MultipartStorage, StorageClient } from '@vp/core/ports';
 import type {
-  ChannelAuditRepositoryPort,
   EventRepository,
   UploadRecord,
   UploadRepository,
@@ -22,7 +21,6 @@ export interface UploadContext {
   uploads: UploadRepository;
   videos: VideoRepository;
   events: EventRepository;
-  audit: Pick<ChannelAuditRepositoryPort, 'append'>;
   users: UserRepository;
   storage: StorageClient;
   multipart: MultipartStorage;

@@ -99,9 +99,12 @@ export interface CommentRepositoryPort {
   ): Promise<Result<CommentThread[], DatabaseUnavailable>>;
   /**
    * Answers null, and writes nothing, when the parent was removed before the reply landed. The
-   * thread counts the replies its author may see.
+   * thread counts the replies its author may see; `audit` is written with the comment, never without.
    */
-  create(input: NewCommentInput): Promise<Result<CommentThread | null, DatabaseUnavailable>>;
+  create(
+    input: NewCommentInput,
+    audit?: NewChannelAuditEntry
+  ): Promise<Result<CommentThread | null, DatabaseUnavailable>>;
   /**
    * A hold takes the comment, and the replies under it, off the count in the same transaction and
    * tells the moderators; the question flag is rewritten either way.

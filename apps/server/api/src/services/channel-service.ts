@@ -27,7 +27,11 @@ import {
 import type { CdnBase } from '@vp/env-schema';
 import { type DatabaseUnavailable, ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import type { ChannelIdentityService, IdentityFailure } from './channel-identity-service';
+import {
+  type ChannelIdentityService,
+  type IdentityFailure,
+  channelChange,
+} from './channel-identity-service';
 import { type ProvisionFailure, findChannelByIdOrHandle, provisionAccount } from './channel-lookup';
 import { type ChannelView, toChannelView, toOwnerExtras } from './channel-views';
 import { decodeCreatedAtCursor, createdAtCursorPayload } from './cursor';
@@ -137,20 +141,20 @@ export class ChannelService {
     const identity = await this.deps.identity.decide(existing.value, input);
     if (isErr(identity)) return identity;
 
-    const updated = await this.deps.channels.update(existing.value.id, {
-      ...identity.value,
-      displayName: input.displayName,
-      avatarUrl: input.avatarUrl,
-      bannerUrl: input.bannerUrl,
-      bio: input.bio,
-    });
+    const { id } = existing.value;
+    const updated = await this.deps.channels.update(
+      id,
+      {
+        ...identity.value,
+        displayName: input.displayName,
+        avatarUrl: input.avatarUrl,
+        bannerUrl: input.bannerUrl,
+        bio: input.bio,
+      },
+      identity.value.handle === undefined ? undefined : channelChange(user, id, ['handle'])
+    );
     if (isErr(updated)) return updated;
     if (!updated.value) return err(channelNotFound(acting.channelId));
-
-    if (identity.value.handle !== undefined) {
-      const recorded = await this.deps.identity.recordChange(user, updated.value.id, ['handle']);
-      if (isErr(recorded)) return recorded;
-    }
     return await this.ownerChannelView(updated.value);
   }
 
