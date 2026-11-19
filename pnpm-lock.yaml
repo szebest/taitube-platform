@@ -2648,6 +2648,9 @@ importers:
 
   packages/server/events:
     dependencies:
+      '@kit/keyspace':
+        specifier: workspace:*
+        version: link:../../platform/server/keyspace
       '@kit/result':
         specifier: workspace:*
         version: link:../../platform/universal/result

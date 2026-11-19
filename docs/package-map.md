@@ -42,7 +42,7 @@ scope (platform or app) and the tier are the directory and the layer is `vp.laye
 | `@vp/errors` | `packages/universal/errors` | app | universal | T4 | `@kit/di` | `@kit/result`, `@kit/testing`, `@kit/tsconfig` |
 | `@kit/design-tokens` | `packages/platform/universal/design-tokens` | platform | universal | T5 | `@kit/appearance`, `@kit/result`, `@vp/errors` | `@kit/testing`, `@kit/tsconfig` |
 | `@kit/pagination` | `packages/platform/universal/pagination` | platform | universal | T5 | `@kit/result`, `@vp/errors` | `@kit/testing`, `@kit/tsconfig` |
-| `@vp/events` | `packages/server/events` | app | server | T5 | `@kit/result`, `@vp/errors` | `@kit/testing`, `@kit/tsconfig` |
+| `@vp/events` | `packages/server/events` | app | server | T5 | `@kit/keyspace`, `@kit/result`, `@vp/errors` | `@kit/testing`, `@kit/tsconfig` |
 | `@vp/ffmpeg` | `packages/server/ffmpeg` | app | server | T5 | `@kit/primitives`, `@kit/result`, `@vp/domain`, `@vp/errors`, `@vp/job-contracts`, `@vp/storage` | `@kit/testing`, `@kit/tsconfig` |
 | `@vp/whisper` | `packages/server/whisper` | app | server | T5 | `@kit/result`, `@vp/domain`, `@vp/errors` | `@kit/testing`, `@kit/tsconfig` |
 | `@vp/messages` | `packages/universal/messages` | app | universal | T5 | `@kit/intl`, `@kit/result`, `@vp/errors` | `@kit/testing`, `@kit/tsconfig` |
