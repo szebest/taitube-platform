@@ -1,5 +1,5 @@
+import type { AnyFailure } from '@kit/errors';
 import { type Result, isErr } from '@kit/result';
-import type { AnyFailure } from '@vp/errors';
 
 export function validateWith<V>(rule: (value: V) => Result<unknown, AnyFailure>) {
   return ({ value }: { value: V }): string | undefined => {

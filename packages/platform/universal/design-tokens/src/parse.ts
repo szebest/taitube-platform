@@ -1,5 +1,6 @@
+import { type InputFailure } from '@kit/errors';
 import { err, ok, type Result } from '@kit/result';
-import { ErrorCodes, type InputFailure } from '@vp/errors';
+import { ErrorCodes } from '@vp/errors';
 import type { ZodType } from 'zod';
 import type { Ref } from './schema/ref';
 import { type ResolvedTheme, resolvedThemeSchema, type Theme, ThemeSchema } from './schema/theme';

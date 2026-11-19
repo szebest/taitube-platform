@@ -1,5 +1,6 @@
+import { type InputFailure } from '@kit/errors';
 import { type Result, err, ok, tryCatch } from '@kit/result';
-import { ErrorCodes, type InputFailure } from '@vp/errors';
+import { ErrorCodes } from '@vp/errors';
 
 /**
  * The keyset a cursor carries: the sort key and tiebreaker of the last row on

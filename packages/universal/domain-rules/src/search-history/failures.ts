@@ -1,4 +1,5 @@
-import { ErrorCodes, type Failure } from '@vp/errors';
+import { type Failure } from '@kit/errors';
+import { ErrorCodes } from '@vp/errors';
 
 export type SearchHistoryNotFound = Failure<
   typeof ErrorCodes.SEARCH_HISTORY_NOT_FOUND,

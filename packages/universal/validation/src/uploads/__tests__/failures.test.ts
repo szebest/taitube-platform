@@ -1,4 +1,5 @@
-import { ErrorCodes, isInputFailure } from '@vp/errors';
+import { isInputFailure } from '@kit/errors';
+import { ErrorCodes } from '@vp/errors';
 import { invalidTitle, unsupportedContentType, uploadTooLarge } from '../failures';
 
 describe('@vp/validation: upload failures', () => {

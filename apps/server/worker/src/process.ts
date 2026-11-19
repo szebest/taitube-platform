@@ -5,11 +5,12 @@ import {
   shutdownOnce,
 } from '@kit/composition';
 import { loadEnv } from '@kit/config';
+import { asThrowable } from '@kit/errors';
 import { LogContext, type Logger, createLogger } from '@kit/logger';
 import { registeredTracing } from '@kit/observability';
 import { fromPromise, ignore, isErr } from '@kit/result';
 import { AppEnvSchema, toAppConfig } from '@vp/env-schema';
-import { asThrowable, errorCodeRegistry } from '@vp/errors';
+import { errorCodeRegistry } from '@vp/errors';
 import { mediaTools } from '@vp/ffmpeg';
 import { fingerprintTools } from '@vp/fingerprint';
 import { speechTools } from '@vp/whisper';

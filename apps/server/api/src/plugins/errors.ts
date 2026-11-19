@@ -1,12 +1,13 @@
 import { STATUS_CODES } from 'node:http';
 import type { Socket } from 'node:net';
+import { PipelineError } from '@kit/errors';
 import {
   PROBLEM_CONTENT_TYPE,
   type Problem,
   problemDetails,
   problemStatus,
 } from '@vp/api-contracts';
-import { type ErrorCode, ErrorCodes, PipelineError } from '@vp/errors';
+import { type ErrorCode, ErrorCodes } from '@vp/errors';
 import type {
   ConnectionError,
   FastifyError,

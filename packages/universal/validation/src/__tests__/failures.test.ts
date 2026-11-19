@@ -1,4 +1,4 @@
-import { isInputFailure } from '@vp/errors';
+import { isInputFailure } from '@kit/errors';
 import { defineFieldFailures } from '../failures';
 
 const { invalidField, invalidLength } = defineFieldFailures('BAD_INPUT');

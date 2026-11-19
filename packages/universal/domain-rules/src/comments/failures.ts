@@ -1,5 +1,6 @@
+import { type Failure } from '@kit/errors';
 import type { ModerationAction, ModerationState } from '@vp/domain';
-import { ErrorCodes, type Failure } from '@vp/errors';
+import { ErrorCodes } from '@vp/errors';
 
 export type CommentNotFound = Failure<typeof ErrorCodes.COMMENT_NOT_FOUND, { commentId: string }>;
 

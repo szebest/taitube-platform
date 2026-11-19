@@ -1,5 +1,5 @@
+import type { Failure } from '@kit/errors';
 import { type ErrorCode, ErrorCodes } from './error-codes';
-import type { Failure } from './failure';
 
 type RoomFailure<C extends ErrorCode> = Failure<C, { roomId: string }>;
 

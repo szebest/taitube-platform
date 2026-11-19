@@ -1,6 +1,7 @@
+import { TransientError } from '@kit/errors';
 import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
-import { ErrorCodes, TransientError } from '@vp/errors';
+import { ErrorCodes } from '@vp/errors';
 import { SEEDED } from '@vp/testing-fixtures';
 import { uuidv7 } from 'uuidv7';
 import { STAGE_SETTINGS } from '../../../__tests__/stage-settings';

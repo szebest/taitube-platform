@@ -7,8 +7,9 @@ import {
   TOKEN_GROUPS,
   themeCss,
 } from '@kit/design-tokens';
+import { type Failure, type InputFailure } from '@kit/errors';
 import { andThen, err, map, ok, type Result, tryCatch } from '@kit/result';
-import { ErrorCodes, type Failure, type InputFailure } from '@vp/errors';
+import { ErrorCodes } from '@vp/errors';
 import { ramps } from '../tokens/ref';
 import { appearance } from './registry';
 

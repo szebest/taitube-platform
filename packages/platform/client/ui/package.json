@@ -52,6 +52,7 @@
   },
   "dependencies": {
     "@kit/design-tokens": "workspace:*",
+    "@kit/errors": "workspace:*",
     "@kit/result": "workspace:*",
     "@vp/domain": "workspace:*",
     "@vp/errors": "workspace:*"

@@ -1,3 +1,4 @@
+import { type Failure } from '@kit/errors';
 import { assertNever, err, ignore, isErr, map, ok, parseJson, type Result } from '@kit/result';
 import {
   type LiveChatBroadcast,
@@ -21,12 +22,7 @@ import {
   type LiveStreamNotFound,
 } from '@vp/domain-rules';
 import type { LiveChatTuning } from '@vp/env-schema';
-import {
-  type CacheUnavailable,
-  type DatabaseUnavailable,
-  ErrorCodes,
-  type Failure,
-} from '@vp/errors';
+import { type CacheUnavailable, type DatabaseUnavailable, ErrorCodes } from '@vp/errors';
 import { canModerateLiveStream, type UserContext } from '@vp/permissions';
 import {
   type InvalidField,

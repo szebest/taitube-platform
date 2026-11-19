@@ -1,5 +1,6 @@
+import { type Failure, PermanentError } from '@kit/errors';
 import { type Result, err, ok, tryCatch } from '@kit/result';
-import { ErrorCodes, type Failure, PermanentError } from '@vp/errors';
+import { ErrorCodes } from '@vp/errors';
 import { type FfmpegProcessLimits, runFfmpeg } from '@vp/ffmpeg';
 import { z } from 'zod';
 

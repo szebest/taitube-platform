@@ -26,6 +26,7 @@
   },
   "dependencies": {
     "@kit/components": "workspace:*",
+    "@kit/errors": "workspace:*",
     "@kit/intl": "workspace:*",
     "@kit/intl-react": "workspace:*",
     "@kit/result": "workspace:*",

@@ -1,3 +1,4 @@
+import { type Failure } from '@kit/errors';
 import { err, isErr, ok, type Result } from '@kit/result';
 import type { WatchPartyTicketGrant } from '@vp/core/ports';
 import { admissionLimit, effectiveCapacity, memberKeyOf, type MemberKind } from '@vp/domain';
@@ -5,7 +6,6 @@ import {
   type CacheUnavailable,
   type DatabaseUnavailable,
   ErrorCodes,
-  type Failure,
   type WatchPartyBanned,
   type WatchPartyClosed,
   type WatchPartyFull,

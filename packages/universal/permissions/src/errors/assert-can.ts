@@ -1,4 +1,5 @@
-import { ErrorCodes, PermanentError } from '@vp/errors';
+import { PermanentError } from '@kit/errors';
+import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '../types/index';
 
 export interface AssertCanOptions {

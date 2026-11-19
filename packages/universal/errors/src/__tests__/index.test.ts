@@ -1,10 +1,5 @@
-import {
-  ApiErrorCodes,
-  ErrorCodes,
-  PermanentError,
-  PipelineErrorCodes,
-  TransientError,
-} from '../index';
+import { PermanentError, TransientError } from '@kit/errors';
+import { ApiErrorCodes, ErrorCodes, PipelineErrorCodes } from '../index';
 
 describe('@vp/errors smoke test', () => {
   it('instantiates PermanentError with correct properties', () => {

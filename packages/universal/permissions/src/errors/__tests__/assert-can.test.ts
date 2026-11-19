@@ -1,4 +1,5 @@
-import { type ErrorCode, ErrorCodes, PermanentError } from '@vp/errors';
+import { PermanentError } from '@kit/errors';
+import { type ErrorCode, ErrorCodes } from '@vp/errors';
 import { standardUser } from '../../__mocks__/fixtures';
 import { type AssertCanOptions, assertCan } from '../assert-can';
 

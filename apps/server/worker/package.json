@@ -15,6 +15,7 @@
   "dependencies": {
     "@kit/composition": "workspace:*",
     "@kit/config": "workspace:*",
+    "@kit/errors": "workspace:*",
     "@kit/logger": "workspace:*",
     "@kit/object-storage": "workspace:*",
     "@kit/observability": "workspace:*",

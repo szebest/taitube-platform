@@ -1,3 +1,4 @@
+import { PermanentError } from '@kit/errors';
 import type { Logger } from '@kit/logger';
 import {
   InMemoryCacheClient,
@@ -11,7 +12,7 @@ import { RedisReactionCacheAdapter } from '@vp/adapters/redis/redis-reaction-cac
 import type { CacheClient, StorageClient } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import { asCdnBase, inProcessAppConfig } from '@vp/env-schema';
-import { ErrorCodes, PermanentError } from '@vp/errors';
+import { ErrorCodes } from '@vp/errors';
 import type { MediaTools } from '@vp/ffmpeg';
 import * as ffmpeg from '@vp/ffmpeg';
 import { fingerprintTools } from '@vp/fingerprint';

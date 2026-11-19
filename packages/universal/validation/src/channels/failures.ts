@@ -1,4 +1,5 @@
-import { ErrorCodes, type InputFailure } from '@vp/errors';
+import { type InputFailure } from '@kit/errors';
+import { ErrorCodes } from '@vp/errors';
 import type { LengthBounds } from '../failures';
 import { type InvalidField, invalidField } from '../field-failures';
 
