@@ -178,7 +178,7 @@ bullmq_queue_jobs{queue="transcode-1080p",state="active"} ${currentActive}
     expect(log.lines()).toContainEqual(expect.objectContaining(logged));
   });
 
-  it('stamps each poll with the clock it is handed', async () => {
+  it('stamps each poll with the clock it is handed', () => {
     const now = vi.fn(() => 42);
     const autoscaler = new ComposeAutoscaler({
       metricsUrl: 'http://mock-api:9464/metrics',
@@ -190,7 +190,8 @@ bullmq_queue_jobs{queue="transcode-1080p",state="active"} ${currentActive}
     });
 
     autoscaler.start();
-    await vi.waitFor(() => expect(now).toHaveBeenCalledOnce());
     autoscaler.stop();
+
+    expect(now).toHaveBeenCalledOnce();
   });
 });
