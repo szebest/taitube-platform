@@ -1,5 +1,7 @@
 import {
   countsFromBuffer,
+  deviceViewField,
+  devicesFromBuffer,
   hourlyFromBuffer,
   hourlyViewField,
   retentionFromBuffer,
@@ -44,6 +46,43 @@ describe('view buffer fields', () => {
     expect(countsFromBuffer({ [viewBufferField(VIDEO, '2026-03-10', 'watch')]: '9' })).toEqual([
       { videoId: VIDEO, viewDate: '2026-03-10', views: 0, watchSeconds: 9 },
     ]);
+  });
+});
+
+describe('device view buffer fields', () => {
+  it('names a field by video, day and device, beside the views and watch fields of the same hash', () => {
+    expect(deviceViewField(VIDEO, '2026-03-10', 'mobile')).toBe(
+      `${VIDEO}|2026-03-10|device:mobile`
+    );
+  });
+
+  it('reads the device fields of a views hash and leaves the other kinds to countsFromBuffer', () => {
+    const hash = {
+      [viewBufferField(VIDEO, '2026-03-10', 'views')]: '5',
+      [viewBufferField(VIDEO, '2026-03-10', 'watch')]: '40',
+      [deviceViewField(VIDEO, '2026-03-10', 'mobile')]: '3',
+      [deviceViewField(VIDEO, '2026-03-10', 'desktop')]: '2',
+      [deviceViewField(OTHER, '2026-03-11', 'unknown')]: '1',
+    };
+
+    expect(devicesFromBuffer(hash)).toEqual([
+      { videoId: VIDEO, viewDate: '2026-03-10', device: 'mobile', views: 3 },
+      { videoId: VIDEO, viewDate: '2026-03-10', device: 'desktop', views: 2 },
+      { videoId: OTHER, viewDate: '2026-03-11', device: 'unknown', views: 1 },
+    ]);
+    expect(countsFromBuffer(hash)).toEqual([
+      { videoId: VIDEO, viewDate: '2026-03-10', views: 5, watchSeconds: 40 },
+    ]);
+  });
+
+  it.each([
+    ['a field of another shape', { stray: '4' }],
+    ['a device nobody reports', { [`${VIDEO}|2026-03-10|device:watch`]: '4' }],
+    ['a field with extra parts', { [`${VIDEO}|2026-03-10|device:mobile|x`]: '4' }],
+    ['a count that is not a number', { [deviceViewField(VIDEO, '2026-03-10', 'mobile')]: 'many' }],
+    ['a count of zero', { [deviceViewField(VIDEO, '2026-03-10', 'mobile')]: '0' }],
+  ])('skips %s', (_name, hash) => {
+    expect(devicesFromBuffer(hash)).toEqual([]);
   });
 });
 

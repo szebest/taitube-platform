@@ -302,6 +302,13 @@
       "when": 1794835517491,
       "tag": "0042_subscription_source_video",
       "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1794986267648,
+      "tag": "0043_video_views_device_daily",
+      "breakpoints": true
     }
   ]
 }

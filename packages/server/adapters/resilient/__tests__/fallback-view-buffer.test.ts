@@ -127,6 +127,7 @@ describe('FallbackViewBuffer', () => {
           sessionId: 's1',
           viewDate: DAY,
           viewHour: HOUR,
+          device: 'tablet',
           watchedSeconds: 9,
           requiredSeconds: 5,
         })
@@ -135,6 +136,7 @@ describe('FallbackViewBuffer', () => {
 
     expect(expectOk(await primary.snapshot('batch'))).toMatchObject({
       counts: [{ views: 1, watchSeconds: 9 }],
+      devices: [{ device: 'tablet', views: 1 }],
       retention: [{ percent: 0 }, { percent: 5 }],
     });
   });

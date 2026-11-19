@@ -59,6 +59,7 @@ describe('AnalyticsService', () => {
           { videoId: OTHER_VIDEO, viewHour: '2026-03-10T07:00:00.000Z', views: 5 },
           { videoId: VIDEO, viewHour: '2026-03-08T08:00:00.000Z', views: 9 },
         ],
+        devices: [],
       })
     );
   });
@@ -145,6 +146,7 @@ describe('AnalyticsService', () => {
             { videoId: VIDEO, percent: 50, viewers: 4 },
           ],
           hourly: [],
+          devices: [],
         })
       );
 

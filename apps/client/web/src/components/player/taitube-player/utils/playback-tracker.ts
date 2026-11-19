@@ -1,5 +1,6 @@
 import { MS_PER_SECOND } from '@kit/primitives';
 import type { PlaybackEvent, PlaybackEventType } from '@vp/api-contracts';
+import type { ViewDevice } from '@vp/domain';
 import type { PlaybackProgress } from '#app/lib/player/taitube-player-props';
 
 const HEARTBEAT_SECONDS = 30;
@@ -7,6 +8,7 @@ const HEARTBEAT_SECONDS = 30;
 export interface PlaybackTrackerOptions {
   videoId: string;
   sessionUuid: string;
+  device?: ViewDevice;
   send: (event: PlaybackEvent) => void;
   now?: () => number;
 }
@@ -14,6 +16,7 @@ export interface PlaybackTrackerOptions {
 export function createPlaybackTracker({
   videoId,
   sessionUuid,
+  device,
   send,
   now = Date.now,
 }: PlaybackTrackerOptions) {
@@ -59,6 +62,7 @@ export function createPlaybackTracker({
       rebufferingMs: Math.round(rebufferingMs),
       watchedSeconds: watchedMs / MS_PER_SECOND,
       rendition: currentRendition,
+      device,
     });
     watchedMs = 0;
     rebufferingMs = 0;

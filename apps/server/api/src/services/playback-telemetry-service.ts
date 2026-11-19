@@ -44,6 +44,7 @@ export class PlaybackTelemetryService {
       videoId: event.videoId,
       sessionId: event.sessionUuid,
       ...viewBucketsOf(new Date(this.deps.now())),
+      device: event.device ?? 'unknown',
       watchedSeconds: event.watchedSeconds,
       requiredSeconds: requiredWatchSeconds(event.duration, this.deps.limits),
     });
