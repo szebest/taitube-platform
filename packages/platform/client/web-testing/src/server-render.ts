@@ -1,8 +1,6 @@
 import type { AnyRouter } from '@tanstack/react-router';
 import { createRequestHandler, defaultStreamHandler } from '@tanstack/react-router/ssr/server';
 import { requestHandler } from '@tanstack/react-start/server';
-import type { HttpHandler } from 'msw/http';
-import { apiServer } from './api-server';
 
 export type ServerRender = {
   status: number;
@@ -13,7 +11,6 @@ export type ServerRender = {
 };
 
 type ServerRenderOptions = {
-  handlers?: HttpHandler[];
   /** The request's headers, the theme cookie among them. */
   headers?: HeadersInit;
 };
@@ -25,9 +22,8 @@ type ServerRenderOptions = {
 export async function serverRender(
   getRouter: () => AnyRouter,
   path: string,
-  { handlers = [], headers }: ServerRenderOptions = {}
+  { headers }: ServerRenderOptions = {}
 ): Promise<ServerRender> {
-  apiServer.use(...handlers);
   const answer = requestHandler((request) =>
     createRequestHandler({ request, createRouter: () => getRouter() })(defaultStreamHandler)
   );

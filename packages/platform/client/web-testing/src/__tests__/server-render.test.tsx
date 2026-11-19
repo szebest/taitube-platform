@@ -33,7 +33,7 @@ const routeTree = rootRoute.addChildren([
 
 const getRouter = () => createRouter({ routeTree });
 
-describe('@vp/web-testing: serverRender', () => {
+describe('@kit/web-testing: serverRender', () => {
   it('answers the page the router renders, and its main area without the layout', async () => {
     const rendered = await serverRender(getRouter, '/');
 

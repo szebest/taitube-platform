@@ -124,7 +124,7 @@
       "project": ["src/**/*.ts!", "!src/**/__tests__/**!"],
       "vitest": ["vitest.config.ts", "integration.config.ts"]
     },
-    "packages/client/web-testing": {
+    "packages/**/client/web-testing": {
       "includeEntryExports": false,
       "project": ["src/**/*.{ts,tsx}!", "!src/**/__tests__/**!"]
     },

@@ -884,5 +884,15 @@
     }
   },
   "@vp/vite-preset": "@kit/vite-preset",
-  "@vp/web-telemetry": "@kit/web-telemetry"
+  "@vp/web-telemetry": "@kit/web-telemetry",
+  "@vp/web-testing": {
+    "./dom": {
+      "axeViolations": "@kit/web-testing/dom",
+      "createRenderCounter": "@kit/web-testing/dom",
+      "showCues": "@kit/web-testing/dom"
+    },
+    "./jsdom.setup": "@kit/web-testing",
+    "./server-functions.setup": "@kit/web-testing",
+    "./settle.setup": "@kit/web-testing"
+  }
 }

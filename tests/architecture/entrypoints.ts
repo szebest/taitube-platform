@@ -2,6 +2,7 @@ import { packageDir } from '../../scripts/workspace-packages';
 
 const WEB_TELEMETRY = packageDir('@kit/web-telemetry');
 const CONFIG = packageDir('@kit/config');
+const WEB_TESTING = packageDir('@kit/web-testing');
 
 /**
  * Where a process starts. Module-level side effects, `console` and reading the environment belong
@@ -24,6 +25,7 @@ export const ENTRYPOINTS: readonly string[] = [
   'packages/server/upload-client/src/main.ts',
   `${WEB_TELEMETRY}/src/*.setup.ts`,
   'packages/client/web-testing/src/*.setup.ts',
+  `${WEB_TESTING}/src/*.setup.ts`,
   'apps/client/web/src/sw.ts',
   'scripts/*.ts',
   'tests/browser/playback.ts',

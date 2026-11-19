@@ -7,8 +7,8 @@ import {
   trapLeakedUpdates,
 } from './test-settle';
 
-// The last setup file, so its afterEach runs first: the test settles and unmounts before the API
-// server drops its handlers. Testing Library's own cleanup is off (RTL_SKIP_AUTO_CLEANUP), since it
+// The last setup file, so its afterEach runs first: the test settles and unmounts before the
+// app's own setup files tear down. Testing Library's own cleanup is off (RTL_SKIP_AUTO_CLEANUP), since it
 // would unmount before anything here could wait.
 trackQueryClients();
 trapLeakedUpdates();

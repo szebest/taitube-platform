@@ -75,11 +75,11 @@ vi.mock(import('@tanstack/react-start'), async (importOriginal) => {
   };
 });
 
-// Node's BroadcastChannel reaches the other test files running in worker threads of the same process, so the app's own channels are named per file.
+// Node's BroadcastChannel reaches the other test files running in worker threads of the same process, so every channel is named per file.
 const PerFileBroadcastChannel = ((Native, scope) =>
   class extends Native {
     constructor(name: string) {
-      super(name.startsWith('vp.') ? `${scope}:${name}` : name);
+      super(`${scope}:${name}`);
     }
   })(globalThis.BroadcastChannel, crypto.randomUUID());
 Object.defineProperty(globalThis, 'BroadcastChannel', {

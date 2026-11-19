@@ -11,7 +11,7 @@ const remember = createServerFn()
 const recall = createServerFn().handler(() => getCookie('kept') ?? null);
 
 // jsdom.setup installs `overCookieRequest` as Start's `createServerFn`.
-describe('@vp/web-testing: server functions in the browser', () => {
+describe('@kit/web-testing: server functions in the browser', () => {
   it('carries the cookies a server function set to the next one, as the browser would', async () => {
     await remember({ data: { value: 'from-the-server' } });
 

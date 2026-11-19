@@ -11,7 +11,7 @@ function videoWithTrack() {
   return { video, element };
 }
 
-describe('@vp/web-testing: text tracks', () => {
+describe('@kit/web-testing: text tracks', () => {
   it('lists the track of each <track> child under its id, language and kind', () => {
     const { video } = videoWithTrack();
 
