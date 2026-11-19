@@ -42,21 +42,19 @@ test.describe('a guest keeps settings on the device, and the sign-in carries the
     api,
     signIn,
   }) => {
-    const viewer = await api('viewer');
-    await viewer.patch('/v1/me/preferences', {
+    const stranger = await api('stranger');
+    const saved = await stranger.patch('/v1/me/preferences', {
       data: { version: 0, playback: { speed: 2 } },
     });
+    expect(saved.ok()).toBe(true);
     await page.goto('/settings/playback', { waitUntil: 'networkidle' });
     await page.getByRole('combobox', { name: 'Default speed' }).click();
     await page.getByRole('option', { name: '1.5x' }).click();
 
-    await signIn('viewer');
-    const kept = expect(page.getByText('Kept your choice for Speed', { exact: true })).toBeVisible({
-      timeout: 15_000,
-    });
-    await page.reload();
+    await signIn('stranger');
+    await page.reload({ waitUntil: 'networkidle' });
 
-    await kept;
+    await expect(page.getByText('Kept your choice for Speed', { exact: true })).toBeVisible();
     await expect(page.getByRole('combobox', { name: 'Default speed' })).toContainText('1.5x');
   });
 });
