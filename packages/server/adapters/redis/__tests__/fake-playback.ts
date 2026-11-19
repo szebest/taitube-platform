@@ -14,6 +14,7 @@ export function recordPlayback(store: PlaybackStore, keys: string[], argv: strin
     required = '0',
     viewsField = '',
     hourlyField = '',
+    deviceField = '',
   ] = argv;
   const session = store.hashes.get(sessionKey) ?? new Map<string, string>();
   const buffer = store.hashes.get(bufferKey) ?? new Map<string, string>();
@@ -41,6 +42,7 @@ export function recordPlayback(store: PlaybackStore, keys: string[], argv: strin
   if (sketch.has(viewer)) return 0;
   sketch.add(viewer);
   buffer.set(viewsField, String(Number(buffer.get(viewsField) ?? 0) + 1));
+  buffer.set(deviceField, String(Number(buffer.get(deviceField) ?? 0) + 1));
   const hourly = store.hashes.get(hourlyKey) ?? new Map<string, string>();
   hourly.set(hourlyField, String(Number(hourly.get(hourlyField) ?? 0) + 1));
   store.hashes.set(hourlyKey, hourly);

@@ -13,6 +13,8 @@ import { CacheKeys } from '@vp/events';
 import type { Redis } from 'ioredis';
 import {
   countsFromBuffer,
+  deviceViewField,
+  devicesFromBuffer,
   hourlyFromBuffer,
   hourlyViewField,
   retentionFromBuffer,
@@ -48,6 +50,7 @@ local added = redis.call('PFADD', KEYS[2], ARGV[1])
 redis.call('EXPIRE', KEYS[2], ARGV[2])
 if added == 1 then
   redis.call('HINCRBY', KEYS[3], ARGV[6], 1)
+  redis.call('HINCRBY', KEYS[3], ARGV[8], 1)
   redis.call('HINCRBY', KEYS[4], ARGV[7], 1)
 end
 return added`,
@@ -147,6 +150,7 @@ export class RedisViewBufferAdapter implements ViewBufferPort {
     sessionId,
     viewDate,
     viewHour,
+    device,
     watchedSeconds,
     requiredSeconds,
   }: PlaybackWatch): Promise<Result<PlaybackWatchOutcome, CacheUnavailable>> {
@@ -165,7 +169,8 @@ export class RedisViewBufferAdapter implements ViewBufferPort {
           watchedSeconds,
           requiredSeconds,
           viewBufferField(videoId, viewDate, 'views'),
-          hourlyViewField(videoId, viewHour)
+          hourlyViewField(videoId, viewHour),
+          deviceViewField(videoId, viewDate, device)
         ),
       cacheUnavailable.during('recordPlayback')
     );
@@ -207,6 +212,7 @@ export class RedisViewBufferAdapter implements ViewBufferPort {
         return map(staged, ([views, retention, hourly]) => ({
           batchId: id,
           counts: countsFromBuffer(views),
+          devices: devicesFromBuffer(views),
           retention: retentionFromBuffer(retention),
           hourly: hourlyFromBuffer(hourly),
         }));

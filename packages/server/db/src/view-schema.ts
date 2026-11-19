@@ -1,5 +1,8 @@
+import { VIEW_DEVICES, type ViewDevice } from '@vp/domain';
+import { sql } from 'drizzle-orm';
 import {
   bigint,
+  check,
   date,
   index,
   integer,
@@ -9,7 +12,7 @@ import {
   text,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { timestamptz } from './columns';
+import { listOf, timestamptz } from './columns';
 import { videos } from './schema';
 
 export const videoViewsDaily = pgTable(
@@ -25,6 +28,25 @@ export const videoViewsDaily = pgTable(
   (table) => [
     primaryKey({ columns: [table.videoId, table.viewDate] }),
     index('video_views_daily_date_video_idx').on(table.viewDate.desc(), table.videoId),
+  ]
+);
+
+export const videoViewsDeviceDaily = pgTable(
+  'video_views_device_daily',
+  {
+    videoId: uuid('video_id')
+      .notNull()
+      .references(() => videos.id, { onDelete: 'cascade' }),
+    viewDate: date('view_date', { mode: 'string' }).notNull(),
+    device: text('device').$type<ViewDevice>().notNull(),
+    views: integer('views').notNull().default(0),
+  },
+  (table) => [
+    primaryKey({ columns: [table.videoId, table.viewDate, table.device] }),
+    check(
+      'video_views_device_daily_device_check',
+      sql`${table.device} IN (${listOf(VIEW_DEVICES)})`
+    ),
   ]
 );
 

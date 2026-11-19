@@ -49,11 +49,11 @@ const ATTEMPTS: Attempt[] = [
     method: 'DELETE',
     path: (id) => `/v1/creator/videos/${id}`,
   },
-  {
-    name: "read another creator's video analytics",
+  ...['analytics', 'audience', 'benchmark'].map((leaf): Attempt => ({
+    name: `read another creator's video ${leaf}`,
     method: 'GET',
-    path: (id) => `/v1/creator/videos/${id}/analytics`,
-  },
+    path: (id) => `/v1/creator/videos/${id}/${leaf}`,
+  })),
   {
     name: "read another creator's private video as an operator",
     method: 'GET',
