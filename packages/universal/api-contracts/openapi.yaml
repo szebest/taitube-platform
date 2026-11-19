@@ -14320,6 +14320,13 @@ paths:
                           description: Why this comment was refused
                           type: string
                           enum:
+                            - VALIDATION_FAILED
+                            - INTERNAL
+                            - INVALID_CURSOR
+                            - FORMAT_UNSUPPORTED_LOCALE
+                            - FORMAT_UNKNOWN_OPTION
+                            - FORMAT_WRONG_KIND
+                            - FORMAT_UNRENDERABLE
                             - UPLOAD_TOO_LARGE
                             - UPLOAD_SIZE_MISMATCH
                             - UNSUPPORTED_CONTENT_TYPE
@@ -14332,9 +14339,7 @@ paths:
                             - FORBIDDEN
                             - RATE_LIMITED
                             - UNAUTHORIZED
-                            - VALIDATION_FAILED
                             - ROUTE_NOT_FOUND
-                            - INVALID_CURSOR
                             - CATEGORY_NOT_FOUND
                             - CATEGORY_SLUG_CONFLICT
                             - CATEGORY_IN_USE
@@ -14429,11 +14434,6 @@ paths:
                             - DATABASE_UNAVAILABLE
                             - CACHE_UNAVAILABLE
                             - QUEUE_UNAVAILABLE
-                            - INTERNAL
-                            - FORMAT_UNSUPPORTED_LOCALE
-                            - FORMAT_UNKNOWN_OPTION
-                            - FORMAT_WRONG_KIND
-                            - FORMAT_UNRENDERABLE
                             - UNSUPPORTED_CODEC
                             - CORRUPT_CONTAINER
                             - DURATION_EXCEEDED
