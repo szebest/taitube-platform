@@ -1,5 +1,5 @@
 name: Set up FFmpeg
-description: Ubuntu's FFmpeg, fpcalc for the screening stage and the fonts the drawtext filter needs, installed from .deb files cached per runner image, once per job. With background, the install runs beside the steps that follow and ffmpeg-ready waits for it.
+description: Ubuntu's FFmpeg, fpcalc for the screening stage and the fonts the drawtext filter needs, installed from .deb files cached per runner image, once per job; a new image starts from the previous image's files, so apt fetches only what changed. With background, the install runs beside the steps that follow and ffmpeg-ready waits for it.
 
 inputs:
   background:
@@ -17,7 +17,8 @@ runs:
         PACKAGES: ffmpeg fonts-dejavu-core fontconfig libchromaprint-tools
       run: |
         packages_hash=$(printf '%s' "$PACKAGES" | sha256sum | cut -c1-16)
-        echo "key=ffmpeg-debs-${ImageOS}-${ImageVersion}-${packages_hash}" >> "$GITHUB_OUTPUT"
+        echo "prefix=ffmpeg-debs-${ImageOS}-${packages_hash}-" >> "$GITHUB_OUTPUT"
+        echo "key=ffmpeg-debs-${ImageOS}-${packages_hash}-${ImageVersion}" >> "$GITHUB_OUTPUT"
         echo "packages=$PACKAGES" >> "$GITHUB_OUTPUT"
 
     - name: Restore the FFmpeg packages
@@ -27,28 +28,32 @@ runs:
       with:
         path: ~/ffmpeg-debs
         key: ${{ steps.key.outputs.key }}
-
-    - name: Download the FFmpeg packages
-      if: env.FFMPEG_SET_UP != 'true' && steps.cache.outputs.cache-hit != 'true'
-      shell: bash
-      env:
-        PACKAGES: ${{ steps.key.outputs.packages }}
-      run: |
-        sudo rm -f /var/lib/man-db/auto-update
-        sudo apt-get update -qq
-        sudo apt-get install -y -qq --download-only --no-install-recommends $PACKAGES
-        mkdir -p ~/ffmpeg-debs
-        cp /var/cache/apt/archives/*.deb ~/ffmpeg-debs/
+        restore-keys: ${{ steps.key.outputs.prefix }}
 
     - name: Install FFmpeg and fonts
       if: env.FFMPEG_SET_UP != 'true'
       shell: bash
       env:
         BACKGROUND: ${{ inputs.background }}
+        CACHE_HIT: ${{ steps.cache.outputs.cache-hit }}
+        PACKAGES: ${{ steps.key.outputs.packages }}
       run: |
         sudo rm -f /var/lib/man-db/auto-update
+        from_cache() {
+          sudo dpkg --force-unsafe-io -i ~/ffmpeg-debs/*.deb > /dev/null
+        }
+        from_apt() {
+          if compgen -G ~/'ffmpeg-debs/*.deb' > /dev/null; then
+            sudo cp ~/ffmpeg-debs/*.deb /var/cache/apt/archives/
+          fi
+          sudo apt-get update -qq \
+            && sudo apt-get install -y -qq --no-install-recommends $PACKAGES > /dev/null \
+            && sudo apt-get autoclean -qq \
+            && rm -rf ~/ffmpeg-debs && mkdir -p ~/ffmpeg-debs \
+            && cp /var/cache/apt/archives/*.deb ~/ffmpeg-debs/
+        }
         install() {
-          sudo dpkg --force-unsafe-io -i ~/ffmpeg-debs/*.deb > /dev/null \
+          { if [ "$CACHE_HIT" = true ]; then from_cache; else from_apt; fi; } \
             && ffmpeg -hide_banner -version | head -1 && fpcalc -version \
             && touch ~/ffmpeg-ready || touch ~/ffmpeg-failed
         }

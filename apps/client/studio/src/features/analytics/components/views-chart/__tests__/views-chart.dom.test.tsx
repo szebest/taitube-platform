@@ -5,8 +5,11 @@ import { apiServer, mockEndpoint, problemReply } from '@vp/web-testing';
 import { axeViolations } from '@vp/web-testing/dom';
 import { serveAnalytics } from '#app/features/analytics/__tests__/analytics-api.fixture';
 import { renderAnalytics } from '#app/features/analytics/__tests__/render-analytics';
+import { LazyViewsPlot } from '#app/features/analytics/components/views-plot/views-plot.lazy';
 import type { ViewsGranularity } from '#app/features/analytics/types';
 import { ViewsChart } from '../views-chart';
+
+beforeAll(() => LazyViewsPlot.preload());
 
 const renderChart = (granularity: ViewsGranularity = 'day') =>
   renderAnalytics(<ViewsChart scope={{ kind: 'channel' }} range="30d" granularity={granularity} />);

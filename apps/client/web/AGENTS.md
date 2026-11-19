@@ -483,8 +483,8 @@ analytics: the vitals beacon goes to this API and the spans to the local collect
 Fonts, icons and `hls.js` are bundled from `node_modules`. `local-first.test.ts` holds it. See
 [docs/LOCAL_FIRST.md](../../../docs/LOCAL_FIRST.md).
 
-### Rule 7: One test file per source file
-Specs live in `__tests__/` beside their source and use the Vitest globals without importing them. A page
+### Rule 7: Specs beside their source, where behaviour matters
+No spec per source file is required (`docs/standards/testing.md` section 8). Specs live in `__tests__/` beside their source and use the Vitest globals without importing them. A page
 renders through `renderPage(page, AppProviders)` (`@vp/web-testing/server`), which mounts it in a one-route
 TanStack router over memory history inside this app's providers (`src/__tests__/providers.tsx`: `AppProviders` for a
 guest, `signedIn(account)`, `asViewer(viewer)` for a permissions override; for a route, `SESSION`, the
@@ -492,7 +492,7 @@ cookie a signed-in request carries, `signInBrowser(account)` for jsdom and `devT
 `serverRender(getRouter, path)`, which answers a request with the real route tree the way the server does.
 
 A spec that clicks, types or waits for the browser to update is a `*.dom.test.{ts,tsx}` and runs under jsdom;
-`<stem>.dom.test.tsx` counts as the spec of `<stem>.tsx`. A route in the browser renders through
+`<stem>.dom.test.tsx` is the usual name for the spec of `<stem>.tsx`. A route in the browser renders through
 `renderRoute(getRouter, url, { handlers? })` (`@vp/web-testing/dom`): this app's router over memory history,
 its `QueryClient` set never to retry. Drive the app through URLs and clicks, not by mounting a page with
 hand-made providers:

@@ -71,3 +71,14 @@ jobs:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           pnpm -s flake-hunt --run-url "$RUN_URL" "$RUNNER_TEMP"/report-*.json
+
+      - name: Keep the round reports and the Playwright results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: flake-hunt-${{ matrix.suite }}
+          path: |
+            ${{ runner.temp }}/report-*.json
+            apps/client/*/e2e/test-results/**
+          if-no-files-found: ignore
+          retention-days: 7

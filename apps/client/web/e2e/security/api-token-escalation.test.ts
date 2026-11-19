@@ -1,6 +1,6 @@
-import type { APIRequestContext, PlaywrightWorkerArgs } from '@playwright/test';
+import type { APIRequestContext } from '@playwright/test';
 import { API_SCOPES } from '@vp/domain';
-import { type Stack, expect, test } from '../../../../../tests/playwright/fixtures';
+import { type Stack, expect, test as base } from '../../../../../tests/playwright/fixtures';
 import type { Persona } from '../../../../../tests/playwright/stack';
 
 const NO_ID = '00000000-0000-7000-8000-000000000000';
@@ -87,29 +87,51 @@ const BEYOND_THE_USER: (TokenAttempt & { persona: Persona })[] = [
   },
 ];
 
-async function tokenOf(
-  session: APIRequestContext,
-  apiUrl: string,
-  playwright: PlaywrightWorkerArgs['playwright']
-): Promise<APIRequestContext> {
-  const created = await session.post('/v1/me/api-tokens', {
-    data: { name: 'escalation', scopes: API_SCOPES },
-  });
-  expect(created.status()).toBe(201);
-  return playwright.request.newContext({
-    baseURL: apiUrl,
-    extraHTTPHeaders: { authorization: `Bearer ${(await created.json()).token}` },
-  });
-}
+const test = base.extend<{
+  mint: (
+    persona: Persona,
+    options?: { channelId?: string; scopes?: readonly string[] }
+  ) => Promise<string>;
+  bearer: (token: string, extraHeaders?: Record<string, string>) => Promise<APIRequestContext>;
+}>({
+  mint: async ({ api }, provide) => {
+    const minted: { session: APIRequestContext; id: string }[] = [];
+    await provide(async (persona, { channelId, scopes = API_SCOPES } = {}) => {
+      const session = await api(persona, { channelId });
+      const created = await session.post('/v1/me/api-tokens', {
+        data: { name: 'escalation', scopes },
+      });
+      expect(created.status()).toBe(201);
+      const { id, token } = await created.json();
+      minted.push({ session, id });
+      return token;
+    });
+    for (const { session, id } of minted) {
+      expect((await session.delete(`/v1/me/api-tokens/${id}`)).status()).toBe(204);
+    }
+  },
+  bearer: async ({ playwright, stack }, provide) => {
+    const contexts: APIRequestContext[] = [];
+    await provide(async (token, extraHeaders = {}) => {
+      const context = await playwright.request.newContext({
+        baseURL: stack.apiUrl,
+        extraHTTPHeaders: { authorization: `Bearer ${token}`, ...extraHeaders },
+      });
+      contexts.push(context);
+      return context;
+    });
+    await Promise.all(contexts.map((context) => context.dispose()));
+  },
+});
 
 test.describe('a personal access token never does more than its user', () => {
   for (const attempt of OUT_OF_REACH) {
     test(`a creator's token holding every scope cannot ${attempt.name}`, async ({
-      api,
+      mint,
+      bearer,
       stack,
-      playwright,
     }) => {
-      const token = await tokenOf(await api('creator'), stack.apiUrl, playwright);
+      const token = await bearer(await mint('creator'));
 
       const response = await token.fetch(attempt.path(stack), {
         method: attempt.method,
@@ -118,18 +140,16 @@ test.describe('a personal access token never does more than its user', () => {
 
       expect(response.status()).toBe(attempt.status);
       expect(await response.json()).toMatchObject({ code: attempt.code });
-      await token.dispose();
     });
   }
 
   for (const { persona, ...attempt } of BEYOND_THE_USER) {
     test(`a ${persona}'s token holding every scope cannot ${attempt.name}`, async ({
-      api,
+      mint,
+      bearer,
       stack,
-      playwright,
     }) => {
-      const session = await api(persona, { channelId: stack.team.channelId });
-      const token = await tokenOf(session, stack.apiUrl, playwright);
+      const token = await bearer(await mint(persona, { channelId: stack.team.channelId }));
 
       const response = await token.fetch(attempt.path(stack), {
         method: attempt.method,
@@ -138,33 +158,18 @@ test.describe('a personal access token never does more than its user', () => {
 
       expect(response.status()).toBe(attempt.status);
       expect(await response.json()).toMatchObject({ code: attempt.code });
-      await token.dispose();
     });
   }
 
-  test('a token request is refused with a session cookie beside it', async ({
-    api,
-    stack,
-    playwright,
-  }) => {
-    const created = await (
-      await api('creator')
-    ).post('/v1/me/api-tokens', {
-      data: { name: 'cookie', scopes: ['videos:read'] },
-    });
-    const both = await playwright.request.newContext({
-      baseURL: stack.apiUrl,
-      extraHTTPHeaders: {
-        authorization: `Bearer ${(await created.json()).token}`,
-        cookie: 'vp.session=anything',
-      },
+  test('a token request is refused with a session cookie beside it', async ({ mint, bearer }) => {
+    const both = await bearer(await mint('creator', { scopes: ['videos:read'] }), {
+      cookie: 'vp.session=anything',
     });
 
     const response = await both.get('/v1/videos');
 
     expect(response.status()).toBe(400);
     expect(await response.json()).toMatchObject({ code: 'API_TOKEN_WITH_SESSION' });
-    await both.dispose();
   });
 
   test('a revoked token is a 401 on its next request', async ({ api, stack, playwright }) => {
