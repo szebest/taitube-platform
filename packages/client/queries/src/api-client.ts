@@ -1,5 +1,6 @@
 import { createIsomorphicFn } from '@tanstack/react-start';
 import { type ApiClient, createApiClient } from '@vp/api-client';
+import { ACCOUNT_SLOT_HEADER } from './account-slots';
 import { readSessionToken } from './session-cookie';
 
 /** Where each client app answers its browser's API calls, on its own origin. */
@@ -10,33 +11,43 @@ export const UNAUTHORIZED = 401;
 export type AppApiClientOptions = {
   /** Where the app's server reaches the API. */
   apiBaseUrl: string;
-  /** Told of every 401 the browser receives, so a session that ended under the viewer closes. */
-  onUnauthorized: () => void;
-  /** The acting channel of an app that works on several; sent as `X-Channel-Id` on the endpoints that take one. */
+  /** The slot this router acts as, read on every call, so a switch moves the next call and not the last. */
+  getSlot: () => number;
+  /** Told of every 401 the browser receives, with the slot the call went as, so a session that ended under the viewer closes. */
+  onUnauthorized: (slot: number) => void;
+  /** The acting channel, sent as `X-Channel-Id` on the endpoints that take one. */
   getChannelId?: () => string | undefined;
 };
 
-function reportingUnauthorized(onUnauthorized: () => void): typeof fetch {
+function asSlot(getSlot: () => number, onUnauthorized: (slot: number) => void): typeof fetch {
   return async (input, init) => {
-    const response = await fetch(input, init);
-    if (response.status === UNAUTHORIZED) onUnauthorized();
+    const slot = getSlot();
+    const headers = new Headers(init?.headers);
+    headers.set(ACCOUNT_SLOT_HEADER, String(slot));
+    const response = await fetch(input, { ...init, headers });
+    if (response.status === UNAUTHORIZED) onUnauthorized(slot);
     return response;
   };
 }
 
 /**
- * The typed client of one router. The app's server calls the API at `apiBaseUrl` with the session
- * cookie's token; the browser calls its own origin's `/api`, whose proxy attaches that token
- * (`sessionMiddleware`), so no script ever holds it and the API is never a cross-origin call.
+ * The typed client of one router. The app's server calls the API at `apiBaseUrl` with the token of
+ * the router's slot; the browser calls its own origin's `/api` naming the slot in `X-Account-Slot`,
+ * whose proxy attaches that slot's token (`sessionMiddleware`), so no script ever holds it and the
+ * API is never a cross-origin call.
  */
 export const createAppApiClient = createIsomorphicFn()
-  .server(({ apiBaseUrl, getChannelId }: AppApiClientOptions): ApiClient =>
-    createApiClient({ baseUrl: apiBaseUrl, getAuthToken: readSessionToken, getChannelId })
+  .server(({ apiBaseUrl, getSlot, getChannelId }: AppApiClientOptions): ApiClient =>
+    createApiClient({
+      baseUrl: apiBaseUrl,
+      getAuthToken: () => readSessionToken(getSlot()),
+      getChannelId,
+    })
   )
-  .client(({ onUnauthorized, getChannelId }: AppApiClientOptions): ApiClient =>
+  .client(({ getSlot, onUnauthorized, getChannelId }: AppApiClientOptions): ApiClient =>
     createApiClient({
       baseUrl: `${window.location.origin}${API_PROXY_PATH}`,
-      fetch: reportingUnauthorized(onUnauthorized),
+      fetch: asSlot(getSlot, onUnauthorized),
       getChannelId,
     })
   );

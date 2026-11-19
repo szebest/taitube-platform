@@ -1,7 +1,6 @@
 import { Paginator } from '@kit/pagination';
 import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
-import { ACCOUNT_AUDIT_USER_AGENT_MAX_LENGTH } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import { AccountSecurityService } from '../account-security-service';
 
@@ -47,7 +46,7 @@ describe('AccountSecurityService', () => {
     );
 
     expect(recorded).toMatchObject({ action: 'account.signed_in', slot: 4 });
-    expect(recorded.userAgent).toHaveLength(ACCOUNT_AUDIT_USER_AGENT_MAX_LENGTH);
+    expect(recorded.userAgent).toHaveLength(200);
     expect(expectOk(await service.signIns(USER, {})).items).toEqual([recorded]);
   });
 

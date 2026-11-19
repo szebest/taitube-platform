@@ -1,7 +1,7 @@
 /** A user's own log of their account, read at `GET /v1/me/security/sign-ins`; no address is kept. */
 export type AccountAuditAction = 'account.signed_in';
 
-export const ACCOUNT_AUDIT_USER_AGENT_MAX_LENGTH = 200;
+const ACCOUNT_AUDIT_USER_AGENT_MAX_LENGTH = 200;
 
 export interface AccountAuditMeta {
   slot: number | null;

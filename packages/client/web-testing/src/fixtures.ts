@@ -11,6 +11,7 @@ import type {
   LiveStreamPublicView,
   OwnerChannel,
   PublicChannel,
+  SignInView,
   SubscribedChannel,
   TranscriptView,
   Video,
@@ -201,6 +202,18 @@ export function account(overrides: Partial<Account> = {}): Account {
     user,
     channel: owned,
     channels: [{ id, handle, displayName, avatarUrl }],
+    ...overrides,
+  };
+}
+
+/** A sign-in into a browser slot, as `POST /v1/me/security/sign-ins` records it. */
+export function signInRecord(overrides: Partial<SignInView> = {}): SignInView {
+  return {
+    id: '0190c3a0-5e1d-7000-8000-00000000e101',
+    action: 'account.signed_in',
+    slot: 0,
+    userAgent: null,
+    createdAt: CREATED_AT,
     ...overrides,
   };
 }

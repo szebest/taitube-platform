@@ -87,6 +87,13 @@ const CLIENT = extraDocs('client', {
     visibility: 'public',
     readBy: ['web', 'studio'],
   },
+  ACCOUNTS_MAX: {
+    description:
+      'The web and studio servers only, read at start: how many accounts one browser may hold signed in at once, each in its own vp.session.<slot> cookie. Adding one more is refused. Empty means 10, every slot.',
+    example: '10',
+    visibility: 'public',
+    readBy: ['web', 'studio'],
+  },
   SSR_DEV_TOKEN_URL: {
     description:
       'The web and studio servers only, read at start: where they reach `pnpm dev-token serve` to mint the demo personas tokens when a build sets VITE_DEMO_PERSONAS=true. Empty means http://localhost:3002.',

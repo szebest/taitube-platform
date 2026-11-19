@@ -1,4 +1,6 @@
-import { ACCOUNT_AUDIT_USER_AGENT_MAX_LENGTH, accountAuditMeta } from '../account-audit';
+import { accountAuditMeta } from '../account-audit';
+
+const STORED_LENGTH = 200;
 
 describe('@vp/domain: accountAuditMeta', () => {
   it.each([
@@ -7,8 +9,8 @@ describe('@vp/domain: accountAuditMeta', () => {
     { scenario: 'a short user agent', userAgent: 'Firefox', expected: 'Firefox' },
     {
       scenario: 'a long user agent',
-      userAgent: 'x'.repeat(ACCOUNT_AUDIT_USER_AGENT_MAX_LENGTH + 50),
-      expected: 'x'.repeat(ACCOUNT_AUDIT_USER_AGENT_MAX_LENGTH),
+      userAgent: 'x'.repeat(STORED_LENGTH + 50),
+      expected: 'x'.repeat(STORED_LENGTH),
     },
   ])('keeps the slot and stores $scenario as $expected', ({ userAgent, expected }) => {
     expect(accountAuditMeta(2, userAgent)).toEqual({ slot: 2, userAgent: expected });

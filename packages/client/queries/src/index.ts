@@ -1,3 +1,4 @@
+export * from './account-slots';
 export * from './acting-channel';
 export * from './api-base-url';
 export * from './api-client';
@@ -32,11 +33,13 @@ export { SESSION_COOKIE } from './session-config';
 export * from './session-functions';
 export * from './session-middleware';
 export * from './session-provider';
+export * from './session-sync';
 export * from './sign-in-button';
 export * from './use-failure-toast';
 export { useLiveChat } from './use-live-chat';
 export { useLiveVideoEvents, type ViewerSample } from './use-live-video-events';
 export * from './use-sign-out';
+export * from './use-tab-identity';
 /** @public */
 export { UserEventStream, useUserEvent } from './user-event-stream';
 export * from './video-queries';

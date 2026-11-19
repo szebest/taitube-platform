@@ -6,13 +6,14 @@ import {
 } from '@tanstack/react-router';
 import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
-import { api, apiServer } from '@vp/web-testing';
+import { getAccount, recordMySignIn } from '@vp/api-contracts';
+import { account, api, apiServer, mockEndpoint, signInRecord } from '@vp/web-testing';
 import { http, HttpResponse } from 'msw/http';
 import { type AppRouterContext, createAppRouter } from '../../app-router';
 import { DEV_TOKEN_URL } from '../persona-sign-in';
 import { PersonaSwitcher, type PersonaSwitcherProps } from '../persona-switcher';
 
-async function renderSwitcher(props: PersonaSwitcherProps = {}) {
+async function renderSwitcher(props: PersonaSwitcherProps = {}, url = '/login') {
   const routeTree = createRootRouteWithContext<AppRouterContext>()({
     component: () => (
       <IntlProvider locale="en" timeZone="UTC">
@@ -26,21 +27,26 @@ async function renderSwitcher(props: PersonaSwitcherProps = {}) {
       apiBaseUrl: 'http://localhost:3000',
       pending: () => null,
     },
-    { api, history: createMemoryHistory({ initialEntries: ['/login'] }) }
+    { api, history: createMemoryHistory({ initialEntries: [url] }) }
   );
   const invalidate = vi.spyOn(router, 'invalidate');
   await router.load();
   render(<RouterProvider router={router} />);
-  return { invalidate, user: userEvent.setup() };
+  return { router, invalidate, user: userEvent.setup() };
 }
 
 function devTokenServe(reply: (persona: string | null) => Response) {
   apiServer.use(
     http.get(`${DEV_TOKEN_URL}/token`, ({ request }) =>
       reply(new URL(request.url).searchParams.get('persona'))
-    )
+    ),
+    mockEndpoint(getAccount, () => HttpResponse.json(account())),
+    mockEndpoint(recordMySignIn, () => HttpResponse.json(signInRecord(), { status: 201 }))
   );
 }
+
+const sessionCookies = () =>
+  document.cookie.split('; ').filter((cookie) => cookie.startsWith('vp.session'));
 
 describe('@vp/queries: PersonaSwitcher', () => {
   it.each([
@@ -56,18 +62,52 @@ describe('@vp/queries: PersonaSwitcher', () => {
     await user.click(await screen.findByRole('button', { name: button }));
 
     await vi.waitFor(() => expect(invalidate).toHaveBeenCalledOnce());
-    expect(document.cookie).toBe(`vp.session=token-of-${persona}`);
+    expect(sessionCookies()).toEqual([`vp.session.0=token-of-${persona}`]);
+  });
+
+  it('adds a persona beside the account signed in, into the next slot, and moves the tab to it', async () => {
+    devTokenServe((asked) => HttpResponse.json({ token: `token-of-${asked}` }));
+    // oxlint-disable-next-line unicorn/no-document-cookie -- the browser arrives signed in.
+    document.cookie = 'vp.session.0=token-of-someone; path=/';
+    const { router, user } = await renderSwitcher({ adding: true, redirect: '/' });
+
+    await user.click(await screen.findByRole('button', { name: 'Creator' }));
+
+    await vi.waitFor(() => expect(router.history.location.pathname).toBe('/u/1'));
+    expect(sessionCookies()).toEqual([
+      'vp.session.0=token-of-someone',
+      'vp.session.1=token-of-creator',
+    ]);
+    expect(screen.queryByRole('button', { name: 'Guest' })).toBeNull();
+  });
+
+  it('says why an add past the most accounts a browser holds is refused', async () => {
+    devTokenServe((asked) => HttpResponse.json({ token: `token-of-${asked}` }));
+    for (let slot = 0; slot < 10; slot += 1) {
+      // oxlint-disable-next-line unicorn/no-document-cookie -- a browser holding every slot.
+      document.cookie = `vp.session.${slot}=t${slot}; path=/`;
+    }
+    const onFailed = vi.fn();
+    const { user } = await renderSwitcher({ adding: true, onFailed });
+
+    await user.click(await screen.findByRole('button', { name: 'Creator' }));
+
+    await vi.waitFor(() =>
+      expect(onFailed).toHaveBeenCalledWith(
+        'This browser holds as many accounts as it can. Sign one out first.'
+      )
+    );
   });
 
   it('signs out as Guest', async () => {
     // oxlint-disable-next-line unicorn/no-document-cookie -- the browser arrives signed in.
-    document.cookie = 'vp.session=token-of-admin; path=/';
+    document.cookie = 'vp.session.0=token-of-admin; path=/';
     const { invalidate, user } = await renderSwitcher();
 
     await user.click(await screen.findByRole('button', { name: 'Guest' }));
 
     await vi.waitFor(() => expect(invalidate).toHaveBeenCalledOnce());
-    expect(document.cookie).toBe('');
+    expect(sessionCookies()).toEqual([]);
   });
 
   it('says why when dev-token serve is not answering, and signs no one in', async () => {
@@ -84,6 +124,6 @@ describe('@vp/queries: PersonaSwitcher', () => {
     );
     expect(onAttempt).toHaveBeenCalledOnce();
     expect(invalidate).not.toHaveBeenCalled();
-    expect(document.cookie).toBe('');
+    expect(sessionCookies()).toEqual([]);
   });
 });
