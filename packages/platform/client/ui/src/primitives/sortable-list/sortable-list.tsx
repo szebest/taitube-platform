@@ -34,10 +34,10 @@ import type { SortableOrientation } from './types';
 const DRAG_DISTANCE_PX = 4;
 
 /**
- * Rows are measured before a drag starts, not after: measured on pick-up, an arrow key pressed at
- * once found no rects to move between and was lost.
+ * Rows stay measured before and during a drag: measured only on pick-up, an arrow key pressed at
+ * once found no rects, and a row that resized after pick-up left the rects stale.
  */
-const MEASURING = { droppable: { strategy: MeasuringStrategy.BeforeDragging } };
+const MEASURING = { droppable: { strategy: MeasuringStrategy.Always } };
 
 export interface SortableListRootProps extends ComponentPropsWithRef<'ul'> {
   items: readonly string[];

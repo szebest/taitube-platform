@@ -1,5 +1,5 @@
 import type { Result } from '@kit/result';
-import type { ViewBatch, ViewDate, ViewHour } from '@vp/domain';
+import type { ViewBatch, ViewDate, ViewDevice, ViewHour } from '@vp/domain';
 import type { CacheUnavailable } from '@vp/errors';
 
 export interface ViewEvent {
@@ -14,6 +14,7 @@ export interface PlaybackWatch {
   readonly sessionId: string;
   readonly viewDate: ViewDate;
   readonly viewHour: ViewHour;
+  readonly device: ViewDevice;
   readonly watchedSeconds: number;
   readonly requiredSeconds: number;
 }
@@ -32,7 +33,7 @@ export type ViewRecordOutcome = 'counted' | 'duplicate' | 'deferred' | 'dropped'
 
 /**
  * Where playback beacons accumulate between flushes, so a view costs no database connection.
- * `snapshot` moves the views, the hourly views and the retention steps buffered so far under the batch id and hands back the batch still
+ * `snapshot` moves the views, the device counts, the hourly views and the retention steps buffered so far under the batch id and hands back the batch still
  * pending from an earlier flush if one never released, which is what makes a crash mid-flush lose
  * nothing; `release` is called only once the batch is durable elsewhere.
  */
@@ -42,7 +43,8 @@ export interface ViewBufferPort {
   recordAll(views: readonly ViewEvent[]): Promise<Result<ViewRecordOutcome[], CacheUnavailable>>;
   /**
    * Adds every second of a playback event to the day's watch time, and counts the viewer once the
-   * session has watched `requiredSeconds` in all, deduplicated per session, video and day.
+   * session has watched `requiredSeconds` in all, deduplicated per session, video and day. The device
+   * is counted with the view and with nothing else.
    */
   recordPlayback(playback: PlaybackWatch): Promise<Result<PlaybackWatchOutcome, CacheUnavailable>>;
   snapshot(batchId: string): Promise<Result<ViewBatch | null, CacheUnavailable>>;

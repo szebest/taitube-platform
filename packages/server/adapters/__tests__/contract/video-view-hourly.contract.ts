@@ -37,7 +37,13 @@ export function describeVideoViewHourlyContract(makeSubject: MakeRepositoriesSub
 
     const apply = async (...hourly: HourlyViewCount[]) =>
       expectOk(
-        await views.applyBatch({ batchId: randomUUID(), counts: [], retention: [], hourly })
+        await views.applyBatch({
+          batchId: randomUUID(),
+          counts: [],
+          retention: [],
+          hourly,
+          devices: [],
+        })
       );
 
     it('adds the hours of every batch onto the rows there, inside the window only, oldest first', async () => {
@@ -56,6 +62,7 @@ export function describeVideoViewHourlyContract(makeSubject: MakeRepositoriesSub
         counts: [],
         retention: [],
         hourly: [hour(VIDEO_IDS.a, HOUR, 2)],
+        devices: [],
       };
       expectOk(await views.applyBatch(batch));
       expectOk(await views.applyBatch(batch));

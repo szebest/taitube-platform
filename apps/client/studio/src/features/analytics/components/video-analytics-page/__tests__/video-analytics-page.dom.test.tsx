@@ -17,6 +17,9 @@ describe('apps/client/studio: VideoAnalyticsPage', () => {
     ).toBeInTheDocument();
     expect(await screen.findByText('Audience retention')).toBeInTheDocument();
     expect(await screen.findByText('Views, last 90 days')).toBeInTheDocument();
+    expect(await screen.findByText('Views by device')).toBeInTheDocument();
+    expect(await screen.findByText('First week against your earlier videos')).toBeInTheDocument();
+    expect(await screen.findByText('Where viewers leave')).toBeInTheDocument();
     expect(requests.every(({ scope, range }) => scope === 'video' && range === '90d')).toBe(true);
   });
 

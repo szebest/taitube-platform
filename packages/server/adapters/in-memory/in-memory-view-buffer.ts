@@ -8,11 +8,14 @@ import type {
   ViewRecordOutcome,
 } from '@vp/core/ports';
 import {
+  type DeviceViewCount,
   type HourlyViewCount,
   RETENTION_STEP_PERCENT,
   type RetentionCount,
   type ViewBatch,
   type ViewCount,
+  type ViewDevice,
+  mergeDeviceCounts,
   mergeHourlyCounts,
 } from '@vp/domain';
 import type { CacheUnavailable } from '@vp/errors';
@@ -38,6 +41,7 @@ export class InMemoryViewBuffer implements ViewBufferPort {
   private readonly reached = new Map<string, number>();
   private retention = new Map<string, RetentionCount>();
   private hourly: HourlyViewCount[] = [];
+  private devices: DeviceViewCount[] = [];
 
   async record(view: ViewEvent): Promise<Result<ViewRecordOutcome, CacheUnavailable>> {
     return ok(this.recordOne(view));
@@ -49,7 +53,7 @@ export class InMemoryViewBuffer implements ViewBufferPort {
     return ok(views.map((view) => this.recordOne(view)));
   }
 
-  private recordOne(view: ViewEvent): ViewRecordOutcome {
+  private recordOne(view: ViewEvent, device?: ViewDevice): ViewRecordOutcome {
     const key = countKey(view.videoId, view.viewDate);
     const seen = this.viewers.get(key);
     if (seen?.has(view.viewerId)) return 'duplicate';
@@ -58,6 +62,9 @@ export class InMemoryViewBuffer implements ViewBufferPort {
     else this.viewers.set(key, new Set([view.viewerId]));
     this.addOne({ videoId: view.videoId, viewDate: view.viewDate, views: 1, watchSeconds: 0 });
     this.hourly.push({ videoId: view.videoId, viewHour: view.viewHour, views: 1 });
+    if (device) {
+      this.devices.push({ videoId: view.videoId, viewDate: view.viewDate, device, views: 1 });
+    }
     return 'counted';
   }
 
@@ -66,6 +73,7 @@ export class InMemoryViewBuffer implements ViewBufferPort {
     sessionId,
     viewDate,
     viewHour,
+    device,
     watchedSeconds,
     requiredSeconds,
   }: PlaybackWatch): Promise<Result<PlaybackWatchOutcome, CacheUnavailable>> {
@@ -84,7 +92,7 @@ export class InMemoryViewBuffer implements ViewBufferPort {
     if (session.counted) return ok('pending');
     session.counted = true;
 
-    const outcome = this.recordOne({ videoId, viewerId: sessionId, viewDate, viewHour });
+    const outcome = this.recordOne({ videoId, viewerId: sessionId, viewDate, viewHour }, device);
     return ok(outcome === 'counted' ? 'counted' : 'duplicate');
   }
 
@@ -98,10 +106,12 @@ export class InMemoryViewBuffer implements ViewBufferPort {
         counts: [...this.buffer.values()],
         retention: [...this.retention.values()],
         hourly: mergeHourlyCounts(this.hourly),
+        devices: mergeDeviceCounts(this.devices),
       });
       this.buffer = new Map();
       this.retention = new Map();
       this.hourly = [];
+      this.devices = [];
       this.pendingBatchId = batchId;
     }
     const pending = this.batches.get(this.pendingBatchId);
@@ -140,6 +150,7 @@ export class InMemoryViewBuffer implements ViewBufferPort {
     this.sessions.clear();
     this.buffer.clear();
     this.hourly = [];
+    this.devices = [];
     this.batches.clear();
     this.pendingBatchId = undefined;
   }

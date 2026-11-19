@@ -304,6 +304,13 @@
       "breakpoints": true
     },
     {
+      "idx": 43,
+      "version": "7",
+      "when": 1794986267648,
+      "tag": "0043_video_views_device_daily",
+      "breakpoints": true
+    },
+    {
       "idx": 45,
       "version": "7",
       "when": 1794994229808,

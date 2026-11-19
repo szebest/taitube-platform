@@ -95,6 +95,8 @@ describe('packages/api-contracts: api tokens', () => {
       'DELETE /v1/videos/:id/corrections/:correctionId': 'videos:write',
       'GET /v1/creator/videos/:id/analytics': 'analytics:read',
       'GET /v1/creator/videos/:id/retention': 'analytics:read',
+      'GET /v1/creator/videos/:id/audience': 'analytics:read',
+      'GET /v1/creator/videos/:id/benchmark': 'analytics:read',
       'GET /v1/creator/channel/analytics': 'analytics:read',
       'GET /v1/videos/:id/comments': 'comments:read',
       'GET /v1/comments/:id/replies': 'comments:read',

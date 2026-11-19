@@ -5,7 +5,7 @@ import { analyticsHandlers } from '#app/features/analytics/__tests__/analytics-a
 import { getRouter } from '#app/router';
 
 function renderAnalytics(path: string) {
-  const { handlers } = analyticsHandlers({ views: [10, 20], retention: [10, 5] });
+  const { handlers } = analyticsHandlers({ views: [10, 20], retention: [10, 5, 2] });
   return serverRender(getRouter, path, {
     handlers: [accountOf(), ...handlers],
     headers: { cookie: SESSION },
@@ -32,5 +32,8 @@ describe('apps/client/studio: /videos/$videoId/analytics', () => {
     expect(rendered.main).toContain('Video analytics');
     expect(rendered.main).toContain('Views, last 7 days');
     expect(rendered.main).toContain('Audience retention');
+    expect(rendered.main).toContain('Views by device');
+    expect(rendered.main).toContain('First week against your earlier videos');
+    expect(rendered.main).toContain('Where viewers leave');
   });
 });

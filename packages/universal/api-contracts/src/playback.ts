@@ -1,3 +1,4 @@
+import { VIEW_DEVICES } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import { z } from 'zod';
 import { defineEndpoint } from './endpoint';
@@ -41,6 +42,12 @@ const PlaybackEventSchema = z.object({
     .regex(/^[\w-]+$/)
     .optional()
     .describe('Rendition playing, such as 720p'),
+  device: z
+    .enum(VIEW_DEVICES)
+    .optional()
+    .describe(
+      'Coarse device class the client decided from its pointer and screen; absent counts as unknown'
+    ),
 });
 
 export const recordPlayback = defineEndpoint({

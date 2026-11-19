@@ -1,4 +1,4 @@
-import { sendJsonBeacon } from '@kit/web-telemetry';
+import { deviceClassOf, sendJsonBeacon } from '@kit/web-telemetry';
 import { recordPlayback } from '@vp/api-contracts';
 import { useEffect, useRef } from 'react';
 import { API_BASE_URL } from '#app/lib/config';
@@ -16,6 +16,10 @@ export function usePlaybackTelemetry(videoId: string) {
     const created = createPlaybackTracker({
       videoId,
       sessionUuid: crypto.randomUUID(),
+      device: deviceClassOf({
+        coarsePointer: window.matchMedia('(pointer: coarse)').matches,
+        screenShortSide: Math.min(window.screen.width, window.screen.height),
+      }),
       send: (event) => sendJsonBeacon(`${API_BASE_URL}${recordPlayback.path}`, event),
     });
     const onVisibilityChange = () => created.visibility(document.visibilityState === 'visible');
