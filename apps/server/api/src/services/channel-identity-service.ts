@@ -1,3 +1,4 @@
+import { MS_PER_DAY } from '@kit/primitives';
 import { type Result, andThen, err, isErr, ok } from '@kit/result';
 import type {
   ChannelAuditRepositoryPort,
@@ -22,7 +23,6 @@ import {
   decideHandleClaim,
   validateBrandColor,
 } from '@vp/domain-rules';
-import { MS_PER_DAY } from '@vp/domain/time';
 import { type DatabaseUnavailable, ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import {

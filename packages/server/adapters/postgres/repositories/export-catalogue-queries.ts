@@ -1,7 +1,7 @@
+import { MS_PER_DAY } from '@kit/primitives';
 import type { ExportScope } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import type { CommentExportRow, VideoExportRow } from '@vp/domain';
-import { MS_PER_DAY } from '@vp/domain/time';
 import { and, asc, eq, gte, isNull, lt } from 'drizzle-orm';
 import type { AnyPgColumn } from 'drizzle-orm/pg-core';
 import { keysetPast, msTimestamp } from '../scopes/index';

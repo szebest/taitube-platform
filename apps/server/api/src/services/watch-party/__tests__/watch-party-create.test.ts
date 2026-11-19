@@ -1,7 +1,7 @@
+import { MS_PER_HOUR } from '@kit/primitives';
+import { expectErr, expectOk } from '@kit/testing/result';
 import { WATCH_PARTY_PERMISSIONS_VERSION } from '@vp/domain';
-import { MS_PER_HOUR } from '@vp/domain/time';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { createRoom } from '../watch-party-create';
 import { OWNER_KEY, setUpCreate } from './watch-party-create-fixture';
 import {

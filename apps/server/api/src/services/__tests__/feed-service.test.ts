@@ -1,11 +1,11 @@
 import { Singleflight } from '@kit/concurrency';
 import { Paginator } from '@kit/pagination';
 import { err } from '@kit/result';
+import { expectOk } from '@kit/testing/result';
 import { InMemoryCacheClient, InMemoryRepositories } from '@vp/adapters/in-memory';
 import { publicFeedInstant } from '@vp/domain';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { cacheUnavailable } from '@vp/errors';
-import { expectOk } from '@vp/testing/result';
 import { seedPrimaryChannel } from '../../__tests__/test-app';
 import { feedCursorPayload } from '../cursor';
 import { FeedService, type FeedServiceDeps } from '../feed-service';

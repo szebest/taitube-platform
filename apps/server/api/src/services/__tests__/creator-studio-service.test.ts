@@ -1,8 +1,8 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { NewVideoInput } from '@vp/core/repositories';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { seedPrimaryChannel } from '../../__tests__/test-app';
 import type { CreatorLibraryOptions, CreatorStudioService } from '../creator-studio-service';
 import { creatorStudioOf, ownerActing, TEST_CDN } from './service-deps';

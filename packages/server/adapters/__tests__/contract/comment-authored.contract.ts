@@ -1,6 +1,6 @@
+import { expectOk } from '@kit/testing/result';
 import type { AuthoredComment } from '@vp/domain';
 import type { UserContext } from '@vp/permissions';
-import { expectOk } from '@vp/testing/result';
 import { C, type CommentContractContext, seedComment } from './comment-contract-context';
 import { OTHER_OWNER_ID, OWNER_CHANNEL_ID, OWNER_ID, VIDEO_IDS, publicVideo } from './fixtures';
 

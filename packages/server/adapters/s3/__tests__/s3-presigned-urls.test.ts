@@ -1,4 +1,4 @@
-import { expectOk } from '@vp/testing/result';
+import { expectOk } from '@kit/testing/result';
 import { S3StorageClient } from '../s3-storage-client';
 
 const BUCKET = 'raw';

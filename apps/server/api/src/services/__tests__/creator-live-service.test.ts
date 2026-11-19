@@ -1,3 +1,4 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import {
   InMemoryCacheClient,
   InMemoryLiveGateway,
@@ -5,7 +6,6 @@ import {
 } from '@vp/adapters/in-memory';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { CreatorLiveService } from '../creator-live-service';
 
 const OWNER: UserContext = { id: '00000000-0000-7000-8000-00000000c001', role: 'USER' };

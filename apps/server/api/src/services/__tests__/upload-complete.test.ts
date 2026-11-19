@@ -1,3 +1,4 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import {
   InMemoryJobQueue,
   InMemoryRepositories,
@@ -6,7 +7,6 @@ import {
 import { ErrorCodes } from '@vp/errors';
 import { ids } from '@vp/job-contracts';
 import type { UserContext } from '@vp/permissions';
-import { expectErr, expectOk } from '@vp/testing/result';
 import type { UploadContext } from '../upload-context';
 import { UploadService } from '../upload-service';
 import { ownerActing, uploadContext } from './service-deps';

@@ -1,6 +1,6 @@
+import { expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
-import { SEEDED } from '@vp/testing';
-import { expectOk } from '@vp/testing/result';
+import { SEEDED } from '@vp/testing-fixtures';
 import { uuidv7 } from 'uuidv7';
 import { STAGE_SETTINGS } from '../../../__tests__/stage-settings';
 import { metadataFinding } from '../metadata-finding';

@@ -1,5 +1,5 @@
 import { ErrorCodes } from '@vp/errors';
-import { SEEDED } from '@vp/testing';
+import { SEEDED } from '@vp/testing-fixtures';
 import { guestSession } from '../../services/watch-party/__tests__/watch-party-access-fixture';
 import {
   DISCORD_ID,

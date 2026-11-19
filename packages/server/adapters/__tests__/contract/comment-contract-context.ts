@@ -1,6 +1,6 @@
+import { expectOk } from '@kit/testing/result';
 import type { CommentRepositoryPort, CommentWindow } from '@vp/core/repositories';
 import type { CommentThread, NewCommentModeration } from '@vp/domain';
-import { expectOk } from '@vp/testing/result';
 import { HOUR_MS, VIDEO_IDS, primaryChannelOf } from './fixtures';
 import type { RepositoriesSubject } from './subjects';
 

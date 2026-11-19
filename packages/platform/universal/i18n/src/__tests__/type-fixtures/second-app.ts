@@ -1,4 +1,4 @@
-import type { MoneyValue } from '@vp/intl';
+import type { MoneyValue } from '@kit/intl';
 import { defineEngine } from '../../engine';
 import { defineKind, isRecord } from '../../kind';
 import { numberKind, pluralKind } from '../../kinds';

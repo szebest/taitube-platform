@@ -1,5 +1,5 @@
+import { expectOk } from '@kit/testing/result';
 import { notificationRead } from '@vp/domain';
-import { expectOk } from '@vp/testing/result';
 import {
   OTHER_OWNER_ID,
   OWNER_CHANNEL_ID,

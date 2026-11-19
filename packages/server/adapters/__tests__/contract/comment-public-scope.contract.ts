@@ -1,6 +1,6 @@
+import { expectOk } from '@kit/testing/result';
 import type { CommentViewer } from '@vp/core/repositories';
 import type { ModerationState } from '@vp/domain';
-import { expectOk } from '@vp/testing/result';
 import { C, type CommentContractContext, commentsCount, keyset } from './comment-contract-context';
 import {
   OTHER_OWNER_CHANNEL_ID,

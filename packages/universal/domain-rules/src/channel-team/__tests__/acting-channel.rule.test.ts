@@ -1,6 +1,6 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { decideActingChannel } from '../acting-channel.rule';
 
 const PRIMARY = '00000000-0000-7000-8000-0000000000c1';

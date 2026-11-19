@@ -1,6 +1,6 @@
+import { MS_PER_SECOND } from '@kit/primitives';
+import { expectOk } from '@kit/testing/result';
 import { SEARCH_SUGGESTIONS } from '@vp/domain';
-import { MS_PER_SECOND } from '@vp/domain/time';
-import { expectOk } from '@vp/testing/result';
 import { LazyQueueRegistry } from '../../composition/queue-registry';
 import { InMemoryCacheClient } from '../../in-memory/in-memory-cache-client';
 import { InMemoryCategoryCache } from '../../in-memory/in-memory-category-cache';

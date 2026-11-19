@@ -1,5 +1,5 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
 import type { Ref } from '../../schema/ref';
 import { tokenFiles } from '../token-files';
 import { fixtureScale, fixtureSets, fixtureTheme } from './fixture';

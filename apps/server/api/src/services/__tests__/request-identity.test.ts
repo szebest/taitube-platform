@@ -1,6 +1,6 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { seedTeamMember } from '../../__tests__/test-app';
 import { ChannelService } from '../channel-service';
 import { RequestIdentity } from '../request-identity';

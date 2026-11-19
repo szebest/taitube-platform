@@ -1,7 +1,7 @@
+import { expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { QueueJob } from '@vp/core/ports';
 import type { NotifyTeamInviteJob } from '@vp/job-contracts';
-import { expectOk } from '@vp/testing/result';
 import { createNotifyTeamInviteProcessor } from '../notify-team-invite';
 import {
   CHANNEL_ID,

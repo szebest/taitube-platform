@@ -1,8 +1,8 @@
+import { SectionError, StatCardSkeleton } from '@kit/components';
 import { useT } from '@kit/intl-react';
 import { Button, Icon, IconButton, useMediaQuery } from '@kit/ui';
 import { useQuery } from '@tanstack/react-query';
 import type { Video } from '@vp/api-contracts';
-import { SectionError, StatCardSkeleton } from '@vp/components';
 import { canPinComment, canUpdateVideo } from '@vp/permissions';
 import { useCan } from '@vp/permissions-react';
 import { creatorStatsQueryOptions, useApi } from '@vp/queries';

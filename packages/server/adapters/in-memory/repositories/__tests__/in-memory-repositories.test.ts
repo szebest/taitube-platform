@@ -1,4 +1,4 @@
-import { expectOk } from '@vp/testing/result';
+import { expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '../in-memory-repositories';
 
 const OWNER = '00000000-0000-7000-8000-0000000000a1';

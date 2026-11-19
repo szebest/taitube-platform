@@ -1,5 +1,5 @@
+import { expectOk } from '@kit/testing/result';
 import type { FrameClassifier, RgbFrame } from '@vp/core/ports';
-import { expectOk } from '@vp/testing/result';
 
 export interface FrameClassifierSubject {
   readonly classifier: FrameClassifier;

@@ -1,4 +1,4 @@
-import { expectErr, expectOk } from '@vp/testing/result';
+import { expectErr, expectOk } from '@kit/testing/result';
 import { validateBannerLink } from '../banner-link';
 
 describe('@vp/validation: validateBannerLink', () => {

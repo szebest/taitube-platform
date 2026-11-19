@@ -1,8 +1,8 @@
+import { expectOk } from '@kit/testing/result';
 import type { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { CHANNEL_HEADER } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
-import { SEEDED } from '@vp/testing';
-import { expectOk } from '@vp/testing/result';
+import { SEEDED } from '@vp/testing-fixtures';
 import type { FastifyInstance } from 'fastify';
 import { TOKENS, bearer, buildTestApp, seedTeamMember } from '../../__tests__/test-app';
 

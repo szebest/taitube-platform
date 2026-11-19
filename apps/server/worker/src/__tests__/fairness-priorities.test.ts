@@ -1,11 +1,11 @@
+import { expectOk } from '@kit/testing/result';
 import {
   InMemoryJobQueue,
   InMemoryMultipartStorage,
   InMemoryRepositories,
 } from '@vp/adapters/in-memory';
 import { ids } from '@vp/job-contracts';
-import { SEEDED } from '@vp/testing';
-import { expectOk } from '@vp/testing/result';
+import { SEEDED } from '@vp/testing-fixtures';
 import { uuidv7 } from 'uuidv7';
 import { runReconcileUploads } from '../stages/housekeeping/reconcile-uploads';
 import { STAGE_SETTINGS, TASKS } from './stage-settings';

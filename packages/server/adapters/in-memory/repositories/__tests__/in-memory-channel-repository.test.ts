@@ -1,5 +1,5 @@
-import { SEEDED } from '@vp/testing';
-import { expectOk } from '@vp/testing/result';
+import { expectOk } from '@kit/testing/result';
+import { SEEDED } from '@vp/testing-fixtures';
 import { describeChannelRepositoryContract } from '../../../__tests__/contract/channel-repository.contract';
 import { inMemorySubject } from '../../../__tests__/contract/subjects';
 import { InMemoryChannelAuditRepository } from '../in-memory-channel-audit-repository';

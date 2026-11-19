@@ -1,4 +1,4 @@
-import { expectOk } from '@vp/testing/result';
+import { expectOk } from '@kit/testing/result';
 import { listAuthored } from '../comment-authored';
 import { newStoredComment } from '../comment-projections';
 import { InMemoryRepositories } from '../in-memory-repositories';

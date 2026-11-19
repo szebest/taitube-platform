@@ -1,4 +1,5 @@
 import { createLogger } from '@kit/logger';
+import { expectOk } from '@kit/testing/result';
 import {
   InMemoryFrameClassifier,
   InMemoryRepositories,
@@ -7,8 +8,7 @@ import {
 import type { QueueJob } from '@vp/core/ports';
 import type { FingerprintTools } from '@vp/fingerprint';
 import type { ScreenJob } from '@vp/job-contracts';
-import { SEEDED, createMockJob } from '@vp/testing';
-import { expectOk } from '@vp/testing/result';
+import { SEEDED, createMockJob } from '@vp/testing-fixtures';
 import { uuidv7 } from 'uuidv7';
 import { STAGE_SETTINGS } from '../../../__tests__/stage-settings';
 import { createScreenProcessor } from '../screen-stage';

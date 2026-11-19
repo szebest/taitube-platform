@@ -1,5 +1,5 @@
+import { expectOk } from '@kit/testing/result';
 import { type NewNotificationInput, toNotificationView } from '@vp/domain';
-import { expectOk } from '@vp/testing/result';
 import { OTHER_OWNER_ID, OWNER_CHANNEL_ID as CHANNEL_ID, seedOwners } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 import { createRoom, ROOM_ID } from './watch-party-activity-fixtures';

@@ -1,5 +1,5 @@
+import { expectOk } from '@kit/testing/result';
 import { inProcessAppConfig } from '@vp/env-schema';
-import { expectOk } from '@vp/testing/result';
 import { redisSubscriptionCacheSubject } from '../../__tests__/contract/redis-subjects';
 import { describeSubscriptionCacheContract } from '../../__tests__/contract/subscription-cache.contract';
 import { RedisSubscriptionCacheAdapter } from '../redis-subscription-cache.adapter';

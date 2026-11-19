@@ -1,5 +1,5 @@
+import { expectOk } from '@kit/testing/result';
 import type { SubscriptionRepositoryPort } from '@vp/core/repositories';
-import { expectOk } from '@vp/testing/result';
 import {
   OTHER_OWNER_CHANNEL_ID as OTHER_CHANNEL_ID,
   OWNER_CHANNEL_ID as CHANNEL_ID,

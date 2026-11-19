@@ -1,6 +1,6 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import type { ChannelPageRepositoryPort } from '@vp/core/repositories';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
 import {
   OTHER_OWNER_CHANNEL_ID,
   OWNER_CHANNEL_ID,

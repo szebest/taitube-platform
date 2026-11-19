@@ -1,9 +1,9 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryCacheClient, InMemoryRepositories } from '@vp/adapters/in-memory';
 import { RedisCategoryCacheAdapter } from '@vp/adapters/redis/redis-category-cache.adapter';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { seedPrimaryChannel } from '../../__tests__/test-app';
 import { CategoryService } from '../category-service';
 

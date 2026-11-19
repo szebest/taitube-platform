@@ -1,4 +1,5 @@
 import { createLogger } from '@kit/logger';
+import { expectOk } from '@kit/testing/result';
 import {
   InMemoryLiveGateway,
   InMemoryRepositories,
@@ -6,7 +7,6 @@ import {
 } from '@vp/adapters/in-memory';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { liveOutbox } from '@vp/job-contracts';
-import { expectOk } from '@vp/testing/result';
 
 export const STREAM_ID = '00000000-0000-7000-8000-00000000f101';
 export const VIDEO_ID = '00000000-0000-7000-8000-00000000f201';

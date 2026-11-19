@@ -1,5 +1,6 @@
 import { Singleflight } from '@kit/concurrency';
 import { Paginator } from '@kit/pagination';
+import { expectOk } from '@kit/testing/result';
 import {
   InMemoryCacheClient,
   InMemoryRepositories,
@@ -7,7 +8,6 @@ import {
 } from '@vp/adapters/in-memory';
 import { RISING, SEARCH_SUGGESTIONS } from '@vp/domain';
 import type { UserContext } from '@vp/permissions';
-import { expectOk } from '@vp/testing/result';
 import { seedPrimaryChannel } from '../../__tests__/test-app';
 import { DiscoveryShelves } from '../discovery-shelves';
 import { HistoryPause } from '../history-pause';

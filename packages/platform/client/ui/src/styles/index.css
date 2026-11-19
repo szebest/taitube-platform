@@ -7,5 +7,5 @@
 
 /* The app scans its own tree for classes; these primitives sit outside it. */
 @source "../";
-@source "../../../../../client/components/src";
+@source "../../../components/src";
 @source "../../../forms/src";

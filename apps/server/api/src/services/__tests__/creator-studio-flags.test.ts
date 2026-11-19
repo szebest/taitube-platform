@@ -1,6 +1,6 @@
+import { expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { UserContext } from '@vp/permissions';
-import { expectOk } from '@vp/testing/result';
 import { seedPrimaryChannel } from '../../__tests__/test-app';
 import type { CreatorStudioService } from '../creator-studio-service';
 import { creatorStudioOf } from './service-deps';

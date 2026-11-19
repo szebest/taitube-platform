@@ -1,8 +1,8 @@
+import { expectOk } from '@kit/testing/result';
 import { Adapters } from '@vp/adapters/composition';
 import { InMemoryLiveGateway } from '@vp/adapters/in-memory';
 import { mintToken } from '@vp/dev-identity';
 import { ErrorCodes } from '@vp/errors';
-import { expectOk } from '@vp/testing/result';
 import { type TestApp, bearer, buildTestApp } from '../../__tests__/test-app';
 
 const OWNER_ID = '11111111-1111-7111-8111-111111111111';

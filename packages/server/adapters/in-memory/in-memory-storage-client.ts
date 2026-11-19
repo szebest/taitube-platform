@@ -1,4 +1,6 @@
 import * as fs from 'node:fs';
+import { S3_MAX_KEYS_PER_REQUEST } from '@kit/object-storage';
+import { MS_PER_SECOND } from '@kit/primitives';
 import { type Result, err, ok } from '@kit/result';
 import {
   StorageClient,
@@ -12,9 +14,7 @@ import {
   type StorageUploadParams,
   type StorageUploadResult,
 } from '@vp/core/ports';
-import { MS_PER_SECOND } from '@vp/domain/time';
 import { type StorageUnavailable, storageUnavailable } from '@vp/errors';
-import { S3_MAX_KEYS_PER_REQUEST } from '@vp/storage';
 
 interface StoredObject {
   data: Buffer;

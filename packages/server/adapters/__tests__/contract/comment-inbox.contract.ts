@@ -1,5 +1,5 @@
+import { expectOk } from '@kit/testing/result';
 import type { CreatorInboxFilter, NewCommentModeration } from '@vp/domain';
-import { expectOk } from '@vp/testing/result';
 import { C, type CommentContractContext, seedComment } from './comment-contract-context';
 import {
   OTHER_OWNER_ID,

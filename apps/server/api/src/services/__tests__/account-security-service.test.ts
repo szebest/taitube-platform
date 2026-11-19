@@ -1,7 +1,7 @@
 import { Paginator } from '@kit/pagination';
+import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { AccountSecurityService } from '../account-security-service';
 
 const USER = { id: '00000000-0000-7000-8000-0000000000a1', role: 'USER' } as const;

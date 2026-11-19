@@ -1,3 +1,4 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import {
   InMemoryJobQueue,
   InMemoryRepositories,
@@ -8,7 +9,6 @@ import { ErrorCodes } from '@vp/errors';
 import { ids } from '@vp/job-contracts';
 import type { UserContext } from '@vp/permissions';
 import { channelImageUploadKey } from '@vp/storage';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { ChannelImagePipelineService } from '../channel-image-pipeline-service';
 import { ownerActing } from './service-deps';
 

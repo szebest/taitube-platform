@@ -1,4 +1,4 @@
-import { SEEDED } from '@vp/testing';
+import { SEEDED } from '@vp/testing-fixtures';
 import { runMigrations } from '../migrate';
 import { seedDatabase } from '../seed';
 import { type SocketDatabase, startSocketDatabase } from './socket-database';

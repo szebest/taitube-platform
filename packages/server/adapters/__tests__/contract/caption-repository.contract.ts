@@ -1,5 +1,5 @@
+import { expectOk } from '@kit/testing/result';
 import { captionsFailed, captionsReady } from '@vp/domain';
-import { expectOk } from '@vp/testing/result';
 import {
   ABSENT_ID,
   CUES,

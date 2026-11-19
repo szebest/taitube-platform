@@ -1,5 +1,5 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { buildTheme } from '../build-theme';
 import { parseTheme, resolveTheme } from '../parse';
 import { refFromTokens, themeFromTokens } from '../schema/__tests__/tokens-json';

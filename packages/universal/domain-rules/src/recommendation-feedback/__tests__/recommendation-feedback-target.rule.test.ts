@@ -1,6 +1,6 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import type { FeedbackTarget, Video } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { aChannel, aVideo, OWNER, STRANGER } from '../../__tests__/entities';
 import { decideRecommendationFeedbackTarget } from '../recommendation-feedback-target.rule';
 

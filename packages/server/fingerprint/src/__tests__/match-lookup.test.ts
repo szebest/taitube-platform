@@ -1,6 +1,6 @@
 import { err } from '@kit/result';
+import { expectErr, expectOk } from '@kit/testing/result';
 import { databaseUnavailable } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { audioIndexTerms } from '../audio-terms';
 import {
   type FingerprintMatchSettings,

@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
+import { expectOk } from '@kit/testing/result';
 import { CacheKeys } from '@vp/events';
-import { expectOk } from '@vp/testing/result';
 import { describePartyGuestSessionsContract } from '../../__tests__/contract/party-guest-sessions.contract';
 import { redisPartyGuestSessionsSubject } from '../../__tests__/contract/redis-subjects';
 import { RedisPartyGuestSessionsAdapter } from '../redis-party-guest-sessions.adapter';

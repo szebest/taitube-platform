@@ -1,5 +1,5 @@
+import { expectOk } from '@kit/testing/result';
 import type { Repositories } from '@vp/core/repositories';
-import { expectOk } from '@vp/testing/result';
 import { seedOwners } from './fixtures';
 
 export const SUBSCRIBER_ID = '00000000-0000-7000-8000-000000000103';

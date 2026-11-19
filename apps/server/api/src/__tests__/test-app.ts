@@ -1,5 +1,6 @@
 import type { Container } from '@kit/composition';
 import type { Logger } from '@kit/logger';
+import { expectOk } from '@kit/testing/result';
 import {
   InMemoryCacheClient,
   InMemoryJobQueue,
@@ -13,8 +14,7 @@ import { mintToken } from '@vp/dev-identity';
 import { type ChannelRole, SEARCH_SUGGESTIONS, type ActingChannel } from '@vp/domain';
 import { type AppConfig, inProcessAppConfig } from '@vp/env-schema';
 import { QUEUES } from '@vp/job-contracts';
-import { SEEDED } from '@vp/testing';
-import { expectOk } from '@vp/testing/result';
+import { SEEDED } from '@vp/testing-fixtures';
 import type { FastifyInstance } from 'fastify';
 import { type AdapterOverrides, composeApp } from '../app';
 import { provisionAccount } from '../services/channel-lookup';

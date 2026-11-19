@@ -1,7 +1,7 @@
+import { expectOk } from '@kit/testing/result';
 import { CHANNEL_HEADER } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { CacheKeys } from '@vp/events';
-import { expectOk } from '@vp/testing/result';
 import {
   ABSENT,
   AS,

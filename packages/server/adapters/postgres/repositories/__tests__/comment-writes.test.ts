@@ -1,5 +1,5 @@
+import { expectOk } from '@kit/testing/result';
 import * as schema from '@vp/db';
-import { expectOk } from '@vp/testing/result';
 import { drizzle } from 'drizzle-orm/pglite';
 import {
   OTHER_OWNER_CHANNEL_ID,

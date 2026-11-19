@@ -1,7 +1,7 @@
+import { expectOk } from '@kit/testing/result';
 import type { CommentActionBody } from '@vp/api-contracts';
 import { type ChannelRole, DEFAULT_COMMENT_SETTINGS } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
-import { expectOk } from '@vp/testing/result';
 import {
   AS,
   AUTHOR,

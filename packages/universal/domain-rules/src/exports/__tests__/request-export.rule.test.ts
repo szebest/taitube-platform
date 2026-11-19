@@ -1,7 +1,7 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import type { ActingChannel, DataExportKind, DataExportUsage } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { decideExportRequest } from '../request-export.rule';
 
 const owner: UserContext = { id: 'owner-1', role: 'USER' };

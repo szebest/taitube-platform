@@ -1,6 +1,6 @@
+import { Shelf, StartHereShelf, VideoCard } from '@kit/components';
 import { useT } from '@kit/intl-react';
 import type { VideoSummary } from '@vp/api-contracts';
-import { Shelf, StartHereShelf, VideoCard } from '@vp/components';
 import { WEB_URL } from '#app/lib/config';
 
 interface StartHerePreviewProps {

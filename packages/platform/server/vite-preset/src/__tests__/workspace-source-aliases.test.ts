@@ -47,7 +47,7 @@ describe('@kit/vite-preset: workspace source aliases', () => {
     { name: '@kit/intl-react', source: '/intl-react/src/index.ts' },
     { name: '@vp/api-client', source: '/api-client/src/index.ts' },
     { name: '@kit/result', source: '/result/src/index.ts' },
-    { name: '@vp/domain/time', source: '/domain/src/time.ts' },
+    { name: '@vp/domain/settings', source: '/domain/src/settings/index.ts' },
     { name: '@vp/web-testing/server', source: '/web-testing/src/server/index.ts' },
   ])('resolves $name to its source in the workspace', ({ name, source }) => {
     expect(resolveSpecifier(undefined, name)?.endsWith(source)).toBe(true);

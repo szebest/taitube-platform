@@ -1,7 +1,8 @@
+import { extractContextFromTraceparent, getTracer } from '@kit/observability';
 import { fromPromise } from '@kit/result';
 import { SpanKind, SpanStatusCode, context, trace } from '@opentelemetry/api';
 import type { QueueJob } from '@vp/core/ports';
-import { extractContextFromTraceparent, getTracer } from '@vp/observability';
+import { TRACER_NAME } from '@vp/pipeline-metrics';
 
 /**
  * Runs a processor inside a `bullmq.process {queue}` span, a child of the producer's `traceparent`
@@ -12,7 +13,7 @@ export function withTelemetry<TData extends { videoId?: string; traceparent?: st
   processor: (job: QueueJob<TData>) => Promise<TResult>
 ): (job: QueueJob<TData>) => Promise<TResult> {
   return async (job: QueueJob<TData>): Promise<TResult> => {
-    const tracer = getTracer('video-pipeline');
+    const tracer = getTracer(TRACER_NAME);
     const traceparent = job.data?.traceparent;
     const parentContext = extractContextFromTraceparent(traceparent);
 

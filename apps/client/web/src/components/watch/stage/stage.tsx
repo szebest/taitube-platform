@@ -1,5 +1,5 @@
+import { videoTransitionName } from '@kit/components';
 import { Button, cn, Icon, Skeleton, Slot, Spinner, useUiCopy } from '@kit/ui';
-import { videoTransitionName } from '@vp/components';
 import type { ComponentPropsWithRef } from 'react';
 import { StageContext, useStage } from './stage.context';
 import { stageStyles } from './stage.variants';

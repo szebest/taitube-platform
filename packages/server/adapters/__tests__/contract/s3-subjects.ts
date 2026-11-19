@@ -1,4 +1,4 @@
-import { expectOk } from '@vp/testing/result';
+import { expectOk } from '@kit/testing/result';
 import { S3MultipartStorage } from '../../s3/s3-multipart-storage';
 import { S3StorageClient } from '../../s3/s3-storage-client';
 import {

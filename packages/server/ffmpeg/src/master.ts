@@ -1,4 +1,4 @@
-import { MS_PER_SECOND } from '@vp/domain/time';
+import { MS_PER_SECOND } from '@kit/primitives';
 import type { LadderEntry } from '@vp/job-contracts';
 
 function getAvcCodecString(profile: 'main' | 'high' | string, level: string): string {

@@ -1,6 +1,6 @@
+import { expectOk } from '@kit/testing/result';
 import { frameBands } from '@vp/domain';
-import { SEEDED } from '@vp/testing';
-import { expectOk } from '@vp/testing/result';
+import { SEEDED } from '@vp/testing-fixtures';
 import { drizzle } from 'drizzle-orm/pglite';
 import { migratedPglite } from '../../../../__tests__/contract/pglite-snapshot';
 import { PostgresFingerprintRepository } from '../../postgres-fingerprint-repository';

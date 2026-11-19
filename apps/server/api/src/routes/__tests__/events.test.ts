@@ -1,8 +1,8 @@
 import * as http from 'node:http';
+import { expectOk } from '@kit/testing/result';
 import { ErrorCodes } from '@vp/errors';
 import { videoChannel } from '@vp/events';
-import { SEEDED } from '@vp/testing';
-import { expectOk } from '@vp/testing/result';
+import { SEEDED } from '@vp/testing-fixtures';
 import type { FastifyInstance } from 'fastify';
 import { TOKENS, buildTestApp, seedVideo } from '../../__tests__/test-app';
 import { Services } from '../../composition/services.module';

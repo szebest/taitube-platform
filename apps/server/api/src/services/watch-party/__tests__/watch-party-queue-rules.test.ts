@@ -1,7 +1,7 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import type { WatchPartyPermission } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import { getWatchPartyPermissions } from '@vp/permissions';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { decideQueuePending, decideQueueRemove } from '../watch-party-queue-rules';
 
 const abilityOf = (...permissions: WatchPartyPermission[]) =>

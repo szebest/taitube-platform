@@ -1,4 +1,4 @@
-import { expectOk } from '@vp/testing/result';
+import { expectOk } from '@kit/testing/result';
 import {
   OTHER_OWNER_CHANNEL_ID,
   OTHER_OWNER_ID,

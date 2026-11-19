@@ -1,9 +1,9 @@
 import { err, ok } from '@kit/result';
+import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { databaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { SEEDED } from '@vp/testing';
-import { expectErr, expectOk } from '@vp/testing/result';
+import { SEEDED } from '@vp/testing-fixtures';
 import { AnalyticsService } from '../analytics-service';
 import { ownerActing } from './service-deps';
 

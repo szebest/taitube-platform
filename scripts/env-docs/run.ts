@@ -1,8 +1,9 @@
 import { existsSync } from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
+import { describeEnvKey } from '../../packages/platform/server/config/src/index';
 import {
-  describeEnvKey,
+  AppEnvSchema,
   ENV_DOCS,
   ENV_GROUPS,
   EXTRA_ENV_DOCS,
@@ -45,7 +46,7 @@ export async function renderFor(root: string): Promise<string> {
     buildModel({
       docs: ENV_DOCS,
       groups: ENV_GROUPS,
-      describe: describeEnvKey,
+      describe: (key) => describeEnvKey(AppEnvSchema.shape[key]),
       extraDocs: EXTRA_ENV_DOCS,
       extraGroups: EXTRA_GROUPS,
       platform: JSON.parse(platform),

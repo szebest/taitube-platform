@@ -1,8 +1,8 @@
 import { err } from '@kit/result';
+import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { ErrorCodes, databaseUnavailable } from '@vp/errors';
-import { SEEDED } from '@vp/testing';
-import { expectErr, expectOk } from '@vp/testing/result';
+import { SEEDED } from '@vp/testing-fixtures';
 import { MyChannelsService } from '../my-channels-service';
 
 const OWNER = { id: SEEDED.userId, role: 'USER' } as const;

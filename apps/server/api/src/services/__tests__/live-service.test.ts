@@ -1,7 +1,7 @@
 import { ok } from '@kit/result';
+import { expectErr, expectOk } from '@kit/testing/result';
 import type { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { LiveService } from '../live-service';
 import { liveWorld, OWNER, STARTED, STREAM_ID, VIEWER, VIEWER_CHANNEL_ID } from './live-harness';
 import { TEST_CDN } from './service-deps';

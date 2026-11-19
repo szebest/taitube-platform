@@ -4,7 +4,7 @@ import { Badge } from '@kit/ui';
 import { Link } from '@tanstack/react-router';
 import type { ChannelAuditPageView } from '@vp/api-contracts';
 import { COMMENT_SETTINGS_FIELDS, VIDEO_AUDIT_FIELDS } from '@vp/domain';
-import { publishedAt } from '@vp/intl';
+import { publishedAt } from '@vp/intl-formats';
 import { AuditLogList } from '#app/components/team/audit-log-list';
 import { RoleBadge } from '#app/components/team/role-badge';
 

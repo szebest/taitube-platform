@@ -26,6 +26,6 @@ describe('architecture: resolved workspace closures', () => {
   );
 
   it('exempts nothing but the build tooling, which ships no code', () => {
-    expect(workspaceClosure('packages/universal/domain', 'dev')).toEqual([]);
+    expect(workspaceClosure('packages/platform/universal/primitives', 'dev')).toEqual([]);
   });
 });

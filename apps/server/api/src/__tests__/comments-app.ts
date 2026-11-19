@@ -1,5 +1,5 @@
+import { expectOk } from '@kit/testing/result';
 import { mintToken } from '@vp/dev-identity';
-import { expectOk } from '@vp/testing/result';
 import type { LightMyRequestResponse } from 'fastify';
 import { type TestApp, bearer, buildTestApp, seedVideo } from './test-app';
 

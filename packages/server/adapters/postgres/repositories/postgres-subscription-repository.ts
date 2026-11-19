@@ -1,3 +1,4 @@
+import { MS_PER_DAY } from '@kit/primitives';
 import { type Result, fromPromise, map } from '@kit/result';
 import type {
   ListSubscribersOptions,
@@ -16,7 +17,6 @@ import {
   type SubscriptionChangeResult,
   type ViewDateRange,
 } from '@vp/domain';
-import { MS_PER_DAY } from '@vp/domain/time';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { type SQL, and, asc, eq, gt, gte, lt, sql } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';

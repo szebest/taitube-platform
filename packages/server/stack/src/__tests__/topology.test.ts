@@ -1,4 +1,4 @@
-import { expectErr, expectOk } from '@vp/testing/result';
+import { expectErr, expectOk } from '@kit/testing/result';
 import { parseTopology, profilesOf, selectServices, tiers } from '../topology';
 
 const started = { condition: 'service_started' };

@@ -1,5 +1,5 @@
+import { SectionError } from '@kit/components';
 import { useT } from '@kit/intl-react';
-import { SectionError } from '@vp/components';
 import { myVideosQueryOptions, useApi } from '@vp/queries';
 import { FeedSentinel } from '#app/components/feed/feed-sentinel';
 import { VideoGrid } from '#app/components/video/video-grid';

@@ -1,9 +1,9 @@
+import { expectOk } from '@kit/testing/result';
 import type { WatchPartyServerFrame } from '@vp/api-contracts';
 import type { WatchPartyPreset, WatchPartyRoom } from '@vp/domain';
 import type { AppConfigOverrides } from '@vp/env-schema';
 import { roomIdOfWatchParty, WATCH_PARTY_WILDCARD_CHANNEL } from '@vp/events';
 import type { UserContext } from '@vp/permissions';
-import { expectOk } from '@vp/testing/result';
 import { seedPrimaryChannel } from '../../../__tests__/test-app';
 import { PatternHub } from '../../pattern-hub';
 import { RoomBatcher } from '../room-batcher';

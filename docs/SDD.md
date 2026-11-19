@@ -640,7 +640,7 @@ point **strictly down** — a T2 package may not depend on another T2. Sibling i
 they are how a layer quietly becomes a cycle. The layer is *declared* rather than derived from the graph: a
 derived depth cannot contradict itself, which would make the check vacuous. `devDependencies` count: a
 test-only edge resolves in CI and its types land in the emitted `.d.ts`, so only the build tooling, none of
-which ships code, is exempt, and only on a dev edge: `@kit/tsconfig`, `@vp/testing`, `@kit/vite-preset` (the
+which ships code, is exempt, and only on a dev edge: `@kit/tsconfig`, `@kit/testing`, `@vp/testing-fixtures`, `@kit/vite-preset` (the
 Vite config of the client apps) and `@vp/web-testing` (the spec helpers of the browser packages and apps).
 `@vp/web-testing` is the one the 93 ticket's table did not list as tooling: `@kit/ui` (T2) runs its own specs
 on its jsdom stubs and axe helper, and the alternative to the exemption was a copy of both.
@@ -773,7 +773,7 @@ collaborators a case touches and build the app through `buildApp({ config, adapt
 
 | Rank | Option | Status | Reason |
 |---|---|---|---|
-| 1 | Three packages on the platform's own `Intl`: `@vp/intl` (universal, T2), `@vp/messages` (universal, T3), `@kit/intl-react` (client, T4) | **Accepted** | No runtime dependency; the core runs in Node for a server render and in the browser for its hydration; the API can format a byte count without linking the product's copy |
+| 1 | Three packages on the platform's own `Intl`: `@kit/intl` (universal, T2), `@vp/messages` (universal, T3), `@kit/intl-react` (client, T4) | **Accepted** | No runtime dependency; the core runs in Node for a server render and in the browser for its hydration; the API can format a byte count without linking the product's copy |
 | 2 | `react-intl` / FormatJS | Rejected | About 50 KB gzipped to wrap built-ins the platform ships, ICU message syntax the repo uses nowhere else, and React-coupled, which the universal core must not be |
 | 3 | `i18next` | Rejected | A runtime and plugin ecosystem for loading and interpolation the repo does not need, with untyped keys and arguments unless a codegen step is added |
 | 4 | `date-fns` plus hand-rolled number helpers | Rejected | A dependency for what `Intl.RelativeTimeFormat` and `Intl.DateTimeFormat` do natively, and the hand-rolled half is exactly what `format-numbers.helper.ts` was |
@@ -794,7 +794,7 @@ would grow its own helper, and no home for the copy that renders a failure code 
   `FORMAT_WRONG_KIND` and `FORMAT_UNRENDERABLE` (§6.2): 422 and permanent, authoring faults that surface in
   tests and warnings rather than responses.
 - **The context is an argument.** Locale, time zone, currency and the reference instant arrive in
-  `FormatContext`; nothing in `@vp/intl` or `@vp/messages` reads `navigator`, the clock, `process` or a
+  `FormatContext`; nothing in `@kit/intl` or `@vp/messages` reads `navigator`, the clock, `process` or a
   `toLocale*` method. The locale is negotiated in one client module, `@vp/queries`' `request-locale.ts`, and
   handed to `IntlProvider`; the zone and the clock are read in `@kit/intl-react` alone.
 - **Options are allowlisted.** Each formatter declares its keys `as const satisfies OptionKeys<...>` and its
@@ -807,7 +807,7 @@ would grow its own helper, and no home for the copy that renders a failure code 
   like any other collaborator. It is never a module singleton either way (`no-module-state.test.ts`).
 - **Messages are typed by their template.** `dt('{count:plural}', { plural: { count: { one, other } } })`; the
   argument names and types are read off `{name:type}` tokens by template literal types, and a runtime regex
-  over the same flat grammar substitutes them through `@vp/intl`. Plural and ordinal branches select through
+  over the same flat grammar substitutes them through `@kit/intl`. Plural and ordinal branches select through
   `Intl.PluralRules`, so ordinal suffixes are catalogue copy, not formatter data. The grammar has no nesting
   and no escapes; anything richer takes a real parser.
 - **The API returns codes, the client chooses words.** `@vp/messages` is unreachable from a server package,
@@ -819,7 +819,7 @@ would grow its own helper, and no home for the copy that renders a failure code 
 `catalogue-parity` and `single-locale-source`. **Adding a language** is a catalogue directory under
 `packages/universal/messages/src/<tag>/` holding every `en` key, plus one entry in `SUPPORTED_LOCALES` and
 `LOCALE_DETAILS` (its name in itself, its `direction`, its OpenGraph name, its dynamic import); Polish needed no other change to
-`@vp/intl` or `@vp/messages` source, which is the proof the seam holds. A right-to-left language is the same
+`@kit/intl` or `@vp/messages` source, which is the proof the seam holds. A right-to-left language is the same
 data change with `direction: 'rtl'`. Each language past `en` costs its own lazy chunk, and every new message
 costs a translation in the same change, which the parity test enforces.
 
@@ -3119,7 +3119,7 @@ flowchart LR
 
 #### Metrics, traces and logs
 
-`createWatchPartyMetrics` (`packages/server/observability/src/watch-party-metrics.ts`) registers these on the API's registry. They are not in the §13.1 table: `metrics.test.ts` diffs that table against `createMetricsRegistry` and fails on a name found in one and not the other.
+`createWatchPartyMetrics` (`packages/server/pipeline-metrics/src/watch-party-metrics.ts`) registers these on the API's registry. They are not in the §13.1 table: `pipeline-metrics.test.ts` diffs that table against `createPipelineMetrics` and fails on a name found in one and not the other.
 
 | Metric | Type | Labels | Source |
 |---|---|---|---|
@@ -3430,7 +3430,7 @@ Guardrails: R2 Class A ops are the metric to watch (every segment upload is one 
 
 ### 13.1 Metrics catalogue
 
-Exposed by `packages/server/observability` (`prom-client` registry; API on `:9464/metrics`, workers likewise; scraped by Prometheus/Alloy).
+Exposed by `@kit/observability`, with the metrics of `@vp/pipeline-metrics` (`prom-client` registry; API on `:9464/metrics`, workers likewise; scraped by Prometheus/Alloy).
 
 | Metric | Type | Labels | Source | Used for |
 |---|---|---|---|---|
@@ -3509,12 +3509,12 @@ The `captions` queue has its own `vp-worker-captions` ScaledObject (min 0, max 4
 
 ### 13.3 Tracing (OpenTelemetry)
 
-- `initTracing` in `@vp/observability` starts `@opentelemetry/sdk-node` with the OTLP/HTTP trace exporter (`OTEL_EXPORTER_OTLP_ENDPOINT`) and the Node auto-instrumentations, `fs`, `dns` and `net` off; it is off under `NODE_ENV=test`. It is **preloaded**: each app's `src/instrument.ts` is the first module the process loads (`node --import ./dist/instrument.js dist/main.js`, the same flag under Bun), because the instrumentations patch only what is imported after them. The ESM hook wraps third-party modules only; this repo's own modules are excluded, since the hook cannot resolve their extensionless `export *`. The SDK exports traces only - metrics stay with Prometheus, logs with pino.
+- `initTracing` in `@kit/observability` starts `@opentelemetry/sdk-node` with the OTLP/HTTP trace exporter (`OTEL_EXPORTER_OTLP_ENDPOINT`) and the Node auto-instrumentations, `fs`, `dns` and `net` off; it is off under `NODE_ENV=test`. It is **preloaded**: each app's `src/instrument.ts` is the first module the process loads (`node --import ./dist/instrument.js dist/main.js`, the same flag under Bun), because the instrumentations patch only what is imported after them. The ESM hook wraps third-party modules only; this repo's own modules are excluded, since the hook cannot resolve their extensionless `export *`. The SDK exports traces only - metrics stay with Prometheus, logs with pino.
 - The API's HTTP server span is its own Fastify hook, `plugins/request-span.ts`: named `{method} {route template}`, parented on the caller's `traceparent`, and started from the root context, because the HTTP instrumentation hands a request it ignores over with tracing suppressed. The handler runs inside it, so `ioredis` spans and the `traceparent` a handler writes into a job both belong to the request's trace. `postgres` (postgres.js) has no OpenTelemetry instrumentation, so SQL is not a span.
 - BullMQ is instrumented by hand: producers inject `traceparent` into `job.data` (`packages/server/job-contracts` makes it a required field); the worker wrapper `withTelemetry(processor)` extracts it and starts a span `bullmq.process {queue}` as a **child of the producer's span**, with `job.id`, `attemptsMade`, `videoId` attributes. Work nothing traced asked for, such as a reconciler repair, starts a root span of its own (`rootTraceparent`). Each `ffmpeg` run is a child span `ffmpeg` carrying `ffmpeg.stage`, the argv with URLs redacted (`ffmpeg.command`) and `ffmpeg.exit_code`.
 - Result: one trace = `POST /v1/uploads/:uploadId/complete` -> `probe` -> three `transcode-*` -> `thumbnail` -> `package` -> `notify`, viewable in Tempo (compose `observability` profile, through the otel-collector); the video repository writes the active `trace_id` into `video_events`, so an operator can go from a video row to its trace.
 - The browser is the first span. `@kit/web-telemetry` starts `@opentelemetry/sdk-trace-web` in each client app after hydration, from a dynamic import, with the fetch instrumentation: it adds `traceparent` to calls to the API origin (`propagateTraceHeaderCorsUrls`) and to the page's own origin, which the instrumentation always does, and to no other host, so the API's request span is the browser span's child. Spans go over OTLP/HTTP to the build-time `VITE_OTEL_TRACES_URL`; with the key unset no tracer loads. Browser tracing is local only: each app's `.env.development` and the compose build set it to the local collector (`http://localhost:4318/v1/traces`, whose receiver allows the two app origins through CORS), and cloud builds leave it unset. Turning it on in the cloud takes a build arg and a CORS block on the Alloy OTLP receiver. The span attributes are the fetch instrumentation's own (method, URL with its query string dropped, status) and `service.name` `taitube-web` or `taitube-studio`: no user id, no session, nothing a viewer typed.
-- Sampling: `OTEL_TRACES_SAMPLER` takes the OpenTelemetry names `always_on`, `always_off`, `traceidratio` and their `parentbased_` forms, and `OTEL_TRACES_SAMPLER_ARG` is the ratio (0 to 1); any other value fails `loadEnv()`. Local runs default to `parentbased_always_on`; the cloud overlay sets `parentbased_traceidratio` at `0.2`, so a new trace is kept one time in five and a child follows its parent's decision (`resolveSampler` in `@vp/observability`, `sampler.test.ts`).
+- Sampling: `OTEL_TRACES_SAMPLER` takes the OpenTelemetry names `always_on`, `always_off`, `traceidratio` and their `parentbased_` forms, and `OTEL_TRACES_SAMPLER_ARG` is the ratio (0 to 1); any other value fails `loadEnv()`. Local runs default to `parentbased_always_on`; the cloud overlay sets `parentbased_traceidratio` at `0.2`, so a new trace is kept one time in five and a child follows its parent's decision (`resolveSampler` in `@kit/observability`, `sampler.test.ts`).
 
 ### 13.4 Logging
 

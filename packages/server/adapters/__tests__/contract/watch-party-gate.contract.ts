@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
+import { expectOk } from '@kit/testing/result';
 import type { WatchPartyBudget, WatchPartyGatePort, WatchPartyTicketGrant } from '@vp/core/ports';
-import { expectOk } from '@vp/testing/result';
 
 export interface WatchPartyGateSubject {
   readonly gate: WatchPartyGatePort;

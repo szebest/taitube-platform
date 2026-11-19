@@ -1,10 +1,10 @@
+import { MS_PER_HOUR } from '@kit/primitives';
 import { err } from '@kit/result';
+import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { ChannelRole } from '@vp/domain';
-import { MS_PER_HOUR } from '@vp/domain/time';
 import { databaseUnavailable } from '@vp/errors';
-import { SEEDED } from '@vp/testing';
-import { expectErr, expectOk } from '@vp/testing/result';
+import { SEEDED } from '@vp/testing-fixtures';
 import { announceStatsUpdated } from '../announce-stats-updated';
 
 const NOW = new Date('2026-03-10T13:42:00.000Z');

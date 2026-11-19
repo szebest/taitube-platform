@@ -1,7 +1,7 @@
+import { expectOk } from '@kit/testing/result';
 import { InMemoryCacheClient } from '@vp/adapters/in-memory';
 import type { WatchPartyServerFrame } from '@vp/api-contracts';
 import { watchPartyChannel } from '@vp/events';
-import { expectOk } from '@vp/testing/result';
 import { RoomEnvelopeSchema, WatchPartyBroadcaster } from '../watch-party-broadcaster';
 
 const ROOM = '018f0000-0000-7000-8000-00000000a001';

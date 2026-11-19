@@ -1,8 +1,8 @@
 import { createLogger } from '@kit/logger';
+import { expectOk } from '@kit/testing/result';
 import type { InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { NotificationLevel } from '@vp/domain';
 import { DEFAULT_PREFERENCES, type NotificationPreferences } from '@vp/domain/settings';
-import { expectOk } from '@vp/testing/result';
 
 export const CREATOR_ID = '00000000-0000-7000-8000-0000000000c0';
 export const CHANNEL_ID = '00000000-0000-7000-8000-0000000000c1';

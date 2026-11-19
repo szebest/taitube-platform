@@ -1,3 +1,4 @@
+import { CAPTIONS_TRACK_HEADERS } from '@kit/object-storage';
 import { type Result, err, isErr, map, ok } from '@kit/result';
 import type { CaptionTrackView } from '@vp/api-contracts';
 import type { StorageClient } from '@vp/core/ports';
@@ -12,7 +13,7 @@ import {
 import type { CdnBase } from '@vp/env-schema';
 import type { StorageUnavailable, VersionConflict } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { CAPTIONS_TRACK_HEADERS, captionsFileKey } from '@vp/storage';
+import { captionsFileKey } from '@vp/storage';
 import {
   type InvalidCaptionFile,
   type InvalidCaptionLanguage,

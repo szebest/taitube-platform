@@ -1,6 +1,6 @@
+import { expectOk } from '@kit/testing/result';
 import type { SearchHit, SearchQuery, SearchRepositoryPort } from '@vp/core/repositories';
 import { searchKinds } from '@vp/domain';
-import { expectOk } from '@vp/testing/result';
 import {
   CATEGORY_MUSIC_ID,
   HOUR_MS,

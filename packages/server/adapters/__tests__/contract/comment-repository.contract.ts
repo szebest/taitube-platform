@@ -1,5 +1,5 @@
+import { expectOk } from '@kit/testing/result';
 import type { CommentRepositoryPort } from '@vp/core/repositories';
-import { expectOk } from '@vp/testing/result';
 import { describeAuthoredCommentsContract } from './comment-authored.contract';
 import {
   C,

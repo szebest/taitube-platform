@@ -1,5 +1,5 @@
+import { expectOk } from '@kit/testing/result';
 import type { ModerationNotice, NewChannelAuditEntry } from '@vp/domain';
-import { expectOk } from '@vp/testing/result';
 import { recordModeration } from '../comment-moderation-record';
 import { InMemoryChannelAuditRepository } from '../in-memory-channel-audit-repository';
 import { InMemoryOutboxRepository } from '../in-memory-outbox-repository';

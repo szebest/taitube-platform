@@ -2,7 +2,7 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { createLogger } from '@kit/logger';
-import { captureLog } from '@vp/testing/log-capture';
+import { captureLog } from '@kit/testing/log-capture';
 import { type CliHost, run } from '../cli';
 import type { AutoscalerConfig } from '../config';
 

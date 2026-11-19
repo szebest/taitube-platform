@@ -1,7 +1,7 @@
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { runEntrypoint } from '../../packages/server/testing/src/run-entrypoint';
+import { runEntrypoint } from '../../packages/platform/server/testing/src/run-entrypoint';
 
 const ENTRYPOINT = path.resolve(import.meta.dirname, '../compose-autoscaler.ts');
 

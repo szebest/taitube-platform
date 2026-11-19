@@ -1,5 +1,5 @@
+import { Shelf } from '@kit/components';
 import { useT } from '@kit/intl-react';
-import { Shelf } from '@vp/components';
 import { useShortsFeed } from '#app/features/shorts/hooks/use-shorts-feed';
 import { ShortPosterCard } from '../short-poster-card/short-poster-card';
 

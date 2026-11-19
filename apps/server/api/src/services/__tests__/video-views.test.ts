@@ -1,3 +1,4 @@
+import { expectOk } from '@kit/testing/result';
 import {
   InMemoryChannelAuditRepository,
   InMemoryChannelHandleHistoryRepository,
@@ -5,7 +6,6 @@ import {
   InMemoryVideoRepository,
 } from '@vp/adapters/in-memory';
 import type { RenditionRecord, VideoRecord } from '@vp/core/repositories';
-import { expectOk } from '@vp/testing/result';
 import {
   loadChannelsOf,
   playbackUrl,

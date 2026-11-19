@@ -1,4 +1,4 @@
-import { MS_PER_HOUR, MS_PER_SECOND } from '@vp/domain/time';
+import { MS_PER_HOUR, MS_PER_SECOND } from '@kit/primitives';
 import { OUTBOX_MAX_ATTEMPTS, decideOutboxAttempt } from '../outbox-attempt.rule';
 
 const NOW = new Date('2026-01-01T00:00:00.000Z');

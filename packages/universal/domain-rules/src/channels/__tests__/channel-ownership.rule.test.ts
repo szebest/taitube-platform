@@ -1,6 +1,6 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { OWNER, aChannel } from '../../__tests__/entities';
 import { decideCreateChannel, decidePromote } from '../channel-ownership.rule';
 

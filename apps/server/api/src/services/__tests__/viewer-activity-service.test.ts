@@ -1,8 +1,8 @@
 import { Paginator } from '@kit/pagination';
+import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { seedPrimaryChannel, seedVideo } from '../../__tests__/test-app';
 import { ViewerActivityService } from '../viewer-activity-service';
 import { ViewerProgress } from '../viewer-progress';

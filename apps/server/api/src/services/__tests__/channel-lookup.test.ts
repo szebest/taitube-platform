@@ -1,6 +1,6 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { findChannelByIdOrHandle } from '../channel-lookup';
 
 const USER = '018f0000-0000-7000-8000-000000000001';

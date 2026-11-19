@@ -1,5 +1,5 @@
+import { expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
-import { expectOk } from '@vp/testing/result';
 import { readChatBacklog } from '../live-chat-backlog';
 import { STARTED, STREAM_ID, VIEWER } from './live-harness';
 

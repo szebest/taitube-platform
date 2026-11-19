@@ -1,7 +1,7 @@
 import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
-import { runEntrypoint } from '../../packages/server/testing/src/run-entrypoint';
+import { runEntrypoint } from '../../packages/platform/server/testing/src/run-entrypoint';
 
 const ENTRYPOINT = resolve(import.meta.dirname, '../gen-env-docs.ts');
 const REPO = resolve(import.meta.dirname, '../..');

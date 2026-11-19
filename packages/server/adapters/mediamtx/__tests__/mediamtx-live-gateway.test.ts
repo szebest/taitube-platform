@@ -1,5 +1,5 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { MediaMtxLiveGateway } from '../mediamtx-live-gateway';
 
 const CONFIG = { apiUrl: 'http://mediamtx:9997', timeoutMs: 1000 };

@@ -1,7 +1,7 @@
+import { expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { userChannel } from '@vp/events';
 import { ids } from '@vp/job-contracts';
-import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { DAY_MS, queueOutboxEntry } from '../stages/housekeeping/__tests__/housekeeping-harness';
 

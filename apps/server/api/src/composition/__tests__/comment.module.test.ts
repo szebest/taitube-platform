@@ -1,8 +1,8 @@
 import { Container } from '@kit/composition';
+import { expectOk } from '@kit/testing/result';
 import { Adapters, registerAdapters } from '@vp/adapters/composition';
 import { inProcessAppConfig } from '@vp/env-schema';
 import type { UserContext } from '@vp/permissions';
-import { expectOk } from '@vp/testing/result';
 import { actingAsPrimary, seedPrimaryChannel } from '../../__tests__/test-app';
 import { Services, registerServices } from '../services.module';
 

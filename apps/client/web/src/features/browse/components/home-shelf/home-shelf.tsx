@@ -1,7 +1,7 @@
+import { Shelf } from '@kit/components';
 import { useT } from '@kit/intl-react';
 import { assertNever } from '@kit/result';
 import type { HomeShelf as HomeShelfData } from '@vp/api-contracts';
-import { Shelf } from '@vp/components';
 import { FeedVideoCard } from '#app/components/video/feed-video-card';
 
 type Translate = ReturnType<typeof useT>['tOr'];

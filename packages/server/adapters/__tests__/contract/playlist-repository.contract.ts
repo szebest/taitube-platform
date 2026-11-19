@@ -1,6 +1,6 @@
+import { expectOk } from '@kit/testing/result';
 import type { PlaylistRepositoryPort } from '@vp/core/repositories';
 import { WATCH_LATER_TITLE } from '@vp/domain';
-import { expectOk } from '@vp/testing/result';
 import { OWNER_ID, VIDEO_IDS, seedOwners } from './fixtures';
 import {
   AN_HOUR_AGO,

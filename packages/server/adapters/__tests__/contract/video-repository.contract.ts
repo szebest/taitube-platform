@@ -1,9 +1,9 @@
 import type { Result } from '@kit/result';
+import { expectOk } from '@kit/testing/result';
 import type { VideoRecord, VideoRepository, VideoWithDetails } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import type { VideoStatus } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { expectOk } from '@vp/testing/result';
 import {
   HOUR_MS,
   OTHER_OWNER_ID,

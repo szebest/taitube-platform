@@ -1,5 +1,5 @@
+import { expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
-import { expectOk } from '@vp/testing/result';
 import { followsChannel } from '../account-subscription';
 
 const FAN = '00000000-0000-7000-8000-0000000000a1';

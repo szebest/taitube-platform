@@ -1,4 +1,4 @@
-import type { ListOptions } from '@vp/intl';
+import type { ListOptions } from '@kit/intl';
 import { defineKind, isRecord } from '../kind';
 
 const isStringList = (value: unknown): value is readonly string[] =>

@@ -1,6 +1,6 @@
+import { expectOk } from '@kit/testing/result';
 import type { NewChannelInvite, Repositories } from '@vp/core/repositories';
 import type { Channel, NewChannelAuditEntry } from '@vp/domain';
-import { expectOk } from '@vp/testing/result';
 import { OTHER_OWNER_ID, OWNER_CHANNEL_ID, OWNER_ID } from './fixtures';
 
 export const INVITEE_ID = '00000000-0000-7000-8000-000000000103';

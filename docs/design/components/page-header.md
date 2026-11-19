@@ -1,6 +1,6 @@
 # PageHeader
 
-The title block at the top of a page that is not a feed: a title, an optional description, and the actions for the page. It carries no signature move; it is where the editorial serif may appear for a one-line curator note. In `@vp/components` because web (You hub, library pages, settings) and every studio page render it.
+The title block at the top of a page that is not a feed: a title, an optional description, and the actions for the page. It carries no signature move; it is where the editorial serif may appear for a one-line curator note. In `@kit/components` because web (You hub, library pages, settings) and every studio page render it.
 
 ## Anatomy
 

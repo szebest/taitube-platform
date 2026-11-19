@@ -1,9 +1,9 @@
 import { Paginator } from '@kit/pagination';
 import { err } from '@kit/result';
+import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { ErrorCodes, databaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { SearchHistoryService } from '../search-history-service';
 
 const VIEWER: UserContext = { id: '00000000-0000-7000-8000-00000000e001', role: 'USER' };

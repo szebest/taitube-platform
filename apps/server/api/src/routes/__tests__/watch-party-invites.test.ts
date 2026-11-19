@@ -1,6 +1,6 @@
+import { expectOk } from '@kit/testing/result';
 import type { NotificationPreferences } from '@vp/domain/settings';
 import { ErrorCodes } from '@vp/errors';
-import { expectOk } from '@vp/testing/result';
 import { seedPrimaryChannel } from '../../__tests__/test-app';
 import {
   type Account,

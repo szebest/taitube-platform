@@ -1,6 +1,6 @@
+import { expectOk } from '@kit/testing/result';
 import type { Repositories } from '@vp/core/repositories';
 import type { Channel, ChannelRole } from '@vp/domain';
-import { expectOk } from '@vp/testing/result';
 import {
   INVITEE_ID,
   auditOf,

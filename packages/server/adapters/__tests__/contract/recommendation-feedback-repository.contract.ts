@@ -1,3 +1,4 @@
+import { expectOk } from '@kit/testing/result';
 import type { RecommendationFeedbackRepositoryPort } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import {
@@ -6,7 +7,6 @@ import {
   type RecommendationFeedbackEntry,
 } from '@vp/domain';
 import type { UserContext } from '@vp/permissions';
-import { expectOk } from '@vp/testing/result';
 import {
   OTHER_OWNER_CHANNEL_ID as OTHER_CHANNEL_ID,
   OTHER_OWNER_ID,

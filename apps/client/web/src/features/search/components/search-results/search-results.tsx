@@ -1,8 +1,8 @@
+import { PageHeader, SectionError, VideoCardSkeleton } from '@kit/components';
 import { useT } from '@kit/intl-react';
 import { Callout } from '@kit/ui';
 import { useSuspenseInfiniteQuery } from '@tanstack/react-query';
 import { getRouteApi } from '@tanstack/react-router';
-import { PageHeader, SectionError, VideoCardSkeleton } from '@vp/components';
 import { isExactChannelMatch } from '@vp/domain';
 import { useApi } from '@vp/queries';
 import { Suspense, useId, useRef } from 'react';

@@ -1,6 +1,6 @@
+import { expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
-import { SEEDED } from '@vp/testing';
-import { expectOk } from '@vp/testing/result';
+import { SEEDED } from '@vp/testing-fixtures';
 import { seedPrimaryChannel } from '../../__tests__/test-app';
 import { VideoService } from '../video-service';
 import { videoServiceDeps } from './service-deps';

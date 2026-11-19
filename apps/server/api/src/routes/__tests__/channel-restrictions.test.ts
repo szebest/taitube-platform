@@ -1,7 +1,7 @@
+import { expectOk } from '@kit/testing/result';
 import { CHANNEL_HEADER, type RestrictionActionBody } from '@vp/api-contracts';
 import type { ChannelRole } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
-import { expectOk } from '@vp/testing/result';
 import {
   AS,
   AUTHOR,

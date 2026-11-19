@@ -1,6 +1,6 @@
+import { expectOk } from '@kit/testing/result';
 import { InMemoryCommentSlowMode, type InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { CommentSettings } from '@vp/domain';
-import { expectOk } from '@vp/testing/result';
 import type { CommentCreateDeps } from '../comment-create';
 import type { CommentUpdateDeps } from '../comment-update';
 

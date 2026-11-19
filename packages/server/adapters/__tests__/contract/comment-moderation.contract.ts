@@ -1,4 +1,4 @@
-import { expectOk } from '@vp/testing/result';
+import { expectOk } from '@kit/testing/result';
 import { C, seedComment, seedThreads } from './comment-contract-context';
 import { HELD_AT_CREATION, describeModerationFixture, outcome } from './comment-moderation-fixture';
 import { OTHER_OWNER_CHANNEL_ID, OWNER_ID, VIDEO_IDS } from './fixtures';

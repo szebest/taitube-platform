@@ -1,7 +1,7 @@
 import { err } from '@kit/result';
+import { expectOk } from '@kit/testing/result';
 import { type InMemoryJobQueue, InMemoryRepositories } from '@vp/adapters/in-memory';
 import { ErrorCodes, queueUnavailable } from '@vp/errors';
-import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { runReconcileLive } from '../reconcile-live';
 import { HOUR_MS, hoursAgo, inMemoryQueues } from './housekeeping-harness';

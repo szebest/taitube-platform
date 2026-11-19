@@ -1,7 +1,7 @@
+import { expectOk } from '@kit/testing/result';
 import type { CommentActionBody } from '@vp/api-contracts';
 import { CHANNEL_HEADER } from '@vp/api-contracts';
 import { DEFAULT_COMMENT_SETTINGS } from '@vp/domain';
-import { expectOk } from '@vp/testing/result';
 import {
   AS,
   AUTHOR,

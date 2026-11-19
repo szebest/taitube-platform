@@ -1,8 +1,8 @@
+import { expectOk } from '@kit/testing/result';
 import { InMemoryJobQueue } from '@vp/adapters/in-memory';
 import { ErrorCodes } from '@vp/errors';
 import { ids } from '@vp/job-contracts';
-import { SEEDED } from '@vp/testing';
-import { expectOk } from '@vp/testing/result';
+import { SEEDED } from '@vp/testing-fixtures';
 import { TOKENS, bearer, buildTestApp, seedPrimaryChannel, type TestApp } from './test-app';
 
 const VIDEO_ID = '018f0000-0000-7000-8000-000000000030';

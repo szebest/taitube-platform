@@ -1,4 +1,4 @@
-import { expectOk } from '@vp/testing/result';
+import { expectOk } from '@kit/testing/result';
 import { inMemoryPartyGuestSessionsSubject } from '../../__tests__/contract/in-memory-port-subjects';
 import { describePartyGuestSessionsContract } from '../../__tests__/contract/party-guest-sessions.contract';
 import { InMemoryPartyGuestSessions } from '../in-memory-party-guest-sessions';

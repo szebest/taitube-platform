@@ -1,4 +1,4 @@
-import { MS_PER_SECOND } from './time';
+import { MS_PER_SECOND } from '@kit/primitives';
 import type { WatchPartyPhase } from './watch-party';
 
 export const WATCH_PARTY_RATES = [0.5, 0.75, 1, 1.25, 1.5, 2] as const;

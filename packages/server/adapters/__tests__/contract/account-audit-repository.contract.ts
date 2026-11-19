@@ -1,6 +1,6 @@
+import { expectOk } from '@kit/testing/result';
 import type { AccountAuditRepositoryPort } from '@vp/core/repositories';
 import type { NewAccountAuditEntry } from '@vp/domain';
-import { expectOk } from '@vp/testing/result';
 import { OTHER_OWNER_ID, OWNER_ID, seedOwnerAccounts } from './fixtures';
 import { walkByCreatedAt } from './keyset-walk';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';

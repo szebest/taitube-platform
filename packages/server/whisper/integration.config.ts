@@ -1,4 +1,4 @@
-import { definePackageTestConfig } from '@vp/testing';
+import { definePackageTestConfig } from '@kit/testing';
 
 /** The real whisper-cli over the real model; `pnpm test:integration` runs it where both exist. */
 export default definePackageTestConfig({

@@ -1,4 +1,4 @@
-import { expectOk } from '@vp/testing/result';
+import { expectOk } from '@kit/testing/result';
 import { inMemorySubscriptionCacheSubject } from '../../__tests__/contract/in-memory-port-subjects';
 import { describeSubscriptionCacheContract } from '../../__tests__/contract/subscription-cache.contract';
 import { InMemorySubscriptionCache } from '../in-memory-subscription-cache';

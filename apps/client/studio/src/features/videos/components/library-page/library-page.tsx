@@ -1,5 +1,5 @@
+import { PageHeader } from '@kit/components';
 import { useT } from '@kit/intl-react';
-import { PageHeader } from '@vp/components';
 import { DataTableSkeleton } from '#app/components/table/data-table';
 import { useSelectedVideo } from '#app/hooks/use-selected-video';
 import { LIBRARY_SKELETON_COLUMNS } from '../library-columns/library-columns';

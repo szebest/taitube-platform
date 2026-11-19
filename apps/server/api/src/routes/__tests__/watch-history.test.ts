@@ -1,5 +1,5 @@
+import { MS_PER_HOUR } from '@kit/primitives';
 import { err } from '@kit/result';
-import { MS_PER_HOUR } from '@vp/domain/time';
 import { ErrorCodes, cacheUnavailable } from '@vp/errors';
 import {
   ABSENT,

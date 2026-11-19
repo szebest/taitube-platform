@@ -1,6 +1,6 @@
+import { expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
-import { createMetricsRegistry } from '@vp/observability';
-import { expectOk } from '@vp/testing/result';
+import { createPipelineMetrics } from '@vp/pipeline-metrics';
 import { uuidv7 } from 'uuidv7';
 import { runReconcileCaptions } from '../reconcile-captions';
 import { seedVideo } from './housekeeping-harness';
@@ -11,7 +11,7 @@ describe('housekeeping: reconcile-captions', () => {
   const reconcile = (enabled = true) =>
     runReconcileCaptions({
       repositories,
-      metrics: createMetricsRegistry(),
+      metrics: createPipelineMetrics(),
       captions: { enabled, modelVersion: 'small-q5_1' },
       thresholdMs: -1000,
       scanLimit: 10,

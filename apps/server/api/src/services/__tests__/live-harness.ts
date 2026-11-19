@@ -1,7 +1,7 @@
+import { expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { Channel, LiveStream, VideoVisibility } from '@vp/domain';
 import type { UserContext } from '@vp/permissions';
-import { expectOk } from '@vp/testing/result';
 
 export const OWNER: UserContext = { id: '00000000-0000-7000-8000-0000000000c0', role: 'USER' };
 export const VIEWER: UserContext = { id: '00000000-0000-7000-8000-0000000000d0', role: 'USER' };

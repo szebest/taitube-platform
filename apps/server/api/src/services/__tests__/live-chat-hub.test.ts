@@ -1,7 +1,7 @@
 import { createLogger } from '@kit/logger';
+import { expectOk } from '@kit/testing/result';
 import { InMemoryCacheClient } from '@vp/adapters/in-memory';
 import type { LiveChatBroadcast } from '@vp/api-contracts';
-import { expectOk } from '@vp/testing/result';
 import { LiveChatHub, publishLiveChat } from '../live-chat-hub';
 
 const STREAM = '00000000-0000-7000-8000-00000000f101';

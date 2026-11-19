@@ -1,6 +1,6 @@
 import type { InMemoryCacheClient, InMemoryRepositories } from '@vp/adapters/in-memory';
 import { ErrorCodes } from '@vp/errors';
-import { SEEDED } from '@vp/testing';
+import { SEEDED } from '@vp/testing-fixtures';
 import type { FastifyInstance } from 'fastify';
 import { buildTestApp, seedVideo } from '../../__tests__/test-app';
 
