@@ -174,3 +174,13 @@ export async function hydrated(locator: Locator): Promise<void> {
     )
     .toBe(true);
 }
+
+/**
+ * After a keyboard pick-up, dnd-kit drops arrow keys until it has attached its keydown listener and
+ * measured the drop targets; both land after the "Picked up" announcement, and two frames on they have.
+ */
+export async function keyboardDragReady(page: Page): Promise<void> {
+  await page.evaluate(
+    () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+  );
+}
