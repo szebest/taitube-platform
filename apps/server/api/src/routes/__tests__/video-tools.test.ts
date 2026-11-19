@@ -293,11 +293,24 @@ describe('video tool routes', () => {
       expect((await add(who)).statusCode).toBe(status);
     });
 
-    it('keeps the cards of a private video as absent as the video', async () => {
-      const res = await call('stranger', 'GET', `/v1/videos/${PRIVATE}/corrections`);
+    it.each([
+      { name: 'listing', method: 'GET' as const, path: '', body: undefined },
+      { name: 'adding', method: 'POST' as const, path: '', body: card },
+      { name: 'editing', method: 'PATCH' as const, path: `/${ABSENT}`, body: { text: 'x' } },
+      { name: 'removing', method: 'DELETE' as const, path: `/${ABSENT}`, body: undefined },
+    ])(
+      'keeps a private video as absent to a stranger $name its cards',
+      async ({ method, path, body }) => {
+        const res = await call(
+          'stranger',
+          method,
+          `/v1/videos/${PRIVATE}/corrections${path}`,
+          body
+        );
 
-      expect(res.json().code).toBe(ErrorCodes.VIDEO_NOT_FOUND);
-    });
+        expect(res.json().code).toBe(ErrorCodes.VIDEO_NOT_FOUND);
+      }
+    );
 
     it('refuses a bad range with a 422 and the eleventh card with a 409', async () => {
       for (let n = 0; n < 10; n++) {

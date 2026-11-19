@@ -68,7 +68,7 @@ export class VideoCorrectionService {
     const found = await this.deps.videos.findById(videoId);
     if (isErr(found)) return found;
     const video = decideVideoEditAccess({ editor: user, video: found.value, videoId });
-    if (isErr(video)) return video;
+    if (isErr(video)) return err(publicReadFailure(video.error));
 
     const existing = await this.deps.corrections.list(videoId);
     if (isErr(existing)) return existing;
@@ -99,7 +99,7 @@ export class VideoCorrectionService {
     const found = await this.deps.videos.findById(videoId);
     if (isErr(found)) return found;
     const video = decideVideoEditAccess({ editor: user, video: found.value, videoId });
-    if (isErr(video)) return video;
+    if (isErr(video)) return err(publicReadFailure(video.error));
 
     const existing = await this.deps.corrections.list(videoId);
     if (isErr(existing)) return existing;
@@ -127,7 +127,7 @@ export class VideoCorrectionService {
     const found = await this.deps.videos.findById(videoId);
     if (isErr(found)) return found;
     const video = decideVideoEditAccess({ editor: user, video: found.value, videoId });
-    if (isErr(video)) return video;
+    if (isErr(video)) return err(publicReadFailure(video.error));
 
     const removed = await this.deps.corrections.remove(videoId, correctionId);
     if (isErr(removed)) return removed;
