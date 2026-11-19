@@ -1,6 +1,7 @@
 import { Paginator } from '@kit/pagination';
 import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
+import { ACCOUNT_AUDIT_USER_AGENT_MAX_LENGTH } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import { AccountSecurityService } from '../account-security-service';
 
@@ -38,6 +39,16 @@ describe('AccountSecurityService', () => {
       ],
       nextCursor: null,
     });
+  });
+
+  it('records a sign-in into a slot as the caller own row, with the user agent cut short', async () => {
+    const recorded = expectOk(
+      await service.recordSignIn(USER, { slot: 4, userAgent: 'x'.repeat(500) })
+    );
+
+    expect(recorded).toMatchObject({ action: 'account.signed_in', slot: 4 });
+    expect(recorded.userAgent).toHaveLength(ACCOUNT_AUDIT_USER_AGENT_MAX_LENGTH);
+    expect(expectOk(await service.signIns(USER, {})).items).toEqual([recorded]);
   });
 
   it('refuses a cursor it did not mint', async () => {

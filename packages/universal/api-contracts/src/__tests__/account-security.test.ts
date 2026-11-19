@@ -1,4 +1,4 @@
-import { listMySignIns } from '../account-security';
+import { listMySignIns, recordMySignIn } from '../account-security';
 
 describe('packages/api-contracts: account security', () => {
   it('serves the sign-in history as a keyset page of the caller own rows', () => {
@@ -19,5 +19,14 @@ describe('packages/api-contracts: account security', () => {
       createdAt: '2026-01-01T00:00:00.000Z',
     };
     expect(listMySignIns.result.safeParse({ items: [row], nextCursor: null }).success).toBe(ok);
+  });
+
+  it.each([
+    { scenario: 'a slot and whether it was added', body: { slot: 2, added: true }, ok: true },
+    { scenario: 'no slot', body: { added: false }, ok: false },
+    { scenario: 'a token beside them', body: { slot: 0, added: false, token: 't' }, ok: false },
+  ])('records a sign-in from $scenario: $ok', ({ body, ok }) => {
+    expect(recordMySignIn).toMatchObject({ method: 'POST', status: 201 });
+    expect(recordMySignIn.body.safeParse(body).success).toBe(ok);
   });
 });
