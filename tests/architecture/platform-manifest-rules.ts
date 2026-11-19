@@ -28,7 +28,6 @@ export interface PackageFiles {
 
 export interface Context {
   byName: ReadonlyMap<string, Pkg>;
-  pending: ReadonlySet<string>;
   /** The package whose presets a platform tsconfig may extend: `@kit/tsconfig` until it moves, then its `@kit` successor. */
   preset: string;
 }
@@ -111,7 +110,7 @@ export function manifestProblems(
   for (const [group, deps] of edges) {
     for (const dep of Object.keys(deps ?? {})) {
       const target = context.byName.get(dep);
-      if (target && dependsOnAppPackage(pkg, target, context.pending)) {
+      if (target && dependsOnAppPackage(pkg, target)) {
         problems.push(`lists the app package ${dep} in ${group}`);
       }
     }

@@ -1,11 +1,7 @@
 import { posix } from 'node:path';
-import {
-  BUILD_TOOLING,
-  checkBoundaries,
-  pendingPlatformMoves,
-} from '../../scripts/check-boundaries';
+import { BUILD_TOOLING, checkBoundaries } from '../../scripts/check-boundaries';
 import { load, type Pkg } from '../../scripts/workspace-packages';
-import { trackedFiles } from './repo-files';
+import { read, trackedFiles } from './repo-files';
 
 function pkg(overrides: Partial<Pkg> & { name: string }): Pkg {
   return {
@@ -60,41 +56,30 @@ describe('architecture: package boundaries', () => {
     }
   );
 
-  const PENDING = new Set(['@vp/moving']);
-
   function platformEdge(dep: string, dev: boolean): string[] {
-    return checkBoundaries(
-      [
-        pkg({ name: '@kit/di', dir: 'packages/platform/universal/di', deps: [{ name: dep, dev }] }),
-        pkg({ name: dep, dir: `packages/universal/${dep.slice(4)}`, layer: 1 }),
-      ],
-      PENDING
-    );
+    return checkBoundaries([
+      pkg({ name: '@kit/di', dir: 'packages/platform/universal/di', deps: [{ name: dep, dev }] }),
+      pkg({ name: dep, dir: `packages/universal/${dep.slice(4)}`, layer: 1 }),
+    ]);
   }
 
   it.each([
     { group: 'a dependency', dev: false, how: 'depends on', dep: '@vp/domain' },
     { group: 'a devDependency', dev: true, how: 'dev-depends on', dep: '@vp/domain' },
-    { group: 'build tooling', dev: true, how: 'dev-depends on', dep: '@vp/lint-config' },
+    { group: 'build tooling', dev: true, how: 'dev-depends on', dep: '@vp/web-testing' },
   ])('reports a platform package that names an app package as $group', ({ dev, how, dep }) => {
     expect(platformEdge(dep, dev)).toEqual([
       `@kit/di (platform) ${how} ${dep} (app) — a platform package depends, peer-depends and dev-depends only on platform packages`,
     ]);
   });
 
-  it('lets a platform package depend on an app package whose move to @kit/* is pending', () => {
-    expect(platformEdge('@vp/moving', false)).toEqual([]);
-  });
+  it('still rejects an app package that package-moves.json sends to @kit/*', () => {
+    const moved = '@vp/concurrency';
 
-  it('counts a package as pending when package-moves.json sends it, or any export of it, to @kit/*', () => {
-    expect(
-      pendingPlatformMoves({
-        '@vp/whole': '@kit/whole',
-        '@vp/split': { '.': { kept: '@vp/split', moved: '@kit/split' } },
-        '@vp/entry': { '.': '@vp/entry', './sub': '@kit/sub' },
-        '@vp/stays': { '.': { a: '@vp/stays', b: '@vp/other' } },
-      })
-    ).toEqual(new Set(['@vp/whole', '@vp/split', '@vp/entry']));
+    expect(JSON.parse(read('scripts/package-moves.json'))).toHaveProperty([moved]);
+    expect(platformEdge(moved, false)).toEqual([
+      `@kit/di (platform) depends on ${moved} (app) — a platform package depends, peer-depends and dev-depends only on platform packages`,
+    ]);
   });
 
   it('reads the tier of a platform package from its path, and lets an app depend on one', () => {
