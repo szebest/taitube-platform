@@ -1,7 +1,7 @@
+import { expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { QueueJob } from '@vp/core/ports';
 import type { NotifyModerationJob } from '@vp/job-contracts';
-import { expectOk } from '@vp/testing/result';
 import { createNotifyModerationProcessor } from '../notify-moderation';
 import {
   CHANNEL_ID,

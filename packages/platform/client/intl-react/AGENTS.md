@@ -8,7 +8,7 @@ Instructions for any coding agent working on `@kit/intl-react`.
 
 ## 1. Scope & Purpose
 
-`IntlProvider`, `useT`, `useFormat` and `<Format>`: the React face of `@vp/intl` and `@vp/messages`.
+`IntlProvider`, `useT`, `useFormat` and `<Format>`: the React face of `@kit/intl` and `@vp/messages`.
 `client` tier, layer T4. Small on purpose: everything that can be pure lives in the two universal packages.
 
 ---

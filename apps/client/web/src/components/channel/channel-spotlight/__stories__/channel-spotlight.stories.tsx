@@ -1,6 +1,6 @@
+import { VideoCard } from '@kit/components';
 import { Button, Icon } from '@kit/ui';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { VideoCard } from '@vp/components';
 import { ChannelSpotlight, ChannelSpotlightSkeleton } from '..';
 import { ChannelSpotlightRoot, type ChannelSpotlightRootProps } from '../channel-spotlight';
 

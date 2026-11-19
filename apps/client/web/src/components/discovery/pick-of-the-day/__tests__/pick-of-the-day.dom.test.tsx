@@ -1,5 +1,5 @@
+import { VideoCard } from '@kit/components';
 import { render, screen, within } from '@testing-library/react';
-import { VideoCard } from '@vp/components';
 import { axeViolations } from '@vp/web-testing/dom';
 import { AppProviders } from '#app/__tests__/providers';
 import { PickOfTheDay, PickOfTheDaySkeleton } from '..';

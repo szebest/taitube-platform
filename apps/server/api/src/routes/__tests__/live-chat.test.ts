@@ -1,6 +1,6 @@
+import { expectOk } from '@kit/testing/result';
 import type { LiveChatServerFrame } from '@vp/api-contracts';
 import { mintToken } from '@vp/dev-identity';
-import { expectOk } from '@vp/testing/result';
 import { type TestApp, bearer, buildTestApp } from '../../__tests__/test-app';
 import { dial } from './socket-client';
 

@@ -28,7 +28,7 @@ terraform apply
 
 CI runs `terraform fmt -check -recursive` and `terraform validate` on every change; the specs that read the HCL run with:
 ```bash
-pnpm --filter @vp/testing test cloud-terraform cloud-r2-tokens
+pnpm --filter @vp/testing-fixtures test cloud-terraform cloud-r2-tokens
 ```
 
 See [AGENTS.md](AGENTS.md) for agent guidelines.

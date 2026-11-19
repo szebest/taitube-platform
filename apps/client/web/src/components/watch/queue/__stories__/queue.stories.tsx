@@ -1,5 +1,5 @@
+import { EmptyLibraryIllustration, EmptyState, VideoCard } from '@kit/components';
 import type { Decorator, Meta, StoryObj } from '@storybook/react-vite';
-import { EmptyLibraryIllustration, EmptyState, VideoCard } from '@vp/components';
 import { useState } from 'react';
 import { Queue, QueueSkeleton } from '..';
 import type { QueueModesState } from '../queue';

@@ -1,6 +1,6 @@
+import { expectOk } from '@kit/testing/result';
 import { CHANNEL_HEADER } from '@vp/api-contracts';
 import type { ChannelRole } from '@vp/domain';
-import { expectOk } from '@vp/testing/result';
 import {
   AS,
   CREATOR,

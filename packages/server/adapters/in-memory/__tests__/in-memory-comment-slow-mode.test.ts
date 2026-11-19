@@ -1,4 +1,4 @@
-import { expectOk } from '@vp/testing/result';
+import { expectOk } from '@kit/testing/result';
 import { describeCommentSlowModeContract } from '../../__tests__/contract/comment-slow-mode.contract';
 import { InMemoryCommentSlowMode } from '../in-memory-comment-slow-mode';
 

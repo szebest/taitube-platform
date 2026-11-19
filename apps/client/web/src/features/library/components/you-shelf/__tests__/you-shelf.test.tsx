@@ -1,4 +1,4 @@
-import { Shelf } from '@vp/components';
+import { Shelf } from '@kit/components';
 import { renderPage } from '@vp/web-testing/server';
 import { AppProviders } from '#app/__tests__/providers';
 import { YouShelf } from '../you-shelf';

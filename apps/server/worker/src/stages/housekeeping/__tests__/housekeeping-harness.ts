@@ -1,6 +1,6 @@
+import { expectOk } from '@kit/testing/result';
 import { InMemoryJobQueue, type InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { NewOutboxInput, NewVideoInput, VideoRecord } from '@vp/core/repositories';
-import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 
 export const HOUR_MS = 60 * 60 * 1000;

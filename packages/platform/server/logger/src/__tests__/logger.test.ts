@@ -1,4 +1,4 @@
-import { captureLog } from '@vp/testing/log-capture';
+import { captureLog } from '@kit/testing/log-capture';
 import { LogContext } from '../log-context';
 import { type LoggerConfig, createLogger } from '../logger';
 

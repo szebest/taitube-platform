@@ -1,4 +1,4 @@
-import { expectOk } from '@vp/testing/result';
+import { expectOk } from '@kit/testing/result';
 import type { MakeRepositoriesSubject } from './subjects';
 import { describeWatchPartyCoWatchersContract } from './watch-party-co-watchers.contract';
 import {

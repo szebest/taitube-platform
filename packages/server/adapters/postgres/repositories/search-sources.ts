@@ -1,3 +1,4 @@
+import { SECONDS_PER_DAY } from '@kit/primitives';
 import type { SearchHit, SearchQuery } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import {
@@ -6,7 +7,6 @@ import {
   type SearchResultKind,
   searchHandleOf,
 } from '@vp/domain';
-import { SECONDS_PER_DAY } from '@vp/domain/time';
 import { type SQL, count, desc, eq, getTableColumns, or, sql } from 'drizzle-orm';
 import { type AnyPgColumn, type PgTable, QueryBuilder } from 'drizzle-orm/pg-core';
 import {

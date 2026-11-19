@@ -1,7 +1,7 @@
+import { EmptyLibraryIllustration, EmptyState, ShelfSkeleton } from '@kit/components';
 import { useT } from '@kit/intl-react';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { ClientOnly, Link, useLocation } from '@tanstack/react-router';
-import { EmptyLibraryIllustration, EmptyState, ShelfSkeleton } from '@vp/components';
 import { useAccount, useApi } from '@vp/queries';
 import { type ReactNode, Suspense } from 'react';
 import { PickOfTheDaySkeleton } from '#app/components/discovery/pick-of-the-day';

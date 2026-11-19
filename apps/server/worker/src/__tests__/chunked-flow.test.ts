@@ -1,9 +1,9 @@
+import { expectOk } from '@kit/testing/result';
 import type { QueueJob } from '@vp/core/ports';
 import type { MediaTools } from '@vp/ffmpeg';
 import type { ProbeJob } from '@vp/job-contracts';
 import { chunkPrefix } from '@vp/storage';
-import { createMockJob } from '@vp/testing';
-import { expectOk } from '@vp/testing/result';
+import { createMockJob } from '@vp/testing-fixtures';
 import { STAGE_REGISTRY } from '../registry';
 import { createPackageProcessor } from '../stages/package';
 import { createProbeProcessor } from '../stages/probe';

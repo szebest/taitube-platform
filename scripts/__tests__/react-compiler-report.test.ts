@@ -1,7 +1,7 @@
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
-import { runEntrypoint } from '../../packages/server/testing/src/run-entrypoint';
+import { runEntrypoint } from '../../packages/platform/server/testing/src/run-entrypoint';
 
 const FILE = 'packages/client/demo/src/toggle.tsx';
 

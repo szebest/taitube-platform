@@ -1,8 +1,9 @@
 import type { Logger } from '@kit/logger';
+import { getHeaderMapping } from '@kit/object-storage';
+import { MS_PER_SECOND } from '@kit/primitives';
 import { type Result, err, isErr, ok, unwrapOr } from '@kit/result';
 import type { JobQueue, QueueJob, StorageClient } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
-import { MS_PER_SECOND } from '@vp/domain/time';
 import type { CdnBase } from '@vp/env-schema';
 import {
   type DatabaseUnavailable,
@@ -20,8 +21,8 @@ import {
   ids,
   stagePolicies,
 } from '@vp/job-contracts';
-import type { PipelineMetrics } from '@vp/observability';
-import { getHeaderMapping, masterPlaylistKey, renditionPlaylistKey } from '@vp/storage';
+import type { PipelineMetrics } from '@vp/pipeline-metrics';
+import { masterPlaylistKey, renditionPlaylistKey } from '@vp/storage';
 import { uuidv7 } from 'uuidv7';
 import { durationBucket } from './duration-bucket';
 import { readChildren } from './package-children';

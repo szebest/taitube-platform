@@ -46,7 +46,7 @@ function isTuning(node: ts.Expression | undefined): boolean {
 }
 
 /**
- * Minutes, hours and days spelt as arithmetic. `@vp/domain/time` owns them, so a duration reads as
+ * Minutes, hours and days spelt as arithmetic. `@kit/primitives` owns them, so a duration reads as
  * `retentionDays * MS_PER_DAY`, never as a literal chain written to get past the constant check.
  */
 const COMPOUND_UNITS = new Set([60_000, 3_600_000, 86_400_000, 3_600, 86_400]);
@@ -93,7 +93,7 @@ function tuningLiterals(file: string, source: string): string[] {
     }
     if (ts.isBindingElement(node) && isTuning(node.initializer)) report(node, 'destructuring');
     if (ts.isParameter(node) && isTuning(node.initializer)) report(node, 'parameter');
-    if (inlinesUnit(node)) report(node, 'inlined unit, use @vp/domain/time');
+    if (inlinesUnit(node)) report(node, 'inlined unit, use @kit/primitives');
     ts.forEachChild(node, visit);
   };
   for (const statement of sourceFile.statements) {

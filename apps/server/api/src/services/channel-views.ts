@@ -1,3 +1,4 @@
+import { MS_PER_DAY } from '@kit/primitives';
 import type { Channel as ChannelResource, OwnerChannel } from '@vp/api-contracts';
 import {
   AVATAR_SIZES,
@@ -10,7 +11,6 @@ import {
   type LiveStream,
   platformOfUrl,
 } from '@vp/domain';
-import { MS_PER_DAY } from '@vp/domain/time';
 import type { CdnBase } from '@vp/env-schema';
 import { channelImageVariantKey } from '@vp/storage';
 import { cdnUrl } from './video-views';

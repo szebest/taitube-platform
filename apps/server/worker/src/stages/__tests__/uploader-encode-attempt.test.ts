@@ -1,10 +1,10 @@
 import * as path from 'node:path';
 import { createLogger } from '@kit/logger';
+import { captureLog } from '@kit/testing/log-capture';
+import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import type { MediaTools } from '@vp/ffmpeg';
-import { captureLog } from '@vp/testing/log-capture';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { STAGE_SETTINGS, transcodeDeps } from '../../__tests__/stage-settings';
 import { createTranscodeProcessor } from '../transcode';
 import {

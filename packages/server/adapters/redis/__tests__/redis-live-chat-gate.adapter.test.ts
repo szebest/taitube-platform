@@ -1,5 +1,5 @@
+import { expectOk } from '@kit/testing/result';
 import { CacheKeys } from '@vp/events';
-import { expectOk } from '@vp/testing/result';
 import { describeLiveChatGateContract } from '../../__tests__/contract/live-chat-gate.contract';
 import { redisLiveChatGateSubject } from '../../__tests__/contract/redis-subjects';
 import { RedisLiveChatGateAdapter } from '../redis-live-chat-gate.adapter';

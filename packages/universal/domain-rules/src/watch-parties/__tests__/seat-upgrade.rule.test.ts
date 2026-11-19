@@ -1,5 +1,5 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { decideWatchPartySeatUpgrade, type WatchPartySeatUpgradeInput } from '../seat-upgrade.rule';
 import { ROOM_ID } from './room-fixtures';
 

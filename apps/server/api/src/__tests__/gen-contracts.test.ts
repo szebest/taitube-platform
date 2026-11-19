@@ -1,7 +1,7 @@
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { runEntrypoint } from '@vp/testing/run-entrypoint';
+import { runEntrypoint } from '@kit/testing/run-entrypoint';
 import { renderOpenApiDocument } from '../composition/openapi-document';
 
 const ENTRYPOINT = resolve(import.meta.dirname, '../gen-contracts.ts');

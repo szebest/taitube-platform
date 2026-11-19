@@ -1,10 +1,10 @@
 import type { IncomingMessage } from 'node:http';
+import { expectOk } from '@kit/testing/result';
 import { InMemoryCacheClient, type InMemoryRepositories } from '@vp/adapters/in-memory';
 import { videoStatusChanged } from '@vp/domain';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { publishVideoEvent, userChannel } from '@vp/events';
-import { SEEDED } from '@vp/testing';
-import { expectOk } from '@vp/testing/result';
+import { SEEDED } from '@vp/testing-fixtures';
 import type { FastifyInstance } from 'fastify';
 import { readSseUntil } from './sse-stream';
 import { TOKENS, bearer, buildTestApp } from './test-app';

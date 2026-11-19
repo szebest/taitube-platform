@@ -14,7 +14,7 @@ architecture tests hold. Ticket: [95](../tickets/95-design-system-2.md).
 | A theme | `packages/platform/client/ui/src/themes/<name>/` | `@kit/ui/themes/<name>` |
 | What ships | `packages/platform/client/ui/src/appearance/registry.ts` | `@kit/ui/appearance/registry` |
 | A primitive | `packages/platform/client/ui/src/primitives/<name>/` | `@kit/ui` |
-| A shared component | `packages/client/components/src/<area>/<name>/` | `@vp/components` |
+| A shared component | `packages/platform/client/components/src/<area>/<name>/` | `@kit/components` |
 | An app kit component | `apps/client/<app>/src/components/<area>/<name>/` | `#app/components/...` |
 | A smart wrapper | `apps/client/<app>/src/features/<feature>/components/` | the feature |
 
@@ -104,7 +104,7 @@ Each row has a fixture proving it fires; the list is [ARCHITECTURE.md section 6]
   [Selectable text](#selectable-text).
 - No stylesheet outside `@kit/ui`'s styles, no CSS module and no SCSS.
 - Every component folder has its component, index, story and jsdom spec.
-- `@vp/components` exports are each imported by both apps.
+- `@kit/components` exports are each imported by both apps.
 - `docs/design/lib/` and `tt-` classes stay in the docs.
 
 ## Scroll lock

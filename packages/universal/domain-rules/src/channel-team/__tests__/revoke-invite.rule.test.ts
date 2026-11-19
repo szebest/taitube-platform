@@ -1,6 +1,6 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import type { ActingRole, ChannelInvite } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { decideInviteRevoke } from '../revoke-invite.rule';
 import { CHANNEL_ID, OWNER_ID, actingAs } from './team-personas';
 

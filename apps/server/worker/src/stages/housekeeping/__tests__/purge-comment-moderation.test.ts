@@ -1,6 +1,6 @@
+import { MS_PER_DAY } from '@kit/primitives';
+import { expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
-import { MS_PER_DAY } from '@vp/domain/time';
-import { expectOk } from '@vp/testing/result';
 import { runPurgeCommentModeration } from '../purge-comment-moderation';
 
 const CHANNEL_ID = '00000000-0000-7000-8000-00000000c001';

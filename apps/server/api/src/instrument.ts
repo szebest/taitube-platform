@@ -1,10 +1,10 @@
 import { loadEnvOrExit } from '@kit/config';
 import { createLogger } from '@kit/logger';
+import { initTracing } from '@kit/observability/tracing-sdk';
 import { isErr } from '@kit/result';
-import { toAppConfig } from '@vp/env-schema';
-import { initTracing } from '@vp/observability/tracing-sdk';
+import { AppEnvSchema, DEFAULT_LOG_LEVEL, toAppConfig } from '@vp/env-schema';
 
-const env = loadEnvOrExit('vp-api', process);
+const env = loadEnvOrExit(AppEnvSchema, DEFAULT_LOG_LEVEL, 'vp-api', process);
 if (env) {
   const { otel, logLevel } = toAppConfig(env);
   const traced = initTracing({ serviceName: 'vp-api', ...otel });

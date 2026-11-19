@@ -1,4 +1,4 @@
-import { definePackageTestConfig } from '@vp/testing';
+import { definePackageTestConfig } from '@kit/testing';
 
 /** The real screening model from `pnpm models:fetch`; `pnpm test:integration` runs it where it exists. */
 export default definePackageTestConfig({

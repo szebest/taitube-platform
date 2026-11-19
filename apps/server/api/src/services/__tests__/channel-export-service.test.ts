@@ -1,10 +1,10 @@
 import { Paginator } from '@kit/pagination';
 import { err, ok } from '@kit/result';
+import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
 import type { ActingChannel } from '@vp/domain';
 import { ErrorCodes, storageUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { ChannelExportService } from '../channel-export-service';
 
 const OWNER: UserContext = { id: '00000000-0000-7000-8000-0000000018c1', role: 'USER' };

@@ -46,7 +46,7 @@ interface StageStatusProps {
 }
 ```
 
-`Stage.Glow` reads `glowColors` (one to three sampled, smoothed CSS colours) from context; without it, or with `data-ambient="off"` (the ambient set `off`, the viewer's choice, and `data-contrast="more"`), no glow renders, so there is no intensity prop. Retry appears only when `onRetry` is passed. `videoId` gives the shared-element name, the same one `VideoThumbnail` (so [VideoCard](video-card.md)) carries, from one helper in `@vp/components`.
+`Stage.Glow` reads `glowColors` (one to three sampled, smoothed CSS colours) from context; without it, or with `data-ambient="off"` (the ambient set `off`, the viewer's choice, and `data-contrast="more"`), no glow renders, so there is no intensity prop. Retry appears only when `onRetry` is passed. `videoId` gives the shared-element name, the same one `VideoThumbnail` (so [VideoCard](video-card.md)) carries, from one helper in `@kit/components`.
 
 ## Variants
 

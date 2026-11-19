@@ -1,6 +1,6 @@
 import { useFormat } from '@kit/intl-react';
 import { unwrapOr } from '@kit/result';
-import { videoDuration } from '@vp/intl';
+import { videoDuration } from '@vp/intl-formats';
 
 const MS_PER_SECOND = 1000;
 

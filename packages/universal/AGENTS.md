@@ -12,7 +12,7 @@ A package belongs in `universal/` when **something client-side actually imports 
 
 Current members: `api-contracts`, `design-tokens`, `domain`, `domain-rules`, `errors`, `intl`, `machine`, `messages`, `pagination`,
 `permissions`, `result`, `tsconfig`, `validation`. `apps/client/web` reaches eight of them at runtime (through
-`@vp/api-client` and `@kit/intl-react` plus its direct `@vp/intl`, `@vp/permissions` and `@kit/result`); `domain-rules` and `validation` qualify through
+`@vp/api-client` and `@kit/intl-react` plus its direct `@kit/intl`, `@vp/permissions` and `@kit/result`); `domain-rules` and `validation` qualify through
 `packages/client/api-client/src/__tests__/universal-rules.test.ts`, which runs both from the client tier.
 
 `storage`, `job-contracts` and `events` live in `server/` because their only consumers are `apps/server/api`,

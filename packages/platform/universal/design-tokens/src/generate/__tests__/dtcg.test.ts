@@ -1,4 +1,4 @@
-import { expectOk } from '@vp/testing/result';
+import { expectOk } from '@kit/testing/result';
 import { parseTheme, parseTokenSet } from '../../parse';
 import {
   refFromTokens,

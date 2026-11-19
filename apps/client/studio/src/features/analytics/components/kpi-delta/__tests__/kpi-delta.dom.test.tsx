@@ -1,5 +1,5 @@
+import { StatCard } from '@kit/components';
 import { render } from '@testing-library/react';
-import { StatCard } from '@vp/components';
 import { AppProviders } from '#app/__tests__/providers';
 import type { KpiDeltaProps } from '../kpi-delta';
 import { KpiDelta } from '../kpi-delta';

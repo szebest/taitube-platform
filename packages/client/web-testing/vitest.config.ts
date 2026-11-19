@@ -1,5 +1,5 @@
+import { definePackageTestConfig } from '@kit/testing';
 import { reactPlugins } from '@kit/vite-preset/react-plugins';
-import { definePackageTestConfig } from '@vp/testing';
 
 export default definePackageTestConfig({
   plugins: reactPlugins(),

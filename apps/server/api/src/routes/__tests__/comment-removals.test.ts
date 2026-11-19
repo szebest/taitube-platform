@@ -1,5 +1,5 @@
+import { expectOk } from '@kit/testing/result';
 import type { CommentActionBody } from '@vp/api-contracts';
-import { expectOk } from '@vp/testing/result';
 import {
   AS,
   VIDEO,

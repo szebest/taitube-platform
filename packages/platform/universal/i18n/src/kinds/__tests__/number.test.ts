@@ -6,7 +6,7 @@ describe('@kit/i18n: numberKind', () => {
   it.each([
     { options: undefined, expected: ok('1,234.5') },
     { options: { maximumFractionDigits: 0 }, expected: ok('1,235') },
-  ])('renders through @vp/intl with $options', ({ options, expected }) => {
+  ])('renders through @kit/intl with $options', ({ options, expected }) => {
     expect(numberKind.format('{n:number}', 1234.5, options, contextFor('en'))).toEqual(expected);
   });
 

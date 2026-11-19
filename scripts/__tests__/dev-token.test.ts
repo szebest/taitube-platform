@@ -1,6 +1,6 @@
 import { resolve } from 'node:path';
+import { runEntrypoint } from '../../packages/platform/server/testing/src/run-entrypoint';
 import { DEV_TOKEN_CONFIG } from '../../packages/server/dev-identity/src/index';
-import { runEntrypoint } from '../../packages/server/testing/src/run-entrypoint';
 
 const ENTRYPOINT = resolve(import.meta.dirname, '../dev-token.ts');
 

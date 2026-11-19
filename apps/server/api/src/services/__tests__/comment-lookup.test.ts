@@ -1,5 +1,5 @@
+import { expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
-import { expectOk } from '@vp/testing/result';
 import { commentWithVideo } from '../comment-lookup';
 
 const OWNER = '11111111-1111-7111-8111-111111111111';

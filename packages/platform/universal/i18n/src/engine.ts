@@ -1,6 +1,6 @@
 import { type AnyProvider, provide, type Registry, type MissingProvider } from '@kit/di';
+import type { IntlBinding } from '@kit/intl';
 import { andThen, map, type Result } from '@kit/result';
-import type { IntlBinding } from '@vp/intl';
 import type { CatalogueSet, CatalogueShape, Translation } from './catalogue';
 import type {
   ArgsFor,

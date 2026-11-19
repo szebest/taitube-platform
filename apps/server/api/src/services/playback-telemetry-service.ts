@@ -1,9 +1,9 @@
+import { MS_PER_SECOND } from '@kit/primitives';
 import { type Result, ignore, isErr, ok } from '@kit/result';
 import type { PlaybackEvent } from '@vp/api-contracts';
 import type { ViewBufferPort } from '@vp/core/ports';
 import { retentionPercentOf, viewBucketsOf } from '@vp/domain';
-import { MS_PER_SECOND } from '@vp/domain/time';
-import type { PipelineMetrics } from '@vp/observability';
+import type { PipelineMetrics } from '@vp/pipeline-metrics';
 import { type ViewLimits, requiredWatchSeconds } from '@vp/validation';
 
 export interface PlaybackTelemetryServiceDeps {

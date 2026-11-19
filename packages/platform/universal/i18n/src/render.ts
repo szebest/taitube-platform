@@ -1,5 +1,5 @@
+import { type IntlBinding, unrenderable, wrongKind } from '@kit/intl';
 import { all, andThen, err, map, ok } from '@kit/result';
-import { type IntlBinding, unrenderable, wrongKind } from '@vp/intl';
 import { describeValue, isRecord, type Kind, type KindContext, type Rendered } from './kind';
 import type { AnyMessage } from './message';
 import { type PresetTable, resolveEntry } from './presets';
@@ -38,7 +38,7 @@ function bare(scope: RenderScope, name: string, value: unknown): Rendered {
     : err(wrongKind(`{${name}}`, describeValue(value)));
 }
 
-/** Renders every placeholder through its kind, and so through `@vp/intl`; the text between, as authored. */
+/** Renders every placeholder through its kind, and so through `@kit/intl`; the text between, as authored. */
 export function renderMessage(message: AnyMessage, args: unknown, scope: RenderScope): Rendered {
   const values = isRecord(args) ? args : {};
   const { template, config } = message;

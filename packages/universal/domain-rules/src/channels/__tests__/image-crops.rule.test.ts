@@ -1,5 +1,5 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import type { ImageCrops } from '@vp/domain';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { decideImageCrops } from '../image-crops.rule';
 
 const IMAGE = { width: 2560, height: 1440 };

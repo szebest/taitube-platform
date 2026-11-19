@@ -1,5 +1,5 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { claimGrant, findGrant, joinGrantOf, settleGrant } from '../watch-party-grants';
 import { seedInvite, seedLink } from './watch-party-access-fixture';
 import { MEMBER, OTHER, seedParty, startParty, watchPartyTestDeps } from './watch-party-test-deps';

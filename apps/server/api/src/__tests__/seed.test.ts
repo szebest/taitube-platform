@@ -1,6 +1,6 @@
 import { resolve } from 'node:path';
-import { PRODUCTION_ENV } from '@vp/testing/env';
-import { runEntrypoint } from '@vp/testing/run-entrypoint';
+import { runEntrypoint } from '@kit/testing/run-entrypoint';
+import { PRODUCTION_ENV } from '@vp/testing-fixtures/env';
 
 const ENTRYPOINT = resolve(import.meta.dirname, '../seed.ts');
 

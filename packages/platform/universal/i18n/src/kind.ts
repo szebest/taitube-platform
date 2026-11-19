@@ -1,5 +1,5 @@
+import { type FormatFailure, type IntlBinding, unrenderable, wrongKind } from '@kit/intl';
 import { err, type Result } from '@kit/result';
-import { type FormatFailure, type IntlBinding, unrenderable, wrongKind } from '@vp/intl';
 
 export type Rendered = Result<string, FormatFailure>;
 

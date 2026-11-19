@@ -1,8 +1,8 @@
+import { EmptyState, PageHeader, SectionError } from '@kit/components';
 import { useT } from '@kit/intl-react';
 import { Badge, Spinner } from '@kit/ui';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import type { BulkActionBody } from '@vp/api-contracts';
-import { EmptyState, PageHeader, SectionError } from '@vp/components';
 import { useApi } from '@vp/queries';
 import { useState } from 'react';
 import { ModerationQueue } from '#app/components/comments/moderation-queue';

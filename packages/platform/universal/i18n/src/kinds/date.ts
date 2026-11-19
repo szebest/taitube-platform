@@ -1,4 +1,4 @@
-import type { DateOptions } from '@vp/intl';
+import type { DateOptions } from '@kit/intl';
 import { defineKind, isRecord } from '../kind';
 
 const isString = (value: unknown): value is string => typeof value === 'string';

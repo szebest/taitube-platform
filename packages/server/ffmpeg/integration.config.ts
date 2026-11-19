@@ -1,4 +1,4 @@
-import { definePackageTestConfig } from '@vp/testing';
+import { definePackageTestConfig } from '@kit/testing';
 
 /** Specs that encode real fixtures with FFmpeg; `pnpm test:integration` runs them in their own job. */
 export default definePackageTestConfig({

@@ -4,10 +4,10 @@ import {
   exitOnSignals,
   shutdownOnce,
 } from '@kit/composition';
+import type { Tracing } from '@kit/observability';
 import { assertNever, fromPromise, ignore, isErr } from '@kit/result';
 import type { AppConfig } from '@vp/env-schema';
 import { asThrowable, errorCodeRegistry } from '@vp/errors';
-import type { Tracing } from '@vp/observability';
 import type { ComposedApp } from './app';
 import { Services } from './composition/services.module';
 

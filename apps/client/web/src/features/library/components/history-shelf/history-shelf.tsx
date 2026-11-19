@@ -1,7 +1,7 @@
+import { Shelf } from '@kit/components';
 import { useT } from '@kit/intl-react';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
-import { Shelf } from '@vp/components';
 import { useApi } from '@vp/queries';
 import { FeedVideoCard } from '#app/components/video/feed-video-card';
 import { historyShelfQueryOptions } from '#app/features/library/api/library-queries';

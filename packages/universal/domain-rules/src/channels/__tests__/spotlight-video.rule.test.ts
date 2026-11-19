@@ -1,4 +1,4 @@
-import { expectErr, expectOk } from '@vp/testing/result';
+import { expectErr, expectOk } from '@kit/testing/result';
 import { OWNER, aVideo } from '../../__tests__/entities';
 import { decideSpotlightVideo, isSpotlightable } from '../spotlight-video.rule';
 

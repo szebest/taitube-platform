@@ -1,6 +1,6 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { ADMIN, OWNER, STRANGER } from '../../__tests__/entities';
 import { decidePreferencesAccess, type PreferencesAccessInput } from '../preferences-access.rule';
 

@@ -1,6 +1,6 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import { WATCH_PARTY_LIMITS } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { resolveSource, type SourceAsk } from '../watch-party-sources';
 import {
   OWNER,

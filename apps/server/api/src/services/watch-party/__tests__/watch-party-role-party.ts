@@ -1,6 +1,6 @@
+import { expectOk } from '@kit/testing/result';
 import { type WatchPartyPreset } from '@vp/domain';
 import type { UserContext } from '@vp/permissions';
-import { expectOk } from '@vp/testing/result';
 import { type CreateRoleInput, WatchPartyRoleService } from '../watch-party-role-service';
 import {
   ROOM_ID,

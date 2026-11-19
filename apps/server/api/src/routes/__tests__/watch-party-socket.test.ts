@@ -1,7 +1,7 @@
+import { expectOk } from '@kit/testing/result';
 import { Adapters } from '@vp/adapters/composition';
 import { ErrorCodes } from '@vp/errors';
-import { SEEDED } from '@vp/testing';
-import { expectOk } from '@vp/testing/result';
+import { SEEDED } from '@vp/testing-fixtures';
 import {
   guestSession,
   GUEST_ID,

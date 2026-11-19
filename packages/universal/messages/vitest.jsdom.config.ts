@@ -1,4 +1,4 @@
-import { definePackageTestConfig } from '@vp/testing';
+import { definePackageTestConfig } from '@kit/testing';
 
 /**
  * The same suites again in a browser environment: a message that renders differently here than

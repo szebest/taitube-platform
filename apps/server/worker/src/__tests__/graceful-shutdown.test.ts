@@ -1,5 +1,5 @@
+import { expectOk } from '@kit/testing/result';
 import { InMemoryJobQueue } from '@vp/adapters/in-memory';
-import { expectOk } from '@vp/testing/result';
 
 describe('worker graceful shutdown and scale-in', () => {
   it('allows active job to finish during graceful shutdown without stalling', async () => {

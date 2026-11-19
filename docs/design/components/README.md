@@ -1,12 +1,12 @@
-# Shared components: `@vp/components`
+# Shared components: `@kit/components`
 
-The specs for every component in `@vp/components` (client, T3), the package that sits above the `@kit/ui` primitives and below the apps. It holds **only what both web and studio render today**. [Ticket 95](../../tickets/95-design-system-2.md) section 6 builds it; [architecture.md](../architecture.md#1-five-layers) places it in the five layers; [the design guide](../README.md) is the look; [`tokens.json`](../tokens.json) holds the values the specs name.
+The specs for every component in `@kit/components` (client, T3), the package that sits above the `@kit/ui` primitives and below the apps. It holds **only what both web and studio render today**. [Ticket 95](../../tickets/95-design-system-2.md) section 6 builds it; [architecture.md](../architecture.md#1-five-layers) places it in the five layers; [the design guide](../README.md) is the look; [`tokens.json`](../tokens.json) holds the values the specs name.
 
 ## The "both apps today" rule
 
 - A component is here because web and studio both import it now. Nothing is here "because it will be shared": a piece one app alone uses lives in that app's kit ([web](../apps/web/README.md), [studio](../apps/studio/README.md)).
 - A piece moves here from an app kit the day the second app needs it, in the same PR that adds the second import. Never earlier ([architecture section 1](../architecture.md#1-five-layers), [section 6](../architecture.md#6-sharing-between-web-and-studio)).
-- `tests/architecture/` holds the rule: every export of `@vp/components` is imported by both apps.
+- `tests/architecture/` holds the rule: every export of `@kit/components` is imported by both apps.
 - The package is small on purpose. It is the contract between two apps, and every piece in it is one both must keep working.
 
 ## Catalogue

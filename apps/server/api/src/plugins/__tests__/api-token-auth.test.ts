@@ -1,8 +1,8 @@
 import { err, ok } from '@kit/result';
+import { expectErr, expectOk } from '@kit/testing/result';
 import type { ActingChannel } from '@vp/domain';
 import { channelMembershipRequired } from '@vp/domain-rules';
 import type { UserContext } from '@vp/permissions';
-import { expectErr, expectOk } from '@vp/testing/result';
 import type { FastifyRequest } from 'fastify';
 import { carriesSession, routeScopes, tokenIdentity } from '../api-token-auth';
 

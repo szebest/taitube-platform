@@ -1,6 +1,6 @@
 import { resolve } from 'node:path';
+import { expectOk } from '@kit/testing/result';
 import { screeningConfig } from '@vp/env-schema';
-import { expectOk } from '@vp/testing/result';
 import { OnnxFrameClassifier } from '../../onnx-frame-classifier';
 
 const MODEL =

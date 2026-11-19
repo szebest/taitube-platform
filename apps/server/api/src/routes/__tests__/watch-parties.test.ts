@@ -1,5 +1,5 @@
 import { ErrorCodes } from '@vp/errors';
-import { SEEDED } from '@vp/testing';
+import { SEEDED } from '@vp/testing-fixtures';
 import { seedVideo } from '../../__tests__/test-app';
 import { buildWatchPartyApp, QUICK_PARTY, type WatchPartyApp } from './watch-party-app';
 

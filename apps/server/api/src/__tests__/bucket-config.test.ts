@@ -1,11 +1,11 @@
 import { loadEnv } from '@kit/config';
-import { toAppConfig } from '@vp/env-schema';
+import { AppEnvSchema, toAppConfig } from '@vp/env-schema';
 import { TOKENS, bearer, buildTestApp } from './test-app';
 
 describe('apps/server/api: the raw bucket is the one the environment declares', () => {
   it('presigns an upload against S3_BUCKET_RAW', async () => {
     const config = toAppConfig(
-      loadEnv({
+      loadEnv(AppEnvSchema, {
         NODE_ENV: 'test',
         ADAPTER_FAMILY: 'in-memory',
         DATABASE_URL: 'postgres://localhost:5432/vp',

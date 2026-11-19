@@ -1,5 +1,5 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { seedVideo } from '../../../__tests__/test-app';
 import { WatchPartyQueueService } from '../watch-party-queue-service';
 import { keyOf, ROOM_ID, seatUser, seedRoom } from './watch-party-moderation-fixture';

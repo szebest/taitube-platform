@@ -1,10 +1,10 @@
 import { err } from '@kit/result';
+import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryCommentSlowMode } from '@vp/adapters/in-memory';
 import type { CommentSlowModePort } from '@vp/core/ports';
 import type { CommentSettings } from '@vp/domain';
 import { ErrorCodes, cacheUnavailable, databaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { createComment } from '../comment-create';
 import {
   type CommentCreateHarness,

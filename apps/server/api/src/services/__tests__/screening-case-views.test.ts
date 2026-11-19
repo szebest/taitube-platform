@@ -1,5 +1,5 @@
+import { expectOk } from '@kit/testing/result';
 import type { ScreeningCase } from '@vp/core/repositories';
-import { expectOk } from '@vp/testing/result';
 import { ScreeningCaseViews } from '../screening-case-views';
 import {
   HELD_ID,

@@ -1,6 +1,6 @@
+import { expectOk } from '@kit/testing/result';
 import { mintToken } from '@vp/dev-identity';
 import { CANONICAL_LADDER } from '@vp/job-contracts';
-import { expectOk } from '@vp/testing/result';
 import { AS, CREATOR, VIDEO, type CommentsApp, sharedCommentsApp } from './comments-app';
 import { bearer, seedVideo } from './test-app';
 

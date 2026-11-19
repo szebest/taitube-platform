@@ -1,4 +1,4 @@
-import { definePackageTestConfig } from '@vp/testing';
+import { definePackageTestConfig } from '@kit/testing';
 
 /** The screen stage over the real ffmpeg and fpcalc; `pnpm test:integration` runs it where both exist. */
 export default definePackageTestConfig({

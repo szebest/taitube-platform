@@ -1,7 +1,7 @@
 import type { IncomingMessage } from 'node:http';
 import type { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { ErrorCodes } from '@vp/errors';
-import { SEEDED } from '@vp/testing';
+import { SEEDED } from '@vp/testing-fixtures';
 import type { FastifyInstance } from 'fastify';
 import { readSseUntil } from './sse-stream';
 import { buildTestApp, seedVideo } from './test-app';
