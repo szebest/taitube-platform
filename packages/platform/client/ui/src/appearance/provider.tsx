@@ -1,4 +1,5 @@
-import type { ModeOption, Theme, TokenGroup } from '@kit/design-tokens';
+import type { ModeOption } from '@kit/appearance';
+import type { Theme, TokenGroup } from '@kit/design-tokens';
 import { ignore, isOk } from '@kit/result';
 import { createContext, type PropsWithChildren, useContext, useEffect, useState } from 'react';
 import { flushSync } from 'react-dom';

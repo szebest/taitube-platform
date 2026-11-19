@@ -1,11 +1,10 @@
+import { ACCENT_PATTERN, PREFERENCE_ID_PATTERN } from '@kit/appearance';
 import type { TokenGroup } from '@kit/design-tokens';
 import { parseJson, unwrapOr } from '@kit/result';
 import {
-  ACCENT_PATTERN,
   APPEARANCE_SETTINGS,
   type AppearancePreferences,
   DEFAULT_PREFERENCES,
-  PREFERENCE_ID_PATTERN,
 } from '@vp/domain/settings';
 import { z } from 'zod';
 import { ONE_YEAR_S, readCookie, writeCookie } from '../cookies/cookie';

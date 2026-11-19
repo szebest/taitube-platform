@@ -94,6 +94,7 @@ document is stale — fix it.
 
 | Package | Tier | Location |
 |---|---|---|
+| `@kit/appearance` (T0) | universal | `packages/platform/universal/appearance` |
 | `@kit/primitives` (T0) | universal | `packages/platform/universal/primitives` |
 | `@vp/domain` | universal | `packages/universal/domain` |
 | `@vp/errors` | universal | `packages/universal/errors` |
@@ -111,7 +112,7 @@ document is stale — fix it.
 
 | Package | Tier | Depends on |
 |---|---|---|
-| `@kit/design-tokens` | universal | `@vp/domain`, `@vp/errors`, `@kit/result` |
+| `@kit/design-tokens` | universal | `@kit/appearance`, `@vp/errors`, `@kit/result` |
 | `@kit/intl` | universal | `@kit/result` |
 | `@kit/pagination` | universal | `@vp/errors`, `@kit/result` |
 | `@vp/permissions` | universal | `@vp/domain`, `@vp/errors` |
@@ -140,7 +141,7 @@ document is stale — fix it.
 | `@kit/runtime` | universal | `@kit/di` |
 | `@kit/i18n` | universal | `@kit/di`, `@kit/intl`, `@kit/result` |
 | `@kit/composition` | server | `@kit/di`, `@kit/result` |
-| `@kit/ui` | client | `@kit/design-tokens`, `@kit/result` |
+| `@kit/ui` | client | `@kit/appearance`, `@kit/design-tokens`, `@kit/result` |
 | `@vp/permissions-react` | client | `@vp/permissions`, `@kit/result` |
 | `@vp/core` | server | `@vp/domain`, `@vp/errors`, `@vp/permissions`, `@kit/result` |
 | `@vp/db` | server | `@vp/domain`, `@vp/job-contracts`, `@kit/result`, `@vp/storage` |

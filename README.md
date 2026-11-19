@@ -90,6 +90,7 @@ taitube-platform/
 ├── packages/                    # Shared libraries. The directory IS the runtime tier.
 │   ├── platform/                # Reusable outside this product: depends on platform packages only
 │   │   ├── universal/               # Runs in a browser AND on a server
+│   │   │   ├── appearance/          # The appearance vocabulary: modes, contrast levels, id and accent patterns
 │   │   │   ├── design-tokens/       # Design system engine: the token group schemas
 │   │   │   ├── di/                  # Typed tokens and an immutable registry whose get returns a Result
 │   │   │   ├── i18n/                # The typed message engine: kinds, presets, param names, catalogue parity; no words

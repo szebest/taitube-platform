@@ -23,6 +23,7 @@
     "clean": "rimraf dist tsconfig.tsbuildinfo"
   },
   "dependencies": {
+    "@kit/appearance": "workspace:*",
     "@kit/pagination": "workspace:*",
     "@kit/primitives": "workspace:*",
     "@kit/result": "workspace:*",

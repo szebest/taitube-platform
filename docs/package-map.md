@@ -8,6 +8,7 @@ scope (platform or app) and the tier are the directory and the layer is `vp.laye
 
 | Package | Directory | Scope | Tier | Layer | Depends on | Dev-depends on |
 |---|---|---|---|---|---|---|
+| `@kit/appearance` | `packages/platform/universal/appearance` | platform | universal | T0 | - | `@kit/testing`, `@kit/tsconfig` |
 | `@kit/primitives` | `packages/platform/universal/primitives` | platform | universal | T0 | - | `@kit/testing`, `@kit/tsconfig` |
 | `@kit/concurrency` | `packages/platform/server/concurrency` | platform | server | T1 | - | `@kit/testing`, `@kit/tsconfig` |
 | `@kit/keyspace` | `packages/platform/server/keyspace` | platform | server | T1 | - | `@kit/testing`, `@kit/tsconfig` |
@@ -18,7 +19,7 @@ scope (platform or app) and the tier are the directory and the layer is `vp.laye
 | `@kit/result` | `packages/platform/universal/result` | platform | universal | T1 | - | `@kit/tsconfig` |
 | `@kit/tsconfig` | `packages/platform/universal/tsconfig` | platform | universal | T1 | - | - |
 | `@vp/storage` | `packages/server/storage` | app | server | T1 | - | `@kit/testing`, `@kit/tsconfig`, `@vp/testing-fixtures` |
-| `@vp/domain` | `packages/universal/domain` | app | universal | T1 | `@kit/primitives` | `@kit/testing`, `@kit/tsconfig` |
+| `@vp/domain` | `packages/universal/domain` | app | universal | T1 | `@kit/appearance`, `@kit/primitives` | `@kit/testing`, `@kit/tsconfig` |
 | `@kit/security-headers` | `packages/platform/client/security-headers` | platform | client | T2 | `@kit/result` | `@kit/testing`, `@kit/tsconfig` |
 | `@kit/compose-autoscaler` | `packages/platform/server/compose-autoscaler` | platform | server | T2 | `@kit/logger` | `@kit/testing`, `@kit/tsconfig` |
 | `@kit/dev-token` | `packages/platform/server/dev-token` | platform | server | T2 | `@kit/logger` | `@kit/testing`, `@kit/tsconfig` |
@@ -39,7 +40,7 @@ scope (platform or app) and the tier are the directory and the layer is `vp.laye
 | `@vp/intl-formats` | `packages/universal/intl-formats` | app | universal | T3 | `@kit/intl` | `@kit/testing`, `@kit/tsconfig` |
 | `@kit/config` | `packages/platform/server/config` | platform | server | T4 | `@kit/composition`, `@kit/logger`, `@kit/result` | `@kit/testing`, `@kit/tsconfig` |
 | `@vp/errors` | `packages/universal/errors` | app | universal | T4 | `@kit/di` | `@kit/result`, `@kit/testing`, `@kit/tsconfig` |
-| `@kit/design-tokens` | `packages/platform/universal/design-tokens` | platform | universal | T5 | `@kit/result`, `@vp/domain`, `@vp/errors` | `@kit/testing`, `@kit/tsconfig` |
+| `@kit/design-tokens` | `packages/platform/universal/design-tokens` | platform | universal | T5 | `@kit/appearance`, `@kit/result`, `@vp/errors` | `@kit/testing`, `@kit/tsconfig` |
 | `@kit/pagination` | `packages/platform/universal/pagination` | platform | universal | T5 | `@kit/result`, `@vp/errors` | `@kit/testing`, `@kit/tsconfig` |
 | `@vp/events` | `packages/server/events` | app | server | T5 | `@kit/result`, `@vp/errors` | `@kit/testing`, `@kit/tsconfig` |
 | `@vp/ffmpeg` | `packages/server/ffmpeg` | app | server | T5 | `@kit/primitives`, `@kit/result`, `@vp/domain`, `@vp/errors`, `@vp/job-contracts`, `@vp/storage` | `@kit/testing`, `@kit/tsconfig` |
@@ -49,12 +50,12 @@ scope (platform or app) and the tier are the directory and the layer is `vp.laye
 | `@vp/validation` | `packages/universal/validation` | app | universal | T5 | `@kit/result`, `@vp/errors` | `@kit/testing`, `@kit/tsconfig` |
 | `@vp/permissions-react` | `packages/client/permissions-react` | app | client | T6 | `@kit/result`, `@vp/permissions` | `@kit/testing`, `@kit/tsconfig`, `@kit/vite-preset` |
 | `@kit/intl-react` | `packages/platform/client/intl-react` | platform | client | T6 | `@kit/intl`, `@kit/result`, `@vp/messages` | `@kit/testing`, `@kit/tsconfig`, `@kit/vite-preset` |
-| `@kit/ui` | `packages/platform/client/ui` | platform | client | T6 | `@kit/design-tokens`, `@kit/result`, `@vp/domain`, `@vp/errors` | `@kit/testing`, `@kit/tsconfig`, `@kit/vite-preset`, `@vp/web-testing` |
+| `@kit/ui` | `packages/platform/client/ui` | platform | client | T6 | `@kit/appearance`, `@kit/design-tokens`, `@kit/result`, `@vp/domain`, `@vp/errors` | `@kit/testing`, `@kit/tsconfig`, `@kit/vite-preset`, `@vp/web-testing` |
 | `@vp/core` | `packages/server/core` | app | server | T6 | `@kit/result`, `@vp/domain`, `@vp/errors`, `@vp/permissions` | `@kit/testing`, `@kit/tsconfig` |
 | `@vp/db` | `packages/server/db` | app | server | T6 | `@kit/result`, `@vp/domain`, `@vp/job-contracts`, `@vp/storage`, `@vp/validation` | `@kit/testing`, `@kit/tsconfig`, `@vp/testing-fixtures` |
 | `@vp/env-schema` | `packages/server/env-schema` | app | server | T6 | `@kit/observability`, `@kit/pagination`, `@kit/primitives`, `@kit/result`, `@vp/domain` | `@kit/config`, `@kit/testing`, `@kit/tsconfig`, `@vp/testing-fixtures` |
-| `@vp/api-contracts` | `packages/universal/api-contracts` | app | universal | T6 | `@kit/pagination`, `@kit/primitives`, `@kit/result`, `@vp/domain`, `@vp/errors`, `@vp/permissions`, `@vp/validation` | `@kit/testing`, `@kit/tsconfig` |
-| `@vp/domain-rules` | `packages/universal/domain-rules` | app | universal | T6 | `@kit/machine`, `@kit/primitives`, `@kit/result`, `@vp/domain`, `@vp/errors`, `@vp/permissions`, `@vp/validation` | `@kit/testing`, `@kit/tsconfig` |
+| `@vp/api-contracts` | `packages/universal/api-contracts` | app | universal | T6 | `@kit/appearance`, `@kit/pagination`, `@kit/primitives`, `@kit/result`, `@vp/domain`, `@vp/errors`, `@vp/permissions`, `@vp/validation` | `@kit/testing`, `@kit/tsconfig` |
+| `@vp/domain-rules` | `packages/universal/domain-rules` | app | universal | T6 | `@kit/appearance`, `@kit/machine`, `@kit/primitives`, `@kit/result`, `@vp/domain`, `@vp/errors`, `@vp/permissions`, `@vp/validation` | `@kit/testing`, `@kit/tsconfig` |
 | `@vp/api-client` | `packages/client/api-client` | app | client | T7 | `@vp/api-contracts` | `@kit/result`, `@kit/testing`, `@kit/tsconfig`, `@vp/domain-rules`, `@vp/validation` |
 | `@kit/components` | `packages/platform/client/components` | platform | client | T7 | `@kit/design-tokens`, `@kit/ui` | `@kit/testing`, `@kit/tsconfig`, `@kit/vite-preset`, `@vp/web-testing` |
 | `@kit/forms` | `packages/platform/client/forms` | platform | client | T7 | `@kit/result`, `@kit/ui`, `@vp/errors` | `@kit/testing`, `@kit/tsconfig`, `@kit/vite-preset`, `@vp/validation`, `@vp/web-testing` |
@@ -67,7 +68,7 @@ scope (platform or app) and the tier are the directory and the layer is `vp.laye
 | `@vp/queries` | `packages/client/queries` | app | client | T8 | `@kit/components`, `@kit/intl`, `@kit/intl-react`, `@kit/result`, `@kit/security-headers`, `@kit/ui`, `@vp/api-client`, `@vp/api-contracts`, `@vp/domain`, `@vp/errors`, `@vp/messages`, `@vp/permissions`, `@vp/permissions-react` | `@kit/testing`, `@kit/tsconfig`, `@kit/vite-preset`, `@vp/web-testing` |
 | `@vp/web-testing` | `packages/client/web-testing` | app | client | T8 | `@vp/api-client`, `@vp/api-contracts`, `@vp/errors` | `@kit/testing`, `@kit/tsconfig`, `@kit/vite-preset` |
 | `@vp/studio` | `apps/client/studio` | app | client | T9 | `@kit/components`, `@kit/design-tokens`, `@kit/forms`, `@kit/intl`, `@kit/intl-react`, `@kit/result`, `@kit/security-headers`, `@kit/ui`, `@kit/web-telemetry`, `@vp/api-client`, `@vp/api-contracts`, `@vp/domain`, `@vp/domain-rules`, `@vp/errors`, `@vp/intl-formats`, `@vp/permissions`, `@vp/permissions-react`, `@vp/queries`, `@vp/validation` | `@kit/primitives`, `@kit/testing`, `@kit/tsconfig`, `@kit/vite-preset`, `@vp/web-testing` |
-| `@vp/web` | `apps/client/web` | app | client | T9 | `@kit/components`, `@kit/design-tokens`, `@kit/forms`, `@kit/intl`, `@kit/intl-react`, `@kit/primitives`, `@kit/result`, `@kit/security-headers`, `@kit/ui`, `@kit/web-telemetry`, `@vp/api-client`, `@vp/api-contracts`, `@vp/domain`, `@vp/domain-rules`, `@vp/intl-formats`, `@vp/messages`, `@vp/permissions`, `@vp/permissions-react`, `@vp/queries`, `@vp/validation` | `@kit/tsconfig`, `@kit/vite-preset`, `@vp/errors`, `@vp/web-testing` |
-| `@vp/workbench` | `packages/client/workbench` | app | client | T9 | - | `@kit/components`, `@kit/design-tokens`, `@kit/intl`, `@kit/intl-react`, `@kit/result`, `@kit/testing`, `@kit/tsconfig`, `@kit/ui`, `@kit/vite-preset`, `@vp/api-client`, `@vp/api-contracts`, `@vp/messages`, `@vp/queries`, `@vp/web-testing` |
+| `@vp/web` | `apps/client/web` | app | client | T9 | `@kit/appearance`, `@kit/components`, `@kit/design-tokens`, `@kit/forms`, `@kit/intl`, `@kit/intl-react`, `@kit/primitives`, `@kit/result`, `@kit/security-headers`, `@kit/ui`, `@kit/web-telemetry`, `@vp/api-client`, `@vp/api-contracts`, `@vp/domain`, `@vp/domain-rules`, `@vp/intl-formats`, `@vp/messages`, `@vp/permissions`, `@vp/permissions-react`, `@vp/queries`, `@vp/validation` | `@kit/tsconfig`, `@kit/vite-preset`, `@vp/errors`, `@vp/web-testing` |
+| `@vp/workbench` | `packages/client/workbench` | app | client | T9 | - | `@kit/appearance`, `@kit/components`, `@kit/design-tokens`, `@kit/intl`, `@kit/intl-react`, `@kit/result`, `@kit/testing`, `@kit/tsconfig`, `@kit/ui`, `@kit/vite-preset`, `@vp/api-client`, `@vp/api-contracts`, `@vp/messages`, `@vp/queries`, `@vp/web-testing` |
 | `@vp/upload-client` | `packages/server/upload-client` | app | server | T9 | `@kit/logger`, `@kit/result` | `@kit/testing`, `@kit/tsconfig`, `@vp/adapters`, `@vp/api`, `@vp/dev-identity`, `@vp/env-schema`, `@vp/testing-fixtures` |
 | `@vp/demo` | `packages/server/demo` | app | server | T10 | `@kit/result`, `@vp/db`, `@vp/dev-identity`, `@vp/domain`, `@vp/env-schema`, `@vp/errors`, `@vp/upload-client` | `@kit/testing`, `@kit/tsconfig`, `@vp/testing-fixtures` |

@@ -13,6 +13,7 @@
     "test:stories": "vp test run --config .storybook/vitest.config.ts"
   },
   "devDependencies": {
+    "@kit/appearance": "workspace:*",
     "@kit/components": "workspace:*",
     "@kit/design-tokens": "workspace:*",
     "@kit/intl": "workspace:*",

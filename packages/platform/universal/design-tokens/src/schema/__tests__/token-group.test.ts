@@ -1,4 +1,4 @@
-import { MAX_APPEARANCE_OVERRIDES, TOKEN_GROUP_PATTERN } from '@vp/domain/settings';
+import { MAX_APPEARANCE_OVERRIDES, TOKEN_GROUP_PATTERN } from '@kit/appearance';
 import { TOKEN_GROUPS, tokenGroups } from '../token-group';
 
 const pathsByGroup = () =>

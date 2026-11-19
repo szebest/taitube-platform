@@ -51,6 +51,7 @@
     "clean": "rimraf dist tsconfig.tsbuildinfo"
   },
   "dependencies": {
+    "@kit/appearance": "workspace:*",
     "@kit/design-tokens": "workspace:*",
     "@kit/result": "workspace:*",
     "@vp/domain": "workspace:*",

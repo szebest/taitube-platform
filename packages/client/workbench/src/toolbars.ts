@@ -1,10 +1,5 @@
-import {
-  CONTRAST_OPTIONS,
-  MODE_OPTIONS,
-  TOKEN_GROUPS,
-  type TokenGroup,
-  tokenGroups,
-} from '@kit/design-tokens';
+import { CONTRAST_OPTIONS, MODE_OPTIONS } from '@kit/appearance';
+import { TOKEN_GROUPS, type TokenGroup, tokenGroups } from '@kit/design-tokens';
 import { FALLBACK_LOCALE } from '@kit/intl';
 import type { AppearancePreference } from '@kit/ui';
 import { appearance } from '@kit/ui/appearance/registry';
