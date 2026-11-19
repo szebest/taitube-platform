@@ -29,8 +29,8 @@ package names no product and imports no contract.
 ## Rules
 
 - **No host literal here.** Each app's `src/config` owns its API and collector defaults, both local.
-- **The beacon is not an API client call.** `sendBeacon` cannot go through `@vp/api-client`; each app
-  hands the path and batch limit from `@vp/api-contracts` (`recordWebVitals`, `MAX_WEB_VITALS_PER_BATCH`), so they cannot drift from the route.
+- **The beacon is not an API client call.** `sendBeacon` cannot go through the app's API client; each app
+  hands the path and batch limit from its own route contract, so they cannot drift from the route.
 - **No user data in a span.** No user id, no session, no query string.
 - **App specs run without it.** Each app's `vitest.jsdom.config.ts` loads `@kit/web-telemetry/off.setup`, which
   mocks the hook, so no jsdom file loads the OpenTelemetry SDK; this package's specs and each app's

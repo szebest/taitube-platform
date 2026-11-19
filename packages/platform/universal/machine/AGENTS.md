@@ -14,8 +14,8 @@ legal moves as a typed table, keyed by event, each edge `{ from, to, event? }`. 
 `target(event)` and `matrix()`. `machineFindings` lists structural faults (unreachable state, dead non-final
 state, final state with an exit, event with no source) and `toMermaid` draws the table.
 
-It knows nothing about `ErrorCode`, `Result`, a video or a comment. A miss is `undefined`; the rule that
-consults the table in `@vp/domain-rules` maps it to its own failure, adds the guards that depend on input
+It knows nothing about `ErrorCode`, `Result`, a video or a comment. A miss is `undefined`; the app's rule that
+consults the table maps it to its own failure, adds the guards that depend on input
 (a reason, a lock) and returns the `Result`. The CAS helper persists the move. Definitions live in
 `*.machine.ts` files next to that rule; the authority is
 [docs/state-machines.md](../../../../docs/state-machines.md).
