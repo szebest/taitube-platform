@@ -1,3 +1,4 @@
+import { MS_PER_DAY } from '@kit/primitives';
 import { type Result, err, ok } from '@kit/result';
 import {
   type CommentSettings,
@@ -5,7 +6,6 @@ import {
   type DisclosureRule,
   type HeldReason,
 } from '@vp/domain';
-import { MS_PER_DAY } from '@vp/domain/time';
 import { hasLinkOutsideAllowlist, matchesBlockedWord } from '@vp/validation';
 import {
   type CommentsAccountTooNew,

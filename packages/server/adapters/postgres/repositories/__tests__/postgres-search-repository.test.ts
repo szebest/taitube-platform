@@ -1,4 +1,4 @@
-import { expectOk } from '@vp/testing/result';
+import { expectOk } from '@kit/testing/result';
 import { postgresSubject } from '../../../__tests__/contract/postgres-subject';
 import { describeSearchRepositoryContract } from '../../../__tests__/contract/search-repository.contract';
 import type { RepositoriesSubject } from '../../../__tests__/contract/subjects';

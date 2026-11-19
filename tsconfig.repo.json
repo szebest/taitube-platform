@@ -12,7 +12,8 @@
       "@vp/db/*": ["./packages/server/db/src/*"],
       "@vp/domain/*": ["./packages/universal/domain/src/*"],
       "@vp/storage/*": ["./packages/server/storage/src/*"],
-      "@vp/testing/*": ["./packages/server/testing/src/*"],
+      "@kit/testing/*": ["./packages/platform/server/testing/src/*"],
+      "@vp/testing-fixtures/*": ["./packages/server/testing-fixtures/src/*"],
       "@kit/*": [
         "./packages/platform/universal/*/src",
         "./packages/platform/server/*/src",

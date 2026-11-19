@@ -5,7 +5,7 @@ import { ResponsiveModal, useToast } from '@kit/ui';
 import { useRouter } from '@tanstack/react-router';
 import type { Video } from '@vp/api-contracts';
 import { CLIP_MAX_MS, CLIP_MIN_MS } from '@vp/domain';
-import { videoDuration } from '@vp/intl';
+import { videoDuration } from '@vp/intl-formats';
 import { Suspense, useState } from 'react';
 import { PlayerChannelProvider } from '#app/components/player/taitube-player';
 import { LazyTaitubePreview } from '#app/components/player/taitube-preview/taitube-preview.lazy';

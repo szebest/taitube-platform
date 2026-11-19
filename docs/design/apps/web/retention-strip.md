@@ -1,6 +1,6 @@
 # RetentionStrip
 
-Location: `apps/client/web/src/components/watch/retention-strip/`, presentational, built from `IconButton` and the `dataviz` categorical palette (`seriesColor`, `@vp/components`).
+Location: `apps/client/web/src/components/watch/retention-strip/`, presentational, built from `IconButton` and the `dataviz` categorical palette (`seriesColor`, `@kit/components`).
 
 The retention curve of one video as a row of bars, one per 5 percent step, with a marker over each drop-off. It sits in the creator stats panel on the watch page ([114](../../../tickets/114-creator-stats-on-the-watch-page.md)), beside the buttons that list the same drop-offs.
 

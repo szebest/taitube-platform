@@ -1,5 +1,5 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { PICK_NOW } from '../../__tests__/entities';
 import { validatePickWindow } from '../pick-window.rule';
 

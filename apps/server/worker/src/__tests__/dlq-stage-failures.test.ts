@@ -1,6 +1,6 @@
+import { expectOk } from '@kit/testing/result';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import { NotifyJob, stagePolicies } from '@vp/job-contracts';
-import { expectOk } from '@vp/testing/result';
 import { createFailureHandler } from '../failure-handler';
 import { createPackageProcessor } from '../stages/package';
 import { createProbeProcessor } from '../stages/probe';

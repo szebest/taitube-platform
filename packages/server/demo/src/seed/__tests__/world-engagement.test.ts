@@ -1,4 +1,4 @@
-import { SEEDED } from '@vp/testing';
+import { SEEDED } from '@vp/testing-fixtures';
 import { createRng } from '../rng';
 import { buildEngagement } from '../world-engagement';
 import { buildUsers } from '../world-users';

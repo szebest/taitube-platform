@@ -1,7 +1,7 @@
+import { VideoCard } from '@kit/components';
 import { useT } from '@kit/intl-react';
 import { Link } from '@tanstack/react-router';
 import type { ClipView } from '@vp/api-contracts';
-import { VideoCard } from '@vp/components';
 import { useDurationText } from '#app/hooks/use-duration-text';
 
 /** A clip in a shelf: the video's frame at the clip's length, linked to the clip. */

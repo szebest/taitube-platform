@@ -1,17 +1,17 @@
 import * as path from 'node:path';
-import { type Result, all, isErr, ok } from '@kit/result';
-import type { StoragePresignedPartInfo } from '@vp/core/ports';
-import type { ActingChannel, VideoVisibility } from '@vp/domain';
-import { type AuthorizationFailure, decideChannelTask } from '@vp/domain-rules';
-import { MS_PER_SECOND } from '@vp/domain/time';
-import type { DatabaseUnavailable, StorageUnavailable } from '@vp/errors';
-import type { UserContext } from '@vp/permissions';
 import {
   MULTIPART_URL_BATCH_SIZE,
   calculatePartSize,
   calculateTotalParts,
-  rawSourceKey,
-} from '@vp/storage';
+} from '@kit/object-storage';
+import { MS_PER_SECOND } from '@kit/primitives';
+import { type Result, all, isErr, ok } from '@kit/result';
+import type { StoragePresignedPartInfo } from '@vp/core/ports';
+import type { ActingChannel, VideoVisibility } from '@vp/domain';
+import { type AuthorizationFailure, decideChannelTask } from '@vp/domain-rules';
+import type { DatabaseUnavailable, StorageUnavailable } from '@vp/errors';
+import type { UserContext } from '@vp/permissions';
+import { rawSourceKey } from '@vp/storage';
 import { uuidv7 } from 'uuidv7';
 import type { UploadContext } from './upload-context';
 

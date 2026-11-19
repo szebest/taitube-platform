@@ -1,7 +1,7 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import type { CommentSettings } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { decideCommentEdit } from '../comment-edit';
 import {
   type CommentCreateHarness,

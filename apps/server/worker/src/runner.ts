@@ -13,7 +13,7 @@ import type { Repositories } from '@vp/core/repositories';
 import type { AppConfig } from '@vp/env-schema';
 import type { MediaTools } from '@vp/ffmpeg';
 import type { FingerprintTools } from '@vp/fingerprint';
-import type { PipelineMetrics } from '@vp/observability';
+import type { PipelineMetrics } from '@vp/pipeline-metrics';
 import type { SpeechTools } from '@vp/whisper';
 import { Worker, registerStages, resolveStartOrder } from './composition/stages.module';
 import type { OutboxRelay } from './stages/housekeeping/outbox-relay';

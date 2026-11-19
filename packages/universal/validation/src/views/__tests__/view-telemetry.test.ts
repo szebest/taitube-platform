@@ -1,4 +1,4 @@
-import { expectErr, expectOk } from '@vp/testing/result';
+import { expectErr, expectOk } from '@kit/testing/result';
 import { qualifyView, requiredWatchSeconds } from '../view-telemetry';
 
 const LIMITS = { minWatchSeconds: 5 };

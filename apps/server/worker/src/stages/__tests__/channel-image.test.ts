@@ -3,6 +3,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { createLogger } from '@kit/logger';
 import { err } from '@kit/result';
+import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
 import type { ChannelImageKind } from '@vp/domain';
 import {
@@ -14,7 +15,6 @@ import {
 } from '@vp/errors';
 import { type ChannelImageProbe, type MediaTools, planChannelImageVariants } from '@vp/ffmpeg';
 import { channelImageUploadKey, channelImageVariantKey } from '@vp/storage';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { STAGE_SETTINGS } from '../../__tests__/stage-settings';
 import { createChannelImageProcessor } from '../channel-image';

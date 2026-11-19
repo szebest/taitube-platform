@@ -1,7 +1,7 @@
+import { expectOk } from '@kit/testing/result';
 import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
 import type { UserContext } from '@vp/permissions';
-import { SEEDED } from '@vp/testing';
-import { expectOk } from '@vp/testing/result';
+import { SEEDED } from '@vp/testing-fixtures';
 import { UploadService } from '../upload-service';
 import { ownerActing, uploadContext } from './service-deps';
 

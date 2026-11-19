@@ -1,6 +1,6 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import type { ScreeningFinding, ScreeningReason } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { decideScreening } from '../decide-screening.rule';
 import { THRESHOLDS } from './thresholds';
 

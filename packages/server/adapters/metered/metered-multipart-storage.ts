@@ -3,7 +3,7 @@ import {
   type StorageCompletePartInput,
   type StoragePresignedPartParams,
 } from '@vp/core/ports';
-import type { PipelineMetrics } from '@vp/observability';
+import type { PipelineMetrics } from '@vp/pipeline-metrics';
 import { meterStorageOp } from './storage-op-meter';
 
 type Outcome<M extends keyof MultipartStorage> = ReturnType<MultipartStorage[M]>;

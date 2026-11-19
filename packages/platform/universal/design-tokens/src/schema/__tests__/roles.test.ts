@@ -1,4 +1,4 @@
-import { expectOk } from '@vp/testing/result';
+import { expectOk } from '@kit/testing/result';
 import { parseTheme, resolveTheme } from '../../parse';
 import { RefSchema } from '../ref';
 import { checkRoleContrast, type RoleColors } from '../roles';

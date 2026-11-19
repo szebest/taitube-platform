@@ -1,5 +1,5 @@
+import { VideoCardSkeleton } from '@kit/components';
 import type { VideoSummary } from '@vp/api-contracts';
-import { VideoCardSkeleton } from '@vp/components';
 import { useRef } from 'react';
 import { FeedVideoCard } from '#app/components/video/feed-video-card';
 import { useWindowRows } from '#app/hooks/use-window-rows';

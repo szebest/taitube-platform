@@ -1,7 +1,7 @@
+import { expectOk } from '@kit/testing/result';
 import type { SearchHistoryRepositoryPort } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import { SEARCH_HISTORY_LIMIT, type SearchHistoryEntry } from '@vp/domain';
-import { expectOk } from '@vp/testing/result';
 import { HOUR_MS, OTHER_OWNER_ID, OWNER_ID, seedOwners } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 

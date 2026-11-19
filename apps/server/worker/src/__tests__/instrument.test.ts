@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
+import { registeredTracing } from '@kit/observability';
+import { withEnv } from '@kit/testing';
 import { isSpanContextValid, trace } from '@opentelemetry/api';
-import { registeredTracing } from '@vp/observability';
-import { withEnv } from '@vp/testing';
 
 const LOCAL_ENV = {
   ADAPTER_FAMILY: 'in-memory',

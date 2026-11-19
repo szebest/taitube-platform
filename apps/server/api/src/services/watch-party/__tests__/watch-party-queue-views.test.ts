@@ -1,4 +1,4 @@
-import { expectOk } from '@vp/testing/result';
+import { expectOk } from '@kit/testing/result';
 import { seedVideo } from '../../../__tests__/test-app';
 import { presentQueue } from '../watch-party-queue-views';
 import { OWNER, START, watchPartyTestDeps } from './watch-party-test-deps';

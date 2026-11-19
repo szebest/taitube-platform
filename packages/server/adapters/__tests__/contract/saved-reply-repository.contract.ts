@@ -1,6 +1,6 @@
+import { expectOk } from '@kit/testing/result';
 import type { Repositories } from '@vp/core/repositories';
 import type { Channel } from '@vp/domain';
-import { expectOk } from '@vp/testing/result';
 import { seedTeam } from './channel-team-fixtures';
 import { OTHER_OWNER_ID, seedOwners } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';

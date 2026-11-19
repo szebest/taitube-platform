@@ -1,4 +1,4 @@
-import { expectOk } from '@vp/testing/result';
+import { expectOk } from '@kit/testing/result';
 import { inMemoryWatchPartyPresenceSubject } from '../../__tests__/contract/in-memory-port-subjects';
 import { describeWatchPartyPresenceContract } from '../../__tests__/contract/watch-party-presence.contract';
 import { InMemoryWatchPartyPresence } from '../in-memory-watch-party-presence';

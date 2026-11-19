@@ -1,4 +1,4 @@
-import { expectOk } from '@vp/testing/result';
+import { expectOk } from '@kit/testing/result';
 import { inMemoryViewBufferSubject } from '../../__tests__/contract/in-memory-port-subjects';
 import { describeViewBufferContract } from '../../__tests__/contract/view-buffer.contract';
 import { InMemoryViewBuffer } from '../in-memory-view-buffer';

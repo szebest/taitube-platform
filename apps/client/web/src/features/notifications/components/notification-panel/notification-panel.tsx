@@ -1,9 +1,9 @@
+import { EmptyState, NoNotificationsIllustration, SectionError } from '@kit/components';
 import { useFormat, useT } from '@kit/intl-react';
 import { unwrapOr } from '@kit/result';
 import { Tabs } from '@kit/ui';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
-import { EmptyState, NoNotificationsIllustration, SectionError } from '@vp/components';
 import { NOTIFICATION_FILTERS, type NotificationFilter } from '@vp/domain';
 import { unreadNotificationCountQueryOptions, useApi } from '@vp/queries';
 import { useState } from 'react';

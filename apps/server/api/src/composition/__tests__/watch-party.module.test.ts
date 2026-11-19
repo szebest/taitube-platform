@@ -1,8 +1,8 @@
 import { Container } from '@kit/composition';
+import { expectOk } from '@kit/testing/result';
 import { Adapters, registerAdapters } from '@vp/adapters/composition';
 import { inProcessAppConfig } from '@vp/env-schema';
 import type { UserContext } from '@vp/permissions';
-import { expectOk } from '@vp/testing/result';
 import { registerServices, Services } from '../services.module';
 
 const OWNER: UserContext = { id: '00000000-0000-7000-8000-00000000f301', role: 'USER' };

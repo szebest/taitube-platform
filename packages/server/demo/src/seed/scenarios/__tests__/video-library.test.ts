@@ -1,4 +1,4 @@
-import { expectOk } from '@vp/testing/result';
+import { expectOk } from '@kit/testing/result';
 import { createFakeApi } from '../../__tests__/fake-api';
 import { createFakePorts } from '../../__tests__/fake-ports';
 import { createApi } from '../../api';

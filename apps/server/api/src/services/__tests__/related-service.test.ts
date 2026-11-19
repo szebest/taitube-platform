@@ -1,7 +1,7 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { NewVideoInput } from '@vp/core/repositories';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { RelatedService } from '../related-service';
 import { VideoService } from '../video-service';
 import { ViewerProgress } from '../viewer-progress';

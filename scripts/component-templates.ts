@@ -7,7 +7,7 @@ export type ComponentKind = (typeof COMPONENT_KINDS)[number];
 
 const KIND_HOME: Readonly<Record<ComponentKind, string>> = {
   primitive: `${UI_SRC}/primitives`,
-  shared: `${packageDir('@vp/components')}/src`,
+  shared: `${packageDir('@kit/components')}/src`,
   web: 'apps/client/web/src/components',
   studio: 'apps/client/studio/src/components',
 };

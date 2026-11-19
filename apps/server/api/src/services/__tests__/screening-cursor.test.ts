@@ -1,8 +1,8 @@
 import { Paginator } from '@kit/pagination';
 import { ok } from '@kit/result';
+import { expectErr, expectOk } from '@kit/testing/result';
 import type { VideoScreening } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { decodeScreeningCaseCursor, screeningCaseCursorPayload } from '../screening-cursor';
 
 const paginator = new Paginator();

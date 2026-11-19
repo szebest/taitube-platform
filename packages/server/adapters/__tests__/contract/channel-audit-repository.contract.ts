@@ -1,7 +1,7 @@
+import { expectOk } from '@kit/testing/result';
 import type { ChannelAuditRepositoryPort } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import type { Channel } from '@vp/domain';
-import { expectOk } from '@vp/testing/result';
 import { auditOf, memberAudit, seedTeam } from './channel-team-fixtures';
 import { OTHER_OWNER_ID, seedOwners } from './fixtures';
 import { SHARED_MILLISECOND, walkByCreatedAt } from './keyset-walk';

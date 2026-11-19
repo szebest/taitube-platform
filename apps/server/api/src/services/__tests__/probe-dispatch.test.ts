@@ -1,9 +1,9 @@
 import { err } from '@kit/result';
+import { expectOk } from '@kit/testing/result';
 import { InMemoryJobQueue } from '@vp/adapters/in-memory';
 import { JOB_PRIORITY } from '@vp/domain';
 import { queueUnavailable } from '@vp/errors';
 import { ids, stagePolicies } from '@vp/job-contracts';
-import { expectOk } from '@vp/testing/result';
 import { buildProbeDispatch, enqueueProbe } from '../probe-dispatch';
 
 const VIDEO_ID = '00000000-0000-7000-8000-0000000000b1';

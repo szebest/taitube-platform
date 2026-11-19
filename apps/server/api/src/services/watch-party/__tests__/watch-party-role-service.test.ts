@@ -1,5 +1,5 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { GUEST_KEY, keyOf, ROOM_ID } from './watch-party-moderation-fixture';
 import { popcorn, setUpRoles, STRANGER } from './watch-party-role-party';
 import {

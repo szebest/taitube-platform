@@ -1,5 +1,5 @@
 import { type Result, err, isErr, ok } from '@kit/result';
-import { type AppEnv, AppEnvSchema } from '@vp/env-schema';
+import type { z } from 'zod';
 
 const SECRET_KEY_PATTERN = /password|secret|key|token|auth/i;
 
@@ -9,8 +9,11 @@ export interface InvalidEnv {
   issues: string[];
 }
 
-export function parseEnv(env: Record<string, string | undefined>): Result<AppEnv, InvalidEnv> {
-  const result = AppEnvSchema.safeParse(env);
+export function parseEnv<T>(
+  schema: z.ZodType<T>,
+  env: Record<string, string | undefined>
+): Result<T, InvalidEnv> {
+  const result = schema.safeParse(env);
 
   if (result.success) return ok(result.data);
 
@@ -23,8 +26,11 @@ export function parseEnv(env: Record<string, string | undefined>): Result<AppEnv
 }
 
 /** Throws a message naming every invalid key, secrets redacted, for the entrypoint to report. */
-export function loadEnv(env: Record<string, string | undefined> = process.env): AppEnv {
-  const parsed = parseEnv(env);
+export function loadEnv<T>(
+  schema: z.ZodType<T>,
+  env: Record<string, string | undefined> = process.env
+): T {
+  const parsed = parseEnv(schema, env);
   if (isErr(parsed)) {
     const lines = parsed.error.issues.map((issue) => `  - ${issue}`);
     throw new Error(`[FATAL] Invalid environment configuration:\n${lines.join('\n')}`);

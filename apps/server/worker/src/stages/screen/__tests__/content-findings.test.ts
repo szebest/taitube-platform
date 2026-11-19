@@ -1,7 +1,7 @@
 import { err } from '@kit/result';
+import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryFrameClassifier, InMemoryStorageClient } from '@vp/adapters/in-memory';
 import { ErrorCodes, mediaFailure } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { STAGE_SETTINGS } from '../../../__tests__/stage-settings';
 import { contentFindings } from '../content-findings';
 import { CLASSIFIER_SIZE, toolsFor } from './screen-harness';

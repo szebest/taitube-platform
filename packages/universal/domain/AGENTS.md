@@ -36,8 +36,7 @@ driver ports and repository contracts stayed behind as `@vp/core`; everything po
 4. **Policy constants carry domain-loaded names** — `TRENDING_GRAVITY`, `PUBLIC_FEED_VISIBILITY` — so a
    call site reads as a rule rather than as a magic number.
 5. **Relative imports are extensionless** (`./channel`), as in every tier (`esm-specifiers.test.ts`).
-6. **Time units live in `time.ts`** (`MS_PER_DAY`, `SECONDS_PER_HOUR`, ...), exported as the
-   `@vp/domain/time` subpath (not from the root barrel), and `public-feed.ts` imports them by that name.
+6. **Time units live in `@kit/primitives`** (`MS_PER_DAY`, `SECONDS_PER_HOUR`, ...), and `public-feed.ts` imports them by that name.
    `no-tuning-literals.test.ts` fails on a minute, hour or day written as literal arithmetic in
    `apps/server/api/src/services`, `apps/server/worker/src`, `packages/server/adapters` or `packages/server/ffmpeg/src`.
 7. **Input rules are not here.** The handle format helpers live in `@vp/validation`

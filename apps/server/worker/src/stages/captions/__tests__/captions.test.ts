@@ -1,5 +1,5 @@
+import { expectOk } from '@kit/testing/result';
 import { captionsChunkKey, captionsFileKey, captionsTmpPrefix } from '@vp/storage';
-import { expectOk } from '@vp/testing/result';
 import { createCaptionsProcessor } from '../captions';
 import { captionsWorld } from './captions-harness';
 

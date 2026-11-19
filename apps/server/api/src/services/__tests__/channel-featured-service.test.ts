@@ -1,8 +1,8 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { FEATURED_VIDEOS_MAX } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { seedVideo } from '../../__tests__/test-app';
 import { ChannelFeaturedService } from '../channel-featured-service';
 import { VideoService } from '../video-service';

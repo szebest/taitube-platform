@@ -1,6 +1,6 @@
+import { expectOk } from '@kit/testing/result';
 import { InMemoryStorageClient } from '@vp/adapters/in-memory';
 import { inProcessAppConfig } from '@vp/env-schema';
-import { expectOk } from '@vp/testing/result';
 import { liveCollaborators } from '../live-collaborators';
 
 describe('worker: liveCollaborators', () => {

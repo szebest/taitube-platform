@@ -1,4 +1,4 @@
-import { MS_PER_DAY } from '@vp/domain/time';
+import { MS_PER_DAY } from '@kit/primitives';
 import type { ViewDate } from './views';
 
 /** One member per dataset a channel can take away; each has its row schema in `@vp/api-contracts`. */

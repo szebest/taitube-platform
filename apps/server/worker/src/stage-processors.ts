@@ -48,7 +48,7 @@ import {
   ScreenJob,
   TranscodeJob,
 } from '@vp/job-contracts';
-import type { PipelineMetrics } from '@vp/observability';
+import type { PipelineMetrics } from '@vp/pipeline-metrics';
 import type { SpeechTools } from '@vp/whisper';
 import { consuming } from './consuming';
 import type { Every } from './heartbeat';

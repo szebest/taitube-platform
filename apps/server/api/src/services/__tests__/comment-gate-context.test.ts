@@ -1,7 +1,7 @@
+import { expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { Video } from '@vp/domain';
 import type { UserContext } from '@vp/permissions';
-import { expectOk } from '@vp/testing/result';
 import { loadCommentGate } from '../comment-gate-context';
 import { commentCreateDeps } from './comment-deps';
 

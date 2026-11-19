@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
+import { FALLBACK_LOCALE } from '@kit/intl';
 import { appearance } from '@kit/ui/appearance/registry';
 import { expect, test } from '@playwright/test';
-import { FALLBACK_LOCALE } from '@vp/intl';
 import { SUPPORTED_LOCALES } from '@vp/messages';
 import { THEME_DEFAULT } from '../src/toolbars';
 import { type StoryEntry, shotVariant, shotsFor, storiesFor } from './stories';

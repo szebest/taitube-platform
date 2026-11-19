@@ -1,7 +1,7 @@
+import { MS_PER_SECOND } from '@kit/primitives';
 import { isErr, ok, type Result } from '@kit/result';
 import type { WatchPartyServerFrame } from '@vp/api-contracts';
 import { parseMemberKey, type RosterEntry } from '@vp/domain';
-import { MS_PER_SECOND } from '@vp/domain/time';
 import { canInRoom } from '@vp/permissions';
 import type { PartyCaller } from './party-caller';
 import type { RoomEnvelope } from './watch-party-broadcaster';

@@ -1,6 +1,6 @@
+import { expectOk } from '@kit/testing/result';
 import { InMemoryJobQueue } from '@vp/adapters/in-memory';
 import { CANONICAL_LADDER, PackageJob } from '@vp/job-contracts';
-import { expectOk } from '@vp/testing/result';
 import { buildApprovedPackageDispatch, enqueueApprovedPackage } from '../screening-package';
 
 const VIDEO_ID = '00000000-0000-7000-8000-0000000006a1';

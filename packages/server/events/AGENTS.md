@@ -11,8 +11,9 @@ Instructions for any coding agent working on `@vp/events`.
 `@vp/events` owns the Redis vocabulary the API, the worker and the adapters share. Tier `server`,
 `vp.layer` 2; its dependencies are in [package.json](package.json).
 
-- `src/index.ts` - `SseMessageEnvelope` (Zod: `event` is `snapshot`, `progress` or `status`),
-  `publishVideoEvent`, `formatSseFrame` and `SSE_PING_COMMENT`.
+- `src/index.ts` - `publishVideoEvent`, which serialises an `SseMessageEnvelope`.
+- `src/envelope.ts` - `SseMessageEnvelope`, the JSON on `video:{id}` and its event names (`formatSseFrame` and
+  `SSE_PING_COMMENT` live in `@kit/keyspace`).
 - `src/channels.ts` - Pub/Sub channels `video:{id}` and `user:{id}`: `videoChannel`, `userChannel`,
   `VIDEO_WILDCARD_CHANNEL`, `USER_WILDCARD_CHANNEL`, `channelType`.
 - `src/keys.ts` - `CacheKeys`, every `taitube:` cache key.

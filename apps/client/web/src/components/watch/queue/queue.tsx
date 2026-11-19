@@ -1,5 +1,5 @@
+import { VideoCardSkeleton } from '@kit/components';
 import { Button, cn, Drawer, Icon, IconButton, Slot, SortableList, useUiCopy } from '@kit/ui';
-import { VideoCardSkeleton } from '@vp/components';
 import {
   Children,
   type ComponentPropsWithRef,

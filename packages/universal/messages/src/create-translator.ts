@@ -1,12 +1,12 @@
-import { err, type Result, unwrapOr } from '@kit/result';
-import { ErrorCodes } from '@vp/errors';
 import {
   FALLBACK_LOCALE,
   type FormatFailure,
   type IntlBinding,
   localeChain,
   type Unrenderable,
-} from '@vp/intl';
+} from '@kit/intl';
+import { err, type Result, unwrapOr } from '@kit/result';
+import { ErrorCodes } from '@vp/errors';
 import { type ArgsOf, type Catalogues, findMessage, type MessageKey } from './catalogue';
 import { substitute } from './substitute';
 

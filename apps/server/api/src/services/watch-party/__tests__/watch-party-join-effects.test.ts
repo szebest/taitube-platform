@@ -1,4 +1,4 @@
-import { expectOk } from '@vp/testing/result';
+import { expectOk } from '@kit/testing/result';
 import { joinRoom, leaveRoom } from '../watch-party-join';
 import { setUpJoin } from './watch-party-join-fixture';
 import { MEMBER, reading, userCaller } from './watch-party-test-deps';

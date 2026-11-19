@@ -1,6 +1,6 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import { DEFAULT_PREFERENCES } from '@vp/domain/settings';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
 import type { PartyCaller } from '../party-caller';
 import { joinRoom } from '../watch-party-join';
 import { previewRoom } from '../watch-party-preview';

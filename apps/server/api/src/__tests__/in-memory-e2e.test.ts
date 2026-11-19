@@ -1,3 +1,4 @@
+import { expectOk } from '@kit/testing/result';
 import {
   InMemoryJobQueue,
   InMemoryMultipartStorage,
@@ -5,7 +6,6 @@ import {
   InMemoryStorageClient,
 } from '@vp/adapters/in-memory';
 import { inProcessAppConfig } from '@vp/env-schema';
-import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
 import { TOKENS, bearer, buildTestApp } from './test-app';
 

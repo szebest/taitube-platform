@@ -1,6 +1,6 @@
+import { expectOk } from '@kit/testing/result';
 import type { NewOutboxInput } from '@vp/core/repositories';
 import type { WatchPartyInvite } from '@vp/domain';
-import { expectOk } from '@vp/testing/result';
 import { OTHER_OWNER_ID, OWNER_ID } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 import {

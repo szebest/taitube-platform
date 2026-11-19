@@ -1,3 +1,4 @@
+import { MS_PER_SECOND } from '@kit/primitives';
 import { type Result, err, ok } from '@kit/result';
 import {
   MultipartStorage,
@@ -8,7 +9,6 @@ import {
   type StoragePresignedPartParams,
   type StorageUploadedPartInfo,
 } from '@vp/core/ports';
-import { MS_PER_SECOND } from '@vp/domain/time';
 import { type StorageUnavailable, storageUnavailable } from '@vp/errors';
 
 interface InFlightPart {

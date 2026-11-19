@@ -1,11 +1,11 @@
 import { LogContext, createLogger } from '@kit/logger';
+import { expectOk } from '@kit/testing/result';
 import {
   InMemoryMultipartStorage,
   InMemoryRepositories,
   InMemoryStorageClient,
 } from '@vp/adapters/in-memory';
 import { inProcessAppConfig } from '@vp/env-schema';
-import { expectOk } from '@vp/testing/result';
 import { composeWorker } from '../runner';
 import { inMemoryQueues } from '../stages/housekeeping/__tests__/housekeeping-harness';
 import { STAGE_SETTINGS } from './stage-settings';

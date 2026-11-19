@@ -1,6 +1,6 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import type { Clip } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { ADMIN, OWNER, STRANGER } from '../../__tests__/entities';
 import { decideClipDelete } from '../delete-clip.rule';
 

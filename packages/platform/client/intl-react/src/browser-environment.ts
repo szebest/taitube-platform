@@ -8,7 +8,7 @@ export function currentInstant(): string {
 }
 
 /**
- * The runtime's time zone and clock, read in one place: `@vp/intl` takes both as arguments, which
+ * The runtime's time zone and clock, read in one place: `@kit/intl` takes both as arguments, which
  * is what lets a server render pass its own. The locale is never read here, it is negotiated
  * before the provider renders and handed to it.
  */

@@ -1,4 +1,4 @@
-import { SEEDED } from '@vp/testing';
+import { SEEDED } from '@vp/testing-fixtures';
 import type { FastifyInstance } from 'fastify';
 import { buildTestApp, seedVideo } from '../../__tests__/test-app';
 

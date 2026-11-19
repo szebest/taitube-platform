@@ -1,7 +1,7 @@
+import { expectOk } from '@kit/testing/result';
 import { PARTY_CREDENTIAL_HEADER } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
-import { SEEDED } from '@vp/testing';
-import { expectOk } from '@vp/testing/result';
+import { SEEDED } from '@vp/testing-fixtures';
 import { guestSession } from '../../services/watch-party/__tests__/watch-party-access-fixture';
 import { buildWatchPartyApp, type WatchPartyApp } from './watch-party-app';
 

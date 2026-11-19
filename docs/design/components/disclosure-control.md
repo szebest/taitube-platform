@@ -1,6 +1,6 @@
 # DisclosureControl
 
-The Silent or Visible switch of comment moderation: whether the author of a moderated comment is told. It is a [SegmentedControl](../primitives/segmented-control.md) with the two options and their words fixed, so the dialog, the bulk bar and the queue say the same thing in the same place. In `@vp/components` because web's moderation dialog and studio's bulk bar, queue and settings defaults all render it.
+The Silent or Visible switch of comment moderation: whether the author of a moderated comment is told. It is a [SegmentedControl](../primitives/segmented-control.md) with the two options and their words fixed, so the dialog, the bulk bar and the queue say the same thing in the same place. In `@kit/components` because web's moderation dialog and studio's bulk bar, queue and settings defaults all render it.
 
 ## Anatomy
 

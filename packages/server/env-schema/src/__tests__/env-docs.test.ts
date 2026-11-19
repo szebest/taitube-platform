@@ -1,7 +1,7 @@
+import { describeEnvKey } from '@kit/config';
 import { AppEnvSchema } from '../app-env';
 import { ENV_GROUPS } from '../env-doc';
 import { ENV_DOCS } from '../env-docs';
-import { describeEnvKey } from '../env-introspection';
 import { SECRET_KEYS } from '../secret-keys';
 
 const entries = Object.entries(ENV_DOCS);
@@ -35,7 +35,8 @@ describe('packages/env-schema: env-docs', () => {
       .filter(([, doc]) => doc.requiredIn?.includes('always'))
       .map(([key]) => key);
     const required = Object.keys(ENV_DOCS).filter(
-      (key) => describeEnvKey(key as keyof typeof ENV_DOCS).default.kind === 'required'
+      (key) =>
+        describeEnvKey(AppEnvSchema.shape[key as keyof typeof ENV_DOCS]).default.kind === 'required'
     );
 
     expect(always.sort()).toEqual(required.sort());

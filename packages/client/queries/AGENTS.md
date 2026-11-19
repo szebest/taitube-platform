@@ -79,7 +79,7 @@ The session (SDD §11, Transport and Origins and cookies):
 - `settleSession(router)` after a sign-in or a sign-out, and `endSession(router)`, which sends a signed-in viewer
   whose token the API refused to `/login?redirect=<where they were>`, with no reload.
 - `SessionProvider` (the session from router context, and the `PermissionsProvider` it fills) and `useAccount()`.
-- `useSignOut()`, which ends the session on both apps and loads the routes again as a guest; the sign-in card and the account menu it feeds are `@vp/components`' parts, wrapped in each app's `features/auth/components/`. `@vp/queries/demo-personas` is for local demos: the
+- `useSignOut()`, which ends the session on both apps and loads the routes again as a guest; the sign-in card and the account menu it feeds are `@kit/components`' parts, wrapped in each app's `features/auth/components/`. `@vp/queries/demo-personas` is for local demos: the
   `PersonaSwitcher` and its `signInAsPersona` server function, which signs in with a token `pnpm dev-token serve`
   mints, at the address `sessionMiddleware` was given as `devTokenUrl`. Each app imports it behind
   `VITE_DEMO_PERSONAS` in its `/login` route, and the bundle guard in `@kit/vite-preset` fails a build with the

@@ -1,4 +1,4 @@
-import { MS_PER_HOUR } from '@vp/domain/time';
+import { MS_PER_HOUR } from '@kit/primitives';
 import type { VideoFormat } from './status-vocabulary';
 
 export type PublicFeedSort = 'recent' | 'popular' | 'trending' | 'shorts';

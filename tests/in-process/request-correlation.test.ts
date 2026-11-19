@@ -2,6 +2,8 @@ import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { LogContext, createLogger } from '@kit/logger';
+import { captureLog } from '@kit/testing/log-capture';
+import { expectOk } from '@kit/testing/result';
 import {
   InMemoryJobQueue,
   InMemoryRepositories,
@@ -10,8 +12,6 @@ import {
 import { inProcessAppConfig } from '@vp/env-schema';
 import { mediaTools } from '@vp/ffmpeg';
 import { fingerprintTools } from '@vp/fingerprint';
-import { captureLog } from '@vp/testing/log-capture';
-import { expectOk } from '@vp/testing/result';
 import { speechTools } from '@vp/whisper';
 import { composeApp } from '../../apps/server/api/src/app';
 import { composeWorker } from '../../apps/server/worker/src/runner';

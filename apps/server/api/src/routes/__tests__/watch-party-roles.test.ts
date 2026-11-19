@@ -1,6 +1,6 @@
+import { expectOk } from '@kit/testing/result';
 import { BUILT_IN_ROLES, WATCH_PARTY_PERMISSION_IDS } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
-import { expectOk } from '@vp/testing/result';
 import {
   buildModerationApp,
   keyFor,

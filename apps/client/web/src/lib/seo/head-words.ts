@@ -1,5 +1,5 @@
+import { createIntl, createIntlCache } from '@kit/intl';
 import type { ActiveLocale } from '@kit/intl-react';
-import { createIntl, createIntlCache } from '@vp/intl';
 import { createTranslator, en, type SupportedLocale, type Translator } from '@vp/messages';
 
 export type HeadWords = Readonly<{ locale: SupportedLocale; tOr: Translator['tOr'] }>;

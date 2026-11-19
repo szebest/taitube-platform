@@ -1,6 +1,6 @@
 # SectionError
 
-The partial state: one section failed inside a page that did not. The comments call can fail while the video keeps playing; a shelf can fail while Home stays usable. In `@vp/components` because web shelves and the discussion and studio tables and charts all render it.
+The partial state: one section failed inside a page that did not. The comments call can fail while the video keeps playing; a shelf can fail while Home stays usable. In `@kit/components` because web shelves and the discussion and studio tables and charts all render it.
 
 ## Anatomy
 

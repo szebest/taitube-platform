@@ -1,6 +1,6 @@
+import { expectOk } from '@kit/testing/result';
 import type { DataExportRepositoryPort } from '@vp/core/repositories';
 import type { Channel, NewChannelAuditEntry, NewDataExport } from '@vp/domain';
-import { expectOk } from '@vp/testing/result';
 import { seedTeam } from './channel-team-fixtures';
 import { OWNER_ID, seedOwners } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';

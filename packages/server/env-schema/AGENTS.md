@@ -47,7 +47,7 @@ declares its own default now.
    and `PAGE_SIZE_MAX` are imported from `@kit/pagination`, which `@vp/api-contracts` reads too, so the
    env default and the advertised page bound cannot drift. That edge, and `@kit/pagination` being layer 2, is
    why this package is layer 3 (its other dependencies, `@vp/domain`, `@kit/result` and `zod`, sit lower).
-   `OTEL_TRACES_SAMPLER` is the same kind of edge: its names are `TraceSamplerName` from `@vp/observability`
+   `OTEL_TRACES_SAMPLER` is the same kind of edge: its names are `TraceSamplerName` from `@kit/observability`
    (layer 2), imported as a type only, so loading the schema loads no OpenTelemetry module.
 7. **A secret has no default.** `SECRET_KEYS` (`DATABASE_URL`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`,
    `REDIS_PASSWORD`) are optional outside production and required in it, and a production boot refuses any

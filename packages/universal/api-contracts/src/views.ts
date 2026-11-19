@@ -1,4 +1,4 @@
-import { SECONDS_PER_DAY } from '@vp/domain/time';
+import { SECONDS_PER_DAY } from '@kit/primitives';
 import { ErrorCodes } from '@vp/errors';
 import { z } from 'zod';
 import { defineEndpoint } from './endpoint';
