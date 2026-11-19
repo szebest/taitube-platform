@@ -1,7 +1,10 @@
 import { screen, within } from '@testing-library/react';
 import { axeViolations } from '@vp/web-testing/dom';
 import { renderLive } from '#app/features/live/__tests__/render-live';
+import { LazyLiveViewersPlot } from '../../live-viewers-plot/live-viewers-plot.lazy';
 import { LiveViewersChart } from '../live-viewers-chart';
+
+beforeAll(() => LazyLiveViewersPlot.preload());
 
 const AT = Date.parse('2026-11-05T10:00:00.000Z');
 

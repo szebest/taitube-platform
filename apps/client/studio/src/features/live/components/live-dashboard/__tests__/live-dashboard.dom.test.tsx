@@ -17,6 +17,9 @@ import {
   liveStream,
 } from '#app/features/live/__tests__/live-api.fixture';
 import { getRouter } from '#app/router';
+import { LazyLiveViewersPlot } from '../../live-viewers-plot/live-viewers-plot.lazy';
+
+beforeAll(() => LazyLiveViewersPlot.preload());
 
 type Stream = ReturnType<typeof liveStream>;
 

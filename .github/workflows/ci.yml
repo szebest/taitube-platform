@@ -163,6 +163,7 @@ jobs:
         run: pnpm exec turbo run typecheck typecheck:repo --only --cache-dir .turbo/typecheck-cache
 
       - name: Save the typecheck results for the next run
+        if: always()
         uses: actions/cache/save@v6
         with:
           path: .turbo/typecheck-cache
@@ -482,17 +483,24 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        app: [web, studio]
-        shard: [1, 2, 3]
+        include:
+          - { app: web, shard: 1, count: 4 }
+          - { app: web, shard: 2, count: 4 }
+          - { app: web, shard: 3, count: 4 }
+          - { app: web, shard: 4, count: 4 }
+          - { app: studio, shard: 1, count: 2 }
+          - { app: studio, shard: 2, count: 2 }
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
 
+      - name: Install FFmpeg beside the workspace setup
+        uses: ./.github/actions/setup-ffmpeg
+        with:
+          background: 'true'
+
       - name: Set up the workspace
         uses: ./.github/actions/setup-workspace
-
-      - name: Set up FFmpeg
-        uses: ./.github/actions/setup-ffmpeg
 
       - name: Restore or generate the upload fixture
         uses: ./.github/actions/video-fixtures
@@ -514,8 +522,11 @@ jobs:
         if: steps.chromium.outputs.cache-hit != 'true'
         run: pnpm --filter @vp/${{ matrix.app }} exec playwright install --only-shell chromium
 
+      - name: Wait for FFmpeg
+        uses: ./.github/actions/ffmpeg-ready
+
       - name: Run this shard of the app's browser suite
-        run: pnpm --filter @vp/${{ matrix.app }} test:e2e --shard=${{ matrix.shard }}/3
+        run: pnpm --filter @vp/${{ matrix.app }} test:e2e --shard=${{ matrix.shard }}/${{ matrix.count }}
 
       - name: Keep the report, traces and screenshots of a failed run
         if: failure()
