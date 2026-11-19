@@ -1,7 +1,7 @@
 import { screen, within } from '@testing-library/react';
 import { axeViolations } from '@vp/web-testing/dom';
 import { renderLive } from '#app/features/live/__tests__/render-live';
-import { LazyLiveViewersPlot } from '../../live-viewers-plot/live-viewers-plot.lazy';
+import { LazyLiveViewersPlot } from '#app/features/live/components/live-viewers-plot/live-viewers-plot.lazy';
 import { LiveViewersChart } from '../live-viewers-chart';
 
 beforeAll(() => LazyLiveViewersPlot.preload());

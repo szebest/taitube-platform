@@ -16,8 +16,8 @@ import {
   liveNow,
   liveStream,
 } from '#app/features/live/__tests__/live-api.fixture';
+import { LazyLiveViewersPlot } from '#app/features/live/components/live-viewers-plot/live-viewers-plot.lazy';
 import { getRouter } from '#app/router';
-import { LazyLiveViewersPlot } from '../../live-viewers-plot/live-viewers-plot.lazy';
 
 beforeAll(() => LazyLiveViewersPlot.preload());
 
