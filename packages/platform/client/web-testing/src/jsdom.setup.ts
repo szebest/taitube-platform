@@ -53,7 +53,7 @@ const neverGranted: LockManager = {
   request: () => new Promise<never>(() => undefined),
   query: async () => ({ held: [], pending: [] }),
 };
-Object.defineProperty(navigator, 'locks', { configurable: true, value: neverGranted });
+Object.assign(navigator, { locks: neverGranted });
 
 // The Start compiler keeps only an isomorphic function's `.client` branch in the browser bundle;
 // uncompiled, the runtime stub always runs `.server`.
@@ -82,10 +82,7 @@ const PerFileBroadcastChannel = ((Native, scope) =>
       super(`${scope}:${name}`);
     }
   })(globalThis.BroadcastChannel, crypto.randomUUID());
-Object.defineProperty(globalThis, 'BroadcastChannel', {
-  value: PerFileBroadcastChannel,
-  configurable: true,
-});
+globalThis.BroadcastChannel = PerFileBroadcastChannel;
 
 // A server function sets cookies in jsdom's jar, the stores keep what a preference or an intent wrote, and
 // TanStack Query's online and focus managers keep the last event a test dispatched, all of which outlive the test.

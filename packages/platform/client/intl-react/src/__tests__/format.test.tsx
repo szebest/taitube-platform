@@ -1,13 +1,13 @@
 import type { FormatValue } from '@kit/intl';
 import { render } from '@testing-library/react';
 import { Format } from '../format';
-import { IntlProvider } from '../intl-provider';
+import { SpecIntl } from './spec-intl';
 
 function rendered(value: FormatValue, fallback?: string): string | null {
   const { container } = render(
-    <IntlProvider locale="en" timeZone="UTC">
+    <SpecIntl locale="en" timeZone="UTC">
       <Format value={value} fallback={fallback} />
-    </IntlProvider>
+    </SpecIntl>
   );
   return container.textContent;
 }

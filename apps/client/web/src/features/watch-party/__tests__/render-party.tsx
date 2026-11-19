@@ -1,9 +1,9 @@
-import { IntlProvider } from '@kit/intl-react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { render } from '@testing-library/react';
 import type { WatchPartyViewer } from '@vp/permissions';
 import { PartyPermissionsProvider } from '@vp/permissions-react';
 import { createQueryClient } from '@vp/queries';
+import { IntlProvider } from '@vp/queries/intl';
 import type { PropsWithChildren, ReactElement } from 'react';
 import { AppProviders } from '#app/__tests__/providers';
 

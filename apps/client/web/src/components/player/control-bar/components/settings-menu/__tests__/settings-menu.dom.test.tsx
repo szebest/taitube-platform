@@ -1,8 +1,8 @@
-import { IntlProvider } from '@kit/intl-react';
 import { axeViolations } from '@kit/web-testing/dom';
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { type UserEvent, userEvent } from '@testing-library/user-event';
 import type { CaptionTrackView } from '@vp/api-contracts';
+import { IntlProvider } from '@vp/queries/intl';
 import { captionTrack } from '@vp/web-testing';
 import { parseMaster } from '#app/integrations/video-js/__tests__/offline-hls';
 import { VideoJsEngine } from '#app/integrations/video-js/video-js-engine';

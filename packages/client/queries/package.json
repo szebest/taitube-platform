@@ -16,6 +16,11 @@
       "types": "./dist/demo-personas/index.d.ts",
       "import": "./dist/demo-personas/index.js",
       "default": "./dist/demo-personas/index.js"
+    },
+    "./intl": {
+      "types": "./dist/intl/index.d.ts",
+      "import": "./dist/intl/index.js",
+      "default": "./dist/intl/index.js"
     }
   },
   "scripts": {

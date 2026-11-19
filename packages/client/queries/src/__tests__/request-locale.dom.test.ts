@@ -1,4 +1,4 @@
-import { createLocaleStore } from '@kit/intl-react';
+import { createLocaleStore } from '../intl';
 import { requestLocale } from '../request-locale';
 
 describe('@vp/queries: request locale in the browser', () => {

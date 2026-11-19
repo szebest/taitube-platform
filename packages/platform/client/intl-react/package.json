@@ -1,6 +1,6 @@
 {
   "name": "@kit/intl-react",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "sideEffects": false,
@@ -22,7 +22,7 @@
   "dependencies": {
     "@kit/intl": "workspace:*",
     "@kit/result": "workspace:*",
-    "@vp/messages": "workspace:*"
+    "@kit/runtime": "workspace:*"
   },
   "devDependencies": {
     "@kit/testing": "workspace:*",

@@ -1,4 +1,3 @@
-import { createLocaleStore } from '@kit/intl-react';
 import {
   createMemoryHistory,
   createRootRouteWithContext,
@@ -14,6 +13,7 @@ import {
   useLayoutMaxWidth,
 } from '../app-router';
 import { createQueryClient } from '../create-query-client';
+import { createLocaleStore } from '../intl';
 import { RouteError, RouteNotFound } from '../route-errors';
 
 const Pending = () => <p>Pending</p>;

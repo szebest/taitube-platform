@@ -1473,9 +1473,9 @@ importers:
       '@kit/result':
         specifier: workspace:*
         version: link:../../universal/result
-      '@vp/messages':
+      '@kit/runtime':
         specifier: workspace:*
-        version: link:../../../universal/messages
+        version: link:../../universal/runtime
     devDependencies:
       '@kit/testing':
         specifier: workspace:*

@@ -1,5 +1,5 @@
-import { IntlProvider } from '@kit/intl-react';
 import { fireEvent, render, screen, within } from '@testing-library/react';
+import { IntlProvider } from '@vp/queries/intl';
 import {
   TaitubePlayer,
   type TaitubePlayerWithTelemetryProps,
