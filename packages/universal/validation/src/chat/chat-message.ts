@@ -1,7 +1,6 @@
 import { err, ok, type Result } from '@kit/result';
-import type { LengthBounds } from '../failures';
+import { type LengthBounds, normalizePlainText, withinLength } from '@kit/validation';
 import { type InvalidField, invalidLength } from '../field-failures';
-import { normalizePlainText, withinLength } from '../plain-text';
 
 /** Also the `char_length` check every chat table puts on a line. */
 export const CHAT_MESSAGE_BOUNDS = {

@@ -1,7 +1,6 @@
 import { err, ok, type Result } from '@kit/result';
-import type { LengthBounds } from '../failures';
+import { type LengthBounds, normalizePlainText, withinLength } from '@kit/validation';
 import { type InvalidField, invalidLength } from '../field-failures';
-import { normalizePlainText, withinLength } from '../plain-text';
 
 export const LIVE_STREAM_DETAILS_BOUNDS = {
   title: { minLength: 0, maxLength: 100 },

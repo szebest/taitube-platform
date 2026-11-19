@@ -1,6 +1,5 @@
 import { type Result, err, ok } from '@kit/result';
-import type { LengthBounds } from '../failures';
-import { normalizePlainText, withinLength } from '../plain-text';
+import { type LengthBounds, normalizePlainText, withinLength } from '@kit/validation';
 import { type InvalidReportNote, invalidReportNote } from './failures';
 
 const REPORT_NOTE_BOUNDS: LengthBounds = { minLength: 1, maxLength: 500 };
