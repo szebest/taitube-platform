@@ -22,7 +22,22 @@ test('the click path home, video, back, search, sidebar and theme', async ({
     await session.send('Emulation.setCPUThrottlingRate', { rate: CPU_THROTTLE });
   }
 
+  await page.addInitScript(() => {
+    const add = window.addEventListener.bind(window);
+    window.addEventListener = ((
+      type: string,
+      ...rest: [EventListener, AddEventListenerOptions?]
+    ) => {
+      if (type === 'beforeinstallprompt') {
+        (window as unknown as { installListening: boolean }).installListening = true;
+      }
+      add(type, ...rest);
+    }) as typeof window.addEventListener;
+  });
   await page.goto('/', { waitUntil: 'networkidle' });
+  await page.waitForFunction(
+    () => (window as unknown as { installListening?: boolean }).installListening === true
+  );
   await page.evaluate(() =>
     window.dispatchEvent(
       Object.assign(new Event('beforeinstallprompt', { cancelable: true }), {

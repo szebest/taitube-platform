@@ -30,7 +30,7 @@ rule below that can be checked by a machine is, and the check is named next to i
   committed snapshot, so a miscompile fails one of the two runs. `*.renders.dom.test.tsx` specs (Field, Tabs,
   Select) count a part's commits with `createRenderCounter` from `@vp/web-testing/dom` while the root re-renders
   with the same props; they prove what the compiler memoizes, so they run compiled only and fail without it.
-- `pnpm test:coverage` runs the same projects with v8 coverage and prints a summary (`coverage/`, gitignored). It is a measurement, not a gate: CI does not run it, and the unit job keeps its time budget.
+- `pnpm test:coverage` runs the same projects with v8 coverage and prints a summary (`coverage/`, gitignored). The root `vitest.config.ts` holds the 85% floor for lines, statements, functions and branches, so the command fails below it. CI does not run it, to keep the unit job's time budget.
 
 ### Integration (`pnpm test:integration`, the `integration` CI job)
 - Runs against real services: the job starts Postgres, Redis and MinIO with Docker Compose, migrates the
@@ -196,13 +196,21 @@ replays a cached pass. `pnpm typecheck --force` bypasses the cache.
 
 ---
 
-## 8. One spec per source file
+## 8. What to test
 
-Every source with runtime code has `__tests__/<same-name>.test.ts` (or `.tsx`, or `.dom.test.ts(x)` for a web
-spec that runs under jsdom) beside it, in every tier, `apps/client/web` included. A module that erases to nothing (types, interfaces, an abstract class of abstract
-members, with or without doc comments) needs none; `tests/architecture/runtime-code.ts` decides by
-transpiling it. One spec never covers several sources. `tests/architecture/test-correspondence.test.ts` is a
-flat assertion with no exception list.
+The floor is 85% coverage (lines, statements, functions and branches) over the unit run. Past it, write a spec where
+behaviour can break: logic, branches, error paths, contracts, and a user flow. Put it in `__tests__/` beside the
+code it covers.
+
+Not required:
+
+- a spec per source file, or a spec named after its source
+- a spec for a type, an interface, a constant, a barrel (`index.ts`), a re-export or generated code
+- a spec for thin wiring (composition modules, config, a route that only delegates), when a test of the
+  behaviour above it already runs it
+- a test written only to satisfy a rule or to lift a number
+
+One spec may cover several sources that make up one behaviour. No architecture test asks for a spec.
 
 ---
 

@@ -8,7 +8,7 @@ const PRIMITIVES = `${packageDir('@kit/ui')}/src/primitives/`;
 const COMPONENTS = `${packageDir('@kit/components')}/src/`;
 
 const KEBAB = '[a-z0-9]+(?:-[a-z0-9]+)*';
-/** Beside the required four: the compound context, the `tv()` styles, a lazy entry, the narrowed unions, the constants, a sibling part. */
+/** Beside the required files: the compound context, the `tv()` styles, a lazy entry, the narrowed unions, the constants, a sibling part. */
 const OPTIONAL_FILE = new RegExp(
   `^(?:${KEBAB}(?:\\.context|\\.variants|\\.lazy)?\\.tsx?|types\\.ts|constants\\.ts)$`
 );
@@ -80,7 +80,6 @@ function folderFindings(folder: string, files: readonly string[]): string[] {
     `${name}.tsx`,
     'index.ts',
     ...(isStoryless(folder) ? [] : [`__stories__/${name}.stories.tsx`]),
-    `__tests__/${name}.dom.test.tsx`,
   ];
   const missing = required
     .filter((file) => !inside.includes(file))
@@ -147,7 +146,7 @@ describe('architecture: every primitive and component has the folder shape', () 
 
   it.each([
     {
-      shape: 'a folder without its story and spec',
+      shape: 'a folder without its story',
       files: [`${PRIMITIVES}chip/chip.tsx`, `${PRIMITIVES}chip/index.ts`],
       finding: `${PRIMITIVES}chip/: no __stories__/chip.stories.tsx`,
     },
