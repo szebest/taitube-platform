@@ -6,7 +6,7 @@ export const MergeStateContext = createContext<MergeState | undefined>(undefined
 export function useMergeState(): MergeState {
   const value = use(MergeStateContext);
   if (value === undefined) {
-    throw new Error('useMergeState must be used within PreferencesSync');
+    throw new Error('useMergeState must be used within MergeStateContext');
   }
   return value;
 }

@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import type { Video } from '@vp/api-contracts';
 import { canPinComment, canUpdateVideo } from '@vp/permissions';
 import { useCan } from '@vp/permissions-react';
-import { creatorStatsQueryOptions, useApi } from '@vp/queries';
+import { creatorStatsQueryOptions, useApi, useAppLink } from '@vp/queries';
 import { useId, useState } from 'react';
 import { useReducedMotion } from '#app/hooks/use-reduced-motion';
 import { STUDIO_URL } from '#app/lib/config';
@@ -23,6 +23,7 @@ const SKELETON_CARDS = ['views', 'watch', 'duration', 'likes', 'comments', 'subs
 export function StatsPanel({ video }: { video: Video }) {
   const api = useApi();
   const { tOr } = useT();
+  const appLink = useAppLink();
   const bodyId = useId();
   const roomy = useMediaQuery(MEDIUM_AND_UP);
   const reducedMotion = useReducedMotion();
@@ -90,7 +91,7 @@ export function StatsPanel({ video }: { video: Video }) {
             <StatsChart stats={stats.data} />
             <StatsRetention videoId={video.id} stats={stats.data} />
             <Button asChild variant="soft" size="sm" className="self-start">
-              <a href={`${STUDIO_URL}/videos/${video.id}/analytics`}>
+              <a href={appLink(STUDIO_URL, `/videos/${video.id}/analytics`)}>
                 {tOr('creatorStats.openAnalytics', {}, '')}
               </a>
             </Button>

@@ -8,7 +8,7 @@ import { VIDEO_VISIBILITIES } from '@vp/domain';
 import { videoDuration } from '@vp/intl-formats';
 import { canDeleteVideo, canReadAnalytics, canUpdateVideo } from '@vp/permissions';
 import { useCan } from '@vp/permissions-react';
-import { useFailureToast } from '@vp/queries';
+import { useAppLink, useFailureToast } from '@vp/queries';
 import { useState } from 'react';
 import { useBatchActions } from '#app/features/videos/hooks/use-batch-actions';
 import { useUpdateVideo } from '#app/features/videos/hooks/use-update-video';
@@ -69,6 +69,7 @@ const VISIBILITY_ORDER = [...VIDEO_VISIBILITIES].reverse();
 
 export function LibraryVideoActions({ video }: LibraryVideoPartProps) {
   const { tOr } = useT();
+  const appLink = useAppLink();
   const canEdit = useCan(canUpdateVideo, { video });
   const canDelete = useCan(canDeleteVideo, { video });
   const canSeeAnalytics = useCan(canReadAnalytics, {
@@ -136,7 +137,9 @@ export function LibraryVideoActions({ video }: LibraryVideoPartProps) {
           )}
           {watchable && (
             <DropdownMenu.Item asChild>
-              <a href={`${WEB_URL}/watch/${video.id}`}>{tOr('studio.watchOnWeb', {}, '')}</a>
+              <a href={appLink(WEB_URL, `/watch/${video.id}`)}>
+                {tOr('studio.watchOnWeb', {}, '')}
+              </a>
             </DropdownMenu.Item>
           )}
           {canDelete && (
