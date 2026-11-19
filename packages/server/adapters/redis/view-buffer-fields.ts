@@ -1,4 +1,13 @@
-import type { HourlyViewCount, RetentionCount, ViewCount, ViewDate, ViewHour } from '@vp/domain';
+import {
+  type DeviceViewCount,
+  type HourlyViewCount,
+  type RetentionCount,
+  VIEW_DEVICES,
+  type ViewCount,
+  type ViewDate,
+  type ViewDevice,
+  type ViewHour,
+} from '@vp/domain';
 
 export type ViewMeasure = 'views' | 'watch';
 
@@ -7,6 +16,13 @@ const SEPARATOR = '|';
 /** One hash field per video, day and measure, so a single `HINCRBY` moves one number. */
 export function viewBufferField(videoId: string, viewDate: ViewDate, measure: ViewMeasure): string {
   return [videoId, viewDate, measure].join(SEPARATOR);
+}
+
+const DEVICE_PREFIX = 'device:';
+
+/** Shares the views hash with `viewBufferField`, and `countsFromBuffer` skips it by its prefix. */
+export function deviceViewField(videoId: string, viewDate: ViewDate, device: ViewDevice): string {
+  return [videoId, viewDate, `${DEVICE_PREFIX}${device}`].join(SEPARATOR);
 }
 
 export function hourlyViewField(videoId: string, viewHour: ViewHour): string {
@@ -39,6 +55,21 @@ export function countsFromBuffer(hash: Readonly<Record<string, string>>): ViewCo
   }
 
   return [...counts.values()].filter((count) => count.views > 0 || count.watchSeconds > 0);
+}
+
+function isDevice(value: string): value is ViewDevice {
+  return VIEW_DEVICES.some((device) => device === value);
+}
+
+/** Reads the device fields of a drained views hash; every other field kind is skipped. */
+export function devicesFromBuffer(hash: Readonly<Record<string, string>>): DeviceViewCount[] {
+  return Object.entries(hash).flatMap(([field, raw]) => {
+    const [videoId, viewDate, kind, ...rest] = field.split(SEPARATOR);
+    const views = Number.parseInt(raw, 10);
+    const device = kind?.startsWith(DEVICE_PREFIX) ? kind.slice(DEVICE_PREFIX.length) : '';
+    if (!(videoId && viewDate && isDevice(device)) || rest.length > 0) return [];
+    return Number.isNaN(views) || views <= 0 ? [] : [{ videoId, viewDate, device, views }];
+  });
 }
 
 /** Folds a drained retention hash back into counts; a field this module did not write is skipped. */

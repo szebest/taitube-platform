@@ -1,5 +1,6 @@
 import { type ErrorCode, ErrorCodes } from '@vp/errors';
 import { SDD_ACCOUNT_ENDPOINTS } from './sdd-account-endpoints';
+import { SDD_ANALYTICS_ENDPOINTS } from './sdd-analytics-endpoints';
 import { SDD_CAPTION_ENDPOINTS } from './sdd-caption-endpoints';
 import { SDD_CHANNEL_ENDPOINTS } from './sdd-channel-endpoints';
 import { SDD_CLIP_ENDPOINTS } from './sdd-clip-endpoints';
@@ -168,21 +169,6 @@ export const SDD_ENDPOINT_CONTRACT: SddEndpointContract[] = [
     hasBody: true,
   },
   {
-    path: '/v1/creator/videos/{id}/retention',
-    method: 'get',
-    expectedStatuses: [200, 400, 401, 403, 404],
-    expectedErrorCodes: OWNED_VIDEO,
-    hasPathParams: true,
-  },
-  {
-    path: '/v1/creator/videos/{id}/analytics',
-    method: 'get',
-    expectedStatuses: [200, 400, 401, 403, 404],
-    expectedErrorCodes: OWNED_VIDEO,
-    hasQueryParams: true,
-    hasPathParams: true,
-  },
-  {
     path: '/v1/videos/{id}/creator-stats',
     method: 'get',
     expectedStatuses: [200, 400, 401, 403, 404],
@@ -331,6 +317,7 @@ export const SDD_ENDPOINT_CONTRACT: SddEndpointContract[] = [
   ...SDD_VIEWER_ACTIVITY_ENDPOINTS,
   ...SDD_CLIP_ENDPOINTS,
   ...SDD_PICK_ENDPOINTS,
+  ...SDD_ANALYTICS_ENDPOINTS,
   ...SDD_INTEGRATION_ENDPOINTS,
   ...SDD_TEAM_ENDPOINTS,
   ...SDD_EXPORT_ENDPOINTS,

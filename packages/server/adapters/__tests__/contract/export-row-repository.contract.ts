@@ -48,6 +48,7 @@ async function view(repositories: Repositories, videoId: string, viewDate: strin
         { videoId, percent: 50, viewers: 1 },
       ],
       hourly: [],
+      devices: [],
     })
   );
 }

@@ -1,7 +1,7 @@
 import { err } from '@kit/result';
 import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories, InMemoryViewBuffer } from '@vp/adapters/in-memory';
-import type { ViewBatch } from '@vp/domain';
+import type { ViewBatch, ViewDevice } from '@vp/domain';
 import { cacheUnavailable, databaseUnavailable } from '@vp/errors';
 import { type PipelineMetrics, createPipelineMetrics } from '@vp/pipeline-metrics';
 import { SEEDED } from '@vp/testing-fixtures';
@@ -30,15 +30,19 @@ describe('housekeeping: flush-video-views', () => {
   const record = (viewerId: string) =>
     viewBuffer.record({ videoId, viewerId, viewDate: DAY, viewHour: HOUR });
 
-  const watch = (sessionId: string, watchedSeconds: number) =>
+  const watch = (sessionId: string, watchedSeconds: number, device: ViewDevice = 'desktop') =>
     viewBuffer.recordPlayback({
       videoId,
       sessionId,
       viewDate: DAY,
       viewHour: HOUR,
+      device,
       watchedSeconds,
       requiredSeconds: 5,
     });
+
+  const devices = async () =>
+    expectOk(await repositories.videoViews.videoDevices(videoId, { from: DAY, to: DAY }));
 
   const curve = async () => expectOk(await repositories.videoViews.retentionCurve(videoId));
 
@@ -80,6 +84,44 @@ describe('housekeeping: flush-video-views', () => {
     ).toEqual([{ viewHour: HOUR, views: 2 }]);
     expect(expectOk(await flush())).toEqual({ type: 'idle' });
     expect((await metrics.viewsFlushed.get()).values[0]?.value).toBe(2);
+  });
+
+  it('writes the device of each counted view with the daily row, and applies a replayed batch once', async () => {
+    await watch('viewer-1', 30, 'mobile');
+    await watch('viewer-2', 50, 'mobile');
+    await watch('viewer-3', 50, 'desktop');
+    await watch('viewer-4', 2, 'tablet');
+    const apply = vi.spyOn(repositories.videoViews, 'applyBatch');
+    vi.spyOn(viewBuffer, 'release').mockResolvedValueOnce(err(cacheUnavailable('releaseViews')));
+
+    expectErr(await flush());
+    const replayed = expectOk(await flush());
+
+    expect(replayed).toEqual({
+      type: 'already-applied',
+      batchId: apply.mock.calls[0]?.[0].batchId,
+    });
+    expect(await devices()).toEqual([
+      { device: 'mobile', views: 2 },
+      { device: 'desktop', views: 1 },
+    ]);
+  });
+
+  it('keeps the device counts of a failed apply pending, and applies each once on the next run', async () => {
+    await watch('viewer-1', 30, 'mobile');
+    vi.spyOn(repositories.videoViews, 'applyBatch').mockResolvedValueOnce(
+      err(databaseUnavailable('applyViewBatch'))
+    );
+
+    expectErr(await flush());
+    await watch('viewer-2', 30, 'tablet');
+    expectOk(await flush());
+    expectOk(await flush());
+
+    expect(await devices()).toEqual([
+      { device: 'mobile', views: 1 },
+      { device: 'tablet', views: 1 },
+    ]);
   });
 
   it('lands a burst of 10,000 views in Postgres as exactly the count the buffer took', async () => {

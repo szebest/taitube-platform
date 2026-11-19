@@ -5,12 +5,13 @@ const VIDEO_ID = '0f8fad5b-d9cb-469f-a165-70867728950e';
 const SESSION = '7c9e6679-7425-40de-944b-e07fc1f90ae7';
 const DURATION = 120;
 
-function setup() {
+function setup(device?: 'mobile') {
   let time = 0;
   const events: PlaybackEvent[] = [];
   const tracker = createPlaybackTracker({
     videoId: VIDEO_ID,
     sessionUuid: SESSION,
+    device,
     now: () => time,
     send: (event) => events.push(event),
   });
@@ -24,6 +25,19 @@ function setup() {
 const types = (events: PlaybackEvent[]) => events.map(({ eventType }) => eventType);
 
 describe('createPlaybackTracker', () => {
+  it('puts the device class on every event, and none when it has none', () => {
+    const phone = setup('mobile');
+    const unknown = setup();
+
+    for (const { tracker, at } of [phone, unknown]) {
+      tracker.play(at(0));
+      tracker.pause(at(0));
+    }
+
+    expect(phone.events).toEqual([expect.objectContaining({ device: 'mobile' })]);
+    expect(unknown.events[0]?.device).toBeUndefined();
+  });
+
   it('reports the start once, however many times playback resumes', () => {
     const { tracker, events, at } = setup();
 

@@ -3,6 +3,10 @@ import type { VideoRecord, VideoViewRepositoryPort } from '@vp/core/repositories
 import {
   type ChannelViewTotals,
   type DailyViews,
+  type DeviceViewCount,
+  type DeviceViews,
+  type FirstWeekRow,
+  type PeerVideo,
   type HourlyViewCount,
   type HourlyViews,
   type RetentionCount,
@@ -12,13 +16,16 @@ import {
   type ViewBatchOutcome,
   type ViewCount,
   type ViewDateRange,
+  type ViewDevice,
   type ViewHourRange,
+  mergeDeviceCounts,
   mergeHourlyCounts,
   mergeViewCounts,
   sumViews,
   viewsByVideo,
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
+import { firstWeekRowsOf, recentPeersOf } from './in-memory-first-week';
 
 /** The two things the view counters need from the videos they count. */
 export interface ViewedVideos {
@@ -49,6 +56,7 @@ export class InMemoryVideoViewRepository implements VideoViewRepositoryPort {
   private readonly batches = new Map<string, Date>();
   private readonly retention = new Map<string, RetentionCount>();
   private readonly hourly = new Map<string, HourlyViewCount>();
+  private readonly devices = new Map<string, DeviceViewCount>();
 
   constructor(private readonly videos: ViewedVideos) {}
 
@@ -79,6 +87,13 @@ export class InMemoryVideoViewRepository implements VideoViewRepositoryPort {
       const hourKey = `${count.videoId}|${count.viewHour}`;
       const held = this.hourly.get(hourKey);
       this.hourly.set(hourKey, { ...count, views: count.views + (held?.views ?? 0) });
+    }
+
+    for (const count of mergeDeviceCounts(batch.devices)) {
+      if (!existing.has(count.videoId)) continue;
+      const deviceKey = `${count.videoId}|${count.viewDate}|${count.device}`;
+      const held = this.devices.get(deviceKey);
+      this.devices.set(deviceKey, { ...count, views: count.views + (held?.views ?? 0) });
     }
 
     const deltas = viewsByVideo(kept);
@@ -125,6 +140,23 @@ export class InMemoryVideoViewRepository implements VideoViewRepositoryPort {
     );
   }
 
+  async videoDevices(
+    videoId: string,
+    range: ViewDateRange
+  ): Promise<Result<DeviceViews[], DatabaseUnavailable>> {
+    const totals = new Map<ViewDevice, number>();
+    for (const count of this.devices.values()) {
+      if (count.videoId === videoId && inRange(count.viewDate, range)) {
+        totals.set(count.device, (totals.get(count.device) ?? 0) + count.views);
+      }
+    }
+    return ok(
+      [...totals.entries()]
+        .map(([device, views]) => ({ device, views }))
+        .sort((left, right) => right.views - left.views || left.device.localeCompare(right.device))
+    );
+  }
+
   async videoTimeline(
     videoId: string,
     range: ViewDateRange
@@ -163,6 +195,27 @@ export class InMemoryVideoViewRepository implements VideoViewRepositoryPort {
     return ok(this.hoursFor(this.ownedIds(channelId), range));
   }
 
+  async firstWeekViews(
+    videoIds: readonly string[]
+  ): Promise<Result<FirstWeekRow[], DatabaseUnavailable>> {
+    const wanted = new Set(videoIds);
+    return ok(
+      firstWeekRowsOf(
+        this.videos.getAllVideos().filter((video) => wanted.has(video.id)),
+        [...this.daily.values()]
+      )
+    );
+  }
+
+  async recentPeers(
+    channelId: string,
+    excludeVideoId: string,
+    readyBefore: Date,
+    limit: number
+  ): Promise<Result<PeerVideo[], DatabaseUnavailable>> {
+    return ok(recentPeersOf(this.live(), channelId, excludeVideoId, readyBefore).slice(0, limit));
+  }
+
   async channelTotals(channelId: string): Promise<Result<ChannelViewTotals, DatabaseUnavailable>> {
     const owned = this.live().filter((video) => video.channelId === channelId);
     return ok({
@@ -199,6 +252,7 @@ export class InMemoryVideoViewRepository implements VideoViewRepositoryPort {
     this.batches.clear();
     this.retention.clear();
     this.hourly.clear();
+    this.devices.clear();
   }
 
   private live(): VideoRecord[] {

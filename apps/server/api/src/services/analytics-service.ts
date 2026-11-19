@@ -1,8 +1,11 @@
+import { MS_PER_DAY } from '@kit/primitives';
 import { type Result, isErr, ok } from '@kit/result';
 import type {
   ChannelAnalytics,
   CreatorStats,
   VideoAnalytics,
+  VideoAudience,
+  VideoBenchmark,
   VideoRetention,
 } from '@vp/api-contracts';
 import type {
@@ -13,10 +16,16 @@ import type {
 import {
   type ActingChannel,
   type AnalyticsRange,
+  BENCHMARK_PEER_LIMIT,
+  FIRST_WEEK_DAYS,
   TOP_VIDEOS_LIMIT,
   analyticsPeriods,
   averageRetention,
   averageViewDurationSeconds,
+  benchmarkDays,
+  benchmarkEnvelope,
+  cumulativeFirstWeek,
+  deviceShares,
   fillHourly,
   fillRetentionCurve,
   firstHoursWindow,
@@ -160,6 +169,63 @@ export class AnalyticsService {
     const points = await this.deps.videoViews.retentionCurve(videoId);
     if (isErr(points)) return points;
     return ok({ videoId, curve: fillRetentionCurve(points.value) });
+  }
+
+  async videoAudience(
+    viewer: UserContext,
+    videoId: string,
+    range: AnalyticsRange
+  ): Promise<Result<VideoAudience, VideoAnalyticsFailure>> {
+    const found = await this.deps.videos.findById(videoId);
+    if (isErr(found)) return found;
+    const allowed = decideVideoAnalyticsRead({ viewer, video: found.value, videoId });
+    if (isErr(allowed)) return allowed;
+
+    const { from, to } = analyticsPeriods(range, new Date(this.deps.now())).current;
+    const devices = await this.deps.videoViews.videoDevices(videoId, { from, to });
+    if (isErr(devices)) return devices;
+    return ok({ videoId, range, from, to, devices: deviceShares(devices.value) });
+  }
+
+  async videoBenchmark(
+    viewer: UserContext,
+    videoId: string
+  ): Promise<Result<VideoBenchmark, VideoAnalyticsFailure>> {
+    const found = await this.deps.videos.findById(videoId);
+    if (isErr(found)) return found;
+    const allowed = decideVideoAnalyticsRead({ viewer, video: found.value, videoId });
+    if (isErr(allowed)) return allowed;
+    const { channelId, readyAt } = allowed.value;
+
+    const now = new Date(this.deps.now());
+    const peers = await this.deps.videoViews.recentPeers(
+      channelId,
+      videoId,
+      new Date(now.getTime() - FIRST_WEEK_DAYS * MS_PER_DAY),
+      BENCHMARK_PEER_LIMIT
+    );
+    if (isErr(peers)) return peers;
+    const rows = await this.deps.videoViews.firstWeekViews([
+      videoId,
+      ...peers.value.map((peer) => peer.videoId),
+    ]);
+    if (isErr(rows)) return rows;
+
+    const seriesOf = (id: string, ready: Date) =>
+      cumulativeFirstWeek(
+        rows.value.filter((row) => row.videoId === id),
+        ready,
+        now
+      );
+    const envelope = benchmarkEnvelope(
+      peers.value.map((peer) => seriesOf(peer.videoId, peer.readyAt))
+    );
+    return ok({
+      videoId,
+      publishedAt: readyAt?.toISOString() ?? null,
+      peerCount: peers.value.length,
+      days: benchmarkDays(readyAt ? seriesOf(videoId, readyAt) : [], envelope),
+    });
   }
 
   async channelAnalytics(

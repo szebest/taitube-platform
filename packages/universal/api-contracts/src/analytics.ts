@@ -168,3 +168,6 @@ export const getChannelAnalytics = defineEndpoint({
 export type VideoAnalytics = z.infer<typeof VideoAnalyticsSchema>;
 export type ChannelAnalytics = z.infer<typeof ChannelAnalyticsSchema>;
 export type VideoRetention = z.infer<typeof VideoRetentionSchema>;
+
+export { getVideoAudience, getVideoBenchmark } from './video-audience';
+export type { VideoAudience, VideoBenchmark } from './video-audience';

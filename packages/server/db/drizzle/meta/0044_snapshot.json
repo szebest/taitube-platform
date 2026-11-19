@@ -1,6 +1,6 @@
 {
   "id": "1e142882-6877-4ef9-b802-38e21b5c37a4",
-  "prevId": "1a3180ed-6c0d-4d2d-a9a1-f48edfaea25d",
+  "prevId": "cd893752-0f15-402b-97aa-4e1f979d213d",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -3137,6 +3137,72 @@
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.video_views_device_daily": {
+      "name": "video_views_device_daily",
+      "schema": "",
+      "columns": {
+        "video_id": {
+          "name": "video_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "view_date": {
+          "name": "view_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "device": {
+          "name": "device",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "views": {
+          "name": "views",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "video_views_device_daily_video_id_videos_id_fk": {
+          "name": "video_views_device_daily_video_id_videos_id_fk",
+          "tableFrom": "video_views_device_daily",
+          "tableTo": "videos",
+          "columnsFrom": [
+            "video_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "video_views_device_daily_video_id_view_date_device_pk": {
+          "name": "video_views_device_daily_video_id_view_date_device_pk",
+          "columns": [
+            "video_id",
+            "view_date",
+            "device"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "video_views_device_daily_device_check": {
+          "name": "video_views_device_daily_device_check",
+          "value": "\"video_views_device_daily\".\"device\" IN ('desktop', 'mobile', 'tablet', 'unknown')"
+        }
+      },
       "isRLSEnabled": false
     },
     "public.video_views_hourly": {

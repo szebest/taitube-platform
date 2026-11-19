@@ -70,6 +70,7 @@ export function describeRisingVideosRepositoryContract(makeSubject: MakeReposito
             { videoId, percent: RISING.completedPercent, viewers: completed },
           ],
           hourly: [],
+          devices: [],
         })
       );
     };
