@@ -1,12 +1,14 @@
-import { apiServer } from '@vp/web-testing';
 import { http, HttpResponse } from 'msw';
+import { setupServer } from 'msw/node';
 import { startWebTracing } from '../start-web-tracing';
 
 const API_ORIGIN = 'http://localhost:3000';
 
+const server = setupServer();
+
 const traceparentSeenBy = async (url: string) => {
   let traceparent: string | null = null;
-  apiServer.use(
+  server.use(
     http.get(url, ({ request }) => {
       traceparent = request.headers.get('traceparent');
       return new HttpResponse(null, { status: 204 });
@@ -19,12 +21,17 @@ const traceparentSeenBy = async (url: string) => {
 
 describe('startWebTracing', () => {
   beforeAll(() => {
+    server.listen({ onUnhandledFrame: 'error' });
     startWebTracing({
       serviceName: 'taitube-web',
       tracesUrl: 'http://localhost:4318/v1/traces',
       apiOrigin: API_ORIGIN,
     });
   });
+
+  afterEach(() => server.resetHandlers());
+
+  afterAll(() => server.close());
 
   it.each([
     { target: 'the API', url: `${API_ORIGIN}/v1/feed`, propagated: true },

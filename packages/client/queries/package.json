@@ -44,6 +44,7 @@
     "@kit/testing": "workspace:*",
     "@kit/tsconfig": "workspace:*",
     "@kit/vite-preset": "workspace:*",
+    "@kit/web-testing": "workspace:*",
     "@tanstack/react-query": "^5.104.1",
     "@tanstack/react-router": "^1.170.41",
     "@tanstack/react-router-ssr-query": "^1.167.3",

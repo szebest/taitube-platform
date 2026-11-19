@@ -5,4 +5,5 @@ export default clientAppConfig({
   port: 5174,
   entryBudgetKb: 128,
   initialBudgetKb: 493,
+  flaggedDirs: [{ dir: 'demo-personas', env: 'VITE_DEMO_PERSONAS' }],
 });

@@ -111,7 +111,7 @@ names a part used outside its root. The shared UI unions (`FillOption`, `ShapeOp
 
 ## Testing
 
-Node specs (`*.test.ts`) and jsdom specs (`*.dom.test.tsx`, through `@vp/web-testing`'s `jsdom.setup`), each
+Node specs (`*.test.ts`) and jsdom specs (`*.dom.test.tsx`, through `@kit/web-testing`'s `jsdom.setup`), each
 jsdom spec checking `axeViolations()`, all compiled by the React Compiler. Field, Tabs, Select and Dialog have a
 `*.differential.dom.test.tsx` that `vitest.uncompiled.config.ts` runs a second time without it, against the same
 snapshot, and Field, Tabs and Select a `*.renders.dom.test.tsx` that counts commits with `createRenderCounter`

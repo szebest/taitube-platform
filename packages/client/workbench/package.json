@@ -22,6 +22,7 @@
     "@kit/tsconfig": "workspace:*",
     "@kit/ui": "workspace:*",
     "@kit/vite-preset": "workspace:*",
+    "@kit/web-testing": "workspace:*",
     "@playwright/test": "^1.64.0",
     "@storybook/addon-a11y": "~10.6.2",
     "@storybook/addon-vitest": "~10.6.2",

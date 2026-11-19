@@ -1,6 +1,6 @@
+import { showCues } from '@kit/web-testing/dom';
 import { act, render, screen } from '@testing-library/react';
 import { captionTrack } from '@vp/web-testing';
-import { showCues } from '@vp/web-testing/dom';
 import { VideoJsEngine } from '#app/integrations/video-js/video-js-engine';
 import type { PlaybackDefaults } from '#app/lib/player/taitube-player-props';
 import { CaptionOverlay } from '../caption-overlay';

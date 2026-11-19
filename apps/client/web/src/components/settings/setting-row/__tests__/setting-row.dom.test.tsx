@@ -1,6 +1,6 @@
 import { Switch } from '@kit/ui';
+import { axeViolations } from '@kit/web-testing/dom';
 import { render, screen } from '@testing-library/react';
-import { axeViolations } from '@vp/web-testing/dom';
 import { SettingRow, type SettingRowRootProps } from '..';
 
 const renderRow = (props: SettingRowRootProps = {}, status?: string) =>

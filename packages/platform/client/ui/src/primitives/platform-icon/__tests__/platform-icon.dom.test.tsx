@@ -1,6 +1,6 @@
+import { axeViolations } from '@kit/web-testing/dom';
 import { render, screen } from '@testing-library/react';
 import { LINK_PLATFORMS } from '@vp/domain';
-import { axeViolations } from '@vp/web-testing/dom';
 import { PLATFORM_ICON_PATHS } from '../../../icons/platform-icon-paths.generated';
 import { PlatformIcon, type PlatformIconProps } from '../platform-icon';
 
