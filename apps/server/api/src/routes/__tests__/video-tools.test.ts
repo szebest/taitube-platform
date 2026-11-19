@@ -31,6 +31,7 @@ const CHAPTERS = [
   { startMs: 20_000, title: 'Middle' },
   { startMs: 60_000, title: 'End' },
 ];
+const CARD = { startMs: 10_000, endMs: 15_000, text: 'The price is 5 dollars' };
 
 describe('video tool routes', () => {
   let ctx: TestApp;
@@ -81,6 +82,18 @@ describe('video tool routes', () => {
     });
   });
 
+  it.each([
+    { method: 'PUT' as const, path: 'chapters', body: { chapters: CHAPTERS, version: 1 } },
+    { method: 'GET' as const, path: 'corrections' },
+    { method: 'POST' as const, path: 'corrections', body: CARD },
+    { method: 'PATCH' as const, path: `corrections/${ABSENT}`, body: { text: 'Fixed' } },
+    { method: 'DELETE' as const, path: `corrections/${ABSENT}` },
+  ])('answers $method $path on a private video of someone else as absent', async (row) => {
+    const res = await call('stranger', row.method, `/v1/videos/${PRIVATE}/${row.path}`, row.body);
+
+    expect(res.json().code).toBe(ErrorCodes.VIDEO_NOT_FOUND);
+  });
+
   describe('chapters', () => {
     it('replaces the set and serves it on the video resource', async () => {
       const res = await putChapters('owner', { chapters: [...CHAPTERS].reverse() });
@@ -119,35 +132,22 @@ describe('video tool routes', () => {
     ])('answers $status to $who', async ({ who, status }) => {
       expect((await putChapters(who)).statusCode).toBe(status);
     });
-
-    it('answers a private video of someone else as absent', async () => {
-      const res = await call('stranger', 'PUT', `/v1/videos/${PRIVATE}/chapters`, {
-        chapters: CHAPTERS,
-        version: 1,
-      });
-
-      expect(res.json().code).toBe(ErrorCodes.VIDEO_NOT_FOUND);
-    });
   });
 
   describe('revisions', () => {
-    const revisions = async (who: Who = 'owner') =>
-      (await call(who, 'GET', `/v1/creator/videos/${VIDEO}/revisions`)).json();
+    const revisions = async () =>
+      (await call('owner', 'GET', `/v1/creator/videos/${VIDEO}/revisions`)).json();
+    const restore = async (revisionId: string, at?: number) =>
+      call('owner', 'POST', `/v1/creator/videos/${VIDEO}/revisions/${revisionId}/restore`, {
+        version: at ?? (await version()),
+      });
 
     it('lists the history and restores a revision under the current version', async () => {
-      await call('owner', 'PUT', `/v1/videos/${VIDEO}/chapters`, {
-        chapters: CHAPTERS,
-        version: 1,
-      });
+      await putChapters('owner');
       const { items } = await revisions();
       const first = items.at(-1);
 
-      const res = await call(
-        'owner',
-        'POST',
-        `/v1/creator/videos/${VIDEO}/revisions/${first.id}/restore`,
-        { version: await version() }
-      );
+      const res = await restore(first.id);
 
       expect(items.map((item: { version: number }) => item.version)).toEqual([2, 1]);
       expect(res.statusCode).toBe(200);
@@ -155,14 +155,7 @@ describe('video tool routes', () => {
     });
 
     it('answers an unknown revision with a 404', async () => {
-      const res = await call(
-        'owner',
-        'POST',
-        `/v1/creator/videos/${VIDEO}/revisions/${ABSENT}/restore`,
-        {
-          version: await version(),
-        }
-      );
+      const res = await restore(ABSENT);
 
       expect(res.json().code).toBe(ErrorCodes.REVISION_NOT_FOUND);
     });
@@ -171,14 +164,7 @@ describe('video tool routes', () => {
       await putChapters('owner');
       const first = (await revisions()).items.at(-1);
 
-      const res = await call(
-        'owner',
-        'POST',
-        `/v1/creator/videos/${VIDEO}/revisions/${first.id}/restore`,
-        {
-          version: 1,
-        }
-      );
+      const res = await restore(first.id, 1);
 
       expect(res.json().code).toBe(ErrorCodes.VERSION_CONFLICT);
     });
@@ -241,11 +227,10 @@ describe('video tool routes', () => {
   });
 
   describe('corrections', () => {
-    const card = { startMs: 10_000, endMs: 15_000, text: 'The price is 5 dollars' };
-    const add = (who: Who, body: object = card, id = VIDEO) =>
-      call(who, 'POST', `/v1/videos/${id}/corrections`, body);
+    const add = (who: Who, body: object = CARD) =>
+      call(who, 'POST', `/v1/videos/${VIDEO}/corrections`, body);
 
-    it('adds a card, lists it to a guest and removes it', async () => {
+    it('adds a CARD, lists it to a guest and removes it', async () => {
       const created = await add('owner');
       const listed = await call('anonymous', 'GET', `/v1/videos/${VIDEO}/corrections`);
       const removed = await call(
@@ -255,11 +240,11 @@ describe('video tool routes', () => {
       );
 
       expect(created.statusCode).toBe(201);
-      expect(listed.json().items).toMatchObject([card]);
+      expect(listed.json().items).toMatchObject([CARD]);
       expect(removed.statusCode).toBe(204);
     });
 
-    it('changes a card and answers the card as it now stands', async () => {
+    it('changes a CARD and answers the CARD as it now stands', async () => {
       const created = await add('owner');
 
       const changed = await call(
@@ -270,7 +255,7 @@ describe('video tool routes', () => {
       );
 
       expect(changed.statusCode).toBe(200);
-      expect(changed.json()).toMatchObject({ ...card, text: 'Fixed' });
+      expect(changed.json()).toMatchObject({ ...CARD, text: 'Fixed' });
     });
 
     it.each([
@@ -293,31 +278,12 @@ describe('video tool routes', () => {
       expect((await add(who)).statusCode).toBe(status);
     });
 
-    it.each([
-      { name: 'listing', method: 'GET' as const, path: '', body: undefined },
-      { name: 'adding', method: 'POST' as const, path: '', body: card },
-      { name: 'editing', method: 'PATCH' as const, path: `/${ABSENT}`, body: { text: 'x' } },
-      { name: 'removing', method: 'DELETE' as const, path: `/${ABSENT}`, body: undefined },
-    ])(
-      'keeps a private video as absent to a stranger $name its cards',
-      async ({ method, path, body }) => {
-        const res = await call(
-          'stranger',
-          method,
-          `/v1/videos/${PRIVATE}/corrections${path}`,
-          body
-        );
-
-        expect(res.json().code).toBe(ErrorCodes.VIDEO_NOT_FOUND);
-      }
-    );
-
-    it('refuses a bad range with a 422 and the eleventh card with a 409', async () => {
+    it('refuses a bad range with a 422 and the eleventh CARD with a 409', async () => {
       for (let n = 0; n < 10; n++) {
         await add('owner', { startMs: n * 10_000, endMs: n * 10_000 + 5_000, text: `Fix ${n}` });
       }
 
-      expect((await add('owner', { ...card, endMs: 11_000 })).statusCode).toBe(422);
+      expect((await add('owner', { ...CARD, endMs: 11_000 })).statusCode).toBe(422);
       expect((await add('owner')).json().code).toBe(ErrorCodes.CORRECTION_LIMIT);
     });
   });
