@@ -10,11 +10,12 @@ Instructions for any coding agent working on `@kit/pagination`.
 
 `@kit/pagination` is the one keyset pagination mechanism in the repo: `Paginator`, the `limit + 1`
 protocol, and the pluggable `CursorCodec` (default `Base64UrlCursorCodec`) that decides how a cursor
-travels over HTTP. `invalidCursor` is its `INVALID_CURSOR` input failure.
+travels over HTTP. `invalidCursor` is its `INVALID_CURSOR` input failure, and `PaginationErrorCodes` is the
+one place that code is written: the app spreads it into its error code set.
 
-It is `universal` because both sides of the wire need the same codec. `@vp/api-contracts` validates an
-inbound cursor with `Base64UrlCursorCodec` (`videos.ts`) and the API mints one through the `Paginator`
-built in `apps/server/api/src/composition/services.module.ts`.
+It is `universal` because both sides of the wire need the same codec: the app's API contract validates an
+inbound cursor with `Base64UrlCursorCodec` and its server mints one through a `Paginator` built at the
+composition root.
 
 ---
 
@@ -28,9 +29,9 @@ built in `apps/server/api/src/composition/services.module.ts`.
 3. **Runtime-agnostic by construction.** `btoa`/`atob` and `TextEncoder`, never `Buffer`, so the codec
    runs unchanged under Node, Bun and the browser.
 4. **Page bounds are injected, and this package owns the default.** `PAGE_SIZE_DEFAULT` /
-   `PAGE_SIZE_MAX` are exported here and nowhere else: `@vp/api-contracts` builds `PageLimitSchema`
-   from them and `@vp/env-schema` uses them as the defaults of the env keys of the same name, which
-   the composition root resolves once and hands to `Paginator`. No call site hard-codes a page size.
+   `PAGE_SIZE_MAX` are exported here and nowhere else: the app builds its page-limit schema from them
+   and uses them as the defaults of its configuration, which the composition root resolves once and
+   hands to `Paginator`. No call site hard-codes a page size.
 5. **A configured maximum clamps, it does not reject.** `Paginator.limit()` trims a request into
    `[1, maxLimit]`, so a deployment running below the advertised maximum serves a shorter page and
    keeps walking with `nextCursor`. That is deliberate — the maximum protects the database, and the

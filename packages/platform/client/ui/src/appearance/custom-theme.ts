@@ -1,6 +1,6 @@
 import { buildTheme, resolveTheme, type ThemeColours } from '@kit/design-tokens';
+import { CommonErrorCodes } from '@kit/errors';
 import { err, type Result } from '@kit/result';
-import { ErrorCodes } from '@vp/errors';
 import { ramps } from '../tokens/ref';
 import {
   type InvalidTheme,
@@ -42,7 +42,12 @@ export function registerCustomTheme(
   );
   if (!built.ok) {
     const { message, field } = built.error;
-    return err<InvalidTheme>({ code: ErrorCodes.VALIDATION_FAILED, message, field, pairs: [] });
+    return err<InvalidTheme>({
+      code: CommonErrorCodes.VALIDATION_FAILED,
+      message,
+      field,
+      pairs: [],
+    });
   }
   return registerTheme(built.value, host);
 }

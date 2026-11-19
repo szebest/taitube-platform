@@ -21,7 +21,7 @@ function describeNonError(value: unknown): string {
   return json ?? String(value);
 }
 
-/** A `Failure` from `@vp/errors`: a returned value with a code and a message, not a thrown one. */
+/** A `Failure` from `@kit/errors`: a returned value with a code and a message, not a thrown one. */
 interface FailureLike {
   code: string;
   message: string;
@@ -62,7 +62,7 @@ function serializeAt(value: unknown, depth: number): SerializedError {
 }
 
 /**
- * What a log line records for `{ err }`: the message, the code (a `@vp/errors` code, or a system
+ * What a log line records for `{ err }`: the message, the code (an app error code, or a system
  * one such as `EADDRINUSE`), the stack and the cause chain. A thrown non-`Error` keeps its content.
  */
 export function serializeError(value: unknown): SerializedError {

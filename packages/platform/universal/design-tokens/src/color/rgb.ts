@@ -1,16 +1,18 @@
-import { type InputFailure } from '@kit/errors';
+import { CommonErrorCodes, type InputFailure } from '@kit/errors';
 import { andThen, err, map, ok, type Result } from '@kit/result';
-import { ErrorCodes } from '@vp/errors';
 import { ColorSchema } from '../schema/values';
 
 export type Rgba = Readonly<{ r: number; g: number; b: number; alpha: number }>;
 
-export type InvalidColour = InputFailure<typeof ErrorCodes.VALIDATION_FAILED, { value: string }>;
+export type InvalidColour = InputFailure<
+  typeof CommonErrorCodes.VALIDATION_FAILED,
+  { value: string }
+>;
 
 const channel = (hex: string, at: number) => Number.parseInt(hex.slice(at, at + 2), 16) / 255;
 
 export const invalidColour = (field: string, value: string, message: string): InvalidColour => ({
-  code: ErrorCodes.VALIDATION_FAILED,
+  code: CommonErrorCodes.VALIDATION_FAILED,
   message,
   field,
   value,

@@ -30,10 +30,10 @@ export type ElevationOption = (typeof ELEVATION_OPTIONS)[number];
 export type HexColor = z.output<typeof ColorSchema>;
 export const ICON_SIZES: readonly ["sm", "md", "lg"]
 export type IconSize = (typeof ICON_SIZES)[number];
-export type InvalidColour = InputFailure<typeof ErrorCodes.VALIDATION_FAILED, {
+export type InvalidColour = InputFailure<typeof CommonErrorCodes.VALIDATION_FAILED, {
     value: string;
 }>;
-export type InvalidDefinition = InputFailure<typeof ErrorCodes.VALIDATION_FAILED>;
+export type InvalidDefinition = InputFailure<typeof CommonErrorCodes.VALIDATION_FAILED>;
 export const MODE_FAMILIES: readonly ["dark", "light"]
 export const MODE_OPTIONS: readonly ["system", "dark", "light", "oled"]
 export type ModeFamily = (typeof MODE_FAMILIES)[number];

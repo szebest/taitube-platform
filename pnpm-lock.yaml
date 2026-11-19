@@ -1400,9 +1400,6 @@ importers:
       '@kit/ui':
         specifier: workspace:*
         version: link:../ui
-      '@vp/errors':
-        specifier: workspace:*
-        version: link:../../../universal/errors
     devDependencies:
       '@kit/testing':
         specifier: workspace:*
@@ -1565,9 +1562,6 @@ importers:
       '@vp/domain':
         specifier: workspace:*
         version: link:../../../universal/domain
-      '@vp/errors':
-        specifier: workspace:*
-        version: link:../../../universal/errors
     devDependencies:
       '@dnd-kit/core':
         specifier: ^6.3.1
@@ -2084,9 +2078,6 @@ importers:
       '@vp/domain':
         specifier: workspace:*
         version: link:../../../universal/domain
-      '@vp/errors':
-        specifier: workspace:*
-        version: link:../../../universal/errors
     devDependencies:
       '@kit/testing':
         specifier: workspace:*
@@ -2233,9 +2224,6 @@ importers:
       '@kit/result':
         specifier: workspace:*
         version: link:../result
-      '@vp/errors':
-        specifier: workspace:*
-        version: link:../../../universal/errors
     devDependencies:
       '@kit/testing':
         specifier: workspace:*
@@ -3178,6 +3166,12 @@ importers:
       '@kit/errors':
         specifier: workspace:*
         version: link:../../platform/universal/errors
+      '@kit/intl':
+        specifier: workspace:*
+        version: link:../../platform/universal/intl
+      '@kit/pagination':
+        specifier: workspace:*
+        version: link:../../platform/universal/pagination
     devDependencies:
       '@kit/testing':
         specifier: workspace:*

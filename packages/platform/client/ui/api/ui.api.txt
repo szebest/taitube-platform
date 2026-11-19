@@ -184,7 +184,7 @@ export interface InputProps extends Omit<ComponentPropsWithRef<'input'>, 'size'>
 }
 export type InputShape = Extract<ShapeOption, 'text' | 'pill'>;
 export type InputSize = ControlSize;
-export type InvalidTheme = InputFailure<typeof ErrorCodes.VALIDATION_FAILED, {
+export type InvalidTheme = InputFailure<typeof CommonErrorCodes.VALIDATION_FAILED, {
     pairs: readonly ThemeContrastFailure[];
 }>;
 export function Kbd({ variant, size, className, ...props }: KbdProps): JSX.Element
@@ -522,14 +522,14 @@ export function rewriteLegacyAppearance(preference: AppearancePreference, storag
 export function saveAppearancePreference(preference: AppearancePreference, { cookie }: AppearanceStorage, domain?: string): void
 
 ## @kit/ui/appearance/register-theme
-export type InvalidTheme = InputFailure<typeof ErrorCodes.VALIDATION_FAILED, {
+export type InvalidTheme = InputFailure<typeof CommonErrorCodes.VALIDATION_FAILED, {
     pairs: readonly ThemeContrastFailure[];
 }>;
 export type RegisteredTheme = Readonly<{
     theme: Theme;
     css: string;
 }>;
-export type ThemeNotInstalled = Failure<typeof ErrorCodes.INTERNAL>;
+export type ThemeNotInstalled = Failure<typeof CommonErrorCodes.INTERNAL>;
 export function registerTheme(input: unknown, host?: StyleHost | null): Result<RegisteredTheme, InvalidTheme | ThemeNotInstalled>
 
 ## @kit/ui/appearance/registry

@@ -92,6 +92,7 @@ taitube-platform/
 │   │   ├── universal/               # Runs in a browser AND on a server
 │   │   │   ├── design-tokens/       # Design system engine: the token group schemas
 │   │   │   ├── di/                  # Typed tokens and an immutable registry whose get returns a Result
+│   │   │   ├── errors/              # Failure types, an app's error code set, retry classes and the common codes
 │   │   │   ├── i18n/                # The typed message engine: kinds, presets, param names, catalogue parity; no words
 │   │   │   ├── intl/                # Formatters on Intl over a tagged value union, IntlCache and the locale chain
 │   │   │   ├── machine/             # Lifecycles as typed edge tables: legal moves, findings, Mermaid
@@ -123,7 +124,7 @@ taitube-platform/
 │   │   ├── api-contracts/           # Zod request/response schemas for every HTTP endpoint
 │   │   ├── domain/                  # Entity types and the status and role vocabularies
 │   │   ├── domain-rules/            # Pure rules over input plus an entity, returning Result
-│   │   ├── errors/                  # ErrorCode vocabulary, Failure types, retry classes
+│   │   ├── errors/                  # The app's ErrorCode vocabulary, retry classes and product failures
 │   │   ├── intl-formats/            # The product's tagged values: views, durations, published-at, file size
 │   │   ├── messages/                # Typed messages, the en catalogue and the copy for every error code
 │   │   ├── permissions/             # CASL ability rules shared by the API and the frontend

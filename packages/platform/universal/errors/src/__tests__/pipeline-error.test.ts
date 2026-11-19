@@ -1,6 +1,6 @@
 import { PermanentError, PipelineError, TransientError } from '../pipeline-error';
 
-describe('@vp/errors: queue-boundary error classes', () => {
+describe('@kit/errors: queue-boundary error classes', () => {
   it.each([
     { name: 'PermanentError', Klass: PermanentError, isRetryable: false },
     { name: 'TransientError', Klass: TransientError, isRetryable: true },

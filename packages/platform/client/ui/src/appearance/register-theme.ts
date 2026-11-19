@@ -7,22 +7,21 @@ import {
   TOKEN_GROUPS,
   themeCss,
 } from '@kit/design-tokens';
-import { type Failure, type InputFailure } from '@kit/errors';
+import { CommonErrorCodes, type Failure, type InputFailure } from '@kit/errors';
 import { andThen, err, map, ok, type Result, tryCatch } from '@kit/result';
-import { ErrorCodes } from '@vp/errors';
 import { ramps } from '../tokens/ref';
 import { appearance } from './registry';
 
 /** `pairs` holds what failed the contrast gate, and is empty when the theme did not parse. */
 export type InvalidTheme = InputFailure<
-  typeof ErrorCodes.VALIDATION_FAILED,
+  typeof CommonErrorCodes.VALIDATION_FAILED,
   { pairs: readonly ThemeContrastFailure[] }
 >;
 
 type StyleHost = Pick<Document, 'adoptedStyleSheets'>;
 
 const invalid = (field: string, message: string, pairs: readonly ThemeContrastFailure[] = []) =>
-  err<InvalidTheme>({ code: ErrorCodes.VALIDATION_FAILED, message, field, pairs });
+  err<InvalidTheme>({ code: CommonErrorCodes.VALIDATION_FAILED, message, field, pairs });
 
 const offeredDefaults = (theme: Theme): Result<Theme, InvalidTheme> => {
   if (appearance.themes.some(({ id }) => id === theme.id)) {
@@ -42,7 +41,7 @@ const firstSelector = (sheet: CSSStyleSheet) => {
 };
 
 /** No constructable stylesheets in this browser: the theme passed, but nothing could install it. */
-export type ThemeNotInstalled = Failure<typeof ErrorCodes.INTERNAL>;
+export type ThemeNotInstalled = Failure<typeof CommonErrorCodes.INTERNAL>;
 
 export type RegisteredTheme = Readonly<{ theme: Theme; css: string }>;
 
@@ -58,7 +57,7 @@ const install = (host: StyleHost, { id }: Theme, css: string) =>
       ];
     },
     (cause): ThemeNotInstalled => ({
-      code: ErrorCodes.INTERNAL,
+      code: CommonErrorCodes.INTERNAL,
       message: `${id}: ${String(cause)}`,
     })
   );

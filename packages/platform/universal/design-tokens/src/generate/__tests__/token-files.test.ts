@@ -1,5 +1,5 @@
+import { CommonErrorCodes } from '@kit/errors';
 import { expectErr, expectOk } from '@kit/testing/result';
-import { ErrorCodes } from '@vp/errors';
 import type { Ref } from '../../schema/ref';
 import { tokenFiles } from '../token-files';
 import { fixtureScale, fixtureSets, fixtureTheme } from './fixture';
@@ -45,7 +45,7 @@ describe('tokenFiles', () => {
 
   it('fails naming the role whose alias names no ramp step', () => {
     expect(expectErr(filesFor({}))).toEqual({
-      code: ErrorCodes.VALIDATION_FAILED,
+      code: CommonErrorCodes.VALIDATION_FAILED,
       message: expect.any(String),
       field: 'color.dark.accent',
     });
