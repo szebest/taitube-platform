@@ -16,7 +16,7 @@ A platform package (`packages/platform/`): no app vocabulary, platform dependenc
 again on hydration. It depends on `@kit/result` only, and owns its four failure codes:
 `FormatErrorCodes` is the one place they are written, and the app spreads it into its error code set. The words around a value (the
 `views` in `1.2M views`) are copy and live in the app's catalogue, not here. The app's own tagged values
-(`views`, `videoDuration`, `publishedAt`) live in the app.
+(a view count, a video duration) live in the app.
 
 ---
 

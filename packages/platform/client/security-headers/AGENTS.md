@@ -13,7 +13,7 @@ layer T2 (it depends on `@kit/result`).
   `X-Content-Type-Options` and `Referrer-Policy` on the response. `createSecurityHeadersMiddleware({ embeddablePrefix })` lets one path
   prefix be framed by any site (`frame-ancestors *`, no `X-Frame-Options`): the viewer app's `/embed/`, through `clientAppRequestMiddlewareFor`.
 - `requestNonce()`: the nonce of the request being rendered, `undefined` on the client and outside a request.
-  `createAppRouter` (`@vp/queries`) passes it to `ssr.nonce`, so every script Start renders carries it.
+  The app's router factory passes it to `ssr.nonce`, so every script Start renders carries it.
 - `clientAppRequestMiddleware`: the CSRF check (`Sec-Fetch-Site`, else `Origin`) on every server function
   and every request that is not a `GET` or `HEAD`, the writes through the app's `/api` proxy among them, then
   the headers; every app's `src/start.ts` hands it to `createStart` ahead of `sessionMiddleware`.

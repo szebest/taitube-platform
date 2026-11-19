@@ -51,10 +51,10 @@
     "clean": "rimraf dist tsconfig.tsbuildinfo"
   },
   "dependencies": {
+    "@kit/appearance": "workspace:*",
     "@kit/design-tokens": "workspace:*",
     "@kit/errors": "workspace:*",
-    "@kit/result": "workspace:*",
-    "@vp/domain": "workspace:*"
+    "@kit/result": "workspace:*"
   },
   "devDependencies": {
     "@dnd-kit/core": "^6.3.1",

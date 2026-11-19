@@ -5,13 +5,11 @@
 export const ACCENT_GROUNDS: Readonly<Record<"dark" | "light", string>>
 export const BREAKPOINTS: readonly ["medium", "expanded", "large", "xlarge"]
 export type Breakpoint = (typeof BREAKPOINTS)[number];
-export const CONTRAST_OPTIONS: readonly ["auto", "standard", "more"]
 export const CONTROL_SIZES: readonly ["sm", "md", "lg"]
 export type ColorRole = (typeof ROLES)[number];
 export type ContrastFailure<Pair extends ContrastPair> = Pair & Readonly<{
     ratio: number;
 }>;
-export type ContrastOption = (typeof CONTRAST_OPTIONS)[number];
 export type ContrastPair = Readonly<{
     foreground: string;
     background: string;
@@ -35,9 +33,7 @@ export type InvalidColour = InputFailure<typeof CommonErrorCodes.VALIDATION_FAIL
 }>;
 export type InvalidDefinition = InputFailure<typeof CommonErrorCodes.VALIDATION_FAILED>;
 export const MODE_FAMILIES: readonly ["dark", "light"]
-export const MODE_OPTIONS: readonly ["system", "dark", "light", "oled"]
 export type ModeFamily = (typeof MODE_FAMILIES)[number];
-export type ModeOption = (typeof MODE_OPTIONS)[number];
 export const NON_TEXT_FLOOR: 3
 export const RADIUS_OPTIONS: readonly ["xs", "sm", "thumb", "card", "sheet", "control", "chip"]
 export const ROLES: readonly ["bg", "surface", "raised", "border", "border-strong", "fg", "fg-muted", "fg-subtle", "tint", "tint-strong", "accent", "accent-hover", "on-accent", "accent-ink", "accent-soft", "focus-ring", "live", "on-live", "danger", "danger-ink", "success-ink", "warning-ink", "info-ink", "scrim", "media", "on-media"]

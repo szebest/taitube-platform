@@ -47,6 +47,7 @@ bullmq_queue_jobs{queue="transcode-1080p",state="active"} 0
         return { type: 'done', value: '' };
       },
       logger,
+      now: () => 0,
     });
 
     await autoscaler.tick(1000);
@@ -80,6 +81,7 @@ bullmq_queue_jobs{queue="transcode-1080p",state="active"} 1
         return { type: 'done', value: '' };
       },
       logger: recordingLogger().logger,
+      now: () => 0,
     });
 
     await autoscaler.tick(1000);
@@ -108,6 +110,7 @@ bullmq_queue_jobs{queue="transcode-1080p",state="active"} ${currentActive}
       }),
       executor: async () => ({ type: 'done', value: '' }),
       logger,
+      now: () => 0,
     });
 
     await autoscaler.tick(0);
@@ -168,9 +171,27 @@ bullmq_queue_jobs{queue="transcode-1080p",state="active"} ${currentActive}
       fetcher,
       executor,
       logger,
+      now: () => 0,
     });
 
     await expect(autoscaler.tick(1000)).resolves.toBeUndefined();
     expect(log.lines()).toContainEqual(expect.objectContaining(logged));
+  });
+
+  it('stamps each poll with the clock it is handed', () => {
+    const now = vi.fn(() => 42);
+    const autoscaler = new ComposeAutoscaler({
+      metricsUrl: 'http://mock-api:9464/metrics',
+      stageConfigs: customConfig,
+      fetcher: async () => ({ type: 'done', value: '' }),
+      executor: async () => ({ type: 'done', value: '' }),
+      logger: recordingLogger().logger,
+      now,
+    });
+
+    autoscaler.start();
+    autoscaler.stop();
+
+    expect(now).toHaveBeenCalledOnce();
   });
 });

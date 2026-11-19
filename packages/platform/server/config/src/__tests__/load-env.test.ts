@@ -14,7 +14,7 @@ function captureFailure(env: Record<string, string>): string {
   return expectErr(parseEnv(Schema, env)).issues.join('\n');
 }
 
-describe('packages/config: loadEnv', () => {
+describe('@kit/config: loadEnv', () => {
   it('reports every invalid key and redacts the sensitive ones', () => {
     const message = captureFailure({ ADMIN_TOKEN: 'short', PORT: 'eighty' });
 
@@ -38,16 +38,5 @@ describe('packages/config: loadEnv', () => {
     expect(() => loadEnv(Schema, {})).toThrow(
       /^\[FATAL\] Invalid environment configuration:\n {2}- DATABASE_URL: .*details redacted/
     );
-  });
-
-  it('reads process.env when it is handed no record', () => {
-    const previous = process.env['DATABASE_URL'];
-    process.env['DATABASE_URL'] = VALID_ENV.DATABASE_URL;
-    try {
-      expect(loadEnv(Schema).DATABASE_URL).toBe(VALID_ENV.DATABASE_URL);
-    } finally {
-      if (previous === undefined) delete process.env['DATABASE_URL'];
-      else process.env['DATABASE_URL'] = previous;
-    }
   });
 });

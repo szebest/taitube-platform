@@ -4,6 +4,7 @@
 
 - `InvalidDefinition` and `InvalidColour` take `VALIDATION_FAILED` from `CommonErrorCodes` in `@kit/errors`;
   the package no longer imports the app's error codes. The wire value is unchanged.
+- `MODE_OPTIONS`, `ModeOption`, `CONTRAST_OPTIONS` and `ContrastOption` moved to `@kit/appearance`, which the theme schema now takes them from; import them from there.
 
 ## 0.1.1
 

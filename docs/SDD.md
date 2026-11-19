@@ -896,7 +896,7 @@ check said whether a theme's text was readable on its grounds.
   switches.
 - **Prop unions are the schemas' keys.** `SizeOption`, `ControlSize`, `IconSize`, `RadiusOption`,
   `ElevationOption`, `TypeStyleOption`, `SpaceStep` are `const` arrays the schemas are keyed by; `ModeOption`
-  and `ContrastOption` come from `@vp/domain/settings`, which the account preference shares with the server.
+  and `ContrastOption` come from `@kit/appearance`, which the account preference shares with the server.
 - **Contrast is a gate, not a review.** Every theme and mode clears the required role pairs (`checkRoleContrast`:
   text 4.5:1, outlines and the focus ring 3:1, translucent grounds composited over `bg`), and a viewer's
   accent is derived in OKLCH to clear its floors on every theme of its mode family (`deriveAccent`).
