@@ -1,6 +1,6 @@
+import { KEYSET_PAGE_SIZE, keysetPaging } from '@kit/query';
 import { infiniteQueryOptions, queryOptions } from '@tanstack/react-query';
 import type { ApiClient } from '@vp/api-client';
-import { KEYSET_PAGE_SIZE, keysetPaging } from '@vp/queries';
 import { libraryKeys } from '#app/lib/query-keys/library-keys';
 
 const SHELF_LIMIT = 12;

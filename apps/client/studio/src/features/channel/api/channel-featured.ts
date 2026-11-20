@@ -1,7 +1,7 @@
+import { KEYSET_PAGE_SIZE, keysetPaging } from '@kit/query';
 import { infiniteQueryOptions, mutationOptions, queryOptions } from '@tanstack/react-query';
 import type { ApiClient } from '@vp/api-client';
 import type { ChannelFeaturedView, VideoSummary } from '@vp/api-contracts';
-import { KEYSET_PAGE_SIZE, keysetPaging } from '@vp/queries';
 
 const featuredKeys = {
   all: ['studio', 'channel-featured'] as const,

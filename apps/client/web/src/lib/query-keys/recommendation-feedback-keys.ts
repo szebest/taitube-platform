@@ -1,6 +1,6 @@
+import { KEYSET_PAGE_SIZE, keysetPaging } from '@kit/query';
 import { infiniteQueryOptions } from '@tanstack/react-query';
 import type { ApiClient } from '@vp/api-client';
-import { KEYSET_PAGE_SIZE, keysetPaging } from '@vp/queries';
 
 export const recommendationFeedbackKeys = {
   all: ['recommendation-feedback'] as const,

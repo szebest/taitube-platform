@@ -1,7 +1,7 @@
+import { KEYSET_PAGE_SIZE, keysetPaging } from '@kit/query';
 import { infiniteQueryOptions, queryOptions } from '@tanstack/react-query';
 import type { ApiClient } from '@vp/api-client';
 import { type ContractQuery, type ContractResult, listDlq } from '@vp/api-contracts';
-import { KEYSET_PAGE_SIZE, keysetPaging } from '@vp/queries';
 import { z } from 'zod';
 import { lenient } from './lenient';
 

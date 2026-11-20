@@ -1,19 +1,19 @@
 import { isNotFound } from '@tanstack/react-router';
-import { VideoIdParamSchema } from '@vp/api-contracts';
-import { VIDEO_ID } from '@vp/web-testing';
+import { z } from 'zod';
 import { parseParam } from '../parse-param';
 
-const VideoId = VideoIdParamSchema.shape.id;
+const Id = z.uuid();
+const ID = '0f8fad5b-d9cb-469f-a165-70867728950e';
 
-describe('@vp/queries: parseParam', () => {
+describe('@kit/query: parseParam', () => {
   it('passes a segment its schema accepts', () => {
-    expect(parseParam(VideoId, VIDEO_ID)).toBe(VIDEO_ID);
+    expect(parseParam(Id, ID)).toBe(ID);
   });
 
   it('throws not-found for a segment its schema refuses', () => {
     const thrown = (() => {
       try {
-        parseParam(VideoId, 'not-a-uuid');
+        parseParam(Id, 'not-a-uuid');
       } catch (error) {
         return error;
       }

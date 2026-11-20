@@ -1,6 +1,6 @@
+import { parseParam } from '@kit/query';
 import { createFileRoute, redirect } from '@tanstack/react-router';
 import { VideoIdParamSchema } from '@vp/api-contracts';
-import { parseParam } from '@vp/queries';
 import { z } from 'zod';
 
 export const Route = createFileRoute('/_authed/upload/edit/$videoId')({
