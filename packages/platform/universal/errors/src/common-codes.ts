@@ -6,5 +6,3 @@ export const CommonErrorCodes = {
   VALIDATION_FAILED: 'VALIDATION_FAILED',
   INTERNAL: 'INTERNAL',
 } as const;
-
-export type CommonErrorCode = (typeof CommonErrorCodes)[keyof typeof CommonErrorCodes];

@@ -41,7 +41,6 @@
     "@vp/api-contracts": "workspace:*",
     "@vp/messages": "workspace:*",
     "@vp/queries": "workspace:*",
-    "@vp/web-testing": "workspace:*",
     "jsdom": "^30.1.2",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",

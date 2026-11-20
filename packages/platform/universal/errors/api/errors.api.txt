@@ -9,7 +9,6 @@ export interface AnyFailure<C extends string = string> {
 export interface AnyInputFailure<C extends string = string> extends AnyFailure<C> {
     readonly field: string;
 }
-export type CommonErrorCode = (typeof CommonErrorCodes)[keyof typeof CommonErrorCodes];
 export const CommonErrorCodes: { readonly VALIDATION_FAILED: "VALIDATION_FAILED"; readonly INTERNAL: "INTERNAL"; }
 export type ErrorClassification = RetryClass | 'unknown';
 export const ErrorCodeRegistry: Token<ErrorCodeSet<string>>

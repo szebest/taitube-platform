@@ -192,7 +192,7 @@
         "!dist/**"
       ]
     },
-    "packages/universal/errors": {
+    "packages/**/universal/errors": {
       "entry": ["src/**/type-fixtures/*.ts"],
       "project": [
         "**/*.{ts,tsx,mts,mjs,js}!",

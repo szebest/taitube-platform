@@ -8,7 +8,7 @@ interface PkgDep {
   dev: boolean;
 }
 
-export interface PathDep {
+interface PathDep {
   name: string;
   spec: string;
   target: string;
