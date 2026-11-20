@@ -1,9 +1,9 @@
+import { assertCan } from '@kit/permissions';
 import {
   type AppAbility,
   type AppAction,
   type AppSubjects,
   type UserContext,
-  assertCan,
   getUserPermissions,
 } from '@vp/permissions';
 import { type PropsWithChildren, createContext, useContext } from 'react';

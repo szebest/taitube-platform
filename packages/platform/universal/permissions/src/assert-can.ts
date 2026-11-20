@@ -1,11 +1,19 @@
 import { PermanentError } from '@kit/errors';
-import { ErrorCodes } from '@vp/errors';
-import type { UserContext } from '../types/index';
+
+export const PermissionErrorCodes = {
+  UNAUTHORIZED: 'UNAUTHORIZED',
+  FORBIDDEN: 'FORBIDDEN',
+} as const;
+
+export interface Actor {
+  readonly id: string;
+  readonly role: string;
+}
 
 export interface AssertCanOptions {
   action: string;
   subject: string;
-  user: UserContext | null;
+  user: Actor | null;
   message?: string;
 }
 
@@ -15,7 +23,7 @@ export function assertCan(allowed: boolean, options: AssertCanOptions): asserts 
 
     if (!user) {
       throw new PermanentError(
-        ErrorCodes.UNAUTHORIZED,
+        PermissionErrorCodes.UNAUTHORIZED,
         message ?? `Authentication required to perform action '${action}' on '${subject}'`,
         {
           action,
@@ -25,14 +33,14 @@ export function assertCan(allowed: boolean, options: AssertCanOptions): asserts 
     }
 
     throw new PermanentError(
-      ErrorCodes.FORBIDDEN,
+      PermissionErrorCodes.FORBIDDEN,
       message ??
-        `Forbidden: user '${user.id}' with role '${user.role ?? 'GUEST'}' cannot perform action '${action}' on '${subject}'`,
+        `Forbidden: user '${user.id}' with role '${user.role}' cannot perform action '${action}' on '${subject}'`,
       {
         action,
         subject,
         userId: user.id,
-        userRole: user.role ?? 'GUEST',
+        userRole: user.role,
       }
     );
   }
