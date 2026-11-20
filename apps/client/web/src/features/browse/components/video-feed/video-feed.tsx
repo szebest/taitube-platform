@@ -31,14 +31,14 @@ export function VideoFeed<TPage extends VideoPage, TKey extends QueryKey>({
           <EmptyState.Illustration>
             <NoResultsIllustration />
           </EmptyState.Illustration>
-          <EmptyState.Title>{tOr('browse.empty', {}, '')}</EmptyState.Title>
+          <EmptyState.Title>{tOr('feed.empty', {}, '')}</EmptyState.Title>
         </EmptyState.Root>
       ) : (
         <VideoGrid videos={videos} />
       )}
       {isError && (
         <SectionError.Root role="alert" retrying={isFetching} onRetry={loadMore}>
-          <SectionError.Message>{tOr('browse.loadMoreFailed', {}, '')}</SectionError.Message>
+          <SectionError.Message>{tOr('feed.loadMoreFailed', {}, '')}</SectionError.Message>
         </SectionError.Root>
       )}
       {hasMore && !isFetching && !isError && <FeedSentinel onNear={loadMore} />}

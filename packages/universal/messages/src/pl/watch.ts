@@ -171,4 +171,5 @@ export const watch = {
   transcriptSearch: dt('Szukaj w transkrypcji'),
   transcriptNoMatches: dt('Nic w transkrypcji nie pasuje do {query}'),
   transcriptFailed: dt('Nie udało się wczytać transkrypcji'),
+  moreLikeThis: dt('Podobne filmy'),
 } as const;

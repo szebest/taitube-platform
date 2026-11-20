@@ -13,7 +13,7 @@ export function StatsOverlay() {
       <dt>{tOr('player.quality', {}, '')}</dt>
       <dd className="m-0">
         {activeHeight
-          ? tOr('videos.resolution', { height: activeHeight }, '')
+          ? tOr('player.resolution', { height: activeHeight }, '')
           : tOr('player.autoQuality', {}, '')}
       </dd>
       <dt>{tOr('player.speed', {}, '')}</dt>

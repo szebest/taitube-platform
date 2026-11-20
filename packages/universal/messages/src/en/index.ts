@@ -5,6 +5,7 @@ import { clips } from './clips';
 import { creatorStats } from './creator-stats';
 import { errorPage } from './error-page';
 import { errors } from './errors';
+import { feed } from './feed';
 import { home } from './home';
 import { library } from './library';
 import { live } from './live';
@@ -17,6 +18,7 @@ import { settings } from './settings';
 import { share } from './share';
 import { shell } from './shell';
 import { shorts } from './shorts';
+import { signInPrompt } from './sign-in-prompt';
 import { studio } from './studio';
 import { themeBuilder } from './theme-builder';
 import { ui } from './ui';
@@ -31,6 +33,7 @@ export const en = {
   creatorStats,
   errorPage,
   errors,
+  feed,
   home,
   library,
   live,
@@ -43,6 +46,7 @@ export const en = {
   share,
   shell,
   shorts,
+  signInPrompt,
   studio,
   themeBuilder,
   ui,

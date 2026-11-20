@@ -110,7 +110,7 @@ function QualitySubmenu({ container }: PortalContainer) {
   const byHeight = renditions
     .flatMap(({ id, height }) => (height ? [{ id, height }] : []))
     .toSorted((higher, lower) => lower.height - higher.height)
-    .map(({ id, height }) => ({ value: id, label: tOr('videos.resolution', { height }, '') }));
+    .map(({ id, height }) => ({ value: id, label: tOr('player.resolution', { height }, '') }));
   const choices = [auto, ...byHeight];
 
   return (

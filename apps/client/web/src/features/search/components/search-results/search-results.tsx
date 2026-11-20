@@ -122,7 +122,7 @@ function SearchResultList({ query, headingId }: SearchResultListProps) {
       )}
       {isError && (
         <SectionError.Root role="alert" retrying={isFetching} onRetry={() => fetchNextPage()}>
-          <SectionError.Message>{tOr('browse.loadMoreFailed', {}, '')}</SectionError.Message>
+          <SectionError.Message>{tOr('feed.loadMoreFailed', {}, '')}</SectionError.Message>
         </SectionError.Root>
       )}
       {hasNextPage && !isFetching && !isError && (

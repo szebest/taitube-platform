@@ -23,7 +23,7 @@ export function OwnVideos() {
       <VideoGrid videos={videos} />
       {isError && (
         <SectionError.Root role="alert" retrying={isFetching} onRetry={loadMore}>
-          <SectionError.Message>{tOr('browse.loadMoreFailed', {}, '')}</SectionError.Message>
+          <SectionError.Message>{tOr('feed.loadMoreFailed', {}, '')}</SectionError.Message>
         </SectionError.Root>
       )}
       {hasMore && !isFetching && !isError && <FeedSentinel onNear={loadMore} />}

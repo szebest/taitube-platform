@@ -6,6 +6,7 @@ describe('@vp/messages: pl watch', () => {
 
   it.each([
     { key: 'watch.subscribe', expected: 'Subskrybuj' },
+    { key: 'watch.moreLikeThis', expected: 'Podobne filmy' },
     { key: 'watch.shareTitle', expected: 'Udostępnij ten film' },
     { key: 'watch.linkCopied', expected: 'Link skopiowany' },
     { key: 'watch.queueEmpty', expected: 'Kolejka jest pusta' },

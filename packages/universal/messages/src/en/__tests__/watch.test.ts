@@ -5,6 +5,7 @@ describe('@vp/messages: en watch', () => {
 
   it.each([
     { key: 'watch.subscribe', args: undefined, expected: 'Subscribe' },
+    { key: 'watch.moreLikeThis', args: undefined, expected: 'More like this' },
     { key: 'watch.subscribed', args: undefined, expected: 'Subscribed' },
     { key: 'watch.share', args: undefined, expected: 'Share' },
     { key: 'watch.shareTitle', args: undefined, expected: 'Share this video' },

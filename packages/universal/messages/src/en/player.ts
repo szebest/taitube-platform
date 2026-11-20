@@ -38,4 +38,5 @@ export const player = {
   captionBackgroundOption: dt('{background:enum}', {
     enum: { background: { none: 'None', translucent: 'See-through', solid: 'Solid' } },
   }),
+  resolution: dt('{height:number}p', { number: { height: { useGrouping: false } } }),
 } as const;

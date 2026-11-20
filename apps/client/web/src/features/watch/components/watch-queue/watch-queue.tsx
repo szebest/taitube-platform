@@ -112,10 +112,7 @@ export function WatchQueue() {
         </EmptyState.Root>
       )}
       {(relatedPending || relatedFailed || recommended.length > 0) && (
-        <Queue.Recommendations
-          heading={tOr('videos.moreLikeThis', {}, '')}
-          loading={relatedPending}
-        >
+        <Queue.Recommendations heading={tOr('watch.moreLikeThis', {}, '')} loading={relatedPending}>
           {relatedFailed && recommended.length === 0 ? (
             <SectionError.Root
               role="alert"

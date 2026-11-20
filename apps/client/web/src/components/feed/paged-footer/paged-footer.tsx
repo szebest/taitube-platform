@@ -17,7 +17,7 @@ export function PagedFooter({ hasMore, isFetching, isError, onLoadMore }: PagedF
     <>
       {isError && (
         <SectionError.Root role="alert" retrying={isFetching} onRetry={onLoadMore}>
-          <SectionError.Message>{tOr('browse.loadMoreFailed', {}, '')}</SectionError.Message>
+          <SectionError.Message>{tOr('feed.loadMoreFailed', {}, '')}</SectionError.Message>
         </SectionError.Root>
       )}
       {hasMore && !isFetching && !isError && <FeedSentinel onNear={onLoadMore} />}

@@ -12,20 +12,20 @@ const { UrlModal, useUrlModal } = urlModals;
 const LEAVE_MODAL: { modal?: undefined } = { modal: undefined };
 
 const REASONS = {
-  like: 'auth.signInLike',
-  dislike: 'auth.signInDislike',
-  comment: 'auth.signInComment',
-  reply: 'auth.signInReply',
-  heart: 'auth.signInHeart',
-  subscribe: 'auth.signInSubscribe',
-  save: 'auth.signInSave',
-  playlist: 'auth.signInPlaylist',
-  queue: 'auth.signInQueue',
-  clip: 'auth.signInClip',
-  history: 'auth.signInHistory',
-  report: 'auth.signInReport',
-  bell: 'auth.signInBell',
-  feedback: 'auth.signInFeedback',
+  like: 'signInPrompt.like',
+  dislike: 'signInPrompt.dislike',
+  comment: 'signInPrompt.comment',
+  reply: 'signInPrompt.reply',
+  heart: 'signInPrompt.heart',
+  subscribe: 'signInPrompt.subscribe',
+  save: 'signInPrompt.save',
+  playlist: 'signInPrompt.playlist',
+  queue: 'signInPrompt.queue',
+  clip: 'signInPrompt.clip',
+  history: 'signInPrompt.history',
+  report: 'signInPrompt.report',
+  bell: 'signInPrompt.bell',
+  feedback: 'signInPrompt.feedback',
 } as const satisfies Record<AccountAction, MessageKey>;
 
 /** `?modal=sign-in&reason=`: says why an account is needed, and signs in to come back to the same page. */
@@ -48,10 +48,10 @@ export function SignInDialog() {
         <UrlModal.Title>
           {tOr(params ? REASONS[params.reason] : 'auth.signIn', {}, '')}
         </UrlModal.Title>
-        <UrlModal.Description>{tOr('auth.signInBody', {}, '')}</UrlModal.Description>
+        <UrlModal.Description>{tOr('signInPrompt.body', {}, '')}</UrlModal.Description>
         <UrlModal.Footer>
           <UrlModal.Close asChild>
-            <Button variant="ghost">{tOr('auth.signInDismiss', {}, '')}</Button>
+            <Button variant="ghost">{tOr('signInPrompt.dismiss', {}, '')}</Button>
           </UrlModal.Close>
           <Button asChild variant="solid" tone="accent">
             <Link
