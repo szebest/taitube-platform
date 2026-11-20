@@ -9,8 +9,8 @@ and the commands. What it means for SKILL.md:
   and `importOriginal<...>`, duplicate test titles, `console` calls, `.skip`/`.only`. So
   hard rule 4 and mock mechanic 2 (a bare `importOriginal()`) are enforced; mechanic 1
   (`vi.mock(import(...))` over a string path) and the rest of SKILL.md are not.
-- **One spec per source file** (`tests/architecture/test-correspondence.test.ts`): a new
-  source file gets its own `__tests__/<name>.test.ts`; one spec never covers two sources.
+- **No spec per source file is required**: write specs where behaviour can break (85% coverage
+  floor, `docs/standards/testing.md` section 8); none for types, constants, barrels or thin wiring.
 - **The real thing first** means the in-memory doubles in
   `packages/server/adapters/in-memory` (each with `.clear()`), PGlite for the Postgres
   repositories, and in the web app MSW handlers typed from `@vp/api-contracts`

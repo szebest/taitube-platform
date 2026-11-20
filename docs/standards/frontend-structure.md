@@ -68,8 +68,7 @@ lib -> lib
 | A route reaches a feature through its `index.ts` | oxlint `no-restricted-imports` on `apps/client/*/src/routes/**`, specs excepted |
 | No cycles | oxlint `import/no-cycle` on `apps/client/*/src/**` |
 | Folder names, stories and specs placement, stylesheets | `tests/architecture/frontend-folder-shape.test.ts` |
-| Component folders hold their story, spec and `index.ts` | `tests/architecture/component-folders.test.ts` |
-| One spec per source file | `tests/architecture/test-correspondence.test.ts` |
+| Component folders hold their story and `index.ts` | `tests/architecture/component-folders.test.ts` |
 | No file byte-identical between the apps | `tests/architecture/client-app-duplicates.test.ts` |
 | A public face with nothing unused | `pnpm knip` |
 
@@ -127,7 +126,7 @@ video-card/
 - **A feature**: `features/<domain>/` with an `index.ts` that exports what routes need (page-level components, the
   loader's query options, a hook a route calls) and nothing else. Reach another domain through a route or a lower layer.
 - **A component**: `pnpm gen:component <name> --kind primitive|shared|web|studio [--area <area>] [--compound]` writes the
-  folder above with its spec and story.
+  folder above with a story and a starter spec (keep it only if it asserts behaviour).
 - **Something two features use**: move it to the app's `components/`, `hooks/`, `utils/` or `lib/`; something both apps
   use goes to a `packages/client/` package.
 - **A move of folders** ships alone, in its own PR or slice ([git-workflow.md](git-workflow.md) section 2).
