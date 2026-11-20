@@ -91,7 +91,9 @@ The session (SDD §11, Transport and Origins and cookies; slots and identities f
   (signed in or expired) ends on it, an add takes the lowest slot with neither a session nor a row (else the
   lowest expired row), a session past `ACCOUNTS_MAX` is refused, and `POST /v1/me/security/sign-ins` records it (the API
   rate-limits adds) before the cookie is written. Server functions: `hasSession`, `signOut`, `signOutAll`,
-  `expireSession`, `rememberIdentity`, `startAddAccount`.
+  `expireSession`, `rememberIdentity`, `startAddAccount`, `listAccounts` (the rows, one whose cookie is gone read as
+  expired), `setIdentityAccent` and `setPinnedIdentities` (`vp.accounts` keeps up to 10 picked ring colours and 8
+  pins inside its 4 KB budget; `accounts.test.ts` proves the worst case).
 - `createAppRouter` keeps one `IdentityStore` per router (`identity` in context): the identity and the one
   `QueryClient` that is its own. `switchIdentity(router, next)` builds the next identity's client and drops the
   last one, cancelling its loads, then replaces the URL under the new prefix; `settleSession` (after a sign-in or a
@@ -120,6 +122,27 @@ The session (SDD §11, Transport and Origins and cookies; slots and identities f
   `sessionMiddleware` was given as `devTokenUrl`. Each app imports it behind `VITE_DEMO_PERSONAS` in its `/login`
   route, and the bundle guard in `@kit/vite-preset` fails a build with the flag off in which anything under
   `src/demo-personas/` reaches a client or a server chunk.
+
+The switcher (`identities/`, SDD §11; ticket 129's section 5):
+
+- `IdentitySwitcherProvider({ fallback })`, mounted by each app root above `SessionProvider`, so its state survives
+  the remount a switch causes: which surface is open (`show('switcher' | 'create-channel')`), the identity on its way
+  (the header draws it on the click), `Alt+Shift+A` on `event.code`, and after a switch the toast with Undo, a polite
+  announcement and focus on the page's `h1`. `switchTo` loads `switch-flow.ts` on first use: `switchInPlace` keeps
+  the page or lands on `fallback` when the new identity cannot see it, and rolls a failed switch back. A part drawn
+  outside a provider (a page in a spec) gets one that stays closed.
+- `useIdentityChoices(open)` is the one list: `identityEntries` (pinned first, then each slot, the tab's account
+  with its other channels and teams from `GET /v1/me/identities`, asked once the list is open, another account is
+  signed in or the URL names a channel) and what choosing a row does (an expired one goes to
+  `/login?slot=<n>&reason=expired`, any other switches in place). `prefetch(entry)` fills the cache the switch will
+  land on (`IdentityStore.prepare`, once per 5 s per identity). The other accounts' counts come from
+  `glanceAccounts` (`account-glance.ts`), one server call for every other slot, only while open.
+- `AccountSwitcher({ links, manage, children, onSignOut })` is the header's account button: the ring when the browser
+  holds more than one identity, the menu's rows (`account-switcher-items.tsx`) loaded as the pointer or focus reaches
+  it, the bottom sheet on a narrow screen. `IdentitySwitcherDialog` is the searchable dialog and sheet each app loads
+  lazily behind `WhenSwitcherOpened`, with `CreateChannelDialog`. `OpenAsLinks` gives a link of this app an "Open
+  as..." menu. `ActingAsLine` and `useIdentityGuard` are a composer's: the identity a write goes out as, and a write
+  fired after the identity changed held and asked again. `studioPathForChannel` is the studio's `/for/<handle>`.
 
 ## Rules
 

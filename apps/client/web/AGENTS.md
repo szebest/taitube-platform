@@ -128,8 +128,18 @@ which the router strips and adds back, so a route never sees it; `__root.tsx` ha
 `beforeLoad`), so it opens as the same identity. No script reads a token: the browser's API calls go to this
 origin's `/api` naming their slot, and only server functions (`signOut`, the demo personas' sign-in) set or clear
 the cookies. A 401 for a signed-in viewer lands them on `/login` for that slot, and back where they were once
-signed in. `/login?add=1` adds an account beside the ones signed in. The shell header mounts `features/account/components/account-menu.tsx`: `@kit/components`' `AccountMenu` with the
-studio's upload and admin pages, a guest's sign-in link, and sign-out, which ends the session on both apps. Locally
+signed in. `/login?add=1` adds an account beside the ones signed in. The shell header mounts `features/account/components/account-menu/`:
+a guest's sign-in link, or `@vp/queries`' `AccountSwitcher` with the studio's upload and admin pages and settings
+(`useAccountLinks`). The switcher is the one way between identities: `IdentitySwitcherProvider` sits above
+`SessionProvider` in `AppLayout` (the shortcut `Alt+Shift+A`, the toast with Undo, the polite announcement and focus on
+the page's `h1` after a switch, the app's home as the fallback when the new identity cannot see the page), the
+searchable dialog and phone sheet (`IdentitySwitcherSheet`, lazy, loaded on its first open) is in the overlays, the
+command palette lists the other identities (`IdentityPaletteGroup`), a long press on the tab bar's You tab opens the
+sheet, and `OpenAsLinks` gives every link an "Open as..." menu. A composer that writes as a channel (comment, reply)
+draws `ActingAsLine` over `useIdentityGuard`, and `SubscribeAction` guards its write the same way; a write fired after
+the identity changed is held and asked again. `/settings/accounts` (`accounts-rows/`, `sign-in-history-row/`) orders and
+pins the identities, picks their ring colours, creates and promotes channels and lists the sign-ins. Each sign-out ends
+that session on both apps. Locally
 `/login` offers the demo personas (Guest, Viewer, Creator, Second creator, Moderator, Admin) in the dev server, where
 `pnpm dev` starts `dev-token serve`, and in a build made with `VITE_DEMO_PERSONAS=true`, which `demo/start.sh` makes
 and points at `dev-token serve` through `SSR_DEV_TOKEN_URL` (setup in `docs/LOCAL_FIRST.md`). The gate is the literal
