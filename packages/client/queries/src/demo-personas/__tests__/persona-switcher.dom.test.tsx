@@ -66,6 +66,7 @@ describe('@vp/queries: PersonaSwitcher', () => {
   });
 
   it('replaces the account signed in on this tab slot with the persona picked', async () => {
+    // oxlint-disable-next-line unicorn/no-document-cookie -- the browser arrives signed in.
     document.cookie = 'vp.session.0=token-of-user; path=/';
     devTokenServe((asked) => HttpResponse.json({ token: `token-of-${asked}` }));
     const { invalidate, user } = await renderSwitcher();
