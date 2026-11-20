@@ -1,11 +1,6 @@
 import { type Result, err, ok } from '@kit/result';
 import type { Video } from '@vp/domain';
-import {
-  type ShareGrant,
-  type UserContext,
-  canModerateVideo,
-  canUpdateVideo,
-} from '@vp/permissions';
+import { type ShareGrant, type UserContext, canUpdateVideo } from '@vp/permissions';
 import { type VideoPasswordRequired, videoPasswordRequired } from './failures';
 
 export interface VideoGateInput {
