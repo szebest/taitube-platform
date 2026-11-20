@@ -4,6 +4,7 @@ import {
   defaultSlotOf,
   firstFreeSlot,
   parseAccounts,
+  serializeAccounts,
   slotOfUser,
   withDefault,
   withExpired,
@@ -28,16 +29,56 @@ describe('@vp/queries: accounts', () => {
     ]);
   });
 
-  it('keeps a label short and an avatar only when it fits the cookie', () => {
+  it.each([
+    { script: 'Latin', label: 'x'.repeat(100), kept: 'x'.repeat(40) },
+    { script: 'CJK', label: '\u{6F22}'.repeat(40), kept: '\u{6F22}'.repeat(10) },
+    { script: 'emoji', label: '\u{1F3AC}'.repeat(40), kept: '\u{1F3AC}'.repeat(7) },
+    { script: 'a broken surrogate', label: '\u{D800}ok', kept: '\u{FFFD}ok' },
+  ])('cuts a $script label to what the cookie holds', ({ label, kept }) => {
     const [entry] = withSignedIn(NO_ACCOUNTS, {
       slot: 0,
       userId: 'u',
-      label: 'x'.repeat(100),
+      label,
+      avatarUrl: null,
+    }).slots;
+
+    expect(entry?.label).toBe(kept);
+  });
+
+  it('keeps an avatar only when it fits the cookie', () => {
+    const [entry] = withSignedIn(NO_ACCOUNTS, {
+      slot: 0,
+      userId: 'u',
+      label: 'A',
       avatarUrl: `https://cdn.example/${'a'.repeat(300)}`,
     }).slots;
 
     expect(entry).toMatchObject({ avatarUrl: null, expired: false, channel: null });
-    expect(entry?.label).toHaveLength(40);
+  });
+
+  it('fits ten of the longest rows in one cookie, dropping the avatar hints that would not fit', () => {
+    const full = Array.from({ length: 10 }, (_, slot) => slot).reduce(
+      (accounts, slot) =>
+        withDefault(
+          withSignedIn(accounts, {
+            slot,
+            userId: crypto.randomUUID(),
+            label: '\u{6F22}'.repeat(40),
+            avatarUrl: `https://cdn.example/${'a'.repeat(180)}`,
+          }),
+          slot,
+          'h'.repeat(30)
+        ),
+      NO_ACCOUNTS
+    );
+
+    const value = serializeAccounts(full);
+
+    expect(`vp.accounts=${encodeURIComponent(value)}`.length).toBeLessThanOrEqual(4096);
+    expect(parseAccounts(value).slots.map(({ avatarUrl }) => avatarUrl)).toEqual(
+      Array.from({ length: 10 }, () => null)
+    );
+    expect(serializeAccounts(TWO)).toBe(JSON.stringify(TWO));
   });
 
   it('marks one slot expired and leaves the others as they were', () => {
@@ -62,20 +103,45 @@ describe('@vp/queries: accounts', () => {
   });
 
   it.each([
-    { userId: 'user-2', occupied: [0, 2], slot: 2 },
-    { userId: 'user-2', occupied: [0], slot: undefined },
-    { userId: 'stranger', occupied: [0, 2], slot: undefined },
-  ])('finds $userId in slot $slot of $occupied', ({ userId, occupied, slot }) => {
-    expect(slotOfUser(TWO, userId, occupied)).toBe(slot);
+    { userId: 'user-2', slot: 2 },
+    { userId: 'stranger', slot: undefined },
+  ])('finds $userId in slot $slot, signed in or expired', ({ userId, slot }) => {
+    expect(slotOfUser(withExpired(TWO, 2), userId)).toBe(slot);
   });
 
   it.each([
-    { occupied: [], max: 10, free: 0 },
-    { occupied: [0, 1, 3], max: 10, free: 2 },
-    { occupied: [0, 1], max: 2, free: undefined },
-    { occupied: Array.from({ length: 10 }, (_, slot) => slot), max: 10, free: undefined },
-  ])('takes slot $free with $occupied held and a cap of $max', ({ occupied, max, free }) => {
-    expect(firstFreeSlot(occupied, max)).toBe(free);
+    { scenario: 'nothing held', accounts: NO_ACCOUNTS, occupied: [], max: 10, free: 0 },
+    { scenario: 'a gap', accounts: NO_ACCOUNTS, occupied: [0, 1, 3], max: 10, free: 2 },
+    {
+      scenario: 'an expired row in the gap, kept',
+      accounts: withExpired(signedIn(TWO, 1), 1),
+      occupied: [0, 2],
+      max: 10,
+      free: 3,
+    },
+    {
+      scenario: 'only expired rows left, the lowest replaced',
+      accounts: withExpired(signedIn(TWO, 1), 1),
+      occupied: [0, 2],
+      max: 3,
+      free: 1,
+    },
+    {
+      scenario: 'the cap reached',
+      accounts: NO_ACCOUNTS,
+      occupied: [0, 1],
+      max: 2,
+      free: undefined,
+    },
+    {
+      scenario: 'every slot held',
+      accounts: NO_ACCOUNTS,
+      occupied: Array.from({ length: 10 }, (_, slot) => slot),
+      max: 10,
+      free: undefined,
+    },
+  ])('adds into slot $free with $scenario', ({ accounts, occupied, max, free }) => {
+    expect(firstFreeSlot(accounts, occupied, max)).toBe(free);
   });
 
   it.each([

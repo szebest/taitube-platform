@@ -33,9 +33,9 @@ function isTooManyRequests(cause: unknown): boolean {
 /**
  * The callback of every sign-in, server only: an add first spends its nonce, so a state this
  * browser did not start signs nothing in. The token is always a new one from `issue`, never one the
- * request carries. A user already in a slot ends on that slot, so one user never holds two; an add
- * past `ACCOUNTS_MAX` is refused, and the API records the sign-in (rate-limiting an add) before the
- * cookie is written.
+ * request carries. A user already in a slot, signed in or expired, ends on that slot, so one user
+ * never holds two; a session past `ACCOUNTS_MAX` is refused, and the API records the sign-in
+ * (rate-limiting an add) before the cookie is written.
  */
 export async function completeSignIn(
   issue: TokenIssuer,
@@ -52,16 +52,18 @@ export async function completeSignIn(
   const account = await api.me.getAccount();
   const accounts = readAccounts();
   const occupied = occupiedSlots();
-  const existing = slotOfUser(accounts, account.user.id, occupied);
+  const listed = slotOfUser(accounts, account.user.id);
   const slot =
-    existing ?? (target.mode === 'slot' ? target.slot : firstFreeSlot(occupied, accountsMax));
-  if (slot === undefined) return { kind: 'accounts-full' };
+    listed ??
+    (target.mode === 'slot' ? target.slot : firstFreeSlot(accounts, occupied, accountsMax));
+  const full = occupied.length >= accountsMax;
+  if (slot === undefined || (full && !occupied.includes(slot))) return { kind: 'accounts-full' };
 
   const hops = forwardedFor(getRequest());
   const recorded = await fromPromise(
     () =>
       api.accountSecurity.recordMySignIn({
-        body: { slot, added: target.mode === 'add' && existing === undefined },
+        body: { slot, added: target.mode === 'add' && listed === undefined },
         headers: hops ? { 'x-forwarded-for': hops } : {},
       }),
     (cause) => cause
@@ -80,7 +82,7 @@ export async function completeSignIn(
   };
   writeAccounts(withSignedIn(accounts, signedIn), cookieDomain);
   const held = new Set([...occupied, slot]).size;
-  return existing === undefined
-    ? { kind: 'signed-in', slot, accounts: held }
-    : { kind: 'already-signed-in', slot, accounts: held };
+  return occupied.includes(slot) && listed === slot
+    ? { kind: 'already-signed-in', slot, accounts: held }
+    : { kind: 'signed-in', slot, accounts: held };
 }

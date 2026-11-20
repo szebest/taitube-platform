@@ -2,7 +2,14 @@ import { createServerFn } from '@tanstack/react-start';
 import { AccountSlotSchema } from '@vp/api-contracts';
 import { z } from 'zod';
 import type { Identity } from './account-slots';
-import { NO_ACCOUNTS, defaultSlotOf, withDefault, withExpired, withoutSlot } from './accounts';
+import {
+  AccountChannelSchema,
+  NO_ACCOUNTS,
+  defaultSlotOf,
+  withDefault,
+  withExpired,
+  withoutSlot,
+} from './accounts';
 import { readAccounts, writeAccounts } from './accounts-cookie';
 import { issueAddNonce } from './add-account-nonce';
 import { requestSession } from './session-config';
@@ -53,7 +60,7 @@ export const expireSession = createServerFn({ method: 'POST' })
 
 /** A tab switched to this identity: a new tab with no prefix opens as it. */
 export const rememberIdentity = createServerFn({ method: 'POST' })
-  .validator(z.strictObject({ slot: AccountSlotSchema, channel: z.string().nullable() }))
+  .validator(z.strictObject({ slot: AccountSlotSchema, channel: AccountChannelSchema.nullable() }))
   .handler(({ data }) => {
     writeAccounts(
       withDefault(readAccounts(), data.slot, data.channel),

@@ -4,15 +4,23 @@ import { z } from 'zod';
 
 const SLOT_COUNT = 10;
 const LABEL_MAX_LENGTH = 40;
+const LABEL_MAX_ENCODED = 90;
 const AVATAR_MAX_LENGTH = 200;
+
+/** What a browser keeps of one cookie, its name included; the slot list must fit all ten slots in it. */
+const COOKIE_BYTES_MAX = 4096;
+const ACCOUNTS_COOKIE_NAME_BYTES = 'vp.accounts='.length;
+
+/** A channel handle (38's rules), the acting channel a slot last used. */
+export const AccountChannelSchema = z.string().min(1).max(30);
 
 const AccountEntrySchema = z.object({
   slot: AccountSlotSchema,
   userId: z.string(),
-  label: z.string().max(LABEL_MAX_LENGTH),
+  label: z.string(),
   avatarUrl: z.string().max(AVATAR_MAX_LENGTH).nullable(),
   /** The channel handle the slot last acted as; `null` is the primary. */
-  channel: z.string().nullable(),
+  channel: AccountChannelSchema.nullable(),
   expired: z.boolean(),
 });
 
@@ -40,13 +48,45 @@ export function parseAccounts(raw: string | undefined): Accounts {
   return parsed?.success ? parsed.data : NO_ACCOUNTS;
 }
 
+function encodedLength(value: string): number {
+  return encodeURIComponent(value).length;
+}
+
+/** The longest start of `label` whose cookie encoding fits, whatever script it is written in. */
+function cutLabel(label: string): string {
+  const characters = Array.from(label.replaceAll(/\p{Surrogate}/gu, '\u{FFFD}')).slice(
+    0,
+    LABEL_MAX_LENGTH
+  );
+  let cut = '';
+  for (const character of characters) {
+    if (encodedLength(cut + character) > LABEL_MAX_ENCODED) break;
+    cut += character;
+  }
+  return cut;
+}
+
+/**
+ * The slot list as the cookie carries it. Ten rows always fit the browser's cookie limit, because a
+ * label and a handle are bounded; the avatar hints are the part that may not, so they are dropped
+ * when they would push the cookie past it.
+ */
+export function serializeAccounts(accounts: Accounts): string {
+  const whole = JSON.stringify(accounts);
+  if (ACCOUNTS_COOKIE_NAME_BYTES + encodedLength(whole) <= COOKIE_BYTES_MAX) return whole;
+  return JSON.stringify({
+    ...accounts,
+    slots: accounts.slots.map((entry) => ({ ...entry, avatarUrl: null })),
+  });
+}
+
 export type SignedInAccount = Pick<AccountEntry, 'slot' | 'userId' | 'label' | 'avatarUrl'>;
 
 /** The slot holds this account now, freshly signed in, and a new tab opens on it. */
 export function withSignedIn(accounts: Accounts, account: SignedInAccount): Accounts {
   const entry: AccountEntry = {
     ...account,
-    label: account.label.slice(0, LABEL_MAX_LENGTH),
+    label: cutLabel(account.label),
     avatarUrl:
       account.avatarUrl && account.avatarUrl.length <= AVATAR_MAX_LENGTH ? account.avatarUrl : null,
     channel: null,
@@ -86,25 +126,26 @@ export function withDefault(accounts: Accounts, slot: number, channel: string | 
   };
 }
 
-/** The slot holding this user's session, so one user never holds two. */
-export function slotOfUser(
-  accounts: Accounts,
-  userId: string,
-  occupied: readonly number[]
-): number | undefined {
-  return accounts.slots.find((entry) => entry.userId === userId && occupied.includes(entry.slot))
-    ?.slot;
+/** The slot this user's row is in, signed in or expired, so one user never holds two. */
+export function slotOfUser(accounts: Accounts, userId: string): number | undefined {
+  return accounts.slots.find((entry) => entry.userId === userId)?.slot;
 }
 
-/** The lowest slot with no session, under the browser's cap. */
+/**
+ * Where an added account goes, under the browser's cap of sessions: the lowest slot with neither a
+ * session nor a row, else the lowest whose row lost its session (that row is replaced), else none.
+ */
 export function firstFreeSlot(
+  accounts: Accounts,
   occupied: readonly number[],
   accountsMax: number
 ): number | undefined {
   if (occupied.length >= accountsMax) return undefined;
-  return Array.from({ length: accountsMax }, (_, slot) => slot).find(
+  const listed = new Set(accounts.slots.map(({ slot }) => slot));
+  const free = Array.from({ length: accountsMax }, (_, slot) => slot).filter(
     (slot) => !occupied.includes(slot)
   );
+  return free.find((slot) => !listed.has(slot)) ?? free[0];
 }
 
 /** The slot a request with no prefix acts as: the default while it holds a session, else the lowest that does. */

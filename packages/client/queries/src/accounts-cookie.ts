@@ -1,5 +1,5 @@
 import { getCookie, setCookie } from '@tanstack/react-start/server';
-import { type Accounts, parseAccounts } from './accounts';
+import { type Accounts, parseAccounts, serializeAccounts } from './accounts';
 import { cookieAttributes } from './session-cookie';
 
 /** The browser's slot list; scripts may read it, since it holds no token. */
@@ -16,7 +16,7 @@ export function writeAccounts(accounts: Accounts, domain: string | undefined): v
     setCookie(ACCOUNTS_COOKIE, '', { ...cookieAttributes(domain), maxAge: 0 });
     return;
   }
-  setCookie(ACCOUNTS_COOKIE, JSON.stringify(accounts), {
+  setCookie(ACCOUNTS_COOKIE, serializeAccounts(accounts), {
     ...cookieAttributes(domain),
     maxAge: ACCOUNTS_MAX_AGE_S,
   });

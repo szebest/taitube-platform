@@ -2,9 +2,15 @@ import { getAccount, recordMySignIn } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { account, apiServer, mockEndpoint, problemReply, signInRecord } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
-import { type Accounts, NO_ACCOUNTS, withSignedIn } from '../accounts';
+import { type Accounts, NO_ACCOUNTS, withExpired, withSignedIn } from '../accounts';
+import { requestSession } from '../session-config';
 import { type SignInTarget, completeSignIn } from '../sign-in';
 import { inRequest } from './in-request';
+
+vi.mock(import('../session-config'), async (importOriginal) => {
+  const original = await importOriginal();
+  return { ...original, requestSession: vi.fn(original.requestSession) };
+});
 
 const NONCE = 'vp.add-nonce=n0nce';
 const ADD: SignInTarget = { mode: 'add', state: 'n0nce' };
@@ -96,15 +102,52 @@ describe('@vp/queries: sign-in', () => {
     expect(recorded[0]?.body).toEqual({ slot: 3, added: false });
   });
 
-  it('refuses an account past ACCOUNTS_MAX, and writes nothing', async () => {
-    api();
-    const full = Array.from({ length: 10 }, (_, slot) => `vp.session.${slot}=t${slot}`).join('; ');
+  it('signs a user whose slot expired back into that slot, as a sign-in rather than an add', async () => {
+    const recorded = api();
+    const expired = withExpired(
+      withSignedIn(NO_ACCOUNTS, {
+        slot: 2,
+        userId: account().user.id,
+        label: 'Me',
+        avatarUrl: null,
+      }),
+      2
+    );
 
-    const { value, setCookies } = await signIn(ADD, full);
+    const { value, setCookies } = await signIn(
+      ADD,
+      `vp.session.0=other; ${accountsCookie(expired)}`
+    );
 
-    expect(value).toEqual({ kind: 'accounts-full' });
-    expect(sessionCookies(setCookies)).toEqual([]);
+    expect(value).toEqual({ kind: 'signed-in', slot: 2, accounts: 2 });
+    expect(sessionCookies(setCookies)[0]).toMatch(/^vp\.session\.2=new-token-of-creator;/);
+    expect(recorded[0]?.body).toEqual({ slot: 2, added: false });
   });
+
+  it.each([
+    { target: ADD, held: 10 },
+    { target: { mode: 'slot', slot: 9 } as const, held: 9 },
+  ])(
+    'refuses a session past ACCOUNTS_MAX into $target.mode, and writes nothing',
+    async ({ target, held }) => {
+      api();
+      vi.mocked(requestSession).mockReturnValue({
+        apiBaseUrl: undefined,
+        cookieDomain: undefined,
+        devTokenUrl: undefined,
+        accountsMax: held,
+      });
+      const full = Array.from({ length: held }, (_, slot) => `vp.session.${slot}=t${slot}`);
+
+      const { value, setCookies } = await inRequest(
+        () => completeSignIn(issue, 'creator', target),
+        { cookie: [...full, NONCE].join('; ') }
+      );
+
+      expect(value).toEqual({ kind: 'accounts-full' });
+      expect(sessionCookies(setCookies)).toEqual([]);
+    }
+  );
 
   it('refuses an add the API rate-limited, and writes nothing', async () => {
     api({ record: () => problemReply(ErrorCodes.RATE_LIMITED) });
