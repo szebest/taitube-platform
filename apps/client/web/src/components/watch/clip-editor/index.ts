@@ -7,4 +7,4 @@ export const ClipEditor = {
 };
 
 export { useClipEditor } from './clip-editor.context';
-export type { ClipEditorSprite, ClipEditorValue } from './types';
+export type { ClipEditorValue } from './types';

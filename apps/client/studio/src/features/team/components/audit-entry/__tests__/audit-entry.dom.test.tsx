@@ -96,6 +96,17 @@ const entries: { scenario: string; entry: Entry; shown: string[] }[] = [
     shown: ['Turned comments on or off', 'comments off'],
   },
   {
+    scenario: 'a restore',
+    entry: {
+      ...base,
+      id: id(20),
+      action: 'video.restored',
+      targetType: 'video',
+      meta: { fromVersion: 3 },
+    },
+    shown: ['Restored an earlier version of a video', 'version 3'],
+  },
+  {
     scenario: 'a silent hide',
     entry: {
       ...base,

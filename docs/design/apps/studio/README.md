@@ -10,7 +10,10 @@ apps/client/studio/src/
     workspace/studio-workspace/    StudioWorkspace
     table/data-table/              DataTable
     analytics/chart-frame/         ChartFrame and the chart helpers
-    comments/bulk-action-bar/      BulkActionBar
+    table/bulk-action-bar/         BulkActionBar
+    history/revision-list/         RevisionList
+    dialogs/field-dialog/          FieldDialog
+    video/timeline-range-editor/   TimelineRangeEditor
     comments/moderation-queue/     ModerationQueue
     section/customization-section/ CustomizationSection
     image/image-cropper/           ImageCropper
@@ -33,6 +36,9 @@ These components exist for the studio alone today, so they stay in the studio's 
 | [DataTable](data-table.md) | Studio table behaviour over the `Table` primitive and TanStack Table state | `Table`, `Checkbox`, `Badge`, `DropdownMenu`, `Button`, `Skeleton` | [60](../../../tickets/60-creator-studio-dashboard-video-management-ui.md), [61](../../../tickets/61-admin-control-panel-category-moderation-ui.md) |
 | [StatCard](stat-card.md) | One KPI with delta and sparkline, in `@kit/components` | `Card`, `Badge`, `Icon` | [60](../../../tickets/60-creator-studio-dashboard-video-management-ui.md) |
 | [BulkActionBar](bulk-action-bar.md) | The actions on selected rows and the disclosure they share | `Button`, `DisclosureControl` | [113](../../../tickets/113-channel-comment-moderation.md) |
+| [RevisionList](revision-list.md) | The saved versions of a record, what each changed, and a way back | `Badge`, `Button` | [116](../../../tickets/116-video-management-power-tools.md) |
+| [FieldDialog](field-dialog.md) | A dialog that asks for one field's value, a choice or a line of text | `ResponsiveModal`, `Field`, `Select`, `Input` | [116](../../../tickets/116-video-management-power-tools.md) |
+| [TimelineRangeEditor](timeline-range-editor.md) | A range or a position over a video's frames, with ticks for the points already set | `Slider`, `SpriteStrip` | [116](../../../tickets/116-video-management-power-tools.md) |
 | [ModerationQueue](moderation-queue.md) | The held comments as a listbox, one open | none | [113](../../../tickets/113-channel-comment-moderation.md) |
 | [CustomizationSection](customization-section.md) | A settings block with its own save | `Card`, `Button` | [72](../../../tickets/72-frontend-settings-customization-system.md), [113](../../../tickets/113-channel-comment-moderation.md) |
 | [ImageCropper](image-cropper.md) | Frame a picture or banner: crop frame, zoom, safe-area guides, previews, job progress | `Dialog`, `SegmentedControl`, `Slider`, `Progress`, `Callout`, `Button` | [115](../../../tickets/115-channel-page-customisation.md) |

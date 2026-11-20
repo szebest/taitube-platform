@@ -1,10 +1,16 @@
 import { assertNever } from '@kit/result';
 import { type Problem, problemFor } from '@vp/api-contracts';
 import { publicReadFailure } from '@vp/domain-rules';
+import type { SuggestChaptersFailure } from '../services/chapter-service';
 import type { UpdateVideoServiceFailure } from '../services/creator-studio-service';
+import type { RestoreRevisionFailure } from '../services/video-revision-service';
 import type { ReadVideoServiceFailure } from '../services/video-service';
 
-export type PublicVideoFailure = ReadVideoServiceFailure | UpdateVideoServiceFailure;
+export type PublicVideoFailure =
+  | ReadVideoServiceFailure
+  | UpdateVideoServiceFailure
+  | RestoreRevisionFailure
+  | SuggestChaptersFailure;
 
 /**
  * The public answer to "you may not read this" is the answer to "it does not exist", byte for byte:
@@ -23,6 +29,8 @@ export function presentPublicVideoFailure(failure: PublicVideoFailure, instance:
     case 'UNAUTHORIZED':
     case 'VALIDATION_FAILED':
     case 'VERSION_CONFLICT':
+    case 'INVALID_CURSOR':
+    case 'REVISION_NOT_FOUND':
     case 'DATABASE_UNAVAILABLE':
       return problemFor(failure, instance);
     default:

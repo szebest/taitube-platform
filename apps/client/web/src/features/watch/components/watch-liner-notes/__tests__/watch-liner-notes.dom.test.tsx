@@ -37,6 +37,33 @@ describe('apps/client/web: watch liner notes', () => {
     expect(stubSeek).toHaveBeenLastCalledWith(135);
   });
 
+  it('lists the chapters the creator stored, before the ones in the description', async () => {
+    const { user } = await renderWatch({
+      video: {
+        description: WITH_CHAPTERS,
+        chapters: [
+          { startMs: 0, title: 'Stored intro' },
+          { startMs: 30_000, title: 'Stored middle' },
+          { startMs: 90_000, title: 'Stored end' },
+        ],
+      },
+    });
+    const strip = screen.getByRole('navigation', { name: 'Chapters' });
+
+    await user.click(within(strip).getByRole('button', { name: /Stored end/ }));
+
+    expect(
+      within(strip)
+        .getAllByRole('button')
+        .map((button) => button.textContent)
+    ).toEqual([
+      expect.stringContaining('Stored intro'),
+      expect.stringContaining('Stored middle'),
+      expect.stringContaining('Stored end'),
+    ]);
+    expect(stubSeek).toHaveBeenLastCalledWith(90);
+  });
+
   it('seeks to a timecode in the text and opens a link in the text on its own', async () => {
     const { user } = await renderWatch({ video: { description: WITH_CHAPTERS } });
     const body = screen.getByRole('region', { name: 'Description' });

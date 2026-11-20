@@ -26,6 +26,8 @@ function kindOf(code: ErrorCode): ErrorStateKind {
     case ErrorCodes.RECOMMENDATION_FEEDBACK_NOT_FOUND:
     case ErrorCodes.CAPTION_NOT_FOUND:
     case ErrorCodes.CLIP_NOT_FOUND:
+    case ErrorCodes.REVISION_NOT_FOUND:
+    case ErrorCodes.CORRECTION_NOT_FOUND:
     case ErrorCodes.PICK_NOT_FOUND:
     case ErrorCodes.WEBHOOK_NOT_FOUND:
     case ErrorCodes.EXPORT_NOT_FOUND:
@@ -119,6 +121,7 @@ function kindOf(code: ErrorCode): ErrorStateKind {
     case ErrorCodes.WHISPER_INPUT_REJECTED:
     case ErrorCodes.NO_AUDIO_STREAM:
     case ErrorCodes.CAPTION_TRACK_LIMIT:
+    case ErrorCodes.CORRECTION_LIMIT:
     case ErrorCodes.CAPTION_OVERWRITE_UNCONFIRMED:
     case ErrorCodes.PICK_WINDOW_OVERLAP:
     case ErrorCodes.WEBHOOK_LIMIT_REACHED:

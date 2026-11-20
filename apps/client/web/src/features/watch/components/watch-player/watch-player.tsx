@@ -1,11 +1,16 @@
 import { useQuery } from '@tanstack/react-query';
-import { captionsQueryOptions, useApi } from '@vp/queries';
+import {
+  captionsQueryOptions,
+  correctionsQueryOptions,
+  useApi,
+  videoQueryOptions,
+} from '@vp/queries';
 import type { TaitubePlayerWithTelemetryProps } from '#app/components/player/taitube-player';
 import { LazyTaitubePlayer } from '#app/components/player/taitube-player/taitube-player.lazy';
 import { useProgressWriter } from '#app/hooks/use-progress-writer';
 import { usePlaybackPreference } from '#app/lib/preferences/device-preferences-provider';
 
-/** The player on the watch page: it starts with the viewer's chosen playback defaults, offers the video's captions and saves where it gets to. */
+/** The player on the watch page: it starts with the viewer's chosen playback defaults, offers the video's captions, corrections and chapters and saves where it gets to. */
 export function WatchPlayer({ onPause, ...props }: TaitubePlayerWithTelemetryProps) {
   const [speed] = usePlaybackPreference('speed');
   const [quality] = usePlaybackPreference('quality');
@@ -17,6 +22,8 @@ export function WatchPlayer({ onPause, ...props }: TaitubePlayerWithTelemetryPro
   const api = useApi();
   const progressWriter = useProgressWriter(props.videoId);
   const { data: captions } = useQuery(captionsQueryOptions(api, props.videoId));
+  const { data: corrections } = useQuery(correctionsQueryOptions(api, props.videoId));
+  const { data: video } = useQuery(videoQueryOptions(api, props.videoId));
 
   return (
     <LazyTaitubePlayer
@@ -30,6 +37,8 @@ export function WatchPlayer({ onPause, ...props }: TaitubePlayerWithTelemetryPro
         statsOverlay,
       }}
       captionTracks={captions?.tracks}
+      cards={corrections?.items}
+      chapters={video?.chapters}
       {...progressWriter}
       {...props}
       onPause={(progress) => {

@@ -105,6 +105,7 @@ export const studioTeam = {
         'channel.updated': 'Changed the channel',
         'video.updated': 'Edited a video',
         'video.comments.toggled': 'Turned comments on or off',
+        'video.restored': 'Restored an earlier version of a video',
         'comment.held': 'Held a comment',
         'comment.approved': 'Approved a comment',
         'comment.hidden': 'Hid a comment',
@@ -143,6 +144,7 @@ export const studioTeam = {
         categoryId: 'category',
         tags: 'tags',
         thumbnail: 'thumbnail',
+        chapters: 'chapters',
       },
     },
   }),
@@ -152,6 +154,7 @@ export const studioTeam = {
   teamAuditCommentsToggled: dt('{state:enum}', {
     enum: { state: { on: 'comments on', off: 'comments off' } },
   }),
+  teamAuditRestored: dt('version {version}'),
   teamAuditPinned: dt('{state:enum}', {
     enum: { state: { on: 'pinned', off: 'unpinned' } },
   }),

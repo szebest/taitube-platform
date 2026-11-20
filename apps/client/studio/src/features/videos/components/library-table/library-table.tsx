@@ -69,7 +69,7 @@ export function LibraryTable({ onInspect }: LibraryTableProps) {
   const selectedVideos = view.items.filter((video) => rowSelection[video.id]);
 
   const keepFailedSelected = ({ failed }: BatchOutcome) => {
-    setSelected({ viewKey, rows: Object.fromEntries(failed.map((id) => [id, true])) });
+    setSelected({ viewKey, rows: Object.fromEntries(failed.map(({ id }) => [id, true])) });
   };
 
   const changeSelection: OnChangeFn<RowSelectionState> = (updater) => {

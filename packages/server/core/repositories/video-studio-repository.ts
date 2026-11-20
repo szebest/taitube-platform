@@ -1,5 +1,6 @@
 import type { Result } from '@kit/result';
 import type {
+  Chapter,
   CreatorLibraryCursor,
   LibrarySort,
   SortOrder,
@@ -18,6 +19,8 @@ export interface StudioMetadataPatch {
   tags?: string[];
   customThumbnailKey?: string | null;
   commentsEnabled?: boolean;
+  /** The whole set replaces the stored one; empty clears it. */
+  chapters?: Chapter[];
 }
 
 export interface UpdateStudioMetadataOptions {
@@ -32,6 +35,11 @@ export interface UpdateStudioMetadataOptions {
    * unless empty; a `commentsEnabled` in the patch is audited on its own as `video.comments.toggled`.
    */
   auditFields: VideoAuditField[];
+  /**
+   * Every landed edit appends a `video_metadata` revision at its new version in the same
+   * transaction; a restore names the version it went back to.
+   */
+  revision?: { restoredFromVersion?: number };
 }
 
 /** Absence is an answer, not a failure: the service decides which error each one becomes. */

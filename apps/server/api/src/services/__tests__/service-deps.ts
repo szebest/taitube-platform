@@ -10,6 +10,7 @@ import {
   InMemoryMultipartStorage,
   type InMemoryRepositories,
   InMemoryStepRepository,
+  InMemoryVideoChapterRepository,
   InMemoryVideoRepository,
 } from '@vp/adapters/in-memory';
 import { RedisReactionCacheAdapter } from '@vp/adapters/redis/redis-reaction-cache.adapter';
@@ -47,6 +48,7 @@ export function videoServiceDeps(
       new InMemoryVideoRepository(),
       new InMemoryChannelHandleHistoryRepository()
     ),
+    chapters: new InMemoryVideoChapterRepository(),
     cdn: TEST_CDN,
     sprite: TEST_SPRITE,
     reactionCache: new RedisReactionCacheAdapter({
@@ -150,7 +152,7 @@ export function sseServiceDeps(
 }
 
 /** The edit screening switched on, over the same repositories as the service under test. */
-function metadataScreeningOf(repositories: InMemoryRepositories): MetadataScreening {
+export function metadataScreeningOf(repositories: InMemoryRepositories): MetadataScreening {
   const { thresholds, process } = inProcessAppConfig().screening;
   return new MetadataScreening({
     screenings: repositories.screenings,
@@ -166,7 +168,9 @@ export function creatorStudioOf(repositories: InMemoryRepositories): CreatorStud
   return new CreatorStudioService({
     videos: repositories.videos,
     studio: repositories.videoStudio,
-    videoService: new VideoService(videoServiceDeps(repositories.videos)),
+    videoService: new VideoService(
+      videoServiceDeps(repositories.videos, { chapters: repositories.videoChapters })
+    ),
     metadataScreening: metadataScreeningOf(repositories),
     cdn: TEST_CDN,
     sprite: TEST_SPRITE,
