@@ -12,11 +12,14 @@ import { CHANNEL_ID, comment, mockEndpoint, OWNER_ID, problemReply } from '@vp/w
 import { HttpResponse } from 'msw/http';
 import '#app/__tests__/stub-stats-panel';
 import { AUTHOR_ID, membershipOn, OTHER_ID, viewerAccount } from '#app/__tests__/comment-fixtures';
+import { LazyTaitubePlayer } from '#app/components/player/taitube-player/taitube-player.lazy';
 import { renderDiscussion } from '#app/features/watch/__tests__/render-discussion';
 
 vi.mock(import('#app/components/player/taitube-player/taitube-player'), async () => ({
   TaitubePlayer: (await import('#app/__tests__/stub-player')).StubPlayer,
 }));
+
+beforeAll(() => LazyTaitubePlayer.preload());
 
 const VIEWER = viewerAccount(AUTHOR_ID);
 

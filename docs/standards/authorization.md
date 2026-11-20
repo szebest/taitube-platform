@@ -69,7 +69,7 @@ Centralized normalizers eliminate ad-hoc object spreads and provide canonical CA
 - `comment.normalizer.ts`: Maps `authorId ?? userId` and resolves `videoOwnerId`.
 - `upload.normalizer.ts`: Maps `ownerId` across upload and video fallbacks.
 - `subject-wrapper.ts`: Type-safe CASL `subject(name, normalized)` builders.
-- Every normalizer maps 1:1 to a dedicated test file in `__tests__/`.
+- Normalizers are covered by specs in `__tests__/` where they hold logic.
 
 ---
 
