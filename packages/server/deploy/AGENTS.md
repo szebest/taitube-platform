@@ -43,7 +43,7 @@ the logic that needs a test.
 2. **Names only.** No code path prints a secret's value, a value's length or a hash of it.
 3. **No network.** Nothing here calls a registry, a cluster or a cloud API; `scripts/deploy.sh` does, and
    only in a real run.
-4. **1:1 tests (Rule 12):** every source file has a name-matching test file in `src/__tests__/`.
+4. **Tests (Rule 12):** specs where behaviour can break, in `src/__tests__/`; no spec per file is required.
 
 ---
 

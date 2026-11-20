@@ -5,7 +5,10 @@ import { apiServer, mockEndpoint, problemReply, VIDEO_ID } from '@vp/web-testing
 import { axeViolations } from '@vp/web-testing/dom';
 import { serveAnalytics } from '#app/features/analytics/__tests__/analytics-api.fixture';
 import { renderAnalytics } from '#app/features/analytics/__tests__/render-analytics';
+import { LazyRetentionPlot } from '#app/features/analytics/components/retention-plot/retention-plot.lazy';
 import { RetentionHeatmap } from '../retention-heatmap';
+
+beforeAll(() => LazyRetentionPlot.preload());
 
 const renderHeatmap = () => renderAnalytics(<RetentionHeatmap videoId={VIDEO_ID} />);
 

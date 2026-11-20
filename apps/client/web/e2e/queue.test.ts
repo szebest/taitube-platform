@@ -6,10 +6,10 @@ test.describe('the queue: add, undo, reorder with the keyboard, play next', () =
     signIn,
     stack,
   }) => {
-    await signIn('viewer');
+    await signIn('stranger');
     await page.goto(`/watch/${stack.videos.watchable.id}`, { waitUntil: 'networkidle' });
-    const queue = page.getByRole('region', { name: 'Your queue' });
-    const before = await queue.getByRole('listitem').count();
+    const items = page.getByRole('list', { name: 'Your queue' }).getByRole('listitem');
+    await expect(items).toHaveCount(1);
 
     await page
       .getByRole('region', { name: 'More like this' })
@@ -18,22 +18,22 @@ test.describe('the queue: add, undo, reorder with the keyboard, play next', () =
       .click();
 
     await expect(page.getByText('Added to your queue', { exact: true })).toBeVisible();
-    await expect(queue.getByRole('listitem')).toHaveCount(before + 1);
+    await expect(items).toHaveCount(2);
 
     await page.getByRole('button', { name: 'Undo' }).click();
-    await expect(queue.getByRole('listitem')).toHaveCount(before);
+    await expect(items).toHaveCount(1);
   });
 
   test('reorders with the keyboard: Space, an arrow, Space', async ({ page, signIn, stack }) => {
-    await signIn('viewer');
+    await signIn('stranger');
     await page.goto(`/watch/${stack.videos.watchable.id}`, { waitUntil: 'networkidle' });
     const more = page.getByRole('region', { name: 'More like this' });
-    const items = page.getByRole('region', { name: 'Your queue' }).getByRole('listitem');
-    const before = await items.count();
+    const items = page.getByRole('list', { name: 'Your queue' }).getByRole('listitem');
+    await expect(items).toHaveCount(1);
     for (let added = 0; added < 2; added += 1) {
       await more.getByRole('button', { name: 'Add to queue' }).nth(added).click();
     }
-    await expect(items).toHaveCount(before + 2);
+    await expect(items).toHaveCount(3);
     const first = await items.nth(1).getAttribute('aria-label');
 
     await items
@@ -51,7 +51,7 @@ test.describe('the queue: add, undo, reorder with the keyboard, play next', () =
   });
 
   test('plays a video next from its card menu', async ({ page, signIn, stack }) => {
-    await signIn('viewer');
+    await signIn('stranger');
     await page.goto(`/watch/${stack.videos.watchable.id}`, { waitUntil: 'networkidle' });
     const more = page.getByRole('region', { name: 'More like this' });
 
@@ -59,7 +59,7 @@ test.describe('the queue: add, undo, reorder with the keyboard, play next', () =
     await page.getByRole('menuitem', { name: 'Play next' }).click();
 
     await expect(page.getByText('Playing next', { exact: true })).toBeVisible();
-    const items = page.getByRole('region', { name: 'Your queue' }).getByRole('listitem');
+    const items = page.getByRole('list', { name: 'Your queue' }).getByRole('listitem');
     await expect(items.nth(1)).toBeVisible();
   });
 });

@@ -123,14 +123,15 @@ test.describe('watch', () => {
     await page.goto(`/watch/${stack.videos.watchable.id}`);
     const seekBar = page.getByRole('slider', { name: 'Seek' });
     await expect.poll(async () => Number(await seekBar.getAttribute('max'))).toBeGreaterThan(1);
+    await page.locator('video').evaluate((video: HTMLVideoElement) => {
+      video.addEventListener('seeked', () => {
+        (window as unknown as { seekedTo: number }).seekedTo = video.currentTime;
+      });
+    });
     await seekBar.fill('1');
     await expect
-      .poll(() =>
-        page
-          .locator('video')
-          .evaluate((video: HTMLVideoElement) => !video.seeking && video.currentTime >= 1)
-      )
-      .toBe(true);
+      .poll(() => page.evaluate(() => (window as unknown as { seekedTo?: number }).seekedTo ?? 0))
+      .toBeGreaterThanOrEqual(1);
 
     await page.getByRole('button', { name: 'Share', exact: true }).click();
     const dialog = page.getByRole('dialog', { name: 'Share this video' });

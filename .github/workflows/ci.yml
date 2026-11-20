@@ -98,7 +98,9 @@ jobs:
         with:
           path: .turbo/typecheck-cache
           key: turbo-typecheck-only-${{ runner.os }}-${{ github.sha }}
+          # The base commit first: a bare prefix restores this branch's own newest entry, which can predate main by days.
           restore-keys: |
+            turbo-typecheck-only-${{ runner.os }}-${{ github.event.pull_request.base.sha }}
             turbo-typecheck-only-${{ runner.os }}-
 
       - name: Set up kustomize
@@ -163,6 +165,7 @@ jobs:
         run: pnpm exec turbo run typecheck typecheck:repo --only --cache-dir .turbo/typecheck-cache
 
       - name: Save the typecheck results for the next run
+        if: always()
         uses: actions/cache/save@v6
         with:
           path: .turbo/typecheck-cache
@@ -488,11 +491,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v7
 
+      - name: Install FFmpeg beside the workspace setup
+        uses: ./.github/actions/setup-ffmpeg
+        with:
+          background: 'true'
+
       - name: Set up the workspace
         uses: ./.github/actions/setup-workspace
-
-      - name: Set up FFmpeg
-        uses: ./.github/actions/setup-ffmpeg
 
       - name: Restore or generate the upload fixture
         uses: ./.github/actions/video-fixtures
@@ -513,6 +518,9 @@ jobs:
       - name: Download Chromium
         if: steps.chromium.outputs.cache-hit != 'true'
         run: pnpm --filter @vp/${{ matrix.app }} exec playwright install --only-shell chromium
+
+      - name: Wait for FFmpeg
+        uses: ./.github/actions/ffmpeg-ready
 
       - name: Run this shard of the app's browser suite
         run: pnpm --filter @vp/${{ matrix.app }} test:e2e --shard=${{ matrix.shard }}/3
