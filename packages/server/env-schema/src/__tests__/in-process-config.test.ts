@@ -9,8 +9,11 @@ describe('packages/env-schema: inProcessAppConfig', () => {
     });
   });
 
-  it('gives an in-process app a guest salt', () => {
-    expect(inProcessAppConfig().watchParties.guestSalt).toBeTruthy();
+  it.each([
+    { secret: 'a guest salt', of: () => inProcessAppConfig().watchParties.guestSalt },
+    { secret: 'a video access secret', of: () => inProcessAppConfig().videoAccess.secret },
+  ])('gives an in-process app $secret', ({ of }) => {
+    expect(of()).toBeTruthy();
   });
 
   it('merges a nested override without dropping its siblings', () => {

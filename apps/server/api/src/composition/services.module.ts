@@ -41,6 +41,7 @@ import { Services } from './service-tokens';
 import { registerSseServices } from './sse.module';
 import { registerStudioServices } from './studio.module';
 import { registerTelemetryServices } from './telemetry.module';
+import { registerVideoAccessServices } from './video-access.module';
 import { registerWatchPartyServices } from './watch-party.module';
 
 export * from './service-tokens';
@@ -74,10 +75,12 @@ export function registerServices(c: Container): Container {
               registerCaptionServices(
                 registerNotificationServices(
                   registerStudioServices(
-                    registerScreeningServices(
-                      registerCommentServices(
-                        registerSseServices(
-                          registerLiveServices(registerWatchPartyServices(registerBootstrap(c)))
+                    registerVideoAccessServices(
+                      registerScreeningServices(
+                        registerCommentServices(
+                          registerSseServices(
+                            registerLiveServices(registerWatchPartyServices(registerBootstrap(c)))
+                          )
                         )
                       )
                     )

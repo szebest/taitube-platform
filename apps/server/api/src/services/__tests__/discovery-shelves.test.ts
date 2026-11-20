@@ -1,19 +1,12 @@
-import { Singleflight } from '@kit/concurrency';
-import { Paginator } from '@kit/pagination';
 import { expectOk } from '@kit/testing/result';
-import {
-  InMemoryCacheClient,
-  InMemoryRepositories,
-  InMemorySearchSuggestionIndex,
-} from '@vp/adapters/in-memory';
-import { RISING, SEARCH_SUGGESTIONS } from '@vp/domain';
+import { InMemoryRepositories } from '@vp/adapters/in-memory';
+import { RISING } from '@vp/domain';
 import type { UserContext } from '@vp/permissions';
 import { DiscoveryShelves } from '../discovery-shelves';
-import { HistoryPause } from '../history-pause';
 import { SearchService } from '../search-service';
 import { VideoService } from '../video-service';
 import { ViewerProgress } from '../viewer-progress';
-import { TEST_CDN, TEST_SPRITE, videoServiceDeps } from './service-deps';
+import { searchServiceDeps, videoServiceDeps } from './service-deps';
 
 const VIEWER: UserContext = { id: '00000000-0000-7000-8000-0000000000a1', role: 'USER' };
 const OTHER: UserContext = { id: '00000000-0000-7000-8000-0000000000a3', role: 'USER' };
@@ -80,20 +73,7 @@ describe('apps/server/api/services: DiscoveryShelves', () => {
     );
     shelves = new DiscoveryShelves({
       searchHistory: repositories.searchHistory,
-      search: new SearchService({
-        search: repositories.search,
-        suggestions: new InMemorySearchSuggestionIndex(Date.now, SEARCH_SUGGESTIONS.keptPerPrefix),
-        cache: new InMemoryCacheClient(),
-        singleflight: new Singleflight(),
-        paginator: new Paginator(),
-        viewerProgress,
-        history: repositories.searchHistory,
-        pause: new HistoryPause(repositories.userPreferences),
-        cdn: TEST_CDN,
-        sprite: TEST_SPRITE,
-        channels: repositories.channels,
-        now: Date.now,
-      }),
+      search: new SearchService(searchServiceDeps(repositories, { viewerProgress })),
       rising: repositories.rising,
       videoService,
       now: Date.now,

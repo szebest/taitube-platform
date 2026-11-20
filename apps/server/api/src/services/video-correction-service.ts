@@ -5,23 +5,21 @@ import {
   type CorrectionLimit,
   type CorrectionNotFound,
   type InvalidCorrection,
-  type ReadVideoFailure,
   correctionLimit,
   correctionNotFound,
   decideCorrection,
   decideCorrectionFields,
-  decideVideoEditAccess,
-  decideVideoRead,
-  publicReadFailure,
 } from '@vp/domain-rules';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { uuidv7 } from 'uuidv7';
 import { isoOf } from './cursor';
+import type { GatedReadFailure, VideoAccess, VideoAccessGate } from './video-access-gate';
+import { type EditAccessFailure, editableVideo } from './video-edit-access';
 
 export interface VideoCorrectionServiceDeps {
   videos: VideoRepository;
   corrections: VideoCorrectionRepository;
+  gate: VideoAccessGate;
   now: () => number;
 }
 
@@ -34,11 +32,9 @@ export interface CorrectionView {
   createdAt: string;
 }
 
-type ReadFailure = ReadVideoFailure | DatabaseUnavailable;
-
-export type CreateCorrectionFailure = ReadFailure | InvalidCorrection | CorrectionLimit;
-export type UpdateCorrectionFailure = ReadFailure | InvalidCorrection | CorrectionNotFound;
-export type RemoveCorrectionFailure = ReadFailure | CorrectionNotFound;
+export type CreateCorrectionFailure = EditAccessFailure | InvalidCorrection | CorrectionLimit;
+export type UpdateCorrectionFailure = EditAccessFailure | InvalidCorrection | CorrectionNotFound;
+export type RemoveCorrectionFailure = EditAccessFailure | CorrectionNotFound;
 
 function toCorrectionView(correction: Correction): CorrectionView {
   return { ...correction, createdAt: isoOf(correction.createdAt) };
@@ -47,14 +43,16 @@ function toCorrectionView(correction: Correction): CorrectionView {
 export class VideoCorrectionService {
   constructor(private readonly deps: VideoCorrectionServiceDeps) {}
 
+  /** The watch page's own gate: what keeps the video from a viewer keeps its corrections too. */
   async list(
     viewer: UserContext | null,
-    videoId: string
-  ): Promise<Result<{ items: CorrectionView[] }, ReadFailure>> {
+    videoId: string,
+    access: VideoAccess
+  ): Promise<Result<{ items: CorrectionView[] }, GatedReadFailure>> {
     const found = await this.deps.videos.findById(videoId);
     if (isErr(found)) return found;
-    const readable = decideVideoRead({ viewer, video: found.value, videoId });
-    if (isErr(readable)) return err(publicReadFailure(readable.error));
+    const readable = await this.deps.gate.read(viewer, found.value, videoId, access);
+    if (isErr(readable)) return readable;
 
     const rows = await this.deps.corrections.list(videoId);
     return andThenAsync(rows, async (items) => ok({ items: items.map(toCorrectionView) }));
@@ -65,10 +63,8 @@ export class VideoCorrectionService {
     videoId: string,
     body: { startMs: number; endMs: number; text: string }
   ): Promise<Result<CorrectionView, CreateCorrectionFailure>> {
-    const found = await this.deps.videos.findById(videoId);
-    if (isErr(found)) return found;
-    const video = decideVideoEditAccess({ editor: user, video: found.value, videoId });
-    if (isErr(video)) return err(publicReadFailure(video.error));
+    const video = await editableVideo(this.deps.videos, user, videoId);
+    if (isErr(video)) return video;
 
     const existing = await this.deps.corrections.list(videoId);
     if (isErr(existing)) return existing;
@@ -96,10 +92,8 @@ export class VideoCorrectionService {
     correctionId: string,
     changes: Partial<{ startMs: number; endMs: number; text: string }>
   ): Promise<Result<CorrectionView, UpdateCorrectionFailure>> {
-    const found = await this.deps.videos.findById(videoId);
-    if (isErr(found)) return found;
-    const video = decideVideoEditAccess({ editor: user, video: found.value, videoId });
-    if (isErr(video)) return err(publicReadFailure(video.error));
+    const video = await editableVideo(this.deps.videos, user, videoId);
+    if (isErr(video)) return video;
 
     const existing = await this.deps.corrections.list(videoId);
     if (isErr(existing)) return existing;
@@ -124,10 +118,8 @@ export class VideoCorrectionService {
     videoId: string,
     correctionId: string
   ): Promise<Result<null, RemoveCorrectionFailure>> {
-    const found = await this.deps.videos.findById(videoId);
-    if (isErr(found)) return found;
-    const video = decideVideoEditAccess({ editor: user, video: found.value, videoId });
-    if (isErr(video)) return err(publicReadFailure(video.error));
+    const video = await editableVideo(this.deps.videos, user, videoId);
+    if (isErr(video)) return video;
 
     const removed = await this.deps.corrections.remove(videoId, correctionId);
     if (isErr(removed)) return removed;

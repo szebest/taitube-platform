@@ -57,10 +57,11 @@ export function registerStudioServices(c: Container): Container {
     )
     .provide(
       Services.VideoCorrectionService,
-      () =>
+      (c) =>
         new VideoCorrectionService({
           videos: repositories().videos,
           corrections: repositories().videoCorrections,
+          gate: c.get(Services.VideoAccessGate),
           now: Date.now,
         })
     );

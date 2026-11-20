@@ -1,21 +1,14 @@
-import { Singleflight } from '@kit/concurrency';
-import { Paginator } from '@kit/pagination';
 import { expectOk } from '@kit/testing/result';
-import {
-  InMemoryCacheClient,
-  InMemoryRepositories,
-  InMemorySearchSuggestionIndex,
-} from '@vp/adapters/in-memory';
+import { InMemoryCacheClient, InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { NewVideoInput } from '@vp/core/repositories';
-import { SEARCH_SUGGESTIONS } from '@vp/domain';
 import { DiscoveryShelves } from '../discovery-shelves';
-import { HistoryPause } from '../history-pause';
+import { ExperimentOverlay } from '../experiment-overlay';
 import { HomeService } from '../home-service';
 import { RelatedService } from '../related-service';
 import { SearchService } from '../search-service';
 import { VideoService } from '../video-service';
 import { ViewerProgress } from '../viewer-progress';
-import { TEST_CDN, TEST_SPRITE, videoServiceDeps } from './service-deps';
+import { searchServiceDeps, videoServiceDeps } from './service-deps';
 
 export const VIEWER = { id: '00000000-0000-7000-8000-0000000000a1', role: 'USER' } as const;
 const CREATOR = '00000000-0000-7000-8000-0000000000a2';
@@ -39,6 +32,7 @@ export async function buildHomeApp(): Promise<HomeApp> {
   const repositories = new InMemoryRepositories();
   const cache = new InMemoryCacheClient();
   const viewerProgress = new ViewerProgress(repositories.watchHistory);
+  const experiments = new ExperimentOverlay(repositories.videoExperiments);
   const videoService = new VideoService(
     videoServiceDeps(repositories.videos, { channels: repositories.channels })
   );
@@ -50,6 +44,7 @@ export async function buildHomeApp(): Promise<HomeApp> {
       feedback: repositories.recommendationFeedback,
       videoService,
       viewerProgress,
+      experiments,
     }),
     history: repositories.watchHistory,
     subscriptions: repositories.subscriptions,
@@ -57,25 +52,13 @@ export async function buildHomeApp(): Promise<HomeApp> {
     feedback: repositories.recommendationFeedback,
     discovery: new DiscoveryShelves({
       searchHistory: repositories.searchHistory,
-      search: new SearchService({
-        search: repositories.search,
-        suggestions: new InMemorySearchSuggestionIndex(Date.now, SEARCH_SUGGESTIONS.keptPerPrefix),
-        cache: new InMemoryCacheClient(),
-        singleflight: new Singleflight(),
-        paginator: new Paginator(),
-        viewerProgress,
-        history: repositories.searchHistory,
-        pause: new HistoryPause(repositories.userPreferences),
-        cdn: TEST_CDN,
-        sprite: TEST_SPRITE,
-        channels: repositories.channels,
-        now: Date.now,
-      }),
+      search: new SearchService(searchServiceDeps(repositories, { viewerProgress, experiments })),
       rising: repositories.rising,
       videoService,
       now: Date.now,
     }),
     viewerProgress,
+    experiments,
     cache,
   });
 

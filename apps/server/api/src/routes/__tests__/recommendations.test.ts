@@ -39,7 +39,7 @@ describe('home and related routes', () => {
 
     expect(res.statusCode).toBe(200);
     expect(res.headers['cache-control']).toBe('private, no-cache');
-    expect(res.headers.vary).toBe('Authorization');
+    expect(res.headers.vary).toBe('Authorization, x-viewer-session');
     expect(res.json().shelves.map(({ kind }: { kind: string }) => kind)).toEqual(['trending']);
   });
 

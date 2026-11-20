@@ -166,6 +166,7 @@ export const unlockVideo = defineEndpoint({
     400: [ErrorCodes.VALIDATION_FAILED],
     403: [ErrorCodes.VIDEO_PASSWORD_INVALID],
     404: [ErrorCodes.VIDEO_NOT_FOUND],
+    409: [ErrorCodes.VIDEO_PASSWORDS_OFF],
     429: [ErrorCodes.RATE_LIMITED],
   },
 });

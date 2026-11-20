@@ -9,6 +9,8 @@ import { PlaybackTelemetryService } from '../playback-telemetry-service';
 const VIDEO = '00000000-0000-7000-8000-0000000000a1';
 const SESSION = '0f8fad5b-d9cb-469f-a165-70867728950e';
 const NOW = Date.parse('2026-03-10T12:00:00.000Z');
+const TEST = '00000000-0000-7000-8000-0000000000e1';
+const SHOWN = { experimentId: TEST, variantId: 'b' } as const;
 
 describe('PlaybackTelemetryService', () => {
   let viewBuffer: InMemoryViewBuffer;
@@ -128,6 +130,49 @@ describe('PlaybackTelemetryService', () => {
     await record({ duration: 3, watchedSeconds: 3 });
 
     expect((await batch())?.counts).toEqual([expect.objectContaining({ views: 1 })]);
+  });
+
+  it.each([
+    {
+      scenario: 'a start of a test variant',
+      event: { eventType: 'playback_start', experiment: SHOWN },
+      starts: 1,
+    },
+    { scenario: 'a heartbeat of a test variant', event: { experiment: SHOWN }, starts: 0 },
+    { scenario: 'a start outside any test', event: { eventType: 'playback_start' }, starts: 0 },
+  ] as const)('counts $starts test start for $scenario', async ({ event, starts }) => {
+    await record(event);
+
+    expect((await batch())?.experiments.reduce((sum, row) => sum + row.starts, 0)).toBe(starts);
+  });
+
+  it('buffers one impression per card shown, for its variant and day', async () => {
+    const other = { experimentId: '00000000-0000-7000-8000-0000000000e2', variantId: 'a' } as const;
+
+    expectOk(
+      await service.recordImpressions({
+        items: [
+          { ...SHOWN, videoId: VIDEO },
+          { ...SHOWN, videoId: VIDEO },
+          { ...other, videoId: VIDEO },
+        ],
+      })
+    );
+
+    expect((await batch())?.experiments).toEqual([
+      expect.objectContaining({ ...SHOWN, viewDate: '2026-03-10', impressions: 2, starts: 0 }),
+      expect.objectContaining({ ...other, viewDate: '2026-03-10', impressions: 1, starts: 0 }),
+    ]);
+  });
+
+  it('accepts impressions the buffer cannot take', async () => {
+    vi.spyOn(viewBuffer, 'recordExperimentEvents').mockResolvedValueOnce(
+      err(cacheUnavailable('recordExperimentEvents'))
+    );
+
+    expect((await service.recordImpressions({ items: [{ ...SHOWN, videoId: VIDEO }] })).ok).toBe(
+      true
+    );
   });
 
   it('accepts the beacon when the buffer cannot take it', async () => {

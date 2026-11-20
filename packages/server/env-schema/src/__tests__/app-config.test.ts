@@ -35,6 +35,7 @@ describe('packages/env-schema: toAppConfig', () => {
       pagination: { defaultLimit: 20, maxLimit: 100 },
       sse: { heartbeatMs: 15000, maxPerUser: 20, maxPerPod: 5000 },
       auth: { type: 'dev', adminToken: 'change-me-32-bytes-random' },
+      videoAccess: { secret: 'change-me-video-access' },
       worker: { stage: 'probe', heartbeatPath: '/tmp/vp/heartbeat', tmpDir: '/tmp/vp' },
       captions: {
         enabled: true,
@@ -64,6 +65,7 @@ describe('packages/env-schema: toAppConfig', () => {
     expect(config.postgres.url).toBe('postgres://db:5432/vp');
     expect(config.auth).toMatchObject({ type: 'dev', adminToken: undefined });
     expect(config.s3.accessKeyId).toBeUndefined();
+    expect(config.videoAccess.secret).toBeUndefined();
   });
 
   it.each([

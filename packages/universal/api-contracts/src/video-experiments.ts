@@ -18,6 +18,9 @@ import { VideoIdParamSchema, VideoSchema } from './video-resource';
  */
 export const VIEWER_SESSION_HEADER = 'x-viewer-session';
 
+/** A random id the tab made, such as a UUID; a header of any other shape is ignored as absent. */
+export const ViewerSessionKeySchema = z.string().regex(/^[\w-]{16,64}$/);
+
 const ExperimentVariantIdSchema = z.enum(EXPERIMENT_VARIANT_IDS);
 
 const ThumbnailChoiceSchema = z.object({ source: z.literal('poster') });

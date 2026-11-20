@@ -1,4 +1,5 @@
 import {
+  SHARE_TOKEN_PARAM,
   bulkEditCreatorVideos,
   createVideoCorrection,
   deleteVideoCorrection,
@@ -14,6 +15,7 @@ import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { requireAuth } from '../plugins/auth';
 import { contractSchema } from './contract-schema';
 import { sendResult } from './send-result';
+import { GATED_READ_HEADERS, videoAccessOf } from './video-access-request';
 import { presentPublicVideoFailure } from './videos.presenter';
 
 export async function videoToolsRoutes(app: FastifyInstance): Promise<void> {
@@ -111,9 +113,21 @@ export async function videoToolsRoutes(app: FastifyInstance): Promise<void> {
 
   server.get(
     listVideoCorrections.path,
-    { schema: { ...contractSchema(listVideoCorrections), params: listVideoCorrections.params } },
-    async (request, reply) =>
-      sendResult(reply, request, await corrections.list(request.user ?? null, request.params.id))
+    {
+      schema: {
+        ...contractSchema(listVideoCorrections),
+        params: listVideoCorrections.params,
+        querystring: listVideoCorrections.query,
+      },
+    },
+    async (request, reply) => {
+      const { id } = request.params;
+      const access = videoAccessOf(request, id, request.query[SHARE_TOKEN_PARAM]);
+      reply.headers(GATED_READ_HEADERS);
+      return sendResult(reply, request, await corrections.list(request.user ?? null, id, access), {
+        present: (failure) => presentPublicVideoFailure(failure, request.url),
+      });
+    }
   );
 
   server.post(

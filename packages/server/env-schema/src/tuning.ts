@@ -93,9 +93,13 @@ export const WEB_VITALS = {
   maxRoutesPerApp: 32,
 } as const;
 
-/** A playback event is one small object: 2 KiB refuses anything else, and 120 a minute per address is far past one viewer. */
+/**
+ * A playback event is one small object: 2 KiB refuses anything else, and 120 a minute per address is far
+ * past one viewer. An impression batch holds up to 50 items of about 110 bytes, so 8 KiB.
+ */
 export const PLAYBACK_TELEMETRY = {
   bodyLimitBytes: 2 * 1024,
+  impressionsBodyLimitBytes: 8 * 1024,
   ratePerMinute: 120,
 } as const;
 

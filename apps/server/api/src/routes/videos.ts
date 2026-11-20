@@ -1,13 +1,21 @@
-import { deleteVideo, getVideo, listVideos, reprocessVideo, updateVideo } from '@vp/api-contracts';
+import {
+  SHARE_TOKEN_PARAM,
+  deleteVideo,
+  getVideo,
+  listVideos,
+  reprocessVideo,
+  updateVideo,
+} from '@vp/api-contracts';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { requireAuth } from '../plugins/auth';
 import { contractPaths, contractSchema } from './contract-schema';
 import { sendResult } from './send-result';
+import { GATED_READ_HEADERS, watchRequestOf } from './video-access-request';
 import { presentPublicVideoFailure } from './videos.presenter';
 
 export async function videosRoutes(app: FastifyInstance): Promise<void> {
-  const { videoService, creatorStudioService } = app.services;
+  const { videoService, videoWatchService, creatorStudioService } = app.services;
   const server = app.withTypeProvider<ZodTypeProvider>();
 
   for (const { path, hide } of contractPaths(listVideos)) {
@@ -33,11 +41,18 @@ export async function videosRoutes(app: FastifyInstance): Promise<void> {
         schema: {
           ...contractSchema(getVideo, { hide }),
           params: getVideo.params,
+          querystring: getVideo.query,
         },
       },
       async (request, reply) => {
         const { id } = request.params;
-        return sendResult(reply, request, await videoService.get(request.user ?? null, id), {
+        const watched = await videoWatchService.watch(
+          request.user ?? null,
+          id,
+          watchRequestOf(request, id, request.query[SHARE_TOKEN_PARAM])
+        );
+        reply.headers(GATED_READ_HEADERS);
+        return sendResult(reply, request, watched, {
           present: (failure) => presentPublicVideoFailure(failure, request.url),
         });
       }

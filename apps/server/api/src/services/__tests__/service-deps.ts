@@ -1,3 +1,4 @@
+import { Singleflight } from '@kit/concurrency';
 import { createLogger } from '@kit/logger';
 import { Paginator } from '@kit/pagination';
 import { ok } from '@kit/result';
@@ -9,6 +10,7 @@ import {
   InMemoryJobQueue,
   InMemoryMultipartStorage,
   type InMemoryRepositories,
+  InMemorySearchSuggestionIndex,
   InMemoryStepRepository,
   InMemoryVideoChapterRepository,
   InMemoryVideoRepository,
@@ -16,7 +18,7 @@ import {
 import { RedisReactionCacheAdapter } from '@vp/adapters/redis/redis-reaction-cache.adapter';
 import type { StorageClient } from '@vp/core/ports';
 import type { VideoRepository } from '@vp/core/repositories';
-import type { ActingChannel } from '@vp/domain';
+import { type ActingChannel, SEARCH_SUGGESTIONS } from '@vp/domain';
 import { asCdnBase, inProcessAppConfig } from '@vp/env-schema';
 import {
   ChannelIdentityService,
@@ -24,10 +26,14 @@ import {
 } from '../channel-identity-service';
 import type { ChannelServiceDeps } from '../channel-service';
 import { CreatorStudioService } from '../creator-studio-service';
+import { ExperimentOverlay } from '../experiment-overlay';
+import { HistoryPause } from '../history-pause';
 import { MetadataScreening } from '../metadata-screening';
+import type { SearchServiceDeps } from '../search-service';
 import type { SseServiceDeps } from '../sse-service';
 import type { UploadContext } from '../upload-context';
 import { VideoService, type VideoServiceDeps } from '../video-service';
+import { ViewerProgress } from '../viewer-progress';
 
 const CACHES = inProcessAppConfig().caches;
 
@@ -177,4 +183,27 @@ export function creatorStudioOf(repositories: InMemoryRepositories): CreatorStud
     channels: repositories.channels,
     paginator: new Paginator(),
   });
+}
+
+/** A SearchService over one repositories bundle, with its own cache and suggestion index. */
+export function searchServiceDeps(
+  repositories: InMemoryRepositories,
+  overrides: Partial<SearchServiceDeps> = {}
+): SearchServiceDeps {
+  return {
+    search: repositories.search,
+    suggestions: new InMemorySearchSuggestionIndex(Date.now, SEARCH_SUGGESTIONS.keptPerPrefix),
+    cache: new InMemoryCacheClient(),
+    singleflight: new Singleflight(),
+    paginator: new Paginator(),
+    viewerProgress: new ViewerProgress(repositories.watchHistory),
+    experiments: new ExperimentOverlay(repositories.videoExperiments),
+    history: repositories.searchHistory,
+    pause: new HistoryPause(repositories.userPreferences),
+    cdn: TEST_CDN,
+    sprite: TEST_SPRITE,
+    channels: repositories.channels,
+    now: Date.now,
+    ...overrides,
+  };
 }

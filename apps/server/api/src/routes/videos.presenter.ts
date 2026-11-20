@@ -5,9 +5,11 @@ import type { SuggestChaptersFailure } from '../services/chapter-service';
 import type { UpdateVideoServiceFailure } from '../services/creator-studio-service';
 import type { RestoreRevisionFailure } from '../services/video-revision-service';
 import type { ReadVideoServiceFailure } from '../services/video-service';
+import type { WatchFailure } from '../services/video-watch-service';
 
 export type PublicVideoFailure =
   | ReadVideoServiceFailure
+  | WatchFailure
   | UpdateVideoServiceFailure
   | RestoreRevisionFailure
   | SuggestChaptersFailure;
@@ -31,6 +33,8 @@ export function presentPublicVideoFailure(failure: PublicVideoFailure, instance:
     case 'VERSION_CONFLICT':
     case 'INVALID_CURSOR':
     case 'REVISION_NOT_FOUND':
+    case 'SHARE_LINK_EXPIRED':
+    case 'VIDEO_PASSWORD_REQUIRED':
     case 'DATABASE_UNAVAILABLE':
       return problemFor(failure, instance);
     default:

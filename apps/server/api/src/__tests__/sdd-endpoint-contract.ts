@@ -98,9 +98,14 @@ export const SDD_ENDPOINT_CONTRACT: SddEndpointContract[] = [
   {
     path: '/v1/videos/{id}',
     method: 'get',
-    expectedStatuses: [200, 400, 401, 404],
-    expectedErrorCodes: VIEWED_VIDEO,
+    expectedStatuses: [200, 400, 401, 403, 404, 410],
+    expectedErrorCodes: [
+      ...VIEWED_VIDEO,
+      ErrorCodes.VIDEO_PASSWORD_REQUIRED,
+      ErrorCodes.SHARE_LINK_EXPIRED,
+    ],
     hasPathParams: true,
+    hasQueryParams: true,
   },
   {
     path: '/v1/videos/{id}',

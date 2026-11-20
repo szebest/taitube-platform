@@ -4,6 +4,7 @@ import {
   type FeedQuery,
   type FeedResponse,
   type ShortsQuery,
+  VIEWER_SESSION_HEADER,
   VideoSummarySchema,
   getFeed,
 } from '@vp/api-contracts';
@@ -13,6 +14,7 @@ import { CacheKeys } from '@vp/events';
 import type { UserContext } from '@vp/permissions';
 import { z } from 'zod';
 import type { FeedSort } from './cursor';
+import type { ExperimentOverlay } from './experiment-overlay';
 import { buildCacheHeaders, generateEtag, isNotModified } from './http-cache';
 import type { ListVideosFailure, VideoService } from './video-service';
 import type { ViewerProgress } from './viewer-progress';
@@ -20,6 +22,7 @@ import type { ViewerProgress } from './viewer-progress';
 export interface FeedServiceDeps {
   videoService: VideoService;
   viewerProgress: ViewerProgress;
+  experiments: ExperimentOverlay;
   cache: CacheClient;
   singleflight: Singleflight;
   maxAgeSeconds: number;
@@ -31,6 +34,13 @@ export interface FeedPage {
   etag: string;
   headers: Record<string, string>;
   notModified: boolean;
+}
+
+/** Who asks for a page: the caller's progress and test variants make it theirs alone. */
+export interface FeedReader {
+  ifNoneMatch?: string;
+  viewer?: UserContext | null;
+  sessionKey?: string | null;
 }
 
 interface FeedRead {
@@ -53,21 +63,7 @@ type CachedCards = z.infer<typeof CachedCardsSchema>;
  * are read on every request, so a renamed channel or a new avatar shows before the page expires.
  */
 export class FeedService {
-  private readonly videoService: VideoService;
-  private readonly viewerProgress: ViewerProgress;
-  private readonly cache: CacheClient;
-  private readonly maxAgeSeconds: number;
-  private readonly staleWhileRevalidateSeconds: number;
-  private readonly singleflight: Singleflight;
-
-  constructor(deps: FeedServiceDeps) {
-    this.videoService = deps.videoService;
-    this.viewerProgress = deps.viewerProgress;
-    this.cache = deps.cache;
-    this.singleflight = deps.singleflight;
-    this.maxAgeSeconds = deps.maxAgeSeconds;
-    this.staleWhileRevalidateSeconds = deps.staleWhileRevalidateSeconds;
-  }
+  constructor(private readonly deps: FeedServiceDeps) {}
 
   /**
    * `CacheUnavailable` is absent from the return type on purpose: a cold or dead page cache falls
@@ -76,8 +72,7 @@ export class FeedService {
    */
   async getFeed(
     query: FeedQuery,
-    ifNoneMatch?: string,
-    viewer: UserContext | null = null
+    reader: FeedReader = {}
   ): Promise<Result<FeedPage, ListVideosFailure>> {
     return this.read(
       {
@@ -87,37 +82,35 @@ export class FeedService {
         cursor: query.cursor || undefined,
         limit: query.limit ?? undefined,
       },
-      ifNoneMatch,
-      viewer
+      reader
     );
   }
 
   /** The cursor of each page carries the Shorts already served, so a walk never repeats one. */
   async getShorts(
     query: ShortsQuery,
-    ifNoneMatch?: string,
-    viewer: UserContext | null = null
+    reader: FeedReader = {}
   ): Promise<Result<FeedPage, ListVideosFailure>> {
     return this.read(
       { sort: 'shorts', format: 'short', cursor: query.cursor || undefined, limit: query.limit },
-      ifNoneMatch,
-      viewer
+      reader
     );
   }
 
   private async read(
     query: FeedRead,
-    ifNoneMatch: string | undefined,
-    viewer: UserContext | null
+    { ifNoneMatch, viewer = null, sessionKey = null }: FeedReader
   ): Promise<Result<FeedPage, ListVideosFailure>> {
     const cards = await this.cardsOf(query);
     if (isErr(cards)) return cards;
 
-    const items = await this.videoService.withChannels(cards.value.items);
+    const items = await this.deps.videoService.withChannels(cards.value.items);
     if (isErr(items)) return items;
 
-    const withProgress = await this.viewerProgress.attach(viewer, items.value);
-    return ok(this.page({ ...cards.value, items: withProgress }, ifNoneMatch, viewer !== null));
+    const withProgress = await this.deps.viewerProgress.attach(viewer, items.value);
+    const shown = await this.deps.experiments.apply(withProgress, sessionKey);
+    const personal = viewer !== null || shown.some((item) => item.experiment !== undefined);
+    return ok(this.page({ ...cards.value, items: shown }, ifNoneMatch, personal));
   }
 
   private async cardsOf(query: FeedRead): Promise<Result<CachedCards, ListVideosFailure>> {
@@ -127,10 +120,10 @@ export class FeedService {
     const cached = query.cursor ? undefined : await this.readCache(variant);
     if (cached) return ok(cached);
 
-    const listed = await this.singleflight.do(
+    const listed = await this.deps.singleflight.do(
       `feed:${variant}:${query.cursor || 'first'}:${limit ?? 'default'}`,
       () =>
-        this.videoService.listPublic({
+        this.deps.videoService.listPublic({
           sort,
           format,
           categoryId: query.categoryId,
@@ -155,16 +148,16 @@ export class FeedService {
         ...buildCacheHeaders({
           etag,
           isPublic: !personal,
-          maxAgeSeconds: this.maxAgeSeconds,
-          staleWhileRevalidateSeconds: this.staleWhileRevalidateSeconds,
+          maxAgeSeconds: this.deps.maxAgeSeconds,
+          staleWhileRevalidateSeconds: this.deps.staleWhileRevalidateSeconds,
         }),
-        Vary: 'Authorization',
+        Vary: `Authorization, ${VIEWER_SESSION_HEADER}`,
       },
     };
   }
 
   private async readCache(variant: string): Promise<CachedCards | undefined> {
-    const raw = unwrapOr(await this.cache.get(CacheKeys.publicFeed(variant)), null);
+    const raw = unwrapOr(await this.deps.cache.get(CacheKeys.publicFeed(variant)), null);
     if (!raw) return undefined;
 
     const parsed = parseJson(raw);
@@ -176,10 +169,10 @@ export class FeedService {
 
   private async writeCache(variant: string, cards: CachedCards): Promise<void> {
     ignore(
-      await this.cache.set(
+      await this.deps.cache.set(
         CacheKeys.publicFeed(variant),
         JSON.stringify(cards),
-        this.maxAgeSeconds
+        this.deps.maxAgeSeconds
       ),
       'a cold page cache costs latency, never correctness'
     );

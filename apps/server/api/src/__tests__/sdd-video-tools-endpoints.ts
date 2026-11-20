@@ -12,6 +12,8 @@ const {
   VERSION_CONFLICT,
   CORRECTION_NOT_FOUND,
   CORRECTION_LIMIT,
+  VIDEO_PASSWORD_REQUIRED,
+  SHARE_LINK_EXPIRED,
 } = ErrorCodes;
 
 export const SDD_VIDEO_TOOLS_ENDPOINTS: SddEndpointContract[] = [
@@ -76,9 +78,16 @@ export const SDD_VIDEO_TOOLS_ENDPOINTS: SddEndpointContract[] = [
   {
     path: '/v1/videos/{id}/corrections',
     method: 'get',
-    expectedStatuses: [200, 400, 401, 404],
-    expectedErrorCodes: [VALIDATION_FAILED, UNAUTHORIZED, VIDEO_NOT_FOUND],
+    expectedStatuses: [200, 400, 401, 403, 404, 410],
+    expectedErrorCodes: [
+      VALIDATION_FAILED,
+      UNAUTHORIZED,
+      VIDEO_PASSWORD_REQUIRED,
+      VIDEO_NOT_FOUND,
+      SHARE_LINK_EXPIRED,
+    ],
     hasPathParams: true,
+    hasQueryParams: true,
   },
   {
     path: '/v1/videos/{id}/corrections',

@@ -7,6 +7,7 @@ import { publicFeedInstant } from '@vp/domain';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { cacheUnavailable } from '@vp/errors';
 import { feedCursorPayload } from '../cursor';
+import { ExperimentOverlay } from '../experiment-overlay';
 import { FeedService, type FeedServiceDeps } from '../feed-service';
 import { generateEtag } from '../http-cache';
 import { VideoService } from '../video-service';
@@ -29,6 +30,7 @@ describe('apps/server/api/services: FeedService', () => {
       singleflight: new Singleflight(),
       videoService,
       viewerProgress: new ViewerProgress(repositories.watchHistory),
+      experiments: new ExperimentOverlay(repositories.videoExperiments),
       cache,
       ...HTTP_CACHE,
       ...overrides,
@@ -75,7 +77,7 @@ describe('apps/server/api/services: FeedService', () => {
     expect(page.headers).toEqual({
       'Cache-Control': 'public, max-age=30, stale-while-revalidate=60',
       ETag: page.etag,
-      Vary: 'Authorization',
+      Vary: 'Authorization, x-viewer-session',
     });
   });
 
@@ -102,7 +104,7 @@ describe('apps/server/api/services: FeedService', () => {
       watchedAt: new Date('2026-03-01T12:00:00.000Z'),
     });
 
-    const page = expectOk(await service.getFeed({ sort: 'recent' }, undefined, viewer));
+    const page = expectOk(await service.getFeed({ sort: 'recent' }, { viewer }));
 
     const viewerOf = (id: string) => page.data.items.find((item) => item.id === id)?.viewer;
 
@@ -117,14 +119,18 @@ describe('apps/server/api/services: FeedService', () => {
   ])('reports not modified for %s', async (_label, present) => {
     const first = expectOk(await service.getFeed({ sort: 'recent' }));
 
-    const second = expectOk(await service.getFeed({ sort: 'recent' }, present(first.etag)));
+    const second = expectOk(
+      await service.getFeed({ sort: 'recent' }, { ifNoneMatch: present(first.etag) })
+    );
 
     expect(second.notModified).toBe(true);
     expect(second.etag).toBe(first.etag);
   });
 
   it('reports modified for an unrelated tag', async () => {
-    const page = expectOk(await service.getFeed({ sort: 'recent' }, 'W/"0000000000000000"'));
+    const page = expectOk(
+      await service.getFeed({ sort: 'recent' }, { ifNoneMatch: 'W/"0000000000000000"' })
+    );
 
     expect(page.notModified).toBe(false);
   });

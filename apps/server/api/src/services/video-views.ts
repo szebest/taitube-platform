@@ -3,6 +3,7 @@ import type { ChannelRepositoryPort, RenditionRecord, VideoRecord } from '@vp/co
 import {
   type ChannelCard,
   type Chapter,
+  type ExperimentVariantId,
   THUMBNAIL_PROGRESS,
   type VideoFormat,
   type VideoStatus,
@@ -37,6 +38,12 @@ interface VideoRenditionView {
   playlistUrl?: string;
 }
 
+/** The running test whose variant a response shows; absent without a viewer session. */
+export interface ExperimentTag {
+  id: string;
+  variantId: ExperimentVariantId;
+}
+
 export interface VideoDetailView {
   id: string;
   ownerId: string;
@@ -62,6 +69,9 @@ export interface VideoDetailView {
   tags: string[];
   commentsEnabled: boolean;
   chapters: Chapter[];
+  passwordProtected: boolean;
+  shareLinkId?: string;
+  experiment?: ExperimentTag;
   channel?: ChannelCard | null;
   viewsCount: number;
   likesCount: number;
@@ -106,6 +116,7 @@ export interface VideoSummaryView {
   createdAt: string;
   updatedAt: string;
   readyAt?: string;
+  experiment?: ExperimentTag;
   viewer?: ViewerProgressView | null;
 }
 
@@ -287,6 +298,7 @@ export function toVideoDetailView(
     tags: video.tags ?? [],
     commentsEnabled: video.commentsEnabled ?? true,
     chapters: [],
+    passwordProtected: video.passwordProtected ?? false,
     viewsCount: video.viewsCount ?? 0,
     likesCount: video.likesCount ?? 0,
     dislikesCount: video.dislikesCount ?? 0,
