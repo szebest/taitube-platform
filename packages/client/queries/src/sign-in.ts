@@ -82,7 +82,7 @@ export async function completeSignIn(
   };
   writeAccounts(withSignedIn(accounts, signedIn), cookieDomain);
   const held = new Set([...occupied, slot]).size;
-  return occupied.includes(slot) && listed === slot
+  return listed !== undefined && occupied.includes(listed)
     ? { kind: 'already-signed-in', slot, accounts: held }
     : { kind: 'signed-in', slot, accounts: held };
 }
