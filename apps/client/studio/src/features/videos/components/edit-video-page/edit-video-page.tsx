@@ -11,7 +11,10 @@ import { parseEditTab } from '#app/features/videos/utils/edit-tabs';
 import { ChaptersPanel } from '../chapters-panel/chapters-panel';
 import { CorrectionsPanel } from '../corrections-panel/corrections-panel';
 import { EditVideoForm } from '../edit-video-form/edit-video-form';
+import { ExperimentsPanel } from '../experiments-panel/experiments-panel';
 import { HistoryPanel } from '../history-panel/history-panel';
+import { ShareLinksSection } from '../share-links-section/share-links-section';
+import { VideoPasswordSection } from '../video-password-section/video-password-section';
 import { VideoProcessingStatus } from '../video-processing-status/video-processing-status';
 import { VideoScreeningPanel } from '../video-screening-panel/video-screening-panel';
 
@@ -49,6 +52,8 @@ export function EditVideoPage({ videoId, captions }: EditVideoPageProps) {
           <Tabs.Tab value="details">{tOr('studio.editTabDetails', {}, '')}</Tabs.Tab>
           <Tabs.Tab value="chapters">{tOr('studio.editTabChapters', {}, '')}</Tabs.Tab>
           <Tabs.Tab value="corrections">{tOr('studio.editTabCorrections', {}, '')}</Tabs.Tab>
+          <Tabs.Tab value="sharing">{tOr('studio.editTabSharing', {}, '')}</Tabs.Tab>
+          <Tabs.Tab value="tests">{tOr('studio.editTabTests', {}, '')}</Tabs.Tab>
           <Tabs.Tab value="history">{tOr('studio.editTabHistory', {}, '')}</Tabs.Tab>
         </Tabs.List>
         <Tabs.Panel value="details" className="flex flex-col gap-section">
@@ -68,6 +73,13 @@ export function EditVideoPage({ videoId, captions }: EditVideoPageProps) {
         </Tabs.Panel>
         <Tabs.Panel value="corrections">
           <CorrectionsPanel video={video} />
+        </Tabs.Panel>
+        <Tabs.Panel value="sharing" className="flex flex-col gap-section">
+          <ShareLinksSection video={video} />
+          <VideoPasswordSection video={video} />
+        </Tabs.Panel>
+        <Tabs.Panel value="tests">
+          <ExperimentsPanel video={video} />
         </Tabs.Panel>
         <Tabs.Panel value="history">
           <HistoryPanel video={video} />

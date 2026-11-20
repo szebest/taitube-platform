@@ -7,11 +7,13 @@ import { studioChannel } from './studio-channel';
 import { studioCommentSettings } from './studio-comment-settings';
 import { studioComments } from './studio-comments';
 import { studioDevelopers } from './studio-developers';
+import { studioExperiments } from './studio-experiments';
 import { studioImages } from './studio-images';
 import { studioLive } from './studio-live';
 import { studioModeration } from './studio-moderation';
 import { studioPicks } from './studio-picks';
 import { studioScreening } from './studio-screening';
+import { studioSharing } from './studio-sharing';
 import { studioTeam } from './studio-team';
 import { studioVideoTools } from './studio-video-tools';
 
@@ -75,6 +77,8 @@ export const studio = {
   ...studioAudience,
   ...studioBatch,
   ...studioVideoTools,
+  ...studioSharing,
+  ...studioExperiments,
   ...studioCaptions,
   ...studioComments,
   ...studioCommentSettings,
