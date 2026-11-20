@@ -3,6 +3,8 @@ import { clientAppTestConfig } from '../client-app-test-config';
 const viteConfig = async () => ({ resolve: { alias: [{ find: '#app', replacement: '/src' }] } });
 
 const DOM_SPECS = 'src/**/__tests__/**/*.dom.test.{ts,tsx}';
+const SETUP_FILES = ['src/__tests__/own.setup.ts', 'shared/spec.setup'];
+const ENV = { FLAG: 'true' };
 
 describe('@kit/vite-preset: client app test config', () => {
   it.each([
@@ -13,12 +15,8 @@ describe('@kit/vite-preset: client app test config', () => {
         isolate: false,
         include: ['src/**/__tests__/**/*.test.{ts,tsx}'],
         exclude: ['**/node_modules/**', DOM_SPECS],
-        setupFiles: [
-          'src/__tests__/own.setup.ts',
-          '@vp/web-testing/server-functions.setup',
-          '@vp/web-testing/api-server.setup',
-        ],
-        env: { VITE_DEMO_PERSONAS: 'true' },
+        setupFiles: SETUP_FILES,
+        env: ENV,
       },
     },
     {
@@ -27,14 +25,8 @@ describe('@kit/vite-preset: client app test config', () => {
         name: 'studio (jsdom)',
         isolate: true,
         include: [DOM_SPECS],
-        setupFiles: [
-          'src/__tests__/own.setup.ts',
-          '@testing-library/jest-dom/vitest',
-          '@vp/web-testing/jsdom.setup',
-          '@vp/web-testing/api-server.setup',
-          '@vp/web-testing/settle.setup',
-        ],
-        env: { VITE_DEMO_PERSONAS: 'true', RTL_SKIP_AUTO_CLEANUP: 'true' },
+        setupFiles: SETUP_FILES,
+        env: { ...ENV, RTL_SKIP_AUTO_CLEANUP: 'true' },
       },
     },
   ])(
@@ -43,7 +35,8 @@ describe('@kit/vite-preset: client app test config', () => {
       const config = await clientAppTestConfig(viteConfig, {
         app: 'studio',
         environment,
-        setupFiles: ['src/__tests__/own.setup.ts'],
+        setupFiles: SETUP_FILES,
+        env: ENV,
       });
 
       expect(config.test).toMatchObject({ environment, ...project });
@@ -52,7 +45,11 @@ describe('@kit/vite-preset: client app test config', () => {
   );
 
   it('leaves the jsdom project on the default exclusions, so a dom spec anywhere under src runs', async () => {
-    const { test } = await clientAppTestConfig(viteConfig, { app: 'web', environment: 'jsdom' });
+    const { test } = await clientAppTestConfig(viteConfig, {
+      app: 'web',
+      environment: 'jsdom',
+      setupFiles: SETUP_FILES,
+    });
 
     expect(test?.exclude).toBeUndefined();
   });
@@ -62,6 +59,7 @@ describe('@kit/vite-preset: client app test config', () => {
     const config = await clientAppTestConfig(compiledApp, {
       app: 'studio',
       environment: 'jsdom',
+      setupFiles: SETUP_FILES,
       compiler: false,
       include: ['src/**/__tests__/**/*.differential.dom.test.tsx'],
     });
@@ -76,7 +74,11 @@ describe('@kit/vite-preset: client app test config', () => {
   });
 
   it('restores stubbed globals and environment after every test, in a shared worker pool', async () => {
-    const { test } = await clientAppTestConfig(viteConfig, { app: 'web', environment: 'node' });
+    const { test } = await clientAppTestConfig(viteConfig, {
+      app: 'web',
+      environment: 'node',
+      setupFiles: SETUP_FILES,
+    });
 
     expect(test).toMatchObject({
       pool: 'threads',

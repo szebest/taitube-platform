@@ -1,6 +1,6 @@
+import { axeViolations } from '@kit/web-testing/dom';
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { axeViolations } from '@vp/web-testing/dom';
 import { AppProviders } from '#app/__tests__/providers';
 import { AppShell, AppShellSkeleton } from '..';
 import type { AppShellRootProps } from '../app-shell';

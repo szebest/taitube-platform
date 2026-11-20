@@ -8,6 +8,6 @@ export default definePackageTestConfig({
     environment: 'jsdom',
     isolate: true,
     include: ['src/**/__tests__/**/*.dom.test.{ts,tsx}'],
-    setupFiles: ['@vp/web-testing/jsdom.setup'],
+    setupFiles: ['@kit/web-testing/jsdom.setup'],
   },
 });

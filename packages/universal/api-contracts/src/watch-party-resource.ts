@@ -1,3 +1,4 @@
+import { ACCENT_PATTERN } from '@kit/appearance';
 import {
   BUILT_IN_ROLE_KEYS,
   MEMBER_KINDS,
@@ -19,7 +20,6 @@ import {
   WATCH_PARTY_VISIBILITIES,
   type WatchPartyPermission,
 } from '@vp/domain';
-import { ACCENT_PATTERN } from '@vp/domain/settings';
 import { z } from 'zod';
 
 export const WatchPartyIdParamSchema = z.object({

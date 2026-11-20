@@ -1,6 +1,6 @@
+import { axeViolations } from '@kit/web-testing/dom';
 import { render, screen } from '@testing-library/react';
 import { CHANNEL_ROLE_NAMES } from '@vp/domain';
-import { axeViolations } from '@vp/web-testing/dom';
 import { RoleBadge } from '../index';
 
 describe('apps/client/studio: RoleBadge', () => {

@@ -1,5 +1,5 @@
+import { serverRender } from '@kit/web-testing/server';
 import { createRootRoute, createRoute, createRouter } from '@tanstack/react-router';
-import { serverRender } from '@vp/web-testing/server';
 import type { ReactNode } from 'react';
 import { FIXTURE_APPEARANCE_STORAGE } from '../../__tests__/appearance-storage-fixture';
 import { BrandScope } from '../brand-scope';

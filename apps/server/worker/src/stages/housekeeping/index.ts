@@ -1,3 +1,4 @@
+import type { AnyFailure } from '@kit/errors';
 import type { Logger } from '@kit/logger';
 import { type Result, assertNever, ok } from '@kit/result';
 import type {
@@ -17,7 +18,6 @@ import {
   SEARCH_HISTORY_RETENTION_DAYS,
 } from '@vp/domain';
 import type { AppConfig } from '@vp/env-schema';
-import type { AnyFailure } from '@vp/errors';
 import type { HousekeepingJob, QueueName } from '@vp/job-contracts';
 import type { PipelineMetrics } from '@vp/pipeline-metrics';
 import { runExpireRaw } from './expire-raw';

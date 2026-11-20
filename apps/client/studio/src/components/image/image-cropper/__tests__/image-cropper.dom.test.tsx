@@ -1,8 +1,8 @@
 import { isOk } from '@kit/result';
+import { axeViolations } from '@kit/web-testing/dom';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import type { ImageCrops } from '@vp/domain';
 import { decideImageCrops } from '@vp/domain-rules';
-import { axeViolations } from '@vp/web-testing/dom';
 import { AppProviders } from '#app/__tests__/providers';
 import { ImageCropper, type ImageCropperKind, type ImageCropperStatus } from '../index';
 

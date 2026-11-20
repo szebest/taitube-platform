@@ -1,6 +1,6 @@
 import type { Theme } from '@kit/design-tokens';
+import { CommonErrorCodes } from '@kit/errors';
 import { expectErr, expectOk } from '@kit/testing/result';
-import { ErrorCodes } from '@vp/errors';
 import { sand } from '../../themes/sand';
 import { radiusSharp } from '../../tokens/radius/sharp';
 import { registerTheme } from '../register-theme';
@@ -57,7 +57,7 @@ describe('@kit/ui: registerTheme', () => {
     const failure = expectErr(registerTheme(duskWithBg('#8A8072'), host));
 
     expect(failure).toMatchObject({
-      code: ErrorCodes.VALIDATION_FAILED,
+      code: CommonErrorCodes.VALIDATION_FAILED,
       field: 'color',
       pairs: expect.arrayContaining([
         expect.objectContaining({ mode: 'dark', label: 'fg-muted on bg', floor: 4.5 }),
@@ -98,7 +98,9 @@ describe('@kit/ui: registerTheme', () => {
     vi.stubGlobal('CSSStyleSheet', undefined);
     const host = emptyHost();
 
-    expect(expectErr(registerTheme(dusk(), host))).toMatchObject({ code: ErrorCodes.INTERNAL });
+    expect(expectErr(registerTheme(dusk(), host))).toMatchObject({
+      code: CommonErrorCodes.INTERNAL,
+    });
     expect(host.adoptedStyleSheets).toEqual([]);
   });
 });

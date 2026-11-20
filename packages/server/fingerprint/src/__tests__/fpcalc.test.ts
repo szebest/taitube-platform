@@ -1,7 +1,8 @@
 import { chmod, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { ErrorCodes, PermanentError } from '@vp/errors';
+import { PermanentError } from '@kit/errors';
+import { ErrorCodes } from '@vp/errors';
 import { runFpcalc } from '../fpcalc';
 
 const FAKE_FPCALC = `#!/bin/sh

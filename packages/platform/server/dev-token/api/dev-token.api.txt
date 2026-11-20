@@ -21,6 +21,7 @@ export interface DevTokenConfig {
         readonly jwks: readonly string[];
         readonly token: string;
     };
+    readonly now: () => number;
 }
 export interface KeyPairResult {
     privateKey: crypto.KeyObject;

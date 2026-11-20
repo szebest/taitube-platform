@@ -1,6 +1,5 @@
 import { type Result, err, ok } from '@kit/result';
-import type { LengthBounds } from '../failures';
-import { normalizePlainText, withinLength } from '../plain-text';
+import { type LengthBounds, normalizePlainText, withinLength } from '@kit/validation';
 import { type InvalidCommentContent, invalidCommentContent } from './failures';
 
 const COMMENT_CONTENT_BOUNDS: LengthBounds = { minLength: 1, maxLength: 2000 };

@@ -1,5 +1,5 @@
+import { CommonErrorCodes } from '@kit/errors';
 import { expectErr, expectOk } from '@kit/testing/result';
-import { ErrorCodes } from '@vp/errors';
 import { buildTheme } from '../build-theme';
 import { parseTheme, resolveTheme } from '../parse';
 import { refFromTokens, themeFromTokens } from '../schema/__tests__/tokens-json';
@@ -36,7 +36,7 @@ describe('buildTheme', () => {
     { ground: '#d9d9d9', accent: '#3366cc' },
   ])('refuses the ground $ground that sits outside the band accents are derived for', (colours) => {
     expect(expectErr(buildTheme(sand, { id: 'custom', name: 'Custom' }, colours))).toMatchObject({
-      code: ErrorCodes.VALIDATION_FAILED,
+      code: CommonErrorCodes.VALIDATION_FAILED,
       field: 'ground',
       value: colours.ground,
     });
@@ -63,6 +63,6 @@ describe('buildTheme', () => {
   ])('refuses $ground and $accent', ({ ground, accent }) => {
     expect(
       expectErr(buildTheme(sand, { id: 'custom', name: 'Custom' }, { ground, accent })).code
-    ).toBe(ErrorCodes.VALIDATION_FAILED);
+    ).toBe(CommonErrorCodes.VALIDATION_FAILED);
   });
 });

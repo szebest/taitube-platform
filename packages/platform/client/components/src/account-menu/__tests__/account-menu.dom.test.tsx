@@ -1,6 +1,6 @@
+import { axeViolations } from '@kit/web-testing/dom';
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { axeViolations } from '@vp/web-testing/dom';
 import { AccountMenu } from '..';
 import { renderWithCopy } from '../../__tests__/render-with-copy';
 

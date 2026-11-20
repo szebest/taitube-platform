@@ -9,7 +9,7 @@
 `@kit/testing` holds the helpers specs across the repo share. Tier `server`, `vp.layer` 2; its dependencies
 are in [package.json](package.json). Each subpath's `import` condition points at `src/`, so a spec needs no
 build. The product's own fixtures (the seeded rows, a production-shaped environment, the infra specs) live in
-`@vp/testing-fixtures`.
+the app's fixtures package.
 
 - **`.` (`src/index.ts`):** `definePackageTestConfig` (node environment, globals, `restoreMocks`,
   `unstubEnvs`, `src/**/__tests__/**/*.test.ts`; most package `vitest.config.ts` files build on it, a few

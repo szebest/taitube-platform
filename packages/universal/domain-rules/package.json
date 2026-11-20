@@ -20,6 +20,8 @@
     "clean": "rimraf dist tsconfig.tsbuildinfo"
   },
   "dependencies": {
+    "@kit/appearance": "workspace:*",
+    "@kit/errors": "workspace:*",
     "@kit/machine": "workspace:*",
     "@kit/primitives": "workspace:*",
     "@kit/result": "workspace:*",
@@ -37,6 +39,6 @@
     "vite-plus": "catalog:"
   },
   "vp": {
-    "layer": 6
+    "layer": 7
   }
 }

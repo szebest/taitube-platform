@@ -1,8 +1,5 @@
-import { packageDir } from '../../scripts/workspace-packages';
 import { ENTRYPOINTS, ENV_HOMES, isListed } from './entrypoints';
 import { isSpec, read, trackedFiles } from './repo-files';
-
-const CONFIG = packageDir('@kit/config');
 
 const SCANNED = /\.(ts|tsx|mts|js|mjs)$/;
 
@@ -31,12 +28,13 @@ describe('architecture: process.env is read only where a process starts', () => 
     expect(readsEnvOutsideAHome(file, source)).toBe(true);
   });
 
-  it.each(['apps/server/api/src/main.ts', 'tests/e2e/run-e2e.ts', `${CONFIG}/src/load-env.ts`])(
-    'allows %s, which is listed in entrypoints.ts',
-    (file) => {
-      expect(readsEnvOutsideAHome(file, 'process.env.NODE_ENV')).toBe(false);
-    }
-  );
+  it.each([
+    'apps/server/api/src/main.ts',
+    'tests/e2e/run-e2e.ts',
+    'tests/integration/use-real-services.ts',
+  ])('allows %s, which is listed in entrypoints.ts', (file) => {
+    expect(readsEnvOutsideAHome(file, 'process.env.NODE_ENV')).toBe(false);
+  });
 
   it('scans .mjs and .js as well as TypeScript', () => {
     expect(['a.mjs', 'b.js', 'c.mts', 'd.tsx'].every((file) => SCANNED.test(file))).toBe(true);

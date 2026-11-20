@@ -8,4 +8,6 @@ export interface DevTokenConfig {
     readonly jwks: readonly string[];
     readonly token: string;
   };
+  /** Milliseconds since the epoch: a token's `iat` is stamped and its `exp` checked against it. */
+  readonly now: () => number;
 }

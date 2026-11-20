@@ -1,3 +1,4 @@
+import { axeViolations } from '@kit/web-testing/dom';
 import { screen, waitFor, within } from '@testing-library/react';
 import {
   listMySubscriptions,
@@ -5,7 +6,7 @@ import {
   updateSubscriptionLevel,
 } from '@vp/api-contracts';
 import { apiServer, CHANNEL_ID, mockEndpoint, subscribedChannel } from '@vp/web-testing';
-import { axeViolations, renderRoute } from '@vp/web-testing/dom';
+import { renderRoute } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
 import { holds, preferencesView } from '#app/__tests__/preferences-fixtures';
 import { signInBrowser } from '#app/__tests__/providers';

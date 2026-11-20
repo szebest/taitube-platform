@@ -1,4 +1,5 @@
-import { ErrorCodes, TransientError } from '@vp/errors';
+import { TransientError } from '@kit/errors';
+import { ErrorCodes } from '@vp/errors';
 
 /**
  * What a fragmented MP4 on a pipe is made of, for a packager: the init segment (`ftyp` + `moov`)

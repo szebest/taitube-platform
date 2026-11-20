@@ -1,7 +1,8 @@
 import { TOKEN_GROUPS } from '@kit/design-tokens';
 import { writeCookie } from '@kit/ui';
+import { axeViolations } from '@kit/web-testing/dom';
 import { screen, within } from '@testing-library/react';
-import { axeViolations, renderRoute } from '@vp/web-testing/dom';
+import { renderRoute } from '@vp/web-testing/dom';
 import { getRouter } from '#app/router';
 
 vi.mock(import('@kit/ui/appearance/registry'), async (importOriginal) =>

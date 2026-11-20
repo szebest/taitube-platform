@@ -14,8 +14,8 @@ ADR-24). It is `Result<T, E>` with `ok` / `err` and `isOk` / `isErr` (`result.ts
 `parseJson` (`try-catch.ts`), and `assertNever` (`assert-never.ts`).
 
 It knows nothing about `ErrorCode`, HTTP, BullMQ or this domain. If a change here needs to name a video, a
-status or a retry class, it belongs in `@vp/errors`, `@vp/validation`, `@vp/domain-rules` or an edge, not
-here.
+status or a retry class, it belongs in `@kit/errors`, the app's
+error vocabulary and rules, or an edge, not here.
 
 The authority on how the three layers use it is
 [docs/standards/error-handling.md](../../../../docs/standards/error-handling.md).

@@ -1,4 +1,5 @@
-import { ErrorCodes, isInputFailure } from '@vp/errors';
+import { isInputFailure } from '@kit/errors';
+import { ErrorCodes } from '@vp/errors';
 import { clipNotFound, invalidClipRange } from '../failures';
 
 describe('@vp/domain-rules: clip failures', () => {

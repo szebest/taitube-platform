@@ -2,7 +2,7 @@
 
 Instructions for any coding agent working on `@kit/intl`.
 
-> Tier rules for this directory: [packages/AGENTS.md](../../../AGENTS.md) · authority: [docs/standards/formatting-and-i18n.md](../../../../docs/standards/formatting-and-i18n.md) · the product's values: [@vp/intl-formats](../../../universal/intl-formats/AGENTS.md)
+> Tier rules for this directory: [packages/AGENTS.md](../../../AGENTS.md) · authority: [docs/standards/formatting-and-i18n.md](../../../../docs/standards/formatting-and-i18n.md)
 
 ---
 
@@ -13,9 +13,10 @@ platform's own `Intl` constructors and nothing else. A formatter takes a tagged 
 `FormatContext` and returns `Result<string, FormatFailure>`.
 
 A platform package (`packages/platform/`): no app vocabulary, platform dependencies only (`pnpm boundaries`). It is `universal`, layer T2, because ticket 89's server render runs it in Node and the browser runs it
-again on hydration. It depends on `@kit/result` only, and owns its four failure codes. The words around a value (the
+again on hydration. It depends on `@kit/result` only, and owns its four failure codes:
+`FormatErrorCodes` is the one place they are written, and the app spreads it into its error code set. The words around a value (the
 `views` in `1.2M views`) are copy and live in the app's catalogue, not here. The app's own tagged values
-(`views`, `videoDuration`, `publishedAt`) live in `@vp/intl-formats`.
+(a view count, a video duration) live in the app.
 
 ---
 
@@ -36,7 +37,7 @@ again on hydration. It depends on `@kit/result` only, and owns its four failure 
    and wraps itself in `withOptions`, so a misspelt key fails to compile at the declaration and declines at
    runtime with the key.
 6. **Values compose, they do not format.** A value constructor returns a tagged value; none builds an `Intl`
-   object or a string. An app writes its own (`@vp/intl-formats`).
+   object or a string. An app writes its own.
 7. **One file per formatter, one spec per file.** A new formatter goes in `src/formatters/`, gets a
    member in `TaggedValue`, a kind in `FORMAT_KINDS` and a case in `formatValue`.
 

@@ -10,9 +10,8 @@ The mechanism both deployables build their object graph with and shut down throu
 (from `@kit/di`, re-exported here), a `Container` that resolves tokens to values with the `start()` / `dispose()`
 lifecycle that runs over what was resolved (`src/container.ts`, plus `closeOnDispose`), and `shutdownOnce` / `exitOnSignals`
 (`src/shutdown.ts`), the drained, grace-bounded shutdown `apps/server/api/src/serve.ts` and
-`apps/server/worker/src/process.ts` install on `SIGTERM` / `SIGINT`. Registrations live with their owners:
-`registerAdapters` in `@vp/adapters`, `apps/server/api/src/composition/services.module.ts`,
-`apps/server/worker/src/composition/stages.module.ts`.
+`apps/server/worker/src/process.ts` install on `SIGTERM` / `SIGINT`. Registrations live with their owners in
+the app: its adapter registry and each deployable's composition modules.
 
 Decision record: [SDD ADR-25](../../../../docs/SDD.md#adr-25--composition-one-container-configuration-is-a-value).
 

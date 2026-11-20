@@ -1,7 +1,6 @@
 import { type Result, err, ok } from '@kit/result';
-import type { LengthBounds } from '../failures';
+import { type LengthBounds, normalizePlainText, withinLength } from '@kit/validation';
 import { type InvalidField, invalidField, invalidLength } from '../field-failures';
-import { normalizePlainText, withinLength } from '../plain-text';
 
 export const ROOM_NAME_BOUNDS = { minLength: 1, maxLength: 60 } as const satisfies LengthBounds;
 export const ROOM_PASSWORD_BOUNDS = { minLength: 4, maxLength: 64 } as const satisfies LengthBounds;

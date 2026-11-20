@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite-plus';
 
 /**
- * Declared inline rather than through `@vp/testing`: the toolkit depends on this package, so
+ * Declared inline rather than through `@kit/testing`: the toolkit depends on this package, so
  * importing its config factory here would make the build graph a cycle.
  */
 export default defineConfig({

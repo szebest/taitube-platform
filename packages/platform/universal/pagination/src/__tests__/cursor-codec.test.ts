@@ -1,6 +1,5 @@
 import { err, ok } from '@kit/result';
-import { ErrorCodes } from '@vp/errors';
-import { Base64UrlCursorCodec, type CursorPayload } from '../cursor-codec';
+import { Base64UrlCursorCodec, type CursorPayload, PaginationErrorCodes } from '../cursor-codec';
 
 describe('packages/pagination: Base64UrlCursorCodec', () => {
   const codec = new Base64UrlCursorCodec();
@@ -29,8 +28,8 @@ describe('packages/pagination: Base64UrlCursorCodec', () => {
   ])('rejects $scenario as INVALID_CURSOR', ({ cursor }) => {
     expect(codec.decode(cursor)).toEqual(
       err({
-        code: ErrorCodes.INVALID_CURSOR,
-        message: ErrorCodes.INVALID_CURSOR,
+        code: PaginationErrorCodes.INVALID_CURSOR,
+        message: PaginationErrorCodes.INVALID_CURSOR,
         field: 'cursor',
       })
     );

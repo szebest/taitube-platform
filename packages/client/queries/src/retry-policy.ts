@@ -1,5 +1,6 @@
+import { type RetryClass } from '@kit/errors';
 import { ApiContractError, ApiError } from '@vp/api-client';
-import { RETRY_CLASS, type RetryClass, isErrorCode } from '@vp/errors';
+import { RETRY_CLASS, isErrorCode } from '@vp/errors';
 
 const MAX_RETRIES = 3;
 const BASE_DELAY_MS = 1000;

@@ -1,6 +1,6 @@
+import { axeViolations } from '@kit/web-testing/dom';
 import { screen } from '@testing-library/react';
 import type { ChannelRole } from '@vp/domain';
-import { axeViolations } from '@vp/web-testing/dom';
 import { renderDevelopers } from '#app/features/developers/__tests__/render-developers';
 
 const SECTIONS = ['Personal access tokens', 'Webhooks', 'Exports', 'API reference'];

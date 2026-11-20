@@ -1,22 +1,22 @@
 import { renderHook } from '@testing-library/react';
 import type { ReactNode } from 'react';
-import { IntlProvider } from '../intl-provider';
 import { useT } from '../use-t';
+import { SpecIntl } from './spec-intl';
 
 function renderUseT(withProvider = true) {
   const wrapper = ({ children }: { children: ReactNode }) => (
-    <IntlProvider locale="en" timeZone="UTC">
+    <SpecIntl locale="en" timeZone="UTC">
       {children}
-    </IntlProvider>
+    </SpecIntl>
   );
   return renderHook(useT, withProvider ? { wrapper } : undefined);
 }
 
 describe('@kit/intl-react: useT', () => {
-  it('translates in the provider locale', () => {
-    const { t } = renderUseT().result.current;
+  it('returns the translator the provider built over its locale', () => {
+    const translator = renderUseT().result.current;
 
-    expect(t('channels.subscribers', { count: 1 })).toEqual({ ok: true, value: '1 subscriber' });
+    expect([translator.locale, translator.count(12_345)]).toEqual(['en', '12K']);
   });
 
   it('fails loudly outside a provider, naming it', () => {

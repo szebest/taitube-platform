@@ -1,6 +1,6 @@
+import { axeViolations } from '@kit/web-testing/dom';
 import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
-import { axeViolations } from '@vp/web-testing/dom';
 import { variantNames } from '../../../lib/variant-names';
 import { Button, type ButtonProps } from '../button';
 import { buttonStyles } from '../button.variants';

@@ -1,9 +1,9 @@
+import { axeViolations } from '@kit/web-testing/dom';
 import { act, screen, waitFor, within } from '@testing-library/react';
 import { getCreatorStats } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { videoKeys } from '@vp/queries';
 import { account, creatorStats, mockEndpoint, problemReply, VIDEO_ID } from '@vp/web-testing';
-import { axeViolations } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
 import { membershipOn, viewerAccount } from '#app/__tests__/comment-fixtures';
 import { renderPanel } from '#app/features/creator-stats/__tests__/render-panel';

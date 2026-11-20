@@ -1,8 +1,8 @@
+import { axeViolations } from '@kit/web-testing/dom';
 import { onlineManager } from '@tanstack/react-query';
 import { act, screen, waitFor, within } from '@testing-library/react';
 import { ErrorCodes } from '@vp/errors';
 import { problemReply } from '@vp/web-testing';
-import { axeViolations } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
 import {
   notification,

@@ -1,6 +1,6 @@
+import { CommonErrorCodes } from '@kit/errors';
 import type { Result } from '@kit/result';
 import { expectErr, expectOk } from '@kit/testing/result';
-import { ErrorCodes } from '@vp/errors';
 import { type InvalidDefinition, parseTheme, parseTokenSet, resolveTheme } from '../parse';
 import { refFromTokens, themeFromTokens, tokenSetValues } from '../schema/__tests__/tokens-json';
 import { RefSchema } from '../schema/ref';
@@ -83,7 +83,7 @@ describe('parse', () => {
     },
   ])('fails $label, naming the field', ({ parse, field }) => {
     expect(expectErr(parse())).toEqual({
-      code: ErrorCodes.VALIDATION_FAILED,
+      code: CommonErrorCodes.VALIDATION_FAILED,
       message: expect.any(String),
       field,
     });

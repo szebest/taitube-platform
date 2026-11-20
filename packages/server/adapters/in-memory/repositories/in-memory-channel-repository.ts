@@ -1,3 +1,4 @@
+import { PermanentError } from '@kit/errors';
 import { type Result, err, ok } from '@kit/result';
 import type { ChannelRepositoryPort } from '@vp/core/repositories';
 import {
@@ -9,13 +10,7 @@ import {
   type UpdateChannelInput,
   isPublicFeedEligible,
 } from '@vp/domain';
-import {
-  type DatabaseUnavailable,
-  ErrorCodes,
-  type HandleTaken,
-  PermanentError,
-  handleTaken,
-} from '@vp/errors';
+import { type DatabaseUnavailable, ErrorCodes, type HandleTaken, handleTaken } from '@vp/errors';
 import { uuidv7 } from 'uuidv7';
 import type { InMemoryChannelHandleHistoryRepository } from './in-memory-channel-handle-history-repository';
 import type { InMemoryVideoRepository } from './in-memory-video-repository';

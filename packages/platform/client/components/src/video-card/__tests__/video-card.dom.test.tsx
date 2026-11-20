@@ -1,7 +1,7 @@
 import { variantNames } from '@kit/ui';
+import { axeViolations } from '@kit/web-testing/dom';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { axeViolations } from '@vp/web-testing/dom';
 import type { ComponentPropsWithRef } from 'react';
 import { VideoCard, VideoCardSkeleton, videoCardStyles } from '..';
 import { renderWithCopy } from '../../__tests__/render-with-copy';

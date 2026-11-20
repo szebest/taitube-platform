@@ -1,5 +1,6 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
+import { isInputFailure } from '@kit/errors';
 import type { Logger } from '@kit/logger';
 import { getHeaderMapping } from '@kit/object-storage';
 import { type Result, err, fromPromise, isErr, ok } from '@kit/result';
@@ -14,7 +15,6 @@ import {
   type MediaFailure,
   RETRY_CLASS,
   type StorageUnavailable,
-  isInputFailure,
   mediaFailure,
   mediaFailureFrom,
 } from '@vp/errors';
