@@ -40,6 +40,7 @@ function kindOf(code: ErrorCode): ErrorStateKind {
       return 'not-found';
     case ErrorCodes.FORBIDDEN:
     case ErrorCodes.CHANNEL_MEMBERSHIP_REQUIRED:
+    case ErrorCodes.CHANNEL_NOT_OWNED:
     case ErrorCodes.API_TOKEN_SCOPE_MISSING:
     case ErrorCodes.LIVE_CHAT_SUBSCRIBERS_ONLY:
     case ErrorCodes.COMMENTS_BANNED:
@@ -122,6 +123,7 @@ function kindOf(code: ErrorCode): ErrorStateKind {
     case ErrorCodes.CAPTION_OVERWRITE_UNCONFIRMED:
     case ErrorCodes.PICK_WINDOW_OVERLAP:
     case ErrorCodes.WEBHOOK_LIMIT_REACHED:
+    case ErrorCodes.CHANNEL_LIMIT_REACHED:
     case ErrorCodes.EXPORT_IN_PROGRESS:
     case ErrorCodes.EXPORT_TOO_LARGE:
     case ErrorCodes.API_TOKEN_LIMIT_REACHED:

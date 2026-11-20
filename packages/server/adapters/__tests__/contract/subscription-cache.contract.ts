@@ -13,7 +13,7 @@ export function describeSubscriptionCacheContract(makeSubject: MakeSubscriptionC
   describe('SubscriptionCache contract', () => {
     let subject: SubscriptionCacheSubject;
     let cache: SubscriptionCachePort;
-    let userId: string;
+    let subscriberChannelId: string;
     let channelId: string;
     let otherChannelId: string;
 
@@ -27,64 +27,64 @@ export function describeSubscriptionCacheContract(makeSubject: MakeSubscriptionC
     });
 
     beforeEach(() => {
-      userId = randomUUID();
+      subscriberChannelId = randomUUID();
       channelId = randomUUID();
       otherChannelId = randomUUID();
     });
 
     const isSubscribed = async (channel: string) =>
-      expectOk(await cache.isSubscribed(userId, channel));
+      expectOk(await cache.isSubscribed(subscriberChannelId, channel));
 
-    it('answers null, a miss, for a user whose set was never primed', async () => {
+    it('answers null, a miss, for a channel whose set was never primed', async () => {
       expect(await isSubscribed(channelId)).toBeNull();
     });
 
     it('answers a primed set, and false for a channel outside it', async () => {
-      expectOk(await cache.setUserSubscriptions(userId, [channelId]));
+      expectOk(await cache.setSubscriptions(subscriberChannelId, [channelId]));
 
       expect(await isSubscribed(channelId)).toBe(true);
       expect(await isSubscribed(otherChannelId)).toBe(false);
     });
 
     it('keeps a primed empty set as a hit, not a miss', async () => {
-      expectOk(await cache.setUserSubscriptions(userId, []));
+      expectOk(await cache.setSubscriptions(subscriberChannelId, []));
 
       expect(await isSubscribed(channelId)).toBe(false);
     });
 
     it('replaces the whole set when primed again', async () => {
-      expectOk(await cache.setUserSubscriptions(userId, [otherChannelId]));
-      expectOk(await cache.setUserSubscriptions(userId, [channelId]));
+      expectOk(await cache.setSubscriptions(subscriberChannelId, [otherChannelId]));
+      expectOk(await cache.setSubscriptions(subscriberChannelId, [channelId]));
 
       expect(await isSubscribed(channelId)).toBe(true);
       expect(await isSubscribed(otherChannelId)).toBe(false);
     });
 
     it('adds a channel to a primed empty set', async () => {
-      expectOk(await cache.setUserSubscriptions(userId, []));
-      expectOk(await cache.addSubscription(userId, channelId));
+      expectOk(await cache.setSubscriptions(subscriberChannelId, []));
+      expectOk(await cache.addSubscription(subscriberChannelId, channelId));
 
       expect(await isSubscribed(channelId)).toBe(true);
       expect(await isSubscribed(otherChannelId)).toBe(false);
     });
 
     it('removes one channel and keeps the rest', async () => {
-      expectOk(await cache.setUserSubscriptions(userId, [channelId, otherChannelId]));
-      expectOk(await cache.removeSubscription(userId, channelId));
+      expectOk(await cache.setSubscriptions(subscriberChannelId, [channelId, otherChannelId]));
+      expectOk(await cache.removeSubscription(subscriberChannelId, channelId));
 
       expect(await isSubscribed(channelId)).toBe(false);
       expect(await isSubscribed(otherChannelId)).toBe(true);
     });
 
     it('answers a miss once the last channel is removed, as Redis drops an empty set', async () => {
-      expectOk(await cache.setUserSubscriptions(userId, [channelId]));
-      expectOk(await cache.removeSubscription(userId, channelId));
+      expectOk(await cache.setSubscriptions(subscriberChannelId, [channelId]));
+      expectOk(await cache.removeSubscription(subscriberChannelId, channelId));
 
       expect(await isSubscribed(channelId)).toBeNull();
     });
 
-    it('leaves a user whose set was never primed a miss after a removal', async () => {
-      expectOk(await cache.removeSubscription(userId, channelId));
+    it('leaves a channel whose set was never primed a miss after a removal', async () => {
+      expectOk(await cache.removeSubscription(subscriberChannelId, channelId));
 
       expect(await isSubscribed(channelId)).toBeNull();
     });

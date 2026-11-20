@@ -8,6 +8,7 @@ import {
 } from '@vp/adapters/in-memory';
 import type { NewVideoInput } from '@vp/core/repositories';
 import { SEARCH_SUGGESTIONS } from '@vp/domain';
+import { seedPrimaryChannel } from '../../__tests__/test-app';
 import { DiscoveryShelves } from '../discovery-shelves';
 import { HistoryPause } from '../history-pause';
 import { HomeService } from '../home-service';
@@ -79,12 +80,13 @@ export async function buildHomeApp(): Promise<HomeApp> {
     cache,
   });
 
-  const publish = (
+  const publish = async (
     id: string,
     overrides: Pick<NewVideoInput, 'ownerId'> & Partial<NewVideoInput>
   ) =>
     repositories.videos.create({
       id,
+      channelId: await seedPrimaryChannel(repositories, overrides.ownerId),
       title: `Video ${id.slice(-2)}`,
       visibility: 'public',
       status: 'READY',
@@ -110,7 +112,11 @@ export async function buildHomeApp(): Promise<HomeApp> {
   await publish(TRAM, { ownerId: OTHER, categoryId: MUSIC, tags: ['lisbon'] });
   await publish(FOOD, { ownerId: OTHER, categoryId: MUSIC, tags: ['lisbon'] });
   await publish(CLIP, { ownerId: CREATOR, categoryId: GAMING });
-  await repositories.subscriptions.subscribe(VIEWER.id, creator.id);
+  await repositories.subscriptions.subscribe(
+    VIEWER.id,
+    await seedPrimaryChannel(repositories, VIEWER.id),
+    creator.id
+  );
   await watchVideo(repositories, NIGHT, 30, 10);
   await watchVideo(repositories, TRAM, 60, 1);
 

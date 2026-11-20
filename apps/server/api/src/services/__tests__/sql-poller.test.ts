@@ -2,6 +2,7 @@ import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { createPipelineMetrics } from '@vp/pipeline-metrics';
 import { SEEDED } from '@vp/testing-fixtures';
+import { seedPrimaryChannel } from '../../__tests__/test-app';
 import { pollSqlMetrics } from '../sql-poller';
 
 const OWNER_ID = SEEDED.userId;
@@ -14,6 +15,7 @@ describe('apps/server/api/services: SQL poller', () => {
     await testRepos.videos.create({
       id: '00000000-0000-7000-8000-000000000101',
       ownerId: OWNER_ID,
+      channelId: await seedPrimaryChannel(testRepos, OWNER_ID),
       title: 'Poller Test',
       visibility: 'public',
       status: 'PROCESSING',

@@ -4,13 +4,7 @@ import type { CreatorInboxComment, CreatorInboxFilter } from '@vp/domain';
 import { type SQL, sql } from 'drizzle-orm';
 import { moderatedThreadColumns, toCommentThread } from './comment-thread-query';
 
-const {
-  videoComments: c,
-  videos: v,
-  commentReports: r,
-  channelUserRestrictions: rs,
-  channels: rc,
-} = schema;
+const { videoComments: c, videos: v, commentReports: r, channelUserRestrictions: rs } = schema;
 
 /** The thread columns plus the title of the video the comment sits under. */
 export const creatorInboxColumns = { ...moderatedThreadColumns, videoTitle: v.title };
@@ -24,7 +18,7 @@ export function toCreatorInboxComment({ videoTitle, ...row }: InboxRow): Creator
 
 /**
  * A comment is answered by a later reply from the owner anywhere in its own thread, and
- * restricted when its author has a shadow ban or a ban on the owner's channel that has not ended.
+ * restricted when its author has a shadow ban or a ban on the video's channel that has not ended.
  */
 export function creatorInboxFilterScope(
   filter: CreatorInboxFilter,
@@ -53,8 +47,8 @@ export function creatorInboxFilterScope(
       return sql`${c.looksLikeQuestion}`;
     case 'restricted':
       return sql`exists (
-        select 1 from ${rs} inner join ${rc} on ${rc.id} = ${rs.channelId}
-        where ${rc.userId} = ${ownerId} and ${rs.userId} = ${c.authorId}
+        select 1 from ${rs}
+        where ${rs.channelId} = ${v.channelId} and ${rs.userId} = ${c.authorId}
           and (${rs.expiresAt} is null or ${rs.expiresAt} > now())
       )`;
     default:

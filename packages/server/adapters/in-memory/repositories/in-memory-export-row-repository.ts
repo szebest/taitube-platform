@@ -44,10 +44,10 @@ const byCreated = (a: { createdAt: Date; id: string }, b: { createdAt: Date; id:
 export class InMemoryExportRowRepository implements ExportRowRepositoryPort {
   constructor(private readonly deps: InMemoryExportRowRepositoryOptions) {}
 
-  private videosOf({ ownerId }: ExportScope): Map<string, VideoRecord> {
+  private videosOf({ channelId }: ExportScope): Map<string, VideoRecord> {
     const owned = this.deps.videos
       .getAllVideos()
-      .filter((video) => video.ownerId === ownerId && !video.deletedAt);
+      .filter((video) => video.channelId === channelId && !video.deletedAt);
     return new Map(owned.map((video) => [video.id, video]));
   }
 
@@ -128,7 +128,7 @@ export class InMemoryExportRowRepository implements ExportRowRepositoryPort {
   async comments(scope: ExportScope, after: string | null, limit: number): Page<CommentExportRow> {
     const videos = this.videosOf(scope);
     const channels = new Map(
-      this.deps.channels.getAllChannels().map((channel) => [channel.userId, channel])
+      this.deps.channels.getAllChannels().map((channel) => [channel.id, channel])
     );
     const rows = [...this.deps.comments.comments.values()]
       .filter(
@@ -139,7 +139,7 @@ export class InMemoryExportRowRepository implements ExportRowRepositoryPort {
       )
       .sort(byCreated)
       .map((comment) => {
-        const author = channels.get(comment.authorId);
+        const author = channels.get(comment.authorChannelId);
         return {
           commentId: comment.id,
           videoId: comment.videoId,

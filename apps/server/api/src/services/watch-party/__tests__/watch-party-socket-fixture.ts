@@ -4,6 +4,7 @@ import type { WatchPartyPreset, WatchPartyRoom } from '@vp/domain';
 import type { AppConfigOverrides } from '@vp/env-schema';
 import { roomIdOfWatchParty, WATCH_PARTY_WILDCARD_CHANNEL } from '@vp/events';
 import type { UserContext } from '@vp/permissions';
+import { seedPrimaryChannel } from '../../../__tests__/test-app';
 import { PatternHub } from '../../pattern-hub';
 import { RoomBatcher } from '../room-batcher';
 import { type RoomEnvelope, RoomEnvelopeSchema } from '../watch-party-broadcaster';
@@ -54,6 +55,7 @@ export async function socketRoom(
       await repositories.videos.create({
         id: videoId,
         ownerId: OWNER.id,
+        channelId: await seedPrimaryChannel(repositories, OWNER.id),
         title: `Video ${index}`,
         visibility: 'public',
         status: 'READY',

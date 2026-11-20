@@ -31,8 +31,15 @@ export interface UserContext {
   readonly email?: string;
   /** Channel id to the caller's role there and the channel owner's user id; loaded per request. */
   readonly memberships?: Readonly<Record<string, ChannelGrant>>;
+  /** The channels the caller owns, loaded per request like the memberships. */
+  readonly channels?: OwnedChannels;
   /** Set when the request carries a personal access token: what it may do, on which channel. */
   readonly token?: TokenGrant;
+}
+
+export interface OwnedChannels {
+  readonly primaryId: string;
+  readonly ownedIds: readonly string[];
 }
 
 export interface TokenGrant {

@@ -10,20 +10,20 @@ import type { PostgresDatabase } from './types';
 
 const { videoComments: c, channels: ch, videos: v } = schema;
 
-/** Live comments on `ownerId`'s videos that the owner did not write, one row more than a page. */
+/** Live comments on the channel's videos that its owner did not write, one row more than a page. */
 export function creatorInboxQuery(
   db: PostgresDatabase,
   ownerId: string,
-  { filter, authorId, cursor, limit }: ListCreatorInboxOptions
+  { channelId, filter, authorId, cursor, limit }: ListCreatorInboxOptions
 ) {
   return db
     .select(creatorInboxColumns)
     .from(c)
     .innerJoin(v, eq(v.id, c.videoId))
-    .leftJoin(ch, eq(ch.userId, c.authorId))
+    .leftJoin(ch, eq(ch.id, c.authorChannelId))
     .where(
       drizzleWhere(
-        eq(v.ownerId, ownerId),
+        eq(v.channelId, channelId),
         ne(c.authorId, ownerId),
         notDeletedScope(c),
         notDeletedScope(v),

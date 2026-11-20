@@ -17,7 +17,7 @@ import { createdAtCursorPayload, decodeCreatedAtCursor } from './cursor';
 export interface TrustedCommenterServiceDeps {
   trusted: TrustedCommenterRepositoryPort;
   users: Pick<UserRepository, 'findById'>;
-  channels: Pick<ChannelRepositoryPort, 'findByUserIds'>;
+  channels: Pick<ChannelRepositoryPort, 'findPrimaryByUserIds'>;
   paginator: Paginator;
 }
 

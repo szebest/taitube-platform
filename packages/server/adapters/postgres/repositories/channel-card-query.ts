@@ -3,7 +3,7 @@ import type { ChannelCard } from '@vp/domain';
 
 const { channels: ch } = schema;
 
-/** Selected over a `LEFT JOIN channels ON channels.user_id = <owner>`. */
+/** Selected over a `LEFT JOIN channels` on the row's channel. */
 export const channelCardColumns = {
   channelId: ch.id,
   handle: ch.handle,
@@ -18,7 +18,7 @@ export interface ChannelCardRow {
   avatarUrl: string | null;
 }
 
-/** Null for an owner who never claimed a channel: the join found nothing. */
+/** Null when the join found nothing. */
 export function toChannelCard(row: ChannelCardRow): ChannelCard | null {
   const { channelId, handle, displayName, avatarUrl } = row;
   return channelId !== null && handle !== null && displayName !== null

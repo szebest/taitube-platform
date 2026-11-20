@@ -14,7 +14,12 @@ import { matrixCells } from './channel-matrix';
 type Visibility = 'public' | 'unlisted' | 'private';
 
 const captionsOf = (visibility: Visibility) =>
-  subject('Caption', { videoId: 'vid-1', ownerId: creatorUser.id, visibility });
+  subject('Caption', {
+    videoId: 'vid-1',
+    ownerId: creatorUser.id,
+    channelId: 'chan-creator-1',
+    visibility,
+  });
 
 describe('rules/caption.rules: who may read and change the captions of a video', () => {
   it.each<{

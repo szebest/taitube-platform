@@ -3,7 +3,7 @@ import type { Repositories } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import type { Channel } from '@vp/domain';
 import { INVITEE_ID, seedTeam } from './channel-team-fixtures';
-import { OTHER_OWNER_ID, OWNER_ID, seedOwners } from './fixtures';
+import { OTHER_OWNER_ID, OWNER_ID, seedOwners, seededChannel } from './fixtures';
 import { SHARED_MILLISECOND } from './keyset-walk';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
@@ -75,13 +75,7 @@ export function describeTrustedCommenterRepositoryContract(
     });
 
     it('trusts a user on one channel only', async () => {
-      const other = expectOk(
-        await repositories.channels.create({
-          userId: OTHER_OWNER_ID,
-          handle: 'other',
-          displayName: 'Other',
-        })
-      );
+      const other = await seededChannel(repositories, OTHER_OWNER_ID);
       await add(INVITEE_ID);
 
       expect(expectOk(await repositories.trustedCommenters.isTrusted(other.id, INVITEE_ID))).toBe(

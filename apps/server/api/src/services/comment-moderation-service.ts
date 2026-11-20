@@ -2,7 +2,6 @@ import { type Result, err, ignore, isErr, ok } from '@kit/result';
 import type { CommentActionBody, ModerationResultView } from '@vp/api-contracts';
 import type { CommentCachePort } from '@vp/core/ports';
 import type {
-  ChannelRepositoryPort,
   CommentModerationRepositoryPort,
   CommentSettingsRepositoryPort,
   NotificationRepositoryPort,
@@ -29,7 +28,6 @@ import { type CommentLookupDeps, commentWithVideo } from './comment-lookup';
 import { toCommentView } from './comment-views';
 
 export interface CommentModerationServiceDeps extends CommentLookupDeps {
-  channels: Pick<ChannelRepositoryPort, 'findByUserId'>;
   settings: CommentSettingsRepositoryPort;
   moderation: CommentModerationRepositoryPort;
   notifications: Pick<NotificationRepositoryPort, 'withdrawUnread'>;
@@ -72,10 +70,7 @@ export class CommentModerationService {
     const { comment, video } = found.value;
     if (!(comment && video)) return err(commentNotFound(commentId));
 
-    const channel = await this.deps.channels.findByUserId(video.ownerId);
-    if (isErr(channel)) return channel;
-    if (!channel.value) return err(commentNotFound(commentId));
-    const channelId = channel.value.id;
+    const { channelId } = video;
     const settings = await this.deps.settings.get(channelId);
     if (isErr(settings)) return settings;
 
@@ -152,7 +147,7 @@ export class CommentModerationService {
       const { thread: moderated } = written.value;
       view = {
         state: outcome.state,
-        comment: toCommentView(moderated, video.ownerId, actor),
+        comment: toCommentView(moderated, video, actor),
       };
     }
 

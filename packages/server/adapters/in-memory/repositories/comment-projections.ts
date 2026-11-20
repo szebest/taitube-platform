@@ -17,7 +17,7 @@ export function toThreadOf(
     ...comment,
     author: {
       userId: comment.authorId,
-      channelId: channel?.id ?? null,
+      channelId: comment.authorChannelId,
       handle: channel?.handle ?? null,
       displayName: channel?.displayName ?? null,
       avatarUrl: channel?.avatarUrl ?? null,

@@ -3,6 +3,7 @@ import { expectOk } from '@kit/testing/result';
 import { Adapters, registerAdapters } from '@vp/adapters/composition';
 import { inProcessAppConfig } from '@vp/env-schema';
 import type { UserContext } from '@vp/permissions';
+import { seedPrimaryChannel } from '../../__tests__/test-app';
 import { Services, registerServices } from '../services.module';
 
 const OWNER: UserContext = { id: '00000000-0000-7000-8000-00000000f301', role: 'CREATOR' };
@@ -23,6 +24,7 @@ describe('apps/server/api/composition: screening module', () => {
       await repositories.videos.create({
         id: VIDEO_ID,
         ownerId: OWNER.id,
+        channelId: await seedPrimaryChannel(repositories, OWNER.id),
         title: 'This is shit',
         status: 'READY',
         sourceKey: 'raw/screening.mp4',

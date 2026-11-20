@@ -9,7 +9,7 @@ export const RISING = {
 
 export interface RisingCandidate {
   id: string;
-  ownerId: string;
+  channelId: string;
   createdAt: Date;
   subscriberCount: number;
   /** Viewers at the 0 percent retention step. */
@@ -48,8 +48,8 @@ export function rankRising<T extends RisingCandidate>(
   const seen = new Set<string>();
   const ranked: T[] = [];
   for (const candidate of candidates.filter(isRisingEligible).sort(compareRising)) {
-    if (seen.has(candidate.ownerId)) continue;
-    seen.add(candidate.ownerId);
+    if (seen.has(candidate.channelId)) continue;
+    seen.add(candidate.channelId);
     ranked.push(candidate);
     if (ranked.length === limit) break;
   }

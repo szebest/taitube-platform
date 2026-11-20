@@ -12,7 +12,9 @@ import { VideoStatusBadge } from '#app/components/video/video-status-badge';
 function VideoDetails({ video }: { video: Video }) {
   const { tOr } = useT();
   const canEdit = useCan(canUpdateVideo, { video });
-  const canSeeAnalytics = useCan(canReadAnalytics, { analytics: { ownerId: video.ownerId } });
+  const canSeeAnalytics = useCan(canReadAnalytics, {
+    analytics: { ownerId: video.ownerId, channelId: video.channelId },
+  });
 
   return (
     <div className="flex flex-col gap-stack">

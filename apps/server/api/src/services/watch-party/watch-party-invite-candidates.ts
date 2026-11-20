@@ -103,7 +103,7 @@ async function gatherSources(
   if (isErr(matches)) return matches;
   if (isErr(seated)) return seated;
   if (isErr(invites)) return invites;
-  const coWatchers = await channels.findByUserIds(coWatcherIds.value);
+  const coWatchers = await channels.findPrimaryByUserIds(coWatcherIds.value);
   if (isErr(coWatchers)) return coWatchers;
 
   const rank = new Map(coWatcherIds.value.map((id, index) => [id, index]));

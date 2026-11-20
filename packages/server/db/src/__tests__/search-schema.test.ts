@@ -34,8 +34,8 @@ describe('db: search migration', () => {
       insert into users (id, email) values ('${USER}', 'search@x.local');
       insert into channels (id, user_id, handle, display_name, bio)
         values ('${USER}', '${USER}', 'fireship', 'Fire Ship', 'short videos');
-      insert into videos (id, owner_id, title, description, tags, source_key)
-        values ('${USER}', '${USER}', 'Learn React', 'hooks', '{frontend}', 'raw/x.mp4');
+      insert into videos (id, owner_id, channel_id, title, description, tags, source_key)
+        values ('${USER}', '${USER}', '${USER}', 'Learn React', 'hooks', '{frontend}', 'raw/x.mp4');
       insert into playlists (id, owner_id, title, description, visibility)
         values ('${USER}', '${USER}', 'Coding Music', 'focus', 'public');
     `);

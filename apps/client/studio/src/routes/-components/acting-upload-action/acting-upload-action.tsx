@@ -5,10 +5,10 @@ import { UploadToolbarButton } from '#app/features/upload';
 import { useActiveChannel } from '#app/hooks/use-active-channel';
 
 function SignedInUploadAction() {
-  const { ownerId } = useActiveChannel();
+  const { ownerId, channelId } = useActiveChannel();
 
   return (
-    <Can type="rule" I={canUpdateVideo} this={{ video: { ownerId } }}>
+    <Can type="rule" I={canUpdateVideo} this={{ video: { ownerId, channelId } }}>
       <UploadToolbarButton />
     </Can>
   );

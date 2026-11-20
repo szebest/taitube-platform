@@ -2,6 +2,7 @@ import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
+import { seedPrimaryChannel } from '../../__tests__/test-app';
 import { type UploadContext, loadOwnedUpload } from '../upload-context';
 import { uploadContext } from './service-deps';
 
@@ -23,6 +24,7 @@ describe('apps/server/api/services: upload context', () => {
     await repositories.videos.create({
       id: VIDEO_ID,
       ownerId: OWNER.id,
+      channelId: await seedPrimaryChannel(repositories, OWNER.id),
       title: 'Owned',
       visibility: 'private',
       status: 'UPLOADING',

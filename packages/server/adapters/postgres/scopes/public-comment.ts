@@ -4,7 +4,7 @@ import { type SQL, eq, or, sql } from 'drizzle-orm';
 import type { AnyPgColumn } from 'drizzle-orm/pg-core';
 import { aliasedTable } from './aliased-table';
 
-const { videoComments, videos, channels, channelUserRestrictions } = schema;
+const { videoComments, videos, channelUserRestrictions } = schema;
 
 interface CommentTable {
   videoId: AnyPgColumn;
@@ -14,7 +14,6 @@ interface CommentTable {
 }
 
 const restriction = aliasedTable(channelUserRestrictions, 'public_scope_restriction');
-const channel = aliasedTable(channels, 'public_scope_channel');
 const video = aliasedTable(videos, 'public_scope_video');
 const parent = aliasedTable(videoComments, 'public_scope_parent');
 
@@ -22,8 +21,7 @@ const parent = aliasedTable(videoComments, 'public_scope_parent');
 function publicOf(table: CommentTable): SQL {
   return sql`(${table.moderationState} = 'published' and not exists (
     select 1 from ${restriction.from}
-    inner join ${channel.from} on ${channel.table.id} = ${restriction.table.channelId}
-    inner join ${video.from} on ${video.table.ownerId} = ${channel.table.userId}
+    inner join ${video.from} on ${video.table.channelId} = ${restriction.table.channelId}
     where ${video.table.id} = ${table.videoId}
       and ${restriction.table.userId} = ${table.authorId}
       and ${restriction.table.kind} = 'shadow'

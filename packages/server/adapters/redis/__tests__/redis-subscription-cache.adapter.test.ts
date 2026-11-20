@@ -7,9 +7,9 @@ import { FakeRedis } from './fake-redis';
 
 const CACHES = inProcessAppConfig().caches;
 
-const USER_ID = 'user-1';
+const SUBSCRIBER_CHANNEL_ID = 'subscriber-channel-1';
 const CHANNEL_ID = 'channel-1';
-const USER_KEY = `taitube:user:${USER_ID}:subscriptions`;
+const FOLLOWED_KEY = `taitube:channel:${SUBSCRIBER_CHANNEL_ID}:subscriptions`;
 const COUNT_KEY = `taitube:channel:${CHANNEL_ID}:subscriber_count`;
 
 describe('RedisSubscriptionCacheAdapter', () => {
@@ -22,35 +22,35 @@ describe('RedisSubscriptionCacheAdapter', () => {
   });
 
   describe('isSubscribed', () => {
-    it('keeps a subscription-free user cached rather than re-reading the database', async () => {
-      await cache.setUserSubscriptions(USER_ID, []);
+    it('keeps a channel that follows nobody cached rather than re-reading the database', async () => {
+      await cache.setSubscriptions(SUBSCRIBER_CHANNEL_ID, []);
 
-      expect(expectOk(await cache.isSubscribed(USER_ID, CHANNEL_ID))).toBe(false);
-      expect(redis.sets.get(USER_KEY)?.size).toBe(1);
+      expect(expectOk(await cache.isSubscribed(SUBSCRIBER_CHANNEL_ID, CHANNEL_ID))).toBe(false);
+      expect(redis.sets.get(FOLLOWED_KEY)?.size).toBe(1);
     });
   });
 
   describe('writes', () => {
     it('drops the empty marker when the first subscription arrives', async () => {
-      await cache.setUserSubscriptions(USER_ID, []);
-      await cache.addSubscription(USER_ID, CHANNEL_ID);
+      await cache.setSubscriptions(SUBSCRIBER_CHANNEL_ID, []);
+      await cache.addSubscription(SUBSCRIBER_CHANNEL_ID, CHANNEL_ID);
 
-      expect([...(redis.sets.get(USER_KEY) ?? [])]).toEqual([CHANNEL_ID]);
-      expect(redis.ttls.get(USER_KEY)).toBe(86400);
+      expect([...(redis.sets.get(FOLLOWED_KEY) ?? [])]).toEqual([CHANNEL_ID]);
+      expect(redis.ttls.get(FOLLOWED_KEY)).toBe(86400);
     });
 
     it('removes one channel without touching the rest', async () => {
-      await cache.setUserSubscriptions(USER_ID, [CHANNEL_ID, 'channel-2']);
-      await cache.removeSubscription(USER_ID, CHANNEL_ID);
+      await cache.setSubscriptions(SUBSCRIBER_CHANNEL_ID, [CHANNEL_ID, 'channel-2']);
+      await cache.removeSubscription(SUBSCRIBER_CHANNEL_ID, CHANNEL_ID);
 
-      expect([...(redis.sets.get(USER_KEY) ?? [])]).toEqual(['channel-2']);
+      expect([...(redis.sets.get(FOLLOWED_KEY) ?? [])]).toEqual(['channel-2']);
     });
 
     it('replaces the whole set on a refresh', async () => {
-      await cache.setUserSubscriptions(USER_ID, [CHANNEL_ID]);
-      await cache.setUserSubscriptions(USER_ID, ['channel-2', 'channel-3']);
+      await cache.setSubscriptions(SUBSCRIBER_CHANNEL_ID, [CHANNEL_ID]);
+      await cache.setSubscriptions(SUBSCRIBER_CHANNEL_ID, ['channel-2', 'channel-3']);
 
-      expect([...(redis.sets.get(USER_KEY) ?? [])].sort()).toEqual(['channel-2', 'channel-3']);
+      expect([...(redis.sets.get(FOLLOWED_KEY) ?? [])].sort()).toEqual(['channel-2', 'channel-3']);
     });
   });
 
@@ -76,10 +76,10 @@ describe('RedisSubscriptionCacheAdapter', () => {
       subscriberCountTtlSeconds: 30,
     });
 
-    await custom.setUserSubscriptions(USER_ID, [CHANNEL_ID]);
+    await custom.setSubscriptions(SUBSCRIBER_CHANNEL_ID, [CHANNEL_ID]);
     await custom.setSubscriberCount(CHANNEL_ID, 1);
 
-    expect(redis.ttls.get(USER_KEY)).toBe(60);
+    expect(redis.ttls.get(FOLLOWED_KEY)).toBe(60);
     expect(redis.ttls.get(COUNT_KEY)).toBe(30);
   });
 });

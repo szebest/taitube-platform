@@ -2,6 +2,7 @@ import { expectOk } from '@kit/testing/result';
 import { SEEDED } from '@vp/testing-fixtures';
 import { describeChannelRepositoryContract } from '../../../__tests__/contract/channel-repository.contract';
 import { inMemorySubject } from '../../../__tests__/contract/subjects';
+import { InMemoryChannelAuditRepository } from '../in-memory-channel-audit-repository';
 import { InMemoryChannelHandleHistoryRepository } from '../in-memory-channel-handle-history-repository';
 import { InMemoryChannelRepository } from '../in-memory-channel-repository';
 import { InMemoryVideoRepository } from '../in-memory-video-repository';
@@ -12,7 +13,8 @@ describe('InMemoryChannelRepository dev seed', () => {
   it('holds the dev channels from construction and restores them on clear', async () => {
     const channels = new InMemoryChannelRepository(
       new InMemoryVideoRepository(),
-      new InMemoryChannelHandleHistoryRepository()
+      new InMemoryChannelHandleHistoryRepository(),
+      new InMemoryChannelAuditRepository()
     );
     expectOk(
       await channels.create({
@@ -30,7 +32,7 @@ describe('InMemoryChannelRepository dev seed', () => {
       userId: SEEDED.userId,
       displayName: 'Dev Channel',
     });
-    expect(expectOk(await channels.findByUserId(SEEDED.otherUserId))?.id).toBe(
+    expect(expectOk(await channels.findPrimaryByUserId(SEEDED.otherUserId))?.id).toBe(
       SEEDED.otherChannelId
     );
   });

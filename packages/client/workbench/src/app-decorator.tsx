@@ -59,6 +59,14 @@ const VIEWER: Account = {
     createdAt: USER.createdAt,
     updatedAt: USER.createdAt,
   },
+  channels: [
+    {
+      id: '0190c3a0-5e1d-7000-8000-00000000c001',
+      handle: 'viewer',
+      displayName: 'The Viewer',
+      avatarUrl: null,
+    },
+  ],
 };
 
 const StoryContext = createContext<ReactNode>(null);

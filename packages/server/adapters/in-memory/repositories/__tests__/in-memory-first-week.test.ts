@@ -1,12 +1,13 @@
 import type { VideoRecord } from '@vp/core/repositories';
 import { firstWeekRowsOf, recentPeersOf } from '../in-memory-first-week';
 
-const OWNER = 'owner';
+const CHANNEL = 'channel';
 
 function video(overrides: Partial<VideoRecord>): VideoRecord {
   return {
     id: 'v1',
-    ownerId: OWNER,
+    ownerId: 'owner',
+    channelId: CHANNEL,
     visibility: 'public',
     status: 'READY',
     readyAt: new Date('2026-03-10T23:30:00.000Z'),
@@ -33,14 +34,14 @@ describe('in-memory first week', () => {
   });
 
   it.each([
-    ['another owner', { ownerId: 'other' }],
+    ['another channel', { channelId: 'other' }],
     ['a private video', { visibility: 'private' as const }],
     ['an unfinished video', { status: 'PROCESSING' as const }],
     ['the excluded video', { id: 'excluded' }],
     ['a video ready after the limit', { readyAt: new Date('2026-04-01T00:00:00.000Z') }],
     ['a video that never became ready', { readyAt: null }],
   ])('leaves out %s', (_name, overrides) => {
-    expect(recentPeersOf([video(overrides)], OWNER, 'excluded', new Date('2026-03-20'))).toEqual(
+    expect(recentPeersOf([video(overrides)], CHANNEL, 'excluded', new Date('2026-03-20'))).toEqual(
       []
     );
   });
@@ -50,7 +51,7 @@ describe('in-memory first week', () => {
     const newer = video({ id: 'b', readyAt: new Date('2026-03-05') });
 
     expect(
-      recentPeersOf([older, newer], OWNER, 'excluded', new Date('2026-03-20')).map(
+      recentPeersOf([older, newer], CHANNEL, 'excluded', new Date('2026-03-20')).map(
         ({ videoId }) => videoId
       )
     ).toEqual(['b', 'a']);

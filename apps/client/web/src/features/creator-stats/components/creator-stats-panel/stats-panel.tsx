@@ -29,7 +29,10 @@ export function StatsPanel({ video }: { video: Video }) {
   const [chosen, setChosen] = useState<boolean>();
   const stats = useQuery(creatorStatsQueryOptions(api, video.id));
   const canEdit = useCan(canUpdateVideo, { video });
-  const canPin = useCan(canPinComment, { videoOwnerId: video.ownerId });
+  const canPin = useCan(canPinComment, {
+    videoOwnerId: video.ownerId,
+    videoChannelId: video.channelId,
+  });
   const expanded = chosen ?? roomy;
   const live = stats.data?.first48Hours != null;
 

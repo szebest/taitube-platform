@@ -40,7 +40,7 @@ export interface ChannelInviteServiceDeps {
   members: Pick<ChannelMemberRepositoryPort, 'membershipsOf'>;
   channels: Pick<
     ChannelRepositoryPort,
-    'findByHandle' | 'findById' | 'findByIds' | 'findByUserIds'
+    'findByHandle' | 'findById' | 'findByIds' | 'findPrimaryByUserIds'
   >;
   paginator: Paginator;
   now: () => number;

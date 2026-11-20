@@ -12,6 +12,7 @@ const created: CommentThread = {
   id: 'c1',
   videoId: 'v1',
   authorId: AUTHOR,
+  authorChannelId: 'author-channel',
   parentId: null,
   content: 'hi',
   isPinned: false,
@@ -21,7 +22,13 @@ const created: CommentThread = {
   createdAt: new Date(0),
   updatedAt: new Date(0),
   ...UNMODERATED,
-  author: { userId: AUTHOR, channelId: null, handle: null, displayName: null, avatarUrl: null },
+  author: {
+    userId: AUTHOR,
+    channelId: 'author-channel',
+    handle: null,
+    displayName: null,
+    avatarUrl: null,
+  },
   replyCount: 0,
 };
 

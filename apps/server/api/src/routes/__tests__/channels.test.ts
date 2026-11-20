@@ -1,7 +1,7 @@
 import type { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { ErrorCodes } from '@vp/errors';
 import type { FastifyInstance } from 'fastify';
-import { buildTestApp } from '../../__tests__/test-app';
+import { buildTestApp, seedPrimaryChannel } from '../../__tests__/test-app';
 
 const CREATOR = '11111111-1111-7111-8111-111111111111';
 const CHANNEL = '22222222-2222-7222-8222-222222222222';
@@ -34,6 +34,7 @@ describe('public channel route', () => {
     await repositories.videos.create({
       id: VIDEO,
       ownerId: CREATOR,
+      channelId: await seedPrimaryChannel(repositories, CREATOR),
       visibility: 'public',
       status: 'READY',
       sourceKey: `raw/${VIDEO}.mp4`,
@@ -134,6 +135,7 @@ describe('public channel route', () => {
     await repositories.videos.create({
       id: SHORT,
       ownerId: CREATOR,
+      channelId: await seedPrimaryChannel(repositories, CREATOR),
       visibility: 'public',
       status: 'READY',
       format: 'short',

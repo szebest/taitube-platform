@@ -3,6 +3,7 @@ import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
+import { seedPrimaryChannel } from '../../__tests__/test-app';
 import { CreatorCommentService } from '../creator-comment-service';
 import { ownerActing } from './service-deps';
 
@@ -24,6 +25,7 @@ describe('CreatorCommentService', () => {
     await repositories.videos.create({
       id: VIDEO_ID,
       ownerId: OWNER.id,
+      channelId: ACTING.channelId,
       title: 'Clip',
       sourceKey: `raw/${VIDEO_ID}/source.mp4`,
       visibility: 'public',
@@ -34,6 +36,7 @@ describe('CreatorCommentService', () => {
         id: crypto.randomUUID(),
         videoId: VIDEO_ID,
         authorId: FAN,
+        authorChannelId: await seedPrimaryChannel(repositories, FAN),
         parentId: null,
         content,
       });

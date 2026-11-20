@@ -5,7 +5,9 @@ import { LazyStatsPanel } from './stats-panel.lazy';
 
 /** What the channel's team sees above a video's description: its numbers, its drop-offs and the quick edits; nothing, and no request, for anyone else. */
 export function CreatorStatsPanel({ video }: { video: Video }) {
-  const canRead = useCan(canReadVideoStats, { video: { ownerId: video.ownerId } });
+  const canRead = useCan(canReadVideoStats, {
+    video: { ownerId: video.ownerId, channelId: video.channelId },
+  });
 
   return canRead ? <LazyStatsPanel video={video} /> : null;
 }

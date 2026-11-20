@@ -26,16 +26,18 @@ describe('db: 0030 subscription events backfill', () => {
   });
 
   it('records every standing subscription as a gain at the time it was made', async () => {
-    const [owner, subscriber, channel] = [
+    const [owner, subscriber, channel, fanChannel] = [
+      crypto.randomUUID(),
       crypto.randomUUID(),
       crypto.randomUUID(),
       crypto.randomUUID(),
     ];
     await database.engine.exec(`
       insert into users (id, email) values ('${owner}', 'owner@example.com'), ('${subscriber}', 'fan@example.com');
-      insert into channels (id, user_id, handle, display_name) values ('${channel}', '${owner}', 'owner', 'Owner');
-      insert into channel_subscriptions (id, subscriber_id, channel_id, created_at)
-        values ('${crypto.randomUUID()}', '${subscriber}', '${channel}', '2026-01-02T03:04:05Z');
+      insert into channels (id, user_id, handle, display_name) values
+        ('${channel}', '${owner}', 'owner', 'Owner'), ('${fanChannel}', '${subscriber}', 'fan', 'Fan');
+      insert into channel_subscriptions (id, subscriber_id, subscriber_channel_id, channel_id, created_at)
+        values ('${crypto.randomUUID()}', '${subscriber}', '${fanChannel}', '${channel}', '2026-01-02T03:04:05Z');
     `);
 
     await database.engine.exec(backfill);

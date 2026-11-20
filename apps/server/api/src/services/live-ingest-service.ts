@@ -71,6 +71,7 @@ export class LiveIngestService {
       video: {
         id: videoId,
         ownerId: channel.value.userId,
+        channelId: channel.value.id,
         title: stream.title || channel.value.displayName,
         description: stream.description,
         visibility: stream.visibility,

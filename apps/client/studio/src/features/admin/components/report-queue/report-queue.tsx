@@ -40,6 +40,7 @@ function ReportActions({ report, onRemove }: ReportActionsProps) {
   const canResolve = useCan(canDeleteComment, {
     comment: { id: comment.id, authorId: comment.authorId, videoId: comment.videoId },
     videoOwnerId: '',
+    videoChannelId: '',
   });
 
   if (!canResolve || report.resolvedAt !== null) {

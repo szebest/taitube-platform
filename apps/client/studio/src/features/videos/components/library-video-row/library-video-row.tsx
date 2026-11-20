@@ -71,7 +71,9 @@ export function LibraryVideoActions({ video }: LibraryVideoPartProps) {
   const { tOr } = useT();
   const canEdit = useCan(canUpdateVideo, { video });
   const canDelete = useCan(canDeleteVideo, { video });
-  const canSeeAnalytics = useCan(canReadAnalytics, { analytics: { ownerId: video.ownerId } });
+  const canSeeAnalytics = useCan(canReadAnalytics, {
+    analytics: { ownerId: video.ownerId, channelId: video.channelId },
+  });
   const { deleteVideos, setVisibility } = useBatchActions();
   const updateVideo = useUpdateVideo(video.id);
   const showFailure = useFailureToast();

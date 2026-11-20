@@ -2,7 +2,13 @@ import { expectErr, expectOk } from '@kit/testing/result';
 import * as schema from '@vp/db';
 import { sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/pglite';
-import { OTHER_OWNER_ID, OWNER_ID, seedOwners } from '../../../__tests__/contract/fixtures';
+import {
+  OTHER_OWNER_CHANNEL_ID,
+  OTHER_OWNER_ID,
+  OWNER_CHANNEL_ID,
+  OWNER_ID,
+  seedOwners,
+} from '../../../__tests__/contract/fixtures';
 import { describeNotificationRepositoryContract } from '../../../__tests__/contract/notification-repository.contract';
 import { describeNotificationWithdrawalContract } from '../../../__tests__/contract/notification-withdrawal.contract';
 import { migratedPglite } from '../../../__tests__/contract/pglite-snapshot';
@@ -56,6 +62,7 @@ describe('PostgresNotificationRepository: one transaction per write', () => {
         await repositories.videos.create({
           id: videoId,
           ownerId: OWNER_ID,
+          channelId: OWNER_CHANNEL_ID,
           sourceKey: 'raw/a/source.mp4',
           visibility: 'public',
           status: 'READY',
@@ -70,6 +77,7 @@ describe('PostgresNotificationRepository: one transaction per write', () => {
           id: '00000000-0000-7000-8000-0000000000c1',
           videoId,
           authorId: OTHER_OWNER_ID,
+          authorChannelId: OTHER_OWNER_CHANNEL_ID,
           parentId: null,
           content: 'hello',
         })

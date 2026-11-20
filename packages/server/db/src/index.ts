@@ -25,6 +25,7 @@ export * from './screening-schema';
 export * from './channel-identity-schema';
 export * from './exports-schema';
 export * from './api-tokens-schema';
+export * from './account-audit-schema';
 export * from './client';
 export * from './migrate';
 export * from './seed';

@@ -72,7 +72,7 @@ describe('channel export routes', () => {
 
   beforeEach(async () => {
     repositories.clear();
-    const seeded = expectOk(await repositories.channels.findByUserId(SEEDED.userId));
+    const seeded = expectOk(await repositories.channels.findPrimaryByUserId(SEEDED.userId));
     if (!seeded) throw new Error('The seeded user has no channel');
     owner = seeded;
   });

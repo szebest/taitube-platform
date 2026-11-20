@@ -4,6 +4,7 @@ import { ErrorCodes } from '@vp/errors';
 import { CaptionService } from '../caption-service';
 import {
   CAPTIONED,
+  CAPTION_CHANNEL_ID,
   CAPTION_OWNER,
   CAPTION_STRANGER,
   PRIVATE_CAPTIONED,
@@ -230,14 +231,20 @@ describe('CaptionService', () => {
   });
 
   it.each([
-    { name: 'the owner with a channel', actor: CAPTION_OWNER, outcome: { enabled: true } },
     {
-      name: 'a caller with no channel',
+      name: 'the owner of the channel',
+      actor: CAPTION_OWNER,
+      channelId: CAPTION_CHANNEL_ID,
+      outcome: { enabled: true },
+    },
+    {
+      name: 'a channel that is not there',
       actor: CAPTION_STRANGER,
+      channelId: CHANNEL_ID,
       outcome: ErrorCodes.CHANNEL_NOT_FOUND,
     },
-  ])('sets the channel default for $name', async ({ actor, outcome }) => {
-    const set = await service.setChannelDefault(actor, ownerActing(actor.id, CHANNEL_ID), true);
+  ])('sets the channel default for $name', async ({ actor, channelId, outcome }) => {
+    const set = await service.setChannelDefault(actor, ownerActing(actor.id, channelId), true);
 
     expect(set.ok ? set.value : set.error.code).toEqual(outcome);
   });

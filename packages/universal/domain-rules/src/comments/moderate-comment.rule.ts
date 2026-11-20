@@ -22,7 +22,12 @@ export function decideCommentDelete(
     andThen(
       authorize(
         input.actor,
-        canDeleteComment({ user: input.actor, comment, videoOwnerId: video.ownerId }),
+        canDeleteComment({
+          user: input.actor,
+          comment,
+          videoOwnerId: video.ownerId,
+          videoChannelId: video.channelId,
+        }),
         { action: 'delete', subject: 'Comment' }
       ),
       () => ok(comment)
@@ -37,10 +42,18 @@ export function decideCommentDelete(
 export function decideCommentPin(input: ModerateCommentInput): Result<Comment, PinCommentFailure> {
   return andThen(locateComment(input), ({ comment, video }) =>
     andThen(
-      authorize(input.actor, canPinComment({ user: input.actor, videoOwnerId: video.ownerId }), {
-        action: 'pin',
-        subject: 'Comment',
-      }),
+      authorize(
+        input.actor,
+        canPinComment({
+          user: input.actor,
+          videoOwnerId: video.ownerId,
+          videoChannelId: video.channelId,
+        }),
+        {
+          action: 'pin',
+          subject: 'Comment',
+        }
+      ),
       (): Result<Comment, CommentNotPinnable> =>
         comment.parentId === null && comment.moderationState === 'published'
           ? ok(comment)

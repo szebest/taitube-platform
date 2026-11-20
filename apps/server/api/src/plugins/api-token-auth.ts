@@ -8,10 +8,16 @@ import type { FastifyRequest } from 'fastify';
 import { contractPaths } from '../routes/contract-schema';
 import type { Identity } from '../services/request-identity';
 
-/** Whether the request also carries the session cookie the client apps keep. */
+/** The single-account cookie, or one of the per-slot cookies a browser holding several accounts keeps. */
+function isSessionCookie(name: string): boolean {
+  const slot = name.startsWith(`${SESSION_COOKIE}.`) ? name.slice(SESSION_COOKIE.length + 1) : null;
+  return name === SESSION_COOKIE || (slot !== null && /^[0-9]$/.test(slot));
+}
+
+/** Whether the request also carries a session cookie the client apps keep. */
 export function carriesSession(request: FastifyRequest): boolean {
   const { cookie } = request.headers;
-  return cookie !== undefined && parseCookie(cookie)[SESSION_COOKIE] !== undefined;
+  return cookie !== undefined && Object.keys(parseCookie(cookie)).some(isSessionCookie);
 }
 
 /** The scope each route names, under its versioned path and its unprefixed alias alike. */

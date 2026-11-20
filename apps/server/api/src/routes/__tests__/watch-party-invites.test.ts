@@ -1,6 +1,7 @@
 import { expectOk } from '@kit/testing/result';
 import type { NotificationPreferences } from '@vp/domain/settings';
 import { ErrorCodes } from '@vp/errors';
+import { seedPrimaryChannel } from '../../__tests__/test-app';
 import {
   type Account,
   buildRoomApp,
@@ -93,8 +94,16 @@ describe('watch party invite routes', () => {
     async ({ prefs, subscribed, sent }) => {
       await ctx.prefers(guest, prefs);
       if (subscribed) {
-        const channel = expectOk(await ctx.repositories.channels.findByUserId(owner.user.id));
-        expectOk(await ctx.repositories.subscriptions.subscribe(guest.user.id, channel?.id ?? ''));
+        const channel = expectOk(
+          await ctx.repositories.channels.findPrimaryByUserId(owner.user.id)
+        );
+        expectOk(
+          await ctx.repositories.subscriptions.subscribe(
+            guest.user.id,
+            await seedPrimaryChannel(ctx.repositories, guest.user.id),
+            channel?.id ?? ''
+          )
+        );
       }
 
       const res = await invite(owner, guest);

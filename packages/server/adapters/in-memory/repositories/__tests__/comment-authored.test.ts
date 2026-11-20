@@ -8,7 +8,17 @@ const AUTHOR = { id: '00000000-0000-7000-8000-000000000102', role: 'USER' as con
 const VIDEO = '00000000-0000-7000-8000-00000000000a';
 
 const stored = (id: string, authorId: string, at: number, deleted = false) => ({
-  ...newStoredComment({ id, videoId: VIDEO, authorId, parentId: null, content: id }, new Date(at)),
+  ...newStoredComment(
+    {
+      id,
+      videoId: VIDEO,
+      authorId,
+      authorChannelId: `channel-${authorId}`,
+      parentId: null,
+      content: id,
+    },
+    new Date(at)
+  ),
   deletedAt: deleted ? new Date(at) : null,
 });
 
@@ -19,6 +29,7 @@ describe('adapters/in-memory: comments by their author', () => {
       await repositories.videos.create({
         id: VIDEO,
         ownerId: OWNER,
+        channelId: 'owner-channel',
         sourceKey: 'raw/a/source.mp4',
         visibility: 'public',
         status: 'READY',

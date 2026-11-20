@@ -8,6 +8,7 @@ import {
 } from '@vp/adapters/in-memory';
 import { RISING, SEARCH_SUGGESTIONS } from '@vp/domain';
 import type { UserContext } from '@vp/permissions';
+import { seedPrimaryChannel } from '../../__tests__/test-app';
 import { DiscoveryShelves } from '../discovery-shelves';
 import { HistoryPause } from '../history-pause';
 import { SearchService } from '../search-service';
@@ -29,10 +30,11 @@ describe('apps/server/api/services: DiscoveryShelves', () => {
   let creatorChannelId: string;
   let shelves: DiscoveryShelves;
 
-  const publish = (id: string, ownerId = CREATOR) =>
+  const publish = async (id: string, ownerId = CREATOR) =>
     repositories.videos.create({
       id,
       ownerId,
+      channelId: await seedPrimaryChannel(repositories, ownerId),
       title: `Video ${id.slice(-2)}`,
       visibility: 'public',
       status: 'READY',

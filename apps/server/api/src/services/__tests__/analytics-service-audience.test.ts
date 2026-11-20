@@ -23,6 +23,7 @@ describe('AnalyticsService: audience and benchmark', () => {
       await repositories.videos.create({
         id,
         ownerId: OWNER.id,
+        channelId: SEEDED.channelId,
         visibility: 'public',
         status: 'READY',
         sourceKey: `raw/${id}/source.mp4`,

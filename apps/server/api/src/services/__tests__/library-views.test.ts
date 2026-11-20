@@ -17,6 +17,7 @@ function clip(posterKey: string | null): VideoRecord {
   return {
     id: 'v1',
     ownerId: 'u2',
+    channelId: 'c2',
     title: 'Clip',
     description: null,
     visibility: 'public',

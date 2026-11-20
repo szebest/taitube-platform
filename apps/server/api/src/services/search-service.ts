@@ -193,10 +193,10 @@ export class SearchService {
     return andThenAsync(
       andThen(found, (page) => map(counts, (kinds) => ({ page, kinds }))),
       async ({ page, kinds }) => {
-        const owners = page.hits.flatMap((hit) =>
-          hit.kind === 'video' ? [hit.video.ownerId] : []
+        const channelIds = page.hits.flatMap((hit) =>
+          hit.kind === 'video' ? [hit.video.channelId] : []
         );
-        const channelOf = await loadChannelsOf(this.deps.channels, owners);
+        const channelOf = await loadChannelsOf(this.deps.channels, channelIds);
         return map(channelOf, (of): SearchBody => ({
           ...this.deps.paginator.paginate(page.hits, limit, {
             cursorOf: (hit) => searchCursorPayload(hit, { sort, mode, instant }),

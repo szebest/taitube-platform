@@ -7,8 +7,9 @@ import {
   renditionPlaylistKey,
   spriteKey,
 } from '@vp/storage';
+import { and, eq } from 'drizzle-orm';
 import { type Log, createDbClient, waitForDatabase } from './client';
-import { renditions, users, videos } from './schema';
+import { channels, renditions, users, videos } from './schema';
 
 const DEV_USER_ID = '00000000-0000-7000-8000-000000000001';
 const OTHER_USER_ID = '00000000-0000-7000-8000-000000000002';
@@ -16,8 +17,22 @@ const SEED_VIDEO_ID = '018f0000-0000-7000-8000-000000000001';
 const OTHER_PRIVATE_VIDEO_ID = '018f0000-0000-7000-8000-000000000002';
 
 const SEED_USERS = [
-  { id: DEV_USER_ID, email: 'dev@video-pipeline.local', tier: 'pro' },
-  { id: OTHER_USER_ID, email: 'other@video-pipeline.local', tier: 'free' },
+  {
+    id: DEV_USER_ID,
+    email: 'dev@video-pipeline.local',
+    tier: 'pro',
+    channel: {
+      id: '00000000-0000-7000-8000-000000000101',
+      handle: 'dev',
+      displayName: 'Dev Channel',
+    },
+  },
+  {
+    id: OTHER_USER_ID,
+    email: 'other@video-pipeline.local',
+    tier: 'free',
+    channel: { id: '00000000-0000-7000-8000-000000000102', handle: 'other', displayName: 'Other' },
+  },
 ] as const;
 
 const SEED_RENDITIONS: Record<RenditionName, { id: string; bytes: number; processingMs: number }> =
@@ -35,11 +50,21 @@ export async function seedDatabase(connectionUrl: string, log: Log): Promise<voi
 
   log.info({}, 'seeding the database');
 
-  for (const { id, email, tier } of SEED_USERS) {
+  const primaryChannel = new Map<string, string>();
+  for (const { id, email, tier, channel } of SEED_USERS) {
     await db
       .insert(users)
       .values({ id, email, tier })
       .onConflictDoUpdate({ target: users.id, set: { email, tier } });
+    await db
+      .insert(channels)
+      .values({ ...channel, userId: id, isPrimary: true })
+      .onConflictDoNothing();
+    const [primary] = await db
+      .select({ id: channels.id })
+      .from(channels)
+      .where(and(eq(channels.userId, id), eq(channels.isPrimary, true)));
+    if (primary) primaryChannel.set(id, primary.id);
   }
 
   const ladder = CANONICAL_LADDER.map(({ name, width, height, videoKbps, audioKbps }) => ({
@@ -50,7 +75,7 @@ export async function seedDatabase(connectionUrl: string, log: Log): Promise<voi
     audioKbps,
   }));
 
-  const seedVideos: (typeof videos.$inferInsert)[] = [
+  const seedVideos: Omit<typeof videos.$inferInsert, 'channelId'>[] = [
     {
       id: SEED_VIDEO_ID,
       ownerId: DEV_USER_ID,
@@ -95,7 +120,10 @@ export async function seedDatabase(connectionUrl: string, log: Log): Promise<voi
     },
   ];
 
-  for (const video of seedVideos) {
+  for (const seeded of seedVideos) {
+    const channelId = primaryChannel.get(seeded.ownerId);
+    if (!channelId) throw new Error(`seed video ${seeded.id} has no owner channel`);
+    const video = { ...seeded, channelId };
     await db
       .insert(videos)
       .values({ ...video, readyAt: new Date() })

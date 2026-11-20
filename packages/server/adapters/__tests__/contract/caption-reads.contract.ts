@@ -1,13 +1,12 @@
 import { expectOk } from '@kit/testing/result';
 import {
   ABSENT_ID,
-  CHANNEL_ID,
   captionContractContext,
   generated,
   ready,
   upload,
 } from './caption-contract-context';
-import { OWNER_ID, VIDEO_IDS } from './fixtures';
+import { OWNER_CHANNEL_ID, OWNER_ID, VIDEO_IDS } from './fixtures';
 import type { MakeRepositoriesSubject } from './subjects';
 
 export function describeCaptionReadsContract(makeSubject: MakeRepositoriesSubject): void {
@@ -48,7 +47,7 @@ export function describeCaptionReadsContract(makeSubject: MakeRepositoriesSubjec
       expect(expectOk(await ctx.captions.listStalePending(-1, 10))).toEqual([]);
     });
 
-    it('reads the switches, falling back to a channel default of false without a channel', async () => {
+    it('reads the switches, the channel default false until it is set', async () => {
       expect(expectOk(await ctx.captions.settings(VIDEO_IDS.a))).toEqual({
         videoId: VIDEO_IDS.a,
         ownerId: OWNER_ID,
@@ -67,25 +66,16 @@ export function describeCaptionReadsContract(makeSubject: MakeRepositoriesSubjec
       });
     });
 
-    it('sets the channel default of an owner who has a channel only', async () => {
-      expect(expectOk(await ctx.captions.setChannelDefault(OWNER_ID, true))).toBe(false);
+    it('sets the default of a channel that is there only, read by its videos', async () => {
+      expect(expectOk(await ctx.captions.setChannelDefault(ABSENT_ID, true))).toBe(false);
 
-      expectOk(
-        await ctx.subject.repositories.channels.create({
-          id: CHANNEL_ID,
-          userId: OWNER_ID,
-          handle: 'owner',
-          displayName: 'Owner',
-        })
-      );
-
-      expect(expectOk(await ctx.captions.channelDefault(OWNER_ID))).toBe(false);
-      expect(expectOk(await ctx.captions.setChannelDefault(OWNER_ID, true))).toBe(true);
-      expect(expectOk(await ctx.captions.channelDefault(OWNER_ID))).toBe(true);
+      expect(expectOk(await ctx.captions.channelDefault(OWNER_CHANNEL_ID))).toBe(false);
+      expect(expectOk(await ctx.captions.setChannelDefault(OWNER_CHANNEL_ID, true))).toBe(true);
+      expect(expectOk(await ctx.captions.channelDefault(OWNER_CHANNEL_ID))).toBe(true);
       expect(expectOk(await ctx.captions.settings(VIDEO_IDS.a))).toMatchObject({
         channelDefault: true,
       });
-      expect(expectOk(await ctx.captions.setChannelDefault(OWNER_ID, false))).toBe(true);
+      expect(expectOk(await ctx.captions.setChannelDefault(OWNER_CHANNEL_ID, false))).toBe(true);
       expect(expectOk(await ctx.captions.settings(VIDEO_IDS.a))).toMatchObject({
         channelDefault: false,
       });
