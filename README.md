@@ -98,6 +98,7 @@ taitube-platform/
 │   │   │   ├── intl/                # Formatters on Intl over a tagged value union, IntlCache and the locale chain
 │   │   │   ├── machine/             # Lifecycles as typed edge tables: legal moves, findings, Mermaid
 │   │   │   ├── pagination/          # Keyset cursor codec and page shapes
+│   │   │   ├── permissions/         # CASL ability factory over the app's rule sets, assertCan
 │   │   │   ├── primitives/          # Time-unit constants every package reads by name
 │   │   │   ├── result/              # Result type, combinators, tryCatch/fromPromise
 │   │   │   ├── runtime/             # Clock, Random, EnvSource, Fetch and CookieJar tokens; node and browser entries
@@ -107,6 +108,7 @@ taitube-platform/
 │   │   │   ├── components/          # Shared components both apps render: PageHeader, EmptyState, ErrorState, SectionError, the state illustrations
 │   │   │   ├── forms/               # useAppForm with the text, select and file fields, and validateWith
 │   │   │   ├── intl-react/          # IntlProvider, useT, useFormat and <Format> for the web app
+│   │   │   ├── query/               # Query client factory, retry policy, keyset paging, not-found loader helpers
 │   │   │   ├── security-headers/    # CSP nonce and the security headers request middleware each app mounts
 │   │   │   ├── ui/                  # Design system: Tailwind tokens, Radix primitives, the theme and the logo
 │   │   │   ├── web-telemetry/       # Core Web Vitals beacon and browser traces, started after hydration

@@ -1,3 +1,4 @@
+import { KEYSET_PAGE_SIZE, keysetPaging } from '@kit/query';
 import {
   infiniteQueryOptions,
   mutationOptions,
@@ -7,7 +8,6 @@ import {
 import type { ApiClient } from '@vp/api-client';
 import type { ContractBody, createSavedReply, updateSavedReply } from '@vp/api-contracts';
 import { useApi } from './api-provider';
-import { KEYSET_PAGE_SIZE, keysetPaging } from './keyset-paging';
 import { moderationKeys } from './moderation-queries';
 
 /** The shadow bans and bans on the acting channel that have not ended, newest first. */

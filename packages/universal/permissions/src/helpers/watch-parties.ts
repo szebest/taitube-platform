@@ -1,4 +1,5 @@
-import { AbilityBuilder, createMongoAbility, subject } from '@casl/ability';
+import { type AbilityBuilder, subject } from '@casl/ability';
+import { createAbilityFactory } from '@kit/permissions';
 import type { WatchPartyPermission } from '@vp/domain';
 import { getUserPermissions } from '../ability';
 import { defineWatchPartyRoomRules } from '../rules/watch-party.rules';
@@ -13,14 +14,22 @@ import type {
   WatchPartyViewer,
 } from '../types/index';
 
+interface RoomContext {
+  readonly user: UserContext | null;
+  readonly viewer: WatchPartyViewer;
+}
+
+const buildRoomAbility = createAbilityFactory([
+  ({ user, viewer }: RoomContext, builder: AbilityBuilder<WatchPartyAbility>) =>
+    defineWatchPartyRoomRules(user, viewer, builder),
+]);
+
 /** The ability every room action on the server, REST or socket, is decided through. */
 export function getWatchPartyPermissions(
   user: UserContext | null,
   viewer: WatchPartyViewer
 ): WatchPartyAbility {
-  const builder = new AbilityBuilder<WatchPartyAbility>(createMongoAbility);
-  defineWatchPartyRoomRules(user, viewer, builder);
-  return builder.build();
+  return buildRoomAbility({ user, viewer });
 }
 
 export function canInRoom(ability: WatchPartyAbility, permission: WatchPartyPermission): boolean {

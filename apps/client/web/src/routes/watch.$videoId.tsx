@@ -1,6 +1,7 @@
+import { parseParam } from '@kit/query';
 import { createFileRoute } from '@tanstack/react-router';
 import { type Video, VideoIdParamSchema } from '@vp/api-contracts';
-import { ensureFound, parseParam, videoQueryOptions, prefetched } from '@vp/queries';
+import { ensureFound, videoQueryOptions, prefetched } from '@vp/queries';
 import { z } from 'zod';
 import { ClipAction } from '#app/features/clips';
 import { CreatorStatsPanel } from '#app/features/creator-stats';

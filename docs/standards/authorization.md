@@ -31,7 +31,7 @@ export function decideVideoMetadataUpdate(
 }
 ```
 
-`assertCan` is still exported from `@vp/permissions` for `apps/client/web`, whose provider builds
+`assertCan` comes from `@kit/permissions` (the generic engine `@vp/permissions` builds on) for `apps/client/web`, whose provider builds
 `usePermissions().assertCan` on it. It has no place in a rule, a service or a route.
 
 ---
@@ -60,7 +60,7 @@ The permission engine is a pure domain package (`packages/universal/permissions`
   - `rules/channel-team.rules.ts`: The channel owner manages `ChannelMember` and `ChannelInvite` and reads `ChannelAudit`; a manager does the same on rows whose `role` is not `manager`; a member deletes their own `ChannelMember` row (leaves); an invitee updates their own `ChannelInvite` (answers).
   - Channel team roles: `CHANNEL_ROLES` in `@vp/domain` maps each role to its capabilities, and `rules/memberships.ts` turns the caller's memberships into `{ $in }` conditions (`ownersWith` on the channel owner's user id for videos, comments, analytics, captions and uploads; `channelsWith` on the channel id for `Channel`). Each rule file adds its member rules beside its owner rules, and `rules/__tests__/channel-matrix.ts` generates one cell per capability, action and persona for every rule spec.
   - `rules/admin.rules.ts`: Superuser global bypass (`can('manage', 'all')`), except the creator's heart: an admin hearts only on a video they own.
-- Global builder `getUserPermissions(user: UserContext | null): AppAbility` compiles rules into an immutable `MongoAbility` with zero class inheritance.
+- Global builder `getUserPermissions(user: UserContext | null): AppAbility` hands the rule sets, in order, to `createAbilityFactory` from `@kit/permissions`, which compiles them into an immutable `MongoAbility` with zero class inheritance.
 
 ### Resource Normalizers (`packages/universal/permissions/src/normalizers/`)
 Centralized normalizers eliminate ad-hoc object spreads and provide canonical CASL subject wrappers:

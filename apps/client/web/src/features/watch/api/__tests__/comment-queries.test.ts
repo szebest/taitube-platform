@@ -1,5 +1,6 @@
+import { KEYSET_PAGE_SIZE } from '@kit/query';
 import { listCommentReplies, listVideoComments } from '@vp/api-contracts';
-import { createQueryClient, KEYSET_PAGE_SIZE } from '@vp/queries';
+import { createQueryClient } from '@vp/queries';
 import { api, apiServer, mockEndpoint, VIDEO_ID } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
 import { COMMENT_ID, comment } from '#app/__tests__/comment-fixtures';

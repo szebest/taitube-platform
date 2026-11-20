@@ -29,8 +29,8 @@ moment a stage's `Result` has to become a throw, because BullMQ's retry contract
 
 ## 2. Invariants
 
-- **Universal, no product dependency.** Platform packages only (`@kit/errors`, `@kit/intl`, `@kit/pagination`),
-  no runtime dependency, no `node:*`.
+- **Universal, no product dependency.** Platform packages only (`@kit/errors`, `@kit/intl`, `@kit/pagination`), no
+  third-party runtime dependency of its own, no `node:*`.
 - **`Failure` is how a rule, a service and a stage report a failure.** Not a class, not a bare
   `Error`, not a `string`. `tests/architecture/no-domain-throw.test.ts` enforces it over
   `@vp/validation`, `@vp/domain-rules`, `@vp/core`, `apps/server/api/src/services` and `apps/server/worker/src/stages`.

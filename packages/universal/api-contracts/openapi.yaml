@@ -14922,6 +14922,8 @@ paths:
                           enum:
                             - VALIDATION_FAILED
                             - INTERNAL
+                            - UNAUTHORIZED
+                            - FORBIDDEN
                             - INVALID_CURSOR
                             - FORMAT_UNSUPPORTED_LOCALE
                             - FORMAT_UNKNOWN_OPTION
@@ -14936,9 +14938,7 @@ paths:
                             - VIDEO_NOT_FOUND
                             - DLQ_ENTRY_NOT_FOUND
                             - VERSION_CONFLICT
-                            - FORBIDDEN
                             - RATE_LIMITED
-                            - UNAUTHORIZED
                             - ROUTE_NOT_FOUND
                             - CATEGORY_NOT_FOUND
                             - CATEGORY_SLUG_CONFLICT

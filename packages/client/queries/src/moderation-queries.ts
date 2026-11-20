@@ -1,3 +1,4 @@
+import { KEYSET_PAGE_SIZE, keysetPaging } from '@kit/query';
 import { fromPromise } from '@kit/result';
 import {
   infiniteQueryOptions,
@@ -16,7 +17,6 @@ import { ErrorCodes } from '@vp/errors';
 import { useApi } from './api-provider';
 import { commentListKeys, creatorCommentKeys } from './comment-queries';
 import { failureCode } from './failure-code';
-import { KEYSET_PAGE_SIZE, keysetPaging } from './keyset-paging';
 
 export const moderationKeys = {
   all: ['moderation'] as const,
