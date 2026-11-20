@@ -10,6 +10,7 @@ import {
   type ExperimentVariantStats,
   mergeExperimentCounts,
 } from '@vp/domain';
+import { EXPERIMENT } from '@vp/domain-rules';
 import type { DatabaseUnavailable } from '@vp/errors';
 
 /** The owner of every video, which is what a channel's running tests are counted over. */
@@ -78,7 +79,8 @@ export class InMemoryVideoExperimentRepository extends VideoExperimentRepository
     end: ExperimentEnd
   ): Promise<Result<Experiment | null, DatabaseUnavailable>> {
     const found = this.experiments.get(experimentId);
-    if (found?.videoId !== videoId || found.status !== 'running') return ok(null);
+    if (found?.videoId !== videoId || !EXPERIMENT.hasEdge(found.status, end.status))
+      return ok(null);
     const ended: Experiment = {
       ...found,
       status: end.status,

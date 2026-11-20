@@ -1,4 +1,4 @@
-import { type Result, assertNever, isErr, map, ok, unwrapOr } from '@kit/result';
+import { type Result, isErr, map, ok, unwrapOr } from '@kit/result';
 import { trace } from '@opentelemetry/api';
 import {
   type EventRepository,
@@ -18,7 +18,6 @@ import {
   type VideoRecord,
   VideoRepository,
   type VideoScan,
-  type VideoScanAbsence,
   type VideoWithDetails,
 } from '@vp/core/repositories';
 import { resolveVideoTransition, videoStatusChanged } from '@vp/domain';
@@ -31,6 +30,7 @@ import { byKeysetDesc, isKeysetBefore } from './keyset';
 import { newVideoRecord } from './new-video-record';
 import { selectPublicFeed } from './public-feed-query';
 import type { InMemoryVideoRepositoryOptions, UploadLookup } from './types';
+import { selectVideoScan } from './video-scan-query';
 
 export type { InMemoryVideoRepositoryOptions };
 
@@ -203,44 +203,13 @@ export class InMemoryVideoRepository extends VideoRepository {
     return ok(true);
   }
 
-  private async isAbsent(video: VideoRecord, absence: VideoScanAbsence): Promise<boolean> {
-    switch (absence.type) {
-      case 'step': {
-        const steps = await this.getSteps(video.id);
-        return !steps.some((s) => s.step === absence.step);
-      }
-      case 'event': {
-        const events = await this.getEvents(video.id);
-        return !events.some(
-          (e) =>
-            e.type === absence.event &&
-            (!absence.forCurrentGeneration ||
-              Number((e.payload as { generation?: number })?.generation ?? 0) >= video.generation)
-        );
-      }
-      default:
-        return assertNever(absence, 'VideoScanAbsence');
-    }
-  }
-
   async scan(filter: VideoScan): Promise<Result<VideoRecord[], DatabaseUnavailable>> {
-    const { status, minGeneration, without, limit } = filter;
-    const idle = filter.idleFor && {
-      since: filter.idleFor.since,
-      before: new Date(this.now() - filter.idleFor.ms),
-    };
-    const results: VideoRecord[] = [];
-
-    for (const video of this.videosMap.values()) {
-      if (results.length >= limit) break;
-      if (video.status !== status) continue;
-      if (idle && (video[idle.since] ?? video.updatedAt) >= idle.before) continue;
-      if (minGeneration !== undefined && video.generation < minGeneration) continue;
-      if (without && !(await this.isAbsent(video, without))) continue;
-      results.push({ ...video });
-    }
-
-    return ok(results);
+    return ok(
+      await selectVideoScan(this.videosMap.values(), filter, this.now(), {
+        steps: (id) => this.getSteps(id),
+        events: (id) => this.getEvents(id),
+      })
+    );
   }
 
   async hardDelete(id: string): Promise<Result<boolean, DatabaseUnavailable>> {

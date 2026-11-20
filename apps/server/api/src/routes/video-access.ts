@@ -16,10 +16,14 @@ import { contractSchema } from './contract-schema';
 import { httpOnlyCookie } from './http-only-cookie';
 import { sendResult } from './send-result';
 
-/** Per client and video, so guessing one video's password neither spends nor shares another's tries. */
+/**
+ * Per client and video, so guessing one video's password neither spends nor shares another's tries.
+ * The limiter runs before validation sees the id, and Postgres matches a uuid in any case, so the key
+ * lower-cases it: otherwise every casing of one id would open a fresh bucket.
+ */
 function unlockKey(request: FastifyRequest): string {
   const { id } = request.params as { id: string };
-  return `${request.ip}|${id}`;
+  return `${request.ip}|${id.toLowerCase()}`;
 }
 
 export async function videoAccessRoutes(app: FastifyInstance): Promise<void> {

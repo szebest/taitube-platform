@@ -4,6 +4,7 @@ import { VIEW_BUFFER_SCRIPTS } from '../view-buffer-scripts';
 import { recordPlayback } from './fake-playback';
 import { recordRetention } from './fake-retention';
 import { rankRange, ranked, recordSuggestion } from './fake-sorted-set';
+import { recordShareLinkOpen, recordView, releaseViews, snapshotViews } from './fake-views';
 
 type Listener = (...args: string[]) => void;
 
@@ -123,13 +124,13 @@ export class FakeRedis {
 
     switch (script) {
       case VIEW_BUFFER_SCRIPTS.record:
-        return this.recordView(keys, argv);
+        return recordView(this, keys, argv);
       case VIEW_BUFFER_SCRIPTS.recordShareLinkOpen:
-        return this.recordShareLinkOpen(keys, argv);
+        return recordShareLinkOpen(this, keys, argv);
       case VIEW_BUFFER_SCRIPTS.snapshot:
-        return this.snapshotViews(keys, argv);
+        return snapshotViews(this, keys, argv);
       case VIEW_BUFFER_SCRIPTS.release:
-        return this.releaseViews(keys, argv);
+        return releaseViews(this, keys, argv);
       case VIEW_BUFFER_SCRIPTS.recordRetention:
         return recordRetention(this, keys, argv);
       case VIEW_BUFFER_SCRIPTS.recordPlayback:
@@ -139,70 +140,6 @@ export class FakeRedis {
       default:
         throw new Error('FakeRedis has no stand-in for this script');
     }
-  }
-
-  private recordView(keys: string[], argv: string[]): number {
-    const [dedupKey = '', bufferKey = '', hourlyKey = ''] = keys;
-    const [viewer = '', ttl = '0', viewsField = '', hourlyField = ''] = argv;
-    const sketch = this.sketches.get(dedupKey) ?? new Set<string>();
-    const added = sketch.has(viewer) ? 0 : 1;
-    sketch.add(viewer);
-    this.sketches.set(dedupKey, sketch);
-    this.ttls.set(dedupKey, Number(ttl));
-    if (added === 1) {
-      void this.hincrby(bufferKey, viewsField, 1);
-      void this.hincrby(hourlyKey, hourlyField, 1);
-    }
-    return added;
-  }
-
-  private recordShareLinkOpen(keys: string[], argv: string[]): number {
-    const [dedupKey = '', bufferKey = ''] = keys;
-    const [viewer = '', ttl = '0', opensField = ''] = argv;
-    const sketch = this.sketches.get(dedupKey) ?? new Set<string>();
-    const added = sketch.has(viewer) ? 0 : 1;
-    sketch.add(viewer);
-    this.sketches.set(dedupKey, sketch);
-    this.ttls.set(dedupKey, Number(ttl));
-    if (added === 1) void this.hincrby(bufferKey, opensField, 1);
-    return added;
-  }
-
-  private snapshotViews(keys: string[], argv: string[]): string | null {
-    const [
-      pointer = '',
-      buffer = '',
-      batchKey = '',
-      retention = '',
-      retentionBatchKey = '',
-      hourly = '',
-      hourlyBatchKey = '',
-    ] = keys;
-    const [batchId = ''] = argv;
-    const pending = this.strings.get(pointer);
-    if (pending !== undefined) return pending;
-    if (![buffer, retention, hourly].some((key) => this.hashes.has(key))) return null;
-    this.moveHash(buffer, batchKey);
-    this.moveHash(retention, retentionBatchKey);
-    this.moveHash(hourly, hourlyBatchKey);
-    this.strings.set(pointer, batchId);
-    return batchId;
-  }
-
-  private moveHash(from: string, to: string): void {
-    const hash = this.hashes.get(from);
-    if (!hash) return;
-    this.hashes.delete(from);
-    this.hashes.set(to, hash);
-  }
-
-  private releaseViews(keys: string[], argv: string[]): number {
-    const [pointer = '', ...batchKeys] = keys;
-    const [batchId = ''] = argv;
-    if (this.strings.get(pointer) !== batchId) return 0;
-    this.strings.delete(pointer);
-    for (const key of batchKeys) this.hashes.delete(key);
-    return 1;
   }
 
   async expire(key: string, ttlSeconds: number): Promise<number> {

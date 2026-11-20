@@ -38,6 +38,15 @@ function countKey(videoId: string, viewDate: string): string {
   return `${videoId}|${viewDate}`;
 }
 
+/** Remembers `viewer` under `key`, and answers whether this is the first time. */
+function firstSighting(seenBy: Map<string, Set<string>>, key: string, viewer: string): boolean {
+  const seen = seenBy.get(key);
+  if (seen?.has(viewer)) return false;
+  if (seen) seen.add(viewer);
+  else seenBy.set(key, new Set([viewer]));
+  return true;
+}
+
 export class InMemoryViewBuffer implements ViewBufferPort {
   private readonly viewers = new Map<string, Set<string>>();
   private buffer = new Map<string, MutableCount>();
@@ -64,11 +73,8 @@ export class InMemoryViewBuffer implements ViewBufferPort {
 
   private recordOne(view: ViewEvent, device?: ViewDevice): ViewRecordOutcome {
     const key = countKey(view.videoId, view.viewDate);
-    const seen = this.viewers.get(key);
-    if (seen?.has(view.viewerId)) return 'duplicate';
+    if (!firstSighting(this.viewers, key, view.viewerId)) return 'duplicate';
 
-    if (seen) seen.add(view.viewerId);
-    else this.viewers.set(key, new Set([view.viewerId]));
     this.addOne({ videoId: view.videoId, viewDate: view.viewDate, views: 1, watchSeconds: 0 });
     this.hourly.push({ videoId: view.videoId, viewHour: view.viewHour, views: 1 });
     if (device) {
@@ -134,11 +140,7 @@ export class InMemoryViewBuffer implements ViewBufferPort {
     viewerKey,
     viewDate,
   }: ShareLinkOpen): Promise<Result<ViewRecordOutcome, CacheUnavailable>> {
-    const key = countKey(linkId, viewDate);
-    const seen = this.openers.get(key) ?? new Set<string>();
-    this.openers.set(key, seen);
-    if (seen.has(viewerKey)) return ok('duplicate');
-    seen.add(viewerKey);
+    if (!firstSighting(this.openers, countKey(linkId, viewDate), viewerKey)) return ok('duplicate');
     this.shareLinks.push({ linkId, viewDate, opens: 1, views: 0, watchSeconds: 0 });
     return ok('counted');
   }

@@ -14749,7 +14749,7 @@ paths:
       summary: Create a share link
       tags:
         - Creator Studio
-      description: 'A link opens /watch/:id?s=token and lets its holder watch the video whatever its visibility, and nothing else. At most 50 active links per video. An access gate, not encryption: the segments stay under unguessable keys in the public bucket.'
+      description: 'A link opens /watch/:id?s=token and lets its holder watch the video whatever its visibility, and nothing else. At most 50 active links per video. An access gate on the page, the player and the API, not encryption: the segments sit in the public bucket under keys derived from the video id, so whoever holds the id can fetch them.'
       requestBody:
         required: true
         content:
@@ -39048,7 +39048,7 @@ paths:
       summary: Read a clip
       tags:
         - Clips
-      description: 'Open to anyone. A clip lives and dies with the visibility of its video: once the video turns private or is deleted, the clip answers 404.'
+      description: 'Open to anyone. A clip lives and dies with the visibility of its video: once the video turns private or is deleted, the clip answers 404, as it does for a password-protected video without that video''s unlock cookie.'
       parameters:
         - schema:
             type: string
@@ -55464,7 +55464,7 @@ paths:
       summary: SSE stream for single video
       tags:
         - Events
-      description: Streams realtime video progress and status events over Server-Sent Events with snapshot and replay. A broadcast adds `live.status` and `live.viewers`; its snapshot carries `live`.
+      description: 'Streams realtime video progress and status events over Server-Sent Events with snapshot and replay. A broadcast adds `live.status` and `live.viewers`; its snapshot carries `live`. It opens exactly when GET /v1/videos/:id answers: the same share link token in `s` and the same unlock cookie.'
       parameters:
         - schema:
             type: string
@@ -55472,6 +55472,15 @@ paths:
           name: last-event-id
           required: false
           description: Replay events after this ID
+        - schema:
+            type: string
+            minLength: 22
+            maxLength: 22
+            pattern: ^[\w-]+$
+          in: query
+          name: s
+          required: false
+          description: The token of a share link
         - schema:
             type: string
             format: uuid
@@ -55568,6 +55577,46 @@ paths:
                   - instance
                 additionalProperties: false
                 description: Problem Details (RFC 9457)
+        '403':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VIDEO_PASSWORD_REQUIRED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
         '404':
           description: Problem Details (RFC 9457)
           content:
@@ -55591,6 +55640,46 @@ paths:
                     type: string
                     enum:
                       - VIDEO_NOT_FOUND
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '410':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - SHARE_LINK_EXPIRED
                     description: Machine-readable error code
                   instance:
                     type: string

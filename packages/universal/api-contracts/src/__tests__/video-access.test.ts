@@ -49,9 +49,18 @@ describe('packages/api-contracts: video access', () => {
     expect(endpoint).toMatchObject({ method, path, status });
   });
 
-  it('unlocks without a sign-in and writes nothing else anonymously', () => {
+  it('unlocks without a sign-in', () => {
     expect(unlockVideo.anonymous).toBe(true);
-    expect('anonymous' in createVideoShareLink).toBe(false);
+  });
+
+  it.each([
+    listVideoShareLinks,
+    createVideoShareLink,
+    revokeVideoShareLink,
+    setVideoPassword,
+    clearVideoPassword,
+  ])('takes no anonymous caller on $method $path', (endpoint) => {
+    expect(endpoint).not.toHaveProperty('anonymous');
   });
 
   it.each([

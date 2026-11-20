@@ -15,6 +15,7 @@ export function registerClipServices(c: Container): Container {
         paginator: c.get(Services.Paginator),
         cdn: c.get(Adapters.Config).cdn,
         sprite: c.get(Adapters.Config).sprite,
+        gate: c.get(Services.VideoAccessGate),
         now: Date.now,
       })
   );

@@ -203,7 +203,7 @@ export const VideoListResponseSchema = z.object({
 });
 
 export const VideoIdParamSchema = z.object({
-  id: z.uuid({ error: 'Invalid video ID format' }),
+  id: z.uuid({ error: 'Invalid video ID format' }).toLowerCase(),
 });
 
 export type Video = z.infer<typeof VideoSchema>;

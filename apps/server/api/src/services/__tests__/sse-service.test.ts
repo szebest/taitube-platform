@@ -7,20 +7,22 @@ import { ErrorCodes } from '@vp/errors';
 import { videoChannel } from '@vp/events';
 import type { UserContext } from '@vp/permissions';
 import { SseService } from '../sse-service';
+import { NO_VIDEO_ACCESS } from '../video-access-gate';
 import { liveWorld, STREAM_ID, VIDEO_ID as LIVE_VIDEO_ID } from './live-harness';
-import { sseServiceDeps } from './service-deps';
+import { UNLOCKED, sseServiceDeps } from './service-deps';
 
 const VIDEO_ID = '00000000-0000-7000-8000-0000000000d1';
 const OWNER: UserContext = { id: '00000000-0000-7000-8000-0000000000d2', role: 'USER' };
 const STRANGER: UserContext = { id: '00000000-0000-7000-8000-0000000000d3', role: 'USER' };
 const CDN = 'http://localhost:9000/public';
+const SHARE_TOKEN = 'streamtokenstreamtoken';
 
 describe('apps/server/api/services: SseService', () => {
   let repositories: InMemoryRepositories;
   let service: SseService;
 
   async function seed(
-    visibility: 'private' | 'public',
+    visibility: 'private' | 'unlisted' | 'public',
     status: 'PROCESSING' | 'READY' = 'PROCESSING'
   ): Promise<void> {
     await repositories.videos.create({
@@ -51,7 +53,7 @@ describe('apps/server/api/services: SseService', () => {
   });
 
   async function videoOpening(afterId: number | null = null) {
-    const session = expectOk(await service.openVideoStream(OWNER, VIDEO_ID));
+    const session = expectOk(await service.openVideoStream(OWNER, VIDEO_ID, NO_VIDEO_ACCESS));
     return expectOk(await session.open(afterId));
   }
 
@@ -67,7 +69,7 @@ describe('apps/server/api/services: SseService', () => {
         sseServiceDeps(world.repositories, { liveViewers: async () => ok(41) })
       );
 
-      const session = expectOk(await live.openVideoStream(null, LIVE_VIDEO_ID));
+      const session = expectOk(await live.openVideoStream(null, LIVE_VIDEO_ID, NO_VIDEO_ACCESS));
       const [snapshot] = expectOk(await session.open(null)).frames;
 
       expect(session.live).toEqual({ liveStreamId: STREAM_ID, videoId: LIVE_VIDEO_ID });
@@ -80,14 +82,14 @@ describe('apps/server/api/services: SseService', () => {
     it('names the channel the hub broadcasts on', async () => {
       await seed('public');
 
-      const session = expectOk(await service.openVideoStream(OWNER, VIDEO_ID));
+      const session = expectOk(await service.openVideoStream(OWNER, VIDEO_ID, NO_VIDEO_ACCESS));
 
       expect(session.channel).toBe(videoChannel(VIDEO_ID));
       expect(session.userId).toBe(OWNER.id);
     });
 
     it('reports an unknown video as not found', async () => {
-      expect(expectErr(await service.openVideoStream(OWNER, VIDEO_ID)).code).toBe(
+      expect(expectErr(await service.openVideoStream(OWNER, VIDEO_ID, NO_VIDEO_ACCESS)).code).toBe(
         ErrorCodes.VIDEO_NOT_FOUND
       );
     });
@@ -95,17 +97,54 @@ describe('apps/server/api/services: SseService', () => {
     it('asks an anonymous caller to authenticate for a private video', async () => {
       await seed('private');
 
-      expect(expectErr(await service.openVideoStream(null, VIDEO_ID)).code).toBe(
+      expect(expectErr(await service.openVideoStream(null, VIDEO_ID, NO_VIDEO_ACCESS)).code).toBe(
         ErrorCodes.UNAUTHORIZED
       );
     });
 
-    it('hides a private video from a signed-in stranger behind a 404', async () => {
+    it('refuses a private video to a signed-in stranger as unreadable, which the route disguises', async () => {
       await seed('private');
 
-      expect(expectErr(await service.openVideoStream(STRANGER, VIDEO_ID)).code).toBe(
-        ErrorCodes.VIDEO_NOT_FOUND
+      expect(
+        expectErr(await service.openVideoStream(STRANGER, VIDEO_ID, NO_VIDEO_ACCESS))
+      ).toMatchObject({ code: ErrorCodes.FORBIDDEN, readable: false });
+    });
+
+    it('asks for the password of a protected video until the unlock credential comes along', async () => {
+      await seed('unlisted', 'READY');
+      expectOk(await repositories.videoPasswords.setHash(VIDEO_ID, 'a-hash'));
+      const unlocked = { ...NO_VIDEO_ACCESS, credential: UNLOCKED };
+
+      expect(expectErr(await service.openVideoStream(null, VIDEO_ID, NO_VIDEO_ACCESS)).code).toBe(
+        ErrorCodes.VIDEO_PASSWORD_REQUIRED
       );
+      expect(expectOk(await service.openVideoStream(null, VIDEO_ID, unlocked)).channel).toBe(
+        videoChannel(VIDEO_ID)
+      );
+    });
+
+    it('opens a private video to the holder of its live share link', async () => {
+      await seed('private');
+      expectOk(
+        await repositories.shareLinks.create(
+          {
+            id: '00000000-0000-7000-8000-0000000000d4',
+            targetType: 'video',
+            targetId: VIDEO_ID,
+            token: SHARE_TOKEN,
+            label: null,
+            expiresAt: null,
+            createdBy: OWNER.id,
+            revokedAt: null,
+            createdAt: new Date(),
+          },
+          50
+        )
+      );
+
+      const shared = { ...NO_VIDEO_ACCESS, shareToken: SHARE_TOKEN };
+
+      expect((await service.openVideoStream(STRANGER, VIDEO_ID, shared)).ok).toBe(true);
     });
 
     it('averages rendition completion into overall progress', async () => {

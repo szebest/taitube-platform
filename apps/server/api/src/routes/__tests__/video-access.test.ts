@@ -1,5 +1,6 @@
 import { expectOk } from '@kit/testing/result';
 import { Adapters } from '@vp/adapters/composition';
+import { VIEWER_SESSION_HEADER } from '@vp/api-contracts';
 import { mintToken } from '@vp/dev-identity';
 import { ErrorCodes } from '@vp/errors';
 import {
@@ -164,9 +165,14 @@ describe('share link and password routes', () => {
       expect([res.statusCode, res.json().code]).toEqual(refused);
     });
 
-    it('counts opens, views and watch seconds per link through the flush', async () => {
+    it('counts opens of a tab with a session key, views and watch seconds per link through the flush', async () => {
       const link = await share();
       await watch('anonymous', PRIVATE, link.token);
+      await ctx.app.inject({
+        method: 'GET',
+        url: `/v1/videos/${PRIVATE}?s=${link.token}`,
+        headers: { [VIEWER_SESSION_HEADER]: 'a-tab-session-key-0001' },
+      });
       await ctx.app.inject({
         method: 'POST',
         url: '/v1/telemetry/playback',

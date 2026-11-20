@@ -42,7 +42,6 @@ export function registerVideoAccessServices(c: Container): Container {
           gate: c.get(Services.VideoAccessGate),
           experiments: c.get(Services.ExperimentOverlay),
           viewBuffer: c.get(Adapters.ViewBuffer),
-          newId: () => uuidv7(),
           now: Date.now,
         })
     )

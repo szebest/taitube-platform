@@ -28,7 +28,7 @@ describe('apps/server/api/services: ShareLinkService', () => {
       videos: repositories.videos,
       shareLinks: repositories.shareLinks,
       newToken: () => `token-${String((tokens += 1)).padStart(16, '0')}`,
-      newId: () => `00000000-0000-7000-8000-${String((ids += 1)).padStart(12, '0')}`,
+      newId: () => `00000000-0000-7000-8000-00000001${String((ids += 1)).padStart(4, '0')}`,
       now: () => clock,
     });
     expectOk(
@@ -49,7 +49,7 @@ describe('apps/server/api/services: ShareLinkService', () => {
     );
 
     expect(created).toEqual({
-      id: '00000000-0000-7000-8000-000000000001',
+      id: '00000000-0000-7000-8000-000000010001',
       token: 'token-0000000000000001',
       label: 'Press',
       expiresAt: new Date(NOW + 24 * HOUR).toISOString(),

@@ -15,7 +15,6 @@ export interface VideoWatchServiceDeps {
   gate: VideoAccessGate;
   experiments: ExperimentOverlay;
   viewBuffer: ViewBufferPort;
-  newId: () => string;
   now: () => number;
 }
 
@@ -49,26 +48,23 @@ export class VideoWatchService {
     if (isErr(view)) return view;
 
     const { link } = gated.value;
-    if (link) await this.recordOpen(link, viewer, request.sessionKey);
+    const viewerKey = viewer?.id ?? request.sessionKey;
+    if (link && viewerKey !== null) await this.recordOpen(link, viewerKey);
     const shown = link ? { ...view.value, shareLinkId: link.id } : view.value;
     return ok(await this.deps.experiments.applyOne(shown, request.sessionKey));
   }
 
   /**
-   * One open per viewer, link and day. With neither an account nor a session key, the read is its
-   * own viewer, as an anonymous view is one per player session.
+   * One open per viewer, link and day. A read with neither an account nor a session key counts
+   * nothing: the server render has no key, and the browser's own read after hydration carries it.
    */
-  private async recordOpen(
-    link: ShareLink,
-    viewer: UserContext | null,
-    sessionKey: string | null
-  ): Promise<void> {
+  private async recordOpen(link: ShareLink, viewerKey: string): Promise<void> {
     const { viewDate } = viewBucketsOf(new Date(this.deps.now()));
     ignore(
       await this.deps.viewBuffer.recordShareLinkOpen({
         videoId: link.targetId,
         linkId: link.id,
-        viewerKey: viewer?.id ?? sessionKey ?? this.deps.newId(),
+        viewerKey,
         viewDate,
       }),
       'an open the buffer could not take is a gap in a statistic, never a refused read'

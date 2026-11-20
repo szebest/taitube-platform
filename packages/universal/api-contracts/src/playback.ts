@@ -20,7 +20,7 @@ const ExperimentShownSchema = z.object({
   variantId: z.enum(EXPERIMENT_VARIANT_IDS),
 });
 
-const MAX_IMPRESSIONS_PER_BATCH = 50;
+export const MAX_IMPRESSIONS_PER_BATCH = 50;
 
 const PlaybackEventSchema = z.object({
   videoId: z.uuid().describe('Video UUID identifier'),

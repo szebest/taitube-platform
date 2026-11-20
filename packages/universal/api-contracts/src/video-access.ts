@@ -81,7 +81,7 @@ export const createVideoShareLink = defineEndpoint({
   scope: 'videos:write',
   tag: 'Creator Studio',
   summary: 'Create a share link',
-  description: `A link opens /watch/:id?s=token and lets its holder watch the video whatever its visibility, and nothing else. At most ${MAX_ACTIVE_SHARE_LINKS} active links per video. An access gate, not encryption: the segments stay under unguessable keys in the public bucket.`,
+  description: `A link opens /watch/:id?s=token and lets its holder watch the video whatever its visibility, and nothing else. At most ${MAX_ACTIVE_SHARE_LINKS} active links per video. An access gate on the page, the player and the API, not encryption: the segments sit in the public bucket under keys derived from the video id, so whoever holds the id can fetch them.`,
   params: VideoIdParamSchema,
   body: z.object({
     label: z

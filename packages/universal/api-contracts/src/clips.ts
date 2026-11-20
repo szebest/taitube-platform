@@ -63,7 +63,7 @@ export const getClip = defineEndpoint({
   tag: 'Clips',
   summary: 'Read a clip',
   description:
-    'Open to anyone. A clip lives and dies with the visibility of its video: once the video turns private or is deleted, the clip answers 404.',
+    "Open to anyone. A clip lives and dies with the visibility of its video: once the video turns private or is deleted, the clip answers 404, as it does for a password-protected video without that video's unlock cookie.",
   anonymous: true,
   params: ClipIdParamSchema,
   status: 200,

@@ -4,11 +4,10 @@ import { InMemoryRepositories, InMemoryViewBuffer } from '@vp/adapters/in-memory
 import { ErrorCodes, cacheUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { ExperimentOverlay } from '../experiment-overlay';
-import { VideoAccessGate } from '../video-access-gate';
 import { VideoService } from '../video-service';
 import { type WatchRequest, VideoWatchService } from '../video-watch-service';
 import { sessionShown, startTitleTest } from './running-test';
-import { videoServiceDeps } from './service-deps';
+import { videoAccessGateOf, videoServiceDeps } from './service-deps';
 
 const OWNER = '00000000-0000-7000-8000-0000000004a1';
 const VIEWER: UserContext = { id: '00000000-0000-7000-8000-0000000004a2', role: 'USER' };
@@ -37,15 +36,9 @@ describe('apps/server/api/services: VideoWatchService', () => {
       videoService: new VideoService(
         videoServiceDeps(repositories.videos, { channels: repositories.channels })
       ),
-      gate: new VideoAccessGate({
-        shareLinks: repositories.shareLinks,
-        passwords: repositories.videoPasswords,
-        unlock: null,
-        now: () => NOW,
-      }),
+      gate: videoAccessGateOf(repositories, () => NOW),
       experiments: new ExperimentOverlay(repositories.videoExperiments),
       viewBuffer,
-      newId: () => 'a-fresh-viewer',
       now: () => NOW,
     });
     expectOk(
@@ -88,14 +81,20 @@ describe('apps/server/api/services: VideoWatchService', () => {
     expect(expectOk(await service.watch(owner, VIDEO, PLAIN))).not.toHaveProperty('shareLinkId');
   });
 
-  it('counts one open per viewer, keyed by account, else session, else the read itself', async () => {
+  it('counts one open per viewer, keyed by account, else session', async () => {
     await service.watch(VIEWER, VIDEO, { ...PLAIN, shareToken: TOKEN });
     await service.watch(VIEWER, VIDEO, { ...PLAIN, shareToken: TOKEN, sessionKey: 'session-1' });
     await service.watch(null, VIDEO, { ...PLAIN, shareToken: TOKEN, sessionKey: 'session-1' });
     await service.watch(null, VIDEO, { ...PLAIN, shareToken: TOKEN, sessionKey: 'session-1' });
-    await service.watch(null, VIDEO, { ...PLAIN, shareToken: TOKEN });
 
-    expect(await opens()).toEqual([[LINK, 3]]);
+    expect(await opens()).toEqual([[LINK, 2]]);
+  });
+
+  it('counts no open for a read with neither an account nor a session key, as a server render', async () => {
+    const view = expectOk(await service.watch(null, VIDEO, { ...PLAIN, shareToken: TOKEN }));
+
+    expect(view.shareLinkId).toBe(LINK);
+    expect(await opens()).toEqual([]);
   });
 
   it('still answers the read when the buffer cannot take the open', async () => {
@@ -103,7 +102,7 @@ describe('apps/server/api/services: VideoWatchService', () => {
       err(cacheUnavailable('recordShareLinkOpen'))
     );
 
-    expect((await service.watch(null, VIDEO, { ...PLAIN, shareToken: TOKEN })).ok).toBe(true);
+    expect((await service.watch(VIEWER, VIDEO, { ...PLAIN, shareToken: TOKEN })).ok).toBe(true);
   });
 
   it('refuses without the link and counts nothing', async () => {

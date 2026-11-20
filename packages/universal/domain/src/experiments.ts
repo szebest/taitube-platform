@@ -7,6 +7,12 @@ export type ExperimentKind = (typeof EXPERIMENT_KINDS)[number];
 export const EXPERIMENT_STATUSES = ['running', 'finished', 'stopped'] as const;
 export type ExperimentStatus = (typeof EXPERIMENT_STATUSES)[number];
 
+/** `EXPERIMENT` in `@vp/domain-rules` is the machine over these edges: applying a winner finishes a test. */
+export const EXPERIMENT_EDGES = {
+  apply: { from: ['running'], to: 'finished' },
+  stop: { from: ['running'], to: 'stopped' },
+} as const satisfies Record<string, { from: readonly ExperimentStatus[]; to: ExperimentStatus }>;
+
 export const EXPERIMENT_VARIANT_IDS = ['a', 'b', 'c'] as const;
 export type ExperimentVariantId = (typeof EXPERIMENT_VARIANT_IDS)[number];
 
@@ -74,7 +80,7 @@ export interface ExperimentVariantStats {
   readonly watchSeconds: number;
 }
 
-export interface ExperimentVariantResult extends ExperimentVariantStats {
+interface ExperimentVariantResult extends ExperimentVariantStats {
   /** Null until every variant has the minimum impressions, as are the two ratios beside it. */
   readonly watchSecondsPerImpression: number | null;
   readonly clickThrough: number | null;
@@ -119,8 +125,7 @@ export function experimentResults(
   };
 }
 
-export const EXPERIMENT_MEASURES = ['impressions', 'starts'] as const;
-export type ExperimentMeasure = (typeof EXPERIMENT_MEASURES)[number];
+export type ExperimentMeasure = 'impressions' | 'starts';
 
 /** One variant's numbers for one day, as a flush adds them to `video_experiment_stats`. */
 export interface ExperimentCount extends ExperimentVariantStats {

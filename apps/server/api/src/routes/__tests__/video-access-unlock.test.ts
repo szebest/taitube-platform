@@ -97,10 +97,11 @@ describe('video unlock route', () => {
     ]);
   });
 
-  it('answers a wrong password with 403 and the sixth attempt in a minute with 429, per video', async () => {
+  it('answers a wrong password with 403 and the sixth attempt in a minute with 429, per video in any casing', async () => {
     const statuses: number[] = [];
     for (let attempt = 0; attempt <= VIDEO_UNLOCK_ATTEMPTS_PER_MINUTE; attempt += 1) {
-      statuses.push((await unlock('a guess')).statusCode);
+      const id = attempt % 2 === 0 ? GUARDED : GUARDED.toUpperCase();
+      statuses.push((await unlock('a guess', {}, id)).statusCode);
     }
     const neighbour = await unlock('a guess', {}, NEIGHBOUR);
 

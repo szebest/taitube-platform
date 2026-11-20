@@ -18,7 +18,7 @@ import {
   invalidExperiment,
 } from './failures';
 
-export interface ExperimentVariantInput {
+interface ExperimentVariantInput {
   readonly title?: string | null;
   readonly thumbnail?: ThumbnailSelection | null;
 }

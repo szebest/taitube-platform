@@ -206,6 +206,26 @@ stateDiagram-v2
   DISCARDED --> [*]
 ```
 
+### experiment
+
+`EXPERIMENT`, defined in `packages/universal/domain-rules/src/experiments/experiment.machine.ts`.
+
+Initial: `running`. Final: `finished`, `stopped`.
+
+| Event | From | To | Recorded as |
+| --- | --- | --- | --- |
+| `apply` | `running` | `finished` | - |
+| `stop` | `running` | `stopped` | - |
+
+```mermaid
+stateDiagram-v2
+  [*] --> running
+  running --> finished: apply
+  running --> stopped: stop
+  finished --> [*]
+  stopped --> [*]
+```
+
 ### live-stream
 
 `LIVE_STREAM`, defined in `packages/universal/domain-rules/src/live/live-stream.machine.ts`.

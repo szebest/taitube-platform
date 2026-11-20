@@ -1,5 +1,10 @@
 import { isErr } from '@kit/result';
-import { LastEventIdSchema, streamMyEvents, streamVideoEvents } from '@vp/api-contracts';
+import {
+  LastEventIdSchema,
+  SHARE_TOKEN_PARAM,
+  streamMyEvents,
+  streamVideoEvents,
+} from '@vp/api-contracts';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { requireAuth } from '../plugins/auth';
@@ -8,6 +13,8 @@ import type { SseHub } from '../services/sse-hub';
 import type { SseSession } from '../services/sse-service';
 import { contractPaths, contractSchema } from './contract-schema';
 import { sendResult } from './send-result';
+import { videoAccessOf } from './video-access-request';
+import { presentPublicVideoFailure } from './videos.presenter';
 
 const SSE_HEADERS = {
   'Content-Type': 'text/event-stream',
@@ -86,8 +93,14 @@ export async function eventsRoutes(app: FastifyInstance): Promise<void> {
         },
       },
       async (request, reply) => {
-        const session = await sseService.openVideoStream(request.user ?? null, request.params.id);
-        if (isErr(session)) return sendResult(reply, request, session);
+        const { id } = request.params;
+        const access = videoAccessOf(request, id, request.query?.[SHARE_TOKEN_PARAM]);
+        const session = await sseService.openVideoStream(request.user ?? null, id, access);
+        if (isErr(session)) {
+          return sendResult(reply, request, session, {
+            present: (failure) => presentPublicVideoFailure(failure, request.url),
+          });
+        }
 
         const afterId = resumeFrom(request, request.query?.['last-event-id']);
         return stream(transport, session.value, afterId, request, reply);

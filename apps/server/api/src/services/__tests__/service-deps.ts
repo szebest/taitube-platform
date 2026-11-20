@@ -32,6 +32,7 @@ import { MetadataScreening } from '../metadata-screening';
 import type { SearchServiceDeps } from '../search-service';
 import type { SseServiceDeps } from '../sse-service';
 import type { UploadContext } from '../upload-context';
+import { VideoAccessGate } from '../video-access-gate';
 import { VideoService, type VideoServiceDeps } from '../video-service';
 import { ViewerProgress } from '../viewer-progress';
 
@@ -137,6 +138,24 @@ export function uploadContext(
   };
 }
 
+/** The unlock credential `videoAccessGateOf` accepts for any protected video. */
+export const UNLOCKED = 'unlocked';
+
+export function videoAccessGateOf(
+  repositories: InMemoryRepositories,
+  now: () => number = Date.now
+): VideoAccessGate {
+  return new VideoAccessGate({
+    shareLinks: repositories.shareLinks,
+    passwords: repositories.videoPasswords,
+    unlock: {
+      issue: () => UNLOCKED,
+      verify: (_videoId, _hash, credential) => credential === UNLOCKED,
+    },
+    now,
+  });
+}
+
 /** An SseService over one repositories bundle, replaying at most SSE_REPLAY_LIMIT events. */
 export function sseServiceDeps(
   repositories: InMemoryRepositories,
@@ -150,6 +169,7 @@ export function sseServiceDeps(
     notifications: repositories.notifications,
     liveStreams: repositories.liveStreams,
     liveViewers: async () => ok(0),
+    gate: videoAccessGateOf(repositories),
     cdn: TEST_CDN,
     replayLimit: SSE_REPLAY_LIMIT,
     logger: createLogger({ format: 'json', service: 'sse-service-spec', level: 'silent' }),
