@@ -1,5 +1,5 @@
 import { type Result, andThen, err, map, ok } from '@kit/result';
-import type { LengthBounds } from '../failures';
+import type { LengthBounds } from '@kit/validation';
 import { type CategoryFormFailure, invalidCategoryName } from './failures';
 import { validateSlug } from './slug-format';
 

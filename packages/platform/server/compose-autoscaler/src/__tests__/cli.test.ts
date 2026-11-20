@@ -17,6 +17,7 @@ function host(argv: string[]): CliHost {
     env: {},
     executor: vi.fn(async () => ({ type: 'done' as const, value: undefined })),
     fetcher: vi.fn(async () => ({ type: 'done' as const, value: '' })),
+    now: () => 0,
     onSignal: vi.fn(),
     exit: vi.fn(),
     print: vi.fn(),

@@ -1,5 +1,6 @@
+import { type Failure } from '@kit/errors';
 import { API_TOKEN_LIMITS, type ApiScope } from '@vp/domain';
-import { ErrorCodes, type Failure } from '@vp/errors';
+import { ErrorCodes } from '@vp/errors';
 
 export type ApiTokenNotFound = Failure<typeof ErrorCodes.API_TOKEN_NOT_FOUND, { tokenId: string }>;
 

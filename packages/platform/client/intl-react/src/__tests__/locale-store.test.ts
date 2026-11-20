@@ -1,27 +1,33 @@
-import { LOCALE_DETAILS } from '@vp/messages';
 import { createLocaleStore } from '../locale-store';
 
+type Locale = 'en' | 'pl';
+type Catalogue = { readonly name: string };
+
+const CATALOGUES: Record<Locale, Catalogue> = { en: { name: 'English' }, pl: { name: 'Polski' } };
+
 function createWatchedStore() {
-  const store = createLocaleStore();
+  const load = vi.fn(async (locale: Locale) => CATALOGUES[locale]);
+  const store = createLocaleStore<Locale, Catalogue>({ fallbackLocale: 'en', load });
   const notified = vi.fn();
   store.subscribe(notified);
-  return { store, notified };
+  return { store, notified, load };
 }
 
 describe('@kit/intl-react: createLocaleStore', () => {
-  it('starts on en with no translation loaded', () => {
-    expect(createLocaleStore().snapshot()).toEqual({ locale: 'en', catalogues: {} });
+  it('starts on the fallback locale with no translation loaded', () => {
+    const { store, load } = createWatchedStore();
+
+    expect(store.snapshot()).toEqual({ locale: 'en', catalogues: {} });
+    expect(load).not.toHaveBeenCalled();
   });
 
   it('loads the catalogue of the locale it activates, and tells its subscribers', async () => {
-    const { store, notified } = createWatchedStore();
+    const { store, notified, load } = createWatchedStore();
 
     await store.activate('pl');
 
-    expect(store.snapshot()).toEqual({
-      locale: 'pl',
-      catalogues: { pl: await LOCALE_DETAILS.pl.load() },
-    });
+    expect(store.snapshot()).toEqual({ locale: 'pl', catalogues: { pl: CATALOGUES.pl } });
+    expect(load).toHaveBeenCalledExactlyOnceWith('pl');
     expect(notified).toHaveBeenCalledOnce();
   });
 
@@ -45,7 +51,7 @@ describe('@kit/intl-react: createLocaleStore', () => {
   });
 
   it('stops telling a subscriber that unsubscribed', async () => {
-    const store = createLocaleStore();
+    const { store } = createWatchedStore();
     const notified = vi.fn();
     const unsubscribe = store.subscribe(notified);
 

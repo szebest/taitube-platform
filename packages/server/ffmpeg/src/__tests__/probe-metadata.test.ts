@@ -1,4 +1,5 @@
-import { type ErrorCode, ErrorCodes, PermanentError } from '@vp/errors';
+import { PermanentError } from '@kit/errors';
+import { type ErrorCode, ErrorCodes } from '@vp/errors';
 import { validateAndParseProbe } from '../probe-metadata';
 import { PROBE_LIMITS } from './encoder-settings';
 

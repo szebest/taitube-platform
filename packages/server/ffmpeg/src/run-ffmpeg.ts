@@ -1,8 +1,9 @@
 import { spawn } from 'node:child_process';
 import type { Readable } from 'node:stream';
+import { TransientError } from '@kit/errors';
 import { assertNever } from '@kit/result';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
-import { ErrorCodes, TransientError } from '@vp/errors';
+import { ErrorCodes } from '@vp/errors';
 import { sanitizeStorageUrl } from '@vp/storage';
 import { classifyFfmpegError } from './classify-ffmpeg-error';
 

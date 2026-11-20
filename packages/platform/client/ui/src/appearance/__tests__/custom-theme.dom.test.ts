@@ -1,5 +1,5 @@
+import { CommonErrorCodes } from '@kit/errors';
 import { expectErr, expectOk } from '@kit/testing/result';
-import { ErrorCodes } from '@vp/errors';
 import { CUSTOM_THEME_START, registerCustomTheme } from '../custom-theme';
 
 const emptyHost = (): { adoptedStyleSheets: CSSStyleSheet[] } => ({ adoptedStyleSheets: [] });
@@ -26,7 +26,7 @@ describe('@kit/ui: registerCustomTheme', () => {
     const host = emptyHost();
 
     expect(expectErr(registerCustomTheme(colours, host))).toMatchObject({
-      code: ErrorCodes.VALIDATION_FAILED,
+      code: CommonErrorCodes.VALIDATION_FAILED,
       field: 'ground',
       pairs: [],
     });
@@ -47,7 +47,7 @@ describe('@kit/ui: registerCustomTheme', () => {
     { ground: '#101820', accent: 'blue' },
   ])('refuses a colour the engine cannot read: $ground $accent', (colours) => {
     expect(expectErr(registerCustomTheme(colours, null))).toMatchObject({
-      code: ErrorCodes.VALIDATION_FAILED,
+      code: CommonErrorCodes.VALIDATION_FAILED,
       pairs: [],
     });
   });

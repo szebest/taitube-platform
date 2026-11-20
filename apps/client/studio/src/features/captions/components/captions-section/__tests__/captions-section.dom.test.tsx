@@ -1,9 +1,9 @@
+import { axeViolations } from '@kit/web-testing/dom';
 import { screen, within } from '@testing-library/react';
 import { listCaptions } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { videoKeys } from '@vp/queries';
 import { VIDEO_ID, apiServer, captionTrack, mockEndpoint, problemReply } from '@vp/web-testing';
-import { axeViolations } from '@vp/web-testing/dom';
 import { serveCaptions } from '#app/__tests__/captions-api.fixture';
 import { renderCaptions } from '#app/features/captions/__tests__/render-captions';
 import { CaptionsSection } from '../captions-section';

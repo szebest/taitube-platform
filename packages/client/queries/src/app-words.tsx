@@ -1,7 +1,8 @@
-import { type ActiveLocale, FALLBACK_ACTIVE_LOCALE, IntlProvider, useT } from '@kit/intl-react';
+import { useT } from '@kit/intl-react';
 import { UiCopyProvider, uiCopyFrom } from '@kit/ui';
 import { useHydrated } from '@tanstack/react-router';
 import type { PropsWithChildren } from 'react';
+import { type ActiveLocale, FALLBACK_ACTIVE_LOCALE, IntlProvider } from './intl';
 
 /** The placeholders a primitive fills itself, kept in the word so the catalogue owns the sentence. */
 const KEPT_PLACEHOLDERS = {

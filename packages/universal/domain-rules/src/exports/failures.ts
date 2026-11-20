@@ -1,5 +1,6 @@
+import { type Failure } from '@kit/errors';
 import { DATA_EXPORT_LIMITS } from '@vp/domain';
-import { ErrorCodes, type Failure } from '@vp/errors';
+import { ErrorCodes } from '@vp/errors';
 
 export type ExportNotFound = Failure<typeof ErrorCodes.EXPORT_NOT_FOUND, { exportId: string }>;
 

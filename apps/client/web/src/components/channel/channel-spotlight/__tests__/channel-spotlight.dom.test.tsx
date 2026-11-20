@@ -1,6 +1,6 @@
 import { VideoCard } from '@kit/components';
+import { axeViolations } from '@kit/web-testing/dom';
 import { render, screen, within } from '@testing-library/react';
-import { axeViolations } from '@vp/web-testing/dom';
 import { AppProviders } from '#app/__tests__/providers';
 import { ChannelSpotlight, ChannelSpotlightSkeleton } from '..';
 import type { ChannelSpotlightRootProps } from '../channel-spotlight';

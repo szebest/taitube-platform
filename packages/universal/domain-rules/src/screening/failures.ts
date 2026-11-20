@@ -1,5 +1,6 @@
+import { type Failure } from '@kit/errors';
 import type { ScreeningReason } from '@vp/domain';
-import { ErrorCodes, type Failure } from '@vp/errors';
+import { ErrorCodes } from '@vp/errors';
 
 /** A finding whose score is not a number from 0 to 1 cannot be ranked against the others. */
 export type InvalidScreeningFinding = Failure<

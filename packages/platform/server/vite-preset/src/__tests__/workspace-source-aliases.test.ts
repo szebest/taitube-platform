@@ -15,7 +15,7 @@ function packagesWith(
   tier = 'universal'
 ): string {
   const packages = mkdtempSync(join(tmpdir(), 'vite-preset-'));
-  const packageDir = join(packages, tier, name.replace('@vp/', ''));
+  const packageDir = join(packages, tier, name.replace('@acme/', ''));
   mkdirSync(src ? join(packageDir, 'src') : packageDir, { recursive: true });
   const manifest = {
     name,
@@ -30,7 +30,7 @@ function packagesWith(
 }
 
 const fixture = (exports: Record<string, string>, files: string[] = []) =>
-  packagesWith({ name: '@vp/fixture', exports, files });
+  packagesWith({ name: '@acme/fixture', exports, files });
 
 function resolveSpecifier(packages: string | undefined, specifier: string): string | undefined {
   const alias = workspaceSourceAliases(packages).find(({ find }) => find.test(specifier));
@@ -45,21 +45,24 @@ type Resolution = Record<'label' | 'specifier' | 'source', string> & {
 describe('@kit/vite-preset: workspace source aliases', () => {
   it.each([
     { name: '@kit/intl-react', source: '/intl-react/src/index.ts' },
-    { name: '@vp/api-client', source: '/api-client/src/index.ts' },
+    { name: '@kit/forms', source: '/forms/src/index.ts' },
     { name: '@kit/result', source: '/result/src/index.ts' },
-    { name: '@vp/domain/settings', source: '/domain/src/settings/index.ts' },
-    { name: '@vp/web-testing/server', source: '/web-testing/src/server/index.ts' },
+    {
+      name: '@kit/security-headers/static-assets',
+      source: '/security-headers/src/static-assets.ts',
+    },
+    { name: '@kit/web-testing/server', source: '/web-testing/src/server/index.ts' },
   ])('resolves $name to its source in the workspace', ({ name, source }) => {
     expect(resolveSpecifier(undefined, name)?.endsWith(source)).toBe(true);
   });
 
   it('reads a browser-tier package under packages/platform/<tier>/ too', () => {
     const packages = packagesWith(
-      { name: '@vp/fixture', exports: { '.': './dist/index.js' }, files: ['src/index.ts'] },
+      { name: '@acme/fixture', exports: { '.': './dist/index.js' }, files: ['src/index.ts'] },
       'platform/client'
     );
 
-    expect(resolveSpecifier(packages, '@vp/fixture')).toBe(
+    expect(resolveSpecifier(packages, '@acme/fixture')).toBe(
       join(packages, 'platform/client/fixture/src/index.ts')
     );
   });
@@ -71,7 +74,7 @@ describe('@kit/vite-preset: workspace source aliases', () => {
     'refuses $label whose built file has no source, instead of reading dist',
     ({ subpath, built }) => {
       expect(() => workspaceSourceAliases(fixture({ [subpath]: built }))).toThrow(
-        `@vp/fixture exports ${subpath} from ${built}, which has no source at`
+        `@acme/fixture exports ${subpath} from ${built}, which has no source at`
       );
     }
   );
@@ -80,7 +83,7 @@ describe('@kit/vite-preset: workspace source aliases', () => {
     expect(
       workspaceSourceAliases(
         packagesWith({
-          name: '@vp/pruned',
+          name: '@acme/pruned',
           src: false,
           exports: { './gone': './dist/gone.js' },
         })
@@ -93,49 +96,49 @@ describe('@kit/vite-preset: workspace source aliases', () => {
       label: 'a wildcard export with a directory capture',
       exports: { './tokens/*': './dist/tokens/*/index.js' },
       files: ['src/tokens/color/index.ts'],
-      specifier: '@vp/fixture/tokens/color',
+      specifier: '@acme/fixture/tokens/color',
       source: 'src/tokens/color/index.ts',
     },
     {
       label: 'a wildcard export with a file capture',
       exports: { './themes/*': './dist/themes/*.js' },
       files: ['src/themes/sand.ts'],
-      specifier: '@vp/fixture/themes/sand',
+      specifier: '@acme/fixture/themes/sand',
       source: 'src/themes/sand.ts',
     },
     {
       label: 'a wildcard export whose capture spans a slash',
       exports: { './themes/*': './dist/themes/*.js' },
       files: ['src/themes/dark/sand.ts'],
-      specifier: '@vp/fixture/themes/dark/sand',
+      specifier: '@acme/fixture/themes/dark/sand',
       source: 'src/themes/dark/sand.ts',
     },
     {
       label: 'a wildcard export whose target has no star: every match is that file',
       exports: { './assets/*': './dist/all.js' },
       files: ['src/all.ts'],
-      specifier: '@vp/fixture/assets/logo',
+      specifier: '@acme/fixture/assets/logo',
       source: 'src/all.ts',
     },
     {
       label: 'a wildcard export whose target has two stars: both take the capture',
       exports: { './themes/*': './dist/*/themes/*.js' },
       files: ['src/sand/themes/sand.ts'],
-      specifier: '@vp/fixture/themes/sand',
+      specifier: '@acme/fixture/themes/sand',
       source: 'src/sand/themes/sand.ts',
     },
     {
       label: 'an exact export declared after a wildcard that also matches it',
       exports: { './tokens/*': './dist/tokens/*.js', './tokens/color': './dist/color.js' },
       files: ['src/tokens/size.ts', 'src/color.ts'],
-      specifier: '@vp/fixture/tokens/color',
+      specifier: '@acme/fixture/tokens/color',
       source: 'src/color.ts',
     },
     {
       label: 'the wildcard with the longer prefix, declared after a shorter one',
       exports: { './tokens/*': './dist/tokens/*.js', './tokens/color/*': './dist/color/*.js' },
       files: ['src/tokens/size.ts', 'src/color/dark.ts'],
-      specifier: '@vp/fixture/tokens/color/dark',
+      specifier: '@acme/fixture/tokens/color/dark',
       source: 'src/color/dark.ts',
     },
   ])('resolves $label', ({ exports, files, specifier, source }) => {
@@ -145,11 +148,15 @@ describe('@kit/vite-preset: workspace source aliases', () => {
   });
 
   it.each([
-    { label: 'a bare specifier', specifier: '@vp/fixture' },
-    { label: 'an empty capture', specifier: '@vp/fixture/tokens/' },
-    { label: 'another subpath', specifier: '@vp/fixture/other/color' },
-    { label: 'a types-only export', specifier: '@vp/api-contracts/openapi', inRepo: true },
-    { label: 'a server package', specifier: '@vp/adapters', inRepo: true },
+    { label: 'a bare specifier', specifier: '@acme/fixture' },
+    { label: 'an empty capture', specifier: '@acme/fixture/tokens/' },
+    { label: 'another subpath', specifier: '@acme/fixture/other/color' },
+    {
+      label: 'a package without a src directory',
+      specifier: '@kit/tsconfig/client.json',
+      inRepo: true,
+    },
+    { label: 'a server package', specifier: '@kit/logger', inRepo: true },
   ])('leaves $label to the package exports', ({ specifier, inRepo }) => {
     const packages = inRepo
       ? undefined

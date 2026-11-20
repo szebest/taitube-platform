@@ -7,6 +7,7 @@ export default clientAppConfig({
   port: 5173,
   entryBudgetKb: 144,
   initialBudgetKb: 549,
+  flaggedDirs: [{ dir: 'demo-personas', env: 'VITE_DEMO_PERSONAS' }],
   forbiddenDirs: ['src/modules/Upload', 'src/features/upload', 'src/routes/_authed/upload'],
   plugins: pwaPlugins,
   prerender: [OFFLINE_PAGE_URL],

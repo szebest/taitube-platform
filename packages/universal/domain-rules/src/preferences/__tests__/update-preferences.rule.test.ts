@@ -1,7 +1,7 @@
+import { MAX_APPEARANCE_OVERRIDES } from '@kit/appearance';
 import { expectErr, expectOk } from '@kit/testing/result';
 import {
   DEFAULT_PREFERENCES,
-  MAX_APPEARANCE_OVERRIDES,
   type PreferencesPatch,
   type UserPreferences,
 } from '@vp/domain/settings';

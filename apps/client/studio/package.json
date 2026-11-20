@@ -27,6 +27,7 @@
     "@kit/forms": "workspace:*",
     "@kit/intl": "workspace:*",
     "@kit/intl-react": "workspace:*",
+    "@kit/query": "workspace:*",
     "@kit/result": "workspace:*",
     "@kit/security-headers": "workspace:*",
     "@kit/ui": "workspace:*",
@@ -61,6 +62,7 @@
     "@kit/testing": "workspace:*",
     "@kit/tsconfig": "workspace:*",
     "@kit/vite-preset": "workspace:*",
+    "@kit/web-testing": "workspace:*",
     "@playwright/test": "^1.64.0",
     "@storybook/react-vite": "~10.6.2",
     "@testing-library/dom": "^10.4.2",
@@ -79,6 +81,6 @@
     "vitest": "catalog:"
   },
   "vp": {
-    "layer": 9
+    "layer": 10
   }
 }

@@ -1,5 +1,4 @@
-import { readFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { dirname } from 'node:path';
 import { createLogger } from '../packages/platform/server/logger/src/index';
 import { directoryTier, isPlatform, load, type Pkg, type Tier } from './workspace-packages';
 
@@ -26,51 +25,10 @@ export const BUILD_TOOLING: ReadonlySet<string> = new Set([
   '@vp/web-testing',
 ]);
 
-type Destinations = string | { readonly [key: string]: Destinations };
+export const dependsOnAppPackage = (pkg: Pick<Pkg, 'dir'>, dep: Pick<Pkg, 'dir'>): boolean =>
+  isPlatform(pkg.dir) && !isPlatform(dep.dir);
 
-const destinations = (move: Destinations): string[] =>
-  typeof move === 'string' ? [move] : Object.values(move).flatMap(destinations);
-
-/**
- * The pending-move allowance: an app package that `scripts/package-moves.json` sends, whole or in part,
- * to a `@kit/*` package still counts as platform for the platform rule. It holds nothing once every
- * move has landed, and goes with the file.
- */
-export function pendingPlatformMoves(
-  moves: Readonly<Record<string, Destinations>> = JSON.parse(
-    readFileSync(join(import.meta.dirname, 'package-moves.json'), 'utf8')
-  )
-): ReadonlySet<string> {
-  return new Set(
-    Object.entries(moves)
-      .filter(([, move]) => destinations(move).some((name) => name.startsWith('@kit/')))
-      .map(([name]) => name)
-  );
-}
-
-/** Edges from a moved package to an app package that a seam still has to remove; deleted with the last seam. */
-const PENDING_APP_EDGES: ReadonlySet<string> = new Set([
-  '@kit/components>@vp/web-testing',
-  '@kit/forms>@vp/web-testing',
-  '@kit/ui>@vp/web-testing',
-  '@kit/web-telemetry>@vp/web-testing',
-  '@kit/web-telemetry>@vp/api-contracts',
-]);
-
-export const dependsOnAppPackage = (
-  pkg: Pick<Pkg, 'dir' | 'name'>,
-  dep: Pick<Pkg, 'dir' | 'name'>,
-  pendingMoves: ReadonlySet<string>
-): boolean =>
-  isPlatform(pkg.dir) &&
-  !isPlatform(dep.dir) &&
-  !pendingMoves.has(dep.name) &&
-  !PENDING_APP_EDGES.has(`${pkg.name}>${dep.name}`);
-
-export function checkBoundaries(
-  packages: Pkg[] = load(),
-  pendingMoves: ReadonlySet<string> = pendingPlatformMoves()
-): string[] {
+export function checkBoundaries(packages: Pkg[] = load()): string[] {
   const byName = new Map(packages.map((p) => [p.name, p]));
   const errors: string[] = [];
 
@@ -92,12 +50,21 @@ export function checkBoundaries(
       continue;
     }
 
+    if (isPlatform(pkg.dir)) {
+      for (const { name, spec, target } of pkg.pathDeps ?? []) {
+        if (isPlatform(`${target}/`)) continue;
+        errors.push(
+          `${pkg.name} (platform) lists ${name} as "${spec}", a path that resolves to ${target} outside packages/platform/ — a platform package reaches app code through no path either`
+        );
+      }
+    }
+
     for (const { name: depName, dev } of pkg.deps) {
       const dep = byName.get(depName);
       if (!dep) continue;
       const how = dev ? 'dev-depends on' : 'depends on';
 
-      if (dependsOnAppPackage(pkg, dep, pendingMoves)) {
+      if (dependsOnAppPackage(pkg, dep)) {
         errors.push(
           `${pkg.name} (platform) ${how} ${dep.name} (app) — a platform package depends, peer-depends and dev-depends only on platform packages`
         );

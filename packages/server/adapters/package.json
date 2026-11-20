@@ -78,6 +78,7 @@
     "@kit/composition": "workspace:*",
     "@kit/concurrency": "workspace:*",
     "@kit/di": "workspace:*",
+    "@kit/errors": "workspace:*",
     "@kit/object-storage": "workspace:*",
     "@kit/primitives": "workspace:*",
     "@kit/result": "workspace:*",
@@ -113,6 +114,6 @@
     "vite-plus": "catalog:"
   },
   "vp": {
-    "layer": 7
+    "layer": 8
   }
 }

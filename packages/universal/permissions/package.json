@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@casl/ability": "^7.0.1",
+    "@kit/permissions": "workspace:*",
     "@vp/domain": "workspace:*",
     "@vp/errors": "workspace:*"
   },
@@ -32,6 +33,6 @@
     "vite-plus": "catalog:"
   },
   "vp": {
-    "layer": 5
+    "layer": 6
   }
 }

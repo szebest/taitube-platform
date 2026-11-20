@@ -1,3 +1,4 @@
+import { type Failure } from '@kit/errors';
 import { assertNever, err, isErr, ok, type Result } from '@kit/result';
 import type {
   BudgetRule,
@@ -5,7 +6,7 @@ import type {
   WatchPartyBudget,
   WatchPartyGatePort,
 } from '@vp/core/ports';
-import { type CacheUnavailable, ErrorCodes, type Failure } from '@vp/errors';
+import { type CacheUnavailable, ErrorCodes } from '@vp/errors';
 
 export type RateLimited = Failure<typeof ErrorCodes.RATE_LIMITED, { retryAfterSeconds: number }>;
 

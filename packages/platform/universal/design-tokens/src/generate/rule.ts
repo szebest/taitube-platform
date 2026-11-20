@@ -1,4 +1,4 @@
-import type { ModeOption } from '../schema/theme';
+import type { ModeOption } from '@kit/appearance';
 import type { ModeFamily } from '../schema/values';
 
 export type Declaration = Readonly<{ property: string; value: string; utility?: string }>;

@@ -1,17 +1,9 @@
-import { APPEARANCE_SETTINGS } from '@vp/domain/settings';
+import type { ModeOption } from '@kit/appearance';
 import { type ZodType, z } from 'zod';
 import { type Ref, RefAliasSchema, refStep } from './ref';
 import { ROLES } from './roles';
 import { PreferenceIdSchema, TOKEN_SET_SCHEMAS } from './token-group';
 import { ColorSchema, type HexColor } from './values';
-
-export const MODE_OPTIONS = APPEARANCE_SETTINGS.mode.options;
-
-export type ModeOption = (typeof MODE_OPTIONS)[number];
-
-export const CONTRAST_OPTIONS = APPEARANCE_SETTINGS.contrast.options;
-
-export type ContrastOption = (typeof CONTRAST_OPTIONS)[number];
 
 const CATEGORICAL_SERIES = 6;
 

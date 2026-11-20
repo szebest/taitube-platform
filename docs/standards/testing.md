@@ -28,7 +28,7 @@ rule below that can be checked by a machine is, and the check is named next to i
   `studio (jsdom, uncompiled)`, run only the `*.differential.dom.test.tsx` specs (Field, Tabs, Select, Dialog,
   the studio upload dialog) without it; each records the DOM and a handler trace at every step into one
   committed snapshot, so a miscompile fails one of the two runs. `*.renders.dom.test.tsx` specs (Field, Tabs,
-  Select) count a part's commits with `createRenderCounter` from `@vp/web-testing/dom` while the root re-renders
+  Select) count a part's commits with `createRenderCounter` from `@kit/web-testing/dom` while the root re-renders
   with the same props; they prove what the compiler memoizes, so they run compiled only and fail without it.
 - `pnpm test:coverage` runs the same projects with v8 coverage and prints a summary (`coverage/`, gitignored). The root `vitest.config.ts` holds the 85% floor for lines, statements, functions and branches, so the command fails below it. CI does not run it, to keep the unit job's time budget.
 
@@ -278,7 +278,7 @@ A spec that fails on one run and passes on the next has a cause in the spec or t
 raised timeout, a retry, a sleep or a skip hides it and a later run finds it again; a quarantine (below) only
 buys the time to fix it.
 
-- **A test ends once its work has.** Every client app's jsdom project runs `@vp/web-testing/settle.setup` last:
+- **A test ends once its work has.** Every client app's jsdom project runs `@kit/web-testing/settle.setup` last:
   before it unmounts, it waits for the fetching queries and pending mutations of every mounted `QueryClient`, and
   for every `renderRoute` router, to go idle, and fails the test with what is still running after 5 s. A test
   that holds a request on purpose releases it before it ends (`heldReply`); an upload it starts, it finishes or

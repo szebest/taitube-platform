@@ -1,8 +1,8 @@
+import { singleFlightRefresh } from '@kit/query';
 import { createMiddleware } from '@tanstack/react-start';
 import { API_PROXY_PATH } from './api-client';
 import { proxyToApi } from './api-proxy';
 import type { SessionConfig } from './session-config';
-import { singleFlightRefresh } from './single-flight-refresh';
 
 function isProxied(pathname: string): boolean {
   return pathname === API_PROXY_PATH || pathname.startsWith(`${API_PROXY_PATH}/`);

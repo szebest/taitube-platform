@@ -1,4 +1,5 @@
-import { ErrorCodes, isInputFailure } from '@vp/errors';
+import { isInputFailure } from '@kit/errors';
+import { ErrorCodes } from '@vp/errors';
 import { invalidChannelLinks, invalidHandleFormat } from '../failures';
 
 const bounds = { minLength: 3, maxLength: 30 };

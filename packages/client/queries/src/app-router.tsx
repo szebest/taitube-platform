@@ -1,4 +1,3 @@
-import { createLocaleStore, type LocaleStore } from '@kit/intl-react';
 import { requestNonce } from '@kit/security-headers';
 import { createToaster, type Toaster } from '@kit/ui';
 import type { QueryClient } from '@tanstack/react-query';
@@ -17,6 +16,7 @@ import { type ActingChannelStore, createActingChannelStore } from './acting-chan
 import { createAppApiClient } from './api-client';
 import { AppWords } from './app-words';
 import { createQueryClient } from './create-query-client';
+import { createLocaleStore, type LocaleStore } from './intl';
 import { RouteError, RouteNotFound } from './route-errors';
 import { endSession } from './session-changes';
 

@@ -1,5 +1,4 @@
-import type { Failure } from './failure';
-import { PipelineError } from './pipeline-error';
+import { type Failure, PipelineError } from '@kit/errors';
 import { type PipelineErrorCode, PipelineErrorCodes } from './pipeline-error-codes';
 
 /**

@@ -1,7 +1,6 @@
 import { type Result, err, ok } from '@kit/result';
-import type { LengthBounds } from '../failures';
+import { type LengthBounds, withinLength } from '@kit/validation';
 import { type InvalidField, invalidField, invalidLength } from '../field-failures';
-import { withinLength } from '../plain-text';
 
 const SEARCH_QUERY_BOUNDS: LengthBounds = { minLength: 1, maxLength: 100 };
 

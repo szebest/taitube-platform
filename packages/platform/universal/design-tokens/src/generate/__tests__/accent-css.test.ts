@@ -1,5 +1,5 @@
+import { CommonErrorCodes } from '@kit/errors';
 import { expectErr, expectOk } from '@kit/testing/result';
-import { ErrorCodes } from '@vp/errors';
 import { accentCss, brandAccentCss, brandKey } from '../accent-css';
 import { lines } from './fixture';
 
@@ -30,7 +30,7 @@ describe('accentCss', () => {
 
   it('refuses a malformed hex', () => {
     expect(expectErr(accentCss('#33'))).toMatchObject({
-      code: ErrorCodes.VALIDATION_FAILED,
+      code: CommonErrorCodes.VALIDATION_FAILED,
       value: '#33',
     });
   });
@@ -74,6 +74,8 @@ describe('brandAccentCss', () => {
   });
 
   it('refuses a malformed hex', () => {
-    expect(expectErr(brandAccentCss('#33'))).toMatchObject({ code: ErrorCodes.VALIDATION_FAILED });
+    expect(expectErr(brandAccentCss('#33'))).toMatchObject({
+      code: CommonErrorCodes.VALIDATION_FAILED,
+    });
   });
 });

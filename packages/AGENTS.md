@@ -18,6 +18,26 @@ reaching the browser; layer stops the dependency graph turning into a ball of mu
 > Spec: [SDD ADR-23](../docs/SDD.md#adr-23--package-runtime-tiers-the-directory-is-the-tier) ·
 > [ARCHITECTURE.md Invariant 5](../ARCHITECTURE.md) · checker: `scripts/check-boundaries.ts`
 
+### The platform rule: `@kit` never depends on `@vp`
+
+A package under `packages/platform/<tier>/` is a platform package (`@kit/*`): reusable by another app,
+extractable on its own. **It never depends on an app package (`@vp/*`)**, in any form:
+
+- not in `dependencies`, `devDependencies` or `peerDependencies`;
+- not in an import, `export ... from`, `import()` or `vi.mock(import(...))`;
+- not in a tsconfig path or reference, a Vite or Vitest alias, or a `setupFiles` entry;
+- not as a mention in its `AGENTS.md`, README, CHANGELOG, comments or test data.
+
+There is no allowlist, no pending-move allowance and no dev-edge carve-out. When a platform package needs
+something the app owns, the dependency is inverted: the platform package declares a typed parameter, port,
+prop or option, and the app supplies the value at its composition root. When the needed piece is itself
+generic, it moves down into a `@kit` package (a `git mv`, importers rewritten), and the app package depends
+on it. Copying it is never the fix. Its docs describe the app side generically ("the app's error
+registry"), never by package name.
+
+`git grep "@vp/" -- packages/platform` prints nothing, and `pnpm boundaries` and the architecture suite
+fail the build on any edge or mention.
+
 ---
 
 ## 1. Tiers — where the code runs
@@ -94,6 +114,7 @@ document is stale — fix it.
 
 | Package | Tier | Location |
 |---|---|---|
+| `@kit/appearance` (T0) | universal | `packages/platform/universal/appearance` |
 | `@kit/primitives` (T0) | universal | `packages/platform/universal/primitives` |
 | `@vp/domain` | universal | `packages/universal/domain` |
 | `@vp/errors` | universal | `packages/universal/errors` |
@@ -111,7 +132,7 @@ document is stale — fix it.
 
 | Package | Tier | Depends on |
 |---|---|---|
-| `@kit/design-tokens` | universal | `@vp/domain`, `@vp/errors`, `@kit/result` |
+| `@kit/design-tokens` | universal | `@kit/appearance`, `@vp/errors`, `@kit/result` |
 | `@kit/intl` | universal | `@kit/result` |
 | `@kit/pagination` | universal | `@vp/errors`, `@kit/result` |
 | `@vp/permissions` | universal | `@vp/domain`, `@vp/errors` |
@@ -140,7 +161,7 @@ document is stale — fix it.
 | `@kit/runtime` | universal | `@kit/di` |
 | `@kit/i18n` | universal | `@kit/di`, `@kit/intl`, `@kit/result` |
 | `@kit/composition` | server | `@kit/di`, `@kit/result` |
-| `@kit/ui` | client | `@kit/design-tokens`, `@kit/result` |
+| `@kit/ui` | client | `@kit/appearance`, `@kit/design-tokens`, `@kit/result` |
 | `@vp/permissions-react` | client | `@vp/permissions`, `@kit/result` |
 | `@vp/core` | server | `@vp/domain`, `@vp/errors`, `@vp/permissions`, `@kit/result` |
 | `@vp/db` | server | `@vp/domain`, `@vp/job-contracts`, `@kit/result`, `@vp/storage` |

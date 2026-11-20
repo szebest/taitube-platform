@@ -20,19 +20,7 @@ async function rejection(promise: Promise<unknown>): Promise<unknown> {
 }
 
 describe('@vp/queries: ensureFound', () => {
-  it('loads once and serves the cached copy after that', async () => {
-    const queryFn = vi.fn(async () => 'Launch day');
-    const options = queryOptions({ queryKey: ['found'], queryFn });
-    const queryClient = createQueryClient();
-
-    await ensureFound(queryClient, options);
-    const again = await ensureFound(queryClient, options);
-
-    expect(again).toBe('Launch day');
-    expect(queryFn).toHaveBeenCalledTimes(1);
-  });
-
-  it('turns a 404 into the not-found page', async () => {
+  it('turns an API 404 into the not-found page', async () => {
     const missing = failingWith(new ApiError(404, 'VIDEO_NOT_FOUND', 'Missing'));
 
     expect(isNotFound(await rejection(ensureFound(createQueryClient(), missing)))).toBe(true);

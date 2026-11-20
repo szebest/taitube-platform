@@ -1,7 +1,7 @@
 import { Icon } from '@kit/ui';
+import { axeViolations } from '@kit/web-testing/dom';
 import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { axeViolations } from '@vp/web-testing/dom';
 import { AppProviders } from '#app/__tests__/providers';
 import { ShortsPlayerFrame, ShortsPlayerFrameSkeleton } from '..';
 import type { ShortsPlayerFrameRootProps } from '../shorts-player-frame';

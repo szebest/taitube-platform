@@ -1,5 +1,6 @@
+import { parseParam } from '@kit/query';
 import { createFileRoute } from '@tanstack/react-router';
-import { clipQueryOptions, ensureFound, parseParam } from '@vp/queries';
+import { clipQueryOptions, ensureFound } from '@vp/queries';
 import { z } from 'zod';
 import { WatchPending } from '#app/features/watch';
 import { ClipPage } from './-components/clip-page/clip-page';

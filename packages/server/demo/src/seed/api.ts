@@ -1,5 +1,6 @@
+import { asThrowable } from '@kit/errors';
 import { type Result, err, fromPromise, isErr, ok, tryCatch } from '@kit/result';
-import { asThrowable, errorCodeRegistry } from '@vp/errors';
+import { errorCodeRegistry } from '@vp/errors';
 import { z } from 'zod';
 import type { SeedFailure } from './failure';
 import type { SeedPorts } from './ports';

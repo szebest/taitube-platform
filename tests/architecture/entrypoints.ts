@@ -1,7 +1,7 @@
 import { packageDir } from '../../scripts/workspace-packages';
 
 const WEB_TELEMETRY = packageDir('@kit/web-telemetry');
-const CONFIG = packageDir('@kit/config');
+const WEB_TESTING = packageDir('@kit/web-testing');
 
 /**
  * Where a process starts. Module-level side effects, `console` and reading the environment belong
@@ -24,6 +24,7 @@ export const ENTRYPOINTS: readonly string[] = [
   'packages/server/upload-client/src/main.ts',
   `${WEB_TELEMETRY}/src/*.setup.ts`,
   'packages/client/web-testing/src/*.setup.ts',
+  `${WEB_TESTING}/src/*.setup.ts`,
   'apps/client/web/src/sw.ts',
   'scripts/*.ts',
   'tests/browser/playback.ts',
@@ -32,10 +33,10 @@ export const ENTRYPOINTS: readonly string[] = [
   'tests/e2e/web-stack.ts',
 ];
 
-/** Not entrypoints, and still allowed to touch the environment: the loader and the test harness. */
+/** Not entrypoints, and still allowed to touch the environment: the test harness and the app config modules. */
 export const ENV_HOMES: readonly string[] = [
-  `${CONFIG}/src/load-env.ts`,
   'packages/platform/server/testing/src/index.ts',
+  'tests/integration/use-real-services.ts',
   'apps/client/*/src/lib/config/index.ts',
   'tests/playwright/config.ts',
 ];

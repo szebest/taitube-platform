@@ -1,7 +1,7 @@
+import { axeViolations } from '@kit/web-testing/dom';
 import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import type { ApiScope } from '@vp/domain';
-import { axeViolations } from '@vp/web-testing/dom';
 import { useState } from 'react';
 import { ScopePicker } from '../index';
 

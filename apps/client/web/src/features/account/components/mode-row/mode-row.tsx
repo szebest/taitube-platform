@@ -1,4 +1,4 @@
-import { MODE_OPTIONS } from '@kit/design-tokens';
+import { MODE_OPTIONS } from '@kit/appearance';
 import { useT } from '@kit/intl-react';
 import { SegmentedControl, useAppearance } from '@kit/ui';
 import { SettingItem } from '../setting-item/setting-item';

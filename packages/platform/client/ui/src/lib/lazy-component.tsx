@@ -1,5 +1,5 @@
 import { fromPromise } from '@kit/result';
-import { type ComponentType, createElement, lazy, type ReactNode, Suspense } from 'react';
+import { type ComponentType, createElement, lazy, type ReactNode, Suspense, useState } from 'react';
 import { isModuleImportFailure, watchPreloadErrors } from './module-import-failure';
 import { moduleUrlOf, retryUrl } from './module-import-url';
 import { reloadOnceForStaleDeploy } from './stale-deploy';
@@ -65,7 +65,7 @@ async function importWithRetry<TModule>(
 /**
  * A component whose module loads on first use, or on `preload()`. One import promise serves every
  * render and preload, and is dropped when it fails, so the next render asks again; once the module is
- * in, the component renders directly. Only import failures are retried, from a cache-busted URL, and one
+ * in, an instance that mounts renders it directly, and one already mounted keeps the element type it started with, so the subtree is never remounted. Only import failures are retried, from a cache-busted URL, and one
  * that outlives the retries is a stale deploy, which reloads the page once. The boundary is always
  * there unless `fallback` is `false`, so the server and a fresh client render the same tree. Not for routes.
  */
@@ -110,7 +110,8 @@ export function lazyComponent<TModule, TProps extends object>(
   let Deferred = deferredFor();
 
   function LazyBoundary(props: TProps) {
-    const content = loaded ? createElement(loaded, props) : createElement(Deferred, props);
+    const [Chosen] = useState(() => loaded ?? Deferred);
+    const content = createElement(Chosen, props);
     return fallback === false ? content : <Suspense fallback={fallback}>{content}</Suspense>;
   }
 

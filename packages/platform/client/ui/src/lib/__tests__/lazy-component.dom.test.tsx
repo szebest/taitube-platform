@@ -1,9 +1,13 @@
 import { act, render, screen } from '@testing-library/react';
-import { Component, type ReactNode } from 'react';
+import { Component, type ReactNode, useEffect } from 'react';
 import { lazyComponent } from '../lazy-component';
 import { onStaleDeploy } from '../stale-deploy';
 
 const Greeting = ({ name }: { name: string }) => <p>{`Hello ${name}`}</p>;
+const MountCounter = ({ onMount }: { onMount: () => void }) => {
+  useEffect(onMount, [onMount]);
+  return <p>Counted</p>;
+};
 const importFailure = () =>
   new TypeError('Failed to fetch dynamically imported module: https://cdn.test/a.js');
 
@@ -48,6 +52,20 @@ describe('@kit/ui: lazyComponent', () => {
 
     expect(screen.getByText('Hello Ana')).toBeInTheDocument();
     expect(screen.queryByText('Loading')).not.toBeInTheDocument();
+  });
+
+  it('keeps the mounted subtree when the component re-renders after the module has loaded', async () => {
+    const onMount = vi.fn();
+    const Lazy = lazyComponent(async () => ({ default: MountCounter }), {
+      name: 'MountCounter',
+      pick: (module) => module.default,
+    });
+    const view = render(<Lazy onMount={onMount} />);
+    await screen.findByText('Counted');
+
+    view.rerender(<Lazy onMount={onMount} />);
+
+    expect(onMount).toHaveBeenCalledTimes(1);
   });
 
   it('shows the fallback while loading, and leaves the boundary to the caller with fallback false', async () => {

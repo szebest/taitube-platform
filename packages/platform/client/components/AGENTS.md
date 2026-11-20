@@ -18,7 +18,7 @@ never earlier.
 - The eight state illustrations (`src/illustrations/`), plain SVG components drawn in `currentColor`: the parent's CSS
   colour tints them, so they take `accent` per theme.
 - `LoginCard` and `AccountMenu`, the presentational parts of sign-in and the account menu; the session hooks
-  (`useAccount`, `signOut`) stay in `@vp/queries` and each app wraps them in `features/account/components/`.
+  stay in the app's data layer and each app wraps them in `features/account/components/`.
 
 Every component is a folder, `src/<area>/<name>/`, shaped like a `@kit/ui` primitive: `<name>.tsx`,
 `<name>.context.ts` and `<name>.variants.ts` for a compound one, `types.ts`, a story and a jsdom spec; the shape is [docs/standards/frontend-structure.md](../../../../docs/standards/frontend-structure.md#3-a-component-folder). It reads the

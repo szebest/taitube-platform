@@ -1,5 +1,6 @@
+import { type Failure } from '@kit/errors';
 import type { UserPreferences } from '@vp/domain/settings';
-import { ErrorCodes, type Failure } from '@vp/errors';
+import { ErrorCodes } from '@vp/errors';
 
 /** Carries what is stored, so the client can merge onto it and retry without a second read. */
 export type PreferencesConflict = Failure<

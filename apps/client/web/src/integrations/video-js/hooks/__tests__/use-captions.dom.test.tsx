@@ -1,8 +1,8 @@
+import { showCues } from '@kit/web-testing/dom';
 import { act, render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import type { CaptionTrackView } from '@vp/api-contracts';
 import { captionTrack } from '@vp/web-testing';
-import { showCues } from '@vp/web-testing/dom';
 import {
   usePlayerCommands,
   usePlayerState,

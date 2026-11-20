@@ -1,6 +1,7 @@
+import type { ModeOption } from '@kit/appearance';
 import { type ContrastFailure, checkContrast, NON_TEXT_FLOOR } from './contrast';
 import { checkRoleContrast, type RoleContrast, type RolePairSet } from './schema/roles';
-import type { ModeOption, ResolvedTheme } from './schema/theme';
+import type { ResolvedTheme } from './schema/theme';
 
 type ThemeMode = Exclude<ModeOption, 'system'>;
 

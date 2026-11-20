@@ -1,5 +1,6 @@
+import { classifyError } from '@kit/errors';
 import type { QueueJob } from '@vp/core/ports';
-import { classifyError, errorCodeRegistry } from '@vp/errors';
+import { errorCodeRegistry } from '@vp/errors';
 import { type Job, UnrecoverableError } from 'bullmq';
 import { toQueueJob } from './job-mapping';
 

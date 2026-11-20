@@ -1,8 +1,8 @@
+import { axeViolations } from '@kit/web-testing/dom';
 import { screen, within } from '@testing-library/react';
 import { removeChannelMember } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { account, mockEndpoint, problemReply } from '@vp/web-testing';
-import { axeViolations } from '@vp/web-testing/dom';
 import { serveLibrary } from '#app/__tests__/library-api.fixture';
 import { renderTeam } from '#app/features/team/__tests__/render-team';
 import { membership, OTHER_CHANNEL_ID } from '#app/features/team/__tests__/team-api.fixture';

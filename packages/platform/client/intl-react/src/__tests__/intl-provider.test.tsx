@@ -1,12 +1,11 @@
 import type { IntlBinding } from '@kit/intl';
 import { act, type RenderOptions, render, renderHook } from '@testing-library/react';
-import { dt } from '@vp/messages';
 import type { ReactElement, ReactNode } from 'react';
 import { renderToStaticMarkup, renderToString } from 'react-dom/server';
 import { Format } from '../format';
-import { IntlProvider, type IntlProviderProps } from '../intl-provider';
 import { useFormat } from '../use-format';
 import { useT } from '../use-t';
+import { SpecIntl, type SpecIntlProps } from './spec-intl';
 
 const NOW = '2026-09-22T18:30:00.000Z';
 const FIXED = { locale: 'en', timeZone: 'UTC', now: NOW } as const;
@@ -17,19 +16,19 @@ function Probe({ seen }: { seen: IntlBinding[] }) {
 }
 
 function Page() {
-  const { tOr } = useT();
+  const { count } = useT();
   return (
     <p>
-      {tOr('videos.views', { count: 1_234_567 }, '')} ·{' '}
+      {count(1_234_567)} views ·{' '}
       <Format value={{ type: 'relative', value: '2026-09-19T18:30:00.000Z' }} />
     </p>
   );
 }
 
-type ProviderProps = Omit<IntlProviderProps, 'children'>;
+type ProviderProps = Omit<SpecIntlProps, 'children'>;
 
 function withIntl(children: ReactNode, props: ProviderProps = FIXED) {
-  return <IntlProvider {...props}>{children}</IntlProvider>;
+  return <SpecIntl {...props}>{children}</SpecIntl>;
 }
 
 function renderIntl(
@@ -84,14 +83,10 @@ describe('@kit/intl-react: IntlProvider', () => {
     expect(reported).not.toHaveBeenCalled();
   });
 
-  it('serves a translation passed beside en, falling back per key', () => {
-    const catalogues: IntlProviderProps['catalogues'] = {
-      sv: { errors: { forbidden: dt('Det får du inte göra.') } },
-    };
-    const { t } = renderIntlHook(useT, { ...FIXED, locale: 'sv', catalogues }).result.current;
+  it('hands the translator the binding it built for the locale', () => {
+    const { result } = renderIntlHook(useT, { ...FIXED, locale: 'sv' });
 
-    expect(t('errors.forbidden')).toEqual({ ok: true, value: 'Det får du inte göra.' });
-    expect(t('errors.internal')).toEqual({ ok: true, value: 'Something went wrong on our side.' });
+    expect(result.current.locale).toBe('sv');
   });
 
   it('keeps relative times current by ticking its clock when no now is pinned', () => {

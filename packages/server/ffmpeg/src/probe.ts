@@ -1,6 +1,7 @@
 import { spawn } from 'node:child_process';
+import { PermanentError } from '@kit/errors';
 import { tryCatch } from '@kit/result';
-import { ErrorCodes, PermanentError } from '@vp/errors';
+import { ErrorCodes } from '@vp/errors';
 import { type ProbeMetadata, type RawFfprobeOutput, validateAndParseProbe } from './probe-metadata';
 
 export interface FfprobeOptions {

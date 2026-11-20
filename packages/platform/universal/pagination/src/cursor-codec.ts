@@ -1,5 +1,10 @@
+import type { InputFailure } from '@kit/errors';
 import { type Result, err, ok, tryCatch } from '@kit/result';
-import { ErrorCodes, type InputFailure } from '@vp/errors';
+
+/** The codes this package emits; an app spreads them into its error code set. */
+export const PaginationErrorCodes = {
+  INVALID_CURSOR: 'INVALID_CURSOR',
+} as const;
 
 /**
  * The keyset a cursor carries: the sort key and tiebreaker of the last row on
@@ -11,10 +16,14 @@ export type CursorPayload = Record<string, string | number>;
  * An input failure: it repeats only what the caller sent, so it is wire-safe by construction and
  * `problemFor` may project it into `Problem.errors`.
  */
-export type InvalidCursor = InputFailure<typeof ErrorCodes.INVALID_CURSOR>;
+export type InvalidCursor = InputFailure<typeof PaginationErrorCodes.INVALID_CURSOR>;
 
 export function invalidCursor(field = 'cursor'): InvalidCursor {
-  return { code: ErrorCodes.INVALID_CURSOR, message: ErrorCodes.INVALID_CURSOR, field };
+  return {
+    code: PaginationErrorCodes.INVALID_CURSOR,
+    message: PaginationErrorCodes.INVALID_CURSOR,
+    field,
+  };
 }
 
 /**

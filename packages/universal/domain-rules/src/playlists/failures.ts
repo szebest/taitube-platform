@@ -1,4 +1,5 @@
-import { ErrorCodes, type Failure, type InputFailure } from '@vp/errors';
+import { type Failure, type InputFailure } from '@kit/errors';
+import { ErrorCodes } from '@vp/errors';
 
 export type PlaylistNotFound = Failure<
   typeof ErrorCodes.PLAYLIST_NOT_FOUND,

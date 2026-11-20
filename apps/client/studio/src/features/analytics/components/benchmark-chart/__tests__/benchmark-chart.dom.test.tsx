@@ -1,8 +1,8 @@
+import { axeViolations } from '@kit/web-testing/dom';
 import { screen, within } from '@testing-library/react';
 import { getVideoBenchmark } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { apiServer, mockEndpoint, problemReply, VIDEO_ID } from '@vp/web-testing';
-import { axeViolations } from '@vp/web-testing/dom';
 import { serveAnalytics } from '#app/features/analytics/__tests__/analytics-api.fixture';
 import { renderAnalytics } from '#app/features/analytics/__tests__/render-analytics';
 import { LazyBenchmarkPlot } from '#app/features/analytics/components/benchmark-plot/benchmark-plot.lazy';

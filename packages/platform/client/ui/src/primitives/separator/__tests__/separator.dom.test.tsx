@@ -1,5 +1,5 @@
+import { axeViolations } from '@kit/web-testing/dom';
 import { render, screen } from '@testing-library/react';
-import { axeViolations } from '@vp/web-testing/dom';
 import { variantNames } from '../../../lib/variant-names';
 import { Separator, type SeparatorProps } from '../separator';
 import { separatorStyles } from '../separator.variants';

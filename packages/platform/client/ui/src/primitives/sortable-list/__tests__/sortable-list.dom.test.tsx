@@ -1,6 +1,6 @@
+import { axeViolations } from '@kit/web-testing/dom';
 import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
-import { axeViolations } from '@vp/web-testing/dom';
 import { SortableList } from '..';
 import { WithUiCopy } from '../../../__tests__/ui-copy-fixture';
 import type { SortableListRootProps } from '../sortable-list';

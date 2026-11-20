@@ -1,5 +1,5 @@
+import type { RetryClass } from '@kit/errors';
 import { type ErrorCode, ErrorCodes } from './error-codes';
-import type { RetryClass } from './registry';
 
 /**
  * ADR-18's classification, declared once per code instead of judged at each throw site. The
