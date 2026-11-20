@@ -6,6 +6,7 @@ import type {
   CreatorInboxCommentView,
   CreatorStats,
   CurrentPickView,
+  IdentitiesView,
   LiveChatMessageView,
   LiveChatServerFrame,
   LiveStreamPublicView,
@@ -214,6 +215,17 @@ export function signInRecord(overrides: Partial<SignInView> = {}): SignInView {
     slot: 0,
     userAgent: null,
     createdAt: CREATED_AT,
+    ...overrides,
+  };
+}
+
+/** What `GET /v1/me/identities` returns for `account()`: its primary channel, owned, and no team. */
+export function identities(overrides: Partial<IdentitiesView> = {}): IdentitiesView {
+  const { user, channels } = account();
+  return {
+    account: { id: user.id, email: user.email },
+    owned: channels.map((owned) => ({ ...owned, isPrimary: true })),
+    member: [],
     ...overrides,
   };
 }

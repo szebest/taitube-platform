@@ -45,20 +45,25 @@ async function loadSession(api: ApiClient, { slot, channel }: Identity): Promise
   return { status: 'signed-in', account: account.value, actingChannelId };
 }
 
+/**
+ * The session of `identity`, kept in that identity's own query cache: a guest's without a session
+ * for its slot, else the account the slot's token reaches. A token the API refuses expires that
+ * slot alone.
+ */
+export function sessionQueryOptions(api: ApiClient, identity: Identity) {
+  return queryOptions({
+    queryKey: SESSION_KEY,
+    queryFn: () => loadSession(api, identity),
+    staleTime: Number.POSITIVE_INFINITY,
+  });
+}
+
 type SessionSources = { queryClient: QueryClient; api: ApiClient; identity: IdentityStore };
 
-/**
- * The session of the router's identity in that identity's query cache, loaded once by the root
- * route on the server and dehydrated into the page: a guest's without a session for its slot, else
- * the account the slot's token reaches. A token the API refuses expires that slot alone.
- */
+/** The router identity's session, loaded once by the root route on the server and dehydrated into the page. */
 export function ensureSession({ queryClient, api, identity }: SessionSources) {
   return queryClient.query({
-    ...queryOptions({
-      queryKey: SESSION_KEY,
-      queryFn: () => loadSession(api, identity.read().identity),
-      staleTime: Number.POSITIVE_INFINITY,
-    }),
+    ...sessionQueryOptions(api, identity.read().identity),
     staleTime: 'static',
   });
 }

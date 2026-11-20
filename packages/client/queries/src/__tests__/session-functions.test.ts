@@ -2,7 +2,10 @@ import { type Accounts, NO_ACCOUNTS, withSignedIn } from '../accounts';
 import {
   expireSession,
   hasSession,
+  listAccounts,
   rememberIdentity,
+  setIdentityAccent,
+  setPinnedIdentities,
   signOut,
   signOutAll,
   startAddAccount,
@@ -115,5 +118,33 @@ describe('@vp/queries: session server functions', () => {
 
   it('refuses a slot it does not know', async () => {
     await expect(inRequest(() => signOut({ data: { slot: 10 } }))).rejects.toThrow();
+  });
+
+  it('lists every row, reading one whose cookie is gone as expired, with the cap', async () => {
+    const { value } = await inRequest(() => listAccounts(), {
+      cookie: THREE_SLOTS.replace('vp.session.1=b; ', ''),
+    });
+
+    expect(value.slots.map(({ slot, expired }) => [slot, expired])).toEqual([
+      [0, false],
+      [1, true],
+      [2, false],
+    ]);
+    expect(value.accountsMax).toBe(10);
+  });
+
+  it('keeps the accent picked for an identity and the pinned order in the slot list', async () => {
+    const accent = await inRequest(
+      () => setIdentityAccent({ data: { slot: 1, channel: 'second', accent: 4 } }),
+      { cookie: THREE_SLOTS }
+    );
+    const pinned = await inRequest(
+      () =>
+        setPinnedIdentities({ data: { pinned: [{ slot: 2 }, { slot: 1, channel: 'second' }] } }),
+      { cookie: THREE_SLOTS }
+    );
+
+    expect(accountsWritten(accent.setCookies).accents).toEqual({ '1.second': 4 });
+    expect(accountsWritten(pinned.setCookies).pinned).toEqual(['2.primary', '1.second']);
   });
 });

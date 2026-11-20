@@ -1,11 +1,14 @@
 import { isOk, parseJson } from '@kit/result';
 import { AccountSlotSchema } from '@vp/api-contracts';
 import { z } from 'zod';
+import { type Identity, identityKey } from './account-slots';
 
 const SLOT_COUNT = 10;
 const LABEL_MAX_LENGTH = 40;
 const LABEL_MAX_ENCODED = 90;
 const AVATAR_MAX_LENGTH = 200;
+const ACCENTS_MAX = 10;
+const PINNED_MAX = 8;
 
 /** What a browser keeps of one cookie, its name included; the slot list must fit all ten slots in it. */
 const COOKIE_BYTES_MAX = 4096;
@@ -24,9 +27,26 @@ const AccountEntrySchema = z.object({
   expired: z.boolean(),
 });
 
+/** The colours an identity's ring may take: the theme's categorical palette, `--dataviz-categorical-<n>`. */
+export const ACCENTS = [1, 2, 3, 4, 5, 6] as const;
+
+const AccentSchema = z.literal(ACCENTS);
+
+export type Accent = z.infer<typeof AccentSchema>;
+
+/** `identityKey`'s shape, bounded so the cookie stays inside its budget. */
+const IdentityKeySchema = z.string().regex(/^\d\.[a-z0-9_.-]{1,30}$/);
+
 const AccountsSchema = z.object({
   defaultSlot: AccountSlotSchema,
   slots: z.array(AccountEntrySchema).max(SLOT_COUNT),
+  /** The accent each identity was given, by `identityKey`; an identity missing here takes its slot's. */
+  accents: z
+    .record(IdentityKeySchema, AccentSchema)
+    .refine((accents) => Object.keys(accents).length <= ACCENTS_MAX)
+    .optional(),
+  /** The identities pinned to the top of the switcher, by `identityKey`, in the order shown. */
+  pinned: z.array(IdentityKeySchema).max(PINNED_MAX).optional(),
 });
 
 /** One row of the slot list: enough to draw it while the slot is signed out or expired. */
@@ -93,6 +113,7 @@ export function withSignedIn(accounts: Accounts, account: SignedInAccount): Acco
     expired: false,
   };
   return {
+    ...accounts,
     defaultSlot: account.slot,
     slots: [...accounts.slots.filter(({ slot }) => slot !== account.slot), entry].toSorted(
       (a, b) => a.slot - b.slot
@@ -110,17 +131,44 @@ export function withExpired(accounts: Accounts, expiredSlot: number): Accounts {
   };
 }
 
-/** The slot signed out: its row goes, and the default moves to the first slot left. */
+const ofSlot = (slot: number) => (key: string) => key.startsWith(`${slot}.`);
+
+/** The slot signed out: its row, accents and pins go, and the default moves to the first slot left. */
 export function withoutSlot(accounts: Accounts, removed: number): Accounts {
   const slots = accounts.slots.filter(({ slot }) => slot !== removed);
   const defaultSlot =
     accounts.defaultSlot === removed ? (slots[0]?.slot ?? 0) : accounts.defaultSlot;
-  return { defaultSlot, slots };
+  const removedKey = ofSlot(removed);
+  const accents = Object.entries(accounts.accents ?? {}).filter(([key]) => !removedKey(key));
+  const pinned = (accounts.pinned ?? []).filter((key) => !removedKey(key));
+  return { defaultSlot, slots, accents: Object.fromEntries(accents), pinned };
+}
+
+/** The ring an identity wears: the accent picked for it, else one its slot gives it. */
+export function accentOf(accounts: Accounts, identity: Identity): Accent {
+  return accounts.accents?.[identityKey(identity)] ?? ACCENTS[identity.slot % ACCENTS.length] ?? 1;
+}
+
+/** The identity wears `accent` from now on; past the cap the oldest choice gives way. */
+export function withAccent(accounts: Accounts, identity: Identity, accent: Accent): Accounts {
+  const key = identityKey(identity);
+  const others = Object.entries(accounts.accents ?? {}).filter(([kept]) => kept !== key);
+  return {
+    ...accounts,
+    accents: Object.fromEntries([...others, [key, accent]].slice(-ACCENTS_MAX)),
+  };
+}
+
+/** The pinned identities, in this order, the first `PINNED_MAX` of them. */
+export function withPinned(accounts: Accounts, pinned: readonly Identity[]): Accounts {
+  const keys = [...new Set(pinned.map(identityKey))];
+  return { ...accounts, pinned: keys.slice(0, PINNED_MAX) };
 }
 
 /** A tab switched to this identity, which a new tab with no prefix opens as. */
 export function withDefault(accounts: Accounts, slot: number, channel: string | null): Accounts {
   return {
+    ...accounts,
     defaultSlot: slot,
     slots: accounts.slots.map((entry) => (entry.slot === slot ? { ...entry, channel } : entry)),
   };

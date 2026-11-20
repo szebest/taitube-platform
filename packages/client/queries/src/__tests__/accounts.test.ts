@@ -1,13 +1,16 @@
 import {
   type Accounts,
   NO_ACCOUNTS,
+  accentOf,
   defaultSlotOf,
   firstFreeSlot,
   parseAccounts,
   serializeAccounts,
   slotOfUser,
   withDefault,
+  withAccent,
   withExpired,
+  withPinned,
   withSignedIn,
   withoutSlot,
 } from '../accounts';
@@ -56,8 +59,8 @@ describe('@vp/queries: accounts', () => {
     expect(entry).toMatchObject({ avatarUrl: null, expired: false, channel: null });
   });
 
-  it('fits ten of the longest rows in one cookie, dropping the avatar hints that would not fit', () => {
-    const full = Array.from({ length: 10 }, (_, slot) => slot).reduce(
+  it('fits ten of the longest rows, every accent and every pin in one cookie, dropping the avatar hints that would not fit', () => {
+    const rows = Array.from({ length: 10 }, (_, slot) => slot).reduce(
       (accounts, slot) =>
         withDefault(
           withSignedIn(accounts, {
@@ -71,6 +74,14 @@ describe('@vp/queries: accounts', () => {
         ),
       NO_ACCOUNTS
     );
+    const channels = Array.from({ length: 10 }, (_, index) => ({
+      slot: index % 10,
+      channel: `${String(index).padStart(2, '0')}${'h'.repeat(28)}`,
+    }));
+    const full = withPinned(
+      channels.reduce((accounts, identity) => withAccent(accounts, identity, 6), rows),
+      channels
+    );
 
     const value = serializeAccounts(full);
 
@@ -78,7 +89,44 @@ describe('@vp/queries: accounts', () => {
     expect(parseAccounts(value).slots.map(({ avatarUrl }) => avatarUrl)).toEqual(
       Array.from({ length: 10 }, () => null)
     );
+    expect(Object.keys(parseAccounts(value).accents ?? {})).toHaveLength(10);
+    expect(parseAccounts(value).pinned).toHaveLength(8);
     expect(serializeAccounts(TWO)).toBe(JSON.stringify(TWO));
+  });
+
+  it.each([
+    { identity: { slot: 0 }, accent: 1 },
+    { identity: { slot: 7 }, accent: 2 },
+    { identity: { slot: 0, channel: 'second' }, accent: 1 },
+  ])('gives $identity the accent its slot derives until one is picked', ({ identity, accent }) => {
+    expect(accentOf(TWO, identity)).toBe(accent);
+    expect(accentOf(withAccent(TWO, identity, 5), identity)).toBe(5);
+  });
+
+  it('keeps the newest ten accents and the first eight pins, once each', () => {
+    const many = Array.from({ length: 15 }, (_, index) => ({ slot: 0, channel: `c${index}` }));
+    const accented = many.reduce((accounts, identity) => withAccent(accounts, identity, 3), TWO);
+    const pinned = withPinned(TWO, [{ slot: 2 }, { slot: 2 }, ...many]);
+
+    expect(Object.keys(accented.accents ?? {})).toEqual(
+      many.slice(5).map(({ channel }) => `0.${channel}`)
+    );
+    expect(pinned.pinned).toEqual([
+      '2.primary',
+      ...many.slice(0, 7).map(({ channel }) => `0.${channel}`),
+    ]);
+  });
+
+  it('forgets the accents and pins of a slot that signed out', () => {
+    const dressed = withPinned(withAccent(withAccent(TWO, { slot: 2 }, 4), { slot: 0 }, 3), [
+      { slot: 2 },
+      { slot: 0 },
+    ]);
+
+    expect(withoutSlot(dressed, 2)).toMatchObject({
+      accents: { '0.primary': 3 },
+      pinned: ['0.primary'],
+    });
   });
 
   it('marks one slot expired and leaves the others as they were', () => {

@@ -1,4 +1,5 @@
 export * from './account-slots';
+export { ACCENTS, type Accent } from './accounts';
 export * from './acting-channel';
 export * from './api-base-url';
 export * from './api-client';
@@ -9,6 +10,7 @@ export * from './clip-queries';
 export * from './comment-queries';
 export * from './create-query-client';
 export * from './ensure-found';
+export * from './identities';
 export * from './keyset-paging';
 export * from './membership-queries';
 export * from './channel-moderation-queries';

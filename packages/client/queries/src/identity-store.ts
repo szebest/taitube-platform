@@ -5,6 +5,9 @@ import { z } from 'zod';
 import { identityKey } from './account-slots';
 import { createQueryClient } from './create-query-client';
 
+/** How long a row's prepared cache counts as fresh: hovering it again within this asks nothing. */
+const PREPARE_INTERVAL_MS = 5000;
+
 const IdentityStateSchema = z.object({
   identity: z.object({ slot: AccountSlotSchema, channel: z.string().optional() }),
   /** Whether links carry the identity's prefix: from a second account, or a channel, on. */
@@ -30,8 +33,13 @@ export type IdentityStore = {
   read: () => IdentityState;
   key: () => string;
   queryClient: () => QueryClient;
-  /** Acts as `next` from now on, with a cache of its own. */
+  /** Acts as `next` from now on, with a cache of its own: the one `prepare` filled for it, if any. */
   switchTo: (next: IdentityState) => QueryClient;
+  /**
+   * A cache for `next` to fill before a switch to it, so the switch lands on warm data; `undefined`
+   * when one was handed out for it in the last 5 seconds.
+   */
+  prepare: (next: IdentityState, now?: number) => QueryClient | undefined;
   /** The same identity with an empty cache, after its account signed in or out. */
   renew: () => QueryClient;
   /** What the server resolved, kept as the browser hydrates; the cache stays the one it filled. */
@@ -47,15 +55,26 @@ export function createIdentityStore(
 ): IdentityStore {
   let state = initial;
   let current = queryClient;
+  const prepared = new Map<string, { client: QueryClient; at: number }>();
   const listeners = new Set<() => void>();
   const notify = () => {
     for (const listener of listeners) listener();
   };
 
-  const replaceCache = (): QueryClient => {
+  const freshCache = (): QueryClient => {
+    const client = createQueryClient();
+    client.setDefaultOptions(current.getDefaultOptions());
+    return client;
+  };
+
+  const replaceCache = (next?: IdentityState): QueryClient => {
     const dropped = current;
-    current = createQueryClient();
-    current.setDefaultOptions(dropped.getDefaultOptions());
+    const warm = next && prepared.get(identityKey(next.identity))?.client;
+    current = warm ?? freshCache();
+    for (const { client } of prepared.values()) {
+      if (client !== current) void client.cancelQueries();
+    }
+    prepared.clear();
     void dropped.cancelQueries();
     return current;
   };
@@ -65,10 +84,18 @@ export function createIdentityStore(
     key: () => identityKey(state.identity),
     queryClient: () => current,
     switchTo: (next) => {
+      const switched = replaceCache(next);
       state = next;
-      const switched = replaceCache();
       notify();
       return switched;
+    },
+    prepare: (next, now = Date.now()) => {
+      const key = identityKey(next.identity);
+      const held = prepared.get(key);
+      if (held && now - held.at < PREPARE_INTERVAL_MS) return undefined;
+      const client = held?.client ?? freshCache();
+      prepared.set(key, { client, at: now });
+      return client;
     },
     renew: () => {
       const renewed = replaceCache();

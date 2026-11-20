@@ -25,6 +25,29 @@ describe('@vp/queries: identity store', () => {
     expect(notified).toHaveBeenCalledOnce();
   });
 
+  it('switches onto the cache prepared for the identity and drops the other prepared ones', () => {
+    const store = createIdentityStore(ON_SLOT_0);
+    const next = { identity: { slot: 1 }, prefixed: true };
+    const warm = store.prepare(next, 0);
+    const other = store.prepare({ identity: { slot: 2 }, prefixed: true }, 0);
+    const cancelOther = other && vi.spyOn(other, 'cancelQueries');
+
+    expect(store.switchTo(next)).toBe(warm);
+    expect(cancelOther).toHaveBeenCalledOnce();
+    expect(store.prepare(next, 1)).not.toBe(warm);
+  });
+
+  it.each([
+    { scenario: 'within five seconds', later: 4999, again: false },
+    { scenario: 'five seconds on', later: 5000, again: true },
+  ])('prepares an identity once, asked again $scenario', ({ later, again }) => {
+    const store = createIdentityStore(ON_SLOT_0);
+    const next = { identity: { slot: 3 }, prefixed: true };
+    const first = store.prepare(next, 0);
+
+    expect(store.prepare(next, later)).toBe(again ? first : undefined);
+  });
+
   it('renews the cache of the same identity', () => {
     const store = createIdentityStore(ON_SLOT_0);
     const first = store.queryClient();

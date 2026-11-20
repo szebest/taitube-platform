@@ -41,6 +41,8 @@ export type AppRouterContext = {
   actingChannel: ActingChannelStore;
   /** The account slot and channel this tab acts as, and the query cache that is theirs. */
   identity: IdentityStore;
+  /** A client calling as another slot, for what the switcher fetches ahead of a switch to it. */
+  apiAs: (slot: number) => ApiClient;
 };
 
 /** What a spec or a request hands the router in place of the defaults it would build. */
@@ -143,6 +145,8 @@ export function createAppRouter<TRouteTree extends AnyRoute>(
     locales = createLocaleStore(),
     actingChannel = createActingChannelStore(),
     identity = createIdentityStore(initialIdentity(history), queryClient),
+    apiAs = (slot) =>
+      createAppApiClient({ apiBaseUrl, getSlot: () => slot, onUnauthorized: () => undefined }),
     nonce = requestNonce(),
     defaultPreload = 'intent',
   }: AppRouterOptions = {}
@@ -172,6 +176,7 @@ export function createAppRouter<TRouteTree extends AnyRoute>(
       locales,
       actingChannel,
       identity,
+      apiAs,
     } satisfies AppRouterContext,
     rewrite: {
       input: ({ url }) => {

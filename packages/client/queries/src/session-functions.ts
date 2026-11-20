@@ -3,11 +3,15 @@ import { AccountSlotSchema } from '@vp/api-contracts';
 import { z } from 'zod';
 import type { Identity } from './account-slots';
 import {
+  ACCENTS,
   AccountChannelSchema,
+  type Accounts,
   NO_ACCOUNTS,
   defaultSlotOf,
+  withAccent,
   withDefault,
   withExpired,
+  withPinned,
   withoutSlot,
 } from './accounts';
 import { readAccounts, writeAccounts } from './accounts-cookie';
@@ -16,6 +20,11 @@ import { requestSession } from './session-config';
 import { clearSessionCookie, occupiedSlots, readSessionToken } from './session-cookie';
 
 const SlotInputSchema = z.strictObject({ slot: AccountSlotSchema });
+
+const IdentityInputSchema = z.strictObject({
+  slot: AccountSlotSchema,
+  channel: AccountChannelSchema.optional(),
+});
 
 /** Where a tab goes once its slot signed out: the default of the slots left, or nowhere. */
 export type AfterSignOut = { readonly next: Identity | undefined; readonly accounts: number };
@@ -72,3 +81,34 @@ export const rememberIdentity = createServerFn({ method: 'POST' })
 export const startAddAccount = createServerFn({ method: 'POST' }).handler(() =>
   issueAddNonce(requestSession().cookieDomain)
 );
+
+/** What the switcher draws before any account is asked: every row, expired where its session is gone. */
+export type AccountsList = Accounts & { readonly accountsMax: number };
+
+/** The browser's slot list as the request's cookies tell it; a row whose cookie is gone reads as expired. */
+export const listAccounts = createServerFn({ method: 'GET' }).handler((): AccountsList => {
+  const accounts = readAccounts();
+  const occupied = occupiedSlots();
+  return {
+    ...accounts,
+    slots: accounts.slots.map((entry) => ({
+      ...entry,
+      expired: entry.expired || !occupied.includes(entry.slot),
+    })),
+    accountsMax: requestSession().accountsMax,
+  };
+});
+
+/** Gives an identity the ring colour the viewer picked for it. */
+export const setIdentityAccent = createServerFn({ method: 'POST' })
+  .validator(IdentityInputSchema.extend({ accent: z.literal(ACCENTS) }))
+  .handler(({ data: { accent, ...identity } }) => {
+    writeAccounts(withAccent(readAccounts(), identity, accent), requestSession().cookieDomain);
+  });
+
+/** The identities pinned to the top of the switcher, in the order given. */
+export const setPinnedIdentities = createServerFn({ method: 'POST' })
+  .validator(z.strictObject({ pinned: z.array(IdentityInputSchema).max(10) }))
+  .handler(({ data }) => {
+    writeAccounts(withPinned(readAccounts(), data.pinned), requestSession().cookieDomain);
+  });
