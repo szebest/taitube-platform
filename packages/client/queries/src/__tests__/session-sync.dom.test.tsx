@@ -99,6 +99,23 @@ describe('@vp/queries: session sync', () => {
     expect(router.state.location.search).toMatchObject({ slot: '1' });
   });
 
+  it.each([
+    { scenario: 'another identity', entry: '/u/2/c/second/subscriptions', slot: 2, swapped: true },
+    { scenario: 'its own identity', entry: '/u/1/login', slot: 1, swapped: false },
+    { scenario: 'no prefix', entry: '/login', slot: 1, swapped: false },
+  ])(
+    'acts as $scenario when the history lands on an entry of it, with a cache of its own: $swapped',
+    async ({ entry, slot, swapped }) => {
+      const router = await renderTab();
+      const { queryClient } = router.options.context;
+
+      router.history.push(entry);
+
+      expect(router.options.context.identity.read().identity.slot).toBe(slot);
+      expect(router.options.context.queryClient !== queryClient).toBe(swapped);
+    }
+  );
+
   it('leaves a tab put on focus while its slot still holds a session', async () => {
     // oxlint-disable-next-line unicorn/no-document-cookie -- slot 1 is signed in.
     document.cookie = 'vp.session.1=still-here; path=/';

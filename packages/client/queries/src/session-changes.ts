@@ -39,6 +39,15 @@ export async function switchIdentity(
 }
 
 /**
+ * The tab's URL moved onto an entry made under another identity (back, forward): it acts as that
+ * identity again, with a cache of its own, without writing the history it is walking.
+ */
+export function followIdentity(router: SessionRouter, next: Identity): Promise<void> {
+  adoptCache(router, router.options.context.identity.switchTo({ identity: next, prefixed: true }));
+  return router.invalidate();
+}
+
+/**
  * After a sign-in or a sign-out of this tab's slot: the cache held the last viewer's data, so a
  * new one replaces it, and the routes load again as the new viewer, which runs the guards (`/login`
  * moves a signed-in viewer on).

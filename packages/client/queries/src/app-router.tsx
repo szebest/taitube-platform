@@ -74,7 +74,7 @@ const SIGNED_OUT_IDENTITY: IdentityState = { identity: { slot: 0 }, prefixed: fa
 
 /** The identity the server resolved for the request, or in the browser the one its URL names until the page hydrates. */
 const initialIdentity = createIsomorphicFn()
-  .server((): IdentityState => {
+  .server((_history: RouterHistory | undefined): IdentityState => {
     const resolved = tryCatch(
       (): IdentityState => {
         const { identity, prefixed } = resolveRequestIdentity();
@@ -84,8 +84,8 @@ const initialIdentity = createIsomorphicFn()
     );
     return unwrapOr(resolved, SIGNED_OUT_IDENTITY);
   })
-  .client((): IdentityState => {
-    const { identity } = parseIdentityPath(window.location.pathname);
+  .client((history: RouterHistory | undefined): IdentityState => {
+    const { identity } = parseIdentityPath((history?.location ?? window.location).pathname);
     return identity ? { identity, prefixed: true } : SIGNED_OUT_IDENTITY;
   });
 
@@ -142,7 +142,7 @@ export function createAppRouter<TRouteTree extends AnyRoute>(
     toaster = createToaster(),
     locales = createLocaleStore(),
     actingChannel = createActingChannelStore(),
-    identity = createIdentityStore(initialIdentity(), queryClient),
+    identity = createIdentityStore(initialIdentity(history), queryClient),
     nonce = requestNonce(),
     defaultPreload = 'intent',
   }: AppRouterOptions = {}

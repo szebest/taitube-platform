@@ -5,11 +5,16 @@ import { account } from '@vp/web-testing';
 import { useState } from 'react';
 import type { Identity } from '../account-slots';
 import type { Session } from '../session';
-import { SessionProvider } from '../session-provider';
+import { SessionProvider, useActingChannelId } from '../session-provider';
 
 const OWNED_CHANNEL = { id: account().channel.id, ownerId: account().user.id };
 
-const MEMBER = { ...account().user, id: '00000000-0000-7000-8000-0000000000b2' };
+const MEMBER_CHANNEL = {
+  id: '00000000-0000-7000-8000-0000000000c9',
+  ownerId: '00000000-0000-7000-8000-0000000000b9',
+};
+
+const VIEWER_USER = { ...account().user, id: '00000000-0000-7000-8000-0000000000b2' };
 
 type Step = { identity: Identity; session: Session };
 
@@ -17,19 +22,27 @@ const CREATOR: Step = {
   identity: { slot: 0 },
   session: { status: 'signed-in', account: account() },
 };
+const CREATOR_ON_MEMBER_CHANNEL: Step = {
+  identity: { slot: 0, channel: 'worked-on' },
+  session: { status: 'signed-in', account: account(), actingChannelId: MEMBER_CHANNEL.id },
+};
 const VIEWER: Step = {
   identity: { slot: 1 },
-  session: { status: 'signed-in', account: account({ role: 'USER', user: MEMBER, id: MEMBER.id }) },
+  session: {
+    status: 'signed-in',
+    account: account({ role: 'USER', user: VIEWER_USER, id: VIEWER_USER.id }),
+  },
 };
-const VIEWER_ON_MEMBER_CHANNEL: Step = { ...VIEWER, identity: { slot: 1, channel: 'worked-on' } };
 const ADMIN: Step = {
   identity: { slot: 2 },
   session: { status: 'signed-in', account: account({ role: 'ADMIN' }) },
 };
 
+/** What a page asks of the channel the tab acts as, on an ability it built when it mounted. */
 function Abilities({ mounted }: { mounted: () => number }) {
   const [mount] = useState(mounted);
-  const owns = useCan(canOwnChannel, { channel: OWNED_CHANNEL });
+  const channel = useActingChannelId() === MEMBER_CHANNEL.id ? MEMBER_CHANNEL : OWNED_CHANNEL;
+  const owns = useCan(canOwnChannel, { channel });
   const admin = useCan(canAccessAdmin);
   return <p>{`mount ${mount}, owns: ${owns}, admin: ${admin}`}</p>;
 }
@@ -41,17 +54,18 @@ describe('@vp/queries: SessionProvider across a switch', () => {
     {
       switch: 'an owned to a member channel',
       from: CREATOR,
-      to: VIEWER_ON_MEMBER_CHANNEL,
+      to: CREATOR_ON_MEMBER_CHANNEL,
       owns: false,
       admin: false,
     },
     {
-      switch: 'a member channel to an admin',
-      from: VIEWER_ON_MEMBER_CHANNEL,
-      to: ADMIN,
+      switch: 'a member to an owned channel',
+      from: CREATOR_ON_MEMBER_CHANNEL,
+      to: CREATOR,
       owns: true,
-      admin: true,
+      admin: false,
     },
+    { switch: 'a plain viewer to an admin', from: VIEWER, to: ADMIN, owns: true, admin: true },
   ])(
     'flips useCan from $switch, on an ability mounted afresh for it',
     ({ from, to, owns, admin }) => {

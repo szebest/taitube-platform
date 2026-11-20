@@ -58,6 +58,11 @@ export function useAccount(): Account | undefined {
   return session.status === 'signed-in' ? session.account : undefined;
 }
 
+/** The channel this tab's identity acts as when it names one (`/c/<handle>`); `undefined` is the primary. */
+export function useActingChannelId(): string | undefined {
+  return useSessionValue('useActingChannelId').session.actingChannelId;
+}
+
 /** The identity this tab acts as. */
 export function useIdentity(): Identity {
   return useSessionValue('useIdentity').identity;
