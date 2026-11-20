@@ -10,6 +10,8 @@ import {
   getAccount,
   listCreatorComments,
   listMyInvites,
+  getUnreadNotificationCount,
+  listMyIdentities,
   listMyMemberships,
   recordMySignIn,
 } from '@vp/api-contracts';
@@ -23,7 +25,7 @@ import {
   SessionProvider,
 } from '@vp/queries';
 import { DEV_TOKEN_URL } from '@vp/queries/demo-personas';
-import { account, api, apiServer, mockEndpoint, signInRecord } from '@vp/web-testing';
+import { account, api, apiServer, identities, mockEndpoint, signInRecord } from '@vp/web-testing';
 import { http, HttpResponse } from 'msw/http';
 import type { ComponentType, PropsWithChildren } from 'react';
 
@@ -67,6 +69,8 @@ export const SESSION = `${SESSION_COOKIE}=signed-in`;
 export function accountOf(creator: Account = account()) {
   apiServer.use(
     mockEndpoint(listMyMemberships, () => HttpResponse.json({ items: [] })),
+    mockEndpoint(listMyIdentities, () => HttpResponse.json(identities())),
+    mockEndpoint(getUnreadNotificationCount, () => HttpResponse.json({ unreadCount: 0 })),
     mockEndpoint(listMyInvites, () => HttpResponse.json({ items: [], nextCursor: null })),
     mockEndpoint(listCreatorComments, () => HttpResponse.json({ items: [], nextCursor: null }))
   );

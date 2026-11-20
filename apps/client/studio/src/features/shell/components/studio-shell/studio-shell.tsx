@@ -18,10 +18,17 @@ export type StudioShellProps = {
   navigation: (state: { newComments: boolean }) => ReactNode;
   /** What the inspector shows for the video the library selected. */
   inspector: (videoId: string) => ReactNode;
+  /** The account menu's entries for the channel the studio acts on: a team to leave. */
+  accountItems?: ReactNode;
 };
 
 /** The studio around every page: the workspace's navigation and toolbar, the page in its content. */
-export function StudioShell({ toolbarAction, navigation, inspector }: StudioShellProps) {
+export function StudioShell({
+  toolbarAction,
+  navigation,
+  inspector,
+  accountItems,
+}: StudioShellProps) {
   const matchRoute = useMatchRoute();
   const maxWidth = useLayoutMaxWidth();
   const appLink = useAppLink();
@@ -76,7 +83,7 @@ export function StudioShell({ toolbarAction, navigation, inspector }: StudioShel
         </Link>
         <div className="ms-auto flex items-center gap-inline">
           {toolbarAction}
-          <ShellAccountMenu />
+          <ShellAccountMenu>{accountItems}</ShellAccountMenu>
         </div>
       </StudioWorkspace.Toolbar>
       <SelectedVideoContext value={{ videoId, open: setVideoId }}>

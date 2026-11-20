@@ -14,6 +14,7 @@ import {
   ApiProvider,
   type AppRouterContext,
   ensureSession,
+  IdentitySwitcherProvider,
   requestLocale,
   SessionProvider,
   UserEventStream,
@@ -85,15 +86,17 @@ function RootLayout() {
 
   return (
     <ApiProvider api={api}>
-      <SessionProvider session={auth} identity={identity} prefixed={prefixed}>
-        <UserEventStream>
-          <Tooltip.Provider>
-            <ToastProvider toaster={toaster}>
-              <StudioRoot />
-            </ToastProvider>
-          </Tooltip.Provider>
-        </UserEventStream>
-      </SessionProvider>
+      <IdentitySwitcherProvider fallback="/">
+        <SessionProvider session={auth} identity={identity} prefixed={prefixed}>
+          <UserEventStream>
+            <Tooltip.Provider>
+              <ToastProvider toaster={toaster}>
+                <StudioRoot />
+              </ToastProvider>
+            </Tooltip.Provider>
+          </UserEventStream>
+        </SessionProvider>
+      </IdentitySwitcherProvider>
     </ApiProvider>
   );
 }

@@ -20,6 +20,7 @@ import { Route as AuthedDevelopersRouteImport } from './routes/_authed/developer
 import { Route as AuthedInvitesRouteImport } from './routes/_authed/invites';
 import { Route as AuthedLiveRouteImport } from './routes/_authed/live';
 import { Route as AuthedTeamRouteImport } from './routes/_authed/team';
+import { Route as ForHandleRouteImport } from './routes/for.$handle';
 import { Route as AuthedAdminIndexRouteImport } from './routes/_authed/admin/index';
 import { Route as AuthedAdminCategoriesRouteImport } from './routes/_authed/admin/categories';
 import { Route as AuthedAdminCurationRouteImport } from './routes/_authed/admin/curation';
@@ -89,6 +90,11 @@ const AuthedTeamRoute = AuthedTeamRouteImport.update({
   id: '/team',
   path: '/team',
   getParentRoute: () => AuthedRoute,
+} as any);
+const ForHandleRoute = ForHandleRouteImport.update({
+  id: '/for/$handle',
+  path: '/for/$handle',
+  getParentRoute: () => rootRouteImport,
 } as any);
 const AuthedAdminIndexRoute = AuthedAdminIndexRouteImport.update({
   id: '/',
@@ -179,6 +185,7 @@ export interface FileRoutesByFullPath {
   '/invites': typeof AuthedInvitesRoute;
   '/live': typeof AuthedLiveRoute;
   '/team': typeof AuthedTeamRoute;
+  '/for/$handle': typeof ForHandleRoute;
   '/admin/categories': typeof AuthedAdminCategoriesRoute;
   '/admin/curation': typeof AuthedAdminCurationRoute;
   '/admin/moderation': typeof AuthedAdminModerationRoute;
@@ -205,6 +212,7 @@ export interface FileRoutesByTo {
   '/invites': typeof AuthedInvitesRoute;
   '/live': typeof AuthedLiveRoute;
   '/team': typeof AuthedTeamRoute;
+  '/for/$handle': typeof ForHandleRoute;
   '/admin/categories': typeof AuthedAdminCategoriesRoute;
   '/admin/curation': typeof AuthedAdminCurationRoute;
   '/admin/moderation': typeof AuthedAdminModerationRoute;
@@ -234,6 +242,7 @@ export interface FileRoutesById {
   '/_authed/invites': typeof AuthedInvitesRoute;
   '/_authed/live': typeof AuthedLiveRoute;
   '/_authed/team': typeof AuthedTeamRoute;
+  '/for/$handle': typeof ForHandleRoute;
   '/_authed/admin/categories': typeof AuthedAdminCategoriesRoute;
   '/_authed/admin/curation': typeof AuthedAdminCurationRoute;
   '/_authed/admin/moderation': typeof AuthedAdminModerationRoute;
@@ -263,6 +272,7 @@ export interface FileRouteTypes {
     | '/invites'
     | '/live'
     | '/team'
+    | '/for/$handle'
     | '/admin/categories'
     | '/admin/curation'
     | '/admin/moderation'
@@ -289,6 +299,7 @@ export interface FileRouteTypes {
     | '/invites'
     | '/live'
     | '/team'
+    | '/for/$handle'
     | '/admin/categories'
     | '/admin/curation'
     | '/admin/moderation'
@@ -317,6 +328,7 @@ export interface FileRouteTypes {
     | '/_authed/invites'
     | '/_authed/live'
     | '/_authed/team'
+    | '/for/$handle'
     | '/_authed/admin/categories'
     | '/_authed/admin/curation'
     | '/_authed/admin/moderation'
@@ -338,6 +350,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute;
   AuthedRoute: typeof AuthedRouteWithChildren;
   LoginRoute: typeof LoginRoute;
+  ForHandleRoute: typeof ForHandleRoute;
   LiveOverlayTokenRoute: typeof LiveOverlayTokenRoute;
 }
 
@@ -419,6 +432,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/team';
       preLoaderRoute: typeof AuthedTeamRouteImport;
       parentRoute: typeof AuthedRoute;
+    };
+    '/for/$handle': {
+      id: '/for/$handle';
+      path: '/for/$handle';
+      fullPath: '/for/$handle';
+      preLoaderRoute: typeof ForHandleRouteImport;
+      parentRoute: typeof rootRouteImport;
     };
     '/_authed/admin/': {
       id: '/_authed/admin/';
@@ -595,6 +615,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthedRoute: AuthedRouteWithChildren,
   LoginRoute: LoginRoute,
+  ForHandleRoute: ForHandleRoute,
   LiveOverlayTokenRoute: LiveOverlayTokenRoute,
 };
 export const routeTree = rootRouteImport

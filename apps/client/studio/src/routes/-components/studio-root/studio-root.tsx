@@ -1,7 +1,8 @@
 import { Outlet, useMatches } from '@tanstack/react-router';
+import { OpenAsLinks, WhenSwitcherOpened } from '@vp/queries';
 import { ReviewQueueNavItem } from '#app/features/comments';
-import { StudioShell } from '#app/features/shell';
-import { ActingNavItems, ActiveChannelProvider } from '#app/features/team';
+import { LazyStudioIdentitySwitcherSheet, StudioShell } from '#app/features/shell';
+import { ActingNavItems, ActiveChannelProvider, LeaveTeam } from '#app/features/team';
 import { UploadDialog, UploadDockProvider, UploadWidget } from '#app/features/upload';
 import { VideoInspector } from '#app/features/videos';
 import { ActingUploadAction } from '../acting-upload-action/acting-upload-action';
@@ -19,15 +20,23 @@ export function StudioRoot() {
   return (
     <ActiveChannelProvider>
       <UploadDockProvider>
-        <StudioShell
-          toolbarAction={<ActingUploadAction />}
-          navigation={({ newComments }) => (
-            <ActingNavItems newComments={newComments} reviewQueue={<ReviewQueueNavItem />} />
-          )}
-          inspector={(videoId) => <VideoInspector videoId={videoId} />}
-        />
+        <LeaveTeam.Root>
+          <OpenAsLinks>
+            <StudioShell
+              toolbarAction={<ActingUploadAction />}
+              navigation={({ newComments }) => (
+                <ActingNavItems newComments={newComments} reviewQueue={<ReviewQueueNavItem />} />
+              )}
+              inspector={(videoId) => <VideoInspector videoId={videoId} />}
+              accountItems={<LeaveTeam.MenuItem />}
+            />
+          </OpenAsLinks>
+        </LeaveTeam.Root>
         <UploadDialog />
         <UploadWidget />
+        <WhenSwitcherOpened>
+          <LazyStudioIdentitySwitcherSheet />
+        </WhenSwitcherOpened>
       </UploadDockProvider>
     </ActiveChannelProvider>
   );

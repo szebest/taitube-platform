@@ -65,6 +65,6 @@ describe('apps/client/studio: ActiveChannelProvider', () => {
     await renderRoute(getRouter, '/login');
 
     expect(await screen.findByRole('navigation', { name: 'Studio' })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Switch channel' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Account' })).toBeNull();
   });
 });

@@ -14,7 +14,7 @@ const openDialog = async (options: Parameters<typeof renderTeam>[1] = {}) => {
     actingOn: OTHER_CHANNEL_ID,
     ...options,
   });
-  await rendered.user.click(screen.getByRole('button', { name: 'Switch channel' }));
+  await rendered.user.click(screen.getByRole('button', { name: 'Account' }));
   await rendered.user.click(await screen.findByRole('menuitem', { name: 'Leave this team' }));
   return {
     ...rendered,
@@ -34,7 +34,6 @@ describe('apps/client/studio: LeaveTeamDialog', () => {
     expect(requests.removedFrom).toEqual([OTHER_CHANNEL_ID]);
     await vi.waitFor(() => expect(router.state.location.pathname).toBe('/videos'));
     await vi.waitFor(() => expect(router.state.status).toBe('idle'));
-    expect(screen.queryByRole('button', { name: 'Switch channel' })).toBeNull();
   });
 
   it('keeps the membership when the viewer thinks again', async () => {

@@ -1,19 +1,29 @@
 import { AccountMenu } from '@kit/components';
 import { useT } from '@kit/intl-react';
 import { AppearanceMenuGroups, DropdownMenu, ThemeMenu, useUiCopy } from '@kit/ui';
-import { Link } from '@tanstack/react-router';
-import { canAccessAdmin } from '@vp/permissions';
-import { Can } from '@vp/permissions-react';
-import { SignInButton, useAccount, useAppLink, useSignOut } from '@vp/queries';
+import {
+  AccountSwitcher,
+  SignInButton,
+  useAccount,
+  useAppLink,
+  useIdentityDocument,
+} from '@vp/queries';
+import type { PropsWithChildren } from 'react';
+import { useAccountLinks } from '#app/features/shell/hooks/use-account-links';
 import { WEB_URL } from '#app/lib/config';
 
-/** The creator's account in the toolbar: a guest's way to sign in, or the channel's menu with upload, admin and sign-out. */
-export function ShellAccountMenu() {
+/**
+ * The creator's account in the toolbar: a guest's way to sign in, or the switcher between their
+ * accounts and channels with upload, customization, admin, appearance and sign-out. `children` are
+ * entries for the channel the studio acts on.
+ */
+export function ShellAccountMenu({ children }: PropsWithChildren) {
   const account = useAccount();
-  const signOut = useSignOut();
   const appLink = useAppLink();
   const { tOr } = useT();
   const { appearance } = useUiCopy();
+  const { links, manage } = useAccountLinks();
+  useIdentityDocument();
 
   if (!account) {
     return (
@@ -25,40 +35,20 @@ export function ShellAccountMenu() {
   }
 
   return (
-    <AccountMenu.Root>
-      <AccountMenu.Trigger
-        name={account.channel.displayName}
-        imageUrl={account.channel.avatarUrl}
-      />
-      <AccountMenu.Content align="end">
-        <AccountMenu.Label>{account.channel.displayName}</AccountMenu.Label>
-        <AccountMenu.Item asChild>
-          <Link to="/upload">{tOr('auth.upload', {}, '')}</Link>
-        </AccountMenu.Item>
-        <AccountMenu.Item asChild>
-          <Link to="/customization">{tOr('studio.navCustomization', {}, '')}</Link>
-        </AccountMenu.Item>
-        <Can type="rule" I={canAccessAdmin}>
+    <AccountSwitcher links={links} manage={manage}>
+      <DropdownMenu.Sub>
+        <DropdownMenu.SubTrigger>{appearance}</DropdownMenu.SubTrigger>
+        <DropdownMenu.SubContent className="min-w-44">
+          <AppearanceMenuGroups />
+          <DropdownMenu.Separator />
           <AccountMenu.Item asChild>
-            <a href="/admin">{tOr('auth.admin', {}, '')}</a>
+            <a href={appLink(WEB_URL, '/settings/appearance')}>
+              {tOr('studio.appearanceSettings', {}, '')}
+            </a>
           </AccountMenu.Item>
-        </Can>
-        <AccountMenu.Separator />
-        <DropdownMenu.Sub>
-          <DropdownMenu.SubTrigger>{appearance}</DropdownMenu.SubTrigger>
-          <DropdownMenu.SubContent className="min-w-44">
-            <AppearanceMenuGroups />
-            <DropdownMenu.Separator />
-            <AccountMenu.Item asChild>
-              <a href={appLink(WEB_URL, '/settings/appearance')}>
-                {tOr('studio.appearanceSettings', {}, '')}
-              </a>
-            </AccountMenu.Item>
-          </DropdownMenu.SubContent>
-        </DropdownMenu.Sub>
-        <AccountMenu.Separator />
-        <AccountMenu.Item onSelect={signOut}>{tOr('auth.signOut', {}, '')}</AccountMenu.Item>
-      </AccountMenu.Content>
-    </AccountMenu.Root>
+        </DropdownMenu.SubContent>
+      </DropdownMenu.Sub>
+      {children}
+    </AccountSwitcher>
   );
 }
