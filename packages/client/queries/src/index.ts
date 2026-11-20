@@ -18,7 +18,6 @@ export * from './prefetched';
 export { failureCode } from './failure-code';
 export * from './present-failure';
 export * from './request-locale';
-export * from './retry-policy';
 export * from './route-errors';
 export * from './route-guards';
 export * from './route-pending';

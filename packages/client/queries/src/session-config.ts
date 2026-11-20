@@ -1,10 +1,8 @@
+import type { RefreshSession } from '@kit/query';
 import { tryCatch, unwrapOr } from '@kit/result';
 import { getGlobalStartContext } from '@tanstack/react-start';
 
 export { SESSION_COOKIE } from '@vp/api-contracts';
-
-/** Exchanges the token the API refused for a fresh one, or says there is none to be had. */
-export type RefreshSession = (refused: string) => Promise<string | undefined>;
 
 export type SessionConfig = {
   /** Where the app's server reaches the API: the proxy and the server render call it there. */
