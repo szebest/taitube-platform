@@ -8,8 +8,7 @@ const keys = defineKeyspace('app', (key) => ({
 expectTypeOf(keys.feed).toEqualTypeOf<`app:${string}`>();
 expectTypeOf(keys.user).toEqualTypeOf<(id: string) => `app:${string}`>();
 
-// @ts-expect-error a key that was not laid out
-keys.missing;
+expectTypeOf(keys).not.toHaveProperty('missing');
 
 // @ts-expect-error a key is a string or a function building one
 defineKeyspace('app', () => ({ bad: 1 }));

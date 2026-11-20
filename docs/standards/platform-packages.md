@@ -102,12 +102,12 @@ needs the version bump and the changelog entry. The layout of the per-port suite
 
 ## Extractable, and the second app
 
-A platform package must work outside this repository. `pnpm check:extractable [<package>]` proves it for every
+A platform package must work outside this repository. The extractability check proves it for every
 package under `packages/platform/`: it copies the package and its platform closure to a temporary directory outside the
 repository with a `pnpm-workspace.yaml` that lists only that closure, installs offline, then runs `tsc --noEmit` and
 `vitest run` there, and asserts that every resolved module sits inside the temporary directory and that none of the
-sources names a `@vp` package. It then runs a **second dummy app**, kept outside the workspace globs, against `pnpm
-pack` tarballs of those packages. The second app registers its own error codes, locales (one right to left), cookie
+sources names a `@vp` package. It then runs a **second dummy app**, kept outside the workspace globs, against packed
+tarballs of those packages. The second app registers its own error codes, locales (one right to left), cookie
 prefix, key namespace and metric prefix, builds a registry and passes its own spec, which proves the packages work as
 installed npm packages and hold none of this product's values. CI runs the check as the `extractable` job, one shard
 per package, inside the budgets of [testing.md](testing.md), section 9.
@@ -124,7 +124,7 @@ per package, inside the budgets of [testing.md](testing.md), section 9.
 | Manifest shape | `platform-manifest.test.ts` |
 | No `any`, assertion, `!` or `@ts-ignore` | `platform-type-strictness.test.ts` |
 | A surface change is reviewed and versioned | `pnpm gen:api --check`, `pnpm check:platform-changes` |
-| It works outside the repository | `pnpm check:extractable`, the `extractable` job |
+| It works outside the repository | the extractability check, the `extractable` job |
 
 [ARCHITECTURE.md section 6](../../ARCHITECTURE.md#6-verification--enforcement) lists what each assertion plants and
 catches.
