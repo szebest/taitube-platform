@@ -1,6 +1,6 @@
 import type { Redis } from 'ioredis';
 import { SEARCH_SUGGESTION_SCRIPT } from '../redis-search-suggestion-index.adapter';
-import { VIEW_BUFFER_SCRIPTS } from '../redis-view-buffer.adapter';
+import { VIEW_BUFFER_SCRIPTS } from '../view-buffer-scripts';
 import { recordPlayback } from './fake-playback';
 import { recordRetention } from './fake-retention';
 import { rankRange, ranked, recordSuggestion } from './fake-sorted-set';
@@ -124,6 +124,8 @@ export class FakeRedis {
     switch (script) {
       case VIEW_BUFFER_SCRIPTS.record:
         return this.recordView(keys, argv);
+      case VIEW_BUFFER_SCRIPTS.recordShareLinkOpen:
+        return this.recordShareLinkOpen(keys, argv);
       case VIEW_BUFFER_SCRIPTS.snapshot:
         return this.snapshotViews(keys, argv);
       case VIEW_BUFFER_SCRIPTS.release:
@@ -151,6 +153,18 @@ export class FakeRedis {
       void this.hincrby(bufferKey, viewsField, 1);
       void this.hincrby(hourlyKey, hourlyField, 1);
     }
+    return added;
+  }
+
+  private recordShareLinkOpen(keys: string[], argv: string[]): number {
+    const [dedupKey = '', bufferKey = ''] = keys;
+    const [viewer = '', ttl = '0', opensField = ''] = argv;
+    const sketch = this.sketches.get(dedupKey) ?? new Set<string>();
+    const added = sketch.has(viewer) ? 0 : 1;
+    sketch.add(viewer);
+    this.sketches.set(dedupKey, sketch);
+    this.ttls.set(dedupKey, Number(ttl));
+    if (added === 1) void this.hincrby(bufferKey, opensField, 1);
     return added;
   }
 

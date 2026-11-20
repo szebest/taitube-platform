@@ -68,6 +68,8 @@ describe('apps/server/api/services: DiscoveryShelves', () => {
       ],
       hourly: [],
       devices: [],
+      shareLinks: [],
+      experiments: [],
     });
 
   beforeEach(async () => {

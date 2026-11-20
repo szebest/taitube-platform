@@ -80,6 +80,12 @@ export class InMemoryVideoRepository extends VideoRepository {
     if (video) video.viewsCount = (video.viewsCount ?? 0) + views;
   }
 
+  setPasswordProtected(videoId: string, passwordProtected: boolean): boolean {
+    const video = this.videosMap.get(videoId);
+    if (video) video.passwordProtected = passwordProtected;
+    return video !== undefined;
+  }
+
   private async getEvents(id: string): Promise<VideoEventRecord[]> {
     return this.eventsRepo ? unwrapOr(await this.eventsRepo.findByVideoId(id), []) : [];
   }

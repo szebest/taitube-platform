@@ -5,6 +5,7 @@ import type { Clip, ClipEntry } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { desc, eq, getTableColumns } from 'drizzle-orm';
+import { toVideoRecord } from '../mappers/video.mapper';
 import { drizzleWhere, keysetBefore, msTimestamp, watchableVideoScope } from '../scopes/index';
 import { channelCardColumns, toChannelCard } from './channel-card-query';
 import type { PostgresDatabase } from './types';
@@ -59,7 +60,7 @@ export class PostgresClipRepository implements ClipRepositoryPort {
     return map(rows, (found) =>
       found.map(({ clip, video, channelId, handle, displayName, avatarUrl }) => ({
         clip,
-        video,
+        video: toVideoRecord(video),
         channel: toChannelCard({ channelId, handle, displayName, avatarUrl }),
       }))
     );

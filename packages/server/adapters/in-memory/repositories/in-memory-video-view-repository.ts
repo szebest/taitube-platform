@@ -5,12 +5,14 @@ import {
   type DailyViews,
   type DeviceViewCount,
   type DeviceViews,
+  type ExperimentCount,
   type FirstWeekRow,
   type PeerVideo,
   type HourlyViewCount,
   type HourlyViews,
   type RetentionCount,
   type RetentionPoint,
+  type ShareLinkCount,
   type TopVideo,
   type ViewBatch,
   type ViewBatchOutcome,
@@ -31,6 +33,12 @@ import { firstWeekRowsOf, recentPeersOf } from './in-memory-first-week';
 export interface ViewedVideos {
   getAllVideos(): VideoRecord[];
   addViews(videoId: string, views: number): void;
+}
+
+/** The in-memory share link and experiment stores, which hold the numbers a flush adds for them. */
+export interface ViewStatsSinks {
+  shareLinks: { addStats(counts: readonly ShareLinkCount[]): void };
+  experiments: { addStats(counts: readonly ExperimentCount[]): void };
 }
 
 function inRange(viewDate: string, range: ViewDateRange): boolean {
@@ -58,7 +66,10 @@ export class InMemoryVideoViewRepository implements VideoViewRepositoryPort {
   private readonly hourly = new Map<string, HourlyViewCount>();
   private readonly devices = new Map<string, DeviceViewCount>();
 
-  constructor(private readonly videos: ViewedVideos) {}
+  constructor(
+    private readonly videos: ViewedVideos,
+    private readonly sinks: ViewStatsSinks
+  ) {}
 
   async applyBatch(batch: ViewBatch): Promise<Result<ViewBatchOutcome, DatabaseUnavailable>> {
     if (this.batches.has(batch.batchId)) return ok({ type: 'already-applied' });
@@ -95,6 +106,9 @@ export class InMemoryVideoViewRepository implements VideoViewRepositoryPort {
       const held = this.devices.get(deviceKey);
       this.devices.set(deviceKey, { ...count, views: count.views + (held?.views ?? 0) });
     }
+
+    this.sinks.shareLinks.addStats(batch.shareLinks);
+    this.sinks.experiments.addStats(batch.experiments);
 
     const deltas = viewsByVideo(kept);
     for (const { videoId, views } of deltas) this.videos.addViews(videoId, views);

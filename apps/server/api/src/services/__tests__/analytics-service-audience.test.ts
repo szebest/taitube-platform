@@ -39,6 +39,8 @@ describe('AnalyticsService: audience and benchmark', () => {
         retention: [],
         hourly: [],
         devices,
+        shareLinks: [],
+        experiments: [],
       })
     );
 

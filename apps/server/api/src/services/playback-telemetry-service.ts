@@ -47,6 +47,8 @@ export class PlaybackTelemetryService {
       device: event.device ?? 'unknown',
       watchedSeconds: event.watchedSeconds,
       requiredSeconds: requiredWatchSeconds(event.duration, this.deps.limits),
+      shareLinkId: event.shareLinkId ?? null,
+      experiment: event.experiment ?? null,
     });
     if (isErr(watch)) metrics.viewsRecorded.inc({ outcome: 'dropped' });
     else if (watch.value !== 'pending') metrics.viewsRecorded.inc({ outcome: watch.value });

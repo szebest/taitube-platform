@@ -3,6 +3,7 @@ import type { SubscriptionFeedOptions, VideoRecord } from '@vp/core/repositories
 import * as schema from '@vp/db';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { desc, eq, sql } from 'drizzle-orm';
+import { toVideoRecord } from '../mappers/video.mapper';
 import {
   drizzleWhere,
   keysetBefore,
@@ -62,7 +63,7 @@ export async function subscriptionFeed(
   );
 
   return map(rows, (found) => ({
-    items: found.map((r) => r.video),
+    items: found.map(({ video }) => toVideoRecord(video)),
     total: counted.value[0]?.count ?? 0,
   }));
 }

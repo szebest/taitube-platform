@@ -35,6 +35,7 @@ import type { SavedReplyRepositoryPort } from './saved-reply-repository';
 import type { ScreeningRepository } from './screening-repository';
 import type { SearchHistoryRepositoryPort } from './search-history-repository';
 import type { SearchRepositoryPort } from './search-repository';
+import type { ShareLinkRepository } from './share-link-repository';
 import type { StepRepository } from './step-repository';
 import type { SubscriptionRepositoryPort } from './subscription-repository';
 import type { TrustedCommenterRepositoryPort } from './trusted-commenter-repository';
@@ -44,6 +45,8 @@ import type { UserPreferencesRepositoryPort } from './user-preferences-repositor
 import type { UserRepository } from './user-repository';
 import type { VideoChapterRepository } from './video-chapter-repository';
 import type { VideoCorrectionRepository } from './video-correction-repository';
+import type { VideoExperimentRepository } from './video-experiment-repository';
+import type { VideoPasswordRepository } from './video-password-repository';
 import type { VideoReactionRepositoryPort } from './video-reaction-repository';
 import type { VideoRepository } from './video-repository';
 import type { VideoStudioRepository } from './video-studio-repository';
@@ -105,6 +108,9 @@ export interface Repositories {
   entityRevisions: EntityRevisionRepository;
   videoChapters: VideoChapterRepository;
   videoCorrections: VideoCorrectionRepository;
+  shareLinks: ShareLinkRepository;
+  videoPasswords: VideoPasswordRepository;
+  videoExperiments: VideoExperimentRepository;
   channelFeatured: ChannelFeaturedRepositoryPort;
   channelHandleHistory: ChannelHandleHistoryRepositoryPort;
   channelImages: ChannelImageRepositoryPort;

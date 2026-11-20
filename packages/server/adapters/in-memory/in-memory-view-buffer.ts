@@ -1,22 +1,28 @@
 import { type Result, ok } from '@kit/result';
 import type {
+  ExperimentEvent,
   PlaybackWatch,
   PlaybackWatchOutcome,
   RetentionMilestone,
+  ShareLinkOpen,
   ViewBufferPort,
   ViewEvent,
   ViewRecordOutcome,
 } from '@vp/core/ports';
 import {
   type DeviceViewCount,
+  type ExperimentCount,
   type HourlyViewCount,
   RETENTION_STEP_PERCENT,
   type RetentionCount,
+  type ShareLinkCount,
   type ViewBatch,
   type ViewCount,
   type ViewDevice,
   mergeDeviceCounts,
+  mergeExperimentCounts,
   mergeHourlyCounts,
+  mergeShareLinkCounts,
 } from '@vp/domain';
 import type { CacheUnavailable } from '@vp/errors';
 
@@ -42,6 +48,9 @@ export class InMemoryViewBuffer implements ViewBufferPort {
   private retention = new Map<string, RetentionCount>();
   private hourly: HourlyViewCount[] = [];
   private devices: DeviceViewCount[] = [];
+  private readonly openers = new Map<string, Set<string>>();
+  private shareLinks: ShareLinkCount[] = [];
+  private experiments: ExperimentCount[] = [];
 
   async record(view: ViewEvent): Promise<Result<ViewRecordOutcome, CacheUnavailable>> {
     return ok(this.recordOne(view));
@@ -76,6 +85,8 @@ export class InMemoryViewBuffer implements ViewBufferPort {
     device,
     watchedSeconds,
     requiredSeconds,
+    shareLinkId,
+    experiment,
   }: PlaybackWatch): Promise<Result<PlaybackWatchOutcome, CacheUnavailable>> {
     const key = `${videoId}|${sessionId}`;
     const session = this.sessions.get(key) ?? { watched: 0, credited: 0, counted: false };
@@ -84,7 +95,26 @@ export class InMemoryViewBuffer implements ViewBufferPort {
     session.watched += watchedSeconds;
     const whole = Math.floor(session.watched);
     if (whole > session.credited) {
-      this.addOne({ videoId, viewDate, views: 0, watchSeconds: whole - session.credited });
+      const seconds = whole - session.credited;
+      this.addOne({ videoId, viewDate, views: 0, watchSeconds: seconds });
+      if (shareLinkId) {
+        this.shareLinks.push({
+          linkId: shareLinkId,
+          viewDate,
+          opens: 0,
+          views: 0,
+          watchSeconds: seconds,
+        });
+      }
+      if (experiment) {
+        this.experiments.push({
+          ...experiment,
+          viewDate,
+          impressions: 0,
+          starts: 0,
+          watchSeconds: seconds,
+        });
+      }
       session.credited = whole;
     }
 
@@ -93,12 +123,51 @@ export class InMemoryViewBuffer implements ViewBufferPort {
     session.counted = true;
 
     const outcome = this.recordOne({ videoId, viewerId: sessionId, viewDate, viewHour }, device);
+    if (outcome === 'counted' && shareLinkId) {
+      this.shareLinks.push({ linkId: shareLinkId, viewDate, opens: 0, views: 1, watchSeconds: 0 });
+    }
     return ok(outcome === 'counted' ? 'counted' : 'duplicate');
+  }
+
+  async recordShareLinkOpen({
+    linkId,
+    viewerKey,
+    viewDate,
+  }: ShareLinkOpen): Promise<Result<ViewRecordOutcome, CacheUnavailable>> {
+    const key = countKey(linkId, viewDate);
+    const seen = this.openers.get(key) ?? new Set<string>();
+    this.openers.set(key, seen);
+    if (seen.has(viewerKey)) return ok('duplicate');
+    seen.add(viewerKey);
+    this.shareLinks.push({ linkId, viewDate, opens: 1, views: 0, watchSeconds: 0 });
+    return ok('counted');
+  }
+
+  async recordExperimentEvents(
+    events: readonly ExperimentEvent[]
+  ): Promise<Result<void, CacheUnavailable>> {
+    for (const { experimentId, variantId, viewDate, measure } of events) {
+      this.experiments.push({
+        experimentId,
+        variantId,
+        viewDate,
+        impressions: measure === 'impressions' ? 1 : 0,
+        starts: measure === 'starts' ? 1 : 0,
+        watchSeconds: 0,
+      });
+    }
+    return ok();
   }
 
   async snapshot(batchId: string): Promise<Result<ViewBatch | null, CacheUnavailable>> {
     if (this.pendingBatchId === undefined) {
-      if (this.buffer.size === 0 && this.retention.size === 0 && this.hourly.length === 0) {
+      if (
+        this.buffer.size === 0 &&
+        this.retention.size === 0 &&
+        this.hourly.length === 0 &&
+        this.shareLinks.length === 0 &&
+        this.experiments.length === 0
+      ) {
         return ok(null);
       }
       this.batches.set(batchId, {
@@ -107,11 +176,15 @@ export class InMemoryViewBuffer implements ViewBufferPort {
         retention: [...this.retention.values()],
         hourly: mergeHourlyCounts(this.hourly),
         devices: mergeDeviceCounts(this.devices),
+        shareLinks: mergeShareLinkCounts(this.shareLinks),
+        experiments: mergeExperimentCounts(this.experiments),
       });
       this.buffer = new Map();
       this.retention = new Map();
       this.hourly = [];
       this.devices = [];
+      this.shareLinks = [];
+      this.experiments = [];
       this.pendingBatchId = batchId;
     }
     const pending = this.batches.get(this.pendingBatchId);
@@ -151,6 +224,9 @@ export class InMemoryViewBuffer implements ViewBufferPort {
     this.buffer.clear();
     this.hourly = [];
     this.devices = [];
+    this.openers.clear();
+    this.shareLinks = [];
+    this.experiments = [];
     this.batches.clear();
     this.pendingBatchId = undefined;
   }

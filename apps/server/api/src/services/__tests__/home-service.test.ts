@@ -138,6 +138,8 @@ describe('apps/server/api/services: HomeService', () => {
       ],
       hourly: [],
       devices: [],
+      shareLinks: [],
+      experiments: [],
     });
 
     const kinds = expectOk(await app.service.get(VIEWER)).shelves.map(({ kind }) => kind);

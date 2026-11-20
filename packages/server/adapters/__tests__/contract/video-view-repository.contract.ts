@@ -4,9 +4,11 @@ import type { VideoViewRepositoryPort } from '@vp/core/repositories';
 import type { RetentionCount, ViewCount } from '@vp/domain';
 import { OTHER_OWNER_ID, OWNER_ID, VIDEO_IDS, publicVideo, seedOwners } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
+import { describeVideoViewAccessStatsContract } from './video-view-access-stats.contract';
 import { describeVideoViewDeviceContract } from './video-view-device.contract';
 import { describeVideoViewFirstWeekContract } from './video-view-first-week.contract';
 import { describeVideoViewHourlyContract } from './video-view-hourly.contract';
+import { viewBatch } from './view-batch';
 
 const DAY = '2026-03-10';
 const NEXT_DAY = '2026-03-11';
@@ -44,26 +46,10 @@ export function describeVideoViewRepositoryContract(makeSubject: MakeRepositorie
     });
 
     const apply = async (...counts: ViewCount[]) =>
-      expectOk(
-        await views.applyBatch({
-          batchId: randomUUID(),
-          counts,
-          retention: [],
-          hourly: [],
-          devices: [],
-        })
-      );
+      expectOk(await views.applyBatch(viewBatch({ counts })));
 
     const applySteps = async (...retention: RetentionCount[]) =>
-      expectOk(
-        await views.applyBatch({
-          batchId: randomUUID(),
-          counts: [],
-          retention,
-          hourly: [],
-          devices: [],
-        })
-      );
+      expectOk(await views.applyBatch(viewBatch({ retention })));
 
     const viewsCountOf = async (videoId: string) =>
       expectOk(await subject.repositories.videos.findById(videoId))?.viewsCount;
@@ -85,13 +71,7 @@ export function describeVideoViewRepositoryContract(makeSubject: MakeRepositorie
     });
 
     it('applies a batch id once, so a flush retried after a crash counts nothing twice', async () => {
-      const batch = {
-        batchId: randomUUID(),
-        counts: [count(VIDEO_IDS.a, DAY, 4)],
-        retention: [],
-        hourly: [],
-        devices: [],
-      };
+      const batch = viewBatch({ counts: [count(VIDEO_IDS.a, DAY, 4)] });
       expectOk(await views.applyBatch(batch));
 
       expect(expectOk(await views.applyBatch(batch))).toEqual({ type: 'already-applied' });
@@ -121,7 +101,7 @@ export function describeVideoViewRepositoryContract(makeSubject: MakeRepositorie
     });
 
     it('records an empty batch as applied', async () => {
-      const batch = { batchId: randomUUID(), counts: [], retention: [], hourly: [], devices: [] };
+      const batch = viewBatch();
 
       expect(expectOk(await views.applyBatch(batch))).toEqual({ type: 'applied', views: 0 });
       expect(expectOk(await views.applyBatch(batch))).toEqual({ type: 'already-applied' });
@@ -135,13 +115,7 @@ export function describeVideoViewRepositoryContract(makeSubject: MakeRepositorie
     });
 
     it('forgets the batches applied before a cutoff, and only those', async () => {
-      const batch = {
-        batchId: randomUUID(),
-        counts: [count(VIDEO_IDS.a, DAY, 1)],
-        retention: [],
-        hourly: [],
-        devices: [],
-      };
+      const batch = viewBatch({ counts: [count(VIDEO_IDS.a, DAY, 1)] });
       expectOk(await views.applyBatch(batch));
 
       expect(expectOk(await views.forgetBatchesBefore(new Date(0)))).toBe(0);
@@ -235,13 +209,10 @@ export function describeVideoViewRepositoryContract(makeSubject: MakeRepositorie
       });
 
       it('applies the views and the steps of a batch once, however often its id is replayed', async () => {
-        const batch = {
-          batchId: randomUUID(),
+        const batch = viewBatch({
           counts: [count(VIDEO_IDS.a, DAY, 2)],
           retention: [{ videoId: VIDEO_IDS.a, percent: 0, viewers: 2 }],
-          hourly: [],
-          devices: [],
-        };
+        });
 
         expectOk(await views.applyBatch(batch));
         expect(expectOk(await views.applyBatch(batch))).toEqual({ type: 'already-applied' });
@@ -263,5 +234,6 @@ export function describeVideoViewRepositoryContract(makeSubject: MakeRepositorie
 
   describeVideoViewHourlyContract(makeSubject);
   describeVideoViewDeviceContract(makeSubject);
+  describeVideoViewAccessStatsContract(makeSubject);
   describeVideoViewFirstWeekContract(makeSubject);
 }

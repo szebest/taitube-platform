@@ -1,6 +1,8 @@
 import { MS_PER_DAY, MS_PER_SECOND } from '@kit/primitives';
+import type { ExperimentCount } from './experiments';
 import { type HourlyViewCount, type ViewHour, viewHourOf } from './hourly-views';
 import type { RetentionCount } from './retention';
+import type { ShareLinkCount } from './share-links';
 import type { DeviceViewCount } from './view-devices';
 
 /** A UTC calendar day, `YYYY-MM-DD`: the bucket a view is counted in. */
@@ -20,6 +22,8 @@ export interface ViewBatch {
   readonly retention: readonly RetentionCount[];
   readonly hourly: readonly HourlyViewCount[];
   readonly devices: readonly DeviceViewCount[];
+  readonly shareLinks: readonly ShareLinkCount[];
+  readonly experiments: readonly ExperimentCount[];
 }
 
 export type ViewBatchOutcome =

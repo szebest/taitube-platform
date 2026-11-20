@@ -120,7 +120,14 @@ export function graph(now: Clock = realClock): Container {
             videosRepo: c.get(Repo.videos),
           })
       )
-      .provide(Repo.videoViews, (c) => new InMemoryVideoViewRepository(c.get(Repo.videos)))
+      .provide(
+        Repo.videoViews,
+        (c) =>
+          new InMemoryVideoViewRepository(c.get(Repo.videos), {
+            shareLinks: c.get(Repo.shareLinks),
+            experiments: c.get(Repo.videoExperiments),
+          })
+      )
       .provide(
         Repo.playlists,
         (c) =>
