@@ -15,10 +15,8 @@ function Links() {
   );
 }
 
-const rightClick = (element: Element) => {
-  fireEvent.pointerDown(element, { button: 2, pointerType: 'mouse' });
-  fireEvent.contextMenu(element);
-};
+const rightClick = (element: Element) =>
+  fireEvent.contextMenu(element, { clientX: 40, clientY: 60 });
 
 describe('@vp/queries: OpenAsLinks', () => {
   it('opens a link of this app in a new tab as the identity picked from its context menu', async () => {

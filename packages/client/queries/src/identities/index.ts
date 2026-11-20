@@ -13,6 +13,7 @@ export {
   IdentitySwitcherProvider,
   type IdentitySwitcherProviderProps,
   useIdentitySwitcher,
+  WhenSwitcherOpened,
 } from './identity-switcher-provider';
 export { OpenAsLinks } from './open-as-links';
 export { useIdentityChoices } from './use-identity-choices';

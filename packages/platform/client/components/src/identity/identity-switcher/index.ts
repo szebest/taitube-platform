@@ -20,4 +20,3 @@ export const IdentitySwitcher = {
   Action: IdentitySwitcherAction,
 };
 export type { IdentitySwitcherContentProps, IdentitySwitcherRootProps } from './identity-switcher';
-export { IDENTITY_ITEM, jumpToIdentityItem } from './identity-switcher';

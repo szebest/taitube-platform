@@ -40,7 +40,7 @@ describe('@vp/queries: AccountSwitcher', () => {
     expect(screen.getByRole('button', { name: 'Account' })).toHaveTextContent('B');
     release();
     expect(
-      await screen.findByText('Now browsing as Byron', { selector: '[role="status"]' })
+      await screen.findByText('Now browsing as Byron', { selector: '[aria-live="polite"]' })
     ).toBeInTheDocument();
     await vi.waitFor(() => expect(document.activeElement).toHaveTextContent('Page'));
     expect(router.state.location.pathname).toBe('/page');

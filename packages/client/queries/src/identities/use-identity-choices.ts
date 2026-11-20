@@ -10,7 +10,8 @@ import {
   identitiesQueryOptions,
 } from './identity-queries';
 import { type SwitchTarget, useIdentitySwitcher } from './identity-switcher-provider';
-import { prefetchIdentity } from './switch-flow';
+
+const loadSwitchFlow = () => import('./switch-flow');
 
 export type IdentityChoices = {
   entries: IdentityEntry[];
@@ -25,7 +26,8 @@ export type IdentityChoices = {
 /**
  * Every identity the switcher offers this tab and what choosing one does: the current one nothing,
  * an expired one signs that slot in again and comes back here, any other switches in place. The
- * other accounts' counts are asked only while `open`.
+ * account's channels are asked once the browser holds more than one identity in view (another
+ * account, a channel in the URL) or the list is `open`; the other accounts' counts only while open.
  */
 export function useIdentityChoices(open: boolean): IdentityChoices {
   const router = useRouter();
@@ -35,11 +37,15 @@ export function useIdentityChoices(open: boolean): IdentityChoices {
   const { switchTo, show } = useIdentitySwitcher();
   const listed = useQuery(accountsListQueryOptions()).data;
   const accounts = listed ?? NO_ACCOUNTS;
-  const mine = useQuery({ ...identitiesQueryOptions(api), enabled: account !== undefined }).data;
   const several = accounts.slots.length > 1;
+  const wanted = open || several || tab.channel !== undefined;
+  const mine = useQuery({
+    ...identitiesQueryOptions(api),
+    enabled: account !== undefined && wanted,
+  }).data;
   const glances = useQuery(accountGlanceQueryOptions(tab.slot, open && several)).data;
 
-  const entries = identityEntries({ accounts, tab, mine, glances });
+  const entries = identityEntries({ accounts, tab, mine, glances, primary: account?.channel });
   const current = entries.find((entry) => entry.current);
   const targetOf = (entry: IdentityEntry): SwitchTarget => ({
     identity: entry.identity,
@@ -62,7 +68,9 @@ export function useIdentityChoices(open: boolean): IdentityChoices {
   const prefetch = (entry: IdentityEntry) => {
     if (entry.current || entry.expired) return;
     const { identity, prefixed } = targetOf(entry);
-    prefetchIdentity(router, { identity, prefixed });
+    void loadSwitchFlow().then(({ prefetchIdentity }) =>
+      prefetchIdentity(router, { identity, prefixed })
+    );
   };
 
   return {

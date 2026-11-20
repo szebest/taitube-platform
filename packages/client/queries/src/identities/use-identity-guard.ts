@@ -6,8 +6,11 @@ import { SESSION_KEY, type Session } from '../session';
 import { useAccount, useIdentity } from '../session-provider';
 
 export type IdentityGuard = {
-  /** Sends `write` only while the tab still acts as the identity the composer was drawn for. */
-  guard: (write: () => void) => void;
+  /**
+   * Sends `write` only while the tab still acts as the identity the composer was drawn for; a held
+   * write calls `onHeld`, for a control with no room for the notice.
+   */
+  guard: (write: () => void, onHeld?: () => void) => void;
   /** A write was held back because the identity changed after the composer was drawn. */
   changed: boolean;
   /** The viewer read the notice and sends the held write as the identity acting now. */
@@ -25,18 +28,20 @@ function viewerOf(identity: IdentityStore): string | undefined {
  * asks again, rather than posting as someone the viewer did not see.
  */
 export function useIdentityGuard(): IdentityGuard {
-  const { identity }: { identity: IdentityStore } = useRouter().options.context;
+  const router = useRouter();
   const drawn = identityKey(useIdentity());
   const viewer = useAccount()?.user.id;
   const [held, setHeld] = useState<{ write: () => void }>();
 
   return {
-    guard: (write) => {
+    guard: (write, onHeld) => {
+      const { identity }: { identity: IdentityStore } = router.options.context;
       if (identity.key() === drawn && viewerOf(identity) === viewer) {
         write();
         return;
       }
       setHeld({ write });
+      onHeld?.();
     },
     changed: held !== undefined,
     sendAnyway: () => {

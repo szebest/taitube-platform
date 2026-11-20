@@ -19,3 +19,4 @@ export const IdentityRow = {
 };
 export type { IdentityRowAvatarProps, IdentityRowRootProps } from './identity-row';
 export { useIdentityRow } from './identity-row.context';
+export { IDENTITY_ITEM, jumpToIdentityItem } from './jump-to-identity-item';

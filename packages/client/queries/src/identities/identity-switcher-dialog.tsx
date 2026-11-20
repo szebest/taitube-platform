@@ -4,7 +4,7 @@ import { useLocation, useRouter } from '@tanstack/react-router';
 import { useAccount } from '../session-provider';
 import { useSignOut } from '../use-sign-out';
 import { type AccountLink, useFollowLink } from './account-links';
-import { MENU_ROWS_MAX } from './account-switcher';
+import { MENU_ROWS_MAX } from './account-switcher-items';
 import { CreateChannelDialog } from './create-channel-dialog';
 import { IdentityEntryRow } from './identity-entry-row';
 import { useIdentitySwitcher } from './identity-switcher-provider';

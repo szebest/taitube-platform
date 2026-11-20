@@ -7,7 +7,6 @@ import type { Identity } from '../account-slots';
 import type { Accent } from '../accounts';
 import { failureCode } from '../failure-code';
 import { present } from '../present-failure';
-import { switchInPlace } from './switch-flow';
 
 /** What the header shows of an identity: enough to draw it before its session has loaded. */
 export type IdentityDisplay = {
@@ -34,6 +33,9 @@ type IdentitySwitcherValue = {
   /** Switches the tab in place; `from` is what Undo goes back to. */
   switchTo: (target: SwitchTarget, from?: SwitchTarget) => Promise<void>;
 };
+
+/** The switch itself loads with the first switch, not with the page. */
+const loadSwitchFlow = () => import('./switch-flow');
 
 const IdentitySwitcherContext = createContext<IdentitySwitcherValue | undefined>(undefined);
 
@@ -89,6 +91,7 @@ export function IdentitySwitcherProvider({ fallback, children }: IdentitySwitche
     setPending(target.display);
     setAnnouncement('');
     const state = { identity: target.identity, prefixed: target.prefixed };
+    const { switchInPlace } = await loadSwitchFlow();
     const outcome = await switchInPlace(router, state, fallback);
     setPending(undefined);
     const { toaster } = router.options.context;
@@ -115,15 +118,34 @@ export function IdentitySwitcherProvider({ fallback, children }: IdentitySwitche
   return (
     <IdentitySwitcherContext value={{ panel, show, pending, switchTo }}>
       {children}
-      <VisuallyHidden role="status" aria-live="polite">
-        {announcement}
-      </VisuallyHidden>
+      <VisuallyHidden aria-live="polite">{announcement}</VisuallyHidden>
     </IdentitySwitcherContext>
   );
 }
 
+/**
+ * Renders `children` from the first time a switcher surface opens on, so the dialog, its search and
+ * the new channel form load with that first open rather than with the page.
+ */
+export function WhenSwitcherOpened({ children }: PropsWithChildren) {
+  const { panel } = useIdentitySwitcher();
+  const [opened, setOpened] = useState(false);
+  if (panel !== 'closed' && !opened) setOpened(true);
+
+  return opened ? children : null;
+}
+
+const CLOSED: IdentitySwitcherValue = {
+  panel: 'closed',
+  show: () => undefined,
+  pending: undefined,
+  switchTo: async () => undefined,
+};
+
+/**
+ * The switcher of the app's root. A part drawn alone, outside an app's root (a page in a spec, a
+ * story), gets one that stays closed and switches nothing.
+ */
 export function useIdentitySwitcher(): IdentitySwitcherValue {
-  const value = useContext(IdentitySwitcherContext);
-  if (!value) throw new Error('useIdentitySwitcher must be used within IdentitySwitcherProvider');
-  return value;
+  return useContext(IdentitySwitcherContext) ?? CLOSED;
 }

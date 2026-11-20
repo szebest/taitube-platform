@@ -1,6 +1,4 @@
 import { act } from '@testing-library/react';
-import { apiServer } from '@vp/web-testing';
-import { http, HttpResponse } from 'msw';
 import { useIdentityDocument } from '../use-identity-document';
 import { renderIdentities, type TestAccount } from './render-identities';
 
@@ -18,11 +16,6 @@ function addIcon() {
   icon.type = 'image/svg+xml';
   icon.href = '/favicon.svg';
   document.head.append(icon);
-  apiServer.use(
-    http.get('*/favicon.svg', () =>
-      HttpResponse.text('<svg xmlns="http://www.w3.org/2000/svg"><g/></svg>')
-    )
-  );
   onTestFinished(() => icon.remove());
   return icon;
 }

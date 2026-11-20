@@ -28,6 +28,8 @@ export type IdentityEntrySources = {
   tab: Identity;
   /** `GET /v1/me/identities` of the tab's account, once loaded. */
   mine: IdentitiesView | undefined;
+  /** The tab's account's primary channel as its session holds it, until `mine` loads. */
+  primary?: Pick<IdentitiesView['owned'][number], 'handle' | 'displayName' | 'avatarUrl'>;
   glances: readonly AccountGlance[] | undefined;
 };
 
@@ -48,7 +50,7 @@ function ownIdentities(sources: IdentityEntrySources): EntryFields[] {
   const { slot } = sources.tab;
   const row = sources.accounts.slots.find((entry) => entry.slot === slot);
   const owned = sources.mine?.owned ?? [];
-  const primary = owned.find((channel) => channel.isPrimary);
+  const primary = owned.find((channel) => channel.isPrimary) ?? sources.primary;
   const base = { expired: false, glance: undefined, role: undefined };
   const account: EntryFields = {
     ...base,
