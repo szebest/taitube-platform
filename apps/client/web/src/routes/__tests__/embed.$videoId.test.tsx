@@ -57,6 +57,16 @@ describe('apps/client/web: /embed/$videoId', () => {
     expect(location).toBe(`/embed/${VIDEO_ID}`);
   });
 
+  it('plays a private video its share link lets through', async () => {
+    const { status, html } = await embed(`/embed/${VIDEO_ID}?s=abcdefghijklmnopqrstuv`, {
+      visibility: 'private',
+      shareLinkId: '0190c3a0-5e1d-7000-8000-0000000000e1',
+    });
+
+    expect(status).toBe(200);
+    expect(html).toContain('src="http://localhost:9000/posters/p.jpg"');
+  });
+
   it.each([
     { scenario: 'a private video', overrides: { visibility: 'private' as const } },
     { scenario: 'a video still processing', overrides: { status: 'PROCESSING' as const } },

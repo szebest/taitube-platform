@@ -6,6 +6,7 @@ import type { RefreshSession } from '../session-config';
 
 const API = 'http://api.internal:3000';
 const APP = 'http://localhost:5173';
+const VIDEO = '0190c3a0-5e1d-7000-8000-00000000a001';
 const BODY_LIMIT_BYTES = 1_048_576;
 
 type Sent = { url: string; method: string; headers: Headers; body: string };
@@ -30,6 +31,7 @@ function api(...replies: (() => Response)[]): Sent[] {
 const refused = () => HttpResponse.json({ code: 'UNAUTHORIZED' }, { status: 401 });
 
 type Call = {
+  app?: string;
   init?: RequestInit;
   clientAddress?: string;
   refresh?: RefreshSession;
@@ -37,8 +39,11 @@ type Call = {
 };
 
 /** A browser's call to the app's `/api`, answered the way the app's server answers it. */
-function callProxy(path: string, { init = {}, clientAddress, refresh, onRequest }: Call = {}) {
-  const request = Object.assign(new Request(`${APP}${path}`, init), { ip: clientAddress });
+function callProxy(
+  path: string,
+  { app = APP, init = {}, clientAddress, refresh, onRequest }: Call = {}
+) {
+  const request = Object.assign(new Request(`${app}${path}`, init), { ip: clientAddress });
   onRequest?.(request);
   return requestHandler(() => proxyToApi(request, { apiBaseUrl: API, refresh }))(request, {});
 }
@@ -87,14 +92,27 @@ describe('@vp/queries: the same-origin API proxy', () => {
     expect(headers).not.toHaveProperty('x-admin-token');
   });
 
-  it('forwards the channel the studio acts on, for the API to check against the memberships', async () => {
+  it.each([
+    { header: 'x-channel-id', value: '00000000-0000-7000-8000-0000000000c1' },
+    { header: 'x-viewer-session', value: '0190c3a0-5e1d-7000-8000-0000000000f1' },
+  ])('forwards $header, for the API to decide by', async ({ header, value }) => {
     const sent = api();
 
-    await callProxy('/api/v1/me/channel/members', {
-      init: { headers: { 'x-channel-id': '00000000-0000-7000-8000-0000000000c1' } },
+    await callProxy('/api/v1/videos', { init: { headers: { [header]: value } } });
+
+    expect(sent[0]?.headers.get(header)).toBe(value);
+  });
+
+  it("tells the API the browser's video unlocks, and no other cookie", async () => {
+    const sent = api();
+
+    await callProxy(`/api/v1/videos/${VIDEO}`, {
+      init: {
+        headers: { cookie: `vp.session=t0ken; vp.video-access.${VIDEO}=signed; vp.theme=dark` },
+      },
     });
 
-    expect(sent[0]?.headers.get('x-channel-id')).toBe('00000000-0000-7000-8000-0000000000c1');
+    expect(sent[0]?.headers.get('cookie')).toBe(`vp.video-access.${VIDEO}=signed`);
   });
 
   it.each([
@@ -125,6 +143,40 @@ describe('@vp/queries: the same-origin API proxy', () => {
 
     expect(answer.headers.get('set-cookie')).toBeNull();
   });
+
+  it.each([
+    {
+      where: 'locally',
+      app: APP,
+      unlock: `vp.video-access.${VIDEO}=signed; Max-Age=43200; Path=/; HttpOnly; SameSite=Lax`,
+    },
+    {
+      where: 'on a real host',
+      app: 'https://taitube.example',
+      unlock: `vp.video-access.${VIDEO}=signed; Max-Age=43200; Path=/; HttpOnly; Secure; SameSite=Lax`,
+    },
+  ])(
+    "sets the API's video unlock on this origin $where, for the time it was given, and nothing else",
+    async ({ app, unlock }) => {
+      api(() => {
+        const headers = new Headers();
+        headers.append(
+          'set-cookie',
+          `vp.video-access.${VIDEO}=signed; Max-Age=43200; Domain=api.internal; Path=/v1; HttpOnly; SameSite=Strict`
+        );
+        headers.append('set-cookie', 'api=1; Path=/');
+        return new HttpResponse(null, { status: 204, headers });
+      });
+
+      const answer = await callProxy(`/api/v1/videos/${VIDEO}/unlock`, {
+        app,
+        init: { method: 'POST', body: '{"password":"hunter22"}' },
+      });
+
+      expect(answer.status).toBe(204);
+      expect(answer.headers.getSetCookie()).toEqual([unlock]);
+    }
+  );
 
   it('refreshes a token the API refused once, and retries the call with the fresh one', async () => {
     const sent = api(refused, () => HttpResponse.json({ id: 'v1' }));

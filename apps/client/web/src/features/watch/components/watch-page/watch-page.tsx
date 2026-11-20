@@ -24,11 +24,11 @@ export interface WatchPageProps {
 
 export function WatchPage({ renderActions, renderCreatorStats }: WatchPageProps) {
   const { videoId } = useParams({ from: '/watch/$videoId' });
-  const { t, list } = useSearch({ from: '/watch/$videoId' });
+  const { t, list, s } = useSearch({ from: '/watch/$videoId' });
   const autoplay = useLocation({ select: ({ state }) => state.autoplay === true });
   const api = useApi();
   const { tOr } = useT();
-  const { data: video } = useSuspenseQuery(videoQueryOptions(api, videoId));
+  const { data: video } = useSuspenseQuery(videoQueryOptions(api, videoId, s));
 
   useOpenInPlaybackSession({ video, list, startTime: t, autoplay });
 

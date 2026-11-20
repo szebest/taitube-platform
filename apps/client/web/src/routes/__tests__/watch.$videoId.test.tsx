@@ -197,4 +197,39 @@ describe('apps/client/web: /watch/$videoId', () => {
     expect(headOf(html)).not.toContain('og:');
     expect(jsonLdOf(html)).toEqual([]);
   });
+
+  it("renders the password gate with no meta, and the page itself once the request carries the video's unlock", async () => {
+    const unlock = `vp.video-access.${VIDEO_ID}=signed`;
+    const answer = mockEndpoint(getVideo, ({ request }) =>
+      request.headers.get('cookie') === unlock
+        ? HttpResponse.json(video({ title: 'Launch day', passwordProtected: true }))
+        : problemReply(ErrorCodes.VIDEO_PASSWORD_REQUIRED)
+    );
+    const handlers = [answer, channelAnswer, relatedAnswer, correctionsAnswer];
+
+    const locked = await serverRender(getRouter, `/watch/${VIDEO_ID}`, { handlers });
+    const unlocked = await serverRender(getRouter, `/watch/${VIDEO_ID}`, {
+      handlers,
+      headers: { cookie: `vp.theme=dark; ${unlock}` },
+    });
+
+    expect(locked.status).toBe(200);
+    expect(locked.html).toMatch(/<h1[^>]*>This video is protected<\/h1>/);
+    expect(headOf(locked.html)).not.toContain('og:');
+    expect(unlocked.html).toMatch(/<h1[^>]*>Launch day<\/h1>/);
+  });
+
+  it('never names a viewer session to the API, so the server render carries the control', async () => {
+    const sessions: (string | null)[] = [];
+    const answer = mockEndpoint(getVideo, ({ request }) => {
+      sessions.push(request.headers.get('x-viewer-session'));
+      return HttpResponse.json(video({ title: 'Launch day' }));
+    });
+
+    await serverRender(getRouter, `/watch/${VIDEO_ID}`, {
+      handlers: [answer, channelAnswer, relatedAnswer, correctionsAnswer],
+    });
+
+    expect(sessions).toEqual([null]);
+  });
 });

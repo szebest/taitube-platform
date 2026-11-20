@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { VideoJsEngine } from '#app/integrations/video-js/video-js-engine';
+import type { PlaybackAttribution } from '#app/lib/player/playback-attribution';
 import type { TaitubePlayerProps } from '#app/lib/player/taitube-player-props';
 import { ControlBar } from '../control-bar/control-bar';
 import { PlayerCardLayer } from '../player-card-layer';
@@ -10,17 +11,20 @@ import { usePlaybackTelemetry } from './hooks/use-playback-telemetry';
 
 export interface TaitubePlayerWithTelemetryProps extends TaitubePlayerProps {
   videoId: string;
+  /** The share link and the test variant of the read, for the playback beacon. */
+  attribution?: PlaybackAttribution;
   /** Drawn over the picture inside the element that goes fullscreen, such as a live chat. */
   overlay?: ReactNode;
 }
 
 export function TaitubePlayer({
   videoId,
+  attribution,
   controls = true,
   overlay,
   ...props
 }: TaitubePlayerWithTelemetryProps) {
-  const telemetry = usePlaybackTelemetry(videoId);
+  const telemetry = usePlaybackTelemetry(videoId, attribution);
 
   return (
     <VideoJsEngine

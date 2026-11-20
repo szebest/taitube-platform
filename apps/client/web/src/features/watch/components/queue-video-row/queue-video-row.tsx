@@ -4,6 +4,7 @@ import { Link } from '@tanstack/react-router';
 import type { ReasonedVideo, VideoSummary } from '@vp/api-contracts';
 import { FeedbackMenuItems } from '#app/components/video/feedback-menu-items';
 import { useDurationText } from '#app/hooks/use-duration-text';
+import { useImpression } from '#app/hooks/use-impression';
 import { useVideoActions } from '#app/hooks/use-video-actions';
 
 export interface QueueVideoRowProps {
@@ -28,6 +29,7 @@ export function QueueVideoRow({
   const { tOr } = useT();
   const { clock, spoken } = useDurationText(video.durationMs);
   const { enqueue, playNext } = useVideoActions(video);
+  const impression = useImpression(video);
 
   const byline = [
     episode === undefined ? undefined : tOr('library.episode', { number: episode }, ''),
@@ -38,7 +40,12 @@ export function QueueVideoRow({
     .join(' · ');
 
   return (
-    <VideoCard.Root variant="row" size="sm" videoId={current ? undefined : video.id}>
+    <VideoCard.Root
+      ref={impression}
+      variant="row"
+      size="sm"
+      videoId={current ? undefined : video.id}
+    >
       <VideoCard.Thumb
         src={video.thumbnailUrl ?? video.posterUrl}
         duration={clock}

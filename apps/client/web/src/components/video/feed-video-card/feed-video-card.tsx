@@ -6,6 +6,7 @@ import { publishedAt } from '@vp/intl-formats';
 import { FeedbackMenuItems } from '#app/components/video/feedback-menu-items';
 import { useDurationText } from '#app/hooks/use-duration-text';
 import { useHoverPlay } from '#app/hooks/use-hover-play';
+import { useImpression } from '#app/hooks/use-impression';
 import { useVideoActions } from '#app/hooks/use-video-actions';
 import { usePlaybackPreference } from '#app/lib/preferences/device-preferences-provider';
 import { spriteOf } from '#app/lib/video-sprite';
@@ -20,13 +21,14 @@ interface FeedVideoCardProps {
   reason?: ShelfReason;
 }
 
-/** A video in a feed, a grid or a shelf: the card, linked to its watch page and its channel. */
+/** A video in a feed, a grid or a shelf: the card, linked to its watch page and its channel, counting the test variant it shows. */
 export function FeedVideoCard({ video, reason }: FeedVideoCardProps) {
   const { tOr } = useT();
   const progress = useWatchProgress(video);
   const [hoverPreview] = usePlaybackPreference('hoverPreview');
   const hoverPlay = useHoverPlay();
   const { save, enqueue, playNext } = useVideoActions(video);
+  const impression = useImpression(video);
 
   const { clock, spoken } = useDurationText(video.durationMs);
   const { channel } = video;
@@ -34,6 +36,7 @@ export function FeedVideoCard({ video, reason }: FeedVideoCardProps) {
 
   return (
     <VideoCard.Root
+      ref={impression}
       variant="shelf"
       videoId={video.id}
       expandOnHover={hoverPreview}

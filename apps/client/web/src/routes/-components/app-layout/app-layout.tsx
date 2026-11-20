@@ -19,6 +19,7 @@ import { AppCommandPalette } from '#app/features/search';
 import { RootShell } from '#app/features/shell';
 import { LazyGlobalNowPlayingBar, PlaybackSessionProvider } from '#app/features/watch';
 import { LazyDevtools } from '#app/integrations/devtools/devtools.lazy';
+import { ImpressionsProvider } from '#app/integrations/impressions/impressions-provider';
 import { AmbientGlowProvider } from '#app/lib/ambient/ambient-glow';
 import { CommandPaletteProvider } from '#app/lib/command-palette/command-palette-store';
 import { API_BASE_URL, OTEL_TRACES_URL } from '#app/lib/config';
@@ -55,35 +56,37 @@ export function AppLayout() {
                       <PlaybackSessionProvider>
                         <CommandPaletteProvider>
                           <AmbientGlowProvider>
-                            <RootShell
-                              sidebar={sidebarState}
-                              account={<AccountMenu />}
-                              actions={<HeaderNotificationCentre />}
-                              notices={
-                                <>
-                                  <OfflineBanner />
-                                  <InstallPrompt />
-                                </>
-                              }
-                              nowPlaying={<LazyGlobalNowPlayingBar />}
-                              overlays={
-                                <>
-                                  <AppCommandPalette />
-                                  <UrlModal.WhenOpened id="save-to-playlist">
-                                    <LazySaveToPlaylistDialog />
-                                  </UrlModal.WhenOpened>
-                                  <UrlModal.WhenOpened id="sign-in">
-                                    <LazySignInDialog />
-                                  </UrlModal.WhenOpened>
-                                  <ReplayIntent />
-                                  <UrlModal.WhenOpened id="new-playlist">
-                                    <LazyNewPlaylistDialog />
-                                  </UrlModal.WhenOpened>
-                                  <UpdatePrompt />
-                                  <QueuedChangesSync />
-                                </>
-                              }
-                            />
+                            <ImpressionsProvider>
+                              <RootShell
+                                sidebar={sidebarState}
+                                account={<AccountMenu />}
+                                actions={<HeaderNotificationCentre />}
+                                notices={
+                                  <>
+                                    <OfflineBanner />
+                                    <InstallPrompt />
+                                  </>
+                                }
+                                nowPlaying={<LazyGlobalNowPlayingBar />}
+                                overlays={
+                                  <>
+                                    <AppCommandPalette />
+                                    <UrlModal.WhenOpened id="save-to-playlist">
+                                      <LazySaveToPlaylistDialog />
+                                    </UrlModal.WhenOpened>
+                                    <UrlModal.WhenOpened id="sign-in">
+                                      <LazySignInDialog />
+                                    </UrlModal.WhenOpened>
+                                    <ReplayIntent />
+                                    <UrlModal.WhenOpened id="new-playlist">
+                                      <LazyNewPlaylistDialog />
+                                    </UrlModal.WhenOpened>
+                                    <UpdatePrompt />
+                                    <QueuedChangesSync />
+                                  </>
+                                }
+                              />
+                            </ImpressionsProvider>
                           </AmbientGlowProvider>
                         </CommandPaletteProvider>
                       </PlaybackSessionProvider>

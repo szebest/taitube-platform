@@ -4,13 +4,14 @@ import { correctionsQueryOptions, useApi, videoQueryOptions } from '@vp/queries'
 import { Suspense } from 'react';
 import { PlayerChannelProvider } from '#app/components/player/taitube-player';
 import { LazyTaitubePlayer } from '#app/components/player/taitube-player/taitube-player.lazy';
+import { playbackAttribution } from '#app/lib/player/playback-attribution';
 
 /** `/embed/$videoId`: the player alone, filling the frame the embedder gave it. */
 export function EmbedPage() {
   const { videoId } = useParams({ from: '/embed/$videoId' });
-  const { autoplay, t, controls, loop } = useSearch({ from: '/embed/$videoId' });
+  const { autoplay, t, controls, loop, s } = useSearch({ from: '/embed/$videoId' });
   const api = useApi();
-  const { data: video } = useSuspenseQuery(videoQueryOptions(api, videoId));
+  const { data: video } = useSuspenseQuery(videoQueryOptions(api, videoId, s));
   const { data: corrections } = useQuery(correctionsQueryOptions(api, videoId));
 
   const poster = video.posterUrl && (
@@ -35,6 +36,7 @@ export function EmbedPage() {
                 loop={loop === 1}
                 control={autoplay === 1 ? { paused: false, muted: true } : undefined}
                 cards={corrections?.items}
+                attribution={playbackAttribution(video)}
               />
             </PlayerChannelProvider>
           </Suspense>
