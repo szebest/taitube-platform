@@ -1,5 +1,4 @@
-import { PermanentError } from '@kit/errors';
-import { CommonErrorCodes } from '@kit/errors';
+import { CommonErrorCodes, PermanentError } from '@kit/errors';
 import { type Actor, type AssertCanOptions, assertCan } from '../assert-can';
 
 const standardUser: Actor = { id: 'usr-1', role: 'USER' };
