@@ -170,6 +170,16 @@ describe('@vp/queries: sign-in', () => {
     expect(issue).not.toHaveBeenCalled();
   });
 
+  it('refuses a slot that holds another user live session, and writes nothing', async () => {
+    const recorded = api();
+
+    const { value, setCookies } = await signIn({ mode: 'slot', slot: 2 }, 'vp.session.2=someone');
+
+    expect(value).toEqual({ kind: 'slot-taken' });
+    expect(sessionCookies(setCookies)).toEqual([]);
+    expect(recorded).toEqual([]);
+  });
+
   it('signs one slot in again, as a sign-in rather than an add', async () => {
     const recorded = api();
 

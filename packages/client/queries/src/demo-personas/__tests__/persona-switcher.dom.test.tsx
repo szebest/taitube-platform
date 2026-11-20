@@ -65,6 +65,17 @@ describe('@vp/queries: PersonaSwitcher', () => {
     expect(sessionCookies()).toEqual([`vp.session.0=token-of-${persona}`]);
   });
 
+  it('replaces the account signed in on this tab slot with the persona picked', async () => {
+    document.cookie = 'vp.session.0=token-of-user; path=/';
+    devTokenServe((asked) => HttpResponse.json({ token: `token-of-${asked}` }));
+    const { invalidate, user } = await renderSwitcher();
+
+    await user.click(await screen.findByRole('button', { name: 'Creator' }));
+
+    await vi.waitFor(() => expect(invalidate).toHaveBeenCalledOnce());
+    expect(sessionCookies()).toEqual(['vp.session.0=token-of-creator']);
+  });
+
   it('adds a persona beside the account signed in, into the next slot, and moves the tab to it', async () => {
     devTokenServe((asked) => HttpResponse.json({ token: `token-of-${asked}` }));
     // oxlint-disable-next-line unicorn/no-document-cookie -- the browser arrives signed in.

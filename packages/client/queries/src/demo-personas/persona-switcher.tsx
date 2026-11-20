@@ -3,7 +3,7 @@ import { useRouter } from '@tanstack/react-router';
 import { useActionState } from 'react';
 import { z } from 'zod';
 import { settleSession, switchIdentity } from '../session-changes';
-import { startAddAccount } from '../session-functions';
+import { hasSession, startAddAccount, signOut as signOutSlot } from '../session-functions';
 import { announceSessionChange } from '../session-sync';
 import type { SignInOutcome } from '../sign-in';
 import { useSignOut } from '../use-sign-out';
@@ -29,6 +29,7 @@ const FAILED_MESSAGE = 'That persona could not sign in. Is dev-token serve runni
 const REFUSED_MESSAGES = {
   'accounts-full': 'This browser holds as many accounts as it can. Sign one out first.',
   'rate-limited': 'Too many accounts added from here. Try again in a few minutes.',
+  'slot-taken': 'Another account is signed in on that slot. Sign it out first.',
   refused: 'That sign-in was not started here. Start adding the account again.',
 } as const;
 
@@ -62,10 +63,19 @@ export function PersonaSwitcher({
   const signOut = useSignOut();
   const current = router.options.context.identity.read().identity.slot;
 
+  const replaceOwnSlot = async (): Promise<void> => {
+    if (!(await hasSession({ data: { slot: current } }))) return;
+    await signOutSlot({ data: { slot: current } });
+    announceSessionChange({ type: 'signed-out', slots: [current] });
+  };
+
   const signIn = async (persona: Persona): Promise<SignInOutcome> => {
-    const target = adding
-      ? { mode: 'add' as const, state: await startAddAccount() }
-      : { mode: 'slot' as const, slot: slot ?? current };
+    if (adding) {
+      const target = { mode: 'add' as const, state: await startAddAccount() };
+      return signInAsPersona({ data: { persona, target } });
+    }
+    if (slot === undefined) await replaceOwnSlot();
+    const target = { mode: 'slot' as const, slot: slot ?? current };
     return signInAsPersona({ data: { persona, target } });
   };
 
@@ -86,6 +96,7 @@ export function PersonaSwitcher({
         return;
       case 'accounts-full':
       case 'rate-limited':
+      case 'slot-taken':
       case 'refused':
         onFailed?.(REFUSED_MESSAGES[outcome.kind]);
         return;

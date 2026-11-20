@@ -1,3 +1,4 @@
+import { isOk, ok, tryCatch } from '@kit/result';
 import { AccountSlotSchema } from '@vp/api-contracts';
 
 /** Names the slot a proxied call acts for; a custom header, so no cross-site form can send it. */
@@ -28,9 +29,16 @@ export function parseIdentityPath(pathname: string): IdentityPath {
   const slot = parseSlot(match?.[1]);
   if (!match || slot === undefined) return { identity: undefined, pathname };
 
-  const channel = match[2] ? decodeURIComponent(match[2]) : undefined;
+  const [, , handle] = match;
+  const channel = handle
+    ? tryCatch(
+        () => decodeURIComponent(handle),
+        (cause) => cause
+      )
+    : ok(undefined);
+  if (!isOk(channel)) return { identity: undefined, pathname };
   return {
-    identity: channel ? { slot, channel } : { slot },
+    identity: channel.value ? { slot, channel: channel.value } : { slot },
     pathname: pathname.slice(match[0].length) || '/',
   };
 }

@@ -12,6 +12,7 @@ describe('@vp/queries: account slots', () => {
     },
     { path: '/u/12/watch', identity: undefined, pathname: '/u/12/watch' },
     { path: '/users/2', identity: undefined, pathname: '/users/2' },
+    { path: '/u/0/c/%E0%A4%A/watch', identity: undefined, pathname: '/u/0/c/%E0%A4%A/watch' },
   ])('reads $path as $identity on $pathname', ({ path, identity, pathname }) => {
     expect(parseIdentityPath(path)).toEqual({ identity, pathname });
   });

@@ -21,6 +21,7 @@ export type SignInOutcome =
   | { readonly kind: 'already-signed-in'; readonly slot: number; readonly accounts: number }
   | { readonly kind: 'accounts-full' }
   | { readonly kind: 'rate-limited' }
+  | { readonly kind: 'slot-taken' }
   | { readonly kind: 'refused' };
 
 /** The provider's half of a sign-in: a grant (a demo persona, a provider's code) in, a new token out. */
@@ -53,6 +54,9 @@ export async function completeSignIn(
   const accounts = readAccounts();
   const occupied = occupiedSlots();
   const listed = slotOfUser(accounts, account.user.id);
+  if (target.mode === 'slot' && listed === undefined && occupied.includes(target.slot)) {
+    return { kind: 'slot-taken' };
+  }
   const slot =
     listed ??
     (target.mode === 'slot' ? target.slot : firstFreeSlot(accounts, occupied, accountsMax));
