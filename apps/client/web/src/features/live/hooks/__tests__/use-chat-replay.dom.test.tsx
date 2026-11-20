@@ -1,10 +1,13 @@
 import { screen, within } from '@testing-library/react';
 import { chatMessage } from '@vp/web-testing';
+import { LazyTaitubePlayer } from '#app/components/player/taitube-player/taitube-player.lazy';
 import { renderLive } from '#app/features/live/__tests__/render-live';
 
 vi.mock(import('#app/components/player/taitube-player/taitube-player'), async () => ({
   TaitubePlayer: (await import('#app/features/live/__tests__/stub-live-player')).StubLivePlayer,
 }));
+
+beforeAll(() => LazyTaitubePlayer.preload());
 
 const ENDED = { status: 'ENDED' as const, playbackUrl: 'http://localhost:9000/archive.m3u8' };
 
@@ -12,12 +15,10 @@ describe('apps/client/web: useChatReplay', () => {
   it('asks for the window the playhead is in, the one before and the one ahead', async () => {
     const { replayWindows } = await renderLive({ stream: ENDED });
 
-    await vi.waitFor(
-      () =>
-        expect(replayWindows).toEqual(
-          expect.arrayContaining(['30000-60000', '60000-90000', '90000-120000'])
-        ),
-      { timeout: 25_000 }
+    await vi.waitFor(() =>
+      expect(replayWindows).toEqual(
+        expect.arrayContaining(['30000-60000', '60000-90000', '90000-120000'])
+      )
     );
   });
 
