@@ -67,7 +67,8 @@ or do not add it at all.
 
 The types and the machinery are `@kit/errors`; the vocabulary is the app's `@vp/errors`. A platform package
 owns the codes it emits (`CommonErrorCodes` in `@kit/errors`: `VALIDATION_FAILED`, `INTERNAL`;
-`PaginationErrorCodes` in `@kit/pagination`; `FormatErrorCodes` in `@kit/intl`), and `ApiErrorCodes` spreads
+`PaginationErrorCodes` in `@kit/pagination`; `FormatErrorCodes` in `@kit/intl`; `PermissionErrorCodes` in
+`@kit/permissions`: `UNAUTHORIZED`, `FORBIDDEN`), and `ApiErrorCodes` spreads
 them in, so each code is written once and no platform package imports the app's codes.
 
 ```ts

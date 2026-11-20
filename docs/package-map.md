@@ -42,18 +42,19 @@ scope (platform or app) and the tier are the directory and the layer is `vp.laye
 | `@vp/intl-formats` | `packages/universal/intl-formats` | app | universal | T3 | `@kit/intl` | `@kit/testing`, `@kit/tsconfig` |
 | `@kit/config` | `packages/platform/server/config` | platform | server | T4 | `@kit/composition`, `@kit/logger`, `@kit/result` | `@kit/testing`, `@kit/tsconfig` |
 | `@kit/pagination` | `packages/platform/universal/pagination` | platform | universal | T4 | `@kit/errors`, `@kit/result` | `@kit/testing`, `@kit/tsconfig` |
+| `@kit/permissions` | `packages/platform/universal/permissions` | platform | universal | T4 | `@kit/errors` | `@kit/testing`, `@kit/tsconfig` |
 | `@kit/validation` | `packages/platform/universal/validation` | platform | universal | T4 | `@kit/errors` | `@kit/testing`, `@kit/tsconfig` |
 | `@kit/design-tokens` | `packages/platform/universal/design-tokens` | platform | universal | T5 | `@kit/appearance`, `@kit/errors`, `@kit/result` | `@kit/testing`, `@kit/tsconfig` |
-| `@vp/errors` | `packages/universal/errors` | app | universal | T5 | `@kit/errors`, `@kit/intl`, `@kit/pagination` | `@kit/testing`, `@kit/tsconfig` |
+| `@vp/errors` | `packages/universal/errors` | app | universal | T5 | `@kit/errors`, `@kit/intl`, `@kit/pagination`, `@kit/permissions` | `@kit/testing`, `@kit/tsconfig` |
 | `@kit/ui` | `packages/platform/client/ui` | platform | client | T6 | `@kit/appearance`, `@kit/design-tokens`, `@kit/errors`, `@kit/result` | `@kit/testing`, `@kit/tsconfig`, `@kit/vite-preset`, `@kit/web-testing` |
 | `@vp/env-schema` | `packages/server/env-schema` | app | server | T6 | `@kit/observability`, `@kit/pagination`, `@kit/primitives`, `@kit/result`, `@vp/domain` | `@kit/config`, `@kit/testing`, `@kit/tsconfig`, `@vp/testing-fixtures` |
 | `@vp/events` | `packages/server/events` | app | server | T6 | `@kit/keyspace`, `@kit/result`, `@vp/errors` | `@kit/testing`, `@kit/tsconfig` |
 | `@vp/ffmpeg` | `packages/server/ffmpeg` | app | server | T6 | `@kit/errors`, `@kit/primitives`, `@kit/result`, `@vp/domain`, `@vp/errors`, `@vp/job-contracts`, `@vp/storage` | `@kit/testing`, `@kit/tsconfig` |
 | `@vp/whisper` | `packages/server/whisper` | app | server | T6 | `@kit/result`, `@vp/domain`, `@vp/errors` | `@kit/testing`, `@kit/tsconfig` |
 | `@vp/messages` | `packages/universal/messages` | app | universal | T6 | `@kit/intl`, `@kit/result`, `@vp/errors` | `@kit/testing`, `@kit/tsconfig` |
-| `@vp/permissions` | `packages/universal/permissions` | app | universal | T6 | `@kit/errors`, `@vp/domain`, `@vp/errors` | `@kit/testing`, `@kit/tsconfig` |
+| `@vp/permissions` | `packages/universal/permissions` | app | universal | T6 | `@kit/permissions`, `@vp/domain`, `@vp/errors` | `@kit/testing`, `@kit/tsconfig` |
 | `@vp/validation` | `packages/universal/validation` | app | universal | T6 | `@kit/errors`, `@kit/result`, `@kit/validation`, `@vp/errors` | `@kit/testing`, `@kit/tsconfig` |
-| `@vp/permissions-react` | `packages/client/permissions-react` | app | client | T7 | `@kit/result`, `@vp/permissions` | `@kit/testing`, `@kit/tsconfig`, `@kit/vite-preset` |
+| `@vp/permissions-react` | `packages/client/permissions-react` | app | client | T7 | `@kit/permissions`, `@kit/result`, `@vp/permissions` | `@kit/testing`, `@kit/tsconfig`, `@kit/vite-preset` |
 | `@kit/components` | `packages/platform/client/components` | platform | client | T7 | `@kit/design-tokens`, `@kit/ui` | `@kit/testing`, `@kit/tsconfig`, `@kit/vite-preset`, `@kit/web-testing` |
 | `@kit/forms` | `packages/platform/client/forms` | platform | client | T7 | `@kit/errors`, `@kit/result`, `@kit/ui` | `@kit/testing`, `@kit/tsconfig`, `@kit/validation`, `@kit/vite-preset`, `@kit/web-testing` |
 | `@kit/intl-react` | `packages/platform/client/intl-react` | platform | client | T7 | `@kit/intl`, `@kit/result`, `@kit/runtime` | `@kit/testing`, `@kit/tsconfig`, `@kit/vite-preset` |

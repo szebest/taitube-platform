@@ -1,12 +1,14 @@
 import { CommonErrorCodes } from '@kit/errors';
 import { FormatErrorCodes } from '@kit/intl';
 import { PaginationErrorCodes } from '@kit/pagination';
+import { PermissionErrorCodes } from '@kit/permissions';
 
 /** The platform packages own the codes they emit; the app's set spreads them in and adds its own. */
 export const ApiErrorCodes = {
   ...CommonErrorCodes,
   ...PaginationErrorCodes,
   ...FormatErrorCodes,
+  ...PermissionErrorCodes,
   UPLOAD_TOO_LARGE: 'UPLOAD_TOO_LARGE',
   UPLOAD_SIZE_MISMATCH: 'UPLOAD_SIZE_MISMATCH',
   UNSUPPORTED_CONTENT_TYPE: 'UNSUPPORTED_CONTENT_TYPE',
@@ -16,9 +18,7 @@ export const ApiErrorCodes = {
   VIDEO_NOT_FOUND: 'VIDEO_NOT_FOUND',
   DLQ_ENTRY_NOT_FOUND: 'DLQ_ENTRY_NOT_FOUND',
   VERSION_CONFLICT: 'VERSION_CONFLICT',
-  FORBIDDEN: 'FORBIDDEN',
   RATE_LIMITED: 'RATE_LIMITED',
-  UNAUTHORIZED: 'UNAUTHORIZED',
   ROUTE_NOT_FOUND: 'ROUTE_NOT_FOUND',
   CATEGORY_NOT_FOUND: 'CATEGORY_NOT_FOUND',
   CATEGORY_SLUG_CONFLICT: 'CATEGORY_SLUG_CONFLICT',

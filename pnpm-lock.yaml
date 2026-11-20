@@ -2343,6 +2343,9 @@ importers:
         specifier: workspace:*
         version: link:../errors
     devDependencies:
+      '@casl/ability':
+        specifier: ^7.0.1
+        version: 7.0.1
       '@kit/testing':
         specifier: workspace:*
         version: link:../../server/testing
@@ -3327,6 +3330,9 @@ importers:
       '@kit/pagination':
         specifier: workspace:*
         version: link:../../platform/universal/pagination
+      '@kit/permissions':
+        specifier: workspace:*
+        version: link:../../platform/universal/permissions
     devDependencies:
       '@kit/testing':
         specifier: workspace:*
@@ -3405,9 +3411,9 @@ importers:
       '@casl/ability':
         specifier: ^7.0.1
         version: 7.0.1
-      '@kit/errors':
+      '@kit/permissions':
         specifier: workspace:*
-        version: link:../../platform/universal/errors
+        version: link:../../platform/universal/permissions
       '@vp/domain':
         specifier: workspace:*
         version: link:../domain

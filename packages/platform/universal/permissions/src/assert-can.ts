@@ -11,10 +11,10 @@ export interface Actor {
 }
 
 export interface AssertCanOptions {
-  action: string;
-  subject: string;
-  user: Actor | null;
-  message?: string;
+  readonly action: string;
+  readonly subject: string;
+  readonly user: Actor | null;
+  readonly message?: string;
 }
 
 export function assertCan(allowed: boolean, options: AssertCanOptions): asserts allowed {

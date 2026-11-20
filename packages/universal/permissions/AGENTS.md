@@ -9,7 +9,8 @@ Instructions for any coding agent working on `@vp/permissions`.
 ## 1. Scope & Purpose
 
 `@vp/permissions` is the zero-I/O authorization engine built on `@casl/ability`. Universal / T2: it
-depends on `@vp/domain` (the watch party permission registry and the channel team roles), `@vp/errors` and `@casl/ability` only, so `apps/client/web`, `apps/server/api`, `@vp/core`,
+depends on `@vp/domain` (the watch party permission registry and the channel team roles), `@vp/errors`,
+`@kit/permissions` (the generic engine: `createAbilityFactory` and `assertCan`) and `@casl/ability` only, so `apps/client/web`, `apps/server/api`, `@vp/core`,
 `@vp/adapters` and `@vp/domain-rules` all import it.
 
 - Rule factories in `src/rules/`: `defineVideoRules`, `defineCommentRules`, `defineChannelRules`,
@@ -18,8 +19,8 @@ depends on `@vp/domain` (the watch party permission registry and the channel tea
   (`<resource>.rules.ts`). Channel team members get their rules beside the owner's, through `ownersWith` /
   `channelsWith` in `rules/memberships.ts` over `UserContext.memberships` and `CHANNEL_ROLES` from `@vp/domain`;
   never an empty `$in`.
-- The ability builder `getUserPermissions(user: UserContext | null)` in `ability.ts`, which applies every
-  rule factory. The admin rules go last: a later CASL rule wins, so `manage all` overrides every `cannot`, such as
+- The ability builder `getUserPermissions(user: UserContext | null)` in `ability.ts`, which hands every rule
+  factory, in order, to `createAbilityFactory` from `@kit/permissions`. The admin rules go last: a later CASL rule wins, so `manage all` overrides every `cannot`, such as
   the one that stops an owner changing the visibility of a video an admin took down (`REJECTED`).
 - Typed helpers in `src/helpers/`: `canReadVideo`, `canUpdateVideo`, `canDeleteVideo`, `canModerateVideo` (the
   `moderate` action: an admin takedown, and approving, rejecting or dismissing a held video), `canAppealVideo` (the owner of a
@@ -29,7 +30,7 @@ depends on `@vp/domain` (the watch party permission registry and the channel tea
   `canCreatePlaylist`, `canReadPlaylist`, `canUpdatePlaylist`, `canDeletePlaylist`,
   `canManagePlaylistItems`, `canReadCaptions`, `canManageCaptions`.
 - The room-scoped ability `getWatchPartyPermissions(user, viewer)` in `src/helpers/watch-parties.ts`, built
-  per member per room by `defineWatchPartyRoomRules` from the `WatchPartyViewer` that `toWatchPartyViewer`
+  per member per room through `createAbilityFactory` by `defineWatchPartyRoomRules` from the `WatchPartyViewer` that `toWatchPartyViewer`
   makes of their effective permissions: each held room permission is an action on `WatchParty`, and the
   role hierarchy is conditions on `WatchPartyRole`, `WatchPartyMember` and `WatchPartyPermission`. Callers
   ask through `canInRoom`, `canGrantPermission`, `canTouchRole` and `canActOnMember`.
@@ -37,9 +38,9 @@ depends on `@vp/domain` (the watch party permission registry and the channel tea
   `normalizeVideoResource`, `normalizeUploadResource`) that the helpers wrap resources with.
 - Types in `src/types/`: `UserContext`, `Role`, `parseRole` (the boundary parser from untrusted input),
   the `*Resource` shapes, and `AppAbility` / `AppAction` / `AppSubjects`.
-- `assertCan(allowed, { action, subject, user, message })` in `src/errors/assert-can.ts`, which throws a
-  `PermanentError` with `UNAUTHORIZED` for an anonymous user and `FORBIDDEN` for a signed-in one. Its
-  `Result` form is `authorize` in `@vp/domain-rules`.
+
+`assertCan` is `@kit/permissions`'s: it throws `UNAUTHORIZED` for an anonymous user and `FORBIDDEN` for a
+signed-in one, and `UserContext` fits its `Actor`. Its `Result` form is `authorize` in `@vp/domain-rules`.
 
 ---
 
@@ -47,13 +48,13 @@ depends on `@vp/domain` (the watch party permission registry and the channel tea
 
 - Zero I/O and no Node-specific runtime bindings, so it runs under Node 24, Bun 1.4 and the browser.
 - Rules, the ability builder and the helpers are pure functions; the package declares no class.
-- Callers ask through the `canX` helpers and `assertCan`. The `AppAbility` itself is held by
+- Callers ask through the `canX` helpers (and `assertCan` from `@kit/permissions`). The `AppAbility` itself is held by
   `PermissionsProvider` in `@vp/permissions-react` (behind `<Can>`),
   `AuthorizationPort.getAbility()` in `@vp/core/ports` and its two implementations,
   `CaslAuthorizationAdapter` and the in-memory authorization doubles, and
   `packages/server/adapters/postgres/scopes/rules-to-sql.ts`, which turns rules into SQL through
-  `@casl/ability/extra`. `@vp/adapters` is the only package besides this one that declares
-  `@casl/ability`.
+  `@casl/ability/extra`. `@vp/adapters` and `@kit/permissions` (a peer) are the only packages besides this
+  one that declare `@casl/ability`.
 
 ---
 

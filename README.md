@@ -98,6 +98,7 @@ taitube-platform/
 │   │   │   ├── intl/                # Formatters on Intl over a tagged value union, IntlCache and the locale chain
 │   │   │   ├── machine/             # Lifecycles as typed edge tables: legal moves, findings, Mermaid
 │   │   │   ├── pagination/          # Keyset cursor codec and page shapes
+│   │   │   ├── permissions/         # CASL ability factory over the app's rule sets, assertCan
 │   │   │   ├── primitives/          # Time-unit constants every package reads by name
 │   │   │   ├── result/              # Result type, combinators, tryCatch/fromPromise
 │   │   │   ├── runtime/             # Clock, Random, EnvSource, Fetch and CookieJar tokens; node and browser entries
