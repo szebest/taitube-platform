@@ -14,7 +14,6 @@ depends only on platform packages (`pnpm boundaries`). It is the machinery of au
   `RuleSet<A, S, C>`, `(context, builder) => void`.
 - **`assertCan(allowed, options)`** (`src/assert-can.ts`): the throwing guard for a caller that needs an
   exception, `UNAUTHORIZED` when there is no `Actor` and `FORBIDDEN` when there is one.
-- **`PermissionErrorCodes`**: the two codes `assertCan` emits. The app spreads them into its error code set.
 
 ## 2. Invariants
 

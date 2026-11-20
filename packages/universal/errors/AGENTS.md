@@ -12,7 +12,7 @@ Instructions for any coding agent working on `@vp/errors`.
 
 - **`ErrorCodes`** - the machine-readable codes, which must match `docs/SDD.md` §6.2. `ApiErrorCodes` spreads in
   the codes the platform packages emit (`CommonErrorCodes` from `@kit/errors`, `PaginationErrorCodes` from
-  `@kit/pagination`, `FormatErrorCodes` from `@kit/intl`, `PermissionErrorCodes` from `@kit/permissions`) and adds the product's own; `PipelineErrorCodes` are
+  `@kit/pagination`, `FormatErrorCodes` from `@kit/intl`) and adds the product's own; `PipelineErrorCodes` are
   the worker's.
 - **`RETRY_CLASS`** - ADR-18's `'permanent' | 'transient'`, declared once per code, and **`errorCodeRegistry`**,
   the `defineErrorCodes` set the composition roots provide as `ErrorCodeRegistry` and pass to `classifyError`,

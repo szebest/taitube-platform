@@ -16,7 +16,6 @@ export interface AssertCanOptions {
     readonly user: Actor | null;
     readonly message?: string;
 }
-export const PermissionErrorCodes: { readonly UNAUTHORIZED: "UNAUTHORIZED"; readonly FORBIDDEN: "FORBIDDEN"; }
 export type RuleSet<A extends string, S extends Subject, C> = (context: C, builder: AbilityBuilder<MongoAbility<[
     A,
     S

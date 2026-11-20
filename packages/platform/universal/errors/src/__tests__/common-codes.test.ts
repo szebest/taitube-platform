@@ -9,7 +9,13 @@ describe('@kit/errors: the common codes', () => {
   it('extend an app set that spreads them in', () => {
     const codes = defineErrorCodes({
       codes: { ...CommonErrorCodes, GONE: 'GONE' },
-      retryClass: { VALIDATION_FAILED: 'permanent', INTERNAL: 'transient', GONE: 'permanent' },
+      retryClass: {
+        VALIDATION_FAILED: 'permanent',
+        INTERNAL: 'transient',
+        UNAUTHORIZED: 'permanent',
+        FORBIDDEN: 'permanent',
+        GONE: 'permanent',
+      },
       internal: CommonErrorCodes.INTERNAL,
     });
 

@@ -1,9 +1,4 @@
-import { PermanentError } from '@kit/errors';
-
-export const PermissionErrorCodes = {
-  UNAUTHORIZED: 'UNAUTHORIZED',
-  FORBIDDEN: 'FORBIDDEN',
-} as const;
+import { CommonErrorCodes, PermanentError } from '@kit/errors';
 
 export interface Actor {
   readonly id: string;
@@ -23,7 +18,7 @@ export function assertCan(allowed: boolean, options: AssertCanOptions): asserts 
 
     if (!user) {
       throw new PermanentError(
-        PermissionErrorCodes.UNAUTHORIZED,
+        CommonErrorCodes.UNAUTHORIZED,
         message ?? `Authentication required to perform action '${action}' on '${subject}'`,
         {
           action,
@@ -33,7 +28,7 @@ export function assertCan(allowed: boolean, options: AssertCanOptions): asserts 
     }
 
     throw new PermanentError(
-      PermissionErrorCodes.FORBIDDEN,
+      CommonErrorCodes.FORBIDDEN,
       message ??
         `Forbidden: user '${user.id}' with role '${user.role}' cannot perform action '${action}' on '${subject}'`,
       {

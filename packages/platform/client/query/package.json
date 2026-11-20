@@ -26,7 +26,6 @@
   "devDependencies": {
     "@kit/testing": "workspace:*",
     "@kit/tsconfig": "workspace:*",
-    "@kit/vite-preset": "workspace:*",
     "@tanstack/react-query": "^5.104.1",
     "@tanstack/react-router": "^1.170.41",
     "@types/react": "^19.3.0",

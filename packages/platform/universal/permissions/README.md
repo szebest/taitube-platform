@@ -23,5 +23,6 @@ const caller = { id: 'u-1', role: 'member' };
 assertCan(abilityFor(caller).can('write', 'Note'), { action: 'write', subject: 'Note', user: caller });
 ```
 
-Rule sets apply in order and a later rule wins, so a rule set that overrides the others goes last. Spread
-`PermissionErrorCodes` into the app's error code set so the codes `assertCan` throws are registered.
+Rule sets apply in order and a later rule wins, so a rule set that overrides the others goes last.
+`assertCan` throws `UNAUTHORIZED` and `FORBIDDEN` from `@kit/errors`' `CommonErrorCodes`, which the app's
+error code set already spreads in.

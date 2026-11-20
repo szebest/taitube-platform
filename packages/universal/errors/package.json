@@ -22,8 +22,7 @@
   "dependencies": {
     "@kit/errors": "workspace:*",
     "@kit/intl": "workspace:*",
-    "@kit/pagination": "workspace:*",
-    "@kit/permissions": "workspace:*"
+    "@kit/pagination": "workspace:*"
   },
   "devDependencies": {
     "@kit/testing": "workspace:*",

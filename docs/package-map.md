@@ -40,13 +40,13 @@ scope (platform or app) and the tier are the directory and the layer is `vp.laye
 | `@vp/dev-identity` | `packages/server/dev-identity` | app | server | T3 | `@kit/dev-token` | `@kit/testing`, `@kit/tsconfig` |
 | `@vp/pipeline-metrics` | `packages/server/pipeline-metrics` | app | server | T3 | `@kit/observability` | `@kit/testing`, `@kit/tsconfig` |
 | `@vp/intl-formats` | `packages/universal/intl-formats` | app | universal | T3 | `@kit/intl` | `@kit/testing`, `@kit/tsconfig` |
-| `@kit/query` | `packages/platform/client/query` | platform | client | T4 | `@kit/errors`, `@kit/result` | `@kit/testing`, `@kit/tsconfig`, `@kit/vite-preset` |
+| `@kit/query` | `packages/platform/client/query` | platform | client | T4 | `@kit/errors`, `@kit/result` | `@kit/testing`, `@kit/tsconfig` |
 | `@kit/config` | `packages/platform/server/config` | platform | server | T4 | `@kit/composition`, `@kit/logger`, `@kit/result` | `@kit/testing`, `@kit/tsconfig` |
 | `@kit/pagination` | `packages/platform/universal/pagination` | platform | universal | T4 | `@kit/errors`, `@kit/result` | `@kit/testing`, `@kit/tsconfig` |
 | `@kit/permissions` | `packages/platform/universal/permissions` | platform | universal | T4 | `@kit/errors` | `@kit/testing`, `@kit/tsconfig` |
 | `@kit/validation` | `packages/platform/universal/validation` | platform | universal | T4 | `@kit/errors` | `@kit/testing`, `@kit/tsconfig` |
 | `@kit/design-tokens` | `packages/platform/universal/design-tokens` | platform | universal | T5 | `@kit/appearance`, `@kit/errors`, `@kit/result` | `@kit/testing`, `@kit/tsconfig` |
-| `@vp/errors` | `packages/universal/errors` | app | universal | T5 | `@kit/errors`, `@kit/intl`, `@kit/pagination`, `@kit/permissions` | `@kit/testing`, `@kit/tsconfig` |
+| `@vp/errors` | `packages/universal/errors` | app | universal | T5 | `@kit/errors`, `@kit/intl`, `@kit/pagination` | `@kit/testing`, `@kit/tsconfig` |
 | `@kit/ui` | `packages/platform/client/ui` | platform | client | T6 | `@kit/appearance`, `@kit/design-tokens`, `@kit/errors`, `@kit/result` | `@kit/testing`, `@kit/tsconfig`, `@kit/vite-preset`, `@kit/web-testing` |
 | `@vp/env-schema` | `packages/server/env-schema` | app | server | T6 | `@kit/observability`, `@kit/pagination`, `@kit/primitives`, `@kit/result`, `@vp/domain` | `@kit/config`, `@kit/testing`, `@kit/tsconfig`, `@vp/testing-fixtures` |
 | `@vp/events` | `packages/server/events` | app | server | T6 | `@kit/keyspace`, `@kit/result`, `@vp/errors` | `@kit/testing`, `@kit/tsconfig` |

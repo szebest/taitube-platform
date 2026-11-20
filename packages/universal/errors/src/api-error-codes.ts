@@ -1,14 +1,12 @@
 import { CommonErrorCodes } from '@kit/errors';
 import { FormatErrorCodes } from '@kit/intl';
 import { PaginationErrorCodes } from '@kit/pagination';
-import { PermissionErrorCodes } from '@kit/permissions';
 
 /** The platform packages own the codes they emit; the app's set spreads them in and adds its own. */
 export const ApiErrorCodes = {
   ...CommonErrorCodes,
   ...PaginationErrorCodes,
   ...FormatErrorCodes,
-  ...PermissionErrorCodes,
   UPLOAD_TOO_LARGE: 'UPLOAD_TOO_LARGE',
   UPLOAD_SIZE_MISMATCH: 'UPLOAD_SIZE_MISMATCH',
   UNSUPPORTED_CONTENT_TYPE: 'UNSUPPORTED_CONTENT_TYPE',

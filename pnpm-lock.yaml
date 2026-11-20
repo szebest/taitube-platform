@@ -1556,9 +1556,6 @@ importers:
       '@kit/tsconfig':
         specifier: workspace:*
         version: link:../../universal/tsconfig
-      '@kit/vite-preset':
-        specifier: workspace:*
-        version: link:../../server/vite-preset
       '@tanstack/react-query':
         specifier: ^5.104.1
         version: 5.104.1(react@19.3.0)
@@ -3388,9 +3385,6 @@ importers:
       '@kit/pagination':
         specifier: workspace:*
         version: link:../../platform/universal/pagination
-      '@kit/permissions':
-        specifier: workspace:*
-        version: link:../../platform/universal/permissions
     devDependencies:
       '@kit/testing':
         specifier: workspace:*

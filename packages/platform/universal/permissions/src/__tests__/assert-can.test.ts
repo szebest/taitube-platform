@@ -1,5 +1,6 @@
 import { PermanentError } from '@kit/errors';
-import { type Actor, type AssertCanOptions, PermissionErrorCodes, assertCan } from '../assert-can';
+import { CommonErrorCodes } from '@kit/errors';
+import { type Actor, type AssertCanOptions, assertCan } from '../assert-can';
 
 const standardUser: Actor = { id: 'usr-1', role: 'USER' };
 
@@ -30,14 +31,14 @@ describe('assertCan', () => {
     {
       scenario: 'an anonymous caller with UNAUTHORIZED',
       options: { action: 'video:update', subject: 'Video', user: null },
-      code: PermissionErrorCodes.UNAUTHORIZED,
+      code: CommonErrorCodes.UNAUTHORIZED,
       message: "Authentication required to perform action 'video:update' on 'Video'",
       details: { action: 'video:update', subject: 'Video' },
     },
     {
       scenario: 'a signed-in caller with FORBIDDEN',
       options: { action: 'video:delete', subject: 'Video', user: standardUser },
-      code: PermissionErrorCodes.FORBIDDEN,
+      code: CommonErrorCodes.FORBIDDEN,
       message:
         "Forbidden: user 'usr-1' with role 'USER' cannot perform action 'video:delete' on 'Video'",
       details: { action: 'video:delete', subject: 'Video', userId: 'usr-1', userRole: 'USER' },
@@ -50,7 +51,7 @@ describe('assertCan', () => {
         user: standardUser,
         message: 'Custom forbidden message',
       },
-      code: PermissionErrorCodes.FORBIDDEN,
+      code: CommonErrorCodes.FORBIDDEN,
       message: 'Custom forbidden message',
       details: { action: 'video:delete', subject: 'Video', userId: 'usr-1', userRole: 'USER' },
     },

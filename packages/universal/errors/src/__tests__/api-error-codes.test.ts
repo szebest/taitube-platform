@@ -1,7 +1,6 @@
 import { CommonErrorCodes } from '@kit/errors';
 import { FormatErrorCodes } from '@kit/intl';
 import { PaginationErrorCodes } from '@kit/pagination';
-import { PermissionErrorCodes } from '@kit/permissions';
 import { ApiErrorCodes } from '../api-error-codes';
 import { PipelineErrorCodes } from '../pipeline-error-codes';
 
@@ -16,7 +15,6 @@ describe('@vp/errors: API error codes', () => {
     { owner: '@kit/errors', codes: CommonErrorCodes },
     { owner: '@kit/pagination', codes: PaginationErrorCodes },
     { owner: '@kit/intl', codes: FormatErrorCodes },
-    { owner: '@kit/permissions', codes: PermissionErrorCodes },
   ])('includes every code $owner emits', ({ codes }) => {
     expect(ApiErrorCodes).toMatchObject(codes);
   });

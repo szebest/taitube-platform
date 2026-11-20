@@ -7,7 +7,6 @@ const VOCABULARY_FILES = [
   'packages/platform/universal/errors/src/common-codes.ts',
   'packages/platform/universal/pagination/src/cursor-codec.ts',
   'packages/platform/universal/intl/src/failures.ts',
-  'packages/platform/universal/permissions/src/assert-can.ts',
 ];
 
 const CODE_KEY = /^\s{2}([A-Z][A-Z0-9_]+):\s*'/gm;
