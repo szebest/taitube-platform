@@ -91,7 +91,16 @@ export function StatsPanel({ video }: { video: Video }) {
             <StatsChart stats={stats.data} />
             <StatsRetention videoId={video.id} stats={stats.data} />
             <Button asChild variant="soft" size="sm" className="self-start">
-              <a href={appLink(STUDIO_URL, `/videos/${video.id}/analytics`)}>
+              <a
+                href={
+                  video.channel
+                    ? appLink(
+                        STUDIO_URL,
+                        `/for/${video.channel.handle}?next=/videos/${video.id}/analytics`
+                      )
+                    : appLink(STUDIO_URL, `/videos/${video.id}/analytics`)
+                }
+              >
                 {tOr('creatorStats.openAnalytics', {}, '')}
               </a>
             </Button>

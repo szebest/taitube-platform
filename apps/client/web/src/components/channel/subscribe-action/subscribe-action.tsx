@@ -1,6 +1,7 @@
 import { useT } from '@kit/intl-react';
+import { useToast } from '@kit/ui';
 import { useQuery } from '@tanstack/react-query';
-import { useApi, useFailureToast } from '@vp/queries';
+import { useApi, useFailureToast, useIdentityGuard } from '@vp/queries';
 import { SubscribeButton } from '#app/components/channel/subscribe-button';
 import { useRequireAccount } from '#app/hooks/use-require-account';
 import { useSetSubscription } from '#app/hooks/use-set-subscription';
@@ -13,11 +14,17 @@ export interface SubscribeActionProps {
   className?: string;
 }
 
-/** Subscribe for a channel, wherever it is shown; a guest who presses it gets the sign-in prompt and subscribes once signed in, a failed write offers a retry. */
+/**
+ * Subscribe for a channel, wherever it is shown; a guest who presses it gets the sign-in prompt and
+ * subscribes once signed in, a failed write offers a retry, and a press that lands after an identity
+ * switch is held and asked again in a toast.
+ */
 export function SubscribeAction({ channelId, fromVideoId, className }: SubscribeActionProps) {
   const api = useApi();
   const { tOr } = useT();
   const showFailure = useFailureToast();
+  const toast = useToast();
+  const guard = useIdentityGuard();
   const { allowed: canSubscribe, run } = useRequireAccount('subscribe');
   const status = useQuery({
     ...subscriptionStatusQueryOptions(api, channelId),
@@ -31,7 +38,13 @@ export function SubscribeAction({ channelId, fromVideoId, className }: Subscribe
       setSubscription.mutate(!subscribed, {
         onError: (error) => showFailure(tOr('watch.subscribeFailed', {}, ''), error, subscribe),
       });
-    run(subscribe, { kind: 'subscribe', id: channelId });
+    const askAgain = () =>
+      toast({
+        tone: 'warning',
+        title: tOr('accounts.identityChanged', {}, ''),
+        action: { label: tOr('accounts.sendAnyway', {}, ''), onAction: subscribe },
+      });
+    run(() => guard.guard(subscribe, askAgain), { kind: 'subscribe', id: channelId });
   };
 
   return (

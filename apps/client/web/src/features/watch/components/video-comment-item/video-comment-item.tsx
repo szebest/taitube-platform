@@ -8,10 +8,12 @@ import { publishedAt } from '@vp/intl-formats';
 import { canHeartComment } from '@vp/permissions';
 import { useCan } from '@vp/permissions-react';
 import {
+  ActingAsLine,
   SectionBoundary,
   useApi,
   useFailureToast,
   useHeartComment,
+  useIdentityGuard,
   videoQueryOptions,
 } from '@vp/queries';
 import { Suspense, useEffect, useEffectEvent, useState } from 'react';
@@ -121,6 +123,32 @@ function ReplyThread(props: ReplyThreadProps) {
   );
 }
 
+interface ReplyComposerProps {
+  draft: string;
+  onDraftChange: (draft: string) => void;
+  onSend: () => void;
+  sending: boolean;
+}
+
+/** The reply field under a comment, naming the identity it goes out as; a reply fired after a switch is held. */
+function ReplyComposer({ draft, onDraftChange, onSend, sending }: ReplyComposerProps) {
+  const { reply } = useUiCopy();
+  const guard = useIdentityGuard();
+
+  return (
+    <div className="col-start-2 flex flex-col gap-inline">
+      <ActingAsLine action="reply" guard={guard} />
+      <CommentThread.Composer
+        value={draft}
+        onChange={onDraftChange}
+        onSubmit={() => guard.guard(onSend)}
+        submitting={sending}
+        aria-label={reply}
+      />
+    </div>
+  );
+}
+
 export interface VideoCommentItemProps {
   comment: CommentView;
   /** The reply thread's open state, held by a parent that unmounts this row while it is off screen. */
@@ -141,7 +169,6 @@ export function VideoCommentItem({
   const { tOr } = useT();
   const { format } = useFormat();
   const showFailure = useFailureToast();
-  const { reply: replyLabel } = useUiCopy();
   const [mode, setMode] = useState<Mode>('view');
   const [ownExpanded, setOwnExpanded] = useState(false);
   const expanded = heldExpanded ?? ownExpanded;
@@ -260,15 +287,12 @@ export function VideoCommentItem({
         />
       </CommentItem.Actions>
       {mode === 'replying' && state === 'view' && (
-        <div className="col-start-2">
-          <CommentThread.Composer
-            value={draft}
-            onChange={setDraft}
-            onSubmit={sendReply}
-            submitting={postReply.isPending}
-            aria-label={replyLabel}
-          />
-        </div>
+        <ReplyComposer
+          draft={draft}
+          onDraftChange={setDraft}
+          onSend={sendReply}
+          sending={postReply.isPending}
+        />
       )}
       {reportOpened && (
         <LazyReportCommentDialog

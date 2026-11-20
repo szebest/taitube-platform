@@ -10,6 +10,7 @@ import {
   getAccount,
   getPreferences,
   getUnreadNotificationCount,
+  listMyIdentities,
   listMyMemberships,
   recordMySignIn,
 } from '@vp/api-contracts';
@@ -25,7 +26,7 @@ import {
   SessionProvider,
 } from '@vp/queries';
 import { DEV_TOKEN_URL } from '@vp/queries/demo-personas';
-import { account, api, apiServer, mockEndpoint, signInRecord } from '@vp/web-testing';
+import { account, api, apiServer, identities, mockEndpoint, signInRecord } from '@vp/web-testing';
 import { HttpResponse, http } from 'msw/http';
 import type { ComponentType, PropsWithChildren } from 'react';
 import { DevicePreferencesProvider } from '../lib/preferences/device-preferences-provider';
@@ -108,7 +109,8 @@ export function signInBrowser(
       })
     ),
     mockEndpoint(getUnreadNotificationCount, () => HttpResponse.json({ unreadCount: 0 })),
-    mockEndpoint(listMyMemberships, () => HttpResponse.json({ items: memberships }))
+    mockEndpoint(listMyMemberships, () => HttpResponse.json({ items: memberships })),
+    mockEndpoint(listMyIdentities, () => HttpResponse.json(identities()))
   );
   return mockEndpoint(getAccount, () => HttpResponse.json(viewer));
 }

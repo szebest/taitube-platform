@@ -23,6 +23,7 @@ describe('apps/client/web: the settings layout', () => {
       'Privacy',
       'Notifications',
       'Language',
+      'Accounts',
     ]);
   });
 
