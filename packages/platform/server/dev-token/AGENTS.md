@@ -32,7 +32,7 @@ This is a **workspace package with a CLI**, not a loose script — which is why 
 1. **Local-first (Rule 1):** runs fully offline, no external host, nothing phones home.
 2. **No ambient clock.** `iat` and the expiry check read `config.now`, never `Date.now()`, so a spec fixes the time.
 3. **Dual runtime (Rule 2):** its `pnpm` script runs it through `tsx`, and it must still run cleanly under `bun`, which `pnpm test:bun` proves.
-4. **1:1 tests (Rule 12):** every source file has a name-matching spec (`cli`, `jwt`, `keys`, `personas`, `server`).
+4. **Tests where behaviour can break:** specs in `src/__tests__/` cover the CLI, token signing, keys, personas and the server, under the repo's 85% coverage floor; no spec is required per source file (`docs/standards/testing.md`).
 
 ---
 

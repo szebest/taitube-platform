@@ -31,7 +31,7 @@ This is a **workspace package with a CLI**, not a loose script — which is why 
 2. **No ambient read.** The host hands it the env record and `now`; nothing here reads `process.env` or the
    clock itself, so a spec drives every poll with the time it chooses.
 3. **Dual runtime (Rule 2):** its `pnpm` script runs it through `tsx`, and it must still run cleanly under `bun`, which `pnpm test:bun` proves.
-4. **1:1 tests (Rule 12):** every source file has a name-matching test file (`src/__tests__/<name>.test.ts`).
+4. **Tests where behaviour can break:** specs in `src/__tests__/` cover the logic, branches and error paths, under the repo's 85% coverage floor; no spec is required per source file (`docs/standards/testing.md`).
 
 ---
 
