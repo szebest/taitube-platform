@@ -1,5 +1,6 @@
 import { EmptyLibraryIllustration, EmptyState } from '@kit/components';
 import { useT } from '@kit/intl-react';
+import { KEYSET_PAGE_SIZE } from '@kit/query';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { Link, useNavigate, useSearch } from '@tanstack/react-router';
 import {
@@ -10,7 +11,7 @@ import {
   type SortingState,
   useTable,
 } from '@tanstack/react-table';
-import { KEYSET_PAGE_SIZE, useApi } from '@vp/queries';
+import { useApi } from '@vp/queries';
 import { useState } from 'react';
 import { DataTable, dataTableFeatures } from '#app/components/table/data-table';
 import type { BatchOutcome } from '#app/features/videos/api/batch-actions';

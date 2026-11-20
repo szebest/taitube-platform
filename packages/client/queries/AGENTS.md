@@ -11,8 +11,9 @@ tier, layer T5, the app-module layer: it sits on `@vp/api-client` and `@kit/intl
 
 The data layer:
 
-- `createQueryClient()`: one per request on the server and one per tab, a `staleTime` above zero so hydration
-  never refetches, no retry on the server and none for a 4xx in the browser.
+- `createQueryClient()`: `@kit/query`'s factory with this product's retry policy (`retry-policy.ts`: the API's
+  `RETRY_CLASS` per error code, then the status, and `Retry-After`), so the cache and the retries are what the
+  generic package documents and none for a 4xx in the browser.
 - `createAppRouter({ routeTree, apiBaseUrl, pending, error, notFound }, options)`: the router every client app's
   `getRouter` returns, with the API client, the query cache and the toaster built once per router and put in
   context (`AppRouterContext`), the request's CSP nonce on every script, and the SSR query integration. It
@@ -31,8 +32,8 @@ The data layer:
   `onUnauthorized` of every 401. `createAppRouter` builds it, with `endSession` as that callback.
 - `ApiProvider` and `useApi()` hand the client in router context to components. `useApi()` outside the provider
   throws, naming it.
-- Loader helpers: `ensureFound` (an API 404 renders the not-found page), `parseParam` (a segment its schema
-  refuses renders it too), `keysetPaging` and `KEYSET_PAGE_SIZE`.
+- Loader helpers: `ensureFound` (`@kit/query`'s `createEnsureFound` told that an API 404 is a missing resource).
+  `parseParam`, `keysetPaging` and `KEYSET_PAGE_SIZE` are imported from `@kit/query`.
 - The query factories both apps read, each taking the client: `videoQueryOptions(api, id)`,
   `myVideosQueryOptions(api)`, and `videoKeys`; for clips, `clipQueryOptions(api, id)`, `myClipsQueryOptions(api)` and `clipKeys`.
 - `notificationKeys`, `unreadNotificationCountQueryOptions(api)` and `setUnreadCount`: the bell's cache, which the

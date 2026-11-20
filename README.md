@@ -108,6 +108,7 @@ taitube-platform/
 │   │   │   ├── components/          # Shared components both apps render: PageHeader, EmptyState, ErrorState, SectionError, the state illustrations
 │   │   │   ├── forms/               # useAppForm with the text, select and file fields, and validateWith
 │   │   │   ├── intl-react/          # IntlProvider, useT, useFormat and <Format> for the web app
+│   │   │   ├── query/               # Query client factory, retry policy, keyset paging, not-found loader helpers
 │   │   │   ├── security-headers/    # CSP nonce and the security headers request middleware each app mounts
 │   │   │   ├── ui/                  # Design system: Tailwind tokens, Radix primitives, the theme and the logo
 │   │   │   ├── web-telemetry/       # Core Web Vitals beacon and browser traces, started after hydration

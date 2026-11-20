@@ -1,8 +1,9 @@
+import { KEYSET_PAGE_SIZE, keysetPaging } from '@kit/query';
 import { infiniteQueryOptions } from '@tanstack/react-query';
 import type { ApiClient } from '@vp/api-client';
 import type { CreatorInboxCommentView } from '@vp/api-contracts';
 import type { CreatorInboxFilter } from '@vp/domain';
-import { creatorCommentKeys, KEYSET_PAGE_SIZE, keysetPaging } from '@vp/queries';
+import { creatorCommentKeys } from '@vp/queries';
 
 export type InboxComment = CreatorInboxCommentView;
 

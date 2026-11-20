@@ -1,7 +1,7 @@
+import { KEYSET_PAGE_SIZE, keysetPaging } from '@kit/query';
 import { infiniteQueryOptions, queryOptions } from '@tanstack/react-query';
 import type { ApiClient } from '@vp/api-client';
 import type { SearchSort, SearchType } from '@vp/domain';
-import { KEYSET_PAGE_SIZE, keysetPaging } from '@vp/queries';
 
 const PALETTE_RESULTS = 5;
 

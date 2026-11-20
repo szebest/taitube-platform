@@ -1,19 +1,8 @@
-import { fromPromise, isOk } from '@kit/result';
-import type { EnsureQueryDataOptions, QueryClient, QueryKey } from '@tanstack/react-query';
-import { notFound } from '@tanstack/react-router';
+import { createEnsureFound } from '@kit/query';
 import { ApiError } from '@vp/api-client';
 
 const NOT_FOUND = 404;
 
-export async function ensureFound<T, TKey extends QueryKey>(
-  queryClient: QueryClient,
-  options: EnsureQueryDataOptions<T, Error, T, TKey>
-): Promise<T> {
-  const loaded = await fromPromise(
-    () => queryClient.query({ ...options, staleTime: 'static' }),
-    (cause) => cause
-  );
-  if (isOk(loaded)) return loaded.value;
-  if (loaded.error instanceof ApiError && loaded.error.status === NOT_FOUND) throw notFound();
-  throw loaded.error;
-}
+export const ensureFound = createEnsureFound(
+  (error) => error instanceof ApiError && error.status === NOT_FOUND
+);

@@ -1,6 +1,7 @@
+import { parseParam } from '@kit/query';
 import { createFileRoute, notFound } from '@tanstack/react-router';
 import { VideoIdParamSchema } from '@vp/api-contracts';
-import { ensureFound, parseParam, videoQueryOptions } from '@vp/queries';
+import { ensureFound, videoQueryOptions } from '@vp/queries';
 import { EmbedNotFound, EmbedPage, EmbedSearchSchema } from '#app/features/embed';
 
 export const Route = createFileRoute('/embed/$videoId')({

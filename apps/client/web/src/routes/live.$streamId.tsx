@@ -1,6 +1,7 @@
+import { parseParam } from '@kit/query';
 import { createFileRoute } from '@tanstack/react-router';
 import { LiveStreamIdParamSchema } from '@vp/api-contracts';
-import { ensureFound, parseParam } from '@vp/queries';
+import { ensureFound } from '@vp/queries';
 import { z } from 'zod';
 import { liveStreamQueryOptions, LiveWatchPage } from '#app/features/live';
 import { WEB_URL } from '#app/lib/config';

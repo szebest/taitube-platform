@@ -1,7 +1,7 @@
+import { KEYSET_PAGE_SIZE, keysetPaging } from '@kit/query';
 import { infiniteQueryOptions } from '@tanstack/react-query';
 import type { ApiClient } from '@vp/api-client';
 import type { ContractQuery, ContractResult, listAdminVideos } from '@vp/api-contracts';
-import { KEYSET_PAGE_SIZE, keysetPaging } from '@vp/queries';
 
 export type AdminVideo = ContractResult<typeof listAdminVideos>['items'][number];
 export type AdminVideoFilters = Omit<ContractQuery<typeof listAdminVideos>, 'cursor' | 'limit'>;

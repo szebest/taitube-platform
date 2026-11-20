@@ -14,7 +14,7 @@ function slowRefresh() {
   return { refresh, releaseAll };
 }
 
-describe('@vp/queries: single-flight refresh', () => {
+describe('@kit/query: single-flight refresh', () => {
   it('shares one refresh between parallel calls with the same refused token', async () => {
     const { refresh, releaseAll } = slowRefresh();
     const single = singleFlightRefresh(refresh);

@@ -1,7 +1,8 @@
+import { KEYSET_PAGE_SIZE, keysetPaging } from '@kit/query';
 import { infiniteQueryOptions } from '@tanstack/react-query';
 import type { ApiClient } from '@vp/api-client';
 import type { NotificationFilter } from '@vp/domain';
-import { KEYSET_PAGE_SIZE, keysetPaging, notificationKeys } from '@vp/queries';
+import { notificationKeys } from '@vp/queries';
 
 export function notificationsQueryOptions(api: ApiClient, filter: NotificationFilter) {
   return infiniteQueryOptions({
