@@ -1,9 +1,6 @@
-import type { ImpressionBatch } from '@vp/api-contracts';
+import { type ImpressionBatch, MAX_IMPRESSIONS_PER_BATCH } from '@vp/api-contracts';
 
 export type Impression = ImpressionBatch['items'][number];
-
-/** `recordImpressions` takes at most this many in one batch. */
-const MAX_PER_BATCH = 50;
 
 /** How long an impression waits for others to share its beacon. */
 const FLUSH_AFTER_MS = 5000;
@@ -16,7 +13,7 @@ export interface ImpressionQueue {
   view(page: string): void;
 }
 
-/** Batches impressions into beacons of up to 50, sent when full, after five seconds, or on `flush`. */
+/** Batches impressions into beacons as full as `recordImpressions` takes, sent when full, after five seconds, or on `flush`. */
 export function createImpressionQueue(send: (batch: ImpressionBatch) => void): ImpressionQueue {
   let page: string | undefined;
   let counted = new Set<string>();
@@ -37,7 +34,7 @@ export function createImpressionQueue(send: (batch: ImpressionBatch) => void): I
       if (counted.has(key)) return;
       counted.add(key);
       queued.push(impression);
-      if (queued.length === MAX_PER_BATCH) flush();
+      if (queued.length === MAX_IMPRESSIONS_PER_BATCH) flush();
       else timer ??= setTimeout(flush, FLUSH_AFTER_MS);
     },
     flush,

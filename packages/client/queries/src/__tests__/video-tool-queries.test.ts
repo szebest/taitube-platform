@@ -16,6 +16,8 @@ import {
   videoToolKeys,
 } from '../video-tool-queries';
 
+const SHARE_TOKEN = 'abcdefghijklmnopqrstuv';
+
 const correction = {
   id: '0190c3a0-5e1d-7000-8000-00000000d001',
   videoId: VIDEO_ID,
@@ -45,7 +47,7 @@ const revision = (version: number) => ({
 
 const shareLink = {
   id: '0190c3a0-5e1d-7000-8000-00000000f001',
-  token: 'abcdefghijklmnopqrstuv',
+  token: SHARE_TOKEN,
   label: 'Press',
   expiresAt: null,
   revokedAt: null,
@@ -112,6 +114,22 @@ describe('@vp/queries: video tool queries', () => {
     const loaded = await load();
 
     expect(loaded.items).toEqual([item]);
+  });
+
+  it("sends a share link's token with the corrections and keeps it out of the key", async () => {
+    const tokens: (string | null)[] = [];
+    apiServer.use(
+      mockEndpoint(listVideoCorrections, ({ request }) => {
+        tokens.push(new URL(request.url).searchParams.get('s'));
+        return HttpResponse.json({ items: [] });
+      })
+    );
+    const shared = correctionsQueryOptions(api, VIDEO_ID, SHARE_TOKEN);
+
+    await createQueryClient().query(shared);
+
+    expect(tokens).toEqual([SHARE_TOKEN]);
+    expect(shared.queryKey).toEqual(correctionsQueryOptions(api, VIDEO_ID).queryKey);
   });
 
   it('pages through the history by cursor', async () => {

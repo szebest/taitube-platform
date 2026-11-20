@@ -4,5 +4,5 @@ export default clientAppConfig({
   configUrl: import.meta.url,
   port: 5174,
   entryBudgetKb: 128,
-  initialBudgetKb: 493,
+  initialBudgetKb: 495,
 });

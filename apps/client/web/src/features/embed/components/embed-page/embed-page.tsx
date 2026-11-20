@@ -12,7 +12,7 @@ export function EmbedPage() {
   const { autoplay, t, controls, loop, s } = useSearch({ from: '/embed/$videoId' });
   const api = useApi();
   const { data: video } = useSuspenseQuery(videoQueryOptions(api, videoId, s));
-  const { data: corrections } = useQuery(correctionsQueryOptions(api, videoId));
+  const { data: corrections } = useQuery(correctionsQueryOptions(api, videoId, s));
 
   const poster = video.posterUrl && (
     <img src={video.posterUrl} alt={video.title ?? ''} className="size-full object-contain" />

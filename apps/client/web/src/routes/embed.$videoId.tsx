@@ -33,7 +33,7 @@ export const Route = createFileRoute('/embed/$videoId')({
     const access = await loadVideoAccess(queryClient, api, videoId, s);
     if (access.kind !== 'open') return access;
     if (!isEmbeddable(access.video)) throw notFound();
-    await prefetched(queryClient.query(correctionsQueryOptions(api, videoId)));
+    await prefetched(queryClient.query(correctionsQueryOptions(api, videoId, s)));
     return access;
   },
   head: () => ({ meta: [{ name: 'robots', content: 'noindex' }] }),

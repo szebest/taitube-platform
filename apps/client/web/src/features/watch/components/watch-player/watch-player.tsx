@@ -10,6 +10,7 @@ import { LazyTaitubePlayer } from '#app/components/player/taitube-player/taitube
 import { useProgressWriter } from '#app/hooks/use-progress-writer';
 import { playbackAttribution } from '#app/lib/player/playback-attribution';
 import { usePlaybackPreference } from '#app/lib/preferences/device-preferences-provider';
+import { useShareToken } from '#app/lib/video-access/share-token.context';
 
 /** The player on the watch page: it starts with the viewer's chosen playback defaults, offers the video's captions, corrections and chapters, saves where it gets to and tells the beacon the read's share link and test variant. */
 export function WatchPlayer({ onPause, ...props }: TaitubePlayerWithTelemetryProps) {
@@ -21,10 +22,11 @@ export function WatchPlayer({ onPause, ...props }: TaitubePlayerWithTelemetryPro
   const [captionsBackground] = usePlaybackPreference('captionsBackground');
   const [statsOverlay] = usePlaybackPreference('statsOverlay');
   const api = useApi();
+  const shareToken = useShareToken();
   const progressWriter = useProgressWriter(props.videoId);
   const { data: captions } = useQuery(captionsQueryOptions(api, props.videoId));
-  const { data: corrections } = useQuery(correctionsQueryOptions(api, props.videoId));
-  const { data: video } = useQuery(videoQueryOptions(api, props.videoId));
+  const { data: corrections } = useQuery(correctionsQueryOptions(api, props.videoId, shareToken));
+  const { data: video } = useQuery(videoQueryOptions(api, props.videoId, shareToken));
 
   return (
     <LazyTaitubePlayer

@@ -1,5 +1,6 @@
 import { infiniteQueryOptions, queryOptions } from '@tanstack/react-query';
 import type { ApiClient } from '@vp/api-client';
+import { SHARE_TOKEN_PARAM } from '@vp/api-contracts';
 import { KEYSET_PAGE_SIZE, keysetPaging } from './keyset-paging';
 import { videoKeys } from './video-queries';
 
@@ -10,11 +11,18 @@ export const videoToolKeys = {
   experiments: (videoId: string) => [...videoKeys.detail(videoId), 'experiments'] as const,
 };
 
-/** Public: the cards of a video, in playback order, for the player and the list under the description. */
-export function correctionsQueryOptions(api: ApiClient, videoId: string) {
+/**
+ * The cards of a video, in playback order, for the player and the list under the description,
+ * behind the same gate as the video: its share link's token goes with the read and stays out of the key.
+ */
+export function correctionsQueryOptions(api: ApiClient, videoId: string, shareToken?: string) {
   return queryOptions({
     queryKey: videoToolKeys.corrections(videoId),
-    queryFn: () => api.videoTools.listVideoCorrections({ params: { id: videoId } }),
+    queryFn: () =>
+      api.videoTools.listVideoCorrections({
+        params: { id: videoId },
+        query: { [SHARE_TOKEN_PARAM]: shareToken },
+      }),
   });
 }
 

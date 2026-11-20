@@ -1,6 +1,7 @@
 import { screen } from '@testing-library/react';
-import { getVideo, unlockVideo } from '@vp/api-contracts';
+import { getVideo, listVideoCorrections, unlockVideo } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
+import { videoKeys } from '@vp/queries';
 import { mockEndpoint, problemReply, VIDEO_ID, video } from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
@@ -123,5 +124,30 @@ describe('apps/client/web: /watch/$videoId in the browser', () => {
     expect(screen.getByRole('link', { name: 'Go to the home page' })).toHaveAttribute('href', '/');
     expect(tokens).toEqual([SHARE_TOKEN]);
     expect(router.state.location.search).toMatchObject({ s: SHARE_TOKEN });
+  });
+
+  it('reads the video once, and sends the share link with every read of it and its corrections, a refetch after an invalidation included', async () => {
+    const reads: string[] = [];
+    const tokenOf = (request: Request) => new URL(request.url).searchParams.get('s');
+    const { queryClient } = await renderRoute(getRouter, `/watch/${VIDEO_ID}?s=${SHARE_TOKEN}`, {
+      handlers: [
+        mockEndpoint(getVideo, ({ request }) => {
+          reads.push(`video ${tokenOf(request)}`);
+          return HttpResponse.json(video({ title: 'Launch day' }));
+        }),
+        mockEndpoint(listVideoCorrections, ({ request }) => {
+          reads.push(`corrections ${tokenOf(request)}`);
+          return HttpResponse.json({ items: [] });
+        }),
+        ...loaderApi(),
+      ],
+    });
+    await screen.findByRole('heading', { level: 1, name: 'Launch day' });
+    expect(reads.filter((read) => read.startsWith('video'))).toHaveLength(1);
+
+    await queryClient.invalidateQueries({ queryKey: videoKeys.detail(VIDEO_ID) });
+
+    expect(new Set(reads)).toEqual(new Set([`video ${SHARE_TOKEN}`, `corrections ${SHARE_TOKEN}`]));
+    expect(reads.filter((read) => read.startsWith('video'))).toHaveLength(2);
   });
 });

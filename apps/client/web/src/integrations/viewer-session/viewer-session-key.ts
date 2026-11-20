@@ -1,7 +1,7 @@
 import { ignore, tryCatch, unwrapOr } from '@kit/result';
 import { ViewerSessionKeySchema } from '@vp/api-contracts';
 
-const STORAGE_KEY = 'vp.viewer-session';
+const STORAGE_KEY = 'vp.viewer-key';
 
 /**
  * This tab's ephemeral key, which the API picks the viewer's test variants by: random, kept in

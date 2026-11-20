@@ -1,4 +1,5 @@
 import { assertNever } from '@kit/result';
+import { environmentManager } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
 import { ShareTokenSchema, type Video, VideoIdParamSchema } from '@vp/api-contracts';
 import { correctionsQueryOptions, parseParam, prefetched } from '@vp/queries';
@@ -36,6 +37,7 @@ function Watch() {
     case 'open':
       return (
         <WatchPage
+          readOnServer={access.readOnServer}
           renderActions={(video) => <EngagementActions video={video} />}
           renderCreatorStats={(video) => <CreatorStatsPanel video={video} />}
         />
@@ -69,10 +71,10 @@ export const Route = createFileRoute('/watch/$videoId')({
     await Promise.all([
       video.channel && prefetched(queryClient.query(channelQueryOptions(api, video.channel.id))),
       prefetched(queryClient.query(relatedQueryOptions(api, videoId))),
-      prefetched(queryClient.query(correctionsQueryOptions(api, videoId))),
+      prefetched(queryClient.query(correctionsQueryOptions(api, videoId, s))),
       list && prefetched(queryClient.query(playlistQueryOptions(api, list))),
     ]);
-    return access;
+    return { ...access, readOnServer: environmentManager.isServer() };
   },
   head: ({ loaderData, match }) =>
     loaderData?.kind === 'open'

@@ -16,7 +16,7 @@ const other = videoSummary({ id: '0190c3a0-5e1d-7000-8000-00000000c009', title: 
 const playing = (video: typeof a, overrides: Partial<PlaybackSession> = {}): PlaybackSession => ({
   ...EMPTY_SESSION,
   videos: [a, b, c],
-  current: { video, startTime: undefined },
+  current: { video, startTime: undefined, shareToken: undefined },
   played: [video.id],
   ...overrides,
 });
@@ -31,6 +31,7 @@ const open = (overrides: Partial<Extract<PlaybackAction, { type: 'open' }>> = {}
     playlist: undefined,
     startTime: undefined,
     autoplay: false,
+    shareToken: undefined,
     ...overrides,
   }) satisfies PlaybackAction;
 
@@ -246,6 +247,19 @@ describe('apps/client/web: playback session reducer', () => {
     expect(next.current?.video.title).toBe(current);
     expect(next.paused).toBe(paused);
   });
+
+  it.each([
+    { scenario: 'a video it opens', state: playing(a), video: b },
+    { scenario: 'the video that already plays', state: playing(a), video: a },
+  ])(
+    "keeps the share link's token of $scenario, and drops it for the next in the queue",
+    ({ state, video }) => {
+      const opened = playbackReducer(state, open({ video, shareToken: 'abcdefghijklmnopqrstuv' }));
+      expect(opened.current?.shareToken).toBe('abcdefghijklmnopqrstuv');
+
+      expect(playbackReducer(opened, { type: 'go', video: c }).current?.shareToken).toBeUndefined();
+    }
+  );
 
   it('plays the video it goes to, and forgets it on the way back', () => {
     const forward = playbackReducer(playing(a), { type: 'go', video: b });

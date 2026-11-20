@@ -11,7 +11,14 @@ export interface PlaybackSession {
   repeat: QueueRepeat;
   /** The ids played so far, the current one last: what a shuffled queue skips and steps back through. */
   played: readonly string[];
-  current: { video: VideoSummary; startTime: number | undefined } | undefined;
+  current:
+    | {
+        video: VideoSummary;
+        startTime: number | undefined;
+        /** The share link's token the watch page opened the video with, which the player's reads of it send. */
+        shareToken: string | undefined;
+      }
+    | undefined;
   paused: boolean;
 }
 
@@ -34,6 +41,7 @@ export type PlaybackAction =
       playlist: { id: string; videos: readonly VideoSummary[] } | undefined;
       startTime: number | undefined;
       autoplay: boolean;
+      shareToken: string | undefined;
     }
   | { type: 'go'; video: VideoSummary; back?: boolean }
   | { type: 'reorder'; id: string; toIndex: number }
@@ -87,7 +95,14 @@ const played = (ids: readonly string[], id: string) => (ids.at(-1) === id ? ids 
 
 function open(
   state: PlaybackSession,
-  { video, list, playlist, startTime, autoplay }: Extract<PlaybackAction, { type: 'open' }>
+  {
+    video,
+    list,
+    playlist,
+    startTime,
+    autoplay,
+    shareToken,
+  }: Extract<PlaybackAction, { type: 'open' }>
 ): PlaybackSession {
   const playlistIds = playlist?.videos.map(({ id }) => id);
   const loadsPlaylist =
@@ -119,7 +134,7 @@ function open(
       ...state,
       ...queue,
       played: played(queue.played, video.id),
-      current: { video, startTime: state.current.startTime },
+      current: { video, startTime: state.current.startTime, shareToken },
     };
   }
 
@@ -127,7 +142,7 @@ function open(
     ...state,
     ...queue,
     played: played(queue.played, video.id),
-    current: { video, startTime },
+    current: { video, startTime, shareToken },
     paused: !autoplay,
   };
 }
@@ -139,7 +154,7 @@ export function playbackReducer(state: PlaybackSession, action: PlaybackAction):
     case 'go':
       return {
         ...state,
-        current: { video: action.video, startTime: undefined },
+        current: { video: action.video, startTime: undefined, shareToken: undefined },
         paused: false,
         played: action.back ? state.played.slice(0, -1) : played(state.played, action.video.id),
       };

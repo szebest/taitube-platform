@@ -16,7 +16,7 @@ describe('apps/client/web: viewerSessionKey', () => {
   });
 
   it('replaces a stored value that is not a key', () => {
-    window.sessionStorage.setItem('vp.viewer-session', 'tampered');
+    window.sessionStorage.setItem('vp.viewer-key', 'tampered');
 
     expect(viewerSessionKey()).toMatch(UUID);
   });

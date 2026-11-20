@@ -24,6 +24,7 @@ import { usePostComment } from '#app/features/watch/hooks/use-post-comment';
 import { type DescriptionToken, tokenizeDescription } from '#app/features/watch/utils/timecodes';
 import { useRequireAccount } from '#app/hooks/use-require-account';
 import { repliesQueryOptions } from '#app/lib/query-keys/comment-keys';
+import { useShareToken } from '#app/lib/video-access/share-token.context';
 import { CommentEditor } from '../comment-editor/comment-editor';
 import { LazyReportCommentDialog } from '../report-comment-dialog/report-comment-dialog.lazy';
 import { VideoCommentMenu } from '../video-comment-menu/video-comment-menu';
@@ -157,7 +158,9 @@ export function VideoCommentItem({
   const [reportOpen, setReportOpen] = useState(false);
   const [reportOpened, setReportOpened] = useState(false);
 
-  const { data: video } = useSuspenseQuery(videoQueryOptions(api, comment.videoId));
+  const { data: video } = useSuspenseQuery(
+    videoQueryOptions(api, comment.videoId, useShareToken())
+  );
   const editComment = useEditComment(comment.id);
   const deleteComment = useDeleteComment(comment.id);
   const postReply = usePostComment(comment.videoId);

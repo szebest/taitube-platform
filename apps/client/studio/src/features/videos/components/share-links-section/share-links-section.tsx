@@ -11,11 +11,12 @@ import { useCopyField } from '#app/hooks/use-copy-field';
 import { WEB_URL } from '#app/lib/config';
 import { CreateShareLinkForm } from '../create-share-link-form/create-share-link-form';
 
-const STATE_TONE = {
-  active: 'success',
-  expired: 'neutral',
-  revoked: 'danger',
-} as const satisfies Record<ShareLinkState, BadgeTone>;
+/** Only an active link can still be copied or revoked. */
+const STATE_VIEW = {
+  active: { tone: 'success', usable: true },
+  expired: { tone: 'neutral', usable: false },
+  revoked: { tone: 'danger', usable: false },
+} as const satisfies Record<ShareLinkState, { tone: BadgeTone; usable: boolean }>;
 
 const count = (value: number): FormatValue => ({ type: 'number', value });
 
@@ -36,7 +37,7 @@ export function ShareLinksSection({ video }: { video: Video }) {
   const revoke = useMutation(revokeShareLinkMutationOptions(api, video.id));
 
   const items = links.data?.items ?? [];
-  const active = items.filter(({ state }) => state === 'active').length;
+  const active = items.filter(({ state }) => STATE_VIEW[state].usable).length;
   const nameOf = (link: ShareLinkView) => link.label ?? tOr('studio.shareLinkNoLabel', {}, '');
   const addressOf = (link: ShareLinkView) =>
     `${WEB_URL}/watch/${video.id}?${new URLSearchParams({ [SHARE_TOKEN_PARAM]: link.token })}`;
@@ -81,7 +82,7 @@ export function ShareLinksSection({ video }: { video: Video }) {
                   {nameOf(link)}
                 </Table.Cell>
                 <Table.Cell>
-                  <Badge size="sm" tone={STATE_TONE[link.state]}>
+                  <Badge size="sm" tone={STATE_VIEW[link.state].tone}>
                     {tOr('studio.shareLinkState', { state: link.state }, link.state)}
                   </Badge>
                 </Table.Cell>
@@ -104,7 +105,7 @@ export function ShareLinksSection({ video }: { video: Video }) {
                   <Format value={watchTime(link.stats.watchSeconds)} />
                 </Table.Cell>
                 <Table.Cell align="end">
-                  {link.state === 'active' && (
+                  {STATE_VIEW[link.state].usable && (
                     <span className="inline-flex gap-inline">
                       <Button
                         variant="outline"

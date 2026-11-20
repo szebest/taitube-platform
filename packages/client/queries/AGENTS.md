@@ -38,7 +38,8 @@ The data layer:
 - Loader helpers: `ensureFound` (an API 404 renders the not-found page), `parseParam` (a segment its schema
   refuses renders it too), `keysetPaging` and `KEYSET_PAGE_SIZE`.
 - The query factories both apps read, each taking the client: `videoQueryOptions(api, id, shareToken?)` (the token
-  goes with the read and stays out of the key, so every part of the page reads the entry the token's read filled),
+  goes with the read and stays out of the key, so every part of the page reads the entry the token's read filled;
+  `correctionsQueryOptions(api, id, shareToken?)` does the same),
   `myVideosQueryOptions(api)`, and `videoKeys`; for clips, `clipQueryOptions(api, id)`, `myClipsQueryOptions(api)` and `clipKeys`.
 - `notificationKeys`, `unreadNotificationCountQueryOptions(api)` and `setUnreadCount`: the bell's cache, which the
   user event handlers below write, so the keys have one owner here; web's notification list files under

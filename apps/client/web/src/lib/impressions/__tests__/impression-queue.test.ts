@@ -1,4 +1,4 @@
-import type { ImpressionBatch } from '@vp/api-contracts';
+import { type ImpressionBatch, MAX_IMPRESSIONS_PER_BATCH } from '@vp/api-contracts';
 import { createImpressionQueue, type Impression } from '../impression-queue';
 
 const EXPERIMENT_ID = '0190c3a0-5e1d-7000-8000-0000000000e2';
@@ -35,14 +35,16 @@ describe('apps/client/web: createImpressionQueue', () => {
     expect(sent).toEqual([{ items: [impression(1), impression(2)] }]);
   });
 
-  it('sends a full batch of 50 at once and starts the next', () => {
+  it('sends a batch at once when it is as full as the API takes, and starts the next', () => {
     const { sent, queue: impressions } = queue();
 
-    for (let index = 0; index < 51; index += 1) impressions.record(impression(index));
+    for (let index = 0; index <= MAX_IMPRESSIONS_PER_BATCH; index += 1) {
+      impressions.record(impression(index));
+    }
 
-    expect(sent.map(({ items }) => items.length)).toEqual([50]);
+    expect(sent.map(({ items }) => items.length)).toEqual([MAX_IMPRESSIONS_PER_BATCH]);
     impressions.flush();
-    expect(sent.map(({ items }) => items.length)).toEqual([50, 1]);
+    expect(sent.map(({ items }) => items.length)).toEqual([MAX_IMPRESSIONS_PER_BATCH, 1]);
   });
 
   it('counts a card once per page view, and again in the next', () => {

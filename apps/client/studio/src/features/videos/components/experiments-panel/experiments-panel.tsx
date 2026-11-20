@@ -1,9 +1,9 @@
 import { EmptyState } from '@kit/components';
 import { useT } from '@kit/intl-react';
-import { Badge, Button, useToast } from '@kit/ui';
+import { Badge, type BadgeTone, Button, useToast } from '@kit/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { ExperimentView, Video } from '@vp/api-contracts';
-import type { ExperimentVariantId } from '@vp/domain';
+import type { ExperimentStatus, ExperimentVariantId } from '@vp/domain';
 import { experimentsQueryOptions, useApi, useFailureToast, videoQueryOptions } from '@vp/queries';
 import { useState } from 'react';
 import { ExperimentResultCard } from '#app/components/analytics/experiment-result-card';
@@ -14,6 +14,12 @@ import {
   stopExperimentMutationOptions,
 } from '#app/features/videos/api/video-tool-mutations';
 import { StartExperimentForm } from '../start-experiment-form/start-experiment-form';
+
+const STATUS_VIEW = {
+  running: { tone: 'accent', running: true },
+  finished: { tone: 'neutral', running: false },
+  stopped: { tone: 'neutral', running: false },
+} as const satisfies Record<ExperimentStatus, { tone: BadgeTone; running: boolean }>;
 
 interface Choice {
   experimentId: string;
@@ -33,7 +39,7 @@ export function ExperimentsPanel({ video }: { video: Video }) {
   const [conflicting, setConflicting] = useState<Choice | null>(null);
 
   const items = experiments.data?.items ?? [];
-  const running = items.some(({ status }) => status === 'running');
+  const running = items.some(({ status }) => STATUS_VIEW[status].running);
 
   const applyChoice = (choice: Choice, version: number) =>
     apply.mutate(
@@ -101,7 +107,7 @@ export function ExperimentsPanel({ video }: { video: Video }) {
                   <h3 id={`experiment-${experiment.id}`} className="m-0">
                     {tOr('studio.experimentHeading', { kind: experiment.kind }, '')}
                   </h3>
-                  <Badge size="sm" tone={experiment.status === 'running' ? 'accent' : 'neutral'}>
+                  <Badge size="sm" tone={STATUS_VIEW[experiment.status].tone}>
                     {tOr('studio.experimentStatus', { status: experiment.status }, '')}
                   </Badge>
                   <span className="text-caption text-fg-muted">
@@ -111,7 +117,7 @@ export function ExperimentsPanel({ video }: { video: Video }) {
                 <ExperimentResultCard.Summary />
                 <ExperimentResultCard.Variants
                   action={
-                    experiment.status === 'running'
+                    STATUS_VIEW[experiment.status].running
                       ? (variant) => (
                           <Button
                             variant="outline"
@@ -130,7 +136,7 @@ export function ExperimentsPanel({ video }: { video: Video }) {
                       : undefined
                   }
                 />
-                {experiment.status === 'running' && (
+                {STATUS_VIEW[experiment.status].running && (
                   <ExperimentResultCard.Footer>
                     <Button
                       variant="outline"

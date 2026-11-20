@@ -5,6 +5,7 @@ import { Badge, Card, Progress, Skeleton, Table, cn } from '@kit/ui';
 import {
   CONTROL_VARIANT_ID,
   EXPERIMENT_MIN_IMPRESSIONS,
+  type ExperimentStatus,
   type ExperimentVariantId,
 } from '@vp/domain';
 import type { ComponentPropsWithRef, ReactNode } from 'react';
@@ -29,6 +30,13 @@ const viewLength = (seconds: number): FormatValue => ({
 const share = (ratio: number): FormatValue => ({ type: 'percent', value: ratio * 100 });
 
 const count = (value: number): FormatValue => ({ type: 'number', value });
+
+/** A finished test ended on the variant the creator applied; a stopped one ended without a winner. */
+const HAS_WINNER = {
+  running: false,
+  finished: true,
+  stopped: false,
+} as const satisfies Record<ExperimentStatus, boolean>;
 
 function useVariantName() {
   const { tOr } = useT();
@@ -66,7 +74,7 @@ export function ExperimentResultCardRoot({
   const variants = experiment.variants.map((variant) => ({
     ...variant,
     result: experiment.results.variants.find(({ variantId }) => variantId === variant.id),
-    winner: experiment.status === 'finished' && experiment.winnerVariantId === variant.id,
+    winner: HAS_WINNER[experiment.status] && experiment.winnerVariantId === variant.id,
   }));
 
   return (
