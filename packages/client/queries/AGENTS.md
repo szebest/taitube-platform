@@ -80,14 +80,16 @@ The session (SDD §11, Transport and Origins and cookies; slots and identities f
   request gets the settings in its context (`requestSession()`).
 - The cookies: `vp.session.<slot>` holds that slot's bearer token, httpOnly, `SameSite=Lax`, `Secure` off
   localhost, `Domain` the app's `COOKIE_DOMAIN`, eight hours; `vp.accounts` (`accounts.ts`, `accounts-cookie.ts`)
-  is the non-secret slot list (user id, label, avatar, acting channel, expired) with the default slot;
+  is the non-secret slot list (user id, label, avatar, acting channel, expired) with the default slot, cut so
+  ten rows always fit one cookie (`serializeAccounts` drops the avatar hints that would not);
   `vp.add-nonce` binds an add to the browser that started it, httpOnly, ten minutes, one use. Only server code
   writes them.
 - The browser's API client names its slot on every call (`X-Account-Slot`, a custom header no cross-site form
   sends); the stream, which an `EventSource` cannot give a header, names it in its path (`/u/<slot>/api/...`).
 - `completeSignIn(issue, grant, target)` (`sign-in.ts`) is every sign-in's callback: an add (`{ mode: 'add',
   state }`) spends its nonce first, the token is always the new one `issue` returns, a user already in a slot
-  ends on it, an add past `ACCOUNTS_MAX` is refused, and `POST /v1/me/security/sign-ins` records it (the API
+  (signed in or expired) ends on it, an add takes the lowest slot with neither a session nor a row (else the
+  lowest expired row), a session past `ACCOUNTS_MAX` is refused, and `POST /v1/me/security/sign-ins` records it (the API
   rate-limits adds) before the cookie is written. Server functions: `hasSession`, `signOut`, `signOutAll`,
   `expireSession`, `rememberIdentity`, `startAddAccount`.
 - `createAppRouter` keeps one `IdentityStore` per router (`identity` in context): the identity and the one
@@ -104,10 +106,12 @@ The session (SDD §11, Transport and Origins and cookies; slots and identities f
   another `slot`.
 - `SessionProvider` (the session and the `identity` from the root, and the `PermissionsProvider` it fills, keyed by
   the identity and its viewer so a switch mounts everything below afresh: no ability, stream, query observer or
-  state outlives its identity), `useAccount()`, `useIdentity()`, `useTabIdentity()` (the router's, for the root).
+  state outlives its identity), `useAccount()`, `useIdentity()`, `useActingChannelId()` (the channel the identity
+  names, which the studio acts on over the one last chosen), `useTabIdentity()` (the router's, for the root).
 - `useSessionSync()`, mounted by each app root: a `BroadcastChannel` tells this origin's tabs of an add or a
   sign-out (a tab on a removed slot goes to `/login`, the rest stay), and a tab coming back into focus asks
-  `hasSession` for its slot, which is how a sign-out on the other app reaches it.
+  `hasSession` for its slot, which is how a sign-out on the other app reaches it. Back or forward onto an entry
+  made under another identity acts as that one again (`followIdentity`, its own cache).
 - `useSignOut()` signs this tab's slot out of both apps and moves it to the default of the slots left, or loads the
   routes again as a guest; `useSignOutAll()` clears every slot. The sign-in card and the account menu it feeds
   are `@kit/components`' parts, wrapped in each app's `features/auth/components/`. `@vp/queries/demo-personas` is
