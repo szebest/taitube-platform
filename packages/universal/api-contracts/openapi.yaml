@@ -14927,6 +14927,8 @@ paths:
                             - FORMAT_UNKNOWN_OPTION
                             - FORMAT_WRONG_KIND
                             - FORMAT_UNRENDERABLE
+                            - UNAUTHORIZED
+                            - FORBIDDEN
                             - UPLOAD_TOO_LARGE
                             - UPLOAD_SIZE_MISMATCH
                             - UNSUPPORTED_CONTENT_TYPE
@@ -14936,9 +14938,7 @@ paths:
                             - VIDEO_NOT_FOUND
                             - DLQ_ENTRY_NOT_FOUND
                             - VERSION_CONFLICT
-                            - FORBIDDEN
                             - RATE_LIMITED
-                            - UNAUTHORIZED
                             - ROUTE_NOT_FOUND
                             - CATEGORY_NOT_FOUND
                             - CATEGORY_SLUG_CONFLICT
