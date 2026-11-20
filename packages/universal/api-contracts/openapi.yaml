@@ -14922,13 +14922,13 @@ paths:
                           enum:
                             - VALIDATION_FAILED
                             - INTERNAL
+                            - UNAUTHORIZED
+                            - FORBIDDEN
                             - INVALID_CURSOR
                             - FORMAT_UNSUPPORTED_LOCALE
                             - FORMAT_UNKNOWN_OPTION
                             - FORMAT_WRONG_KIND
                             - FORMAT_UNRENDERABLE
-                            - UNAUTHORIZED
-                            - FORBIDDEN
                             - UPLOAD_TOO_LARGE
                             - UPLOAD_SIZE_MISMATCH
                             - UNSUPPORTED_CONTENT_TYPE
