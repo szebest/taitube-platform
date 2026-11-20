@@ -7,6 +7,10 @@ description: Shared vocabulary for designing deep modules. Use when the user wan
 
 Design **deep modules**: a lot of behaviour behind a small interface, placed at a clean seam, testable through that interface. Use this language and these principles wherever code is being designed or restructured. The aim is leverage for callers, locality for maintainers, and testability for everyone.
 
+**In this repo, ask first:** could a second app use the module unchanged? Then its seam is a `@kit/*` platform package,
+the app's values arrive as parameters or `@kit/di` tokens, and it never names a `@vp/*` package
+(`docs/standards/platform-packages.md`).
+
 ## Glossary
 
 Use these terms exactly: don't substitute "component," "service," "API," or "boundary." Consistent language is the whole point.

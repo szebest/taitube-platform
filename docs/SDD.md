@@ -633,6 +633,15 @@ and no such job existed. The result: `apps/client/web → @vp/permissions → @v
 `universal` only when something client-side actually consumes it — `storage`, `job-contracts` and `events`
 were once declared universal with no client consumer, which put BullMQ queue names in the browser-safe tier.
 
+*Scope* answers **could a second app use this package unchanged**, and it is the package's location too: a package
+under `packages/platform/<tier>/<name>` is a **platform package**, scope `@kit/*`; any other is an app package,
+scope `@vp/*`. A platform package depends, peer-depends and dev-depends only on platform packages, and **never
+imports, depends on or names a `@vp/*` package**, in code, manifest or docs: where it needs a value the app owns, it
+takes a required typed parameter, port or prop, or a `@kit/di` token the app provides at its composition root. A
+package that is half of each is split: the generic half moves to `@kit/<name>`, the app half keeps its name and
+depends on it. The extra rules (explicit `exports`, an API snapshot, versions, type-level specs, contract suites,
+the extractability check) are in [docs/standards/platform-packages.md](standards/platform-packages.md).
+
 *Layer* answers **which way may dependencies point**, declared as `vp.layer`: T1 foundation, T2 contracts and
 policy, T3 domain capability, T4 integration, T5 app modules (code more than one application shares, such as
 the query factories over `@vp/api-client`), T6 applications, T7 reference tools that drive one. Dependencies
@@ -654,8 +663,10 @@ on its jsdom stubs and axe helper, and the alternative to the exemption was a co
 - `@kit/tsconfig` presets give `universal`/`client` packages `lib` with `DOM` and `types: []`, so a Node
   builtin is a type error.
 - `tests/architecture/package-boundaries.test.ts` asserts the same rules in the unit suite.
-- Package **names** are unchanged by the move, so no source import specifier changed; only `package.json`
-  paths, tsconfig `extends`, turbo globs, Docker contexts and CI paths did.
+- The tier move changed no name. Moving a package into `packages/platform/` renamed it `@kit/*`, which the
+  specifier codemod rewrote at export level, so a split package's importers took one import per half.
+- `pnpm boundaries` and `platform-never-names-app.test.ts` fail on a platform edge to an app package and on the
+  substring `@vp/` anywhere under `packages/platform/`, with no allowlist.
 - Changing a package's tier means moving it, which is a deliberate act rather than a one-word edit.
 
 ---
@@ -722,7 +733,7 @@ Authority: [docs/standards/error-handling.md](standards/error-handling.md).
 
 | Rank | Option | Status | Reason |
 |---|---|---|---|
-| 1 | Typed tokens and a hand-written `Container` (`@kit/composition`, server, T2) | **Accepted** | The token carries the type, so `get(VideoService)` types without a cast and a missing edge is a compile error; no dependency, no reflection, same behaviour under Node and Bun |
+| 1 | Typed tokens (`Token<T>` in `@kit/di`, universal) and a hand-written `Container` over them (`@kit/composition`, server) | **Accepted** | The token carries the type, so `get(VideoService)` types without a cast and a missing edge is a compile error; no dependency, no reflection, same behaviour under Node and Bun |
 | 2 | A decorator container resolving by type (`@Injectable`, NestJS-style) | Rejected | Needs `emitDecoratorMetadata` plus a `reflect-metadata` polyfill in the eager path of both deployables; TC39 decorators carry no parameter types, so it pins the legacy flag indefinitely, and transpiler-level behaviour is what dual-runtime parity (Rule 2) exists to keep out. It also trades a compile error for a runtime one |
 | 3 | Keep constructors with optional collaborators and in-service fallbacks | Rejected | Delete a line from the composition root and a different graph boots silently: that is a service locator wearing a constructor |
 
@@ -736,11 +747,19 @@ anyone who sent it. The API installed no `SIGTERM` handler, and the worker infer
 
 **Decision.**
 
-- **One mechanism.** `Token<T>`, `Container.provide / get / override / start / dispose`. A factory is
+- **One mechanism.** `Token<T>` from `@kit/di` (declared in the universal tier so a browser package can declare one),
+  `Container.provide / get / override / start / dispose`. A factory is
   synchronous; I/O a value needs before it is usable runs in its `start` hook, in construction order.
   `dispose()` runs in reverse construction order, aggregates failures, is idempotent, and releases only what
   a factory built, never an override. `shutdownOnce` is the drain both processes share.
-- **Configuration is a value.** `loadEnv()` (`@kit/config`) parses `process.env` once at `main.ts`;
+- **A platform package asks, the app answers.** A value the app hands a platform package is a required, typed
+  parameter, and a `@kit/di` token only where a container resolves it (the error code registry, the catalogues,
+  `Clock`, `Random`, `EnvSource`, `Fetch`). A token with no sensible default has none, so a missing provision is a
+  startup error. The app registers once per deployable, in its composition module; no platform package reads
+  `process.env`, a cookie name, a locale list or the clock on its own
+  ([platform-packages.md](standards/platform-packages.md)).
+- **Configuration is a value.** `loadEnv(schema, env)` (`@kit/config`, the schema is the app's) parses `process.env`
+  once at `main.ts`;
   `toAppConfig()` (`@vp/env-schema`, T3, so `@vp/adapters` at T4 can take it) shapes it into `AppConfig`.
   `CdnBase` is branded and normalised once. Nothing below `main.ts` reads the environment.
 - **`AdapterKind` is the single environment switch.** `config.kind` is derived from `NODE_ENV` in

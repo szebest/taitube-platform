@@ -75,6 +75,12 @@ A double that drifts from the real thing fails the shared contract assertion in 
 live in `@vp/adapters` rather than `@kit/testing`, because `@kit/testing` depending on `@vp/core` would make a
 workspace cycle (every package dev-depends on `@kit/testing`).
 
+**A platform package ships its contract.** A package under `packages/platform/` that defines a port or a registry
+exports `runXContract(makeImpl)` from a `./contract` entry (vitest is a peer dependency), so any app runs it against
+its own implementation. The repository's doubles and registries run it in their own specs. A contract is part of the
+package's surface: changing one needs the version bump and changelog entry
+([platform-packages.md](platform-packages.md)). The contracts above stay in `@vp/adapters` for the app's own ports.
+
 Each Postgres spec file gets a PGlite of its own, loaded from one migrated snapshot the adapters project
 builds in its global setup (`__tests__/contract/pglite-snapshot.ts`): a fresh PGlite runs initdb, most of a
 second, and one loaded from the snapshot starts in about a tenth of that. The engine is truncated between
@@ -201,6 +207,12 @@ replays a cached pass. `pnpm typecheck --force` bypasses the cache.
 The floor is 85% coverage (lines, statements, functions and branches) over the unit run. Past it, write a spec where
 behaviour can break: logic, branches, error paths, contracts, and a user flow. Put it in `__tests__/` beside the
 code it covers.
+
+**Type-level specs.** Every public generic of a platform package has a spec that proves misuse fails to compile, in
+the package's `src/__tests__/type-fixtures/`: `expectTypeOf` for what a call infers, and `// @ts-expect-error` above
+each call that must be rejected, one reason in the comment. They are not run by vitest; the package's `typecheck`
+compiles them (universal and client packages through `tsconfig.spec.json`), so an `@ts-expect-error` over code that
+now compiles fails. Nothing else in platform source may suppress the compiler (`platform-type-strictness.test.ts`).
 
 Not required:
 

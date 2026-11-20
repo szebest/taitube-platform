@@ -18,6 +18,15 @@ reaching the browser; layer stops the dependency graph turning into a ball of mu
 > Spec: [SDD ADR-23](../docs/SDD.md#adr-23--package-runtime-tiers-the-directory-is-the-tier) ·
 > [ARCHITECTURE.md Invariant 5](../ARCHITECTURE.md) · checker: `scripts/check-boundaries.ts`
 
+### Platform or app
+
+A third question comes before tier and layer: **could a second app use this package unchanged?** If it names no
+product value and asks for everything that varies, it is **platform**: `packages/platform/<tier>/<name>`, scope
+`@kit/*`. Otherwise it is an app package under `packages/<tier>/`, scope `@vp/*`. A package that is half of each is two
+packages: the generic half moves down into `@kit/<name>`, the app half keeps its name and depends on it. Platform
+packages are held to extra rules (explicit `exports`, a reviewed API snapshot, versions, type-level specs, an
+extractability check) in [docs/standards/platform-packages.md](../docs/standards/platform-packages.md).
+
 ### The platform rule: `@kit` never depends on `@vp`
 
 A package under `packages/platform/<tier>/` is a platform package (`@kit/*`): reusable by another app,
@@ -252,8 +261,8 @@ The remaining hole is someone *adding the declaration* to `package.json`. TypeSc
 - every manifest sits under `packages/<tier>/`, `packages/platform/<tier>/` or `apps/<server|client>/`, and none
   declares a `vp.tier`
 - a package under `packages/platform/` (a platform package, reusable outside this product) depends, peer-depends and
-  dev-depends only on other platform packages, build tooling included; until its move lands, an app package that
-  `scripts/package-moves.json` sends to `@kit/*` counts as platform
+  dev-depends only on other platform packages, build tooling included, with no allowance for a package
+  `scripts/package-moves.json` still lists
 
 `pnpm boundaries` then runs `scripts/sync-claude-symlinks.ts --check`, which fails when an `AGENTS.md` has no
 `CLAUDE.md` symlink beside it.
@@ -291,15 +300,20 @@ shows up as a failing test.
 
 ### Adding a package
 
-1. Decide the **tier** by asking who consumes it. Client consumer → `universal` (or `client` if
+1. Ask first: **platform or app** (above). A platform package goes under `packages/platform/<tier>/<name>` as
+   `@kit/<name>` and follows [docs/standards/platform-packages.md](../docs/standards/platform-packages.md): copy the
+   shape of an existing one (`exports`, `types`, `sideEffects: false`, `version`, `CHANGELOG.md`, `README.md`,
+   `api/<name>.api.txt` from `pnpm gen:api`), and it names no `@vp` package anywhere.
+2. Decide the **tier** by asking who consumes it. Client consumer → `universal` (or `client` if
    browser-only). Otherwise `server`.
-2. Put it in `packages/<tier>/<name>`. The directory is the tier; there is no second place to declare it.
-3. Decide the **layer**: one more than the highest layer it depends on. If that forces a sibling edge, the
+3. Put it in `packages/<tier>/<name>`, or `packages/platform/<tier>/<name>` for a platform package. The directory is the
+   tier; there is no second place to declare it.
+4. Decide the **layer**: one more than the highest layer it depends on. If that forces a sibling edge, the
    design is wrong — fix the dependency, not the number.
-4. `package.json` gets `"vp": { "layer": ... }` - **not a `tier`**, the directory already fixes that and
+5. `package.json` gets `"vp": { "layer": ... }` - **not a `tier`**, the directory already fixes that and
    declaring one fails `pnpm boundaries`. `tsconfig.json` extends `@kit/tsconfig/<tier>.json`.
-5. Write `AGENTS.md` and run `pnpm sync:claude` for the symlink.
-6. `pnpm boundaries` must pass.
+6. Write `AGENTS.md` and run `pnpm sync:claude` for the symlink.
+7. `pnpm boundaries` must pass, and for a platform package so must `pnpm test:architecture`.
 
 ### "I need a server package from the frontend"
 
