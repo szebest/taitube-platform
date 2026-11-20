@@ -3,7 +3,7 @@ import { Logo } from '@kit/ui';
 import { Link, Outlet, useMatchRoute } from '@tanstack/react-router';
 import { canAccessAdmin } from '@vp/permissions';
 import { Can } from '@vp/permissions-react';
-import { useLayoutMaxWidth, useUserEvent } from '@vp/queries';
+import { useAppLink, useLayoutMaxWidth, useUserEvent } from '@vp/queries';
 import { type ReactNode, useState } from 'react';
 import { StudioWorkspace } from '#app/components/workspace/studio-workspace';
 import { useAccessDeniedToast } from '#app/features/shell/hooks/use-access-denied-toast';
@@ -24,6 +24,7 @@ export type StudioShellProps = {
 export function StudioShell({ toolbarAction, navigation, inspector }: StudioShellProps) {
   const matchRoute = useMatchRoute();
   const maxWidth = useLayoutMaxWidth();
+  const appLink = useAppLink();
   const { tOr } = useT();
   const [videoId, setVideoId] = useState<string>();
   const [newComments, setNewComments] = useState(false);
@@ -58,7 +59,7 @@ export function StudioShell({ toolbarAction, navigation, inspector }: StudioShel
             <Link to="/admin">{tOr('studio.adminNav', {}, '')}</Link>
           </StudioWorkspace.NavItem>
         </Can>
-        <StudioWorkspace.NavItem icon="home" href={WEB_URL}>
+        <StudioWorkspace.NavItem icon="home" href={appLink(WEB_URL)}>
           {tOr('studio.backToWeb', {}, '')}
         </StudioWorkspace.NavItem>
       </StudioWorkspace.Nav>

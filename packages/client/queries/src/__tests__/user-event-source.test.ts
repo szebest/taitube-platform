@@ -6,7 +6,7 @@ import {
 } from '../user-event-source';
 import { ScriptedSource, progress } from './scripted-source';
 
-const STREAM = '/api/v1/me/events';
+const STREAM = '/u/0/api/v1/me/events';
 const HELLO: UserStreamEvent = {
   type: 'hello',
   payload: { resume: 'fresh', unreadNotifications: 0 },
@@ -38,6 +38,7 @@ function browserWithTabs(locks: UserEventBrowser['locks'] = navigator.locks) {
     const received: UserStreamEvent[] = [];
     const close = connectUserEvents({
       name,
+      slot: 0,
       browser,
       onEvent: (event) => received.push(event),
       onFollow: () => undefined,

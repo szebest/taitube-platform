@@ -3,43 +3,60 @@ import { type QueryClient, queryOptions } from '@tanstack/react-query';
 import { type ApiClient, ApiError } from '@vp/api-client';
 import type { Account } from '@vp/api-contracts';
 import type { UserContext } from '@vp/permissions';
+import type { Identity } from './account-slots';
 import { UNAUTHORIZED } from './api-client';
-import { hasSession, signOut } from './session-functions';
+import type { IdentityStore } from './identity-store';
+import { expireSession, hasSession } from './session-functions';
 
 export type Session =
-  | { readonly status: 'guest' }
-  | { readonly status: 'signed-in'; readonly account: Account };
+  | { readonly status: 'guest'; readonly actingChannelId?: never }
+  | {
+      readonly status: 'signed-in';
+      readonly account: Account;
+      /** The channel the identity's `/c/<handle>` names, among those the account owns or works on. */
+      readonly actingChannelId?: string;
+    };
 
 export const GUEST: Session = { status: 'guest' };
 
 export const SESSION_KEY = ['session'] as const;
 
-async function loadSession(api: ApiClient): Promise<Session> {
-  if (!(await hasSession())) return GUEST;
+async function actingChannelOf(api: ApiClient, handle: string): Promise<string | undefined> {
+  const { owned, member } = await api.myChannels.listMyIdentities();
+  return [...owned, ...member].find((channel) => channel.handle === handle)?.id;
+}
+
+async function loadSession(api: ApiClient, { slot, channel }: Identity): Promise<Session> {
+  if (!(await hasSession({ data: { slot } }))) return GUEST;
 
   const account = await fromPromise(
     () => api.me.getAccount(),
     (cause) => cause
   );
-  if (isOk(account)) return { status: 'signed-in', account: account.value };
-  if (!(account.error instanceof ApiError && account.error.status === UNAUTHORIZED)) {
-    throw account.error;
+  if (!isOk(account)) {
+    if (!(account.error instanceof ApiError && account.error.status === UNAUTHORIZED)) {
+      throw account.error;
+    }
+    await expireSession({ data: { slot } });
+    return GUEST;
   }
 
-  await signOut();
-  return GUEST;
+  const actingChannelId = channel ? await actingChannelOf(api, channel) : undefined;
+  return { status: 'signed-in', account: account.value, actingChannelId };
 }
 
+type SessionSources = { queryClient: QueryClient; api: ApiClient; identity: IdentityStore };
+
 /**
- * The viewer's session in the router's query cache, loaded once by the root route on the server
- * and dehydrated into the page: a guest's without a session cookie, else the account its token
- * reaches. A token the API refuses signs the viewer out.
+ * The session of the router's identity in that identity's query cache, loaded once by the root
+ * route on the server and dehydrated into the page: a guest's without a session for its slot, else
+ * the account the slot's token reaches. A token the API refuses expires that slot alone.
  */
-export function ensureSession({ queryClient, api }: { queryClient: QueryClient; api: ApiClient }) {
+export function ensureSession({ queryClient, api, identity }: SessionSources) {
   return queryClient.query({
     ...queryOptions({
       queryKey: SESSION_KEY,
-      queryFn: () => loadSession(api),
+      queryFn: () => loadSession(api, identity.read().identity),
       staleTime: Number.POSITIVE_INFINITY,
     }),
     staleTime: 'static',

@@ -108,8 +108,8 @@ export const WEB_ROWS: readonly Row[] = [
     fires: '<p dangerouslySetInnerHTML={{ __html: video.description }} />',
   },
   {
-    name: 'a token kept in browser storage, where a script can read it (the session is an httpOnly cookie)',
-    pattern: /\b(?:localStorage|sessionStorage)\b[^\n]*(?:token|session|AUTH_)/gi,
+    name: 'a token or an account slot kept in browser storage, where a script can read it (each slot is an httpOnly vp.session.<slot> cookie)',
+    pattern: /\b(?:localStorage|sessionStorage)\b[^\n]*(?:token|session|bearer|slot|AUTH_)/gi,
     scope: [
       ...inEachApp('src/**/*.ts'),
       ...inEachApp('src/**/*.tsx'),
@@ -118,6 +118,22 @@ export const WEB_ROWS: readonly Row[] = [
     ],
     expected: 0,
     fires: "const token = window.localStorage.getItem('AUTH_TOKEN');",
+    passes: "window.localStorage.setItem('vp.prefs.device', saved);",
+  },
+  {
+    name: "a query cache cleared under its readers (a switch, a sign-in or a sign-out builds the identity's next QueryClient and drops the last one, so a response in flight lands nowhere)",
+    pattern: /[qQ]ueryClient(?:\(\))?\.clear\(\)/g,
+    scope: [
+      ...inEachApp('src/**/*.ts'),
+      ...inEachApp('src/**/*.tsx'),
+      `:(glob)${CLIENT}/*/src/**/*.ts`,
+      `:(glob)${CLIENT}/*/src/**/*.tsx`,
+      ...APPS.map((app) => `:(exclude,glob)${app}/src/**/__tests__/**`),
+      `:(exclude,glob)${CLIENT}/*/src/**/__tests__/**`,
+    ],
+    expected: 0,
+    fires: 'queryClientOf(router).clear(); router.options.context.queryClient.clear();',
+    passes: 'listeners.clear();',
   },
   {
     name: 'a dependency or import of the legacy front end (Bootstrap, react-bootstrap, bootstrap-icons, Sass, react-player, react-pro-sidebar, react-toastify, react-horizontal-scrolling-menu), which the design system and its toasts replaced',

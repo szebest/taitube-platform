@@ -17,6 +17,8 @@ import {
   requestLocale,
   SessionProvider,
   UserEventStream,
+  useSessionSync,
+  useTabIdentity,
 } from '@vp/queries';
 import type { ReactNode } from 'react';
 import { API_BASE_URL, COOKIE_DOMAIN, OTEL_TRACES_URL } from '#app/lib/config';
@@ -70,6 +72,8 @@ function RootDocument({ children }: { children: ReactNode }) {
 
 function RootLayout() {
   const { api, toaster, auth } = Route.useRouteContext();
+  const { identity, prefixed } = useTabIdentity();
+  useSessionSync();
 
   useWebTelemetry({
     app: 'studio',
@@ -81,7 +85,7 @@ function RootLayout() {
 
   return (
     <ApiProvider api={api}>
-      <SessionProvider session={auth}>
+      <SessionProvider session={auth} identity={identity} prefixed={prefixed}>
         <UserEventStream>
           <Tooltip.Provider>
             <ToastProvider toaster={toaster}>

@@ -2,7 +2,7 @@ import { clientAppRequestMiddlewareFor } from '@kit/security-headers';
 import { createStart } from '@tanstack/react-start';
 import { sessionMiddleware } from '@vp/queries';
 import { EMBED_PATH_PREFIX } from '#app/features/embed';
-import { API_BASE_URL, COOKIE_DOMAIN, DEV_TOKEN_URL } from './lib/config';
+import { ACCOUNTS_MAX, API_BASE_URL, COOKIE_DOMAIN, DEV_TOKEN_URL } from './lib/config';
 
 export const startInstance = createStart(() => ({
   requestMiddleware: [
@@ -11,6 +11,7 @@ export const startInstance = createStart(() => ({
       apiBaseUrl: API_BASE_URL,
       cookieDomain: COOKIE_DOMAIN,
       devTokenUrl: DEV_TOKEN_URL,
+      accountsMax: ACCOUNTS_MAX,
     }),
   ],
 }));

@@ -63,8 +63,11 @@ pnpm --filter @vp/studio typecheck   # tsconfig.json (the app), tsconfig.spec.js
 pnpm --filter @vp/studio test:e2e    # the Playwright suite; `make e2e-studio` is the same
 ```
 
-The browser calls the studio's own `/api`, which its server forwards to the API with the session cookie's token, as
-in web. `/login` offers the demo personas as web's does (`VITE_DEMO_PERSONAS`, `SSR_DEV_TOKEN_URL`; see web's AGENTS.md).
+The browser calls the studio's own `/api`, which its server forwards to the API with the token of the tab's account
+slot, as in web. The studio reads the same `vp.session.<slot>` and `vp.accounts` cookies and the same
+`/u/<slot>[/c/<handle>]` prefix as web, and every link back to web goes through `useAppLink()`, so a tab keeps its
+identity across the two apps. `/login` offers the demo personas as web's does (`VITE_DEMO_PERSONAS`,
+`SSR_DEV_TOKEN_URL`, `ACCOUNTS_MAX`; see web's AGENTS.md).
 
 ## 4. Also read
 

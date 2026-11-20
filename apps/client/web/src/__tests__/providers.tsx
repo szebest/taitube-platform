@@ -11,6 +11,7 @@ import {
   getPreferences,
   getUnreadNotificationCount,
   listMyMemberships,
+  recordMySignIn,
 } from '@vp/api-contracts';
 import { APPEARANCE_COOKIES } from '@vp/domain/settings';
 import type { UserContext } from '@vp/permissions';
@@ -24,7 +25,7 @@ import {
   SessionProvider,
 } from '@vp/queries';
 import { DEV_TOKEN_URL } from '@vp/queries/demo-personas';
-import { account, api, apiServer, mockEndpoint } from '@vp/web-testing';
+import { account, api, apiServer, mockEndpoint, signInRecord } from '@vp/web-testing';
 import { HttpResponse, http } from 'msw/http';
 import type { ComponentType, PropsWithChildren } from 'react';
 import { DevicePreferencesProvider } from '../lib/preferences/device-preferences-provider';
@@ -112,9 +113,12 @@ export function signInBrowser(
   return mockEndpoint(getAccount, () => HttpResponse.json(viewer));
 }
 
-/** `dev-token serve` on this machine, minting the token of whichever persona is asked for, and the API answering the signed-in persona with no channels. */
+/** `dev-token serve` on this machine, minting the token of whichever persona is asked for, and the API recording the sign-in and answering the signed-in persona with no channels. */
 export function devTokenServe() {
-  apiServer.use(mockEndpoint(listMyMemberships, () => HttpResponse.json({ items: [] })));
+  apiServer.use(
+    mockEndpoint(listMyMemberships, () => HttpResponse.json({ items: [] })),
+    mockEndpoint(recordMySignIn, () => HttpResponse.json(signInRecord(), { status: 201 }))
+  );
   return http.get(`${DEV_TOKEN_URL}/token`, ({ request }) =>
     HttpResponse.json({ token: `token-of-${new URL(request.url).searchParams.get('persona')}` })
   );

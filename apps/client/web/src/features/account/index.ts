@@ -22,6 +22,8 @@ export {
   SpeedRow,
   StatsOverlayRow,
 } from './components/playback-rows/playback-rows';
+export { createMergeState } from './api/identity-reset';
+export { MergeStateContext } from './components/preferences-sync/merge-state.context';
 export { PreferencesSync } from './components/preferences-sync/preferences-sync';
 export {
   PauseHistoryRow,

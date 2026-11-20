@@ -1,6 +1,7 @@
 import { Shelf, StartHereShelf, VideoCard } from '@kit/components';
 import { useT } from '@kit/intl-react';
 import type { VideoSummary } from '@vp/api-contracts';
+import { useAppLink } from '@vp/queries';
 import { WEB_URL } from '#app/lib/config';
 
 interface StartHerePreviewProps {
@@ -11,6 +12,7 @@ interface StartHerePreviewProps {
 /** The shelf as the channel page draws it, over the pins as they stand now. */
 export function StartHerePreview({ channelId, pins }: StartHerePreviewProps) {
   const { tOr } = useT();
+  const appLink = useAppLink();
 
   return (
     <StartHereShelf.Root source="pinned">
@@ -33,7 +35,7 @@ export function StartHerePreview({ channelId, pins }: StartHerePreviewProps) {
       <StartHereShelf.Footer>
         <StartHereShelf.Attribution />
         <Shelf.Action asChild>
-          <a href={`${WEB_URL}/channel/${channelId}`}>
+          <a href={appLink(WEB_URL, `/channel/${channelId}`)}>
             {tOr('studio.startHereViewChannel', {}, '')}
           </a>
         </Shelf.Action>

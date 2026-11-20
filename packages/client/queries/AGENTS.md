@@ -42,9 +42,9 @@ The data layer:
 The user event stream (SDD §10.3, ADR-27):
 
 - `<UserEventStream>`, which each app root mounts once around the shell, inside `SessionProvider`: for a
-  signed-in viewer it joins `connectUserEvents`, for a guest it opens nothing. One tab per browser holds the Web Lock
-  `vp.user-events.<userId>` and opens the platform `EventSource` on this origin's `/api/v1/me/events` (the
-  proxy turns the cookie into the bearer); it posts every event to the other tabs over a `BroadcastChannel` of
+  signed-in viewer it joins `connectUserEvents`, for a guest it opens nothing. One tab per browser and identity
+  holds the Web Lock `vp.user-events.<slot>.<channel>.<userId>` and opens the platform `EventSource` on this
+  origin's `/u/<slot>/api/v1/me/events` (the proxy turns the slot's cookie into the bearer); it posts every event to the other tabs over a `BroadcastChannel` of
   the same name. When it closes, the next tab in the lock's queue opens the stream with `?last-event-id=` set to
   the last id any tab saw, and every tab drops an id it already has. A stream the browser gave up on reopens
   with backoff from that id, and none is open while TanStack Query's `onlineManager` says offline.
@@ -60,30 +60,66 @@ The user event stream (SDD §10.3, ADR-27):
 - `useUserEvent(type, handler)` for a component below it that reacts to an event (a toast), called after the
   cache work.
 
-The session (SDD §11, Transport and Origins and cookies):
+The session (SDD §11, Transport and Origins and cookies; slots and identities from ticket 129):
 
-- `sessionMiddleware({ apiBaseUrl, cookieDomain, refresh? })`: the request middleware each app's `src/start.ts`
-  mounts after the CSRF check and the security headers. It answers `/api/...` from the API (`proxyToApi`: an
-  allowlist of request headers, the session cookie's token as the bearer, the browser's address appended to
-  `X-Forwarded-For`, a refused token refreshed once through `refresh`, single-flight per refused token in this
-  process, or the cookie cleared; a write body over 1 MiB answered 413 before it is forwarded), and hands every
-  other request the cookie domain.
-- The cookie, `SESSION_COOKIE` (`vp.session`): httpOnly, `SameSite=Lax`, `Secure` off localhost, `Domain` the
-  app's `COOKIE_DOMAIN`. Only server code writes it: the proxy, `signOut`, and the demo personas' sign-in;
-  `hasSession` tells the browser whether one is there.
-- `ensureSession(context)`: what the root route's `beforeLoad` returns as `auth`, the `Session` (a guest, or the
-  account `GET /v1/me/account` answers for the token), cached in the query client and dehydrated into the page.
+- A browser holds up to `ACCOUNTS_MAX` accounts (`accountsMax`, default 10), each in its **slot** (0 to 9), and a
+  tab acts as one **identity**, `{ slot, channel? }`, named in its URL as `/u/<slot>[/c/<handle>]`
+  (`account-slots.ts`: `parseIdentityPath`, `identityPath`, `identityKey`). With one account on its primary
+  channel no prefix appears; the router's `rewrite` strips it on the way in and adds it on the way out, so routes
+  never see it. `appLink(origin, path, tab)` (and `useAppLink()`) keeps the identity on a link into the other app.
+- `sessionMiddleware({ apiBaseUrl, cookieDomain, devTokenUrl, accountsMax, refresh? })`: the request middleware
+  each app's `src/start.ts` mounts after the CSRF check and the security headers. It moves a pre-slot
+  `vp.session` cookie into slot 0 once, resolves the request's identity (`resolveRequestIdentity`: the prefix,
+  else `X-Account-Slot`, else the default slot `vp.accounts` remembers), and answers `/api/...` from the API
+  (`proxyToApi`: an allowlist of request headers, the slot's token as the bearer, the browser's address appended
+  to `X-Forwarded-For`, a write that names no slot refused 403, a refused token refreshed once through
+  `refresh`, single-flight per refused token in this process, or that slot alone cleared and marked expired; a
+  write body over 1 MiB answered 413 before it is forwarded). A page with no prefix in a browser of two or more
+  accounts is a 302 to the default identity's prefix, a prefix for a slot with no session a 302 to
+  `/login?slot=<n>&reason=expired`, and a signed-in page is `Cache-Control: private, no-store`. Every other
+  request gets the settings in its context (`requestSession()`).
+- The cookies: `vp.session.<slot>` holds that slot's bearer token, httpOnly, `SameSite=Lax`, `Secure` off
+  localhost, `Domain` the app's `COOKIE_DOMAIN`, eight hours; `vp.accounts` (`accounts.ts`, `accounts-cookie.ts`)
+  is the non-secret slot list (user id, label, avatar, acting channel, expired) with the default slot, cut so
+  ten rows always fit one cookie (`serializeAccounts` drops the avatar hints that would not);
+  `vp.add-nonce` binds an add to the browser that started it, httpOnly, ten minutes, one use. Only server code
+  writes them.
+- The browser's API client names its slot on every call (`X-Account-Slot`, a custom header no cross-site form
+  sends); the stream, which an `EventSource` cannot give a header, names it in its path (`/u/<slot>/api/...`).
+- `completeSignIn(issue, grant, target)` (`sign-in.ts`) is every sign-in's callback: an add (`{ mode: 'add',
+  state }`) spends its nonce first, the token is always the new one `issue` returns, a user already in a slot
+  (signed in or expired) ends on it, an add takes the lowest slot with neither a session nor a row (else the
+  lowest expired row), a session past `ACCOUNTS_MAX` is refused, and `POST /v1/me/security/sign-ins` records it (the API
+  rate-limits adds) before the cookie is written. Server functions: `hasSession`, `signOut`, `signOutAll`,
+  `expireSession`, `rememberIdentity`, `startAddAccount`.
+- `createAppRouter` keeps one `IdentityStore` per router (`identity` in context): the identity and the one
+  `QueryClient` that is its own. `switchIdentity(router, next)` builds the next identity's client and drops the
+  last one, cancelling its loads, then replaces the URL under the new prefix; `settleSession` (after a sign-in or a
+  sign-out) and `endSession(router, slot)` (a 401 on this tab's slot, which goes to `/login?slot=<n>`) renew the
+  client the same way. No client is ever `clear()`ed under its readers (a zero-matches row).
+- `ensureSession(context)`: what the root route's `beforeLoad` returns as `auth`, the `Session` of the router's
+  identity (a guest, or the account `GET /v1/me/account` answers for the slot's token, with `actingChannelId` for a
+  `/c/<handle>`), cached in that identity's client and dehydrated with the identity into the page.
   `viewerOf(session)` is who `@vp/permissions` decides for.
 - `requireSignedIn` (`_authed`'s `beforeLoad`) and `leaveLoginWhenSignedIn` with `LoginSearchSchema`
-  (`/login`'s), which keeps a `redirect` only when it stays on this origin.
-- `settleSession(router)` after a sign-in or a sign-out, and `endSession(router)`, which sends a signed-in viewer
-  whose token the API refused to `/login?redirect=<where they were>`, with no reload.
-- `SessionProvider` (the session from router context, and the `PermissionsProvider` it fills) and `useAccount()`.
-- `useSignOut()`, which ends the session on both apps and loads the routes again as a guest; the sign-in card and the account menu it feeds are `@kit/components`' parts, wrapped in each app's `features/auth/components/`. `@vp/queries/demo-personas` is for local demos: the
-  `PersonaSwitcher` and its `signInAsPersona` server function, which signs in with a token `pnpm dev-token serve`
-  mints, at the address `sessionMiddleware` was given as `devTokenUrl`. Each app imports it behind
-  `VITE_DEMO_PERSONAS` in its `/login` route, and the bundle guard in `@kit/vite-preset` fails a build with the
-  flag off in which anything under `src/demo-personas/` reaches a client or a server chunk.
+  (`/login`'s), which keeps a `redirect` only when it stays on this origin, and stays on `/login` for `add=1` or
+  another `slot`.
+- `SessionProvider` (the session and the `identity` from the root, and the `PermissionsProvider` it fills, keyed by
+  the identity and its viewer so a switch mounts everything below afresh: no ability, stream, query observer or
+  state outlives its identity), `useAccount()`, `useIdentity()`, `useActingChannelId()` (the channel the identity
+  names, which the studio acts on over the one last chosen), `useTabIdentity()` (the router's, for the root).
+- `useSessionSync()`, mounted by each app root: a `BroadcastChannel` tells this origin's tabs of an add or a
+  sign-out (a tab on a removed slot goes to `/login`, the rest stay), and a tab coming back into focus asks
+  `hasSession` for its slot, which is how a sign-out on the other app reaches it. Back or forward onto an entry
+  made under another identity acts as that one again (`followIdentity`, its own cache).
+- `useSignOut()` signs this tab's slot out of both apps and moves it to the default of the slots left, or loads the
+  routes again as a guest; `useSignOutAll()` clears every slot. The sign-in card and the account menu it feeds
+  are `@kit/components`' parts, wrapped in each app's `features/auth/components/`. `@vp/queries/demo-personas` is
+  for local demos: the `PersonaSwitcher` (into this tab's slot, `slot`, or `adding` one) and its
+  `signInAsPersona` server function, a `completeSignIn` whose provider is `pnpm dev-token serve`, at the address
+  `sessionMiddleware` was given as `devTokenUrl`. Each app imports it behind `VITE_DEMO_PERSONAS` in its `/login`
+  route, and the bundle guard in `@kit/vite-preset` fails a build with the flag off in which anything under
+  `src/demo-personas/` reaches a client or a server chunk.
 
 ## Rules
 

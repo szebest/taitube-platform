@@ -1,6 +1,7 @@
 import { fromPromise, ignore, isOk, parseJson } from '@kit/result';
 import { onlineManager } from '@tanstack/react-query';
 import { type ContractResult, streamMyEvents } from '@vp/api-contracts';
+import { identityPath } from './account-slots';
 import { API_PROXY_PATH } from './api-client';
 import { createReconnectTimer } from './reconnect-timer';
 
@@ -27,6 +28,8 @@ export interface UserEventBrowser {
 
 export interface UserEventConnection {
   name: string;
+  /** The account slot the stream is for, named in its path: an `EventSource` sends no custom header. */
+  slot: number;
   browser: UserEventBrowser;
   onEvent: (event: UserStreamEvent) => void;
   /** A tab that joins behind a leading one gets no `hello`, so it catches up here instead. */
@@ -49,10 +52,12 @@ function readEvent(data: string): UserStreamEvent | undefined {
 
 export function connectUserEvents({
   name,
+  slot,
   browser,
   onEvent,
   onFollow,
 }: UserEventConnection): () => void {
+  const streamUrl = identityPath({ slot }, USER_EVENTS_URL);
   const channel = browser.openChannel(name);
   const stopped = new AbortController();
   let lastSeenId = 0;
@@ -102,7 +107,7 @@ export function connectUserEvents({
         if (!onlineManager.isOnline()) return;
 
         const opened = browser.openSource(
-          lastSeenId > 0 ? `${USER_EVENTS_URL}?last-event-id=${lastSeenId}` : USER_EVENTS_URL
+          lastSeenId > 0 ? `${streamUrl}?last-event-id=${lastSeenId}` : streamUrl
         );
         sourceLastId = '';
         for (const type of EVENT_TYPES) opened.addEventListener(type, onFrame);

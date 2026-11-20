@@ -119,12 +119,16 @@ Everything under `src/` runs on the server first. A component that reads `window
   player, a `React.lazy` chunk inside `Suspense` with the same fallback, mounts after hydration. Never a
   route-wide `ssr: false`.
 
-The session is the httpOnly `vp.session` cookie (`@vp/queries`, SDD §11), so the server renders the signed-in
-page: the root route's `beforeLoad` returns `auth` (`ensureSession`), `_authed`'s `beforeLoad` sends a guest to
-`/login?redirect=<path>`, and its loaders run on the server with the cookie's token. No script reads the token: the
-browser's API calls go to this origin's `/api`, and only server functions (`signOut`, the demo personas' sign-in)
-set or clear the cookie. A 401 for a signed-in viewer lands them on `/login`, and back where they were once signed
-in. The shell header mounts `features/account/components/account-menu.tsx`: `@kit/components`' `AccountMenu` with the
+The session is one httpOnly `vp.session.<slot>` cookie per signed-in account (`@vp/queries`, SDD §11), so the
+server renders the signed-in page: the root route's `beforeLoad` returns `auth` (`ensureSession`) for the tab's
+identity, `_authed`'s `beforeLoad` sends a guest to `/login?redirect=<path>`, and its loaders run on the server with
+the slot's token. A browser of two or more accounts keeps each tab's identity in its URL (`/u/<slot>[/c/<handle>]`),
+which the router strips and adds back, so a route never sees it; `__root.tsx` hands `SessionProvider` the identity
+(`useTabIdentity`) and mounts `useSessionSync`. A link into the studio goes through `useAppLink()` (or `appLink` in a
+`beforeLoad`), so it opens as the same identity. No script reads a token: the browser's API calls go to this
+origin's `/api` naming their slot, and only server functions (`signOut`, the demo personas' sign-in) set or clear
+the cookies. A 401 for a signed-in viewer lands them on `/login` for that slot, and back where they were once
+signed in. `/login?add=1` adds an account beside the ones signed in. The shell header mounts `features/account/components/account-menu.tsx`: `@kit/components`' `AccountMenu` with the
 studio's upload and admin pages, a guest's sign-in link, and sign-out, which ends the session on both apps. Locally
 `/login` offers the demo personas (Guest, Viewer, Creator, Second creator, Moderator, Admin) in the dev server, where
 `pnpm dev` starts `dev-token serve`, and in a build made with `VITE_DEMO_PERSONAS=true`, which `demo/start.sh` makes
@@ -286,8 +290,8 @@ under `_authed`.
   the loaded history by title, and the clear-all confirmation is the `clear-history` URL modal.
 - **Progress is saved by `useProgressWriter`**, handed to the player by `features/watch/components/watch-player.tsx`:
   a heartbeat per ten seconds of playhead, a write-through on pause and at the end, nothing for a guest or while
-  `privacy.historyPaused` is set. A sign-in or sign-out clears the cache (`settleSession`), so no list outlives its
-  viewer.
+  `privacy.historyPaused` is set. A sign-in, a sign-out or a switch swaps in the identity's own cache
+  (`settleSession`, `switchIdentity`), so no list outlives its viewer.
 - **A spec renders through `renderLibrary(url, api)`** (`features/library/__tests__/render-library.tsx`), which signs
   the viewer in over `libraryApi` handlers, with `useLibraryClock()` holding `Date` still.
 
@@ -448,9 +452,9 @@ A check `@vp/permissions` cannot express gets a rule there, not a branch in JSX.
 
 ### Rule 2: Every HTTP call goes through the API client in router context
 `getRouter` builds it through `createAppRouter` from `@vp/queries` (`createAppApiClient` over `API_BASE_URL`). On
-the server it calls the API at `API_BASE_URL` with the session cookie's token; in the browser it calls this
-origin's `/api`, which `sessionMiddleware` (mounted in `src/start.ts` after the CSRF check and the security
-headers) forwards there with the same token, so the browser never makes a cross-origin call and never holds the
+the server it calls the API at `API_BASE_URL` with the tab's slot's token; in the browser it calls this
+origin's `/api` with `X-Account-Slot`, which `sessionMiddleware` (mounted in `src/start.ts` after the CSRF check and
+the security headers) forwards there with that slot's token, so the browser never makes a cross-origin call and never holds the
 token (SDD §11, Transport). Nothing else makes an HTTP call (the upload's PUT of file bytes to storage lives in
 the studio), except `useWebTelemetry` (`@kit/web-telemetry`, mounted in `__root.tsx`): its vitals beacon to
 `POST /v1/telemetry/vitals` and its spans to `OTEL_TRACES_URL`. A component consumes a hook or a query and

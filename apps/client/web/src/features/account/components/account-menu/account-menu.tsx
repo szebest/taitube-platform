@@ -3,7 +3,7 @@ import { useT } from '@kit/intl-react';
 import { Link } from '@tanstack/react-router';
 import { canAccessAdmin } from '@vp/permissions';
 import { Can } from '@vp/permissions-react';
-import { SignInButton, useAccount, useSignOut } from '@vp/queries';
+import { SignInButton, useAccount, useAppLink, useSignOut } from '@vp/queries';
 import { clearQueuedChanges } from '#app/integrations/service-worker-client/clear-queued-changes';
 import { STUDIO_URL } from '#app/lib/config';
 
@@ -11,6 +11,7 @@ import { STUDIO_URL } from '#app/lib/config';
 export function AccountMenu() {
   const account = useAccount();
   const signOut = useSignOut();
+  const appLink = useAppLink();
   const { tOr } = useT();
 
   if (!account) {
@@ -23,14 +24,14 @@ export function AccountMenu() {
       <Menu.Content align="end">
         <Menu.Label>{account.channel.displayName}</Menu.Label>
         <Menu.Item asChild>
-          <a href={`${STUDIO_URL}/upload`}>{tOr('auth.upload', {}, '')}</a>
+          <a href={appLink(STUDIO_URL, '/upload')}>{tOr('auth.upload', {}, '')}</a>
         </Menu.Item>
         <Menu.Item asChild>
           <Link to="/settings">{tOr('shell.settings', {}, '')}</Link>
         </Menu.Item>
         <Can type="rule" I={canAccessAdmin}>
           <Menu.Item asChild>
-            <a href={`${STUDIO_URL}/admin`}>{tOr('auth.admin', {}, '')}</a>
+            <a href={appLink(STUDIO_URL, '/admin')}>{tOr('auth.admin', {}, '')}</a>
           </Menu.Item>
         </Can>
         <Menu.Separator />
