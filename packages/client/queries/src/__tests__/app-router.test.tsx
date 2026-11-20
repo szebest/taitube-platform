@@ -221,21 +221,27 @@ describe('@vp/queries: app router', () => {
     }
   );
 
-  it("renders the page for /u/1 with slot 1's account and nothing of slot 0's", async () => {
-    const named = (displayName: string) =>
-      HttpResponse.json<Account>(account({ channel: { ...account().channel, displayName } }));
-    const { html } = await serverRender(getRouter, '/u/1/whoami', {
-      headers: TWO_SLOTS,
-      handlers: [
-        mockEndpoint(getAccount, ({ request }) =>
-          named(request.headers.get('authorization') === 'Bearer one' ? 'Slot One' : 'Slot Zero')
-        ),
-      ],
-    });
+  it.each([
+    { tab: '/u/1/whoami', name: 'Slot One', other: 'Slot Zero' },
+    { tab: '/u/0/whoami', name: 'Slot Zero', other: 'Slot One' },
+  ])(
+    "renders $tab, one of two tabs in one browser, with its own slot's account and nothing of the other's",
+    async ({ tab, name, other }) => {
+      const named = (displayName: string) =>
+        HttpResponse.json<Account>(account({ channel: { ...account().channel, displayName } }));
+      const { html } = await serverRender(getRouter, tab, {
+        headers: TWO_SLOTS,
+        handlers: [
+          mockEndpoint(getAccount, ({ request }) =>
+            named(request.headers.get('authorization') === 'Bearer one' ? 'Slot One' : 'Slot Zero')
+          ),
+        ],
+      });
 
-    expect(html).toContain('<p>Slot One</p>');
-    expect(html).not.toContain('Slot Zero');
-  });
+      expect(html).toContain(`<p>${name}</p>`);
+      expect(html).not.toContain(other);
+    }
+  );
 
   it('keeps links under the prefix once the browser holds two accounts, and a one-account browser free of it', () => {
     const prefixed = getRouter({

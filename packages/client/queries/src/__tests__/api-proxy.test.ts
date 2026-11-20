@@ -210,6 +210,7 @@ describe('@vp/queries: the same-origin API proxy', () => {
 
     expect(sent).toHaveLength(1);
     expect(answer.status).toBe(401);
+    expect(answer.headers.getSetCookie()).toHaveLength(2);
     const [cleared, marked] = answer.headers.getSetCookie();
     expect(cleared).toMatch(/^vp\.session\.1=; Max-Age=0;/);
     const written = JSON.parse(

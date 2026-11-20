@@ -1,3 +1,4 @@
+import { clientAppRequestMiddleware } from '@kit/security-headers';
 import { requestHandler } from '@tanstack/react-start/server';
 import { apiServer } from '@vp/web-testing';
 import { http, HttpResponse } from 'msw/http';
@@ -12,17 +13,33 @@ type Answer = {
   headers?: Record<string, string>;
   method?: string;
   handlerType?: 'router' | 'serverFn';
+  /** What the API answers every call with; `{}` by default. */
+  reply?: (authorization: string | null) => Response;
+  refresh?: (refused: string) => Promise<string | undefined>;
+  /** Runs the CSRF check every client app mounts first, as `src/start.ts` orders them. */
+  behindCsrf?: boolean;
 };
+
+const [crossSiteWriteMiddleware] = clientAppRequestMiddleware;
 
 async function answer(
   pathname: string,
-  { cookie = '', headers = {}, method = 'GET', handlerType = 'router' }: Answer = {}
+  {
+    cookie = '',
+    headers = {},
+    method = 'GET',
+    handlerType = 'router',
+    reply = () => HttpResponse.json({}),
+    refresh,
+    behindCsrf = false,
+  }: Answer = {}
 ) {
   const bearers: (string | null)[] = [];
   apiServer.use(
     http.all(`${API}/*`, ({ request }) => {
-      bearers.push(request.headers.get('authorization'));
-      return HttpResponse.json({});
+      const authorization = request.headers.get('authorization');
+      bearers.push(authorization);
+      return reply(authorization);
     })
   );
   const next = vi.fn().mockResolvedValue({ response: new Response('page') });
@@ -35,17 +52,28 @@ async function answer(
     cookieDomain: 'taitube.example',
     devTokenUrl: 'http://dev-token:3002',
     accountsMax: 4,
+    refresh,
   });
-
-  const answered: { result?: unknown } = {};
-  const response = await requestHandler(async () => {
-    answered.result = await middleware.options.server?.({
+  const session = () =>
+    middleware.options.server?.({ request, pathname, context: undefined, handlerType, next });
+  const csrfThenSession = async () => {
+    const passed = vi.fn().mockImplementation(async () => {
+      const result = await session();
+      return { request, pathname, context: {}, response: result };
+    });
+    const result = await crossSiteWriteMiddleware?.options.server?.({
       request,
       pathname,
       context: undefined,
       handlerType,
-      next,
+      next: passed,
     });
+    return result instanceof Response ? result : result?.response;
+  };
+
+  const answered: { result?: unknown } = {};
+  const response = await requestHandler(async () => {
+    answered.result = await (behindCsrf ? csrfThenSession() : session());
     return answered.result instanceof Response ? answered.result : new Response(null);
   })(request, {});
 
@@ -184,6 +212,79 @@ describe('@vp/queries: session middleware', () => {
 
     expect(page?.headers.get('cache-control')).toBe(cacheControl);
   });
+
+  it.each<{ scenario: string; headers: Record<string, string>; status: number; bearers: string[] }>(
+    [
+      {
+        scenario: 'a cross-site write naming its slot, refused by the CSRF check',
+        headers: { 'sec-fetch-site': 'cross-site', 'x-account-slot': '1' },
+        status: 403,
+        bearers: [],
+      },
+      {
+        scenario: 'a same-origin write naming no slot, refused by the proxy',
+        headers: { 'sec-fetch-site': 'same-origin' },
+        status: 403,
+        bearers: [],
+      },
+      {
+        scenario: 'a same-origin write naming its slot',
+        headers: { 'sec-fetch-site': 'same-origin', 'x-account-slot': '1' },
+        status: 200,
+        bearers: ['Bearer one'],
+      },
+    ]
+  )('answers $scenario with $status', async ({ headers, status, bearers: expected }) => {
+    const { response, bearers } = await answer('/api/v1/videos/v1/reactions', {
+      cookie: TWO_SLOTS,
+      method: 'POST',
+      headers,
+      behindCsrf: true,
+    });
+
+    expect(response.status).toBe(status);
+    expect(bearers).toEqual(expected);
+  });
+
+  it.each([
+    {
+      scenario: 'moving a browser signed in before slots',
+      path: '/watch/abc',
+      cookie: 'vp.session=legacy',
+    },
+    {
+      scenario: 'refreshing a refused token',
+      path: '/api/v1/me/account',
+      cookie: TWO_SLOTS,
+      refresh: async () => 'fresh',
+    },
+    {
+      scenario: 'clearing a token with no refresh to be had',
+      path: '/api/v1/me/account',
+      cookie: TWO_SLOTS,
+    },
+  ])(
+    'writes every slot cookie httpOnly, SameSite=Lax, on the shared domain, when $scenario',
+    async ({ path, cookie, refresh }) => {
+      const { setCookies } = await answer(path, {
+        cookie,
+        refresh,
+        reply: (authorization) =>
+          authorization === 'Bearer fresh'
+            ? HttpResponse.json({})
+            : HttpResponse.json({}, { status: 401 }),
+      });
+      const slotCookies = setCookies.filter((set) => set.startsWith('vp.session'));
+
+      expect(slotCookies.length).toBeGreaterThan(0);
+      for (const set of slotCookies) {
+        expect(set).toMatch(/; HttpOnly(;|$)/);
+        expect(set).toMatch(/; SameSite=Lax(;|$)/);
+        expect(set).toMatch(/; Path=\/(;|$)/);
+        expect(set).toMatch(/; Domain=taitube\.example(;|$)/);
+      }
+    }
+  );
 
   it('moves a browser signed in before slots onto slot 0', async () => {
     const { setCookies } = await answer('/watch/abc', { cookie: 'vp.session=legacy' });
