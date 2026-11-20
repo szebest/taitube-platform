@@ -1,4 +1,4 @@
-import { dt } from '../define';
+import { dt } from '../engine';
 import { settingsRows } from './settings-rows';
 
 export const settings = {

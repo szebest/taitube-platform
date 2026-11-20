@@ -1,4 +1,4 @@
-import { dt } from '../define';
+import { dt } from '../engine';
 
 /** The words `@kit/ui`'s primitives print themselves, handed to its `UiCopyProvider`. */
 export const ui = {

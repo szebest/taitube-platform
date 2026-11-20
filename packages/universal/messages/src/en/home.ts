@@ -1,4 +1,4 @@
-import { dt } from '../define';
+import { dt } from '../engine';
 
 export const home = {
   continueWatching: dt('Continue watching'),

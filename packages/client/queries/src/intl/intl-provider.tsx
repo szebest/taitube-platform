@@ -2,7 +2,7 @@ import {
   IntlProvider as AppIntlProvider,
   type IntlProviderProps as AppIntlProviderProps,
 } from '@kit/intl-react';
-import { createTranslator, en, type Translator } from '@vp/messages';
+import { en, i18n, type Translator } from '@vp/messages';
 import type { ActiveLocale } from './locale-store';
 
 declare module '@kit/intl-react' {
@@ -24,7 +24,9 @@ export function IntlProvider({ catalogues, ...props }: IntlProviderProps) {
     <AppIntlProvider
       {...props}
       clock={SYSTEM_CLOCK}
-      createTranslator={(intl) => createTranslator({ intl, catalogues: { ...catalogues, en } })}
+      createTranslator={(intl) =>
+        i18n.createTranslator(intl, { locale: 'en', source: en, translations: catalogues ?? {} })
+      }
     />
   );
 }

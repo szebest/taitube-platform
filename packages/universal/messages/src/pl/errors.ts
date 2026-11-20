@@ -1,4 +1,4 @@
-import { dt } from '../define';
+import { dt } from '../engine';
 import { commentErrors } from './errors-comments';
 
 export const errors = {

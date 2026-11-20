@@ -1,4 +1,4 @@
-import { dt } from '../define';
+import { dt } from '../engine';
 
 export const themeBuilder = {
   ground: dt('Page colour of your theme'),

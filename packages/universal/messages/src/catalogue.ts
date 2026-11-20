@@ -1,39 +1,22 @@
-import type { Message, Params } from './define';
+import type {
+  ArgumentFreeKey as KitArgumentFreeKey,
+  MessageKey as KitMessageKey,
+  Translation as KitTranslation,
+  Translator as KitTranslator,
+} from '@kit/i18n';
 import type { en } from './en';
+import { createI18n } from './engine';
 
-type Catalogue = typeof en;
+export type Catalogue = typeof en;
 
-/** A translation: any feature or message may be missing, and the fallback chain fills the gap. */
-type PartialCatalogue = {
-  readonly [F in keyof Catalogue]?: { readonly [M in keyof Catalogue[F]]?: Message };
-};
-
-export type Catalogues = Readonly<Record<string, PartialCatalogue>> & { readonly en: Catalogue };
-
-export type MessageKey = {
-  [F in keyof Catalogue]: `${F & string}.${keyof Catalogue[F] & string}`;
-}[keyof Catalogue];
-
-type MessageAt<K extends MessageKey> = K extends `${infer F extends keyof Catalogue}.${infer M}`
-  ? M extends keyof Catalogue[F]
-    ? Catalogue[F][M]
-    : never
-  : never;
-
-export type ArgsOf<K extends MessageKey> =
-  MessageAt<K> extends Message<infer T, infer C> ? Params<T, C> : never;
+export type MessageKey = KitMessageKey<Catalogue>;
 
 /** A key whose message takes no arguments, and so can render with nothing but its name. */
-export type ArgumentFreeKey = {
-  [K in MessageKey]: keyof ArgsOf<K> extends never ? K : never;
-}[MessageKey];
+export type ArgumentFreeKey = KitArgumentFreeKey<Catalogue>;
 
-type LooseCatalogue = Readonly<Record<string, Readonly<Record<string, Message>> | undefined>>;
+/** Another locale's catalogue: any namespace or message may be missing, the chain fills the gap. */
+export type Translation = KitTranslation<Catalogue>;
 
-export function findMessage(
-  catalogue: LooseCatalogue | undefined,
-  key: string
-): Message | undefined {
-  const [feature = '', name = ''] = key.split('.');
-  return catalogue?.[feature]?.[name];
-}
+export type Translator = KitTranslator<Catalogue>;
+
+export const i18n = createI18n<Catalogue>();

@@ -3429,6 +3429,9 @@ importers:
 
   packages/universal/messages:
     dependencies:
+      '@kit/i18n':
+        specifier: workspace:*
+        version: link:../../platform/universal/i18n
       '@kit/intl':
         specifier: workspace:*
         version: link:../../platform/universal/intl

@@ -1,4 +1,4 @@
-import { dt } from '../define';
+import { dt } from '../engine';
 import { studioInvites } from './studio-invites';
 
 const roles = (manager: string, editor: string, moderator: string, analytics: string) =>

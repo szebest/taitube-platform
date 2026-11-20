@@ -1,4 +1,4 @@
-import { dt } from '../define';
+import { dt } from '../engine';
 import { studioDevelopersTokens } from './studio-developers-tokens';
 
 export const studioDevelopers = {

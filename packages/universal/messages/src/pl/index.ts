@@ -1,4 +1,5 @@
-import type { Catalogues } from '../catalogue';
+import type { en } from '../en';
+import { defineCatalogue } from '../engine';
 import { auth } from './auth';
 import { browse } from './browse';
 import { channels } from './channels';
@@ -24,7 +25,7 @@ import { ui } from './ui';
 import { videos } from './videos';
 import { watch } from './watch';
 
-export const pl = {
+export const pl = defineCatalogue<typeof en>()({
   auth,
   browse,
   channels,
@@ -49,4 +50,4 @@ export const pl = {
   ui,
   videos,
   watch,
-} as const satisfies Catalogues['pl'];
+});

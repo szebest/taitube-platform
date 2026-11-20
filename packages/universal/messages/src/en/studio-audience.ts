@@ -1,4 +1,4 @@
-import { dt } from '../define';
+import { dt } from '../engine';
 
 const VIEW_DEVICE = {
   desktop: 'Desktop',

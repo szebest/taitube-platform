@@ -5,9 +5,7 @@ import {
   fallbackActiveLocale,
   type LocaleStore as AppLocaleStore,
 } from '@kit/intl-react';
-import { type Catalogues, LOCALE_DETAILS, type SupportedLocale } from '@vp/messages';
-
-type Translation = Catalogues[string];
+import { LOCALE_DETAILS, type SupportedLocale, type Translation } from '@vp/messages';
 
 export type ActiveLocale = AppActiveLocale<SupportedLocale, Translation>;
 

@@ -1,4 +1,4 @@
-import { dt } from '../define';
+import { dt } from '../engine';
 
 /** The headings and actions of a page that failed; the sentence under each heading is `errors`. */
 export const errorPage = {

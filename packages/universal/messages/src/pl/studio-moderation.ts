@@ -1,4 +1,4 @@
-import { dt } from '../define';
+import { dt } from '../engine';
 
 export const studioModeration = {
   moderationBulkLabel: dt('Moderuj zaznaczone komentarze'),

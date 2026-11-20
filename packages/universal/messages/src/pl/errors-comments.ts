@@ -1,4 +1,4 @@
-import { dt } from '../define';
+import { dt } from '../engine';
 
 export const commentErrors = {
   commentNotFound: dt('Ten komentarz nie istnieje lub został usunięty.'),

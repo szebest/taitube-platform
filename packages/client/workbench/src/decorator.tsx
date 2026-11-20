@@ -9,11 +9,9 @@ import {
   useAppearance,
 } from '@kit/ui';
 import type { Decorator, Loader } from '@storybook/react-vite';
-import { type Catalogues, en, LOCALE_DETAILS, SUPPORTED_LOCALES } from '@vp/messages';
+import { en, LOCALE_DETAILS, SUPPORTED_LOCALES, type Translation } from '@vp/messages';
 import { type PropsWithChildren, useEffect } from 'react';
 import { DIRECTIONS, pickOption, preferenceFromGlobals } from './toolbars';
-
-type Translation = Catalogues[string];
 
 export const pickLocale = (globals: Readonly<Record<string, unknown>>) =>
   pickOption(SUPPORTED_LOCALES, globals.locale, FALLBACK_LOCALE);

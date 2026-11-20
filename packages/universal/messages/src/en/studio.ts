@@ -1,4 +1,4 @@
-import { dt } from '../define';
+import { dt } from '../engine';
 import { studioAdmin } from './studio-admin';
 import { studioAudience } from './studio-audience';
 import { studioBatch } from './studio-batch';

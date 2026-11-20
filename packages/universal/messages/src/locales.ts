@@ -1,8 +1,6 @@
 import { SUPPORTED_LOCALES } from '@kit/intl';
-import type { Catalogues } from './catalogue';
+import type { Translation } from './catalogue';
 import { en } from './en';
-
-type Translation = Catalogues[string];
 
 export interface LocaleDetails {
   /** The language's name in itself, which is how a chooser lists it. */
