@@ -4,7 +4,7 @@ The spec helpers a package shares: a vitest config factory, an environment scope
 signing keys and signed tokens, a log capture and an entrypoint runner.
 
 ```sh
-pnpm add -D @kit/testing vite-plus
+pnpm add -D @kit/testing vite-plus tsx
 ```
 
 Tokens and registries: none. Entry points: `definePackageTestConfig` and `withEnv` (`.`), `expectOk` and

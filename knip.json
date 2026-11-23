@@ -132,6 +132,16 @@
       "includeEntryExports": false,
       "project": ["src/**/*.{ts,css}!", "!src/**/__tests__/**!"]
     },
+    "packages/**/server/testing": {
+      "includeEntryExports": false,
+      "ignoreDependencies": ["tsx"],
+      "project": [
+        "**/*.{ts,tsx,mts,mjs,js}!",
+        "!**/__tests__/**!",
+        "!**/*.test.{ts,tsx}!",
+        "!dist/**"
+      ]
+    },
     "packages/**/server/dev-token": {
       "project": [
         "**/*.{ts,tsx,mts,mjs,js}!",
