@@ -4,8 +4,6 @@ import {
   hasSession,
   listAccounts,
   rememberIdentity,
-  setIdentityAccent,
-  setPinnedIdentities,
   signOut,
   signOutAll,
   startAddAccount,
@@ -131,20 +129,5 @@ describe('@vp/queries: session server functions', () => {
       [2, false],
     ]);
     expect(value.accountsMax).toBe(10);
-  });
-
-  it('keeps the accent picked for an identity and the pinned order in the slot list', async () => {
-    const accent = await inRequest(
-      () => setIdentityAccent({ data: { slot: 1, channel: 'second', accent: 4 } }),
-      { cookie: THREE_SLOTS }
-    );
-    const pinned = await inRequest(
-      () =>
-        setPinnedIdentities({ data: { pinned: [{ slot: 2 }, { slot: 1, channel: 'second' }] } }),
-      { cookie: THREE_SLOTS }
-    );
-
-    expect(accountsWritten(accent.setCookies).accents).toEqual({ '1.second': 4 });
-    expect(accountsWritten(pinned.setCookies).pinned).toEqual(['2.primary', '1.second']);
   });
 });

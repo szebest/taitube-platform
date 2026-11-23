@@ -46,40 +46,42 @@ function entryOf(fields: EntryFields, { accounts, tab }: IdentityEntrySources): 
   };
 }
 
+type OwnedChannel = IdentitiesView['owned'][number];
+
 function ownIdentities(sources: IdentityEntrySources): EntryFields[] {
   const { slot } = sources.tab;
   const row = sources.accounts.slots.find((entry) => entry.slot === slot);
   const owned = sources.mine?.owned ?? [];
   const primary = owned.find((channel) => channel.isPrimary) ?? sources.primary;
-  const base = { expired: false, glance: undefined, role: undefined };
+  const own = (
+    channel: Pick<OwnedChannel, 'handle' | 'displayName' | 'avatarUrl'>,
+    kind: 'channel' | 'team',
+    role?: ChannelRole
+  ): EntryFields => ({
+    identity: { slot, channel: channel.handle },
+    kind,
+    name: channel.displayName,
+    handle: channel.handle,
+    avatarUrl: channel.avatarUrl,
+    role,
+    expired: false,
+    glance: undefined,
+  });
   const account: EntryFields = {
-    ...base,
     identity: { slot },
     kind: 'account',
     name: primary?.displayName ?? row?.label ?? '',
     handle: primary?.handle,
     avatarUrl: primary?.avatarUrl ?? row?.avatarUrl ?? null,
+    role: undefined,
+    expired: false,
+    glance: undefined,
   };
-  const channels = owned
-    .filter((channel) => !channel.isPrimary)
-    .map((channel): EntryFields => ({
-      ...base,
-      identity: { slot, channel: channel.handle },
-      kind: 'channel',
-      name: channel.displayName,
-      handle: channel.handle,
-      avatarUrl: channel.avatarUrl,
-    }));
-  const teams = (sources.mine?.member ?? []).map((channel): EntryFields => ({
-    ...base,
-    identity: { slot, channel: channel.handle },
-    kind: 'team',
-    name: channel.displayName,
-    handle: channel.handle,
-    avatarUrl: channel.avatarUrl,
-    role: channel.role,
-  }));
-  return [account, ...channels, ...teams];
+  return [
+    account,
+    ...owned.filter((channel) => !channel.isPrimary).map((channel) => own(channel, 'channel')),
+    ...(sources.mine?.member ?? []).map((channel) => own(channel, 'team', channel.role)),
+  ];
 }
 
 function otherAccount(

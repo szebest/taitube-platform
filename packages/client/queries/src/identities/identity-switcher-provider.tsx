@@ -1,12 +1,9 @@
 import { useT } from '@kit/intl-react';
-import { isOk } from '@kit/result';
 import { VisuallyHidden } from '@kit/ui';
 import { useRouter } from '@tanstack/react-router';
 import { type PropsWithChildren, createContext, useContext, useEffect, useState } from 'react';
 import type { Identity } from '../account-slots';
 import type { Accent } from '../accounts';
-import { failureCode } from '../failure-code';
-import { present } from '../present-failure';
 
 /** What the header shows of an identity: enough to draw it before its session has loaded. */
 export type IdentityDisplay = {
@@ -46,17 +43,6 @@ function isSwitcherShortcut(event: KeyboardEvent): boolean {
   );
 }
 
-/** After a switch the page's heading takes focus, so a screen reader starts from the new page. */
-function focusMainHeading(): void {
-  requestAnimationFrame(() => {
-    const heading =
-      document.querySelector<HTMLElement>('main h1') ?? document.querySelector<HTMLElement>('h1');
-    if (!heading) return;
-    if (!heading.hasAttribute('tabindex')) heading.tabIndex = -1;
-    heading.focus({ preventScroll: true });
-  });
-}
-
 export type IdentitySwitcherProviderProps = PropsWithChildren<{
   /** Where a switch lands when the new identity cannot see the page: the app's home. */
   fallback: string;
@@ -86,32 +72,20 @@ export function IdentitySwitcherProvider({ fallback, children }: IdentitySwitche
   }, []);
 
   const switchTo = async (target: SwitchTarget, from?: SwitchTarget): Promise<void> => {
-    const { name } = target.display;
     show('closed');
     setPending(target.display);
     setAnnouncement('');
     const state = { identity: target.identity, prefixed: target.prefixed };
-    const { switchInPlace } = await loadSwitchFlow();
+    const { switchInPlace, finishSwitch } = await loadSwitchFlow();
     const outcome = await switchInPlace(router, state, fallback);
     setPending(undefined);
-    const { toaster } = router.options.context;
-    if (!isOk(outcome)) {
-      toaster.show({
-        tone: 'danger',
-        title: tOr('accounts.switchFailed', { name }, ''),
-        description: tOr(present({ code: failureCode(outcome.error) }).copy, {}, ''),
-      });
-      return;
-    }
-    const said = tOr('accounts.nowBrowsing', { name }, '');
-    setAnnouncement(said);
-    focusMainHeading();
-    toaster.show({
-      title: said,
-      action: from && {
-        label: tOr('accounts.undo', {}, ''),
-        onAction: () => void switchTo(from, target),
-      },
+    finishSwitch({
+      router,
+      outcome,
+      target,
+      tOr,
+      announce: setAnnouncement,
+      undo: from && (() => void switchTo(from, target)),
     });
   };
 

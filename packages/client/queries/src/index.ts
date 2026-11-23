@@ -11,6 +11,7 @@ export * from './comment-queries';
 export * from './create-query-client';
 export * from './ensure-found';
 export * from './identities';
+export * from './identity-settings-functions';
 export * from './keyset-paging';
 export * from './membership-queries';
 export * from './channel-moderation-queries';
