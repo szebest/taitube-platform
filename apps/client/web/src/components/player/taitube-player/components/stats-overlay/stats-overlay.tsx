@@ -1,5 +1,5 @@
-import { useT } from '@kit/intl-react';
 import { usePlayerState } from '#app/integrations/video-js/video-js-engine';
+import { useT } from '#app/lib/messages';
 
 /** What is playing now, over a corner of the picture: the viewer's stats overlay default draws it. */
 export function StatsOverlay() {

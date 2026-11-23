@@ -1,4 +1,3 @@
-import { useT } from '@kit/intl-react';
 import { Button, Dialog, Field, Kbd, Select, Textarea, ToggleGroup, useUiCopy } from '@kit/ui';
 import {
   BAN_DURATIONS,
@@ -7,6 +6,7 @@ import {
   type CommentModerationReason,
 } from '@vp/domain';
 import { type KeyboardEvent, useState } from 'react';
+import { useT } from '#app/lib/messages';
 
 export type ReasonedAction = 'hide' | 'remove' | 'ban';
 

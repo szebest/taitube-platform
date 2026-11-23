@@ -79,7 +79,7 @@ export type LocaleRequest = Readonly<{ searchStr: string; persisted?: string | n
  * catalogue is loaded before it resolves.
  */
 export async function requestLocale(
-  locales: LocaleStore,
+  locales: Pick<LocaleStore, 'activate'>,
   { searchStr, persisted }: LocaleRequest
 ): Promise<RequestedLocale> {
   const accepted = viewerLanguages();

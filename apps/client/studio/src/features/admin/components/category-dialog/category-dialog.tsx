@@ -1,5 +1,4 @@
 import { useAppForm, validateWith } from '@kit/forms';
-import { useT } from '@kit/intl-react';
 import { fromPromise, isOk } from '@kit/result';
 import { Button, Field, Input, ResponsiveModal, Textarea, useToast, useUiCopy } from '@kit/ui';
 import { ApiError } from '@vp/api-client';
@@ -10,6 +9,7 @@ import {
   useCreateCategory,
   useUpdateCategory,
 } from '#app/features/admin/hooks/use-category-mutations';
+import { useT } from '#app/lib/messages';
 
 const SLUG_CONFLICT = 'CATEGORY_SLUG_CONFLICT';
 

@@ -1,4 +1,3 @@
-import { useT } from '@kit/intl-react';
 import { fromPromise, isOk } from '@kit/result';
 import { Button, Checkbox, Field, Input, ResponsiveModal, useUiCopy } from '@kit/ui';
 import type { CreatedWebhookView } from '@vp/api-contracts';
@@ -6,6 +5,7 @@ import { WEBHOOK_EVENTS, type WebhookEvent } from '@vp/domain';
 import { useFailureToast } from '@vp/queries';
 import { type FormEvent, useId, useState } from 'react';
 import { useCreateWebhook } from '#app/features/developers/hooks/use-developer-mutations';
+import { useT } from '#app/lib/messages';
 import { SecretStep } from '../secret-step/secret-step';
 
 function EventChoice({

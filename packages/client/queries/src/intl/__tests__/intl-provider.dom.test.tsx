@@ -1,29 +1,41 @@
-import { useT } from '@kit/intl-react';
 import { renderHook } from '@testing-library/react';
 import { dt } from '@vp/messages';
 import type { ReactNode } from 'react';
+import { SPEC_MESSAGES, useSpecT } from '../../__tests__/spec-messages';
 import { IntlProvider, type IntlProviderProps } from '../intl-provider';
+import { useT } from '../shared-words';
 
-function renderUseT(props: Omit<IntlProviderProps, 'children'>) {
-  return renderHook(useT, {
+type Props = Omit<IntlProviderProps<typeof SPEC_MESSAGES.source>, 'children' | 'messages'>;
+
+function renderTranslator(hook: typeof useT, props: Props) {
+  return renderHook(hook, {
     wrapper: ({ children }: { children: ReactNode }) => (
-      <IntlProvider {...props}>{children}</IntlProvider>
+      <IntlProvider messages={SPEC_MESSAGES} {...props}>
+        {children}
+      </IntlProvider>
     ),
   });
 }
 
 describe('@vp/queries: IntlProvider', () => {
-  it('translates in en, the source catalogue, when no translation is passed', () => {
-    const { t } = renderUseT({ locale: 'en', timeZone: 'UTC' }).result.current;
+  it.each([
+    { translator: 'the app', hook: useSpecT },
+    { translator: 'the shared', hook: useT },
+  ])('gives $translator translator the source catalogue when nothing is loaded', ({ hook }) => {
+    const { t } = renderTranslator(hook, { locale: 'en', timeZone: 'UTC' }).result.current;
 
-    expect(t('channels.subscribers', { count: 1 })).toEqual({ ok: true, value: '1 subscriber' });
+    expect(t('videos.views', { count: 1 })).toEqual({ ok: true, value: '1 view' });
   });
 
-  it('serves a translation passed beside en, falling back per key', () => {
-    const catalogues: IntlProviderProps['catalogues'] = {
+  it.each([
+    { translator: 'the app', hook: useSpecT },
+    { translator: 'the shared', hook: useT },
+  ])('gives $translator translator the loaded translation, falling back per key', ({ hook }) => {
+    const catalogues: Props['catalogues'] = {
       sv: { errors: { forbidden: dt('Det får du inte göra.') } },
     };
-    const { t } = renderUseT({ locale: 'sv', timeZone: 'UTC', catalogues }).result.current;
+    const { t } = renderTranslator(hook, { locale: 'sv', timeZone: 'UTC', catalogues }).result
+      .current;
 
     expect(t('errors.forbidden')).toEqual({ ok: true, value: 'Det får du inte göra.' });
     expect(t('errors.internal')).toEqual({ ok: true, value: 'Something went wrong on our side.' });

@@ -1,10 +1,10 @@
-import { useT } from '@kit/intl-react';
 import { composeStory } from '@storybook/react-vite';
 import { Link } from '@tanstack/react-router';
 import { render, screen } from '@testing-library/react';
 import { isSubscribedToChannel } from '@vp/api-contracts';
 import { useAccount, useApi } from '@vp/queries';
 import { useEffect, useState } from 'react';
+import { useT } from '../../../../../apps/client/web/src/lib/messages';
 import { type AppParameters, withApp } from '../app-decorator';
 import { loadCatalogue } from '../decorator';
 import { initialAppearanceGlobals } from '../toolbars';

@@ -1,5 +1,5 @@
 import { VideoCard } from '@kit/components';
-import { Format, useT } from '@kit/intl-react';
+import { Format } from '@kit/intl-react';
 import { Button, Icon, useUiCopy } from '@kit/ui';
 import { Link } from '@tanstack/react-router';
 import { publishedAt } from '@vp/intl-formats';
@@ -8,6 +8,7 @@ import type { Spotlight } from '#app/features/browse/utils/spotlight';
 import { useAmbientSample } from '#app/hooks/use-ambient-sample';
 import { useDurationText } from '#app/hooks/use-duration-text';
 import { useVideoActions } from '#app/hooks/use-video-actions';
+import { useT } from '#app/lib/messages';
 import { PickWindow } from '../pick-window/pick-window';
 
 export interface SpotlightCardProps {

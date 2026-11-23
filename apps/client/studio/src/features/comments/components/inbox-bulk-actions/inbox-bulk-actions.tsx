@@ -1,4 +1,3 @@
-import { useT } from '@kit/intl-react';
 import type { BulkActionBody } from '@vp/api-contracts';
 import type { Disclosure } from '@vp/domain';
 import { useState } from 'react';
@@ -7,6 +6,7 @@ import { useBulkModeration } from '#app/features/comments/hooks/use-bulk-moderat
 import { useDisclosureDefaults } from '#app/features/comments/hooks/use-disclosure-defaults';
 import { useModerationAbilities } from '#app/features/comments/hooks/use-moderation-abilities';
 import { reasonedAction } from '#app/features/comments/utils/reasoned-action';
+import { useT } from '#app/lib/messages';
 import {
   ModerationReasonDialog,
   type ModerationReason,

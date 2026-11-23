@@ -1,4 +1,3 @@
-import { useT } from '@kit/intl-react';
 import { DropdownMenu, IconButton, type PortalContainer } from '@kit/ui';
 import { PLAYBACK_SETTINGS } from '@vp/domain/settings';
 import { Captions, Gauge, Settings, SlidersHorizontal, Type } from 'lucide-react';
@@ -9,6 +8,7 @@ import {
   usePlayerContainer,
   usePlayerState,
 } from '#app/integrations/video-js/video-js-engine';
+import { useT } from '#app/lib/messages';
 import { useCaptionTrackLabel } from './hooks/use-caption-track-label';
 
 const CAPTIONS_OFF = 'off';

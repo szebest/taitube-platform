@@ -1,4 +1,4 @@
-import { translatorFor } from '../../__tests__/fixtures';
+import { translatorFor } from '../../__tests__/web-fixtures';
 
 describe('@vp/messages: en shell', () => {
   const { t } = translatorFor('en');

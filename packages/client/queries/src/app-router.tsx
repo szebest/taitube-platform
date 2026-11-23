@@ -10,37 +10,41 @@ import {
 } from '@tanstack/react-router';
 import { setupRouterSsrQueryIntegration } from '@tanstack/react-router-ssr-query';
 import type { ApiClient } from '@vp/api-client';
-import { isSupportedLocale } from '@vp/messages';
+import { isSupportedLocale, type SharedCatalogue } from '@vp/messages';
 import { type PropsWithChildren, useSyncExternalStore } from 'react';
 import { type ActingChannelStore, createActingChannelStore } from './acting-channel';
 import { createAppApiClient } from './api-client';
 import { AppWords } from './app-words';
 import { createQueryClient } from './create-query-client';
-import { createLocaleStore, type LocaleStore } from './intl';
+import { type AppMessages, createLocaleStore, type LocaleStore } from './intl';
 import { RouteError, RouteNotFound } from './route-errors';
 import { endSession } from './session-changes';
 
 /** What every route reads from context; the root route's `beforeLoad` adds `auth` (`ensureSession`). */
-export type AppRouterContext = {
+export type AppRouterContext<App extends SharedCatalogue = SharedCatalogue> = {
   api: ApiClient;
   queryClient: QueryClient;
   toaster: Toaster;
   /** The negotiated locale and its loaded catalogue; the root route's `requestLocale` sets it. */
-  locales: LocaleStore;
+  locales: LocaleStore<App>;
   /** The channel a studio acts on; web never selects one, so its calls name none. */
   actingChannel: ActingChannelStore;
 };
 
 /** What a spec or a request hands the router in place of the defaults it would build. */
-export type AppRouterOptions = Partial<AppRouterContext> & {
+export type AppRouterOptions<App extends SharedCatalogue = SharedCatalogue> = Partial<
+  AppRouterContext<App>
+> & {
   history?: RouterHistory;
   nonce?: string;
   /** `false` switches intent preloading off, for a viewer who saves data. */
   defaultPreload?: 'intent' | false;
 };
 
-export type AppRoutes<TRouteTree extends AnyRoute> = {
+export type AppRoutes<TRouteTree extends AnyRoute, App extends SharedCatalogue> = {
   routeTree: TRouteTree;
+  /** The app's catalogue, its translations and its translator provider. */
+  messages: AppMessages<App>;
   /** Where the app's API client calls, from the app's own `src/config`. */
   apiBaseUrl: string;
   pending: RouteComponent;
@@ -63,15 +67,20 @@ const viewTransition = {
   types: () => (document.documentElement.dataset.motion === 'reduced' ? false : ['navigation']),
 };
 
-function RouterWords({
+function RouterWords<App extends SharedCatalogue>({
+  messages,
   locales,
   renderedAt,
   children,
-}: PropsWithChildren<{ locales: LocaleStore; renderedAt: string }>) {
+}: PropsWithChildren<{
+  messages: AppMessages<App>;
+  locales: LocaleStore<App>;
+  renderedAt: string;
+}>) {
   const active = useSyncExternalStore(locales.subscribe, locales.snapshot, locales.snapshot);
 
   return (
-    <AppWords active={active} renderedAt={renderedAt}>
+    <AppWords messages={messages} active={active} renderedAt={renderedAt}>
       {children}
     </AppWords>
   );
@@ -89,18 +98,18 @@ const PENDING_MIN_MS = 500;
  * wrote). Search params stay the text the URL carries (no JSON either way), so `?q=1.10` is
  * `'1.10'` and each route's schema coerces what it needs.
  */
-export function createAppRouter<TRouteTree extends AnyRoute>(
-  { routeTree, apiBaseUrl, pending, actsOnChannels = false }: AppRoutes<TRouteTree>,
+export function createAppRouter<TRouteTree extends AnyRoute, App extends SharedCatalogue>(
+  { routeTree, messages, apiBaseUrl, pending, actsOnChannels = false }: AppRoutes<TRouteTree, App>,
   {
     history,
     api,
     queryClient = createQueryClient(),
     toaster = createToaster(),
-    locales = createLocaleStore(),
+    locales = createLocaleStore(messages),
     actingChannel = createActingChannelStore(),
     nonce = requestNonce(),
     defaultPreload = 'intent',
-  }: AppRouterOptions = {}
+  }: AppRouterOptions<App> = {}
 ): Router<TRouteTree> {
   let renderedAt = new Date().toISOString();
   const sessionApi = () =>
@@ -121,7 +130,7 @@ export function createAppRouter<TRouteTree extends AnyRoute>(
       toaster,
       locales,
       actingChannel,
-    } satisfies AppRouterContext,
+    } satisfies AppRouterContext<App>,
     defaultPreload,
     defaultPreloadStaleTime: 0,
     defaultViewTransition: viewTransition,
@@ -132,7 +141,7 @@ export function createAppRouter<TRouteTree extends AnyRoute>(
     defaultNotFoundComponent: RouteNotFound,
     scrollRestoration: true,
     Wrap: ({ children }) => (
-      <RouterWords locales={locales} renderedAt={renderedAt}>
+      <RouterWords messages={messages} locales={locales} renderedAt={renderedAt}>
         {children}
       </RouterWords>
     ),

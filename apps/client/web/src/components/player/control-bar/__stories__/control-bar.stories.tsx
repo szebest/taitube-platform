@@ -1,6 +1,6 @@
 import type { Decorator, Meta, StoryObj } from '@storybook/react-vite';
-import { IntlProvider } from '@vp/queries/intl';
 import { VideoJsEngine } from '#app/integrations/video-js/video-js-engine';
+import { IntlProvider } from '#app/lib/messages/intl-provider';
 import { ControlBar } from '..';
 
 const frame = (markup: string) =>

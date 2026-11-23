@@ -1,4 +1,3 @@
-import { useT } from '@kit/intl-react';
 import { fromPromise, isOk } from '@kit/result';
 import { Button, Field, Input, ResponsiveModal, Select, useUiCopy } from '@kit/ui';
 import type { CreatedApiTokenView } from '@vp/api-contracts';
@@ -12,6 +11,7 @@ import {
 import { useFailureToast } from '@vp/queries';
 import { type FormEvent, useState } from 'react';
 import { useCreateToken } from '#app/features/developers/hooks/use-developer-mutations';
+import { useT } from '#app/lib/messages';
 import { SecretStep } from '../secret-step/secret-step';
 import { TokenScopePicker } from '../token-scope-picker/token-scope-picker';
 

@@ -1,4 +1,3 @@
-import { useT } from '@kit/intl-react';
 import { fromPromise, isOk, unwrapOr } from '@kit/result';
 import { Button, ResponsiveModal, useToast, useUiCopy } from '@kit/ui';
 import { validatePickNote } from '@vp/validation';
@@ -17,6 +16,7 @@ import {
   fromLocalInput,
   toLocalInput,
 } from '#app/features/admin/utils/pick-schedule';
+import { useT } from '#app/lib/messages';
 import { PickDraftFields, type ShownIssues } from '../pick-draft-fields/pick-draft-fields';
 
 export interface PickDialogProps {

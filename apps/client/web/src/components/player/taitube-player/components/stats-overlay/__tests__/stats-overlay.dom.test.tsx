@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
-import { IntlProvider } from '@vp/queries/intl';
 import { attachedHls, parseMaster } from '#app/integrations/video-js/__tests__/offline-hls';
 import { VideoJsEngine } from '#app/integrations/video-js/video-js-engine';
+import { IntlProvider } from '#app/lib/messages/intl-provider';
 import { StatsOverlay } from '../stats-overlay';
 
 vi.mock(import('hls.js'), async (importOriginal) => {

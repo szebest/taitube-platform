@@ -1,5 +1,4 @@
 import { useAppForm } from '@kit/forms';
-import { useT } from '@kit/intl-react';
 import { Button, useUiCopy } from '@kit/ui';
 import type { PlaylistView } from '@vp/api-contracts';
 import { PLAYLIST_VISIBILITIES } from '@vp/domain';
@@ -8,6 +7,7 @@ import {
   useValidatePlaylistDescription,
   useValidatePlaylistTitle,
 } from '#app/features/library/hooks/use-validate-playlist-title';
+import { useT } from '#app/lib/messages';
 
 export interface PlaylistDetailsFormProps {
   playlist: Pick<PlaylistView, 'id' | 'title' | 'description' | 'visibility'>;

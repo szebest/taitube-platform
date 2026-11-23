@@ -1,4 +1,4 @@
-import { useFormat, useT } from '@kit/intl-react';
+import { useFormat } from '@kit/intl-react';
 import { unwrapOr } from '@kit/result';
 import { Button, Icon, useMediaQuery, useToast, useUiCopy } from '@kit/ui';
 import { useQuery } from '@tanstack/react-query';
@@ -11,6 +11,7 @@ import { useMarkRead } from '#app/features/notifications/hooks/use-mark-read';
 import { useNotificationText } from '#app/features/notifications/hooks/use-notification-text';
 import { notificationTarget } from '#app/features/notifications/utils/notification-target';
 import { useRequireAccount } from '#app/hooks/use-require-account';
+import { useT } from '#app/lib/messages';
 import { LazyNotificationPanel } from '../notification-panel/notification-panel.lazy';
 
 const POPOVER_FITS = '(min-width: 600px)';

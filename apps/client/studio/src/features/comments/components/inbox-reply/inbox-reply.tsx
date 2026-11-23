@@ -1,9 +1,9 @@
-import { useT } from '@kit/intl-react';
 import { Button, Textarea, useToast, useUiCopy } from '@kit/ui';
 import { useFailureToast } from '@vp/queries';
 import { useState } from 'react';
 import type { InboxComment } from '#app/features/comments/api/inbox-queries';
 import { useReplyToComment } from '#app/features/comments/hooks/use-reply-to-comment';
+import { useT } from '#app/lib/messages';
 import { SavedRepliesPicker } from '../saved-replies-picker/saved-replies-picker';
 
 export interface InboxReplyProps {

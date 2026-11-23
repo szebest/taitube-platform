@@ -1,4 +1,3 @@
-import { useT } from '@kit/intl-react';
 import { fromPromise, isOk } from '@kit/result';
 import {
   Button,
@@ -21,6 +20,7 @@ import {
 import { useFailureToast } from '@vp/queries';
 import { type FormEvent, useState } from 'react';
 import { useRequestExport } from '#app/features/developers/hooks/use-developer-mutations';
+import { useT } from '#app/lib/messages';
 
 /** Lifetime is no range at all, so the file reaches the oldest data there is. */
 function paramsOf(range: AnalyticsRange, today: Date) {

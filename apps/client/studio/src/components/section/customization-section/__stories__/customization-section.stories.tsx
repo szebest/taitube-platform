@@ -1,6 +1,7 @@
 import { Field, Input } from '@kit/ui';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { FALLBACK_ACTIVE_LOCALE, IntlProvider } from '@vp/queries/intl';
+import { FALLBACK_ACTIVE_LOCALE } from '@vp/queries/intl';
+import { IntlProvider } from '#app/lib/messages/intl-provider';
 import { CustomizationSection } from '../index';
 
 const meta = {

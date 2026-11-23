@@ -11,6 +11,31 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "default": "./dist/index.js"
+    },
+    "./pl": {
+      "types": "./dist/pl/index.d.ts",
+      "import": "./dist/pl/index.js",
+      "default": "./dist/pl/index.js"
+    },
+    "./web": {
+      "types": "./dist/en/web.d.ts",
+      "import": "./dist/en/web.js",
+      "default": "./dist/en/web.js"
+    },
+    "./web/pl": {
+      "types": "./dist/pl/web.d.ts",
+      "import": "./dist/pl/web.js",
+      "default": "./dist/pl/web.js"
+    },
+    "./studio": {
+      "types": "./dist/en/studio-catalogue.d.ts",
+      "import": "./dist/en/studio-catalogue.js",
+      "default": "./dist/en/studio-catalogue.js"
+    },
+    "./studio/pl": {
+      "types": "./dist/pl/studio-catalogue.d.ts",
+      "import": "./dist/pl/studio-catalogue.js",
+      "default": "./dist/pl/studio-catalogue.js"
     }
   },
   "scripts": {

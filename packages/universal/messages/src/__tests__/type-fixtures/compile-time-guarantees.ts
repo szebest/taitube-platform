@@ -1,5 +1,5 @@
 import { type ErrorCode, ErrorCodes } from '@vp/errors';
-import type { ArgumentFreeKey } from '../../catalogue';
+import type { SharedArgumentFreeKey as ArgumentFreeKey } from '../../catalogue';
 import { translatorFor } from '../fixtures';
 
 const { t } = translatorFor('en');

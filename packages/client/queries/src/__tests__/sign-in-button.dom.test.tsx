@@ -7,11 +7,17 @@ import { render, screen } from '@testing-library/react';
 import { api } from '@vp/web-testing';
 import { type AppRouterContext, createAppRouter } from '../app-router';
 import { SignInButton } from '../sign-in-button';
+import { SPEC_MESSAGES } from './spec-messages';
 
 async function renderAt(path: string) {
   const routeTree = createRootRouteWithContext<AppRouterContext>()({ component: SignInButton });
   const router = createAppRouter(
-    { routeTree, apiBaseUrl: 'http://localhost:3000', pending: () => null },
+    {
+      routeTree,
+      messages: SPEC_MESSAGES,
+      apiBaseUrl: 'http://localhost:3000',
+      pending: () => null,
+    },
     { api, history: createMemoryHistory({ initialEntries: [path] }) }
   );
   await router.load();

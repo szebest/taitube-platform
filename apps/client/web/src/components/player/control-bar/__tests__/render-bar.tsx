@@ -1,8 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
-import { IntlProvider } from '@vp/queries/intl';
 import { Fragment } from 'react';
 import { VideoJsEngine } from '#app/integrations/video-js/video-js-engine';
+import { IntlProvider } from '#app/lib/messages/intl-provider';
 import { PlayerChannelProvider, usePlayerTheater } from '#app/lib/player/player-channel';
 import type { PlaybackRange } from '#app/lib/player/taitube-player-props';
 import { ControlBar } from '../control-bar';

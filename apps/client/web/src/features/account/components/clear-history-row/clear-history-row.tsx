@@ -1,7 +1,7 @@
-import { useT } from '@kit/intl-react';
 import { Button, ResponsiveModal, useToast, useUiCopy } from '@kit/ui';
 import { useState } from 'react';
 import { useClearWatchHistory } from '#app/features/account/hooks/use-clear-watch-history';
+import { useT } from '#app/lib/messages';
 import { SettingItem } from '../setting-item/setting-item';
 
 /** Clearing watch history asks first, because the server cannot bring it back. */

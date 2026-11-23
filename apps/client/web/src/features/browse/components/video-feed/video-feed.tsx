@@ -1,10 +1,10 @@
 import { EmptyState, NoResultsIllustration, PageHeader, SectionError } from '@kit/components';
-import { useT } from '@kit/intl-react';
 import { Skeleton } from '@kit/ui';
 import type { QueryKey } from '@tanstack/react-query';
 import { FeedSentinel } from '#app/components/feed/feed-sentinel';
 import { VideoGrid, VideoGridSkeleton } from '#app/components/video/video-grid';
 import { useVideoPages, type VideoPage, type VideoPagesOptions } from '#app/hooks/use-video-pages';
+import { useT } from '#app/lib/messages';
 
 export interface VideoFeedProps<TPage extends VideoPage, TKey extends QueryKey> {
   title: string;

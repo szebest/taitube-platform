@@ -1,8 +1,9 @@
 import { StatCard } from '@kit/components';
-import { Format, useT } from '@kit/intl-react';
+import { Format } from '@kit/intl-react';
 import { kpiChange } from '#app/features/analytics/api/kpi-change';
 import { useChannelAnalytics } from '#app/features/analytics/hooks/use-analytics';
 import type { AnalyticsRange } from '#app/features/analytics/types';
+import { useT } from '#app/lib/messages';
 import { KpiDelta } from '../kpi-delta/kpi-delta';
 
 export interface NetSubscribersCardProps {

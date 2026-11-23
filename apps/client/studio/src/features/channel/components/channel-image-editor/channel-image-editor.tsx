@@ -1,5 +1,4 @@
 import { useAppForm } from '@kit/forms';
-import { useT } from '@kit/intl-react';
 import { isErr } from '@kit/result';
 import {
   CHANNEL_IMAGE_CONTENT_TYPES,
@@ -15,6 +14,7 @@ import {
 } from '#app/features/channel/hooks/use-channel-image-upload';
 import { useObjectUrl } from '#app/features/channel/hooks/use-object-url';
 import { useUpdateChannel } from '#app/features/channel/hooks/use-update-channel';
+import { useT } from '#app/lib/messages';
 import { selectedFilesText } from '#app/lib/selected-files-text';
 import { ChannelImage } from '../channel-image/channel-image';
 import { readImageSize } from './utils/read-image-size';

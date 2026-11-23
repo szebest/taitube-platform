@@ -1,7 +1,7 @@
 import { Shelf, StartHereShelf, VideoCard } from '@kit/components';
-import { useT } from '@kit/intl-react';
 import type { VideoSummary } from '@vp/api-contracts';
 import { WEB_URL } from '#app/lib/config';
+import { useT } from '#app/lib/messages';
 
 interface StartHerePreviewProps {
   channelId: string;

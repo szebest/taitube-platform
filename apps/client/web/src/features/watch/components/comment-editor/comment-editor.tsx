@@ -1,6 +1,6 @@
-import { useT } from '@kit/intl-react';
 import { Button, Textarea, useUiCopy } from '@kit/ui';
 import { useState } from 'react';
+import { useT } from '#app/lib/messages';
 
 export interface CommentEditorProps {
   initial: string;

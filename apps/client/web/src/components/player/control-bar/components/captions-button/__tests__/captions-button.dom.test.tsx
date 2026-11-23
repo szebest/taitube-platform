@@ -1,9 +1,9 @@
 import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import type { CaptionTrackView } from '@vp/api-contracts';
-import { IntlProvider } from '@vp/queries/intl';
 import { captionTrack } from '@vp/web-testing';
 import { VideoJsEngine } from '#app/integrations/video-js/video-js-engine';
+import { IntlProvider } from '#app/lib/messages/intl-provider';
 import { CaptionsButton } from '../captions-button';
 
 vi.mock(import('hls.js'), async (importOriginal) => {

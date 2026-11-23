@@ -1,6 +1,6 @@
-import { useT } from '@kit/intl-react';
 import { Avatar, Button, Field, Input } from '@kit/ui';
 import { type ComponentPropsWithRef, type SubmitEvent, useState } from 'react';
+import { useT } from '#app/lib/messages';
 import { PASSWORD_ERROR_COPY, STATE_NOTICE } from './constants';
 import type { PartyJoinAction, PartyJoinState, PartyPasswordError } from './types';
 

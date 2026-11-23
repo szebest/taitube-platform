@@ -1,5 +1,5 @@
 import { EmptyState, SectionError } from '@kit/components';
-import { Format, useT } from '@kit/intl-react';
+import { Format } from '@kit/intl-react';
 import { Button, Icon, IconButton } from '@kit/ui';
 import { useQuery } from '@tanstack/react-query';
 import { createColumnHelper, useTable } from '@tanstack/react-table';
@@ -14,6 +14,7 @@ import {
 } from '#app/components/table/data-table';
 import { teamQueryOptions } from '#app/features/team/api/team-queries';
 import { useRoleRules } from '#app/features/team/hooks/use-role-rules';
+import { useT } from '#app/lib/messages';
 import { tableStateOf } from '#app/utils/paged-rows';
 import { InviteDialog } from '../invite-dialog/invite-dialog';
 import { MemberRoleCell } from '../member-role-cell/member-role-cell';

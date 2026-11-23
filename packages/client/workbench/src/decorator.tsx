@@ -9,8 +9,9 @@ import {
   useAppearance,
 } from '@kit/ui';
 import type { Decorator, Loader } from '@storybook/react-vite';
-import { en, LOCALE_DETAILS, SUPPORTED_LOCALES, type Translation } from '@vp/messages';
+import { en, SUPPORTED_LOCALES, type SharedTranslation } from '@vp/messages';
 import { type PropsWithChildren, useEffect } from 'react';
+import { WEB_MESSAGES } from '../../../../apps/client/web/src/lib/messages';
 import { DIRECTIONS, pickOption, preferenceFromGlobals } from './toolbars';
 
 export const pickLocale = (globals: Readonly<Record<string, unknown>>) =>
@@ -18,10 +19,10 @@ export const pickLocale = (globals: Readonly<Record<string, unknown>>) =>
 
 /** The toolbar locale's catalogue, loaded before the story renders as the apps load it before they hydrate. */
 export const loadCatalogue: Loader = async ({ globals }) => ({
-  catalogue: await LOCALE_DETAILS[pickLocale(globals)].load(),
+  catalogue: await WEB_MESSAGES.load(pickLocale(globals)),
 });
 
-const copyFrom = (catalogue: Translation | undefined) =>
+const copyFrom = (catalogue: SharedTranslation | undefined) =>
   uiCopyFrom((key) => (catalogue?.ui?.[key] ?? en.ui[key]).template);
 
 function OnDocument({

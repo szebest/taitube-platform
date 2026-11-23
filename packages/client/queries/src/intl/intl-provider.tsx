@@ -1,32 +1,43 @@
+import type { Translation } from '@kit/i18n';
 import {
-  IntlProvider as AppIntlProvider,
-  type IntlProviderProps as AppIntlProviderProps,
+  IntlProvider as KitIntlProvider,
+  type IntlProviderProps as KitIntlProviderProps,
 } from '@kit/intl-react';
-import { en, i18n, type Translator } from '@vp/messages';
-import type { ActiveLocale } from './locale-store';
+import { en, type SharedCatalogue } from '@vp/messages';
+import type { AppMessages } from './app-messages';
+import { SOURCE_LOCALE } from './locale-store';
+import { sharedWords } from './shared-words';
 
-declare module '@kit/intl-react' {
-  interface IntlRegister {
-    translator: Translator;
-  }
-}
+const SYSTEM_CLOCK: KitIntlProviderProps['clock'] = { now: () => Date.now() };
 
-const SYSTEM_CLOCK: AppIntlProviderProps['clock'] = { now: () => Date.now() };
-
-export type IntlProviderProps = Omit<AppIntlProviderProps, 'clock' | 'createTranslator'> & {
-  /** Translations beside `en`; keep the object stable, a new one rebuilds every binding. */
-  readonly catalogues?: ActiveLocale['catalogues'];
+export type IntlProviderProps<App extends SharedCatalogue> = Omit<KitIntlProviderProps, 'clock'> & {
+  readonly messages: AppMessages<App>;
+  /** The active locale's translation; keep the object stable, a new one rebuilds every binding. */
+  readonly catalogues?: Readonly<Record<string, Translation<App>>>;
 };
 
-/** `@kit/intl-react`'s provider over this app's messages, with `en` as the source catalogue. */
-export function IntlProvider({ catalogues, ...props }: IntlProviderProps) {
+/**
+ * `@kit/intl-react`'s provider with the app's translator and the shared one beside it, both over
+ * the source catalogue and the active locale's translation.
+ */
+export function IntlProvider<App extends SharedCatalogue>({
+  messages,
+  catalogues = {},
+  children,
+  ...props
+}: IntlProviderProps<App>) {
+  const { TranslatorProvider } = messages;
   return (
-    <AppIntlProvider
-      {...props}
-      clock={SYSTEM_CLOCK}
-      createTranslator={(intl) =>
-        i18n.createTranslator(intl, { locale: 'en', source: en, translations: catalogues ?? {} })
-      }
-    />
+    <KitIntlProvider {...props} clock={SYSTEM_CLOCK}>
+      <sharedWords.TranslatorProvider
+        catalogues={{ locale: SOURCE_LOCALE, source: en, translations: catalogues }}
+      >
+        <TranslatorProvider
+          catalogues={{ locale: SOURCE_LOCALE, source: messages.source, translations: catalogues }}
+        >
+          {children}
+        </TranslatorProvider>
+      </sharedWords.TranslatorProvider>
+    </KitIntlProvider>
   );
 }

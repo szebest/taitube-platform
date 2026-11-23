@@ -1,4 +1,3 @@
-import { useT } from '@kit/intl-react';
 import { createFileRoute } from '@tanstack/react-router';
 import { prefetched } from '@vp/queries';
 import { useId } from 'react';
@@ -10,6 +9,7 @@ import {
   ModerationTable,
   ReportQueue,
 } from '#app/features/admin';
+import { useT } from '#app/lib/messages';
 
 function ModerationPage() {
   const { tOr } = useT();

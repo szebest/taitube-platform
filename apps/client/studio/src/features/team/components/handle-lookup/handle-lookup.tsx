@@ -1,9 +1,9 @@
-import { useT } from '@kit/intl-react';
 import { Command } from '@kit/ui';
 import { useQuery } from '@tanstack/react-query';
 import { useApi } from '@vp/queries';
 import { useDeferredValue, useState } from 'react';
 import { channelLookupQueryOptions } from '#app/features/team/api/team-queries';
+import { useT } from '#app/lib/messages';
 
 export interface FoundChannel {
   id: string;

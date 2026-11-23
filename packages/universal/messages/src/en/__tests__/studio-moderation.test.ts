@@ -1,4 +1,4 @@
-import { translatorFor } from '../../__tests__/fixtures';
+import { translatorFor } from '../../__tests__/studio-fixtures';
 
 describe('@vp/messages: en studio moderation', () => {
   const { t } = translatorFor('en');

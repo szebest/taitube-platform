@@ -1,4 +1,3 @@
-import { useT } from '@kit/intl-react';
 import { useMediaQuery, useUiCopy, VisuallyHidden } from '@kit/ui';
 import type { VideoSummary } from '@vp/api-contracts';
 import { type KeyboardEvent, type ReactNode, useEffect, useRef } from 'react';
@@ -7,6 +6,7 @@ import { useShortsScroll } from '#app/features/shorts/hooks/use-shorts-scroll';
 import { useShortsUrl } from '#app/features/shorts/hooks/use-shorts-url';
 import { ownsKeystrokes } from '#app/features/shorts/utils/owns-keystrokes';
 import { useReaction } from '#app/hooks/use-reaction';
+import { useT } from '#app/lib/messages';
 import { ShortsSlide } from '../shorts-slide/shorts-slide';
 
 const ACTIONS_BESIDE = '(min-width: 600px)';

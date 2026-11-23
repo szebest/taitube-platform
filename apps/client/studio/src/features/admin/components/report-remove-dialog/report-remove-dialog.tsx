@@ -1,7 +1,7 @@
-import { useT } from '@kit/intl-react';
 import { fromPromise, isOk } from '@kit/result';
 import { AlertDialog, Button, useToast, useUiCopy } from '@kit/ui';
 import { useResolveReport } from '#app/features/admin/hooks/use-report-resolution';
+import { useT } from '#app/lib/messages';
 
 export interface ReportRemoveDialogProps {
   reportId: string;

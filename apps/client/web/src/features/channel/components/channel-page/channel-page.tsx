@@ -1,4 +1,3 @@
-import { useT } from '@kit/intl-react';
 import { BrandScope } from '@kit/ui';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { useAccount, useApi } from '@vp/queries';
@@ -7,6 +6,7 @@ import { ChannelHeader } from '#app/components/channel/channel-header';
 import { SubscribeAction } from '#app/components/channel/subscribe-action';
 import { VideoGridSkeleton } from '#app/components/video/video-grid';
 import { avatarSrcSet } from '#app/features/channel/utils/avatar-src-set';
+import { useT } from '#app/lib/messages';
 import { channelQueryOptions } from '#app/lib/query-keys/channel-keys';
 import { ChannelAbout } from '../channel-about/channel-about';
 import { ChannelBanner } from '../channel-banner/channel-banner';

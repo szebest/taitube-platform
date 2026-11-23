@@ -257,6 +257,9 @@ importers:
       '@kit/forms':
         specifier: workspace:*
         version: link:../../../packages/platform/client/forms
+      '@kit/i18n':
+        specifier: workspace:*
+        version: link:../../../packages/platform/universal/i18n
       '@kit/intl':
         specifier: workspace:*
         version: link:../../../packages/platform/universal/intl
@@ -314,6 +317,9 @@ importers:
       '@vp/intl-formats':
         specifier: workspace:*
         version: link:../../../packages/universal/intl-formats
+      '@vp/messages':
+        specifier: workspace:*
+        version: link:../../../packages/universal/messages
       '@vp/permissions':
         specifier: workspace:*
         version: link:../../../packages/universal/permissions
@@ -429,6 +435,9 @@ importers:
       '@kit/forms':
         specifier: workspace:*
         version: link:../../../packages/platform/client/forms
+      '@kit/i18n':
+        specifier: workspace:*
+        version: link:../../../packages/platform/universal/i18n
       '@kit/intl':
         specifier: workspace:*
         version: link:../../../packages/platform/universal/intl
@@ -1040,6 +1049,9 @@ importers:
       '@kit/errors':
         specifier: workspace:*
         version: link:../../platform/universal/errors
+      '@kit/i18n':
+        specifier: workspace:*
+        version: link:../../platform/universal/i18n
       '@kit/intl':
         specifier: workspace:*
         version: link:../../platform/universal/intl
@@ -1240,6 +1252,9 @@ importers:
       '@kit/design-tokens':
         specifier: workspace:*
         version: link:../../platform/universal/design-tokens
+      '@kit/i18n':
+        specifier: workspace:*
+        version: link:../../platform/universal/i18n
       '@kit/intl':
         specifier: workspace:*
         version: link:../../platform/universal/intl
@@ -1491,6 +1506,9 @@ importers:
 
   packages/platform/client/intl-react:
     dependencies:
+      '@kit/i18n':
+        specifier: workspace:*
+        version: link:../../universal/i18n
       '@kit/intl':
         specifier: workspace:*
         version: link:../../universal/intl

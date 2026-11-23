@@ -1,22 +1,22 @@
 import type {
   ArgumentFreeKey as KitArgumentFreeKey,
   MessageKey as KitMessageKey,
-  Translation as KitTranslation,
-  Translator as KitTranslator,
+  Translation,
+  Translator,
 } from '@kit/i18n';
 import type { en } from './en';
 import { createI18n } from './engine';
 
-export type Catalogue = typeof en;
+/** The shared catalogue's type: every app's catalogue holds it, merged with the app's own. */
+export type SharedCatalogue = typeof en;
 
-export type MessageKey = KitMessageKey<Catalogue>;
+export type SharedMessageKey = KitMessageKey<SharedCatalogue>;
 
-/** A key whose message takes no arguments, and so can render with nothing but its name. */
-export type ArgumentFreeKey = KitArgumentFreeKey<Catalogue>;
+/** A shared key whose message takes no arguments, and so can render with nothing but its name. */
+export type SharedArgumentFreeKey = KitArgumentFreeKey<SharedCatalogue>;
 
-/** Another locale's catalogue: any namespace or message may be missing, the chain fills the gap. */
-export type Translation = KitTranslation<Catalogue>;
+export type SharedTranslation = Translation<SharedCatalogue>;
 
-export type Translator = KitTranslator<Catalogue>;
+export type SharedTranslator = Translator<SharedCatalogue>;
 
-export const i18n = createI18n<Catalogue>();
+export const sharedI18n = createI18n<SharedCatalogue>();

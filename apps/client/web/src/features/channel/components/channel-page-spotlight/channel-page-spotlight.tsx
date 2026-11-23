@@ -1,5 +1,5 @@
 import { VideoCard } from '@kit/components';
-import { Format, useFormat, useT } from '@kit/intl-react';
+import { Format, useFormat } from '@kit/intl-react';
 import { Button, Icon } from '@kit/ui';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
@@ -11,6 +11,7 @@ import {
   type ChannelSpotlightSource,
 } from '#app/components/channel/channel-spotlight';
 import { useDurationText } from '#app/hooks/use-duration-text';
+import { useT } from '#app/lib/messages';
 import { channelSpotlightQueryOptions } from '#app/lib/query-keys/channel-keys';
 
 interface SpotlightVideoProps {

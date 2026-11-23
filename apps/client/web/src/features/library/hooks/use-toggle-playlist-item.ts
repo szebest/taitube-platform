@@ -1,7 +1,7 @@
-import { useT } from '@kit/intl-react';
 import { useToast } from '@kit/ui';
 import type { ApiClient } from '@vp/api-client';
 import { useApi } from '@vp/queries';
+import { useT } from '#app/lib/messages';
 import { libraryKeys } from '#app/lib/query-keys/library-keys';
 import { saveTargetsQueryOptions } from '../api/library-queries';
 import { queryMutationOptions } from '../api/query-mutation';

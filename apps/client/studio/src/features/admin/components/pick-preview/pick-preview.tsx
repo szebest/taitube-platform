@@ -1,7 +1,7 @@
 import { VideoThumbnail } from '@kit/components';
-import { useT } from '@kit/intl-react';
 import { useUiCopy } from '@kit/ui';
 import type { PickVideo } from '#app/features/admin/api/pick-videos';
+import { useT } from '#app/lib/messages';
 
 export interface PickPreviewProps {
   video: PickVideo | null;

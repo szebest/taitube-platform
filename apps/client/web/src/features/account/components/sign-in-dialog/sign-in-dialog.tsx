@@ -1,9 +1,9 @@
-import { useT } from '@kit/intl-react';
 import { Button } from '@kit/ui';
 import { Link } from '@tanstack/react-router';
-import type { MessageKey } from '@vp/messages';
 import type { AccountAction } from '#app/lib/account-action/account-actions';
 import { decodeIntent, forgetIntent, rememberIntent } from '#app/lib/account-action/replay-intent';
+import { useT } from '#app/lib/messages';
+import type { MessageKey } from '#app/lib/messages';
 import { urlModals } from '#app/lib/url-modal/registry';
 
 const { UrlModal, useUrlModal } = urlModals;

@@ -1,9 +1,9 @@
-import { useT } from '@kit/intl-react';
 import { fromPromise, isOk } from '@kit/result';
 import { AlertDialog, Button, useToast, useUiCopy } from '@kit/ui';
 import type { ChannelMembershipView } from '@vp/api-contracts';
 import { useAccount } from '@vp/queries';
 import { useLeaveTeam } from '#app/features/team/hooks/use-leave-team';
+import { useT } from '#app/lib/messages';
 
 export interface LeaveTeamDialogProps {
   membership: ChannelMembershipView;

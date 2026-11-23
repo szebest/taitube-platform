@@ -1,8 +1,8 @@
-import { useT } from '@kit/intl-react';
 import { useToast } from '@kit/ui';
 import { useMutation } from '@tanstack/react-query';
 import { useApi } from '@vp/queries';
 import { useRequireAccount } from '#app/hooks/use-require-account';
+import { useT } from '#app/lib/messages';
 import { putFeedbackMutationOptions } from '#app/lib/query-keys/recommendation-feedback-mutations';
 import { useUndoRecommendationFeedback } from './use-undo-recommendation-feedback';
 

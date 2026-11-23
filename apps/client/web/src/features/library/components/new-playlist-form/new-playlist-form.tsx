@@ -1,9 +1,9 @@
 import { useAppForm } from '@kit/forms';
-import { useT } from '@kit/intl-react';
 import { Button, useUiCopy } from '@kit/ui';
 import { DEFAULT_PLAYLIST_VISIBILITY, PLAYLIST_VISIBILITIES } from '@vp/domain';
 import { useCreatePlaylist } from '#app/features/library/hooks/use-create-playlist';
 import { useValidatePlaylistTitle } from '#app/features/library/hooks/use-validate-playlist-title';
+import { useT } from '#app/lib/messages';
 
 export interface NewPlaylistFormProps {
   /** A video the new playlist starts with. */

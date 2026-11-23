@@ -1,5 +1,5 @@
 import { render, screen, within } from '@testing-library/react';
-import { IntlProvider } from '@vp/queries/intl';
+import { IntlProvider } from '#app/lib/messages/intl-provider';
 import { TaitubePreview } from '../taitube-preview';
 
 describe('apps/client/web: the Taitube preview', () => {

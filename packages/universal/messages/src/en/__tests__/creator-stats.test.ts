@@ -1,4 +1,4 @@
-import { translatorFor } from '../../__tests__/fixtures';
+import { translatorFor } from '../../__tests__/web-fixtures';
 
 describe('@vp/messages: en creator stats', () => {
   const { t } = translatorFor('en');

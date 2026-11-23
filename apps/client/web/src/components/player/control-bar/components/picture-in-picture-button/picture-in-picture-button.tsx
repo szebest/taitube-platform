@@ -1,6 +1,6 @@
-import { useT } from '@kit/intl-react';
 import { IconButton } from '@kit/ui';
 import { PictureInPicture2 } from 'lucide-react';
+import { useT } from '#app/lib/messages';
 
 export interface PictureInPictureButtonProps {
   /** The browser has the API and the video has pictures to float: with `false` nothing is drawn. */

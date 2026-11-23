@@ -1,10 +1,10 @@
 import { Shelf } from '@kit/components';
-import { useT } from '@kit/intl-react';
 import { useQuery } from '@tanstack/react-query';
 import { useAccount, useApi } from '@vp/queries';
 import { FeedVideoCard } from '#app/components/video/feed-video-card';
 import { uploadsShelfQueryOptions } from '#app/features/library/api/library-queries';
 import { STUDIO_URL } from '#app/lib/config';
+import { useT } from '#app/lib/messages';
 import { YouShelf } from '../you-shelf/you-shelf';
 
 const NO_CHANNEL = '';

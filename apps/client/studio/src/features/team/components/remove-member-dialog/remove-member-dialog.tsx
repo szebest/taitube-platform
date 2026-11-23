@@ -1,8 +1,8 @@
-import { useT } from '@kit/intl-react';
 import { fromPromise, isOk } from '@kit/result';
 import { AlertDialog, Button, useToast, useUiCopy } from '@kit/ui';
 import type { ChannelMemberView } from '@vp/api-contracts';
 import { useRemoveMember } from '#app/features/team/hooks/use-team-mutations';
+import { useT } from '#app/lib/messages';
 
 export interface RemoveMemberDialogProps {
   member: ChannelMemberView;

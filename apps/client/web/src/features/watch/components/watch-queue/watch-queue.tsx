@@ -1,5 +1,4 @@
 import { EmptyLibraryIllustration, EmptyState, SectionError } from '@kit/components';
-import { useT } from '@kit/intl-react';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useParams } from '@tanstack/react-router';
 import { useApi } from '@vp/queries';
@@ -8,6 +7,7 @@ import { Queue } from '#app/components/watch/queue';
 import { useAutoplayNext } from '#app/features/watch/hooks/use-autoplay-next';
 import { useQueueNavigation } from '#app/features/watch/hooks/use-queue-navigation';
 import { usePlaybackQueue } from '#app/hooks/use-playback-queue';
+import { useT } from '#app/lib/messages';
 import { usePlaybackPreference } from '#app/lib/preferences/device-preferences-provider';
 import { playlistQueryOptions } from '#app/lib/query-keys/library-keys';
 import { relatedQueryOptions } from '#app/lib/query-keys/related-keys';

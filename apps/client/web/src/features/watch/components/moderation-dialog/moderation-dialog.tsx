@@ -1,6 +1,5 @@
 import { DisclosureControl } from '@kit/components';
 import { useAppForm, validateWith } from '@kit/forms';
-import { useT } from '@kit/intl-react';
 import { Button, ResponsiveModal, useToast, useUiCopy } from '@kit/ui';
 import { useQuery } from '@tanstack/react-query';
 import type { CommentView } from '@vp/api-contracts';
@@ -24,6 +23,7 @@ import {
 } from '@vp/queries';
 import { validateModerationNote } from '@vp/validation';
 import { useId } from 'react';
+import { useT } from '#app/lib/messages';
 
 export type ModerationDialogAction = 'hold' | 'hide' | 'remove' | 'shadow_ban' | 'ban';
 

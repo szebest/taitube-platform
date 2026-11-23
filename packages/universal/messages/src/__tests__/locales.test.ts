@@ -1,15 +1,6 @@
-import { en } from '../en';
-import { isSupportedLocale, LOCALE_DETAILS } from '../locales';
-import { pl } from '../pl';
+import { isSupportedLocale } from '../locales';
 
 describe('@vp/messages: the supported locales', () => {
-  it.each([
-    { locale: 'en', catalogue: en },
-    { locale: 'pl', catalogue: pl },
-  ] as const)('loads the $locale catalogue', async ({ locale, catalogue }) => {
-    await expect(LOCALE_DETAILS[locale].load()).resolves.toBe(catalogue);
-  });
-
   it.each([
     { tag: 'pl', supported: true },
     { tag: 'en', supported: true },

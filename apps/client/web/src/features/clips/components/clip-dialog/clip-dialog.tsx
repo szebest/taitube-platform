@@ -1,5 +1,5 @@
 import { useAppForm } from '@kit/forms';
-import { useFormat, useT } from '@kit/intl-react';
+import { useFormat } from '@kit/intl-react';
 import { fromPromise, isOk, unwrapOr } from '@kit/result';
 import { ResponsiveModal, useToast } from '@kit/ui';
 import { useRouter } from '@tanstack/react-router';
@@ -17,6 +17,7 @@ import { ClipEditor } from '#app/components/watch/clip-editor';
 import { useClipValidators } from '#app/features/clips/hooks/use-clip-validators';
 import { useCreateClip } from '#app/features/clips/hooks/use-create-clip';
 import { initialClipRange } from '#app/features/clips/utils/clip-defaults';
+import { useT } from '#app/lib/messages';
 
 const MS_PER_SECOND = 1000;
 

@@ -1,6 +1,6 @@
-import { useT } from '@kit/intl-react';
 import { useToast } from '@kit/ui';
 import { failureCode } from './failure-code';
+import { useT } from './intl/shared-words';
 import { present } from './present-failure';
 
 /**

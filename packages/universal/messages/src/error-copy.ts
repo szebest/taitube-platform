@@ -1,12 +1,12 @@
 import { type ErrorCode, ErrorCodes } from '@vp/errors';
-import type { ArgumentFreeKey } from './catalogue';
+import type { SharedArgumentFreeKey } from './catalogue';
 
 /**
  * The words a person sees for each failure code. Declared over the whole `ErrorCode` union, so a
  * new code fails to compile until someone writes its copy.
  * @public
  */
-export const ERROR_COPY: Readonly<Record<ErrorCode, ArgumentFreeKey>> = {
+export const ERROR_COPY: Readonly<Record<ErrorCode, SharedArgumentFreeKey>> = {
   [ErrorCodes.UPLOAD_TOO_LARGE]: 'errors.uploadTooLarge',
   [ErrorCodes.UPLOAD_SIZE_MISMATCH]: 'errors.uploadSizeMismatch',
   [ErrorCodes.UNSUPPORTED_CONTENT_TYPE]: 'errors.unsupportedContentType',

@@ -1,6 +1,6 @@
 import { SectionError } from '@kit/components';
-import { useT } from '@kit/intl-react';
 import { FeedSentinel } from '#app/components/feed/feed-sentinel';
+import { useT } from '#app/lib/messages';
 
 export interface PagedFooterProps {
   hasMore: boolean;

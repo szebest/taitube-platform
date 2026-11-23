@@ -1,7 +1,7 @@
-import { useT } from '@kit/intl-react';
 import { Button, useUiCopy } from '@kit/ui';
 import { useClearHistory } from '#app/features/library/hooks/use-clear-history';
 import { useClearSearches } from '#app/features/library/hooks/use-clear-searches';
+import { useT } from '#app/lib/messages';
 import { urlModals } from '#app/lib/url-modal/registry';
 
 const { UrlModal, useUrlModal } = urlModals;

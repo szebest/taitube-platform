@@ -1,5 +1,5 @@
 import { FALLBACK_LOCALE, SUPPORTED_LOCALES } from '@kit/intl';
-import { Format, useFormat, useT } from '@kit/intl-react';
+import { Format, useFormat } from '@kit/intl-react';
 import { unwrapOr } from '@kit/result';
 import { Field, Tabs, Textarea } from '@kit/ui';
 import { useQuery } from '@tanstack/react-query';
@@ -12,6 +12,7 @@ import { spotlightQueryOptions } from '#app/features/channel/api/channel-spotlig
 import { useSaveSpotlight } from '#app/features/channel/hooks/use-save-spotlight';
 import { failureCodeOf } from '#app/features/channel/hooks/use-update-channel';
 import { useActiveChannel } from '#app/hooks/use-active-channel';
+import { useT } from '#app/lib/messages';
 import { SpotlightVideoPicker } from '../spotlight-video-picker/spotlight-video-picker';
 
 const OTHER_LOCALES = SUPPORTED_LOCALES.filter((locale) => locale !== FALLBACK_LOCALE);

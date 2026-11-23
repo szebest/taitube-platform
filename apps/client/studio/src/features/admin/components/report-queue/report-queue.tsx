@@ -1,5 +1,5 @@
 import { EmptyState, SectionError } from '@kit/components';
-import { Format, useFormat, useT } from '@kit/intl-react';
+import { Format, useFormat } from '@kit/intl-react';
 import { fromPromise, isOk, unwrapOr } from '@kit/result';
 import { Button, useToast } from '@kit/ui';
 import { useInfiniteQuery } from '@tanstack/react-query';
@@ -17,6 +17,7 @@ import {
 import { LoadMore } from '#app/components/table/load-more';
 import { type AdminReport, adminReportsQueryOptions } from '#app/features/admin/api/admin-reports';
 import { useResolveReport } from '#app/features/admin/hooks/use-report-resolution';
+import { useT } from '#app/lib/messages';
 import { pagedRows, tableStateOf } from '#app/utils/paged-rows';
 import { ReportRemoveDialog } from '../report-remove-dialog/report-remove-dialog';
 

@@ -1,7 +1,7 @@
-import { useT } from '@kit/intl-react';
 import { appearance } from '@kit/ui/appearance/registry';
 import { useRouter } from '@tanstack/react-router';
 import { useCan } from '@vp/permissions-react';
+import { useT } from '#app/lib/messages';
 import { APPEARANCE_MODES, type CommandAction, PLANNED_PAGES } from '../utils/command-actions';
 
 /** Every action the palette can run: a theme and a mode each, the pages whose route exists, and the studio for a creator. */

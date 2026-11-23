@@ -1,21 +1,36 @@
+import type { Translation } from '@kit/i18n';
 import { FALLBACK_LOCALE } from '@kit/intl';
 import {
-  type ActiveLocale as AppActiveLocale,
-  createLocaleStore as createAppLocaleStore,
-  fallbackActiveLocale,
-  type LocaleStore as AppLocaleStore,
+  type ActiveLocale as KitActiveLocale,
+  createLocaleStore as createKitLocaleStore,
+  type LocaleStore as KitLocaleStore,
 } from '@kit/intl-react';
-import { LOCALE_DETAILS, type SupportedLocale, type Translation } from '@vp/messages';
+import type { SharedCatalogue, SupportedLocale } from '@vp/messages';
+import type { AppMessages } from './app-messages';
 
-export type ActiveLocale = AppActiveLocale<SupportedLocale, Translation>;
+export const SOURCE_LOCALE: SupportedLocale = FALLBACK_LOCALE;
 
-export type LocaleStore = AppLocaleStore<SupportedLocale, Translation>;
+export type ActiveLocale<App extends SharedCatalogue = SharedCatalogue> = KitActiveLocale<
+  SupportedLocale,
+  Translation<App>
+>;
 
-export const FALLBACK_ACTIVE_LOCALE: ActiveLocale = fallbackActiveLocale(FALLBACK_LOCALE);
+export type LocaleStore<App extends SharedCatalogue = SharedCatalogue> = KitLocaleStore<
+  SupportedLocale,
+  Translation<App>
+>;
 
-export function createLocaleStore(): LocaleStore {
-  return createAppLocaleStore<SupportedLocale, Translation>({
-    fallbackLocale: FALLBACK_LOCALE,
-    load: (locale) => LOCALE_DETAILS[locale].load(),
+/** The source locale with nothing loaded, which any app's store starts on. */
+export const FALLBACK_ACTIVE_LOCALE: {
+  readonly locale: SupportedLocale;
+  readonly catalogues: Readonly<Record<string, never>>;
+} = { locale: SOURCE_LOCALE, catalogues: {} };
+
+export function createLocaleStore<App extends SharedCatalogue>(
+  messages: AppMessages<App>
+): LocaleStore<App> {
+  return createKitLocaleStore<SupportedLocale, Translation<App>>({
+    fallbackLocale: SOURCE_LOCALE,
+    load: messages.load,
   });
 }

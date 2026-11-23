@@ -1,10 +1,10 @@
-import { useT } from '@kit/intl-react';
 import { Card } from '@kit/ui';
 import type { LiveStreamView } from '@vp/api-contracts';
 import { useId } from 'react';
 import { CredentialField } from '#app/components/live/credential-field';
 import { useOrigin } from '#app/features/live/hooks/use-origin';
 import { useCopyField } from '#app/hooks/use-copy-field';
+import { useT } from '#app/lib/messages';
 
 const OVERLAY_WIDGETS = ['chat', 'alerts', 'goal'] as const;
 

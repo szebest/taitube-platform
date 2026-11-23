@@ -1,5 +1,5 @@
-import { pl } from '..';
-import { translatorFor } from '../../__tests__/fixtures';
+import { translatorFor } from '../../__tests__/studio-fixtures';
+import { pl } from '../studio-catalogue';
 
 describe('@vp/messages: pl studio', () => {
   const { t } = translatorFor('pl', { pl });

@@ -1,10 +1,10 @@
-import { useT } from '@kit/intl-react';
 import { Button, DropdownMenu } from '@kit/ui';
 import { VIDEO_VISIBILITIES } from '@vp/domain';
 import { useCan } from '@vp/permissions-react';
 import { useState } from 'react';
 import type { BatchOutcome } from '#app/features/videos/api/batch-actions';
 import { useBatchActions } from '#app/features/videos/hooks/use-batch-actions';
+import { useT } from '#app/lib/messages';
 import { DeleteVideosDialog } from '../delete-videos-dialog/delete-videos-dialog';
 import type { CreatorVideo } from '../library-video-row/library-video-row';
 

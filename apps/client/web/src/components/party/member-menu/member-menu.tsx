@@ -1,8 +1,8 @@
-import { useT } from '@kit/intl-react';
 import { DropdownMenu, Icon, IconButton } from '@kit/ui';
 import type { WatchPartyMemberSubject } from '@vp/permissions';
 import { usePartyCan } from '@vp/permissions-react';
 import type { ReactNode } from 'react';
+import { useT } from '#app/lib/messages';
 import { MUTE_DURATIONS } from './constants';
 import type { MemberMenuRole, MemberMuteDuration, MemberMuteScope } from './types';
 

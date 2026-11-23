@@ -3,9 +3,9 @@ import { render } from '@testing-library/react';
 import type { WatchPartyViewer } from '@vp/permissions';
 import { PartyPermissionsProvider } from '@vp/permissions-react';
 import { createQueryClient } from '@vp/queries';
-import { IntlProvider } from '@vp/queries/intl';
 import type { PropsWithChildren, ReactElement } from 'react';
 import { AppProviders } from '#app/__tests__/providers';
+import { IntlProvider } from '#app/lib/messages/intl-provider';
 
 /** A viewer who holds `permissions` in the room, at `topPosition` in its hierarchy. */
 export function partyViewer(

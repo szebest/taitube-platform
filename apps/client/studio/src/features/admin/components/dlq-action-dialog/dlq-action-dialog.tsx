@@ -1,8 +1,8 @@
-import { useT } from '@kit/intl-react';
 import { fromPromise, isOk } from '@kit/result';
 import { AlertDialog, Button, useToast, useUiCopy } from '@kit/ui';
 import type { DlqEntry } from '#app/features/admin/api/admin-dlq';
 import { useDiscardDlqEntry, useReplayDlqEntry } from '#app/features/admin/hooks/use-dlq-mutations';
+import { useT } from '#app/lib/messages';
 
 export type DlqAction = 'replay' | 'discard';
 

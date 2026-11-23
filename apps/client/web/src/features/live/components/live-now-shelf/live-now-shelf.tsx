@@ -1,8 +1,8 @@
 import { Shelf } from '@kit/components';
-import { useT } from '@kit/intl-react';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { useApi } from '@vp/queries';
 import { liveNowQueryOptions } from '#app/features/live/api/live-queries';
+import { useT } from '#app/lib/messages';
 import { LiveStreamCard } from '../live-stream-card/live-stream-card';
 
 /** The home's Live now shelf: the broadcasts live now, nothing when none is. */

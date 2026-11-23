@@ -1,10 +1,10 @@
-import { useT } from '@kit/intl-react';
 import { Avatar, Button } from '@kit/ui';
 import type { ComponentPropsWithRef, ReactNode } from 'react';
 import { LiveChat } from '#app/components/live/live-chat';
 import type { LiveChatRootProps } from '#app/components/live/live-chat/live-chat';
 import { useLiveChat } from '#app/components/live/live-chat/live-chat.context';
 import { liveChatStyles } from '#app/components/live/live-chat/live-chat.variants';
+import { useT } from '#app/lib/messages';
 import type { PartyChatComposerState } from './types';
 
 /** The Chat tab: the live chat's log and composer, named for the party. */

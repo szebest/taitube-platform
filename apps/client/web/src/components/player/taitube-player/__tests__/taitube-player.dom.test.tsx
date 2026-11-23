@@ -1,9 +1,9 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
-import { IntlProvider } from '@vp/queries/intl';
 import {
   TaitubePlayer,
   type TaitubePlayerWithTelemetryProps,
 } from '#app/components/player/taitube-player/taitube-player';
+import { IntlProvider } from '#app/lib/messages/intl-provider';
 
 afterEach(() => {
   vi.useRealTimers();

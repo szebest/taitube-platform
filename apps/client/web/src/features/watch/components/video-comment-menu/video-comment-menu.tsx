@@ -1,4 +1,3 @@
-import { useT } from '@kit/intl-react';
 import { DropdownMenu, Icon, useUiCopy } from '@kit/ui';
 import type { CommentView } from '@vp/api-contracts';
 import { canDeleteComment, canPinComment, canUpdateComment } from '@vp/permissions';
@@ -11,6 +10,7 @@ import {
   useModerationChoices,
 } from '#app/features/watch/hooks/use-moderation-choices';
 import { useRequireAccount } from '#app/hooks/use-require-account';
+import { useT } from '#app/lib/messages';
 import type { ModerationDialogAction } from '../moderation-dialog/moderation-dialog';
 import { LazyModerationDialog } from '../moderation-dialog/moderation-dialog.lazy';
 

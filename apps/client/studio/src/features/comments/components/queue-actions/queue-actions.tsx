@@ -1,9 +1,9 @@
-import { useT } from '@kit/intl-react';
 import { Button, Kbd } from '@kit/ui';
 import type { Disclosure } from '@vp/domain';
 import type { ReactNode } from 'react';
 import type { ModerationAbilities } from '#app/features/comments/hooks/use-moderation-abilities';
 import type { QueueKey } from '#app/features/comments/hooks/use-queue-shortcuts';
+import { useT } from '#app/lib/messages';
 
 export interface QueueActionsProps {
   abilities: ModerationAbilities;

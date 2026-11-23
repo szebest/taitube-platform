@@ -1,9 +1,9 @@
 import { SectionError } from '@kit/components';
-import { useT } from '@kit/intl-react';
 import { myVideosQueryOptions, useApi } from '@vp/queries';
 import { FeedSentinel } from '#app/components/feed/feed-sentinel';
 import { VideoGrid } from '#app/components/video/video-grid';
 import { useVideoPages } from '#app/hooks/use-video-pages';
+import { useT } from '#app/lib/messages';
 
 /** The viewer's own uploads on their channel page, paging in as they scroll. */
 export function OwnVideos() {

@@ -1,5 +1,4 @@
 import { PageHeader, SectionError, VideoCardSkeleton } from '@kit/components';
-import { useT } from '@kit/intl-react';
 import { Callout } from '@kit/ui';
 import { useSuspenseInfiniteQuery } from '@tanstack/react-query';
 import { getRouteApi } from '@tanstack/react-router';
@@ -10,6 +9,7 @@ import { FeedSentinel } from '#app/components/feed/feed-sentinel';
 import { searchQueryOptions } from '#app/features/search/api/search-queries';
 import { matchedTerms } from '#app/features/search/utils/matched-terms';
 import { useWindowRows } from '#app/hooks/use-window-rows';
+import { useT } from '#app/lib/messages';
 import { ChannelResultHeader } from '../channel-result-header/channel-result-header';
 import { SearchNoResults } from '../search-no-results/search-no-results';
 import { SearchResult, searchResultKey } from '../search-result/search-result';

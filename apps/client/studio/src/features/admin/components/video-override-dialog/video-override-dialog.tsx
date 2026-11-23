@@ -1,4 +1,3 @@
-import { useT } from '@kit/intl-react';
 import { fromPromise, isOk } from '@kit/result';
 import { AlertDialog, Button, Field, Textarea, useToast, useUiCopy } from '@kit/ui';
 import { ApiError } from '@vp/api-client';
@@ -10,6 +9,7 @@ import {
   useForcePrivate,
   useRejectVideo,
 } from '#app/features/admin/hooks/use-video-overrides';
+import { useT } from '#app/lib/messages';
 
 export type VideoOverride = 'force-private' | 'reject' | 'delete';
 

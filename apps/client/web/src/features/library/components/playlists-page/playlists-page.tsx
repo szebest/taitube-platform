@@ -1,9 +1,9 @@
 import { EmptyLibraryIllustration, EmptyState, PageHeader } from '@kit/components';
-import { useT } from '@kit/intl-react';
 import { Button, Icon } from '@kit/ui';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { useApi } from '@vp/queries';
 import { myPlaylistsQueryOptions } from '#app/features/library/api/library-queries';
+import { useT } from '#app/lib/messages';
 import { urlModals } from '#app/lib/url-modal/registry';
 import { YouPlaylistCard } from '../you-playlist-card/you-playlist-card';
 

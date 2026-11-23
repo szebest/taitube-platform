@@ -1,6 +1,6 @@
 import { renderHook } from '@testing-library/react';
-import { IntlProvider } from '@vp/queries/intl';
 import type { PropsWithChildren } from 'react';
+import { IntlProvider } from '#app/lib/messages/intl-provider';
 import type { PlayerCaptionTrack } from '#app/lib/player/player-port';
 import { useCaptionTrackLabel } from '../use-caption-track-label';
 

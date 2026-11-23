@@ -1,4 +1,3 @@
-import { useT } from '@kit/intl-react';
 import { fromPromise, isOk } from '@kit/result';
 import { Button, Field, ResponsiveModal, SegmentedControl, useToast, useUiCopy } from '@kit/ui';
 import { ApiError } from '@vp/api-client';
@@ -7,6 +6,7 @@ import { ErrorCodes } from '@vp/errors';
 import { type FormEvent, useState } from 'react';
 import { useRoleRules } from '#app/features/team/hooks/use-role-rules';
 import { useInviteMember } from '#app/features/team/hooks/use-team-mutations';
+import { useT } from '#app/lib/messages';
 import { type FoundChannel, HandleLookup } from '../handle-lookup/handle-lookup';
 import { RoleCapabilities } from '../role-capabilities/role-capabilities';
 

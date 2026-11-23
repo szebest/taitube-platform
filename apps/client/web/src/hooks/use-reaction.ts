@@ -1,9 +1,9 @@
-import { useT } from '@kit/intl-react';
 import { useQuery } from '@tanstack/react-query';
 import type { UserReaction } from '@vp/api-contracts';
 import { useApi, useFailureToast } from '@vp/queries';
 import { useRequireAccount } from '#app/hooks/use-require-account';
 import { isQueuedByWorker } from '#app/integrations/service-worker-client/is-queued-by-worker';
+import { useT } from '#app/lib/messages';
 import { myReactionQueryOptions } from '#app/lib/query-keys/reaction-keys';
 import { useSetReaction } from './use-set-reaction';
 

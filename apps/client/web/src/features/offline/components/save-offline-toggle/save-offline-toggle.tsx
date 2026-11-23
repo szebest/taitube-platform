@@ -1,10 +1,10 @@
-import { useT } from '@kit/intl-react';
 import { assertNever } from '@kit/result';
 import { useToast } from '@kit/ui';
 import type { Video } from '@vp/api-contracts';
 import { EngagementBar } from '#app/components/watch/engagement-bar';
 import { useCanSaveOffline } from '#app/features/offline/hooks/use-can-save-offline';
 import { type SaveToggled, useSaveOffline } from '#app/features/offline/hooks/use-save-offline';
+import { useT } from '#app/lib/messages';
 
 /** The Save for offline action under a watch page's title; absent where the browser cannot keep videos offline. */
 export function SaveOfflineToggle({ video }: { video: Video }) {

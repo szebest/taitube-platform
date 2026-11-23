@@ -1,5 +1,4 @@
 import { PageHeader, SectionError } from '@kit/components';
-import { useT } from '@kit/intl-react';
 import { Badge, Button } from '@kit/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { LiveStreamView } from '@vp/api-contracts';
@@ -7,6 +6,7 @@ import { useApi, useLiveVideoEvents } from '@vp/queries';
 import { useEffect, useEffectEvent, useState } from 'react';
 import { liveKeys, myLiveStreamQueryOptions } from '#app/features/live/api/live-queries';
 import { WEB_URL } from '#app/lib/config';
+import { useT } from '#app/lib/messages';
 import { LiveChatModeForm } from '../live-chat-mode-form/live-chat-mode-form';
 import { LiveChatModeration } from '../live-chat-moderation/live-chat-moderation';
 import { LiveCredentialsCard } from '../live-credentials-card/live-credentials-card';

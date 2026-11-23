@@ -1,4 +1,3 @@
-import { useT } from '@kit/intl-react';
 import { Logo } from '@kit/ui';
 import { Link, Outlet, useMatchRoute } from '@tanstack/react-router';
 import { canAccessAdmin } from '@vp/permissions';
@@ -9,6 +8,7 @@ import { StudioWorkspace } from '#app/components/workspace/studio-workspace';
 import { useAccessDeniedToast } from '#app/features/shell/hooks/use-access-denied-toast';
 import { SelectedVideoContext } from '#app/hooks/use-selected-video';
 import { WEB_URL } from '#app/lib/config';
+import { useT } from '#app/lib/messages';
 import { ShellAccountMenu } from '../shell-account-menu/shell-account-menu';
 
 export type StudioShellProps = {

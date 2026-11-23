@@ -1,6 +1,6 @@
-import { useT } from '@kit/intl-react';
 import { AlertBanner } from '#app/components/live/alert-banner';
 import { useSubscriberAlert } from '#app/features/live/hooks/use-subscriber-alert';
+import { useT } from '#app/lib/messages';
 
 export interface OverlayAlertsProps {
   subscriberCount: number;
