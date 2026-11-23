@@ -32,7 +32,7 @@ describe('apps/client/studio: EditVideoPage', () => {
       within(tabs)
         .getAllByRole('tab')
         .map((tab) => tab.textContent)
-    ).toEqual(['Details', 'Chapters', 'Corrections', 'Sharing', 'Tests', 'History']);
+    ).toEqual(['Details', 'Chapters', 'Corrections', 'Sharing', 'Tests', 'Edit video', 'History']);
   });
 
   it('shows the captions section to the owner of the video', async () => {

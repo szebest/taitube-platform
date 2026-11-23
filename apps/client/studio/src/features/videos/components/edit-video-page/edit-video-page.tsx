@@ -11,6 +11,7 @@ import { parseEditTab } from '#app/features/videos/utils/edit-tabs';
 import { ChaptersPanel } from '../chapters-panel/chapters-panel';
 import { CorrectionsPanel } from '../corrections-panel/corrections-panel';
 import { EditVideoForm } from '../edit-video-form/edit-video-form';
+import { EditVideoPanel } from '../edit-video-panel/edit-video-panel';
 import { ExperimentsPanel } from '../experiments-panel/experiments-panel';
 import { HistoryPanel } from '../history-panel/history-panel';
 import { ShareLinksSection } from '../share-links-section/share-links-section';
@@ -54,6 +55,7 @@ export function EditVideoPage({ videoId, captions }: EditVideoPageProps) {
           <Tabs.Tab value="corrections">{tOr('studio.editTabCorrections', {}, '')}</Tabs.Tab>
           <Tabs.Tab value="sharing">{tOr('studio.editTabSharing', {}, '')}</Tabs.Tab>
           <Tabs.Tab value="tests">{tOr('studio.editTabTests', {}, '')}</Tabs.Tab>
+          <Tabs.Tab value="edit">{tOr('studio.editTabEditVideo', {}, '')}</Tabs.Tab>
           <Tabs.Tab value="history">{tOr('studio.editTabHistory', {}, '')}</Tabs.Tab>
         </Tabs.List>
         <Tabs.Panel value="details" className="flex flex-col gap-section">
@@ -80,6 +82,9 @@ export function EditVideoPage({ videoId, captions }: EditVideoPageProps) {
         </Tabs.Panel>
         <Tabs.Panel value="tests">
           <ExperimentsPanel video={video} />
+        </Tabs.Panel>
+        <Tabs.Panel value="edit">
+          <EditVideoPanel video={video} />
         </Tabs.Panel>
         <Tabs.Panel value="history">
           <HistoryPanel video={video} />

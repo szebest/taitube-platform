@@ -6,7 +6,8 @@ describe('apps/client/studio: parseEditTab', () => {
     { value: 'history', expected: 'history' },
     { value: 'sharing', expected: 'sharing' },
     { value: 'tests', expected: 'tests' },
-    { value: 'edit', expected: undefined },
+    { value: 'edit', expected: 'edit' },
+    { value: 'trim', expected: undefined },
     { value: 3, expected: undefined },
     { value: undefined, expected: undefined },
   ])('reads $value as $expected', ({ value, expected }) => {

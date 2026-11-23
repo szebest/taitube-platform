@@ -15,6 +15,7 @@ import { studioPicks } from './studio-picks';
 import { studioScreening } from './studio-screening';
 import { studioSharing } from './studio-sharing';
 import { studioTeam } from './studio-team';
+import { studioVideoPipeline } from './studio-video-pipeline';
 import { studioVideoTools } from './studio-video-tools';
 
 const VIDEO_STATUS = {
@@ -77,6 +78,7 @@ export const studio = {
   ...studioAudience,
   ...studioBatch,
   ...studioVideoTools,
+  ...studioVideoPipeline,
   ...studioSharing,
   ...studioExperiments,
   ...studioCaptions,
