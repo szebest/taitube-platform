@@ -13,7 +13,7 @@ import {
   databaseUnavailable,
   queueUnavailable,
 } from '@vp/errors';
-import { ids, stagePolicies } from '@vp/job-contracts';
+import { APPLY_EDITS, ids, stagePolicies } from '@vp/job-contracts';
 import { uuidv7 } from 'uuidv7';
 import { createFailureHandler } from '../failure-handler';
 import { type FlowWorld, flowWorld, uploadedVideo } from './flow-harness';
@@ -125,6 +125,32 @@ describe('apps/server/worker: DLQ failure handler', () => {
     await handlerOver(overrides(), stage)(JOB, FAILURE());
 
     expect(lines).toContainEqual({ level: 'error', message });
+  });
+
+  it('fails a render that ran out of attempts, never the video or its renditions', async () => {
+    const videoId = await uploadedVideo(world, 'raw/replaced.mp4');
+    expectOk(
+      await world.repositories.videoGenerations.saveEdit({
+        videoId,
+        generation: 2,
+        baseGeneration: 1,
+        replacesGeneration: 1,
+        edit: { trim: { startMs: 0, endMs: 5_000 }, blurs: [] },
+        outbox: { kind: APPLY_EDITS, payload: { type: 'pubsub', channel: 'x', message: '' } },
+      })
+    );
+    const before = { ...expectOk(await world.repositories.videos.findById(videoId)) };
+
+    await handlerOver({}, 'transcode-1080p')(
+      { id: 'render-1', name: APPLY_EDITS, data: { videoId, generation: 2, traceparent: 't' } },
+      FAILURE()
+    );
+
+    const [row] = expectOk(await world.repositories.videoGenerations.list(videoId));
+    expect(row).toMatchObject({ status: 'failed', errorCode: ErrorCodes.CORRUPT_CONTAINER });
+    expect(expectOk(await world.repositories.videos.findById(videoId))).toEqual(before);
+    expect(expectOk(await world.repositories.steps.findByVideoId(videoId))).toEqual([]);
+    expect(await dlqEntries()).toHaveLength(1);
   });
 
   it('parks a permanent failure on its first attempt, marking the step DEAD and the rendition FAILED', async () => {

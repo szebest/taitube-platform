@@ -10,6 +10,8 @@ import {
   isErrorCode,
 } from '@vp/errors';
 import {
+  APPLY_EDITS,
+  ApplyEditsJob,
   CaptionsJob,
   DlqJob,
   type NotifyJob,
@@ -113,6 +115,18 @@ export function createFailureHandler(deps: FailureHandlerDeps) {
       if (isErr(failed)) {
         logger.error({ err: failed.error, jobId }, 'failed to mark the captions track failed');
       }
+    }
+
+    if (job.name === APPLY_EDITS) {
+      const render = ApplyEditsJob.safeParse(job.data);
+      if (render.success) {
+        const { videoId: rendered, generation } = render.data;
+        const failed = await repositories.videoGenerations.fail(rendered, generation, errorCode);
+        if (isErr(failed)) {
+          logger.error({ err: failed.error, jobId }, 'failed to mark the generation failed');
+        }
+      }
+      return;
     }
 
     if (videoId) {
