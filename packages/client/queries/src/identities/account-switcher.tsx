@@ -1,15 +1,11 @@
 import { AccountMenu, jumpToIdentityItem } from '@kit/components';
-import { COMPACT_QUERY, lazyComponent, useMediaQuery } from '@kit/ui';
+import { COMPACT_QUERY, useMediaQuery } from '@kit/ui';
 import { type ReactNode, useState } from 'react';
 import { useAccount } from '../session-provider';
 import type { AccountLink } from './account-links';
+import { LazyAccountSwitcherItems } from './account-switcher-items.lazy';
 import { useIdentitySwitcher } from './identity-switcher-provider';
 import { useIdentityChoices } from './use-identity-choices';
-
-const LazyAccountSwitcherItems = lazyComponent(() => import('./account-switcher-items'), {
-  name: 'AccountSwitcherItems',
-  pick: (module) => module.AccountSwitcherItems,
-});
 
 export interface AccountSwitcherProps {
   /** The app's own pages, listed under the identities. */

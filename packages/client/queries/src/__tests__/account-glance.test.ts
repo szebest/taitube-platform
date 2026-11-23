@@ -56,20 +56,25 @@ function answering(answer: (slot: number) => Promise<Response | undefined> | Res
 
 describe('@vp/queries: account glance', () => {
   it('asks every other slot in one call, in parallel, with its own token', async () => {
+    let arrived = 0;
+    let everyoneArrived = () => {};
+    const everyone = new Promise<void>((resolve) => {
+      everyoneArrived = resolve;
+    });
     const asked = answering(async () => {
-      await delay(300);
+      arrived += 1;
+      if (arrived === 9) everyoneArrived();
+      await everyone;
       return undefined;
     });
-    const started = performance.now();
 
     const { value } = await inRequest(() => glanceAccounts({ data: { slot: 0 } }), {
       cookie: TEN_SLOTS,
     });
 
-    expect(performance.now() - started).toBeLessThan(1500);
     expect(asked.toSorted((a, b) => a - b)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9]);
     expect(value).toHaveLength(9);
-    expect(value[0]).toEqual({ slot: 1, state: 'counted', unread: 1, newComments: 1 });
+    expect(value[0]).toEqual({ slot: 1, kind: 'counted', unread: 1, newComments: 1 });
   });
 
   it.each([
@@ -79,17 +84,17 @@ describe('@vp/queries: account glance', () => {
         await delay('infinite');
         return undefined;
       },
-      glance: { slot: 1, state: 'unknown' },
+      glance: { slot: 1, kind: 'unknown' },
     },
     {
       scenario: 'fails',
       answer: () => problemReply(ErrorCodes.INTERNAL),
-      glance: { slot: 1, state: 'unknown' },
+      glance: { slot: 1, kind: 'unknown' },
     },
     {
       scenario: 'refuses its token',
       answer: () => problemReply(ErrorCodes.UNAUTHORIZED),
-      glance: { slot: 1, state: 'expired' },
+      glance: { slot: 1, kind: 'expired' },
     },
   ])('gives a slot that $scenario no count, and the others theirs', async ({ answer, glance }) => {
     answering((slot) => (slot === 1 ? answer() : undefined));
@@ -98,6 +103,6 @@ describe('@vp/queries: account glance', () => {
       cookie: 'vp.session.0=token-0; vp.session.1=token-1; vp.session.2=token-2',
     });
 
-    expect(value).toEqual([glance, { slot: 2, state: 'counted', unread: 2, newComments: 1 }]);
+    expect(value).toEqual([glance, { slot: 2, kind: 'counted', unread: 2, newComments: 1 }]);
   });
 });

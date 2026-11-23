@@ -96,7 +96,7 @@ function otherAccount(
     handle: undefined,
     avatarUrl,
     role: undefined,
-    expired: expired || glance?.state === 'expired',
+    expired: expired || glance?.kind === 'expired',
     glance,
   };
 }

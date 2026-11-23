@@ -52,10 +52,15 @@ export function SessionProvider({
   );
 }
 
+/** The account a session holds, or `undefined` for a guest. */
+export function accountOf(session: Session): Account | undefined {
+  return session.status === 'signed-in' ? session.account : undefined;
+}
+
 /** The signed-in viewer's account, or `undefined` for a guest. */
 export function useAccount(): Account | undefined {
   const { session } = useSessionValue('useAccount');
-  return session.status === 'signed-in' ? session.account : undefined;
+  return accountOf(session);
 }
 
 /** The channel this tab's identity acts as when it names one (`/c/<handle>`); `undefined` is the primary. */

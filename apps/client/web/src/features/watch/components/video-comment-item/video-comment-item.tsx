@@ -123,15 +123,17 @@ function ReplyThread(props: ReplyThreadProps) {
   );
 }
 
-interface ReplyComposerProps {
+function ReplyComposer({
+  draft,
+  onChange,
+  onSend,
+  sending,
+}: {
   draft: string;
-  onDraftChange: (draft: string) => void;
+  onChange: (draft: string) => void;
   onSend: () => void;
   sending: boolean;
-}
-
-/** The reply field under a comment, naming the identity it goes out as; a reply fired after a switch is held. */
-function ReplyComposer({ draft, onDraftChange, onSend, sending }: ReplyComposerProps) {
+}) {
   const { reply } = useUiCopy();
   const guard = useIdentityGuard();
 
@@ -140,7 +142,7 @@ function ReplyComposer({ draft, onDraftChange, onSend, sending }: ReplyComposerP
       <ActingAsLine action="reply" guard={guard} />
       <CommentThread.Composer
         value={draft}
-        onChange={onDraftChange}
+        onChange={onChange}
         onSubmit={() => guard.guard(onSend)}
         submitting={sending}
         aria-label={reply}
@@ -289,7 +291,7 @@ export function VideoCommentItem({
       {mode === 'replying' && state === 'view' && (
         <ReplyComposer
           draft={draft}
-          onDraftChange={setDraft}
+          onChange={setDraft}
           onSend={sendReply}
           sending={postReply.isPending}
         />

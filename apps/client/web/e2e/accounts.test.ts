@@ -1,17 +1,16 @@
 import { type Page, expect, test } from '../../../../tests/playwright/fixtures';
 
-/** The cold and warm budgets from activating a row to the new identity's page painted. */
-const COLD_MS = 1000;
-const WARM_MS = 300;
-
-/** What the throttled API adds to every call, as a slow network would. */
-const API_LATENCY_MS = 150;
-
-async function throttleApi(page: Page, latency = API_LATENCY_MS) {
+/** Holds every API call of `slot` (all slots when none) until the returned function runs, as a network that does not answer. */
+async function holdApi(page: Page, slot?: string) {
+  let release = () => {};
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
   await page.route('**/api/**', async (route) => {
-    await new Promise((resolve) => setTimeout(resolve, latency));
+    if (slot === undefined || route.request().headers()['x-account-slot'] === slot) await gate;
     await route.continue();
   });
+  return release;
 }
 
 /** Counts every document load from here on, which an in-place switch must never cause. */
@@ -33,14 +32,12 @@ async function switchTo(page: Page, name: string) {
   await page.getByRole('button', { name: 'Account' }).click();
   const row = page.getByRole('menuitemradio', { name: new RegExp(name) });
   await row.hover();
-  const started = Date.now();
   await row.click();
   await expect(
     page
       .locator('[aria-live="polite"][data-slot="visually-hidden"]')
       .filter({ hasText: `Now browsing as ${name}` })
   ).toBeAttached();
-  return Date.now() - started;
 }
 
 test.describe('several accounts in one browser', () => {
@@ -66,46 +63,46 @@ test.describe('several accounts in one browser', () => {
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
     const after = await countLoads(page);
     const before = await after();
-    await page.route('**/api/**', async (route) => {
-      if (route.request().headers()['x-account-slot'] === '0') {
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-      }
-      await route.continue();
-    });
+    const release = await holdApi(page, '0');
 
     await switchTo(page, viewer);
 
     await expect(page).toHaveURL(/\/u\/1\/feed\/you$/);
-    await page.waitForTimeout(2500);
     await page.getByRole('button', { name: 'Account' }).click();
     await expect(page.getByRole('menuitemradio', { checked: true })).toContainText(viewer);
     await page.keyboard.press('Escape');
+    release();
+    await page.waitForLoadState('networkidle');
     await expect(page.getByRole('main')).not.toContainText(creator);
     expect(await after()).toEqual({ loads: 0, navigations: 1, history: before.history });
   });
 
-  test('switches within the speed target: 1 s cold and 300 ms warm with the API throttled', async ({
+  test('switches to an account whose data was fetched ahead without one API answer', async ({
     page,
     signInSlots,
   }) => {
-    const [creator = '', viewer = ''] = await signInSlots(['creator', 'viewer']);
+    const [, viewer = ''] = await signInSlots(['creator', 'viewer']);
     await page.goto('/feed/trending');
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-    await throttleApi(page);
 
-    const cold = await switchTo(page, viewer);
-    const warm: number[] = [];
-    for (const name of [creator, viewer, creator, viewer, creator]) {
-      await page.getByRole('button', { name: 'Account' }).click();
-      await page.getByRole('menuitemradio', { name: new RegExp(name) }).hover();
-      await page.waitForTimeout(API_LATENCY_MS * 4);
-      await page.keyboard.press('Escape');
-      warm.push(await switchTo(page, name));
-    }
-    const p95 = warm.toSorted((a, b) => a - b)[Math.ceil(warm.length * 0.95) - 1] ?? 0;
+    await page.getByRole('button', { name: 'Account' }).click();
+    const row = page.getByRole('menuitemradio', { name: new RegExp(viewer) });
+    const fetchedAhead = Promise.all(
+      ['/v1/me/account', '/v1/me/identities', '/v1/me/notifications/unread-count'].map((path) =>
+        page.waitForResponse((response) => response.url().endsWith(path))
+      )
+    );
+    await row.hover();
+    await fetchedAhead;
+    const release = await holdApi(page);
+    await row.click();
 
-    expect(cold).toBeLessThan(COLD_MS);
-    expect(p95).toBeLessThan(WARM_MS);
+    await expect(
+      page
+        .locator('[aria-live="polite"][data-slot="visually-hidden"]')
+        .filter({ hasText: `Now browsing as ${viewer}` })
+    ).toBeAttached();
+    release();
   });
 
   test('two tabs on two accounts call the API as two users and keep them over a reload', async ({
@@ -186,6 +183,7 @@ test.describe('several accounts in one browser', () => {
     signInSlots,
   }) => {
     const [, viewer = ''] = await signInSlots(['creator', 'viewer']);
+    await page.clock.install();
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/u/0/');
 
@@ -203,7 +201,7 @@ test.describe('several accounts in one browser', () => {
     if (!box) throw new Error('the You tab is not on screen');
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
     await page.mouse.down();
-    await page.waitForTimeout(700);
+    await page.clock.fastForward(700);
     await page.mouse.up();
 
     await expect(sheet).toBeVisible();

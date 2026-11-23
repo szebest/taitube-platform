@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { identityKey } from '../account-slots';
 import type { IdentityStore } from '../identity-store';
 import { SESSION_KEY, type Session } from '../session';
-import { useAccount, useIdentity } from '../session-provider';
+import { accountOf, useAccount, useIdentity } from '../session-provider';
 
 export type IdentityGuard = {
   /**
@@ -19,7 +19,7 @@ export type IdentityGuard = {
 
 function viewerOf(identity: IdentityStore): string | undefined {
   const session = identity.queryClient().getQueryData<Session>(SESSION_KEY);
-  return session?.status === 'signed-in' ? session.account.user.id : undefined;
+  return session && accountOf(session)?.user.id;
 }
 
 /**

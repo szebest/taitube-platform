@@ -1,4 +1,3 @@
-import { AccentRing } from '@kit/components';
 import { useT } from '@kit/intl-react';
 import { Badge, Button, Icon, IconButton, SortableList, useToast } from '@kit/ui';
 import { useQuery } from '@tanstack/react-query';
@@ -102,9 +101,16 @@ export function AccountAccentRow() {
                   className="cursor-pointer rounded-full border-0 bg-transparent p-1 focus-ring"
                   onClick={() => void setAccent(entry.identity, accent)}
                 >
-                  <AccentRing accent={accent} className={entry.accent === accent ? '' : 'ring-1'}>
-                    <span className="block size-4 rounded-full bg-tint-strong" />
-                  </AccentRing>
+                  <span
+                    className="block size-4 rounded-full outline-offset-2"
+                    style={{
+                      backgroundColor: `var(--dataviz-categorical-${accent})`,
+                      outline:
+                        entry.accent === accent
+                          ? `2px solid var(--dataviz-categorical-${accent})`
+                          : undefined,
+                    }}
+                  />
                 </button>
               ))}
             </fieldset>

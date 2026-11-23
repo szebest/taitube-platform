@@ -18,13 +18,13 @@ const RECENT_LIMIT = 20;
 export type AccountGlance =
   | {
       readonly slot: number;
-      readonly state: 'counted';
+      readonly kind: 'counted';
       readonly unread: number;
       /** Unread comments on the account's channels among its newest notifications. */
       readonly newComments?: number;
     }
-  | { readonly slot: number; readonly state: 'expired' }
-  | { readonly slot: number; readonly state: 'unknown' };
+  | { readonly slot: number; readonly kind: 'expired' }
+  | { readonly slot: number; readonly kind: 'unknown' };
 
 async function glanceAt(apiBaseUrl: string, slot: number, token: string): Promise<AccountGlance> {
   const api = createApiClient({ baseUrl: apiBaseUrl, getAuthToken: () => token });
@@ -41,14 +41,14 @@ async function glanceAt(apiBaseUrl: string, slot: number, token: string): Promis
   ]);
   if (!isOk(count)) {
     const expired = count.error instanceof ApiError && count.error.status === UNAUTHORIZED;
-    return { slot, state: expired ? 'expired' : 'unknown' };
+    return { slot, kind: expired ? 'expired' : 'unknown' };
   }
-  if (!isOk(recent)) return { slot, state: 'counted', unread: count.value.unreadCount };
+  if (!isOk(recent)) return { slot, kind: 'counted', unread: count.value.unreadCount };
 
   const newComments = recent.value.items.filter(
     (notification) => !notification.read && notification.kind === 'comment'
   ).length;
-  return { slot, state: 'counted', unread: count.value.unreadCount, newComments };
+  return { slot, kind: 'counted', unread: count.value.unreadCount, newComments };
 }
 
 /**
@@ -65,7 +65,7 @@ export const glanceAccounts = createServerFn({ method: 'GET' })
       others.map((slot) => {
         const token = readSessionToken(slot);
         return token === undefined
-          ? Promise.resolve<AccountGlance>({ slot, state: 'expired' })
+          ? Promise.resolve<AccountGlance>({ slot, kind: 'expired' })
           : glanceAt(apiBaseUrl, slot, token);
       })
     );

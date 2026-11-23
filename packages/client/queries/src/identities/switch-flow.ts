@@ -1,5 +1,5 @@
 import type { useT } from '@kit/intl-react';
-import { type Result, fromPromise, isOk, ok } from '@kit/result';
+import { type Result, fromPromise, ignore, isOk, ok } from '@kit/result';
 import type { Toaster } from '@kit/ui';
 import type { AnyRouter } from '@tanstack/react-router';
 import type { ApiClient } from '@vp/api-client';
@@ -49,15 +49,19 @@ export async function switchInPlace(
     (cause) => cause
   );
   if (!isOk(switched)) {
-    await fromPromise(
+    const rolledBack = await fromPromise(
       () => switchIdentity(router, previous.identity, { prefixed: previous.prefixed }),
       (cause) => cause
     );
+    ignore(rolledBack, 'a rollback that fails too leaves the switch failure as the answer');
     return switched;
   }
-  void fromPromise(
-    () => leaveRefusedPage(router, fallback),
-    (cause) => cause
+  ignore(
+    fromPromise(
+      () => leaveRefusedPage(router, fallback),
+      (cause) => cause
+    ),
+    'a page that cannot be left stays, and shows its own refusal'
   );
   return ok(undefined);
 }

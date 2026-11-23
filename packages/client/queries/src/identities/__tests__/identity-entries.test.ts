@@ -64,13 +64,13 @@ describe('@vp/queries: identity entries', () => {
     {
       scenario: 'a counted glance',
       accounts: TWO,
-      glances: [{ slot: 3, state: 'counted' as const, unread: 4 }],
+      glances: [{ slot: 3, kind: 'counted' as const, unread: 4 }],
       expired: false,
     },
     {
       scenario: 'a refused token',
       accounts: TWO,
-      glances: [{ slot: 3, state: 'expired' as const }],
+      glances: [{ slot: 3, kind: 'expired' as const }],
       expired: true,
     },
     { scenario: 'a row marked expired', accounts: withExpired(TWO, 3), glances: [], expired: true },

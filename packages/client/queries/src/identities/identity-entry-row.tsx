@@ -10,7 +10,7 @@ function useDetail(entry: IdentityEntry): string {
     const role = tOr('studio.teamRole', { role: entry.role }, '');
     return entry.handle ? `${role} · @${entry.handle}` : role;
   }
-  if (entry.glance?.state === 'counted') {
+  if (entry.glance?.kind === 'counted') {
     const { unread, newComments = 0 } = entry.glance;
     const said = [
       unread > 0 ? tOr('accounts.unread', { count: unread }, '') : '',
@@ -35,7 +35,7 @@ export function IdentityEntryRow({
 }) {
   const detail = useDetail(entry);
   const { format } = useFormat();
-  const unread = entry.glance?.state === 'counted' ? entry.glance.unread : 0;
+  const unread = entry.glance?.kind === 'counted' ? entry.glance.unread : 0;
 
   return (
     <IdentityRow.Root current={entry.current} expired={entry.expired}>

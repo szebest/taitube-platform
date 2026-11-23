@@ -1,5 +1,5 @@
-import { lazyComponent } from '@kit/ui';
 import { type MouseEvent, type PropsWithChildren, useState } from 'react';
+import { LazyOpenAsMenu } from './open-as-menu.lazy';
 import { useIdentityChoices } from './use-identity-choices';
 
 /** The address of a link of this app that was right-clicked, or `undefined` for anything else. */
@@ -7,11 +7,6 @@ function linkedHref(target: EventTarget | null): string | undefined {
   const link = target instanceof Element ? target.closest<HTMLAnchorElement>('a[href]') : null;
   return link?.origin === window.location.origin ? link.href : undefined;
 }
-
-const LazyOpenAsMenu = lazyComponent(() => import('./open-as-menu'), {
-  name: 'OpenAsMenu',
-  pick: (module) => module.OpenAsMenu,
-});
 
 type Aimed = { href: string; x: number; y: number };
 
