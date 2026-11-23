@@ -7,15 +7,17 @@ test.describe('the studio across several accounts', () => {
     signInSlots,
   }) => {
     const [, viewer = ''] = await signInSlots(['creator', 'viewer']);
-    await page.goto(`/u/0/videos/${stack.videos.watchable.id}/edit`);
+    await page.goto(`/u/0/videos/${stack.videos.draft.id}/edit`);
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
 
     await page.getByRole('button', { name: 'Account' }).click();
     await page.getByRole('menuitemradio', { name: new RegExp(viewer) }).click();
 
-    await expect(page).toHaveURL(/\/u\/1\/videos$/);
+    await expect(page).toHaveURL(/\/u\/1\/videos(\?|$)/);
     await expect(
-      page.locator('[aria-live="polite"]').filter({ hasText: `Now browsing as ${viewer}` })
+      page
+        .locator('[aria-live="polite"][data-slot="visually-hidden"]')
+        .filter({ hasText: `Now browsing as ${viewer}` })
     ).toBeAttached();
   });
 
@@ -29,7 +31,7 @@ test.describe('the studio across several accounts', () => {
 
     await page.goto(`/for/${creator.channel.handle}?next=/videos`);
 
-    await expect(page).toHaveURL(/\/u\/1\/videos$/);
+    await expect(page).toHaveURL(/\/u\/1\/videos(\?|$)/);
     await expect(page.getByRole('heading', { name: 'Your videos' })).toBeVisible();
   });
 

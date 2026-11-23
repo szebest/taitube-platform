@@ -36,7 +36,9 @@ async function switchTo(page: Page, name: string) {
   const started = Date.now();
   await row.click();
   await expect(
-    page.locator('[aria-live="polite"]').filter({ hasText: `Now browsing as ${name}` })
+    page
+      .locator('[aria-live="polite"][data-slot="visually-hidden"]')
+      .filter({ hasText: `Now browsing as ${name}` })
   ).toBeAttached();
   return Date.now() - started;
 }
@@ -77,6 +79,7 @@ test.describe('several accounts in one browser', () => {
     await page.waitForTimeout(2500);
     await page.getByRole('button', { name: 'Account' }).click();
     await expect(page.getByRole('menuitemradio', { checked: true })).toContainText(viewer);
+    await page.keyboard.press('Escape');
     await expect(page.getByRole('main')).not.toContainText(creator);
     expect(await after()).toEqual({ loads: 0, navigations: 1, history: before.history });
   });
