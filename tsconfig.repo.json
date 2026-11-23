@@ -23,5 +23,5 @@
     }
   },
   "include": ["scripts/**/*.ts", "tests/**/*.ts"],
-  "exclude": ["tests/load", "tests/playwright"]
+  "exclude": ["tests/load", "tests/playwright", "tests/fixtures/second-app"]
 }

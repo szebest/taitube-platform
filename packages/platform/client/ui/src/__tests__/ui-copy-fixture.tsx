@@ -34,7 +34,7 @@ export const FIXTURE_UI_COPY: UiCopy = {
   moreActions: 'More actions',
   cancel: 'Cancel',
   clear: 'Clear',
-  paletteLabel: 'Search Taitube',
+  paletteLabel: 'Search Acme',
   palettePlaceholder: 'Search videos, channels and actions',
   paletteNavigate: 'Move',
   paletteOpen: 'Open',

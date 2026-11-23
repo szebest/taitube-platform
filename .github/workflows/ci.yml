@@ -31,6 +31,8 @@ jobs:
       code: ${{ github.event_name != 'pull_request' || steps.changes.outputs.code == 'true' }}
       unit-shards: ${{ steps.unit-shards.outputs.unit-shards }}
       unit-shard-count: ${{ steps.unit-shards.outputs.unit-shard-count }}
+      platform: ${{ github.event_name != 'pull_request' || steps.platform.outputs.platform == 'true' }}
+      extractable: ${{ steps.extractable.outputs.extractable }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -47,6 +49,25 @@ jobs:
               - '!**/*.md'
               - '!docs/**/!(tokens.json)'
 
+      - name: Detect a change the extractability proof can see
+        id: platform
+        if: github.event_name == 'pull_request'
+        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        with:
+          filters: |
+            platform:
+              - 'packages/platform/**'
+              - 'scripts/check-extractable.ts'
+              - 'scripts/extractable/**'
+              - 'scripts/workspace-packages.ts'
+              - 'tests/fixtures/second-app/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - '.nvmrc'
+              - '.github/workflows/ci.yml'
+              - '.github/actions/setup-workspace/**'
+
       - name: Set up the workspace
         if: github.event_name != 'pull_request' || steps.changes.outputs.code == 'true'
         uses: ./.github/actions/setup-workspace
@@ -61,6 +82,11 @@ jobs:
         id: unit-shards
         if: github.event_name != 'pull_request' || steps.changes.outputs.code == 'true'
         run: pnpm -s unit-shards --github-output
+
+      - name: List the platform packages and the second app, one extractable shard each
+        id: extractable
+        if: github.event_name != 'pull_request' || steps.platform.outputs.platform == 'true'
+        run: pnpm -s check:extractable --list --github-output
 
       - name: Hand the build to the jobs that follow, for this run only
         if: github.event_name != 'pull_request' || steps.changes.outputs.code == 'true'
@@ -326,6 +352,29 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           JOBS: repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/attempts/${{ github.run_attempt }}/jobs?per_page=100
         run: *name-failed-shards
+
+  extractable:
+    name: extractable (${{ matrix.target }})
+    needs: [build]
+    if: needs.build.outputs.code == 'true' && needs.build.outputs.platform == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    strategy:
+      fail-fast: false
+      matrix:
+        target: ${{ fromJSON(needs.build.outputs.extractable || '[]') }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      # The check builds its own copy of the closure, so the workspace's build is not needed.
+      - name: Set up the workspace
+        uses: ./.github/actions/setup-workspace
+        with:
+          build: 'false'
+
+      - name: Install, typecheck and test it outside the repository, offline, from the restored store
+        run: pnpm -s check:extractable '${{ matrix.target }}'
 
   integration:
     name: integration

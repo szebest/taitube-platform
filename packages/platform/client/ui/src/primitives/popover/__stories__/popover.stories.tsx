@@ -29,7 +29,7 @@ export const Sizes: Story = {
             <Popover.Arrow />
             <Field.Root>
               <Field.Label>Link</Field.Label>
-              <Input readOnly value="https://taitube.local/watch/lisbon" />
+              <Input readOnly value="https://acme.local/watch/lisbon" />
             </Field.Root>
           </Popover.Content>
         </Popover.Root>

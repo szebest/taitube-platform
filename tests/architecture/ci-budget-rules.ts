@@ -11,6 +11,7 @@ const TIMEOUTS: Readonly<Record<string, number>> = {
   unit: 1,
   'unit-bun-shards': 4,
   'unit-bun': 1,
+  extractable: 6,
   integration: 6,
   'e2e-smoke': 4,
   'e2e-client': 4,

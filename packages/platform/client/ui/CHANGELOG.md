@@ -2,6 +2,8 @@
 
 ## 0.2.0
 
+- `ICONS`, the icon ids with the glyph that draws each, is exported, so an app can check its design library
+  against what the package draws.
 - `InvalidTheme` and `ThemeNotInstalled` take `VALIDATION_FAILED` and `INTERNAL` from `CommonErrorCodes` in
   `@kit/errors`; the package no longer imports the app's error codes. The wire values are unchanged.
 - `accountAppearance` and `appearanceFromAccount` speak `AccountAppearance`, the account's shape derived from `AppearancePreference`, and the cookie's defaults and options come from `@kit/appearance`.

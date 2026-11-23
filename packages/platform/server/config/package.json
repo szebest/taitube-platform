@@ -34,6 +34,7 @@
     "rimraf": "^6.1.3",
     "typescript": "^6.0.3",
     "vite-plus": "catalog:",
+    "vitest": "catalog:",
     "zod": "^4.6.5"
   },
   "vp": {

@@ -1,12 +1,12 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { ICONS } from '../inventory';
+import { ICONS } from '@kit/ui';
 
 const LOGO = 'mark';
 
 const drawnIds = () => {
   const sprite = readFileSync(
-    resolve(import.meta.dirname, '../../../../../../../docs/design/lib/icons.svg'),
+    resolve(import.meta.dirname, '../../../../../docs/design/lib/icons.svg'),
     'utf8'
   );
   const symbols = new DOMParser()

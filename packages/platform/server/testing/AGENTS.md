@@ -19,7 +19,7 @@ the app's fixtures package.
   it, for the token-verifier and API auth specs.
 - **`./log-capture`:** `captureLog`, a `destination` for `createLogger` that parses back what was written.
 - **`./run-entrypoint`:** `runEntrypoint`, which starts a TypeScript entrypoint under the runtime the
-  spec runs on (`tsx` under Node, as is under Bun).
+  spec runs on (`tsx` under Node, an optional peer resolved from this package; as is under Bun).
 
 ---
 
