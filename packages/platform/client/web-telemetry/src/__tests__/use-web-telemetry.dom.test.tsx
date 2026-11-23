@@ -28,7 +28,7 @@ const renderTelemetry = async ({ inServer = false, ...overrides }: TelemetryOpti
   function Root() {
     useWebTelemetry({
       app: 'studio',
-      serviceName: 'taitube-studio',
+      serviceName: 'acme-studio',
       apiBaseUrl: 'http://localhost:3000',
       vitals: { path: '/v1/telemetry/vitals', maxBatchSize: 32 },
       tracesUrl,
@@ -67,7 +67,7 @@ describe('useWebTelemetry', () => {
 
     await vi.waitFor(() => expect(startWebTracing).toHaveBeenCalled());
     expect(startWebTracing).toHaveBeenCalledExactlyOnceWith({
-      serviceName: 'taitube-studio',
+      serviceName: 'acme-studio',
       tracesUrl: TRACES_URL,
       apiOrigin: 'http://localhost:3000',
     });
