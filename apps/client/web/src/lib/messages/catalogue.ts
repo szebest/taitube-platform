@@ -1,5 +1,4 @@
 import type {
-  ArgumentFreeKey as KitArgumentFreeKey,
   DisjointNamespaces,
   MessageKey as KitMessageKey,
   Translation,
@@ -12,8 +11,6 @@ import { en } from './en';
 export type WebCatalogue = DisjointNamespaces<[typeof en, typeof sharedEn]>;
 
 export type MessageKey = KitMessageKey<WebCatalogue>;
-
-export type ArgumentFreeKey = KitArgumentFreeKey<WebCatalogue>;
 
 export type Translator = KitTranslator<WebCatalogue>;
 

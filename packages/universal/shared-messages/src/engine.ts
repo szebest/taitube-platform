@@ -3,6 +3,7 @@ import { PARAMS } from './params';
 
 const PRESETS = definePresets({});
 
+/** @public */
 export type AppEngine = EngineOf<typeof builtInKinds, typeof PRESETS, typeof PARAMS>;
 
 /** The product's message engine: the built-in kinds, no presets yet, and the closed param vocabulary. */

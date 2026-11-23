@@ -1,9 +1,7 @@
 import type {
   ArgumentFreeKey as KitArgumentFreeKey,
   DisjointNamespaces,
-  MessageKey as KitMessageKey,
   Translation,
-  Translator as KitTranslator,
 } from '@kit/i18n';
 import { createI18n, en as sharedEn, type SupportedLocale } from '@vp/shared-messages';
 import { en } from './en';
@@ -11,11 +9,7 @@ import { en } from './en';
 /** The studio's catalogue: the shared words and its own, which never share a namespace. */
 export type StudioCatalogue = DisjointNamespaces<[typeof en, typeof sharedEn]>;
 
-export type MessageKey = KitMessageKey<StudioCatalogue>;
-
 export type ArgumentFreeKey = KitArgumentFreeKey<StudioCatalogue>;
-
-export type Translator = KitTranslator<StudioCatalogue>;
 
 export const STUDIO_SOURCE: StudioCatalogue = { ...sharedEn, ...en };
 

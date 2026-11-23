@@ -2,6 +2,7 @@ import type { CatalogueSet, CatalogueShape, I18n, Translator } from '@kit/i18n';
 import { createContext, type ReactNode, useContext } from 'react';
 import { useIntlBindings } from './intl-context';
 
+/** @public */
 export interface TranslatorProviderProps<App> {
   /** The source catalogue and the translations the active locale has loaded. */
   readonly catalogues: CatalogueSet<App>;

@@ -7,9 +7,9 @@ import {
   webI18n,
 } from '#app/lib/messages/catalogue';
 
-export const NOW = '2026-09-22T18:30:00.000Z';
+const NOW = '2026-09-22T18:30:00.000Z';
 
-export function intlFor(locale: string): IntlBinding {
+function intlFor(locale: string): IntlBinding {
   return createIntl({ locale, timeZone: 'UTC', now: NOW, cache: createIntlCache() });
 }
 

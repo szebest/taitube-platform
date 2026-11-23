@@ -93,6 +93,7 @@
       ]
     },
     "packages/**/client/ui": {
+      "entry": ["src/**/type-fixtures/*.ts"],
       "includeEntryExports": false,
       "ignoreDependencies": ["simple-icons", "simple-icons-linkedin"],
       "project": [
@@ -133,6 +134,7 @@
       "project": ["src/**/*.{ts,css}!", "!src/**/__tests__/**!"]
     },
     "packages/**/server/testing": {
+      "entry": ["src/**/type-fixtures/*.ts"],
       "includeEntryExports": false,
       "ignoreDependencies": ["tsx"],
       "project": [
@@ -160,6 +162,7 @@
       ]
     },
     "packages/**/universal/design-tokens": {
+      "entry": ["src/**/type-fixtures/*.ts"],
       "includeEntryExports": false,
       "project": [
         "**/*.{ts,tsx,mts,mjs,js}!",
@@ -187,6 +190,7 @@
       ]
     },
     "packages/**/client/intl-react": {
+      "entry": ["src/**/type-fixtures/*.ts"],
       "project": [
         "**/*.{ts,tsx,mts,mjs,js}!",
         "!**/__tests__/**!",
@@ -249,6 +253,7 @@
     },
     "packages/platform/*/*": {
       "includeEntryExports": false,
+      "entry": ["src/**/type-fixtures/*.ts"],
       "project": [
         "**/*.{ts,tsx,mts,mjs,js}!",
         "!**/__tests__/**!",

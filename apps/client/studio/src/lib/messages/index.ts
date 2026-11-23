@@ -9,7 +9,9 @@ import {
 
 export * from './catalogue';
 
-export const { TranslatorProvider, useT } = createReactI18n(studioI18n);
+const { TranslatorProvider, useT } = createReactI18n(studioI18n);
+
+export { useT };
 
 export const STUDIO_MESSAGES: AppMessages<StudioCatalogue> = {
   source: STUDIO_SOURCE,

@@ -4,7 +4,9 @@ import { WEB_SOURCE, type WebCatalogue, loadWebTranslation, webI18n } from './ca
 
 export * from './catalogue';
 
-export const { TranslatorProvider, useT } = createReactI18n(webI18n);
+const { TranslatorProvider, useT } = createReactI18n(webI18n);
+
+export { useT };
 
 export const WEB_MESSAGES: AppMessages<WebCatalogue> = {
   source: WEB_SOURCE,

@@ -18,6 +18,7 @@ export interface LocaleStoreOptions<Locale extends string, Catalogue> {
   readonly load: (locale: Locale) => Promise<Catalogue>;
 }
 
+/** @public */
 export function fallbackActiveLocale<Locale extends string, Catalogue>(
   fallbackLocale: Locale
 ): ActiveLocale<Locale, Catalogue> {

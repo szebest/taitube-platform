@@ -1055,9 +1055,6 @@ importers:
       '@kit/i18n':
         specifier: workspace:*
         version: link:../../platform/universal/i18n
-      '@kit/intl':
-        specifier: workspace:*
-        version: link:../../platform/universal/intl
       '@kit/intl-react':
         specifier: workspace:*
         version: link:../../platform/client/intl-react
@@ -1255,15 +1252,6 @@ importers:
       '@kit/design-tokens':
         specifier: workspace:*
         version: link:../../platform/universal/design-tokens
-      '@kit/i18n':
-        specifier: workspace:*
-        version: link:../../platform/universal/i18n
-      '@kit/intl':
-        specifier: workspace:*
-        version: link:../../platform/universal/intl
-      '@kit/intl-react':
-        specifier: workspace:*
-        version: link:../../platform/client/intl-react
       '@kit/result':
         specifier: workspace:*
         version: link:../../platform/universal/result
@@ -3637,9 +3625,6 @@ importers:
       '@kit/intl':
         specifier: workspace:*
         version: link:../../platform/universal/intl
-      '@kit/result':
-        specifier: workspace:*
-        version: link:../../platform/universal/result
       '@vp/errors':
         specifier: workspace:*
         version: link:../errors
