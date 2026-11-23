@@ -1,6 +1,6 @@
 import { translatorFor } from '../../__tests__/fixtures';
 
-describe('@vp/messages: en studio batch', () => {
+describe('apps/client/studio: en studio batch', () => {
   const { t } = translatorFor('en');
 
   it.each([

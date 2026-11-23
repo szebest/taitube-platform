@@ -1,7 +1,7 @@
 import { pl } from '..';
 import { translatorFor } from '../../__tests__/fixtures';
 
-describe('@vp/messages: pl auth', () => {
+describe('@vp/shared-messages: pl auth', () => {
   const { t } = translatorFor('pl', { pl });
 
   it.each([

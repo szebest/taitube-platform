@@ -1,4 +1,5 @@
 import type { FormatKind, KindsMatchUnion, TaggedValue } from '../../format-value';
+import { defineLocales } from '../../locales';
 import type { OptionKeys } from '../../with-options';
 
 const _complete: KindsMatchUnion<FormatKind, TaggedValue['type']> = true;
@@ -15,3 +16,15 @@ const _declared = ['maximumFractionDigits'] as const satisfies OptionKeys<Intl.N
 const _misspelt = ['maximumFractionDigts'] as const satisfies OptionKeys<Intl.NumberFormatOptions>;
 
 const _ours = ['base'] as const satisfies OptionKeys<Intl.NumberFormatOptions, 'base'>;
+
+const locales = defineLocales({
+  source: 'en',
+  details: { en: { name: 'English', direction: 'ltr' }, he: { name: 'עברית', direction: 'rtl' } },
+});
+expectTypeOf(locales.tags).toEqualTypeOf<readonly ('en' | 'he')[]>();
+
+// @ts-expect-error the source locale must be one the app registers
+defineLocales({ source: 'de', details: { en: { name: 'English', direction: 'ltr' } } });
+
+// @ts-expect-error a direction is ltr or rtl
+defineLocales({ source: 'en', details: { en: { name: 'English', direction: 'up' } } });

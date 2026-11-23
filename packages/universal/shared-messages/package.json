@@ -16,6 +16,11 @@
       "types": "./dist/pl/index.d.ts",
       "import": "./dist/pl/index.js",
       "default": "./dist/pl/index.js"
+    },
+    "./locales": {
+      "types": "./dist/locales.d.ts",
+      "import": "./dist/locales.js",
+      "default": "./dist/locales.js"
     }
   },
   "scripts": {

@@ -4,8 +4,8 @@ import {
   type IntlProviderProps as KitIntlProviderProps,
 } from '@kit/intl-react';
 import { en, type SharedCatalogue } from '@vp/shared-messages';
+import { LOCALES } from '@vp/shared-messages/locales';
 import type { AppMessages } from './app-messages';
-import { SOURCE_LOCALE } from './locale-store';
 import { sharedWords } from './shared-words';
 
 const SYSTEM_CLOCK: KitIntlProviderProps['clock'] = { now: () => Date.now() };
@@ -30,10 +30,10 @@ export function IntlProvider<App extends SharedCatalogue>({
   return (
     <KitIntlProvider {...props} clock={SYSTEM_CLOCK}>
       <sharedWords.TranslatorProvider
-        catalogues={{ locale: SOURCE_LOCALE, source: en, translations: catalogues }}
+        catalogues={{ locale: LOCALES.source, source: en, translations: catalogues }}
       >
         <TranslatorProvider
-          catalogues={{ locale: SOURCE_LOCALE, source: messages.source, translations: catalogues }}
+          catalogues={{ locale: LOCALES.source, source: messages.source, translations: catalogues }}
         >
           {children}
         </TranslatorProvider>

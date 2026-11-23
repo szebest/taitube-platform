@@ -1,6 +1,6 @@
 import { Select } from '@kit/ui';
 import { useRouteContext, useRouter } from '@tanstack/react-router';
-import { LOCALE_DETAILS, SUPPORTED_LOCALES } from '@vp/shared-messages';
+import { LOCALES } from '@vp/shared-messages/locales';
 import { useT } from '#app/lib/messages';
 import { useLocalePreference } from '#app/lib/preferences/device-preferences-provider';
 import { SettingItem } from '../setting-item/setting-item';
@@ -21,11 +21,11 @@ export function LanguageRow() {
   });
   const { tOr } = useT();
 
-  const unlisted = locale !== null && !SUPPORTED_LOCALES.some((listed) => listed === locale);
+  const unlisted = locale !== null && !LOCALES.tags.some((listed) => listed === locale);
   const followBrowser =
     browserLocale === undefined
       ? tOr('settings.followBrowser', {}, '')
-      : tOr('settings.followBrowserIn', { name: LOCALE_DETAILS[browserLocale].name }, '');
+      : tOr('settings.followBrowserIn', { name: LOCALES.details[browserLocale].name }, '');
 
   const choose = (next: string) => {
     setLocale(next === BROWSER ? null : next);
@@ -43,9 +43,9 @@ export function LanguageRow() {
         </Select.Trigger>
         <Select.Content>
           <Select.Item value={BROWSER}>{followBrowser}</Select.Item>
-          {SUPPORTED_LOCALES.map((tag) => (
+          {LOCALES.tags.map((tag) => (
             <Select.Item key={tag} value={tag} lang={tag}>
-              {LOCALE_DETAILS[tag].name}
+              {LOCALES.details[tag].name}
             </Select.Item>
           ))}
           {unlisted && <Select.Item value={locale}>{locale}</Select.Item>}

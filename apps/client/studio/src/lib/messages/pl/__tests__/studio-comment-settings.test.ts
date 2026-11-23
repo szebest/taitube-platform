@@ -1,7 +1,7 @@
 import { pl } from '..';
 import { translatorFor } from '../../__tests__/fixtures';
 
-describe('@vp/messages: pl studio comment settings', () => {
+describe('apps/client/studio: pl studio comment settings', () => {
   const { t } = translatorFor('pl', { pl });
 
   it('names the review mode all', () => {

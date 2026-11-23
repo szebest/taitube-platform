@@ -10,7 +10,8 @@ import {
 } from '@tanstack/react-router';
 import { setupRouterSsrQueryIntegration } from '@tanstack/react-router-ssr-query';
 import type { ApiClient } from '@vp/api-client';
-import { isSupportedLocale, type SharedCatalogue } from '@vp/shared-messages';
+import { type SharedCatalogue } from '@vp/shared-messages';
+import { LOCALES } from '@vp/shared-messages/locales';
 import { type PropsWithChildren, useSyncExternalStore } from 'react';
 import { type ActingChannelStore, createActingChannelStore } from './acting-channel';
 import { createAppApiClient } from './api-client';
@@ -154,7 +155,7 @@ export function createAppRouter<TRouteTree extends AnyRoute, App extends SharedC
       renderedAt = dehydrated['renderedAt'] ?? renderedAt;
       actingChannel.select(dehydrated['actingChannel'] || undefined);
       const locale = dehydrated['locale'] ?? '';
-      if (isSupportedLocale(locale)) {
+      if (LOCALES.isSupported(locale)) {
         await locales.activate(locale);
       }
     },

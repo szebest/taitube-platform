@@ -1,8 +1,7 @@
 import { readFileSync } from 'node:fs';
-import { FALLBACK_LOCALE } from '@kit/intl';
 import { appearance } from '@kit/ui/appearance/registry';
 import { expect, test } from '@playwright/test';
-import { SUPPORTED_LOCALES } from '@vp/shared-messages';
+import { LOCALES } from '@vp/shared-messages/locales';
 import { THEME_DEFAULT } from '../src/toolbars';
 import { type StoryEntry, shotVariant, shotsFor, storiesFor } from './stories';
 
@@ -32,12 +31,12 @@ const changed = changedList
 const shots = shotsFor(storiesFor(Object.values(index.entries), changed), {
   themes: appearance.themes.map(({ id }) => id),
   modes: SHOWN_MODES,
-  locales: SUPPORTED_LOCALES.filter((locale) => locale !== FALLBACK_LOCALE),
+  locales: LOCALES.tags.filter((locale) => locale !== LOCALES.source),
 });
 
 for (const shot of shots) {
   const { story, theme, mode } = shot;
-  const { motion = THEME_DEFAULT, direction = 'ltr', locale = FALLBACK_LOCALE } = shot;
+  const { motion = THEME_DEFAULT, direction = 'ltr', locale = LOCALES.source } = shot;
   const variant = shotVariant(shot);
   test(`${story} at ${theme} ${mode}${variant}`, async ({ page }) => {
     const globals = `theme:${theme};mode:${mode};motion:${motion};direction:${direction};locale:${locale}`;

@@ -1,7 +1,7 @@
 import { pl } from '..';
 import { translatorFor } from '../../__tests__/fixtures';
 
-describe('@vp/messages: pl themeBuilder', () => {
+describe('apps/client/web: pl themeBuilder', () => {
   const { t } = translatorFor('pl', { pl });
 
   it.each([

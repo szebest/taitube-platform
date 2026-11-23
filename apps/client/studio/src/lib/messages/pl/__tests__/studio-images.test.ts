@@ -1,7 +1,7 @@
 import { pl } from '..';
 import { translatorFor } from '../../__tests__/fixtures';
 
-describe('@vp/messages: pl studio images', () => {
+describe('apps/client/studio: pl studio images', () => {
   const { t } = translatorFor('pl', { pl });
 
   it.each([

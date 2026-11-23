@@ -1,6 +1,6 @@
 import { translatorFor } from '../../__tests__/fixtures';
 
-describe('@vp/messages: en themeBuilder', () => {
+describe('apps/client/web: en themeBuilder', () => {
   const { t } = translatorFor('en');
 
   it.each([

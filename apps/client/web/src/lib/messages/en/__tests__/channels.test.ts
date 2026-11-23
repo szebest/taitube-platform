@@ -1,6 +1,6 @@
 import { translatorFor } from '../../__tests__/fixtures';
 
-describe('@vp/messages: en channels', () => {
+describe('apps/client/web: en channels', () => {
   const { t } = translatorFor('en');
 
   it.each([

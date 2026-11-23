@@ -1,7 +1,7 @@
 import { pl } from '..';
 import { translatorFor } from '../../__tests__/fixtures';
 
-describe('@vp/messages: pl signInPrompt', () => {
+describe('apps/client/web: pl signInPrompt', () => {
   const { t } = translatorFor('pl', { pl });
 
   it.each([

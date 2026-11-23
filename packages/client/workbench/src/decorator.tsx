@@ -1,5 +1,4 @@
 import { accentCss } from '@kit/design-tokens';
-import { FALLBACK_LOCALE } from '@kit/intl';
 import { unwrapOr } from '@kit/result';
 import {
   AppearanceProvider,
@@ -9,13 +8,14 @@ import {
   useAppearance,
 } from '@kit/ui';
 import type { Decorator, Loader } from '@storybook/react-vite';
-import { en, SUPPORTED_LOCALES, type SharedTranslation } from '@vp/shared-messages';
+import { en, type SharedTranslation } from '@vp/shared-messages';
+import { LOCALES } from '@vp/shared-messages/locales';
 import { type PropsWithChildren, useEffect } from 'react';
 import { WEB_MESSAGES } from '../../../../apps/client/web/src/lib/messages';
 import { DIRECTIONS, pickOption, preferenceFromGlobals } from './toolbars';
 
 export const pickLocale = (globals: Readonly<Record<string, unknown>>) =>
-  pickOption(SUPPORTED_LOCALES, globals.locale, FALLBACK_LOCALE);
+  pickOption(LOCALES.tags, globals.locale, LOCALES.source);
 
 /** The toolbar locale's catalogue, loaded before the story renders as the apps load it before they hydrate. */
 export const loadCatalogue: Loader = async ({ globals }) => ({

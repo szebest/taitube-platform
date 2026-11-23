@@ -1,4 +1,4 @@
-import { SUPPORTED_LOCALES } from '@vp/shared-messages';
+import { LOCALES } from '@vp/shared-messages';
 import {
   loadStudioTranslation,
   STUDIO_SOURCE,
@@ -59,12 +59,14 @@ describe('architecture: every catalogue holds the keys en holds', () => {
 
   it.each(
     APPS.flatMap(({ app, source, load }) =>
-      SUPPORTED_LOCALES.filter((locale) => locale !== 'en').map((locale) => ({
-        app,
-        source,
-        load,
-        locale,
-      }))
+      LOCALES.tags
+        .filter((locale) => locale !== 'en')
+        .map((locale) => ({
+          app,
+          source,
+          load,
+          locale,
+        }))
     )
   )('finds no drift between en and $locale in $app', async ({ source, load, locale }) => {
     expect(drift(source, await load(locale))).toEqual({

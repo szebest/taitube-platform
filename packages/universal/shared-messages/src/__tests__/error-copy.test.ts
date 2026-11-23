@@ -1,7 +1,7 @@
 import { ERROR_COPY } from '../error-copy';
 import { translatorFor } from './fixtures';
 
-describe('@vp/messages: ERROR_COPY', () => {
+describe('@vp/shared-messages: ERROR_COPY', () => {
   it.each(Object.entries(ERROR_COPY))('renders %s as a sentence', (_code, key) => {
     const rendered = translatorFor('en').t(key);
 

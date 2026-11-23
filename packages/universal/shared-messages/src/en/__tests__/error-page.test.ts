@@ -1,6 +1,6 @@
 import { translatorFor } from '../../__tests__/fixtures';
 
-describe('@vp/messages: en errorPage', () => {
+describe('@vp/shared-messages: en errorPage', () => {
   const { t } = translatorFor('en');
 
   it.each([

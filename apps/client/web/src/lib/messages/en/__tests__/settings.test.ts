@@ -1,6 +1,6 @@
 import { translatorFor } from '../../__tests__/fixtures';
 
-describe('@vp/messages: en settings', () => {
+describe('apps/client/web: en settings', () => {
   const { t } = translatorFor('en');
 
   it.each([
@@ -20,7 +20,7 @@ describe('@vp/messages: en settings', () => {
   });
 });
 
-describe('@vp/messages: en settings, kept choice', () => {
+describe('apps/client/web: en settings, kept choice', () => {
   const { t } = translatorFor('en');
 
   it('names the field it kept', () => {

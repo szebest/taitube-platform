@@ -1,5 +1,5 @@
 import { LOCALE_PARAM } from '@vp/queries';
-import { LOCALE_DETAILS, SUPPORTED_LOCALES, type SupportedLocale } from '@vp/shared-messages';
+import { LOCALES, type SupportedLocale } from '@vp/shared-messages/locales';
 import { serializeJsonLd } from './json-ld';
 
 const DESCRIPTION_LIMIT = 200;
@@ -30,7 +30,7 @@ function excerpt(text: string): string {
 /** The same page in every supported language, through the `lang` param, and the negotiated one by default. */
 function languageAlternates(url: string): HeadLink[] {
   return [
-    ...SUPPORTED_LOCALES.map((tag) => ({
+    ...LOCALES.tags.map((tag) => ({
       rel: 'alternate',
       hrefLang: tag,
       href: `${url}?${new URLSearchParams({ [LOCALE_PARAM]: tag })}`,
@@ -66,11 +66,13 @@ export function pageHead({
       { property: 'og:type', content: openGraphType },
       { property: 'og:site_name', content: SITE_NAME },
       { property: 'og:url', content: url },
-      { property: 'og:locale', content: LOCALE_DETAILS[locale].openGraph },
-      ...SUPPORTED_LOCALES.filter((other) => other !== locale).map((other) => ({
-        property: 'og:locale:alternate',
-        content: LOCALE_DETAILS[other].openGraph,
-      })),
+      { property: 'og:locale', content: LOCALES.details[locale].openGraph },
+      ...LOCALES.tags
+        .filter((other) => other !== locale)
+        .map((other) => ({
+          property: 'og:locale:alternate',
+          content: LOCALES.details[other].openGraph,
+        })),
       { property: 'og:title', content: title },
       { property: 'og:description', content: summary },
       ...(image ? [{ property: 'og:image', content: image }] : []),

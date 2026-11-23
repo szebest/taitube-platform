@@ -1,7 +1,7 @@
 import { pl } from '..';
 import { translatorFor } from '../../__tests__/fixtures';
 
-describe('@vp/messages: pl party', () => {
+describe('apps/client/web: pl party', () => {
   const { t } = translatorFor('pl', { pl });
 
   it.each([

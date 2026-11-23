@@ -1,6 +1,6 @@
 import { translatorFor } from '../../__tests__/fixtures';
 
-describe('@vp/messages: en auth', () => {
+describe('@vp/shared-messages: en auth', () => {
   const { t } = translatorFor('en');
 
   it.each([

@@ -1,6 +1,6 @@
 import { translatorFor } from '../../__tests__/fixtures';
 
-describe('@vp/messages: en browse', () => {
+describe('@vp/shared-messages: en browse', () => {
   const { t } = translatorFor('en');
 
   it.each([{ key: 'browse.untitled', expected: 'Untitled video' }] as const)(

@@ -63,6 +63,7 @@
     "@vp/job-contracts": "workspace:*",
     "@vp/permissions": "workspace:*",
     "@vp/pipeline-metrics": "workspace:*",
+    "@vp/shared-messages": "workspace:*",
     "@vp/storage": "workspace:*",
     "@vp/validation": "workspace:*",
     "@vp/whisper": "workspace:*",

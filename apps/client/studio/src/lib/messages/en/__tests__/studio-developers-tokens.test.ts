@@ -1,6 +1,6 @@
 import { translatorFor } from '../../__tests__/fixtures';
 
-describe('@vp/messages: en studio developer tokens', () => {
+describe('apps/client/studio: en studio developer tokens', () => {
   const { t } = translatorFor('en');
 
   it.each([
