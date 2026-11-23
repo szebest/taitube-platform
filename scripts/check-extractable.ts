@@ -135,6 +135,13 @@ function resolveTargets(names: readonly string[], platform: readonly Pkg[]) {
   return { found, unknown };
 }
 
+/** The sandboxes run what a fresh shell would: no module path, no package or script variables of this run. */
+function forgetRepositoryRun(env: NodeJS.ProcessEnv): void {
+  for (const key of Object.keys(env)) {
+    if (/^(NODE_PATH|INIT_CWD)$|^npm_|^PNPM_(SCRIPT|PACKAGE)/.test(key)) delete env[key];
+  }
+}
+
 async function main(argv: readonly string[]): Promise<number> {
   const flags = argv.filter((arg) => arg.startsWith('-'));
   const unknownFlag = flags.find((flag) => !FLAGS.includes(flag));
@@ -191,5 +198,6 @@ async function main(argv: readonly string[]): Promise<number> {
 }
 
 if (process.argv[1]?.endsWith('check-extractable.ts')) {
+  forgetRepositoryRun(process.env);
   process.exitCode = await main(process.argv.slice(2));
 }

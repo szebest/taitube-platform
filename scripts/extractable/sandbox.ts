@@ -38,26 +38,12 @@ export interface Outcome {
   output: string;
 }
 
-/** Only what a fresh shell would carry: no module path, no package or script variables of the repository's run. */
-function cleanEnv(): NodeJS.ProcessEnv {
-  return Object.fromEntries(
-    Object.entries(process.env).filter(
-      ([key]) =>
-        key !== 'NODE_PATH' &&
-        key !== 'INIT_CWD' &&
-        !key.startsWith('npm_') &&
-        !key.startsWith('PNPM_SCRIPT') &&
-        !key.startsWith('PNPM_PACKAGE')
-    )
-  );
-}
-
 /** The install every sandbox runs: offline, from the pruned lockfile as it is, which the repository's own install already verified. */
 export const OFFLINE_INSTALL = ['install', '--offline', '--frozen-lockfile', '--trust-lockfile'];
 
 export function exec(command: string, args: readonly string[], cwd: string): Promise<Outcome> {
   return new Promise((done) => {
-    const child = spawn(command, args, { cwd, env: cleanEnv(), stdio: ['ignore', 'pipe', 'pipe'] });
+    const child = spawn(command, args, { cwd, stdio: ['ignore', 'pipe', 'pipe'] });
     const chunks: Buffer[] = [];
     child.stdout.on('data', (chunk: Buffer) => chunks.push(chunk));
     child.stderr.on('data', (chunk: Buffer) => chunks.push(chunk));
