@@ -61,7 +61,7 @@ const PALETTE = [
 /** The rows that keep components on the design system's tokens and inside its packages. */
 export const DESIGN_ROWS: readonly Row[] = [
   {
-    name: 'a raw colour in client source, where a colour role belongs (media is not chrome: the stand-in posters stories paint, the ambient colour sampled from a video, and the workbench accents standing in for one a viewer types)',
+    name: 'a raw colour in client source, where a colour role belongs (media is not chrome: the stand-in posters stories paint, the ambient colour sampled from a video, and the workbench accents standing in for one a viewer types, and the example colour a catalogue sentence names)',
     pattern: /#[0-9a-fA-F]{3,8}\b|\b(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch|color-mix)\(/g,
     scope: [
       ...CLIENT_SOURCE,
@@ -71,6 +71,7 @@ export const DESIGN_ROWS: readonly Row[] = [
       ':(exclude,glob)**/*.stories.tsx',
       ':(exclude)apps/client/web/src/hooks/use-ambient-sample.ts',
       ':(exclude)packages/client/workbench/src/toolbars.ts',
+      ':(exclude,glob)apps/client/*/src/lib/messages/*/studio.ts',
     ],
     expected: 0,
     fires: "{ name: 'theme-color', content: '#000000' },",

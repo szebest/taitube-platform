@@ -5,7 +5,12 @@ import { workspacePaths } from '../tests/architecture/program';
 import { productionSources, ROOT } from '../tests/architecture/repo-files';
 import { load, runsInBrowser } from './workspace-packages';
 
-const KEY_MODULE = 'packages/universal/shared-messages/src/catalogue.ts';
+/** Each catalogue module and the key union it exports: the shared layer's and each app's own. */
+const KEY_MODULES = [
+  { file: 'packages/universal/shared-messages/src/catalogue.ts', keyType: 'SharedMessageKey' },
+  { file: 'apps/client/web/src/lib/messages/catalogue.ts', keyType: 'MessageKey' },
+  { file: 'apps/client/studio/src/lib/messages/catalogue.ts', keyType: 'MessageKey' },
+];
 const FIXTURE = 'tests/architecture/message-key-usage.json';
 
 export type KeyUsage = ReadonlyMap<string, ReadonlySet<string>>;
@@ -15,11 +20,16 @@ function stringLiterals(type: ts.Type): string[] {
   return members.flatMap((member) => (member.isStringLiteral() ? [member.value] : []));
 }
 
-function messageKeys(checker: ts.TypeChecker, keyModule: ts.SourceFile): ReadonlySet<string> {
+export interface KeyModule {
+  readonly file: string;
+  readonly keyType: string;
+}
+
+function messageKeys(checker: ts.TypeChecker, keyModule: ts.SourceFile, keyType: string): string[] {
   const moduleSymbol = checker.getSymbolAtLocation(keyModule);
-  const keySymbol = moduleSymbol && checker.tryGetMemberInModuleExports('MessageKey', moduleSymbol);
-  if (!keySymbol) throw new Error(`${keyModule.fileName} exports no MessageKey`);
-  return new Set(stringLiterals(checker.getDeclaredTypeOfSymbol(keySymbol)));
+  const keySymbol = moduleSymbol && checker.tryGetMemberInModuleExports(keyType, moduleSymbol);
+  if (!keySymbol) throw new Error(`${keyModule.fileName} exports no ${keyType}`);
+  return stringLiterals(checker.getDeclaredTypeOfSymbol(keySymbol));
 }
 
 function isKeyContext(checker: ts.TypeChecker, node: ts.Expression, keys: ReadonlySet<string>) {
@@ -41,12 +51,16 @@ function isPassedValue(node: ts.Node): node is ts.Expression {
  * The keys a node names: a literal by its text, anything else by its type, unless that type is the
  * catalogue's own key union, which says only that some key flows through and would name every one.
  */
-function keysNamedBy(checker: ts.TypeChecker, node: ts.Node, keyModule: ts.SourceFile): string[] {
+function keysNamedBy(
+  checker: ts.TypeChecker,
+  node: ts.Node,
+  keyModules: ReadonlySet<ts.SourceFile>
+): string[] {
   if (ts.isStringLiteralLike(node)) return [node.text];
   if (!(ts.isTemplateExpression(node) || isPassedValue(node))) return [];
   const type = checker.getTypeAtLocation(node);
   const alias = type.aliasSymbol?.declarations?.[0]?.getSourceFile();
-  return alias === keyModule ? [] : stringLiterals(type);
+  return alias !== undefined && keyModules.has(alias) ? [] : stringLiterals(type);
 }
 
 /**
@@ -57,17 +71,23 @@ function keysNamedBy(checker: ts.TypeChecker, node: ts.Node, keyModule: ts.Sourc
  */
 export function messageKeyUsage(
   program: ts.Program,
-  keyModule: string,
+  keyModules: readonly KeyModule[],
   files: readonly string[]
 ): KeyUsage {
   const checker = program.getTypeChecker();
-  const source = program.getSourceFile(keyModule);
-  if (!source) throw new Error(`${keyModule} is not in the program`);
-  const keys = messageKeys(checker, source);
+  const sources = keyModules.map(({ file, keyType }) => {
+    const source = program.getSourceFile(file);
+    if (!source) throw new Error(`${file} is not in the program`);
+    return { source, keyType };
+  });
+  const keys = new Set(
+    sources.flatMap(({ source, keyType }) => messageKeys(checker, source, keyType))
+  );
+  const moduleFiles = new Set(sources.map(({ source }) => source));
   const usage = new Map<string, Set<string>>([...keys].map((key) => [key, new Set<string>()]));
 
   const visit = (file: string) => (node: ts.Node) => {
-    const named = keysNamedBy(checker, node, source);
+    const named = keysNamedBy(checker, node, moduleFiles);
     if (named.length > 0 && ts.isExpression(node) && isKeyContext(checker, node, keys)) {
       for (const key of named) usage.get(key)?.add(file);
     }
@@ -115,7 +135,8 @@ function render(): string {
   const roots = productionSources()
     .filter(runsInBrowser)
     .map((file) => join(ROOT, file));
-  const usage = messageKeyUsage(browserProgram(roots), join(ROOT, KEY_MODULE), roots);
+  const keyModules = KEY_MODULES.map(({ file, keyType }) => ({ file: join(ROOT, file), keyType }));
+  const usage = messageKeyUsage(browserProgram(roots), keyModules, roots);
   const relativeUsage = new Map(
     [...usage].map(([key, files]) => [key, new Set([...files].map((f) => relative(ROOT, f)))])
   );
