@@ -10,7 +10,7 @@
 A package belongs in `universal/` when **something client-side actually imports it**. Not when it
 *could* run in a browser — plenty of code is portable without any browser needing it.
 
-Current members: `api-contracts`, `domain`, `domain-rules`, `errors`, `intl-formats`, `messages`, `permissions` and
+Current members: `api-contracts`, `domain`, `domain-rules`, `errors`, `intl-formats`, `permissions`, `shared-messages` and
 `validation` (the app halves, `@vp/*`), and the platform packages in `packages/platform/universal/`: `appearance`,
 `design-tokens`, `di`, `errors`, `i18n`, `intl`, `machine`, `pagination`, `permissions`, `primitives`, `result`,
 `runtime`, `tsconfig`, `validation` (`@kit/*`). `apps/client/web` reaches them at runtime through `@vp/api-client` and

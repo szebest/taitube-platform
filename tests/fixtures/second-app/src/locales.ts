@@ -1,13 +1,16 @@
-import { createIntl, createIntlCache, type IntlBinding } from '@kit/intl';
+import { createIntl, createIntlCache, defineLocales, type IntlBinding } from '@kit/intl';
 
-export const SHOP_LOCALES = [
-  { tag: 'fi-FI', direction: 'ltr', timeZone: 'Europe/Helsinki' },
-  { tag: 'ar-EG', direction: 'rtl', timeZone: 'Africa/Cairo' },
-] as const;
+export const SHOP_LOCALES = defineLocales({
+  source: 'fi-FI',
+  details: {
+    'fi-FI': { name: 'Suomi', direction: 'ltr', timeZone: 'Europe/Helsinki' },
+    'ar-EG': { name: 'العربية', direction: 'rtl', timeZone: 'Africa/Cairo' },
+  },
+});
 
-export type ShopLocale = (typeof SHOP_LOCALES)[number]['tag'];
+export type ShopLocale = (typeof SHOP_LOCALES.tags)[number];
 
 export function shopIntl(locale: ShopLocale): IntlBinding {
-  const { timeZone } = SHOP_LOCALES.find(({ tag }) => tag === locale) ?? SHOP_LOCALES[0];
+  const { timeZone } = SHOP_LOCALES.details[locale];
   return createIntl({ locale, timeZone, cache: createIntlCache() });
 }

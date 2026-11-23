@@ -166,7 +166,7 @@ document is stale — fix it.
 | `@vp/api-contracts` | universal | `@vp/domain`, `@vp/errors`, `@kit/pagination`, `@vp/permissions`, `@kit/result`, `@vp/validation` |
 | `@vp/domain-rules` | universal | `@vp/domain`, `@vp/errors`, `@vp/permissions`, `@kit/result`, `@vp/validation` |
 | `@vp/intl-formats` | universal | `@kit/intl` |
-| `@vp/messages` | universal | `@vp/errors`, `@kit/intl`, `@kit/result` |
+| `@vp/shared-messages` | universal | `@kit/i18n`, `@kit/intl`, `@kit/result`, `@vp/errors` |
 | `@kit/runtime` | universal | `@kit/di` |
 | `@kit/i18n` | universal | `@kit/di`, `@kit/intl`, `@kit/result` |
 | `@kit/composition` | server | `@kit/di`, `@kit/result` |
@@ -185,7 +185,7 @@ document is stale — fix it.
 | `@vp/api-client` | client | `@vp/api-contracts` |
 | `@kit/components` | client | `@kit/design-tokens`, `@kit/ui` |
 | `@kit/forms` | client | `@vp/errors`, `@kit/result` (T4 by design: above `@kit/ui` at T3, whose primitives its fields move onto) |
-| `@kit/intl-react` | client | `@kit/intl`, `@vp/messages`, `@kit/result` |
+| `@kit/intl-react` | client | `@kit/i18n`, `@kit/intl`, `@kit/result` |
 | `@kit/web-telemetry` | client | `@vp/api-contracts`, `@kit/result` |
 | `@vp/adapters` | server | `@kit/composition`, `@kit/concurrency`, `@vp/core`, `@vp/db`, `@kit/dev-token`, `@vp/domain`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/job-contracts`, `@kit/object-storage`, `@vp/permissions`, `@vp/pipeline-metrics`, `@kit/result`, `@vp/storage` |
 | `@kit/config` | server | `@kit/composition`, `@kit/logger`, `@kit/result` |
@@ -215,13 +215,13 @@ puts it at T5.
 | Package | Tier | Depends on | Dev-depends on |
 |---|---|---|---|
 | `@vp/upload-client` | server | `@kit/logger`, `@kit/result` | `@vp/adapters`, `@vp/api`, `@kit/dev-token`, `@vp/env-schema` |
-| `@vp/workbench` | client | nothing (Storybook: it ships nothing and nothing imports it) | `@kit/components`, `@kit/design-tokens`, `@vp/messages`, `@kit/ui`, the stories of both client apps |
+| `@vp/workbench` | client | nothing (Storybook: it ships nothing and nothing imports it) | `@kit/components`, `@kit/design-tokens`, `@vp/shared-messages`, `@kit/ui`, the stories of both client apps |
 
 `@vp/upload-client`'s acceptance suite boots `apps/server/api` and a stub S3, so the package sits above the application it drives. `@vp/workbench` typechecks the apps' stories, which import `@kit/components`, so it sits above the apps too: below them, a cold `pnpm typecheck` checked it before `@kit/components` was built.
 What it *ships* is two runtime dependencies; the layer records the whole manifest, dev edges included.
 
 **Every package in `@vp/web`'s runtime closure is `universal` or `client`** - seventeen of them, eight `client`
-and nine `universal`, counting what the direct ones pull in (`@vp/domain`, `@kit/pagination`, `@vp/messages`);
+and nine `universal`, counting what the direct ones pull in (`@vp/domain`, `@kit/pagination`, `@vp/shared-messages`);
 its devDependencies are build tooling only (`@kit/tsconfig`, `@kit/vite-preset`, `@vp/web-testing`). That is
 the invariant the whole scheme exists to protect. Verify it any time
 with `pnpm why bullmq` from `apps/client/web` — it returns nothing.

@@ -46,7 +46,7 @@ taitube-platform/
 │   ├── domain-rules/               # @vp/domain-rules - pure rules over input plus an entity
 │   ├── errors/                     # @vp/errors - the app's error codes, ErrorCode vocabulary, RFC 9457 mapping
 │   ├── intl-formats/               # @vp/intl-formats - the app's format presets
-│   ├── messages/                   # @vp/messages - the app-shared copy
+│   ├── shared-messages/            # @vp/shared-messages - copy shared by both apps, the locale list, the app engine
 │   ├── permissions/                # @vp/permissions - the app's CASL rules
 │   └── validation/                 # @vp/validation - the app's rules over submitted input
 │
@@ -371,15 +371,16 @@ Both deployables build one object graph from one `Container` (`@kit/composition`
 ### Invariant 10: User-Facing Formatting Happens in `@kit/intl`
 
 Every number, date, duration, list and count a person reads is formatted by `@kit/intl` (SDD ADR-26), and
-every word around it comes from `@vp/messages`.
+every word around it comes from a catalogue: each client app's own (`src/lib/messages/`) or
+`@vp/shared-messages` for the words both apps render.
 
 - **No ad-hoc formatting.** No `toLocale*` call and no hand-built `Intl` object outside `@kit/intl`, and no
   `toFixed` as display text in browser-reachable code. `@kit/intl-react`'s `browser-environment.ts` reads the
   runtime's time zone and is the one named exception.
-- **The context is an argument.** Neither `@kit/intl` nor `@vp/messages` reads `navigator`, the clock,
+- **The context is an argument.** Neither `@kit/intl` nor a catalogue reads `navigator`, the clock,
   `process` or a `toLocale*` method, so a server render and its hydration produce the same text.
-- **The server returns codes.** No `apps/server/api`, `apps/server/worker` or `packages/server` source or manifest names
-  `@vp/messages`; the client renders a failure through `ERROR_COPY`, which covers every `ErrorCode`.
+- **The server returns codes.** No `apps/server/api`, `apps/server/worker` or `packages/server` source imports a
+  catalogue; the server reads only `@vp/shared-messages/locales`, the locale list. The client renders a failure through `ERROR_COPY`, which covers every `ErrorCode`.
 
 Authority: [docs/standards/formatting-and-i18n.md](docs/standards/formatting-and-i18n.md).
 

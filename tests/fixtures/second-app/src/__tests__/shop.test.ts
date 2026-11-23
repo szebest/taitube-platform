@@ -27,7 +27,7 @@ describe('quill shop on the extracted platform packages', () => {
   });
 
   it('formats in its two locales, one of them right to left', () => {
-    expect(SHOP_LOCALES.map(({ tag, direction }) => [tag, direction])).toEqual([
+    expect(SHOP_LOCALES.tags.map((tag) => [tag, SHOP_LOCALES.details[tag].direction])).toEqual([
       ['fi-FI', 'ltr'],
       ['ar-EG', 'rtl'],
     ]);
