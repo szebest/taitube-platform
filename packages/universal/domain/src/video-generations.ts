@@ -33,7 +33,7 @@ export const RETIRED_GENERATION_GRACE_MS = 24 * 60 * 60 * 1000;
 /** The raw source expires after 7 days, so an edit renders from the base generation, kept this long after the last edit. */
 export const EDIT_BASE_RETENTION_MS = 14 * 24 * 60 * 60 * 1000;
 /** A replacement whose duration moves further than this flags the timed extras for review. */
-export const TIMELINE_DRIFT_MS = 2_000;
+const TIMELINE_DRIFT_MS = 2_000;
 
 export interface TimedCorrection {
   startMs: number;

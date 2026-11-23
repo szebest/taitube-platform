@@ -185,5 +185,4 @@ export const getClipSuggestions = defineEndpoint({
 });
 
 export type VideoGenerationsView = z.infer<typeof listVideoGenerations.result>;
-export type VideoEditView = z.infer<typeof VideoEditSchema>;
 export type ClipSuggestionView = z.infer<typeof getClipSuggestions.result>['items'][number];

@@ -22,7 +22,7 @@ export interface SaveEditInput {
 }
 
 /** A render swaps in under the token it claimed with; a revert under the video version the creator saw. */
-export type SwapClaim =
+type SwapClaim =
   | { type: 'render'; lockToken: string; playback: GenerationPlayback }
   | { type: 'revert'; expectedVersion: number };
 

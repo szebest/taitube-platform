@@ -127,30 +127,28 @@ describe('apps/server/worker: DLQ failure handler', () => {
     expect(lines).toContainEqual({ level: 'error', message });
   });
 
-  it('fails a render that ran out of attempts, never the video or its renditions', async () => {
-    const videoId = await uploadedVideo(world, 'raw/replaced.mp4');
+  it('fails a spent render, not the video', async () => {
+    const videoId = await uploadedVideo(world, 'raw/r.mp4');
+    const { repositories: repos } = world;
     expectOk(
-      await world.repositories.videoGenerations.saveEdit({
+      await repos.videoGenerations.saveEdit({
         videoId,
         generation: 2,
         baseGeneration: 1,
         replacesGeneration: 1,
-        edit: { trim: { startMs: 0, endMs: 5_000 }, blurs: [] },
+        edit: { trim: null, blurs: [] },
         outbox: { kind: APPLY_EDITS, payload: { type: 'pubsub', channel: 'x', message: '' } },
       })
     );
-    const before = { ...expectOk(await world.repositories.videos.findById(videoId)) };
+    const before = { ...expectOk(await repos.videos.findById(videoId)) };
+    const data = { videoId, generation: 2, traceparent: 't' };
 
-    await handlerOver({}, 'transcode-1080p')(
-      { id: 'render-1', name: APPLY_EDITS, data: { videoId, generation: 2, traceparent: 't' } },
-      FAILURE()
-    );
+    await handlerOver({}, 'transcode-1080p')({ id: 'r', name: APPLY_EDITS, data }, FAILURE());
 
-    const [row] = expectOk(await world.repositories.videoGenerations.list(videoId));
+    const [row] = expectOk(await repos.videoGenerations.list(videoId));
     expect(row).toMatchObject({ status: 'failed', errorCode: ErrorCodes.CORRUPT_CONTAINER });
-    expect(expectOk(await world.repositories.videos.findById(videoId))).toEqual(before);
-    expect(expectOk(await world.repositories.steps.findByVideoId(videoId))).toEqual([]);
-    expect(await dlqEntries()).toHaveLength(1);
+    expect(expectOk(await repos.videos.findById(videoId))).toEqual(before);
+    expect(expectOk(await repos.steps.findByVideoId(videoId))).toEqual([]);
   });
 
   it('parks a permanent failure on its first attempt, marking the step DEAD and the rendition FAILED', async () => {

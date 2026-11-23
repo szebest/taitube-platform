@@ -12,8 +12,9 @@ import type {
   VideoRevisionService,
   VideoWatchService,
 } from '../services/index';
+import { type VideoPipelineServiceSet, VideoPipelineServices } from './video-pipeline-tokens';
 
-export interface VideoToolsServiceSet {
+export interface VideoToolsServiceSet extends VideoPipelineServiceSet {
   videoBulkEditService: VideoBulkEditService;
   videoRevisionService: VideoRevisionService;
   chapterService: ChapterService;
@@ -25,6 +26,7 @@ export interface VideoToolsServiceSet {
 }
 
 export const VideoToolsServices = {
+  ...VideoPipelineServices,
   VideoBulkEditService: token<VideoBulkEditService>('VideoBulkEditService'),
   VideoRevisionService: token<VideoRevisionService>('VideoRevisionService'),
   ChapterService: token<ChapterService>('ChapterService'),

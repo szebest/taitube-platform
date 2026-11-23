@@ -5,6 +5,7 @@ import type {
   UserEventRepository,
   SwapOutcome,
   VideoRecord,
+  VideoViewRepositoryPort,
 } from '@vp/core/repositories';
 import {
   type Correction,
@@ -35,8 +36,7 @@ export interface SwapStores {
     correctionsOf(videoId: string): Correction[];
     replaceFor(videoId: string, corrections: readonly Correction[]): void;
   };
-  retention: {
-    retentionOf(videoId: string): RetentionPoint[];
+  retention: Pick<VideoViewRepositoryPort, 'retentionCurve'> & {
     replaceRetention(videoId: string, points: readonly RetentionPoint[]): void;
   };
   events: Pick<EventRepository, 'create'>;
@@ -96,7 +96,9 @@ export async function swapInMemory(
       .map(({ startMs, endMs, text }) => ({ startMs, endMs, text })),
   };
   const retired = stores.generations.get(generationKey(videoId, outgoing));
-  const retention = stores.retention.retentionOf(videoId);
+  const curve = await stores.retention.retentionCurve(videoId);
+  if (isErr(curve)) return curve;
+  const retention = curve.value;
   const outgoingRow: StoredGeneration = {
     videoId,
     generation: outgoing,

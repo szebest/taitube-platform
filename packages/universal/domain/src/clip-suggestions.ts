@@ -1,7 +1,7 @@
 import type { Chapter } from './chapters';
 import { RETENTION_FULL_PERCENT, type RetentionPoint } from './retention';
 
-export const CLIP_SUGGESTION_LENGTHS_MS = [15_000, 30_000, 45_000] as const;
+const CLIP_SUGGESTION_LENGTHS_MS = [15_000, 30_000, 45_000] as const;
 export const MAX_CLIP_SUGGESTIONS = 3;
 const START_STEP_MS = 5_000;
 

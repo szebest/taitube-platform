@@ -3,9 +3,10 @@ import { Adapters } from '@vp/adapters/composition';
 import { ClipService } from '../services/index';
 import { registerIntegrationServices } from './integration.module';
 import { Services } from './service-tokens';
+import { registerVideoPipelineServices } from './video-pipeline.module';
 
 export function registerClipServices(c: Container): Container {
-  return registerIntegrationServices(c).provide(
+  return registerVideoPipelineServices(registerIntegrationServices(c)).provide(
     Services.ClipService,
     (c) =>
       new ClipService({

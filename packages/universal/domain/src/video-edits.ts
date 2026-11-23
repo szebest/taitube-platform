@@ -1,5 +1,5 @@
 export const BLUR_SHAPES = ['rect', 'ellipse'] as const;
-export type BlurShape = (typeof BLUR_SHAPES)[number];
+type BlurShape = (typeof BLUR_SHAPES)[number];
 
 export const MAX_BLURS = 20;
 export const BLUR_MIN_STRENGTH = 1;

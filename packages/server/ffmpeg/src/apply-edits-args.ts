@@ -43,7 +43,7 @@ function blurChain(blur: BlurRegion, index: number, input: string, output: strin
  * over the frame only between its times, then the trim, then the rendition's scale. Blurs come before
  * the trim, so their times are on the base generation's timeline like the trim's own.
  */
-export function editFilterGraph(
+function editFilterGraph(
   options: Pick<ApplyEditsArgsOptions, 'edits' | 'hasAudio' | 'rendition'>
 ): string {
   const { edits, hasAudio, rendition } = options;

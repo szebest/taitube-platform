@@ -35,7 +35,7 @@ describe('@vp/domain: shiftTimeline', () => {
       trim: { startMs: 150_000, endMs: 230_000 },
       starts: [],
     },
-  ])('$shape', ({ trim, starts }) => {
+  ])('chapters: $shape', ({ trim, starts }) => {
     expect(shiftTimeline(timeline, trim).chapters.map(({ startMs }) => startMs)).toEqual(starts);
   });
 
@@ -61,7 +61,7 @@ describe('@vp/domain: shiftTimeline', () => {
       trim: { startMs: 19_000, endMs: 119_000 },
       ranges: [],
     },
-  ])('$shape', ({ trim, ranges }) => {
+  ])('corrections: $shape', ({ trim, ranges }) => {
     expect(
       shiftTimeline(timeline, trim).corrections.map(({ startMs, endMs }) => [startMs, endMs])
     ).toEqual(ranges);

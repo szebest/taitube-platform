@@ -10,7 +10,6 @@ import {
   clipSuggestionsQueryOptions,
   generationInFlight,
   generationsQueryOptions,
-  videoPipelineKeys,
 } from '../video-pipeline-queries';
 
 const rendering = {
@@ -26,8 +25,8 @@ const rendering = {
 
 describe('apps/client/studio: video pipeline queries', () => {
   it.each([
-    { key: videoPipelineKeys.generations(VIDEO_ID) },
-    { key: videoPipelineKeys.clipSuggestions(VIDEO_ID) },
+    { key: generationsQueryOptions(api, VIDEO_ID).queryKey },
+    { key: clipSuggestionsQueryOptions(api, VIDEO_ID).queryKey },
   ])('keeps $key under the video, so a swap announced on the stream refreshes it', ({ key }) => {
     expect(key.slice(0, videoKeys.detail(VIDEO_ID).length)).toEqual(videoKeys.detail(VIDEO_ID));
   });

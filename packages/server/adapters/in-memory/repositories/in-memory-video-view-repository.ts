@@ -146,21 +146,18 @@ export class InMemoryVideoViewRepository implements VideoViewRepositoryPort {
   }
 
   async retentionCurve(videoId: string): Promise<Result<RetentionPoint[], DatabaseUnavailable>> {
-    return ok(this.retentionOf(videoId));
-  }
-
-  retentionOf(videoId: string): RetentionPoint[] {
-    return [...this.retention.values()]
-      .filter((count) => count.videoId === videoId)
-      .map(({ percent, viewers }) => ({ percent, viewers }))
-      .sort((left, right) => left.percent - right.percent);
+    return ok(
+      [...this.retention.values()]
+        .filter((count) => count.videoId === videoId)
+        .map(({ percent, viewers }) => ({ percent, viewers }))
+        .sort((left, right) => left.percent - right.percent)
+    );
   }
 
   replaceRetention(videoId: string, points: readonly RetentionPoint[]): void {
-    for (const point of this.retentionOf(videoId))
-      this.retention.delete(`${videoId}|${point.percent}`);
-    for (const point of points)
-      this.retention.set(`${videoId}|${point.percent}`, { ...point, videoId });
+    for (const [key, step] of this.retention)
+      if (step.videoId === videoId) this.retention.delete(key);
+    for (const p of points) this.retention.set(`${videoId}|${p.percent}`, { ...p, videoId });
   }
 
   async videoDevices(

@@ -1,6 +1,5 @@
-import type { BlurRegion } from '@vp/domain';
+import type { BlurRegion, VideoEditList } from '@vp/domain';
 import type { LadderEntry } from '@vp/job-contracts';
-import type { editFilterGraph } from '../apply-edits-args';
 import { buildApplyEditsArgs } from '../apply-edits-args';
 import { ENCODER } from './encoder-settings';
 
@@ -28,7 +27,7 @@ const blur = (overrides: Partial<BlurRegion> = {}): BlurRegion => ({
   ...overrides,
 });
 
-const argsOf = (edits: Parameters<typeof editFilterGraph>[0]['edits'], hasAudio = true) =>
+const argsOf = (edits: VideoEditList, hasAudio = true) =>
   buildApplyEditsArgs({
     ...ENCODER,
     sourcePath: '/tmp/base/index.m3u8',

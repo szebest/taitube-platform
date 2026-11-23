@@ -4,7 +4,7 @@ import type { VideoGenerationsView } from '@vp/api-contracts';
 import { IN_FLIGHT_GENERATIONS } from '@vp/domain-rules';
 import { videoKeys } from '@vp/queries';
 
-export const videoPipelineKeys = {
+const videoPipelineKeys = {
   generations: (videoId: string) => [...videoKeys.detail(videoId), 'generations'] as const,
   clipSuggestions: (videoId: string) => [...videoKeys.detail(videoId), 'clip-suggestions'] as const,
 };

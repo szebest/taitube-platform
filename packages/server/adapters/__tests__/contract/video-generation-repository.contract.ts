@@ -58,6 +58,16 @@ export function describeVideoGenerationRepositoryContract(
       expectOk(await subject.repositories.userEvents.listFrom(OWNER_ID, 0, 100))
         .filter(({ type }) => type === 'video.generation.updated')
         .map(({ payload }) => payload);
+    const chaptersOf = async () =>
+      expectOk(await subject.repositories.videoChapters.listFor([VIDEO])).get(VIDEO);
+    const curveOf = async () =>
+      expectOk(await subject.repositories.videoViews.retentionCurve(VIDEO));
+    const seedRetention = async () =>
+      expectOk(
+        await subject.repositories.videoViews.applyBatch(
+          viewBatch({ retention: [{ videoId: VIDEO, percent: 0, viewers: 7 }] })
+        )
+      );
     const render = async (generation: number, durationMs?: number) => {
       expectOk(await generations.claim(VIDEO, generation, TOKEN));
       return expectOk(
@@ -194,26 +204,20 @@ export function describeVideoGenerationRepositoryContract(
       expect(await announced()).toEqual([{ videoId: VIDEO, generation: 2, status: 'failed' }]);
     });
 
-    it('renders an edit onto the shifted timeline and keeps its base for the revert window', async () => {
-      expectOk(
-        await subject.repositories.videoViews.applyBatch(
-          viewBatch({ retention: [{ videoId: VIDEO, percent: 0, viewers: 7 }] })
-        )
-      );
+    it('renders an edit onto the shifted timeline, keeping its base to revert to', async () => {
+      await seedRetention();
       await edit(2);
 
       expect(await render(2, 210_000)).toMatchObject({ type: 'swapped' });
-      const chapters = expectOk(await subject.repositories.videoChapters.listFor([VIDEO])).get(
-        VIDEO
-      );
-      expect(chapters?.map(({ startMs }) => startMs)).toEqual([0, 30_000, 90_000, 150_000]);
+      const starts = (await chaptersOf())?.map(({ startMs }) => startMs);
+      expect(starts).toEqual([0, 30_000, 90_000, 150_000]);
       expect(await rowOf(1)).toMatchObject({
         status: 'retired',
         retention: [{ percent: 0, viewers: 7 }],
         timeline: { chapters: CHAPTERS },
         purgeAfter: new Date(NOW.getTime() + EDIT_BASE_RETENTION_MS),
       });
-      expect(expectOk(await subject.repositories.videoViews.retentionCurve(VIDEO))).toEqual([]);
+      expect(await curveOf()).toEqual([]);
       expect(expectOk(await generations.findEdit(VIDEO))).toMatchObject({
         status: 'applied',
         baseGeneration: 1,
@@ -222,11 +226,7 @@ export function describeVideoGenerationRepositoryContract(
     });
 
     it('reverts to the base under the current version only, restoring its timeline and curve', async () => {
-      expectOk(
-        await subject.repositories.videoViews.applyBatch(
-          viewBatch({ retention: [{ videoId: VIDEO, percent: 0, viewers: 7 }] })
-        )
-      );
+      await seedRetention();
       await edit(2);
       await render(2, 210_000);
       const edited = await video();
@@ -241,18 +241,13 @@ export function describeVideoGenerationRepositoryContract(
       expect(expectOk(await revert(edited.version - 1))).toEqual({ type: 'superseded' });
       expect(expectOk(await revert(edited.version))).toMatchObject({ type: 'swapped' });
       expect(await video()).toMatchObject({ generation: 1, durationMs: 240_000 });
-      const chapters = expectOk(await subject.repositories.videoChapters.listFor([VIDEO])).get(
-        VIDEO
-      );
-      expect(chapters).toEqual(CHAPTERS);
-      expect(expectOk(await subject.repositories.videoViews.retentionCurve(VIDEO))).toEqual([
-        { percent: 0, viewers: 7 },
-      ]);
+      expect(await chaptersOf()).toEqual(CHAPTERS);
+      expect(await curveOf()).toEqual([{ percent: 0, viewers: 7 }]);
       expect(await rowOf(2)).toMatchObject({ status: 'retired' });
       expect(expectOk(await generations.findEdit(VIDEO))).toMatchObject({ status: 'reverted' });
     });
 
-    it('lists what is due and bakes the edit list into what plays once its base is purged', async () => {
+    it('lists what is due and bakes the edit list in once its base is purged', async () => {
       await edit(2);
       await render(2);
       const later = new Date(NOW.getTime() + EDIT_BASE_RETENTION_MS + 1);
