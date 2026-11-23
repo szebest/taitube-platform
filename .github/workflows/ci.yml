@@ -95,7 +95,7 @@ jobs:
           name: turbo-cache
           path: .turbo/cache
           include-hidden-files: true
-          retention-days: 1
+          retention-days: 7
 
       - name: Keep main's build as the starting point of the next run's
         if: github.ref == 'refs/heads/main'
@@ -118,6 +118,8 @@ jobs:
 
       - name: Set up the workspace
         uses: ./.github/actions/setup-workspace
+        with:
+          handoff: 'true'
 
       - name: Restore the typecheck results of an earlier run, so only changed packages check again
         uses: actions/cache/restore@v6
@@ -226,6 +228,8 @@ jobs:
 
       - name: Set up the workspace
         uses: ./.github/actions/setup-workspace
+        with:
+          handoff: 'true'
 
       - name: Set up kustomize
         uses: ./.github/actions/setup-kustomize
@@ -315,6 +319,7 @@ jobs:
       - name: Set up the workspace
         uses: ./.github/actions/setup-workspace
         with:
+          handoff: 'true'
           bun: 'true'
 
       - name: Set up kustomize
@@ -373,6 +378,7 @@ jobs:
       - name: Set up the workspace
         uses: ./.github/actions/setup-workspace
         with:
+          handoff: 'true'
           build: 'false'
 
       - name: Install, typecheck and test it outside the repository, offline, from the restored store
@@ -397,6 +403,8 @@ jobs:
 
       - name: Set up the workspace
         uses: ./.github/actions/setup-workspace
+        with:
+          handoff: 'true'
 
       - name: Set up FFmpeg
         uses: ./.github/actions/setup-ffmpeg
@@ -460,6 +468,8 @@ jobs:
 
       - name: Set up the workspace
         uses: ./.github/actions/setup-workspace
+        with:
+          handoff: 'true'
 
       - name: Bundle the API, the worker, the web app and the studio from that build
         run: |
@@ -549,6 +559,8 @@ jobs:
 
       - name: Set up the workspace
         uses: ./.github/actions/setup-workspace
+        with:
+          handoff: 'true'
 
       - name: Restore or generate the upload fixture
         uses: ./.github/actions/video-fixtures
@@ -612,6 +624,8 @@ jobs:
 
       - name: Set up the workspace
         uses: ./.github/actions/setup-workspace
+        with:
+          handoff: 'true'
 
       - name: Restore the workbench build of these sources
         id: storybook
