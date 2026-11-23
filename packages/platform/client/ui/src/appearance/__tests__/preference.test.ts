@@ -13,7 +13,7 @@ import {
 } from '../preference';
 
 const appearanceCookie = (value: unknown) =>
-  `vp.appearance=${encodeURIComponent(JSON.stringify(value))}`;
+  `acme.appearance=${encodeURIComponent(JSON.stringify(value))}`;
 
 const preference = (overrides: Partial<AppearancePreference> = {}): AppearancePreference => ({
   ...DEFAULT_APPEARANCE,
@@ -111,8 +111,8 @@ describe('@kit/ui: the appearance preference', () => {
       },
     },
     {
-      label: 'a vp.theme cookie from before schema 2 as the default theme in that mode',
-      cookie: 'vp.theme=light',
+      label: 'a acme.theme cookie from before schema 2 as the default theme in that mode',
+      cookie: 'acme.theme=light',
       stored: {
         preference: preference({ mode: 'light' }),
         source: 'legacy',
@@ -120,8 +120,8 @@ describe('@kit/ui: the appearance preference', () => {
       },
     },
     {
-      label: 'a cookie that is not JSON as the vp.theme beside it',
-      cookie: 'vp.appearance=%7Bnot-json; vp.theme=dark',
+      label: 'a cookie that is not JSON as the acme.theme beside it',
+      cookie: 'acme.appearance=%7Bnot-json; acme.theme=dark',
       stored: {
         preference: preference({ mode: 'dark' }),
         source: 'legacy',
@@ -154,10 +154,10 @@ describe('@kit/ui: the appearance preference', () => {
     const document = { cookie: '' };
     vi.stubGlobal('document', document);
 
-    saveAppearancePreference(NOCTURNE_AIRY, FIXTURE_APPEARANCE_STORAGE, 'taitube.local');
+    saveAppearancePreference(NOCTURNE_AIRY, FIXTURE_APPEARANCE_STORAGE, 'acme.local');
 
     expect(document.cookie).toBe(
-      `${appearanceCookie(NOCTURNE_AIRY)}; Max-Age=31536000; Domain=taitube.local; Path=/; SameSite=Lax`
+      `${appearanceCookie(NOCTURNE_AIRY)}; Max-Age=31536000; Domain=acme.local; Path=/; SameSite=Lax`
     );
     expect(await storedFor(appearanceCookie(NOCTURNE_AIRY))).toEqual({
       preference: NOCTURNE_AIRY,
@@ -213,7 +213,7 @@ describe('@kit/ui: the appearance preference', () => {
       overrides: Object.fromEntries(TOKEN_GROUPS.map((group) => [group, longest])),
     } as const;
 
-    const cookie = `vp.appearance=${encodeURIComponent(JSON.stringify(worst))}`;
+    const cookie = `acme.appearance=${encodeURIComponent(JSON.stringify(worst))}`;
 
     expect(AppearancePreferenceSchema.parse(worst)).toEqual(worst);
     expect(cookie.length).toBeLessThan(1024);
