@@ -1,4 +1,4 @@
-import { Button, Dialog, Field, Textarea, useUiCopy } from '@kit/ui';
+import { Button, Dialog, Field, Textarea } from '@kit/ui';
 import { useState } from 'react';
 import { useScreeningDecision } from '#app/features/admin/hooks/use-screening-decision';
 import { useT } from '#app/lib/messages';
@@ -14,7 +14,7 @@ export interface ScreeningRejectDialogProps {
 /** Asks for the reason a held video is rejected, which the creator reads; the button stays off until there is one. */
 export function ScreeningRejectDialog({ videoId, title, onClose }: ScreeningRejectDialogProps) {
   const { tOr } = useT();
-  const { cancel } = useUiCopy();
+  const cancel = tOr('ui.cancel', {}, '');
   const decide = useScreeningDecision();
   const [reason, setReason] = useState('');
 

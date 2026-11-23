@@ -1,5 +1,5 @@
+import { translatorFor } from '#app/lib/messages/__tests__/fixtures';
 import { pl } from '..';
-import { translatorFor } from '../../__tests__/fixtures';
 
 describe('apps/client/studio: pl studio', () => {
   const { t } = translatorFor('pl', { pl });
@@ -31,5 +31,13 @@ describe('apps/client/studio: pl studio', () => {
     { key: 'studio.deleteConfirmTitle', args: { count: 5 }, expected: 'Usunąć 5 filmów?' },
   ] as const)('renders $key for $args', ({ key, args, expected }) => {
     expect(t(key, args)).toEqual({ ok: true, value: expected });
+  });
+
+  it.each([
+    { count: 1, expected: 'Selected file:' },
+    { count: 2, expected: 'Selected files:' },
+    { count: 5, expected: 'Selected files:' },
+  ])('names $count chosen files with the field words', ({ count, expected }) => {
+    expect(t('studio.selectedFiles', { count })).toEqual({ ok: true, value: expected });
   });
 });

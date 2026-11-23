@@ -55,7 +55,8 @@ function CategoryTextField({
 /** Creates a category, or edits `category`; the fields are checked by the `@vp/validation` category rules. */
 export function CategoryDialog({ category, nextSortOrder, onClose }: CategoryDialogProps) {
   const { tOr } = useT();
-  const { cancel, save } = useUiCopy();
+  const { save } = useUiCopy();
+  const cancel = tOr('ui.cancel', {}, '');
   const toast = useToast();
   const create = useCreateCategory();
   const update = useUpdateCategory();

@@ -1,5 +1,5 @@
 import { fromPromise, isOk } from '@kit/result';
-import { AlertDialog, Button, useToast, useUiCopy } from '@kit/ui';
+import { AlertDialog, Button, useToast } from '@kit/ui';
 import type { ChannelMemberView } from '@vp/api-contracts';
 import { useRemoveMember } from '#app/features/team/hooks/use-team-mutations';
 import { useT } from '#app/lib/messages';
@@ -13,7 +13,7 @@ export interface RemoveMemberDialogProps {
 /** Asks before taking a member off the team; they lose the studio at once. */
 export function RemoveMemberDialog({ member, name, onClose }: RemoveMemberDialogProps) {
   const { tOr } = useT();
-  const { cancel } = useUiCopy();
+  const cancel = tOr('ui.cancel', {}, '');
   const toast = useToast();
   const remove = useRemoveMember();
 

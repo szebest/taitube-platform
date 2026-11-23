@@ -1,12 +1,13 @@
 import { renderHook } from '@testing-library/react';
+import { IntlProvider } from '@vp/queries/intl';
 import type { PropsWithChildren } from 'react';
-import { IntlProvider } from '#app/lib/messages/intl-provider';
+import { WEB_MESSAGES } from '#app/lib/messages';
 import type { PlayerCaptionTrack } from '#app/lib/player/player-port';
 import { useCaptionTrackLabel } from '../use-caption-track-label';
 
 function renderLabel(locale: string) {
   const wrapper = ({ children }: PropsWithChildren) => (
-    <IntlProvider locale={locale} timeZone="UTC">
+    <IntlProvider messages={WEB_MESSAGES} locale={locale} timeZone="UTC">
       {children}
     </IntlProvider>
   );

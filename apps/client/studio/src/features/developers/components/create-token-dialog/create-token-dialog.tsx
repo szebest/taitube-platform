@@ -1,5 +1,5 @@
 import { fromPromise, isOk } from '@kit/result';
-import { Button, Field, Input, ResponsiveModal, Select, useUiCopy } from '@kit/ui';
+import { Button, Field, Input, ResponsiveModal, Select } from '@kit/ui';
 import type { CreatedApiTokenView } from '@vp/api-contracts';
 import {
   API_TOKEN_EXPIRIES,
@@ -26,7 +26,7 @@ export interface CreateTokenDialogProps {
 /** Names a token, picks how long it lives and what it may touch, then shows its secret once. */
 export function CreateTokenDialog({ onClose }: CreateTokenDialogProps) {
   const { tOr } = useT();
-  const { cancel } = useUiCopy();
+  const cancel = tOr('ui.cancel', {}, '');
   const showFailure = useFailureToast();
   const create = useCreateToken();
   const [name, setName] = useState('');

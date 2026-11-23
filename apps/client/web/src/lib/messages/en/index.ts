@@ -1,3 +1,4 @@
+import { appUi } from './app-ui';
 import { channels } from './channels';
 import { clips } from './clips';
 import { creatorStats } from './creator-stats';
@@ -20,6 +21,7 @@ import { watch } from './watch';
 
 /** The words only the web app renders. */
 export const en = {
+  appUi,
   channels,
   clips,
   creatorStats,

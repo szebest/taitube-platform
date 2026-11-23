@@ -1,4 +1,4 @@
-import { DropdownMenu, Icon, useUiCopy } from '@kit/ui';
+import { DropdownMenu, Icon } from '@kit/ui';
 import type { CommentView } from '@vp/api-contracts';
 import { canDeleteComment, canPinComment, canUpdateComment } from '@vp/permissions';
 import { useCan } from '@vp/permissions-react';
@@ -45,7 +45,7 @@ export function VideoCommentMenu({
   onReport,
 }: VideoCommentMenuProps) {
   const { tOr } = useT();
-  const { delete: deleteLabel } = useUiCopy();
+  const deleteLabel = tOr('ui.delete', {}, '');
   const [dialog, setDialog] = useState<{ action: ModerationDialogAction; open: boolean }>();
   const target = { id: comment.id, authorId: comment.author.userId };
   const canEdit = useCan(canUpdateComment, { comment: target });

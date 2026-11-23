@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.0
+
+- Breaking: `UI_COPY_KEYS` (and so `UiCopy`) holds only the 45 words this package and the other kit packages
+  render themselves; the 97 words only an app's own components read are gone, and the app renders them from its
+  catalogue.
+
 ## 0.2.0
 
 - `InvalidTheme` and `ThemeNotInstalled` take `VALIDATION_FAILED` and `INTERNAL` from `CommonErrorCodes` in

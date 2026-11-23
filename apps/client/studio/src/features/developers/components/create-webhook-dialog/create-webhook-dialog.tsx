@@ -1,5 +1,5 @@
 import { fromPromise, isOk } from '@kit/result';
-import { Button, Checkbox, Field, Input, ResponsiveModal, useUiCopy } from '@kit/ui';
+import { Button, Checkbox, Field, Input, ResponsiveModal } from '@kit/ui';
 import type { CreatedWebhookView } from '@vp/api-contracts';
 import { WEBHOOK_EVENTS, type WebhookEvent } from '@vp/domain';
 import { useFailureToast } from '@vp/queries';
@@ -48,7 +48,7 @@ export interface CreateWebhookDialogProps {
 /** An address and the events it hears about, then the signing secret shown once. */
 export function CreateWebhookDialog({ onClose }: CreateWebhookDialogProps) {
   const { tOr } = useT();
-  const { cancel } = useUiCopy();
+  const cancel = tOr('ui.cancel', {}, '');
   const showFailure = useFailureToast();
   const create = useCreateWebhook();
   const [url, setUrl] = useState('');

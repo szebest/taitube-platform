@@ -29,6 +29,9 @@ const VIDEO_STATUS = {
 } as const;
 
 export const studio = {
+  selectedFiles: dt('{count:plural}', {
+    plural: { count: { one: 'Selected file:', other: 'Selected files:' } },
+  }),
   title: dt('Creator Studio'),
   backToWeb: dt('Back to Taitube'),
   signIn: dt('Sign in to the studio'),

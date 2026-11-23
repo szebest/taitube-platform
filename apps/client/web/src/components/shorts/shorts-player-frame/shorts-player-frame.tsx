@@ -1,5 +1,6 @@
 import { AspectRatio, Button, Icon, IconButton, Skeleton, Slider, Slot, useUiCopy } from '@kit/ui';
 import type { ComponentPropsWithRef } from 'react';
+import { useT } from '#app/lib/messages';
 import { ShortsPlayerFrameContext, useShortsPlayerFrame } from './shorts-player-frame.context';
 import { shortsPlayerFrameStyles } from './shorts-player-frame.variants';
 import type { ShortsActionsLayout, ShortsFrameState, ShortsPlayback } from './types';
@@ -26,7 +27,9 @@ export function ShortsPlayerFrameRoot({
   children,
   ...props
 }: ShortsPlayerFrameRootProps) {
-  const { previousShort, nextShort } = useUiCopy();
+  const { tOr } = useT();
+  const previousShort = tOr('appUi.previousShort', {}, '');
+  const nextShort = tOr('appUi.nextShort', {}, '');
   const styles = shortsPlayerFrameStyles({ layout });
 
   return (

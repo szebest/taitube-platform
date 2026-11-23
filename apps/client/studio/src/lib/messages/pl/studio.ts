@@ -29,6 +29,16 @@ const VIDEO_STATUS = {
 } as const;
 
 export const studio = {
+  selectedFiles: dt('{count:plural}', {
+    plural: {
+      count: {
+        one: 'Selected file:',
+        few: 'Selected files:',
+        many: 'Selected files:',
+        other: 'Selected files:',
+      },
+    },
+  }),
   title: dt('Studio twórcy'),
   backToWeb: dt('Wróć do Taitube'),
   signIn: dt('Zaloguj się do studia'),

@@ -1,4 +1,4 @@
-import { translatorFor } from '../../__tests__/fixtures';
+import { translatorFor } from '#app/lib/messages/__tests__/fixtures';
 
 describe('apps/client/studio: en studio comment settings', () => {
   const { t } = translatorFor('en');

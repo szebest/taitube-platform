@@ -42,7 +42,8 @@ const draftOf = (pick: AdminPick | undefined, now: Date): PickDraft =>
 /** Schedules a pick, or edits `pick`; the window is checked against the calendar by the rules the API runs. */
 export function PickDialog({ pick, picks, onClose, onCancelPick }: PickDialogProps) {
   const { tOr } = useT();
-  const { cancel, save } = useUiCopy();
+  const { save } = useUiCopy();
+  const cancel = tOr('ui.cancel', {}, '');
   const toast = useToast();
   const create = useCreatePick();
   const update = useUpdatePick();

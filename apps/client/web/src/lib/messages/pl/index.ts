@@ -1,5 +1,6 @@
 import { defineCatalogue } from '@vp/shared-messages';
 import type { en } from '../en';
+import { appUi } from './app-ui';
 import { channels } from './channels';
 import { clips } from './clips';
 import { creatorStats } from './creator-stats';
@@ -21,6 +22,7 @@ import { themeBuilder } from './theme-builder';
 import { watch } from './watch';
 
 export const pl = defineCatalogue<typeof en>()({
+  appUi,
   channels,
   clips,
   creatorStats,

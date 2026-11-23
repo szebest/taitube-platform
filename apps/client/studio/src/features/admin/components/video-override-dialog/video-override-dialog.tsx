@@ -1,5 +1,5 @@
 import { fromPromise, isOk } from '@kit/result';
-import { AlertDialog, Button, Field, Textarea, useToast, useUiCopy } from '@kit/ui';
+import { AlertDialog, Button, Field, Textarea, useToast } from '@kit/ui';
 import { ApiError } from '@vp/api-client';
 import { ErrorCodes } from '@vp/errors';
 import { useState } from 'react';
@@ -45,7 +45,7 @@ export interface VideoOverrideDialogProps {
  */
 export function VideoOverrideDialog({ action, video, onClose }: VideoOverrideDialogProps) {
   const { tOr } = useT();
-  const { cancel } = useUiCopy();
+  const cancel = tOr('ui.cancel', {}, '');
   const toast = useToast();
   const forcePrivate = useForcePrivate();
   const reject = useRejectVideo();

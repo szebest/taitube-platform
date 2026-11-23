@@ -1,9 +1,10 @@
-import { Button, Checkbox, Icon, Table, useUiCopy, VisuallyHidden } from '@kit/ui';
+import { Button, Checkbox, Icon, Table, VisuallyHidden } from '@kit/ui';
 import { FlexRender, type Header, type RowData, type SortDirection } from '@tanstack/react-table';
 import type { ComponentPropsWithRef } from 'react';
 import { columnLook, useDataTable } from '#app/components/table/data-table/data-table.context';
 import { dataTableStyles } from '#app/components/table/data-table/data-table.variants';
 import type { DataTableFeatures, DataTableSort } from '#app/components/table/data-table/types';
+import { type ArgumentFreeKey, useT } from '#app/lib/messages';
 
 const SORTS: Readonly<Record<SortDirection, DataTableSort>> = {
   asc: 'ascending',
@@ -11,14 +12,15 @@ const SORTS: Readonly<Record<SortDirection, DataTableSort>> = {
 };
 
 const SORT_COPY = {
-  ascending: 'sortedAscending',
-  descending: 'sortedDescending',
-  none: 'notSorted',
-} as const satisfies Record<DataTableSort, string>;
+  ascending: 'appUi.sortedAscending',
+  descending: 'appUi.sortedDescending',
+  none: 'appUi.notSorted',
+} as const satisfies Record<DataTableSort, ArgumentFreeKey>;
 
 function SelectAllHead({ rowSpan }: { rowSpan: number }) {
   const { table } = useDataTable('Header');
-  const { selectAllRows } = useUiCopy();
+  const { tOr } = useT();
+  const selectAllRows = tOr('appUi.selectAllRows', {}, '');
   const all = table.getIsAllPageRowsSelected();
   const some = table.getIsSomePageRowsSelected();
 
@@ -41,7 +43,7 @@ function SortableHead<TData extends RowData>({
   index: number;
 }) {
   const { selectable, sorting } = useDataTable('Header');
-  const copy = useUiCopy();
+  const { tOr } = useT();
   const { column } = header;
   const look = columnLook(column.columnDef.meta, index, selectable);
   const sorted = sorting.find(({ id }) => id === column.id);
@@ -64,7 +66,7 @@ function SortableHead<TData extends RowData>({
           onClick={column.getToggleSortingHandler()}
           className={styles.sortButton()}
         >
-          {content} <VisuallyHidden>{copy[SORT_COPY[sort]]}</VisuallyHidden>
+          {content} <VisuallyHidden>{tOr(SORT_COPY[sort], {}, '')}</VisuallyHidden>
           <Icon name="chevron-down" size="sm" data-sort={sort} className={styles.sortIcon()} />
         </Button>
       ) : (

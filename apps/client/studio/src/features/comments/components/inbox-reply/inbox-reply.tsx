@@ -1,4 +1,4 @@
-import { Button, Textarea, useToast, useUiCopy } from '@kit/ui';
+import { Button, Textarea, useToast } from '@kit/ui';
 import { useFailureToast } from '@vp/queries';
 import { useState } from 'react';
 import type { InboxComment } from '#app/features/comments/api/inbox-queries';
@@ -17,7 +17,7 @@ export function InboxReply({ comment, onDone }: InboxReplyProps) {
   const showToast = useToast();
   const showFailure = useFailureToast();
   const { tOr } = useT();
-  const { cancel } = useUiCopy();
+  const cancel = tOr('ui.cancel', {}, '');
   const reply = useReplyToComment(comment);
 
   const content = draft.trim();

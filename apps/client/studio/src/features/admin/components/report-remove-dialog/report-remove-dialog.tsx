@@ -1,5 +1,5 @@
 import { fromPromise, isOk } from '@kit/result';
-import { AlertDialog, Button, useToast, useUiCopy } from '@kit/ui';
+import { AlertDialog, Button, useToast } from '@kit/ui';
 import { useResolveReport } from '#app/features/admin/hooks/use-report-resolution';
 import { useT } from '#app/lib/messages';
 
@@ -13,7 +13,7 @@ export interface ReportRemoveDialogProps {
 /** Asks before resolving a report as removed, which deletes the comment and its replies. */
 export function ReportRemoveDialog({ reportId, excerpt, onClose }: ReportRemoveDialogProps) {
   const { tOr } = useT();
-  const { cancel } = useUiCopy();
+  const cancel = tOr('ui.cancel', {}, '');
   const toast = useToast();
   const resolve = useResolveReport();
 

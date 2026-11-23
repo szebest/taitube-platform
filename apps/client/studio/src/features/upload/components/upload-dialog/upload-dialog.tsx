@@ -2,7 +2,6 @@ import { useAppForm } from '@kit/forms';
 import { Button, ResponsiveModal } from '@kit/ui';
 import { VIDEO_VISIBILITIES } from '@vp/api-contracts';
 import { useT } from '#app/lib/messages';
-import { selectedFilesText } from '#app/lib/selected-files-text';
 import {
   VIDEO_FILE_ACCEPT,
   validateVideoFile,
@@ -49,7 +48,7 @@ function UploadForm() {
             <field.FileField
               accept={VIDEO_FILE_ACCEPT}
               placeholderText={tOr('studio.uploadDrop', {}, '')}
-              selectedText={selectedFilesText}
+              selectedText={(count) => tOr('studio.selectedFiles', { count }, '')}
             />
           )}
         </form.AppField>

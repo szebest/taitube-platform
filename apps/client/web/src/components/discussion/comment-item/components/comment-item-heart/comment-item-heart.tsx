@@ -1,4 +1,5 @@
-import { Icon, IconButton, useUiCopy } from '@kit/ui';
+import { Icon, IconButton } from '@kit/ui';
+import { useT } from '#app/lib/messages';
 
 export interface CommentItemHeartProps {
   hearted: boolean;
@@ -8,7 +9,9 @@ export interface CommentItemHeartProps {
 
 /** The creator's heart: a toggle for the video's owner, a badge for everyone else. */
 export function CommentItemHeart({ hearted, onToggle }: CommentItemHeartProps) {
-  const { heartComment, heartedByCreator } = useUiCopy();
+  const { tOr } = useT();
+  const heartComment = tOr('appUi.heartComment', {}, '');
+  const heartedByCreator = tOr('appUi.heartedByCreator', {}, '');
   const tone = hearted ? 'danger' : 'inherit';
   const fill = hearted ? 'fill-current' : undefined;
 

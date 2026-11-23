@@ -1,5 +1,5 @@
 import { fromPromise, isOk } from '@kit/result';
-import { Button, Field, ResponsiveModal, SegmentedControl, useToast, useUiCopy } from '@kit/ui';
+import { Button, Field, ResponsiveModal, SegmentedControl, useToast } from '@kit/ui';
 import { ApiError } from '@vp/api-client';
 import { CHANNEL_ROLE_NAMES, type ChannelRole } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
@@ -36,7 +36,7 @@ function refusalOf(error: unknown): Refusal | undefined {
 /** Invites the channel behind a handle with a role; a manager is offered every role but manager. */
 export function InviteDialog({ onClose }: InviteDialogProps) {
   const { tOr } = useT();
-  const { cancel } = useUiCopy();
+  const cancel = tOr('ui.cancel', {}, '');
   const toast = useToast();
   const invite = useInviteMember();
   const { canInvite } = useRoleRules();

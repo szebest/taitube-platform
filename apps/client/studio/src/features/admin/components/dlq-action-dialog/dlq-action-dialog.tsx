@@ -1,5 +1,5 @@
 import { fromPromise, isOk } from '@kit/result';
-import { AlertDialog, Button, useToast, useUiCopy } from '@kit/ui';
+import { AlertDialog, Button, useToast } from '@kit/ui';
 import type { DlqEntry } from '#app/features/admin/api/admin-dlq';
 import { useDiscardDlqEntry, useReplayDlqEntry } from '#app/features/admin/hooks/use-dlq-mutations';
 import { useT } from '#app/lib/messages';
@@ -30,7 +30,7 @@ export interface DlqActionDialogProps {
 /** Asks before a dead-letter job goes back on its queue, or is discarded for good; names the job either way. */
 export function DlqActionDialog({ action, entry, onClose }: DlqActionDialogProps) {
   const { tOr } = useT();
-  const { cancel } = useUiCopy();
+  const cancel = tOr('ui.cancel', {}, '');
   const toast = useToast();
   const replay = useReplayDlqEntry();
   const discard = useDiscardDlqEntry();

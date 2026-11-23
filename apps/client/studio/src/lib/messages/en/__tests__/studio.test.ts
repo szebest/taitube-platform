@@ -1,4 +1,4 @@
-import { translatorFor } from '../../__tests__/fixtures';
+import { translatorFor } from '#app/lib/messages/__tests__/fixtures';
 
 describe('apps/client/studio: en studio', () => {
   const { t } = translatorFor('en');
@@ -104,5 +104,13 @@ describe('apps/client/studio: en studio', () => {
       ok: true,
       value: 'Viewers see your most-watched videos until you pin some',
     });
+  });
+
+  it.each([
+    { count: 1, expected: 'Selected file:' },
+    { count: 2, expected: 'Selected files:' },
+    { count: 5, expected: 'Selected files:' },
+  ])('names $count chosen files with the field words', ({ count, expected }) => {
+    expect(t('studio.selectedFiles', { count })).toEqual({ ok: true, value: expected });
   });
 });

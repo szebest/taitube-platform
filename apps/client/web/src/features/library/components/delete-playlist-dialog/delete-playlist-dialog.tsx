@@ -1,4 +1,4 @@
-import { Button, useUiCopy } from '@kit/ui';
+import { Button } from '@kit/ui';
 import { useDeletePlaylist } from '#app/features/library/hooks/use-delete-playlist';
 import { useT } from '#app/lib/messages';
 import { urlModals } from '#app/lib/url-modal/registry';
@@ -8,7 +8,7 @@ const { UrlModal, useUrlModal } = urlModals;
 /** `?modal=delete-playlist&playlistId=`: asks first, because a deleted playlist and its order do not come back. */
 export function DeletePlaylistDialog() {
   const { tOr } = useT();
-  const { cancel } = useUiCopy();
+  const cancel = tOr('ui.cancel', {}, '');
   const { params } = useUrlModal('delete-playlist');
   const { mutate, isPending } = useDeletePlaylist();
 

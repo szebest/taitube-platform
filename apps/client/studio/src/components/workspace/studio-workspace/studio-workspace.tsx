@@ -1,14 +1,7 @@
 import { PageHeaderSkeleton } from '@kit/components';
-import {
-  Icon,
-  IconButton,
-  Progress,
-  type ProgressProps,
-  Skeleton,
-  useMediaQuery,
-  useUiCopy,
-} from '@kit/ui';
+import { Icon, IconButton, Progress, type ProgressProps, Skeleton, useMediaQuery } from '@kit/ui';
 import { type ComponentPropsWithRef, type ReactNode, useId, useState } from 'react';
+import { useT } from '#app/lib/messages';
 import { StudioWorkspaceContext, useStudioWorkspace } from './studio-workspace.context';
 import { studioWorkspaceStyles } from './studio-workspace.variants';
 import type { InspectorSide, WorkspaceLayout } from './types';
@@ -45,7 +38,8 @@ export function StudioWorkspaceRoot({
   const layout = useWorkspaceLayout();
   const navId = useId();
   const [navOpen, setNavOpen] = useState(false);
-  const { skipToContent } = useUiCopy();
+  const { tOr } = useT();
+  const skipToContent = tOr('ui.skipToContent', {}, '');
   const styles = studioWorkspaceStyles({ inspectorSide });
   const shared = {
     layout,
@@ -82,7 +76,8 @@ export function StudioWorkspaceToolbar({
   ...props
 }: ComponentPropsWithRef<'header'>) {
   const { navId, navOpen, setNavOpen, inspectorSide } = useStudioWorkspace('Toolbar');
-  const { menu } = useUiCopy();
+  const { tOr } = useT();
+  const menu = tOr('ui.menu', {}, '');
   const styles = studioWorkspaceStyles({ inspectorSide });
 
   return (

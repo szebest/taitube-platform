@@ -1,9 +1,10 @@
 import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import type { CaptionTrackView } from '@vp/api-contracts';
+import { IntlProvider } from '@vp/queries/intl';
 import { captionTrack } from '@vp/web-testing';
 import { VideoJsEngine } from '#app/integrations/video-js/video-js-engine';
-import { IntlProvider } from '#app/lib/messages/intl-provider';
+import { WEB_MESSAGES } from '#app/lib/messages';
 import { CaptionsButton } from '../captions-button';
 
 vi.mock(import('hls.js'), async (importOriginal) => {
@@ -14,7 +15,7 @@ vi.mock(import('hls.js'), async (importOriginal) => {
 function renderButton(captionTracks: readonly CaptionTrackView[] = [captionTrack({ id: 'en' })]) {
   const user = userEvent.setup();
   const rendered = render(
-    <IntlProvider locale="en" timeZone="UTC">
+    <IntlProvider messages={WEB_MESSAGES} locale="en" timeZone="UTC">
       <VideoJsEngine
         playbackUrl="http://localhost:9000/public/videos/v1/hls/master.m3u8"
         title="Launch day"

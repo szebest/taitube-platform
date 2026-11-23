@@ -3,9 +3,10 @@ import { render } from '@testing-library/react';
 import type { WatchPartyViewer } from '@vp/permissions';
 import { PartyPermissionsProvider } from '@vp/permissions-react';
 import { createQueryClient } from '@vp/queries';
+import { IntlProvider } from '@vp/queries/intl';
 import type { PropsWithChildren, ReactElement } from 'react';
 import { AppProviders } from '#app/__tests__/providers';
-import { IntlProvider } from '#app/lib/messages/intl-provider';
+import { WEB_MESSAGES } from '#app/lib/messages';
 
 /** A viewer who holds `permissions` in the room, at `topPosition` in its hierarchy. */
 export function partyViewer(
@@ -21,7 +22,7 @@ export function renderParty(ui: ReactElement, viewer: WatchPartyViewer = partyVi
   const Providers = ({ children }: PropsWithChildren) => (
     <QueryClientProvider client={client}>
       <AppProviders>
-        <IntlProvider locale="en" timeZone="UTC">
+        <IntlProvider messages={WEB_MESSAGES} locale="en" timeZone="UTC">
           <PartyPermissionsProvider userContext={null} viewer={viewer}>
             {children}
           </PartyPermissionsProvider>

@@ -1,5 +1,5 @@
 import { useAppForm } from '@kit/forms';
-import { Button, useUiCopy } from '@kit/ui';
+import { Button } from '@kit/ui';
 import { DEFAULT_PLAYLIST_VISIBILITY, PLAYLIST_VISIBILITIES } from '@vp/domain';
 import { useCreatePlaylist } from '#app/features/library/hooks/use-create-playlist';
 import { useValidatePlaylistTitle } from '#app/features/library/hooks/use-validate-playlist-title';
@@ -15,7 +15,7 @@ export interface NewPlaylistFormProps {
 /** A title and who can see it; submitting creates the playlist, with the video in it when there is one. */
 export function NewPlaylistForm({ videoId, onCreated, onCancel }: NewPlaylistFormProps) {
   const { tOr } = useT();
-  const { cancel } = useUiCopy();
+  const cancel = tOr('ui.cancel', {}, '');
   const create = useCreatePlaylist();
 
   const form = useAppForm({

@@ -44,7 +44,7 @@ export function ShortsFeedActions({ short, renderComments }: ShortsFeedActionsPr
           pressed={liked}
           onSelect={() => change(liked ? null : 'LIKE')}
         >
-          {copy.like}
+          {tOr('appUi.like', {}, '')}
         </ShortsPlayerFrame.Action>
         <ShortsPlayerFrame.Action
           icon={<Icon name="chat" />}

@@ -1,6 +1,6 @@
 import { useFormat } from '@kit/intl-react';
 import { unwrapOr } from '@kit/result';
-import { Button, Icon, useMediaQuery, useToast, useUiCopy } from '@kit/ui';
+import { Button, Icon, useMediaQuery, useToast } from '@kit/ui';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import type { Notification } from '@vp/api-contracts';
@@ -64,7 +64,8 @@ function useArrivals(open: boolean): Announcement {
 }
 
 function GuestBell() {
-  const { notifications } = useUiCopy();
+  const { tOr } = useT();
+  const notifications = tOr('appUi.notifications', {}, '');
   const { run } = useRequireAccount('bell');
 
   return (

@@ -1,5 +1,5 @@
 import { fromPromise, isOk } from '@kit/result';
-import { AlertDialog, Button, useToast, useUiCopy } from '@kit/ui';
+import { AlertDialog, Button, useToast } from '@kit/ui';
 import type { ChannelMembershipView } from '@vp/api-contracts';
 import { useAccount } from '@vp/queries';
 import { useLeaveTeam } from '#app/features/team/hooks/use-leave-team';
@@ -13,7 +13,7 @@ export interface LeaveTeamDialogProps {
 /** Asks before the viewer leaves a team they work on; they lose its studio at once and land on their own channel. */
 export function LeaveTeamDialog({ membership, onClose }: LeaveTeamDialogProps) {
   const { tOr } = useT();
-  const { cancel } = useUiCopy();
+  const cancel = tOr('ui.cancel', {}, '');
   const toast = useToast();
   const account = useAccount();
   const leave = useLeaveTeam();

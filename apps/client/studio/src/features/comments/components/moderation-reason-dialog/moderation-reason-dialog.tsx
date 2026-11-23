@@ -1,4 +1,4 @@
-import { Button, Dialog, Field, Kbd, Select, Textarea, ToggleGroup, useUiCopy } from '@kit/ui';
+import { Button, Dialog, Field, Kbd, Select, Textarea, ToggleGroup } from '@kit/ui';
 import {
   BAN_DURATIONS,
   type BanDuration,
@@ -38,7 +38,7 @@ interface FormProps extends Omit<ModerationReasonDialogProps, 'action'> {
 
 function ReasonForm({ action, pending = false, onConfirm, onCancel }: FormProps) {
   const { tOr } = useT();
-  const { cancel } = useUiCopy();
+  const cancel = tOr('ui.cancel', {}, '');
   const [reason, setReason] = useState<CommentModerationReason>('spam');
   const [duration, setDuration] = useState<BanDuration>('7d');
   const [note, setNote] = useState('');

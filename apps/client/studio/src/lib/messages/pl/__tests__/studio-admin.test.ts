@@ -1,5 +1,5 @@
+import { translatorFor } from '#app/lib/messages/__tests__/fixtures';
 import { pl } from '..';
-import { translatorFor } from '../../__tests__/fixtures';
 
 describe('apps/client/studio: pl studio admin', () => {
   const { t } = translatorFor('pl', { pl });

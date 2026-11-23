@@ -1,5 +1,6 @@
-import { Button, Chip, Skeleton, Slot, useUiCopy, VisuallyHidden } from '@kit/ui';
+import { Button, Chip, Skeleton, Slot, VisuallyHidden } from '@kit/ui';
 import { type ComponentPropsWithRef, useEffect, useId, useRef, useState } from 'react';
+import { useT } from '#app/lib/messages';
 import { LinerNotesContext, useLinerNotes } from './liner-notes.context';
 import { linerNotesStyles } from './liner-notes.variants';
 import type { LinerNotesLayout } from './types';
@@ -26,7 +27,8 @@ export function LinerNotesRoot({
 }: LinerNotesRootProps) {
   const [own, setOwn] = useState(false);
   const bodyId = useId();
-  const { description } = useUiCopy();
+  const { tOr } = useT();
+  const description = tOr('ui.description', {}, '');
   const expanded = controlled ?? own;
 
   const setExpanded = (next: boolean) => {
@@ -57,7 +59,9 @@ export function LinerNotesMeta({ className, ...props }: ComponentPropsWithRef<'p
 /** The notes, already tokenised by the caller: three lines until expanded, the full text always in the DOM. */
 export function LinerNotesBody({ className, ...props }: ComponentPropsWithRef<'div'>) {
   const { expanded, setExpanded, bodyId } = useLinerNotes('Body');
-  const { showMore, showLess } = useUiCopy();
+  const { tOr } = useT();
+  const showMore = tOr('appUi.showMore', {}, '');
+  const showLess = tOr('appUi.showLess', {}, '');
   const styles = linerNotesStyles();
 
   return (
@@ -98,7 +102,8 @@ export function LinerNotesTimecode({
   ...props
 }: LinerNotesTimecodeProps) {
   const { seek } = useLinerNotes('Timecode');
-  const { seekTo } = useUiCopy();
+  const { tOr } = useT();
+  const seekTo = tOr('appUi.seekTo', {}, '');
   const id = useId();
   const Element = asChild ? Slot.Root : 'button';
 
@@ -128,7 +133,8 @@ export function LinerNotesChapters({
   children,
   ...props
 }: ComponentPropsWithRef<'nav'>) {
-  const { chapters } = useUiCopy();
+  const { tOr } = useT();
+  const chapters = tOr('appUi.chapters', {}, '');
 
   return (
     <nav aria-label={chapters} data-slot="liner-notes-chapters" {...props}>

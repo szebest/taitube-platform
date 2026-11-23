@@ -15,7 +15,6 @@ import {
 import { useObjectUrl } from '#app/features/channel/hooks/use-object-url';
 import { useUpdateChannel } from '#app/features/channel/hooks/use-update-channel';
 import { useT } from '#app/lib/messages';
-import { selectedFilesText } from '#app/lib/selected-files-text';
 import { ChannelImage } from '../channel-image/channel-image';
 import { readImageSize } from './utils/read-image-size';
 
@@ -96,7 +95,7 @@ export function ChannelImageEditor({ kind, currentUrl }: ChannelImageEditorProps
           <field.FileField
             accept={IMAGE_ACCEPT}
             placeholderText={tOr(`studio.${kind}Drop`, {}, '')}
-            selectedText={selectedFilesText}
+            selectedText={(count) => tOr('studio.selectedFiles', { count }, '')}
           />
         )}
       </form.AppField>

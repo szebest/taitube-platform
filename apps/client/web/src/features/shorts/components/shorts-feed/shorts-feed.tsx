@@ -1,4 +1,4 @@
-import { useMediaQuery, useUiCopy, VisuallyHidden } from '@kit/ui';
+import { useMediaQuery, VisuallyHidden } from '@kit/ui';
 import type { VideoSummary } from '@vp/api-contracts';
 import { type KeyboardEvent, type ReactNode, useEffect, useRef } from 'react';
 import { useShortsPlayback } from '#app/features/shorts/hooks/use-shorts-playback';
@@ -29,7 +29,7 @@ export interface ShortsFeedProps {
  */
 export function ShortsFeed({ shorts, named, hasMore, loadMore, renderComments }: ShortsFeedProps) {
   const { tOr } = useT();
-  const { shortsPlayer } = useUiCopy();
+  const shortsPlayer = tOr('appUi.shortsPlayer', {}, '');
   const beside = useMediaQuery(ACTIONS_BESIDE);
   const playback = useShortsPlayback();
   const feed = useRef<HTMLElement>(null);
