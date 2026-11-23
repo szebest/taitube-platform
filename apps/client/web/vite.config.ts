@@ -6,7 +6,8 @@ export default clientAppConfig({
   configUrl: import.meta.url,
   port: 5173,
   entryBudgetKb: 144,
-  initialBudgetKb: 549,
+  // 116: share-link, password, test and pipeline contracts and copy ship in the first load (554.5 KB measured)
+  initialBudgetKb: 555,
   forbiddenDirs: ['src/modules/Upload', 'src/features/upload', 'src/routes/_authed/upload'],
   plugins: pwaPlugins,
   prerender: [OFFLINE_PAGE_URL],
