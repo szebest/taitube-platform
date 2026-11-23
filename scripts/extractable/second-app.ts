@@ -2,15 +2,13 @@ import {
   copyFileSync,
   cpSync,
   existsSync,
-  mkdtempSync,
+  mkdirSync,
   readdirSync,
   readFileSync,
-  realpathSync,
   renameSync,
   rmSync,
   writeFileSync,
 } from 'node:fs';
-import { tmpdir } from 'node:os';
 import { join, relative } from 'node:path';
 import { load } from 'js-yaml';
 import type { Pkg } from '../workspace-packages';
@@ -26,13 +24,14 @@ import {
   loadedFiles,
   OFFLINE_INSTALL,
   type Report,
+  runScript,
 } from './sandbox';
 
 export const SECOND_APP = 'second-app';
 const SECOND_APP_DIR = 'tests/fixtures/second-app';
 const TARBALLS = 'tarballs';
 /** What a package runs or ships as data; its prose is the docs' business. */
-const SHIPPED = /\.(?:[cm]?[jt]sx?|json|css)$/;
+const SHIPPED = /\.(?:[cm]?[jt]sx?|json|css|map)$/;
 
 /** `@kit/<name>` packs to `tarballs/kit-<name>.tgz`, a name the app's manifest and overrides can hold across versions. */
 export const tarballOf = (name: string): string =>
@@ -67,43 +66,72 @@ function walk(dir: string): string[] {
   });
 }
 
-/** What the installed tarballs hold that belongs to this product: its name, a dotted or underscored prefix, an app package. */
-function productValues(appRoot: string): string[] {
-  const store = join(appRoot, 'node_modules/.pnpm');
-  return readdirSync(store)
-    .filter((entry) => entry.startsWith('@kit+'))
-    .flatMap((entry) => walk(join(store, entry, 'node_modules/@kit')))
-    .filter((file) => SHIPPED.test(file))
-    .flatMap((file) => {
-      const text = readFileSync(file, 'utf8');
-      const name = relative(store, file);
-      const named = text
-        .split('\n')
-        .flatMap((line, index) =>
-          PRODUCT_NAME.test(line)
-            ? [`${name}:${index + 1}: holds a value of this product: ${line.trim()}`]
-            : []
-        );
-      return [...named, ...appReferences(name, text)];
-    });
+function productLines(name: string, text: string): string[] {
+  return text
+    .split('\n')
+    .flatMap((line, index) =>
+      PRODUCT_NAME.test(line)
+        ? [`${name}:${index + 1}: holds a value of this product: ${line.trim()}`]
+        : []
+    );
 }
 
+/**
+ * What the installed `closure` packages hold that belongs to this product: its name, a dotted or
+ * underscored prefix, an app package. A closure package the store does not hold is a problem too, so
+ * an install that moved its packages elsewhere cannot pass by scanning nothing.
+ * @public
+ */
+export function productValues(appRoot: string, closure: readonly string[]): string[] {
+  const store = join(appRoot, 'node_modules/.pnpm');
+  const installed = readdirSync(store)
+    .filter((entry) => entry.startsWith('@kit+'))
+    .flatMap((entry) => {
+      const scope = join(store, entry, 'node_modules/@kit');
+      return readdirSync(scope, { withFileTypes: true })
+        .filter((dirent) => dirent.isDirectory())
+        .map((dirent) => ({ name: `@kit/${dirent.name}`, dir: join(scope, dirent.name) }));
+    });
+  const files = installed.flatMap(({ dir }) => walk(dir)).filter((file) => SHIPPED.test(file));
+  const missing = closure
+    .filter((name) => !installed.some((pkg) => pkg.name === name))
+    .map((name) => `${name} is not installed in ${store}, so nothing of it was scanned`);
+  if (files.length === 0) return [...missing, `no shipped file under ${store}/@kit+*`];
+  return [
+    ...missing,
+    ...files.flatMap((file) => {
+      const text = readFileSync(file, 'utf8');
+      const name = relative(store, file);
+      return [...productLines(name, text), ...appReferences(name, text)];
+    }),
+  ];
+}
+
+/**
+ * Packs each `packSet` package from `sandbox`, a workspace of its build closure, with the `dist` this
+ * repository built: building outside the repository is each package's own shard, and a pack from the
+ * repository itself would follow its ignore files.
+ */
 async function packKit(
+  repoRoot: string,
   sandbox: string,
   packSet: readonly Pkg[],
-  appRoot: string
+  destination: string
 ): Promise<string[]> {
+  mkdirSync(destination, { recursive: true });
   const packed = await Promise.all(
-    packSet.map((pkg) =>
-      exec('pnpm', ['pack', '--pack-destination', join(appRoot, TARBALLS)], join(sandbox, pkg.dir))
-    )
+    packSet.map((pkg) => {
+      const dist = join(repoRoot, pkg.dir, 'dist');
+      if (existsSync(dist)) cpSync(dist, join(sandbox, pkg.dir, 'dist'), { recursive: true });
+      return exec('pnpm', ['pack', '--pack-destination', destination], join(sandbox, pkg.dir));
+    })
   );
   const problems = packed.flatMap((outcome, index) =>
     outcome.code === 0 ? [] : [failed(`pnpm pack ${packSet[index]?.name}`, outcome.output)]
   );
-  for (const file of readdirSync(join(appRoot, TARBALLS))) {
+  for (const file of readdirSync(destination)) {
     const name = file.replace(/-\d+\.\d+\.\d+(?:-[\w.]+)?\.tgz$/, '.tgz');
-    renameSync(join(appRoot, TARBALLS, file), join(appRoot, TARBALLS, name));
+    renameSync(join(destination, file), join(destination, name));
   }
   return problems;
 }
@@ -115,6 +143,7 @@ async function packKit(
 async function runApp(
   repoRoot: string,
   appRoot: string,
+  closure: readonly string[],
   refreshLockfile: boolean
 ): Promise<string[]> {
   if (refreshLockfile)
@@ -129,12 +158,13 @@ async function runApp(
       : `\nrun pnpm check:extractable ${SECOND_APP} --refresh-lockfile`;
     return [failed('pnpm install --offline', installed.output) + hint];
   }
-  const problems = [...linksLeaving(appRoot), ...productValues(appRoot)];
-  for (const script of ['typecheck', 'test']) {
-    const ran = await exec('pnpm', ['run', script], appRoot);
-    if (ran.code !== 0) problems.push(failed(`pnpm run ${script}`, ran.output));
-  }
-  return [...problems, ...(await loadedFiles(appRoot, appRoot))];
+  const ran = Promise.all([
+    runScript('typecheck', appRoot),
+    runScript('test', appRoot),
+    loadedFiles(appRoot, appRoot),
+  ]);
+  const scanned = [...linksLeaving(appRoot), ...productValues(appRoot, closure)];
+  return [...scanned, ...(await ran).flat()];
 }
 
 export async function checkSecondApp(
@@ -160,10 +190,8 @@ export async function checkSecondApp(
   const buildSet = platformClosure(direct, packages, 'all');
   if (!packSet.ok) return report([...packSet.problems]);
   if (!buildSet.ok) return report([...buildSet.problems]);
-  const overrides = overrideProblems(
-    workspace.overrides ?? {},
-    packSet.packages.map((pkg) => pkg.name)
-  );
+  const closure = packSet.packages.map((pkg) => pkg.name);
+  const overrides = overrideProblems(workspace.overrides ?? {}, closure);
   if (overrides.length > 0) return report(overrides);
   const unlocked = refreshLockfile
     ? []
@@ -180,33 +208,36 @@ export async function checkSecondApp(
     );
   }
 
-  const { root: sandbox, problems } = createSandbox(repoRoot, buildSet.packages, SECOND_APP);
-  const appRoot = realpathSync(mkdtempSync(join(tmpdir(), `extractable-${SECOND_APP}-app-`)));
-  cpSync(fixture, appRoot, {
-    recursive: true,
-    filter: (source) => !/[/\\](node_modules|tarballs)$/.test(source),
-  });
-
-  const steps = async (): Promise<string[]> => {
-    const installed = await exec('pnpm', OFFLINE_INSTALL, sandbox);
-    if (installed.code !== 0) return [failed('pnpm install --offline', installed.output)];
-    const filters = packSet.packages.flatMap((pkg) => ['--filter', pkg.name]);
-    const built = await exec(
-      'pnpm',
-      ['--recursive', ...filters, 'run', '--if-present', 'build'],
-      sandbox
-    );
-    if (built.code !== 0) return [failed('building the packed packages', built.output)];
-    const packProblems = await packKit(sandbox, packSet.packages, appRoot);
-    return packProblems.length > 0 ? packProblems : runApp(repoRoot, appRoot, refreshLockfile);
-  };
-  problems.push(...(await steps()));
-
-  if (refreshLockfile && existsSync(join(appRoot, 'pnpm-lock.yaml'))) {
-    const lockfile = readFileSync(join(appRoot, 'pnpm-lock.yaml'), 'utf8');
-    writeFileSync(join(fixture, 'pnpm-lock.yaml'), withoutTarballIntegrity(lockfile));
+  const filters = packSet.packages.map((pkg) => `--filter=${pkg.name}`);
+  const building = exec(
+    'pnpm',
+    ['exec', 'turbo', 'run', 'build', ...filters, '--output-logs=errors-only'],
+    repoRoot
+  );
+  const { root, problems } = createSandbox(repoRoot, buildSet.packages, SECOND_APP);
+  const appRoot = join(root, 'app');
+  try {
+    cpSync(fixture, appRoot, {
+      recursive: true,
+      filter: (source) => !/[/\\](node_modules|tarballs)$/.test(source),
+    });
+    const built = await building;
+    if (built.code !== 0) problems.push(failed('building the packed packages', built.output));
+    else {
+      const packProblems = await packKit(repoRoot, root, packSet.packages, join(appRoot, TARBALLS));
+      problems.push(
+        ...(packProblems.length > 0
+          ? packProblems
+          : await runApp(repoRoot, appRoot, closure, refreshLockfile))
+      );
+    }
+    if (refreshLockfile && existsSync(join(appRoot, 'pnpm-lock.yaml'))) {
+      const lockfile = readFileSync(join(appRoot, 'pnpm-lock.yaml'), 'utf8');
+      writeFileSync(join(fixture, 'pnpm-lock.yaml'), withoutTarballIntegrity(lockfile));
+    }
+    return report(problems);
+  } finally {
+    if (keep) process.stdout.write(`kept ${root}\n`);
+    else rmSync(root, { recursive: true, force: true });
   }
-  if (keep) process.stdout.write(`kept ${sandbox} and ${appRoot}\n`);
-  else for (const dir of [sandbox, appRoot]) rmSync(dir, { recursive: true, force: true });
-  return report(problems);
 }
