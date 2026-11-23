@@ -10,6 +10,7 @@ import {
   loadedFiles,
   OFFLINE_INSTALL,
   type Report,
+  runScript,
 } from './extractable/sandbox';
 import { checkSecondApp, SECOND_APP } from './extractable/second-app';
 import { isPlatform, load, type Pkg } from './workspace-packages';
@@ -18,19 +19,20 @@ const USAGE = `Usage: pnpm check:extractable [<package>...] [${SECOND_APP}] [--l
                               [--refresh-lockfile] [--keep]
 
 Proves each platform package works outside this repository. For the packages named (default: every
-package under packages/platform, then the second app) it copies their platform closure, from the
-manifests' dependencies, peers and dev edges, to a fresh temp directory with a workspace file that
-lists only that closure, then:
+package under packages/platform, and the second app beside them) it copies their platform closure,
+from the manifests' dependencies, peers and dev edges, to a fresh temp directory with a workspace file
+that lists only that closure, then:
 
   1. installs offline and frozen from the local pnpm store, with this repository's lockfile cut
      down to the closure, so no registry and no metadata cache is needed;
   2. builds the closure, then runs the package's own typecheck and test scripts there;
   3. fails when a copied file names an app package (@vp/...), when a path in a source file, tsconfig
-     or manifest leaves its package folder, when an installed link or a file the compiler loads
-     resolves outside the temp directory.
+     or manifest leaves its package folder, when a tracked symlink, an installed link or a file the
+     compiler loads resolves outside it.
 
-${SECOND_APP} packs the packages tests/fixtures/second-app depends on with pnpm pack, installs the app
-from those tarballs and runs its typecheck and spec (scripts/extractable/second-app.ts).
+${SECOND_APP} builds the packages tests/fixtures/second-app reaches at runtime with turbo, packs them with
+pnpm pack from a copy of their closure, installs the app from those tarballs and runs its typecheck and
+spec (scripts/extractable/second-app.ts).
 
   <package>         @kit/<name> or <name>; several run in one sandbox, built once
   --list            print the targets as a JSON array and exit
@@ -65,13 +67,32 @@ async function checkTarget(root: string, pkg: Pkg): Promise<Report> {
   const dir = join(root, pkg.dir);
   const scripts: Record<string, string> =
     JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8')).scripts ?? {};
-  const problems: string[] = [];
-  for (const script of ['typecheck', 'test'].filter((name) => name in scripts)) {
-    const ran = await exec('pnpm', ['run', script], dir);
-    if (ran.code !== 0) problems.push(failed(`pnpm run ${script}`, ran.output));
-  }
-  problems.push(...(await loadedFiles(root, dir)));
-  return { target: pkg.name, problems, seconds: seconds(started) };
+  const ran = await Promise.all([
+    ...['typecheck', 'test'].filter((name) => name in scripts).map((name) => runScript(name, dir)),
+    loadedFiles(root, dir),
+  ]);
+  return { target: pkg.name, problems: ran.flat(), seconds: seconds(started) };
+}
+
+async function setUp(root: string, targets: readonly Pkg[]): Promise<string[]> {
+  const installed = await exec('pnpm', OFFLINE_INSTALL, root);
+  if (installed.code !== 0) return [failed('pnpm install --offline', installed.output)];
+  const leaving = linksLeaving(root);
+  if (leaving.length > 0) return leaving;
+  const filters = targets.flatMap((pkg) => ['--filter', `${pkg.name}^...`]);
+  const built = await exec(
+    'pnpm',
+    [
+      '--recursive',
+      `--workspace-concurrency=${availableParallelism()}`,
+      ...filters,
+      'run',
+      '--if-present',
+      'build',
+    ],
+    root
+  );
+  return built.code === 0 ? [] : [failed('building the closure', built.output)];
 }
 
 async function checkPackages(targets: readonly Pkg[], packages: readonly Pkg[], keep: boolean) {
@@ -89,38 +110,18 @@ async function checkPackages(targets: readonly Pkg[], packages: readonly Pkg[], 
 
   const started = performance.now();
   const { root, problems } = createSandbox(REPO, closure.packages, 'packages');
-  const setup = async (): Promise<string[]> => {
-    const installed = await exec('pnpm', OFFLINE_INSTALL, root);
-    if (installed.code !== 0) return [failed('pnpm install --offline', installed.output)];
-    const leaving = linksLeaving(root);
-    if (leaving.length > 0) return leaving;
-    const filters = targets.flatMap((pkg) => ['--filter', `${pkg.name}^...`]);
-    const built = await exec(
-      'pnpm',
-      [
-        '--recursive',
-        `--workspace-concurrency=${CONCURRENCY}`,
-        ...filters,
-        'run',
-        '--if-present',
-        'build',
-      ],
-      root
+  try {
+    const shared = [...problems, ...(await setUp(root, targets))];
+    process.stdout.write(
+      `sandbox ${root}: ${closure.packages.length} packages ready in ${seconds(started)} s\n`
     );
-    return built.code === 0 ? [] : [failed('building the closure', built.output)];
-  };
-  const shared = [...problems, ...(await setup())];
-  process.stdout.write(
-    `sandbox ${root}: ${closure.packages.length} packages ready in ${seconds(started)} s\n`
-  );
-
-  const reports =
-    shared.length > 0
+    return shared.length > 0
       ? targets.map((pkg) => ({ target: pkg.name, problems: shared, seconds: 0 }))
       : await pool(targets, CONCURRENCY, (pkg) => checkTarget(root, pkg));
-  if (keep) process.stdout.write(`kept ${root}\n`);
-  else rmSync(root, { recursive: true, force: true });
-  return reports;
+  } finally {
+    if (keep) process.stdout.write(`kept ${root}\n`);
+    else rmSync(root, { recursive: true, force: true });
+  }
 }
 
 function resolveTargets(names: readonly string[], platform: readonly Pkg[]) {
@@ -178,16 +179,16 @@ async function main(argv: readonly string[]): Promise<number> {
   const targets = names.length === 0 ? platform : found;
   const keep = flags.includes('--keep');
 
-  const reports: Report[] =
-    targets.length === 0 ? [] : await checkPackages(targets, packages, keep);
-  if (runSecondApp) {
-    reports.push(
-      await checkSecondApp(REPO, packages, {
-        keep,
-        refreshLockfile: flags.includes('--refresh-lockfile'),
-      })
-    );
-  }
+  const [packageReports, secondApp] = await Promise.all([
+    targets.length === 0 ? [] : checkPackages(targets, packages, keep),
+    runSecondApp
+      ? checkSecondApp(REPO, packages, {
+          keep,
+          refreshLockfile: flags.includes('--refresh-lockfile'),
+        })
+      : undefined,
+  ]);
+  const reports = secondApp === undefined ? packageReports : [...packageReports, secondApp];
 
   for (const { target, problems, seconds: took } of reports) {
     process.stdout.write(`${problems.length === 0 ? 'ok  ' : 'FAIL'} ${target} (${took} s)\n`);
