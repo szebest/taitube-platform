@@ -67,7 +67,13 @@ taitube-platform/
 │   │   ├── auth/                   # JwksTokenVerifier, DevTokenVerifier
 │   │   ├── authorization/          # CaslAuthorizationAdapter (@vp/permissions bridge)
 │   │   ├── bullmq/                 # BullMqJobQueue, BullMqFlowProducer, the Bull Board queue adapters
-│   │   ├── db/                         # @vp/db - Drizzle schema, client, migrations, the seed functions
+│   │   ├── composition/            # registerAdapters and the in-memory / external families
+│   │   ├── in-memory/              # the test doubles
+│   │   ├── metered/                # MeteredStorageClient, MeteredMultipartStorage (storage metrics)
+│   │   ├── postgres/               # repositories/, mappers/, scopes/ (CASL rules -> SQL, keyset)
+│   │   ├── redis/                  # RedisCacheClient and the category, reaction, subscription, comment and playhead caches
+│   │   └── s3/                     # S3StorageClient, S3MultipartStorage (@aws-sdk/client-s3)
+│   ├── db/                         # @vp/db - Drizzle schema, client, migrations, the seed functions
 │   ├── env-schema/                 # @vp/env-schema - the zod schema, AppConfig and toAppConfig
 │   ├── events/                     # @vp/events - publishVideoEvent, channels, cache keys
 │   ├── ffmpeg/                     # @vp/ffmpeg - argument builders, progress parsers, probe rules

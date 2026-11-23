@@ -15,7 +15,7 @@ This skill defines the dependency inversion rules, interface segregation contrac
 
 Before placing a port, adapter, token or registry, ask whether a second app could use it unchanged. If so it belongs in a
 `@kit/*` platform package (`packages/platform/<tier>/`) that never names a `@vp/*` package: the app's value comes in as a
-required typed parameter or a `@kit/di` token, and a port ships a `./contract` suite the app's adapters run. The rules:
+required typed parameter or a `@kit/di` token, and a port ships a `./contract` suite the app's adapters run (today the suites are the per-port ones in `packages/server/adapters/__tests__/contract/`; they move with `@kit/ports`, the last step of ticket 170). The rules:
 `docs/standards/platform-packages.md`. Everything below is the app side.
 
 ## 1. Core Principles

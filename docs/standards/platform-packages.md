@@ -43,7 +43,7 @@ A package that holds data exports a typed `define*` helper (`defineErrorCodes`, 
 `defineTokenSet`) that returns a frozen value, and `provide*` helpers that wrap a value for a registry. It exports no
 instance, runs nothing at import time and reads no global: `platform-no-import-time-registration.test.ts` fails a
 top-level `provide*`, `define*` or `register*` call whose result is dropped. The app calls them once, in its
-composition root (server: `apps/server/*/src/composition/`; client: each app's `src/lib/app-providers.ts`). A
+composition root (server: `apps/server/*/src/composition/`; client: each app's `src/router.tsx` and `src/routes/__root.tsx`). A
 function takes the registry or the value it needs as an argument; no function body looks one up from a global.
 A spec swaps a value with `createRegistry().provide(Token, fake)`, with no `vi.mock` of an import.
 
@@ -71,10 +71,16 @@ bump fails `pnpm check:platform-changes` (against `origin/main`; CI passes `--ba
 
 ## Type safety
 
-Strict generics; branded types where they prevent a mix-up (`Brand<T, 'UserId'>` in `@kit/primitives`);
+Strict generics; branded types where they prevent a mix-up;
 discriminated unions that end in `assertNever`; registries checked with `satisfies`. `platform-type-strictness.test.ts`
 bans `any`, a type assertion other than `as const`, a non-null `!` and `@ts-ignore` in platform source, with no
 exception list: the fix is a type, a guard or a schema.
+
+Every public generic has a type-level spec in `src/__tests__/type-fixtures/` (`expectTypeOf` for what it infers,
+`// @ts-expect-error` for what it rejects, each directive failing for exactly the reason its comment names). `@kit/ui`
+has one for its exports with a type parameter (`lazyComponent`, `createCompoundContext`, `variantNames`);
+`@kit/components`, `@kit/web-testing` and `@kit/vite-preset` export no generic, and the components' plain props are
+held by their component specs.
 
 Misuse must fail to compile, and a spec proves it: every public generic has a **type-level spec** under the
 package's `src/__tests__/type-fixtures/`, written with `expectTypeOf` and `// @ts-expect-error`. The package's
@@ -97,8 +103,9 @@ No platform package holds copy: no catalogue, no `dt(` call, no user-facing Engl
 A platform package that defines a port or a registry exports a `./contract` suite, `runXContract(makeImpl)`, with
 vitest as a peer dependency. The repository's own implementations (the in-memory doubles, the app's registries) run
 it against themselves, and so does any other app against its own. Changing a suite is a change of the surface, so it
-needs the version bump and the changelog entry. The layout of the per-port suites in `@vp/adapters` is in
-[testing.md](testing.md), section 2.
+needs the version bump and the changelog entry. No platform package exports `./contract` yet: the per-port suites live
+today in `packages/server/adapters/__tests__/contract/` (layout in [testing.md](testing.md), section 2) and move with
+`@kit/ports`, which lands as the last step of ticket 170.
 
 ## Extractable, and the second app
 

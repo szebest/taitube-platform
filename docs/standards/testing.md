@@ -79,7 +79,9 @@ workspace cycle (every package dev-depends on `@kit/testing`).
 exports `runXContract(makeImpl)` from a `./contract` entry (vitest is a peer dependency), so any app runs it against
 its own implementation. The repository's doubles and registries run it in their own specs. A contract is part of the
 package's surface: changing one needs the version bump and changelog entry
-([platform-packages.md](platform-packages.md)). The contracts above stay in `@vp/adapters` for the app's own ports.
+([platform-packages.md](platform-packages.md)). No platform package exports one yet: the contracts above are the
+suites today, and they move with `@kit/ports`, which lands as the last step of ticket 170. Contracts for the app's own
+ports stay in `@vp/adapters`.
 
 Each Postgres spec file gets a PGlite of its own, loaded from one migrated snapshot the adapters project
 builds in its global setup (`__tests__/contract/pglite-snapshot.ts`): a fresh PGlite runs initdb, most of a

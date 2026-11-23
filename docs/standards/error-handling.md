@@ -35,7 +35,7 @@ The mechanism is platform code, the vocabulary is the app's.
 - **A platform package owns the codes it emits.** `@kit/errors` exports `CommonErrorCodes`, `@kit/pagination`
   `PaginationErrorCodes`, `@kit/intl` `FormatErrorCodes`, each as an `as const` object. The app's set spreads them in
   and gives each a retry class, so no code is written twice and no platform package names an app code.
-- **The app's codes stay in `@vp/errors`** (`ApiErrorCodes`, `PROBLEM_STATUS`, `RETRY_CLASS`, the RFC 9457 mapping). A
+- **The app's codes stay in `@vp/errors`** (`ApiErrorCodes`, `RETRY_CLASS`); `PROBLEM_STATUS` and the RFC 9457 mapping live in `@vp/api-contracts` (`problem.ts`). A
   new code lands there, in the set and in SDD section 6.2 together, or it does not compile: `retryClass` is a `Record`
   over the set's codes.
 - **Platform rules take their code as a parameter.** `defineFieldFailures(code)` in `@kit/validation` returns the

@@ -19,9 +19,9 @@ Current members: `api-contracts`, `domain`, `domain-rules`, `errors`, `intl-form
 
 **Platform or app, first.** A package that names no product value and asks for what varies belongs in
 `packages/platform/universal/` as `@kit/<name>`; the rest stays here as `@vp/<name>`. A platform package never
-depends on, imports or names a `@vp/*` package, with no exception. `errors`, `validation`, `permissions` and
-`pagination` were each split on this rule: the generic half (`@kit/errors`, `@kit/validation`, `@kit/permissions`,
-`@kit/pagination`) owns the codes it emits, and the app half keeps its name and builds on it. The rule and its
+depends on, imports or names a `@vp/*` package, with no exception. `errors`, `validation` and `permissions`
+were each split on this rule: the generic half (`@kit/errors`, `@kit/validation`, `@kit/permissions`) owns the codes
+it emits (`@kit/pagination`, moved whole, owns its own), and the app half keeps its name and builds on it. The rule and its
 checks: [docs/standards/platform-packages.md](../../docs/standards/platform-packages.md).
 
 `storage`, `job-contracts` and `events` live in `server/` because their only consumers are `apps/server/api`,
