@@ -7,7 +7,7 @@ expectTypeOf(
 ).toEqualTypeOf<'INVALID_INPUT'>();
 expectTypeOf(failures.invalidField('title', 'bad', { max: 5 })).toHaveProperty('code');
 
-// @ts-expect-error the code is a string literal
+// @ts-expect-error the code is a string, not a number
 defineFieldFailures(1);
 
 // @ts-expect-error bounds carry both limits
