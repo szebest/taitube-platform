@@ -398,7 +398,9 @@ Whether a package belongs there is the first question for any new one (`packages
 - **Its surface is reviewed**: `api/<name>.api.txt` from `pnpm gen:api`, a changelog entry and a version bump for any
   change, extension rather than edit, a type-level spec for every public generic, and no `any`, assertion, `!` or
   `@ts-ignore` in its source.
-- **It works outside the repository**: the extractability check and a second app that registers its own values.
+- **It works outside the repository**: `pnpm check:extractable` (`scripts/check-extractable.ts`, CI job `extractable`)
+  installs each closure offline outside the repository and runs its checks, and `tests/fixtures/second-app/`
+  registers its own values against packed tarballs.
 
 Authority: [docs/standards/platform-packages.md](docs/standards/platform-packages.md). Section 6 lists the assertions.
 

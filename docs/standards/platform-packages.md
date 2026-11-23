@@ -109,15 +109,19 @@ today in `packages/server/adapters/__tests__/contract/` (layout in [testing.md](
 
 ## Extractable, and the second app
 
-A platform package must work outside this repository. The extractability check proves it for every
-package under `packages/platform/`: it copies the package and its platform closure to a temporary directory outside the
-repository with a `pnpm-workspace.yaml` that lists only that closure, installs offline, then runs `tsc --noEmit` and
-`vitest run` there, and asserts that every resolved module sits inside the temporary directory and that none of the
-sources names a `@vp` package. It then runs a **second dummy app**, kept outside the workspace globs, against packed
-tarballs of those packages. The second app registers its own error codes, locales (one right to left), cookie
-prefix, key namespace and metric prefix, builds a registry and passes its own spec, which proves the packages work as
-installed npm packages and hold none of this product's values. CI runs the check as the `extractable` job, one shard
-per package, inside the budgets of [testing.md](testing.md), section 9.
+A platform package must work outside this repository. `pnpm check:extractable [<package>|second-app]`
+(`scripts/check-extractable.ts`, its parts in `scripts/extractable/`) proves it for every package under
+`packages/platform/`: it copies the package and its platform closure, computed from the manifests, to a temporary
+directory outside the repository, installs offline and frozen from the repository's lockfile cut down to that
+closure, builds it and runs the package's own `typecheck` and `test` there. It fails on a `@vp/` reference, on a path
+that leaves the package folder, and on a link or compiled file that resolves outside the temporary directory.
+
+`second-app` installs `tests/fixtures/second-app/` (outside the workspace globs) from packed tarballs. It
+registers its own error codes, `fi-FI` and right to left `ar-EG`, another cookie prefix, key namespace, metric prefix
+and dev-token issuer, builds its registry and runs its spec, and the check fails when an installed package's code
+holds a value of this product. After changing the second app's dependencies, run
+`pnpm check:extractable second-app --refresh-lockfile`. CI runs the check as the `extractable` job, one shard per
+platform package plus `second-app`, inside the budgets of [testing.md](testing.md), section 9.
 
 ## What fails the build
 
@@ -131,7 +135,7 @@ per package, inside the budgets of [testing.md](testing.md), section 9.
 | Manifest shape | `platform-manifest.test.ts` |
 | No `any`, assertion, `!` or `@ts-ignore` | `platform-type-strictness.test.ts` |
 | A surface change is reviewed and versioned | `pnpm gen:api --check`, `pnpm check:platform-changes` |
-| It works outside the repository | the extractability check, the `extractable` job |
+| It works outside the repository | `pnpm check:extractable` (`scripts/check-extractable.ts`), the `extractable` job, `tests/fixtures/second-app/` |
 
 [ARCHITECTURE.md section 6](../../ARCHITECTURE.md#6-verification--enforcement) lists what each assertion plants and
 catches.
