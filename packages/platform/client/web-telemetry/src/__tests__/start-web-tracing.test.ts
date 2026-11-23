@@ -23,7 +23,7 @@ describe('startWebTracing', () => {
   beforeAll(() => {
     server.listen({ onUnhandledFrame: 'error' });
     startWebTracing({
-      serviceName: 'taitube-web',
+      serviceName: 'acme-web',
       tracesUrl: 'http://localhost:4318/v1/traces',
       apiOrigin: API_ORIGIN,
     });

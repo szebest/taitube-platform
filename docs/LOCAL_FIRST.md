@@ -90,6 +90,7 @@ Any other build leaves the flag off and ships none of that code (the bundle guar
    - Container startup scripts never invoke `apt-get`, `npm install`, or `curl` to fetch assets at runtime. Fonts (such as `fonts-dejavu-core` for FFmpeg subtitle/text filters) and the speech-to-text models are pre-baked at build time.
 4. **Offline CI Verification**:
    - CI runs `make smoke-offline` on an internal Docker bridge network without external gateway access, preventing regression against external dependencies.
+   - `pnpm check:extractable` installs every sandbox and the second app with `pnpm install --offline` from the local store, so it never reaches a registry.
 5. **Machine-Enforced in Source**:
    - `tests/architecture/local-first.test.ts` fails the build when any production source names an off-machine
      host, or when an uncommented `.env.example` default points off the machine. The cloud rung stays behind

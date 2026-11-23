@@ -234,8 +234,9 @@ Each job's `timeout-minutes` in `.github/workflows/ci.yml` is its outer bound, a
 own budget through `.github/actions/budget`: `unit-tests` 240 s in each unit shard, `architecture` 30 s in
 `lint-typecheck` (the suite's own time from its JSON report) and `integration-tests` 240 s.
 `tests/architecture/ci-budget-rules.ts` holds the numbers: `build` 3, `lint-typecheck` 4, `unit-shards` 5,
-`unit-bun-shards` 4, `integration` 6, `e2e-smoke` 4, `e2e-client` 4, `visual` 5, `terraform` 2, the two
-aggregates 1, and 9 minutes for the longest `needs` chain. A budget names the step it measures by its `id`, and its
+`unit-bun-shards` 4, `extractable` 6 (one shard per platform package and the second app), `integration` 6,
+`e2e-smoke` 4, `e2e-client` 4, `visual` 5, `terraform` 2, the two aggregates 1, and 9 minutes for the longest
+`needs` chain. A budget names the step it measures by its `id`, and its
 limit sits below its job's `timeout-minutes`, so the budget fires first and names the step.
 
 `unit` (vitest, `--shard=i/N`, N derived below) and `unit-bun` (`bun test --shard=i/5`) are matrix jobs named `unit-shard-<i>` and

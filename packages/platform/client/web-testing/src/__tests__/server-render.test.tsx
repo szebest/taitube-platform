@@ -11,7 +11,7 @@ const rootRoute = createRootRoute({
   component: () => (
     <html lang="en">
       <body>
-        <header>Taitube</header>
+        <header>Acme</header>
         <main className="page">
           <Outlet />
         </main>
@@ -38,10 +38,10 @@ describe('@kit/web-testing: serverRender', () => {
     const rendered = await serverRender(getRouter, '/');
 
     expect(rendered.status).toBe(200);
-    expect(rendered.html).toContain('<header>Taitube</header>');
+    expect(rendered.html).toContain('<header>Acme</header>');
     expect(rendered.main).toContain('<main class="page">');
     expect(rendered.main).toContain('<p>Home</p>');
-    expect(rendered.main).not.toContain('Taitube');
+    expect(rendered.main).not.toContain('Acme');
   });
 
   it('answers a redirect with the location it sends the browser to', async () => {

@@ -369,7 +369,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v7
 
-      # The check builds its own copy of the closure, so the workspace's build is not needed.
+      # A package shard builds its own copy of the closure; the second app replays the turbo cache this restores.
       - name: Set up the workspace
         uses: ./.github/actions/setup-workspace
         with:

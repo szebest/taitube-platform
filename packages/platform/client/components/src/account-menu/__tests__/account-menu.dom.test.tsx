@@ -22,7 +22,7 @@ const renderMenu = () =>
 describe('@kit/components: AccountMenu', () => {
   it.each([
     { name: 'The Creator', initials: 'TC' },
-    { name: 'taitube', initials: 'T' },
+    { name: 'acme', initials: 'A' },
     { name: '  Ada   Lovelace Byron ', initials: 'AL' },
     { name: '', initials: '' },
   ])('draws $name as $initials', ({ name, initials }) => {

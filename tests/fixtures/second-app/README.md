@@ -21,13 +21,16 @@ It brings its own:
 
 ## How the check runs it
 
-1. Copies the platform packages it reaches, with their dev closure, to a temp directory, installs them
-   offline and builds them.
-2. Packs each package it reaches at runtime into `tarballs/kit-<name>.tgz`; `package.json` names its direct
-   ones and `pnpm-workspace.yaml` overrides every one, so nothing resolves from a registry.
-3. Copies this folder to a second temp directory, installs offline and frozen from `pnpm-lock.yaml`, and
-   runs `typecheck` and `test` there. It also fails when an installed package file holds a value of this
-   product or names an app package.
+1. Builds the platform packages it reaches at runtime in this repository with turbo, which replays the
+   build job's cache in CI, while it copies them, with their dev closure, to a temp directory as a
+   workspace. Each package's own shard proves it builds outside the repository.
+2. Packs each package it reaches at runtime from that copy into `app/tarballs/kit-<name>.tgz`;
+   `package.json` names its direct ones and `pnpm-workspace.yaml` overrides every one, so nothing resolves
+   from a registry.
+3. Copies this folder to `app/` in the same temp directory, installs offline and frozen from
+   `pnpm-lock.yaml`, and runs `typecheck` and `test` there. It also fails when an installed package file,
+   source maps included, holds a value of this product or names an app package, or when a package it
+   reaches was not installed for that scan.
 
 The packages ship extensionless relative imports, written for a bundler, so `vitest.config.ts` inlines
 `@kit/*` through Vite instead of handing them to Node.
