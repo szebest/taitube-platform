@@ -1,6 +1,6 @@
 import { createIntl, createIntlCache } from '@kit/intl';
-import type { SupportedLocale } from '@vp/messages';
 import type { ActiveLocale } from '@vp/queries/intl';
+import type { SupportedLocale } from '@vp/shared-messages';
 import {
   type Translator,
   WEB_SOURCE,

@@ -3,7 +3,7 @@ import {
   IntlProvider as KitIntlProvider,
   type IntlProviderProps as KitIntlProviderProps,
 } from '@kit/intl-react';
-import { en, type SharedCatalogue } from '@vp/messages';
+import { en, type SharedCatalogue } from '@vp/shared-messages';
 import type { AppMessages } from './app-messages';
 import { SOURCE_LOCALE } from './locale-store';
 import { sharedWords } from './shared-words';

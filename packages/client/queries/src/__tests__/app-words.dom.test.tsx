@@ -1,7 +1,7 @@
 import { Format } from '@kit/intl-react';
 import { UI_COPY_KEYS, type UiCopy, useUiCopy } from '@kit/ui';
 import { act, render } from '@testing-library/react';
-import type { SupportedLocale } from '@vp/messages';
+import type { SupportedLocale } from '@vp/shared-messages';
 import type { ReactNode } from 'react';
 import { hydrateRoot } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';

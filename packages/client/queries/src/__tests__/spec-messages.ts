@@ -1,6 +1,6 @@
 import { createReactI18n } from '@kit/intl-react';
-import { en, sharedI18n } from '@vp/messages';
-import { pl } from '@vp/messages/pl';
+import { en, sharedI18n } from '@vp/shared-messages';
+import { pl } from '@vp/shared-messages/pl';
 import type { AppMessages } from '../intl';
 
 const words = createReactI18n(sharedI18n);

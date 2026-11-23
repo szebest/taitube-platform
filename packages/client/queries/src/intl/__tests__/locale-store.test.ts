@@ -1,4 +1,4 @@
-import { pl } from '@vp/messages/pl';
+import { pl } from '@vp/shared-messages/pl';
 import { SPEC_MESSAGES } from '../../__tests__/spec-messages';
 import { createLocaleStore, FALLBACK_ACTIVE_LOCALE } from '../locale-store';
 

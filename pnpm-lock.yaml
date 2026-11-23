@@ -317,9 +317,6 @@ importers:
       '@vp/intl-formats':
         specifier: workspace:*
         version: link:../../../packages/universal/intl-formats
-      '@vp/messages':
-        specifier: workspace:*
-        version: link:../../../packages/universal/messages
       '@vp/permissions':
         specifier: workspace:*
         version: link:../../../packages/universal/permissions
@@ -329,6 +326,9 @@ importers:
       '@vp/queries':
         specifier: workspace:*
         version: link:../../../packages/client/queries
+      '@vp/shared-messages':
+        specifier: workspace:*
+        version: link:../../../packages/universal/shared-messages
       '@vp/validation':
         specifier: workspace:*
         version: link:../../../packages/universal/validation
@@ -501,9 +501,6 @@ importers:
       '@vp/intl-formats':
         specifier: workspace:*
         version: link:../../../packages/universal/intl-formats
-      '@vp/messages':
-        specifier: workspace:*
-        version: link:../../../packages/universal/messages
       '@vp/permissions':
         specifier: workspace:*
         version: link:../../../packages/universal/permissions
@@ -513,6 +510,9 @@ importers:
       '@vp/queries':
         specifier: workspace:*
         version: link:../../../packages/client/queries
+      '@vp/shared-messages':
+        specifier: workspace:*
+        version: link:../../../packages/universal/shared-messages
       '@vp/validation':
         specifier: workspace:*
         version: link:../../../packages/universal/validation
@@ -1082,15 +1082,15 @@ importers:
       '@vp/errors':
         specifier: workspace:*
         version: link:../../universal/errors
-      '@vp/messages':
-        specifier: workspace:*
-        version: link:../../universal/messages
       '@vp/permissions':
         specifier: workspace:*
         version: link:../../universal/permissions
       '@vp/permissions-react':
         specifier: workspace:*
         version: link:../permissions-react
+      '@vp/shared-messages':
+        specifier: workspace:*
+        version: link:../../universal/shared-messages
       zod:
         specifier: ^4.6.5
         version: 4.6.5
@@ -1324,12 +1324,12 @@ importers:
       '@vp/api-contracts':
         specifier: workspace:*
         version: link:../../universal/api-contracts
-      '@vp/messages':
-        specifier: workspace:*
-        version: link:../../universal/messages
       '@vp/queries':
         specifier: workspace:*
         version: link:../queries
+      '@vp/shared-messages':
+        specifier: workspace:*
+        version: link:../../universal/shared-messages
       jsdom:
         specifier: ^30.1.2
         version: 30.1.2
@@ -3445,7 +3445,38 @@ importers:
         specifier: 'catalog:'
         version: 1.5.0(@opentelemetry/api@1.9.1)(@types/node@24.19.1)(@vitest/browser-playwright@5.1.0)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.28.2)(jiti@2.7.0)(jsdom@30.1.2)(msw@3.0.2(@types/node@24.19.1)(supports-color@10.2.2)(typescript@6.0.3)(vite@8.3.4(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)))(playwright@1.64.0)(sass@1.105.1)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1)
 
-  packages/universal/messages:
+  packages/universal/permissions:
+    dependencies:
+      '@casl/ability':
+        specifier: ^7.0.1
+        version: 7.0.1
+      '@kit/permissions':
+        specifier: workspace:*
+        version: link:../../platform/universal/permissions
+      '@vp/domain':
+        specifier: workspace:*
+        version: link:../domain
+      '@vp/errors':
+        specifier: workspace:*
+        version: link:../errors
+    devDependencies:
+      '@kit/testing':
+        specifier: workspace:*
+        version: link:../../platform/server/testing
+      '@kit/tsconfig':
+        specifier: workspace:*
+        version: link:../../platform/universal/tsconfig
+      rimraf:
+        specifier: ^6.1.3
+        version: 6.1.3
+      typescript:
+        specifier: ^6.0.3
+        version: 6.0.3
+      vite-plus:
+        specifier: 'catalog:'
+        version: 1.5.0(@opentelemetry/api@1.9.1)(@types/node@24.19.1)(@vitest/browser-playwright@5.1.0)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.28.2)(jiti@2.7.0)(jsdom@30.1.2)(msw@3.0.2(@types/node@24.19.1)(supports-color@10.2.2)(typescript@6.0.3)(vite@8.3.4(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)))(playwright@1.64.0)(sass@1.105.1)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1)
+
+  packages/universal/shared-messages:
     dependencies:
       '@kit/i18n':
         specifier: workspace:*
@@ -3477,38 +3508,7 @@ importers:
         version: 6.0.3
       vite-plus:
         specifier: 'catalog:'
-        version: 1.5.0(@opentelemetry/api@1.9.1)(@types/node@24.19.1)(@vitest/browser-playwright@5.1.0)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.28.2)(jiti@2.7.0)(jsdom@30.1.2)(msw@3.0.2(@types/node@24.19.1)(supports-color@10.2.2)(typescript@6.0.3)(vite@8.3.4(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)))(playwright@1.64.0)(sass@1.105.1)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1)
-
-  packages/universal/permissions:
-    dependencies:
-      '@casl/ability':
-        specifier: ^7.0.1
-        version: 7.0.1
-      '@kit/permissions':
-        specifier: workspace:*
-        version: link:../../platform/universal/permissions
-      '@vp/domain':
-        specifier: workspace:*
-        version: link:../domain
-      '@vp/errors':
-        specifier: workspace:*
-        version: link:../errors
-    devDependencies:
-      '@kit/testing':
-        specifier: workspace:*
-        version: link:../../platform/server/testing
-      '@kit/tsconfig':
-        specifier: workspace:*
-        version: link:../../platform/universal/tsconfig
-      rimraf:
-        specifier: ^6.1.3
-        version: 6.1.3
-      typescript:
-        specifier: ^6.0.3
-        version: 6.0.3
-      vite-plus:
-        specifier: 'catalog:'
-        version: 1.5.0(@opentelemetry/api@1.9.1)(@types/node@24.19.1)(@vitest/browser-playwright@5.1.0)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.28.2)(jiti@2.7.0)(jsdom@30.1.2)(msw@3.0.2(@types/node@24.19.1)(supports-color@10.2.2)(typescript@6.0.3)(vite@8.3.4(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)))(playwright@1.64.0)(sass@1.105.1)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1)
+        version: 1.5.0(@opentelemetry/api@1.9.1)(@types/node@24.19.1)(@vitest/browser-playwright@5.1.0)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.28.2)(jiti@2.7.0)(jsdom@30.1.2)(msw@3.0.2(@types/node@24.19.1)(@voidzero-dev/vite-plus-core@1.5.0(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.1)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1))(supports-color@10.2.2)(typescript@6.0.3))(playwright@1.64.0)(sass@1.105.1)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1)
 
   packages/universal/validation:
     dependencies:

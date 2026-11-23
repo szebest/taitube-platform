@@ -9,7 +9,7 @@ import {
   useAppearance,
 } from '@kit/ui';
 import type { Decorator, Loader } from '@storybook/react-vite';
-import { en, SUPPORTED_LOCALES, type SharedTranslation } from '@vp/messages';
+import { en, SUPPORTED_LOCALES, type SharedTranslation } from '@vp/shared-messages';
 import { type PropsWithChildren, useEffect } from 'react';
 import { WEB_MESSAGES } from '../../../../apps/client/web/src/lib/messages';
 import { DIRECTIONS, pickOption, preferenceFromGlobals } from './toolbars';

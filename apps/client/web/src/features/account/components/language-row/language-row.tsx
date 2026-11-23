@@ -1,6 +1,6 @@
 import { Select } from '@kit/ui';
 import { useRouteContext, useRouter } from '@tanstack/react-router';
-import { LOCALE_DETAILS, SUPPORTED_LOCALES } from '@vp/messages';
+import { LOCALE_DETAILS, SUPPORTED_LOCALES } from '@vp/shared-messages';
 import { useT } from '#app/lib/messages';
 import { useLocalePreference } from '#app/lib/preferences/device-preferences-provider';
 import { SettingItem } from '../setting-item/setting-item';

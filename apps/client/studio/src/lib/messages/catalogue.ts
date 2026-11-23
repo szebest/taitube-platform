@@ -5,8 +5,8 @@ import type {
   Translation,
   Translator as KitTranslator,
 } from '@kit/i18n';
-import { createI18n, en as sharedEn, type SupportedLocale } from '@vp/messages';
-import { en } from '@vp/messages/studio';
+import { createI18n, en as sharedEn, type SupportedLocale } from '@vp/shared-messages';
+import { en } from './en';
 
 /** The studio's catalogue: the shared words and its own, which never share a namespace. */
 export type StudioCatalogue = DisjointNamespaces<[typeof en, typeof sharedEn]>;

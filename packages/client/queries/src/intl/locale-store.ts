@@ -5,7 +5,7 @@ import {
   createLocaleStore as createKitLocaleStore,
   type LocaleStore as KitLocaleStore,
 } from '@kit/intl-react';
-import type { SharedCatalogue, SupportedLocale } from '@vp/messages';
+import type { SharedCatalogue, SupportedLocale } from '@vp/shared-messages';
 import type { AppMessages } from './app-messages';
 
 export const SOURCE_LOCALE: SupportedLocale = FALLBACK_LOCALE;

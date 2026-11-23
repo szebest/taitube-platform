@@ -1,6 +1,6 @@
 import type { Translation } from '@kit/i18n';
 import type { ReactI18n } from '@kit/intl-react';
-import type { SharedCatalogue, SupportedLocale } from '@vp/messages';
+import type { SharedCatalogue, SupportedLocale } from '@vp/shared-messages';
 
 /**
  * What a client app hands the shared providers about its words: its source catalogue (the shared

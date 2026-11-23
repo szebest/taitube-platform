@@ -167,7 +167,7 @@
         "!dist/**"
       ]
     },
-    "packages/universal/messages": {
+    "packages/universal/shared-messages": {
       "entry": ["src/**/type-fixtures/*.ts"],
       "project": [
         "**/*.{ts,tsx,mts,mjs,js}!",

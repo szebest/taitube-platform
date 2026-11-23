@@ -1,5 +1,5 @@
-import { LOCALE_DETAILS, SUPPORTED_LOCALES, type SupportedLocale } from '@vp/messages';
 import { LOCALE_PARAM } from '@vp/queries';
+import { LOCALE_DETAILS, SUPPORTED_LOCALES, type SupportedLocale } from '@vp/shared-messages';
 import { serializeJsonLd } from './json-ld';
 
 const DESCRIPTION_LIMIT = 200;

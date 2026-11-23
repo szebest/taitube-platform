@@ -4,7 +4,7 @@ import { FALLBACK_LOCALE } from '@kit/intl';
 import type { AppearancePreference } from '@kit/ui';
 import { appearance } from '@kit/ui/appearance/registry';
 import type { Preview } from '@storybook/react-vite';
-import { LOCALE_DETAILS, SUPPORTED_LOCALES } from '@vp/messages';
+import { LOCALE_DETAILS, SUPPORTED_LOCALES } from '@vp/shared-messages';
 
 /** A group's or the accent's toolbar entry for "no override": the theme's own. */
 export const THEME_DEFAULT = 'theme';

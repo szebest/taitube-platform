@@ -25,14 +25,14 @@ function serverManifests(): string[] {
 function declaresMessages(manifest: string): boolean {
   const parsed = JSON.parse(read(manifest)) as Record<string, Record<string, string> | undefined>;
   return ['dependencies', 'devDependencies', 'peerDependencies'].some(
-    (group) => parsed[group]?.['@vp/messages'] !== undefined
+    (group) => parsed[group]?.['@vp/shared-messages'] !== undefined
   );
 }
 
 describe('architecture: @vp/messages stays out of every server package', () => {
   it.each([
-    { shape: 'a static import', source: "import { en } from '@vp/messages';" },
-    { shape: 'a dynamic import', source: "const m = await import('@vp/messages');" },
+    { shape: 'a static import', source: "import { en } from '@vp/shared-messages';" },
+    { shape: 'a dynamic import', source: "const m = await import('@vp/shared-messages');" },
   ])('recognises $shape', ({ source }) => {
     expect(importsMessages(source)).toBe(true);
   });

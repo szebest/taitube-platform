@@ -1,4 +1,4 @@
-import { SUPPORTED_LOCALES } from '@vp/messages';
+import { SUPPORTED_LOCALES } from '@vp/shared-messages';
 import {
   loadStudioTranslation,
   STUDIO_SOURCE,

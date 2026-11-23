@@ -5,7 +5,7 @@ import { workspacePaths } from '../tests/architecture/program';
 import { productionSources, ROOT } from '../tests/architecture/repo-files';
 import { load, runsInBrowser } from './workspace-packages';
 
-const KEY_MODULE = 'packages/universal/messages/src/catalogue.ts';
+const KEY_MODULE = 'packages/universal/shared-messages/src/catalogue.ts';
 const FIXTURE = 'tests/architecture/message-key-usage.json';
 
 export type KeyUsage = ReadonlyMap<string, ReadonlySet<string>>;

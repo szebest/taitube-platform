@@ -1,6 +1,6 @@
 import { UiCopyProvider, uiCopyFrom } from '@kit/ui';
 import { useHydrated } from '@tanstack/react-router';
-import type { SharedCatalogue } from '@vp/messages';
+import type { SharedCatalogue } from '@vp/shared-messages';
 import type { PropsWithChildren } from 'react';
 import { type ActiveLocale, type AppMessages, FALLBACK_ACTIVE_LOCALE, IntlProvider } from './intl';
 import { useT } from './intl/shared-words';

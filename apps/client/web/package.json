@@ -48,7 +48,7 @@
     "@vp/domain": "workspace:*",
     "@vp/domain-rules": "workspace:*",
     "@vp/intl-formats": "workspace:*",
-    "@vp/messages": "workspace:*",
+    "@vp/shared-messages": "workspace:*",
     "@vp/permissions": "workspace:*",
     "@vp/permissions-react": "workspace:*",
     "@vp/queries": "workspace:*",

@@ -1,0 +1,83 @@
+import { translatorFor } from '../../__tests__/fixtures';
+
+describe('@vp/messages: en watch', () => {
+  const { t } = translatorFor('en');
+
+  it.each([
+    { key: 'watch.subscribe', args: undefined, expected: 'Subscribe' },
+    { key: 'watch.moreLikeThis', args: undefined, expected: 'More like this' },
+    { key: 'watch.subscribed', args: undefined, expected: 'Subscribed' },
+    { key: 'watch.share', args: undefined, expected: 'Share' },
+    { key: 'watch.shareTitle', args: undefined, expected: 'Share this video' },
+    { key: 'watch.shareLink', args: undefined, expected: 'Link' },
+    { key: 'watch.shareStartAt', args: { time: '1:30' }, expected: 'Start at 1:30' },
+    { key: 'watch.linkCopied', args: undefined, expected: 'Link copied' },
+    { key: 'watch.copyFailed', args: undefined, expected: 'The link could not be copied' },
+    {
+      key: 'watch.subscribeFailed',
+      args: undefined,
+      expected: 'Your subscription could not be changed',
+    },
+    {
+      key: 'watch.reactionFailed',
+      args: undefined,
+      expected: 'Your reaction could not be saved',
+    },
+    { key: 'watch.discussion', args: undefined, expected: 'Discussion' },
+    { key: 'watch.discussionEmpty', args: undefined, expected: 'Nobody has said anything yet' },
+    {
+      key: 'watch.discussionSignIn',
+      args: undefined,
+      expected: 'Sign in to join the discussion',
+    },
+    {
+      key: 'watch.discussionFailed',
+      args: undefined,
+      expected: 'The discussion could not be loaded',
+    },
+    { key: 'watch.channelFailed', args: undefined, expected: 'The channel could not be loaded' },
+    {
+      key: 'watch.relatedFailed',
+      args: undefined,
+      expected: 'More like this could not be loaded',
+    },
+    { key: 'watch.repliesFailed', args: undefined, expected: 'The replies could not be loaded' },
+    { key: 'watch.showMoreReplies', args: undefined, expected: 'Show more replies' },
+    { key: 'watch.commentFailed', args: undefined, expected: 'Your comment could not be posted' },
+    { key: 'watch.commentEditFailed', args: undefined, expected: 'Your change could not be saved' },
+    {
+      key: 'watch.commentDeleteFailed',
+      args: undefined,
+      expected: 'The comment could not be deleted',
+    },
+    { key: 'watch.editComment', args: undefined, expected: 'Edit' },
+    { key: 'watch.editCommentLabel', args: undefined, expected: 'Edit comment' },
+    { key: 'watch.saveComment', args: undefined, expected: 'Save' },
+    { key: 'watch.reportReason', args: { reason: 'other' }, expected: 'Something else' },
+    { key: 'watch.moderateAction', args: { action: 'shadow_ban' }, expected: 'Shadow ban user' },
+    { key: 'watch.moderationTitle', args: { action: 'hold' }, expected: 'Hold this comment' },
+    { key: 'watch.moderationReason', args: { reason: 'off_topic' }, expected: 'Off topic' },
+    { key: 'watch.moderationDuration', args: { duration: '24h' }, expected: '24 hours' },
+    {
+      key: 'watch.moderationDone',
+      args: { action: 'lift' },
+      expected: 'The restriction is lifted',
+    },
+    { key: 'watch.commentsBannedReason', args: { reason: 'Spam' }, expected: 'Reason: Spam' },
+    {
+      key: 'watch.commentsAccountTooNew',
+      args: { date: 'Nov 12' },
+      expected: 'Your account can comment from Nov 12',
+    },
+    { key: 'watch.commentsSlowMode', args: { seconds: 12 }, expected: 'Wait 12 s' },
+    { key: 'watch.queueTitle', args: undefined, expected: 'Your queue' },
+    { key: 'watch.queuePosition', args: { position: 3, count: 12 }, expected: '3 / 12' },
+    { key: 'watch.queueEmpty', args: undefined, expected: 'Nothing queued' },
+    { key: 'watch.queueCount', args: { count: 3 }, expected: '3 in the queue' },
+    { key: 'watch.queuedToast', args: undefined, expected: 'Added to your queue' },
+    { key: 'watch.alreadyQueued', args: undefined, expected: 'Already in your queue' },
+    { key: 'watch.queueBrowse', args: undefined, expected: 'Browse' },
+  ] as const)('writes $key', ({ key, args, expected }) => {
+    expect(t(key, ...(args ? [args] : []))).toEqual({ ok: true, value: expected });
+  });
+});

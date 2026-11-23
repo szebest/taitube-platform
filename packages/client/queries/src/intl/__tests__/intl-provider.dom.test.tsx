@@ -1,5 +1,5 @@
 import { renderHook } from '@testing-library/react';
-import { dt } from '@vp/messages';
+import { dt } from '@vp/shared-messages';
 import type { ReactNode } from 'react';
 import { SPEC_MESSAGES, useSpecT } from '../../__tests__/spec-messages';
 import { IntlProvider, type IntlProviderProps } from '../intl-provider';

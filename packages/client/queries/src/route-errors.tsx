@@ -1,7 +1,7 @@
 import { ErrorState, type ErrorStateKind } from '@kit/components';
 import { Link, useRouter } from '@tanstack/react-router';
 import { type ErrorCode, ErrorCodes } from '@vp/errors';
-import type { SharedMessageKey } from '@vp/messages';
+import type { SharedMessageKey } from '@vp/shared-messages';
 import { failureCode } from './failure-code';
 import { useT } from './intl/shared-words';
 import { present } from './present-failure';
