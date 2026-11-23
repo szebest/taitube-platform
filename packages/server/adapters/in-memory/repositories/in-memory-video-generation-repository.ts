@@ -200,11 +200,13 @@ export class InMemoryVideoGenerationRepository extends VideoGenerationRepository
 
   async markPurged(
     videoId: string,
-    generation: number
+    generation: number,
+    at: Date
   ): Promise<Result<boolean, DatabaseUnavailable>> {
     const row = this.generations.get(generationKey(videoId, generation));
-    if (!row || !inState(row, 'purge')) return ok(false);
-    const at = new Date(this.now());
+    if (!row || !inState(row, 'purge') || row.purgeAfter === null || row.purgeAfter > at) {
+      return ok(false);
+    }
     Object.assign(row, {
       status: 'purged',
       purgeAfter: null,

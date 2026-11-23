@@ -10,7 +10,7 @@ import {
 import * as schema from '@vp/db';
 import { type VideoEdit, type VideoGeneration, videoGenerationUpdated } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
-import { and, asc, desc, eq, inArray, lt, or, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray, lt, lte, or, sql } from 'drizzle-orm';
 import { commitGenerationSwap } from './generation-swap';
 import { appendUserEvent } from './postgres-user-event-repository';
 import type { PostgresDatabase } from './types';
@@ -249,12 +249,12 @@ export class PostgresVideoGenerationRepository extends VideoGenerationRepository
 
   async markPurged(
     videoId: string,
-    generation: number
+    generation: number,
+    now: Date
   ): Promise<Result<boolean, DatabaseUnavailable>> {
     return fromPromise(
       () =>
         this.db.transaction(async (tx) => {
-          const now = new Date();
           const purged = await tx
             .update(vg)
             .set({
@@ -265,7 +265,12 @@ export class PostgresVideoGenerationRepository extends VideoGenerationRepository
               updatedAt: now,
             })
             .where(
-              and(eq(vg.videoId, videoId), eq(vg.generation, generation), eq(vg.status, 'retired'))
+              and(
+                eq(vg.videoId, videoId),
+                eq(vg.generation, generation),
+                eq(vg.status, 'retired'),
+                lte(vg.purgeAfter, now)
+              )
             )
             .returning({ generation: vg.generation });
           if (purged.length === 0) return false;

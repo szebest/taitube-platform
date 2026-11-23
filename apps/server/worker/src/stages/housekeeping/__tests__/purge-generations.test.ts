@@ -111,13 +111,39 @@ describe('housekeeping: purge-generations', () => {
     expect(await statusOf(1)).toBe('purged');
   });
 
-  it('keeps a generation whose objects could not be deleted due for the next run', async () => {
+  it('stops when storage fails, leaving the claimed generation purged and its objects behind', async () => {
     vi.spyOn(storage, 'purgePrefix').mockResolvedValue(
       err(storageUnavailable.during('purgePrefix')(new Error('down')))
     );
 
     expectErr(await purge(RETIRED_GENERATION_GRACE_MS + 1));
-    expect(await statusOf(1)).toBe('retired');
+    expect(await statusOf(1)).toBe('purged');
+    expect(await keys()).toHaveLength(4);
+  });
+
+  it('keeps the objects of a generation reverted to after it was listed due', async () => {
+    const generations = repositories.videoGenerations;
+    const listDue = generations.listDue.bind(generations);
+    vi.spyOn(generations, 'listDue').mockImplementationOnce(async (now, limit) => {
+      const due = await listDue(now, limit);
+      const playing = expectOk(await repositories.videos.findById(VIDEO_ID));
+      expectOk(
+        await generations.swap({
+          videoId: VIDEO_ID,
+          generation: 1,
+          claim: { type: 'revert', expectedVersion: playing?.version ?? 0 },
+          now: new Date(SWAPPED_AT),
+        })
+      );
+      return due;
+    });
+
+    expect(expectOk(await purge(RETIRED_GENERATION_GRACE_MS + 1))).toEqual({
+      purgedCount: 0,
+      expiredUploads: 0,
+    });
+    expect(await statusOf(1)).toBe('active');
+    expect(await keys()).toHaveLength(4);
   });
 
   it('fails a replacement whose upload lapsed, leaving the video as it is', async () => {

@@ -9,7 +9,7 @@ import {
   shiftTimeline,
   videoGenerationUpdated,
 } from '@vp/domain';
-import { and, asc, eq, sql } from 'drizzle-orm';
+import { and, asc, eq, gt, sql } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
 import { appendUserEvent } from './postgres-user-event-repository';
 import type { PostgresDatabase } from './types';
@@ -109,7 +109,7 @@ export async function commitGenerationSwap(
   const held =
     claim.type === 'render'
       ? and(eq(vg.status, 'rendering'), eq(vg.lockToken, claim.lockToken))
-      : eq(vg.status, 'retired');
+      : and(eq(vg.status, 'retired'), gt(vg.purgeAfter, now));
   const [incoming] = await tx
     .select()
     .from(vg)

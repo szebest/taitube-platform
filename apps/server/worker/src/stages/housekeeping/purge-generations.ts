@@ -40,14 +40,16 @@ async function purgeObjects(
 
 /**
  * Deletes the renditions of every retired generation past its grace (24 hours after a swap, 14 days
- * for an edit list's base) and fails every replacement whose upload lapsed. The objects go before the
- * row turns `purged`, so a run that stops halfway leaves the row due and the next run takes it again.
+ * for an edit list's base) and fails every replacement whose upload lapsed. The row turns `purged`
+ * before its objects go, so a revert that took it back first keeps them; a run that stops between
+ * the two leaves the objects behind for good, which nothing plays.
  */
 export async function runPurgeGenerations(
   options: PurgeGenerationsOptions
 ): Promise<Result<PurgeGenerationsResult, DatabaseUnavailable | StorageUnavailable>> {
   const { repositories, storage, publicBucket, scanLimit, now, logger } = options;
-  const due = await repositories.videoGenerations.listDue(new Date(now()), scanLimit);
+  const at = new Date(now());
+  const due = await repositories.videoGenerations.listDue(at, scanLimit);
   if (isErr(due)) return due;
 
   let purgedCount = 0;
@@ -63,10 +65,11 @@ export async function runPurgeGenerations(
       expiredUploads += 1;
       continue;
     }
+    const claimed = await repositories.videoGenerations.markPurged(row.videoId, row.generation, at);
+    if (isErr(claimed)) return claimed;
+    if (!claimed.value) continue;
     const removed = await purgeObjects(storage, publicBucket, row);
     if (isErr(removed)) return removed;
-    const marked = await repositories.videoGenerations.markPurged(row.videoId, row.generation);
-    if (isErr(marked)) return marked;
     purgedCount += 1;
   }
 

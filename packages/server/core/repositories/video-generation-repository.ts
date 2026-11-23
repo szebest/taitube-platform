@@ -83,11 +83,13 @@ export abstract class VideoGenerationRepository {
     limit: number
   ): Promise<Result<VideoGeneration[], DatabaseUnavailable>>;
   /**
-   * Marks a retired generation purged. Purging an edit list's base bakes the list into what plays now:
-   * the list empties and further edits render from the current generation.
+   * Claims a retired generation past its `purgeAfter` as purged, before its objects go: `false` when a
+   * revert took it back first. Purging an edit list's base bakes the list into what plays now: the list
+   * empties and further edits render from the current generation.
    */
   abstract markPurged(
     videoId: string,
-    generation: number
+    generation: number,
+    now: Date
   ): Promise<Result<boolean, DatabaseUnavailable>>;
 }

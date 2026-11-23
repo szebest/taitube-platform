@@ -65,7 +65,9 @@ function holds(stored: StoredGeneration | undefined, input: SwapGenerationInput)
   return claim.type === 'render'
     ? VIDEO_GENERATION.sources('swap').includes(stored.status) &&
         stored.lockToken === claim.lockToken
-    : VIDEO_GENERATION.sources('restore').includes(stored.status);
+    : VIDEO_GENERATION.sources('restore').includes(stored.status) &&
+        stored.purgeAfter !== null &&
+        stored.purgeAfter > input.now;
 }
 
 /** The in-memory twin of `commitGenerationSwap`: the same checks and writes, without a transaction. */
