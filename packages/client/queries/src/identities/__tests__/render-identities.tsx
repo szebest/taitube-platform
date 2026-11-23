@@ -38,7 +38,7 @@ import { AccountSwitcher } from '../account-switcher';
 import { IdentitySwitcherDialog } from '../identity-switcher-dialog';
 import { IdentitySwitcherProvider } from '../identity-switcher-provider';
 
-export const MANAGE: AccountLink = { kind: 'route', label: 'Manage accounts', to: '/settings' };
+const MANAGE: AccountLink = { kind: 'route', label: 'Manage accounts', to: '/settings' };
 
 /** One signed-in account of the browser under test: its slot, its name, its owned channels. */
 export type TestAccount = {
