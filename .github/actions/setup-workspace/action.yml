@@ -57,16 +57,17 @@ runs:
           turbo-${{ runner.os }}-
 
     # Not the Actions cache: a per-commit entry would outlive its run and push the image layers and the
-    # pnpm store out of the repo's 10 GB, so the build job hands its turbo cache on as a seven-day artifact, which outlives a re-run of failed jobs.
+    # pnpm store out of the repo's 10 GB, so the build job hands its turbo cache on as a seven-day artifact.
+    # gh under `timeout`, not download-artifact: a composite step takes no timeout-minutes, and download-artifact
+    # retries a stalled blob silently for about three minutes.
     - name: Take the turbo cache the build job of this run handed on
       id: handoff
       if: inputs.handoff == 'true'
       continue-on-error: true
-      timeout-minutes: 1
-      uses: actions/download-artifact@v8
-      with:
-        name: turbo-cache
-        path: .turbo/cache
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: timeout 60 gh run download "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY" --name turbo-cache --dir .turbo/cache
 
     # Without the hand-off every job rebuilds for about 90 s, which a shard's ceiling does not leave room for, and
     # an artifact that expired cannot come back: re-running all jobs makes the build job upload a fresh one.
