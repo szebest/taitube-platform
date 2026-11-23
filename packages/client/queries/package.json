@@ -32,6 +32,7 @@
   "dependencies": {
     "@kit/components": "workspace:*",
     "@kit/errors": "workspace:*",
+    "@kit/i18n": "workspace:*",
     "@kit/intl": "workspace:*",
     "@kit/intl-react": "workspace:*",
     "@kit/query": "workspace:*",
@@ -42,7 +43,7 @@
     "@vp/api-contracts": "workspace:*",
     "@vp/domain": "workspace:*",
     "@vp/errors": "workspace:*",
-    "@vp/messages": "workspace:*",
+    "@vp/shared-messages": "workspace:*",
     "@vp/permissions": "workspace:*",
     "@vp/permissions-react": "workspace:*",
     "zod": "^4.6.5"

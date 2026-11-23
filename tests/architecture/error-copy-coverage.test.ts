@@ -1,5 +1,5 @@
 import { ErrorCodes } from '@vp/errors';
-import { ERROR_COPY, en } from '@vp/messages';
+import { ERROR_COPY, en } from '@vp/shared-messages';
 
 /**
  * The API answers with a code and the client chooses the words (SDD ADR-24, ADR-26). A code with no

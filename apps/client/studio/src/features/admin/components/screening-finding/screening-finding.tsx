@@ -1,4 +1,3 @@
-import { useT } from '@kit/intl-react';
 import { Badge } from '@kit/ui';
 import { useId } from 'react';
 import type { ScreeningFinding as Finding } from '#app/features/admin/api/admin-screening';
@@ -7,6 +6,7 @@ import {
   useSecondsRange,
   useShare,
 } from '#app/features/admin/hooks/use-screening-format';
+import { useT } from '#app/lib/messages';
 
 export interface ScreeningFindingProps {
   finding: Finding;

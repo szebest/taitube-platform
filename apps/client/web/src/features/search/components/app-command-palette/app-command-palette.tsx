@@ -1,5 +1,4 @@
 import { SectionError } from '@kit/components';
-import { useT } from '@kit/intl-react';
 import { Icon, useMediaQuery } from '@kit/ui';
 import { useNavigate, useSearch } from '@tanstack/react-router';
 import { useAccount } from '@vp/queries';
@@ -12,6 +11,7 @@ import { type PaletteResult, paletteResultKey } from '#app/features/search/utils
 import { useOpenDestination } from '#app/hooks/use-open-destination';
 import { useShellDestinations } from '#app/hooks/use-shell-destinations';
 import { useCommandPaletteStore } from '#app/lib/command-palette/command-palette-store';
+import { useT } from '#app/lib/messages';
 import { PaletteActionItem } from '../palette-action-item/palette-action-item';
 import { PaletteResultItem } from '../palette-result-item/palette-result-item';
 import { RecentSearchGroup } from '../recent-search-group/recent-search-group';

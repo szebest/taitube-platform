@@ -11,7 +11,7 @@ export declare function t<K extends MessageKey>(key: K): string;
 
 function usageOf(consumer: string): Record<string, string[]> {
   const program = fixtureProgram({ [CATALOGUE]: CATALOGUE_SOURCE, [CONSUMER]: consumer });
-  const usage = messageKeyUsage(program, CATALOGUE, [CONSUMER]);
+  const usage = messageKeyUsage(program, [{ file: CATALOGUE, keyType: 'MessageKey' }], [CONSUMER]);
   return Object.fromEntries([...usage].map(([key, files]) => [key, [...files]]));
 }
 

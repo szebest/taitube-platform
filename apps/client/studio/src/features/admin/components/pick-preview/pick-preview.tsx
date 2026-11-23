@@ -1,7 +1,6 @@
 import { VideoThumbnail } from '@kit/components';
-import { useT } from '@kit/intl-react';
-import { useUiCopy } from '@kit/ui';
 import type { PickVideo } from '#app/features/admin/api/pick-videos';
+import { useT } from '#app/lib/messages';
 
 export interface PickPreviewProps {
   video: PickVideo | null;
@@ -14,7 +13,7 @@ export interface PickPreviewProps {
 /** What home will show for the pick, from the same pieces: kicker, thumbnail, title, the note in the editorial face, the window. */
 export function PickPreview({ video, note, window }: PickPreviewProps) {
   const { tOr } = useT();
-  const { pickOfTheDay } = useUiCopy();
+  const pickOfTheDay = tOr('ui.pickOfTheDay', {}, '');
   const text = note.trim();
 
   return (

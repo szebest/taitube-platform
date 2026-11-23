@@ -1,10 +1,10 @@
-import { useT } from '@kit/intl-react';
 import { Avatar, Button, DropdownMenu, Icon } from '@kit/ui';
 import { useAccount } from '@vp/queries';
 import { useState } from 'react';
 import { RoleBadge } from '#app/components/team/role-badge';
 import { useSwitchChannel } from '#app/features/team/hooks/use-switch-channel';
 import { useActiveChannel } from '#app/hooks/use-active-channel';
+import { useT } from '#app/lib/messages';
 import { LeaveTeamDialog } from '../leave-team-dialog/leave-team-dialog';
 import { LeaveTeamItem } from '../leave-team-item/leave-team-item';
 

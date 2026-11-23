@@ -1,6 +1,6 @@
-import { useT } from '@kit/intl-react';
 import { fromPromise, isOk } from '@kit/result';
 import { useToast } from '@kit/ui';
+import { useT } from '#app/lib/messages';
 
 /** Copies a link to the clipboard and says whether it worked. */
 export function useCopyLink(): (link: string) => Promise<void> {

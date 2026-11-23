@@ -1,4 +1,3 @@
-import { useT } from '@kit/intl-react';
 import { Card, Icon, Input, InputGroup } from '@kit/ui';
 import { Link, useNavigate, useSearch } from '@tanstack/react-router';
 import { useState } from 'react';
@@ -8,6 +7,7 @@ import {
   SETTINGS_SECTIONS,
 } from '#app/features/account/utils/settings-index';
 import { searchSettings } from '#app/features/account/utils/settings-search';
+import { useT } from '#app/lib/messages';
 
 /** The `/settings` page: a search over every setting, and a card for each section when there is no search. */
 export function SettingsOverview() {

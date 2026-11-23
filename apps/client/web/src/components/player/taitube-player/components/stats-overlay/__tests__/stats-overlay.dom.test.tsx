@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { IntlProvider } from '@vp/queries/intl';
 import { attachedHls, parseMaster } from '#app/integrations/video-js/__tests__/offline-hls';
 import { VideoJsEngine } from '#app/integrations/video-js/video-js-engine';
+import { WEB_MESSAGES } from '#app/lib/messages';
 import { StatsOverlay } from '../stats-overlay';
 
 vi.mock(import('hls.js'), async (importOriginal) => {
@@ -12,7 +13,7 @@ vi.mock(import('hls.js'), async (importOriginal) => {
 function renderOverlay(playbackRate = 1) {
   vi.spyOn(HTMLMediaElement.prototype, 'playbackRate', 'get').mockReturnValue(playbackRate);
   const rendered = render(
-    <IntlProvider locale="en" timeZone="UTC">
+    <IntlProvider messages={WEB_MESSAGES} locale="en" timeZone="UTC">
       <VideoJsEngine
         playbackUrl="http://localhost:9000/public/videos/v1/hls/master.m3u8"
         title="Launch day"

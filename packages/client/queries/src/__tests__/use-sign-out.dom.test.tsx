@@ -8,6 +8,7 @@ import { userEvent } from '@testing-library/user-event';
 import { api } from '@vp/web-testing';
 import { type AppRouterContext, createAppRouter } from '../app-router';
 import { useSignOut } from '../use-sign-out';
+import { SPEC_MESSAGES } from './spec-messages';
 
 function SignOutButton() {
   const signOut = useSignOut();
@@ -24,6 +25,7 @@ async function renderSignOut() {
   const router = createAppRouter(
     {
       routeTree,
+      messages: SPEC_MESSAGES,
       apiBaseUrl: 'http://localhost:3000',
       pending: () => null,
     },

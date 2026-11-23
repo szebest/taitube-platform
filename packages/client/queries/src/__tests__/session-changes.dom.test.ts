@@ -8,6 +8,7 @@ import { account, api } from '@vp/web-testing';
 import { type AppRouterContext, createAppRouter } from '../app-router';
 import { GUEST, SESSION_KEY, type Session } from '../session';
 import { endSession, settleSession } from '../session-changes';
+import { SPEC_MESSAGES } from './spec-messages';
 
 const rootRoute = createRootRouteWithContext<AppRouterContext>()({ component: Outlet });
 const routeTree = rootRoute.addChildren(
@@ -20,6 +21,7 @@ async function routerAt(url: string, session?: Session) {
   const router = createAppRouter(
     {
       routeTree,
+      messages: SPEC_MESSAGES,
       apiBaseUrl: 'http://localhost:3000',
       pending: () => null,
     },

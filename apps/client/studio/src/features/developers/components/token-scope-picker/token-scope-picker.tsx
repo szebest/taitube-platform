@@ -1,6 +1,6 @@
-import { useT } from '@kit/intl-react';
 import type { ApiScope } from '@vp/domain';
 import { ScopePicker } from '#app/components/developers/scope-picker';
+import { useT } from '#app/lib/messages';
 
 /** Every scope once, under what it touches, in the order a creator reads them. */
 const SCOPE_GROUPS = [

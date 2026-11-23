@@ -1,6 +1,6 @@
-import { useT } from '@kit/intl-react';
 import { Button, Dialog, useUiCopy } from '@kit/ui';
 import type { ScreeningCase } from '#app/features/admin/api/admin-screening';
+import { useT } from '#app/lib/messages';
 import { ScreeningFinding } from '../screening-finding/screening-finding';
 
 export interface ScreeningEvidenceDialogProps {

@@ -27,6 +27,7 @@ import { DEV_TOKEN_URL } from '@vp/queries/demo-personas';
 import { account, api, apiServer, mockEndpoint } from '@vp/web-testing';
 import { HttpResponse, http } from 'msw/http';
 import type { ComponentType, PropsWithChildren } from 'react';
+import { WEB_MESSAGES } from '#app/lib/messages';
 import { DevicePreferencesProvider } from '../lib/preferences/device-preferences-provider';
 import { PreferencesSyncContext } from '../lib/preferences/preferences-sync.context';
 import { DEFAULT_DEVICE_PREFERENCES } from './device-preferences-fixtures';
@@ -41,7 +42,7 @@ const NO_SYNC = { signedIn: false, save: () => {}, notSaved: new Set<string>() }
 
 function providersFor(session: Session): ComponentType<PropsWithChildren> {
   return ({ children }) => (
-    <AppWords>
+    <AppWords messages={WEB_MESSAGES}>
       <ApiProvider api={api}>
         <SessionProvider session={session}>
           <AppearanceProvider stored={STORED_APPEARANCE}>

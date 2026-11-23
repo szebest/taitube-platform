@@ -1,7 +1,7 @@
-import { useT } from '@kit/intl-react';
 import { Button, DropdownMenu, Icon } from '@kit/ui';
 import { getRouteApi } from '@tanstack/react-router';
 import { SEARCH_SORTS } from '@vp/domain';
+import { useT } from '#app/lib/messages';
 
 const route = getRouteApi('/search');
 

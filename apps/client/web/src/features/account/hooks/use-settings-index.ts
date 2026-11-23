@@ -1,4 +1,4 @@
-import { useT } from '@kit/intl-react';
+import { useT } from '#app/lib/messages';
 import {
   SETTING_ROWS,
   SETTINGS_SECTIONS,

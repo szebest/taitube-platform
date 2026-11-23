@@ -11,17 +11,14 @@ export interface FormatProps {
     readonly value: FormatValue;
     readonly fallback?: string;
 }
-export function IntlProvider({ locale, timeZone, currency, now, clock, createTranslator, children, }: IntlProviderProps): React.JSX.Element
+export function IntlProvider({ locale, timeZone, currency, now, clock, children, }: IntlProviderProps): React.JSX.Element
 export interface IntlProviderProps {
     readonly locale: string;
     readonly timeZone?: string;
     readonly currency?: string;
     readonly now?: string;
     readonly clock: Clock;
-    readonly createTranslator: (intl: IntlBinding) => RegisteredTranslator;
     readonly children: ReactNode;
-}
-export interface IntlRegister {
 }
 export interface LocaleStore<Locale extends string, Catalogue> {
     activate(locale: Locale): Promise<void>;
@@ -32,10 +29,15 @@ export interface LocaleStoreOptions<Locale extends string, Catalogue> {
     readonly fallbackLocale: Locale;
     readonly load: (locale: Locale) => Promise<Catalogue>;
 }
-export type RegisteredTranslator = IntlRegister extends {
-    readonly translator: infer Translator;
-} ? Translator : never;
+export interface ReactI18n<App> {
+    readonly TranslatorProvider: (props: TranslatorProviderProps<App>) => ReactNode;
+    readonly useT: () => Translator<App>;
+}
+export interface TranslatorProviderProps<App> {
+    readonly catalogues: CatalogueSet<App>;
+    readonly children: ReactNode;
+}
 export function createLocaleStore<Locale extends string, Catalogue>({ fallbackLocale, load, }: LocaleStoreOptions<Locale, Catalogue>): LocaleStore<Locale, Catalogue>
+export function createReactI18n<App extends CatalogueShape>(i18n: I18n<App>): ReactI18n<App>
 export function fallbackActiveLocale<Locale extends string, Catalogue>(fallbackLocale: Locale): ActiveLocale<Locale, Catalogue>
 export function useFormat(): IntlBinding
-export function useT(): RegisteredTranslator

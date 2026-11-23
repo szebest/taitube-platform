@@ -1,4 +1,3 @@
-import { useT } from '@kit/intl-react';
 import { Button } from '@kit/ui';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import {
@@ -8,6 +7,7 @@ import {
   useTrustCommenter,
 } from '@vp/queries';
 import { LoadMore } from '#app/components/table/load-more';
+import { useT } from '#app/lib/messages';
 import { pagedRows } from '#app/utils/paged-rows';
 import { SettingsListSection } from '../settings-section/settings-section';
 

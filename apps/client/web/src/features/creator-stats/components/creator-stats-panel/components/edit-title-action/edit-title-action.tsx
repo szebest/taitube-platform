@@ -1,4 +1,3 @@
-import { useT } from '@kit/intl-react';
 import { Button, Callout, Icon, Input, useToast } from '@kit/ui';
 import { useQueryClient } from '@tanstack/react-query';
 import type { Video } from '@vp/api-contracts';
@@ -6,6 +5,7 @@ import { ErrorCodes } from '@vp/errors';
 import { failureCode, useFailureToast, videoKeys } from '@vp/queries';
 import { type KeyboardEvent, useState } from 'react';
 import { useUpdateVideo } from '#app/features/creator-stats/hooks/use-update-video';
+import { useT } from '#app/lib/messages';
 
 /** The title edited in place: Enter saves against the version the page holds, Escape cancels, a stale version offers a reload. */
 export function EditTitleAction({ video }: { video: Video }) {

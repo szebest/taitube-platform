@@ -1,5 +1,4 @@
 import { SectionError } from '@kit/components';
-import { useT } from '@kit/intl-react';
 import { Button, ResponsiveModal, Skeleton, useToast } from '@kit/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { CaptionTrackView } from '@vp/api-contracts';
@@ -10,6 +9,7 @@ import { VersionConflictDialog } from '#app/components/dialogs/version-conflict-
 import { editCuesMutationOptions } from '#app/features/captions/api/caption-mutations';
 import { useLanguageLabel } from '#app/features/captions/hooks/use-language-label';
 import { hasCode } from '#app/features/captions/utils/caption-failures';
+import { useT } from '#app/lib/messages';
 import { CueRows } from '../cue-rows/cue-rows';
 
 export interface CueEditorDialogProps {

@@ -1,9 +1,9 @@
-import { useT } from '@kit/intl-react';
 import { useQuery } from '@tanstack/react-query';
 import { useApi, useFailureToast } from '@vp/queries';
 import { SubscribeButton } from '#app/components/channel/subscribe-button';
 import { useRequireAccount } from '#app/hooks/use-require-account';
 import { useSetSubscription } from '#app/hooks/use-set-subscription';
+import { useT } from '#app/lib/messages';
 import { subscriptionStatusQueryOptions } from '#app/lib/query-keys/subscription-keys';
 
 export interface SubscribeActionProps {

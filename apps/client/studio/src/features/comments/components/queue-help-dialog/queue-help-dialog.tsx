@@ -1,6 +1,6 @@
-import { useT } from '@kit/intl-react';
 import { Dialog, Kbd } from '@kit/ui';
 import { QUEUE_KEYS } from '#app/features/comments/hooks/use-queue-shortcuts';
+import { useT } from '#app/lib/messages';
 
 export interface QueueHelpDialogProps {
   open: boolean;

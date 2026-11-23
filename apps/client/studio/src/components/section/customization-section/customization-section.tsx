@@ -1,6 +1,6 @@
-import { useT } from '@kit/intl-react';
 import { Button, Card, createCompoundContext } from '@kit/ui';
 import { type ComponentPropsWithRef, useId } from 'react';
+import { useT } from '#app/lib/messages';
 
 const [SectionContext, useSection] = createCompoundContext<{ titleId: string }>(
   'CustomizationSection'

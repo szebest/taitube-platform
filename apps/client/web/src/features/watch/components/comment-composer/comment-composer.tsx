@@ -1,4 +1,4 @@
-import { useFormat, useT } from '@kit/intl-react';
+import { useFormat } from '@kit/intl-react';
 import { unwrapOr } from '@kit/result';
 import { Button, Callout } from '@kit/ui';
 import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
@@ -9,6 +9,7 @@ import { CommentThread } from '#app/components/watch/comment-thread';
 import { useCountdown } from '#app/features/watch/hooks/use-countdown';
 import type { CommentRefusal } from '#app/features/watch/utils/comment-refusal';
 import { useSetSubscription } from '#app/hooks/use-set-subscription';
+import { useT } from '#app/lib/messages';
 
 type Notice = Exclude<CommentRefusal, { kind: 'slow-mode' }>;
 

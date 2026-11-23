@@ -1,5 +1,4 @@
 import { EmptyState, PageHeader } from '@kit/components';
-import { useT } from '@kit/intl-react';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { canUpdateCommentSettings } from '@vp/permissions';
 import { useCan } from '@vp/permissions-react';
@@ -8,6 +7,7 @@ import {
   type ModerationChannel,
   ModerationChannelProvider,
 } from '#app/features/comments/hooks/use-moderation-channel';
+import { useT } from '#app/lib/messages';
 import { DisclosureDefaultsSection } from '../disclosure-defaults-section/disclosure-defaults-section';
 import {
   AccountAgeSection,

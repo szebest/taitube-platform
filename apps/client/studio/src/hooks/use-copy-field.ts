@@ -1,6 +1,6 @@
-import { useT } from '@kit/intl-react';
 import { fromPromise, isOk } from '@kit/result';
 import { useToast } from '@kit/ui';
+import { useT } from '#app/lib/messages';
 
 /** Copies a value to the clipboard and toasts which field it was, or that the browser refused. */
 export function useCopyField() {

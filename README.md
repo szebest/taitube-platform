@@ -131,7 +131,7 @@ taitube-platform/
 │   │   ├── domain-rules/            # Pure rules over input plus an entity, returning Result
 │   │   ├── errors/                  # The app's ErrorCode vocabulary, retry classes and product failures
 │   │   ├── intl-formats/            # The product's tagged values: views, durations, published-at, file size
-│   │   ├── messages/                # Typed messages, the en catalogue and the copy for every error code
+│   │   ├── shared-messages/         # The words both apps render, the message engine and the error copy
 │   │   ├── permissions/             # CASL ability rules shared by the API and the frontend
 │   │   └── validation/              # Pure input-only rules returning Result
 │   ├── client/                      # Browser only

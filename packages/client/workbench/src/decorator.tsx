@@ -1,5 +1,4 @@
 import { accentCss } from '@kit/design-tokens';
-import { FALLBACK_LOCALE } from '@kit/intl';
 import { unwrapOr } from '@kit/result';
 import {
   AppearanceProvider,
@@ -9,21 +8,21 @@ import {
   useAppearance,
 } from '@kit/ui';
 import type { Decorator, Loader } from '@storybook/react-vite';
-import { type Catalogues, en, LOCALE_DETAILS, SUPPORTED_LOCALES } from '@vp/messages';
+import { en, type SharedTranslation } from '@vp/shared-messages';
+import { LOCALES } from '@vp/shared-messages/locales';
 import { type PropsWithChildren, useEffect } from 'react';
+import { WEB_MESSAGES } from '../../../../apps/client/web/src/lib/messages';
 import { DIRECTIONS, pickOption, preferenceFromGlobals } from './toolbars';
 
-type Translation = Catalogues[string];
-
 export const pickLocale = (globals: Readonly<Record<string, unknown>>) =>
-  pickOption(SUPPORTED_LOCALES, globals.locale, FALLBACK_LOCALE);
+  pickOption(LOCALES.tags, globals.locale, LOCALES.source);
 
 /** The toolbar locale's catalogue, loaded before the story renders as the apps load it before they hydrate. */
 export const loadCatalogue: Loader = async ({ globals }) => ({
-  catalogue: await LOCALE_DETAILS[pickLocale(globals)].load(),
+  catalogue: await WEB_MESSAGES.load(pickLocale(globals)),
 });
 
-const copyFrom = (catalogue: Translation | undefined) =>
+const copyFrom = (catalogue: SharedTranslation | undefined) =>
   uiCopyFrom((key) => (catalogue?.ui?.[key] ?? en.ui[key]).template);
 
 function OnDocument({

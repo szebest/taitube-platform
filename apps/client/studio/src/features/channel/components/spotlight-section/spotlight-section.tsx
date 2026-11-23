@@ -1,20 +1,21 @@
-import { FALLBACK_LOCALE, SUPPORTED_LOCALES } from '@kit/intl';
-import { Format, useFormat, useT } from '@kit/intl-react';
+import { Format, useFormat } from '@kit/intl-react';
 import { unwrapOr } from '@kit/result';
 import { Field, Tabs, Textarea } from '@kit/ui';
 import { useQuery } from '@tanstack/react-query';
 import type { ChannelSpotlightSettings } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { useApi } from '@vp/queries';
+import { LOCALES } from '@vp/shared-messages/locales';
 import { useState } from 'react';
 import { CustomizationSection } from '#app/components/section/customization-section';
 import { spotlightQueryOptions } from '#app/features/channel/api/channel-spotlight';
 import { useSaveSpotlight } from '#app/features/channel/hooks/use-save-spotlight';
 import { failureCodeOf } from '#app/features/channel/hooks/use-update-channel';
 import { useActiveChannel } from '#app/hooks/use-active-channel';
+import { useT } from '#app/lib/messages';
 import { SpotlightVideoPicker } from '../spotlight-video-picker/spotlight-video-picker';
 
-const OTHER_LOCALES = SUPPORTED_LOCALES.filter((locale) => locale !== FALLBACK_LOCALE);
+const OTHER_LOCALES = LOCALES.tags.filter((locale) => locale !== LOCALES.source);
 
 type Localization = ChannelSpotlightSettings['localizations'][number];
 

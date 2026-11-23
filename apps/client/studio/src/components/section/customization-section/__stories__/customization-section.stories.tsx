@@ -1,6 +1,7 @@
 import { Field, Input } from '@kit/ui';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { FALLBACK_ACTIVE_LOCALE, IntlProvider } from '@vp/queries/intl';
+import { STUDIO_MESSAGES } from '#app/lib/messages';
 import { CustomizationSection } from '../index';
 
 const meta = {
@@ -23,6 +24,7 @@ function Section({
 }) {
   return (
     <IntlProvider
+      messages={STUDIO_MESSAGES}
       locale={FALLBACK_ACTIVE_LOCALE.locale}
       catalogues={FALLBACK_ACTIVE_LOCALE.catalogues}
       timeZone="UTC"

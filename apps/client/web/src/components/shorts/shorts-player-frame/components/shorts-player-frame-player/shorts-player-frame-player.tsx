@@ -1,7 +1,8 @@
-import { AspectRatio, Icon, Spinner, useUiCopy } from '@kit/ui';
+import { AspectRatio, Icon, Spinner } from '@kit/ui';
 import { type ComponentPropsWithRef, type ReactNode, useEffect, useState } from 'react';
 import { useShortsPlayerFrame } from '#app/components/shorts/shorts-player-frame/shorts-player-frame.context';
 import { shortsPlayerFrameStyles } from '#app/components/shorts/shorts-player-frame/shorts-player-frame.variants';
+import { useT } from '#app/lib/messages';
 
 const SPINNER_DELAY_MS = 400;
 
@@ -17,7 +18,10 @@ export function ShortsPlayerFramePlayer({
   ...props
 }: ShortsPlayerFramePlayerProps) {
   const { state, layout, paused, playback } = useShortsPlayerFrame('Player');
-  const { play, pause, caughtUp } = useUiCopy();
+  const { tOr } = useT();
+  const play = tOr('appUi.play', {}, '');
+  const pause = tOr('appUi.pause', {}, '');
+  const caughtUp = tOr('appUi.caughtUp', {}, '');
   const [spinnerDue, setSpinnerDue] = useState(false);
   const styles = shortsPlayerFrameStyles({ layout });
   const plays = state === 'ready' || state === 'ended';

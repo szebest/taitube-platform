@@ -1,6 +1,6 @@
-import { useT } from '@kit/intl-react';
 import type { IconId } from '@kit/ui';
 import { useAccount } from '@vp/queries';
+import { useT } from '#app/lib/messages';
 
 export type ShellTarget =
   | {

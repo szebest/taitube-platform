@@ -1,11 +1,11 @@
 import { useAppForm } from '@kit/forms';
-import { useT } from '@kit/intl-react';
 import { isErr } from '@kit/result';
-import { Button, ResponsiveModal, useToast, useUiCopy } from '@kit/ui';
+import { Button, ResponsiveModal, useToast } from '@kit/ui';
 import { COMMENT_REPORT_REASONS, type CommentReportReason } from '@vp/domain';
 import { useFailureToast } from '@vp/queries';
 import { validateReportNote } from '@vp/validation';
 import { useReportComment } from '#app/features/watch/hooks/use-report-comment';
+import { useT } from '#app/lib/messages';
 
 interface ReportCommentFormProps {
   commentId: string;
@@ -16,7 +16,7 @@ function ReportCommentForm({ commentId, onSent }: ReportCommentFormProps) {
   const showToast = useToast();
   const showFailure = useFailureToast();
   const { tOr } = useT();
-  const { cancel } = useUiCopy();
+  const cancel = tOr('ui.cancel', {}, '');
   const reportComment = useReportComment(commentId);
 
   const validateNote = ({ value }: { value: string }) =>

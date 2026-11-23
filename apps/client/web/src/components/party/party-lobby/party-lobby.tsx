@@ -1,7 +1,7 @@
-import { useT } from '@kit/intl-react';
 import { Avatar, Button, Icon, VisuallyHidden } from '@kit/ui';
 import { PartyCan } from '@vp/permissions-react';
 import type { ComponentPropsWithRef } from 'react';
+import { useT } from '#app/lib/messages';
 
 export interface PartyLobbyRootProps extends ComponentPropsWithRef<'div'> {
   posterUrl?: string | null;

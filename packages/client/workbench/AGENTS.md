@@ -3,7 +3,7 @@
 > Tier rules for this directory: [../AGENTS.md](../AGENTS.md) · full tier & layer reference: [packages/AGENTS.md](../../AGENTS.md)
 
 Owner: ticket [95](../../../docs/tickets/95-design-system-2.md). `client` tier, layer T4 (it depends on
-`@kit/ui`, `@kit/design-tokens` and `@vp/messages`). Nothing imports it: it is Storybook over every story in the
+`@kit/ui`, `@kit/design-tokens` and `@vp/shared-messages`). Nothing imports it: it is Storybook over every story in the
 repo.
 
 ## What it holds
@@ -18,7 +18,7 @@ repo.
   and the toolbars.
 - `src/toolbars.ts`: one toolbar per axis, built from the appearance registry (themes, the shown modes,
   contrast, and per token group the theme default plus every offered set), the direction, the locale (every
-  supported one, from `@vp/messages`), and `preferenceFromGlobals`, the preference they describe.
+  supported one, from `LOCALES` in `@vp/shared-messages`), and `preferenceFromGlobals`, the preference they describe.
 - `src/decorator.tsx`: `withAppearance` renders each story inside `AppearanceProvider` and puts the
   appearance, `dir` and `lang` on `<html>` through `applyAppearance`, the attributes `ThemedDocument` renders
   in the apps, with the `ui` words of the toolbar locale's catalogue as its `UiCopy` (`loadCatalogue`, a

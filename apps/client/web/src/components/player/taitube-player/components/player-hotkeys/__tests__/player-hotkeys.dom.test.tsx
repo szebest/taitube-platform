@@ -3,6 +3,7 @@ import type { CaptionTrackView } from '@vp/api-contracts';
 import { IntlProvider } from '@vp/queries/intl';
 import { captionTrack } from '@vp/web-testing';
 import { usePlayerState, VideoJsEngine } from '#app/integrations/video-js/video-js-engine';
+import { WEB_MESSAGES } from '#app/lib/messages';
 import { PlayerHotkeys } from '../player-hotkeys';
 
 vi.mock(import('hls.js'), async (importOriginal) => {
@@ -18,7 +19,7 @@ function CaptionsShown() {
 
 function renderHotkeys(captionTracks: readonly CaptionTrackView[] = [captionTrack()]) {
   const rendered = render(
-    <IntlProvider locale="en" timeZone="UTC">
+    <IntlProvider messages={WEB_MESSAGES} locale="en" timeZone="UTC">
       <input aria-label="Search" />
       <VideoJsEngine
         playbackUrl="http://localhost:9000/public/videos/v1/hls/master.m3u8"

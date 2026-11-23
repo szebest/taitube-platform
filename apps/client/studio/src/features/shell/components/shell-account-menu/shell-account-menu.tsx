@@ -1,11 +1,11 @@
 import { AccountMenu } from '@kit/components';
-import { useT } from '@kit/intl-react';
 import { AppearanceMenuGroups, DropdownMenu, ThemeMenu, useUiCopy } from '@kit/ui';
 import { Link } from '@tanstack/react-router';
 import { canAccessAdmin } from '@vp/permissions';
 import { Can } from '@vp/permissions-react';
 import { SignInButton, useAccount, useSignOut } from '@vp/queries';
 import { WEB_URL } from '#app/lib/config';
+import { useT } from '#app/lib/messages';
 
 /** The creator's account in the toolbar: a guest's way to sign in, or the channel's menu with upload, admin and sign-out. */
 export function ShellAccountMenu() {

@@ -1,5 +1,4 @@
 import { EmptyState, SectionError } from '@kit/components';
-import { useT } from '@kit/intl-react';
 import { Skeleton } from '@kit/ui';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { CHANNEL_AUDIT_ACTIONS } from '@vp/domain';
@@ -12,6 +11,7 @@ import {
   auditQueryOptions,
   teamQueryOptions,
 } from '#app/features/team/api/team-queries';
+import { useT } from '#app/lib/messages';
 import { pagedRows } from '#app/utils/paged-rows';
 import { AuditEntry } from '../audit-entry/audit-entry';
 

@@ -339,7 +339,6 @@
       "DisplayNameValue": "@kit/intl",
       "duration": "@kit/intl",
       "DurationValue": "@kit/intl",
-      "FALLBACK_LOCALE": "@kit/intl",
       "fileSize": "@vp/intl-formats",
       "FORMAT_KINDS": "@kit/intl",
       "FormatContext": "@kit/intl",
@@ -374,7 +373,6 @@
       "scale": "@kit/intl",
       "Scaled": "@kit/intl",
       "subscribers": "@vp/intl-formats",
-      "SUPPORTED_LOCALES": "@kit/intl",
       "TaggedValue": "@kit/intl",
       "time": "@kit/intl",
       "TIME_FIELD_KEYS": "@kit/intl",
@@ -402,23 +400,16 @@
     ".": {
       "ArgsOf": "@kit/i18n",
       "ArgumentFreeKey": "@kit/i18n",
-      "Catalogues": "@kit/i18n",
       "createTranslator": "@kit/i18n",
-      "dt": "@kit/i18n",
+      "dt": "@vp/shared-messages",
       "en": "@vp/shared-messages",
       "ERROR_COPY": "@vp/shared-messages",
       "findMessage": "@kit/i18n",
-      "isSupportedLocale": "@vp/shared-messages",
-      "LOCALE_DETAILS": "@vp/shared-messages",
-      "LocaleDetails": "@vp/shared-messages",
       "Message": "@kit/i18n",
       "MessageConfig": "@kit/i18n",
       "MessageKey": "@kit/i18n",
-      "Params": "@kit/i18n",
-      "SUPPORTED_LOCALES": "@vp/shared-messages",
       "SupportedLocale": "@vp/shared-messages",
-      "Translator": "@kit/i18n",
-      "TranslatorDeps": "@kit/i18n"
+      "Translator": "@kit/i18n"
     }
   },
   "@vp/observability": {

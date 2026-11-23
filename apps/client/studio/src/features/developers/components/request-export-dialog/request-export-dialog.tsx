@@ -1,14 +1,5 @@
-import { useT } from '@kit/intl-react';
 import { fromPromise, isOk } from '@kit/result';
-import {
-  Button,
-  Field,
-  ResponsiveModal,
-  SegmentedControl,
-  Select,
-  useToast,
-  useUiCopy,
-} from '@kit/ui';
+import { Button, Field, ResponsiveModal, SegmentedControl, Select, useToast } from '@kit/ui';
 import {
   ANALYTICS_RANGES,
   type AnalyticsRange,
@@ -21,6 +12,7 @@ import {
 import { useFailureToast } from '@vp/queries';
 import { type FormEvent, useState } from 'react';
 import { useRequestExport } from '#app/features/developers/hooks/use-developer-mutations';
+import { useT } from '#app/lib/messages';
 
 /** Lifetime is no range at all, so the file reaches the oldest data there is. */
 function paramsOf(range: AnalyticsRange, today: Date) {
@@ -35,7 +27,7 @@ export interface RequestExportDialogProps {
 /** Which data, in which format, over which days; the job runs and the table follows it. */
 export function RequestExportDialog({ kinds, onClose }: RequestExportDialogProps) {
   const { tOr } = useT();
-  const { cancel } = useUiCopy();
+  const cancel = tOr('ui.cancel', {}, '');
   const toast = useToast();
   const showFailure = useFailureToast();
   const request = useRequestExport();

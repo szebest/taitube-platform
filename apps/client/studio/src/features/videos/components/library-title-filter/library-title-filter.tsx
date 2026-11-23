@@ -1,6 +1,6 @@
-import { useT } from '@kit/intl-react';
 import { Input } from '@kit/ui';
 import { type ChangeEvent, useEffect, useRef } from 'react';
+import { useT } from '#app/lib/messages';
 
 const SETTLE_MS = 300;
 

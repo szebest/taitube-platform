@@ -833,12 +833,12 @@ would grow its own helper, and no home for the copy that renders a failure code 
   and `ERROR_COPY` is total over `ErrorCode`.
 
 **Consequences.** `docs/standards/formatting-and-i18n.md` is the authority. `tests/architecture/` holds
-`intl-purity`, `no-adhoc-formatting`, `messages-are-client-only` and `error-copy-coverage` (ARCHITECTURE.md
+`intl-purity`, `no-adhoc-formatting`, `translation-layers` and `error-copy-coverage` (ARCHITECTURE.md
 §6). `javascript-time-ago` left `apps/client/web`. Ticket 86 added negotiation, Polish and RTL, and with them
-`catalogue-parity` and `single-locale-source`. **Adding a language** is a catalogue directory under
-`packages/universal/messages/src/<tag>/` holding every `en` key, plus one entry in `SUPPORTED_LOCALES` and
-`LOCALE_DETAILS` (its name in itself, its `direction`, its OpenGraph name, its dynamic import); Polish needed no other change to
-`@kit/intl` or `@vp/messages` source, which is the proof the seam holds. A right-to-left language is the same
+`catalogue-parity` and `single-locale-source`. **Adding a language** is a `<tag>/` directory beside `en/` in `@vp/shared-messages` and in each app's
+`src/lib/messages/`, holding every `en` key, plus one entry in `LOCALES` (its name in itself, its `direction`, its
+OpenGraph name) and one loader per app; Polish needed no other change to
+`@kit/intl` or the message source, which is the proof the seam holds. A right-to-left language is the same
 data change with `direction: 'rtl'`. Each language past `en` costs its own lazy chunk, and every new message
 costs a translation in the same change, which the parity test enforces.
 

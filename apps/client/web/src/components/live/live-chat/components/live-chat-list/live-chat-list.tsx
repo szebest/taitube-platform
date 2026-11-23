@@ -1,4 +1,4 @@
-import { Badge, Button, useUiCopy } from '@kit/ui';
+import { Badge, Button } from '@kit/ui';
 import {
   type ComponentPropsWithRef,
   type RefObject,
@@ -9,6 +9,7 @@ import {
 import { useLiveChat } from '#app/components/live/live-chat/live-chat.context';
 import { liveChatStyles } from '#app/components/live/live-chat/live-chat.variants';
 import { scrollToEnd } from '#app/components/live/live-chat/utils/live-chat-scroll';
+import { useT } from '#app/lib/messages';
 
 const FOLLOW_SLOP_PX = 16;
 
@@ -32,7 +33,9 @@ export function LiveChatList({ className, children, ...props }: ComponentPropsWi
     listRef,
     onEndReached,
   } = useLiveChat('List');
-  const { liveChat, jumpToLatest: jumpLabel } = useUiCopy();
+  const { tOr } = useT();
+  const jumpLabel = tOr('appUi.jumpToLatest', {}, '');
+  const liveChat = tOr('appUi.liveChat', {}, '');
   const styles = liveChatStyles({ layout });
   const memory = useRef<ScrollMemory>({ top: 0, pinned: true });
 

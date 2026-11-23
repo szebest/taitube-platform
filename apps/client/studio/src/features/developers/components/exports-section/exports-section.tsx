@@ -1,5 +1,5 @@
 import { EmptyState, SectionError } from '@kit/components';
-import { Format, useT } from '@kit/intl-react';
+import { Format } from '@kit/intl-react';
 import { Badge, type BadgeTone, Button, Icon, IconButton, Progress, useToast } from '@kit/ui';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { createColumnHelper, useTable } from '@tanstack/react-table';
@@ -20,6 +20,7 @@ import {
   useExportDownload,
 } from '#app/features/developers/hooks/use-developer-mutations';
 import { useExportEvents } from '#app/features/developers/hooks/use-export-events';
+import { useT } from '#app/lib/messages';
 import { pagedRows, tableStateOf } from '#app/utils/paged-rows';
 import { DeveloperSection } from '../developer-section/developer-section';
 import { RequestExportDialog } from '../request-export-dialog/request-export-dialog';

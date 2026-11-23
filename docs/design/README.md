@@ -323,7 +323,7 @@ A UI ticket is done when its surfaces meet every line. Tickets cite this section
 - [ ] Text meets 4.5:1 (3:1 at 24 px and up, and for control outlines and icons) in every theme and mode.
 - [ ] Motion uses the motion tokens and stops under reduced motion; no layout shift on hover.
 - [ ] CLS under 0.05 on the page's first load; hover and press respond within one frame.
-- [ ] Copy from the message catalogue (`@vp/messages`), numbers and dates through `@kit/intl-react`, logical
+- [ ] Copy from the message catalogue (`@vp/shared-messages` and each app's own), numbers and dates through `@kit/intl-react`, logical
       properties only (`inline-start`, never `left`).
 
 ---

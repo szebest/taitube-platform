@@ -1,9 +1,10 @@
-import { useFormat, useT } from '@kit/intl-react';
+import { useFormat } from '@kit/intl-react';
 import { assertNever, unwrapOr } from '@kit/result';
 import { Button, Card, Icon, IconButton, Progress } from '@kit/ui';
 import { fileSize, uploadProgress } from '@vp/intl-formats';
 import { percentOf } from '#app/features/upload/api/upload-progress';
 import { useUploadProgress } from '#app/features/upload/hooks/use-upload-progress';
+import { useT } from '#app/lib/messages';
 import { type UploadItem, useUploadDock } from '../upload-dock/upload-dock';
 import { UploadProcessing } from '../upload-processing/upload-processing';
 

@@ -1,4 +1,3 @@
-import { useT } from '@kit/intl-react';
 import { Button, Field, Icon, IconButton, Input, Textarea } from '@kit/ui';
 import { useQuery } from '@tanstack/react-query';
 import type { SavedReplyView } from '@vp/api-contracts';
@@ -10,6 +9,7 @@ import {
   useFailureToast,
 } from '@vp/queries';
 import { useState } from 'react';
+import { useT } from '#app/lib/messages';
 import { SettingsListSection } from '../settings-section/settings-section';
 
 interface Draft {

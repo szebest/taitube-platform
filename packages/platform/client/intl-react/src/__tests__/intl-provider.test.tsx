@@ -1,10 +1,10 @@
 import type { IntlBinding } from '@kit/intl';
-import { act, type RenderOptions, render, renderHook } from '@testing-library/react';
+import { unwrapOr } from '@kit/result';
+import { act, type RenderOptions, render } from '@testing-library/react';
 import type { ReactElement, ReactNode } from 'react';
 import { renderToStaticMarkup, renderToString } from 'react-dom/server';
 import { Format } from '../format';
 import { useFormat } from '../use-format';
-import { useT } from '../use-t';
 import { SpecIntl, type SpecIntlProps } from './spec-intl';
 
 const NOW = '2026-09-22T18:30:00.000Z';
@@ -16,10 +16,10 @@ function Probe({ seen }: { seen: IntlBinding[] }) {
 }
 
 function Page() {
-  const { count } = useT();
+  const { format } = useFormat();
   return (
     <p>
-      {count(1_234_567)} views ·{' '}
+      {unwrapOr(format({ type: 'count', value: 1_234_567 }), '')} views ·{' '}
       <Format value={{ type: 'relative', value: '2026-09-19T18:30:00.000Z' }} />
     </p>
   );
@@ -41,12 +41,6 @@ function renderIntl(
   const rerenderIntl = (next: ReactNode, nextProps: ProviderProps = props) =>
     result.rerender(withIntl(next, nextProps));
   return { ...result, tree, rerenderIntl };
-}
-
-function renderIntlHook<Result>(hook: () => Result, props: ProviderProps = FIXED) {
-  return renderHook(hook, {
-    wrapper: ({ children }: { children: ReactNode }) => withIntl(children, props),
-  });
 }
 
 describe('@kit/intl-react: IntlProvider', () => {
@@ -81,12 +75,6 @@ describe('@kit/intl-react: IntlProvider', () => {
     renderIntl(<Page />, props, { container, hydrate: true });
 
     expect(reported).not.toHaveBeenCalled();
-  });
-
-  it('hands the translator the binding it built for the locale', () => {
-    const { result } = renderIntlHook(useT, { ...FIXED, locale: 'sv' });
-
-    expect(result.current.locale).toBe('sv');
   });
 
   it('keeps relative times current by ticking its clock when no now is pinned', () => {

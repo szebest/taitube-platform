@@ -7,6 +7,7 @@ import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import { api, apiServer } from '@vp/web-testing';
 import { http, HttpResponse } from 'msw/http';
+import { SPEC_MESSAGES } from '../../__tests__/spec-messages';
 import { type AppRouterContext, createAppRouter } from '../../app-router';
 import { IntlProvider } from '../../intl';
 import { DEV_TOKEN_URL } from '../persona-sign-in';
@@ -15,7 +16,7 @@ import { PersonaSwitcher, type PersonaSwitcherProps } from '../persona-switcher'
 async function renderSwitcher(props: PersonaSwitcherProps = {}) {
   const routeTree = createRootRouteWithContext<AppRouterContext>()({
     component: () => (
-      <IntlProvider locale="en" timeZone="UTC">
+      <IntlProvider messages={SPEC_MESSAGES} locale="en" timeZone="UTC">
         <PersonaSwitcher {...props} />
       </IntlProvider>
     ),
@@ -23,6 +24,7 @@ async function renderSwitcher(props: PersonaSwitcherProps = {}) {
   const router = createAppRouter(
     {
       routeTree,
+      messages: SPEC_MESSAGES,
       apiBaseUrl: 'http://localhost:3000',
       pending: () => null,
     },

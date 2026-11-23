@@ -1,7 +1,7 @@
-import { useT } from '@kit/intl-react';
 import { DropdownMenu, Icon } from '@kit/ui';
 import type { VideoSummary } from '@vp/api-contracts';
 import { useUnlikeVideo } from '#app/features/library/hooks/use-unlike-video';
+import { useT } from '#app/lib/messages';
 import { LibraryVideoRow } from '../library-video-row/library-video-row';
 
 export interface LikedVideoRowProps {

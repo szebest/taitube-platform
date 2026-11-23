@@ -1,5 +1,4 @@
 import { fieldError, useAppForm } from '@kit/forms';
-import { useT } from '@kit/intl-react';
 import { Button, Field, Input, PlatformIcon } from '@kit/ui';
 import type { OwnerChannel } from '@vp/api-contracts';
 import { platformOfUrl } from '@vp/domain';
@@ -10,6 +9,7 @@ import {
   withoutBlankLinks,
 } from '#app/features/channel/forms/channel-field-validators';
 import { useUpdateChannel } from '#app/features/channel/hooks/use-update-channel';
+import { useT } from '#app/lib/messages';
 
 const MAX_LINKS = 8;
 const LINKS_LABEL_ID = 'channel-links-label';

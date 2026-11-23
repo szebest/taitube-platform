@@ -1,4 +1,4 @@
-import { useT } from '@kit/intl-react';
+import { useT } from '#app/lib/messages';
 import { urlModals } from '#app/lib/url-modal/registry';
 import { NewPlaylistForm } from '../new-playlist-form/new-playlist-form';
 

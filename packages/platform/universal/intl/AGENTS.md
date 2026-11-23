@@ -38,7 +38,10 @@ again on hydration. It depends on `@kit/result` only, and owns its four failure 
    runtime with the key.
 6. **Values compose, they do not format.** A value constructor returns a tagged value; none builds an `Intl`
    object or a string. An app writes its own.
-7. **One file per formatter, a spec where it can break.** A new formatter goes in `src/formatters/`, gets a
+7. **No locale data.** The app registers the locales it serves with `defineLocales({ source, details })`
+   (each tag's name in itself and its `direction`), and holds that value itself. `localeChain(tag)` walks a
+   tag down to its language only (`sv-FI`, `sv`); the caller appends its own source locale.
+8. **One file per formatter, a spec where it can break.** A new formatter goes in `src/formatters/`, gets a
    member in `TaggedValue`, a kind in `FORMAT_KINDS` and a case in `formatValue`.
 
 ---

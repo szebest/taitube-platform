@@ -1,7 +1,6 @@
 import { DisclosureControl } from '@kit/components';
 import { useAppForm, validateWith } from '@kit/forms';
-import { useT } from '@kit/intl-react';
-import { Button, ResponsiveModal, useToast, useUiCopy } from '@kit/ui';
+import { Button, ResponsiveModal, useToast } from '@kit/ui';
 import { useQuery } from '@tanstack/react-query';
 import type { CommentView } from '@vp/api-contracts';
 import {
@@ -24,6 +23,7 @@ import {
 } from '@vp/queries';
 import { validateModerationNote } from '@vp/validation';
 import { useId } from 'react';
+import { useT } from '#app/lib/messages';
 
 export type ModerationDialogAction = 'hold' | 'hide' | 'remove' | 'shadow_ban' | 'ban';
 
@@ -53,7 +53,7 @@ interface FormProps extends Omit<ModerationDialogProps, 'open' | 'channel'> {
 
 function ModerationForm({ comment, action, channelId, preset, onOpenChange }: FormProps) {
   const { tOr } = useT();
-  const { cancel } = useUiCopy();
+  const cancel = tOr('ui.cancel', {}, '');
   const showToast = useToast();
   const showFailure = useFailureToast();
   const moderate = useModerateComment();

@@ -1,6 +1,6 @@
 import { PageHeader } from '@kit/components';
-import { useT } from '@kit/intl-react';
 import { useExportableKinds } from '#app/features/developers/hooks/use-exportable-kinds';
+import { useT } from '#app/lib/messages';
 import { ApiReferenceSection } from '../api-reference-section/api-reference-section';
 import { ExportsSection } from '../exports-section/exports-section';
 import { TokensSection } from '../tokens-section/tokens-section';

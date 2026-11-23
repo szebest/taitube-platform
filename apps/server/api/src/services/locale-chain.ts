@@ -1,5 +1,6 @@
-import { FALLBACK_LOCALE, localeChain } from '@kit/intl';
+import { localeChain } from '@kit/intl';
 import { isOk } from '@kit/result';
+import { LOCALES } from '@vp/shared-messages/locales';
 
 function tagsOf(acceptLanguage: string | undefined): string[] {
   return (acceptLanguage ?? '')
@@ -22,7 +23,7 @@ export function localeChainOf(explicit: string | undefined, acceptLanguage?: str
   const chain: string[] = [];
   for (const tag of [...(explicit ? [explicit] : []), ...tagsOf(acceptLanguage)]) {
     const parsed = localeChain(tag);
-    if (isOk(parsed)) chain.push(...parsed.value.filter((entry) => entry !== FALLBACK_LOCALE));
+    if (isOk(parsed)) chain.push(...parsed.value.filter((entry) => entry !== LOCALES.source));
   }
-  return [...new Set([...chain, FALLBACK_LOCALE])];
+  return [...new Set([...chain, LOCALES.source])];
 }

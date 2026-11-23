@@ -1,6 +1,6 @@
-import { useT } from '@kit/intl-react';
 import type { Channel } from '@vp/api-contracts';
 import { CustomizationSection } from '#app/components/section/customization-section';
+import { useT } from '#app/lib/messages';
 import { ChannelImageEditor } from '../channel-image-editor/channel-image-editor';
 
 /** The channel's picture and banner: each is framed in the cropper and processed on its own, with no section save. */

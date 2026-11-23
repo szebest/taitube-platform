@@ -1,4 +1,4 @@
-import { useFormat, useT } from '@kit/intl-react';
+import { useFormat } from '@kit/intl-react';
 import { unwrapOr } from '@kit/result';
 import { usePartyCan } from '@vp/permissions-react';
 import type { PartyChatLine, WatchPartySocket } from '@vp/queries';
@@ -11,6 +11,7 @@ import { usePartyModeration } from '#app/features/watch-party/hooks/use-party-mo
 import { getComposerState } from '#app/features/watch-party/utils/get-composer-state';
 import { getMemberSubject } from '#app/features/watch-party/utils/get-member-subject';
 import { getRoleBadges } from '#app/features/watch-party/utils/get-role-badges';
+import { useT } from '#app/lib/messages';
 
 const UNASSIGNABLE_ROLES = ['owner', 'member', 'guest', 'chat_muted', 'voice_muted'];
 

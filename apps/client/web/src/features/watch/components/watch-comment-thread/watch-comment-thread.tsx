@@ -1,5 +1,5 @@
 import { EmptyState } from '@kit/components';
-import { Format, useT } from '@kit/intl-react';
+import { Format } from '@kit/intl-react';
 import { Button } from '@kit/ui';
 import { useSuspenseInfiniteQuery } from '@tanstack/react-query';
 import { useSearch } from '@tanstack/react-router';
@@ -17,6 +17,7 @@ import { type NewComment, usePostComment } from '#app/features/watch/hooks/use-p
 import { commentRefusal } from '#app/features/watch/utils/comment-refusal';
 import { useRequireAccount } from '#app/hooks/use-require-account';
 import { useWindowRows } from '#app/hooks/use-window-rows';
+import { useT } from '#app/lib/messages';
 import { commentsQueryOptions } from '#app/lib/query-keys/comment-keys';
 import { CommentComposer } from '../comment-composer/comment-composer';
 import { NearViewport } from '../near-viewport/near-viewport';

@@ -1,5 +1,5 @@
 import { EmptyLibraryIllustration, EmptyState } from '@kit/components';
-import { useT } from '@kit/intl-react';
+import { useT } from '#app/lib/messages';
 
 /** What the analytics show for a range nobody has watched anything in: the words in place of a screen of zeros. */
 export function AnalyticsEmpty() {

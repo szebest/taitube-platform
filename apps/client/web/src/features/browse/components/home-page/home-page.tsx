@@ -1,11 +1,11 @@
 import { EmptyLibraryIllustration, EmptyState, ShelfSkeleton } from '@kit/components';
-import { useT } from '@kit/intl-react';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { ClientOnly, Link, useLocation } from '@tanstack/react-router';
 import { useAccount, useApi } from '@vp/queries';
 import { type ReactNode, Suspense } from 'react';
 import { PickOfTheDaySkeleton } from '#app/components/discovery/pick-of-the-day';
 import { SignedOutSection } from '#app/components/states/signed-out-section';
+import { useT } from '#app/lib/messages';
 import { homeQueryOptions } from '#app/lib/query-keys/home-keys';
 import { HomePick } from '../home-pick/home-pick';
 import { HomeShelf } from '../home-shelf/home-shelf';

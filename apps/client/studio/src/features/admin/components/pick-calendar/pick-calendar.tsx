@@ -1,9 +1,10 @@
-import { useFormat, useT } from '@kit/intl-react';
+import { useFormat } from '@kit/intl-react';
 import { unwrapOr } from '@kit/result';
 import { cn } from '@kit/ui';
 import type { AdminPick } from '#app/features/admin/api/admin-picks';
 import { usePickWindowText } from '#app/features/admin/hooks/use-pick-window-text';
 import { calendarDays, picksOnDay } from '#app/features/admin/utils/pick-days';
+import { useT } from '#app/lib/messages';
 
 export interface PickCalendarProps {
   picks: readonly AdminPick[];

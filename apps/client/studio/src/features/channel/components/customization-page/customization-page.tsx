@@ -1,7 +1,7 @@
 import { PageHeader } from '@kit/components';
-import { useT } from '@kit/intl-react';
 import { Can } from '@vp/permissions-react';
 import { useActingChannel } from '#app/features/channel/hooks/use-acting-channel';
+import { useT } from '#app/lib/messages';
 import { BrandColourSection } from '../brand-colour-section/brand-colour-section';
 import { CaptionsDefaultSection } from '../captions-default-section/captions-default-section';
 import { IdentitySection } from '../identity-section/identity-section';

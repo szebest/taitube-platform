@@ -1,6 +1,6 @@
 import { MODE_OPTIONS } from '@kit/appearance';
-import { useT } from '@kit/intl-react';
 import { SegmentedControl, useAppearance } from '@kit/ui';
+import { useT } from '#app/lib/messages';
 import { SettingItem } from '../setting-item/setting-item';
 
 export function ModeRow() {

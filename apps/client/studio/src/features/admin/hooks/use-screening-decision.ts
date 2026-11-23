@@ -1,4 +1,3 @@
-import { useT } from '@kit/intl-react';
 import { useToast } from '@kit/ui';
 import { mutationOptions, useMutation } from '@tanstack/react-query';
 import { ApiError } from '@vp/api-client';
@@ -10,6 +9,7 @@ import {
   type ScreeningCase,
   type ScreeningPages,
 } from '#app/features/admin/api/admin-screening';
+import { useT } from '#app/lib/messages';
 
 export type ScreeningAction =
   | { kind: 'approve'; videoId: string }

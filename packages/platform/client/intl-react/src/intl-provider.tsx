@@ -1,8 +1,8 @@
-import { createIntl, createIntlCache, type IntlBinding } from '@kit/intl';
+import { createIntl, createIntlCache } from '@kit/intl';
 import type { Clock } from '@kit/runtime';
 import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import { currentInstant, readBrowserEnvironment } from './browser-environment';
-import { IntlContext, type RegisteredTranslator } from './intl-context';
+import { IntlContext } from './intl-context';
 
 /** How often "3 minutes ago" is measured again when no `now` prop pins the reference instant. */
 const CLOCK_TICK_MS = 30_000;
@@ -16,8 +16,6 @@ export interface IntlProviderProps {
   readonly now?: string;
   /** Where the provider's clock reads the time; keep it stable. */
   readonly clock: Clock;
-  /** Builds the translator over the binding for `locale`, from the catalogues the app holds. */
-  readonly createTranslator: (intl: IntlBinding) => RegisteredTranslator;
   readonly children: ReactNode;
 }
 
@@ -37,7 +35,6 @@ export function IntlProvider({
   currency,
   now,
   clock,
-  createTranslator,
   children,
 }: IntlProviderProps) {
   const [environment] = useState(() => readBrowserEnvironment(clock));
@@ -53,7 +50,5 @@ export function IntlProvider({
     now: referenceInstant,
     cache: cacheForLocale.cache,
   });
-  const bindings = { intl, translator: createTranslator(intl) };
-
-  return <IntlContext value={bindings}>{children}</IntlContext>;
+  return <IntlContext value={{ intl }}>{children}</IntlContext>;
 }
