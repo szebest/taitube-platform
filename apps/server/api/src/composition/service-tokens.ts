@@ -83,9 +83,11 @@ import type {
 import { type CommentServiceSet, CommentServices } from './comment-tokens';
 import { type IntegrationServiceSet, IntegrationServices } from './integration-tokens';
 import { ScreeningServices } from './screening-tokens';
+import { type VideoPipelineServiceSet, VideoPipelineServices } from './video-pipeline-tokens';
 import { type VideoToolsServiceSet, VideoToolsServices } from './video-tools-tokens';
 
-export interface ServiceSet extends CommentServiceSet, IntegrationServiceSet, VideoToolsServiceSet {
+export interface ServiceSet
+  extends CommentServiceSet, IntegrationServiceSet, VideoToolsServiceSet, VideoPipelineServiceSet {
   videoService: VideoService;
   creatorStudioService: CreatorStudioService;
   searchService: SearchService;
@@ -189,6 +191,7 @@ export const Services = {
   ...ScreeningServices,
   ...IntegrationServices,
   ...VideoToolsServices,
+  ...VideoPipelineServices,
   CreatorCommentService: token<CreatorCommentService>('CreatorCommentService'),
   ViewService: token<ViewService>('ViewService'),
   WebVitalsService: token<WebVitalsService>('WebVitalsService'),
