@@ -7,7 +7,16 @@ export class InMemoryVideoCorrectionRepository extends VideoCorrectionRepository
   private readonly rows = new Map<string, Correction>();
 
   async list(videoId: string): Promise<Result<Correction[], DatabaseUnavailable>> {
-    return ok(this.ofVideo(videoId).map((row) => ({ ...row })));
+    return ok(this.correctionsOf(videoId));
+  }
+
+  correctionsOf(videoId: string): Correction[] {
+    return this.ofVideo(videoId).map((row) => ({ ...row }));
+  }
+
+  replaceFor(videoId: string, corrections: readonly Correction[]): void {
+    for (const row of this.ofVideo(videoId)) this.rows.delete(row.id);
+    for (const correction of corrections) this.rows.set(correction.id, { ...correction });
   }
 
   async create(

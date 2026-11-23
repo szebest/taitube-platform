@@ -17,4 +17,11 @@ export const videoToolErrors = {
   experimentNotFound: dt('Ten test nie istnieje.'),
   experimentLimit: dt('Na tym filmie trwa już test albo kanał prowadzi maksymalną liczbę testów.'),
   experimentNotRunning: dt('Ten test już się zakończył.'),
+  generationInProgress: dt(
+    'Nowy plik lub edycja tego filmu jest już przetwarzana. Poczekaj, aż się zakończy.'
+  ),
+  replacementNotUploaded: dt(
+    'Nowy plik nie został jeszcze przesłany. Prześlij go i spróbuj ponownie.'
+  ),
+  noEditToRevert: dt('Ten film nie ma zastosowanej edycji do cofnięcia.'),
 };

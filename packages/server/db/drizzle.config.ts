@@ -30,6 +30,7 @@ export default defineConfig({
     './src/api-tokens-schema.ts',
     './src/video-tools-schema.ts',
     './src/video-access-schema.ts',
+    './src/video-pipeline-schema.ts',
   ],
   out: './drizzle',
   dialect: 'postgresql',

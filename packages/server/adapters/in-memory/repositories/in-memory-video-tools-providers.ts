@@ -6,6 +6,7 @@ import { InMemoryShareLinkRepository } from './in-memory-share-link-repository';
 import { InMemoryVideoChapterRepository } from './in-memory-video-chapter-repository';
 import { InMemoryVideoCorrectionRepository } from './in-memory-video-correction-repository';
 import { InMemoryVideoExperimentRepository } from './in-memory-video-experiment-repository';
+import { InMemoryVideoGenerationRepository } from './in-memory-video-generation-repository';
 import { InMemoryVideoPasswordRepository } from './in-memory-video-password-repository';
 import { InMemoryVideoStudioRepository } from './in-memory-video-studio-repository';
 
@@ -20,6 +21,22 @@ export function provideVideoTools(container: Container, now: Clock = realClock):
     .provide(
       Repo.videoExperiments,
       (c) => new InMemoryVideoExperimentRepository(c.get(Repo.videos))
+    )
+    .provide(
+      Repo.videoGenerations,
+      (c) =>
+        new InMemoryVideoGenerationRepository(
+          {
+            videos: c.get(Repo.videos),
+            chapters: c.get(Repo.videoChapters),
+            corrections: c.get(Repo.videoCorrections),
+            retention: c.get(Repo.videoViews),
+            events: c.get(Repo.events),
+            userEvents: c.get(Repo.userEvents),
+            outbox: c.get(Repo.outbox),
+          },
+          now
+        )
     )
     .provide(
       Repo.videoStudio,

@@ -142,6 +142,14 @@ const UserEventSchema = z.discriminatedUnion('type', [
     payload: z.object({ videoId: z.uuid() }),
   }),
   z.object({
+    type: z.literal('video.generation.updated'),
+    payload: z.object({
+      videoId: z.uuid(),
+      generation: z.number().int().min(1),
+      status: z.enum(['active', 'failed']),
+    }),
+  }),
+  z.object({
     type: z.literal('export.ready'),
     payload: z.object({
       exportId: z.uuid(),

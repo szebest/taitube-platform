@@ -15,6 +15,7 @@ export * from './in-memory-video-chapter-repository';
 export * from './in-memory-video-correction-repository';
 export * from './in-memory-video-experiment-repository';
 export * from './in-memory-video-password-repository';
+export * from './in-memory-video-generation-repository';
 export * from './in-memory-share-link-repository';
 export * from './in-memory-comment-moderation-repository';
 export * from './in-memory-comment-repository';

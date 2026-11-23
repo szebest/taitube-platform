@@ -33,6 +33,7 @@ describe('apps/server/api/services: housekeeping schedulers', () => {
       'purge-comment-moderation',
       'purge-deleted',
       'purge-exports',
+      'purge-generations',
       'purge-handle-history',
       'purge-screening-evidence',
       'purge-search-history',

@@ -3,6 +3,7 @@ import { PostgresShareLinkRepository } from './postgres-share-link-repository';
 import { PostgresVideoChapterRepository } from './postgres-video-chapter-repository';
 import { PostgresVideoCorrectionRepository } from './postgres-video-correction-repository';
 import { PostgresVideoExperimentRepository } from './postgres-video-experiment-repository';
+import { PostgresVideoGenerationRepository } from './postgres-video-generation-repository';
 import { PostgresVideoPasswordRepository } from './postgres-video-password-repository';
 import type { PostgresDatabase } from './types';
 
@@ -14,6 +15,7 @@ export abstract class PostgresVideoToolsRepositories {
   readonly shareLinks: PostgresShareLinkRepository;
   readonly videoPasswords: PostgresVideoPasswordRepository;
   readonly videoExperiments: PostgresVideoExperimentRepository;
+  readonly videoGenerations: PostgresVideoGenerationRepository;
 
   constructor(db: PostgresDatabase) {
     this.entityRevisions = new PostgresEntityRevisionRepository(db);
@@ -22,5 +24,6 @@ export abstract class PostgresVideoToolsRepositories {
     this.shareLinks = new PostgresShareLinkRepository(db);
     this.videoPasswords = new PostgresVideoPasswordRepository(db);
     this.videoExperiments = new PostgresVideoExperimentRepository(db);
+    this.videoGenerations = new PostgresVideoGenerationRepository(db);
   }
 }

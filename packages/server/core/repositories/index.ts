@@ -49,6 +49,7 @@ export * from './video-correction-repository';
 export * from './share-link-repository';
 export * from './video-password-repository';
 export * from './video-experiment-repository';
+export * from './video-generation-repository';
 export * from './pick-repository';
 export * from './webhook-repository';
 export * from './live-chat-repository';

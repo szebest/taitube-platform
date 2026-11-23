@@ -131,6 +131,9 @@ function kindOf(code: ErrorCode): ErrorStateKind {
     case ErrorCodes.VIDEO_PASSWORDS_OFF:
     case ErrorCodes.EXPERIMENT_LIMIT:
     case ErrorCodes.EXPERIMENT_NOT_RUNNING:
+    case ErrorCodes.GENERATION_IN_PROGRESS:
+    case ErrorCodes.REPLACEMENT_NOT_UPLOADED:
+    case ErrorCodes.NO_EDIT_TO_REVERT:
     case ErrorCodes.CAPTION_OVERWRITE_UNCONFIRMED:
     case ErrorCodes.PICK_WINDOW_OVERLAP:
     case ErrorCodes.WEBHOOK_LIMIT_REACHED:

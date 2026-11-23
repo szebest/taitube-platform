@@ -19,4 +19,9 @@ export const videoToolErrors = {
     'A test is already running on this video, or the channel runs the most tests it can.'
   ),
   experimentNotRunning: dt('This test has already ended.'),
+  generationInProgress: dt(
+    'A new file or an edit is already being processed for this video. Wait for it to finish.'
+  ),
+  replacementNotUploaded: dt('The new file has not finished uploading. Upload it and try again.'),
+  noEditToRevert: dt('This video has no applied edit to revert.'),
 };

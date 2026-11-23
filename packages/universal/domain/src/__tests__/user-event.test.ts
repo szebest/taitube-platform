@@ -10,6 +10,7 @@ import {
   exportReady,
   partyControlsUpdated,
   preferencesUpdated,
+  videoGenerationUpdated,
   videoStatsUpdated,
   videoStatusChanged,
 } from '../user-event';
@@ -19,6 +20,13 @@ describe('domain: user event', () => {
     expect(videoStatusChanged('v1', 'READY')).toEqual({
       type: 'video.processing',
       payload: { videoId: 'v1', change: { kind: 'status', status: 'READY' } },
+    });
+  });
+
+  it('announces a swapped or failed generation of a video', () => {
+    expect(videoGenerationUpdated({ videoId: 'v1', generation: 3, status: 'failed' })).toEqual({
+      type: 'video.generation.updated',
+      payload: { videoId: 'v1', generation: 3, status: 'failed' },
     });
   });
 

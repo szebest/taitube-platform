@@ -33,3 +33,4 @@ export * from './revisions/index';
 export * from './share-links/index';
 export * from './video-access/index';
 export * from './experiments/index';
+export * from './video-pipeline/index';

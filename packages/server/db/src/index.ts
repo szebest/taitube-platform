@@ -12,6 +12,7 @@ export * from './recommendation-feedback-schema';
 export * from './clips-schema';
 export * from './video-tools-schema';
 export * from './video-access-schema';
+export * from './video-pipeline-schema';
 export * from './channel-featured-schema';
 export * from './picks-schema';
 export * from './webhooks-schema';

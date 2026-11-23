@@ -27,13 +27,20 @@ export function computeFfmpegThreads(baseThreads: number, attempt = 1): number {
 
 type VideoEncodeOptions = Pick<TranscodeArgsOptions, 'rendition' | 'fps' | 'gopSeconds' | 'preset'>;
 
+export function scaleFilter(rendition: LadderEntry): string {
+  return `scale=w=${rendition.width}:h=${rendition.height}:force_original_aspect_ratio=decrease:force_divisible_by=2`;
+}
+
 export function videoEncodeArgs(options: VideoEncodeOptions): string[] {
+  return ['-vf', scaleFilter(options.rendition), ...videoCodecArgs(options)];
+}
+
+/** The encoder settings alone, for a run that scales inside its own filter graph. */
+export function videoCodecArgs(options: VideoEncodeOptions): string[] {
   const { rendition, fps, preset, gopSeconds } = options;
   const gop = Math.max(1, Math.round(gopSeconds * fps));
 
   return [
-    '-vf',
-    `scale=w=${rendition.width}:h=${rendition.height}:force_original_aspect_ratio=decrease:force_divisible_by=2`,
     '-c:v',
     'libx264',
     '-fps_mode',

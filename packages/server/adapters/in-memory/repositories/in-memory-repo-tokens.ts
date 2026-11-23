@@ -45,6 +45,7 @@ import type { InMemoryUserRepository } from './in-memory-user-repository';
 import type { InMemoryVideoChapterRepository } from './in-memory-video-chapter-repository';
 import type { InMemoryVideoCorrectionRepository } from './in-memory-video-correction-repository';
 import type { InMemoryVideoExperimentRepository } from './in-memory-video-experiment-repository';
+import type { InMemoryVideoGenerationRepository } from './in-memory-video-generation-repository';
 import type { InMemoryVideoPasswordRepository } from './in-memory-video-password-repository';
 import type { InMemoryVideoReactionRepository } from './in-memory-video-reaction-repository';
 import type { InMemoryVideoRepository } from './in-memory-video-repository';
@@ -102,6 +103,7 @@ export const Repo = {
   shareLinks: token<InMemoryShareLinkRepository>('shareLinks'),
   videoPasswords: token<InMemoryVideoPasswordRepository>('videoPasswords'),
   videoExperiments: token<InMemoryVideoExperimentRepository>('videoExperiments'),
+  videoGenerations: token<InMemoryVideoGenerationRepository>('videoGenerations'),
   channelFeatured: token<InMemoryChannelFeaturedRepository>('channelFeatured'),
   channelHandleHistory: token<InMemoryChannelHandleHistoryRepository>('channelHandleHistory'),
   channelImages: token<InMemoryChannelImageRepository>('channelImages'),

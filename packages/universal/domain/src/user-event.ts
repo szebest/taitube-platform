@@ -49,8 +49,16 @@ export type UserEvent =
   | { type: 'channel.image.failed'; payload: ChannelImageFailedPayload }
   | { type: 'party.controls.updated'; payload: PartyControlsUpdatedPayload }
   | { type: 'video.stats.updated'; payload: { videoId: string } }
+  | { type: 'video.generation.updated'; payload: VideoGenerationUpdatedPayload }
   | { type: 'export.ready'; payload: ExportReadyPayload }
   | { type: 'export.failed'; payload: ExportFailedPayload };
+
+/** A replacement or an edit swapped in (`active`) or failed, leaving the video as it was. */
+export interface VideoGenerationUpdatedPayload {
+  videoId: string;
+  generation: number;
+  status: 'active' | 'failed';
+}
 
 /** An export's file can be downloaded until `expiresAt` (ISO 8601). */
 export interface ExportReadyPayload {
@@ -99,6 +107,10 @@ export interface LiveStartedPayload {
   title: string;
   startedAt: string;
   channel: ChannelCard;
+}
+
+export function videoGenerationUpdated(payload: VideoGenerationUpdatedPayload): UserEvent {
+  return { type: 'video.generation.updated', payload };
 }
 
 export function videoStatusChanged(videoId: string, status: VideoStatus): UserEvent {

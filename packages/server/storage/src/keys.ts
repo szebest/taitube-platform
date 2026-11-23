@@ -29,6 +29,12 @@ export function exportObjectKey(
   return `exports/${channelId}/${exportId}.${format}`;
 }
 
+/** Raw bucket: the file a creator uploaded to replace a video, kept apart from the source it was created from. */
+export function replacementSourceKey(videoId: string, generation: number, ext = 'mp4'): string {
+  const cleanExt = ext.startsWith('.') ? ext.slice(1) : ext;
+  return `${rawPrefix(videoId)}g${generation}/source.${cleanExt}`;
+}
+
 export function videoPrefix(videoId: string): string {
   return `videos/${videoId}/`;
 }
@@ -45,6 +51,22 @@ export function reprocessPrefixesBefore(videoId: string, currentGeneration: numb
     prefixes.push(`${hlsPrefix(videoId, generation)}/`);
   }
   return prefixes;
+}
+
+/**
+ * What purging one generation deletes. Generation 1 lives in `hls/` itself, above every later
+ * generation's `hls/g{n}/`, so it is purged rendition by rendition and its master, never by `hls/`.
+ */
+export function generationPurgeTargets(
+  videoId: string,
+  generation: number,
+  renditions: readonly string[]
+): string[] {
+  if (generation > 1) return [`${hlsPrefix(videoId, generation)}/`];
+  return [
+    ...renditions.map((rendition) => renditionPrefix(videoId, rendition, generation)),
+    masterPlaylistKey(videoId, generation),
+  ];
 }
 
 export function renditionPrefix(videoId: string, rendition: string, generation = 1): string {

@@ -11,6 +11,7 @@ export * from './postgres-entity-revision-repository';
 export * from './postgres-video-chapter-repository';
 export * from './postgres-video-correction-repository';
 export * from './postgres-video-experiment-repository';
+export * from './postgres-video-generation-repository';
 export * from './postgres-video-password-repository';
 export * from './postgres-share-link-repository';
 export * from './postgres-comment-moderation-repository';

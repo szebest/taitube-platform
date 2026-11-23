@@ -46,6 +46,7 @@ import type { UserRepository } from './user-repository';
 import type { VideoChapterRepository } from './video-chapter-repository';
 import type { VideoCorrectionRepository } from './video-correction-repository';
 import type { VideoExperimentRepository } from './video-experiment-repository';
+import type { VideoGenerationRepository } from './video-generation-repository';
 import type { VideoPasswordRepository } from './video-password-repository';
 import type { VideoReactionRepositoryPort } from './video-reaction-repository';
 import type { VideoRepository } from './video-repository';
@@ -111,6 +112,7 @@ export interface Repositories {
   shareLinks: ShareLinkRepository;
   videoPasswords: VideoPasswordRepository;
   videoExperiments: VideoExperimentRepository;
+  videoGenerations: VideoGenerationRepository;
   channelFeatured: ChannelFeaturedRepositoryPort;
   channelHandleHistory: ChannelHandleHistoryRepositoryPort;
   channelImages: ChannelImageRepositoryPort;
