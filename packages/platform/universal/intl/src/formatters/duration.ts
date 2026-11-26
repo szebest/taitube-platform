@@ -5,7 +5,7 @@ import { finite } from '../inputs';
 import { HOUR, MINUTE } from '../time-spans';
 import { type OptionKeys, withOptions } from '../with-options';
 
-/** `Intl.DurationFormat` has no TypeScript options type yet, so the shape this formatter offers is its own. */
+/** This package's lib does not type `Intl.DurationFormat`, so the shape this formatter offers is its own. */
 interface DurationChoices {
   readonly style: 'clock' | 'words';
   readonly unitDisplay: 'short' | 'long' | 'narrow';
