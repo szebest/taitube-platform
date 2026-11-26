@@ -37,7 +37,7 @@ export interface VideoViewRepositoryPort {
     range: ViewDateRange
   ): Promise<Result<DailyViews[], DatabaseUnavailable>>;
   channelTimeline(
-    ownerId: string,
+    channelId: string,
     range: ViewDateRange
   ): Promise<Result<DailyViews[], DatabaseUnavailable>>;
   videoHourly(
@@ -45,21 +45,21 @@ export interface VideoViewRepositoryPort {
     range: ViewHourRange
   ): Promise<Result<HourlyViews[], DatabaseUnavailable>>;
   channelHourly(
-    ownerId: string,
+    channelId: string,
     range: ViewHourRange
   ): Promise<Result<HourlyViews[], DatabaseUnavailable>>;
   /** Views per UTC day offset (0 to 6) from each video's `ready_at` day, for the videos that have one; a day without views is absent. */
   firstWeekViews(videoIds: readonly string[]): Promise<Result<FirstWeekRow[], DatabaseUnavailable>>;
-  /** The owner's most recently ready public videos that became ready at or before `readyBefore`, newest first, never `excludeVideoId`. */
+  /** The channel's most recently ready public videos that became ready at or before `readyBefore`, newest first, never `excludeVideoId`. */
   recentPeers(
-    ownerId: string,
+    channelId: string,
     excludeVideoId: string,
     readyBefore: Date,
     limit: number
   ): Promise<Result<PeerVideo[], DatabaseUnavailable>>;
-  channelTotals(ownerId: string): Promise<Result<ChannelViewTotals, DatabaseUnavailable>>;
+  channelTotals(channelId: string): Promise<Result<ChannelViewTotals, DatabaseUnavailable>>;
   topVideos(
-    ownerId: string,
+    channelId: string,
     range: ViewDateRange,
     limit: number
   ): Promise<Result<TopVideo[], DatabaseUnavailable>>;

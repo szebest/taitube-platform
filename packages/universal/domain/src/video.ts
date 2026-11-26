@@ -7,6 +7,7 @@ import type { VideoFormat, VideoStatus, VideoVisibility } from './status-vocabul
 export interface Video {
   id: string;
   ownerId: string;
+  channelId: string;
   title: string | null;
   description: string | null;
   visibility: VideoVisibility;

@@ -11,7 +11,8 @@ export const CacheKeys = defineKeyspace('taitube', (key) => ({
   userReactions: (userId: string) => key('user', userId, 'reactions'),
   userReaction: (userId: string, videoId: string) => key('user', userId, 'reactions', videoId),
   userPlayhead: (userId: string, videoId: string) => key('user', userId, 'playhead', videoId),
-  userSubscriptions: (userId: string) => key('user', userId, 'subscriptions'),
+  channelSubscriptions: (subscriberChannelId: string) =>
+    key('channel', subscriberChannelId, 'subscriptions'),
   channelSubscriberCount: (channelId: string) => key('channel', channelId, 'subscriber_count'),
   searchQuery: (type: string, hash: string) => key('search', 'q', type, hash),
   searchSuggest: (prefix: string) => key('search', 'suggest', prefix),

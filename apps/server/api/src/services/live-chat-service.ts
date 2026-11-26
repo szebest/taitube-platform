@@ -31,6 +31,7 @@ import {
   validateChatMessage,
 } from '@vp/validation';
 import { uuidv7 } from 'uuidv7';
+import { followsChannel } from './account-subscription';
 import { type LiveAccessDeps, type ReadLiveFailure, readLive } from './live-access';
 import { readChatBacklog } from './live-chat-backlog';
 import { type LiveChatHub, publishLiveChat } from './live-chat-hub';
@@ -38,7 +39,7 @@ import { liveChatMode, toLiveChatMessageView } from './live-views';
 
 export interface LiveChatServiceDeps extends LiveAccessDeps {
   liveChat: LiveChatRepositoryPort;
-  subscriptions: Pick<SubscriptionRepositoryPort, 'isSubscribed'>;
+  subscriptions: Pick<SubscriptionRepositoryPort, 'getUserSubscriptionChannelIds'>;
   gate: LiveChatGatePort;
   hub: LiveChatHub;
   cache: Pick<CacheClient, 'publish'>;
@@ -217,7 +218,7 @@ export class LiveChatService {
     if (stream.value === null) return err(liveStreamNotFound(liveStreamId));
 
     const subscribed = stream.value.chatSubscribersOnly
-      ? await subscriptions.isSubscribed(viewer.id, stream.value.channelId)
+      ? await followsChannel(subscriptions, viewer.id, stream.value.channelId)
       : ok(true);
     if (isErr(subscribed)) return subscribed;
     const grant = decideLiveChatPost({

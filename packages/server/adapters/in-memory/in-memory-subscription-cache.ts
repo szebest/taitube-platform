@@ -3,44 +3,44 @@ import type { SubscriptionCachePort } from '@vp/core/ports';
 import type { CacheUnavailable } from '@vp/errors';
 
 export class InMemorySubscriptionCache implements SubscriptionCachePort {
-  private readonly userSubscriptions = new Map<string, Set<string>>();
+  private readonly followed = new Map<string, Set<string>>();
   private readonly subscriberCounts = new Map<string, number>();
 
   async isSubscribed(
-    userId: string,
+    subscriberChannelId: string,
     channelId: string
   ): Promise<Result<boolean | null, CacheUnavailable>> {
-    return ok(this.userSubscriptions.get(userId)?.has(channelId) ?? null);
+    return ok(this.followed.get(subscriberChannelId)?.has(channelId) ?? null);
   }
 
   async addSubscription(
-    userId: string,
+    subscriberChannelId: string,
     channelId: string
   ): Promise<Result<void, CacheUnavailable>> {
-    const set = this.userSubscriptions.get(userId);
+    const set = this.followed.get(subscriberChannelId);
     if (set) {
       set.add(channelId);
       return ok();
     }
-    this.userSubscriptions.set(userId, new Set([channelId]));
+    this.followed.set(subscriberChannelId, new Set([channelId]));
     return ok();
   }
 
   async removeSubscription(
-    userId: string,
+    subscriberChannelId: string,
     channelId: string
   ): Promise<Result<void, CacheUnavailable>> {
-    const set = this.userSubscriptions.get(userId);
+    const set = this.followed.get(subscriberChannelId);
     set?.delete(channelId);
-    if (set?.size === 0) this.userSubscriptions.delete(userId);
+    if (set?.size === 0) this.followed.delete(subscriberChannelId);
     return ok();
   }
 
-  async setUserSubscriptions(
-    userId: string,
+  async setSubscriptions(
+    subscriberChannelId: string,
     channelIds: string[]
   ): Promise<Result<void, CacheUnavailable>> {
-    this.userSubscriptions.set(userId, new Set(channelIds));
+    this.followed.set(subscriberChannelId, new Set(channelIds));
     return ok();
   }
 
@@ -57,7 +57,7 @@ export class InMemorySubscriptionCache implements SubscriptionCachePort {
   }
 
   clear(): void {
-    this.userSubscriptions.clear();
+    this.followed.clear();
     this.subscriberCounts.clear();
   }
 }

@@ -51,7 +51,8 @@ async function claimFreeHandle(
 
 /**
  * Every write tolerates losing a race with a concurrent request for the same identity - and only
- * that, so a dead store still surfaces instead of a half-provisioned user.
+ * that, so a dead store still surfaces instead of a half-provisioned user. Answers every channel
+ * the user owns, the primary first; provisioning creates that primary only.
  */
 export async function provisionAccount(
   deps: {
@@ -61,7 +62,7 @@ export async function provisionAccount(
   },
   userId: string,
   email?: string
-): Promise<Result<Channel, ProvisionFailure>> {
+): Promise<Result<Channel[], ProvisionFailure>> {
   const userEmail = email || `${userId}@taitube.local`;
 
   const existingUser = await deps.users.findById(userId);
@@ -72,11 +73,10 @@ export async function provisionAccount(
     if (isErr(upserted)) return upserted;
   }
 
-  const existingChannel = await deps.channels.findByUserId(userId);
-  if (isErr(existingChannel)) return existingChannel;
-  if (existingChannel.value) return ok(existingChannel.value);
+  const owned = await deps.channels.listByUserId(userId);
+  if (isErr(owned) || owned.value.length > 0) return owned;
 
-  // The channel is the "already provisioned" marker, so Watch Later has to exist before it does.
+  // A channel is the "already provisioned" marker, so Watch Later has to exist before it does.
   const watchLater = await deps.playlists.provisionWatchLater({ id: uuidv7(), ownerId: userId });
   if (isErr(watchLater)) return watchLater;
 
@@ -88,10 +88,11 @@ export async function provisionAccount(
     handle: handle.value,
     displayName: email ? email.split('@')[0] || 'User' : 'User',
   });
-  if (!isErr(created) || created.error.code !== ErrorCodes.HANDLE_ALREADY_TAKEN) return created;
+  if (!isErr(created)) return ok([created.value]);
+  if (created.error.code !== ErrorCodes.HANDLE_ALREADY_TAKEN) return created;
 
-  // A concurrent request for the same identity got there first; its channel is ours.
-  const raced = await deps.channels.findByUserId(userId);
+  // A concurrent request for the same identity got there first; its primary is ours.
+  const raced = await deps.channels.listByUserId(userId);
   if (isErr(raced)) return raced;
-  return raced.value ? ok(raced.value) : created;
+  return raced.value.length > 0 ? raced : created;
 }

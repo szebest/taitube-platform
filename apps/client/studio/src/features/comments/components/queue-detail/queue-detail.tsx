@@ -1,6 +1,6 @@
 import { Badge, Spinner } from '@kit/ui';
 import { useQuery } from '@tanstack/react-query';
-import { useApi } from '@vp/queries';
+import { useApi, useAppLink } from '@vp/queries';
 import { authorCommentsQueryOptions } from '#app/features/comments/api/author-queries';
 import type { InboxComment } from '#app/features/comments/api/inbox-queries';
 import { WEB_URL } from '#app/lib/config';
@@ -48,6 +48,7 @@ function AuthorHistory({ comment }: QueueDetailProps) {
 /** One held comment with where it sits, why it was held and what its author wrote before. */
 export function QueueDetail({ comment }: QueueDetailProps) {
   const { tOr } = useT();
+  const appLink = useAppLink();
   const author = comment.author.displayName ?? comment.author.handle ?? '';
 
   return (
@@ -63,7 +64,7 @@ export function QueueDetail({ comment }: QueueDetailProps) {
         </Badge>
       </header>
       <p className="m-0 text-body-sm text-fg-muted">
-        <a href={`${WEB_URL}/watch/${comment.video.id}`}>
+        <a href={appLink(WEB_URL, `/watch/${comment.video.id}`)}>
           {tOr('studio.queueOnVideo', { title: comment.video.title }, '')}
         </a>
         {comment.parentId !== null && <> · {tOr('studio.queueInThread', {}, '')}</>}

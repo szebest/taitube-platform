@@ -9,8 +9,9 @@ import {
   useEffectEvent,
   useState,
 } from 'react';
+import { identityKey } from './account-slots';
 import { setUnreadCount } from './notification-queries';
-import { useAccount } from './session-provider';
+import { useAccount, useIdentity } from './session-provider';
 import { applyUserEvent } from './user-event-handlers';
 import {
   type UserEventBrowser,
@@ -71,13 +72,17 @@ function browserApis(): UserEventBrowser {
 }
 
 /**
- * The signed-in viewer's events, on one connection per browser, fed into this tab's query cache and
- * to `useUserEvent` below it. Each app root mounts it once around the shell; for a guest it opens
- * nothing.
+ * The signed-in viewer's events, on one connection per identity per browser, fed into this tab's
+ * query cache and to `useUserEvent` below it. Each app root mounts it once around the shell; for a
+ * guest it opens nothing. A switch closes the last identity's connection before it opens the next,
+ * and the two never share a name, a connection or a last event id.
  */
 export function UserEventStream({ children }: PropsWithChildren) {
   const [listeners] = useState(() => new Set<UserEventListener>());
   const userId = useAccount()?.id;
+  const identity = useIdentity();
+  const key = identityKey(identity);
+  const { slot } = identity;
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -86,7 +91,8 @@ export function UserEventStream({ children }: PropsWithChildren) {
     }
 
     const disconnect = connectUserEvents({
-      name: `vp.user-events.${userId}`,
+      name: `vp.user-events.${key}.${userId}`,
+      slot,
       browser: browserApis(),
       onEvent: (event) => receive(queryClient, listeners, event),
       onFollow: () => refetchVideos(queryClient),
@@ -94,7 +100,7 @@ export function UserEventStream({ children }: PropsWithChildren) {
     return () => {
       disconnect();
     };
-  }, [userId, queryClient, listeners]);
+  }, [userId, key, slot, queryClient, listeners]);
 
   return <UserEventListeners value={listeners}>{children}</UserEventListeners>;
 }

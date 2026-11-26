@@ -81,7 +81,7 @@ export class PostgresPlaylistRepository implements PlaylistRepositoryPort {
         this.db
           .select({ playlist: getTableColumns(p), ...channelCardColumns })
           .from(p)
-          .leftJoin(ch, eq(ch.userId, p.ownerId))
+          .leftJoin(ch, and(eq(ch.userId, p.ownerId), eq(ch.isPrimary, true)))
           .where(drizzleWhere(eq(p.id, id), playlistReadScope(viewer))),
       databaseUnavailable.during('findPlaylist')
     );

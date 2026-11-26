@@ -1,4 +1,5 @@
 import { expectOk } from '@kit/testing/result';
+import { CHANNEL_HEADER } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { CacheKeys } from '@vp/events';
 import {
@@ -33,6 +34,18 @@ describe('comment routes', () => {
 
     expect(res.statusCode).toBe(401);
     expect(res.json().code).toBe(ErrorCodes.UNAUTHORIZED);
+  });
+
+  it('refuses a comment posted as a channel the caller does not work on with 403', async () => {
+    const res = await ctx.app.inject({
+      method: 'POST',
+      url: `/v1/videos/${VIDEO}/comments`,
+      headers: { ...AS.author, [CHANNEL_HEADER]: ctx.creatorChannelId },
+      payload: { content: 'not mine' },
+    });
+
+    expect(res.statusCode).toBe(403);
+    expect(res.json().code).toBe(ErrorCodes.CHANNEL_MEMBERSHIP_REQUIRED);
   });
 
   it('creates a comment with its author channel and counts it', async () => {

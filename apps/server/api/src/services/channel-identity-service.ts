@@ -11,6 +11,7 @@ import {
   HANDLE_RESERVATION_DAYS,
   type ChannelFieldsPatch,
   type ChannelHandleChange,
+  type NewChannelAuditEntry,
 } from '@vp/domain';
 import {
   type ChannelNotFound,
@@ -71,6 +72,22 @@ export interface PublicChannelMatch {
   channel: Channel;
   /** The retired handle the request named, when it resolved through the history. */
   redirectedFrom: string | null;
+}
+
+/** The audit row of an edit to the channel's identity, naming the fields it changed. */
+export function channelChange(
+  user: UserContext,
+  channelId: string,
+  fields: ChannelAuditField[]
+): NewChannelAuditEntry {
+  return {
+    channelId,
+    actorUserId: user.id,
+    action: 'channel.updated',
+    targetType: 'channel',
+    targetId: channelId,
+    meta: { fields },
+  };
 }
 
 /** What identifies a channel and how it can be reached: its handle and its history, links, contact and banner link. */
@@ -150,14 +167,7 @@ export class ChannelIdentityService {
     channelId: string,
     fields: ChannelAuditField[]
   ): Promise<Result<void, DatabaseUnavailable>> {
-    const appended = await this.deps.audit.append({
-      channelId,
-      actorUserId: user.id,
-      action: 'channel.updated',
-      targetType: 'channel',
-      targetId: channelId,
-      meta: { fields },
-    });
+    const appended = await this.deps.audit.append(channelChange(user, channelId, fields));
     return isErr(appended) ? appended : ok();
   }
 

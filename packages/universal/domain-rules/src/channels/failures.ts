@@ -95,3 +95,13 @@ export function imageUploadNotFound(uploadId: string): ImageUploadNotFound {
     uploadId,
   };
 }
+
+export type ChannelNotOwned = Failure<typeof ErrorCodes.CHANNEL_NOT_OWNED, { channelId: string }>;
+
+export function channelNotOwned(channelId: string): ChannelNotOwned {
+  return {
+    code: ErrorCodes.CHANNEL_NOT_OWNED,
+    message: 'Only the owner of the channel can do that',
+    channelId,
+  };
+}

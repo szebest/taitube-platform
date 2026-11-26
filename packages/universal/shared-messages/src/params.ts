@@ -2,6 +2,7 @@ import { defineParams } from '@kit/i18n';
 
 /** Every placeholder name a message may use; a new name is one reviewed line here. */
 export const PARAMS = defineParams([
+  'accent',
   'action',
   'audience',
   'author',
@@ -85,6 +86,7 @@ export const PARAMS = defineParams([
   'share',
   'shelf',
   'size',
+  'slot',
   'sort',
   'stage',
   'start',

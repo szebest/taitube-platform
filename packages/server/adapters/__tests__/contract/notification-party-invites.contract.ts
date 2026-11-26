@@ -1,10 +1,9 @@
 import { expectOk } from '@kit/testing/result';
 import { type NewNotificationInput, toNotificationView } from '@vp/domain';
-import { OTHER_OWNER_ID, OWNER_ID, seedOwners } from './fixtures';
+import { OTHER_OWNER_ID, OWNER_CHANNEL_ID as CHANNEL_ID, seedOwners } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 import { createRoom, ROOM_ID } from './watch-party-activity-fixtures';
 
-const CHANNEL_ID = '00000000-0000-7000-8000-000000000901';
 const INVITE_A = '00000000-0000-7000-8000-00000000e101';
 const INVITE_B = '00000000-0000-7000-8000-00000000e102';
 
@@ -17,7 +16,7 @@ const invite = (inviteId: string): NewNotificationInput => ({
   watchPartyId: ROOM_ID,
   groupKey: `party_invite:${ROOM_ID}`,
   payload: {
-    actor: { handle: 'night-kitchen', displayName: 'Night Kitchen', avatarUrl: null },
+    actor: { handle: 'owner', displayName: 'Owner', avatarUrl: null },
     videoTitle: null,
     excerpt: null,
     outcome: null,
@@ -57,12 +56,6 @@ export function describeNotificationPartyInvitesContract(
     beforeEach(async () => {
       await subject.reset();
       await seedOwners(subject.repositories);
-      await subject.repositories.channels.create({
-        id: CHANNEL_ID,
-        userId: OWNER_ID,
-        handle: 'night-kitchen',
-        displayName: 'Night Kitchen',
-      });
       await createRoom(subject, ROOM_ID);
     });
 

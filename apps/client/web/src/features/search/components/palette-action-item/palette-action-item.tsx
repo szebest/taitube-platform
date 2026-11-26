@@ -1,6 +1,7 @@
 import { assertNever } from '@kit/result';
 import { Icon, type IconId, useAppearance } from '@kit/ui';
 import { useRouter } from '@tanstack/react-router';
+import { useAppLink } from '@vp/queries';
 import { CommandPalette } from '#app/components/shell/command-palette';
 import type { CommandAction } from '#app/features/search/utils/command-actions';
 import { useCommandPaletteStore } from '#app/lib/command-palette/command-palette-store';
@@ -23,6 +24,7 @@ export function PaletteActionItem({ action }: PaletteActionItemProps) {
   const { setOpen } = useCommandPaletteStore();
   const { update } = useAppearance();
   const router = useRouter();
+  const appLink = useAppLink();
   const { tOr } = useT();
 
   const run = () => {
@@ -38,7 +40,7 @@ export function PaletteActionItem({ action }: PaletteActionItemProps) {
         router.history.push(action.path);
         return;
       case 'studio':
-        window.location.assign(STUDIO_URL);
+        window.location.assign(appLink(STUDIO_URL));
         return;
       default:
         assertNever(action, 'command action');

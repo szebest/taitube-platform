@@ -31,6 +31,7 @@ import { Route as LiveStreamIdRouteImport } from './routes/live.$streamId';
 import { Route as PartiesRoomIdRouteImport } from './routes/parties.$roomId';
 import { Route as SettingsIndexRouteImport } from './routes/settings/index';
 import { Route as SettingsAccessibilityRouteImport } from './routes/settings/accessibility';
+import { Route as SettingsAccountsRouteImport } from './routes/settings/accounts';
 import { Route as SettingsLanguageRouteImport } from './routes/settings/language';
 import { Route as SettingsNotificationsRouteImport } from './routes/settings/notifications';
 import { Route as SettingsPlaybackRouteImport } from './routes/settings/playback';
@@ -157,6 +158,11 @@ const SettingsAccessibilityRoute = SettingsAccessibilityRouteImport.update({
   path: '/accessibility',
   getParentRoute: () => SettingsRoute,
 } as any);
+const SettingsAccountsRoute = SettingsAccountsRouteImport.update({
+  id: '/accounts',
+  path: '/accounts',
+  getParentRoute: () => SettingsRoute,
+} as any);
 const SettingsLanguageRoute = SettingsLanguageRouteImport.update({
   id: '/language',
   path: '/language',
@@ -261,6 +267,7 @@ export interface FileRoutesByFullPath {
   '/live/$streamId': typeof LiveStreamIdRoute;
   '/parties/$roomId': typeof PartiesRoomIdRoute;
   '/settings/accessibility': typeof SettingsAccessibilityRoute;
+  '/settings/accounts': typeof SettingsAccountsRoute;
   '/settings/language': typeof SettingsLanguageRoute;
   '/settings/notifications': typeof SettingsNotificationsRoute;
   '/settings/playback': typeof SettingsPlaybackRoute;
@@ -299,6 +306,7 @@ export interface FileRoutesByTo {
   '/live/$streamId': typeof LiveStreamIdRoute;
   '/parties/$roomId': typeof PartiesRoomIdRoute;
   '/settings/accessibility': typeof SettingsAccessibilityRoute;
+  '/settings/accounts': typeof SettingsAccountsRoute;
   '/settings/language': typeof SettingsLanguageRoute;
   '/settings/notifications': typeof SettingsNotificationsRoute;
   '/settings/playback': typeof SettingsPlaybackRoute;
@@ -340,6 +348,7 @@ export interface FileRoutesById {
   '/live/$streamId': typeof LiveStreamIdRoute;
   '/parties/$roomId': typeof PartiesRoomIdRoute;
   '/settings/accessibility': typeof SettingsAccessibilityRoute;
+  '/settings/accounts': typeof SettingsAccountsRoute;
   '/settings/language': typeof SettingsLanguageRoute;
   '/settings/notifications': typeof SettingsNotificationsRoute;
   '/settings/playback': typeof SettingsPlaybackRoute;
@@ -381,6 +390,7 @@ export interface FileRouteTypes {
     | '/live/$streamId'
     | '/parties/$roomId'
     | '/settings/accessibility'
+    | '/settings/accounts'
     | '/settings/language'
     | '/settings/notifications'
     | '/settings/playback'
@@ -419,6 +429,7 @@ export interface FileRouteTypes {
     | '/live/$streamId'
     | '/parties/$roomId'
     | '/settings/accessibility'
+    | '/settings/accounts'
     | '/settings/language'
     | '/settings/notifications'
     | '/settings/playback'
@@ -459,6 +470,7 @@ export interface FileRouteTypes {
     | '/live/$streamId'
     | '/parties/$roomId'
     | '/settings/accessibility'
+    | '/settings/accounts'
     | '/settings/language'
     | '/settings/notifications'
     | '/settings/playback'
@@ -660,6 +672,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsAccessibilityRouteImport;
       parentRoute: typeof SettingsRoute;
     };
+    '/settings/accounts': {
+      id: '/settings/accounts';
+      path: '/accounts';
+      fullPath: '/settings/accounts';
+      preLoaderRoute: typeof SettingsAccountsRouteImport;
+      parentRoute: typeof SettingsRoute;
+    };
     '/settings/language': {
       id: '/settings/language';
       path: '/language';
@@ -800,6 +819,7 @@ const AuthedRouteWithChildren =
 
 interface SettingsRouteChildren {
   SettingsAccessibilityRoute: typeof SettingsAccessibilityRoute;
+  SettingsAccountsRoute: typeof SettingsAccountsRoute;
   SettingsLanguageRoute: typeof SettingsLanguageRoute;
   SettingsNotificationsRoute: typeof SettingsNotificationsRoute;
   SettingsPlaybackRoute: typeof SettingsPlaybackRoute;
@@ -811,6 +831,7 @@ interface SettingsRouteChildren {
 
 const SettingsRouteChildren: SettingsRouteChildren = {
   SettingsAccessibilityRoute: SettingsAccessibilityRoute,
+  SettingsAccountsRoute: SettingsAccountsRoute,
   SettingsLanguageRoute: SettingsLanguageRoute,
   SettingsNotificationsRoute: SettingsNotificationsRoute,
   SettingsPlaybackRoute: SettingsPlaybackRoute,

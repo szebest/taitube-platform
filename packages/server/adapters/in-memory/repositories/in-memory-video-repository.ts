@@ -1,19 +1,14 @@
 import { type Result, assertNever, isErr, map, ok, unwrapOr } from '@kit/result';
 import { trace } from '@opentelemetry/api';
 import {
-  type EventRepository,
   type ListPublicVideosOptions,
   type ListPublicVideosResult,
   type ListVideosOptions,
   type NewVideoInput,
-  type OutboxRepository,
   type ProcessingStepRecord,
   type RenditionRecord,
-  type RenditionRepository,
-  type StepRepository,
   type TransitionVideoOptions,
   type UploadRecord,
-  type UserEventRepository,
   type VideoEventRecord,
   type VideoRecord,
   VideoRepository,
@@ -21,7 +16,7 @@ import {
   type VideoScanAbsence,
   type VideoWithDetails,
 } from '@vp/core/repositories';
-import { resolveVideoTransition, videoStatusChanged } from '@vp/domain';
+import { type NewChannelAuditEntry, resolveVideoTransition, videoStatusChanged } from '@vp/domain';
 import { VIDEO_LIFECYCLE } from '@vp/domain-rules';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { transitionNotificationJobs } from '@vp/job-contracts';
@@ -30,29 +25,17 @@ import { type Clock, realClock } from './clock';
 import { byKeysetDesc, isKeysetBefore } from './keyset';
 import { newVideoRecord } from './new-video-record';
 import { selectPublicFeed } from './public-feed-query';
-import type { InMemoryVideoRepositoryOptions, UploadLookup } from './types';
+import type { InMemoryVideoRepositoryOptions } from './types';
 
 export type { InMemoryVideoRepositoryOptions };
 
 export class InMemoryVideoRepository extends VideoRepository {
   private readonly videosMap = new Map<string, VideoRecord>();
-  private readonly eventsRepo?: EventRepository;
-  private readonly renditionsRepo?: RenditionRepository;
-  private readonly stepsRepo?: StepRepository;
-  private readonly uploadsRepo?: UploadLookup;
-  private readonly outboxRepo?: OutboxRepository;
-  private readonly userEventsRepo?: UserEventRepository;
   private readonly now: Clock;
 
-  constructor(options: InMemoryVideoRepositoryOptions = {}) {
+  constructor(private readonly deps: InMemoryVideoRepositoryOptions = {}) {
     super();
-    this.now = options.now ?? realClock;
-    this.eventsRepo = options.eventsRepo;
-    this.renditionsRepo = options.renditionsRepo;
-    this.stepsRepo = options.stepsRepo;
-    this.uploadsRepo = options.uploadsRepo;
-    this.outboxRepo = options.outboxRepo;
-    this.userEventsRepo = options.userEventsRepo;
+    this.now = deps.now ?? realClock;
   }
 
   async findById(id: string): Promise<Result<VideoRecord | null, DatabaseUnavailable>> {
@@ -81,19 +64,23 @@ export class InMemoryVideoRepository extends VideoRepository {
   }
 
   private async getEvents(id: string): Promise<VideoEventRecord[]> {
-    return this.eventsRepo ? unwrapOr(await this.eventsRepo.findByVideoId(id), []) : [];
+    return this.deps.eventsRepo ? unwrapOr(await this.deps.eventsRepo.findByVideoId(id), []) : [];
   }
 
   private async getSteps(id: string): Promise<ProcessingStepRecord[]> {
-    return this.stepsRepo ? unwrapOr(await this.stepsRepo.findByVideoId(id), []) : [];
+    return this.deps.stepsRepo ? unwrapOr(await this.deps.stepsRepo.findByVideoId(id), []) : [];
   }
 
   private async getRenditions(id: string): Promise<RenditionRecord[]> {
-    return this.renditionsRepo ? unwrapOr(await this.renditionsRepo.findByVideoId(id), []) : [];
+    return this.deps.renditionsRepo
+      ? unwrapOr(await this.deps.renditionsRepo.findByVideoId(id), [])
+      : [];
   }
 
   private async getUpload(id: string): Promise<UploadRecord | null> {
-    return this.uploadsRepo ? unwrapOr(await this.uploadsRepo.findByVideoId(id), null) : null;
+    return this.deps.uploadsRepo
+      ? unwrapOr(await this.deps.uploadsRepo.findByVideoId(id), null)
+      : null;
   }
 
   private async emitEvent(
@@ -102,8 +89,11 @@ export class InMemoryVideoRepository extends VideoRepository {
     payload: Record<string, unknown>,
     traceId?: string | null
   ): Promise<Result<void, DatabaseUnavailable>> {
-    if (!this.eventsRepo) return ok();
-    return map(await this.eventsRepo.create({ videoId, type, payload, traceId }), () => undefined);
+    if (!this.deps.eventsRepo) return ok();
+    return map(
+      await this.deps.eventsRepo.create({ videoId, type, payload, traceId }),
+      () => undefined
+    );
   }
 
   async findWithDetails(id: string): Promise<Result<VideoWithDetails | null, DatabaseUnavailable>> {
@@ -118,9 +108,16 @@ export class InMemoryVideoRepository extends VideoRepository {
     return ok({ video, renditions, steps, events, upload });
   }
 
-  async create(data: NewVideoInput): Promise<Result<VideoRecord, DatabaseUnavailable>> {
+  async create(
+    data: NewVideoInput,
+    audit?: NewChannelAuditEntry
+  ): Promise<Result<VideoRecord, DatabaseUnavailable>> {
     const record = newVideoRecord(data, new Date());
     this.videosMap.set(record.id, record);
+    if (audit && this.deps.auditRepo) {
+      const appended = await this.deps.auditRepo.append(audit);
+      if (isErr(appended)) return appended;
+    }
     return ok(record);
   }
 
@@ -179,16 +176,16 @@ export class InMemoryVideoRepository extends VideoRepository {
       effectiveTraceId
     );
     if (isErr(recorded)) return recorded;
-    if (options.outbox && this.outboxRepo) {
-      const enqueued = await this.outboxRepo.enqueue(options.outbox);
+    if (options.outbox && this.deps.outboxRepo) {
+      const enqueued = await this.deps.outboxRepo.enqueue(options.outbox);
       if (isErr(enqueued)) return enqueued;
     }
     for (const job of edge ? transitionNotificationJobs(videoId, edge, video.visibility) : []) {
-      const enqueued = await this.outboxRepo?.enqueue(job);
+      const enqueued = await this.deps.outboxRepo?.enqueue(job);
       if (enqueued && isErr(enqueued)) return enqueued;
     }
-    if (this.userEventsRepo) {
-      const appended = await this.userEventsRepo.append({
+    if (this.deps.userEventsRepo) {
+      const appended = await this.deps.userEventsRepo.append({
         userId: video.ownerId,
         ...videoStatusChanged(videoId, to),
       });

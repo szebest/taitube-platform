@@ -22,6 +22,7 @@ const CHANNEL = {
 const BARE: VideoSummary = {
   id: '0190c3a0-5e1d-7000-8000-00000000a001',
   ownerId: '0190c3a0-5e1d-7000-8000-00000000b001',
+  channelId: CHANNEL.id,
   title: 'Shot entirely on a 1998 camcorder: Lisbon at night',
   description: 'A night walk from Alfama down to the river, on a camcorder older than the tram.',
   visibility: 'public',

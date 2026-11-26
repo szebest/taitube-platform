@@ -11,11 +11,7 @@ import { useAccount, useApi } from '@vp/queries';
 import { type PropsWithChildren, useEffect, useEffectEvent, useRef, useState } from 'react';
 import { appearanceChange } from '#app/features/account/api/appearance-change';
 import { noteGuestChange } from '#app/features/account/api/guest-changes';
-import type {
-  AppliedVersion,
-  GuestSections,
-  MergeState,
-} from '#app/features/account/api/identity-reset';
+import type { MergeState } from '#app/features/account/api/identity-reset';
 import { planMerge } from '#app/features/account/api/merge-account';
 import type { MergeConflict } from '#app/features/account/api/merge-account';
 import { createPatchBatch, type PatchBatch } from '#app/features/account/api/patch-batch';
@@ -28,7 +24,7 @@ import { changedPaths, type PreferencesChange } from '#app/lib/preferences/prefe
 import { preferencesQueryOptions } from '#app/lib/preferences/preferences-queries';
 import { PreferencesSyncContext } from '#app/lib/preferences/preferences-sync.context';
 import { IdentityReset } from '../identity-reset/identity-reset';
-import { MergeStateContext } from './merge-state.context';
+import { useMergeState } from './merge-state.context';
 
 const SAVE_DELAY_MS = 400;
 
@@ -167,9 +163,7 @@ export function PreferencesSync({ children }: PropsWithChildren) {
   const userId = useAccount()?.user.id;
   const showToast = useToast();
   const { tOr } = useT();
-  const appliedRef = useRef<AppliedVersion | undefined>(undefined);
-  const guestRef = useRef<GuestSections | undefined>(undefined);
-  const baselineRef = useRef<AppearancePreference | undefined>(undefined);
+  const { applied: appliedRef, guest: guestRef, baseline: baselineRef } = useMergeState();
   const retryBatchRef = useRef<PatchBatch | null>(null);
   const [failures, setFailures] = useState<Failures>({ userId, paths: NONE });
 
@@ -221,27 +215,24 @@ export function PreferencesSync({ children }: PropsWithChildren) {
     },
     notSaved: failures.userId === userId ? failures.paths : NONE,
   };
-  const mergeState: MergeState = { applied: appliedRef, guest: guestRef, baseline: baselineRef };
 
   return (
     <PreferencesSyncContext value={value}>
-      <MergeStateContext value={mergeState}>
-        <IdentityReset userId={userId} />
-        <AppearanceCrossTab />
-        {userId === undefined && <GuestChanges baseline={baselineRef} />}
-        {userId && (
-          <AccountMerge
-            key={userId}
-            userId={userId}
-            appliedRef={appliedRef}
-            guestRef={guestRef}
-            saving={isPending}
-            hasWaiting={batch.hasWaiting}
-            save={value.save}
-          />
-        )}
-        {children}
-      </MergeStateContext>
+      <IdentityReset userId={userId} />
+      <AppearanceCrossTab />
+      {userId === undefined && <GuestChanges baseline={baselineRef} />}
+      {userId && (
+        <AccountMerge
+          key={userId}
+          userId={userId}
+          appliedRef={appliedRef}
+          guestRef={guestRef}
+          saving={isPending}
+          hasWaiting={batch.hasWaiting}
+          save={value.save}
+        />
+      )}
+      {children}
     </PreferencesSyncContext>
   );
 }

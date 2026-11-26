@@ -11,6 +11,7 @@ import { canManageCaptions, canReadCaptions } from '../captions';
 const privateCaptions: CaptionResource = {
   videoId: 'vid-priv',
   ownerId: creatorUser.id,
+  channelId: 'chan-creator-1',
   visibility: 'private',
 };
 

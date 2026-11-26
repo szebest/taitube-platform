@@ -3,7 +3,7 @@ import { InMemoryJobQueue } from '@vp/adapters/in-memory';
 import { ErrorCodes } from '@vp/errors';
 import { ids } from '@vp/job-contracts';
 import { SEEDED } from '@vp/testing-fixtures';
-import { TOKENS, type TestApp, bearer, buildTestApp } from './test-app';
+import { TOKENS, bearer, buildTestApp, seedPrimaryChannel, type TestApp } from './test-app';
 
 const VIDEO_ID = '018f0000-0000-7000-8000-000000000030';
 const OTHER_VIDEO_ID = '018f0000-0000-7000-8000-000000000031';
@@ -26,6 +26,7 @@ describe('POST /videos/:id/reprocess', () => {
     await ctx.repositories.videos.create({
       id: VIDEO_ID,
       ownerId: SEEDED.userId,
+      channelId: await seedPrimaryChannel(ctx.repositories, SEEDED.userId),
       title: 'Reprocess Test Video',
       status: 'FAILED',
       sourceKey: `raw/${VIDEO_ID}/source.mp4`,
@@ -34,6 +35,7 @@ describe('POST /videos/:id/reprocess', () => {
     await ctx.repositories.videos.create({
       id: OTHER_VIDEO_ID,
       ownerId: SEEDED.otherUserId,
+      channelId: await seedPrimaryChannel(ctx.repositories, SEEDED.otherUserId),
       title: 'Other User Video',
       status: 'READY',
       sourceKey: `raw/${OTHER_VIDEO_ID}/source.mp4`,
@@ -113,6 +115,7 @@ describe('POST /videos/:id/reprocess', () => {
     await ctx.repositories.videos.create({
       id: RATE_LIMIT_VIDEO_ID,
       ownerId: SEEDED.userId,
+      channelId: await seedPrimaryChannel(ctx.repositories, SEEDED.userId),
       title: 'Rate Limit Test Video',
       status: 'READY',
       sourceKey: `raw/${RATE_LIMIT_VIDEO_ID}/source.mp4`,

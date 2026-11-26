@@ -31,6 +31,7 @@ describe('apps/client/web: generated route tree', () => {
       '/settings',
       '/settings/',
       '/settings/accessibility',
+      '/settings/accounts',
       '/settings/appearance/',
       '/settings/appearance/advanced',
       '/settings/language',

@@ -78,6 +78,13 @@ export const CORE_DOCS = groupDocs('core', {
     visibility: 'public',
     readBy: ['api'],
   },
+  CHANNELS_MAX_OWNED: {
+    description:
+      'How many channels one account may own. POST /v1/me/channels past it answers 409 CHANNEL_LIMIT_REACHED.',
+    example: '5',
+    visibility: 'public',
+    readBy: ['api'],
+  },
   FEATURE_FLAGS: {
     description:
       'Comma list of flags GET /v1/bootstrap reports as enabled to the client apps. Empty means none.',

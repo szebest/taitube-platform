@@ -46,6 +46,16 @@ describe('apps/server/worker/stages: notify-subscribers', () => {
     await seedVideo(repositories, videoId(1));
   });
 
+  it('notifies an account subscribed from two of its channels once, at its louder level', async () => {
+    await seedSubscriber(repositories, userId(1), { level: 'none' });
+    const second = '0000000d-0000-7000-8000-000000000001';
+    expectOk(await repositories.subscriptions.subscribe(userId(1), second, CHANNEL_ID));
+
+    await fanOut(1);
+
+    expect(await received(1)).toEqual(['upload']);
+  });
+
   it.each<{ scenario: string; level: 'all' | 'highlights' | 'none'; kind: NotificationKind[] }>([
     { scenario: 'all', level: 'all', kind: ['upload'] },
     { scenario: 'highlights', level: 'highlights', kind: ['upload'] },

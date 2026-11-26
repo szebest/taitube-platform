@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import type { Video } from '@vp/api-contracts';
 import { canPinComment, canUpdateVideo } from '@vp/permissions';
 import { useCan } from '@vp/permissions-react';
-import { creatorStatsQueryOptions, useApi } from '@vp/queries';
+import { creatorStatsQueryOptions, useApi, useAppLink } from '@vp/queries';
 import { useId, useState } from 'react';
 import { useReducedMotion } from '#app/hooks/use-reduced-motion';
 import { STUDIO_URL } from '#app/lib/config';
@@ -23,13 +23,17 @@ const SKELETON_CARDS = ['views', 'watch', 'duration', 'likes', 'comments', 'subs
 export function StatsPanel({ video }: { video: Video }) {
   const api = useApi();
   const { tOr } = useT();
+  const appLink = useAppLink();
   const bodyId = useId();
   const roomy = useMediaQuery(MEDIUM_AND_UP);
   const reducedMotion = useReducedMotion();
   const [chosen, setChosen] = useState<boolean>();
   const stats = useQuery(creatorStatsQueryOptions(api, video.id));
   const canEdit = useCan(canUpdateVideo, { video });
-  const canPin = useCan(canPinComment, { videoOwnerId: video.ownerId });
+  const canPin = useCan(canPinComment, {
+    videoOwnerId: video.ownerId,
+    videoChannelId: video.channelId,
+  });
   const expanded = chosen ?? roomy;
   const live = stats.data?.first48Hours != null;
 
@@ -87,7 +91,16 @@ export function StatsPanel({ video }: { video: Video }) {
             <StatsChart stats={stats.data} />
             <StatsRetention videoId={video.id} stats={stats.data} />
             <Button asChild variant="soft" size="sm" className="self-start">
-              <a href={`${STUDIO_URL}/videos/${video.id}/analytics`}>
+              <a
+                href={
+                  video.channel
+                    ? appLink(
+                        STUDIO_URL,
+                        `/for/${video.channel.handle}?next=/videos/${video.id}/analytics`
+                      )
+                    : appLink(STUDIO_URL, `/videos/${video.id}/analytics`)
+                }
+              >
                 {tOr('creatorStats.openAnalytics', {}, '')}
               </a>
             </Button>

@@ -1,5 +1,5 @@
 import { Container } from '@kit/composition';
-import { provideExports } from '../in-memory-export-providers';
+import { accountDataOf, provideExports } from '../in-memory-export-providers';
 import { graph } from '../in-memory-graph';
 import { Repo } from '../in-memory-repo-tokens';
 
@@ -14,5 +14,15 @@ describe('provideExports', () => {
     const c = graph();
 
     expect(c.get(Repo.dataExports)).toBe(c.get(Repo.dataExports));
+  });
+
+  it("hands over the account's data repositories the graph holds, one of each", () => {
+    const c = graph();
+
+    expect(accountDataOf(c)).toMatchObject({
+      dataExports: c.get(Repo.dataExports),
+      apiTokens: c.get(Repo.apiTokens),
+      accountAudit: c.get(Repo.accountAudit),
+    });
   });
 });

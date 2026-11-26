@@ -1,7 +1,12 @@
 import * as schema from '@vp/db';
 import { eq } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/pglite';
-import { OWNER_ID, seedOwners, VIDEO_IDS } from '../../../__tests__/contract/fixtures';
+import {
+  OWNER_CHANNEL_ID,
+  OWNER_ID,
+  seedOwners,
+  VIDEO_IDS,
+} from '../../../__tests__/contract/fixtures';
 import { migratedPglite } from '../../../__tests__/contract/pglite-snapshot';
 import { PostgresRepositories } from '../postgres-repositories';
 import { commitVideoTransition } from '../video-transition';
@@ -13,6 +18,7 @@ async function seeded() {
   await repositories.videos.create({
     id: VIDEO_IDS.a,
     ownerId: OWNER_ID,
+    channelId: OWNER_CHANNEL_ID,
     sourceKey: 'raw/a/source.mp4',
     status: 'PROCESSING',
   });

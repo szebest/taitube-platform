@@ -1,5 +1,5 @@
 import type { UserContext } from '../../types/index';
-import { channelsWith, ownersWith } from '../memberships';
+import { channelsWith } from '../memberships';
 
 const userWith = (memberships: UserContext['memberships']): UserContext => ({
   id: 'member-1',
@@ -14,26 +14,16 @@ describe('rules/memberships: the channels a member may act on', () => {
   });
 
   it.each([
-    { capability: 'video.edit', owners: { $in: ['owner-a'] }, channels: { $in: ['chan-a'] } },
-    {
-      capability: 'video.read',
-      owners: { $in: ['owner-a', 'owner-b'] },
-      channels: { $in: ['chan-a', 'chan-b'] },
-    },
-    { capability: 'team.manage', owners: null, channels: null },
-  ] as const)(
-    '$capability: owners $owners, channels $channels',
-    ({ capability, owners, channels }) => {
-      expect([ownersWith(member, capability), channelsWith(member, capability)]).toEqual([
-        owners,
-        channels,
-      ]);
-    }
-  );
+    { capability: 'video.edit', channels: { $in: ['chan-a'] } },
+    { capability: 'video.read', channels: { $in: ['chan-a', 'chan-b'] } },
+    { capability: 'team.manage', channels: null },
+  ] as const)('$capability: channels $channels', ({ capability, channels }) => {
+    expect(channelsWith(member, capability)).toEqual(channels);
+  });
 
   it('answers null, never an empty $in, for a user who belongs to no channel', () => {
     expect([
-      ownersWith(userWith(undefined), 'video.read'),
+      channelsWith(userWith(undefined), 'video.read'),
       channelsWith(userWith({}), 'video.read'),
     ]).toEqual([null, null]);
   });

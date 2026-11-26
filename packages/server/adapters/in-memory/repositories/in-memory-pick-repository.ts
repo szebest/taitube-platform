@@ -81,7 +81,7 @@ export class InMemoryPickRepository implements PickRepositoryPort {
     for (const pick of picks) {
       const video = unwrapOr(await this.lookups.videosRepo.findById(pick.videoId), null);
       if (!video) continue;
-      const channel = await channelCard(this.lookups, video.ownerId);
+      const channel = await channelCard(this.lookups, video.channelId);
       entries.push({ pick: { ...pick }, video, channel });
     }
     return entries;

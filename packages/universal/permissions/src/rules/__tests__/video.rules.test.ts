@@ -228,7 +228,7 @@ describe('rules/video.rules: Declarative Video Ability Rules', () => {
   const editorOfCreator: UserContext = {
     id: 'editor-1',
     role: 'USER',
-    memberships: { 'chan-creator': { role: 'editor', ownerId: creatorUser.id } },
+    memberships: { 'chan-creator-1': { role: 'editor', ownerId: creatorUser.id } },
   };
 
   it.each([

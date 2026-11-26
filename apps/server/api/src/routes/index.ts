@@ -37,6 +37,7 @@ import { liveChatRoutes } from './live-chat';
 import { liveCompanionRoutes } from './live-companion';
 import { liveIngestRoutes } from './live-ingest';
 import { meRoutes } from './me';
+import { myChannelsRoutes } from './my-channels';
 import { notificationsRoutes } from './notifications';
 import { oembedRoutes } from './oembed';
 import { picksRoutes } from './picks';
@@ -91,6 +92,7 @@ const ROUTES: readonly FastifyPluginAsync[] = [
   adminCategoriesRoutes,
   adminVideosRoutes,
   meRoutes,
+  myChannelsRoutes,
   preferencesRoutes,
   captionsRoutes,
   notificationsRoutes,

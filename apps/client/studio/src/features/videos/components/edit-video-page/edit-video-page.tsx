@@ -34,7 +34,12 @@ export function EditVideoPage({ videoId, captions }: EditVideoPageProps) {
         type="rule"
         I={canManageCaptions}
         this={{
-          caption: { videoId, ownerId: video.ownerId, visibility: video.visibility },
+          caption: {
+            videoId,
+            ownerId: video.ownerId,
+            channelId: video.channelId,
+            visibility: video.visibility,
+          },
         }}
       >
         {captions}

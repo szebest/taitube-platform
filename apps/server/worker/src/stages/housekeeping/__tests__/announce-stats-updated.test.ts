@@ -32,6 +32,7 @@ describe('housekeeping: announce-stats-updated', () => {
       await repositories.videos.create({
         id: VIDEO_ID,
         ownerId: SEEDED.userId,
+        channelId: SEEDED.channelId,
         sourceKey: 'raw/aa/source.mp4',
       })
     );
@@ -40,10 +41,9 @@ describe('housekeeping: announce-stats-updated', () => {
 
   beforeEach(async () => {
     repositories = new InMemoryRepositories();
-    const channel = expectOk(await repositories.channels.findByUserId(SEEDED.userId));
     for (const { userId, role } of MEMBERS) {
       repositories.channelMembers.join({
-        channelId: channel?.id ?? '',
+        channelId: SEEDED.channelId,
         userId,
         role,
         invitedBy: SEEDED.userId,

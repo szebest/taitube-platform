@@ -51,6 +51,12 @@ describe('db: schema', () => {
       column: 'owner_id',
       expected: { table: 'users', onDelete: 'no action' },
     },
+    {
+      scenario: 'refuses to delete a channel that still holds a video',
+      table: videos,
+      column: 'channel_id',
+      expected: { table: 'channels', onDelete: 'no action' },
+    },
   ])('$scenario', ({ table, column, expected }) => {
     expect(referenceFrom(table, column)).toEqual(expected);
   });

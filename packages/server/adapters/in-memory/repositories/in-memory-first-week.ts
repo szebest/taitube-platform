@@ -29,13 +29,13 @@ export function firstWeekRowsOf(
 
 export function recentPeersOf(
   videos: readonly VideoRecord[],
-  ownerId: string,
+  channelId: string,
   excludeVideoId: string,
   readyBefore: Date
 ): PeerVideo[] {
   return videos
     .flatMap((video) =>
-      video.ownerId === ownerId &&
+      video.channelId === channelId &&
       video.id !== excludeVideoId &&
       video.visibility === PUBLIC_FEED_VISIBILITY &&
       video.status === PUBLIC_FEED_STATUS &&

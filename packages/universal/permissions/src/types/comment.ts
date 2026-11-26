@@ -4,4 +4,5 @@ export interface CommentResource {
   readonly userId?: string;
   readonly videoId?: string;
   readonly videoOwnerId?: string;
+  readonly videoChannelId?: string;
 }

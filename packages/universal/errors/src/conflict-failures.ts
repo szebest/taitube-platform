@@ -57,3 +57,16 @@ export function versionConflict(id: string, expectedVersion?: number): VersionCo
     ...(expectedVersion === undefined ? {} : { expectedVersion }),
   };
 }
+
+export type ChannelLimitReached = Failure<
+  typeof ErrorCodes.CHANNEL_LIMIT_REACHED,
+  { limit: number }
+>;
+
+export function channelLimitReached(limit: number): ChannelLimitReached {
+  return {
+    code: ErrorCodes.CHANNEL_LIMIT_REACHED,
+    message: `An account owns at most ${limit} channels`,
+    limit,
+  };
+}

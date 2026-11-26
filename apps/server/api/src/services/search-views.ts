@@ -19,7 +19,7 @@ export function toSearchResultItem(
     case 'video':
       return {
         type: 'video',
-        data: toVideoSummaryView(hit.video, cdn, sprite, channelOf(hit.video.ownerId)),
+        data: toVideoSummaryView(hit.video, cdn, sprite, channelOf(hit.video.channelId)),
       };
     case 'channel': {
       const { id, handle, displayName, avatarUrl, bio, subscriberCount } = hit.channel;

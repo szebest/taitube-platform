@@ -1,26 +1,35 @@
 import { err } from '@kit/result';
 import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemorySubscriptionCache } from '@vp/adapters/in-memory';
+import type { ActingChannel } from '@vp/domain';
 import { ErrorCodes, cacheUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { creator, otherCreator, subscriber, subscriptionHarness } from './subscription-harness';
+import {
+  asSubscriber,
+  asSubscriberSecond,
+  creator,
+  otherCreator,
+  subscriber,
+  subscriptionHarness,
+} from './subscription-harness';
 
 describe('SubscriptionService', () => {
   let videos: Awaited<ReturnType<typeof subscriptionHarness>>['videos'];
   let subscriptions: Awaited<ReturnType<typeof subscriptionHarness>>['subscriptions'];
   let cache: Awaited<ReturnType<typeof subscriptionHarness>>['cache'];
+  let audit: Awaited<ReturnType<typeof subscriptionHarness>>['audit'];
   let service: Awaited<ReturnType<typeof subscriptionHarness>>['service'];
   let serviceOver: Awaited<ReturnType<typeof subscriptionHarness>>['serviceOver'];
 
   const missingChannelId = '00000000-0000-0000-0000-000000000000';
 
   beforeEach(async () => {
-    ({ videos, subscriptions, cache, service, serviceOver } = await subscriptionHarness());
+    ({ videos, subscriptions, cache, audit, service, serviceOver } = await subscriptionHarness());
   });
 
   describe('subscribe / unsubscribe', () => {
     it('reports the new state and count', async () => {
-      const result = expectOk(await service.subscribe(subscriber, creator.channelId));
+      const result = expectOk(await service.subscribe(subscriber, asSubscriber, creator.channelId));
 
       expect(result).toEqual({
         channelId: creator.channelId,
@@ -30,29 +39,35 @@ describe('SubscriptionService', () => {
     });
 
     it('primes the cache so the next status check needs no query', async () => {
-      await service.subscribe(subscriber, creator.channelId);
+      await service.subscribe(subscriber, asSubscriber, creator.channelId);
 
-      expect(expectOk(await cache.isSubscribed(subscriber.id, creator.channelId))).toBe(true);
+      expect(expectOk(await cache.isSubscribed(asSubscriber.channelId, creator.channelId))).toBe(
+        true
+      );
       expect(expectOk(await cache.getSubscriberCount(creator.channelId))).toBe(1);
     });
 
     it('leaves the cache a miss once the only membership is unsubscribed', async () => {
-      await service.subscribe(subscriber, creator.channelId);
-      const result = expectOk(await service.unsubscribe(subscriber, creator.channelId));
+      await service.subscribe(subscriber, asSubscriber, creator.channelId);
+      const result = expectOk(
+        await service.unsubscribe(subscriber, asSubscriber, creator.channelId)
+      );
 
       expect(result).toEqual({
         channelId: creator.channelId,
         subscribed: false,
         subscriberCount: 0,
       });
-      expect(expectOk(await cache.isSubscribed(subscriber.id, creator.channelId))).toBeNull();
+      expect(
+        expectOk(await cache.isSubscribed(asSubscriber.channelId, creator.channelId))
+      ).toBeNull();
     });
 
     it('skips cache writes when the call changed nothing', async () => {
-      await service.subscribe(subscriber, creator.channelId);
+      await service.subscribe(subscriber, asSubscriber, creator.channelId);
       const addSubscription = vi.spyOn(cache, 'addSubscription');
 
-      await service.subscribe(subscriber, creator.channelId);
+      await service.subscribe(subscriber, asSubscriber, creator.channelId);
 
       expect(addSubscription).not.toHaveBeenCalled();
     });
@@ -60,43 +75,97 @@ describe('SubscriptionService', () => {
     it.each([{ action: 'subscribe' as const }, { action: 'unsubscribe' as const }])(
       'returns CHANNEL_NOT_FOUND from $action',
       async ({ action }) => {
-        expect(expectErr(await service[action](subscriber, missingChannelId)).code).toBe(
-          ErrorCodes.CHANNEL_NOT_FOUND
-        );
+        expect(
+          expectErr(await service[action](subscriber, asSubscriber, missingChannelId)).code
+        ).toBe(ErrorCodes.CHANNEL_NOT_FOUND);
       }
     );
 
-    it('returns CANNOT_SUBSCRIBE_TO_SELF, which the repositories no longer decide', async () => {
+    it('returns CANNOT_SUBSCRIBE_TO_SELF for a channel acting as itself', async () => {
       const owner: UserContext = { id: creator.userId, role: 'USER' };
+      const asCreator: ActingChannel = {
+        channelId: creator.channelId,
+        ownerId: creator.userId,
+        role: 'owner',
+      };
 
-      expect(expectErr(await service.subscribe(owner, creator.channelId)).code).toBe(
+      expect(expectErr(await service.subscribe(owner, asCreator, creator.channelId)).code).toBe(
         ErrorCodes.CANNOT_SUBSCRIBE_TO_SELF
       );
+    });
+
+    it('refuses a channel the caller cannot act as', async () => {
+      const asCreator: ActingChannel = {
+        channelId: creator.channelId,
+        ownerId: creator.userId,
+        role: 'owner',
+      };
+
+      expect(
+        expectErr(await service.subscribe(subscriber, asCreator, otherCreator.channelId)).code
+      ).toBe(ErrorCodes.FORBIDDEN);
+    });
+
+    it('records the subscription in the acting channel audit log, once', async () => {
+      await service.subscribe(subscriber, asSubscriber, creator.channelId);
+      await service.subscribe(subscriber, asSubscriber, creator.channelId);
+
+      const entries = expectOk(
+        await audit.list(asSubscriber.channelId, { cursor: null, limit: 10 })
+      );
+      expect(entries).toEqual([
+        expect.objectContaining({
+          action: 'channel.subscribed',
+          actorUserId: subscriber.id,
+          targetType: 'channel',
+          targetId: creator.channelId,
+        }),
+      ]);
     });
   });
 
   describe('isSubscribed', () => {
     it('reports an unknown channel before consulting the cache', async () => {
-      expect(expectErr(await service.isSubscribed(subscriber, missingChannelId)).code).toBe(
-        ErrorCodes.CHANNEL_NOT_FOUND
-      );
+      expect(
+        expectErr(await service.isSubscribed(subscriber, asSubscriber, missingChannelId)).code
+      ).toBe(ErrorCodes.CHANNEL_NOT_FOUND);
     });
 
     it('primes the full subscription set on a cache miss', async () => {
-      await subscriptions.subscribe(subscriber.id, creator.channelId);
-      await subscriptions.subscribe(subscriber.id, otherCreator.channelId);
+      await subscriptions.subscribe(subscriber.id, asSubscriber.channelId, creator.channelId);
+      await subscriptions.subscribe(subscriber.id, asSubscriber.channelId, otherCreator.channelId);
 
-      const result = expectOk(await service.isSubscribed(subscriber, creator.channelId));
+      const result = expectOk(
+        await service.isSubscribed(subscriber, asSubscriber, creator.channelId)
+      );
 
       expect(result).toEqual({ channelId: creator.channelId, subscribed: true });
-      expect(expectOk(await cache.isSubscribed(subscriber.id, otherCreator.channelId))).toBe(true);
+      expect(
+        expectOk(await cache.isSubscribed(asSubscriber.channelId, otherCreator.channelId))
+      ).toBe(true);
     });
 
-    it('answers a primed miss without re-reading the repository', async () => {
-      await service.isSubscribed(subscriber, creator.channelId);
-      const getChannelIds = vi.spyOn(subscriptions, 'getUserSubscriptionChannelIds');
+    it.each([
+      { scenario: 'the channel that subscribed', acting: asSubscriber, subscribed: true },
+      { scenario: 'another channel of the account', acting: asSubscriberSecond, subscribed: false },
+    ])(
+      'answers for the acting channel alone: $scenario reads $subscribed',
+      async ({ acting, subscribed }) => {
+        await service.subscribe(subscriber, asSubscriber, creator.channelId);
 
-      const result = expectOk(await service.isSubscribed(subscriber, creator.channelId));
+        expect(expectOk(await service.isSubscribed(subscriber, acting, creator.channelId))).toEqual(
+          { channelId: creator.channelId, subscribed }
+        );
+      }
+    );
+
+    it('answers a primed miss without re-reading the repository', async () => {
+      await service.isSubscribed(subscriber, asSubscriber, creator.channelId);
+      const getChannelIds = vi.spyOn(subscriptions, 'getChannelSubscriptionChannelIds');
+
+      const result = expectOk(
+        await service.isSubscribed(subscriber, asSubscriber, creator.channelId)
+      );
 
       expect(result).toEqual({ channelId: creator.channelId, subscribed: false });
       expect(getChannelIds).not.toHaveBeenCalled();
@@ -105,8 +174,8 @@ describe('SubscriptionService', () => {
 
   describe('listSubscriptions', () => {
     it('serialises the subscription timestamp and mints a cursor for the next page', async () => {
-      await service.subscribe(subscriber, creator.channelId);
-      await service.subscribe(subscriber, otherCreator.channelId);
+      await service.subscribe(subscriber, asSubscriber, creator.channelId);
+      await service.subscribe(subscriber, asSubscriber, otherCreator.channelId);
 
       const page = expectOk(await service.listSubscriptions(subscriber, { limit: 1 }));
 
@@ -116,8 +185,8 @@ describe('SubscriptionService', () => {
     });
 
     it('walks its own cursor to the second page without repeating a channel', async () => {
-      await service.subscribe(subscriber, creator.channelId);
-      await service.subscribe(subscriber, otherCreator.channelId);
+      await service.subscribe(subscriber, asSubscriber, creator.channelId);
+      await service.subscribe(subscriber, asSubscriber, otherCreator.channelId);
 
       const first = expectOk(await service.listSubscriptions(subscriber, { limit: 1 }));
       const second = expectOk(
@@ -133,7 +202,7 @@ describe('SubscriptionService', () => {
     });
 
     it('returns no cursor when the last page fits', async () => {
-      await service.subscribe(subscriber, creator.channelId);
+      await service.subscribe(subscriber, asSubscriber, creator.channelId);
 
       const page = expectOk(await service.listSubscriptions(subscriber, { limit: 10 }));
 
@@ -144,10 +213,11 @@ describe('SubscriptionService', () => {
 
   describe('getFeed', () => {
     beforeEach(async () => {
-      for (const [index, ownerId] of [creator.userId, creator.userId].entries()) {
+      for (const index of [0, 1]) {
         await videos.create({
           id: `66666666-6666-7666-8666-66666666666${index}`,
-          ownerId,
+          ownerId: creator.userId,
+          channelId: creator.channelId,
           title: `Video ${index}`,
           visibility: 'public',
           status: 'READY',
@@ -157,7 +227,7 @@ describe('SubscriptionService', () => {
     });
 
     it('reports the unpaginated total alongside the page', async () => {
-      await service.subscribe(subscriber, creator.channelId);
+      await service.subscribe(subscriber, asSubscriber, creator.channelId);
 
       const feed = expectOk(await service.getFeed(subscriber, { limit: 1 }));
 
@@ -189,9 +259,9 @@ describe('SubscriptionService', () => {
         })
       );
 
-      expect(expectOk(await broken.isSubscribed(subscriber, creator.channelId)).channelId).toBe(
-        creator.channelId
-      );
+      expect(
+        expectOk(await broken.isSubscribed(subscriber, asSubscriber, creator.channelId)).channelId
+      ).toBe(creator.channelId);
     });
   });
 });

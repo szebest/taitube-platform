@@ -1,6 +1,7 @@
 import type { Video } from '../video';
 
 const REQUIRED = [
+  'channelId',
   'createdAt',
   'description',
   'durationMs',
@@ -26,6 +27,7 @@ describe('@vp/domain: the video entity', () => {
     const video: Video = {
       id: 'video-1',
       ownerId: 'user-1',
+      channelId: 'channel-1',
       title: null,
       description: null,
       visibility: 'private',
@@ -51,6 +53,7 @@ describe('@vp/domain: the video entity', () => {
     const ready: Video = {
       id: 'video-1',
       ownerId: 'user-1',
+      channelId: 'channel-1',
       title: 'Clip',
       description: null,
       visibility: 'public',

@@ -20,7 +20,10 @@ export function decideVideoAnalyticsRead(
   return andThen(
     decideVideoRead({ viewer: input.viewer, video: input.video, videoId: input.videoId }),
     (video) =>
-      canReadAnalytics({ user: input.viewer, analytics: { ownerId: video.ownerId } })
+      canReadAnalytics({
+        user: input.viewer,
+        analytics: { ownerId: video.ownerId, channelId: video.channelId },
+      })
         ? ok(video)
         : err(analyticsForbidden(input.videoId))
   );

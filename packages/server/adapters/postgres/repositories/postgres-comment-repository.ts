@@ -149,9 +149,12 @@ export class PostgresCommentRepository implements CommentRepositoryPort {
     return map(rows, (found) => found.map(toCommentThread));
   }
 
-  async create(input: NewCommentInput): Promise<Result<CommentThread | null, DatabaseUnavailable>> {
+  async create(
+    input: NewCommentInput,
+    audit?: NewChannelAuditEntry
+  ): Promise<Result<CommentThread | null, DatabaseUnavailable>> {
     return await fromPromise(
-      () => this.db.transaction((tx) => insertComment(tx, input)),
+      () => this.db.transaction((tx) => insertComment(tx, input, audit)),
       databaseUnavailable.during('createComment')
     );
   }

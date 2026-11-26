@@ -5,20 +5,23 @@ export const EXPANDED = { width: 1280, height: 900 };
 export const idOf = (position: number) =>
   `0190c3a0-5e1d-7000-8000-00000000f${String(position).padStart(3, '0')}`;
 
+const channel = {
+  id: '0190c3a0-5e1d-7000-8000-00000000c001',
+  handle: 'marta',
+  displayName: 'Marta',
+  avatarUrl: null,
+};
+
 const shorts = [1, 2, 3].map((position) => ({
   id: idOf(position),
   ownerId: '0190c3a0-5e1d-7000-8000-00000000b001',
+  channelId: channel.id,
   title: `Short ${position}`,
   description: null,
   visibility: 'public',
   status: 'READY',
   format: 'short',
-  channel: {
-    id: '0190c3a0-5e1d-7000-8000-00000000c001',
-    handle: 'marta',
-    displayName: 'Marta',
-    avatarUrl: null,
-  },
+  channel,
   version: 0,
   createdAt: '2026-01-01T00:00:00.000Z',
   updatedAt: '2026-01-01T00:00:00.000Z',

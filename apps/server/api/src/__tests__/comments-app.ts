@@ -1,3 +1,4 @@
+import { expectOk } from '@kit/testing/result';
 import { mintToken } from '@vp/dev-identity';
 import type { LightMyRequestResponse } from 'fastify';
 import { type TestApp, bearer, buildTestApp, seedVideo } from './test-app';
@@ -28,6 +29,8 @@ export interface CommentsApp extends TestApp {
     video?: string
   ): Promise<LightMyRequestResponse>;
   comment(who: Who, content: string, parentId?: string): Promise<string>;
+  /** The creator's primary channel, which both videos belong to. */
+  creatorChannelId: string;
   list(
     query?: string,
     headers?: Record<string, string>,
@@ -75,6 +78,13 @@ async function seededCommentsApp(testApp: TestApp): Promise<CommentsApp> {
       tier: 'free',
     });
   }
+  const creatorChannel = expectOk(
+    await repositories.channels.create({
+      userId: CREATOR,
+      handle: 'creator',
+      displayName: 'Creator',
+    })
+  );
   await repositories.channels.create({
     userId: AUTHOR,
     handle: 'author',
@@ -93,6 +103,7 @@ async function seededCommentsApp(testApp: TestApp): Promise<CommentsApp> {
 
   return {
     ...testApp,
+    creatorChannelId: creatorChannel.id,
     post,
     comment: async (who, content, parentId) => {
       const res = await post(who, { content, ...(parentId ? { parentId } : {}) });

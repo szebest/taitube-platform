@@ -1,7 +1,13 @@
 import { expectErr, expectOk } from '@kit/testing/result';
 import type { ChannelPageRepositoryPort } from '@vp/core/repositories';
 import { ErrorCodes } from '@vp/errors';
-import { OTHER_OWNER_ID, OWNER_ID, publicVideo, seedOwners, VIDEO_IDS } from './fixtures';
+import {
+  OTHER_OWNER_CHANNEL_ID,
+  OWNER_CHANNEL_ID,
+  VIDEO_IDS,
+  publicVideo,
+  seedOwners,
+} from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
 const { a, b, c } = VIDEO_IDS;
@@ -31,13 +37,8 @@ export function describeChannelPageRepositoryContract(makeSubject: MakeRepositor
       for (const id of [a, b, c]) {
         await subject.repositories.videos.create(publicVideo({ id }));
       }
-      const { channels } = subject.repositories;
-      channelId = expectOk(
-        await channels.create({ userId: OWNER_ID, handle: 'owner', displayName: 'Owner' })
-      ).id;
-      otherChannelId = expectOk(
-        await channels.create({ userId: OTHER_OWNER_ID, handle: 'other', displayName: 'Other' })
-      ).id;
+      channelId = OWNER_CHANNEL_ID;
+      otherChannelId = OTHER_OWNER_CHANNEL_ID;
       pages = subject.repositories.channelPages;
     });
 

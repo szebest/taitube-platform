@@ -2,6 +2,7 @@ import { expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { NewVideoInput } from '@vp/core/repositories';
 import { inProcessAppConfig } from '@vp/env-schema';
+import { seedPrimaryChannel } from '../../__tests__/test-app';
 import { MetadataScreening } from '../metadata-screening';
 
 const OWNER_ID = '00000000-0000-7000-8000-0000000006b1';
@@ -26,6 +27,7 @@ describe('apps/server/api/services: metadata screening', () => {
       await repositories.videos.create({
         id: VIDEO_ID,
         ownerId: OWNER_ID,
+        channelId: await seedPrimaryChannel(repositories, OWNER_ID),
         title: 'A calm walk',
         status: 'READY',
         visibility: 'public',

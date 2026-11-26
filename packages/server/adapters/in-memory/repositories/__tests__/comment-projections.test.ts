@@ -8,6 +8,7 @@ const stored: StoredComment = {
   parentId: 'root',
   videoId: 'v1',
   authorId: 'u1',
+  authorChannelId: 'ch1',
   content: 'hello',
   isPinned: false,
   isEdited: false,
@@ -29,7 +30,7 @@ const channel = {
 describe('adapters/in-memory: comment projections', () => {
   it.each([
     {
-      scenario: 'an author with a channel',
+      scenario: 'the channel it was posted as',
       channel,
       author: {
         userId: 'u1',
@@ -40,9 +41,9 @@ describe('adapters/in-memory: comment projections', () => {
       },
     },
     {
-      scenario: 'an author without a channel',
+      scenario: 'a channel the lookup did not find',
       channel: null,
-      author: { userId: 'u1', channelId: null, handle: null, displayName: null, avatarUrl: null },
+      author: { userId: 'u1', channelId: 'ch1', handle: null, displayName: null, avatarUrl: null },
     },
   ])('shapes a thread for $scenario and drops the removal stamp', ({ channel, author }) => {
     const thread = toThreadOf(stored, channel, 2);
@@ -66,7 +67,14 @@ describe('adapters/in-memory: comment projections', () => {
   });
 
   describe('newStoredComment', () => {
-    const input = { id: 'c9', videoId: 'v1', authorId: 'u1', parentId: null, content: 'hi' };
+    const input = {
+      id: 'c9',
+      videoId: 'v1',
+      authorId: 'u1',
+      authorChannelId: 'ch1',
+      parentId: null,
+      content: 'hi',
+    };
     const now = new Date(5);
 
     it('starts a comment published, unmoderated and unliked', () => {

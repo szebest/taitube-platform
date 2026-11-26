@@ -34,7 +34,12 @@ export function decideCommentModeration(
     andThen(
       authorize(
         actor,
-        canModerateComment({ user: actor, action: action.action, videoOwnerId: video.ownerId }),
+        canModerateComment({
+          user: actor,
+          action: action.action,
+          videoOwnerId: video.ownerId,
+          videoChannelId: video.channelId,
+        }),
         { action: action.action, subject: 'Comment' }
       ),
       () =>

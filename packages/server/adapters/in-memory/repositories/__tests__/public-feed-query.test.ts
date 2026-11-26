@@ -13,6 +13,7 @@ function video(id: string, overrides: Partial<VideoRecord> = {}): VideoRecord {
   return {
     id,
     ownerId: 'owner-1',
+    channelId: 'channel-1',
     title: null,
     description: null,
     visibility: 'public',
@@ -43,6 +44,7 @@ const FEED = [
     viewsCount: 500,
     categoryId: 'gaming',
     ownerId: 'owner-2',
+    channelId: 'channel-2',
   }),
   video('c', { createdAt: new Date(NOW - 50 * HOUR_MS), viewsCount: 5000, categoryId: 'music' }),
   video('d', {
@@ -50,6 +52,7 @@ const FEED = [
     viewsCount: 1,
     categoryId: 'gaming',
     ownerId: 'owner-2',
+    channelId: 'channel-2',
   }),
 ];
 
@@ -88,7 +91,7 @@ describe('adapters/in-memory: public feed array query', () => {
 
   it.each([
     { filter: 'category', options: { categoryId: 'music' }, expected: ['a', 'c'] },
-    { filter: 'owner', options: { ownerId: 'owner-2' }, expected: ['b', 'd'] },
+    { filter: 'channel', options: { channelId: 'channel-2' }, expected: ['b', 'd'] },
   ])('filters by $filter and counts only its videos', ({ options, expected }) => {
     const result = selectPublicFeed(FEED, { limit: 10, ...options });
     expect(result.items.map((v) => v.id)).toEqual(expected);

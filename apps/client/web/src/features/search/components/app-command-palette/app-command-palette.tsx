@@ -12,6 +12,7 @@ import { useOpenDestination } from '#app/hooks/use-open-destination';
 import { useShellDestinations } from '#app/hooks/use-shell-destinations';
 import { useCommandPaletteStore } from '#app/lib/command-palette/command-palette-store';
 import { useT } from '#app/lib/messages';
+import { LazyIdentityPaletteGroup } from '../identity-palette-group/identity-palette-group.lazy';
 import { PaletteActionItem } from '../palette-action-item/palette-action-item';
 import { PaletteResultItem } from '../palette-result-item/palette-result-item';
 import { RecentSearchGroup } from '../recent-search-group/recent-search-group';
@@ -118,6 +119,7 @@ function Palette({ initialQuery }: { initialQuery: string }) {
             {tOr('search.noResults', { query: words }, '')}
           </CommandPalette.Empty>
         )}
+        {account && open && <LazyIdentityPaletteGroup words={words} />}
         {matching.length > 0 && (
           <CommandPalette.Group heading={tOr('search.group', { kind: 'action' }, '')}>
             {matching.map((action) => (

@@ -4,7 +4,10 @@ import {
   createRoute,
   Outlet,
 } from '@tanstack/react-router';
+import { type Account, getAccount } from '@vp/api-contracts';
+import { account, mockEndpoint } from '@vp/web-testing';
 import { serverRender } from '@vp/web-testing/server';
+import { HttpResponse } from 'msw/http';
 import { createActingChannelStore } from '../acting-channel';
 import {
   type AppRouterContext,
@@ -13,8 +16,10 @@ import {
   useLayoutMaxWidth,
 } from '../app-router';
 import { createQueryClient } from '../create-query-client';
+import { createIdentityStore } from '../identity-store';
 import { createLocaleStore } from '../intl';
 import { RouteError, RouteNotFound } from '../route-errors';
+import { ensureSession } from '../session';
 import { SPEC_MESSAGES } from './spec-messages';
 
 const Pending = () => <p>Pending</p>;
@@ -26,6 +31,16 @@ const rootRoute = createRootRouteWithContext<AppRouterContext>()({
     </main>
   ),
 });
+
+const sessionRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/whoami',
+  beforeLoad: async ({ context }) => ({ auth: await ensureSession(context) }),
+  component: function WhoAmI() {
+    const { auth } = sessionRoute.useRouteContext();
+    return <p>{auth.status === 'signed-in' ? auth.account.channel.displayName : 'guest'}</p>;
+  },
+});
 const routeTree = rootRoute.addChildren([
   createRoute({
     getParentRoute: () => rootRoute,
@@ -35,7 +50,10 @@ const routeTree = rootRoute.addChildren([
   }),
   createRoute({ getParentRoute: () => rootRoute, path: '/wide', component: () => <p>Wide</p> }),
   createRoute({ getParentRoute: () => rootRoute, path: '/echo', component: () => <p>Echo</p> }),
+  sessionRoute,
 ]);
+
+const TWO_SLOTS = { cookie: 'vp.session.0=zero; vp.session.1=one' };
 
 function getRouter(options: AppRouterOptions = {}) {
   return createAppRouter(
@@ -84,11 +102,12 @@ describe('@vp/queries: app router', () => {
   );
 
   it.each([
-    { motion: 'standard', types: ['navigation'] },
-    { motion: 'reduced', types: false },
+    { motion: 'standard', hrefChanged: true, types: ['navigation'] },
+    { motion: 'reduced', hrefChanged: true, types: false },
+    { motion: 'standard', hrefChanged: false, types: false },
   ])(
-    'runs a navigation through a view transition typed $types under $motion motion',
-    ({ motion, types }) => {
+    'runs a load through a view transition typed $types under $motion motion when the address changed: $hrefChanged',
+    ({ motion, hrefChanged, types }) => {
       const router = getRouter();
       const { defaultViewTransition } = router.options;
       if (
@@ -99,8 +118,8 @@ describe('@vp/queries: app router', () => {
       }
       const change = {
         toLocation: router.latestLocation,
-        pathChanged: true,
-        hrefChanged: true,
+        pathChanged: hrefChanged,
+        hrefChanged,
         hashChanged: false,
       };
       vi.stubGlobal('document', { documentElement: { dataset: { motion } } });
@@ -189,5 +208,70 @@ describe('@vp/queries: app router', () => {
 
     expect(status).toBe(404);
     expect(html).toContain('Page not found');
+  });
+
+  it.each([
+    { path: '/u/1/echo', identity: '{\\"identity\\":{\\"slot\\":1},\\"prefixed\\":true}' },
+    { path: '/u/1/c/second/echo', identity: '\\"channel\\":\\"second\\"' },
+  ])(
+    'matches $path without its prefix, and carries the identity into the page',
+    async ({ path, identity }) => {
+      const { status, html } = await serverRender(getRouter, path, { headers: TWO_SLOTS });
+
+      expect(status).toBe(200);
+      expect(html).toContain('<p>Echo</p>');
+      expect(html).toContain(identity);
+    }
+  );
+
+  it.each([
+    { tab: '/u/1/whoami', name: 'Slot One', other: 'Slot Zero' },
+    { tab: '/u/0/whoami', name: 'Slot Zero', other: 'Slot One' },
+  ])(
+    "renders $tab, one of two tabs in one browser, with its own slot's account and nothing of the other's",
+    async ({ tab, name, other }) => {
+      const named = (displayName: string) =>
+        HttpResponse.json<Account>(account({ channel: { ...account().channel, displayName } }));
+      const { html } = await serverRender(getRouter, tab, {
+        headers: TWO_SLOTS,
+        handlers: [
+          mockEndpoint(getAccount, ({ request }) =>
+            named(request.headers.get('authorization') === 'Bearer one' ? 'Slot One' : 'Slot Zero')
+          ),
+        ],
+      });
+
+      expect(html).toContain(`<p>${name}</p>`);
+      expect(html).not.toContain(other);
+    }
+  );
+
+  it('keeps links under the prefix once the browser holds two accounts, and a one-account browser free of it', () => {
+    const prefixed = getRouter({
+      identity: createIdentityStore({ identity: { slot: 2, channel: 'second' }, prefixed: true }),
+    });
+    const plain = getRouter({
+      identity: createIdentityStore({ identity: { slot: 0 }, prefixed: false }),
+    });
+
+    expect(prefixed.buildLocation({ to: '/echo' }).publicHref).toBe('/u/2/c/second/echo');
+    expect(prefixed.buildLocation({ to: '/login' }).publicHref).toBe('/login');
+    expect(plain.buildLocation({ to: '/echo' }).publicHref).toBe('/echo');
+  });
+
+  it('takes the identity the server rendered for as the browser hydrates, with the cache it filled', async () => {
+    const browser = getRouter();
+    const { queryClient } = browser.options.context;
+
+    await browser.options.hydrate?.({
+      locale: 'en',
+      identity: JSON.stringify({ identity: { slot: 3 }, prefixed: true }),
+    });
+
+    expect(browser.options.context.identity.read()).toEqual({
+      identity: { slot: 3 },
+      prefixed: true,
+    });
+    expect(browser.options.context.identity.queryClient()).toBe(queryClient);
   });
 });

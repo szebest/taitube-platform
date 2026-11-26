@@ -1,3 +1,4 @@
+import { accountSettings } from './account-settings';
 import { appUi } from './app-ui';
 import { channels } from './channels';
 import { clips } from './clips';
@@ -21,6 +22,7 @@ import { watch } from './watch';
 
 /** The words only the web app renders. */
 export const en = {
+  accountSettings,
   appUi,
   channels,
   clips,

@@ -1,4 +1,4 @@
-import { expect, test } from '../../../../tests/playwright/fixtures';
+import { expect, keyboardDragReady, test } from '../../../../tests/playwright/fixtures';
 
 test.describe('start here', () => {
   test.describe.configure({ mode: 'serial' });
@@ -30,10 +30,7 @@ test.describe('start here', () => {
     const announced = page.getByRole('status').filter({ hasText: /position/ });
     await page.keyboard.press('Space');
     await expect(announced).toContainText('Picked up');
-    // dnd-kit adds its keydown listener in a task after pick-up; two frames on, it has run.
-    await page.evaluate(
-      () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
-    );
+    await keyboardDragReady(page);
     await page.keyboard.press('ArrowUp');
     await expect(announced).toContainText('Moved to position 2');
     await page.keyboard.press('ArrowUp');

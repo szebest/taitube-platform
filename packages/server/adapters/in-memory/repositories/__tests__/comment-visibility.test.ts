@@ -8,6 +8,7 @@ const comment = (id: string, parentId: string | null, deletedAt: Date | null): S
   deletedAt,
   videoId: 'v',
   authorId: 'a',
+  authorChannelId: 'ch-a',
   content: '',
   isPinned: false,
   isEdited: false,

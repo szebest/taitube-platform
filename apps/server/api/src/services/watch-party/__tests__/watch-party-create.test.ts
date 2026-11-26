@@ -149,7 +149,7 @@ describe('apps/server/api/services: createRoom', () => {
 
   it('hosts as the channel of an owner with a public ready video', async () => {
     const { create, repositories } = await setUpCreate();
-    const channel = expectOk(await repositories.channels.findByUserId(OWNER.id));
+    const channel = expectOk(await repositories.channels.findPrimaryByUserId(OWNER.id));
 
     expect(expectOk(await create(partyBody({ hostAs: 'channel' }))).asChannelId).toBe(channel?.id);
   });

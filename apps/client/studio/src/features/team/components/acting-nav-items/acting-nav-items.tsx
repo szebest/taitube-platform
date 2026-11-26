@@ -10,7 +10,6 @@ import { Can } from '@vp/permissions-react';
 import { useAccount } from '@vp/queries';
 import type { ReactNode } from 'react';
 import { StudioWorkspace } from '#app/components/workspace/studio-workspace';
-import { ChannelSwitcher } from '#app/features/team/components/channel-switcher/channel-switcher';
 import { useActiveChannel } from '#app/hooks/use-active-channel';
 import { useT } from '#app/lib/messages';
 import { InvitesNavItem } from '../invites-nav-item/invites-nav-item';
@@ -29,8 +28,7 @@ function SignedInNavItems({ newComments, reviewQueue }: ActingNavItemsProps) {
 
   return (
     <>
-      <ChannelSwitcher />
-      <Can type="rule" I={canUpdateVideo} this={{ video: { ownerId } }}>
+      <Can type="rule" I={canUpdateVideo} this={{ video: { ownerId, channelId } }}>
         <StudioWorkspace.NavItem
           asChild
           icon="video"
@@ -41,7 +39,7 @@ function SignedInNavItems({ newComments, reviewQueue }: ActingNavItemsProps) {
           </Link>
         </StudioWorkspace.NavItem>
       </Can>
-      <Can type="rule" I={canReadAnalytics} this={{ analytics: { ownerId } }}>
+      <Can type="rule" I={canReadAnalytics} this={{ analytics: { ownerId, channelId } }}>
         <StudioWorkspace.NavItem
           asChild
           icon="chart"
@@ -52,7 +50,11 @@ function SignedInNavItems({ newComments, reviewQueue }: ActingNavItemsProps) {
           </Link>
         </StudioWorkspace.NavItem>
       </Can>
-      <Can type="rule" I={canModerateComments} this={{ videoOwnerId: ownerId }}>
+      <Can
+        type="rule"
+        I={canModerateComments}
+        this={{ videoOwnerId: ownerId, videoChannelId: channelId }}
+      >
         <StudioWorkspace.NavItem
           asChild
           icon="chat"
@@ -64,7 +66,11 @@ function SignedInNavItems({ newComments, reviewQueue }: ActingNavItemsProps) {
           </Link>
         </StudioWorkspace.NavItem>
       </Can>
-      <Can type="rule" I={canModerateComments} this={{ videoOwnerId: ownerId }}>
+      <Can
+        type="rule"
+        I={canModerateComments}
+        this={{ videoOwnerId: ownerId, videoChannelId: channelId }}
+      >
         {reviewQueue}
       </Can>
       <Can type="rule" I={canUpdateLiveStream} this={{ stream: { ownerId } }}>
@@ -95,7 +101,7 @@ function SignedInNavItems({ newComments, reviewQueue }: ActingNavItemsProps) {
   );
 }
 
-/** The studio's pages the viewer's role on the acting channel reaches, behind the switcher between channels; none for a guest. */
+/** The studio's pages the viewer's role on the acting channel reaches; none for a guest. */
 export function ActingNavItems(props: ActingNavItemsProps) {
   return useAccount() ? <SignedInNavItems {...props} /> : null;
 }

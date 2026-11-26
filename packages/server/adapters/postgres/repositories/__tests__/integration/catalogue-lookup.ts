@@ -30,8 +30,10 @@ export async function measureCatalogueLookup(videos: number): Promise<LookupMeas
   const repository = new PostgresFingerprintRepository(drizzle(pglite) as never);
   await pglite.exec(`
     INSERT INTO users (id, email) VALUES ('${SEEDED.userId}', 'perf@example.com');
-    INSERT INTO videos (id, owner_id, source_key)
-      SELECT gen_random_uuid(), '${SEEDED.userId}', 'raw/' || n FROM generate_series(1, ${videos}) n;
+    INSERT INTO channels (id, user_id, handle, display_name, is_primary)
+      VALUES ('${SEEDED.channelId}', '${SEEDED.userId}', 'perf', 'Perf', true);
+    INSERT INTO videos (id, owner_id, channel_id, source_key)
+      SELECT gen_random_uuid(), '${SEEDED.userId}', '${SEEDED.channelId}', 'raw/' || n FROM generate_series(1, ${videos}) n;
   `);
   const secondary = await pglite.query<{ indexname: string; indexdef: string }>(
     `SELECT indexname, indexdef FROM pg_indexes

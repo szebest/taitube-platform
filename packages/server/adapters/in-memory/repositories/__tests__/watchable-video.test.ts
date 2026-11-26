@@ -1,23 +1,25 @@
 import { expectOk } from '@kit/testing/result';
 import type { VideoStatus, VideoVisibility } from '@vp/domain';
 import { InMemoryRepositories } from '../in-memory-repositories';
-import { keepWatchable, watchableVideo } from '../watchable-video';
+import { keepWatchable, primaryChannelCard, watchableVideo } from '../watchable-video';
 
 const OWNER = { id: '00000000-0000-7000-8000-000000000101', role: 'USER' as const };
 const VIEWER = { id: '00000000-0000-7000-8000-000000000102', role: 'USER' as const };
 
 describe('watchableVideo', () => {
   let repositories: InMemoryRepositories;
+  let channelId: string;
 
   beforeEach(async () => {
     repositories = new InMemoryRepositories();
-    expectOk(
+    const channel = expectOk(
       await repositories.channels.create({
         userId: OWNER.id,
         handle: 'owner',
         displayName: 'Owner',
       })
     );
+    channelId = channel.id;
   });
 
   async function seed(visibility: VideoVisibility, status: VideoStatus = 'READY') {
@@ -25,6 +27,7 @@ describe('watchableVideo', () => {
       await repositories.videos.create({
         id: '00000000-0000-7000-8000-00000000000a',
         ownerId: OWNER.id,
+        channelId,
         sourceKey: 'raw/a/source.mp4',
         visibility,
         status,
@@ -50,6 +53,21 @@ describe('watchableVideo', () => {
     expect(await watchableVideo(lookups(), viewer, videoId)).toBeNull();
   });
 
+  it('cards the channel the video is on, not the primary of its owner', async () => {
+    const second = expectOk(
+      await repositories.channels.createOwned(
+        { userId: OWNER.id, handle: 'second', displayName: 'Second' },
+        5
+      )
+    );
+    channelId = second.id;
+
+    const found = await watchableVideo(lookups(), VIEWER, await seed('public'));
+
+    expect(found?.channel).toMatchObject({ handle: 'second' });
+    expect(await primaryChannelCard(lookups(), OWNER.id)).toMatchObject({ handle: 'owner' });
+  });
+
   it('shows the owner their own private video', async () => {
     expect(await watchableVideo(lookups(), OWNER, await seed('private'))).not.toBeNull();
   });
@@ -65,6 +83,7 @@ describe('watchableVideo', () => {
           await repositories.videos.create({
             id,
             ownerId: OWNER.id,
+            channelId,
             sourceKey: `raw/${id}/source.mp4`,
             visibility: index === 1 ? 'private' : 'public',
             status: 'READY',

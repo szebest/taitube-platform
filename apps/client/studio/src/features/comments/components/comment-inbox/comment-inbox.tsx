@@ -10,7 +10,7 @@ import {
 } from '@tanstack/react-table';
 import type { CreatorInboxFilter } from '@vp/domain';
 import { publishedAt } from '@vp/intl-formats';
-import { useApi } from '@vp/queries';
+import { useApi, useAppLink } from '@vp/queries';
 import { useState } from 'react';
 import {
   DataTable,
@@ -37,6 +37,7 @@ export interface CommentInboxProps {
 /** The comments on the creator's videos under one filter, on the studio's `DataTable`, each answered in its row. */
 export function CommentInbox({ filter }: CommentInboxProps) {
   const { tOr } = useT();
+  const appLink = useAppLink();
   const comments = useInfiniteQuery({
     ...inboxQueryOptions(useApi(), filter),
     select: pagedRows,
@@ -60,7 +61,7 @@ export function CommentInbox({ filter }: CommentInboxProps) {
         header: tOr('studio.commentsVideo', {}, ''),
         enableSorting: false,
         cell: ({ row: { original } }) => (
-          <a href={`${WEB_URL}/watch/${original.video.id}`} className="line-clamp-2">
+          <a href={appLink(WEB_URL, `/watch/${original.video.id}`)} className="line-clamp-2">
             {original.video.title}
           </a>
         ),

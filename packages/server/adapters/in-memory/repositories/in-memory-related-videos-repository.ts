@@ -33,7 +33,7 @@ export class InMemoryRelatedVideosRepository implements RelatedVideosRepositoryP
         signals: {
           coWatchers: coWatchers.get(video.id) ?? 0,
           sharedTags: (video.tags ?? []).filter((tag) => tags.has(tag)).length,
-          sameChannel: video.ownerId === options.ownerId,
+          sameChannel: video.channelId === options.channelId,
           sameCategory: options.categoryId !== null && video.categoryId === options.categoryId,
         },
       }))

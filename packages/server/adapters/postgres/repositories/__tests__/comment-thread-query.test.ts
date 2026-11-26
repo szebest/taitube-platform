@@ -95,6 +95,7 @@ describe('adapters/postgres: comment thread SQL query', () => {
       id: 'c-1',
       videoId: 'v-1',
       authorId: 'u-1',
+      authorChannelId: 'ch-1',
       parentId: null,
       content: 'hi',
       isPinned: false,
@@ -105,7 +106,6 @@ describe('adapters/postgres: comment thread SQL query', () => {
       ...UNMODERATED,
       updatedAt: CREATED_AT,
       deletedAt: null,
-      channelId: null,
       handle: null,
       displayName: null,
       avatarUrl: null,
@@ -115,7 +115,7 @@ describe('adapters/postgres: comment thread SQL query', () => {
     expect(thread).not.toHaveProperty('deletedAt');
     expect(thread.author).toEqual({
       userId: 'u-1',
-      channelId: null,
+      channelId: 'ch-1',
       handle: null,
       displayName: null,
       avatarUrl: null,

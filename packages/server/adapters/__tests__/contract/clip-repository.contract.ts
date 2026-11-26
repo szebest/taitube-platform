@@ -51,11 +51,6 @@ export function describeClipRepositoryContract(makeSubject: MakeRepositoriesSubj
       await seedOwners(subject.repositories);
       await subject.repositories.videos.create(publicVideo({ id: VIDEO_IDS.a }));
       await subject.repositories.videos.create(publicVideo({ id: VIDEO_IDS.b }));
-      await subject.repositories.channels.create({
-        userId: OWNER_ID,
-        handle: 'owner',
-        displayName: 'The Owner',
-      });
       clips = subject.repositories.clips;
     });
 

@@ -4,7 +4,14 @@ import { Button, Callout } from '@kit/ui';
 import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
 import { isChannelTeamMember } from '@vp/permissions';
 import { useCan } from '@vp/permissions-react';
-import { ownRestrictionQueryOptions, useAccount, useApi, videoQueryOptions } from '@vp/queries';
+import {
+  ActingAsLine,
+  ownRestrictionQueryOptions,
+  useAccount,
+  useApi,
+  useIdentityGuard,
+  videoQueryOptions,
+} from '@vp/queries';
 import { CommentThread } from '#app/components/watch/comment-thread';
 import { useCountdown } from '#app/features/watch/hooks/use-countdown';
 import type { CommentRefusal } from '#app/features/watch/utils/comment-refusal';
@@ -88,7 +95,11 @@ export interface CommentComposerProps {
   onSubscribed: () => void;
 }
 
-/** The place to write a comment, or the reason there is none: comments off, a ban, subscribers only or an account too new, each in place of the field; slow mode on its button. */
+/**
+ * The place to write a comment, or the reason there is none: comments off, a ban, subscribers only
+ * or an account too new, each in place of the field; slow mode on its button. The line above it
+ * names the identity the comment goes out as, and a comment fired after a switch is held.
+ */
 export function CommentComposer({
   videoId,
   value,
@@ -113,6 +124,7 @@ export function CommentComposer({
     enabled: channelId !== undefined,
   });
   const seconds = useCountdown(waitUntil);
+  const guard = useIdentityGuard();
 
   const notice: Notice | null =
     (!(video.commentsEnabled || onTeam) ? { kind: 'comments-disabled' } : null) ??
@@ -129,13 +141,16 @@ export function CommentComposer({
   }
 
   return (
-    <CommentThread.Composer
-      value={value}
-      onChange={onChange}
-      onSubmit={onSubmit}
-      viewerAvatar={account?.channel?.avatarUrl ?? undefined}
-      submitting={submitting}
-      wait={seconds > 0 ? tOr('watch.commentsSlowMode', { seconds }, '') : undefined}
-    />
+    <div className="flex flex-col gap-inline">
+      <ActingAsLine action="comment" guard={guard} />
+      <CommentThread.Composer
+        value={value}
+        onChange={onChange}
+        onSubmit={() => guard.guard(onSubmit)}
+        viewerAvatar={account?.channel?.avatarUrl ?? undefined}
+        submitting={submitting}
+        wait={seconds > 0 ? tOr('watch.commentsSlowMode', { seconds }, '') : undefined}
+      />
+    </div>
   );
 }

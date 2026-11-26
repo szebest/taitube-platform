@@ -99,7 +99,7 @@ export class PostgresRecommendationFeedbackRepository implements RecommendationF
           .select({ feedback: rf, video: v, owner: ownerChannel, target: targetChannel })
           .from(rf)
           .leftJoin(v, and(eq(v.id, rf.videoId), watchableVideoScope(viewer)))
-          .leftJoin(ownerChannel, eq(ownerChannel.userId, v.ownerId))
+          .leftJoin(ownerChannel, eq(ownerChannel.id, v.channelId))
           .leftJoin(targetChannel, eq(targetChannel.id, rf.channelId))
           .where(
             drizzleWhere(

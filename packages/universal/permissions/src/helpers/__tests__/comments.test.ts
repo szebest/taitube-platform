@@ -18,18 +18,17 @@ import {
 } from '../comments';
 
 const STRANGER: UserContext = { id: 'usr-9', role: 'USER' };
-const VIDEO_OWNER_ID = 'creator-1';
+const VIDEO = { videoOwnerId: 'creator-1', videoChannelId: 'chan-creator-1' };
 
 const CHECKS = {
   create: (user: UserContext | null) => canCreateComment({ user }),
   update: (user: UserContext | null) => canUpdateComment({ user, comment: sampleComment }),
   delete: (user: UserContext | null) =>
-    canDeleteComment({ user, comment: sampleComment, videoOwnerId: VIDEO_OWNER_ID }),
-  pin: (user: UserContext | null) => canPinComment({ user, videoOwnerId: VIDEO_OWNER_ID }),
-  heart: (user: UserContext | null) => canHeartComment({ user, videoOwnerId: VIDEO_OWNER_ID }),
+    canDeleteComment({ user, comment: sampleComment, ...VIDEO }),
+  pin: (user: UserContext | null) => canPinComment({ user, ...VIDEO }),
+  heart: (user: UserContext | null) => canHeartComment({ user, ...VIDEO }),
   report: (user: UserContext | null) => canReportComment({ user }),
-  moderate: (user: UserContext | null) =>
-    canModerateComments({ user, videoOwnerId: VIDEO_OWNER_ID }),
+  moderate: (user: UserContext | null) => canModerateComments({ user, ...VIDEO }),
 };
 
 type Action = keyof typeof CHECKS;

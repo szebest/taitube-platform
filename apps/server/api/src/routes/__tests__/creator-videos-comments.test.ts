@@ -35,7 +35,7 @@ describe('creator studio video routes: turning comments off', () => {
   });
 
   it('turns comments off and back on, and the audit log records each toggle', async () => {
-    const channel = expectOk(await repositories.channels.findByUserId(SEEDED.userId));
+    const channel = expectOk(await repositories.channels.findPrimaryByUserId(SEEDED.userId));
 
     const off = await patch({ commentsEnabled: false });
     const on = await patch({ commentsEnabled: true });
@@ -51,7 +51,7 @@ describe('creator studio video routes: turning comments off', () => {
   });
 
   it('records a toggle and a field edit as two rows from one request', async () => {
-    const channel = expectOk(await repositories.channels.findByUserId(SEEDED.userId));
+    const channel = expectOk(await repositories.channels.findPrimaryByUserId(SEEDED.userId));
 
     await patch({ commentsEnabled: false, title: 'Retitled' });
 

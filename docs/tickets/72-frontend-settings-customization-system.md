@@ -140,6 +140,7 @@ One stack on `feat/72-settings`, three slices:
 
 ## Acceptance criteria
 
+- [ ] Switching account or channel ([129](129-multiple-accounts-and-channels.md)) shows only the new identity's account-held settings (privacy, notifications, the synced preferences), with no stale cache.
 - [ ] Every section in the table is its own route, renders on the server, and works at 320 px as list then page
       and from medium up as navigation plus pane.
 - [ ] Theme, mode, accent and density apply without a reload, survive a reload with no flash, and

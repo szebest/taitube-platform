@@ -45,14 +45,15 @@ describe('comment list queries', () => {
     });
   });
 
-  it('scopes the creator inbox to comments on the owner videos by someone else', () => {
+  it("scopes the creator inbox to comments on the channel's videos by someone else", () => {
     const { sql } = creatorInboxQuery(db, 'owner-1', {
+      channelId: 'channel-1',
       filter: 'all',
       cursor: null,
       limit: 10,
     }).toSQL();
 
-    expect(sql).toContain('"videos"."owner_id" = $1');
+    expect(sql).toContain('"videos"."channel_id" = $1');
     expect(sql).toContain('"video_comments"."author_id" <> $2');
   });
 });

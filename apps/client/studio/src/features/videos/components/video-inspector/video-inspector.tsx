@@ -13,7 +13,9 @@ import { useT } from '#app/lib/messages';
 function VideoDetails({ video }: { video: Video }) {
   const { tOr } = useT();
   const canEdit = useCan(canUpdateVideo, { video });
-  const canSeeAnalytics = useCan(canReadAnalytics, { analytics: { ownerId: video.ownerId } });
+  const canSeeAnalytics = useCan(canReadAnalytics, {
+    analytics: { ownerId: video.ownerId, channelId: video.channelId },
+  });
 
   return (
     <div className="flex flex-col gap-stack">

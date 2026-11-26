@@ -2,7 +2,6 @@ import { unwrapOr } from '@kit/result';
 import type { CommentViewer, VideoRepository } from '@vp/core/repositories';
 import { compareKeys, rowKey } from './comment-order';
 import type { StoredComment } from './comment-visibility';
-import type { InMemoryChannelRepository } from './in-memory-channel-repository';
 import type { InMemoryChannelUserRestrictionRepository } from './in-memory-channel-user-restriction-repository';
 
 /** The authors a channel has shadow banned, by the video their comments sit under. */
@@ -59,7 +58,6 @@ export function ownNonPublic(
 
 export interface PublicScopeLookups {
   videos: Pick<VideoRepository, 'findById'>;
-  channels: Pick<InMemoryChannelRepository, 'findByUserId'>;
   restrictions: Pick<InMemoryChannelUserRestrictionRepository, 'shadowedUserIds'>;
 }
 
@@ -67,14 +65,13 @@ export interface PublicScopeLookups {
 export async function publicScopeOf(
   comments: ReadonlyMap<string, StoredComment>,
   videoIds: readonly string[],
-  { videos, channels, restrictions }: PublicScopeLookups
+  { videos, restrictions }: PublicScopeLookups
 ): Promise<PublicScopeContext> {
   const shadowed = new Map<string, Set<string>>();
   const everyVideo = new Set([...videoIds, ...[...comments.values()].map((c) => c.videoId)]);
   for (const videoId of everyVideo) {
     const video = unwrapOr(await videos.findById(videoId), null);
-    const channel = video && unwrapOr(await channels.findByUserId(video.ownerId), null);
-    shadowed.set(videoId, channel ? restrictions.shadowedUserIds(channel.id) : new Set());
+    shadowed.set(videoId, video ? restrictions.shadowedUserIds(video.channelId) : new Set());
   }
   return { shadowed, comments };
 }

@@ -23,7 +23,6 @@ import {
   type NewCommentRemoval,
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { commentOutbox } from '@vp/job-contracts';
 import type { UserContext } from '@vp/permissions';
 import { announceCreated } from './comment-announce';
 import { listAuthored } from './comment-authored';
@@ -118,7 +117,10 @@ export class InMemoryCommentRepository implements CommentRepositoryPort {
     return ok(await this.threadsOf(mine, ownOrPublicTo({ id: authorId }, scope)));
   }
 
-  async create(input: NewCommentInput): Promise<Result<CommentThread | null, DatabaseUnavailable>> {
+  async create(
+    input: NewCommentInput,
+    audit?: NewChannelAuditEntry
+  ): Promise<Result<CommentThread | null, DatabaseUnavailable>> {
     const video = unwrapOr(await this.deps.videosRepo.findById(input.videoId), null);
     const scope = await this.scope([input.videoId]);
     if (input.parentId !== null && !this.liveById(input.parentId)) return ok(null);
@@ -126,21 +128,12 @@ export class InMemoryCommentRepository implements CommentRepositoryPort {
     this.comments.set(stored.id, stored);
     const counted = isVisibleTo(null, stored, scope);
     if (counted && video) video.commentsCount = (video.commentsCount ?? 0) + 1;
-    if (counted) {
-      const enqueued = await this.deps.outboxRepo.enqueue(
-        commentOutbox({ videoId: input.videoId, commentId: input.id })
-      );
-      if (isErr(enqueued)) return enqueued;
-    }
 
     const created = await this.toThread(stored, ownOrPublicTo({ id: input.authorId }, scope));
-    const told = await announceCreated(this.deps, {
-      created,
-      video,
-      input,
-      counted,
-    });
-    return isErr(told) ? told : ok(created);
+    const told = await announceCreated(this.deps, { created, video, input, counted });
+    if (isErr(told)) return told;
+    const recorded = await recordModeration(this.deps, audit && { audit });
+    return isErr(recorded) ? recorded : ok(created);
   }
 
   async updateContent(
@@ -253,7 +246,6 @@ export class InMemoryCommentRepository implements CommentRepositoryPort {
   private scope(videoIds: readonly string[]): Promise<PublicScopeContext> {
     return publicScopeOf(this.comments, videoIds, {
       videos: this.deps.videosRepo,
-      channels: this.deps.channelsRepo,
       restrictions: this.deps.restrictionsRepo,
     });
   }
@@ -269,7 +261,7 @@ export class InMemoryCommentRepository implements CommentRepositoryPort {
     stored: StoredComment,
     countsReply: (reply: StoredComment) => boolean
   ): Promise<CommentThread> {
-    const channel = unwrapOr(await this.deps.channelsRepo.findByUserId(stored.authorId), null);
+    const channel = unwrapOr(await this.deps.channelsRepo.findById(stored.authorChannelId), null);
     return toThreadOf(stored, channel, this.repliesOf(stored.id).filter(countsReply).length);
   }
 }

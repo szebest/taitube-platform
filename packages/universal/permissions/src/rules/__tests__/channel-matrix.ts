@@ -27,12 +27,14 @@ const OWNER_ID = 'owner-team';
 const privateVideo = subject('Video', {
   id: 'vid-team',
   ownerId: OWNER_ID,
+  channelId: CHANNEL_ID,
   visibility: 'private' as const,
 });
 const comment = subject('Comment', {
   id: 'comment-team',
   authorId: 'fan-1',
   videoOwnerId: OWNER_ID,
+  videoChannelId: CHANNEL_ID,
 });
 const channel = subject('Channel', { id: CHANNEL_ID, userId: OWNER_ID, ownerId: OWNER_ID });
 const channelUser = subject('ChannelUser', { channelId: CHANNEL_ID, ownerId: OWNER_ID });
@@ -70,13 +72,22 @@ const CAPABILITY_PROBES: Record<ChannelCapability, Probe[]> = {
       target: subject('Caption', {
         videoId: 'vid-team',
         ownerId: OWNER_ID,
+        channelId: CHANNEL_ID,
         visibility: 'private' as const,
       }),
     },
   ],
   'analytics.read': [
-    { type: 'Analytics', action: 'read', target: subject('Analytics', { ownerId: OWNER_ID }) },
-    { type: 'VideoStats', action: 'read', target: subject('VideoStats', { ownerId: OWNER_ID }) },
+    {
+      type: 'Analytics',
+      action: 'read',
+      target: subject('Analytics', { ownerId: OWNER_ID, channelId: CHANNEL_ID }),
+    },
+    {
+      type: 'VideoStats',
+      action: 'read',
+      target: subject('VideoStats', { ownerId: OWNER_ID, channelId: CHANNEL_ID }),
+    },
   ],
   'video.edit': [
     { type: 'Video', action: 'update', target: privateVideo },
@@ -86,13 +97,19 @@ const CAPABILITY_PROBES: Record<ChannelCapability, Probe[]> = {
       target: subject('Caption', {
         videoId: 'vid-team',
         ownerId: OWNER_ID,
+        channelId: CHANNEL_ID,
         visibility: 'public' as const,
       }),
     },
-    { type: 'Upload', action: 'access', target: subject('Upload', { ownerId: OWNER_ID }) },
+    {
+      type: 'Upload',
+      action: 'access',
+      target: subject('Upload', { ownerId: OWNER_ID, channelId: CHANNEL_ID }),
+    },
   ],
   'video.delete': [{ type: 'Video', action: 'delete', target: privateVideo }],
   'channel.edit': [{ type: 'Channel', action: 'update', target: channel }],
+  'channel.act': [{ type: 'Channel', action: 'act', target: channel }],
   'comment.pin': [{ type: 'Comment', action: 'pin', target: comment }],
   'content.pin': [{ type: 'Video', action: 'pin', target: privateVideo }],
   'comment.heart': [{ type: 'Comment', action: 'heart', target: comment }],
@@ -122,7 +139,10 @@ const CAPABILITY_PROBES: Record<ChannelCapability, Probe[]> = {
     { type: 'Team', action: 'update', target: editor },
     { type: 'Team', action: 'delete', target: editor },
   ],
-  'channel.own': [{ type: 'Channel', action: 'delete', target: channel }],
+  'channel.own': [
+    { type: 'Channel', action: 'delete', target: channel },
+    { type: 'Channel', action: 'own', target: channel },
+  ],
 };
 
 const owner: UserContext = { id: OWNER_ID, role: 'CREATOR' };
@@ -167,4 +187,53 @@ export function matrixCells(type: SubjectType): MatrixCell[] {
         { persona: 'stranger', capability, action, user: stranger, target, expected: false },
       ]);
   });
+}
+
+const SIBLING_CHANNEL_ID = 'chan-sibling';
+const SIBLING_TYPES: readonly SubjectType[] = [
+  'Video',
+  'Comment',
+  'Caption',
+  'Analytics',
+  'VideoStats',
+  'Upload',
+];
+
+const onSiblingChannel = ({ type, target }: Probe): AppSubjects => {
+  if (typeof target === 'string') return target;
+  const key = type === 'Comment' ? 'videoChannelId' : 'channelId';
+  return subject(type, { ...target, [key]: SIBLING_CHANNEL_ID }) as AppSubjects;
+};
+
+export interface SiblingCell {
+  persona: string;
+  capability: ChannelCapability;
+  action: AppAction;
+  user: UserContext;
+  home: AppSubjects;
+  sibling: AppSubjects;
+}
+
+/** The owner and each role that holds the capability, with the same resource on the owner's other channel. */
+export function siblingCells(): SiblingCell[] {
+  return (Object.keys(CAPABILITY_PROBES) as ChannelCapability[]).flatMap((capability) =>
+    CAPABILITY_PROBES[capability]
+      .filter((probe) => SIBLING_TYPES.includes(probe.type))
+      .flatMap((probe) =>
+        [
+          { persona: 'owner', user: owner },
+          ...CHANNEL_ROLE_NAMES.filter((role) => roleHas(role, capability)).map((role) => ({
+            persona: role,
+            user: memberOf(role),
+          })),
+        ].map(({ persona, user }) => ({
+          persona,
+          capability,
+          action: probe.action,
+          user,
+          home: probe.target,
+          sibling: onSiblingChannel(probe),
+        }))
+      )
+  );
 }
