@@ -1,5 +1,6 @@
 import { dirname, join } from 'node:path';
 import ts from 'typescript';
+import { PROGRAM_LEVEL } from './ecmascript-baseline';
 import { productionSources, ROOT } from './repo-files';
 import { workspaceSources } from './workspace-sources';
 
@@ -13,12 +14,12 @@ export function workspacePaths(): Record<string, string[]> {
 }
 
 const OPTIONS: ts.CompilerOptions = {
-  target: ts.ScriptTarget.ES2022,
+  target: PROGRAM_LEVEL.target,
   /**
    * No DOM: `lib.dom.d.ts` is most of what the program parses, and none of the assertions asks about a
    * browser global. In `apps/client/web` one reads as an error type, which is not a `Result` or a config leaf.
    */
-  lib: ['lib.es2022.d.ts'],
+  lib: [...PROGRAM_LEVEL.lib],
   module: ts.ModuleKind.ESNext,
   moduleResolution: ts.ModuleResolutionKind.Bundler,
   jsx: ts.JsxEmit.ReactJSX,
@@ -68,7 +69,7 @@ function workspaceOnlyHost(): ts.CompilerHost {
   const resolutions = ts.createModuleResolutionCache(ROOT, (name) => name, OPTIONS);
   const parse = host.getSourceFile.bind(host);
   host.getSourceFile = (file, version, ...rest) =>
-    libSource(file, ts.ScriptTarget.ES2022) ?? parse(file, version, ...rest);
+    libSource(file, PROGRAM_LEVEL.target) ?? parse(file, version, ...rest);
   host.resolveModuleNameLiterals = (literals, containingFile, redirected, options) =>
     literals.map(({ text }) =>
       text.startsWith('.') || isWorkspaceModule(text) || text === 'fastify'
@@ -114,7 +115,7 @@ function buildFixtureProgram(files: Record<string, string>): ts.Program {
   host.directoryExists = (dir) =>
     Object.keys(files).some((file) => file.startsWith(`${dir}/`)) || ts.sys.directoryExists(dir);
   host.getSourceFile = (file, version) => {
-    const lib = files[file] === undefined ? libSource(file, ts.ScriptTarget.ES2022) : undefined;
+    const lib = files[file] === undefined ? libSource(file, PROGRAM_LEVEL.target) : undefined;
     if (lib) return lib;
     const text = files[file] ?? ts.sys.readFile(file);
     return text === undefined ? undefined : ts.createSourceFile(file, text, version, true);
