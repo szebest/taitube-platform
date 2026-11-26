@@ -82,4 +82,11 @@ export const SDD_ACCOUNT_ENDPOINTS: SddEndpointContract[] = [
     expectedErrorCodes: [...AUTHENTICATED, INVALID_CURSOR],
     hasQueryParams: true,
   },
+  {
+    path: '/v1/me/security/sign-ins',
+    method: 'post',
+    expectedStatuses: [201, 400, 401, 429],
+    expectedErrorCodes: [...AUTHENTICATED, ErrorCodes.RATE_LIMITED],
+    hasBody: true,
+  },
 ];

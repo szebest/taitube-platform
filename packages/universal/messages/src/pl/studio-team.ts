@@ -193,7 +193,4 @@ export const studioTeam = {
   teamAuditEmptyTitle: dt('Nic tu jeszcze nie ma'),
   teamAuditEmptyDescription: dt('Zmiany wprowadzone przez zespół pojawią się tutaj.'),
   teamAuditFailed: dt('Nie udało się wczytać dziennika zmian.'),
-  channelSwitch: dt('Przełącz kanał'),
-  channelSwitchLabel: dt('Kanał, nad którym pracujesz'),
-  channelSwitchOwn: dt('{name} (Twój)'),
 } as const;

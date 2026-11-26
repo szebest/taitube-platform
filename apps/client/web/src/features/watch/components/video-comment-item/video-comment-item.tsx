@@ -8,10 +8,12 @@ import { publishedAt } from '@vp/intl-formats';
 import { canHeartComment } from '@vp/permissions';
 import { useCan } from '@vp/permissions-react';
 import {
+  ActingAsLine,
   SectionBoundary,
   useApi,
   useFailureToast,
   useHeartComment,
+  useIdentityGuard,
   videoQueryOptions,
 } from '@vp/queries';
 import { Suspense, useEffect, useEffectEvent, useState } from 'react';
@@ -121,6 +123,34 @@ function ReplyThread(props: ReplyThreadProps) {
   );
 }
 
+function ReplyComposer({
+  draft,
+  onChange,
+  onSend,
+  sending,
+}: {
+  draft: string;
+  onChange: (draft: string) => void;
+  onSend: () => void;
+  sending: boolean;
+}) {
+  const { reply } = useUiCopy();
+  const guard = useIdentityGuard();
+
+  return (
+    <div className="col-start-2 flex flex-col gap-inline">
+      <ActingAsLine action="reply" guard={guard} />
+      <CommentThread.Composer
+        value={draft}
+        onChange={onChange}
+        onSubmit={() => guard.guard(onSend)}
+        submitting={sending}
+        aria-label={reply}
+      />
+    </div>
+  );
+}
+
 export interface VideoCommentItemProps {
   comment: CommentView;
   /** The reply thread's open state, held by a parent that unmounts this row while it is off screen. */
@@ -141,7 +171,6 @@ export function VideoCommentItem({
   const { tOr } = useT();
   const { format } = useFormat();
   const showFailure = useFailureToast();
-  const { reply: replyLabel } = useUiCopy();
   const [mode, setMode] = useState<Mode>('view');
   const [ownExpanded, setOwnExpanded] = useState(false);
   const expanded = heldExpanded ?? ownExpanded;
@@ -260,15 +289,12 @@ export function VideoCommentItem({
         />
       </CommentItem.Actions>
       {mode === 'replying' && state === 'view' && (
-        <div className="col-start-2">
-          <CommentThread.Composer
-            value={draft}
-            onChange={setDraft}
-            onSubmit={sendReply}
-            submitting={postReply.isPending}
-            aria-label={replyLabel}
-          />
-        </div>
+        <ReplyComposer
+          draft={draft}
+          onChange={setDraft}
+          onSend={sendReply}
+          sending={postReply.isPending}
+        />
       )}
       {reportOpened && (
         <LazyReportCommentDialog

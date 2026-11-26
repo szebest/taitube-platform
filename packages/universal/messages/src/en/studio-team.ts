@@ -193,7 +193,4 @@ export const studioTeam = {
   teamAuditEmptyTitle: dt('Nothing here'),
   teamAuditEmptyDescription: dt('Changes the team makes to the channel show up here.'),
   teamAuditFailed: dt('The audit log did not load.'),
-  channelSwitch: dt('Switch channel'),
-  channelSwitchLabel: dt('Channel you work on'),
-  channelSwitchOwn: dt('{name} (yours)'),
 } as const;

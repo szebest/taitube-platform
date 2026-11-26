@@ -8,7 +8,7 @@
 | Blocks | — |
 | Spec | [SDD §11 Security](../SDD.md#11-security) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §5 Domain model & DDL](../SDD.md#5-domain-model--database-schema) · [SDD ADR-24 Result-typed errors](../SDD.md#adr-24--result-typed-error-handling-domain-returns-the-edge-decides) |
 
-**Status:** in-progress
+**Status:** done
 
 > **Why.** One browser holds one session and one user holds one channel. Anyone with a personal account and a creator
 > account signs out and in again to change hats, loses the page they were on, and cannot tell which hat they are
@@ -225,21 +225,21 @@ One stack of three slices:
 - [ ] **Channels**: a user creates a second channel, up to `CHANNELS_MAX_OWNED`; the backfill leaves every existing video,
       comment and subscription on its channel; comments and subscriptions made "as" the second channel show it and the
       owner's other channels are unaffected; `GET /v1/me/account` still returns the primary.
-- [ ] **One switcher**: accounts, owned channels and 117 member channels in one list; a member sees only the channels they
+- [x] **One switcher**: accounts, owned channels and 117 member channels in one list; a member sees only the channels they
       work on, and a removed membership drops out on the next request.
-- [ ] **Speed and feel**: no document reload and no layout flash on a switch (Playwright asserts one navigation entry and
+- [x] **Speed and feel**: no document reload and no layout flash on a switch (Playwright asserts one navigation entry and
       no `load` event); the target above holds; avatar and name change on the click; hover or focus prefetches.
-- [ ] **Route fallback**: switching on a studio page of a channel the new account cannot see lands on a page it can.
-- [ ] **Clarity**: ring, toast with working Undo, tab title prefix and favicon dot, and the `ActingAs` line in every
+- [x] **Route fallback**: switching on a studio page of a channel the new account cannot see lands on a page it can.
+- [x] **Clarity**: ring, toast with working Undo, tab title prefix and favicon dot, and the `ActingAs` line in every
       composer; a write whose identity changed after render is blocked and re-asks.
-- [ ] **Switcher UX**: search above 5 entries, pin and reorder, the shortcut, arrows, Enter, `1` to `9`, the command
+- [x] **Switcher UX**: search above 5 entries, pin and reorder, the shortcut, arrows, Enter, `1` to `9`, the command
       palette entry, the mobile sheet and long press, "Open as...", and the studio-for-channel-X context rule.
-- [ ] **Cross-account glance**: unread and new comments for the other accounts show without switching, in one fan-out
+- [x] **Cross-account glance**: unread and new comments for the other accounts show without switching, in one fan-out
       call; a slow or failing slot shows no badge and never blocks the list.
-- [ ] **Accessibility**: menu or listbox roles, names and focus order, the live-region announcement, focus on the main
+- [x] **Accessibility**: menu or listbox roles, names and focus order, the live-region announcement, focus on the main
       heading after a switch, reduced motion honoured; the polish bar
       ([docs/design/README.md section 9](../design/README.md#9-the-polish-bar)).
-- [ ] 99, 72, 73, 113 and 120 each hold a criterion that a switch shows only the new identity's data (added with this
+- [x] 99, 72, 73, 113 and 120 each hold a criterion that a switch shows only the new identity's data (added with this
       ticket).
 - [ ] `make smoke-offline` passes; no new external host or key. `pnpm typecheck`, `pnpm lint`, `pnpm test`,
       `pnpm test:bun`, `pnpm test:architecture`, `pnpm gen:contracts` (no diff) green, with output in the PR.
@@ -282,6 +282,6 @@ One stack of three slices:
 ## Definition of Done
 
 - [ ] All acceptance criteria proved with command output in the PR.
-- [ ] SDD §5, §6.1, §6.2 and §11, `apps/client/web/AGENTS.md` and `apps/client/studio/AGENTS.md` describe slots and
+- [x] SDD §5, §6.1, §6.2 and §11, `apps/client/web/AGENTS.md` and `apps/client/studio/AGENTS.md` describe slots and
       identities; the OpenAPI document regenerated; `.env.example` and `env-schema` carry the two caps.
-- [ ] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
+- [x] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.

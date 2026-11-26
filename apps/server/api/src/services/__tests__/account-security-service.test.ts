@@ -40,6 +40,16 @@ describe('AccountSecurityService', () => {
     });
   });
 
+  it('records a sign-in into a slot as the caller own row, with the user agent cut short', async () => {
+    const recorded = expectOk(
+      await service.recordSignIn(USER, { slot: 4, userAgent: 'x'.repeat(500) })
+    );
+
+    expect(recorded).toMatchObject({ action: 'account.signed_in', slot: 4 });
+    expect(recorded.userAgent).toHaveLength(200);
+    expect(expectOk(await service.signIns(USER, {})).items).toEqual([recorded]);
+  });
+
   it('refuses a cursor it did not mint', async () => {
     expect(expectErr(await service.signIns(USER, { cursor: 'nonsense' })).code).toBe(
       ErrorCodes.INVALID_CURSOR

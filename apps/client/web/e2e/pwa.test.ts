@@ -105,13 +105,19 @@ test.describe('pwa: offline', () => {
     await controlledAt(page, '/');
     const feedRequest = page.waitForRequest((request) => request.url().includes('/api/v1/feed?'));
     await page.getByRole('link', { name: 'Trending' }).first().click();
-    const url = (await feedRequest).url();
+    const request = await feedRequest;
+    const url = request.url();
+    const slot = request.headers()['x-account-slot'] ?? '';
     await expect
       .poll(async () => (await cachedUrls(page, API_CACHE)).some((cached) => cached === url))
       .toBe(true);
 
     await context.setOffline(true);
-    const status = await page.evaluate((feed) => fetch(feed).then(({ status }) => status), url);
+    const status = await page.evaluate(
+      ([feed, account]) =>
+        fetch(feed, { headers: { 'x-account-slot': account } }).then(({ status }) => status),
+      [url, slot] as const
+    );
 
     expect(status).toBe(200);
   });

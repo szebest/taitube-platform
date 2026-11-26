@@ -211,4 +211,50 @@ describe('my channels routes', () => {
     ]);
     expect(second.nextCursor).toBeNull();
   });
+
+  describe('a sign-in into a browser slot', () => {
+    const record = (body: object, ip = '203.0.113.9', token = TOKENS.user) =>
+      app.inject({
+        method: 'POST',
+        url: '/v1/me/security/sign-ins',
+        headers: { ...bearer(token), 'user-agent': 'Firefox' },
+        remoteAddress: ip,
+        payload: body,
+      });
+
+    it('lands in the caller own sign-in history', async () => {
+      const recorded = await record({ slot: 2, added: true }, '203.0.113.1');
+
+      expect(recorded.statusCode).toBe(201);
+      const history = await send(TOKENS.user, { method: 'GET', url: '/v1/me/security/sign-ins' });
+      expect(history.json().items).toEqual([
+        expect.objectContaining({ action: 'account.signed_in', slot: 2, userAgent: 'Firefox' }),
+      ]);
+    });
+
+    it('refuses a sixth added account from one address in ten minutes with the rate-limit problem', async () => {
+      const statuses = [];
+      for (let added = 0; added < 6; added += 1) {
+        statuses.push((await record({ slot: 1, added: true }, '203.0.113.2')).statusCode);
+      }
+      const refused = await record({ slot: 1, added: true }, '203.0.113.2');
+
+      expect(statuses).toEqual([201, 201, 201, 201, 201, 429]);
+      expect(refused.json()).toMatchObject({ code: ErrorCodes.RATE_LIMITED, status: 429 });
+      expect((await record({ slot: 1, added: true }, '203.0.113.3')).statusCode).toBe(201);
+    });
+
+    it('never limits a sign-in into a slot the browser already had', async () => {
+      for (let again = 0; again < 6; again += 1) {
+        expect((await record({ slot: 0, added: false }, '203.0.113.4')).statusCode).toBe(201);
+      }
+    });
+
+    it.each([
+      { scenario: 'a token in the body', body: { slot: 0, added: true, token: 'forged' } },
+      { scenario: 'a slot past nine', body: { slot: 10, added: true } },
+    ])('refuses $scenario', async ({ body }) => {
+      expect((await record(body, '203.0.113.5')).statusCode).toBe(400);
+    });
+  });
 });

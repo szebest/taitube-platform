@@ -1,10 +1,12 @@
 import { Avatar, DropdownMenu, type MenuItemProps, useUiCopy, VisuallyHidden } from '@kit/ui';
 import type { ComponentPropsWithRef } from 'react';
+import { AccentRing, type AccentRingAccent } from '../identity/accent-ring';
 import { accountMenuStyles } from './account-menu.variants';
 
 const INITIALS = 2;
 
-function initialsOf(name: string): string {
+/** Up to two initials of `name`, the monogram an avatar shows until its picture loads. */
+export function initialsOf(name: string): string {
   return name
     .split(/\s+/)
     .filter((word) => word !== '')
@@ -17,16 +19,25 @@ export interface AccountMenuTriggerProps extends ComponentPropsWithRef<'button'>
   /** The viewer's channel name, drawn as its initials until the picture loads. */
   name: string;
   imageUrl?: string | null;
+  /** The ring of the identity the tab acts as; none in a browser of one account and one channel. */
+  accent?: AccentRingAccent;
 }
 
 /** The header avatar that opens the account menu. */
 export function AccountMenuTrigger({
   name,
   imageUrl,
+  accent,
   className,
   ...props
 }: AccountMenuTriggerProps) {
   const { account } = useUiCopy();
+  const avatar = (
+    <Avatar.Root size="md">
+      {imageUrl ? <Avatar.Image src={imageUrl} alt="" /> : null}
+      <Avatar.Fallback aria-hidden="true">{initialsOf(name)}</Avatar.Fallback>
+    </Avatar.Root>
+  );
 
   return (
     <DropdownMenu.Trigger asChild>
@@ -36,10 +47,7 @@ export function AccountMenuTrigger({
         className={accountMenuStyles().trigger({ className })}
         {...props}
       >
-        <Avatar.Root size="md">
-          {imageUrl ? <Avatar.Image src={imageUrl} alt="" /> : null}
-          <Avatar.Fallback aria-hidden="true">{initialsOf(name)}</Avatar.Fallback>
-        </Avatar.Root>
+        {accent ? <AccentRing accent={accent}>{avatar}</AccentRing> : avatar}
         <VisuallyHidden>{account}</VisuallyHidden>
       </button>
     </DropdownMenu.Trigger>

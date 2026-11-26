@@ -47,7 +47,9 @@ describe('apps/client/web: /subscriptions in the browser', () => {
     });
 
     await vi.waitFor(() =>
-      expect(router.state.location.href).toBe('/login?redirect=%2Fsubscriptions&reason=expired')
+      expect(router.state.location.href).toBe(
+        '/login?redirect=%2Fsubscriptions&reason=expired&slot=0'
+      )
     );
     expect(await screen.findByRole('heading', { name: 'Sign in' })).toBeInTheDocument();
   });

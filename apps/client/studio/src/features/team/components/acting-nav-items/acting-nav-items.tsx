@@ -11,7 +11,6 @@ import { Can } from '@vp/permissions-react';
 import { useAccount } from '@vp/queries';
 import type { ReactNode } from 'react';
 import { StudioWorkspace } from '#app/components/workspace/studio-workspace';
-import { ChannelSwitcher } from '#app/features/team/components/channel-switcher/channel-switcher';
 import { useActiveChannel } from '#app/hooks/use-active-channel';
 import { InvitesNavItem } from '../invites-nav-item/invites-nav-item';
 
@@ -29,7 +28,6 @@ function SignedInNavItems({ newComments, reviewQueue }: ActingNavItemsProps) {
 
   return (
     <>
-      <ChannelSwitcher />
       <Can type="rule" I={canUpdateVideo} this={{ video: { ownerId, channelId } }}>
         <StudioWorkspace.NavItem
           asChild
@@ -103,7 +101,7 @@ function SignedInNavItems({ newComments, reviewQueue }: ActingNavItemsProps) {
   );
 }
 
-/** The studio's pages the viewer's role on the acting channel reaches, behind the switcher between channels; none for a guest. */
+/** The studio's pages the viewer's role on the acting channel reaches; none for a guest. */
 export function ActingNavItems(props: ActingNavItemsProps) {
   return useAccount() ? <SignedInNavItems {...props} /> : null;
 }

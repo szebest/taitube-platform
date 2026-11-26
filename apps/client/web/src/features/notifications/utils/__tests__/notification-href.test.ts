@@ -51,6 +51,8 @@ describe('apps/client/web: notificationHref', () => {
     },
   ])('$case', ({ kind, payload, href, ...rest }) => {
     const videoId = 'videoId' in rest ? rest.videoId : VIDEO_ID;
-    expect(notificationHref(notification({ kind, videoId }, payload))).toBe(href);
+    const studioLink = (path: string) => new URL(path, 'http://localhost:5174').toString();
+
+    expect(notificationHref(notification({ kind, videoId }, payload), studioLink)).toBe(href);
   });
 });

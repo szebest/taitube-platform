@@ -12,12 +12,19 @@ export const Route = createFileRoute('/login')({
 
 function Login() {
   const [error, setError] = useState<string>();
+  const { add, slot, redirect } = Route.useSearch();
 
   return (
     <LoginPage error={error}>
       {LazyPersonaSwitcher && (
         <Suspense>
-          <LazyPersonaSwitcher onAttempt={() => setError(undefined)} onFailed={setError} />
+          <LazyPersonaSwitcher
+            adding={add}
+            slot={slot}
+            redirect={redirect}
+            onAttempt={() => setError(undefined)}
+            onFailed={setError}
+          />
         </Suspense>
       )}
     </LoginPage>

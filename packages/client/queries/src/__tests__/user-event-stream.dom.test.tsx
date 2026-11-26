@@ -1,6 +1,7 @@
-import { QueryClientProvider } from '@tanstack/react-query';
+import { type QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render } from '@testing-library/react';
 import { VIDEO_ID, account, video } from '@vp/web-testing';
+import type { Identity } from '../account-slots';
 import { createQueryClient } from '../create-query-client';
 import { GUEST, type Session } from '../session';
 import { SessionProvider } from '../session-provider';
@@ -27,23 +28,35 @@ const freeLock: LockGrant = (name, _options, grant) => grant({ name, mode: 'excl
 const heldByAnotherTab: LockGrant = (_name, { ifAvailable }, grant) =>
   ifAvailable ? grant(null) : new Promise(() => undefined);
 
+function processingCache() {
+  const queryClient = createQueryClient();
+  queryClient.setQueryData(videoKeys.detail(VIDEO_ID), video({ status: 'PROCESSING' }));
+  queryClient.setQueryData(NOT_A_VIDEO, []);
+  return queryClient;
+}
+
 function renderStream(session: Session = SIGNED_IN, lock: LockGrant = freeLock) {
   const sources: ScriptedSource[] = [];
+  const timeline: string[] = [];
   vi.stubGlobal(
     'EventSource',
     class extends ScriptedSource {
       constructor(url: string) {
         super(url);
+        timeline.push(`open ${url}`);
         sources.push(this);
+      }
+
+      override close(): void {
+        timeline.push(`close ${this.url}`);
+        super.close();
       }
     }
   );
-  vi.spyOn(navigator.locks, 'request').mockImplementation(async (name, options, grant) =>
-    lock(name, options, grant)
-  );
-  const queryClient = createQueryClient();
-  queryClient.setQueryData(videoKeys.detail(VIDEO_ID), video({ status: 'PROCESSING' }));
-  queryClient.setQueryData(NOT_A_VIDEO, []);
+  const locks = vi
+    .spyOn(navigator.locks, 'request')
+    .mockImplementation(async (name, options, grant) => lock(name, options, grant));
+  const queryClient = processingCache();
   const isInvalidated = (queryKey: readonly unknown[]) =>
     queryClient.getQueryState(queryKey)?.isInvalidated;
   const heard: unknown[] = [];
@@ -53,9 +66,9 @@ function renderStream(session: Session = SIGNED_IN, lock: LockGrant = freeLock) 
     return null;
   }
 
-  const tree = (viewer: Session) => (
-    <QueryClientProvider client={queryClient}>
-      <SessionProvider session={viewer}>
+  const tree = (viewer: Session, identity: Identity = { slot: 0 }, client = queryClient) => (
+    <QueryClientProvider client={client}>
+      <SessionProvider session={viewer} identity={identity}>
         <UserEventStream>
           <Listener />
         </UserEventStream>
@@ -63,7 +76,17 @@ function renderStream(session: Session = SIGNED_IN, lock: LockGrant = freeLock) 
     </QueryClientProvider>
   );
   const { rerender } = render(tree(session));
-  return { queryClient, sources, heard, isInvalidated, signOut: () => rerender(tree(GUEST)) };
+  return {
+    queryClient,
+    sources,
+    heard,
+    timeline,
+    isInvalidated,
+    lockNames: () => locks.mock.calls.map(([name]) => name),
+    signOut: () => rerender(tree(GUEST)),
+    switchTo: (identity: Identity, client: QueryClient) =>
+      rerender(tree(session, identity, client)),
+  };
 }
 
 describe('@vp/queries: UserEventStream', () => {
@@ -136,7 +159,42 @@ describe('@vp/queries: UserEventStream', () => {
     signOut();
 
     expect(sources.map(({ url, readyState }) => [url, readyState])).toEqual([
-      ['/api/v1/me/events', 2],
+      ['/u/0/api/v1/me/events', 2],
     ]);
+  });
+
+  it("closes the last identity's stream before it opens the next, and keeps the last identity's events out", async () => {
+    const { sources, heard, timeline, lockNames, switchTo } = renderStream();
+    sources[0]?.send(progress(10), 1);
+    const nextCache = processingCache();
+    const lastIdentityName = `vp.user-events.0.primary.${account().id}`;
+    const lastIdentity = new BroadcastChannel(lastIdentityName);
+    const anotherTabOnIt = new BroadcastChannel(lastIdentityName);
+    const reachedAnotherTab = vi.fn();
+    anotherTabOnIt.addEventListener('message', reachedAnotherTab);
+    onTestFinished(() => {
+      lastIdentity.close();
+      anotherTabOnIt.close();
+    });
+
+    switchTo({ slot: 1, channel: 'second' }, nextCache);
+    lastIdentity.postMessage({ id: 2, event: progress(90) });
+    await vi.waitFor(() => expect(reachedAnotherTab).toHaveBeenCalledOnce());
+
+    expect(timeline).toEqual([
+      'open /u/0/api/v1/me/events',
+      'close /u/0/api/v1/me/events',
+      'open /u/1/api/v1/me/events',
+    ]);
+    expect(new Set(lockNames())).toEqual(
+      new Set([
+        `vp.user-events.0.primary.${account().id}`,
+        `vp.user-events.1.second.${account().id}`,
+      ])
+    );
+    expect(nextCache.getQueryData(videoKeys.detail(VIDEO_ID))).toEqual(
+      video({ status: 'PROCESSING' })
+    );
+    expect(heard).toEqual([progress(10)]);
   });
 });

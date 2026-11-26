@@ -8,9 +8,12 @@ import { MergeStateContext } from '#app/features/account/components/preferences-
 import { DevicePreferencesProvider } from '#app/lib/preferences/device-preferences-provider';
 import { IdentityReset } from '../identity-reset';
 
-function renderReset(userId: string | undefined) {
+function renderReset(
+  userId: string | undefined,
+  applied: MergeState['applied']['current'] = userId ? { userId, version: 4 } : undefined
+) {
   const merge: MergeState = {
-    applied: { current: { userId: 'ada', version: 4 } },
+    applied: { current: applied },
     guest: { current: undefined },
     baseline: { current: undefined },
   };
@@ -54,16 +57,23 @@ describe('IdentityReset', () => {
     { name: 'a guest signs in', from: undefined, to: 'grace' },
   ])('leaves the merge state alone when $name', ({ from, to }) => {
     const { merge, rerenderAs } = renderReset(from);
+    const before = merge.applied.current;
 
     rerenderAs(to);
 
-    expect(merge.applied.current).toEqual({ userId: 'ada', version: 4 });
+    expect(merge.applied.current).toEqual(before);
   });
 
   it('resets the merge state when the user signs out', () => {
     const { merge, rerenderAs } = renderReset('ada');
 
     rerenderAs(undefined);
+
+    expect(merge.applied.current).toBeUndefined();
+  });
+
+  it('resets the merge state when the tree mounts again signed out after an account was merged', () => {
+    const { merge } = renderReset(undefined, { userId: 'ada', version: 4 });
 
     expect(merge.applied.current).toBeUndefined();
   });
