@@ -12,6 +12,7 @@ export * from './create-query-client';
 export * from './ensure-found';
 export * from './identities';
 export * from './identity-settings-functions';
+/** @internal */
 export { createIdentityStore } from './identity-store';
 export * from './keyset-paging';
 export * from './membership-queries';
