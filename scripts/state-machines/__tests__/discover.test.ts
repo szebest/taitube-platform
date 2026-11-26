@@ -27,11 +27,14 @@ describe('scripts: state-machines/discover', () => {
     ]);
   });
 
-  it.each(['node_modules', 'dist', '.turbo'])('skips a %s folder', async (folder) => {
-    const root = tree([`packages/a/${folder}/x.machine.ts`, 'packages/a/src/y.machine.ts']);
+  it.each(['node_modules', 'dist', '.turbo', '.scaffold-x1'])(
+    'skips a %s folder',
+    async (folder) => {
+      const root = tree([`packages/a/${folder}/x.machine.ts`, 'packages/a/src/y.machine.ts']);
 
-    expect(await findMachineFiles(root)).toEqual(['packages/a/src/y.machine.ts']);
-  });
+      expect(await findMachineFiles(root)).toEqual(['packages/a/src/y.machine.ts']);
+    }
+  );
 
   it('finds nothing in a tree without the roots', async () => {
     expect(await findMachineFiles(tree(['docs/z.machine.ts']))).toEqual([]);
