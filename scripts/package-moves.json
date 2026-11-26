@@ -583,6 +583,7 @@
       "createActingChannelStore": "@vp/queries",
       "createAppApiClient": "@vp/queries",
       "createAppRouter": "@vp/queries",
+      "createIdentityStore": "@vp/queries",
       "createQueryClient": "@kit/query",
       "creatorCommentKeys": "@vp/queries",
       "creatorStatsQueryOptions": "@vp/queries",
