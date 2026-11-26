@@ -1,5 +1,5 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import type { Result } from '@kit/result';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { HealthCheckable } from './health-checkable';
 
 export abstract class DatabaseClient implements HealthCheckable<DatabaseUnavailable> {

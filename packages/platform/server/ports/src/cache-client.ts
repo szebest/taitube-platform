@@ -1,5 +1,5 @@
+import type { CacheUnavailable } from '@kit/errors';
 import type { Result } from '@kit/result';
-import type { CacheUnavailable } from '@vp/errors';
 import type { HealthCheckable } from './health-checkable';
 
 export type MessageListener = (channel: string, message: string) => void;

@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { expectOk } from '@kit/testing/result';
-import type { CacheClient } from '@vp/core/ports';
+import type { CacheClient } from '../cache-client';
 
 export interface CacheClientSubject {
   readonly cache: CacheClient;

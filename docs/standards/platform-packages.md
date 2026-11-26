@@ -103,9 +103,10 @@ No platform package holds copy: no catalogue, no `dt(` call, no user-facing Engl
 A platform package that defines a port or a registry exports a `./contract` suite, `runXContract(makeImpl)`, with
 vitest as a peer dependency. The repository's own implementations (the in-memory doubles, the app's registries) run
 it against themselves, and so does any other app against its own. Changing a suite is a change of the surface, so it
-needs the version bump and the changelog entry. No platform package exports `./contract` yet: the per-port suites live
-today in `packages/server/adapters/__tests__/contract/` (layout in [testing.md](testing.md), section 2) and move with
-`@kit/ports`, which lands as the last step of ticket 170.
+needs the version bump and the changelog entry. `@kit/ports/contract` exports the first three, for the cache client, the
+job queue and the flow producer, and the adapters' in-memory doubles and Redis and BullMQ adapters run them. The suites
+of the app's own ports stay in `packages/server/adapters/__tests__/contract/` (layout in [testing.md](testing.md),
+section 2).
 
 ## Extractable, and the second app
 

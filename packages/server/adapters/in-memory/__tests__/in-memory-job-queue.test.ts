@@ -1,8 +1,8 @@
 import { PermanentError, TransientError } from '@kit/errors';
+import { describeJobQueueContract } from '@kit/ports/contract';
 import { expectOk } from '@kit/testing/result';
 import { JOB_PRIORITY } from '@vp/domain';
 import { inMemoryJobQueueSubject } from '../../__tests__/contract/in-memory-port-subjects';
-import { describeJobQueueContract } from '../../__tests__/contract/job-queue.contract';
 import { InMemoryJobQueue } from '../in-memory-job-queue';
 
 describeJobQueueContract(inMemoryJobQueueSubject);

@@ -1,5 +1,5 @@
+import type { InfraFailure } from '@kit/errors';
 import type { Result } from '@kit/result';
-import type { InfraFailure } from '@vp/errors';
 
 /**
  * A reachability probe. It answers `ok()` or the narrow unavailability of the port it belongs to,

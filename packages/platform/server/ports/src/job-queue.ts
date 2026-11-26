@@ -1,5 +1,5 @@
+import type { QueueUnavailable } from '@kit/errors';
 import { type Result, ok } from '@kit/result';
-import type { QueueUnavailable } from '@vp/errors';
 import type { HealthCheckable } from './health-checkable';
 
 export interface QueueJob<T = unknown> {
