@@ -156,9 +156,15 @@ test.describe('several accounts in one browser', () => {
     await page.getByRole('button', { name: 'Account' }).click();
     await page.getByRole('menuitem', { name: 'Sign out of this account' }).click();
 
-    await expect(page).toHaveURL(/\/feed\/trending$/);
-    await page.getByRole('button', { name: 'Account' }).click();
-    await expect(page.getByRole('menuitemradio', { checked: true })).toContainText(viewer);
+    await expect(page).toHaveURL((url) => url.pathname === '/feed/trending');
+    // The switch to the slot left swaps the query cache after the URL moves, which closes a menu opened before it settles.
+    await expect(async () => {
+      await page.keyboard.press('Escape');
+      await page.getByRole('button', { name: 'Account' }).click();
+      await expect(page.getByRole('menuitemradio', { checked: true })).toContainText(viewer, {
+        timeout: 1_000,
+      });
+    }).toPass();
     const names = (await context.cookies()).map(({ name }) => name);
     expect(names).toContain('vp.session.1');
     expect(names).not.toContain('vp.session.0');
