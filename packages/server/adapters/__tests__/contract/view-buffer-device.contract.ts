@@ -27,15 +27,23 @@ export function describeViewBufferDeviceContract(makeSubject: MakeViewBufferSubj
       return batch;
     };
 
+    /**
+     * Redis dedups viewers in a HyperLogLog, which can take a random new id for one it holds
+     * (about 1 in 16,000 a pair): fixed ids hash the same on every run, so a count never wavers.
+     */
+    let viewers = 0;
+    const nextViewer = () => `viewer-${++viewers}`;
+
     beforeEach(async () => {
       videoId = randomUUID();
+      viewers = 0;
       await drain();
       await drain();
     });
 
     const playback = (overrides: Partial<PlaybackWatch>): PlaybackWatch => ({
       videoId,
-      sessionId: randomUUID(),
+      sessionId: nextViewer(),
       viewDate: DAY,
       viewHour: HOUR,
       device: 'desktop',

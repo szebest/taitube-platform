@@ -10,8 +10,16 @@
 Browser-only libraries: code that needs the DOM, `window`, or browser-only APIs, and that no server
 process imports. If both a browser and a server need it, it is `universal/`, not here.
 
-Current members: `api-client`, `components`, `forms`, `intl-react`, `permissions-react`, `queries`, `security-headers`,
-`ui`, `web-telemetry`, `web-testing` (spec-only), `workbench` (Storybook, nothing imports it).
+Current members: `api-client`, `permissions-react`, `queries`, `web-testing` (spec-only) and `workbench` (Storybook,
+nothing imports it) are app packages (`@vp/*`). The platform packages (`@kit/*`) sit in `packages/platform/client/`:
+`components`, `forms`, `intl-react`, `query`, `security-headers`, `ui`, `web-telemetry`, `web-testing` (generic spec
+helpers).
+
+**Platform or app, first.** A browser package that names no product value belongs in `packages/platform/client/`,
+and it never depends on, imports or names a `@vp/*` package. What the app owns (the translator, the session, the
+telemetry endpoint, the copy) comes in as a required prop, option or parameter, never an import: `@kit/intl-react` takes
+the app's translator, `@kit/ui` takes its copy and brand mark, `@kit/forms` takes the rule that validates. See
+[docs/standards/platform-packages.md](../../docs/standards/platform-packages.md).
 
 ## Rules
 

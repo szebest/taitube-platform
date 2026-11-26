@@ -1,6 +1,6 @@
-import { useT } from '@kit/intl-react';
 import { Button, useAppearance } from '@kit/ui';
 import { useState } from 'react';
+import { useT } from '#app/lib/messages';
 import { AccentRolesPreview } from '../accent-roles-preview/accent-roles-preview';
 import { SettingItem } from '../setting-item/setting-item';
 

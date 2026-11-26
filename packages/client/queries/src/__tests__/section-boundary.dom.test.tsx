@@ -6,6 +6,7 @@ import { ErrorCodes } from '@vp/errors';
 import { Suspense } from 'react';
 import { AppWords } from '../app-words';
 import { SectionBoundary } from '../section-boundary';
+import { SPEC_MESSAGES } from './spec-messages';
 
 let failure: Error | undefined;
 
@@ -32,7 +33,7 @@ function renderBoundary(props: { viewerTriggered?: boolean } = {}) {
   vi.spyOn(console, 'error').mockImplementation(() => undefined);
   render(
     <QueryClientProvider client={new QueryClient()}>
-      <AppWords>
+      <AppWords messages={SPEC_MESSAGES}>
         <SectionBoundary message="It could not be loaded" resetKey="video" {...props}>
           <Suspense fallback={null}>
             <Section />

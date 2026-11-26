@@ -3,6 +3,7 @@ import { userEvent } from '@testing-library/user-event';
 import { IntlProvider } from '@vp/queries/intl';
 import { Fragment } from 'react';
 import { VideoJsEngine } from '#app/integrations/video-js/video-js-engine';
+import { WEB_MESSAGES } from '#app/lib/messages';
 import { PlayerChannelProvider, usePlayerTheater } from '#app/lib/player/player-channel';
 import type { PlaybackRange } from '#app/lib/player/taitube-player-props';
 import { ControlBar } from '../control-bar';
@@ -68,7 +69,7 @@ export function renderBar({
   const user = userEvent.setup();
   const Channel = channel ? PlayerChannelProvider : Fragment;
   const rendered = render(
-    <IntlProvider locale="en" timeZone="UTC">
+    <IntlProvider messages={WEB_MESSAGES} locale="en" timeZone="UTC">
       <Channel>
         <VideoJsEngine
           playbackUrl="http://localhost:9000/public/videos/v1/hls/master.m3u8"

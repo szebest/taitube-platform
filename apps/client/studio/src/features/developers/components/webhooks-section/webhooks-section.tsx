@@ -1,5 +1,5 @@
 import { EmptyState, SectionError } from '@kit/components';
-import { Format, useT } from '@kit/intl-react';
+import { Format } from '@kit/intl-react';
 import { assertNever } from '@kit/result';
 import { Badge, Button, Icon, IconButton, useToast } from '@kit/ui';
 import { useQuery } from '@tanstack/react-query';
@@ -18,6 +18,7 @@ import {
   useDeleteWebhook,
   useTestWebhook,
 } from '#app/features/developers/hooks/use-developer-mutations';
+import { useT } from '#app/lib/messages';
 import { tableStateOf } from '#app/utils/paged-rows';
 import { ConfirmDialog } from '../confirm-dialog/confirm-dialog';
 import { CreateWebhookDialog } from '../create-webhook-dialog/create-webhook-dialog';

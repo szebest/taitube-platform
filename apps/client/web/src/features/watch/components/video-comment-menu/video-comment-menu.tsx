@@ -1,5 +1,4 @@
-import { useT } from '@kit/intl-react';
-import { DropdownMenu, Icon, useUiCopy } from '@kit/ui';
+import { DropdownMenu, Icon } from '@kit/ui';
 import type { CommentView } from '@vp/api-contracts';
 import { canDeleteComment, canPinComment, canUpdateComment } from '@vp/permissions';
 import { useCan } from '@vp/permissions-react';
@@ -11,6 +10,7 @@ import {
   useModerationChoices,
 } from '#app/features/watch/hooks/use-moderation-choices';
 import { useRequireAccount } from '#app/hooks/use-require-account';
+import { useT } from '#app/lib/messages';
 import type { ModerationDialogAction } from '../moderation-dialog/moderation-dialog';
 import { LazyModerationDialog } from '../moderation-dialog/moderation-dialog.lazy';
 
@@ -45,7 +45,7 @@ export function VideoCommentMenu({
   onReport,
 }: VideoCommentMenuProps) {
   const { tOr } = useT();
-  const { delete: deleteLabel } = useUiCopy();
+  const deleteLabel = tOr('ui.delete', {}, '');
   const [dialog, setDialog] = useState<{ action: ModerationDialogAction; open: boolean }>();
   const target = { id: comment.id, authorId: comment.author.userId };
   const canEdit = useCan(canUpdateComment, { comment: target });

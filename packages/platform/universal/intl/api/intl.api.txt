@@ -57,7 +57,6 @@ export interface DurationValue {
     readonly value: number;
     readonly options?: DurationOptions;
 }
-export const FALLBACK_LOCALE: "en"
 export const FORMAT_KINDS: readonly ["count", "number", "percent", "bytes", "bitrate", "numberRange", "money", "date", "time", "dateTime", "dateRange", "relative", "calendarDay", "duration", "list", "displayName"]
 export interface FormatContext {
     readonly locale: string;
@@ -83,6 +82,16 @@ export interface ListValue {
     readonly type: 'list';
     readonly value: readonly string[];
     readonly options?: ListOptions;
+}
+export interface LocaleDetails {
+    readonly name: string;
+    readonly direction: 'ltr' | 'rtl';
+}
+export interface Locales<Tag extends string, Details extends LocaleDetails> {
+    readonly source: Tag;
+    readonly tags: readonly Tag[];
+    readonly details: Readonly<Record<Tag, Details>>;
+    readonly isSupported: (tag: string) => tag is Tag;
 }
 export interface MoneyValue {
     readonly type: 'money';
@@ -116,7 +125,6 @@ export interface RelativeValue {
     readonly now?: string;
     readonly options?: RelativeOptions;
 }
-export const SUPPORTED_LOCALES: readonly ["en", "pl"]
 export interface Scaled<U extends string> {
     readonly amount: number;
     readonly unit: U;
@@ -156,6 +164,7 @@ export const date: Formatter<DateValue>
 export function dateFormatOptions(options?: DateOptions): Intl.DateTimeFormatOptions
 export const dateRange: Formatter<DateRangeValue>
 export const dateTime: Formatter<DateTimeValue>
+export function defineLocales<const Tag extends string, Details extends LocaleDetails>({ source, details, }: LocalesDefinition<Tag, Details>): Locales<Tag, Details>
 export function displayName(value: DisplayNameValue, context: FormatContext): Result<string, FormatFailure>
 export const duration: Formatter<DurationValue>
 export function formatValue(value: FormatValue, context: FormatContext): Result<string, FormatFailure>

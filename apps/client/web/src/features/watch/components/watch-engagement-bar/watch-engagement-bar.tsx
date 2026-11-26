@@ -1,4 +1,4 @@
-import { useFormat, useT } from '@kit/intl-react';
+import { useFormat } from '@kit/intl-react';
 import { unwrapOr } from '@kit/result';
 import { BrandScope, useUiCopy } from '@kit/ui';
 import { useSuspenseQuery } from '@tanstack/react-query';
@@ -12,6 +12,7 @@ import { ShareDialog } from '#app/components/watch/share-dialog';
 import { toSummary } from '#app/features/watch/utils/to-summary';
 import { useReaction } from '#app/hooks/use-reaction';
 import { useVideoActions } from '#app/hooks/use-video-actions';
+import { useT } from '#app/lib/messages';
 import { channelQueryOptions } from '#app/lib/query-keys/channel-keys';
 
 function ChannelSection({ channelId, videoId }: { channelId: string; videoId: string }) {

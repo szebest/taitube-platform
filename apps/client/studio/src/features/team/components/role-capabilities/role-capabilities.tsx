@@ -1,6 +1,6 @@
-import { useT } from '@kit/intl-react';
 import { Callout } from '@kit/ui';
 import { CHANNEL_CAPABILITIES, type ChannelRole, roleHas } from '@vp/domain';
+import { useT } from '#app/lib/messages';
 
 export interface RoleCapabilitiesProps {
   role: ChannelRole;

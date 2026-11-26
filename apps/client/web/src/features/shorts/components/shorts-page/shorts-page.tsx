@@ -1,8 +1,8 @@
 import { EmptyLibraryIllustration, EmptyState } from '@kit/components';
-import { useT } from '@kit/intl-react';
 import { Link } from '@tanstack/react-router';
 import type { ReactNode } from 'react';
 import { useShortsNavigation } from '#app/features/shorts/hooks/use-shorts-navigation';
+import { useT } from '#app/lib/messages';
 import { ShortsFeed } from '../shorts-feed/shorts-feed';
 
 function ShortsEmpty() {

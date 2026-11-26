@@ -16,13 +16,33 @@ at the throw site.
 
 | Layer | Lives in | Tier · layer | Needs | Returns |
 |---|---|---|---|---|
-| **1a. Validation** | `@vp/validation` | `universal` · T2 | the input, nothing else | `Result<T, InputFailure union>` |
+| **1a. Validation** | `@vp/validation` (the app's rules) over `@kit/validation` (the generic half) | `universal` · T2 | the input, nothing else | `Result<T, InputFailure union>` |
 | **1b. Domain rules** | `@vp/domain-rules` | `universal` · T3 | input **+** an entity **+** policy | `Result<T, Failure union>` |
 | **2. Services** | `apps/server/api/src/services/`, `apps/server/worker/src/stages/` | `server` | ports and rules | `Result<T, rule + infra failures>` |
 | **3. Edge** | `apps/server/api/src/routes/`, `apps/server/worker/src/composition/stages.module.ts`, later `apps/client/web` | `server` / `client` | HTTP, BullMQ, the DOM | a response, a throw at the queue boundary, a view state |
 
 Layers 1 and 2 never log a failure, never format one and never `throw`. Layer 3 never contains a
 rule. All four are asserted in `tests/architecture/`, not just written here.
+
+## The registry, and who owns a code
+
+The mechanism is platform code, the vocabulary is the app's.
+
+- **`@kit/errors`** holds `Failure`, `InputFailure`, the retry classes, `classifyError` and `defineErrorCodes`. It
+  lists no code of this product. The app builds one frozen `ErrorCodeSet` with `defineErrorCodes({ codes,
+  retryClass, internal })` and provides it under the `ErrorCodeRegistry` token at its composition root; the token has
+  no default, so a missing set is a startup error.
+- **A platform package owns the codes it emits.** `@kit/errors` exports `CommonErrorCodes`, `@kit/pagination`
+  `PaginationErrorCodes`, `@kit/intl` `FormatErrorCodes`, each as an `as const` object. The app's set spreads them in
+  and gives each a retry class, so no code is written twice and no platform package names an app code.
+- **The app's codes stay in `@vp/errors`** (`ApiErrorCodes`, `RETRY_CLASS`); `PROBLEM_STATUS` and the RFC 9457 mapping live in `@vp/api-contracts` (`problem.ts`). A
+  new code lands there, in the set and in SDD section 6.2 together, or it does not compile: `retryClass` is a `Record`
+  over the set's codes.
+- **Platform rules take their code as a parameter.** `defineFieldFailures(code)` in `@kit/validation` returns the
+  failure constructors for the code the app passes, so a generic rule never spells `VALIDATION_FAILED` for the app.
+
+A second app registers its own set the same way; the extractability check proves it (see
+[platform-packages.md](platform-packages.md)).
 
 ## Where a predicate goes
 

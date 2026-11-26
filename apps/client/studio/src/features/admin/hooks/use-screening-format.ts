@@ -1,6 +1,7 @@
-import { useFormat, useT } from '@kit/intl-react';
+import { useFormat } from '@kit/intl-react';
 import { unwrapOr } from '@kit/result';
 import { videoDuration } from '@vp/intl-formats';
+import { useT } from '#app/lib/messages';
 
 const PERCENT = 100;
 

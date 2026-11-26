@@ -1,10 +1,11 @@
 import { EmptyState, NoResultsIllustration } from '@kit/components';
-import { useFormat, useT } from '@kit/intl-react';
+import { useFormat } from '@kit/intl-react';
 import { useApi } from '@vp/queries';
 import { PagedFooter } from '#app/components/feed/paged-footer';
 import { watchHistoryQueryOptions } from '#app/features/library/api/library-queries';
 import { usePagedItems } from '#app/features/library/hooks/use-paged-items';
 import { filterByTitle, groupByDay } from '#app/features/library/utils/history-groups';
+import { useT } from '#app/lib/messages';
 import { HistoryVideoRow } from '../history-video-row/history-video-row';
 import { LibraryEmpty } from '../library-empty/library-empty';
 

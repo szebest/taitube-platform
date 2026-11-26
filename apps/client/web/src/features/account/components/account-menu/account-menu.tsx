@@ -1,11 +1,11 @@
 import { AccountMenu as Menu } from '@kit/components';
-import { useT } from '@kit/intl-react';
 import { Link } from '@tanstack/react-router';
 import { canAccessAdmin } from '@vp/permissions';
 import { Can } from '@vp/permissions-react';
 import { SignInButton, useAccount, useSignOut } from '@vp/queries';
 import { clearQueuedChanges } from '#app/integrations/service-worker-client/clear-queued-changes';
 import { STUDIO_URL } from '#app/lib/config';
+import { useT } from '#app/lib/messages';
 
 /** The viewer's account in the header: a guest's way to sign in, or the channel's menu with the studio's pages and sign-out. */
 export function AccountMenu() {

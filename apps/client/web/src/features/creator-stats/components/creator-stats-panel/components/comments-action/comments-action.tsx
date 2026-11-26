@@ -1,8 +1,8 @@
-import { useT } from '@kit/intl-react';
 import { Switch } from '@kit/ui';
 import type { Video } from '@vp/api-contracts';
 import { useFailureToast } from '@vp/queries';
 import { useUpdateVideo } from '#app/features/creator-stats/hooks/use-update-video';
+import { useT } from '#app/lib/messages';
 
 /** Comments on or off for the video, over the studio's `commentsEnabled`. */
 export function CommentsAction({ video }: { video: Video }) {

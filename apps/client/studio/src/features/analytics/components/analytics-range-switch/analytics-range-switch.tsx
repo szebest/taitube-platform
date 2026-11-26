@@ -1,7 +1,7 @@
-import { useT } from '@kit/intl-react';
 import { SegmentedControl } from '@kit/ui';
 import { ANALYTICS_RANGES } from '@vp/domain';
 import type { AnalyticsRange } from '#app/features/analytics/types';
+import { useT } from '#app/lib/messages';
 
 export interface AnalyticsRangeSwitchProps {
   value: AnalyticsRange;

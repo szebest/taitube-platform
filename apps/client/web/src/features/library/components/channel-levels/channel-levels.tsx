@@ -1,4 +1,3 @@
-import { useT } from '@kit/intl-react';
 import { Avatar, SegmentedControl } from '@kit/ui';
 import { useQuery } from '@tanstack/react-query';
 import type { SubscribedChannel } from '@vp/api-contracts';
@@ -7,6 +6,7 @@ import { useAccount, useApi, useFailureToast } from '@vp/queries';
 import { SettingRow } from '#app/components/settings/setting-row';
 import { SettingsSection } from '#app/components/settings/settings-section';
 import { useSetSubscriptionLevel } from '#app/features/library/hooks/use-set-subscription-level';
+import { useT } from '#app/lib/messages';
 import { mySubscriptionsQueryOptions } from '#app/lib/query-keys/subscription-keys';
 
 function ChannelLevelRow({ channel }: { channel: SubscribedChannel }) {

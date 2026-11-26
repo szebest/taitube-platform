@@ -1,8 +1,8 @@
-import { useT } from '@kit/intl-react';
 import { SegmentedControl } from '@kit/ui';
 import type { CommentSettingsView } from '@vp/api-contracts';
 import { REVIEW_MODES, type ReviewMode } from '@vp/domain';
 import { useSettingsSection } from '#app/features/comments/hooks/use-settings-section';
+import { useT } from '#app/lib/messages';
 import { SettingsSection } from '../settings-section/settings-section';
 
 const KEYS = ['reviewMode'] as const;

@@ -1,9 +1,9 @@
-import { useT } from '@kit/intl-react';
 import { useToast } from '@kit/ui';
 import { useQueryClient } from '@tanstack/react-query';
 import type { DataExportKind } from '@vp/domain';
 import { useUserEvent } from '@vp/queries';
 import { developerKeys } from '#app/features/developers/api/developer-queries';
+import { useT } from '#app/lib/messages';
 
 /** Reloads the exports when the job settles one, and says which. */
 export function useExportEvents() {

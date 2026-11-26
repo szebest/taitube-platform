@@ -1,4 +1,3 @@
-import { useT } from '@kit/intl-react';
 import { useQuery } from '@tanstack/react-query';
 import type { Channel, ChannelFeaturedView } from '@vp/api-contracts';
 import { FEATURED_VIDEOS_MAX } from '@vp/domain';
@@ -7,6 +6,7 @@ import { CustomizationSection } from '#app/components/section/customization-sect
 import { featuredQueryOptions } from '#app/features/channel/api/channel-featured';
 import { useFeaturedDraft } from '#app/features/channel/hooks/use-featured-draft';
 import { useSaveFeatured } from '#app/features/channel/hooks/use-save-featured';
+import { useT } from '#app/lib/messages';
 import { StartHerePicker } from '../start-here-picker/start-here-picker';
 import { StartHerePins } from '../start-here-pins/start-here-pins';
 import { StartHerePreview } from '../start-here-preview/start-here-preview';

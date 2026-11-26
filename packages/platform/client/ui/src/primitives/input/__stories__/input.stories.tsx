@@ -61,7 +61,7 @@ export const Adornments: Story = {
       </InputGroup.Root>
       <InputGroup.Root>
         <InputGroup.Start>https://</InputGroup.Start>
-        <Input aria-label="Address" defaultValue="taitube.example" />
+        <Input aria-label="Address" defaultValue="acme.example" />
         <InputGroup.End>.com</InputGroup.End>
       </InputGroup.Root>
     </div>

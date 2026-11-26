@@ -1,4 +1,3 @@
-import { useT } from '@kit/intl-react';
 import { assertNever } from '@kit/result';
 import { Icon, type IconId, useAppearance } from '@kit/ui';
 import { useRouter } from '@tanstack/react-router';
@@ -6,6 +5,7 @@ import { CommandPalette } from '#app/components/shell/command-palette';
 import type { CommandAction } from '#app/features/search/utils/command-actions';
 import { useCommandPaletteStore } from '#app/lib/command-palette/command-palette-store';
 import { STUDIO_URL } from '#app/lib/config';
+import { useT } from '#app/lib/messages';
 
 const ICONS: Record<CommandAction['kind'], IconId> = {
   theme: 'moon',

@@ -1,5 +1,5 @@
 import { EmptyState, SectionError } from '@kit/components';
-import { Format, useT } from '@kit/intl-react';
+import { Format } from '@kit/intl-react';
 import { DropdownMenu, Icon, IconButton } from '@kit/ui';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { getRouteApi } from '@tanstack/react-router';
@@ -22,6 +22,7 @@ import {
 import { LoadMore } from '#app/components/table/load-more';
 import { type AdminVideo, adminVideosQueryOptions } from '#app/features/admin/api/admin-videos';
 import { sortingOf, sortOf } from '#app/features/admin/api/moderation-search';
+import { useT } from '#app/lib/messages';
 import { pagedRows, tableStateOf } from '#app/utils/paged-rows';
 import { ModerationFilters } from '../moderation-filters/moderation-filters';
 import {

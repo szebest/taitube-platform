@@ -1,7 +1,8 @@
-import { Badge, useUiCopy } from '@kit/ui';
+import { Badge } from '@kit/ui';
 import type { ComponentPropsWithRef } from 'react';
 import { useCommentItem } from '#app/components/discussion/comment-item/comment-item.context';
 import { commentItemStyles } from '#app/components/discussion/comment-item/comment-item.variants';
+import { useT } from '#app/lib/messages';
 
 export interface CommentItemModerationProps extends Omit<ComponentPropsWithRef<'div'>, 'children'> {
   /** Why it was held or hidden, in the viewer's words; absent when the author is not told. */
@@ -18,7 +19,10 @@ export function CommentItemModeration({
   ...props
 }: CommentItemModerationProps) {
   const { state } = useCommentItem('Moderation');
-  const { commentHeld, commentHidden, commentSilent } = useUiCopy();
+  const { tOr } = useT();
+  const commentHeld = tOr('appUi.commentHeld', {}, '');
+  const commentHidden = tOr('appUi.commentHidden', {}, '');
+  const commentSilent = tOr('appUi.commentSilent', {}, '');
 
   if (state !== 'held' && state !== 'hidden') return null;
 

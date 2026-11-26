@@ -1,4 +1,4 @@
-import { Format, useT } from '@kit/intl-react';
+import { Format } from '@kit/intl-react';
 import { fromPromise, isOk } from '@kit/result';
 import { Avatar, Button, cn, useToast } from '@kit/ui';
 import { ApiError } from '@vp/api-client';
@@ -6,6 +6,7 @@ import type { MyInviteView } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { RoleBadge } from '#app/components/team/role-badge';
 import { useAcceptInvite, useDeclineInvite } from '#app/features/team/hooks/use-answer-invite';
+import { useT } from '#app/lib/messages';
 
 type Refusal = 'studio.invitesClosed' | 'studio.invitesGone';
 

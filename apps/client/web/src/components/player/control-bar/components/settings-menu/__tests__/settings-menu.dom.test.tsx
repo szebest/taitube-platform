@@ -6,6 +6,7 @@ import { IntlProvider } from '@vp/queries/intl';
 import { captionTrack } from '@vp/web-testing';
 import { parseMaster } from '#app/integrations/video-js/__tests__/offline-hls';
 import { VideoJsEngine } from '#app/integrations/video-js/video-js-engine';
+import { WEB_MESSAGES } from '#app/lib/messages';
 import { SettingsMenu } from '../settings-menu';
 
 vi.mock(import('hls.js'), async (importOriginal) => {
@@ -20,7 +21,7 @@ afterEach(() => {
 function renderMenu(captionTracks: readonly CaptionTrackView[] = []) {
   const user = userEvent.setup();
   const rendered = render(
-    <IntlProvider locale="en" timeZone="UTC">
+    <IntlProvider messages={WEB_MESSAGES} locale="en" timeZone="UTC">
       <VideoJsEngine
         playbackUrl="http://localhost:9000/public/videos/v1/hls/master.m3u8"
         posterUrl="http://localhost:9000/posters/p.jpg"

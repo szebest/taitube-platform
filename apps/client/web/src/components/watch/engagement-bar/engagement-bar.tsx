@@ -17,6 +17,7 @@ import {
   type ReactNode,
   useState,
 } from 'react';
+import { useT } from '#app/lib/messages';
 import { EngagementBarContext, useEngagementBar } from './engagement-bar.context';
 import { engagementBarStyles } from './engagement-bar.variants';
 import type { EngagementBarLayout, EngagementBarReaction as ReactionValue } from './types';
@@ -103,7 +104,8 @@ export function EngagementBarActions({
   ...props
 }: ComponentPropsWithRef<'div'>) {
   const { layout } = useEngagementBar('Actions');
-  const { videoActions } = useUiCopy();
+  const { tOr } = useT();
+  const videoActions = tOr('appUi.videoActions', {}, '');
 
   return (
     <div
@@ -160,7 +162,9 @@ export function EngagementBarReaction({
   className,
   ...props
 }: EngagementBarReactionProps) {
-  const { like, dislike } = useUiCopy();
+  const { tOr } = useT();
+  const like = tOr('appUi.like', {}, '');
+  const dislike = tOr('appUi.dislike', {}, '');
   const styles = engagementBarStyles();
 
   return (

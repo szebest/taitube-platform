@@ -1,5 +1,4 @@
-import { useT } from '@kit/intl-react';
-import { Button, Dialog, Field, Kbd, Select, Textarea, ToggleGroup, useUiCopy } from '@kit/ui';
+import { Button, Dialog, Field, Kbd, Select, Textarea, ToggleGroup } from '@kit/ui';
 import {
   BAN_DURATIONS,
   type BanDuration,
@@ -7,6 +6,7 @@ import {
   type CommentModerationReason,
 } from '@vp/domain';
 import { type KeyboardEvent, useState } from 'react';
+import { useT } from '#app/lib/messages';
 
 export type ReasonedAction = 'hide' | 'remove' | 'ban';
 
@@ -38,7 +38,7 @@ interface FormProps extends Omit<ModerationReasonDialogProps, 'action'> {
 
 function ReasonForm({ action, pending = false, onConfirm, onCancel }: FormProps) {
   const { tOr } = useT();
-  const { cancel } = useUiCopy();
+  const cancel = tOr('ui.cancel', {}, '');
   const [reason, setReason] = useState<CommentModerationReason>('spam');
   const [duration, setDuration] = useState<BanDuration>('7d');
   const [note, setNote] = useState('');

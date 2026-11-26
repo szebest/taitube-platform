@@ -3,7 +3,7 @@
 > Tier rules for this directory: [../AGENTS.md](../AGENTS.md) · full tier & layer reference: [packages/AGENTS.md](../../AGENTS.md)
 
 Owner: ticket [95](../../../docs/tickets/95-design-system-2.md). `client` tier, layer T4 (it depends on
-`@kit/ui`, `@kit/design-tokens` and `@vp/messages`). Nothing imports it: it is Storybook over every story in the
+`@kit/ui`, `@kit/design-tokens` and `@vp/shared-messages`). Nothing imports it: it is Storybook over every story in the
 repo.
 
 ## What it holds
@@ -18,11 +18,12 @@ repo.
   and the toolbars.
 - `src/toolbars.ts`: one toolbar per axis, built from the appearance registry (themes, the shown modes,
   contrast, and per token group the theme default plus every offered set), the direction, the locale (every
-  supported one, from `@vp/messages`), and `preferenceFromGlobals`, the preference they describe.
+  supported one, from `LOCALES` in `@vp/shared-messages`), and `preferenceFromGlobals`, the preference they describe.
 - `src/decorator.tsx`: `withAppearance` renders each story inside `AppearanceProvider` and puts the
   appearance, `dir` and `lang` on `<html>` through `applyAppearance`, the attributes `ThemedDocument` renders
-  in the apps, with the `ui` words of the toolbar locale's catalogue as its `UiCopy` (`loadCatalogue`, a
-  loader, fetches it before the story renders, as the apps load it before they hydrate).
+  in the apps, under its app's translator (the studio's for a `Studio/` title, the web's otherwise) and with
+  the `ui` words of the toolbar locale's catalogue as its `UiCopy` (`loadCatalogue`, a loader, fetches that
+  app's catalogue before the story renders, as the apps load it before they hydrate).
 - `src/app-decorator.tsx`: `withApp`, for a story that sets `parameters.app` (`session`: `'guest'` or
   `'signed-in'`, `api`: a function returning the replies it wants, built once per story render so a closure over
   it is that render's own state; a story without it renders bare). It stands a memory-history router, a query

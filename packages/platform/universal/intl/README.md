@@ -7,7 +7,19 @@ bitrates, plurals, collation and display names; `Intl` objects come from an `Int
 Install: `pnpm add @kit/intl`. It depends on `@kit/result`.
 
 Tokens: none. The locale, time zone, reference instant and cache arrive in the `FormatContext`; `localeChain`
-walks a tag down to the fallback locale.
+walks a tag down to its language, and the caller appends its own source locale. The package holds no locale list:
+the app registers its own.
+
+```ts
+import { defineLocales } from '@kit/intl';
+
+export const LOCALES = defineLocales({
+  source: 'fi',
+  details: { fi: { name: 'Suomi', direction: 'ltr' }, ar: { name: 'العربية', direction: 'rtl' } },
+});
+LOCALES.tags; // ['fi', 'ar']
+LOCALES.isSupported('ar'); // true, and narrows the tag
+```
 
 ```ts
 import { createIntl, createIntlCache, number } from '@kit/intl';

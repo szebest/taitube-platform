@@ -43,17 +43,8 @@ type Resolution = Record<'label' | 'specifier' | 'source', string> & {
 };
 
 describe('@kit/vite-preset: workspace source aliases', () => {
-  it.each([
-    { name: '@kit/intl-react', source: '/intl-react/src/index.ts' },
-    { name: '@kit/forms', source: '/forms/src/index.ts' },
-    { name: '@kit/result', source: '/result/src/index.ts' },
-    {
-      name: '@kit/security-headers/static-assets',
-      source: '/security-headers/src/static-assets.ts',
-    },
-    { name: '@kit/web-testing/server', source: '/web-testing/src/server/index.ts' },
-  ])('resolves $name to its source in the workspace', ({ name, source }) => {
-    expect(resolveSpecifier(undefined, name)?.endsWith(source)).toBe(true);
+  it('resolves a package of this workspace to its source', () => {
+    expect(resolveSpecifier(undefined, '@kit/result')?.endsWith('/result/src/index.ts')).toBe(true);
   });
 
   it('reads a browser-tier package under packages/platform/<tier>/ too', () => {

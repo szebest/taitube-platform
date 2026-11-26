@@ -1,10 +1,10 @@
-import { useT } from '@kit/intl-react';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { useLocation, useParams, useSearch } from '@tanstack/react-router';
 import type { Video } from '@vp/api-contracts';
 import { useApi, videoQueryOptions } from '@vp/queries';
 import type { ReactNode } from 'react';
 import { useOpenInPlaybackSession } from '#app/features/watch/hooks/use-open-in-playback-session';
+import { useT } from '#app/lib/messages';
 import { WatchCommentThread } from '../watch-comment-thread/watch-comment-thread';
 import { WatchEngagementBar } from '../watch-engagement-bar/watch-engagement-bar';
 import { WatchLayout } from '../watch-layout/watch-layout';

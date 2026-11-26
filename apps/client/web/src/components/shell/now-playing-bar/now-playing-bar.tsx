@@ -11,6 +11,7 @@ import {
   VisuallyHidden,
 } from '@kit/ui';
 import { type ComponentPropsWithRef, useId } from 'react';
+import { useT } from '#app/lib/messages';
 import { NowPlayingBarContext, useNowPlayingBar } from './now-playing-bar.context';
 import { nowPlayingBarStyles } from './now-playing-bar.variants';
 import type { NowPlayingBarStatus } from './types';
@@ -37,7 +38,8 @@ export function NowPlayingBarRoot({
   className,
   ...props
 }: NowPlayingBarRootProps) {
-  const { nowPlaying } = useUiCopy();
+  const { tOr } = useT();
+  const nowPlaying = tOr('appUi.nowPlaying', {}, '');
 
   return (
     <NowPlayingBarContext value={{ playing, progress, status, onPlayPause, onSeek }}>
@@ -157,7 +159,8 @@ export function NowPlayingBarTransport({ className, ...props }: ComponentPropsWi
 }
 
 export function NowPlayingBarPrevious({ className, ...props }: TransportButtonProps) {
-  const { previous } = useUiCopy();
+  const { tOr } = useT();
+  const previous = tOr('appUi.previous', {}, '');
 
   return (
     <IconButton
@@ -174,6 +177,7 @@ export function NowPlayingBarPrevious({ className, ...props }: TransportButtonPr
 export function NowPlayingBarPlayPause(props: TransportButtonProps) {
   const { playing, status, onPlayPause } = useNowPlayingBar('PlayPause');
   const copy = useUiCopy();
+  const { tOr } = useT();
 
   if (status === 'unavailable') {
     return (
@@ -184,14 +188,19 @@ export function NowPlayingBarPlayPause(props: TransportButtonProps) {
   }
 
   return (
-    <IconButton aria-label={playing ? copy.pause : copy.play} onClick={onPlayPause} {...props}>
+    <IconButton
+      aria-label={playing ? tOr('appUi.pause', {}, '') : tOr('appUi.play', {}, '')}
+      onClick={onPlayPause}
+      {...props}
+    >
       <Icon name={playing ? 'pause' : 'play'} />
     </IconButton>
   );
 }
 
 export function NowPlayingBarNext(props: TransportButtonProps) {
-  const { next } = useUiCopy();
+  const { tOr } = useT();
+  const next = tOr('appUi.next', {}, '');
 
   return (
     <IconButton aria-label={next} {...props}>
@@ -206,7 +215,8 @@ export interface NowPlayingBarQueueProps extends TransportButtonProps {
 }
 
 export function NowPlayingBarQueue({ count, className, ...props }: NowPlayingBarQueueProps) {
-  const { queue } = useUiCopy();
+  const { tOr } = useT();
+  const queue = tOr('appUi.queue', {}, '');
   const labelId = useId();
   const countId = useId();
   const styles = nowPlayingBarStyles();
@@ -242,7 +252,8 @@ export function NowPlayingBarExpand({
   children,
   ...props
 }: NowPlayingBarExpandProps) {
-  const { backToVideo } = useUiCopy();
+  const { tOr } = useT();
+  const backToVideo = tOr('appUi.backToVideo', {}, '');
   const Element = asChild ? Slot.Root : 'button';
 
   return (

@@ -7,23 +7,17 @@ negotiated.
 pnpm add @kit/intl-react react
 ```
 
-It consumes no token of its own. The app mounts `IntlProvider` at its root with the negotiated locale, a clock and a
-`createTranslator` that builds its translator over the locale's formatting binding.
+It consumes no token of its own. The app mounts `IntlProvider` at its root with the negotiated locale and a clock,
+and binds its translator once with `createReactI18n`, over the `I18n` it built with `@kit/i18n`:
 
 ```tsx
-import { IntlProvider } from '@kit/intl-react';
+import { createReactI18n, IntlProvider } from '@kit/intl-react';
 
-<IntlProvider locale={locale} clock={clock} createTranslator={(intl) => createAppTranslator(intl, catalogues)}>
-  {children}
+export const { TranslatorProvider, useT } = createReactI18n(createI18n<AppCatalogue>());
+
+<IntlProvider locale={locale} clock={clock}>
+  <TranslatorProvider catalogues={{ locale: 'en', source, translations }}>{children}</TranslatorProvider>
 </IntlProvider>;
 ```
 
-The translator's type is the app's, declared once by merging into `IntlRegister`, which is what types `useT`.
-
-```ts
-declare module '@kit/intl-react' {
-  interface IntlRegister {
-    translator: AppTranslator;
-  }
-}
-```
+`useT()` is typed by `AppCatalogue`: a wrong key or wrong arguments fail to compile.

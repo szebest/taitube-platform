@@ -1,7 +1,5 @@
 export * from './format';
-/** @public */
-export type { IntlRegister, RegisteredTranslator } from './intl-context';
 export * from './intl-provider';
 export * from './locale-store';
+export * from './react-i18n';
 export * from './use-format';
-export * from './use-t';

@@ -1,5 +1,4 @@
 import { SectionError } from '@kit/components';
-import { useT } from '@kit/intl-react';
 import { Button, Checkbox, Icon, Label, Skeleton } from '@kit/ui';
 import { useQuery } from '@tanstack/react-query';
 import { useApi } from '@vp/queries';
@@ -7,6 +6,7 @@ import { useState } from 'react';
 import { saveTargetsQueryOptions } from '#app/features/library/api/library-queries';
 import { useTogglePlaylistItem } from '#app/features/library/hooks/use-toggle-playlist-item';
 import { useRequireAccount } from '#app/hooks/use-require-account';
+import { useT } from '#app/lib/messages';
 import { urlModals } from '#app/lib/url-modal/registry';
 import { NewPlaylistForm } from '../new-playlist-form/new-playlist-form';
 

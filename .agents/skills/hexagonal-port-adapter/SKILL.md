@@ -11,6 +11,13 @@ metadata:
 
 This skill defines the dependency inversion rules, interface segregation contracts, and modular repository standards across `video-pipeline`.
 
+## 0. Platform or app, first
+
+Before placing a port, adapter, token or registry, ask whether a second app could use it unchanged. If so it belongs in a
+`@kit/*` platform package (`packages/platform/<tier>/`) that never names a `@vp/*` package: the app's value comes in as a
+required typed parameter or a `@kit/di` token, and a port ships a `./contract` suite the app's adapters run (today the suites are the per-port ones in `packages/server/adapters/__tests__/contract/`; they move with `@kit/ports`, the last step of ticket 170). The rules:
+`docs/standards/platform-packages.md`. Everything below is the app side.
+
 ## 1. Core Principles
 
 1. **Dependency Inversion:** Concrete SDKs (`@aws-sdk/client-s3`, `ioredis`, `bullmq`, `postgres`, `drizzle-orm`) MUST NEVER be imported, instantiated, or referenced outside their adapter modules in `adapters/**` and composition roots (`apps/server/api/src/app.ts` and `apps/server/worker/src/runner.ts`).

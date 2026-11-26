@@ -29,6 +29,19 @@ dependency on its current major) are `senior-engineering-practices`, section 4. 
 - **A rule that slipped gets a check, not louder prose**: the assertion goes into `tests/architecture/` with a
   fixture proving it fires, and its row into [ARCHITECTURE.md section 6](../../ARCHITECTURE.md#6-verification--enforcement).
 
+## Platform packages, here
+
+Before touching or adding a package under `packages/`, ask whether a second app could use it unchanged. If so it is
+a platform package (`packages/platform/<tier>/<name>`, `@kit/*`) and [platform-packages.md](../standards/platform-packages.md)
+applies:
+
+- **It never names an app package**, in code, manifest or docs: take the app's value as a required typed parameter,
+  prop or option, or move the generic piece into a `@kit` package. Never copy it.
+- **Extend, never edit.** A change adds a token, a registry entry, a plugin or an option whose default keeps the
+  old behaviour.
+- **A surface change** (`pnpm gen:api` rewrites `api/<name>.api.txt`) comes with a `CHANGELOG.md` entry and a version
+  bump, and a type-level spec for a new public generic.
+
 ## Setup & environment
 
 A change that adds an environment key, a service, a port, a migration, a queue, a seed entity or a demo scenario

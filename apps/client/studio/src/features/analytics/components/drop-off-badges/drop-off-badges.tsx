@@ -1,10 +1,11 @@
-import { useFormat, useT } from '@kit/intl-react';
+import { useFormat } from '@kit/intl-react';
 import { unwrapOr } from '@kit/result';
 import { Badge } from '@kit/ui';
 import { useQuery } from '@tanstack/react-query';
 import { dropOffMoments } from '@vp/domain-rules';
 import { videoDuration } from '@vp/intl-formats';
 import { useApi, videoQueryOptions, videoRetentionQueryOptions } from '@vp/queries';
+import { useT } from '#app/lib/messages';
 
 const MS_PER_SECOND = 1000;
 

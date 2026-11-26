@@ -1,6 +1,6 @@
-import { useT } from '@kit/intl-react';
 import { Button, createCompoundContext } from '@kit/ui';
 import type { PropsWithChildren } from 'react';
+import { useT } from '#app/lib/messages';
 import { ImagePreview } from '../image-preview/image-preview';
 
 type ImageState = {

@@ -33,7 +33,7 @@ const renderAppearance = (from: StoredAppearance = stored(), defaults?: TokenSet
 const setIds = ({ resolved }: ReturnType<typeof useAppearance>) =>
   Object.fromEntries(TOKEN_GROUPS.map((group) => [group, resolved.sets[group].id]));
 
-const storedCookie = () => JSON.parse(readCookie('vp.appearance') ?? 'null');
+const storedCookie = () => JSON.parse(readCookie('acme.appearance') ?? 'null');
 
 describe('@kit/ui: AppearanceProvider', () => {
   beforeEach(() => {
@@ -84,8 +84,8 @@ describe('@kit/ui: AppearanceProvider', () => {
   });
 
   afterEach(() => {
-    writeCookie('vp.appearance', '', { maxAge: 0 });
-    writeCookie('vp.theme', '', { maxAge: 0 });
+    writeCookie('acme.appearance', '', { maxAge: 0 });
+    writeCookie('acme.theme', '', { maxAge: 0 });
   });
 
   it('applies an override at once, keeps it in the cookie, and carries it across a theme switch', () => {
@@ -154,7 +154,7 @@ describe('@kit/ui: AppearanceProvider', () => {
     const { result } = renderAppearance();
     act(() => result.current.update({ theme: 'nocturne' }));
 
-    writeCookie('vp.appearance', JSON.stringify({ ...storedCookie(), mode: 'light' }), {
+    writeCookie('acme.appearance', JSON.stringify({ ...storedCookie(), mode: 'light' }), {
       maxAge: 60,
     });
     act(() => result.current.setOverride('spacing', 'airy'));
@@ -184,12 +184,12 @@ describe('@kit/ui: AppearanceProvider', () => {
     expect(setIds(result.current)).toMatchObject({ spacing: 'compact', sizing: 'small' });
   });
 
-  it('rewrites a vp.theme cookie from before schema 2 as vp.appearance, and deletes it', () => {
-    writeCookie('vp.theme', 'light', { maxAge: 60 });
+  it('rewrites a acme.theme cookie from before schema 2 as acme.appearance, and deletes it', () => {
+    writeCookie('acme.theme', 'light', { maxAge: 60 });
 
     renderAppearance(stored({ mode: 'light' }, 'legacy'));
 
-    expect(readCookie('vp.theme')).toBeUndefined();
+    expect(readCookie('acme.theme')).toBeUndefined();
     expect(storedCookie()).toMatchObject({ schema: 2, theme: null, mode: 'light' });
   });
 

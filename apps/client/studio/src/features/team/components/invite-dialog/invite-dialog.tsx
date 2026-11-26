@@ -1,12 +1,12 @@
-import { useT } from '@kit/intl-react';
 import { fromPromise, isOk } from '@kit/result';
-import { Button, Field, ResponsiveModal, SegmentedControl, useToast, useUiCopy } from '@kit/ui';
+import { Button, Field, ResponsiveModal, SegmentedControl, useToast } from '@kit/ui';
 import { ApiError } from '@vp/api-client';
 import { CHANNEL_ROLE_NAMES, type ChannelRole } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import { type FormEvent, useState } from 'react';
 import { useRoleRules } from '#app/features/team/hooks/use-role-rules';
 import { useInviteMember } from '#app/features/team/hooks/use-team-mutations';
+import { useT } from '#app/lib/messages';
 import { type FoundChannel, HandleLookup } from '../handle-lookup/handle-lookup';
 import { RoleCapabilities } from '../role-capabilities/role-capabilities';
 
@@ -36,7 +36,7 @@ function refusalOf(error: unknown): Refusal | undefined {
 /** Invites the channel behind a handle with a role; a manager is offered every role but manager. */
 export function InviteDialog({ onClose }: InviteDialogProps) {
   const { tOr } = useT();
-  const { cancel } = useUiCopy();
+  const cancel = tOr('ui.cancel', {}, '');
   const toast = useToast();
   const invite = useInviteMember();
   const { canInvite } = useRoleRules();

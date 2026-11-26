@@ -1,9 +1,9 @@
 import { AppEnvSchema } from '../../packages/server/env-schema/src/index';
+import { PRODUCT_NAME } from '../../scripts/extractable/product-name';
 import { isPlatform, load, type Pkg } from '../../scripts/workspace-packages';
 import { moduleSpecifiers, platformSources, stringTexts } from './platform-sources';
 import { read } from './repo-files';
 
-const PRODUCT_NAME = /taitube|video-pipeline|vp-dev|(?<![a-z0-9])vp[._]/i;
 const ROUTE = /^\/[a-z][\w:{}.~-]*(?:\/[\w:{}.~-]*)*$/i;
 const OTLP_SPEC_PATH = '/v1/traces';
 const ENV_KEYS: ReadonlySet<string> = new Set(Object.keys(AppEnvSchema.shape));

@@ -1,4 +1,4 @@
-import { Table, useUiCopy, VisuallyHidden } from '@kit/ui';
+import { Table, VisuallyHidden } from '@kit/ui';
 import { type RowData, Subscribe, type TableState } from '@tanstack/react-table';
 import {
   Children,
@@ -7,6 +7,7 @@ import {
   isValidElement,
   type ReactNode,
 } from 'react';
+import { useT } from '#app/lib/messages';
 import { DataTablePagination } from './components/data-table-pagination/data-table-pagination';
 import { DataTableContext, rowAgnostic, useDataTable } from './data-table.context';
 import { dataTableStyles } from './data-table.variants';
@@ -109,10 +110,10 @@ export function DataTableToolbar({ className, ...props }: ComponentPropsWithRef<
 /** Actions on the selected rows, shown over the toolbar with the count, which is announced. */
 export function DataTableBatch({ className, children, ...props }: ComponentPropsWithRef<'div'>) {
   const { rowSelection } = useDataTable('Batch');
-  const copy = useUiCopy();
+  const { tOr } = useT();
   const count = selectedCount(rowSelection);
   const open = count > 0;
-  const label = copy.selectedCount.replace('{count}', String(count));
+  const label = tOr('appUi.selectedCount', { count: String(count) }, '');
   const styles = dataTableStyles({ open });
 
   return (

@@ -1,6 +1,6 @@
-import { useT } from '@kit/intl-react';
 import { CREATOR_INBOX_FILTERS, type CreatorInboxFilter } from '@vp/domain';
 import { FilterSelect } from '#app/components/table/filter-select';
+import { useT } from '#app/lib/messages';
 
 export interface InboxFilterProps {
   value: CreatorInboxFilter;

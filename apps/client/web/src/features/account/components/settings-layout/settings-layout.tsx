@@ -1,4 +1,3 @@
-import { useT } from '@kit/intl-react';
 import { Icon } from '@kit/ui';
 import { Link, Outlet, useLocation } from '@tanstack/react-router';
 import { SettingsShell } from '#app/components/settings/settings-shell';
@@ -6,6 +5,7 @@ import {
   SETTINGS_SECTION_IDS,
   SETTINGS_SECTIONS,
 } from '#app/features/account/utils/settings-index';
+import { useT } from '#app/lib/messages';
 
 /** The `/settings` layout: the section navigation beside the page from medium up, the page alone on compact. */
 export function SettingsLayout() {

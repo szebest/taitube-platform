@@ -1,11 +1,12 @@
 import { seriesColor } from '@kit/components';
-import { Format, useT } from '@kit/intl-react';
+import { Format } from '@kit/intl-react';
 import { useQuery } from '@tanstack/react-query';
 import { useApi } from '@vp/queries';
 import { ChartFrame } from '#app/components/analytics/chart-frame';
 import { videoAudienceQueryOptions } from '#app/features/analytics/api/analytics-queries';
 import type { AnalyticsRange } from '#app/features/analytics/types';
 import { type DeviceRow, visibleDevices } from '#app/features/analytics/utils/visible-devices';
+import { useT } from '#app/lib/messages';
 
 export interface DeviceSplitProps {
   videoId: string;

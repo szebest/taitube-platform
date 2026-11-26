@@ -14,7 +14,11 @@ The data layer:
 - `createQueryClient()`: `@kit/query`'s factory with this product's retry policy (`retry-policy.ts`: the API's
   `RETRY_CLASS` per error code, then the status, and `Retry-After`), so the cache and the retries are what the
   generic package documents and none for a 4xx in the browser.
-- `createAppRouter({ routeTree, apiBaseUrl, pending, error, notFound }, options)`: the router every client app's
+- `AppMessages<App>`: what an app hands the shared providers about its words (its merged source catalogue,
+  its loader per locale and its `TranslatorProvider` from `createReactI18n`); `AppWords`, `IntlProvider` and
+  `createLocaleStore` take it, and this package renders its own words (the error pages, the section boundary,
+  the failure toast, sign-in, `UiCopy`) with a translator over the shared catalogue alone.
+- `createAppRouter({ routeTree, messages, apiBaseUrl, pending }, options)`: the router every client app's
   `getRouter` returns, with the API client, the query cache and the toaster built once per router and put in
   context (`AppRouterContext`), the request's CSP nonce on every script, and the SSR query integration. It
   dehydrates the instant the server rendered at and the negotiated locale; its `Wrap`, `AppWords`, measures

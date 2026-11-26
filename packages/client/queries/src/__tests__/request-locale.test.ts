@@ -1,9 +1,10 @@
 import { createLocaleStore } from '../intl';
 import { type LocaleRequest, requestLocale } from '../request-locale';
 import { inRequest } from './in-request';
+import { SPEC_MESSAGES } from './spec-messages';
 
 async function requestLocaleOnServer(acceptLanguage: string, request: Partial<LocaleRequest> = {}) {
-  const locales = createLocaleStore();
+  const locales = createLocaleStore(SPEC_MESSAGES);
   const { value } = await inRequest(() => requestLocale(locales, { searchStr: '', ...request }), {
     acceptLanguage,
   });

@@ -1,10 +1,10 @@
 import { PageHeader } from '@kit/components';
-import { useT } from '@kit/intl-react';
 import { useNavigate, useSearch } from '@tanstack/react-router';
 import {
   type ModerationChannel,
   ModerationChannelProvider,
 } from '#app/features/comments/hooks/use-moderation-channel';
+import { useT } from '#app/lib/messages';
 import { CommentInbox } from '../comment-inbox/comment-inbox';
 import { CommentSettingsLink } from '../comment-settings-link/comment-settings-link';
 import { InboxFilter } from '../inbox-filter/inbox-filter';

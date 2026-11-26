@@ -1,6 +1,6 @@
 import type { Container } from '@kit/composition';
-import { SUPPORTED_LOCALES } from '@kit/intl';
 import { Adapters, queueNamed } from '@vp/adapters/composition';
+import { LOCALES } from '@vp/shared-messages/locales';
 import {
   ChannelFeaturedService,
   ChannelIdentityService,
@@ -47,7 +47,7 @@ export function registerChannelServices(c: Container): Container {
           audit: c.get(Adapters.Repositories).channelAudit,
           identity: c.get(Services.ChannelIdentityService),
           videoService: c.get(Services.VideoService),
-          locales: SUPPORTED_LOCALES,
+          locales: LOCALES.tags,
         })
     )
     .provide(

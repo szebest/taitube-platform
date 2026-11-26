@@ -1,7 +1,7 @@
-import { useT } from '@kit/intl-react';
 import { useToast } from '@kit/ui';
 import type { VideoSummary } from '@vp/api-contracts';
 import { use } from 'react';
+import { useT } from '#app/lib/messages';
 import { urlModals } from '#app/lib/url-modal/registry';
 import { PlaybackSessionContext } from '../lib/playback-session/playback-session.context';
 import { useRequireAccount } from './use-require-account';

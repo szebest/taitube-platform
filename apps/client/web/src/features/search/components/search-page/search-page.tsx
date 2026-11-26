@@ -1,7 +1,7 @@
-import { useT } from '@kit/intl-react';
 import { Skeleton } from '@kit/ui';
 import { getRouteApi } from '@tanstack/react-router';
 import { ChipBarSkeleton } from '#app/components/discovery/chip-bar';
+import { useT } from '#app/lib/messages';
 import { SearchResults, SearchResultsSkeleton } from '../search-results/search-results';
 
 const route = getRouteApi('/search');

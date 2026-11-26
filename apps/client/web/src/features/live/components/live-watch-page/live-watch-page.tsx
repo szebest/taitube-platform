@@ -1,4 +1,3 @@
-import { useT } from '@kit/intl-react';
 import { Badge, Button } from '@kit/ui';
 import { useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
 import { ClientOnly, Link, useParams } from '@tanstack/react-router';
@@ -17,6 +16,7 @@ import { LazyTaitubePlayer } from '#app/components/player/taitube-player/taitube
 import { Stage } from '#app/components/watch/stage';
 import { liveKeys, liveStreamQueryOptions } from '#app/features/live/api/live-queries';
 import { useChatDock } from '#app/features/live/hooks/use-chat-dock';
+import { useT } from '#app/lib/messages';
 import { LiveChatReplay } from '../live-chat-replay/live-chat-replay';
 import { LiveStreamChat } from '../live-stream-chat/live-stream-chat';
 

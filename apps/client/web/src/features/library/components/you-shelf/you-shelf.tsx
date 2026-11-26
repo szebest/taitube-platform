@@ -1,6 +1,6 @@
 import { EmptyLibraryIllustration, EmptyState, Shelf } from '@kit/components';
-import { useT } from '@kit/intl-react';
 import type { ReactElement, ReactNode } from 'react';
+import { useT } from '#app/lib/messages';
 
 type YouShelfId = 'history' | 'watchLater' | 'playlists' | 'videos';
 
