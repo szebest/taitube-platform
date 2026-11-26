@@ -84,7 +84,7 @@ describe('apps/client/web: registerRuntimeCaching', () => {
           expect.objectContaining({ cachedResponseWillBeUsed: expect.any(Function) }),
         ]),
       },
-      { cacheName: CACHE_NAMES.api },
+      { cacheName: CACHE_NAMES.api, matchOptions: { ignoreVary: true } },
     ]);
   });
 });
