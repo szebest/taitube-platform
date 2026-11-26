@@ -86,7 +86,7 @@ describe('@vp/workbench: withApp', () => {
   it('rewords the story when the toolbar locale changes', async () => {
     const words = async (locale: string) => ({
       locale,
-      loaded: await loadCatalogue({ globals: { locale } } as never),
+      loaded: await loadCatalogue({ globals: { locale }, title: 'Probe' } as never),
     });
     const en = await words('en');
     const pl = await words('pl');

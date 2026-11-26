@@ -1,6 +1,8 @@
 import { Button, useUiCopy } from '@kit/ui';
 import { composeStory } from '@storybook/react-vite';
 import { render, screen } from '@testing-library/react';
+import { useT as useStudioT } from '../../../../../apps/client/studio/src/lib/messages';
+import { useT as useWebT } from '../../../../../apps/client/web/src/lib/messages';
 import { loadCatalogue, withAppearance } from '../decorator';
 import { initialAppearanceGlobals } from '../toolbars';
 
@@ -8,10 +10,21 @@ function CloseButton() {
   return <Button>{useUiCopy().close}</Button>;
 }
 
-const renderStory = async (globals: Record<string, string>) => {
+function StudioLegend() {
+  return <p>{useStudioT().tOr('appUi.legend', {}, '')}</p>;
+}
+
+function WebNavigation() {
+  return <p>{useWebT().tOr('appUi.navigation', {}, '')}</p>;
+}
+
+const renderStory = async (
+  globals: Record<string, string>,
+  { title = 'Probe', render: Probe = CloseButton } = {}
+) => {
   const Story = composeStory(
-    { render: () => <CloseButton /> },
-    { title: 'Probe' },
+    { render: () => <Probe /> },
+    { title },
     { decorators: [withAppearance], loaders: [loadCatalogue], initialGlobals: globals }
   );
   await Story.load();
@@ -48,6 +61,20 @@ describe('@vp/workbench: withAppearance', () => {
 
       expect(screen.getByRole('button', { name: close })).toBeInTheDocument();
       expect(document.documentElement.lang).toBe(locale);
+    }
+  );
+
+  it.each([
+    { title: 'Studio/Probe', Probe: StudioLegend, locale: 'en', word: 'Legend' },
+    { title: 'Studio/Probe', Probe: StudioLegend, locale: 'pl', word: 'Legenda' },
+    { title: 'Web/Probe', Probe: WebNavigation, locale: 'en', word: 'Main' },
+    { title: 'Web/Probe', Probe: WebNavigation, locale: 'pl', word: 'Główne' },
+  ])(
+    'hands a $title story its own app translator in $locale',
+    async ({ title, Probe, locale, word }) => {
+      await renderStory({ ...initialAppearanceGlobals, locale }, { title, render: Probe });
+
+      expect(screen.getByText(word)).toBeInTheDocument();
     }
   );
 });
