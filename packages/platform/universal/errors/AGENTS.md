@@ -23,6 +23,8 @@ vocabulary itself:
   `.during(operation)` as a `fromPromise` mapper.
 - **`CommonErrorCodes`** (`src/common-codes.ts`): the codes a platform package may emit without owning a
   domain, `VALIDATION_FAILED` and `INTERNAL`.
+- **`InfraErrorCodes`, `InfraFailure`** (`src/infra-codes.ts`, `src/infra-failures.ts`): the four `*_UNAVAILABLE`
+  codes, their `Unavailable` failure types and factories, which the ports of `@kit/ports` return.
 
 ## 2. Invariants
 
