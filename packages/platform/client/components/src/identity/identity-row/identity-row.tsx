@@ -1,8 +1,7 @@
 import { Avatar, Badge, Icon, cn } from '@kit/ui';
 import type { ComponentPropsWithRef } from 'react';
 import { initialsOf } from '../../account-menu/account-menu';
-import { AccentRing } from '../accent-ring/accent-ring';
-import type { AccentRingAccent } from '../accent-ring/types';
+import { AccentRing, type AccentRingAccent } from '../accent-ring';
 import { IdentityRowContext, useIdentityRow } from './identity-row.context';
 
 export interface IdentityRowRootProps extends ComponentPropsWithRef<'span'> {

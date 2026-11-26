@@ -1,7 +1,6 @@
 export * from './account-menu';
 export * from './analytics/stat-card';
 export * from './disclosure-control';
-export * from './identity/accent-ring';
 export * from './identity/acting-as';
 export * from './identity/identity-row';
 export * from './identity/identity-switcher';

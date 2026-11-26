@@ -1,7 +1,6 @@
 import { Avatar, DropdownMenu, type MenuItemProps, useUiCopy, VisuallyHidden } from '@kit/ui';
 import type { ComponentPropsWithRef } from 'react';
-import { AccentRing } from '../identity/accent-ring/accent-ring';
-import type { AccentRingAccent } from '../identity/accent-ring/types';
+import { AccentRing, type AccentRingAccent } from '../identity/accent-ring';
 import { accountMenuStyles } from './account-menu.variants';
 
 const INITIALS = 2;
