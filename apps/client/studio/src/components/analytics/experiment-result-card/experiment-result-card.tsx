@@ -1,6 +1,6 @@
 import { StatCard, StatCardSkeleton } from '@kit/components';
 import type { FormatValue } from '@kit/intl';
-import { Format, useT } from '@kit/intl-react';
+import { Format } from '@kit/intl-react';
 import { Badge, Card, Progress, Skeleton, Table, cn } from '@kit/ui';
 import {
   CONTROL_VARIANT_ID,
@@ -9,6 +9,7 @@ import {
   type ExperimentVariantId,
 } from '@vp/domain';
 import type { ComponentPropsWithRef, ReactNode } from 'react';
+import { useT } from '#app/lib/messages';
 import {
   ExperimentResultCardContext,
   useExperimentResultCard,

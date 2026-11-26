@@ -1,6 +1,6 @@
+import type { AnyFailure } from '@kit/errors';
 import type { Result } from '@kit/result';
 import { PROBLEM_CONTENT_TYPE, type Problem, problemFor } from '@vp/api-contracts';
-import type { AnyFailure } from '@vp/errors';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 
 /**

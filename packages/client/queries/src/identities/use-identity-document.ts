@@ -1,7 +1,7 @@
-import { useT } from '@kit/intl-react';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useEffectEvent } from 'react';
 import { identityKey } from '../account-slots';
+import { useT } from '../intl/shared-words';
 import { useIdentity } from '../session-provider';
 import { accountsListQueryOptions } from './identity-queries';
 import { useIdentityChoices } from './use-identity-choices';

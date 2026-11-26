@@ -1,7 +1,7 @@
-import { useT } from '@kit/intl-react';
 import { Button, Field, Textarea, useToast } from '@kit/ui';
 import { useState } from 'react';
 import { useAppealScreening } from '#app/features/videos/hooks/use-appeal-screening';
+import { useT } from '#app/lib/messages';
 
 const MESSAGE_MAX_LENGTH = 1000;
 

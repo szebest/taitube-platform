@@ -1,6 +1,7 @@
-import { FALLBACK_ACTIVE_LOCALE, IntlProvider } from '@kit/intl-react';
 import { Badge, Button } from '@kit/ui';
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { FALLBACK_ACTIVE_LOCALE, IntlProvider } from '@vp/queries/intl';
+import { STUDIO_MESSAGES } from '#app/lib/messages';
 import { ExperimentResultCard, type ExperimentResultCardExperiment } from '../index';
 
 const result = (variantId: 'a' | 'b' | 'c', impressions: number, enough: boolean) => ({
@@ -41,6 +42,7 @@ const meta = {
   args: { experiment: running },
   render: (args) => (
     <IntlProvider
+      messages={STUDIO_MESSAGES}
       locale={FALLBACK_ACTIVE_LOCALE.locale}
       catalogues={FALLBACK_ACTIVE_LOCALE.catalogues}
       timeZone="UTC"

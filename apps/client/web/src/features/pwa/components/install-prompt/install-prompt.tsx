@@ -1,6 +1,6 @@
-import { useT } from '@kit/intl-react';
 import { Button, Callout } from '@kit/ui';
 import { useInstallPrompt } from '#app/features/pwa/hooks/use-install-prompt';
+import { useT } from '#app/lib/messages';
 
 /** The "Install Taitube" callout, floating over the page so that showing it moves nothing, shown once the browser offers an install and until it is dismissed. */
 export function InstallPrompt() {

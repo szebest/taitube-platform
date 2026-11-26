@@ -1,4 +1,4 @@
-import { PREFERENCE_ID_PATTERN } from '@vp/domain/settings';
+import { PREFERENCE_ID_PATTERN } from '@kit/appearance';
 import { type ZodType, z } from 'zod';
 import { AmbientSchema } from './ambient';
 import { BorderSchema } from './border';

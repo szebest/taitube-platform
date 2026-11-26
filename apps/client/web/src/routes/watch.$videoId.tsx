@@ -1,8 +1,9 @@
+import { parseParam } from '@kit/query';
 import { assertNever } from '@kit/result';
 import { environmentManager } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
 import { ShareTokenSchema, type Video, VideoIdParamSchema } from '@vp/api-contracts';
-import { correctionsQueryOptions, parseParam, prefetched } from '@vp/queries';
+import { correctionsQueryOptions, prefetched } from '@vp/queries';
 import { z } from 'zod';
 import { ClipAction } from '#app/features/clips';
 import { CreatorStatsPanel } from '#app/features/creator-stats';

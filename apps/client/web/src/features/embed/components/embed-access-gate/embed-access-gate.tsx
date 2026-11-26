@@ -1,7 +1,7 @@
-import { useT } from '@kit/intl-react';
 import { assertNever } from '@kit/result';
 import { Link } from '@tanstack/react-router';
 import { AccessGate } from '#app/components/watch/access-gate';
+import { useT } from '#app/lib/messages';
 import type { VideoAccess } from '#app/lib/video-access/load-video-access';
 
 export interface EmbedAccessGateProps {

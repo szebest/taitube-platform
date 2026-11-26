@@ -1,5 +1,4 @@
 import { EmptyState } from '@kit/components';
-import { useT } from '@kit/intl-react';
 import { isErr } from '@kit/result';
 import { Button, Callout, useToast } from '@kit/ui';
 import { useMutation } from '@tanstack/react-query';
@@ -13,6 +12,7 @@ import {
   revertEditsMutationOptions,
   saveEditsMutationOptions,
 } from '#app/features/videos/api/video-pipeline-mutations';
+import { useT } from '#app/lib/messages';
 import { formatTimecode } from '#app/utils/timecode';
 import { BlurFields } from '../blur-fields/blur-fields';
 

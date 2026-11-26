@@ -1,6 +1,5 @@
+import { isInputFailure, PermanentError, TransientError } from '@kit/errors';
 import { ErrorCodes } from '../error-codes';
-import { isInputFailure } from '../failure';
-import { PermanentError, TransientError } from '../pipeline-error';
 import { mediaFailure, mediaFailureFrom } from '../pipeline-failures';
 
 describe('@vp/errors: media failures', () => {

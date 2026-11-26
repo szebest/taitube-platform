@@ -11,9 +11,14 @@ tier, layer T5, the app-module layer: it sits on `@vp/api-client` and `@kit/intl
 
 The data layer:
 
-- `createQueryClient()`: one per request on the server and one per tab, a `staleTime` above zero so hydration
-  never refetches, no retry on the server and none for a 4xx in the browser.
-- `createAppRouter({ routeTree, apiBaseUrl, pending, error, notFound }, options)`: the router every client app's
+- `createQueryClient()`: `@kit/query`'s factory with this product's retry policy (`retry-policy.ts`: the API's
+  `RETRY_CLASS` per error code, then the status, and `Retry-After`), so the cache and the retries are what the
+  generic package documents and none for a 4xx in the browser.
+- `AppMessages<App>`: what an app hands the shared providers about its words (its merged source catalogue,
+  its loader per locale and its `TranslatorProvider` from `createReactI18n`); `AppWords`, `IntlProvider` and
+  `createLocaleStore` take it, and this package renders its own words (the error pages, the section boundary,
+  the failure toast, sign-in, `UiCopy`) with a translator over the shared catalogue alone.
+- `createAppRouter({ routeTree, messages, apiBaseUrl, pending }, options)`: the router every client app's
   `getRouter` returns, with the API client, the query cache and the toaster built once per router and put in
   context (`AppRouterContext`), the request's CSP nonce on every script, and the SSR query integration. It
   dehydrates the instant the server rendered at and the negotiated locale; its `Wrap`, `AppWords`, measures
@@ -35,8 +40,8 @@ The data layer:
   title).
 - `ApiProvider` and `useApi()` hand the client in router context to components. `useApi()` outside the provider
   throws, naming it.
-- Loader helpers: `ensureFound` (an API 404 renders the not-found page), `parseParam` (a segment its schema
-  refuses renders it too), `keysetPaging` and `KEYSET_PAGE_SIZE`.
+- Loader helpers: `ensureFound` (`@kit/query`'s `createEnsureFound` told that an API 404 is a missing resource).
+  `parseParam`, `keysetPaging` and `KEYSET_PAGE_SIZE` are imported from `@kit/query`.
 - The query factories both apps read, each taking the client: `videoQueryOptions(api, id, shareToken?)` (the token
   goes with the read and stays out of the key, so every part of the page reads the entry the token's read filled;
   `correctionsQueryOptions(api, id, shareToken?)` does the same),
@@ -161,7 +166,7 @@ The switcher (`identities/`, SDD §11; ticket 129's section 5):
 - **A factory moves here when a second app reads it**, and not before: a query only web reads (feed, channel,
   reactions, subscriptions, categories) stays in web's `features/`.
 - **A server function is a thin wrapper.** The cookie and the request are read in plain functions
-  (`session-cookie.ts`); a spec runs the wrapper through `@vp/web-testing`'s doubles, since vitest has no Start
+  (`session-cookie.ts`); a spec runs the wrapper through `@kit/web-testing`'s doubles, since vitest has no Start
   compiler.
 - **UI only for the session.** The login page (and the account menu) sit here because they render the session
   both apps share; a page or a layout of one app does not. Plain markup until the shell ticket styles it.

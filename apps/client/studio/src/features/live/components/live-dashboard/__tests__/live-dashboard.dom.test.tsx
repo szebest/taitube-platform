@@ -1,13 +1,9 @@
+import { axeViolations } from '@kit/web-testing/dom';
 import { screen, within } from '@testing-library/react';
 import { openMyLiveStream } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { apiServer, LIVE_VIDEO_ID, mockEndpoint, problemReply } from '@vp/web-testing';
-import {
-  axeViolations,
-  mockLiveChatSocket,
-  renderRoute,
-  stubEventSource,
-} from '@vp/web-testing/dom';
+import { mockLiveChatSocket, renderRoute, stubEventSource } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
 import { signInBrowser } from '#app/__tests__/providers';
 import {

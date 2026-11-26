@@ -1,4 +1,3 @@
-import { useT } from '@kit/intl-react';
 import { useQuery } from '@tanstack/react-query';
 import { ClientOnly } from '@tanstack/react-router';
 import { type WatchPartySocket, useApi, videoQueryOptions } from '@vp/queries';
@@ -7,6 +6,7 @@ import { PartyLobby } from '#app/components/party/party-lobby';
 import { LazyTaitubePlayer } from '#app/components/player/taitube-player/taitube-player.lazy';
 import { Stage } from '#app/components/watch/stage';
 import { usePartyCountdown } from '#app/features/watch-party/hooks/use-party-countdown';
+import { useT } from '#app/lib/messages';
 import { PartySyncOverlay } from '../party-sync-overlay/party-sync-overlay';
 
 interface PartyStageProps {

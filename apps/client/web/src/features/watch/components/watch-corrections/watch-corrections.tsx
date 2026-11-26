@@ -1,9 +1,10 @@
-import { useFormat, useT } from '@kit/intl-react';
+import { useFormat } from '@kit/intl-react';
 import { unwrapOr } from '@kit/result';
 import { useQuery } from '@tanstack/react-query';
 import { videoDuration } from '@vp/intl-formats';
 import { correctionsQueryOptions, useApi } from '@vp/queries';
 import { usePlayerSeek } from '#app/components/player/taitube-player';
+import { useT } from '#app/lib/messages';
 import { useShareToken } from '#app/lib/video-access/share-token.context';
 
 /** The corrections of a video under its description, so one that was on screen while the viewer looked away is still there. */

@@ -1,3 +1,4 @@
+import { type Failure } from '@kit/errors';
 import {
   BLUR_MAX_STRENGTH,
   BLUR_MIN_MS,
@@ -5,7 +6,7 @@ import {
   MAX_BLURS,
   TRIM_MIN_MS,
 } from '@vp/domain';
-import { ErrorCodes, type Failure } from '@vp/errors';
+import { ErrorCodes } from '@vp/errors';
 import { type InvalidField, invalidField } from '@vp/validation';
 
 /** A replacement or an edit is already uploading or rendering: one at a time per video. */

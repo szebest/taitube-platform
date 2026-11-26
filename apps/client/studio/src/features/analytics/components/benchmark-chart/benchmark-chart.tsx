@@ -1,11 +1,12 @@
 import { EmptyState } from '@kit/components';
-import { Format, useT } from '@kit/intl-react';
+import { Format } from '@kit/intl-react';
 import { Skeleton } from '@kit/ui';
 import { useQuery } from '@tanstack/react-query';
 import { useApi } from '@vp/queries';
 import { Suspense } from 'react';
 import { ChartFrame } from '#app/components/analytics/chart-frame';
 import { videoBenchmarkQueryOptions } from '#app/features/analytics/api/analytics-queries';
+import { useT } from '#app/lib/messages';
 import type { BenchmarkPoint } from '../benchmark-plot/benchmark-plot';
 import { LazyBenchmarkPlot } from '../benchmark-plot/benchmark-plot.lazy';
 

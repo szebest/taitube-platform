@@ -1,5 +1,6 @@
+import { parseParam } from '@kit/query';
 import { createFileRoute } from '@tanstack/react-router';
-import { ensureFound, parseParam } from '@vp/queries';
+import { ensureFound } from '@vp/queries';
 import { z } from 'zod';
 import { PlaylistPage, PlaylistPageSkeleton } from '#app/features/library';
 import { playlistQueryOptions } from '#app/lib/query-keys/library-keys';

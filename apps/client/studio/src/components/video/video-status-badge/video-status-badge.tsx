@@ -1,6 +1,6 @@
-import { useT } from '@kit/intl-react';
 import { Badge, type BadgeTone, Icon, type IconId } from '@kit/ui';
 import type { VideoSummary } from '@vp/api-contracts';
+import { useT } from '#app/lib/messages';
 
 type VideoStatus = VideoSummary['status'];
 

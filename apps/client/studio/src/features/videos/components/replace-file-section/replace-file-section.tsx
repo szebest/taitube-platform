@@ -1,9 +1,9 @@
-import { useT } from '@kit/intl-react';
 import { Button, Field, Input, Progress, useToast } from '@kit/ui';
 import { useMutation } from '@tanstack/react-query';
 import { useApi } from '@vp/queries';
 import { useState } from 'react';
 import { replaceFileMutationOptions } from '#app/features/videos/api/video-pipeline-mutations';
+import { useT } from '#app/lib/messages';
 
 export interface ReplaceFileSectionProps {
   videoId: string;

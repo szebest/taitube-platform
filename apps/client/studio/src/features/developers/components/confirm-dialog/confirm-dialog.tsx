@@ -1,4 +1,5 @@
-import { AlertDialog, Button, useUiCopy } from '@kit/ui';
+import { AlertDialog, Button } from '@kit/ui';
+import { useT } from '#app/lib/messages';
 
 export interface ConfirmDialogProps {
   title: string;
@@ -16,7 +17,8 @@ export function ConfirmDialog({
   onConfirm,
   onClose,
 }: ConfirmDialogProps) {
-  const { cancel } = useUiCopy();
+  const { tOr } = useT();
+  const cancel = tOr('ui.cancel', {}, '');
 
   return (
     <AlertDialog.Root open onOpenChange={(open) => !open && onClose()}>

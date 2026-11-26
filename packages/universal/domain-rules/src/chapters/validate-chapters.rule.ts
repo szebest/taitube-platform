@@ -1,4 +1,5 @@
 import { type Result, err, ok } from '@kit/result';
+import { normalizePlainText, withinLength } from '@kit/validation';
 import {
   CHAPTER_MIN_GAP_MS,
   CHAPTER_TITLE_MAX_LENGTH,
@@ -6,7 +7,6 @@ import {
   CHAPTERS_MIN_COUNT,
   type Chapter,
 } from '@vp/domain';
-import { normalizePlainText, withinLength } from '@vp/validation';
 import { type InvalidChapters, invalidChapters } from './failures';
 
 const TITLE_BOUNDS = { minLength: 1, maxLength: CHAPTER_TITLE_MAX_LENGTH };

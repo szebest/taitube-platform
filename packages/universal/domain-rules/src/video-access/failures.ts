@@ -1,5 +1,6 @@
+import { type Failure } from '@kit/errors';
 import { VIDEO_PASSWORD_MAX_LENGTH, VIDEO_PASSWORD_MIN_LENGTH } from '@vp/domain';
-import { ErrorCodes, type Failure } from '@vp/errors';
+import { ErrorCodes } from '@vp/errors';
 import { type InvalidField, invalidField } from '@vp/validation';
 
 export type VideoPasswordRequired = Failure<

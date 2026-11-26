@@ -1,5 +1,6 @@
+import { KEYSET_PAGE_SIZE } from '@kit/query';
 import { listRecommendationFeedback } from '@vp/api-contracts';
-import { createQueryClient, KEYSET_PAGE_SIZE } from '@vp/queries';
+import { createQueryClient } from '@vp/queries';
 import { api, apiServer, mockEndpoint } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
 import { hiddenRecommendationsQueryOptions } from '../recommendation-feedback-keys';

@@ -1,10 +1,10 @@
-import { useT } from '@kit/intl-react';
 import { Button } from '@kit/ui';
 import { canModerateVideo } from '@vp/permissions';
 import { useCan } from '@vp/permissions-react';
 import { useState } from 'react';
 import type { ScreeningCase } from '#app/features/admin/api/admin-screening';
 import { useScreeningDecision } from '#app/features/admin/hooks/use-screening-decision';
+import { useT } from '#app/lib/messages';
 import { ScreeningRejectDialog } from '../screening-reject-dialog/screening-reject-dialog';
 
 export interface ScreeningActionsProps {

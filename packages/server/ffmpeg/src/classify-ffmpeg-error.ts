@@ -1,4 +1,5 @@
-import { ErrorCodes, PermanentError, TransientError } from '@vp/errors';
+import { PermanentError, TransientError } from '@kit/errors';
+import { ErrorCodes } from '@vp/errors';
 
 export function classifyFfmpegError(
   exitCode: number | null,

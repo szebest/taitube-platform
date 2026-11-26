@@ -1,13 +1,13 @@
+import { CommonErrorCodes } from '@kit/errors';
 import { err, ok } from '@kit/result';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { ErrorCodes } from '@vp/errors';
 import { useAppForm } from '../use-app-form';
 import { validateWith } from '../validate-with';
 import { WithUiCopy } from './with-ui-copy';
 
 const requireText = validateWith((text: string) =>
-  text ? ok(text) : err({ code: ErrorCodes.VALIDATION_FAILED, message: 'Say something' })
+  text ? ok(text) : err({ code: CommonErrorCodes.VALIDATION_FAILED, message: 'Say something' })
 );
 
 function NoteForm({ multiline = false }: { multiline?: boolean }) {

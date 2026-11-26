@@ -1,5 +1,5 @@
+import { axeViolations } from '@kit/web-testing/dom';
 import { screen } from '@testing-library/react';
-import { axeViolations } from '@vp/web-testing/dom';
 import { renderEditVideo } from '#app/features/videos/__tests__/render-edit-video';
 import { generationsOf } from '#app/features/videos/__tests__/video-pipeline-api.fixture';
 

@@ -1,6 +1,7 @@
-import { IntlProvider } from '@kit/intl-react';
 import type { Decorator, Meta, StoryObj } from '@storybook/react-vite';
+import { IntlProvider } from '@vp/queries/intl';
 import { VideoJsEngine } from '#app/integrations/video-js/video-js-engine';
+import { WEB_MESSAGES } from '#app/lib/messages';
 import { ControlBar } from '..';
 
 const frame = (markup: string) =>
@@ -36,7 +37,7 @@ type Story = StoryObj<typeof meta>;
 
 const onFrame = (posterUrl: string): Story => ({
   render: (args) => (
-    <IntlProvider locale="en" timeZone="UTC">
+    <IntlProvider messages={WEB_MESSAGES} locale="en" timeZone="UTC">
       <VideoJsEngine playbackUrl={PLAYBACK_URL} posterUrl={posterUrl} title={args.title ?? null}>
         <ControlBar {...args} />
       </VideoJsEngine>

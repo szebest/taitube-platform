@@ -1,10 +1,11 @@
 import { type ChartSeries, StatCard } from '@kit/components';
 import type { FormatValue } from '@kit/intl';
-import { Format, useT } from '@kit/intl-react';
+import { Format } from '@kit/intl-react';
 import { type KpiChangeUnit, kpiChange } from '#app/features/analytics/api/kpi-change';
 import { kpiSeries } from '#app/features/analytics/api/kpi-series';
 import { useAnalytics } from '#app/features/analytics/hooks/use-analytics';
 import type { AnalyticsRange, AnalyticsScope, KpiMetric } from '#app/features/analytics/types';
+import { useT } from '#app/lib/messages';
 import { KpiDelta } from '../kpi-delta/kpi-delta';
 
 interface KpiPresentation {

@@ -1,0 +1,199 @@
+import { dt } from '@vp/shared-messages';
+import { studioInvites } from './studio-invites';
+
+const roles = (manager: string, editor: string, moderator: string, analytics: string) =>
+  ({ manager, editor, moderator, analytics }) as const;
+
+export const studioTeam = {
+  ...studioInvites,
+  teamNav: dt('Zespół'),
+  teamTitle: dt('Zespół'),
+  teamTabs: dt('Sekcje zespołu'),
+  teamTabMembers: dt('Członkowie'),
+  teamTabAudit: dt('Dziennik zmian'),
+  teamRole: dt('{role:enum}', {
+    enum: { role: roles('Menedżer', 'Edytor', 'Moderator', 'Analityk') },
+  }),
+  teamRoleSummary: dt('{role:enum}', {
+    enum: {
+      role: roles(
+        'Prowadzi kanał i zespół, z wyjątkiem innych menedżerów.',
+        'Dodaje i edytuje filmy oraz stronę kanału.',
+        'Pilnuje porządku w komentarzach.',
+        'Czyta statystyki i filmy, niczego nie zmienia.'
+      ),
+    },
+  }),
+  teamCapability: dt('{capability:enum}', {
+    enum: {
+      capability: {
+        'video.read': 'Widzi prywatne i niepubliczne filmy oraz ich napisy',
+        'analytics.read': 'Czyta statystyki',
+        'video.edit': 'Dodaje i edytuje filmy, miniatury i widoczność',
+        'video.delete': 'Usuwa filmy',
+        'channel.act': 'Komentuje i subskrybuje jako kanał',
+        'channel.edit': 'Edytuje stronę i tożsamość kanału',
+        'comment.pin': 'Przypina komentarze',
+        'content.pin': 'Przypina wpisy i filmy w sekcji Zacznij tutaj',
+        'comment.heart': 'Dodaje serduszka do komentarzy',
+        'comment.moderate': 'Moderuje komentarze',
+        'comment.settings': 'Zmienia ustawienia komentarzy i zablokowane słowa',
+        'analytics.export': 'Eksportuje statystyki',
+        'data.export': 'Eksportuje komentarze i filmy',
+        'team.manage': 'Zaprasza osoby, zmienia role i czyta dziennik zmian',
+        'channel.own': 'Usuwa kanał i przekazuje własność',
+      },
+    },
+  }),
+  teamRoleCanTitle: dt('Rola: {role:enum}. Może', {
+    enum: { role: roles('Menedżer', 'Edytor', 'Moderator', 'Analityk') },
+  }),
+  teamMembersCaption: dt('Osoby pracujące nad tym kanałem'),
+  teamColumnMember: dt('Członek'),
+  teamColumnRole: dt('Rola'),
+  teamColumnJoined: dt('Dołączył'),
+  teamColumnActions: dt('Akcje'),
+  teamRoleOf: dt('Rola: {name}'),
+  teamRoleChangeFailed: dt('Nie udało się zmienić roli.'),
+  teamRemove: dt('Usuń: {name}'),
+  teamRemoveTitle: dt('Usunąć {name} z zespołu?'),
+  teamRemoveDescription: dt('Ta osoba od razu traci dostęp do studia tego kanału.'),
+  teamRemoveConfirm: dt('Usuń'),
+  teamRemoved: dt('Usunięto: {name}'),
+  teamRemoveFailed: dt('Nie udało się usunąć członka zespołu.'),
+  teamEmptyTitle: dt('Nikogo więcej jeszcze nie ma'),
+  teamEmptyDescription: dt('Zaproś kogoś, żeby dać mu rolę w studiu.'),
+  teamFailed: dt('Nie udało się wczytać zespołu.'),
+  teamNoAccessTitle: dt('Zespół widzą tylko menedżerowie'),
+  teamNoAccessDescription: dt('Jeśli potrzebujesz innej roli, zapytaj właściciela kanału.'),
+  teamInvite: dt('Zaproś osobę'),
+  teamInviteTitle: dt('Zaproś do zespołu'),
+  teamInviteDescription: dt(
+    'Zaproszona osoba dostaje powiadomienie i sama je przyjmuje. Zaproszenie wygasa po 14 dniach.'
+  ),
+  teamInviteHandle: dt('Nazwa kanału'),
+  teamInviteHandleLabel: dt('Znajdź kanał po nazwie'),
+  teamInviteHandlePlaceholder: dt('Wpisz nazwę, bez @'),
+  teamInviteNoChannel: dt('Żaden kanał nie ma takiej nazwy'),
+  teamInviteChosen: dt('Zapraszasz: {name} (@{handle})'),
+  teamInviteRole: dt('Rola'),
+  teamInviteSend: dt('Wyślij zaproszenie'),
+  teamInviteSent: dt('Wysłano zaproszenie do: {name}'),
+  teamInviteFailed: dt('Nie udało się wysłać zaproszenia.'),
+  teamInviteAlreadyMember: dt('Ta osoba jest już w zespole.'),
+  teamInviteAlreadyPending: dt('Ta osoba ma już oczekujące zaproszenie.'),
+  teamInvitesTitle: dt('Oczekujące zaproszenia'),
+  teamInvitesCaption: dt('Zaproszenia, na które nikt jeszcze nie odpowiedział'),
+  teamInviteExpires: dt('Wygasa'),
+  teamInviteRevoke: dt('Cofnij zaproszenie dla: {name}'),
+  teamInviteRevoked: dt('Cofnięto zaproszenie'),
+  teamInviteRevokeFailed: dt('Nie udało się cofnąć zaproszenia.'),
+  teamUnknownMember: dt('Nieznany kanał'),
+  teamAuditCaption: dt('Co zmienił zespół, od najnowszych'),
+  teamAuditEntries: dt('Wpisy dziennika zmian'),
+  teamAuditFilterActor: dt('Kto'),
+  teamAuditFilterAction: dt('Co'),
+  teamAuditAction: dt('{action:enum}', {
+    enum: {
+      action: {
+        'invite.created': 'Zaprosił(a) osobę',
+        'invite.accepted': 'Przyjął(-ęła) zaproszenie',
+        'invite.declined': 'Odrzucił(a) zaproszenie',
+        'invite.revoked': 'Cofnął(-ęła) zaproszenie',
+        'member.role_changed': 'Zmienił(a) rolę',
+        'member.removed': 'Usunął(-ęła) członka zespołu',
+        'member.left': 'Opuścił(a) zespół',
+        'channel.updated': 'Zmieniono kanał',
+        'video.updated': 'Edytował(a) film',
+        'video.comments.toggled': 'Włączył(a) lub wyłączył(a) komentarze',
+        'video.restored': 'Przywrócił(a) wcześniejszą wersję filmu',
+        'comment.held': 'Wstrzymał(a) komentarz',
+        'comment.approved': 'Zatwierdził(a) komentarz',
+        'comment.hidden': 'Ukrył(a) komentarz',
+        'comment.unhidden': 'Odkrył(a) komentarz',
+        'comment.removed': 'Usunął(-ęła) komentarz',
+        'comment.pinned': 'Przypiął(-ęła) lub odpiął(-ęła) komentarz',
+        'user.shadow_banned': 'Zablokował(a) po cichu użytkownika',
+        'user.banned': 'Zablokował(a) użytkownika',
+        'user.restriction_lifted': 'Zdjął(-ęła) ograniczenie',
+        'trusted.added': 'Dodał(a) zaufanego komentującego',
+        'trusted.removed': 'Usunął(-ęła) zaufanego komentującego',
+        'settings.comments.updated': 'Zmienił(a) ustawienia komentarzy',
+        'export.requested': 'Zlecił(a) eksport',
+        'export.deleted': 'Usunął(ęła) eksport',
+        'channel.created': 'Utworzył(a) kanał',
+        'channel.promoted': 'Ustawił(a) kanał jako główny',
+        'comment.posted': 'Skomentował(a) jako kanał',
+        'channel.subscribed': 'Zasubskrybował(a) jako kanał',
+        'video.uploaded': 'Przesłał(a) film',
+      },
+    },
+  }),
+  teamAuditInvited: dt('jako {role:enum}', {
+    enum: { role: roles('Menedżer', 'Edytor', 'Moderator', 'Analityk') },
+  }),
+  teamAuditRoleChanged: dt('była: {from:enum}, jest: {to:enum}', {
+    enum: {
+      from: roles('Menedżer', 'Edytor', 'Moderator', 'Analityk'),
+      to: roles('Menedżer', 'Edytor', 'Moderator', 'Analityk'),
+    },
+  }),
+  teamAuditVideoFields: dt('{fields:list}', {
+    list: { fields: { type: 'conjunction' } },
+  }),
+  teamAuditField: dt('{field:enum}', {
+    enum: {
+      field: {
+        title: 'tytuł',
+        description: 'opis',
+        visibility: 'widoczność',
+        categoryId: 'kategoria',
+        tags: 'tagi',
+        thumbnail: 'miniatura',
+        chapters: 'rozdziały',
+      },
+    },
+  }),
+  teamAuditDisclosure: dt('{disclosure:enum}', {
+    enum: { disclosure: { silent: 'po cichu', visible: 'z informacją dla autora' } },
+  }),
+  teamAuditCommentsToggled: dt('{state:enum}', {
+    enum: { state: { on: 'komentarze włączone', off: 'komentarze wyłączone' } },
+  }),
+  teamAuditRestored: dt('wersja {version}'),
+  teamAuditPinned: dt('{state:enum}', {
+    enum: { state: { on: 'przypięty', off: 'odpięty' } },
+  }),
+  teamAuditViaToken: dt('tokenem'),
+  teamAuditExport: dt('{kind:enum} jako {format:enum}', {
+    enum: {
+      kind: {
+        video_analytics: 'statystyki filmów',
+        channel_analytics: 'statystyki kanału',
+        comments: 'komentarze',
+        videos: 'filmy',
+      },
+      format: { csv: 'CSV', json: 'JSON' },
+    },
+  }),
+  teamAuditSettingsFields: dt('{fields:list}', {
+    list: { fields: { type: 'conjunction' } },
+  }),
+  teamAuditSettingsField: dt('{field:enum}', {
+    enum: {
+      field: {
+        reviewMode: 'tryb przeglądu',
+        blockedWords: 'zablokowane słowa',
+        linkAllowlist: 'dozwolone linki',
+        slowModeSeconds: 'tryb powolny',
+        subscribersOnly: 'tylko dla subskrybentów',
+        minAccountAgeDays: 'wiek konta',
+        disclosure: 'co widzą autorzy',
+      },
+    },
+  }),
+  teamAuditDeletedActor: dt('Były członek zespołu'),
+  teamAuditEmptyTitle: dt('Nic tu jeszcze nie ma'),
+  teamAuditEmptyDescription: dt('Zmiany wprowadzone przez zespół pojawią się tutaj.'),
+  teamAuditFailed: dt('Nie udało się wczytać dziennika zmian.'),
+} as const;

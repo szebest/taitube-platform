@@ -1,6 +1,7 @@
+import { PermanentError } from '@kit/errors';
 import { expectErr, expectOk } from '@kit/testing/result';
 import type { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
-import { ErrorCodes, PermanentError } from '@vp/errors';
+import { ErrorCodes } from '@vp/errors';
 import type { ApplyEditsOptions, MediaTools } from '@vp/ffmpeg';
 import { APPLY_EDITS, type ApplyEditsJob, CANONICAL_LADDER } from '@vp/job-contracts';
 import { masterPlaylistKey, renditionObjectKey, renditionPlaylistKey } from '@vp/storage';

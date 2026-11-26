@@ -1,0 +1,19 @@
+overrides:
+  '@kit/appearance': file:tarballs/kit-appearance.tgz
+  '@kit/design-tokens': file:tarballs/kit-design-tokens.tgz
+  '@kit/dev-token': file:tarballs/kit-dev-token.tgz
+  '@kit/di': file:tarballs/kit-di.tgz
+  '@kit/errors': file:tarballs/kit-errors.tgz
+  '@kit/intl': file:tarballs/kit-intl.tgz
+  '@kit/keyspace': file:tarballs/kit-keyspace.tgz
+  '@kit/logger': file:tarballs/kit-logger.tgz
+  '@kit/observability': file:tarballs/kit-observability.tgz
+  '@kit/result': file:tarballs/kit-result.tgz
+  '@kit/runtime': file:tarballs/kit-runtime.tgz
+  '@kit/ui': file:tarballs/kit-ui.tgz
+  vite: npm:@voidzero-dev/vite-plus-core@1.5.0
+allowBuilds:
+  '@parcel/watcher': false
+  esbuild: false
+  msgpackr-extract: false
+  protobufjs: false

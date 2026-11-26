@@ -1,5 +1,4 @@
 import { EmptyState } from '@kit/components';
-import { useT } from '@kit/intl-react';
 import { Skeleton, useToast } from '@kit/ui';
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { type Video } from '@vp/api-contracts';
@@ -11,6 +10,7 @@ import { RevisionList, type RevisionListItem } from '#app/components/history/rev
 import { LoadMore } from '#app/components/table/load-more';
 import { isVersionConflict } from '#app/features/videos/api/is-version-conflict';
 import { restoreRevisionMutationOptions } from '#app/features/videos/api/video-tool-mutations';
+import { useT } from '#app/lib/messages';
 
 /** The saved versions of the metadata, and a way back to any of them under the video's current version. */
 export function HistoryPanel({ video }: { video: Video }) {

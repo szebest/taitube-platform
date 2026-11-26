@@ -9,7 +9,7 @@
 The engine of a process's metrics and tracing; it names no product metric, prefix or tracer.
 
 - **Registry (`src/metrics.ts`):** `createMetricsRegistry({ prefix })` returns a `Registry` with the default
-  process metrics under `prefix`. The app builds its own metrics on it (`@vp/pipeline-metrics`).
+  process metrics under `prefix`. The app builds its own metrics on it.
 - **Scrape server (`src/server.ts`):** `MetricsServer` serves `/metrics`, `/healthz` and, when given a
   `ready` probe, `/readyz`. Constructing it opens nothing; `listen()` and `close()` return a `Result`.
 - **Tracing (`src/tracing.ts`):** `getTracer(name)`, `registeredTracing.shutdown()` and the W3C `traceparent`
@@ -28,7 +28,7 @@ The engine of a process's metrics and tracing; it names no product metric, prefi
    host lists them as dependencies. `@kit/logger` owns logging, not this package.
 2. **No product constant here.** The metric prefix and the tracer name are parameters.
 3. `initTracing` is a no-op when `enabled` is false. The auto-instrumentation hook wraps third-party
-   modules only, never `@vp/*` or `@kit/*` packages or app source.
+   modules only, never a workspace package or app source.
 
 ---
 

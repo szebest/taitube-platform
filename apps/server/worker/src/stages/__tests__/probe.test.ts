@@ -1,11 +1,12 @@
 import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
+import { PermanentError } from '@kit/errors';
 import { createLogger } from '@kit/logger';
 import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
 import type { QueueJob } from '@vp/core/ports';
-import { type ErrorCode, ErrorCodes, PermanentError } from '@vp/errors';
+import { type ErrorCode, ErrorCodes } from '@vp/errors';
 import type { MediaTools, ProbeMetadata } from '@vp/ffmpeg';
 import type { ProbeJob } from '@vp/job-contracts';
 import { createMockJob } from '@vp/testing-fixtures';

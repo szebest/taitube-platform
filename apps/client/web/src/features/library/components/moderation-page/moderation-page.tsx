@@ -1,5 +1,5 @@
 import { EmptyState, PageHeader, PageHeaderSkeleton } from '@kit/components';
-import { useFormat, useT } from '@kit/intl-react';
+import { useFormat } from '@kit/intl-react';
 import { unwrapOr } from '@kit/result';
 import { Callout, Skeleton } from '@kit/ui';
 import { useQuery } from '@tanstack/react-query';
@@ -9,6 +9,7 @@ import { publishedAt } from '@vp/intl-formats';
 import { myCommentRemovalsQueryOptions, ownRestrictionQueryOptions, useApi } from '@vp/queries';
 import { PagedFooter } from '#app/components/feed/paged-footer';
 import { usePagedItems } from '#app/features/library/hooks/use-paged-items';
+import { useT } from '#app/lib/messages';
 import { channelQueryOptions } from '#app/lib/query-keys/channel-keys';
 
 function OwnBan({ channelId }: { channelId: string }) {

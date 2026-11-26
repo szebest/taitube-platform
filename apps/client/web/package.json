@@ -22,12 +22,15 @@
     "typecheck": "tsc --noEmit && tsc -p tsconfig.spec.json && tsc -p tsconfig.e2e.json && tsc -p tsconfig.sw.json"
   },
   "dependencies": {
+    "@kit/appearance": "workspace:*",
     "@kit/components": "workspace:*",
     "@kit/design-tokens": "workspace:*",
     "@kit/forms": "workspace:*",
+    "@kit/i18n": "workspace:*",
     "@kit/intl": "workspace:*",
     "@kit/intl-react": "workspace:*",
     "@kit/primitives": "workspace:*",
+    "@kit/query": "workspace:*",
     "@kit/result": "workspace:*",
     "@kit/security-headers": "workspace:*",
     "@kit/ui": "workspace:*",
@@ -45,7 +48,7 @@
     "@vp/domain": "workspace:*",
     "@vp/domain-rules": "workspace:*",
     "@vp/intl-formats": "workspace:*",
-    "@vp/messages": "workspace:*",
+    "@vp/shared-messages": "workspace:*",
     "@vp/permissions": "workspace:*",
     "@vp/permissions-react": "workspace:*",
     "@vp/queries": "workspace:*",
@@ -66,6 +69,7 @@
   "devDependencies": {
     "@kit/tsconfig": "workspace:*",
     "@kit/vite-preset": "workspace:*",
+    "@kit/web-testing": "workspace:*",
     "@playwright/test": "^1.64.0",
     "@storybook/react-vite": "~10.6.2",
     "@tanstack/react-query-devtools": "^5.104.1",
@@ -92,6 +96,6 @@
     "workbox-build": "7.4.1"
   },
   "vp": {
-    "layer": 9
+    "layer": 10
   }
 }

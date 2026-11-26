@@ -1,4 +1,4 @@
-import { useFormat, useT } from '@kit/intl-react';
+import { useFormat } from '@kit/intl-react';
 import { unwrapOr } from '@kit/result';
 import { videoDuration } from '@vp/intl-formats';
 import type { CSSProperties } from 'react';
@@ -11,6 +11,7 @@ import {
   toClipPlayhead,
 } from '#app/components/player/control-bar/utils/clip-playhead';
 import { usePlayerCommands, usePlayerState } from '#app/integrations/video-js/video-js-engine';
+import { useT } from '#app/lib/messages';
 import type { PlaybackRange, PlayerChapter } from '#app/lib/player/taitube-player-props';
 
 export interface SeekBarProps {

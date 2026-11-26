@@ -1,4 +1,3 @@
-import { IntlProvider } from '@kit/intl-react';
 import {
   RouterProvider,
   createMemoryHistory,
@@ -9,14 +8,16 @@ import { userEvent } from '@testing-library/user-event';
 import { getAccount, recordMySignIn } from '@vp/api-contracts';
 import { account, api, apiServer, mockEndpoint, signInRecord } from '@vp/web-testing';
 import { http, HttpResponse } from 'msw/http';
+import { SPEC_MESSAGES } from '../../__tests__/spec-messages';
 import { type AppRouterContext, createAppRouter } from '../../app-router';
+import { IntlProvider } from '../../intl';
 import { DEV_TOKEN_URL } from '../persona-sign-in';
 import { PersonaSwitcher, type PersonaSwitcherProps } from '../persona-switcher';
 
 async function renderSwitcher(props: PersonaSwitcherProps = {}, url = '/login') {
   const routeTree = createRootRouteWithContext<AppRouterContext>()({
     component: () => (
-      <IntlProvider locale="en" timeZone="UTC">
+      <IntlProvider messages={SPEC_MESSAGES} locale="en" timeZone="UTC">
         <PersonaSwitcher {...props} />
       </IntlProvider>
     ),
@@ -24,6 +25,7 @@ async function renderSwitcher(props: PersonaSwitcherProps = {}, url = '/login') 
   const router = createAppRouter(
     {
       routeTree,
+      messages: SPEC_MESSAGES,
       apiBaseUrl: 'http://localhost:3000',
       pending: () => null,
     },

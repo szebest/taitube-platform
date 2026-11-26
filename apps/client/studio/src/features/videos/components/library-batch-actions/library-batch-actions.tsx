@@ -1,10 +1,10 @@
-import { useT } from '@kit/intl-react';
 import { useCan } from '@vp/permissions-react';
 import { useState } from 'react';
 import { BulkActionBar } from '#app/components/table/bulk-action-bar';
 import type { BatchOutcome } from '#app/features/videos/api/batch-actions';
 import { useBatchActions } from '#app/features/videos/hooks/use-batch-actions';
 import { BULK_FIELDS, type BulkField } from '#app/features/videos/utils/bulk-fields';
+import { useT } from '#app/lib/messages';
 import { DeleteVideosDialog } from '../delete-videos-dialog/delete-videos-dialog';
 import { LibraryFieldDialog } from '../library-field-dialog/library-field-dialog';
 import type { CreatorVideo } from '../library-video-row/library-video-row';

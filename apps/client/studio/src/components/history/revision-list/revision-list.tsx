@@ -1,8 +1,9 @@
-import { Format, useT } from '@kit/intl-react';
+import { Format } from '@kit/intl-react';
 import { Badge, Button, cn } from '@kit/ui';
 import type { VideoMetadataField } from '@vp/domain';
 import { publishedAt } from '@vp/intl-formats';
 import type { ComponentPropsWithRef } from 'react';
+import { useT } from '#app/lib/messages';
 
 export interface RevisionListItem {
   id: string;

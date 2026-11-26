@@ -1,9 +1,10 @@
+import { type Failure } from '@kit/errors';
 import {
   MAX_EXPERIMENT_VARIANTS,
   MAX_RUNNING_EXPERIMENTS_PER_CHANNEL,
   MIN_EXPERIMENT_VARIANTS,
 } from '@vp/domain';
-import { ErrorCodes, type Failure } from '@vp/errors';
+import { ErrorCodes } from '@vp/errors';
 import { type InvalidField, invalidField } from '@vp/validation';
 
 export type ExperimentNotFound = Failure<

@@ -1,9 +1,9 @@
+import { CommonErrorCodes } from '@kit/errors';
 import { err, ok } from '@kit/result';
-import { ErrorCodes } from '@vp/errors';
 import { compositeOver, formatHex, parseGround, toGamma, toLinear } from '../rgb';
 
 const invalidColour = (field: string, value: string) =>
-  err({ code: ErrorCodes.VALIDATION_FAILED, message: expect.any(String), field, value });
+  err({ code: CommonErrorCodes.VALIDATION_FAILED, message: expect.any(String), field, value });
 
 describe('rgb', () => {
   it.each([

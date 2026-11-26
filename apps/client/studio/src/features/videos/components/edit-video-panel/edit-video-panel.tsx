@@ -1,4 +1,3 @@
-import { useT } from '@kit/intl-react';
 import { Callout, Skeleton } from '@kit/ui';
 import { useQuery } from '@tanstack/react-query';
 import type { Video } from '@vp/api-contracts';
@@ -7,6 +6,7 @@ import {
   generationInFlight,
   generationsQueryOptions,
 } from '#app/features/videos/api/video-pipeline-queries';
+import { useT } from '#app/lib/messages';
 import { ClipSuggestionsList } from '../clip-suggestions-list/clip-suggestions-list';
 import { ReplaceFileSection } from '../replace-file-section/replace-file-section';
 import { TrimBlurEditor } from '../trim-blur-editor/trim-blur-editor';

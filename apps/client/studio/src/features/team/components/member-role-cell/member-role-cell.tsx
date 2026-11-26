@@ -1,4 +1,3 @@
-import { useT } from '@kit/intl-react';
 import { fromPromise, isOk } from '@kit/result';
 import { Select, useToast } from '@kit/ui';
 import type { ChannelMemberView } from '@vp/api-contracts';
@@ -6,6 +5,7 @@ import { CHANNEL_ROLE_NAMES } from '@vp/domain';
 import { RoleBadge } from '#app/components/team/role-badge';
 import { useRoleRules } from '#app/features/team/hooks/use-role-rules';
 import { useChangeMemberRole } from '#app/features/team/hooks/use-team-mutations';
+import { useT } from '#app/lib/messages';
 
 export interface MemberRoleCellProps {
   member: ChannelMemberView;

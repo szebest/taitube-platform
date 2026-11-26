@@ -1,6 +1,7 @@
+import { parseParam } from '@kit/query';
 import { createFileRoute } from '@tanstack/react-router';
 import { VideoIdParamSchema } from '@vp/api-contracts';
-import { parseParam, prefetched, videoQueryOptions, videoRetentionQueryOptions } from '@vp/queries';
+import { prefetched, videoQueryOptions, videoRetentionQueryOptions } from '@vp/queries';
 import {
   analyticsQueryOptions,
   AnalyticsSearchSchema,

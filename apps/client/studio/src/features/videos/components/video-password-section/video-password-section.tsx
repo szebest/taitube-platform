@@ -1,4 +1,3 @@
-import { useT } from '@kit/intl-react';
 import { isErr } from '@kit/result';
 import { Button, Callout, Field, Input, Switch, useToast } from '@kit/ui';
 import { useMutation } from '@tanstack/react-query';
@@ -11,6 +10,7 @@ import {
   clearPasswordMutationOptions,
   setPasswordMutationOptions,
 } from '#app/features/videos/api/video-tool-mutations';
+import { useT } from '#app/lib/messages';
 
 const LENGTHS = { min: VIDEO_PASSWORD_MIN_LENGTH, max: VIDEO_PASSWORD_MAX_LENGTH };
 

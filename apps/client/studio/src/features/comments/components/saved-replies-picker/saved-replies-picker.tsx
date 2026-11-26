@@ -1,8 +1,8 @@
-import { useT } from '@kit/intl-react';
 import { Button, Popover, Spinner } from '@kit/ui';
 import { useQuery } from '@tanstack/react-query';
 import { savedRepliesQueryOptions, useApi } from '@vp/queries';
 import { useState } from 'react';
+import { useT } from '#app/lib/messages';
 
 export interface SavedRepliesPickerProps {
   /** Takes the body of the reply picked, to put in the draft where it can still be edited. */

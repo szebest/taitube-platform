@@ -1,10 +1,11 @@
+import { type Failure } from '@kit/errors';
 import {
   CORRECTION_MAX_MS,
   CORRECTION_MIN_MS,
   CORRECTION_TEXT_MAX_LENGTH,
   MAX_CORRECTIONS_PER_VIDEO,
 } from '@vp/domain';
-import { ErrorCodes, type Failure } from '@vp/errors';
+import { ErrorCodes } from '@vp/errors';
 import { type InvalidField, invalidField } from '@vp/validation';
 
 export type CorrectionNotFound = Failure<

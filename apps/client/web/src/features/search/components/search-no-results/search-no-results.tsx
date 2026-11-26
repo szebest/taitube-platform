@@ -1,10 +1,10 @@
 import { EmptyState, NoResultsIllustration } from '@kit/components';
-import { useT } from '@kit/intl-react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import { useApi } from '@vp/queries';
 import { ChipBar } from '#app/components/discovery/chip-bar';
 import { topicsQueryOptions } from '#app/features/search/api/search-queries';
+import { useT } from '#app/lib/messages';
 
 export interface SearchNoResultsProps {
   query: string;

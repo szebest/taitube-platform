@@ -1,9 +1,10 @@
-import { Format, useT } from '@kit/intl-react';
+import { Format } from '@kit/intl-react';
 import { Button } from '@kit/ui';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { publishedAt } from '@vp/intl-formats';
 import { useApi } from '@vp/queries';
 import { signInHistoryQueryOptions } from '#app/features/account/api/sign-in-history-queries';
+import { useT } from '#app/lib/messages';
 import { SettingItem } from '../setting-item/setting-item';
 
 /** Each time this account signed in, newest first: when, into which slot, and on what device. */
@@ -32,9 +33,9 @@ export function SignInHistoryRow() {
             <span className="text-caption text-fg-muted">
               {signIn.slot === null
                 ? ''
-                : tOr('accounts.signInSlot', { slot: signIn.slot + 1 }, '')}{' '}
+                : tOr('accountSettings.signInSlot', { slot: signIn.slot + 1 }, '')}{' '}
               {signIn.userAgent
-                ? tOr('accounts.signInDevice', { device: signIn.userAgent }, '')
+                ? tOr('accountSettings.signInDevice', { device: signIn.userAgent }, '')
                 : tOr('accounts.signInUnknownDevice', {}, '')}
             </span>
           </li>

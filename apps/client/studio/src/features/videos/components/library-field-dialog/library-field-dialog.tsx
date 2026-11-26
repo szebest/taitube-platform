@@ -1,4 +1,3 @@
-import { useT } from '@kit/intl-react';
 import { useQuery } from '@tanstack/react-query';
 import { type BulkEditPatch, VIDEO_VISIBILITIES } from '@vp/domain';
 import { useApi } from '@vp/queries';
@@ -11,6 +10,7 @@ import {
   buildBulkPatch,
   COMMENTS_STATES,
 } from '#app/features/videos/utils/bulk-fields';
+import { useT } from '#app/lib/messages';
 
 const VISIBILITY_ORDER = [...VIDEO_VISIBILITIES].reverse();
 

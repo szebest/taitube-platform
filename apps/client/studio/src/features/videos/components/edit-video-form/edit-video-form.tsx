@@ -1,6 +1,5 @@
 import { VideoThumbnail } from '@kit/components';
 import { useAppForm } from '@kit/forms';
-import { useT } from '@kit/intl-react';
 import { Button, Field, Switch, useToast } from '@kit/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { type Video, VIDEO_VISIBILITIES } from '@vp/api-contracts';
@@ -16,6 +15,7 @@ import {
   valuesOf,
 } from '#app/features/videos/forms/edit-video-values';
 import { useUpdateVideo } from '#app/features/videos/hooks/use-update-video';
+import { useT } from '#app/lib/messages';
 import {
   validateVideoDescription,
   validateVideoTags,

@@ -1,9 +1,9 @@
-import { useT } from '@kit/intl-react';
 import { Button, Icon, Popover } from '@kit/ui';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import type { CommentView } from '@vp/api-contracts';
 import { useApi, useFailureToast, usePinComment } from '@vp/queries';
 import { useState } from 'react';
+import { useT } from '#app/lib/messages';
 import { commentsQueryOptions } from '#app/lib/query-keys/comment-keys';
 
 const LISTED = 5;

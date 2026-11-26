@@ -1,11 +1,12 @@
 import { VideoCard } from '@kit/components';
-import { Format, useT } from '@kit/intl-react';
+import { Format } from '@kit/intl-react';
 import { Link } from '@tanstack/react-router';
 import { publishedAt } from '@vp/intl-formats';
 import type { VideoHit } from '#app/features/search/utils/search-hits';
 import { useDurationText } from '#app/hooks/use-duration-text';
 import { useImpression } from '#app/hooks/use-impression';
 import { useVideoActions } from '#app/hooks/use-video-actions';
+import { useT } from '#app/lib/messages';
 import { MatchedText } from '../matched-text/matched-text';
 
 export interface SearchVideoResultProps {

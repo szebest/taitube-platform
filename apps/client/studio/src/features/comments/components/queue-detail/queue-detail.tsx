@@ -1,10 +1,10 @@
-import { useT } from '@kit/intl-react';
 import { Badge, Spinner } from '@kit/ui';
 import { useQuery } from '@tanstack/react-query';
 import { useApi, useAppLink } from '@vp/queries';
 import { authorCommentsQueryOptions } from '#app/features/comments/api/author-queries';
 import type { InboxComment } from '#app/features/comments/api/inbox-queries';
 import { WEB_URL } from '#app/lib/config';
+import { useT } from '#app/lib/messages';
 
 export interface QueueDetailProps {
   comment: InboxComment;

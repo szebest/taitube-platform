@@ -1,4 +1,3 @@
-import { useT } from '@kit/intl-react';
 import { assertNever, isErr } from '@kit/result';
 import { Button, Field, Input, SegmentedControl, useToast } from '@kit/ui';
 import { useMutation } from '@tanstack/react-query';
@@ -18,6 +17,7 @@ import { present, useApi, useFailureToast } from '@vp/queries';
 import { VIDEO_TITLE_BOUNDS } from '@vp/validation';
 import { type FormEvent, useState } from 'react';
 import { startExperimentMutationOptions } from '#app/features/videos/api/video-tool-mutations';
+import { useT } from '#app/lib/messages';
 
 const VARIANT_COUNTS = [MIN_EXPERIMENT_VARIANTS, MAX_EXPERIMENT_VARIANTS];
 

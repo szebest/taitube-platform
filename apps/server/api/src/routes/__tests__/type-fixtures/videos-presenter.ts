@@ -1,7 +1,8 @@
+import type { Failure } from '@kit/errors';
 import { assertNever } from '@kit/result';
 import { type Problem, problemFor } from '@vp/api-contracts';
 import { publicReadFailure } from '@vp/domain-rules';
-import type { ErrorCodes, Failure } from '@vp/errors';
+import type { ErrorCodes } from '@vp/errors';
 import { type PublicVideoFailure, presentPublicVideoFailure } from '../../videos.presenter';
 
 type VideoQuarantined = Failure<typeof ErrorCodes.QUOTA_EXCEEDED, { videoId: string }>;

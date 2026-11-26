@@ -7,7 +7,7 @@
 ## 1. Scope & Purpose
 
 Pure functions and constants for an S3-compatible bucket, no SDK. Tier `server`, `vp.layer` 1; its
-dependencies are in [package.json](package.json). The key layout of this product stays in `@vp/storage`.
+dependencies are in [package.json](package.json). The app's key layout stays in the app.
 
 - **Headers (`src/mime.ts`):** `getHeaderMapping` gives an object's `Content-Type` and `Cache-Control` by
   extension, `application/octet-stream` for an unknown one.

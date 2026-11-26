@@ -1,6 +1,6 @@
+import { axeViolations } from '@kit/web-testing/dom';
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { axeViolations } from '@vp/web-testing/dom';
 import { renderWithCopy } from '../../__tests__/render-with-copy';
 import { DisclosureControl, type DisclosureControlProps } from '../disclosure-control';
 

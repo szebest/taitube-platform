@@ -1,5 +1,6 @@
-import { FALLBACK_ACTIVE_LOCALE, IntlProvider } from '@kit/intl-react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { FALLBACK_ACTIVE_LOCALE, IntlProvider } from '@vp/queries/intl';
+import { STUDIO_MESSAGES } from '#app/lib/messages';
 import { FilterSelect } from '../filter-select';
 
 const meta = {
@@ -16,6 +17,7 @@ const meta = {
   },
   render: (args) => (
     <IntlProvider
+      messages={STUDIO_MESSAGES}
       locale={FALLBACK_ACTIVE_LOCALE.locale}
       catalogues={FALLBACK_ACTIVE_LOCALE.catalogues}
       timeZone="UTC"

@@ -105,7 +105,10 @@ function Verified(props: GlyphProps) {
   );
 }
 
-/** The product's icon ids (docs/design/foundations/iconography.md), each drawn by one glyph. */
+/**
+ * The icon ids `Icon` draws, each by one glyph.
+ * @public
+ */
 export const ICONS = {
   menu: Menu,
   search: Search,

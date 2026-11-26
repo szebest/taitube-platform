@@ -1,5 +1,5 @@
 import { type Result, err, ok } from '@kit/result';
-import { normalizePlainText } from '../plain-text';
+import { normalizePlainText } from '@kit/validation';
 import { type ChannelLinkLimits, type InvalidChannelLinks, invalidChannelLinks } from './failures';
 import { isHttpsUrl } from './https-url';
 

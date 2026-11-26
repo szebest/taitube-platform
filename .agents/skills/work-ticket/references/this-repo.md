@@ -18,6 +18,10 @@
   payloads in `@vp/job-contracts`, object keys in `packages/server/storage/src/keys.ts`,
   state through the CAS helper, `postgres-cas-fencing`), errors classified at the throw
   site.
+- **Platform or app**: a ticket that adds or changes a package under `packages/` asks first whether a second app could
+  use it unchanged; if so it is a `@kit/*` platform package that never names a `@vp/*` package, and
+  `docs/standards/platform-packages.md` applies (parameters before tokens, extension only, a reviewed API
+  snapshot, type-level specs).
 - **The gate**: `pnpm typecheck && pnpm lint && pnpm test`, plus `pnpm test:bun` for worker
   and shared package code, `pnpm test:architecture`, `pnpm boundaries`, and `make smoke`
   when the stack is involved.

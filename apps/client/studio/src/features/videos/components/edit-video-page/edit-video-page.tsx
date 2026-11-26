@@ -1,5 +1,4 @@
 import { PageHeader } from '@kit/components';
-import { useT } from '@kit/intl-react';
 import { Tabs } from '@kit/ui';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { useNavigate, useSearch } from '@tanstack/react-router';
@@ -8,6 +7,7 @@ import { Can } from '@vp/permissions-react';
 import { useApi, videoQueryOptions } from '@vp/queries';
 import type { ReactNode } from 'react';
 import { parseEditTab } from '#app/features/videos/utils/edit-tabs';
+import { useT } from '#app/lib/messages';
 import { ChaptersPanel } from '../chapters-panel/chapters-panel';
 import { CorrectionsPanel } from '../corrections-panel/corrections-panel';
 import { EditVideoForm } from '../edit-video-form/edit-video-form';

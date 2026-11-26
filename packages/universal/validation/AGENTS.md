@@ -16,8 +16,9 @@ rule and belongs in `@vp/domain-rules`. There is no third answer, and
 Every rule is a pure function returning `Result<T, InputFailure>` (SDD ADR-24). Rules are grouped by
 resource (`uploads/`, `videos/`, `channels/`, `categories/`, `comments/`, `playlists/`,
 `captions/`), each with a
-`failures.ts`; the shared `invalidField` / `invalidLength` builders live in `src/failures.ts`, and
-`src/plain-text.ts` normalizes user text and counts it in code points for comments and playlists.
+`failures.ts`; the shared `invalidField` / `invalidLength` builders are `src/field-failures.ts`, which binds
+`@kit/validation`'s `defineFieldFailures` to `VALIDATION_FAILED`, and `@kit/validation`'s `normalizePlainText` /
+`withinLength` normalize user text and count it in code points for comments and playlists.
 `ALLOWED_CONTENT_TYPES` (`uploads/allowed-content-type.ts`) is a typed constant, not configuration.
 
 The API is the authority and runs each rule itself (`apps/server/api/src/routes/uploads.ts` calls

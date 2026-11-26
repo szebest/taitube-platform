@@ -1,4 +1,5 @@
-import { ErrorCodes, isInputFailure } from '@vp/errors';
+import { isInputFailure } from '@kit/errors';
+import { ErrorCodes } from '@vp/errors';
 import { correctionLimit, correctionNotFound, invalidCorrection } from '../failures';
 
 describe('@vp/domain-rules: correction failures', () => {

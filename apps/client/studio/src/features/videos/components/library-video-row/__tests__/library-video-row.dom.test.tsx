@@ -1,3 +1,4 @@
+import { axeViolations } from '@kit/web-testing/dom';
 import { QueryClientProvider } from '@tanstack/react-query';
 import {
   createMemoryHistory,
@@ -10,7 +11,6 @@ import userEvent from '@testing-library/user-event';
 import { bulkEditCreatorVideos } from '@vp/api-contracts';
 import { createQueryClient } from '@vp/queries';
 import { account, apiServer, mockEndpoint, VIDEO_ID } from '@vp/web-testing';
-import { axeViolations } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
 import type { ComponentType, PropsWithChildren } from 'react';
 import { creatorVideo } from '#app/__tests__/creator-video.fixture';

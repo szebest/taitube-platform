@@ -9,8 +9,8 @@ async function readDuringRequest(cookie: string, name: string): Promise<string> 
 
 describe('@kit/ui: cookie on the server', () => {
   it.each([
-    { cookie: 'vp.theme=light; other=1', name: 'vp.theme', value: 'light' },
-    { cookie: 'other=1', name: 'vp.theme', value: '(none)' },
+    { cookie: 'acme.theme=light; other=1', name: 'acme.theme', value: 'light' },
+    { cookie: 'other=1', name: 'acme.theme', value: '(none)' },
   ])(
     'reads $name from the request the server is answering: $value',
     async ({ cookie, name, value }) => {

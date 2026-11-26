@@ -8,6 +8,7 @@ import { api } from '@vp/web-testing';
 import { type AppRouterContext, createAppRouter } from '../app-router';
 import { createIdentityStore } from '../identity-store';
 import { useTabIdentity } from '../use-tab-identity';
+import { SPEC_MESSAGES } from './spec-messages';
 
 function Tab() {
   const { identity, prefixed } = useTabIdentity();
@@ -19,7 +20,12 @@ describe('@vp/queries: useTabIdentity', () => {
     const identity = createIdentityStore({ identity: { slot: 0 }, prefixed: false });
     const routeTree = createRootRouteWithContext<AppRouterContext>()({ component: Tab });
     const router = createAppRouter(
-      { routeTree, apiBaseUrl: 'http://localhost:3000', pending: () => null },
+      {
+        routeTree,
+        messages: SPEC_MESSAGES,
+        apiBaseUrl: 'http://localhost:3000',
+        pending: () => null,
+      },
       { api, history: createMemoryHistory({ initialEntries: ['/'] }), identity }
     );
     await router.load();

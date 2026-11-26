@@ -1,6 +1,6 @@
+import { axeViolations } from '@kit/web-testing/dom';
 import { screen } from '@testing-library/react';
 import { account, VIDEO_ID } from '@vp/web-testing';
-import { axeViolations } from '@vp/web-testing/dom';
 import { viewerAccount } from '#app/__tests__/comment-fixtures';
 import { renderClip } from '#app/features/clips/__tests__/render-clip';
 

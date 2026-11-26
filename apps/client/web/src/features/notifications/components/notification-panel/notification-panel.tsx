@@ -1,5 +1,5 @@
 import { EmptyState, NoNotificationsIllustration, SectionError } from '@kit/components';
-import { useFormat, useT } from '@kit/intl-react';
+import { useFormat } from '@kit/intl-react';
 import { unwrapOr } from '@kit/result';
 import { Tabs } from '@kit/ui';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
@@ -17,6 +17,7 @@ import { notificationsQueryOptions } from '#app/features/notifications/api/notif
 import { useMarkRead } from '#app/features/notifications/hooks/use-mark-read';
 import { groupByDay } from '#app/features/notifications/utils/group-by-day';
 import { useOnlineStatus } from '#app/hooks/use-online-status';
+import { useT } from '#app/lib/messages';
 import { NotificationRow } from '../notification-row/notification-row';
 
 function isFilter(value: string): value is NotificationFilter {

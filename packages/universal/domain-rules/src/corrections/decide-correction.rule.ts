@@ -1,11 +1,11 @@
 import { type Result, err, isErr, ok } from '@kit/result';
+import { normalizePlainText, withinLength } from '@kit/validation';
 import {
   CORRECTION_MAX_MS,
   CORRECTION_MIN_MS,
   CORRECTION_TEXT_MAX_LENGTH,
   MAX_CORRECTIONS_PER_VIDEO,
 } from '@vp/domain';
-import { normalizePlainText, withinLength } from '@vp/validation';
 import {
   type CorrectionLimit,
   type InvalidCorrection,

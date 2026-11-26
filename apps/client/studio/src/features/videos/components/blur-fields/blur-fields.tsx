@@ -1,6 +1,6 @@
-import { useT } from '@kit/intl-react';
 import { Field, Input, Select, Slider } from '@kit/ui';
 import { BLUR_MAX_STRENGTH, BLUR_MIN_STRENGTH, BLUR_SHAPES, type BlurRegion } from '@vp/domain';
+import { useT } from '#app/lib/messages';
 
 type Edge = 'x' | 'y' | 'w' | 'h';
 

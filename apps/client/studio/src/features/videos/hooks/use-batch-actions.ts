@@ -1,9 +1,9 @@
-import { useT } from '@kit/intl-react';
 import { useToast } from '@kit/ui';
 import { useMutation } from '@tanstack/react-query';
 import type { BulkEditPatch } from '@vp/domain';
 import { ErrorCodes, isErrorCode } from '@vp/errors';
 import { present, useApi } from '@vp/queries';
+import { useT } from '#app/lib/messages';
 import {
   type BatchOutcome,
   type BatchVideo,

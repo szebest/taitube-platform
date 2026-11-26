@@ -1,7 +1,7 @@
-import { useT } from '@kit/intl-react';
 import { Link, useMatchRoute } from '@tanstack/react-router';
 import { StudioWorkspace } from '#app/components/workspace/studio-workspace';
 import { useMyInvites } from '#app/features/team/hooks/use-my-invites';
+import { useT } from '#app/lib/messages';
 
 /** The way to the invites, with how many wait; absent while none does. */
 export function InvitesNavItem() {

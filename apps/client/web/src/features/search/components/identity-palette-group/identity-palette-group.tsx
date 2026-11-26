@@ -1,7 +1,7 @@
-import { useT } from '@kit/intl-react';
 import { IdentityEntryRow, useIdentityChoices } from '@vp/queries';
 import { CommandPalette } from '#app/components/shell/command-palette';
 import { useCommandPaletteStore } from '#app/lib/command-palette/command-palette-store';
+import { useT } from '#app/lib/messages';
 
 /** The palette's way to switch account or channel: every other identity whose name or handle holds the words. */
 export function IdentityPaletteGroup({ words }: { words: string }) {

@@ -1,4 +1,5 @@
 import { type Result, err, ok } from '@kit/result';
+import { normalizePlainText, withinLength } from '@kit/validation';
 import {
   MAX_ACTIVE_SHARE_LINKS,
   SHARE_LINK_LABEL_MAX_LENGTH,
@@ -8,7 +9,6 @@ import {
   shareLinkState,
 } from '@vp/domain';
 import type { ShareGrant } from '@vp/permissions';
-import { normalizePlainText, withinLength } from '@vp/validation';
 import {
   type InvalidShareLink,
   type ShareLinkExpired,

@@ -1,7 +1,8 @@
-import { useFormat, useT } from '@kit/intl-react';
+import { useFormat } from '@kit/intl-react';
 import { unwrapOr } from '@kit/result';
 import { PickOfTheDay } from '#app/components/discovery/pick-of-the-day';
 import { usePickWindow } from '#app/features/browse/hooks/use-pick-window';
+import { useT } from '#app/lib/messages';
 
 const MINUTES_PER_HOUR = 60;
 const SECONDS_PER_MINUTE = 60;

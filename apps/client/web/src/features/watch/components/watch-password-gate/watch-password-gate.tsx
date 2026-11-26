@@ -1,9 +1,9 @@
-import { useT } from '@kit/intl-react';
 import { useRouter } from '@tanstack/react-router';
-import { ERROR_COPY } from '@vp/messages';
 import { failureCode } from '@vp/queries';
+import { ERROR_COPY } from '@vp/shared-messages';
 import { AccessGate } from '#app/components/watch/access-gate';
 import { useUnlockVideo } from '#app/features/watch/hooks/use-unlock-video';
+import { useT } from '#app/lib/messages';
 
 /** `/watch/$videoId` for a password-protected video: the password lifts the gate and the page loads again. */
 export function WatchPasswordGate({ videoId }: { videoId: string }) {

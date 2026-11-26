@@ -1,11 +1,11 @@
-import { useT } from '@kit/intl-react';
 import { fromPromise, isOk } from '@kit/result';
-import { AlertDialog, Button, useToast, useUiCopy } from '@kit/ui';
+import { AlertDialog, Button, useToast } from '@kit/ui';
 import type { AdminCategory } from '#app/features/admin/api/admin-categories';
 import {
   useDeleteCategory,
   useUpdateCategory,
 } from '#app/features/admin/hooks/use-category-mutations';
+import { useT } from '#app/lib/messages';
 
 export interface CategoryDeleteDialogProps {
   category: AdminCategory;
@@ -18,7 +18,8 @@ export interface CategoryDeleteDialogProps {
  */
 export function CategoryDeleteDialog({ category, onClose }: CategoryDeleteDialogProps) {
   const { tOr } = useT();
-  const { cancel, delete: remove } = useUiCopy();
+  const remove = tOr('ui.delete', {}, '');
+  const cancel = tOr('ui.cancel', {}, '');
   const toast = useToast();
   const deleteCategory = useDeleteCategory();
   const updateCategory = useUpdateCategory();

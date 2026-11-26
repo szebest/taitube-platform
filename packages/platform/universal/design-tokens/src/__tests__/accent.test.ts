@@ -1,6 +1,6 @@
+import { CommonErrorCodes } from '@kit/errors';
 import { err } from '@kit/result';
 import { expectOk } from '@kit/testing/result';
-import { ErrorCodes } from '@vp/errors';
 import { ACCENT_GROUNDS, deriveAccent, groundsInsideAccentBand } from '../accent';
 import { toOklch } from '../color/oklch';
 import { compositeOver, parseGround } from '../color/rgb';
@@ -114,7 +114,7 @@ describe('deriveAccent', () => {
   it.each(MODE_FAMILIES)('rejects a malformed hex in %s mode rather than painting it', (family) => {
     expect(deriveAccent('yellow', family)).toEqual(
       err({
-        code: ErrorCodes.VALIDATION_FAILED,
+        code: CommonErrorCodes.VALIDATION_FAILED,
         message: expect.any(String),
         field: 'foreground',
         value: 'yellow',

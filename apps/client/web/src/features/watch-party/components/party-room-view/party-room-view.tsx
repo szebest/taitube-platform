@@ -1,5 +1,4 @@
 import { EmptyState } from '@kit/components';
-import { useT } from '@kit/intl-react';
 import { Badge } from '@kit/ui';
 import { useLocation, useNavigate } from '@tanstack/react-router';
 import type { WatchPartyPreviewView } from '@vp/api-contracts';
@@ -15,6 +14,7 @@ import { PlayerChannelProvider } from '#app/components/player/taitube-player';
 import { usePartyClock } from '#app/features/watch-party/hooks/use-party-clock';
 import { useUpgradePartySeat } from '#app/features/watch-party/hooks/use-upgrade-party-seat';
 import { API_PUBLIC_URL } from '#app/lib/config';
+import { useT } from '#app/lib/messages';
 import { PartyControls } from '../party-controls/party-controls';
 import { PartyLayoutMenu } from '../party-layout-menu/party-layout-menu';
 import { PartyPanel } from '../party-panel/party-panel';

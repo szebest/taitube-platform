@@ -12,6 +12,7 @@ import { createIdentityStore } from '../identity-store';
 import { SESSION_KEY } from '../session';
 import { hasSession } from '../session-functions';
 import { announceSessionChange, useSessionSync } from '../session-sync';
+import { SPEC_MESSAGES } from './spec-messages';
 
 vi.mock(import('../session-functions'), async (importOriginal) => {
   const functions = await importOriginal();
@@ -32,7 +33,12 @@ const routeTree = rootRoute.addChildren(
 
 async function renderTab({ slot = 1, prefixed = true } = {}) {
   const router = createAppRouter(
-    { routeTree, apiBaseUrl: 'http://localhost:3000', pending: () => null },
+    {
+      routeTree,
+      messages: SPEC_MESSAGES,
+      apiBaseUrl: 'http://localhost:3000',
+      pending: () => null,
+    },
     {
       api,
       history: createMemoryHistory({ initialEntries: ['/subscriptions'] }),

@@ -1,6 +1,6 @@
-import { useT } from '@kit/intl-react';
 import { Link } from '@tanstack/react-router';
 import { AccessGate } from '#app/components/watch/access-gate';
+import { useT } from '#app/lib/messages';
 
 /** `/watch/$videoId?s=` for a share link that expired or was revoked. */
 export function ShareLinkExpired() {

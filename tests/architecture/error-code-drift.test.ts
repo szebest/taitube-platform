@@ -1,3 +1,4 @@
+import { declaredErrorCodes } from './declared-error-codes';
 import { read } from './repo-files';
 
 /**
@@ -8,19 +9,11 @@ import { read } from './repo-files';
  */
 /** The enumeration paragraph only: the prose after it names the two maps, not more codes. */
 const SDD_ENUMERATION = /### 6\.2 Error codes[^\n]*\n+([^\n]+)/;
-const CODE_KEY = /^\s{2}([A-Z][A-Z0-9_]+):\s*'/gm;
 const MAP_KEY = /\[ErrorCodes\.([A-Z][A-Z0-9_]+)\]/g;
 const BACKTICKED = /`([A-Z][A-Z0-9_]+)`/g;
 
 function keysOf(file: string, pattern: RegExp): string[] {
   return [...read(file).matchAll(pattern)].map((match) => match[1] as string);
-}
-
-function declaredCodes(): string[] {
-  return [
-    ...keysOf('packages/universal/errors/src/api-error-codes.ts', CODE_KEY),
-    ...keysOf('packages/universal/errors/src/pipeline-error-codes.ts', CODE_KEY),
-  ];
 }
 
 function sddCodes(): Set<string> {
@@ -30,7 +23,7 @@ function sddCodes(): Set<string> {
 
 describe('architecture: no error code drifts between the vocabulary, the maps and the SDD', () => {
   it('reads the vocabulary and the section it is asserting about', () => {
-    expect(declaredCodes().length).toBeGreaterThan(30);
+    expect(declaredErrorCodes().length).toBeGreaterThan(30);
     expect(sddCodes().size).toBeGreaterThan(30);
   });
 
@@ -40,17 +33,17 @@ describe('architecture: no error code drifts between the vocabulary, the maps an
   ])('gives every code an entry in $map', ({ file }) => {
     const mapped = new Set(keysOf(file, MAP_KEY));
 
-    expect(declaredCodes().filter((code) => !mapped.has(code))).toEqual([]);
+    expect(declaredErrorCodes().filter((code) => !mapped.has(code))).toEqual([]);
   });
 
   it('lists every code in SDD 6.2', () => {
     const documented = sddCodes();
 
-    expect(declaredCodes().filter((code) => !documented.has(code))).toEqual([]);
+    expect(declaredErrorCodes().filter((code) => !documented.has(code))).toEqual([]);
   });
 
   it('documents no code the vocabulary has dropped', () => {
-    const known = new Set(declaredCodes());
+    const known = new Set(declaredErrorCodes());
 
     expect([...sddCodes()].filter((code) => !known.has(code))).toEqual([]);
   });

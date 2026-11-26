@@ -1,9 +1,10 @@
+import { axeViolations } from '@kit/web-testing/dom';
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { Video } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { VIDEO_ID, video } from '@vp/web-testing';
-import { axeViolations, renderRoute } from '@vp/web-testing/dom';
+import { renderRoute } from '@vp/web-testing/dom';
 import { signInBrowser } from '#app/__tests__/providers';
 import { serveSharing } from '#app/features/videos/__tests__/sharing-api.fixture';
 import { getRouter } from '#app/router';

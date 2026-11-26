@@ -55,13 +55,13 @@ the contrast gate, installed as a constructed stylesheet, and selectable through
 default for a group one line in its `index.ts`, and offering a set one import and one entry.
 
 `UiCopyProvider` (`src/copy/`) holds every word a primitive prints itself (`UI_COPY_KEYS`); a primitive reads
-it with `useUiCopy()` and takes no label prop for it, and each app fills it through `@vp/queries`'
-`AppWords` (`uiCopyFrom`, one catalogue lookup per key). `Icon` (`src/primitives/icon/`) renders an inventory id from `src/icons/inventory.tsx`, the one place a
+it with `useUiCopy()` and takes no label prop for it, and each app fills it from its own catalogue
+(`uiCopyFrom`, one lookup per key). `Icon` (`src/primitives/icon/`) renders an inventory id from `src/icons/inventory.tsx`, the one place a
 glyph is chosen, mirroring the directional ones under RTL.
 
 Every primitive is a folder, `src/primitives/<name>/`: `<name>.tsx`, `<name>.variants.ts` when it has `tv()`
 variants, `types.ts` for the unions it narrows, `<name>.context.ts` for a compound one, `__stories__/<name>.stories.tsx`
-(the workbench, `@vp/workbench`, shows it under every theme and set), `__tests__/<name>.dom.test.tsx` and an
+(the app's Storybook workbench shows it under every theme and set), `__tests__/<name>.dom.test.tsx` and an
 `index.ts` that exports a compound one as `X = { Root, ...parts }` with its `useX` hook and its styles.
 `pnpm gen:component <name> --kind primitive|shared|web|studio [--area <area>] [--compound]` scaffolds that
 folder. A root shares its options with its parts through `createCompoundContext(name)` (`src/lib/`), which
@@ -91,8 +91,8 @@ names a part used outside its root. The shared UI unions (`FillOption`, `ShapeOp
   and reduced motion. `useAppearance()`
   reads the resolved state and changes any axis or override; a change writes the cookie and swaps the attributes
   through a view transition, with no reload. A legacy cookie is rewritten once and deleted.
-- **Root providers** (`ThemedDocument`'s `AppearanceProvider`, `TooltipProvider`, `ToastProvider`, and
-  `@vp/queries`' `AppWords` as the router's `Wrap`) are mounted once; a component never mounts its own.
+- **Root providers** (`ThemedDocument`'s `AppearanceProvider`, `TooltipProvider`, `ToastProvider`, and the
+  app's `UiCopyProvider` in the router's `Wrap`) are mounted once; a component never mounts its own.
 - **Motion** uses the `animate-*` tokens and the `duration-*` and `ease-*` ones, and stops under `motion: reduced`
   and `prefers-reduced-motion` (`motion-reduce:animate-none`, `motion-safe:`). A selection indicator
   (`SegmentedControl`, `Tabs`, single-select `ChipGroup`) slides through `useSlidingIndicator` and
@@ -107,11 +107,11 @@ names a part used outside its root. The shared UI unions (`FillOption`, `ShapeOp
 ## What does not belong here
 
 - Anything that fetches, reads app config or knows a route: a primitive takes its data and its links as props.
-- Copy: labels come from the caller, strings from `@vp/messages`.
+- Copy: labels come from the caller, strings from the app's catalogue through `UiCopy`.
 
 ## Testing
 
-Node specs (`*.test.ts`) and jsdom specs (`*.dom.test.tsx`, through `@vp/web-testing`'s `jsdom.setup`), each
+Node specs (`*.test.ts`) and jsdom specs (`*.dom.test.tsx`, through `@kit/web-testing`'s `jsdom.setup`), each
 jsdom spec checking `axeViolations()`, all compiled by the React Compiler. Field, Tabs, Select and Dialog have a
 `*.differential.dom.test.tsx` that `vitest.uncompiled.config.ts` runs a second time without it, against the same
 snapshot, and Field, Tabs and Select a `*.renders.dom.test.tsx` that counts commits with `createRenderCounter`

@@ -1,4 +1,4 @@
-import { Format, useT } from '@kit/intl-react';
+import { Format } from '@kit/intl-react';
 import { fromPromise, isOk } from '@kit/result';
 import { Icon, IconButton, useToast } from '@kit/ui';
 import { createColumnHelper, useTable } from '@tanstack/react-table';
@@ -11,6 +11,7 @@ import {
 import { RoleBadge } from '#app/components/team/role-badge';
 import { useRoleRules } from '#app/features/team/hooks/use-role-rules';
 import { useRevokeInvite } from '#app/features/team/hooks/use-team-mutations';
+import { useT } from '#app/lib/messages';
 
 const column = createColumnHelper<DataTableFeatures, ChannelInviteView>();
 const NONE: readonly ChannelInviteView[] = [];

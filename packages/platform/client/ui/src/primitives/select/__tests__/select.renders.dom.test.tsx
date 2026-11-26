@@ -1,5 +1,5 @@
+import { createRenderCounter } from '@kit/web-testing/dom';
 import { render } from '@testing-library/react';
-import { createRenderCounter } from '@vp/web-testing/dom';
 import { Select } from '..';
 import { WithUiCopy } from '../../../__tests__/ui-copy-fixture';
 import { Field } from '../../field';

@@ -1,8 +1,8 @@
+import { axeViolations } from '@kit/web-testing/dom';
 import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import type { WatchPartyViewer } from '@vp/permissions';
 import { PartyPermissionsProvider } from '@vp/permissions-react';
-import { axeViolations } from '@vp/web-testing/dom';
 import { AppProviders } from '#app/__tests__/providers';
 import { MemberMenu, type MemberMenuProps } from '..';
 

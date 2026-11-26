@@ -1,7 +1,7 @@
+import { KEYSET_PAGE_SIZE, keysetPaging } from '@kit/query';
 import { infiniteQueryOptions, queryOptions } from '@tanstack/react-query';
 import type { ApiClient } from '@vp/api-client';
 import { SHARE_TOKEN_PARAM } from '@vp/api-contracts';
-import { KEYSET_PAGE_SIZE, keysetPaging } from './keyset-paging';
 import { videoKeys } from './video-queries';
 
 export const videoToolKeys = {

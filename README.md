@@ -90,23 +90,29 @@ taitube-platform/
 ├── packages/                    # Shared libraries. The directory IS the runtime tier.
 │   ├── platform/                # Reusable outside this product: depends on platform packages only
 │   │   ├── universal/               # Runs in a browser AND on a server
+│   │   │   ├── appearance/          # The appearance vocabulary: modes, contrast levels, id and accent patterns
 │   │   │   ├── design-tokens/       # Design system engine: the token group schemas
 │   │   │   ├── di/                  # Typed tokens and an immutable registry whose get returns a Result
+│   │   │   ├── errors/              # Failure types, an app's error code set, retry classes and the common codes
 │   │   │   ├── i18n/                # The typed message engine: kinds, presets, param names, catalogue parity; no words
 │   │   │   ├── intl/                # Formatters on Intl over a tagged value union, IntlCache and the locale chain
 │   │   │   ├── machine/             # Lifecycles as typed edge tables: legal moves, findings, Mermaid
 │   │   │   ├── pagination/          # Keyset cursor codec and page shapes
+│   │   │   ├── permissions/         # CASL ability factory over the app's rule sets, assertCan
 │   │   │   ├── primitives/          # Time-unit constants every package reads by name
 │   │   │   ├── result/              # Result type, combinators, tryCatch/fromPromise
 │   │   │   ├── runtime/             # Clock, Random, EnvSource, Fetch and CookieJar tokens; node and browser entries
-│   │   │   └── tsconfig/            # Shared TypeScript presets, one per tier
+│   │   │   ├── tsconfig/            # Shared TypeScript presets, one per tier
+│   │   │   └── validation/          # Field failures bound to one code, plain text normalised and counted in code points
 │   │   ├── client/                  # Browser only
 │   │   │   ├── components/          # Shared components both apps render: PageHeader, EmptyState, ErrorState, SectionError, the state illustrations
 │   │   │   ├── forms/               # useAppForm with the text, select and file fields, and validateWith
 │   │   │   ├── intl-react/          # IntlProvider, useT, useFormat and <Format> for the web app
+│   │   │   ├── query/               # Query client factory, retry policy, keyset paging, not-found loader helpers
 │   │   │   ├── security-headers/    # CSP nonce and the security headers request middleware each app mounts
 │   │   │   ├── ui/                  # Design system: Tailwind tokens, Radix primitives, the theme and the logo
-│   │   │   └── web-telemetry/       # Core Web Vitals beacon and browser traces, started after hydration
+│   │   │   ├── web-telemetry/       # Core Web Vitals beacon and browser traces, started after hydration
+│   │   │   └── web-testing/         # Spec helpers that know no API: the jsdom and settle setup files, axe, the render counter, serverRender
 │   │   └── server/                  # Node / Bun only
 │   │       ├── compose-autoscaler/  # CLI: scales Compose worker services from the API's queue-depth metrics
 │   │       ├── composition/         # Typed dependency container, tokens, shutdown and signal handling
@@ -123,9 +129,9 @@ taitube-platform/
 │   │   ├── api-contracts/           # Zod request/response schemas for every HTTP endpoint
 │   │   ├── domain/                  # Entity types and the status and role vocabularies
 │   │   ├── domain-rules/            # Pure rules over input plus an entity, returning Result
-│   │   ├── errors/                  # ErrorCode vocabulary, Failure types, retry classes
+│   │   ├── errors/                  # The app's ErrorCode vocabulary, retry classes and product failures
 │   │   ├── intl-formats/            # The product's tagged values: views, durations, published-at, file size
-│   │   ├── messages/                # Typed messages, the en catalogue and the copy for every error code
+│   │   ├── shared-messages/         # The words both apps render, the message engine and the error copy
 │   │   ├── permissions/             # CASL ability rules shared by the API and the frontend
 │   │   └── validation/              # Pure input-only rules returning Result
 │   ├── client/                      # Browser only

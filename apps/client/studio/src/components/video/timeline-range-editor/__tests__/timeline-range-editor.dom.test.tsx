@@ -1,6 +1,6 @@
+import { axeViolations } from '@kit/web-testing/dom';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { axeViolations } from '@vp/web-testing/dom';
 import { AppProviders } from '#app/__tests__/providers';
 import { TimelineRangeEditor, type TimelineRangeEditorProps } from '../timeline-range-editor';
 import type { PositionControl, RangeControl } from '../types';

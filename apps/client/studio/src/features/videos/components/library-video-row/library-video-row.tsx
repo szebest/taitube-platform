@@ -1,5 +1,5 @@
 import { VideoThumbnail } from '@kit/components';
-import { useFormat, useT } from '@kit/intl-react';
+import { useFormat } from '@kit/intl-react';
 import { unwrapOr } from '@kit/result';
 import { DropdownMenu, Icon, IconButton } from '@kit/ui';
 import { Link } from '@tanstack/react-router';
@@ -12,6 +12,7 @@ import { useAppLink } from '@vp/queries';
 import { useState } from 'react';
 import { useBatchActions } from '#app/features/videos/hooks/use-batch-actions';
 import { WEB_URL } from '#app/lib/config';
+import { useT } from '#app/lib/messages';
 import { DeleteVideosDialog } from '../delete-videos-dialog/delete-videos-dialog';
 
 const MS_PER_SECOND = 1000;

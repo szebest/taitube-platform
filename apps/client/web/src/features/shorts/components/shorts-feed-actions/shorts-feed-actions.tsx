@@ -1,4 +1,4 @@
-import { useFormat, useT } from '@kit/intl-react';
+import { useFormat } from '@kit/intl-react';
 import { unwrapOr } from '@kit/result';
 import { Icon, ResponsiveModal, useUiCopy } from '@kit/ui';
 import type { VideoSummary } from '@vp/api-contracts';
@@ -7,6 +7,7 @@ import { ShortsPlayerFrame } from '#app/components/shorts/shorts-player-frame';
 import { ShareDialogContent } from '#app/components/watch/share-dialog';
 import { useReaction } from '#app/hooks/use-reaction';
 import { useVideoActions } from '#app/hooks/use-video-actions';
+import { useT } from '#app/lib/messages';
 import { ShortsCommentSheet } from '../shorts-comment-sheet/shorts-comment-sheet';
 
 type Panel = 'discussion' | 'share';
@@ -43,7 +44,7 @@ export function ShortsFeedActions({ short, renderComments }: ShortsFeedActionsPr
           pressed={liked}
           onSelect={() => change(liked ? null : 'LIKE')}
         >
-          {copy.like}
+          {tOr('appUi.like', {}, '')}
         </ShortsPlayerFrame.Action>
         <ShortsPlayerFrame.Action
           icon={<Icon name="chat" />}

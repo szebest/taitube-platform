@@ -1,4 +1,3 @@
-import { useT } from '@kit/intl-react';
 import { Logo, ThemeMenu } from '@kit/ui';
 import { Link, Outlet } from '@tanstack/react-router';
 import { useLayoutMaxWidth } from '@vp/queries';
@@ -7,6 +6,7 @@ import { AmbientLayer } from '#app/components/shell/ambient-layer';
 import { AppShell } from '#app/components/shell/app-shell';
 import { useImmersive } from '#app/features/shell/hooks/use-immersive';
 import { type SidebarState, saveSidebarState } from '#app/features/shell/utils/sidebar-state';
+import { useT } from '#app/lib/messages';
 import { ShellRail } from '../shell-rail/shell-rail';
 import { ShellSearch } from '../shell-search/shell-search';
 import { ShellTabBar } from '../shell-tab-bar/shell-tab-bar';

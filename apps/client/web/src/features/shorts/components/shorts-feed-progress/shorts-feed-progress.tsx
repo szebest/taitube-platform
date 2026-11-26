@@ -1,6 +1,6 @@
-import { useT } from '@kit/intl-react';
 import { usePlayerSeek, usePlayerTime } from '#app/components/player/taitube-player';
 import { ShortsPlayerFrame } from '#app/components/shorts/shorts-player-frame';
+import { useT } from '#app/lib/messages';
 
 const MS_PER_SECOND = 1000;
 

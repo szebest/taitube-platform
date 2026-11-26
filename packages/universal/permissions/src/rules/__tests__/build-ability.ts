@@ -1,10 +1,9 @@
-import { AbilityBuilder, createMongoAbility } from '@casl/ability';
-import type { AppAbility, UserContext } from '../../types/index';
+import { type RuleSet, createAbilityFactory } from '@kit/permissions';
+import type { AppAbility, AppAction, AppSubjects, UserContext } from '../../types/index';
 
-type DefineRules = (user: UserContext | null, builder: AbilityBuilder<AppAbility>) => void;
-
-export function buildAbility(define: DefineRules, user: UserContext | null): AppAbility {
-  const builder = new AbilityBuilder<AppAbility>(createMongoAbility);
-  define(user, builder);
-  return builder.build();
+export function buildAbility(
+  define: RuleSet<AppAction, AppSubjects, UserContext | null>,
+  user: UserContext | null
+): AppAbility {
+  return createAbilityFactory([define])(user);
 }

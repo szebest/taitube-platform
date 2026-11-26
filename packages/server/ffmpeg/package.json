@@ -20,6 +20,7 @@
     "clean": "rimraf dist tsconfig.tsbuildinfo"
   },
   "dependencies": {
+    "@kit/errors": "workspace:*",
     "@kit/primitives": "workspace:*",
     "@kit/result": "workspace:*",
     "@opentelemetry/api": "^1.9.1",
@@ -36,6 +37,6 @@
     "vite-plus": "catalog:"
   },
   "vp": {
-    "layer": 5
+    "layer": 6
   }
 }

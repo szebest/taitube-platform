@@ -1,8 +1,9 @@
+import { axeViolations } from '@kit/web-testing/dom';
 import { screen, within } from '@testing-library/react';
 import { getCommentSettings, listCreatorComments } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { account, apiServer, comment, mockEndpoint, problemReply, VIDEO_ID } from '@vp/web-testing';
-import { axeViolations, renderRoute, streamUserEvents } from '@vp/web-testing/dom';
+import { renderRoute, streamUserEvents } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
 import { serveLibrary } from '#app/__tests__/library-api.fixture';
 import { signInBrowser } from '#app/__tests__/providers';

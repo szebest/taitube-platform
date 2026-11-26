@@ -23,6 +23,7 @@ import {
 } from '@vp/queries';
 import type { ReactNode } from 'react';
 import { API_BASE_URL, COOKIE_DOMAIN, OTEL_TRACES_URL } from '#app/lib/config';
+import type { StudioCatalogue } from '#app/lib/messages';
 import { AccessDeniedSearchSchema } from '#app/utils/access-denied-search';
 import { StudioRoot } from './-components/studio-root/studio-root';
 
@@ -31,7 +32,7 @@ const STUDIO_SETS: TokenSetIds = { spacing: 'compact', sizing: 'small' };
 
 const VITALS_ENDPOINT = { path: recordWebVitals.path, maxBatchSize: MAX_WEB_VITALS_PER_BATCH };
 
-export const Route = createRootRouteWithContext<AppRouterContext>()({
+export const Route = createRootRouteWithContext<AppRouterContext<StudioCatalogue>>()({
   validateSearch: AccessDeniedSearchSchema,
   beforeLoad: async ({ context, location }) => ({
     appearance: requestAppearancePreference(APPEARANCE_COOKIES),

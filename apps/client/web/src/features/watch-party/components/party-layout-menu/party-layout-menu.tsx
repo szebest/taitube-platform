@@ -1,6 +1,6 @@
-import { useT } from '@kit/intl-react';
 import { Button, DropdownMenu, Icon } from '@kit/ui';
 import type { PartyRoomLayout } from '#app/components/party/party-room';
+import { useT } from '#app/lib/messages';
 
 const LAYOUTS = [
   { value: 'side', label: 'party.layoutSide' },

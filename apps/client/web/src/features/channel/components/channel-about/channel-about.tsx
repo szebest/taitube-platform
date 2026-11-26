@@ -1,8 +1,9 @@
-import { Format, useT } from '@kit/intl-react';
+import { Format } from '@kit/intl-react';
 import { PlatformIcon } from '@kit/ui';
 import type { Channel } from '@vp/api-contracts';
 import { useId } from 'react';
 import { httpsUrl } from '#app/features/channel/utils/https-url';
+import { useT } from '#app/lib/messages';
 import { ContactReveal } from '../contact-reveal/contact-reveal';
 
 export interface ChannelAboutProps {

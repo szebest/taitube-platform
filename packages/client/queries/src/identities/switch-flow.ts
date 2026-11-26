@@ -1,10 +1,10 @@
-import type { useT } from '@kit/intl-react';
 import { type Result, fromPromise, ignore, isOk, ok } from '@kit/result';
 import type { Toaster } from '@kit/ui';
 import type { AnyRouter } from '@tanstack/react-router';
 import type { ApiClient } from '@vp/api-client';
 import { failureCode } from '../failure-code';
 import type { IdentityState, IdentityStore } from '../identity-store';
+import type { useT } from '../intl/shared-words';
 import { unreadNotificationCountQueryOptions } from '../notification-queries';
 import { present } from '../present-failure';
 import { sessionQueryOptions } from '../session';

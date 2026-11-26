@@ -18,7 +18,7 @@ it is keyed by (`SIZE_OPTIONS`, `RADIUS_OPTIONS`, `SPACE_STEPS`...), each with i
 drift from the tokens. `tokenGroups` in `token-group.ts` keys every group by its camelCase name to
 `{ path, schema }`; `TOKEN_GROUPS` is the typed list of those names and `TokenGroup` its member. Beside them:
 `roles.ts` (`ROLES`, `TONE_OPTIONS`, the required contrast pairs and `checkRoleContrast`), `theme.ts` (the theme
-schema, with `ModeOption` and `ContrastOption` from `@vp/domain/settings`), `ref.ts` (the tier 1 ramps) and
+schema, keyed by the modes of `@kit/appearance`), `ref.ts` (the tier 1 ramps) and
 `scale.ts` (the raw space scale, z layers, breakpoints and layout measures).
 
 `define.ts` holds `defineTokenSet`, `defineTheme` and `defineAppearance`, typed identity helpers whose job is the
@@ -47,8 +47,8 @@ defaultTheme, offer })` composes them into the four files `pnpm gen:tokens` writ
 sets and Tailwind CSS, each CSS file under one generated header), or the `resolveTheme` failure.
 
 It is `universal` because `@kit/ui` (client) builds on it and the generators that write `tokens.json` and the
-CSS run on a server. It is T2 because it takes the appearance vocabulary from `@vp/domain/settings` (T1); never
-import `@vp/domain-rules` (T3) or redeclare a pattern `@vp/domain/settings` exports.
+CSS run on a server. It takes the appearance vocabulary (modes, contrast levels, the id pattern) from
+`@kit/appearance` and never redeclares an option or a pattern that package exports.
 
 ---
 

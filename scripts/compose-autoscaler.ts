@@ -29,6 +29,7 @@ try {
     env: process.env,
     executor: (cmd) => attempt(() => execAsync(cmd)),
     fetcher: (url) => attempt(() => fetchMetricsText(url)),
+    now: () => Date.now(),
     onSignal: (signal, handler) => process.on(signal, handler),
     exit: (code) => process.exit(code),
     print: (text) => process.stdout.write(`${text}\n`),

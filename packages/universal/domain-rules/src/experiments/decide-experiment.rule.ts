@@ -1,4 +1,5 @@
 import { type Result, err, isErr, ok } from '@kit/result';
+import { normalizePlainText, withinLength } from '@kit/validation';
 import {
   EXPERIMENT_VARIANT_IDS,
   type ExperimentKind,
@@ -10,7 +11,7 @@ import {
   type Video,
   thumbnailSourcesOf,
 } from '@vp/domain';
-import { VIDEO_TITLE_BOUNDS, normalizePlainText, withinLength } from '@vp/validation';
+import { VIDEO_TITLE_BOUNDS } from '@vp/validation';
 import {
   type ExperimentLimit,
   type InvalidExperiment,

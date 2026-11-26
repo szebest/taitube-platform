@@ -1,6 +1,6 @@
 {
   "name": "@kit/vite-preset",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "sideEffects": false,
@@ -43,7 +43,8 @@
     "rimraf": "^6.1.3",
     "typescript": "^6.0.3",
     "vite": "catalog:",
-    "vite-plus": "catalog:"
+    "vite-plus": "catalog:",
+    "vitest": "catalog:"
   },
   "peerDependencies": {
     "@tailwindcss/vite": "^4.3.3",

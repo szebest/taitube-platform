@@ -1,5 +1,4 @@
 import { EmptyState } from '@kit/components';
-import { useT } from '@kit/intl-react';
 import { Badge, type BadgeTone, Button, useToast } from '@kit/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { ExperimentView, Video } from '@vp/api-contracts';
@@ -13,6 +12,7 @@ import {
   applyExperimentMutationOptions,
   stopExperimentMutationOptions,
 } from '#app/features/videos/api/video-tool-mutations';
+import { useT } from '#app/lib/messages';
 import { StartExperimentForm } from '../start-experiment-form/start-experiment-form';
 
 const STATUS_VIEW = {

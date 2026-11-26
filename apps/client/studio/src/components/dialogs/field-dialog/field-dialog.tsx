@@ -1,5 +1,6 @@
-import { Button, Field, Input, ResponsiveModal, Select, useUiCopy } from '@kit/ui';
+import { Button, Field, Input, ResponsiveModal, Select } from '@kit/ui';
 import { type FormEvent, useState } from 'react';
+import { useT } from '#app/lib/messages';
 import type { FieldInput } from './types';
 
 export interface FieldDialogProps {
@@ -26,7 +27,8 @@ function FieldForm({
   onSubmit,
   onCancel,
 }: Omit<FieldDialogProps, 'open' | 'onOpenChange'> & { onCancel: () => void }) {
-  const { cancel } = useUiCopy();
+  const { tOr } = useT();
+  const cancel = tOr('ui.cancel', {}, '');
   const [value, setValue] = useState(
     input.kind === 'choice' ? (input.initial ?? input.options[0]?.value ?? '') : ''
   );

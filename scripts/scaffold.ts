@@ -1,11 +1,11 @@
 import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
+import { PREFERENCE_ID_PATTERN } from '../packages/platform/universal/appearance/src/index';
 import {
   TOKEN_GROUPS,
   type TokenGroup,
   tokenGroups,
 } from '../packages/platform/universal/design-tokens/src/index';
-import { PREFERENCE_ID_PATTERN } from '../packages/universal/domain/src/settings/index';
 import { packageDir } from './workspace-packages';
 
 export const UI_SRC = `${packageDir('@kit/ui')}/src`;

@@ -1,4 +1,5 @@
-import { type HexColor, type ModeOption, resolveTheme, type Theme } from '@kit/design-tokens';
+import type { ModeOption } from '@kit/appearance';
+import { type HexColor, resolveTheme, type Theme } from '@kit/design-tokens';
 import { ramps } from '@kit/ui/tokens/ref';
 
 type ShownMode = Exclude<ModeOption, 'system'>;

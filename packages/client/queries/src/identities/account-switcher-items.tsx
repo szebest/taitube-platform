@@ -1,8 +1,8 @@
 import { AccountMenu, IDENTITY_ITEM } from '@kit/components';
-import { useT } from '@kit/intl-react';
 import { DropdownMenu } from '@kit/ui';
 import { Link, useLocation } from '@tanstack/react-router';
 import type { ReactNode } from 'react';
+import { useT } from '../intl/shared-words';
 import { useSignOut, useSignOutAll } from '../use-sign-out';
 import { type AccountLink, AccountMenuLink } from './account-links';
 import { IdentityEntryRow } from './identity-entry-row';

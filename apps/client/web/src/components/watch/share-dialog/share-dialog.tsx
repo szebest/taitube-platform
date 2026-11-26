@@ -1,4 +1,4 @@
-import { useFormat, useT } from '@kit/intl-react';
+import { useFormat } from '@kit/intl-react';
 import { fromPromise, unwrapOr } from '@kit/result';
 import { Button, Checkbox, Label, ResponsiveModal, useUiCopy } from '@kit/ui';
 import type { Video } from '@vp/api-contracts';
@@ -7,6 +7,7 @@ import { useId, useState } from 'react';
 import { usePlayerSeek } from '#app/components/player/taitube-player';
 import { EngagementBar } from '#app/components/watch/engagement-bar';
 import { useCopyLink } from '#app/hooks/use-copy-link';
+import { useT } from '#app/lib/messages';
 import { type ShareKind, shareUrl } from '#app/lib/share/share-url';
 import { SOCIAL_TARGETS } from '#app/lib/share/social-targets';
 import { splitLink } from './utils/split-link';

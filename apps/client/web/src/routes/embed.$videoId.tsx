@@ -1,6 +1,7 @@
+import { parseParam } from '@kit/query';
 import { createFileRoute, notFound } from '@tanstack/react-router';
 import { VideoIdParamSchema } from '@vp/api-contracts';
-import { correctionsQueryOptions, parseParam, prefetched } from '@vp/queries';
+import { correctionsQueryOptions, prefetched } from '@vp/queries';
 import {
   EmbedAccessGate,
   EmbedNotFound,

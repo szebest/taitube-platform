@@ -1,5 +1,4 @@
 import { useAppForm, validateWith } from '@kit/forms';
-import { useT } from '@kit/intl-react';
 import { fromPromise, isOk } from '@kit/result';
 import { Button, Field, Input, ResponsiveModal, Textarea, useToast, useUiCopy } from '@kit/ui';
 import { ApiError } from '@vp/api-client';
@@ -10,6 +9,7 @@ import {
   useCreateCategory,
   useUpdateCategory,
 } from '#app/features/admin/hooks/use-category-mutations';
+import { useT } from '#app/lib/messages';
 
 const SLUG_CONFLICT = 'CATEGORY_SLUG_CONFLICT';
 
@@ -55,7 +55,8 @@ function CategoryTextField({
 /** Creates a category, or edits `category`; the fields are checked by the `@vp/validation` category rules. */
 export function CategoryDialog({ category, nextSortOrder, onClose }: CategoryDialogProps) {
   const { tOr } = useT();
-  const { cancel, save } = useUiCopy();
+  const { save } = useUiCopy();
+  const cancel = tOr('ui.cancel', {}, '');
   const toast = useToast();
   const create = useCreateCategory();
   const update = useUpdateCategory();

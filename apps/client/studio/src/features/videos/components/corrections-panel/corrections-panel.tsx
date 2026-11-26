@@ -1,5 +1,4 @@
 import { EmptyState } from '@kit/components';
-import { useT } from '@kit/intl-react';
 import { isErr } from '@kit/result';
 import { Button, Input, Skeleton, useToast } from '@kit/ui';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -14,6 +13,7 @@ import {
   removeCorrectionMutationOptions,
   updateCorrectionMutationOptions,
 } from '#app/features/videos/api/video-tool-mutations';
+import { useT } from '#app/lib/messages';
 import { formatTimecode, parseTimecode } from '#app/utils/timecode';
 
 /** The cards laid over the player: each a range of the video and a line of text. */

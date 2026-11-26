@@ -26,10 +26,7 @@ export function parseEnv<T>(
 }
 
 /** Throws a message naming every invalid key, secrets redacted, for the entrypoint to report. */
-export function loadEnv<T>(
-  schema: z.ZodType<T>,
-  env: Record<string, string | undefined> = process.env
-): T {
+export function loadEnv<T>(schema: z.ZodType<T>, env: Record<string, string | undefined>): T {
   const parsed = parseEnv(schema, env);
   if (isErr(parsed)) {
     const lines = parsed.error.issues.map((issue) => `  - ${issue}`);

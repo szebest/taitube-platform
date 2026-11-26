@@ -1,3 +1,4 @@
+import { PermanentError, TransientError } from '@kit/errors';
 import type { Logger } from '@kit/logger';
 import { type Result, err } from '@kit/result';
 import { expectOk } from '@kit/testing/result';
@@ -7,9 +8,7 @@ import type { DlqEntryRecord, NewDlqEntryInput, Repositories } from '@vp/core/re
 import {
   type DatabaseUnavailable,
   ErrorCodes,
-  PermanentError,
   type QueueUnavailable,
-  TransientError,
   databaseUnavailable,
   queueUnavailable,
 } from '@vp/errors';
@@ -143,7 +142,7 @@ describe('apps/server/worker: DLQ failure handler', () => {
     const before = { ...expectOk(await repos.videos.findById(videoId)) };
     const data = { videoId, generation: 2, traceparent: 't' };
 
-    await handlerOver({}, 'transcode-1080p')({ id: 'r', name: APPLY_EDITS, data }, FAILURE());
+    await handlerOver()({ id: 'r', name: APPLY_EDITS, data }, FAILURE());
 
     const [row] = expectOk(await repos.videoGenerations.list(videoId));
     expect(row).toMatchObject({ status: 'failed', errorCode: ErrorCodes.CORRUPT_CONTAINER });

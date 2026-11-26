@@ -1,5 +1,5 @@
+import { axeViolations } from '@kit/web-testing/dom';
 import { screen, within } from '@testing-library/react';
-import { axeViolations } from '@vp/web-testing/dom';
 import { renderIdentities, type TestAccount } from './render-identities';
 
 const ADA: TestAccount = { slot: 0, name: 'Ada', channels: ['engines'], teams: ['lab'] };

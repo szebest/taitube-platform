@@ -1,5 +1,5 @@
 import { EmptyState, SpriteStrip } from '@kit/components';
-import { useFormat, useT } from '@kit/intl-react';
+import { useFormat } from '@kit/intl-react';
 import { unwrapOr } from '@kit/result';
 import { Button, Skeleton, useToast } from '@kit/ui';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -7,6 +7,7 @@ import type { ClipSuggestionView, Video } from '@vp/api-contracts';
 import { useApi } from '@vp/queries';
 import { createClipMutationOptions } from '#app/features/videos/api/video-pipeline-mutations';
 import { clipSuggestionsQueryOptions } from '#app/features/videos/api/video-pipeline-queries';
+import { useT } from '#app/lib/messages';
 import { formatTimecode } from '#app/utils/timecode';
 
 const PERCENT = 100;

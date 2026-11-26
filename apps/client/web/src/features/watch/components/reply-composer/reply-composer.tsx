@@ -1,6 +1,6 @@
-import { useUiCopy } from '@kit/ui';
 import { ActingAsLine, useIdentityGuard } from '@vp/queries';
 import { CommentThread } from '#app/components/watch/comment-thread';
+import { useT } from '#app/lib/messages';
 
 export interface ReplyComposerProps {
   draft: string;
@@ -10,7 +10,7 @@ export interface ReplyComposerProps {
 }
 
 export function ReplyComposer({ draft, onChange, onSend, sending }: ReplyComposerProps) {
-  const { reply } = useUiCopy();
+  const { tOr } = useT();
   const guard = useIdentityGuard();
 
   return (
@@ -21,7 +21,7 @@ export function ReplyComposer({ draft, onChange, onSend, sending }: ReplyCompose
         onChange={onChange}
         onSubmit={() => guard.guard(onSend)}
         submitting={sending}
-        aria-label={reply}
+        aria-label={tOr('appUi.reply', {}, '')}
       />
     </div>
   );

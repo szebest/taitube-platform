@@ -1,4 +1,5 @@
-import { ErrorCodes, isInputFailure } from '@vp/errors';
+import { isInputFailure } from '@kit/errors';
+import { ErrorCodes } from '@vp/errors';
 import { invalidShareLink, shareLinkExpired, shareLinkLimit, shareLinkNotFound } from '../failures';
 
 describe('@vp/domain-rules: share link failures', () => {

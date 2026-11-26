@@ -1,4 +1,3 @@
-import { useT } from '@kit/intl-react';
 import { assertNever, isErr } from '@kit/result';
 import { Button, Field, Input, Select, useToast } from '@kit/ui';
 import { useMutation } from '@tanstack/react-query';
@@ -8,6 +7,7 @@ import { ErrorCodes } from '@vp/errors';
 import { present, useApi, useFailureToast } from '@vp/queries';
 import { type FormEvent, useState } from 'react';
 import { createShareLinkMutationOptions } from '#app/features/videos/api/video-tool-mutations';
+import { useT } from '#app/lib/messages';
 
 const DEFAULT_EXPIRY: ShareLinkExpiry = '7d';
 

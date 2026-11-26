@@ -1,4 +1,3 @@
-import { useT } from '@kit/intl-react';
 import { isErr } from '@kit/result';
 import { Button, Input, useToast } from '@kit/ui';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -14,6 +13,7 @@ import {
   replaceChaptersMutationOptions,
   suggestChaptersMutationOptions,
 } from '#app/features/videos/api/video-tool-mutations';
+import { useT } from '#app/lib/messages';
 import { formatTimecode, parseTimecode } from '#app/utils/timecode';
 
 interface Row {

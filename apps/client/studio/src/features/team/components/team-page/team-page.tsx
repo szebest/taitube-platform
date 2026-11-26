@@ -1,10 +1,10 @@
 import { EmptyState, PageHeader } from '@kit/components';
-import { useT } from '@kit/intl-react';
 import { Tabs } from '@kit/ui';
 import { useNavigate, useSearch } from '@tanstack/react-router';
 import { canReadChannelTeam } from '@vp/permissions';
 import { useCan } from '@vp/permissions-react';
 import { useActiveChannel } from '#app/hooks/use-active-channel';
+import { useT } from '#app/lib/messages';
 import { AuditPanel } from '../audit-panel/audit-panel';
 import { MembersPanel } from '../members-panel/members-panel';
 

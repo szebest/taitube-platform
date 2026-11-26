@@ -19,6 +19,13 @@ pnpm workspaces provide built-in monorepo support through `pnpm-workspace.yaml`,
 
 **When NOT to use:** Single-package projects, projects already using npm/yarn workspaces (migration required), projects that need floating dependency versions per package.
 
+## In this repo
+
+Ask first whether a new package is platform: one a second app could use unchanged goes under
+`packages/platform/<tier>/<name>` as `@kit/<name>`, and a `@kit/*` package never depends on a `@vp/*` package
+(`pnpm boundaries` fails on it). The rest of the recipe, tier and layer: `packages/AGENTS.md`, "Adding a package", and
+`docs/standards/platform-packages.md`. The workspace globs are `packages/platform/*/*`, `packages/*/*` and `apps/*/*`.
+
 ## Quick Reference
 
 | Pattern                  | API / Config                                   | Key Points                                              |

@@ -28,10 +28,11 @@ import { DEV_TOKEN_URL } from '@vp/queries/demo-personas';
 import { account, api, apiServer, identities, mockEndpoint, signInRecord } from '@vp/web-testing';
 import { http, HttpResponse } from 'msw/http';
 import type { ComponentType, PropsWithChildren } from 'react';
+import { STUDIO_MESSAGES } from '#app/lib/messages';
 
 function providersFor(session: Session): ComponentType<PropsWithChildren> {
   return ({ children }) => (
-    <AppWords>
+    <AppWords messages={STUDIO_MESSAGES}>
       <ApiProvider api={api}>
         <SessionProvider session={session}>
           <AppearanceProvider

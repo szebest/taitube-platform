@@ -1,5 +1,5 @@
+import { axeViolations } from '@kit/web-testing/dom';
 import { act, fireEvent, screen } from '@testing-library/react';
-import { axeViolations } from '@vp/web-testing/dom';
 import { renderBar } from './render-bar';
 
 afterEach(() => {

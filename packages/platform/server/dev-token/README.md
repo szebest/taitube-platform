@@ -8,7 +8,7 @@ pnpm add @kit/dev-token
 ```
 
 Tokens and registries: none. The caller passes a `DevTokenConfig`:
-`{ product, issuer, audience, keyId, seed, routes: { jwks, token } }`.
+`{ product, issuer, audience, keyId, seed, routes: { jwks, token }, now }`.
 
 ```ts
 import { type DevTokenConfig, getDevJwks, mintToken, verifyToken } from '@kit/dev-token';
@@ -20,6 +20,7 @@ const config: DevTokenConfig = {
   keyId: 'acme-key-1',
   seed: 'acme-seed',
   routes: { jwks: ['/jwks.json'], token: '/token' },
+  now: () => Date.now(),
 };
 
 const token = mintToken(config, { sub: 'user-1', role: 'admin', ttl: '1h' });

@@ -1,5 +1,6 @@
+import { type Failure } from '@kit/errors';
 import { MAX_ACTIVE_SHARE_LINKS, SHARE_LINK_LABEL_MAX_LENGTH } from '@vp/domain';
-import { ErrorCodes, type Failure } from '@vp/errors';
+import { ErrorCodes } from '@vp/errors';
 import { type InvalidField, invalidField } from '@vp/validation';
 
 export type ShareLinkNotFound = Failure<typeof ErrorCodes.SHARE_LINK_NOT_FOUND, { linkId: string }>;

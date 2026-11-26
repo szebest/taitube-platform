@@ -1,3 +1,4 @@
+import { singleFlightRefresh } from '@kit/query';
 import { createMiddleware } from '@tanstack/react-start';
 import { ACCOUNT_SLOT_HEADER, identityPath, parseSlot } from './account-slots';
 import { API_PROXY_PATH } from './api-client';
@@ -5,7 +6,6 @@ import { proxyToApi } from './api-proxy';
 import { type RequestIdentity, resolveRequestIdentity } from './request-identity';
 import { ACCOUNTS_MAX_DEFAULT, type RequestSession, type SessionConfig } from './session-config';
 import { migrateLegacySession } from './session-cookie';
-import { singleFlightRefresh } from './single-flight-refresh';
 
 const SAFE_METHODS: ReadonlySet<string> = new Set(['GET', 'HEAD']);
 

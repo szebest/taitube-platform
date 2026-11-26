@@ -1,5 +1,5 @@
 import { type Result, err, ok } from '@kit/result';
-import { normalizePlainText, withinLength } from '../plain-text';
+import { normalizePlainText, withinLength } from '@kit/validation';
 import { type InvalidRestriction, invalidRestriction } from './failures';
 
 const MAX_REASON_LENGTH = 200;

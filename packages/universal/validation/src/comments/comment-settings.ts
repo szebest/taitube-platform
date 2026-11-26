@@ -1,5 +1,5 @@
 import { type Result, err, isErr, ok } from '@kit/result';
-import { normalizePlainText, withinLength } from '../plain-text';
+import { normalizePlainText, withinLength } from '@kit/validation';
 import { foldForMatching } from './blocked-words';
 import { type InvalidCommentSettings, invalidCommentSettings } from './failures';
 

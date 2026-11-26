@@ -1,4 +1,3 @@
-import { useT } from '@kit/intl-react';
 import { createFileRoute } from '@tanstack/react-router';
 import { prefetched } from '@vp/queries';
 import {
@@ -6,6 +5,7 @@ import {
   ScreeningQueue,
   ScreeningSearchSchema,
 } from '#app/features/admin';
+import { useT } from '#app/lib/messages';
 
 function ScreeningPage() {
   const { tOr } = useT();

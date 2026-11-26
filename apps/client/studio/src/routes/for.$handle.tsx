@@ -1,5 +1,6 @@
+import { parseParam } from '@kit/query';
 import { createFileRoute, redirect } from '@tanstack/react-router';
-import { parseParam, studioPathForChannel } from '@vp/queries';
+import { studioPathForChannel } from '@vp/queries';
 import { z } from 'zod';
 
 /**

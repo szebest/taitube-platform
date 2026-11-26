@@ -1,7 +1,8 @@
+import { KEYSET_PAGE_SIZE, keysetPaging } from '@kit/query';
 import { infiniteQueryOptions, queryOptions } from '@tanstack/react-query';
 import type { ApiClient } from '@vp/api-client';
 import type { ChannelAuditAction } from '@vp/domain';
-import { KEYSET_PAGE_SIZE, keysetPaging, membershipKeys } from '@vp/queries';
+import { membershipKeys } from '@vp/queries';
 
 export type AuditFilters = { actorUserId?: string; action?: ChannelAuditAction };
 

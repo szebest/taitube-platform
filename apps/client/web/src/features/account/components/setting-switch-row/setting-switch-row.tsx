@@ -1,5 +1,5 @@
-import { useT } from '@kit/intl-react';
 import { Switch } from '@kit/ui';
+import { useT } from '#app/lib/messages';
 import { SettingItem } from '../setting-item/setting-item';
 
 type SwitchRowId =

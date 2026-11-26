@@ -1,5 +1,6 @@
+import type { Failure } from '@kit/errors';
 import type { Result } from '@kit/result';
-import type { ErrorCodes, Failure } from '@vp/errors';
+import type { ErrorCodes } from '@vp/errors';
 
 export type HashingFailed = Failure<
   typeof ErrorCodes.INTERNAL,

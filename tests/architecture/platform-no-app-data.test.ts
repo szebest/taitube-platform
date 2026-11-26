@@ -1,10 +1,9 @@
 import { AppEnvSchema } from '../../packages/server/env-schema/src/index';
-import { pendingPlatformMoves } from '../../scripts/check-boundaries';
+import { PRODUCT_NAME } from '../../scripts/extractable/product-name';
 import { isPlatform, load, type Pkg } from '../../scripts/workspace-packages';
 import { moduleSpecifiers, platformSources, stringTexts } from './platform-sources';
 import { read } from './repo-files';
 
-const PRODUCT_NAME = /taitube|video-pipeline|vp-dev|(?<![a-z0-9])vp[._]/i;
 const ROUTE = /^\/[a-z][\w:{}.~-]*(?:\/[\w:{}.~-]*)*$/i;
 const OTLP_SPEC_PATH = '/v1/traces';
 const ENV_KEYS: ReadonlySet<string> = new Set(Object.keys(AppEnvSchema.shape));
@@ -13,16 +12,12 @@ function packageName(specifier: string): string {
   return specifier.split('/', specifier.startsWith('@') ? 2 : 1).join('/');
 }
 
-function appImports(
-  source: string,
-  packages: readonly Pkg[],
-  pending: ReadonlySet<string>
-): string[] {
+function appImports(source: string, packages: readonly Pkg[]): string[] {
   const byName = new Map(packages.map((pkg) => [pkg.name, pkg]));
   return moduleSpecifiers(source).filter((specifier) => {
     const name = packageName(specifier);
     const target = byName.get(name);
-    if (target) return !(isPlatform(target.dir) || pending.has(name));
+    if (target) return !isPlatform(target.dir);
     return name.startsWith('@vp/');
   });
 }
@@ -42,7 +37,6 @@ const PACKAGES: Pkg[] = [
   { name: '@kit/result', dir: 'packages/platform/universal/result', layer: 1, deps: [] },
   { name: '@kit/di', dir: 'packages/platform/universal/di', layer: 2, deps: [] },
 ];
-const PENDING = new Set(['@kit/result']);
 
 describe('architecture: platform packages hold no app data', () => {
   it.each([
@@ -88,13 +82,8 @@ describe('architecture: platform packages hold no app data', () => {
     { shape: 'an unknown @vp package', source: "import 'node:fs'; import '@vp/ghost';", found: 1 },
     { shape: 'a platform package', source: "import { x } from '@kit/di';", found: 0 },
     { shape: 'a third-party package', source: "import { z } from 'zod';", found: 0 },
-    {
-      shape: 'a package whose move to @kit/* is pending',
-      source: "import '@kit/result';",
-      found: 0,
-    },
   ])('counts $found app import(s) in $shape', ({ source, found }) => {
-    expect(appImports(source, PACKAGES, PENDING)).toHaveLength(found);
+    expect(appImports(source, PACKAGES)).toHaveLength(found);
   });
 
   it('finds none in platform source', () => {
@@ -105,9 +94,7 @@ describe('architecture: platform packages hold no app data', () => {
     expect(
       sources.flatMap((file) => [
         ...appData(file, read(file)),
-        ...appImports(read(file), packages, pendingPlatformMoves()).map(
-          (specifier) => `${file}: imports ${specifier}`
-        ),
+        ...appImports(read(file), packages).map((specifier) => `${file}: imports ${specifier}`),
       ])
     ).toEqual([]);
   });

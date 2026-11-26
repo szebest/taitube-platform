@@ -1,6 +1,6 @@
 import { ActingAs } from '@kit/components';
-import { useT } from '@kit/intl-react';
 import { Button, Callout } from '@kit/ui';
+import { useT } from '../intl/shared-words';
 import { useIdentitySwitcher } from './identity-switcher-provider';
 import { useIdentityChoices } from './use-identity-choices';
 import type { IdentityGuard } from './use-identity-guard';

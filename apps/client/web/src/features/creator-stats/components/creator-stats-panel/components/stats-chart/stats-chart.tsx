@@ -1,9 +1,10 @@
 import { seriesColor } from '@kit/components';
-import { useFormat, useT } from '@kit/intl-react';
+import { useFormat } from '@kit/intl-react';
 import { unwrapOr } from '@kit/result';
 import { SegmentedControl } from '@kit/ui';
 import type { CreatorStats } from '@vp/api-contracts';
 import { useState } from 'react';
+import { useT } from '#app/lib/messages';
 
 type Range = 'hours' | 'days';
 

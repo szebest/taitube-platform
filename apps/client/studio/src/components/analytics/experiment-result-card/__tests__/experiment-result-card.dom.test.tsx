@@ -1,5 +1,5 @@
+import { axeViolations } from '@kit/web-testing/dom';
 import { render, screen, within } from '@testing-library/react';
-import { axeViolations } from '@vp/web-testing/dom';
 import type { ComponentProps } from 'react';
 import { AppProviders } from '#app/__tests__/providers';
 import { ExperimentResultCard, type ExperimentResultCardExperiment } from '../index';

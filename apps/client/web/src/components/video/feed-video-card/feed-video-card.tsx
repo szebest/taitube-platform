@@ -1,5 +1,5 @@
 import { VideoCard } from '@kit/components';
-import { Format, useT } from '@kit/intl-react';
+import { Format } from '@kit/intl-react';
 import { Link } from '@tanstack/react-router';
 import type { ReasonedVideo, VideoSummary } from '@vp/api-contracts';
 import { publishedAt } from '@vp/intl-formats';
@@ -8,6 +8,7 @@ import { useDurationText } from '#app/hooks/use-duration-text';
 import { useHoverPlay } from '#app/hooks/use-hover-play';
 import { useImpression } from '#app/hooks/use-impression';
 import { useVideoActions } from '#app/hooks/use-video-actions';
+import { useT } from '#app/lib/messages';
 import { usePlaybackPreference } from '#app/lib/preferences/device-preferences-provider';
 import { spriteOf } from '#app/lib/video-sprite';
 import { useWatchProgress } from './hooks/use-watch-progress';

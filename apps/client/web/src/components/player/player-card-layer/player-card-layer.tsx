@@ -1,6 +1,6 @@
-import { useT } from '@kit/intl-react';
 import { Button } from '@kit/ui';
 import { useState } from 'react';
+import { useT } from '#app/lib/messages';
 import { usePlayerTime } from '#app/lib/player/player-channel';
 import type { PlayerCard } from '#app/lib/player/taitube-player-props';
 

@@ -1,6 +1,7 @@
+import { axeViolations } from '@kit/web-testing/dom';
 import { screen } from '@testing-library/react';
 import { apiServer, chatLine } from '@vp/web-testing';
-import { axeViolations, mockLiveChatSocket, renderRoute } from '@vp/web-testing/dom';
+import { mockLiveChatSocket, renderRoute } from '@vp/web-testing/dom';
 import {
   chatTicket,
   OVERLAY_TOKEN,

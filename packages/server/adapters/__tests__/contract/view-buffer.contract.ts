@@ -41,22 +41,30 @@ export function describeViewBufferContract(makeSubject: MakeViewBufferSubject): 
 
     const drain = async (): Promise<readonly ViewCount[]> => (await drainBatch())?.counts ?? [];
 
+    /**
+     * Redis dedups viewers in a HyperLogLog, which can take a random new id for one it holds
+     * (about 1 in 16,000 a pair): fixed ids hash the same on every run, so a count never wavers.
+     */
+    let viewers = 0;
+    const nextViewer = () => `viewer-${++viewers}`;
+
     beforeEach(async () => {
       videoId = randomUUID();
+      viewers = 0;
       await drain();
       await drain();
     });
 
     const view = (overrides: Partial<ViewEvent> = {}): ViewEvent => ({
       videoId,
-      viewerId: randomUUID(),
+      viewerId: nextViewer(),
       viewDate: DAY,
       viewHour: HOUR,
       ...overrides,
     });
 
     it('counts a viewer once per video and day', async () => {
-      const viewerId = randomUUID();
+      const viewerId = nextViewer();
 
       expect(expectOk(await buffer.record(view({ viewerId })))).toBe('counted');
       expect(expectOk(await buffer.record(view({ viewerId })))).toBe('duplicate');
@@ -65,7 +73,7 @@ export function describeViewBufferContract(makeSubject: MakeViewBufferSubject): 
     });
 
     it('counts the same viewer again on another day', async () => {
-      const viewerId = randomUUID();
+      const viewerId = nextViewer();
       expectOk(await buffer.record(view({ viewerId })));
 
       expect(expectOk(await buffer.record(view({ viewerId, viewDate: NEXT_DAY })))).toBe('counted');
@@ -78,7 +86,7 @@ export function describeViewBufferContract(makeSubject: MakeViewBufferSubject): 
     });
 
     it('counts each viewer in the hour the view was counted in, duplicates left out', async () => {
-      const viewerId = randomUUID();
+      const viewerId = nextViewer();
       expectOk(await buffer.record(view({ viewerId })));
       expectOk(await buffer.record(view({ viewerId, viewHour: NEXT_HOUR })));
       expectOk(await buffer.record(view()));
@@ -158,7 +166,7 @@ export function describeViewBufferContract(makeSubject: MakeViewBufferSubject): 
     describe('playback', () => {
       const playback = (overrides: Partial<PlaybackWatch> = {}): PlaybackWatch => ({
         videoId,
-        sessionId: randomUUID(),
+        sessionId: nextViewer(),
         viewDate: DAY,
         viewHour: HOUR,
         device: 'desktop',

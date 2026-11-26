@@ -34,12 +34,18 @@ export type BundleRules = {
   initialBudgetKb?: number;
   /** Directories of the app no chunk may carry at all: code that moved to another app. */
   forbiddenDirs?: readonly string[];
-  /** Whether the build carries the demo personas (`VITE_DEMO_PERSONAS=true`), which the preset reads from the build's environment. */
-  demoPersonas?: boolean;
+  /** Directories that only a build with their flag on may carry. */
+  flaggedDirs?: readonly FlaggedDir[];
 };
 
-/** The one-click sign-in modules, `@vp/queries/demo-personas`, which only a build with the flag on may carry. */
-const DEMO_PERSONAS_FOLDER = 'demo-personas/';
+export type FlaggedDir = {
+  /** The directory's name, matched as a whole path segment. */
+  dir: string;
+  /** The build environment variable that is `true` when the build may carry it. */
+  env: string;
+  /** Whether the build being checked has the flag on. */
+  enabled: boolean;
+};
 
 const NODE_MODULES = 'node_modules';
 
@@ -49,17 +55,17 @@ function directory(...segments: string[]): string {
 
 function devOnlyViolations(chunk: BundledChunk, rules: BundleRules): string[] {
   const devtools = DEVTOOLS.filter((name) => carries(chunk, directory(NODE_MODULES, name)));
-  const personas =
-    !rules.demoPersonas && carries(chunk, `/${DEMO_PERSONAS_FOLDER}`)
-      ? [
-          `${chunk.fileName} carries ${DEMO_PERSONAS_FOLDER}, which only a build with VITE_DEMO_PERSONAS=true may ship`,
-        ]
-      : [];
+  const flagged = (rules.flaggedDirs ?? [])
+    .filter(({ dir, enabled }) => !enabled && carries(chunk, `/${dir}/`))
+    .map(
+      ({ dir, env }) =>
+        `${chunk.fileName} carries ${dir}/, which only a build with ${env}=true may ship`
+    );
   return [
     ...devtools.map(
       (name) => `${chunk.fileName} carries ${name}, which only the dev server may load`
     ),
-    ...personas,
+    ...flagged,
   ];
 }
 
@@ -146,7 +152,7 @@ function chunkViolations(chunk: BundledChunk, rules: BundleRules): string[] {
 }
 
 /**
- * What a production client bundle must not do: ship devtools, or the demo personas without `VITE_DEMO_PERSONAS=true`, carry a directory
+ * What a production client bundle must not do: ship devtools, or a flagged directory without its flag, carry a directory
  * whose code moved to another app, stop splitting per route, or read the server's
  * environment (`SSR_API_BASE_URL` is read behind `import.meta.env.SSR`, which the build drops).
  */

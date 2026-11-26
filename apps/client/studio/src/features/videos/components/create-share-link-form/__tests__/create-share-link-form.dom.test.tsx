@@ -1,9 +1,10 @@
+import { axeViolations } from '@kit/web-testing/dom';
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MAX_ACTIVE_SHARE_LINKS } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import { VIDEO_ID, video } from '@vp/web-testing';
-import { axeViolations, renderRoute } from '@vp/web-testing/dom';
+import { renderRoute } from '@vp/web-testing/dom';
 import { signInBrowser } from '#app/__tests__/providers';
 import { serveSharing, shareLink } from '#app/features/videos/__tests__/sharing-api.fixture';
 import { getRouter } from '#app/router';

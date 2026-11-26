@@ -1,5 +1,6 @@
+import { PermanentError } from '@kit/errors';
 import { expectOk } from '@kit/testing/result';
-import { ErrorCodes, PermanentError } from '@vp/errors';
+import { ErrorCodes } from '@vp/errors';
 import { NotifyJob, stagePolicies } from '@vp/job-contracts';
 import { createFailureHandler } from '../failure-handler';
 import { createPackageProcessor } from '../stages/package';

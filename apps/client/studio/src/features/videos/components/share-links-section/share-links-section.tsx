@@ -1,6 +1,6 @@
 import { EmptyState } from '@kit/components';
 import type { FormatValue } from '@kit/intl';
-import { Format, useT } from '@kit/intl-react';
+import { Format } from '@kit/intl-react';
 import { Badge, type BadgeTone, Button, Skeleton, Table, useToast } from '@kit/ui';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { SHARE_TOKEN_PARAM, type ShareLinkView, type Video } from '@vp/api-contracts';
@@ -9,6 +9,7 @@ import { shareLinksQueryOptions, useApi, useFailureToast } from '@vp/queries';
 import { revokeShareLinkMutationOptions } from '#app/features/videos/api/video-tool-mutations';
 import { useCopyField } from '#app/hooks/use-copy-field';
 import { WEB_URL } from '#app/lib/config';
+import { useT } from '#app/lib/messages';
 import { CreateShareLinkForm } from '../create-share-link-form/create-share-link-form';
 
 /** Only an active link can still be copied or revoked. */

@@ -1,5 +1,5 @@
 import { EmptyState, SectionError } from '@kit/components';
-import { Format, useT } from '@kit/intl-react';
+import { Format } from '@kit/intl-react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import {
   createColumnHelper,
@@ -20,6 +20,7 @@ import {
 import { LoadMore } from '#app/components/table/load-more';
 import { type InboxComment, inboxQueryOptions } from '#app/features/comments/api/inbox-queries';
 import { WEB_URL } from '#app/lib/config';
+import { useT } from '#app/lib/messages';
 import { pagedRows, tableStateOf } from '#app/utils/paged-rows';
 import { InboxBulkActions } from '../inbox-bulk-actions/inbox-bulk-actions';
 import { InboxCommentActions } from '../inbox-comment-actions/inbox-comment-actions';
