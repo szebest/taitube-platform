@@ -20,13 +20,10 @@ export const BROWSER: EcmaScriptLevel = {
   lib: ['lib.es2024.d.ts', 'lib.dom.d.ts'],
 };
 
-export const SERVICE_WORKER: EcmaScriptLevel = {
+const SERVICE_WORKER: EcmaScriptLevel = {
   target: ts.ScriptTarget.ES2024,
   lib: ['lib.es2024.d.ts', 'lib.webworker.d.ts'],
 };
-
-/** The level the shared architecture program parses at: it spans the server tier and has no DOM. */
-export const PROGRAM_LEVEL = SERVER;
 
 interface Tier {
   name: string;
@@ -34,7 +31,7 @@ interface Tier {
   level: EcmaScriptLevel;
 }
 
-export const TIERS: readonly Tier[] = [
+const TIERS: readonly Tier[] = [
   {
     name: 'server',
     directories: ['apps/server', 'packages/server', 'packages/platform/server'],
@@ -105,14 +102,14 @@ const TARGET_NAMES = new Map(
 const targetName = (target: ts.ScriptTarget | undefined): string =>
   target === undefined ? 'unset' : (TARGET_NAMES.get(target) ?? String(target));
 
-export interface EffectiveLevel {
+interface EffectiveLevel {
   target: ts.ScriptTarget | undefined;
   lib: readonly string[] | undefined;
   problems: string[];
 }
 
 /** The `target` and `lib` a tsconfig resolves to once its `extends` chain is applied, by the compiler's own parser. */
-export function effectiveLevel(file: string, root = ROOT): EffectiveLevel {
+function effectiveLevel(file: string, root = ROOT): EffectiveLevel {
   const parsed = ts.getParsedCommandLineOfConfigFile(join(root, file), {}, host);
   const { target, lib } = parsed?.options ?? {};
   return {
