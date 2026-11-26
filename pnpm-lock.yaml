@@ -2724,9 +2724,6 @@ importers:
       '@kit/object-storage':
         specifier: workspace:*
         version: link:../../platform/server/object-storage
-      '@kit/ports':
-        specifier: workspace:*
-        version: link:../../platform/server/ports
       '@kit/primitives':
         specifier: workspace:*
         version: link:../../platform/universal/primitives
@@ -2797,6 +2794,9 @@ importers:
       '@electric-sql/pglite':
         specifier: ^0.5.8
         version: 0.5.8
+      '@kit/ports':
+        specifier: workspace:*
+        version: link:../../platform/server/ports
       '@kit/testing':
         specifier: workspace:*
         version: link:../../platform/server/testing
