@@ -1,6 +1,5 @@
 import { useFormat, useT } from '@kit/intl-react';
 import { unwrapOr } from '@kit/result';
-import { useUiCopy } from '@kit/ui';
 import { useSuspenseInfiniteQuery, useSuspenseQuery } from '@tanstack/react-query';
 import type { CommentView } from '@vp/api-contracts';
 import { threadRootId } from '@vp/domain';
@@ -8,12 +7,10 @@ import { publishedAt } from '@vp/intl-formats';
 import { canHeartComment } from '@vp/permissions';
 import { useCan } from '@vp/permissions-react';
 import {
-  ActingAsLine,
   SectionBoundary,
   useApi,
   useFailureToast,
   useHeartComment,
-  useIdentityGuard,
   videoQueryOptions,
 } from '@vp/queries';
 import { Suspense, useEffect, useEffectEvent, useState } from 'react';
@@ -28,6 +25,7 @@ import { useRequireAccount } from '#app/hooks/use-require-account';
 import { repliesQueryOptions } from '#app/lib/query-keys/comment-keys';
 import { useShareToken } from '#app/lib/video-access/share-token.context';
 import { CommentEditor } from '../comment-editor/comment-editor';
+import { ReplyComposer } from '../reply-composer/reply-composer';
 import { LazyReportCommentDialog } from '../report-comment-dialog/report-comment-dialog.lazy';
 import { VideoCommentMenu } from '../video-comment-menu/video-comment-menu';
 
@@ -121,34 +119,6 @@ function ReplyThread(props: ReplyThreadProps) {
         <ExpandedReplies {...props} />
       </Suspense>
     </SectionBoundary>
-  );
-}
-
-function ReplyComposer({
-  draft,
-  onChange,
-  onSend,
-  sending,
-}: {
-  draft: string;
-  onChange: (draft: string) => void;
-  onSend: () => void;
-  sending: boolean;
-}) {
-  const { reply } = useUiCopy();
-  const guard = useIdentityGuard();
-
-  return (
-    <div className="col-start-2 flex flex-col gap-inline">
-      <ActingAsLine action="reply" guard={guard} />
-      <CommentThread.Composer
-        value={draft}
-        onChange={onChange}
-        onSubmit={() => guard.guard(onSend)}
-        submitting={sending}
-        aria-label={reply}
-      />
-    </div>
   );
 }
 
