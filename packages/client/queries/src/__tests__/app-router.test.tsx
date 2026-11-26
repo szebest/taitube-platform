@@ -100,11 +100,12 @@ describe('@vp/queries: app router', () => {
   );
 
   it.each([
-    { motion: 'standard', types: ['navigation'] },
-    { motion: 'reduced', types: false },
+    { motion: 'standard', hrefChanged: true, types: ['navigation'] },
+    { motion: 'reduced', hrefChanged: true, types: false },
+    { motion: 'standard', hrefChanged: false, types: false },
   ])(
-    'runs a navigation through a view transition typed $types under $motion motion',
-    ({ motion, types }) => {
+    'runs a load through a view transition typed $types under $motion motion when the address changed: $hrefChanged',
+    ({ motion, hrefChanged, types }) => {
       const router = getRouter();
       const { defaultViewTransition } = router.options;
       if (
@@ -115,8 +116,8 @@ describe('@vp/queries: app router', () => {
       }
       const change = {
         toLocation: router.latestLocation,
-        pathChanged: true,
-        hrefChanged: true,
+        pathChanged: hrefChanged,
+        hrefChanged,
         hashChanged: false,
       };
       vi.stubGlobal('document', { documentElement: { dataset: { motion } } });

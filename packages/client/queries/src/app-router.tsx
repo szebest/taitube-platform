@@ -104,9 +104,14 @@ function IdentityQueryClient({
   return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
 }
 
-/** Every navigation cross-fades through a view transition; under reduced motion the page swaps at once. */
+/**
+ * Every navigation cross-fades through a view transition; under reduced motion the page swaps at once.
+ * A load that stays on the same address (hydration, an invalidate) never runs one: the page takes no
+ * pointer while a transition runs, and that one would last as long as its loaders.
+ */
 const viewTransition = {
-  types: () => (document.documentElement.dataset.motion === 'reduced' ? false : ['navigation']),
+  types: ({ hrefChanged }: { hrefChanged: boolean }) =>
+    hrefChanged && document.documentElement.dataset.motion !== 'reduced' ? ['navigation'] : false,
 };
 
 function RouterWords({
