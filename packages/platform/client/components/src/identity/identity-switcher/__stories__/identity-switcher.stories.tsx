@@ -23,26 +23,29 @@ const ROWS = [
 export const Searchable: Story = {
   args: { open: true, onOpenChange: () => undefined, children: null },
   render: (args) => (
-    <IdentitySwitcher.Root {...args}>
-      <IdentitySwitcher.Content title="Switch account or channel">
-        <IdentitySwitcher.Search placeholder="Find an account or channel" />
-        <IdentitySwitcher.List>
-          <IdentitySwitcher.Group heading="Accounts and channels">
-            {ROWS.map((row, index) => (
-              <IdentitySwitcher.Item key={row.handle} value={row.handle}>
-                <IdentityRow.Root current={index === 0}>
-                  <IdentityRow.Avatar name={row.name} accent={row.accent} />
-                  <IdentityRow.Text>
-                    <IdentityRow.Name>{row.name}</IdentityRow.Name>
-                    <IdentityRow.Detail>{row.handle}</IdentityRow.Detail>
-                  </IdentityRow.Text>
-                  <IdentityRow.Check />
-                </IdentityRow.Root>
-              </IdentitySwitcher.Item>
-            ))}
-          </IdentitySwitcher.Group>
-        </IdentitySwitcher.List>
-      </IdentitySwitcher.Content>
-    </IdentitySwitcher.Root>
+    <>
+      <p className="m-section text-fg">The page the switcher opens over.</p>
+      <IdentitySwitcher.Root {...args}>
+        <IdentitySwitcher.Content title="Switch account or channel">
+          <IdentitySwitcher.Search placeholder="Find an account or channel" />
+          <IdentitySwitcher.List>
+            <IdentitySwitcher.Group heading="Accounts and channels">
+              {ROWS.map((row, index) => (
+                <IdentitySwitcher.Item key={row.handle} value={row.handle}>
+                  <IdentityRow.Root current={index === 0}>
+                    <IdentityRow.Avatar name={row.name} accent={row.accent} />
+                    <IdentityRow.Text>
+                      <IdentityRow.Name>{row.name}</IdentityRow.Name>
+                      <IdentityRow.Detail>{row.handle}</IdentityRow.Detail>
+                    </IdentityRow.Text>
+                    <IdentityRow.Check />
+                  </IdentityRow.Root>
+                </IdentitySwitcher.Item>
+              ))}
+            </IdentitySwitcher.Group>
+          </IdentitySwitcher.List>
+        </IdentitySwitcher.Content>
+      </IdentitySwitcher.Root>
+    </>
   ),
 };
