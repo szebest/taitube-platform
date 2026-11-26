@@ -87,7 +87,8 @@ The session (SDD §11, Transport and Origins and cookies; slots and identities f
 - The browser's API client names its slot on every call (`X-Account-Slot`, a custom header no cross-site form
   sends); the stream, which an `EventSource` cannot give a header, names it in its path (`/u/<slot>/api/...`).
 - `completeSignIn(issue, grant, target)` (`sign-in.ts`) is every sign-in's callback: an add (`{ mode: 'add',
-  state }`) spends its nonce first, the token is always the new one `issue` returns, a user already in a slot
+  state }`) spends its nonce first, as does a new user into one slot beside another (`{ mode: 'slot', slot, state }`,
+  recorded as an add), the token is always the new one `issue` returns, a user already in a slot
   (signed in or expired) ends on it, an add takes the lowest slot with neither a session nor a row (else the
   lowest expired row), a session past `ACCOUNTS_MAX` is refused, and `POST /v1/me/security/sign-ins` records it (the API
   rate-limits adds) before the cookie is written. Server functions: `hasSession`, `signOut`, `signOutAll`,

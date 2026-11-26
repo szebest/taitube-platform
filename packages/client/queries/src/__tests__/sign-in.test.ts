@@ -180,13 +180,45 @@ describe('@vp/queries: sign-in', () => {
     expect(recorded).toEqual([]);
   });
 
-  it('signs one slot in again, as a sign-in rather than an add', async () => {
+  it('signs a first account into one slot, as a sign-in rather than an add', async () => {
     const recorded = api();
 
-    const { value, setCookies } = await signIn({ mode: 'slot', slot: 2 }, 'vp.session.0=first');
+    const { value, setCookies } = await signIn({ mode: 'slot', slot: 2 }, '');
 
-    expect(value).toEqual({ kind: 'signed-in', slot: 2, accounts: 2 });
+    expect(value).toEqual({ kind: 'signed-in', slot: 2, accounts: 1 });
     expect(sessionCookies(setCookies)[0]).toMatch(/^vp\.session\.2=/);
     expect(recorded[0]?.body).toEqual({ slot: 2, added: false });
   });
+
+  it('signs a new user into one slot beside another as an add, bound to its nonce and counted', async () => {
+    const recorded = api();
+
+    const { value, setCookies } = await signIn(
+      { mode: 'slot', slot: 2, state: 'n0nce' },
+      'vp.session.0=first'
+    );
+
+    expect(value).toEqual({ kind: 'signed-in', slot: 2, accounts: 2 });
+    expect(sessionCookies(setCookies)[0]).toMatch(/^vp\.session\.2=/);
+    expect(recorded[0]?.body).toEqual({ slot: 2, added: true });
+  });
+
+  it.each([
+    { scenario: 'no nonce', target: { mode: 'slot', slot: 2 } as const },
+    {
+      scenario: 'a nonce this browser did not start',
+      target: { mode: 'slot', slot: 2, state: 'other' } as const,
+    },
+  ])(
+    'refuses a new user into one slot beside another with $scenario, and writes nothing',
+    async ({ target }) => {
+      const recorded = api();
+
+      const { value, setCookies } = await signIn(target, 'vp.session.0=first');
+
+      expect(value).toEqual({ kind: 'refused' });
+      expect(sessionCookies(setCookies)).toEqual([]);
+      expect(recorded).toEqual([]);
+    }
+  );
 });

@@ -11,10 +11,13 @@ import { occupiedSlots, writeSessionCookie } from './session-cookie';
 
 const TOO_MANY_REQUESTS = 429;
 
-/** Where a sign-in lands: a free slot beside the others (an add, bound to its nonce), or one slot. */
+/**
+ * Where a sign-in lands: a free slot beside the others (an add, bound to its nonce), or one slot. A
+ * new user into one slot beside others is an add too, so it carries the nonce of one.
+ */
 export type SignInTarget =
   | { readonly mode: 'add'; readonly state: string }
-  | { readonly mode: 'slot'; readonly slot: number };
+  | { readonly mode: 'slot'; readonly slot: number; readonly state?: string };
 
 export type SignInOutcome =
   | { readonly kind: 'signed-in'; readonly slot: number; readonly accounts: number }
@@ -62,12 +65,20 @@ export async function completeSignIn(
     (target.mode === 'slot' ? target.slot : firstFreeSlot(accounts, occupied, accountsMax));
   const full = occupied.length >= accountsMax;
   if (slot === undefined || (full && !occupied.includes(slot))) return { kind: 'accounts-full' };
+  const added = listed === undefined && (target.mode === 'add' || occupied.length > 0);
+  if (
+    added &&
+    target.mode === 'slot' &&
+    (target.state === undefined || !consumeAddNonce(target.state, cookieDomain))
+  ) {
+    return { kind: 'refused' };
+  }
 
   const hops = forwardedFor(getRequest());
   const recorded = await fromPromise(
     () =>
       api.accountSecurity.recordMySignIn({
-        body: { slot, added: target.mode === 'add' && listed === undefined },
+        body: { slot, added },
         headers: hops ? { 'x-forwarded-for': hops } : {},
       }),
     (cause) => cause

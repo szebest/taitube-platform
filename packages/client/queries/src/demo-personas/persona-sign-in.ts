@@ -13,7 +13,11 @@ const MintedSchema = z.object({ token: z.string() });
 
 const SignInTargetSchema = z.discriminatedUnion('mode', [
   z.strictObject({ mode: z.literal('add'), state: z.string() }),
-  z.strictObject({ mode: z.literal('slot'), slot: AccountSlotSchema }),
+  z.strictObject({
+    mode: z.literal('slot'),
+    slot: AccountSlotSchema,
+    state: z.string().optional(),
+  }),
 ]);
 
 /** The demo personas' provider: a token minted on this machine for the persona named. */

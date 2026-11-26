@@ -75,7 +75,7 @@ export function PersonaSwitcher({
       return signInAsPersona({ data: { persona, target } });
     }
     if (slot === undefined) await replaceOwnSlot();
-    const target = { mode: 'slot' as const, slot: slot ?? current };
+    const target = { mode: 'slot' as const, slot: slot ?? current, state: await startAddAccount() };
     return signInAsPersona({ data: { persona, target } });
   };
 
