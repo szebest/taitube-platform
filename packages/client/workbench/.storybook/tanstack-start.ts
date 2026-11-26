@@ -32,6 +32,7 @@ export const createCsrfMiddleware = (): undefined => undefined;
 export const getGlobalStartContext = (): undefined => undefined;
 export const getRequestIP = (): undefined => undefined;
 export const getCookie = (): undefined => undefined;
+export const getCookies = (): undefined => undefined;
 export const setCookie = (): undefined => undefined;
 export const deleteCookie = (): undefined => undefined;
 export const getRequest = (): undefined => undefined;
