@@ -8,7 +8,7 @@
 | Blocks | — |
 | Spec | [packages/universal/tsconfig/AGENTS.md](../../packages/platform/universal/tsconfig/AGENTS.md) · [packages/AGENTS.md](../../packages/AGENTS.md) · [SDD ADR-23](../SDD.md#adr-23--package-runtime-tiers-the-directory-is-the-tier) · [testing.md, dual runtime](../standards/testing.md) · [170](170-platform-packages-open-closed-extractable.md) · [171](171-intl-formatters-open-extensible-list-more-tooltip-and-duration-conformance.md) |
 
-**Status:** ready
+**Status:** in-progress
 
 > **Owner decision (final).** The `server` tier targets **ES2025** (`target` and `lib`). `client`, `universal`, the specs
 > and the apps (web, studio, the web service worker) target **ES2024**. `universal` is the lowest common denominator
@@ -230,7 +230,20 @@ each hit below was read. **Commit 0 reruns them** (PR #326 adds code). Left as `
 
 ## Delivery
 
-**One PR**, branch `ticket/172-ecmascript-baseline`, ordered commits, no stack; each commit leaves typecheck, lint and tests green:
+**One stack**, trunk `feat/172-ecmascript-baseline`, three slices; each slice leaves typecheck, lint and tests green, and the
+numbered steps below are its ordered commits:
+
+| Slice | Branch | Holds (steps) | ACs | Est. lines |
+|---|---|---|---|---|
+| a | `slice/172a-presets` | 0, 1, 2, and F2, F3 from 5 | 1, 2, 5, 6 | ~500 |
+| b | `slice/172b-floor-guard` | 3, 4, 6 | 3, 4, 8 | ~400 |
+| c | `slice/172c-cleanup` | F4 to F8 from 5, one commit each | 7, 9 | ~150 over ~25 files |
+
+The cleanup is its own top slice because it touches files spread over apps and packages that other tickets in flight
+also edit; it lands last.
+
+170 landed first: the presets live at `packages/platform/universal/tsconfig` (`@kit/tsconfig`), and the tier table lives
+in `tests/architecture`, never in the preset package.
 
 0. **Recorded checks, no behaviour change:** rerun the *Cleanup findings* greps, run the feature probe on Node 24.15 and Bun 1.4.2, rerun the
    Baseline command, the Vite and `vite-plugin-pwa` target check, and the compat-plugin spike; write the results into the PR body.
