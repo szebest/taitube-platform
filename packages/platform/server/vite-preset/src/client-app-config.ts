@@ -3,6 +3,7 @@ import { basename, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { type BundleRules, bundleGuard, type FlaggedDir } from '@kit/vite-preset/bundle-guard';
 import { type ReactCompiler, reactPlugins } from '@kit/vite-preset/react-plugins';
+import browserslistToEsbuild from 'browserslist-to-esbuild';
 import { type Alias, defineConfig, loadEnv, type PluginOption, type SSROptions } from 'vite';
 
 // Vite loads an app's config with this package external, and Node cannot resolve an extensionless
@@ -142,8 +143,8 @@ export type ClientAppOptions = Omit<BundleRules, 'flaggedDirs'> & {
   /** The `import.meta.url` of the app's `vite.config.ts`. */
   configUrl: string;
   port: number;
-  /** Plugins the app adds after the preset's own, such as its service worker's; never called under test. */
-  plugins?: () => PluginOption[] | Promise<PluginOption[]>;
+  /** Plugins the app adds after the preset's own, such as its service worker's, given the esbuild target the client build compiles to, from the `browserslist` above the app; never called under test. */
+  plugins?: (target: string[]) => PluginOption[] | Promise<PluginOption[]>;
   compiler?: ReactCompiler;
 };
 
@@ -154,7 +155,8 @@ async function appPlugins(
   rules: BundleRules,
   prerender: readonly string[],
   compiler: ReactCompiler | undefined,
-  extra: () => PluginOption[] | Promise<PluginOption[]>
+  target: string[],
+  extra: NonNullable<ClientAppOptions['plugins']>
 ): Promise<PluginOption[]> {
   if (mode === 'test') return reactPlugins(compiler);
   const [{ tanstackStart }, { default: tailwindcss }] = await Promise.all([
@@ -172,7 +174,7 @@ async function appPlugins(
     ...reactPlugins(compiler),
     tailwindcss(),
     bundleGuard(rules),
-    ...(await extra()),
+    ...(await extra(target)),
   ];
 }
 
@@ -190,9 +192,11 @@ export function clientAppConfig({
     // A CommonJS dependency a workspace package brings in, inlined next to an external `react`,
     // would `require` it at runtime from an image that ships no node_modules.
     const ssr: SSROptions = command === 'build' ? { noExternal: true } : {};
+    const appDir = dirname(fileURLToPath(configUrl));
+    const target = browserslistToEsbuild(undefined, { path: appDir });
     const flags = loadEnv(
       mode,
-      dirname(fileURLToPath(configUrl)),
+      appDir,
       flaggedDirs.map(({ env }) => env)
     );
     const guarded = {
@@ -214,6 +218,7 @@ export function clientAppConfig({
         client: {
           optimizeDeps: { entries: WORKSPACE_ENTRIES },
           build: {
+            target,
             rolldownOptions: {
               // Merging fires only while it makes no chunk cycle, so any import edit could fold the shared chunks into the entry.
               experimental: { chunkOptimization: { mergeCommonChunks: false } },
@@ -224,7 +229,7 @@ export function clientAppConfig({
       },
       server: { port, strictPort: true },
       preview: { host: '127.0.0.1', port, strictPort: true },
-      plugins: await appPlugins(mode, guarded, prerender, compiler, plugins),
+      plugins: await appPlugins(mode, guarded, prerender, compiler, target, plugins),
     };
   });
 }

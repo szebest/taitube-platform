@@ -1,4 +1,6 @@
+import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import browserslistToEsbuild from 'browserslist-to-esbuild';
 import type { PluginOption } from 'vite';
 import { clientAppConfig, vendorChunkOf } from '../client-app-config';
 
@@ -20,12 +22,13 @@ describe('@kit/vite-preset: vendor chunks', () => {
   });
 });
 
-const APP = new URL('../../../../../../apps/client/web/', import.meta.url);
+const ROOT = new URL('../../../../../../', import.meta.url);
+const APP = new URL('apps/client/web/', ROOT);
 
 function resolveConfig(
   port: number,
   command: 'serve' | 'build' = 'serve',
-  { mode = 'test', plugins }: { mode?: string; plugins?: () => PluginOption[] } = {}
+  { mode = 'test', plugins }: { mode?: string; plugins?: (target: string[]) => PluginOption[] } = {}
 ) {
   const config = clientAppConfig({ configUrl: new URL('vite.config.ts', APP).href, port, plugins });
   return config({ command, mode });
@@ -73,4 +76,24 @@ describe('@kit/vite-preset: client app config', () => {
       expect((await resolveConfig(5174, command)).ssr).toEqual(ssr);
     }
   );
+
+  it("compiles the client build to the root's browserslist, and hands that target to the app's plugins", async () => {
+    const { browserslist }: { browserslist: string[] } = JSON.parse(
+      readFileSync(new URL('package.json', ROOT), 'utf8')
+    );
+    const target = browserslistToEsbuild(browserslist);
+    const received: string[][] = [];
+
+    const config = await resolveConfig(5174, 'build', {
+      mode: 'production',
+      plugins: (pluginTarget) => {
+        received.push(pluginTarget);
+        return [];
+      },
+    });
+
+    expect(config.environments?.client?.build?.target).toEqual(target);
+    expect(received).toEqual([target]);
+    expect(target).toContain('safari17.4');
+  });
 });
