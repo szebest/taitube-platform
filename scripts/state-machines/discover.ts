@@ -3,7 +3,7 @@ import { readdir } from 'node:fs/promises';
 import { join, posix } from 'node:path';
 
 const ROOTS = ['apps', 'packages'];
-const SKIPPED = ['node_modules', 'dist', '.turbo'];
+const SKIPPED = ['node_modules', 'dist'];
 const SUFFIX = '.machine.ts';
 
 async function walk(root: string, directory: string): Promise<string[]> {
@@ -12,7 +12,10 @@ async function walk(root: string, directory: string): Promise<string[]> {
   const found = await Promise.all(
     entries.map(async (entry) => {
       const path = posix.join(directory, entry.name);
-      if (entry.isDirectory()) return SKIPPED.includes(entry.name) ? [] : walk(root, path);
+      if (entry.isDirectory()) {
+        const skipped = entry.name.startsWith('.') || SKIPPED.includes(entry.name);
+        return skipped ? [] : walk(root, path);
+      }
       return entry.name.endsWith(SUFFIX) ? [path] : [];
     })
   );
