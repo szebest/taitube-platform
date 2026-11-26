@@ -1,11 +1,11 @@
-import { useT } from '@kit/intl-react';
 import { fromPromise, isOk } from '@kit/result';
-import { Button, Dialog, Field, Input, useToast, useUiCopy } from '@kit/ui';
+import { Button, Dialog, Field, Input, useToast } from '@kit/ui';
 import { useMutation } from '@tanstack/react-query';
 import type { CreateChannelBody } from '@vp/api-contracts';
 import { useActionState } from 'react';
 import { useApi } from '../api-provider';
 import { failureCode } from '../failure-code';
+import { useT } from '../intl/shared-words';
 import { present } from '../present-failure';
 import { identityKeys } from './identity-queries';
 
@@ -26,7 +26,7 @@ function useCreateChannel() {
  */
 export function CreateChannelDialog({ onClose }: { onClose: () => void }) {
   const { tOr } = useT();
-  const { cancel } = useUiCopy();
+  const cancel = tOr('ui.cancel', {}, '');
   const toast = useToast();
   const create = useCreateChannel();
 

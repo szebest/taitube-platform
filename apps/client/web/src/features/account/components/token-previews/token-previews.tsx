@@ -1,6 +1,6 @@
-import { useT } from '@kit/intl-react';
 import { cn } from '@kit/ui';
 import { useEffect, useState } from 'react';
+import { useT } from '#app/lib/messages';
 
 const CARD =
   'rounded-card border-divider border-border bg-raised px-inset-control py-inline text-caption text-fg';

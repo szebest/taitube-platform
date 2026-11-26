@@ -1,10 +1,11 @@
-import { useFormat, useT } from '@kit/intl-react';
+import { useFormat } from '@kit/intl-react';
 import { unwrapOr } from '@kit/result';
 import { Badge, Button, useToast } from '@kit/ui';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { restrictionsQueryOptions, useApi, useFailureToast, useLiftRestriction } from '@vp/queries';
 import { LoadMore } from '#app/components/table/load-more';
 import { useModerationChannel } from '#app/features/comments/hooks/use-moderation-channel';
+import { useT } from '#app/lib/messages';
 import { pagedRows } from '#app/utils/paged-rows';
 import { SettingsListSection } from '../settings-section/settings-section';
 

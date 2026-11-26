@@ -3,6 +3,7 @@ import { expectOk } from '@kit/testing/result';
 import type { PlaybackWatch, ViewBufferPort, ViewEvent } from '@vp/core/ports';
 import type { ViewBatch, ViewCount } from '@vp/domain';
 import { describeViewBufferDeviceContract } from './view-buffer-device.contract';
+import { describeViewBufferRetentionContract } from './view-buffer-retention.contract';
 
 export interface ViewBufferSubject {
   readonly buffer: ViewBufferPort;
@@ -39,22 +40,30 @@ export function describeViewBufferContract(makeSubject: MakeViewBufferSubject): 
 
     const drain = async (): Promise<readonly ViewCount[]> => (await drainBatch())?.counts ?? [];
 
+    /**
+     * Redis dedups viewers in a HyperLogLog, which can take a random new id for one it holds
+     * (about 1 in 16,000 a pair): fixed ids hash the same on every run, so a count never wavers.
+     */
+    let viewers = 0;
+    const nextViewer = () => `viewer-${++viewers}`;
+
     beforeEach(async () => {
       videoId = randomUUID();
+      viewers = 0;
       await drain();
       await drain();
     });
 
     const view = (overrides: Partial<ViewEvent> = {}): ViewEvent => ({
       videoId,
-      viewerId: randomUUID(),
+      viewerId: nextViewer(),
       viewDate: DAY,
       viewHour: HOUR,
       ...overrides,
     });
 
     it('counts a viewer once per video and day', async () => {
-      const viewerId = randomUUID();
+      const viewerId = nextViewer();
 
       expect(expectOk(await buffer.record(view({ viewerId })))).toBe('counted');
       expect(expectOk(await buffer.record(view({ viewerId })))).toBe('duplicate');
@@ -63,7 +72,7 @@ export function describeViewBufferContract(makeSubject: MakeViewBufferSubject): 
     });
 
     it('counts the same viewer again on another day', async () => {
-      const viewerId = randomUUID();
+      const viewerId = nextViewer();
       expectOk(await buffer.record(view({ viewerId })));
 
       expect(expectOk(await buffer.record(view({ viewerId, viewDate: NEXT_DAY })))).toBe('counted');
@@ -76,7 +85,7 @@ export function describeViewBufferContract(makeSubject: MakeViewBufferSubject): 
     });
 
     it('counts each viewer in the hour the view was counted in, duplicates left out', async () => {
-      const viewerId = randomUUID();
+      const viewerId = nextViewer();
       expectOk(await buffer.record(view({ viewerId })));
       expectOk(await buffer.record(view({ viewerId, viewHour: NEXT_HOUR })));
       expectOk(await buffer.record(view()));
@@ -154,7 +163,7 @@ export function describeViewBufferContract(makeSubject: MakeViewBufferSubject): 
     describe('playback', () => {
       const playback = (overrides: Partial<PlaybackWatch> = {}): PlaybackWatch => ({
         videoId,
-        sessionId: randomUUID(),
+        sessionId: nextViewer(),
         viewDate: DAY,
         viewHour: HOUR,
         device: 'desktop',
@@ -211,74 +220,8 @@ export function describeViewBufferContract(makeSubject: MakeViewBufferSubject): 
         expect(await drain()).toEqual([{ videoId, viewDate: DAY, views: 2, watchSeconds: 30 }]);
       });
     });
-
-    describe('retention', () => {
-      const reach = async (sessionId: string, percent: number) =>
-        expectOk(await buffer.recordRetention({ videoId, sessionId, percent }));
-
-      const drainSteps = async () =>
-        (await drainBatch())?.retention.filter((count) => count.videoId === videoId) ?? [];
-
-      it('counts a session at every step it reached, once, however many beacons it sends', async () => {
-        const sessionId = randomUUID();
-
-        await reach(sessionId, 10);
-        await reach(sessionId, 10);
-        await reach(sessionId, 20);
-        await reach(sessionId, 5);
-
-        expect(await drainSteps()).toEqual(
-          [0, 5, 10, 15, 20].map((percent) => ({ videoId, percent, viewers: 1 }))
-        );
-      });
-
-      it('sums distinct sessions per step and empties the buffer on release', async () => {
-        await reach(randomUUID(), 5);
-        await reach(randomUUID(), 0);
-
-        expect(await drainSteps()).toEqual(
-          expect.arrayContaining([
-            { videoId, percent: 0, viewers: 2 },
-            { videoId, percent: 5, viewers: 1 },
-          ])
-        );
-        expect(await drainSteps()).toEqual([]);
-      });
-
-      it('snapshots a buffer holding only retention steps, and hands the same batch back until release', async () => {
-        const first = randomUUID();
-        await reach(randomUUID(), 5);
-
-        const batch = expectOk(await buffer.snapshot(first));
-        const again = expectOk(await buffer.snapshot(randomUUID()));
-        expectOk(await buffer.release(first));
-
-        expect(batch).toEqual({
-          batchId: first,
-          counts: [],
-          retention: expect.arrayContaining([{ videoId, percent: 5, viewers: 1 }]),
-          hourly: [],
-          devices: [],
-        });
-        expect(again).toEqual(batch);
-        expect(expectOk(await buffer.snapshot(randomUUID()))).toBeNull();
-      });
-
-      it('keeps the steps recorded after a snapshot for the batch after it', async () => {
-        const first = randomUUID();
-        await reach(randomUUID(), 0);
-        const batch = expectOk(await buffer.snapshot(first));
-        await reach(randomUUID(), 5);
-        expectOk(await buffer.release(first));
-
-        expect(batch?.retention).toEqual([{ videoId, percent: 0, viewers: 1 }]);
-        expect(await drainSteps()).toEqual([
-          { videoId, percent: 0, viewers: 1 },
-          { videoId, percent: 5, viewers: 1 },
-        ]);
-      });
-    });
   });
 
   describeViewBufferDeviceContract(makeSubject);
+  describeViewBufferRetentionContract(makeSubject);
 }

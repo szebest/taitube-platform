@@ -1,3 +1,4 @@
+import { trackRouter } from '@kit/web-testing';
 import type { QueryClient } from '@tanstack/react-query';
 import {
   type AnyRouter,
@@ -9,7 +10,6 @@ import { type RenderResult, type queries, render, waitFor } from '@testing-libra
 import { type UserEvent, userEvent } from '@testing-library/user-event';
 import type { HttpHandler } from 'msw/http';
 import { apiServer } from './api-server';
-import { trackRouter } from './test-settle';
 
 /** An app's router: TanStack Router with the `QueryClient` its loaders fill in router context. */
 export type QueryRouter = AnyRouter & { options: { context: { queryClient: QueryClient } } };

@@ -1,14 +1,13 @@
+import { axeViolations } from '@kit/web-testing/dom';
 import { render, screen } from '@testing-library/react';
-import { LINK_PLATFORMS } from '@vp/domain';
-import { axeViolations } from '@vp/web-testing/dom';
 import { PLATFORM_ICON_PATHS } from '../../../icons/platform-icon-paths.generated';
-import { PlatformIcon, type PlatformIconProps } from '../platform-icon';
+import { PLATFORM_ICON_NAMES, PlatformIcon, type PlatformIconProps } from '../platform-icon';
 
 const renderIcon = (props: Partial<PlatformIconProps> = {}) =>
   render(<PlatformIcon platform="github" {...props} />);
 
 describe('PlatformIcon', () => {
-  it.each(LINK_PLATFORMS)('draws %s from the repo and from nothing else', (platform) => {
+  it.each(PLATFORM_ICON_NAMES)('draws %s from the repo and from nothing else', (platform) => {
     const { container } = renderIcon({ platform });
 
     const drawn =
@@ -19,7 +18,7 @@ describe('PlatformIcon', () => {
     expect(container.querySelector('img, image, use, [href]')).toBeNull();
   });
 
-  it.each(LINK_PLATFORMS.filter((platform) => platform !== 'website'))(
+  it.each(PLATFORM_ICON_NAMES.filter((platform) => platform !== 'website'))(
     'carries the vendored path of %s',
     (platform) => {
       const { container } = renderIcon({ platform });

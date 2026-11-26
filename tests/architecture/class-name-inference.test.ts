@@ -1,7 +1,8 @@
+import { declaredErrorCodes } from './declared-error-codes';
 import { productionSources, read } from './repo-files';
 
 /**
- * An error's identity is `instanceof`, and its retry class is `classifyError` in `@vp/errors`.
+ * An error's identity is `instanceof`, and its retry class is `classifyError` in `@kit/errors`.
  * Neither is a string. This started as one rule about `constructor.name`; the same defect turned up
  * three more ways - comparing `.name` to an error class, duck-typing `.isRetryable`, and comparing
  * `.code` to a bare literal instead of the `ErrorCodes` member - so it is one assertion now.
@@ -20,23 +21,11 @@ const RETRYABILITY_SHAPE = /\.\s*isRetryable\s*[!=]=+/;
 const CODE_LITERAL = /\.\s*code\s*[!=]=+\s*['"`]([A-Z][A-Z0-9_]*)['"`]/g;
 
 /**
- * `@vp/errors` owns every one of these checks. `packages/server/adapters/s3/` compares `error.name`
+ * `@kit/errors` owns every one of these checks. `packages/server/adapters/s3/` compares `error.name`
  * deliberately: AWS SDK v3 generates a service-exception class per command, so `instanceof` is
  * unreliable across sub-package versions and `name` is what the SDK documents.
  */
-const OWNERS = ['packages/universal/errors/', 'packages/server/adapters/s3/'];
-
-function vocabulary(): Set<string> {
-  const codes = new Set<string>();
-  for (const file of ['api-error-codes.ts', 'pipeline-error-codes.ts']) {
-    for (const match of read(`packages/universal/errors/src/${file}`).matchAll(
-      /^\s{2}([A-Z][A-Z0-9_]+):\s*'/gm
-    )) {
-      codes.add(match[1] as string);
-    }
-  }
-  return codes;
-}
+const OWNERS = ['packages/platform/universal/errors/', 'packages/server/adapters/s3/'];
 
 function infersFromClassName(source: string): boolean {
   return CONSTRUCTOR_NAME.some((pattern) => pattern.test(source)) || ERROR_CLASS_NAME.test(source);
@@ -82,7 +71,7 @@ describe('architecture: an error identity is instanceof and its class is the voc
   });
 
   it('recognises a bare ErrorCode literal but leaves a Node errno alone', () => {
-    const codes = vocabulary();
+    const codes = new Set(declaredErrorCodes());
 
     expect(comparesCodeToBareLiteral("err.code === 'VERSION_CONFLICT'", codes)).toBe(true);
     expect(comparesCodeToBareLiteral("errorWithCode?.code === 'ENOSPC'", codes)).toBe(false);
@@ -92,11 +81,11 @@ describe('architecture: an error identity is instanceof and its class is the voc
   });
 
   it('reads the vocabulary it checks against', () => {
-    expect(vocabulary().size).toBeGreaterThan(30);
+    expect(new Set(declaredErrorCodes()).size).toBeGreaterThan(30);
   });
 
   it('picks no class or retry policy out of a string in any production source', () => {
-    const codes = vocabulary();
+    const codes = new Set(declaredErrorCodes());
     const offenders = productionSources()
       .filter((file) => !owned(file))
       .filter((file) => {

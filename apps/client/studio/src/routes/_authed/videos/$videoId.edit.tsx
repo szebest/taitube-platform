@@ -1,6 +1,7 @@
+import { parseParam } from '@kit/query';
 import { createFileRoute } from '@tanstack/react-router';
 import { VideoIdParamSchema } from '@vp/api-contracts';
-import { ensureFound, parseParam, videoQueryOptions, prefetched } from '@vp/queries';
+import { ensureFound, videoQueryOptions, prefetched } from '@vp/queries';
 import { z } from 'zod';
 import { LazyCaptionsSection } from '#app/features/captions';
 import { categoriesQueryOptions, EditVideoPage, EditVideoPageSkeleton } from '#app/features/videos';

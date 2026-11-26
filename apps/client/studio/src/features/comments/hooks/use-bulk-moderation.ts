@@ -1,9 +1,9 @@
-import { useT } from '@kit/intl-react';
 import { fromPromise } from '@kit/result';
 import { useToast } from '@kit/ui';
 import type { BulkActionBody } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { present, useBulkModerate, useFailureToast } from '@vp/queries';
+import { useT } from '#app/lib/messages';
 
 const SHORT_ID = 8;
 

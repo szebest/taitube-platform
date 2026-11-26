@@ -1,6 +1,5 @@
 import { createIntl, createIntlCache } from '@kit/intl';
 import { renderHook } from '@testing-library/react';
-import { createTranslator, en } from '@vp/messages';
 import type { ReactNode } from 'react';
 import { type IntlBindings, IntlContext, useIntlBindings } from '../intl-context';
 
@@ -14,7 +13,7 @@ function renderBindings(hookName: string, bindings?: IntlBindings) {
 describe('@kit/intl-react: useIntlBindings', () => {
   it('hands back what the context holds', () => {
     const intl = createIntl({ locale: 'en', timeZone: 'UTC', cache: createIntlCache() });
-    const bindings = { intl, translator: createTranslator({ intl, catalogues: { en } }) };
+    const bindings = { intl };
 
     expect(renderBindings('probe', bindings).result.current).toBe(bindings);
   });

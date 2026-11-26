@@ -1,8 +1,8 @@
-import { useT } from '@kit/intl-react';
 import { canAccessAdmin } from '@vp/permissions';
 import { useCan } from '@vp/permissions-react';
 import { type AccountLink, useAppLink } from '@vp/queries';
 import { STUDIO_URL } from '#app/lib/config';
+import { useT } from '#app/lib/messages';
 
 /** The pages the account menu and the switcher's sheet list, the studio's opening as this tab's identity. */
 export function useAccountLinks(): { links: AccountLink[]; manage: AccountLink } {

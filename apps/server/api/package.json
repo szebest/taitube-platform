@@ -30,6 +30,7 @@
     "@kit/composition": "workspace:*",
     "@kit/concurrency": "workspace:*",
     "@kit/config": "workspace:*",
+    "@kit/errors": "workspace:*",
     "@kit/intl": "workspace:*",
     "@kit/keyspace": "workspace:*",
     "@kit/logger": "workspace:*",
@@ -62,6 +63,7 @@
     "@vp/job-contracts": "workspace:*",
     "@vp/permissions": "workspace:*",
     "@vp/pipeline-metrics": "workspace:*",
+    "@vp/shared-messages": "workspace:*",
     "@vp/storage": "workspace:*",
     "@vp/validation": "workspace:*",
     "@vp/whisper": "workspace:*",
@@ -86,6 +88,6 @@
     "vite-plus": "catalog:"
   },
   "vp": {
-    "layer": 8
+    "layer": 9
   }
 }

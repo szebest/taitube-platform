@@ -1,5 +1,4 @@
 import { validateWith } from '@kit/forms';
-import { useT } from '@kit/intl-react';
 import { ok } from '@kit/result';
 import { updateMyChannel } from '@vp/api-contracts';
 import { validateBrandColor } from '@vp/domain-rules';
@@ -12,6 +11,7 @@ import {
   validateContactEmail,
   validateHandle,
 } from '@vp/validation';
+import { useT } from '#app/lib/messages';
 
 const { displayName, bio } = updateMyChannel.body.shape;
 

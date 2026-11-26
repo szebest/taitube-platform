@@ -1,5 +1,4 @@
 import ts from 'typescript';
-import { pendingPlatformMoves } from '../../scripts/check-boundaries';
 import { load, type Pkg } from '../../scripts/workspace-packages';
 import {
   type Context,
@@ -22,7 +21,6 @@ const MOVING: Pkg = {
 
 const CONTEXT: Context = {
   byName: new Map([KIT, APP, MOVING].map((pkg) => [pkg.name, pkg])),
-  pending: new Set(['@kit/result']),
   preset: '@kit/tsconfig',
 };
 
@@ -192,7 +190,6 @@ describe('architecture: platform manifests', () => {
     const packages = load();
     const context: Context = {
       byName: new Map(packages.map((pkg) => [pkg.name, pkg])),
-      pending: pendingPlatformMoves(),
       preset: tsconfigPreset(
         JSON.parse(read('scripts/package-moves.json')),
         new Set(packages.map(({ name }) => name))

@@ -1,5 +1,5 @@
-import { useT } from '@kit/intl-react';
 import { Button } from '@kit/ui';
+import { useT } from '#app/lib/messages';
 
 export interface LoadMoreProps {
   hasNextPage: boolean;

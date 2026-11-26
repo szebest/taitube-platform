@@ -1,5 +1,4 @@
 import { EmptyState, PageHeader, SectionError } from '@kit/components';
-import { useT } from '@kit/intl-react';
 import { Badge, Spinner } from '@kit/ui';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import type { BulkActionBody } from '@vp/api-contracts';
@@ -21,6 +20,7 @@ import {
 } from '#app/features/comments/hooks/use-queue-shortcuts';
 import { chosenDisclosure, needsReason } from '#app/features/comments/utils/disclosure-choice';
 import { reasonedAction } from '#app/features/comments/utils/reasoned-action';
+import { useT } from '#app/lib/messages';
 import { pagedRows } from '#app/utils/paged-rows';
 import { CommentSettingsLink } from '../comment-settings-link/comment-settings-link';
 import {

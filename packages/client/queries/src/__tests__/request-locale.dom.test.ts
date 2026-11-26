@@ -1,5 +1,6 @@
-import { createLocaleStore } from '@kit/intl-react';
+import { createLocaleStore } from '../intl';
 import { requestLocale } from '../request-locale';
+import { SPEC_MESSAGES } from './spec-messages';
 
 describe('@vp/queries: request locale in the browser', () => {
   it.each([
@@ -10,7 +11,7 @@ describe('@vp/queries: request locale in the browser', () => {
     async ({ languages, locale }) => {
       vi.spyOn(navigator, 'languages', 'get').mockReturnValue(languages);
 
-      const requested = await requestLocale(createLocaleStore(), { searchStr: '' });
+      const requested = await requestLocale(createLocaleStore(SPEC_MESSAGES), { searchStr: '' });
 
       expect(requested.locale).toBe(locale);
     }

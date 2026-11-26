@@ -1,5 +1,5 @@
 import type { FormatValue } from '@kit/intl';
-import { Format, useT } from '@kit/intl-react';
+import { Format } from '@kit/intl-react';
 import { Skeleton } from '@kit/ui';
 import { HOURLY_WINDOW_HOURS } from '@vp/domain';
 import { Suspense } from 'react';
@@ -12,6 +12,7 @@ import type {
   ViewsGranularity,
 } from '#app/features/analytics/types';
 import { dayInstant } from '#app/features/analytics/utils/day-instant';
+import { useT } from '#app/lib/messages';
 import type { ViewsPoint } from '../views-plot/views-plot';
 import { LazyViewsPlot } from '../views-plot/views-plot.lazy';
 

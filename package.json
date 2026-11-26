@@ -50,6 +50,7 @@
     "codemod:specifiers": "tsx scripts/codemod/rewrite-specifiers.ts",
     "gen:api": "tsx scripts/gen-api.ts",
     "check:platform-changes": "tsx scripts/check-platform-changes.ts",
+    "check:extractable": "tsx scripts/check-extractable.ts",
     "scan:message-keys": "tsx scripts/message-key-usage.ts",
     "gen:contracts": "turbo run build --filter=@vp/api^... --output-logs=errors-only && tsx apps/server/api/src/gen-contracts.ts && turbo run build --filter=@vp/api-contracts --output-logs=errors-only",
     "db:migrate": "tsx --env-file-if-exists=.env apps/server/api/src/migrate.ts",

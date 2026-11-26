@@ -1,10 +1,10 @@
 import { PageHeader } from '@kit/components';
-import { useT } from '@kit/intl-react';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { canManageCaptions } from '@vp/permissions';
 import { Can } from '@vp/permissions-react';
 import { useApi, videoQueryOptions } from '@vp/queries';
 import type { ReactNode } from 'react';
+import { useT } from '#app/lib/messages';
 import { EditVideoForm } from '../edit-video-form/edit-video-form';
 import { VideoProcessingStatus } from '../video-processing-status/video-processing-status';
 import { VideoScreeningPanel } from '../video-screening-panel/video-screening-panel';

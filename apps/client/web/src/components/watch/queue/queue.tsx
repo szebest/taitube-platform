@@ -1,5 +1,5 @@
 import { VideoCardSkeleton } from '@kit/components';
-import { Button, cn, Drawer, Icon, IconButton, Slot, SortableList, useUiCopy } from '@kit/ui';
+import { Button, cn, Drawer, Icon, IconButton, Slot, SortableList } from '@kit/ui';
 import {
   Children,
   type ComponentPropsWithRef,
@@ -7,6 +7,7 @@ import {
   type ReactNode,
   useId,
 } from 'react';
+import { useT } from '#app/lib/messages';
 import { useScrollToCurrent } from './hooks/use-scroll-to-current';
 import { QueueContext, useQueue } from './queue.context';
 import { queueStyles } from './queue.variants';
@@ -52,7 +53,8 @@ export function QueueRoot({
   ...props
 }: QueueRootProps) {
   const headingId = useId();
-  const { queue } = useUiCopy();
+  const { tOr } = useT();
+  const queue = tOr('appUi.queue', {}, '');
   const sheet = layout === 'sheet';
   const drawered = sheet || collapsible;
   const section = (sectionLayout: QueueLayout | undefined, sectionClassName?: string) => (
@@ -144,19 +146,19 @@ export interface QueueModesProps extends QueueModesState {
 
 /** Shuffle, repeat and autoplay as toggles; repeat cycles off, all, one and its name says which. */
 export function QueueModes({ shuffle, repeat, autoplay, onChange }: QueueModesProps) {
-  const copy = useUiCopy();
+  const { tOr } = useT();
   const state = { shuffle, repeat, autoplay };
   const repeatLabel = {
-    off: copy.repeatOff,
-    all: copy.repeatAll,
-    one: copy.repeatOne,
+    off: tOr('appUi.repeatOff', {}, ''),
+    all: tOr('appUi.repeatAll', {}, ''),
+    one: tOr('appUi.repeatOne', {}, ''),
   } satisfies Record<QueueRepeat, string>;
 
   return (
-    <fieldset aria-label={copy.playbackModes} className={queueStyles().modes()}>
+    <fieldset aria-label={tOr('appUi.playbackModes', {}, '')} className={queueStyles().modes()}>
       <IconButton
         size="sm"
-        aria-label={copy.shuffle}
+        aria-label={tOr('appUi.shuffle', {}, '')}
         aria-pressed={shuffle}
         onClick={() => onChange({ ...state, shuffle: !shuffle })}
       >
@@ -173,7 +175,7 @@ export function QueueModes({ shuffle, repeat, autoplay, onChange }: QueueModesPr
       </IconButton>
       <IconButton
         size="sm"
-        aria-label={copy.autoplay}
+        aria-label={tOr('appUi.autoplay', {}, '')}
         aria-pressed={autoplay}
         onClick={() => onChange({ ...state, autoplay: !autoplay })}
       >
@@ -219,7 +221,7 @@ export interface QueueItemProps extends ComponentPropsWithRef<'li'> {
 /** One queued video: the handle, the row card the caller passes, the remove button. */
 export function QueueItem({ id, title, className, children, onKeyDown, ...props }: QueueItemProps) {
   const { currentId, select, remove } = useQueue('Item');
-  const copy = useUiCopy();
+  const { tOr } = useT();
   const styles = queueStyles();
   const current = id === currentId;
 
@@ -248,12 +250,12 @@ export function QueueItem({ id, title, className, children, onKeyDown, ...props 
     >
       <SortableList.Handle />
       <div className={styles.itemBody()}>
-        {current && <p className={styles.nowPlaying()}>{copy.nowPlaying}</p>}
+        {current && <p className={styles.nowPlaying()}>{tOr('appUi.nowPlaying', {}, '')}</p>}
         {children}
       </div>
       <IconButton
         size="sm"
-        aria-label={copy.removeFromQueue.replace('{name}', title)}
+        aria-label={tOr('appUi.removeFromQueue', { name: title }, '')}
         onClick={() => remove(id)}
       >
         <Icon name="close" />

@@ -14,13 +14,13 @@ describe('@kit/testing', () => {
   });
 
   it('sets and unsets env vars for one call and restores them after', async () => {
-    const seen = await withEnv({ VP_SPEC_SET: 'set', PATH: undefined }, () => ({
-      set: process.env.VP_SPEC_SET,
+    const seen = await withEnv({ ACME_SPEC_SET: 'set', PATH: undefined }, () => ({
+      set: process.env.ACME_SPEC_SET,
       path: process.env.PATH,
     }));
 
     expect(seen).toEqual({ set: 'set', path: undefined });
-    expect(process.env.VP_SPEC_SET).toBeUndefined();
+    expect(process.env.ACME_SPEC_SET).toBeUndefined();
     expect(process.env.PATH).toBeDefined();
   });
 });

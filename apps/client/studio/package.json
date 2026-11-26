@@ -25,8 +25,10 @@
     "@kit/components": "workspace:*",
     "@kit/design-tokens": "workspace:*",
     "@kit/forms": "workspace:*",
+    "@kit/i18n": "workspace:*",
     "@kit/intl": "workspace:*",
     "@kit/intl-react": "workspace:*",
+    "@kit/query": "workspace:*",
     "@kit/result": "workspace:*",
     "@kit/security-headers": "workspace:*",
     "@kit/ui": "workspace:*",
@@ -43,6 +45,7 @@
     "@vp/domain-rules": "workspace:*",
     "@vp/errors": "workspace:*",
     "@vp/intl-formats": "workspace:*",
+    "@vp/shared-messages": "workspace:*",
     "@vp/permissions": "workspace:*",
     "@vp/permissions-react": "workspace:*",
     "@vp/queries": "workspace:*",
@@ -61,6 +64,7 @@
     "@kit/testing": "workspace:*",
     "@kit/tsconfig": "workspace:*",
     "@kit/vite-preset": "workspace:*",
+    "@kit/web-testing": "workspace:*",
     "@playwright/test": "^1.64.0",
     "@storybook/react-vite": "~10.6.2",
     "@testing-library/dom": "^10.4.2",
@@ -79,6 +83,6 @@
     "vitest": "catalog:"
   },
   "vp": {
-    "layer": 9
+    "layer": 10
   }
 }

@@ -1,5 +1,5 @@
+import { type Unavailable, unavailable } from '@kit/errors';
 import { ErrorCodes } from './error-codes';
-import { type Unavailable, unavailable } from './unavailable';
 
 export type DatabaseUnavailable = Unavailable<typeof ErrorCodes.DATABASE_UNAVAILABLE>;
 export type CacheUnavailable = Unavailable<typeof ErrorCodes.CACHE_UNAVAILABLE>;

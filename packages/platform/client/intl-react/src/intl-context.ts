@@ -1,10 +1,8 @@
 import type { IntlBinding } from '@kit/intl';
-import type { Translator } from '@vp/messages';
 import { createContext, useContext } from 'react';
 
 export interface IntlBindings {
   readonly intl: IntlBinding;
-  readonly translator: Translator;
 }
 
 export const IntlContext = createContext<IntlBindings | undefined>(undefined);

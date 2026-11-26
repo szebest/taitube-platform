@@ -1,52 +1,42 @@
-import {
-  Outlet,
-  createRootRoute,
-  createRoute,
-  createRouter,
-  redirect,
-} from '@tanstack/react-router';
+import { createRootRoute, createRoute, createRouter } from '@tanstack/react-router';
+import { http, HttpResponse } from 'msw';
+import { LOCAL_API_BASE_URL } from '../local-api';
 import { serverRender } from '../server-render';
 
 const rootRoute = createRootRoute({
   component: () => (
     <html lang="en">
       <body>
-        <header>Taitube</header>
-        <main className="page">
-          <Outlet />
-        </main>
+        <main>Ready</main>
       </body>
     </html>
   ),
 });
 
-const routeTree = rootRoute.addChildren([
-  createRoute({ getParentRoute: () => rootRoute, path: '/', component: () => <p>Home</p> }),
-  createRoute({
-    getParentRoute: () => rootRoute,
-    path: '/old',
-    beforeLoad: () => {
-      throw redirect({ to: '/' });
-    },
-  }),
-]);
-
-const getRouter = () => createRouter({ routeTree });
-
-describe('@vp/web-testing: serverRender', () => {
-  it('answers the page the router renders, and its main area without the layout', async () => {
-    const rendered = await serverRender(getRouter, '/');
-
-    expect(rendered.status).toBe(200);
-    expect(rendered.html).toContain('<header>Taitube</header>');
-    expect(rendered.main).toContain('<main class="page">');
-    expect(rendered.main).toContain('<p>Home</p>');
-    expect(rendered.main).not.toContain('Taitube');
+const getRouter = () =>
+  createRouter({
+    routeTree: rootRoute.addChildren([
+      createRoute({
+        getParentRoute: () => rootRoute,
+        path: '/',
+        loader: async () => (await fetch(`${LOCAL_API_BASE_URL}/v1/greeting`)).text(),
+        component: () => <p>Home</p>,
+      }),
+    ]),
   });
 
-  it('answers a redirect with the location it sends the browser to', async () => {
-    const rendered = await serverRender(getRouter, '/old');
+describe('@vp/web-testing: serverRender', () => {
+  it('answers the API calls a page makes with the handlers it is given', async () => {
+    let asked = false;
+    const rendered = await serverRender(getRouter, '/', {
+      handlers: [
+        http.get(`${LOCAL_API_BASE_URL}/v1/greeting`, () => {
+          asked = true;
+          return HttpResponse.text('hello');
+        }),
+      ],
+    });
 
-    expect(rendered).toMatchObject({ status: 307, location: '/' });
+    expect({ asked, status: rendered.status }).toEqual({ asked: true, status: 200 });
   });
 });

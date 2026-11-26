@@ -1,4 +1,4 @@
-import { Format, useFormat, useT } from '@kit/intl-react';
+import { Format, useFormat } from '@kit/intl-react';
 import { unwrapOr } from '@kit/result';
 import type { Video } from '@vp/api-contracts';
 import { publishedAt, videoDuration } from '@vp/intl-formats';
@@ -10,6 +10,7 @@ import {
   type DescriptionToken,
   tokenizeDescription,
 } from '#app/features/watch/utils/timecodes';
+import { useT } from '#app/lib/messages';
 
 function ChapterStrip({ chapters }: { chapters: readonly Chapter[] }) {
   const { format } = useFormat();

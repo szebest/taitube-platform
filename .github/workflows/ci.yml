@@ -15,6 +15,8 @@ concurrency:
 
 permissions:
   contents: read
+  # setup-workspace downloads the build job's turbo-cache artifact through the REST API.
+  actions: read
 
 env:
   TURBO_TELEMETRY_DISABLED: 1
@@ -31,6 +33,8 @@ jobs:
       code: ${{ github.event_name != 'pull_request' || steps.changes.outputs.code == 'true' }}
       unit-shards: ${{ steps.unit-shards.outputs.unit-shards }}
       unit-shard-count: ${{ steps.unit-shards.outputs.unit-shard-count }}
+      platform: ${{ github.event_name != 'pull_request' || steps.platform.outputs.platform == 'true' }}
+      extractable: ${{ steps.extractable.outputs.extractable }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -47,6 +51,25 @@ jobs:
               - '!**/*.md'
               - '!docs/**/!(tokens.json)'
 
+      - name: Detect a change the extractability proof can see
+        id: platform
+        if: github.event_name == 'pull_request'
+        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        with:
+          filters: |
+            platform:
+              - 'packages/platform/**'
+              - 'scripts/check-extractable.ts'
+              - 'scripts/extractable/**'
+              - 'scripts/workspace-packages.ts'
+              - 'tests/fixtures/second-app/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - '.nvmrc'
+              - '.github/workflows/ci.yml'
+              - '.github/actions/setup-workspace/**'
+
       - name: Set up the workspace
         if: github.event_name != 'pull_request' || steps.changes.outputs.code == 'true'
         uses: ./.github/actions/setup-workspace
@@ -62,6 +85,11 @@ jobs:
         if: github.event_name != 'pull_request' || steps.changes.outputs.code == 'true'
         run: pnpm -s unit-shards --github-output
 
+      - name: List the platform packages and the second app, one extractable shard each
+        id: extractable
+        if: github.event_name != 'pull_request' || steps.platform.outputs.platform == 'true'
+        run: pnpm -s check:extractable --list --github-output
+
       - name: Hand the build to the jobs that follow, for this run only
         if: github.event_name != 'pull_request' || steps.changes.outputs.code == 'true'
         uses: actions/upload-artifact@v7
@@ -69,7 +97,7 @@ jobs:
           name: turbo-cache
           path: .turbo/cache
           include-hidden-files: true
-          retention-days: 1
+          retention-days: 7
 
       - name: Keep main's build as the starting point of the next run's
         if: github.ref == 'refs/heads/main'
@@ -92,6 +120,8 @@ jobs:
 
       - name: Set up the workspace
         uses: ./.github/actions/setup-workspace
+        with:
+          handoff: 'true'
 
       - name: Restore the typecheck results of an earlier run, so only changed packages check again
         uses: actions/cache/restore@v6
@@ -200,6 +230,8 @@ jobs:
 
       - name: Set up the workspace
         uses: ./.github/actions/setup-workspace
+        with:
+          handoff: 'true'
 
       - name: Set up kustomize
         uses: ./.github/actions/setup-kustomize
@@ -289,6 +321,7 @@ jobs:
       - name: Set up the workspace
         uses: ./.github/actions/setup-workspace
         with:
+          handoff: 'true'
           bun: 'true'
 
       - name: Set up kustomize
@@ -329,6 +362,30 @@ jobs:
           JOBS: repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/attempts/${{ github.run_attempt }}/jobs?per_page=100
         run: *name-failed-shards
 
+  extractable:
+    name: extractable (${{ matrix.target }})
+    needs: [build]
+    if: needs.build.outputs.code == 'true' && needs.build.outputs.platform == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    strategy:
+      fail-fast: false
+      matrix:
+        target: ${{ fromJSON(needs.build.outputs.extractable || '[]') }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      # A package shard builds its own copy of the closure; the second app replays the turbo cache this restores.
+      - name: Set up the workspace
+        uses: ./.github/actions/setup-workspace
+        with:
+          handoff: 'true'
+          build: 'false'
+
+      - name: Install, typecheck and test it outside the repository, offline, from the restored store
+        run: pnpm -s check:extractable '${{ matrix.target }}'
+
   integration:
     name: integration
     needs: [build]
@@ -348,6 +405,8 @@ jobs:
 
       - name: Set up the workspace
         uses: ./.github/actions/setup-workspace
+        with:
+          handoff: 'true'
 
       - name: Set up FFmpeg
         uses: ./.github/actions/setup-ffmpeg
@@ -411,6 +470,8 @@ jobs:
 
       - name: Set up the workspace
         uses: ./.github/actions/setup-workspace
+        with:
+          handoff: 'true'
 
       - name: Bundle the API, the worker, the web app and the studio from that build
         run: |
@@ -500,6 +561,8 @@ jobs:
 
       - name: Set up the workspace
         uses: ./.github/actions/setup-workspace
+        with:
+          handoff: 'true'
 
       - name: Restore or generate the upload fixture
         uses: ./.github/actions/video-fixtures
@@ -563,6 +626,8 @@ jobs:
 
       - name: Set up the workspace
         uses: ./.github/actions/setup-workspace
+        with:
+          handoff: 'true'
 
       - name: Restore the workbench build of these sources
         id: storybook

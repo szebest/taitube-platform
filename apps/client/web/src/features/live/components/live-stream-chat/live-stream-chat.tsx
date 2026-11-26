@@ -1,13 +1,13 @@
-import { useT } from '@kit/intl-react';
 import { Button } from '@kit/ui';
 import { Link, useLocation } from '@tanstack/react-router';
 import type { LiveStreamPublicView } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
-import { ERROR_COPY } from '@vp/messages';
 import { type LiveChatLine, useAccount, useLiveChat } from '@vp/queries';
+import { ERROR_COPY } from '@vp/shared-messages';
 import { CHAT_MESSAGE_BOUNDS } from '@vp/validation';
 import { LiveChat, type LiveChatLayout } from '#app/components/live/live-chat';
 import { API_PUBLIC_URL } from '#app/lib/config';
+import { useT } from '#app/lib/messages';
 
 interface LiveStreamChatProps {
   stream: Pick<LiveStreamPublicView, 'id' | 'status'>;

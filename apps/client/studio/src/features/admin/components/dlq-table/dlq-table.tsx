@@ -1,5 +1,5 @@
 import { EmptyState, SectionError } from '@kit/components';
-import { Format, useT } from '@kit/intl-react';
+import { Format } from '@kit/intl-react';
 import { Button } from '@kit/ui';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { getRouteApi } from '@tanstack/react-router';
@@ -22,6 +22,7 @@ import {
   type DlqEntry,
   knownDlqStatus,
 } from '#app/features/admin/api/admin-dlq';
+import { useT } from '#app/lib/messages';
 import { pagedRows, tableStateOf } from '#app/utils/paged-rows';
 import { type DlqAction, DlqActionDialog } from '../dlq-action-dialog/dlq-action-dialog';
 

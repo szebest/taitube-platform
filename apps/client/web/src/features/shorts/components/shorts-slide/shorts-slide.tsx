@@ -1,4 +1,3 @@
-import { useT } from '@kit/intl-react';
 import { useQuery } from '@tanstack/react-query';
 import type { VideoSummary } from '@vp/api-contracts';
 import { captionsQueryOptions, useApi } from '@vp/queries';
@@ -8,6 +7,7 @@ import { PlayerChannelProvider } from '#app/components/player/taitube-player';
 import { ShortsPlayerFrame } from '#app/components/shorts/shorts-player-frame';
 import type { ShortsActionsLayout } from '#app/components/shorts/shorts-player-frame/types';
 import type { useShortsPlayback } from '#app/features/shorts/hooks/use-shorts-playback';
+import { useT } from '#app/lib/messages';
 import { ShortsFeedActions } from '../shorts-feed-actions/shorts-feed-actions';
 import { ShortsFeedControls } from '../shorts-feed-controls/shorts-feed-controls';
 import { ShortsFeedPlayer } from '../shorts-feed-player/shorts-feed-player';

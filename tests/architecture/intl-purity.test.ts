@@ -8,7 +8,7 @@ import { productionSources, read } from './repo-files';
  * server container and another in the browser, and a server render's hydration reports the
  * difference as an error. The locale, the zone and the reference instant are arguments.
  */
-const PURE_PACKAGES = ['@kit/intl', '@vp/intl-formats', '@vp/messages'].map(
+const PURE_PACKAGES = ['@kit/intl', '@kit/i18n', '@vp/intl-formats', '@vp/shared-messages'].map(
   (name) => `${packageDir(name)}/`
 );
 
@@ -92,7 +92,7 @@ describe('architecture: the formatting core reads nothing from the runtime', () 
     expect(pureSources().length).toBeGreaterThan(20);
   });
 
-  it('finds no ambient read in @kit/intl or @vp/messages', () => {
+  it('finds no ambient read in the formatting and message packages', () => {
     expect(pureSources().flatMap((file) => impurities(file, read(file)))).toEqual([]);
   });
 });

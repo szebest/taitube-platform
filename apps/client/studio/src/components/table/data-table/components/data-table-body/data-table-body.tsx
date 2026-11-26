@@ -1,9 +1,10 @@
-import { Checkbox, Table, useUiCopy } from '@kit/ui';
+import { Checkbox, Table } from '@kit/ui';
 import { FlexRender, type Row, type RowData } from '@tanstack/react-table';
 import { type ComponentPropsWithRef, type KeyboardEvent, useId, useState } from 'react';
 import { columnLook, useDataTable } from '#app/components/table/data-table/data-table.context';
 import { dataTableStyles } from '#app/components/table/data-table/data-table.variants';
 import type { DataTableFeatures } from '#app/components/table/data-table/types';
+import { useT } from '#app/lib/messages';
 import { DataTableSkeletonRows } from '../data-table-skeleton/data-table-skeleton';
 
 export interface DataTableBodyProps extends ComponentPropsWithRef<'tbody'> {
@@ -26,7 +27,8 @@ const sibling = (row: HTMLElement, key: string) =>
  */
 export function DataTableBody({ onRowActivate, children, ...props }: DataTableBodyProps) {
   const { table, selectable, state } = useDataTable('Body');
-  const { selectRow } = useUiCopy();
+  const { tOr } = useT();
+  const selectRow = tOr('appUi.selectRow', {}, '');
   const id = useId();
   const [focused, setFocused] = useState<string>();
   const columns = table.getAllLeafColumns();

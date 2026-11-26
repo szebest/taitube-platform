@@ -1,14 +1,9 @@
+import { type AnyFailure, toPipelineError } from '@kit/errors';
 import { createLogger } from '@kit/logger';
 import { type Result, err, isErr, ok } from '@kit/result';
 import { expectOk } from '@kit/testing/result';
 import { InMemoryJobQueue, InMemoryRepositories } from '@vp/adapters/in-memory';
-import {
-  type AnyFailure,
-  ErrorCodes,
-  errorCodeRegistry,
-  storageUnavailable,
-  toPipelineError,
-} from '@vp/errors';
+import { ErrorCodes, errorCodeRegistry, storageUnavailable } from '@vp/errors';
 import { createPipelineMetrics } from '@vp/pipeline-metrics';
 import { uuidv7 } from 'uuidv7';
 import { createFailureHandler } from '../failure-handler';

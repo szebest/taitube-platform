@@ -1,5 +1,6 @@
 import { Avatar, Badge, Button, Icon, IconButton, Slot, useUiCopy } from '@kit/ui';
 import type { ComponentPropsWithRef, ReactNode } from 'react';
+import { useT } from '#app/lib/messages';
 import { ChannelHeaderContext, useChannelHeader } from './channel-header.context';
 import { channelHeaderStyles } from './channel-header.variants';
 import type { ChannelHeaderLayout } from './types';
@@ -132,6 +133,7 @@ export function ChannelHeaderIdentity({
 }: ChannelHeaderIdentityProps) {
   const { layout } = useChannelHeader('Identity');
   const copy = useUiCopy();
+  const { tOr } = useT();
   const styles = channelHeaderStyles({ layout });
   const Element = asChild ? Slot.Root : 'header';
   const Heading = layout === 'full' ? 'h1' : 'h2';
@@ -159,7 +161,7 @@ export function ChannelHeaderIdentity({
           <Icon
             name="verified"
             size="md"
-            aria-label={copy.verified}
+            aria-label={tOr('appUi.verified', {}, '')}
             className={styles.verified()}
           />
         )}
@@ -204,7 +206,8 @@ export function ChannelHeaderBell(
   props: Omit<ComponentPropsWithRef<'button'>, 'aria-label' | 'children'>
 ) {
   useChannelHeader('Bell');
-  const { notifications } = useUiCopy();
+  const { tOr } = useT();
+  const notifications = tOr('appUi.notifications', {}, '');
 
   return (
     <IconButton
@@ -221,7 +224,8 @@ export function ChannelHeaderBell(
 /** The channel's sections as a labelled `nav` of links, each a route. */
 export function ChannelHeaderTabs({ className, children, ...props }: ComponentPropsWithRef<'nav'>) {
   const { layout } = useChannelHeader('Tabs');
-  const { channelSections } = useUiCopy();
+  const { tOr } = useT();
+  const channelSections = tOr('appUi.channelSections', {}, '');
   const styles = channelHeaderStyles({ layout });
 
   if (layout === 'identity') {

@@ -9,6 +9,7 @@ import { api } from '@vp/web-testing';
 import { type AppRouterContext, createAppRouter } from '../app-router';
 import { createIdentityStore } from '../identity-store';
 import { useSignOut, useSignOutAll } from '../use-sign-out';
+import { SPEC_MESSAGES } from './spec-messages';
 
 function SignOutButtons() {
   const signOut = useSignOut();
@@ -35,6 +36,7 @@ async function renderSignOut(cookies: string[], slot = 0) {
   const router = createAppRouter(
     {
       routeTree,
+      messages: SPEC_MESSAGES,
       apiBaseUrl: 'http://localhost:3000',
       pending: () => null,
     },

@@ -1,5 +1,6 @@
+import { type Failure } from '@kit/errors';
 import { CLIP_MAX_MS, CLIP_MIN_MS } from '@vp/domain';
-import { ErrorCodes, type Failure } from '@vp/errors';
+import { ErrorCodes } from '@vp/errors';
 import { type InvalidField, invalidField } from '@vp/validation';
 
 export type ClipNotFound = Failure<typeof ErrorCodes.CLIP_NOT_FOUND, { clipId: string }>;

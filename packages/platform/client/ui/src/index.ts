@@ -9,6 +9,7 @@ export {
 } from './appearance/custom-theme';
 export { PREFERS_MORE_CONTRAST, PREFERS_REDUCED_MOTION, useMediaQuery } from './appearance/media';
 export type {
+  AccountAppearance,
   AppearancePreference,
   AppearanceStorage,
   StoredAppearance,

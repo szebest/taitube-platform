@@ -1,7 +1,7 @@
+import { KEYSET_PAGE_SIZE } from '@kit/query';
 import { type QueryClient, queryOptions } from '@tanstack/react-query';
 import type { ApiClient } from '@vp/api-client';
 import type { ContractResult, listCreatorVideos } from '@vp/api-contracts';
-import { KEYSET_PAGE_SIZE } from '@vp/queries';
 import type { LibraryQuery } from './library-search';
 
 type LibraryPage = ContractResult<typeof listCreatorVideos>;

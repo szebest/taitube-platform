@@ -1,6 +1,6 @@
+import { axeViolations } from '@kit/web-testing/dom';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { axeViolations } from '@vp/web-testing/dom';
 import { AppProviders } from '#app/__tests__/providers';
 import { ShortsPlayerFrameRoot } from '#app/components/shorts/shorts-player-frame/shorts-player-frame';
 import { ShortsFeedControls, type ShortsFeedControlsProps } from '../shorts-feed-controls';

@@ -1,15 +1,9 @@
-import {
-  CONTRAST_OPTIONS,
-  MODE_OPTIONS,
-  TOKEN_GROUPS,
-  type TokenGroup,
-  tokenGroups,
-} from '@kit/design-tokens';
-import { FALLBACK_LOCALE } from '@kit/intl';
+import { CONTRAST_OPTIONS, MODE_OPTIONS } from '@kit/appearance';
+import { TOKEN_GROUPS, type TokenGroup, tokenGroups } from '@kit/design-tokens';
 import type { AppearancePreference } from '@kit/ui';
 import { appearance } from '@kit/ui/appearance/registry';
 import type { Preview } from '@storybook/react-vite';
-import { LOCALE_DETAILS, SUPPORTED_LOCALES } from '@vp/messages';
+import { LOCALES } from '@vp/shared-messages/locales';
 
 /** A group's or the accent's toolbar entry for "no override": the theme's own. */
 export const THEME_DEFAULT = 'theme';
@@ -46,7 +40,7 @@ export const appearanceToolbars: GlobalTypes = {
   direction: toolbar('Direction', named(DIRECTIONS)),
   locale: toolbar(
     'Locale',
-    SUPPORTED_LOCALES.map((tag) => ({ value: tag, title: LOCALE_DETAILS[tag].name }))
+    LOCALES.tags.map((tag) => ({ value: tag, title: LOCALES.details[tag].name }))
   ),
   ...Object.fromEntries(
     TOKEN_GROUPS.map((group) => [
@@ -65,7 +59,7 @@ export const initialAppearanceGlobals: Readonly<Record<string, string>> = {
   contrast: 'standard',
   accent: THEME_DEFAULT,
   direction: 'ltr',
-  locale: FALLBACK_LOCALE,
+  locale: LOCALES.source,
   ...Object.fromEntries(TOKEN_GROUPS.map((group) => [group, THEME_DEFAULT])),
 };
 

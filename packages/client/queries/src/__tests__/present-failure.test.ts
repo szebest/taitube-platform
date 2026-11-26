@@ -1,5 +1,5 @@
 import { ErrorCodes, RETRY_CLASS } from '@vp/errors';
-import { ERROR_COPY } from '@vp/messages';
+import { ERROR_COPY } from '@vp/shared-messages';
 import { present } from '../present-failure';
 
 describe('@vp/queries: present', () => {

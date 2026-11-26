@@ -71,6 +71,14 @@ describe('dev-token: jwt', () => {
     expect(exp - iat).toBe(seconds);
   });
 
+  it('checks expiry against the clock it is handed', () => {
+    const token = mintToken({ sub: SUB, ttl: '1h' });
+    const twoHoursLater = { ...TEST_CONFIG, now: () => TEST_CONFIG.now() + 2 * 3_600_000 };
+
+    expect(verifyToken(token).iat).toBe(1_700_000_000);
+    expect(() => verify(twoHoursLater, token)).toThrow(/expired/i);
+  });
+
   it('refuses a malformed TTL', () => {
     expect(() => mintToken({ ttl: 'invalid' })).toThrow(/invalid ttl/i);
   });

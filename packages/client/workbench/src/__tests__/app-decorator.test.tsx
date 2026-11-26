@@ -1,10 +1,10 @@
-import { useT } from '@kit/intl-react';
 import { composeStory } from '@storybook/react-vite';
 import { Link } from '@tanstack/react-router';
 import { render, screen } from '@testing-library/react';
 import { isSubscribedToChannel } from '@vp/api-contracts';
 import { useAccount, useApi } from '@vp/queries';
 import { useEffect, useState } from 'react';
+import { useT } from '../../../../../apps/client/web/src/lib/messages';
 import { type AppParameters, withApp } from '../app-decorator';
 import { loadCatalogue } from '../decorator';
 import { initialAppearanceGlobals } from '../toolbars';
@@ -86,7 +86,7 @@ describe('@vp/workbench: withApp', () => {
   it('rewords the story when the toolbar locale changes', async () => {
     const words = async (locale: string) => ({
       locale,
-      loaded: await loadCatalogue({ globals: { locale } } as never),
+      loaded: await loadCatalogue({ globals: { locale }, title: 'Probe' } as never),
     });
     const en = await words('en');
     const pl = await words('pl');

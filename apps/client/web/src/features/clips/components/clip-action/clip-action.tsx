@@ -1,10 +1,10 @@
-import { useT } from '@kit/intl-react';
 import type { Video } from '@vp/api-contracts';
 import { CLIP_MIN_MS } from '@vp/domain';
 import { useRef, useState } from 'react';
 import { usePlayerSeek } from '#app/components/player/taitube-player';
 import { EngagementBar } from '#app/components/watch/engagement-bar';
 import { useRequireAccount } from '#app/hooks/use-require-account';
+import { useT } from '#app/lib/messages';
 import { LazyClipDialog } from '../clip-dialog/clip-dialog.lazy';
 
 export interface ClipActionProps {

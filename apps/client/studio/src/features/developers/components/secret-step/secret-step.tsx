@@ -1,7 +1,7 @@
-import { useT } from '@kit/intl-react';
 import { ResponsiveModal } from '@kit/ui';
 import { SecretReveal } from '#app/components/developers/secret-reveal';
 import { useCopyField } from '#app/hooks/use-copy-field';
+import { useT } from '#app/lib/messages';
 
 export interface SecretStepProps {
   title: string;

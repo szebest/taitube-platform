@@ -1,5 +1,5 @@
 import { useAppForm } from '@kit/forms';
-import { Format, useFormat, useT } from '@kit/intl-react';
+import { Format, useFormat } from '@kit/intl-react';
 import { unwrapOr } from '@kit/result';
 import { Callout, Field, Select } from '@kit/ui';
 import type { ContractBody, OwnerChannel, updateMyChannel } from '@vp/api-contracts';
@@ -12,6 +12,7 @@ import {
   validateHandleField,
 } from '#app/features/channel/forms/channel-field-validators';
 import { failureCodeOf, useUpdateChannel } from '#app/features/channel/hooks/use-update-channel';
+import { useT } from '#app/lib/messages';
 import { ChannelTextField } from '../channel-text-field/channel-text-field';
 
 const NO_COUNTRY = 'none';

@@ -1,6 +1,6 @@
-import { useT } from '@kit/intl-react';
 import { DropdownMenu } from '@kit/ui';
 import { identityPath, parseIdentityPath } from '../account-slots';
+import { useT } from '../intl/shared-words';
 import type { IdentityEntry } from './identity-entries';
 import { IdentityEntryRow } from './identity-entry-row';
 import type { SwitchTarget } from './identity-switcher-provider';

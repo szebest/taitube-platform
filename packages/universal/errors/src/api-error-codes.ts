@@ -1,4 +1,12 @@
+import { CommonErrorCodes } from '@kit/errors';
+import { FormatErrorCodes } from '@kit/intl';
+import { PaginationErrorCodes } from '@kit/pagination';
+
+/** The platform packages own the codes they emit; the app's set spreads them in and adds its own. */
 export const ApiErrorCodes = {
+  ...CommonErrorCodes,
+  ...PaginationErrorCodes,
+  ...FormatErrorCodes,
   UPLOAD_TOO_LARGE: 'UPLOAD_TOO_LARGE',
   UPLOAD_SIZE_MISMATCH: 'UPLOAD_SIZE_MISMATCH',
   UNSUPPORTED_CONTENT_TYPE: 'UNSUPPORTED_CONTENT_TYPE',
@@ -8,12 +16,8 @@ export const ApiErrorCodes = {
   VIDEO_NOT_FOUND: 'VIDEO_NOT_FOUND',
   DLQ_ENTRY_NOT_FOUND: 'DLQ_ENTRY_NOT_FOUND',
   VERSION_CONFLICT: 'VERSION_CONFLICT',
-  FORBIDDEN: 'FORBIDDEN',
   RATE_LIMITED: 'RATE_LIMITED',
-  UNAUTHORIZED: 'UNAUTHORIZED',
-  VALIDATION_FAILED: 'VALIDATION_FAILED',
   ROUTE_NOT_FOUND: 'ROUTE_NOT_FOUND',
-  INVALID_CURSOR: 'INVALID_CURSOR',
   CATEGORY_NOT_FOUND: 'CATEGORY_NOT_FOUND',
   CATEGORY_SLUG_CONFLICT: 'CATEGORY_SLUG_CONFLICT',
   CATEGORY_IN_USE: 'CATEGORY_IN_USE',
@@ -110,11 +114,6 @@ export const ApiErrorCodes = {
   DATABASE_UNAVAILABLE: 'DATABASE_UNAVAILABLE',
   CACHE_UNAVAILABLE: 'CACHE_UNAVAILABLE',
   QUEUE_UNAVAILABLE: 'QUEUE_UNAVAILABLE',
-  INTERNAL: 'INTERNAL',
-  FORMAT_UNSUPPORTED_LOCALE: 'FORMAT_UNSUPPORTED_LOCALE',
-  FORMAT_UNKNOWN_OPTION: 'FORMAT_UNKNOWN_OPTION',
-  FORMAT_WRONG_KIND: 'FORMAT_WRONG_KIND',
-  FORMAT_UNRENDERABLE: 'FORMAT_UNRENDERABLE',
 } as const;
 
 export type ApiErrorCode = (typeof ApiErrorCodes)[keyof typeof ApiErrorCodes];

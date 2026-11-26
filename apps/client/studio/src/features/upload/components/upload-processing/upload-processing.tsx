@@ -1,4 +1,4 @@
-import { Format, useT } from '@kit/intl-react';
+import { Format } from '@kit/intl-react';
 import { Button, Progress } from '@kit/ui';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
@@ -7,6 +7,7 @@ import { uploadProgress } from '@vp/intl-formats';
 import { useApi, useAppLink, videoQueryOptions } from '@vp/queries';
 import { VideoStatusBadge } from '#app/components/video/video-status-badge';
 import { WEB_URL } from '#app/lib/config';
+import { useT } from '#app/lib/messages';
 
 interface UploadStageProps {
   title: string;

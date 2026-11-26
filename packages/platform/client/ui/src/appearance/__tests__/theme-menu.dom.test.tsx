@@ -1,6 +1,6 @@
+import { axeViolations } from '@kit/web-testing/dom';
 import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
-import { axeViolations } from '@vp/web-testing/dom';
 import { FIXTURE_APPEARANCE_STORAGE } from '../../__tests__/appearance-storage-fixture';
 import { WithUiCopy } from '../../__tests__/ui-copy-fixture';
 import { readCookie, writeCookie } from '../../cookies/cookie';
@@ -41,7 +41,7 @@ async function openMenu() {
 
 describe('@kit/ui: ThemeMenu', () => {
   afterEach(() => {
-    writeCookie('vp.appearance', '', { maxAge: 0 });
+    writeCookie('acme.appearance', '', { maxAge: 0 });
   });
 
   it('checks the current theme and mode, and switches to the ones picked', async () => {
@@ -54,7 +54,7 @@ describe('@kit/ui: ThemeMenu', () => {
     await userEvent.click(screen.getByRole('menuitemradio', { name: 'Light' }));
 
     expect(screen.getByRole('status')).toHaveTextContent('nocturne light default medium');
-    expect(JSON.parse(readCookie('vp.appearance') ?? 'null')).toMatchObject({
+    expect(JSON.parse(readCookie('acme.appearance') ?? 'null')).toMatchObject({
       theme: 'nocturne',
       mode: 'light',
     });
@@ -78,7 +78,7 @@ describe('@kit/ui: ThemeMenu', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Appearance' }));
     await userEvent.click(screen.getByRole('menuitemradio', { name: 'Comfortable' }));
 
-    expect(JSON.parse(readCookie('vp.appearance') ?? 'null').overrides).toEqual({});
+    expect(JSON.parse(readCookie('acme.appearance') ?? 'null').overrides).toEqual({});
   });
 
   it('passes axe open', async () => {

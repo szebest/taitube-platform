@@ -1,4 +1,3 @@
-import { createLocaleStore } from '@kit/intl-react';
 import {
   createMemoryHistory,
   createRootRouteWithContext,
@@ -18,8 +17,10 @@ import {
 } from '../app-router';
 import { createQueryClient } from '../create-query-client';
 import { createIdentityStore } from '../identity-store';
+import { createLocaleStore } from '../intl';
 import { RouteError, RouteNotFound } from '../route-errors';
 import { ensureSession } from '../session';
+import { SPEC_MESSAGES } from './spec-messages';
 
 const Pending = () => <p>Pending</p>;
 
@@ -58,6 +59,7 @@ function getRouter(options: AppRouterOptions = {}) {
   return createAppRouter(
     {
       routeTree,
+      messages: SPEC_MESSAGES,
       apiBaseUrl: 'http://localhost:3000',
       pending: Pending,
     },
@@ -167,7 +169,7 @@ describe('@vp/queries: app router', () => {
   });
 
   it('dehydrates the active locale into the page', async () => {
-    const locales = createLocaleStore();
+    const locales = createLocaleStore(SPEC_MESSAGES);
     await locales.activate('pl');
 
     const { html } = await serverRender(() => getRouter({ locales }), '/wide');

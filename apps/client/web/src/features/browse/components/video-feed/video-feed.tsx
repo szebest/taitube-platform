@@ -1,10 +1,10 @@
 import { EmptyState, NoResultsIllustration, PageHeader, SectionError } from '@kit/components';
-import { useT } from '@kit/intl-react';
 import { Skeleton } from '@kit/ui';
 import type { QueryKey } from '@tanstack/react-query';
 import { FeedSentinel } from '#app/components/feed/feed-sentinel';
 import { VideoGrid, VideoGridSkeleton } from '#app/components/video/video-grid';
 import { useVideoPages, type VideoPage, type VideoPagesOptions } from '#app/hooks/use-video-pages';
+import { useT } from '#app/lib/messages';
 
 export interface VideoFeedProps<TPage extends VideoPage, TKey extends QueryKey> {
   title: string;
@@ -31,14 +31,14 @@ export function VideoFeed<TPage extends VideoPage, TKey extends QueryKey>({
           <EmptyState.Illustration>
             <NoResultsIllustration />
           </EmptyState.Illustration>
-          <EmptyState.Title>{tOr('browse.empty', {}, '')}</EmptyState.Title>
+          <EmptyState.Title>{tOr('feed.empty', {}, '')}</EmptyState.Title>
         </EmptyState.Root>
       ) : (
         <VideoGrid videos={videos} />
       )}
       {isError && (
         <SectionError.Root role="alert" retrying={isFetching} onRetry={loadMore}>
-          <SectionError.Message>{tOr('browse.loadMoreFailed', {}, '')}</SectionError.Message>
+          <SectionError.Message>{tOr('feed.loadMoreFailed', {}, '')}</SectionError.Message>
         </SectionError.Root>
       )}
       {hasMore && !isFetching && !isError && <FeedSentinel onNear={loadMore} />}

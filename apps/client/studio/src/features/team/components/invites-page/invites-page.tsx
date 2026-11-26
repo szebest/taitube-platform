@@ -1,10 +1,10 @@
 import { EmptyState, PageHeader, SectionError } from '@kit/components';
-import { useT } from '@kit/intl-react';
 import { Skeleton } from '@kit/ui';
 import { useSearch } from '@tanstack/react-router';
 import { ApiError } from '@vp/api-client';
 import { LoadMore } from '#app/components/table/load-more';
 import { useMyInvites } from '#app/features/team/hooks/use-my-invites';
+import { useT } from '#app/lib/messages';
 import { InviteCard } from '../invite-card/invite-card';
 
 /** The invites to a team that wait for the viewer's answer. */

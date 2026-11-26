@@ -1,5 +1,4 @@
 import { SectionError } from '@kit/components';
-import { useT } from '@kit/intl-react';
 import { useQuery } from '@tanstack/react-query';
 import type { Video } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
@@ -7,6 +6,7 @@ import { canAppealVideo } from '@vp/permissions';
 import { useCan } from '@vp/permissions-react';
 import { useApi } from '@vp/queries';
 import { videoScreeningQueryOptions } from '#app/features/videos/api/video-screening';
+import { useT } from '#app/lib/messages';
 import { ScreeningAppealForm } from '../screening-appeal-form/screening-appeal-form';
 
 export interface VideoScreeningPanelProps {

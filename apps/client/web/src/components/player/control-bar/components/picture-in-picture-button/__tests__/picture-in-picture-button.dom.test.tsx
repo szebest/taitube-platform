@@ -1,13 +1,14 @@
-import { IntlProvider } from '@kit/intl-react';
 import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
+import { IntlProvider } from '@vp/queries/intl';
+import { WEB_MESSAGES } from '#app/lib/messages';
 import { PictureInPictureButton } from '../picture-in-picture-button';
 
 function renderButton(props: { available: boolean; active?: boolean }) {
   const onRequest = vi.fn();
   const onExit = vi.fn();
   render(
-    <IntlProvider locale="en" timeZone="UTC">
+    <IntlProvider messages={WEB_MESSAGES} locale="en" timeZone="UTC">
       <PictureInPictureButton active={false} {...props} onRequest={onRequest} onExit={onExit} />
     </IntlProvider>
   );

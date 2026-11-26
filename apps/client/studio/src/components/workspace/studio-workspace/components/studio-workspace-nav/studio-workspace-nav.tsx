@@ -1,4 +1,4 @@
-import { Drawer, Icon, type IconId, Slot, Tooltip, useUiCopy, VisuallyHidden } from '@kit/ui';
+import { Drawer, Icon, type IconId, Slot, Tooltip, VisuallyHidden } from '@kit/ui';
 import {
   type ComponentPropsWithRef,
   isValidElement,
@@ -8,6 +8,7 @@ import {
 } from 'react';
 import { useStudioWorkspace } from '#app/components/workspace/studio-workspace/studio-workspace.context';
 import { studioWorkspaceStyles } from '#app/components/workspace/studio-workspace/studio-workspace.variants';
+import { useT } from '#app/lib/messages';
 
 const NAV_ITEM = '[data-slot="studio-workspace-nav-item"]';
 
@@ -35,7 +36,9 @@ export function StudioWorkspaceNav({
   ...props
 }: ComponentPropsWithRef<'nav'>) {
   const { navId, navOpen, setNavOpen } = useStudioWorkspace('Nav');
-  const { studioNavigation, menu } = useUiCopy();
+  const { tOr } = useT();
+  const studioNavigation = tOr('appUi.studioNavigation', {}, '');
+  const menu = tOr('ui.menu', {}, '');
   const styles = studioWorkspaceStyles();
 
   const closeOnLink = (event: MouseEvent<HTMLElement>) => {

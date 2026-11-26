@@ -1,4 +1,4 @@
-import { FALLBACK_ACTIVE_LOCALE } from '@kit/intl-react';
+import { FALLBACK_ACTIVE_LOCALE } from '@vp/queries/intl';
 import { partyPreview } from '@vp/web-testing';
 import { headWords } from '../head-words';
 import { partyHead } from '../party-head';

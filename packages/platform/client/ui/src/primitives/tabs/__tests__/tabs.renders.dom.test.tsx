@@ -1,5 +1,5 @@
+import { createRenderCounter } from '@kit/web-testing/dom';
 import { render } from '@testing-library/react';
-import { createRenderCounter } from '@vp/web-testing/dom';
 import { Tabs } from '..';
 
 function renderCountedTabs() {

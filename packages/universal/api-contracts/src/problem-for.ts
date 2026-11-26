@@ -1,4 +1,4 @@
-import { type AnyFailure, failurePayload, isInputFailure } from '@vp/errors';
+import { type AnyFailure, failurePayload, isInputFailure } from '@kit/errors';
 import { type Problem, problemDetails, problemStatus } from './problem';
 
 export interface ProblemOverrides {

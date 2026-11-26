@@ -1,7 +1,8 @@
-import { Dialog, Drawer, useUiCopy } from '@kit/ui';
+import { Dialog, Drawer } from '@kit/ui';
 import type { ComponentPropsWithRef } from 'react';
 import { useStudioWorkspace } from '#app/components/workspace/studio-workspace/studio-workspace.context';
 import { studioWorkspaceStyles } from '#app/components/workspace/studio-workspace/studio-workspace.variants';
+import { useT } from '#app/lib/messages';
 
 export interface StudioWorkspaceInspectorProps extends ComponentPropsWithRef<'aside'> {
   /** Names the aside, and heads it while an item is open. */
@@ -20,7 +21,8 @@ export function StudioWorkspaceInspector({
 }: StudioWorkspaceInspectorProps) {
   const { layout, inspectorOpen, setInspectorOpen, inspectorSide } =
     useStudioWorkspace('Inspector');
-  const { inspectorEmpty } = useUiCopy();
+  const { tOr } = useT();
+  const inspectorEmpty = tOr('appUi.inspectorEmpty', {}, '');
   const styles = studioWorkspaceStyles({ inspectorSide });
 
   if (layout === 'three-column') {

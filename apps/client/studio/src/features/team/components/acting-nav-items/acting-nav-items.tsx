@@ -1,4 +1,3 @@
-import { useT } from '@kit/intl-react';
 import { Link, useMatchRoute } from '@tanstack/react-router';
 import {
   canModerateComments,
@@ -12,6 +11,7 @@ import { useAccount } from '@vp/queries';
 import type { ReactNode } from 'react';
 import { StudioWorkspace } from '#app/components/workspace/studio-workspace';
 import { useActiveChannel } from '#app/hooks/use-active-channel';
+import { useT } from '#app/lib/messages';
 import { InvitesNavItem } from '../invites-nav-item/invites-nav-item';
 
 export interface ActingNavItemsProps {

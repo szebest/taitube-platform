@@ -1,5 +1,5 @@
+import { axeViolations } from '@kit/web-testing/dom';
 import { render, screen } from '@testing-library/react';
-import { axeViolations } from '@vp/web-testing/dom';
 import { Field } from '..';
 import { WithUiCopy } from '../../../__tests__/ui-copy-fixture';
 import { variantNames } from '../../../lib/variant-names';

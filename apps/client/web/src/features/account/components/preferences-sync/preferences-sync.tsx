@@ -1,5 +1,4 @@
 import type { TokenGroup } from '@kit/design-tokens';
-import { useT } from '@kit/intl-react';
 import {
   type AppearancePreference,
   accountAppearance,
@@ -17,6 +16,7 @@ import { planMerge } from '#app/features/account/api/merge-account';
 import type { MergeConflict } from '#app/features/account/api/merge-account';
 import { createPatchBatch, type PatchBatch } from '#app/features/account/api/patch-batch';
 import { useSavePreferences } from '#app/features/account/hooks/use-save-preferences';
+import { useT } from '#app/lib/messages';
 import { AppearanceCrossTab } from '#app/lib/preferences/appearance-cross-tab';
 import { useDevicePreferences } from '#app/lib/preferences/device-preferences-provider';
 import { clearDirty, markDirty, readDirty } from '#app/lib/preferences/dirty-fields';

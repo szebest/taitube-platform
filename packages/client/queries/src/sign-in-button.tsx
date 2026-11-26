@@ -1,6 +1,6 @@
-import { useT } from '@kit/intl-react';
 import { Button } from '@kit/ui';
 import { Link, useLocation } from '@tanstack/react-router';
+import { useT } from './intl/shared-words';
 
 /** A guest's way in from any page: the sign-in page, which brings them back to the page they pressed it on. */
 export function SignInButton() {

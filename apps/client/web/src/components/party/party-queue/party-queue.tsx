@@ -1,7 +1,7 @@
-import { useT } from '@kit/intl-react';
 import { Button, Icon, IconButton } from '@kit/ui';
 import { PartyCan } from '@vp/permissions-react';
 import type { ComponentPropsWithRef } from 'react';
+import { useT } from '#app/lib/messages';
 
 /** The Queue tab: what plays next, in the room's order. */
 export function PartyQueueRoot({ className, ...props }: ComponentPropsWithRef<'section'>) {

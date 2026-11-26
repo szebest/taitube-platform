@@ -1,16 +1,7 @@
+import { type ServerRender, serverRender as render } from '@kit/web-testing/server';
 import type { AnyRouter } from '@tanstack/react-router';
-import { createRequestHandler, defaultStreamHandler } from '@tanstack/react-router/ssr/server';
-import { requestHandler } from '@tanstack/react-start/server';
 import type { HttpHandler } from 'msw/http';
 import { apiServer } from './api-server';
-
-export type ServerRender = {
-  status: number;
-  location: string | null;
-  html: string;
-  /** The page area inside the layout, from its `<main` tag on, without the header and the sidebar. */
-  main: string;
-};
 
 type ServerRenderOptions = {
   handlers?: HttpHandler[];
@@ -18,25 +9,12 @@ type ServerRenderOptions = {
   headers?: HeadersInit;
 };
 
-/**
- * What the server answers for `path`: the app's real route tree and router, rendered to a string
- * inside the request context Start gives the server's code.
- */
+/** `@kit/web-testing`'s `serverRender`, with the API handlers the page's loaders call answered. */
 export async function serverRender(
   getRouter: () => AnyRouter,
   path: string,
   { handlers = [], headers }: ServerRenderOptions = {}
 ): Promise<ServerRender> {
   apiServer.use(...handlers);
-  const answer = requestHandler((request) =>
-    createRequestHandler({ request, createRouter: () => getRouter() })(defaultStreamHandler)
-  );
-  const response = await answer(new Request(`http://localhost${path}`, { headers }), {});
-  const html = await response.text();
-  return {
-    status: response.status,
-    location: response.headers.get('location'),
-    html,
-    main: html.slice(html.indexOf('<main'), html.indexOf('</main>')),
-  };
+  return render(getRouter, path, { headers });
 }

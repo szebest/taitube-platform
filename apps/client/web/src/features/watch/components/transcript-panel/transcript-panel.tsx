@@ -1,4 +1,4 @@
-import { Format, useT } from '@kit/intl-react';
+import { Format } from '@kit/intl-react';
 import { Input } from '@kit/ui';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import type { TranscriptView } from '@vp/api-contracts';
@@ -9,6 +9,7 @@ import { useEffect, useId, useRef, useState } from 'react';
 import { usePlayerSeek, usePlayerTime } from '#app/components/player/taitube-player';
 import { useDebouncedValue } from '#app/hooks/use-debounced-value';
 import { useWindowRows } from '#app/hooks/use-window-rows';
+import { useT } from '#app/lib/messages';
 
 const SEARCH_DELAY_MS = 300;
 

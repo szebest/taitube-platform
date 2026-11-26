@@ -1,6 +1,5 @@
-import { useFormat, useT } from '@kit/intl-react';
+import { useFormat } from '@kit/intl-react';
 import { unwrapOr } from '@kit/result';
-import { useUiCopy } from '@kit/ui';
 import { useSuspenseInfiniteQuery, useSuspenseQuery } from '@tanstack/react-query';
 import type { CommentView } from '@vp/api-contracts';
 import { threadRootId } from '@vp/domain';
@@ -25,6 +24,7 @@ import { useEditComment } from '#app/features/watch/hooks/use-edit-comment';
 import { usePostComment } from '#app/features/watch/hooks/use-post-comment';
 import { type DescriptionToken, tokenizeDescription } from '#app/features/watch/utils/timecodes';
 import { useRequireAccount } from '#app/hooks/use-require-account';
+import { useT } from '#app/lib/messages';
 import { repliesQueryOptions } from '#app/lib/query-keys/comment-keys';
 import { CommentEditor } from '../comment-editor/comment-editor';
 import { LazyReportCommentDialog } from '../report-comment-dialog/report-comment-dialog.lazy';
@@ -134,7 +134,7 @@ function ReplyComposer({
   onSend: () => void;
   sending: boolean;
 }) {
-  const { reply } = useUiCopy();
+  const { tOr } = useT();
   const guard = useIdentityGuard();
 
   return (
@@ -145,7 +145,7 @@ function ReplyComposer({
         onChange={onChange}
         onSubmit={() => guard.guard(onSend)}
         submitting={sending}
-        aria-label={reply}
+        aria-label={tOr('appUi.reply', {}, '')}
       />
     </div>
   );

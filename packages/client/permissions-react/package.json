@@ -20,6 +20,7 @@
     "clean": "rimraf dist tsconfig.tsbuildinfo"
   },
   "dependencies": {
+    "@kit/permissions": "workspace:*",
     "@kit/result": "workspace:*",
     "@vp/permissions": "workspace:*"
   },
@@ -39,6 +40,6 @@
     "react": "^19.3.0"
   },
   "vp": {
-    "layer": 6
+    "layer": 7
   }
 }

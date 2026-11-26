@@ -1,4 +1,3 @@
-import { useT } from '@kit/intl-react';
 import { Badge, Button, Icon, IconButton, SortableList, useToast } from '@kit/ui';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -14,6 +13,7 @@ import {
   useIdentityLook,
   usePromoteChannel,
 } from '#app/features/account/hooks/use-identity-settings';
+import { useT } from '#app/lib/messages';
 import { SettingItem } from '../setting-item/setting-item';
 
 /** The order of the switcher: every identity, dragged into place; the order is the pins. */
@@ -57,7 +57,7 @@ export function AccountOrderRow() {
               variant={entry.pinned ? 'soft' : 'ghost'}
               aria-pressed={entry.pinned}
               aria-label={tOr(
-                entry.pinned ? 'accounts.unpin' : 'accounts.pin',
+                entry.pinned ? 'accountSettings.unpin' : 'accountSettings.pin',
                 { name: entry.name },
                 ''
               )}
@@ -90,14 +90,14 @@ export function AccountAccentRow() {
             <span className="text-body-sm">{entry.name}</span>
             <fieldset className="m-0 flex gap-inline border-0 p-0">
               <legend className="sr-only">
-                {tOr('accounts.accentFor', { name: entry.name }, '')}
+                {tOr('accountSettings.accentFor', { name: entry.name }, '')}
               </legend>
               {ACCENTS.map((accent) => (
                 <button
                   key={accent}
                   type="button"
                   aria-pressed={entry.accent === accent}
-                  aria-label={tOr('accounts.accentOption', { accent: String(accent) }, '')}
+                  aria-label={tOr('accountSettings.accentOption', { accent: String(accent) }, '')}
                   className="cursor-pointer rounded-full border-0 bg-transparent p-1 focus-ring"
                   onClick={() => void setAccent(entry.identity, accent)}
                 >
@@ -132,7 +132,8 @@ export function OwnedChannelsRow() {
 
   const makePrimary = (id: string, name: string) =>
     promote.mutate(id, {
-      onSuccess: () => toast({ tone: 'success', title: tOr('accounts.promoted', { name }, '') }),
+      onSuccess: () =>
+        toast({ tone: 'success', title: tOr('accountSettings.promoted', { name }, '') }),
       onError: (error) => showFailure(tOr('accounts.promoteFailed', {}, ''), error),
     });
 

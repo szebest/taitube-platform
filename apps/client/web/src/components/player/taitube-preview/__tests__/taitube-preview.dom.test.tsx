@@ -1,11 +1,12 @@
-import { IntlProvider } from '@kit/intl-react';
 import { render, screen, within } from '@testing-library/react';
+import { IntlProvider } from '@vp/queries/intl';
+import { WEB_MESSAGES } from '#app/lib/messages';
 import { TaitubePreview } from '../taitube-preview';
 
 describe('apps/client/web: the Taitube preview', () => {
   it('draws the player with its controls', () => {
     render(
-      <IntlProvider locale="en" timeZone="UTC">
+      <IntlProvider messages={WEB_MESSAGES} locale="en" timeZone="UTC">
         <TaitubePreview
           playbackUrl="http://localhost:9000/public/videos/v1/hls/master.m3u8"
           title="Launch day"

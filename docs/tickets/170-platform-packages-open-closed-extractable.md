@@ -584,6 +584,48 @@ main with half a registry.
 - **Docs**: 50 files under `docs/` and 38 under `packages/` name a package path; they are rewritten by the same codemod
   where the reference is a path, by hand where it is prose; `CLAUDE.md` symlinks are re-synced (`pnpm sync:claude`).
 
+### Delivered so far, and the final stack
+
+#348 moved 17 packages whole and added `@kit/di`, `@kit/runtime` and `@kit/i18n`; #360 split `testing`, `intl`,
+`domain/time`, `storage`, `events`, `observability` and the env helpers, and moved `components`. The rest lands as one
+`gh stack` on `feat/170-platform-packages-final`, three slices, each green on its own.
+
+**The holy rule, from slice A on: a `@kit/*` package never depends on a `@vp/*` package.** Not in `dependencies`,
+`devDependencies` or `peerDependencies`, not in an import, a tsconfig path or a Vite or Vitest alias. No allowlist, no
+pending-move allowance, no dev-edge carve-out. Where a platform package needs something the app owns, the dependency is
+inverted: the platform package takes a typed parameter, port or prop and the app supplies it.
+
+- **A, errors and seams**: `@kit/errors` and `@kit/validation` (the generic halves), a new `@kit/web-testing`
+  (generic spec helpers, replacing every platform dev edge on `@vp/web-testing`), and every remaining edge of
+  `design-tokens`, `pagination`, `forms`, `ui`, `components`, `web-telemetry` and `intl-react` inverted: the appearance
+  vocabulary moves into `@kit/design-tokens/appearance`, `PaginationLimits` is a required option, `intl-react` takes the
+  app's translator instead of importing `@vp/messages`, `vite-preset` takes the app's setup files and env, ambient clock
+  and env reads become parameters, `@kit/keyspace` gains `defineKeyspace`. The pending-move allowance and
+  `PENDING_APP_EDGES` are deleted, and a hard architecture test fails on any `@vp/` reference in `packages/platform`.
+- **B, permissions, query, ports**: `@kit/permissions` (`assertCan`, `createAbilityFactory`), `@kit/query` (query
+  client, retry policy, keyset paging, `ensureFound`, `parseParam`, single-flight refresh) and `@kit/ports` (the
+  infrastructure ports with `./contract` suites the adapters run).
+- **C, translations and the proof**: the `@kit/i18n` engine adopted, `@vp/messages` split into `@vp/shared-messages`
+  and the per-app catalogues, the locale list out of `@kit/intl`, `UiCopy` trimmed to what the kit renders, the studio
+  file-field words as keys (English copied into `pl`, no visible change); `pnpm check:extractable` (failing on any `@vp`
+  reference), the second app and the `extractable` CI job; type-level specs for every public generic; the docs
+  (criteria 22 and 23); the status set to `done`.
+
+Decisions taken while delivering, which amend the sections above:
+
+- **App packages keep their names.** `@vp/errors`, `@vp/validation`, `@vp/permissions` and `@vp/queries` hold the app
+  half; the generic half moves out. No `@vp/error-codes`, `@vp/input-rules` or `@vp/permission-rules`: 48 renames the app
+  side once, and these renames would rewrite about 1,100 more imports for nothing.
+- **Parameters before tokens.** A value the app hands a platform package is a required, typed parameter or prop; a
+  `@kit/di` token only where a container resolves it (`ErrorCodeRegistry`, the catalogues, the presets, the runtime
+  tokens). Criterion 18 reads "a token, a registry or a required parameter, with a spec that swaps it".
+- **No `@kit/di-react`.** Nothing would consume it; a required provider prop fails at compile time, a registry lookup
+  only at run time.
+- **The session machinery stays in `@vp/queries`** (`SessionConfig`, the middleware, `SectionBoundary`): it is bound to
+  this product's proxy and cookie.
+- **Platform packages own the codes they emit** (`@kit/errors`, `@kit/pagination`, `@kit/intl`); the app's registry
+  includes them, and criterion 10 reads "no platform package lists an app code".
+
 ## Sequencing
 
 This touches almost every package, so it conflicts with everything in flight. **Order: the open PRs first, then this

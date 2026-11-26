@@ -1,0 +1,55 @@
+import { dt } from '../engine';
+
+export const accounts = {
+  switcherTitle: dt('Switch account or channel'),
+  switcherSearch: dt('Find an account or channel'),
+  switcherOpen: dt('Switch account or channel'),
+  switcherShortcut: dt('Alt+Shift+A'),
+  groupAccounts: dt('Accounts'),
+  unread: dt('{count:plural}', { plural: { count: { one: '{?} unread', other: '{?} unread' } } }),
+  newComments: dt('{count:plural}', {
+    plural: { count: { one: '{?} new comment', other: '{?} new comments' } },
+  }),
+  glanceNothing: dt('Nothing new'),
+  expired: dt('Session expired, sign in'),
+  addAccount: dt('Add account'),
+  createChannel: dt('Create channel'),
+  manage: dt('Manage accounts'),
+  signOutThis: dt('Sign out of this account'),
+  signOutAll: dt('Sign out of all accounts'),
+  nowBrowsing: dt('Now browsing as {name}'),
+  undo: dt('Undo'),
+  switchFailed: dt('Could not switch to {name}'),
+  commentingAs: dt('Commenting as {name}'),
+  replyingAs: dt('Replying as {name}'),
+  subscribingAs: dt('Subscribing as {name}'),
+  switch: dt('Switch'),
+  identityChanged: dt(
+    'You switched to another account or channel after this was written. Nothing was sent.'
+  ),
+  sendAnyway: dt('Send anyway'),
+  openAs: dt('Open as...'),
+  tabTitle: dt('@{handle} - {title}'),
+  createChannelTitle: dt('Create a channel'),
+  createChannelBody: dt('A channel of its own, with its own handle, videos and subscribers.'),
+  channelHandle: dt('Handle'),
+  channelName: dt('Channel name'),
+  create: dt('Create'),
+  channelCreated: dt('Created {name}'),
+  makePrimary: dt('Make primary'),
+  primary: dt('Primary'),
+  promoteFailed: dt('Could not make that channel primary'),
+  signInUnknownDevice: dt('On an unknown device'),
+  noSignIns: dt('No sign-ins recorded yet.'),
+  loadMore: dt('Load more'),
+  teamRole: dt('{role:enum}', {
+    enum: {
+      role: {
+        manager: 'Manager',
+        editor: 'Editor',
+        moderator: 'Moderator',
+        analytics: 'Analytics viewer',
+      },
+    },
+  }),
+} as const;

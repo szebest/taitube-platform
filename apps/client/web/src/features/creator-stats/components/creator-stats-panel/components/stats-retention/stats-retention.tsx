@@ -1,4 +1,4 @@
-import { useFormat, useT } from '@kit/intl-react';
+import { useFormat } from '@kit/intl-react';
 import { unwrapOr } from '@kit/result';
 import { Button } from '@kit/ui';
 import { useQuery } from '@tanstack/react-query';
@@ -7,6 +7,7 @@ import { videoDuration } from '@vp/intl-formats';
 import { useApi, videoRetentionQueryOptions } from '@vp/queries';
 import { usePlayerSeek } from '#app/components/player/taitube-player';
 import { RetentionStrip } from '#app/components/watch/retention-strip';
+import { useT } from '#app/lib/messages';
 
 type DropOff = CreatorStats['retention']['dropOffs'][number];
 

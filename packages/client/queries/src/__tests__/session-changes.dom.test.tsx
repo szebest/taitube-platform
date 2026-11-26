@@ -19,6 +19,7 @@ import { GUEST, SESSION_KEY, type Session } from '../session';
 import { endSession, settleSession, switchIdentity } from '../session-changes';
 import { SessionProvider } from '../session-provider';
 import { useTabIdentity } from '../use-tab-identity';
+import { SPEC_MESSAGES } from './spec-messages';
 
 function Who() {
   const { api: routerApi }: AppRouterContext = useRouter().options.context;
@@ -51,6 +52,7 @@ async function routerAt(
   const router = createAppRouter(
     {
       routeTree,
+      messages: SPEC_MESSAGES,
       apiBaseUrl: 'http://localhost:3000',
       pending: () => null,
     },
@@ -153,7 +155,12 @@ describe('@vp/queries: session changes', () => {
       )
     );
     const router = createAppRouter(
-      { routeTree, apiBaseUrl: 'http://localhost:3000', pending: () => null },
+      {
+        routeTree,
+        messages: SPEC_MESSAGES,
+        apiBaseUrl: 'http://localhost:3000',
+        pending: () => null,
+      },
       {
         history: createMemoryHistory({ initialEntries: ['/who'] }),
         identity: createIdentityStore({ identity: { slot: 0 }, prefixed: true }),

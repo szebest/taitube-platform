@@ -10,7 +10,7 @@ export default definePackageTestConfig({
     include: ['src/**/__tests__/**/*.dom.test.{ts,tsx}'],
     setupFiles: [
       '@testing-library/jest-dom/vitest',
-      '@vp/web-testing/jsdom.setup',
+      '@kit/web-testing/jsdom.setup',
       '@vp/web-testing/api-server.setup',
     ],
   },

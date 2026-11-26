@@ -1,9 +1,9 @@
-import { useT } from '@kit/intl-react';
 import { VisuallyHidden } from '@kit/ui';
 import { useRouter } from '@tanstack/react-router';
 import { type PropsWithChildren, createContext, useContext, useEffect, useState } from 'react';
 import type { Identity } from '../account-slots';
 import type { Accent } from '../accounts';
+import { useT } from '../intl/shared-words';
 
 /** What the header shows of an identity: enough to draw it before its session has loaded. */
 export type IdentityDisplay = {

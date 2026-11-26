@@ -16,13 +16,33 @@ at the throw site.
 
 | Layer | Lives in | Tier · layer | Needs | Returns |
 |---|---|---|---|---|
-| **1a. Validation** | `@vp/validation` | `universal` · T2 | the input, nothing else | `Result<T, InputFailure union>` |
+| **1a. Validation** | `@vp/validation` (the app's rules) over `@kit/validation` (the generic half) | `universal` · T2 | the input, nothing else | `Result<T, InputFailure union>` |
 | **1b. Domain rules** | `@vp/domain-rules` | `universal` · T3 | input **+** an entity **+** policy | `Result<T, Failure union>` |
 | **2. Services** | `apps/server/api/src/services/`, `apps/server/worker/src/stages/` | `server` | ports and rules | `Result<T, rule + infra failures>` |
 | **3. Edge** | `apps/server/api/src/routes/`, `apps/server/worker/src/composition/stages.module.ts`, later `apps/client/web` | `server` / `client` | HTTP, BullMQ, the DOM | a response, a throw at the queue boundary, a view state |
 
 Layers 1 and 2 never log a failure, never format one and never `throw`. Layer 3 never contains a
 rule. All four are asserted in `tests/architecture/`, not just written here.
+
+## The registry, and who owns a code
+
+The mechanism is platform code, the vocabulary is the app's.
+
+- **`@kit/errors`** holds `Failure`, `InputFailure`, the retry classes, `classifyError` and `defineErrorCodes`. It
+  lists no code of this product. The app builds one frozen `ErrorCodeSet` with `defineErrorCodes({ codes,
+  retryClass, internal })` and provides it under the `ErrorCodeRegistry` token at its composition root; the token has
+  no default, so a missing set is a startup error.
+- **A platform package owns the codes it emits.** `@kit/errors` exports `CommonErrorCodes`, `@kit/pagination`
+  `PaginationErrorCodes`, `@kit/intl` `FormatErrorCodes`, each as an `as const` object. The app's set spreads them in
+  and gives each a retry class, so no code is written twice and no platform package names an app code.
+- **The app's codes stay in `@vp/errors`** (`ApiErrorCodes`, `RETRY_CLASS`); `PROBLEM_STATUS` and the RFC 9457 mapping live in `@vp/api-contracts` (`problem.ts`). A
+  new code lands there, in the set and in SDD section 6.2 together, or it does not compile: `retryClass` is a `Record`
+  over the set's codes.
+- **Platform rules take their code as a parameter.** `defineFieldFailures(code)` in `@kit/validation` returns the
+  failure constructors for the code the app passes, so a generic rule never spells `VALIDATION_FAILED` for the app.
+
+A second app registers its own set the same way; the extractability check proves it (see
+[platform-packages.md](platform-packages.md)).
 
 ## Where a predicate goes
 
@@ -65,11 +85,16 @@ error vocabulary.** A failure whose `code` is a bare string is a review rejectio
 code `ErrorCodes` does not have, add it to `ErrorCodes`, `PROBLEM_STATUS`, `RETRY_CLASS` and SDD §6.2
 or do not add it at all.
 
+The types and the machinery are `@kit/errors`; the vocabulary is the app's `@vp/errors`. A platform package
+owns the codes it emits (`CommonErrorCodes` in `@kit/errors`: `VALIDATION_FAILED`, `INTERNAL`, `UNAUTHORIZED`, `FORBIDDEN`;
+`PaginationErrorCodes` in `@kit/pagination`; `FormatErrorCodes` in `@kit/intl`), and `ApiErrorCodes` spreads
+them in, so each code is written once and no platform package imports the app's codes.
+
 ```ts
-export type Failure<C extends ErrorCode, D extends object = Record<never, never>> =
+export type Failure<C extends string, D extends object = Record<never, never>> =
   Readonly<{ code: C; message: string } & D>;
 
-export type InputFailure<C extends ErrorCode, D extends object = Record<never, never>> =
+export type InputFailure<C extends string, D extends object = Record<never, never>> =
   Readonly<{ code: C; message: string; field: string } & D>;
 ```
 
@@ -191,7 +216,7 @@ runner converts, and it is the only place in `apps/server/worker` that throws.
 
 ```ts
 const outcome = await stage(job);
-if (isErr(outcome)) throw toPipelineError(outcome.error); // RETRY_CLASS -> Permanent | Transient
+if (isErr(outcome)) throw toPipelineError(errorCodeRegistry, outcome.error); // RETRY_CLASS -> Permanent | Transient
 ```
 
 `toPipelineError` reads `RETRY_CLASS`, so ADR-18's "decided at the throw site, never by regex on
@@ -204,7 +229,7 @@ itself: a parent flow job reads its children's return values, and the wrapper st
 
 ### Classifying something that is already an exception
 
-`classifyError(error)` in `@vp/errors` is the one place that answers "is this permanent". It returns
+`classifyError(set, error)` in `@kit/errors`, called with the app's `errorCodeRegistry`, is the one place that answers "is this permanent". It returns
 `'permanent' | 'transient' | 'unknown'`, and **`unknown` is a third answer on purpose**: ADR-18
 retries an unrecognised error a little and then parks it, which needs a lower attempt cap than a
 failure positively classified as transient. Collapsing the two silently gives every unrecognised
@@ -216,7 +241,7 @@ It decides in this order:
 2. `name === 'UnrecoverableError'` - the one foreign class recognised structurally. `bullmq` is
    confined to `packages/server/adapters/**`, so `apps/server/worker` and the in-memory queue double
    *cannot* import it. The BullMQ adapter, which may, uses a real `instanceof`.
-3. `RETRY_CLASS[code]` for anything carrying a code.
+3. The set's retry class (`RETRY_CLASS` for this app) for anything carrying a code.
 4. Otherwise `unknown`.
 
 **Never read a class name, a message or an `isRetryable` field yourself.**

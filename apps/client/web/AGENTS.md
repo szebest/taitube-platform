@@ -220,7 +220,7 @@ One preference store behind the settings area, with a catalogue per section in `
   quality), `FeedVideoCard` hands the card `expandOnHover`. A new playback default is a catalogue field plus the
   consumer reading `usePlaybackPreference`, never a `localStorage` key.
 - **Adding a row**: add the id to `SETTING_ROWS` in `settings-index.ts`, its words to `settings.rowLabel`,
-  `rowKeywords` and (for a switch) `rowDescription` in `@vp/messages`, the row component in
+  `rowKeywords` and (for a switch) `rowDescription` in `src/lib/messages/{en,pl}/settings*.ts`, the row component in
   `features/account/components/` over `SettingItem` (or `SettingSwitchRow`), and the row to its page in
   `routes/settings/`. Search, the overview cards and the `#row` highlight come from the index.
 - Gaps owned elsewhere: the stats overlay (57) and autoplay next (73's queue) are saved but nothing reads them
@@ -485,7 +485,7 @@ validation literal.
 
 ### Rule 5: Components never format
 Every number, date, duration and count goes through `@kit/intl-react`: `<Format value={...} />`,
-`useT().tOr(...)` or `useFormat()`. The root route negotiates the locale (`requestLocale`) and the router
+`useT().tOr(...)` (`useT` from `#app/lib/messages`, typed by the web catalogue) or `useFormat()`. The root route negotiates the locale (`requestLocale`) and the router
 passes it with `timeZone="UTC"`, so the server and the hydration print the same text; a route's `head`
 words itself through `headWords(match.context.locales.snapshot())`. `no-adhoc-formatting.test.ts` fails
 on `toLocaleString()`, a displayed `toFixed` or an `Intl` constructor. See
@@ -522,7 +522,7 @@ it('renders the video the loader fetched', async () => {
 ```
 
 It returns Testing Library's render result plus `router`, `queryClient` and a `user` from `userEvent.setup()`.
-`@vp/web-testing/jsdom.setup` fills in the browser APIs jsdom lacks (`matchMedia`, `scrollTo`,
+`@kit/web-testing/jsdom.setup` fills in the browser APIs jsdom lacks (`matchMedia`, `scrollTo`,
 `IntersectionObserver`). jsdom specs run isolated (`isolate: true` in `vitest.jsdom.config.ts`), so
 Testing Library's `screen`, `userEvent` and its automatic cleanup belong to the file that runs them. A spec that expects an error page
 silences the error React logs with `vi.spyOn(console, 'error').mockImplementation(() => undefined)`.

@@ -1,6 +1,6 @@
+import { parseParam } from '@kit/query';
 import { createFileRoute } from '@tanstack/react-router';
 import { ChannelHandleParamSchema } from '@vp/api-contracts';
-import { parseParam } from '@vp/queries';
 import { z } from 'zod';
 import { ChannelPage, loadChannelPage } from '#app/features/channel';
 import { WEB_URL } from '#app/lib/config';

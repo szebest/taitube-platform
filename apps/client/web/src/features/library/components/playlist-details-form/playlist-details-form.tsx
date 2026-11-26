@@ -1,6 +1,5 @@
 import { useAppForm } from '@kit/forms';
-import { useT } from '@kit/intl-react';
-import { Button, useUiCopy } from '@kit/ui';
+import { Button } from '@kit/ui';
 import type { PlaylistView } from '@vp/api-contracts';
 import { PLAYLIST_VISIBILITIES } from '@vp/domain';
 import { useUpdatePlaylist } from '#app/features/library/hooks/use-update-playlist';
@@ -8,6 +7,7 @@ import {
   useValidatePlaylistDescription,
   useValidatePlaylistTitle,
 } from '#app/features/library/hooks/use-validate-playlist-title';
+import { useT } from '#app/lib/messages';
 
 export interface PlaylistDetailsFormProps {
   playlist: Pick<PlaylistView, 'id' | 'title' | 'description' | 'visibility'>;
@@ -17,7 +17,7 @@ export interface PlaylistDetailsFormProps {
 /** The owner's edit of a playlist's title, description and privacy, in place of the hero's text. */
 export function PlaylistDetailsForm({ playlist, onDone }: PlaylistDetailsFormProps) {
   const { tOr } = useT();
-  const { cancel } = useUiCopy();
+  const cancel = tOr('ui.cancel', {}, '');
   const update = useUpdatePlaylist(playlist.id);
   const validateTitle = useValidatePlaylistTitle();
   const validateDescription = useValidatePlaylistDescription();

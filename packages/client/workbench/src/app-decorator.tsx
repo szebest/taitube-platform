@@ -18,7 +18,9 @@ import {
   type Session,
   SessionProvider,
 } from '@vp/queries';
+import type { ActiveLocale } from '@vp/queries/intl';
 import { createContext, type PropsWithChildren, type ReactNode, use, useState } from 'react';
+import { WEB_MESSAGES, type WebCatalogue } from '../../../../apps/client/web/src/lib/messages';
 import { pickLocale } from './decorator';
 import { type ApiReply, inMemoryApi } from './in-memory-api';
 import { WebProviders } from './web-providers';
@@ -79,7 +81,7 @@ const VIEWER: Account = {
 
 const StoryContext = createContext<ReactNode>(null);
 
-type ActiveWords = Parameters<typeof AppWords>[0]['active'];
+type ActiveWords = ActiveLocale<WebCatalogue>;
 
 const ActiveContext = createContext<ActiveWords | undefined>(undefined);
 
@@ -127,7 +129,7 @@ function StoryApp({
   const [toaster] = useState(createToaster);
   const [router] = useState(() =>
     createStoryRouter(client, ({ active: words, children: story }) => (
-      <AppWords active={words}>
+      <AppWords messages={WEB_MESSAGES} active={words}>
         <ApiProvider api={api}>
           <SessionProvider session={session}>
             <Tooltip.Provider>

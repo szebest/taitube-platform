@@ -1,8 +1,8 @@
+import { MAX_APPEARANCE_OVERRIDES } from '@kit/appearance';
 import { assertNever } from '@kit/result';
 import {
   APPEARANCE_SETTINGS,
   type AppearancePreferences,
-  MAX_APPEARANCE_OVERRIDES,
   type MergePatch,
   mapSection,
   NOTIFICATION_SETTINGS,

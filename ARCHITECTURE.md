@@ -19,8 +19,9 @@ This document describes the architectural boundaries, ports, and adapters layer 
 
 ## 2. Directory Layout
 
-Shared code sits under `packages/<tier>/` and apps under `apps/<tier>/`, where the directory **is** the runtime tier
-(Invariant 5).
+Shared code sits under `packages/<tier>/` (app packages) or `packages/platform/<tier>/` (platform packages) and apps
+under `apps/<tier>/`, where the directory **is** the runtime tier (Invariant 5) and `platform/` is the scope
+(Invariant 11).
 
 ```
 taitube-platform/
@@ -31,25 +32,32 @@ taitube-platform/
 │   └── client/                     # browser only
 │       └── web/                    # Taitube web client (TanStack Start, React 19)
 │
-├── packages/universal/             # runs in a browser AND on a server
+├── packages/platform/              # reusable by a second app, names no @vp package (Invariant 11)
+│   ├── universal/                  # @kit/appearance, design-tokens, di, errors, i18n, intl, machine, pagination,
+│   │                               #   permissions, primitives, result, runtime, tsconfig, validation
+│   ├── client/                     # @kit/components, forms, intl-react, query, security-headers, ui,
+│   │                               #   web-telemetry, web-testing
+│   └── server/                     # @kit/compose-autoscaler, composition, concurrency, config, dev-token, keyspace,
+│                                   #   logger, object-storage, observability, testing, vite-preset
+│
+├── packages/universal/             # app packages that run in a browser AND on a server
 │   ├── api-contracts/              # @vp/api-contracts - every endpoint schema, one entry per route
-│   ├── design-tokens/              # @kit/design-tokens - the token group schemas of the design system
 │   ├── domain/                     # @vp/domain - entities, value objects, status vocabulary, ranking policy
 │   ├── domain-rules/               # @vp/domain-rules - pure rules over input plus an entity
-│   ├── errors/                     # @vp/errors - the ErrorCode vocabulary, failures, RFC 9457 mapping
-│   ├── intl/                       # @kit/intl - every user-facing format, on Intl, context as an argument
-│   ├── messages/                   # @vp/messages - typed dt()/t, the en catalogue, ERROR_COPY
-│   ├── pagination/                 # @kit/pagination - the one keyset Paginator and cursor codec
-│   ├── permissions/                # @vp/permissions - the pure CASL authorization engine
-│   ├── result/                     # @kit/result - Result, tryCatch/fromPromise, ignore
-│   ├── tsconfig/                   # @kit/tsconfig - base / server / universal / client / spec presets
-│   └── validation/                 # @vp/validation - pure rules over submitted input
+│   ├── errors/                     # @vp/errors - the app's error codes, ErrorCode vocabulary, RFC 9457 mapping
+│   ├── intl-formats/               # @vp/intl-formats - the app's format presets
+│   ├── shared-messages/            # @vp/shared-messages - copy shared by both apps, the locale list, the app engine
+│   ├── permissions/                # @vp/permissions - the app's CASL rules
+│   └── validation/                 # @vp/validation - the app's rules over submitted input
 │
-├── packages/client/                # browser only
+├── packages/client/                # app packages, browser only
 │   ├── api-client/                 # @vp/api-client - typed client over @vp/api-contracts
-│   └── intl-react/                 # @kit/intl-react - IntlProvider, useT, useFormat, <Format>
+│   ├── permissions-react/          # @vp/permissions-react - <Can> and the ability hooks
+│   ├── queries/                    # @vp/queries - query factories and the session over the typed client
+│   ├── web-testing/                # @vp/web-testing - spec helpers bound to this product's client
+│   └── workbench/                  # @vp/workbench - Storybook over every app's stories
 │
-├── packages/server/                # Node/Bun only
+├── packages/server/                # app packages, Node/Bun only
 │   ├── core/                       # @vp/core - abstract ports and repository contracts
 │   │   ├── ports/                  # authorization, cache-client, category-cache, database-client,
 │   │   │                           #   flow-producer, health-checkable, job-queue, multipart-storage,
@@ -65,25 +73,17 @@ taitube-platform/
 │   │   ├── postgres/               # repositories/, mappers/, scopes/ (CASL rules -> SQL, keyset)
 │   │   ├── redis/                  # RedisCacheClient and the category, reaction, subscription, comment and playhead caches
 │   │   └── s3/                     # S3StorageClient, S3MultipartStorage (@aws-sdk/client-s3)
-│   ├── composition/                # @kit/composition - Container, tokens, shutdownOnce, exitOnSignals
-│   ├── concurrency/                # @kit/concurrency - Singleflight
-│   ├── config/                     # @kit/config - loadEnv(), the one reader of process.env
 │   ├── db/                         # @vp/db - Drizzle schema, client, migrations, the seed functions
 │   ├── env-schema/                 # @vp/env-schema - the zod schema, AppConfig and toAppConfig
 │   ├── events/                     # @vp/events - publishVideoEvent, channels, cache keys
 │   ├── ffmpeg/                     # @vp/ffmpeg - argument builders, progress parsers, probe rules
 │   ├── fingerprint/                # @vp/fingerprint - frame dHash, Chromaprint, the offset-vote matcher
 │   ├── job-contracts/              # @vp/job-contracts - BullMQ payloads, queue names, the ladder
-│   ├── keyspace/                   # @kit/keyspace - the SSE message envelope, frame and keep-alive comment
-│   ├── logger/                     # @kit/logger - createLogger (pino), json and pretty formats
-│   ├── object-storage/             # @kit/object-storage - S3 object headers and multipart part sizing
-│   ├── observability/              # @kit/observability - OpenTelemetry tracing, the metrics registry and server
 │   ├── pipeline-metrics/           # @vp/pipeline-metrics - the product's Prometheus metrics and tracer name
 │   ├── storage/                    # @vp/storage - the S3 object key layout
-│   ├── testing/                    # @kit/testing - definePackageTestConfig, withEnv, Result and log helpers
 │   ├── testing-fixtures/           # @vp/testing-fixtures - the seeded rows, the production-shaped env, the infra specs
 │   ├── whisper/                    # @vp/whisper - whisper.cpp runner, caption windows, WebVTT
-│   └── compose-autoscaler/ dev-token/ gen-video/ upload-client/   # developer CLIs
+│   └── demo/ deploy/ dev-identity/ stack/ gen-video/ lighthouse/ upload-client/   # developer tooling and CLIs
 │
 └── tests/
     ├── architecture/               # the executable form of section 5 - see section 6
@@ -240,11 +240,14 @@ packages/server/      Node/Bun only
 packages/client/      browser only
 ```
 
+Each tier also exists under `packages/platform/`, for the packages a second app could use unchanged (Invariant 11).
+The table lists the app packages and the platform packages of each tier.
+
 | Tier | Packages | May depend on |
 |---|---|---|
-| `universal` | `api-contracts`, `design-tokens`, `domain`, `domain-rules`, `errors`, `intl`, `messages`, `pagination`, `permissions`, `result`, `tsconfig`, `validation` | `universal` only — no `node:*`, no server SDK |
-| `server` | `adapters`, `composition`, `compose-autoscaler`, `concurrency`, `config`, `core`, `db`, `dev-token`, `env-schema`, `events`, `ffmpeg`, `fingerprint`, `gen-video`, `job-contracts`, `logger`, `observability`, `storage`, `testing`, `upload-client`, `whisper` | `universal` + `server` |
-| `client` | `api-client`, `forms`, `intl-react`, `permissions-react`, `queries`, `security-headers`, `ui`, `web-telemetry`, `web-testing`, `workbench` | `universal` + `client` |
+| `universal` | `api-contracts`, `domain`, `domain-rules`, `errors`, `intl-formats`, `messages`, `permissions`, `validation`; platform: `appearance`, `design-tokens`, `di`, `errors`, `i18n`, `intl`, `machine`, `pagination`, `permissions`, `primitives`, `result`, `runtime`, `tsconfig`, `validation` | `universal` only — no `node:*`, no server SDK |
+| `server` | `adapters`, `core`, `db`, `env-schema`, `events`, `ffmpeg`, `fingerprint`, `gen-video`, `job-contracts`, `pipeline-metrics`, `storage`, `testing-fixtures`, `upload-client`, `whisper`; platform: `compose-autoscaler`, `composition`, `concurrency`, `config`, `dev-token`, `keyspace`, `logger`, `object-storage`, `observability`, `testing`, `vite-preset` | `universal` + `server` |
+| `client` | `api-client`, `permissions-react`, `queries`, `web-testing`, `workbench`; platform: `components`, `forms`, `intl-react`, `query`, `security-headers`, `ui`, `web-telemetry`, `web-testing` | `universal` + `client` |
 
 Apps take their tier from their directory the same way: `apps/server/api` and `apps/server/worker` are `server`,
 `apps/client/web` and `apps/client/studio` are `client`. No app is `universal`, and an app anywhere else has no tier.
@@ -368,17 +371,39 @@ Both deployables build one object graph from one `Container` (`@kit/composition`
 ### Invariant 10: User-Facing Formatting Happens in `@kit/intl`
 
 Every number, date, duration, list and count a person reads is formatted by `@kit/intl` (SDD ADR-26), and
-every word around it comes from `@vp/messages`.
+every word around it comes from a catalogue: each client app's own (`src/lib/messages/`) or
+`@vp/shared-messages` for the words both apps render.
 
 - **No ad-hoc formatting.** No `toLocale*` call and no hand-built `Intl` object outside `@kit/intl`, and no
   `toFixed` as display text in browser-reachable code. `@kit/intl-react`'s `browser-environment.ts` reads the
   runtime's time zone and is the one named exception.
-- **The context is an argument.** Neither `@kit/intl` nor `@vp/messages` reads `navigator`, the clock,
+- **The context is an argument.** Neither `@kit/intl` nor a catalogue reads `navigator`, the clock,
   `process` or a `toLocale*` method, so a server render and its hydration produce the same text.
-- **The server returns codes.** No `apps/server/api`, `apps/server/worker` or `packages/server` source or manifest names
-  `@vp/messages`; the client renders a failure through `ERROR_COPY`, which covers every `ErrorCode`.
+- **The server returns codes.** No `apps/server/api`, `apps/server/worker` or `packages/server` source imports a
+  catalogue; the server reads only `@vp/shared-messages/locales`, the locale list. The client renders a failure through `ERROR_COPY`, which covers every `ErrorCode`.
 
 Authority: [docs/standards/formatting-and-i18n.md](docs/standards/formatting-and-i18n.md).
+
+### Invariant 11: Platform Packages Never Name the App
+
+A package under `packages/platform/<tier>/` (`@kit/*`) is reusable by a second app and extractable on its own.
+Whether a package belongs there is the first question for any new one (`packages/AGENTS.md`, "Platform or app").
+
+- **It never depends on, imports or names a `@vp/*` package**: not in a manifest field, an import, a `vi.mock`, a
+  tsconfig path, an alias, a `setupFiles` string, a doc or a test string. There is no allowlist and no carve-out.
+  Where it needs a value the app owns, the dependency is inverted: a required typed parameter, port or prop, or a
+  `@kit/di` token the app provides at its composition root. A generic piece an app package holds moves into a `@kit`
+  package; copying it is never the fix.
+- **It owns the codes it emits and none of the app's**, holds no copy, no product value and no import-time
+  registration, and exposes only what its `exports` map lists.
+- **Its surface is reviewed**: `api/<name>.api.txt` from `pnpm gen:api`, a changelog entry and a version bump for any
+  change, extension rather than edit, a type-level spec for every public generic, and no `any`, assertion, `!` or
+  `@ts-ignore` in its source.
+- **It works outside the repository**: `pnpm check:extractable` (`scripts/check-extractable.ts`, CI job `extractable`)
+  installs each closure offline outside the repository and runs its checks, and `tests/fixtures/second-app/`
+  registers its own values against packed tarballs.
+
+Authority: [docs/standards/platform-packages.md](docs/standards/platform-packages.md). Section 6 lists the assertions.
 
 ## 6. Verification & Enforcement
 
@@ -440,12 +465,13 @@ fails.
 
 | Assertion | Holds | Fixture that proves it fires |
 |---|---|---|
-| `package-boundaries.test.ts` | `checkBoundaries()` from `scripts/check-boundaries.ts`, over every manifest under `packages/` and `apps/`: a package or app takes its tier from its `packages/<tier>/` or `apps/<server\|client>/` directory, or `packages/platform/<tier>/`, one anywhere else has none, and none may declare `vp.tier`; tiers only depend where allowed (`universal` never on `server`); dependencies point strictly down, devDependencies included, a dev edge on `BUILD_TOOLING` exempt and a runtime one still checked; a package under `packages/platform/` depends, peer-depends and dev-depends only on platform packages, build tooling included, or on an app package `scripts/package-moves.json` sends to `@kit/*` (the pending-move allowance) | planted manifests: a `client` package depending (and dev-depending) on a `server` one, and a `client` app doing the same; an app outside `apps/<server\|client>/`; a `vp.tier` on a package and on an app; a T2 package depending on a T4 one; a runtime dependency on each `BUILD_TOOLING` package; a platform package depending, dev-depending and dev-depending as build tooling on an app package, and one depending on an app package whose move to `@kit/*` is pending (allowed); a platform `client` package depending on a platform `server` one |
-| `platform-no-app-data.test.ts` | in the non-test source of every package under `packages/platform/` (whichever exist, through `workspace-packages.ts`): no string, template part or JSX text names the product (`taitube`, `video-pipeline`, `vp-dev`, `vp.`, `vp_`), equals a key of `@vp/env-schema`'s `AppEnvSchema`, or is a route path, and no import (`import`, `export from`, `import()`, `require`) names an app-side package, an app or an unknown `@vp/*` package, except one `scripts/package-moves.json` sends to `@kit/*` (the pending-move allowance) (compiler scanner and AST) | `'taitube'`, `` `video-pipeline/${x}` ``, `'vp-dev'`, `'vp.session'`, `'vp_requests_total'`, JSX text naming the product, `'DATABASE_URL'`, `'/v1/categories'`, and imports of an app package, an app, a dynamic app import and `@vp/ghost`; `rsvp.yes`, a bare `/` and a pending package pass |
+| `package-boundaries.test.ts` | `checkBoundaries()` from `scripts/check-boundaries.ts`, over every manifest under `packages/` and `apps/`: a package or app takes its tier from its `packages/<tier>/` or `apps/<server\|client>/` directory, or `packages/platform/<tier>/`, one anywhere else has none, and none may declare `vp.tier`; tiers only depend where allowed (`universal` never on `server`); dependencies point strictly down, devDependencies included, a dev edge on `BUILD_TOOLING` exempt and a runtime one still checked; a package under `packages/platform/` depends, peer-depends and dev-depends only on platform packages, build tooling included, with no allowance for a package `scripts/package-moves.json` still lists; no dependency, peer or dev spec of a platform manifest is a `link:`, `file:` or `workspace:` path that resolves outside `packages/platform/` | planted manifests: a `client` package depending (and dev-depending) on a `server` one, and a `client` app doing the same; an app outside `apps/<server\|client>/`; a `vp.tier` on a package and on an app; a T2 package depending on a T4 one; a runtime dependency on each `BUILD_TOOLING` package; a platform package depending, dev-depending and dev-depending as build tooling on an app package, and one depending on an app package that `scripts/package-moves.json` sends to `@kit/*` (still rejected); a platform `client` package depending on a platform `server` one; a platform manifest entry `link:`, `file:` and `workspace:` pathing into app code (read through `load()` from a temporary tree too), and a path to a platform sibling that passes |
+| `platform-no-app-data.test.ts` | in the non-test source of every package under `packages/platform/` (whichever exist, through `workspace-packages.ts`): no string, template part or JSX text names the product (`taitube`, `video-pipeline`, `vp-dev`, `vp.`, `vp_`), equals a key of `@vp/env-schema`'s `AppEnvSchema`, or is a route path, and no import (`import`, `export from`, `import()`, `require`) names an app-side package, an app or an unknown `@vp/*` package (compiler scanner and AST) | `'taitube'`, `` `video-pipeline/${x}` ``, `'vp-dev'`, `'vp.session'`, `'vp_requests_total'`, JSX text naming the product, `'DATABASE_URL'`, `'/v1/categories'`, and imports of an app package, an app, a dynamic app import and `@vp/ghost`; `rsvp.yes` and a bare `/` pass |
+| `platform-never-names-app.test.ts` | every git-tracked file under `packages/platform/`, of any extension (manifests, source, tsconfigs, configs, markdown, `api/*.api.txt`, CHANGELOGs), never contains the substring `@vp/`: no dependency, import, `vi.mock`, alias, `setupFiles` string, tsconfig path, doc mention or test data names an app package (the holy rule of `packages/AGENTS.md`); the failure names the file, the line and the rule | one pure function over `{ path, text }` pairs, planted with a manifest dependency, an import, a `setupFiles` string, a tsconfig path and an `AGENTS.md` mention; `@kit/*` imports, `rsvp/yes` and app-neutral prose pass |
 | `platform-no-copy.test.ts` | AST over platform non-test source: no `dt(` call (callee or method `dt`, tagged template included), no JSX text with a letter, and no `label`, `title`, `aria-label`, `placeholder` or `message` property or JSX attribute whose value is a plain sentence (two words or a closing full stop; a token, key, constant or identifier is not); no tracked file in a platform package is a data file (`.json` other than manifests and tsconfigs, `.po`, `.xlf`, `.ftl`, ...) or sits in a `locales`, `catalogues`, `translations`, `messages` or `xx-XX` directory | `dt('{count:number} views')`, `engine.dt(...)`, `<button>Save changes</button>`, `<b>Close</b>`, `aria-label="Close the dialog"`, `placeholder={'Search videos'}`, `{ label: 'Sign in to continue' }`, a `message` template, and `en.json`, `locales/en.ts`, `pl-PL/a.ts`, `copy.po` |
 | `platform-no-deep-imports.test.ts` | over every tracked `.ts` and `.tsx` file in `apps`, `packages`, `scripts` and `tests`: no import of a platform package names a subpath its `exports` does not list (`@kit/<pkg>/src/...` included; `*` patterns honoured); over every file in a platform package: no relative import resolves outside the package root (compiler scanner) | `@kit/di/src/registry`, `@kit/di/dist/index`, `@kit/runtime/server`, `@kit/ui/icons` against `icons/*`, `vi.mock(import('@kit/runtime/src/node'))`, and relative imports into a sibling package and the repository root |
 | `platform-no-import-time-registration.test.ts` | AST over platform non-test source: no top-level statement (blocks, `if`, immediately invoked functions included; function, method and class bodies excluded) calls `provide*`, `define*` or `register*` with its result dropped, and none calls `register*` at all; a bound `defineKind(...)` or `provide(token, value)` builds a value and passes | `provide(Locale, 'en');`, `defineErrorCodes(...)`, `registry.register(kind)`, `const off = registerKind(kind)`, `await defineLocale('en')`, a call in a top-level block, in an immediately invoked arrow, in a default export |
-| `platform-manifest.test.ts` | every package under `packages/platform/` has a `name`, a semver `version`, an `exports` map with a `.` entry, `types`, `sideEffects: false`, `"type": "module"`, `README.md`, `AGENTS.md`, `api/<name>.api.txt`, a `CHANGELOG.md` with an entry for its `version`, a `tsconfig.json`, and every `tsconfig*.json` extends only a sibling `./tsconfig*.json` or a preset of `@kit/tsconfig` (the package `package-moves.json` names, `@kit/tsconfig`, once it exists); its `dependencies` are workspace packages only (third-party libraries are peers), and no dependency, peer or dev edge names an app package other than one whose move is pending (`dependsOnAppPackage`, the function `pnpm boundaries` uses) | a manifest missing each field in turn, `sideEffects: true`, a changelog without the version, a tsconfig extending the repository base or another package, a third-party runtime dependency, and an app package as dependency, peer and devDependency |
+| `platform-manifest.test.ts` | every package under `packages/platform/` has a `name`, a semver `version`, an `exports` map with a `.` entry, `types`, `sideEffects: false`, `"type": "module"`, `README.md`, `AGENTS.md`, `api/<name>.api.txt`, a `CHANGELOG.md` with an entry for its `version`, a `tsconfig.json`, and every `tsconfig*.json` extends only a sibling `./tsconfig*.json` or a preset of `@kit/tsconfig` (the package `package-moves.json` names, `@kit/tsconfig`, once it exists); its `dependencies` are workspace packages only (third-party libraries are peers), and no dependency, peer or dev edge names an app package (`dependsOnAppPackage`, the function `pnpm boundaries` uses) | a manifest missing each field in turn, `sideEffects: true`, a changelog without the version, a tsconfig extending the repository base or another package, a third-party runtime dependency, and an app package as dependency, peer and devDependency |
 | `platform-type-strictness.test.ts` | AST over platform non-test source, with no exception list: no `any`, no type assertion (`as T`, `<T>x`) except `as const`, no non-null `!`, no `@ts-ignore` or `@ts-nocheck` | `a: any`, `Array<any>`, `x as string`, `x as unknown as string`, `<string>x`, `map.get(k)!`, `map.get(k)!.size`, both directives; `as const`, `satisfies`, a mapped-type `as` and `@ts-expect-error` pass |
 | `package-moves.test.ts` | type-aware, on the shared `ts.Program`: every key of `scripts/package-moves.json` is a workspace package; a split package lists every export entry its manifest declares, and each listed entry names exactly the exports the entry has today, each with its destination package | planted moves: a package no manifest declares; an unlisted entry, an export with no destination and one the package no longer exports |
 | `sdk-confinement.test.ts` | regex over import specifiers: `@aws-sdk/*`, `ioredis`, `bullmq`, `onnxruntime-node`, `postgres` and `drizzle-orm` are named only under `packages/server/adapters/` and `packages/server/db/` across `.ts`/`.tsx` in `apps`, `packages`, `scripts`, `tests` and `tools`, and declared in no other manifest (root included); `@vp/adapters` is imported, **within `apps/` only**, from a `composition/` module, `app.ts` or `runner.ts` | `import { CaslAuthorizationAdapter } from '@vp/adapters'` at a service path |
@@ -483,11 +509,13 @@ fails.
 | `result-returning-ports.test.ts` | regex over method signatures: every `Promise`-returning abstract or interface method in `@vp/core` `ports/` and `repositories/`, and every `export async function` in `@vp/events`, returns `Promise<Result<...>>` | none - reads the repo |
 | `no-discarded-result.test.ts` | no expression statement in production source leaves a `Result` or a promise of one unread, through `await`, `void`, parentheses or a trailing `.catch`/`.finally` (type-aware, on the shared `ts.Program`); a deliberate drop is `ignore(result, 'reason')` | a fixture program with `await repo.remove();`, `void repo.remove();`, `repo.remove().catch(() => {});` and `check();` |
 | `error-vocabulary.test.ts` | AST: no string literal assigned to a `code` / `errorCode` / `error_code` property in `apps/server/api`, `apps/server/worker`, `packages/server`, `packages/universal` or `scripts` is outside `ErrorCodes` (metric labels aside), and every `*Options`/`*Input` interface in `@vp/core` `repositories/` types its `errorCode` as `ErrorCode` | `{ errorCode: 'ORPHANED_VIDEO' }`; `interface FailStepOptions { errorCode: string }` |
-| `intl-purity.test.ts` | AST over production source in `@kit/intl` and `@vp/messages`: no `navigator`, `window`, `document`, `localStorage` or `process` identifier, no `Date.now()`, no zero-argument `new Date()`, no `toLocale*` call | `const locale = navigator.language;`, `const today = new Date();` |
+| `intl-purity.test.ts` | AST over production source in `@kit/intl`, `@kit/i18n` and `@vp/shared-messages`: no `navigator`, `window`, `document`, `localStorage` or `process` identifier, no `Date.now()`, no zero-argument `new Date()`, no `toLocale*` call | `const locale = navigator.language;`, `const today = new Date();` |
 | `no-adhoc-formatting.test.ts` | AST over production source outside `@kit/intl` (and `@kit/intl-react`'s `browser-environment.ts`, which reads the runtime zone, and `@vp/queries`' `request-locale.ts`, which parses the tags it negotiates): no `toLocale*` call, no `new Intl.X(...)` or `Intl.X(...)` construction; in `apps/client/*`, `packages/client` and `packages/universal`, no `toFixed` | `new Date(x).toLocaleDateString()`, `` `${size.toFixed(1)} MB` `` |
-| `messages-are-client-only.test.ts` | regex over import specifiers and manifests: no production source under `apps/server/api`, `apps/server/worker` or `packages/server` imports `@vp/messages`, and no manifest there declares it | `import { en } from '@vp/messages';` |
-| `error-copy-coverage.test.ts` | regex over text: every code in `api-error-codes.ts` and `pipeline-error-codes.ts` has an `[ErrorCodes.X]` entry in `ERROR_COPY`, and every entry names a message `src/en/errors.ts` declares | a planted map holding only `INTERNAL` |
-| `catalogue-parity.test.ts` | every catalogue `SUPPORTED_LOCALES` lists, loaded through `LOCALE_DETAILS`, holds exactly the `feature.key` set `en` holds, in both directions | a planted translation missing `videos.title`, and one declaring `videos.gone` |
+| `translation-layers.test.ts` | every key of the shared catalogue (`@vp/shared-messages`) has two consumers in the type-aware scan (`tests/architecture/message-key-usage.json`, `pnpm scan:message-keys`): web and studio, or a client and a server; a key rendered through `@vp/queries` or the `ERROR_COPY` registry reaches both apps | a planted `ui.planted` key only web renders, and one nothing renders |
+| `plural-categories.test.ts` | every plural in each app's source catalogue and translations holds exactly the categories `Intl.PluralRules(locale, { type }).resolvedOptions().pluralCategories` lists for its locale, plus `other` | a planted `pl` plural with only `one` and `other`, and one with `zero` |
+| `message-param-names.test.ts` | AST over every `dt(` template in the shared and app catalogues, and the vocabulary in `params.ts`: each placeholder name is lower camelCase letters, so no positional or numbered name | `dt('{0} views')`, `dt('{count2:number}')`, `dt('Hi {Name}')` |
+| `error-copy-coverage.test.ts` | regex over text: every code in `api-error-codes.ts` and `pipeline-error-codes.ts` has an `[ErrorCodes.X]` entry in `ERROR_COPY`, and every entry names a message the shared catalogue declares | a planted map holding only `INTERNAL` |
+| `catalogue-parity.test.ts` | every translation each app loads (web and studio, for every locale `LOCALES` lists) holds exactly the `feature.key` set of that app's source catalogue, shared words included, in both directions | a planted translation missing `videos.title`, and one declaring `videos.gone` |
 | `single-locale-source.test.ts` | AST over production source: `navigator.language` / `navigator.languages` (dotted, indexed or destructured, `window.navigator` too) is read in `packages/client/queries/src/request-locale.ts` and nowhere else | `const tags = navigator.languages;` |
 | `no-in-probes.test.ts` | no `'literal' in value` narrowing in production source, the browser tier included (AST) | `if ('rendition' in child)` |
 | `keyset-timestamps.test.ts` | in `packages/server/adapters/postgres/`, a `keysetBefore`/`keysetPast` sort key, a cursor comparison written by hand in a `sql` template (a row value compared, or an interpolation that reaches `cursor`), and every `orderBy` whose query reaches either, never reads a raw `*At` column of a `@vp/db` table outside `msTimestamp(...)` (an `IS NULL` test aside), following a name to its `const`, local function or the arguments a local function is called with: `now()` stamps microseconds and a cursor `Date` keeps milliseconds (AST) | a destructured, namespaced and named-import column, one behind a `const`, a local function and a rank input, a hand-written row value, timestamp and sort-key row comparison, and an `orderBy` beside a truncated keyset or comparison, beside a truncated walk and comparison, a clock cutoff, a row compared with a row, a counter, a parameter and an unpaged order |

@@ -1,6 +1,6 @@
+import { axeViolations } from '@kit/web-testing/dom';
 import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
-import { axeViolations } from '@vp/web-testing/dom';
 import { variantNames } from '../../../lib/variant-names';
 import { Label, type LabelProps } from '../label';
 import { labelStyles } from '../label.variants';

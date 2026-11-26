@@ -1,5 +1,5 @@
-import { useT } from '@kit/intl-react';
 import { Field, Select } from '@kit/ui';
+import { useT } from '#app/lib/messages';
 
 const ANY = 'any';
 

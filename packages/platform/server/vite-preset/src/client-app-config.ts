@@ -1,7 +1,7 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { type BundleRules, bundleGuard } from '@kit/vite-preset/bundle-guard';
+import { type BundleRules, bundleGuard, type FlaggedDir } from '@kit/vite-preset/bundle-guard';
 import { type ReactCompiler, reactPlugins } from '@kit/vite-preset/react-plugins';
 import { type Alias, defineConfig, loadEnv, type PluginOption, type SSROptions } from 'vite';
 
@@ -134,7 +134,9 @@ export function vendorChunkOf(moduleId: string): string | null {
   return VENDOR_GROUPS.find(({ test }) => test.test(moduleId))?.name ?? null;
 }
 
-export type ClientAppOptions = BundleRules & {
+export type ClientAppOptions = Omit<BundleRules, 'flaggedDirs'> & {
+  /** Directories only a build with their environment variable `true` may carry; the preset reads the variable with `loadEnv`. */
+  flaggedDirs?: readonly Pick<FlaggedDir, 'dir' | 'env'>[];
   /** Routes rendered to static HTML at build time, into the client output, for a service worker to precache. */
   prerender?: readonly string[];
   /** The `import.meta.url` of the app's `vite.config.ts`. */
@@ -181,14 +183,25 @@ export function clientAppConfig({
   plugins = () => [],
   prerender = [],
   compiler,
+  flaggedDirs = [],
   ...rules
 }: ClientAppOptions) {
   return defineConfig(async ({ command, mode }) => {
     // A CommonJS dependency a workspace package brings in, inlined next to an external `react`,
     // would `require` it at runtime from an image that ships no node_modules.
     const ssr: SSROptions = command === 'build' ? { noExternal: true } : {};
-    const { VITE_DEMO_PERSONAS } = loadEnv(mode, dirname(fileURLToPath(configUrl)), 'VITE_');
-    const guarded = { ...rules, demoPersonas: VITE_DEMO_PERSONAS === 'true' };
+    const flags = loadEnv(
+      mode,
+      dirname(fileURLToPath(configUrl)),
+      flaggedDirs.map(({ env }) => env)
+    );
+    const guarded = {
+      ...rules,
+      flaggedDirs: flaggedDirs.map((flagged) => ({
+        ...flagged,
+        enabled: flags[flagged.env] === 'true',
+      })),
+    };
     return {
       resolve: { alias: workspaceSourceAliases() },
       ssr,
@@ -202,6 +215,8 @@ export function clientAppConfig({
           optimizeDeps: { entries: WORKSPACE_ENTRIES },
           build: {
             rolldownOptions: {
+              // Merging fires only while it makes no chunk cycle, so any import edit could fold the shared chunks into the entry.
+              experimental: { chunkOptimization: { mergeCommonChunks: false } },
               output: { codeSplitting: { groups: VENDOR_GROUPS } },
             },
           },

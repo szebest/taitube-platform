@@ -1,6 +1,6 @@
-import { useT } from '@kit/intl-react';
 import { Drawer } from '@kit/ui';
 import type { ReactNode } from 'react';
+import { useT } from '#app/lib/messages';
 
 export interface ShortsCommentSheetProps {
   open: boolean;

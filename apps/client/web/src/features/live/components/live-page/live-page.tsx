@@ -1,9 +1,9 @@
 import { EmptyLibraryIllustration, EmptyState } from '@kit/components';
-import { useT } from '@kit/intl-react';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import { useApi } from '@vp/queries';
 import { liveNowQueryOptions } from '#app/features/live/api/live-queries';
+import { useT } from '#app/lib/messages';
 import { LiveStreamCard } from '../live-stream-card/live-stream-card';
 
 const GRID =

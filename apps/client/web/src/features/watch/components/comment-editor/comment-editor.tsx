@@ -1,6 +1,6 @@
-import { useT } from '@kit/intl-react';
-import { Button, Textarea, useUiCopy } from '@kit/ui';
+import { Button, Textarea } from '@kit/ui';
 import { useState } from 'react';
+import { useT } from '#app/lib/messages';
 
 export interface CommentEditorProps {
   initial: string;
@@ -12,7 +12,7 @@ export interface CommentEditorProps {
 /** The text of a comment being edited, saved only once it differs from what was posted. */
 export function CommentEditor({ initial, saving, onSave, onCancel }: CommentEditorProps) {
   const { tOr } = useT();
-  const { cancel } = useUiCopy();
+  const cancel = tOr('ui.cancel', {}, '');
   const [text, setText] = useState(initial);
   const content = text.trim();
 

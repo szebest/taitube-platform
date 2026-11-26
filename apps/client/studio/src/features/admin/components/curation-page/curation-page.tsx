@@ -1,5 +1,4 @@
 import { EmptyState, PageHeader, SectionError } from '@kit/components';
-import { useT } from '@kit/intl-react';
 import { Button, Icon, Skeleton } from '@kit/ui';
 import { canManagePick } from '@vp/permissions';
 import { useCan } from '@vp/permissions-react';
@@ -7,6 +6,7 @@ import { useState } from 'react';
 import type { AdminPick } from '#app/features/admin/api/admin-picks';
 import { useAdminPicks } from '#app/features/admin/hooks/use-admin-picks';
 import { calendarDays } from '#app/features/admin/utils/pick-days';
+import { useT } from '#app/lib/messages';
 import { PickCalendar } from '../pick-calendar/pick-calendar';
 import { PickCancelDialog } from '../pick-cancel-dialog/pick-cancel-dialog';
 import { PickDialog } from '../pick-dialog/pick-dialog';

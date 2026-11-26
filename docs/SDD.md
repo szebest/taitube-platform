@@ -633,6 +633,15 @@ and no such job existed. The result: `apps/client/web → @vp/permissions → @v
 `universal` only when something client-side actually consumes it — `storage`, `job-contracts` and `events`
 were once declared universal with no client consumer, which put BullMQ queue names in the browser-safe tier.
 
+*Scope* answers **could a second app use this package unchanged**, and it is the package's location too: a package
+under `packages/platform/<tier>/<name>` is a **platform package**, scope `@kit/*`; any other is an app package,
+scope `@vp/*`. A platform package depends, peer-depends and dev-depends only on platform packages, and **never
+imports, depends on or names a `@vp/*` package**, in code, manifest or docs: where it needs a value the app owns, it
+takes a required typed parameter, port or prop, or a `@kit/di` token the app provides at its composition root. A
+package that is half of each is split: the generic half moves to `@kit/<name>`, the app half keeps its name and
+depends on it. The extra rules (explicit `exports`, an API snapshot, versions, type-level specs, contract suites,
+the extractability check) are in [docs/standards/platform-packages.md](standards/platform-packages.md).
+
 *Layer* answers **which way may dependencies point**, declared as `vp.layer`: T1 foundation, T2 contracts and
 policy, T3 domain capability, T4 integration, T5 app modules (code more than one application shares, such as
 the query factories over `@vp/api-client`), T6 applications, T7 reference tools that drive one. Dependencies
@@ -654,8 +663,10 @@ on its jsdom stubs and axe helper, and the alternative to the exemption was a co
 - `@kit/tsconfig` presets give `universal`/`client` packages `lib` with `DOM` and `types: []`, so a Node
   builtin is a type error.
 - `tests/architecture/package-boundaries.test.ts` asserts the same rules in the unit suite.
-- Package **names** are unchanged by the move, so no source import specifier changed; only `package.json`
-  paths, tsconfig `extends`, turbo globs, Docker contexts and CI paths did.
+- The tier move changed no name. Moving a package into `packages/platform/` renamed it `@kit/*`, which the
+  specifier codemod rewrote at export level, so a split package's importers took one import per half.
+- `pnpm boundaries` and `platform-never-names-app.test.ts` fail on a platform edge to an app package and on the
+  substring `@vp/` anywhere under `packages/platform/`, with no allowlist.
 - Changing a package's tier means moving it, which is a deliberate act rather than a one-word edit.
 
 ---
@@ -722,7 +733,7 @@ Authority: [docs/standards/error-handling.md](standards/error-handling.md).
 
 | Rank | Option | Status | Reason |
 |---|---|---|---|
-| 1 | Typed tokens and a hand-written `Container` (`@kit/composition`, server, T2) | **Accepted** | The token carries the type, so `get(VideoService)` types without a cast and a missing edge is a compile error; no dependency, no reflection, same behaviour under Node and Bun |
+| 1 | Typed tokens (`Token<T>` in `@kit/di`, universal) and a hand-written `Container` over them (`@kit/composition`, server) | **Accepted** | The token carries the type, so `get(VideoService)` types without a cast and a missing edge is a compile error; no dependency, no reflection, same behaviour under Node and Bun |
 | 2 | A decorator container resolving by type (`@Injectable`, NestJS-style) | Rejected | Needs `emitDecoratorMetadata` plus a `reflect-metadata` polyfill in the eager path of both deployables; TC39 decorators carry no parameter types, so it pins the legacy flag indefinitely, and transpiler-level behaviour is what dual-runtime parity (Rule 2) exists to keep out. It also trades a compile error for a runtime one |
 | 3 | Keep constructors with optional collaborators and in-service fallbacks | Rejected | Delete a line from the composition root and a different graph boots silently: that is a service locator wearing a constructor |
 
@@ -736,11 +747,19 @@ anyone who sent it. The API installed no `SIGTERM` handler, and the worker infer
 
 **Decision.**
 
-- **One mechanism.** `Token<T>`, `Container.provide / get / override / start / dispose`. A factory is
+- **One mechanism.** `Token<T>` from `@kit/di` (declared in the universal tier so a browser package can declare one),
+  `Container.provide / get / override / start / dispose`. A factory is
   synchronous; I/O a value needs before it is usable runs in its `start` hook, in construction order.
   `dispose()` runs in reverse construction order, aggregates failures, is idempotent, and releases only what
   a factory built, never an override. `shutdownOnce` is the drain both processes share.
-- **Configuration is a value.** `loadEnv()` (`@kit/config`) parses `process.env` once at `main.ts`;
+- **A platform package asks, the app answers.** A value the app hands a platform package is a required, typed
+  parameter, and a `@kit/di` token only where a container resolves it (the error code registry, the catalogues,
+  `Clock`, `Random`, `EnvSource`, `Fetch`). A token with no sensible default has none, so a missing provision is a
+  startup error. The app registers once per deployable, in its composition module; no platform package reads
+  `process.env`, a cookie name, a locale list or the clock on its own
+  ([platform-packages.md](standards/platform-packages.md)).
+- **Configuration is a value.** `loadEnv(schema, env)` (`@kit/config`, the schema is the app's) parses `process.env`
+  once at `main.ts`;
   `toAppConfig()` (`@vp/env-schema`, T3, so `@vp/adapters` at T4 can take it) shapes it into `AppConfig`.
   `CdnBase` is branded and normalised once. Nothing below `main.ts` reads the environment.
 - **`AdapterKind` is the single environment switch.** `config.kind` is derived from `NODE_ENV` in
@@ -773,7 +792,7 @@ collaborators a case touches and build the app through `buildApp({ config, adapt
 
 | Rank | Option | Status | Reason |
 |---|---|---|---|
-| 1 | Three packages on the platform's own `Intl`: `@kit/intl` (universal, T2), `@vp/messages` (universal, T3), `@kit/intl-react` (client, T4) | **Accepted** | No runtime dependency; the core runs in Node for a server render and in the browser for its hydration; the API can format a byte count without linking the product's copy |
+| 1 | Three packages on the platform's own `Intl`: `@kit/intl` (universal), the catalogues (`@vp/shared-messages` for the words both apps render, each client app's own under `src/lib/messages/`), `@kit/intl-react` (client) | **Accepted** | No runtime dependency; the core runs in Node for a server render and in the browser for its hydration; the API can format a byte count without linking the product's copy |
 | 2 | `react-intl` / FormatJS | Rejected | About 50 KB gzipped to wrap built-ins the platform ships, ICU message syntax the repo uses nowhere else, and React-coupled, which the universal core must not be |
 | 3 | `i18next` | Rejected | A runtime and plugin ecosystem for loading and interpolation the repo does not need, with untyped keys and arguments unless a codegen step is added |
 | 4 | `date-fns` plus hand-rolled number helpers | Rejected | A dependency for what `Intl.RelativeTimeFormat` and `Intl.DateTimeFormat` do natively, and the hand-rolled half is exactly what `format-numbers.helper.ts` was |
@@ -794,7 +813,7 @@ would grow its own helper, and no home for the copy that renders a failure code 
   `FORMAT_WRONG_KIND` and `FORMAT_UNRENDERABLE` (§6.2): 422 and permanent, authoring faults that surface in
   tests and warnings rather than responses.
 - **The context is an argument.** Locale, time zone, currency and the reference instant arrive in
-  `FormatContext`; nothing in `@kit/intl` or `@vp/messages` reads `navigator`, the clock, `process` or a
+  `FormatContext`; nothing in `@kit/intl` or a catalogue reads `navigator`, the clock, `process` or a
   `toLocale*` method. The locale is negotiated in one client module, `@vp/queries`' `request-locale.ts`, and
   handed to `IntlProvider`; the zone and the clock are read in `@kit/intl-react` alone.
 - **Options are allowlisted.** Each formatter declares its keys `as const satisfies OptionKeys<...>` and its
@@ -810,16 +829,16 @@ would grow its own helper, and no home for the copy that renders a failure code 
   over the same flat grammar substitutes them through `@kit/intl`. Plural and ordinal branches select through
   `Intl.PluralRules`, so ordinal suffixes are catalogue copy, not formatter data. The grammar has no nesting
   and no escapes; anything richer takes a real parser.
-- **The API returns codes, the client chooses words.** `@vp/messages` is unreachable from a server package,
-  and `ERROR_COPY` is total over `ErrorCode`.
+- **The API returns codes, the client chooses words.** no server package imports a catalogue (the API reads only
+  `@vp/shared-messages/locales`, the locale list), and `ERROR_COPY` is total over `ErrorCode`.
 
 **Consequences.** `docs/standards/formatting-and-i18n.md` is the authority. `tests/architecture/` holds
-`intl-purity`, `no-adhoc-formatting`, `messages-are-client-only` and `error-copy-coverage` (ARCHITECTURE.md
+`intl-purity`, `no-adhoc-formatting`, `translation-layers` and `error-copy-coverage` (ARCHITECTURE.md
 §6). `javascript-time-ago` left `apps/client/web`. Ticket 86 added negotiation, Polish and RTL, and with them
-`catalogue-parity` and `single-locale-source`. **Adding a language** is a catalogue directory under
-`packages/universal/messages/src/<tag>/` holding every `en` key, plus one entry in `SUPPORTED_LOCALES` and
-`LOCALE_DETAILS` (its name in itself, its `direction`, its OpenGraph name, its dynamic import); Polish needed no other change to
-`@kit/intl` or `@vp/messages` source, which is the proof the seam holds. A right-to-left language is the same
+`catalogue-parity` and `single-locale-source`. **Adding a language** is a `<tag>/` directory beside `en/` in `@vp/shared-messages` and in each app's
+`src/lib/messages/`, holding every `en` key, plus one entry in `LOCALES` (its name in itself, its `direction`, its
+OpenGraph name) and one loader per app; Polish needed no other change to
+`@kit/intl` or the message source, which is the proof the seam holds. A right-to-left language is the same
 data change with `direction: 'rtl'`. Each language past `en` costs its own lazy chunk, and every new message
 costs a translation in the same change, which the parity test enforces.
 
@@ -896,7 +915,7 @@ check said whether a theme's text was readable on its grounds.
   switches.
 - **Prop unions are the schemas' keys.** `SizeOption`, `ControlSize`, `IconSize`, `RadiusOption`,
   `ElevationOption`, `TypeStyleOption`, `SpaceStep` are `const` arrays the schemas are keyed by; `ModeOption`
-  and `ContrastOption` come from `@vp/domain/settings`, which the account preference shares with the server.
+  and `ContrastOption` come from `@kit/appearance`, which the account preference shares with the server.
 - **Contrast is a gate, not a review.** Every theme and mode clears the required role pairs (`checkRoleContrast`:
   text 4.5:1, outlines and the focus ring 3:1, translucent grounds composited over `bg`), and a viewer's
   accent is derived in OKLCH to clear its floors on every theme of its mode family (`deriveAccent`).
@@ -2224,7 +2243,7 @@ Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>`
 | `GET /videos?cursor=&limit=&status=` | List mine | — | `200 { items:[VideoSummary], nextCursor }` | Keyset pagination on `(created_at, id)`. |
 | `GET /feed?sort=&format=&categoryId=&cursor=&limit=` | Public video feed | — | `200 { items:[VideoSummary], nextCursor, total }` | Unauthenticated public feed. Multi-sort (recent, popular, trending), `format` (`standard`, the default, or `short`) & categoryId filter, so the main grid carries no Shorts; single-sourced in `packages/universal/domain/src/public-feed.ts` and translated by each adapter. Trending ranks on `(views_count + 1) / (ageHours + 2) ^ 1.5`. Cached in Redis under `taitube:feed:public:{sort}:{format}:{categoryId}` with singleflight & ETag 304; the cache holds the cards without their channel, which every request reads, so the ETag changes with a rename. A signed-in caller's cards also carry `viewer: { progressSeconds, watchedAt } \| null`, read for the whole page in one query on `watch_history`; that page is `Cache-Control: private` and every feed answer says `Vary: Authorization`. The same `viewer` field is on every `VideoSummary` the API returns for a signed-in caller: feed, search, subscription feed, playlist items, home and related. Search caches its page for everyone and adds `viewer` after the cache read. |
 | `GET /v1/shorts?cursor=&limit=` | Shorts feed | — | `200 { items:[VideoSummary], nextCursor, total }` / `400 VALIDATION_FAILED` / `400 INVALID_CURSOR` | Anonymous. The public `READY` videos with `format = 'short'` for the swipe player, ranked as trending times a freshness boost, `(views_count + 1) / (ageHours + 2) ^ 1.5 * (1 + 2 * max(0, 1 - ageHours / 48))` (`SHORTS_FRESHNESS`, `public-feed.ts`), keyset on `(rank, id)`. The opaque cursor carries the last row's rank inputs, the walk's instant and `seen`, the ids already served (at most 60, newest last, comma-joined); the repository leaves `seen` ids out, so a walk never shows a Short twice. Cached and conditional like `GET /feed`, first page only. |
-| `GET /home` | Home shelves | — | `200 { shelves:[{ kind, subject?, items:[VideoSummary & { reason }] }] }` | Anonymous allowed. `kind` is `continue`, `subscriptions`, `because-searched`, `because-watched`, `category`, `rising` or `trending`; `subject` is `{ kind: video\|channel\|category\|query, id, name }` for the shelves that are about one. Heuristics over data the platform already has, no model: `continue` is the viewer's partly watched videos, newest first; `subscriptions` the recent uploads of subscribed channels; `because-searched` (signed in) the viewer's latest `search_history` row of the last 48 hours (`HOME_SHELVES.searchedWindowHours`) as one shelf, `subject: { kind: 'query', id: <row id>, name: <query text> }`, filled by `SearchService.search` for `type=video` with `record=false` (47's ranking and its page cache, so no history row is written) minus videos the viewer has watched (any with a `viewer` playhead), each item's reason `{ kind: 'searched', subjectId: <row id> }`; a new search shows on the next build, at most five minutes later, because searches do not drop the cached page; `because-watched` one shelf for each of the last three videos watched to at least half, filled from that video's related ranking minus what the viewer already watched; `category` one shelf for each of the two categories the viewer watches most, topped up from the categories of the trending page (signed out: those alone); `rising` (everyone) public ready videos created in the last 14 days by channels with at most 1000 subscribers (`channels.subscriber_count`) and at least 20 retention sessions (`video_retention_milestones` at 0 percent), ordered by completion ratio (viewers at the 90 percent step over viewers at 0 percent), ties by newest, one video per channel, never the viewer's own uploads or videos in their watch window, read through `RisingVideosRepositoryPort.find` with the public feed's read scope (the constants, `completionRatio`, `isRisingEligible` and `rankRising` are in `packages/universal/domain/src/rising.ts`, so the Postgres and in-memory implementations rank identically); `trending` the feed's trending ranking. `reason.kind` is data (`continue`, `subscription`, `co-watched`, `shared-tags`, `same-channel`, `same-category`, `category`, `trending`, `searched`, `rising`, with the video, channel, category, search row or channel in `subjectId`); the web app turns it into copy through `@vp/messages`. The page is cached in Redis for five minutes under `taitube:home:{userId}` (`taitube:home:anonymous` signed out) and the viewer's key is dropped by a watch history write, a removal, a clear, a subscribe, an unsubscribe and a recommendation feedback write or undo. What the viewer marked with `PUT /me/recommendation-feedback` (a video, or every video of a channel) is removed from every shelf except `continue` and `subscriptions` (`applyFeedback` in `packages/universal/domain/src/recommendation-feedback.ts`), after the viewer-independent reads: a shelf that loses items shows fewer than twelve and is not back-filled, and an emptied shelf is dropped. One `hiddenOf` read per build, none for a signed-out visitor. `Cache-Control: private, no-cache`, `Vary: Authorization`. |
+| `GET /home` | Home shelves | — | `200 { shelves:[{ kind, subject?, items:[VideoSummary & { reason }] }] }` | Anonymous allowed. `kind` is `continue`, `subscriptions`, `because-searched`, `because-watched`, `category`, `rising` or `trending`; `subject` is `{ kind: video\|channel\|category\|query, id, name }` for the shelves that are about one. Heuristics over data the platform already has, no model: `continue` is the viewer's partly watched videos, newest first; `subscriptions` the recent uploads of subscribed channels; `because-searched` (signed in) the viewer's latest `search_history` row of the last 48 hours (`HOME_SHELVES.searchedWindowHours`) as one shelf, `subject: { kind: 'query', id: <row id>, name: <query text> }`, filled by `SearchService.search` for `type=video` with `record=false` (47's ranking and its page cache, so no history row is written) minus videos the viewer has watched (any with a `viewer` playhead), each item's reason `{ kind: 'searched', subjectId: <row id> }`; a new search shows on the next build, at most five minutes later, because searches do not drop the cached page; `because-watched` one shelf for each of the last three videos watched to at least half, filled from that video's related ranking minus what the viewer already watched; `category` one shelf for each of the two categories the viewer watches most, topped up from the categories of the trending page (signed out: those alone); `rising` (everyone) public ready videos created in the last 14 days by channels with at most 1000 subscribers (`channels.subscriber_count`) and at least 20 retention sessions (`video_retention_milestones` at 0 percent), ordered by completion ratio (viewers at the 90 percent step over viewers at 0 percent), ties by newest, one video per channel, never the viewer's own uploads or videos in their watch window, read through `RisingVideosRepositoryPort.find` with the public feed's read scope (the constants, `completionRatio`, `isRisingEligible` and `rankRising` are in `packages/universal/domain/src/rising.ts`, so the Postgres and in-memory implementations rank identically); `trending` the feed's trending ranking. `reason.kind` is data (`continue`, `subscription`, `co-watched`, `shared-tags`, `same-channel`, `same-category`, `category`, `trending`, `searched`, `rising`, with the video, channel, category, search row or channel in `subjectId`); the web app turns it into copy through its catalogue. The page is cached in Redis for five minutes under `taitube:home:{userId}` (`taitube:home:anonymous` signed out) and the viewer's key is dropped by a watch history write, a removal, a clear, a subscribe, an unsubscribe and a recommendation feedback write or undo. What the viewer marked with `PUT /me/recommendation-feedback` (a video, or every video of a channel) is removed from every shelf except `continue` and `subscriptions` (`applyFeedback` in `packages/universal/domain/src/recommendation-feedback.ts`), after the viewer-independent reads: a shelf that loses items shows fewer than twelve and is not back-filled, and an emptied shelf is dropped. One `hiddenOf` read per build, none for a signed-out visitor. `Cache-Control: private, no-cache`, `Vary: Authorization`. |
 | `GET /videos/:id/related` | Related videos | — | `200 { items:[VideoSummary & { reason }] }` / `404 VIDEO_NOT_FOUND` | Anonymous allowed, readable videos only (a private video of someone else is a 404). Up to 20 public ready videos ranked by viewers who watched both, shared tags, same channel, same category, then views (`compareRelated` in `packages/universal/domain/src/related.ts`; the Postgres query orders by the same signals). `reason.kind` is the strongest signal a video matched on, with the asked video in `subjectId`. The video itself and the caller's own uploads never appear, nor do the videos and channels the caller marked with `PUT /me/recommendation-feedback`. |
 | `PUT /me/recommendation-feedback` | Stop recommending | `{ kind: 'not_interested', videoId } \| { kind: 'hide_channel', channelId }` | `200 { id, kind, videoId \| channelId, createdAt }` / `404 VIDEO_NOT_FOUND` / `404 CHANNEL_NOT_FOUND` | Authenticated. Idempotent: the same target answers the row already there. `VIDEO_NOT_FOUND` for a video the caller may not read (`decideVideoRead`), whatever the reason. It is an explicit act, so it is stored while `privacy.historyPaused` is set. The caller keeps their newest 1000 rows (`RECOMMENDATION_FEEDBACK_LIMIT`): a write that adds one past that deletes the oldest in the same statement. Drops the caller's cached home page. Feedback filters only the home shelves (not `continue` or `subscriptions`) and "More like this"; `/feed`, search, channel pages, playlists and the subscriptions feed never apply it. |
 | `GET /me/recommendation-feedback?kind=&cursor=&limit=` | What I stopped recommending | — | `200 { items:[{ id, kind, videoId \| channelId, createdAt, video?, channel }], nextCursor }` | Authenticated. Newest first, keyset on `(created_at, id)`; `kind` is `not_interested` or `hide_channel`. A `not_interested` row carries the `VideoSummary` (`null` once the caller may no longer watch it) and the channel of the video, a `hide_channel` row its channel card. |

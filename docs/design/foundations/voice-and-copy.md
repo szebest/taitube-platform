@@ -2,7 +2,7 @@
 
 Taitube speaks like a curator, not a marketer: warm, plain, and specific. It is the voice behind the principles
 in [README section 1](../README.md#1-who-taitube-is), especially "Say why". All copy comes from the message
-catalogue (`@vp/messages`); numbers and dates go through `@kit/intl-react`.
+catalogue (`@vp/shared-messages` and each app's own); numbers and dates go through `@kit/intl-react`.
 
 ## The voice
 

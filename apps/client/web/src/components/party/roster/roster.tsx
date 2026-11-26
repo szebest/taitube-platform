@@ -1,6 +1,6 @@
-import { useT } from '@kit/intl-react';
 import { Avatar, Badge, Icon, VisuallyHidden } from '@kit/ui';
 import type { ComponentPropsWithRef, ReactNode } from 'react';
+import { useT } from '#app/lib/messages';
 import { SYNC_COPY } from './constants';
 import type { RosterSource, RosterSync } from './types';
 

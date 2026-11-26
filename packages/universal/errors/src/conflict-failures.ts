@@ -1,5 +1,5 @@
+import type { Failure } from '@kit/errors';
 import { ErrorCodes } from './error-codes';
-import type { Failure } from './failure';
 
 /**
  * Failures a store reports because a constraint said no. They live here rather than in

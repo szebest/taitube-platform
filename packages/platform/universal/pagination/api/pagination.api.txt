@@ -11,7 +11,7 @@ export interface CursorCodec {
     decode(cursor: string): Result<CursorPayload, InvalidCursor>;
 }
 export type CursorPayload = Record<string, string | number>;
-export type InvalidCursor = InputFailure<typeof ErrorCodes.INVALID_CURSOR>;
+export type InvalidCursor = InputFailure<typeof PaginationErrorCodes.INVALID_CURSOR>;
 export const PAGE_SIZE_DEFAULT: 20
 export const PAGE_SIZE_MAX: 100
 export interface Page<TItem> {
@@ -26,6 +26,7 @@ export interface PaginationDefaults {
     readonly defaultLimit: number;
     readonly maxLimit: number;
 }
+export const PaginationErrorCodes: { readonly INVALID_CURSOR: "INVALID_CURSOR"; }
 export class Paginator
   constructor(options?: PaginatorOptions): Paginator
   cursorCodec: CursorCodec

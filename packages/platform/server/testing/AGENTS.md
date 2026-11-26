@@ -9,7 +9,7 @@
 `@kit/testing` holds the helpers specs across the repo share. Tier `server`, `vp.layer` 2; its dependencies
 are in [package.json](package.json). Each subpath's `import` condition points at `src/`, so a spec needs no
 build. The product's own fixtures (the seeded rows, a production-shaped environment, the infra specs) live in
-`@vp/testing-fixtures`.
+the app's fixtures package.
 
 - **`.` (`src/index.ts`):** `definePackageTestConfig` (node environment, globals, `restoreMocks`,
   `unstubEnvs`, `src/**/__tests__/**/*.test.ts`; most package `vitest.config.ts` files build on it, a few
@@ -19,7 +19,7 @@ build. The product's own fixtures (the seeded rows, a production-shaped environm
   it, for the token-verifier and API auth specs.
 - **`./log-capture`:** `captureLog`, a `destination` for `createLogger` that parses back what was written.
 - **`./run-entrypoint`:** `runEntrypoint`, which starts a TypeScript entrypoint under the runtime the
-  spec runs on (`tsx` under Node, as is under Bun).
+  spec runs on (`tsx` under Node, an optional peer resolved from this package; as is under Bun).
 
 ---
 

@@ -1,5 +1,4 @@
 import { AccountMenu } from '@kit/components';
-import { useT } from '@kit/intl-react';
 import { AppearanceMenuGroups, DropdownMenu, ThemeMenu, useUiCopy } from '@kit/ui';
 import {
   AccountSwitcher,
@@ -11,6 +10,7 @@ import {
 import type { PropsWithChildren } from 'react';
 import { useAccountLinks } from '#app/features/shell/hooks/use-account-links';
 import { WEB_URL } from '#app/lib/config';
+import { useT } from '#app/lib/messages';
 
 /**
  * The creator's account in the toolbar: a guest's way to sign in, or the switcher between their

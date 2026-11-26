@@ -1,7 +1,7 @@
 import { DropdownMenu } from '@kit/ui';
+import { axeViolations } from '@kit/web-testing/dom';
 import { render, screen, within } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
-import { axeViolations } from '@vp/web-testing/dom';
 import type { ReactNode } from 'react';
 import { AppProviders } from '#app/__tests__/providers';
 import { CommentItem, CommentItemSkeleton } from '..';

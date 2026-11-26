@@ -1,5 +1,5 @@
 import { EmptyState, SectionError, VideoThumbnail } from '@kit/components';
-import { Format, useT } from '@kit/intl-react';
+import { Format } from '@kit/intl-react';
 import { Button } from '@kit/ui';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { getRouteApi } from '@tanstack/react-router';
@@ -21,6 +21,7 @@ import {
   screeningStateOf,
 } from '#app/features/admin/api/admin-screening';
 import { useSecondsRange, useShare } from '#app/features/admin/hooks/use-screening-format';
+import { useT } from '#app/lib/messages';
 import { pagedRows, tableStateOf } from '#app/utils/paged-rows';
 import { ScreeningActions } from '../screening-actions/screening-actions';
 import { ScreeningEvidenceDialog } from '../screening-evidence-dialog/screening-evidence-dialog';

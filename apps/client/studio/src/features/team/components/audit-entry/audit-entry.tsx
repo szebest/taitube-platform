@@ -1,4 +1,4 @@
-import { Format, useT } from '@kit/intl-react';
+import { Format } from '@kit/intl-react';
 import { assertNever } from '@kit/result';
 import { Badge } from '@kit/ui';
 import { Link } from '@tanstack/react-router';
@@ -7,6 +7,7 @@ import { COMMENT_SETTINGS_FIELDS, VIDEO_AUDIT_FIELDS } from '@vp/domain';
 import { publishedAt } from '@vp/intl-formats';
 import { AuditLogList } from '#app/components/team/audit-log-list';
 import { RoleBadge } from '#app/components/team/role-badge';
+import { useT } from '#app/lib/messages';
 
 export type AuditEntryView = ChannelAuditPageView['items'][number];
 

@@ -16,6 +16,11 @@
       "types": "./dist/demo-personas/index.d.ts",
       "import": "./dist/demo-personas/index.js",
       "default": "./dist/demo-personas/index.js"
+    },
+    "./intl": {
+      "types": "./dist/intl/index.d.ts",
+      "import": "./dist/intl/index.js",
+      "default": "./dist/intl/index.js"
     }
   },
   "scripts": {
@@ -26,8 +31,10 @@
   },
   "dependencies": {
     "@kit/components": "workspace:*",
-    "@kit/intl": "workspace:*",
+    "@kit/errors": "workspace:*",
+    "@kit/i18n": "workspace:*",
     "@kit/intl-react": "workspace:*",
+    "@kit/query": "workspace:*",
     "@kit/result": "workspace:*",
     "@kit/security-headers": "workspace:*",
     "@kit/ui": "workspace:*",
@@ -35,7 +42,7 @@
     "@vp/api-contracts": "workspace:*",
     "@vp/domain": "workspace:*",
     "@vp/errors": "workspace:*",
-    "@vp/messages": "workspace:*",
+    "@vp/shared-messages": "workspace:*",
     "@vp/permissions": "workspace:*",
     "@vp/permissions-react": "workspace:*",
     "zod": "^4.6.5"
@@ -44,6 +51,7 @@
     "@kit/testing": "workspace:*",
     "@kit/tsconfig": "workspace:*",
     "@kit/vite-preset": "workspace:*",
+    "@kit/web-testing": "workspace:*",
     "@tanstack/react-query": "^5.104.1",
     "@tanstack/react-router": "^1.170.41",
     "@tanstack/react-router-ssr-query": "^1.167.3",
@@ -72,6 +80,6 @@
     "react": "^19.3.0"
   },
   "vp": {
-    "layer": 8
+    "layer": 9
   }
 }

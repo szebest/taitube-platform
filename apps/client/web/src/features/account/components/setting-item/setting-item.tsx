@@ -1,8 +1,8 @@
-import { useT } from '@kit/intl-react';
 import { useLocation } from '@tanstack/react-router';
 import { type PropsWithChildren, type ReactNode, useEffect, useRef } from 'react';
 import { SettingRow } from '#app/components/settings/setting-row';
 import type { SettingRowId } from '#app/features/account/utils/settings-index';
+import { useT } from '#app/lib/messages';
 import { useNotSaved } from '#app/lib/preferences/preferences-sync.context';
 
 export type SettingItemProps = PropsWithChildren<{

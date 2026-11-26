@@ -1,3 +1,4 @@
+import { PermanentError, TransientError } from '@kit/errors';
 import type { Logger } from '@kit/logger';
 import { type Result, err } from '@kit/result';
 import { expectOk } from '@kit/testing/result';
@@ -7,9 +8,7 @@ import type { DlqEntryRecord, NewDlqEntryInput, Repositories } from '@vp/core/re
 import {
   type DatabaseUnavailable,
   ErrorCodes,
-  PermanentError,
   type QueueUnavailable,
-  TransientError,
   databaseUnavailable,
   queueUnavailable,
 } from '@vp/errors';

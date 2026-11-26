@@ -1,7 +1,7 @@
+import { KEYSET_PAGE_SIZE, keysetPaging } from '@kit/query';
 import { infiniteQueryOptions } from '@tanstack/react-query';
 import type { ApiClient } from '@vp/api-client';
 import type { FeedQuery } from '@vp/api-contracts';
-import { KEYSET_PAGE_SIZE, keysetPaging } from '@vp/queries';
 
 export type PublicFeedFilter = Pick<FeedQuery, 'sort' | 'categoryId'>;
 

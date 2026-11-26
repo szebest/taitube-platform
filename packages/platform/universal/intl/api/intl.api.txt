@@ -57,7 +57,6 @@ export interface DurationValue {
     readonly value: number;
     readonly options?: DurationOptions;
 }
-export const FALLBACK_LOCALE: "en"
 export const FORMAT_KINDS: readonly ["count", "number", "percent", "bytes", "bitrate", "numberRange", "money", "date", "time", "dateTime", "dateRange", "relative", "calendarDay", "duration", "list", "displayName"]
 export interface FormatContext {
     readonly locale: string;
@@ -66,6 +65,7 @@ export interface FormatContext {
     readonly now?: string;
     readonly cache: IntlCache;
 }
+export const FormatErrorCodes: { readonly FORMAT_UNSUPPORTED_LOCALE: "FORMAT_UNSUPPORTED_LOCALE"; readonly FORMAT_UNKNOWN_OPTION: "FORMAT_UNKNOWN_OPTION"; readonly FORMAT_WRONG_KIND: "FORMAT_WRONG_KIND"; readonly FORMAT_UNRENDERABLE: "FORMAT_UNRENDERABLE"; }
 export type FormatFailure = UnsupportedLocale | UnknownOption | WrongKind | Unrenderable;
 export type FormatKind = (typeof FORMAT_KINDS)[number];
 export type FormatValue = string | number | TaggedValue;
@@ -82,6 +82,16 @@ export interface ListValue {
     readonly type: 'list';
     readonly value: readonly string[];
     readonly options?: ListOptions;
+}
+export interface LocaleDetails {
+    readonly name: string;
+    readonly direction: 'ltr' | 'rtl';
+}
+export interface Locales<Tag extends string, Details extends LocaleDetails> {
+    readonly source: Tag;
+    readonly tags: readonly Tag[];
+    readonly details: Readonly<Record<Tag, Details>>;
+    readonly isSupported: (tag: string) => tag is Tag;
 }
 export interface MoneyValue {
     readonly type: 'money';
@@ -115,7 +125,6 @@ export interface RelativeValue {
     readonly now?: string;
     readonly options?: RelativeOptions;
 }
-export const SUPPORTED_LOCALES: readonly ["en", "pl"]
 export interface Scaled<U extends string> {
     readonly amount: number;
     readonly unit: U;
@@ -128,19 +137,19 @@ export interface TimeValue {
     readonly options?: TimeOptions;
 }
 export const USER: "user"
-export type UnknownOption = FailureOf<'FORMAT_UNKNOWN_OPTION', {
+export type UnknownOption = FailureOf<typeof FormatErrorCodes.FORMAT_UNKNOWN_OPTION, {
     formatter: string;
     option: string;
 }>;
-export type Unrenderable = FailureOf<'FORMAT_UNRENDERABLE', {
+export type Unrenderable = FailureOf<typeof FormatErrorCodes.FORMAT_UNRENDERABLE, {
     formatter: string;
     reason: string;
 }>;
-export type UnsupportedLocale = FailureOf<'FORMAT_UNSUPPORTED_LOCALE', {
+export type UnsupportedLocale = FailureOf<typeof FormatErrorCodes.FORMAT_UNSUPPORTED_LOCALE, {
     locale: string;
 }>;
 export type User = typeof USER;
-export type WrongKind = FailureOf<'FORMAT_WRONG_KIND', {
+export type WrongKind = FailureOf<typeof FormatErrorCodes.FORMAT_WRONG_KIND, {
     formatter: string;
     received: string;
 }>;
@@ -155,6 +164,7 @@ export const date: Formatter<DateValue>
 export function dateFormatOptions(options?: DateOptions): Intl.DateTimeFormatOptions
 export const dateRange: Formatter<DateRangeValue>
 export const dateTime: Formatter<DateTimeValue>
+export function defineLocales<const Tag extends string, Details extends LocaleDetails>({ source, details, }: LocalesDefinition<Tag, Details>): Locales<Tag, Details>
 export function displayName(value: DisplayNameValue, context: FormatContext): Result<string, FormatFailure>
 export const duration: Formatter<DurationValue>
 export function formatValue(value: FormatValue, context: FormatContext): Result<string, FormatFailure>

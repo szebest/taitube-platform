@@ -1,8 +1,8 @@
-import { useT } from '@kit/intl-react';
 import { useToast } from '@kit/ui';
 import { useMutation } from '@tanstack/react-query';
 import type { VideoSummary } from '@vp/api-contracts';
 import { useApi, useFailureToast } from '@vp/queries';
+import { useT } from '#app/lib/messages';
 import { saveFeaturedMutationOptions } from '../api/channel-featured';
 
 /** Saves the pins: the shelf follows at once, a toast says it held, and a refusal is presented and undone. */

@@ -1,9 +1,9 @@
-import { useT } from '@kit/intl-react';
 import { Button } from '@kit/ui';
 import { Link } from '@tanstack/react-router';
 import type { ReactNode } from 'react';
 import { ChannelHeader } from '#app/components/channel/channel-header';
 import { SubscribeAction } from '#app/components/channel/subscribe-action';
+import { useT } from '#app/lib/messages';
 
 export interface ChannelRowProps {
   channel: {

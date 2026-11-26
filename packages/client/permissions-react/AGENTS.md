@@ -3,7 +3,7 @@
 > Tier rules for this directory: [../AGENTS.md](../AGENTS.md) · full tier & layer reference: [packages/AGENTS.md](../../AGENTS.md) · authority: [docs/standards/authorization.md](../../../docs/standards/authorization.md)
 
 Owner: ticket [81](../../../docs/tickets/81-casl-declarative-permissions-refactor.md). `client` tier, layer T3
-(it depends on `@vp/permissions` and `@kit/result`).
+(it depends on `@vp/permissions`, `@kit/permissions` for `assertCan`, and `@kit/result`).
 
 ## What it holds
 

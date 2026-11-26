@@ -1,4 +1,3 @@
-import { useT } from '@kit/intl-react';
 import { Icon, IconButton, useUiCopy } from '@kit/ui';
 import { Link, useNavigate } from '@tanstack/react-router';
 import type { VideoSummary } from '@vp/api-contracts';
@@ -14,6 +13,7 @@ import { useIsWatching } from '#app/features/watch/hooks/use-is-watching';
 import { useQueueNavigation } from '#app/features/watch/hooks/use-queue-navigation';
 import { useDurationText } from '#app/hooks/use-duration-text';
 import { usePlaybackQueue } from '#app/hooks/use-playback-queue';
+import { useT } from '#app/lib/messages';
 import { PlayerSlot } from '../player-slot/player-slot';
 
 const MS_PER_SECOND = 1000;

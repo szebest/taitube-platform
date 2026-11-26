@@ -1,4 +1,3 @@
-import { createLocaleStore, type LocaleStore } from '@kit/intl-react';
 import { tryCatch, unwrapOr } from '@kit/result';
 import { requestNonce } from '@kit/security-headers';
 import { createToaster, type Toaster } from '@kit/ui';
@@ -13,7 +12,8 @@ import {
 import { setupRouterSsrQueryIntegration } from '@tanstack/react-router-ssr-query';
 import { createIsomorphicFn } from '@tanstack/react-start';
 import type { ApiClient } from '@vp/api-client';
-import { isSupportedLocale } from '@vp/messages';
+import { type SharedCatalogue } from '@vp/shared-messages';
+import { LOCALES } from '@vp/shared-messages/locales';
 import { type PropsWithChildren, useSyncExternalStore } from 'react';
 import { identityPath, parseIdentityPath } from './account-slots';
 import { type ActingChannelStore, createActingChannelStore } from './acting-channel';
@@ -25,18 +25,19 @@ import {
   createIdentityStore,
   parseIdentityState,
 } from './identity-store';
+import { type AppMessages, createLocaleStore, type LocaleStore } from './intl';
 import { resolveRequestIdentity } from './request-identity';
 import { RouteError, RouteNotFound } from './route-errors';
 import { SESSION_KEY, type Session } from './session';
 import { endSession } from './session-changes';
 
 /** What every route reads from context; the root route's `beforeLoad` adds `auth` (`ensureSession`). */
-export type AppRouterContext = {
+export type AppRouterContext<App extends SharedCatalogue = SharedCatalogue> = {
   api: ApiClient;
   queryClient: QueryClient;
   toaster: Toaster;
   /** The negotiated locale and its loaded catalogue; the root route's `requestLocale` sets it. */
-  locales: LocaleStore;
+  locales: LocaleStore<App>;
   /** The channel a studio acts on; web never selects one, so its calls name none. */
   actingChannel: ActingChannelStore;
   /** The account slot and channel this tab acts as, and the query cache that is theirs. */
@@ -46,15 +47,19 @@ export type AppRouterContext = {
 };
 
 /** What a spec or a request hands the router in place of the defaults it would build. */
-export type AppRouterOptions = Partial<AppRouterContext> & {
+export type AppRouterOptions<App extends SharedCatalogue = SharedCatalogue> = Partial<
+  AppRouterContext<App>
+> & {
   history?: RouterHistory;
   nonce?: string;
   /** `false` switches intent preloading off, for a viewer who saves data. */
   defaultPreload?: 'intent' | false;
 };
 
-export type AppRoutes<TRouteTree extends AnyRoute> = {
+export type AppRoutes<TRouteTree extends AnyRoute, App extends SharedCatalogue> = {
   routeTree: TRouteTree;
+  /** The app's catalogue, its translations and its translator provider. */
+  messages: AppMessages<App>;
   /** Where the app's API client calls, from the app's own `src/config`. */
   apiBaseUrl: string;
   pending: RouteComponent;
@@ -114,15 +119,20 @@ const viewTransition = {
     hrefChanged && document.documentElement.dataset.motion !== 'reduced' ? ['navigation'] : false,
 };
 
-function RouterWords({
+function RouterWords<App extends SharedCatalogue>({
+  messages,
   locales,
   renderedAt,
   children,
-}: PropsWithChildren<{ locales: LocaleStore; renderedAt: string }>) {
+}: PropsWithChildren<{
+  messages: AppMessages<App>;
+  locales: LocaleStore<App>;
+  renderedAt: string;
+}>) {
   const active = useSyncExternalStore(locales.subscribe, locales.snapshot, locales.snapshot);
 
   return (
-    <AppWords active={active} renderedAt={renderedAt}>
+    <AppWords messages={messages} active={active} renderedAt={renderedAt}>
       {children}
     </AppWords>
   );
@@ -140,21 +150,21 @@ const PENDING_MIN_MS = 500;
  * wrote). Search params stay the text the URL carries (no JSON either way), so `?q=1.10` is
  * `'1.10'` and each route's schema coerces what it needs.
  */
-export function createAppRouter<TRouteTree extends AnyRoute>(
-  { routeTree, apiBaseUrl, pending, actsOnChannels = false }: AppRoutes<TRouteTree>,
+export function createAppRouter<TRouteTree extends AnyRoute, App extends SharedCatalogue>(
+  { routeTree, messages, apiBaseUrl, pending, actsOnChannels = false }: AppRoutes<TRouteTree, App>,
   {
     history,
     api,
     queryClient,
     toaster = createToaster(),
-    locales = createLocaleStore(),
+    locales = createLocaleStore(messages),
     actingChannel = createActingChannelStore(),
     identity = createIdentityStore(initialIdentity(history), queryClient),
     apiAs = (slot) =>
       createAppApiClient({ apiBaseUrl, getSlot: () => slot, onUnauthorized: () => undefined }),
     nonce = requestNonce(),
     defaultPreload = 'intent',
-  }: AppRouterOptions = {}
+  }: AppRouterOptions<App> = {}
 ): Router<TRouteTree> {
   let renderedAt = new Date().toISOString();
   const actingChannelId = () => {
@@ -182,7 +192,7 @@ export function createAppRouter<TRouteTree extends AnyRoute>(
       actingChannel,
       identity,
       apiAs,
-    } satisfies AppRouterContext,
+    } satisfies AppRouterContext<App>,
     rewrite: {
       input: ({ url }) => {
         const located = parseIdentityPath(url.pathname);
@@ -208,7 +218,7 @@ export function createAppRouter<TRouteTree extends AnyRoute>(
     scrollRestoration: true,
     Wrap: ({ children }) => (
       <IdentityQueryClient identity={identity}>
-        <RouterWords locales={locales} renderedAt={renderedAt}>
+        <RouterWords messages={messages} locales={locales} renderedAt={renderedAt}>
           {children}
         </RouterWords>
       </IdentityQueryClient>
@@ -224,7 +234,7 @@ export function createAppRouter<TRouteTree extends AnyRoute>(
       actingChannel.select(dehydrated['actingChannel'] || undefined);
       identity.hydrate(parseIdentityState(dehydrated['identity']) ?? identity.read());
       const locale = dehydrated['locale'] ?? '';
-      if (isSupportedLocale(locale)) {
+      if (LOCALES.isSupported(locale)) {
         await locales.activate(locale);
       }
     },

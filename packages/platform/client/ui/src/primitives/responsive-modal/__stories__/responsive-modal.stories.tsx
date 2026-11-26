@@ -21,7 +21,7 @@ export const Open: Story = {
         <ResponsiveModal.Content>
           <ResponsiveModal.Title>Share video</ResponsiveModal.Title>
           <ResponsiveModal.Description>Anyone with the link can watch.</ResponsiveModal.Description>
-          <ResponsiveModal.Body>https://taitube.example/watch/lisbon</ResponsiveModal.Body>
+          <ResponsiveModal.Body>https://acme.example/watch/lisbon</ResponsiveModal.Body>
           <ResponsiveModal.Footer>
             <ResponsiveModal.Close asChild>
               <Button>Done</Button>

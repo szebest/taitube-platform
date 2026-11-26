@@ -16,7 +16,8 @@ Instructions for any coding agent working on `@vp/events`.
   `SSE_PING_COMMENT` live in `@kit/keyspace`).
 - `src/channels.ts` - Pub/Sub channels `video:{id}` and `user:{id}`: `videoChannel`, `userChannel`,
   `VIDEO_WILDCARD_CHANNEL`, `USER_WILDCARD_CHANNEL`, `channelType`.
-- `src/keys.ts` - `CacheKeys`, every `taitube:` cache key.
+- `src/keys.ts` - `CacheKeys`, every `taitube:` cache key, built through `defineKeyspace` (`@kit/keyspace`), which
+  joins each key's parts under the namespace and freezes the layout.
 
 ---
 

@@ -1,4 +1,4 @@
-import { Drawer, Skeleton, useUiCopy } from '@kit/ui';
+import { Drawer, Skeleton } from '@kit/ui';
 import {
   type ComponentPropsWithRef,
   type MouseEvent,
@@ -7,6 +7,7 @@ import {
   useRef,
   useState,
 } from 'react';
+import { useT } from '#app/lib/messages';
 import { AppShellContext, RailLabelsShown, useAppShell } from './app-shell.context';
 import { appShellStyles } from './app-shell.variants';
 import { useRailOverlay } from './hooks/use-rail-overlay';
@@ -42,7 +43,8 @@ export function AppShellRoot({
   const drawerId = useId();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [railOverlay, setRailOverlay] = useState(false);
-  const { skipToContent } = useUiCopy();
+  const { tOr } = useT();
+  const skipToContent = tOr('ui.skipToContent', {}, '');
   const styles = appShellStyles({ variant });
 
   return (
@@ -80,7 +82,9 @@ export function AppShellRoot({
 export function AppShellRail({ className, children, ...props }: ComponentPropsWithRef<'nav'>) {
   const { railState, railId, drawerId, drawerOpen, setDrawerOpen, setRailOverlay } =
     useAppShell('Rail');
-  const { navigation, menu } = useUiCopy();
+  const { tOr } = useT();
+  const navigation = tOr('appUi.navigation', {}, '');
+  const menu = tOr('ui.menu', {}, '');
   const navRef = useRef<HTMLElement>(null);
   const { overlay, opensInPlace } = useRailOverlay(navRef);
   const styles = appShellStyles({ railState, overlay });
@@ -156,7 +160,8 @@ export function AppShellGroup({ heading, className, children, ...props }: AppShe
 
 /** The compact bottom bar: the few places to go from anywhere. */
 export function AppShellTabBar({ className, children, ...props }: ComponentPropsWithRef<'nav'>) {
-  const { navigation } = useUiCopy();
+  const { tOr } = useT();
+  const navigation = tOr('appUi.navigation', {}, '');
   const styles = appShellStyles();
 
   return (

@@ -1,4 +1,5 @@
-import { ErrorCodes, isInputFailure } from '@vp/errors';
+import { isInputFailure } from '@kit/errors';
+import { ErrorCodes } from '@vp/errors';
 import { playlistItemNotFound, playlistNotFound, systemPlaylistImmutable } from '../failures';
 
 describe('@vp/domain-rules: playlist failures', () => {

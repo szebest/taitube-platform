@@ -1,4 +1,4 @@
-import { Format, useT } from '@kit/intl-react';
+import { Format } from '@kit/intl-react';
 import { Icon, IconButton } from '@kit/ui';
 import { Link } from '@tanstack/react-router';
 import { publishedAt } from '@vp/intl-formats';
@@ -7,6 +7,7 @@ import { PagedFooter } from '#app/components/feed/paged-footer';
 import { searchHistoryQueryOptions } from '#app/features/library/api/library-queries';
 import { usePagedItems } from '#app/features/library/hooks/use-paged-items';
 import { useRemoveSearch } from '#app/features/library/hooks/use-remove-search';
+import { useT } from '#app/lib/messages';
 import { LibraryEmpty } from '../library-empty/library-empty';
 
 interface SearchHistoryEntryProps {

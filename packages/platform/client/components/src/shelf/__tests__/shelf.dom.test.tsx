@@ -1,7 +1,7 @@
 import { variantNames } from '@kit/ui';
+import { axeViolations } from '@kit/web-testing/dom';
 import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { axeViolations } from '@vp/web-testing/dom';
 import { Shelf, ShelfSkeleton, shelfStyles } from '..';
 import { renderWithCopy } from '../../__tests__/render-with-copy';
 import type { ShelfRootProps } from '../shelf';

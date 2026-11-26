@@ -1,5 +1,6 @@
+import { PermanentError } from '@kit/errors';
 import { MAX_CHANNEL_IMAGE_EDGE, MAX_CHANNEL_IMAGE_PIXELS } from '@vp/domain';
-import { ErrorCodes, PermanentError } from '@vp/errors';
+import { ErrorCodes } from '@vp/errors';
 
 export interface ChannelImageProbe {
   format: 'jpeg' | 'png' | 'webp';

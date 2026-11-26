@@ -1,6 +1,6 @@
-import { useT } from '@kit/intl-react';
 import { Icon } from '@kit/ui';
 import { Link } from '@tanstack/react-router';
+import { useT } from '#app/lib/messages';
 import { AccentRow } from '../accent-row/accent-row';
 import { BuildThemeRow } from '../build-theme-row/build-theme-row';
 import { DensityRow } from '../density-row/density-row';

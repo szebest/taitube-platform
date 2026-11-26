@@ -1,13 +1,14 @@
 import { IdentityRow } from '@kit/components';
-import { useFormat, useT } from '@kit/intl-react';
+import { useFormat } from '@kit/intl-react';
 import { unwrapOr } from '@kit/result';
+import { useT } from '../intl/shared-words';
 import type { IdentityEntry } from './identity-entries';
 
 function useDetail(entry: IdentityEntry): string {
   const { tOr } = useT();
   if (entry.expired) return tOr('accounts.expired', {}, '');
   if (entry.role) {
-    const role = tOr('studio.teamRole', { role: entry.role }, '');
+    const role = tOr('accounts.teamRole', { role: entry.role }, '');
     return entry.handle ? `${role} · @${entry.handle}` : role;
   }
   if (entry.glance?.kind === 'counted') {

@@ -1,6 +1,7 @@
+import { parseParam } from '@kit/query';
 import { createFileRoute } from '@tanstack/react-router';
 import { WatchPartyIdParamSchema } from '@vp/api-contracts';
-import { ensureFound, parseParam, watchPartyPreviewQueryOptions } from '@vp/queries';
+import { ensureFound, watchPartyPreviewQueryOptions } from '@vp/queries';
 import { z } from 'zod';
 import { PartyPage } from '#app/features/watch-party';
 import { WEB_URL } from '#app/lib/config';

@@ -1,9 +1,9 @@
-import { useT } from '@kit/intl-react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { Link, useMatchRoute } from '@tanstack/react-router';
 import { useApi } from '@vp/queries';
 import { StudioWorkspace } from '#app/components/workspace/studio-workspace';
 import { inboxQueryOptions } from '#app/features/comments/api/inbox-queries';
+import { useT } from '#app/lib/messages';
 
 /** The review queue's entry in the navigation, counting the comments held for review as they arrive. */
 export function ReviewQueueNavItem() {

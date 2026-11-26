@@ -1,7 +1,7 @@
-import { useT } from '@kit/intl-react';
 import { Button, DropdownMenu, Icon, IconButton } from '@kit/ui';
 import { PLAYBACK_SETTINGS } from '@vp/domain/settings';
 import { ShortsPlayerFrame } from '#app/components/shorts/shorts-player-frame';
+import { useT } from '#app/lib/messages';
 
 const SCRIM = 'bg-scrim text-on-live';
 

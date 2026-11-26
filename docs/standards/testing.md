@@ -28,7 +28,7 @@ rule below that can be checked by a machine is, and the check is named next to i
   `studio (jsdom, uncompiled)`, run only the `*.differential.dom.test.tsx` specs (Field, Tabs, Select, Dialog,
   the studio upload dialog) without it; each records the DOM and a handler trace at every step into one
   committed snapshot, so a miscompile fails one of the two runs. `*.renders.dom.test.tsx` specs (Field, Tabs,
-  Select) count a part's commits with `createRenderCounter` from `@vp/web-testing/dom` while the root re-renders
+  Select) count a part's commits with `createRenderCounter` from `@kit/web-testing/dom` while the root re-renders
   with the same props; they prove what the compiler memoizes, so they run compiled only and fail without it.
 - `pnpm test:coverage` runs the same projects with v8 coverage and prints a summary (`coverage/`, gitignored). The root `vitest.config.ts` holds the 85% floor for lines, statements, functions and branches, so the command fails below it. CI does not run it, to keep the unit job's time budget.
 
@@ -74,6 +74,14 @@ the contract against itself:
 A double that drifts from the real thing fails the shared contract assertion in its own spec. The contracts
 live in `@vp/adapters` rather than `@kit/testing`, because `@kit/testing` depending on `@vp/core` would make a
 workspace cycle (every package dev-depends on `@kit/testing`).
+
+**A platform package ships its contract.** A package under `packages/platform/` that defines a port or a registry
+exports `runXContract(makeImpl)` from a `./contract` entry (vitest is a peer dependency), so any app runs it against
+its own implementation. The repository's doubles and registries run it in their own specs. A contract is part of the
+package's surface: changing one needs the version bump and changelog entry
+([platform-packages.md](platform-packages.md)). No platform package exports one yet: the contracts above are the
+suites today, and they move with `@kit/ports`, which lands as the last step of ticket 170. Contracts for the app's own
+ports stay in `@vp/adapters`.
 
 Each Postgres spec file gets a PGlite of its own, loaded from one migrated snapshot the adapters project
 builds in its global setup (`__tests__/contract/pglite-snapshot.ts`): a fresh PGlite runs initdb, most of a
@@ -202,6 +210,12 @@ The floor is 85% coverage (lines, statements, functions and branches) over the u
 behaviour can break: logic, branches, error paths, contracts, and a user flow. Put it in `__tests__/` beside the
 code it covers.
 
+**Type-level specs.** Every public generic of a platform package has a spec that proves misuse fails to compile, in
+the package's `src/__tests__/type-fixtures/`: `expectTypeOf` for what a call infers, and `// @ts-expect-error` above
+each call that must be rejected, one reason in the comment. They are not run by vitest; the package's `typecheck`
+compiles them (universal and client packages through `tsconfig.spec.json`), so an `@ts-expect-error` over code that
+now compiles fails. Nothing else in platform source may suppress the compiler (`platform-type-strictness.test.ts`).
+
 Not required:
 
 - a spec per source file, or a spec named after its source
@@ -220,8 +234,9 @@ Each job's `timeout-minutes` in `.github/workflows/ci.yml` is its outer bound, a
 own budget through `.github/actions/budget`: `unit-tests` 240 s in each unit shard, `architecture` 30 s in
 `lint-typecheck` (the suite's own time from its JSON report) and `integration-tests` 240 s.
 `tests/architecture/ci-budget-rules.ts` holds the numbers: `build` 3, `lint-typecheck` 4, `unit-shards` 5,
-`unit-bun-shards` 4, `integration` 6, `e2e-smoke` 4, `e2e-client` 4, `visual` 5, `terraform` 2, the two
-aggregates 1, and 9 minutes for the longest `needs` chain. A budget names the step it measures by its `id`, and its
+`unit-bun-shards` 4, `extractable` 6 (one shard per platform package and the second app), `integration` 6,
+`e2e-smoke` 4, `e2e-client` 4, `visual` 5, `terraform` 2, the two aggregates 1, and 9 minutes for the longest
+`needs` chain. A budget names the step it measures by its `id`, and its
 limit sits below its job's `timeout-minutes`, so the budget fires first and names the step.
 
 `unit` (vitest, `--shard=i/N`, N derived below) and `unit-bun` (`bun test --shard=i/5`) are matrix jobs named `unit-shard-<i>` and
@@ -278,7 +293,7 @@ A spec that fails on one run and passes on the next has a cause in the spec or t
 raised timeout, a retry, a sleep or a skip hides it and a later run finds it again; a quarantine (below) only
 buys the time to fix it.
 
-- **A test ends once its work has.** Every client app's jsdom project runs `@vp/web-testing/settle.setup` last:
+- **A test ends once its work has.** Every client app's jsdom project runs `@kit/web-testing/settle.setup` last:
   before it unmounts, it waits for the fetching queries and pending mutations of every mounted `QueryClient`, and
   for every `renderRoute` router, to go idle, and fails the test with what is still running after 5 s. A test
   that holds a request on purpose releases it before it ends (`heldReply`); an upload it starts, it finishes or

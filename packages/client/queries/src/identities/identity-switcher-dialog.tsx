@@ -1,6 +1,6 @@
 import { IdentitySwitcher } from '@kit/components';
-import { useT } from '@kit/intl-react';
 import { useLocation, useRouter } from '@tanstack/react-router';
+import { useT } from '../intl/shared-words';
 import { useAccount } from '../session-provider';
 import { useSignOut } from '../use-sign-out';
 import { type AccountLink, useFollowLink } from './account-links';

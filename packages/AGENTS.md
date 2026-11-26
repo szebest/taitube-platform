@@ -18,6 +18,35 @@ reaching the browser; layer stops the dependency graph turning into a ball of mu
 > Spec: [SDD ADR-23](../docs/SDD.md#adr-23--package-runtime-tiers-the-directory-is-the-tier) ·
 > [ARCHITECTURE.md Invariant 5](../ARCHITECTURE.md) · checker: `scripts/check-boundaries.ts`
 
+### Platform or app
+
+A third question comes before tier and layer: **could a second app use this package unchanged?** If it names no
+product value and asks for everything that varies, it is **platform**: `packages/platform/<tier>/<name>`, scope
+`@kit/*`. Otherwise it is an app package under `packages/<tier>/`, scope `@vp/*`. A package that is half of each is two
+packages: the generic half moves down into `@kit/<name>`, the app half keeps its name and depends on it. Platform
+packages are held to extra rules (explicit `exports`, a reviewed API snapshot, versions, type-level specs, an
+extractability check) in [docs/standards/platform-packages.md](../docs/standards/platform-packages.md).
+
+### The platform rule: `@kit` never depends on `@vp`
+
+A package under `packages/platform/<tier>/` is a platform package (`@kit/*`): reusable by another app,
+extractable on its own. **It never depends on an app package (`@vp/*`)**, in any form:
+
+- not in `dependencies`, `devDependencies` or `peerDependencies`;
+- not in an import, `export ... from`, `import()` or `vi.mock(import(...))`;
+- not in a tsconfig path or reference, a Vite or Vitest alias, or a `setupFiles` entry;
+- not as a mention in its `AGENTS.md`, README, CHANGELOG, comments or test data.
+
+There is no allowlist, no pending-move allowance and no dev-edge carve-out. When a platform package needs
+something the app owns, the dependency is inverted: the platform package declares a typed parameter, port,
+prop or option, and the app supplies the value at its composition root. When the needed piece is itself
+generic, it moves down into a `@kit` package (a `git mv`, importers rewritten), and the app package depends
+on it. Copying it is never the fix. Its docs describe the app side generically ("the app's error
+registry"), never by package name.
+
+`git grep "@vp/" -- packages/platform` prints nothing, and `pnpm boundaries` and the architecture suite
+fail the build on any edge or mention.
+
 ---
 
 ## 1. Tiers — where the code runs
@@ -94,6 +123,7 @@ document is stale — fix it.
 
 | Package | Tier | Location |
 |---|---|---|
+| `@kit/appearance` (T0) | universal | `packages/platform/universal/appearance` |
 | `@kit/primitives` (T0) | universal | `packages/platform/universal/primitives` |
 | `@vp/domain` | universal | `packages/universal/domain` |
 | `@vp/errors` | universal | `packages/universal/errors` |
@@ -111,7 +141,7 @@ document is stale — fix it.
 
 | Package | Tier | Depends on |
 |---|---|---|
-| `@kit/design-tokens` | universal | `@vp/domain`, `@vp/errors`, `@kit/result` |
+| `@kit/design-tokens` | universal | `@kit/appearance`, `@vp/errors`, `@kit/result` |
 | `@kit/intl` | universal | `@kit/result` |
 | `@kit/pagination` | universal | `@vp/errors`, `@kit/result` |
 | `@vp/permissions` | universal | `@vp/domain`, `@vp/errors` |
@@ -136,11 +166,11 @@ document is stale — fix it.
 | `@vp/api-contracts` | universal | `@vp/domain`, `@vp/errors`, `@kit/pagination`, `@vp/permissions`, `@kit/result`, `@vp/validation` |
 | `@vp/domain-rules` | universal | `@vp/domain`, `@vp/errors`, `@vp/permissions`, `@kit/result`, `@vp/validation` |
 | `@vp/intl-formats` | universal | `@kit/intl` |
-| `@vp/messages` | universal | `@vp/errors`, `@kit/intl`, `@kit/result` |
+| `@vp/shared-messages` | universal | `@kit/i18n`, `@kit/intl`, `@kit/result`, `@vp/errors` |
 | `@kit/runtime` | universal | `@kit/di` |
 | `@kit/i18n` | universal | `@kit/di`, `@kit/intl`, `@kit/result` |
 | `@kit/composition` | server | `@kit/di`, `@kit/result` |
-| `@kit/ui` | client | `@kit/design-tokens`, `@kit/result` |
+| `@kit/ui` | client | `@kit/appearance`, `@kit/design-tokens`, `@kit/result` |
 | `@vp/permissions-react` | client | `@vp/permissions`, `@kit/result` |
 | `@vp/core` | server | `@vp/domain`, `@vp/errors`, `@vp/permissions`, `@kit/result` |
 | `@vp/db` | server | `@vp/domain`, `@vp/job-contracts`, `@kit/result`, `@vp/storage` |
@@ -155,7 +185,7 @@ document is stale — fix it.
 | `@vp/api-client` | client | `@vp/api-contracts` |
 | `@kit/components` | client | `@kit/design-tokens`, `@kit/ui` |
 | `@kit/forms` | client | `@vp/errors`, `@kit/result` (T4 by design: above `@kit/ui` at T3, whose primitives its fields move onto) |
-| `@kit/intl-react` | client | `@kit/intl`, `@vp/messages`, `@kit/result` |
+| `@kit/intl-react` | client | `@kit/i18n`, `@kit/intl`, `@kit/result` |
 | `@kit/web-telemetry` | client | `@vp/api-contracts`, `@kit/result` |
 | `@vp/adapters` | server | `@kit/composition`, `@kit/concurrency`, `@vp/core`, `@vp/db`, `@kit/dev-token`, `@vp/domain`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/job-contracts`, `@kit/object-storage`, `@vp/permissions`, `@vp/pipeline-metrics`, `@kit/result`, `@vp/storage` |
 | `@kit/config` | server | `@kit/composition`, `@kit/logger`, `@kit/result` |
@@ -185,13 +215,13 @@ puts it at T5.
 | Package | Tier | Depends on | Dev-depends on |
 |---|---|---|---|
 | `@vp/upload-client` | server | `@kit/logger`, `@kit/result` | `@vp/adapters`, `@vp/api`, `@kit/dev-token`, `@vp/env-schema` |
-| `@vp/workbench` | client | nothing (Storybook: it ships nothing and nothing imports it) | `@kit/components`, `@kit/design-tokens`, `@vp/messages`, `@kit/ui`, the stories of both client apps |
+| `@vp/workbench` | client | nothing (Storybook: it ships nothing and nothing imports it) | `@kit/components`, `@kit/design-tokens`, `@vp/shared-messages`, `@kit/ui`, the stories of both client apps |
 
 `@vp/upload-client`'s acceptance suite boots `apps/server/api` and a stub S3, so the package sits above the application it drives. `@vp/workbench` typechecks the apps' stories, which import `@kit/components`, so it sits above the apps too: below them, a cold `pnpm typecheck` checked it before `@kit/components` was built.
 What it *ships* is two runtime dependencies; the layer records the whole manifest, dev edges included.
 
 **Every package in `@vp/web`'s runtime closure is `universal` or `client`** - seventeen of them, eight `client`
-and nine `universal`, counting what the direct ones pull in (`@vp/domain`, `@kit/pagination`, `@vp/messages`);
+and nine `universal`, counting what the direct ones pull in (`@vp/domain`, `@kit/pagination`, `@vp/shared-messages`);
 its devDependencies are build tooling only (`@kit/tsconfig`, `@kit/vite-preset`, `@vp/web-testing`). That is
 the invariant the whole scheme exists to protect. Verify it any time
 with `pnpm why bullmq` from `apps/client/web` — it returns nothing.
@@ -231,8 +261,8 @@ The remaining hole is someone *adding the declaration* to `package.json`. TypeSc
 - every manifest sits under `packages/<tier>/`, `packages/platform/<tier>/` or `apps/<server|client>/`, and none
   declares a `vp.tier`
 - a package under `packages/platform/` (a platform package, reusable outside this product) depends, peer-depends and
-  dev-depends only on other platform packages, build tooling included; until its move lands, an app package that
-  `scripts/package-moves.json` sends to `@kit/*` counts as platform
+  dev-depends only on other platform packages, build tooling included, with no allowance for a package
+  `scripts/package-moves.json` still lists
 
 `pnpm boundaries` then runs `scripts/sync-claude-symlinks.ts --check`, which fails when an `AGENTS.md` has no
 `CLAUDE.md` symlink beside it.
@@ -270,15 +300,20 @@ shows up as a failing test.
 
 ### Adding a package
 
-1. Decide the **tier** by asking who consumes it. Client consumer → `universal` (or `client` if
+1. Ask first: **platform or app** (above). A platform package goes under `packages/platform/<tier>/<name>` as
+   `@kit/<name>` and follows [docs/standards/platform-packages.md](../docs/standards/platform-packages.md): copy the
+   shape of an existing one (`exports`, `types`, `sideEffects: false`, `version`, `CHANGELOG.md`, `README.md`,
+   `api/<name>.api.txt` from `pnpm gen:api`), and it names no `@vp` package anywhere.
+2. Decide the **tier** by asking who consumes it. Client consumer → `universal` (or `client` if
    browser-only). Otherwise `server`.
-2. Put it in `packages/<tier>/<name>`. The directory is the tier; there is no second place to declare it.
-3. Decide the **layer**: one more than the highest layer it depends on. If that forces a sibling edge, the
+3. Put it in `packages/<tier>/<name>`, or `packages/platform/<tier>/<name>` for a platform package. The directory is the
+   tier; there is no second place to declare it.
+4. Decide the **layer**: one more than the highest layer it depends on. If that forces a sibling edge, the
    design is wrong — fix the dependency, not the number.
-4. `package.json` gets `"vp": { "layer": ... }` - **not a `tier`**, the directory already fixes that and
+5. `package.json` gets `"vp": { "layer": ... }` - **not a `tier`**, the directory already fixes that and
    declaring one fails `pnpm boundaries`. `tsconfig.json` extends `@kit/tsconfig/<tier>.json`.
-5. Write `AGENTS.md` and run `pnpm sync:claude` for the symlink.
-6. `pnpm boundaries` must pass.
+6. Write `AGENTS.md` and run `pnpm sync:claude` for the symlink.
+7. `pnpm boundaries` must pass, and for a platform package so must `pnpm test:architecture`.
 
 ### "I need a server package from the frontend"
 

@@ -1,5 +1,5 @@
 import { EmptyState, SectionError } from '@kit/components';
-import { Format, useFormat, useT } from '@kit/intl-react';
+import { Format, useFormat } from '@kit/intl-react';
 import { unwrapOr } from '@kit/result';
 import { Badge, Button, Icon, IconButton, useToast } from '@kit/ui';
 import { useQuery } from '@tanstack/react-query';
@@ -17,6 +17,7 @@ import {
 } from '#app/components/table/data-table';
 import { apiTokensQueryOptions } from '#app/features/developers/api/developer-queries';
 import { useRevokeToken } from '#app/features/developers/hooks/use-developer-mutations';
+import { useT } from '#app/lib/messages';
 import { tableStateOf } from '#app/utils/paged-rows';
 import { ConfirmDialog } from '../confirm-dialog/confirm-dialog';
 import { CreateTokenDialog } from '../create-token-dialog/create-token-dialog';

@@ -26,6 +26,7 @@ import {
 } from '@vp/web-testing';
 import { HttpResponse, delay } from 'msw';
 import type { ReactNode } from 'react';
+import { SPEC_MESSAGES } from '../../__tests__/spec-messages';
 import { type Accounts, NO_ACCOUNTS, withExpired, withSignedIn } from '../../accounts';
 import { ApiProvider } from '../../api-provider';
 import { type AppRouterContext, createAppRouter } from '../../app-router';
@@ -238,7 +239,12 @@ export async function renderIdentities({
   ]);
   const history = createMemoryHistory({ initialEntries: [url] });
   const router = createAppRouter(
-    { routeTree, apiBaseUrl: 'http://localhost:3000', pending: () => null },
+    {
+      routeTree,
+      messages: SPEC_MESSAGES,
+      apiBaseUrl: 'http://localhost:3000',
+      pending: () => null,
+    },
     {
       history,
       identity: createIdentityStore({ identity: { slot }, prefixed: accounts.length > 1 }),

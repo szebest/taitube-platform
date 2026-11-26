@@ -1,3 +1,4 @@
+import { isInputFailure } from '@kit/errors';
 import {
   categorySlugConflict,
   channelLimitReached,
@@ -5,7 +6,7 @@ import {
   pickWindowOverlap,
   versionConflict,
 } from '../conflict-failures';
-import { ErrorCodes, isInputFailure } from '../index';
+import { ErrorCodes } from '../index';
 
 describe('@vp/errors: conflict failures', () => {
   it.each([

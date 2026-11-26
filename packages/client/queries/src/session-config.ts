@@ -1,3 +1,4 @@
+import type { RefreshSession } from '@kit/query';
 import { tryCatch, unwrapOr } from '@kit/result';
 import { getGlobalStartContext } from '@tanstack/react-start';
 
@@ -5,9 +6,6 @@ export { SESSION_COOKIE } from '@vp/api-contracts';
 
 /** How many accounts one browser holds when `ACCOUNTS_MAX` is unset: every slot. */
 export const ACCOUNTS_MAX_DEFAULT = 10;
-
-/** Exchanges the token the API refused for a fresh one, or says there is none to be had. */
-export type RefreshSession = (refused: string) => Promise<string | undefined>;
 
 export type SessionConfig = {
   /** Where the app's server reaches the API: the proxy and the server render call it there. */

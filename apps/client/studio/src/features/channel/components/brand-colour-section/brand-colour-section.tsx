@@ -1,9 +1,9 @@
 import { useAppForm } from '@kit/forms';
-import { useT } from '@kit/intl-react';
 import type { Channel } from '@vp/api-contracts';
 import { CustomizationSection } from '#app/components/section/customization-section';
 import { useChannelValidators } from '#app/features/channel/forms/channel-field-validators';
 import { useUpdateChannel } from '#app/features/channel/hooks/use-update-channel';
+import { useT } from '#app/lib/messages';
 import { BrandAccentPreview } from '../brand-accent-preview/brand-accent-preview';
 import { ChannelTextField } from '../channel-text-field/channel-text-field';
 

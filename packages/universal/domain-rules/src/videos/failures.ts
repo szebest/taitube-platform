@@ -1,5 +1,6 @@
+import { type Failure } from '@kit/errors';
 import type { VideoStatus } from '@vp/domain';
-import { ErrorCodes, type Failure } from '@vp/errors';
+import { ErrorCodes } from '@vp/errors';
 
 export type VideoNotFound = Failure<typeof ErrorCodes.VIDEO_NOT_FOUND, { videoId: string }>;
 /**

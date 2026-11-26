@@ -1,5 +1,4 @@
 import { SectionError, StatCardSkeleton } from '@kit/components';
-import { useT } from '@kit/intl-react';
 import { Button, Icon, IconButton, useMediaQuery } from '@kit/ui';
 import { useQuery } from '@tanstack/react-query';
 import type { Video } from '@vp/api-contracts';
@@ -9,6 +8,7 @@ import { creatorStatsQueryOptions, useApi, useAppLink } from '@vp/queries';
 import { useId, useState } from 'react';
 import { useReducedMotion } from '#app/hooks/use-reduced-motion';
 import { STUDIO_URL } from '#app/lib/config';
+import { useT } from '#app/lib/messages';
 import { CommentsAction } from './components/comments-action/comments-action';
 import { EditTitleAction } from './components/edit-title-action/edit-title-action';
 import { PinCommentAction } from './components/pin-comment-action/pin-comment-action';

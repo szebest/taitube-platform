@@ -57,7 +57,7 @@ describe('@vp/workbench: the stories a change can move', () => {
     },
     {
       label: 'a universal package change',
-      changed: ['packages/universal/messages/src/en/ui.ts'],
+      changed: ['packages/universal/shared-messages/src/en/ui.ts'],
       picked: [BUTTON, CARD],
     },
     {

@@ -1,9 +1,10 @@
 import type { Container } from '@kit/composition';
+import { ErrorCodeRegistry } from '@kit/errors';
 import { createLogger } from '@kit/logger';
 import { MetricsServer } from '@kit/observability';
 import { Paginator } from '@kit/pagination';
 import { Adapters, queueNamed } from '@vp/adapters/composition';
-import { ErrorCodeRegistry, errorCodeRegistry } from '@vp/errors';
+import { errorCodeRegistry } from '@vp/errors';
 import { METRICS_ROUTES } from '@vp/pipeline-metrics';
 import {
   AnalyticsService,

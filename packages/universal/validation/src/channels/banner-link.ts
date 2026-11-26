@@ -1,6 +1,6 @@
 import { type Result, err, ok } from '@kit/result';
+import { normalizePlainText, withinLength } from '@kit/validation';
 import { type InvalidField, invalidField } from '../field-failures';
-import { normalizePlainText, withinLength } from '../plain-text';
 import { isHttpsUrl } from './https-url';
 
 const BANNER_LINK_LIMITS = { maxLabelLength: 24, maxUrlLength: 2048 } as const;

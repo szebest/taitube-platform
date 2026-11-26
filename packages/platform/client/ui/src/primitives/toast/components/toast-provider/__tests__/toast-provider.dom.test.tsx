@@ -1,6 +1,6 @@
+import { axeViolations } from '@kit/web-testing/dom';
 import { act, render, screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
-import { axeViolations } from '@vp/web-testing/dom';
 import { WithUiCopy } from '../../../../../__tests__/ui-copy-fixture';
 import { Button } from '../../../../button';
 import {

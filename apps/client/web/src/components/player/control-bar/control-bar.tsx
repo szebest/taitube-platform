@@ -1,4 +1,4 @@
-import { Format, useFormat, useT } from '@kit/intl-react';
+import { Format, useFormat } from '@kit/intl-react';
 import { unwrapOr } from '@kit/result';
 import { Badge, IconButton } from '@kit/ui';
 import { videoDuration } from '@vp/intl-formats';
@@ -20,6 +20,7 @@ import {
   usePlayerCommands,
   usePlayerState,
 } from '#app/integrations/video-js/video-js-engine';
+import { useT } from '#app/lib/messages';
 import { useOfferedPlayerChannel, usePlayerTheater } from '#app/lib/player/player-channel';
 import type { PlaybackRange } from '#app/lib/player/taitube-player-props';
 import { CaptionsButton } from './components/captions-button/captions-button';

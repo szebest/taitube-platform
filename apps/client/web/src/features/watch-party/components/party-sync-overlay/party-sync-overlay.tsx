@@ -1,8 +1,8 @@
-import { useT } from '@kit/intl-react';
 import { Badge, Button } from '@kit/ui';
 import type { WatchPartySocket } from '@vp/queries';
 import { usePartySync } from '#app/features/watch-party/hooks/use-party-sync';
 import { getSyncBadge } from '#app/features/watch-party/utils/get-sync-badge';
+import { useT } from '#app/lib/messages';
 
 /** Rendered inside the player: keeps it on the room's clock, and shows how well it does. */
 export function PartySyncOverlay({ socket }: { socket: WatchPartySocket }) {
