@@ -23,6 +23,20 @@ export interface PlaybackRange {
   endMs: number;
 }
 
+/** A note drawn over the picture while the playhead is inside `startMs` to `endMs`. */
+export interface PlayerCard {
+  id: string;
+  startMs: number;
+  endMs: number;
+  text: string;
+}
+
+/** A chapter the creator set: a mark on the seek bar, named for the playhead's position. */
+export interface PlayerChapter {
+  startMs: number;
+  title: string;
+}
+
 type PlayerLayout = 'landscape' | 'vertical' | 'fill';
 
 /** The playback a caller owns: the engine plays or pauses and mutes to match, and reports back through the callbacks. */
@@ -70,6 +84,10 @@ export interface TaitubePlayerProps extends Pick<Video, 'posterUrl' | 'title'> {
   defaults?: PlaybackDefaults;
   /** The video's caption tracks; the ready ones are side-loaded and offered in the captions menu. */
   captionTracks?: readonly CaptionTrackView[];
+  /** Corrections and other timed notes drawn over the picture, one at a time. */
+  cards?: readonly PlayerCard[];
+  /** The video's stored chapters; the seek bar marks where each one starts. */
+  chapters?: readonly PlayerChapter[];
   onPlay?: (progress: PlaybackProgress) => void;
   onPause?: (progress: PlaybackProgress) => void;
   onWaiting?: () => void;

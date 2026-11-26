@@ -1091,6 +1091,9 @@ importers:
       '@vp/shared-messages':
         specifier: workspace:*
         version: link:../../universal/shared-messages
+      cookie-es:
+        specifier: ^3.1.1
+        version: 3.1.1
       zod:
         specifier: ^4.6.5
         version: 4.6.5
@@ -3501,6 +3504,9 @@ importers:
       '@kit/result':
         specifier: workspace:*
         version: link:../../platform/universal/result
+      '@kit/validation':
+        specifier: workspace:*
+        version: link:../../platform/universal/validation
       '@vp/domain':
         specifier: workspace:*
         version: link:../domain

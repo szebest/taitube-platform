@@ -44,6 +44,7 @@ import type { UserContext } from '@vp/permissions';
 import { isPlainSearchQuery, searchQueryWithoutTerms, validateSearchQuery } from '@vp/validation';
 import { uuidv7 } from 'uuidv7';
 import { decodeSearchCursor, searchCursorPayload } from './cursor';
+import type { ExperimentOverlay } from './experiment-overlay';
 import type { HistoryPause } from './history-pause';
 import { toChannelSuggestion, toSearchResultItem } from './search-views';
 import { loadChannelsOf, type SpriteGeometry } from './video-views';
@@ -56,6 +57,7 @@ export interface SearchServiceDeps {
   singleflight: Singleflight;
   paginator: Paginator;
   viewerProgress: ViewerProgress;
+  experiments: ExperimentOverlay;
   history: SearchHistoryRepositoryPort;
   pause: HistoryPause;
   cdn: CdnBase;
@@ -72,6 +74,11 @@ export interface SearchResult {
 }
 
 type SearchBody = Omit<SearchResponse, 'tookMs'>;
+
+interface SearchReader {
+  viewer: UserContext | null;
+  sessionKey: string | null;
+}
 
 const CachedBodySchema = search.result.omit({ tookMs: true });
 
@@ -91,18 +98,23 @@ interface Plan {
 export class SearchService {
   constructor(private readonly deps: SearchServiceDeps) {}
 
-  async search(request: SearchRequest, viewer: UserContext | null = null) {
+  async search(
+    request: SearchRequest,
+    viewer: UserContext | null = null,
+    sessionKey: string | null = null
+  ) {
     const startedAt = this.deps.now();
+    const reader = { viewer, sessionKey };
     return andThenAsync(this.plan(request), async (plan) => {
       if (request.record) await this.recordHistory(request.q, plan.cursor, viewer);
       const cached = await this.readCache(plan.key);
-      if (cached) return ok(await this.timed(cached, 'HIT', startedAt, viewer));
+      if (cached) return ok(await this.timed(cached, 'HIT', startedAt, reader));
 
       const computed = await this.deps.singleflight.do(plan.key, () =>
         this.searchUncached(request, plan)
       );
       if (isErr(computed)) return computed;
-      return ok(await this.timed(computed.value, 'MISS', startedAt, viewer));
+      return ok(await this.timed(computed.value, 'MISS', startedAt, reader));
     });
   }
 
@@ -234,22 +246,24 @@ export class SearchService {
     body: SearchBody,
     cache: CacheOutcome,
     startedAt: number,
-    viewer: UserContext | null
+    reader: SearchReader
   ): Promise<SearchResult> {
-    const items = await this.withProgress(body.items, viewer);
+    const items = await this.forReader(body.items, reader);
     return { data: { ...body, items, tookMs: this.deps.now() - startedAt }, cache };
   }
 
-  private async withProgress(
+  /** The caller's progress and test variants, over a page any searcher may have cached. */
+  private async forReader(
     items: SearchBody['items'],
-    viewer: UserContext | null
+    { viewer, sessionKey }: SearchReader
   ): Promise<SearchBody['items']> {
     const videos = items.flatMap((item) => (item.type === 'video' ? [item.data] : []));
-    const marked = new Map(
-      (await this.deps.viewerProgress.attach(viewer, videos)).map((video) => [video.id, video])
+    const marked = await this.deps.viewerProgress.attach(viewer, videos);
+    const shown = new Map(
+      (await this.deps.experiments.apply(marked, sessionKey)).map((video) => [video.id, video])
     );
     return items.map((item) =>
-      item.type === 'video' ? { ...item, data: marked.get(item.data.id) ?? item.data } : item
+      item.type === 'video' ? { ...item, data: shown.get(item.data.id) ?? item.data } : item
     );
   }
 

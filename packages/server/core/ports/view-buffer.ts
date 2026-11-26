@@ -1,5 +1,12 @@
 import type { Result } from '@kit/result';
-import type { ViewBatch, ViewDate, ViewDevice, ViewHour } from '@vp/domain';
+import type {
+  ExperimentMeasure,
+  ExperimentVariantId,
+  ViewBatch,
+  ViewDate,
+  ViewDevice,
+  ViewHour,
+} from '@vp/domain';
 import type { CacheUnavailable } from '@vp/errors';
 
 export interface ViewEvent {
@@ -7,6 +14,11 @@ export interface ViewEvent {
   readonly viewerId: string;
   readonly viewDate: ViewDate;
   readonly viewHour: ViewHour;
+}
+
+export interface ExperimentShown {
+  readonly experimentId: string;
+  readonly variantId: ExperimentVariantId;
 }
 
 export interface PlaybackWatch {
@@ -17,6 +29,24 @@ export interface PlaybackWatch {
   readonly device: ViewDevice;
   readonly watchedSeconds: number;
   readonly requiredSeconds: number;
+  /** The share link the page came through: its watch seconds and its counted view go to it too. */
+  readonly shareLinkId: string | null;
+  /** The test variant the page showed: its watch seconds go to it too. */
+  readonly experiment: ExperimentShown | null;
+}
+
+export interface ShareLinkOpen {
+  readonly videoId: string;
+  readonly linkId: string;
+  /** The signed-in viewer's id, else something as ephemeral; counted once per link and day. */
+  readonly viewerKey: string;
+  readonly viewDate: ViewDate;
+}
+
+export interface ExperimentEvent extends ExperimentShown {
+  readonly videoId: string;
+  readonly viewDate: ViewDate;
+  readonly measure: ExperimentMeasure;
 }
 
 /** `pending`: this event decided nothing, the session is short of the required seconds or already counted. */
@@ -54,4 +84,10 @@ export interface ViewBufferPort {
    * session adds one viewer to each step it reaches however many beacons it sends.
    */
   recordRetention(milestone: RetentionMilestone): Promise<Result<void, CacheUnavailable>>;
+  /** One open per viewer, link and day, kept distinct as the views are, through the day's sketch. */
+  recordShareLinkOpen(open: ShareLinkOpen): Promise<Result<ViewRecordOutcome, CacheUnavailable>>;
+  /** Adds one impression or start per event, in one round trip. */
+  recordExperimentEvents(
+    events: readonly ExperimentEvent[]
+  ): Promise<Result<void, CacheUnavailable>>;
 }

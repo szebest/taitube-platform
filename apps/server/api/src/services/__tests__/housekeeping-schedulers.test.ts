@@ -27,11 +27,13 @@ describe('apps/server/api/services: housekeeping schedulers', () => {
     expect(registered.map((scheduler) => scheduler.id).sort()).toEqual([
       'expire-raw',
       'flush-video-views',
+      'prune-revisions',
       'purge-channel-audit',
       'purge-channel-images',
       'purge-comment-moderation',
       'purge-deleted',
       'purge-exports',
+      'purge-generations',
       'purge-handle-history',
       'purge-screening-evidence',
       'purge-search-history',

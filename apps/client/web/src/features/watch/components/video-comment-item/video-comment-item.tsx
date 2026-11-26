@@ -7,12 +7,10 @@ import { publishedAt } from '@vp/intl-formats';
 import { canHeartComment } from '@vp/permissions';
 import { useCan } from '@vp/permissions-react';
 import {
-  ActingAsLine,
   SectionBoundary,
   useApi,
   useFailureToast,
   useHeartComment,
-  useIdentityGuard,
   videoQueryOptions,
 } from '@vp/queries';
 import { Suspense, useEffect, useEffectEvent, useState } from 'react';
@@ -26,7 +24,9 @@ import { type DescriptionToken, tokenizeDescription } from '#app/features/watch/
 import { useRequireAccount } from '#app/hooks/use-require-account';
 import { useT } from '#app/lib/messages';
 import { repliesQueryOptions } from '#app/lib/query-keys/comment-keys';
+import { useShareToken } from '#app/lib/video-access/share-token.context';
 import { CommentEditor } from '../comment-editor/comment-editor';
+import { ReplyComposer } from '../reply-composer/reply-composer';
 import { LazyReportCommentDialog } from '../report-comment-dialog/report-comment-dialog.lazy';
 import { VideoCommentMenu } from '../video-comment-menu/video-comment-menu';
 
@@ -123,34 +123,6 @@ function ReplyThread(props: ReplyThreadProps) {
   );
 }
 
-function ReplyComposer({
-  draft,
-  onChange,
-  onSend,
-  sending,
-}: {
-  draft: string;
-  onChange: (draft: string) => void;
-  onSend: () => void;
-  sending: boolean;
-}) {
-  const { tOr } = useT();
-  const guard = useIdentityGuard();
-
-  return (
-    <div className="col-start-2 flex flex-col gap-inline">
-      <ActingAsLine action="reply" guard={guard} />
-      <CommentThread.Composer
-        value={draft}
-        onChange={onChange}
-        onSubmit={() => guard.guard(onSend)}
-        submitting={sending}
-        aria-label={tOr('appUi.reply', {}, '')}
-      />
-    </div>
-  );
-}
-
 export interface VideoCommentItemProps {
   comment: CommentView;
   /** The reply thread's open state, held by a parent that unmounts this row while it is off screen. */
@@ -186,7 +158,9 @@ export function VideoCommentItem({
   const [reportOpen, setReportOpen] = useState(false);
   const [reportOpened, setReportOpened] = useState(false);
 
-  const { data: video } = useSuspenseQuery(videoQueryOptions(api, comment.videoId));
+  const { data: video } = useSuspenseQuery(
+    videoQueryOptions(api, comment.videoId, useShareToken())
+  );
   const editComment = useEditComment(comment.id);
   const deleteComment = useDeleteComment(comment.id);
   const postReply = usePostComment(comment.videoId);

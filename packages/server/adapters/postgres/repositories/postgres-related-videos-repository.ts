@@ -9,6 +9,7 @@ import { RELATED_CANDIDATES, compareRelated } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { type SQL, arrayOverlaps, count, desc, eq, inArray, ne, sql } from 'drizzle-orm';
 import { union } from 'drizzle-orm/pg-core';
+import { toVideoRecord } from '../mappers/video.mapper';
 import { drizzleWhere } from '../scopes/index';
 import { publicFeedScope } from './public-feed-query';
 import type { PostgresDatabase } from './types';
@@ -128,7 +129,7 @@ export class PostgresRelatedVideosRepository implements RelatedVideosRepositoryP
     );
 
     return map(found, (videos) => {
-      const byId = new Map(videos.map((video) => [video.id, video]));
+      const byId = new Map(videos.map((video) => [video.id, toVideoRecord(video)]));
       return winners.flatMap(({ id, signals }) => {
         const video = byId.get(id);
         return video ? [{ video, signals }] : [];

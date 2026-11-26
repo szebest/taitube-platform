@@ -1,5 +1,4 @@
-import { Format, useFormat } from '@kit/intl-react';
-import { unwrapOr } from '@kit/result';
+import { Format } from '@kit/intl-react';
 import { Badge, IconButton } from '@kit/ui';
 import { videoDuration } from '@vp/intl-formats';
 import {
@@ -14,7 +13,7 @@ import {
   Volume2,
   VolumeX,
 } from 'lucide-react';
-import { type ChangeEvent, type CSSProperties, useRef } from 'react';
+import { type ChangeEvent, useRef } from 'react';
 import {
   LiveEdgeButton,
   usePlayerCommands,
@@ -22,11 +21,12 @@ import {
 } from '#app/integrations/video-js/video-js-engine';
 import { useT } from '#app/lib/messages';
 import { useOfferedPlayerChannel, usePlayerTheater } from '#app/lib/player/player-channel';
-import type { PlaybackRange } from '#app/lib/player/taitube-player-props';
+import type { PlaybackRange, PlayerChapter } from '#app/lib/player/taitube-player-props';
 import { CaptionsButton } from './components/captions-button/captions-button';
 import { PictureInPictureButton } from './components/picture-in-picture-button/picture-in-picture-button';
+import { SeekBar } from './components/seek-bar/seek-bar';
 import { SettingsMenu } from './components/settings-menu/settings-menu';
-import { fromClipTime, toClipPlayhead } from './utils/clip-playhead';
+import { toClipPlayhead } from './utils/clip-playhead';
 
 export interface ControlBarProps {
   /** Shown over the top of the picture, on its own scrim, while the controls are. */
@@ -34,11 +34,20 @@ export interface ControlBarProps {
   live?: boolean;
   /** A clip: the seek bar and the clock show only this range of the video. */
   range?: PlaybackRange;
+  /** Marked on the seek bar where each starts. */
+  chapters?: readonly PlayerChapter[];
   onPrevious?: () => void;
   onNext?: () => void;
 }
 
-export function ControlBar({ title, live = false, range, onPrevious, onNext }: ControlBarProps) {
+export function ControlBar({
+  title,
+  live = false,
+  range,
+  chapters,
+  onPrevious,
+  onNext,
+}: ControlBarProps) {
   const visible = usePlayerState((state) => state.controlsVisible);
 
   const { tOr } = useT();
@@ -52,7 +61,7 @@ export function ControlBar({ title, live = false, range, onPrevious, onNext }: C
         data-visible={visible || undefined}
         className="absolute inset-x-0 bottom-0 m-0 min-w-0 border-0 bg-linear-to-t from-media/90 via-media/55 to-transparent px-3 pt-20 pb-1 transition-opacity duration-fast ease-standard motion-reduce:transition-none not-data-visible:pointer-events-none not-data-visible:opacity-0 has-focus-visible:pointer-events-auto has-focus-visible:opacity-100"
       >
-        {!live && <SeekBar range={range} />}
+        {!live && <SeekBar range={range} chapters={chapters} />}
         <div className="flex items-center gap-1">
           {onPrevious && (
             <IconButton aria-label={tOr('player.previousVideo', {}, '')} onClick={onPrevious}>
@@ -98,45 +107,6 @@ function useClipPlayhead(range: PlaybackRange | undefined) {
   const duration = usePlayerState((state) => state.duration);
 
   return toClipPlayhead(range, { currentTime, duration });
-}
-
-const percentOf = (part: number, whole: number) =>
-  `${whole > 0 ? Math.min((part / whole) * 100, 100) : 0}%`;
-
-function SeekBar({ range }: Pick<ControlBarProps, 'range'>) {
-  const { currentTime, duration } = useClipPlayhead(range);
-  const videoDurationSeconds = usePlayerState((state) => state.duration);
-  const bufferedEnd = usePlayerState((state) => state.bufferedEnd);
-  const { currentTime: buffered } = toClipPlayhead(range, {
-    currentTime: bufferedEnd,
-    duration: videoDurationSeconds,
-  });
-
-  const { seek } = usePlayerCommands();
-  const { tOr } = useT();
-  const { format } = useFormat();
-
-  return (
-    <input
-      type="range"
-      aria-label={tOr('player.seek', {}, '')}
-      aria-valuetext={unwrapOr(format(videoDuration(currentTime)), '')}
-      min={0}
-      max={duration}
-      step="any"
-      value={currentTime}
-      onChange={({ currentTarget }) =>
-        seek(fromClipTime(range, currentTarget.valueAsNumber, videoDurationSeconds))
-      }
-      style={
-        {
-          '--played': percentOf(currentTime, duration),
-          '--buffered': percentOf(buffered, duration),
-        } as CSSProperties
-      }
-      className="media-seek block w-full cursor-pointer"
-    />
-  );
 }
 
 function LiveBadge() {

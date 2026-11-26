@@ -48,6 +48,7 @@ REDIS_PASSWORD=vp
 S3_ACCESS_KEY_ID=minioadmin
 S3_SECRET_ACCESS_KEY=minioadmin
 ADMIN_TOKEN=change-me-32-bytes-random
+VIDEO_ACCESS_SECRET=change-me-video-access
 LIVE_HOOK_SECRET=change-me-live-hook
 WATCH_PARTY_GUEST_SALT=change-me-party-salt
 ```
@@ -128,6 +129,7 @@ How the API verifies who is calling.
 | `AUTH_ALGORITHMS` | comma list | `RS256,ES256` | - | no | api | Comma list of signature algorithms a jwks token may use (RS256, RS384, RS512, ES256, ES384, ES512, EdDSA). Tokens signed otherwise are rejected. | `RS256,ES256` |
 | `AUTH_DEV_USER_ID` | uuid | `00000000-0000-7000-8000-000000000001` | - | no | api | The user ADMIN_TOKEN acts as in dev mode. The seed provisions it; a different value needs a matching user row. | `00000000-0000-7000-8000-000000000001` |
 | `ADMIN_TOKEN` | string | *unset* | - | yes | api | The x-admin-token for /admin and Bull Board in dev mode. Production refuses any value: admin comes from a verified token role. | `<random 32 bytes>` |
+| `VIDEO_ACCESS_SECRET` | string | *unset* | - | yes | api | Signs the cookie that unlocks a password-protected video for 12 hours. Unset, setting a video password is refused; rotating it ends every unlock; production refuses the local value. | `<random 32 bytes>` |
 
 ## Pipeline tuning
 

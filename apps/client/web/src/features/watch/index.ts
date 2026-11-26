@@ -5,3 +5,5 @@ export { WatchLayout } from './components/watch-layout/watch-layout';
 export { WatchStage } from './components/watch-stage/watch-stage';
 export { WatchCommentThread } from './components/watch-comment-thread/watch-comment-thread';
 export { LazyGlobalNowPlayingBar } from './components/global-now-playing-bar/global-now-playing-bar.lazy';
+export { ShareLinkExpired } from './components/share-link-expired/share-link-expired';
+export { WatchPasswordGate } from './components/watch-password-gate/watch-password-gate';

@@ -3,11 +3,14 @@ import {
   type ViewBatch,
   type ViewBatchOutcome,
   mergeDeviceCounts,
+  mergeExperimentCounts,
   mergeHourlyCounts,
+  mergeShareLinkCounts,
   mergeViewCounts,
   viewsByVideo,
 } from '@vp/domain';
 import { eq, inArray, sql } from 'drizzle-orm';
+import { applyAccessStats } from './access-stats-writes';
 import type { PostgresDatabase } from './types';
 
 const {
@@ -34,9 +37,13 @@ export async function applyViewBatch(
   const counts = mergeViewCounts(batch.counts);
   const hours = mergeHourlyCounts(batch.hourly);
   const devices = mergeDeviceCounts(batch.devices);
+  const linkCounts = mergeShareLinkCounts(batch.shareLinks);
+  const experimentCounts = mergeExperimentCounts(batch.experiments);
   const videoIds = [
     ...new Set([...counts, ...batch.retention, ...hours, ...devices].map(({ videoId }) => videoId)),
   ];
+
+  await applyAccessStats(tx, linkCounts, experimentCounts);
   if (videoIds.length === 0) return { type: 'applied', views: 0 };
 
   const known = await tx.select({ id: v.id }).from(v).where(inArray(v.id, videoIds));

@@ -112,6 +112,7 @@ export const VIDEO_AUDIT_FIELDS = [
   'categoryId',
   'tags',
   'thumbnail',
+  'chapters',
 ] as const;
 
 export type VideoAuditField = (typeof VIDEO_AUDIT_FIELDS)[number];
@@ -141,6 +142,12 @@ type ChannelAuditEvent =
       meta: { fields: VideoAuditField[] };
     }
   | { action: 'video.comments.toggled'; targetType: 'video'; targetId: string; meta: ToggledMeta }
+  | {
+      action: 'video.restored';
+      targetType: 'video';
+      targetId: string;
+      meta: { fromVersion: number };
+    }
   | { action: 'comment.held'; targetType: 'comment'; targetId: string; meta: CommentMeta }
   | { action: 'comment.approved'; targetType: 'comment'; targetId: string; meta: CommentMeta }
   | { action: 'comment.hidden'; targetType: 'comment'; targetId: string; meta: CommentMeta }
@@ -202,14 +209,26 @@ export type ChannelAuditAction = ChannelAuditEvent['action'];
 
 type VideoAuditEvent = Extract<ChannelAuditEvent, { targetType: 'video' }>;
 
-/** One edit is audited as what changed in its fields and, on its own row, a comments toggle. */
+/**
+ * One edit is audited as what changed in its fields and, on its own row, a comments toggle; a
+ * restore adds a row naming the version it went back to.
+ */
 export function videoEditAudit(edit: {
   videoId: string;
   fields: VideoAuditField[];
   commentsEnabled?: boolean;
+  restoredFromVersion?: number;
 }): VideoAuditEvent[] {
-  const { videoId: targetId, fields, commentsEnabled } = edit;
+  const { videoId: targetId, fields, commentsEnabled, restoredFromVersion } = edit;
   const events: VideoAuditEvent[] = [];
+  if (restoredFromVersion !== undefined) {
+    events.push({
+      action: 'video.restored',
+      targetType: 'video',
+      targetId,
+      meta: { fromVersion: restoredFromVersion },
+    });
+  }
   if (fields.length > 0) {
     events.push({ action: 'video.updated', targetType: 'video', targetId, meta: { fields } });
   }
@@ -234,6 +253,7 @@ const AUDIT_ACTIONS: Record<ChannelAuditAction, true> = {
   'member.left': true,
   'video.updated': true,
   'video.comments.toggled': true,
+  'video.restored': true,
   'comment.held': true,
   'comment.approved': true,
   'comment.hidden': true,

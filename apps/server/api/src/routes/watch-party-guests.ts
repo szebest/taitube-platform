@@ -9,19 +9,9 @@ import { ErrorCodes } from '@vp/errors';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { contractSchema } from './contract-schema';
+import { httpOnlyCookie } from './http-only-cookie';
 import { partyCallerOf } from './party-caller';
 import { sendResult } from './send-result';
-
-function guestCookie(credential: string, maxAgeSeconds: number, secure: boolean): string {
-  return [
-    `${PARTY_GUEST_COOKIE}=${credential}`,
-    'Path=/',
-    'HttpOnly',
-    'SameSite=Lax',
-    `Max-Age=${maxAgeSeconds}`,
-    ...(secure ? ['Secure'] : []),
-  ].join('; ');
-}
 
 export async function watchPartyGuestsRoutes(app: FastifyInstance): Promise<void> {
   const { watchPartyGuestService } = app.services;
@@ -53,7 +43,10 @@ export async function watchPartyGuestsRoutes(app: FastifyInstance): Promise<void
       const { credential, maxAgeSeconds, ...body } = joined.value;
       reply.header(
         'set-cookie',
-        guestCookie(credential, maxAgeSeconds, request.protocol === 'https')
+        httpOnlyCookie(PARTY_GUEST_COOKIE, credential, {
+          maxAgeSeconds,
+          secure: request.protocol === 'https',
+        })
       );
       return sendResult(reply, request, ok(body), { status: joinWatchPartyAsGuest.status });
     }

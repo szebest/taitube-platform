@@ -4,6 +4,7 @@ import {
   PROBLEM_CONTENT_TYPE,
   type ProblemInput,
   problemDetails,
+  VIEWER_SESSION_HEADER,
 } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { ACCOUNT_SLOT_HEADER } from './account-slots';
@@ -11,7 +12,13 @@ import { withExpired } from './accounts';
 import { readAccounts, writeAccounts } from './accounts-cookie';
 import { API_PROXY_PATH, UNAUTHORIZED } from './api-client';
 import type { SessionConfig } from './session-config';
-import { clearSessionCookie, readSessionToken, writeSessionCookie } from './session-cookie';
+import {
+  clearSessionCookie,
+  readSessionToken,
+  readVideoAccessCookies,
+  reissueVideoAccessCookies,
+  writeSessionCookie,
+} from './session-cookie';
 
 const SAFE_METHODS: ReadonlySet<string> = new Set(['GET', 'HEAD']);
 
@@ -22,7 +29,10 @@ const PAYLOAD_TOO_LARGE = 413;
 
 const FORBIDDEN = 403;
 
-/** What the browser may tell the API. Never its cookies: the session goes as the bearer, alone. */
+/**
+ * What the browser may tell the API. Never its cookies but the video unlocks: the session goes as
+ * the bearer, alone.
+ */
 const FORWARDED_REQUEST_HEADERS = [
   'accept',
   'accept-language',
@@ -32,6 +42,7 @@ const FORWARDED_REQUEST_HEADERS = [
   'last-event-id',
   'traceparent',
   'tracestate',
+  VIEWER_SESSION_HEADER,
 ];
 
 /** What `fetch` already consumed (the encoding it decoded, the framing) or this origin must not take. */
@@ -94,6 +105,8 @@ function forwardedHeaders(request: Request, token: string | undefined): Headers 
   const hops = forwardedFor(request);
   if (hops) headers.set('x-forwarded-for', hops);
   if (token) headers.set('authorization', `Bearer ${token}`);
+  const unlocks = readVideoAccessCookies();
+  if (unlocks) headers.set('cookie', unlocks);
   return headers;
 }
 
@@ -102,6 +115,7 @@ function forwardedHeaders(request: Request, token: string | undefined): Headers 
  * slot and channel the browser named: a tab on another account is never served this one's copy.
  */
 function relayed(response: Response): Response {
+  reissueVideoAccessCookies(response.headers.getSetCookie());
   const headers = new Headers(response.headers);
   for (const name of DROPPED_RESPONSE_HEADERS) headers.delete(name);
   if (headers.get('vary') !== '*')
@@ -115,11 +129,12 @@ function relayed(response: Response): Response {
 
 /**
  * Answers the browser's call to `/api/...` on this origin from the API, with the token of `slot`
- * (the `X-Account-Slot` the browser sent) as the bearer. A write that names no slot is refused, so
- * a cross-site form, which cannot set that header, writes nothing. A token the API refuses is
- * refreshed once and the call retried; with no refresh to be had that slot alone is cleared and
- * marked expired, the 401 goes back, and the browser signs that slot in again. `refresh` is
- * single-flight per token (`sessionMiddleware`), so parallel 401s share one.
+ * (the `X-Account-Slot` the browser sent) as the bearer and the video unlock cookies, which come
+ * back re-issued on this origin. A write that names no slot is refused, so a cross-site form,
+ * which cannot set that header, writes nothing. A token the API refuses is refreshed once and the
+ * call retried; with no refresh to be had that slot alone is cleared and marked expired, the 401
+ * goes back, and the browser signs that slot in again. `refresh` is single-flight per token
+ * (`sessionMiddleware`), so parallel 401s share one.
  */
 export async function proxyToApi(
   request: Request,

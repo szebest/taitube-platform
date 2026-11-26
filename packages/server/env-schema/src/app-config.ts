@@ -87,6 +87,8 @@ export interface AppConfig {
     resourceAttributes: string;
   };
   auth: AuthConfig;
+  /** Absent turns video passwords off. */
+  videoAccess: { secret: string | undefined };
   caches: {
     categories: { l1TtlMs: number; l2TtlSeconds: number; maxL1Entries: number };
     reactions: { ttlSeconds: number; userReactionTtlSeconds: number };
@@ -117,7 +119,11 @@ export interface AppConfig {
     scanLimit: number;
   };
   views: Numbers<typeof VIEWS>;
-  playbackTelemetry: { bodyLimitBytes: number; ratePerMinute: number };
+  playbackTelemetry: {
+    bodyLimitBytes: number;
+    impressionsBodyLimitBytes: number;
+    ratePerMinute: number;
+  };
   webVitals: { bodyLimitBytes: number; ratePerMinute: number; maxRoutesPerApp: number };
   http: {
     port: number;
@@ -239,18 +245,10 @@ export function toAppConfig(env: AppEnv): AppConfig {
       resourceAttributes: env.OTEL_RESOURCE_ATTRIBUTES,
     },
     auth: authConfig(env),
-    caches: {
-      categories: { ...CACHES.categories },
-      reactions: { ...CACHES.reactions },
-      subscriptions: { ...CACHES.subscriptions },
-      comments: { ...CACHES.comments },
-      playheads: { ...CACHES.playheads },
-    },
+    videoAccess: { secret: env.VIDEO_ACCESS_SECRET },
+    caches: structuredClone(CACHES),
     pollers: { ...POLLERS },
-    httpCache: {
-      categories: { ...HTTP_CACHE.categories },
-      feed: { ...HTTP_CACHE.feed },
-    },
+    httpCache: structuredClone(HTTP_CACHE),
     picks: { ...PICKS },
     webhooks: { allowPrivateHosts: env.WEBHOOK_ALLOW_PRIVATE_HOSTS, ...WEBHOOK_DELIVERY },
     housekeeping: { ...HOUSEKEEPING },

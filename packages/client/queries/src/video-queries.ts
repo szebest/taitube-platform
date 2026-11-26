@@ -1,6 +1,7 @@
 import { KEYSET_PAGE_SIZE, keysetPaging } from '@kit/query';
 import { infiniteQueryOptions, queryOptions } from '@tanstack/react-query';
 import type { ApiClient } from '@vp/api-client';
+import { SHARE_TOKEN_PARAM } from '@vp/api-contracts';
 
 export const videoKeys = {
   all: ['videos'] as const,
@@ -11,10 +12,15 @@ export const videoKeys = {
   captions: (videoId: string) => [...videoKeys.all, 'captions', videoId] as const,
 };
 
-export function videoQueryOptions(api: ApiClient, videoId: string) {
+/**
+ * One video's read. A share link's token goes with the request but stays out of the key, so every
+ * part of the page reads the one entry the token's read filled.
+ */
+export function videoQueryOptions(api: ApiClient, videoId: string, shareToken?: string) {
   return queryOptions({
     queryKey: videoKeys.detail(videoId),
-    queryFn: () => api.videos.getVideo({ params: { id: videoId } }),
+    queryFn: () =>
+      api.videos.getVideo({ params: { id: videoId }, query: { [SHARE_TOKEN_PARAM]: shareToken } }),
   });
 }
 

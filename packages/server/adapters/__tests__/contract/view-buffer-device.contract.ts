@@ -49,6 +49,8 @@ export function describeViewBufferDeviceContract(makeSubject: MakeViewBufferSubj
       device: 'desktop',
       watchedSeconds: 6,
       requiredSeconds: 5,
+      shareLinkId: null,
+      experiment: null,
       ...overrides,
     });
 

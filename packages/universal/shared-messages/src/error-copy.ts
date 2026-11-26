@@ -1,5 +1,6 @@
 import { type ErrorCode, ErrorCodes } from '@vp/errors';
 import type { SharedArgumentFreeKey } from './catalogue';
+import { CHANNEL_ERROR_COPY } from './error-copy-channels';
 
 /**
  * The words a person sees for each failure code. Declared over the whole `ErrorCode` union, so a
@@ -56,6 +57,21 @@ export const ERROR_COPY: Readonly<Record<ErrorCode, SharedArgumentFreeKey>> = {
   [ErrorCodes.SEARCH_HISTORY_NOT_FOUND]: 'errors.searchHistoryNotFound',
   [ErrorCodes.RECOMMENDATION_FEEDBACK_NOT_FOUND]: 'errors.recommendationFeedbackNotFound',
   [ErrorCodes.CLIP_NOT_FOUND]: 'errors.clipNotFound',
+  [ErrorCodes.REVISION_NOT_FOUND]: 'errors.revisionNotFound',
+  [ErrorCodes.CORRECTION_NOT_FOUND]: 'errors.correctionNotFound',
+  [ErrorCodes.CORRECTION_LIMIT]: 'errors.correctionLimit',
+  [ErrorCodes.SHARE_LINK_NOT_FOUND]: 'errors.shareLinkNotFound',
+  [ErrorCodes.SHARE_LINK_EXPIRED]: 'errors.shareLinkExpired',
+  [ErrorCodes.SHARE_LINK_LIMIT]: 'errors.shareLinkLimit',
+  [ErrorCodes.VIDEO_PASSWORD_REQUIRED]: 'errors.videoPasswordRequired',
+  [ErrorCodes.VIDEO_PASSWORD_INVALID]: 'errors.videoPasswordInvalid',
+  [ErrorCodes.VIDEO_PASSWORDS_OFF]: 'errors.videoPasswordsOff',
+  [ErrorCodes.EXPERIMENT_NOT_FOUND]: 'errors.experimentNotFound',
+  [ErrorCodes.EXPERIMENT_LIMIT]: 'errors.experimentLimit',
+  [ErrorCodes.EXPERIMENT_NOT_RUNNING]: 'errors.experimentNotRunning',
+  [ErrorCodes.GENERATION_IN_PROGRESS]: 'errors.generationInProgress',
+  [ErrorCodes.REPLACEMENT_NOT_UPLOADED]: 'errors.replacementNotUploaded',
+  [ErrorCodes.NO_EDIT_TO_REVERT]: 'errors.noEditToRevert',
   [ErrorCodes.PICK_NOT_FOUND]: 'errors.pickNotFound',
   [ErrorCodes.PICK_WINDOW_OVERLAP]: 'errors.pickWindowOverlap',
   [ErrorCodes.WEBHOOK_NOT_FOUND]: 'errors.webhookNotFound',
@@ -134,13 +150,5 @@ export const ERROR_COPY: Readonly<Record<ErrorCode, SharedArgumentFreeKey>> = {
   [ErrorCodes.WATCH_PARTY_CHAT_OFF]: 'errors.watchPartyChatOff',
   [ErrorCodes.WATCH_PARTY_TICKET_INVALID]: 'errors.watchPartyTicketInvalid',
   [ErrorCodes.WATCH_PARTY_CREDENTIAL_INVALID]: 'errors.watchPartyCredentialInvalid',
-  [ErrorCodes.CHANNEL_MEMBERSHIP_REQUIRED]: 'errors.channelMembershipRequired',
-  [ErrorCodes.CHANNEL_LIMIT_REACHED]: 'errors.channelLimitReached',
-  [ErrorCodes.CHANNEL_NOT_OWNED]: 'errors.channelNotOwned',
-  [ErrorCodes.CHANNEL_INVITE_NOT_FOUND]: 'errors.channelInviteNotFound',
-  [ErrorCodes.CHANNEL_INVITE_NOT_PENDING]: 'errors.channelInviteNotPending',
-  [ErrorCodes.CHANNEL_INVITE_ALREADY_PENDING]: 'errors.channelInviteAlreadyPending',
-  [ErrorCodes.CHANNEL_MEMBER_EXISTS]: 'errors.channelMemberExists',
-  [ErrorCodes.CHANNEL_MEMBER_NOT_FOUND]: 'errors.channelMemberNotFound',
-  [ErrorCodes.CHANNEL_OWNER_IMMUTABLE]: 'errors.channelOwnerImmutable',
+  ...CHANNEL_ERROR_COPY,
 };

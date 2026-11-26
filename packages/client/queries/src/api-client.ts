@@ -1,7 +1,8 @@
 import { createIsomorphicFn } from '@tanstack/react-start';
 import { type ApiClient, createApiClient } from '@vp/api-client';
+import { VIEWER_SESSION_HEADER } from '@vp/api-contracts';
 import { ACCOUNT_SLOT_HEADER } from './account-slots';
-import { readSessionToken } from './session-cookie';
+import { readSessionToken, withVideoAccessCookies } from './session-cookie';
 
 /** Where each client app answers its browser's API calls, on its own origin. */
 export const API_PROXY_PATH = '/api';
@@ -17,6 +18,11 @@ export type AppApiClientOptions = {
   onUnauthorized: (slot: number) => void;
   /** The acting channel, sent as `X-Channel-Id` on the endpoints that take one. */
   getChannelId?: () => string | undefined;
+  /**
+   * The browser tab's ephemeral key, sent as `x-viewer-session` so the API picks one test variant
+   * per tab. The server never sends one, so a server render always carries the control.
+   */
+  getViewerSession?: () => string;
 };
 
 function asSlot(getSlot: () => number, onUnauthorized: (slot: number) => void): typeof fetch {
@@ -40,14 +46,17 @@ export const createAppApiClient = createIsomorphicFn()
   .server(({ apiBaseUrl, getSlot, getChannelId }: AppApiClientOptions): ApiClient =>
     createApiClient({
       baseUrl: apiBaseUrl,
+      fetch: withVideoAccessCookies,
       getAuthToken: () => readSessionToken(getSlot()),
       getChannelId,
     })
   )
-  .client(({ getSlot, onUnauthorized, getChannelId }: AppApiClientOptions): ApiClient =>
-    createApiClient({
-      baseUrl: `${window.location.origin}${API_PROXY_PATH}`,
-      fetch: asSlot(getSlot, onUnauthorized),
-      getChannelId,
-    })
+  .client(
+    ({ getSlot, onUnauthorized, getChannelId, getViewerSession }: AppApiClientOptions): ApiClient =>
+      createApiClient({
+        baseUrl: `${window.location.origin}${API_PROXY_PATH}`,
+        fetch: asSlot(getSlot, onUnauthorized),
+        getChannelId,
+        headers: getViewerSession && { [VIEWER_SESSION_HEADER]: getViewerSession() },
+      })
   );

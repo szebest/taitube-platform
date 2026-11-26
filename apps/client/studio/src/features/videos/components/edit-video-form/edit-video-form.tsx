@@ -2,13 +2,12 @@ import { VideoThumbnail } from '@kit/components';
 import { useAppForm } from '@kit/forms';
 import { Button, Field, Switch, useToast } from '@kit/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ApiError } from '@vp/api-client';
 import { type Video, VIDEO_VISIBILITIES } from '@vp/api-contracts';
-import { ErrorCodes } from '@vp/errors';
 import { useApi, videoQueryOptions } from '@vp/queries';
 import { useState } from 'react';
 import { VersionConflictDialog } from '#app/components/dialogs/version-conflict-dialog';
 import { categoriesQueryOptions } from '#app/features/videos/api/category-queries';
+import { isVersionConflict } from '#app/features/videos/api/is-version-conflict';
 import {
   type EditVideoValues,
   NO_CATEGORY,
@@ -23,10 +22,6 @@ import {
   validateVideoTitle,
 } from '#app/utils/video-field-validators';
 import { DescriptionPreview } from '../description-preview/description-preview';
-
-function isVersionConflict(error: Error): boolean {
-  return error instanceof ApiError && error.code === ErrorCodes.VERSION_CONFLICT;
-}
 
 /** The metadata editor: validates with the API's own rules and saves against the version it loaded. */
 export function EditVideoForm({ video }: { video: Video }) {

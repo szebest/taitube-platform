@@ -40,6 +40,7 @@ describe('newVideoRecord', () => {
       categoryId: null,
       tags: [],
       customThumbnailKey: null,
+      passwordProtected: false,
       generation: 1,
       version: 1,
       createdAt: NOW,

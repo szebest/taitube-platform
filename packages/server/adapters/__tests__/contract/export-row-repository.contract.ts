@@ -49,6 +49,8 @@ async function view(repositories: Repositories, videoId: string, viewDate: strin
       ],
       hourly: [],
       devices: [],
+      shareLinks: [],
+      experiments: [],
     })
   );
 }

@@ -96,6 +96,7 @@ describe('packages/env-schema: the environment contract', () => {
     WEBHOOK_ALLOW_PRIVATE_HOSTS: 'false',
     LIVE_HOOK_SECRET: '',
     WATCH_PARTY_GUEST_SALT: '',
+    VIDEO_ACCESS_SECRET: '',
   };
 
   function refusals(env: Record<string, string>): [string, string][] {
@@ -121,6 +122,7 @@ describe('packages/env-schema: the environment contract', () => {
       ],
       ['LIVE_HOOK_SECRET', 'holds a credential this repo ships for local use'],
       ['WATCH_PARTY_GUEST_SALT', 'holds a credential this repo ships for local use'],
+      ['VIDEO_ACCESS_SECRET', 'holds a credential this repo ships for local use'],
     ]);
   });
 
@@ -144,6 +146,11 @@ describe('packages/env-schema: the environment contract', () => {
     {
       key: 'WATCH_PARTY_GUEST_SALT',
       value: 'change-me-party-salt',
+      message: 'holds a credential this repo ships for local use',
+    },
+    {
+      key: 'VIDEO_ACCESS_SECRET',
+      value: 'change-me-video-access',
       message: 'holds a credential this repo ships for local use',
     },
     { key: 'AUTH_MODE', value: 'dev', message: 'dev verifies the public dev key; use jwks' },

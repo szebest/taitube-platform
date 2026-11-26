@@ -17,6 +17,11 @@ describe('apps/client/web: pl player', () => {
   it.each([
     { key: 'player.autoQualityAt', args: { height: 1080 }, expected: 'Auto (1080p)' },
     { key: 'player.rate', args: { rate: 1.5 }, expected: '1,5x' },
+    {
+      key: 'player.seekInChapter',
+      args: { time: '02:30', chapter: 'Środek' },
+      expected: '02:30, Środek',
+    },
     { key: 'player.resolution', args: { height: 1080 }, expected: '1080p' },
   ] as const)('renders $key for $args', ({ key, args, expected }) => {
     expect(t(key, args)).toEqual({ ok: true, value: expected });

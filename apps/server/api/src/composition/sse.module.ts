@@ -22,6 +22,7 @@ export function registerSseServices(c: Container): Container {
           logger: c.get(Services.Logger),
           liveStreams: repositories().liveStreams,
           liveViewers: (liveStreamId) => c.get(Services.LiveViewerTracker).viewers(liveStreamId),
+          gate: c.get(Services.VideoAccessGate),
         })
     )
     .provide(

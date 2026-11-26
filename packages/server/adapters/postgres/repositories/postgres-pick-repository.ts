@@ -4,6 +4,7 @@ import * as schema from '@vp/db';
 import type { EditorPick, EditorPickEntry } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable, pickWindowOverlap } from '@vp/errors';
 import { and, asc, eq, getTableColumns, gt, lt, ne } from 'drizzle-orm';
+import { toVideoRecord } from '../mappers/video.mapper';
 import { isExclusionViolation } from '../pg-errors';
 import { channelCardColumns, toChannelCard } from './channel-card-query';
 import type { PostgresDatabase } from './types';
@@ -110,7 +111,7 @@ export class PostgresPickRepository implements PickRepositoryPort {
     return map(rows, (found) =>
       found.map(({ pick, video, channelId, handle, displayName, avatarUrl }) => ({
         pick,
-        video,
+        video: toVideoRecord(video),
         channel: toChannelCard({ channelId, handle, displayName, avatarUrl }),
       }))
     );

@@ -1,7 +1,7 @@
 import { type Result, err, ok } from '@kit/result';
 import type { Video } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
-import { type UserContext, canReadVideo } from '@vp/permissions';
+import { type ShareGrant, type UserContext, canReadVideo } from '@vp/permissions';
 import {
   type ReadVideoFailure,
   type VideoForbidden,
@@ -16,6 +16,8 @@ export interface ReadVideoInput {
   readonly viewer: UserContext | null;
   readonly video: Video | null;
   readonly videoId: string;
+  /** A live share link of this video, as `decideShareLinkUse` proved it. */
+  readonly share?: ShareGrant | null;
 }
 
 /**
@@ -28,7 +30,9 @@ export interface ReadVideoInput {
  */
 export function decideVideoRead(input: ReadVideoInput): Result<Video, ReadVideoFailure> {
   if (!input.video) return err(videoNotFound(input.videoId));
-  if (canReadVideo({ user: input.viewer, video: input.video })) return ok(input.video);
+  if (canReadVideo({ user: input.viewer, video: input.video, share: input.share })) {
+    return ok(input.video);
+  }
   if (!input.viewer) return err(videoReadRequiresAuth(input.videoId));
   return err(videoForbidden(input.videoId));
 }

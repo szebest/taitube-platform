@@ -19,6 +19,7 @@ import {
 import { CacheKeys } from '@vp/events';
 import type { UserContext } from '@vp/permissions';
 import { type DiscoveryShelves, type ShelfFailure, reasoned } from './discovery-shelves';
+import type { ExperimentOverlay } from './experiment-overlay';
 import type { RelatedService } from './related-service';
 import type { VideoService } from './video-service';
 import type { VideoCardView } from './video-views';
@@ -33,6 +34,7 @@ export interface HomeServiceDeps {
   feedback: RecommendationFeedbackRepositoryPort;
   discovery: DiscoveryShelves;
   viewerProgress: ViewerProgress;
+  experiments: ExperimentOverlay;
   cache: CacheClient;
 }
 
@@ -46,7 +48,16 @@ export interface HomeServiceDeps {
 export class HomeService {
   constructor(private readonly deps: HomeServiceDeps) {}
 
-  async get(viewer: UserContext | null): Promise<Result<HomeResponse, ShelfFailure>> {
+  async get(
+    viewer: UserContext | null,
+    sessionKey: string | null = null
+  ): Promise<Result<HomeResponse, ShelfFailure>> {
+    const page = await this.page(viewer);
+    if (isErr(page)) return page;
+    return ok({ shelves: await this.withVariants(page.value.shelves, sessionKey) });
+  }
+
+  private async page(viewer: UserContext | null): Promise<Result<HomeResponse, ShelfFailure>> {
     const key = CacheKeys.home(viewer?.id ?? 'anonymous');
     const cached = await this.readCache(key);
     if (cached) return ok(cached);
@@ -59,6 +70,23 @@ export class HomeService {
       );
     }
     return built;
+  }
+
+  /** Every shelf in one lookup, after the cache, so a cached page holds the control alone. */
+  private async withVariants(
+    shelves: HomeShelf[],
+    sessionKey: string | null
+  ): Promise<HomeShelf[]> {
+    const shown = await this.deps.experiments.apply(
+      shelves.flatMap((shelf) => shelf.items),
+      sessionKey
+    );
+    let offset = 0;
+    return shelves.map((shelf) => {
+      const items = shown.slice(offset, offset + shelf.items.length);
+      offset += shelf.items.length;
+      return { ...shelf, items };
+    });
   }
 
   async forget(userId: string): Promise<void> {

@@ -37,6 +37,8 @@ export interface Video {
   categoryId?: string | null;
   tags?: string[];
   customThumbnailKey?: string | null;
+  /** Set while a password guards the video; the hash itself never leaves its repository. */
+  passwordProtected?: boolean;
   generation: number;
   version: number;
   createdAt: Date;

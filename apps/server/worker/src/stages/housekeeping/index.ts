@@ -22,11 +22,13 @@ import type { HousekeepingJob, QueueName } from '@vp/job-contracts';
 import type { PipelineMetrics } from '@vp/pipeline-metrics';
 import { runExpireRaw } from './expire-raw';
 import { runFlushVideoViews } from './flush-video-views';
+import { runPruneRevisions } from './prune-revisions';
 import { runPurgeChannelAudit } from './purge-channel-audit';
 import { runPurgeChannelImages } from './purge-channel-images';
 import { runPurgeCommentModeration } from './purge-comment-moderation';
 import { runPurgeDeleted } from './purge-deleted';
 import { runPurgeExports } from './purge-exports';
+import { runPurgeGenerations } from './purge-generations';
 import { runPurgeHandleHistory } from './purge-handle-history';
 import { runPurgeScreeningEvidence } from './purge-screening-evidence';
 import { runPurgeSearchHistory } from './purge-search-history';
@@ -53,6 +55,8 @@ export * from './purge-screening-evidence';
 export * from './purge-channel-images';
 export * from './purge-handle-history';
 export * from './purge-exports';
+export * from './purge-generations';
+export * from './prune-revisions';
 export * from './purge-search-history';
 
 interface HousekeepingSettings {
@@ -270,6 +274,19 @@ export function createHousekeepingProcessor(
           repositories,
           storage,
           rawBucket,
+          now,
+          ...tasks.expire,
+          logger,
+        });
+
+      case 'prune-revisions':
+        return await runPruneRevisions({ repositories, logger });
+
+      case 'purge-generations':
+        return await runPurgeGenerations({
+          repositories,
+          storage,
+          publicBucket,
           now,
           ...tasks.expire,
           logger,

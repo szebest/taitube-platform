@@ -5,6 +5,7 @@ import { useMediaSession } from '#app/features/watch/hooks/use-media-session';
 import { useQueueNavigation } from '#app/features/watch/hooks/use-queue-navigation';
 import { usePlaybackSession } from '#app/hooks/use-playback-queue';
 import { SlotRectStore } from '#app/lib/slot-rect-store';
+import { ShareTokenContext } from '#app/lib/video-access/share-token.context';
 import { WatchPlayer } from '../watch-player/watch-player';
 
 const hostStyles = tv({
@@ -54,7 +55,7 @@ export function PlaybackHost() {
     return null;
   }
 
-  const { video, startTime } = current;
+  const { video, startTime, shareToken } = current;
   const state = rect === undefined ? 'hidden' : watching ? 'docked' : 'mini';
 
   return (
@@ -70,23 +71,25 @@ export function PlaybackHost() {
         }
       }
     >
-      <Suspense>
-        <WatchPlayer
-          videoId={video.id}
-          playbackUrl={playbackUrl}
-          posterUrl={video.posterUrl}
-          title={video.title}
-          startTime={startTime}
-          control={{ paused, muted: false }}
-          loop={repeat === 'one'}
-          layout={watching ? 'landscape' : 'fill'}
-          controls={watching}
-          onPlay={() => dispatch({ type: 'paused', paused: false })}
-          onPause={() => dispatch({ type: 'paused', paused: true })}
-          onPrevious={hasPrevious ? previous : undefined}
-          onNext={hasNext ? next : undefined}
-        />
-      </Suspense>
+      <ShareTokenContext value={shareToken}>
+        <Suspense>
+          <WatchPlayer
+            videoId={video.id}
+            playbackUrl={playbackUrl}
+            posterUrl={video.posterUrl}
+            title={video.title}
+            startTime={startTime}
+            control={{ paused, muted: false }}
+            loop={repeat === 'one'}
+            layout={watching ? 'landscape' : 'fill'}
+            controls={watching}
+            onPlay={() => dispatch({ type: 'paused', paused: false })}
+            onPause={() => dispatch({ type: 'paused', paused: true })}
+            onPrevious={hasPrevious ? previous : undefined}
+            onNext={hasNext ? next : undefined}
+          />
+        </Suspense>
+      </ShareTokenContext>
     </div>
   );
 }

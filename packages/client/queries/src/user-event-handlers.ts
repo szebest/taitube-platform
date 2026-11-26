@@ -130,6 +130,14 @@ function applyVideoStatsUpdated(
 
 function ignoreExportChange() {}
 
+/** The Edit video tab's generations and the video itself, which a swap points at new renditions. */
+function applyGenerationUpdated(
+  { videoId }: UserEventPayloads['video.generation.updated'],
+  queryClient: QueryClient
+) {
+  void queryClient.invalidateQueries({ queryKey: videoKeys.detail(videoId) });
+}
+
 const userEventHandlers: UserEventHandlers = {
   'video.processing': applyVideoProcessing,
   'preferences.updated': applyPreferencesUpdated,
@@ -146,6 +154,7 @@ const userEventHandlers: UserEventHandlers = {
   'video.stats.updated': applyVideoStatsUpdated,
   'export.ready': ignoreExportChange,
   'export.failed': ignoreExportChange,
+  'video.generation.updated': applyGenerationUpdated,
 };
 
 // Mapped rather than `UserEvent`, so `type` and `payload` stay correlated once the union grows.

@@ -19,6 +19,8 @@ import type { AppConfig } from '@vp/env-schema';
 import type { MediaTools } from '@vp/ffmpeg';
 import type { FingerprintTools } from '@vp/fingerprint';
 import {
+  APPLY_EDITS,
+  ApplyEditsJob,
   ANNOUNCE_COMMENT_HELD,
   ANNOUNCE_LIVE,
   AnnounceCommentHeldJob,
@@ -53,6 +55,7 @@ import type { SpeechTools } from '@vp/whisper';
 import { consuming } from './consuming';
 import type { Every } from './heartbeat';
 import { liveCollaborators } from './live-collaborators';
+import { createApplyEditsProcessor } from './stages/apply-edits/apply-edits-stage';
 import { createCaptionsStage } from './stages/captions/captions-stage';
 import { createExportProcessor } from './stages/exports/export-stage';
 import { createHousekeepingProcessor } from './stages/housekeeping/index';
@@ -170,6 +173,7 @@ export const probe = (d: StageDeps) =>
     })
   );
 
+/** The transcode queues carry a rendition or a chunk of one; the 1080p queue also carries apply-edits renders. */
 export const transcode = (d: StageDeps) => {
   const ffmpeg = {
     path: d.config.worker.ffmpegPath,
@@ -194,9 +198,20 @@ export const transcode = (d: StageDeps) => {
   };
   const rendition = createTranscodeProcessor({ ...shared, ...transcodeCollaborators(d) });
   const chunk = createTranscodeChunkProcessor(shared);
-  return consuming(TranscodeJob, (job) =>
+  const render = consuming(
+    ApplyEditsJob,
+    createApplyEditsProcessor({
+      ...shared,
+      publicBucket: d.config.buckets.public,
+      ffprobePath: d.config.worker.ffprobePath,
+      maxDurationSeconds: d.config.limits.maxDurationSeconds,
+      now: d.now,
+    })
+  );
+  const encode = consuming(TranscodeJob, (job) =>
     job.data.chunkIndex === undefined ? rendition(job) : chunk(job)
   );
+  return (job: QueueJob<unknown>) => (job.name === APPLY_EDITS ? render(job) : encode(job));
 };
 
 export const captions = (d: StageDeps) => consuming(CaptionsJob, createCaptionsStage(d));

@@ -7,6 +7,7 @@ export * from './api-provider';
 export * from './app-router';
 export * from './app-words';
 export * from './clip-queries';
+export * from './video-tool-queries';
 export * from './comment-queries';
 export * from './create-query-client';
 export * from './ensure-found';

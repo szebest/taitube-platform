@@ -30,7 +30,7 @@ import { InMemoryUserPreferencesRepository } from './in-memory-user-preferences-
 import { InMemoryUserRepository } from './in-memory-user-repository';
 import { InMemoryVideoReactionRepository } from './in-memory-video-reaction-repository';
 import { InMemoryVideoRepository } from './in-memory-video-repository';
-import { InMemoryVideoStudioRepository } from './in-memory-video-studio-repository';
+import { provideVideoTools } from './in-memory-video-tools-providers';
 import { InMemoryVideoViewRepository } from './in-memory-video-view-repository';
 import { InMemoryWatchHistoryRepository } from './in-memory-watch-history-repository';
 import { InMemoryWebhookRepository } from './in-memory-webhook-repository';
@@ -41,7 +41,10 @@ import { InMemoryWebhookRepository } from './in-memory-webhook-repository';
  */
 export function graph(now: Clock = realClock): Container {
   return provideCommentRepositories(
-    provideChannels(provideExports(provideScreening(new Container()), now), now)
+    provideChannels(
+      provideExports(provideScreening(provideVideoTools(new Container(), now)), now),
+      now
+    )
       .provide(Repo.outbox, () => new InMemoryOutboxRepository(now))
       .provide(Repo.renditions, () => new InMemoryRenditionRepository())
       .provide(Repo.steps, () => new InMemoryStepRepository(now))
@@ -61,17 +64,6 @@ export function graph(now: Clock = realClock): Container {
             auditRepo: c.get(Repo.channelAudit),
             now,
             uploadsRepo: { findByVideoId: (id) => c.get(Repo.uploads).findByVideoId(id) },
-          })
-      )
-      .provide(
-        Repo.videoStudio,
-        (c) =>
-          new InMemoryVideoStudioRepository({
-            videos: c.get(Repo.videos),
-            categories: c.get(Repo.categories),
-            events: c.get(Repo.events),
-            outbox: c.get(Repo.outbox),
-            audit: c.get(Repo.channelAudit),
           })
       )
       .provide(
@@ -100,7 +92,14 @@ export function graph(now: Clock = realClock): Container {
             auditRepo: c.get(Repo.channelAudit),
           })
       )
-      .provide(Repo.videoViews, (c) => new InMemoryVideoViewRepository(c.get(Repo.videos)))
+      .provide(
+        Repo.videoViews,
+        (c) =>
+          new InMemoryVideoViewRepository(c.get(Repo.videos), {
+            shareLinks: c.get(Repo.shareLinks),
+            experiments: c.get(Repo.videoExperiments),
+          })
+      )
       .provide(
         Repo.playlists,
         (c) =>

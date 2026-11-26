@@ -5,10 +5,10 @@ import {
   type Playlist,
   type PlaylistEntry,
   type PositionWrite,
-  type Video,
 } from '@vp/domain';
 import type { UserContext } from '@vp/permissions';
 import { asc, count, desc, eq, getTableColumns, isNotNull, sql } from 'drizzle-orm';
+import { toVideoRecord } from '../mappers/video.mapper';
 import { drizzleWhere, keysetBefore, msTimestamp, watchableVideoScope } from '../scopes/index';
 import { type ChannelCardRow, channelCardColumns, toChannelCard } from './channel-card-query';
 import type { PostgresDatabase } from './types';
@@ -53,12 +53,14 @@ export function entriesOf(db: PostgresDatabase, playlistId: string, viewer: User
     .orderBy(asc(ranked.position));
 }
 
+type VideoRow = typeof v.$inferSelect;
+
 interface EntryRow extends ChannelCardRow {
   id: string;
   videoId: string;
   addedAt: Date;
   position: number;
-  video: Video;
+  video: VideoRow;
 }
 
 export function toPlaylistEntry({
@@ -69,7 +71,14 @@ export function toPlaylistEntry({
   video,
   ...card
 }: EntryRow): PlaylistEntry {
-  return { id, videoId, addedAt, position, video, channel: toChannelCard(card) };
+  return {
+    id,
+    videoId,
+    addedAt,
+    position,
+    video: toVideoRecord(video),
+    channel: toChannelCard(card),
+  };
 }
 
 /** Every slot in playlist order, `hidden` where the viewer may not watch the video. */

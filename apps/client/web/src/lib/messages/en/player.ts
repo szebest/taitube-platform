@@ -10,6 +10,7 @@ export const player = {
   unmute: dt('Unmute'),
   volume: dt('Volume'),
   seek: dt('Seek'),
+  seekInChapter: dt('{time}, {chapter}'),
   settings: dt('Settings'),
   quality: dt('Quality'),
   autoQuality: dt('Auto'),
@@ -34,6 +35,7 @@ export const player = {
   captionSizeOption: dt('{size:enum}', {
     enum: { size: { small: 'Small', medium: 'Medium', large: 'Large', xlarge: 'Extra large' } },
   }),
+  cardDismiss: dt('Dismiss this note'),
   captionBackground: dt('Caption background'),
   captionBackgroundOption: dt('{background:enum}', {
     enum: { background: { none: 'None', translucent: 'See-through', solid: 'Solid' } },

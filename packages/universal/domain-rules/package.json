@@ -25,6 +25,7 @@
     "@kit/machine": "workspace:*",
     "@kit/primitives": "workspace:*",
     "@kit/result": "workspace:*",
+    "@kit/validation": "workspace:*",
     "@vp/domain": "workspace:*",
     "@vp/errors": "workspace:*",
     "@vp/permissions": "workspace:*",

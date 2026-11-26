@@ -38,42 +38,6 @@ describe('apps/client/web: the player control bar', () => {
     expect(text ?? null).toBe(scrim);
   });
 
-  it('sizes the seek track from the playhead and the buffered range', async () => {
-    renderBar({ currentTime: 150, duration: 600 });
-    const seekBar = screen.getByRole('slider', { name: 'Seek' });
-
-    await vi.waitFor(() => expect(seekBar.style.getPropertyValue('--played')).toBe('25%'));
-    expect(seekBar.style.getPropertyValue('--buffered')).toBe('0%');
-  });
-
-  it('shows only the clip: its own clock and seek bar, seeking inside it', async () => {
-    const seek = vi.spyOn(HTMLMediaElement.prototype, 'currentTime', 'set');
-    const { bar } = renderBar({
-      currentTime: 75,
-      duration: 600,
-      range: { startMs: 60_000, endMs: 90_000 },
-    });
-    const seekBar = screen.getByRole('slider', { name: 'Seek' });
-
-    await vi.waitFor(() => expect(bar).toHaveTextContent('00:15 / 00:30'));
-    expect(seekBar).toHaveAttribute('max', '30');
-
-    fireEvent.change(seekBar, { target: { value: '10' } });
-
-    expect(seek).toHaveBeenCalledWith(70);
-  });
-
-  it('seeks to the time the seek bar moves to', async () => {
-    const seek = vi.spyOn(HTMLMediaElement.prototype, 'currentTime', 'set');
-    renderBar({ duration: 600 });
-    const seekBar = screen.getByRole('slider', { name: 'Seek' });
-    await vi.waitFor(() => expect(seekBar).toHaveAttribute('max', '600'));
-
-    fireEvent.change(seekBar, { target: { value: '30' } });
-
-    expect(seek).toHaveBeenCalledWith(30);
-  });
-
   it.each([
     { from: 'muted', startMuted: true, shown: '0', position: '0.5', volume: 0.25, muted: false },
     { from: 'muted', startMuted: true, shown: '0', position: '1', volume: 1, muted: false },

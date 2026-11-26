@@ -2,6 +2,7 @@ import { err, isErr, ok, type Result } from '@kit/result';
 import {
   type CategoryRepositoryPort,
   type ChannelAuditRepositoryPort,
+  type EntityRevisionRepository,
   type EventRepository,
   type OutboxRepository,
   type StudioMetadataOutcome,
@@ -12,9 +13,16 @@ import {
   type VideoRepository,
   VideoStudioRepository,
 } from '@vp/core/repositories';
-import { type CreatorLibraryCursor, creatorLibraryCursorOf, videoEditAudit } from '@vp/domain';
+import {
+  type CreatorLibraryCursor,
+  creatorLibraryCursorOf,
+  type VideoMetadataSnapshot,
+  videoEditAudit,
+  videoMetadataSnapshot,
+} from '@vp/domain';
 import { type DatabaseUnavailable, type VersionConflict, versionConflict } from '@vp/errors';
 import { visibilityNotificationJobs } from '@vp/job-contracts';
+import type { InMemoryVideoChapterRepository } from './in-memory-video-chapter-repository';
 
 interface StudioVideos extends Pick<VideoRepository, 'transition'> {
   getAllVideos(): VideoRecord[];
@@ -26,6 +34,8 @@ export interface InMemoryVideoStudioRepositoryOptions {
   events: Pick<EventRepository, 'create'>;
   outbox: Pick<OutboxRepository, 'enqueue'>;
   audit: Pick<ChannelAuditRepositoryPort, 'append'>;
+  revisions: Pick<EntityRevisionRepository, 'append' | 'list'>;
+  chapters: Pick<InMemoryVideoChapterRepository, 'chaptersOf' | 'replace'>;
 }
 
 function compare<T extends Date | number | string>(a: T, b: T): number {
@@ -75,7 +85,8 @@ export class InMemoryVideoStudioRepository extends VideoStudioRepository {
   async updateMetadata(
     options: UpdateStudioMetadataOptions
   ): Promise<Result<StudioMetadataOutcome, DatabaseUnavailable | VersionConflict>> {
-    const { videoId, expectedVersion, patch, userId, tokenId, auditFields } = options;
+    const { videoId, expectedVersion, userId, tokenId, auditFields, revision } = options;
+    const { chapters, ...patch } = options.patch;
     const { categoryId } = patch;
 
     if (categoryId) {
@@ -89,7 +100,19 @@ export class InMemoryVideoStudioRepository extends VideoStudioRepository {
     if (video.version !== expectedVersion) return err(versionConflict(videoId, expectedVersion));
 
     const visibilityBefore = video.visibility;
+    const before = videoMetadataSnapshot(video, this.deps.chapters.chaptersOf(videoId));
+    const baseline = { ...before };
+    const baselineVersion = video.version;
     Object.assign(video, patch, { version: video.version + 1, updatedAt: new Date() });
+    if (chapters !== undefined) this.deps.chapters.replace(videoId, chapters);
+    const revised = await this.recordRevisions({
+      video,
+      baseline,
+      baselineVersion,
+      userId,
+      restoredFromVersion: revision?.restoredFromVersion,
+    });
+    if (isErr(revised)) return revised;
     const recorded = await this.deps.events.create({
       videoId,
       type: 'video.metadata_updated',
@@ -97,7 +120,12 @@ export class InMemoryVideoStudioRepository extends VideoStudioRepository {
     });
     if (isErr(recorded)) return recorded;
 
-    const edit = { videoId, fields: auditFields, commentsEnabled: patch.commentsEnabled };
+    const edit = {
+      videoId,
+      fields: auditFields,
+      commentsEnabled: patch.commentsEnabled,
+      restoredFromVersion: revision?.restoredFromVersion,
+    };
     for (const entry of videoEditAudit(edit)) {
       const audited = await this.deps.audit.append({
         ...entry,
@@ -118,6 +146,41 @@ export class InMemoryVideoStudioRepository extends VideoStudioRepository {
       if (isErr(enqueued)) return enqueued;
     }
     return ok({ type: 'updated', video });
+  }
+
+  private async recordRevisions(edit: {
+    video: VideoRecord;
+    baseline: VideoMetadataSnapshot;
+    baselineVersion: number;
+    userId: string;
+    restoredFromVersion?: number;
+  }): Promise<Result<void, DatabaseUnavailable>> {
+    const { video, baseline, baselineVersion, userId, restoredFromVersion } = edit;
+    const { revisions, chapters } = this.deps;
+    const known = await revisions.list('video_metadata', video.id, {
+      beforeVersion: null,
+      limit: 0,
+    });
+    if (isErr(known)) return known;
+    if (known.value.length === 0) {
+      const recorded = await revisions.append({
+        entityType: 'video_metadata',
+        entityId: video.id,
+        version: baselineVersion,
+        snapshot: baseline,
+        authorUserId: null,
+        restoredFromVersion: null,
+      });
+      if (isErr(recorded)) return recorded;
+    }
+    return revisions.append({
+      entityType: 'video_metadata',
+      entityId: video.id,
+      version: video.version,
+      snapshot: videoMetadataSnapshot(video, chapters.chaptersOf(video.id)),
+      authorUserId: userId,
+      restoredFromVersion: restoredFromVersion ?? null,
+    });
   }
 
   async takeDown(

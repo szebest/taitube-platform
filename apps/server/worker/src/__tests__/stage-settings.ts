@@ -41,6 +41,7 @@ const mediaTools: MediaTools = {
   live: (...args) => ffmpeg.runFfmpegLive(...args),
   probeChannelImage: (...args) => ffmpeg.probeChannelImage(...args),
   channelImage: (...args) => ffmpeg.runFfmpegChannelImage(...args),
+  applyEdits: (...args) => ffmpeg.runFfmpegApplyEdits(...args),
 };
 
 /** The configuration a stage reads, at the values `.env.example` gives a local process. */

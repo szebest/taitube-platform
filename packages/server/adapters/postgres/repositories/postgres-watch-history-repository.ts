@@ -5,6 +5,7 @@ import type { NewWatchProgress, WatchHistoryEntry, WatchProgress } from '@vp/dom
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { and, desc, eq, getTableColumns, inArray, sql } from 'drizzle-orm';
+import { toVideoRecord } from '../mappers/video.mapper';
 import { drizzleWhere, keysetBefore, msTimestamp, watchableVideoScope } from '../scopes/index';
 import { channelCardColumns, toChannelCard } from './channel-card-query';
 import type { PostgresDatabase } from './types';
@@ -103,8 +104,9 @@ export class PostgresWatchHistoryRepository implements WatchHistoryRepositoryPor
       databaseUnavailable.during('listWatchHistory')
     );
     return map(rows, (found) =>
-      found.map(({ channelId, handle, displayName, avatarUrl, ...entry }) => ({
+      found.map(({ channelId, handle, displayName, avatarUrl, video, ...entry }) => ({
         ...entry,
+        video: toVideoRecord(video),
         channel: toChannelCard({ channelId, handle, displayName, avatarUrl }),
       }))
     );

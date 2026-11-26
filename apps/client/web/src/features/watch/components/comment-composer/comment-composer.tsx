@@ -17,6 +17,7 @@ import { useCountdown } from '#app/features/watch/hooks/use-countdown';
 import type { CommentRefusal } from '#app/features/watch/utils/comment-refusal';
 import { useSetSubscription } from '#app/hooks/use-set-subscription';
 import { useT } from '#app/lib/messages';
+import { useShareToken } from '#app/lib/video-access/share-token.context';
 
 type Notice = Exclude<CommentRefusal, { kind: 'slow-mode' }>;
 
@@ -113,7 +114,7 @@ export function CommentComposer({
   const api = useApi();
   const { tOr } = useT();
   const account = useAccount();
-  const { data: video } = useSuspenseQuery(videoQueryOptions(api, videoId));
+  const { data: video } = useSuspenseQuery(videoQueryOptions(api, videoId, useShareToken()));
   const channelId = video.channel?.id;
   const onTeam = useCan(isChannelTeamMember, {
     channelId: channelId ?? '',

@@ -14,6 +14,7 @@ import * as schema from '@vp/db';
 import { type NewChannelAuditEntry, publicFeedWalkInstant } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { type SQL, and, desc, eq, gt, inArray, sql } from 'drizzle-orm';
+import { toVideoRecord } from '../mappers/video.mapper';
 import {
   drizzleWhere,
   keysetBefore,
@@ -41,7 +42,7 @@ export class PostgresVideoRepository extends VideoRepository {
       databaseUnavailable.during('findById')
     );
 
-    return map(rows, ([row]) => row ?? null);
+    return map(rows, ([row]) => (row ? toVideoRecord(row) : null));
   }
 
   async listReadyAfter(
@@ -49,7 +50,7 @@ export class PostgresVideoRepository extends VideoRepository {
     readyAfter: Date
   ): Promise<Result<VideoRecord[], DatabaseUnavailable>> {
     if (videoIds.length === 0) return ok([]);
-    return fromPromise(
+    const rows = await fromPromise(
       () =>
         this.db
           .select()
@@ -57,6 +58,7 @@ export class PostgresVideoRepository extends VideoRepository {
           .where(and(inArray(v.id, [...videoIds]), gt(v.readyAt, readyAfter))),
       databaseUnavailable.during('listReadyAfter')
     );
+    return map(rows, (found) => found.map(toVideoRecord));
   }
 
   async findWithDetails(id: string): Promise<Result<VideoWithDetails | null, DatabaseUnavailable>> {
@@ -94,7 +96,9 @@ export class PostgresVideoRepository extends VideoRepository {
 
     if (!rows.ok) return rows;
     const [created] = rows.value;
-    return created ? ok(created) : err(databaseUnavailable('create', 'insert returned no row'));
+    return created
+      ? ok(toVideoRecord(created))
+      : err(databaseUnavailable('create', 'insert returned no row'));
   }
 
   async listByOwner(
@@ -112,7 +116,7 @@ export class PostgresVideoRepository extends VideoRepository {
       )
     );
 
-    return await fromPromise(
+    const rows = await fromPromise(
       () =>
         this.db
           .select()
@@ -122,6 +126,7 @@ export class PostgresVideoRepository extends VideoRepository {
           .limit(limit + 1),
       databaseUnavailable.during('listByOwner')
     );
+    return map(rows, (found) => found.map(toVideoRecord));
   }
 
   async listPublic(
@@ -146,7 +151,7 @@ export class PostgresVideoRepository extends VideoRepository {
     );
 
     return map(rows, (found) => ({
-      items: found,
+      items: found.map(toVideoRecord),
       total: total.value,
       instant: instantMs,
     }));
@@ -171,7 +176,7 @@ export class PostgresVideoRepository extends VideoRepository {
       databaseUnavailable.during('scan')
     );
 
-    return rows;
+    return map(rows, (found) => found.map(toVideoRecord));
   }
 
   async hardDelete(id: string): Promise<Result<boolean, DatabaseUnavailable>> {

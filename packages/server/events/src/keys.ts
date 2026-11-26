@@ -47,4 +47,6 @@ export const CacheKeys = defineKeyspace('taitube', (key) => ({
   partyGuestSession: (credentialHash: string) => key('watch-party', 'guest', credentialHash),
   viewDedup: (videoId: string, viewDate: string) =>
     key('views', 'dedup', videoId, viewDate.replaceAll('-', '')),
+  shareLinkOpenDedup: (linkId: string, viewDate: string) =>
+    key('views', 'link-dedup', linkId, viewDate.replaceAll('-', '')),
 }));

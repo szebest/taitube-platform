@@ -14,9 +14,9 @@ describe('packages/api-contracts: admin videos', () => {
     expect(getVideoAsAdmin.params).toBe(getVideo.params);
   });
 
-  it('declares the 403 the public route does not, which is the whole reason it exists', () => {
+  it('declares the FORBIDDEN the public route does not, which is the whole reason it exists', () => {
     expect(getVideoAsAdmin.errors?.[403]).toContain(ErrorCodes.FORBIDDEN);
-    expect(Object.keys(getVideo.errors ?? {})).not.toContain('403');
+    expect(getVideo.errors?.[403]).toEqual([ErrorCodes.VIDEO_PASSWORD_REQUIRED]);
   });
 
   it('still declares 404, because an operator can ask for a video that is genuinely gone', () => {

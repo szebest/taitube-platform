@@ -2,14 +2,10 @@ import type { Repositories } from '@vp/core/repositories';
 import type { Sql } from 'postgres';
 import { PostgresCaptionRepository } from './postgres-caption-repository';
 import { PostgresCategoryRepository } from './postgres-category-repository';
-import { PostgresChannelAuditRepository } from './postgres-channel-audit-repository';
-import { PostgresChannelFeaturedRepository } from './postgres-channel-featured-repository';
-import { PostgresChannelHandleHistoryRepository } from './postgres-channel-handle-history-repository';
-import { PostgresChannelImageRepository } from './postgres-channel-image-repository';
-import { PostgresChannelInviteRepository } from './postgres-channel-invite-repository';
-import { PostgresChannelMemberRepository } from './postgres-channel-member-repository';
-import { PostgresChannelPageRepository } from './postgres-channel-page-repository';
-import { PostgresChannelRepository } from './postgres-channel-repository';
+import {
+  type ChannelRepositories,
+  createChannelRepositories,
+} from './postgres-channel-repositories';
 import { PostgresClipRepository } from './postgres-clip-repository';
 import {
   type CommentRepositories,
@@ -45,6 +41,7 @@ import { PostgresUserRepository } from './postgres-user-repository';
 import { PostgresVideoReactionRepository } from './postgres-video-reaction-repository';
 import { PostgresVideoRepository } from './postgres-video-repository';
 import { PostgresVideoStudioRepository } from './postgres-video-studio-repository';
+import { PostgresVideoToolsRepositories } from './postgres-video-tools-repositories';
 import { PostgresVideoViewRepository } from './postgres-video-view-repository';
 import { PostgresWatchHistoryRepository } from './postgres-watch-history-repository';
 import {
@@ -53,7 +50,7 @@ import {
 } from './postgres-watch-party-repositories';
 import { PostgresWebhookRepository } from './postgres-webhook-repository';
 
-export class PostgresRepositories implements Repositories {
+export class PostgresRepositories extends PostgresVideoToolsRepositories implements Repositories {
   readonly videos: PostgresVideoRepository;
   readonly videoStudio: PostgresVideoStudioRepository;
   readonly uploads: PostgresUploadRepository;
@@ -65,10 +62,14 @@ export class PostgresRepositories implements Repositories {
   readonly dlq: PostgresDlqRepository;
   readonly outbox: PostgresOutboxRepository;
   readonly categories: PostgresCategoryRepository;
-  readonly channels: PostgresChannelRepository;
-  readonly channelMembers: PostgresChannelMemberRepository;
-  readonly channelInvites: PostgresChannelInviteRepository;
-  readonly channelAudit: PostgresChannelAuditRepository;
+  declare readonly channels: ChannelRepositories['channels'];
+  declare readonly channelMembers: ChannelRepositories['channelMembers'];
+  declare readonly channelInvites: ChannelRepositories['channelInvites'];
+  declare readonly channelAudit: ChannelRepositories['channelAudit'];
+  declare readonly channelFeatured: ChannelRepositories['channelFeatured'];
+  declare readonly channelHandleHistory: ChannelRepositories['channelHandleHistory'];
+  declare readonly channelImages: ChannelRepositories['channelImages'];
+  declare readonly channelPages: ChannelRepositories['channelPages'];
   declare readonly dataExports: CreatorDataRepositories['dataExports'];
   declare readonly exportRows: CreatorDataRepositories['exportRows'];
   declare readonly apiTokens: CreatorDataRepositories['apiTokens'];
@@ -96,10 +97,6 @@ export class PostgresRepositories implements Repositories {
   readonly screenings: PostgresScreeningRepository;
   readonly fingerprints: PostgresFingerprintRepository;
   readonly clips: PostgresClipRepository;
-  readonly channelFeatured: PostgresChannelFeaturedRepository;
-  readonly channelHandleHistory: PostgresChannelHandleHistoryRepository;
-  readonly channelImages: PostgresChannelImageRepository;
-  readonly channelPages: PostgresChannelPageRepository;
   readonly picks: PostgresPickRepository;
   readonly webhooks: PostgresWebhookRepository;
   readonly liveStreams: PostgresLiveStreamRepository;
@@ -118,6 +115,7 @@ export class PostgresRepositories implements Repositories {
 
   constructor(config: PostgresRepositoriesConfig) {
     const { db, ownedPool } = connectPostgres(config);
+    super(db);
     this.ownedPool = ownedPool;
 
     this.videos = new PostgresVideoRepository(db);
@@ -131,10 +129,7 @@ export class PostgresRepositories implements Repositories {
     this.dlq = new PostgresDlqRepository(db);
     this.outbox = new PostgresOutboxRepository(db);
     this.categories = new PostgresCategoryRepository(db);
-    this.channels = new PostgresChannelRepository(db);
-    this.channelMembers = new PostgresChannelMemberRepository(db);
-    this.channelInvites = new PostgresChannelInviteRepository(db);
-    this.channelAudit = new PostgresChannelAuditRepository(db);
+    Object.assign(this, createChannelRepositories(db));
     Object.assign(this, createCreatorDataRepositories(db));
     Object.assign(this, createCommentRepositories(db));
     this.videoReactions = new PostgresVideoReactionRepository(db);
@@ -153,10 +148,6 @@ export class PostgresRepositories implements Repositories {
     this.screenings = new PostgresScreeningRepository(db);
     this.fingerprints = new PostgresFingerprintRepository(db);
     this.clips = new PostgresClipRepository(db);
-    this.channelFeatured = new PostgresChannelFeaturedRepository(db);
-    this.channelHandleHistory = new PostgresChannelHandleHistoryRepository(db);
-    this.channelImages = new PostgresChannelImageRepository(db);
-    this.channelPages = new PostgresChannelPageRepository(db);
     Object.assign(this, createWatchPartyRepositories(db));
     this.picks = new PostgresPickRepository(db);
     this.webhooks = new PostgresWebhookRepository(db);

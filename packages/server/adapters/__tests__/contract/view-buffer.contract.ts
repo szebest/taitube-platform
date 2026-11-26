@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { expectOk } from '@kit/testing/result';
 import type { PlaybackWatch, ViewBufferPort, ViewEvent } from '@vp/core/ports';
 import type { ViewBatch, ViewCount } from '@vp/domain';
+import { describeViewBufferAccessContract } from './view-buffer-access.contract';
 import { describeViewBufferDeviceContract } from './view-buffer-device.contract';
 import { describeViewBufferRetentionContract } from './view-buffer-retention.contract';
 
@@ -119,6 +120,8 @@ export function describeViewBufferContract(makeSubject: MakeViewBufferSubject): 
         retention: [],
         hourly: [{ videoId, viewHour: HOUR, views: 1 }],
         devices: [],
+        shareLinks: [],
+        experiments: [],
       });
       expect(next?.batchId).not.toBe(first);
       expect(next?.counts).toEqual([expect.objectContaining({ videoId, views: 1 })]);
@@ -169,6 +172,8 @@ export function describeViewBufferContract(makeSubject: MakeViewBufferSubject): 
         device: 'desktop',
         watchedSeconds: 3,
         requiredSeconds: 5,
+        shareLinkId: null,
+        experiment: null,
         ...overrides,
       });
 
@@ -222,6 +227,7 @@ export function describeViewBufferContract(makeSubject: MakeViewBufferSubject): 
     });
   });
 
-  describeViewBufferDeviceContract(makeSubject);
   describeViewBufferRetentionContract(makeSubject);
+  describeViewBufferDeviceContract(makeSubject);
+  describeViewBufferAccessContract(makeSubject);
 }

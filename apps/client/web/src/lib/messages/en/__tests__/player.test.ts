@@ -33,6 +33,11 @@ describe('apps/client/web: en player', () => {
       rendered: t('player.autoQualityAt', { height: 2160 }),
       expected: 'Auto (2160p)',
     },
+    {
+      key: 'seekInChapter',
+      rendered: t('player.seekInChapter', { time: '02:30', chapter: 'Middle' }),
+      expected: '02:30, Middle',
+    },
     { key: 'rate', rendered: t('player.rate', { rate: 0.25 }), expected: '0.25x' },
     { key: 'resolution', rendered: t('player.resolution', { height: 2160 }), expected: '2160p' },
     {

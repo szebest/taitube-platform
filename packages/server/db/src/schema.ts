@@ -113,6 +113,7 @@ export const videos = pgTable(
     categoryId: uuid('category_id').references(() => categories.id, { onDelete: 'set null' }),
     tags: text('tags').array().notNull().default([]),
     customThumbnailKey: text('custom_thumbnail_key'),
+    accessPasswordHash: text('access_password_hash'),
     autoCaptions: boolean('auto_captions'),
     title: text('title').notNull().default(''),
     description: text('description').notNull().default(''),

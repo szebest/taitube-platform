@@ -1,5 +1,7 @@
 import { dt } from '../engine';
+import { channelErrors } from './errors-channels';
 import { commentErrors } from './errors-comments';
+import { videoToolErrors } from './errors-video-tools';
 
 export const errors = {
   uploadTooLarge: dt('Ten plik jest większy, niż pozwalają przesyłane pliki.'),
@@ -24,6 +26,7 @@ export const errors = {
   handleAlreadyTaken: dt('Ta nazwa użytkownika jest już zajęta.'),
   invalidHandleFormat: dt('Nazwa użytkownika może zawierać tylko małe litery, cyfry i myślniki.'),
   cannotSubscribeToSelf: dt('Nie możesz subskrybować własnego kanału.'),
+  ...channelErrors,
   ...commentErrors,
   reportNotFound: dt('To zgłoszenie nie istnieje.'),
   reportAlreadyResolved: dt('To zgłoszenie zostało już rozpatrzone.'),
@@ -31,6 +34,7 @@ export const errors = {
   playlistItemNotFound: dt('Tego filmu nie ma na playliście.'),
   systemPlaylistImmutable: dt('Playlisty Do obejrzenia nie można zmienić ani usunąć.'),
   clipNotFound: dt('Ten klip nie istnieje lub jego film nie jest już dostępny.'),
+  ...videoToolErrors,
   pickNotFound: dt('Ten wybór nie istnieje lub został anulowany.'),
   pickWindowOverlap: dt('Inny wybór zajmuje już część tego terminu.'),
   webhookNotFound: dt('Ten webhook nie istnieje lub został usunięty.'),
@@ -123,19 +127,6 @@ export const errors = {
     'Połączenie z imprezą wygasło. Połącz się ponownie, aby dalej oglądać.'
   ),
   watchPartyCredentialInvalid: dt('Twoje miejsce gościa wygasło. Dołącz do imprezy ponownie.'),
-  channelMembershipRequired: dt('Nie należysz już do zespołu tego kanału.'),
-  channelLimitReached: dt(
-    'Masz już tyle kanałów, ile może mieć konto. Usuń jeden, aby dodać kolejny.'
-  ),
-  channelNotOwned: dt('Tylko właściciel tego kanału może to zrobić.'),
-  channelInviteNotFound: dt('To zaproszenie nie istnieje.'),
-  channelInviteNotPending: dt(
-    'To zaproszenie jest już nieaktualne: zostało przyjęte, odrzucone, cofnięte albo wygasło.'
-  ),
-  channelInviteAlreadyPending: dt('Ta osoba ma już otwarte zaproszenie do zespołu.'),
-  channelMemberExists: dt('Ta osoba jest już w zespole.'),
-  channelMemberNotFound: dt('Tej osoby nie ma w zespole.'),
-  channelOwnerImmutable: dt('Właściciela kanału nie można usunąć ani zmienić mu roli.'),
   handleChangeTooSoon: dt('Niedawno zmieniono uchwyt. Można go zmienić ponownie za kilka tygodni.'),
   handleReserved: dt(
     'Ten uchwyt był niedawno używany przez inny kanał i jest zarezerwowany dla jego właściciela.'

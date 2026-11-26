@@ -74,6 +74,8 @@ export function describeViewBufferRetentionContract(makeSubject: MakeViewBufferS
         retention: expect.arrayContaining([{ videoId, percent: 5, viewers: 1 }]),
         hourly: [],
         devices: [],
+        shareLinks: [],
+        experiments: [],
       });
       expect(again).toEqual(batch);
       expect(expectOk(await subject.buffer.snapshot(randomUUID()))).toBeNull();

@@ -17,7 +17,7 @@ const LONG_FIXTURE = path.resolve(import.meta.dirname, '../fixtures/s15.mp4');
 const READY_DEADLINE_MS = 120_000;
 const POLL_MS = 250;
 
-type Visibility = 'public' | 'private';
+type Visibility = 'public' | 'private' | 'unlisted';
 
 type StartedUpload = { videoId: string; uploadId: string; singleUrl: string };
 
@@ -83,8 +83,14 @@ async function startUpload(
   return (await started.json()) as StartedUpload;
 }
 
-async function seedReadyVideo(apiUrl: string, token: string, title: string, fixture = FIXTURE) {
-  const upload = await startUpload(apiUrl, token, title, 'public', fixture);
+async function seedReadyVideo(
+  apiUrl: string,
+  token: string,
+  title: string,
+  fixture = FIXTURE,
+  visibility: Visibility = 'public'
+) {
+  const upload = await startUpload(apiUrl, token, title, visibility, fixture);
   await call(upload.singleUrl, {
     method: 'PUT',
     headers: { 'content-type': 'video/mp4' },
@@ -186,11 +192,13 @@ async function main(log: Logger): Promise<void> {
     recruit: mintToken({ sub: randomUUID() }),
   };
   const draftTitle = `E2E private draft ${run}`;
-  const [watchable, canvas, draft, clippable] = await Promise.all([
+  const [watchable, canvas, draft, clippable, shared, locked] = await Promise.all([
     seedReadyVideo(apiUrl, personas.creator, `E2E seeded video ${run}`),
     seedReadyVideo(apiUrl, personas.creator, `${HOSTILE_TEXT} ${run}`),
     startUpload(apiUrl, personas.creator, draftTitle, 'private'),
     seedReadyVideo(apiUrl, personas.creator, `E2E long video ${run}`, LONG_FIXTURE),
+    seedReadyVideo(apiUrl, personas.creator, `E2E shared video ${run}`, FIXTURE, 'private'),
+    seedReadyVideo(apiUrl, personas.creator, `E2E locked video ${run}`, FIXTURE, 'unlisted'),
   ]);
   await call(`${apiUrl}/v1/videos/${canvas.id}`, {
     method: 'PATCH',
@@ -222,6 +230,8 @@ async function main(log: Logger): Promise<void> {
       watchable,
       canvas,
       clippable,
+      shared,
+      locked,
       draft: { id: draft.videoId, title: draftTitle },
     },
   } satisfies Stack);

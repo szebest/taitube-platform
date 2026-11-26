@@ -15,6 +15,7 @@ import {
   VIEWER,
   buildHomeApp,
 } from './home-app';
+import { sessionShown, startTitleTest } from './running-test';
 import { TEST_CDN, TEST_SPRITE } from './service-deps';
 
 describe('apps/server/api/services: HomeService', () => {
@@ -82,6 +83,34 @@ describe('apps/server/api/services: HomeService', () => {
     expect(findMany).toHaveBeenCalledTimes(1);
   });
 
+  it('shows a session its test variant on every shelf that holds the video, over the cached page', async () => {
+    const test = await startTitleTest(app.repositories, {
+      videoId: NIGHT,
+      ownerId: '00000000-0000-7000-8000-0000000000a2',
+      control: 'Video c1',
+      challenger: 'Night tram',
+    });
+    expectOk(await app.service.get(VIEWER));
+    const nights = (page: { shelves: { items: { id: string }[] }[] }) =>
+      page.shelves.flatMap(({ items }) => items).filter(({ id }) => id === NIGHT);
+
+    const shown = nights(expectOk(await app.service.get(VIEWER, sessionShown(test.id, 'b'))));
+    const control = nights(expectOk(await app.service.get(VIEWER)));
+
+    expect(shown.length).toBeGreaterThan(1);
+    expect(shown).toEqual(
+      shown.map(() =>
+        expect.objectContaining({
+          title: 'Night tram',
+          experiment: { id: test.id, variantId: 'b' },
+        })
+      )
+    );
+    expect(control).toEqual(
+      control.map(() => expect.not.objectContaining({ experiment: expect.anything() }))
+    );
+  });
+
   it('serves a signed-in viewer a cached page until a new watch drops it', async () => {
     const watchHistory = new WatchHistoryService({
       history: app.repositories.watchHistory,
@@ -138,6 +167,8 @@ describe('apps/server/api/services: HomeService', () => {
       ],
       hourly: [],
       devices: [],
+      shareLinks: [],
+      experiments: [],
     });
 
     const kinds = expectOk(await app.service.get(VIEWER)).shelves.map(({ kind }) => kind);

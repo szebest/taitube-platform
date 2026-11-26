@@ -61,6 +61,8 @@ describe('AnalyticsService', () => {
           { videoId: VIDEO, viewHour: '2026-03-08T08:00:00.000Z', views: 9 },
         ],
         devices: [],
+        shareLinks: [],
+        experiments: [],
       })
     );
   });
@@ -148,6 +150,8 @@ describe('AnalyticsService', () => {
           ],
           hourly: [],
           devices: [],
+          shareLinks: [],
+          experiments: [],
         })
       );
 

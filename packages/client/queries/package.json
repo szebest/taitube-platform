@@ -45,6 +45,7 @@
     "@vp/shared-messages": "workspace:*",
     "@vp/permissions": "workspace:*",
     "@vp/permissions-react": "workspace:*",
+    "cookie-es": "^3.1.1",
     "zod": "^4.6.5"
   },
   "devDependencies": {

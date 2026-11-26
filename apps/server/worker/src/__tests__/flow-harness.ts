@@ -127,8 +127,15 @@ export async function encodeSegments(
 
 export const fixedTools: Pick<
   MediaTools,
-  'transcodeChunk' | 'concat' | 'audio' | 'live' | 'probeChannelImage' | 'channelImage'
+  | 'transcodeChunk'
+  | 'concat'
+  | 'audio'
+  | 'live'
+  | 'probeChannelImage'
+  | 'channelImage'
+  | 'applyEdits'
 > = {
+  applyEdits: (options) => encodeSegments(options, 1),
   live: async () => undefined,
   probeChannelImage: async () => ({ format: 'png', width: 800, height: 800 }),
   channelImage: async () => [],

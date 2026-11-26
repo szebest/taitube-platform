@@ -118,7 +118,7 @@ describe('FallbackViewBuffer', () => {
     expect(await record()).toBe('dropped');
   });
 
-  it('records retention and playback through the primary alone', async () => {
+  it('records retention, playback, link opens and test events through the primary alone', async () => {
     expectOk(await buffer.recordRetention({ videoId: 'video-1', sessionId: 's1', percent: 5 }));
     expect(
       expectOk(
@@ -130,13 +130,38 @@ describe('FallbackViewBuffer', () => {
           device: 'tablet',
           watchedSeconds: 9,
           requiredSeconds: 5,
+          shareLinkId: null,
+          experiment: null,
         })
       )
     ).toBe('counted');
+    expect(
+      expectOk(
+        await buffer.recordShareLinkOpen({
+          videoId: 'video-1',
+          linkId: 'link-1',
+          viewerKey: 'viewer-1',
+          viewDate: DAY,
+        })
+      )
+    ).toBe('counted');
+    expectOk(
+      await buffer.recordExperimentEvents([
+        {
+          videoId: 'video-1',
+          experimentId: 'exp-1',
+          variantId: 'b',
+          viewDate: DAY,
+          measure: 'impressions',
+        },
+      ])
+    );
 
     expect(expectOk(await primary.snapshot('batch'))).toMatchObject({
       counts: [{ views: 1, watchSeconds: 9 }],
       devices: [{ device: 'tablet', views: 1 }],
+      shareLinks: [{ linkId: 'link-1', viewDate: DAY, opens: 1 }],
+      experiments: [{ experimentId: 'exp-1', variantId: 'b', impressions: 1 }],
       retention: [{ percent: 0 }, { percent: 5 }],
     });
   });

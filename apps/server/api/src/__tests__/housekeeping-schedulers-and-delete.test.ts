@@ -60,6 +60,8 @@ describe('housekeeping schedulers and video deletion', () => {
       { id: 'purge-channel-images', repeat: { pattern: '0 4 * * *' } },
       { id: 'purge-handle-history', repeat: { pattern: '15 4 * * *' } },
       { id: 'purge-exports', repeat: { pattern: '30 * * * *' } },
+      { id: 'prune-revisions', repeat: { pattern: '30 4 * * *' } },
+      { id: 'purge-generations', repeat: { pattern: '45 * * * *' } },
       { id: 'flush-video-views', repeat: { every: 10_000 } },
     ])('schedules $id on $repeat with a task of the same name', async ({ id, repeat }) => {
       const schedulers = expectOk(await housekeepingQueue.getJobSchedulers());
@@ -77,11 +79,13 @@ describe('housekeeping schedulers and video deletion', () => {
       expect(schedulers.map((s) => s.id).sort()).toEqual([
         'expire-raw',
         'flush-video-views',
+        'prune-revisions',
         'purge-channel-audit',
         'purge-channel-images',
         'purge-comment-moderation',
         'purge-deleted',
         'purge-exports',
+        'purge-generations',
         'purge-handle-history',
         'purge-screening-evidence',
         'purge-search-history',

@@ -26,6 +26,7 @@ export function registerDiscoveryServices(c: Container): Container {
         new FeedService({
           videoService: c.get(Services.VideoService),
           viewerProgress: c.get(Services.ViewerProgress),
+          experiments: c.get(Services.ExperimentOverlay),
           cache: c.get(Adapters.Cache),
           singleflight: new Singleflight(),
           ...config().httpCache.feed,
@@ -39,6 +40,7 @@ export function registerDiscoveryServices(c: Container): Container {
           related: repositories().related,
           videoService: c.get(Services.VideoService),
           viewerProgress: c.get(Services.ViewerProgress),
+          experiments: c.get(Services.ExperimentOverlay),
           feedback: repositories().recommendationFeedback,
         })
     )
@@ -65,6 +67,7 @@ export function registerDiscoveryServices(c: Container): Container {
           feedback: repositories().recommendationFeedback,
           discovery: c.get(Services.DiscoveryShelves),
           viewerProgress: c.get(Services.ViewerProgress),
+          experiments: c.get(Services.ExperimentOverlay),
           cache: c.get(Adapters.Cache),
         })
     )

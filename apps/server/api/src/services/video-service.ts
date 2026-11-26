@@ -1,7 +1,12 @@
 import type { InvalidCursor, Paginator } from '@kit/pagination';
 import { type Result, err, isErr, map, ok, unwrapOr } from '@kit/result';
 import type { AuthorizationPort, ReactionCachePort } from '@vp/core/ports';
-import type { ChannelRepositoryPort, VideoRecord } from '@vp/core/repositories';
+import type {
+  ChannelRepositoryPort,
+  VideoChapterRepository,
+  VideoRecord,
+  VideoWithDetails,
+} from '@vp/core/repositories';
 import { PUBLIC_FEED_SEEN_LIMIT, type VideoFormat, type VideoStatus } from '@vp/domain';
 import { type ReadVideoFailure, decideVideoRead, videoNotFound } from '@vp/domain-rules';
 import type { CdnBase } from '@vp/env-schema';
@@ -42,6 +47,7 @@ export interface VideoServiceDeps extends VideoLifecycleDeps {
   cdn: CdnBase;
   sprite: SpriteGeometry;
   channels: ChannelRepositoryPort;
+  chapters: VideoChapterRepository;
   reactionCache: ReactionCachePort;
   authorization: AuthorizationPort;
   paginator: Paginator;
@@ -163,31 +169,26 @@ export class VideoService {
     const found = await this.deps.videos.findWithDetails(videoId);
     if (isErr(found)) return found;
 
-    const decided = decideVideoRead({
-      viewer,
-      video: found.value?.video ?? null,
-      videoId,
-    });
+    const decided = decideVideoRead({ viewer, video: found.value?.video ?? null, videoId });
     if (isErr(decided)) return decided;
+    return found.value ? this.detail(found.value) : err(videoNotFound(videoId));
+  }
 
-    const details = found.value;
-    if (!details) return err(videoNotFound(videoId));
-
+  /** The view of a video its caller was let read, with its live counters, channel and chapters. */
+  async detail(details: VideoWithDetails): Promise<Result<VideoDetailView, DatabaseUnavailable>> {
+    const { video } = details;
     const view = toVideoDetailView(
-      decided.value,
+      video,
       details.renditions,
       this.deps.cdn,
       this.deps.sprite,
       details.events
     );
 
-    const stored = {
-      likesCount: decided.value.likesCount ?? 0,
-      dislikesCount: decided.value.dislikesCount ?? 0,
-    };
+    const stored = { likesCount: video.likesCount ?? 0, dislikesCount: video.dislikesCount ?? 0 };
     // A dead cache costs the stored counters their refresh, not the video its response.
     const counts = unwrapOr(
-      await this.deps.reactionCache.getCounts(videoId, async () => ok(stored)),
+      await this.deps.reactionCache.getCounts(video.id, async () => ok(stored)),
       stored
     );
     view.likesCount = counts.likesCount;
@@ -196,6 +197,10 @@ export class VideoService {
     const channelOf = await loadChannelsOf(this.deps.channels, [view.channelId]);
     if (isErr(channelOf)) return channelOf;
     view.channel = channelOf.value(view.channelId);
+
+    const chapters = await this.deps.chapters.listFor([video.id]);
+    if (isErr(chapters)) return chapters;
+    view.chapters = chapters.value.get(video.id) ?? [];
 
     return ok(view);
   }

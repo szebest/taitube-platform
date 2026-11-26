@@ -1,5 +1,3 @@
-import { Singleflight } from '@kit/concurrency';
-import { Paginator } from '@kit/pagination';
 import { err, ok } from '@kit/result';
 import { expectErr, expectOk } from '@kit/testing/result';
 import {
@@ -9,11 +7,9 @@ import {
 } from '@vp/adapters/in-memory';
 import { SEARCH_CACHE_TTL_SECONDS, SEARCH_SUGGESTIONS } from '@vp/domain';
 import { DEFAULT_PREFERENCES } from '@vp/domain/settings';
-import { inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes, cacheUnavailable, databaseUnavailable } from '@vp/errors';
-import { HistoryPause } from '../history-pause';
 import { type SearchResult, SearchService } from '../search-service';
-import { ViewerProgress } from '../viewer-progress';
+import { searchServiceDeps } from './service-deps';
 
 const OWNER = '00000000-0000-7000-8000-0000000047e1';
 const VIDEO = '00000000-0000-7000-8000-0000000047a1';
@@ -47,20 +43,9 @@ describe('apps/server/api/services: SearchService', () => {
     cache = new InMemoryCacheClient();
     suggestions = new InMemorySearchSuggestionIndex(Date.now, SEARCH_SUGGESTIONS.keptPerPrefix);
     clock = 1_000;
-    service = new SearchService({
-      search: repositories.search,
-      suggestions,
-      cache,
-      singleflight: new Singleflight(),
-      paginator: new Paginator(),
-      viewerProgress: new ViewerProgress(repositories.watchHistory),
-      history: repositories.searchHistory,
-      pause: new HistoryPause(repositories.userPreferences),
-      cdn: inProcessAppConfig().cdn,
-      sprite: inProcessAppConfig().sprite,
-      channels: repositories.channels,
-      now: () => clock,
-    });
+    service = new SearchService(
+      searchServiceDeps(repositories, { suggestions, cache, now: () => clock })
+    );
     expectOk(
       await repositories.videos.create({
         id: VIDEO,

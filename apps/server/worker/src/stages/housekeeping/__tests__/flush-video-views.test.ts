@@ -39,6 +39,8 @@ describe('housekeeping: flush-video-views', () => {
       device,
       watchedSeconds,
       requiredSeconds: 5,
+      shareLinkId: null,
+      experiment: null,
     });
 
   const devices = async () =>
@@ -84,6 +86,42 @@ describe('housekeeping: flush-video-views', () => {
     ).toEqual([{ viewHour: HOUR, views: 2 }]);
     expect(expectOk(await flush())).toEqual({ type: 'idle' });
     expect((await metrics.viewsFlushed.get()).values[0]?.value).toBe(2);
+  });
+
+  it('adds a share link view, its watch seconds and its opens to the link in the same batch', async () => {
+    const linkId = '00000000-0000-7000-8000-0000000000ab';
+    const link = {
+      id: linkId,
+      targetType: 'video' as const,
+      targetId: videoId,
+      token: 'a'.repeat(22),
+      label: null,
+      expiresAt: null,
+      createdBy: SEEDED.userId,
+      revokedAt: null,
+      createdAt: new Date(now),
+    };
+    expectOk(await repositories.shareLinks.create(link, 50));
+    await viewBuffer.recordShareLinkOpen({ videoId, linkId, viewerKey: 'viewer-1', viewDate: DAY });
+    await viewBuffer.recordPlayback({
+      videoId,
+      sessionId: 'viewer-1',
+      viewDate: DAY,
+      viewHour: HOUR,
+      device: 'desktop',
+      watchedSeconds: 30,
+      requiredSeconds: 5,
+      shareLinkId: linkId,
+      experiment: null,
+    });
+
+    expectOk(await flush());
+
+    expect(expectOk(await repositories.shareLinks.totalsFor([linkId])).get(linkId)).toEqual({
+      opens: 1,
+      views: 1,
+      watchSeconds: 30,
+    });
   });
 
   it('writes the device of each counted view with the daily row, and applies a replayed batch once', async () => {

@@ -85,6 +85,30 @@ describe('helpers/videos: Video Action Helpers', () => {
     ])('$scenario: $expected', ({ user, video, expected }) => {
       expect(canReadVideo({ user, video })).toBe(expected);
     });
+
+    it.each([
+      {
+        scenario: 'a guest holding its link',
+        user: guestUser,
+        targetId: 'vid-priv',
+        expected: true,
+      },
+      {
+        scenario: 'a viewer holding its link',
+        user: standardUser,
+        targetId: 'vid-priv',
+        expected: true,
+      },
+      {
+        scenario: 'a guest holding another link',
+        user: guestUser,
+        targetId: 'vid-unl',
+        expected: false,
+      },
+    ])('reads a private video for $scenario: $expected', ({ user, targetId, expected }) => {
+      const share = { targetType: 'video', targetId } as const;
+      expect(canReadVideo({ user, video: privateVideo, share })).toBe(expected);
+    });
   });
 
   describe('canReactVideo', () => {

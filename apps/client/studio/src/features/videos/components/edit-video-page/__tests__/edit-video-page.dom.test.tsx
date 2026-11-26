@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import { VIDEO_ID, account, video } from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
 import { signInBrowser } from '#app/__tests__/providers';
@@ -20,6 +20,19 @@ describe('apps/client/studio: EditVideoPage', () => {
       'Processing'
     );
     expect(screen.getByRole('button', { name: 'Save changes' })).toBeInTheDocument();
+  });
+
+  it('offers the sections of the editor in order', async () => {
+    serveEditor(video({ title: 'Launch day' }));
+
+    await renderRoute(getRouter, `/videos/${VIDEO_ID}/edit`, { handlers: [signInBrowser()] });
+    const tabs = await screen.findByRole('tablist', { name: 'Video sections' });
+
+    expect(
+      within(tabs)
+        .getAllByRole('tab')
+        .map((tab) => tab.textContent)
+    ).toEqual(['Details', 'Chapters', 'Corrections', 'Sharing', 'Tests', 'Edit video', 'History']);
   });
 
   it('shows the captions section to the owner of the video', async () => {

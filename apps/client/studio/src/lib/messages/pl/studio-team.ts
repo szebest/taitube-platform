@@ -106,6 +106,7 @@ export const studioTeam = {
         'channel.updated': 'Zmieniono kanał',
         'video.updated': 'Edytował(a) film',
         'video.comments.toggled': 'Włączył(a) lub wyłączył(a) komentarze',
+        'video.restored': 'Przywrócił(a) wcześniejszą wersję filmu',
         'comment.held': 'Wstrzymał(a) komentarz',
         'comment.approved': 'Zatwierdził(a) komentarz',
         'comment.hidden': 'Ukrył(a) komentarz',
@@ -149,6 +150,7 @@ export const studioTeam = {
         categoryId: 'kategoria',
         tags: 'tagi',
         thumbnail: 'miniatura',
+        chapters: 'rozdziały',
       },
     },
   }),
@@ -158,6 +160,7 @@ export const studioTeam = {
   teamAuditCommentsToggled: dt('{state:enum}', {
     enum: { state: { on: 'komentarze włączone', off: 'komentarze wyłączone' } },
   }),
+  teamAuditRestored: dt('wersja {version}'),
   teamAuditPinned: dt('{state:enum}', {
     enum: { state: { on: 'przypięty', off: 'odpięty' } },
   }),

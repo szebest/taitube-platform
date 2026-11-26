@@ -31,14 +31,20 @@ The data layer:
 - `requestLocale(locales, { searchStr, persisted })`: the negotiation chain (`lang` param, saved preference,
   `Accept-Language` on the server or `navigator.languages` in the browser, `en`), called from each app's root
   `beforeLoad`; the only module that reads the browser's languages (`single-locale-source.test.ts`).
-- `createAppApiClient({ apiBaseUrl, onUnauthorized })`: on the server the typed client calls the API at
-  `apiBaseUrl` with the session cookie's token; in the browser it calls this origin's `/api` and tells
-  `onUnauthorized` of every 401. `createAppRouter` builds it, with `endSession` as that callback.
+- `createAppApiClient({ apiBaseUrl, onUnauthorized, getViewerSession? })`: on the server the typed client calls the
+  API at `apiBaseUrl` with the session cookie's token and the request's `vp.video-access.*` unlock cookies, so a page
+  reloaded after an unlock renders unlocked; in the browser it calls this origin's `/api`, tells `onUnauthorized` of
+  every 401 and sends `getViewerSession()` as `x-viewer-session`, the tab's key the API picks test variants by. The
+  server never sends one, so a server render carries the control. `createAppRouter` builds it, with `endSession` as
+  that callback and the app's `getViewerSession` (web's; the studio passes none, so its edit form reads the stored
+  title).
 - `ApiProvider` and `useApi()` hand the client in router context to components. `useApi()` outside the provider
   throws, naming it.
 - Loader helpers: `ensureFound` (`@kit/query`'s `createEnsureFound` told that an API 404 is a missing resource).
   `parseParam`, `keysetPaging` and `KEYSET_PAGE_SIZE` are imported from `@kit/query`.
-- The query factories both apps read, each taking the client: `videoQueryOptions(api, id)`,
+- The query factories both apps read, each taking the client: `videoQueryOptions(api, id, shareToken?)` (the token
+  goes with the read and stays out of the key, so every part of the page reads the entry the token's read filled;
+  `correctionsQueryOptions(api, id, shareToken?)` does the same),
   `myVideosQueryOptions(api)`, and `videoKeys`; for clips, `clipQueryOptions(api, id)`, `myClipsQueryOptions(api)` and `clipKeys`.
 - `notificationKeys`, `unreadNotificationCountQueryOptions(api)` and `setUnreadCount`: the bell's cache, which the
   user event handlers below write, so the keys have one owner here; web's notification list files under
@@ -76,10 +82,13 @@ The session (SDD §11, Transport and Origins and cookies; slots and identities f
   each app's `src/start.ts` mounts after the CSRF check and the security headers. It moves a pre-slot
   `vp.session` cookie into slot 0 once, resolves the request's identity (`resolveRequestIdentity`: the prefix,
   else `X-Account-Slot`, else the default slot `vp.accounts` remembers), and answers `/api/...` from the API
-  (`proxyToApi`: an allowlist of request headers, the slot's token as the bearer, the browser's address appended
-  to `X-Forwarded-For`, a write that names no slot refused 403, a refused token refreshed once through
+  (`proxyToApi`: an allowlist of request headers with `x-viewer-session` among them, the slot's token as the bearer,
+  the browser's `vp.video-access.*` cookies and none of its others, the browser's address appended to
+  `X-Forwarded-For`, a write that names no slot refused 403, a refused token refreshed once through
   `refresh`, single-flight per refused token in this process, or that slot alone cleared and marked expired; a
-  write body over 1 MiB answered 413 before it is forwarded). A page with no prefix in a browser of two or more
+  write body over 1 MiB answered 413 before it is forwarded; every `Set-Cookie` of the API dropped but a video
+  unlock, which `reissueVideoAccessCookies` sets again on this origin, `HttpOnly`, `SameSite=Lax`, for the
+  `Max-Age` the API gave). A page with no prefix in a browser of two or more
   accounts is a 302 to the default identity's prefix, a prefix for a slot with no session a 302 to
   `/login?slot=<n>&reason=expired`, and a signed-in page is `Cache-Control: private, no-store`. Every other
   request gets the settings in its context (`requestSession()`).

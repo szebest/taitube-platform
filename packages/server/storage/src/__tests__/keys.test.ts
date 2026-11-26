@@ -28,6 +28,8 @@ import {
   renditionObjectKey,
   renditionPlaylistKey,
   renditionPrefix,
+  generationPurgeTargets,
+  replacementSourceKey,
   reprocessPrefixesBefore,
   sanitizeStorageUrl,
   spriteKey,
@@ -96,6 +98,30 @@ describe('packages/storage: object keys', () => {
     expect(masterPlaylistKey(videoId, 2).startsWith(prefix)).toBe(true);
     expect(segmentKeyOf(2).startsWith(prefix)).toBe(true);
     expect(masterPlaylistKey(videoId, 3).startsWith(prefix)).toBe(false);
+  });
+
+  it('keeps a replacement upload under the raw prefix, apart from the first source', () => {
+    expect(replacementSourceKey(videoId, 3, '.mov')).toBe(`raw/${videoId}/g3/source.mov`);
+  });
+
+  it('purges a later generation by its own prefix, never touching another', () => {
+    const [prefix = ''] = generationPurgeTargets(videoId, 2, ['720p']);
+
+    expect(generationPurgeTargets(videoId, 2, ['720p'])).toHaveLength(1);
+    expect(segmentKeyOf(2).startsWith(prefix)).toBe(true);
+    expect(segmentKeyOf(3).startsWith(prefix)).toBe(false);
+  });
+
+  it('purges the first generation rendition by rendition and its master, never every later one with it', () => {
+    const targets = generationPurgeTargets(videoId, 1, ['720p', '480p']);
+
+    expect(targets).toEqual([
+      renditionPrefix(videoId, '720p'),
+      renditionPrefix(videoId, '480p'),
+      masterPlaylistKey(videoId),
+    ]);
+    expect(targets.some((target) => segmentKeyOf(2).startsWith(target))).toBe(false);
+    expect(targets.some((target) => segmentKeyOf(1).startsWith(target))).toBe(true);
   });
 
   it('keeps the raw upload apart from its variants, one prefix per version', () => {

@@ -1,3 +1,4 @@
+import { VIEWER_SESSION_HEADER } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { VIDEO_ID, apiServer, problemReply, video } from '@vp/web-testing';
 import { http, HttpResponse } from 'msw/http';
@@ -5,11 +6,12 @@ import { createAppApiClient } from '../api-client';
 
 const PROXIED_VIDEO = `${window.location.origin}/api/v1/videos/${VIDEO_ID}`;
 
-function browserClient(onUnauthorized = vi.fn(), slot = 0) {
+function browserClient(onUnauthorized = vi.fn(), slot = 0, getViewerSession?: () => string) {
   return createAppApiClient({
     apiBaseUrl: 'http://api.internal:3000',
     getSlot: () => slot,
     onUnauthorized,
+    getViewerSession,
   });
 }
 
@@ -44,4 +46,21 @@ describe('@vp/queries: createAppApiClient in the browser', () => {
       expect(onUnauthorized.mock.calls).toEqual(Array.from({ length: told }, () => [2]));
     }
   );
+
+  it.each([
+    { app: 'that keeps a viewer session', getViewerSession: () => 'tab-key', sent: 'tab-key' },
+    { app: 'that keeps none', getViewerSession: undefined, sent: null },
+  ])('names the tab to the API from an app $app', async ({ getViewerSession, sent }) => {
+    const named: (string | null)[] = [];
+    apiServer.use(
+      http.get(PROXIED_VIDEO, ({ request }) => {
+        named.push(request.headers.get(VIEWER_SESSION_HEADER));
+        return HttpResponse.json(video());
+      })
+    );
+
+    await browserClient(vi.fn(), 0, getViewerSession).videos.getVideo({ params: { id: VIDEO_ID } });
+
+    expect(named).toEqual([sent]);
+  });
 });

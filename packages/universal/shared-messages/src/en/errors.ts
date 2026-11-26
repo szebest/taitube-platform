@@ -1,5 +1,7 @@
 import { dt } from '../engine';
+import { channelErrors } from './errors-channels';
 import { commentErrors } from './errors-comments';
+import { videoToolErrors } from './errors-video-tools';
 
 export const errors = {
   uploadTooLarge: dt('This file is larger than uploads allow.'),
@@ -24,6 +26,7 @@ export const errors = {
   handleAlreadyTaken: dt('This handle is already taken.'),
   invalidHandleFormat: dt('Handles use lowercase letters, digits and dashes only.'),
   cannotSubscribeToSelf: dt('You cannot subscribe to your own channel.'),
+  ...channelErrors,
   ...commentErrors,
   reportNotFound: dt('This report does not exist.'),
   reportAlreadyResolved: dt('This report was already resolved.'),
@@ -31,6 +34,7 @@ export const errors = {
   playlistItemNotFound: dt('This video is not in the playlist.'),
   systemPlaylistImmutable: dt('Watch Later cannot be renamed or deleted.'),
   clipNotFound: dt('This clip does not exist or its video is no longer available.'),
+  ...videoToolErrors,
   pickNotFound: dt('This pick does not exist or was cancelled.'),
   pickWindowOverlap: dt('Another pick already holds part of that window.'),
   webhookNotFound: dt('This webhook does not exist or was removed.'),
@@ -117,17 +121,6 @@ export const errors = {
   watchPartyChatOff: dt('Chat is off in this party.'),
   watchPartyTicketInvalid: dt('Your party connection expired. Reconnect to keep watching.'),
   watchPartyCredentialInvalid: dt('Your guest seat expired. Join the party again.'),
-  channelMembershipRequired: dt('You are not on the team of this channel any more.'),
-  channelLimitReached: dt('You own as many channels as an account can. Remove one to add another.'),
-  channelNotOwned: dt('Only the owner of this channel can do that.'),
-  channelInviteNotFound: dt('This invite does not exist.'),
-  channelInviteNotPending: dt(
-    'This invite is no longer open: it was answered, revoked or has expired.'
-  ),
-  channelInviteAlreadyPending: dt('This person already has an open invite to the team.'),
-  channelMemberExists: dt('This person is already on the team.'),
-  channelMemberNotFound: dt('This person is not on the team.'),
-  channelOwnerImmutable: dt('The channel owner cannot be removed or given another role.'),
   handleChangeTooSoon: dt(
     'You changed your handle recently. You can change it again in a few weeks.'
   ),

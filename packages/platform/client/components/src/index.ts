@@ -8,6 +8,7 @@ export * from './illustrations';
 export * from './login-card';
 export * from './page-header';
 export * from './shelf';
+export * from './sprite-strip';
 export * from './start-here-shelf';
 export * from './states/empty-state';
 export * from './states/error-state';

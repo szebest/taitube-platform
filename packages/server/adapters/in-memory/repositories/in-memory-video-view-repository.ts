@@ -5,12 +5,14 @@ import {
   type DailyViews,
   type DeviceViewCount,
   type DeviceViews,
+  type ExperimentCount,
   type FirstWeekRow,
   type PeerVideo,
   type HourlyViewCount,
   type HourlyViews,
   type RetentionCount,
   type RetentionPoint,
+  type ShareLinkCount,
   type TopVideo,
   type ViewBatch,
   type ViewBatchOutcome,
@@ -26,6 +28,7 @@ import {
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { firstWeekRowsOf, recentPeersOf } from './in-memory-first-week';
+import { byDate, byHour, inHours, inRange } from './in-memory-view-ranges';
 
 /** The two things the view counters need from the videos they count. */
 export interface ViewedVideos {
@@ -33,22 +36,10 @@ export interface ViewedVideos {
   addViews(videoId: string, views: number): void;
 }
 
-function inRange(viewDate: string, range: ViewDateRange): boolean {
-  return viewDate >= range.from && viewDate <= range.to;
-}
-
-function inHours(viewHour: string, range: ViewHourRange): boolean {
-  return (
-    Date.parse(viewHour) >= Date.parse(range.from) && Date.parse(viewHour) <= Date.parse(range.to)
-  );
-}
-
-function byHour(left: HourlyViews, right: HourlyViews): number {
-  return Date.parse(left.viewHour) - Date.parse(right.viewHour);
-}
-
-function byDate(left: DailyViews, right: DailyViews): number {
-  return left.viewDate.localeCompare(right.viewDate);
+/** The in-memory share link and experiment stores, which hold the numbers a flush adds for them. */
+export interface ViewStatsSinks {
+  shareLinks: { addStats(counts: readonly ShareLinkCount[]): void };
+  experiments: { addStats(counts: readonly ExperimentCount[]): void };
 }
 
 export class InMemoryVideoViewRepository implements VideoViewRepositoryPort {
@@ -58,7 +49,10 @@ export class InMemoryVideoViewRepository implements VideoViewRepositoryPort {
   private readonly hourly = new Map<string, HourlyViewCount>();
   private readonly devices = new Map<string, DeviceViewCount>();
 
-  constructor(private readonly videos: ViewedVideos) {}
+  constructor(
+    private readonly videos: ViewedVideos,
+    private readonly sinks: ViewStatsSinks
+  ) {}
 
   async applyBatch(batch: ViewBatch): Promise<Result<ViewBatchOutcome, DatabaseUnavailable>> {
     if (this.batches.has(batch.batchId)) return ok({ type: 'already-applied' });
@@ -95,6 +89,9 @@ export class InMemoryVideoViewRepository implements VideoViewRepositoryPort {
       const held = this.devices.get(deviceKey);
       this.devices.set(deviceKey, { ...count, views: count.views + (held?.views ?? 0) });
     }
+
+    this.sinks.shareLinks.addStats(batch.shareLinks);
+    this.sinks.experiments.addStats(batch.experiments);
 
     const deltas = viewsByVideo(kept);
     for (const { videoId, views } of deltas) this.videos.addViews(videoId, views);
@@ -138,6 +135,12 @@ export class InMemoryVideoViewRepository implements VideoViewRepositoryPort {
         .map(({ percent, viewers }) => ({ percent, viewers }))
         .sort((left, right) => left.percent - right.percent)
     );
+  }
+
+  replaceRetention(videoId: string, points: readonly RetentionPoint[]): void {
+    for (const [key, step] of this.retention)
+      if (step.videoId === videoId) this.retention.delete(key);
+    for (const p of points) this.retention.set(`${videoId}|${p.percent}`, { ...p, videoId });
   }
 
   async videoDevices(

@@ -8,6 +8,7 @@ import * as schema from '@vp/db';
 import type { SubscribedChannelItem } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { asc, desc, eq, inArray, sql } from 'drizzle-orm';
+import { toVideoRecord } from '../mappers/video.mapper';
 import {
   drizzleWhere,
   keysetBefore,
@@ -67,7 +68,7 @@ export async function subscriptionFeed(
   );
 
   return map(rows, (found) => ({
-    items: found.map((r) => r.video),
+    items: found.map(({ video }) => toVideoRecord(video)),
     total: counted.value[0]?.count ?? 0,
   }));
 }

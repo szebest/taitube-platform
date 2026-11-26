@@ -71,6 +71,8 @@ export function describeRisingVideosRepositoryContract(makeSubject: MakeReposito
           ],
           hourly: [],
           devices: [],
+          shareLinks: [],
+          experiments: [],
         })
       );
     };

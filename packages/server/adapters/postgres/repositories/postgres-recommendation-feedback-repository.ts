@@ -16,7 +16,7 @@ import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { and, desc, eq, sql } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
-import { toFeedback } from '../mappers/index';
+import { toFeedback, toVideoRecord } from '../mappers/index';
 import { drizzleWhere, keysetBefore, msTimestamp, watchableVideoScope } from '../scopes/index';
 import type { PostgresDatabase } from './types';
 
@@ -119,7 +119,7 @@ export class PostgresRecommendationFeedbackRepository implements RecommendationF
     return map(rows, (found) =>
       found.map(({ feedback, video, owner, target }) => ({
         ...toFeedback(feedback),
-        video,
+        video: video ? toVideoRecord(video) : null,
         channel: cardOf(feedback.kind === 'hide_channel' ? target : owner),
       }))
     );

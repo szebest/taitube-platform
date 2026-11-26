@@ -1,5 +1,5 @@
 import { hashKey } from '@tanstack/react-query';
-import { getChannel, getRelatedVideos, getVideo } from '@vp/api-contracts';
+import { getChannel, getRelatedVideos, getVideo, listVideoCorrections } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { videoQueryOptions } from '@vp/queries';
 import {
@@ -28,6 +28,10 @@ const CHANNEL_CARD = {
 
 const channelAnswer = mockEndpoint(getChannel, () =>
   HttpResponse.json(channel({ subscriberCount: 284_000 }))
+);
+
+const correctionsAnswer = mockEndpoint(listVideoCorrections, () =>
+  HttpResponse.json({ items: [] })
 );
 
 const relatedAnswer = mockEndpoint(getRelatedVideos, () =>
@@ -61,7 +65,7 @@ describe('apps/client/web: /watch/$videoId', () => {
     const asked: string[] = [];
 
     const { status, html } = await serverRender(getRouter, `/watch/${VIDEO_ID}`, {
-      handlers: [videoAnswer(asked), channelAnswer, relatedAnswer],
+      handlers: [videoAnswer(asked), channelAnswer, relatedAnswer, correctionsAnswer],
     });
 
     expect(status).toBe(200);
@@ -80,7 +84,7 @@ describe('apps/client/web: /watch/$videoId', () => {
     const asked: string[] = [];
 
     const { html } = await serverRender(getRouter, `/watch/${VIDEO_ID}`, {
-      handlers: [videoAnswer(asked), channelAnswer, relatedAnswer],
+      handlers: [videoAnswer(asked), channelAnswer, relatedAnswer, correctionsAnswer],
     });
 
     const head = headOf(html);
@@ -115,7 +119,7 @@ describe('apps/client/web: /watch/$videoId', () => {
     'server-renders the page and its meta in the locale "$acceptLanguage" negotiates, with every language as an hreflang alternate',
     async ({ acceptLanguage, lang, ogLocale, subscribers }) => {
       const { html } = await serverRender(getRouter, `/watch/${VIDEO_ID}`, {
-        handlers: [videoAnswer(), channelAnswer, relatedAnswer],
+        handlers: [videoAnswer(), channelAnswer, relatedAnswer, correctionsAnswer],
         headers: { 'accept-language': acceptLanguage },
       });
 
@@ -140,7 +144,7 @@ describe('apps/client/web: /watch/$videoId', () => {
     },
   ])('answers $scenario with $status', async ({ search, status, location }) => {
     const rendered = await serverRender(getRouter, `/watch/${VIDEO_ID}${search}`, {
-      handlers: [videoAnswer(), channelAnswer, relatedAnswer],
+      handlers: [videoAnswer(), channelAnswer, relatedAnswer, correctionsAnswer],
     });
 
     expect(rendered.status).toBe(status);
@@ -155,7 +159,7 @@ describe('apps/client/web: /watch/$videoId', () => {
     'dehydrates the loaded $name into the page, so hydration reads it instead of refetching',
     async ({ queryKey }) => {
       const { html } = await serverRender(getRouter, `/watch/${VIDEO_ID}`, {
-        handlers: [videoAnswer(), channelAnswer, relatedAnswer],
+        handlers: [videoAnswer(), channelAnswer, relatedAnswer, correctionsAnswer],
       });
 
       expect(html).toContain(`queryHash:${JSON.stringify(hashKey(queryKey))}`);
@@ -167,6 +171,7 @@ describe('apps/client/web: /watch/$videoId', () => {
       handlers: [
         videoAnswer(),
         channelAnswer,
+        correctionsAnswer,
         mockEndpoint(getRelatedVideos, () => problemReply(ErrorCodes.INTERNAL)),
       ],
     });
@@ -191,5 +196,40 @@ describe('apps/client/web: /watch/$videoId', () => {
     expect(html).toContain('Page not found');
     expect(headOf(html)).not.toContain('og:');
     expect(jsonLdOf(html)).toEqual([]);
+  });
+
+  it("renders the password gate with no meta, and the page itself once the request carries the video's unlock", async () => {
+    const unlock = `vp.video-access.${VIDEO_ID}=signed`;
+    const answer = mockEndpoint(getVideo, ({ request }) =>
+      request.headers.get('cookie') === unlock
+        ? HttpResponse.json(video({ title: 'Launch day', passwordProtected: true }))
+        : problemReply(ErrorCodes.VIDEO_PASSWORD_REQUIRED)
+    );
+    const handlers = [answer, channelAnswer, relatedAnswer, correctionsAnswer];
+
+    const locked = await serverRender(getRouter, `/watch/${VIDEO_ID}`, { handlers });
+    const unlocked = await serverRender(getRouter, `/watch/${VIDEO_ID}`, {
+      handlers,
+      headers: { cookie: `vp.theme=dark; ${unlock}` },
+    });
+
+    expect(locked.status).toBe(200);
+    expect(locked.html).toMatch(/<h1[^>]*>This video is protected<\/h1>/);
+    expect(headOf(locked.html)).not.toContain('og:');
+    expect(unlocked.html).toMatch(/<h1[^>]*>Launch day<\/h1>/);
+  });
+
+  it('never names a viewer session to the API, so the server render carries the control', async () => {
+    const sessions: (string | null)[] = [];
+    const answer = mockEndpoint(getVideo, ({ request }) => {
+      sessions.push(request.headers.get('x-viewer-session'));
+      return HttpResponse.json(video({ title: 'Launch day' }));
+    });
+
+    await serverRender(getRouter, `/watch/${VIDEO_ID}`, {
+      handlers: [answer, channelAnswer, relatedAnswer, correctionsAnswer],
+    });
+
+    expect(sessions).toEqual([null]);
   });
 });
