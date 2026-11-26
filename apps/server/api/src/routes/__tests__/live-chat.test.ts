@@ -36,6 +36,7 @@ describe('live chat socket', () => {
         video: {
           id: '00000000-0000-7000-8000-00000000f201',
           ownerId: OWNER_ID,
+          channelId: channel.id,
           visibility: 'public',
           sourceKey: 'live/',
         },

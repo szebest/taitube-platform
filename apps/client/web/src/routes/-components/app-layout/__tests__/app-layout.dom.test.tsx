@@ -13,7 +13,7 @@ describe('apps/client/web: app layout in the browser', () => {
     await renderRoute(getRouter, '/watch/not-a-video', { handlers: handlers() });
 
     expect(requested.mock.calls.map(([name]) => name)).toEqual(
-      locks.map((userId) => `vp.user-events.${userId}`)
+      locks.map((userId) => `vp.user-events.0.primary.${userId}`)
     );
   });
 });

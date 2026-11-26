@@ -32,14 +32,15 @@ export class CreatorCommentService {
   ): Promise<Result<CreatorInboxPage, CreatorInboxFailure>> {
     const allowed = decideChannelTask({ user, acting, task: 'read-inbox' });
     if (isErr(allowed)) return allowed;
-    const { ownerId } = allowed.value;
+    const scope = allowed.value;
 
     const { paginator, comments } = this.deps;
     const limit = paginator.limit(options.limit);
     const cursor = decodeCreatedAtCursor(options.cursor, paginator);
     if (isErr(cursor)) return cursor;
 
-    const rows = await comments.listForOwner(ownerId, {
+    const rows = await comments.listForOwner(scope.ownerId, {
+      channelId: scope.channelId,
       filter: options.filter,
       authorId: options.authorId,
       cursor: cursor.value,
@@ -48,7 +49,7 @@ export class CreatorCommentService {
     return map(rows, (found) =>
       paginator.paginate(found, limit, {
         cursorOf: createdAtCursorPayload,
-        toItem: (comment) => toCreatorInboxCommentView(comment, ownerId, user),
+        toItem: (comment) => toCreatorInboxCommentView(comment, scope, user),
       })
     );
   }

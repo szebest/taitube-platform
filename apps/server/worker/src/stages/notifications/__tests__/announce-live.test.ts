@@ -55,7 +55,13 @@ describe('apps/server/worker/stages: announce-live', () => {
     expectOk(
       await repositories.liveStreams.goLive({
         streamId: STREAM_ID,
-        video: { id: VIDEO_ID, ownerId: CREATOR_ID, visibility, sourceKey: `live/${STREAM_ID}/` },
+        video: {
+          id: VIDEO_ID,
+          ownerId: CREATOR_ID,
+          channelId: CHANNEL_ID,
+          visibility,
+          sourceKey: `live/${STREAM_ID}/`,
+        },
         startedAt: STARTED,
         outbox: [],
       })

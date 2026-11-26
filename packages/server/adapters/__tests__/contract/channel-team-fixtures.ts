@@ -1,7 +1,7 @@
 import { expectOk } from '@kit/testing/result';
 import type { NewChannelInvite, Repositories } from '@vp/core/repositories';
 import type { Channel, NewChannelAuditEntry } from '@vp/domain';
-import { OTHER_OWNER_ID, OWNER_ID } from './fixtures';
+import { OTHER_OWNER_ID, OWNER_CHANNEL_ID, OWNER_ID } from './fixtures';
 
 export const INVITEE_ID = '00000000-0000-7000-8000-000000000103';
 
@@ -10,13 +10,14 @@ const DAY_MS = 86_400_000;
 export const inviteId = (n: number) =>
   `00000000-0000-7000-8000-00000000c1${String(n).padStart(2, '0')}`;
 
+/** The invitee, beside the owners and the primary channel `seedOwners` made for the owner. */
 export async function seedTeam(repositories: Repositories): Promise<Channel> {
   expectOk(
     await repositories.users.upsert({ id: INVITEE_ID, email: 'invitee@video-pipeline.local' })
   );
-  return expectOk(
-    await repositories.channels.create({ userId: OWNER_ID, handle: 'owner', displayName: 'Owner' })
-  );
+  const channel = expectOk(await repositories.channels.findById(OWNER_CHANNEL_ID));
+  if (!channel) throw new Error('seedOwners made no channel for the owner');
+  return channel;
 }
 
 export function invite(

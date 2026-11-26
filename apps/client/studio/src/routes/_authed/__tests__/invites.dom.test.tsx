@@ -30,17 +30,18 @@ describe('apps/client/studio: /invites', () => {
     await user.click(
       await screen.findByRole('button', { name: 'Accept the invite to Other Show' })
     );
-    await user.click(await screen.findByRole('button', { name: 'Switch channel' }));
+    await user.click(await screen.findByRole('button', { name: 'Account' }));
     await user.click(await screen.findByRole('menuitemradio', { name: /Other Show/ }));
-    await vi.waitFor(() => expect(router.state.location.pathname).toBe('/videos'));
+    await vi.waitFor(() =>
+      expect(router.history.location.pathname).toMatch(/\/c\/[^/]+\/invites$/)
+    );
 
-    await user.click(screen.getByRole('button', { name: 'Switch channel' }));
+    await user.click(await screen.findByRole('button', { name: 'Account' }));
     await user.click(await screen.findByRole('menuitem', { name: 'Leave this team' }));
     await user.click(await screen.findByRole('button', { name: 'Leave team' }));
 
     expect(await screen.findByText('You left Other Show')).toBeInTheDocument();
-    await vi.waitFor(() =>
-      expect(screen.queryByRole('button', { name: 'Switch channel' })).toBeNull()
-    );
+    await vi.waitFor(() => expect(router.state.location.pathname).toBe('/videos'));
+    expect(router.history.location.pathname).not.toMatch(/\/c\//);
   });
 });

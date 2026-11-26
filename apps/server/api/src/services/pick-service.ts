@@ -163,7 +163,7 @@ export class PickService {
     video: Video
   ): Promise<Result<PickView, DatabaseUnavailable>> {
     await this.deps.currentCache.drop();
-    const owner = await this.deps.channels.findByUserId(video.ownerId);
+    const owner = await this.deps.channels.findById(video.channelId);
     return map(owner, (channel) =>
       toPickView(
         { pick, video, channel: channel && toChannelCard(channel) },

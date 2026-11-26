@@ -57,7 +57,9 @@ export async function loadOwnedUpload(
   const record = found.value;
   const decided = decideUploadAccess({
     actor: user,
-    upload: record ? { id: record.upload.id, ownerId: record.video.ownerId } : null,
+    upload: record
+      ? { id: record.upload.id, ownerId: record.video.ownerId, channelId: record.video.channelId }
+      : null,
     uploadId,
     action,
   });

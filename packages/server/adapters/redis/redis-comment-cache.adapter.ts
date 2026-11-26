@@ -17,6 +17,7 @@ const HotCommentsSchema = z.object({
       id: z.string(),
       videoId: z.string(),
       authorId: z.string(),
+      authorChannelId: z.string(),
       parentId: z.string().nullable(),
       content: z.string(),
       isPinned: z.boolean(),
@@ -35,7 +36,7 @@ const HotCommentsSchema = z.object({
       updatedAt: z.coerce.date(),
       author: z.object({
         userId: z.string(),
-        channelId: z.string().nullable(),
+        channelId: z.string(),
         handle: z.string().nullable(),
         displayName: z.string().nullable(),
         avatarUrl: z.string().nullable(),

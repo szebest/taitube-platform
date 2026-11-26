@@ -9,7 +9,7 @@ import {
   expect,
 } from '@playwright/test';
 import { mintToken } from '../../packages/server/dev-identity/src/index';
-import { sessionCookie } from './session-cookie';
+import { type SlotRow, accountsCookie, sessionCookie, slotCookie } from './session-cookie';
 import type { Persona, Stack } from './stack';
 
 /** The short clip every browser flow uploads; `pnpm gen-video --only s2` writes it. */
@@ -31,6 +31,11 @@ type TestFixtures = {
   offMachineRequests: string[];
   tokens: Record<TestPersona, string>;
   signIn: (persona: TestPersona) => Promise<void>;
+  /**
+   * Signs the browser in to several accounts at once, persona `n` in slot `n`, the first the default
+   * for a tab with no prefix; answers each account's channel name, the label its row shows.
+   */
+  signInSlots: (personas: readonly TestPersona[]) => Promise<string[]>;
   /** `channelId` acts on that channel through `X-Channel-Id`, as the studio does for a team member. */
   api: (persona?: TestPersona, options?: { channelId?: string }) => Promise<APIRequestContext>;
 };
@@ -139,6 +144,28 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
     });
   },
 
+  signInSlots: async ({ context, tokens, baseURL, playwright, stack }, use) => {
+    await use(async (personas) => {
+      const url = baseURL ?? '';
+      const rows: SlotRow[] = await Promise.all(
+        personas.map(async (persona, slot) => {
+          const request = await playwright.request.newContext({
+            baseURL: stack.apiUrl,
+            extraHTTPHeaders: { authorization: `Bearer ${tokens[persona]}` },
+          });
+          const account = await (await request.get('/v1/me/account')).json();
+          await request.dispose();
+          return { slot, userId: account.user.id, label: account.channel.displayName };
+        })
+      );
+      await context.addCookies([
+        ...personas.map((persona, slot) => slotCookie(slot, tokens[persona], url)),
+        accountsCookie(rows, 0, url),
+      ]);
+      return rows.map(({ label }) => label);
+    });
+  },
+
   api: async ({ playwright, stack, tokens }, use) => {
     const contexts: APIRequestContext[] = [];
     await use(async (persona, { channelId } = {}) => {
@@ -173,4 +200,14 @@ export async function hydrated(locator: Locator): Promise<void> {
       )
     )
     .toBe(true);
+}
+
+/**
+ * After a keyboard pick-up, dnd-kit drops arrow keys until it has attached its keydown listener and
+ * measured the drop targets; both land after the "Picked up" announcement, and two frames on they have.
+ */
+export async function keyboardDragReady(page: Page): Promise<void> {
+  await page.evaluate(
+    () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+  );
 }

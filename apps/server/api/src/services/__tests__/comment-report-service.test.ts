@@ -6,6 +6,7 @@ import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { CommentCachePort } from '@vp/core/ports';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
+import { actingAsPrimary, seedPrimaryChannel } from '../../__tests__/test-app';
 import { CommentReportService } from '../comment-report-service';
 import { CommentService } from '../comment-service';
 import { commentUpdateDeps } from './comment-deps';
@@ -54,12 +55,20 @@ describe('CommentReportService', () => {
       await repositories.videos.create({
         id,
         ownerId: OWNER.id,
+        channelId: await seedPrimaryChannel(repositories, OWNER.id),
         sourceKey: `raw/${id}/source.mp4`,
         visibility,
         status: 'READY',
       });
     }
-    commentId = expectOk(await commentService.create(AUTHOR, VIDEO_ID, { content: 'spam' })).id;
+    commentId = expectOk(
+      await commentService.create(
+        AUTHOR,
+        await actingAsPrimary(repositories, AUTHOR.id),
+        VIDEO_ID,
+        { content: 'spam' }
+      )
+    ).id;
   });
 
   const report = (reporter = REPORTER, id = commentId) =>
@@ -84,6 +93,7 @@ describe('CommentReportService', () => {
         id: '77777777-7777-7777-8777-777777777777',
         videoId: PRIVATE_ID,
         authorId: OWNER.id,
+        authorChannelId: await seedPrimaryChannel(repositories, OWNER.id),
         parentId: null,
         content: 'draft',
       })

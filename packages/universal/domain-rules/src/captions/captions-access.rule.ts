@@ -26,7 +26,12 @@ export interface CaptionsAccess {
 }
 
 function captionsOf(video: Video): CaptionResource {
-  return { videoId: video.id, ownerId: video.ownerId, visibility: video.visibility };
+  return {
+    videoId: video.id,
+    ownerId: video.ownerId,
+    channelId: video.channelId,
+    visibility: video.visibility,
+  };
 }
 
 /**

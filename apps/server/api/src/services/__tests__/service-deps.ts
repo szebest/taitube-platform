@@ -4,6 +4,7 @@ import { ok } from '@kit/result';
 import { CaslAuthorizationAdapter } from '@vp/adapters/authorization';
 import {
   InMemoryCacheClient,
+  InMemoryChannelAuditRepository,
   InMemoryChannelHandleHistoryRepository,
   InMemoryChannelRepository,
   InMemoryJobQueue,
@@ -45,7 +46,8 @@ export function videoServiceDeps(
     videos,
     channels: new InMemoryChannelRepository(
       new InMemoryVideoRepository(),
-      new InMemoryChannelHandleHistoryRepository()
+      new InMemoryChannelHandleHistoryRepository(),
+      new InMemoryChannelAuditRepository()
     ),
     cdn: TEST_CDN,
     sprite: TEST_SPRITE,

@@ -27,7 +27,7 @@ function trending(viewsCount: number, ageHours: number): number {
 function video(overrides: Partial<PublicFeedCandidate> = {}): PublicFeedCandidate {
   return {
     id: 'video-1',
-    ownerId: 'owner-1',
+    channelId: 'channel-1',
     visibility: 'public',
     status: 'READY',
     format: 'standard',
@@ -59,7 +59,7 @@ describe('packages/domain: public feed rules', () => {
         scenario: 'an uncategorised video when a category is requested',
         filter: { categoryId: 'cat-b' },
       },
-      { scenario: "another owner's video", filter: { ownerId: 'owner-2' } },
+      { scenario: "another channel's video", filter: { channelId: 'channel-2' } },
       { scenario: 'a standard video when Shorts are requested', filter: { format: 'short' } },
       {
         scenario: 'a Short when standard videos are requested',
@@ -75,8 +75,8 @@ describe('packages/domain: public feed rules', () => {
       { scenario: 'with an absent category', filter: { categoryId: null } },
       { scenario: 'of the requested format', filter: { format: 'standard' } },
       {
-        scenario: 'of its own category and owner',
-        filter: { categoryId: 'cat-a', ownerId: 'owner-1' },
+        scenario: 'of its own category and channel',
+        filter: { categoryId: 'cat-a', channelId: 'channel-1' },
       },
     ])('includes a public ready video $scenario', ({ filter }) => {
       expect(isPublicFeedEligible(video({ categoryId: 'cat-a' }), filter)).toBe(true);

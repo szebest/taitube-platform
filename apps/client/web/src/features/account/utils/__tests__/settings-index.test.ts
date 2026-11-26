@@ -25,6 +25,7 @@ describe('the settings index', () => {
       'privacy',
       'notifications',
       'language',
+      'accounts',
     ]);
   });
 });

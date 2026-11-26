@@ -79,11 +79,11 @@ export abstract class CaptionRepository {
     videoId: string,
     autoCaptions: boolean | null
   ): Promise<Result<boolean, DatabaseUnavailable>>;
-  /** `false` when the owner has no channel. */
-  abstract channelDefault(ownerId: string): Promise<Result<boolean, DatabaseUnavailable>>;
-  /** `false` when the owner has no channel. */
+  /** `false` when the channel is not there. */
+  abstract channelDefault(channelId: string): Promise<Result<boolean, DatabaseUnavailable>>;
+  /** `false` when the channel is not there. */
   abstract setChannelDefault(
-    ownerId: string,
+    channelId: string,
     enabled: boolean
   ): Promise<Result<boolean, DatabaseUnavailable>>;
   abstract list(videoId: string): Promise<Result<CaptionRecord[], DatabaseUnavailable>>;

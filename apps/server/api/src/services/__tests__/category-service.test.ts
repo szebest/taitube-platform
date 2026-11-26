@@ -4,6 +4,7 @@ import { RedisCategoryCacheAdapter } from '@vp/adapters/redis/redis-category-cac
 import { inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
+import { seedPrimaryChannel } from '../../__tests__/test-app';
 import { CategoryService } from '../category-service';
 
 const CACHES = inProcessAppConfig().caches;
@@ -122,6 +123,7 @@ describe('CategoryService', () => {
       await repositories.videos.create({
         id: '00000000-0000-7000-8000-0000000000e1',
         ownerId: '00000000-0000-7000-8000-0000000000e2',
+        channelId: await seedPrimaryChannel(repositories, '00000000-0000-7000-8000-0000000000e2'),
         title: 'Tagged',
         sourceKey: 'raw/tagged.mp4',
         categoryId: music.id,

@@ -79,13 +79,7 @@ describe('no leak of silent state: state x viewer x read path', () => {
 
   beforeEach(async () => {
     ctx = await buildCommentsApp();
-    channelId = expectOk(
-      await ctx.repositories.channels.create({
-        userId: CREATOR,
-        handle: 'creator',
-        displayName: 'Creator',
-      })
-    ).id;
+    channelId = ctx.creatorChannelId;
     baseline = await ctx.comment('stranger', 'public');
     subject = await ctx.comment('author', 'the subject');
     reply = await ctx.comment('author', 'a reply of the subject author', baseline);

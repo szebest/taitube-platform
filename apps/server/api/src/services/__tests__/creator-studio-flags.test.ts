@@ -1,6 +1,7 @@
 import { expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { UserContext } from '@vp/permissions';
+import { seedPrimaryChannel } from '../../__tests__/test-app';
 import type { CreatorStudioService } from '../creator-studio-service';
 import { creatorStudioOf } from './service-deps';
 
@@ -17,6 +18,7 @@ describe('apps/server/api/services: creator studio edit flags', () => {
       await repositories.videos.create({
         id: VIDEO_ID,
         ownerId: OWNER.id,
+        channelId: await seedPrimaryChannel(repositories, OWNER.id),
         title: 'Studio fixture',
         visibility: 'public',
         status: 'READY',

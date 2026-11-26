@@ -54,7 +54,7 @@ export class ReactionService {
     if (isErr(allowed)) return allowed;
     const banned = await refuseWhileBanned(
       this.deps,
-      allowed.value.ownerId,
+      allowed.value.channelId,
       user.id,
       new Date(this.deps.now())
     );

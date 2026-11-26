@@ -7,6 +7,7 @@ interface Env {
   traces?: string;
   publicApi?: string;
   devToken?: string;
+  accountsMax?: string;
   demoPersonas?: string;
 }
 
@@ -19,12 +20,14 @@ async function configFor({
   traces,
   publicApi,
   devToken,
+  accountsMax,
   demoPersonas,
 }: Env) {
   vi.stubEnv('SSR', ssr);
   vi.stubEnv('VITE_API_BASE_URL', 'http://localhost:3000');
   vi.stubEnv('SSR_API_BASE_URL', server);
   vi.stubEnv('SSR_DEV_TOKEN_URL', devToken);
+  vi.stubEnv('ACCOUNTS_MAX', accountsMax);
   vi.stubEnv('VITE_DEMO_PERSONAS', demoPersonas);
   vi.stubEnv('VITE_API_PUBLIC_URL', publicApi);
   vi.stubEnv('VITE_STUDIO_URL', studio);
@@ -125,6 +128,18 @@ describe('apps/client/web: config', () => {
     },
   ])("resolves the token server's address: $scenario", async ({ env, expected }) => {
     expect((await configFor(env)).DEV_TOKEN_URL).toBe(expected);
+  });
+
+  it.each([
+    { scenario: 'is every slot by default', env: { ssr: true }, expected: 10 },
+    {
+      scenario: 'reads ACCOUNTS_MAX on the server',
+      env: { ssr: true, accountsMax: '3' },
+      expected: 3,
+    },
+    { scenario: 'ignores ACCOUNTS_MAX in the browser', env: { accountsMax: '3' }, expected: 10 },
+  ])('resolves how many accounts a browser holds: $scenario', async ({ env, expected }) => {
+    expect((await configFor(env)).ACCOUNTS_MAX).toBe(expected);
   });
 
   it.each([

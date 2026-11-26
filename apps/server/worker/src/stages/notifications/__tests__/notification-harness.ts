@@ -17,6 +17,11 @@ export function userId(n: number): string {
   return `00000000-0000-7000-8000-${String(n).padStart(12, '0')}`;
 }
 
+/** The primary channel of a user the harness seeds: the creator's, or one derived from the id. */
+export function channelOf(id: string): string {
+  return id === CREATOR_ID ? CHANNEL_ID : `0000000c${id.slice(8)}`;
+}
+
 export function videoId(n: number): string {
   return `018f0000-0000-7000-8000-${String(n).padStart(12, '0')}`;
 }
@@ -47,6 +52,7 @@ export async function seedVideo(
     await repositories.videos.create({
       id,
       ownerId: overrides.ownerId ?? CREATOR_ID,
+      channelId: channelOf(overrides.ownerId ?? CREATOR_ID),
       title: overrides.title ?? `Video ${id.slice(-2)}`,
       sourceKey: `raw/${id}/source.mp4`,
       visibility: overrides.visibility ?? 'public',
@@ -62,9 +68,10 @@ export async function seedSubscriber(
   options: { level?: NotificationLevel; switches?: Partial<NotificationPreferences> } = {}
 ): Promise<void> {
   expectOk(await repositories.users.upsert({ id, email: `${id}@example.com` }));
-  expectOk(await repositories.subscriptions.subscribe(id, CHANNEL_ID));
+  expectOk(await repositories.subscriptions.subscribe(id, channelOf(id), CHANNEL_ID));
   if (options.level) {
-    expectOk(await repositories.subscriptions.setNotificationLevel(id, CHANNEL_ID, options.level));
+    const as = channelOf(id);
+    expectOk(await repositories.subscriptions.setNotificationLevel(as, CHANNEL_ID, options.level));
   }
   if (options.switches) await saveSwitches(repositories, id, options.switches);
 }

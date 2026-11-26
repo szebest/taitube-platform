@@ -2,12 +2,24 @@ import { ToastProvider, Tooltip } from '@kit/ui';
 import { useWebTelemetry } from '@kit/web-telemetry';
 import { getRouteApi } from '@tanstack/react-router';
 import { MAX_WEB_VITALS_PER_BATCH, recordWebVitals } from '@vp/api-contracts';
-import { ApiProvider, SessionProvider, UserEventStream } from '@vp/queries';
-import { Suspense } from 'react';
+import {
+  ApiProvider,
+  IdentitySwitcherProvider,
+  OpenAsLinks,
+  SessionProvider,
+  UserEventStream,
+  useSessionSync,
+  useTabIdentity,
+  WhenSwitcherOpened,
+} from '@vp/queries';
+import { Suspense, useState } from 'react';
 import {
   AccountMenu,
   ChannelPermissions,
+  createMergeState,
+  LazyIdentitySwitcherSheet,
   LazySignInDialog,
+  MergeStateContext,
   PreferencesSync,
   ReplayIntent,
 } from '#app/features/account';
@@ -33,6 +45,9 @@ const rootRoute = getRouteApi('__root__');
 
 export function AppLayout() {
   const { api, toaster, sidebarState, auth, devicePreferences } = rootRoute.useRouteContext();
+  const { identity, prefixed } = useTabIdentity();
+  const [mergeState] = useState(createMergeState);
+  useSessionSync();
 
   useWebTelemetry({
     app: 'web',
@@ -45,55 +60,64 @@ export function AppLayout() {
   return (
     <>
       <ApiProvider api={api}>
-        <SessionProvider session={auth}>
-          <ChannelPermissions>
-            <UserEventStream>
-              <Tooltip.Provider>
-                <ToastProvider toaster={toaster}>
-                  <DevicePreferencesProvider initial={devicePreferences}>
-                    <PreferencesSync>
-                      <PlaybackSessionProvider>
-                        <CommandPaletteProvider>
-                          <AmbientGlowProvider>
-                            <RootShell
-                              sidebar={sidebarState}
-                              account={<AccountMenu />}
-                              actions={<HeaderNotificationCentre />}
-                              notices={
-                                <>
-                                  <OfflineBanner />
-                                  <InstallPrompt />
-                                </>
-                              }
-                              nowPlaying={<LazyGlobalNowPlayingBar />}
-                              overlays={
-                                <>
-                                  <AppCommandPalette />
-                                  <UrlModal.WhenOpened id="save-to-playlist">
-                                    <LazySaveToPlaylistDialog />
-                                  </UrlModal.WhenOpened>
-                                  <UrlModal.WhenOpened id="sign-in">
-                                    <LazySignInDialog />
-                                  </UrlModal.WhenOpened>
-                                  <ReplayIntent />
-                                  <UrlModal.WhenOpened id="new-playlist">
-                                    <LazyNewPlaylistDialog />
-                                  </UrlModal.WhenOpened>
-                                  <UpdatePrompt />
-                                  <QueuedChangesSync />
-                                </>
-                              }
-                            />
-                          </AmbientGlowProvider>
-                        </CommandPaletteProvider>
-                      </PlaybackSessionProvider>
-                    </PreferencesSync>
-                  </DevicePreferencesProvider>
-                </ToastProvider>
-              </Tooltip.Provider>
-            </UserEventStream>
-          </ChannelPermissions>
-        </SessionProvider>
+        <MergeStateContext value={mergeState}>
+          <DevicePreferencesProvider initial={devicePreferences}>
+            <IdentitySwitcherProvider fallback="/">
+              <SessionProvider session={auth} identity={identity} prefixed={prefixed}>
+                <ChannelPermissions>
+                  <UserEventStream>
+                    <Tooltip.Provider>
+                      <ToastProvider toaster={toaster}>
+                        <PreferencesSync>
+                          <PlaybackSessionProvider>
+                            <CommandPaletteProvider>
+                              <AmbientGlowProvider>
+                                <OpenAsLinks>
+                                  <RootShell
+                                    sidebar={sidebarState}
+                                    account={<AccountMenu />}
+                                    actions={<HeaderNotificationCentre />}
+                                    notices={
+                                      <>
+                                        <OfflineBanner />
+                                        <InstallPrompt />
+                                      </>
+                                    }
+                                    nowPlaying={<LazyGlobalNowPlayingBar />}
+                                    overlays={
+                                      <>
+                                        <AppCommandPalette />
+                                        <UrlModal.WhenOpened id="save-to-playlist">
+                                          <LazySaveToPlaylistDialog />
+                                        </UrlModal.WhenOpened>
+                                        <UrlModal.WhenOpened id="sign-in">
+                                          <LazySignInDialog />
+                                        </UrlModal.WhenOpened>
+                                        <ReplayIntent />
+                                        <UrlModal.WhenOpened id="new-playlist">
+                                          <LazyNewPlaylistDialog />
+                                        </UrlModal.WhenOpened>
+                                        <UpdatePrompt />
+                                        <QueuedChangesSync />
+                                        <WhenSwitcherOpened>
+                                          <LazyIdentitySwitcherSheet />
+                                        </WhenSwitcherOpened>
+                                      </>
+                                    }
+                                  />
+                                </OpenAsLinks>
+                              </AmbientGlowProvider>
+                            </CommandPaletteProvider>
+                          </PlaybackSessionProvider>
+                        </PreferencesSync>
+                      </ToastProvider>
+                    </Tooltip.Provider>
+                  </UserEventStream>
+                </ChannelPermissions>
+              </SessionProvider>
+            </IdentitySwitcherProvider>
+          </DevicePreferencesProvider>
+        </MergeStateContext>
       </ApiProvider>
       <Suspense>
         <LazyDevtools />

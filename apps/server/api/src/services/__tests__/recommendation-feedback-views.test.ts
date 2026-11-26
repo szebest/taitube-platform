@@ -1,6 +1,7 @@
 import { expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { ChannelCard, RecommendationFeedbackEntry } from '@vp/domain';
+import { seedPrimaryChannel } from '../../__tests__/test-app';
 import {
   toRecommendationFeedbackItemView,
   toRecommendationFeedbackView,
@@ -32,6 +33,7 @@ describe('apps/server/api/services: recommendation feedback views', () => {
       await repositories.videos.create({
         id: '00000000-0000-7000-8000-00000000f0a1',
         ownerId: 'o1',
+        channelId: await seedPrimaryChannel(repositories, 'o1'),
         title: 'Clip',
         visibility: 'public',
         status: 'READY',

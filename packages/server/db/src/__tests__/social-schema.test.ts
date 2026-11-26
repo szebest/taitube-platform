@@ -15,6 +15,12 @@ describe('db: social schema', () => {
     {
       name: 'a subscription',
       table: channelSubscriptions,
+      column: 'subscriber_channel_id',
+      references: 'channels',
+    },
+    {
+      name: 'a subscription',
+      table: channelSubscriptions,
       column: 'channel_id',
       references: 'channels',
     },
@@ -30,10 +36,19 @@ describe('db: social schema', () => {
 
   it.each([
     { table: videoReactions, unique: 'video_reactions_user_id_video_id_unique' },
-    { table: channelSubscriptions, unique: 'channel_subscriptions_subscriber_channel_unique' },
+    {
+      table: channelSubscriptions,
+      unique: 'channel_subscriptions_subscriber_channel_channel_unique',
+    },
   ])('holds one row per pair through $unique', ({ table, unique }) => {
     expect(getTableConfig(table).uniqueConstraints.map((constraint) => constraint.name)).toEqual([
       unique,
+    ]);
+  });
+
+  it('refuses a channel subscribing to itself', () => {
+    expect(getTableConfig(channelSubscriptions).checks.map((check) => check.name)).toEqual([
+      'channel_subscriptions_not_self',
     ]);
   });
 

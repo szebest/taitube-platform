@@ -103,7 +103,8 @@ async function tellHeld(
 
 export async function insertComment(
   tx: PostgresDatabase,
-  input: NewCommentInput
+  input: NewCommentInput,
+  audit?: NewChannelAuditEntry
 ): Promise<CommentThread | null> {
   const video = await lockVideo(tx, input.videoId);
   if (input.parentId !== null && !(await isLive(tx, input.parentId))) return null;
@@ -126,6 +127,7 @@ export async function insertComment(
   const created = await threadById(tx, input.id, { id: input.authorId });
   if (counted && created && video) await publish(tx, created, video);
   if (created && moderation?.moderationState === 'held') await tellHeld(tx, created, moderators);
+  if (audit) await appendChannelAudit(tx, audit);
   return created;
 }
 

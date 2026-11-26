@@ -49,11 +49,16 @@ export function VideoCommentMenu({
   const [dialog, setDialog] = useState<{ action: ModerationDialogAction; open: boolean }>();
   const target = { id: comment.id, authorId: comment.author.userId };
   const canEdit = useCan(canUpdateComment, { comment: target });
-  const canDelete = useCan(canDeleteComment, { comment: target, videoOwnerId });
+  const videoChannelId = channelId ?? '';
+  const canDelete = useCan(canDeleteComment, {
+    comment: target,
+    videoOwnerId,
+    videoChannelId,
+  });
   const report = useRequireAccount('report');
   const canReport = !canEdit;
   const canPin =
-    useCan(canPinComment, { videoOwnerId }) &&
+    useCan(canPinComment, { videoOwnerId, videoChannelId }) &&
     comment.parentId === null &&
     comment.status === 'published';
   const choices = useModerationChoices(comment, { videoOwnerId, channelId });

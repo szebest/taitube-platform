@@ -17,6 +17,7 @@ const HOT: HotComments = {
       id: 'c-1',
       videoId: VIDEO_ID,
       authorId: 'u-1',
+      authorChannelId: 'ch-1',
       parentId: null,
       content: 'first',
       isPinned: true,

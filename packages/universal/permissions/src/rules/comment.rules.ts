@@ -1,6 +1,6 @@
 import type { AbilityBuilder } from '@casl/ability';
 import { type AppAbility, type UserContext, isSignedInRole } from '../types/index';
-import { ownersWith } from './memberships';
+import { channelsWith } from './memberships';
 
 const MODERATION_ACTIONS = ['hold', 'approve', 'hide', 'unhide', 'remove'] as const;
 
@@ -34,16 +34,16 @@ export function defineCommentRules(
     can('delete', 'Comment');
   }
 
-  const moderated = ownersWith(user, 'comment.moderate');
+  const moderated = channelsWith(user, 'comment.moderate');
   if (moderated) {
-    can('delete', 'Comment', { videoOwnerId: moderated });
-    can('moderate', 'Comment', { videoOwnerId: moderated });
-    for (const action of MODERATION_ACTIONS) can(action, 'Comment', { videoOwnerId: moderated });
+    can('delete', 'Comment', { videoChannelId: moderated });
+    can('moderate', 'Comment', { videoChannelId: moderated });
+    for (const action of MODERATION_ACTIONS) can(action, 'Comment', { videoChannelId: moderated });
   }
 
-  const pinnable = ownersWith(user, 'comment.pin');
-  if (pinnable) can('pin', 'Comment', { videoOwnerId: pinnable });
+  const pinnable = channelsWith(user, 'comment.pin');
+  if (pinnable) can('pin', 'Comment', { videoChannelId: pinnable });
 
-  const heartable = ownersWith(user, 'comment.heart');
-  if (heartable) can('heart', 'Comment', { videoOwnerId: heartable });
+  const heartable = channelsWith(user, 'comment.heart');
+  if (heartable) can('heart', 'Comment', { videoChannelId: heartable });
 }

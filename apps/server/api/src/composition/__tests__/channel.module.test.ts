@@ -13,11 +13,14 @@ describe('apps/server/api/composition: channel module', () => {
       await registerAdapters(new Container(), inProcessAppConfig({ cdn: 'http://cdn.example/' }))
     );
     const { videos, channels } = c.get(Adapters.Repositories);
-    expectOk(await channels.create({ userId: OWNER.id, handle: 'owner', displayName: 'Owner' }));
+    const channel = expectOk(
+      await channels.create({ userId: OWNER.id, handle: 'owner', displayName: 'Owner' })
+    );
     expectOk(
       await videos.create({
         id: VIDEO,
         ownerId: OWNER.id,
+        channelId: channel.id,
         title: 'Match',
         visibility: 'public',
         status: 'READY',

@@ -14,6 +14,7 @@ export function createIsomorphicFn() {
 export function createServerFn() {
   const builder = {
     inputValidator: () => builder,
+    validator: () => builder,
     middleware: () => builder,
     handler: <T>(implementation: T) => implementation,
   };
@@ -32,6 +33,7 @@ export const createCsrfMiddleware = (): undefined => undefined;
 export const getGlobalStartContext = (): undefined => undefined;
 export const getRequestIP = (): undefined => undefined;
 export const getCookie = (): undefined => undefined;
+export const getCookies = (): Record<string, string> => ({});
 export const setCookie = (): undefined => undefined;
 export const deleteCookie = (): undefined => undefined;
 export const getRequest = (): undefined => undefined;

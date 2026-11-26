@@ -39,8 +39,10 @@ describe('db: screening migration', () => {
     await database.engine.exec(`
       truncate users cascade;
       insert into users (id, email) values ('${USER}', 'screening@x.local');
-      insert into videos (id, owner_id, source_key, status)
-        values ('${VIDEO}', '${USER}', 'raw/x.mp4', 'HELD');
+      insert into channels (id, user_id, handle, display_name)
+        values ('${USER}', '${USER}', 'screening', 'Screening');
+      insert into videos (id, owner_id, channel_id, source_key, status)
+        values ('${VIDEO}', '${USER}', '${USER}', 'raw/x.mp4', 'HELD');
       insert into video_screenings (id, video_id, source_checksum, outcome, score, threshold_version)
         values ('${SCREENING}', '${VIDEO}', 'sum-1', 'HOLD', 0.93, 'v1');
     `);

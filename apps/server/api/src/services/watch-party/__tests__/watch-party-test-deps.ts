@@ -15,6 +15,7 @@ import type { PartyGuestSession } from '@vp/core/ports';
 import { type AppConfigOverrides, asCdnBase, inProcessAppConfig } from '@vp/env-schema';
 import type { UserContext } from '@vp/permissions';
 import { createPipelineMetrics, createWatchPartyMetrics } from '@vp/pipeline-metrics';
+import { seedPrimaryChannel } from '../../../__tests__/test-app';
 import type { PartyCaller } from '../party-caller';
 import { type RoomEnvelope, WatchPartyBroadcaster } from '../watch-party-broadcaster';
 import { WatchPartyContextLoader } from '../watch-party-context';
@@ -192,6 +193,7 @@ export async function seedParty({ repositories }: WatchPartyTest): Promise<void>
       await repositories.videos.create({
         id,
         ownerId: OWNER.id,
+        channelId: await seedPrimaryChannel(repositories, OWNER.id),
         title,
         visibility,
         status: 'READY',

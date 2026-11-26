@@ -24,6 +24,7 @@ describe('screeningGate', () => {
       await repositories.videos.create({
         id: videoId,
         ownerId: SEEDED.userId,
+        channelId: SEEDED.channelId,
         title: 't',
         status: 'PROCESSING',
         sourceKey: 'raw/x.mp4',

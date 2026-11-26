@@ -4,6 +4,7 @@ import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
+import { seedPrimaryChannel } from '../../__tests__/test-app';
 import { ChannelRestrictionService } from '../channel-restriction-service';
 
 const OWNER: UserContext = { id: '11111111-1111-7111-8111-111111111111', role: 'CREATOR' };
@@ -33,6 +34,7 @@ describe('apps/server/api/services: channel restrictions', () => {
       await repositories.videos.create({
         id: VIDEO,
         ownerId: OWNER.id,
+        channelId: await seedPrimaryChannel(repositories, OWNER.id),
         sourceKey: 'raw/v/source.mp4',
         title: 'Open',
         visibility: 'public',
@@ -44,6 +46,7 @@ describe('apps/server/api/services: channel restrictions', () => {
         id: COMMENT,
         videoId: VIDEO,
         authorId: AUTHOR,
+        authorChannelId: await seedPrimaryChannel(repositories, AUTHOR),
         parentId: null,
         content: 'hello',
       })

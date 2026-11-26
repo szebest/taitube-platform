@@ -3,7 +3,7 @@ import * as schema from '@vp/db';
 import { drizzle } from 'drizzle-orm/pglite';
 import {
   OTHER_OWNER_ID,
-  OWNER_ID,
+  OWNER_CHANNEL_ID,
   VIDEO_IDS,
   publicVideo,
   seedOwners,
@@ -13,10 +13,11 @@ import { PostgresRepositories } from '../postgres-repositories';
 import { subscriptionFeed } from '../subscription-feed-query';
 
 const SUBSCRIBER_ID = '00000000-0000-7000-8000-000000000103';
-const CHANNEL_ID = '00000000-0000-7000-8000-000000000901';
+const SUBSCRIBER_CHANNEL_ID = '00000000-0000-7000-8000-000000000903';
+const SECOND_CHANNEL_ID = '00000000-0000-7000-8000-000000000904';
 
 describe('adapters/postgres: subscription feed query', () => {
-  it('lists the public ready videos of the followed channels with the total of the unpaged feed', async () => {
+  it('lists the public ready videos of the followed channels once each, with the unpaged total', async () => {
     const db = drizzle(await migratedPglite(), { schema });
     const repositories = new PostgresRepositories({ type: 'drizzle', db });
     await seedOwners(repositories);
@@ -25,12 +26,18 @@ describe('adapters/postgres: subscription feed query', () => {
       email: 'subscriber@video-pipeline.local',
     });
     await repositories.channels.create({
-      id: CHANNEL_ID,
-      userId: OWNER_ID,
-      handle: 'owner-channel',
-      displayName: 'Owner Channel',
+      id: SUBSCRIBER_CHANNEL_ID,
+      userId: SUBSCRIBER_ID,
+      handle: 'fan',
+      displayName: 'Fan',
     });
-    await repositories.subscriptions.subscribe(SUBSCRIBER_ID, CHANNEL_ID);
+    await repositories.channels.createOwned(
+      { id: SECOND_CHANNEL_ID, userId: SUBSCRIBER_ID, handle: 'fan-two', displayName: 'Fan Two' },
+      5
+    );
+    for (const as of [SUBSCRIBER_CHANNEL_ID, SECOND_CHANNEL_ID]) {
+      await repositories.subscriptions.subscribe(SUBSCRIBER_ID, as, OWNER_CHANNEL_ID);
+    }
     await repositories.videos.create(publicVideo({ id: VIDEO_IDS.a }));
     await repositories.videos.create(publicVideo({ id: VIDEO_IDS.b }));
     await repositories.videos.create(publicVideo({ id: VIDEO_IDS.c, visibility: 'private' }));

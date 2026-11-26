@@ -6,12 +6,20 @@ const OWNER: UserContext = { id: 'u-owner', role: 'USER' };
 const STRANGER: UserContext = { id: 'u-other', role: 'USER' };
 const ADMIN: UserContext = { id: 'u-admin', role: 'ADMIN' };
 
-const upload = { id: 'up-1', ownerId: OWNER.id };
+const CHANNEL_ID = 'chan-1';
+const editorOf = (channelId: string): UserContext => ({
+  id: 'u-editor',
+  role: 'USER',
+  memberships: { [channelId]: { role: 'editor', ownerId: OWNER.id } },
+});
+
+const upload = { id: 'up-1', ownerId: OWNER.id, channelId: CHANNEL_ID };
 
 describe('@vp/domain-rules: decideUploadAccess', () => {
   it.each([
     { actor: 'the owner', user: OWNER },
     { actor: 'an admin', user: ADMIN },
+    { actor: 'an editor of its channel', user: editorOf(CHANNEL_ID) },
   ])('hands the upload back to $actor', ({ user }) => {
     expect(
       decideUploadAccess({ actor: user, upload, uploadId: upload.id, action: 'abort this upload' })
@@ -21,6 +29,11 @@ describe('@vp/domain-rules: decideUploadAccess', () => {
   it.each([
     { scenario: 'a stranger', actor: STRANGER, code: ErrorCodes.FORBIDDEN },
     { scenario: 'an anonymous caller', actor: null, code: ErrorCodes.UNAUTHORIZED },
+    {
+      scenario: "an editor of the owner's other channel",
+      actor: editorOf('chan-2'),
+      code: ErrorCodes.FORBIDDEN,
+    },
   ])('refuses $scenario with $code', ({ actor, code }) => {
     const decided = decideUploadAccess({
       actor,

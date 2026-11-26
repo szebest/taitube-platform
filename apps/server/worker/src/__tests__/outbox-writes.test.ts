@@ -20,6 +20,7 @@ describe('outbox writes', () => {
     await repositories.videos.create({
       id: videoId,
       ownerId,
+      channelId: '00000000-0000-7000-8000-00000000c4a1',
       sourceKey: `raw/${videoId}/source.mp4`,
       status: 'PROCESSING',
     });

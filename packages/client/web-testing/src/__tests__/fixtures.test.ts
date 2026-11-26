@@ -7,7 +7,9 @@ import {
   getVideo,
   heartComment,
   listCreatorComments,
+  listMyIdentities,
   listMySubscriptions,
+  recordMySignIn,
 } from '@vp/api-contracts';
 import {
   account,
@@ -16,7 +18,9 @@ import {
   comment,
   creatorStats,
   feedPages,
+  identities,
   inboxComment,
+  signInRecord,
   subscribedChannel,
   video,
   videoSummary,
@@ -29,6 +33,8 @@ describe('@vp/web-testing: fixtures', () => {
     { fixture: 'creatorStats', contract: getCreatorStats, body: creatorStats() },
     { fixture: 'channel', contract: getChannel, body: channel() },
     { fixture: 'account', contract: getAccount, body: account() },
+    { fixture: 'signInRecord', contract: recordMySignIn, body: signInRecord() },
+    { fixture: 'identities', contract: listMyIdentities, body: identities() },
     { fixture: 'comment', contract: heartComment, body: comment() },
     {
       fixture: 'inboxComment',

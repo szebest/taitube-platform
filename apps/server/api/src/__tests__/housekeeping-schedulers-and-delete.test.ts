@@ -5,7 +5,7 @@ import { ErrorCodes } from '@vp/errors';
 import { SEEDED } from '@vp/testing-fixtures';
 import type { FastifyInstance } from 'fastify';
 import { uuidv7 } from 'uuidv7';
-import { TOKENS, bearer, buildTestApp, inMemoryQueues } from './test-app';
+import { TOKENS, bearer, buildTestApp, inMemoryQueues, seedPrimaryChannel } from './test-app';
 
 describe('housekeeping schedulers and video deletion', () => {
   let app: FastifyInstance;
@@ -18,6 +18,7 @@ describe('housekeeping schedulers and video deletion', () => {
     await repositories.videos.create({
       id: videoId,
       ownerId: SEEDED.userId,
+      channelId: await seedPrimaryChannel(repositories, SEEDED.userId),
       sourceKey: `raw/${videoId}/source.mp4`,
       status,
     });

@@ -62,7 +62,7 @@ interface PublicFeedRankInput {
 
 export interface PublicFeedCandidate extends PublicFeedRankInput {
   id: string;
-  ownerId: string;
+  channelId: string;
   visibility: string;
   status: string;
   deletedAt?: Date | null;
@@ -100,22 +100,22 @@ export function publicFeedRanking(sort?: PublicFeedSort | null): PublicFeedRank 
   return PUBLIC_FEED_RANKINGS[sort ?? DEFAULT_PUBLIC_FEED_SORT] ?? PUBLIC_FEED_RANKINGS.recent;
 }
 
-/** Narrows the feed to a category, an owner and a format; an absent field narrows nothing. */
+/** Narrows the feed to a category, a channel and a format; an absent field narrows nothing. */
 export interface PublicFeedFilter {
   categoryId?: string | null;
-  ownerId?: string;
+  channelId?: string;
   format?: VideoFormat;
 }
 
 export function isPublicFeedEligible(
   video: PublicFeedCandidate,
-  { categoryId, ownerId, format }: PublicFeedFilter = {}
+  { categoryId, channelId, format }: PublicFeedFilter = {}
 ): boolean {
   if (video.visibility !== PUBLIC_FEED_VISIBILITY) return false;
   if (video.status !== PUBLIC_FEED_STATUS) return false;
   if (video.deletedAt) return false;
   if (categoryId && video.categoryId !== categoryId) return false;
-  if (ownerId && video.ownerId !== ownerId) return false;
+  if (channelId && video.channelId !== channelId) return false;
   if (format && video.format !== format) return false;
   return true;
 }

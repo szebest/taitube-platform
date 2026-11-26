@@ -9,6 +9,7 @@ export const CHANNEL_CAPABILITIES = [
   'video.edit',
   'video.delete',
   'channel.edit',
+  'channel.act',
   'comment.pin',
   'content.pin',
   'comment.heart',
@@ -30,6 +31,7 @@ const CHANNEL_ROLES = {
     'video.edit',
     'video.delete',
     'channel.edit',
+    'channel.act',
     'comment.pin',
     'content.pin',
     'comment.heart',
@@ -163,7 +165,12 @@ type ChannelAuditEvent =
       meta: { fields: ChannelAuditField[] };
     }
   | { action: 'export.requested'; targetType: 'export'; targetId: string; meta: ExportMeta }
-  | { action: 'export.deleted'; targetType: 'export'; targetId: string; meta: ExportMeta };
+  | { action: 'export.deleted'; targetType: 'export'; targetId: string; meta: ExportMeta }
+  | { action: 'channel.created'; targetType: 'channel'; targetId: string; meta: UserMeta }
+  | { action: 'channel.promoted'; targetType: 'channel'; targetId: string; meta: UserMeta }
+  | { action: 'comment.posted'; targetType: 'comment'; targetId: string; meta: PostedMeta }
+  | { action: 'channel.subscribed'; targetType: 'channel'; targetId: string; meta: UserMeta }
+  | { action: 'video.uploaded'; targetType: 'video'; targetId: string; meta: UserMeta };
 
 /** Type literals, not interfaces, so a meta stays assignable to the jsonb column's record type. */
 type InviteMeta = {
@@ -180,6 +187,8 @@ type ToggledMeta = { enabled: boolean };
 type CommentMeta = { videoId: string; disclosure: Disclosure };
 
 type PinnedMeta = { videoId: string; pinned: boolean };
+
+type PostedMeta = { videoId: string };
 
 type UserMeta = Record<never, never>;
 
@@ -240,6 +249,11 @@ const AUDIT_ACTIONS: Record<ChannelAuditAction, true> = {
   'channel.updated': true,
   'export.requested': true,
   'export.deleted': true,
+  'channel.created': true,
+  'channel.promoted': true,
+  'comment.posted': true,
+  'channel.subscribed': true,
+  'video.uploaded': true,
 };
 
 export const CHANNEL_AUDIT_ACTIONS = Object.keys(AUDIT_ACTIONS) as ChannelAuditAction[];

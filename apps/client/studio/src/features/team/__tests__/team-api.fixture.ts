@@ -14,6 +14,7 @@ import {
   getChannelTeam,
   listChannelAudit,
   listMyInvites,
+  listMyIdentities,
   listMyMemberships,
   removeChannelMember,
   revokeChannelInvite,
@@ -21,7 +22,7 @@ import {
 import type { ChannelRole } from '@vp/domain';
 import { type ErrorCode, ErrorCodes } from '@vp/errors';
 import { createActingChannelStore } from '@vp/queries';
-import { channel, mockEndpoint, OWNER_ID, problemReply } from '@vp/web-testing';
+import { channel, identities, mockEndpoint, OWNER_ID, problemReply } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
 
 export const OTHER_CHANNEL_ID = '0190c3a0-5e1d-7000-8000-0000000cc002';
@@ -143,6 +144,18 @@ export function serveTeam(
 
   const handlers = [
     mockEndpoint(listMyMemberships, () => HttpResponse.json({ items: state.memberships })),
+    mockEndpoint(listMyIdentities, () =>
+      HttpResponse.json(
+        identities({
+          member: state.memberships.map(({ channelId, channel, role, ownerId }) => ({
+            id: channelId,
+            ...channel,
+            role,
+            ownerId,
+          })),
+        })
+      )
+    ),
     mockEndpoint(getChannelTeam, ({ request }) => {
       requests.teamChannels.push(request.headers.get('x-channel-id'));
       return HttpResponse.json({ members: state.members, invites: state.invites });

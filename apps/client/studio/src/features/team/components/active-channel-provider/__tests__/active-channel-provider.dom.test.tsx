@@ -1,5 +1,8 @@
 import { screen } from '@testing-library/react';
+import { listMyIdentities } from '@vp/api-contracts';
+import { account, mockEndpoint } from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
+import { HttpResponse } from 'msw/http';
 import { renderTeam } from '#app/features/team/__tests__/render-team';
 import { membership, OTHER_CHANNEL_ID } from '#app/features/team/__tests__/team-api.fixture';
 import { getRouter } from '#app/router';
@@ -24,6 +27,32 @@ describe('apps/client/studio: ActiveChannelProvider', () => {
     expect(await screen.findByText('Only managers see the team')).toBeInTheDocument();
   });
 
+  it("acts on the channel the tab's identity names, over the one last chosen here", async () => {
+    await renderTeam('/u/0/c/othershow/team', {
+      state: { memberships: [membership('editor')] },
+      handlers: [
+        mockEndpoint(listMyIdentities, () =>
+          HttpResponse.json({
+            account: { id: account().user.id, email: account().user.email },
+            owned: [],
+            member: [
+              {
+                id: OTHER_CHANNEL_ID,
+                handle: 'othershow',
+                displayName: 'Other Show',
+                avatarUrl: null,
+                role: 'editor',
+                ownerId: account().user.id,
+              },
+            ],
+          })
+        ),
+      ],
+    });
+
+    expect(await screen.findByText('Only managers see the team')).toBeInTheDocument();
+  });
+
   it('puts a viewer whose membership ended back on their own channel on the next page they open', async () => {
     const { requests } = await renderTeam('/team', { actingOn: OTHER_CHANNEL_ID });
 
@@ -36,6 +65,6 @@ describe('apps/client/studio: ActiveChannelProvider', () => {
     await renderRoute(getRouter, '/login');
 
     expect(await screen.findByRole('navigation', { name: 'Studio' })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Switch channel' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Account' })).toBeNull();
   });
 });

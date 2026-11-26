@@ -19,6 +19,7 @@ describe('metadataFinding', () => {
       await repositories.videos.create({
         id: uuidv7(),
         ownerId: SEEDED.userId,
+        channelId: SEEDED.channelId,
         title,
         description,
         status: 'READY',

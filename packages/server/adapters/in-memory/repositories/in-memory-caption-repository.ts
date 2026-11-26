@@ -28,7 +28,7 @@ import { searchTokens } from './search-text';
 
 export interface CaptionDependencies {
   videos: Pick<VideoRepository, 'findById'>;
-  channels: Pick<ChannelRepositoryPort, 'findByUserId'>;
+  channels: Pick<ChannelRepositoryPort, 'findById'>;
   events: EventRepository;
   userEvents: UserEventRepository;
   now?: Clock;
@@ -53,12 +53,12 @@ export class InMemoryCaptionRepository extends CaptionRepository {
     if (isErr(video)) return video;
     if (!video.value) return ok(null);
 
-    const { ownerId } = video.value;
+    const { ownerId, channelId } = video.value;
     return ok({
       videoId,
       ownerId,
       autoCaptions: this.videoSwitches.get(videoId) ?? null,
-      channelDefault: this.channelDefaults.get(ownerId) ?? false,
+      channelDefault: this.channelDefaults.get(channelId) ?? false,
     });
   }
 
@@ -74,19 +74,19 @@ export class InMemoryCaptionRepository extends CaptionRepository {
     return ok(true);
   }
 
-  async channelDefault(ownerId: string): Promise<Result<boolean, DatabaseUnavailable>> {
-    return ok(this.channelDefaults.get(ownerId) ?? false);
+  async channelDefault(channelId: string): Promise<Result<boolean, DatabaseUnavailable>> {
+    return ok(this.channelDefaults.get(channelId) ?? false);
   }
 
   async setChannelDefault(
-    ownerId: string,
+    channelId: string,
     enabled: boolean
   ): Promise<Result<boolean, DatabaseUnavailable>> {
-    const channel = await this.deps.channels.findByUserId(ownerId);
+    const channel = await this.deps.channels.findById(channelId);
     if (isErr(channel)) return channel;
     if (!channel.value) return ok(false);
 
-    this.channelDefaults.set(ownerId, enabled);
+    this.channelDefaults.set(channelId, enabled);
     return ok(true);
   }
 
@@ -307,11 +307,10 @@ export class InMemoryCaptionRepository extends CaptionRepository {
       payload: { captionId: track.id, language: track.language, reason: track.reason },
     });
     if (isErr(logged)) return logged;
-    if (!announcement) return ok({ type: 'committed', track: { ...track } });
 
-    const video = await this.deps.videos.findById(track.videoId);
+    const video = announcement ? await this.deps.videos.findById(track.videoId) : ok(null);
     if (isErr(video)) return video;
-    if (video.value) {
+    if (announcement && video.value) {
       const announced = await this.deps.userEvents.append({
         userId: video.value.ownerId,
         ...announcement,

@@ -1,6 +1,7 @@
 import { MS_PER_DAY, MS_PER_HOUR } from '@kit/primitives';
 import { expectOk } from '@kit/testing/result';
 import { ErrorCodes } from '@vp/errors';
+import { seedPrimaryChannel } from '../../__tests__/test-app';
 import {
   type Account,
   buildRoomApp,
@@ -50,8 +51,16 @@ describe('watch party invite candidate routes', () => {
     longAgo = await ctx.account(6);
     await seatOnce(recent, new Date(Date.now() + MS_PER_HOUR));
     await seatOnce(longAgo, new Date(Date.now() - 40 * MS_PER_DAY));
-    const channel = expectOk(await ctx.repositories.channels.findByUserId(subscribed.user.id));
-    expectOk(await ctx.repositories.subscriptions.subscribe(owner.user.id, channel?.id ?? ''));
+    const channel = expectOk(
+      await ctx.repositories.channels.findPrimaryByUserId(subscribed.user.id)
+    );
+    expectOk(
+      await ctx.repositories.subscriptions.subscribe(
+        owner.user.id,
+        await seedPrimaryChannel(ctx.repositories, owner.user.id),
+        channel?.id ?? ''
+      )
+    );
     await ctx.call(owner, 'POST', `/v1/watch-parties/${ROOM_ID}/invites`, {
       userIds: [recent.user.id],
     });

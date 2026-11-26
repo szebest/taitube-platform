@@ -19,7 +19,9 @@ describe('rules/analytics.rules: Declarative Analytics Ability Rules', () => {
   ])('$scenario reading analytics of $ownerId: $expected', ({ user, ownerId, expected }) => {
     const ability = buildAbility(defineAnalyticsRules, user);
 
-    expect(ability.can('read', subject('Analytics', { ownerId }))).toBe(expected);
+    expect(ability.can('read', subject('Analytics', { ownerId, channelId: 'chan-1' }))).toBe(
+      expected
+    );
   });
 
   it.each(matrixCells('VideoStats'))(

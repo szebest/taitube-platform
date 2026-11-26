@@ -4,6 +4,7 @@ function channel(overrides: Partial<Channel> = {}): Channel {
   return {
     id: 'channel-1',
     userId: 'user-1',
+    isPrimary: true,
     handle: 'ada',
     displayName: 'Ada',
     avatarUrl: null,
@@ -43,6 +44,7 @@ describe('@vp/domain: the channel entity', () => {
       'handle',
       'handleChangedAt',
       'id',
+      'isPrimary',
       'links',
       'subscriberCount',
       'updatedAt',

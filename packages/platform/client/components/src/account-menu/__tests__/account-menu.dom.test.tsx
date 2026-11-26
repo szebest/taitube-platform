@@ -45,4 +45,17 @@ describe('@kit/components: AccountMenu', () => {
     expect(screen.getByRole('menuitem', { name: 'Sign out' })).toBeVisible();
     expect(await axeViolations()).toEqual([]);
   });
+
+  it.each([
+    { accent: 3 as const, ringed: true },
+    { accent: undefined, ringed: false },
+  ])('rings the avatar in accent $accent of the identity the tab acts as', ({ accent, ringed }) => {
+    renderWithCopy(
+      <AccountMenu.Root>
+        <AccountMenu.Trigger name="The Creator" accent={accent} />
+      </AccountMenu.Root>
+    );
+
+    expect(document.querySelector('[data-slot="accent-ring"]') !== null).toBe(ringed);
+  });
 });

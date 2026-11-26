@@ -20,7 +20,7 @@ import { watchableVideo } from './watchable-video';
 
 interface FeedbackLookups {
   videosRepo: Pick<VideoRepository, 'findById'>;
-  channelsRepo: Pick<ChannelRepositoryPort, 'findById' | 'findByUserId'>;
+  channelsRepo: Pick<ChannelRepositoryPort, 'findById' | 'findPrimaryByUserId'>;
 }
 
 const keysetOf = ({ createdAt, id }: NewRecommendationFeedback) => ({ sort: createdAt, tie: id });

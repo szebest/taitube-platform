@@ -34,12 +34,13 @@ export function useModerationChoices(
   { videoOwnerId, channelId }: ModerationScope
 ): ModerationChoice[] {
   const viewerId = useAccount()?.user.id;
+  const videoChannelId = channelId ?? '';
   const may = {
-    hold: useCan(canModerateComment, { action: 'hold', videoOwnerId }),
-    approve: useCan(canModerateComment, { action: 'approve', videoOwnerId }),
-    hide: useCan(canModerateComment, { action: 'hide', videoOwnerId }),
-    unhide: useCan(canModerateComment, { action: 'unhide', videoOwnerId }),
-    remove: useCan(canModerateComment, { action: 'remove', videoOwnerId }),
+    hold: useCan(canModerateComment, { action: 'hold', videoOwnerId, videoChannelId }),
+    approve: useCan(canModerateComment, { action: 'approve', videoOwnerId, videoChannelId }),
+    hide: useCan(canModerateComment, { action: 'hide', videoOwnerId, videoChannelId }),
+    unhide: useCan(canModerateComment, { action: 'unhide', videoOwnerId, videoChannelId }),
+    remove: useCan(canModerateComment, { action: 'remove', videoOwnerId, videoChannelId }),
   };
   const mayRestrict = useCan(canRestrictChannelUser, {
     channel: { channelId: channelId ?? '', ownerId: videoOwnerId },

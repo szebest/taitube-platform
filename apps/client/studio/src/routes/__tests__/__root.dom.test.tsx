@@ -13,7 +13,7 @@ describe('apps/client/studio: root route in the browser', () => {
     await renderRoute(getRouter, '/no-such-page', { handlers: handlers() });
 
     expect(requested.mock.calls.map(([name]) => name)).toEqual(
-      locks.map((userId) => `vp.user-events.${userId}`)
+      locks.map((userId) => `vp.user-events.0.primary.${userId}`)
     );
   });
 });

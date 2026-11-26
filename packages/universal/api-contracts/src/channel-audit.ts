@@ -80,6 +80,11 @@ const AuditEntrySchema = z.discriminatedUnion('action', [
   ),
   auditEntry('export.requested', 'export', ExportMetaSchema),
   auditEntry('export.deleted', 'export', ExportMetaSchema),
+  auditEntry('channel.created', 'channel', NoMetaSchema),
+  auditEntry('channel.promoted', 'channel', NoMetaSchema),
+  auditEntry('comment.posted', 'comment', z.object({ videoId: z.uuid() })),
+  auditEntry('channel.subscribed', 'channel', NoMetaSchema),
+  auditEntry('video.uploaded', 'video', NoMetaSchema),
 ]);
 
 export const AuditPageSchema = z.object({

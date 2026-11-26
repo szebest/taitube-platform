@@ -2,7 +2,7 @@ import { RISING, type RisingCandidate, rankRising } from '../rising';
 
 const candidate = (id: string, overrides: Partial<RisingCandidate> = {}): RisingCandidate => ({
   id,
-  ownerId: `owner-${id}`,
+  channelId: `channel-${id}`,
   createdAt: new Date('2026-03-01T12:00:00.000Z'),
   subscriberCount: 10,
   sessions: 100,
@@ -30,8 +30,8 @@ describe('domain: rising', () => {
       {
         scenario: 'one video per channel, the better one',
         rows: [
-          candidate('a', { ownerId: 'o', completed: 10 }),
-          candidate('b', { ownerId: 'o', completed: 90 }),
+          candidate('a', { channelId: 'c', completed: 10 }),
+          candidate('b', { channelId: 'c', completed: 90 }),
           candidate('c'),
         ],
         expected: ['b', 'c'],

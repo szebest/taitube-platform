@@ -16,9 +16,13 @@ describe('postgres: export analytics queries', () => {
     await db
       .insert(schema.channels)
       .values({ id: CHANNEL_ID, userId: OWNER_ID, handle: 'owner', displayName: 'Owner' });
-    await db
-      .insert(schema.videos)
-      .values({ id: VIDEO_ID, ownerId: OWNER_ID, title: 'Clip', sourceKey: 'raw/v/source.mp4' });
+    await db.insert(schema.videos).values({
+      id: VIDEO_ID,
+      ownerId: OWNER_ID,
+      channelId: CHANNEL_ID,
+      title: 'Clip',
+      sourceKey: 'raw/v/source.mp4',
+    });
     await db.insert(schema.videoViewsDaily).values(
       ['2026-03-01', '2026-03-02', '2026-03-03'].map((viewDate, n) => ({
         videoId: VIDEO_ID,

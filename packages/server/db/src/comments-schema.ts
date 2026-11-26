@@ -21,7 +21,7 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core';
 import { listOf, timestamptz } from './columns';
-import { users, videos } from './schema';
+import { channels, users, videos } from './schema';
 
 export const videoComments = pgTable(
   'video_comments',
@@ -33,6 +33,9 @@ export const videoComments = pgTable(
     authorId: uuid('author_id')
       .notNull()
       .references(() => users.id),
+    authorChannelId: uuid('author_channel_id')
+      .notNull()
+      .references(() => channels.id),
     parentId: uuid('parent_id').references((): AnyPgColumn => videoComments.id, {
       onDelete: 'cascade',
     }),
@@ -75,6 +78,10 @@ export const videoComments = pgTable(
     index('video_comments_author_created_idx')
       .on(table.authorId, table.createdAt.desc(), table.id.desc())
       .where(sql`${table.deletedAt} IS NULL`),
+    index('video_comments_author_channel_created_idx').on(
+      table.authorChannelId,
+      table.createdAt.desc()
+    ),
     uniqueIndex('video_comments_one_pinned_per_video_idx')
       .on(table.videoId)
       .where(sql`${table.isPinned} AND ${table.deletedAt} IS NULL`),

@@ -1,4 +1,4 @@
-import { expect, test } from '../../../../tests/playwright/fixtures';
+import { expect, keyboardDragReady, test } from '../../../../tests/playwright/fixtures';
 
 test.describe('the queue: add, undo, reorder with the keyboard, play next', () => {
   test('adds a card to the queue with an Undo, and takes it out again', async ({
@@ -42,6 +42,7 @@ test.describe('the queue: add, undo, reorder with the keyboard, play next', () =
       .focus();
     await page.keyboard.press('Space');
     await expect(page.getByText(/^Picked up /)).toBeAttached();
+    await keyboardDragReady(page);
     await page.keyboard.press('ArrowDown');
     await expect(page.getByText(/^Moved to position /)).toBeAttached();
     await page.keyboard.press('Space');

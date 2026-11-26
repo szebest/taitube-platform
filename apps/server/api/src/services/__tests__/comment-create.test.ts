@@ -36,10 +36,11 @@ describe('apps/server/api/services: create comment', () => {
     expect(expectOk(await h.repositories.comments.findById(view.id))?.authorId).toBe(VIEWER.id);
   });
 
-  it('publishes on a channel with no gate and on a video whose owner has no channel', async () => {
+  it('publishes on a channel that never saved its settings', async () => {
     const lonely = await h.repositories.videos.create({
       id: MISSING_ID,
       ownerId: VIEWER.id,
+      channelId: h.acting(VIEWER).channelId,
       sourceKey: 'raw/x/source.mp4',
       visibility: 'public',
       status: 'READY',
@@ -47,12 +48,49 @@ describe('apps/server/api/services: create comment', () => {
     expectOk(lonely);
 
     const view = expectOk(
-      await createComment(commentCreateDeps(h.repositories, h.now), OTHER, MISSING_ID, {
-        content: 'hi',
-      })
+      await createComment(
+        commentCreateDeps(h.repositories, h.now),
+        OTHER,
+        h.acting(OTHER),
+        MISSING_ID,
+        { content: 'hi' }
+      )
     );
 
     expect(view.status).toBe('published');
+  });
+
+  it('posts as the acting channel and records it in that channel audit log', async () => {
+    const view = expectOk(await h.create(VIEWER));
+    const { channelId } = h.acting(VIEWER);
+
+    expect(expectOk(await h.repositories.comments.findById(view.id))?.authorChannelId).toBe(
+      channelId
+    );
+    expect(
+      expectOk(await h.repositories.channelAudit.list(channelId, { cursor: null, limit: 10 }))
+    ).toEqual([
+      expect.objectContaining({
+        action: 'comment.posted',
+        actorUserId: VIEWER.id,
+        targetId: view.id,
+        meta: { videoId: VIDEO_ID },
+      }),
+    ]);
+  });
+
+  it('refuses a channel the author cannot act as', async () => {
+    const failure = expectErr(
+      await createComment(
+        commentCreateDeps(h.repositories, h.now),
+        VIEWER,
+        h.acting(OTHER),
+        VIDEO_ID,
+        { content: 'hi' }
+      )
+    );
+
+    expect(failure.code).toBe(ErrorCodes.FORBIDDEN);
   });
 
   it.each([
@@ -60,10 +98,16 @@ describe('apps/server/api/services: create comment', () => {
     { scenario: 'a parent that is not there', videoId: VIDEO_ID, parentId: MISSING_ID },
   ])('refuses $scenario', async ({ videoId, parentId }) => {
     const failure = expectErr(
-      await createComment(commentCreateDeps(h.repositories, h.now), VIEWER, videoId, {
-        content: 'hi',
-        parentId,
-      })
+      await createComment(
+        commentCreateDeps(h.repositories, h.now),
+        VIEWER,
+        h.acting(VIEWER),
+        videoId,
+        {
+          content: 'hi',
+          parentId,
+        }
+      )
     );
 
     expect([ErrorCodes.VIDEO_NOT_FOUND, ErrorCodes.COMMENT_NOT_FOUND]).toContain(failure.code);
@@ -139,7 +183,13 @@ describe('apps/server/api/services: create comment', () => {
 
     it('lets a subscriber comment on a subscribers only channel', async () => {
       await h.configure({ subscribersOnly: true });
-      expectOk(await h.repositories.subscriptions.subscribe(VIEWER.id, h.channelId));
+      expectOk(
+        await h.repositories.subscriptions.subscribe(
+          VIEWER.id,
+          h.acting(VIEWER).channelId,
+          h.channelId
+        )
+      );
 
       expect(expectOk(await h.create(VIEWER)).status).toBe('published');
     });

@@ -88,15 +88,15 @@ export async function settingsOf(
       channelDefault: channels.autoCaptionsDefault,
     })
     .from(videos)
-    .leftJoin(channels, eq(channels.userId, videos.ownerId))
+    .leftJoin(channels, eq(channels.id, videos.channelId))
     .where(eq(videos.id, videoId));
   return row ? { ...row, channelDefault: row.channelDefault ?? false } : null;
 }
 
-export async function channelDefaultOf(db: PostgresDatabase, ownerId: string): Promise<boolean> {
+export async function channelDefaultOf(db: PostgresDatabase, channelId: string): Promise<boolean> {
   const [row] = await db
     .select({ enabled: channels.autoCaptionsDefault })
     .from(channels)
-    .where(eq(channels.userId, ownerId));
+    .where(eq(channels.id, channelId));
   return row?.enabled ?? false;
 }

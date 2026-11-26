@@ -3,6 +3,7 @@ import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
+import { seedPrimaryChannel } from '../../__tests__/test-app';
 import { CommentModerationService } from '../comment-moderation-service';
 
 const OWNER: UserContext = { id: '11111111-1111-7111-8111-111111111111', role: 'CREATOR' };
@@ -17,7 +18,6 @@ describe('apps/server/api/services: comment moderation', () => {
     new CommentModerationService({
       comments: repositories.comments,
       videos: repositories.videos,
-      channels: repositories.channels,
       settings: repositories.commentSettings,
       moderation: repositories.commentModeration,
       notifications: repositories.notifications,
@@ -39,6 +39,7 @@ describe('apps/server/api/services: comment moderation', () => {
       await repositories.videos.create({
         id: VIDEO,
         ownerId: OWNER.id,
+        channelId: await seedPrimaryChannel(repositories, OWNER.id),
         sourceKey: 'raw/v/source.mp4',
         title: 'Open',
         visibility: 'public',
@@ -50,6 +51,7 @@ describe('apps/server/api/services: comment moderation', () => {
         id: COMMENT,
         videoId: VIDEO,
         authorId: AUTHOR,
+        authorChannelId: await seedPrimaryChannel(repositories, AUTHOR),
         parentId: null,
         content: 'hello',
       })

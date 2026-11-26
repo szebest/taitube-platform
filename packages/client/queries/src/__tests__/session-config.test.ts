@@ -5,10 +5,10 @@ vi.mock(import('@tanstack/react-start'), async (importOriginal) => ({
   getGlobalStartContext: vi.fn(),
 }));
 
-async function readFromRequest(key: 'requestCookieDomain' | 'requestDevTokenUrl') {
+async function readFromRequest() {
   vi.resetModules();
   const config = await import('../session-config');
-  return config[key]();
+  return config.requestSession();
 }
 
 function outsideARequest(): never {
@@ -16,30 +16,31 @@ function outsideARequest(): never {
 }
 
 describe('@vp/queries: session config', () => {
-  it.each([
-    { read: 'requestCookieDomain' as const, expected: 'taitube.example' },
-    { read: 'requestDevTokenUrl' as const, expected: 'http://dev-token:3002' },
-  ])(
-    'reads what sessionMiddleware put in the request context: $read',
-    async ({ read, expected }) => {
-      vi.mocked<() => { sessionCookieDomain?: string; devTokenUrl?: string } | undefined>(
-        getGlobalStartContext
-      ).mockReturnValue({
-        sessionCookieDomain: 'taitube.example',
-        devTokenUrl: 'http://dev-token:3002',
-      });
+  it('reads what sessionMiddleware put in the request context', async () => {
+    const session = {
+      apiBaseUrl: 'http://api:3000',
+      cookieDomain: 'taitube.example',
+      devTokenUrl: 'http://dev-token:3002',
+      accountsMax: 3,
+    };
+    vi.mocked<() => { session: typeof session } | undefined>(getGlobalStartContext).mockReturnValue(
+      { session }
+    );
 
-      expect(await readFromRequest(read)).toBe(expected);
-    }
-  );
+    expect(await readFromRequest()).toEqual(session);
+  });
 
   it.each([
     { scenario: 'on the client, which has no request context', context: () => undefined },
     { scenario: 'outside a request, as in a spec', context: outsideARequest },
-  ])('has none $scenario', async ({ context }) => {
+  ])('has the defaults $scenario', async ({ context }) => {
     vi.mocked(getGlobalStartContext).mockImplementation(context);
 
-    expect(await readFromRequest('requestCookieDomain')).toBeUndefined();
-    expect(await readFromRequest('requestDevTokenUrl')).toBeUndefined();
+    expect(await readFromRequest()).toEqual({
+      apiBaseUrl: undefined,
+      cookieDomain: undefined,
+      devTokenUrl: undefined,
+      accountsMax: 10,
+    });
   });
 });

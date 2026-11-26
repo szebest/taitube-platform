@@ -12,6 +12,7 @@ const comment = (id: string, overrides: Partial<StoredComment> = {}): StoredComm
   id,
   videoId: 'v1',
   authorId: AUTHOR.id,
+  authorChannelId: 'author-channel',
   parentId: null,
   content: '',
   isPinned: false,
@@ -134,10 +135,7 @@ describe('adapters/in-memory: public comment scope', () => {
     const lookups = (shadowedByChannel: Record<string, string[]>) => ({
       videos: {
         findById: async (id: string) =>
-          ok(id === 'ghost' ? null : ({ id, ownerId: `owner-of-${id}` } as never)),
-      },
-      channels: {
-        findByUserId: async (userId: string) => ok({ id: `channel-of-${userId}` } as never),
+          ok(id === 'ghost' ? null : ({ id, channelId: `channel-of-${id}` } as never)),
       },
       restrictions: {
         shadowedUserIds: (channelId: string) => new Set(shadowedByChannel[channelId] ?? []),
@@ -150,8 +148,8 @@ describe('adapters/in-memory: public comment scope', () => {
         new Map([[stored.id, stored]]),
         ['v1', 'ghost'],
         lookups({
-          'channel-of-owner-of-v1': ['a'],
-          'channel-of-owner-of-v2': ['b'],
+          'channel-of-v1': ['a'],
+          'channel-of-v2': ['b'],
         })
       );
 

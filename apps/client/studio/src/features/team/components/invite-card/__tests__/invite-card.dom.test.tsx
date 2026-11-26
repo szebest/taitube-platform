@@ -8,8 +8,6 @@ describe('apps/client/studio: InviteCard', () => {
     const { user, requests } = await renderTeam('/invites', {
       state: { myInvites: [myInvite('editor')] },
     });
-    expect(screen.queryByRole('button', { name: 'Switch channel' })).toBeNull();
-
     await user.click(
       await screen.findByRole('button', { name: 'Accept the invite to Other Show' })
     );
@@ -19,7 +17,7 @@ describe('apps/client/studio: InviteCard', () => {
     await vi.waitFor(() =>
       expect(screen.queryByRole('list', { name: 'Pending invites' })).toBeNull()
     );
-    await user.click(await screen.findByRole('button', { name: 'Switch channel' }));
+    await user.click(await screen.findByRole('button', { name: 'Account' }));
     expect(await screen.findByRole('menuitemradio', { name: /Other Show/ })).toHaveTextContent(
       'Editor'
     );
