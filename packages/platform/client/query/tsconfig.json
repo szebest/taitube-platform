@@ -3,7 +3,6 @@
   "compilerOptions": {
     "rootDir": "src",
     "outDir": "dist",
-    "lib": ["ES2023", "DOM"],
     "types": ["vite/client"]
   },
   "include": ["src/**/*"],
