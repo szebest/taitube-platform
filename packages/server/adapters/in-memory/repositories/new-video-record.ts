@@ -33,6 +33,7 @@ export function newVideoRecord(data: NewVideoInput, now: Date): VideoRecord {
     categoryId: data.categoryId ?? null,
     tags: data.tags ?? [],
     customThumbnailKey: null,
+    passwordProtected: false,
     generation: data.generation ?? 1,
     version: 1,
     createdAt: now,

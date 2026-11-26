@@ -3,12 +3,14 @@ import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
+import { NO_VIDEO_ACCESS, VideoAccessGate } from '../video-access-gate';
 import { VideoCorrectionService } from '../video-correction-service';
 
 const OWNER: UserContext = { id: '00000000-0000-7000-8000-0000000000d1', role: 'CREATOR' };
 const STRANGER: UserContext = { id: '00000000-0000-7000-8000-0000000000d2', role: 'USER' };
 const VIDEO_ID = '00000000-0000-7000-8000-0000000000da';
 const PRIVATE_ID = '00000000-0000-7000-8000-0000000000db';
+const GUARDED_ID = '00000000-0000-7000-8000-0000000000dc';
 const NOW = Date.parse('2026-03-10T00:00:00.000Z');
 const body = (n: number) => ({ startMs: n * 10_000, endMs: n * 10_000 + 5_000, text: `Fix ${n}` });
 
@@ -21,11 +23,21 @@ describe('apps/server/api/services: corrections', () => {
     corrections = new VideoCorrectionService({
       videos: repositories.videos,
       corrections: repositories.videoCorrections,
+      gate: new VideoAccessGate({
+        shareLinks: repositories.shareLinks,
+        passwords: repositories.videoPasswords,
+        unlock: {
+          issue: () => 'unlocked',
+          verify: (_id, _hash, credential) => credential === 'unlocked',
+        },
+        now: () => NOW,
+      }),
       now: () => NOW,
     });
     for (const [id, visibility] of [
       [VIDEO_ID, 'public'],
       [PRIVATE_ID, 'private'],
+      [GUARDED_ID, 'unlisted'],
     ] as const) {
       expectOk(
         await repositories.videos.create({
@@ -45,7 +57,7 @@ describe('apps/server/api/services: corrections', () => {
     expectOk(await corrections.create(OWNER, VIDEO_ID, body(3)));
     const created = expectOk(await corrections.create(OWNER, VIDEO_ID, body(1)));
 
-    const { items } = expectOk(await corrections.list(null, VIDEO_ID));
+    const { items } = expectOk(await corrections.list(null, VIDEO_ID, NO_VIDEO_ACCESS));
 
     expect(created).toMatchObject({
       ...body(1),
@@ -55,10 +67,26 @@ describe('apps/server/api/services: corrections', () => {
     expect(items.map((item) => item.text)).toEqual(['Fix 1', 'Fix 3']);
   });
 
-  it('keeps the list of a video the viewer cannot watch as absent as the video', async () => {
-    expect(expectErr(await corrections.list(STRANGER, PRIVATE_ID)).code).toBe(
-      ErrorCodes.VIDEO_NOT_FOUND
-    );
+  it('refuses the list of a video the viewer cannot watch, for the route to answer as absent', async () => {
+    expect(expectErr(await corrections.list(STRANGER, PRIVATE_ID, NO_VIDEO_ACCESS))).toMatchObject({
+      code: ErrorCodes.FORBIDDEN,
+      readable: false,
+    });
+  });
+
+  it.each([
+    {
+      scenario: 'without the unlock credential',
+      credential: null,
+      code: 'VIDEO_PASSWORD_REQUIRED',
+    },
+    { scenario: 'with the unlock credential', credential: 'unlocked', code: null },
+  ])('keeps the list behind the password $scenario', async ({ credential, code }) => {
+    expectOk(await repositories.videoPasswords.setHash(GUARDED_ID, 'scrypt$hash'));
+
+    const listed = await corrections.list(null, GUARDED_ID, { shareToken: null, credential });
+
+    expect(listed.ok ? null : listed.error.code).toBe(code);
   });
 
   it('refuses the eleventh correction', async () => {
@@ -86,7 +114,9 @@ describe('apps/server/api/services: corrections', () => {
     );
 
     expect(changed).toMatchObject({ id, startMs: body(1).startMs, endMs: 20_000, text: 'Fixed' });
-    expect(expectOk(await corrections.list(null, VIDEO_ID)).items).toMatchObject([changed]);
+    expect(expectOk(await corrections.list(null, VIDEO_ID, NO_VIDEO_ACCESS)).items).toMatchObject([
+      changed,
+    ]);
   });
 
   it('refuses a change that leaves the range invalid, and an unknown correction', async () => {

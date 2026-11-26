@@ -1,6 +1,15 @@
 import { SESSION_COOKIE } from '../session-config';
-import { clearSessionCookie, readSessionToken, writeSessionCookie } from '../session-cookie';
+import {
+  clearSessionCookie,
+  readSessionToken,
+  readVideoAccessCookies,
+  reissueVideoAccessCookies,
+  writeSessionCookie,
+} from '../session-cookie';
 import { inRequest } from './in-request';
+
+const UNLOCK = 'vp.video-access.0190c3a0-5e1d-7000-8000-00000000a001=signed';
+const OTHER_UNLOCK = 'vp.video-access.0190c3a0-5e1d-7000-8000-00000000a002=signed';
 
 describe('@vp/queries: session cookie', () => {
   it('reads the token of the request being answered', async () => {
@@ -37,5 +46,26 @@ describe('@vp/queries: session cookie', () => {
     expect(setCookies).toEqual([
       expect.stringMatching(/^vp\.session=; Max-Age=0; Domain=taitube\.example; Path=\/; /),
     ]);
+  });
+
+  it.each([
+    {
+      held: 'two unlocks among other cookies',
+      cookie: `vp.theme=dark; ${UNLOCK}; ${OTHER_UNLOCK}`,
+      header: `${UNLOCK}; ${OTHER_UNLOCK}`,
+    },
+    { held: 'no unlock', cookie: 'vp.session=t0ken; vp.theme=dark', header: undefined },
+  ])('reads $held as the Cookie header the API is told', async ({ cookie, header }) => {
+    const { value } = await inRequest(readVideoAccessCookies, { cookie });
+
+    expect(value).toBe(header);
+  });
+
+  it('re-issues an unlock that names no lifetime for the 12 hours an unlock lasts, and nothing that is not an unlock', async () => {
+    const { setCookies } = await inRequest(() =>
+      reissueVideoAccessCookies([`${UNLOCK}; Path=/`, '', 'api=1'])
+    );
+
+    expect(setCookies).toEqual([`${UNLOCK}; Max-Age=43200; Path=/; HttpOnly; SameSite=Lax`]);
   });
 });

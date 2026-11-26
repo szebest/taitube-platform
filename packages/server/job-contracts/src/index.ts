@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { ChannelImageJob } from './channel-images';
 import { LadderEntry, RENDITIONS, type RenditionName } from './ladder';
 
+export * from './apply-edits';
 export * from './captions-flow';
 export * from './channel-images';
 export * from './chunks';
@@ -152,6 +153,7 @@ export const HousekeepingJob = z.object({
     'purge-handle-history',
     'purge-exports',
     'prune-revisions',
+    'purge-generations',
   ]),
 });
 export type HousekeepingJob = z.infer<typeof HousekeepingJob>;

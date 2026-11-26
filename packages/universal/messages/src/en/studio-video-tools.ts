@@ -5,6 +5,8 @@ export const studioVideoTools = {
   editTabDetails: dt('Details'),
   editTabChapters: dt('Chapters'),
   editTabCorrections: dt('Corrections'),
+  editTabSharing: dt('Sharing'),
+  editTabTests: dt('Tests'),
   editTabHistory: dt('History'),
   chaptersTitle: dt('Chapters'),
   chaptersDescription: dt(

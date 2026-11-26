@@ -10,7 +10,7 @@ import type { UploadStatus } from '@vp/domain';
 import { uploadSourcesInto } from '@vp/domain-rules';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { and, eq, inArray } from 'drizzle-orm';
-import { toUploadInsert, toUploadStatusUpdate } from '../mappers/index';
+import { toUploadInsert, toUploadStatusUpdate, toVideoRecord } from '../mappers/index';
 import type { PostgresDatabase } from './types';
 
 export class PostgresUploadRepository extends UploadRepository {
@@ -51,7 +51,7 @@ export class PostgresUploadRepository extends UploadRepository {
       databaseUnavailable.during('findWithVideo')
     );
 
-    return map(rows, ([row]) => row ?? null);
+    return map(rows, ([row]) => (row ? { ...row, video: toVideoRecord(row.video) } : null));
   }
 
   async create(data: NewUploadInput): Promise<Result<UploadRecord, DatabaseUnavailable>> {

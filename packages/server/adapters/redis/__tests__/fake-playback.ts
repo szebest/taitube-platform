@@ -15,6 +15,9 @@ export function recordPlayback(store: PlaybackStore, keys: string[], argv: strin
     viewsField = '',
     hourlyField = '',
     deviceField = '',
+    linkWatchField = '',
+    linkViewsField = '',
+    experimentWatchField = '',
   ] = argv;
   const session = store.hashes.get(sessionKey) ?? new Map<string, string>();
   const buffer = store.hashes.get(bufferKey) ?? new Map<string, string>();
@@ -24,11 +27,13 @@ export function recordPlayback(store: PlaybackStore, keys: string[], argv: strin
   const watched = Number(session.get('watched') ?? 0) + Number(watchedNow);
   const credited = Number(session.get('credited') ?? 0);
   session.set('watched', String(watched));
+  const add = (field: string, amount: number) => {
+    if (field) buffer.set(field, String(Number(buffer.get(field) ?? 0) + amount));
+  };
   if (Math.floor(watched) > credited) {
-    buffer.set(
-      watchField,
-      String(Number(buffer.get(watchField) ?? 0) + Math.floor(watched) - credited)
-    );
+    for (const field of [watchField, linkWatchField, experimentWatchField]) {
+      add(field, Math.floor(watched) - credited);
+    }
     session.set('credited', String(Math.floor(watched)));
   }
   store.ttls.set(sessionKey, Number(ttl));
@@ -41,8 +46,7 @@ export function recordPlayback(store: PlaybackStore, keys: string[], argv: strin
   store.ttls.set(dedupKey, Number(ttl));
   if (sketch.has(viewer)) return 0;
   sketch.add(viewer);
-  buffer.set(viewsField, String(Number(buffer.get(viewsField) ?? 0) + 1));
-  buffer.set(deviceField, String(Number(buffer.get(deviceField) ?? 0) + 1));
+  for (const field of [viewsField, deviceField, linkViewsField]) add(field, 1);
   const hourly = store.hashes.get(hourlyKey) ?? new Map<string, string>();
   hourly.set(hourlyField, String(Number(hourly.get(hourlyField) ?? 0) + 1));
   store.hashes.set(hourlyKey, hourly);

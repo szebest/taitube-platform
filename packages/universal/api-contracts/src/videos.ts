@@ -4,6 +4,7 @@ import { VIDEO_DESCRIPTION_MAX_LENGTH, VIDEO_TITLE_BOUNDS } from '@vp/validation
 import { z } from 'zod';
 import { defineEndpoint } from './endpoint';
 import { CursorSchema, PageLimitSchema } from './pagination';
+import { SHARE_TOKEN_PARAM, ShareTokenSchema } from './video-access';
 import {
   VideoIdParamSchema,
   VideoListResponseSchema,
@@ -71,15 +72,20 @@ export const getVideo = defineEndpoint({
   tag: 'Videos',
   summary: 'Get video details',
   description:
-    'Retrieves full video details. Public/unlisted videos are readable by anyone; private videos require owner or admin authentication (returns 404 for non-owners). Public playback URL uses CDN (PRD OQ-2).',
+    'Retrieves full video details. Public/unlisted videos are readable by anyone; private videos require owner or admin authentication (returns 404 for non-owners), or a live share link token in `s`. A password-protected video answers 403 VIDEO_PASSWORD_REQUIRED until its unlock cookie or a live share link comes with the request; a dead link of this video answers 410 SHARE_LINK_EXPIRED. Public playback URL uses CDN (PRD OQ-2).',
   anonymous: true,
   params: VideoIdParamSchema,
+  query: z.object({
+    [SHARE_TOKEN_PARAM]: ShareTokenSchema.optional().describe('The token of a share link'),
+  }),
   status: 200,
   result: VideoSchema,
   errors: {
     400: [ErrorCodes.VALIDATION_FAILED],
     401: [ErrorCodes.UNAUTHORIZED],
+    403: [ErrorCodes.VIDEO_PASSWORD_REQUIRED],
     404: [ErrorCodes.VIDEO_NOT_FOUND],
+    410: [ErrorCodes.SHARE_LINK_EXPIRED],
   },
 });
 

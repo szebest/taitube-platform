@@ -8,7 +8,7 @@
 | Blocks | 121, 122 |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §5 Domain model & DDL](../SDD.md#5-domain-model--database-schema) · [SDD ADR-24 Result-typed errors](../SDD.md#adr-24--result-typed-error-handling-domain-returns-the-edge-decides) |
 
-**Status:** blocked
+**Status:** ready
 
 > **Why.** [46](46-youtube-playlists-watch-history-engine.md)'s playlist is one owner's ordered list of videos, and
 > [73](73-frontend-youtube-playlists-library-player-queue.md) lists collaborative playlists as out of scope. A study group

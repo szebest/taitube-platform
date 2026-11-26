@@ -15,28 +15,33 @@ import { definePlaylistRules } from './rules/playlist.rules';
 import { definePreferencesRules } from './rules/preferences.rules';
 import { defineQueueRules } from './rules/queue.rules';
 import { defineRecommendationFeedbackRules } from './rules/recommendation-feedback.rules';
+import { defineShareLinkRules } from './rules/share-link.rules';
 import { defineUploadRules } from './rules/upload.rules';
 import { defineVideoRules } from './rules/video.rules';
 import { defineWatchPartyRules } from './rules/watch-party.rules';
 import { defineWebhookRules } from './rules/webhook.rules';
 import { onTokenChannel, withinScopes } from './token-scopes';
-import type { AppAbility, UserContext } from './types/index';
+import type { AppAbility, ShareGrant, UserContext } from './types/index';
 
 /**
  * The one place a token is narrowed: the ability is built for the user on the token's channel, then
  * cut down to the token's scopes, so a token never does more than its user can.
  */
-export function getUserPermissions(user: UserContext | null): AppAbility {
+export function getUserPermissions(
+  user: UserContext | null,
+  share: ShareGrant | null = null
+): AppAbility {
   const token = user?.token;
-  if (!(user && token)) return buildAbility(user);
+  if (!(user && token)) return buildAbility(user, share);
   const onChannel = onTokenChannel(user, token);
-  return withinScopes(buildAbility(onChannel), onChannel, token);
+  return withinScopes(buildAbility(onChannel, share), onChannel, token);
 }
 
-function buildAbility(user: UserContext | null): AppAbility {
+function buildAbility(user: UserContext | null, share: ShareGrant | null): AppAbility {
   const builder = new AbilityBuilder<AppAbility>(createMongoAbility);
 
   defineVideoRules(user, builder);
+  defineShareLinkRules(share, builder);
   defineCommentRules(user, builder);
   defineCommentModerationRules(user, builder);
   defineChannelRules(user, builder);

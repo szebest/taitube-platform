@@ -1,10 +1,12 @@
 import { MS_PER_SECOND } from '@kit/primitives';
 import { type Result, ignore, isErr, ok } from '@kit/result';
-import type { PlaybackEvent } from '@vp/api-contracts';
-import type { ViewBufferPort } from '@vp/core/ports';
-import { retentionPercentOf, viewBucketsOf } from '@vp/domain';
+import type { ImpressionBatch, PlaybackEvent } from '@vp/api-contracts';
+import type { ExperimentShown, ViewBufferPort } from '@vp/core/ports';
+import { type ExperimentMeasure, retentionPercentOf, viewBucketsOf } from '@vp/domain';
 import type { PipelineMetrics } from '@vp/pipeline-metrics';
 import { type ViewLimits, requiredWatchSeconds } from '@vp/validation';
+
+type ShownVariant = ExperimentShown & { readonly videoId: string };
 
 export interface PlaybackTelemetryServiceDeps {
   viewBuffer: ViewBufferPort;
@@ -24,7 +26,12 @@ export class PlaybackTelemetryService {
 
   async record(event: PlaybackEvent): Promise<Result<undefined, never>> {
     const { metrics, viewBuffer } = this.deps;
-    if (event.eventType === 'playback_start') metrics.playbackStarts.inc();
+    if (event.eventType === 'playback_start') {
+      metrics.playbackStarts.inc();
+      if (event.experiment) {
+        await this.recordExperiments([{ ...event.experiment, videoId: event.videoId }], 'starts');
+      }
+    }
 
     metrics.playbackWatchSeconds.inc(event.watchedSeconds);
     const stalledMs = event.rebufferingMs;
@@ -47,9 +54,35 @@ export class PlaybackTelemetryService {
       device: event.device ?? 'unknown',
       watchedSeconds: event.watchedSeconds,
       requiredSeconds: requiredWatchSeconds(event.duration, this.deps.limits),
+      shareLinkId: event.shareLinkId ?? null,
+      experiment: event.experiment ?? null,
     });
     if (isErr(watch)) metrics.viewsRecorded.inc({ outcome: 'dropped' });
     else if (watch.value !== 'pending') metrics.viewsRecorded.inc({ outcome: watch.value });
     return ok(undefined);
+  }
+
+  async recordImpressions(batch: ImpressionBatch): Promise<Result<undefined, never>> {
+    await this.recordExperiments(batch.items, 'impressions');
+    return ok(undefined);
+  }
+
+  private async recordExperiments(
+    shown: readonly ShownVariant[],
+    measure: ExperimentMeasure
+  ): Promise<void> {
+    const { viewDate } = viewBucketsOf(new Date(this.deps.now()));
+    ignore(
+      await this.deps.viewBuffer.recordExperimentEvents(
+        shown.map(({ videoId, experimentId, variantId }) => ({
+          videoId,
+          experimentId,
+          variantId,
+          viewDate,
+          measure,
+        }))
+      ),
+      'a test event the buffer could not take is a gap in a statistic, and the beacon is not retried'
+    );
   }
 }

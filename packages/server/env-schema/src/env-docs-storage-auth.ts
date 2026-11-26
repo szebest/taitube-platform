@@ -144,4 +144,11 @@ export const AUTH_DOCS = groupDocs('auth', {
     visibility: 'secret',
     readBy: ['api'],
   },
+  VIDEO_ACCESS_SECRET: {
+    description:
+      'Signs the cookie that unlocks a password-protected video for 12 hours. Unset, setting a video password is refused; rotating it ends every unlock; production refuses the local value.',
+    example: '<random 32 bytes>',
+    visibility: 'secret',
+    readBy: ['api'],
+  },
 });

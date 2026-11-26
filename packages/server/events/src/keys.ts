@@ -51,4 +51,6 @@ export const CacheKeys = {
   partyGuestSession: (credentialHash: string) => `${NAMESPACE}:watch-party:guest:${credentialHash}`,
   viewDedup: (videoId: string, viewDate: string) =>
     `${NAMESPACE}:views:dedup:${videoId}:${viewDate.replaceAll('-', '')}`,
+  shareLinkOpenDedup: (linkId: string, viewDate: string) =>
+    `${NAMESPACE}:views:link-dedup:${linkId}:${viewDate.replaceAll('-', '')}`,
 } as const;

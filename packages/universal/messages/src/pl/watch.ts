@@ -173,4 +173,12 @@ export const watch = {
   correctionsTitle: dt('Korekty'),
   correctionsSeek: dt('Przejdź do {time}'),
   transcriptFailed: dt('Nie udało się wczytać transkrypcji'),
+  lockedTitle: dt('Ten film jest chroniony'),
+  lockedDescription: dt('Wpisz hasło od twórcy, aby go obejrzeć.'),
+  lockedPassword: dt('Hasło'),
+  lockedUnlock: dt('Oglądaj'),
+  lockedOpenToWatch: dt('Otwórz w Taitube, aby wpisać hasło'),
+  linkExpiredTitle: dt('Ten link już nie działa'),
+  linkExpiredDescription: dt('Wygasł albo twórca go wyłączył. Poproś o nowy link.'),
+  linkExpiredHome: dt('Przejdź na stronę główną'),
 } as const;

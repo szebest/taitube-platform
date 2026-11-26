@@ -61,6 +61,7 @@ export function registerRuntimeCaching(origin: string, storage: Pick<CacheStorag
     new NetworkFirst({
       cacheName: CACHE_NAMES.api,
       networkTimeoutSeconds: API_TIMEOUT_S,
+      matchOptions: { ignoreVary: true },
       plugins: [{ cacheWillUpdate: publicResponsesOnly }],
     })
   );

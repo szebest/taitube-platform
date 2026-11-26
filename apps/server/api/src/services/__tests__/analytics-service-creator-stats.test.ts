@@ -68,6 +68,8 @@ describe('AnalyticsService: creatorStats', () => {
           { videoId: VIDEO, viewHour: '2026-03-10T07:00:00.000Z', views: 1 },
         ],
         devices: [],
+        shareLinks: [],
+        experiments: [],
       })
     );
     expectOk(await repositories.subscriptions.subscribe(OWNER.id, SEEDED.otherChannelId, VIDEO));

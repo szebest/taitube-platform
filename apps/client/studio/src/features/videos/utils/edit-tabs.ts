@@ -1,4 +1,12 @@
-const EDIT_TABS = ['details', 'chapters', 'corrections', 'history'] as const;
+const EDIT_TABS = [
+  'details',
+  'chapters',
+  'corrections',
+  'sharing',
+  'tests',
+  'edit',
+  'history',
+] as const;
 
 type EditTab = (typeof EDIT_TABS)[number];
 

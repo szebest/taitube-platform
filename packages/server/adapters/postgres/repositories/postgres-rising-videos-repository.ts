@@ -9,6 +9,7 @@ import { RISING, rankRising } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { and, desc, eq, gte, lte, notInArray, ne } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
+import { toVideoRecord } from '../mappers/video.mapper';
 import { drizzleWhere } from '../scopes/index';
 import { publicFeedScope } from './public-feed-query';
 import type { PostgresDatabase } from './types';
@@ -63,7 +64,7 @@ export class PostgresRisingVideosRepository implements RisingVideosRepositoryPor
     return map(rows, (found) =>
       rankRising(
         found.map(({ video, completed: done, ...counts }) => ({
-          video,
+          video: toVideoRecord(video),
           id: video.id,
           ownerId: video.ownerId,
           createdAt: video.createdAt,

@@ -172,4 +172,12 @@ export const watch = {
   transcriptFailed: dt('The transcript could not be loaded'),
   correctionsTitle: dt('Corrections'),
   correctionsSeek: dt('Go to {time}'),
+  lockedTitle: dt('This video is protected'),
+  lockedDescription: dt('Enter the password its creator gave you to watch it.'),
+  lockedPassword: dt('Password'),
+  lockedUnlock: dt('Watch'),
+  lockedOpenToWatch: dt('Open on Taitube to enter the password'),
+  linkExpiredTitle: dt('This link no longer works'),
+  linkExpiredDescription: dt('It expired or its creator turned it off. Ask them for a new link.'),
+  linkExpiredHome: dt('Go to the home page'),
 } as const;

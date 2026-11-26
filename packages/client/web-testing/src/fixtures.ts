@@ -59,6 +59,7 @@ export function video(overrides: Partial<Video> = {}): Video {
     renditions: [],
     commentsEnabled: true,
     chapters: [],
+    passwordProtected: false,
     likesCount: 0,
     dislikesCount: 0,
     version: 3,

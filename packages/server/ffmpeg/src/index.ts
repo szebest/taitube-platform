@@ -1,3 +1,4 @@
+export * from './apply-edits';
 export * from './audio';
 export * from './channel-image';
 export * from './channel-image-args';
@@ -17,6 +18,7 @@ export * from './thumbnail';
 export * from './transcode';
 export { computeFfmpegThreads } from './transcode-args';
 
+import { runFfmpegApplyEdits } from './apply-edits';
 import { runFfmpegAudio } from './audio';
 import { runFfmpegChannelImage } from './channel-image';
 import { probeChannelImage } from './channel-image-probe';
@@ -40,6 +42,7 @@ export interface MediaTools {
   probeChannelImage: typeof probeChannelImage;
   channelImage: typeof runFfmpegChannelImage;
   live: typeof runFfmpegLive;
+  applyEdits: typeof runFfmpegApplyEdits;
 }
 
 export const mediaTools: MediaTools = {
@@ -52,4 +55,5 @@ export const mediaTools: MediaTools = {
   probeChannelImage,
   channelImage: runFfmpegChannelImage,
   live: runFfmpegLive,
+  applyEdits: runFfmpegApplyEdits,
 };

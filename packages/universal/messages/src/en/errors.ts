@@ -1,5 +1,6 @@
 import { dt } from '../define';
 import { commentErrors } from './errors-comments';
+import { videoToolErrors } from './errors-video-tools';
 
 export const errors = {
   uploadTooLarge: dt('This file is larger than uploads allow.'),
@@ -31,9 +32,7 @@ export const errors = {
   playlistItemNotFound: dt('This video is not in the playlist.'),
   systemPlaylistImmutable: dt('Watch Later cannot be renamed or deleted.'),
   clipNotFound: dt('This clip does not exist or its video is no longer available.'),
-  revisionNotFound: dt('This version of the video does not exist.'),
-  correctionNotFound: dt('This correction does not exist.'),
-  correctionLimit: dt('This video already has the most corrections it can hold.'),
+  ...videoToolErrors,
   pickNotFound: dt('This pick does not exist or was cancelled.'),
   pickWindowOverlap: dt('Another pick already holds part of that window.'),
   webhookNotFound: dt('This webhook does not exist or was removed.'),

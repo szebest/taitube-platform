@@ -9,6 +9,7 @@ import {
 } from '@vp/domain';
 import { type SQL, count, desc, eq, getTableColumns, or, sql } from 'drizzle-orm';
 import { type AnyPgColumn, type PgTable, QueryBuilder } from 'drizzle-orm/pg-core';
+import { toVideoRecord } from '../mappers/video.mapper';
 import {
   drizzleWhere,
   notDeletedScope,
@@ -106,7 +107,12 @@ export const videoSource = sourceOf({
       .where(where)
       .orderBy(desc(key), desc(v.id))
       .limit(limit);
-    return rows.map(({ video, key }) => ({ kind: 'video', key, id: video.id, video }));
+    return rows.map(({ video, key }) => ({
+      kind: 'video',
+      key,
+      id: video.id,
+      video: toVideoRecord(video),
+    }));
   },
 });
 

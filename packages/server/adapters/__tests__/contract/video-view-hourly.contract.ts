@@ -43,6 +43,8 @@ export function describeVideoViewHourlyContract(makeSubject: MakeRepositoriesSub
           retention: [],
           hourly,
           devices: [],
+          shareLinks: [],
+          experiments: [],
         })
       );
 
@@ -63,6 +65,8 @@ export function describeVideoViewHourlyContract(makeSubject: MakeRepositoriesSub
         retention: [],
         hourly: [hour(VIDEO_IDS.a, HOUR, 2)],
         devices: [],
+        shareLinks: [],
+        experiments: [],
       };
       expectOk(await views.applyBatch(batch));
       expectOk(await views.applyBatch(batch));

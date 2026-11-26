@@ -46,6 +46,8 @@ export type AppRoutes<TRouteTree extends AnyRoute> = {
   pending: RouteComponent;
   /** Sends the store's channel as `X-Channel-Id` on the calls that take one: the studio's. */
   actsOnChannels?: boolean;
+  /** The browser tab's key the viewer's test variants are picked by: web's, never the studio's. */
+  getViewerSession?: () => string;
 };
 
 function parseSearch(searchStr: string): Record<string, string> {
@@ -90,7 +92,13 @@ const PENDING_MIN_MS = 500;
  * `'1.10'` and each route's schema coerces what it needs.
  */
 export function createAppRouter<TRouteTree extends AnyRoute>(
-  { routeTree, apiBaseUrl, pending, actsOnChannels = false }: AppRoutes<TRouteTree>,
+  {
+    routeTree,
+    apiBaseUrl,
+    pending,
+    actsOnChannels = false,
+    getViewerSession,
+  }: AppRoutes<TRouteTree>,
   {
     history,
     api,
@@ -108,6 +116,7 @@ export function createAppRouter<TRouteTree extends AnyRoute>(
       apiBaseUrl,
       onUnauthorized: () => endSession(router),
       getChannelId: actsOnChannels ? actingChannel.read : undefined,
+      getViewerSession,
     });
   // Named as `Router`, not `createRouter`'s `RouterCore`, so the emitted declaration imports a
   // package the apps resolve: `@tanstack/router-core` is react-router's own dependency, not theirs.

@@ -12,6 +12,7 @@ export * from './preferences';
 export * from './caption';
 export * from './notification';
 export * from './clip';
+export * from './share-link';
 export * from './live-stream';
 export * from './recommendation-feedback';
 export * from './watch-party';

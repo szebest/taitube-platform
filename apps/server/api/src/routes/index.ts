@@ -54,6 +54,9 @@ import { subscriptionsRoutes } from './subscriptions';
 import { telemetryRoutes } from './telemetry';
 import { trustedCommentersRoutes } from './trusted-commenters';
 import { uploadsRoutes } from './uploads';
+import { videoAccessRoutes } from './video-access';
+import { videoExperimentsRoutes } from './video-experiments';
+import { videoPipelineRoutes } from './video-pipeline';
 import { videoToolsRoutes } from './video-tools';
 import { videosRoutes } from './videos';
 import { viewerActivityRoutes } from './viewer-activity';
@@ -80,6 +83,9 @@ const ROUTES: readonly FastifyPluginAsync[] = [
   creatorStatsRoutes,
   creatorVideosRoutes,
   videoToolsRoutes,
+  videoAccessRoutes,
+  videoExperimentsRoutes,
+  videoPipelineRoutes,
   commentsRoutes,
   commentReportsRoutes,
   creatorCommentsRoutes,

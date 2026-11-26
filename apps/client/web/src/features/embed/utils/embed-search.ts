@@ -1,4 +1,6 @@
+import { ShareTokenSchema } from '@vp/api-contracts';
 import { z } from 'zod';
+import { validOrUndefined } from '#app/utils/valid-or-undefined';
 
 const StartTimeSchema = z.coerce.number().int().nonnegative();
 
@@ -12,17 +14,13 @@ function onlyWhen<Value extends 0 | 1>(wanted: Value) {
 
 /**
  * The embed parameters, as an iframe URL carries them. A value that does not parse falls back to
- * the default, so a bad URL still plays the video: autoplay and loop are off, controls are on.
+ * the default, so a bad URL still plays the video: autoplay and loop are off, controls are on, and
+ * no share link is sent.
  */
 export const EmbedSearchSchema = z.object({
   autoplay: onlyWhen(1),
-  t: z
-    .unknown()
-    .optional()
-    .transform((value) => {
-      const parsed = StartTimeSchema.safeParse(value);
-      return parsed.success ? parsed.data : undefined;
-    }),
+  t: validOrUndefined(StartTimeSchema),
   controls: onlyWhen(0),
   loop: onlyWhen(1),
+  s: validOrUndefined(ShareTokenSchema),
 });

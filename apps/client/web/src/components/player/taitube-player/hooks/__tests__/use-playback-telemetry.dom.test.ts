@@ -87,4 +87,25 @@ describe('apps/client/web: usePlaybackTelemetry', () => {
     expect(sent()).toHaveLength(2);
     vi.useRealTimers();
   });
+
+  it("tells every event the read's share link and test variant, as they arrive, in the same session", () => {
+    const attribution = {
+      shareLinkId: '0190c3a0-5e1d-7000-8000-0000000000e1',
+      experiment: { experimentId: '0190c3a0-5e1d-7000-8000-0000000000e2', variantId: 'b' as const },
+    };
+    const { result, rerender } = renderHook(({ shown }) => usePlaybackTelemetry(VIDEO_ID, shown), {
+      initialProps: { shown: {} },
+    });
+
+    rerender({ shown: attribution });
+    result.current.onPlay(PROGRESS);
+    result.current.onEnded({ duration: PROGRESS.duration });
+
+    const events = sent().map(({ event }) => event);
+    expect(events).toEqual([
+      expect.objectContaining({ eventType: 'playback_start', ...attribution }),
+      expect.objectContaining({ eventType: 'playback_ended', ...attribution }),
+    ]);
+    expect(new Set(events.map((event) => Reflect.get(event, 'sessionUuid'))).size).toBe(1);
+  });
 });

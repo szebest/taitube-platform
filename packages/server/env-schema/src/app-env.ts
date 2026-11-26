@@ -105,6 +105,7 @@ const AuthEnvSchema = z.object({
   AUTH_ALGORITHMS: commaList(z.enum(JWS_ALGORITHMS)).default(['RS256', 'ES256']),
   AUTH_DEV_USER_ID: z.uuid().default('00000000-0000-7000-8000-000000000001'),
   ADMIN_TOKEN: secret(),
+  VIDEO_ACCESS_SECRET: secret(),
 });
 
 const PipelineEnvSchema = z.object({
@@ -208,6 +209,13 @@ const URL_KEYS = (Object.keys(AppEnvShape.shape) as (keyof ParsedEnv)[]).filter(
   /_URL(_|$)/.test(key)
 );
 
+/** Secrets a production boot may go without, switching their feature off, but never with the local value. */
+const FEATURE_SECRET_KEYS = [
+  'LIVE_HOOK_SECRET',
+  'WATCH_PARTY_GUEST_SALT',
+  'VIDEO_ACCESS_SECRET',
+] as const satisfies readonly (keyof ParsedEnv)[];
+
 function productionIssues(env: ParsedEnv): { key: string; message: string }[] {
   const issues: { key: string; message: string }[] = [];
 
@@ -235,20 +243,11 @@ function productionIssues(env: ParsedEnv): { key: string; message: string }[] {
       message: 'is refused in production: a webhook could reach the internal network',
     });
   }
-  if (env.LIVE_HOOK_SECRET !== undefined && heldLocalCredentials(env.LIVE_HOOK_SECRET)) {
-    issues.push({
-      key: 'LIVE_HOOK_SECRET',
-      message: 'holds a credential this repo ships for local use',
-    });
-  }
-  if (
-    env.WATCH_PARTY_GUEST_SALT !== undefined &&
-    heldLocalCredentials(env.WATCH_PARTY_GUEST_SALT)
-  ) {
-    issues.push({
-      key: 'WATCH_PARTY_GUEST_SALT',
-      message: 'holds a credential this repo ships for local use',
-    });
+  for (const key of FEATURE_SECRET_KEYS) {
+    const value = env[key];
+    if (value !== undefined && heldLocalCredentials(value)) {
+      issues.push({ key, message: 'holds a credential this repo ships for local use' });
+    }
   }
   if (env.CORS_ORIGINS.length === 0 || env.CORS_ORIGINS.includes('*')) {
     issues.push({ key: 'CORS_ORIGINS', message: 'must name the allowed origins in production' });

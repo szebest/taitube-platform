@@ -206,6 +206,26 @@ stateDiagram-v2
   DISCARDED --> [*]
 ```
 
+### experiment
+
+`EXPERIMENT`, defined in `packages/universal/domain-rules/src/experiments/experiment.machine.ts`.
+
+Initial: `running`. Final: `finished`, `stopped`.
+
+| Event | From | To | Recorded as |
+| --- | --- | --- | --- |
+| `apply` | `running` | `finished` | - |
+| `stop` | `running` | `stopped` | - |
+
+```mermaid
+stateDiagram-v2
+  [*] --> running
+  running --> finished: apply
+  running --> stopped: stop
+  finished --> [*]
+  stopped --> [*]
+```
+
 ### live-stream
 
 `LIVE_STREAM`, defined in `packages/universal/domain-rules/src/live/live-stream.machine.ts`.
@@ -267,6 +287,61 @@ stateDiagram-v2
   OPEN --> ABORTED: abort
   COMPLETED --> [*]
   ABORTED --> [*]
+```
+
+### video-edit
+
+`VIDEO_EDIT`, defined in `packages/universal/domain-rules/src/video-pipeline/video-edit.machine.ts`.
+
+Initial: `rendering`. Final: none.
+
+| Event | From | To | Recorded as |
+| --- | --- | --- | --- |
+| `render` | `applied`, `failed`, `reverted` | `rendering` | - |
+| `apply` | `rendering` | `applied` | - |
+| `fail` | `rendering` | `failed` | - |
+| `revert` | `applied` | `reverted` | - |
+
+```mermaid
+stateDiagram-v2
+  [*] --> rendering
+  applied --> rendering: render
+  failed --> rendering: render
+  reverted --> rendering: render
+  rendering --> applied: apply
+  rendering --> failed: fail
+  applied --> reverted: revert
+```
+
+### video-generation
+
+`VIDEO_GENERATION`, defined in `packages/universal/domain-rules/src/video-pipeline/video-generation.machine.ts`.
+
+Initial: `uploading`, `rendering`, `retired`. Final: `failed`, `purged`.
+
+| Event | From | To | Recorded as |
+| --- | --- | --- | --- |
+| `render` | `uploading` | `rendering` | - |
+| `swap` | `rendering` | `active` | - |
+| `fail` | `uploading`, `rendering` | `failed` | - |
+| `retire` | `active` | `retired` | - |
+| `restore` | `retired` | `active` | - |
+| `purge` | `retired` | `purged` | - |
+
+```mermaid
+stateDiagram-v2
+  [*] --> uploading
+  [*] --> rendering
+  [*] --> retired
+  uploading --> rendering: render
+  rendering --> active: swap
+  uploading --> failed: fail
+  rendering --> failed: fail
+  active --> retired: retire
+  retired --> active: restore
+  retired --> purged: purge
+  failed --> [*]
+  purged --> [*]
 ```
 
 ### video-lifecycle

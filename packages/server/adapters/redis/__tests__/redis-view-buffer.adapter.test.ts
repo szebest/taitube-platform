@@ -19,6 +19,8 @@ const PLAYBACK = {
   device: 'mobile' as const,
   watchedSeconds: 12,
   requiredSeconds: 5,
+  shareLinkId: null,
+  experiment: null,
 };
 
 describe('RedisViewBufferAdapter', () => {
@@ -46,6 +48,39 @@ describe('RedisViewBufferAdapter', () => {
       [`${VIDEO}|2026-03-10|views`]: '1',
       [`${VIDEO}|2026-03-10|device:mobile`]: '1',
       [`${VIDEO}|2026-03-10|watch`]: '12',
+    });
+  });
+
+  it('buffers the watch seconds and the counted view of a link and the watch seconds of a variant beside the video fields', async () => {
+    const experiment = { experimentId: 'exp-1', variantId: 'b' as const };
+    expectOk(await buffer.recordPlayback({ ...PLAYBACK, shareLinkId: 'link-1', experiment }));
+
+    expect(Object.fromEntries(redis.hashes.get('taitube:views:buffer') ?? [])).toEqual({
+      [`${VIDEO}|2026-03-10|views`]: '1',
+      [`${VIDEO}|2026-03-10|device:mobile`]: '1',
+      [`${VIDEO}|2026-03-10|watch`]: '12',
+      [`${VIDEO}|2026-03-10|watch|link:link-1`]: '12',
+      [`${VIDEO}|2026-03-10|views|link:link-1`]: '1',
+      [`${VIDEO}|2026-03-10|watch|exp:exp-1:b`]: '12',
+    });
+  });
+
+  it('counts a link open once per viewer and day under its own dedup key, which slides with the beacons', async () => {
+    const open = {
+      videoId: VIDEO,
+      linkId: 'link-1',
+      viewerKey: 'viewer-1',
+      viewDate: '2026-03-10',
+    };
+    const dedup = 'taitube:views:link-dedup:link-1:20260310';
+
+    expectOk(await buffer.recordShareLinkOpen(open));
+    redis.ttls.set(dedup, 1);
+    expectOk(await buffer.recordShareLinkOpen(open));
+
+    expect(redis.ttls.get(dedup)).toBe(86_400);
+    expect(Object.fromEntries(redis.hashes.get('taitube:views:buffer') ?? [])).toEqual({
+      [`${VIDEO}|2026-03-10|opens|link:link-1`]: '1',
     });
   });
 
@@ -103,6 +138,29 @@ describe('RedisViewBufferAdapter', () => {
     ['recordAll', (b) => b.recordAll([VIEW])],
     ['recordRetention', (b) => b.recordRetention({ videoId: VIDEO, sessionId: 's', percent: 5 })],
     ['recordPlayback', (b) => b.recordPlayback(PLAYBACK)],
+    [
+      'recordShareLinkOpen',
+      (b) =>
+        b.recordShareLinkOpen({
+          videoId: VIDEO,
+          linkId: 'link-1',
+          viewerKey: 'viewer-1',
+          viewDate: '2026-03-10',
+        }),
+    ],
+    [
+      'recordExperimentEvents',
+      (b) =>
+        b.recordExperimentEvents([
+          {
+            videoId: VIDEO,
+            experimentId: 'exp-1',
+            variantId: 'a',
+            viewDate: '2026-03-10',
+            measure: 'impressions',
+          },
+        ]),
+    ],
   ])('reports an unreachable Redis on %s as CACHE_UNAVAILABLE', async (_name, call) => {
     const down = {
       eval: () => Promise.reject(new Error('ECONNREFUSED')),

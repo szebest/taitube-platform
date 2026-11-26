@@ -14,12 +14,16 @@ vi.mock(import('#app/components/player/taitube-player/taitube-player'), async ()
       data-defaults={JSON.stringify(props.defaults)}
       data-caption-tracks={JSON.stringify(props.captionTracks ?? [])}
       data-chapters={JSON.stringify(props.chapters ?? [])}
+      data-attribution={JSON.stringify(props.attribution ?? {})}
       data-handlers={[props.onTimeUpdate, props.onPause, props.onEnded]
         .map((handler) => typeof handler)
         .join()}
     />
   ),
 }));
+
+const LINK_ID = '0190c3a0-5e1d-7000-8000-0000000000e1';
+const EXPERIMENT_ID = '0190c3a0-5e1d-7000-8000-0000000000e2';
 
 const readPlayer = (attribute: string): unknown =>
   JSON.parse(screen.getByTestId('player').getAttribute(attribute) ?? '');
@@ -76,5 +80,21 @@ describe('apps/client/web: WatchPlayer', () => {
     await renderWatch({ video: { chapters } });
 
     await vi.waitFor(() => expect(readPlayer('data-chapters')).toEqual(chapters));
+  });
+
+  it("hands the beacon the read's share link and test variant", async () => {
+    await renderWatch({
+      video: {
+        shareLinkId: LINK_ID,
+        experiment: { id: EXPERIMENT_ID, variantId: 'b' },
+      },
+    });
+
+    await vi.waitFor(() =>
+      expect(readPlayer('data-attribution')).toEqual({
+        shareLinkId: LINK_ID,
+        experiment: { experimentId: EXPERIMENT_ID, variantId: 'b' },
+      })
+    );
   });
 });

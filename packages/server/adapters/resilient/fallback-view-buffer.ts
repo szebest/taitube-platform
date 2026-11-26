@@ -1,9 +1,11 @@
 import type { CircuitBreaker } from '@kit/concurrency';
 import { type Result, isOk, map, ok } from '@kit/result';
 import type {
+  ExperimentEvent,
   PlaybackWatch,
   PlaybackWatchOutcome,
   RetentionMilestone,
+  ShareLinkOpen,
   ViewBufferPort,
   ViewEvent,
   ViewRecordOutcome,
@@ -27,8 +29,8 @@ export interface FallbackViewBufferConfig {
  * the memory that costs, and a view past it is dropped rather than failing the request.
  *
  * Draining is the flush's job and has a retry of its own, so `snapshot` and `release` go straight
- * to the primary. A retention step and a playback event's watch time are statistics, not counts:
- * while the primary is down they are not held.
+ * to the primary. A retention step, a playback event's watch time, a share link open and a test
+ * impression are statistics, not counts: while the primary is down they are not held.
  */
 export class FallbackViewBuffer implements ViewBufferPort {
   private readonly primary: ViewBufferPort;
@@ -78,6 +80,18 @@ export class FallbackViewBuffer implements ViewBufferPort {
 
   async recordRetention(milestone: RetentionMilestone): Promise<Result<void, CacheUnavailable>> {
     return this.primary.recordRetention(milestone);
+  }
+
+  async recordShareLinkOpen(
+    open: ShareLinkOpen
+  ): Promise<Result<ViewRecordOutcome, CacheUnavailable>> {
+    return this.primary.recordShareLinkOpen(open);
+  }
+
+  async recordExperimentEvents(
+    events: readonly ExperimentEvent[]
+  ): Promise<Result<void, CacheUnavailable>> {
+    return this.primary.recordExperimentEvents(events);
   }
 
   private async handBack(): Promise<void> {

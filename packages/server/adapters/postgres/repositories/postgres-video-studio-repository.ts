@@ -1,4 +1,4 @@
-import { err, fromPromise, ok, type Result } from '@kit/result';
+import { err, fromPromise, map, ok, type Result } from '@kit/result';
 import {
   type StudioMetadataOutcome,
   type TakeDownVideoOptions,
@@ -17,6 +17,7 @@ import {
 } from '@vp/errors';
 import { visibilityNotificationJobs } from '@vp/job-contracts';
 import { and, asc, desc, eq, sql } from 'drizzle-orm';
+import { toVideoRecord } from '../mappers/video.mapper';
 import {
   containsScope,
   drizzleWhere,
@@ -61,7 +62,7 @@ export class PostgresVideoStudioRepository extends VideoStudioRepository {
     const key = sortKey(sort);
     const direction = order === 'asc' ? asc : desc;
 
-    return fromPromise(
+    const rows = await fromPromise(
       () =>
         this.db
           .select()
@@ -81,6 +82,7 @@ export class PostgresVideoStudioRepository extends VideoStudioRepository {
           .limit(limit + 1),
       databaseUnavailable.during('listLibrary')
     );
+    return map(rows, (found) => found.map(toVideoRecord));
   }
 
   async updateMetadata(
@@ -161,7 +163,7 @@ export class PostgresVideoStudioRepository extends VideoStudioRepository {
               updated.visibility
             )
           );
-          return ok({ type: 'updated', video: updated });
+          return ok({ type: 'updated', video: toVideoRecord(updated) });
         }),
       databaseUnavailable.during('updateMetadata')
     );
@@ -190,7 +192,7 @@ export class PostgresVideoStudioRepository extends VideoStudioRepository {
             .set({ version: sql`${v.version} + 1` })
             .where(eq(v.id, videoId))
             .returning();
-          return bumped ?? null;
+          return bumped ? toVideoRecord(bumped) : null;
         }),
       databaseUnavailable.during('takeDown')
     );

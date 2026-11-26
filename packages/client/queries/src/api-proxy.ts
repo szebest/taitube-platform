@@ -1,9 +1,20 @@
 import { getRequestIP } from '@tanstack/react-start/server';
-import { CHANNEL_HEADER, PROBLEM_CONTENT_TYPE, problemDetails } from '@vp/api-contracts';
+import {
+  CHANNEL_HEADER,
+  PROBLEM_CONTENT_TYPE,
+  problemDetails,
+  VIEWER_SESSION_HEADER,
+} from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { API_PROXY_PATH, UNAUTHORIZED } from './api-client';
 import type { SessionConfig } from './session-config';
-import { clearSessionCookie, readSessionToken, writeSessionCookie } from './session-cookie';
+import {
+  clearSessionCookie,
+  readSessionToken,
+  readVideoAccessCookies,
+  reissueVideoAccessCookies,
+  writeSessionCookie,
+} from './session-cookie';
 
 const SAFE_METHODS: ReadonlySet<string> = new Set(['GET', 'HEAD']);
 
@@ -12,7 +23,10 @@ const PROXY_BODY_LIMIT_BYTES = 1_048_576;
 
 const PAYLOAD_TOO_LARGE = 413;
 
-/** What the browser may tell the API. Never its cookies: the session goes as the bearer, alone. */
+/**
+ * What the browser may tell the API. Never its cookies but the video unlocks: the session goes as
+ * the bearer, alone.
+ */
 const FORWARDED_REQUEST_HEADERS = [
   'accept',
   'accept-language',
@@ -22,6 +36,7 @@ const FORWARDED_REQUEST_HEADERS = [
   'last-event-id',
   'traceparent',
   'tracestate',
+  VIEWER_SESSION_HEADER,
 ];
 
 /** What `fetch` already consumed (the encoding it decoded, the framing) or this origin must not take. */
@@ -90,10 +105,13 @@ function forwardedHeaders(request: Request, token: string | undefined): Headers 
   const hops = forwardedFor(request);
   if (hops) headers.set('x-forwarded-for', hops);
   if (token) headers.set('authorization', `Bearer ${token}`);
+  const unlocks = readVideoAccessCookies();
+  if (unlocks) headers.set('cookie', unlocks);
   return headers;
 }
 
 function relayed(response: Response): Response {
+  reissueVideoAccessCookies(response.headers.getSetCookie());
   const headers = new Headers(response.headers);
   for (const name of DROPPED_RESPONSE_HEADERS) headers.delete(name);
   return new Response(response.body, {
@@ -105,8 +123,9 @@ function relayed(response: Response): Response {
 
 /**
  * Answers the browser's call to `/api/...` on this origin from the API, with the session cookie's
- * token as the bearer. A token the API refuses is refreshed once and the call retried; with no
- * refresh to be had the cookie is cleared and the 401 goes back, and the browser signs in again.
+ * token as the bearer and the video unlock cookies, which come back re-issued on this origin. A
+ * token the API refuses is refreshed once and the call retried; with no refresh to be had the
+ * cookie is cleared and the 401 goes back, and the browser signs in again.
  * `refresh` is single-flight per token (`sessionMiddleware`), so parallel 401s share one.
  */
 export async function proxyToApi(

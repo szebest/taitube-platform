@@ -15,6 +15,10 @@ export type Stack = {
     canvas: SeededVideo;
     /** Long enough to take a clip: the other seeded videos last two seconds. */
     clippable: SeededVideo;
+    /** READY and private, for a share link to open. */
+    shared: SeededVideo;
+    /** READY and unlisted, for a password to protect. */
+    locked: SeededVideo;
     draft: SeededVideo;
   };
 };

@@ -50,6 +50,9 @@ import * as subscriptions from './subscriptions';
 import * as telemetry from './telemetry';
 import * as trustedCommenters from './trusted-commenters';
 import * as uploads from './uploads';
+import * as videoAccess from './video-access';
+import * as videoExperiments from './video-experiments';
+import * as videoPipeline from './video-pipeline';
 import * as videoTools from './video-tools';
 import * as videos from './videos';
 import * as viewerActivity from './viewer-activity';
@@ -123,6 +126,9 @@ export * from './telemetry';
 export * from './trusted-commenters';
 export * from './uploads';
 export * from './video-resource';
+export * from './video-access';
+export * from './video-experiments';
+export * from './video-pipeline';
 export * from './video-tools';
 export * from './videos';
 export * from './viewer-activity';
@@ -192,6 +198,9 @@ export const contracts = {
   savedReplies,
   trustedCommenters,
   uploads,
+  videoAccess,
+  videoExperiments,
+  videoPipeline,
   videoTools,
   videos,
   viewerActivity,

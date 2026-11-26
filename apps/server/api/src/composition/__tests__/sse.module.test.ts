@@ -2,6 +2,7 @@ import { Container } from '@kit/composition';
 import { expectOk } from '@kit/testing/result';
 import { Adapters, registerAdapters } from '@vp/adapters/composition';
 import { inProcessAppConfig } from '@vp/env-schema';
+import { NO_VIDEO_ACCESS } from '../../services/video-access-gate';
 import { registerServices, Services } from '../services.module';
 
 const OWNER_ID = '00000000-0000-7000-8000-00000000f501';
@@ -38,7 +39,8 @@ describe('apps/server/api/composition: sse module', () => {
     );
     await c.get(Services.LiveViewerTracker).watch(STREAM_ID, VIDEO_ID);
 
-    const session = expectOk(await c.get(Services.SseService).openVideoStream(null, VIDEO_ID));
+    const sse = c.get(Services.SseService);
+    const session = expectOk(await sse.openVideoStream(null, VIDEO_ID, NO_VIDEO_ACCESS));
     const [snapshot] = expectOk(await session.open(null)).frames;
 
     expect(snapshot?.data).toMatchObject({ live: { viewers: 1 } });

@@ -33,6 +33,8 @@ describe('analytics routes', () => {
         retention: [],
         hourly: [],
         devices: [{ videoId: PUBLIC_VIDEO, viewDate: today, device: 'mobile', views: 3 }],
+        shareLinks: [],
+        experiments: [],
       })
     );
   });
@@ -60,6 +62,8 @@ describe('analytics routes', () => {
         ],
         hourly: [],
         devices: [],
+        shareLinks: [],
+        experiments: [],
       })
     );
 

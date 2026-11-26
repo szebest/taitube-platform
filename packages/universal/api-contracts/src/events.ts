@@ -12,17 +12,22 @@ import { ChannelCardSchema } from './channels';
 import { defineEndpoint } from './endpoint';
 import { NotificationSchema } from './notifications';
 import { PreferenceSectionSchema } from './preferences';
+import { SHARE_TOKEN_PARAM, ShareTokenSchema } from './video-access';
 import { VideoIdParamSchema, VideoStatusSchema } from './video-resource';
 import { MemberKeySchema } from './watch-party-resource';
 
 /** A `Last-Event-ID` the stream resumes from; anything else opens it as if none was sent. */
 export const LastEventIdSchema = z.string().regex(/^\d{1,15}$/);
 
-const EventStreamQuerySchema = z
-  .object({
-    'last-event-id': z.string().optional().describe('Replay events after this ID'),
-  })
-  .optional();
+const EventStreamQueryShape = z.object({
+  'last-event-id': z.string().optional().describe('Replay events after this ID'),
+});
+
+const EventStreamQuerySchema = EventStreamQueryShape.optional();
+
+const VideoEventStreamQuerySchema = EventStreamQueryShape.extend({
+  [SHARE_TOKEN_PARAM]: ShareTokenSchema.optional().describe('The token of a share link'),
+}).optional();
 
 const EventStreamSchema = z.string().describe('text/event-stream Server-Sent Events stream');
 
@@ -137,6 +142,14 @@ const UserEventSchema = z.discriminatedUnion('type', [
     payload: z.object({ videoId: z.uuid() }),
   }),
   z.object({
+    type: z.literal('video.generation.updated'),
+    payload: z.object({
+      videoId: z.uuid(),
+      generation: z.number().int().min(1),
+      status: z.enum(['active', 'failed']),
+    }),
+  }),
+  z.object({
     type: z.literal('export.ready'),
     payload: z.object({
       exportId: z.uuid(),
@@ -192,16 +205,18 @@ export const streamVideoEvents = defineEndpoint({
   tag: 'Events',
   summary: 'SSE stream for single video',
   description:
-    'Streams realtime video progress and status events over Server-Sent Events with snapshot and replay. A broadcast adds `live.status` and `live.viewers`; its snapshot carries `live`.',
+    'Streams realtime video progress and status events over Server-Sent Events with snapshot and replay. A broadcast adds `live.status` and `live.viewers`; its snapshot carries `live`. It opens exactly when GET /v1/videos/:id answers: the same share link token in `s` and the same unlock cookie.',
   anonymous: true,
   params: VideoIdParamSchema,
-  query: EventStreamQuerySchema,
+  query: VideoEventStreamQuerySchema,
   status: 200,
   result: EventStreamSchema,
   errors: {
     400: [ErrorCodes.VALIDATION_FAILED],
     401: [ErrorCodes.UNAUTHORIZED],
+    403: [ErrorCodes.VIDEO_PASSWORD_REQUIRED],
     404: [ErrorCodes.VIDEO_NOT_FOUND],
+    410: [ErrorCodes.SHARE_LINK_EXPIRED],
     429: [ErrorCodes.RATE_LIMITED],
   },
 });

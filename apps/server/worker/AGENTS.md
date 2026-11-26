@@ -15,6 +15,8 @@ Instructions for any coding agent working on the Taitube distributed worker runt
 
 - **Screen (`src/stages/screen/`):** a Flow child of `package` on the `screen` queue (`SCREENING_ENABLED` off, no child). `screen-stage.ts` claims the `screen` step, reuses the result stored for the video and the source's ETag, else runs `fingerprint-findings.ts` (frame hashes, `fpcalc` when the job says audio, the catalogue lookup, the blank rule), `content-findings.ts` (the `FrameClassifier` over a frame every 10 s, evidence JPEGs under `evidence/{videoId}/`) and `metadata-finding.ts`, and stores what `decideScreening` says. It never holds a video itself and reads no `MAX_*` limit: `package` reads the result through `screeningGate` (`package-screening.ts`) and moves the video `PROCESSING -> HELD` before it writes a master, failing closed when the flow had a `screen` child and no result came back.
 
+- **Apply edits (`src/stages/apply-edits/`):** rides the `transcode-1080p` queue by job name (`APPLY_EDITS`). It claims a `video_generations` row with a fresh `lockToken`, fetches what the generation renders from (`generation-source.ts`: a replacement's upload, or an edit's base top rendition from the public bucket), encodes every rung once through `@vp/ffmpeg`'s edit filter graph into `hls/g{n}/`, writes the master last and swaps the generation in with `videoGenerations.swap`, one compare-and-set under that token. The video stays `READY` on its old renditions the whole time; a retry is fenced, a video that moved on fails the generation, and a terminal failure fails it in `failure-handler.ts` without touching the video, its steps or its renditions. `purge-generations` (housekeeping) deletes a retired generation after its grace.
+
 ---
 
 ## 2. Invariants & Rules

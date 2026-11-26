@@ -26,6 +26,7 @@ function merged<T>(base: T, overrides: unknown): T {
 }
 
 const IN_PROCESS_GUEST_SALT = 'in-process-guest-salt';
+const IN_PROCESS_VIDEO_ACCESS_SECRET = 'in-process-video-access-secret';
 
 /**
  * What an in-process app runs on: the in-memory family over the schema defaults, with any
@@ -51,8 +52,10 @@ export function inProcessAppConfig(overrides: AppConfigOverrides = {}): AppConfi
     guestSalt: base.watchParties.guestSalt ?? IN_PROCESS_GUEST_SALT,
   };
 
+  const videoAccess = { secret: base.videoAccess.secret ?? IN_PROCESS_VIDEO_ACCESS_SECRET };
+
   return merged(
-    { ...base, watchParties, cdn: cdn === undefined ? base.cdn : asCdnBase(cdn) },
+    { ...base, watchParties, videoAccess, cdn: cdn === undefined ? base.cdn : asCdnBase(cdn) },
     rest
   );
 }

@@ -12,6 +12,7 @@ import { ErrorCodes } from '@vp/errors';
 import { z } from 'zod';
 import { defineEndpoint } from './endpoint';
 import { CursorSchema, OptionalPageLimitSchema } from './pagination';
+import { SHARE_TOKEN_PARAM, ShareTokenSchema } from './video-access';
 import {
   VideoChapterSchema,
   VideoIdParamSchema,
@@ -235,14 +236,20 @@ export const listVideoCorrections = defineEndpoint({
   anonymous: true,
   tag: 'Videos',
   summary: 'List the corrections of a video',
-  description: 'Open to anyone who can watch the video, in playback order.',
+  description:
+    'Open to anyone who can watch the video, in playback order, behind the same share link and password gate as the video itself.',
   params: VideoIdParamSchema,
+  query: z.object({
+    [SHARE_TOKEN_PARAM]: ShareTokenSchema.optional().describe('The token of a share link'),
+  }),
   status: 200,
   result: CorrectionListSchema,
   errors: {
     400: [ErrorCodes.VALIDATION_FAILED],
     401: [ErrorCodes.UNAUTHORIZED],
+    403: [ErrorCodes.VIDEO_PASSWORD_REQUIRED],
     404: [ErrorCodes.VIDEO_NOT_FOUND],
+    410: [ErrorCodes.SHARE_LINK_EXPIRED],
   },
 });
 

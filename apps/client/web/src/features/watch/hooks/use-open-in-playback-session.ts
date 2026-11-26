@@ -11,6 +11,7 @@ export interface OpenInPlaybackSession {
   list: string | undefined;
   startTime: number | undefined;
   autoplay: boolean;
+  shareToken: string | undefined;
 }
 
 /** Hands the watch page's video, and the playlist it was opened from, to the session that plays it. */
@@ -19,6 +20,7 @@ export function useOpenInPlaybackSession({
   list,
   startTime,
   autoplay,
+  shareToken,
 }: OpenInPlaybackSession) {
   const api = useApi();
   const { dispatch } = usePlaybackSession();
@@ -38,6 +40,7 @@ export function useOpenInPlaybackSession({
       },
       startTime,
       autoplay,
+      shareToken,
     });
-  }, [dispatch, video, list, playlist, startTime, autoplay]);
+  }, [dispatch, video, list, playlist, startTime, autoplay, shareToken]);
 }

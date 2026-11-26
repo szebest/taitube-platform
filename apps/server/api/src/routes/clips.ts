@@ -4,6 +4,7 @@ import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { requireAuth } from '../plugins/auth';
 import { contractSchema } from './contract-schema';
 import { sendResult } from './send-result';
+import { videoAccessOf } from './video-access-request';
 
 export async function clipsRoutes(app: FastifyInstance): Promise<void> {
   const { clipService } = app.services;
@@ -30,8 +31,14 @@ export async function clipsRoutes(app: FastifyInstance): Promise<void> {
   server.get(
     getClip.path,
     { schema: { ...contractSchema(getClip), params: getClip.params } },
-    async (request, reply) =>
-      sendResult(reply, request, await clipService.get(request.user ?? null, request.params.id))
+    async (request, reply) => {
+      const unlockOf = (videoId: string) => videoAccessOf(request, videoId, undefined).credential;
+      return sendResult(
+        reply,
+        request,
+        await clipService.get(request.user ?? null, request.params.id, unlockOf)
+      );
+    }
   );
 
   server.get(

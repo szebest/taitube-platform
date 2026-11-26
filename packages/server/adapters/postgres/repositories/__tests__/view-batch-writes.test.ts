@@ -20,6 +20,8 @@ describe('applyViewBatch transaction', () => {
       retention: [{ videoId: VIDEO_IDS.a, percent: 100_000, viewers: 1 }],
       hourly: [],
       devices: [],
+      shareLinks: [],
+      experiments: [],
     };
 
     expectErr(await repositories.videoViews.applyBatch(batch));

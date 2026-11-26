@@ -6,7 +6,7 @@ import { databaseUnavailable, ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { seedVideo } from '../../__tests__/test-app';
 import { ClipService } from '../clip-service';
-import { TEST_CDN, TEST_SPRITE } from './service-deps';
+import { TEST_CDN, TEST_SPRITE, UNLOCKED, videoAccessGateOf } from './service-deps';
 
 const VIEWER: UserContext = { id: '00000000-0000-7000-8000-00000000e001', role: 'USER' };
 const STRANGER: UserContext = { id: '00000000-0000-7000-8000-00000000e002', role: 'USER' };
@@ -28,6 +28,8 @@ describe('apps/server/api/services: ClipService', () => {
 
   const clip = async (videoId = VIDEO, body = RANGE, viewer: UserContext | null = VIEWER) =>
     service.create(viewer, videoId, body);
+  const read = (viewer: UserContext | null, clipId: string, credential: string | null = null) =>
+    service.get(viewer, clipId, () => credential);
 
   beforeEach(async () => {
     clock = NOW;
@@ -39,6 +41,7 @@ describe('apps/server/api/services: ClipService', () => {
       paginator: new Paginator({ defaultLimit: 20, maxLimit: 100 }),
       cdn: TEST_CDN,
       sprite: TEST_SPRITE,
+      gate: videoAccessGateOf(repositories, () => clock),
       now: () => clock,
     });
     await repositories.channels.create({ userId: OWNER, handle: 'owner', displayName: 'Owner' });
@@ -73,7 +76,7 @@ describe('apps/server/api/services: ClipService', () => {
         video: { id: VIDEO, title: 'Match', channel: { handle: 'owner' } },
       });
       expect(created.video.playbackUrl).toContain(VIDEO);
-      expect(expectOk(await service.get(null, created.id)).id).toBe(created.id);
+      expect(expectOk(await read(null, created.id)).id).toBe(created.id);
     });
 
     it.each([
@@ -130,7 +133,7 @@ describe('apps/server/api/services: ClipService', () => {
 
   describe('get', () => {
     it('answers not found for an unknown clip', async () => {
-      expect(expectErr(await service.get(null, ABSENT)).code).toBe(ErrorCodes.CLIP_NOT_FOUND);
+      expect(expectErr(await read(null, ABSENT)).code).toBe(ErrorCodes.CLIP_NOT_FOUND);
     });
 
     it('stops resolving a clip once its video turned private, for everyone but those who may read it', async () => {
@@ -138,8 +141,19 @@ describe('apps/server/api/services: ClipService', () => {
       const stored = expectOk(await repositories.videos.findById(VIDEO));
       if (stored) stored.visibility = 'private';
 
-      expect(expectErr(await service.get(null, id)).code).toBe(ErrorCodes.CLIP_NOT_FOUND);
-      expect(expectErr(await service.get(VIEWER, id)).code).toBe(ErrorCodes.CLIP_NOT_FOUND);
+      expect(expectErr(await read(null, id)).code).toBe(ErrorCodes.CLIP_NOT_FOUND);
+      expect(expectErr(await read(VIEWER, id)).code).toBe(ErrorCodes.CLIP_NOT_FOUND);
+    });
+
+    it('opens a clip of a video since protected by a password only with its unlock credential or to its owner', async () => {
+      const { id } = expectOk(await clip());
+      const stored = expectOk(await repositories.videos.findById(VIDEO));
+      if (stored) stored.visibility = 'unlisted';
+      expectOk(await repositories.videoPasswords.setHash(VIDEO, 'a-hash'));
+
+      expect(expectErr(await read(VIEWER, id)).code).toBe(ErrorCodes.CLIP_NOT_FOUND);
+      expect(expectOk(await read(VIEWER, id, UNLOCKED)).id).toBe(id);
+      expect(expectOk(await read({ id: OWNER, role: 'CREATOR' }, id)).id).toBe(id);
     });
   });
 
@@ -178,7 +192,7 @@ describe('apps/server/api/services: ClipService', () => {
       const { id } = expectOk(await clip());
 
       expect(expectErr(await service.remove(actor, id)).code).toBe(code);
-      expectOk(await service.get(null, id));
+      expectOk(await read(null, id));
     });
 
     it('lets the creator delete it, also once the video turned private, and once only', async () => {
@@ -196,7 +210,7 @@ describe('apps/server/api/services: ClipService', () => {
 
       expectOk(await service.remove({ id: STRANGER.id, role: 'ADMIN' }, id));
 
-      expect(expectErr(await service.get(null, id)).code).toBe(ErrorCodes.CLIP_NOT_FOUND);
+      expect(expectErr(await read(null, id)).code).toBe(ErrorCodes.CLIP_NOT_FOUND);
     });
   });
 });
