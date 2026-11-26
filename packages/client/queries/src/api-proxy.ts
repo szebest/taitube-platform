@@ -6,6 +6,7 @@ import {
   problemDetails,
 } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
+import { ACCOUNT_SLOT_HEADER } from './account-slots';
 import { withExpired } from './accounts';
 import { readAccounts, writeAccounts } from './accounts-cookie';
 import { API_PROXY_PATH, UNAUTHORIZED } from './api-client';
@@ -96,9 +97,15 @@ function forwardedHeaders(request: Request, token: string | undefined): Headers 
   return headers;
 }
 
+/**
+ * The browser never sends the bearer the API varies on, so a cacheable answer also varies on the
+ * slot and channel the browser named: a tab on another account is never served this one's copy.
+ */
 function relayed(response: Response): Response {
   const headers = new Headers(response.headers);
   for (const name of DROPPED_RESPONSE_HEADERS) headers.delete(name);
+  if (headers.get('vary') !== '*')
+    headers.append('vary', `${ACCOUNT_SLOT_HEADER}, ${CHANNEL_HEADER}`);
   return new Response(response.body, {
     status: response.status,
     statusText: response.statusText,

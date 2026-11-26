@@ -158,6 +158,31 @@ describe('@vp/queries: the same-origin API proxy', () => {
     }
   );
 
+  it.each([
+    { apiVary: 'Authorization', vary: 'Authorization, x-account-slot, x-channel-id' },
+    { apiVary: null, vary: 'x-account-slot, x-channel-id' },
+    { apiVary: '*', vary: '*' },
+  ])(
+    'varies an answer whose API Vary is $apiVary on the slot and channel the browser named',
+    async ({ apiVary, vary }) => {
+      api(() =>
+        HttpResponse.json(
+          {},
+          {
+            headers: {
+              'cache-control': 'private, max-age=30',
+              ...(apiVary ? { vary: apiVary } : {}),
+            },
+          }
+        )
+      );
+
+      const answer = await callProxy('/api/v1/feed');
+
+      expect(answer.headers.get('vary')).toBe(vary);
+    }
+  );
+
   it('keeps the cookies the API sets off this origin', async () => {
     api(() => HttpResponse.json({}, { headers: { 'set-cookie': 'api=1; Path=/' } }));
 
