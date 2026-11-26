@@ -8,7 +8,7 @@
 | Blocks | 121, 122 |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §5 Domain model & DDL](../SDD.md#5-domain-model--database-schema) · [SDD §11 Security](../SDD.md#11-security) · [SDD ADR-24 Result-typed errors](../SDD.md#adr-24--result-typed-error-handling-domain-returns-the-edge-decides) |
 
-**Status:** ready
+**Status:** in-progress
 
 > **Why.** [104](104-channel-page-data.md) leaves the channel page's Community tab hidden "until its own ticket", and this is it.
 > A creator can reach subscribers only by uploading: there is no way to ask them a question, share an update, point at a
