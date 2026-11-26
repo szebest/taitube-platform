@@ -11,7 +11,7 @@ import {
   type VideoWithDetails,
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
-import { publicFeedWalkInstant } from '@vp/domain';
+import { type NewChannelAuditEntry, publicFeedWalkInstant } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { type SQL, and, desc, eq, gt, inArray, sql } from 'drizzle-orm';
 import { toVideoRecord } from '../mappers/video.mapper';
@@ -23,6 +23,7 @@ import {
   ownerScope,
   videoReadScope,
 } from '../scopes/index';
+import { appendChannelAudit } from './channel-audit-writes';
 import { publicFeedCursorScope, publicFeedOrderBy, publicFeedScope } from './public-feed-query';
 import type { PostgresDatabase } from './types';
 import { videoScanScope } from './video-scan-query';
@@ -79,9 +80,17 @@ export class PostgresVideoRepository extends VideoRepository {
     return map(details, ([renditions, steps, events]) => ({ video, renditions, steps, events }));
   }
 
-  async create(data: NewVideoInput): Promise<Result<VideoRecord, DatabaseUnavailable>> {
+  async create(
+    data: NewVideoInput,
+    audit?: NewChannelAuditEntry
+  ): Promise<Result<VideoRecord, DatabaseUnavailable>> {
     const rows = await fromPromise(
-      () => this.db.insert(v).values(data).returning(),
+      () =>
+        this.db.transaction(async (tx) => {
+          const inserted = await tx.insert(v).values(data).returning();
+          if (audit) await appendChannelAudit(tx, audit);
+          return inserted;
+        }),
       databaseUnavailable.during('create')
     );
 

@@ -2,6 +2,7 @@ import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
+import { seedPrimaryChannel } from '../../__tests__/test-app';
 import { applyVideoEdit } from '../video-edit';
 import { VideoService } from '../video-service';
 import { metadataScreeningOf, videoServiceDeps } from './service-deps';
@@ -42,6 +43,7 @@ describe('apps/server/api/services: applyVideoEdit', () => {
       await repositories.videos.create({
         id: VIDEO_ID,
         ownerId: OWNER.id,
+        channelId: await seedPrimaryChannel(repositories, OWNER.id),
         title: 'Before',
         visibility: 'public',
         status: 'READY',

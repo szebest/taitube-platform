@@ -2,6 +2,7 @@ import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
+import { seedPrimaryChannel } from '../../__tests__/test-app';
 import { editableVideo } from '../video-edit-access';
 
 const OWNER: UserContext = { id: '00000000-0000-7000-8000-0000000000f1', role: 'CREATOR' };
@@ -23,6 +24,7 @@ describe('apps/server/api/services: editableVideo', () => {
         await repositories.videos.create({
           id,
           ownerId: OWNER.id,
+          channelId: await seedPrimaryChannel(repositories, OWNER.id),
           title: 'Mine',
           visibility,
           status: 'READY',

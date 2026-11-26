@@ -1,7 +1,7 @@
 import { expectOk } from '@kit/testing/result';
 import type { CommentRepositoryPort, CommentWindow } from '@vp/core/repositories';
 import type { CommentThread, NewCommentModeration } from '@vp/domain';
-import { HOUR_MS, VIDEO_IDS } from './fixtures';
+import { HOUR_MS, VIDEO_IDS, primaryChannelOf } from './fixtures';
 import type { RepositoriesSubject } from './subjects';
 
 export interface CommentContractContext {
@@ -10,8 +10,6 @@ export interface CommentContractContext {
   /** Who writes the seeded comments. */
   readonly authorId: string;
 }
-
-export const CHANNEL_ID = '00000000-0000-7000-8000-000000000901';
 
 export const C = {
   old: '00000000-0000-7000-8000-000000000c01',
@@ -56,6 +54,7 @@ export async function seedComment(
       id,
       videoId: options.videoId ?? VIDEO_IDS.a,
       authorId: ctx.authorId,
+      authorChannelId: primaryChannelOf(ctx.authorId),
       parentId: options.parentId ?? null,
       content: `comment ${id.slice(-2)}`,
       moderation: options.moderation,

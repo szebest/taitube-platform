@@ -150,6 +150,8 @@ export const ERROR_COPY: Readonly<Record<ErrorCode, ArgumentFreeKey>> = {
   [ErrorCodes.WATCH_PARTY_TICKET_INVALID]: 'errors.watchPartyTicketInvalid',
   [ErrorCodes.WATCH_PARTY_CREDENTIAL_INVALID]: 'errors.watchPartyCredentialInvalid',
   [ErrorCodes.CHANNEL_MEMBERSHIP_REQUIRED]: 'errors.channelMembershipRequired',
+  [ErrorCodes.CHANNEL_LIMIT_REACHED]: 'errors.channelLimitReached',
+  [ErrorCodes.CHANNEL_NOT_OWNED]: 'errors.channelNotOwned',
   [ErrorCodes.CHANNEL_INVITE_NOT_FOUND]: 'errors.channelInviteNotFound',
   [ErrorCodes.CHANNEL_INVITE_NOT_PENDING]: 'errors.channelInviteNotPending',
   [ErrorCodes.CHANNEL_INVITE_ALREADY_PENDING]: 'errors.channelInviteAlreadyPending',

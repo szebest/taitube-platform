@@ -2,7 +2,13 @@ import { useQuery } from '@tanstack/react-query';
 import { useRouter } from '@tanstack/react-router';
 import type { Account } from '@vp/api-contracts';
 import { PermissionsProvider } from '@vp/permissions-react';
-import { membershipsQueryOptions, useAccount, useApi, viewerOf } from '@vp/queries';
+import {
+  membershipsQueryOptions,
+  useAccount,
+  useActingChannelId,
+  useApi,
+  viewerOf,
+} from '@vp/queries';
 import { type PropsWithChildren, useSyncExternalStore } from 'react';
 import { type ActiveChannel, ActiveChannelContext } from '#app/hooks/use-active-channel';
 
@@ -10,11 +16,12 @@ const NONE: ActiveChannel['memberships'] = [];
 
 function SignedInChannel({ account, children }: PropsWithChildren<{ account: Account }>) {
   const { actingChannel } = useRouter().options.context;
-  const selected = useSyncExternalStore(
+  const chosen = useSyncExternalStore(
     actingChannel.subscribe,
     actingChannel.read,
     actingChannel.read
   );
+  const selected = useActingChannelId() ?? chosen;
   const memberships = useQuery(membershipsQueryOptions(useApi())).data?.items ?? NONE;
 
   const held = memberships.find(({ channelId }) => channelId === selected);
@@ -42,7 +49,10 @@ function SignedInChannel({ account, children }: PropsWithChildren<{ account: Acc
   );
 }
 
-/** Tells everything below which channel the studio acts on, and the viewer's permissions on it; a guest has none. */
+/**
+ * Tells everything below which channel the studio acts on (the one the tab's identity names, else
+ * the one last chosen here), and the viewer's permissions on it; a guest has none.
+ */
 export function ActiveChannelProvider({ children }: PropsWithChildren) {
   const account = useAccount();
 

@@ -17,13 +17,15 @@ export function canModerateComment({
   user,
   action,
   videoOwnerId,
+  videoChannelId,
 }: {
   user: UserContext | null;
   action: CommentModerationAction;
   videoOwnerId: string;
+  videoChannelId: string;
 }): boolean {
   if (!user) return false;
-  return getUserPermissions(user).can(action, subject('Comment', { videoOwnerId }));
+  return getUserPermissions(user).can(action, subject('Comment', { videoOwnerId, videoChannelId }));
 }
 
 /** Shadow ban, ban and lift. */

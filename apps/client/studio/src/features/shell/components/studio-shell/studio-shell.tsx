@@ -3,7 +3,7 @@ import { Logo } from '@kit/ui';
 import { Link, Outlet, useMatchRoute } from '@tanstack/react-router';
 import { canAccessAdmin } from '@vp/permissions';
 import { Can } from '@vp/permissions-react';
-import { useLayoutMaxWidth, useUserEvent } from '@vp/queries';
+import { useAppLink, useLayoutMaxWidth, useUserEvent } from '@vp/queries';
 import { type ReactNode, useState } from 'react';
 import { StudioWorkspace } from '#app/components/workspace/studio-workspace';
 import { useAccessDeniedToast } from '#app/features/shell/hooks/use-access-denied-toast';
@@ -18,12 +18,20 @@ export type StudioShellProps = {
   navigation: (state: { newComments: boolean }) => ReactNode;
   /** What the inspector shows for the video the library selected. */
   inspector: (videoId: string) => ReactNode;
+  /** The account menu's entries for the channel the studio acts on: a team to leave. */
+  accountItems?: ReactNode;
 };
 
 /** The studio around every page: the workspace's navigation and toolbar, the page in its content. */
-export function StudioShell({ toolbarAction, navigation, inspector }: StudioShellProps) {
+export function StudioShell({
+  toolbarAction,
+  navigation,
+  inspector,
+  accountItems,
+}: StudioShellProps) {
   const matchRoute = useMatchRoute();
   const maxWidth = useLayoutMaxWidth();
+  const appLink = useAppLink();
   const { tOr } = useT();
   const [videoId, setVideoId] = useState<string>();
   const [newComments, setNewComments] = useState(false);
@@ -58,7 +66,7 @@ export function StudioShell({ toolbarAction, navigation, inspector }: StudioShel
             <Link to="/admin">{tOr('studio.adminNav', {}, '')}</Link>
           </StudioWorkspace.NavItem>
         </Can>
-        <StudioWorkspace.NavItem icon="home" href={WEB_URL}>
+        <StudioWorkspace.NavItem icon="home" href={appLink(WEB_URL)}>
           {tOr('studio.backToWeb', {}, '')}
         </StudioWorkspace.NavItem>
       </StudioWorkspace.Nav>
@@ -75,7 +83,7 @@ export function StudioShell({ toolbarAction, navigation, inspector }: StudioShel
         </Link>
         <div className="ms-auto flex items-center gap-inline">
           {toolbarAction}
-          <ShellAccountMenu />
+          <ShellAccountMenu>{accountItems}</ShellAccountMenu>
         </div>
       </StudioWorkspace.Toolbar>
       <SelectedVideoContext value={{ videoId, open: setVideoId }}>

@@ -57,6 +57,7 @@ const CoreEnvSchema = z.object({
   METRICS_PORT: z.coerce.number().int().nonnegative().default(9464),
   PAGE_SIZE_DEFAULT: z.coerce.number().int().positive().default(PAGE_SIZE_DEFAULT),
   PAGE_SIZE_MAX: z.coerce.number().int().positive().default(PAGE_SIZE_MAX),
+  CHANNELS_MAX_OWNED: z.coerce.number().int().positive().default(5),
   FEATURE_FLAGS: commaList(z.string()).default([]),
   WEB_URL: z.url().default('http://localhost:5173'),
   WEBHOOK_ALLOW_PRIVATE_HOSTS: z

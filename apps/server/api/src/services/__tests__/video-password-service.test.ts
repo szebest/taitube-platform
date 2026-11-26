@@ -5,6 +5,7 @@ import type { PasswordHasherPort } from '@vp/core/ports';
 import { VIDEO_UNLOCK_TTL_SECONDS, type Video } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
+import { seedPrimaryChannel } from '../../__tests__/test-app';
 import type { UnlockCredentials } from '../video-access-gate';
 import { VideoPasswordService } from '../video-password-service';
 
@@ -51,6 +52,7 @@ describe('apps/server/api/services: VideoPasswordService', () => {
         await repositories.videos.create({
           id,
           ownerId: OWNER.id,
+          channelId: await seedPrimaryChannel(repositories, OWNER.id),
           title: 'Guarded',
           visibility,
           status: 'READY',

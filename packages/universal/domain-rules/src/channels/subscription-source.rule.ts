@@ -5,10 +5,8 @@ import type { Channel, Video } from '@vp/domain';
  * Anything else, a forged id included, is dropped without a failure, because the subscription itself is fine.
  */
 export function subscriptionSourceOf(
-  channel: Pick<Channel, 'userId'>,
-  video: Pick<Video, 'id' | 'ownerId' | 'visibility'> | null
+  channel: Pick<Channel, 'id'>,
+  video: Pick<Video, 'id' | 'channelId' | 'visibility'> | null
 ): string | null {
-  return video && video.ownerId === channel.userId && video.visibility === 'public'
-    ? video.id
-    : null;
+  return video && video.channelId === channel.id && video.visibility === 'public' ? video.id : null;
 }

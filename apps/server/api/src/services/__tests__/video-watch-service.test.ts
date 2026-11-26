@@ -3,6 +3,7 @@ import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories, InMemoryViewBuffer } from '@vp/adapters/in-memory';
 import { ErrorCodes, cacheUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
+import { seedPrimaryChannel } from '../../__tests__/test-app';
 import { ExperimentOverlay } from '../experiment-overlay';
 import { VideoService } from '../video-service';
 import { type WatchRequest, VideoWatchService } from '../video-watch-service';
@@ -45,6 +46,7 @@ describe('apps/server/api/services: VideoWatchService', () => {
       await repositories.videos.create({
         id: VIDEO,
         ownerId: OWNER,
+        channelId: await seedPrimaryChannel(repositories, OWNER),
         title: 'Rough cut',
         visibility: 'private',
         status: 'READY',

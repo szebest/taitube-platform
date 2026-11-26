@@ -41,7 +41,7 @@ export class PostgresClipRepository implements ClipRepositoryPort {
           .select({ clip: getTableColumns(c), video: getTableColumns(v), ...channelCardColumns })
           .from(c)
           .innerJoin(v, eq(v.id, c.videoId))
-          .leftJoin(ch, eq(ch.userId, v.ownerId))
+          .leftJoin(ch, eq(ch.id, v.channelId))
           .where(
             drizzleWhere(
               eq(c.userId, viewer.id),

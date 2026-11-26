@@ -126,7 +126,7 @@ export class ClipService {
   }
 
   private async present(clip: Clip, video: Video): Promise<Result<ClipView, DatabaseUnavailable>> {
-    const owner = await this.deps.channels.findByUserId(video.ownerId);
+    const owner = await this.deps.channels.findById(video.channelId);
     return map(owner, (channel) => this.toView(clip, video, channel && toChannelCard(channel)));
   }
 

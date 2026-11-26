@@ -4,6 +4,7 @@ import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { EXPERIMENT_MIN_IMPRESSIONS, MAX_RUNNING_EXPERIMENTS_PER_CHANNEL } from '@vp/domain';
 import { ErrorCodes, databaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
+import { seedPrimaryChannel } from '../../__tests__/test-app';
 import { VideoExperimentService } from '../video-experiment-service';
 import { creatorStudioOf } from './service-deps';
 
@@ -43,6 +44,7 @@ describe('apps/server/api/services: VideoExperimentService', () => {
         await repositories.videos.create({
           id,
           ownerId: OWNER.id,
+          channelId: await seedPrimaryChannel(repositories, OWNER.id),
           title: 'Control',
           visibility: 'public',
           status: 'READY',

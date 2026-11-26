@@ -10,7 +10,10 @@ import {
   getAccount,
   listCreatorComments,
   listMyInvites,
+  getUnreadNotificationCount,
+  listMyIdentities,
   listMyMemberships,
+  recordMySignIn,
 } from '@vp/api-contracts';
 import { APPEARANCE_COOKIES } from '@vp/domain/settings';
 import {
@@ -22,7 +25,7 @@ import {
   SessionProvider,
 } from '@vp/queries';
 import { DEV_TOKEN_URL } from '@vp/queries/demo-personas';
-import { account, api, apiServer, mockEndpoint } from '@vp/web-testing';
+import { account, api, apiServer, identities, mockEndpoint, signInRecord } from '@vp/web-testing';
 import { http, HttpResponse } from 'msw/http';
 import type { ComponentType, PropsWithChildren } from 'react';
 
@@ -66,6 +69,8 @@ export const SESSION = `${SESSION_COOKIE}=signed-in`;
 export function accountOf(creator: Account = account()) {
   apiServer.use(
     mockEndpoint(listMyMemberships, () => HttpResponse.json({ items: [] })),
+    mockEndpoint(listMyIdentities, () => HttpResponse.json(identities())),
+    mockEndpoint(getUnreadNotificationCount, () => HttpResponse.json({ unreadCount: 0 })),
     mockEndpoint(listMyInvites, () => HttpResponse.json({ items: [], nextCursor: null })),
     mockEndpoint(listCreatorComments, () => HttpResponse.json({ items: [], nextCursor: null }))
   );
@@ -79,8 +84,11 @@ export function signInBrowser(creator: Account = account()) {
   return accountOf(creator);
 }
 
-/** `dev-token serve` on this machine, minting the token of whichever persona is asked for. */
+/** `dev-token serve` on this machine, minting the token of whichever persona is asked for, and the API recording the sign-in. */
 export function devTokenServe() {
+  apiServer.use(
+    mockEndpoint(recordMySignIn, () => HttpResponse.json(signInRecord(), { status: 201 }))
+  );
   return http.get(`${DEV_TOKEN_URL}/token`, ({ request }) =>
     HttpResponse.json({ token: `token-of-${new URL(request.url).searchParams.get('persona')}` })
   );

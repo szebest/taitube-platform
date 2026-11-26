@@ -107,7 +107,7 @@ export class ScreeningCaseViews {
       if (result.value) videos.set(result.value.id, result.value);
     }
     const channelOf = await loadChannelsOf(this.deps.channels, [
-      ...new Set([...videos.values()].map((video) => video.ownerId)),
+      ...new Set([...videos.values()].map((video) => video.channelId)),
     ]);
     if (isErr(channelOf)) return channelOf;
 
@@ -205,7 +205,7 @@ export class ScreeningCaseViews {
     return {
       id,
       title: matched?.title ?? null,
-      channel: matched ? channelOf(matched.ownerId) : null,
+      channel: matched ? channelOf(matched.channelId) : null,
       thumbnailUrl: matched ? thumbnailUrl(matched, this.deps.cdn) : undefined,
       status: matched?.status ?? null,
       sameChannel: sameChannel ?? false,

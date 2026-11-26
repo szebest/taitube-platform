@@ -15,7 +15,7 @@ depends on `@vp/domain` (the watch party permission registry and the channel tea
 - Rule factories in `src/rules/`: `defineVideoRules`, `defineCommentRules`, `defineChannelRules`,
   `defineUploadRules`, `defineAnalyticsRules`, `definePlaylistRules`, `definePreferencesRules`, `defineQueueRules` (the `queue` action on `Queue`, signed-in only),
   `defineCaptionRules`, `defineRecommendationFeedbackRules`, `defineChannelTeamRules`, `defineAdminRules`
-  (`<resource>.rules.ts`). Channel team members get their rules beside the owner's, through `ownersWith` /
+  (`<resource>.rules.ts`). Channel team members get their rules beside the owner's, through
   `channelsWith` in `rules/memberships.ts` over `UserContext.memberships` and `CHANNEL_ROLES` from `@vp/domain`;
   never an empty `$in`.
 - The ability builder `getUserPermissions(user: UserContext | null)` in `ability.ts`, which applies every

@@ -7,6 +7,7 @@ import type { DatabaseUnavailable } from '@vp/errors';
 import {
   HOUR_MS,
   OTHER_OWNER_ID,
+  OWNER_CHANNEL_ID,
   OWNER_ID,
   VIDEO_IDS,
   idsOf,
@@ -61,6 +62,24 @@ export function describeVideoRepositoryContract(makeSubject: MakeRepositoriesSub
         expect(found?.status).toBe('UPLOADING');
         expect(found?.visibility).toBe('public');
         expect(found?.version).toBe(created.version);
+      });
+
+      it('writes the audit row it is handed with the video', async () => {
+        const uploaded = {
+          channelId: OWNER_CHANNEL_ID,
+          actorUserId: OWNER_ID,
+          action: 'video.uploaded',
+          targetType: 'video',
+          targetId: VIDEO_IDS.a,
+          meta: {},
+        } as const;
+
+        expectOk(await videos.create(publicVideo({ id: VIDEO_IDS.a }), uploaded));
+
+        const audit = expectOk(
+          await subject.repositories.channelAudit.list(OWNER_CHANNEL_ID, { cursor: null, limit: 5 })
+        );
+        expect(audit).toEqual([expect.objectContaining(uploaded)]);
       });
 
       it('exposes the video with its details', async () => {

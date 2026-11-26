@@ -13,6 +13,8 @@ const OWNER_ID = '018f0000-0000-7000-8000-000000000001';
 const FAN_ID = '018f0000-0000-7000-8000-000000000003';
 const OTHER_OWNER_ID = '018f0000-0000-7000-8000-000000000005';
 const CHANNEL_ID = '018f0000-0000-7000-8000-000000000002';
+const OTHER_CHANNEL_ID = '018f0000-0000-7000-8000-000000000006';
+const FAN_CHANNEL_ID = '018f0000-0000-7000-8000-000000000004';
 const TRAILER = '018f0000-0000-7000-8000-0000000000a1';
 const RETURNING = '018f0000-0000-7000-8000-0000000000a2';
 const PRIVATE = '018f0000-0000-7000-8000-0000000000a3';
@@ -46,6 +48,7 @@ describe('ChannelSpotlightService', () => {
       await repositories.videos.create({
         id,
         ownerId,
+        channelId: ownerId === OWNER_ID ? CHANNEL_ID : OTHER_CHANNEL_ID,
         title: `Video ${id.slice(-2)}`,
         visibility: 'public',
         status: 'READY',
@@ -157,7 +160,7 @@ describe('ChannelSpotlightService', () => {
     });
 
     it('shows a subscriber the returning-subscriber video', async () => {
-      expectOk(await repositories.subscriptions.subscribe(FAN_ID, CHANNEL_ID));
+      expectOk(await repositories.subscriptions.subscribe(FAN_ID, FAN_CHANNEL_ID, CHANNEL_ID));
 
       expect(await sourceOf(FAN)).toBe('returning');
       expect(await idOf(FAN)).toBe(RETURNING);
@@ -165,7 +168,7 @@ describe('ChannelSpotlightService', () => {
 
     it('falls back to the trailer for a subscriber when no returning video is set', async () => {
       expectOk(await replace({ trailerVideoId: TRAILER }));
-      expectOk(await repositories.subscriptions.subscribe(FAN_ID, CHANNEL_ID));
+      expectOk(await repositories.subscriptions.subscribe(FAN_ID, FAN_CHANNEL_ID, CHANNEL_ID));
 
       expect(await sourceOf(FAN)).toBe('trailer');
     });

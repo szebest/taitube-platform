@@ -90,6 +90,7 @@ const ExperimentTagSchema = z
 export const VideoSchema = z.object({
   id: z.uuid().describe('Video UUIDv7 identifier'),
   ownerId: z.uuid().describe('Owning user UUID, for client-side ownership rules'),
+  channelId: z.uuid().describe('The channel the video is published on'),
   title: z.string().nullable().describe('Video title'),
   description: z.string().nullable().describe('Video description'),
   visibility: VideoVisibilitySchema,
@@ -161,6 +162,7 @@ const ViewerProgressSchema = z
 export const VideoSummarySchema = z.object({
   id: z.uuid().describe('Video UUIDv7 identifier'),
   ownerId: z.uuid().describe('Owning user UUID, for client-side ownership rules'),
+  channelId: z.uuid().describe('The channel the video is published on'),
   title: z.string().nullable().describe('Video title'),
   description: z.string().nullable().describe('Video description'),
   visibility: VideoVisibilitySchema,

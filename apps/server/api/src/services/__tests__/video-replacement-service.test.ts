@@ -3,6 +3,7 @@ import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-mem
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { replacementSourceKey } from '@vp/storage';
+import { seedPrimaryChannel } from '../../__tests__/test-app';
 import { VideoReplacementService } from '../video-replacement-service';
 
 const OWNER: UserContext = { id: '00000000-0000-7000-8000-0000000000e1', role: 'CREATOR' };
@@ -33,6 +34,7 @@ describe('apps/server/api/services: video replacement', () => {
       await repositories.videos.create({
         id: VIDEO_ID,
         ownerId: OWNER.id,
+        channelId: await seedPrimaryChannel(repositories, OWNER.id),
         visibility: 'private',
         status: 'READY',
         sourceKey: `raw/${VIDEO_ID}/source.mp4`,

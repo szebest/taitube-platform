@@ -2,6 +2,7 @@ import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
+import { seedPrimaryChannel } from '../../__tests__/test-app';
 import { ClipSuggestionService } from '../clip-suggestion-service';
 
 const OWNER: UserContext = { id: '00000000-0000-7000-8000-0000000000f1', role: 'CREATOR' };
@@ -23,6 +24,7 @@ describe('apps/server/api/services: clip suggestions', () => {
       await repositories.videos.create({
         id: VIDEO_ID,
         ownerId: OWNER.id,
+        channelId: await seedPrimaryChannel(repositories, OWNER.id),
         visibility: 'private',
         status: 'READY',
         sourceKey: `raw/${VIDEO_ID}/source.mp4`,

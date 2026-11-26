@@ -23,13 +23,34 @@ function recordAuthorization(): (string | null)[] {
 
 describe('@vp/queries: createAppApiClient on the server', () => {
   it.each([
-    { viewer: 'a signed-in viewer', cookie: 'vp.session=t0ken', authorization: 'Bearer t0ken' },
-    { viewer: 'a guest', cookie: '', authorization: null },
+    {
+      viewer: 'slot 0, signed in before slots',
+      cookie: 'vp.session=t0ken',
+      slot: 0,
+      authorization: 'Bearer t0ken',
+    },
+    {
+      viewer: 'slot 1 of two',
+      cookie: 'vp.session.0=first; vp.session.1=second',
+      slot: 1,
+      authorization: 'Bearer second',
+    },
+    {
+      viewer: 'a slot with no session',
+      cookie: 'vp.session.0=first',
+      slot: 2,
+      authorization: null,
+    },
+    { viewer: 'a guest', cookie: '', slot: 0, authorization: null },
   ])(
-    'calls the API at its base URL as $viewer, from the session cookie',
-    async ({ cookie, authorization }) => {
+    "calls the API at its base URL as $viewer, with that slot's token alone",
+    async ({ cookie, slot, authorization }) => {
       const sent = recordAuthorization();
-      const api = createAppApiClient({ apiBaseUrl: LOCAL_API_BASE_URL, onUnauthorized: vi.fn() });
+      const api = createAppApiClient({
+        apiBaseUrl: LOCAL_API_BASE_URL,
+        getSlot: () => slot,
+        onUnauthorized: vi.fn(),
+      });
 
       await inRequest(() => api.videos.getVideo({ params: { id: VIDEO_ID } }), { cookie });
 
@@ -47,6 +68,7 @@ describe('@vp/queries: createAppApiClient on the server', () => {
     );
     const api = createAppApiClient({
       apiBaseUrl: LOCAL_API_BASE_URL,
+      getSlot: () => 0,
       onUnauthorized: vi.fn(),
       getViewerSession: () => 'tab-key',
     });
@@ -75,6 +97,7 @@ describe('@vp/queries: createAppApiClient naming the acting channel', () => {
     );
     const api = createAppApiClient({
       apiBaseUrl: LOCAL_API_BASE_URL,
+      getSlot: () => 0,
       onUnauthorized: vi.fn(),
       getChannelId: () => 'chan-2',
     });

@@ -46,7 +46,7 @@ export class OEmbedService {
       async ({ videoId }): Promise<Result<OEmbedVideo, OEmbedFailure>> =>
         andThenAsync(await videos.findById(videoId), async (found) =>
           andThenAsync(decideOEmbedVideo(found, videoId), async (video) =>
-            map(await channels.findByUserId(video.ownerId), (channel) =>
+            map(await channels.findById(video.channelId), (channel) =>
               buildOEmbed({
                 video,
                 channel: channel && toChannelCard(channel),

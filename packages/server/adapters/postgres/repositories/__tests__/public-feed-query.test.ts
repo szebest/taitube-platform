@@ -28,7 +28,12 @@ describe('adapters/postgres: public feed SQL query', () => {
         column: 'category_id',
         value: 'cat-1',
       },
-      { filter: 'owner', options: { ownerId: 'owner-1' }, column: 'owner_id', value: 'owner-1' },
+      {
+        filter: 'channel',
+        options: { channelId: 'channel-1' },
+        column: 'channel_id',
+        value: 'channel-1',
+      },
     ])('adds the $filter predicate only when one is requested', ({ options, column, value }) => {
       expect(sqlText(publicFeedScope())).not.toContain(column);
       const scoped = publicFeedScope(options);

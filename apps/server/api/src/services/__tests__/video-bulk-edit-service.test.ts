@@ -3,6 +3,7 @@ import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { NewVideoInput } from '@vp/core/repositories';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
+import { seedPrimaryChannel } from '../../__tests__/test-app';
 import { VideoBulkEditService } from '../video-bulk-edit-service';
 import { creatorStudioOf } from './service-deps';
 
@@ -21,6 +22,7 @@ describe('apps/server/api/services: bulk edit', () => {
       await repositories.videos.create({
         id,
         ownerId: OWNER.id,
+        channelId: await seedPrimaryChannel(repositories, overrides.ownerId ?? OWNER.id),
         title: `Video ${id.slice(-1)}`,
         visibility: 'public',
         status: 'READY',

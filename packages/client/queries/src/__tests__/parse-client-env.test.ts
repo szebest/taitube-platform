@@ -7,6 +7,7 @@ const LOCAL = {
   cookieDomain: undefined,
   tracesUrl: undefined,
   devTokenUrl: undefined,
+  accountsMax: 10,
 };
 
 describe('@vp/queries: parseClientEnv', () => {
@@ -41,6 +42,20 @@ describe('@vp/queries: parseClientEnv', () => {
     expect(
       parseClientEnv({ env: {}, serverEnv: { SSR_DEV_TOKEN_URL: 'http://dev-token:3002/' } })
     ).toHaveProperty('devTokenUrl', 'http://dev-token:3002');
+  });
+
+  it.each([
+    { value: '3', accountsMax: 3 },
+    { value: '', accountsMax: 10 },
+  ])('reads ACCOUNTS_MAX "$value" on the server as $accountsMax', ({ value, accountsMax }) => {
+    expect(parseClientEnv({ env: {}, serverEnv: { ACCOUNTS_MAX: value } })).toHaveProperty(
+      'accountsMax',
+      accountsMax
+    );
+  });
+
+  it.each(['0', '11', 'many'])('refuses an ACCOUNTS_MAX of %s, past the ten slots', (value) => {
+    expect(() => parseClientEnv({ env: {}, serverEnv: { ACCOUNTS_MAX: value } })).toThrow();
   });
 
   it.each([

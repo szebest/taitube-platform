@@ -2,7 +2,6 @@ import { err, isErr, ok, type Result } from '@kit/result';
 import {
   type CategoryRepositoryPort,
   type ChannelAuditRepositoryPort,
-  type ChannelRepositoryPort,
   type EntityRevisionRepository,
   type EventRepository,
   type OutboxRepository,
@@ -34,7 +33,6 @@ export interface InMemoryVideoStudioRepositoryOptions {
   categories: Pick<CategoryRepositoryPort, 'findById'>;
   events: Pick<EventRepository, 'create'>;
   outbox: Pick<OutboxRepository, 'enqueue'>;
-  channels: Pick<ChannelRepositoryPort, 'findByUserId'>;
   audit: Pick<ChannelAuditRepositoryPort, 'append'>;
   revisions: Pick<EntityRevisionRepository, 'append' | 'list'>;
   chapters: Pick<InMemoryVideoChapterRepository, 'chaptersOf' | 'replace'>;
@@ -60,7 +58,7 @@ export class InMemoryVideoStudioRepository extends VideoStudioRepository {
   }
 
   async listLibrary(query: VideoLibraryQuery): Promise<Result<VideoRecord[], DatabaseUnavailable>> {
-    const { ownerId, sort, cursor, limit, status, visibility, categoryId, titleContains } = query;
+    const { channelId, sort, cursor, limit, status, visibility, categoryId, titleContains } = query;
     const direction = query.order === 'asc' ? 1 : -1;
     const keyOf = (video: VideoRecord) => creatorLibraryCursorOf(video, sort);
     const needle = titleContains?.toLowerCase();
@@ -69,7 +67,7 @@ export class InMemoryVideoStudioRepository extends VideoStudioRepository {
       .getAllVideos()
       .filter(
         (video) =>
-          (!ownerId || video.ownerId === ownerId) &&
+          (!channelId || video.channelId === channelId) &&
           video.status !== 'DELETED' &&
           !video.deletedAt &&
           (!status || video.status === status) &&
@@ -122,24 +120,20 @@ export class InMemoryVideoStudioRepository extends VideoStudioRepository {
     });
     if (isErr(recorded)) return recorded;
 
-    const channel = await this.deps.channels.findByUserId(video.ownerId);
-    if (isErr(channel)) return channel;
-    if (channel.value) {
-      const edit = {
-        videoId,
-        fields: auditFields,
-        commentsEnabled: patch.commentsEnabled,
-        restoredFromVersion: revision?.restoredFromVersion,
-      };
-      for (const entry of videoEditAudit(edit)) {
-        const audited = await this.deps.audit.append({
-          ...entry,
-          channelId: channel.value.id,
-          actorUserId: userId,
-          actorTokenId: tokenId,
-        });
-        if (isErr(audited)) return audited;
-      }
+    const edit = {
+      videoId,
+      fields: auditFields,
+      commentsEnabled: patch.commentsEnabled,
+      restoredFromVersion: revision?.restoredFromVersion,
+    };
+    for (const entry of videoEditAudit(edit)) {
+      const audited = await this.deps.audit.append({
+        ...entry,
+        channelId: video.channelId,
+        actorUserId: userId,
+        actorTokenId: tokenId,
+      });
+      if (isErr(audited)) return audited;
     }
 
     for (const job of visibilityNotificationJobs(

@@ -11,7 +11,7 @@ import { createdAtCursorPayload, decodeCreatedAtCursor } from './cursor';
 
 export interface ChannelAuditServiceDeps {
   audit: Pick<ChannelAuditRepositoryPort, 'list'>;
-  channels: Pick<ChannelRepositoryPort, 'findByUserIds'>;
+  channels: Pick<ChannelRepositoryPort, 'findPrimaryByUserIds'>;
   paginator: Paginator;
 }
 

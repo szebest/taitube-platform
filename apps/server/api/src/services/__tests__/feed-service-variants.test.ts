@@ -2,6 +2,7 @@ import { Singleflight } from '@kit/concurrency';
 import { expectOk } from '@kit/testing/result';
 import { InMemoryCacheClient, InMemoryRepositories } from '@vp/adapters/in-memory';
 import { inProcessAppConfig } from '@vp/env-schema';
+import { seedPrimaryChannel } from '../../__tests__/test-app';
 import { ExperimentOverlay } from '../experiment-overlay';
 import { FeedService } from '../feed-service';
 import { VideoService } from '../video-service';
@@ -31,6 +32,7 @@ describe('apps/server/api/services: FeedService test variants', () => {
     await repositories.videos.create({
       id: TESTED,
       ownerId: OWNER,
+      channelId: await seedPrimaryChannel(repositories, OWNER),
       title: 'Control',
       visibility: 'public',
       status: 'READY',

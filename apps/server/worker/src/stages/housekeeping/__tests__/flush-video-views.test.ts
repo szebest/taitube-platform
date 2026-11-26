@@ -59,6 +59,7 @@ describe('housekeeping: flush-video-views', () => {
       await repositories.videos.create({
         id: '00000000-0000-7000-8000-0000000000aa',
         ownerId: SEEDED.userId,
+        channelId: SEEDED.channelId,
         sourceKey: 'raw/aa/source.mp4',
       })
     );

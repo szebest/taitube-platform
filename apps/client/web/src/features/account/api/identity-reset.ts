@@ -3,7 +3,7 @@ import type { QueryClient } from '@tanstack/react-query';
 import type { PlaybackPreferences } from '@vp/domain/settings';
 import { preferencesKeys } from '#app/lib/preferences/preferences-queries';
 
-export type AppliedVersion = { userId: string; version: number };
+type AppliedVersion = { userId: string; version: number };
 
 export type GuestSections = {
   appearance: AppearancePreference;
@@ -16,6 +16,15 @@ export type MergeState = {
   /** The appearance a signed-out viewer's next change is measured from, so one the app made itself is not theirs. */
   baseline: { current: AppearancePreference | undefined };
 };
+
+/** One per tab, above the session, so an account or identity switch that mounts the tree again keeps it. */
+export function createMergeState(): MergeState {
+  return {
+    applied: { current: undefined },
+    guest: { current: undefined },
+    baseline: { current: undefined },
+  };
+}
 
 export function resetIdentityState(
   queryClient: QueryClient,

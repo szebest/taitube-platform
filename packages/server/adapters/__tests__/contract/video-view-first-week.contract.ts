@@ -2,7 +2,13 @@ import { randomUUID } from 'node:crypto';
 import { expectOk } from '@kit/testing/result';
 import type { VideoViewRepositoryPort } from '@vp/core/repositories';
 import type { ViewCount } from '@vp/domain';
-import { OTHER_OWNER_ID, OWNER_ID, VIDEO_IDS, publicVideo, seedOwners } from './fixtures';
+import {
+  OTHER_OWNER_CHANNEL_ID,
+  OWNER_CHANNEL_ID,
+  VIDEO_IDS,
+  publicVideo,
+  seedOwners,
+} from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
 const READY = new Date('2026-03-10T23:30:00.000Z');
@@ -97,11 +103,11 @@ export function describeVideoViewFirstWeekContract(makeSubject: MakeRepositories
 
     describe('recentPeers', () => {
       const peers = async (limit = 10) =>
-        expectOk(await views.recentPeers(OWNER_ID, VIDEO_IDS.f, LIMIT, limit)).map(
+        expectOk(await views.recentPeers(OWNER_CHANNEL_ID, VIDEO_IDS.f, LIMIT, limit)).map(
           ({ videoId }) => videoId
         );
 
-      it("lists the owner's public ready videos at or before the limit, newest first, up to the limit", async () => {
+      it("lists the channel's public ready videos at or before the limit, newest first, up to the limit", async () => {
         await seed(VIDEO_IDS.a, new Date('2026-03-01T00:00:00.000Z'));
         await seed(VIDEO_IDS.b, new Date('2026-03-05T00:00:00.000Z'));
         await seed(VIDEO_IDS.c, LIMIT);
@@ -111,11 +117,13 @@ export function describeVideoViewFirstWeekContract(makeSubject: MakeRepositories
         expect(await peers(2)).toEqual([VIDEO_IDS.c, VIDEO_IDS.b]);
       });
 
-      it('leaves out the video itself, later videos, other owners, private and unfinished videos', async () => {
+      it('leaves out the video itself, later videos, other channels of the owner, private and unfinished videos', async () => {
         await seed(VIDEO_IDS.a, new Date('2026-03-01T00:00:00.000Z'));
         await seed(VIDEO_IDS.f, new Date('2026-03-02T00:00:00.000Z'));
         await seed(VIDEO_IDS.b, new Date('2026-03-25T00:00:00.000Z'));
-        await seed(VIDEO_IDS.c, new Date('2026-03-02T00:00:00.000Z'), { ownerId: OTHER_OWNER_ID });
+        await seed(VIDEO_IDS.c, new Date('2026-03-02T00:00:00.000Z'), {
+          channelId: OTHER_OWNER_CHANNEL_ID,
+        });
         await seed(VIDEO_IDS.d, new Date('2026-03-02T00:00:00.000Z'), { visibility: 'private' });
         await seed(VIDEO_IDS.e, null);
 
@@ -125,9 +133,9 @@ export function describeVideoViewFirstWeekContract(makeSubject: MakeRepositories
       it('returns the ready time with each peer', async () => {
         await seed(VIDEO_IDS.a, new Date('2026-03-01T08:00:00.000Z'));
 
-        expect(expectOk(await views.recentPeers(OWNER_ID, VIDEO_IDS.f, LIMIT, 10))).toEqual([
-          { videoId: VIDEO_IDS.a, readyAt: new Date('2026-03-01T08:00:00.000Z') },
-        ]);
+        expect(expectOk(await views.recentPeers(OWNER_CHANNEL_ID, VIDEO_IDS.f, LIMIT, 10))).toEqual(
+          [{ videoId: VIDEO_IDS.a, readyAt: new Date('2026-03-01T08:00:00.000Z') }]
+        );
       });
     });
   });

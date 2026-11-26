@@ -147,7 +147,7 @@ export class CaptionService {
     const allowed = decideChannelTask({ user: actor, acting, task: 'edit-channel' });
     if (isErr(allowed)) return allowed;
 
-    const stored = await this.deps.captions.setChannelDefault(acting.ownerId, enabled);
+    const stored = await this.deps.captions.setChannelDefault(acting.channelId, enabled);
     if (isErr(stored)) return stored;
     return stored.value ? ok({ enabled }) : err(channelNotFound(acting.channelId));
   }

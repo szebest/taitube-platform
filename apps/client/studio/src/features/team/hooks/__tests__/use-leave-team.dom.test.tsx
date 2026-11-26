@@ -13,7 +13,7 @@ describe('apps/client/studio: useLeaveTeam', () => {
     });
     expect(createActingChannelStore().read()).toBe(OTHER_CHANNEL_ID);
 
-    await user.click(screen.getByRole('button', { name: 'Switch channel' }));
+    await user.click(screen.getByRole('button', { name: 'Account' }));
     await user.click(await screen.findByRole('menuitem', { name: 'Leave this team' }));
     await user.click(await screen.findByRole('button', { name: 'Leave team' }));
 

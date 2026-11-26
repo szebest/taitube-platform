@@ -103,7 +103,7 @@ export class PostgresPickRepository implements PickRepositoryPort {
         .select({ pick: getTableColumns(p), video: getTableColumns(v), ...channelCardColumns })
         .from(p)
         .innerJoin(v, eq(v.id, p.videoId))
-        .leftJoin(ch, eq(ch.userId, v.ownerId))
+        .leftJoin(ch, eq(ch.id, v.channelId))
         .where(where)
         .orderBy(asc(p.startsAt));
       return limit === undefined ? query : query.limit(limit);

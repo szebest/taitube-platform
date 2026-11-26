@@ -87,6 +87,7 @@ describe('worker: apply-edits stage', () => {
       await repositories.videos.create({
         id: VIDEO_ID,
         ownerId: OWNER_ID,
+        channelId: '00000000-0000-7000-8000-00000000c4a1',
         sourceKey: `raw/${VIDEO_ID}/source.mp4`,
         status: 'READY',
         durationMs: 240_000,

@@ -42,6 +42,7 @@ describe('domain: user event', () => {
       id: 'c1',
       videoId: 'v1',
       authorId: 'u2',
+      authorChannelId: 'ch',
       parentId: null,
       content: 'nice',
       isPinned: false,

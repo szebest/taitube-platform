@@ -45,7 +45,7 @@ export function createNotifyPartyInviteProcessor(deps: NotifyPartyInviteDeps) {
     if (isErr(switchedOn)) return switchedOn;
     if (!switchedOn.value.has(inviteeId)) return skipped;
 
-    const inviter = await repositories.channels.findByUserId(inviterId);
+    const inviter = await repositories.channels.findPrimaryByUserId(inviterId);
     if (isErr(inviter)) return inviter;
     const actor: NotificationActor | null = inviter.value && {
       handle: inviter.value.handle,

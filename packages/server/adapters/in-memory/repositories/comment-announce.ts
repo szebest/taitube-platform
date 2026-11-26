@@ -2,7 +2,7 @@ import { isErr, ok, type Result } from '@kit/result';
 import type { OutboxRepository, UserEventRepository } from '@vp/core/repositories';
 import { type CommentThread, commentCreated, commentHeld, type NewCommentInput } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { commentHeldOutbox } from '@vp/job-contracts';
+import { commentHeldOutbox, commentOutbox } from '@vp/job-contracts';
 import { uuidv7 } from 'uuidv7';
 
 export interface AnnounceDeps {
@@ -19,13 +19,20 @@ interface Announcement {
 }
 
 /**
- * What the transaction of a new comment tells people: a public one reaches the video owner, a
- * held one reaches the moderators the service named.
+ * What the transaction of a new comment tells people: a public one reaches the notification job
+ * and the video owner, a held one reaches the moderators the service named.
  */
 export async function announceCreated(
   deps: AnnounceDeps,
   { created, video, input, counted }: Announcement
 ): Promise<Result<void, DatabaseUnavailable>> {
+  if (counted) {
+    const enqueued = await deps.outboxRepo.enqueue(
+      commentOutbox({ videoId: created.videoId, commentId: created.id })
+    );
+    if (isErr(enqueued)) return enqueued;
+  }
+
   if (counted && video && video.ownerId !== input.authorId) {
     const announced = await deps.userEventsRepo.append({
       userId: video.ownerId,

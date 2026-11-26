@@ -1,7 +1,12 @@
 import { expectOk } from '@kit/testing/result';
 import * as schema from '@vp/db';
 import { drizzle } from 'drizzle-orm/pglite';
-import { VIDEO_IDS, OWNER_ID, publicVideo, seedOwners } from '../../../__tests__/contract/fixtures';
+import {
+  OWNER_CHANNEL_ID,
+  VIDEO_IDS,
+  publicVideo,
+  seedOwners,
+} from '../../../__tests__/contract/fixtures';
 import { migratedPglite } from '../../../__tests__/contract/pglite-snapshot';
 import { firstWeekRows, recentPeerVideos } from '../first-week-queries';
 import { PostgresRepositories } from '../postgres-repositories';
@@ -48,7 +53,7 @@ describe('first week queries', () => {
     await engine.close();
   });
 
-  it('lists the owner public ready videos at or before the limit, newest first', async () => {
+  it('lists the channel public ready videos at or before the limit, newest first', async () => {
     const { engine, db, repositories } = await seeded();
     expectOk(
       await repositories.videos.create(
@@ -66,7 +71,13 @@ describe('first week queries', () => {
       )
     );
 
-    const peers = await recentPeerVideos(db, OWNER_ID, VIDEO_IDS.f, new Date('2026-03-20'), 10);
+    const peers = await recentPeerVideos(
+      db,
+      OWNER_CHANNEL_ID,
+      VIDEO_IDS.f,
+      new Date('2026-03-20'),
+      10
+    );
 
     expect(peers.map(({ videoId }) => videoId)).toEqual([VIDEO_IDS.b, VIDEO_IDS.a]);
     await engine.close();

@@ -13,6 +13,7 @@ export interface Comment extends CommentModerationFields {
   id: string;
   videoId: string;
   authorId: string;
+  authorChannelId: string;
   parentId: string | null;
   content: string;
   isPinned: boolean;
@@ -23,10 +24,10 @@ export interface Comment extends CommentModerationFields {
   updatedAt: Date;
 }
 
-/** The author's channel, absent for a user who never claimed one. */
+/** The channel the comment was posted as, and the user behind it. */
 interface CommentAuthor {
   userId: string;
-  channelId: string | null;
+  channelId: string;
   handle: string | null;
   displayName: string | null;
   avatarUrl: string | null;
@@ -62,6 +63,7 @@ export interface NewCommentInput {
   id: string;
   videoId: string;
   authorId: string;
+  authorChannelId: string;
   parentId: string | null;
   content: string;
   /** Published when absent; the gate sets it for a comment it holds. */

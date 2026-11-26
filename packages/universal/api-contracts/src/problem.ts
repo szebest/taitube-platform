@@ -107,6 +107,8 @@ const PROBLEM_STATUS: Readonly<Record<ErrorCode, number>> = {
   [ErrorCodes.CHANNEL_MEMBER_EXISTS]: 409,
   [ErrorCodes.CHANNEL_MEMBER_NOT_FOUND]: 404,
   [ErrorCodes.CHANNEL_OWNER_IMMUTABLE]: 400,
+  [ErrorCodes.CHANNEL_LIMIT_REACHED]: 409,
+  [ErrorCodes.CHANNEL_NOT_OWNED]: 403,
   [ErrorCodes.WEBHOOK_LIMIT_REACHED]: 409,
   [ErrorCodes.EXPORT_IN_PROGRESS]: 409,
   [ErrorCodes.API_TOKEN_LIMIT_REACHED]: 409,

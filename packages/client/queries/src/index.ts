@@ -1,3 +1,5 @@
+export * from './account-slots';
+export { ACCENTS, type Accent } from './accounts';
 export * from './acting-channel';
 export * from './api-base-url';
 export * from './api-client';
@@ -9,6 +11,10 @@ export * from './video-tool-queries';
 export * from './comment-queries';
 export * from './create-query-client';
 export * from './ensure-found';
+export * from './identities';
+export * from './identity-settings-functions';
+/** @internal */
+export { createIdentityStore } from './identity-store';
 export * from './keyset-paging';
 export * from './membership-queries';
 export * from './channel-moderation-queries';
@@ -33,11 +39,13 @@ export { SESSION_COOKIE } from './session-config';
 export * from './session-functions';
 export * from './session-middleware';
 export * from './session-provider';
+export * from './session-sync';
 export * from './sign-in-button';
 export * from './use-failure-toast';
 export { useLiveChat } from './use-live-chat';
 export { useLiveVideoEvents, type ViewerSample } from './use-live-video-events';
 export * from './use-sign-out';
+export * from './use-tab-identity';
 /** @public */
 export { UserEventStream, useUserEvent } from './user-event-stream';
 export * from './video-queries';

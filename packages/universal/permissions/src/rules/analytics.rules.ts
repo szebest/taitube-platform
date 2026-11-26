@@ -1,6 +1,6 @@
 import type { AbilityBuilder } from '@casl/ability';
 import { type AppAbility, type UserContext, isSignedInRole } from '../types/index';
-import { ownersWith } from './memberships';
+import { channelsWith } from './memberships';
 
 export function defineAnalyticsRules(
   user: UserContext | null,
@@ -10,6 +10,6 @@ export function defineAnalyticsRules(
 
   builder.can('read', ['Analytics', 'VideoStats'], { ownerId: user.id });
 
-  const readable = ownersWith(user, 'analytics.read');
-  if (readable) builder.can('read', ['Analytics', 'VideoStats'], { ownerId: readable });
+  const readable = channelsWith(user, 'analytics.read');
+  if (readable) builder.can('read', ['Analytics', 'VideoStats'], { channelId: readable });
 }

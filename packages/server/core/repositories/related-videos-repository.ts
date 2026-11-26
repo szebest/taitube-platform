@@ -5,7 +5,8 @@ import type { VideoRecord } from './video-repository';
 
 export interface RelatedVideosOptions {
   videoId: string;
-  ownerId: string;
+  /** The channel the video is on; its other videos are related. */
+  channelId: string;
   categoryId: string | null;
   tags: readonly string[];
   /** The caller's own uploads never come back. */

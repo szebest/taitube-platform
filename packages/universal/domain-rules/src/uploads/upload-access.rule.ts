@@ -3,10 +3,11 @@ import { type UserContext, canAccessUpload } from '@vp/permissions';
 import { type AuthorizationFailure, authorize } from '../authorize';
 import { type UploadNotFound, uploadNotFound } from './failures';
 
-/** What the rule needs to answer: who owns the video the upload writes into. */
+/** What the rule needs to answer: which channel and owner hold the video the upload writes into. */
 export interface OwnedUpload {
   readonly id: string;
   readonly ownerId: string;
+  readonly channelId: string;
 }
 
 export interface UploadAccessInput<T extends OwnedUpload> {
@@ -31,8 +32,8 @@ export function decideUploadAccess<T extends OwnedUpload>(
 
   const allowed = canAccessUpload({
     user: actor,
-    upload: { ownerId: upload.ownerId },
-    video: { ownerId: upload.ownerId },
+    upload: { ownerId: upload.ownerId, channelId: upload.channelId },
+    video: { ownerId: upload.ownerId, channelId: upload.channelId },
   });
 
   return map(

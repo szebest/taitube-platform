@@ -36,17 +36,26 @@ type Call = {
   clientAddress?: string;
   refresh?: RefreshSession;
   onRequest?: (request: Request) => void;
+  /** The slot the call names; `null` for a call that names none. */
+  slot?: number | null;
 };
 
 /** A browser's call to the app's `/api`, answered the way the app's server answers it. */
 function callProxy(
   path: string,
-  { app = APP, init = {}, clientAddress, refresh, onRequest }: Call = {}
+  { app = APP, init = {}, clientAddress, refresh, onRequest, slot = 0 }: Call = {}
 ) {
   const request = Object.assign(new Request(`${app}${path}`, init), { ip: clientAddress });
   onRequest?.(request);
-  return requestHandler(() => proxyToApi(request, { apiBaseUrl: API, refresh }))(request, {});
+  const named = { pathname: new URL(request.url).pathname, slot: slot ?? undefined };
+  return requestHandler(() => proxyToApi(request, { apiBaseUrl: API, refresh }, named))(
+    request,
+    {}
+  );
 }
+
+const cookieNames = (answer: Response) =>
+  answer.headers.getSetCookie().map((set) => set.split(';')[0]);
 
 describe('@vp/queries: the same-origin API proxy', () => {
   it('forwards the method, the path under /api, the query and the body, and relays the answer', async () => {
@@ -93,6 +102,34 @@ describe('@vp/queries: the same-origin API proxy', () => {
   });
 
   it.each([
+    { slot: 0, authorization: 'Bearer zero' },
+    { slot: 1, authorization: 'Bearer one' },
+    { slot: 2, authorization: null },
+  ])("sends slot $slot's token alone as the bearer", async ({ slot, authorization }) => {
+    const sent = api();
+
+    await callProxy('/api/v1/me/account', {
+      init: { headers: { cookie: 'vp.session.0=zero; vp.session.1=one' } },
+      slot,
+    });
+
+    expect(sent[0]?.headers.get('authorization')).toBe(authorization);
+  });
+
+  it('refuses a write that names no slot, which a cross-site form cannot', async () => {
+    const sent = api();
+
+    const answer = await callProxy('/api/v1/videos/v1/reactions', {
+      init: { method: 'POST', headers: { cookie: 'vp.session.0=zero' } },
+      slot: null,
+    });
+
+    expect(answer.status).toBe(403);
+    expect(await answer.json()).toMatchObject({ code: 'FORBIDDEN', status: 403 });
+    expect(sent).toEqual([]);
+  });
+
+  it.each([
     { header: 'x-channel-id', value: '00000000-0000-7000-8000-0000000000c1' },
     { header: 'x-viewer-session', value: '0190c3a0-5e1d-7000-8000-0000000000f1' },
   ])('forwards $header, for the API to decide by', async ({ header, value }) => {
@@ -133,6 +170,31 @@ describe('@vp/queries: the same-origin API proxy', () => {
       });
 
       expect(sent[0]?.headers.get('x-forwarded-for')).toBe(expected);
+    }
+  );
+
+  it.each([
+    { apiVary: 'Authorization', vary: 'Authorization, x-account-slot, x-channel-id' },
+    { apiVary: null, vary: 'x-account-slot, x-channel-id' },
+    { apiVary: '*', vary: '*' },
+  ])(
+    'varies an answer whose API Vary is $apiVary on the slot and channel the browser named',
+    async ({ apiVary, vary }) => {
+      api(() =>
+        HttpResponse.json(
+          {},
+          {
+            headers: {
+              'cache-control': 'private, max-age=30',
+              ...(apiVary ? { vary: apiVary } : {}),
+            },
+          }
+        )
+      );
+
+      const answer = await callProxy('/api/v1/feed');
+
+      expect(answer.headers.get('vary')).toBe(vary);
     }
   );
 
@@ -183,8 +245,9 @@ describe('@vp/queries: the same-origin API proxy', () => {
     const refresh = vi.fn(async () => 'fresh');
 
     const answer = await callProxy('/api/v1/videos', {
-      init: { method: 'DELETE', headers: { cookie: 'vp.session=stale' } },
+      init: { method: 'DELETE', headers: { cookie: 'vp.session.0=other; vp.session.1=stale' } },
       refresh,
+      slot: 1,
     });
 
     expect(sent.map(({ method, headers }) => [method, headers.get('authorization')])).toEqual([
@@ -193,20 +256,43 @@ describe('@vp/queries: the same-origin API proxy', () => {
     ]);
     expect(refresh).toHaveBeenCalledExactlyOnceWith('stale');
     expect(answer.status).toBe(200);
-    expect(answer.headers.getSetCookie()).toEqual([expect.stringMatching(/^vp\.session=fresh;/)]);
+    expect(cookieNames(answer)).toEqual(['vp.session.1=fresh']);
   });
 
-  it('clears a session the API refused when there is no refresh to be had, and passes the 401 on', async () => {
+  it('clears the one slot the API refused when there is no refresh to be had, marks it expired, and passes the 401 on', async () => {
     const sent = api(refused);
+    const accounts = {
+      defaultSlot: 1,
+      slots: [0, 1].map((slot) => ({
+        slot,
+        userId: `user-${slot}`,
+        label: `Account ${slot}`,
+        avatarUrl: null,
+        channel: null,
+        expired: false,
+      })),
+    };
 
     const answer = await callProxy('/api/v1/me/account', {
-      init: { headers: { cookie: 'vp.session=stale' } },
+      init: {
+        headers: {
+          cookie: `vp.session.0=valid; vp.session.1=stale; vp.accounts=${encodeURIComponent(JSON.stringify(accounts))}`,
+        },
+      },
+      slot: 1,
     });
 
     expect(sent).toHaveLength(1);
     expect(answer.status).toBe(401);
-    expect(answer.headers.getSetCookie()).toEqual([
-      expect.stringMatching(/^vp\.session=; Max-Age=0;/),
+    expect(answer.headers.getSetCookie()).toHaveLength(2);
+    const [cleared, marked] = answer.headers.getSetCookie();
+    expect(cleared).toMatch(/^vp\.session\.1=; Max-Age=0;/);
+    const written = JSON.parse(
+      decodeURIComponent(marked?.split(';')[0]?.slice('vp.accounts='.length) ?? '')
+    );
+    expect(written.slots.map(({ expired }: { expired: boolean }) => expired)).toEqual([
+      false,
+      true,
     ]);
   });
 

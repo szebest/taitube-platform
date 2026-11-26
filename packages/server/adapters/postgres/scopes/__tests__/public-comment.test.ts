@@ -17,10 +17,12 @@ describe('adapters/postgres: public comment scope', () => {
     expect(sqlParams(scope)).toEqual(['viewer-1']);
   });
 
-  it('reads a ban of the video owner channel, never one of another channel', () => {
+  it('reads a ban of the channel the video is on, never one of another channel', () => {
     const text = sqlText(ownOrPublicScope(null));
 
-    expect(text).toContain('"public_scope_video"."owner_id" = "public_scope_channel"."user_id"');
+    expect(text).toContain(
+      '"public_scope_video"."channel_id" = "public_scope_restriction"."channel_id"'
+    );
     expect(text).toContain('"public_scope_video"."id" = "video_comments"."video_id"');
   });
 

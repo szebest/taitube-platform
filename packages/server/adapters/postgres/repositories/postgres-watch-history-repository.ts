@@ -87,7 +87,7 @@ export class PostgresWatchHistoryRepository implements WatchHistoryRepositoryPor
           })
           .from(wh)
           .innerJoin(v, eq(v.id, wh.videoId))
-          .leftJoin(ch, eq(ch.userId, v.ownerId))
+          .leftJoin(ch, eq(ch.id, v.channelId))
           .where(
             drizzleWhere(
               eq(wh.userId, viewer.id),

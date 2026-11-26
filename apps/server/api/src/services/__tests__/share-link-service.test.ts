@@ -4,6 +4,7 @@ import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { MAX_ACTIVE_SHARE_LINKS } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
+import { seedPrimaryChannel } from '../../__tests__/test-app';
 import { ShareLinkService } from '../share-link-service';
 
 const OWNER: UserContext = { id: '00000000-0000-7000-8000-0000000001a1', role: 'CREATOR' };
@@ -35,6 +36,7 @@ describe('apps/server/api/services: ShareLinkService', () => {
       await repositories.videos.create({
         id: VIDEO,
         ownerId: OWNER.id,
+        channelId: await seedPrimaryChannel(repositories, OWNER.id),
         title: 'Shared',
         visibility: 'private',
         status: 'READY',

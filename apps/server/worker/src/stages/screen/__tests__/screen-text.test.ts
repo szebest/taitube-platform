@@ -23,6 +23,7 @@ describe('screenText', () => {
       await repositories.videos.create({
         id: videoId,
         ownerId: SEEDED.userId,
+        channelId: SEEDED.channelId,
         title: 'A walk',
         status: 'READY',
         visibility: 'public',

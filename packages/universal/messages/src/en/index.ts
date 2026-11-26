@@ -1,3 +1,4 @@
+import { accounts } from './accounts';
 import { auth } from './auth';
 import { browse } from './browse';
 import { channels } from './channels';
@@ -24,6 +25,7 @@ import { videos } from './videos';
 import { watch } from './watch';
 
 export const en = {
+  accounts,
   auth,
   browse,
   channels,

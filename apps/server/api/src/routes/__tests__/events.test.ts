@@ -183,7 +183,13 @@ describe('SSE event routes: a broadcast', () => {
     expectOk(
       await repositories.liveStreams.goLive({
         streamId: STREAM_ID,
-        video: { id: VIDEO_ID, ownerId: CREATOR, visibility: 'public', sourceKey: 'live/' },
+        video: {
+          id: VIDEO_ID,
+          ownerId: CREATOR,
+          channelId: channel.id,
+          visibility: 'public',
+          sourceKey: 'live/',
+        },
         startedAt: new Date(),
         outbox: [],
       })

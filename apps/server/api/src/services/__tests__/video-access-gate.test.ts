@@ -4,6 +4,7 @@ import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { Video } from '@vp/domain';
 import { ErrorCodes, databaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
+import { seedPrimaryChannel } from '../../__tests__/test-app';
 import { NO_VIDEO_ACCESS, type VideoAccess, VideoAccessGate } from '../video-access-gate';
 
 const OWNER: UserContext = { id: '00000000-0000-7000-8000-0000000000c1', role: 'CREATOR' };
@@ -22,6 +23,7 @@ describe('apps/server/api/services: VideoAccessGate', () => {
       await repositories.videos.create({
         id,
         ownerId: OWNER.id,
+        channelId: await seedPrimaryChannel(repositories, OWNER.id),
         title: 'Seen',
         visibility,
         status: 'READY',

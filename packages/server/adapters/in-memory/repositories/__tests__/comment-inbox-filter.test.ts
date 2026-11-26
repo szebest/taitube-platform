@@ -5,6 +5,7 @@ const at = (minute: number) => new Date(Date.UTC(2026, 2, 1, 12, minute));
 
 const question = {
   id: 'q',
+  videoId: 'video-1',
   parentId: null,
   authorId: 'viewer-1',
   createdAt: at(0),
@@ -45,7 +46,10 @@ describe('matchesInbox', () => {
   });
 
   it('keeps the comments of restricted authors for the restricted filter', () => {
-    const restricted = { ...neverReported, isRestricted: (id: string) => id === 'viewer-1' };
+    const restricted = {
+      ...neverReported,
+      isRestricted: (row: { authorId: string }) => row.authorId === 'viewer-1',
+    };
 
     expect(matchesInbox(question, 'restricted', OWNER, [question], restricted)).toBe(true);
     expect(matchesInbox(question, 'restricted', OWNER, [question], neverReported)).toBe(false);

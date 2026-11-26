@@ -7,7 +7,13 @@ const HOUR_MS = 3_600_000;
 
 const video = (id: string, overrides: { generation?: number; updatedAt?: Date } = {}) => ({
   ...newVideoRecord(
-    { id, ownerId: 'owner-1', sourceKey: `raw/${id}.mp4`, status: 'PROCESSING' },
+    {
+      id,
+      ownerId: 'owner-1',
+      channelId: 'channel-1',
+      sourceKey: `raw/${id}.mp4`,
+      status: 'PROCESSING',
+    },
     new Date(NOW)
   ),
   ...overrides,

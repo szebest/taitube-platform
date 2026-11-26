@@ -46,7 +46,6 @@ export function provideVideoTools(container: Container, now: Clock = realClock):
           categories: c.get(Repo.categories),
           events: c.get(Repo.events),
           outbox: c.get(Repo.outbox),
-          channels: c.get(Repo.channels),
           audit: c.get(Repo.channelAudit),
           revisions: c.get(Repo.entityRevisions),
           chapters: c.get(Repo.videoChapters),

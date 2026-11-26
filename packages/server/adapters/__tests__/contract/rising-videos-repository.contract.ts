@@ -52,6 +52,7 @@ export function describeRisingVideosRepositoryContract(makeSubject: MakeReposito
         publicVideo({
           id: video.id,
           ownerId: creatorId(n),
+          channelId: creatorId(n + 50),
           ...(video.visibility && { visibility: video.visibility }),
         }),
         new Date(NOW - (video.daysAgo ?? 1) * 24 * HOUR_MS)
@@ -151,7 +152,7 @@ export function describeRisingVideosRepositoryContract(makeSubject: MakeReposito
     it('takes one video for each channel, the one finished most', async () => {
       await publish(1, { id: VIDEO_IDS.a, sessions: 100, completed: 10 });
       await subject.seedVideo(
-        publicVideo({ id: VIDEO_IDS.b, ownerId: creatorId(1) }),
+        publicVideo({ id: VIDEO_IDS.b, ownerId: creatorId(1), channelId: creatorId(51) }),
         new Date(NOW - HOUR_MS)
       );
       await retain(VIDEO_IDS.b, 100, 90);
@@ -191,7 +192,7 @@ export function describeRisingVideosRepositoryContract(makeSubject: MakeReposito
         displayName: 'C',
       });
       await subject.seedVideo(
-        publicVideo({ id: VIDEO_IDS.a, ownerId: creatorId(1) }),
+        publicVideo({ id: VIDEO_IDS.a, ownerId: creatorId(1), channelId: creatorId(51) }),
         new Date(NOW - HOUR_MS)
       );
 

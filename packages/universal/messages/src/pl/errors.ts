@@ -126,6 +126,10 @@ export const errors = {
   ),
   watchPartyCredentialInvalid: dt('Twoje miejsce gościa wygasło. Dołącz do imprezy ponownie.'),
   channelMembershipRequired: dt('Nie należysz już do zespołu tego kanału.'),
+  channelLimitReached: dt(
+    'Masz już tyle kanałów, ile może mieć konto. Usuń jeden, aby dodać kolejny.'
+  ),
+  channelNotOwned: dt('Tylko właściciel tego kanału może to zrobić.'),
   channelInviteNotFound: dt('To zaproszenie nie istnieje.'),
   channelInviteNotPending: dt(
     'To zaproszenie jest już nieaktualne: zostało przyjęte, odrzucone, cofnięte albo wygasło.'

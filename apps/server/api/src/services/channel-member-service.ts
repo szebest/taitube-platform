@@ -22,7 +22,7 @@ import { profileOf, profilesOf, toInviteView, toMemberView } from './channel-tea
 export interface ChannelMemberServiceDeps {
   members: ChannelMemberRepositoryPort;
   invites: Pick<ChannelInviteRepositoryPort, 'listPending'>;
-  channels: Pick<ChannelRepositoryPort, 'findByUserIds'>;
+  channels: Pick<ChannelRepositoryPort, 'findPrimaryByUserIds' | 'findByIds'>;
 }
 
 /** The team of the acting channel, and the channels the caller works on. */
@@ -113,9 +113,11 @@ export class ChannelMemberService {
     const held = await this.deps.members.membershipsOf(user.id);
     if (isErr(held)) return held;
 
-    const owners = await this.deps.channels.findByUserIds(held.value.map(({ ownerId }) => ownerId));
-    if (isErr(owners)) return owners;
-    const byId = new Map(owners.value.map((channel) => [channel.id, channel]));
+    const channels = await this.deps.channels.findByIds(
+      held.value.map(({ channelId }) => channelId)
+    );
+    if (isErr(channels)) return channels;
+    const byId = new Map(channels.value.map((channel) => [channel.id, channel]));
 
     return ok({
       items: held.value.flatMap(({ channelId, ownerId, role }): ChannelMembershipView[] => {

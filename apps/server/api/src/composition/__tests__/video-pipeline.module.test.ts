@@ -3,6 +3,7 @@ import { expectOk } from '@kit/testing/result';
 import { Adapters, registerAdapters } from '@vp/adapters/composition';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { replacementSourceKey } from '@vp/storage';
+import { seedPrimaryChannel } from '../../__tests__/test-app';
 import { registerServices, Services } from '../services.module';
 
 const OWNER = { id: '00000000-0000-7000-8000-00000000f701', role: 'CREATOR' } as const;
@@ -17,6 +18,7 @@ describe('apps/server/api/composition: video pipeline module', () => {
       await repositories.videos.create({
         id: VIDEO,
         ownerId: OWNER.id,
+        channelId: await seedPrimaryChannel(repositories, OWNER.id),
         status: 'READY',
         sourceKey: `raw/${VIDEO}/source.mp4`,
         durationMs: 60_000,

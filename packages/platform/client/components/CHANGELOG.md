@@ -3,6 +3,7 @@
 ## 0.2.0
 
 - `SpriteStrip`, `spriteFrameStyle`, `SpriteSheet` and `SpriteStripShade`: the frames of a video side by side from its thumbnail sprite sheet, with an optional shade outside a range.
+- `IdentityRow`, `ActingAs` and `IdentitySwitcher`: the identity switcher parts, with `IDENTITY_ITEM`, `jumpToIdentityItem` and `useIdentityRow`.
 
 ## 0.1.0
 

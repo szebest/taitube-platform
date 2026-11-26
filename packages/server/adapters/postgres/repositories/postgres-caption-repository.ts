@@ -68,19 +68,19 @@ export class PostgresCaptionRepository extends CaptionRepository {
     return map(rows, (updated) => updated.length > 0);
   }
 
-  channelDefault(ownerId: string) {
-    return this.read('channelDefault', () => channelDefaultOf(this.db, ownerId));
+  channelDefault(channelId: string) {
+    return this.read('channelDefault', () => channelDefaultOf(this.db, channelId));
   }
 
   async setChannelDefault(
-    ownerId: string,
+    channelId: string,
     enabled: boolean
   ): Promise<Result<boolean, DatabaseUnavailable>> {
     const rows = await this.read('setChannelDefault', () =>
       this.db
         .update(channels)
         .set({ autoCaptionsDefault: enabled })
-        .where(eq(channels.userId, ownerId))
+        .where(eq(channels.id, channelId))
         .returning({ id: channels.id })
     );
     return map(rows, (updated) => updated.length > 0);

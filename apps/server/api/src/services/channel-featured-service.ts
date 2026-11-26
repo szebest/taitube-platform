@@ -96,7 +96,7 @@ export class ChannelFeaturedService {
 
   private async mostViewed(channel: Channel): Promise<Result<Video[], DatabaseUnavailable>> {
     const found = await this.deps.videos.listPublic({
-      ownerId: channel.userId,
+      channelId: channel.id,
       format: 'standard',
       sort: 'popular',
       limit: FEATURED_VIDEOS_MAX,

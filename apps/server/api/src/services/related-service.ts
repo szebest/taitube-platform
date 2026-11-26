@@ -54,7 +54,7 @@ export class RelatedService {
   ): Promise<Result<ReasonedVideo[], DatabaseUnavailable>> {
     const found = await this.deps.related.find({
       videoId: video.id,
-      ownerId: video.ownerId,
+      channelId: video.channelId,
       categoryId: video.categoryId ?? null,
       tags: video.tags ?? [],
       excludeOwnerId: viewer?.id ?? null,

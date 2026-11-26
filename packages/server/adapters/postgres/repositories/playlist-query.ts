@@ -48,7 +48,7 @@ export function entriesOf(db: PostgresDatabase, playlistId: string, viewer: User
     })
     .from(ranked)
     .innerJoin(v, eq(v.id, ranked.videoId))
-    .leftJoin(ch, eq(ch.userId, v.ownerId))
+    .leftJoin(ch, eq(ch.id, v.channelId))
     .where(watchableVideoScope(viewer))
     .orderBy(asc(ranked.position));
 }

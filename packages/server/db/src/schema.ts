@@ -25,6 +25,7 @@ import {
   pgTable,
   text,
   unique,
+  uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
 import { timestamptz } from './columns';
@@ -53,8 +54,8 @@ export const channels = pgTable(
     id: uuid('id').primaryKey(),
     userId: uuid('user_id')
       .notNull()
-      .unique()
       .references(() => users.id, { onDelete: 'cascade' }),
+    isPrimary: boolean('is_primary').notNull().default(false),
     handle: text('handle').notNull().unique(),
     displayName: text('display_name').notNull(),
     avatarUrl: text('avatar_url'),
@@ -77,6 +78,9 @@ export const channels = pgTable(
   (table) => [
     index('channels_handle_idx').on(table.handle),
     index('channels_user_id_idx').on(table.userId),
+    uniqueIndex('channels_user_primary_unique')
+      .on(table.userId)
+      .where(sql`${table.isPrimary}`),
   ]
 );
 
@@ -103,6 +107,9 @@ export const videos = pgTable(
     ownerId: uuid('owner_id')
       .notNull()
       .references(() => users.id),
+    channelId: uuid('channel_id')
+      .notNull()
+      .references(() => channels.id),
     categoryId: uuid('category_id').references(() => categories.id, { onDelete: 'set null' }),
     tags: text('tags').array().notNull().default([]),
     customThumbnailKey: text('custom_thumbnail_key'),
@@ -146,12 +153,13 @@ export const videos = pgTable(
       table.createdAt.desc().nullsFirst(),
       table.id.desc().nullsFirst()
     ),
+    index('videos_channel_created_idx').on(table.channelId, table.createdAt.desc()),
     index('videos_status_updated_idx').on(table.status, table.updatedAt),
     index('videos_category_id_idx').on(table.categoryId),
     index('videos_views_count_idx').on(table.viewsCount.desc()),
     index('videos_tags_idx').using('gin', table.tags),
     index('videos_channel_stats_idx')
-      .on(table.ownerId, table.viewsCount)
+      .on(table.channelId, table.viewsCount)
       .where(
         sql`${table.status} = 'READY' AND ${table.visibility} = 'public' AND ${table.deletedAt} IS NULL`
       ),

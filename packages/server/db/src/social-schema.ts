@@ -37,6 +37,9 @@ export const channelSubscriptions = pgTable(
     subscriberId: uuid('subscriber_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
+    subscriberChannelId: uuid('subscriber_channel_id')
+      .notNull()
+      .references(() => channels.id, { onDelete: 'cascade' }),
     channelId: uuid('channel_id')
       .notNull()
       .references(() => channels.id, { onDelete: 'cascade' }),
@@ -48,9 +51,13 @@ export const channelSubscriptions = pgTable(
     createdAt: timestamptz('created_at').notNull().defaultNow(),
   },
   (table) => [
-    unique('channel_subscriptions_subscriber_channel_unique').on(
-      table.subscriberId,
+    unique('channel_subscriptions_subscriber_channel_channel_unique').on(
+      table.subscriberChannelId,
       table.channelId
+    ),
+    check(
+      'channel_subscriptions_not_self',
+      sql`${table.subscriberChannelId} <> ${table.channelId}`
     ),
     index('channel_subscriptions_subscriber_created_idx').on(
       table.subscriberId,

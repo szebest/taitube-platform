@@ -34,7 +34,7 @@ export function getUserPermissions(
   const token = user?.token;
   if (!(user && token)) return buildAbility(user, share);
   const onChannel = onTokenChannel(user, token);
-  return withinScopes(buildAbility(onChannel, share), onChannel, token);
+  return withinScopes(buildAbility(onChannel, share), token);
 }
 
 function buildAbility(user: UserContext | null, share: ShareGrant | null): AppAbility {

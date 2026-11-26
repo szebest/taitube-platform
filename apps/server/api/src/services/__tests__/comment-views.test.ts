@@ -8,6 +8,7 @@ const THREAD: CommentThread = {
   id: 'c-1',
   videoId: 'v-1',
   authorId: 'u-1',
+  authorChannelId: 'ch-1',
   parentId: null,
   content: 'hello',
   isPinned: false,
@@ -28,6 +29,7 @@ const THREAD: CommentThread = {
   replyCount: 1,
 };
 
+const VIDEO = { ownerId: 'owner-1', channelId: 'ch-owner' };
 const OWNER: UserContext = { id: 'owner-1', role: 'CREATOR' };
 const AUTHOR: UserContext = { id: 'u-1', role: 'USER' };
 const STRANGER: UserContext = { id: 'u-2', role: 'USER' };
@@ -41,38 +43,36 @@ const PUBLISHED_VIEW = { status: 'published', moderation: null };
 
 describe('apps/server/api/services: comment views', () => {
   it('renders dates as ISO strings and keeps the author under author', () => {
-    expect(toCommentView({ ...THREAD, moderationState: 'published' }, 'owner-1', STRANGER)).toEqual(
-      {
-        id: 'c-1',
-        videoId: 'v-1',
-        parentId: null,
-        content: 'hello',
-        isPinned: false,
-        isEdited: true,
-        likeCount: 3,
-        heartedByCreator: false,
-        replyCount: 1,
-        ...PUBLISHED_VIEW,
-        author: {
-          userId: 'u-1',
-          channelId: 'ch-1',
-          handle: 'u1',
-          displayName: 'U1',
-          avatarUrl: null,
-          isCreator: false,
-        },
-        createdAt: AT.toISOString(),
-        updatedAt: AT.toISOString(),
-      }
-    );
+    expect(toCommentView({ ...THREAD, moderationState: 'published' }, VIDEO, STRANGER)).toEqual({
+      id: 'c-1',
+      videoId: 'v-1',
+      parentId: null,
+      content: 'hello',
+      isPinned: false,
+      isEdited: true,
+      likeCount: 3,
+      heartedByCreator: false,
+      replyCount: 1,
+      ...PUBLISHED_VIEW,
+      author: {
+        userId: 'u-1',
+        channelId: 'ch-1',
+        handle: 'u1',
+        displayName: 'U1',
+        avatarUrl: null,
+        isCreator: false,
+      },
+      createdAt: AT.toISOString(),
+      updatedAt: AT.toISOString(),
+    });
   });
 
   it('badges the author who owns the video', () => {
-    expect(toCommentView(THREAD, 'u-1', null).author.isCreator).toBe(true);
+    expect(toCommentView(THREAD, { ...VIDEO, ownerId: 'u-1' }, null).author.isCreator).toBe(true);
   });
 
   it('shows the creator heart as a flag, never the instant', () => {
-    const hearted = toCommentView({ ...THREAD, heartedAt: AT }, 'owner-1', null);
+    const hearted = toCommentView({ ...THREAD, heartedAt: AT }, VIDEO, null);
 
     expect(hearted).toMatchObject({ heartedByCreator: true });
     expect(hearted).not.toHaveProperty('heartedAt');
@@ -113,7 +113,7 @@ describe('apps/server/api/services: comment views', () => {
     },
     { scenario: 'nobody signed in', viewer: null, disclosure: 'visible', seen: PUBLISHED_VIEW },
   ])('shows a held comment to $scenario', ({ viewer, disclosure, seen }) => {
-    const view = toCommentView({ ...THREAD, moderationDisclosure: disclosure }, 'owner-1', viewer);
+    const view = toCommentView({ ...THREAD, moderationDisclosure: disclosure }, VIDEO, viewer);
 
     expect(view).toMatchObject(seen);
   });
@@ -121,7 +121,7 @@ describe('apps/server/api/services: comment views', () => {
   it('tells the author of a visibly hidden comment its state and nothing of who did it', () => {
     const view = toCommentView(
       { ...THREAD, moderationState: 'hidden', moderationDisclosure: 'visible' },
-      'owner-1',
+      VIDEO,
       AUTHOR
     );
 

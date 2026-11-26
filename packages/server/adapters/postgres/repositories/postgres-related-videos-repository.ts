@@ -25,7 +25,7 @@ export class PostgresRelatedVideosRepository implements RelatedVideosRepositoryP
   constructor(private readonly db: PostgresDatabase) {}
 
   async find(options: RelatedVideosOptions): Promise<Result<RelatedVideo[], DatabaseUnavailable>> {
-    const { videoId, ownerId, categoryId, tags, excludeOwnerId, limit } = options;
+    const { videoId, channelId, categoryId, tags, excludeOwnerId, limit } = options;
 
     const eligible = drizzleWhere(
       publicFeedScope(),
@@ -71,7 +71,7 @@ export class PostgresRelatedVideosRepository implements RelatedVideosRepositoryP
     ].flatMap((source) => (source ? [source] : []));
     const candidates = union(
       this.db.select({ id: coWatch.videoId }).from(coWatch),
-      sourceOf(eq(v.ownerId, ownerId), [desc(v.createdAt), desc(v.id)]),
+      sourceOf(eq(v.channelId, channelId), [desc(v.createdAt), desc(v.id)]),
       ...optional
     ).as('candidates');
 
@@ -81,7 +81,7 @@ export class PostgresRelatedVideosRepository implements RelatedVideosRepositoryP
           .with(coWatch)
           .select({
             id: v.id,
-            ownerId: v.ownerId,
+            channelId: v.channelId,
             categoryId: v.categoryId,
             tags: v.tags,
             viewsCount: v.viewsCount,
@@ -104,7 +104,7 @@ export class PostgresRelatedVideosRepository implements RelatedVideosRepositoryP
         signals: {
           coWatchers: Number(row.watchers ?? 0),
           sharedTags: row.tags.filter((tag) => wanted.has(tag)).length,
-          sameChannel: row.ownerId === ownerId,
+          sameChannel: row.channelId === channelId,
           sameCategory: categoryId !== null && row.categoryId === categoryId,
         },
       }))

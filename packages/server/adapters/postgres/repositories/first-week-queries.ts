@@ -36,7 +36,7 @@ export async function firstWeekRows(
 
 export async function recentPeerVideos(
   db: PostgresDatabase,
-  ownerId: string,
+  channelId: string,
   excludeVideoId: string,
   readyBefore: Date,
   limit: number
@@ -46,7 +46,7 @@ export async function recentPeerVideos(
     .from(v)
     .where(
       and(
-        eq(v.ownerId, ownerId),
+        eq(v.channelId, channelId),
         ne(v.id, excludeVideoId),
         eq(v.visibility, PUBLIC_FEED_VISIBILITY),
         eq(v.status, PUBLIC_FEED_STATUS),

@@ -311,6 +311,13 @@
       "breakpoints": true
     },
     {
+      "idx": 44,
+      "version": "7",
+      "when": 1794986951691,
+      "tag": "0044_multiple_channels",
+      "breakpoints": true
+    },
+    {
       "idx": 45,
       "version": "7",
       "when": 1794994229808,

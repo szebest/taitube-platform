@@ -13,7 +13,8 @@ export const CacheKeys = {
     `${NAMESPACE}:user:${userId}:reactions:${videoId}`,
   userPlayhead: (userId: string, videoId: string) =>
     `${NAMESPACE}:user:${userId}:playhead:${videoId}`,
-  userSubscriptions: (userId: string) => `${NAMESPACE}:user:${userId}:subscriptions`,
+  channelSubscriptions: (subscriberChannelId: string) =>
+    `${NAMESPACE}:channel:${subscriberChannelId}:subscriptions`,
   channelSubscriberCount: (channelId: string) =>
     `${NAMESPACE}:channel:${channelId}:subscriber_count`,
   searchQuery: (type: string, hash: string) => `${NAMESPACE}:search:q:${type}:${hash}`,

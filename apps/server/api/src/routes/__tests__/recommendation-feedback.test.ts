@@ -23,7 +23,7 @@ describe('recommendation feedback routes', () => {
   });
 
   const channelId = async () => {
-    const channel = await ctx.repositories.channels.findByUserId(
+    const channel = await ctx.repositories.channels.findPrimaryByUserId(
       '44444444-4444-7444-8444-444444444444'
     );
     return channel.ok && channel.value ? channel.value.id : '';

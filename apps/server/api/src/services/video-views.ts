@@ -47,6 +47,7 @@ export interface ExperimentTag {
 export interface VideoDetailView {
   id: string;
   ownerId: string;
+  channelId: string;
   title: string | null;
   description: string | null;
   visibility: VideoVisibility;
@@ -97,6 +98,7 @@ export interface ViewerProgressView {
 export interface VideoSummaryView {
   id: string;
   ownerId: string;
+  channelId: string;
   title: string | null;
   description: string | null;
   visibility: VideoVisibility;
@@ -168,6 +170,7 @@ export function toVideoCardView(
   return {
     id: v.id,
     ownerId: v.ownerId,
+    channelId: v.channelId,
     title: v.title,
     description: v.description,
     visibility: v.visibility,
@@ -198,16 +201,16 @@ export function toVideoSummaryView(
   return { ...toVideoCardView(v, cdn, sprite), channel };
 }
 
-export type ChannelOf = (ownerId: string) => ChannelCard | null;
+export type ChannelOf = (channelId: string) => ChannelCard | null;
 
 export async function loadChannelsOf(
-  channels: ChannelRepositoryPort,
-  ownerIds: readonly string[]
+  channels: Pick<ChannelRepositoryPort, 'findByIds'>,
+  channelIds: readonly string[]
 ): Promise<Result<ChannelOf, DatabaseUnavailable>> {
-  const found = await channels.findByUserIds(ownerIds);
+  const found = await channels.findByIds(channelIds);
   return map(found, (list) => {
-    const byOwner = new Map(list.map((channel) => [channel.userId, toChannelCard(channel)]));
-    return (ownerId: string) => byOwner.get(ownerId) ?? null;
+    const byId = new Map(list.map((channel) => [channel.id, toChannelCard(channel)]));
+    return (channelId: string) => byId.get(channelId) ?? null;
   });
 }
 
@@ -274,6 +277,7 @@ export function toVideoDetailView(
   return {
     id: video.id,
     ownerId: video.ownerId,
+    channelId: video.channelId,
     title: video.title,
     description: video.description,
     visibility: video.visibility,

@@ -9,7 +9,15 @@ import {
   RouterProvider,
 } from '@tanstack/react-router';
 import type { Account } from '@vp/api-contracts';
-import { ApiProvider, AppWords, GUEST, type Session, SessionProvider } from '@vp/queries';
+import {
+  ApiProvider,
+  AppWords,
+  createIdentityStore,
+  GUEST,
+  SESSION_KEY,
+  type Session,
+  SessionProvider,
+} from '@vp/queries';
 import { createContext, type PropsWithChildren, type ReactNode, use, useState } from 'react';
 import { pickLocale } from './decorator';
 import { type ApiReply, inMemoryApi } from './in-memory-api';
@@ -59,6 +67,14 @@ const VIEWER: Account = {
     createdAt: USER.createdAt,
     updatedAt: USER.createdAt,
   },
+  channels: [
+    {
+      id: '0190c3a0-5e1d-7000-8000-00000000c001',
+      handle: 'viewer',
+      displayName: 'The Viewer',
+      avatarUrl: null,
+    },
+  ],
 };
 
 const StoryContext = createContext<ReactNode>(null);
@@ -70,6 +86,7 @@ const ActiveContext = createContext<ActiveWords | undefined>(undefined);
 const PATHS = ['/', '/login', '/channel/$channelId', '/watch/$videoId'];
 
 function createStoryRouter(
+  queryClient: QueryClient,
   Providers: (props: PropsWithChildren<{ active: ActiveWords | undefined }>) => ReactNode
 ) {
   function Stage() {
@@ -79,7 +96,13 @@ function createStoryRouter(
   const routeTree = root.addChildren(
     PATHS.map((path) => createRoute({ getParentRoute: () => root, path }))
   );
-  return createRouter({ routeTree, history: createMemoryHistory({ initialEntries: ['/'] }) });
+  return createRouter({
+    routeTree,
+    history: createMemoryHistory({ initialEntries: ['/'] }),
+    context: {
+      identity: createIdentityStore({ identity: { slot: 0 }, prefixed: false }, queryClient),
+    },
+  });
 }
 
 function StoryApp({
@@ -91,18 +114,19 @@ function StoryApp({
   active: ActiveWords;
   children: ReactNode;
 }) {
-  const [client] = useState(
-    () =>
-      new QueryClient({
-        defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
-      })
-  );
-  const [api] = useState(() => inMemoryApi(parameters.api?.() ?? []));
-  const [toaster] = useState(createToaster);
   const session: Session =
     parameters.session === 'signed-in' ? { status: 'signed-in', account: VIEWER } : GUEST;
+  const [client] = useState(() => {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    });
+    queryClient.setQueryData(SESSION_KEY, session);
+    return queryClient;
+  });
+  const [api] = useState(() => inMemoryApi(parameters.api?.() ?? []));
+  const [toaster] = useState(createToaster);
   const [router] = useState(() =>
-    createStoryRouter(({ active: words, children: story }) => (
+    createStoryRouter(client, ({ active: words, children: story }) => (
       <AppWords active={words}>
         <ApiProvider api={api}>
           <SessionProvider session={session}>

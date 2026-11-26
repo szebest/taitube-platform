@@ -20,6 +20,7 @@ export function aStoredComment(overrides: Partial<StoredComment> = {}): StoredCo
     deletedAt: null,
     videoId: 'video-1',
     authorId: 'author-1',
+    authorChannelId: 'channel-author-1',
     content: 'hello',
     isPinned: false,
     isEdited: false,

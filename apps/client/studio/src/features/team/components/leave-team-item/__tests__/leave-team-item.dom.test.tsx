@@ -12,7 +12,7 @@ describe('apps/client/studio: LeaveTeamItem', () => {
         actingOn: OTHER_CHANNEL_ID,
       });
 
-      await user.click(screen.getByRole('button', { name: 'Switch channel' }));
+      await user.click(screen.getByRole('button', { name: 'Account' }));
 
       expect(await screen.findByRole('menuitem', { name: 'Leave this team' })).toBeInTheDocument();
     }
@@ -21,7 +21,7 @@ describe('apps/client/studio: LeaveTeamItem', () => {
   it('offers the owner of the channel no way to leave it', async () => {
     const { user } = await renderTeam('/team', { state: { memberships: [membership('editor')] } });
 
-    await user.click(screen.getByRole('button', { name: 'Switch channel' }));
+    await user.click(screen.getByRole('button', { name: 'Account' }));
     await screen.findByRole('menu');
 
     expect(screen.queryByRole('menuitem', { name: 'Leave this team' })).toBeNull();

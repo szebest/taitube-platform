@@ -121,6 +121,13 @@
           "primaryKey": false,
           "notNull": true
         },
+        "is_primary": {
+          "name": "is_primary",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
         "handle": {
           "name": "handle",
           "type": "text",
@@ -267,6 +274,22 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
+        },
+        "channels_user_primary_unique": {
+          "name": "channels_user_primary_unique",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"channels\".\"is_primary\"",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {
@@ -286,13 +309,6 @@
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "channels_user_id_unique": {
-          "name": "channels_user_id_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "user_id"
-          ]
-        },
         "channels_handle_unique": {
           "name": "channels_handle_unique",
           "nullsNotDistinct": false,
@@ -951,6 +967,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "channel_id": {
+          "name": "channel_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
         "category_id": {
           "name": "category_id",
           "type": "uuid",
@@ -1212,6 +1234,27 @@
           "method": "btree",
           "with": {}
         },
+        "videos_channel_created_idx": {
+          "name": "videos_channel_created_idx",
+          "columns": [
+            {
+              "expression": "channel_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": false,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
         "videos_status_updated_idx": {
           "name": "videos_status_updated_idx",
           "columns": [
@@ -1282,7 +1325,7 @@
           "name": "videos_channel_stats_idx",
           "columns": [
             {
-              "expression": "owner_id",
+              "expression": "channel_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -1308,6 +1351,19 @@
           "tableTo": "users",
           "columnsFrom": [
             "owner_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "videos_channel_id_channels_id_fk": {
+          "name": "videos_channel_id_channels_id_fk",
+          "tableFrom": "videos",
+          "tableTo": "channels",
+          "columnsFrom": [
+            "channel_id"
           ],
           "columnsTo": [
             "id"
@@ -1347,6 +1403,12 @@
         },
         "subscriber_id": {
           "name": "subscriber_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "subscriber_channel_id": {
+          "name": "subscriber_channel_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
@@ -1452,6 +1514,19 @@
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
+        "channel_subscriptions_subscriber_channel_id_channels_id_fk": {
+          "name": "channel_subscriptions_subscriber_channel_id_channels_id_fk",
+          "tableFrom": "channel_subscriptions",
+          "tableTo": "channels",
+          "columnsFrom": [
+            "subscriber_channel_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
         "channel_subscriptions_channel_id_channels_id_fk": {
           "name": "channel_subscriptions_channel_id_channels_id_fk",
           "tableFrom": "channel_subscriptions",
@@ -1481,17 +1556,22 @@
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "channel_subscriptions_subscriber_channel_unique": {
-          "name": "channel_subscriptions_subscriber_channel_unique",
+        "channel_subscriptions_subscriber_channel_channel_unique": {
+          "name": "channel_subscriptions_subscriber_channel_channel_unique",
           "nullsNotDistinct": false,
           "columns": [
-            "subscriber_id",
+            "subscriber_channel_id",
             "channel_id"
           ]
         }
       },
       "policies": {},
-      "checkConstraints": {},
+      "checkConstraints": {
+        "channel_subscriptions_not_self": {
+          "name": "channel_subscriptions_not_self",
+          "value": "\"channel_subscriptions\".\"subscriber_channel_id\" <> \"channel_subscriptions\".\"channel_id\""
+        }
+      },
       "isRLSEnabled": false
     },
     "public.subscription_events": {
@@ -1737,6 +1817,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "author_channel_id": {
+          "name": "author_channel_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
         "parent_id": {
           "name": "parent_id",
           "type": "uuid",
@@ -1960,6 +2046,27 @@
           "method": "btree",
           "with": {}
         },
+        "video_comments_author_channel_created_idx": {
+          "name": "video_comments_author_channel_created_idx",
+          "columns": [
+            {
+              "expression": "author_channel_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": false,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
         "video_comments_one_pinned_per_video_idx": {
           "name": "video_comments_one_pinned_per_video_idx",
           "columns": [
@@ -2025,6 +2132,19 @@
           "tableTo": "users",
           "columnsFrom": [
             "author_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "video_comments_author_channel_id_channels_id_fk": {
+          "name": "video_comments_author_channel_id_channels_id_fk",
+          "tableFrom": "video_comments",
+          "tableTo": "channels",
+          "columnsFrom": [
+            "author_channel_id"
           ],
           "columnsTo": [
             "id"
@@ -8936,6 +9056,92 @@
           "value": "cardinality(\"api_tokens\".\"scopes\") >= 1 AND \"api_tokens\".\"scopes\" <@ ARRAY['videos:read', 'videos:write', 'analytics:read', 'comments:read', 'comments:moderate', 'exports:read', 'exports:create', 'webhooks:manage']::text[]"
         }
       },
+      "isRLSEnabled": false
+    },
+    "public.account_audit_log": {
+      "name": "account_audit_log",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "action": {
+          "name": "action",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "meta": {
+          "name": "meta",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "account_audit_log_user_newest_idx": {
+          "name": "account_audit_log_user_newest_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": false,
+              "nulls": "last"
+            },
+            {
+              "expression": "id",
+              "isExpression": false,
+              "asc": false,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "account_audit_log_user_id_users_id_fk": {
+          "name": "account_audit_log_user_id_users_id_fk",
+          "tableFrom": "account_audit_log",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
       "isRLSEnabled": false
     },
     "public.entity_revisions": {

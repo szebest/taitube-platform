@@ -3,7 +3,7 @@ import { ErrorCodes } from '@vp/errors';
 import { ROLES } from '@vp/permissions';
 import { z } from 'zod';
 import { BannerLinkSchema } from './channel-images';
-import { ChannelLinkSchema, OwnerChannelSchema } from './channels';
+import { ChannelCardSchema, ChannelLinkSchema, OwnerChannelSchema } from './channels';
 import { defineEndpoint } from './endpoint';
 
 const UserSchema = z.object({
@@ -16,7 +16,8 @@ const UserSchema = z.object({
 const AccountSchema = UserSchema.extend({
   role: z.enum(ROLES),
   user: UserSchema,
-  channel: OwnerChannelSchema,
+  channel: OwnerChannelSchema.describe('The primary channel'),
+  channels: z.array(ChannelCardSchema).describe('Every channel the account owns, primary first'),
 });
 
 const UpdateChannelSchema = z.object({

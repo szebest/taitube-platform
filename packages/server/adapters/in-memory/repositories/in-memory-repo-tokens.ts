@@ -1,4 +1,5 @@
 import { token } from '@kit/di';
+import type { InMemoryAccountAuditRepository } from './in-memory-account-audit-repository';
 import type { InMemoryApiTokenRepository } from './in-memory-api-token-repository';
 import type { InMemoryCaptionRepository } from './in-memory-caption-repository';
 import type { InMemoryCategoryRepository } from './in-memory-category-repository';
@@ -71,6 +72,7 @@ export const Repo = {
   channelMembers: token<InMemoryChannelMemberRepository>('channelMembers'),
   channelInvites: token<InMemoryChannelInviteRepository>('channelInvites'),
   channelAudit: token<InMemoryChannelAuditRepository>('channelAudit'),
+  accountAudit: token<InMemoryAccountAuditRepository>('accountAudit'),
   dataExports: token<InMemoryDataExportRepository>('dataExports'),
   apiTokens: token<InMemoryApiTokenRepository>('apiTokens'),
   commentSettings: token<InMemoryCommentSettingsRepository>('commentSettings'),

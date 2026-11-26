@@ -2,6 +2,7 @@ import { expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { RISING } from '@vp/domain';
 import type { UserContext } from '@vp/permissions';
+import { seedPrimaryChannel } from '../../__tests__/test-app';
 import { DiscoveryShelves } from '../discovery-shelves';
 import { SearchService } from '../search-service';
 import { VideoService } from '../video-service';
@@ -22,10 +23,11 @@ describe('apps/server/api/services: DiscoveryShelves', () => {
   let creatorChannelId: string;
   let shelves: DiscoveryShelves;
 
-  const publish = (id: string, ownerId = CREATOR) =>
+  const publish = async (id: string, ownerId = CREATOR) =>
     repositories.videos.create({
       id,
       ownerId,
+      channelId: await seedPrimaryChannel(repositories, ownerId),
       title: `Video ${id.slice(-2)}`,
       visibility: 'public',
       status: 'READY',

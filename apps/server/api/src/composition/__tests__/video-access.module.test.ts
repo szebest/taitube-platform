@@ -3,6 +3,7 @@ import { expectErr, expectOk } from '@kit/testing/result';
 import { Adapters, registerAdapters } from '@vp/adapters/composition';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes } from '@vp/errors';
+import { seedPrimaryChannel } from '../../__tests__/test-app';
 import { registerServices, Services } from '../services.module';
 
 const OWNER = { id: '00000000-0000-7000-8000-00000000f601', role: 'CREATOR' } as const;
@@ -18,6 +19,7 @@ async function composed(secret: string | undefined) {
     await c.get(Adapters.Repositories).videos.create({
       id: VIDEO,
       ownerId: OWNER.id,
+      channelId: await seedPrimaryChannel(c.get(Adapters.Repositories), OWNER.id),
       title: 'Guarded',
       visibility: 'unlisted',
       status: 'READY',

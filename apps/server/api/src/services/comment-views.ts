@@ -1,6 +1,8 @@
 import type { CommentView, CreatorInboxCommentView } from '@vp/api-contracts';
-import type { CommentThread, CreatorInboxComment } from '@vp/domain';
+import type { CommentThread, CreatorInboxComment, Video } from '@vp/domain';
 import { type UserContext, canModerateComment } from '@vp/permissions';
+
+type CommentedVideo = Pick<Video, 'ownerId' | 'channelId'>;
 
 type ModerationView = Pick<CommentView, 'status' | 'moderation'>;
 
@@ -12,13 +14,20 @@ const LOOKS_PUBLISHED: ModerationView = { status: 'published', moderation: null 
  */
 function moderationViewOf(
   thread: CommentThread,
-  videoOwnerId: string,
+  video: CommentedVideo,
   viewer: UserContext | null
 ): ModerationView {
   const { moderationState: state, moderationReason: reason } = thread;
   if (state === 'published') return LOOKS_PUBLISHED;
 
-  if (canModerateComment({ user: viewer, action: 'hold', videoOwnerId })) {
+  if (
+    canModerateComment({
+      user: viewer,
+      action: 'hold',
+      videoOwnerId: video.ownerId,
+      videoChannelId: video.channelId,
+    })
+  ) {
     return {
       status: state,
       moderation: {
@@ -39,7 +48,7 @@ function moderationViewOf(
 /** `isCreator` is a badge on the wire, never a permission; moderation asks `@vp/permissions`. */
 export function toCommentView(
   thread: CommentThread,
-  videoOwnerId: string,
+  video: CommentedVideo,
   viewer: UserContext | null
 ): CommentView {
   const { id, videoId, parentId, content, isPinned, isEdited, likeCount, replyCount } = thread;
@@ -54,17 +63,17 @@ export function toCommentView(
     likeCount,
     replyCount,
     heartedByCreator: heartedAt !== null,
-    ...moderationViewOf(thread, videoOwnerId, viewer),
-    author: { ...author, isCreator: author.userId === videoOwnerId },
+    ...moderationViewOf(thread, video, viewer),
+    author: { ...author, isCreator: author.userId === video.ownerId },
     createdAt: createdAt.toISOString(),
     updatedAt: updatedAt.toISOString(),
   };
 }
 
 export function toCreatorInboxCommentView(
-  { video, ...thread }: CreatorInboxComment,
-  videoOwnerId: string,
+  { video: summary, ...thread }: CreatorInboxComment,
+  video: CommentedVideo,
   viewer: UserContext
 ): CreatorInboxCommentView {
-  return { ...toCommentView(thread, videoOwnerId, viewer), video };
+  return { ...toCommentView(thread, video, viewer), video: summary };
 }

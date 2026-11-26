@@ -56,6 +56,7 @@ export interface AppConfig {
     uploadSessionTtlSeconds: number;
     rawRetentionDays: number;
     maxDurationSeconds: number;
+    channelsMaxOwned: number;
   };
   pagination: { defaultLimit: number; maxLimit: number };
   featureFlags: readonly string[];
@@ -204,6 +205,7 @@ export function toAppConfig(env: AppEnv): AppConfig {
       uploadSessionTtlSeconds: UPLOAD_SESSION_TTL_SECONDS,
       rawRetentionDays: env.RAW_RETENTION_DAYS,
       maxDurationSeconds: env.MAX_DURATION_SEC,
+      channelsMaxOwned: env.CHANNELS_MAX_OWNED,
     },
     pagination: { defaultLimit: env.PAGE_SIZE_DEFAULT, maxLimit: env.PAGE_SIZE_MAX },
     featureFlags: env.FEATURE_FLAGS,

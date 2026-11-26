@@ -6,6 +6,7 @@ import { commentRows, videoRows } from '../export-catalogue-queries';
 const OWNER_ID = '00000000-0000-7000-8000-0000000000a1';
 const FAN_ID = '00000000-0000-7000-8000-0000000000a2';
 const CHANNEL_ID = '00000000-0000-7000-8000-0000000000c1';
+const FAN_CHANNEL_ID = '00000000-0000-7000-8000-0000000000c2';
 const VIDEO_ID = '00000000-0000-7000-8000-0000000000d1';
 const commentId = (n: number) => `00000000-0000-7000-8000-0000000000f${n}`;
 const SCOPE = { channelId: CHANNEL_ID, ownerId: OWNER_ID, range: {} };
@@ -19,12 +20,14 @@ describe('postgres: export catalogue queries', () => {
       { id: OWNER_ID, email: 'owner@test.local' },
       { id: FAN_ID, email: 'fan@test.local' },
     ]);
-    await db
-      .insert(schema.channels)
-      .values({ id: CHANNEL_ID, userId: OWNER_ID, handle: 'owner', displayName: 'Owner' });
+    await db.insert(schema.channels).values([
+      { id: CHANNEL_ID, userId: OWNER_ID, handle: 'owner', displayName: 'Owner' },
+      { id: FAN_CHANNEL_ID, userId: FAN_ID, handle: 'fan', displayName: 'Fan' },
+    ]);
     await db.insert(schema.videos).values({
       id: VIDEO_ID,
       ownerId: OWNER_ID,
+      channelId: CHANNEL_ID,
       title: 'Clip',
       sourceKey: 'raw/v/source.mp4',
       createdAt: new Date(AT),
@@ -34,6 +37,7 @@ describe('postgres: export catalogue queries', () => {
         id: commentId(n),
         videoId: VIDEO_ID,
         authorId: FAN_ID,
+        authorChannelId: FAN_CHANNEL_ID,
         content: `comment ${n}`,
         createdAt: new Date(AT + n * 86_400_000),
         deletedAt: n === 3 ? new Date(AT) : null,
@@ -42,7 +46,7 @@ describe('postgres: export catalogue queries', () => {
     return { engine, db };
   }
 
-  it('reads the standing comments after a key, oldest first, an author without a channel by no name', async () => {
+  it('reads the standing comments after a key, oldest first, each by the channel it was posted as', async () => {
     const { engine, db } = await seeded();
 
     const rows = await commentRows(
@@ -53,7 +57,7 @@ describe('postgres: export catalogue queries', () => {
     );
 
     expect(rows).toEqual([
-      expect.objectContaining({ commentId: commentId(2), authorHandle: null, hearted: false }),
+      expect.objectContaining({ commentId: commentId(2), authorHandle: 'fan', hearted: false }),
     ]);
     await engine.close();
   });

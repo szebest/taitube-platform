@@ -104,11 +104,11 @@ export class CreatorStudioService {
   > {
     const allowed = decideChannelTask({ user, acting, task: 'read-library' });
     if (isErr(allowed)) return allowed;
-    const { ownerId } = allowed.value;
+    const { channelId } = allowed.value;
 
     const { sort, status, visibility, q } = options;
     const walked = await this.walk({ sort, order: 'desc', cursor: options.cursor }, options.limit, {
-      ownerId,
+      channelId,
       status,
       visibility,
       titleContains: q,
@@ -116,11 +116,11 @@ export class CreatorStudioService {
     if (isErr(walked)) return walked;
     const { rows, limit } = walked.value;
 
-    const channelOf = await loadChannelsOf(this.deps.channels, [ownerId]);
+    const channelOf = await loadChannelsOf(this.deps.channels, [channelId]);
     return map(channelOf, (of) =>
       this.deps.paginator.paginate(rows, limit, {
         cursorOf: (row) => creatorLibraryCursorPayload(row, sort),
-        toItem: (row) => toCreatorVideoView(row, this.deps.cdn, this.deps.sprite, of(ownerId)),
+        toItem: (row) => toCreatorVideoView(row, this.deps.cdn, this.deps.sprite, of(channelId)),
       })
     );
   }
@@ -144,12 +144,13 @@ export class CreatorStudioService {
     if (isErr(walked)) return walked;
     const { rows, limit } = walked.value;
 
-    const owners = [...new Set(rows.slice(0, limit).map((row) => row.ownerId))];
-    const channelOf = await loadChannelsOf(this.deps.channels, owners);
+    const channelIds = [...new Set(rows.slice(0, limit).map((row) => row.channelId))];
+    const channelOf = await loadChannelsOf(this.deps.channels, channelIds);
     return map(channelOf, (of) =>
       this.deps.paginator.paginate(rows, limit, {
         cursorOf: (row) => creatorLibraryCursorPayload(row, sort, order),
-        toItem: (row) => toVideoSummaryView(row, this.deps.cdn, this.deps.sprite, of(row.ownerId)),
+        toItem: (row) =>
+          toVideoSummaryView(row, this.deps.cdn, this.deps.sprite, of(row.channelId)),
       })
     );
   }
@@ -159,7 +160,7 @@ export class CreatorStudioService {
     requestedLimit: number | undefined,
     filters: Pick<
       VideoLibraryQuery,
-      'ownerId' | 'status' | 'visibility' | 'categoryId' | 'titleContains'
+      'channelId' | 'status' | 'visibility' | 'categoryId' | 'titleContains'
     >
   ): Promise<Result<{ rows: VideoRecord[]; limit: number }, DatabaseUnavailable | InvalidCursor>> {
     const limit = this.deps.paginator.limit(requestedLimit);

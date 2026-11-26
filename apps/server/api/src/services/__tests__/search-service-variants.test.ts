@@ -1,5 +1,6 @@
 import { expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
+import { seedPrimaryChannel } from '../../__tests__/test-app';
 import { type SearchResult, SearchService } from '../search-service';
 import { sessionShown, startTitleTest } from './running-test';
 import { searchServiceDeps } from './service-deps';
@@ -23,6 +24,7 @@ describe('apps/server/api/services: SearchService test variants', () => {
       await repositories.videos.create({
         id: VIDEO,
         ownerId: OWNER,
+        channelId: await seedPrimaryChannel(repositories, OWNER),
         title: 'Rust ownership explained',
         visibility: 'public',
         status: 'READY',

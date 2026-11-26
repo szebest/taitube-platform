@@ -30,6 +30,7 @@ describe('apps/server/api/composition: sse module', () => {
         video: {
           id: VIDEO_ID,
           ownerId: OWNER_ID,
+          channelId: channel.id,
           visibility: 'public',
           sourceKey: `live/${STREAM_ID}/`,
         },

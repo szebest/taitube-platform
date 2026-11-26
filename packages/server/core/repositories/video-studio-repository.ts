@@ -49,8 +49,8 @@ export type StudioMetadataOutcome =
   | { type: 'category-missing'; categoryId: string };
 
 export interface VideoLibraryQuery {
-  /** Absent for an operator, who lists everyone's videos. */
-  ownerId?: string;
+  /** The channel the library is of; absent for an operator, who lists every channel's videos. */
+  channelId?: string;
   sort: LibrarySort;
   /** Defaults to `desc`; the cursor must have been minted for the same sort and order. */
   order?: SortOrder;

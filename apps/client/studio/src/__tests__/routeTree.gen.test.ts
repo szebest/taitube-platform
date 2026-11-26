@@ -29,6 +29,7 @@ describe('apps/client/studio: generated route tree', () => {
       '/_authed/videos/$videoId/',
       '/_authed/videos/$videoId/analytics',
       '/_authed/videos/$videoId/edit',
+      '/for/$handle',
       '/live/overlay/$token',
       '/login',
       '__root__',

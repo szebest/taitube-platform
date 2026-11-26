@@ -12,12 +12,12 @@ export interface ModerationAbilities {
 /** What the viewer may do to a comment or its author on the channel being moderated, one answer per action. */
 export function useModerationAbilities(): ModerationAbilities {
   const channel = useModerationChannel();
-  const { ownerId } = channel;
+  const scope = { videoOwnerId: channel.ownerId, videoChannelId: channel.channelId };
 
   return {
-    approve: useCan(canModerateComment, { action: 'approve', videoOwnerId: ownerId }),
-    hide: useCan(canModerateComment, { action: 'hide', videoOwnerId: ownerId }),
-    remove: useCan(canModerateComment, { action: 'remove', videoOwnerId: ownerId }),
+    approve: useCan(canModerateComment, { action: 'approve', ...scope }),
+    hide: useCan(canModerateComment, { action: 'hide', ...scope }),
+    remove: useCan(canModerateComment, { action: 'remove', ...scope }),
     restrict: useCan(canRestrictChannelUser, { channel }),
   };
 }

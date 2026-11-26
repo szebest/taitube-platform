@@ -6,18 +6,21 @@ import type {
   SubscriptionRepositoryPort,
   VideoRepository,
 } from '@vp/core/repositories';
-import type { NotificationLevel, SubscribedChannelItem } from '@vp/domain';
+import type { ActingChannel, Channel, NotificationLevel, SubscribedChannelItem } from '@vp/domain';
 import {
+  type AuthorizationFailure,
   type SubscribeFailure,
   type UnsubscribeFailure,
-  decideSubscribe,
   channelNotFound,
+  decideChannelTask,
+  decideSubscribe,
   decideUnsubscribe,
   subscriptionSourceOf,
 } from '@vp/domain-rules';
 import type { CdnBase } from '@vp/env-schema';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
+import { auditActor } from './audit-actor';
 import {
   createdAtCursorPayload,
   decodeCreatedAtCursor,
@@ -55,26 +58,38 @@ export interface SubscriptionServiceDeps {
   viewerProgress: ViewerProgress;
 }
 
-export type SubscribeServiceFailure = SubscribeFailure | DatabaseUnavailable;
-export type UnsubscribeServiceFailure = UnsubscribeFailure | DatabaseUnavailable;
+export type SubscribeServiceFailure = AuthorizationFailure | SubscribeFailure | DatabaseUnavailable;
+export type UnsubscribeServiceFailure =
+  | AuthorizationFailure
+  | UnsubscribeFailure
+  | DatabaseUnavailable;
 export type ReadSubscriptionFailure = UnsubscribeFailure | DatabaseUnavailable;
 
+/**
+ * `CacheUnavailable` is absent from every signature here on purpose: a dead cache costs a query,
+ * not an answer, so this service handles it rather than passing it on.
+ */
 export class SubscriptionService {
   constructor(private readonly deps: SubscriptionServiceDeps) {}
 
-  /**
-   * `CacheUnavailable` is absent from every signature here on purpose: a dead cache costs a query,
-   * not an answer, so this service handles it rather than passing it on.
-   */
+  /** Subscribes the acting channel; a new subscription lands in that channel's audit log. */
   async subscribe(
     user: UserContext,
+    acting: ActingChannel,
     channelId: string,
     fromVideoId?: string
   ): Promise<Result<SubscriptionStatusView, SubscribeServiceFailure>> {
+    const allowed = decideChannelTask({ user, acting, task: 'subscribe-as' });
+    if (isErr(allowed)) return allowed;
     const found = await this.deps.channels.findById(channelId);
     if (isErr(found)) return found;
 
-    const decided = decideSubscribe({ subscriber: user, channel: found.value, channelId });
+    const decided = decideSubscribe({
+      subscriber: user,
+      channel: found.value,
+      channelId,
+      subscriberChannelId: acting.channelId,
+    });
     if (isErr(decided)) return decided;
 
     const source = fromVideoId ? await this.deps.videos.findById(fromVideoId) : ok(null);
@@ -82,8 +97,17 @@ export class SubscriptionService {
 
     const written = await this.deps.subscriptions.subscribe(
       user.id,
+      acting.channelId,
       channelId,
-      subscriptionSourceOf(decided.value, source.value)
+      subscriptionSourceOf(decided.value, source.value),
+      {
+        channelId: acting.channelId,
+        ...auditActor(user),
+        action: 'channel.subscribed',
+        targetType: 'channel',
+        targetId: channelId,
+        meta: {},
+      }
     );
     if (isErr(written)) return written;
 
@@ -91,7 +115,7 @@ export class SubscriptionService {
     if (changed) {
       await this.deps.home.forget(user.id);
       ignore(
-        await this.deps.subscriptionCache.addSubscription(user.id, channelId),
+        await this.deps.subscriptionCache.addSubscription(acting.channelId, channelId),
         'the subscription is written; the cache heals on its TTL'
       );
       ignore(
@@ -104,22 +128,20 @@ export class SubscriptionService {
 
   async unsubscribe(
     user: UserContext,
+    acting: ActingChannel,
     channelId: string
   ): Promise<Result<SubscriptionStatusView, UnsubscribeServiceFailure>> {
-    const found = await this.deps.channels.findById(channelId);
-    if (isErr(found)) return found;
-
-    const decided = decideUnsubscribe({ subscriber: user, channel: found.value, channelId });
+    const decided = await this.decideAs(user, acting, channelId);
     if (isErr(decided)) return decided;
 
-    const written = await this.deps.subscriptions.unsubscribe(user.id, channelId);
+    const written = await this.deps.subscriptions.unsubscribe(acting.channelId, channelId);
     if (isErr(written)) return written;
 
     const { subscriberCount, changed } = written.value;
     if (changed) {
       await this.deps.home.forget(user.id);
       ignore(
-        await this.deps.subscriptionCache.removeSubscription(user.id, channelId),
+        await this.deps.subscriptionCache.removeSubscription(acting.channelId, channelId),
         'the unsubscription is written; the cache heals on its TTL'
       );
       ignore(
@@ -130,8 +152,10 @@ export class SubscriptionService {
     return ok({ channelId, subscribed: false, subscriberCount });
   }
 
+  /** Whether the acting channel follows `channelId`; another channel of the account may differ. */
   async isSubscribed(
     user: UserContext,
+    acting: ActingChannel,
     channelId: string
   ): Promise<Result<{ channelId: string; subscribed: boolean }, ReadSubscriptionFailure>> {
     const found = await this.deps.channels.findById(channelId);
@@ -141,18 +165,20 @@ export class SubscriptionService {
     if (isErr(decided)) return decided;
 
     const cached = unwrapOr(
-      await this.deps.subscriptionCache.isSubscribed(user.id, channelId),
+      await this.deps.subscriptionCache.isSubscribed(acting.channelId, channelId),
       null
     );
     if (cached !== null) return ok({ channelId, subscribed: cached });
 
     // On a miss, prime the whole set: one query answers this call and every
     // later one, instead of a point lookup that leaves the cache still cold.
-    const channelIds = await this.deps.subscriptions.getUserSubscriptionChannelIds(user.id);
+    const channelIds = await this.deps.subscriptions.getChannelSubscriptionChannelIds(
+      acting.channelId
+    );
     if (isErr(channelIds)) return channelIds;
 
     ignore(
-      await this.deps.subscriptionCache.setUserSubscriptions(user.id, channelIds.value),
+      await this.deps.subscriptionCache.setSubscriptions(acting.channelId, channelIds.value),
       'the set was read; a cold cache costs the next call one query'
     );
     return ok({ channelId, subscribed: channelIds.value.includes(channelId) });
@@ -160,19 +186,34 @@ export class SubscriptionService {
 
   async setNotificationLevel(
     user: UserContext,
+    acting: ActingChannel,
     channelId: string,
     level: NotificationLevel
-  ): Promise<Result<{ channelId: string; level: NotificationLevel }, ReadSubscriptionFailure>> {
-    const found = await this.deps.channels.findById(channelId);
-    if (isErr(found)) return found;
-
-    const decided = decideUnsubscribe({ subscriber: user, channel: found.value, channelId });
+  ): Promise<Result<{ channelId: string; level: NotificationLevel }, UnsubscribeServiceFailure>> {
+    const decided = await this.decideAs(user, acting, channelId);
     if (isErr(decided)) return decided;
 
-    const written = await this.deps.subscriptions.setNotificationLevel(user.id, channelId, level);
+    const written = await this.deps.subscriptions.setNotificationLevel(
+      acting.channelId,
+      channelId,
+      level
+    );
     if (isErr(written)) return written;
 
     return written.value ? ok({ channelId, level }) : err(channelNotFound(channelId));
+  }
+
+  /** A write on the acting channel's subscription to `channelId`, which must be there. */
+  private async decideAs(
+    user: UserContext,
+    acting: ActingChannel,
+    channelId: string
+  ): Promise<Result<Channel, UnsubscribeServiceFailure>> {
+    const allowed = decideChannelTask({ user, acting, task: 'subscribe-as' });
+    if (isErr(allowed)) return allowed;
+    const found = await this.deps.channels.findById(channelId);
+    if (isErr(found)) return found;
+    return decideUnsubscribe({ subscriber: user, channel: found.value, channelId });
   }
 
   async listSubscriptions(
@@ -225,14 +266,19 @@ export class SubscriptionService {
     const { items, total } = feed.value;
     const channelOf = await loadChannelsOf(
       this.deps.channels,
-      items.map((video) => video.ownerId)
+      items.map((video) => video.channelId)
     );
     if (isErr(channelOf)) return channelOf;
 
     const page = this.deps.paginator.paginate(items, limit, {
       cursorOf: createdAtCursorPayload,
       toItem: (video) =>
-        toVideoSummaryView(video, this.deps.cdn, this.deps.sprite, channelOf.value(video.ownerId)),
+        toVideoSummaryView(
+          video,
+          this.deps.cdn,
+          this.deps.sprite,
+          channelOf.value(video.channelId)
+        ),
     });
     return ok({
       ...page,

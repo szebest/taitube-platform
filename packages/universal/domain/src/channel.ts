@@ -13,6 +13,8 @@ export interface ChannelStats {
 export interface Channel {
   id: string;
   userId: string;
+  /** The one channel `GET /v1/me/account` returns and an account acts as by default. */
+  isPrimary: boolean;
   handle: string;
   displayName: string;
   avatarUrl: string | null;

@@ -1,4 +1,5 @@
 import type { Catalogues } from '../catalogue';
+import { accounts } from './accounts';
 import { auth } from './auth';
 import { browse } from './browse';
 import { channels } from './channels';
@@ -25,6 +26,7 @@ import { videos } from './videos';
 import { watch } from './watch';
 
 export const pl = {
+  accounts,
   auth,
   browse,
   channels,

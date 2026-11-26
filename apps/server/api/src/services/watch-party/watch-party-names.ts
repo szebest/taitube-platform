@@ -19,7 +19,7 @@ export type PersonOf = (memberKey: string) => PartyPerson;
 const UNKNOWN_NAME = 'Member';
 
 export async function resolvePeople(
-  channels: Pick<ChannelRepositoryPort, 'findByUserIds'>,
+  channels: Pick<ChannelRepositoryPort, 'findPrimaryByUserIds'>,
   memberKeys: readonly string[],
   snapshots?: ReadonlyMap<string, PartySnapshot>
 ): Promise<Result<PersonOf, DatabaseUnavailable>> {
@@ -27,7 +27,7 @@ export async function resolvePeople(
     const parsed = parseMemberKey(key);
     return parsed?.kind === 'user' ? [parsed.id] : [];
   });
-  const found = userIds.length === 0 ? ok([]) : await channels.findByUserIds(userIds);
+  const found = userIds.length === 0 ? ok([]) : await channels.findPrimaryByUserIds(userIds);
 
   return map(found, (rows) => {
     const sources = new Map<string, PartySnapshot>(snapshots ?? []);

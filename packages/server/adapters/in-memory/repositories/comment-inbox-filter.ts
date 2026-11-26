@@ -1,4 +1,4 @@
-import { assertNever, unwrapOr } from '@kit/result';
+import { assertNever } from '@kit/result';
 import type { ListCreatorInboxOptions } from '@vp/core/repositories';
 import type {
   CommentThread,
@@ -8,12 +8,12 @@ import type {
 } from '@vp/domain';
 import { compareKeys, newestAfter, rowKey } from './comment-order';
 import type { StoredComment } from './comment-visibility';
-import type { InMemoryChannelRepository } from './in-memory-channel-repository';
 import type { InMemoryChannelUserRestrictionRepository } from './in-memory-channel-user-restriction-repository';
 import type { InMemoryVideoRepository } from './in-memory-video-repository';
 
 interface InboxRow {
   id: string;
+  videoId: string;
   parentId: string | null;
   authorId: string;
   createdAt: Date;
@@ -23,7 +23,8 @@ interface InboxRow {
 
 interface InboxLookups {
   hasOpenReport(commentId: string): boolean;
-  isRestricted(userId: string): boolean;
+  /** Whether the author is restricted on the channel of the video the comment is under. */
+  isRestricted(comment: InboxRow): boolean;
 }
 
 /** @internal The in-memory form of `creatorInboxFilterScope`; `live` is every comment still standing. */
@@ -57,7 +58,7 @@ export function matchesInbox(
     case 'questions':
       return comment.looksLikeQuestion;
     case 'restricted':
-      return lookups.isRestricted(comment.authorId);
+      return lookups.isRestricted(comment);
     default:
       return assertNever(filter, 'CreatorInboxFilter');
   }
@@ -81,13 +82,12 @@ function inboxPage(
 interface CreatorInboxDeps {
   videosRepo: Pick<InMemoryVideoRepository, 'getAllVideos'>;
   reportsRepo: { hasOpenReport(commentId: string): boolean };
-  channelsRepo: Pick<InMemoryChannelRepository, 'findByUserId'>;
   restrictionsRepo: Pick<InMemoryChannelUserRestrictionRepository, 'restrictedUserIds'>;
 }
 
-/** One inbox page, up to one row past the limit: comments on the owner's videos, newest first. */
+/** One inbox page, up to one row past the limit: comments on the channel's videos, newest first. */
 export async function creatorInbox(
-  { videosRepo, reportsRepo, channelsRepo, restrictionsRepo }: CreatorInboxDeps,
+  { videosRepo, reportsRepo, restrictionsRepo }: CreatorInboxDeps,
   live: readonly StoredComment[],
   ownerId: string,
   options: ListCreatorInboxOptions,
@@ -96,14 +96,15 @@ export async function creatorInbox(
   const videos = new Map(
     videosRepo
       .getAllVideos()
-      .filter((video) => video.ownerId === ownerId && !video.deletedAt)
+      .filter((video) => video.channelId === options.channelId && !video.deletedAt)
       .map((video) => [video.id, video])
   );
-  const channel = unwrapOr(await channelsRepo.findByUserId(ownerId), null);
-  const restricted = channel ? restrictionsRepo.restrictedUserIds(channel.id) : new Set<string>();
   const lookups = {
     hasOpenReport: (commentId: string) => reportsRepo.hasOpenReport(commentId),
-    isRestricted: (userId: string) => restricted.has(userId),
+    isRestricted: ({ videoId, authorId }: InboxRow) => {
+      const channelId = videos.get(videoId)?.channelId;
+      return channelId !== undefined && restrictionsRepo.restrictedUserIds(channelId).has(authorId);
+    },
   };
   const rows = await toThreads(inboxPage(live, videos, ownerId, options, lookups));
   return rows.map((row) => ({

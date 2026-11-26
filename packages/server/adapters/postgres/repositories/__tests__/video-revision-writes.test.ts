@@ -12,6 +12,7 @@ import {
 
 const USER_ID = '00000000-0000-7000-8000-0000000000a1';
 const VIDEO_ID = '00000000-0000-7000-8000-0000000000b1';
+const CHANNEL_ID = '00000000-0000-7000-8000-0000000000c1';
 
 const snapshot: VideoMetadataSnapshot = {
   title: 'T',
@@ -29,8 +30,12 @@ async function inEngine(run: (db: ReturnType<typeof drizzle<typeof schema>>) => 
   try {
     const db = drizzle(engine, { schema });
     await db.insert(schema.users).values({ id: USER_ID, email: 'u@test.local' });
+    await db
+      .insert(schema.channels)
+      .values({ id: CHANNEL_ID, userId: USER_ID, handle: 'u', displayName: 'U', isPrimary: true });
     await db.insert(schema.videos).values({
       id: VIDEO_ID,
+      channelId: CHANNEL_ID,
       ownerId: USER_ID,
       title: 'T',
       status: 'READY',

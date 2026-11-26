@@ -86,25 +86,25 @@ export class VideoService {
 
     const channelOf = await loadChannelsOf(
       this.deps.channels,
-      rows.value.map((v) => v.ownerId)
+      rows.value.map((v) => v.channelId)
     );
     return map(channelOf, (of) =>
       this.deps.paginator.paginate(rows.value, limit, {
         cursorOf: createdAtCursorPayload,
-        toItem: (v) => toVideoSummaryView(v, this.deps.cdn, this.deps.sprite, of(v.ownerId)),
+        toItem: (v) => toVideoSummaryView(v, this.deps.cdn, this.deps.sprite, of(v.channelId)),
       })
     );
   }
 
-  /** Attaches each owner's channel to cards read from a page cache, in one read. */
+  /** Attaches each video's channel to cards read from a page cache, in one read. */
   async withChannels(
     cards: readonly VideoCardView[]
   ): Promise<Result<VideoSummaryView[], DatabaseUnavailable>> {
     const channelOf = await loadChannelsOf(
       this.deps.channels,
-      cards.map((card) => card.ownerId)
+      cards.map((card) => card.channelId)
     );
-    return map(channelOf, (of) => cards.map((card) => ({ ...card, channel: of(card.ownerId) })));
+    return map(channelOf, (of) => cards.map((card) => ({ ...card, channel: of(card.channelId) })));
   }
 
   async summarize(
@@ -112,11 +112,11 @@ export class VideoService {
   ): Promise<Result<VideoSummaryView[], DatabaseUnavailable>> {
     const channelOf = await loadChannelsOf(
       this.deps.channels,
-      videos.map((video) => video.ownerId)
+      videos.map((video) => video.channelId)
     );
     return map(channelOf, (of) =>
       videos.map((video) =>
-        toVideoSummaryView(video, this.deps.cdn, this.deps.sprite, of(video.ownerId))
+        toVideoSummaryView(video, this.deps.cdn, this.deps.sprite, of(video.channelId))
       )
     );
   }
@@ -124,7 +124,7 @@ export class VideoService {
   async listPublic(options: {
     sort?: FeedSort;
     categoryId?: string;
-    ownerId?: string;
+    channelId?: string;
     format?: VideoFormat;
     cursor?: string;
     limit?: number;
@@ -139,7 +139,7 @@ export class VideoService {
     const found = await this.deps.videos.listPublic({
       sort,
       categoryId: options.categoryId,
-      ownerId: options.ownerId,
+      channelId: options.channelId,
       format: options.format,
       cursor: cursor.value,
       limit,
@@ -194,9 +194,9 @@ export class VideoService {
     view.likesCount = counts.likesCount;
     view.dislikesCount = counts.dislikesCount;
 
-    const channelOf = await loadChannelsOf(this.deps.channels, [view.ownerId]);
+    const channelOf = await loadChannelsOf(this.deps.channels, [view.channelId]);
     if (isErr(channelOf)) return channelOf;
-    view.channel = channelOf.value(view.ownerId);
+    view.channel = channelOf.value(view.channelId);
 
     const chapters = await this.deps.chapters.listFor([video.id]);
     if (isErr(chapters)) return chapters;

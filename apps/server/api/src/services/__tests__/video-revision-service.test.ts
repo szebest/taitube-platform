@@ -3,6 +3,7 @@ import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
+import { seedPrimaryChannel } from '../../__tests__/test-app';
 import { VideoRevisionService } from '../video-revision-service';
 import { creatorStudioOf } from './service-deps';
 
@@ -44,6 +45,7 @@ describe('apps/server/api/services: video revisions', () => {
       await repositories.videos.create({
         id: VIDEO_ID,
         ownerId: OWNER.id,
+        channelId: await seedPrimaryChannel(repositories, OWNER.id),
         title: 'Original',
         description: 'First words',
         visibility: 'public',
@@ -94,20 +96,14 @@ describe('apps/server/api/services: video revisions', () => {
   });
 
   it('audits the restore beside the edit', async () => {
-    const channel = expectOk(
-      await repositories.channels.create({
-        userId: OWNER.id,
-        handle: 'owner',
-        displayName: 'Owner',
-      })
-    );
+    const channelId = expectOk(await repositories.videos.findById(VIDEO_ID))?.channelId ?? '';
     await edit({ title: 'One' });
     const original = (await list()).items.at(-1);
 
     expectOk(await revisions.restore(OWNER, VIDEO_ID, original?.id ?? '', await versionOf()));
 
     const log = expectOk(
-      await repositories.channelAudit.list(channel.id, { cursor: null, limit: 10 })
+      await repositories.channelAudit.list(channelId, { cursor: null, limit: 10 })
     );
     expect(log.map((entry) => entry.action)).toContain('video.restored');
   });

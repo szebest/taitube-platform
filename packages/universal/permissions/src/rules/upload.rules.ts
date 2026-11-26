@@ -1,6 +1,6 @@
 import type { AbilityBuilder } from '@casl/ability';
 import { type AppAbility, type UserContext, isSignedInRole } from '../types/index';
-import { ownersWith } from './memberships';
+import { channelsWith } from './memberships';
 
 export function defineUploadRules(
   user: UserContext | null,
@@ -19,6 +19,6 @@ export function defineUploadRules(
     can('access', 'Upload', { ownerId: user.id });
   }
 
-  const editable = ownersWith(user, 'video.edit');
-  if (editable) can('access', 'Upload', { ownerId: editable });
+  const editable = channelsWith(user, 'video.edit');
+  if (editable) can('access', 'Upload', { channelId: editable });
 }
