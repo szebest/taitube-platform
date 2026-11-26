@@ -20,7 +20,7 @@ export async function uploadRendition(
       mediaFailure('apply-edits', ErrorCodes.SEGMENT_VERIFY_FAILED, `Nothing rendered in ${dir}`)
   );
   if (isErr(listed)) return listed;
-  const files = [...listed.value.filter((name) => name !== PLAYLIST), PLAYLIST];
+  const files = [...listed.value.filter((name) => name !== PLAYLIST).toSorted(), PLAYLIST];
   for (const name of files) {
     const body = await fromPromise(
       () => fs.readFile(path.join(dir, name)),
