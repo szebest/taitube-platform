@@ -195,7 +195,7 @@ describe('architecture: the CI pipeline holds its budgets', () => {
 
     const findings = shapeFindings(workflow);
 
-    expect(findings).toContain('e2e-client: timeout-minutes is not 4');
+    expect(findings).toContain('e2e-client: timeout-minutes is not 6');
     expect(findings).toContain('e2e-web: its needs chain budgets 14 min');
     expect(findings).toContain('e2e-studio: its needs chain budgets 14 min');
   });
