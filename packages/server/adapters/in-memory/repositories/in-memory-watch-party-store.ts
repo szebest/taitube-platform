@@ -8,6 +8,7 @@ import type {
   WatchPartyMemberRole,
   WatchPartyMessage,
   WatchPartyQueueItem,
+  WatchPartyReport,
   WatchPartyRoleRecord,
   WatchPartyRoom,
 } from '@vp/domain';
@@ -35,6 +36,8 @@ export class InMemoryWatchPartyStore {
   readonly invites = new Map<string, WatchPartyInvite>();
   readonly inviteLinks = new Map<string, WatchPartyInviteLink>();
   readonly controls = new Map<string, PersonalControlRecord>();
+  readonly interest = new Map<string, { roomId: string; userId: string; at: Date }>();
+  readonly reports = new Map<string, { report: WatchPartyReport; resolvedAt: Date | null }>();
 
   appendSystemLine(
     roomId: string,
@@ -88,6 +91,8 @@ export class InMemoryWatchPartyStore {
       this.invites,
       this.inviteLinks,
       this.controls,
+      this.interest,
+      this.reports,
     ]) {
       table.clear();
     }

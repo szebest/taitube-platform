@@ -12,6 +12,7 @@ export type WatchPartyPasswordRequired = RoomFailure<
 >;
 export type WatchPartyPasswordInvalid = RoomFailure<typeof ErrorCodes.WATCH_PARTY_PASSWORD_INVALID>;
 export type WatchPartyInviteInvalid = RoomFailure<typeof ErrorCodes.WATCH_PARTY_INVITE_INVALID>;
+export type WatchPartyAlreadyReported = RoomFailure<typeof ErrorCodes.WATCH_PARTY_ALREADY_REPORTED>;
 export type WatchPartyChatOff = RoomFailure<typeof ErrorCodes.WATCH_PARTY_CHAT_OFF>;
 export type WatchPartyQueueFull = RoomFailure<typeof ErrorCodes.WATCH_PARTY_QUEUE_FULL>;
 export type WatchPartyRoleLimit = RoomFailure<typeof ErrorCodes.WATCH_PARTY_ROLE_LIMIT>;
@@ -100,6 +101,14 @@ export function watchPartyPasswordInvalid(roomId: string): WatchPartyPasswordInv
 
 export function watchPartyInviteInvalid(roomId: string): WatchPartyInviteInvalid {
   return { code: ErrorCodes.WATCH_PARTY_INVITE_INVALID, message: 'Invite is not valid', roomId };
+}
+
+export function watchPartyAlreadyReported(roomId: string): WatchPartyAlreadyReported {
+  return {
+    code: ErrorCodes.WATCH_PARTY_ALREADY_REPORTED,
+    message: 'Already reported',
+    roomId,
+  };
 }
 
 export function watchPartyChatOff(roomId: string): WatchPartyChatOff {

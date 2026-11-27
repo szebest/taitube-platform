@@ -15,12 +15,20 @@ function isPlatformStaff(user: UserContext | null): boolean {
   return user?.role === 'MODERATOR' || user?.role === 'ADMIN';
 }
 
-/** Creating a room and reading its preview: everything else in a room is the room-scoped ability. */
+/**
+ * Creating a room, reading its preview and what a signed-in account or a moderator does to a room
+ * from outside it; everything else in a room is the room-scoped ability.
+ */
 export function defineWatchPartyRules(
   user: UserContext | null,
   builder: AbilityBuilder<AppAbility>
 ): void {
-  if (user && isSignedInRole(user.role)) builder.can('create', 'WatchParty');
+  if (user && isSignedInRole(user.role)) {
+    builder.can('create', 'WatchParty');
+    builder.can('report', 'WatchParty', { visibility: 'public' });
+    builder.can('report', 'WatchParty', { isMember: true });
+  }
+  if (isPlatformStaff(user)) builder.can(['close', 'restore'], 'WatchParty');
   builder.can('read', 'WatchParty', { visibility: { $in: ['public', 'unlisted'] } });
   builder.can('read', 'WatchParty', { isMember: true });
   builder.can('read', 'WatchParty', { hasGrant: true });

@@ -138,6 +138,7 @@ export const ERROR_COPY: Readonly<Record<ErrorCode, SharedArgumentFreeKey>> = {
   [ErrorCodes.WATCH_PARTY_PASSWORD_INVALID]: 'errors.watchPartyPasswordInvalid',
   [ErrorCodes.WATCH_PARTY_PASSWORD_LOCKED]: 'errors.watchPartyPasswordLocked',
   [ErrorCodes.WATCH_PARTY_INVITE_INVALID]: 'errors.watchPartyInviteInvalid',
+  [ErrorCodes.WATCH_PARTY_ALREADY_REPORTED]: 'errors.watchPartyAlreadyReported',
   [ErrorCodes.WATCH_PARTY_LIMIT_REACHED]: 'errors.watchPartyLimitReached',
   [ErrorCodes.WATCH_PARTY_VIDEO_NOT_SHAREABLE]: 'errors.watchPartyVideoNotShareable',
   [ErrorCodes.WATCH_PARTY_QUEUE_FULL]: 'errors.watchPartyQueueFull',

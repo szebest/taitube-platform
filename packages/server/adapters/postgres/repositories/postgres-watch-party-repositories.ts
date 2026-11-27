@@ -1,10 +1,12 @@
 import { PostgresWatchPartyHousekeepingRepository } from './postgres-watch-party-housekeeping-repository';
+import { PostgresWatchPartyInterestRepository } from './postgres-watch-party-interest-repository';
 import { PostgresWatchPartyInviteLinkRepository } from './postgres-watch-party-invite-link-repository';
 import { PostgresWatchPartyInviteRepository } from './postgres-watch-party-invite-repository';
 import { PostgresWatchPartyMemberRepository } from './postgres-watch-party-member-repository';
 import { PostgresWatchPartyMessageRepository } from './postgres-watch-party-message-repository';
 import { PostgresWatchPartyPersonalControlRepository } from './postgres-watch-party-personal-control-repository';
 import { PostgresWatchPartyQueueRepository } from './postgres-watch-party-queue-repository';
+import { PostgresWatchPartyReportRepository } from './postgres-watch-party-report-repository';
 import { PostgresWatchPartyRoleRepository } from './postgres-watch-party-role-repository';
 import { PostgresWatchPartyRoomRepository } from './postgres-watch-party-room-repository';
 import type { PostgresDatabase } from './types';
@@ -19,6 +21,8 @@ export function createWatchPartyRepositories(db: PostgresDatabase) {
     watchPartyInvites: new PostgresWatchPartyInviteRepository(db),
     watchPartyInviteLinks: new PostgresWatchPartyInviteLinkRepository(db),
     watchPartyControls: new PostgresWatchPartyPersonalControlRepository(db),
+    watchPartyInterest: new PostgresWatchPartyInterestRepository(db),
+    watchPartyReports: new PostgresWatchPartyReportRepository(db),
     watchPartyHousekeeping: new PostgresWatchPartyHousekeepingRepository(db),
   };
 }

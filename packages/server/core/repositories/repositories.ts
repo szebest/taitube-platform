@@ -58,12 +58,14 @@ import type { VideoThreadRepositoryPort } from './video-thread-repository';
 import type { VideoViewRepositoryPort } from './video-view-repository';
 import type { WatchHistoryRepositoryPort } from './watch-history-repository';
 import type { WatchPartyHousekeepingRepositoryPort } from './watch-party-housekeeping-repository';
+import type { WatchPartyInterestRepositoryPort } from './watch-party-interest-repository';
 import type { WatchPartyInviteLinkRepositoryPort } from './watch-party-invite-link-repository';
 import type { WatchPartyInviteRepositoryPort } from './watch-party-invite-repository';
 import type { WatchPartyMemberRepositoryPort } from './watch-party-member-repository';
 import type { WatchPartyMessageRepositoryPort } from './watch-party-message-repository';
 import type { WatchPartyPersonalControlRepositoryPort } from './watch-party-personal-control-repository';
 import type { WatchPartyQueueRepositoryPort } from './watch-party-queue-repository';
+import type { WatchPartyReportRepositoryPort } from './watch-party-report-repository';
 import type { WatchPartyRoleRepositoryPort } from './watch-party-role-repository';
 import type { WatchPartyRoomRepositoryPort } from './watch-party-room-repository';
 import type { WebhookRepositoryPort } from './webhook-repository';
@@ -137,5 +139,7 @@ export interface Repositories {
   watchPartyInvites: WatchPartyInviteRepositoryPort;
   watchPartyInviteLinks: WatchPartyInviteLinkRepositoryPort;
   watchPartyControls: WatchPartyPersonalControlRepositoryPort;
+  watchPartyInterest: WatchPartyInterestRepositoryPort;
+  watchPartyReports: WatchPartyReportRepositoryPort;
   watchPartyHousekeeping: WatchPartyHousekeepingRepositoryPort;
 }

@@ -122,6 +122,7 @@ const PROBLEM_STATUS: Readonly<Record<ErrorCode, number>> = {
   [ErrorCodes.HANDLE_RESERVED]: 409,
   [ErrorCodes.COMMENT_NOT_PINNABLE]: 409,
   [ErrorCodes.COMMENT_ALREADY_REPORTED]: 409,
+  [ErrorCodes.WATCH_PARTY_ALREADY_REPORTED]: 409,
   [ErrorCodes.COMMENTS_BANNED]: 403,
   [ErrorCodes.COMMENTS_DISABLED]: 403,
   [ErrorCodes.COMMENTS_SUBSCRIBERS_ONLY]: 403,

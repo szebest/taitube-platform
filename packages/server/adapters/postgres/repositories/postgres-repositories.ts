@@ -112,6 +112,8 @@ export class PostgresRepositories extends PostgresVideoToolsRepositories impleme
   declare readonly watchPartyInvites: WatchPartyRepositories['watchPartyInvites'];
   declare readonly watchPartyInviteLinks: WatchPartyRepositories['watchPartyInviteLinks'];
   declare readonly watchPartyControls: WatchPartyRepositories['watchPartyControls'];
+  declare readonly watchPartyInterest: WatchPartyRepositories['watchPartyInterest'];
+  declare readonly watchPartyReports: WatchPartyRepositories['watchPartyReports'];
   declare readonly watchPartyHousekeeping: WatchPartyRepositories['watchPartyHousekeeping'];
 
   private readonly ownedPool: Sql | undefined;

@@ -68,3 +68,5 @@ export * from './watch-party-housekeeping-repository';
 export * from './watch-party-invite-repository';
 export * from './watch-party-invite-link-repository';
 export * from './watch-party-personal-control-repository';
+export * from './watch-party-interest-repository';
+export * from './watch-party-report-repository';

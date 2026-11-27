@@ -151,6 +151,7 @@ export const RETRY_CLASS: Readonly<Record<ErrorCode, RetryClass>> = {
   [ErrorCodes.WATCH_PARTY_PASSWORD_INVALID]: 'permanent',
   [ErrorCodes.WATCH_PARTY_PASSWORD_LOCKED]: 'permanent',
   [ErrorCodes.WATCH_PARTY_INVITE_INVALID]: 'permanent',
+  [ErrorCodes.WATCH_PARTY_ALREADY_REPORTED]: 'permanent',
   [ErrorCodes.WATCH_PARTY_LIMIT_REACHED]: 'permanent',
   [ErrorCodes.WATCH_PARTY_VIDEO_NOT_SHAREABLE]: 'permanent',
   [ErrorCodes.WATCH_PARTY_QUEUE_FULL]: 'permanent',
