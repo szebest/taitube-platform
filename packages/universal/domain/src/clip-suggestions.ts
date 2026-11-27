@@ -42,7 +42,7 @@ export function suggestClips(input: {
   chapters: readonly Chapter[];
 }): ClipSuggestion[] {
   const { durationMs, chapters } = input;
-  const curve = [...input.curve].sort((a, b) => a.percent - b.percent);
+  const curve = input.curve.toSorted((a, b) => a.percent - b.percent);
   const started = viewersAt(curve, 0);
   if (started <= 0 || durationMs <= 0) return [];
 

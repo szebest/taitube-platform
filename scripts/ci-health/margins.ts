@@ -30,10 +30,8 @@ export const MARGIN = 0.85;
 
 const EXPRESSION = /\$\{\{[^}]*\}\}/;
 
-const literal = (text: string): string => text.replace(/[.*+?^$()|[\]\\{}]/g, '\\$&');
-
 function nameMatcher(template: string): RegExp {
-  return new RegExp(`^${template.split(EXPRESSION).map(literal).join('.+')}$`);
+  return new RegExp(`^${template.split(EXPRESSION).map(RegExp.escape).join('.+')}$`);
 }
 
 export function budgetsOf(source: string): Budget[] {

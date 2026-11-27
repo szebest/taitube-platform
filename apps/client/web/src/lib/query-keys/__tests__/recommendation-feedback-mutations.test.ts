@@ -51,10 +51,7 @@ describe('apps/client/web: recommendation feedback mutations', () => {
   ] as const)(
     'takes $scenario off the home shelves and the related list before the answer',
     async ({ body, left }) => {
-      let release: () => void = () => undefined;
-      const gate = new Promise<void>((resolve) => {
-        release = resolve;
-      });
+      const { promise: gate, resolve: release } = Promise.withResolvers<void>();
       apiServer.use(
         mockEndpoint(putRecommendationFeedback, async () => {
           await gate;

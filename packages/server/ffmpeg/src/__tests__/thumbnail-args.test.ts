@@ -18,7 +18,7 @@ describe('@vp/ffmpeg: thumbnail arguments (SDD §8.3)', () => {
     );
     expect(args).toContain('-q:v');
     expect(args).toContain('3');
-    expect(args[args.length - 1]).toBe('/path/to/poster.jpg');
+    expect(args.at(-1)).toBe('/path/to/poster.jpg');
   });
 
   it('builds poster arguments with 0.000 fallback when duration is unknown', () => {

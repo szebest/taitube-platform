@@ -57,10 +57,7 @@ function answering(answer: (slot: number) => Promise<Response | undefined> | Res
 describe('@vp/queries: account glance', () => {
   it('asks every other slot in one call, in parallel, with its own token', async () => {
     let arrived = 0;
-    let everyoneArrived = () => {};
-    const everyone = new Promise<void>((resolve) => {
-      everyoneArrived = resolve;
-    });
+    const { promise: everyone, resolve: everyoneArrived } = Promise.withResolvers<void>();
     const asked = answering(async () => {
       arrived += 1;
       if (arrived === 9) everyoneArrived();

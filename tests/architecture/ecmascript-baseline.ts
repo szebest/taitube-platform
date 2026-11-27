@@ -115,7 +115,7 @@ function effectiveLevel(file: string, root = ROOT): EffectiveLevel {
   const { target, lib } = parsed?.options ?? {};
   return {
     target,
-    lib: lib === undefined ? undefined : [...lib].sort(),
+    lib: lib === undefined ? undefined : lib.toSorted(),
     problems: (parsed?.errors ?? [])
       .filter(({ code }) => code !== NO_INPUTS)
       .map(({ messageText }) => ts.flattenDiagnosticMessageText(messageText, '\n')),
@@ -132,7 +132,7 @@ export function levelDifferences(
   const wanted =
     expected === UNSET
       ? { target: undefined, lib: undefined }
-      : { target: expected.target, lib: [...expected.lib].sort() };
+      : { target: expected.target, lib: expected.lib.toSorted() };
   const libNames = (names: readonly string[] | undefined) => (names ? `[${names}]` : 'unset');
   return [
     ...problems.map((problem) => `${file}: ${problem}`),

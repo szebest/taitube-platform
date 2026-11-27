@@ -171,7 +171,7 @@ export class InMemoryCacheClient extends CacheClient {
   }
 
   private matchesPattern(pattern: string, channel: string): boolean {
-    const escaped = pattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*');
+    const escaped = pattern.split('*').map(RegExp.escape).join('.*');
     const regex = new RegExp(`^${escaped}$`);
     return regex.test(channel);
   }

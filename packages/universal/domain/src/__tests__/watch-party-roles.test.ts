@@ -40,8 +40,6 @@ function roomRoles(preset: WatchPartyPreset = 'friends'): RoomRole[] {
   return builtInRoles(preset).map((role) => ({ ...role, id: role.key ?? role.name }));
 }
 
-const sorted = (permissions: readonly string[]) => [...permissions].sort();
-
 describe('@vp/domain: the built-in roles', () => {
   it.each([
     { key: 'owner', kind: 'grant', position: 1000, permissions: ALL },
@@ -94,7 +92,7 @@ describe('@vp/domain: the built-in roles', () => {
     const role = builtInRoles('friends').find((candidate) => candidate.key === key);
 
     expect(role).toMatchObject({ kind, position });
-    expect(sorted(role?.permissions ?? [])).toEqual(sorted(permissions));
+    expect((role?.permissions ?? []).toSorted()).toEqual(permissions.toSorted());
   });
 
   it.each([
@@ -104,8 +102,8 @@ describe('@vp/domain: the built-in roles', () => {
     const roles = builtInRoles(preset);
     const others = (list: typeof roles) => list.filter((role) => role.key !== 'member');
 
-    expect(sorted(roles.find((role) => role.key === 'member')?.permissions ?? [])).toEqual(
-      sorted(member)
+    expect((roles.find((role) => role.key === 'member')?.permissions ?? []).toSorted()).toEqual(
+      member.toSorted()
     );
     expect(others(roles)).toEqual(others(builtInRoles('friends')));
   });
@@ -202,7 +200,7 @@ describe('@vp/domain: effectivePermissions', () => {
   ])('$scenario', ({ overrides, permissions, top }) => {
     const effective = effectiveOf(overrides);
 
-    expect(sorted(effective.permissions)).toEqual(sorted(permissions));
+    expect(effective.permissions.toSorted()).toEqual(permissions.toSorted());
     expect(effective.topPosition).toBe(top);
   });
 

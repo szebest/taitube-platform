@@ -54,8 +54,6 @@ export async function setUpRoles(preset: WatchPartyPreset = 'friends') {
 
 export type Roles = Awaited<ReturnType<typeof setUpRoles>>;
 
-export const sortedKeys = (permissions: readonly string[]) => [...permissions].sort();
-
 export async function permissionsOf(setup: Roles, key: string) {
   const { items } = await setup.roles();
   return items.find((role) => role.key === key)?.permissions ?? [];
