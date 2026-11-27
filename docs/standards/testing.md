@@ -236,11 +236,11 @@ One spec may cover several sources that make up one behaviour. No architecture t
 ## 9. CI budgets, shards and retries
 
 Each job's `timeout-minutes` in `.github/workflows/ci.yml` is its outer bound, and three test steps carry their
-own budget through `.github/actions/budget`: `unit-tests` 240 s in each unit shard, `architecture` 30 s in
+own budget through `.github/actions/budget`: `unit-tests` 240 s in each unit shard, `architecture` 40 s in
 `lint-typecheck` (the suite's own time from its JSON report) and `integration-tests` 240 s.
-`tests/architecture/ci-budget-rules.ts` holds the numbers: `build` 3, `lint-typecheck` 4, `unit-shards` 5,
-`unit-bun-shards` 4, `extractable` 6 (one shard per platform package and the second app), `integration` 6,
-`e2e-smoke` 4, `e2e-client` 4, `visual` 5, `terraform` 2, the two aggregates 1, and 9 minutes for the longest
+`tests/architecture/ci-budget-rules.ts` holds the numbers: `build` 4, `lint-typecheck` 7, `unit-shards` 6,
+`unit-bun-shards` 5, `extractable` 9 (one job, every platform package and the second app in a sandbox of its own, four at a time), `integration` 6,
+`e2e-smoke` 6, `e2e-client` 6, `visual` 6 (24 shards), `terraform` 2, the two aggregates 1, and 13 minutes for the longest
 `needs` chain. A budget names the step it measures by its `id`, and its
 limit sits below its job's `timeout-minutes`, so the budget fires first and names the step.
 

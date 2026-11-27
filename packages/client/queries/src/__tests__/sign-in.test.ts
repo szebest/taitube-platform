@@ -2,9 +2,10 @@ import { getAccount, recordMySignIn } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { account, apiServer, mockEndpoint, problemReply, signInRecord } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
-import { type Accounts, NO_ACCOUNTS, withExpired, withSignedIn } from '../accounts';
+import { NO_ACCOUNTS, withExpired, withSignedIn } from '../accounts';
 import { requestSession } from '../session-config';
 import { type SignInTarget, completeSignIn } from '../sign-in';
+import { accountsCookies } from './accounts-fixtures';
 import { inRequest } from './in-request';
 
 vi.mock(import('../session-config'), async (importOriginal) => {
@@ -15,7 +16,12 @@ vi.mock(import('../session-config'), async (importOriginal) => {
 const NONCE = 'vp.add-nonce=n0nce';
 const ADD: SignInTarget = { mode: 'add', state: 'n0nce' };
 
-type Recorded = { body: unknown; authorization: string | null; forwardedFor: string | null };
+type Recorded = {
+  body: unknown;
+  authorization: string | null;
+  forwardedFor: string | null;
+  userAgent: string | null;
+};
 
 function api({ userId = account().user.id, record = (): Response | undefined => undefined } = {}) {
   const recorded: Recorded[] = [];
@@ -28,6 +34,7 @@ function api({ userId = account().user.id, record = (): Response | undefined => 
         body: await request.json(),
         authorization: request.headers.get('authorization'),
         forwardedFor: request.headers.get('x-forwarded-for'),
+        userAgent: request.headers.get('user-agent'),
       });
       return record() ?? HttpResponse.json(signInRecord(), { status: 201 });
     })
@@ -35,15 +42,14 @@ function api({ userId = account().user.id, record = (): Response | undefined => 
   return recorded;
 }
 
-function accountsCookie(accounts: Accounts): string {
-  return `vp.accounts=${encodeURIComponent(JSON.stringify(accounts))}`;
-}
-
 const issue = vi.fn(async (grant: string) => `new-token-of-${grant}`);
+
+const BROWSER = 'Mozilla/5.0 (X11; Linux x86_64) Firefox/140.0';
 
 function signIn(target: SignInTarget, cookie: string) {
   return inRequest(() => completeSignIn(issue, 'creator', target), {
     cookie: `${cookie}; ${NONCE}`,
+    userAgent: BROWSER,
   });
 }
 
@@ -51,7 +57,7 @@ const sessionCookies = (setCookies: string[]) =>
   setCookies.filter((set) => set.startsWith('vp.session.'));
 
 describe('@vp/queries: sign-in', () => {
-  it('adds a new token into the first free slot, records it as added, and lists the account', async () => {
+  it('adds a new token into the first free slot, records it as added from the browser, and lists the account', async () => {
     const recorded = api();
 
     const { value, setCookies } = await signIn(ADD, 'vp.session.0=first');
@@ -65,11 +71,42 @@ describe('@vp/queries: sign-in', () => {
         body: { slot: 1, added: true },
         authorization: 'Bearer new-token-of-creator',
         forwardedFor: null,
+        userAgent: BROWSER,
       },
     ]);
-    const listed = setCookies.find((set) => set.startsWith('vp.accounts=')) ?? '';
-    expect(decodeURIComponent(listed)).toContain('"slot":1');
+    const listed = setCookies.find((set) => set.startsWith('vp.accounts.1=')) ?? '';
+    expect(decodeURIComponent(listed)).toContain(`"userId":"${account().user.id}"`);
     expect(listed).not.toContain('HttpOnly');
+  });
+
+  it.each([
+    { scenario: 'the slot its nonce held', cookie: 'vp.session.0=first', nonce: 3, slot: 3 },
+    {
+      scenario: 'the first free slot when its own was taken meanwhile',
+      cookie: 'vp.session.0=first; vp.session.3=someone',
+      nonce: 3,
+      slot: 1,
+    },
+    {
+      scenario: 'the first free slot when its own is past ACCOUNTS_MAX',
+      cookie: 'vp.session.0=first',
+      nonce: 9,
+      slot: 1,
+    },
+  ])('adds into $scenario', async ({ cookie, nonce, slot }) => {
+    api();
+    vi.mocked(requestSession).mockReturnValue({
+      apiBaseUrl: undefined,
+      cookieDomain: undefined,
+      devTokenUrl: undefined,
+      accountsMax: 5,
+    });
+
+    const { value } = await inRequest(() => completeSignIn(issue, 'creator', ADD), {
+      cookie: `${cookie}; vp.add-nonce.${nonce}=n0nce`,
+    });
+
+    expect(value).toMatchObject({ kind: 'signed-in', slot });
   });
 
   it('never signs in with a token the request carries, only the one it was issued', async () => {
@@ -83,23 +120,27 @@ describe('@vp/queries: sign-in', () => {
     expect(sessionCookies(setCookies)[0]).toMatch(/^vp\.session\.2=new-token-of-creator;/);
   });
 
-  it('ends on the slot a user already holds, so one user never holds two', async () => {
+  it('ends on the slot a user already holds, so one user never holds two, and renews its row', async () => {
     const recorded = api();
     const held = withSignedIn(NO_ACCOUNTS, {
       slot: 3,
       userId: account().user.id,
-      label: 'Me',
-      avatarUrl: null,
+      label: account().channel.displayName,
+      avatarUrl: account().channel.avatarUrl,
     });
 
     const { value, setCookies } = await signIn(
       ADD,
-      `vp.session.0=other; vp.session.3=mine; ${accountsCookie(held)}`
+      `vp.session.0=other; vp.session.3=mine; ${accountsCookies(held)}`
     );
 
     expect(value).toEqual({ kind: 'already-signed-in', slot: 3, accounts: 2 });
     expect(sessionCookies(setCookies)[0]).toMatch(/^vp\.session\.3=new-token-of-creator;/);
     expect(recorded[0]?.body).toEqual({ slot: 3, added: false });
+    expect(setCookies.filter((set) => set.startsWith('vp.accounts'))).toEqual([
+      expect.stringMatching(/^vp\.accounts\.3=.*Max-Age=2592000/),
+      expect.stringMatching(/^vp\.accounts=.*Max-Age=2592000/),
+    ]);
   });
 
   it('signs a user whose slot expired back into that slot, as a sign-in rather than an add', async () => {
@@ -116,7 +157,7 @@ describe('@vp/queries: sign-in', () => {
 
     const { value, setCookies } = await signIn(
       ADD,
-      `vp.session.0=other; ${accountsCookie(expired)}`
+      `vp.session.0=other; ${accountsCookies(expired)}`
     );
 
     expect(value).toEqual({ kind: 'signed-in', slot: 2, accounts: 2 });

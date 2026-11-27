@@ -1,4 +1,4 @@
-import { type Result, err, isErr, ok } from '@kit/result';
+import { type Result, err, isErr, isOk, ok } from '@kit/result';
 import type { VideoGenerationRepository, VideoRepository } from '@vp/core/repositories';
 import {
   type Video,
@@ -44,6 +44,7 @@ export interface VideoGenerationsView {
   activeGeneration: number;
   editBase: { generation: number; durationMs: number };
   edit: VideoEditView | null;
+  revertible: boolean;
   items: {
     generation: number;
     kind: VideoGeneration['kind'];
@@ -120,6 +121,7 @@ export class VideoEditsService {
       activeGeneration: video.generation,
       editBase: { generation: base, durationMs: baseDurationMs ?? 0 },
       edit: edit?.baseGeneration === base ? toEditView(edit) : null,
+      revertible: isOk(decideEditRevert(video, generations)),
       items: generations.map((row) => ({
         generation: row.generation,
         kind: row.kind,
@@ -180,7 +182,7 @@ export class VideoEditsService {
   ): Promise<Result<{ generation: number; version: number }, RevertEditFailure>> {
     const found = await this.context(user, videoId);
     if (isErr(found)) return found;
-    const revertible = decideEditRevert(found.value.video, found.value.edit);
+    const revertible = decideEditRevert(found.value.video, found.value.generations);
     if (isErr(revertible)) return revertible;
 
     const { baseGeneration } = revertible.value;

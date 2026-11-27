@@ -4,8 +4,6 @@ import {
   accentOf,
   defaultSlotOf,
   firstFreeSlot,
-  parseAccounts,
-  serializeAccounts,
   slotOfUser,
   withDefault,
   withAccent,
@@ -37,6 +35,7 @@ describe('@vp/queries: accounts', () => {
     { script: 'CJK', label: '\u{6F22}'.repeat(40), kept: '\u{6F22}'.repeat(10) },
     { script: 'emoji', label: '\u{1F3AC}'.repeat(40), kept: '\u{1F3AC}'.repeat(7) },
     { script: 'a broken surrogate', label: '\u{D800}ok', kept: '\u{FFFD}ok' },
+    { script: 'JSON-escaped', label: '"'.repeat(40), kept: '"'.repeat(15) },
   ])('cuts a $script label to what the cookie holds', ({ label, kept }) => {
     const [entry] = withSignedIn(NO_ACCOUNTS, {
       slot: 0,
@@ -57,41 +56,6 @@ describe('@vp/queries: accounts', () => {
     }).slots;
 
     expect(entry).toMatchObject({ avatarUrl: null, expired: false, channel: null });
-  });
-
-  it('fits ten of the longest rows, every accent and every pin in one cookie, dropping the avatar hints that would not fit', () => {
-    const rows = Array.from({ length: 10 }, (_, slot) => slot).reduce(
-      (accounts, slot) =>
-        withDefault(
-          withSignedIn(accounts, {
-            slot,
-            userId: crypto.randomUUID(),
-            label: '\u{6F22}'.repeat(40),
-            avatarUrl: `https://cdn.example/${'a'.repeat(180)}`,
-          }),
-          slot,
-          'h'.repeat(30)
-        ),
-      NO_ACCOUNTS
-    );
-    const channels = Array.from({ length: 10 }, (_, index) => ({
-      slot: index % 10,
-      channel: `${String(index).padStart(2, '0')}${'h'.repeat(28)}`,
-    }));
-    const full = withPinned(
-      channels.reduce((accounts, identity) => withAccent(accounts, identity, 6), rows),
-      channels
-    );
-
-    const value = serializeAccounts(full);
-
-    expect(`vp.accounts=${encodeURIComponent(value)}`.length).toBeLessThanOrEqual(4096);
-    expect(parseAccounts(value).slots.map(({ avatarUrl }) => avatarUrl)).toEqual(
-      Array.from({ length: 10 }, () => null)
-    );
-    expect(Object.keys(parseAccounts(value).accents ?? {})).toHaveLength(10);
-    expect(parseAccounts(value).pinned).toHaveLength(8);
-    expect(serializeAccounts(TWO)).toBe(JSON.stringify(TWO));
   });
 
   it.each([
@@ -199,11 +163,4 @@ describe('@vp/queries: accounts', () => {
   ])('opens a tab with no prefix on slot $slot of $occupied', ({ occupied, slot }) => {
     expect(defaultSlotOf(TWO, occupied)).toBe(slot);
   });
-
-  it.each(['not json', '{"defaultSlot":12,"slots":[]}', undefined])(
-    'reads %s as no accounts',
-    (raw) => {
-      expect(parseAccounts(raw)).toEqual(NO_ACCOUNTS);
-    }
-  );
 });

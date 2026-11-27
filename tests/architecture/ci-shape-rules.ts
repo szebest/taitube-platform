@@ -10,8 +10,8 @@ const matrixShards = (job: Job): string | (string | number)[] => {
 
 const rangeTo = (count: number): number[] => Array.from({ length: count }, (_, index) => index + 1);
 
-/** build 3, a unit shard 5 and the aggregate 1: the longest chain of timeouts. */
-const CRITICAL_PATH_MINUTES = 9;
+/** build 4 and extractable 9: the longest chain of timeouts. */
+const CRITICAL_PATH_MINUTES = 13;
 
 /** Keeps `main`'s cache entries younger than GitHub's 7-day eviction, so a PR has them to restore. */
 const WARM_CACHE_CRON = '0 4 * * 1,4';
