@@ -11,6 +11,12 @@ export const POST_STATUSES = ['draft', 'scheduled', 'published'] as const;
 
 export type PostStatus = (typeof POST_STATUSES)[number];
 
+/** `POST_LIFECYCLE` in `@vp/domain-rules` is the machine over these edges. */
+export const POST_LIFECYCLE_EDGES = {
+  schedule: { from: ['draft'], to: 'scheduled' },
+  publish: { from: ['draft', 'scheduled'], to: 'published' },
+} as const satisfies Record<string, { from: readonly PostStatus[]; to: PostStatus }>;
+
 export const POST_TEXT_MAX = 2000;
 export const POST_IMAGES_MAX = 4;
 export const POST_IMAGE_ALT_MAX = 200;

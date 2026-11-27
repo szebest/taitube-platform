@@ -62,6 +62,9 @@ export interface CommentVideoSummary {
   title: string;
 }
 
+/** How many characters of a post's text an inbox row shows as the title of its target. */
+export const POST_TARGET_TITLE_LENGTH = 80;
+
 /** The target an inbox row sits under, with the title the row shows. */
 export interface CommentTargetSummary {
   type: CommentTarget['type'];

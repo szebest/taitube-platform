@@ -15,6 +15,7 @@ import type {
   NewChannelAuditEntry,
   NewChannelPostInput,
 } from '@vp/domain';
+import { POST_LIFECYCLE } from '@vp/domain-rules';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { postSubscribersOutbox } from '@vp/job-contracts';
 import type { InMemoryChannelAuditRepository } from './in-memory-channel-audit-repository';
@@ -28,17 +29,24 @@ export interface InMemoryChannelPostRepositoryOptions {
   removeComments: (target: CommentTarget) => void;
 }
 
-/** Pinned first by pin time, then newest, the id breaking ties; every part descends. */
-function orderKey({ pinnedAt, publishedAt, id }: ChannelPostCursor): readonly (number | string)[] {
-  return [pinnedAt?.getTime() ?? -1, publishedAt.getTime(), id];
+function comparePinnedDesc(a: Date | null, b: Date | null): number {
+  if (a && b) return b.getTime() - a.getTime();
+  if (a) return -1;
+  return b ? 1 : 0;
 }
 
+function compareIdDesc(a: string, b: string): number {
+  if (a === b) return 0;
+  return a > b ? -1 : 1;
+}
+
+/** Pinned first by pin time, then newest, the id breaking ties; every part descends. */
 function compareDesc(a: ChannelPostCursor, b: ChannelPostCursor): number {
-  const left = orderKey(a);
-  const right = orderKey(b);
-  const at = left.findIndex((part, index) => part !== right[index]);
-  if (at === -1) return 0;
-  return (left[at] ?? 0) > (right[at] ?? 0) ? -1 : 1;
+  return (
+    comparePinnedDesc(a.pinnedAt, b.pinnedAt) ||
+    b.publishedAt.getTime() - a.publishedAt.getTime() ||
+    compareIdDesc(a.id, b.id)
+  );
 }
 
 function cursorOf(post: ChannelPost): ChannelPostCursor | null {
@@ -182,7 +190,7 @@ export class InMemoryChannelPostRepository implements ChannelPostRepositoryPort 
     ordered: (post: ChannelPost) => ChannelPost = (post) => post
   ): ChannelPostEntry[] {
     return [...this.posts.values()]
-      .filter((post) => post.status === 'published' && belongs(post))
+      .filter((post) => post.status === POST_LIFECYCLE.target('publish') && belongs(post))
       .map(ordered)
       .flatMap((post) => {
         const key = cursorOf(post);

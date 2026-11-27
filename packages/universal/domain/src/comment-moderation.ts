@@ -1,5 +1,5 @@
+import type { AuditActor, NewChannelAuditEntry } from './channel-audit';
 import type { ChannelUserRestriction, RestrictionKind } from './channel-restriction';
-import type { AuditActor, NewChannelAuditEntry } from './channel-team';
 import { COMMENT_REPORT_REASONS } from './comment-report';
 import type { Disclosure } from './comment-settings';
 

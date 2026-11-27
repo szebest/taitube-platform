@@ -1,6 +1,8 @@
 import { type Result, assertNever, err, ok } from '@kit/result';
-import type { PostPayload } from '@vp/domain';
+import { type PostPayload, VIDEO_LIFECYCLE_EDGES } from '@vp/domain';
 import { type PostShareNotPublic, postShareNotPublic } from './failures';
+
+const WATCHABLE_STATUS = VIDEO_LIFECYCLE_EDGES.package.to;
 
 export type SharedTarget =
   | {
@@ -27,7 +29,7 @@ export function decidePostShare(input: PostShareInput): Result<void, PostShareNo
       return shared?.type === 'video' &&
         shared.id === payload.videoId &&
         shared.visibility === 'public' &&
-        shared.status === 'READY'
+        shared.status === WATCHABLE_STATUS
         ? ok(undefined)
         : err(postShareNotPublic('video', payload.videoId));
     case 'playlist_share':

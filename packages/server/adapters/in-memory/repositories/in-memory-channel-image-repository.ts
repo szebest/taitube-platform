@@ -115,7 +115,7 @@ export class InMemoryChannelImageRepository implements ChannelImageRepositoryPor
       const ready =
         upload?.channelId === channelId &&
         upload.kind === 'post-image' &&
-        upload.status === 'ready' &&
+        upload.status === CHANNEL_IMAGE_UPLOAD_EDGES.commit.to &&
         upload.variantUrls;
       return ready && upload ? [{ uploadId: upload.id, urls: ready }] : [];
     });

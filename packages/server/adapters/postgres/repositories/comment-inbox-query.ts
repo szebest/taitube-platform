@@ -1,6 +1,10 @@
 import { assertNever } from '@kit/result';
 import * as schema from '@vp/db';
-import type { CreatorInboxComment, CreatorInboxFilter } from '@vp/domain';
+import {
+  type CreatorInboxComment,
+  type CreatorInboxFilter,
+  POST_TARGET_TITLE_LENGTH,
+} from '@vp/domain';
 import { type SQL, sql } from 'drizzle-orm';
 import { moderatedThreadColumns, toCommentThread } from './comment-thread-query';
 
@@ -12,15 +16,13 @@ const {
   channelUserRestrictions: rs,
 } = schema;
 
-const POST_TITLE_LENGTH = 80;
-
 /**
  * What the row names its target by: the video title, or the start of the post's text. Selected
  * over the comments left-joined to the video and the post the target may be.
  */
 const targetTitle = sql<string>`coalesce(${v.title}, left(coalesce(
   ${p.payload} ->> 'text', ${p.payload} ->> 'caption', ${p.payload} ->> 'comment', ''
-), ${POST_TITLE_LENGTH}))`;
+), ${POST_TARGET_TITLE_LENGTH}))`;
 
 /** The thread columns plus the title of the target the comment sits under. */
 export const creatorInboxColumns = { ...moderatedThreadColumns, targetTitle };

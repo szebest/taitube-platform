@@ -1,12 +1,13 @@
 import { assertNever } from '@kit/result';
 import type { ListCreatorInboxOptions } from '@vp/core/repositories';
-import type {
-  CommentTarget,
-  CommentThread,
-  CreatorInboxComment,
-  CreatorInboxFilter,
-  ModerationState,
-  PostPayload,
+import {
+  type CommentTarget,
+  type CommentThread,
+  type CreatorInboxComment,
+  type CreatorInboxFilter,
+  type ModerationState,
+  POST_TARGET_TITLE_LENGTH,
+  type PostPayload,
 } from '@vp/domain';
 import { compareKeys, newestAfter, rowKey } from './comment-order';
 import type { StoredComment } from './comment-visibility';
@@ -66,8 +67,6 @@ export function matchesInbox(
       return assertNever(filter, 'CreatorInboxFilter');
   }
 }
-
-const POST_TITLE_LENGTH = 80;
 
 function textOf(payload: PostPayload): string {
   switch (payload.kind) {
@@ -136,7 +135,7 @@ export async function creatorInbox(
       }
       case 'post': {
         const post = postsRepo.posts.get(id);
-        const title = (post ? textOf(post.payload) : '').slice(0, POST_TITLE_LENGTH);
+        const title = (post ? textOf(post.payload) : '').slice(0, POST_TARGET_TITLE_LENGTH);
         return { ...row, video: null, targetSummary: { type, id, title } };
       }
       default:
