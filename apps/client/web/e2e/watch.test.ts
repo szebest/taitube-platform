@@ -54,7 +54,7 @@ test.describe('watch', () => {
   }) => {
     const { clippable } = stack.videos;
     await context.grantPermissions(['clipboard-read', 'clipboard-write']);
-    await signIn('viewer');
+    await signIn('stranger');
     await page.setViewportSize(EXPANDED);
     await page.goto(`/watch/${clippable.id}`);
     await page.getByRole('button', { name: 'Clip', exact: true }).click();
@@ -103,7 +103,7 @@ test.describe('watch', () => {
   });
 
   test('a member likes the video and takes the like back', async ({ page, signIn, stack }) => {
-    await signIn('viewer');
+    await signIn('stranger');
     await page.goto(`/watch/${stack.videos.watchable.id}`);
     const like = page.getByRole('toolbar', { name: 'Video actions' }).getByRole('button', {
       name: /^Like/,
