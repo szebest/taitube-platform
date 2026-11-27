@@ -22,6 +22,12 @@ patches:
       - op: add
         path: /stringData/VIDEO_ACCESS_SECRET
         value: "change-me-video-access"
+      - op: add
+        path: /stringData/LIVE_HOOK_SECRET
+        value: "change-me-live-hook"
+      - op: add
+        path: /stringData/WATCH_PARTY_GUEST_SALT
+        value: "change-me-party-salt"
   - target:
       kind: Deployment
       name: .*

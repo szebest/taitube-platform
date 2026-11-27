@@ -1,20 +1,19 @@
-import { useEffect, useState } from 'react';
+import { useSyncExternalStore } from 'react';
 
-/** The clock in epoch milliseconds, ticking while `running`; `undefined` until the first tick, so the server and the browser agree. */
-export function useNow(running: boolean, intervalMs = 1000): number | undefined {
-  const [now, setNow] = useState<number>();
+const TICK_MS = 1000;
 
-  useEffect(() => {
-    if (!running) {
-      return;
-    }
+const IDLE = () => () => undefined;
 
-    setNow(Date.now());
-    const timer = setInterval(() => setNow(Date.now()), intervalMs);
-    const stop = () => clearInterval(timer);
+const ticking = (notify: () => void) => {
+  const timer = setInterval(notify, TICK_MS);
+  return () => clearInterval(timer);
+};
 
-    return stop;
-  }, [running, intervalMs]);
+const currentTick = () => Math.floor(Date.now() / TICK_MS) * TICK_MS;
 
-  return now;
+const noTick = () => undefined;
+
+/** The clock in epoch milliseconds, ticking every second while `running`; `undefined` until the client reads it, so the server and the browser agree. */
+export function useNow(running: boolean): number | undefined {
+  return useSyncExternalStore(running ? ticking : IDLE, running ? currentTick : noTick, noTick);
 }
