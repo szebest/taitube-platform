@@ -1298,6 +1298,55 @@ None.
   socket", recording the transport, the CAS clock, the fan-out, the capacity ceiling, the roles model and the credential
   boundary.
 
+## Delivery record
+
+Slice 140a landed as #312 into `feat/140-watch-parties`. Slices 140b and 140c were built together and merged as one pull
+request, #331, into the feature branch on 2026-11-10; its description was never updated past "work in progress". The
+feature branch was squash-merged to `main` as #310 (`0298f42d3`). The acceptance criteria below stay unticked: this record
+lists what is on `main`, not what was proved.
+
+On `main` from 140b:
+
+- The party page route: `apps/client/web/src/routes/parties.$roomId.tsx` (a `noindex, nofollow` robots tag on every party page).
+- The party kit, each with stories and specs: `apps/client/web/src/components/party/` holds `member-menu`, `party-chat`,
+  `party-join-panel`, `party-lobby`, `party-queue`, `party-room` and `roster`.
+- The page itself: `apps/client/web/src/features/watch-party/components/` holds `party-page`, `party-join`, `party-panel`,
+  `party-room-view`, `party-stage`, `party-controls` (the room control bar), `party-layout-menu` and `party-sync-overlay`.
+- The member menu with the two chat and voice mute scopes: `components/party/member-menu/member-menu.tsx`.
+- The clock and drift driver: `features/watch-party/hooks/use-party-sync.ts`, `use-party-clock.ts` and
+  `utils/plan-party-sync.ts`, over `packages/client/queries/src/use-watch-party-socket.ts` and `watch-party-state.ts`, and
+  `packages/universal/domain/src/watch-party-drift.ts`.
+- The invite and starting notification kinds routed to the room: `features/notifications/utils/notification-target.ts` and
+  `notification-href.ts` (`party_invite`, `party_starting`).
+- The backend for personal controls, roles, invites and guests: `apps/server/api/src/routes/watch-party-controls.ts`,
+  `watch-party-roles.ts`, `watch-party-invites.ts` and `watch-party-guests.ts`.
+
+From 140b, not found on `main`:
+
+- The role editor (no `RoleEditor` or role editor component anywhere under `apps/` or `packages/`).
+- The personal controls UI and `/settings/party-controls` (no route under `apps/client/web/src/routes/settings/`; the member
+  menu has moderation mutes only).
+- The invite row with its Decline action in the bell (only the target and href mapping exist) and `NotificationCentre.ItemAction`.
+- `ReactionOverlay`.
+- The share dialog with QR and Web Share (`qrcode` is not a dependency of `apps/client/web`) and the "Watch together" entry
+  points (the copy exists in `lib/messages/*/party.ts`, no component uses it).
+- The per-viewer `party` preferences section (nothing in `apps/client/web/src/lib/preferences/`).
+- The two-browser Playwright e2e (nothing in `apps/client/web/e2e/` mentions parties).
+
+From 140c, not found on `main`:
+
+- The discovery endpoint, scope, search and SSE stream: the only list endpoints are `GET /v1/watch-parties` (the caller's own
+  rooms) and `GET /v1/watch-parties/:id` in `apps/server/api/src/routes/watch-parties.ts`.
+- The `/parties` index route and screen, the `PartyCard`, and the nav entries (the only route is `parties.$roomId.tsx`).
+- Scheduled parties with interest and reminders: the model carries `scheduledFor` and `autoStart`
+  (`packages/universal/domain/src/watch-party.ts`) and the `party_starting` kind is routed, but no job or endpoint sends the
+  reminders and no interest endpoint exists.
+- Reports and the moderator close from a report (only the `close` endpoint exists).
+- The dashboard (`infra/observability/dashboards/` holds `api`, `pipeline`, `queues`, `storage-cost` and `workers`).
+- The alerts (`infra/observability/alerts/video-pipeline-alerts.yaml` has no watch party rule) and the runbooks
+  (`docs/runbooks/` has none for watch parties).
+- The S8 script `tests/load/s8-watch-parties.js` and its results under `docs/load-tests/results/`.
+
 ## Definition of Done
 
 - [ ] All acceptance criteria proved with command output in the PRs.
