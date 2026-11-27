@@ -22,12 +22,15 @@ export const Route = createFileRoute('/_authed/feed/you')({
       ...myPlaylistsQueryOptions(api),
       staleTime: 'static',
     });
-    const watchLater = playlists.items.find(({ isSystem }) => isSystem);
+    const shelved = playlists.items.filter(
+      ({ isSystem, pinnedAt }) => isSystem || pinnedAt !== null
+    );
 
     await Promise.all([
       queryClient.query({ ...historyShelfQueryOptions(api), staleTime: 'static' }),
-      watchLater &&
-        queryClient.query({ ...playlistQueryOptions(api, watchLater.id), staleTime: 'static' }),
+      ...shelved.map(({ id }) =>
+        queryClient.query({ ...playlistQueryOptions(api, id), staleTime: 'static' })
+      ),
       queryClient.infiniteQuery({ ...myClipsQueryOptions(api), staleTime: 'static' }),
       auth.status === 'signed-in' &&
         queryClient.query({
