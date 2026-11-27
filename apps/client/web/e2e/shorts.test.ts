@@ -1,7 +1,18 @@
+import { collectConsole } from '../../../../tests/playwright/diag';
 import { expect, test } from '../../../../tests/playwright/fixtures';
 import { idOf, openShorts } from './shorts-feed';
 
 test.describe('shorts', () => {
+  let flushConsole: Awaited<ReturnType<typeof collectConsole>>;
+
+  test.beforeEach(({ page }) => {
+    flushConsole = collectConsole(page, /^SHORTS/);
+  });
+
+  test.afterEach(async () => {
+    await flushConsole(test.info(), 'shorts-console');
+  });
+
   test('arrow keys swipe through the Shorts, name each in the URL and announce it', async ({
     page,
   }) => {

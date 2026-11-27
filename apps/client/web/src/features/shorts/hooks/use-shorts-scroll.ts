@@ -22,6 +22,7 @@ export function useShortsScroll({ count, initialIndex, onIndexChange }: ShortsSc
   const laidOutAt = useRef(0);
 
   const show = (next: number) => {
+    console.log('SHORTS', 'show', next, performance.now(), element.current?.scrollTop);
     current.current = next;
     setIndex(next);
     onIndexChange(next);
@@ -42,6 +43,7 @@ export function useShortsScroll({ count, initialIndex, onIndexChange }: ShortsSc
   const goTo = (target: number) => {
     const node = element.current;
     const next = Math.min(Math.max(target, 0), count - 1);
+    console.log('SHORTS', 'goTo', next, performance.now(), node?.scrollTop);
     if (!node || next === current.current) {
       return;
     }
@@ -53,6 +55,7 @@ export function useShortsScroll({ count, initialIndex, onIndexChange }: ShortsSc
 
   const handleScroll = () => {
     const node = element.current;
+    console.log('SHORTS', 'scroll', heading.current, performance.now(), node?.scrollTop);
     if (!node || node.clientHeight === 0) {
       return;
     }
@@ -77,6 +80,7 @@ export function useShortsScroll({ count, initialIndex, onIndexChange }: ShortsSc
 
   const finishMove = () => {
     const node = element.current;
+    console.log('SHORTS', 'scrollend', heading.current, performance.now(), node?.scrollTop);
     const target = heading.current;
     if (!node || target === undefined) {
       return;

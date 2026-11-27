@@ -17,6 +17,7 @@ export function useShortsNavigation() {
     enabled: named !== undefined,
   });
 
+  console.log('SHORTS', 'navigation', named, performance.now(), 0);
   const served = videos.some(({ id }) => id === named);
   const shorts =
     linked && !served ? [{ ...linked, channel: linked.channel ?? null }, ...videos] : videos;

@@ -34,6 +34,11 @@ export function PlaybackHost() {
   const { next, previous, hasNext, hasPrevious } = useQueueNavigation();
   const { current, paused, repeat } = session;
 
+  useEffect(() => {
+    console.log('MOUNT', 'PlaybackHost');
+    return () => console.log('UNMOUNT', 'PlaybackHost');
+  }, []);
+
   useEffect(() => store.track(slot), [store, slot]);
 
   useEffect(() => {

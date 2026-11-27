@@ -26,14 +26,17 @@ export function useShortsUrl({ activeId, named, onExternal }: ShortsUrlOptions) 
     }
 
     written.current.add(id);
+    console.log('SHORTS', 'url-write', id, performance.now(), 0);
     navigate({ to: '/shorts/$videoId', params: { videoId: id }, replace: true });
   });
 
   const follow = useEffectEvent((id: string) => {
+    console.log('SHORTS', 'follow', id, performance.now(), 0);
     if (written.current.delete(id) || id === activeId) {
       return;
     }
 
+    console.log('SHORTS', 'onExternal', id, performance.now(), 0);
     onExternal(id);
   });
 

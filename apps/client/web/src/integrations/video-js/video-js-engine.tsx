@@ -65,6 +65,10 @@ export function VideoJsEngine({
   children,
 }: VideoJsEngineProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  useEffect(() => {
+    console.log('MOUNT', 'VideoJsEngine');
+    return () => console.log('UNMOUNT', 'VideoJsEngine');
+  }, []);
 
   const channel = useOfferedPlayerChannel();
   const captions = useCaptions(videoRef, playbackUrl, captionTracks, defaults);

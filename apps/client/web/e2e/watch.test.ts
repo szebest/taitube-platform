@@ -1,3 +1,4 @@
+import { collectConsole } from '../../../../tests/playwright/diag';
 import { expect, type Page, serverHtml, test } from '../../../../tests/playwright/fixtures';
 
 const COMPACT = { width: 390, height: 844 };
@@ -53,6 +54,23 @@ test.describe('watch', () => {
     stack,
   }) => {
     const { clippable } = stack.videos;
+    await page.addInitScript(() => {
+      const note = (kind: string, node: Node) => {
+        if (!(node instanceof Element)) return;
+        const videos = node.tagName === 'VIDEO' ? [node] : [...node.querySelectorAll('video')];
+        for (const video of videos) {
+          console.log(kind, (video as HTMLVideoElement).src, new Error().stack);
+        }
+      };
+      new MutationObserver((records) => {
+        for (const record of records) {
+          for (const node of record.removedNodes) note('VIDEO-REMOVED', node);
+          for (const node of record.addedNodes) note('VIDEO-ADDED', node);
+        }
+      }).observe(document, { subtree: true, childList: true });
+    });
+    const flushConsole = collectConsole(page, /^(VIDEO-|MOUNT|UNMOUNT)/);
+    try {
     await context.grantPermissions(['clipboard-read', 'clipboard-write']);
     await signIn('viewer');
     await page.setViewportSize(EXPANDED);
@@ -100,6 +118,9 @@ test.describe('watch', () => {
         )
       )
       .toBe(true);
+    } finally {
+      await flushConsole(test.info(), 'video-console');
+    }
   });
 
   test('a member likes the video and takes the like back', async ({ page, signIn, stack }) => {
