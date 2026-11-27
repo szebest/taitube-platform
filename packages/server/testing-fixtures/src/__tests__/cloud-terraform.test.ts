@@ -103,6 +103,7 @@ describe('cloud infrastructure and Terraform', () => {
       'cloudflare_r2_bucket.public',
       'cloudflare_r2_bucket.raw',
       'cloudflare_r2_bucket_cors.public',
+      'cloudflare_r2_bucket_cors.raw',
       'cloudflare_r2_bucket_lifecycle.raw',
       'cloudflare_r2_custom_domain.public_cdn',
       'cloudflare_zero_trust_access_application.admin_portal',
@@ -114,6 +115,24 @@ describe('cloud infrastructure and Terraform', () => {
       'hcloud_ssh_key.operator_key',
       'random_bytes.tunnel_secret',
     ]);
+  });
+
+  it('lets the studio origin PUT to the raw bucket and read the ETag, for browser uploads', async () => {
+    const { resource } = await terraformFile(terraformDir, 'main.tf');
+
+    expect(resource.cloudflare_r2_bucket_cors?.raw?.[0]).toMatchObject({
+      bucket_name: '${cloudflare_r2_bucket.raw.name}',
+      rules: [
+        {
+          allowed: {
+            origins: ['https://studio.${var.domain}'],
+            methods: ['PUT'],
+            headers: ['content-type'],
+          },
+          expose_headers: ['ETag'],
+        },
+      ],
+    });
   });
 
   it('lets the web origin GET and HEAD the public bucket with Range, for saved videos', async () => {

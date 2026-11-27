@@ -1,6 +1,8 @@
 import type { APIRequestContext } from '@playwright/test';
 import { type Stack, expect, test } from '../../../../../tests/playwright/fixtures';
 import { CHANNEL_ATTEMPTS } from './channel-attempts';
+import { ME_ATTEMPTS } from './me-attempts';
+import { TEAM_REFUSED } from './team-video-attempts';
 import { TOKEN_ATTEMPTS } from './token-attempts';
 
 const CALLERS = [
@@ -145,52 +147,7 @@ const ATTEMPTS: Attempt[] = [
     path: () => '/v1/admin/categories',
     data: { name: 'Hijacked', slug: 'hijacked' },
   },
-  {
-    name: 'read saved preferences',
-    method: 'GET',
-    path: () => '/v1/me/preferences',
-    callers: ['an anonymous caller'],
-  },
-  {
-    name: 'save preferences',
-    method: 'PATCH',
-    path: () => '/v1/me/preferences',
-    data: { version: 0, privacy: { historyPaused: true } },
-    callers: ['an anonymous caller'],
-  },
-  ...[
-    {
-      name: 'stop recommending a video',
-      method: 'PUT',
-      path: '/v1/me/recommendation-feedback',
-      data: { kind: 'not_interested', videoId: '00000000-0000-7000-8000-000000000000' },
-    },
-    {
-      name: 'read what was stopped being recommended',
-      method: 'GET',
-      path: '/v1/me/recommendation-feedback',
-    },
-    {
-      name: "remove an entry of another user's recommendation feedback",
-      method: 'DELETE',
-      path: '/v1/me/recommendation-feedback/00000000-0000-7000-8000-000000000000',
-    },
-    { name: 'read the search history', method: 'GET', path: '/v1/me/searches' },
-    { name: 'clear the search history', method: 'DELETE', path: '/v1/me/searches' },
-    {
-      name: "remove an entry of another user's search history",
-      method: 'DELETE',
-      path: '/v1/me/searches/00000000-0000-7000-8000-000000000000',
-    },
-    { name: 'read the liked videos', method: 'GET', path: '/v1/me/liked-videos' },
-    { name: 'read the own comments', method: 'GET', path: '/v1/me/comments' },
-  ].map(({ name, method, path, data }): Attempt => ({
-    name,
-    method: method as Attempt['method'],
-    path: () => path,
-    data,
-    callers: ['an anonymous caller'],
-  })),
+  ...ME_ATTEMPTS,
 ];
 
 async function commentOn(viewer: APIRequestContext, videoId: string): Promise<string> {
@@ -237,6 +194,31 @@ test.describe('privilege escalation is refused with problem+json', () => {
         expect(await response.json()).toMatchObject({ status, code });
       });
     }
+  }
+});
+
+test.describe('a channel team member is held to the role, with problem+json', () => {
+  for (const { caller, persona, method, path, ...rest } of TEAM_REFUSED) {
+    test(`${caller} of the channel cannot ${method === 'DELETE' ? 'delete' : 'edit'} its video on ${path}`, async ({
+      api,
+      stack,
+    }) => {
+      const { id, title } = stack.videos.watchable;
+      const member = await api(persona, { channelId: stack.team.channelId });
+      const owner = await api('creator');
+
+      const response = await member.fetch(`${path}/${id}`, {
+        method,
+        data: 'data' in rest ? rest.data : undefined,
+      });
+      const kept = await owner.get(`/v1/videos/${id}`);
+
+      expect(response.status()).toBe(403);
+      expect(response.headers()['content-type']).toContain('application/problem+json');
+      expect(await response.json()).toMatchObject({ status: 403, code: 'FORBIDDEN' });
+      expect(kept.status()).toBe(200);
+      expect((await kept.json()).title).toBe(title);
+    });
   }
 });
 
