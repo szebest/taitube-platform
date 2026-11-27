@@ -3,7 +3,6 @@ import type { LayoutAudience, LayoutVisibility, ViewerAudience } from '@vp/domai
 export interface LayoutViewer {
   readonly audience: ViewerAudience;
   readonly now: Date;
-  /** The negotiated locale chain, most specific first. */
   readonly locales: readonly string[];
 }
 
@@ -28,17 +27,14 @@ export function isShownInLocale(
   return locales.length === 0 || chain.some((locale) => locales.includes(locale));
 }
 
-export function isShownInWindow(
-  { from, to }: Pick<LayoutVisibility, 'from' | 'to'>,
-  now: Date
-): boolean {
+function isShownInWindow({ from, to }: Pick<LayoutVisibility, 'from' | 'to'>, now: Date): boolean {
   const instant = now.getTime();
   return (
-    (from === null || Date.parse(from) <= instant) && (to === null || instant < Date.parse(to))
+    (from === null || new Date(from).getTime() <= instant) &&
+    (to === null || instant < new Date(to).getTime())
   );
 }
 
-/** Audience, locale and window together; the cache holds the first two, the window is judged at read. */
 export function isShownTo(visibility: LayoutVisibility, viewer: LayoutViewer): boolean {
   return (
     isShownToAudience(visibility, viewer.audience) &&

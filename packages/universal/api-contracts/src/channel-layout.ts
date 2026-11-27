@@ -216,5 +216,3 @@ export const ChannelLayoutSchema = z
     description:
       'The versioned document a channel page is built from: tabs, and sections on Home and on custom tabs. Caps (tabs, sections, picked items, size) are refused on save with their own codes.',
   }) satisfies z.ZodType<ChannelLayout>;
-
-export type ChannelLayoutDocument = z.infer<typeof ChannelLayoutSchema>;

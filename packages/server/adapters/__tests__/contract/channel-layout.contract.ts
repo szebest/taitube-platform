@@ -1,5 +1,5 @@
 import { expectOk } from '@kit/testing/result';
-import { defaultChannelLayout, type NewChannelAuditEntry } from '@vp/domain';
+import { standardChannelLayout, type NewChannelAuditEntry } from '@vp/domain';
 import { OWNER_CHANNEL_ID, OWNER_ID, seedOwners } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
@@ -26,7 +26,7 @@ const publishAudit = (version: number) =>
 export function describeChannelLayoutContract(makeSubject: MakeRepositoriesSubject): void {
   describe('ChannelLayoutRepository contract', () => {
     let subject: RepositoriesSubject;
-    const document = defaultChannelLayout();
+    const document = standardChannelLayout();
 
     beforeAll(async () => {
       subject = await makeSubject();

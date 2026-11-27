@@ -8,10 +8,6 @@ function customTabs(layout: ChannelLayout | null): CustomTab[] {
   return layout?.tabs.filter((tab): tab is CustomTab => tab.kind === 'custom') ?? [];
 }
 
-/**
- * A slug is 3 to 30 of `a-z0-9-`, not a built-in's or a reserved word, unique in the layout, and
- * stable once published: a tab id that was published keeps its slug, so its URL does not move.
- */
 export function decideLayoutSlugs(
   layout: ChannelLayout,
   published: ChannelLayout | null

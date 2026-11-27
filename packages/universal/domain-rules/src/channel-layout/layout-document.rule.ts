@@ -24,7 +24,6 @@ function decideRichText(layout: ChannelLayout): Result<ChannelLayout, InvalidLay
   return ok(layout);
 }
 
-/** Everything a document must satisfy on its own, before what it points at is looked up. */
 export function decideLayoutDocument(
   layout: ChannelLayout,
   published: ChannelLayout | null

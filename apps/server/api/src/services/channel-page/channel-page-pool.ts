@@ -105,10 +105,6 @@ async function collect(
   return ok(refs);
 }
 
-/**
- * What a plan resolves to: one source call per type, then one hydration of every id they named. A
- * ref the hydration does not answer is not public any more and is dropped here.
- */
 export async function loadPagePool(
   sources: ChannelPageSourceRepositoryPort,
   cdn: CdnBase,

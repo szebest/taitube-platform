@@ -1,5 +1,5 @@
 import { expectErr, expectOk } from '@kit/testing/result';
-import { defaultChannelLayout } from '@vp/domain';
+import { standardChannelLayout } from '@vp/domain';
 import { decideLayoutDocument } from '../layout-document.rule';
 import { contentSection, customTab, layoutWith, layoutWithHomeSections } from './layout-fixtures';
 
@@ -16,7 +16,7 @@ describe('@vp/domain-rules: decideLayoutDocument', () => {
     expectOk(
       decideLayoutDocument(
         layoutWithHomeSections(richText('Hello **there**')),
-        defaultChannelLayout()
+        standardChannelLayout()
       )
     );
   });
@@ -39,7 +39,7 @@ describe('@vp/domain-rules: decideLayoutDocument', () => {
     },
     {
       scenario: 'a layout without About',
-      layout: { ...defaultChannelLayout(), tabs: defaultChannelLayout().tabs.slice(0, 3) },
+      layout: { ...standardChannelLayout(), tabs: standardChannelLayout().tabs.slice(0, 3) },
       code: 'LAYOUT_STRUCTURE_INVALID',
     },
   ])('refuses $scenario with its own code', ({ layout, code }) => {

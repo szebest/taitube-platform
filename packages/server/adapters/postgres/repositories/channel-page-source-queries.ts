@@ -39,6 +39,7 @@ export function videoPool(db: PostgresDatabase, channelId: string, format: 'stan
     db
       .select({ key: keyOf(request.key), id: v.id })
       .from(v)
+      .$dynamic()
       .where(
         drizzleWhere(
           publicFeedScope({ channelId, format }),
@@ -69,6 +70,7 @@ export function postPool(db: PostgresDatabase, channelId: string) {
     db
       .select({ key: keyOf(request.key), id: p.id })
       .from(p)
+      .$dynamic()
       .where(
         drizzleWhere(
           eq(p.channelId, channelId),
@@ -87,6 +89,7 @@ export function livePool(db: PostgresDatabase, channelId: string) {
     db
       .select({ key: keyOf(request.key), id: ls.id })
       .from(ls)
+      .$dynamic()
       .where(
         drizzleWhere(
           eq(ls.channelId, channelId),
@@ -110,6 +113,7 @@ export function playlistPool(db: PostgresDatabase, ownerUserId: string) {
     db
       .select({ key: keyOf(request.key), id: pl.id })
       .from(pl)
+      .$dynamic()
       .where(
         drizzleWhere(
           eq(pl.ownerId, ownerUserId),
@@ -129,6 +133,7 @@ export function playlistItemsQuery(db: PostgresDatabase, request: PlaylistItemsR
     .from(pi)
     .innerJoin(pl, eq(pl.id, pi.playlistId))
     .innerJoin(v, eq(v.id, pi.videoId))
+    .$dynamic()
     .where(
       drizzleWhere(
         eq(pi.playlistId, request.playlistId),
@@ -147,6 +152,7 @@ export function smartQuery(db: PostgresDatabase, channelId: string, now: Date) {
     return db
       .select({ key: keyOf(request.key), id: v.id })
       .from(v)
+      .$dynamic()
       .where(drizzleWhere(publicFeedScope({ channelId }), rulesSql(request.rules, null, now)))
       .orderBy(direction(key), direction(v.id))
       .limit(Math.min(request.rules.limit, request.limit));

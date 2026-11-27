@@ -1,7 +1,12 @@
 import type { Container } from '@kit/composition';
 import { Singleflight } from '@kit/concurrency';
 import { Adapters } from '@vp/adapters/composition';
-import { ChannelLayoutService, ChannelPageResolver, ChannelPageService } from '../services/index';
+import {
+  ChannelLayoutScheduleService,
+  ChannelLayoutService,
+  ChannelPageResolver,
+  ChannelPageService,
+} from '../services/index';
 import { Services } from './service-tokens';
 
 export function registerChannelPageServices(c: Container): Container {
@@ -13,10 +18,18 @@ export function registerChannelPageServices(c: Container): Container {
       (c) =>
         new ChannelLayoutService({
           layouts: repositories().channelLayouts,
-          schedules: repositories().channelLayoutSchedules,
           revisions: repositories().entityRevisions,
           sources: repositories().channelPageSources,
           paginator: c.get(Services.Paginator),
+        })
+    )
+    .provide(
+      Services.ChannelLayoutScheduleService,
+      () =>
+        new ChannelLayoutScheduleService({
+          layouts: repositories().channelLayouts,
+          schedules: repositories().channelLayoutSchedules,
+          sources: repositories().channelPageSources,
           now: Date.now,
         })
     )

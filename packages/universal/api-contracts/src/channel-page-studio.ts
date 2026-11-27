@@ -208,6 +208,5 @@ export const previewChannelPage = defineEndpoint({
 
 export type ChannelPageDraftView = z.infer<typeof DraftSchema>;
 export type ChannelPagePublishedView = z.infer<typeof PublishedSchema>;
-export type ChannelPageRevisionView = z.infer<typeof RevisionSchema>;
 export type ChannelPageRevisionPageView = z.infer<typeof RevisionPageSchema>;
 export type ChannelPageScheduleView = z.infer<typeof ScheduleSchema>;

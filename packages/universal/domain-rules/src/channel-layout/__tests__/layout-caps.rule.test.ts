@@ -1,5 +1,5 @@
 import { expectErr, expectOk } from '@kit/testing/result';
-import { type ChannelLayout, defaultChannelLayout } from '@vp/domain';
+import { type ChannelLayout, standardChannelLayout } from '@vp/domain';
 import { decideLayoutCaps } from '../layout-caps.rule';
 import { contentSection, customTab, layoutWith, layoutWithHomeSections } from './layout-fixtures';
 
@@ -25,7 +25,7 @@ const picked = (count: number) =>
 
 describe('@vp/domain-rules: decideLayoutCaps', () => {
   it.each([
-    { scenario: 'the default layout', layout: defaultChannelLayout() },
+    { scenario: 'the default layout', layout: standardChannelLayout() },
     { scenario: 'four custom tabs', layout: customTabs(4) },
     { scenario: 'twenty sections on a tab', layout: layoutWithHomeSections(...sections(20, 'a')) },
     { scenario: 'twenty-four picked items', layout: layoutWithHomeSections(picked(24)) },

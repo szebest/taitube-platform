@@ -3,10 +3,10 @@ import {
   type ContentSection,
   type LayoutSection,
   type LayoutVisibility,
-  defaultChannelLayout,
+  standardChannelLayout,
 } from '@vp/domain';
 
-export const EVERYONE: LayoutVisibility = {
+const EVERYONE: LayoutVisibility = {
   audience: 'everyone',
   from: null,
   to: null,
@@ -38,7 +38,7 @@ export function section(id: string, overrides: Partial<ContentSection> = {}): Co
 }
 
 export function homeWith(...sections: LayoutSection[]): ChannelLayout {
-  const base = defaultChannelLayout();
+  const base = standardChannelLayout();
   return {
     ...base,
     tabs: base.tabs.map((tab) => (tab.kind === 'home' ? { ...tab, sections } : tab)),

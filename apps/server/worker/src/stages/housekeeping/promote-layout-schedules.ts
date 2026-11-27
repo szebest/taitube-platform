@@ -14,10 +14,6 @@ export interface PromoteLayoutSchedulesResult {
   appliedCount: number;
 }
 
-/**
- * Publishes the channel page layouts whose time has come. Each goes through the compare-and-set on
- * its status that also appends the revision, so two runs at once, or a retry, apply a schedule once.
- */
 export async function runPromoteLayoutSchedules(
   options: PromoteLayoutSchedulesOptions
 ): Promise<Result<PromoteLayoutSchedulesResult, DatabaseUnavailable>> {

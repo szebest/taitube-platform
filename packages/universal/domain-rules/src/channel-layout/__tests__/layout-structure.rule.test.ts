@@ -1,21 +1,21 @@
 import { expectErr, expectOk } from '@kit/testing/result';
-import { type ChannelLayout, defaultChannelLayout } from '@vp/domain';
+import { type ChannelLayout, standardChannelLayout } from '@vp/domain';
 import { decideLayoutStructure } from '../layout-structure.rule';
 import { contentSection, customTab, layoutWith, layoutWithHomeSections } from './layout-fixtures';
 
 const without = (kind: string): ChannelLayout => {
-  const base = defaultChannelLayout();
+  const base = standardChannelLayout();
   return { ...base, tabs: base.tabs.filter((tab) => tab.kind !== kind) };
 };
 
 const withSecondPostsTab = (): ChannelLayout => {
-  const base = defaultChannelLayout();
+  const base = standardChannelLayout();
   const posts = base.tabs.find((tab) => tab.kind === 'posts');
   return { ...base, tabs: [...base.tabs, ...(posts ? [{ ...posts, id: 'posts-2' }] : [])] };
 };
 
 const hiding = (kind: string): ChannelLayout => {
-  const base = defaultChannelLayout();
+  const base = standardChannelLayout();
   return {
     ...base,
     tabs: base.tabs.map((tab) => (tab.kind === kind ? { ...tab, hidden: true } : tab)),
@@ -24,7 +24,7 @@ const hiding = (kind: string): ChannelLayout => {
 
 describe('@vp/domain-rules: decideLayoutStructure', () => {
   it.each([
-    { scenario: 'the default layout', layout: defaultChannelLayout() },
+    { scenario: 'the default layout', layout: standardChannelLayout() },
     { scenario: 'a hidden Shorts tab', layout: hiding('shorts') },
     {
       scenario: 'a custom tab a section links to',
@@ -58,7 +58,7 @@ describe('@vp/domain-rules: decideLayoutStructure', () => {
     { scenario: 'a hidden About', layout: hiding('about'), reason: 'pinned_tab_hidden' },
     {
       scenario: 'a landing tab that is gone',
-      layout: { ...defaultChannelLayout(), landing: { visitor: 'home', subscriber: 'gone' } },
+      layout: { ...standardChannelLayout(), landing: { visitor: 'home', subscriber: 'gone' } },
       reason: 'landing_unknown',
     },
     {

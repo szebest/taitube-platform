@@ -1,5 +1,5 @@
 import { expectOk } from '@kit/testing/result';
-import { defaultChannelLayout, type NewChannelAuditEntry } from '@vp/domain';
+import { standardChannelLayout, type NewChannelAuditEntry } from '@vp/domain';
 import { OTHER_OWNER_CHANNEL_ID, OWNER_CHANNEL_ID, OWNER_ID, seedOwners } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
@@ -43,7 +43,7 @@ export function describeChannelLayoutScheduleContract(makeSubject: MakeRepositor
           {
             id,
             channelId: OWNER_CHANNEL_ID,
-            document: defaultChannelLayout(),
+            document: standardChannelLayout(),
             publishAt,
             createdBy: OWNER_ID,
           },

@@ -21,10 +21,6 @@ export function toPublishedLayout(row: RevisionRow): PublishedChannelLayout {
   };
 }
 
-/**
- * Appends the channel's next revision and its audit entry on the caller's transaction. The advisory
- * lock serialises two publishes of one channel, so each gets its own version.
- */
 export async function publishLayoutRevision(
   tx: PostgresDatabase,
   input: PublishChannelLayout

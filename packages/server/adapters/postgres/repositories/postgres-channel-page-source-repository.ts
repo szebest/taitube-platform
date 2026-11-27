@@ -31,13 +31,9 @@ interface KeyedRef {
   id: string;
 }
 
-/** A select of `key` and `id`: any table, which is why the set operation is typed here once. */
-interface KeyedMember extends PromiseLike<KeyedRef[]> {
-  getSQL(): unknown;
-}
-
-async function runUnion(members: readonly KeyedMember[]): Promise<KeyedRef[]> {
-  const [first, second, ...rest] = members as unknown as [PgSelect, PgSelect, ...PgSelect[]];
+async function runUnion(members: readonly PgSelect[]): Promise<KeyedRef[]> {
+  const [first, second, ...rest] = members;
+  if (!first) return [];
   const rows = await (second ? unionAll(first, second, ...rest) : first);
   return rows.map(({ key, id }) => ({ key: String(key), id: String(id) }));
 }
@@ -63,7 +59,7 @@ function poolMember(
   channelId: string,
   ownerUserId: string,
   type: PoolSourceType
-): (request: PoolRequest) => KeyedMember {
+): (request: PoolRequest) => PgSelect {
   switch (type) {
     case 'videos':
       return videoPool(db, channelId, 'standard');
@@ -179,7 +175,7 @@ export class PostgresChannelPageSourceRepository implements ChannelPageSourceRep
 
   private async keyed(
     keys: readonly string[],
-    members: readonly KeyedMember[],
+    members: readonly PgSelect[],
     kind: PageItemRef['kind'],
     operation: string
   ): Promise<Result<RefsByKey, DatabaseUnavailable>> {

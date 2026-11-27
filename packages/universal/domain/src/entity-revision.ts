@@ -24,15 +24,10 @@ export interface VideoMetadataSnapshot {
   commentsEnabled: boolean;
 }
 
-export interface ChannelLayoutSnapshot {
-  document: StoredLayout;
-  note: string | null;
-}
-
 export interface EntitySnapshots {
   video_metadata: VideoMetadataSnapshot;
   channel_post: { payload: PostPayload };
-  channel_layout: ChannelLayoutSnapshot;
+  channel_layout: { document: StoredLayout; note: string | null };
 }
 
 export type EntityRevision<T extends EntityRevisionType = EntityRevisionType> = {

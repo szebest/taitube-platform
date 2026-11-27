@@ -1,6 +1,6 @@
 import { expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
-import { defaultChannelLayout } from '@vp/domain';
+import { standardChannelLayout } from '@vp/domain';
 import { runPromoteLayoutSchedules } from '../promote-layout-schedules';
 
 const AT = Date.parse('2026-12-10T12:00:00.000Z');
@@ -12,7 +12,7 @@ async function schedule(repositories: InMemoryRepositories, n: number, minutesFr
   const publishAt = new Date(AT + minutesFromAt * 60_000);
   expectOk(
     await repositories.channelLayoutSchedules.create(
-      { id, channelId: CHANNEL, document: defaultChannelLayout(), publishAt, createdBy: USER },
+      { id, channelId: CHANNEL, document: standardChannelLayout(), publishAt, createdBy: USER },
       {
         channelId: CHANNEL,
         actorUserId: USER,

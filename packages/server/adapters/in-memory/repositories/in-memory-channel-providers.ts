@@ -92,6 +92,7 @@ export function provideChannels(container: Container, now: Clock): Container {
 export function channelContentOf(c: Container) {
   return {
     channelFeatured: c.get(Repo.channelFeatured),
+    channelHandleHistory: c.get(Repo.channelHandleHistory),
     channelImages: c.get(Repo.channelImages),
     channelPages: c.get(Repo.channelPages),
     channelLayouts: c.get(Repo.channelLayouts),

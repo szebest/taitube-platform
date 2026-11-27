@@ -1130,6 +1130,8 @@ erDiagram
     channels ||--o{ channel_subscriptions : has
     channels ||--o{ subscription_events : "gains and loses"
     channels ||--o{ channel_featured_videos : pins
+    channels ||--o| channel_layout_drafts : "has one draft page layout"
+    channels ||--o{ channel_layout_schedules : "queues page layouts"
     channels ||--o{ channel_handle_history : "retired handles"
     channels ||--o{ channel_image_uploads : "avatar, banner and playlist cover uploads"
     channels ||--o| channel_page_settings : "trailer and returning video"
@@ -1999,18 +2001,42 @@ CREATE INDEX clips_video_idx ON clips (video_id);
 -- 0045: one history for every entity that keeps one (ticket 116). A kind adds a value to the type CHECK and a snapshot shape in @vp/domain.
 CREATE TABLE entity_revisions (
   id             uuid PRIMARY KEY,                                       -- UUIDv7
-  entity_type    text NOT NULL,                                          -- 'video_metadata'
+  entity_type    text NOT NULL,                                          -- 'video_metadata', 'channel_post', 'channel_layout'
   entity_id      uuid NOT NULL,
   version        integer NOT NULL,                                       -- the entity's own version after the change
-  snapshot       jsonb NOT NULL,                                         -- video_metadata: title, description, tags, categoryId, visibility, thumbnail, chapters, commentsEnabled
+  snapshot       jsonb NOT NULL,                                         -- video_metadata: title, description, tags, categoryId, visibility, thumbnail, chapters, commentsEnabled; channel_post: payload; channel_layout: { document, note }
   author_user_id uuid REFERENCES users(id) ON DELETE SET NULL,           -- null for the state recorded before a video's first edit
   restored_from_version integer,                                         -- the version a restore went back to; null for an ordinary edit
   created_at     timestamptz NOT NULL DEFAULT now(),
-  CONSTRAINT entity_revisions_type_check CHECK (entity_type IN ('video_metadata')),
+  CONSTRAINT entity_revisions_type_check CHECK (entity_type IN ('video_metadata', 'channel_post', 'channel_layout')),
   CONSTRAINT entity_revisions_restored_from_check CHECK (restored_from_version IS NULL OR restored_from_version >= 0)
 );
 CREATE UNIQUE INDEX entity_revisions_entity_version_idx ON entity_revisions (entity_type, entity_id, version);
 -- Written in the edit's own transaction, after its CAS, so a lost write leaves neither a revision nor an audit row; `prune-revisions` keeps the newest 50 per entity.
+
+-- 0050: the channel page builder (ticket 121). The published layout is the newest `entity_revisions` row of type 'channel_layout'
+-- (entity_id = the channel id, snapshot = { document, note }); a publish takes an advisory lock per channel, appends version + 1 and writes its audit row in one transaction.
+CREATE TABLE channel_layout_drafts (
+  channel_id uuid PRIMARY KEY REFERENCES channels(id) ON DELETE CASCADE,   -- one draft per channel
+  doc        jsonb NOT NULL,                                               -- ChannelLayout (schemaVersion 1); migrated on read
+  version    integer NOT NULL DEFAULT 1,                                   -- optimistic: a save names the version it read
+  updated_by uuid REFERENCES users(id) ON DELETE SET NULL,
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT channel_layout_drafts_version_check CHECK (version >= 1)
+);
+CREATE TABLE channel_layout_schedules (
+  id         uuid PRIMARY KEY,                                             -- UUIDv7
+  channel_id uuid NOT NULL REFERENCES channels(id) ON DELETE CASCADE,
+  doc        jsonb NOT NULL,                                               -- the layout as it was when queued
+  publish_at timestamptz NOT NULL,
+  status     text NOT NULL DEFAULT 'pending',                              -- pending | applied | cancelled
+  created_by uuid REFERENCES users(id) ON DELETE SET NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT channel_layout_schedules_status_check CHECK (status IN ('pending', 'applied', 'cancelled'))
+);
+CREATE INDEX channel_layout_schedules_channel_status_idx ON channel_layout_schedules (channel_id, status);
+CREATE INDEX channel_layout_schedules_due_idx ON channel_layout_schedules (publish_at) WHERE status = 'pending';
+-- The `promote-layout-schedules` housekeeping task (every minute) flips a due row `pending -> applied` with a compare-and-set on status and appends its revision in that transaction, so it applies once however many runs find it.
 
 CREATE TABLE video_chapters (
   video_id uuid NOT NULL REFERENCES videos(id) ON DELETE CASCADE,
@@ -2557,6 +2583,12 @@ Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>`
 | `PUT /v1/posts/:id/reactions`, `DELETE /v1/posts/:id/reactions` | Like or unlike a post | — | `200 { postId, liked, likeCount }` / `404 POST_NOT_FOUND` | Signed in. Idempotent; likes only, `post_reactions`. |
 | `GET /v1/me/channel/posts?status=&cursor=&limit=` | The studio list | — | `200 { items:[ManagedPost], nextCursor }` | Channel-scoped, `create Post`. Every status, newest created first, keyset; `ManagedPost` is `Post` with `status`, `publishAt`, `createdAt` and a nullable `publishedAt`. A draft is visible only here, never to a reader. |
 | `POST /v1/me/channel/posts/:id/pin`, `DELETE /v1/me/channel/posts/:id/pin` | Pin or unpin a post | — | `200 ManagedPost` / `404 POST_NOT_FOUND` / `409 POST_PIN_LIMIT` | Scope `posts:write`, `pin Post` (owner, manager, editor). Published posts only, up to 3 a channel, newest pin first, checked in the transaction that pins; unpinning is idempotent. |
+| `GET /v1/channels/:idOrHandle/page` | A channel page, resolved for this viewer (query `tab`, `seed`, `locale`) | - | `200 ChannelPage` / `400` / `404 CHANNEL_NOT_FOUND` (an unknown, hidden or empty tab too) | Anonymous. The published layout (the default one when none), for the audience guest, member or subscriber. The resolver groups every section's source by type and asks once per type (`videos`, `shorts`, `posts`, `live`, `playlists`, `playlist`, `smart_playlist`, `start_here`) plus one hydration of every id they named, never a query per section or item; a fixed tab shows only when a one-item probe of its type found something. The pool of every section's items is cached in Redis per `(channel, revision, audience, locale chain)` for 60 s behind singleflight, a new revision being a new key; windows, the seeded `random` order (`seed`, generated and returned when absent) and `hideWatched` (one `watch_history` lookup over the pool, signed-in viewers only) run after it. Sort `manual` keeps the source order (picked items, one playlist, Start here). A section whose items turned private drops out on the read, with no save. |
+| `GET /v1/me/channel/page/draft`, `PUT /v1/me/channel/page/draft` | Read and save the draft | `{ document: ChannelLayout, version }` | `200 ChannelPageDraft` / `401` / `403` / `409 VERSION_CONFLICT` / `422 LAYOUT_LIMIT_EXCEEDED \| LAYOUT_STRUCTURE_INVALID \| LAYOUT_SLUG_INVALID \| LAYOUT_MARKDOWN_INVALID \| VALIDATION_FAILED` | Channel-scoped, the `edit-page` task: owner, manager and editor; a moderator and an analyst get 403. A save replaces the draft only when the stored version is the one the caller read (0 for none), so the second of two members gets 409. Caps (10 tabs, 4 custom, 20 sections a tab, 60 in all, 24 picked items, 128 KB), tab structure (Home and About present and shown, ids unique, landing and see-all pointing at tabs), slugs (3 to 30 of `a-z0-9-`, unique, not reserved, stable once published) and rich text (paragraphs, h2 and h3, bold, italic, lists, breaks, https links, `page-image:<id>` images with alt text; at most 8000 characters and 6 images) are `Result` rules in `@vp/domain-rules` and `@vp/validation`. Writes `page.draft_saved`. |
+| `POST /v1/me/channel/page/publish` | Publish the draft | `{ version, note? }` | `200 ChannelPageRevision` / `403` / `409 VERSION_CONFLICT` / `422 LAYOUT_REFERENCE_INVALID \| LAYOUT_*` | Same task. Also checks the draft against the live data (every picked video, post, playlist and featured channel exists, is public and belongs to the channel or the account) and appends the revision with its `page.published` audit row in one transaction. |
+| `GET /v1/me/channel/page/schedule`, `POST /v1/me/channel/page/schedule`, `DELETE /v1/me/channel/page/schedule/:id` | List, queue and cancel a layout change | `{ publishAt, source: 'draft' \| 'published' }` | `200 { items }` / `201 ChannelPageSchedule` / `200 ChannelPageSchedule` / `404 REVISION_NOT_FOUND \| LAYOUT_SCHEDULE_NOT_FOUND` / `422 LAYOUT_SCHEDULE_INVALID \| LAYOUT_*` | Same task. The document is snapshotted and validated when queued; `source: 'published'` is the studio's "schedule my return". Writes `page.scheduled` and `page.schedule_cancelled`. |
+| `GET /v1/me/channel/page/revisions?cursor=&limit=`, `POST /v1/me/channel/page/revisions/:id/restore` | History and restore | - | `200 { items:[ChannelPageRevision], nextCursor }` / `200 ChannelPageRevision` / `404 REVISION_NOT_FOUND` | Same task, over `entity_revisions` type `channel_layout` (the last 50 stay). A restore appends a new revision from the snapshot with `restoredFromVersion` and a `page.restored` audit row, so history is never rewritten and the published layout is always the newest row. |
+| `GET /v1/me/channel/page/preview?as=visitor\|subscriber&tab=&seed=` | The draft, resolved for an audience | - | `200 ChannelPage` / `403` / `404 CHANNEL_NOT_FOUND` | Same task. `as` switches the audience only and grants nothing; `Cache-Control: no-store`, and the pool is never read from or written to the cache. |
 | `GET /v1/me/channel/posts/:id/revisions?cursor=&limit=`, `POST /v1/me/channel/posts/:id/revisions/:revisionId/restore` | Edit history and restore | `{ version }` | `200 { items:[PostRevision], nextCursor }` / `200 ManagedPost` / `404 POST_NOT_FOUND \| REVISION_NOT_FOUND` / `409 VERSION_CONFLICT \| POST_POLL_LOCKED` / `422` | Scope `posts:write`, channel-scoped, `update Post`. Editing a published post appends a `channel_post` revision in 116's `entity_revisions` in the same transaction as the edit (the state before the first edit is kept too, and the last 50 stay); a draft or scheduled post keeps none. Restore is a normal edit under the caller's `version` that records `restoredFromVersion`, so history is appended to, never rewritten; a poll that has votes cannot be restored to different options. The public post keeps showing `isEdited`. |
 | `GET /v1/videos/:id/threads` | A video's viewer threads | — | `200 { items:[Thread], markers:[{ anchorMs, threadId, threadIds, count }] }` / `404 VIDEO_NOT_FOUND` | Anonymous allowed, the read rules of the video. Pinned first, then by `anchorMs`, up to 200. A thread held for review is listed to its author only. `markers` is `placeThreadMarkers` of `@vp/domain-rules`: a thread earns one with at least 2 replies from at least 2 distinct viewers (shadow banned and banned repliers do not count) or a pin, markers within 1 percent of the duration merge into one with a `count`, at most 20 are drawn. |
 | `POST /v1/videos/:id/threads` | Start a thread at a moment | `{ anchorMs, title, body? }` | `201 Thread` / `422 THREAD_ANCHOR_INVALID \| VALIDATION_FAILED` / `429 THREAD_LIMIT \| COMMENTS_SLOW_MODE` / the gate refusals of `POST /videos/:id/comments` | Channel-scoped. Title 1 to 100 characters, body up to 1000, `anchorMs` inside the video's duration. The title and body go through 113's gate on the video's channel as one comment would (hold, blocked words, slow mode, shadow bans, bans, account age, comments off). At most 5 open threads per viewer per video, counted under a lock on the video row. |
@@ -3211,6 +3243,7 @@ The watch party sweep (idle close, owner hand-over, purge) is not a scheduler: i
 | `prune-revisions` | `30 4 * * *` | Keep the newest 50 `entity_revisions` of every entity (`ENTITY_REVISION_KEEP`) and delete the older ones; a video's history is never rewritten, only truncated. |
 | `purge-generations` | `45 * * * *` | Delete the renditions and master of every retired generation past its grace (24 h after a swap, 14 days after the last edit for an edit's base; generation 1 rendition by rendition, since later generations live under its `hls/`), then mark it `purged`; purging an edit's base bakes the list into what plays. Fails a replacement whose upload lapsed. |
 | `purge-playlist-activity` | `45 4 * * *` | Delete `playlist_activity` rows older than 180 days (`PLAYLIST_ACTIVITY_RETENTION_DAYS`). |
+| `promote-layout-schedules` | `* * * * *` | Apply every `channel_layout_schedules` row that is `pending` and due, oldest first, up to the scan limit: each flips `pending -> applied` with a compare-and-set on `status` and appends its `channel_layout` revision (and the `page.published` audit row) in the same transaction, so a retry or two runs at once apply a schedule once. |
 | `reconcile-captions` | `*/20 * * * *` | Re-enqueue the run of every generated captions track still `pending` an hour after its last change, under the same job id (ADR-16). |
 | `flush-video-views` | every 10 s (`every`, not cron: cron has minute resolution) | Drain the Redis view and retention buffers into `videos.views_count`, `video_views_daily` and `video_views_device_daily` effectively-once (§5.2), the retention steps into `video_retention_milestones` and the playlist counts into `playlist_stats_daily` and `playlist_plays_daily` in the same batch, then announce `video.stats.updated` for videos in their first 48 hours (§10.3) and forget ledger batches older than a day. |
 

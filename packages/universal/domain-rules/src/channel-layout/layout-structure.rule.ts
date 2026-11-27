@@ -14,7 +14,6 @@ function firstRepeat(ids: readonly string[]): string | null {
 
 const isPinned = (kind: string): boolean => PINNED_TAB_KINDS.some((pinned) => pinned === kind);
 
-/** The tabs and sections hold together: unique ids, each built-in once, Home and About shown, every link inside the layout. */
 export function decideLayoutStructure(
   layout: ChannelLayout
 ): Result<ChannelLayout, LayoutStructureInvalid> {

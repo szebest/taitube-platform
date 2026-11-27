@@ -1,8 +1,8 @@
-import { type ChannelLayout, type ContentSection, defaultChannelLayout } from '@vp/domain';
+import { type ChannelLayout, type ContentSection, standardChannelLayout } from '@vp/domain';
 import { ChannelLayoutSchema } from '../channel-layout';
 
 function homeSection(): ContentSection {
-  const home = defaultChannelLayout().tabs[0];
+  const home = standardChannelLayout().tabs[0];
   const section = home?.kind === 'home' ? home.sections[0] : undefined;
   if (section?.kind !== 'content')
     throw new Error('the default Home starts with a content section');
@@ -10,14 +10,14 @@ function homeSection(): ContentSection {
 }
 
 function layoutWithSection(section: object): unknown {
-  const base = defaultChannelLayout();
+  const base = standardChannelLayout();
   const [home, ...rest] = base.tabs;
   return { ...base, tabs: [{ ...home, sections: [section] }, ...rest] };
 }
 
 describe('packages/api-contracts: ChannelLayoutSchema', () => {
   it('parses the default layout unchanged', () => {
-    const layout = defaultChannelLayout();
+    const layout = standardChannelLayout();
 
     expect(ChannelLayoutSchema.parse(layout)).toEqual(layout);
   });
@@ -46,7 +46,7 @@ describe('packages/api-contracts: ChannelLayoutSchema', () => {
   });
 
   it('leaves the caps to the rules, so an eleventh tab still parses', () => {
-    const base = defaultChannelLayout();
+    const base = standardChannelLayout();
     const extra: ChannelLayout['tabs'] = Array.from({ length: 5 }, (_, index) => ({
       kind: 'videos',
       id: `extra-${index}`,

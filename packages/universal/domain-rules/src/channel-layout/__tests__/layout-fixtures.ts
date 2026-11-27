@@ -4,10 +4,10 @@ import {
   type CustomTab,
   type LayoutSection,
   type LayoutVisibility,
-  defaultChannelLayout,
+  standardChannelLayout,
 } from '@vp/domain';
 
-export const EVERYONE: LayoutVisibility = {
+const EVERYONE: LayoutVisibility = {
   audience: 'everyone',
   from: null,
   to: null,
@@ -57,12 +57,12 @@ export function customTab(id: string, slug: string, sections: LayoutSection[] = 
 }
 
 export function layoutWith(...extraTabs: CustomTab[]): ChannelLayout {
-  const base = defaultChannelLayout();
+  const base = standardChannelLayout();
   return { ...base, tabs: [...base.tabs, ...extraTabs] };
 }
 
 export function layoutWithHomeSections(...sections: LayoutSection[]): ChannelLayout {
-  const base = defaultChannelLayout();
+  const base = standardChannelLayout();
   return {
     ...base,
     tabs: base.tabs.map((tab) => (tab.kind === 'home' ? { ...tab, sections } : tab)),

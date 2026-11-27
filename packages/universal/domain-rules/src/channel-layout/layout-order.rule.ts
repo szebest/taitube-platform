@@ -16,7 +16,6 @@ function generatorOf(seed: number): () => number {
   };
 }
 
-/** The same seed puts the same items in the same order, so one visit is stable; a new seed reshuffles. */
 export function shuffledBySeed<T>(items: readonly T[], seed: string): T[] {
   const next = generatorOf(hashOf(seed));
   const order = [...items];

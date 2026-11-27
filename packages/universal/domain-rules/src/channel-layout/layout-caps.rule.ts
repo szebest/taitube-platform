@@ -16,7 +16,6 @@ function pickedItems(section: LayoutSection): number {
     : 0;
 }
 
-/** The first cap the document breaks, checked from the whole document down to a section. */
 export function decideLayoutCaps(
   layout: ChannelLayout
 ): Result<ChannelLayout, LayoutLimitExceeded> {

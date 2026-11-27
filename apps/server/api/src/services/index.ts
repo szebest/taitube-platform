@@ -69,6 +69,7 @@ export * from './search-history-service';
 export * from './recommendation-feedback-service';
 export * from './discovery-shelves';
 export * from './channel-featured-service';
+export * from './channel-layout-schedule-service';
 export * from './channel-layout-service';
 export * from './channel-page/channel-page-resolver';
 export * from './channel-page/channel-page-service';

@@ -1,12 +1,8 @@
-import type { StoredLayout } from '@vp/domain';
+import { LAYOUT_SCHEDULE_STATUSES, type LayoutScheduleStatus, type StoredLayout } from '@vp/domain';
 import { sql } from 'drizzle-orm';
 import { check, index, integer, jsonb, pgTable, text, uuid } from 'drizzle-orm/pg-core';
 import { listOf, timestamptz } from './columns';
 import { channels, users } from './schema';
-
-export const CHANNEL_LAYOUT_SCHEDULE_STATUSES = ['pending', 'applied', 'cancelled'] as const;
-
-export type ChannelLayoutScheduleStatus = (typeof CHANNEL_LAYOUT_SCHEDULE_STATUSES)[number];
 
 export const channelLayoutDrafts = pgTable(
   'channel_layout_drafts',
@@ -31,7 +27,7 @@ export const channelLayoutSchedules = pgTable(
       .references(() => channels.id, { onDelete: 'cascade' }),
     doc: jsonb('doc').$type<StoredLayout>().notNull(),
     publishAt: timestamptz('publish_at').notNull(),
-    status: text('status').$type<ChannelLayoutScheduleStatus>().notNull().default('pending'),
+    status: text('status').$type<LayoutScheduleStatus>().notNull().default('pending'),
     createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
     createdAt: timestamptz('created_at').notNull().defaultNow(),
   },
@@ -42,7 +38,7 @@ export const channelLayoutSchedules = pgTable(
       .where(sql`${table.status} = 'pending'`),
     check(
       'channel_layout_schedules_status_check',
-      sql`${table.status} IN (${listOf(CHANNEL_LAYOUT_SCHEDULE_STATUSES)})`
+      sql`${table.status} IN (${listOf(LAYOUT_SCHEDULE_STATUSES)})`
     ),
   ]
 );

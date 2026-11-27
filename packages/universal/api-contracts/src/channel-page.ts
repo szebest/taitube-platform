@@ -42,7 +42,7 @@ export const PageItemSchema = z
 
 const SectionBase = { id: z.string(), presentation: PresentationSchema };
 
-export const ResolvedSectionSchema = z
+const ResolvedSectionSchema = z
   .discriminatedUnion('kind', [
     z.strictObject({
       ...SectionBase,

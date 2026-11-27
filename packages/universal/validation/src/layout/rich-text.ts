@@ -59,11 +59,6 @@ function firstRefusal(
   return null;
 }
 
-/**
- * Parses the body with the parser the studio's description preview renders with and walks the
- * tree against a whitelist: paragraphs, h2 and h3, bold, italic, lists, line breaks, https links
- * and images that name a `page-image:<id>` with alt text. Answers the image ids the body uses.
- */
 export function validateRichText(
   body: string,
   { maxChars, maxImages }: RichTextLimits

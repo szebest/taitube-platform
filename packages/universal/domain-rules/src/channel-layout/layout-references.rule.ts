@@ -11,8 +11,7 @@ export interface LayoutReference {
   readonly id: string;
 }
 
-/** What a public item looks like to the rule: the channel or the account that owns it, when it has one. */
-export interface LayoutReferenceFact extends LayoutReference {
+interface LayoutReferenceFact extends LayoutReference {
   readonly channelId: string | null;
   readonly ownerUserId: string | null;
 }
@@ -23,7 +22,6 @@ export interface LayoutReferenceScope {
   readonly facts: readonly LayoutReferenceFact[];
 }
 
-/** Every video, playlist, post and channel the document names, once each, in document order. */
 export function layoutReferences(layout: ChannelLayout): LayoutReference[] {
   const found: LayoutReference[] = [];
   for (const section of layout.tabs.flatMap(tabSections)) {
@@ -68,11 +66,6 @@ function belongs(
   }
 }
 
-/**
- * A picked video or post exists, is public and is the channel's own, a playlist is the account's,
- * and a featured channel exists. `facts` holds only what is public, so a missing one is absent,
- * private or someone else's, and the refusal tells which is none of them.
- */
 export function decideLayoutReferences(
   layout: ChannelLayout,
   scope: LayoutReferenceScope

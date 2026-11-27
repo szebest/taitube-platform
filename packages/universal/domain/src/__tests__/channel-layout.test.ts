@@ -1,8 +1,8 @@
-import { CHANNEL_LAYOUT_VERSION, defaultChannelLayout, migrateLayout } from '../channel-layout';
+import { CHANNEL_LAYOUT_VERSION, standardChannelLayout, migrateLayout } from '../channel-layout';
 
 describe('@vp/domain: migrateLayout', () => {
   it('returns a current document as it is', () => {
-    const layout = defaultChannelLayout();
+    const layout = standardChannelLayout();
 
     expect(migrateLayout(layout)).toBe(layout);
   });
@@ -34,9 +34,9 @@ describe('@vp/domain: migrateLayout', () => {
   });
 });
 
-describe('@vp/domain: defaultChannelLayout', () => {
+describe('@vp/domain: standardChannelLayout', () => {
   it('keeps Home and About and lands every viewer on Home', () => {
-    const layout = defaultChannelLayout();
+    const layout = standardChannelLayout();
 
     expect(layout.tabs.map(({ kind }) => kind)).toEqual([
       'home',

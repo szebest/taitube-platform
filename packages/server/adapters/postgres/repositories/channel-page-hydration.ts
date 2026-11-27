@@ -27,7 +27,6 @@ function cardOf(kind: PageItemKind): SQL<PageItemKind> {
   return sql<PageItemKind>`${kind}::text`;
 }
 
-/** Every kind selected into one shape, so the answer is one statement however the ids mix. */
 export async function hydrateRefs(
   db: PostgresDatabase,
   refs: readonly PageItemRef[]

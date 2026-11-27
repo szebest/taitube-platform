@@ -226,7 +226,6 @@ export type ChannelAuditEntry = ChannelAuditEvent & {
   createdAt: Date;
 };
 
-/** What a schedule coming due records, once its revision has a version; none when its author is gone. */
 export function scheduleAppliedAudit(schedule: {
   channelId: string;
   createdBy: string | null;

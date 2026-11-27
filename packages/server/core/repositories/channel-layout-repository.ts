@@ -22,7 +22,6 @@ export interface PublishedChannelLayout {
 export interface SaveChannelLayoutDraft {
   channelId: string;
   document: StoredLayout;
-  /** The version the caller read; 0 when the channel had no draft. */
   expectedVersion: number;
   userId: string;
   audit: NewChannelAuditEntry;
@@ -38,15 +37,9 @@ export interface PublishChannelLayout {
   authorUserId: string | null;
   note: string | null;
   restoredFromVersion: number | null;
-  /** Built once the new revision's version is known. */
   audit: ((version: number) => NewChannelAuditEntry) | null;
 }
 
-/**
- * The one draft of a channel page and its published layouts. A published layout is the newest
- * `entity_revisions` row of type `channel_layout`; publishing appends one with its audit entry in
- * one transaction, so history is never rewritten.
- */
 export interface ChannelLayoutRepositoryPort {
   getDraft(channelId: string): Promise<Result<ChannelLayoutDraft | null, DatabaseUnavailable>>;
   saveDraft(

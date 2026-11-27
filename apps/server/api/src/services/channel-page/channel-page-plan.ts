@@ -39,8 +39,7 @@ export interface PlanInput {
   now: Date;
 }
 
-/** The tabs and sections this audience and locale may see at all; the window is judged at read. */
-export function shownTabs(
+function shownTabs(
   layout: ChannelLayout,
   audience: ViewerAudience,
   locales: readonly string[]
@@ -51,7 +50,7 @@ export function shownTabs(
   );
 }
 
-export function shownSections(
+function shownSections(
   tab: LayoutTab,
   audience: ViewerAudience,
   locales: readonly string[]
@@ -116,10 +115,6 @@ function probeRequest(kind: ProbedTabKind): PoolRequest {
   };
 }
 
-/**
- * Groups every section's source by type, so the resolver asks each type once: one request per
- * section inside it, and a one-item probe for each fixed tab that decides whether the tab shows.
- */
 export function planPage({ layout, audience, locales, now }: PlanInput): PagePlan {
   const plan: PagePlan = {
     pool: { videos: [], shorts: [], posts: [], live: [], playlists: [] },

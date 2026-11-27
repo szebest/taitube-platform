@@ -4,18 +4,17 @@ import {
   type ChannelLayout,
   type LayoutSection,
   type LayoutTab,
-  type ViewerAudience,
   platformOfUrl,
+  tabSections,
   tabSlug,
 } from '@vp/domain';
 import {
   type ChannelNotFound,
   type LayoutViewer,
   channelNotFound,
-  isShownInWindow,
+  isShownTo,
   shuffledBySeed,
 } from '@vp/domain-rules';
-import { shownSections, shownTabs } from './channel-page-plan';
 import type { PagePool } from './channel-page-pool';
 
 export interface PageSelection {
@@ -26,7 +25,7 @@ export interface PageSelection {
 
 type TabSummary = ChannelPageView['tabs'][number];
 
-export function summaryOf(tab: LayoutTab): TabSummary {
+function summaryOf(tab: LayoutTab): TabSummary {
   return {
     id: tab.id,
     kind: tab.kind,
@@ -52,7 +51,6 @@ function hasContent(tab: LayoutTab, pool: PagePool): boolean {
   }
 }
 
-/** The tabs this viewer sees, the one asked for and the one a viewer lands on when none is. */
 export function selectTab(
   layout: ChannelLayout,
   pool: PagePool,
@@ -60,8 +58,8 @@ export function selectTab(
   requested: string | undefined,
   idOrHandle: string
 ): Result<PageSelection, ChannelNotFound> {
-  const tabs = shownTabs(layout, viewer.audience, viewer.locales).filter(
-    (tab) => isShownInWindow(tab.visibility, viewer.now) && hasContent(tab, pool)
+  const tabs = layout.tabs.filter(
+    (tab) => !tab.hidden && isShownTo(tab.visibility, viewer) && hasContent(tab, pool)
   );
   const home = tabs.find(({ kind }) => kind === 'home') ?? tabs[0];
   if (!home) return err(channelNotFound(idOrHandle));
@@ -73,15 +71,12 @@ export function selectTab(
   return tab ? ok({ tabs, tab, landing }) : err(channelNotFound(`${idOrHandle}/${requested}`));
 }
 
-function sectionsOf(tab: LayoutTab, audience: ViewerAudience, viewer: LayoutViewer) {
-  return shownSections(tab, audience, viewer.locales).filter(({ visibility }) =>
-    isShownInWindow(visibility, viewer.now)
-  );
+function sectionsOf(tab: LayoutTab, viewer: LayoutViewer): LayoutSection[] {
+  return tabSections(tab).filter(({ visibility }) => isShownTo(visibility, viewer));
 }
 
-/** The videos the viewer's own history must be asked about: those of sections that hide what was watched. */
 export function watchCandidates(tab: LayoutTab, pool: PagePool, viewer: LayoutViewer): string[] {
-  return sectionsOf(tab, viewer.audience, viewer).flatMap((section) =>
+  return sectionsOf(tab, viewer).flatMap((section) =>
     section.kind === 'content' && section.filters.hideWatched
       ? (pool.sections[section.id] ?? []).flatMap((item) =>
           item.kind === 'video' ? [item.id] : []
@@ -159,7 +154,7 @@ export function assemblePage(input: {
       ...summaryOf(tab),
       description: tab.kind === 'custom' ? tab.description : null,
       header: tab.kind === 'custom' ? tab.header : null,
-      sections: sectionsOf(tab, viewer.audience, viewer).flatMap(
+      sections: sectionsOf(tab, viewer).flatMap(
         (section) => resolveSection(section, context) ?? []
       ),
     },

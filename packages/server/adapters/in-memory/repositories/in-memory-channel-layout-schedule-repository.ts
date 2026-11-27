@@ -4,7 +4,7 @@ import type {
   ChannelLayoutScheduleRepositoryPort,
   NewChannelLayoutSchedule,
 } from '@vp/core/repositories';
-import { type NewChannelAuditEntry, scheduleAppliedAudit } from '@vp/domain';
+import { type NewChannelAuditEntry, isSchedulePending, scheduleAppliedAudit } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { type Clock, realClock } from './clock';
 import {
@@ -40,7 +40,7 @@ export class InMemoryChannelLayoutScheduleRepository implements ChannelLayoutSch
   ): Promise<Result<ChannelLayoutSchedule[], DatabaseUnavailable>> {
     return ok(
       [...this.rows.values()]
-        .filter((row) => row.channelId === channelId && row.status === 'pending')
+        .filter((row) => row.channelId === channelId && isSchedulePending(row.status))
         .sort((a, b) => a.publishAt.getTime() - b.publishAt.getTime())
         .map((row) => ({ ...row }))
     );
@@ -52,7 +52,7 @@ export class InMemoryChannelLayoutScheduleRepository implements ChannelLayoutSch
     audit: NewChannelAuditEntry
   ): Promise<Result<ChannelLayoutSchedule | null, DatabaseUnavailable>> {
     const row = this.rows.get(id);
-    if (!row || row.channelId !== channelId || row.status !== 'pending') return ok(null);
+    if (!row || row.channelId !== channelId || !isSchedulePending(row.status)) return ok(null);
     row.status = 'cancelled';
     const written = await this.deps.audit.append(audit);
     if (isErr(written)) return written;
@@ -61,7 +61,7 @@ export class InMemoryChannelLayoutScheduleRepository implements ChannelLayoutSch
 
   async promoteDue(now: Date, limit: number): Promise<Result<string[], DatabaseUnavailable>> {
     const due = [...this.rows.values()]
-      .filter((row) => row.status === 'pending' && row.publishAt <= now)
+      .filter((row) => isSchedulePending(row.status) && row.publishAt <= now)
       .sort((a, b) => a.publishAt.getTime() - b.publishAt.getTime())
       .slice(0, limit);
     const applied: string[] = [];

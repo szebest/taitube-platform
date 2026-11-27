@@ -1,5 +1,5 @@
 import { MS_PER_SECOND } from '@kit/primitives';
-import { type Result, assertNever, isErr, ok, unwrapOr } from '@kit/result';
+import { type Result, assertNever, isErr, ok } from '@kit/result';
 import type {
   ChannelFeaturedRepositoryPort,
   ChannelPageSourceRepositoryPort,
@@ -17,12 +17,13 @@ import {
   type ChannelPost,
   type LiveStream,
   type Playlist,
-  type PostPayload,
   type Video,
+  isChannelPageStream,
   isPostPublished,
   isPublicFeedEligible,
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
+import { hydrateRow, videoIdsOf } from './in-memory-channel-page-rows';
 
 interface PoolRow {
   id: string;
@@ -43,27 +44,6 @@ export interface InMemoryChannelPageSourcesDeps {
   channels: () => Pick<ChannelRepositoryPort, 'findById'>;
   featured: () => Pick<ChannelFeaturedRepositoryPort, 'listForChannel'>;
   smart: () => Pick<SmartPlaylistRepositoryPort, 'evaluate'>;
-}
-
-function videoIdsOf(rows: readonly { kind: string; videoId: string | null }[]): string[] {
-  return rows.flatMap(({ kind, videoId }) => (kind === 'video' && videoId ? [videoId] : []));
-}
-
-function excerptOf(payload: PostPayload): string {
-  switch (payload.kind) {
-    case 'text':
-      return payload.text;
-    case 'images':
-      return payload.caption ?? '';
-    case 'poll':
-    case 'quiz':
-      return payload.question;
-    case 'video_share':
-    case 'playlist_share':
-      return payload.comment ?? '';
-    default:
-      return assertNever(payload, 'PostPayload');
-  }
 }
 
 function matches(row: PoolRow, request: PoolRequest): boolean {
@@ -105,7 +85,6 @@ function ranked(rows: PoolRow[], request: PoolRequest): PoolRow[] {
     .slice(0, request.limit);
 }
 
-/** The in-memory form of the page's source queries: the same predicates, orders and limits. */
 export class InMemoryChannelPageSources implements ChannelPageSourceRepositoryPort {
   constructor(private readonly deps: InMemoryChannelPageSourcesDeps) {}
 
@@ -197,7 +176,7 @@ export class InMemoryChannelPageSources implements ChannelPageSourceRepositoryPo
   async hydrate(refs: readonly PageItemRef[]): Promise<Result<PageItemRow[], DatabaseUnavailable>> {
     const rows: PageItemRow[] = [];
     for (const ref of refs) {
-      const row = await this.rowOf(ref);
+      const row = await hydrateRow(this.deps, ref);
       if (row) rows.push(row);
     }
     return ok(rows);
@@ -251,7 +230,7 @@ export class InMemoryChannelPageSources implements ChannelPageSourceRepositoryPo
           rows: this.deps
             .live()
             .getAll()
-            .filter((stream) => stream.channelId === channelId && isShownLive(stream))
+            .filter((stream) => stream.channelId === channelId && isChannelPageStream(stream))
             .map((stream) => ({
               id: stream.id,
               createdAt: stream.startedAt ?? stream.createdAt,
@@ -284,103 +263,4 @@ export class InMemoryChannelPageSources implements ChannelPageSourceRepositoryPo
         return assertNever(type, 'PoolSourceType');
     }
   }
-
-  private async rowOf({ kind, id }: PageItemRef): Promise<PageItemRow | null> {
-    switch (kind) {
-      case 'video': {
-        const video = this.deps
-          .videos()
-          .getAllVideos()
-          .find((candidate) => candidate.id === id);
-        if (!video || !isPublicFeedEligible(video)) return null;
-        return {
-          kind,
-          id,
-          title: video.title ?? '',
-          thumbnailKey: video.customThumbnailKey ?? video.posterKey ?? null,
-          createdAt: video.createdAt,
-          channelId: video.channelId,
-          ownerUserId: video.ownerId,
-          format: video.format,
-          durationMs: video.durationMs,
-          viewsCount: video.viewsCount ?? 0,
-          likesCount: video.likesCount ?? 0,
-        };
-      }
-      case 'post': {
-        const post = this.deps.posts().posts.get(id);
-        if (!post || !isPostPublished(post.status)) return null;
-        return {
-          kind,
-          id,
-          title: excerptOf(post.payload),
-          thumbnailKey: null,
-          createdAt: post.publishedAt ?? post.createdAt,
-          channelId: post.channelId,
-          ownerUserId: null,
-          likesCount: post.likeCount,
-          commentsCount: post.commentsCount,
-        };
-      }
-      case 'playlist': {
-        const playlist = this.deps
-          .playlists()
-          .getAllPlaylists()
-          .find((candidate) => candidate.id === id);
-        if (!playlist || playlist.visibility !== 'public' || playlist.isSystem) return null;
-        return {
-          kind,
-          id,
-          title: playlist.title,
-          thumbnailKey: playlist.customThumbnailKey,
-          createdAt: playlist.updatedAt,
-          channelId: null,
-          ownerUserId: playlist.ownerId,
-          itemCount: videoIdsOf(this.deps.playlists().rowsOf(id)).length,
-        };
-      }
-      case 'live': {
-        const stream = this.deps
-          .live()
-          .getAll()
-          .find((candidate) => candidate.id === id);
-        if (!stream || !isShownLive(stream)) return null;
-        return {
-          kind,
-          id,
-          title: stream.title,
-          thumbnailKey: null,
-          createdAt: stream.startedAt ?? stream.createdAt,
-          channelId: stream.channelId,
-          ownerUserId: null,
-          status: stream.status,
-          viewers: stream.currentViewers,
-          videoId: stream.videoId,
-        };
-      }
-      case 'channel': {
-        const channel = unwrapOr(await this.deps.channels().findById(id), null);
-        if (!channel) return null;
-        return {
-          kind,
-          id,
-          title: channel.displayName,
-          thumbnailKey: null,
-          createdAt: channel.createdAt,
-          channelId: channel.id,
-          ownerUserId: channel.userId,
-          handle: channel.handle,
-          avatarUrl: channel.avatarUrl ?? null,
-        };
-      }
-      default:
-        return assertNever(kind, 'PageItemKind');
-    }
-  }
-}
-
-function isShownLive(stream: LiveStream): boolean {
-  if (stream.visibility !== 'public') return false;
-  if (stream.status === 'LIVE') return true;
-  return stream.status === 'ENDED' && stream.archiveVisibility === 'public';
 }

@@ -9,7 +9,7 @@ import {
   type ActingChannel,
   type ChannelLayout,
   type ViewerAudience,
-  defaultChannelLayout,
+  standardChannelLayout,
 } from '@vp/domain';
 import {
   type AuthorizationFailure,
@@ -40,7 +40,6 @@ export interface PageQuery {
 export type GetPageFailure = ChannelNotFound | DatabaseUnavailable;
 export type PreviewPageFailure = GetPageFailure | AuthorizationFailure;
 
-/** The channel page a viewer, or a team member previewing the draft, is shown. */
 export class ChannelPageService {
   constructor(private readonly deps: ChannelPageServiceDeps) {}
 
@@ -55,7 +54,7 @@ export class ChannelPageService {
       if (isErr(published)) return published;
       const audience = await this.audienceOf(viewer, found.id);
       if (isErr(audience)) return audience;
-      const layout = readStoredLayout(published.value?.document) ?? defaultChannelLayout();
+      const layout = readStoredLayout(published.value?.document) ?? standardChannelLayout();
       return this.deps.resolver.resolve({
         channel: found,
         layout,
@@ -90,7 +89,7 @@ export class ChannelPageService {
     const layout: ChannelLayout =
       readStoredLayout(draft.value?.document) ??
       readStoredLayout(published.value?.document) ??
-      defaultChannelLayout();
+      standardChannelLayout();
     return this.deps.resolver.resolve({
       channel: channel.value,
       layout,

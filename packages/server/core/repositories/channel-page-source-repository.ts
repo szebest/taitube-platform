@@ -63,11 +63,6 @@ export type PageItemRow =
     })
   | (PageItemBase & { kind: 'channel'; handle: string; avatarUrl: string | null });
 
-/**
- * What the page resolver reads, one statement per call: a call per source type that holds the
- * requests of every section of that type, and one hydration for every id the others collected.
- * Everything answered is public and the channel's own where a source says so.
- */
 export interface ChannelPageSourceRepositoryPort {
   pool(
     channelId: string,
@@ -75,18 +70,14 @@ export interface ChannelPageSourceRepositoryPort {
     type: PoolSourceType,
     requests: readonly PoolRequest[]
   ): Promise<Result<RefsByKey, DatabaseUnavailable>>;
-  /** The videos of the public playlists named, in their position order. */
   playlistItems(
     requests: readonly PlaylistItemsRequest[]
   ): Promise<Result<RefsByKey, DatabaseUnavailable>>;
-  /** Each rules document evaluated over the channel's own public videos. */
   smart(
     channelId: string,
     requests: readonly SmartRequest[],
     now: Date
   ): Promise<Result<RefsByKey, DatabaseUnavailable>>;
-  /** The pins that still qualify in order, else the most viewed public uploads. */
   startHere(channelId: string, limit: number): Promise<Result<PageItemRef[], DatabaseUnavailable>>;
-  /** The public ones among `refs`; an id that is private, gone or not ready is absent. */
   hydrate(refs: readonly PageItemRef[]): Promise<Result<PageItemRow[], DatabaseUnavailable>>;
 }

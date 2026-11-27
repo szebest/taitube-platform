@@ -1,5 +1,6 @@
 import { token } from '@kit/composition';
 import type {
+  ChannelLayoutScheduleService,
   ChannelLayoutService,
   ChannelPageResolver,
   ChannelPageService,
@@ -7,11 +8,13 @@ import type {
 
 export interface ChannelPageServiceSet {
   channelLayoutService: ChannelLayoutService;
+  channelLayoutScheduleService: ChannelLayoutScheduleService;
   channelPageService: ChannelPageService;
 }
 
 export const ChannelPageServices = {
   ChannelLayoutService: token<ChannelLayoutService>('ChannelLayoutService'),
+  ChannelLayoutScheduleService: token<ChannelLayoutScheduleService>('ChannelLayoutScheduleService'),
   ChannelPageResolver: token<ChannelPageResolver>('ChannelPageResolver'),
   ChannelPageService: token<ChannelPageService>('ChannelPageService'),
 };

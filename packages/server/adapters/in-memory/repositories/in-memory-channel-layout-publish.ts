@@ -14,7 +14,6 @@ export interface ChannelLayoutPublishDeps {
   };
 }
 
-/** The next revision of the channel and its audit entry; the in-memory form of the one transaction. */
 export async function publishChannelLayout(
   { revisions, audit }: ChannelLayoutPublishDeps,
   input: PublishChannelLayout,

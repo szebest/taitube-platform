@@ -2,6 +2,8 @@ import type { SmartPlaylistRules } from './smart-playlist';
 
 export const CHANNEL_LAYOUT_VERSION = 1;
 
+export const CHANNEL_PAGE_CACHE_SECONDS = 60;
+
 export const LAYOUT_LIMITS = {
   tabs: 10,
   customTabs: 4,
@@ -28,10 +30,17 @@ export type LayoutLimit =
   | 'picked_items'
   | 'document_bytes';
 
+export const LAYOUT_SCHEDULE_STATUSES = ['pending', 'applied', 'cancelled'] as const;
+export type LayoutScheduleStatus = (typeof LAYOUT_SCHEDULE_STATUSES)[number];
+
+const PENDING = LAYOUT_SCHEDULE_STATUSES[0];
+
+export const isSchedulePending = (status: LayoutScheduleStatus): boolean => status === PENDING;
+
 export const LAYOUT_AUDIENCES = ['everyone', 'visitors', 'subscribers', 'signed_in'] as const;
 export type LayoutAudience = (typeof LAYOUT_AUDIENCES)[number];
 
-export const VIEWER_AUDIENCES = ['guest', 'member', 'subscriber'] as const;
+const VIEWER_AUDIENCES = ['guest', 'member', 'subscriber'] as const;
 export type ViewerAudience = (typeof VIEWER_AUDIENCES)[number];
 
 export const BUILT_IN_TAB_KINDS = [
@@ -63,21 +72,6 @@ export const RESERVED_TAB_SLUGS: readonly string[] = [
   'edit',
 ];
 
-export const SECTION_SOURCE_TYPES = [
-  'videos',
-  'shorts',
-  'posts',
-  'live',
-  'playlists',
-  'playlist',
-  'picked',
-  'start_here',
-  'smart_playlist',
-] as const;
-
-export const PAGE_SOURCE_TYPES = [...SECTION_SOURCE_TYPES, 'channels'] as const;
-export type PageSourceType = (typeof PAGE_SOURCE_TYPES)[number];
-
 export const SECTION_SORTS = [
   'newest',
   'popular',
@@ -88,16 +82,15 @@ export const SECTION_SORTS = [
 ] as const;
 export type SectionSort = (typeof SECTION_SORTS)[number];
 
-export const SECTION_LAYOUT_TYPES = ['shelf', 'grid', 'list', 'hero', 'masonry'] as const;
 export const SECTION_DENSITIES = ['compact', 'comfortable'] as const;
-export type SectionDensity = (typeof SECTION_DENSITIES)[number];
+type SectionDensity = (typeof SECTION_DENSITIES)[number];
 
 export const PICKED_ITEM_KINDS = ['video', 'playlist', 'post'] as const;
-export type PickedItemKind = (typeof PICKED_ITEM_KINDS)[number];
+type PickedItemKind = (typeof PICKED_ITEM_KINDS)[number];
 
 export const GRID_COLUMNS = { min: 2, max: 6 } as const;
 
-export type LocalizedText = { default: string } & Record<string, string>;
+type LocalizedText = { default: string } & Record<string, string>;
 
 export interface LayoutVisibility {
   audience: LayoutAudience;
@@ -106,7 +99,7 @@ export interface LayoutVisibility {
   locales: string[];
 }
 
-export interface SectionPresentation {
+interface SectionPresentation {
   title: LocalizedText | null;
   subtitle: LocalizedText | null;
   background: string | null;
@@ -115,12 +108,12 @@ export interface SectionPresentation {
   show: { duration: boolean; views: boolean; date: boolean };
 }
 
-export interface PickedItem {
+interface PickedItem {
   kind: PickedItemKind;
   id: string;
 }
 
-export type SectionSource =
+type SectionSource =
   | { type: 'videos' }
   | { type: 'shorts' }
   | { type: 'posts' }
@@ -131,7 +124,7 @@ export type SectionSource =
   | { type: 'start_here' }
   | { type: 'smart_playlist'; rules: SmartPlaylistRules };
 
-export type SectionDateRange =
+type SectionDateRange =
   | { type: 'absolute'; from: string | null; to: string | null }
   | { type: 'last_days'; days: number };
 
@@ -142,7 +135,7 @@ export interface SectionFilters {
   hideWatched: boolean;
 }
 
-export type SectionLayout =
+type SectionLayout =
   | { type: 'shelf' }
   | { type: 'grid'; columns: number }
   | { type: 'list' }
@@ -163,7 +156,7 @@ export interface ContentSection {
   hideWhenEmpty: boolean;
 }
 
-export interface RichTextSection {
+interface RichTextSection {
   kind: 'rich_text';
   id: string;
   body: string;
@@ -171,7 +164,7 @@ export interface RichTextSection {
   visibility: LayoutVisibility;
 }
 
-export interface LinksSection {
+interface LinksSection {
   kind: 'links';
   id: string;
   links: { label: string; url: string }[];
@@ -179,7 +172,7 @@ export interface LinksSection {
   visibility: LayoutVisibility;
 }
 
-export interface FeaturedChannelsSection {
+interface FeaturedChannelsSection {
   kind: 'featured_channels';
   id: string;
   channelIds: string[];
@@ -200,12 +193,12 @@ interface TabBase {
   visibility: LayoutVisibility;
 }
 
-export interface HomeTab extends TabBase {
+interface HomeTab extends TabBase {
   kind: 'home';
   sections: LayoutSection[];
 }
 
-export interface FixedTab extends TabBase {
+interface FixedTab extends TabBase {
   kind: Exclude<BuiltInTabKind, 'home'>;
 }
 
@@ -277,8 +270,7 @@ function contentSection(id: string, source: SectionSource, title: string): Conte
   };
 }
 
-/** What a channel that never published a layout shows: the fixed tabs and a Home of two shelves. */
-export function defaultChannelLayout(): ChannelLayout {
+export function standardChannelLayout(): ChannelLayout {
   const fixed = (kind: Exclude<BuiltInTabKind, 'home'>): FixedTab => ({
     kind,
     id: kind,
@@ -314,7 +306,6 @@ export type StoredLayout = { schemaVersion: number } & Record<string, unknown>;
 
 type LayoutMigration = (document: StoredLayout) => StoredLayout;
 
-/** One step per old version, each returning the next; version 1 is the first, so none exist yet. */
 const LAYOUT_MIGRATIONS: Readonly<Record<number, LayoutMigration>> = {};
 
 function isStoredLayout(raw: unknown): raw is StoredLayout {
@@ -326,10 +317,6 @@ function isStoredLayout(raw: unknown): raw is StoredLayout {
   );
 }
 
-/**
- * Brings a stored document to the current version, or answers null for one that is not a layout
- * or comes from a newer version than this build knows.
- */
 export function migrateLayout(
   raw: unknown,
   migrations: Readonly<Record<number, LayoutMigration>> = LAYOUT_MIGRATIONS

@@ -17,7 +17,7 @@ import { contractSchema } from './contract-schema';
 import { sendResult } from './send-result';
 
 export async function channelPageStudioRoutes(app: FastifyInstance): Promise<void> {
-  const { channelLayoutService, channelPageService } = app.services;
+  const { channelLayoutService, channelLayoutScheduleService, channelPageService } = app.services;
   const server = app.withTypeProvider<ZodTypeProvider>();
 
   server.get(
@@ -60,7 +60,7 @@ export async function channelPageStudioRoutes(app: FastifyInstance): Promise<voi
     { schema: contractSchema(listChannelPageSchedules) },
     async (request, reply) => {
       const { user, acting } = requireActingChannel(request);
-      return sendResult(reply, request, await channelLayoutService.listSchedules(user, acting));
+      return sendResult(reply, request, await channelLayoutScheduleService.list(user, acting));
     }
   );
 
@@ -73,10 +73,11 @@ export async function channelPageStudioRoutes(app: FastifyInstance): Promise<voi
       return sendResult(
         reply,
         request,
-        await channelLayoutService.schedule(user, acting, {
+        await channelLayoutScheduleService.create(user, acting, {
           publishAt: new Date(publishAt),
           source,
-        })
+        }),
+        { status: scheduleChannelPage.status }
       );
     }
   );
@@ -94,7 +95,7 @@ export async function channelPageStudioRoutes(app: FastifyInstance): Promise<voi
       return sendResult(
         reply,
         request,
-        await channelLayoutService.cancelSchedule(user, acting, request.params.id)
+        await channelLayoutScheduleService.cancel(user, acting, request.params.id)
       );
     }
   );

@@ -7,6 +7,7 @@ import type {
   WatchHistoryRepositoryPort,
 } from '@vp/core/repositories';
 import {
+  CHANNEL_PAGE_CACHE_SECONDS,
   type Channel,
   type ChannelLayout,
   type ViewerAudience,
@@ -21,8 +22,6 @@ import { planPage } from './channel-page-plan';
 import { type PagePool, PagePoolSchema, loadPagePool } from './channel-page-pool';
 import { assemblePage, selectTab, watchCandidates } from './channel-page-view';
 
-const POOL_FRESH_SECONDS = 60;
-
 export interface ChannelPageResolverDeps {
   sources: ChannelPageSourceRepositoryPort;
   history: Pick<WatchHistoryRepositoryPort, 'findMany'>;
@@ -35,9 +34,7 @@ export interface ChannelPageResolverDeps {
 export interface ResolveRequest {
   channel: Channel;
   layout: ChannelLayout;
-  /** The published revision the layout is; null for the default layout and for a draft. */
   revision: number | null;
-  /** A draft is never cached. */
   cached: boolean;
   audience: ViewerAudience;
   locales: readonly string[];
@@ -49,11 +46,6 @@ export interface ResolveRequest {
 
 export type ResolvePageFailure = ChannelNotFound | DatabaseUnavailable;
 
-/**
- * Resolves a layout for one viewer. The pool of every section's items is the same for everyone of
- * an audience and locale, so it is cached per revision for a minute behind singleflight; windows,
- * the seeded order and the viewer's own watch history are applied after it.
- */
 export class ChannelPageResolver {
   constructor(private readonly deps: ChannelPageResolverDeps) {}
 
@@ -126,7 +118,7 @@ export class ChannelPageResolver {
 
   private async write(key: string, pool: PagePool): Promise<void> {
     ignore(
-      await this.deps.cache.set(key, JSON.stringify(pool), POOL_FRESH_SECONDS),
+      await this.deps.cache.set(key, JSON.stringify(pool), CHANNEL_PAGE_CACHE_SECONDS),
       'a cold cache costs one resolution, never a wrong page'
     );
   }
