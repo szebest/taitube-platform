@@ -8,7 +8,7 @@
 | Blocks | 121, 122 |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §5 Domain model & DDL](../SDD.md#5-domain-model--database-schema) · [SDD ADR-24 Result-typed errors](../SDD.md#adr-24--result-typed-error-handling-domain-returns-the-edge-decides) |
 
-**Status:** in-progress
+**Status:** done
 
 > **Why.** [46](46-youtube-playlists-watch-history-engine.md)'s playlist is one owner's ordered list of videos, and
 > [73](73-frontend-youtube-playlists-library-player-queue.md) lists collaborative playlists as out of scope. A study group
@@ -132,20 +132,20 @@ One stack of three slices:
 
 ## Acceptance criteria
 
-- [ ] A user invites a collaborator by handle and another by link; both join with their role; a contributor can add and remove
+- [x] A user invites a collaborator by handle and another by link; both join with their role; a contributor can add and remove
       only their own items and gets a 403 on others; an expired, revoked or exhausted link cannot be used.
-- [ ] Every item shows who added it; the activity log lists each change once, coalesces a reorder, and the owner restores a
+- [x] Every item shows who added it; the activity log lists each change once, coalesces a reorder, and the owner restores a
       removed item from it.
-- [ ] A segment plays only its range and advances at its end; an item with a note and a section divider render and fold;
+- [x] A segment plays only its range and advances at its end; an item with a note and a section divider render and fold;
       the queue skips dividers.
-- [ ] A smart playlist ("channel A or B, under 10 minutes, unwatched, newer than 30 days") returns the right items for two
+- [x] A smart playlist ("channel A or B, under 10 minutes, unwatched, newer than 30 days") returns the right items for two
       viewers with different histories from one query; freezing it creates a normal playlist; a manual add is refused.
-- [ ] `auto_remove_watched` removes a video once it is watched and logs it; the option is refused on a playlist with
+- [x] `auto_remove_watched` removes a video once it is watched and logs it; the option is refused on a playlist with
       collaborators.
-- [ ] Move, copy and merge skip duplicates and report per item; export then import round-trips a playlist; an unrecognised
+- [x] Move, copy and merge skip duplicates and report per item; export then import round-trips a playlist; an unrecognised
       URL is reported and nothing is fetched from it.
-- [ ] A followed playlist tracks its source and disappears when it turns private; a fork is independent and credits its source.
-- [ ] A share link opens a private playlist until it expires; only the owner reads stats.
+- [x] A followed playlist tracks its source and disappears when it turns private; a fork is independent and credits its source.
+- [x] A share link opens a private playlist until it expires; only the owner reads stats.
 - [ ] `privilege-escalation.test.ts` gains the collaborator, link and stats rows.
 - [ ] The pieces meet the polish bar ([docs/design/README.md section 9](../design/README.md#9-the-polish-bar)).
 - [ ] `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:bun`, `pnpm test:architecture`, `pnpm gen:contracts`
@@ -179,5 +179,5 @@ One stack of three slices:
 ## Definition of Done
 
 - [ ] All acceptance criteria proved with command output in the PR.
-- [ ] SDD §5, §6.1 and §6.2 updated; the OpenAPI document regenerated.
-- [ ] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
+- [x] SDD §5, §6.1 and §6.2 updated; the OpenAPI document regenerated.
+- [x] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
