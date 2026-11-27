@@ -78,6 +78,7 @@ describe('apps/server/api/composition: services module', () => {
       'playbackTelemetryService',
       'playlistActivityService',
       'playlistCollaborationService',
+      'playlistCoverService',
       'playlistItemService',
       'playlistLibraryService',
       'playlistPortabilityService',

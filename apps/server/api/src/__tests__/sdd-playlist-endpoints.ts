@@ -21,12 +21,19 @@ const {
   SHARE_LINK_LIMIT,
   SHARE_LINK_NOT_FOUND,
   SYSTEM_PLAYLIST_IMMUTABLE,
+  CHANNEL_NOT_FOUND,
+  UPLOAD_TOO_LARGE,
+  UNSUPPORTED_CONTENT_TYPE,
+  IMAGE_UPLOAD_NOT_FOUND,
+  UPLOAD_SIZE_MISMATCH,
+  IMAGE_TOO_SMALL,
 } = ErrorCodes;
 const ACTING = [VALIDATION_FAILED, UNAUTHORIZED, FORBIDDEN, PLAYLIST_NOT_FOUND];
 const READING = [VALIDATION_FAILED, UNAUTHORIZED, PLAYLIST_NOT_FOUND];
 const TAKING = [VALIDATION_FAILED, UNAUTHORIZED, PLAYLIST_INVITE_INVALID];
 const ITEMS = [...ACTING, PLAYLIST_IS_SMART];
 const OWNER_ONLY = [...ACTING, SYSTEM_PLAYLIST_IMMUTABLE];
+const COVER = [...OWNER_ONLY, CHANNEL_NOT_FOUND];
 
 type Shape = Pick<SddEndpointContract, 'hasBody' | 'hasPathParams' | 'hasQueryParams'>;
 
@@ -73,12 +80,7 @@ export const SDD_PLAYLIST_ENDPOINTS: SddEndpointContract[] = [
     'post',
     `${ID}/collaborators`,
     [201, 400, 401, 403, 404, 409],
-    [
-      ...ACTING,
-      ErrorCodes.CHANNEL_NOT_FOUND,
-      PLAYLIST_COLLABORATOR_EXISTS,
-      PLAYLIST_COLLABORATOR_LIMIT,
-    ],
+    [...ACTING, CHANNEL_NOT_FOUND, PLAYLIST_COLLABORATOR_EXISTS, PLAYLIST_COLLABORATOR_LIMIT],
     BODY
   ),
   row(
@@ -162,4 +164,24 @@ export const SDD_PLAYLIST_ENDPOINTS: SddEndpointContract[] = [
     [...OWNER_ONLY, SHARE_LINK_NOT_FOUND]
   ),
   row('get', '/v1/me/playlists/{id}/stats', [200, 400, 401, 403, 404], ACTING, QUERY),
+  row(
+    'post',
+    `${ID}/cover/upload`,
+    [201, 400, 401, 403, 404, 422],
+    [...COVER, UPLOAD_TOO_LARGE, UNSUPPORTED_CONTENT_TYPE],
+    BODY
+  ),
+  row(
+    'post',
+    `${ID}/cover/complete`,
+    [202, 400, 401, 403, 404, 422],
+    [
+      ...COVER,
+      IMAGE_UPLOAD_NOT_FOUND,
+      UPLOAD_SIZE_MISMATCH,
+      UNSUPPORTED_CONTENT_TYPE,
+      IMAGE_TOO_SMALL,
+    ],
+    BODY
+  ),
 ];
