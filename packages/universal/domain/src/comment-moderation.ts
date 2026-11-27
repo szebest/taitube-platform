@@ -73,6 +73,11 @@ export interface ModerationOutcome {
   readonly note: string | null;
 }
 
+export type StoredModerationOutcome = ModerationOutcome & { readonly state: ModerationState };
+
+export const isStored = (outcome: ModerationOutcome): outcome is StoredModerationOutcome =>
+  MODERATION_STATES.some((state) => state === outcome.state);
+
 const COMMENT_AUDIT_ACTIONS = {
   hold: 'comment.held',
   approve: 'comment.approved',

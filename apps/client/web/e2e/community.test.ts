@@ -8,6 +8,9 @@ test.describe('community', () => {
     api,
     signIn,
   }) => {
+    const run = Date.now();
+    const question = `Which route next? ${run}`;
+    const [first, second] = [`Line 28 (${run})`, `Line 15 (${run})`];
     const creator = await api('creator');
     const account = (await (await creator.get('/v1/me/account')).json()) as {
       channel: { id: string };
@@ -16,8 +19,8 @@ test.describe('community', () => {
       data: {
         payload: {
           kind: 'poll',
-          question: 'Which route next?',
-          options: ['Line 28', 'Line 15'],
+          question,
+          options: [first, second],
           closesAt: null,
         },
         commentsEnabled: true,
@@ -29,12 +32,11 @@ test.describe('community', () => {
 
     await signIn('viewer');
     await page.goto(`/channel/${account.channel.id}?tab=posts`);
-    const poll = page.getByText('Which route next?');
-    await expect(poll).toBeVisible();
-    await page.getByRole('button', { name: 'Line 28' }).click();
+    await expect(page.getByText(question)).toBeVisible();
+    await page.getByRole('button', { name: first }).click();
 
     await expect(page.getByText(/votes?/).first()).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Line 15' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: second })).toHaveCount(0);
   });
 
   test('a viewer starts a thread and its marker appears after two replies from two viewers', async ({
@@ -60,7 +62,6 @@ test.describe('community', () => {
     await signIn('viewer');
     await page.goto(`/watch/${watchable.id}`);
     await page.getByRole('tab', { name: 'Threads' }).click();
-    await expect(page.getByText('The first shot')).toBeVisible();
-    await expect(page.getByRole('button', { name: /The first shot/ }).first()).toBeVisible();
+    await expect(page.getByRole('button', { name: 'The first shot, 2 replies' })).toBeVisible();
   });
 });

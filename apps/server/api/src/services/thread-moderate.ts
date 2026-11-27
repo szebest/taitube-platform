@@ -1,6 +1,6 @@
 import { type Result, err, ignore, isErr, map, ok } from '@kit/result';
 import type { CommentActionBody, ModerationResultView } from '@vp/api-contracts';
-import { type ModerationNotice, commentModerationAudit } from '@vp/domain';
+import { type ModerationNotice, commentModerationAudit, isStored } from '@vp/domain';
 import {
   type ModerateThreadFailure,
   type ThreadNotFound,
@@ -50,7 +50,7 @@ export async function moderateThread(
   const decided = decideThreadModeration({ actor, thread, threadId, video, action });
   if (isErr(decided)) return decided;
   const { outcome, thread: current, video: host } = decided.value;
-  if (outcome.state === 'removed') {
+  if (!isStored(outcome)) {
     return err(moderationNotApplicable(action.action, current.moderationState, 'state'));
   }
 
@@ -72,7 +72,7 @@ export async function moderateThread(
   const written = await deps.threads.moderate({
     id: current.id,
     from: current.moderationState,
-    outcome: { ...outcome, state: outcome.state },
+    outcome,
     audit: commentModerationAudit({
       channelId: host.channelId,
       ...auditActor(actor),
