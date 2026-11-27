@@ -14,6 +14,7 @@ export abstract class ShareLinkRepository {
    */
   abstract create(link: ShareLink, limit: number): Promise<Result<boolean, DatabaseUnavailable>>;
   abstract findByToken(token: string): Promise<Result<ShareLink | null, DatabaseUnavailable>>;
+  abstract findById(id: string): Promise<Result<ShareLink | null, DatabaseUnavailable>>;
   /** The revoked link, or `null` when the target holds none with that id; a second revoke keeps the first time. */
   abstract revoke(
     targetType: ShareLinkTargetType,

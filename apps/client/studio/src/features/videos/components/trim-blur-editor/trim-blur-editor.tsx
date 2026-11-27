@@ -4,7 +4,7 @@ import { Button, Callout, useToast } from '@kit/ui';
 import { useMutation } from '@tanstack/react-query';
 import type { Video, VideoGenerationsView } from '@vp/api-contracts';
 import { BLUR_MIN_MS, type BlurRegion, TRIM_MIN_MS, type TimeRange } from '@vp/domain';
-import { VIDEO_EDIT, decideVideoEdit } from '@vp/domain-rules';
+import { decideVideoEdit } from '@vp/domain-rules';
 import { useApi } from '@vp/queries';
 import { useState } from 'react';
 import { TimelineRangeEditor } from '#app/components/video/timeline-range-editor';
@@ -52,7 +52,7 @@ export function TrimBlurEditor({ video, generations, busy }: TrimBlurEditorProps
   const { tOr } = useT();
   const save = useMutation(saveEditsMutationOptions(api, video.id));
   const revert = useMutation(revertEditsMutationOptions(api, video.id));
-  const { edit, editBase, activeGeneration } = generations;
+  const { edit, editBase, revertible } = generations;
   const durationMs = editBase.durationMs;
   const [trim, setTrim] = useState<TimeRange>(edit?.trim ?? { startMs: 0, endMs: durationMs });
   const [rows, setRows] = useState(() => (edit?.blurs ?? []).map(keyed));
@@ -60,11 +60,6 @@ export function TrimBlurEditor({ video, generations, busy }: TrimBlurEditorProps
   const [selected, setSelected] = useState<number | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
   const editing = selected === null ? undefined : blurs[selected];
-  const revertible =
-    edit !== null &&
-    VIDEO_EDIT.sources('revert').includes(edit.status) &&
-    edit.generation === activeGeneration &&
-    edit.baseGeneration !== edit.generation;
 
   const time = (range: TimeRange) => ({
     start: formatTimecode(range.startMs),

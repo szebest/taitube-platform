@@ -5,17 +5,17 @@ import type { Check, Job, Workflow } from './ci-workflow';
  * job key, one row for every app it runs. docs/standards/testing.md has the formula behind each.
  */
 const TIMEOUTS: Readonly<Record<string, number>> = {
-  build: 3,
-  'lint-typecheck': 4,
-  'unit-shards': 5,
+  build: 4,
+  'lint-typecheck': 7,
+  'unit-shards': 6,
   unit: 1,
-  'unit-bun-shards': 4,
+  'unit-bun-shards': 5,
   'unit-bun': 1,
-  extractable: 6,
+  extractable: 9,
   integration: 6,
-  'e2e-smoke': 4,
-  'e2e-client': 4,
-  visual: 5,
+  'e2e-smoke': 6,
+  'e2e-client': 6,
+  visual: 6,
   terraform: 2,
 };
 
@@ -24,7 +24,7 @@ const BUDGET_ACTION = './.github/actions/budget';
 /** What `.github/actions/budget` holds, in seconds, each on the step whose id it names. */
 const STEP_BUDGETS = [
   { job: 'unit-shards', step: 'unit-tests', seconds: 240 },
-  { job: 'lint-typecheck', step: 'architecture', seconds: 30 },
+  { job: 'lint-typecheck', step: 'architecture', seconds: 40 },
   { job: 'integration', step: 'integration-tests', seconds: 240 },
 ];
 

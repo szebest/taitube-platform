@@ -18126,7 +18126,7 @@ paths:
       summary: The generations of a video and its edit list
       tags:
         - Creator Studio
-      description: Newest first. `editBase` is the generation a new edit renders from and the timeline its ranges are on; `edit` is the list saved over it, or null.
+      description: Newest first. `editBase` is the generation a new edit renders from and the timeline its ranges are on; `edit` is the list saved over it, or null; `revertible` says the edit that plays can go back to its base.
       parameters:
         - schema:
             type: string
@@ -18267,6 +18267,8 @@ paths:
                           - updatedAt
                         additionalProperties: false
                       - type: 'null'
+                  revertible:
+                    type: boolean
                   items:
                     type: array
                     items:
@@ -18326,6 +18328,7 @@ paths:
                   - activeGeneration
                   - editBase
                   - edit
+                  - revertible
                   - items
                 additionalProperties: false
         '400':

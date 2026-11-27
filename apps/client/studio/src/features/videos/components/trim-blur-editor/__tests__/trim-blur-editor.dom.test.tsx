@@ -12,6 +12,7 @@ const applied = generationsOf({
     blurs: [],
     updatedAt: '2026-03-01T12:00:00.000Z',
   },
+  revertible: true,
 });
 
 describe('apps/client/studio: TrimBlurEditor', () => {
