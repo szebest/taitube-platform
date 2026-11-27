@@ -180,7 +180,7 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 | 146 | [Word-level caption timestamps so per-cue edges meet 100 ms](146-word-level-caption-timestamps.md) | 5 - Developer experience & growth | S | 139 | — | blocked |
 | 170 | [Platform packages - reusable, app-independent, extractable; the app registers its data through injection tokens](170-platform-packages-open-closed-extractable.md) | 5 - Developer experience & growth | XL (one PR, ordered commits, see *Delivery*) | 82, 85, 86, 87, 88, 131 | 48, 171 | in-progress |
 | 171 | [Intl formatters - one open contract, lists that collapse into "and N more" with a tooltip, richer formatters, a duration conformance suite](171-intl-formatters-open-extensible-list-more-tooltip-and-duration-conformance.md) | 5 - Developer experience & growth | XL (one PR, ordered commits, see *Delivery*) | 170 | — | blocked |
-| 172 | [One ECMAScript baseline per tier - presets, a browser floor, a guard, and the cleanup it enables](172-ecmascript-baseline-per-tier-presets-browser-floor-and-cleanup.md) | 5 - Developer experience & growth | M (one PR, ordered commits, see *Delivery*) | 85, 110 | — | in-progress |
+| 172 | [One ECMAScript baseline per tier - presets, a browser floor, a guard, and the cleanup it enables](172-ecmascript-baseline-per-tier-presets-browser-floor-and-cleanup.md) | 5 - Developer experience & growth | M (one PR, ordered commits, see *Delivery*) | 85, 110 | — | done |
 
 > `in-progress` and `done` are set by hand; the rest derive from the blockers and are written back to each ticket: `ready` = all blockers done (the frontier) · `blocked` · `blocked-by-date` (blockers done, waiting for a date the ticket names; set by hand, reset to `blocked` while a blocker is open).
 
