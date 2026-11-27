@@ -176,6 +176,7 @@ export const studioTeam = {
         channel_analytics: 'statystyki kanału',
         comments: 'komentarze',
         videos: 'filmy',
+        posts: 'wpisy',
       },
       format: { csv: 'CSV', json: 'JSON' },
     },

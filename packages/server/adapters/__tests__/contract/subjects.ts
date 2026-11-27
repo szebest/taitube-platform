@@ -9,6 +9,8 @@ export interface RepositoriesSubject {
   seedVideo(input: NewVideoInput, createdAt?: Date): Promise<VideoRecord>;
   /** No write path sets a like count or a past `createdAt`; ranking specs need both. */
   adjustComment(id: string, patch: CommentAdjustment): Promise<void>;
+  /** `publish` stamps its own `createdAt`; export specs place posts on the days they are read by. */
+  backdatePost(id: string, createdAt: Date): Promise<void>;
   /** Ordering specs place a playlist's last change in the past rather than waiting on a clock. */
   backdatePlaylist(id: string, updatedAt: Date): Promise<void>;
   /** Notifications are stamped by the clock; specs move what exists into the past instead of waiting. */
@@ -48,6 +50,11 @@ export async function inMemorySubject(): Promise<RepositoriesSubject> {
       const stored = expectOk(await repositories.comments.findById(id));
       if (!stored) throw new Error(`comment ${id} is not there to adjust`);
       Object.assign(stored, patch);
+    },
+    backdatePost: async (id, createdAt) => {
+      const stored = repositories.channelPosts.posts.get(id);
+      if (!stored) throw new Error(`post ${id} is not there to backdate`);
+      stored.createdAt = createdAt;
     },
     backdatePlaylist: async (id, updatedAt) => {
       const stored = expectOk(await repositories.playlists.findById(id));

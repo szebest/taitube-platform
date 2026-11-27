@@ -1,13 +1,13 @@
 import { MS_PER_DAY } from '@kit/primitives';
 import type { ExportScope } from '@vp/core/repositories';
 import * as schema from '@vp/db';
-import type { CommentExportRow, VideoExportRow } from '@vp/domain';
+import type { CommentExportRow, PostExportRow, VideoExportRow } from '@vp/domain';
 import { and, asc, eq, gte, isNull, lt } from 'drizzle-orm';
 import type { AnyPgColumn } from 'drizzle-orm/pg-core';
 import { keysetPast, msTimestamp } from '../scopes/index';
 import type { PostgresDatabase } from './types';
 
-const { comments: c, videos: v, channels: ch, categories: cat } = schema;
+const { comments: c, videos: v, channels: ch, categories: cat, channelPosts: p } = schema;
 
 export interface CreatedKey {
   createdAt: Date;
@@ -109,5 +109,44 @@ export async function videoRows(
     ...row,
     createdAt: createdAt.toISOString(),
     readyAt: readyAt?.toISOString() ?? null,
+  }));
+}
+
+export async function postRows(
+  db: PostgresDatabase,
+  scope: ExportScope,
+  after: CreatedKey | null,
+  limit: number
+): Promise<PostExportRow[]> {
+  const rows = await db
+    .select({
+      postId: p.id,
+      kind: p.kind,
+      status: p.status,
+      payload: p.payload,
+      commentsEnabled: p.commentsEnabled,
+      likeCount: p.likeCount,
+      commentsCount: p.commentsCount,
+      publishedAt: p.publishedAt,
+      createdAt: p.createdAt,
+      editedAt: p.editedAt,
+    })
+    .from(p)
+    .where(
+      and(
+        eq(p.channelId, scope.channelId),
+        madeWithin(p.createdAt, scope.range),
+        keysetPast(msTimestamp(p.createdAt), p.id, keyOf(after), 'asc')
+      )
+    )
+    .orderBy(asc(msTimestamp(p.createdAt)), asc(p.id))
+    .limit(limit);
+
+  return rows.map(({ payload, publishedAt, createdAt, editedAt, ...row }) => ({
+    ...row,
+    payload: JSON.stringify(payload),
+    publishedAt: publishedAt?.toISOString() ?? null,
+    createdAt: createdAt.toISOString(),
+    editedAt: editedAt?.toISOString() ?? null,
   }));
 }

@@ -31,7 +31,10 @@ const NOTIFICATION: Notification = {
 describe('domain: notification', () => {
   it.each<{ level: NotificationLevel; allowed: NotificationKind[] }>([
     { level: 'all', allowed: [...NOTIFICATION_KINDS] },
-    { level: 'highlights', allowed: NOTIFICATION_KINDS.filter((kind) => kind !== 'live') },
+    {
+      level: 'highlights',
+      allowed: NOTIFICATION_KINDS.filter((kind) => kind !== 'live' && kind !== 'post'),
+    },
     { level: 'none', allowed: [] },
   ])('a subscriber at level $level lets through $allowed', ({ level, allowed }) => {
     expect(NOTIFICATION_KINDS.filter((kind) => levelAllows(level, kind))).toEqual(allowed);
@@ -39,7 +42,7 @@ describe('domain: notification', () => {
 
   it.each([
     { filter: 'all' as const, kinds: NOTIFICATION_KINDS },
-    { filter: 'subscriptions' as const, kinds: ['upload', 'live'] },
+    { filter: 'subscriptions' as const, kinds: ['upload', 'live', 'post'] },
     { filter: 'mentions' as const, kinds: ['reply', 'mention'] },
   ])('the $filter filter lists $kinds', ({ filter, kinds }) => {
     expect(kindsOfFilter(filter)).toEqual(kinds);
@@ -153,6 +156,33 @@ describe('domain: notification', () => {
 
       it('changes nothing for an invite it already holds', () => {
         expect(foldNotification(held, invite('i1'), NOW)).toBeNull();
+      });
+    });
+
+    describe('posts of one channel', () => {
+      const held: Notification = {
+        ...NOTIFICATION,
+        kind: 'post',
+        videoId: null,
+        groupKey: 'post:c1',
+        payload: { ...NOTIFICATION.payload, postId: 'p1' },
+      };
+      const post = (postId: string): NewNotificationInput => ({
+        ...NEXT,
+        kind: 'post',
+        videoId: null,
+        groupKey: 'post:c1',
+        payload: { ...NEXT.payload, postId },
+      });
+
+      it('folds a second post into the row, holding the newest', () => {
+        expect(foldNotification(held, post('p2'), NOW)).toMatchObject({
+          payload: { count: 4, postId: 'p2' },
+        });
+      });
+
+      it('changes nothing for a post it already holds', () => {
+        expect(foldNotification(held, post('p1'), NOW)).toBeNull();
       });
     });
   });

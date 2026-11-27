@@ -20,6 +20,7 @@ import {
 } from './fixtures';
 import { type CreatedAtCursor, SHARED_MILLISECOND, walkByCreatedAt } from './keyset-walk';
 import { describeNotificationPartyInvitesContract } from './notification-party-invites.contract';
+import { describeNotificationPostsContract } from './notification-posts.contract';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
 const ACTOR = { handle: 'owner', displayName: 'Owner', avatarUrl: null };
@@ -82,6 +83,7 @@ export function describeNotificationRepositoryContract(makeSubject: MakeReposito
     });
 
     describeNotificationPartyInvitesContract(makeSubject);
+    describeNotificationPostsContract(makeSubject);
 
     beforeEach(async () => {
       await subject.reset();

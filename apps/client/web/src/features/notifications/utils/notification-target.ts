@@ -30,6 +30,10 @@ export function notificationTarget({
         return linkOptions({ to: '/channel/$channelId', params: { channelId: actorChannelId } });
       }
       return watch(videoId);
+    case 'post':
+      return actorChannelId
+        ? linkOptions({ to: '/channel/$channelId', params: { channelId: actorChannelId } })
+        : undefined;
     case 'live':
     case 'processing':
     case 'team_invite':

@@ -176,6 +176,7 @@ export const studioTeam = {
         channel_analytics: 'channel analytics',
         comments: 'comments',
         videos: 'videos',
+        posts: 'posts',
       },
       format: { csv: 'CSV', json: 'JSON' },
     },

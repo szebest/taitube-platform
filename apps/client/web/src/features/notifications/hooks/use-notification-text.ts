@@ -27,6 +27,10 @@ export function useNotificationText(): (notification: Notification) => Notificat
         return payload.count > 1
           ? tOr('notifications.uploads', { count: payload.count, name }, '')
           : tOr('notifications.uploaded', { name }, '');
+      case 'post':
+        return payload.count > 1
+          ? tOr('notifications.posts', { count: payload.count, name }, '')
+          : tOr('notifications.posted', { name }, '');
       case 'live':
         return tOr('notifications.live', { name }, '');
       case 'reply':

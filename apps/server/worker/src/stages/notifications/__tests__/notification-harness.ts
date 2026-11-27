@@ -1,7 +1,7 @@
 import { createLogger } from '@kit/logger';
 import { expectOk } from '@kit/testing/result';
 import type { InMemoryRepositories } from '@vp/adapters/in-memory';
-import type { NotificationLevel } from '@vp/domain';
+import type { NotificationLevel, PostPayload } from '@vp/domain';
 import { DEFAULT_PREFERENCES, type NotificationPreferences } from '@vp/domain/settings';
 
 export const CREATOR_ID = '00000000-0000-7000-8000-0000000000c0';
@@ -59,6 +59,30 @@ export async function seedVideo(
       status: 'READY',
       deletedAt: overrides.deletedAt ?? null,
     })
+  );
+}
+
+export function postId(n: number): string {
+  return `018f0001-0000-7000-8000-${String(n).padStart(12, '0')}`;
+}
+
+export async function seedPost(
+  repositories: InMemoryRepositories,
+  id: string,
+  payload: PostPayload = { kind: 'text', text: `Post ${id.slice(-2)}` }
+): Promise<void> {
+  expectOk(
+    await repositories.channelPosts.publish(
+      { id, channelId: CHANNEL_ID, authorUserId: CREATOR_ID, payload, commentsEnabled: true },
+      {
+        channelId: CHANNEL_ID,
+        actorUserId: CREATOR_ID,
+        action: 'post.published',
+        targetType: 'post',
+        targetId: id,
+        meta: { kind: payload.kind },
+      }
+    )
   );
 }
 
