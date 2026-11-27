@@ -1,5 +1,5 @@
 import type { PlaylistSearchCard, VideoRecord } from '@vp/core/repositories';
-import type { Channel } from '@vp/domain';
+import { type Channel, DEFAULT_PLAYLIST_SETTINGS } from '@vp/domain';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { toChannelSuggestion, toSearchResultItem } from '../search-views';
 import { TEST_SPRITE as SPRITE } from './service-deps';
@@ -42,6 +42,7 @@ function card(customThumbnailKey: string | null, coverKey: string | null): Playl
       kind: 'playlist',
       isSystem: false,
       customThumbnailKey,
+      ...DEFAULT_PLAYLIST_SETTINGS,
       createdAt: AT,
       updatedAt: AT,
     },

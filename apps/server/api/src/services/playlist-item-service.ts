@@ -13,12 +13,13 @@ import type {
   SortedPlaylistEntry,
   VideoRepository,
 } from '@vp/core/repositories';
-import type { PlaylistItemPatch, PlaylistItemSort } from '@vp/domain';
+import type { PlaylistItemPatch, PlaylistItemSort, SmartPlaylistRules } from '@vp/domain';
 import {
   type EditPlaylistItemFailure,
   type ManagePlaylistFailure,
   type PlaylistItemNotFound,
   type PlaylistNotFound,
+  type ShareLinkExpired,
   decidePlaylistAction,
   decidePlaylistItemEdit,
   decidePlaylistRead,
@@ -32,11 +33,15 @@ import type { UserContext } from '@vp/permissions';
 import type { InvalidPlaylistDetails } from '@vp/validation';
 import { decodeWith } from './cursor';
 import { toPlaylistItemView } from './library-views';
+import type { PlaylistSharingService } from './playlist-sharing-service';
+import type { SmartPlaylistReader } from './smart-playlist-reader';
 import type { SpriteGeometry } from './video-views';
 
 export interface PlaylistItemServiceDeps {
   playlists: PlaylistRepositoryPort;
   videos: Pick<VideoRepository, 'findById'>;
+  smart: Pick<SmartPlaylistReader, 'page'>;
+  sharing: Pick<PlaylistSharingService, 'shareOf'>;
   paginator: Paginator;
   cdn: CdnBase;
   sprite: SpriteGeometry;
@@ -47,24 +52,21 @@ interface ItemsQuery {
   sort: PlaylistItemSort;
   cursor?: string | undefined;
   limit?: number | undefined;
+  shareToken?: string | null;
 }
+
+/** A smart playlist pages in its rules' order whatever the sort asked, so its cursor names that. */
+const SMART_SORT = 'smart';
 
 type Acting = ManagePlaylistFailure | DatabaseUnavailable;
 type ItemPage = Page<PlaylistView['items'][number]>;
 
 /** Names its sort and is refused under another: a duration resumes nothing in a walk by channel. */
-function itemCursorPayload(
-  sort: PlaylistItemSort,
-  { entry, key }: SortedPlaylistEntry
-): CursorPayload {
-  return { sort, key, id: entry.id };
+function itemCursorPayload(sort: string, key: string | number, id: string): CursorPayload {
+  return { sort, key, id };
 }
 
-function decodeItemCursor(
-  cursor: string | undefined,
-  sort: PlaylistItemSort,
-  paginator: Paginator
-) {
+function decodeItemCursor(cursor: string | undefined, sort: string, paginator: Paginator) {
   return decodeWith(cursor, paginator, (payload): Result<PlaylistItemCursor, InvalidCursor> => {
     const key = payload['key'];
     const id = payload['id'];
@@ -84,11 +86,22 @@ export class PlaylistItemService {
     viewer: UserContext | null,
     playlistId: string,
     query: ItemsQuery
-  ): Promise<Result<ItemPage, PlaylistNotFound | InvalidCursor | DatabaseUnavailable>> {
+  ): Promise<
+    Result<ItemPage, PlaylistNotFound | ShareLinkExpired | InvalidCursor | DatabaseUnavailable>
+  > {
+    const share = await this.deps.sharing.shareOf(query.shareToken ?? null, playlistId);
+    if (isErr(share)) return share;
     const playlist = await this.deps.playlists.findSeated(playlistId, viewer?.id ?? null);
     if (isErr(playlist)) return playlist;
-    const readable = decidePlaylistRead({ actor: viewer, playlist: playlist.value, playlistId });
+    const readable = decidePlaylistRead({
+      actor: viewer,
+      playlist: playlist.value,
+      playlistId,
+      share: share.value?.grant ?? null,
+    });
     if (isErr(readable)) return readable;
+    const { rules } = readable.value;
+    if (rules !== null) return await this.smartPage(viewer, playlistId, rules, query);
 
     const { paginator, cdn, sprite } = this.deps;
     const limit = paginator.limit(query.limit);
@@ -102,8 +115,34 @@ export class PlaylistItemService {
     });
     return map(rows, (found) =>
       paginator.paginate(found, limit, {
-        cursorOf: (row) => itemCursorPayload(query.sort, row),
+        cursorOf: ({ entry, key }: SortedPlaylistEntry) =>
+          itemCursorPayload(query.sort, key, entry.id),
         toItem: ({ entry }) => toPlaylistItemView(entry, cdn, sprite),
+      })
+    );
+  }
+
+  private async smartPage(
+    viewer: UserContext | null,
+    playlistId: string,
+    rules: SmartPlaylistRules,
+    query: ItemsQuery
+  ): Promise<Result<ItemPage, InvalidCursor | DatabaseUnavailable>> {
+    const { paginator } = this.deps;
+    const limit = paginator.limit(query.limit);
+    const cursor = decodeItemCursor(query.cursor, SMART_SORT, paginator);
+    if (isErr(cursor)) return cursor;
+    const { key, id } = cursor.value ?? { key: 0, id: '' };
+    if (typeof key !== 'number') return err(invalidCursor());
+
+    const rows = await this.deps.smart.page({ id: playlistId, rules }, viewer, {
+      cursor: cursor.value && { key, id },
+      limit,
+    });
+    return map(rows, (found) =>
+      paginator.paginate(found, limit, {
+        cursorOf: (row) => itemCursorPayload(SMART_SORT, row.key, row.item.id),
+        toItem: (row) => row.item,
       })
     );
   }

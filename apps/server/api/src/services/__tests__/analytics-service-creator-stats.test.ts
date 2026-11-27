@@ -72,6 +72,7 @@ describe('AnalyticsService: creatorStats', () => {
         devices: [],
         shareLinks: [],
         experiments: [],
+        playlists: [],
       })
     );
     expectOk(

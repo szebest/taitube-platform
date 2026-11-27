@@ -5,6 +5,7 @@ import {
   listPlaylistItems,
   removePlaylistSection,
   restorePlaylistActivity,
+  SHARE_TOKEN_PARAM,
   sortPlaylist,
 } from '@vp/api-contracts';
 import type { FastifyInstance } from 'fastify';
@@ -30,7 +31,10 @@ export async function playlistItemsRoutes(app: FastifyInstance): Promise<void> {
       sendResult(
         reply,
         request,
-        await items.list(request.user ?? null, request.params.id, request.query)
+        await items.list(request.user ?? null, request.params.id, {
+          ...request.query,
+          shareToken: request.query[SHARE_TOKEN_PARAM] ?? null,
+        })
       )
   );
 

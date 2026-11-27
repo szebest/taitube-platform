@@ -3,7 +3,7 @@ import type { LightMyRequestResponse } from 'fastify';
 import { type TestApp, bearer, buildTestApp, seedVideo } from './test-app';
 
 export const OWNER = '11111111-1111-7111-8111-111111111111';
-const STRANGER = '22222222-2222-7222-8222-222222222222';
+export const STRANGER = '22222222-2222-7222-8222-222222222222';
 const ADMIN = '33333333-3333-7333-8333-333333333333';
 const CREATOR = '44444444-4444-7444-8444-444444444444';
 export const EDITOR = '55555555-5555-7555-8555-555555555555';

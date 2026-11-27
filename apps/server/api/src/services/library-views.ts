@@ -7,6 +7,8 @@ import type {
 } from '@vp/api-contracts';
 import {
   type OwnedPlaylist,
+  PLAYLIST_COVER_MOSAIC_SIZE,
+  type Playlist,
   type PlaylistDetail,
   type PlaylistEntry,
   type PublicPlaylist,
@@ -37,18 +39,42 @@ export function toPlaylistItemView(
   };
 }
 
+type ItemView = PlaylistView['items'][number];
+
+/** The image the cover mode picks; an item or a custom image that is gone falls back to the first poster. */
+function coverUrlOf(playlist: Playlist, entries: readonly ItemView[], cdn: CdnBase): string | null {
+  const first = entries.find((entry) => entry.video.posterUrl)?.video.posterUrl ?? null;
+  const { coverMode, coverVideoId, customThumbnailKey } = playlist;
+  if (coverMode === 'custom' && customThumbnailKey) return cdnUrl(cdn, customThumbnailKey);
+  if (coverMode === 'item') {
+    return entries.find((entry) => entry.videoId === coverVideoId)?.video.posterUrl ?? first;
+  }
+  return first;
+}
+
+/** `computed` stands for the stored items of a smart playlist, which holds none. */
 export function toPlaylistView(
   { playlist, owner, items, sections }: PlaylistDetail,
   cdn: CdnBase,
-  sprite: SpriteGeometry
+  sprite: SpriteGeometry,
+  computed?: readonly ItemView[]
 ): PlaylistView {
-  const { customThumbnailKey, createdAt, updatedAt, ...fields } = playlist;
-  const entries = items.map((item) => toPlaylistItemView(item, cdn, sprite));
+  const { customThumbnailKey, coverMode, coverVideoId, pinnedAt, createdAt, updatedAt, ...fields } =
+    playlist;
+  const entries = computed
+    ? [...computed]
+    : items.map((item) => toPlaylistItemView(item, cdn, sprite));
   return {
     ...fields,
-    thumbnailUrl: customThumbnailKey
-      ? cdnUrl(cdn, customThumbnailKey)
-      : (entries[0]?.video.posterUrl ?? null),
+    thumbnailUrl: coverUrlOf(playlist, entries, cdn),
+    cover: {
+      mode: coverMode,
+      videoId: coverVideoId,
+      mosaicUrls: entries
+        .flatMap((entry) => (entry.video.posterUrl ? [entry.video.posterUrl] : []))
+        .slice(0, PLAYLIST_COVER_MOSAIC_SIZE),
+    },
+    pinnedAt: pinnedAt?.toISOString() ?? null,
     videoCount: entries.length,
     owner,
     nextEpisodeVideoId: null,
@@ -60,12 +86,15 @@ export function toPlaylistView(
 }
 
 export function toOwnedPlaylistView(playlist: OwnedPlaylist): OwnedPlaylistView {
-  const { id, title, visibility, isSystem, videoCount, containsVideo, updatedAt } = playlist;
+  const { id, title, visibility, isSystem, rules, pinnedAt, videoCount, containsVideo, updatedAt } =
+    playlist;
   return {
     id,
     title,
     visibility,
     isSystem,
+    isSmart: rules !== null,
+    pinnedAt: pinnedAt?.toISOString() ?? null,
     videoCount,
     containsVideo,
     updatedAt: updatedAt.toISOString(),

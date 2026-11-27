@@ -72,6 +72,8 @@ export function registerServiceSet(c: Container): Container {
     playlistItemService: c.get(Services.PlaylistItemService),
     playlistTransferService: c.get(Services.PlaylistTransferService),
     playlistPortabilityService: c.get(Services.PlaylistPortabilityService),
+    playlistLibraryService: c.get(Services.PlaylistLibraryService),
+    playlistSharingService: c.get(Services.PlaylistSharingService),
     watchHistoryService: c.get(Services.WatchHistoryService),
     viewerActivityService: c.get(Services.ViewerActivityService),
     preferencesService: c.get(Services.PreferencesService),

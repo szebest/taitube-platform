@@ -51,6 +51,7 @@ describe('apps/server/api/services: clip suggestions', () => {
         devices: [],
         shareLinks: [],
         experiments: [],
+        playlists: [],
         retention: [
           { videoId: VIDEO_ID, percent: 0, viewers: 10 },
           { videoId: VIDEO_ID, percent: 100, viewers: 2 },

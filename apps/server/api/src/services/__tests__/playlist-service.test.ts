@@ -1,13 +1,11 @@
 import { type Result, isErr, ok } from '@kit/result';
 import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
-import { asCdnBase } from '@vp/env-schema';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { seedVideo } from '../../__tests__/test-app';
 import { PlaylistService } from '../playlist-service';
-import { ViewerProgress } from '../viewer-progress';
-import { TEST_SPRITE } from './service-deps';
+import { playlistReading } from './playlist-reading';
 
 const OWNER: UserContext = { id: '00000000-0000-7000-8000-00000000e001', role: 'USER' };
 const VIDEO = '00000000-0000-7000-8000-00000000e002';
@@ -20,10 +18,9 @@ describe('PlaylistService', () => {
     repositories = new InMemoryRepositories();
     service = new PlaylistService({
       playlists: repositories.playlists,
+      seats: repositories.playlistCollaborators,
       videos: repositories.videos,
-      viewerProgress: new ViewerProgress(repositories.watchHistory),
-      cdn: asCdnBase('http://cdn.test'),
-      sprite: TEST_SPRITE,
+      reader: playlistReading(repositories).reader,
     });
     await seedVideo(repositories, { id: VIDEO, ownerId: OWNER.id, title: 'Clip' });
   });
@@ -126,5 +123,47 @@ describe('PlaylistService', () => {
     });
 
     expect(expectErr(reordered).code).toBe(ErrorCodes.VERSION_CONFLICT);
+  });
+
+  it('decides a cover video against the items the playlist holds', async () => {
+    const id = await created();
+    const absent = await service.update(OWNER, id, { coverVideoId: VIDEO });
+    expectOk(await service.addItem(OWNER, id, VIDEO));
+
+    const held = expectOk(await service.update(OWNER, id, { coverVideoId: VIDEO }));
+
+    expect(expectErr(absent)).toMatchObject({
+      code: ErrorCodes.VALIDATION_FAILED,
+      field: 'coverVideoId',
+    });
+    expect(held.cover).toMatchObject({ mode: 'item', videoId: VIDEO });
+  });
+
+  it('refuses to remove watched videos from a list someone else works on', async () => {
+    const id = await created();
+    vi.spyOn(repositories.playlistCollaborators, 'seats').mockResolvedValueOnce(
+      ok({ seated: 1, isCollaborator: false })
+    );
+
+    const refused = await service.update(OWNER, id, { autoRemoveWatched: true });
+
+    expect(expectErr(refused).code).toBe(ErrorCodes.PLAYLIST_HAS_COLLABORATORS);
+    expect(expectOk(await service.update(OWNER, id, { autoRemoveWatched: true }))).toMatchObject({
+      autoRemoveWatched: true,
+    });
+  });
+
+  it('creates a smart playlist and refuses a video added to it by hand', async () => {
+    const { id, rules } = expectOk(
+      await service.create(OWNER, {
+        title: 'Fresh',
+        rules: { match: 'all', conditions: [], sort: 'newest', limit: 20 },
+      })
+    );
+
+    expect(rules).toMatchObject({ limit: 20 });
+    expect(expectErr(await service.addItem(OWNER, id, VIDEO)).code).toBe(
+      ErrorCodes.PLAYLIST_IS_SMART
+    );
   });
 });

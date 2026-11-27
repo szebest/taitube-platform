@@ -185,6 +185,7 @@ describe('replace, trim and clip suggestion routes', () => {
         devices: [],
         shareLinks: [],
         experiments: [],
+        playlists: [],
         retention: [0, 25, 50, 75, 100].map((percent, step) => ({
           videoId: VIDEO,
           percent,
