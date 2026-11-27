@@ -53,6 +53,7 @@ import * as searchHistory from './search-history';
 import * as shorts from './shorts';
 import * as subscriptions from './subscriptions';
 import * as telemetry from './telemetry';
+import * as threads from './threads';
 import * as trustedCommenters from './trusted-commenters';
 import * as uploads from './uploads';
 import * as videoAccess from './video-access';
@@ -133,6 +134,7 @@ export * from './search-history';
 export * from './shorts';
 export * from './subscriptions';
 export * from './telemetry';
+export * from './threads';
 export * from './trusted-commenters';
 export * from './uploads';
 export * from './video-resource';
@@ -210,6 +212,7 @@ export const contracts = {
   shorts,
   subscriptions,
   telemetry,
+  threads,
   savedReplies,
   trustedCommenters,
   uploads,

@@ -1,6 +1,7 @@
 import { Paginator } from '@kit/pagination';
 import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
+import type { CreatorInboxFilter } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { seedPrimaryChannel } from '../../__tests__/test-app';
@@ -20,6 +21,8 @@ describe('CreatorCommentService', () => {
     repositories = new InMemoryRepositories();
     service = new CreatorCommentService({
       comments: repositories.comments,
+      threads: repositories.videoThreads,
+      videos: repositories.videos,
       paginator: new Paginator(),
     });
     await repositories.videos.create({
@@ -64,5 +67,67 @@ describe('CreatorCommentService', () => {
     const result = await service.inbox(OWNER, ACTING, { filter: 'all', cursor: 'garbage' });
 
     expect(expectErr(result).code).toBe(ErrorCodes.INVALID_CURSOR);
+  });
+
+  describe('held threads', () => {
+    const THREAD = '55555555-5555-7555-8555-555555555555';
+
+    const startHeld = async () =>
+      repositories.videoThreads.create(
+        {
+          id: THREAD,
+          videoId: VIDEO_ID,
+          channelId: ACTING.channelId,
+          authorId: FAN,
+          authorChannelId: await seedPrimaryChannel(repositories, FAN),
+          anchorMs: 1_000,
+          title: 'The cut',
+          body: '',
+          moderation: {
+            moderationState: 'held',
+            moderationDisclosure: 'silent',
+            heldReason: 'review_all',
+            looksLikeQuestion: false,
+          },
+        },
+        5
+      );
+    const idsOf = async (filter: CreatorInboxFilter) =>
+      expectOk(await service.inbox(OWNER, ACTING, { filter })).items.map(({ id }) => id);
+
+    it.each([
+      { filter: 'all' as const, listed: true },
+      { filter: 'held' as const, listed: true },
+      { filter: 'unanswered' as const, listed: false },
+      { filter: 'reported' as const, listed: false },
+      { filter: 'hidden' as const, listed: false },
+      { filter: 'questions' as const, listed: false },
+      { filter: 'restricted' as const, listed: false },
+    ])('lists a held thread under $filter: $listed', async ({ filter, listed }) => {
+      await startHeld();
+
+      expect((await idsOf(filter)).includes(THREAD)).toBe(listed);
+    });
+
+    it('merges the threads into the pages, once each, across the cursor', async () => {
+      await startHeld();
+      const first = expectOk(await service.inbox(OWNER, ACTING, { filter: 'all', limit: 2 }));
+      const second = expectOk(
+        await service.inbox(OWNER, ACTING, {
+          filter: 'all',
+          limit: 2,
+          cursor: first.nextCursor ?? undefined,
+        })
+      );
+
+      const ids = [...first.items, ...second.items].map(({ id }) => id);
+
+      expect(ids).toHaveLength(4);
+      expect(new Set(ids).size).toBe(4);
+      expect([...first.items, ...second.items].find(({ id }) => id === THREAD)).toMatchObject({
+        targetSummary: { type: 'thread', id: THREAD, title: 'The cut' },
+        video: { id: VIDEO_ID, title: 'Clip' },
+      });
+    });
   });
 });

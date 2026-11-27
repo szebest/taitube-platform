@@ -13,7 +13,7 @@ import {
   Volume2,
   VolumeX,
 } from 'lucide-react';
-import { type ChangeEvent, useRef } from 'react';
+import { type ChangeEvent, type ReactNode, useRef } from 'react';
 import {
   LiveEdgeButton,
   usePlayerCommands,
@@ -36,6 +36,8 @@ export interface ControlBarProps {
   range?: PlaybackRange;
   /** Marked on the seek bar where each starts. */
   chapters?: readonly PlayerChapter[];
+  /** Laid over the seek bar, such as the thread markers. */
+  markers?: ReactNode;
   onPrevious?: () => void;
   onNext?: () => void;
 }
@@ -45,6 +47,7 @@ export function ControlBar({
   live = false,
   range,
   chapters,
+  markers,
   onPrevious,
   onNext,
 }: ControlBarProps) {
@@ -61,7 +64,7 @@ export function ControlBar({
         data-visible={visible || undefined}
         className="absolute inset-x-0 bottom-0 m-0 min-w-0 border-0 bg-linear-to-t from-media/90 via-media/55 to-transparent px-3 pt-20 pb-1 transition-opacity duration-fast ease-standard motion-reduce:transition-none not-data-visible:pointer-events-none not-data-visible:opacity-0 has-focus-visible:pointer-events-auto has-focus-visible:opacity-100"
       >
-        {!live && <SeekBar range={range} chapters={chapters} />}
+        {!live && <SeekBar range={range} chapters={chapters} markers={markers} />}
         <div className="flex items-center gap-1">
           {onPrevious && (
             <IconButton aria-label={tOr('player.previousVideo', {}, '')} onClick={onPrevious}>

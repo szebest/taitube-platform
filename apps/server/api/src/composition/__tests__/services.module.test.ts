@@ -96,6 +96,7 @@ describe('apps/server/api/composition: services module', () => {
       'sseHub',
       'sseService',
       'subscriptionService',
+      'threadService',
       'trustedCommenterService',
       'uploadService',
       'videoBulkEditService',

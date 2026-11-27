@@ -6,6 +6,7 @@ import type {
 } from './comment-moderation';
 import type { Disclosure } from './comment-settings';
 import type { Video } from './video';
+import type { VideoThread } from './video-thread';
 
 export const COMMENT_SORTS = ['top', 'newest'] as const;
 
@@ -14,12 +15,16 @@ export type CommentSort = (typeof COMMENT_SORTS)[number];
 export const COMMENT_TARGET_TYPES = ['video', 'post', 'thread'] as const;
 
 /** What a comment sits under; one table holds the comments of every kind. */
-export type CommentTarget = { type: 'video'; id: string } | { type: 'post'; id: string };
+export type CommentTarget =
+  | { type: 'video'; id: string }
+  | { type: 'post'; id: string }
+  | { type: 'thread'; id: string };
 
 /** What a comment sits under, loaded: the rules read its owner, channel and switches from it. */
 export type CommentHost =
   | { type: 'video'; video: Video }
-  | { type: 'post'; post: ChannelPost; ownerId: string };
+  | { type: 'post'; post: ChannelPost; ownerId: string }
+  | { type: 'thread'; thread: VideoThread; video: Video; authorShadowed: boolean };
 
 /** The video a comment sits under, or null for a comment on anything else. */
 export function commentVideoId(target: CommentTarget): string | null {
@@ -85,7 +90,7 @@ export const CREATOR_INBOX_FILTERS = [
 export type CreatorInboxFilter = (typeof CREATOR_INBOX_FILTERS)[number];
 
 export interface CreatorInboxComment extends CommentThread {
-  /** Null for a comment on anything but a video; `targetSummary` names every kind. */
+  /** Null for a comment on a post; a thread's comment names the video the thread is on. */
   video: CommentVideoSummary | null;
   targetSummary: CommentTargetSummary;
 }

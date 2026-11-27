@@ -1,5 +1,7 @@
+import { assertNever } from '@kit/result';
 import { expectOk } from '@kit/testing/result';
 import * as schema from '@vp/db';
+import type { CommentTarget } from '@vp/domain';
 import { eq } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/pglite';
 import {
@@ -22,6 +24,7 @@ import { PostgresRepositories } from '../postgres-repositories';
 
 const POST_ID = '00000000-0000-7000-8000-0000000007a1';
 const MISSING_ID = '00000000-0000-7000-8000-0000000007a2';
+const THREAD_ID = '00000000-0000-7000-8000-0000000007a3';
 
 async function seeded() {
   const engine = await migratedPglite();
@@ -38,21 +41,45 @@ async function seeded() {
     status: 'published',
     publishedAt: new Date(),
   });
-  const countOf = async (target: { type: 'video' | 'post'; id: string }) => {
-    if (target.type === 'video') {
-      const [row] = await db.select().from(schema.videos).where(eq(schema.videos.id, target.id));
-      return row?.commentsCount;
+  await db.insert(schema.videoThreads).values({
+    id: THREAD_ID,
+    videoId: VIDEO_IDS.a,
+    channelId: OWNER_CHANNEL_ID,
+    authorId: OWNER_ID,
+    authorChannelId: OWNER_CHANNEL_ID,
+    anchorMs: 0,
+    title: 'Intro',
+    body: '',
+  });
+  const countOf = async (target: CommentTarget) => {
+    switch (target.type) {
+      case 'video': {
+        const [row] = await db.select().from(schema.videos).where(eq(schema.videos.id, target.id));
+        return row?.commentsCount;
+      }
+      case 'post': {
+        const [row] = await db
+          .select()
+          .from(schema.channelPosts)
+          .where(eq(schema.channelPosts.id, target.id));
+        return row?.commentsCount;
+      }
+      case 'thread': {
+        const [row] = await db
+          .select()
+          .from(schema.videoThreads)
+          .where(eq(schema.videoThreads.id, target.id));
+        return row?.commentsCount;
+      }
+      default:
+        return assertNever(target, 'CommentTarget');
     }
-    const [row] = await db
-      .select()
-      .from(schema.channelPosts)
-      .where(eq(schema.channelPosts.id, target.id));
-    return row?.commentsCount;
   };
   return { db, engine, countOf };
 }
 
 const POST = { type: 'post', id: POST_ID } as const;
+const THREAD = { type: 'thread', id: THREAD_ID } as const;
 
 describe('adapters/postgres: comment targets', () => {
   it.each([
@@ -66,6 +93,11 @@ describe('adapters/postgres: comment targets', () => {
       target: POST,
       expected: { type: 'post', ownerId: OWNER_ID },
     },
+    {
+      scenario: 'a thread, with the owner of its video',
+      target: THREAD,
+      expected: { type: 'thread', ownerId: OWNER_ID, videoId: VIDEO_IDS.a },
+    },
     { scenario: 'a missing video', target: videoTarget(MISSING_ID), expected: undefined },
     { scenario: 'a missing post', target: { type: 'post', id: MISSING_ID }, expected: undefined },
   ] as const)('locks $scenario', async ({ target, expected }) => {
@@ -78,6 +110,7 @@ describe('adapters/postgres: comment targets', () => {
   it.each([
     { scenario: 'a video', target: videoTarget(VIDEO_IDS.a) },
     { scenario: 'a post', target: POST },
+    { scenario: 'a thread', target: THREAD },
   ] as const)('moves and sets the count of $scenario', async ({ target }) => {
     const { db, engine, countOf } = await seeded();
 

@@ -12,4 +12,8 @@ export const POST_ERROR_COPY = {
   [ErrorCodes.POST_DRAFT_LIMIT]: 'errors.postDraftLimit',
   [ErrorCodes.POST_SCHEDULE_INVALID]: 'errors.postScheduleInvalid',
   [ErrorCodes.POST_IMAGE_NOT_READY]: 'errors.postImageNotReady',
+  [ErrorCodes.THREAD_NOT_FOUND]: 'errors.threadNotFound',
+  [ErrorCodes.THREAD_LIMIT]: 'errors.threadLimit',
+  [ErrorCodes.THREAD_PIN_LIMIT]: 'errors.threadPinLimit',
+  [ErrorCodes.THREAD_ANCHOR_INVALID]: 'errors.threadAnchorInvalid',
 } as const satisfies Partial<Record<ErrorCode, SharedArgumentFreeKey>>;

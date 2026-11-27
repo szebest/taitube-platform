@@ -1,7 +1,7 @@
 import { isErr, isOk } from '@kit/result';
 import type { CommentHost } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
-import { OWNER, STRANGER, aPost, aVideo, videoHost } from '../../__tests__/entities';
+import { OWNER, STRANGER, aPost, aThread, aVideo, videoHost } from '../../__tests__/entities';
 import {
   commentHostTarget,
   commentHostTraits,
@@ -17,10 +17,18 @@ const postHost = (overrides = {}): CommentHost => ({
   ownerId: OWNER.id,
 });
 
+const threadHost = (thread = {}, video = {}, authorShadowed = false): CommentHost => ({
+  type: 'thread',
+  thread: aThread(thread),
+  video: aVideo(video),
+  authorShadowed,
+});
+
 describe('@vp/domain-rules: comment host', () => {
   it.each([
     { name: 'a video', host: videoHost(aVideo()), target: { type: 'video', id: 'video-1' } },
     { name: 'a post', host: postHost(), target: { type: 'post', id: 'post-1' } },
+    { name: 'a thread', host: threadHost(), target: { type: 'thread', id: 'thread-1' } },
   ])('targets $name by its id', ({ host, target }) => {
     expect(commentHostTarget(host)).toEqual(target);
   });
@@ -56,6 +64,16 @@ describe('@vp/domain-rules: comment host', () => {
         commentsCount: 7,
       },
     },
+    {
+      name: 'a thread, moderated by the video channel with the thread count',
+      host: threadHost({ commentsCount: 3 }, { commentsEnabled: false }),
+      traits: {
+        channelId: 'channel-1',
+        ownerId: OWNER.id,
+        commentsEnabled: false,
+        commentsCount: 3,
+      },
+    },
   ])('reads the traits of $name', ({ host, traits }) => {
     expect(commentHostTraits(host)).toEqual(traits);
   });
@@ -63,6 +81,7 @@ describe('@vp/domain-rules: comment host', () => {
   it.each([
     { name: 'a video', host: videoHost(aVideo()) },
     { name: 'a post', host: postHost() },
+    { name: 'a thread', host: threadHost() },
   ])('names the creator and the channel of $name for the permissions', ({ host }) => {
     expect(commentOwnership(host)).toEqual({
       videoOwnerId: OWNER.id,
@@ -73,6 +92,12 @@ describe('@vp/domain-rules: comment host', () => {
   it.each([
     { name: 'a public video', host: videoHost(aVideo()), viewer: null },
     { name: 'a published post', host: postHost(), viewer: null },
+    { name: 'a published thread', host: threadHost(), viewer: null },
+    {
+      name: 'a shadow banned thread, to its author',
+      host: threadHost({ authorId: STRANGER.id }, {}, true),
+      viewer: STRANGER,
+    },
   ])('lets anyone read the comments of $name', ({ host, viewer }) => {
     const result = decideCommentHostRead(viewer, host);
 
@@ -85,6 +110,18 @@ describe('@vp/domain-rules: comment host', () => {
       host: postHost({ status: 'draft' }),
       viewer: OWNER,
       code: ErrorCodes.POST_NOT_FOUND,
+    },
+    {
+      name: 'a held thread to a stranger',
+      host: threadHost({ moderationState: 'held' }),
+      viewer: STRANGER,
+      code: ErrorCodes.THREAD_NOT_FOUND,
+    },
+    {
+      name: 'the thread of a shadow banned author to a stranger',
+      host: threadHost({}, {}, true),
+      viewer: STRANGER,
+      code: ErrorCodes.THREAD_NOT_FOUND,
     },
     {
       name: 'a private video to a stranger',
@@ -110,6 +147,12 @@ describe('@vp/domain-rules: comment host', () => {
       host: postHost({ status: 'draft' }),
       viewer: OWNER,
       code: ErrorCodes.POST_NOT_FOUND,
+    },
+    {
+      name: 'a thread refusal, which is already the disguise',
+      host: threadHost({ moderationState: 'hidden' }),
+      viewer: STRANGER,
+      code: ErrorCodes.THREAD_NOT_FOUND,
     },
     {
       name: 'a private video of a stranger, disguised as absent',
@@ -139,6 +182,11 @@ describe('@vp/domain-rules: comment host', () => {
       name: 'a post',
       target: { type: 'post', id: 'p-9' } as const,
       code: ErrorCodes.POST_NOT_FOUND,
+    },
+    {
+      name: 'a thread',
+      target: { type: 'thread', id: 't-9' } as const,
+      code: ErrorCodes.THREAD_NOT_FOUND,
     },
   ])('refuses a missing $name as not found', ({ target, code }) => {
     expect(commentTargetNotFound(target)).toMatchObject({ code });

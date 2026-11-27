@@ -13,6 +13,7 @@ export function commentCreateDeps(
     comments: repositories.comments,
     videos: repositories.videos,
     posts: repositories.channelPosts,
+    threads: repositories.videoThreads,
     channels: repositories.channels,
     members: repositories.channelMembers,
     settings: repositories.commentSettings,

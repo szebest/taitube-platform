@@ -5,6 +5,7 @@ import {
   PostManageService,
   PostRevisionService,
   PostService,
+  ThreadService,
 } from '../services/index';
 import { Services } from './service-tokens';
 
@@ -49,6 +50,22 @@ export function registerPostServices(c: Container): Container {
           paginator: c.get(Services.Paginator),
         })
     )
+    .provide(Services.ThreadService, (c) => {
+      const repositories = c.get(Adapters.Repositories);
+      return new ThreadService({
+        videos: repositories.videos,
+        threads: repositories.videoThreads,
+        settings: repositories.commentSettings,
+        restrictions: repositories.channelUserRestrictions,
+        trusted: repositories.trustedCommenters,
+        subscriptions: repositories.subscriptions,
+        users: repositories.users,
+        members: repositories.channelMembers,
+        slowMode: c.get(Adapters.CommentSlowMode),
+        commentCache: c.get(Adapters.CommentCache),
+        now: Date.now,
+      });
+    })
     .provide(Services.PostEngagementService, (c) => {
       const repositories = c.get(Adapters.Repositories);
       return new PostEngagementService({

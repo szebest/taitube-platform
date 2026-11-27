@@ -27,6 +27,7 @@ describe('apps/client/web: generated route tree', () => {
       '/offline',
       '/parties/$roomId',
       '/playlist',
+      '/post/$id',
       '/search',
       '/settings',
       '/settings/',

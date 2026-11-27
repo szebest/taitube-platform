@@ -8,6 +8,7 @@ import { InMemoryCommentSettingsRepository } from './in-memory-comment-settings-
 import { InMemoryPostEngagement } from './in-memory-post-engagement-repository';
 import { Repo } from './in-memory-repo-tokens';
 import { InMemoryTrustedCommenterRepository } from './in-memory-trusted-commenter-repository';
+import { InMemoryVideoThreadRepository } from './in-memory-video-thread-repository';
 
 /**
  * The comment repositories, what moderates them and the posts they sit under, which need one
@@ -24,6 +25,26 @@ export function provideCommentRepositories(c: Container): Container {
           subscriptionsRepo: c.get(Repo.subscriptions),
           votes: (postId) => c.get(Repo.postEngagement).total(postId),
           revisions: c.get(Repo.entityRevisions),
+          removeComments: (target) => c.get(Repo.comments).removeTarget(target),
+        })
+    )
+    .provide(
+      Repo.videoThreads,
+      (c) =>
+        new InMemoryVideoThreadRepository({
+          auditRepo: c.get(Repo.channelAudit),
+          outboxRepo: c.get(Repo.outbox),
+          userEventsRepo: c.get(Repo.userEvents),
+          channelsRepo: c.get(Repo.channels),
+          restrictionsRepo: c.get(Repo.channelUserRestrictions),
+          commentsRepo: {
+            get comments() {
+              return c.get(Repo.comments).comments;
+            },
+            get removals() {
+              return c.get(Repo.comments).removals;
+            },
+          },
           removeComments: (target) => c.get(Repo.comments).removeTarget(target),
         })
     )
@@ -55,6 +76,7 @@ export function provideCommentRepositories(c: Container): Container {
           channelsRepo: c.get(Repo.channels),
           videosRepo: c.get(Repo.videos),
           postsRepo: c.get(Repo.channelPosts),
+          threadsRepo: c.get(Repo.videoThreads),
           outboxRepo: c.get(Repo.outbox),
           auditRepo: c.get(Repo.channelAudit),
           reportsRepo: c.get(Repo.commentReports),
@@ -69,6 +91,7 @@ export function provideCommentRepositories(c: Container): Container {
           commentsRepo: c.get(Repo.comments),
           videosRepo: c.get(Repo.videos),
           postsRepo: c.get(Repo.channelPosts),
+          threadsRepo: c.get(Repo.videoThreads),
           channelsRepo: c.get(Repo.channels),
           restrictionsRepo: c.get(Repo.channelUserRestrictions),
           auditRepo: c.get(Repo.channelAudit),

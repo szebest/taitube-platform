@@ -5,6 +5,7 @@ import type {
   CommentRepositoryPort,
   CommentViewer,
   VideoRepository,
+  VideoThreadRepositoryPort,
 } from '@vp/core/repositories';
 import type { Comment, CommentHost, CommentTarget } from '@vp/domain';
 import {
@@ -20,6 +21,7 @@ export interface CommentLookupDeps {
   comments: CommentRepositoryPort;
   videos: Pick<VideoRepository, 'findById'>;
   posts: Pick<ChannelPostRepositoryPort, 'findById'>;
+  threads: Pick<VideoThreadRepositoryPort, 'findEntry'>;
   channels: Pick<ChannelRepositoryPort, 'findById'>;
 }
 
@@ -43,6 +45,15 @@ export async function findHost(
       const channel = await deps.channels.findById(post.value.channelId);
       if (isErr(channel)) return channel;
       return ok(channel.value && { type: 'post', post: post.value, ownerId: channel.value.userId });
+    }
+    case 'thread': {
+      const entry = await deps.threads.findEntry(target.id);
+      if (isErr(entry)) return entry;
+      if (!entry.value) return ok(null);
+      const { thread, authorShadowed } = entry.value;
+      const video = await deps.videos.findById(thread.videoId);
+      if (isErr(video)) return video;
+      return ok(video.value && { type: 'thread', thread, video: video.value, authorShadowed });
     }
     default:
       return assertNever(target, 'CommentTarget');

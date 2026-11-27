@@ -126,7 +126,7 @@ describe('adapters/in-memory: announce a created comment', () => {
     const post: TargetOwner = { type: 'post', id: 'p1', ownerId: OWNER };
     const onPost = { ...created, target: { type: 'post', id: 'p1' } } satisfies CommentThread;
 
-    it('tells no one of a public comment', async () => {
+    it('queues the notification job for a public comment but tells no stream', async () => {
       await announceCreated(deps, {
         created: onPost,
         owner: post,
@@ -134,7 +134,10 @@ describe('adapters/in-memory: announce a created comment', () => {
         counted: true,
       });
 
-      expect([told, queued]).toEqual([[], []]);
+      expect(told).toEqual([]);
+      expect(queued).toMatchObject([
+        { payload: { job: { data: { target: { type: 'post', id: 'p1' }, commentId: 'c1' } } } },
+      ]);
     });
 
     it('tells the moderators on their stream but queues no webhook for a held comment', async () => {

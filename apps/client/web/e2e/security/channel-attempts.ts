@@ -10,6 +10,7 @@ export type ChannelAttempt = {
 };
 
 const NO_POST = '00000000-0000-7000-8000-000000000000';
+const NO_THREAD = '00000000-0000-7000-8000-000000000001';
 
 export const CHANNEL_ATTEMPTS: ChannelAttempt[] = [
   {
@@ -113,6 +114,39 @@ export const CHANNEL_ATTEMPTS: ChannelAttempt[] = [
     name: 'read the community feed',
     method: 'GET',
     path: () => '/v1/feed/community',
+    callers: ['an anonymous caller'],
+  },
+  {
+    name: 'start a thread on a video',
+    method: 'POST',
+    path: () => `/v1/videos/${NO_POST}/threads`,
+    data: { anchorMs: 0, title: 'hijacked', body: '' },
+    callers: ['an anonymous caller'],
+  },
+  {
+    name: 'reply in a thread',
+    method: 'POST',
+    path: () => `/v1/threads/${NO_THREAD}/comments`,
+    data: { content: 'hijacked' },
+    callers: ['an anonymous caller'],
+  },
+  {
+    name: 'pin a thread',
+    method: 'POST',
+    path: () => `/v1/threads/${NO_THREAD}/pin`,
+    callers: ['an anonymous caller'],
+  },
+  {
+    name: 'unpin a thread',
+    method: 'DELETE',
+    path: () => `/v1/threads/${NO_THREAD}/pin`,
+    callers: ['an anonymous caller'],
+  },
+  {
+    name: 'remove a thread',
+    method: 'POST',
+    path: () => `/v1/threads/${NO_THREAD}/remove`,
+    data: { disclosure: 'silent' },
     callers: ['an anonymous caller'],
   },
 ];

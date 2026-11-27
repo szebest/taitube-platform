@@ -17,6 +17,7 @@ import { definePreferencesRules } from './rules/preferences.rules';
 import { defineQueueRules } from './rules/queue.rules';
 import { defineRecommendationFeedbackRules } from './rules/recommendation-feedback.rules';
 import { defineShareLinkRules } from './rules/share-link.rules';
+import { defineThreadRules } from './rules/thread.rules';
 import { defineUploadRules } from './rules/upload.rules';
 import { defineVideoRules } from './rules/video.rules';
 import { defineWatchPartyRules } from './rules/watch-party.rules';
@@ -49,6 +50,7 @@ const buildAbility = createAbilityFactory<AppAction, AppSubjects, AbilityContext
   forUser(defineAnalyticsRules),
   forUser(definePlaylistRules),
   forUser(definePostRules),
+  forUser(defineThreadRules),
   forUser(definePreferencesRules),
   forUser(defineCaptionRules),
   forUser(defineNotificationRules),

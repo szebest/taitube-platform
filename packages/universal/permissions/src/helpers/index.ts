@@ -6,6 +6,7 @@ export * from './uploads';
 export * from './categories';
 export * from './playlists';
 export * from './posts';
+export * from './threads';
 export * from './admin';
 export * from './analytics';
 export * from './preferences';

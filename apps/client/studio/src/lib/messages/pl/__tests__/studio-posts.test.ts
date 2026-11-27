@@ -24,6 +24,7 @@ describe('apps/client/studio: pl studio posts', () => {
     { key: 'studio.statsOptionVotes', args: { count: 5 }, expected: '5 głosów' },
     { key: 'studio.statsOptionVotes', args: { count: 22 }, expected: '22 głosy' },
     { key: 'studio.commentsTargetChip', args: { type: 'video' }, expected: 'Film' },
+    { key: 'studio.commentsTargetChip', args: { type: 'thread' }, expected: 'Wątek' },
   ] as const)('renders $key for $args', ({ key, args, expected }) => {
     expect(t(key, args)).toEqual({ ok: true, value: expected });
   });

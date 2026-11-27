@@ -27,6 +27,7 @@ export function registerCommentServices(c: Container): Container {
           comments: repositories().comments,
           videos: repositories().videos,
           posts: repositories().channelPosts,
+          threads: repositories().videoThreads,
           channels: repositories().channels,
           members: repositories().channelMembers,
           settings: repositories().commentSettings,
@@ -75,6 +76,7 @@ export function registerCommentServices(c: Container): Container {
           comments: repositories().comments,
           videos: repositories().videos,
           posts: repositories().channelPosts,
+          threads: repositories().videoThreads,
           channels: repositories().channels,
           settings: repositories().commentSettings,
           moderation: repositories().commentModeration,
@@ -116,6 +118,7 @@ export function registerCommentServices(c: Container): Container {
           comments: repositories().comments,
           videos: repositories().videos,
           posts: repositories().channelPosts,
+          threads: repositories().videoThreads,
           channels: repositories().channels,
           reports: repositories().commentReports,
           commentService: c.get(Services.CommentService),
@@ -127,6 +130,8 @@ export function registerCommentServices(c: Container): Container {
       (c) =>
         new CreatorCommentService({
           comments: repositories().comments,
+          threads: repositories().videoThreads,
+          videos: repositories().videos,
           paginator: c.get(Services.Paginator),
         })
     );

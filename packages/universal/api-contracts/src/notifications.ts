@@ -41,7 +41,14 @@ const NotificationPayloadSchema = z.object({
     .nullable()
     .describe('The party a party_invite points at, with who was watching when it was sent'),
   inviteId: z.uuid().optional().describe('The channel team invite a `team_invite` opens'),
-  postId: z.uuid().optional().describe('The newest post of a `post` notification'),
+  postId: z
+    .uuid()
+    .optional()
+    .describe('The newest post of a `post` notification, or the post a comment kind is under'),
+  threadId: z
+    .uuid()
+    .optional()
+    .describe('The viewer thread a comment kind is under, on the notification `videoId`'),
   moderation: z
     .object({
       action: z.enum(['hold', 'hide', 'remove', 'ban']),

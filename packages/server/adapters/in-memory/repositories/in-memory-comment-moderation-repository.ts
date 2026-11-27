@@ -23,12 +23,14 @@ import type { InMemoryChannelRepository } from './in-memory-channel-repository';
 import type { InMemoryChannelUserRestrictionRepository } from './in-memory-channel-user-restriction-repository';
 import type { InMemoryCommentRepository } from './in-memory-comment-repository';
 import type { InMemoryVideoRepository } from './in-memory-video-repository';
+import type { InMemoryVideoThreadRepository } from './in-memory-video-thread-repository';
 import { byKeysetDesc, isKeysetBefore } from './keyset';
 
 export interface InMemoryCommentModerationRepositoryOptions {
   commentsRepo: Pick<InMemoryCommentRepository, 'comments' | 'removals'>;
   videosRepo: InMemoryVideoRepository;
   postsRepo: Pick<InMemoryChannelPostRepository, 'posts'>;
+  threadsRepo: Pick<InMemoryVideoThreadRepository, 'threads'>;
   channelsRepo: InMemoryChannelRepository;
   restrictionsRepo: Pick<InMemoryChannelUserRestrictionRepository, 'shadowedUserIds'>;
   auditRepo: Pick<InMemoryChannelAuditRepository, 'append'>;
@@ -85,12 +87,12 @@ export class InMemoryCommentModerationRepository implements CommentModerationRep
     const channel = unwrapOr(await this.deps.channelsRepo.findById(stored.authorChannelId), null);
     const thread = toThreadOf(stored, channel, repliesOf(comments.values(), stored.id).length);
     const firstPublication = outcome.state === 'published' && from === 'held' && heldBefore;
-    if (firstPublication && owner.type === 'video') {
+    if (firstPublication) {
       const queued = await this.deps.outboxRepo.enqueue(
-        commentOutbox({ videoId: owner.id, commentId: stored.id })
+        commentOutbox({ target: stored.target, commentId: stored.id })
       );
       if (isErr(queued)) return queued;
-      if (owner.ownerId !== stored.authorId) {
+      if (owner.type === 'video' && owner.ownerId !== stored.authorId) {
         const told = await this.deps.userEventsRepo.append({
           userId: owner.ownerId,
           ...commentCreated(thread, { id: owner.id, title: owner.title }),

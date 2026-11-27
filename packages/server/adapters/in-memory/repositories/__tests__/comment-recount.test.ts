@@ -38,6 +38,7 @@ describe('adapters/in-memory: recountAuthored', () => {
     const stores: CommentTargetStores = {
       videosRepo: { findById: async (id) => ok((videos.get(id) ?? null) as Video | null) },
       postsRepo: { posts: new Map([[post.id, post as ChannelPost]]) },
+      threadsRepo: { threads: new Map() },
       channelsRepo: { findById: async () => ok(null) },
     };
     const scope: PublicScopeContext = {

@@ -17,6 +17,7 @@ function setUp() {
   const stores: CommentTargetStores = {
     videosRepo: { findById: async (id) => ok(id === video.id ? (video as Video) : null) },
     postsRepo: { posts: new Map([[post.id, post as ChannelPost]]) },
+    threadsRepo: { threads: new Map() },
     channelsRepo: {
       findById: async (id) =>
         ok(id === 'ch1' ? ({ id, userId: 'channel-owner' } as Channel) : null),

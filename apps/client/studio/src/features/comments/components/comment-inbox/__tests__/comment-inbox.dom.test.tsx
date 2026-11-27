@@ -10,12 +10,22 @@ const OLDER = inboxComment({
 });
 
 const POST_ID = '0190c3a0-5e1d-7000-8000-00000000d00b';
+const THREAD_ID = '0190c3a0-5e1d-7000-8000-00000000d00e';
 const POST_COMMENT = inboxComment({
   id: '0190c3a0-5e1d-7000-8000-00000000d00c',
   content: 'On a post',
   target: { type: 'post', id: POST_ID },
   videoId: null,
+  video: null,
   targetSummary: { type: 'post', id: POST_ID, title: 'Which topic next?' },
+});
+
+const THREAD_COMMENT = inboxComment({
+  id: '0190c3a0-5e1d-7000-8000-00000000d00d',
+  content: 'On a thread',
+  target: { type: 'thread', id: THREAD_ID },
+  videoId: null,
+  targetSummary: { type: 'thread', id: THREAD_ID, title: 'The first shot' },
 });
 
 const rowOf = (text: string) => screen.getByText(text).closest('tr') as HTMLElement;
@@ -42,6 +52,7 @@ describe('apps/client/studio: CommentInbox', () => {
         content: 'Count me in',
         target: { type: 'post', id: POST_ID },
         videoId: null,
+        video: null,
         targetSummary: { type: 'post', id: POST_ID, title: 'Which topic next?' },
       }),
       chip: 'Post',
@@ -59,10 +70,13 @@ describe('apps/client/studio: CommentInbox', () => {
     }
   );
 
-  it('links only a video, never a post', async () => {
-    await renderInbox('/comments', [[POST_COMMENT]]);
+  it('links a video and a thread to their video, never a post', async () => {
+    await renderInbox('/comments', [[POST_COMMENT, THREAD_COMMENT]]);
 
     expect(within(rowOf(POST_COMMENT.content)).queryByRole('link')).toBeNull();
+    expect(
+      within(rowOf(THREAD_COMMENT.content)).getByRole('link', { name: 'The first shot' })
+    ).toHaveAttribute('href', `http://localhost:5173/watch/${VIDEO_ID}`);
   });
 
   it('loads the next page on request', async () => {

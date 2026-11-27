@@ -4,11 +4,11 @@ import type { AuthoredComment } from '@vp/domain';
 import type { UserContext } from '@vp/permissions';
 import { and, eq, ne, or } from 'drizzle-orm';
 import { drizzleWhere, notDeletedScope, watchableVideoScope } from '../scopes/index';
-import { creatorInboxColumns, creatorInboxFilterScope } from './comment-inbox-query';
+import { creatorInboxColumns, creatorInboxFilterScope, threadVideo } from './comment-inbox-query';
 import { commentInboxCursorScope, commentInboxOrderBy } from './comment-thread-query';
 import type { PostgresDatabase } from './types';
 
-const { comments: c, channels: ch, videos: v, channelPosts: p } = schema;
+const { comments: c, channels: ch, videos: v, channelPosts: p, videoThreads: th } = schema;
 
 /** Live comments on the channel's videos and posts that its owner did not write, one row more than a page. */
 export function creatorInboxQuery(
@@ -21,6 +21,8 @@ export function creatorInboxQuery(
     .from(c)
     .leftJoin(v, and(eq(c.targetType, 'video'), eq(v.id, c.targetId)))
     .leftJoin(p, and(eq(c.targetType, 'post'), eq(p.id, c.targetId)))
+    .leftJoin(th, and(eq(c.targetType, 'thread'), eq(th.id, c.targetId)))
+    .leftJoin(threadVideo.table, eq(threadVideo.table.id, th.videoId))
     .leftJoin(ch, eq(ch.id, c.authorChannelId))
     .where(
       drizzleWhere(

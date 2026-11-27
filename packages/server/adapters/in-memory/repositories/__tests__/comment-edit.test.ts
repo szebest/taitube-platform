@@ -64,6 +64,7 @@ function setUp({
       {
         videosRepo: videos,
         postsRepo: { posts },
+        threadsRepo: { threads: new Map() },
         channelsRepo: { findById: async () => ok(null) },
         userEventsRepo: events,
         outboxRepo: outbox,

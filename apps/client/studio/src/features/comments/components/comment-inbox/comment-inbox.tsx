@@ -66,11 +66,8 @@ export function CommentInbox({ filter }: CommentInboxProps) {
             <Badge size="sm" variant="soft">
               {tOr('studio.commentsTargetChip', { type: original.targetSummary.type }, '')}
             </Badge>
-            {original.targetSummary.type === 'video' ? (
-              <a
-                href={appLink(WEB_URL, `/watch/${original.targetSummary.id}`)}
-                className="line-clamp-2"
-              >
+            {original.video ? (
+              <a href={appLink(WEB_URL, `/watch/${original.video.id}`)} className="line-clamp-2">
                 {original.targetSummary.title}
               </a>
             ) : (

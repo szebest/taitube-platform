@@ -1,3 +1,4 @@
+import { barSpan } from '#app/lib/player/bar-span';
 import type { PlaybackRange, PlayerChapter } from '#app/lib/player/taitube-player-props';
 
 const MS_PER_SECOND = 1000;
@@ -18,10 +19,10 @@ export function chapterMarkers(
   range: PlaybackRange | undefined,
   durationSeconds: number
 ): ChapterMarker[] {
-  const startMs = range?.startMs ?? 0;
-  const endMs = Math.min(range?.endMs ?? Infinity, durationSeconds * MS_PER_SECOND);
+  const span = barSpan(range, durationSeconds);
+  if (!span) return [];
+  const { startMs, endMs } = span;
   const lengthMs = endMs - startMs;
-  if (!(lengthMs > 0)) return [];
 
   return chapters
     .filter((chapter) => chapter.startMs > startMs && chapter.startMs < endMs)

@@ -52,7 +52,7 @@ export type CreateCommentServiceFailure =
   | PublicHostReadFailure
   | DatabaseUnavailable;
 
-function moderationOf(verdict: CommentGateVerdict, content: string): NewCommentModeration {
+export function moderationOf(verdict: CommentGateVerdict, content: string): NewCommentModeration {
   return {
     ...PUBLISHED_AT_CREATION,
     moderationState: verdict.decision === 'hold' ? 'held' : 'published',
@@ -63,7 +63,7 @@ function moderationOf(verdict: CommentGateVerdict, content: string): NewCommentM
 }
 
 /** A dead cache costs the limit for one comment, never the comment. */
-async function claimSlowMode(
+export async function claimSlowMode(
   deps: Pick<CommentCreateDeps, 'slowMode'>,
   channelId: string,
   authorId: string,

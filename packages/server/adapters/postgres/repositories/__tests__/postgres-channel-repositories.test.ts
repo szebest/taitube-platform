@@ -16,6 +16,7 @@ describe('createChannelRepositories', () => {
       'channelPosts',
       'channels',
       'postEngagement',
+      'videoThreads',
     ]);
   });
 });

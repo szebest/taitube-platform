@@ -115,8 +115,10 @@ interface NotificationFields {
   outcome: 'ready' | 'failed' | 'held' | 'approved' | 'rejected' | null;
   /** Set on `team_invite`: the invite the notification opens. */
   inviteId?: string;
-  /** Set on `post`: the newest post of the group. */
+  /** Set on `post`: the newest post of the group; on `reply`, `mention` and `comment`: the post the comment is under. */
   postId?: string;
+  /** Set on `reply`, `mention` and `comment` under a viewer thread: with `videoId`, where it opens. */
+  threadId?: string;
   /** Set on `moderation`: what was done, why, and when a ban ends. */
   moderation?: {
     action: 'hold' | 'hide' | 'remove' | 'ban';

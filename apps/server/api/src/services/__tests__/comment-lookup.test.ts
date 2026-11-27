@@ -37,6 +37,7 @@ describe('apps/server/api/services: comment lookup', () => {
         comments: repositories.comments,
         videos: repositories.videos,
         posts: repositories.channelPosts,
+        threads: repositories.videoThreads,
         channels: repositories.channels,
       },
       COMMENT_ID

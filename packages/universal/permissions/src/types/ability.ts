@@ -19,6 +19,7 @@ import type { PlaylistResource } from './playlist';
 import type { PostResource } from './post';
 import type { PreferencesResource } from './preferences';
 import type { RecommendationFeedbackResource } from './recommendation-feedback';
+import type { ThreadResource } from './thread';
 import type { UploadResource } from './upload';
 import type { VideoResource } from './video';
 import type { WatchPartyResource } from './watch-party';
@@ -61,6 +62,7 @@ export type AppSubjects =
       | (PlaylistResource & ForcedSubject<'Playlist'>)
       | (PostResource & ForcedSubject<'Post'>)
       | (PostResource & ForcedSubject<'PostStats'>)
+      | (ThreadResource & ForcedSubject<'Thread'>)
       | (PreferencesResource & ForcedSubject<'Preferences'>)
       | (CaptionResource & ForcedSubject<'Caption'>)
       | (NotificationResource & ForcedSubject<'Notification'>)
@@ -84,6 +86,7 @@ export type AppSubjects =
   | 'Playlist'
   | 'Post'
   | 'PostStats'
+  | 'Thread'
   | 'Queue'
   | 'Analytics'
   | 'VideoStats'

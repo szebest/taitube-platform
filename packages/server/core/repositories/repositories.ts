@@ -54,6 +54,7 @@ import type { VideoPasswordRepository } from './video-password-repository';
 import type { VideoReactionRepositoryPort } from './video-reaction-repository';
 import type { VideoRepository } from './video-repository';
 import type { VideoStudioRepository } from './video-studio-repository';
+import type { VideoThreadRepositoryPort } from './video-thread-repository';
 import type { VideoViewRepositoryPort } from './video-view-repository';
 import type { WatchHistoryRepositoryPort } from './watch-history-repository';
 import type { WatchPartyHousekeepingRepositoryPort } from './watch-party-housekeeping-repository';
@@ -123,6 +124,7 @@ export interface Repositories {
   channelPages: ChannelPageRepositoryPort;
   channelPosts: ChannelPostRepositoryPort;
   postEngagement: PostEngagementRepositoryPort;
+  videoThreads: VideoThreadRepositoryPort;
   picks: PickRepositoryPort;
   webhooks: WebhookRepositoryPort;
   liveStreams: LiveStreamRepositoryPort;

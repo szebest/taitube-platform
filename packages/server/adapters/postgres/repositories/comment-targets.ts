@@ -1,16 +1,17 @@
 import { assertNever } from '@kit/result';
 import * as schema from '@vp/db';
 import type { CommentTarget } from '@vp/domain';
-import { type SQL, eq, sql } from 'drizzle-orm';
+import { type SQL, and, eq, isNull, sql } from 'drizzle-orm';
 import type { AnyPgColumn } from 'drizzle-orm/pg-core';
 import type { PostgresDatabase } from './types';
 
-const { comments: c, videos: v, channelPosts: p, channels: ch } = schema;
+const { comments: c, videos: v, channelPosts: p, channels: ch, videoThreads: th } = schema;
 
 /** The target row a comment write locked, with what telling its owner needs. */
 export type LockedTarget =
   | { type: 'video'; ownerId: string; title: string }
-  | { type: 'post'; ownerId: string };
+  | { type: 'post'; ownerId: string }
+  | { type: 'thread'; ownerId: string; videoId: string };
 
 interface TargetColumns {
   targetType: AnyPgColumn;
@@ -59,6 +60,15 @@ export async function lockTarget(
         .for('update', { of: p });
       return post && { type: 'post', ...post };
     }
+    case 'thread': {
+      const [thread] = await tx
+        .select({ ownerId: v.ownerId, videoId: v.id })
+        .from(th)
+        .innerJoin(v, eq(v.id, th.videoId))
+        .where(and(eq(th.id, target.id), isNull(th.deletedAt)))
+        .for('update', { of: th });
+      return thread && { type: 'thread', ...thread };
+    }
     default:
       return assertNever(target, 'CommentTarget');
   }
@@ -84,6 +94,12 @@ export async function moveCommentsCount(
         .set({ commentsCount: sql`${p.commentsCount} + ${delta}` })
         .where(eq(p.id, target.id));
       return;
+    case 'thread':
+      await tx
+        .update(th)
+        .set({ commentsCount: sql`${th.commentsCount} + ${delta}` })
+        .where(eq(th.id, target.id));
+      return;
     default:
       return assertNever(target, 'CommentTarget');
   }
@@ -101,6 +117,9 @@ export async function setCommentsCount(
       return;
     case 'post':
       await tx.update(p).set({ commentsCount }).where(eq(p.id, target.id));
+      return;
+    case 'thread':
+      await tx.update(th).set({ commentsCount }).where(eq(th.id, target.id));
       return;
     default:
       return assertNever(target, 'CommentTarget');

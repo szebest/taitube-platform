@@ -41,10 +41,15 @@ import {
   type PublicScopeContext,
   publicScopeOf,
 } from './comment-public-scope';
-import { moveCommentsCount, ownerOf, removeTargetComments, sameTarget } from './comment-targets';
+import {
+  type CommentTargetStores,
+  moveCommentsCount,
+  ownerOf,
+  removeTargetComments,
+  sameTarget,
+} from './comment-targets';
 import { repliesOf, standing, type StoredComment } from './comment-visibility';
 import type { InMemoryChannelAuditRepository } from './in-memory-channel-audit-repository';
-import type { InMemoryChannelPostRepository } from './in-memory-channel-post-repository';
 import type { InMemoryChannelRepository } from './in-memory-channel-repository';
 import type { InMemoryChannelUserRestrictionRepository } from './in-memory-channel-user-restriction-repository';
 import type { InMemoryCommentReportRepository } from './in-memory-comment-report-repository';
@@ -53,7 +58,8 @@ import type { InMemoryVideoRepository } from './in-memory-video-repository';
 export interface InMemoryCommentRepositoryOptions {
   channelsRepo: InMemoryChannelRepository;
   videosRepo: InMemoryVideoRepository;
-  postsRepo: Pick<InMemoryChannelPostRepository, 'posts'>;
+  postsRepo: CommentTargetStores['postsRepo'];
+  threadsRepo: CommentTargetStores['threadsRepo'];
   outboxRepo: OutboxRepository;
   auditRepo: InMemoryChannelAuditRepository;
   reportsRepo: InMemoryCommentReportRepository;
