@@ -6,6 +6,7 @@ export * from './intl-cache';
 export * from './kind';
 export * from './locale-chain';
 export * from './locales';
+export * from './number-kind';
 export * from './presets';
 
 export * from './formatters/bitrate';
@@ -23,6 +24,7 @@ export * from './formatters/money';
 export * from './formatters/number';
 export * from './formatters/number-range';
 export * from './formatters/percent';
+export * from './formatters/plain-date';
 export * from './formatters/plural';
 export * from './formatters/relative';
 export * from './formatters/time';

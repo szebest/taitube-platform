@@ -32,20 +32,37 @@ interface UnitSpan {
   readonly seconds: number;
 }
 
-const SMALLEST: UnitSpan = { unit: 'second', seconds: SECOND };
-
-const LARGEST_FIRST: readonly UnitSpan[] = [
+const LARGEST_FIRST: readonly [UnitSpan, ...UnitSpan[]] = [
   { unit: 'year', seconds: YEAR },
   { unit: 'month', seconds: MONTH },
   { unit: 'week', seconds: WEEK },
   { unit: 'day', seconds: DAY },
   { unit: 'hour', seconds: HOUR },
   { unit: 'minute', seconds: MINUTE },
-  SMALLEST,
+  { unit: 'second', seconds: SECOND },
 ];
 
-function largestUnit(elapsedSeconds: number): UnitSpan {
-  return LARGEST_FIRST.find(({ seconds }) => Math.abs(elapsedSeconds) >= seconds) ?? SMALLEST;
+const roundHalfAwayFromZero = (value: number) => Math.sign(value) * Math.round(Math.abs(value));
+
+interface Elapsed {
+  readonly count: number;
+  readonly unit: Intl.RelativeTimeFormatUnit;
+}
+
+/**
+ * The largest unit the span reaches, rounded the same way either side of now; a count that
+ * rounds up to the next unit (59.5 minutes) is read in that unit (1 hour), never as 60 minutes.
+ */
+function inLargestUnit(elapsedSeconds: number): Elapsed {
+  const reached = LARGEST_FIRST.findIndex(({ seconds }) => Math.abs(elapsedSeconds) >= seconds);
+  const index = reached === -1 ? LARGEST_FIRST.length - 1 : reached;
+  const span = LARGEST_FIRST[index] ?? LARGEST_FIRST[0];
+  const count = roundHalfAwayFromZero(elapsedSeconds / span.seconds);
+  const larger = LARGEST_FIRST[index - 1];
+  if (larger !== undefined && Math.abs(count) * span.seconds >= larger.seconds) {
+    return { count: roundHalfAwayFromZero(elapsedSeconds / larger.seconds), unit: larger.unit };
+  }
+  return { count, unit: span.unit };
 }
 
 export const relative = defineKind({
@@ -60,8 +77,8 @@ export const relative = defineKind({
         return map(context.cache.relativeTimeFormat(context.locale, intlOptions), (format) => {
           const signedSeconds = (then.getTime() - now.getTime()) / MILLISECONDS_PER_SECOND;
           const elapsedSeconds = pastOnly ? Math.min(signedSeconds, 0) : signedSeconds;
-          const { unit, seconds } = largestUnit(elapsedSeconds);
-          return format.format(Math.round(elapsedSeconds / seconds), unit);
+          const { count, unit } = inLargestUnit(elapsedSeconds);
+          return format.format(count, unit);
         });
       })
     );

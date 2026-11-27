@@ -60,3 +60,18 @@ defineEngine({
   presets: definePresets({ money: { euro: { default: { currency: 'EUR' } } } }),
   params: defineParams(['amount'] as const),
 });
+
+defineEngine({
+  kinds: [numberKind],
+  presets: definePresets({
+    number: { tight: { default: { notation: 'compact' }, pl: { maximumFractionDigits: 0 } } },
+  }),
+  params: defineParams(['amount'] as const),
+});
+
+defineEngine({
+  kinds: [numberKind],
+  // @ts-expect-error a locale overrides only its own kind's options
+  presets: definePresets({ number: { tight: { default: {}, pl: { currency: 'PLN' } } } }),
+  params: defineParams(['amount'] as const),
+});

@@ -10,6 +10,15 @@
 - `createIntlCache(env)` takes the constructors as an `IntlEnvironment` (`Intl` by default);
   `cache.get(descriptor, locale, options)` builds whatever an `IntlDescriptor` describes.
 - `KindContext`, `runKind` and `describeValue`, the last moved from `@kit/i18n`.
+- `defineNumberKind` and `defineScaledUnitKind` build the number family (`bytes` and `bitrate` share one scaler);
+  a default such as `percent`'s one decimal gives way to a caller's fraction or significant digits, so
+  `{ minimumFractionDigits: 2 }` renders `7.00%` instead of declining.
+- Breaking: `date`, `time`, `dateTime` (and every kind reading an instant) decline a calendar date such as
+  `2024-05-01`; the new `plainDate` kind formats it with no zone. `dateFormatOptions` is replaced by
+  `resolveDateOptions`.
+- `relative` rounds half away from zero and reads a count that rounds up to the next unit in that unit:
+  3570 seconds is "in 1 hour" and "1 hour ago".
+- Breaking: a preset's locale entry overrides part of `default` instead of replacing it.
 
 ## 0.4.0
 

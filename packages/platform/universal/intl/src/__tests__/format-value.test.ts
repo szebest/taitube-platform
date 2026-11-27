@@ -17,6 +17,7 @@ const ONE_OF_EACH: readonly { value: FormatValue; expected: RegExp }[] = [
   { value: { type: 'time', value: ISO }, expected: /^18:30$/ },
   { value: { type: 'dateTime', value: ISO }, expected: /^19 Sept? 2026(,| at) 18:30$/ },
   { value: { type: 'dateRange', value: [ISO, NOW] }, expected: /^19\s?–\s?22 Sept? 2026$/u },
+  { value: { type: 'plainDate', value: '2026-09-19' }, expected: /^19 Sept? 2026$/ },
   { value: { type: 'relative', value: ISO }, expected: /^3 days ago$/ },
   { value: { type: 'calendarDay', value: NOW }, expected: /^today 18:30$/ },
   { value: { type: 'duration', value: 765 }, expected: /^12:45$/ },

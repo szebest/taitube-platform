@@ -1,4 +1,9 @@
-import { type DateStyle, formatInstant } from '../format-instant';
+import {
+  DATE_RESOLUTION,
+  type DateStyle,
+  formatInstant,
+  resolveDateOptions,
+} from '../format-instant';
 import { isString } from '../inputs';
 import { type OptionKeys, type TaggedOf, defineKind, optionKeys } from '../kind';
 
@@ -20,19 +25,13 @@ export type DateOptions = Pick<Intl.DateTimeFormatOptions, (typeof DATE_FIELD_KE
   readonly style?: DateStyle;
 };
 
-export function dateFormatOptions(options: DateOptions = {}): Intl.DateTimeFormatOptions {
-  const { style, ...fields } = options;
-  if (style !== undefined) return { dateStyle: style };
-  return Object.keys(fields).length === 0 ? { dateStyle: 'medium' } : fields;
-}
-
 /** An ISO 8601 instant. */
 export const date = defineKind({
   name: 'date',
   arg: isString,
   options: optionKeys<DateOptions>(DATE_OPTION_KEYS),
   render: (value, options, context) =>
-    formatInstant('date', value, dateFormatOptions(options), context),
+    formatInstant('date', value, resolveDateOptions(options ?? {}, DATE_RESOLUTION), context),
 });
 
 /** @public */

@@ -1,6 +1,6 @@
-import { andThen, map } from '@kit/result';
-import { finite, isNumber } from '../inputs';
-import { type OptionKeys, type TaggedOf, defineKind, optionKeys } from '../kind';
+import { ok } from '@kit/result';
+import { type OptionKeys, type TaggedOf } from '../kind';
+import { defineNumberKind } from '../number-kind';
 
 const COMPACT_OPTION_KEYS = [
   'compactDisplay',
@@ -11,17 +11,11 @@ const COMPACT_OPTION_KEYS = [
 
 type CompactOptions = Pick<Intl.NumberFormatOptions, (typeof COMPACT_OPTION_KEYS)[number]>;
 
-export const compact = defineKind({
+export const compact = defineNumberKind({
   name: 'count',
-  arg: isNumber,
-  options: optionKeys<CompactOptions>(COMPACT_OPTION_KEYS),
-  render: (value, options, context) =>
-    andThen(finite('compact', value), (count) =>
-      map(
-        context.cache.numberFormat(context.locale, { ...options, notation: 'compact' }),
-        (format) => format.format(count)
-      )
-    ),
+  keys: COMPACT_OPTION_KEYS,
+  transform: (amount, options: Partial<CompactOptions>) =>
+    ok({ amount, format: { ...options, notation: 'compact' } }),
 });
 
 /** @public */

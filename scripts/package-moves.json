@@ -405,7 +405,6 @@
       "date": "@kit/intl",
       "DATE_FIELD_KEYS": "@kit/intl",
       "DATE_OPTION_KEYS": "@kit/intl",
-      "dateFormatOptions": "@kit/intl",
       "DateOptions": "@kit/intl",
       "dateRange": "@kit/intl",
       "DateRangeValue": "@kit/intl",

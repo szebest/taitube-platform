@@ -17,6 +17,7 @@ expectTypeOf<TaggedValue['type']>().toEqualTypeOf<
   | 'time'
   | 'dateTime'
   | 'dateRange'
+  | 'plainDate'
   | 'relative'
   | 'calendarDay'
   | 'duration'

@@ -144,9 +144,9 @@ export type PlaceholderInBranch<Token extends string> = `PlaceholderInBranch<'${
 export type PresetsFor<Presets, Kinds extends readonly MessageKind[]> = {
     readonly [K in keyof Presets]: K extends Kinds[number]['name'] ? {
         readonly [N in keyof Presets[K]]: {
-            readonly [L in keyof Presets[K][N]]: OptionsOfKind<Extract<Kinds[number], {
+            readonly [L in keyof Presets[K][N]]: PresetEntry<Presets[K][N][L], OptionsOfKind<Extract<Kinds[number], {
                 readonly name: K;
-            }>>;
+            }>>, L>;
         };
     } : Fails<UnknownKind<K & string>>;
 };

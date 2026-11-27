@@ -5,18 +5,21 @@ const presets = definePresets({
   number: {
     compact: {
       default: { notation: 'compact' },
-      pl: { notation: 'compact', maximumFractionDigits: 0 },
-      'pl-PL': { notation: 'compact', maximumFractionDigits: 2 },
+      pl: { maximumFractionDigits: 0 },
+      'pl-PL': { useGrouping: false },
     },
   },
 });
 
 describe('@kit/intl: presets', () => {
   it.each([
-    { chain: ['pl-PL', 'pl'], expected: { notation: 'compact', maximumFractionDigits: 2 } },
+    {
+      chain: ['pl-PL', 'pl'],
+      expected: { notation: 'compact', maximumFractionDigits: 0, useGrouping: false },
+    },
     { chain: ['pl'], expected: { notation: 'compact', maximumFractionDigits: 0 } },
     { chain: ['sv-FI', 'sv'], expected: { notation: 'compact' } },
-  ])('resolves a preset name along $chain, then default', ({ chain, expected }) => {
+  ])('lays each locale of $chain over default, the most specific last', ({ chain, expected }) => {
     expect(resolveEntry(presets, 'number', 'compact', chain)).toEqual(ok(expected));
   });
 

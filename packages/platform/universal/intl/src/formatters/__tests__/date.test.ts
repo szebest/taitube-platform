@@ -1,5 +1,5 @@
 import { contextFor, format } from '../../__tests__/fixtures';
-import { type DateOptions, dateFormatOptions } from '../date';
+import { type DateOptions } from '../date';
 
 const ISO = '2026-09-22T18:30:00.000Z';
 
@@ -35,13 +35,5 @@ describe('@kit/intl: date', () => {
     const rendered = format({ type: 'date', value: 'Sep 22 2026' }, contextFor('en'));
 
     expect(rendered).toMatchObject({ ok: false, error: { code: 'FORMAT_UNRENDERABLE' } });
-  });
-
-  it.each([
-    { options: undefined, expected: { dateStyle: 'medium' } },
-    { options: { style: 'long' } as const, expected: { dateStyle: 'long' } },
-    { options: { year: 'numeric' } as const, expected: { year: 'numeric' } },
-  ])('maps $options to Intl options', ({ options, expected }) => {
-    expect(dateFormatOptions(options)).toEqual(expected);
   });
 });

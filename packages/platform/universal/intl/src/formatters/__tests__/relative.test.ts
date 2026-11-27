@@ -30,6 +30,29 @@ describe('@kit/intl: relative', () => {
     expect(render(locale, value)).toBe(expected);
   });
 
+  it.each([
+    { locale: 'en', seconds: 3570, expected: '1 hour ago' },
+    { locale: 'en', seconds: -3570, expected: 'in 1 hour' },
+    { locale: 'pl', seconds: 3570, expected: '1 godzinę temu' },
+    { locale: 'pl', seconds: -3570, expected: 'za 1 godzinę' },
+    { locale: 'en', seconds: 90, expected: '2 minutes ago' },
+    { locale: 'en', seconds: -90, expected: 'in 2 minutes' },
+  ])(
+    'rounds $seconds s the same way either side of now, in the unit it rounds to, in $locale',
+    ({ locale, seconds, expected }) => {
+      const rendered = format(
+        {
+          type: 'relative',
+          value: ago(seconds * MILLISECONDS_PER_SECOND),
+          options: { numeric: 'always' },
+        },
+        contextFor(locale)
+      );
+
+      expect(rendered).toEqual({ ok: true, value: expected });
+    }
+  );
+
   it('writes Arabic-Indic digits in ar-EG', () => {
     expect(render('ar-EG', ago(3 * DAY))).toMatch(ARABIC_INDIC_DIGIT);
   });

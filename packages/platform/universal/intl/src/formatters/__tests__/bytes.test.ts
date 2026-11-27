@@ -1,5 +1,5 @@
 import { ARABIC_INDIC_DIGIT, contextFor, format } from '../../__tests__/fixtures';
-import { type BytesValue, scale } from '../bytes';
+import { type BytesValue } from '../bytes';
 
 function render(locale: string, value: number, options?: BytesValue['options']) {
   const rendered = format({ type: 'bytes', value, options }, contextFor(locale));
@@ -24,16 +24,4 @@ describe('@kit/intl: bytes', () => {
   it('writes Arabic-Indic digits in ar-EG', () => {
     expect(render('ar-EG', 4_500_000)).toMatch(ARABIC_INDIC_DIGIT);
   });
-
-  it.each([
-    { value: 999, expected: { amount: 999, unit: 'a' } },
-    { value: 1500, expected: { amount: 1.5, unit: 'b' } },
-    { value: 5_000_000_000, expected: { amount: 5000, unit: 'c' } },
-    { value: -2000, expected: { amount: -2, unit: 'b' } },
-  ])(
-    'scales $value to the largest unit it reaches, the last one capping it',
-    ({ value, expected }) => {
-      expect(scale(value, 1000, ['a', 'b', 'c'])).toEqual(expected);
-    }
-  );
 });

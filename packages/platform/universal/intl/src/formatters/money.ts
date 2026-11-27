@@ -1,7 +1,7 @@
 import { andThen, map } from '@kit/result';
 import { type User, resolveCurrency } from '../context';
-import { finite, isNumber } from '../inputs';
-import { type OptionKeys, type TaggedOf, defineKind, optionKeys } from '../kind';
+import { type OptionKeys, type TaggedOf } from '../kind';
+import { defineNumberKind } from '../number-kind';
 
 const MONEY_OPTION_KEYS = [
   'currency',
@@ -16,23 +16,18 @@ type MoneyOptions = Pick<Intl.NumberFormatOptions, 'currencyDisplay' | 'signDisp
   readonly units?: 'minor' | 'major';
 };
 
-export const money = defineKind({
+export const money = defineNumberKind({
   name: 'money',
-  arg: isNumber,
-  options: optionKeys<MoneyOptions>(MONEY_OPTION_KEYS),
-  render: (value, options, context) => {
-    const { currency: requested, units = 'major', ...display } = options ?? {};
-    return andThen(finite('money', value), (amount) =>
-      andThen(resolveCurrency('money', requested, context), (currency) =>
-        map(
-          context.cache.numberFormat(context.locale, { ...display, style: 'currency', currency }),
-          (format) => {
-            const digits = format.resolvedOptions().maximumFractionDigits ?? 0;
-            return format.format(units === 'minor' ? amount / 10 ** digits : amount);
-          }
-        )
-      )
-    );
+  keys: MONEY_OPTION_KEYS,
+  transform: (value, options: Partial<MoneyOptions>, context) => {
+    const { currency: requested, units = 'major', ...display } = options;
+    return andThen(resolveCurrency('money', requested, context), (currency) => {
+      const format = { ...display, style: 'currency', currency } as const;
+      return map(context.cache.numberFormat(context.locale, format), (formatter) => {
+        const digits = formatter.resolvedOptions().maximumFractionDigits ?? 0;
+        return { amount: units === 'minor' ? value / 10 ** digits : value, format };
+      });
+    });
   },
 });
 

@@ -13,6 +13,7 @@ import { money } from './formatters/money';
 import { number } from './formatters/number';
 import { numberRange } from './formatters/number-range';
 import { percent } from './formatters/percent';
+import { plainDate } from './formatters/plain-date';
 import { pluralCategory } from './formatters/plural';
 import { relative } from './formatters/relative';
 import { time } from './formatters/time';
@@ -32,6 +33,7 @@ export const formatKinds = [
   time,
   dateTime,
   dateRange,
+  plainDate,
   relative,
   calendarDay,
   duration,

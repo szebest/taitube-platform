@@ -192,13 +192,26 @@ export type ArgsFor<P extends readonly Placeholder[], C, E extends EngineTypes> 
   readonly [H in P[number] as H['name']]: ArgFor<H, C, E>;
 };
 
-/** Presets whose options each fit their kind's, for kinds the engine lists. */
+/** Exactly the kind's options: a key the kind does not take fails, named. */
+type OwnOptions<Entry, Options> = {
+  readonly [O in keyof Entry]: O extends keyof Options
+    ? Options[O]
+    : Fails<UnknownOption<O & string>>;
+};
+
+/** `default` holds the kind's options; a locale overrides some of them, and nothing else. */
+type PresetEntry<Entry, Options, Locale> = OwnOptions<Entry, Options> &
+  (Locale extends 'default' ? Options : Partial<Options>);
+
+/** Presets whose options each fit their kind's, for kinds the engine lists; a locale overrides part of `default`. */
 export type PresetsFor<Presets, Kinds extends readonly MessageKind[]> = {
   readonly [K in keyof Presets]: K extends Kinds[number]['name']
     ? {
         readonly [N in keyof Presets[K]]: {
-          readonly [L in keyof Presets[K][N]]: OptionsOfKind<
-            Extract<Kinds[number], { readonly name: K }>
+          readonly [L in keyof Presets[K][N]]: PresetEntry<
+            Presets[K][N][L],
+            OptionsOfKind<Extract<Kinds[number], { readonly name: K }>>,
+            L
           >;
         };
       }

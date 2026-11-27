@@ -1,6 +1,6 @@
-import { andThen, map } from '@kit/result';
-import { finite, isNumber } from '../inputs';
-import { type OptionKeys, type TaggedOf, defineKind, optionKeys } from '../kind';
+import { ok } from '@kit/result';
+import { type OptionKeys, type TaggedOf } from '../kind';
+import { defineNumberKind } from '../number-kind';
 
 export const NUMBER_OPTION_KEYS = [
   'minimumFractionDigits',
@@ -20,16 +20,11 @@ export function numberFormatOptions(options: NumberOptions = {}): Intl.NumberFor
   return { ...options, style: options.unit === undefined ? 'decimal' : 'unit' };
 }
 
-export const number = defineKind({
+export const number = defineNumberKind({
   name: 'number',
-  arg: isNumber,
-  options: optionKeys<NumberOptions>(NUMBER_OPTION_KEYS),
-  render: (value, options, context) =>
-    andThen(finite('number', value), (finiteValue) =>
-      map(context.cache.numberFormat(context.locale, numberFormatOptions(options)), (format) =>
-        format.format(finiteValue)
-      )
-    ),
+  keys: NUMBER_OPTION_KEYS,
+  transform: (amount, options: Partial<NumberOptions>) =>
+    ok({ amount, format: numberFormatOptions(options) }),
 });
 
 /** @public */

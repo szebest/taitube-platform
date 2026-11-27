@@ -1,6 +1,6 @@
-import { andThen, map } from '@kit/result';
-import { finite, isNumber } from '../inputs';
-import { type OptionKeys, type TaggedOf, defineKind, optionKeys } from '../kind';
+import { ok } from '@kit/result';
+import { type OptionKeys, type TaggedOf } from '../kind';
+import { defineNumberKind } from '../number-kind';
 
 const PERCENT_OPTION_KEYS = [
   'minimumFractionDigits',
@@ -11,21 +11,12 @@ const PERCENT_OPTION_KEYS = [
 type PercentOptions = Pick<Intl.NumberFormatOptions, (typeof PERCENT_OPTION_KEYS)[number]>;
 
 /** In percentage points: `7` renders as 7%, not 700%. */
-export const percent = defineKind({
+export const percent = defineNumberKind({
   name: 'percent',
-  arg: isNumber,
-  options: optionKeys<PercentOptions>(PERCENT_OPTION_KEYS),
-  render: (value, options, context) =>
-    andThen(finite('percent', value), (points) =>
-      map(
-        context.cache.numberFormat(context.locale, {
-          maximumFractionDigits: 1,
-          ...options,
-          style: 'percent',
-        }),
-        (format) => format.format(points / 100)
-      )
-    ),
+  keys: PERCENT_OPTION_KEYS,
+  defaults: { maximumFractionDigits: 1 },
+  transform: (points, options: Partial<PercentOptions>) =>
+    ok({ amount: points / 100, format: { ...options, style: 'percent' } }),
 });
 
 /** @public */

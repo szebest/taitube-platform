@@ -1,4 +1,4 @@
-import { type Scaled, scale } from '../../formatters/bytes';
+import { type Scaled, scale } from '../../number-kind';
 
 expectTypeOf(scale(2048, 1024, ['byte', 'kilobyte'])).toEqualTypeOf<Scaled<'byte' | 'kilobyte'>>();
 expectTypeOf(scale(1, 1000, ['a', 'b', 'c']).unit).toEqualTypeOf<'a' | 'b' | 'c'>();
