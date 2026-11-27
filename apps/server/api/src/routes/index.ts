@@ -55,6 +55,7 @@ import { searchHistoryRoutes } from './search-history';
 import { shortsRoutes } from './shorts';
 import { subscriptionsRoutes } from './subscriptions';
 import { telemetryRoutes } from './telemetry';
+import { threadsRoutes } from './threads';
 import { trustedCommentersRoutes } from './trusted-commenters';
 import { uploadsRoutes } from './uploads';
 import { videoAccessRoutes } from './video-access';
@@ -91,6 +92,7 @@ const ROUTES: readonly FastifyPluginAsync[] = [
   videoPipelineRoutes,
   commentsRoutes,
   postsRoutes,
+  threadsRoutes,
   postStudioRoutes,
   commentReportsRoutes,
   creatorCommentsRoutes,

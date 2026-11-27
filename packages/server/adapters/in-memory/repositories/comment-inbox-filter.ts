@@ -14,6 +14,7 @@ import type { StoredComment } from './comment-visibility';
 import type { InMemoryChannelPostRepository } from './in-memory-channel-post-repository';
 import type { InMemoryChannelUserRestrictionRepository } from './in-memory-channel-user-restriction-repository';
 import type { InMemoryVideoRepository } from './in-memory-video-repository';
+import type { InMemoryVideoThreadRepository } from './in-memory-video-thread-repository';
 
 interface InboxRow {
   id: string;
@@ -103,13 +104,14 @@ function inboxPage(
 interface CreatorInboxDeps {
   videosRepo: Pick<InMemoryVideoRepository, 'getAllVideos'>;
   postsRepo: Pick<InMemoryChannelPostRepository, 'posts'>;
+  threadsRepo: Pick<InMemoryVideoThreadRepository, 'threads'>;
   reportsRepo: { hasOpenReport(commentId: string): boolean };
   restrictionsRepo: Pick<InMemoryChannelUserRestrictionRepository, 'restrictedUserIds'>;
 }
 
 /** One inbox page, up to one row past the limit: comments on the channel's videos and posts, newest first. */
 export async function creatorInbox(
-  { videosRepo, postsRepo, reportsRepo, restrictionsRepo }: CreatorInboxDeps,
+  { videosRepo, postsRepo, threadsRepo, reportsRepo, restrictionsRepo }: CreatorInboxDeps,
   live: readonly StoredComment[],
   ownerId: string,
   options: ListCreatorInboxOptions,
@@ -125,8 +127,18 @@ export async function creatorInbox(
     hasOpenReport: (commentId: string) => reportsRepo.hasOpenReport(commentId),
     isRestricted: ({ channelId, authorId }: InboxRow) =>
       restrictionsRepo.restrictedUserIds(channelId).has(authorId),
-    isListed: ({ type, id }: CommentTarget) =>
-      type === 'video' ? videos.has(id) : postsRepo.posts.has(id),
+    isListed: ({ type, id }: CommentTarget) => {
+      switch (type) {
+        case 'video':
+          return videos.has(id);
+        case 'post':
+          return postsRepo.posts.has(id);
+        case 'thread':
+          return threadsRepo.threads.get(id)?.channelId === options.channelId;
+        default:
+          return assertNever(type, 'CommentTarget');
+      }
+    },
   };
   const rows = await toThreads(inboxPage(live, ownerId, options, lookups));
   return rows.map((row) => {
@@ -140,6 +152,15 @@ export async function creatorInbox(
         const post = postsRepo.posts.get(id);
         const title = (post ? textOf(post.payload) : '').slice(0, POST_TARGET_TITLE_LENGTH);
         return { ...row, video: null, targetSummary: { type, id, title } };
+      }
+      case 'thread': {
+        const thread = threadsRepo.threads.get(id);
+        const video = thread && videos.get(thread.videoId);
+        return {
+          ...row,
+          video: thread ? { id: thread.videoId, title: video?.title ?? '' } : null,
+          targetSummary: { type, id, title: thread?.title ?? '' },
+        };
       }
       default:
         return assertNever(type, 'CommentTarget');

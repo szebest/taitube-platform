@@ -11,11 +11,32 @@ import type {
   Playlist,
   Upload,
   Video,
+  VideoThread,
 } from '@vp/domain';
 import type { UserContext } from '@vp/permissions';
 
 export function videoHost(video: Video): CommentHost {
   return { type: 'video', video };
+}
+
+export function aThread(overrides: Partial<VideoThread> = {}): VideoThread {
+  return {
+    id: 'thread-1',
+    videoId: 'video-1',
+    channelId: 'channel-1',
+    authorId: 'author-1',
+    authorChannelId: 'author-channel-1',
+    anchorMs: 500,
+    title: 'The cut at 0:00',
+    body: '',
+    pinnedAt: null,
+    commentsCount: 0,
+    moderationState: 'published',
+    moderationDisclosure: null,
+    heldReason: null,
+    createdAt: new Date('2026-01-01T00:00:00.000Z'),
+    ...overrides,
+  };
 }
 
 export const OWNER: UserContext = { id: 'owner-1', role: 'CREATOR' };

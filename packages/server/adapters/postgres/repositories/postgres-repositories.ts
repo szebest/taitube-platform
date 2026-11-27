@@ -72,6 +72,7 @@ export class PostgresRepositories extends PostgresVideoToolsRepositories impleme
   declare readonly channelPages: ChannelRepositories['channelPages'];
   declare readonly channelPosts: ChannelRepositories['channelPosts'];
   declare readonly postEngagement: ChannelRepositories['postEngagement'];
+  declare readonly videoThreads: ChannelRepositories['videoThreads'];
   declare readonly dataExports: CreatorDataRepositories['dataExports'];
   declare readonly exportRows: CreatorDataRepositories['exportRows'];
   declare readonly apiTokens: CreatorDataRepositories['apiTokens'];

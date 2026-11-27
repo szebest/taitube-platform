@@ -11,4 +11,8 @@ export const postErrors = {
   postDraftLimit: dt('Ten kanał ma już maksymalną liczbę wersji roboczych i zaplanowanych postów.'),
   postScheduleInvalid: dt('Wybierz przyszły termin dla zaplanowanego posta.'),
   postImageNotReady: dt('Obraz tego posta nie jest gotowy lub nie pochodzi z tego kanału.'),
+  threadNotFound: dt('Ten wątek nie istnieje lub został usunięty.'),
+  threadLimit: dt('Masz już 5 otwartych wątków pod tym filmem.'),
+  threadPinLimit: dt('Film może mieć przypięte do 3 wątków. Najpierw odepnij jeden.'),
+  threadAnchorInvalid: dt('Wybierz moment wewnątrz filmu.'),
 } as const;

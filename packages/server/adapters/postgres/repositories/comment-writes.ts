@@ -84,6 +84,7 @@ export async function publish(
       }
       return;
     case 'post':
+    case 'thread':
       return;
     default:
       return assertNever(target, 'LockedTarget');

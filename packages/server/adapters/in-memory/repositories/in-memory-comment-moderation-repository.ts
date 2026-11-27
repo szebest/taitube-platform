@@ -23,12 +23,14 @@ import type { InMemoryChannelRepository } from './in-memory-channel-repository';
 import type { InMemoryChannelUserRestrictionRepository } from './in-memory-channel-user-restriction-repository';
 import type { InMemoryCommentRepository } from './in-memory-comment-repository';
 import type { InMemoryVideoRepository } from './in-memory-video-repository';
+import type { InMemoryVideoThreadRepository } from './in-memory-video-thread-repository';
 import { byKeysetDesc, isKeysetBefore } from './keyset';
 
 export interface InMemoryCommentModerationRepositoryOptions {
   commentsRepo: Pick<InMemoryCommentRepository, 'comments' | 'removals'>;
   videosRepo: InMemoryVideoRepository;
   postsRepo: Pick<InMemoryChannelPostRepository, 'posts'>;
+  threadsRepo: Pick<InMemoryVideoThreadRepository, 'threads'>;
   channelsRepo: InMemoryChannelRepository;
   restrictionsRepo: Pick<InMemoryChannelUserRestrictionRepository, 'shadowedUserIds'>;
   auditRepo: Pick<InMemoryChannelAuditRepository, 'append'>;

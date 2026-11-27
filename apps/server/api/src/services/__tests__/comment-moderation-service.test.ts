@@ -19,6 +19,7 @@ describe('apps/server/api/services: comment moderation', () => {
       comments: repositories.comments,
       videos: repositories.videos,
       posts: repositories.channelPosts,
+      threads: repositories.videoThreads,
       channels: repositories.channels,
       settings: repositories.commentSettings,
       moderation: repositories.commentModeration,

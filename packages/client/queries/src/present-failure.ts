@@ -22,6 +22,7 @@ function kindOf(code: ErrorCode): ErrorStateKind {
     case ErrorCodes.REPORT_NOT_FOUND:
     case ErrorCodes.PLAYLIST_NOT_FOUND:
     case ErrorCodes.POST_NOT_FOUND:
+    case ErrorCodes.THREAD_NOT_FOUND:
     case ErrorCodes.PLAYLIST_ITEM_NOT_FOUND:
     case ErrorCodes.SEARCH_HISTORY_NOT_FOUND:
     case ErrorCodes.RECOMMENDATION_FEEDBACK_NOT_FOUND:
@@ -179,6 +180,9 @@ function kindOf(code: ErrorCode): ErrorStateKind {
     case ErrorCodes.POST_PIN_LIMIT:
     case ErrorCodes.POST_SCHEDULE_INVALID:
     case ErrorCodes.POST_IMAGE_NOT_READY:
+    case ErrorCodes.THREAD_LIMIT:
+    case ErrorCodes.THREAD_PIN_LIMIT:
+    case ErrorCodes.THREAD_ANCHOR_INVALID:
       return 'generic';
     default:
       return assertNever(code, 'kindOf');

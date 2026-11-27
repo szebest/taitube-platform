@@ -165,5 +165,7 @@ export const studioPosts = {
   statsQuizShare: dt('Poprawnych odpowiedzi:'),
   statsQuizNone: dt('Nikt jeszcze nie odpowiedział.'),
   statsFailed: dt('Nie udało się wczytać statystyk.'),
-  commentsTargetChip: dt('{type:enum}', { enum: { type: { video: 'Film', post: 'Post' } } }),
+  commentsTargetChip: dt('{type:enum}', {
+    enum: { type: { video: 'Film', post: 'Post', thread: 'Wątek' } },
+  }),
 } as const;

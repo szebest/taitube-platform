@@ -1,6 +1,7 @@
 import { PAGE_SIZE_MAX } from '@kit/pagination';
 import {
   COMMENT_MODERATION_REASONS,
+  COMMENT_TARGET_TYPES,
   COMMENT_SORTS,
   DISCLOSURES,
   HELD_REASONS,
@@ -39,7 +40,7 @@ const CommentModerationSchema = z
   );
 
 export const CommentTargetSchema = z
-  .object({ type: z.enum(['video', 'post']), id: z.uuid() })
+  .object({ type: z.enum(COMMENT_TARGET_TYPES), id: z.uuid() })
   .describe('What the comment sits under');
 
 export const CommentSchema = z.object({

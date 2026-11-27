@@ -4,6 +4,7 @@ import type {
   PostManageService,
   PostRevisionService,
   PostService,
+  ThreadService,
 } from '../services/index';
 
 export interface PostServiceSet {
@@ -11,6 +12,7 @@ export interface PostServiceSet {
   postManageService: PostManageService;
   postEngagementService: PostEngagementService;
   postRevisionService: PostRevisionService;
+  threadService: ThreadService;
 }
 
 export const PostServices = {
@@ -18,4 +20,5 @@ export const PostServices = {
   PostManageService: token<PostManageService>('PostManageService'),
   PostEngagementService: token<PostEngagementService>('PostEngagementService'),
   PostRevisionService: token<PostRevisionService>('PostRevisionService'),
+  ThreadService: token<ThreadService>('ThreadService'),
 };

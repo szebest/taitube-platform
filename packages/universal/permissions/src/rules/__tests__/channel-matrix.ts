@@ -15,7 +15,8 @@ type SubjectType =
   | 'CommentSettings'
   | 'ChannelExport'
   | 'Post'
-  | 'PostStats';
+  | 'PostStats'
+  | 'Thread';
 
 interface Probe {
   type: SubjectType;
@@ -40,6 +41,7 @@ const comment = subject('Comment', {
 });
 const channel = subject('Channel', { id: CHANNEL_ID, userId: OWNER_ID, ownerId: OWNER_ID });
 const post = subject('Post', { channelId: CHANNEL_ID, ownerId: OWNER_ID });
+const thread = subject('Thread', { channelId: CHANNEL_ID, ownerId: OWNER_ID });
 const channelUser = subject('ChannelUser', { channelId: CHANNEL_ID, ownerId: OWNER_ID });
 const commentSettings = subject('CommentSettings', { channelId: CHANNEL_ID, ownerId: OWNER_ID });
 const editor = subject('ChannelMember', {
@@ -122,6 +124,7 @@ const CAPABILITY_PROBES: Record<ChannelCapability, Probe[]> = {
   'content.pin': [
     { type: 'Video', action: 'pin', target: privateVideo },
     { type: 'Post', action: 'pin', target: post },
+    { type: 'Thread', action: 'pin', target: thread },
   ],
   'post.manage': (['create', 'update', 'delete'] as const).map((action) => ({
     type: 'Post' as const,

@@ -3,17 +3,20 @@ import type { CommentTarget } from '@vp/domain';
 import type { InMemoryChannelPostRepository } from './in-memory-channel-post-repository';
 import type { InMemoryChannelRepository } from './in-memory-channel-repository';
 import type { InMemoryVideoRepository } from './in-memory-video-repository';
+import type { InMemoryVideoThreadRepository } from './in-memory-video-thread-repository';
 
 export interface CommentTargetStores {
   videosRepo: Pick<InMemoryVideoRepository, 'findById'>;
   postsRepo: Pick<InMemoryChannelPostRepository, 'posts'>;
+  threadsRepo: Pick<InMemoryVideoThreadRepository, 'threads'>;
   channelsRepo: Pick<InMemoryChannelRepository, 'findById'>;
 }
 
 /** The in-memory form of `LockedTarget`: what telling the target's owner needs. */
 export type TargetOwner =
   | { type: 'video'; id: string; ownerId: string; title: string }
-  | { type: 'post'; id: string; ownerId: string };
+  | { type: 'post'; id: string; ownerId: string }
+  | { type: 'thread'; id: string; ownerId: string; videoId: string };
 
 export function sameTarget(left: CommentTarget, right: CommentTarget): boolean {
   return left.type === right.type && left.id === right.id;
@@ -38,6 +41,13 @@ export async function ownerOf(
       if (!(channel && stores.postsRepo.posts.has(post.id))) return null;
       return { type: 'post', id: post.id, ownerId: channel.userId };
     }
+    case 'thread': {
+      const thread = stores.threadsRepo.threads.get(target.id);
+      if (!thread) return null;
+      const video = unwrapOr(await stores.videosRepo.findById(thread.videoId), null);
+      if (!(video && stores.threadsRepo.threads.has(thread.id))) return null;
+      return { type: 'thread', id: thread.id, ownerId: video.ownerId, videoId: video.id };
+    }
     default:
       return assertNever(target, 'CommentTarget');
   }
@@ -60,6 +70,11 @@ export async function moveCommentsCount(
       if (post) post.commentsCount += delta;
       return;
     }
+    case 'thread': {
+      const thread = stores.threadsRepo.threads.get(target.id);
+      if (thread) thread.commentsCount += delta;
+      return;
+    }
     default:
       return assertNever(target, 'CommentTarget');
   }
@@ -80,6 +95,11 @@ export async function setCommentsCount(
     case 'post': {
       const post = stores.postsRepo.posts.get(target.id);
       if (post) post.commentsCount = count;
+      return;
+    }
+    case 'thread': {
+      const thread = stores.threadsRepo.threads.get(target.id);
+      if (thread) thread.commentsCount = count;
       return;
     }
     default:

@@ -19,6 +19,7 @@ export * from './entity-revision';
 export * from './experiments';
 export * from './ban-duration';
 export * from './comment';
+export * from './video-thread';
 export * from './comment-moderation';
 export * from './comment-removal';
 export * from './countries';

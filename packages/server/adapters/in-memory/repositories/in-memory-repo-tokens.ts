@@ -53,6 +53,7 @@ import type { InMemoryVideoPasswordRepository } from './in-memory-video-password
 import type { InMemoryVideoReactionRepository } from './in-memory-video-reaction-repository';
 import type { InMemoryVideoRepository } from './in-memory-video-repository';
 import type { InMemoryVideoStudioRepository } from './in-memory-video-studio-repository';
+import type { InMemoryVideoThreadRepository } from './in-memory-video-thread-repository';
 import type { InMemoryVideoViewRepository } from './in-memory-video-view-repository';
 import type { InMemoryWatchHistoryRepository } from './in-memory-watch-history-repository';
 import type { InMemoryWebhookRepository } from './in-memory-webhook-repository';
@@ -113,6 +114,7 @@ export const Repo = {
   channelImages: token<InMemoryChannelImageRepository>('channelImages'),
   channelPages: token<InMemoryChannelPageRepository>('channelPages'),
   channelPosts: token<InMemoryChannelPostRepository>('channelPosts'),
+  videoThreads: token<InMemoryVideoThreadRepository>('videoThreads'),
   postEngagement: token<InMemoryPostEngagement>('postEngagement'),
   picks: token<InMemoryPickRepository>('picks'),
   webhooks: token<InMemoryWebhookRepository>('webhooks'),

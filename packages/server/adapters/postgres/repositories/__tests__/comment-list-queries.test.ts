@@ -53,7 +53,7 @@ describe('comment list queries', () => {
       limit: 10,
     }).toSQL();
 
-    expect(sql).toContain('"comments"."channel_id" = $4');
-    expect(sql).toContain('"comments"."author_id" <> $5');
+    expect(sql).toContain('"comments"."channel_id" = $5');
+    expect(sql).toContain('"comments"."author_id" <> $6');
   });
 });

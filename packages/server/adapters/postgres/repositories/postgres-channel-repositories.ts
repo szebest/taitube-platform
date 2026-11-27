@@ -8,6 +8,7 @@ import { PostgresChannelPageRepository } from './postgres-channel-page-repositor
 import { PostgresChannelPostRepository } from './postgres-channel-post-repository';
 import { PostgresChannelRepository } from './postgres-channel-repository';
 import { PostgresPostEngagementRepository } from './postgres-post-engagement-repository';
+import { PostgresVideoThreadRepository } from './postgres-video-thread-repository';
 import type { PostgresDatabase } from './types';
 
 export function createChannelRepositories(db: PostgresDatabase) {
@@ -22,6 +23,7 @@ export function createChannelRepositories(db: PostgresDatabase) {
     channelPages: new PostgresChannelPageRepository(db),
     channelPosts: new PostgresChannelPostRepository(db),
     postEngagement: new PostgresPostEngagementRepository(db),
+    videoThreads: new PostgresVideoThreadRepository(db),
   };
 }
 
