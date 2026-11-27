@@ -6,7 +6,12 @@ import type {
   NewChannelImageUpload,
 } from '@vp/core/repositories';
 import { channelImageUploads as up, channels } from '@vp/db';
-import { CHANNEL_IMAGE_UPLOAD_EDGES, type ChannelImageUpload } from '@vp/domain';
+import {
+  CHANNEL_IMAGE_UPLOAD_EDGES,
+  type ChannelImageUpload,
+  type PostImageUrls,
+  type PostImageVariants,
+} from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { and, asc, eq, inArray, lt, or, sql } from 'drizzle-orm';
 import {
@@ -82,7 +87,8 @@ export class PostgresChannelImageRepository implements ChannelImageRepositoryPor
 
   commit(
     id: string,
-    defaultUrl: string
+    defaultUrl: string,
+    variantUrls?: PostImageUrls
   ): Promise<Result<ChannelImageCommit | null, DatabaseUnavailable>> {
     return this.write('commitChannelImageUpload', async (tx) => {
       const row = await lockUpload(tx, id);
@@ -90,8 +96,33 @@ export class PostgresChannelImageRepository implements ChannelImageRepositoryPor
       if (row.status === 'ready' || row.status === 'superseded') {
         return { upload: toChannelImageUpload(row), applied: row.status === 'ready' };
       }
-      return row.status === 'queued' ? commitUpload(tx, row, defaultUrl) : null;
+      return row.status === 'queued' ? commitUpload(tx, row, defaultUrl, variantUrls) : null;
     });
+  }
+
+  async findReadyPostImages(
+    channelId: string,
+    uploadIds: readonly string[]
+  ): Promise<Result<PostImageVariants[], DatabaseUnavailable>> {
+    if (uploadIds.length === 0) return ok([]);
+    const rows = await fromPromise(
+      () =>
+        this.db
+          .select({ uploadId: up.id, urls: up.variantUrls })
+          .from(up)
+          .where(
+            and(
+              eq(up.channelId, channelId),
+              eq(up.kind, 'post-image'),
+              eq(up.status, 'ready'),
+              inArray(up.id, [...uploadIds])
+            )
+          ),
+      databaseUnavailable.during('findReadyPostImages')
+    );
+    return map(rows, (found) =>
+      found.flatMap(({ uploadId, urls }) => (urls ? [{ uploadId, urls }] : []))
+    );
   }
 
   fail(

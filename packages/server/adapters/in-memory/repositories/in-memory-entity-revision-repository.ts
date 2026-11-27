@@ -27,11 +27,11 @@ export class InMemoryEntityRevisionRepository extends EntityRevisionRepository {
     return ok();
   }
 
-  async list(
-    entityType: EntityRevisionType,
+  async list<T extends EntityRevisionType>(
+    entityType: T,
     entityId: string,
     { beforeVersion, limit }: ListRevisionsOptions
-  ): Promise<Result<EntityRevision[], DatabaseUnavailable>> {
+  ): Promise<Result<EntityRevision<T>[], DatabaseUnavailable>> {
     const found = this.rows
       .filter(
         (row) =>
@@ -41,18 +41,18 @@ export class InMemoryEntityRevisionRepository extends EntityRevisionRepository {
       )
       .sort((a, b) => b.version - a.version)
       .slice(0, limit + 1);
-    return ok(found.map((row) => ({ ...row })));
+    return ok(found.map((row) => ({ ...row }) as EntityRevision<T>));
   }
 
-  async get(
-    entityType: EntityRevisionType,
+  async get<T extends EntityRevisionType>(
+    entityType: T,
     entityId: string,
     revisionId: string
-  ): Promise<Result<EntityRevision | null, DatabaseUnavailable>> {
+  ): Promise<Result<EntityRevision<T> | null, DatabaseUnavailable>> {
     const found = this.rows.find(
       (row) => row.id === revisionId && row.entityType === entityType && row.entityId === entityId
     );
-    return ok(found ? { ...found } : null);
+    return ok(found ? ({ ...found } as EntityRevision<T>) : null);
   }
 
   async prune(keep: number): Promise<Result<number, DatabaseUnavailable>> {

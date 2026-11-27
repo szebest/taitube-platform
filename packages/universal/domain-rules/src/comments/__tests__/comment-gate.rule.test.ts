@@ -13,7 +13,7 @@ const settings = (patch: Partial<CommentSettings> = {}): CommentSettings => ({
 
 const context = (patch: Partial<CommentGateContext> = {}): CommentGateContext => ({
   now: NOW,
-  videoId: 'video-1',
+  targetId: 'video-1',
   channelId: 'channel-1',
   commentsEnabled: true,
   restriction: null,

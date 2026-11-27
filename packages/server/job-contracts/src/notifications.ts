@@ -1,5 +1,11 @@
 import type { VideoLifecycleEdge, VideoStatus, VideoVisibility } from '@vp/domain';
 import { z } from 'zod';
+import {
+  NOTIFY_PLAYLIST_INVITE,
+  NOTIFY_PLAYLIST_UPDATE,
+  type NotifyPlaylistInviteJob,
+  type NotifyPlaylistUpdateJob,
+} from './playlist-notifications';
 import { defaultJobOptions, stagePolicies } from './policies';
 
 /** The jobs on the `notify` queue that create notification rows, told apart by their name. */
@@ -10,8 +16,7 @@ export const NOTIFY_HEART = 'notify-heart';
 export const NOTIFY_PARTY_INVITE = 'notify-party-invite';
 export const NOTIFY_TEAM_INVITE = 'notify-team-invite';
 export const NOTIFY_MODERATION = 'notify-moderation';
-export const NOTIFY_PLAYLIST_INVITE = 'notify-playlist-invite';
-export const NOTIFY_PLAYLIST_UPDATE = 'notify-playlist-update';
+export const NOTIFY_POST_SUBSCRIBERS = 'notify-post-subscribers';
 /** Not a notification row: tells each subscriber's open tabs, through `live.started`, right away. */
 export const ANNOUNCE_LIVE = 'announce-live';
 
@@ -25,8 +30,15 @@ export const NotifySubscribersJob = z.object({
 });
 export type NotifySubscribersJob = z.infer<typeof NotifySubscribersJob>;
 
+/** What the comment sits under; the `CommentTarget` of the domain, one literal per kind. */
+const CommentTargetSchema = z.discriminatedUnion('type', [
+  z.object({ type: z.literal('video'), id: z.uuid() }),
+  z.object({ type: z.literal('post'), id: z.uuid() }),
+  z.object({ type: z.literal('thread'), id: z.uuid() }),
+]);
+
 export const NotifyCommentJob = z.object({
-  videoId: z.uuid(),
+  target: CommentTargetSchema,
   commentId: z.uuid(),
   traceparent: z.string().optional(),
   requestId: z.string().optional(),
@@ -82,22 +94,14 @@ export const NotifyModerationJob = z.object({
 });
 export type NotifyModerationJob = z.infer<typeof NotifyModerationJob>;
 
-export const NotifyPlaylistInviteJob = z.object({
-  inviteId: z.uuid(),
+export const NotifyPostSubscribersJob = z.object({
+  postId: z.uuid(),
+  /** The last subscriber of the batch before this one; absent on the first. */
+  after: z.uuid().optional(),
   traceparent: z.string().optional(),
   requestId: z.string().optional(),
 });
-export type NotifyPlaylistInviteJob = z.infer<typeof NotifyPlaylistInviteJob>;
-
-/** One per playlist and actor per hour: the owner's row groups the rest. */
-export const NotifyPlaylistUpdateJob = z.object({
-  playlistId: z.uuid(),
-  actorUserId: z.uuid(),
-  hour: z.string(),
-  traceparent: z.string().optional(),
-  requestId: z.string().optional(),
-});
-export type NotifyPlaylistUpdateJob = z.infer<typeof NotifyPlaylistUpdateJob>;
+export type NotifyPostSubscribersJob = z.infer<typeof NotifyPostSubscribersJob>;
 
 export const AnnounceLiveJob = z.object({
   liveStreamId: z.uuid(),
@@ -113,6 +117,8 @@ const notificationJobIds = {
     `${videoId}--${NOTIFY_SUBSCRIBERS}--${kind}${after ? `--${after}` : ''}`,
   announceLive: (liveStreamId: string, after?: string) =>
     `${liveStreamId}--${ANNOUNCE_LIVE}${after ? `--${after}` : ''}`,
+  postSubscribers: (postId: string, after?: string) =>
+    `${postId}--${NOTIFY_POST_SUBSCRIBERS}${after ? `--${after}` : ''}`,
   comment: (commentId: string) => `${commentId}--${NOTIFY_COMMENT}`,
   heart: (commentId: string) => `${commentId}--${NOTIFY_HEART}`,
   partyInvite: (inviteId: string) => `${inviteId}--${NOTIFY_PARTY_INVITE}`,
@@ -155,6 +161,13 @@ export const announceLiveOutbox = (job: AnnounceLiveJob) =>
     name: ANNOUNCE_LIVE,
     data: job,
     jobId: notificationJobIds.announceLive(job.liveStreamId, job.after),
+  });
+
+export const postSubscribersOutbox = (job: NotifyPostSubscribersJob) =>
+  notificationOutbox({
+    name: NOTIFY_POST_SUBSCRIBERS,
+    data: job,
+    jobId: notificationJobIds.postSubscribers(job.postId, job.after),
   });
 
 export const commentOutbox = (job: NotifyCommentJob) =>

@@ -15,6 +15,7 @@ import { player } from './player';
 import { playlistEdit } from './playlist-edit';
 import { playlistPeople } from './playlist-people';
 import { playlistTools } from './playlist-tools';
+import { posts } from './posts';
 import { pwa } from './pwa';
 import { search } from './search';
 import { settings } from './settings';
@@ -23,6 +24,7 @@ import { shell } from './shell';
 import { shorts } from './shorts';
 import { signInPrompt } from './sign-in-prompt';
 import { themeBuilder } from './theme-builder';
+import { threads } from './threads';
 import { watch } from './watch';
 
 export const pl = defineCatalogue<typeof en>()({
@@ -38,6 +40,7 @@ export const pl = defineCatalogue<typeof en>()({
   notifications,
   party,
   player,
+  posts,
   pwa,
   search,
   settings,
@@ -46,6 +49,7 @@ export const pl = defineCatalogue<typeof en>()({
   shorts,
   signInPrompt,
   themeBuilder,
+  threads,
   watch,
   playlistEdit,
   playlistPeople,

@@ -3,11 +3,11 @@ import type { CommentSettings } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { decideCommentEdit } from '../comment-edit';
+import { findHost } from '../comment-lookup';
 import {
   type CommentCreateHarness,
   OTHER,
   OWNER,
-  VIDEO_ID,
   VIEWER,
   setUpCommentCreate,
 } from './comment-create-harness';
@@ -18,15 +18,10 @@ describe('apps/server/api/services: decide a comment edit', () => {
 
   const decide = async (author: UserContext, content: string, commentId: string) => {
     const comment = expectOk(await h.repositories.comments.findById(commentId));
-    const video = expectOk(await h.repositories.videos.findById(VIDEO_ID));
     if (!comment) throw new Error('comment missing');
-    return decideCommentEdit(
-      commentCreateDeps(h.repositories, h.now),
-      author,
-      comment,
-      video,
-      content
-    );
+    const deps = commentCreateDeps(h.repositories, h.now);
+    const host = expectOk(await findHost(deps, comment.target));
+    return decideCommentEdit(deps, author, comment, host, content);
   };
 
   beforeEach(async () => {

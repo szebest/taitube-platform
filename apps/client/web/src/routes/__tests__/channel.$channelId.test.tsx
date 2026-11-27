@@ -4,6 +4,7 @@ import { CHANNEL_ID, mockEndpoint, problemReply } from '@vp/web-testing';
 import { serverRender } from '@vp/web-testing/server';
 import { headOf, jsonLdOf } from '#app/__tests__/head-tags';
 import { loaderApi } from '#app/__tests__/loader-api';
+import { postsApi } from '#app/__tests__/posts-api';
 import { getRouter } from '#app/router';
 
 describe('apps/client/web: /channel/$channelId', () => {
@@ -46,6 +47,18 @@ describe('apps/client/web: /channel/$channelId', () => {
         itemListElement: [{ item: { '@type': 'VideoObject', name: 'Feed video' } }],
       },
     ]);
+  });
+
+  it('server-renders the Posts tab with the posts the loader fetched', async () => {
+    const calls: string[] = [];
+
+    const { status, main } = await serverRender(getRouter, `/channel/${CHANNEL_ID}?tab=posts`, {
+      handlers: [...postsApi({ calls }), ...loaderApi()],
+    });
+
+    expect(status).toBe(200);
+    expect(main).toContain('A new episode is out');
+    expect(calls.filter((call) => call.includes('/posts'))).toHaveLength(1);
   });
 
   it('renders not-found for a segment that is not a channel id, without asking the API', async () => {

@@ -61,6 +61,9 @@ export class PostgresNotificationRepository implements NotificationRepositoryPor
                   input.payload.party
                     ? sql`${n.payload} -> 'party' ->> 'inviteId' = ${input.payload.party.inviteId}`
                     : undefined,
+                  input.payload.postId
+                    ? sql`${n.payload} ->> 'postId' = ${input.payload.postId}`
+                    : undefined,
                   gt(n.createdAt, windowStart)
                 )
               )

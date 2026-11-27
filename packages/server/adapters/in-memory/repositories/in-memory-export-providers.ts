@@ -32,6 +32,7 @@ function exportRowsOver(c: Container): InMemoryExportRowRepository {
     channels: c.get(Repo.channels),
     subscriptions: c.get(Repo.subscriptions),
     categories: c.get(Repo.categories),
+    posts: c.get(Repo.channelPosts),
   });
 }
 

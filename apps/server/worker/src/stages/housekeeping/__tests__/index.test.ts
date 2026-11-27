@@ -53,6 +53,7 @@ describe('housekeeping: createHousekeepingProcessor', () => {
     { task: 'prune-revisions', result: { purgedCount: 0 } },
     { task: 'purge-generations', result: { purgedCount: 0, expiredUploads: 0 } },
     { task: 'purge-playlist-activity', result: { purgedCount: 0 } },
+    { task: 'publish-due-posts', result: { publishedCount: 0 } },
   ] as const)('dispatches $task to its task', async ({ task, result }) => {
     expect(await run(task)).toEqual(result);
   });

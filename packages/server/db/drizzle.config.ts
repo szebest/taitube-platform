@@ -5,6 +5,7 @@ export default defineConfig({
     './src/schema.ts',
     './src/social-schema.ts',
     './src/comments-schema.ts',
+    './src/posts-schema.ts',
     './src/comment-reports-schema.ts',
     './src/comment-moderation-schema.ts',
     './src/view-schema.ts',

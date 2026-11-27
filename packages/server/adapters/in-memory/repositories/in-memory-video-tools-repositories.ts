@@ -7,6 +7,7 @@ import type { InMemoryVideoCorrectionRepository } from './in-memory-video-correc
 import type { InMemoryVideoExperimentRepository } from './in-memory-video-experiment-repository';
 import type { InMemoryVideoGenerationRepository } from './in-memory-video-generation-repository';
 import type { InMemoryVideoPasswordRepository } from './in-memory-video-password-repository';
+import type { InMemoryVideoThreadRepository } from './in-memory-video-thread-repository';
 import { InMemoryWatchPartyRepositories } from './in-memory-watch-party-repositories';
 
 export class InMemoryVideoToolsRepositories extends InMemoryWatchPartyRepositories {
@@ -17,6 +18,7 @@ export class InMemoryVideoToolsRepositories extends InMemoryWatchPartyRepositori
   readonly videoPasswords: InMemoryVideoPasswordRepository;
   readonly videoExperiments: InMemoryVideoExperimentRepository;
   readonly videoGenerations: InMemoryVideoGenerationRepository;
+  readonly videoThreads: InMemoryVideoThreadRepository;
 
   constructor(c: Container) {
     super(c.get(Repo.outbox), c.get(Repo.userEvents));
@@ -27,5 +29,6 @@ export class InMemoryVideoToolsRepositories extends InMemoryWatchPartyRepositori
     this.videoPasswords = c.get(Repo.videoPasswords);
     this.videoExperiments = c.get(Repo.videoExperiments);
     this.videoGenerations = c.get(Repo.videoGenerations);
+    this.videoThreads = c.get(Repo.videoThreads);
   }
 }

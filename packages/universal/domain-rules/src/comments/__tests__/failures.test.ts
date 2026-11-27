@@ -67,7 +67,7 @@ describe('@vp/domain-rules: comment moderation failures', () => {
       name: 'commentsDisabled',
       failure: commentsDisabled('v1'),
       code: ErrorCodes.COMMENTS_DISABLED,
-      payload: { videoId: 'v1' },
+      payload: { targetId: 'v1' },
     },
     {
       name: 'commentsSubscribersOnly',

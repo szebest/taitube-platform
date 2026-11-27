@@ -14,6 +14,7 @@ describe('apps/client/studio: ActingNavItems', () => {
 
     expect(navLinks()).toEqual([
       'Videos',
+      'Posts',
       'Analytics',
       'Comments',
       'Review queue',
@@ -25,8 +26,11 @@ describe('apps/client/studio: ActingNavItems', () => {
   });
 
   it.each<{ role: ChannelRole; pages: string[] }>([
-    { role: 'manager', pages: ['Videos', 'Analytics', 'Comments', 'Review queue', 'Team'] },
-    { role: 'editor', pages: ['Videos', 'Analytics'] },
+    {
+      role: 'manager',
+      pages: ['Videos', 'Posts', 'Analytics', 'Comments', 'Review queue', 'Team'],
+    },
+    { role: 'editor', pages: ['Videos', 'Posts', 'Analytics'] },
     { role: 'moderator', pages: ['Comments', 'Review queue'] },
     { role: 'analytics', pages: ['Analytics'] },
   ])('shows a $role the pages that role reaches: $pages', async ({ role, pages }) => {

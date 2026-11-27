@@ -1,6 +1,11 @@
 import type { NewEntityRevision } from '@vp/core/repositories';
 import * as schema from '@vp/db';
-import { type Chapter, type EntityRevision, videoMetadataSnapshot } from '@vp/domain';
+import {
+  type Chapter,
+  type EntityRevision,
+  type EntityRevisionType,
+  videoMetadataSnapshot,
+} from '@vp/domain';
 import { asc, eq, and } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
 import type { PostgresDatabase } from './types';
@@ -9,8 +14,10 @@ const { entityRevisions: er, videoChapters: vc } = schema;
 
 type RevisionRow = typeof er.$inferSelect;
 
-export function toEntityRevision(row: RevisionRow): EntityRevision {
-  return row as EntityRevision;
+export function toEntityRevision<T extends EntityRevisionType>(
+  row: RevisionRow
+): EntityRevision<T> {
+  return row as EntityRevision<T>;
 }
 
 /** Written on the caller's transaction; a version already recorded for the entity stays as it was. */

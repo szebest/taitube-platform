@@ -10,6 +10,7 @@ import type { InMemoryChannelImageRepository } from './in-memory-channel-image-r
 import type { InMemoryChannelInviteRepository } from './in-memory-channel-invite-repository';
 import type { InMemoryChannelMemberRepository } from './in-memory-channel-member-repository';
 import type { InMemoryChannelPageRepository } from './in-memory-channel-page-repository';
+import type { InMemoryChannelPostRepository } from './in-memory-channel-post-repository';
 import type { InMemoryChannelRepository } from './in-memory-channel-repository';
 import type { InMemoryChannelUserRestrictionRepository } from './in-memory-channel-user-restriction-repository';
 import type { InMemoryClipRepository } from './in-memory-clip-repository';
@@ -31,6 +32,7 @@ import type { InMemoryPlaylistCollaboratorRepository } from './in-memory-playlis
 import type { InMemoryPlaylistLibraryRepository } from './in-memory-playlist-library-repository';
 import type { InMemoryPlaylistRepository } from './in-memory-playlist-repository';
 import type { InMemoryPlaylistStatsRepository } from './in-memory-playlist-stats-repository';
+import type { InMemoryPostEngagement } from './in-memory-post-engagement-repository';
 import type { InMemoryRecommendationFeedbackRepository } from './in-memory-recommendation-feedback-repository';
 import type { InMemoryRelatedVideosRepository } from './in-memory-related-videos-repository';
 import type { InMemoryRenditionRepository } from './in-memory-rendition-repository';
@@ -56,6 +58,7 @@ import type { InMemoryVideoPasswordRepository } from './in-memory-video-password
 import type { InMemoryVideoReactionRepository } from './in-memory-video-reaction-repository';
 import type { InMemoryVideoRepository } from './in-memory-video-repository';
 import type { InMemoryVideoStudioRepository } from './in-memory-video-studio-repository';
+import type { InMemoryVideoThreadRepository } from './in-memory-video-thread-repository';
 import type { InMemoryVideoViewRepository } from './in-memory-video-view-repository';
 import type { InMemoryWatchHistoryRepository } from './in-memory-watch-history-repository';
 import type { InMemoryWebhookRepository } from './in-memory-webhook-repository';
@@ -117,6 +120,9 @@ export const Repo = {
   channelHandleHistory: token<InMemoryChannelHandleHistoryRepository>('channelHandleHistory'),
   channelImages: token<InMemoryChannelImageRepository>('channelImages'),
   channelPages: token<InMemoryChannelPageRepository>('channelPages'),
+  channelPosts: token<InMemoryChannelPostRepository>('channelPosts'),
+  videoThreads: token<InMemoryVideoThreadRepository>('videoThreads'),
+  postEngagement: token<InMemoryPostEngagement>('postEngagement'),
   picks: token<InMemoryPickRepository>('picks'),
   webhooks: token<InMemoryWebhookRepository>('webhooks'),
   liveStreams: token<InMemoryLiveStreamRepository>('liveStreams'),

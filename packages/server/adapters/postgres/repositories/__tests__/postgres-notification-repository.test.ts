@@ -75,7 +75,8 @@ describe('PostgresNotificationRepository: one transaction per write', () => {
       expectErr(
         await repositories.comments.create({
           id: '00000000-0000-7000-8000-0000000000c1',
-          videoId,
+          target: { type: 'video', id: videoId },
+          channelId: OWNER_CHANNEL_ID,
           authorId: OTHER_OWNER_ID,
           authorChannelId: OTHER_OWNER_CHANNEL_ID,
           parentId: null,

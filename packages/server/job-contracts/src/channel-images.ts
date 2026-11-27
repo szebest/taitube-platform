@@ -4,7 +4,7 @@ export const ChannelImageJob = z.object({
   type: z.literal('channel-image'),
   uploadId: z.uuid(),
   channelId: z.uuid(),
-  kind: z.enum(['avatar', 'banner', 'playlist-cover']),
+  kind: z.enum(['avatar', 'banner', 'playlist-cover', 'post-image']),
   traceparent: z.string(),
   requestId: z.string().optional(),
 });

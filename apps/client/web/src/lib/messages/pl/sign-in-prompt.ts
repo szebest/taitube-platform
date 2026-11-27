@@ -17,4 +17,5 @@ export const signInPrompt = {
   report: dt('Zaloguj się, aby to zgłosić'),
   bell: dt('Zaloguj się, aby dostawać powiadomienia'),
   feedback: dt('Zaloguj się, aby dostosować rekomendacje'),
+  vote: dt('Zaloguj się, aby zagłosować'),
 } as const;

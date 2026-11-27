@@ -20,6 +20,7 @@ export function describeCommentModerationRepositoryContract(
         if (removed) expectOk(await ctx.comments.remove(target(C.liked)));
         const reply = {
           ...target(C.reply1),
+          channelId: f.channelId,
           authorId: ctx.authorId,
           authorChannelId: OTHER_OWNER_CHANNEL_ID,
           parentId: C.liked,

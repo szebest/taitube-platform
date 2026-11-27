@@ -1,3 +1,4 @@
+import { expectOk } from '@kit/testing/result';
 import { ErrorCodes } from '@vp/errors';
 import {
   PRIVATE_VIDEO,
@@ -76,6 +77,11 @@ describe('viewer activity routes', () => {
   });
 
   describe('GET /v1/me/comments', () => {
+    const channelOfVideo = async (videoId: string) => {
+      const video = expectOk(await ctx.repositories.videos.findById(videoId));
+      if (!video) throw new Error(`no video ${videoId}`);
+      return video.channelId;
+    };
     const comment = async (
       id: string,
       authorId: string,
@@ -84,7 +90,8 @@ describe('viewer activity routes', () => {
     ) =>
       ctx.repositories.comments.create({
         id,
-        videoId,
+        target: { type: 'video', id: videoId },
+        channelId: await channelOfVideo(videoId),
         authorId,
         authorChannelId: await seedPrimaryChannel(ctx.repositories, authorId),
         parentId,

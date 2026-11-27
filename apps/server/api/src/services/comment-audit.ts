@@ -1,41 +1,42 @@
-import { type Comment, type NewChannelAuditEntry, commentModerationAudit } from '@vp/domain';
+import {
+  type Comment,
+  type NewChannelAuditEntry,
+  commentModerationAudit,
+  commentVideoId,
+} from '@vp/domain';
 import type { UserContext } from '@vp/permissions';
 import { auditActor } from './audit-actor';
 
 /** Deleting a comment is silent in the log, and the author's own delete is not moderation at all. */
 export function deletionAudit(
-  channelId: string | undefined,
   actor: UserContext,
   comment: Comment
 ): { audit: NewChannelAuditEntry } | undefined {
-  if (!channelId || actor.id === comment.authorId) return undefined;
+  if (actor.id === comment.authorId) return undefined;
 
   return {
     audit: commentModerationAudit({
-      channelId,
+      channelId: comment.channelId,
       ...auditActor(actor),
       action: 'remove',
       commentId: comment.id,
-      videoId: comment.videoId,
+      videoId: commentVideoId(comment.target),
       disclosure: 'silent',
     }),
   };
 }
 
 export function pinAudit(
-  channelId: string | undefined,
   actor: UserContext,
   comment: Comment,
   pinned: boolean
-): NewChannelAuditEntry | undefined {
-  if (!channelId) return undefined;
-
+): NewChannelAuditEntry {
   return {
-    channelId,
+    channelId: comment.channelId,
     ...auditActor(actor),
     action: 'comment.pinned',
     targetType: 'comment',
     targetId: comment.id,
-    meta: { videoId: comment.videoId, pinned },
+    meta: { videoId: commentVideoId(comment.target), pinned },
   };
 }

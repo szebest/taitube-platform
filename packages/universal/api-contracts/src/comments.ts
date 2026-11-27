@@ -1,6 +1,7 @@
 import { PAGE_SIZE_MAX } from '@kit/pagination';
 import {
   COMMENT_MODERATION_REASONS,
+  COMMENT_TARGET_TYPES,
   COMMENT_SORTS,
   DISCLOSURES,
   HELD_REASONS,
@@ -38,9 +39,14 @@ const CommentModerationSchema = z
     'What the reader may know of a moderated comment: the state and the reason for its author when it was done visibly, everything for a moderator'
   );
 
+export const CommentTargetSchema = z
+  .object({ type: z.enum(COMMENT_TARGET_TYPES), id: z.uuid() })
+  .describe('What the comment sits under');
+
 export const CommentSchema = z.object({
   id: z.uuid(),
-  videoId: z.uuid(),
+  target: CommentTargetSchema,
+  videoId: z.uuid().nullable().describe('The target id of a comment on a video, null otherwise'),
   parentId: z.uuid().nullable().describe('The root comment of a reply, null for a root'),
   content: z.string(),
   isPinned: z.boolean(),

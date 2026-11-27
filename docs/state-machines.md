@@ -269,6 +269,28 @@ stateDiagram-v2
   DEAD --> [*]
 ```
 
+### post-lifecycle
+
+`POST_LIFECYCLE`, defined in `packages/universal/domain-rules/src/posts/post-lifecycle.machine.ts`.
+
+Initial: `draft`, `scheduled`, `published`. Final: `published`.
+
+| Event | From | To | Recorded as |
+| --- | --- | --- | --- |
+| `schedule` | `draft` | `scheduled` | - |
+| `publish` | `draft`, `scheduled` | `published` | - |
+
+```mermaid
+stateDiagram-v2
+  [*] --> draft
+  [*] --> scheduled
+  [*] --> published
+  draft --> scheduled: schedule
+  draft --> published: publish
+  scheduled --> published: publish
+  published --> [*]
+```
+
 ### upload-session
 
 `UPLOAD_SESSION`, defined in `packages/universal/domain-rules/src/uploads/upload-session.machine.ts`.

@@ -145,7 +145,7 @@ function ModerationQueueBoard() {
                         ''
                       )}
                     </Badge>
-                    <span className="truncate">{row.video.title}</span>
+                    <span className="truncate">{row.targetSummary.title}</span>
                   </span>
                 </ModerationQueue.Item>
               ))}

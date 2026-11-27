@@ -14,6 +14,8 @@ import {
   channelImageReady,
   type ChannelImageKind,
   type ChannelImageUpload,
+  type PostImageUrls,
+  type PostImageVariants,
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { InMemoryChannelRepository } from './in-memory-channel-repository';
@@ -43,6 +45,7 @@ export class InMemoryChannelImageRepository implements ChannelImageRepositoryPor
       height: null,
       crops: null,
       version: null,
+      variantUrls: null,
       failure: null,
       createdAt: now,
       updatedAt: now,
@@ -73,7 +76,8 @@ export class InMemoryChannelImageRepository implements ChannelImageRepositoryPor
 
   async commit(
     id: string,
-    defaultUrl: string
+    defaultUrl: string,
+    variantUrls?: PostImageUrls
   ): Promise<Result<ChannelImageCommit | null, DatabaseUnavailable>> {
     const upload = this.uploads.get(id);
     if (!upload) return ok(null);
@@ -86,6 +90,7 @@ export class InMemoryChannelImageRepository implements ChannelImageRepositoryPor
 
     const applied =
       upload.kind === 'playlist-cover' ||
+      upload.kind === 'post-image' ||
       this.deps.channels.advanceImageVersion(
         upload.channelId,
         upload.kind,
@@ -94,12 +99,29 @@ export class InMemoryChannelImageRepository implements ChannelImageRepositoryPor
         defaultUrl
       );
     upload.status = applied ? 'ready' : 'superseded';
+    if (applied && variantUrls) upload.variantUrls = variantUrls;
     upload.updatedAt = new Date();
     if (applied) {
       const announced = await this.announceReady(upload, upload.version);
       if (isErr(announced)) return announced;
     }
     return ok({ upload: { ...upload }, applied });
+  }
+
+  async findReadyPostImages(
+    channelId: string,
+    uploadIds: readonly string[]
+  ): Promise<Result<PostImageVariants[], DatabaseUnavailable>> {
+    const found = uploadIds.flatMap((id) => {
+      const upload = this.uploads.get(id);
+      const ready =
+        upload?.channelId === channelId &&
+        upload.kind === 'post-image' &&
+        upload.status === CHANNEL_IMAGE_UPLOAD_EDGES.commit.to &&
+        upload.variantUrls;
+      return ready && upload ? [{ uploadId: upload.id, urls: ready }] : [];
+    });
+    return ok(found);
   }
 
   async fail(
@@ -187,7 +209,7 @@ export class InMemoryChannelImageRepository implements ChannelImageRepositoryPor
     upload: ChannelImageUpload,
     version: number
   ): Promise<Result<unknown, DatabaseUnavailable>> {
-    if (upload.kind !== 'playlist-cover') {
+    if (upload.kind !== 'playlist-cover' && upload.kind !== 'post-image') {
       const audited = await this.deps.audit.append({
         channelId: upload.channelId,
         actorUserId: upload.uploadedBy,
@@ -220,6 +242,7 @@ function heldVersion(
     case 'banner':
       return channel?.bannerVersion;
     case 'playlist-cover':
+    case 'post-image':
       return 0;
     default:
       return assertNever(kind, 'ChannelImageKind');

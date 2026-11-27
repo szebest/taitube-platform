@@ -107,4 +107,4 @@ ALTER TABLE "playlist_items" ADD CONSTRAINT "playlist_items_note_check" CHECK ("
 ALTER TABLE "playlist_items" ADD CONSTRAINT "playlist_items_segment_check" CHECK (("playlist_items"."start_ms" IS NULL OR "playlist_items"."start_ms" >= 0) AND ("playlist_items"."end_ms" IS NULL OR "playlist_items"."end_ms" >= 1000) AND ("playlist_items"."start_ms" IS NULL OR "playlist_items"."end_ms" IS NULL OR "playlist_items"."end_ms" - "playlist_items"."start_ms" >= 1000));--> statement-breakpoint
 ALTER TABLE "playlists" ADD CONSTRAINT "playlists_cover_mode_check" CHECK ("playlists"."cover_mode" IN ('auto', 'item', 'custom'));--> statement-breakpoint
 ALTER TABLE "share_links" ADD CONSTRAINT "share_links_target_type_check" CHECK ("share_links"."target_type" IN ('video', 'playlist'));--> statement-breakpoint
-ALTER TABLE "channel_image_uploads" ADD CONSTRAINT "channel_image_uploads_kind_check" CHECK ("channel_image_uploads"."kind" IN ('avatar', 'banner', 'playlist-cover'));
+ALTER TABLE "channel_image_uploads" ADD CONSTRAINT "channel_image_uploads_kind_check" CHECK ("channel_image_uploads"."kind" IN ('avatar', 'banner', 'playlist-cover', 'post-image'));

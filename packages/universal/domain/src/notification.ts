@@ -15,6 +15,7 @@ export const NOTIFICATION_KINDS = [
   'moderation',
   'playlist_invite',
   'playlist_update',
+  'post',
 ] as const;
 export type NotificationKind = (typeof NOTIFICATION_KINDS)[number];
 
@@ -26,7 +27,7 @@ export type NotificationFilter = (typeof NOTIFICATION_FILTERS)[number];
 
 const FILTER_KINDS = {
   all: NOTIFICATION_KINDS,
-  subscriptions: ['upload', 'live'],
+  subscriptions: ['upload', 'live', 'post'],
   mentions: ['reply', 'mention'],
 } as const satisfies Record<NotificationFilter, readonly NotificationKind[]>;
 
@@ -41,11 +42,11 @@ export const NOTIFICATION_EXCERPT_LENGTH = 140;
 
 const BLOCKED_BY_LEVEL: Record<NotificationLevel, readonly NotificationKind[]> = {
   all: [],
-  highlights: ['live'],
+  highlights: ['live', 'post'],
   none: NOTIFICATION_KINDS,
 };
 
-/** What a subscriber's level lets through: `highlights` is uploads only, no live. */
+/** What a subscriber's level lets through: `highlights` is uploads only, no live and no posts. */
 export function levelAllows(level: NotificationLevel, kind: NotificationKind): boolean {
   return !BLOCKED_BY_LEVEL[level].includes(kind);
 }
@@ -65,6 +66,7 @@ export const KIND_SWITCH = {
   moderation: null,
   playlist_invite: null,
   playlist_update: null,
+  post: 'subscriptionUploads',
 } as const satisfies Record<NotificationKind, string | null>;
 
 interface NotifiableVideo {
@@ -126,6 +128,10 @@ interface NotificationFields {
   inviteId?: string;
   /** Set on `playlist_invite` and `playlist_update`: the playlist, and the invite's token and role. */
   playlist?: NotificationPlaylist;
+  /** Set on `post`: the newest post of the group; on `reply`, `mention` and `comment`: the post the comment is under. */
+  postId?: string;
+  /** Set on `reply`, `mention` and `comment` under a viewer thread: with `videoId`, where it opens. */
+  threadId?: string;
   /** Set on `moderation`: what was done, why, and when a ban ends. */
   moderation?: {
     action: 'hold' | 'hide' | 'remove' | 'ban';
@@ -170,21 +176,22 @@ export interface NewNotificationInput {
   payload: Omit<NotificationPayload, 'count'>;
 }
 
-/** What tells one event of a group from another: the video and comment, and for an invite the invite. */
+/** What tells one event of a group from another: the video and comment, and for an invite the invite, for a post the post. */
 export function sameNotificationSubject(
   held: {
     videoId: string | null;
     commentId: string | null;
-    payload: Pick<NotificationPayload, 'party'>;
+    payload: Pick<NotificationPayload, 'party' | 'postId'>;
   },
   input: Pick<NewNotificationInput, 'videoId' | 'commentId'> & {
-    payload: Pick<NotificationPayload, 'party'>;
+    payload: Pick<NotificationPayload, 'party' | 'postId'>;
   }
 ): boolean {
   return (
     held.videoId === input.videoId &&
     held.commentId === input.commentId &&
-    (held.payload.party?.inviteId ?? null) === (input.payload.party?.inviteId ?? null)
+    (held.payload.party?.inviteId ?? null) === (input.payload.party?.inviteId ?? null) &&
+    (held.payload.postId ?? null) === (input.payload.postId ?? null)
   );
 }
 

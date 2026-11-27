@@ -13,6 +13,8 @@ export interface RevisionListItem {
   restoredFromVersion: number | null;
   /** The fields that differ from the version before; `null` for the oldest one. */
   changedFields: VideoMetadataField[] | null;
+  /** What stands in for the changed fields when the record has none to name, such as a post's words. */
+  note?: string;
   current: boolean;
 }
 
@@ -55,19 +57,21 @@ export function RevisionList({
               </span>
             )}
             <span className="text-caption text-fg-muted">
-              {item.changedFields === null
-                ? tOr('studio.historyOriginal', {}, '')
-                : item.changedFields.length === 0
-                  ? tOr('studio.historyNoChange', {}, '')
-                  : tOr(
-                      'studio.historyChanged',
-                      {
-                        fields: item.changedFields.map((field) =>
-                          tOr('studio.historyField', { field }, field)
-                        ),
-                      },
-                      ''
-                    )}
+              {item.note !== undefined
+                ? item.note
+                : item.changedFields === null
+                  ? tOr('studio.historyOriginal', {}, '')
+                  : item.changedFields.length === 0
+                    ? tOr('studio.historyNoChange', {}, '')
+                    : tOr(
+                        'studio.historyChanged',
+                        {
+                          fields: item.changedFields.map((field) =>
+                            tOr('studio.historyField', { field }, field)
+                          ),
+                        },
+                        ''
+                      )}
             </span>
           </div>
           {!item.current && (

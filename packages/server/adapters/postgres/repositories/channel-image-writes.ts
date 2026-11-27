@@ -7,6 +7,7 @@ import {
   channelImageReady,
   type ChannelImageKind,
   type ChannelImageUpload,
+  type PostImageUrls,
 } from '@vp/domain';
 import { and, eq, inArray, lt, sql } from 'drizzle-orm';
 import { appendChannelAudit } from './channel-audit-writes';
@@ -55,6 +56,7 @@ function heldVersion(
     case 'banner':
       return channel?.banner ?? 0;
     case 'playlist-cover':
+    case 'post-image':
       return 0;
     default:
       return assertNever(kind, 'ChannelImageKind');
@@ -94,6 +96,7 @@ async function advanceChannel(
         ).length > 0
       );
     case 'playlist-cover':
+    case 'post-image':
       return true;
     default:
       return assertNever(upload.kind, 'ChannelImageKind');
@@ -102,26 +105,31 @@ async function advanceChannel(
 
 /**
  * Moves the channel's version to the upload's when it is newer, and only then: the compare is in
- * the write, so a retried or late job cannot take an older image back. A playlist cover moves no
- * channel version and is always ready; the playlist takes it when its owner names the upload.
+ * the write, so a retried or late job cannot take an older image back. A playlist cover or a post image moves no
+ * channel version and is always ready; the playlist takes a cover when its owner names the upload.
  */
 export async function commitUpload(
   tx: PostgresDatabase,
   upload: ImageUploadRow,
-  defaultUrl: string
+  defaultUrl: string,
+  variantUrls?: PostImageUrls
 ): Promise<ChannelImageCommit> {
   const version = upload.version ?? 0;
   const applied = await advanceChannel(tx, upload, defaultUrl);
 
   const [row] = await tx
     .update(up)
-    .set({ status: applied ? 'ready' : 'superseded', updatedAt: new Date() })
+    .set({
+      status: applied ? 'ready' : 'superseded',
+      variantUrls: applied ? variantUrls : undefined,
+      updatedAt: new Date(),
+    })
     .where(and(eq(up.id, upload.id), inArray(up.status, [...EDGES.commit.from])))
     .returning();
   if (!row) throw new Error('channel_image_uploads update returned no row');
 
   if (applied) {
-    if (upload.kind !== 'playlist-cover') {
+    if (upload.kind !== 'playlist-cover' && upload.kind !== 'post-image') {
       await appendChannelAudit(tx, {
         channelId: upload.channelId,
         actorUserId: upload.uploadedBy,

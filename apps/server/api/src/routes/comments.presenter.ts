@@ -2,6 +2,9 @@ import { type Problem, problemFor } from '@vp/api-contracts';
 import type { CommentsBanned } from '@vp/domain-rules';
 import { ErrorCodes } from '@vp/errors';
 import type { CreateCommentServiceFailure } from '../services/comment-create';
+import type { CreateThreadServiceFailure } from '../services/thread-create';
+
+type GatedFailure = CreateCommentServiceFailure | CreateThreadServiceFailure;
 
 /**
  * The refusals of a new comment carry what the client acts on: a ban its reason and end, an account
@@ -15,10 +18,7 @@ export function presentBanned(failure: CommentsBanned, instance: string): Proble
   });
 }
 
-export function presentCommentFailure(
-  failure: CreateCommentServiceFailure,
-  instance: string
-): Problem {
+export function presentCommentFailure(failure: GatedFailure, instance: string): Problem {
   switch (failure.code) {
     case ErrorCodes.COMMENTS_BANNED:
       return presentBanned(failure, instance);
@@ -34,9 +34,7 @@ export function presentCommentFailure(
 }
 
 /** Slow mode tells the client how long to wait in the one header HTTP has for it. */
-export function commentFailureHeaders(
-  failure: CreateCommentServiceFailure
-): Record<string, string> {
+export function commentFailureHeaders(failure: GatedFailure): Record<string, string> {
   return failure.code === ErrorCodes.COMMENTS_SLOW_MODE
     ? { 'retry-after': String(failure.retryAfterSeconds) }
     : {};

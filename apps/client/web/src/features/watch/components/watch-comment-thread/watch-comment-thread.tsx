@@ -1,6 +1,5 @@
 import { EmptyState } from '@kit/components';
 import { Format } from '@kit/intl-react';
-import { Button } from '@kit/ui';
 import { useSuspenseInfiniteQuery } from '@tanstack/react-query';
 import { useSearch } from '@tanstack/react-router';
 import type { CommentSort } from '@vp/domain';
@@ -15,12 +14,12 @@ import {
 } from '#app/components/watch/comment-thread';
 import { type NewComment, usePostComment } from '#app/features/watch/hooks/use-post-comment';
 import { commentRefusal } from '#app/features/watch/utils/comment-refusal';
-import { useRequireAccount } from '#app/hooks/use-require-account';
 import { useWindowRows } from '#app/hooks/use-window-rows';
 import { useT } from '#app/lib/messages';
 import { commentsQueryOptions } from '#app/lib/query-keys/comment-keys';
 import { CommentComposer } from '../comment-composer/comment-composer';
 import { NearViewport } from '../near-viewport/near-viewport';
+import { SignInPrompt } from '../sign-in-prompt/sign-in-prompt';
 import { VideoCommentItem } from '../video-comment-item/video-comment-item';
 
 const ESTIMATED_COMMENT_HEIGHT = 110;
@@ -37,20 +36,6 @@ const toggled = (held: ReadonlySet<string>, id: string, on: boolean): ReadonlySe
   }
   return next;
 };
-
-function SignInPrompt() {
-  const { tOr } = useT();
-  const { run } = useRequireAccount('comment');
-
-  return (
-    <div className="flex flex-wrap items-center gap-stack">
-      <p className="m-0 text-body">{tOr('watch.discussionSignIn', {}, '')}</p>
-      <Button variant="soft" onClick={() => run(() => undefined)}>
-        {tOr('auth.signIn', {}, '')}
-      </Button>
-    </div>
-  );
-}
 
 function DraftComment({ draft, onRetry, onDiscard }: DraftProps) {
   const account = useAccount();

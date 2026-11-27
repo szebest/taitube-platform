@@ -10,12 +10,14 @@ import {
   PLAYLIST_COVER_ASPECT,
   PLAYLIST_COVER_KEPT_WIDTH,
   PLAYLIST_COVER_WIDTHS,
+  POST_IMAGE_WIDTHS,
 } from '@vp/domain';
 
 export type ChannelImageCrops =
   | { readonly kind: 'avatar'; readonly crop: CropRect }
   | { readonly kind: 'banner'; readonly crops: BannerCrops }
-  | { readonly kind: 'playlist-cover'; readonly crop: CropRect };
+  | { readonly kind: 'playlist-cover'; readonly crop: CropRect }
+  | { readonly kind: 'post-image'; readonly crop: CropRect };
 
 /** One file the job writes: the rectangle it cuts from the source and the size it scales that to. */
 export interface ChannelImageVariant {
@@ -29,6 +31,7 @@ const DEFAULT_VARIANT: Readonly<Record<ChannelImageKind, string>> = {
   avatar: '128',
   banner: 'desktop-1280',
   'playlist-cover': String(PLAYLIST_COVER_KEPT_WIDTH),
+  'post-image': '1280',
 };
 
 export function defaultChannelImageVariant(kind: ChannelImageKind): string {
@@ -37,7 +40,7 @@ export function defaultChannelImageVariant(kind: ChannelImageKind): string {
 
 /**
  * Four squares of an avatar's one crop; a banner's three targets, each at two widths with an even
- * height; a playlist cover's one crop at two widths.
+ * height; a playlist cover's one crop at two widths and a post image's, keeping the shape of its crop.
  */
 export function planChannelImageVariants(crops: ChannelImageCrops): ChannelImageVariant[] {
   switch (crops.kind) {
@@ -64,8 +67,15 @@ export function planChannelImageVariants(crops: ChannelImageCrops): ChannelImage
         width,
         height: evenHeight(width, PLAYLIST_COVER_ASPECT),
       }));
+    case 'post-image':
+      return POST_IMAGE_WIDTHS.map((width) => ({
+        name: String(width),
+        crop: crops.crop,
+        width,
+        height: evenHeight(width, crops.crop.width / crops.crop.height),
+      }));
     default:
-      return assertNever(crops, 'ChannelImageCrops');
+      return assertNever(crops, 'ImageCrops.kind');
   }
 }
 

@@ -20,6 +20,7 @@ import { RedisCommentSlowModeAdapter } from '../redis/redis-comment-slow-mode.ad
 import { RedisLiveChatGateAdapter } from '../redis/redis-live-chat-gate.adapter';
 import { RedisLivePresenceAdapter } from '../redis/redis-live-presence.adapter';
 import { RedisPartyGuestSessionsAdapter } from '../redis/redis-party-guest-sessions.adapter';
+import { RedisPostOpenSketchAdapter } from '../redis/redis-post-open-sketch.adapter';
 import { RedisSearchSuggestionIndexAdapter } from '../redis/redis-search-suggestion-index.adapter';
 import { RedisSubscriptionCacheAdapter } from '../redis/redis-subscription-cache.adapter';
 import { RedisViewBufferAdapter } from '../redis/redis-view-buffer.adapter';
@@ -175,6 +176,10 @@ export function registerFamily(c: Container): void {
     .provide(
       Adapters.CommentSlowMode,
       (c) => new RedisCommentSlowModeAdapter(c.get(Redis).getRedis())
+    )
+    .provide(
+      Adapters.PostOpenSketch,
+      (c) => new RedisPostOpenSketchAdapter(c.get(Redis).getRedis())
     )
     .provide(Adapters.LiveChatGate, (c) => new RedisLiveChatGateAdapter(c.get(Redis).getRedis()))
     .provide(

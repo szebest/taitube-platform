@@ -13,7 +13,10 @@ type SubjectType =
   | 'Team'
   | 'ChannelUser'
   | 'CommentSettings'
-  | 'ChannelExport';
+  | 'ChannelExport'
+  | 'Post'
+  | 'PostStats'
+  | 'Thread';
 
 interface Probe {
   type: SubjectType;
@@ -37,6 +40,12 @@ const comment = subject('Comment', {
   videoChannelId: CHANNEL_ID,
 });
 const channel = subject('Channel', { id: CHANNEL_ID, userId: OWNER_ID, ownerId: OWNER_ID });
+const post = subject('Post', { channelId: CHANNEL_ID, ownerId: OWNER_ID });
+const thread = subject('Thread', {
+  channelId: CHANNEL_ID,
+  ownerId: OWNER_ID,
+  authorId: 'fan-1',
+});
 const channelUser = subject('ChannelUser', { channelId: CHANNEL_ID, ownerId: OWNER_ID });
 const commentSettings = subject('CommentSettings', { channelId: CHANNEL_ID, ownerId: OWNER_ID });
 const editor = subject('ChannelMember', {
@@ -88,6 +97,11 @@ const CAPABILITY_PROBES: Record<ChannelCapability, Probe[]> = {
       action: 'read',
       target: subject('VideoStats', { ownerId: OWNER_ID, channelId: CHANNEL_ID }),
     },
+    {
+      type: 'PostStats',
+      action: 'read',
+      target: subject('PostStats', { ownerId: OWNER_ID, channelId: CHANNEL_ID }),
+    },
   ],
   'video.edit': [
     { type: 'Video', action: 'update', target: privateVideo },
@@ -111,7 +125,16 @@ const CAPABILITY_PROBES: Record<ChannelCapability, Probe[]> = {
   'channel.edit': [{ type: 'Channel', action: 'update', target: channel }],
   'channel.act': [{ type: 'Channel', action: 'act', target: channel }],
   'comment.pin': [{ type: 'Comment', action: 'pin', target: comment }],
-  'content.pin': [{ type: 'Video', action: 'pin', target: privateVideo }],
+  'content.pin': [
+    { type: 'Video', action: 'pin', target: privateVideo },
+    { type: 'Post', action: 'pin', target: post },
+    { type: 'Thread', action: 'pin', target: thread },
+  ],
+  'post.manage': (['create', 'update', 'delete'] as const).map((action) => ({
+    type: 'Post' as const,
+    action,
+    target: post,
+  })),
   'comment.heart': [{ type: 'Comment', action: 'heart', target: comment }],
   'comment.moderate': [
     { type: 'Comment', action: 'moderate', target: comment },

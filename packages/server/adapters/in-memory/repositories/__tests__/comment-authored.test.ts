@@ -11,7 +11,8 @@ const stored = (id: string, authorId: string, at: number, deleted = false) => ({
   ...newStoredComment(
     {
       id,
-      videoId: VIDEO,
+      target: { type: 'video', id: VIDEO },
+      channelId: 'channel-owner',
       authorId,
       authorChannelId: `channel-${authorId}`,
       parentId: null,
