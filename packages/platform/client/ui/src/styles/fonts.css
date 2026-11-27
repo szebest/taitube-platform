@@ -3,3 +3,40 @@
 @import "@fontsource-variable/geist";
 @import "@fontsource-variable/geist-mono";
 @import "@fontsource-variable/newsreader";
+
+/* Each face's stack names a metric-matched local face before the system fonts, so the swap to the web font does not reflow the page. */
+@font-face {
+  font-family: "Figtree Fallback";
+  src: local("Arial"), local("Liberation Sans");
+  size-adjust: 100.3%;
+  ascent-override: 94.71%;
+  descent-override: 24.92%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Geist Fallback";
+  src: local("Arial"), local("Liberation Sans");
+  size-adjust: 105.86%;
+  ascent-override: 94.94%;
+  descent-override: 27.87%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Newsreader Fallback";
+  src: local("Times New Roman"), local("Liberation Serif");
+  size-adjust: 105.72%;
+  ascent-override: 69.52%;
+  descent-override: 25.07%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Geist Mono Fallback";
+  src: local("Courier New"), local("Liberation Mono");
+  size-adjust: 99.98%;
+  ascent-override: 100.52%;
+  descent-override: 29.5%;
+  line-gap-override: 0%;
+}
