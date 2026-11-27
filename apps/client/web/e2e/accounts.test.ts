@@ -1,5 +1,7 @@
 import { type Page, expect, test } from '../../../../tests/playwright/fixtures';
 
+const ACCOUNTS = ['creator', 'stranger'] as const;
+
 /** Holds every API call of `slot` (all slots when none) until the returned function runs, as a network that does not answer. */
 async function holdApi(page: Page, slot?: string) {
   const { promise: gate, resolve: release } = Promise.withResolvers<void>();
@@ -42,7 +44,7 @@ test.describe('several accounts in one browser', () => {
     page,
     signInSlots,
   }) => {
-    const [creator] = await signInSlots(['creator', 'viewer']);
+    const [creator] = await signInSlots(ACCOUNTS);
 
     await page.goto('/feed/trending');
 
@@ -55,18 +57,18 @@ test.describe('several accounts in one browser', () => {
     page,
     signInSlots,
   }) => {
-    const [creator = '', viewer = ''] = await signInSlots(['creator', 'viewer']);
+    const [creator = '', stranger = ''] = await signInSlots(ACCOUNTS);
     await page.goto('/feed/you');
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
     const after = await countLoads(page);
     const before = await after();
     const release = await holdApi(page, '0');
 
-    await switchTo(page, viewer);
+    await switchTo(page, stranger);
 
     await expect(page).toHaveURL(/\/u\/1\/feed\/you$/);
     await page.getByRole('button', { name: 'Account' }).click();
-    await expect(page.getByRole('menuitemradio', { checked: true })).toContainText(viewer);
+    await expect(page.getByRole('menuitemradio', { checked: true })).toContainText(stranger);
     await page.keyboard.press('Escape');
     release();
     await page.waitForLoadState('networkidle');
@@ -78,12 +80,12 @@ test.describe('several accounts in one browser', () => {
     page,
     signInSlots,
   }) => {
-    const [, viewer = ''] = await signInSlots(['creator', 'viewer']);
+    const [, stranger = ''] = await signInSlots(ACCOUNTS);
     await page.goto('/feed/trending');
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
 
     await page.getByRole('button', { name: 'Account' }).click();
-    const row = page.getByRole('menuitemradio', { name: new RegExp(viewer) });
+    const row = page.getByRole('menuitemradio', { name: new RegExp(stranger) });
     const fetchedAhead = Promise.all(
       ['/v1/me/account', '/v1/me/identities', '/v1/me/notifications/unread-count'].map((path) =>
         page.waitForResponse((response) => response.url().endsWith(path))
@@ -97,7 +99,7 @@ test.describe('several accounts in one browser', () => {
     await expect(
       page
         .locator('[aria-live="polite"][data-slot="visually-hidden"]')
-        .filter({ hasText: `Now browsing as ${viewer}` })
+        .filter({ hasText: `Now browsing as ${stranger}` })
     ).toBeAttached();
     release();
   });
@@ -107,7 +109,7 @@ test.describe('several accounts in one browser', () => {
     context,
     signInSlots,
   }) => {
-    const [creator = '', viewer = ''] = await signInSlots(['creator', 'viewer']);
+    const [creator = '', stranger = ''] = await signInSlots(ACCOUNTS);
     const other = await context.newPage();
 
     await page.goto('/u/0/feed/trending');
@@ -116,7 +118,7 @@ test.describe('several accounts in one browser', () => {
 
     for (const [tab, name] of [
       [page, creator],
-      [other, viewer],
+      [other, stranger],
     ] as const) {
       await tab.getByRole('button', { name: 'Account' }).click();
       await expect(tab.getByRole('menuitemradio', { checked: true })).toContainText(name);
@@ -129,7 +131,7 @@ test.describe('several accounts in one browser', () => {
     context,
     signInSlots,
   }) => {
-    const [creator = ''] = await signInSlots(['creator', 'viewer']);
+    const [creator = ''] = await signInSlots(ACCOUNTS);
     await context.clearCookies({ name: 'vp.session.1' });
 
     await page.goto('/u/0/feed/trending');
@@ -147,7 +149,7 @@ test.describe('several accounts in one browser', () => {
     context,
     signInSlots,
   }) => {
-    const [, viewer = ''] = await signInSlots(['creator', 'viewer']);
+    const [, stranger = ''] = await signInSlots(ACCOUNTS);
     await page.goto('/u/0/feed/trending');
 
     await page.getByRole('button', { name: 'Account' }).click();
@@ -158,7 +160,7 @@ test.describe('several accounts in one browser', () => {
     await expect(async () => {
       await page.keyboard.press('Escape');
       await page.getByRole('button', { name: 'Account' }).click();
-      await expect(page.getByRole('menuitemradio', { checked: true })).toContainText(viewer, {
+      await expect(page.getByRole('menuitemradio', { checked: true })).toContainText(stranger, {
         timeout: 1_000,
       });
     }).toPass();
@@ -172,7 +174,7 @@ test.describe('several accounts in one browser', () => {
   });
 
   test('a studio link opens the studio as the same account', async ({ page, signInSlots }) => {
-    await signInSlots(['creator', 'viewer']);
+    await signInSlots(ACCOUNTS);
     await page.goto('/u/1/feed/trending');
 
     await page.getByRole('button', { name: 'Account' }).click();
@@ -185,14 +187,14 @@ test.describe('several accounts in one browser', () => {
     page,
     signInSlots,
   }) => {
-    const [, viewer = ''] = await signInSlots(['creator', 'viewer']);
+    const [, stranger = ''] = await signInSlots(ACCOUNTS);
     await page.clock.install();
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/u/0/');
 
     await page.getByRole('button', { name: 'Account' }).click();
     const sheet = page.getByRole('dialog', { name: 'Switch account or channel' });
-    await expect(sheet.getByRole('option', { name: new RegExp(viewer) })).toBeVisible();
+    await expect(sheet.getByRole('option', { name: new RegExp(stranger) })).toBeVisible();
     await page.keyboard.press('Escape');
     await expect(sheet).toBeHidden();
 
