@@ -100,6 +100,31 @@ class Rewriter {
     );
   }
 
+  private mergeTarget(
+    from: ts.ImportDeclaration | ts.ExportDeclaration,
+    destination: string,
+    typeOnly: boolean,
+    group: readonly Piece[]
+  ): ts.NamedImports | undefined {
+    if (!ts.isImportDeclaration(from) || group.some((piece) => piece.kind === 'default')) return;
+    for (const statement of this.file.statements) {
+      if (!ts.isImportDeclaration(statement) || statement === from) continue;
+      if (!ts.isStringLiteral(statement.moduleSpecifier)) continue;
+      if (statement.moduleSpecifier.text !== destination) continue;
+      const clause = statement.importClause;
+      const bindings = clause?.namedBindings;
+      if (clause?.isTypeOnly !== typeOnly) continue;
+      if (bindings && ts.isNamedImports(bindings) && bindings.elements.length > 0) return bindings;
+    }
+  }
+
+  private removeStatement(node: ts.Node): Edit {
+    const { text } = this.file;
+    const end = node.getEnd();
+    const lineEnd = text.startsWith('\r\n', end) ? end + 2 : text[end] === '\n' ? end + 1 : end;
+    return { start: node.getStart(), end: lineEnd, text: '' };
+  }
+
   private splitDeclaration(
     node: ts.ImportDeclaration | ts.ExportDeclaration,
     literal: ts.StringLiteral,
@@ -115,16 +140,32 @@ class Rewriter {
     }
 
     const groups = groupByDestination(pieces, resolution.of);
+    const kept: [string, Piece[]][] = [];
+    for (const [destination, group] of groups) {
+      const target = this.mergeTarget(node, destination, typeOnly, group);
+      const last = target?.elements.at(-1);
+      if (last) {
+        const names = group.map((piece) => piece.text).join(', ');
+        this.edits.push({ start: last.getEnd(), end: last.getEnd(), text: `, ${names}` });
+      } else {
+        kept.push([destination, group]);
+      }
+    }
+
     const [first] = groups.keys();
-    if (groups.size === 1 && first !== undefined) {
+    if (kept.length === groups.size && groups.size === 1 && first !== undefined) {
       if (first !== literal.text) this.edits.push(literalEdit(literal, first));
+      return;
+    }
+    if (kept.length === 0) {
+      this.edits.push(this.removeStatement(node));
       return;
     }
 
     const quote = quoteOf(literal);
     const semicolon = node.getText().endsWith(';') ? ';' : '';
     const indent = ' '.repeat(this.file.getLineAndCharacterOfPosition(node.getStart()).character);
-    const lines = [...groups].map(
+    const lines = kept.map(
       ([destination, group]) =>
         `${keyword} ${clauseText(group, typeOnly)} from ${quote}${destination}${quote}${semicolon}`
     );

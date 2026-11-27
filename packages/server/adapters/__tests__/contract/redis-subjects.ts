@@ -1,3 +1,4 @@
+import type { CacheClientSubject } from '@kit/ports/contract';
 import { expectOk } from '@kit/testing/result';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { CacheKeys } from '@vp/events';
@@ -16,7 +17,6 @@ import { RedisSubscriptionCacheAdapter } from '../../redis/redis-subscription-ca
 import { RedisViewBufferAdapter } from '../../redis/redis-view-buffer.adapter';
 import { RedisWatchPartyGateAdapter } from '../../redis/redis-watch-party-gate.adapter';
 import { RedisWatchPartyPresenceAdapter } from '../../redis/redis-watch-party-presence.adapter';
-import type { CacheClientSubject } from './cache-client.contract';
 import type { CategoryCacheSubject } from './category-cache.contract';
 import type { CommentSlowModeSubject } from './comment-slow-mode.contract';
 import { inMemoryCacheClientSubject } from './in-memory-port-subjects';

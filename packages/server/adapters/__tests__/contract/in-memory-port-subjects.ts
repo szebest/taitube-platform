@@ -1,3 +1,4 @@
+import type { CacheClientSubject, FlowProducerSubject, JobQueueSubject } from '@kit/ports/contract';
 import { MS_PER_SECOND } from '@kit/primitives';
 import { expectOk } from '@kit/testing/result';
 import { SEARCH_SUGGESTIONS } from '@vp/domain';
@@ -14,10 +15,7 @@ import { InMemorySubscriptionCache } from '../../in-memory/in-memory-subscriptio
 import { InMemoryViewBuffer } from '../../in-memory/in-memory-view-buffer';
 import { InMemoryWatchPartyGate } from '../../in-memory/in-memory-watch-party-gate';
 import { InMemoryWatchPartyPresence } from '../../in-memory/in-memory-watch-party-presence';
-import type { CacheClientSubject } from './cache-client.contract';
 import type { CategoryCacheSubject } from './category-cache.contract';
-import type { FlowProducerSubject } from './flow-producer.contract';
-import type { JobQueueSubject } from './job-queue.contract';
 import type { MultipartStorageSubject } from './multipart-storage.contract';
 import type { PartyGuestSessionsSubject } from './party-guest-sessions.contract';
 import {

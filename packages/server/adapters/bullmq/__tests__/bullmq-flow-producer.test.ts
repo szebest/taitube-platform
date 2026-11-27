@@ -1,9 +1,9 @@
+import { describeFlowProducerContract } from '@kit/ports/contract';
 import { isOk } from '@kit/result';
 import { expectErr, expectOk } from '@kit/testing/result';
 import { ErrorCodes } from '@vp/errors';
 import type { FlowProducer } from 'bullmq';
 import { bullMqFlowProducerSubject } from '../../__tests__/contract/bullmq-subjects';
-import { describeFlowProducerContract } from '../../__tests__/contract/flow-producer.contract';
 import { BullMqFlowProducer } from '../bullmq-flow-producer';
 
 interface FakeFlowProducerInit {

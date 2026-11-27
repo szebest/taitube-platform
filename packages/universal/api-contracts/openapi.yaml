@@ -24457,6 +24457,9 @@ paths:
                             - FORMAT_UNKNOWN_OPTION
                             - FORMAT_WRONG_KIND
                             - FORMAT_UNRENDERABLE
+                            - DATABASE_UNAVAILABLE
+                            - CACHE_UNAVAILABLE
+                            - QUEUE_UNAVAILABLE
                             - UPLOAD_TOO_LARGE
                             - UPLOAD_SIZE_MISMATCH
                             - UNSUPPORTED_CONTENT_TYPE
@@ -24576,9 +24579,6 @@ paths:
                             - WATCH_PARTY_CHAT_OFF
                             - WATCH_PARTY_TICKET_INVALID
                             - WATCH_PARTY_CREDENTIAL_INVALID
-                            - DATABASE_UNAVAILABLE
-                            - CACHE_UNAVAILABLE
-                            - QUEUE_UNAVAILABLE
                             - UNSUPPORTED_CODEC
                             - CORRUPT_CONTAINER
                             - DURATION_EXCEEDED

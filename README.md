@@ -123,6 +123,7 @@ taitube-platform/
 │   │       ├── logger/              # Pino logger with json and pretty formats, log context, serializeError
 │   │       ├── object-storage/      # S3 object headers by extension and multipart part sizing
 │   │       ├── observability/       # OpenTelemetry tracing, the Prometheus registry and the metrics server
+│   │       ├── ports/               # The cache, database, job queue and flow producer ports and their contract suites
 │   │       ├── testing/             # definePackageTestConfig, withEnv, Result, JWT, log capture and entrypoint helpers
 │   │       └── vite-preset/         # The Vite config of every client app: Start, React, Tailwind, the bundle guard
 │   ├── universal/                   # Runs in a browser AND on a server

@@ -5,6 +5,7 @@ const VOCABULARY_FILES = [
   'packages/universal/errors/src/api-error-codes.ts',
   'packages/universal/errors/src/pipeline-error-codes.ts',
   'packages/platform/universal/errors/src/common-codes.ts',
+  'packages/platform/universal/errors/src/infra-codes.ts',
   'packages/platform/universal/pagination/src/cursor-codec.ts',
   'packages/platform/universal/intl/src/failures.ts',
 ];

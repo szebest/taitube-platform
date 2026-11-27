@@ -13,7 +13,7 @@ only when it has earned it with a real consumer.
 Members (app packages, `@vp/*`): `adapters`, `core`, `db`, `env-schema`, `events`, `ffmpeg`, `fingerprint`,
 `job-contracts`, `pipeline-metrics`, `storage`, `testing-fixtures`, `whisper`, plus `demo`, `deploy`, `dev-identity`, `stack` and the CLI packages `gen-video`,
 `lighthouse` and `upload-client`. The platform packages (`@kit/*`) sit in `packages/platform/server/`: `compose-autoscaler`,
-`composition`, `concurrency`, `config`, `dev-token`, `keyspace`, `logger`, `object-storage`, `observability`, `testing`,
+`composition`, `concurrency`, `config`, `dev-token`, `keyspace`, `logger`, `object-storage`, `observability`, `ports`, `testing`,
 `vite-preset` (the client apps' Vite config, build tooling).
 
 **Platform or app, first.** A server package that names no product value belongs in `packages/platform/server/`, and

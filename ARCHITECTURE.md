@@ -38,7 +38,7 @@ taitube-platform/
 │   ├── client/                     # @kit/components, forms, intl-react, query, security-headers, ui,
 │   │                               #   web-telemetry, web-testing
 │   └── server/                     # @kit/compose-autoscaler, composition, concurrency, config, dev-token, keyspace,
-│                                   #   logger, object-storage, observability, testing, vite-preset
+│                                   #   logger, object-storage, observability, ports, testing, vite-preset
 │
 ├── packages/universal/             # app packages that run in a browser AND on a server
 │   ├── api-contracts/              # @vp/api-contracts - every endpoint schema, one entry per route
@@ -246,7 +246,7 @@ The table lists the app packages and the platform packages of each tier.
 | Tier | Packages | May depend on |
 |---|---|---|
 | `universal` | `api-contracts`, `domain`, `domain-rules`, `errors`, `intl-formats`, `messages`, `permissions`, `validation`; platform: `appearance`, `design-tokens`, `di`, `errors`, `i18n`, `intl`, `machine`, `pagination`, `permissions`, `primitives`, `result`, `runtime`, `tsconfig`, `validation` | `universal` only — no `node:*`, no server SDK |
-| `server` | `adapters`, `core`, `db`, `env-schema`, `events`, `ffmpeg`, `fingerprint`, `gen-video`, `job-contracts`, `pipeline-metrics`, `storage`, `testing-fixtures`, `upload-client`, `whisper`; platform: `compose-autoscaler`, `composition`, `concurrency`, `config`, `dev-token`, `keyspace`, `logger`, `object-storage`, `observability`, `testing`, `vite-preset` | `universal` + `server` |
+| `server` | `adapters`, `core`, `db`, `env-schema`, `events`, `ffmpeg`, `fingerprint`, `gen-video`, `job-contracts`, `pipeline-metrics`, `storage`, `testing-fixtures`, `upload-client`, `whisper`; platform: `compose-autoscaler`, `composition`, `concurrency`, `config`, `dev-token`, `keyspace`, `logger`, `object-storage`, `observability`, `ports`, `testing`, `vite-preset` | `universal` + `server` |
 | `client` | `api-client`, `permissions-react`, `queries`, `web-testing`, `workbench`; platform: `components`, `forms`, `intl-react`, `query`, `security-headers`, `ui`, `web-telemetry`, `web-testing` | `universal` + `client` |
 
 Apps take their tier from their directory the same way: `apps/server/api` and `apps/server/worker` are `server`,
