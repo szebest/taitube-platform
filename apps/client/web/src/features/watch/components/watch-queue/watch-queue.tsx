@@ -1,11 +1,13 @@
 import { EmptyLibraryIllustration, EmptyState, SectionError } from '@kit/components';
 import { useQuery } from '@tanstack/react-query';
-import { Link, useParams } from '@tanstack/react-router';
+import { Link, useParams, useSearch } from '@tanstack/react-router';
+import type { Video } from '@vp/api-contracts';
 import { useApi } from '@vp/queries';
 import { usePlayerTheater } from '#app/components/player/taitube-player';
 import { Queue } from '#app/components/watch/queue';
 import { useAutoplayNext } from '#app/features/watch/hooks/use-autoplay-next';
 import { useQueueNavigation } from '#app/features/watch/hooks/use-queue-navigation';
+import { getOpenedSession } from '#app/features/watch/utils/to-open-action';
 import { usePlaybackQueue } from '#app/hooks/use-playback-queue';
 import { useT } from '#app/lib/messages';
 import { usePlaybackPreference } from '#app/lib/preferences/device-preferences-provider';
@@ -13,9 +15,15 @@ import { playlistQueryOptions } from '#app/lib/query-keys/library-keys';
 import { relatedQueryOptions } from '#app/lib/query-keys/related-keys';
 import { QueueVideoRow } from '../queue-video-row/queue-video-row';
 
+export interface WatchQueueProps {
+  /** The page's video, which the queue shows, with the playlist it was opened from, until the session has opened it. */
+  video: Video;
+}
+
 /** The viewer's queue with its modes and "More like this" below it; the queue is a playlist's when the page was opened from one. */
-export function WatchQueue() {
+export function WatchQueue({ video }: WatchQueueProps) {
   const { videoId } = useParams({ from: '/watch/$videoId' });
+  const { list } = useSearch({ from: '/watch/$videoId' });
   const api = useApi();
   const { tOr } = useT();
   const [autoplayNext, setAutoplayNext] = usePlaybackPreference('autoplayNext');
@@ -26,7 +34,19 @@ export function WatchQueue() {
     isFetching: relatedFetching,
     refetch: refetchRelated,
   } = useQuery(relatedQueryOptions(api, videoId));
-  const { videos, playlistId, shuffle, repeat, reorder, remove, setModes } = usePlaybackQueue();
+  const held = usePlaybackQueue();
+  const { shuffle, repeat, reorder, remove, setModes } = held;
+  const { data: listed } = useQuery({
+    ...playlistQueryOptions(api, list ?? ''),
+    enabled: list !== undefined,
+  });
+  const { videos, playlistId } =
+    held.current === undefined && held.videos.length === 0
+      ? getOpenedSession(
+          { video, list, startTime: undefined, autoplay: false, shareToken: undefined },
+          listed
+        )
+      : held;
   const { open } = useQueueNavigation();
   const theater = usePlayerTheater();
 

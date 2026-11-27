@@ -322,7 +322,7 @@ Initial: `rendering`. Final: none.
 | `render` | `applied`, `failed`, `reverted` | `rendering` | - |
 | `apply` | `rendering` | `applied` | - |
 | `fail` | `rendering` | `failed` | - |
-| `revert` | `applied` | `reverted` | - |
+| `revert` | `applied`, `failed` | `reverted` | - |
 
 ```mermaid
 stateDiagram-v2
@@ -333,6 +333,7 @@ stateDiagram-v2
   rendering --> applied: apply
   rendering --> failed: fail
   applied --> reverted: revert
+  failed --> reverted: revert
 ```
 
 ### video-generation

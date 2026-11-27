@@ -22,6 +22,7 @@ export function generationsOf(patch: Partial<VideoGenerationsView> = {}): VideoG
     activeGeneration: 1,
     editBase: { generation: 1, durationMs: 120_000 },
     edit: null,
+    revertible: false,
     items: [],
     ...patch,
   };

@@ -84,6 +84,8 @@ describe('S3MultipartStorage', () => {
       expect(part.url).toContain('partNumber=3');
       expect(part.url).toContain(`uploadId=${UPLOAD_ID}`);
       expect(part.url).toContain('X-Amz-Expires=600');
+      expect(part.url.toLowerCase()).not.toContain('x-amz-checksum');
+      expect(part.url.toLowerCase()).not.toContain('x-amz-sdk-checksum-algorithm');
       expect(new Date(part.expiresAt).getTime()).toBeGreaterThan(Date.now());
     });
   });

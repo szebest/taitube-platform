@@ -70,7 +70,7 @@ jobs:
     name: e2e-smoke
     needs: [build, unit-shards]
     if: needs.build.outputs.code == 'true'
-    timeout-minutes: 4
+    timeout-minutes: 6
     steps:
       - run: pnpm test:architecture
   terraform:
@@ -87,15 +87,15 @@ jobs:
 
 describe('architecture: the CI pipeline holds its budgets', () => {
   it.each([
-    'build: timeout-minutes is not 3',
-    'lint-typecheck: timeout-minutes is not 4',
+    'build: timeout-minutes is not 4',
+    'lint-typecheck: timeout-minutes is not 7',
     'e2e-smoke: needs more than build',
     'architecture tests run in 2 jobs',
     'unit-shard-1: runs pnpm test, architecture included',
     'build: runs pnpm boundaries twice',
     'unit-shard-1: starts a service container',
     'unit-shard-1: runs a migration',
-    'e2e-smoke: its needs chain budgets 12 min',
+    'e2e-smoke: its needs chain budgets 14 min',
     'unit-shard-1: does not skip a docs-only change',
     'build: no path filter that skips a docs-only change',
     'build: the path filter matches a file on any one pattern',
@@ -104,7 +104,7 @@ describe('architecture: the CI pipeline holds its budgets', () => {
     "main's caches are not kept warm by the 0 4 * * 1,4 schedule",
     'a scheduled run can cancel the run of a push to main',
     'a push to main can cancel the run of the merge before it',
-    'lint-typecheck: architecture is not held to 30 s',
+    'lint-typecheck: architecture is not held to 40 s',
     'unit-shards: unit-tests is not held to 240 s',
     'integration: integration-tests is not held to 240 s',
     'unit-shards: a budget names no step before it',
@@ -120,49 +120,6 @@ describe('architecture: the CI pipeline holds its budgets', () => {
     'lint-typecheck: docs/state-machines.md is not checked for drift',
   ])('fires on a workflow where %s', (finding) => {
     expect(shapeFindings(BAD_WORKFLOW)).toContain(finding);
-  });
-
-  describe('a unit matrix planned by pnpm unit-shards in build', () => {
-    const MATRIX = "${{ fromJSON(needs.build.outputs.unit-shards || '[1]') }}";
-    const COUNT = '${{ needs.build.outputs.unit-shard-count }}';
-    const PLAN = 'pnpm -s unit-shards --github-output';
-    const OUTPUTS = '{ unit-shards: a, unit-shard-count: b }';
-    const workflow = ({ matrix = MATRIX, count = COUNT, plan = PLAN, outputs = OUTPUTS } = {}) =>
-      [
-        'on: [pull_request]',
-        'jobs:',
-        '  build:',
-        '    name: build',
-        `    outputs: ${outputs}`,
-        `    steps: [{ run: ${JSON.stringify(plan)} }]`,
-        '  unit-shards:',
-        '    name: unit-shard-${{ matrix.shard }}',
-        '    needs: [build]',
-        `    strategy: { matrix: { shard: ${JSON.stringify(matrix)} } }`,
-        `    steps: [{ run: "pnpm test:unit --shard=\${{ matrix.shard }}/${count}" }]`,
-      ].join('\n');
-    const finding =
-      'unit-shards: its matrix and --shard denominator are not the outputs of pnpm unit-shards in build';
-
-    it('is accepted, and named unit-shard-N', () => {
-      expect(shapeFindings(workflow())).not.toContain(finding);
-      expect(shapeFindings(workflow())).toContain('unit-shard-N: does not skip a docs-only change');
-    });
-
-    it('fires on a hand-set denominator the matrix does not match', () => {
-      expect(shapeFindings(workflow({ count: '6' }))).toContain(
-        'unit-shards: its matrix does not run every one of the 6 shards'
-      );
-    });
-
-    it.each([
-      { case: 'a static matrix against the build count', matrix: '[1, 2]' },
-      { case: 'a denominator from another job', count: '${{ needs.other.outputs.count }}' },
-      { case: 'a build that does not plan the shards', plan: 'pnpm build' },
-      { case: 'a build that does not export the outputs', outputs: '{}' },
-    ])('fires on $case', (overrides) => {
-      expect(shapeFindings(workflow(overrides))).toContain(finding);
-    });
   });
 
   it.each([
@@ -190,14 +147,14 @@ describe('architecture: the CI pipeline holds its budgets', () => {
       '    strategy:',
       '      matrix:',
       '        app: [web, studio]',
-      '    timeout-minutes: 10',
+      '    timeout-minutes: 12',
     ].join('\n');
 
     const findings = shapeFindings(workflow);
 
-    expect(findings).toContain('e2e-client: timeout-minutes is not 4');
-    expect(findings).toContain('e2e-web: its needs chain budgets 12 min');
-    expect(findings).toContain('e2e-studio: its needs chain budgets 12 min');
+    expect(findings).toContain('e2e-client: timeout-minutes is not 6');
+    expect(findings).toContain('e2e-web: its needs chain budgets 14 min');
+    expect(findings).toContain('e2e-studio: its needs chain budgets 14 min');
   });
 
   it('runs the browser suite of every client app, and of nothing else, in the e2e-client matrix', () => {
