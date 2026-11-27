@@ -5,18 +5,20 @@ import type {
   ListCommentReportsOptions,
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
-import type {
-  CommentReport,
-  CommentReportQueueItem,
-  CommentReportResolution,
-  NewCommentReportInput,
+import {
+  type CommentReport,
+  type CommentReportQueueItem,
+  type CommentReportResolution,
+  type NewCommentReportInput,
+  commentVideoId,
 } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { type SQL, and, desc, eq, isNull, sql } from 'drizzle-orm';
 import { msTimestamp } from '../scopes/index';
+import { targetOf } from './comment-targets';
 import type { PostgresDatabase } from './types';
 
-const { commentReports: r, videoComments: c } = schema;
+const { commentReports: r, comments: c } = schema;
 
 const isOpen = sql<boolean>`(${r.resolvedAt} is null)`;
 const reportedAt = msTimestamp(r.createdAt);
@@ -64,7 +66,8 @@ export class PostgresCommentReportRepository implements CommentReportRepositoryP
             report: r,
             comment: {
               id: c.id,
-              videoId: c.videoId,
+              targetType: c.targetType,
+              targetId: c.targetId,
               authorId: c.authorId,
               content: c.content,
               deletedAt: c.deletedAt,
@@ -78,9 +81,13 @@ export class PostgresCommentReportRepository implements CommentReportRepositoryP
       databaseUnavailable.during('listCommentReports')
     );
     return map(rows, (found) =>
-      found.map(({ report, comment: { deletedAt, ...comment } }) => ({
+      found.map(({ report, comment: { deletedAt, targetType, targetId, ...comment } }) => ({
         ...report,
-        comment: { ...comment, removed: deletedAt !== null },
+        comment: {
+          ...comment,
+          videoId: commentVideoId(targetOf({ targetType, targetId })),
+          removed: deletedAt !== null,
+        },
       }))
     );
   }

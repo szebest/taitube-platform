@@ -7,6 +7,7 @@ export const DATA_EXPORT_KINDS = [
   'channel_analytics',
   'comments',
   'videos',
+  'posts',
 ] as const;
 
 export type DataExportKind = (typeof DATA_EXPORT_KINDS)[number];

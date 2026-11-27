@@ -1,10 +1,11 @@
 import { AppearanceProvider, DEFAULT_APPEARANCE } from '@kit/ui';
 import type { Channel, ChannelSpotlight } from '@vp/api-contracts';
 import { APPEARANCE_COOKIES } from '@vp/domain/settings';
-import { createQueryClient, myVideosQueryOptions } from '@vp/queries';
+import { channelPostsQueryOptions, createQueryClient, myVideosQueryOptions } from '@vp/queries';
 import { api, CHANNEL_ID, channel, feedPages, videoSummary } from '@vp/web-testing';
 import { renderPage } from '@vp/web-testing/server';
 import type { PropsWithChildren } from 'react';
+import { post } from '#app/__tests__/post-fixtures';
 import { AppProviders, signedIn, withToasts } from '#app/__tests__/providers';
 import {
   channelQueryOptions,
@@ -36,6 +37,7 @@ interface ChannelOptions {
   brandColor?: string | null;
   fields?: Partial<Channel>;
   spotlight?: ChannelSpotlight;
+  search?: string;
 }
 
 function renderChannel({
@@ -44,6 +46,7 @@ function renderChannel({
   brandColor = null,
   fields = {},
   spotlight,
+  search = '',
 }: ChannelOptions = {}) {
   const queryClient = createQueryClient();
   queryClient.setQueryData(
@@ -61,9 +64,14 @@ function renderChannel({
     feedPages([videoSummary({ title: 'My upload' })])
   );
 
+  queryClient.setQueryData(channelPostsQueryOptions(api, CHANNEL_ID, null).queryKey, {
+    pages: [{ items: [post({ body: { kind: 'text', text: 'Posted here' } })], nextCursor: null }],
+    pageParams: [undefined],
+  });
+
   return renderPage(<ChannelPage channelId={CHANNEL_ID} />, Providers, {
     queryClient,
-    url: `/channel/${CHANNEL_ID}`,
+    url: `/channel/${CHANNEL_ID}${search}`,
     route: '/channel/$channelId',
   });
 }
@@ -82,6 +90,23 @@ describe('apps/client/web: channel page', () => {
     expect(markup).toContain('>Your videos</h2>');
     expect(markup).toContain('My upload');
   });
+
+  it.each([
+    { search: '', open: 'Home', other: 'Posts', onPosts: false },
+    { search: '?tab=home', open: 'Home', other: 'Posts', onPosts: false },
+    { search: '?tab=posts', open: 'Posts', other: 'Home', onPosts: true },
+    { search: '?tab=videos', open: 'Home', other: 'Posts', onPosts: false },
+  ])(
+    'opens the $open section for "$search" and links to the other',
+    async ({ search, open, other, onPosts }) => {
+      const markup = await renderChannel({ search, fields: { country: 'PL' } });
+
+      expect(markup).toMatch(new RegExp(`<a[^>]*aria-current="page"[^>]*>${open}</a>`));
+      expect(markup).toContain(`>${other}</a>`);
+      expect(markup.includes('Posted here')).toBe(onPosts);
+      expect(markup.includes('>About</h2>')).toBe(!onPosts);
+    }
+  );
 
   it('draws the bio when the channel has one', async () => {
     expect(await renderChannel({ bio: 'Films about trams' })).toContain('Films about trams');

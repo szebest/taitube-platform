@@ -19,6 +19,7 @@ import { Route as AuthedCustomizationRouteImport } from './routes/_authed/custom
 import { Route as AuthedDevelopersRouteImport } from './routes/_authed/developers';
 import { Route as AuthedInvitesRouteImport } from './routes/_authed/invites';
 import { Route as AuthedLiveRouteImport } from './routes/_authed/live';
+import { Route as AuthedPostsRouteImport } from './routes/_authed/posts';
 import { Route as AuthedTeamRouteImport } from './routes/_authed/team';
 import { Route as ForHandleRouteImport } from './routes/for.$handle';
 import { Route as AuthedAdminIndexRouteImport } from './routes/_authed/admin/index';
@@ -84,6 +85,11 @@ const AuthedInvitesRoute = AuthedInvitesRouteImport.update({
 const AuthedLiveRoute = AuthedLiveRouteImport.update({
   id: '/live',
   path: '/live',
+  getParentRoute: () => AuthedRoute,
+} as any);
+const AuthedPostsRoute = AuthedPostsRouteImport.update({
+  id: '/posts',
+  path: '/posts',
   getParentRoute: () => AuthedRoute,
 } as any);
 const AuthedTeamRoute = AuthedTeamRouteImport.update({
@@ -184,6 +190,7 @@ export interface FileRoutesByFullPath {
   '/developers': typeof AuthedDevelopersRoute;
   '/invites': typeof AuthedInvitesRoute;
   '/live': typeof AuthedLiveRoute;
+  '/posts': typeof AuthedPostsRoute;
   '/team': typeof AuthedTeamRoute;
   '/for/$handle': typeof ForHandleRoute;
   '/admin/categories': typeof AuthedAdminCategoriesRoute;
@@ -211,6 +218,7 @@ export interface FileRoutesByTo {
   '/developers': typeof AuthedDevelopersRoute;
   '/invites': typeof AuthedInvitesRoute;
   '/live': typeof AuthedLiveRoute;
+  '/posts': typeof AuthedPostsRoute;
   '/team': typeof AuthedTeamRoute;
   '/for/$handle': typeof ForHandleRoute;
   '/admin/categories': typeof AuthedAdminCategoriesRoute;
@@ -241,6 +249,7 @@ export interface FileRoutesById {
   '/_authed/developers': typeof AuthedDevelopersRoute;
   '/_authed/invites': typeof AuthedInvitesRoute;
   '/_authed/live': typeof AuthedLiveRoute;
+  '/_authed/posts': typeof AuthedPostsRoute;
   '/_authed/team': typeof AuthedTeamRoute;
   '/for/$handle': typeof ForHandleRoute;
   '/_authed/admin/categories': typeof AuthedAdminCategoriesRoute;
@@ -271,6 +280,7 @@ export interface FileRouteTypes {
     | '/developers'
     | '/invites'
     | '/live'
+    | '/posts'
     | '/team'
     | '/for/$handle'
     | '/admin/categories'
@@ -298,6 +308,7 @@ export interface FileRouteTypes {
     | '/developers'
     | '/invites'
     | '/live'
+    | '/posts'
     | '/team'
     | '/for/$handle'
     | '/admin/categories'
@@ -327,6 +338,7 @@ export interface FileRouteTypes {
     | '/_authed/developers'
     | '/_authed/invites'
     | '/_authed/live'
+    | '/_authed/posts'
     | '/_authed/team'
     | '/for/$handle'
     | '/_authed/admin/categories'
@@ -424,6 +436,13 @@ declare module '@tanstack/react-router' {
       path: '/live';
       fullPath: '/live';
       preLoaderRoute: typeof AuthedLiveRouteImport;
+      parentRoute: typeof AuthedRoute;
+    };
+    '/_authed/posts': {
+      id: '/_authed/posts';
+      path: '/posts';
+      fullPath: '/posts';
+      preLoaderRoute: typeof AuthedPostsRouteImport;
       parentRoute: typeof AuthedRoute;
     };
     '/_authed/team': {
@@ -578,6 +597,7 @@ interface AuthedRouteChildren {
   AuthedDevelopersRoute: typeof AuthedDevelopersRoute;
   AuthedInvitesRoute: typeof AuthedInvitesRoute;
   AuthedLiveRoute: typeof AuthedLiveRoute;
+  AuthedPostsRoute: typeof AuthedPostsRoute;
   AuthedTeamRoute: typeof AuthedTeamRoute;
   AuthedCommentsQueueRoute: typeof AuthedCommentsQueueRoute;
   AuthedCommentsSettingsRoute: typeof AuthedCommentsSettingsRoute;
@@ -597,6 +617,7 @@ const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedDevelopersRoute: AuthedDevelopersRoute,
   AuthedInvitesRoute: AuthedInvitesRoute,
   AuthedLiveRoute: AuthedLiveRoute,
+  AuthedPostsRoute: AuthedPostsRoute,
   AuthedTeamRoute: AuthedTeamRoute,
   AuthedCommentsQueueRoute: AuthedCommentsQueueRoute,
   AuthedCommentsSettingsRoute: AuthedCommentsSettingsRoute,

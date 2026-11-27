@@ -12,6 +12,7 @@ export * from './exports';
 export * from './ladder';
 export * from './live';
 export * from './notifications';
+export * from './playlist-notifications';
 export * from './policies';
 
 export const QUEUES = [
@@ -155,6 +156,7 @@ export const HousekeepingJob = z.object({
     'prune-revisions',
     'purge-generations',
     'purge-playlist-activity',
+    'publish-due-posts',
   ]),
 });
 export type HousekeepingJob = z.infer<typeof HousekeepingJob>;

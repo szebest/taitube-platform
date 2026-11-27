@@ -21,7 +21,8 @@ export type BannerCrops = Record<BannerTarget, CropRect>;
 export type ImageCrops =
   | { readonly kind: 'avatar'; readonly crop: CropRect }
   | { readonly kind: 'banner'; readonly crops: BannerCrops }
-  | { readonly kind: 'playlist-cover'; readonly crop: CropRect };
+  | { readonly kind: 'playlist-cover'; readonly crop: CropRect }
+  | { readonly kind: 'post-image'; readonly crop: CropRect };
 
 export const AVATAR_SIZES = [48, 72, 128, 256] as const;
 
@@ -35,6 +36,18 @@ export const PLAYLIST_COVER_WIDTHS = [640, 1280] as const;
 /** The variant a playlist keeps as its custom cover. */
 export const PLAYLIST_COVER_KEPT_WIDTH: (typeof PLAYLIST_COVER_WIDTHS)[number] = 1280;
 
+export const POST_IMAGE_WIDTHS = [640, 1280] as const;
+
+export interface PostImageUrls {
+  readonly w640: string;
+  readonly w1280: string;
+}
+
+export interface PostImageVariants {
+  readonly uploadId: string;
+  readonly urls: PostImageUrls;
+}
+
 export interface ChannelBannerLink {
   label: string;
   url: string;
@@ -46,7 +59,7 @@ export const HANDLE_RESERVATION_DAYS = 90;
 
 export const CONTACT_REVEALS_PER_DAY = 20;
 
-export type ChannelImageKind = 'avatar' | 'banner' | 'playlist-cover';
+export type ChannelImageKind = 'avatar' | 'banner' | 'playlist-cover' | 'post-image';
 
 export const IMAGE_UPLOAD_STATUSES = [
   'issued',
@@ -82,8 +95,8 @@ export const CHANNEL_IMAGE_UPLOAD_EDGES = {
 } as const satisfies Record<string, { from: readonly ImageUploadStatus[]; to: ImageUploadStatus }>;
 
 /**
- * One file a creator uploaded for an avatar, a banner or a playlist cover, from the presigned URL to
- * the version it became.
+ * One file a creator uploaded for an avatar, a banner, a playlist cover or a post image, from the
+ * presigned URL to the version it became.
  */
 export interface ChannelImageUpload {
   id: string;
@@ -97,6 +110,7 @@ export interface ChannelImageUpload {
   height: number | null;
   crops: ImageCrops | null;
   version: number | null;
+  variantUrls: PostImageUrls | null;
   failure: string | null;
   createdAt: Date;
   updatedAt: Date;

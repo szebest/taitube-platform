@@ -55,6 +55,8 @@ A service's collaborators arrive through its deps and are required; `composition
 | `CommentService` | `comment-service.ts` | Threaded comments, the hot first page behind singleflight, moderation through `@vp/domain-rules` |
 | - | `comment-views.ts` | The comment wire shape, with the creator badge |
 | `PlaylistService` | `playlist-service.ts` | Playlists and their items; reorders hand `decidePlaylistReorder` to the repository transaction |
+| `PostService` | `post-service.ts` | A channel's text, images, video and playlist posts: the keyset list and the community feed, publishing and editing as the acting channel (never naming the member), delete with its comments, likes; registered by `composition/post.module.ts` |
+| - | `post-views.ts` · `post-share-cards.ts` · `post-cursor.ts` | The batched post view (channels, ready images, one lookup per shared target), the share card decided by `decidePostShare`, and the pinned-first and feed cursors |
 | `WatchHistoryService` | `watch-history-service.ts` | Resumable playheads over the Redis write-behind buffer, the keyset history list |
 | `SearchHistoryService` | `search-history-service.ts` | The caller's search trail: the keyset list, one entry removed (`decideSearchHistoryRemoval`), all cleared; registered by `composition/search.module.ts` |
 | `RecommendationFeedbackService` | `recommendation-feedback-service.ts` | "Not interested" and hidden channels: put (the target decided by `decideRecommendationFeedbackTarget`), the keyset list, undo; every write drops the viewer's cached home page through `HomeService.forget`; registered by `composition/discovery.module.ts` |

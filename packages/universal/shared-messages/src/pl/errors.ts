@@ -2,6 +2,7 @@ import { dt } from '../engine';
 import { channelErrors } from './errors-channels';
 import { commentErrors } from './errors-comments';
 import { playlistErrors } from './errors-playlists';
+import { postErrors } from './errors-posts';
 import { videoToolErrors } from './errors-video-tools';
 
 export const errors = {
@@ -28,6 +29,7 @@ export const errors = {
   invalidHandleFormat: dt('Nazwa użytkownika może zawierać tylko małe litery, cyfry i myślniki.'),
   cannotSubscribeToSelf: dt('Nie możesz subskrybować własnego kanału.'),
   ...channelErrors,
+  ...postErrors,
   ...commentErrors,
   ...playlistErrors,
   reportNotFound: dt('To zgłoszenie nie istnieje.'),

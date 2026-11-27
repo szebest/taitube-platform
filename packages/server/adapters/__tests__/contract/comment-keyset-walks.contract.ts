@@ -9,7 +9,7 @@ import {
   nextWindow,
   seedComment,
 } from './comment-contract-context';
-import { OWNER_CHANNEL_ID, OWNER_ID, VIDEO_IDS } from './fixtures';
+import { OWNER_CHANNEL_ID, OWNER_ID, VIDEO_IDS, videoTarget } from './fixtures';
 import { SHARED_MILLISECOND, walkByCreatedAt, walkOneAtATime } from './keyset-walk';
 
 const ROOTS = [C.old, C.liked, C.fresh];
@@ -20,8 +20,8 @@ export function describeCommentKeysetWalksContract(ctx: CommentContractContext):
     const seedInOneMillisecond = async (ids: readonly string[], parentId?: string) => {
       for (const id of ids) await seedComment(ctx, id, { parentId });
       await ctx.subject.spreadAcrossMicroseconds({
-        stamp: schema.videoComments.createdAt,
-        key: schema.videoComments.id,
+        stamp: schema.comments.createdAt,
+        key: schema.comments.id,
         ids,
         at: SHARED_MILLISECOND,
       });
@@ -33,7 +33,7 @@ export function describeCommentKeysetWalksContract(ctx: CommentContractContext):
       const served = await walkOneAtATime(
         async (window: CommentWindow | null) =>
           expectOk(
-            await ctx.comments.listThreads(VIDEO_IDS.a, {
+            await ctx.comments.listThreads(videoTarget(VIDEO_IDS.a), {
               viewer: null,
               sort,
               window: window ?? keyset(1),
@@ -49,7 +49,7 @@ export function describeCommentKeysetWalksContract(ctx: CommentContractContext):
     it('serves every reply of a thread once', async () => {
       await seedComment(ctx, C.liked);
       await seedInOneMillisecond(REPLIES, C.liked);
-      const root = { id: C.liked, videoId: VIDEO_IDS.a };
+      const root = { id: C.liked, target: videoTarget(VIDEO_IDS.a) };
 
       const served = await walkByCreatedAt(async (cursor) =>
         expectOk(await ctx.comments.listReplies(root, { viewer: null, cursor, limit: 1 }))

@@ -3,12 +3,13 @@ import type { Clock } from './clock';
 import type { InMemoryCaptionRepository } from './in-memory-caption-repository';
 import type { InMemoryCategoryRepository } from './in-memory-category-repository';
 import type { InMemoryChannelAuditRepository } from './in-memory-channel-audit-repository';
-import type { InMemoryChannelFeaturedRepository } from './in-memory-channel-featured-repository';
 import type { InMemoryChannelHandleHistoryRepository } from './in-memory-channel-handle-history-repository';
-import type { InMemoryChannelImageRepository } from './in-memory-channel-image-repository';
 import type { InMemoryChannelInviteRepository } from './in-memory-channel-invite-repository';
 import type { InMemoryChannelMemberRepository } from './in-memory-channel-member-repository';
-import type { InMemoryChannelPageRepository } from './in-memory-channel-page-repository';
+import {
+  type ChannelContentRepositories as ChannelContent,
+  channelContentOf,
+} from './in-memory-channel-providers';
 import type { InMemoryChannelRepository } from './in-memory-channel-repository';
 import type { InMemoryChannelUserRestrictionRepository } from './in-memory-channel-user-restriction-repository';
 import type { InMemoryClipRepository } from './in-memory-clip-repository';
@@ -102,10 +103,12 @@ export class InMemoryRepositories extends InMemoryVideoToolsRepositories impleme
   readonly screenings: InMemoryScreeningRepository;
   readonly fingerprints: InMemoryFingerprintRepository;
   readonly clips: InMemoryClipRepository;
-  readonly channelFeatured: InMemoryChannelFeaturedRepository;
+  declare readonly channelFeatured: ChannelContent['channelFeatured'];
   readonly channelHandleHistory: InMemoryChannelHandleHistoryRepository;
-  readonly channelImages: InMemoryChannelImageRepository;
-  readonly channelPages: InMemoryChannelPageRepository;
+  declare readonly channelImages: ChannelContent['channelImages'];
+  declare readonly channelPages: ChannelContent['channelPages'];
+  declare readonly channelPosts: ChannelContent['channelPosts'];
+  declare readonly postEngagement: ChannelContent['postEngagement'];
   readonly picks: InMemoryPickRepository;
   readonly webhooks: InMemoryWebhookRepository;
   readonly liveStreams: InMemoryLiveStreamRepository;
@@ -153,10 +156,8 @@ export class InMemoryRepositories extends InMemoryVideoToolsRepositories impleme
     this.screenings = c.get(Repo.screenings);
     this.fingerprints = c.get(Repo.fingerprints);
     this.clips = c.get(Repo.clips);
-    this.channelFeatured = c.get(Repo.channelFeatured);
+    Object.assign(this, channelContentOf(c));
     this.channelHandleHistory = c.get(Repo.channelHandleHistory);
-    this.channelImages = c.get(Repo.channelImages);
-    this.channelPages = c.get(Repo.channelPages);
     this.picks = c.get(Repo.picks);
     this.webhooks = c.get(Repo.webhooks);
     this.liveStreams = c.get(Repo.liveStreams);

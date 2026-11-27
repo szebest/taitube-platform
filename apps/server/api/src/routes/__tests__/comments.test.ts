@@ -153,7 +153,7 @@ describe('comment routes', () => {
 
     it('caches the first top page and purges it on the next write', async () => {
       await ctx.comment('author', 'one');
-      const key = CacheKeys.videoHotComments(VIDEO);
+      const key = CacheKeys.hotComments('video', VIDEO);
 
       await ctx.list();
       expect(expectOk(await ctx.cache.get(key))).not.toBeNull();

@@ -37,6 +37,10 @@ export const notifications = {
       },
     },
   }),
+  posted: dt('{name} shared a post'),
+  posts: dt('{count:plural} from {name}', {
+    plural: { count: { one: '{?} new post', other: '{?} new posts' } },
+  }),
   processingReady: dt('Your video is ready to watch'),
   processingFailed: dt('Your video could not be processed'),
   processingHeld: dt('Your video is on hold until a reviewer has looked at it'),

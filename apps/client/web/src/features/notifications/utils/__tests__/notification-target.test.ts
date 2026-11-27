@@ -12,6 +12,8 @@ const PLAYLIST = {
   title: 'Road trip',
   invite: { token: TOKEN, role: 'editor' as const },
 };
+const POST_ID = '0190c3a0-5e1d-7000-8000-0000000000a1';
+const THREAD_ID = '0190c3a0-5e1d-7000-8000-0000000000b1';
 
 describe('apps/client/web: notificationTarget', () => {
   it.each([
@@ -42,6 +44,36 @@ describe('apps/client/web: notificationTarget', () => {
         params: { videoId: VIDEO_ID },
         search: { comment: COMMENT_ID },
       },
+    },
+    {
+      case: 'a reply under a post opens the post',
+      overrides: { kind: 'reply' as const, videoId: null, commentId: COMMENT_ID },
+      payload: { postId: POST_ID },
+      count: 1,
+      target: { to: '/post/$id', params: { id: POST_ID }, search: {} },
+    },
+    {
+      case: 'a reply under a thread opens the thread on its video',
+      overrides: { kind: 'reply' as const, commentId: COMMENT_ID },
+      payload: { threadId: THREAD_ID },
+      count: 1,
+      target: {
+        to: '/watch/$videoId',
+        params: { videoId: VIDEO_ID },
+        search: { tab: 'threads', thread: THREAD_ID, comment: COMMENT_ID },
+      },
+    },
+    {
+      case: 'a post opens its channel',
+      overrides: { kind: 'post' as const, videoId: null },
+      count: 1,
+      target: { to: '/channel/$channelId', params: { channelId: CHANNEL_ID } },
+    },
+    {
+      case: 'a post with no channel opens nothing',
+      overrides: { kind: 'post' as const, videoId: null, actorChannelId: null },
+      count: 1,
+      target: undefined,
     },
     {
       case: 'a team invite has no video to open',
@@ -83,9 +115,9 @@ describe('apps/client/web: notificationTarget', () => {
       count: 1,
       target: undefined,
     },
-  ])('$case', ({ overrides, count, target }) => {
-    expect(notificationTarget(notification(overrides, { count, playlist: PLAYLIST }))).toEqual(
-      target
-    );
+  ])('$case', ({ overrides, payload, count, target }) => {
+    expect(
+      notificationTarget(notification(overrides, { count, playlist: PLAYLIST, ...payload }))
+    ).toEqual(target);
   });
 });

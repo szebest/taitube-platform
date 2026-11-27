@@ -19,6 +19,16 @@ describe('apps/client/web: useNotificationText', () => {
       headline: '3 new videos from Night Kitchen',
     },
     {
+      case: 'one post',
+      shown: notification({ kind: 'post', videoId: null }, { videoTitle: null }),
+      headline: 'Night Kitchen shared a post',
+    },
+    {
+      case: 'a group of posts',
+      shown: notification({ kind: 'post', videoId: null }, { videoTitle: null, count: 3 }),
+      headline: '3 new posts from Night Kitchen',
+    },
+    {
       case: 'a live start',
       shown: notification({ kind: 'live' }),
       headline: 'Night Kitchen is live now',
@@ -114,6 +124,14 @@ describe('apps/client/web: useNotificationText', () => {
       case: 'the comment over the title',
       shown: notification({ kind: 'reply' }, { excerpt: 'So good' }),
       detail: 'So good',
+    },
+    {
+      case: 'the post text',
+      shown: notification(
+        { kind: 'post', videoId: null },
+        { videoTitle: null, excerpt: 'Dinner at nine' }
+      ),
+      detail: 'Dinner at nine',
     },
     { case: 'nothing', shown: notification({}, { videoTitle: null }), detail: null },
   ])('details $case', ({ shown, detail }) => {

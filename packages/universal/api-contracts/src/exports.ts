@@ -8,6 +8,9 @@ import {
   type DataExportKind,
   DISCLOSURES,
   MODERATION_STATES,
+  POST_KINDS,
+  POST_STATUSES,
+  type PostExportRow,
   VIDEO_STATUSES,
   VIDEO_VISIBILITIES,
   type VideoAnalyticsExportRow,
@@ -96,12 +99,28 @@ const VideoRowSchema = z
     'One video of the channel with its metadata and counts'
   ) satisfies z.ZodType<VideoExportRow>;
 
+const PostRowSchema = z
+  .object({
+    postId: z.uuid(),
+    kind: z.enum(POST_KINDS),
+    status: z.enum(POST_STATUSES),
+    payload: z.string().describe('The post content as JSON text, whatever its kind'),
+    commentsEnabled: z.boolean(),
+    likeCount: z.number().int(),
+    commentsCount: z.number().int(),
+    publishedAt: z.iso.datetime().nullable(),
+    createdAt: z.iso.datetime(),
+    editedAt: z.iso.datetime().nullable(),
+  })
+  .describe('One post of the channel with its counts') satisfies z.ZodType<PostExportRow>;
+
 /** The row each kind writes, in column order: a CSV header is the keys, a JSON file an array of these. */
 const EXPORT_ROW_SCHEMAS = {
   video_analytics: VideoAnalyticsRowSchema,
   channel_analytics: ChannelAnalyticsRowSchema,
   comments: CommentRowSchema,
   videos: VideoRowSchema,
+  posts: PostRowSchema,
 } as const satisfies Record<DataExportKind, z.ZodObject>;
 
 export function exportColumns(kind: DataExportKind): string[] {
@@ -118,7 +137,7 @@ const ExportParamsSchema = z
     path: ['from'],
   })
   .describe(
-    'Narrows analytics to the days, comments and videos to those made on the days; a retention curve has no day and is always whole'
+    'Narrows analytics to the days, comments, videos and posts to those made on the days; a retention curve has no day and is always whole'
   );
 
 const ExportIdParamSchema = z.object({ id: z.uuid({ error: 'Invalid export ID format' }) });

@@ -9,9 +9,10 @@ import * as schema from '@vp/db';
 import type { Comment, CommentSort, CommentThread } from '@vp/domain';
 import { type SQL, type SQLWrapper, asc, desc, eq, getTableColumns, sql } from 'drizzle-orm';
 import { aliasedTable, msTimestamp, ownOrPublicScope } from '../scopes/index';
+import { sameTarget, targetOf } from './comment-targets';
 import type { PostgresDatabase } from './types';
 
-const { videoComments: c, channels: ch } = schema;
+const { comments: c, channels: ch } = schema;
 
 type CommentRow = typeof c.$inferSelect;
 
@@ -19,7 +20,7 @@ const reply = aliasedTable(c, 'reply');
 
 const replyCountOf = (scope: SQL | undefined) => sql<number>`(
   select count(*)::int from ${reply.from}
-  where ${reply.table.videoId} = ${c.videoId} and ${reply.table.parentId} = ${c.id}
+  where ${sameTarget(reply.table, c)} and ${reply.table.parentId} = ${c.id}
     and ${reply.table.deletedAt} is null${scope ? sql` and ${scope}` : sql``}
 )`;
 
@@ -31,7 +32,7 @@ const channelColumns = {
 };
 
 /**
- * Selected over `video_comments LEFT JOIN channels ON channels.id = author_channel_id`. The reply
+ * Selected over `comments LEFT JOIN channels ON channels.id = author_channel_id`. The reply
  * count is what the viewer may see of the replies, so it matches the thread they open.
  */
 const publicThreadColumns = (viewer: CommentViewer) => ({
@@ -49,8 +50,13 @@ type ThreadRow = CommentRow & {
   replyCount: number;
 };
 
-export function toComment({ deletedAt: _deletedAt, ...comment }: CommentRow): Comment {
-  return comment;
+export function toComment({
+  deletedAt: _deletedAt,
+  targetType,
+  targetId,
+  ...comment
+}: CommentRow): Comment {
+  return { ...comment, target: targetOf({ targetType, targetId }) };
 }
 
 export function toCommentThread({

@@ -3,6 +3,7 @@ import {
   IMAGE_UPLOAD_STATUSES,
   type ImageCrops,
   type ImageUploadStatus,
+  type PostImageUrls,
 } from '@vp/domain';
 import { sql } from 'drizzle-orm';
 import {
@@ -52,6 +53,7 @@ export const channelImageUploads = pgTable(
     height: integer('height'),
     crops: jsonb('crops').$type<ImageCrops>(),
     version: integer('version'),
+    variantUrls: jsonb('variant_urls').$type<PostImageUrls>(),
     failure: text('failure'),
     createdAt: timestamptz('created_at').notNull().defaultNow(),
     updatedAt: timestamptz('updated_at').notNull().defaultNow(),
@@ -62,7 +64,7 @@ export const channelImageUploads = pgTable(
     index('channel_image_uploads_status_idx').on(table.status, table.updatedAt),
     check(
       'channel_image_uploads_kind_check',
-      sql`${table.kind} IN ('avatar', 'banner', 'playlist-cover')`
+      sql`${table.kind} IN ('avatar', 'banner', 'playlist-cover', 'post-image')`
     ),
     check('channel_image_uploads_status_check', sql`${table.status} IN (${STATUS_LIST})`),
   ]

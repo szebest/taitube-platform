@@ -13,6 +13,7 @@ import {
   type AuthoredComment,
   type Comment,
   type CommentEditWrite,
+  type CommentTarget,
   type CommentThread,
   type CreatorInboxComment,
   type ModerationRecord,
@@ -31,6 +32,7 @@ import {
   creatorInboxQuery,
   toAuthoredComment,
 } from './comment-list-queries';
+import { onTarget } from './comment-targets';
 import {
   commentReplyCursorScope,
   commentReplyOrderBy,
@@ -46,7 +48,7 @@ import { editComment, insertComment, pinComment, removeComment } from './comment
 import { enqueueNotificationJobs } from './notification-jobs';
 import type { PostgresDatabase } from './types';
 
-const { videoComments: c } = schema;
+const { comments: c } = schema;
 
 export class PostgresCommentRepository implements CommentRepositoryPort {
   constructor(private readonly db: PostgresDatabase) {}
@@ -79,7 +81,7 @@ export class PostgresCommentRepository implements CommentRepositoryPort {
   }
 
   async listThreads(
-    videoId: string,
+    target: CommentTarget,
     { viewer, sort, window }: ListCommentThreadsOptions
   ): Promise<Result<CommentThread[], DatabaseUnavailable>> {
     const { cursor, offset } = commentWindowBounds(window);
@@ -88,7 +90,7 @@ export class PostgresCommentRepository implements CommentRepositoryPort {
         selectThreads(this.db, viewer)
           .where(
             drizzleWhere(
-              eq(c.videoId, videoId),
+              onTarget(target),
               sql`${c.parentId} IS NULL`,
               notDeletedScope(c),
               publicCommentScope(viewer),
@@ -112,7 +114,7 @@ export class PostgresCommentRepository implements CommentRepositoryPort {
         selectThreads(this.db, viewer)
           .where(
             drizzleWhere(
-              eq(c.videoId, root.videoId),
+              onTarget(root.target),
               eq(c.parentId, root.id),
               notDeletedScope(c),
               publicCommentScope(viewer),
@@ -127,7 +129,7 @@ export class PostgresCommentRepository implements CommentRepositoryPort {
   }
 
   async listOwnNonPublic(
-    videoId: string,
+    target: CommentTarget,
     authorId: string
   ): Promise<Result<CommentThread[], DatabaseUnavailable>> {
     const viewer = { id: authorId };
@@ -136,7 +138,7 @@ export class PostgresCommentRepository implements CommentRepositoryPort {
         selectThreads(this.db, viewer)
           .where(
             drizzleWhere(
-              eq(c.videoId, videoId),
+              onTarget(target),
               eq(c.authorId, authorId),
               notDeletedScope(c),
               publicCommentScope(viewer),
@@ -200,7 +202,7 @@ export class PostgresCommentRepository implements CommentRepositoryPort {
         this.db.transaction(async (tx) => {
           const where = drizzleWhere(
             eq(c.id, target.id),
-            eq(c.videoId, target.videoId),
+            onTarget(target.target),
             notDeletedScope(c)
           );
           const [before] = await tx
@@ -214,9 +216,9 @@ export class PostgresCommentRepository implements CommentRepositoryPort {
             .update(c)
             .set({ heartedAt: hearted ? sql`coalesce(${c.heartedAt}, now())` : null })
             .where(eq(c.id, target.id));
-          if (hearted && before.heartedAt === null) {
+          if (hearted && before.heartedAt === null && target.target.type === 'video') {
             await enqueueNotificationJobs(tx, [
-              heartOutbox({ videoId: target.videoId, commentId: target.id }),
+              heartOutbox({ videoId: target.target.id, commentId: target.id }),
             ]);
           }
           return threadById(tx, target.id, null);

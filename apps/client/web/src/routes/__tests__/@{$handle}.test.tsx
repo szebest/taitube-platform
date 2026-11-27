@@ -5,6 +5,7 @@ import { serverRender } from '@vp/web-testing/server';
 import { HttpResponse } from 'msw/http';
 import { headOf } from '#app/__tests__/head-tags';
 import { loaderApi } from '#app/__tests__/loader-api';
+import { postsApi } from '#app/__tests__/posts-api';
 import { getRouter } from '#app/router';
 
 const byHandle = (fields: Parameters<typeof channel>[0]) =>
@@ -45,6 +46,18 @@ describe('apps/client/web: /@handle', () => {
 
     expect(status).toBe(301);
     expect(location).toBe('/@new-name');
+  });
+
+  it('server-renders the Posts tab with the posts the loader fetched', async () => {
+    const calls: string[] = [];
+
+    const { status, main } = await serverRender(getRouter, '/@creator?tab=posts', {
+      handlers: [byHandle({}), ...postsApi({ calls }), ...loaderApi()],
+    });
+
+    expect(status).toBe(200);
+    expect(main).toContain('A new episode is out');
+    expect(calls.filter((call) => call.includes('/posts'))).toHaveLength(1);
   });
 
   it('renders not-found when no channel ever had the handle', async () => {

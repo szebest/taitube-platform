@@ -92,7 +92,7 @@ const UserEventSchema = z.discriminatedUnion('type', [
   }),
   z.object({
     type: z.literal('comment.held'),
-    payload: z.object({ commentId: z.uuid(), videoId: z.uuid() }),
+    payload: z.object({ commentId: z.uuid(), videoId: z.uuid().nullable() }),
   }),
   z.object({
     type: z.literal('captions.ready'),

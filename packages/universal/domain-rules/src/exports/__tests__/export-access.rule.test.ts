@@ -51,6 +51,7 @@ describe('@vp/domain-rules: decideExportAccess', () => {
   it.each([
     { access: 'read', kind: 'comments', code: ErrorCodes.FORBIDDEN },
     { access: 'delete', kind: 'videos', code: ErrorCodes.FORBIDDEN },
+    { access: 'read', kind: 'posts', code: ErrorCodes.FORBIDDEN },
   ] as const)('refuses an analytics viewer to $access a $kind export', ({ access, kind, code }) => {
     const decided = decideExportAccess({
       user: memberAs('analytics'),
@@ -96,7 +97,10 @@ describe('@vp/domain-rules: decideExportAccess before the lookup', () => {
 
 describe('@vp/domain-rules: decideReadableExportKinds', () => {
   it.each([
-    { role: 'manager', kinds: ['video_analytics', 'channel_analytics', 'comments', 'videos'] },
+    {
+      role: 'manager',
+      kinds: ['video_analytics', 'channel_analytics', 'comments', 'videos', 'posts'],
+    },
     { role: 'analytics', kinds: ['video_analytics', 'channel_analytics'] },
   ] as const)('lists what a $role may see', ({ role, kinds }) => {
     expect(

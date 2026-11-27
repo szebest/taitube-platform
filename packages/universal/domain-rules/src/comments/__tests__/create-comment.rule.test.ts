@@ -1,15 +1,16 @@
 import { isErr, isOk } from '@kit/result';
 import { ErrorCodes } from '@vp/errors';
-import { AUTHOR, aComment, aVideo } from '../../__tests__/entities';
+import { AUTHOR, aComment, aVideo, videoHost } from '../../__tests__/entities';
 import { type CreateCommentInput, decideCommentCreate } from '../create-comment.rule';
 
 const video = aVideo();
+const host = videoHost(video);
 
 function input(overrides: Partial<CreateCommentInput> = {}): CreateCommentInput {
   return {
     author: AUTHOR,
-    video,
-    videoId: video.id,
+    host,
+    target: { type: 'video', id: video.id },
     parent: null,
     parentId: null,
     content: 'nice',
@@ -21,7 +22,7 @@ describe('@vp/domain-rules: decideCommentCreate', () => {
   it('opens a new thread with the normalised content', () => {
     const result = decideCommentCreate(input({ content: '  nice  ' }));
 
-    expect(isOk(result) && result.value).toEqual({ video, parentId: null, content: 'nice' });
+    expect(isOk(result) && result.value).toEqual({ host, parentId: null, content: 'nice' });
   });
 
   it('threads a reply under the root it answers', () => {
@@ -48,12 +49,12 @@ describe('@vp/domain-rules: decideCommentCreate', () => {
     },
     {
       scenario: 'an absent video',
-      overrides: { video: null },
+      overrides: { host: null },
       code: ErrorCodes.VIDEO_NOT_FOUND,
     },
     {
       scenario: 'a video the author may not read',
-      overrides: { video: aVideo({ visibility: 'private' }) },
+      overrides: { host: videoHost(aVideo({ visibility: 'private' })) },
       code: ErrorCodes.FORBIDDEN,
     },
     {
@@ -63,7 +64,10 @@ describe('@vp/domain-rules: decideCommentCreate', () => {
     },
     {
       scenario: 'a parent under another video',
-      overrides: { parent: aComment({ videoId: 'video-2' }), parentId: 'comment-1' },
+      overrides: {
+        parent: aComment({ target: { type: 'video', id: 'video-2' } }),
+        parentId: 'comment-1',
+      },
       code: ErrorCodes.COMMENT_NOT_FOUND,
     },
     {

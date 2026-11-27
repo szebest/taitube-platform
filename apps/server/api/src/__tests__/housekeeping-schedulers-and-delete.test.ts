@@ -63,6 +63,7 @@ describe('housekeeping schedulers and video deletion', () => {
       { id: 'prune-revisions', repeat: { pattern: '30 4 * * *' } },
       { id: 'purge-generations', repeat: { pattern: '45 * * * *' } },
       { id: 'purge-playlist-activity', repeat: { pattern: '45 4 * * *' } },
+      { id: 'publish-due-posts', repeat: { pattern: '* * * * *' } },
       { id: 'flush-video-views', repeat: { every: 10_000 } },
     ])('schedules $id on $repeat with a task of the same name', async ({ id, repeat }) => {
       const schedulers = expectOk(await housekeepingQueue.getJobSchedulers());
@@ -81,6 +82,7 @@ describe('housekeeping schedulers and video deletion', () => {
         'expire-raw',
         'flush-video-views',
         'prune-revisions',
+        'publish-due-posts',
         'purge-channel-audit',
         'purge-channel-images',
         'purge-comment-moderation',

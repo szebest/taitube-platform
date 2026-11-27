@@ -96,6 +96,49 @@ describe('personal access tokens, end to end', () => {
     ]);
   });
 
+  it('publishes a post with posts:write, and the audit log names the member and the token', async () => {
+    const { id, headers } = await tokenFor(['posts:write']);
+
+    const published = await call(headers, {
+      method: 'POST',
+      url: '/v1/me/channel/posts',
+      payload: { payload: { kind: 'text', text: 'from a script' } },
+    });
+    const audit = await call(bearer(TOKENS.user), { method: 'GET', url: '/v1/me/channel/audit' });
+
+    expect([published.statusCode, published.json().body]).toEqual([
+      201,
+      { kind: 'text', text: 'from a script' },
+    ]);
+    expect(audit.json().items).toEqual([
+      expect.objectContaining({
+        action: 'post.published',
+        actorUserId: SEEDED.userId,
+        actorTokenId: id,
+      }),
+    ]);
+  });
+
+  it.each([
+    {
+      method: 'POST',
+      url: '/v1/me/channel/posts',
+      payload: { payload: { kind: 'text', text: 'x' } },
+    },
+    {
+      method: 'PATCH',
+      url: `/v1/me/channel/posts/${NO_ID}`,
+      payload: { payload: { kind: 'text', text: 'x' }, version: 1 },
+    },
+    { method: 'DELETE', url: `/v1/me/channel/posts/${NO_ID}` },
+  ] as const)('refuses a token without posts:write on $method $url with 403', async (options) => {
+    const { headers } = await tokenFor(['videos:write', 'comments:read']);
+
+    const res = await call(headers, options);
+
+    expect([res.statusCode, res.json().code]).toEqual([403, ErrorCodes.API_TOKEN_SCOPE_MISSING]);
+  });
+
   it('answers a malformed, a revoked and an expired token with 401', async () => {
     const revoked = await tokenFor(['videos:read']);
     await call(bearer(TOKENS.user), { method: 'DELETE', url: `/v1/me/api-tokens/${revoked.id}` });
@@ -191,6 +234,7 @@ describe('personal access tokens, end to end', () => {
       'exports:read',
       'exports:create',
       'webhooks:manage',
+      'posts:write',
     ]);
 
     const res = await call(headers, options);

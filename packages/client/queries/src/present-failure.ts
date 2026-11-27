@@ -21,6 +21,8 @@ function kindOf(code: ErrorCode): ErrorStateKind {
     case ErrorCodes.COMMENT_NOT_FOUND:
     case ErrorCodes.REPORT_NOT_FOUND:
     case ErrorCodes.PLAYLIST_NOT_FOUND:
+    case ErrorCodes.POST_NOT_FOUND:
+    case ErrorCodes.THREAD_NOT_FOUND:
     case ErrorCodes.PLAYLIST_ITEM_NOT_FOUND:
     case ErrorCodes.SEARCH_HISTORY_NOT_FOUND:
     case ErrorCodes.RECOMMENDATION_FEEDBACK_NOT_FOUND:
@@ -76,6 +78,8 @@ function kindOf(code: ErrorCode): ErrorStateKind {
     case ErrorCodes.LIVE_CHAT_SLOW_MODE:
     case ErrorCodes.COMMENTS_SLOW_MODE:
     case ErrorCodes.EXPORT_DAILY_LIMIT:
+    case ErrorCodes.POST_DAILY_LIMIT:
+    case ErrorCodes.POST_DRAFT_LIMIT:
     case ErrorCodes.WATCH_PARTY_PASSWORD_LOCKED:
     case ErrorCodes.WATCH_PARTY_SLOW_MODE:
       return 'rate-limited';
@@ -179,6 +183,16 @@ function kindOf(code: ErrorCode): ErrorStateKind {
     case ErrorCodes.PLAYLIST_NOT_SMART:
     case ErrorCodes.PLAYLIST_HAS_COLLABORATORS:
     case ErrorCodes.PLAYLIST_PIN_LIMIT:
+    case ErrorCodes.POST_SHARE_NOT_PUBLIC:
+    case ErrorCodes.POST_ALREADY_VOTED:
+    case ErrorCodes.POST_POLL_CLOSED:
+    case ErrorCodes.POST_POLL_LOCKED:
+    case ErrorCodes.POST_PIN_LIMIT:
+    case ErrorCodes.POST_SCHEDULE_INVALID:
+    case ErrorCodes.POST_IMAGE_NOT_READY:
+    case ErrorCodes.THREAD_LIMIT:
+    case ErrorCodes.THREAD_PIN_LIMIT:
+    case ErrorCodes.THREAD_ANCHOR_INVALID:
       return 'generic';
     default:
       return assertNever(code, 'kindOf');

@@ -1,6 +1,6 @@
 import { expectOk } from '@kit/testing/result';
 import type { NewVideoInput, Repositories } from '@vp/core/repositories';
-import type { Channel } from '@vp/domain';
+import type { Channel, CommentTarget } from '@vp/domain';
 
 export const OWNER_ID = '00000000-0000-7000-8000-000000000101';
 export const OTHER_OWNER_ID = '00000000-0000-7000-8000-000000000102';
@@ -31,6 +31,10 @@ export const VIDEO_IDS = {
   e: '00000000-0000-7000-8000-00000000000e',
   f: '00000000-0000-7000-8000-00000000000f',
 } as const;
+
+export function videoTarget(videoId: string): CommentTarget {
+  return { type: 'video', id: videoId };
+}
 
 export const HOUR_MS = 3_600_000;
 

@@ -2,7 +2,14 @@ import { expectOk } from '@kit/testing/result';
 import type { AuthoredComment } from '@vp/domain';
 import type { UserContext } from '@vp/permissions';
 import { C, type CommentContractContext, seedComment } from './comment-contract-context';
-import { OTHER_OWNER_ID, OWNER_CHANNEL_ID, OWNER_ID, VIDEO_IDS, publicVideo } from './fixtures';
+import {
+  OTHER_OWNER_ID,
+  OWNER_CHANNEL_ID,
+  OWNER_ID,
+  VIDEO_IDS,
+  publicVideo,
+  videoTarget,
+} from './fixtures';
 
 const VIEWER: UserContext = { id: OTHER_OWNER_ID, role: 'USER' };
 const HIDDEN_ID = '00000000-0000-7000-8000-0000000000f7';
@@ -23,7 +30,8 @@ export function describeAuthoredCommentsContract(ctx: CommentContractContext): v
       const created = expectOk(
         await ctx.comments.create({
           id: C.old,
-          videoId: VIDEO_IDS.a,
+          target: videoTarget(VIDEO_IDS.a),
+          channelId: OWNER_CHANNEL_ID,
           authorId: OWNER_ID,
           authorChannelId: second.id,
           parentId: null,
@@ -79,14 +87,15 @@ export function describeAuthoredCommentsContract(ctx: CommentContractContext): v
       expectOk(
         await ctx.comments.create({
           id: STRANGER_COMMENT,
-          videoId: VIDEO_IDS.a,
+          target: videoTarget(VIDEO_IDS.a),
+          channelId: OWNER_CHANNEL_ID,
           authorId: OWNER_ID,
           authorChannelId: OWNER_CHANNEL_ID,
           parentId: null,
           content: 'not mine',
         })
       );
-      expectOk(await ctx.comments.remove({ id: C.fresh, videoId: VIDEO_IDS.a }));
+      expectOk(await ctx.comments.remove({ id: C.fresh, target: videoTarget(VIDEO_IDS.a) }));
 
       expect(idsOf(await authored())).toEqual([C.old]);
     });

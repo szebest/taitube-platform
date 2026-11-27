@@ -26,11 +26,14 @@ describe('apps/server/api/composition: comment module', () => {
       })
     );
     const comment = expectOk(
-      await c
-        .get(Services.CommentService)
-        .create(FAN, await actingAsPrimary(c.get(Adapters.Repositories), FAN.id), VIDEO_ID, {
+      await c.get(Services.CommentService).create(
+        FAN,
+        await actingAsPrimary(c.get(Adapters.Repositories), FAN.id),
+        { type: 'video', id: VIDEO_ID },
+        {
           content: 'hello',
-        })
+        }
+      )
     );
 
     const report = expectOk(

@@ -4,6 +4,7 @@ import {
   DATA_EXPORT_FORMATS,
   DATA_EXPORT_KINDS,
   DISCLOSURES,
+  POST_KINDS,
 } from '@vp/domain';
 import { z } from 'zod';
 
@@ -19,7 +20,11 @@ export const ProfileSchema = z
 
 const InviteMetaSchema = z.object({ inviteeUserId: z.uuid(), role: ChannelRoleSchema });
 const MemberMetaSchema = z.object({ role: ChannelRoleSchema });
-const CommentMetaSchema = z.object({ videoId: z.uuid(), disclosure: z.enum(DISCLOSURES) });
+const CommentMetaSchema = z.object({
+  videoId: z.uuid().nullable().describe('Null for a comment on a post'),
+  disclosure: z.enum(DISCLOSURES),
+});
+const PostMetaSchema = z.object({ kind: z.enum(POST_KINDS) });
 const NoMetaSchema = z.object({});
 const ExportMetaSchema = z.object({
   kind: z.enum(DATA_EXPORT_KINDS),
@@ -68,7 +73,11 @@ const AuditEntrySchema = z.discriminatedUnion('action', [
   auditEntry('comment.hidden', 'comment', CommentMetaSchema),
   auditEntry('comment.unhidden', 'comment', CommentMetaSchema),
   auditEntry('comment.removed', 'comment', CommentMetaSchema),
-  auditEntry('comment.pinned', 'comment', z.object({ videoId: z.uuid(), pinned: z.boolean() })),
+  auditEntry(
+    'comment.pinned',
+    'comment',
+    z.object({ videoId: z.uuid().nullable(), pinned: z.boolean() })
+  ),
   auditEntry('user.shadow_banned', 'user', NoMetaSchema),
   auditEntry('user.banned', 'user', z.object({ expiresAt: z.iso.datetime().nullable() })),
   auditEntry('user.restriction_lifted', 'user', z.object({ kind: z.enum(['shadow', 'ban']) })),
@@ -83,9 +92,12 @@ const AuditEntrySchema = z.discriminatedUnion('action', [
   auditEntry('export.deleted', 'export', ExportMetaSchema),
   auditEntry('channel.created', 'channel', NoMetaSchema),
   auditEntry('channel.promoted', 'channel', NoMetaSchema),
-  auditEntry('comment.posted', 'comment', z.object({ videoId: z.uuid() })),
+  auditEntry('comment.posted', 'comment', z.object({ videoId: z.uuid().nullable() })),
   auditEntry('channel.subscribed', 'channel', NoMetaSchema),
   auditEntry('video.uploaded', 'video', NoMetaSchema),
+  auditEntry('post.published', 'post', PostMetaSchema),
+  auditEntry('post.updated', 'post', PostMetaSchema),
+  auditEntry('post.deleted', 'post', PostMetaSchema),
 ]);
 
 export const AuditPageSchema = z.object({

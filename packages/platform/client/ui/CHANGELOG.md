@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.0
+
+- `DateTimePicker`: the browser's date and time boxes side by side over one local `YYYY-MM-DDTHH:mm` string, each box named by a prop.
+
 ## 0.3.0
 
 - Breaking: `UI_COPY_KEYS` (and so `UiCopy`) holds only the 45 words this package and the other kit packages

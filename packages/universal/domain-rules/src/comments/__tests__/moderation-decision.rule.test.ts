@@ -1,11 +1,12 @@
 import { isErr, isOk } from '@kit/result';
-import type { CommentModerationAction } from '@vp/domain';
+import type { CommentHost, CommentModerationAction } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { AUTHOR, OWNER, STRANGER, aComment, aVideo } from '../../__tests__/entities';
 import { decideCommentModeration } from '../moderation-decision.rule';
 
 const video = aVideo();
+const host: CommentHost = { type: 'video', video };
 const MODERATOR_ON_CHANNEL: UserContext = {
   id: 'member-1',
   role: 'USER',
@@ -30,7 +31,7 @@ describe('@vp/domain-rules: decideCommentModeration', () => {
       actor,
       comment,
       commentId: comment.id,
-      video,
+      host,
       action: HIDE,
     });
 
@@ -49,7 +50,7 @@ describe('@vp/domain-rules: decideCommentModeration', () => {
       actor,
       comment,
       commentId: comment.id,
-      video,
+      host,
       action: HIDE,
     });
 
@@ -63,7 +64,7 @@ describe('@vp/domain-rules: decideCommentModeration', () => {
       actor: OWNER,
       comment,
       commentId: comment.id,
-      video,
+      host,
       action: HIDE,
     });
 
@@ -71,14 +72,14 @@ describe('@vp/domain-rules: decideCommentModeration', () => {
   });
 
   it.each([
-    { scenario: 'an absent comment', comment: null, under: video },
+    { scenario: 'an absent comment', comment: null, under: host },
     { scenario: 'a comment whose video is gone', comment: aComment(), under: null },
   ])('reports $scenario as COMMENT_NOT_FOUND', ({ comment, under }) => {
     const result = decideCommentModeration({
       actor: OWNER,
       comment,
       commentId: 'gone',
-      video: under,
+      host: under,
       action: HIDE,
     });
 

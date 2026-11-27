@@ -4,6 +4,7 @@ import type {
   Comment,
   CommentEditWrite,
   CommentSort,
+  CommentTarget,
   CommentThread,
   CreatorInboxComment,
   CreatorInboxFilter,
@@ -63,12 +64,12 @@ export interface ListAuthoredCommentsOptions {
   limit: number;
 }
 
-export type CommentLocator = Pick<Comment, 'id' | 'videoId'>;
+export type CommentLocator = Pick<Comment, 'id' | 'target'>;
 
 /**
  * Reads never return a deleted comment. Listings return up to `limit + 1` rows so the caller can
- * tell a further page exists. Every write that adds or removes comments moves
- * `videos.comments_count` in the same transaction, and counts only what is public: a published
+ * tell a further page exists. Every write that adds or removes comments moves the target's
+ * `comments_count` in the same transaction, and counts only what is public: a published
  * comment of an author who is not shadow banned, under a root that is public too.
  *
  * Every read a viewer makes goes through the public scope. `findById` is the one exception: it
@@ -82,7 +83,7 @@ export interface CommentRepositoryPort {
     id: string
   ): Promise<Result<Comment | null, DatabaseUnavailable>>;
   listThreads(
-    videoId: string,
+    target: CommentTarget,
     options: ListCommentThreadsOptions
   ): Promise<Result<CommentThread[], DatabaseUnavailable>>;
   listReplies(
@@ -90,11 +91,11 @@ export interface CommentRepositoryPort {
     options: ListCommentRepliesOptions
   ): Promise<Result<CommentThread[], DatabaseUnavailable>>;
   /**
-   * The author's own comments and replies on the video that no one else can see: held, hidden or
+   * The author's own comments and replies on the target that no one else can see: held, hidden or
    * shadowed. One batched read, so the author's count matches their list.
    */
   listOwnNonPublic(
-    videoId: string,
+    target: CommentTarget,
     authorId: string
   ): Promise<Result<CommentThread[], DatabaseUnavailable>>;
   /**
@@ -123,7 +124,7 @@ export interface CommentRepositoryPort {
     comment: CommentLocator,
     record?: ModerationRecord & { removal?: NewCommentRemoval }
   ): Promise<Result<number, DatabaseUnavailable>>;
-  /** Pinning unpins whichever comment held the video's one pinned slot, and records `audit`. */
+  /** Pinning unpins whichever comment held the target's one pinned slot, and records `audit`. */
   setPinned(
     comment: CommentLocator,
     pinned: boolean,
@@ -146,7 +147,7 @@ export interface CommentRepositoryPort {
     options: ListAuthoredCommentsOptions
   ): Promise<Result<AuthoredComment[], DatabaseUnavailable>>;
   /**
-   * Live comments on the videos of `options.channelId`, a channel of `ownerId`, that the owner did
+   * Live comments on anything of `options.channelId`, a channel of `ownerId`, that the owner did
    * not write, newest first. `unanswered`
    * keeps those without a later reply from the owner in the same thread; `reported` keeps those
    * with an open report.
