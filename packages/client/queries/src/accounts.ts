@@ -1,24 +1,19 @@
-import { isOk, parseJson } from '@kit/result';
 import { AccountSlotSchema } from '@vp/api-contracts';
 import { z } from 'zod';
 import { type Identity, identityKey } from './account-slots';
 
-const SLOT_COUNT = 10;
+export const SLOT_COUNT = 10;
 const LABEL_MAX_LENGTH = 40;
-const LABEL_MAX_ENCODED = 90;
+const LABEL_MAX_ENCODED = 96;
 const AVATAR_MAX_LENGTH = 200;
 const ACCENTS_MAX = 10;
 const PINNED_MAX = 8;
 
-/** What a browser keeps of one cookie, its name included; the slot list must fit all ten slots in it. */
-const COOKIE_BYTES_MAX = 4096;
-const ACCOUNTS_COOKIE_NAME_BYTES = 'vp.accounts='.length;
-
 /** A channel handle (38's rules), the acting channel a slot last used. */
 export const AccountChannelSchema = z.string().min(1).max(30);
 
-const AccountEntrySchema = z.object({
-  slot: AccountSlotSchema,
+/** What `vp.accounts.<slot>` holds: one slot's row, its slot being the cookie's name. */
+export const AccountRowSchema = z.object({
   userId: z.string(),
   label: z.string(),
   avatarUrl: z.string().max(AVATAR_MAX_LENGTH).nullable(),
@@ -26,6 +21,8 @@ const AccountEntrySchema = z.object({
   channel: AccountChannelSchema.nullable(),
   expired: z.boolean(),
 });
+
+const AccountEntrySchema = AccountRowSchema.extend({ slot: AccountSlotSchema });
 
 /** The colours an identity's ring may take: the theme's categorical palette, `--dataviz-categorical-<n>`. */
 export const ACCENTS = [1, 2, 3, 4, 5, 6] as const;
@@ -37,9 +34,12 @@ export type Accent = z.infer<typeof AccentSchema>;
 /** `identityKey`'s shape, bounded so the cookie stays inside its budget. */
 const IdentityKeySchema = z.string().regex(/^\d\.[a-z0-9_.-]{1,30}$/);
 
-const AccountsSchema = z.object({
+/**
+ * What `vp.accounts` holds: what the browser shares across its slots. A browser that signed in
+ * before each row had its own cookie also keeps its rows here, as `slots`.
+ */
+export const AccountsCookieSchema = z.object({
   defaultSlot: AccountSlotSchema,
-  slots: z.array(AccountEntrySchema).max(SLOT_COUNT),
   /** The accent each identity was given, by `identityKey`; an identity missing here takes its slot's. */
   accents: z
     .record(IdentityKeySchema, AccentSchema)
@@ -47,32 +47,28 @@ const AccountsSchema = z.object({
     .optional(),
   /** The identities pinned to the top of the switcher, by `identityKey`, in the order shown. */
   pinned: z.array(IdentityKeySchema).max(PINNED_MAX).optional(),
+  slots: z.array(AccountEntrySchema).max(SLOT_COUNT).optional(),
 });
 
 /** One row of the slot list: enough to draw it while the slot is signed out or expired. */
-type AccountEntry = z.infer<typeof AccountEntrySchema>;
+export type AccountEntry = z.infer<typeof AccountEntrySchema>;
 
 /**
- * What `vp.accounts` holds: the slots this browser signed in, newest sign-in as the default for a
- * tab with no prefix. Not a secret and not the truth: which slots hold a session is which
- * `vp.session.<slot>` cookies the request carries.
+ * The slots this browser signed in, newest sign-in as the default for a tab with no prefix. Not a
+ * secret and not the truth: which slots hold a session is which `vp.session.<slot>` cookies the
+ * request carries.
  */
-export type Accounts = z.infer<typeof AccountsSchema>;
+export type Accounts = Omit<z.infer<typeof AccountsCookieSchema>, 'slots'> & {
+  slots: AccountEntry[];
+};
 
 export const NO_ACCOUNTS: Accounts = { defaultSlot: 0, slots: [] };
 
-export function parseAccounts(raw: string | undefined): Accounts {
-  if (raw === undefined) return NO_ACCOUNTS;
-  const json = parseJson(raw);
-  const parsed = isOk(json) ? AccountsSchema.safeParse(json.value) : undefined;
-  return parsed?.success ? parsed.data : NO_ACCOUNTS;
-}
-
-function encodedLength(value: string): number {
+export function encodedLength(value: string): number {
   return encodeURIComponent(value).length;
 }
 
-/** The longest start of `label` whose cookie encoding fits, whatever script it is written in. */
+/** The longest start of `label` whose cookie encoding, as JSON, fits, whatever script it is written in. */
 function cutLabel(label: string): string {
   const characters = Array.from(label.replaceAll(/\p{Surrogate}/gu, '\u{FFFD}')).slice(
     0,
@@ -80,24 +76,10 @@ function cutLabel(label: string): string {
   );
   let cut = '';
   for (const character of characters) {
-    if (encodedLength(cut + character) > LABEL_MAX_ENCODED) break;
+    if (encodedLength(JSON.stringify(cut + character)) > LABEL_MAX_ENCODED) break;
     cut += character;
   }
   return cut;
-}
-
-/**
- * The slot list as the cookie carries it. Ten rows always fit the browser's cookie limit, because a
- * label and a handle are bounded; the avatar hints are the part that may not, so they are dropped
- * when they would push the cookie past it.
- */
-export function serializeAccounts(accounts: Accounts): string {
-  const whole = JSON.stringify(accounts);
-  if (ACCOUNTS_COOKIE_NAME_BYTES + encodedLength(whole) <= COOKIE_BYTES_MAX) return whole;
-  return JSON.stringify({
-    ...accounts,
-    slots: accounts.slots.map((entry) => ({ ...entry, avatarUrl: null })),
-  });
 }
 
 export type SignedInAccount = Pick<AccountEntry, 'slot' | 'userId' | 'label' | 'avatarUrl'>;
@@ -141,7 +123,12 @@ export function withoutSlot(accounts: Accounts, removed: number): Accounts {
   const removedKey = ofSlot(removed);
   const accents = Object.entries(accounts.accents ?? {}).filter(([key]) => !removedKey(key));
   const pinned = (accounts.pinned ?? []).filter((key) => !removedKey(key));
-  return { defaultSlot, slots, accents: Object.fromEntries(accents), pinned };
+  return {
+    defaultSlot,
+    slots,
+    ...(accents.length > 0 && { accents: Object.fromEntries(accents) }),
+    ...(pinned.length > 0 && { pinned }),
+  };
 }
 
 /** The ring an identity wears: the accent picked for it, else one its slot gives it. */
