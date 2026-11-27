@@ -9,7 +9,7 @@
 | Blocks | 143 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §11 Security](../SDD.md#11-security) · [SDD §13.1 Metrics](../SDD.md#131-metrics-catalogue) · [SDD §14.2 Load scenarios](../SDD.md#142-scenarios) · [SDD P9 Local-first](../SDD.md#13-design-principles-used-to-break-ties-throughout) |
 
-**Status:** blocked
+**Status:** in-progress
 
 > **Why.** A party is better when people can talk. [140](140-watch-parties.md) gives a room chat, roles and a roster,
 > and already reserves `voice.join`, `voice.speak`, `voice.moderate`, the Speaker and Voice muted roles and the roster's
@@ -194,7 +194,7 @@ while 140's S8 runs beside it. Results under `docs/load-tests/results/`.
 
 ## Delivery
 
-One stack, `feat/141-watch-party-voice-chat`, three slices: (a) the port and both adapters, the env keys, compose and
+One stack, `feat/141-watch-party-voice`, three slices (`slice/141a-voice-server`, `slice/141b-voice-ui`, `slice/141c-voice-abuse-ops`); a builds on `main`, b and c need 140e's party page and 140d's member reports, so the stack takes `feat/140-watch-parties-completion` in before b: (a) the port and both adapters, the env keys, compose and
 k3d, the token and webhook endpoints, grant enforcement on role changes, the voice smoke; (b) the client port, voice UI,
 push-to-talk, speaking rings, volume, ducking, devices, mobile behaviour; (c) reports and auto-mute, metrics, alerts,
 runbooks, S9, docs.
