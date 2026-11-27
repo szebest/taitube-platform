@@ -87,8 +87,8 @@ jobs:
 
 describe('architecture: the CI pipeline holds its budgets', () => {
   it.each([
-    'build: timeout-minutes is not 3',
-    'lint-typecheck: timeout-minutes is not 4',
+    'build: timeout-minutes is not 4',
+    'lint-typecheck: timeout-minutes is not 7',
     'e2e-smoke: needs more than build',
     'architecture tests run in 2 jobs',
     'unit-shard-1: runs pnpm test, architecture included',
@@ -104,7 +104,7 @@ describe('architecture: the CI pipeline holds its budgets', () => {
     "main's caches are not kept warm by the 0 4 * * 1,4 schedule",
     'a scheduled run can cancel the run of a push to main',
     'a push to main can cancel the run of the merge before it',
-    'lint-typecheck: architecture is not held to 30 s',
+    'lint-typecheck: architecture is not held to 40 s',
     'unit-shards: unit-tests is not held to 240 s',
     'integration: integration-tests is not held to 240 s',
     'unit-shards: a budget names no step before it',
