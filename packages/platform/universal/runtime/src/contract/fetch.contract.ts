@@ -17,7 +17,7 @@ export function describeFetchContract(makeSubject: MakeFetchSubject): void {
       const subject = makeSubject();
       subject.serve(body, status);
 
-      const response = await subject.fetch('https://example.test/ping');
+      const response = await subject.fetch('http://localhost/ping');
 
       expect([response.status, await response.text()]).toEqual([status, body]);
     });
@@ -27,16 +27,16 @@ export function describeFetchContract(makeSubject: MakeFetchSubject): void {
       subject.serve('ok');
       const init = { method: 'POST', body: 'payload' };
 
-      await subject.fetch('https://example.test/submit', init);
+      await subject.fetch('http://localhost/submit', init);
 
-      expect(subject.requests()).toEqual([{ input: 'https://example.test/submit', init }]);
+      expect(subject.requests()).toEqual([{ input: 'http://localhost/submit', init }]);
     });
 
     it('answers a call without an init as a call without an init', async () => {
       const subject = makeSubject();
       subject.serve('ok');
 
-      await subject.fetch('https://example.test/ping');
+      await subject.fetch('http://localhost/ping');
 
       expect(subject.requests()[0]?.init).toBeUndefined();
     });
