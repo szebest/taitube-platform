@@ -1,6 +1,7 @@
 import { dt } from '../engine';
 import { channelErrors } from './errors-channels';
 import { commentErrors } from './errors-comments';
+import { linkErrors } from './errors-links';
 import { playlistErrors } from './errors-playlists';
 import { postErrors } from './errors-posts';
 import { videoToolErrors } from './errors-video-tools';
@@ -30,6 +31,7 @@ export const errors = {
   cannotSubscribeToSelf: dt('Nie możesz subskrybować własnego kanału.'),
   ...channelErrors,
   ...postErrors,
+  ...linkErrors,
   ...commentErrors,
   ...playlistErrors,
   reportNotFound: dt('To zgłoszenie nie istnieje.'),
