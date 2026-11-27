@@ -6,6 +6,7 @@ import { type AppConfigOverrides, inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes } from '@vp/errors';
 import type { FastifyInstance } from 'fastify';
 import { buildTestApp } from '../../__tests__/test-app';
+import { startTitleTest } from '../../services/__tests__/running-test';
 
 const URL = '/v1/telemetry/vitals';
 const LCP = { name: 'LCP', value: 1250, route: '/watch/$videoId' };
@@ -193,7 +194,15 @@ describe('impression telemetry route', () => {
     });
 
   beforeAll(async () => {
-    ({ app, container } = await buildTelemetryApp());
+    const built = await buildTelemetryApp();
+    ({ app, container } = built);
+    await startTitleTest(built.repositories, {
+      videoId: ITEM.videoId,
+      ownerId: '00000000-0000-7000-8000-0000000000b1',
+      control: 'A',
+      challenger: 'B',
+      id: ITEM.experimentId,
+    });
   });
 
   afterAll(async () => {

@@ -36,10 +36,11 @@ function isTooManyRequests(cause: unknown): boolean {
 
 /**
  * The callback of every sign-in, server only: an add first spends its nonce, so a state this
- * browser did not start signs nothing in. The token is always a new one from `issue`, never one the
- * request carries. A user already in a slot, signed in or expired, ends on that slot, so one user
- * never holds two; a session past `ACCOUNTS_MAX` is refused, and the API records the sign-in
- * (rate-limiting an add) before the cookie is written.
+ * browser did not start signs nothing in, and takes the slot its nonce held while that is free.
+ * The token is always a new one from `issue`, never one the request carries. A user already in a
+ * slot, signed in or expired, ends on that slot, so one user never holds two; a session past
+ * `ACCOUNTS_MAX` is refused, and the API records the sign-in (rate-limiting an add) before the
+ * cookie is written.
  */
 export async function completeSignIn(
   issue: TokenIssuer,
@@ -47,9 +48,8 @@ export async function completeSignIn(
   target: SignInTarget
 ): Promise<SignInOutcome> {
   const { apiBaseUrl = DEFAULT_API_BASE_URL, cookieDomain, accountsMax } = requestSession();
-  if (target.mode === 'add' && !consumeAddNonce(target.state, cookieDomain)) {
-    return { kind: 'refused' };
-  }
+  const spent = target.mode === 'add' ? consumeAddNonce(target.state, cookieDomain) : undefined;
+  if (spent?.kind === 'unknown') return { kind: 'refused' };
 
   const token = await issue(grant);
   const api = createApiClient({ baseUrl: apiBaseUrl, getAuthToken: () => token });
@@ -60,26 +60,34 @@ export async function completeSignIn(
   if (target.mode === 'slot' && listed === undefined && occupied.includes(target.slot)) {
     return { kind: 'slot-taken' };
   }
-  const slot =
-    listed ??
-    (target.mode === 'slot' ? target.slot : firstFreeSlot(accounts, occupied, accountsMax));
+  const reserved = spent?.kind === 'spent' ? spent.reserved : undefined;
+  const freeSlot =
+    reserved !== undefined && reserved < accountsMax && !occupied.includes(reserved)
+      ? reserved
+      : firstFreeSlot(accounts, occupied, accountsMax);
+  const slot = listed ?? (target.mode === 'slot' ? target.slot : freeSlot);
   const full = occupied.length >= accountsMax;
   if (slot === undefined || (full && !occupied.includes(slot))) return { kind: 'accounts-full' };
   const added = listed === undefined && (target.mode === 'add' || occupied.length > 0);
   if (
     added &&
     target.mode === 'slot' &&
-    (target.state === undefined || !consumeAddNonce(target.state, cookieDomain))
+    (target.state === undefined || consumeAddNonce(target.state, cookieDomain).kind !== 'spent')
   ) {
     return { kind: 'refused' };
   }
 
-  const hops = forwardedFor(getRequest());
+  const request = getRequest();
+  const hops = forwardedFor(request);
+  const userAgent = request.headers.get('user-agent');
   const recorded = await fromPromise(
     () =>
       api.accountSecurity.recordMySignIn({
         body: { slot, added },
-        headers: hops ? { 'x-forwarded-for': hops } : {},
+        headers: {
+          ...(hops && { 'x-forwarded-for': hops }),
+          ...(userAgent && { 'user-agent': userAgent }),
+        },
       }),
     (cause) => cause
   );
@@ -95,7 +103,7 @@ export async function completeSignIn(
     label: account.channel.displayName,
     avatarUrl: account.channel.avatarUrl,
   };
-  writeAccounts(withSignedIn(accounts, signedIn), cookieDomain);
+  writeAccounts(withSignedIn(accounts, signedIn), cookieDomain, slot);
   const held = new Set([...occupied, slot]).size;
   return listed !== undefined && occupied.includes(listed)
     ? { kind: 'already-signed-in', slot, accounts: held }

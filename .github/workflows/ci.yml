@@ -28,11 +28,10 @@ jobs:
   build:
     name: build
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 4
     outputs:
       code: ${{ github.event_name != 'pull_request' || steps.changes.outputs.code == 'true' }}
       platform: ${{ github.event_name != 'pull_request' || steps.platform.outputs.platform == 'true' }}
-      extractable: ${{ steps.extractable.outputs.extractable }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -78,11 +77,6 @@ jobs:
         if: github.event_name != 'pull_request' || steps.changes.outputs.code == 'true'
         run: git diff --exit-code -- 'apps/client/*/src/routeTree.gen.ts'
 
-      - name: List the platform packages and the second app, one extractable shard each
-        id: extractable
-        if: github.event_name != 'pull_request' || steps.platform.outputs.platform == 'true'
-        run: pnpm -s check:extractable --list --github-output
-
       - name: Hand the build to the jobs that follow, for this run only
         if: github.event_name != 'pull_request' || steps.changes.outputs.code == 'true'
         uses: actions/upload-artifact@v7
@@ -104,7 +98,7 @@ jobs:
     needs: [build]
     if: needs.build.outputs.code == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 4
+    timeout-minutes: 7
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -157,7 +151,7 @@ jobs:
         uses: ./.github/actions/budget
         with:
           step: architecture
-          seconds: 30
+          seconds: 40
           started-at: ${{ steps.architecture-time.outputs.started }}
           finished-at: ${{ steps.architecture-time.outputs.finished }}
 
@@ -207,7 +201,7 @@ jobs:
     needs: [build]
     if: needs.build.outputs.code == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 6
     strategy:
       fail-fast: false
       matrix:
@@ -284,7 +278,7 @@ jobs:
     needs: [build]
     if: needs.build.outputs.code == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 4
+    timeout-minutes: 5
     strategy:
       fail-fast: false
       matrix:
@@ -343,28 +337,28 @@ jobs:
         run: *name-failed-shards
 
   extractable:
-    name: extractable (${{ matrix.target }})
+    name: extractable
     needs: [build]
     if: needs.build.outputs.code == 'true' && needs.build.outputs.platform == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 6
-    strategy:
-      fail-fast: false
-      matrix:
-        target: ${{ fromJSON(needs.build.outputs.extractable || '[]') }}
+    timeout-minutes: 9
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
 
-      # A package shard builds its own copy of the closure; the second app replays the turbo cache this restores.
+      # A package builds its own copy of the closure; the second app replays the turbo cache this restores.
       - name: Set up the workspace
         uses: ./.github/actions/setup-workspace
         with:
           handoff: 'true'
           build: 'false'
 
-      - name: Install, typecheck and test it outside the repository, offline, from the restored store
-        run: pnpm -s check:extractable '${{ matrix.target }}'
+      - name: Install, typecheck and test every platform package and the second app outside the repository, offline, four at a time
+        run: |
+          set -o pipefail
+          targets=$(pnpm -s check:extractable --list | jq -r '.[]')
+          test -n "$targets"
+          echo "$targets" | xargs -P 4 -n 1 pnpm -s check:extractable
 
   integration:
     name: integration
@@ -435,7 +429,7 @@ jobs:
     needs: [build]
     if: needs.build.outputs.code == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 4
+    timeout-minutes: 6
     steps:
       - name: Move Docker to the containerd image store, where a build lands without a tarball load
         run: |
@@ -524,7 +518,7 @@ jobs:
     needs: [build]
     if: needs.build.outputs.code == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 4
+    timeout-minutes: 6
     strategy:
       fail-fast: false
       matrix:
@@ -585,7 +579,7 @@ jobs:
     needs: [build]
     if: needs.build.outputs.code == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 6
     strategy:
       fail-fast: false
       matrix:
@@ -593,9 +587,32 @@ jobs:
     steps:
       - name: Checkout repository, with the baselines from Git LFS and the base branch to diff against
         uses: actions/checkout@v7
+        env:
+          GIT_LFS_SKIP_SMUDGE: 1
         with:
-          lfs: true
           fetch-depth: 0
+
+      - name: Name the baselines this commit holds, so the LFS objects of an earlier one are restored
+        id: lfs
+        run: echo "key=$(git lfs ls-files --long | cut -d' ' -f1 | sort | sha256sum | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+
+      - name: Restore the LFS objects of the baselines
+        id: lfs-cache
+        uses: actions/cache/restore@v6
+        with:
+          path: .git/lfs
+          key: lfs-${{ runner.os }}-${{ steps.lfs.outputs.key }}
+          restore-keys: lfs-${{ runner.os }}-
+
+      - name: Fetch the baselines the restored objects lack
+        run: git lfs pull
+
+      - name: Keep main's LFS objects for the pull requests that follow
+        if: github.ref == 'refs/heads/main' && matrix.shard == 1 && steps.lfs-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v6
+        with:
+          path: .git/lfs
+          key: ${{ steps.lfs-cache.outputs.cache-primary-key }}
 
       - name: Name the Playwright image the baselines were drawn in, its Chromium and fonts pinned by digest
         id: image

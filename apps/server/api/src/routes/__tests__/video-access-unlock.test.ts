@@ -109,6 +109,18 @@ describe('video unlock route', () => {
     expect(neighbour.json().code).toBe(ErrorCodes.VIDEO_PASSWORD_INVALID);
   });
 
+  it('keeps a separate budget for each client the trusted proxy forwards', async () => {
+    const from = (client: string) => ({ 'x-forwarded-for': client });
+    for (let attempt = 0; attempt < VIDEO_UNLOCK_ATTEMPTS_PER_MINUTE; attempt += 1) {
+      await unlock('a guess', from('203.0.113.7'));
+    }
+
+    expect([
+      (await unlock('a guess', from('203.0.113.7'))).statusCode,
+      (await unlock('a guess', from('198.51.100.4'))).statusCode,
+    ]).toEqual([429, 403]);
+  });
+
   it('keeps the password and its hash out of every response and every log line', async () => {
     const hash = expectOk(await ctx.repositories.videoPasswords.hashOf(GUARDED)) ?? 'missing';
     const responses = [
