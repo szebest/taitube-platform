@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import type { Result } from '@kit/result';
 import type {
   NewNotificationInput,
@@ -5,7 +6,6 @@ import type {
   NotificationFilter,
   NotificationReadScope,
 } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 
 export interface ListNotificationsOptions {
   filter: NotificationFilter;

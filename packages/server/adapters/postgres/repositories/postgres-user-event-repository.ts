@@ -1,3 +1,4 @@
+import { type DatabaseUnavailable, databaseUnavailable } from '@kit/errors';
 import { MS_PER_DAY } from '@kit/primitives';
 import { type Result, fromPromise, map } from '@kit/result';
 import {
@@ -6,7 +7,6 @@ import {
   UserEventRepository,
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
-import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { userChannel } from '@vp/events';
 import { and, asc, eq, gte, lt, max, sql } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';

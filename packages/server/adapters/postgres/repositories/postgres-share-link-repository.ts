@@ -1,3 +1,4 @@
+import { type DatabaseUnavailable, databaseUnavailable } from '@kit/errors';
 import { fromPromise, map, ok, type Result } from '@kit/result';
 import { ShareLinkRepository } from '@vp/core/repositories';
 import * as schema from '@vp/db';
@@ -7,7 +8,6 @@ import {
   type ShareLinkTargetType,
   type ShareLinkTotals,
 } from '@vp/domain';
-import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { and, count, desc, eq, gt, inArray, isNull, or, sql } from 'drizzle-orm';
 import type { PostgresDatabase } from './types';
 

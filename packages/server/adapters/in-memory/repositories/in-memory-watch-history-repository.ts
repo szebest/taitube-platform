@@ -1,7 +1,7 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { type Result, ok } from '@kit/result';
 import type { ListWatchHistoryOptions, WatchHistoryRepositoryPort } from '@vp/core/repositories';
 import type { NewWatchProgress, WatchHistoryEntry, WatchProgress } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { type VideoLookups, keepWatchable } from './watchable-video';
 

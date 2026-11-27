@@ -1,9 +1,8 @@
+import { type CacheUnavailable, type DatabaseUnavailable } from '@kit/errors';
 import { err, isErr, ok, type Result } from '@kit/result';
 import { memberKeyOf, type MemberKey } from '@vp/domain';
 import { decideWatchPartySeatUpgrade } from '@vp/domain-rules';
 import {
-  type CacheUnavailable,
-  type DatabaseUnavailable,
   ErrorCodes,
   type WatchPartyBanned,
   type WatchPartyCredentialInvalid,

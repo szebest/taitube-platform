@@ -1,7 +1,7 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { isErr, ok, type Result } from '@kit/result';
 import type { OutboxRepository, UserEventRepository } from '@vp/core/repositories';
 import { type CommentThread, commentCreated, commentHeld, type NewCommentInput } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 import { commentHeldOutbox, commentOutbox } from '@vp/job-contracts';
 import { uuidv7 } from 'uuidv7';
 

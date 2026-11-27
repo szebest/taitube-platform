@@ -1,6 +1,7 @@
+import { databaseUnavailable } from '@kit/errors';
 import { err, ok } from '@kit/result';
 import { PROBLEM_CONTENT_TYPE, problemFor } from '@vp/api-contracts';
-import { ErrorCodes, databaseUnavailable } from '@vp/errors';
+import { ErrorCodes } from '@vp/errors';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { sendResult } from '../send-result';
 

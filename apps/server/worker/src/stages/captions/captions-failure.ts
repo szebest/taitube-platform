@@ -1,8 +1,8 @@
-import { errorCodeOf } from '@kit/errors';
+import { errorCodeOf, type DatabaseUnavailable } from '@kit/errors';
+import type { QueueJob } from '@kit/ports';
 import { type Result, isErr, ok } from '@kit/result';
-import type { QueueJob } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
-import { type DatabaseUnavailable, errorCodeRegistry } from '@vp/errors';
+import { errorCodeRegistry } from '@vp/errors';
 import { CaptionsJob } from '@vp/job-contracts';
 import type { PipelineMetrics } from '@vp/pipeline-metrics';
 

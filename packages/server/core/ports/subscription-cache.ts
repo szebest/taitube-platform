@@ -1,5 +1,5 @@
+import type { CacheUnavailable } from '@kit/errors';
 import type { Result } from '@kit/result';
-import type { CacheUnavailable } from '@vp/errors';
 
 /**
  * Caches the set of channels each subscribing channel follows, and per-channel subscriber counts.

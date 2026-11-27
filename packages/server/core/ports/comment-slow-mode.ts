@@ -1,5 +1,5 @@
+import type { CacheUnavailable } from '@kit/errors';
 import type { Result } from '@kit/result';
-import type { CacheUnavailable } from '@vp/errors';
 
 export type CommentSlowModeClaim =
   | { type: 'claimed' }

@@ -1,5 +1,5 @@
+import type { QueueJob } from '@kit/ports';
 import { expectOk } from '@kit/testing/result';
-import type { QueueJob } from '@vp/core/ports';
 import type { MediaTools } from '@vp/ffmpeg';
 import type { ProbeJob } from '@vp/job-contracts';
 import { chunkPrefix } from '@vp/storage';

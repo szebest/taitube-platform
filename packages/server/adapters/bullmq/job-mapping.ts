@@ -1,4 +1,4 @@
-import type { FlowJobNode, QueueJob, QueueJobOptions } from '@vp/core/ports';
+import type { FlowJobNode, QueueJob, QueueJobOptions } from '@kit/ports';
 import type { FlowJobNode as BullFlowJobNode, Job, JobsOptions } from 'bullmq';
 
 export type PortJobsOptions = Pick<

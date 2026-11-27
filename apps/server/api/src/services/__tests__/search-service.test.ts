@@ -1,3 +1,4 @@
+import { cacheUnavailable, databaseUnavailable } from '@kit/errors';
 import { err, ok } from '@kit/result';
 import { expectErr, expectOk } from '@kit/testing/result';
 import {
@@ -7,7 +8,7 @@ import {
 } from '@vp/adapters/in-memory';
 import { SEARCH_CACHE_TTL_SECONDS, SEARCH_SUGGESTIONS } from '@vp/domain';
 import { DEFAULT_PREFERENCES } from '@vp/domain/settings';
-import { ErrorCodes, cacheUnavailable, databaseUnavailable } from '@vp/errors';
+import { ErrorCodes } from '@vp/errors';
 import { type SearchResult, SearchService } from '../search-service';
 import { searchServiceDeps } from './service-deps';
 

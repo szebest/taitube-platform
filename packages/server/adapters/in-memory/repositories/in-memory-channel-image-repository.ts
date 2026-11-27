@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { isErr, ok, type Result } from '@kit/result';
 import type {
   ChannelAuditRepositoryPort,
@@ -14,7 +15,6 @@ import {
   channelImageReady,
   type ChannelImageUpload,
 } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { InMemoryChannelRepository } from './in-memory-channel-repository';
 
 export interface InMemoryChannelImageDeps {

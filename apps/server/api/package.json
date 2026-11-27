@@ -37,6 +37,7 @@
     "@kit/object-storage": "workspace:*",
     "@kit/observability": "workspace:*",
     "@kit/pagination": "workspace:*",
+    "@kit/ports": "workspace:*",
     "@kit/primitives": "workspace:*",
     "@kit/result": "workspace:*",
     "@opentelemetry/api": "^1.9.1",

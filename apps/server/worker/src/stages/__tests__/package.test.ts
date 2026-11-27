@@ -1,7 +1,7 @@
 import { createLogger } from '@kit/logger';
+import type { QueueJob } from '@kit/ports';
 import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
-import type { QueueJob } from '@vp/core/ports';
 import { ErrorCodes } from '@vp/errors';
 import { CANONICAL_LADDER, type LadderEntry, type PackageJob } from '@vp/job-contracts';
 import { createPipelineMetrics } from '@vp/pipeline-metrics';

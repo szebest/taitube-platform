@@ -1,7 +1,7 @@
+import { type CacheUnavailable, cacheUnavailable } from '@kit/errors';
+import type { MessageListener, PatternMessageListener } from '@kit/ports';
+import { CacheClient } from '@kit/ports';
 import { type Result, err, ok } from '@kit/result';
-import type { MessageListener, PatternMessageListener } from '@vp/core/ports';
-import { CacheClient } from '@vp/core/ports';
-import { type CacheUnavailable, cacheUnavailable } from '@vp/errors';
 
 export interface PublishedMessage {
   channel: string;

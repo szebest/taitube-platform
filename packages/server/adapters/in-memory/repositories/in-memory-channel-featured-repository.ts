@@ -1,6 +1,6 @@
+import { type DatabaseUnavailable, databaseUnavailable } from '@kit/errors';
 import { err, isErr, ok, type Result } from '@kit/result';
 import type { ChannelFeaturedRepositoryPort, VideoRepository } from '@vp/core/repositories';
-import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 
 export class InMemoryChannelFeaturedRepository implements ChannelFeaturedRepositoryPort {
   private readonly pins = new Map<string, readonly string[]>();

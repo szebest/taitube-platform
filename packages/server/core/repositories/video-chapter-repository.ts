@@ -1,6 +1,6 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import type { Result } from '@kit/result';
 import type { Chapter } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 
 /**
  * Reads only: the set is replaced inside `VideoStudioRepository.updateMetadata`, in the edit's own

@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { type Result, isErr, ok, unwrapOr } from '@kit/result';
 import type {
   ListSubscribersOptions,
@@ -17,7 +18,6 @@ import {
   type ViewDateRange,
   viewDateOf,
 } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 import { uuidv7 } from 'uuidv7';
 import type { InMemoryChannelAuditRepository } from './in-memory-channel-audit-repository';
 import type { InMemoryChannelRepository } from './in-memory-channel-repository';

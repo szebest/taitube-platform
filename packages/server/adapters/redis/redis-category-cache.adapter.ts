@@ -1,7 +1,8 @@
+import type { CacheUnavailable } from '@kit/errors';
+import type { CacheClient } from '@kit/ports';
 import { type Result, ignore, isErr, isOk, map, ok, tryCatch, unwrapOr } from '@kit/result';
-import type { CacheClient, CategoryCachePort } from '@vp/core/ports';
+import type { CategoryCachePort } from '@vp/core/ports';
 import type { Category } from '@vp/domain';
-import type { CacheUnavailable } from '@vp/errors';
 import { CacheKeys } from '@vp/events';
 
 interface CachedCategories {

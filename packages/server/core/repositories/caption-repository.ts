@@ -1,6 +1,6 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import type { Result } from '@kit/result';
 import type { CaptionTrack, TranscriptCue } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 
 export type CaptionRecord = CaptionTrack;
 

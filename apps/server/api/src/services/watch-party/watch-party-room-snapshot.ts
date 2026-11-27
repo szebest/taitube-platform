@@ -1,7 +1,7 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { isErr, map, ok, type Result } from '@kit/result';
 import type { WatchPartyServerFrame } from '@vp/api-contracts';
 import { type RosterEntry, rosterFor } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 import { canInRoom } from '@vp/permissions';
 import { readRoomChat } from './watch-party-chat';
 import type { RoomContext } from './watch-party-context';

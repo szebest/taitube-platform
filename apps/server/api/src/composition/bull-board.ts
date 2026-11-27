@@ -1,7 +1,7 @@
 import { createBullBoard } from '@bull-board/api';
 import type { BaseAdapter } from '@bull-board/api/baseAdapter';
 import { FastifyAdapter } from '@bull-board/fastify';
-import type { JobQueue } from '@vp/core/ports';
+import type { JobQueue } from '@kit/ports';
 import type { FastifyPluginCallback } from 'fastify';
 
 export interface BullBoardOptions {

@@ -1,7 +1,7 @@
+import { cacheUnavailable } from '@kit/errors';
 import { err } from '@kit/result';
 import { expectOk } from '@kit/testing/result';
 import { InMemoryViewBuffer } from '@vp/adapters/in-memory';
-import { cacheUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { type PipelineMetrics, createPipelineMetrics } from '@vp/pipeline-metrics';
 import { ViewService } from '../view-service';

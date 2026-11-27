@@ -1,3 +1,4 @@
+import { type DatabaseUnavailable } from '@kit/errors';
 import { err, isErr, ok, type Result } from '@kit/result';
 import type {
   ChannelRepositoryPort,
@@ -11,7 +12,7 @@ import {
   liveStreamNotFound,
   type VideoReadRequiresAuth,
 } from '@vp/domain-rules';
-import { type DatabaseUnavailable, ErrorCodes } from '@vp/errors';
+import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 
 export interface LiveAccessDeps {

@@ -1,3 +1,4 @@
+import { type DatabaseUnavailable } from '@kit/errors';
 import { andThen, andThenAsync, err, ok, type Result } from '@kit/result';
 import {
   effectivePermissions,
@@ -6,7 +7,6 @@ import {
   type WatchPartyMember,
 } from '@vp/domain';
 import {
-  type DatabaseUnavailable,
   type WatchPartyNotFound,
   type WatchPartyRoleNotFound,
   watchPartyNotFound,

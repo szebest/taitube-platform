@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { ok, type Result } from '@kit/result';
 import type {
   NewSystemLine,
@@ -6,7 +7,6 @@ import type {
   WatchPartyMemberRepositoryPort,
 } from '@vp/core/repositories';
 import type { WatchPartyBan, WatchPartyMember } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 import {
   assignmentKey,
   type InMemoryWatchPartyStore,

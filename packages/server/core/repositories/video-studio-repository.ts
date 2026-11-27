@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import type { Result } from '@kit/result';
 import type {
   Chapter,
@@ -8,7 +9,7 @@ import type {
   VideoStatus,
   VideoVisibility,
 } from '@vp/domain';
-import type { DatabaseUnavailable, VersionConflict } from '@vp/errors';
+import type { VersionConflict } from '@vp/errors';
 import type { VideoRecord } from './video-repository';
 
 export interface StudioMetadataPatch {

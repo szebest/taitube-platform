@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import type { Result } from '@kit/result';
 import type {
   CommentReport,
@@ -5,7 +6,6 @@ import type {
   CommentReportResolution,
   NewCommentReportInput,
 } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 
 /** Open reports sort before resolved ones, each group newest first. */
 export interface CommentReportQueueCursor {

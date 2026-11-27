@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { isErr, ok, type Result, unwrapOr } from '@kit/result';
 import type {
   CommentLocator,
@@ -22,7 +23,6 @@ import {
   type NewCommentInput,
   type NewCommentRemoval,
 } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { announceCreated } from './comment-announce';
 import { listAuthored } from './comment-authored';

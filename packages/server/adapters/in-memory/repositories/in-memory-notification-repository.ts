@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { MS_PER_DAY } from '@kit/primitives';
 import { isErr, ok, type Result } from '@kit/result';
 import type {
@@ -19,7 +20,6 @@ import {
   notificationRead,
   toNotificationView,
 } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 import { uuidv7 } from 'uuidv7';
 import { type Clock, realClock } from './clock';
 import { byKeysetDesc, isKeysetBefore } from './keyset';

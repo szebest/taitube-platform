@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import type { InvalidCursor, Paginator } from '@kit/pagination';
 import { type Result, err, ignore, isErr, map, ok } from '@kit/result';
 import type { OwnRestrictionView, RestrictionActionBody, RestrictionView } from '@vp/api-contracts';
@@ -25,7 +26,6 @@ import {
   decideChannelUserRestriction,
   restrictionNotFound,
 } from '@vp/domain-rules';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { type InvalidRestriction, invalidRestriction, validateBan } from '@vp/validation';
 import { auditActor } from './audit-actor';

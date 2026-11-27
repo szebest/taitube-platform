@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import type { InvalidCursor, Paginator } from '@kit/pagination';
 import { type Result, andThen, isErr, map } from '@kit/result';
 import type {
@@ -20,7 +21,6 @@ import {
   decideRecommendationFeedbackTarget,
 } from '@vp/domain-rules';
 import type { CdnBase } from '@vp/env-schema';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { uuidv7 } from 'uuidv7';
 import { createdAtCursorPayload, decodeCreatedAtCursor } from './cursor';

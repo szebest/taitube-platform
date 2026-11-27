@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { type Result, ok, unwrapOr } from '@kit/result';
 import type {
   ChannelRepositoryPort,
@@ -7,7 +8,6 @@ import type {
   VideoViewRepositoryPort,
 } from '@vp/core/repositories';
 import { RISING, isPublicFeedEligible, rankRising } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 
 export interface RisingVideosLookups {
   videosRepo: { getAllVideos(): VideoRecord[] };

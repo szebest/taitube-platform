@@ -1,6 +1,6 @@
+import type { CacheUnavailable } from '@kit/errors';
 import type { Result } from '@kit/result';
 import type { ReactionCounts, ReactionType } from '@vp/domain';
-import type { CacheUnavailable } from '@vp/errors';
 
 /**
  * The read-through methods take a fetcher and return whatever it returned, so a failure the

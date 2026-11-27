@@ -1,3 +1,4 @@
+import { type CacheUnavailable, type DatabaseUnavailable } from '@kit/errors';
 import { MS_PER_HOUR } from '@kit/primitives';
 import { andThenAsync, err, isErr, ok, type Result } from '@kit/result';
 import type { CreateWatchPartyBody, WatchPartyView } from '@vp/api-contracts';
@@ -14,8 +15,6 @@ import {
 } from '@vp/domain';
 import { type AuthorizationFailure, authorize } from '@vp/domain-rules';
 import {
-  type CacheUnavailable,
-  type DatabaseUnavailable,
   type WatchPartyLimitReached,
   type WatchPartyVideoNotShareable,
   watchPartyLimitReached,

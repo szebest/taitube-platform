@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { type Result, isErr, ok, unwrapOr } from '@kit/result';
 import type {
   AddPlaylistItemOutcome,
@@ -21,7 +22,6 @@ import {
   appendPosition,
   renumberPositions,
 } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 import { type UserContext, canReadPlaylist } from '@vp/permissions';
 import { byKeysetDesc, isKeysetBefore } from './keyset';
 import { type VideoLookups, primaryChannelCard, watchableVideo } from './watchable-video';

@@ -1,6 +1,6 @@
+import type { CacheUnavailable } from '@kit/errors';
 import { ok, type Result } from '@kit/result';
 import type { PartyGuestSession, PartyGuestSessionsPort } from '@vp/core/ports';
-import type { CacheUnavailable } from '@vp/errors';
 
 export class InMemoryPartyGuestSessions implements PartyGuestSessionsPort {
   private readonly sessions = new Map<string, { session: PartyGuestSession; endsAtMs: number }>();

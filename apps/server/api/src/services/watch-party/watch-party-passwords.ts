@@ -1,11 +1,8 @@
+import { type CacheUnavailable } from '@kit/errors';
 import { all, err, isErr, ok, type Result } from '@kit/result';
 import type { HashingFailed } from '@vp/core/ports';
 import type { JoinPassword } from '@vp/domain-rules';
-import {
-  type CacheUnavailable,
-  type WatchPartyPasswordLocked,
-  watchPartyPasswordLocked,
-} from '@vp/errors';
+import { type WatchPartyPasswordLocked, watchPartyPasswordLocked } from '@vp/errors';
 import type { WatchPartyDeps } from './watch-party-deps';
 
 export interface PasswordAttempt {

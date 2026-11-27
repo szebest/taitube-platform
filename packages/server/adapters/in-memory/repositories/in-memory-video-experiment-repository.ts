@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { ok, type Result } from '@kit/result';
 import {
   type ExperimentCreated,
@@ -11,7 +12,6 @@ import {
   mergeExperimentCounts,
 } from '@vp/domain';
 import { EXPERIMENT } from '@vp/domain-rules';
-import type { DatabaseUnavailable } from '@vp/errors';
 
 /** The owner of every video, which is what a channel's running tests are counted over. */
 export interface ExperimentVideos {

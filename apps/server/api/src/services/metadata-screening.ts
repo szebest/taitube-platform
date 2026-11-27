@@ -1,8 +1,8 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { type Result, isErr, ok } from '@kit/result';
 import type { ScreeningRepository, VideoRecord, VideoRepository } from '@vp/core/repositories';
 import type { ScreeningThresholds } from '@vp/domain';
 import { screenMetadataInLocales } from '@vp/domain-rules';
-import type { DatabaseUnavailable } from '@vp/errors';
 import { uuidv7 } from 'uuidv7';
 
 export interface MetadataScreeningDeps {

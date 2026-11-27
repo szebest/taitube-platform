@@ -1,7 +1,7 @@
 import { extractContextFromTraceparent, getTracer } from '@kit/observability';
+import type { QueueJob } from '@kit/ports';
 import { fromPromise } from '@kit/result';
 import { SpanKind, SpanStatusCode, context, trace } from '@opentelemetry/api';
-import type { QueueJob } from '@vp/core/ports';
 import { TRACER_NAME } from '@vp/pipeline-metrics';
 
 /**

@@ -1,6 +1,6 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import type { Result } from '@kit/result';
 import type { GenerationPlayback, VideoEdit, VideoEditList, VideoGeneration } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { NewOutboxInput } from './outbox-repository';
 
 export interface OpenReplacementInput {

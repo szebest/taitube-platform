@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import type { Result } from '@kit/result';
 import type {
   Category,
@@ -6,7 +7,7 @@ import type {
   ListCategoriesOptions,
   UpdateCategoryInput,
 } from '@vp/domain';
-import type { CategorySlugConflict, DatabaseUnavailable } from '@vp/errors';
+import type { CategorySlugConflict } from '@vp/errors';
 
 /**
  * Absence is not a failure: `findById`, `findBySlug` and `update` answer `ok(null)` for a row that

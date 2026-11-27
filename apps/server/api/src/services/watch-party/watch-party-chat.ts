@@ -1,3 +1,4 @@
+import { type CacheUnavailable, type DatabaseUnavailable } from '@kit/errors';
 import { err, isErr, map, ok, type Result } from '@kit/result';
 import type { WatchPartyServerFrame } from '@vp/api-contracts';
 import { expectedPositionMs, type WatchPartyMessage } from '@vp/domain';
@@ -7,8 +8,6 @@ import {
   requireRoomPermission,
 } from '@vp/domain-rules';
 import {
-  type CacheUnavailable,
-  type DatabaseUnavailable,
   ErrorCodes,
   type WatchPartyChatOff,
   type WatchPartyClosed,

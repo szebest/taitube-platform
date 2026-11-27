@@ -1,3 +1,4 @@
+import { type DatabaseUnavailable, databaseUnavailable } from '@kit/errors';
 import { andThenAsync, err, fromPromise, map, ok, type Result } from '@kit/result';
 import type {
   EndLiveInput,
@@ -13,7 +14,6 @@ import {
   liveStreamCarryOver,
   videoStatusChanged,
 } from '@vp/domain';
-import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { and, desc, eq, inArray, type SQL, sql } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
 import { appendUserEvent } from './postgres-user-event-repository';

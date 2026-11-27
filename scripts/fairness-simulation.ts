@@ -14,13 +14,13 @@
 import * as crypto from 'node:crypto';
 import { runReconcileUploads } from '../apps/server/worker/src/stages/housekeeping/reconcile-uploads';
 import { createLogger, type Logger } from '../packages/platform/server/logger/src/index';
+import type { QueueJob } from '../packages/platform/server/ports/src/index';
 import { isErr, type Result } from '../packages/platform/universal/result/src/index';
 import {
   InMemoryJobQueue,
   InMemoryMultipartStorage,
   InMemoryRepositories,
 } from '../packages/server/adapters/in-memory/index';
-import type { QueueJob } from '../packages/server/core/ports/index';
 import { ids } from '../packages/server/job-contracts/src/index';
 import { createPipelineMetrics } from '../packages/server/pipeline-metrics/src/index';
 import { rawSourceKey } from '../packages/server/storage/src/index';

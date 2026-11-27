@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { type Result, andThenAsync, err, isErr, map, ok } from '@kit/result';
 import type { ChannelSpotlight, ChannelSpotlightSettings } from '@vp/api-contracts';
 import type {
@@ -23,7 +24,6 @@ import {
   decideSpotlightVideo,
   isSpotlightable,
 } from '@vp/domain-rules';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { type InvalidField, invalidField } from '@vp/validation';
 import { followsChannel } from './account-subscription';

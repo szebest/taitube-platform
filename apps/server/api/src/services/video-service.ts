@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import type { InvalidCursor, Paginator } from '@kit/pagination';
 import { type Result, err, isErr, map, ok, unwrapOr } from '@kit/result';
 import type { AuthorizationPort, ReactionCachePort } from '@vp/core/ports';
@@ -10,7 +11,6 @@ import type {
 import { PUBLIC_FEED_SEEN_LIMIT, type VideoFormat, type VideoStatus } from '@vp/domain';
 import { type ReadVideoFailure, decideVideoRead, videoNotFound } from '@vp/domain-rules';
 import type { CdnBase } from '@vp/env-schema';
-import type { DatabaseUnavailable } from '@vp/errors';
 import { type UserContext, canAccessAdmin } from '@vp/permissions';
 import {
   type FeedCursor,

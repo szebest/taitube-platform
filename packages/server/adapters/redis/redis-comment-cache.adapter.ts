@@ -1,12 +1,13 @@
+import type { CacheUnavailable } from '@kit/errors';
+import type { CacheClient } from '@kit/ports';
 import { type Result, ignore, isOk, map, ok, parseJson, unwrapOr } from '@kit/result';
-import type { CacheClient, CommentCachePort, HotComments } from '@vp/core/ports';
+import type { CommentCachePort, HotComments } from '@vp/core/ports';
 import {
   COMMENT_MODERATION_REASONS,
   DISCLOSURES,
   HELD_REASONS,
   MODERATION_STATES,
 } from '@vp/domain';
-import type { CacheUnavailable } from '@vp/errors';
 import { CacheKeys } from '@vp/events';
 import { z } from 'zod';
 

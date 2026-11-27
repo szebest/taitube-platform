@@ -1,5 +1,7 @@
 import type { ServerResponse } from 'node:http';
+import type { CacheUnavailable } from '@kit/errors';
 import type { Logger } from '@kit/logger';
+import type { CacheClient } from '@kit/ports';
 import {
   type Result,
   assertNever,
@@ -12,8 +14,6 @@ import {
   tryCatch,
 } from '@kit/result';
 import { UserEventFrameSchema } from '@vp/api-contracts';
-import type { CacheClient } from '@vp/core/ports';
-import type { CacheUnavailable } from '@vp/errors';
 import {
   SseMessageEnvelope,
   USER_WILDCARD_CHANNEL,

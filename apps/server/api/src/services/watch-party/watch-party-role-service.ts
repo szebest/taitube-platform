@@ -1,3 +1,4 @@
+import { type DatabaseUnavailable } from '@kit/errors';
 import { andThen, andThenAsync, err, map, ok, type Result } from '@kit/result';
 import type {
   applyWatchPartyPreset,
@@ -15,7 +16,7 @@ import {
   decideRoleUpdate,
   requireRoomPermission,
 } from '@vp/domain-rules';
-import { type DatabaseUnavailable, type WatchPartyNotFound, watchPartyNotFound } from '@vp/errors';
+import { type WatchPartyNotFound, watchPartyNotFound } from '@vp/errors';
 import { validateRoleName } from '@vp/validation';
 import type { z } from 'zod';
 import type { PartyCaller } from './party-caller';

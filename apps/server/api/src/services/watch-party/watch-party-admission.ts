@@ -1,3 +1,4 @@
+import type { CacheUnavailable } from '@kit/errors';
 import { map, type Result } from '@kit/result';
 import {
   admissionLimit,
@@ -6,7 +7,6 @@ import {
   type WatchPartyRoom,
 } from '@vp/domain';
 import type { WatchPartyJoinInput } from '@vp/domain-rules';
-import type { CacheUnavailable } from '@vp/errors';
 import type { RoomContext } from './watch-party-context';
 import type { WatchPartyDeps } from './watch-party-deps';
 

@@ -1,4 +1,5 @@
 import type { CircuitBreaker } from '@kit/concurrency';
+import type { CacheUnavailable } from '@kit/errors';
 import { type Result, isOk, map, ok } from '@kit/result';
 import type {
   ExperimentEvent,
@@ -11,7 +12,6 @@ import type {
   ViewRecordOutcome,
 } from '@vp/core/ports';
 import type { ViewBatch } from '@vp/domain';
-import type { CacheUnavailable } from '@vp/errors';
 import type { PipelineMetrics } from '@vp/pipeline-metrics';
 import { HeldViews } from './held-views';
 

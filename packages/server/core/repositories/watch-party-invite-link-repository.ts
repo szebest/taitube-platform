@@ -1,6 +1,6 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import type { Result } from '@kit/result';
 import type { WatchPartyInviteLink } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 
 export interface WatchPartyInviteLinkRepositoryPort {
   create(link: WatchPartyInviteLink): Promise<Result<WatchPartyInviteLink, DatabaseUnavailable>>;

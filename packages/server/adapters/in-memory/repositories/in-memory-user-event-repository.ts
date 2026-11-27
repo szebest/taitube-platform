@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { MS_PER_DAY } from '@kit/primitives';
 import { type Result, map, ok } from '@kit/result';
 import {
@@ -6,7 +7,6 @@ import {
   type UserEventRecord,
   UserEventRepository,
 } from '@vp/core/repositories';
-import type { DatabaseUnavailable } from '@vp/errors';
 import { userChannel } from '@vp/events';
 import { type Clock, realClock } from './clock';
 

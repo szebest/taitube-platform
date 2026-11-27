@@ -1,3 +1,4 @@
+import { type DatabaseUnavailable, databaseUnavailable } from '@kit/errors';
 import { type Result, fromPromise, map } from '@kit/result';
 import type {
   RisingVideosOptions,
@@ -6,7 +7,6 @@ import type {
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import { RISING, rankRising } from '@vp/domain';
-import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { and, desc, eq, gte, lte, notInArray, ne } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import { toVideoRecord } from '../mappers/video.mapper';

@@ -1,4 +1,4 @@
-import { PermanentError } from '@kit/errors';
+import { PermanentError, type DatabaseUnavailable } from '@kit/errors';
 import { type Result, err, isErr, ok } from '@kit/result';
 import type { ChannelRepositoryPort } from '@vp/core/repositories';
 import {
@@ -13,7 +13,6 @@ import {
 } from '@vp/domain';
 import {
   type ChannelLimitReached,
-  type DatabaseUnavailable,
   ErrorCodes,
   type HandleTaken,
   channelLimitReached,

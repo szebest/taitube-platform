@@ -1,7 +1,8 @@
+import { type DatabaseUnavailable } from '@kit/errors';
+import { DatabaseClient } from '@kit/ports';
 import { type Result, ok } from '@kit/result';
 import { expectErr, expectOk } from '@kit/testing/result';
-import { DatabaseClient } from '@vp/core/ports';
-import { type DatabaseUnavailable, ErrorCodes } from '@vp/errors';
+import { ErrorCodes } from '@vp/errors';
 import type { Sql } from 'postgres';
 import { PostgresDatabaseClient } from '../postgres-database-client';
 

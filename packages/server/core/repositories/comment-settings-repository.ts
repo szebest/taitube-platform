@@ -1,6 +1,6 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import type { Result } from '@kit/result';
 import type { CommentSettings, NewChannelAuditEntry } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 
 export interface CommentSettingsRepositoryPort {
   /** A channel that never saved settings has the defaults. */

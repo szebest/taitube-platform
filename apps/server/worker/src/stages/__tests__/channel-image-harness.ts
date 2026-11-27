@@ -1,8 +1,8 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
+import type { QueueJob } from '@kit/ports';
 import { expectOk } from '@kit/testing/result';
 import type { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
-import type { QueueJob } from '@vp/core/ports';
 import type { ChannelImageCompletion } from '@vp/core/repositories';
 import type { BannerCrops, ChannelImageKind, CropRect } from '@vp/domain';
 import type { ChannelImageProbe, MediaTools } from '@vp/ffmpeg';

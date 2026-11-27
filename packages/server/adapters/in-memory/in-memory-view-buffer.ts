@@ -1,3 +1,4 @@
+import type { CacheUnavailable } from '@kit/errors';
 import { type Result, ok } from '@kit/result';
 import type {
   ExperimentEvent,
@@ -24,7 +25,6 @@ import {
   mergeHourlyCounts,
   mergeShareLinkCounts,
 } from '@vp/domain';
-import type { CacheUnavailable } from '@vp/errors';
 
 type MutableCount = { -readonly [K in keyof ViewCount]: ViewCount[K] };
 

@@ -1,7 +1,8 @@
+import type { DatabaseUnavailable } from '@kit/errors';
+import type { QueueJob } from '@kit/ports';
 import { type Result, err, isErr, ok } from '@kit/result';
-import type { QueueJob } from '@vp/core/ports';
 import type { CaptionRecord } from '@vp/core/repositories';
-import type { DatabaseUnavailable, ErrorCode } from '@vp/errors';
+import type { ErrorCode } from '@vp/errors';
 import type { CaptionsJob } from '@vp/job-contracts';
 import { uuidv7 } from 'uuidv7';
 import { createScratchDir, removeScratchDir } from '../scratch-dir';

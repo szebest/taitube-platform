@@ -1,8 +1,8 @@
+import type { DatabaseUnavailable } from '@kit/errors';
+import type { FlowJobNode } from '@kit/ports';
+import type { QueueJobOptions } from '@kit/ports';
 import type { Result } from '@kit/result';
 import type { OutboxStatus } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
-import type { FlowJobNode } from '../ports/flow-producer';
-import type { QueueJobOptions } from '../ports/job-queue';
 
 interface OutboxQueueJobPayload {
   name: string;

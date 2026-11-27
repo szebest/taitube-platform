@@ -1,9 +1,9 @@
 import { randomUUID } from 'node:crypto';
+import type { DatabaseUnavailable } from '@kit/errors';
 import type { Result } from '@kit/result';
 import { expectOk } from '@kit/testing/result';
 import type { ExportRowRepositoryPort, ExportScope, Repositories } from '@vp/core/repositories';
 import type { Channel, ExportRowPage } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 import { seedTeam } from './channel-team-fixtures';
 import {
   CATEGORY_MUSIC_ID,

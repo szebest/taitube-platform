@@ -1,6 +1,6 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import type { Result } from '@kit/result';
 import type { ChannelInvite, ChannelMembership, NewChannelAuditEntry } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 
 export type NewChannelInvite = Omit<ChannelInvite, 'status' | 'createdAt'>;
 

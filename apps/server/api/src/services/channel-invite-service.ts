@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import type { InvalidCursor, Paginator } from '@kit/pagination';
 import { type Result, assertNever, err, isErr, ok } from '@kit/result';
 import type { ChannelInviteView, ChannelMembershipView, MyInvitePageView } from '@vp/api-contracts';
@@ -24,7 +25,6 @@ import {
   decideInviteAnswer,
   decideInviteRevoke,
 } from '@vp/domain-rules';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { uuidv7 } from 'uuidv7';
 import { profileOf, profilesOf, toInviteView } from './channel-team-views';

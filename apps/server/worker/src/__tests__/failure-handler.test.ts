@@ -1,17 +1,18 @@
-import { PermanentError, TransientError } from '@kit/errors';
-import type { Logger } from '@kit/logger';
-import { type Result, err } from '@kit/result';
-import { expectOk } from '@kit/testing/result';
-import { InMemoryDlqRepository, InMemoryJobQueue } from '@vp/adapters/in-memory';
-import type { QueueJob, QueueJobOptions } from '@vp/core/ports';
-import type { DlqEntryRecord, NewDlqEntryInput, Repositories } from '@vp/core/repositories';
 import {
+  PermanentError,
+  TransientError,
   type DatabaseUnavailable,
-  ErrorCodes,
   type QueueUnavailable,
   databaseUnavailable,
   queueUnavailable,
-} from '@vp/errors';
+} from '@kit/errors';
+import type { Logger } from '@kit/logger';
+import type { QueueJob, QueueJobOptions } from '@kit/ports';
+import { type Result, err } from '@kit/result';
+import { expectOk } from '@kit/testing/result';
+import { InMemoryDlqRepository, InMemoryJobQueue } from '@vp/adapters/in-memory';
+import type { DlqEntryRecord, NewDlqEntryInput, Repositories } from '@vp/core/repositories';
+import { ErrorCodes } from '@vp/errors';
 import { APPLY_EDITS, ids, stagePolicies } from '@vp/job-contracts';
 import { uuidv7 } from 'uuidv7';
 import { createFailureHandler } from '../failure-handler';

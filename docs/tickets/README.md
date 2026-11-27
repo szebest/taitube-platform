@@ -6,9 +6,11 @@ Tracer-bullet tickets generated from [`PRD.md`](../PRD.md) and [`SDD.md`](../SDD
 
 Every ticket whose blockers are all `done` and which nobody has started, computed from the `**Status:**` lines.
 
+- [48: Complete monorepo rebrand & package namespace unification (@vp/ -> @taitube/, services, Docker & CLI)](48-project-rebrand-cli-unification.md)
 - [119: Playlists and lists - collaboration, segments, sections, smart playlists, watch lists, import and export](119-playlists-customisation-and-collaboration.md)
 - [120: Community - channel posts, polls and quizzes, and timestamped viewer threads](120-community-posts-and-threads.md)
 - [138: Type-aware lint backlog, the twelve oxlint rules 110 left off](138-type-aware-lint-backlog.md)
+- [171: Intl formatters - one open contract, lists that collapse into "and N more" with a tooltip, richer formatters, a duration conformance suite](171-intl-formatters-open-extensible-list-more-tooltip-and-duration-conformance.md)
 
 ## How to work a ticket (humans and agents)
 
@@ -80,7 +82,7 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 | 45 | [Frontend API modernization & contract alignment — migrate web app to clean canonical `/v1` APIs](45-legacy-frontend-compatibility-adapter-layer.md) | 5 | L | — | — | done |
 | 46 | [YouTube-grade playlists & watch history domain engine (Public/private, Watch Later, drag-and-drop reorder & resume sync)](46-youtube-playlists-watch-history-engine.md) | 5 | L | 38, 39 | 47, 73, 100, 104, 115, 119, 122, 125 | done |
 | 47 | [Multi-resource search engine — unified weighted full-text search across videos, channels & playlists with Redis caching](47-multi-resource-search-engine.md) | 5 | L | 38, 44, 46 | 74, 92, 111, 125, 140 | done |
-| 48 | [Complete monorepo rebrand & package namespace unification (@vp/ -> @taitube/, services, Docker & CLI)](48-project-rebrand-cli-unification.md) | 5 | L | 01, 92, 93, 170 | — | blocked |
+| 48 | [Complete monorepo rebrand & package namespace unification (@vp/ -> @taitube/, services, Docker & CLI)](48-project-rebrand-cli-unification.md) | 5 | L | 01, 92, 93, 170 | — | ready |
 | 49 | [Next-Gen frontend direct API gateway & CORS profile for Taitube](49-nextgen-frontend-api-gateway-bootstrap.md) | 5 | M | 36, 37, 38 | — | done |
 | 50 | [Shared API contracts package (`@taitube/api-contracts`) & automated OpenAPI TypeScript codegen](50-shared-api-contracts-zod-openapi-codegen.md) | 5 | M | 19, 37, 38 | — | done |
 | 51 | [Type-safe API client SDK (`@taitube/api-client`) with auto-generated TanStack Query hooks](51-type-safe-query-client-tanstack-react-hooks.md) | 5 | M | — | — | done |
@@ -178,8 +180,8 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 | 144 | [Invitee accept from the studio - pending invites, accept and decline, and leaving a team](144-invitee-accept-from-studio.md) | 5 - Developer experience & growth | M | 117 | — | done |
 | 145 | [Stories and visual baselines for the app kit folders that have none](145-kit-stories-and-visual-baselines.md) | 5 - Developer experience & growth | S | 131 | — | done |
 | 146 | [Word-level caption timestamps so per-cue edges meet 100 ms](146-word-level-caption-timestamps.md) | 5 - Developer experience & growth | S | 139 | — | blocked |
-| 170 | [Platform packages - reusable, app-independent, extractable; the app registers its data through injection tokens](170-platform-packages-open-closed-extractable.md) | 5 - Developer experience & growth | XL (one PR, ordered commits, see *Delivery*) | 82, 85, 86, 87, 88, 131 | 48, 171 | in-progress |
-| 171 | [Intl formatters - one open contract, lists that collapse into "and N more" with a tooltip, richer formatters, a duration conformance suite](171-intl-formatters-open-extensible-list-more-tooltip-and-duration-conformance.md) | 5 - Developer experience & growth | XL (one PR, ordered commits, see *Delivery*) | 170 | — | blocked |
+| 170 | [Platform packages - reusable, app-independent, extractable; the app registers its data through injection tokens](170-platform-packages-open-closed-extractable.md) | 5 - Developer experience & growth | XL (one PR, ordered commits, see *Delivery*) | 82, 85, 86, 87, 88, 131 | 48, 171 | done |
+| 171 | [Intl formatters - one open contract, lists that collapse into "and N more" with a tooltip, richer formatters, a duration conformance suite](171-intl-formatters-open-extensible-list-more-tooltip-and-duration-conformance.md) | 5 - Developer experience & growth | XL (one PR, ordered commits, see *Delivery*) | 170 | — | ready |
 | 172 | [One ECMAScript baseline per tier - presets, a browser floor, a guard, and the cleanup it enables](172-ecmascript-baseline-per-tier-presets-browser-floor-and-cleanup.md) | 5 - Developer experience & growth | M (one PR, ordered commits, see *Delivery*) | 85, 110 | — | done |
 
 > `in-progress` and `done` are set by hand; the rest derive from the blockers and are written back to each ticket: `ready` = all blockers done (the frontier) · `blocked` · `blocked-by-date` (blockers done, waiting for a date the ticket names; set by hand, reset to `blocked` while a blocker is open).

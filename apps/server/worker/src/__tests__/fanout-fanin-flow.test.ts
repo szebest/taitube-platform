@@ -1,5 +1,5 @@
+import type { QueueJob } from '@kit/ports';
 import { expectOk } from '@kit/testing/result';
-import type { QueueJob } from '@vp/core/ports';
 import { ErrorCodes } from '@vp/errors';
 import { LadderEntry, type ProbeJob } from '@vp/job-contracts';
 import { createMockJob } from '@vp/testing-fixtures';

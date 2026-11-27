@@ -1,3 +1,4 @@
+import { type DatabaseUnavailable, databaseUnavailable } from '@kit/errors';
 import { fromPromise, type Result } from '@kit/result';
 import type { ExportRowRepositoryPort, ExportScope } from '@vp/core/repositories';
 import type {
@@ -7,7 +8,6 @@ import type {
   VideoAnalyticsExportRow,
   VideoExportRow,
 } from '@vp/domain';
-import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { z } from 'zod';
 import { channelDayRows, retentionRows, videoDailyRows } from './export-analytics-queries';
 import { commentRows, videoRows } from './export-catalogue-queries';

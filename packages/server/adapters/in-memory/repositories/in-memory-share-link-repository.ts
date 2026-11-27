@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { ok, type Result } from '@kit/result';
 import { ShareLinkRepository } from '@vp/core/repositories';
 import {
@@ -8,7 +9,6 @@ import {
   type ShareLinkTargetType,
   type ShareLinkTotals,
 } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 
 function isActiveAt(link: ShareLink, at: Date): boolean {
   return link.revokedAt === null && (link.expiresAt === null || link.expiresAt > at);

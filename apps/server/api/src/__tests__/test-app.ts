@@ -1,5 +1,6 @@
 import type { Container } from '@kit/composition';
 import type { Logger } from '@kit/logger';
+import type { JobQueue } from '@kit/ports';
 import { expectOk } from '@kit/testing/result';
 import {
   InMemoryCacheClient,
@@ -8,7 +9,7 @@ import {
   InMemorySearchSuggestionIndex,
   InMemoryStorageClient,
 } from '@vp/adapters/in-memory';
-import type { JobQueue, StorageClient } from '@vp/core/ports';
+import type { StorageClient } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import { mintToken } from '@vp/dev-identity';
 import { type ChannelRole, SEARCH_SUGGESTIONS, type ActingChannel } from '@vp/domain';

@@ -1,6 +1,6 @@
 import type { AnyInputFailure, RetryClass } from '@kit/errors';
+import { databaseUnavailable } from '@kit/errors';
 import { type ErrorCode, ErrorCodes } from '../../error-codes';
-import { databaseUnavailable } from '../../infra-failures';
 import { RETRY_CLASS } from '../../retry-class';
 
 const _completeClassification: Readonly<Record<ErrorCode, RetryClass>> = RETRY_CLASS;

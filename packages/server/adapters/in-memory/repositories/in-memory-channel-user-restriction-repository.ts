@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { isErr, ok, type Result } from '@kit/result';
 import type {
   ChannelUserRestrictionQuery,
@@ -13,7 +14,6 @@ import {
   type NewChannelAuditEntry,
   type NewChannelUserRestriction,
 } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 import { recordModeration } from './comment-moderation-record';
 import type { InMemoryChannelAuditRepository } from './in-memory-channel-audit-repository';
 import { byKeysetDesc, isKeysetBefore } from './keyset';

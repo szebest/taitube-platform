@@ -1,3 +1,4 @@
+import { type DatabaseUnavailable, databaseUnavailable } from '@kit/errors';
 import { type Result, fromPromise, map } from '@kit/result';
 import type {
   CommentReportQueueCursor,
@@ -11,7 +12,6 @@ import type {
   CommentReportResolution,
   NewCommentReportInput,
 } from '@vp/domain';
-import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { type SQL, and, desc, eq, isNull, sql } from 'drizzle-orm';
 import { msTimestamp } from '../scopes/index';
 import type { PostgresDatabase } from './types';

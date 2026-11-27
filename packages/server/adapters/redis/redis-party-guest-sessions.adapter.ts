@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
+import { type CacheUnavailable, cacheUnavailable } from '@kit/errors';
 import { fromPromise, isErr, map, parseJson, type Result } from '@kit/result';
 import type { PartyGuestSession, PartyGuestSessionsPort } from '@vp/core/ports';
-import { type CacheUnavailable, cacheUnavailable } from '@vp/errors';
 import { CacheKeys } from '@vp/events';
 import type { Redis } from 'ioredis';
 import { z } from 'zod';

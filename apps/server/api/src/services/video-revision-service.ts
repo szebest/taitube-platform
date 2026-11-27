@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import type { InvalidCursor, Paginator } from '@kit/pagination';
 import { type Result, andThen, andThenAsync, err, isErr, ok } from '@kit/result';
 import type {
@@ -18,7 +19,6 @@ import {
   decideVideoEditAccess,
   revisionNotFound,
 } from '@vp/domain-rules';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import type { CreatorStudioService } from './creator-studio-service';
 import { isoOf } from './cursor';

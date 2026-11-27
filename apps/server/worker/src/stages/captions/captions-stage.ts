@@ -1,4 +1,4 @@
-import type { QueueJob } from '@vp/core/ports';
+import type { QueueJob } from '@kit/ports';
 import type { AppConfig } from '@vp/env-schema';
 import type { CaptionsJob } from '@vp/job-contracts';
 import { createCaptionsProcessor } from './captions';

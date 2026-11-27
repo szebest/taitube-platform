@@ -1,7 +1,7 @@
+import { queueUnavailable } from '@kit/errors';
+import type { JobQueue } from '@kit/ports';
 import { err } from '@kit/result';
 import { InMemoryJobQueue } from '@vp/adapters/in-memory';
-import type { JobQueue } from '@vp/core/ports';
-import { queueUnavailable } from '@vp/errors';
 import { createPipelineMetrics } from '@vp/pipeline-metrics';
 import { pollQueueMetrics } from '../queue-poller';
 

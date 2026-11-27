@@ -1,3 +1,4 @@
+import { type StorageUnavailable, storageUnavailable } from '@kit/errors';
 import { MS_PER_SECOND } from '@kit/primitives';
 import { type Result, err, ok } from '@kit/result';
 import {
@@ -9,7 +10,6 @@ import {
   type StoragePresignedPartParams,
   type StorageUploadedPartInfo,
 } from '@vp/core/ports';
-import { type StorageUnavailable, storageUnavailable } from '@vp/errors';
 
 interface InFlightPart {
   partNumber: number;

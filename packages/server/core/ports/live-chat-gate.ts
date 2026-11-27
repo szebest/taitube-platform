@@ -1,5 +1,5 @@
+import type { CacheUnavailable } from '@kit/errors';
 import type { Result } from '@kit/result';
-import type { CacheUnavailable } from '@vp/errors';
 import type { Role } from '@vp/permissions';
 
 /** Who a one-time chat token was issued to, and for which stream. */

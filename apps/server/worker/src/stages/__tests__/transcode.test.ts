@@ -1,10 +1,11 @@
 import * as fs from 'node:fs/promises';
+import { databaseUnavailable } from '@kit/errors';
 import { createLogger } from '@kit/logger';
+import type { QueueJob } from '@kit/ports';
 import { err, ok } from '@kit/result';
 import { expectOk } from '@kit/testing/result';
 import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
-import type { QueueJob } from '@vp/core/ports';
-import { ErrorCodes, databaseUnavailable } from '@vp/errors';
+import { ErrorCodes } from '@vp/errors';
 import type { MediaTools } from '@vp/ffmpeg';
 import type { TranscodeJob } from '@vp/job-contracts';
 import { chunkKey, chunkPrefix } from '@vp/storage';

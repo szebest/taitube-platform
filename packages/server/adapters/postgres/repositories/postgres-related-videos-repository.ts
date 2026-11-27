@@ -1,3 +1,4 @@
+import { type DatabaseUnavailable, databaseUnavailable } from '@kit/errors';
 import { type Result, fromPromise, map, ok } from '@kit/result';
 import type {
   RelatedVideo,
@@ -6,7 +7,6 @@ import type {
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import { RELATED_CANDIDATES, compareRelated } from '@vp/domain';
-import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { type SQL, arrayOverlaps, count, desc, eq, inArray, ne, sql } from 'drizzle-orm';
 import { union } from 'drizzle-orm/pg-core';
 import { toVideoRecord } from '../mappers/video.mapper';

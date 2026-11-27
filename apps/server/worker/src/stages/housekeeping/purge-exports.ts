@@ -1,9 +1,9 @@
+import type { DatabaseUnavailable, StorageUnavailable } from '@kit/errors';
 import type { Logger } from '@kit/logger';
 import { type Result, err, isErr, ok } from '@kit/result';
 import type { StorageClient } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import { DATA_EXPORT_STALE_AFTER_MS } from '@vp/domain';
-import type { DatabaseUnavailable, StorageUnavailable } from '@vp/errors';
 
 export interface PurgeExportsOptions {
   repositories: Repositories;

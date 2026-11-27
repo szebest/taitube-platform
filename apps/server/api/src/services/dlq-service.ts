@@ -1,6 +1,7 @@
+import { type DatabaseUnavailable, type QueueUnavailable } from '@kit/errors';
 import type { InvalidCursor, Paginator } from '@kit/pagination';
+import type { JobQueue } from '@kit/ports';
 import { type Result, err, isErr, map, ok } from '@kit/result';
-import type { JobQueue } from '@vp/core/ports';
 import type { DlqEntryRecord, DlqRepository, EventRepository } from '@vp/core/repositories';
 import type { DlqStatus } from '@vp/domain';
 import {
@@ -12,12 +13,7 @@ import {
   dlqEntryNotFound,
   replayQueueUnknown,
 } from '@vp/domain-rules';
-import {
-  type DatabaseUnavailable,
-  type QueueUnavailable,
-  type VersionConflict,
-  versionConflict,
-} from '@vp/errors';
+import { type VersionConflict, versionConflict } from '@vp/errors';
 import { defaultJobOptions, generateReplayJobId, stagePolicies } from '@vp/job-contracts';
 import type { UserContext } from '@vp/permissions';
 import { createdAtCursorPayload, decodeCreatedAtCursor } from './cursor';

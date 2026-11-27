@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { type Result, ok } from '@kit/result';
 import type {
   CommentReportQueueCursor,
@@ -10,7 +11,6 @@ import type {
   CommentReportResolution,
   NewCommentReportInput,
 } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 
 export interface CommentLookup {
   peek(

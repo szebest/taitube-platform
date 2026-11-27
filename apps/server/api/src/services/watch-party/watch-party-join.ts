@@ -1,3 +1,4 @@
+import { type CacheUnavailable, type DatabaseUnavailable } from '@kit/errors';
 import { andThenAsync, err, isErr, ok, type Result } from '@kit/result';
 import type { HashingFailed } from '@vp/core/ports';
 import {
@@ -14,8 +15,6 @@ import {
   type WatchPartyJoinInput,
 } from '@vp/domain-rules';
 import {
-  type CacheUnavailable,
-  type DatabaseUnavailable,
   ErrorCodes,
   type WatchPartyInviteInvalid,
   type WatchPartyNotFound,

@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { type Result, err, isErr, map, ok } from '@kit/result';
 import type { ChannelMembershipView, ChannelMemberView, ChannelTeamView } from '@vp/api-contracts';
 import type {
@@ -15,7 +16,6 @@ import {
   decideMemberRemoval,
   decideMemberRoleChange,
 } from '@vp/domain-rules';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { profileOf, profilesOf, toInviteView, toMemberView } from './channel-team-views';
 

@@ -1,5 +1,7 @@
 import * as os from 'node:os';
+import { databaseUnavailable } from '@kit/errors';
 import { createLogger } from '@kit/logger';
+import type { QueueJob } from '@kit/ports';
 import { err, ok } from '@kit/result';
 import { expectErr, expectOk } from '@kit/testing/result';
 import {
@@ -7,9 +9,8 @@ import {
   InMemoryStorageClient,
   InMemoryWebhookDispatcher,
 } from '@vp/adapters/in-memory';
-import type { QueueJob } from '@vp/core/ports';
 import type { CommentExportRow, DataExportFormat, DataExportKind } from '@vp/domain';
-import { ErrorCodes, databaseUnavailable } from '@vp/errors';
+import { ErrorCodes } from '@vp/errors';
 import type { ExportJob } from '@vp/job-contracts';
 import { uuidv7 } from 'uuidv7';
 import { type ExportProcessorDeps, createExportProcessor } from '../export-stage';

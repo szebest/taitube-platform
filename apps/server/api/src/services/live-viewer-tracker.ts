@@ -1,8 +1,9 @@
 import { randomUUID } from 'node:crypto';
+import type { CacheUnavailable } from '@kit/errors';
 import type { Logger } from '@kit/logger';
+import type { CacheClient } from '@kit/ports';
 import { isErr, type Result } from '@kit/result';
-import type { CacheClient, LivePresencePort } from '@vp/core/ports';
-import type { CacheUnavailable } from '@vp/errors';
+import type { LivePresencePort } from '@vp/core/ports';
 import { publishVideoEvent } from '@vp/events';
 
 export interface LiveViewerTrackerDeps {

@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { type Result, err, isErr, map, ok } from '@kit/result';
 import type { CaptionListView, CaptionTrackView, TranscriptView } from '@vp/api-contracts';
 import type { VideoRepository } from '@vp/core/repositories';
@@ -16,7 +17,6 @@ import {
   visibleCaptionTracks,
 } from '@vp/domain-rules';
 import type { CdnBase } from '@vp/env-schema';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { type InvalidCaptionLanguage, validateCaptionLanguage } from '@vp/validation';
 import { type CaptionAccessFailure, manageCaptions, readCaptions } from './caption-access';

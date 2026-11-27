@@ -1,3 +1,4 @@
+import { type DatabaseUnavailable, databaseUnavailable } from '@kit/errors';
 import { type Result, fromPromise, map } from '@kit/result';
 import type { VideoViewRepositoryPort } from '@vp/core/repositories';
 import * as schema from '@vp/db';
@@ -15,7 +16,6 @@ import {
   type ViewDateRange,
   type ViewHourRange,
 } from '@vp/domain';
-import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { and, asc, between, desc, eq, isNull, lt, sql } from 'drizzle-orm';
 import { firstWeekRows, recentPeerVideos } from './first-week-queries';
 import type { PostgresDatabase } from './types';

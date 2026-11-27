@@ -1,7 +1,7 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
+import type { QueueJob } from '@kit/ports';
 import type { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
-import type { QueueJob } from '@vp/core/ports';
 import type { MediaTools } from '@vp/ffmpeg';
 import type { TranscodeJob } from '@vp/job-contracts';
 import { uuidv7 } from 'uuidv7';

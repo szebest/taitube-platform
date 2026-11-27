@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { type Result, ok, unwrapOr } from '@kit/result';
 import {
   type NewUploadInput,
@@ -8,7 +9,6 @@ import {
 } from '@vp/core/repositories';
 import type { UploadStatus } from '@vp/domain';
 import { uploadSourcesInto } from '@vp/domain-rules';
-import type { DatabaseUnavailable } from '@vp/errors';
 
 export interface InMemoryUploadRepositoryOptions {
   videosRepo?: VideoRepository;

@@ -1,6 +1,6 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import type { Result } from '@kit/result';
 import { problemFor } from '@vp/api-contracts';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { sendResult } from '../../send-result';
 

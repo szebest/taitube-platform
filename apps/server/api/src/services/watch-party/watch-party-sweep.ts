@@ -1,7 +1,7 @@
+import type { CacheUnavailable, DatabaseUnavailable } from '@kit/errors';
 import { MS_PER_DAY, MS_PER_SECOND } from '@kit/primitives';
 import { isErr, ok, type Result } from '@kit/result';
 import { IDLE_CLOSE_MS, type WatchPartyCloseReason, type WatchPartyRoom } from '@vp/domain';
-import type { CacheUnavailable, DatabaseUnavailable } from '@vp/errors';
 import { dropUnavailable } from './watch-party-availability';
 import type { WatchPartyDeps } from './watch-party-deps';
 import { announce, logChange } from './watch-party-moderation-effects';

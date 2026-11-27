@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { type Result, ok } from '@kit/result';
 import {
   type AudioTerm,
@@ -7,7 +8,6 @@ import {
   type FrameFingerprint,
   type FrameFingerprintHit,
 } from '@vp/core/repositories';
-import type { DatabaseUnavailable } from '@vp/errors';
 
 /** Answers a band lookup with every stored frame, which the matcher's exact check then narrows. */
 export class FingerprintDouble extends FingerprintRepository {

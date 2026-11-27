@@ -1,3 +1,4 @@
+import { type DatabaseUnavailable, databaseUnavailable } from '@kit/errors';
 import { type Result, fromPromise, isErr, map } from '@kit/result';
 import type {
   ListSubscriptionsOptions,
@@ -6,7 +7,6 @@ import type {
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import type { SubscribedChannelItem } from '@vp/domain';
-import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { asc, desc, eq, inArray, sql } from 'drizzle-orm';
 import { toVideoRecord } from '../mappers/video.mapper';
 import {

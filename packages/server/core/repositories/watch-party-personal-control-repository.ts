@@ -1,6 +1,6 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import type { Result } from '@kit/result';
 import type { PersonalControlRecord } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 
 export interface WatchPartyPersonalControlRepositoryPort {
   /** Every everywhere control, and with a room its room-scoped ones too. */

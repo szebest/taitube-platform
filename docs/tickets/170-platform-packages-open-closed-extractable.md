@@ -8,7 +8,7 @@
 | Blocks | 48, 171 |
 | Spec | [packages/AGENTS.md](../../packages/AGENTS.md) · [ARCHITECTURE.md section 6](../../ARCHITECTURE.md#6-verification--enforcement) · [SDD ADR-23](../SDD.md#adr-23--package-runtime-tiers-the-directory-is-the-tier) · [SDD ADR-25](../SDD.md#adr-25--composition-one-container-configuration-is-a-value) · [87](87-composition-root-typed-container-config-value.md) · [85](85-universal-intl-formatting-message-core.md) · [86](86-localisation-rollout-locale-negotiation-rtl.md) · [48](48-project-rebrand-cli-unification.md) |
 
-**Status:** in-progress
+**Status:** done
 
 > **Start condition.** The two PRs in flight now (#329 for [113](113-channel-comment-moderation.md), #326 for
 > [136](136-frontend-ui-and-feel-overhaul-web-and-studio.md)) are assumed to merge first; this ticket starts only when no

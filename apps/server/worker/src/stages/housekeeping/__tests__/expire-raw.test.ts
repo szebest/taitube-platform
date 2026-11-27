@@ -1,7 +1,7 @@
+import { storageUnavailable } from '@kit/errors';
 import { err } from '@kit/result';
 import { expectOk } from '@kit/testing/result';
 import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
-import { storageUnavailable } from '@vp/errors';
 import { runExpireRaw } from '../expire-raw';
 import { DAY_MS, seedVideo } from './housekeeping-harness';
 

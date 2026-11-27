@@ -1,7 +1,7 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { ok, type Result } from '@kit/result';
 import type { WatchPartyHousekeepingRepositoryPort } from '@vp/core/repositories';
 import type { WatchPartyRoom } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { InMemoryWatchPartyStore } from './in-memory-watch-party-store';
 
 export class InMemoryWatchPartyHousekeepingRepository implements WatchPartyHousekeepingRepositoryPort {

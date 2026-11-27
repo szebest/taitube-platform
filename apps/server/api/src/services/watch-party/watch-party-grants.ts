@@ -1,11 +1,8 @@
+import { type DatabaseUnavailable } from '@kit/errors';
 import { andThenAsync, assertNever, err, isErr, map, ok, type Result } from '@kit/result';
 import type { WatchPartyInviteLink } from '@vp/domain';
 import type { JoinGrant } from '@vp/domain-rules';
-import {
-  type DatabaseUnavailable,
-  type WatchPartyInviteInvalid,
-  watchPartyInviteInvalid,
-} from '@vp/errors';
+import { type WatchPartyInviteInvalid, watchPartyInviteInvalid } from '@vp/errors';
 import type { WatchPartyDeps } from './watch-party-deps';
 
 export type Grant =

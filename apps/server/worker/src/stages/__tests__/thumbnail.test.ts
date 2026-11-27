@@ -1,9 +1,9 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import { createLogger } from '@kit/logger';
+import type { QueueJob } from '@kit/ports';
 import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
-import type { QueueJob } from '@vp/core/ports';
 import { THUMBNAIL_PROGRESS } from '@vp/domain';
 import type { ThumbnailJob } from '@vp/job-contracts';
 import { SEEDED, createMockJob } from '@vp/testing-fixtures';

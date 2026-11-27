@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { isErr, map, ok, type Result } from '@kit/result';
 import type {
   AcceptInviteOutcome,
@@ -8,7 +9,6 @@ import type {
   PendingInvitesQuery,
 } from '@vp/core/repositories';
 import { type ChannelInvite, type NewChannelAuditEntry, roleHas } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 import { teamInviteOutbox } from '@vp/job-contracts';
 import type { Clock } from './clock';
 import type { InMemoryChannelAuditRepository } from './in-memory-channel-audit-repository';

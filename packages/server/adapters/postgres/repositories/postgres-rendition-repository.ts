@@ -1,3 +1,4 @@
+import { type DatabaseUnavailable, databaseUnavailable } from '@kit/errors';
 import { type Result, err, fromPromise, map, ok } from '@kit/result';
 import {
   type NewRenditionInput,
@@ -5,7 +6,6 @@ import {
   RenditionRepository,
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
-import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { and, eq, inArray } from 'drizzle-orm';
 import { toRenditionInsert, toRenditionUpdate } from '../mappers/index';
 import type { PostgresDatabase } from './types';

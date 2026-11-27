@@ -1,3 +1,4 @@
+import { type DatabaseUnavailable } from '@kit/errors';
 import { andThen, andThenAsync, assertNever, err, map, ok, type Result } from '@kit/result';
 import type {
   addToWatchPartyQueue,
@@ -8,7 +9,6 @@ import type { QueueSnapshot, QueueWrite } from '@vp/core/repositories';
 import { movePositions, WATCH_PARTY_LIMITS, type WatchPartyRoom } from '@vp/domain';
 import { decideWatchPartyShareable, requireRoomPermission } from '@vp/domain-rules';
 import {
-  type DatabaseUnavailable,
   type WatchPartyNotFound,
   type WatchPartyQueueFull,
   type WatchPartyVideoNotShareable,

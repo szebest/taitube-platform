@@ -1,6 +1,6 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import type { Result } from '@kit/result';
 import type { PreferenceSection, Preferences, UserPreferences } from '@vp/domain/settings';
-import type { DatabaseUnavailable } from '@vp/errors';
 
 export interface SavePreferencesOptions {
   readonly userId: string;

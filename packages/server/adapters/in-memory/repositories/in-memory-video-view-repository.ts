@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { type Result, ok } from '@kit/result';
 import type { VideoRecord, VideoViewRepositoryPort } from '@vp/core/repositories';
 import {
@@ -26,7 +27,6 @@ import {
   sumViews,
   viewsByVideo,
 } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 import { firstWeekRowsOf, recentPeersOf } from './in-memory-first-week';
 import { byDate, byHour, inHours, inRange } from './in-memory-view-ranges';
 

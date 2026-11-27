@@ -1,3 +1,4 @@
+import { type CacheUnavailable, type DatabaseUnavailable } from '@kit/errors';
 import { assertNever, err, isErr, ok, type Result } from '@kit/result';
 import type { WatchPartyPreviewView } from '@vp/api-contracts';
 import {
@@ -13,13 +14,7 @@ import {
 } from '@vp/domain';
 import { decideWatchPartyJoin, type WatchPartyJoinFailure } from '@vp/domain-rules';
 import { DEFAULT_PREFERENCES } from '@vp/domain/settings';
-import {
-  type CacheUnavailable,
-  type DatabaseUnavailable,
-  ErrorCodes,
-  type WatchPartyNotFound,
-  watchPartyNotFound,
-} from '@vp/errors';
+import { ErrorCodes, type WatchPartyNotFound, watchPartyNotFound } from '@vp/errors';
 import { canReadWatchParty } from '@vp/permissions';
 import { holdsJoinWhenFull, isRoomMember, joinCapacity } from './watch-party-admission';
 import type { RoomContext } from './watch-party-context';

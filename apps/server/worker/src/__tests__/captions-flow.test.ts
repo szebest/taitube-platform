@@ -1,6 +1,6 @@
+import type { QueueJob } from '@kit/ports';
 import { err } from '@kit/result';
 import { expectOk } from '@kit/testing/result';
-import type { QueueJob } from '@vp/core/ports';
 import { ErrorCodes, mediaFailure } from '@vp/errors';
 import type { ProbeJob } from '@vp/job-contracts';
 import { captionsTmpPrefix } from '@vp/storage';

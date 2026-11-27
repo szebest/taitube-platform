@@ -1,4 +1,5 @@
-import { ErrorCodes, databaseUnavailable } from '@vp/errors';
+import { databaseUnavailable } from '@kit/errors';
+import { ErrorCodes } from '@vp/errors';
 import { problemFor } from '../problem-for';
 
 const tooLarge = {

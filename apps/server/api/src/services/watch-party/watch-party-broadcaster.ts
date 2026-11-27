@@ -1,12 +1,12 @@
+import type { CacheUnavailable } from '@kit/errors';
+import type { CacheClient } from '@kit/ports';
 import { map, type Result } from '@kit/result';
 import {
   WatchPartyPermissionSchema,
   type WatchPartyServerFrame,
   WatchPartyServerFrameSchema,
 } from '@vp/api-contracts';
-import type { CacheClient } from '@vp/core/ports';
 import type { WatchPartyPermission } from '@vp/domain';
-import type { CacheUnavailable } from '@vp/errors';
 import { watchPartyChannel } from '@vp/events';
 import { z } from 'zod';
 

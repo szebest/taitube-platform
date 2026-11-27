@@ -1,3 +1,4 @@
+import { type DatabaseUnavailable, databaseUnavailable } from '@kit/errors';
 import { fromPromise, map, type Result } from '@kit/result';
 import type { CommentSettingsRepositoryPort } from '@vp/core/repositories';
 import * as schema from '@vp/db';
@@ -6,7 +7,6 @@ import {
   DEFAULT_COMMENT_SETTINGS,
   type NewChannelAuditEntry,
 } from '@vp/domain';
-import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { eq } from 'drizzle-orm';
 import { appendChannelAudit } from './channel-audit-writes';
 import type { PostgresDatabase } from './types';

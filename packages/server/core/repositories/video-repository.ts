@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import type { Result } from '@kit/result';
 import type {
   NewChannelAuditEntry,
@@ -10,7 +11,7 @@ import type {
   VideoTransitionTarget,
   VideoVisibility,
 } from '@vp/domain';
-import type { DatabaseUnavailable, ErrorCode } from '@vp/errors';
+import type { ErrorCode } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import type { VideoEventRecord } from './event-repository';
 import type { NewOutboxInput } from './outbox-repository';

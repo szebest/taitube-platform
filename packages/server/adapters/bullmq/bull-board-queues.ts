@@ -1,6 +1,6 @@
 import type { BaseAdapter } from '@bull-board/api/baseAdapter';
 import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
-import type { JobQueue } from '@vp/core/ports';
+import type { JobQueue } from '@kit/ports';
 import { BullMqJobQueue } from './bullmq-job-queue';
 import { portBoardQueue } from './port-board-queues';
 

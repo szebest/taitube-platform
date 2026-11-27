@@ -1,3 +1,4 @@
+import { type DatabaseUnavailable, databaseUnavailable } from '@kit/errors';
 import { type Result, err, fromPromise, map, ok } from '@kit/result';
 import type { ChannelRepositoryPort } from '@vp/core/repositories';
 import { channels, videos } from '@vp/db';
@@ -10,10 +11,8 @@ import type {
 } from '@vp/domain';
 import {
   type ChannelLimitReached,
-  type DatabaseUnavailable,
   type HandleTaken,
   channelLimitReached,
-  databaseUnavailable,
   handleTaken,
 } from '@vp/errors';
 import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm';

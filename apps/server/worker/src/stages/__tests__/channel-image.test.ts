@@ -1,13 +1,13 @@
 import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { PermanentError, TransientError } from '@kit/errors';
+import { PermanentError, TransientError, storageUnavailable } from '@kit/errors';
 import { createLogger } from '@kit/logger';
 import { err } from '@kit/result';
 import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
 import type { ChannelImageKind } from '@vp/domain';
-import { ErrorCodes, RETRY_CLASS, storageUnavailable } from '@vp/errors';
+import { ErrorCodes, RETRY_CLASS } from '@vp/errors';
 import { type ChannelImageProbe, type MediaTools, planChannelImageVariants } from '@vp/ffmpeg';
 import { channelImageUploadKey, channelImageVariantKey } from '@vp/storage';
 import { uuidv7 } from 'uuidv7';

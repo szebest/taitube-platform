@@ -1,14 +1,11 @@
 import type { BaseAdapter } from '@bull-board/api/baseAdapter';
 import { token } from '@kit/di';
+import type { CacheClient, DatabaseClient, FlowProducerPort, JobQueue } from '@kit/ports';
 import type {
   AuthorizationPort,
-  CacheClient,
   CategoryCachePort,
   CommentCachePort,
-  DatabaseClient,
-  FlowProducerPort,
   FrameClassifier,
-  JobQueue,
   CommentSlowModePort,
   LiveChatGatePort,
   LiveGatewayPort,

@@ -1,8 +1,8 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import type { Logger } from '@kit/logger';
 import { type Result, isErr, ok } from '@kit/result';
 import type { Repositories } from '@vp/core/repositories';
 import type { CaptionsConfig } from '@vp/env-schema';
-import type { DatabaseUnavailable } from '@vp/errors';
 import { captionsFlow } from '@vp/job-contracts';
 import type { PipelineMetrics } from '@vp/pipeline-metrics';
 

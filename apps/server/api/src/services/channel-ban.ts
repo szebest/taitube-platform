@@ -1,7 +1,7 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { type Result, err, isErr, ok } from '@kit/result';
 import type { ChannelUserRestrictionRepositoryPort } from '@vp/core/repositories';
 import { type CommentsBanned, commentsBanned } from '@vp/domain-rules';
-import type { DatabaseUnavailable } from '@vp/errors';
 
 export interface ChannelBanLookups {
   restrictions: Pick<ChannelUserRestrictionRepositoryPort, 'findActive'>;

@@ -1,3 +1,4 @@
+import { type CacheUnavailable, type DatabaseUnavailable } from '@kit/errors';
 import { MS_PER_SECOND } from '@kit/primitives';
 import { all, err, isErr, map, ok, type Result } from '@kit/result';
 import type {
@@ -9,8 +10,6 @@ import type {
 import { memberKeyOf, type RosterEntry, type RosterPreview } from '@vp/domain';
 import { type AuthorizationFailure, authorize } from '@vp/domain-rules';
 import {
-  type CacheUnavailable,
-  type DatabaseUnavailable,
   type WatchPartyBanned,
   type WatchPartyClosed,
   type WatchPartyNotFound,

@@ -1,3 +1,4 @@
+import { type DatabaseUnavailable } from '@kit/errors';
 import type { InvalidCursor, Paginator } from '@kit/pagination';
 import { type Result, err, isErr, map } from '@kit/result';
 import type {
@@ -23,7 +24,7 @@ import {
   decideVideoTakedown,
 } from '@vp/domain-rules';
 import type { CdnBase } from '@vp/env-schema';
-import { type DatabaseUnavailable, type VersionConflict, versionConflict } from '@vp/errors';
+import { type VersionConflict, versionConflict } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { creatorLibraryCursorPayload, decodeCreatorLibraryCursor } from './cursor';
 import type { MetadataScreening } from './metadata-screening';

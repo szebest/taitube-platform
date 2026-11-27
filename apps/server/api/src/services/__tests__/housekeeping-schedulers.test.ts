@@ -1,8 +1,9 @@
+import { type QueueUnavailable, queueUnavailable } from '@kit/errors';
+import type { JobSchedulerTemplate, UpsertJobSchedulerOptions } from '@kit/ports';
 import { type Result, err } from '@kit/result';
 import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryJobQueue } from '@vp/adapters/in-memory';
-import type { JobSchedulerTemplate, UpsertJobSchedulerOptions } from '@vp/core/ports';
-import { ErrorCodes, type QueueUnavailable, queueUnavailable } from '@vp/errors';
+import { ErrorCodes } from '@vp/errors';
 import { registerHousekeepingSchedulers } from '../housekeeping-schedulers';
 
 class UnreachableQueue extends InMemoryJobQueue {

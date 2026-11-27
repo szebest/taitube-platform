@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { andThenAsync, err, isErr, isOk, map, ok, type Result } from '@kit/result';
 import type {
   CreatePickBody,
@@ -24,7 +25,6 @@ import {
   type UpdatePickFailure,
 } from '@vp/domain-rules';
 import type { CdnBase } from '@vp/env-schema';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { uuidv7 } from 'uuidv7';
 import type { CurrentPickCache } from './current-pick-cache';

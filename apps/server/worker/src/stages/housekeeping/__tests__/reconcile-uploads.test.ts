@@ -1,3 +1,4 @@
+import { queueUnavailable } from '@kit/errors';
 import { err } from '@kit/result';
 import { expectOk } from '@kit/testing/result';
 import {
@@ -6,7 +7,6 @@ import {
   InMemoryRepositories,
   InMemoryStorageClient,
 } from '@vp/adapters/in-memory';
-import { queueUnavailable } from '@vp/errors';
 import { ids } from '@vp/job-contracts';
 import { type PipelineMetrics, createPipelineMetrics } from '@vp/pipeline-metrics';
 import { uuidv7 } from 'uuidv7';

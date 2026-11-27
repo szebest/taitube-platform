@@ -1,5 +1,5 @@
 import { PermanentError, TransientError } from '@kit/errors';
-import type { QueueJob } from '@vp/core/ports';
+import type { QueueJob } from '@kit/ports';
 import { ErrorCodes } from '@vp/errors';
 import { UnrecoverableError } from 'bullmq';
 import { bullMqProcessor } from '../bullmq-processor';

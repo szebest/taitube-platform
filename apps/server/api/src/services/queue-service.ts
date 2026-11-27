@@ -1,12 +1,12 @@
+import type { QueueUnavailable } from '@kit/errors';
+import type { JobQueue, QueueJobCounts } from '@kit/ports';
 import { type Result, all, err, isErr, map, ok } from '@kit/result';
-import type { JobQueue, QueueJobCounts } from '@vp/core/ports';
 import {
   type AuthorizationFailure,
   type ReplayQueueUnknown,
   decideAdminAccess,
   replayQueueUnknown,
 } from '@vp/domain-rules';
-import type { QueueUnavailable } from '@vp/errors';
 import { QUEUES } from '@vp/job-contracts';
 import type { UserContext } from '@vp/permissions';
 

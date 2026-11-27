@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { ok, type Result } from '@kit/result';
 import {
   EntityRevisionRepository,
@@ -5,7 +6,6 @@ import {
   type NewEntityRevision,
 } from '@vp/core/repositories';
 import type { EntityRevision, EntityRevisionType } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 import { uuidv7 } from 'uuidv7';
 import { type Clock, realClock } from './clock';
 

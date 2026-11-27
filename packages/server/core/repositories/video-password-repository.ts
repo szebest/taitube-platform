@@ -1,5 +1,5 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import type { Result } from '@kit/result';
-import type { DatabaseUnavailable } from '@vp/errors';
 
 /**
  * The only reader of `videos.access_password_hash`: every other read of a video sees

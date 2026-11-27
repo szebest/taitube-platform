@@ -1,18 +1,18 @@
-import { type Result, err } from '@kit/result';
-import { expectErr, expectOk } from '@kit/testing/result';
-import { InMemoryCacheClient, InMemoryJobQueue } from '@vp/adapters/in-memory';
+import {
+  type CacheUnavailable,
+  type QueueUnavailable,
+  cacheUnavailable,
+  queueUnavailable,
+} from '@kit/errors';
 import type {
   JobSchedulerTemplate,
   PatternMessageListener,
   UpsertJobSchedulerOptions,
-} from '@vp/core/ports';
-import {
-  type CacheUnavailable,
-  ErrorCodes,
-  type QueueUnavailable,
-  cacheUnavailable,
-  queueUnavailable,
-} from '@vp/errors';
+} from '@kit/ports';
+import { type Result, err } from '@kit/result';
+import { expectErr, expectOk } from '@kit/testing/result';
+import { InMemoryCacheClient, InMemoryJobQueue } from '@vp/adapters/in-memory';
+import { ErrorCodes } from '@vp/errors';
 import { buildTestApp, inMemoryQueues } from './test-app';
 
 class UnsubscribableCache extends InMemoryCacheClient {

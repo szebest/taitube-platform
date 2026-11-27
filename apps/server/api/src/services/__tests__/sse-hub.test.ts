@@ -1,11 +1,12 @@
 import type { ServerResponse } from 'node:http';
 import { PassThrough, Writable } from 'node:stream';
+import { type CacheUnavailable, cacheUnavailable } from '@kit/errors';
 import { createLogger } from '@kit/logger';
+import type { PatternMessageListener } from '@kit/ports';
 import { type Result, err } from '@kit/result';
 import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryCacheClient } from '@vp/adapters/in-memory';
-import type { PatternMessageListener } from '@vp/core/ports';
-import { type CacheUnavailable, ErrorCodes, cacheUnavailable } from '@vp/errors';
+import { ErrorCodes } from '@vp/errors';
 import { userChannel, videoChannel } from '@vp/events';
 import { createPipelineMetrics } from '@vp/pipeline-metrics';
 import { SseHub, type SseHubOptions } from '../sse-hub';

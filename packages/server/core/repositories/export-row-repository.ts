@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import type { Result } from '@kit/result';
 import type {
   ChannelAnalyticsExportRow,
@@ -7,7 +8,6 @@ import type {
   VideoAnalyticsExportRow,
   VideoExportRow,
 } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 
 /** The channel an export reads, by its id and its owner's user id, and the days it is narrowed to. */
 export interface ExportScope {

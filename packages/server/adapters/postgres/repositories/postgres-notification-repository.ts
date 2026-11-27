@@ -1,3 +1,4 @@
+import { type DatabaseUnavailable, databaseUnavailable } from '@kit/errors';
 import { MS_PER_DAY } from '@kit/primitives';
 import { fromPromise, map, ok, type Result } from '@kit/result';
 import type {
@@ -18,7 +19,6 @@ import {
   notificationRead,
   toNotificationView,
 } from '@vp/domain';
-import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { and, desc, eq, gt, inArray, isNull, lt, sql } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
 import { drizzleWhere, keysetBefore, msTimestamp } from '../scopes/index';

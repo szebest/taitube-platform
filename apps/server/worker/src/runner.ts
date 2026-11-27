@@ -1,14 +1,9 @@
 import { Container, DisposeFailed, type StartupFailed } from '@kit/composition';
 import type { LogContext, Logger } from '@kit/logger';
+import type { CacheClient, FlowProducerPort, JobQueue } from '@kit/ports';
 import { type Result, isErr, ok } from '@kit/result';
 import { Adapters, registerAdapters } from '@vp/adapters/composition';
-import type {
-  CacheClient,
-  FlowProducerPort,
-  JobQueue,
-  MultipartStorage,
-  StorageClient,
-} from '@vp/core/ports';
+import type { MultipartStorage, StorageClient } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import type { AppConfig } from '@vp/env-schema';
 import type { MediaTools } from '@vp/ffmpeg';

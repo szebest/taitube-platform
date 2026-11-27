@@ -1,3 +1,4 @@
+import { databaseUnavailable } from '@kit/errors';
 import { err, ok } from '@kit/result';
 import { expectOk } from '@kit/testing/result';
 import { DevTokenVerifier } from '@vp/adapters/auth';
@@ -6,7 +7,6 @@ import { CHANNEL_HEADER } from '@vp/api-contracts';
 import { getDevJwks, mintToken } from '@vp/dev-identity';
 import { apiTokenRefused } from '@vp/domain-rules';
 import { type AuthConfig, inProcessAppConfig } from '@vp/env-schema';
-import { databaseUnavailable } from '@vp/errors';
 import fastify, { type FastifyInstance } from 'fastify';
 import { seedTeamMember } from '../../__tests__/test-app';
 import { channelServiceDeps } from '../../services/__tests__/service-deps';

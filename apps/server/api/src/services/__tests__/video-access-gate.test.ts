@@ -1,8 +1,9 @@
+import { databaseUnavailable } from '@kit/errors';
 import { err } from '@kit/result';
 import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { Video } from '@vp/domain';
-import { ErrorCodes, databaseUnavailable } from '@vp/errors';
+import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { seedPrimaryChannel } from '../../__tests__/test-app';
 import { NO_VIDEO_ACCESS, type VideoAccess, VideoAccessGate } from '../video-access-gate';

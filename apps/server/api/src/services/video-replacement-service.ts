@@ -1,4 +1,5 @@
 import * as path from 'node:path';
+import type { StorageUnavailable } from '@kit/errors';
 import { MS_PER_SECOND } from '@kit/primitives';
 import { type Result, err, isErr, ok } from '@kit/result';
 import type { StorageClient } from '@vp/core/ports';
@@ -12,7 +13,6 @@ import {
   generationInProgress,
   replacementNotUploaded,
 } from '@vp/domain-rules';
-import type { StorageUnavailable } from '@vp/errors';
 import { applyEditsOutbox } from '@vp/job-contracts';
 import type { UserContext } from '@vp/permissions';
 import { replacementSourceKey } from '@vp/storage';

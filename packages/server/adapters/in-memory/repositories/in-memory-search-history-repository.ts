@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { ok, type Result } from '@kit/result';
 import type { ListSearchHistoryOptions, SearchHistoryRepositoryPort } from '@vp/core/repositories';
 import {
@@ -5,7 +6,6 @@ import {
   SEARCH_HISTORY_LIMIT,
   type SearchHistoryEntry,
 } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 import { byKeysetDesc, isKeysetBefore } from './keyset';
 
 const keysetOf = ({ searchedAt, id }: SearchHistoryEntry) => ({ sort: searchedAt, tie: id });

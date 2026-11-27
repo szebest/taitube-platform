@@ -1,7 +1,8 @@
+import type { CacheUnavailable } from '@kit/errors';
+import type { CacheClient } from '@kit/ports';
 import { type Result, isOk, map, parseJson } from '@kit/result';
-import type { CacheClient, PlayheadCachePort } from '@vp/core/ports';
+import type { PlayheadCachePort } from '@vp/core/ports';
 import type { BufferedPlayhead } from '@vp/domain';
-import type { CacheUnavailable } from '@vp/errors';
 import { CacheKeys } from '@vp/events';
 import { z } from 'zod';
 

@@ -1,3 +1,4 @@
+import { type DatabaseUnavailable, databaseUnavailable } from '@kit/errors';
 import { err, fromPromise, map, ok, type Result } from '@kit/result';
 import type {
   NewWatchPartyRole,
@@ -13,12 +14,7 @@ import {
   type WatchPartyPermission,
   type WatchPartyRoleRecord,
 } from '@vp/domain';
-import {
-  type DatabaseUnavailable,
-  databaseUnavailable,
-  ErrorCodes,
-  versionConflict,
-} from '@vp/errors';
+import { ErrorCodes, versionConflict } from '@vp/errors';
 import { and, desc, eq, gt, inArray, isNull, lte, or, sql } from 'drizzle-orm';
 import { isUniqueViolation } from '../pg-errors';
 import type { PostgresDatabase } from './types';

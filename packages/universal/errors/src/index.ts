@@ -3,7 +3,6 @@ export * from './pipeline-error-codes';
 export * from './error-codes';
 export * from './error-code-registry';
 export * from './pipeline-failures';
-export * from './infra-failures';
 export * from './conflict-failures';
 export * from './retry-class';
 export * from './webhook-failures';

@@ -1,7 +1,8 @@
+import { cacheUnavailable } from '@kit/errors';
 import { err } from '@kit/result';
 import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories, InMemoryViewBuffer } from '@vp/adapters/in-memory';
-import { ErrorCodes, cacheUnavailable } from '@vp/errors';
+import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { seedPrimaryChannel } from '../../__tests__/test-app';
 import { ExperimentOverlay } from '../experiment-overlay';

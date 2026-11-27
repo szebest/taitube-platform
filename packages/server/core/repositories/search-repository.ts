@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import type { Result } from '@kit/result';
 import type {
   Channel,
@@ -8,7 +9,6 @@ import type {
   SearchResultKind,
   SearchSort,
 } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { VideoRecord } from './video-repository';
 
 export interface SearchQuery {

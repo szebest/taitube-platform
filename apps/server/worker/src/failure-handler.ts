@@ -1,7 +1,7 @@
 import { attemptsFor, classifyError, errorCodeOf } from '@kit/errors';
 import type { Logger } from '@kit/logger';
+import type { JobQueue, QueueJob } from '@kit/ports';
 import { isErr, unwrapOr } from '@kit/result';
-import type { JobQueue, QueueJob } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import { errorCodeRegistry, isErrorCode } from '@vp/errors';
 import {

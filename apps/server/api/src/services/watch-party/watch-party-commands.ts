@@ -1,3 +1,4 @@
+import { type CacheUnavailable, type DatabaseUnavailable } from '@kit/errors';
 import { assertNever, err, isErr, ok, type Result } from '@kit/result';
 import type { WatchPartyClientFrame, WatchPartyServerFrame } from '@vp/api-contracts';
 import type { RoomWrite } from '@vp/core/repositories';
@@ -10,8 +11,6 @@ import {
 } from '@vp/domain';
 import { requireRoomPermission } from '@vp/domain-rules';
 import {
-  type CacheUnavailable,
-  type DatabaseUnavailable,
   type WatchPartyClosed,
   type WatchPartyNotFound,
   type WatchPartyPermissionMissing,

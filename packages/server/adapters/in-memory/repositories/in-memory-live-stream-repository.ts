@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { err, isErr, ok, type Result } from '@kit/result';
 import type {
   EndLiveInput,
@@ -16,7 +17,6 @@ import {
   liveStreamCarryOver,
   videoStatusChanged,
 } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { InMemoryVideoRepository } from './in-memory-video-repository';
 
 interface InMemoryLiveStreamRepositoryDeps {

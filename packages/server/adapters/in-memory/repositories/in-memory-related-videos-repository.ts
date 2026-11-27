@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { type Result, ok } from '@kit/result';
 import type {
   RelatedVideo,
@@ -6,7 +7,6 @@ import type {
   VideoRecord,
 } from '@vp/core/repositories';
 import { compareRelated, isPublicFeedEligible } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 
 export interface RelatedVideosLookups {
   videosRepo: { getAllVideos(): VideoRecord[] };

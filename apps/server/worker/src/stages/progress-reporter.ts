@@ -1,6 +1,6 @@
 import type { Logger } from '@kit/logger';
+import type { CacheClient } from '@kit/ports';
 import { ignore, isOk, map, unwrapOr } from '@kit/result';
-import type { CacheClient } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import type { UserEvent } from '@vp/domain';
 import { publishVideoEvent, userChannel } from '@vp/events';

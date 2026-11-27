@@ -1,6 +1,6 @@
 import type { AnyFailure } from '@kit/errors';
+import type { QueueJob } from '@kit/ports';
 import { type Result, assertNever } from '@kit/result';
-import type { QueueJob } from '@vp/core/ports';
 import type { ChannelImageJob, ThumbnailQueueJob } from '@vp/job-contracts';
 
 type VideoThumbnailJob = Extract<ThumbnailQueueJob, { type: 'video-thumbnail' }>;

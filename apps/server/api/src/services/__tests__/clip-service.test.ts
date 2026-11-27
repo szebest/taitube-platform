@@ -1,8 +1,9 @@
+import { databaseUnavailable } from '@kit/errors';
 import { Paginator } from '@kit/pagination';
 import { err } from '@kit/result';
 import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
-import { databaseUnavailable, ErrorCodes } from '@vp/errors';
+import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { seedVideo } from '../../__tests__/test-app';
 import { ClipService } from '../clip-service';

@@ -1,8 +1,8 @@
+import type { CacheUnavailable } from '@kit/errors';
+import type { CacheClient } from '@kit/ports';
 import { ignore, map, type Result } from '@kit/result';
 import { type LiveChatBroadcast, LiveChatBroadcastSchema } from '@vp/api-contracts';
-import type { CacheClient } from '@vp/core/ports';
 import type { LiveStream } from '@vp/domain';
-import type { CacheUnavailable } from '@vp/errors';
 import { LIVE_CHAT_WILDCARD_CHANNEL, liveChatChannel, liveStreamIdOfChat } from '@vp/events';
 import { liveChatMode } from './live-views';
 import { PatternHub, type PatternHubOptions } from './pattern-hub';

@@ -1,8 +1,8 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { type Result, err, isErr, map, ok } from '@kit/result';
 import type { CommentRepositoryPort, CommentViewer, VideoRepository } from '@vp/core/repositories';
 import type { Comment, Video } from '@vp/domain';
 import { decideVideoRead, publicReadFailure } from '@vp/domain-rules';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 
 export interface CommentLookupDeps {

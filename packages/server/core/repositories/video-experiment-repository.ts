@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import type { Result } from '@kit/result';
 import type {
   Experiment,
@@ -5,7 +6,6 @@ import type {
   ExperimentVariantId,
   ExperimentVariantStats,
 } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 
 export type ExperimentCreated = 'created' | 'video-busy' | 'channel-full';
 

@@ -688,6 +688,9 @@ importers:
       '@kit/pagination':
         specifier: workspace:*
         version: link:../../../packages/platform/universal/pagination
+      '@kit/ports':
+        specifier: workspace:*
+        version: link:../../../packages/platform/server/ports
       '@kit/primitives':
         specifier: workspace:*
         version: link:../../../packages/platform/universal/primitives
@@ -851,6 +854,9 @@ importers:
       '@kit/observability':
         specifier: workspace:*
         version: link:../../../packages/platform/server/observability
+      '@kit/ports':
+        specifier: workspace:*
+        version: link:../../../packages/platform/server/ports
       '@kit/primitives':
         specifier: workspace:*
         version: link:../../../packages/platform/universal/primitives
@@ -2730,6 +2736,9 @@ importers:
       '@kit/object-storage':
         specifier: workspace:*
         version: link:../../platform/server/object-storage
+      '@kit/ports':
+        specifier: workspace:*
+        version: link:../../platform/server/ports
       '@kit/primitives':
         specifier: workspace:*
         version: link:../../platform/universal/primitives
@@ -2800,9 +2809,6 @@ importers:
       '@electric-sql/pglite':
         specifier: ^0.5.8
         version: 0.5.8
-      '@kit/ports':
-        specifier: workspace:*
-        version: link:../../platform/server/ports
       '@kit/testing':
         specifier: workspace:*
         version: link:../../platform/server/testing
@@ -3073,15 +3079,15 @@ importers:
 
   packages/server/events:
     dependencies:
+      '@kit/errors':
+        specifier: workspace:*
+        version: link:../../platform/universal/errors
       '@kit/keyspace':
         specifier: workspace:*
         version: link:../../platform/server/keyspace
       '@kit/result':
         specifier: workspace:*
         version: link:../../platform/universal/result
-      '@vp/errors':
-        specifier: workspace:*
-        version: link:../../universal/errors
       zod:
         specifier: ^4.6.5
         version: 4.6.5

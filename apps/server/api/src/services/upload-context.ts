@@ -1,5 +1,7 @@
+import type { DatabaseUnavailable } from '@kit/errors';
+import type { JobQueue } from '@kit/ports';
 import { type Result, err, isErr, map, ok } from '@kit/result';
-import type { JobQueue, MultipartStorage, StorageClient } from '@vp/core/ports';
+import type { MultipartStorage, StorageClient } from '@vp/core/ports';
 import type {
   EventRepository,
   UploadRecord,
@@ -14,7 +16,6 @@ import {
   decideUploadAccess,
   uploadNotOpen,
 } from '@vp/domain-rules';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 
 export interface UploadContext {

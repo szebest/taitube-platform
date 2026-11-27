@@ -1,3 +1,4 @@
+import { type CacheUnavailable, cacheUnavailable } from '@kit/errors';
 import { type Result, andThen, andThenAsync, err, fromPromise, map, ok } from '@kit/result';
 import type {
   ExperimentEvent,
@@ -10,7 +11,6 @@ import type {
   ViewRecordOutcome,
 } from '@vp/core/ports';
 import { RETENTION_STEP_PERCENT, type ViewBatch } from '@vp/domain';
-import { type CacheUnavailable, cacheUnavailable } from '@vp/errors';
 import { CacheKeys } from '@vp/events';
 import type { Redis } from 'ioredis';
 import {

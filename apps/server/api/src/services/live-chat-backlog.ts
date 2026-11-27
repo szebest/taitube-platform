@@ -1,5 +1,5 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { isErr, map, type Result } from '@kit/result';
-import type { DatabaseUnavailable } from '@vp/errors';
 
 type ChatResume = 'fresh' | 'replayed' | 'expired';
 

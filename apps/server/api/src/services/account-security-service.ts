@@ -1,9 +1,9 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import type { InvalidCursor, Paginator } from '@kit/pagination';
 import { type Result, isErr, map } from '@kit/result';
 import type { SignInPageView, SignInView } from '@vp/api-contracts';
 import type { AccountAuditRepositoryPort } from '@vp/core/repositories';
 import { type AccountAuditEntry, accountAuditMeta } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { createdAtCursorPayload, decodeCreatedAtCursor } from './cursor';
 

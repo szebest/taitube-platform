@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import type { Result } from '@kit/result';
 import type {
   ChannelMembership,
@@ -5,7 +6,6 @@ import type {
   MemberChannel,
   NewChannelAuditEntry,
 } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 
 export interface ChannelRoleChange {
   channelId: string;

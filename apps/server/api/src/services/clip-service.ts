@@ -1,3 +1,4 @@
+import { type DatabaseUnavailable } from '@kit/errors';
 import type { InvalidCursor, Paginator } from '@kit/pagination';
 import { andThen, andThenAsync, err, isErr, map, type Result } from '@kit/result';
 import type { ClipPageView, ClipView, CreateClipBody } from '@vp/api-contracts';
@@ -20,7 +21,7 @@ import {
   videoNotFound,
 } from '@vp/domain-rules';
 import type { CdnBase } from '@vp/env-schema';
-import { type DatabaseUnavailable, ErrorCodes } from '@vp/errors';
+import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { uuidv7 } from 'uuidv7';
 import { createdAtCursorPayload, decodeCreatedAtCursor } from './cursor';

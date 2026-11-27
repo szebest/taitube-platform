@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { ok, type Result } from '@kit/result';
 import type {
   NewWatchPartyRole,
@@ -13,7 +14,6 @@ import {
   type WatchPartyPermission,
   type WatchPartyRoleRecord,
 } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 import { assignmentKey, type InMemoryWatchPartyStore } from './in-memory-watch-party-store';
 
 const CONFLICT = { type: 'conflict' } as const;

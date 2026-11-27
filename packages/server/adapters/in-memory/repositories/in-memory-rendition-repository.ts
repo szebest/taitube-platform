@@ -1,10 +1,10 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { type Result, ok } from '@kit/result';
 import {
   type NewRenditionInput,
   type RenditionRecord,
   RenditionRepository,
 } from '@vp/core/repositories';
-import type { DatabaseUnavailable } from '@vp/errors';
 import { uuidv7 } from 'uuidv7';
 
 export class InMemoryRenditionRepository extends RenditionRepository {

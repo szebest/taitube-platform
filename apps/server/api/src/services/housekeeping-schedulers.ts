@@ -1,6 +1,6 @@
+import type { QueueUnavailable } from '@kit/errors';
+import type { JobQueue, UpsertJobSchedulerOptions } from '@kit/ports';
 import { type Result, isErr, ok } from '@kit/result';
-import type { JobQueue, UpsertJobSchedulerOptions } from '@vp/core/ports';
-import type { QueueUnavailable } from '@vp/errors';
 import type { HousekeepingJob } from '@vp/job-contracts';
 
 type HousekeepingTask = HousekeepingJob['task'];

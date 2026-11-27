@@ -1,9 +1,9 @@
+import { queueUnavailable } from '@kit/errors';
 import { LogContext, createLogger } from '@kit/logger';
 import { err } from '@kit/result';
 import { expectOk } from '@kit/testing/result';
 import { InMemoryJobQueue, InMemoryRepositories } from '@vp/adapters/in-memory';
 import { inProcessAppConfig } from '@vp/env-schema';
-import { queueUnavailable } from '@vp/errors';
 import { mediaTools } from '@vp/ffmpeg';
 import { fingerprintTools } from '@vp/fingerprint';
 import { speechTools } from '@vp/whisper';

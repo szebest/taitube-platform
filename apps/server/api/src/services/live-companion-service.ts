@@ -1,10 +1,12 @@
+import type { DatabaseUnavailable } from '@kit/errors';
+import type { CacheClient } from '@kit/ports';
 import { assertNever, err, isErr, map, ok, parseJson, type Result } from '@kit/result';
 import {
   type LiveCompanionCommand,
   LiveCompanionCommandSchema,
   type LiveCompanionFrame,
 } from '@vp/api-contracts';
-import type { CacheClient, LiveGatewayPort } from '@vp/core/ports';
+import type { LiveGatewayPort } from '@vp/core/ports';
 import type { LiveStreamRepositoryPort } from '@vp/core/repositories';
 import { type LiveStream, liveChatOffsetMs } from '@vp/domain';
 import {
@@ -13,7 +15,7 @@ import {
   liveStreamNotFound,
   liveStreamNotLive,
 } from '@vp/domain-rules';
-import type { DatabaseUnavailable, LiveGatewayUnavailable } from '@vp/errors';
+import type { LiveGatewayUnavailable } from '@vp/errors';
 import { type InvalidField, invalidField } from '@vp/validation';
 import { haltBroadcast } from './creator-live-service';
 import { announceChatMode } from './live-chat-hub';

@@ -1,7 +1,7 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { ok, type Result } from '@kit/result';
 import type { ChannelAuditQuery, ChannelAuditRepositoryPort } from '@vp/core/repositories';
 import type { ChannelAuditEntry, NewChannelAuditEntry } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 import { uuidv7 } from 'uuidv7';
 import { byKeysetDesc, isKeysetBefore } from './keyset';
 

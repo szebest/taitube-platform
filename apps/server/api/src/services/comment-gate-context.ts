@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { isErr, ok, type Result } from '@kit/result';
 import type {
   ChannelUserRestrictionRepositoryPort,
@@ -8,7 +9,6 @@ import type {
 } from '@vp/core/repositories';
 import type { CommentSettings, Video } from '@vp/domain';
 import type { CommentGateContext } from '@vp/domain-rules';
-import type { DatabaseUnavailable } from '@vp/errors';
 import { isChannelTeamMember, type UserContext } from '@vp/permissions';
 
 /** An account with no row is as old as can be, so the age check never refuses it. */

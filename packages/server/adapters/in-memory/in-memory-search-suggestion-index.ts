@@ -1,8 +1,8 @@
+import type { CacheUnavailable } from '@kit/errors';
 import { MS_PER_SECOND } from '@kit/primitives';
 import { type Result, ok } from '@kit/result';
 import type { SearchSuggestionIndexPort } from '@vp/core/ports';
 import { SEARCH_SUGGESTIONS, searchSuggestionPrefixes } from '@vp/domain';
-import type { CacheUnavailable } from '@vp/errors';
 
 type Count = [text: string, searches: number];
 

@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import type { Result } from '@kit/result';
 import type {
   DataExport,
@@ -6,7 +7,6 @@ import type {
   NewChannelAuditEntry,
   NewDataExport,
 } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 
 export type CreateExportOutcome =
   | { type: 'created'; dataExport: DataExport }

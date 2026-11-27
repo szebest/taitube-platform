@@ -1,20 +1,19 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
-import { isInputFailure } from '@kit/errors';
+import { isInputFailure, type DatabaseUnavailable, type StorageUnavailable } from '@kit/errors';
 import type { Logger } from '@kit/logger';
 import { getHeaderMapping } from '@kit/object-storage';
+import type { QueueJob } from '@kit/ports';
 import { type Result, err, fromPromise, isErr, ok } from '@kit/result';
-import type { QueueJob, StorageClient } from '@vp/core/ports';
+import type { StorageClient } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import type { ChannelImageUpload, ImageCrops } from '@vp/domain';
 import { decideImageCrops, type DecideImageCropsFailure } from '@vp/domain-rules';
 import type { CdnBase } from '@vp/env-schema';
 import {
-  type DatabaseUnavailable,
   ErrorCodes,
   type MediaFailure,
   RETRY_CLASS,
-  type StorageUnavailable,
   mediaFailure,
   mediaFailureFrom,
 } from '@vp/errors';

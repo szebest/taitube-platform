@@ -1,6 +1,6 @@
+import type { QueueJob } from '@kit/ports';
 import { expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
-import type { QueueJob } from '@vp/core/ports';
 import type { NewCommentModeration } from '@vp/domain';
 import type { NotifyHeartJob } from '@vp/job-contracts';
 import { createNotifyHeartProcessor } from '../notify-heart';

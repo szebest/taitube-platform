@@ -1,6 +1,7 @@
+import { cacheUnavailable } from '@kit/errors';
 import { MS_PER_HOUR } from '@kit/primitives';
 import { err } from '@kit/result';
-import { ErrorCodes, cacheUnavailable } from '@vp/errors';
+import { ErrorCodes } from '@vp/errors';
 import {
   ABSENT,
   type LibraryApp,

@@ -1,6 +1,6 @@
+import type { CacheUnavailable } from '@kit/errors';
 import type { Result } from '@kit/result';
 import type { PartyPrincipal } from '@vp/domain';
-import type { CacheUnavailable } from '@vp/errors';
 
 /** A guest's or a Discord member's party credential: no account, so no app session. */
 export interface PartyGuestSession {

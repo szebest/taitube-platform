@@ -1,3 +1,4 @@
+import { type DatabaseUnavailable, databaseUnavailable } from '@kit/errors';
 import { type Result, fromPromise, isErr, map } from '@kit/result';
 import type {
   ListRecommendationFeedbackOptions,
@@ -12,7 +13,6 @@ import {
   type RecommendationFeedback,
   type RecommendationFeedbackEntry,
 } from '@vp/domain';
-import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { and, desc, eq, sql } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';

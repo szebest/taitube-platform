@@ -1,5 +1,5 @@
+import type { JobQueue, QueueJobOptions } from '@kit/ports';
 import { ignore } from '@kit/result';
-import type { JobQueue, QueueJobOptions } from '@vp/core/ports';
 import type { NewOutboxInput, VideoRecord } from '@vp/core/repositories';
 import {
   LadderEntry,
