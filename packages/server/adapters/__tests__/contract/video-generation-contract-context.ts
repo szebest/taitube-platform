@@ -67,6 +67,9 @@ export function videoGenerationContractContext(
         durationMs: 240_000,
         masterPlaylistKey: `videos/${VIDEO}/hls/master.m3u8`,
         ladder: [{ name: '720p' }],
+        viewsCount: 1_234,
+        likesCount: 56,
+        commentsCount: 7,
       })
     );
     expectOk(

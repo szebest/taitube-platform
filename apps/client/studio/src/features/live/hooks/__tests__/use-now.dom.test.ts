@@ -12,8 +12,8 @@ describe('apps/client/studio: useNow', () => {
     vi.useRealTimers();
   });
 
-  it('reads the clock at once and again every interval', () => {
-    const { result } = renderHook(() => useNow(true, 1000));
+  it('reads the clock at once and again every second', () => {
+    const { result } = renderHook(() => useNow(true));
 
     expect(result.current).toBe(START);
     act(() => {

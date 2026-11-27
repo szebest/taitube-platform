@@ -33,6 +33,7 @@ secrets:
     - GRAFANA_OTLP_ENDPOINT
     - GRAFANA_OTLP_HEADERS
     - CLOUDFLARE_TUNNEL_TOKEN
+    - VIDEO_ACCESS_SECRET
 health:
   readyzTimeoutSec: 300
   smoke: false
