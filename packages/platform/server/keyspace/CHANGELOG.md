@@ -2,7 +2,7 @@
 
 ## 0.3.0
 
-- `./contract` exports `describeKeyspaceContract`, `KeyLayout` and `MakeKeyspace`; vitest is an optional peer.
+- `./contract` exports `describeKeyspaceContract`, `KeyLayout` and `MakeKeyspace`; vitest is a peer.
 
 ## 0.2.0
 

@@ -28,9 +28,10 @@ testing, the ports contract), `messages` (i18n, intl), `react-ui` and `react-int
 intl-react), `web-runtime` (query, security-headers, web-telemetry, web-testing) and `tooling` (tsconfig,
 vite-preset). `tsconfig.json` extends `@kit/tsconfig/client.json`.
 
-`@kit/vite-preset` is consumed through its `./bundle-guard` subpath: its root entry resolves the workspace
-`packages/` directory when it loads, which an app outside a workspace does not have, and `./react-plugins`
-imports `@rolldown/plugin-babel`, which its manifest does not declare.
+`@kit/vite-preset` is consumed through its root entry, `./bundle-guard` and `./react-plugins`. The root entry takes
+the workspace `packagesDir` as an argument, so an app outside a workspace passes a directory with none of the
+tiers and nothing aliases. `./react-plugins` declares `@rolldown/plugin-babel`, `@babel/core` and
+`babel-plugin-react-compiler` as optional peers, and the app installs them.
 
 ## How the check runs it
 

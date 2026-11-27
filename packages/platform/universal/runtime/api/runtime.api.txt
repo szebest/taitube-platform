@@ -28,5 +28,25 @@ export interface BrowserRuntimeOptions {
 }
 export function browserRuntime({ env, cookies }: BrowserRuntimeOptions): AnyProvider[]
 
+## @kit/runtime/contract
+export interface FetchSubject {
+    readonly fetch: Fetch;
+    serve(body: string, status?: number): void;
+    requests(): readonly {
+        input: RequestInfo | URL;
+        init: RequestInit | undefined;
+    }[];
+}
+export type MakeClock = () => Clock;
+export type MakeCookieJar = (held: Readonly<Record<string, string>>) => CookieJar;
+export type MakeEnvSource = (held: EnvRecord) => EnvSource;
+export type MakeFetchSubject = () => FetchSubject;
+export type MakeRandom = () => Random;
+export function describeClockContract(makeClock: MakeClock): void
+export function describeCookieJarContract(makeCookieJar: MakeCookieJar): void
+export function describeEnvSourceContract(makeEnvSource: MakeEnvSource): void
+export function describeFetchContract(makeSubject: MakeFetchSubject): void
+export function describeRandomContract(makeRandom: MakeRandom): void
+
 ## @kit/runtime/node
 export function nodeRuntime({ env }: { env: EnvRecord; }): AnyProvider[]

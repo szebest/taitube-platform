@@ -112,6 +112,7 @@ needs the version bump and the changelog entry.
 | `@kit/errors` | `describeErrorCodeSetContract` | its fixture set, `@vp/errors`' `errorCodeRegistry` |
 | `@kit/i18n` | `describeI18nContract` | its fixture, `@vp/shared-messages`, the web and studio catalogues |
 | `@kit/keyspace` | `describeKeyspaceContract` | its fixture, `@vp/events`' `CacheKeys` |
+| `@kit/runtime` | clock, random, env source, fetch, cookie jar | its node and browser providers |
 | `@kit/permissions` | `describeAbilityFactoryContract` | its fixture, `@vp/permissions`' `getUserPermissions` |
 
 The suites of the app's own ports stay in `packages/server/adapters/__tests__/contract/` (layout in
