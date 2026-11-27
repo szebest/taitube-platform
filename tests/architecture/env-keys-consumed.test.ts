@@ -142,7 +142,7 @@ function unconsumedLeaves(
   };
   for (const file of program.getSourceFiles().filter((f) => isConsumer(f.fileName))) visit(file);
 
-  return [...leaves].filter((leaf) => !consumed.has(leaf)).sort();
+  return [...leaves.difference(consumed)].sort();
 }
 
 describe('architecture: every declared key is read and every config leaf is consumed', () => {

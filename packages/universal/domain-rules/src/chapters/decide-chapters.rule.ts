@@ -9,7 +9,7 @@ export function decideChapters(
   video: { readonly durationMs: number | null }
 ): Result<Chapter[], InvalidChapters> {
   return andThen(validateChapters(chapters), (sorted) => {
-    const last = sorted[sorted.length - 1];
+    const last = sorted.at(-1);
     if (video.durationMs !== null && last && last.startMs >= video.durationMs) {
       return err(invalidChapters('Every chapter starts before the video ends'));
     }

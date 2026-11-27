@@ -64,8 +64,8 @@ describe('Metrics Catalogue Conformance (SDD §13.1)', () => {
     const sddSet = new Set(sddMetricNames);
     const codeSet = new Set(codeMetricNames);
 
-    const missingInCode = [...sddSet].filter((x) => !codeSet.has(x));
-    const extraInCode = [...codeSet].filter((x) => !sddSet.has(x));
+    const missingInCode = [...sddSet.difference(codeSet)];
+    const extraInCode = [...codeSet.difference(sddSet)];
 
     expect(
       missingInCode,

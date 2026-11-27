@@ -8,7 +8,7 @@ const nextDay = (day: Date) => new Date(day.getFullYear(), day.getMonth(), day.g
 export function calendarDays(from: Date, count = CALENDAR_DAYS): Date[] {
   const days = [new Date(from.getFullYear(), from.getMonth(), from.getDate())];
   while (days.length < count) {
-    days.push(nextDay(days[days.length - 1] ?? from));
+    days.push(nextDay(days.at(-1) ?? from));
   }
   return days;
 }

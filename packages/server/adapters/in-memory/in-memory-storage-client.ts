@@ -139,7 +139,7 @@ export class InMemoryStorageClient extends StorageClient {
 
     const slice = filteredKeys.slice(0, maxKeys);
     const isTruncated = filteredKeys.length > maxKeys;
-    const lastKey = slice.length > 0 ? slice[slice.length - 1] : undefined;
+    const lastKey = slice.at(-1);
     return ok({
       keys: slice,
       nextContinuationToken: isTruncated ? lastKey : undefined,
