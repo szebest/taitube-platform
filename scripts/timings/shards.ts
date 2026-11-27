@@ -28,7 +28,7 @@ const byCostThenKey = (a: Costed, b: Costed): number =>
 /** Longest first, each file to the shard with the least cost so far; the order makes it deterministic. */
 export function assignShards<T extends Costed>(files: readonly T[], count: number): T[][] {
   const shards = Array.from({ length: count }, () => ({ total: 0, files: [] as T[] }));
-  for (const file of [...files].sort(byCostThenKey)) {
+  for (const file of files.toSorted(byCostThenKey)) {
     const lightest = shards.reduce((min, shard) => (shard.total < min.total ? shard : min));
     lightest.files.push(file);
     lightest.total += file.cost;

@@ -118,7 +118,7 @@ export class InMemoryMultipartStorage extends MultipartStorage {
       return err(storageUnavailable('completeMultipartUpload', uploadId));
     }
 
-    const sortedParts = [...parts].sort((a, b) => a.partNumber - b.partNumber);
+    const sortedParts = parts.toSorted((a, b) => a.partNumber - b.partNumber);
     const chunks: Buffer[] = [];
     for (const p of sortedParts) {
       const part = upload.parts.get(p.partNumber);

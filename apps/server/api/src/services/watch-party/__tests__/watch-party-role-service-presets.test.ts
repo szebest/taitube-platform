@@ -8,7 +8,6 @@ import {
   popcorn,
   PUBLIC_MEMBER,
   setUpRoles,
-  sortedKeys,
 } from './watch-party-role-party';
 import { MEMBER, OTHER, userCaller } from './watch-party-test-deps';
 
@@ -34,7 +33,7 @@ describe('applyPreset', () => {
 
       const applied = expectOk(await service.applyPreset(ROOM_ID, owner, { preset }));
 
-      expect(sortedKeys(await permissionsOf(setup, 'member'))).toEqual(sortedKeys(member));
+      expect((await permissionsOf(setup, 'member')).toSorted()).toEqual(member.toSorted());
       expect(await permissionsOf(setup, 'dj')).toContain('playback.control');
       expect(applied.items.map(({ id }) => id)).toContain(custom.id);
       expect(

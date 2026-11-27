@@ -106,7 +106,7 @@ export function consumersByKey(
   usage: KeyUsage,
   packages: readonly { name: string; dir: string }[]
 ): Record<string, string[]> {
-  const byDepth = [...packages].sort((a, b) => b.dir.length - a.dir.length);
+  const byDepth = packages.toSorted((a, b) => b.dir.length - a.dir.length);
   const ownerOf = (file: string) =>
     byDepth.find(({ dir }) => file.startsWith(`${dir}/`))?.name ?? file;
   return Object.fromEntries(
