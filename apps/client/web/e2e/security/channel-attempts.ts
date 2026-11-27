@@ -9,6 +9,8 @@ export type ChannelAttempt = {
   callers: readonly ['an anonymous caller'];
 };
 
+const NO_POST = '00000000-0000-7000-8000-000000000000';
+
 export const CHANNEL_ATTEMPTS: ChannelAttempt[] = [
   {
     name: 'read the channel for editing',
@@ -79,6 +81,38 @@ export const CHANNEL_ATTEMPTS: ChannelAttempt[] = [
     name: 'delete a channel export',
     method: 'DELETE',
     path: () => '/v1/me/channel/exports/00000000-0000-7000-8000-000000000000',
+    callers: ['an anonymous caller'],
+  },
+  {
+    name: 'publish a channel post',
+    method: 'POST',
+    path: () => '/v1/me/channel/posts',
+    data: { payload: { kind: 'text', text: 'hijacked' } },
+    callers: ['an anonymous caller'],
+  },
+  {
+    name: 'edit a channel post',
+    method: 'PATCH',
+    path: () => `/v1/me/channel/posts/${NO_POST}`,
+    data: { payload: { kind: 'text', text: 'hijacked' }, version: 1 },
+    callers: ['an anonymous caller'],
+  },
+  {
+    name: 'delete a channel post',
+    method: 'DELETE',
+    path: () => `/v1/me/channel/posts/${NO_POST}`,
+    callers: ['an anonymous caller'],
+  },
+  {
+    name: 'like a post',
+    method: 'PUT',
+    path: () => `/v1/posts/${NO_POST}/reactions`,
+    callers: ['an anonymous caller'],
+  },
+  {
+    name: 'read the community feed',
+    method: 'GET',
+    path: () => '/v1/feed/community',
     callers: ['an anonymous caller'],
   },
 ];
