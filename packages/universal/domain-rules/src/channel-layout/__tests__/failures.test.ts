@@ -1,6 +1,7 @@
 import {
   layoutLimitExceeded,
   layoutReferenceInvalid,
+  layoutRevisionNotFound,
   layoutScheduleInvalid,
   layoutScheduleNotFound,
   layoutSlugInvalid,
@@ -28,6 +29,10 @@ describe('@vp/domain-rules: layout failures', () => {
     {
       failure: layoutScheduleInvalid(),
       expected: { code: 'LAYOUT_SCHEDULE_INVALID', reason: 'in_past' },
+    },
+    {
+      failure: layoutRevisionNotFound('c', 'r'),
+      expected: { code: 'REVISION_NOT_FOUND', channelId: 'c', revisionId: 'r' },
     },
     {
       failure: layoutScheduleNotFound('s'),

@@ -46,6 +46,23 @@ export type LayoutScheduleNotFound = Failure<
   { scheduleId: string }
 >;
 
+export type LayoutRevisionNotFound = Failure<
+  typeof ErrorCodes.REVISION_NOT_FOUND,
+  { channelId: string; revisionId: string }
+>;
+
+export function layoutRevisionNotFound(
+  channelId: string,
+  revisionId: string
+): LayoutRevisionNotFound {
+  return {
+    code: ErrorCodes.REVISION_NOT_FOUND,
+    message: 'Revision not found',
+    channelId,
+    revisionId,
+  };
+}
+
 export function layoutLimitExceeded(
   limit: LayoutLimit,
   max: number,

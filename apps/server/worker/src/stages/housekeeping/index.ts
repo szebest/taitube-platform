@@ -22,6 +22,7 @@ import type { HousekeepingJob, QueueName } from '@vp/job-contracts';
 import type { PipelineMetrics } from '@vp/pipeline-metrics';
 import { runExpireRaw } from './expire-raw';
 import { runFlushVideoViews } from './flush-video-views';
+import { runPromoteLayoutSchedules } from './promote-layout-schedules';
 import { runPruneRevisions } from './prune-revisions';
 import { runPublishDuePosts } from './publish-due-posts';
 import { runPurgeChannelAudit } from './purge-channel-audit';
@@ -60,6 +61,7 @@ export * from './purge-exports';
 export * from './purge-generations';
 export * from './purge-playlist-activity';
 export * from './prune-revisions';
+export * from './promote-layout-schedules';
 export * from './publish-due-posts';
 export * from './purge-search-history';
 
@@ -107,6 +109,7 @@ export function housekeepingTasks(housekeeping: AppConfig['housekeeping']) {
     },
     expire: { scanLimit: housekeeping.scanLimit },
     duePosts: { scanLimit: housekeeping.scanLimit },
+    layoutSchedules: { scanLimit: housekeeping.scanLimit },
     tmpSweep: { thresholdMs: housekeeping.tmpSweepAfterMs },
     reactions: { limit: housekeeping.reactionReconcileLimit },
     captions: {
@@ -301,6 +304,13 @@ export function createHousekeepingProcessor(
         return await runPurgePlaylistActivity({ repositories, now, logger });
       case 'publish-due-posts':
         return await runPublishDuePosts({ repositories, now, ...tasks.duePosts, logger });
+      case 'promote-layout-schedules':
+        return await runPromoteLayoutSchedules({
+          repositories,
+          now,
+          ...tasks.layoutSchedules,
+          logger,
+        });
 
       default:
         return assertNever(data.task, 'createHousekeepingProcessor');

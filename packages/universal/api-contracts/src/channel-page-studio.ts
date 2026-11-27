@@ -49,8 +49,10 @@ const PublishedSchema = z
   })
   .meta({ id: 'ChannelPageRevision', description: 'One published layout of the channel page' });
 
+const RevisionSchema = PublishedSchema.extend({ id: z.uuid().describe('What restore takes') });
+
 const RevisionPageSchema = z.object({
-  items: z.array(PublishedSchema),
+  items: z.array(RevisionSchema),
   nextCursor: z.string().nullable(),
 });
 
@@ -205,6 +207,7 @@ export const previewChannelPage = defineEndpoint({
 });
 
 export type ChannelPageDraftView = z.infer<typeof DraftSchema>;
-export type ChannelPageRevisionView = z.infer<typeof PublishedSchema>;
+export type ChannelPagePublishedView = z.infer<typeof PublishedSchema>;
+export type ChannelPageRevisionView = z.infer<typeof RevisionSchema>;
 export type ChannelPageRevisionPageView = z.infer<typeof RevisionPageSchema>;
 export type ChannelPageScheduleView = z.infer<typeof ScheduleSchema>;

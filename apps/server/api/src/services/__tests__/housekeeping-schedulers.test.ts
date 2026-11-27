@@ -29,6 +29,7 @@ describe('apps/server/api/services: housekeeping schedulers', () => {
       'flush-video-views',
       'prune-revisions',
       'publish-due-posts',
+      'promote-layout-schedules',
       'purge-channel-audit',
       'purge-channel-images',
       'purge-comment-moderation',

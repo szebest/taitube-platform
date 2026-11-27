@@ -52,6 +52,8 @@ export const CacheKeys = defineKeyspace('taitube', (key) => ({
     key('views', 'link-dedup', linkId, viewDate.replaceAll('-', '')),
   playlistOpenDedup: (playlistId: string, viewDate: string) =>
     key('views', 'playlist-dedup', playlistId, viewDate.replaceAll('-', '')),
+  channelPagePool: (channelId: string, revision: number, audience: string, locales: string) =>
+    key('channels', channelId, 'page', String(revision), audience, locales),
   smartPlaylistPage: (playlistId: string, fingerprint: string) =>
     key('playlists', 'smart', playlistId, fingerprint),
 }));

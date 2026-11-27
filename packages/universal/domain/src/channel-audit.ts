@@ -225,3 +225,21 @@ export type ChannelAuditEntry = ChannelAuditEvent & {
   actorTokenId: string | null;
   createdAt: Date;
 };
+
+/** What a schedule coming due records, once its revision has a version; none when its author is gone. */
+export function scheduleAppliedAudit(schedule: {
+  channelId: string;
+  createdBy: string | null;
+}): ((version: number) => NewChannelAuditEntry) | null {
+  const { channelId, createdBy } = schedule;
+  return createdBy
+    ? (version) => ({
+        channelId,
+        actorUserId: createdBy,
+        action: 'page.published',
+        targetType: 'page',
+        targetId: channelId,
+        meta: { version },
+      })
+    : null;
+}

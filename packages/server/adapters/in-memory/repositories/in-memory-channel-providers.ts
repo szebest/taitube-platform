@@ -5,8 +5,11 @@ import { InMemoryChannelFeaturedRepository } from './in-memory-channel-featured-
 import { InMemoryChannelHandleHistoryRepository } from './in-memory-channel-handle-history-repository';
 import { InMemoryChannelImageRepository } from './in-memory-channel-image-repository';
 import { InMemoryChannelInviteRepository } from './in-memory-channel-invite-repository';
+import { InMemoryChannelLayoutRepository } from './in-memory-channel-layout-repository';
+import { InMemoryChannelLayoutScheduleRepository } from './in-memory-channel-layout-schedule-repository';
 import { InMemoryChannelMemberRepository } from './in-memory-channel-member-repository';
 import { InMemoryChannelPageRepository } from './in-memory-channel-page-repository';
+import { InMemoryChannelPageSources } from './in-memory-channel-page-sources';
 import { InMemoryChannelRepository } from './in-memory-channel-repository';
 import { Repo } from './in-memory-repo-tokens';
 
@@ -54,7 +57,36 @@ export function provideChannels(container: Container, now: Clock): Container {
           userEvents: c.get(Repo.userEvents),
         })
     )
-    .provide(Repo.channelPages, (c) => new InMemoryChannelPageRepository(c.get(Repo.videos)));
+    .provide(Repo.channelPages, (c) => new InMemoryChannelPageRepository(c.get(Repo.videos)))
+    .provide(
+      Repo.channelLayouts,
+      (c) =>
+        new InMemoryChannelLayoutRepository(
+          { revisions: c.get(Repo.entityRevisions), audit: c.get(Repo.channelAudit) },
+          now
+        )
+    )
+    .provide(
+      Repo.channelLayoutSchedules,
+      (c) =>
+        new InMemoryChannelLayoutScheduleRepository(
+          { revisions: c.get(Repo.entityRevisions), audit: c.get(Repo.channelAudit) },
+          now
+        )
+    )
+    .provide(
+      Repo.channelPageSources,
+      (c) =>
+        new InMemoryChannelPageSources({
+          videos: () => c.get(Repo.videos),
+          posts: () => c.get(Repo.channelPosts),
+          playlists: () => c.get(Repo.playlists),
+          live: () => c.get(Repo.liveStreams),
+          channels: () => c.get(Repo.channels),
+          featured: () => c.get(Repo.channelFeatured),
+          smart: () => c.get(Repo.smartPlaylists),
+        })
+    );
 }
 
 export function channelContentOf(c: Container) {
@@ -62,6 +94,9 @@ export function channelContentOf(c: Container) {
     channelFeatured: c.get(Repo.channelFeatured),
     channelImages: c.get(Repo.channelImages),
     channelPages: c.get(Repo.channelPages),
+    channelLayouts: c.get(Repo.channelLayouts),
+    channelLayoutSchedules: c.get(Repo.channelLayoutSchedules),
+    channelPageSources: c.get(Repo.channelPageSources),
     channelPosts: c.get(Repo.channelPosts),
     postEngagement: c.get(Repo.postEngagement),
   };

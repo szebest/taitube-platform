@@ -220,11 +220,11 @@ export interface CustomTab extends TabBase {
 
 export type LayoutTab = HomeTab | FixedTab | CustomTab;
 
-export interface ChannelLayout {
+export type ChannelLayout = {
   schemaVersion: typeof CHANNEL_LAYOUT_VERSION;
   landing: { visitor: string; subscriber: string };
   tabs: LayoutTab[];
-}
+};
 
 export function tabSections(tab: LayoutTab): LayoutSection[] {
   return tab.kind === 'home' || tab.kind === 'custom' ? tab.sections : [];

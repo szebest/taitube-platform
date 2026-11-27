@@ -107,6 +107,9 @@ export class InMemoryRepositories extends InMemoryVideoToolsRepositories impleme
   readonly channelHandleHistory: InMemoryChannelHandleHistoryRepository;
   declare readonly channelImages: ChannelContent['channelImages'];
   declare readonly channelPages: ChannelContent['channelPages'];
+  declare readonly channelLayouts: ChannelContent['channelLayouts'];
+  declare readonly channelLayoutSchedules: ChannelContent['channelLayoutSchedules'];
+  declare readonly channelPageSources: ChannelContent['channelPageSources'];
   declare readonly channelPosts: ChannelContent['channelPosts'];
   declare readonly postEngagement: ChannelContent['postEngagement'];
   readonly picks: InMemoryPickRepository;

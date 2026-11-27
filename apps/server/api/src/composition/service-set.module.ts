@@ -30,6 +30,8 @@ export function registerServiceSet(c: Container): Container {
     channelImagePipelineService: c.get(Services.ChannelImagePipelineService),
     channelSpotlightService: c.get(Services.ChannelSpotlightService),
     channelFeaturedService: c.get(Services.ChannelFeaturedService),
+    channelLayoutService: c.get(Services.ChannelLayoutService),
+    channelPageService: c.get(Services.ChannelPageService),
     channelInviteService: c.get(Services.ChannelInviteService),
     channelMemberService: c.get(Services.ChannelMemberService),
     channelAuditService: c.get(Services.ChannelAuditService),
