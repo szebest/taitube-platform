@@ -18,6 +18,8 @@ interface TeamOptions {
   answerFailure?: ErrorCode;
   /** What else the page under test asks the API, or answers otherwise than the team API does. */
   handlers?: HttpHandler[];
+  /** Off for a spec that holds a reply on purpose. */
+  awaitQueries?: boolean;
 }
 
 /** `url` in the studio over a team API holding `state`, the viewer signed in and acting on `actingOn`. */
@@ -30,6 +32,7 @@ export async function renderTeam(
     inviteFailure,
     answerFailure,
     handlers = [],
+    awaitQueries,
   }: TeamOptions = {}
 ) {
   onTestFinished(forgetActingChannel);
@@ -37,6 +40,7 @@ export async function renderTeam(
   const served = serveTeam(state, inviteFailure, answerFailure);
   const rendered = await renderRoute(getRouter, url, {
     handlers: [signInBrowser(viewer), ...handlers, ...served.handlers],
+    awaitQueries,
   });
   await screen.findByRole('navigation', { name: 'Studio' });
   return { ...rendered, ...served };

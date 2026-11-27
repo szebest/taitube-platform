@@ -36,7 +36,10 @@ describe('apps/client/studio: InvitesPage', () => {
     const invites = heldReply(() =>
       HttpResponse.json<ContractResult<typeof listMyInvites>>({ items: [], nextCursor: null })
     );
-    await renderTeam('/invites', { handlers: [mockEndpoint(listMyInvites, invites.answer)] });
+    await renderTeam('/invites', {
+      handlers: [mockEndpoint(listMyInvites, invites.answer)],
+      awaitQueries: false,
+    });
 
     expect(document.querySelector('[data-slot="skeleton"]')).toBeInTheDocument();
     invites.release();
