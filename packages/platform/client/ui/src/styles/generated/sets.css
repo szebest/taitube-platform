@@ -36,9 +36,9 @@
 }
 
 [data-typography="figtree"] {
-  --font-sans: "Figtree Variable", ui-sans-serif, system-ui, sans-serif;
-  --font-editorial: "Newsreader Variable", ui-serif, "Georgia", serif;
-  --font-mono: "Geist Mono Variable", ui-monospace, "SFMono-Regular", monospace;
+  --font-sans: "Figtree Variable", "Figtree Fallback", ui-sans-serif, system-ui, sans-serif;
+  --font-editorial: "Newsreader Variable", "Newsreader Fallback", ui-serif, "Georgia", serif;
+  --font-mono: "Geist Mono Variable", "Geist Mono Fallback", ui-monospace, "SFMono-Regular", monospace;
   --type-display-weight: 800;
   --type-headline-weight: 750;
   --type-title-lg-weight: 750;
@@ -64,9 +64,9 @@
 }
 
 [data-typography="geist"] {
-  --font-sans: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
-  --font-editorial: "Newsreader Variable", ui-serif, "Georgia", serif;
-  --font-mono: "Geist Mono Variable", ui-monospace, "SFMono-Regular", monospace;
+  --font-sans: "Geist Variable", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
+  --font-editorial: "Newsreader Variable", "Newsreader Fallback", ui-serif, "Georgia", serif;
+  --font-mono: "Geist Mono Variable", "Geist Mono Fallback", ui-monospace, "SFMono-Regular", monospace;
   --type-display-weight: 800;
   --type-headline-weight: 750;
   --type-title-lg-weight: 750;

@@ -13,7 +13,7 @@ export function useSavedVideos(): SavedVideo[] {
   const { data } = useQuery({
     queryKey: savedVideoKeys.all,
     queryFn: () => listSavedVideos(window.caches),
-    enabled: canSave,
+    enabled: canSave === true,
     networkMode: 'always',
   });
   return data ?? NONE;
