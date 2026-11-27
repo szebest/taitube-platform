@@ -25,6 +25,7 @@ const AS = {
   moderator: bearer(mintToken({ sub: MODERATOR, role: 'USER', ttl: '1h' })),
   stranger: bearer(mintToken({ sub: STRANGER, role: 'USER', ttl: '1h' })),
   fan: bearer(mintToken({ sub: FAN, role: 'USER', ttl: '1h' })),
+  guest: bearer(mintToken({ sub: FAN, role: 'GUEST', ttl: '1h' })),
   anonymous: {},
 };
 

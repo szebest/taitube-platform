@@ -480,6 +480,7 @@
       "canManagePick": "@vp/permissions",
       "canManagePlaylistItems": "@vp/permissions",
       "canManagePost": "@vp/permissions",
+      "canReactPost": "@vp/permissions",
       "canModerateComment": "@vp/permissions",
       "canModerateComments": "@vp/permissions",
       "canModerateLiveStream": "@vp/permissions",

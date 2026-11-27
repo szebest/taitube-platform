@@ -2,7 +2,7 @@ import { isErr, isOk } from '@kit/result';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { ADMIN, OWNER, STRANGER, aPost } from '../../__tests__/entities';
-import { decidePostTarget, decidePostWrite } from '../manage-post.rule';
+import { decidePostReact, decidePostTarget, decidePostWrite } from '../manage-post.rule';
 
 const channel = { id: 'channel-1', ownerId: OWNER.id };
 
@@ -71,5 +71,21 @@ describe('@vp/domain-rules: decidePostTarget', () => {
       code: ErrorCodes.POST_NOT_FOUND,
       postId: 'post-1',
     });
+  });
+});
+
+describe('@vp/domain-rules: decidePostReact', () => {
+  it.each<{ scenario: string; reactor: UserContext | null; code: string | null }>([
+    { scenario: 'a signed-in user', reactor: STRANGER, code: null },
+    {
+      scenario: 'a guest identity',
+      reactor: { id: 'guest-1', role: 'GUEST' },
+      code: ErrorCodes.FORBIDDEN,
+    },
+    { scenario: 'an anonymous caller', reactor: null, code: ErrorCodes.UNAUTHORIZED },
+  ])('decides a like by $scenario', ({ reactor, code }) => {
+    const result = decidePostReact(reactor);
+
+    expect(isErr(result) ? result.error.code : null).toBe(code);
   });
 });

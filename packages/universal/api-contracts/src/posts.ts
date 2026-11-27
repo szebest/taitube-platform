@@ -224,6 +224,7 @@ export const deletePost = defineEndpoint({
 const LIKE_ERRORS = {
   400: [ErrorCodes.VALIDATION_FAILED],
   401: [ErrorCodes.UNAUTHORIZED],
+  403: [ErrorCodes.FORBIDDEN],
   404: [ErrorCodes.POST_NOT_FOUND],
 } as const;
 

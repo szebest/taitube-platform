@@ -4,6 +4,7 @@ import type { SddEndpointContract } from './sdd-endpoint-contract';
 const {
   VALIDATION_FAILED,
   UNAUTHORIZED,
+  FORBIDDEN,
   INVALID_CURSOR,
   CHANNEL_NOT_FOUND,
   POST_NOT_FOUND,
@@ -56,8 +57,8 @@ export const SDD_POST_ENDPOINTS: SddEndpointContract[] = [
   ...(['put', 'delete'] as const).map((method): SddEndpointContract => ({
     path: '/v1/posts/{id}/reactions',
     method,
-    expectedStatuses: [200, 400, 401, 404],
-    expectedErrorCodes: [...SIGNED_IN, POST_NOT_FOUND],
+    expectedStatuses: [200, 400, 401, 403, 404],
+    expectedErrorCodes: [...SIGNED_IN, FORBIDDEN, POST_NOT_FOUND],
     hasPathParams: true,
   })),
   {

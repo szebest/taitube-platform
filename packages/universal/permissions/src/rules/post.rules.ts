@@ -10,6 +10,7 @@ export function definePostRules(
   if (!(user && isSignedInRole(user.role))) return;
   const { can } = builder;
 
+  can('react', 'Post');
   can(['create', 'update', 'delete', 'pin'], 'Post', { ownerId: user.id });
   can('read', 'PostStats', { ownerId: user.id });
 

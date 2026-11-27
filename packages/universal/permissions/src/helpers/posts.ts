@@ -16,6 +16,10 @@ export function canManagePost({
   return getUserPermissions(user).can(action, subject('Post', { ...post }));
 }
 
+export function canReactPost({ user }: { user: UserContext | null }): boolean {
+  return getUserPermissions(user).can('react', 'Post');
+}
+
 /** @internal */
 export function canReadPostStats({
   user,

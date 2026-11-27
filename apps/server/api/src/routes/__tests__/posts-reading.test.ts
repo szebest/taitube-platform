@@ -48,6 +48,14 @@ describe('post routes', () => {
       ]);
     });
 
+    it.each(['PUT', 'DELETE'] as const)('refuses a %s of a like from a guest', async (method) => {
+      const id = await ctx.text('owner', 'like me');
+
+      const res = await ctx.call('guest', method, `/v1/posts/${id}/reactions`);
+
+      expect([res.statusCode, codeOf(res)]).toEqual([403, 'FORBIDDEN']);
+    });
+
     it('shows each viewer their own like on the post and on the channel list', async () => {
       const id = await ctx.text('owner', 'like me');
       await ctx.call('stranger', 'PUT', `/v1/posts/${id}/reactions`);

@@ -1,6 +1,6 @@
 import { type Result, err, ok } from '@kit/result';
 import type { ChannelPost } from '@vp/domain';
-import { type UserContext, canManagePost } from '@vp/permissions';
+import { type UserContext, canManagePost, canReactPost } from '@vp/permissions';
 import { type AuthorizationFailure, authorize } from '../authorize';
 import { type PostNotFound, postNotFound } from './failures';
 
@@ -29,4 +29,11 @@ export interface PostTargetInput {
 export function decidePostTarget(input: PostTargetInput): Result<ChannelPost, PostNotFound> {
   const { post, postId, channelId } = input;
   return post && post.channelId === channelId ? ok(post) : err(postNotFound(postId));
+}
+
+/** Liking is for a signed-in account; a guest identity is refused like an anonymous caller is. */
+export function decidePostReact(
+  reactor: UserContext | null
+): Result<UserContext, AuthorizationFailure> {
+  return authorize(reactor, canReactPost({ user: reactor }), { action: 'react', subject: 'Post' });
 }

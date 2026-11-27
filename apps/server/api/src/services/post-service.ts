@@ -20,6 +20,7 @@ import {
   decideChannelTask,
   decidePostCreate,
   decidePostEdit,
+  decidePostReact,
   decidePostRead,
   decidePostTarget,
   decidePostWrite,
@@ -225,7 +226,9 @@ export class PostService {
     user: UserContext,
     postId: string,
     liked: boolean
-  ): Promise<Result<PostLikeView, ReadFailure>> {
+  ): Promise<Result<PostLikeView, AuthorizationFailure | ReadFailure>> {
+    const reactor = decidePostReact(user);
+    if (isErr(reactor)) return reactor;
     const post = await this.readable(postId);
     if (isErr(post)) return post;
     const written = await this.deps.posts.setLiked(postId, user.id, liked);

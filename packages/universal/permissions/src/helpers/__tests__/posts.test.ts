@@ -1,6 +1,6 @@
 import { adminUser, creatorUser, guestUser, standardUser } from '../../__mocks__/fixtures';
 import type { UserContext } from '../../types/index';
-import { canManagePost, canReadPostStats } from '../posts';
+import { canManagePost, canReactPost, canReadPostStats } from '../posts';
 
 const post = { ownerId: creatorUser.id, channelId: 'chan-creator-1' };
 
@@ -20,5 +20,14 @@ describe('helpers/posts', () => {
   ])('$scenario manages a post: $manages, reads its stats: $reads', ({ user, manages, reads }) => {
     expect(canManagePost({ user, action: 'update', post })).toBe(manages);
     expect(canReadPostStats({ user, post })).toBe(reads);
+  });
+
+  it.each<{ scenario: string; user: UserContext | null; reacts: boolean }>([
+    { scenario: 'an unauthenticated caller', user: guestUser, reacts: false },
+    { scenario: 'a guest identity', user: { id: 'guest-1', role: 'GUEST' }, reacts: false },
+    { scenario: 'a signed-in user', user: standardUser, reacts: true },
+    { scenario: 'the owning creator', user: creatorUser, reacts: true },
+  ])('$scenario likes a post: $reacts', ({ user, reacts }) => {
+    expect(canReactPost({ user })).toBe(reacts);
   });
 });
