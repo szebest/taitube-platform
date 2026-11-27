@@ -1,6 +1,6 @@
 import { QUEUE_JOB_STATES } from '../job-queue';
 
-describe('core: job queue port', () => {
+describe('@kit/ports: job queue port', () => {
   it('counts a queue in prioritized, where BullMQ keeps every job that carries a priority', () => {
     expect(QUEUE_JOB_STATES).toContain('prioritized');
   });

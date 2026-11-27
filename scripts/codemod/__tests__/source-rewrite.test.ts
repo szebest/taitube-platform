@@ -97,6 +97,39 @@ describe('scripts: rewriteSource', () => {
     expect(result.problems).toEqual([]);
   });
 
+  it.each([
+    [
+      'into the destination import that precedes it',
+      `import { ok } from '@kit/errors';\nimport { Failure } from '@vp/errors';`,
+      `import { ok, Failure } from '@kit/errors';\n`,
+    ],
+    [
+      'into the destination import that follows it',
+      `import { Failure } from '@vp/errors';\nimport { ok } from '@kit/errors';`,
+      `import { ok, Failure } from '@kit/errors';`,
+    ],
+    [
+      'a type-only name into a type-only import',
+      `import type { Result } from '@kit/errors';\nimport type { Failure } from '@vp/errors';`,
+      `import type { Result, Failure } from '@kit/errors';\n`,
+    ],
+    [
+      'one destination of a split, the other kept as an import',
+      `import { ok } from '@kit/errors';\nimport { Failure, type ApiErrorCode } from '@vp/errors';`,
+      `import { ok, Failure } from '@kit/errors';\nimport { type ApiErrorCode } from '@vp/error-codes';`,
+    ],
+    [
+      'no name into an import of the other type-only-ness',
+      `import type { Result } from '@kit/errors';\nimport { Failure } from '@vp/errors';`,
+      `import type { Result } from '@kit/errors';\nimport { Failure } from '@kit/errors';`,
+    ],
+  ])('merges %s', (_label, input, expected) => {
+    const result = rewrite(input);
+
+    expect(result.text).toBe(expected);
+    expect(result.problems).toEqual([]);
+  });
+
   it('only touches the specifier line when one destination covers the whole import', () => {
     const input = `import {\n  Failure,\n  classify,\n} from '@vp/errors';\n`;
 

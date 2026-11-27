@@ -9,7 +9,9 @@ export interface AnyFailure<C extends string = string> {
 export interface AnyInputFailure<C extends string = string> extends AnyFailure<C> {
     readonly field: string;
 }
+export type CacheUnavailable = Unavailable<typeof InfraErrorCodes.CACHE_UNAVAILABLE>;
 export const CommonErrorCodes: { readonly VALIDATION_FAILED: "VALIDATION_FAILED"; readonly INTERNAL: "INTERNAL"; readonly UNAUTHORIZED: "UNAUTHORIZED"; readonly FORBIDDEN: "FORBIDDEN"; }
+export type DatabaseUnavailable = Unavailable<typeof InfraErrorCodes.DATABASE_UNAVAILABLE>;
 export type ErrorClassification = RetryClass | 'unknown';
 export const ErrorCodeRegistry: Token<ErrorCodeSet<string>>
 export interface ErrorCodeSet<C extends string> {
@@ -23,6 +25,8 @@ export type Failure<C extends string, D extends object = Record<never, never>> =
     code: C;
     message: string;
 } & D>;
+export const InfraErrorCodes: { readonly DATABASE_UNAVAILABLE: "DATABASE_UNAVAILABLE"; readonly CACHE_UNAVAILABLE: "CACHE_UNAVAILABLE"; readonly QUEUE_UNAVAILABLE: "QUEUE_UNAVAILABLE"; readonly STORAGE_UNAVAILABLE: "STORAGE_UNAVAILABLE"; }
+export type InfraFailure = DatabaseUnavailable | CacheUnavailable | QueueUnavailable | StorageUnavailable;
 export type InputFailure<C extends string, D extends object = Record<never, never>> = Failure<C, {
     field: string;
 } & D>;
@@ -44,7 +48,9 @@ export class PipelineError
   message: string
   name: string
   stack?: string | undefined
+export type QueueUnavailable = Unavailable<typeof InfraErrorCodes.QUEUE_UNAVAILABLE>;
 export type RetryClass = 'permanent' | 'transient';
+export type StorageUnavailable = Unavailable<typeof InfraErrorCodes.STORAGE_UNAVAILABLE>;
 export class TransientError
   constructor(code: string, message: string, details?: Record<string, unknown> | undefined): TransientError
   cause?: unknown
@@ -64,13 +70,17 @@ export interface UnavailableFactory<C extends string> {
 }
 export function asThrowable<C extends string>(set: ErrorCodeSet<C>, cause: unknown): Error
 export function attemptsFor<C extends string>(set: ErrorCodeSet<C>, error: unknown, allowed: number): number
+export const cacheUnavailable: UnavailableFactory<"CACHE_UNAVAILABLE">
 export function classifyError<C extends string>(set: ErrorCodeSet<C>, error: unknown): ErrorClassification
+export const databaseUnavailable: UnavailableFactory<"DATABASE_UNAVAILABLE">
 export function defineErrorCodes<const C extends string>(set: ErrorCodeSet<C>): ErrorCodeSet<C>
 export function errorCodeOf<C extends string>(set: ErrorCodeSet<C>, error: unknown): C
 export function failureDetails(failure: AnyFailure): Record<string, unknown>
 export function failurePayload<F extends AnyInputFailure>(failure: F): Record<string, unknown>
 export function isInputFailure<C extends string>(failure: AnyFailure<C>): failure is AnyInputFailure<C>
 export function isRegisteredCode<C extends string>(set: ErrorCodeSet<C>, code: unknown): code is C
+export const queueUnavailable: UnavailableFactory<"QUEUE_UNAVAILABLE">
 export function retryClass<C extends string>(set: ErrorCodeSet<C>, code: string): RetryClass
+export const storageUnavailable: UnavailableFactory<"STORAGE_UNAVAILABLE">
 export function toPipelineError<C extends string>(set: ErrorCodeSet<C>, failure: AnyFailure): PermanentError | TransientError
 export function unavailable<C extends string>(code: C, message: string): UnavailableFactory<C>

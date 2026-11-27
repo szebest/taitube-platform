@@ -31,6 +31,8 @@ core/
 ├── ports/          # Driver ports: StorageClient, MultipartStorage, CacheClient, JobQueue, FlowProducerPort,
 │                   #   DatabaseClient, TokenVerifier, AuthorizationPort, the cache ports, ViewBufferPort,
 │                   #   HealthCheckable
+│                   #   (CacheClient, JobQueue, FlowProducerPort, DatabaseClient and HealthCheckable live in
+│                   #   `@kit/ports`; their files here forward them)
 └── repositories/   # One file per repository contract, plus the Repositories bundle (repositories.ts)
 ```
 

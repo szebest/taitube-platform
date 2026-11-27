@@ -626,6 +626,25 @@ Decisions taken while delivering, which amend the sections above:
 - **Platform packages own the codes they emit** (`@kit/errors`, `@kit/pagination`, `@kit/intl`); the app's registry
   includes them, and criterion 10 reads "no platform package lists an app code".
 
+### The follow-up: `@kit/ports`
+
+#363 landed A, B (without `@kit/ports`) and C. `CacheClient`, `DatabaseClient`, `JobQueue` and `FlowProducerPort`
+return the app's `*Unavailable` failures, so those move first. 116 and 129 already import `@kit/*`: the codemod over
+main with today's `package-moves.json` changes nothing but the `@kit/ports` imports. The rest lands as one `gh stack`
+on `feat/170-kit-ports`, two slices:
+
+- **a, `@kit/ports`**: `@kit/errors` gains `InfraErrorCodes` (beside `CommonErrorCodes`), the four `*Unavailable`
+  types and factories and `InfraFailure`; `@vp/errors` spreads the codes into `ApiErrorCodes` and `PipelineErrorCodes`,
+  so `ErrorCodes.*_UNAVAILABLE` and `RETRY_CLASS` stay as they are. `@kit/ports` holds `cache-client`, `job-queue`,
+  `flow-producer`, `health-checkable` and `database-client`, and exports `./contract` with the three suites from
+  `packages/server/adapters/__tests__/contract/`. The old homes forward to the new ones inside the feature branch only.
+  The codemod merges a moved name into an existing import of its destination. Docs: `platform-packages.md`,
+  `testing.md`, the package maps.
+- **b, the importers**: the nine infra names point at `@kit/errors` in `package-moves.json`, then
+  `rewrite-specifiers.ts --packages @vp/core,@vp/errors` rewrites about 590 files, the forwards are deleted, and each
+  importing package lists `@kit/ports` and `@kit/errors`. No hand edits: on a moved main the slice is rebuilt by
+  re-running the codemod. Status `done`.
+
 ## Sequencing
 
 This touches almost every package, so it conflicts with everything in flight. **Order: the open PRs first, then this

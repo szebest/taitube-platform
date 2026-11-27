@@ -209,7 +209,7 @@
       "failurePayload": "@kit/errors",
       "handleTaken": "@vp/errors",
       "HandleTaken": "@vp/errors",
-      "InfraFailure": "@vp/errors",
+      "InfraFailure": "@kit/errors",
       "InputFailure": "@kit/errors",
       "isErrorCode": "@vp/errors",
       "isInputFailure": "@kit/errors",
