@@ -4,8 +4,11 @@ import { renderDevelopers } from '#app/features/developers/__tests__/render-deve
 
 describe('apps/client/studio: useExportableKinds', () => {
   it.each<{ role?: ChannelRole; kinds: string[] }>([
-    { kinds: ['Video analytics', 'Channel analytics', 'Comments', 'Videos'] },
-    { role: 'manager', kinds: ['Video analytics', 'Channel analytics', 'Comments', 'Videos'] },
+    { kinds: ['Video analytics', 'Channel analytics', 'Comments', 'Videos', 'Posts'] },
+    {
+      role: 'manager',
+      kinds: ['Video analytics', 'Channel analytics', 'Comments', 'Videos', 'Posts'],
+    },
     { role: 'analytics', kinds: ['Video analytics', 'Channel analytics'] },
   ])('lets the owner or a $role export $kinds', async ({ role, kinds }) => {
     const { user } = await renderDevelopers({ role });

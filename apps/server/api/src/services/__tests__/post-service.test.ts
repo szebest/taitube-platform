@@ -1,6 +1,7 @@
+import { err } from '@kit/result';
 import { expectErr, expectOk } from '@kit/testing/result';
 import type { PostPayload } from '@vp/domain';
-import { ErrorCodes } from '@vp/errors';
+import { ErrorCodes, cacheUnavailable } from '@vp/errors';
 import { ABSENT, MODERATOR_ID, OWNER, STRANGER, member, postsFixture } from './post-deps';
 
 const TEXT = (text: string): PostPayload => ({ kind: 'text', text });
@@ -179,10 +180,7 @@ describe('apps/server/api/services: PostService', () => {
     it('still deletes when the cache cannot be reached', async () => {
       const { service, acting, commentCache, publish } = await postsFixture();
       const { id } = await publish();
-      vi.mocked(commentCache.invalidate).mockResolvedValue({
-        ok: false,
-        error: { code: ErrorCodes.CACHE_UNAVAILABLE, message: 'down' },
-      } as never);
+      vi.spyOn(commentCache, 'invalidate').mockResolvedValue(err(cacheUnavailable('invalidate')));
 
       expectOk(await service.remove(OWNER, acting, id));
 
