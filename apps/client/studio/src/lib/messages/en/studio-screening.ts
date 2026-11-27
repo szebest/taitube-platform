@@ -1,4 +1,4 @@
-import { dt } from '@vp/shared-messages';
+import { dt, listMore } from '@vp/shared-messages';
 
 export const studioScreening = {
   adminTabScreening: dt('Held and flagged'),
@@ -68,7 +68,9 @@ export const studioScreening = {
   screeningFrameAt: dt('Frame at {time}, score {score}'),
   screeningFlaggedShare: dt('Sampled frames over the threshold: {share}'),
   screeningSignals: dt('Metadata hits'),
-  screeningProfanity: dt('Matched words'),
+  screeningProfanity: dt('Matched words: {names:list}', {
+    list: { names: { type: 'conjunction', max: 5, more: listMore.en } },
+  }),
   screeningAppealHeading: dt('Appeal from the creator'),
   screeningDecisionNote: dt('Reason given: {note}'),
   screeningApprove: dt('Approve'),

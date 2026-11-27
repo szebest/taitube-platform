@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.0
+
+- `MoreDisclosure`: inline text that opens a popover on click, tap, keyboard focus and a resting mouse (`pointerType`
+  mouse only, after `openDelay`), and closes on Escape, an outside press, blur and the mouse leaving. It prints no
+  words: its trigger text and content come from the caller.
+
 ## 0.3.0
 
 - Breaking: `UI_COPY_KEYS` (and so `UiCopy`) holds only the 45 words this package and the other kit packages

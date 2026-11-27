@@ -29,6 +29,12 @@ export interface Translator<App> {
     ...args: ArgsTuple<App, K>
   ): Result<readonly MessagePart[], MessageFailure>;
   tOr<K extends MessageKey<App>>(key: K, args: ArgsOf<App, K>, fallback: string): string;
+  /** `parts` with the arguments positional like `tOr`'s, and `fallback` for a message that cannot render. */
+  partsOr<K extends MessageKey<App>>(
+    key: K,
+    args: ArgsOf<App, K>,
+    fallback: readonly MessagePart[]
+  ): readonly MessagePart[];
 }
 
 export interface TranslatorScope {
@@ -74,6 +80,11 @@ export function createTranslator<App>({
   return {
     t: (key, ...[args]) => render(key, args),
     parts: (key, ...[args]) => andThen(find(key), (message) => renderParts(message, args, scope)),
+    partsOr: (key, args, fallback) =>
+      unwrapOr(
+        andThen(find(key), (message) => renderParts(message, args, scope)),
+        fallback
+      ),
     tOr: (key, args, fallback) => unwrapOr(render(key, args), fallback),
   };
 }

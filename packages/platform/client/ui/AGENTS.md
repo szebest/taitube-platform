@@ -82,6 +82,10 @@ names a part used outside its root. The shared UI unions (`FillOption`, `ShapeOp
   by a prop (`variant`, `size`, `side`), and its variant names drive the specs' `it.each` through
   `variantNames`. Static classes go inline on the element, with `cn(..., className)` where a caller's class
   merges in. Both come from `src/lib/class-names.ts`, which teaches tailwind-merge the z-index tokens.
+- **`MoreDisclosure`** is inline text that discloses a popover: click, tap, Enter, Space and keyboard focus open it,
+  a mouse opens it after `openDelay` only for `pointerType === 'mouse'` (so a tap never opens twice), Escape, an
+  outside press, blur and a hovering mouse leaving close it. It prints no words and takes its content as a prop;
+  focus stays on the trigger, whose text names the dialog.
 - **Radix through the one `radix-ui` package**: `import { Dialog as DialogPrimitive } from 'radix-ui'`.
 - **The appearance** is the cookie the app's `AppearanceStorage` names (`src/appearance/preference.ts`) the root route reads in
   `beforeLoad` and hands `ThemedDocument`, which renders `data-theme`, `data-mode`, `data-contrast`, `data-density`

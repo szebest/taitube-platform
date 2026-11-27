@@ -6,7 +6,7 @@ import {
   useSecondsRange,
   useShare,
 } from '#app/features/admin/hooks/use-screening-format';
-import { useT } from '#app/lib/messages';
+import { Message, useT } from '#app/lib/messages';
 
 export interface ScreeningFindingProps {
   finding: Finding;
@@ -106,7 +106,7 @@ export function ScreeningFinding({ finding }: ScreeningFindingProps) {
       )}
       {profanity.length > 0 && (
         <p className="m-0 text-caption">
-          {tOr('studio.screeningProfanity', {}, '')}: {profanity.join(', ')}
+          <Message id="studio.screeningProfanity" args={{ names: profanity }} />
         </p>
       )}
     </section>

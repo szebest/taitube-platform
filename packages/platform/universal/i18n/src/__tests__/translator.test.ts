@@ -49,6 +49,7 @@ describe('@kit/i18n: createTranslator', () => {
       ],
     });
     expect(translator.t('videos.genres', args)).toEqual({ ok: true, value: joined });
+    expect(translator.partsOr('videos.genres', args, [])).toEqual(parts.ok && parts.value);
   });
 
   it('renders a message that takes no arguments with none', () => {

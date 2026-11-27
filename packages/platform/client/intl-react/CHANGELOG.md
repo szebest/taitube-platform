@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.0
+
+- `Message` and `useTParts` from `createReactI18n`, `FormatList`, `useFormatParts` and `ListPartView`: a list renders
+  its items in `<bdi>` and its "and N more" as the trigger of `@kit/ui`'s `MoreDisclosure`, which opens every item.
+  `moreTooltip={false}` renders the text alone; `moreTooltip={{ trigger, content, side, align, openDelay }}` customises it.
+- Depends on `@kit/ui`.
+
 ## 0.3.0
 
 - Breaking: `useT`, `IntlRegister` and `RegisteredTranslator` are removed, and `IntlProvider` no longer takes

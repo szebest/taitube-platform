@@ -28,6 +28,7 @@ export const PARAMS = defineParams([
   'event',
   'expiry',
   'failed',
+  'failures',
   'field',
   'fields',
   'filter',

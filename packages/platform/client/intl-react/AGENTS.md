@@ -8,7 +8,7 @@ Instructions for any coding agent working on `@kit/intl-react`.
 
 ## 1. Scope & Purpose
 
-`IntlProvider`, `useFormat`, `<Format>` and `createReactI18n`: the React face of `@kit/intl` and `@kit/i18n`.
+`IntlProvider`, `useFormat`, `<Format>`, `useFormatParts`, `<FormatList>`, `ListPartView` and `createReactI18n` (`useT`, `useTParts`, `<Message>`): the React face of `@kit/intl` and `@kit/i18n`.
 `client` tier. It names no app: the app hands it its `I18n` (from `@kit/i18n`'s `createI18n<AppCatalogue>()`), a clock and a catalogue loader. Small on purpose: everything that can be pure lives in the two universal packages.
 
 ---
@@ -29,6 +29,11 @@ Instructions for any coding agent working on `@kit/intl-react`.
    snapshot is what the provider renders. It is generic over the app's locale and catalogue types. A server
    render passes `timeZone` and `now` too, so the hydration renders the same text.
 4. **Hooks fail loudly outside the provider**, naming it.
+5. **A list renders through `ListPartView`, never as a plain string.** `<Message>` and `<FormatList>` hand each list
+   part to it: items in `<bdi>` (a Latin name inside Arabic keeps its direction), literals as text, the `more`
+   segment as the trigger of `@kit/ui`'s `MoreDisclosure`. `moreTooltip={false}` renders `detail.text`. This package
+   depends on `@kit/ui` for that (layer 7 over 6); `@kit/components` cannot import it, so list rendering lives here.
+   The words "and N more" are the app's catalogue; the popover has none of its own.
 
 ---
 
