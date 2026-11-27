@@ -20,6 +20,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 env:
   TURBO_TELEMETRY_DISABLED: 1
   DO_NOT_TRACK: 1
@@ -27,8 +30,11 @@ env:
 jobs:
   load-smoke:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Point pnpm at the store the cache holds
         run: echo "pnpm_config_store_dir=$RUNNER_TEMP/pnpm-store" >> "$GITHUB_ENV"
@@ -40,7 +46,7 @@ jobs:
           key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', '.nvmrc') }}
 
       - name: Set up pnpm and Node.js, and install the locked dependencies
-        uses: pnpm/setup@v3
+        uses: pnpm/setup@731dfb6463bbd11c11fd0ee11fe00ed0e36d48a1 # v3.2.0
         with:
           node-version-file: .nvmrc
           cache: false
@@ -51,7 +57,7 @@ jobs:
           cp .env.example .env
           # The load profile drives far more uploads per user than the production limit allows.
           echo "UPLOAD_RATE_LIMIT_MAX=100000" >> .env
-          make up all
+          make up api worker
 
       # Installed from the release tarball: the apt repo needs a keyserver fetch that times out on runners.
       - name: Install k6
