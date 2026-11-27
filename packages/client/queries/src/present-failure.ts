@@ -75,6 +75,7 @@ function kindOf(code: ErrorCode): ErrorStateKind {
     case ErrorCodes.COMMENTS_SLOW_MODE:
     case ErrorCodes.EXPORT_DAILY_LIMIT:
     case ErrorCodes.POST_DAILY_LIMIT:
+    case ErrorCodes.POST_DRAFT_LIMIT:
     case ErrorCodes.WATCH_PARTY_PASSWORD_LOCKED:
     case ErrorCodes.WATCH_PARTY_SLOW_MODE:
       return 'rate-limited';
@@ -172,6 +173,12 @@ function kindOf(code: ErrorCode): ErrorStateKind {
     case ErrorCodes.IMAGE_UPLOAD_NOT_FOUND:
     case ErrorCodes.SERIES_VIDEO_NOT_OWNED:
     case ErrorCodes.POST_SHARE_NOT_PUBLIC:
+    case ErrorCodes.POST_ALREADY_VOTED:
+    case ErrorCodes.POST_POLL_CLOSED:
+    case ErrorCodes.POST_POLL_LOCKED:
+    case ErrorCodes.POST_PIN_LIMIT:
+    case ErrorCodes.POST_SCHEDULE_INVALID:
+    case ErrorCodes.POST_IMAGE_NOT_READY:
       return 'generic';
     default:
       return assertNever(code, 'kindOf');
