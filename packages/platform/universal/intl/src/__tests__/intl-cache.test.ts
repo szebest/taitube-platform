@@ -13,6 +13,10 @@ const WITHOUT_DURATION_FORMAT: IntlEnvironment = {
 };
 
 describe('@kit/intl: the Intl cache', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('hands back the same instance for the same locale and options, whatever their order', () => {
     const cache = createIntlCache();
     const first = cache.numberFormat('en', { maximumFractionDigits: 1, notation: 'compact' });
