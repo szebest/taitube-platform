@@ -1096,10 +1096,17 @@ erDiagram
     videos ||--o{ video_events : emits
     videos ||--o{ video_reactions : receives
     users ||--o{ video_reactions : reacts
-    videos ||--o{ video_comments : receives
-    users ||--o{ video_comments : writes
-    video_comments ||--o{ video_comments : "replies to"
-    video_comments ||--o{ comment_reports : "is reported in"
+    videos ||--o{ comments : "receives (target_type video)"
+    channel_posts ||--o{ comments : "receives (target_type post)"
+    video_threads ||--o{ comments : "receives (target_type thread)"
+    users ||--o{ comments : writes
+    comments ||--o{ comments : "replies to"
+    comments ||--o{ comment_reports : "is reported in"
+    channels ||--o{ channel_posts : publishes
+    channel_posts ||--o{ post_reactions : "is liked in"
+    channel_posts ||--o{ post_poll_votes : "is voted in"
+    channel_posts ||--o{ post_stats_daily : "is counted in"
+    videos ||--o{ video_threads : "is discussed in"
     users ||--o{ comment_reports : files
     videos ||--o{ video_views_daily : "is viewed on"
     videos ||--o{ video_views_hourly : "is viewed in"
@@ -1372,9 +1379,11 @@ erDiagram
         text_array tags
         text custom_thumbnail_key
     }
-    video_comments {
+    comments {
         uuid id PK
-        uuid video_id FK
+        text target_type
+        uuid target_id
+        uuid channel_id FK
         uuid author_id FK
         uuid parent_id FK
         text content
@@ -1766,6 +1775,35 @@ CREATE UNIQUE INDEX video_comments_one_pinned_per_video_idx ON video_comments (v
 CREATE INDEX video_comments_moderation_idx ON video_comments (video_id, created_at DESC, id DESC) WHERE moderation_state <> 'published';
 -- Only `published` comments of an author who is not shadow banned are public: counts, the hot cache and every read go
 -- through one scope (`publicCommentScope`). A shadow ban is read from channel_user_restrictions on every read.
+
+-- 0048 (ticket 120): comments become commentable. `video_comments` is renamed `comments`; `video_id` becomes
+-- `target_id` with `target_type IN ('video','post','thread')` and loses its foreign key; `channel_id` (backfilled from
+-- the video) is the channel that moderates the comment, and 113's gate, 103's hearts and reports, the inbox and 117's
+-- matrix read it. Every index above leads with (target_type, target_id); one pinned comment per target. An AFTER DELETE
+-- trigger per target table (videos, channel_posts, video_threads) runs delete_target_comments(type), so deleting the
+-- target takes its comments in the same transaction. The hot cache key is taitube:{targetType}:{id}:comments:top.
+CREATE TABLE channel_posts (
+  id uuid PRIMARY KEY, channel_id uuid NOT NULL REFERENCES channels(id) ON DELETE CASCADE,
+  author_user_id uuid NOT NULL REFERENCES users(id),     -- the member who wrote it; the channel is the public author
+  kind text NOT NULL CHECK (kind IN ('text','images','poll','quiz','video_share','playlist_share')),
+  payload jsonb NOT NULL CHECK (payload ->> 'kind' = kind),  -- the PostPayload tagged union of @vp/api-contracts
+  status text NOT NULL CHECK (status IN ('draft','scheduled','published')),
+  publish_at timestamptz, published_at timestamptz, pinned_at timestamptz,
+  comments_enabled boolean NOT NULL DEFAULT true, like_count integer NOT NULL DEFAULT 0,
+  comments_count integer NOT NULL DEFAULT 0, version integer NOT NULL DEFAULT 1, edited_at timestamptz,
+  created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX channel_posts_channel_published_idx ON channel_posts (channel_id, pinned_at DESC, published_at DESC, id DESC) WHERE status = 'published';
+CREATE TABLE post_reactions (post_id uuid REFERENCES channel_posts(id) ON DELETE CASCADE, user_id uuid REFERENCES users(id) ON DELETE CASCADE,
+  type text NOT NULL DEFAULT 'LIKE' CHECK (type = 'LIKE'), created_at timestamptz NOT NULL DEFAULT now(), PRIMARY KEY (post_id, user_id));
+  -- likes only; like_count moves in the same transaction by the rows really added or removed (40's counter cache)
+CREATE TABLE post_poll_votes (post_id uuid, user_id uuid, option_index smallint CHECK (option_index BETWEEN 0 AND 5), UNIQUE (post_id, user_id));
+CREATE TABLE post_stats_daily (post_id uuid, day date, opens integer, share_clicks integer, PRIMARY KEY (post_id, day));
+CREATE TABLE video_threads (id uuid PRIMARY KEY, video_id uuid REFERENCES videos(id) ON DELETE CASCADE, channel_id uuid,
+  author_id uuid, author_channel_id uuid, anchor_ms integer CHECK (anchor_ms >= 0), title text, body text, pinned_at timestamptz,
+  comments_count integer, moderation_state text, moderation_disclosure text, held_reason text, created_at timestamptz, deleted_at timestamptz);
+ALTER TABLE channel_image_uploads ADD COLUMN variant_urls jsonb;  -- the 640 and 1280 wide variants of a `post-image` upload
+-- 0048 also adds 'post-image' to channel_image_uploads.kind, 'posts' to data_exports.kind and 'posts:write' to api_tokens.scopes.
 
 ALTER TABLE videos ADD COLUMN comments_enabled boolean NOT NULL DEFAULT true;   -- PATCH /v1/creator/videos/:id
 
@@ -2418,7 +2456,7 @@ Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>`
 | `GET /v1/me/security/sign-ins?cursor&limit` | My sign-in history | — | `200 { items: [{ id, action, slot, userAgent, createdAt }], nextCursor }` / `400 INVALID_CURSOR` / `401` | Signed in; the caller's own `account_audit_log` rows, newest first, keyset-paginated. |
 | `PATCH /v1/me/channel` | Edit my channel | `{ handle?, displayName?, avatarUrl?, bannerUrl?, brandColor?, bio?, links?, country?, contactEmail?, bannerLink? }` | `200 OwnerChannel` / `400 INVALID_HANDLE_FORMAT` / `403 FORBIDDEN` / `404 CHANNEL_NOT_FOUND` / `409 HANDLE_ALREADY_TAKEN \| HANDLE_CHANGE_TOO_SOON \| HANDLE_RESERVED` / `422 VALIDATION_FAILED` | The acting channel (`X-Channel-Id`, default the caller's primary): the owner, a manager or an editor (`edit-channel`, `decideChannelTask`); a moderator gets `403`. `avatarUrl` and `bannerUrl` take an external image address, which stays until an upload replaces it (`POST /v1/me/channel/images/:kind/upload` and `/complete`), or `null` to remove the image. A handle changes at most once every 30 days (`HANDLE_CHANGE_TOO_SOON`, `decideHandleChange`); the one it leaves goes to `channel_handle_history` in the same transaction and stays reserved for its old owner for 90 days (`HANDLE_RESERVED`, `decideHandleClaim`). `bio` up to 5000 characters of plain text. `links` replaces the list: up to 8 `{ label, url }`, a label of 1-40 characters, an `https` URL of up to 2048 characters without credentials (`validateChannelLinks` in `@vp/validation`, so the form runs the same rule); an empty list clears it. `country` is an ISO 3166-1 alpha-2 code in `COUNTRIES` or `null`; `contactEmail` is a validated address or `null`; `bannerLink` is `{ label <= 24, url }`, `https` only, or `null`. `brandColor` is `#rrggbb` in any case, stored lowercase, or `null` to clear it (`validateBrandColor` in `@vp/domain-rules`): a malformed value is `422 VALIDATION_FAILED`, any well-formed one is accepted, a hostile one too, because the web app derives the channel's accent from it with `deriveAccent`. A save that changes anything appends one `channel.updated` row to the channel audit log naming the fields. |
 | `GET /v1/me/channel` | Read my channel for editing | — | `200 OwnerChannel` (the channel resource plus `contactEmail`, `bannerCrops`, `handleChangeAvailableAt`, `autoCaptionsDefault`) / `401` / `403 FORBIDDEN` / `404 CHANNEL_NOT_FOUND` | The acting channel, for the roles that may edit it (`edit-channel`): the owner, a manager and an editor; a moderator gets `403`. The studio's customisation page reads this, so an editor edits the channel they switched to and not their own. |
-| `POST /v1/me/channel/images/:kind/upload` | Presign an avatar or banner upload | `{ contentType, sizeBytes }` | `201 { uploadId, uploadUrl, headers, expiresAt }` / `400` / `401` / `403` / `404 CHANNEL_NOT_FOUND` / `422 UNSUPPORTED_CONTENT_TYPE \| UPLOAD_TOO_LARGE` | The acting channel (`edit-channel`). A presigned `PUT` into the private `raw` bucket at `channelImageUploadKey` (`channel-images/<channelId>/<kind>/<uploadId>`); `image/jpeg`, `image/png` or `image/webp`, at most 2 MB for an avatar and 6 MB for a banner (`validateChannelImageUploadRequest` in `@vp/validation`); the size is signed into the URL. Records a `channel_image_uploads` row at `issued`. |
+| `POST /v1/me/channel/images/:kind/upload` | Presign an avatar, banner or post image upload (`post-image`: variants 640 and 1280 wide, no crop, many ready side by side) | `{ contentType, sizeBytes }` | `201 { uploadId, uploadUrl, headers, expiresAt }` / `400` / `401` / `403` / `404 CHANNEL_NOT_FOUND` / `422 UNSUPPORTED_CONTENT_TYPE \| UPLOAD_TOO_LARGE` | The acting channel (`edit-channel`). A presigned `PUT` into the private `raw` bucket at `channelImageUploadKey` (`channel-images/<channelId>/<kind>/<uploadId>`); `image/jpeg`, `image/png` or `image/webp`, at most 2 MB for an avatar and 6 MB for a banner (`validateChannelImageUploadRequest` in `@vp/validation`); the size is signed into the URL. Records a `channel_image_uploads` row at `issued`. |
 | `POST /v1/me/channel/images/:kind/complete` | Crop an uploaded image and start processing it | `{ uploadId, width, height, crop }` for an avatar, `{ uploadId, width, height, crops: { desktop, mobile, tv } }` for a banner | `202 { uploadId, version }` / `400` / `401` / `403` / `404 CHANNEL_NOT_FOUND \| IMAGE_UPLOAD_NOT_FOUND` / `422 VALIDATION_FAILED \| UPLOAD_TOO_LARGE \| UPLOAD_SIZE_MISMATCH \| UNSUPPORTED_CONTENT_TYPE \| IMAGE_TOO_SMALL` | The acting channel. Heads the object for its stored size and type, checks the dimensions (an avatar at least 200 x 200, a banner at least 1024 x 576) and every crop against the image (`decideImageCrops`: an avatar square, a banner desktop 6:1, mobile 3:1, tv 16:9, each inside the image), stores the crops on the upload row and enqueues a `channel-image` job on the `thumbnail` queue under `jobId = <uploadId>--channel-image`. Completing the same upload again answers the same version. The channel keeps its image until the job succeeds; `channel.image.ready` or `channel.image.failed` arrives on `GET /v1/me/events` (§10.3). |
 | `GET /v1/channels/:idOrHandle/spotlight?locale=` | The video a channel page shows first | — | `200 { source: 'returning' \| 'trailer' \| null, video: VideoSummary \| null }` / `400` / `404 CHANNEL_NOT_FOUND` | Anonymous. A subscriber (§5.2, `channel_subscriptions`) gets the returning-subscriber video, the trailer when none is set; anyone else gets the trailer. A localized trailer for the negotiated locale wins over the default. Judged on every read (`isSpotlightable`: the channel's own, `READY`, `public`, not deleted), so a trailer made private drops out without a save. It is the only viewer-dependent block of a channel page, fetched on its own so the rest stays cacheable. |
 | `GET /v1/me/channel/spotlight` | Read the spotlight settings | — | `200 { trailerVideoId, returningVideoId, localizations: [{ locale, description, trailerVideoId }] }` / `401` / `403` / `404` | The acting channel (`edit-channel`). What was saved, whatever state each video is in since. |
@@ -2447,6 +2485,15 @@ Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>`
 | `POST /comments/:id/heart` | Heart comment | — | `200 Comment` | Video owner only (`comment:heart`; an admin's `manage all` does not reach it). Idempotent; every viewer then reads `heartedByCreator: true`. Purges the hot page. |
 | `DELETE /comments/:id/heart` | Remove heart | — | `200 Comment` | Video owner only (`comment:heart`; an admin's `manage all` does not reach it). |
 | `POST /comments/:id/reports` | Report comment | `{ reason: spam\|harassment\|hate\|misinformation\|other, note? }` | `201 CommentReport` / `409 COMMENT_ALREADY_REPORTED` | Any signed-in viewer who can read the video (`comment:report`). One report per reporter per comment; `note` is up to 500 characters of plain text. |
+| `GET /v1/posts/:id/comments?sort=&cursor=&limit=` | Post comments | — | `200 { items:[Comment], nextCursor, total }` / `404 POST_NOT_FOUND` | Anonymous allowed. The video comments listing over `{ type: 'post' }`: same sort, keyset, hot cache (`taitube:post:{id}:comments:top`) and one-level replies; a post that is not published is `404`. `Comment.target` names what the comment sits under; `videoId` is null off a video. |
+| `POST /v1/posts/:id/comments` | Comment on a post or reply | `{ content, parentId? }` | `201 Comment` / the gate refusals of `POST /videos/:id/comments` / `404 POST_NOT_FOUND` | Channel-scoped. 113's gate on the post's channel and the post's `comments_enabled`; `PATCH`, `DELETE`, pin, heart and report by comment id are unchanged. |
+| `GET /v1/channels/:idOrHandle/posts?cursor=&limit=` | A channel's posts | — | `200 { items:[Post], nextCursor }` / `404 CHANNEL_NOT_FOUND` | Anonymous allowed. Published posts, pinned first then newest, keyset; each with `likedByViewer`. A post shows the channel as its author, never the member who wrote it. A shared video or playlist that is gone or not public is the card `{ type: 'unavailable' }` and nothing of it. |
+| `GET /v1/posts/:id` | One post | — | `200 Post` / `404 POST_NOT_FOUND` | Anonymous allowed; a post that is not published is `404`. |
+| `POST /v1/me/channel/posts` | Publish a post | `{ payload: text\|images\|video_share\|playlist_share, commentsEnabled? }` | `201 Post` / `403` / `422 VALIDATION_FAILED \| POST_SHARE_NOT_PUBLIC` / `429 POST_DAILY_LIMIT` | Scope `posts:write`, channel-scoped, `create Post` (owner, manager, editor). 20 a day per channel (UTC day). Writes the post, its `post.published` audit row (naming the member) and the `notify-post-subscribers` job in one transaction; subscribers on `all` get a `post` notification grouped by channel within an hour, `highlights` skips it. |
+| `PATCH /v1/me/channel/posts/:id` | Edit a post | `{ payload, commentsEnabled?, version }` | `200 Post` / `404 POST_NOT_FOUND` / `409 VERSION_CONFLICT` / `422` | Scope `posts:write`, `update Post`. Applies only at `version`; the post shows edited. |
+| `DELETE /v1/me/channel/posts/:id` | Delete a post | — | `204` / `404 POST_NOT_FOUND` | Scope `posts:write`, `delete Post`. Its comments, likes, votes and stats go with it in the same transaction. |
+| `PUT /v1/posts/:id/reactions`, `DELETE /v1/posts/:id/reactions` | Like or unlike a post | — | `200 { postId, liked, likeCount }` / `404 POST_NOT_FOUND` | Signed in. Idempotent; likes only, `post_reactions`. |
+| `GET /v1/feed/community?cursor=&limit=` | Community feed | — | `200 { items:[Post], nextCursor }` | Channel-scoped (`subscribe-as`). Published posts of the channels the acting channel subscribes to, newest first, keyset; separate from `/v1/feed/subscriptions`, whose items are videos. |
 | `POST /playlists` | Create playlist | `{ title, description?, visibility?, kind? }` | `201 Playlist` | Authenticated (`playlist:create`). Private unless asked otherwise. Title 1-150 characters, description up to 5000. |
 | `GET /playlists/:id` | Read playlist | — | `200 Playlist` (metadata, owner channel, `videoCount`, ordered `items[]`) / `404 PLAYLIST_NOT_FOUND` | Anonymous allowed. Scoped in SQL by `playlistReadScope` (the `playlist:read` rules): a private playlist of someone else is absent. Items the viewer may not watch are hidden and keep their place. `kind` is `playlist` or `series`; a series holds only its owner's own videos (`decideSeriesMembership`, `SERIES_VIDEO_NOT_OWNED`). For a signed-in viewer a series carries each item's `episode` (its position from 1) and `progress` (percent from `watch_history`, §5.2) and `nextEpisodeVideoId`: the first item after the last one watched that is below 92 percent, else the first unfinished one, else `null`. |
 | `PATCH /playlists/:id` | Edit playlist | `{ title?, description?, visibility? }` | `200 Playlist` / `400 SYSTEM_PLAYLIST_IMMUTABLE` | Owner or admin (`playlist:update`). |
