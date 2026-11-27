@@ -115,12 +115,7 @@ const STRICTER_THAN_BIOME = [
   'unicorn/prefer-string-starts-ends-with',
 ];
 
-const TYPE_AWARE_BACKLOG = [
-  'typescript/no-base-to-string',
-  'typescript/no-floating-promises',
-  'typescript/restrict-template-expressions',
-  'typescript/unbound-method',
-];
+const TYPE_AWARE_BACKLOG = ['typescript/unbound-method'];
 
 const REACT_COMPILER_RULES = [
   'react/capitalized-calls',

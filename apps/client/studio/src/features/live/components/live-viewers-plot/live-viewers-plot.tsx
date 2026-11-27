@@ -60,7 +60,7 @@ export function LiveViewersPlot({ points, name }: LiveViewersPlotProps) {
           allowDecimals={false}
         />
         <Tooltip
-          labelFormatter={(at) => text(clock(String(at)))}
+          labelFormatter={(at) => text(clock(typeof at === 'string' ? at : ''))}
           formatter={(value) => count(Number(value))}
           contentStyle={{ background: theme.tooltipSurface, border: 'none' }}
         />

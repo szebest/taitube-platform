@@ -5,11 +5,13 @@ import type { SseFrame } from './sse-connection';
 
 export function videoFrame({ id, event, data }: SseMessageEnvelope): SseFrame {
   const rendition = data['rendition'];
+  const renditionKey =
+    typeof rendition === 'string' || typeof rendition === 'number' ? String(rendition) : 'overall';
   return {
     id,
     event,
     data,
-    ...(event === 'progress' ? { coalesceKey: String(rendition ?? 'overall') } : {}),
+    ...(event === 'progress' ? { coalesceKey: renditionKey } : {}),
   };
 }
 

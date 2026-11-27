@@ -77,7 +77,7 @@ export function get(host: DeployHost, input: CommandInput): ExitCode {
     host.print(`${input.environment} has no ${input.rest[0] ?? ''}`);
     return EXIT.failure;
   }
-  host.print(typeof value === 'object' ? JSON.stringify(value) : String(value));
+  host.print(typeof value === 'string' ? value : JSON.stringify(value));
   return EXIT.ok;
 }
 

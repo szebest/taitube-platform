@@ -20,6 +20,11 @@ function useCreateChannel() {
   });
 }
 
+function trimmed(form: FormData, field: string): string {
+  const value = form.get(field);
+  return typeof value === 'string' ? value.trim() : '';
+}
+
 /**
  * The new channel form: a handle and a name. The API holds the rules (the handle's format, one
  * already taken, the cap of owned channels), and a refusal is said under the form in its words.
@@ -33,8 +38,8 @@ export function CreateChannelDialog({ onClose }: { onClose: () => void }) {
   const [refusal, submit, isPending] = useActionState(
     async (_last: string | undefined, form: FormData): Promise<string | undefined> => {
       const body = {
-        handle: String(form.get('handle') ?? '').trim(),
-        displayName: String(form.get('displayName') ?? '').trim(),
+        handle: trimmed(form, 'handle'),
+        displayName: trimmed(form, 'displayName'),
       };
       const created = await fromPromise(
         () => create.mutateAsync(body),

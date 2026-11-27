@@ -71,7 +71,7 @@ export function createApi(ports: SeedPorts, baseUrl: string): Api {
   const urlFor = ({ path, query }: ApiRequest): string => {
     const search = new URLSearchParams();
     for (const [key, value] of Object.entries(query ?? {})) search.set(key, String(value));
-    const suffix = search.size > 0 ? `?${search}` : '';
+    const suffix = search.size > 0 ? `?${search.toString()}` : '';
     return `${root}${path}${suffix}`;
   };
 

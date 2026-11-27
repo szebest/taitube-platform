@@ -90,7 +90,7 @@ describe('queryScalar', () => {
   it('asks for the query at the given instant', async () => {
     const urls: string[] = [];
     const recording: typeof fetch = async (input) => {
-      urls.push(String(input));
+      urls.push(input instanceof Request ? input.url : String(input));
       return prometheus('1')(input);
     };
 

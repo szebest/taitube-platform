@@ -37,7 +37,7 @@ function inMemoryFetch(replies: readonly ApiReply[]): typeof fetch {
 
   return async (input, init) => {
     const method = init?.method ?? 'GET';
-    const { pathname } = new URL(String(input));
+    const { pathname } = new URL(input instanceof Request ? input.url : String(input));
     const sent = typeof init?.body === 'string' ? JSON.parse(init.body) : undefined;
 
     for (const { reply, match } of routes) {
