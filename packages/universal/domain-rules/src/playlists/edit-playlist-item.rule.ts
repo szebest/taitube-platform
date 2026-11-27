@@ -12,13 +12,13 @@ import {
   validatePlaylistNote,
   validateSectionTitle,
 } from '@vp/validation';
+import { type PlaylistItemNotFound, playlistItemNotFound } from './failures';
 import {
   type ManagePlaylistFailure,
   type ManagePlaylistInput,
   decidePlaylistAction,
   decidePlaylistRead,
 } from './manage-playlist.rule';
-import { type PlaylistItemNotFound, playlistItemNotFound } from './failures';
 
 export interface EditPlaylistItemInput extends ManagePlaylistInput {
   readonly itemId: string;
@@ -39,7 +39,7 @@ function misplaced(field: string): InvalidField {
 }
 
 /** At least a second long, and inside the video as it is at save. */
-function checkSegment(
+export function checkPlaylistSegment(
   segment: PlaylistSegment,
   durationMs: number | null
 ): Result<PlaylistSegment, InvalidField> {
@@ -73,7 +73,7 @@ function videoPatch(
     endMs: patch.endMs === undefined ? item.endMs : patch.endMs,
   };
   const touchesSegment = patch.startMs !== undefined || patch.endMs !== undefined;
-  return andThen(touchesSegment ? checkSegment(segment, durationMs) : ok(segment), () =>
+  return andThen(touchesSegment ? checkPlaylistSegment(segment, durationMs) : ok(segment), () =>
     patch.note === undefined
       ? ok({ ...pickSegment(patch) })
       : andThen(validatePlaylistNote(patch.note), (note) => ok({ ...pickSegment(patch), note }))
@@ -87,7 +87,9 @@ function pickSegment({ startMs, endMs }: PlaylistItemPatch): PlaylistItemPatch {
   };
 }
 
-function sectionPatch(patch: PlaylistItemPatch): Result<PlaylistItemPatch, EditPlaylistItemFailure> {
+function sectionPatch(
+  patch: PlaylistItemPatch
+): Result<PlaylistItemPatch, EditPlaylistItemFailure> {
   if (patch.note !== undefined) return err(misplaced('note'));
   if (patch.startMs !== undefined || patch.endMs !== undefined) return err(misplaced('startMs'));
   if (patch.title === undefined) return ok({});

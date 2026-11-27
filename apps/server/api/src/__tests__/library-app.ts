@@ -6,6 +6,8 @@ export const OWNER = '11111111-1111-7111-8111-111111111111';
 const STRANGER = '22222222-2222-7222-8222-222222222222';
 const ADMIN = '33333333-3333-7333-8333-333333333333';
 const CREATOR = '44444444-4444-7444-8444-444444444444';
+export const EDITOR = '55555555-5555-7555-8555-555555555555';
+export const CONTRIBUTOR = '88888888-8888-7888-8888-888888888888';
 
 const video = (tail: string) => `66666666-6666-7666-8666-6666666666${tail}`;
 export const VIDEOS = [video('a1'), video('a2'), video('a3'), video('a4'), video('a5')] as const;
@@ -16,6 +18,8 @@ const AS = {
   owner: bearer(mintToken({ sub: OWNER, role: 'USER', ttl: '1h' })),
   stranger: bearer(mintToken({ sub: STRANGER, role: 'USER', ttl: '1h' })),
   admin: bearer(mintToken({ sub: ADMIN, role: 'ADMIN', ttl: '1h' })),
+  editor: bearer(mintToken({ sub: EDITOR, role: 'USER', ttl: '1h' })),
+  contributor: bearer(mintToken({ sub: CONTRIBUTOR, role: 'USER', ttl: '1h' })),
   anonymous: {},
 };
 

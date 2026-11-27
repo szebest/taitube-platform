@@ -7,9 +7,9 @@ describe('@vp/domain-rules: leaving a playlist', () => {
   it('lets a seated collaborator go', () => {
     const playlist = aPlaylist({ collaboratorId: STRANGER.id, collaboratorRole: 'contributor' });
 
-    expect(expectOk(decidePlaylistLeave({ actor: STRANGER, playlist, playlistId: playlist.id }))).toBe(
-      playlist
-    );
+    expect(
+      expectOk(decidePlaylistLeave({ actor: STRANGER, playlist, playlistId: playlist.id }))
+    ).toBe(playlist);
   });
 
   it.each([

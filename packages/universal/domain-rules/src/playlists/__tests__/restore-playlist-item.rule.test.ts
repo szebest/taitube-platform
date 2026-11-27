@@ -37,7 +37,11 @@ describe('@vp/domain-rules: restoring a removed item', () => {
   });
 
   it.each([
-    { scenario: 'an unknown change', overrides: { activity: null }, code: ErrorCodes.PLAYLIST_ACTIVITY_NOT_FOUND },
+    {
+      scenario: 'an unknown change',
+      overrides: { activity: null },
+      code: ErrorCodes.PLAYLIST_ACTIVITY_NOT_FOUND,
+    },
     {
       scenario: "another playlist's change",
       overrides: { activity: { ...removed, playlistId: 'other' } },

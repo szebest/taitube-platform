@@ -1,16 +1,16 @@
 import { type Result, andThen, err, ok } from '@kit/result';
 import { type PlaylistActivity, type RestorablePlaylistActivity, isRestorable } from '@vp/domain';
 import {
-  type ManagePlaylistFailure,
-  type ManagePlaylistInput,
-  decidePlaylistAction,
-} from './manage-playlist.rule';
-import {
   type PlaylistActivityNotFound,
   type PlaylistActivityNotRestorable,
   playlistActivityNotFound,
   playlistActivityNotRestorable,
 } from './failures';
+import {
+  type ManagePlaylistFailure,
+  type ManagePlaylistInput,
+  decidePlaylistAction,
+} from './manage-playlist.rule';
 
 export interface RestorePlaylistItemInput extends ManagePlaylistInput {
   readonly activityId: string;

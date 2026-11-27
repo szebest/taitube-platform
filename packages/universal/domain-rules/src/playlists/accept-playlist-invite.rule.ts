@@ -5,7 +5,11 @@ import {
   type PlaylistInvite,
   playlistInviteState,
 } from '@vp/domain';
-import { type UserContext, canAcceptPlaylistInvite } from '@vp/permissions';
+import {
+  type UserContext,
+  canAcceptPlaylistInvite,
+  canDeclinePlaylistInvite,
+} from '@vp/permissions';
 import {
   type PlaylistCollaboratorExists,
   type PlaylistCollaboratorLimit,
@@ -47,6 +51,18 @@ export function decidePlaylistInviteAccept(
   if (isCollaborator || user.id === invite.ownerId) {
     return err(playlistCollaboratorExists(invite.playlistId, user.id));
   }
-  if (seated >= MAX_PLAYLIST_COLLABORATORS) return err(playlistCollaboratorLimit(invite.playlistId));
+  if (seated >= MAX_PLAYLIST_COLLABORATORS)
+    return err(playlistCollaboratorLimit(invite.playlistId));
   return ok({ playlistId: invite.playlistId, role: invite.role });
+}
+
+/** Only a personal invite is declined, by its invitee; a link is the owner's to revoke. */
+export function decidePlaylistInviteDecline(input: {
+  readonly user: UserContext;
+  readonly invite: PlaylistInvite | null;
+}): Result<PlaylistInvite, PlaylistInviteInvalid> {
+  const { user, invite } = input;
+  return invite && invite.inviteeUserId !== null && canDeclinePlaylistInvite({ user, invite })
+    ? ok(invite)
+    : err(playlistInviteInvalid());
 }

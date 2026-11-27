@@ -2,7 +2,10 @@ import { expectErr, expectOk } from '@kit/testing/result';
 import type { PlaylistInvite } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import { OWNER, STRANGER } from '../../__tests__/entities';
-import { decidePlaylistInviteAccept } from '../accept-playlist-invite.rule';
+import {
+  decidePlaylistInviteAccept,
+  decidePlaylistInviteDecline,
+} from '../accept-playlist-invite.rule';
 
 const NOW = new Date('2026-11-26T12:00:00.000Z');
 const link: PlaylistInvite & { ownerId: string } = {
@@ -56,10 +59,39 @@ describe('@vp/domain-rules: accepting a playlist invite', () => {
   });
 
   it.each([
-    { scenario: 'a seated collaborator', overrides: { isCollaborator: true }, code: ErrorCodes.PLAYLIST_COLLABORATOR_EXISTS },
-    { scenario: 'the owner', overrides: { user: OWNER }, code: ErrorCodes.PLAYLIST_COLLABORATOR_EXISTS },
-    { scenario: 'a full playlist', overrides: { seated: 20 }, code: ErrorCodes.PLAYLIST_COLLABORATOR_LIMIT },
+    {
+      scenario: 'a seated collaborator',
+      overrides: { isCollaborator: true },
+      code: ErrorCodes.PLAYLIST_COLLABORATOR_EXISTS,
+    },
+    {
+      scenario: 'the owner',
+      overrides: { user: OWNER },
+      code: ErrorCodes.PLAYLIST_COLLABORATOR_EXISTS,
+    },
+    {
+      scenario: 'a full playlist',
+      overrides: { seated: 20 },
+      code: ErrorCodes.PLAYLIST_COLLABORATOR_LIMIT,
+    },
   ])('refuses $scenario with $code', ({ overrides, code }) => {
     expect(expectErr(accept(overrides)).code).toBe(code);
+  });
+
+  it.each([
+    {
+      scenario: 'the invitee declines their invite',
+      invite: { ...link, inviteeUserId: STRANGER.id },
+      declined: true,
+    },
+    {
+      scenario: 'someone else declines it',
+      invite: { ...link, inviteeUserId: 'someone' },
+      declined: false,
+    },
+    { scenario: 'a link is declined', invite: link, declined: false },
+    { scenario: 'an unknown token is declined', invite: null, declined: false },
+  ])('$scenario: $declined', ({ invite, declined }) => {
+    expect(decidePlaylistInviteDecline({ user: STRANGER, invite }).ok).toBe(declined);
   });
 });

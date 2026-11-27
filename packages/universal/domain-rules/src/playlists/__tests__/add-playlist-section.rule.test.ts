@@ -18,7 +18,12 @@ describe('@vp/domain-rules: adding a section', () => {
   });
 
   it.each([
-    { scenario: 'a blank title', actor: OWNER, target: playlist, code: ErrorCodes.VALIDATION_FAILED },
+    {
+      scenario: 'a blank title',
+      actor: OWNER,
+      target: playlist,
+      code: ErrorCodes.VALIDATION_FAILED,
+    },
     {
       scenario: 'a contributor',
       actor: STRANGER,

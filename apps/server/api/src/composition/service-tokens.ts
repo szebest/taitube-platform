@@ -63,6 +63,7 @@ import type { ViewerProgress } from '../services/viewer-progress';
 import { type AccountServiceSet, AccountServices } from './account-tokens';
 import { type CommentServiceSet, CommentServices } from './comment-tokens';
 import { type IntegrationServiceSet, IntegrationServices } from './integration-tokens';
+import { type PlaylistServiceSet, PlaylistServices } from './playlist-tokens';
 import { ScreeningServices } from './screening-tokens';
 import { type VideoToolsServiceSet, VideoToolsServices } from './video-tools-tokens';
 import { type WatchPartyServiceSet, WatchPartyServices } from './watch-party-tokens';
@@ -73,7 +74,8 @@ export interface ServiceSet
     IntegrationServiceSet,
     VideoToolsServiceSet,
     AccountServiceSet,
-    WatchPartyServiceSet {
+    WatchPartyServiceSet,
+    PlaylistServiceSet {
   videoService: VideoService;
   creatorStudioService: CreatorStudioService;
   searchService: SearchService;
@@ -171,6 +173,7 @@ export const Services = {
   ...VideoToolsServices,
   ...AccountServices,
   ...WatchPartyServices,
+  ...PlaylistServices,
   CreatorCommentService: token<CreatorCommentService>('CreatorCommentService'),
   ViewService: token<ViewService>('ViewService'),
   WebVitalsService: token<WebVitalsService>('WebVitalsService'),

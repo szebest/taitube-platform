@@ -8,16 +8,16 @@ import {
 } from '@vp/domain';
 import { type ChannelNotFound, channelNotFound } from '../channels/failures';
 import {
-  type ManagePlaylistFailure,
-  type ManagePlaylistInput,
-  decidePlaylistAction,
-} from './manage-playlist.rule';
-import {
   type PlaylistCollaboratorExists,
   type PlaylistCollaboratorLimit,
   playlistCollaboratorExists,
   playlistCollaboratorLimit,
 } from './failures';
+import {
+  type ManagePlaylistFailure,
+  type ManagePlaylistInput,
+  decidePlaylistAction,
+} from './manage-playlist.rule';
 
 interface NewInviteFields {
   readonly role: PlaylistCollaboratorRole;
@@ -55,7 +55,17 @@ function invite(
   rest: Pick<PlaylistInvite, 'inviteeUserId' | 'expiresAt' | 'maxUses'>
 ): PlaylistInvite {
   const { id, role, token, now } = fields;
-  return { id, playlistId, role, token, createdBy, useCount: 0, revokedAt: null, createdAt: now, ...rest };
+  return {
+    id,
+    playlistId,
+    role,
+    token,
+    createdBy,
+    useCount: 0,
+    revokedAt: null,
+    createdAt: now,
+    ...rest,
+  };
 }
 
 /** The owner is on the playlist already, so inviting them is inviting a collaborator. */

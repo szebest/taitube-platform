@@ -35,6 +35,7 @@ import { registerCommentServices } from './comment.module';
 import { registerDiscoveryServices } from './discovery.module';
 import { registerLiveServices } from './live.module';
 import { registerNotificationServices } from './notification.module';
+import { registerPlaylistServices } from './playlist.module';
 import { registerScreeningServices } from './screening.module';
 import { registerSearchServices } from './search.module';
 import { registerServiceSet } from './service-set.module';
@@ -67,20 +68,22 @@ export function registerServices(c: Container): Container {
   const config = () => c.get(Adapters.Config);
   const repositories = () => c.get(Adapters.Repositories);
 
-  registerTelemetryServices(
-    registerDiscoveryServices(
-      registerActivityServices(
-        registerClipServices(
-          registerChannelServices(
-            registerSearchServices(
-              registerCaptionServices(
-                registerNotificationServices(
-                  registerStudioServices(
-                    registerVideoAccessServices(
-                      registerScreeningServices(
-                        registerCommentServices(
-                          registerSseServices(
-                            registerLiveServices(registerWatchPartyServices(registerBootstrap(c)))
+  registerPlaylistServices(
+    registerTelemetryServices(
+      registerDiscoveryServices(
+        registerActivityServices(
+          registerClipServices(
+            registerChannelServices(
+              registerSearchServices(
+                registerCaptionServices(
+                  registerNotificationServices(
+                    registerStudioServices(
+                      registerVideoAccessServices(
+                        registerScreeningServices(
+                          registerCommentServices(
+                            registerSseServices(
+                              registerLiveServices(registerWatchPartyServices(registerBootstrap(c)))
+                            )
                           )
                         )
                       )

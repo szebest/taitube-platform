@@ -169,7 +169,11 @@ describe('@vp/domain-rules: playlist management', () => {
 
   it.each([
     { role: 'editor' as const, patch: { title: 'New', description: 'Why' }, code: null },
-    { role: 'editor' as const, patch: { visibility: 'public' as const }, code: ErrorCodes.FORBIDDEN },
+    {
+      role: 'editor' as const,
+      patch: { visibility: 'public' as const },
+      code: ErrorCodes.FORBIDDEN,
+    },
     { role: 'editor' as const, patch: { kind: 'series' as const }, code: ErrorCodes.FORBIDDEN },
     { role: 'contributor' as const, patch: { title: 'New' }, code: ErrorCodes.FORBIDDEN },
   ])('lets an $role change $patch: $code', ({ role, patch, code }) => {

@@ -39,7 +39,11 @@ describe('@vp/domain-rules: playlist invites', () => {
   });
 
   it.each([
-    { scenario: 'an unknown handle', overrides: { invitee: null }, code: ErrorCodes.CHANNEL_NOT_FOUND },
+    {
+      scenario: 'an unknown handle',
+      overrides: { invitee: null },
+      code: ErrorCodes.CHANNEL_NOT_FOUND,
+    },
     {
       scenario: 'a collaborator already seated',
       overrides: { isCollaborator: true },
@@ -50,7 +54,11 @@ describe('@vp/domain-rules: playlist invites', () => {
       overrides: { invitee: { userId: OWNER.id } },
       code: ErrorCodes.PLAYLIST_COLLABORATOR_EXISTS,
     },
-    { scenario: 'a full playlist', overrides: { seated: 20 }, code: ErrorCodes.PLAYLIST_COLLABORATOR_LIMIT },
+    {
+      scenario: 'a full playlist',
+      overrides: { seated: 20 },
+      code: ErrorCodes.PLAYLIST_COLLABORATOR_LIMIT,
+    },
     {
       scenario: 'an editor inviting',
       overrides: {
@@ -76,7 +84,12 @@ describe('@vp/domain-rules: playlist invites', () => {
   );
 
   it('opens no link on a full playlist', () => {
-    const result = decidePlaylistLinkInvite({ ...base, seated: 20, expiresInDays: 7, maxUses: null });
+    const result = decidePlaylistLinkInvite({
+      ...base,
+      seated: 20,
+      expiresInDays: 7,
+      maxUses: null,
+    });
 
     expect(expectErr(result).code).toBe(ErrorCodes.PLAYLIST_COLLABORATOR_LIMIT);
   });

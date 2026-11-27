@@ -18,7 +18,11 @@ const video: StoredPlaylistItem = {
 };
 const section: StoredPlaylistItem = { ...video, kind: 'section', videoId: null, title: 'Part 1' };
 
-function edit(patch: PlaylistItemPatch, item: StoredPlaylistItem | null = video, durationMs: number | null = 60_000) {
+function edit(
+  patch: PlaylistItemPatch,
+  item: StoredPlaylistItem | null = video,
+  durationMs: number | null = 60_000
+) {
   return decidePlaylistItemEdit({
     actor: OWNER,
     playlist,
@@ -34,9 +38,17 @@ describe('@vp/domain-rules: editing an item', () => {
   it.each([
     { scenario: 'a note', patch: { note: ' Start here ' }, expected: { note: 'Start here' } },
     { scenario: 'a cleared note', patch: { note: '' }, expected: { note: null } },
-    { scenario: 'a segment', patch: { startMs: 1000, endMs: 30_000 }, expected: { startMs: 1000, endMs: 30_000 } },
+    {
+      scenario: 'a segment',
+      patch: { startMs: 1000, endMs: 30_000 },
+      expected: { startMs: 1000, endMs: 30_000 },
+    },
     { scenario: 'an open-ended start', patch: { startMs: 59_000 }, expected: { startMs: 59_000 } },
-    { scenario: 'a cleared segment', patch: { startMs: null, endMs: null }, expected: { startMs: null, endMs: null } },
+    {
+      scenario: 'a cleared segment',
+      patch: { startMs: null, endMs: null },
+      expected: { startMs: null, endMs: null },
+    },
   ])('keeps $scenario', ({ patch, expected }) => {
     expect(expectOk(edit(patch))).toEqual(expected);
   });

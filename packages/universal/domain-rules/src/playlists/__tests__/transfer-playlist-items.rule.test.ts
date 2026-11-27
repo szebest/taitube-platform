@@ -36,7 +36,12 @@ describe('@vp/domain-rules: moving and copying items', () => {
   });
 
   it.each([
-    { scenario: 'a private source', source, target: aPlaylist({ ownerId: STRANGER.id }), code: ErrorCodes.PLAYLIST_NOT_FOUND },
+    {
+      scenario: 'a private source',
+      source,
+      target: aPlaylist({ ownerId: STRANGER.id }),
+      code: ErrorCodes.PLAYLIST_NOT_FOUND,
+    },
     {
       scenario: "someone else's public target",
       source: { ...source, visibility: 'public' as const },
@@ -60,9 +65,24 @@ describe('@vp/domain-rules: moving and copying items', () => {
 
   it.each([
     { scenario: 'copies any item', mode: 'copy' as const, held: item, code: null },
-    { scenario: 'moves their own item', mode: 'move' as const, held: { ...item, addedBy: STRANGER.id }, code: null },
-    { scenario: "moves someone else's item", mode: 'move' as const, held: item, code: ErrorCodes.FORBIDDEN },
-    { scenario: 'names an absent item', mode: 'copy' as const, held: null, code: ErrorCodes.PLAYLIST_ITEM_NOT_FOUND },
+    {
+      scenario: 'moves their own item',
+      mode: 'move' as const,
+      held: { ...item, addedBy: STRANGER.id },
+      code: null,
+    },
+    {
+      scenario: "moves someone else's item",
+      mode: 'move' as const,
+      held: item,
+      code: ErrorCodes.FORBIDDEN,
+    },
+    {
+      scenario: 'names an absent item',
+      mode: 'copy' as const,
+      held: null,
+      code: ErrorCodes.PLAYLIST_ITEM_NOT_FOUND,
+    },
   ])('a contributor $scenario: $code', ({ mode, held, code }) => {
     const result = decidePlaylistTransferItem({
       actor: STRANGER,
