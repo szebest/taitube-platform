@@ -7,8 +7,8 @@ import { useOpenInPlaybackSession } from '#app/features/watch/hooks/use-open-in-
 import { useViewerReread } from '#app/features/watch/hooks/use-viewer-reread';
 import { useT } from '#app/lib/messages';
 import { ShareTokenContext } from '#app/lib/video-access/share-token.context';
-import { WatchCommentThread } from '../watch-comment-thread/watch-comment-thread';
 import { WatchCorrections } from '../watch-corrections/watch-corrections';
+import { WatchDiscussion } from '../watch-discussion/watch-discussion';
 import { WatchEngagementBar } from '../watch-engagement-bar/watch-engagement-bar';
 import { WatchLayout } from '../watch-layout/watch-layout';
 import { WatchLinerNotes } from '../watch-liner-notes/watch-liner-notes';
@@ -52,7 +52,7 @@ export function WatchPage({ readOnServer, renderActions, renderCreatorStats }: W
             <WatchCorrections videoId={video.id} />
           </>
         }
-        discussion={<WatchCommentThread videoId={video.id} />}
+        discussion={<WatchDiscussion videoId={video.id} />}
         aside={
           <>
             <WatchTranscript videoId={video.id} />

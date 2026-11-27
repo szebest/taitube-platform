@@ -1,20 +1,20 @@
 import { type Result, err, ok } from '@kit/result';
-import type { Comment, Video } from '@vp/domain';
+import type { Comment, CommentHost } from '@vp/domain';
 import { type CommentNotFound, commentNotFound } from './failures';
 
 export interface LocatedCommentInput {
   readonly comment: Comment | null;
   readonly commentId: string;
-  readonly video: Video | null;
+  readonly host: CommentHost | null;
 }
 
 export interface LocatedComment {
   readonly comment: Comment;
-  readonly video: Video;
+  readonly host: CommentHost;
 }
 
 export function locateComment(input: LocatedCommentInput): Result<LocatedComment, CommentNotFound> {
-  return input.comment && input.video
-    ? ok({ comment: input.comment, video: input.video })
+  return input.comment && input.host
+    ? ok({ comment: input.comment, host: input.host })
     : err(commentNotFound(input.commentId));
 }

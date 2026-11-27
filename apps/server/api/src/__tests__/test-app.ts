@@ -127,7 +127,12 @@ const TEAM_INVITE_ID = '00000000-0000-7000-8000-00000000e117';
  */
 export async function seedTeamMember(
   repositories: InMemoryRepositories,
-  { ownerId, memberId, role }: { ownerId: string; memberId: string; role: ChannelRole }
+  {
+    ownerId,
+    memberId,
+    role,
+    inviteId = TEAM_INVITE_ID,
+  }: { ownerId: string; memberId: string; role: ChannelRole; inviteId?: string }
 ): Promise<string> {
   const found = expectOk(await repositories.channels.findPrimaryByUserId(ownerId));
   const channelId =
@@ -143,13 +148,13 @@ export async function seedTeamMember(
     channelId,
     actorUserId: ownerId,
     targetType: 'invite',
-    targetId: TEAM_INVITE_ID,
+    targetId: inviteId,
     meta: { inviteeUserId: memberId, role },
   } as const;
   expectOk(
     await repositories.channelInvites.create(
       {
-        id: TEAM_INVITE_ID,
+        id: inviteId,
         channelId,
         inviteeUserId: memberId,
         role,
@@ -160,7 +165,7 @@ export async function seedTeamMember(
     )
   );
   expectOk(
-    await repositories.channelInvites.accept(TEAM_INVITE_ID, memberId, {
+    await repositories.channelInvites.accept(inviteId, memberId, {
       ...audit,
       actorUserId: memberId,
       action: 'invite.accepted',

@@ -178,7 +178,7 @@ describe('no leak of silent state: state x viewer x read path', () => {
           userId: CREATOR,
           kind: 'comment',
           actorChannelId: null,
-          videoId: expectOk(await ctx.repositories.comments.findById(subject))?.videoId ?? null,
+          videoId: expectOk(await ctx.repositories.comments.findById(subject))?.target.id ?? null,
           commentId: subject,
           groupKey: null,
           payload: { actor: null, videoTitle: 'Open', excerpt: 'the subject', outcome: null },

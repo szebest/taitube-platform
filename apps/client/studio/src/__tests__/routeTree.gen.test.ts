@@ -22,6 +22,7 @@ describe('apps/client/studio: generated route tree', () => {
       '/_authed/developers',
       '/_authed/invites',
       '/_authed/live',
+      '/_authed/posts',
       '/_authed/team',
       '/_authed/upload/',
       '/_authed/upload/edit/$videoId',

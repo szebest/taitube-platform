@@ -116,6 +116,9 @@ function AuditDetail({ entry }: { entry: AuditEntryView }) {
     case 'comment.posted':
     case 'channel.subscribed':
     case 'video.uploaded':
+    case 'post.published':
+    case 'post.updated':
+    case 'post.deleted':
       return null;
     default:
       return assertNever(entry, 'ChannelAuditAction');

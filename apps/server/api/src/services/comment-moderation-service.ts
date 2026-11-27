@@ -6,55 +6,41 @@ import type {
   CommentModerationRepositoryPort,
   CommentSettingsRepositoryPort,
   NotificationRepositoryPort,
+  VideoThreadRepositoryPort,
 } from '@vp/core/repositories';
 import {
   COMMENT_REMOVAL_EXCERPT_LENGTH,
   type ModerationNotice,
   NOTIFICATION_EXCERPT_LENGTH,
-  type CommentModerationAction,
-  type DisclosureDefaults,
-  type DisclosureRule,
   commentModerationAudit,
+  commentVideoId,
 } from '@vp/domain';
 import {
   type CommentModerationFailure,
+  commentHostTraits,
   commentNotFound,
   decideCommentModeration,
   moderationNotApplicable,
 } from '@vp/domain-rules';
 import type { UserContext } from '@vp/permissions';
 import { auditActor } from './audit-actor';
-import { type CommentLookupDeps, commentWithVideo } from './comment-lookup';
+import { type CommentLookupDeps, commentWithHost } from './comment-lookup';
 import { toCommentView } from './comment-views';
+import { actionOf } from './moderation-action';
+import { type ModerateThreadServiceFailure, moderateThread } from './thread-moderate';
 
 export interface CommentModerationServiceDeps extends CommentLookupDeps {
+  threads: VideoThreadRepositoryPort;
   settings: CommentSettingsRepositoryPort;
   moderation: CommentModerationRepositoryPort;
   notifications: Pick<NotificationRepositoryPort, 'withdrawUnread'>;
   commentCache: CommentCachePort;
 }
 
-export type ModerateCommentServiceFailure = CommentModerationFailure | DatabaseUnavailable;
-
-const DISCLOSURE_RULE = {
-  hold: 'manual_hold',
-  hide: 'hide',
-  remove: 'remove',
-} as const satisfies Record<string, DisclosureRule>;
-
-/** The action as the domain takes it: the disclosure is the moderator's, else the channel default. */
-function actionOf(body: CommentActionBody, defaults: DisclosureDefaults): CommentModerationAction {
-  switch (body.action) {
-    case 'approve':
-    case 'unhide':
-      return { action: body.action };
-    default:
-      return {
-        ...body,
-        disclosure: body.disclosure ?? defaults[DISCLOSURE_RULE[body.action]],
-      };
-  }
-}
+export type ModerateCommentServiceFailure =
+  | CommentModerationFailure
+  | ModerateThreadServiceFailure
+  | DatabaseUnavailable;
 
 export class CommentModerationService {
   constructor(private readonly deps: CommentModerationServiceDeps) {}
@@ -65,21 +51,27 @@ export class CommentModerationService {
     body: CommentActionBody
   ): Promise<Result<ModerationResultView, ModerateCommentServiceFailure>> {
     const { comments, moderation } = this.deps;
-    const found = await commentWithVideo(this.deps, commentId);
+    const found = await commentWithHost(this.deps, commentId);
     if (isErr(found)) return found;
-    const { comment, video } = found.value;
-    if (!(comment && video)) return err(commentNotFound(commentId));
+    const { comment, host } = found.value;
+    if (!comment) {
+      const thread = await this.deps.threads.findById(commentId);
+      if (isErr(thread)) return thread;
+      if (thread.value) return moderateThread(this.deps, actor, thread.value.id, body);
+    }
+    if (!(comment && host)) return err(commentNotFound(commentId));
 
-    const { channelId } = video;
+    const { channelId } = comment;
+    const videoId = commentVideoId(comment.target);
     const settings = await this.deps.settings.get(channelId);
     if (isErr(settings)) return settings;
 
     const action = actionOf(body, settings.value.disclosure);
-    const decided = decideCommentModeration({ actor, comment, commentId, video, action });
+    const decided = decideCommentModeration({ actor, comment, commentId, host, action });
     if (isErr(decided)) return decided;
     const { outcome } = decided.value;
 
-    const locator = { id: comment.id, videoId: comment.videoId };
+    const locator = { id: comment.id, target: comment.target };
     const leavesPublic = comment.moderationState === 'published' && outcome.state !== 'published';
     const thread = leavesPublic ? await moderation.threadIds(locator) : ok<string[]>([]);
     if (isErr(thread)) return thread;
@@ -89,7 +81,7 @@ export class CommentModerationService {
       ...auditActor(actor),
       action: action.action,
       commentId,
-      videoId: video.id,
+      videoId,
       disclosure: outcome.disclosure ?? comment.moderationDisclosure ?? 'silent',
     });
 
@@ -99,7 +91,7 @@ export class CommentModerationService {
             userId: comment.authorId,
             action: action.action,
             channelId,
-            videoId: video.id,
+            videoId,
             commentId: comment.id,
             reason: outcome.reason,
             expiresAt: null,
@@ -118,7 +110,7 @@ export class CommentModerationService {
         removal: {
           id: comment.id,
           channelId,
-          videoId: video.id,
+          videoId,
           authorId: comment.authorId,
           excerpt: comment.content.slice(0, COMMENT_REMOVAL_EXCERPT_LENGTH),
           reason: outcome.reason ?? 'other',
@@ -147,12 +139,12 @@ export class CommentModerationService {
       const { thread: moderated } = written.value;
       view = {
         state: outcome.state,
-        comment: toCommentView(moderated, video, actor),
+        comment: toCommentView(moderated, commentHostTraits(host), actor),
       };
     }
 
     ignore(
-      await this.deps.commentCache.invalidate(video.id),
+      await this.deps.commentCache.invalidate(comment.target),
       'the write is committed; the hot page expires on its own TTL'
     );
     const withdrawn = await this.deps.notifications.withdrawUnread(thread.value);

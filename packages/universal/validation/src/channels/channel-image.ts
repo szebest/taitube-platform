@@ -1,4 +1,4 @@
-export const CHANNEL_IMAGE_KINDS = ['avatar', 'banner'] as const;
+export const CHANNEL_IMAGE_KINDS = ['avatar', 'banner', 'post-image'] as const;
 
 export type ChannelImageKind = (typeof CHANNEL_IMAGE_KINDS)[number];
 

@@ -1,4 +1,3 @@
-import { ok } from '@kit/result';
 import type { CommentViewer } from '@vp/core/repositories';
 import { isOwnOrPublic, isVisibleTo, ownOrPublicTo, publicScopeOf } from '../comment-public-scope';
 import type { StoredComment } from '../comment-visibility';
@@ -10,7 +9,8 @@ const OTHER = { id: 'other' };
 const comment = (id: string, overrides: Partial<StoredComment> = {}): StoredComment => ({
   ...UNMODERATED,
   id,
-  videoId: 'v1',
+  target: { type: 'video', id: 'v1' },
+  channelId: 'ch1',
   authorId: AUTHOR.id,
   authorChannelId: 'author-channel',
   parentId: null,
@@ -25,7 +25,7 @@ const comment = (id: string, overrides: Partial<StoredComment> = {}): StoredComm
   ...overrides,
 });
 
-const shadowedAuthor = new Map([['v1', new Set([AUTHOR.id])]]);
+const shadowedAuthor = new Map([['ch1', new Set([AUTHOR.id])]]);
 const nobodyShadowed = new Map<string, Set<string>>();
 
 describe('adapters/in-memory: public comment scope', () => {
@@ -133,31 +133,27 @@ describe('adapters/in-memory: public comment scope', () => {
 
   describe('publicScopeOf', () => {
     const lookups = (shadowedByChannel: Record<string, string[]>) => ({
-      videos: {
-        findById: async (id: string) =>
-          ok(id === 'ghost' ? null : ({ id, channelId: `channel-of-${id}` } as never)),
-      },
       restrictions: {
         shadowedUserIds: (channelId: string) => new Set(shadowedByChannel[channelId] ?? []),
       },
     });
 
-    it('reads the bans of the channel that owns each video, for the asked and the stored videos', async () => {
-      const stored = comment('c1', { videoId: 'v2' });
-      const scope = await publicScopeOf(
+    it('reads the bans of the asked channels and of the channels of the stored comments', () => {
+      const stored = comment('c1', { channelId: 'ch2' });
+      const scope = publicScopeOf(
         new Map([[stored.id, stored]]),
-        ['v1', 'ghost'],
+        ['ch1', 'ghost'],
         lookups({
-          'channel-of-v1': ['a'],
-          'channel-of-v2': ['b'],
+          ch1: ['a'],
+          ch2: ['b'],
         })
       );
 
       expect(scope.shadowed).toEqual(
         new Map([
-          ['v1', new Set(['a'])],
+          ['ch1', new Set(['a'])],
           ['ghost', new Set()],
-          ['v2', new Set(['b'])],
+          ['ch2', new Set(['b'])],
         ])
       );
     });

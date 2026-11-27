@@ -58,7 +58,7 @@ export type CommentsBanned = Failure<
   { reason: string | null; expiresAt: string | null }
 >;
 
-export type CommentsDisabled = Failure<typeof ErrorCodes.COMMENTS_DISABLED, { videoId: string }>;
+export type CommentsDisabled = Failure<typeof ErrorCodes.COMMENTS_DISABLED, { targetId: string }>;
 
 export type CommentsSubscribersOnly = Failure<
   typeof ErrorCodes.COMMENTS_SUBSCRIBERS_ONLY,
@@ -95,8 +95,8 @@ export function commentsBanned(restriction: {
   };
 }
 
-export function commentsDisabled(videoId: string): CommentsDisabled {
-  return { code: ErrorCodes.COMMENTS_DISABLED, message: 'Comments are turned off', videoId };
+export function commentsDisabled(targetId: string): CommentsDisabled {
+  return { code: ErrorCodes.COMMENTS_DISABLED, message: 'Comments are turned off', targetId };
 }
 
 export function commentsSubscribersOnly(channelId: string): CommentsSubscribersOnly {

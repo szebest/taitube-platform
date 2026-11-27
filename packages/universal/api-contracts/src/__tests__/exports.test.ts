@@ -54,7 +54,11 @@ describe('packages/api-contracts: exports', () => {
       body: { kind: 'videos', format: 'csv', params: { from: '2026-02-30' } },
       ok: false,
     },
-    { scenario: 'a kind that does not exist', body: { kind: 'posts', format: 'csv' }, ok: false },
+    {
+      scenario: 'a kind that does not exist',
+      body: { kind: 'playlists', format: 'csv' },
+      ok: false,
+    },
     {
       scenario: 'a format that does not exist',
       body: { kind: 'videos', format: 'xlsx' },
@@ -73,6 +77,7 @@ describe('packages/api-contracts: exports', () => {
     { kind: 'channel_analytics', first: ['day', 'views', 'watchSeconds', 'subscribersGained'] },
     { kind: 'comments', first: ['commentId', 'videoId', 'videoTitle', 'parentId'] },
     { kind: 'videos', first: ['videoId', 'title', 'description', 'tags'] },
+    { kind: 'posts', first: ['postId', 'kind', 'status', 'payload'] },
   ] as const)('orders the $kind columns as its row schema does', ({ kind, first }) => {
     expect(exportColumns(kind).slice(0, first.length)).toEqual(first);
   });

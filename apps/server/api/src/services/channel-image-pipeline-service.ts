@@ -5,7 +5,7 @@ import {
 } from '@kit/errors';
 import { createTraceparent, getActiveTraceparent } from '@kit/observability';
 import type { JobQueue } from '@kit/ports';
-import { type Result, andThen, err, isErr, map, ok } from '@kit/result';
+import { type Result, andThen, assertNever, err, isErr, map, ok } from '@kit/result';
 import type { StorageClient } from '@vp/core/ports';
 import type { ChannelImageRepositoryPort, ChannelRepositoryPort } from '@vp/core/repositories';
 import type { BannerCrops, ChannelImageKind, ChannelImageUpload, CropRect } from '@vp/domain';
@@ -87,7 +87,7 @@ export type CompleteImageFailure =
   | QueueUnavailable;
 
 /**
- * Avatars and banners: the file goes into the private bucket by presigned PUT, the crops come
+ * Avatars, banners and post images: the file goes into the private bucket by presigned PUT, the crops come
  * with the completion, and a job cuts the variants. The channel keeps its image until that job
  * says otherwise, so nothing here changes what a visitor sees.
  */
@@ -230,14 +230,20 @@ export class ChannelImagePipelineService {
 
 function decideCrops(
   kind: ChannelImageKind,
-  { crop, crops }: CompleteImageInput
+  { crop, crops, width, height }: CompleteImageInput
 ): Result<Parameters<typeof decideImageCrops>[0], InvalidField<Record<never, never>>> {
-  if (kind === 'avatar') {
-    return crop
-      ? ok({ kind, crop })
-      : err(invalidField('crop', 'An avatar needs a square crop', {}));
+  switch (kind) {
+    case 'avatar':
+      return crop
+        ? ok({ kind, crop })
+        : err(invalidField('crop', 'An avatar needs a square crop', {}));
+    case 'banner':
+      return crops
+        ? ok({ kind, crops })
+        : err(invalidField('crops', 'A banner needs a crop for desktop, mobile and tv', {}));
+    case 'post-image':
+      return ok({ kind, crop: { x: 0, y: 0, width, height } });
+    default:
+      return assertNever(kind, 'ChannelImageKind');
   }
-  return crops
-    ? ok({ kind, crops })
-    : err(invalidField('crops', 'A banner needs a crop for desktop, mobile and tv', {}));
 }

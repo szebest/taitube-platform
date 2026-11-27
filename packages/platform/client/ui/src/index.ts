@@ -50,6 +50,7 @@ export * from './primitives/checkbox';
 export * from './primitives/chip';
 export * from './primitives/command';
 export * from './primitives/context-menu';
+export * from './primitives/date-time-picker';
 export * from './primitives/dialog';
 export * from './primitives/drawer';
 export * from './primitives/dropdown-menu';

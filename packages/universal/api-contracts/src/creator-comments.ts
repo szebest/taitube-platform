@@ -3,12 +3,18 @@ import { ErrorCodes } from '@vp/errors';
 import { z } from 'zod';
 import { RestrictionActionSchema } from './channel-restrictions';
 import { CommentActionSchema } from './comment-moderation';
-import { CommentSchema } from './comments';
+import { CommentSchema, CommentTargetSchema } from './comments';
 import { defineEndpoint } from './endpoint';
 import { CursorSchema, PageLimitSchema } from './pagination';
 
 const CreatorInboxCommentSchema = CommentSchema.extend({
-  video: z.object({ id: z.uuid(), title: z.string() }).describe('The video the comment is on'),
+  video: z
+    .object({ id: z.uuid(), title: z.string() })
+    .nullable()
+    .describe('The video the comment is on, null for a comment on a post'),
+  targetSummary: CommentTargetSchema.extend({ title: z.string() }).describe(
+    'What the comment sits under: a video by its title, a post by the start of its text'
+  ),
 });
 
 export const listCreatorComments = defineEndpoint({
@@ -19,7 +25,7 @@ export const listCreatorComments = defineEndpoint({
   tag: 'Creator Studio',
   summary: 'The creator comment inbox',
   description:
-    'Comments on the caller videos that the caller did not write, newest first, keyset-paginated. unanswered keeps those without a later reply from the caller in their thread; reported keeps those with an open report; held and hidden keep those in that moderation state; questions keeps those with a question mark or a leading question word; restricted keeps those whose author has a shadow ban or a ban on the channel that has not ended. Held and hidden comments are listed here with their moderation state, for the people who moderate.',
+    'Comments on the caller videos that the caller did not write, newest first, keyset-paginated. unanswered keeps those without a later reply from the caller in their thread; reported keeps those with an open report; held and hidden keep those in that moderation state; questions keeps those with a question mark or a leading question word; restricted keeps those whose author has a shadow ban or a ban on the channel that has not ended. Held and hidden comments are listed here with their moderation state, for the people who moderate. Under all and held, a held viewer thread is a row too: its id is the thread id, its target summary names the thread, and the moderate endpoint takes that id.',
   query: z.object({
     filter: z.enum(CREATOR_INBOX_FILTERS).default('all'),
     authorId: z.uuid().optional().describe('Only the comments this user wrote'),

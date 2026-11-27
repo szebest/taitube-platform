@@ -1,7 +1,7 @@
 import type { QueueJob } from '@kit/ports';
 import { expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
-import type { NewCommentModeration } from '@vp/domain';
+import type { CommentTarget, NewCommentModeration } from '@vp/domain';
 import type { NotifyCommentJob } from '@vp/job-contracts';
 import { createNotifyCommentProcessor } from '../notify-comment';
 import {
@@ -10,6 +10,8 @@ import {
   CREATOR_ID,
   logger,
   notificationsOf,
+  postId,
+  seedPost,
   saveSwitches,
   seedCreator,
   seedVideo,
@@ -29,14 +31,16 @@ describe('apps/server/worker/stages: notify-comment', () => {
     author: string,
     content: string,
     parentId: string | null = null,
-    moderation?: NewCommentModeration
+    moderation?: NewCommentModeration,
+    target: CommentTarget = { type: 'video', id: VIDEO }
   ) => {
     commentCount += 1;
     const id = `00000000-0000-7000-8000-${String(900 + commentCount).padStart(12, '0')}`;
     expectOk(
       await repositories.comments.create({
         id,
-        videoId: VIDEO,
+        target,
+        channelId: CHANNEL_ID,
         authorId: author,
         authorChannelId: channelOf(author),
         parentId,
@@ -47,11 +51,14 @@ describe('apps/server/worker/stages: notify-comment', () => {
     return id;
   };
 
-  const notify = async (commentId: string) => {
+  const notify = async (
+    commentId: string,
+    target: CommentTarget = { type: 'video', id: VIDEO }
+  ) => {
     const job: QueueJob<NotifyCommentJob> = {
       id: `${commentId}--notify-comment`,
       name: 'notify-comment',
-      data: { videoId: VIDEO, commentId },
+      data: { target, commentId },
     };
     return expectOk(await createNotifyCommentProcessor({ repositories, logger })(job));
   };
@@ -202,4 +209,96 @@ describe('apps/server/worker/stages: notify-comment', () => {
       expect(await kindsFor(CREATOR_ID)).toEqual([]);
     }
   );
+
+  describe('under a post or a viewer thread', () => {
+    const POST = postId(1);
+    const THREAD = '00000000-0000-7000-8000-0000000007f1';
+    const onPost: CommentTarget = { type: 'post', id: POST };
+    const onThread: CommentTarget = { type: 'thread', id: THREAD };
+    const held: NewCommentModeration = {
+      moderationState: 'held',
+      moderationDisclosure: 'silent',
+      heldReason: 'review_all',
+      looksLikeQuestion: false,
+    };
+
+    const targets = [
+      {
+        name: 'a post',
+        target: onPost,
+        videoId: null,
+        link: { postId: POST },
+      },
+      {
+        name: 'a viewer thread',
+        target: onThread,
+        videoId: VIDEO,
+        link: { threadId: THREAD },
+      },
+    ];
+
+    const seedTarget = async (target: CommentTarget) => {
+      if (target.type === 'post') {
+        await seedPost(repositories, POST);
+        return;
+      }
+      expectOk(
+        await repositories.videoThreads.create(
+          {
+            id: THREAD,
+            videoId: VIDEO,
+            channelId: CHANNEL_ID,
+            authorId: AUTHOR,
+            authorChannelId: channelOf(AUTHOR),
+            anchorMs: 1_000,
+            title: 'The cut',
+            body: '',
+            moderation: {
+              moderationState: 'published',
+              moderationDisclosure: null,
+              heldReason: null,
+              looksLikeQuestion: false,
+            },
+          },
+          5
+        )
+      );
+    };
+
+    it.each(targets)(
+      'tells the author of a comment about a reply under $name, with its link',
+      async ({ target, videoId, link }) => {
+        await seedTarget(target);
+        const root = await comment(AUTHOR, 'first', null, undefined, target);
+
+        await notify(await comment(FAN, 'agreed', root, undefined, target), target);
+
+        const [row] = await notificationsOf(repositories, AUTHOR);
+        expect(row).toMatchObject({
+          kind: 'reply',
+          videoId,
+          payload: { actor: { handle: 'a-fan' }, excerpt: 'agreed', ...link },
+        });
+        expect(await kindsFor(CREATOR_ID)).toEqual([]);
+      }
+    );
+
+    it.each(targets)('tells nobody about a root comment under $name', async ({ target }) => {
+      await seedTarget(target);
+
+      await notify(await comment(FAN, 'first', null, undefined, target), target);
+
+      expect(await kindsFor(CREATOR_ID)).toEqual([]);
+    });
+
+    it.each(targets)('tells nobody about a reply under $name that is held', async ({ target }) => {
+      await seedTarget(target);
+      const root = await comment(AUTHOR, 'first', null, undefined, target);
+
+      const result = await notify(await comment(FAN, 'agreed', root, held, target), target);
+
+      expect(result.recorded).toBe(0);
+      expect(await kindsFor(AUTHOR)).toEqual([]);
+    });
+  });
 });

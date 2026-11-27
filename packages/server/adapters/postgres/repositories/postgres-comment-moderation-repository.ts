@@ -12,9 +12,10 @@ import type { CommentRemoval } from '@vp/domain';
 import { and, desc, eq, gte, lt, or } from 'drizzle-orm';
 import { drizzleWhere, keysetBefore, msTimestamp, notDeletedScope } from '../scopes/index';
 import { moderateComment } from './comment-moderation-writes';
+import { onTarget } from './comment-targets';
 import type { PostgresDatabase } from './types';
 
-const { commentRemovals: r, videoComments: c, videos: v } = schema;
+const { commentRemovals: r, comments: c, channels: ch } = schema;
 
 export class PostgresCommentModerationRepository implements CommentModerationRepositoryPort {
   constructor(private readonly db: PostgresDatabase) {}
@@ -36,7 +37,7 @@ export class PostgresCommentModerationRepository implements CommentModerationRep
           .from(c)
           .where(
             drizzleWhere(
-              eq(c.videoId, target.videoId),
+              onTarget(target.target),
               or(eq(c.id, target.id), eq(c.parentId, target.id)),
               notDeletedScope(c)
             )
@@ -55,9 +56,9 @@ export class PostgresCommentModerationRepository implements CommentModerationRep
         this.db
           .select({ id: c.id })
           .from(c)
-          .innerJoin(v, eq(v.id, c.videoId))
+          .innerJoin(ch, eq(ch.id, c.channelId))
           .where(
-            drizzleWhere(eq(c.authorId, authorId), eq(v.ownerId, videoOwnerId), notDeletedScope(c))
+            drizzleWhere(eq(c.authorId, authorId), eq(ch.userId, videoOwnerId), notDeletedScope(c))
           ),
       databaseUnavailable.during('listIdsByAuthor')
     );

@@ -1,3 +1,4 @@
+import type { POST_KINDS, PostStatus } from './channel-post';
 import type { ModerationState } from './comment-moderation';
 import type { Disclosure } from './comment-settings';
 import type { VideoStatus, VideoVisibility } from './status-vocabulary';
@@ -55,6 +56,20 @@ export type VideoExportRow = {
   comments: number;
   createdAt: string;
   readyAt: string | null;
+};
+
+/** `payload` is the post's own JSON, so a CSV cell holds it whole whatever the kind. */
+export type PostExportRow = {
+  postId: string;
+  kind: (typeof POST_KINDS)[number];
+  status: PostStatus;
+  payload: string;
+  commentsEnabled: boolean;
+  likeCount: number;
+  commentsCount: number;
+  publishedAt: string | null;
+  createdAt: string;
+  editedAt: string | null;
 };
 
 /** One keyset page; `next` is the opaque position after its last row, `null` on the last page. */

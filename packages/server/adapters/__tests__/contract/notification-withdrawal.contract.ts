@@ -7,6 +7,7 @@ import {
   VIDEO_IDS,
   publicVideo,
   seedOwners,
+  videoTarget,
 } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
@@ -50,7 +51,8 @@ export function describeNotificationWithdrawalContract(makeSubject: MakeReposito
         expectOk(
           await comments.create({
             id,
-            videoId: VIDEO_IDS.a,
+            target: videoTarget(VIDEO_IDS.a),
+            channelId: OWNER_CHANNEL_ID,
             authorId: OWNER_ID,
             authorChannelId: OWNER_CHANNEL_ID,
             parentId: null,

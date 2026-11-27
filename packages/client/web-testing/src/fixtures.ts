@@ -122,6 +122,7 @@ export function comment(overrides: Partial<CommentView> = {}): CommentView {
   const postedAt = '2026-10-14T09:12:00.000Z';
   return {
     id: COMMENT_ID,
+    target: { type: 'video', id: VIDEO_ID },
     videoId: VIDEO_ID,
     parentId: null,
     content: 'The tram at 02:15 is the best sound design this year.',
@@ -150,7 +151,12 @@ export function comment(overrides: Partial<CommentView> = {}): CommentView {
 export function inboxComment(
   overrides: Partial<CreatorInboxCommentView> = {}
 ): CreatorInboxCommentView {
-  return { ...comment(), video: { id: VIDEO_ID, title: 'Alfama at 5 a.m.' }, ...overrides };
+  return {
+    ...comment(),
+    video: { id: VIDEO_ID, title: 'Alfama at 5 a.m.' },
+    targetSummary: { type: 'video', id: VIDEO_ID, title: 'Alfama at 5 a.m.' },
+    ...overrides,
+  };
 }
 
 export function channel(

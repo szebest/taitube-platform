@@ -39,6 +39,9 @@ import * as oembed from './oembed';
 import * as picks from './picks';
 import * as playback from './playback';
 import * as playlists from './playlists';
+import * as postRevisions from './post-revisions';
+import * as postStudio from './post-studio';
+import * as posts from './posts';
 import * as preferences from './preferences';
 import * as reactions from './reactions';
 import * as recommendationFeedback from './recommendation-feedback';
@@ -50,6 +53,7 @@ import * as searchHistory from './search-history';
 import * as shorts from './shorts';
 import * as subscriptions from './subscriptions';
 import * as telemetry from './telemetry';
+import * as threads from './threads';
 import * as trustedCommenters from './trusted-commenters';
 import * as uploads from './uploads';
 import * as videoAccess from './video-access';
@@ -114,6 +118,9 @@ export * from './pagination';
 export * from './picks';
 export * from './playback';
 export * from './playlists';
+export * from './post-revisions';
+export * from './post-studio';
+export * from './posts';
 export * from './preferences';
 export * from './problem';
 export * from './problem-for';
@@ -127,6 +134,7 @@ export * from './search-history';
 export * from './shorts';
 export * from './subscriptions';
 export * from './telemetry';
+export * from './threads';
 export * from './trusted-commenters';
 export * from './uploads';
 export * from './video-resource';
@@ -191,6 +199,9 @@ export const contracts = {
   picks,
   playback,
   playlists,
+  postRevisions,
+  postStudio,
+  posts,
   preferences,
   reactions,
   recommendationFeedback,
@@ -201,6 +212,7 @@ export const contracts = {
   shorts,
   subscriptions,
   telemetry,
+  threads,
   savedReplies,
   trustedCommenters,
   uploads,

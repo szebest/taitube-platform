@@ -24,6 +24,7 @@ describe('apps/client/web: pl signInPrompt', () => {
     { key: 'signInPrompt.report', expected: 'Zaloguj się, aby to zgłosić' },
     { key: 'signInPrompt.bell', expected: 'Zaloguj się, aby dostawać powiadomienia' },
     { key: 'signInPrompt.feedback', expected: 'Zaloguj się, aby dostosować rekomendacje' },
+    { key: 'signInPrompt.vote', expected: 'Zaloguj się, aby zagłosować' },
   ] as const)('renders $key with no arguments', ({ key, expected }) => {
     expect(t(key)).toEqual({ ok: true, value: expected });
   });

@@ -100,6 +100,7 @@ export const studioDevelopers = {
         channel_analytics: 'Channel analytics',
         comments: 'Comments',
         videos: 'Videos',
+        posts: 'Posts',
       },
     },
   }),

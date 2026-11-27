@@ -8,7 +8,7 @@
 | Blocks | — |
 | Spec | [116 out of scope](116-video-management-power-tools.md) · [120 drafts and schedules](120-community-posts-and-threads.md) · [121 schedules](121-channel-page-builder.md) · [17 housekeeping schedulers](17-housekeeping-reconciler-purge.md) |
 
-**Status:** blocked
+**Status:** ready
 
 ## What to build
 

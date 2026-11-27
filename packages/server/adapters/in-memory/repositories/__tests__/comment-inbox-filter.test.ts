@@ -5,7 +5,7 @@ const at = (minute: number) => new Date(Date.UTC(2026, 2, 1, 12, minute));
 
 const question = {
   id: 'q',
-  videoId: 'video-1',
+  channelId: 'channel-1',
   parentId: null,
   authorId: 'viewer-1',
   createdAt: at(0),

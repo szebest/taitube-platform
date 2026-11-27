@@ -12,6 +12,7 @@
 5 apps/client/studio/src/features/live/components/live-dashboard/live-dashboard.tsx
 1 apps/client/studio/src/features/live/components/live-stats/live-stats.tsx
 1 apps/client/studio/src/features/live/utils/overlay-chime.ts
+1 apps/client/studio/src/features/posts/api/prefetch-posts.ts
 1 apps/client/studio/src/features/team/api/ensure-acting-channel.ts
 1 apps/client/studio/src/features/upload/components/upload-processing/upload-processing.tsx
 1 apps/client/studio/src/features/videos/components/library-video-row/library-video-row.tsx

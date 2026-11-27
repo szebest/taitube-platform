@@ -33,8 +33,8 @@ need goes to a `packages/client/` package, never a copy.
 
 | | Web | Studio |
 |---|---|---|
-| Features | `account` `browse` `channel` `clips` `embed` `library` `live` `notifications` `offline` `pwa` `recommendations` `search` `shell` `shorts` `watch` | `account` `admin` `analytics` `captions` `channel` `comments` `live` `shell` `team` `upload` `videos` |
-| Kit areas | `channel` `discovery` `discussion` `feed` `live` `player` `settings` `shell` `shorts` `states` `video` `watch` | `analytics` `dialogs` `live` `table` `team` `video` `workspace` |
+| Features | `account` `browse` `channel` `clips` `embed` `library` `live` `notifications` `offline` `pwa` `recommendations` `search` `shell` `shorts` `watch` | `account` `admin` `analytics` `captions` `channel` `comments` `live` `posts` `shell` `team` `upload` `videos` |
+| Kit areas | `channel` `discovery` `discussion` `feed` `live` `player` `settings` `shell` `shorts` `states` `video` `watch` | `analytics` `dialogs` `live` `posts` `table` `team` `video` `workspace` |
 
 The player is not a feature: the skin is `components/player/`, the Video.js engine `integrations/video-js/`, the port
 `lib/player/`.

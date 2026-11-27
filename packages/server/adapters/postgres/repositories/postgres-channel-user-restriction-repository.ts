@@ -59,9 +59,9 @@ export class PostgresChannelUserRestrictionRepository implements ChannelUserRest
               set: { ...restriction, createdAt },
             })
             .returning();
-          const videoIds = await recountAuthored(tx, restriction.channelId, restriction.userId);
+          const targets = await recountAuthored(tx, restriction.channelId, restriction.userId);
           if (record) await appendModerationRecord(tx, record);
-          return { restriction: row ?? { ...restriction, createdAt }, videoIds };
+          return { restriction: row ?? { ...restriction, createdAt }, targets };
         }),
       databaseUnavailable.during('applyRestriction')
     );
@@ -79,11 +79,11 @@ export class PostgresChannelUserRestrictionRepository implements ChannelUserRest
             .delete(r)
             .where(and(eq(r.channelId, channelId), eq(r.userId, userId)))
             .returning({ userId: r.userId });
-          if (removed.length === 0) return { lifted: false, videoIds: [] };
+          if (removed.length === 0) return { lifted: false, targets: [] };
 
-          const videoIds = await recountAuthored(tx, channelId, userId);
+          const targets = await recountAuthored(tx, channelId, userId);
           if (audit) await appendChannelAudit(tx, audit);
-          return { lifted: true, videoIds };
+          return { lifted: true, targets };
         }),
       databaseUnavailable.during('liftRestriction')
     );

@@ -11,8 +11,9 @@ import { useProgressWriter } from '#app/hooks/use-progress-writer';
 import { playbackAttribution } from '#app/lib/player/playback-attribution';
 import { usePlaybackPreference } from '#app/lib/preferences/device-preferences-provider';
 import { useShareToken } from '#app/lib/video-access/share-token.context';
+import { LazyWatchThreadMarkers } from '../watch-thread-markers/watch-thread-markers.lazy';
 
-/** The player on the watch page: it starts with the viewer's chosen playback defaults, offers the video's captions, corrections and chapters, saves where it gets to and tells the beacon the read's share link and test variant. */
+/** The player on the watch page: it starts with the viewer's chosen playback defaults, offers the video's captions, corrections, chapters and thread markers, saves where it gets to and tells the beacon the read's share link and test variant. */
 export function WatchPlayer({ onPause, ...props }: TaitubePlayerWithTelemetryProps) {
   const [speed] = usePlaybackPreference('speed');
   const [quality] = usePlaybackPreference('quality');
@@ -43,6 +44,7 @@ export function WatchPlayer({ onPause, ...props }: TaitubePlayerWithTelemetryPro
       cards={corrections?.items}
       chapters={video?.chapters}
       attribution={video && playbackAttribution(video)}
+      markers={props.range ? undefined : <LazyWatchThreadMarkers videoId={props.videoId} />}
       {...progressWriter}
       {...props}
       onPause={(progress) => {

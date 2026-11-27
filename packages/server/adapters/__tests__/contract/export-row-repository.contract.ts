@@ -1,10 +1,10 @@
 import { randomUUID } from 'node:crypto';
-import type { DatabaseUnavailable } from '@kit/errors';
-import type { Result } from '@kit/result';
 import { expectOk } from '@kit/testing/result';
 import type { ExportRowRepositoryPort, ExportScope, Repositories } from '@vp/core/repositories';
-import type { Channel, ExportRowPage } from '@vp/domain';
+import type { Channel } from '@vp/domain';
 import { seedTeam } from './channel-team-fixtures';
+import { describeExportPostRowsContract } from './export-post-rows.contract';
+import { walk } from './export-row-walk';
 import {
   CATEGORY_MUSIC_ID,
   OTHER_OWNER_CHANNEL_ID,
@@ -14,29 +14,13 @@ import {
   seedCategories,
   seedOwners,
   VIDEO_IDS,
+  videoTarget,
+  OWNER_CHANNEL_ID,
 } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
 const COMMENT = (n: number) => `00000000-0000-7000-8000-00000000ec${String(n).padStart(2, '0')}`;
 const BASE = Date.parse('2026-03-01T12:00:00.000Z');
-
-type Pager<Row> = (
-  scope: ExportScope,
-  after: string | null,
-  limit: number
-) => Promise<Result<ExportRowPage<Row>, DatabaseUnavailable>>;
-
-/** Follows `next` to the end two rows at a time, so every walk crosses a page boundary. */
-async function walk<Row>(pager: Pager<Row>, scope: ExportScope): Promise<Row[]> {
-  const rows: Row[] = [];
-  let after: string | null = null;
-  do {
-    const page: ExportRowPage<Row> = expectOk(await pager(scope, after, 2));
-    rows.push(...page.rows);
-    after = page.next;
-  } while (after !== null);
-  return rows;
-}
 
 async function view(repositories: Repositories, videoId: string, viewDate: string, views: number) {
   expectOk(
@@ -162,7 +146,8 @@ export function describeExportRowRepositoryContract(makeSubject: MakeRepositorie
         expectOk(
           await repositories.comments.create({
             id: COMMENT(n),
-            videoId: VIDEO_IDS.a,
+            target: videoTarget(VIDEO_IDS.a),
+            channelId: OWNER_CHANNEL_ID,
             authorId: fan.userId,
             authorChannelId: fan.id,
             parentId: n === 2 ? COMMENT(1) : null,
@@ -175,7 +160,9 @@ export function describeExportRowRepositoryContract(makeSubject: MakeRepositorie
         moderationState: 'held',
         moderationDisclosure: 'silent',
       });
-      expectOk(await repositories.comments.remove({ id: COMMENT(3), videoId: VIDEO_IDS.a }));
+      expectOk(
+        await repositories.comments.remove({ id: COMMENT(3), target: videoTarget(VIDEO_IDS.a) })
+      );
 
       const read = await walk(rows.comments.bind(rows), scope);
 
@@ -231,5 +218,7 @@ export function describeExportRowRepositoryContract(makeSubject: MakeRepositorie
 
       expect(read).toEqual([]);
     });
+
+    describeExportPostRowsContract(makeSubject);
   });
 }

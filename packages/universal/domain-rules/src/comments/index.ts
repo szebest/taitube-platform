@@ -1,4 +1,5 @@
 export * from './failures';
+export * from './comment-host';
 export * from './apply-moderation.rule';
 export * from './comment-gate.rule';
 export * from './create-comment.rule';

@@ -13,6 +13,7 @@ describe('@vp/domain: data export', () => {
       'channel_analytics',
       'comments',
       'videos',
+      'posts',
     ]);
   });
 

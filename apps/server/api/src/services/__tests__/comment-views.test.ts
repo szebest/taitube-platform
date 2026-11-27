@@ -6,7 +6,8 @@ const AT = new Date('2026-03-01T12:00:00.000Z');
 
 const THREAD: CommentThread = {
   id: 'c-1',
-  videoId: 'v-1',
+  target: { type: 'video', id: 'v-1' },
+  channelId: 'ch-9',
   authorId: 'u-1',
   authorChannelId: 'ch-1',
   parentId: null,
@@ -45,6 +46,7 @@ describe('apps/server/api/services: comment views', () => {
   it('renders dates as ISO strings and keeps the author under author', () => {
     expect(toCommentView({ ...THREAD, moderationState: 'published' }, VIDEO, STRANGER)).toEqual({
       id: 'c-1',
+      target: { type: 'video', id: 'v-1' },
       videoId: 'v-1',
       parentId: null,
       content: 'hello',

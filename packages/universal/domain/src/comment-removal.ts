@@ -8,7 +8,8 @@ export const COMMENT_REMOVAL_RETENTION_DAYS = 30;
 export interface CommentRemoval {
   id: string;
   channelId: string;
-  videoId: string;
+  /** Null for a comment that was on anything but a video. */
+  videoId: string | null;
   authorId: string;
   excerpt: string;
   reason: CommentModerationReason;

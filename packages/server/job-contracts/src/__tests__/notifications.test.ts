@@ -10,6 +10,7 @@ import {
   NOTIFY_HEART,
   NOTIFY_MODERATION,
   NOTIFY_PARTY_INVITE,
+  NOTIFY_POST_SUBSCRIBERS,
   NOTIFY_TEAM_INVITE,
   NOTIFY_PROCESSING,
   NOTIFY_SUBSCRIBERS,
@@ -21,6 +22,7 @@ import {
   NotifyProcessingJob,
   NotifySubscribersJob,
   partyInviteOutbox,
+  postSubscribersOutbox,
   subscribersOutbox,
   transitionNotificationJobs,
   visibilityNotificationJobs,
@@ -48,7 +50,10 @@ const MODERATION = {
 describe('job-contracts: notification jobs', () => {
   it.each([
     { schema: NotifySubscribersJob, valid: { kind: 'live', videoId: VIDEO_ID } },
-    { schema: NotifyCommentJob, valid: { videoId: VIDEO_ID, commentId: COMMENT_ID } },
+    {
+      schema: NotifyCommentJob,
+      valid: { target: { type: 'video', id: VIDEO_ID }, commentId: COMMENT_ID },
+    },
     { schema: NotifyHeartJob, valid: { videoId: VIDEO_ID, commentId: COMMENT_ID } },
     { schema: NotifyPartyInviteJob, valid: { inviteId: INVITE_ID } },
     { schema: NotifyTeamInviteJob, valid: { inviteId: INVITE_ID } },
@@ -59,6 +64,18 @@ describe('job-contracts: notification jobs', () => {
   ])('reads a well-formed payload', ({ schema, valid }) => {
     expect(schema.parse(valid)).toEqual(valid);
     expect(schema.safeParse({}).success).toBe(false);
+  });
+
+  it.each(['video', 'post', 'thread'] as const)('reads a comment on a %s', (type) => {
+    const job = { target: { type, id: VIDEO_ID }, commentId: COMMENT_ID };
+
+    expect(NotifyCommentJob.parse(job)).toEqual(job);
+  });
+
+  it('refuses a comment on a target of no kind', () => {
+    const job = { target: { type: 'playlist', id: VIDEO_ID }, commentId: COMMENT_ID };
+
+    expect(NotifyCommentJob.safeParse(job).success).toBe(false);
   });
 
   it('refuses a fan-out for a kind that has no subscribers', () => {
@@ -87,8 +104,14 @@ describe('job-contracts: notification jobs', () => {
       jobId: `${VIDEO_ID}--announce-live--${AFTER}`,
     },
     {
+      scenario: 'a later batch of a post',
+      outbox: postSubscribersOutbox({ postId: VIDEO_ID, after: AFTER }),
+      name: NOTIFY_POST_SUBSCRIBERS,
+      jobId: `${VIDEO_ID}--notify-post-subscribers--${AFTER}`,
+    },
+    {
       scenario: 'a comment',
-      outbox: commentOutbox({ videoId: VIDEO_ID, commentId: COMMENT_ID }),
+      outbox: commentOutbox({ target: { type: 'video', id: VIDEO_ID }, commentId: COMMENT_ID }),
       name: NOTIFY_COMMENT,
       jobId: `${COMMENT_ID}--notify-comment`,
     },

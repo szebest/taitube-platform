@@ -1,6 +1,11 @@
-import { getChannel, getChannelFeatured, getChannelSpotlight } from '@vp/api-contracts';
+import {
+  getChannel,
+  getChannelFeatured,
+  getChannelSpotlight,
+  listChannelPosts,
+} from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
-import { createQueryClient, GUEST } from '@vp/queries';
+import { channelPostsQueryOptions, createQueryClient, GUEST } from '@vp/queries';
 import {
   account,
   api,
@@ -16,6 +21,7 @@ import {
   channelQueryOptions,
   channelSpotlightQueryOptions,
 } from '#app/lib/query-keys/channel-keys';
+import type { ChannelTab } from '../channel-search';
 import { loadChannelPage } from '../load-channel-page';
 
 const FEATURED = { source: 'popular' as const, items: [videoSummary({ title: 'Shelf video' })] };
@@ -28,11 +34,15 @@ function answer(fields: Parameters<typeof channel>[0] = {}) {
   );
 }
 
-const load = (idOrHandle: string, auth: Parameters<typeof loadChannelPage>[0]['auth'] = GUEST) => {
+const load = (
+  idOrHandle: string,
+  auth: Parameters<typeof loadChannelPage>[0]['auth'] = GUEST,
+  tab?: ChannelTab
+) => {
   const queryClient = createQueryClient();
   return {
     queryClient,
-    loaded: loadChannelPage({ queryClient, api, locale: 'pl', auth }, idOrHandle),
+    loaded: loadChannelPage({ queryClient, api, locale: 'pl', auth }, idOrHandle, tab),
   };
 };
 
@@ -79,6 +89,33 @@ describe('apps/client/web: loadChannelPage', () => {
     await expect(loaded).rejects.toMatchObject({
       options: { to: '/@{$handle}', params: { handle: 'new-name' }, statusCode: 301 },
     });
+  });
+
+  it('keeps the tab on the redirect to the current handle', async () => {
+    answer({ handle: 'new-name', redirectedFrom: 'old-name' });
+
+    const { loaded } = load('old-name', GUEST, 'posts');
+
+    await expect(loaded).rejects.toMatchObject({ options: { search: { tab: 'posts' } } });
+  });
+
+  it.each([
+    { tab: 'posts' as const, warmed: true },
+    { tab: 'home' as const, warmed: false },
+    { tab: undefined, warmed: false },
+  ])('warms the first page of posts only on the Posts tab: $tab', async ({ tab, warmed }) => {
+    answer();
+    apiServer.use(
+      mockEndpoint(listChannelPosts, () => HttpResponse.json({ items: [], nextCursor: null }))
+    );
+
+    const { queryClient, loaded } = load(CHANNEL_ID, GUEST, tab);
+    await loaded;
+
+    expect(
+      queryClient.getQueryData(channelPostsQueryOptions(api, CHANNEL_ID, null).queryKey) !==
+        undefined
+    ).toBe(warmed);
   });
 
   it('renders not found for a channel the API does not have', async () => {

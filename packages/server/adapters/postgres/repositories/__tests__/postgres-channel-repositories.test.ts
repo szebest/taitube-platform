@@ -13,7 +13,10 @@ describe('createChannelRepositories', () => {
       'channelInvites',
       'channelMembers',
       'channelPages',
+      'channelPosts',
       'channels',
+      'postEngagement',
+      'videoThreads',
     ]);
   });
 });
