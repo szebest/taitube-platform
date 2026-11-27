@@ -8,7 +8,7 @@ import { type KindContext, defineKind, optionKeys } from './kind';
  * @public
  */
 export interface NumberInput {
-  readonly amount: number;
+  readonly amount: number | Intl.StringNumericLiteral;
   readonly format: Intl.NumberFormatOptions;
 }
 
@@ -58,22 +58,35 @@ export function defineNumberKind<const Name extends string, Options extends obje
   defaults = {},
   transform,
 }: NumberKindDefinition<Name, Options>) {
-  return defineKind({
+  const check = optionKeys<Options>(keys);
+  const inputFrom = (
+    value: number,
+    options: Options | undefined,
+    context: KindContext
+  ): Result<NumberInput, FormatFailure> =>
+    andThen(finite(name, value), (finiteValue) =>
+      andThen(transform(finiteValue, options ?? {}, context), ({ amount, format }) =>
+        ok({ amount, format: { ...defaultsFor(defaults, format), ...format } })
+      )
+    );
+  const kind = defineKind({
     name,
     arg: isNumber,
-    options: optionKeys<Options>(keys),
+    options: check,
     render: (value, options, context) =>
-      andThen(finite(name, value), (finiteValue) =>
-        andThen(transform(finiteValue, options ?? {}, context), ({ amount, format }) =>
-          map(
-            context.cache.numberFormat(context.locale, {
-              ...defaultsFor(defaults, format),
-              ...format,
-            }),
-            (formatter) => formatter.format(amount)
-          )
+      andThen(inputFrom(value, options, context), ({ amount, format }) =>
+        map(context.cache.numberFormat(context.locale, format), (formatter) =>
+          formatter.format(amount)
         )
       ),
+  });
+  return Object.freeze({
+    ...kind,
+    /** What this kind hands `Intl.NumberFormat` for a value and unchecked options, for a kind that composes it. */
+    input: (value: number, options: unknown, context: KindContext) =>
+      options === undefined
+        ? inputFrom(value, undefined, context)
+        : andThen(check(options, name), (valid) => inputFrom(value, valid, context)),
   });
 }
 
@@ -83,16 +96,18 @@ export interface Scaled<U extends string> {
 }
 
 /**
- * Divides by `step` until the amount fits the largest unit it reaches, the last unit capping it.
+ * Divides by `step` until the amount fits the largest unit it reaches, the last unit capping it
+ * and `first` the one it never goes below.
  * @internal
  */
 export function scale<U extends string>(
   value: number,
   step: number,
-  units: readonly [U, ...U[]]
+  units: readonly [U, ...U[]],
+  first = 0
 ): Scaled<U> {
-  let amount = value;
-  let index = 0;
+  let amount = value / step ** first;
+  let index = first;
   while (Math.abs(amount) >= step && index < units.length - 1) {
     amount /= step;
     index += 1;
@@ -102,32 +117,36 @@ export function scale<U extends string>(
 
 interface ScaledUnitKindDefinition<
   Name extends string,
-  Options extends object,
+  Options extends { readonly minUnit?: Unit },
   Unit extends string,
 > {
   readonly name: Name;
   readonly keys: readonly (keyof Options & string)[];
   readonly units: readonly [Unit, ...Unit[]];
   /** The step between units for these options, and the options `Intl` is handed. */
-  readonly scaleBy: (options: Partial<Options>) => {
+  readonly scaleBy: (options: Omit<Partial<Options>, 'minUnit'>) => {
     readonly step: number;
     readonly display: Intl.NumberFormatOptions;
   };
 }
 
-/** A quantity read in the largest unit it reaches (`4.5 MB`, `4.5 Mb/s`), one decimal unless the caller says else. */
+/**
+ * A quantity read in the largest unit it reaches (`4.5 MB`, `4.5 Mb/s`), one decimal unless the
+ * caller says else; `minUnit` is the smallest unit it is shown in.
+ */
 export function defineScaledUnitKind<
   const Name extends string,
-  Options extends object,
+  Options extends { readonly minUnit?: Unit },
   const Unit extends string,
 >({ name, keys, units, scaleBy }: ScaledUnitKindDefinition<Name, Options, Unit>) {
   return defineNumberKind<Name, Options>({
     name,
     keys,
     defaults: { maximumFractionDigits: 1 },
-    transform: (value, options) => {
+    transform: (value, { minUnit, ...options }) => {
       const { step, display } = scaleBy(options);
-      const { amount, unit } = scale(value, step, units);
+      const first = minUnit === undefined ? 0 : Math.max(units.indexOf(minUnit), 0);
+      const { amount, unit } = scale(value, step, units, first);
       return ok({ amount, format: { ...display, style: 'unit', unit } });
     },
   });

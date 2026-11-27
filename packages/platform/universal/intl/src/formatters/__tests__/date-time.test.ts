@@ -1,4 +1,4 @@
-import { ARABIC_INDIC_DIGIT, contextFor, format } from '../../__tests__/fixtures';
+import { formatText, ARABIC_INDIC_DIGIT, contextFor, format } from '../../__tests__/fixtures';
 import { type DateTimeValue } from '../date-time';
 
 const ISO = '2026-09-22T18:30:00.000Z';
@@ -26,5 +26,18 @@ describe('@kit/intl: dateTime', () => {
     { options: { weekday: 'long', hour: '2-digit' } as const, expected: /^Tuesday(,| at) 18$/ },
   ])('follows $options', ({ options, expected }) => {
     expect(render('en-GB', options)).toMatch(expected);
+  });
+
+  it.each([
+    { options: { dateStyle: 'full' }, expected: 'Tuesday, September 22, 2026' },
+    { options: { timeStyle: 'short' }, expected: '6:30 PM' },
+    {
+      options: { dateStyle: 'short', timeStyle: 'short', timeZone: 'Asia/Tokyo' },
+      expected: '9/23/26, 3:30 AM',
+    },
+  ] as const)('takes $options', ({ options, expected }) => {
+    expect(
+      formatText({ type: 'dateTime', value: ISO, options }, 'en-US').replace(/\s/gu, ' ')
+    ).toBe(expected);
   });
 });

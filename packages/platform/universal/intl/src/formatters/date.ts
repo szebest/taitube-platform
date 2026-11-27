@@ -1,5 +1,6 @@
 import {
   DATE_RESOLUTION,
+  INSTANT_KEYS,
   type DateStyle,
   formatInstant,
   resolveDateOptions,
@@ -14,9 +15,10 @@ export const DATE_FIELD_KEYS = [
   'month',
   'day',
   'timeZoneName',
+  ...INSTANT_KEYS,
 ] as const satisfies OptionKeys<Intl.DateTimeFormatOptions>;
 
-export const DATE_OPTION_KEYS = ['style', ...DATE_FIELD_KEYS] as const satisfies OptionKeys<
+const DATE_OPTION_KEYS = ['style', ...DATE_FIELD_KEYS] as const satisfies OptionKeys<
   Intl.DateTimeFormatOptions,
   'style'
 >;

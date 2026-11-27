@@ -69,3 +69,29 @@ defineLocales({ source: 'de', details: { en: { name: 'English', direction: 'ltr'
 
 // @ts-expect-error a direction is ltr or rtl
 defineLocales({ source: 'en', details: { en: { name: 'English', direction: 'up' } } });
+
+const _options: readonly FormatValue[] = [
+  { type: 'number', value: 1, options: { roundingMode: 'floor', trailingZeroDisplay: 'auto' } },
+  { type: 'count', value: 1, options: { roundingMode: 'ceil', signDisplay: 'always' } },
+  { type: 'percent', value: 1, options: { input: 'fraction', maximumSignificantDigits: 2 } },
+  { type: 'money', value: 1, options: { currencySign: 'accounting', notation: 'compact' } },
+  { type: 'bytes', value: 1, options: { minUnit: 'kilobyte', roundingMode: 'floor' } },
+  { type: 'bitrate', value: 1, options: { minUnit: 'kilobit-per-second' } },
+  { type: 'date', value: '', options: { timeZone: 'Asia/Tokyo', calendar: 'japanese' } },
+  { type: 'time', value: '', options: { timeZone: 'Asia/Tokyo', fractionalSecondDigits: 3 } },
+  { type: 'dateTime', value: '', options: { dateStyle: 'full', timeStyle: 'short' } },
+  { type: 'dateRange', value: ['', ''], options: { hour: 'numeric', timeZone: 'UTC' } },
+  { type: 'calendarDay', value: '', options: { withTime: false, windowDays: 3, style: 'long' } },
+  { type: 'relative', value: '', options: { minUnit: 'minute', maxUnit: 'day' } },
+  { type: 'displayName', value: 'GB', options: { of: 'region', style: 'short' } },
+  { type: 'duration', value: 1, options: { unit: 'milliseconds', maxUnits: 2 } },
+];
+
+// @ts-expect-error a bytes size is never shown below a unit it does not know
+const _minUnit: FormatValue = { type: 'bytes', value: 1, options: { minUnit: 'kb' } };
+
+// @ts-expect-error percent reads points or a fraction
+const _input: FormatValue = { type: 'percent', value: 1, options: { input: 'ratio' } };
+
+// @ts-expect-error money has no per-value zone
+const _moneyZone: FormatValue = { type: 'money', value: 1, options: { timeZone: 'UTC' } };

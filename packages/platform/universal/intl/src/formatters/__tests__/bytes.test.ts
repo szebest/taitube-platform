@@ -1,4 +1,4 @@
-import { ARABIC_INDIC_DIGIT, contextFor, format } from '../../__tests__/fixtures';
+import { formatText, ARABIC_INDIC_DIGIT, contextFor, format } from '../../__tests__/fixtures';
 import { type BytesValue } from '../bytes';
 
 function render(locale: string, value: number, options?: BytesValue['options']) {
@@ -23,5 +23,13 @@ describe('@kit/intl: bytes', () => {
 
   it('writes Arabic-Indic digits in ar-EG', () => {
     expect(render('ar-EG', 4_500_000)).toMatch(ARABIC_INDIC_DIGIT);
+  });
+
+  it.each([
+    { options: { minUnit: 'kilobyte' }, value: 512, expected: '0.5 kB' },
+    { options: { minimumFractionDigits: 2 }, value: 4_500_000, expected: '4.50 MB' },
+    { options: { roundingMode: 'floor' }, value: 4_990_000, expected: '4.9 MB' },
+  ] as const)('takes $options', ({ options, value, expected }) => {
+    expect(formatText({ type: 'bytes', value, options })).toBe(expected);
   });
 });

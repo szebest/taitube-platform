@@ -1,4 +1,4 @@
-import { ARABIC_INDIC_DIGIT, contextFor, format } from '../../__tests__/fixtures';
+import { formatText, ARABIC_INDIC_DIGIT, contextFor, format } from '../../__tests__/fixtures';
 import { USER } from '../../context';
 import { type MoneyValue } from '../money';
 
@@ -48,5 +48,22 @@ describe('@kit/intl: money', () => {
     },
   ])('declines $scenario', ({ currency, value }) => {
     expect(render('en', value, currency)).toBe('FORMAT_UNRENDERABLE');
+  });
+
+  it.each([
+    { options: { currencySign: 'accounting' }, value: -5, expected: '($5.00)' },
+    { options: { notation: 'compact' }, value: 1_250_000, expected: '$1.3M' },
+    { options: { trailingZeroDisplay: 'stripIfInteger' }, value: 5, expected: '$5' },
+    {
+      options: { units: 'minor' },
+      value: 9_007_199_254_740_991,
+      expected: '$90,071,992,547,409.91',
+    },
+    { options: { units: 'minor' }, value: -5, expected: '-$0.05' },
+    { options: { units: 'minor' }, value: 12.5, expected: 'FORMAT_UNRENDERABLE' },
+  ] as const)('takes $options for $value', ({ options, value, expected }) => {
+    expect(formatText({ type: 'money', value, options }, 'en-US', { currency: 'USD' })).toBe(
+      expected
+    );
   });
 });

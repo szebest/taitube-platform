@@ -5,11 +5,15 @@ import { defineNumberKind } from '../number-kind';
 export const NUMBER_OPTION_KEYS = [
   'minimumFractionDigits',
   'maximumFractionDigits',
+  'minimumSignificantDigits',
+  'maximumSignificantDigits',
   'minimumIntegerDigits',
   'useGrouping',
   'signDisplay',
   'notation',
   'compactDisplay',
+  'roundingMode',
+  'trailingZeroDisplay',
   'unit',
   'unitDisplay',
 ] as const satisfies OptionKeys<Intl.NumberFormatOptions>;

@@ -1,4 +1,10 @@
-import { ARABIC_INDIC_DIGIT, ASCII_DIGIT, contextFor, format } from '../../__tests__/fixtures';
+import {
+  formatText,
+  ARABIC_INDIC_DIGIT,
+  ASCII_DIGIT,
+  contextFor,
+  format,
+} from '../../__tests__/fixtures';
 import { type PercentValue } from '../percent';
 
 function render(locale: string, value: number, options?: PercentValue['options']) {
@@ -23,5 +29,13 @@ describe('@kit/intl: percent', () => {
   it('writes Arabic-Indic digits in ar-EG', () => {
     expect(render('ar-EG', 7)).toMatch(ARABIC_INDIC_DIGIT);
     expect(render('ar-EG', 7)).not.toMatch(ASCII_DIGIT);
+  });
+
+  it.each([
+    { options: { input: 'fraction' }, value: 0.07, expected: '7%' },
+    { options: { maximumSignificantDigits: 2 }, value: 12.345, expected: '12%' },
+    { options: { roundingMode: 'floor', maximumFractionDigits: 0 }, value: 12.9, expected: '12%' },
+  ] as const)('takes $options', ({ options, value, expected }) => {
+    expect(formatText({ type: 'percent', value, options })).toBe(expected);
   });
 });

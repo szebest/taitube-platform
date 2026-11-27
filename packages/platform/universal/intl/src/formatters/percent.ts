@@ -5,18 +5,27 @@ import { defineNumberKind } from '../number-kind';
 const PERCENT_OPTION_KEYS = [
   'minimumFractionDigits',
   'maximumFractionDigits',
+  'maximumSignificantDigits',
+  'roundingMode',
   'signDisplay',
-] as const satisfies OptionKeys<Intl.NumberFormatOptions>;
+  'input',
+] as const satisfies OptionKeys<Intl.NumberFormatOptions, 'input'>;
 
-type PercentOptions = Pick<Intl.NumberFormatOptions, (typeof PERCENT_OPTION_KEYS)[number]>;
+type PercentOptions = Pick<
+  Intl.NumberFormatOptions,
+  Exclude<(typeof PERCENT_OPTION_KEYS)[number], 'input'>
+> & { readonly input?: 'points' | 'fraction' };
 
-/** In percentage points: `7` renders as 7%, not 700%. */
+/** In percentage points, `7` rendering as 7%, not 700%; `input: 'fraction'` reads `0.07` as 7%. */
 export const percent = defineNumberKind({
   name: 'percent',
   keys: PERCENT_OPTION_KEYS,
   defaults: { maximumFractionDigits: 1 },
-  transform: (points, options: Partial<PercentOptions>) =>
-    ok({ amount: points / 100, format: { ...options, style: 'percent' } }),
+  transform: (value, { input = 'points', ...display }: Partial<PercentOptions>) =>
+    ok({
+      amount: input === 'points' ? value / 100 : value,
+      format: { ...display, style: 'percent' },
+    }),
 });
 
 /** @public */

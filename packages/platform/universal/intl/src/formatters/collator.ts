@@ -6,6 +6,7 @@ const COLLATOR_OPTION_KEYS = [
   'numeric',
   'caseFirst',
   'ignorePunctuation',
+  'usage',
 ] as const satisfies OptionKeys<Intl.CollatorOptions>;
 
 export type CollatorOptions = Pick<Intl.CollatorOptions, (typeof COLLATOR_OPTION_KEYS)[number]>;

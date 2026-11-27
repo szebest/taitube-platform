@@ -3,10 +3,16 @@ import { type FormatContext, USER, type User, resolveCurrency } from '../context
 import { type FormatFailure, unrenderable } from '../failures';
 import { type OptionKeys, type TaggedOf, defineKind, optionKeys } from '../kind';
 
-const DISPLAY_NAME_OPTION_KEYS = ['of'] as const satisfies OptionKeys<DisplayNameOptions>;
+const DISPLAY_NAME_OPTION_KEYS = [
+  'of',
+  'style',
+  'languageDisplay',
+] as const satisfies OptionKeys<DisplayNameOptions>;
 
 export interface DisplayNameOptions {
   readonly of: Intl.DisplayNamesType;
+  readonly style?: Intl.DisplayNamesOptions['style'];
+  readonly languageDisplay?: Intl.DisplayNamesOptions['languageDisplay'];
 }
 
 const isCode = (value: unknown): value is string | User => typeof value === 'string';
@@ -29,8 +35,12 @@ export const displayName = defineKind({
   options: optionKeys<DisplayNameOptions>(DISPLAY_NAME_OPTION_KEYS),
   render: (value, options, context) => {
     if (options === undefined) return err(unrenderable('displayName', 'no type of name given'));
-    const { of } = options;
-    const names = context.cache.displayNames(context.locale, { type: of, fallback: 'none' });
+    const { of, ...display } = options;
+    const names = context.cache.displayNames(context.locale, {
+      ...display,
+      type: of,
+      fallback: 'none',
+    });
     return andThen(resolveCode(value, of, context), (code) =>
       andThen(names, (format) =>
         andThen(

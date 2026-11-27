@@ -15,3 +15,13 @@ export function contextFor(locale: string, overrides: Partial<FormatContext> = {
 export function format(value: FormatValue, context: FormatContext) {
   return createIntl(context).format(value);
 }
+
+/** The text a value renders as, or the code of the failure that declined it. */
+export function formatText(
+  value: FormatValue,
+  locale = 'en',
+  overrides: Partial<FormatContext> = {}
+): string {
+  const rendered = format(value, contextFor(locale, overrides));
+  return rendered.ok ? rendered.value : rendered.error.code;
+}

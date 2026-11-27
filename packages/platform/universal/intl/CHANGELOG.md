@@ -18,6 +18,16 @@
   `resolveDateOptions`.
 - `relative` rounds half away from zero and reads a count that rounds up to the next unit in that unit:
   3570 seconds is "in 1 hour" and "1 hour ago".
+- Options added to the kinds that had room for them: `roundingMode`, `trailingZeroDisplay` and significant digits on
+  `number`; `roundingMode` and `signDisplay` on `count`; `input: 'fraction'`, `roundingMode` and
+  `maximumSignificantDigits` on `percent`; `currencySign`, `notation`, `trailingZeroDisplay` and an exact decimal
+  `units: 'minor'` on `money` (a fractional minor amount is declined); `minimumFractionDigits`, `roundingMode` and
+  `minUnit` on `bytes` and `bitrate`; `timeZone` and `calendar` per value on `date`, `time` and `dateTime`,
+  `fractionalSecondDigits` on `time`, independent `dateStyle` and `timeStyle` on `dateTime` and time fields on
+  `dateRange`; `withTime`, `style` and `windowDays` on `calendarDay`; `minUnit`, `maxUnit`, `thresholds` and calendar
+  months and years on `relative`; `style` and `languageDisplay` on `displayName`; `usage` on `collator`; `ellipsis`,
+  `position` and `boundary` on `truncate`; `unit`, `maxUnits` and `hoursDisplay` on `duration`. `numberRange` takes two
+  values of one kind (`number`, `count`, `percent`, `money`) and a number kind's `input` is the `NumberInput` it hands `Intl.NumberFormat`.
 - Breaking: a preset's locale entry overrides part of `default` instead of replacing it.
 - `list` formats each item through its context (text, numbers, tagged values, or raw values of `item: { kind }`),
   collapses past `max` into the caller's plural `more` branches (no copy of its own; `max` without `more` fails

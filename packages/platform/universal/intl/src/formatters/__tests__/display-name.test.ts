@@ -1,4 +1,4 @@
-import { contextFor, format } from '../../__tests__/fixtures';
+import { contextFor, format, formatText } from '../../__tests__/fixtures';
 import { USER } from '../../context';
 import { type DisplayNameValue } from '../display-name';
 
@@ -62,5 +62,26 @@ describe('@kit/intl: displayName', () => {
     },
   ])('declines $scenario', ({ value }) => {
     expect(render('en', value)).toBe('FORMAT_UNRENDERABLE');
+  });
+
+  it.each([
+    {
+      value: { type: 'displayName', value: 'GB', options: { of: 'region', style: 'short' } },
+      expected: 'UK',
+    },
+    {
+      value: {
+        type: 'displayName',
+        value: 'en-GB',
+        options: { of: 'language', languageDisplay: 'standard' },
+      },
+      expected: /^English \((United Kingdom|UK)\)$/,
+    },
+    {
+      value: { type: 'displayName', value: 'Latn', options: { of: 'script' } },
+      expected: 'Latin',
+    },
+  ] as const)('takes $value.options', ({ value, expected }) => {
+    expect(formatText(value)).toMatch(expected);
   });
 });

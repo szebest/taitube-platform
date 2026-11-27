@@ -7,14 +7,20 @@ import { TIME_FIELD_KEYS } from './time';
 const DATE_TIME_FIELD_KEYS = [
   ...DATE_FIELD_KEYS,
   ...TIME_FIELD_KEYS,
+  'dateStyle',
+  'timeStyle',
 ] as const satisfies OptionKeys<Intl.DateTimeFormatOptions>;
 
-const DATE_TIME_OPTION_KEYS = ['style', ...DATE_TIME_FIELD_KEYS] as const satisfies OptionKeys<
-  Intl.DateTimeFormatOptions,
-  'style'
->;
+export const DATE_TIME_OPTION_KEYS = [
+  'style',
+  ...DATE_TIME_FIELD_KEYS,
+] as const satisfies OptionKeys<Intl.DateTimeFormatOptions, 'style'>;
 
-type DateTimeOptions = Pick<Intl.DateTimeFormatOptions, (typeof DATE_TIME_FIELD_KEYS)[number]> & {
+/** `dateStyle` and `timeStyle` are independent: either alone shows only its half. */
+export type DateTimeOptions = Pick<
+  Intl.DateTimeFormatOptions,
+  (typeof DATE_TIME_FIELD_KEYS)[number]
+> & {
   readonly style?: DateStyle;
 };
 

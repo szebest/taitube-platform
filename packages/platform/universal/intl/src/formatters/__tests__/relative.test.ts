@@ -1,4 +1,4 @@
-import { ARABIC_INDIC_DIGIT, NOW, contextFor, format } from '../../__tests__/fixtures';
+import { ARABIC_INDIC_DIGIT, NOW, contextFor, format, formatText } from '../../__tests__/fixtures';
 import {
   DAY as DAY_SECONDS,
   HOUR as HOUR_SECONDS,
@@ -95,4 +95,31 @@ describe('@kit/intl: relative', () => {
       'FORMAT_UNRENDERABLE'
     );
   });
+
+  it.each([
+    { options: { minUnit: 'minute' }, seconds: 20, expected: 'this minute' },
+    { options: { maxUnit: 'day' }, seconds: 400 * 86_400, expected: '400 days ago' },
+    { options: { thresholds: { minute: 90 } }, seconds: 75, expected: '75 seconds ago' },
+    { options: { thresholds: { minute: 90 } }, seconds: 100, expected: '2 minutes ago' },
+  ] as const)('takes $options for $seconds s', ({ options, seconds, expected }) => {
+    const value = ago(seconds * MILLISECONDS_PER_SECOND);
+
+    expect(formatText({ type: 'relative', value, options })).toBe(expected);
+  });
+
+  it.each([
+    { now: '2026-03-31T12:00:00.000Z', value: '2026-02-28T12:00:00.000Z', expected: 'last month' },
+    { now: '2026-03-27T12:00:00.000Z', value: '2026-02-28T12:00:00.000Z', expected: '4 weeks ago' },
+    {
+      now: '2027-09-21T12:00:00.000Z',
+      value: '2026-09-22T12:00:00.000Z',
+      expected: '11 months ago',
+    },
+    { now: '2027-09-22T12:00:00.000Z', value: '2026-09-22T12:00:00.000Z', expected: 'last year' },
+  ] as const)(
+    'counts calendar months and years from $now to $value',
+    ({ now, value, expected }) => {
+      expect(formatText({ type: 'relative', value, options: { now } })).toBe(expected);
+    }
+  );
 });

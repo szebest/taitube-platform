@@ -1,4 +1,4 @@
-import { contextFor, format } from '../../__tests__/fixtures';
+import { formatText, contextFor, format } from '../../__tests__/fixtures';
 import { type DateOptions } from '../date';
 
 const ISO = '2026-09-22T18:30:00.000Z';
@@ -35,5 +35,13 @@ describe('@kit/intl: date', () => {
     const rendered = format({ type: 'date', value: 'Sep 22 2026' }, contextFor('en'));
 
     expect(rendered).toMatchObject({ ok: false, error: { code: 'FORMAT_UNRENDERABLE' } });
+  });
+
+  it.each([
+    { options: { style: 'short', timeZone: 'Asia/Tokyo' }, expected: '9/23/26' },
+    { options: { timeZone: 'Asia/Tokyo' }, expected: 'Sep 23, 2026' },
+    { options: { year: 'numeric', calendar: 'japanese' }, expected: 'Reiwa' },
+  ] as const)('takes $options', ({ options, expected }) => {
+    expect(formatText({ type: 'date', value: ISO, options }, 'en-US')).toMatch(expected);
   });
 });

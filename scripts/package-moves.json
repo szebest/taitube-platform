@@ -407,7 +407,6 @@
       "createIntlCache": "@kit/intl",
       "date": "@kit/intl",
       "DATE_FIELD_KEYS": "@kit/intl",
-      "DATE_OPTION_KEYS": "@kit/intl",
       "DateOptions": "@kit/intl",
       "dateRange": "@kit/intl",
       "DateRangeValue": "@kit/intl",

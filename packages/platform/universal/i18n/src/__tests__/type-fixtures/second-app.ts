@@ -33,7 +33,7 @@ second.dt('{amount:money}', { money: { amount: 'euro' } });
 second.dt('{amount:money}', { money: { amount: 'dollar' } });
 
 // @ts-expect-error UnknownOption: money takes MoneyOptions, not number options
-second.dt('{amount:money}', { money: { amount: { notation: 'compact' } } });
+second.dt('{amount:money}', { money: { amount: { minimumIntegerDigits: 3 } } });
 
 // @ts-expect-error UnknownKind: the second app registers no enum
 second.dt('{amount:enum}', { enum: { amount: {} } });

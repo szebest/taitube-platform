@@ -2,7 +2,7 @@ import { andThen, map } from '@kit/result';
 import { DATE_RESOLUTION, resolveDateOptions } from '../format-instant';
 import { parseInstant } from '../inputs';
 import { type TaggedOf, defineKind, optionKeys } from '../kind';
-import { DATE_OPTION_KEYS, type DateOptions } from './date';
+import { DATE_TIME_OPTION_KEYS, type DateTimeOptions } from './date-time';
 
 const isStringPair = (value: unknown): value is readonly [string, string] =>
   Array.isArray(value) &&
@@ -12,11 +12,11 @@ const isStringPair = (value: unknown): value is readonly [string, string] =>
 export const dateRange = defineKind({
   name: 'dateRange',
   arg: isStringPair,
-  options: optionKeys<DateOptions>(DATE_OPTION_KEYS),
+  options: optionKeys<DateTimeOptions>(DATE_TIME_OPTION_KEYS),
   render: ([start, end], options, context) => {
     const intlOptions = {
-      ...resolveDateOptions(options ?? {}, DATE_RESOLUTION),
       timeZone: context.timeZone,
+      ...resolveDateOptions(options ?? {}, DATE_RESOLUTION),
     };
     return andThen(parseInstant('dateRange', start), (from) =>
       andThen(parseInstant('dateRange', end), (to) =>

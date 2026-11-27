@@ -8,7 +8,9 @@ export const TIME_FIELD_KEYS = [
   'second',
   'hour12',
   'hourCycle',
+  'fractionalSecondDigits',
   'timeZoneName',
+  'timeZone',
 ] as const satisfies OptionKeys<Intl.DateTimeFormatOptions>;
 
 const TIME_OPTION_KEYS = ['style', ...TIME_FIELD_KEYS] as const satisfies OptionKeys<

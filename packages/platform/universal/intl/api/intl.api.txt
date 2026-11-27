@@ -12,27 +12,38 @@ export type BitrateValue = TaggedOf<typeof bitrate>;
 export type BytesValue = TaggedOf<typeof bytes>;
 export interface CalendarDayOptions {
     readonly now?: string;
+    readonly withTime?: boolean;
+    readonly style?: DateStyle;
+    readonly windowDays?: number;
 }
 export type CalendarDayValue = TaggedOf<typeof calendarDay>;
 export type CheckOptions<Options> = (value: unknown, kind: string) => Result<Options, FormatFailure>;
 export type CollatorOptions = Pick<Intl.CollatorOptions, (typeof COLLATOR_OPTION_KEYS)[number]>;
 export type Comparator = (a: string, b: string) => number;
 export type CountValue = TaggedOf<typeof compact>;
-export const DATE_FIELD_KEYS: readonly ["weekday", "era", "year", "month", "day", "timeZoneName"]
-export const DATE_OPTION_KEYS: readonly ["style", "weekday", "era", "year", "month", "day", "timeZoneName"]
+export const DATE_FIELD_KEYS: readonly ["weekday", "era", "year", "month", "day", "timeZoneName", "timeZone", "calendar"]
+export const DATE_TIME_OPTION_KEYS: readonly ["style", "weekday", "era", "year", "month", "day", "timeZoneName", "timeZone", "calendar", "hour", "minute", "second", "hour12", "hourCycle", "fractionalSecondDigits", "timeZoneName", "timeZone", "dateStyle", "timeStyle"]
 export type DateOptions = Pick<Intl.DateTimeFormatOptions, (typeof DATE_FIELD_KEYS)[number]> & {
     readonly style?: DateStyle;
 };
 export type DateRangeValue = TaggedOf<typeof dateRange>;
+export type DateTimeOptions = Pick<Intl.DateTimeFormatOptions, (typeof DATE_TIME_FIELD_KEYS)[number]> & {
+    readonly style?: DateStyle;
+};
 export type DateTimeValue = TaggedOf<typeof dateTime>;
 export type DateValue = TaggedOf<typeof date>;
 export interface DisplayNameOptions {
     readonly of: Intl.DisplayNamesType;
+    readonly style?: Intl.DisplayNamesOptions['style'];
+    readonly languageDisplay?: Intl.DisplayNamesOptions['languageDisplay'];
 }
 export type DisplayNameValue = TaggedOf<typeof displayName>;
 export interface DurationChoices {
     readonly style: 'clock' | 'words';
     readonly unitDisplay: 'short' | 'long' | 'narrow';
+    readonly unit: 'seconds' | 'milliseconds';
+    readonly maxUnits: number;
+    readonly hoursDisplay: 'auto' | 'always';
 }
 export type DurationValue = TaggedOf<typeof duration>;
 export interface FormatContext {
@@ -136,9 +147,9 @@ export type MoreBranches = {
 } & {
     readonly other: string;
 };
-export const NUMBER_OPTION_KEYS: readonly ["minimumFractionDigits", "maximumFractionDigits", "minimumIntegerDigits", "useGrouping", "signDisplay", "notation", "compactDisplay", "unit", "unitDisplay"]
+export const NUMBER_OPTION_KEYS: readonly ["minimumFractionDigits", "maximumFractionDigits", "minimumSignificantDigits", "maximumSignificantDigits", "minimumIntegerDigits", "useGrouping", "signDisplay", "notation", "compactDisplay", "roundingMode", "trailingZeroDisplay", "unit", "unitDisplay"]
 export interface NumberInput {
-    readonly amount: number;
+    readonly amount: number | Intl.StringNumericLiteral;
     readonly format: Intl.NumberFormatOptions;
 }
 export type NumberOptions = Pick<Intl.NumberFormatOptions, (typeof NUMBER_OPTION_KEYS)[number]>;
@@ -155,12 +166,18 @@ export type Preset<Options> = {
     readonly [locale: string]: Partial<Options>;
 };
 export type PresetTable = Readonly<Record<string, Readonly<Record<string, Preset<unknown>>>>>;
+export interface RangeEnd {
+    readonly type: 'number' | 'count' | 'percent' | 'money';
+    readonly value: number;
+    readonly options?: unknown;
+}
+export type RelativeUnit = 'year' | 'month' | 'week' | 'day' | 'hour' | 'minute' | 'second';
 export type RelativeValue = TaggedOf<typeof relative>;
 export interface Scaled<U extends string> {
     readonly amount: number;
     readonly unit: U;
 }
-export const TIME_FIELD_KEYS: readonly ["hour", "minute", "second", "hour12", "hourCycle", "timeZoneName"]
+export const TIME_FIELD_KEYS: readonly ["hour", "minute", "second", "hour12", "hourCycle", "fractionalSecondDigits", "timeZoneName", "timeZone"]
 export type TaggedOf<K> = K extends Kind<infer Name, infer Arg, infer Options, infer Out> ? string extends Out ? {
     readonly type: Name;
     readonly value: Arg;
@@ -174,6 +191,9 @@ export type TaggedValueOf<Kinds extends readonly Kind[]> = TaggedOf<Kinds[number
 export type TimeValue = TaggedOf<typeof time>;
 export interface TruncateOptions {
     readonly maxGraphemes: number;
+    readonly ellipsis?: string;
+    readonly position?: 'end' | 'middle';
+    readonly boundary?: 'grapheme' | 'word';
 }
 export const USER: "user"
 export type UnknownOption = FailureOf<typeof FormatErrorCodes.FORMAT_UNKNOWN_OPTION, {
@@ -192,35 +212,35 @@ export type WrongKind = FailureOf<typeof FormatErrorCodes.FORMAT_WRONG_KIND, {
     formatter: string;
     received: string;
 }>;
-export const bitrate: Kind<"bitrate", number, BitrateOptions, string, never>
-export const bytes: Kind<"bytes", number, BytesOptions, string, never>
+export const bitrate: Readonly<{ input: (value: number, options: unknown, context: KindContext) => Result<NumberInput, FormatFailure>; name: "bitrate"; arg(value: unknown): value is number; options(value: unknown, kind: string): Result<BitrateOptions, FormatFailure>; render(arg: number, options: BitrateOptions | undefined, context: KindContext): Result<string, FormatFailure>; parts?(arg: number, options: BitrateOptions | undefined, context: KindContext): Result<never, FormatFailure>; }>
+export const bytes: Readonly<{ input: (value: number, options: unknown, context: KindContext) => Result<NumberInput, FormatFailure>; name: "bytes"; arg(value: unknown): value is number; options(value: unknown, kind: string): Result<BytesOptions, FormatFailure>; render(arg: number, options: BytesOptions | undefined, context: KindContext): Result<string, FormatFailure>; parts?(arg: number, options: BytesOptions | undefined, context: KindContext): Result<never, FormatFailure>; }>
 export const calendarDay: Kind<"calendarDay", string, CalendarDayOptions, string, never>
 export const collator: Kind<"collator", undefined, CollatorOptions, Comparator, never>
-export const compact: Kind<"count", number, CompactOptions, string, never>
+export const compact: Readonly<{ input: (value: number, options: unknown, context: KindContext) => Result<NumberInput, FormatFailure>; name: "count"; arg(value: unknown): value is number; options(value: unknown, kind: string): Result<CompactOptions, FormatFailure>; render(arg: number, options: CompactOptions | undefined, context: KindContext): Result<string, FormatFailure>; parts?(arg: number, options: CompactOptions | undefined, context: KindContext): Result<never, FormatFailure>; }>
 export function createIntl(context: FormatContext): IntlBinding
 export function createIntl<const Kinds extends readonly Kind[]>(context: FormatContext, kinds: Kinds): IntlBinding<Kinds>
 export function createIntlCache(env?: IntlEnvironment): IntlCache
 export const date: Kind<"date", string, DateOptions, string, never>
-export const dateRange: Kind<"dateRange", readonly [string, string], DateOptions, string, never>
+export const dateRange: Kind<"dateRange", readonly [string, string], DateTimeOptions, string, never>
 export const dateTime: Kind<"dateTime", string, DateTimeOptions, string, never>
 export function defaultsFor(defaults: Intl.NumberFormatOptions, options: Intl.NumberFormatOptions): Intl.NumberFormatOptions
 export function defineKind<const Name extends string, Arg, Options, Out = string, Parts = never>(definition: KindDefinition<Name, Arg, Options, Out, Parts>): Kind<Name, Arg, Options, Out, Parts>
 export function defineLocales<const Tag extends string, Details extends LocaleDetails>({ source, details, }: LocalesDefinition<Tag, Details>): Locales<Tag, Details>
-export function defineNumberKind<const Name extends string, Options extends object>({ name, keys, defaults, transform, }: NumberKindDefinition<Name, Options>): Kind<Name, number, Options, string, never>
+export function defineNumberKind<const Name extends string, Options extends object>({ name, keys, defaults, transform, }: NumberKindDefinition<Name, Options>): Readonly<{ input: (value: number, options: unknown, context: KindContext) => Result<NumberInput, FormatFailure>; name: Name; arg(value: unknown): value is number; options(value: unknown, kind: string): Result<Options, FormatFailure>; render(arg: number, options: Options | undefined, context: KindContext): Result<string, FormatFailure>; parts?(arg: number, options: Options | undefined, context: KindContext): Result<never, FormatFailure>; }>
 export function definePresets<const Presets extends PresetTable>(presets: Presets): Presets
-export function defineScaledUnitKind<const Name extends string, Options extends object, const Unit extends string>({ name, keys, units, scaleBy }: ScaledUnitKindDefinition<Name, Options, Unit>): Kind<Name, number, Options, string, never>
+export function defineScaledUnitKind<const Name extends string, Options extends { readonly minUnit?: Unit; }, const Unit extends string>({ name, keys, units, scaleBy }: ScaledUnitKindDefinition<Name, Options, Unit>): Readonly<{ input: (value: number, options: unknown, context: KindContext) => Result<NumberInput, FormatFailure>; name: Name; arg(value: unknown): value is number; options(value: unknown, kind: string): Result<Options, FormatFailure>; render(arg: number, options: Options | undefined, context: KindContext): Result<string, FormatFailure>; parts?(arg: number, options: Options | undefined, context: KindContext): Result<never, FormatFailure>; }>
 export function describeValue(value: unknown): string
 export const displayName: Kind<"displayName", string, DisplayNameOptions, string, never>
-export const duration: Kind<"duration", number, Partial<Pick<DurationChoices, "style" | "unitDisplay">>, string, never>
-export const formatKinds: readonly [Kind<"count", number, CompactOptions, string, never>, Kind<"number", number, NumberOptions, string, never>, Kind<"percent", number, PercentOptions, string, never>, Kind<"bytes", number, BytesOptions, string, never>, Kind<"bitrate", number, BitrateOptions, string, never>, Kind<"numberRange", readonly [number, number], NumberOptions, string, never>, Kind<"money", number, MoneyOptions, string, never>, Kind<"date", string, DateOptions, string, never>, Kind<"time", string, TimeOptions, string, never>, Kind<"dateTime", string, DateTimeOptions, string, never>, Kind<"dateRange", readonly [string, string], DateOptions, string, never>, Kind<"plainDate", string, PlainDateOptions, string, never>, Kind<"relative", string, RelativeOptions, string, never>, Kind<"calendarDay", string, CalendarDayOptions, string, never>, Kind<"duration", number, Partial<Pick<DurationChoices, "style" | "unitDisplay">>, string, never>, Kind<"list", readonly ListItem[], ListOptions, string, ListDetail>, Kind<"displayName", string, DisplayNameOptions, string, never>, Kind<"collator", undefined, CollatorOptions, Comparator, never>, Kind<"pluralCategory", number, PluralOptions, Intl.LDMLPluralRule, never>, Kind<"truncate", string, TruncateOptions, string, never>]
+export const duration: Kind<"duration", number, Partial<Pick<DurationChoices, "style" | "unit" | "unitDisplay" | "maxUnits" | "hoursDisplay">>, string, never>
+export const formatKinds: readonly [Readonly<{ input: (value: number, options: unknown, context: KindContext) => Result<NumberInput, FormatFailure>; name: "count"; arg(value: unknown): value is number; options(value: unknown, kind: string): Result<CompactOptions, FormatFailure>; render(arg: number, options: CompactOptions | undefined, context: KindContext): Result<string, FormatFailure>; parts?(arg: number, options: CompactOptions | undefined, context: KindContext): Result<never, FormatFailure>; }>, Readonly<{ input: (value: number, options: unknown, context: KindContext) => Result<NumberInput, FormatFailure>; name: "number"; arg(value: unknown): value is number; options(value: unknown, kind: string): Result<NumberOptions, FormatFailure>; render(arg: number, options: NumberOptions | undefined, context: KindContext): Result<string, FormatFailure>; parts?(arg: number, options: NumberOptions | undefined, context: KindContext): Result<never, FormatFailure>; }>, Readonly<{ input: (value: number, options: unknown, context: KindContext) => Result<NumberInput, FormatFailure>; name: "percent"; arg(value: unknown): value is number; options(value: unknown, kind: string): Result<PercentOptions, FormatFailure>; render(arg: number, options: PercentOptions | undefined, context: KindContext): Result<string, FormatFailure>; parts?(arg: number, options: PercentOptions | undefined, context: KindContext): Result<never, FormatFailure>; }>, Readonly<{ input: (value: number, options: unknown, context: KindContext) => Result<NumberInput, FormatFailure>; name: "bytes"; arg(value: unknown): value is number; options(value: unknown, kind: string): Result<BytesOptions, FormatFailure>; render(arg: number, options: BytesOptions | undefined, context: KindContext): Result<string, FormatFailure>; parts?(arg: number, options: BytesOptions | undefined, context: KindContext): Result<never, FormatFailure>; }>, Readonly<{ input: (value: number, options: unknown, context: KindContext) => Result<NumberInput, FormatFailure>; name: "bitrate"; arg(value: unknown): value is number; options(value: unknown, kind: string): Result<BitrateOptions, FormatFailure>; render(arg: number, options: BitrateOptions | undefined, context: KindContext): Result<string, FormatFailure>; parts?(arg: number, options: BitrateOptions | undefined, context: KindContext): Result<never, FormatFailure>; }>, Kind<"numberRange", RangeEnds, NumberOptions, string, never>, Readonly<{ input: (value: number, options: unknown, context: KindContext) => Result<NumberInput, FormatFailure>; name: "money"; arg(value: unknown): value is number; options(value: unknown, kind: string): Result<MoneyOptions, FormatFailure>; render(arg: number, options: MoneyOptions | undefined, context: KindContext): Result<string, FormatFailure>; parts?(arg: number, options: MoneyOptions | undefined, context: KindContext): Result<never, FormatFailure>; }>, Kind<"date", string, DateOptions, string, never>, Kind<"time", string, TimeOptions, string, never>, Kind<"dateTime", string, DateTimeOptions, string, never>, Kind<"dateRange", readonly [string, string], DateTimeOptions, string, never>, Kind<"plainDate", string, PlainDateOptions, string, never>, Kind<"relative", string, RelativeOptions, string, never>, Kind<"calendarDay", string, CalendarDayOptions, string, never>, Kind<"duration", number, Partial<Pick<DurationChoices, "style" | "unit" | "unitDisplay" | "maxUnits" | "hoursDisplay">>, string, never>, Kind<"list", readonly ListItem[], ListOptions, string, ListDetail>, Kind<"displayName", string, DisplayNameOptions, string, never>, Kind<"collator", undefined, CollatorOptions, Comparator, never>, Kind<"pluralCategory", number, PluralOptions, Intl.LDMLPluralRule, never>, Kind<"truncate", string, TruncateOptions, string, never>]
 export const list: Kind<"list", readonly ListItem[], ListOptions, string, ListDetail>
 export function localeChain(tag: string): Result<readonly string[], FormatFailure>
-export const money: Kind<"money", number, MoneyOptions, string, never>
-export const number: Kind<"number", number, NumberOptions, string, never>
+export const money: Readonly<{ input: (value: number, options: unknown, context: KindContext) => Result<NumberInput, FormatFailure>; name: "money"; arg(value: unknown): value is number; options(value: unknown, kind: string): Result<MoneyOptions, FormatFailure>; render(arg: number, options: MoneyOptions | undefined, context: KindContext): Result<string, FormatFailure>; parts?(arg: number, options: MoneyOptions | undefined, context: KindContext): Result<never, FormatFailure>; }>
+export const number: Readonly<{ input: (value: number, options: unknown, context: KindContext) => Result<NumberInput, FormatFailure>; name: "number"; arg(value: unknown): value is number; options(value: unknown, kind: string): Result<NumberOptions, FormatFailure>; render(arg: number, options: NumberOptions | undefined, context: KindContext): Result<string, FormatFailure>; parts?(arg: number, options: NumberOptions | undefined, context: KindContext): Result<never, FormatFailure>; }>
 export function numberFormatOptions(options?: NumberOptions): Intl.NumberFormatOptions
-export const numberRange: Kind<"numberRange", readonly [number, number], NumberOptions, string, never>
+export const numberRange: Kind<"numberRange", RangeEnds, NumberOptions, string, never>
 export function optionKeys<Options extends object>(allowed: readonly (keyof Options & string)[]): CheckOptions<Options>
-export const percent: Kind<"percent", number, PercentOptions, string, never>
+export const percent: Readonly<{ input: (value: number, options: unknown, context: KindContext) => Result<NumberInput, FormatFailure>; name: "percent"; arg(value: unknown): value is number; options(value: unknown, kind: string): Result<PercentOptions, FormatFailure>; render(arg: number, options: PercentOptions | undefined, context: KindContext): Result<string, FormatFailure>; parts?(arg: number, options: PercentOptions | undefined, context: KindContext): Result<never, FormatFailure>; }>
 export const plainDate: Kind<"plainDate", string, PlainDateOptions, string, never>
 export const pluralCategory: Kind<"pluralCategory", number, PluralOptions, Intl.LDMLPluralRule, never>
 export const relative: Kind<"relative", string, RelativeOptions, string, never>
@@ -228,7 +248,7 @@ export function resolveCurrency(formatter: string, requested: string | User | un
 export function resolveEntry(presets: PresetTable, kind: string, entry: unknown, chain: readonly string[]): Resolved
 export function runKind<Arg, Options, Out>(kind: Kind<string, Arg, Options, Out>, arg: unknown, options: unknown, context: KindContext, label?: string): Result<Out, FormatFailure>
 export function runParts<Arg, Options, Parts>(kind: Kind<string, Arg, Options, unknown, Parts>, arg: unknown, options: unknown, context: KindContext, label?: string): Result<Parts, FormatFailure>
-export function scale<U extends string>(value: number, step: number, units: readonly [U, ...U[]]): Scaled<U>
+export function scale<U extends string>(value: number, step: number, units: readonly [U, ...U[]], first?: number): Scaled<U>
 export const time: Kind<"time", string, TimeOptions, string, never>
 export const truncate: Kind<"truncate", string, TruncateOptions, string, never>
 export const unknownOption: (formatter: string, option: string) => UnknownOption

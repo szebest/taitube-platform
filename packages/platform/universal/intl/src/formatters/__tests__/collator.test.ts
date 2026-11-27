@@ -35,10 +35,19 @@ describe('@kit/intl: collator', () => {
   it('declines an option it does not allow', () => {
     const intl = createIntl(contextFor('en'));
 
-    // @ts-expect-error usage is fixed to sorting
-    expect(intl.call('collator', undefined, { usage: 'search' })).toMatchObject({
+    // @ts-expect-error collation is not an option collator takes
+    expect(intl.call('collator', undefined, { collation: 'phonebk' })).toMatchObject({
       ok: false,
-      error: { code: 'FORMAT_UNKNOWN_OPTION', option: 'usage' },
+      error: { code: 'FORMAT_UNKNOWN_OPTION', option: 'collation' },
     });
+  });
+
+  it('matches loosely when it searches', () => {
+    const compare = createIntl(contextFor('en')).call('collator', undefined, {
+      usage: 'search',
+      sensitivity: 'base',
+    });
+
+    expect(compare.ok && compare.value('Café', 'cafe')).toBe(0);
   });
 });

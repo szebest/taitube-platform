@@ -1,4 +1,4 @@
-import { NOW, contextFor, format } from '../../__tests__/fixtures';
+import { NOW, contextFor, format, formatText } from '../../__tests__/fixtures';
 
 function render(locale: string, value: string, timeZone = 'UTC') {
   const rendered = format({ type: 'calendarDay', value }, contextFor(locale, { timeZone }));
@@ -30,5 +30,23 @@ describe('@kit/intl: calendarDay', () => {
     );
 
     expect(rendered).toEqual({ ok: true, value: 'yesterday' });
+  });
+
+  it.each([
+    { options: { withTime: false }, value: '2026-09-22T09:15:00.000Z', expected: 'today' },
+    { options: { windowDays: 3 }, value: '2026-09-20T09:15:00.000Z', expected: '2 days ago' },
+    {
+      options: { style: 'long' },
+      value: '2026-09-10T09:15:00.000Z',
+      expected: 'September 10, 2026',
+    },
+  ] as const)('takes $options', ({ options, value, expected }) => {
+    expect(formatText({ type: 'calendarDay', value, options })).toBe(expected);
+  });
+
+  it.each([-1, 1.5])('declines a window of %d days', (windowDays) => {
+    expect(formatText({ type: 'calendarDay', value: NOW, options: { windowDays } })).toBe(
+      'FORMAT_UNRENDERABLE'
+    );
   });
 });

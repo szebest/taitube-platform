@@ -7,6 +7,8 @@ const COMPACT_OPTION_KEYS = [
   'maximumFractionDigits',
   'minimumFractionDigits',
   'maximumSignificantDigits',
+  'roundingMode',
+  'signDisplay',
 ] as const satisfies OptionKeys<Intl.NumberFormatOptions>;
 
 type CompactOptions = Pick<Intl.NumberFormatOptions, (typeof COMPACT_OPTION_KEYS)[number]>;

@@ -1,4 +1,4 @@
-import { ARABIC_INDIC_DIGIT, contextFor, format } from '../../__tests__/fixtures';
+import { formatText, ARABIC_INDIC_DIGIT, contextFor, format } from '../../__tests__/fixtures';
 
 const RANGE = ['2026-09-22T12:00:00.000Z', '2026-09-24T12:00:00.000Z'] as const;
 
@@ -25,5 +25,18 @@ describe('@kit/intl: dateRange', () => {
 
   it('declines a bound that is not ISO 8601', () => {
     expect(render('en', [RANGE[0], 'soon'])).toBe('FORMAT_UNRENDERABLE');
+  });
+
+  it('shows the time of a premiere in its own zone', () => {
+    const rendered = formatText(
+      {
+        type: 'dateRange',
+        value: ['2026-05-03T16:00:00.000Z', '2026-05-03T18:00:00.000Z'],
+        options: { month: 'short', day: 'numeric', hour: 'numeric', timeZone: 'America/New_York' },
+      },
+      'en-US'
+    );
+
+    expect(rendered.replace(/\s/gu, ' ')).toBe('May 3, 12 – 2 PM');
   });
 });
