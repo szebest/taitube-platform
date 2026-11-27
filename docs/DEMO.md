@@ -61,10 +61,12 @@ on `/login` (the compose images are built without `VITE_DEMO_PERSONAS`); they ex
    Library, analytics, comment inbox, upload.
 6. **Upload.** Upload `tests/fixtures/s15.mp4` (`pnpm gen-video` makes it) in the studio and watch the status move
    through the pipeline, live, over SSE.
-7. **Moderate.** Sign in as the moderator and open the reported comments.
-8. **Operate.** Open Bull Board at http://localhost:3000/admin/queues with the `x-admin-token` header, and
+7. **Protect.** In the studio, set a password on a video. It works because `.env` holds `VIDEO_ACCESS_SECRET`; the viewer
+   unlocks it once in the web app and stays unlocked for 12 hours.
+8. **Moderate.** Sign in as the moderator and open the reported comments.
+9. **Operate.** Open Bull Board at http://localhost:3000/admin/queues with the `x-admin-token` header, and
    http://localhost:3000/docs for the API reference. With `--observability`, Grafana is at http://localhost:3001.
-9. **Break it.** `make chaos-kill` kills a worker mid-transcode and asserts the video still reaches READY once.
+10. **Break it.** `make chaos-kill` kills a worker mid-transcode and asserts the video still reaches READY once.
 
 ## Extend the seed
 
