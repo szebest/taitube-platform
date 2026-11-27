@@ -4,6 +4,7 @@ import type {
   ChannelPostEdited,
   ChannelPostRepositoryPort,
   ListChannelPostsOptions,
+  ListManagedPostsOptions,
   OutboxRepository,
   PostLikeWritten,
 } from '@vp/core/repositories';
@@ -14,10 +15,13 @@ import type {
   CommentTarget,
   NewChannelAuditEntry,
   NewChannelPostInput,
+  NewUnpublishedPostInput,
+  PostPinOutcome,
 } from '@vp/domain';
 import { POST_LIFECYCLE } from '@vp/domain-rules';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { postSubscribersOutbox } from '@vp/job-contracts';
+import { compareDesc, compareIdDesc, cursorOf } from './channel-post-ordering';
 import type { InMemoryChannelAuditRepository } from './in-memory-channel-audit-repository';
 import type { InMemorySubscriptionRepository } from './in-memory-subscription-repository';
 
@@ -27,32 +31,6 @@ export interface InMemoryChannelPostRepositoryOptions {
   subscriptionsRepo: Pick<InMemorySubscriptionRepository, 'getChannelSubscriptionChannelIds'>;
   /** The in-memory form of the trigger that deletes a target's comments with it. */
   removeComments: (target: CommentTarget) => void;
-}
-
-function comparePinnedDesc(a: Date | null, b: Date | null): number {
-  if (a && b) return b.getTime() - a.getTime();
-  if (a) return -1;
-  return b ? 1 : 0;
-}
-
-function compareIdDesc(a: string, b: string): number {
-  if (a === b) return 0;
-  return a > b ? -1 : 1;
-}
-
-/** Pinned first by pin time, then newest, the id breaking ties; every part descends. */
-function compareDesc(a: ChannelPostCursor, b: ChannelPostCursor): number {
-  return (
-    comparePinnedDesc(a.pinnedAt, b.pinnedAt) ||
-    b.publishedAt.getTime() - a.publishedAt.getTime() ||
-    compareIdDesc(a.id, b.id)
-  );
-}
-
-function cursorOf(post: ChannelPost): ChannelPostCursor | null {
-  return (
-    post.publishedAt && { pinnedAt: post.pinnedAt, publishedAt: post.publishedAt, id: post.id }
-  );
 }
 
 export class InMemoryChannelPostRepository implements ChannelPostRepositoryPort {
@@ -105,14 +83,20 @@ export class InMemoryChannelPostRepository implements ChannelPostRepositoryPort 
   async edit(
     id: string,
     version: number,
-    { payload, commentsEnabled }: ChannelPostEdit,
+    { payload, commentsEnabled, placement }: ChannelPostEdit,
     audit: NewChannelAuditEntry
   ): Promise<Result<ChannelPostEdited, DatabaseUnavailable>> {
     const post = this.posts.get(id);
     if (!post) return ok({ type: 'missing' });
     if (post.version !== version) return ok({ type: 'stale', version: post.version });
 
-    Object.assign(post, { payload, commentsEnabled, editedAt: new Date(), version: version + 1 });
+    Object.assign(post, {
+      payload,
+      commentsEnabled,
+      ...placement,
+      editedAt: new Date(),
+      version: version + 1,
+    });
     const audited = await this.deps.auditRepo.append(audit);
     return isErr(audited) ? audited : ok({ type: 'edited', post: { ...post } });
   }
@@ -126,6 +110,100 @@ export class InMemoryChannelPostRepository implements ChannelPostRepositoryPort 
     this.deps.removeComments({ type: 'post', id });
     const audited = await this.deps.auditRepo.append(audit);
     return isErr(audited) ? audited : ok(true);
+  }
+
+  async countPending(channelId: string): Promise<Result<number, DatabaseUnavailable>> {
+    return ok(
+      [...this.posts.values()].filter(
+        (post) => post.channelId === channelId && post.status !== 'published'
+      ).length
+    );
+  }
+
+  async saveUnpublished(
+    input: NewUnpublishedPostInput,
+    audit: NewChannelAuditEntry
+  ): Promise<Result<ChannelPost, DatabaseUnavailable>> {
+    const post: ChannelPost = {
+      ...input,
+      publishedAt: null,
+      pinnedAt: null,
+      editedAt: null,
+      likeCount: 0,
+      commentsCount: 0,
+      version: 1,
+      createdAt: new Date(),
+    };
+    this.posts.set(post.id, post);
+    const audited = await this.deps.auditRepo.append(audit);
+    return isErr(audited) ? audited : ok({ ...post });
+  }
+
+  async promote(
+    id: string,
+    audit: NewChannelAuditEntry | null
+  ): Promise<Result<ChannelPost | null, DatabaseUnavailable>> {
+    const post = this.posts.get(id);
+    if (!post || post.status === 'published') return ok(null);
+    Object.assign(post, { status: 'published', publishedAt: new Date(), publishAt: null });
+    if (audit) {
+      const audited = await this.deps.auditRepo.append(audit);
+      if (isErr(audited)) return audited;
+    }
+    const enqueued = await this.deps.outboxRepo.enqueue(postSubscribersOutbox({ postId: id }));
+    return isErr(enqueued) ? enqueued : ok({ ...post });
+  }
+
+  async promoteDue(now: Date, limit: number): Promise<Result<string[], DatabaseUnavailable>> {
+    const due = [...this.posts.values()]
+      .filter((post) => post.status === 'scheduled' && post.publishAt && post.publishAt <= now)
+      .sort((a, b) => (a.publishAt?.getTime() ?? 0) - (b.publishAt?.getTime() ?? 0))
+      .slice(0, limit);
+    const promoted: string[] = [];
+    for (const { id } of due) {
+      const result = await this.promote(id, null);
+      if (isErr(result)) return result;
+      if (result.value) promoted.push(id);
+    }
+    return ok(promoted);
+  }
+
+  async listManaged(
+    channelId: string,
+    { status, cursor, limit }: ListManagedPostsOptions
+  ): Promise<Result<ChannelPost[], DatabaseUnavailable>> {
+    const before = (post: ChannelPost) =>
+      !cursor ||
+      post.createdAt < cursor.createdAt ||
+      (post.createdAt.getTime() === cursor.createdAt.getTime() && post.id < cursor.id);
+    return ok(
+      [...this.posts.values()]
+        .filter((post) => post.channelId === channelId && (!status || post.status === status))
+        .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime() || compareIdDesc(a.id, b.id))
+        .filter(before)
+        .slice(0, limit + 1)
+        .map((post) => ({ ...post }))
+    );
+  }
+
+  async setPinned(
+    id: string,
+    channelId: string,
+    pinned: boolean,
+    limit: number,
+    audit: NewChannelAuditEntry
+  ): Promise<Result<PostPinOutcome, DatabaseUnavailable>> {
+    const post = this.posts.get(id);
+    if (post?.channelId !== channelId) return ok('missing');
+    if (post.status !== 'published') return ok('not_published');
+    if (pinned === (post.pinnedAt !== null)) return ok(pinned ? 'pinned' : 'unpinned');
+    const held = [...this.posts.values()].filter(
+      (other) => other.channelId === channelId && other.pinnedAt !== null
+    ).length;
+    if (pinned && held >= limit) return ok('limit');
+    post.pinnedAt = pinned ? new Date() : null;
+    const audited = await this.deps.auditRepo.append(audit);
+    return isErr(audited) ? audited : ok(pinned ? 'pinned' : 'unpinned');
   }
 
   async listPublished(

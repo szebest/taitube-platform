@@ -23,6 +23,7 @@ import type { PipelineMetrics } from '@vp/pipeline-metrics';
 import { runExpireRaw } from './expire-raw';
 import { runFlushVideoViews } from './flush-video-views';
 import { runPruneRevisions } from './prune-revisions';
+import { runPublishDuePosts } from './publish-due-posts';
 import { runPurgeChannelAudit } from './purge-channel-audit';
 import { runPurgeChannelImages } from './purge-channel-images';
 import { runPurgeCommentModeration } from './purge-comment-moderation';
@@ -57,6 +58,7 @@ export * from './purge-handle-history';
 export * from './purge-exports';
 export * from './purge-generations';
 export * from './prune-revisions';
+export * from './publish-due-posts';
 export * from './purge-search-history';
 
 interface HousekeepingSettings {
@@ -102,6 +104,7 @@ export function housekeepingTasks(housekeeping: AppConfig['housekeeping']) {
       notificationRetentionDays: housekeeping.notificationRetentionDays,
     },
     expire: { scanLimit: housekeeping.scanLimit },
+    duePosts: { scanLimit: housekeeping.scanLimit },
     tmpSweep: { thresholdMs: housekeeping.tmpSweepAfterMs },
     reactions: { limit: housekeeping.reactionReconcileLimit },
     captions: {
@@ -291,6 +294,9 @@ export function createHousekeepingProcessor(
           ...tasks.expire,
           logger,
         });
+
+      case 'publish-due-posts':
+        return await runPublishDuePosts({ repositories, now, ...tasks.duePosts, logger });
 
       default:
         return assertNever(data.task, 'createHousekeepingProcessor');

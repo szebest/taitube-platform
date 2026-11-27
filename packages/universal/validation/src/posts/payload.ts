@@ -6,6 +6,12 @@ import {
   invalidPostStartMs,
   invalidPostText,
 } from './failures';
+import {
+  type PollPayloadInput,
+  type QuizPayloadInput,
+  validatePollPayload,
+  validateQuizPayload,
+} from './poll-payload';
 
 const TEXT_BOUNDS: LengthBounds = { minLength: 1, maxLength: 2000 };
 const CAPTION_BOUNDS: LengthBounds = { minLength: 0, maxLength: 2000 };
@@ -25,6 +31,8 @@ export type PostPayloadInput =
       readonly images: PostImageInput[];
       readonly caption: string | null;
     }
+  | PollPayloadInput
+  | QuizPayloadInput
   | {
       readonly kind: 'video_share';
       readonly videoId: string;
@@ -88,6 +96,10 @@ export function validatePostPayload(
           caption,
         }))
       );
+    case 'poll':
+      return validatePollPayload(payload);
+    case 'quiz':
+      return validateQuizPayload(payload);
     case 'video_share':
       return andThen(optionalText('comment', payload.comment, COMMENT_BOUNDS), (comment) =>
         map(startMs(payload.startMs), (start) => ({ ...payload, comment, startMs: start }))

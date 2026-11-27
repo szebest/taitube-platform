@@ -1,6 +1,7 @@
 import { type Result, fromPromise, map } from '@kit/result';
 import type {
   ChannelPostEdit,
+  ListManagedPostsOptions,
   ChannelPostEdited,
   ChannelPostRepositoryPort,
   ListChannelPostsOptions,
@@ -12,11 +13,22 @@ import type {
   ChannelPostEntry,
   NewChannelAuditEntry,
   NewChannelPostInput,
+  NewUnpublishedPostInput,
+  PostPinOutcome,
 } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { postSubscribersOutbox } from '@vp/job-contracts';
 import { and, count, eq, gte, sql } from 'drizzle-orm';
 import { appendChannelAudit } from './channel-audit-writes';
+import {
+  countPendingPosts,
+  dueScheduledIds,
+  insertUnpublishedPost,
+  managedPostsPage,
+  placementColumns,
+  promotePost,
+  setPostPinned,
+} from './channel-post-lifecycle-writes';
 import { channelPostsPage, feedPostsPage, toChannelPost } from './channel-post-queries';
 import { enqueueNotificationJobs } from './notification-jobs';
 import type { PostgresDatabase } from './types';
@@ -80,7 +92,7 @@ export class PostgresChannelPostRepository implements ChannelPostRepositoryPort 
   async edit(
     id: string,
     version: number,
-    { payload, commentsEnabled }: ChannelPostEdit,
+    { payload, commentsEnabled, placement }: ChannelPostEdit,
     audit: NewChannelAuditEntry
   ): Promise<Result<ChannelPostEdited, DatabaseUnavailable>> {
     return fromPromise(
@@ -93,6 +105,7 @@ export class PostgresChannelPostRepository implements ChannelPostRepositoryPort 
               payload,
               kind: payload.kind,
               commentsEnabled,
+              ...placementColumns(placement),
               editedAt: now,
               updatedAt: now,
               version: sql`${p.version} + 1`,
@@ -123,6 +136,67 @@ export class PostgresChannelPostRepository implements ChannelPostRepositoryPort 
           return true;
         }),
       databaseUnavailable.during('removeChannelPost')
+    );
+  }
+
+  async countPending(channelId: string): Promise<Result<number, DatabaseUnavailable>> {
+    return fromPromise(
+      () => countPendingPosts(this.db, channelId),
+      databaseUnavailable.during('countPendingChannelPosts')
+    );
+  }
+
+  async saveUnpublished(
+    input: NewUnpublishedPostInput,
+    audit: NewChannelAuditEntry
+  ): Promise<Result<ChannelPost, DatabaseUnavailable>> {
+    return fromPromise(
+      () => this.db.transaction((tx) => insertUnpublishedPost(tx, input, audit)),
+      databaseUnavailable.during('saveUnpublishedChannelPost')
+    );
+  }
+
+  async promote(
+    id: string,
+    audit: NewChannelAuditEntry | null
+  ): Promise<Result<ChannelPost | null, DatabaseUnavailable>> {
+    return fromPromise(
+      () => this.db.transaction((tx) => promotePost(tx, id, audit)),
+      databaseUnavailable.during('promoteChannelPost')
+    );
+  }
+
+  async promoteDue(now: Date, limit: number): Promise<Result<string[], DatabaseUnavailable>> {
+    return fromPromise(async () => {
+      const promoted: string[] = [];
+      for (const id of await dueScheduledIds(this.db, now, limit)) {
+        const post = await this.db.transaction((tx) => promotePost(tx, id, null));
+        if (post) promoted.push(id);
+      }
+      return promoted;
+    }, databaseUnavailable.during('promoteDueChannelPosts'));
+  }
+
+  async listManaged(
+    channelId: string,
+    options: ListManagedPostsOptions
+  ): Promise<Result<ChannelPost[], DatabaseUnavailable>> {
+    return fromPromise(
+      () => managedPostsPage(this.db, channelId, options),
+      databaseUnavailable.during('listManagedChannelPosts')
+    );
+  }
+
+  async setPinned(
+    id: string,
+    channelId: string,
+    pinned: boolean,
+    limit: number,
+    audit: NewChannelAuditEntry
+  ): Promise<Result<PostPinOutcome, DatabaseUnavailable>> {
+    return fromPromise(
+      () => this.db.transaction((tx) => setPostPinned(tx, { id, channelId, pinned, limit }, audit)),
+      databaseUnavailable.during('pinChannelPost')
     );
   }
 

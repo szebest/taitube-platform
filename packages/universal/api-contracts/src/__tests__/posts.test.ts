@@ -126,12 +126,17 @@ describe('packages/api-contracts: posts', () => {
 
   it('answers the publish and the edit with what the caller acts on', () => {
     expect(createPost.errors).toMatchObject({
-      422: [ErrorCodes.VALIDATION_FAILED, ErrorCodes.POST_SHARE_NOT_PUBLIC],
-      429: [ErrorCodes.POST_DAILY_LIMIT],
+      422: [
+        ErrorCodes.VALIDATION_FAILED,
+        ErrorCodes.POST_SHARE_NOT_PUBLIC,
+        ErrorCodes.POST_IMAGE_NOT_READY,
+        ErrorCodes.POST_SCHEDULE_INVALID,
+      ],
+      429: [ErrorCodes.POST_DAILY_LIMIT, ErrorCodes.POST_DRAFT_LIMIT],
     });
     expect(updatePost.errors).toMatchObject({
       404: [ErrorCodes.POST_NOT_FOUND],
-      409: [ErrorCodes.VERSION_CONFLICT],
+      409: [ErrorCodes.VERSION_CONFLICT, ErrorCodes.POST_POLL_LOCKED],
     });
   });
 
@@ -141,6 +146,51 @@ describe('packages/api-contracts: posts', () => {
       ErrorCodes.POST_NOT_FOUND,
       ErrorCodes.COMMENT_NOT_FOUND,
     ]);
+  });
+
+  it.each([
+    {
+      scenario: 'no timing',
+      body: { payload: { kind: 'text', text: 'hi' } },
+      timing: { mode: 'now' },
+    },
+    {
+      scenario: 'a draft',
+      body: { payload: { kind: 'text', text: 'hi' }, timing: { mode: 'draft' } },
+      timing: { mode: 'draft' },
+    },
+  ])('reads $scenario on a new post as $timing', ({ body, timing }) => {
+    expect(createPost.body.parse(body).timing).toEqual(timing);
+  });
+
+  it.each([
+    { scenario: 'a schedule without a time', timing: { mode: 'schedule' } },
+    { scenario: 'a schedule with a bad time', timing: { mode: 'schedule', publishAt: 'soon' } },
+    { scenario: 'an unknown mode', timing: { mode: 'later' } },
+  ])('refuses $scenario', ({ timing }) => {
+    expect(
+      createPost.body.safeParse({ payload: { kind: 'text', text: 'hi' }, timing }).success
+    ).toBe(false);
+  });
+
+  it.each([
+    {
+      scenario: 'a poll',
+      payload: { kind: 'poll', question: 'Q?', options: ['a', 'b'], closesAt: null },
+    },
+    {
+      scenario: 'a quiz',
+      payload: {
+        kind: 'quiz',
+        question: 'Q?',
+        options: ['a', 'b'],
+        closesAt: '2026-03-01T00:00:00.000Z',
+        correctIndex: 0,
+        explanation: null,
+      },
+    },
+  ])('accepts $scenario as a payload', ({ payload }) => {
+    expect(createPost.body.safeParse({ payload }).success).toBe(true);
   });
 
   it('never carries the author of a post', () => {

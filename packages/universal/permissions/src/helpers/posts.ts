@@ -20,7 +20,6 @@ export function canReactPost({ user }: { user: UserContext | null }): boolean {
   return getUserPermissions(user).can('react', 'Post');
 }
 
-/** @internal */
 export function canReadPostStats({
   user,
   post,

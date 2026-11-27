@@ -1,135 +1,20 @@
 import { ErrorCodes } from '@vp/errors';
 import { z } from 'zod';
-import { ChannelCardSchema, ChannelHandleParamSchema } from './channels';
+import { ChannelHandleParamSchema } from './channels';
 import { createComment, listVideoComments } from './comments';
 import { defineEndpoint } from './endpoint';
 import { KeysetQuerySchema } from './pagination';
+import {
+  ManagedPostSchema,
+  PostIdParamSchema,
+  PostLikeSchema,
+  PostPageSchema,
+  PostSchema,
+  PostTimingSchema,
+  PostWriteBodySchema,
+} from './post-schemas';
 
 const TAG = 'Posts';
-
-const PostIdParamSchema = z.object({
-  id: z.uuid({ error: 'Invalid post ID format' }),
-});
-
-const PostImageInputSchema = z.object({
-  uploadId: z.uuid().describe('A ready post-image upload of the posting channel'),
-  alt: z.string().describe('Alt text, 1-200 characters after trimming'),
-});
-
-const PostPayloadSchema = z
-  .discriminatedUnion('kind', [
-    z.object({
-      kind: z.literal('text'),
-      text: z.string().describe('1-2000 characters of plain text'),
-    }),
-    z.object({
-      kind: z.literal('images'),
-      images: z.array(PostImageInputSchema).describe('1 to 4 images, in display order'),
-      caption: z.string().nullable().describe('Up to 2000 characters'),
-    }),
-    z.object({
-      kind: z.literal('video_share'),
-      videoId: z.uuid().describe('A public, ready video'),
-      comment: z.string().nullable().describe('Up to 500 characters'),
-      startMs: z
-        .number()
-        .nullable()
-        .describe('Where the card opens the video, in whole milliseconds'),
-    }),
-    z.object({
-      kind: z.literal('playlist_share'),
-      playlistId: z.uuid().describe('A public playlist'),
-      comment: z.string().nullable().describe('Up to 500 characters'),
-    }),
-  ])
-  .meta({ id: 'PostPayload', description: 'What the post says, by kind' });
-
-const PostImageViewSchema = z.object({
-  uploadId: z.uuid(),
-  alt: z.string(),
-  urls: z.object({ w640: z.string(), w1280: z.string() }),
-});
-
-const PostShareCardSchema = z
-  .discriminatedUnion('type', [
-    z.object({
-      type: z.literal('video'),
-      id: z.uuid(),
-      title: z.string(),
-      thumbnailUrl: z.string().nullable(),
-      durationSeconds: z.number().int().nonnegative().nullable(),
-    }),
-    z.object({
-      type: z.literal('playlist'),
-      id: z.uuid(),
-      title: z.string(),
-      itemCount: z.number().int().nonnegative(),
-    }),
-    z.object({ type: z.literal('unavailable') }),
-  ])
-  .meta({
-    id: 'PostShareCard',
-    description:
-      'What a shared video or playlist shows, or `unavailable` once it is gone or not public, and then nothing of it',
-  });
-
-const PostBodySchema = z
-  .discriminatedUnion('kind', [
-    z.object({ kind: z.literal('text'), text: z.string() }),
-    z.object({
-      kind: z.literal('images'),
-      images: z
-        .array(PostImageViewSchema)
-        .describe('An image whose upload is not ready is left out'),
-      caption: z.string().nullable(),
-    }),
-    z.object({
-      kind: z.literal('video_share'),
-      comment: z.string().nullable(),
-      startMs: z.number().int().nonnegative().nullable(),
-      card: PostShareCardSchema,
-    }),
-    z.object({
-      kind: z.literal('playlist_share'),
-      comment: z.string().nullable(),
-      card: PostShareCardSchema,
-    }),
-  ])
-  .meta({ id: 'PostBody', description: 'The post ready to render, by kind' });
-
-const PostSchema = z
-  .object({
-    id: z.uuid(),
-    channel: ChannelCardSchema.describe(
-      "The channel that published it; a team member's post shows the channel, never the member"
-    ),
-    kind: z.enum(['text', 'images', 'video_share', 'playlist_share']),
-    body: PostBodySchema,
-    commentsEnabled: z.boolean(),
-    likeCount: z.number().int().nonnegative(),
-    commentsCount: z.number().int().nonnegative(),
-    likedByViewer: z.boolean().describe('False for an anonymous reader'),
-    isEdited: z.boolean(),
-    publishedAt: z.string().describe('ISO 8601 timestamp'),
-    version: z.number().int().positive().describe('The version an edit is made against'),
-  })
-  .meta({ id: 'Post', description: 'A published channel post' });
-
-const PostPageSchema = z.object({
-  items: z.array(PostSchema),
-  nextCursor: z.string().nullable(),
-});
-
-const PostLikeSchema = z.object({
-  postId: z.uuid(),
-  liked: z.boolean(),
-  likeCount: z.number().int().nonnegative(),
-});
-
-const PostWriteBodySchema = z.object({
-  payload: PostPayloadSchema,
-  commentsEnabled: z.boolean().default(true).describe('Whether viewers may reply to the post'),
-});
 
 const WHO =
   'Owner, manager and editor of the channel the request acts on; a moderator and an analyst are refused.';
@@ -137,7 +22,12 @@ const WHO =
 const WRITE_ERRORS = {
   400: [ErrorCodes.VALIDATION_FAILED],
   401: [ErrorCodes.UNAUTHORIZED],
-  422: [ErrorCodes.VALIDATION_FAILED, ErrorCodes.POST_SHARE_NOT_PUBLIC],
+  422: [
+    ErrorCodes.VALIDATION_FAILED,
+    ErrorCodes.POST_SHARE_NOT_PUBLIC,
+    ErrorCodes.POST_IMAGE_NOT_READY,
+    ErrorCodes.POST_SCHEDULE_INVALID,
+  ],
 } as const;
 
 export const listChannelPosts = defineEndpoint({
@@ -177,12 +67,12 @@ export const createPost = defineEndpoint({
   scope: 'posts:write',
   channelScoped: true,
   tag: TAG,
-  summary: 'Publish a post',
-  description: `Publishes a text, images, video or playlist post as the acting channel and tells its subscribers. A shared video or playlist must be public. At most 20 posts a day per channel. ${WHO}`,
+  summary: 'Publish, schedule or draft a post',
+  description: `Publishes a text, images, poll, quiz, video or playlist post as the acting channel and tells its subscribers, or keeps it as a draft or schedules it (the timing field). Every image must be a ready post image of the channel. At most 50 drafts and scheduled posts. A shared video or playlist must be public. At most 20 posts a day per channel. ${WHO}`,
   body: PostWriteBodySchema,
   status: 201,
-  result: PostSchema,
-  errors: { ...WRITE_ERRORS, 429: [ErrorCodes.POST_DAILY_LIMIT] },
+  result: ManagedPostSchema,
+  errors: { ...WRITE_ERRORS, 429: [ErrorCodes.POST_DAILY_LIMIT, ErrorCodes.POST_DRAFT_LIMIT] },
 });
 
 export const updatePost = defineEndpoint({
@@ -196,11 +86,18 @@ export const updatePost = defineEndpoint({
   params: PostIdParamSchema,
   body: PostWriteBodySchema.extend({
     commentsEnabled: z.boolean().optional().describe('Left as it is when absent'),
+    timing: PostTimingSchema.optional().describe(
+      'Moves a draft or scheduled post: publish now, keep as a draft or reschedule; absent keeps its status'
+    ),
     version: z.number().int().positive().describe('The version the edit was made against'),
   }),
   status: 200,
-  result: PostSchema,
-  errors: { ...WRITE_ERRORS, 404: [ErrorCodes.POST_NOT_FOUND], 409: [ErrorCodes.VERSION_CONFLICT] },
+  result: ManagedPostSchema,
+  errors: {
+    ...WRITE_ERRORS,
+    404: [ErrorCodes.POST_NOT_FOUND],
+    409: [ErrorCodes.VERSION_CONFLICT, ErrorCodes.POST_POLL_LOCKED],
+  },
 });
 
 export const deletePost = defineEndpoint({
@@ -303,7 +200,11 @@ export const createPostComment = defineEndpoint({
   },
 });
 
-export type PostView = z.infer<typeof PostSchema>;
-export type PostPageView = z.infer<typeof PostPageSchema>;
-export type PostLikeView = z.infer<typeof PostLikeSchema>;
-export type PostWriteBody = z.infer<typeof PostWriteBodySchema>;
+export type {
+  ManagedPostView,
+  PostLikeView,
+  PostPageView,
+  PostView,
+  PostWriteBody,
+  PostWriteInput,
+} from './post-schemas';

@@ -8,6 +8,9 @@ export function postExcerpt(payload: PostPayload): string | null {
       return payload.text.slice(0, NOTIFICATION_EXCERPT_LENGTH);
     case 'images':
       return payload.caption?.slice(0, NOTIFICATION_EXCERPT_LENGTH) ?? null;
+    case 'poll':
+    case 'quiz':
+      return payload.question.slice(0, NOTIFICATION_EXCERPT_LENGTH);
     case 'video_share':
     case 'playlist_share':
       return payload.comment?.slice(0, NOTIFICATION_EXCERPT_LENGTH) ?? null;

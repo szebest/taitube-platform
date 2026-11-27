@@ -18,6 +18,10 @@ export const POST_LIFECYCLE_EDGES = {
 } as const satisfies Record<string, { from: readonly PostStatus[]; to: PostStatus }>;
 
 export const POSTS_PER_DAY = 20;
+export const POSTS_PENDING_LIMIT = 50;
+export const POSTS_PINNED_LIMIT = 3;
+export const POLL_OPTIONS = { min: 2, max: 6 } as const;
+export const POLL_MAX_OPEN_DAYS = 30;
 
 interface PostImage {
   /** A ready `post-image` upload of the post's channel. */
@@ -28,6 +32,15 @@ interface PostImage {
 export type PostPayload =
   | { kind: 'text'; text: string }
   | { kind: 'images'; images: PostImage[]; caption: string | null }
+  | { kind: 'poll'; question: string; options: string[]; closesAt: string | null }
+  | {
+      kind: 'quiz';
+      question: string;
+      options: string[];
+      closesAt: string | null;
+      correctIndex: number;
+      explanation: string | null;
+    }
   | { kind: 'video_share'; videoId: string; comment: string | null; startMs: number | null }
   | { kind: 'playlist_share'; playlistId: string; comment: string | null };
 
@@ -56,6 +69,28 @@ export interface NewChannelPostInput {
   authorUserId: string;
   payload: PostPayload;
   commentsEnabled: boolean;
+}
+
+export interface NewUnpublishedPostInput extends NewChannelPostInput {
+  status: 'draft' | 'scheduled';
+  publishAt: Date | null;
+}
+
+/** A published post as the team sees it in the studio list, with its place in the pipeline. */
+export interface ManagedPostCursor {
+  createdAt: Date;
+  id: string;
+}
+
+export type PostPinOutcome = 'pinned' | 'unpinned' | 'limit' | 'missing' | 'not_published';
+
+export interface PostStats {
+  opens: number;
+  shareClicks: number;
+  likes: number;
+  replies: number;
+  votesByOption: number[];
+  quizCorrectShare: number | null;
 }
 
 /** What a shared video or playlist shows on the card, or `unavailable` once it is not public. */

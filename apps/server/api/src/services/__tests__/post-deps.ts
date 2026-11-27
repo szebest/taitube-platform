@@ -2,6 +2,7 @@ import { Paginator } from '@kit/pagination';
 import { ok } from '@kit/result';
 import { expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
+import { InMemoryPostOpenSketch } from '@vp/adapters/in-memory';
 import type { CommentCachePort } from '@vp/core/ports';
 import type {
   ActingChannel,
@@ -14,6 +15,8 @@ import type {
 import { asCdnBase } from '@vp/env-schema';
 import type { UserContext } from '@vp/permissions';
 import { uuidv7 } from 'uuidv7';
+import { PostEngagementService } from '../post-engagement-service';
+import { PostManageService } from '../post-manage-service';
 import { PostService } from '../post-service';
 
 export const NOW = Date.parse('2026-03-10T12:00:00.000Z');
@@ -44,15 +47,25 @@ export async function postsFixture(now: () => number = () => NOW) {
     getHot: vi.fn(),
     invalidate: vi.fn(async () => ok(undefined)),
   };
-  const service = new PostService({
+  const viewDeps = {
     posts: repositories.channelPosts,
     channels: repositories.channels,
     images: repositories.channelImages,
     videos: repositories.videos,
     playlists: repositories.playlists,
-    commentCache,
+    engagement: repositories.postEngagement,
     cdn: CDN,
     paginator: new Paginator(),
+    now,
+  };
+  const service = new PostService({ ...viewDeps, commentCache });
+  const manage = new PostManageService(viewDeps);
+  const openSketch = new InMemoryPostOpenSketch();
+  const engagementService = new PostEngagementService({
+    posts: service,
+    engagement: repositories.postEngagement,
+    restrictions: repositories.channelUserRestrictions,
+    openSketch,
     now,
   });
 
@@ -126,6 +139,8 @@ export async function postsFixture(now: () => number = () => NOW) {
     channel,
     acting,
     service,
+    manage,
+    engagementService,
     commentCache,
     video,
     playlist,

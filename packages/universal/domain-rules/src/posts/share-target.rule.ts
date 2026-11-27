@@ -24,6 +24,8 @@ export function decidePostShare(input: PostShareInput): Result<void, PostShareNo
   switch (payload.kind) {
     case 'text':
     case 'images':
+    case 'poll':
+    case 'quiz':
       return ok(undefined);
     case 'video_share':
       return shared?.type === 'video' &&

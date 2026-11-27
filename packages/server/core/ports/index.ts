@@ -24,3 +24,4 @@ export * from './watch-party-gate';
 export * from './watch-party-presence';
 export * from './party-guest-sessions';
 export * from './password-hasher';
+export * from './post-open-sketch';

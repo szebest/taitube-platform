@@ -124,6 +124,8 @@ describe('packages/api-contracts: api tokens', () => {
       'POST /v1/me/channel/posts': 'posts:write',
       'PATCH /v1/me/channel/posts/:id': 'posts:write',
       'DELETE /v1/me/channel/posts/:id': 'posts:write',
+      'POST /v1/me/channel/posts/:id/pin': 'posts:write',
+      'DELETE /v1/me/channel/posts/:id/pin': 'posts:write',
       'POST /v1/me/channel/exports': 'exports:create',
       'GET /v1/me/channel/exports': 'exports:read',
       'GET /v1/me/channel/exports/:id': 'exports:read',

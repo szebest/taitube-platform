@@ -2,11 +2,16 @@ import { isErr, isOk } from '@kit/result';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { ADMIN, OWNER, STRANGER, aPost } from '../../__tests__/entities';
-import { decidePostReact, decidePostTarget, decidePostWrite } from '../manage-post.rule';
+import {
+  decidePostReact,
+  decidePostStatsRead,
+  decidePostTarget,
+  decidePostWrite,
+} from '../manage-post.rule';
 
 const channel = { id: 'channel-1', ownerId: OWNER.id };
 
-function member(role: 'editor' | 'moderator'): UserContext {
+function member(role: 'editor' | 'moderator' | 'analytics'): UserContext {
   return {
     id: `${role}-1`,
     role: 'USER',
@@ -14,7 +19,7 @@ function member(role: 'editor' | 'moderator'): UserContext {
   };
 }
 
-const ACTIONS = ['create', 'update', 'delete'] as const;
+const ACTIONS = ['create', 'update', 'delete', 'pin'] as const;
 
 describe('@vp/domain-rules: decidePostWrite', () => {
   it.each(
@@ -87,5 +92,34 @@ describe('@vp/domain-rules: decidePostReact', () => {
     const result = decidePostReact(reactor);
 
     expect(isErr(result) ? result.error.code : null).toBe(code);
+  });
+});
+
+describe('@vp/domain-rules: decidePostStatsRead', () => {
+  it.each([
+    { who: 'the owner', actor: OWNER },
+    { who: 'an analyst', actor: member('analytics') },
+    { who: 'a site admin', actor: ADMIN },
+  ])('lets $who read the stats of a post', ({ actor }) => {
+    expect(isOk(decidePostStatsRead({ actor, channel }))).toBe(true);
+  });
+
+  it.each([
+    { who: 'a stranger', actor: STRANGER },
+    { who: 'a moderator', actor: member('moderator') },
+  ])('forbids $who the stats of a post', ({ actor }) => {
+    const result = decidePostStatsRead({ actor, channel });
+
+    expect(isErr(result) && result.error).toMatchObject({
+      code: ErrorCodes.FORBIDDEN,
+      action: 'read',
+      subject: 'PostStats',
+    });
+  });
+
+  it('asks an anonymous caller to sign in', () => {
+    const result = decidePostStatsRead({ actor: null, channel });
+
+    expect(isErr(result) && result.error.code).toBe(ErrorCodes.UNAUTHORIZED);
   });
 });
