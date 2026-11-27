@@ -45,7 +45,8 @@ export function decideEditRevert(
   return playing?.kind === 'edit' &&
     playing.baseGeneration !== null &&
     playing.baseGeneration !== playing.generation &&
-    base?.status === 'retired' &&
+    base !== undefined &&
+    VIDEO_GENERATION.sources('restore').includes(base.status) &&
     !inFlight
     ? ok({ baseGeneration: playing.baseGeneration })
     : err(noEditToRevert(video.id));
