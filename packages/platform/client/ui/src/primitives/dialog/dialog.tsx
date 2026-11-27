@@ -12,6 +12,8 @@ export interface DialogContentProps extends ComponentPropsWithRef<typeof DialogP
   size?: DialogSize;
   /** Render in place instead of in a portal, for the server render, where a portal has no container. */
   inline?: boolean;
+  /** Where the portal mounts, for a dialog opened inside a fullscreen element; the document body when absent. */
+  container?: HTMLElement | null;
 }
 
 /** The portal, the overlay, the surface and its close button. Every dialog needs a `Dialog.Title`. */
@@ -19,6 +21,7 @@ export function DialogContent({
   side,
   size = 'md',
   inline = false,
+  container,
   className,
   children,
   ...props
@@ -27,10 +30,11 @@ export function DialogContent({
   const shared = { side, size };
   const styles = dialogStyles({ side: side ?? 'centred', size });
   const Layer = inline ? Fragment : DialogPrimitive.Portal;
+  const layerProps = inline ? {} : { container };
 
   return (
     <DialogContext value={shared}>
-      <Layer>
+      <Layer {...layerProps}>
         <DialogPrimitive.Overlay data-slot="dialog-overlay" className={styles.overlay()} />
         <DialogPrimitive.Content
           data-slot="dialog-content"

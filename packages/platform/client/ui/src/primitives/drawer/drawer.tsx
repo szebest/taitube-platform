@@ -32,19 +32,23 @@ export interface DrawerContentProps extends ComponentPropsWithRef<typeof DialogP
   size?: DrawerSize;
   /** Render in place instead of in a portal, for the server render, where a portal has no container. */
   inline?: boolean;
+  /** Where the portal mounts, for a drawer opened inside a fullscreen element; the document body when absent. */
+  container?: HTMLElement | null;
 }
 
 export function DrawerContent({
   size = 'md',
   inline = false,
+  container,
   className,
   ...props
 }: DrawerContentProps) {
   const styles = drawerStyles({ size });
   const Layer = inline ? Fragment : DialogPrimitive.Portal;
+  const layerProps = inline ? {} : { container };
 
   return (
-    <Layer>
+    <Layer {...layerProps}>
       <DialogPrimitive.Overlay data-slot="drawer-overlay" className={styles.overlay()} />
       <DialogPrimitive.Content
         data-slot="drawer-content"

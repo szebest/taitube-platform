@@ -49,6 +49,8 @@ export interface ResponsiveModalContentProps extends Omit<
 > {
   size?: ResponsiveModalSize;
   children?: React.ReactNode;
+  /** Where the portal mounts, for a modal opened inside a fullscreen element; the document body when absent. */
+  container?: HTMLElement | null;
 }
 
 export function ResponsiveModalContent({ children, ...props }: ResponsiveModalContentProps) {
