@@ -1,10 +1,10 @@
-import { ARABIC_INDIC_DIGIT, contextFor } from '../../__tests__/fixtures';
-import { type DateTimeValue, dateTime } from '../date-time';
+import { ARABIC_INDIC_DIGIT, contextFor, format } from '../../__tests__/fixtures';
+import { type DateTimeValue } from '../date-time';
 
 const ISO = '2026-09-22T18:30:00.000Z';
 
 function render(locale: string, options?: DateTimeValue['options']) {
-  const rendered = dateTime({ type: 'dateTime', value: ISO, options }, contextFor(locale));
+  const rendered = format({ type: 'dateTime', value: ISO, options }, contextFor(locale));
   return rendered.ok ? rendered.value : rendered.error.code;
 }
 

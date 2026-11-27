@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.5.0
+
+- Breaking: every formatter is a kind, `defineKind({ name, arg, options, render })`, and `createIntl(context, kinds?)`
+  takes the registry (`formatKinds`, plus an app's own). `IntlBinding` is `{ context, format, call }`:
+  `pluralCategory`, `collator` and `truncate` are kinds reached through `call`. `TaggedValue` is derived from the
+  registry; `FORMAT_KINDS`, `FormatKind`, `KindsMatchUnion` and `formatValue` are removed, and `optionKeys` replaces
+  `withOptions`. `money`'s `units`, `relative`'s and `calendarDay`'s `now` and `displayName`'s `of` are options.
+- `createIntlCache(env)` takes the constructors as an `IntlEnvironment` (`Intl` by default);
+  `cache.get(descriptor, locale, options)` builds whatever an `IntlDescriptor` describes.
+- `KindContext`, `runKind` and `describeValue`, the last moved from `@kit/i18n`.
+
 ## 0.4.0
 
 - `Preset`, `PresetTable`, `definePresets` and `resolveEntry`, moved from `@kit/i18n`.

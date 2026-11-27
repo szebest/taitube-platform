@@ -1,12 +1,12 @@
 import { type Result, andThen, err, map, ok } from '@kit/result';
 import type { DurationFormatOptions, DurationParts } from '../duration-fallback';
 import { type FormatFailure, unrenderable } from '../failures';
-import { finite } from '../inputs';
+import { finite, isNumber } from '../inputs';
+import { type OptionKeys, type TaggedOf, defineKind, optionKeys } from '../kind';
 import { HOUR, MINUTE } from '../time-spans';
-import { type OptionKeys, withOptions } from '../with-options';
 
 /** This package's lib does not type `Intl.DurationFormat`, so the shape this formatter offers is its own. */
-interface DurationChoices {
+export interface DurationChoices {
   readonly style: 'clock' | 'words';
   readonly unitDisplay: 'short' | 'long' | 'narrow';
 }
@@ -17,13 +17,6 @@ const DURATION_OPTION_KEYS = [
 ] as const satisfies OptionKeys<DurationChoices>;
 
 type DurationOptions = Partial<Pick<DurationChoices, (typeof DURATION_OPTION_KEYS)[number]>>;
-
-/** In seconds: `765` is `12:45` as a clock, `12 min, 45 sec` in words. */
-export interface DurationValue {
-  readonly type: 'duration';
-  readonly value: number;
-  readonly options?: DurationOptions;
-}
 
 function toParts(totalSeconds: number): Result<DurationParts, FormatFailure> {
   if (totalSeconds < 0) return err(unrenderable('duration', `${totalSeconds} is negative`));
@@ -44,16 +37,21 @@ function durationFormatOptions(
   return { style: options.unitDisplay ?? 'short', secondsDisplay: nothingElse ? 'always' : 'auto' };
 }
 
-export const duration = withOptions<DurationValue>(
-  'duration',
-  DURATION_OPTION_KEYS,
-  (value, context) =>
-    andThen(finite('duration', value.value), (totalSeconds) =>
+/** In seconds: `765` is `12:45` as a clock, `12 min, 45 sec` in words. */
+export const duration = defineKind({
+  name: 'duration',
+  arg: isNumber,
+  options: optionKeys<DurationOptions>(DURATION_OPTION_KEYS),
+  render: (value, options, context) =>
+    andThen(finite('duration', value), (totalSeconds) =>
       andThen(toParts(totalSeconds), (parts) => {
-        const options = durationFormatOptions(value.options ?? {}, parts);
-        return map(context.cache.durationFormat(context.locale, options), (format) =>
+        const intlOptions = durationFormatOptions(options ?? {}, parts);
+        return map(context.cache.durationFormat(context.locale, intlOptions), (format) =>
           format.format(parts)
         );
       })
-    )
-);
+    ),
+});
+
+/** @public */
+export type DurationValue = TaggedOf<typeof duration>;

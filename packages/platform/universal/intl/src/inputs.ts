@@ -15,3 +15,7 @@ export function finite(formatter: string, value: number): Result<number, FormatF
     ? ok(value)
     : err(unrenderable(formatter, `${value} is not finite`));
 }
+
+export const isNumber = (value: unknown): value is number => typeof value === 'number';
+
+export const isString = (value: unknown): value is string => typeof value === 'string';

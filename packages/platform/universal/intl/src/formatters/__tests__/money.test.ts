@@ -1,9 +1,9 @@
-import { ARABIC_INDIC_DIGIT, contextFor } from '../../__tests__/fixtures';
+import { ARABIC_INDIC_DIGIT, contextFor, format } from '../../__tests__/fixtures';
 import { USER } from '../../context';
-import { type MoneyValue, money } from '../money';
+import { type MoneyValue } from '../money';
 
 function render(locale: string, value: MoneyValue, currency?: string) {
-  const rendered = money(value, contextFor(locale, { currency }));
+  const rendered = format(value, contextFor(locale, { currency }));
   return rendered.ok ? rendered.value : rendered.error.code;
 }
 
@@ -11,18 +11,18 @@ describe('@kit/intl: money', () => {
   it.each([
     {
       locale: 'en-GB',
-      value: { type: 'money', value: 1250, units: 'minor' } as const,
+      value: { type: 'money', value: 1250, options: { units: 'minor' } } as const,
       expected: /^£12\.50$/,
     },
     { locale: 'en-GB', value: { type: 'money', value: 12.5 } as const, expected: /^£12\.50$/ },
     {
       locale: 'sv',
-      value: { type: 'money', value: 1250, units: 'minor', options: { currency: 'SEK' } } as const,
+      value: { type: 'money', value: 1250, options: { units: 'minor', currency: 'SEK' } } as const,
       expected: /^12,50\skr$/u,
     },
     {
       locale: 'ja',
-      value: { type: 'money', value: 1250, units: 'minor', options: { currency: 'JPY' } } as const,
+      value: { type: 'money', value: 1250, options: { units: 'minor', currency: 'JPY' } } as const,
       expected: /^[￥¥]1,250$/u,
     },
   ])('renders $value in $locale', ({ locale, value, expected }) => {

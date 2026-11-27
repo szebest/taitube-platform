@@ -13,7 +13,7 @@ import type {
   PresetsFor,
   ValidTemplate,
 } from './engine-types';
-import type { Kind } from './kind';
+import type { MessageKind } from './kind';
 import type { AnyMessage, Message, MessageConfig } from './message';
 import type { ParseTemplate } from './template';
 import { Catalogues, FormatPresets, ParamVocabulary } from './tokens';
@@ -62,7 +62,7 @@ export interface Engine<E extends EngineTypes> {
 }
 
 interface EngineDefinition<
-  Kinds extends readonly Kind[],
+  Kinds extends readonly MessageKind[],
   Presets extends PresetTable,
   Params extends readonly string[],
 > {
@@ -76,7 +76,7 @@ interface EngineDefinition<
  * (templates, configs, catalogues, `t`) is checked against these kinds, presets and param names.
  */
 export function defineEngine<
-  const Kinds extends readonly Kind[],
+  const Kinds extends readonly MessageKind[],
   const Presets extends PresetTable,
   const Params extends readonly string[],
 >(

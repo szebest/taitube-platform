@@ -1,14 +1,54 @@
-import type { FormatKind, KindsMatchUnion, TaggedValue } from '../../format-value';
+import { createIntl } from '../../create-intl';
+import type { FormatValue, TaggedValue } from '../../format-value';
+import { formatKinds } from '../../format-value';
+import { type OptionKeys, defineKind, optionKeys } from '../../kind';
 import { defineLocales } from '../../locales';
-import type { OptionKeys } from '../../with-options';
+import { contextFor } from '../fixtures';
 
-const _complete: KindsMatchUnion<FormatKind, TaggedValue['type']> = true;
+expectTypeOf<TaggedValue['type']>().toEqualTypeOf<
+  | 'count'
+  | 'number'
+  | 'percent'
+  | 'bytes'
+  | 'bitrate'
+  | 'numberRange'
+  | 'money'
+  | 'date'
+  | 'time'
+  | 'dateTime'
+  | 'dateRange'
+  | 'relative'
+  | 'calendarDay'
+  | 'duration'
+  | 'list'
+  | 'displayName'
+  | 'truncate'
+>();
 
-// @ts-expect-error a kind added to the list with no member in the union
-const _kindWithoutMember: KindsMatchUnion<FormatKind | 'rating', TaggedValue['type']> = true;
+// @ts-expect-error a kind the registry does not hold is no tagged value
+const _unknownKind: FormatValue = { type: 'rating', value: 5 };
 
-// @ts-expect-error a member added to the union with no entry in the kind list
-const _memberWithoutKind: KindsMatchUnion<Exclude<FormatKind, 'money'>, TaggedValue['type']> = true;
+// @ts-expect-error displayName cannot render without saying which names it reads
+const _noOf: FormatValue = { type: 'displayName', value: 'sv' };
+
+const rating = defineKind({
+  name: 'rating',
+  arg: (value): value is number => typeof value === 'number',
+  options: optionKeys<{ readonly stars?: number }>(['stars']),
+  render: (value, _, context) => context.format(value),
+});
+const withRating = createIntl(contextFor('en'), [...formatKinds, rating]);
+withRating.format({ type: 'rating', value: 4, options: { stars: 5 } });
+
+// @ts-expect-error the registered kind's argument is a number
+withRating.format({ type: 'rating', value: 'four' });
+
+expectTypeOf(createIntl(contextFor('en')).call('pluralCategory', 1)).toEqualTypeOf<
+  ReturnType<typeof withRating.call<'pluralCategory'>>
+>();
+
+// @ts-expect-error a misspelt allowlist key fails where it is declared
+optionKeys<{ readonly stars?: number }>(['starz']);
 
 const _declared = ['maximumFractionDigits'] as const satisfies OptionKeys<Intl.NumberFormatOptions>;
 

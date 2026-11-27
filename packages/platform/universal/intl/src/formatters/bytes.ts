@@ -1,6 +1,6 @@
 import { andThen, map } from '@kit/result';
-import { finite } from '../inputs';
-import { type OptionKeys, withOptions } from '../with-options';
+import { finite, isNumber } from '../inputs';
+import { type OptionKeys, type TaggedOf, defineKind, optionKeys } from '../kind';
 
 const BYTES_OPTION_KEYS = [
   'maximumFractionDigits',
@@ -12,12 +12,6 @@ type BytesOptions = Pick<
   Intl.NumberFormatOptions,
   Exclude<(typeof BYTES_OPTION_KEYS)[number], 'base'>
 > & { readonly base?: 'decimal' | 'binary' };
-
-export interface BytesValue {
-  readonly type: 'bytes';
-  readonly value: number;
-  readonly options?: BytesOptions;
-}
 
 const BYTE_UNITS = ['byte', 'kilobyte', 'megabyte', 'gigabyte', 'terabyte', 'petabyte'] as const;
 
@@ -41,13 +35,21 @@ export function scale<U extends string>(
   return { amount, unit: units[index] ?? units[0] };
 }
 
-export const bytes = withOptions<BytesValue>('bytes', BYTES_OPTION_KEYS, (value, context) => {
-  const { base = 'decimal', ...display } = value.options ?? {};
-  return andThen(finite('bytes', value.value), (count) => {
-    const { amount, unit } = scale(count, base === 'binary' ? 1024 : 1000, BYTE_UNITS);
-    const options = { maximumFractionDigits: 1, ...display, style: 'unit', unit } as const;
-    return map(context.cache.numberFormat(context.locale, options), (format) =>
-      format.format(amount)
-    );
-  });
+export const bytes = defineKind({
+  name: 'bytes',
+  arg: isNumber,
+  options: optionKeys<BytesOptions>(BYTES_OPTION_KEYS),
+  render: (value, options, context) => {
+    const { base = 'decimal', ...display } = options ?? {};
+    return andThen(finite('bytes', value), (count) => {
+      const { amount, unit } = scale(count, base === 'binary' ? 1024 : 1000, BYTE_UNITS);
+      const intlOptions = { maximumFractionDigits: 1, ...display, style: 'unit', unit } as const;
+      return map(context.cache.numberFormat(context.locale, intlOptions), (format) =>
+        format.format(amount)
+      );
+    });
+  },
 });
+
+/** @public */
+export type BytesValue = TaggedOf<typeof bytes>;

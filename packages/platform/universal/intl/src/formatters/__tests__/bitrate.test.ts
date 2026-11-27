@@ -1,8 +1,7 @@
-import { ARABIC_INDIC_DIGIT, contextFor } from '../../__tests__/fixtures';
-import { bitrate } from '../bitrate';
+import { ARABIC_INDIC_DIGIT, contextFor, format } from '../../__tests__/fixtures';
 
 function render(locale: string, value: number) {
-  const rendered = bitrate({ type: 'bitrate', value }, contextFor(locale));
+  const rendered = format({ type: 'bitrate', value }, contextFor(locale));
   return rendered.ok ? rendered.value : rendered.error.code;
 }
 

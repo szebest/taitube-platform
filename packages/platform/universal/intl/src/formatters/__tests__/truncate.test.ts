@@ -1,12 +1,12 @@
 import { contextFor } from '../../__tests__/fixtures';
-import { truncate } from '../truncate';
+import { createIntl } from '../../create-intl';
 
 const FAMILY = '👨‍👩‍👧‍👦';
 const CAFE = 'Café';
 const TOKYO = '東京都渋谷区';
 
 function cut(text: string, max: number, locale = 'en') {
-  const cutText = truncate(text, max, contextFor(locale));
+  const cutText = createIntl(contextFor(locale)).call('truncate', text, { maxGraphemes: max });
   return cutText.ok ? cutText.value : cutText.error.code;
 }
 

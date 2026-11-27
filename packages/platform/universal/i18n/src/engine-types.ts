@@ -1,22 +1,22 @@
-import type { PresetTable } from '@kit/intl';
-import type { ConfigKey, EntryOf, Kind } from './kind';
+import type { ArgOf, OptionsOf, PresetTable } from '@kit/intl';
+import type { ConfigKey, EntryOf, MessageKind } from './kind';
 import type { InvalidParamName, IsCamelCase } from './params';
 import type { Placeholder } from './template';
 
 /** What an engine was defined with, as types: its kinds by name, its presets, its param names. */
 export interface EngineTypes {
-  readonly kinds: { readonly [name: string]: Kind };
+  readonly kinds: { readonly [name: string]: MessageKind };
   readonly presets: PresetTable;
   readonly params: string;
 }
 
-type KindsByName<Kinds extends readonly Kind[]> = {
+type KindsByName<Kinds extends readonly MessageKind[]> = {
   readonly [K in Kinds[number] as K['name']]: K;
 };
 
 /** The types of the engine `defineEngine` builds from these kinds, presets and param names. */
 export interface EngineOf<
-  Kinds extends readonly Kind[],
+  Kinds extends readonly MessageKind[],
   Presets extends PresetTable,
   Params extends readonly string[],
 > {
@@ -41,8 +41,8 @@ export type MissingConfig<Template extends string> = `MissingConfig<'${Template}
 export type PlaceholderInBranch<Token extends string> = `PlaceholderInBranch<'${Token}'>`;
 
 type KindAt<E extends EngineTypes, K> = K extends keyof E['kinds'] ? E['kinds'][K] : never;
-type ArgOfKind<Kd extends Kind> = NonNullable<Kd['types']>['arg'];
-type OptionsOfKind<Kd extends Kind> = NonNullable<Kd['types']>['options'];
+type ArgOfKind<Kd extends MessageKind> = ArgOf<Kd>;
+type OptionsOfKind<Kd extends MessageKind> = OptionsOf<Kd>;
 type PresetNames<E extends EngineTypes, K> = K extends keyof E['presets']
   ? keyof E['presets'][K] & string
   : never;
@@ -193,7 +193,7 @@ export type ArgsFor<P extends readonly Placeholder[], C, E extends EngineTypes> 
 };
 
 /** Presets whose options each fit their kind's, for kinds the engine lists. */
-export type PresetsFor<Presets, Kinds extends readonly Kind[]> = {
+export type PresetsFor<Presets, Kinds extends readonly MessageKind[]> = {
   readonly [K in keyof Presets]: K extends Kinds[number]['name']
     ? {
         readonly [N in keyof Presets[K]]: {

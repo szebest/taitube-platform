@@ -1,10 +1,10 @@
-import { contextFor } from '../../__tests__/fixtures';
-import { type DateOptions, date, dateFormatOptions } from '../date';
+import { contextFor, format } from '../../__tests__/fixtures';
+import { type DateOptions, dateFormatOptions } from '../date';
 
 const ISO = '2026-09-22T18:30:00.000Z';
 
 function render(locale: string, options?: DateOptions, timeZone = 'UTC') {
-  const rendered = date({ type: 'date', value: ISO, options }, contextFor(locale, { timeZone }));
+  const rendered = format({ type: 'date', value: ISO, options }, contextFor(locale, { timeZone }));
   return rendered.ok ? rendered.value : rendered.error.code;
 }
 
@@ -32,7 +32,7 @@ describe('@kit/intl: date', () => {
   });
 
   it('declines a value that is not ISO 8601', () => {
-    const rendered = date({ type: 'date', value: 'Sep 22 2026' }, contextFor('en'));
+    const rendered = format({ type: 'date', value: 'Sep 22 2026' }, contextFor('en'));
 
     expect(rendered).toMatchObject({ ok: false, error: { code: 'FORMAT_UNRENDERABLE' } });
   });

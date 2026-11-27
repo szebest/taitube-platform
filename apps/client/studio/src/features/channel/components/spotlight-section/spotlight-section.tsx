@@ -29,7 +29,7 @@ function SpotlightEditor({ saved }: { saved: ChannelSpotlightSettings }) {
   const { tOr } = useT();
   const { format } = useFormat();
   const languageName = (locale: string) =>
-    unwrapOr(format({ type: 'displayName', value: locale, of: 'language' }), locale);
+    unwrapOr(format({ type: 'displayName', value: locale, options: { of: 'language' } }), locale);
   const save = useSaveSpotlight();
   const [draft, setDraft] = useState(saved);
   const dirty = JSON.stringify(draft) !== JSON.stringify(saved);
@@ -74,7 +74,7 @@ function SpotlightEditor({ saved }: { saved: ChannelSpotlightSettings }) {
             {OTHER_LOCALES.map((locale) => (
               <Tabs.Tab key={locale} value={locale}>
                 <Format
-                  value={{ type: 'displayName', value: locale, of: 'language' }}
+                  value={{ type: 'displayName', value: locale, options: { of: 'language' } }}
                   fallback={locale}
                 />
               </Tabs.Tab>

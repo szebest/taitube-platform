@@ -2,13 +2,15 @@ import { type Result, andThen, map, ok } from '@kit/result';
 import type { FormatContext } from '../context';
 import type { FormatFailure } from '../failures';
 import { formatInstant } from '../format-instant';
-import { parseInstant } from '../inputs';
+import { isString, parseInstant } from '../inputs';
+import { type OptionKeys, type TaggedOf, defineKind, optionKeys } from '../kind';
 import { referenceInstant } from '../reference-instant';
 import { DAY, MILLISECONDS_PER_SECOND } from '../time-spans';
 
-export interface CalendarDayValue {
-  readonly type: 'calendarDay';
-  readonly value: string;
+const CALENDAR_DAY_OPTION_KEYS = ['now'] as const satisfies OptionKeys<CalendarDayOptions>;
+
+/** `now` is the instant whose day is today, else the context's. */
+export interface CalendarDayOptions {
   readonly now?: string;
 }
 
@@ -49,29 +51,34 @@ function calendarDaysBetween(
  * `today 18:30` for today, `yesterday` / `tomorrow` either side, the medium date beyond. Casing is
  * the locale's own: a sentence-initial capital is the presentation layer's call, not this one.
  */
-export function calendarDay(
-  value: CalendarDayValue,
-  context: FormatContext
-): Result<string, FormatFailure> {
-  const { cache, locale } = context;
-  return andThen(parseInstant('calendarDay', value.value), (then) =>
-    andThen(referenceInstant('calendarDay', value.now, context), (now) =>
-      andThen(calendarDaysBetween(now, then, context), (days) => {
-        if (Math.abs(days) > 1) {
-          return formatInstant('calendarDay', value.value, { dateStyle: 'medium' }, context);
-        }
-        return andThen(cache.relativeTimeFormat(locale, { numeric: 'auto' }), (relativeDay) => {
-          const dayWord = relativeDay.format(days, 'day');
-          if (days !== 0) return ok(dayWord);
-          return andThen(
-            formatInstant('calendarDay', value.value, { timeStyle: 'short' }, context),
-            (clock) =>
-              map(cache.listFormat(locale, { type: 'unit', style: 'narrow' }), (list) =>
-                list.format([dayWord, clock])
-              )
-          );
-        });
-      })
-    )
-  );
-}
+export const calendarDay = defineKind({
+  name: 'calendarDay',
+  arg: isString,
+  options: optionKeys<CalendarDayOptions>(CALENDAR_DAY_OPTION_KEYS),
+  render: (value, options, context) => {
+    const { cache, locale } = context;
+    return andThen(parseInstant('calendarDay', value), (then) =>
+      andThen(referenceInstant('calendarDay', options?.now, context), (now) =>
+        andThen(calendarDaysBetween(now, then, context), (days) => {
+          if (Math.abs(days) > 1) {
+            return formatInstant('calendarDay', value, { dateStyle: 'medium' }, context);
+          }
+          return andThen(cache.relativeTimeFormat(locale, { numeric: 'auto' }), (relativeDay) => {
+            const dayWord = relativeDay.format(days, 'day');
+            if (days !== 0) return ok(dayWord);
+            return andThen(
+              formatInstant('calendarDay', value, { timeStyle: 'short' }, context),
+              (clock) =>
+                map(cache.listFormat(locale, { type: 'unit', style: 'narrow' }), (list) =>
+                  list.format([dayWord, clock])
+                )
+            );
+          });
+        })
+      )
+    );
+  },
+});
+
+/** @public */
+export type CalendarDayValue = TaggedOf<typeof calendarDay>;

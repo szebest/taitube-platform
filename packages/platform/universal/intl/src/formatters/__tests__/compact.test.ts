@@ -1,8 +1,7 @@
-import { ARABIC_INDIC_DIGIT, ASCII_DIGIT, contextFor } from '../../__tests__/fixtures';
-import { compact } from '../compact';
+import { ARABIC_INDIC_DIGIT, ASCII_DIGIT, contextFor, format } from '../../__tests__/fixtures';
 
 function render(locale: string, value: number) {
-  const rendered = compact({ type: 'count', value }, contextFor(locale));
+  const rendered = format({ type: 'count', value }, contextFor(locale));
   return rendered.ok ? rendered.value : rendered.error.code;
 }
 

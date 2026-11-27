@@ -16,7 +16,7 @@ export function useCaptionTrackLabel(): (
     }
 
     const name = unwrapOr(
-      format({ type: 'displayName', value: language, of: 'language' }),
+      format({ type: 'displayName', value: language, options: { of: 'language' } }),
       language
     );
     return kind === 'auto' ? tOr('player.captionTrackAuto', { language: name }, '') : name;

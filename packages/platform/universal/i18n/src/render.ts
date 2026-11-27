@@ -1,39 +1,53 @@
 import {
+  type FormatFailure,
+  type FormatInput,
   type IntlBinding,
+  type KindContext,
   type PresetTable,
+  describeValue,
   resolveEntry,
+  runKind,
   unrenderable,
   wrongKind,
 } from '@kit/intl';
-import { all, andThen, err, map, ok } from '@kit/result';
-import { describeValue, isRecord, type Kind, type KindContext, type Rendered } from './kind';
+import { type Result, all, andThen, err, map, ok } from '@kit/result';
+import { isRecord, type MessageKind } from './kind';
 import type { AnyMessage } from './message';
 import { placeholders } from './template';
+
+type Rendered = Result<string, FormatFailure>;
 
 /** What a message renders against: the context's intl, the engine's kinds and presets, the locale chain. */
 export interface RenderScope {
   readonly intl: IntlBinding;
-  readonly kinds: ReadonlyMap<string, Kind>;
+  readonly kinds: ReadonlyMap<string, MessageKind>;
   readonly presets: PresetTable;
   readonly chain: readonly string[];
 }
 
+/** The intl context a kind renders in, its nested `format` resolving presets as a config entry does. */
+function messageContext(scope: RenderScope): KindContext {
+  const { context } = scope.intl;
+  const format = (value: FormatInput): Rendered => {
+    if (typeof value !== 'object') return context.format(value);
+    const options = resolveEntry(scope.presets, value.type, value.options, scope.chain);
+    return andThen(options, (resolved) => context.format({ ...value, options: resolved }));
+  };
+  return { ...context, format };
+}
+
 function formatAs(
   scope: RenderScope,
+  context: KindContext,
   token: string,
-  kind: string,
+  name: string,
   value: unknown,
   entry: unknown
 ): Rendered {
-  const found = scope.kinds.get(kind);
-  if (found === undefined) return err(unrenderable(token, `unknown kind ${kind}`));
-  const context: KindContext = {
-    intl: scope.intl,
-    render: (inner, innerValue, innerEntry) =>
-      formatAs(scope, token, inner, innerValue, innerEntry),
-  };
-  return andThen(resolveEntry(scope.presets, kind, entry, scope.chain), (options) =>
-    found.format(token, value, options, context)
+  const kind = scope.kinds.get(name);
+  if (kind === undefined) return err(unrenderable(token, `unknown kind ${name}`));
+  return andThen(resolveEntry(scope.presets, name, entry, scope.chain), (options) =>
+    runKind(kind, value, options, context, token)
   );
 }
 
@@ -46,6 +60,7 @@ function bare(scope: RenderScope, name: string, value: unknown): Rendered {
 /** Renders every placeholder through its kind, and so through `@kit/intl`; the text between, as authored. */
 export function renderMessage(message: AnyMessage, args: unknown, scope: RenderScope): Rendered {
   const values = isRecord(args) ? args : {};
+  const context = messageContext(scope);
   const { template, config } = message;
   const pieces: Rendered[] = [];
   let copied = 0;
@@ -54,7 +69,7 @@ export function renderMessage(message: AnyMessage, args: unknown, scope: RenderS
     pieces.push(
       kind === undefined
         ? bare(scope, name, values[name])
-        : formatAs(scope, `{${name}:${kind}}`, kind, values[name], config[kind]?.[name])
+        : formatAs(scope, context, `{${name}:${kind}}`, kind, values[name], config[kind]?.[name])
     );
     copied = end;
   }

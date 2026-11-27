@@ -1,8 +1,7 @@
-import { ARABIC_INDIC_DIGIT, contextFor } from '../../__tests__/fixtures';
-import { numberRange } from '../number-range';
+import { ARABIC_INDIC_DIGIT, contextFor, format } from '../../__tests__/fixtures';
 
 function render(locale: string, value: readonly [number, number]) {
-  const rendered = numberRange({ type: 'numberRange', value }, contextFor(locale));
+  const rendered = format({ type: 'numberRange', value }, contextFor(locale));
   return rendered.ok ? rendered.value : rendered.error.code;
 }
 

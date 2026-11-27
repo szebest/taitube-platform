@@ -1,10 +1,9 @@
-import { ARABIC_INDIC_DIGIT, NOW, contextFor } from '../../__tests__/fixtures';
+import { ARABIC_INDIC_DIGIT, NOW, contextFor, format } from '../../__tests__/fixtures';
 import {
   DAY as DAY_SECONDS,
   HOUR as HOUR_SECONDS,
   MILLISECONDS_PER_SECOND,
 } from '../../time-spans';
-import { relative } from '../relative';
 
 const HOUR = HOUR_SECONDS * MILLISECONDS_PER_SECOND;
 const DAY = DAY_SECONDS * MILLISECONDS_PER_SECOND;
@@ -14,7 +13,7 @@ function ago(ms: number): string {
 }
 
 function render(locale: string, value: string, now?: string, context = contextFor(locale)) {
-  const rendered = relative({ type: 'relative', value, now }, context);
+  const rendered = format({ type: 'relative', value, options: { now } }, context);
   return rendered.ok ? rendered.value : rendered.error.code;
 }
 
@@ -47,7 +46,7 @@ describe('@kit/intl: relative', () => {
   ])(
     'with pastOnly $pastOnly reads an instant ahead of now as $expected',
     ({ pastOnly, expected }) => {
-      const ahead = relative(
+      const ahead = format(
         { type: 'relative', value: ago(-2 * HOUR), options: { pastOnly } },
         contextFor('en')
       );
@@ -60,7 +59,7 @@ describe('@kit/intl: relative', () => {
     { pastOnly: false, expected: '3 days ago' },
     { pastOnly: true, expected: '3 days ago' },
   ])('with pastOnly $pastOnly leaves a past instant as $expected', ({ pastOnly, expected }) => {
-    const past = relative(
+    const past = format(
       { type: 'relative', value: ago(3 * DAY), options: { pastOnly } },
       contextFor('en')
     );

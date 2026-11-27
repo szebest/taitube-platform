@@ -9,7 +9,7 @@ import {
 import { err, type Result, unwrapOr } from '@kit/result';
 import type { ArgsOf, LooseCatalogue, LooseCatalogueSet, MessageKey } from './catalogue';
 import { findMessage } from './catalogue';
-import type { Kind } from './kind';
+import type { MessageKind } from './kind';
 import { renderMessage } from './render';
 
 export type MissingMessage = Unrenderable & { readonly key: string };
@@ -28,7 +28,7 @@ export interface Translator<App> {
 export interface TranslatorScope {
   readonly intl: IntlBinding;
   readonly catalogues: LooseCatalogueSet;
-  readonly kinds: ReadonlyMap<string, Kind>;
+  readonly kinds: ReadonlyMap<string, MessageKind>;
   readonly presets: PresetTable;
 }
 

@@ -127,7 +127,7 @@ export function IdentitySection({ channel }: { channel: OwnerChannel }) {
                   {COUNTRIES.map((country) => (
                     <Select.Item key={country} value={country}>
                       <Format
-                        value={{ type: 'displayName', value: country, of: 'region' }}
+                        value={{ type: 'displayName', value: country, options: { of: 'region' } }}
                         fallback={country}
                       />
                     </Select.Item>

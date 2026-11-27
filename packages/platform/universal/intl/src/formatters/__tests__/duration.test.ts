@@ -1,8 +1,8 @@
-import { ARABIC_INDIC_DIGIT, contextFor } from '../../__tests__/fixtures';
-import { type DurationValue, duration } from '../duration';
+import { ARABIC_INDIC_DIGIT, contextFor, format } from '../../__tests__/fixtures';
+import { type DurationValue } from '../duration';
 
 function render(locale: string, value: number, options?: DurationValue['options']) {
-  const rendered = duration({ type: 'duration', value, options }, contextFor(locale));
+  const rendered = format({ type: 'duration', value, options }, contextFor(locale));
   return rendered.ok ? rendered.value : rendered.error.code;
 }
 

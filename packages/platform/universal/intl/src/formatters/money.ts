@@ -1,38 +1,40 @@
 import { andThen, map } from '@kit/result';
 import { type User, resolveCurrency } from '../context';
-import { finite } from '../inputs';
-import { type OptionKeys, withOptions } from '../with-options';
+import { finite, isNumber } from '../inputs';
+import { type OptionKeys, type TaggedOf, defineKind, optionKeys } from '../kind';
 
 const MONEY_OPTION_KEYS = [
   'currency',
   'currencyDisplay',
   'signDisplay',
-] as const satisfies OptionKeys<Intl.NumberFormatOptions>;
-
-type MoneyOptions = Pick<
-  Intl.NumberFormatOptions,
-  Exclude<(typeof MONEY_OPTION_KEYS)[number], 'currency'>
-> & { readonly currency?: string | User };
+  'units',
+] as const satisfies OptionKeys<Intl.NumberFormatOptions, 'units'>;
 
 /** `minor` counts the currency's smallest unit (pence, öre), so `1250` GBP is £12.50. */
-export interface MoneyValue {
-  readonly type: 'money';
-  readonly value: number;
+type MoneyOptions = Pick<Intl.NumberFormatOptions, 'currencyDisplay' | 'signDisplay'> & {
+  readonly currency?: string | User;
   readonly units?: 'minor' | 'major';
-  readonly options?: MoneyOptions;
-}
+};
 
-export const money = withOptions<MoneyValue>('money', MONEY_OPTION_KEYS, (value, context) => {
-  const { currency: requested, ...display } = value.options ?? {};
-  return andThen(finite('money', value.value), (amount) =>
-    andThen(resolveCurrency('money', requested, context), (currency) =>
-      map(
-        context.cache.numberFormat(context.locale, { ...display, style: 'currency', currency }),
-        (format) => {
-          const digits = format.resolvedOptions().maximumFractionDigits ?? 0;
-          return format.format(value.units === 'minor' ? amount / 10 ** digits : amount);
-        }
+export const money = defineKind({
+  name: 'money',
+  arg: isNumber,
+  options: optionKeys<MoneyOptions>(MONEY_OPTION_KEYS),
+  render: (value, options, context) => {
+    const { currency: requested, units = 'major', ...display } = options ?? {};
+    return andThen(finite('money', value), (amount) =>
+      andThen(resolveCurrency('money', requested, context), (currency) =>
+        map(
+          context.cache.numberFormat(context.locale, { ...display, style: 'currency', currency }),
+          (format) => {
+            const digits = format.resolvedOptions().maximumFractionDigits ?? 0;
+            return format.format(units === 'minor' ? amount / 10 ** digits : amount);
+          }
+        )
       )
-    )
-  );
+    );
+  },
 });
+
+/** @public */
+export type MoneyValue = TaggedOf<typeof money>;

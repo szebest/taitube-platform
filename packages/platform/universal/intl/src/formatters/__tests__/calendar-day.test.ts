@@ -1,8 +1,7 @@
-import { NOW, contextFor } from '../../__tests__/fixtures';
-import { calendarDay } from '../calendar-day';
+import { NOW, contextFor, format } from '../../__tests__/fixtures';
 
 function render(locale: string, value: string, timeZone = 'UTC') {
-  const rendered = calendarDay({ type: 'calendarDay', value }, contextFor(locale, { timeZone }));
+  const rendered = format({ type: 'calendarDay', value }, contextFor(locale, { timeZone }));
   return rendered.ok ? rendered.value : rendered.error.code;
 }
 
@@ -25,8 +24,8 @@ describe('@kit/intl: calendarDay', () => {
   });
 
   it('keeps the reference instant it was given', () => {
-    const rendered = calendarDay(
-      { type: 'calendarDay', value: NOW, now: '2026-09-23T12:00:00.000Z' },
+    const rendered = format(
+      { type: 'calendarDay', value: NOW, options: { now: '2026-09-23T12:00:00.000Z' } },
       contextFor('en')
     );
 

@@ -1,10 +1,9 @@
-import { ARABIC_INDIC_DIGIT, contextFor } from '../../__tests__/fixtures';
-import { dateRange } from '../date-range';
+import { ARABIC_INDIC_DIGIT, contextFor, format } from '../../__tests__/fixtures';
 
 const RANGE = ['2026-09-22T12:00:00.000Z', '2026-09-24T12:00:00.000Z'] as const;
 
 function render(locale: string, value: readonly [string, string] = RANGE) {
-  const rendered = dateRange(
+  const rendered = format(
     { type: 'dateRange', value, options: { day: 'numeric', month: 'short' } },
     contextFor(locale)
   );

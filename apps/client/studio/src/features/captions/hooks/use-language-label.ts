@@ -10,5 +10,8 @@ export function useLanguageLabel(): (language: string | null) => string {
   return (language) =>
     language === null
       ? tOr('studio.captionsLanguageUnknown', {}, '')
-      : unwrapOr(format({ type: 'displayName', value: language, of: 'language' }), language);
+      : unwrapOr(
+          format({ type: 'displayName', value: language, options: { of: 'language' } }),
+          language
+        );
 }

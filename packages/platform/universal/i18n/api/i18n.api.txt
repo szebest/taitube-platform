@@ -66,14 +66,14 @@ export interface Engine<E extends EngineTypes> {
     defineCatalogue<Source extends CatalogueShape>(): (translation: Translation<Source>) => Translation<Source>;
     createI18n<App extends CatalogueShape>(): I18n<App>;
 }
-export interface EngineOf<Kinds extends readonly Kind[], Presets extends PresetTable, Params extends readonly string[]> {
+export interface EngineOf<Kinds extends readonly MessageKind[], Presets extends PresetTable, Params extends readonly string[]> {
     readonly kinds: KindsByName<Kinds>;
     readonly presets: Presets;
     readonly params: Params[number];
 }
 export interface EngineTypes {
     readonly kinds: {
-        readonly [name: string]: Kind;
+        readonly [name: string]: MessageKind;
     };
     readonly presets: PresetTable;
     readonly params: string;
@@ -92,19 +92,6 @@ export interface I18n<App> {
 }
 export type InvalidParamName<Name extends string> = `InvalidParamName<'${Name}'>`;
 export type IsCamelCase<S extends string> = S extends `${infer Head}${infer Rest}` ? Head extends Lower ? LettersOnly<Rest> : false : false;
-export interface Kind<Name extends string = string, Need extends Requirement = Requirement, Arg = unknown, Options = unknown> {
-    readonly name: Name;
-    readonly config: Need;
-    readonly format: (token: string, value: unknown, entry: unknown, context: KindContext) => Rendered;
-    readonly types?: {
-        readonly arg: Arg;
-        readonly options: Options;
-    };
-}
-export interface KindContext {
-    readonly intl: IntlBinding;
-    render(kind: string, value: unknown, entry: unknown): Rendered;
-}
 export type LooseCatalogue = {
     readonly [namespace: string]: {
         readonly [name: string]: AnyMessage | undefined;
@@ -127,6 +114,9 @@ export type MessageFailure = FormatFailure | MissingMessage;
 export type MessageKey<App> = {
     [F in keyof App]: `${F & string}.${keyof App[F] & string}`;
 }[keyof App];
+export type MessageKind<Name extends string = string, Need extends Requirement = Requirement, Arg = unknown, Options = unknown> = Kind<Name, Arg, Options, string> & {
+    readonly config: Need;
+};
 export type MissingConfig<Template extends string> = `MissingConfig<'${Template}'>`;
 export type MissingMessage = Unrenderable & {
     readonly key: string;
@@ -151,7 +141,7 @@ export interface Placeholder {
     readonly kind: string | undefined;
 }
 export type PlaceholderInBranch<Token extends string> = `PlaceholderInBranch<'${Token}'>`;
-export type PresetsFor<Presets, Kinds extends readonly Kind[]> = {
+export type PresetsFor<Presets, Kinds extends readonly MessageKind[]> = {
     readonly [K in keyof Presets]: K extends Kinds[number]['name'] ? {
         readonly [N in keyof Presets[K]]: {
             readonly [L in keyof Presets[K][N]]: OptionsOfKind<Extract<Kinds[number], {
@@ -160,7 +150,6 @@ export type PresetsFor<Presets, Kinds extends readonly Kind[]> = {
         };
     } : Fails<UnknownKind<K & string>>;
 };
-export type Rendered = Result<string, FormatFailure>;
 export type Requirement = 'required' | 'optional';
 export type Translation<Source> = {
     readonly [F in keyof Source]?: {
@@ -174,7 +163,7 @@ export interface Translator<App> {
 export interface TranslatorScope {
     readonly intl: IntlBinding;
     readonly catalogues: LooseCatalogueSet;
-    readonly kinds: ReadonlyMap<string, Kind>;
+    readonly kinds: ReadonlyMap<string, MessageKind>;
     readonly presets: PresetTable;
 }
 export type UnknownKind<Name extends string> = `UnknownKind<'${Name}'>`;
@@ -182,21 +171,20 @@ export type UnknownOption<Name extends string> = `UnknownOption<'${Name}'>`;
 export type UnknownParam<Name extends string> = `UnknownParam<'${Name}'>`;
 export type UnknownPreset<Name extends string> = `UnknownPreset<'${Name}'>`;
 export type ValidTemplate<T extends string, P extends readonly Placeholder[], E extends EngineTypes> = CheckPlaceholders<P, E> extends true ? T : CheckPlaceholders<P, E> & string;
-export const builtInKinds: readonly [Kind<"number", "optional", number, NumberOptions>, Kind<"date", "optional", string, DateOptions>, Kind<"list", "optional", readonly string[], ListOptions>, Kind<"plural", "required", number, Branches>, Kind<"enum", "required", ConfigKey, Readonly<Record<string, string>>>]
+export const builtInKinds: readonly [Kind<"number", number, NumberOptions, string> & { readonly config: "optional"; }, Kind<"date", string, DateOptions, string> & { readonly config: "optional"; }, Kind<"list", readonly string[], ListOptions, string> & { readonly config: "optional"; }, Kind<"plural", number, Branches, string> & { readonly config: "required"; }, Kind<"enum", ConfigKey, Readonly<Record<string, string>>, string> & { readonly config: "required"; }]
 export function createTranslator<App>({ intl, catalogues, kinds, presets, }: TranslatorScope): Translator<App>
-export const dateKind: Kind<"date", "optional", string, DateOptions>
-export function defineEngine<const Kinds extends readonly Kind[], const Presets extends PresetTable, const Params extends readonly string[]>(definition: EngineDefinition<Kinds, Presets & NoInfer<PresetsFor<Presets, Kinds>>, Params>): Engine<EngineOf<Kinds, Presets, Params>>
-export function defineKind<const Name extends string, const Need extends Requirement, Arg, Options>(definition: KindDefinition<Name, Need, Arg, Options>): Kind<Name, Need, Arg, Options>
+export const dateKind: Kind<"date", string, DateOptions, string> & { readonly config: "optional"; }
+export function defineEngine<const Kinds extends readonly MessageKind[], const Presets extends PresetTable, const Params extends readonly string[]>(definition: EngineDefinition<Kinds, Presets & NoInfer<PresetsFor<Presets, Kinds>>, Params>): Engine<EngineOf<Kinds, Presets, Params>>
 export function defineParams<const Names extends readonly string[]>(names: Names & ValidNames<Names>): Names
-export function describeValue(value: unknown): string
-export const enumKind: Kind<"enum", "required", ConfigKey, Readonly<Record<string, string>>>
+export const enumKind: Kind<"enum", ConfigKey, Readonly<Record<string, string>>, string> & { readonly config: "required"; }
 export function findMessage(catalogue: LooseCatalogue | undefined, key: string): AnyMessage | undefined
 export const isConfigKey: (value: unknown) => value is ConfigKey
 export const isRecord: (value: unknown) => value is Readonly<Record<string, unknown>>
-export const listKind: Kind<"list", "optional", readonly string[], ListOptions>
-export const numberKind: Kind<"number", "optional", number, NumberOptions>
+export const listKind: Kind<"list", readonly string[], ListOptions, string> & { readonly config: "optional"; }
+export function messageKind<const Need extends Requirement, const K extends Kind<string, unknown, unknown, string>>(kind: K, config: Need): K & { readonly config: Need; }
+export const numberKind: Kind<"number", number, NumberOptions, string> & { readonly config: "optional"; }
 export function placeholders(template: string): Located[]
-export const pluralKind: Kind<"plural", "required", number, Branches>
+export const pluralKind: Kind<"plural", number, Branches, string> & { readonly config: "required"; }
 
 ## @kit/i18n/contract
 export interface I18nSubject {

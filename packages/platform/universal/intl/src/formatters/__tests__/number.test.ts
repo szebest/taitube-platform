@@ -1,8 +1,8 @@
-import { ARABIC_INDIC_DIGIT, ASCII_DIGIT, contextFor } from '../../__tests__/fixtures';
-import { number, numberFormatOptions } from '../number';
+import { ARABIC_INDIC_DIGIT, ASCII_DIGIT, contextFor, format } from '../../__tests__/fixtures';
+import { numberFormatOptions } from '../number';
 
 function render(locale: string, value: number, options = {}) {
-  return number({ type: 'number', value, options }, contextFor(locale));
+  return format({ type: 'number', value, options }, contextFor(locale));
 }
 
 describe('@kit/intl: number', () => {
@@ -45,7 +45,7 @@ describe('@kit/intl: number', () => {
   });
 
   it('declines an option it does not allow', () => {
-    const declined = number(
+    const declined = format(
       // @ts-expect-error currency formatting is money's job, not number's
       { type: 'number', value: 1, options: { currency: 'SEK' } },
       contextFor('en')

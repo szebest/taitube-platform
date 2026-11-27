@@ -1,6 +1,6 @@
-import { unrenderable } from '@kit/intl';
-import { andThen, err, map } from '@kit/result';
-import { type EntryOf, defineKind, isRecord } from '../kind';
+import { defineKind, pluralCategory, runKind, unrenderable } from '@kit/intl';
+import { andThen, err, map, ok } from '@kit/result';
+import { type EntryOf, isRecord, messageKind } from '../kind';
 
 const COUNT = '{?}';
 
@@ -17,17 +17,22 @@ const isBranches = (value: unknown): value is Branches =>
   isRecord(value) && typeof value.other === 'string';
 
 /** `{count:plural}`: a number that selects a branch through `Intl.PluralRules`; the count renders as a `number`. */
-export const pluralKind = defineKind({
-  name: 'plural',
-  config: 'required',
-  arg: isNumber,
-  options: isBranches,
-  render: (count, branches, { intl, render }) => {
-    if (branches === undefined) return err(unrenderable('plural', 'no branches'));
-    return andThen(intl.pluralCategory(count, branches.type), (category) =>
-      map(render('number', count, branches.formatter), (digits) =>
-        (branches[category] ?? branches.other).replaceAll(COUNT, digits)
-      )
-    );
-  },
-});
+export const pluralKind = messageKind(
+  defineKind({
+    name: 'plural',
+    arg: isNumber,
+    options: (value, kind) =>
+      isBranches(value) ? ok(value) : err(unrenderable(kind, 'branches without other')),
+    render: (count, branches, context) => {
+      if (branches === undefined) return err(unrenderable('plural', 'no branches'));
+      const rules = runKind(pluralCategory, count, { type: branches.type }, context);
+      return andThen(rules, (category) =>
+        map(
+          context.format({ type: 'number', value: count, options: branches.formatter }),
+          (digits) => (branches[category] ?? branches.other).replaceAll(COUNT, digits)
+        )
+      );
+    },
+  }),
+  'required'
+);

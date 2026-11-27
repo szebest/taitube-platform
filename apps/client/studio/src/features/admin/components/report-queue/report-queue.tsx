@@ -34,7 +34,7 @@ interface ReportActionsProps {
 
 function ReportActions({ report, onRemove }: ReportActionsProps) {
   const { tOr } = useT();
-  const { truncate } = useFormat();
+  const { format } = useFormat();
   const toast = useToast();
   const resolve = useResolveReport();
   const { comment } = report;
@@ -48,7 +48,14 @@ function ReportActions({ report, onRemove }: ReportActionsProps) {
     return null;
   }
 
-  const excerpt = unwrapOr(truncate(comment.content, EXCERPT_GRAPHEMES), comment.content);
+  const excerpt = unwrapOr(
+    format({
+      type: 'truncate',
+      value: comment.content,
+      options: { maxGraphemes: EXCERPT_GRAPHEMES },
+    }),
+    comment.content
+  );
 
   const dismiss = async () => {
     const done = await fromPromise(

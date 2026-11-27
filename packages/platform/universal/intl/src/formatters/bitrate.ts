@@ -1,6 +1,6 @@
 import { andThen, map } from '@kit/result';
-import { finite } from '../inputs';
-import { type OptionKeys, withOptions } from '../with-options';
+import { finite, isNumber } from '../inputs';
+import { type OptionKeys, type TaggedOf, defineKind, optionKeys } from '../kind';
 import { scale } from './bytes';
 
 const BITRATE_OPTION_KEYS = [
@@ -10,13 +10,6 @@ const BITRATE_OPTION_KEYS = [
 
 type BitrateOptions = Pick<Intl.NumberFormatOptions, (typeof BITRATE_OPTION_KEYS)[number]>;
 
-/** In bits per second. */
-export interface BitrateValue {
-  readonly type: 'bitrate';
-  readonly value: number;
-  readonly options?: BitrateOptions;
-}
-
 const BITRATE_UNITS = [
   'bit-per-second',
   'kilobit-per-second',
@@ -24,12 +17,20 @@ const BITRATE_UNITS = [
   'gigabit-per-second',
 ] as const;
 
-export const bitrate = withOptions<BitrateValue>('bitrate', BITRATE_OPTION_KEYS, (value, context) =>
-  andThen(finite('bitrate', value.value), (bitsPerSecond) => {
-    const { amount, unit } = scale(bitsPerSecond, 1000, BITRATE_UNITS);
-    const options = { maximumFractionDigits: 1, ...value.options, style: 'unit', unit } as const;
-    return map(context.cache.numberFormat(context.locale, options), (format) =>
-      format.format(amount)
-    );
-  })
-);
+/** In bits per second. */
+export const bitrate = defineKind({
+  name: 'bitrate',
+  arg: isNumber,
+  options: optionKeys<BitrateOptions>(BITRATE_OPTION_KEYS),
+  render: (value, options, context) =>
+    andThen(finite('bitrate', value), (bitsPerSecond) => {
+      const { amount, unit } = scale(bitsPerSecond, 1000, BITRATE_UNITS);
+      const intlOptions = { maximumFractionDigits: 1, ...options, style: 'unit', unit } as const;
+      return map(context.cache.numberFormat(context.locale, intlOptions), (format) =>
+        format.format(amount)
+      );
+    }),
+});
+
+/** @public */
+export type BitrateValue = TaggedOf<typeof bitrate>;

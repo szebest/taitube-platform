@@ -1,5 +1,5 @@
-import { FORMAT_KINDS, type FormatValue, formatValue } from '../format-value';
-import { NOW, contextFor } from './fixtures';
+import { type FormatValue, formatKinds } from '../format-value';
+import { NOW, contextFor, format } from './fixtures';
 
 const ISO = '2026-09-19T18:30:00.000Z';
 
@@ -12,7 +12,7 @@ const ONE_OF_EACH: readonly { value: FormatValue; expected: RegExp }[] = [
   { value: { type: 'bytes', value: 4_500_000 }, expected: /^4\.5 MB$/ },
   { value: { type: 'bitrate', value: 4_500_000 }, expected: /^4\.5 Mb\/s$/ },
   { value: { type: 'numberRange', value: [1, 5] }, expected: /^1\s?–\s?5$/u },
-  { value: { type: 'money', value: 1250, units: 'minor' }, expected: /^£12\.50$/ },
+  { value: { type: 'money', value: 1250, options: { units: 'minor' } }, expected: /^£12\.50$/ },
   { value: { type: 'date', value: ISO }, expected: /^19 Sept? 2026$/ },
   { value: { type: 'time', value: ISO }, expected: /^18:30$/ },
   { value: { type: 'dateTime', value: ISO }, expected: /^19 Sept? 2026(,| at) 18:30$/ },
@@ -21,26 +21,33 @@ const ONE_OF_EACH: readonly { value: FormatValue; expected: RegExp }[] = [
   { value: { type: 'calendarDay', value: NOW }, expected: /^today 18:30$/ },
   { value: { type: 'duration', value: 765 }, expected: /^12:45$/ },
   { value: { type: 'list', value: ['a', 'b', 'c'] }, expected: /^a, b and c$/ },
-  { value: { type: 'displayName', value: 'sv', of: 'language' }, expected: /^Swedish$/ },
+  {
+    value: { type: 'displayName', value: 'sv', options: { of: 'language' } },
+    expected: /^Swedish$/,
+  },
+  { value: { type: 'truncate', value: 'abcdef', options: { maxGraphemes: 3 } }, expected: /^ab…$/ },
 ];
 
 describe('@kit/intl: formatValue', () => {
   it.each(ONE_OF_EACH)('routes $value to its own formatter', ({ value, expected }) => {
-    const rendered = formatValue(value, contextFor('en-GB', { currency: 'GBP' }));
+    const rendered = format(value, contextFor('en-GB', { currency: 'GBP' }));
 
     expect(rendered.ok && rendered.value).toMatch(expected);
   });
 
-  it('covers every kind in the list', () => {
+  it('covers every text kind it registers', () => {
     const routed = ONE_OF_EACH.flatMap(({ value }) =>
       typeof value === 'object' ? [value.type] : []
     );
+    const textKinds = formatKinds
+      .map(({ name }) => name)
+      .filter((name) => !['collator', 'pluralCategory'].includes(name));
 
-    expect([...routed].sort()).toEqual([...FORMAT_KINDS].sort());
+    expect([...routed].sort()).toEqual([...textKinds].sort());
   });
 
   it('declines an unsupported locale with a failure, not a throw', () => {
-    expect(formatValue({ type: 'count', value: 1 }, contextFor('xx'))).toMatchObject({
+    expect(format({ type: 'count', value: 1 }, contextFor('xx'))).toMatchObject({
       ok: false,
       error: { code: 'FORMAT_UNSUPPORTED_LOCALE', locale: 'xx' },
     });

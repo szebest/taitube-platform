@@ -1,7 +1,5 @@
-import { type Result, err, map } from '@kit/result';
-import type { FormatContext } from '../context';
-import { type FormatFailure, unknownOption } from '../failures';
-import { type OptionKeys, findUnknownOption } from '../with-options';
+import { map } from '@kit/result';
+import { type OptionKeys, defineKind, optionKeys } from '../kind';
 
 const COLLATOR_OPTION_KEYS = [
   'sensitivity',
@@ -15,11 +13,10 @@ export type CollatorOptions = Pick<Intl.CollatorOptions, (typeof COLLATOR_OPTION
 export type Comparator = (a: string, b: string) => number;
 
 /** A comparator for `.sort()` in the locale's alphabetical order, where `Ä` is not after `Z`. */
-export function collator(
-  context: FormatContext,
-  options: CollatorOptions = {}
-): Result<Comparator, FormatFailure> {
-  const unknown = findUnknownOption(COLLATOR_OPTION_KEYS, options);
-  if (unknown !== undefined) return err(unknownOption('collator', unknown));
-  return map(context.cache.collator(context.locale, options), (format) => format.compare);
-}
+export const collator = defineKind({
+  name: 'collator',
+  arg: (value): value is undefined => value === undefined,
+  options: optionKeys<CollatorOptions>(COLLATOR_OPTION_KEYS),
+  render: (_, options, context) =>
+    map(context.cache.collator(context.locale, options), (format): Comparator => format.compare),
+});

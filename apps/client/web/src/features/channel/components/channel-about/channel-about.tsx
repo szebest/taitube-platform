@@ -56,7 +56,7 @@ export function ChannelAbout({ channel: { id, links, country, hasContact } }: Ch
             <dt className="text-label text-fg-muted">{tOr('channels.aboutCountry', {}, '')}</dt>
             <dd className="m-0">
               <Format
-                value={{ type: 'displayName', value: country, of: 'region' }}
+                value={{ type: 'displayName', value: country, options: { of: 'region' } }}
                 fallback={country}
               />
             </dd>

@@ -1,4 +1,4 @@
-import { type Result, andThen, err, tryCatch } from '@kit/result';
+import { type Result, andThen, err, ok, tryCatch } from '@kit/result';
 import {
   type DurationFormatLike,
   type DurationFormatOptions,
@@ -6,16 +6,56 @@ import {
 } from './duration-fallback';
 import { type FormatFailure, unrenderable, unsupportedLocale } from './failures';
 
-const MAX_ENTRIES_PER_KIND = 256;
+const MAX_ENTRIES_PER_DESCRIPTOR = 256;
 
 type Built<T> = Result<T, FormatFailure>;
 
+interface DurationFormatConstructor {
+  new (locale: string, options: DurationFormatOptions): DurationFormatLike;
+  supportedLocalesOf(locales: string[]): string[];
+}
+
 /**
- * A shared `Intl` object per `(locale, kind, options)`. Constructing one costs about two orders of
- * magnitude more than using it, and a feed formats hundreds per scroll. Failures are kept too, so
- * an unsupported locale is detected once rather than on every format.
+ * The `Intl` constructors a cache builds from. `Intl` itself is one; an engine without
+ * `DurationFormat` (or a spec standing in for one) leaves it out and gets the fallback.
+ * @public
+ */
+export interface IntlEnvironment {
+  readonly NumberFormat: typeof Intl.NumberFormat;
+  readonly DateTimeFormat: typeof Intl.DateTimeFormat;
+  readonly RelativeTimeFormat: typeof Intl.RelativeTimeFormat;
+  readonly PluralRules: typeof Intl.PluralRules;
+  readonly ListFormat: typeof Intl.ListFormat;
+  readonly DisplayNames: typeof Intl.DisplayNames;
+  readonly Collator: typeof Intl.Collator;
+  readonly Segmenter: typeof Intl.Segmenter;
+  readonly DurationFormat?: DurationFormatConstructor;
+  readonly supportedValuesOf: typeof Intl.supportedValuesOf;
+}
+
+/**
+ * How to build one kind of `Intl` object: a kind needing a constructor the cache has no
+ * accessor for passes its own to `get`. `is` recognises what `create` built.
+ * @public
+ */
+export interface IntlDescriptor<T, Options extends object> {
+  readonly name: string;
+  create(locale: string, options: Options): T;
+  supportedLocalesOf(locales: string[]): string[];
+  is(value: unknown): value is T;
+}
+
+/**
+ * A shared `Intl` object per `(descriptor, locale, options)`. Constructing one costs about two
+ * orders of magnitude more than using it, and a feed formats hundreds per scroll. Failures are
+ * kept too, so an unsupported locale is detected once rather than on every format.
  */
 export interface IntlCache {
+  get<T, Options extends object>(
+    descriptor: IntlDescriptor<T, Options>,
+    locale: string,
+    options: Options
+  ): Built<T>;
   numberFormat(locale: string, options?: Intl.NumberFormatOptions): Built<Intl.NumberFormat>;
   dateTimeFormat(locale: string, options?: Intl.DateTimeFormatOptions): Built<Intl.DateTimeFormat>;
   relativeTimeFormat(
@@ -32,6 +72,29 @@ export interface IntlCache {
   clear(): void;
 }
 
+interface Constructor<T, Options> {
+  new (locale: string, options: Options): T;
+  supportedLocalesOf(locales: string[]): string[];
+}
+
+function describe<T, Options extends object>(
+  name: string,
+  Native: Constructor<T, Options>
+): IntlDescriptor<T, Options> {
+  return {
+    name,
+    create: (locale, options) => new Native(locale, options),
+    supportedLocalesOf: (locales) => Native.supportedLocalesOf(locales),
+    is: (value): value is T => value instanceof Native,
+  };
+}
+
+function optionsKey(options: object): string {
+  const defined = Object.entries(options).filter(([, value]) => value !== undefined);
+  defined.sort(([a], [b]) => (a < b ? -1 : 1));
+  return JSON.stringify(defined);
+}
+
 class BoundedMemo<T> {
   private readonly entries = new Map<string, Built<T>>();
 
@@ -42,8 +105,9 @@ class BoundedMemo<T> {
 
     const built = build();
     const oldest = this.entries.keys().next();
-    if (this.entries.size >= MAX_ENTRIES_PER_KIND && !oldest.done)
+    if (this.entries.size >= MAX_ENTRIES_PER_DESCRIPTOR && !oldest.done) {
       this.entries.delete(oldest.value);
+    }
     this.entries.set(key, built);
     return built;
   }
@@ -53,153 +117,117 @@ class BoundedMemo<T> {
   }
 }
 
-function optionsKey(options: object): string {
-  const defined = Object.entries(options).filter(([, value]) => value !== undefined);
-  defined.sort(([a], [b]) => (a < b ? -1 : 1));
-  return JSON.stringify(defined);
-}
-
-type SupportedLocalesOf = (locales: string[]) => string[];
-
-function construct<T>(
-  kind: string,
+function construct<T, Options extends object>(
+  descriptor: IntlDescriptor<T, Options>,
   locale: string,
-  supportedLocalesOf: SupportedLocalesOf,
-  build: () => T
+  options: Options
 ): Built<T> {
   const supported = tryCatch(
-    () => supportedLocalesOf([locale]),
+    () => descriptor.supportedLocalesOf([locale]),
     () => unsupportedLocale(locale)
   );
   return andThen(supported, (found): Built<T> =>
     found.length === 0
       ? err(unsupportedLocale(locale))
-      : tryCatch(build, (cause) => unrenderable(kind, String(cause)))
+      : tryCatch(
+          () => descriptor.create(locale, options),
+          (cause) => unrenderable(descriptor.name, String(cause))
+        )
   );
 }
 
-interface DurationFormatConstructor {
-  new (locale: string, options: DurationFormatOptions): DurationFormatLike;
-}
-
-const isDurationFormat = (value: unknown): value is DurationFormatConstructor =>
-  typeof value === 'function';
-
-function nativeDurationFormat(): DurationFormatConstructor | undefined {
-  // This package's lib does not type Intl.DurationFormat, and the oldest browsers we support lack it.
-  const native: unknown = Reflect.get(Intl, 'DurationFormat');
-  return isDurationFormat(native) ? native : undefined;
-}
-
 class MemoisedIntl implements IntlCache {
-  private readonly numbers = new BoundedMemo<Intl.NumberFormat>();
-  private readonly dates = new BoundedMemo<Intl.DateTimeFormat>();
-  private readonly relatives = new BoundedMemo<Intl.RelativeTimeFormat>();
-  private readonly plurals = new BoundedMemo<Intl.PluralRules>();
-  private readonly lists = new BoundedMemo<Intl.ListFormat>();
-  private readonly names = new BoundedMemo<Intl.DisplayNames>();
-  private readonly collators = new BoundedMemo<Intl.Collator>();
-  private readonly segmenters = new BoundedMemo<Intl.Segmenter>();
-  private readonly durations = new BoundedMemo<DurationFormatLike>();
+  private readonly memos = new Map<object, BoundedMemo<unknown>>();
+  private readonly fallbacks = new BoundedMemo<DurationFormatLike>();
+  private readonly number;
+  private readonly dateTime;
+  private readonly relativeTime;
+  private readonly plural;
+  private readonly list;
+  private readonly names;
+  private readonly collation;
+  private readonly segments;
+  private readonly duration;
   private knownCurrencies: ReadonlySet<string> | undefined;
 
+  constructor(private readonly env: IntlEnvironment) {
+    this.number = describe('NumberFormat', env.NumberFormat);
+    this.dateTime = describe('DateTimeFormat', env.DateTimeFormat);
+    this.relativeTime = describe('RelativeTimeFormat', env.RelativeTimeFormat);
+    this.plural = describe('PluralRules', env.PluralRules);
+    this.list = describe('ListFormat', env.ListFormat);
+    this.names = describe('DisplayNames', env.DisplayNames);
+    this.collation = describe('Collator', env.Collator);
+    this.segments = describe('Segmenter', env.Segmenter);
+    this.duration = env.DurationFormat && describe('DurationFormat', env.DurationFormat);
+  }
+
+  get<T, Options extends object>(
+    descriptor: IntlDescriptor<T, Options>,
+    locale: string,
+    options: Options
+  ): Built<T> {
+    const memo = this.memos.get(descriptor) ?? new BoundedMemo<unknown>();
+    this.memos.set(descriptor, memo);
+    const built = memo.get(locale, options, () => construct(descriptor, locale, options));
+    if (!built.ok) return built;
+    return descriptor.is(built.value)
+      ? ok(built.value)
+      : err(unrenderable(descriptor.name, 'a second descriptor shares this one'));
+  }
+
   numberFormat(locale: string, options: Intl.NumberFormatOptions = {}) {
-    return this.numbers.get(locale, options, () =>
-      construct('NumberFormat', locale, Intl.NumberFormat.supportedLocalesOf, () => {
-        return new Intl.NumberFormat(locale, options);
-      })
-    );
+    return this.get(this.number, locale, options);
   }
 
   dateTimeFormat(locale: string, options: Intl.DateTimeFormatOptions = {}) {
-    return this.dates.get(locale, options, () =>
-      construct('DateTimeFormat', locale, Intl.DateTimeFormat.supportedLocalesOf, () => {
-        return new Intl.DateTimeFormat(locale, options);
-      })
-    );
+    return this.get(this.dateTime, locale, options);
   }
 
   relativeTimeFormat(locale: string, options: Intl.RelativeTimeFormatOptions = {}) {
-    return this.relatives.get(locale, options, () =>
-      construct('RelativeTimeFormat', locale, Intl.RelativeTimeFormat.supportedLocalesOf, () => {
-        return new Intl.RelativeTimeFormat(locale, options);
-      })
-    );
+    return this.get(this.relativeTime, locale, options);
   }
 
   pluralRules(locale: string, options: Intl.PluralRulesOptions = {}) {
-    return this.plurals.get(locale, options, () =>
-      construct('PluralRules', locale, Intl.PluralRules.supportedLocalesOf, () => {
-        return new Intl.PluralRules(locale, options);
-      })
-    );
+    return this.get(this.plural, locale, options);
   }
 
   listFormat(locale: string, options: Intl.ListFormatOptions = {}) {
-    return this.lists.get(locale, options, () =>
-      construct('ListFormat', locale, Intl.ListFormat.supportedLocalesOf, () => {
-        return new Intl.ListFormat(locale, options);
-      })
-    );
+    return this.get(this.list, locale, options);
   }
 
   displayNames(locale: string, options: Intl.DisplayNamesOptions) {
-    return this.names.get(locale, options, () =>
-      construct('DisplayNames', locale, Intl.DisplayNames.supportedLocalesOf, () => {
-        return new Intl.DisplayNames(locale, options);
-      })
-    );
+    return this.get(this.names, locale, options);
   }
 
   collator(locale: string, options: Intl.CollatorOptions = {}) {
-    return this.collators.get(locale, options, () =>
-      construct('Collator', locale, Intl.Collator.supportedLocalesOf, () => {
-        return new Intl.Collator(locale, options);
-      })
-    );
+    return this.get(this.collation, locale, options);
   }
 
   segmenter(locale: string, options: Intl.SegmenterOptions = {}) {
-    return this.segmenters.get(locale, options, () =>
-      construct('Segmenter', locale, Intl.Segmenter.supportedLocalesOf, () => {
-        return new Intl.Segmenter(locale, options);
-      })
-    );
+    return this.get(this.segments, locale, options);
   }
 
   durationFormat(locale: string, options: DurationFormatOptions) {
-    return this.durations.get(locale, options, () => {
-      const Native = nativeDurationFormat();
-      if (Native === undefined) return createDurationFallback(locale, options, this);
-      return construct('DurationFormat', locale, Intl.NumberFormat.supportedLocalesOf, () => {
-        return new Native(locale, options);
-      });
-    });
+    if (this.duration !== undefined) return this.get(this.duration, locale, options);
+    return this.fallbacks.get(locale, options, () => createDurationFallback(locale, options, this));
   }
 
   currencies(): ReadonlySet<string> {
-    this.knownCurrencies ??= new Set(Intl.supportedValuesOf('currency'));
+    this.knownCurrencies ??= new Set(this.env.supportedValuesOf('currency'));
     return this.knownCurrencies;
   }
 
   clear(): void {
-    for (const memo of [
-      this.numbers,
-      this.dates,
-      this.relatives,
-      this.plurals,
-      this.lists,
-      this.names,
-      this.collators,
-      this.segmenters,
-      this.durations,
-    ]) {
-      memo.clear();
-    }
+    this.memos.clear();
+    this.fallbacks.clear();
   }
 }
 
-/** One per owner with a lifetime - a provider per locale, a container per process - never a module constant. */
-export function createIntlCache(): IntlCache {
-  return new MemoisedIntl();
+/**
+ * One per owner with a lifetime - a provider per locale, a container per process - never a
+ * module constant. `env` is where the constructors come from: `Intl` unless a caller says else.
+ */
+export function createIntlCache(env: IntlEnvironment = Intl): IntlCache {
+  return new MemoisedIntl(env);
 }

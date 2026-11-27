@@ -1,11 +1,14 @@
-import { dateKind } from './date';
+import { date, list, number } from '@kit/intl';
+import { messageKind } from '../kind';
 import { enumKind } from './enum';
-import { listKind } from './list';
-import { numberKind } from './number';
 import { pluralKind } from './plural';
 
-export { dateKind, enumKind, listKind, numberKind, pluralKind };
+export const numberKind = messageKind(number, 'optional');
+export const dateKind = messageKind(date, 'optional');
+export const listKind = messageKind(list, 'optional');
+
+export { enumKind, pluralKind };
 export type { Branches } from './plural';
 
-/** `number`, `date`, `list`, `plural` and `enum`, written with `defineKind` as an app writes its own. */
+/** `number`, `date` and `list` from `@kit/intl`, `plural` and `enum` of messages alone. */
 export const builtInKinds = [numberKind, dateKind, listKind, pluralKind, enumKind] as const;

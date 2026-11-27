@@ -1,8 +1,8 @@
-import { ARABIC_INDIC_DIGIT, ASCII_DIGIT, contextFor } from '../../__tests__/fixtures';
-import { type PercentValue, percent } from '../percent';
+import { ARABIC_INDIC_DIGIT, ASCII_DIGIT, contextFor, format } from '../../__tests__/fixtures';
+import { type PercentValue } from '../percent';
 
 function render(locale: string, value: number, options?: PercentValue['options']) {
-  const rendered = percent({ type: 'percent', value, options }, contextFor(locale));
+  const rendered = format({ type: 'percent', value, options }, contextFor(locale));
   return rendered.ok ? rendered.value : rendered.error.code;
 }
 

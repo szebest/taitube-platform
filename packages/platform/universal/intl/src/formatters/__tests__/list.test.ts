@@ -1,10 +1,10 @@
-import { contextFor } from '../../__tests__/fixtures';
-import { type ListOptions, list } from '../list';
+import { contextFor, format } from '../../__tests__/fixtures';
+import { type ListOptions } from '../list';
 
 const GENRES = ['Action', 'Comedy', 'Drama'];
 
 function render(locale: string, options?: ListOptions) {
-  const rendered = list({ type: 'list', value: GENRES, options }, contextFor(locale));
+  const rendered = format({ type: 'list', value: GENRES, options }, contextFor(locale));
   return rendered.ok ? rendered.value : rendered.error.code;
 }
 

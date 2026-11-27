@@ -1,5 +1,6 @@
 import { type DateStyle, formatInstant } from '../format-instant';
-import { type OptionKeys, withOptions } from '../with-options';
+import { isString } from '../inputs';
+import { type OptionKeys, type TaggedOf, defineKind, optionKeys } from '../kind';
 
 export const DATE_FIELD_KEYS = [
   'weekday',
@@ -19,19 +20,20 @@ export type DateOptions = Pick<Intl.DateTimeFormatOptions, (typeof DATE_FIELD_KE
   readonly style?: DateStyle;
 };
 
-/** An ISO 8601 instant. */
-export interface DateValue {
-  readonly type: 'date';
-  readonly value: string;
-  readonly options?: DateOptions;
-}
-
 export function dateFormatOptions(options: DateOptions = {}): Intl.DateTimeFormatOptions {
   const { style, ...fields } = options;
   if (style !== undefined) return { dateStyle: style };
   return Object.keys(fields).length === 0 ? { dateStyle: 'medium' } : fields;
 }
 
-export const date = withOptions<DateValue>('date', DATE_OPTION_KEYS, (value, context) =>
-  formatInstant('date', value.value, dateFormatOptions(value.options), context)
-);
+/** An ISO 8601 instant. */
+export const date = defineKind({
+  name: 'date',
+  arg: isString,
+  options: optionKeys<DateOptions>(DATE_OPTION_KEYS),
+  render: (value, options, context) =>
+    formatInstant('date', value, dateFormatOptions(options), context),
+});
+
+/** @public */
+export type DateValue = TaggedOf<typeof date>;
