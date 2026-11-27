@@ -1,5 +1,5 @@
 import { rulesToAST } from '@casl/ability/extra';
-import type { AppAbility, AppAction, AppSubjects, UserContext } from '@vp/permissions';
+import type { AppAbility, AppAction, AppSubjects, ShareGrant, UserContext } from '@vp/permissions';
 import { getUserPermissions } from '@vp/permissions';
 import { type SQL, sql } from 'drizzle-orm';
 import type { PgTableWithColumns, TableConfig } from 'drizzle-orm/pg-core';
@@ -30,6 +30,8 @@ export type Viewer = UserContext | null;
  * Compiles CASL rules into Drizzle SQL WHERE conditions via @casl/ability/extra rulesToAST,
  * so row scoping and in-memory can() decisions derive from one rule set.
  *
+ * A live share link adds the read it grants on its own target.
+ *
  * Three outcomes: `undefined` imposes no restriction (rule grants the action unconditionally),
  * a condition restricts the rows, and a forbidden action yields a predicate matching no rows.
  */
@@ -38,9 +40,10 @@ export function rulesToSql<T extends TableConfig>(
   subject: AppSubjects,
   viewer: Viewer,
   table: PgTableWithColumns<T>,
-  derived: DerivedFields = {}
+  derived: DerivedFields = {},
+  share: ShareGrant | null = null
 ): SQL | undefined {
-  const ability = getUserPermissions(viewer);
+  const ability = getUserPermissions(viewer, share);
   const ast = rulesToAST(ability, action, subject as Parameters<typeof rulesToAST<AppAbility>>[2]);
 
   // A null AST means no rule grants the action; returning undefined would leave the query unfiltered.

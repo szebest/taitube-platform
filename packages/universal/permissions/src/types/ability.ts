@@ -15,7 +15,7 @@ import type { CommentResource } from './comment';
 import type { ChannelUserResource, CommentSettingsResource } from './comment-moderation';
 import type { LiveStreamResource } from './live-stream';
 import type { NotificationResource } from './notification';
-import type { PlaylistInviteResource, PlaylistResource } from './playlist';
+import type { PlaylistInviteResource, PlaylistResource, PlaylistStatsResource } from './playlist';
 import type { PreferencesResource } from './preferences';
 import type { RecommendationFeedbackResource } from './recommendation-feedback';
 import type { UploadResource } from './upload';
@@ -79,6 +79,7 @@ export type AppSubjects =
       | (ChannelExportResource & ForcedSubject<'ChannelExport'>)
       | (ApiTokenResource & ForcedSubject<'ApiToken'>)
       | (PlaylistInviteResource & ForcedSubject<'PlaylistInvite'>)
+      | (PlaylistStatsResource & ForcedSubject<'PlaylistStats'>)
     >
   | 'Video'
   | 'Upload'
@@ -105,6 +106,7 @@ export type AppSubjects =
   | 'CommentSettings'
   | 'ChannelExport'
   | 'ApiToken'
-  | 'PlaylistInvite';
+  | 'PlaylistInvite'
+  | 'PlaylistStats';
 
 export type AppAbility = MongoAbility<[AppAction, AppSubjects]>;

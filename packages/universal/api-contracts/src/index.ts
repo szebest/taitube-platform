@@ -41,6 +41,8 @@ import * as playback from './playback';
 import * as playlistActivity from './playlist-activity';
 import * as playlistCollaboration from './playlist-collaboration';
 import * as playlistItems from './playlist-items';
+import * as playlistLibrary from './playlist-library';
+import * as playlistSharing from './playlist-sharing';
 import * as playlistTransfer from './playlist-transfer';
 import * as playlists from './playlists';
 import * as preferences from './preferences';
@@ -120,6 +122,10 @@ export * from './playback';
 export * from './playlist-activity';
 export * from './playlist-collaboration';
 export * from './playlist-items';
+export * from './playlist-library';
+export * from './playlist-resource';
+export * from './playlist-rules';
+export * from './playlist-sharing';
 export * from './playlist-transfer';
 export * from './playlists';
 export * from './preferences';
@@ -233,6 +239,8 @@ export const contracts = {
   watchPartyRoles,
   watchPartySocket,
   webhooks,
+  playlistLibrary,
+  playlistSharing,
 } as const;
 
 export function endpointKey(method: string, path: string): string {

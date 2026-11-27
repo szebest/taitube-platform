@@ -1,8 +1,14 @@
 import { type Result, ok } from '@kit/result';
 import type { ListWatchHistoryOptions, WatchHistoryRepositoryPort } from '@vp/core/repositories';
-import type { NewWatchProgress, WatchHistoryEntry, WatchProgress } from '@vp/domain';
+import {
+  type NewWatchProgress,
+  type WatchHistoryEntry,
+  type WatchProgress,
+  isWatchCompleted,
+} from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
+import type { InMemoryPlaylistStore } from './in-memory-playlist-store';
 import { type VideoLookups, keepWatchable } from './watchable-video';
 
 type KeysetRow = { watchedAt: Date; id: string };
@@ -11,21 +17,29 @@ function compareNewestFirst(a: KeysetRow, b: KeysetRow): number {
   return b.watchedAt.getTime() - a.watchedAt.getTime() || b.id.localeCompare(a.id);
 }
 
+interface WatchHistoryDeps extends VideoLookups {
+  playlists: () => Pick<InMemoryPlaylistStore, 'removeWatched'>;
+}
+
 export class InMemoryWatchHistoryRepository implements WatchHistoryRepositoryPort {
   private readonly rows = new Map<string, NewWatchProgress>();
 
-  constructor(private readonly lookups: VideoLookups) {}
+  constructor(private readonly lookups: WatchHistoryDeps) {}
 
+  /** A write that lands watched takes the video out of the owner's lists that ask. */
   async record(progress: NewWatchProgress): Promise<Result<void, DatabaseUnavailable>> {
     const key = this.key(progress.userId, progress.videoId);
     const stored = this.rows.get(key);
+    if (stored && stored.watchedAt > progress.watchedAt) return ok();
     if (!stored) {
       this.rows.set(key, { ...progress });
-    } else if (stored.watchedAt <= progress.watchedAt) {
+    } else {
       const { id: _id, ...latest } = progress;
       Object.assign(stored, latest);
     }
-    return ok();
+    return isWatchCompleted(progress)
+      ? await this.lookups.playlists().removeWatched(progress.userId, progress.videoId)
+      : ok();
   }
 
   async find(

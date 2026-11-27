@@ -1,4 +1,5 @@
 import type { ChannelCard } from './channel';
+import type { SmartPlaylistRules } from './smart-playlist';
 import { VIDEO_VISIBILITIES, type VideoVisibility } from './status-vocabulary';
 import type { Video } from './video';
 
@@ -49,6 +50,12 @@ export const PLAYLIST_MERGE_MAX_SOURCES = 5;
 export const PLAYLIST_IMPORT_MAX_LINES = 500;
 export const PLAYLIST_IMPORT_MAX_BYTES = 1024 * 1024;
 
+/** How many playlists one user may pin as shelves of their library. */
+export const PLAYLIST_PIN_LIMIT = 5;
+
+/** An `auto` cover is a mosaic of this many of the first thumbnails, drawn at render. */
+export const PLAYLIST_COVER_MOSAIC_SIZE = 4;
+
 /** Every user owns exactly one system playlist, provisioned with their channel. */
 export const WATCH_LATER_TITLE = 'Watch Later';
 
@@ -61,9 +68,26 @@ export interface Playlist {
   kind: PlaylistKind;
   isSystem: boolean;
   customThumbnailKey: string | null;
+  /** Set on a smart playlist, which stores no items and computes them on read. */
+  rules: SmartPlaylistRules | null;
+  autoRemoveWatched: boolean;
+  pinnedAt: Date | null;
+  forkedFromPlaylistId: string | null;
+  coverMode: PlaylistCoverMode;
+  coverVideoId: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
+
+/** What a playlist starts with beside its own words, as the columns default it. */
+export const DEFAULT_PLAYLIST_SETTINGS = {
+  rules: null,
+  autoRemoveWatched: false,
+  pinnedAt: null,
+  forkedFromPlaylistId: null,
+  coverMode: 'auto',
+  coverVideoId: null,
+} as const satisfies Partial<Playlist>;
 
 /** Who put an item in, with the channel the list shows as their avatar. */
 interface PlaylistItemAdder {
@@ -155,6 +179,8 @@ export interface NewPlaylistInput {
   description: string;
   visibility: PlaylistVisibility;
   kind?: PlaylistKind;
+  rules?: SmartPlaylistRules | null;
+  forkedFromPlaylistId?: string | null;
 }
 
 export interface PlaylistPatch {
@@ -162,6 +188,10 @@ export interface PlaylistPatch {
   description?: string;
   visibility?: PlaylistVisibility;
   kind?: PlaylistKind;
+  rules?: SmartPlaylistRules;
+  autoRemoveWatched?: boolean;
+  coverMode?: PlaylistCoverMode;
+  coverVideoId?: string | null;
 }
 
 export type PlaylistReorder =

@@ -165,4 +165,8 @@ export const RETRY_CLASS: Readonly<Record<ErrorCode, RetryClass>> = {
   [ErrorCodes.CHANNEL_OWNER_IMMUTABLE]: 'permanent',
   [ErrorCodes.CHANNEL_LIMIT_REACHED]: 'permanent',
   [ErrorCodes.CHANNEL_NOT_OWNED]: 'permanent',
+  [ErrorCodes.PLAYLIST_IS_SMART]: 'permanent',
+  [ErrorCodes.PLAYLIST_NOT_SMART]: 'permanent',
+  [ErrorCodes.PLAYLIST_HAS_COLLABORATORS]: 'permanent',
+  [ErrorCodes.PLAYLIST_PIN_LIMIT]: 'permanent',
 };

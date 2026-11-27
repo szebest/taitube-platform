@@ -13,9 +13,12 @@ import {
   canDeclinePlaylistInvite,
   canDeletePlaylist,
   canManagePlaylistCollaborators,
+  canFollowPlaylist,
   canManagePlaylistItems,
+  canPinPlaylist,
   canReadPlaylist,
   canReadPlaylistActivity,
+  canReadPlaylistStats,
   canRemovePlaylistItem,
   canRestorePlaylistItem,
   canUpdatePlaylist,
@@ -47,6 +50,9 @@ const CHECKS = {
     canManagePlaylistCollaborators({ user, playlist: seatOf(user) }),
   log: (user: UserContext | null) => canReadPlaylistActivity({ user, playlist: seatOf(user) }),
   restore: (user: UserContext | null) => canRestorePlaylistItem({ user, playlist: seatOf(user) }),
+  pin: (user: UserContext | null) => canPinPlaylist({ user, playlist: seatOf(user) }),
+  stats: (user: UserContext | null) =>
+    canReadPlaylistStats({ user, stats: { ownerId: creatorUser.id } }),
 };
 
 const EVERYTHING: Action[] = [
@@ -61,6 +67,8 @@ const EVERYTHING: Action[] = [
   'seats',
   'log',
   'restore',
+  'pin',
+  'stats',
 ];
 
 type Action = keyof typeof CHECKS;
@@ -82,6 +90,40 @@ describe('helpers/playlists: who may do what to a private playlist', () => {
     expect(canReadPlaylist({ user: guestUser, playlist: { ...privatePlaylist, visibility } })).toBe(
       true
     );
+  });
+
+  it.each([
+    { scenario: 'without a link', share: null, expected: false },
+    {
+      scenario: 'with its link',
+      share: { targetType: 'playlist', targetId: 'pl-1' },
+      expected: true,
+    },
+    {
+      scenario: 'with a link of another',
+      share: { targetType: 'playlist', targetId: 'pl-2' },
+      expected: false,
+    },
+    {
+      scenario: 'with a video link of the same id',
+      share: { targetType: 'video', targetId: 'pl-1' },
+      expected: false,
+    },
+  ] as const)(
+    'lets a guest read a private playlist $scenario: $expected',
+    ({ share, expected }) => {
+      expect(canReadPlaylist({ user: guestUser, playlist: privatePlaylist, share })).toBe(expected);
+    }
+  );
+
+  it.each([
+    { who: 'a stranger', user: moderatorUser, expected: true },
+    { who: 'the owner', user: creatorUser, expected: false },
+    { who: 'a guest', user: guestUser, expected: false },
+  ])('lets $who follow: $expected', ({ user, expected }) => {
+    expect(
+      canFollowPlaylist({ user, playlist: { ...privatePlaylist, visibility: 'public' } })
+    ).toBe(expected);
   });
 
   it.each([

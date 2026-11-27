@@ -16,7 +16,7 @@ import type {
   StoredPlaylistItem,
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import type { UserContext } from '@vp/permissions';
+import type { ShareGrant, UserContext } from '@vp/permissions';
 
 export type AddPlaylistItemOutcome = 'added' | 'present' | 'playlist-missing' | 'video-missing';
 
@@ -100,9 +100,11 @@ export interface PlaylistRepositoryPort {
     id: string,
     userId: string | null
   ): Promise<Result<SeatedPlaylist | null, DatabaseUnavailable>>;
+  /** `share` is a live link of this playlist, which lets the viewer read it whatever its visibility. */
   findDetail(
     id: string,
-    viewer: UserContext | null
+    viewer: UserContext | null,
+    share?: ShareGrant | null
   ): Promise<Result<PlaylistDetail | null, DatabaseUnavailable>>;
   /** Watch Later first, then the most recently changed. */
   listOwned(

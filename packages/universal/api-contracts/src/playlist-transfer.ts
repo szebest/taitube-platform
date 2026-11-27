@@ -36,6 +36,8 @@ const ACTING = {
   404: [ErrorCodes.PLAYLIST_NOT_FOUND],
 } as const;
 
+const SMART = { 409: [ErrorCodes.PLAYLIST_IS_SMART] } as const;
+
 export const transferPlaylistItems = defineEndpoint({
   method: 'POST',
   path: '/v1/playlists/:id/items/transfer',
@@ -51,7 +53,7 @@ export const transferPlaylistItems = defineEndpoint({
   }),
   status: 200,
   result: BatchResultSchema,
-  errors: { ...ACTING, 422: [ErrorCodes.VALIDATION_FAILED] },
+  errors: { ...ACTING, ...SMART, 422: [ErrorCodes.VALIDATION_FAILED] },
 });
 
 export const duplicatePlaylist = defineEndpoint({
@@ -92,6 +94,7 @@ export const mergePlaylists = defineEndpoint({
   errors: {
     ...ACTING,
     400: [ErrorCodes.VALIDATION_FAILED, ErrorCodes.SYSTEM_PLAYLIST_IMMUTABLE],
+    ...SMART,
     422: [ErrorCodes.VALIDATION_FAILED],
   },
 });
@@ -148,7 +151,7 @@ export const importPlaylist = defineEndpoint({
       })
     ),
   }),
-  errors: { ...ACTING, 422: [ErrorCodes.VALIDATION_FAILED] },
+  errors: { ...ACTING, ...SMART, 422: [ErrorCodes.VALIDATION_FAILED] },
 });
 
 export type PlaylistImportLineView = z.infer<typeof importPlaylist.result>['lines'][number];

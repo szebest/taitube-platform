@@ -1,6 +1,6 @@
 import { playlistCollaborators, playlists, videos } from '@vp/db';
 import { PUBLIC_FEED_VISIBILITY } from '@vp/domain';
-import type { UserContext } from '@vp/permissions';
+import type { ShareGrant, UserContext } from '@vp/permissions';
 import { type SQL, eq, sql } from 'drizzle-orm';
 import { type Viewer, rulesToSql } from './rules-to-sql';
 import { notDeletedScope } from './soft-delete';
@@ -20,10 +20,13 @@ export function watchableVideoScope(viewer: Viewer): SQL | undefined {
  * `collaboratorId` is the viewer's own seat, so the rule that matches it on the viewer's id reads as
  * "the viewer sits on this playlist".
  */
-export function playlistReadScope(viewer: Viewer): SQL | undefined {
+export function playlistReadScope(
+  viewer: Viewer,
+  share: ShareGrant | null = null
+): SQL | undefined {
   const { userId, playlistId } = playlistCollaborators;
   const seat = sql`(select ${userId} from ${playlistCollaborators} where ${playlistId} = ${playlists.id} and ${userId} = ${viewer?.id ?? null})`;
-  return rulesToSql('read', 'Playlist', viewer, playlists, { collaboratorId: seat });
+  return rulesToSql('read', 'Playlist', viewer, playlists, { collaboratorId: seat }, share);
 }
 
 export function ownerScope<T extends WithOwner>(table: T, owner: UserContext | string): SQL {

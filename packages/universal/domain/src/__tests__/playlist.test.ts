@@ -1,4 +1,5 @@
 import {
+  DEFAULT_PLAYLIST_SETTINGS,
   PLAYLIST_VISIBILITIES,
   WATCH_LATER_TITLE,
   clampSegment,
@@ -48,5 +49,16 @@ describe('@vp/domain: playlist', () => {
     ];
 
     expect([...keys].sort((a, b) => a - b)).toEqual([keys[2], keys[1], keys[0], keys[3]]);
+  });
+
+  it('starts a playlist plain: no rules, no pin, no fork, the auto cover', () => {
+    expect(DEFAULT_PLAYLIST_SETTINGS).toEqual({
+      rules: null,
+      autoRemoveWatched: false,
+      pinnedAt: null,
+      forkedFromPlaylistId: null,
+      coverMode: 'auto',
+      coverVideoId: null,
+    });
   });
 });

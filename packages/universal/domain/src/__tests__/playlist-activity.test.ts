@@ -1,5 +1,10 @@
 import { MS_PER_MINUTE } from '@kit/primitives';
-import { type PlaylistActivity, coalescesWith, isRestorable } from '../playlist-activity';
+import {
+  type PlaylistActivity,
+  autoRemoveStopped,
+  coalescesWith,
+  isRestorable,
+} from '../playlist-activity';
 
 const NOW = new Date('2026-11-26T12:00:00.000Z');
 const minutesAgo = (minutes: number) => new Date(NOW.getTime() - minutes * MS_PER_MINUTE);
@@ -60,4 +65,11 @@ describe('@vp/domain: playlist activity', () => {
       expect(isRestorable(activity)).toBe(restorable);
     }
   );
+
+  it('logs a stopped removal of watched videos as a change of that one setting', () => {
+    expect(autoRemoveStopped()).toEqual({
+      action: 'settings_changed',
+      target: { fields: ['autoRemoveWatched'] },
+    });
+  });
 });

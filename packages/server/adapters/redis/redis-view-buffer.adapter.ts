@@ -3,6 +3,8 @@ import type {
   ExperimentEvent,
   PlaybackWatch,
   PlaybackWatchOutcome,
+  PlaylistBufferEvent,
+  PlaylistOpen,
   RetentionMilestone,
   ShareLinkOpen,
   ViewBufferPort,
@@ -13,6 +15,7 @@ import { RETENTION_STEP_PERCENT, type ViewBatch } from '@vp/domain';
 import { type CacheUnavailable, cacheUnavailable } from '@vp/errors';
 import { CacheKeys } from '@vp/events';
 import type { Redis } from 'ioredis';
+import { playlistEventField, playlistField, playlistsFromBuffer } from './playlist-buffer-fields';
 import {
   countsFromBuffer,
   deviceViewField,
@@ -166,6 +169,7 @@ export class RedisViewBufferAdapter implements ViewBufferPort {
           devices: devicesFromBuffer(views),
           shareLinks: shareLinksFromBuffer(views),
           experiments: experimentsFromBuffer(views),
+          playlists: playlistsFromBuffer(views),
           retention: retentionFromBuffer(retention),
           hourly: hourlyFromBuffer(hourly),
         }));
@@ -211,7 +215,7 @@ export class RedisViewBufferAdapter implements ViewBufferPort {
   }
 
   async recordShareLinkOpen({
-    videoId,
+    targetId,
     linkId,
     viewerKey,
     viewDate,
@@ -225,7 +229,7 @@ export class RedisViewBufferAdapter implements ViewBufferPort {
           CacheKeys.viewBuffer,
           viewerKey,
           this.dedupTtlSeconds,
-          shareLinkField(videoId, viewDate, 'opens', linkId)
+          shareLinkField(targetId, viewDate, 'opens', linkId)
         ),
       cacheUnavailable.during('recordShareLinkOpen')
     );
@@ -257,6 +261,52 @@ export class RedisViewBufferAdapter implements ViewBufferPort {
     return andThen(replies, (settled): Result<void, CacheUnavailable> => {
       const failed = (settled ?? []).find(([error]) => error !== null);
       if (!settled || failed) return err(cacheUnavailable('recordExperimentEvents', failed?.[0]));
+      return ok();
+    });
+  }
+
+  async recordPlaylistOpen({
+    playlistId,
+    viewerKey,
+    viewDate,
+  }: PlaylistOpen): Promise<Result<ViewRecordOutcome, CacheUnavailable>> {
+    const added = await fromPromise(
+      () =>
+        this.redis.eval(
+          VIEW_BUFFER_SCRIPTS.recordShareLinkOpen,
+          2,
+          CacheKeys.playlistOpenDedup(playlistId, viewDate),
+          CacheKeys.viewBuffer,
+          viewerKey,
+          this.dedupTtlSeconds,
+          playlistField(playlistId, viewDate, 'opens', null)
+        ),
+      cacheUnavailable.during('recordPlaylistOpen')
+    );
+
+    return map(added, outcomeOf);
+  }
+
+  async recordPlaylistEvents(
+    events: readonly PlaylistBufferEvent[]
+  ): Promise<Result<void, CacheUnavailable>> {
+    if (events.length === 0) return ok();
+
+    const replies = await fromPromise(
+      () =>
+        events
+          .reduce(
+            (pipeline, event) =>
+              pipeline.hincrby(CacheKeys.viewBuffer, playlistEventField(event), 1),
+            this.redis.pipeline()
+          )
+          .exec(),
+      cacheUnavailable.during('recordPlaylistEvents')
+    );
+
+    return andThen(replies, (settled): Result<void, CacheUnavailable> => {
+      const failed = (settled ?? []).find(([error]) => error !== null);
+      if (!settled || failed) return err(cacheUnavailable('recordPlaylistEvents', failed?.[0]));
       return ok();
     });
   }

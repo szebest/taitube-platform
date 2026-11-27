@@ -40,21 +40,9 @@ import type { PostgresDatabase } from './types';
 
 const { playlists: p, playlistItems: pi, videos: v, channels: ch } = schema;
 
+/** The row is the playlist, column for column. */
 export function toPlaylist(row: typeof p.$inferSelect): Playlist {
-  const { id, ownerId, title, description, visibility, kind, isSystem } = row;
-  const { customThumbnailKey, createdAt, updatedAt } = row;
-  return {
-    id,
-    ownerId,
-    title,
-    description,
-    visibility,
-    kind,
-    isSystem,
-    customThumbnailKey,
-    createdAt,
-    updatedAt,
-  };
+  return { ...row };
 }
 
 const adder = alias(ch, 'adder_channel');

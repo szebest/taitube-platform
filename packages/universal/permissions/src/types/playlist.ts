@@ -16,6 +16,10 @@ export interface PlaylistResource {
   readonly addedBy?: string | null;
 }
 
+export interface PlaylistStatsResource {
+  readonly ownerId: string;
+}
+
 /** `inviteeUserId` is null on a link invite, which anyone signed in may take. */
 export interface PlaylistInviteResource {
   readonly inviteeUserId?: string | null;

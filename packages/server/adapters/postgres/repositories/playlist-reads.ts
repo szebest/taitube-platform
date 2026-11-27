@@ -1,6 +1,6 @@
 import * as schema from '@vp/db';
 import type { OwnedPlaylist, PlaylistDetail, SeatedPlaylist } from '@vp/domain';
-import type { UserContext } from '@vp/permissions';
+import type { ShareGrant, UserContext } from '@vp/permissions';
 import { and, count, desc, eq, getTableColumns, inArray, sql } from 'drizzle-orm';
 import { drizzleWhere, playlistReadScope, watchableVideoScope } from '../scopes/index';
 import { channelCardColumns, toChannelCard } from './channel-card-query';
@@ -40,13 +40,14 @@ export async function seatedOf(
 export async function detailOf(
   db: PostgresDatabase,
   id: string,
-  viewer: UserContext | null
+  viewer: UserContext | null,
+  share: ShareGrant | null
 ): Promise<PlaylistDetail | null> {
   const [header] = await db
     .select({ playlist: getTableColumns(p), ...channelCardColumns })
     .from(p)
     .leftJoin(ch, and(eq(ch.userId, p.ownerId), eq(ch.isPrimary, true)))
-    .where(drizzleWhere(eq(p.id, id), playlistReadScope(viewer)));
+    .where(drizzleWhere(eq(p.id, id), playlistReadScope(viewer, share)));
   if (!header) return null;
 
   const rows = await rowsOf(db, id, viewer);

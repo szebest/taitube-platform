@@ -7,8 +7,12 @@ import {
   playlistCollaboratorLimit,
   playlistCollaboratorNotFound,
   playlistInviteInvalid,
+  playlistHasCollaborators,
+  playlistIsSmart,
   playlistItemNotFound,
   playlistNotFound,
+  playlistNotSmart,
+  playlistPinLimit,
   systemPlaylistImmutable,
 } from '../failures';
 
@@ -48,6 +52,22 @@ describe('@vp/domain-rules: playlist failures', () => {
       name: 'playlistActivityNotFound',
       failure: playlistActivityNotFound('p1', 'a1'),
       code: ErrorCodes.PLAYLIST_ACTIVITY_NOT_FOUND,
+    },
+    { name: 'playlistIsSmart', failure: playlistIsSmart('p1'), code: ErrorCodes.PLAYLIST_IS_SMART },
+    {
+      name: 'playlistNotSmart',
+      failure: playlistNotSmart('p1'),
+      code: ErrorCodes.PLAYLIST_NOT_SMART,
+    },
+    {
+      name: 'playlistHasCollaborators',
+      failure: playlistHasCollaborators('p1'),
+      code: ErrorCodes.PLAYLIST_HAS_COLLABORATORS,
+    },
+    {
+      name: 'playlistPinLimit',
+      failure: playlistPinLimit('p1'),
+      code: ErrorCodes.PLAYLIST_PIN_LIMIT,
     },
   ])('$name carries $code and the playlist id, off the wire', ({ failure, code }) => {
     expect(failure).toMatchObject({ code, playlistId: 'p1' });

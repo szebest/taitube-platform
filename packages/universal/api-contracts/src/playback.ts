@@ -62,6 +62,12 @@ const PlaybackEventSchema = z.object({
   experiment: ExperimentShownSchema.optional().describe(
     'The test variant the video read answered; starts and watch seconds count toward it'
   ),
+  playlistId: z
+    .uuid()
+    .optional()
+    .describe(
+      "The playlist the watch page plays from, its list parameter; a start counts toward the playlist's plays"
+    ),
 });
 
 export const recordPlayback = defineEndpoint({

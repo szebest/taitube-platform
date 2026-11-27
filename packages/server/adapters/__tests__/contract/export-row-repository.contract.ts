@@ -51,6 +51,7 @@ async function view(repositories: Repositories, videoId: string, viewDate: strin
       devices: [],
       shareLinks: [],
       experiments: [],
+      playlists: [],
     })
   );
 }

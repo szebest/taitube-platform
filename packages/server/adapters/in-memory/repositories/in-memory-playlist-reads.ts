@@ -16,7 +16,7 @@ import {
   type StoredPlaylistItem,
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { type UserContext, canReadPlaylist } from '@vp/permissions';
+import { type ShareGrant, type UserContext, canReadPlaylist } from '@vp/permissions';
 import { SORT_ORDER, compareSorted, isPast, toStored } from './in-memory-playlist-items';
 import { InMemoryPlaylistStore } from './in-memory-playlist-store';
 import { byKeysetDesc, isKeysetBefore } from './keyset';
@@ -56,10 +56,11 @@ export class InMemoryPlaylistReads extends InMemoryPlaylistStore {
 
   async findDetail(
     id: string,
-    viewer: UserContext | null
+    viewer: UserContext | null,
+    share: ShareGrant | null = null
   ): Promise<Result<PlaylistDetail | null, DatabaseUnavailable>> {
     const seated = unwrapOr(await this.findSeated(id, viewer?.id ?? null), null);
-    if (!(seated && canReadPlaylist({ user: viewer, playlist: seated }))) return ok(null);
+    if (!(seated && canReadPlaylist({ user: viewer, playlist: seated, share }))) return ok(null);
 
     const rows = this.itemsOf(id);
     const entries = await Promise.all(

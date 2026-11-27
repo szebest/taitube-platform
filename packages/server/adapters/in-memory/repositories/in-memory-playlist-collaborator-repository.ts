@@ -5,11 +5,12 @@ import type {
   PlaylistCollaboratorRepositoryPort,
   PlaylistSeatGrant,
 } from '@vp/core/repositories';
-import type {
-  PlaylistActivityEntry,
-  PlaylistCollaborator,
-  PlaylistCollaboratorRole,
-  PlaylistInvite,
+import {
+  type PlaylistActivityEntry,
+  type PlaylistCollaborator,
+  type PlaylistCollaboratorRole,
+  type PlaylistInvite,
+  autoRemoveStopped,
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { playlistInviteOutbox } from '@vp/job-contracts';
@@ -21,6 +22,8 @@ export interface InMemoryPlaylistCollaboratorDeps {
   outbox: Pick<OutboxRepository, 'enqueue'>;
   /** The owner of a playlist, `null` once it is gone. */
   ownerOf: (playlistId: string) => string | null;
+  /** Ends removing watched videos on a list someone joins; answers whether it was on. */
+  stopAutoRemove: (playlistId: string) => boolean;
   now: Clock;
 }
 
@@ -141,8 +144,10 @@ export class InMemoryPlaylistCollaboratorRepository implements PlaylistCollabora
       createdAt: new Date(this.deps.now()),
     });
     this.invites.set(invite.id, { ...invite, useCount: invite.useCount + 1 });
+    const stopped = this.deps.stopAutoRemove(playlistId);
     const logged = await this.record(playlistId, userId, [
       { action: 'collaborator_added', target: { userId, role } },
+      ...(stopped ? [autoRemoveStopped()] : []),
     ]);
     return isErr(logged) ? logged : ok(decided.value);
   }

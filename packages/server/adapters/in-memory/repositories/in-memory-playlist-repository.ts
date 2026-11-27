@@ -13,14 +13,12 @@ import type {
   TransferOutcome,
 } from '@vp/core/repositories';
 import {
-  type NewPlaylistInput,
   type Playlist,
   type PlaylistItemPatch,
   type PlaylistItemSort,
   type PlaylistPatch,
   type RestorablePlaylistActivity,
   type StoredPlaylistItem,
-  WATCH_LATER_TITLE,
   renumberPositions,
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
@@ -43,43 +41,6 @@ export class InMemoryPlaylistRepository
   extends InMemoryPlaylistReads
   implements PlaylistRepositoryPort
 {
-  async create(input: NewPlaylistInput): Promise<Result<Playlist, DatabaseUnavailable>> {
-    const now = new Date();
-    const playlist: Playlist = {
-      ...input,
-      kind: input.kind ?? 'playlist',
-      isSystem: false,
-      customThumbnailKey: null,
-      createdAt: now,
-      updatedAt: now,
-    };
-    this.playlists.set(playlist.id, playlist);
-    return ok({ ...playlist });
-  }
-
-  async provisionWatchLater(input: {
-    id: string;
-    ownerId: string;
-  }): Promise<Result<void, DatabaseUnavailable>> {
-    const held = [...this.playlists.values()].some(
-      (playlist) => playlist.ownerId === input.ownerId && playlist.isSystem
-    );
-    if (held) return ok();
-    const now = new Date();
-    this.playlists.set(input.id, {
-      ...input,
-      title: WATCH_LATER_TITLE,
-      description: '',
-      visibility: 'private',
-      kind: 'playlist',
-      isSystem: true,
-      customThumbnailKey: null,
-      createdAt: now,
-      updatedAt: now,
-    });
-    return ok();
-  }
-
   async update(
     id: string,
     patch: PlaylistPatch,
