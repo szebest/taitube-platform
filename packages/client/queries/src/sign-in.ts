@@ -74,12 +74,17 @@ export async function completeSignIn(
     return { kind: 'refused' };
   }
 
-  const hops = forwardedFor(getRequest());
+  const request = getRequest();
+  const hops = forwardedFor(request);
+  const userAgent = request.headers.get('user-agent');
   const recorded = await fromPromise(
     () =>
       api.accountSecurity.recordMySignIn({
         body: { slot, added },
-        headers: hops ? { 'x-forwarded-for': hops } : {},
+        headers: {
+          ...(hops && { 'x-forwarded-for': hops }),
+          ...(userAgent && { 'user-agent': userAgent }),
+        },
       }),
     (cause) => cause
   );

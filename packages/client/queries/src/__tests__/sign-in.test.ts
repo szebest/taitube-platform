@@ -15,7 +15,12 @@ vi.mock(import('../session-config'), async (importOriginal) => {
 const NONCE = 'vp.add-nonce=n0nce';
 const ADD: SignInTarget = { mode: 'add', state: 'n0nce' };
 
-type Recorded = { body: unknown; authorization: string | null; forwardedFor: string | null };
+type Recorded = {
+  body: unknown;
+  authorization: string | null;
+  forwardedFor: string | null;
+  userAgent: string | null;
+};
 
 function api({ userId = account().user.id, record = (): Response | undefined => undefined } = {}) {
   const recorded: Recorded[] = [];
@@ -28,6 +33,7 @@ function api({ userId = account().user.id, record = (): Response | undefined => 
         body: await request.json(),
         authorization: request.headers.get('authorization'),
         forwardedFor: request.headers.get('x-forwarded-for'),
+        userAgent: request.headers.get('user-agent'),
       });
       return record() ?? HttpResponse.json(signInRecord(), { status: 201 });
     })
@@ -41,9 +47,12 @@ function accountsCookie(accounts: Accounts): string {
 
 const issue = vi.fn(async (grant: string) => `new-token-of-${grant}`);
 
+const BROWSER = 'Mozilla/5.0 (X11; Linux x86_64) Firefox/140.0';
+
 function signIn(target: SignInTarget, cookie: string) {
   return inRequest(() => completeSignIn(issue, 'creator', target), {
     cookie: `${cookie}; ${NONCE}`,
+    userAgent: BROWSER,
   });
 }
 
@@ -51,7 +60,7 @@ const sessionCookies = (setCookies: string[]) =>
   setCookies.filter((set) => set.startsWith('vp.session.'));
 
 describe('@vp/queries: sign-in', () => {
-  it('adds a new token into the first free slot, records it as added, and lists the account', async () => {
+  it('adds a new token into the first free slot, records it as added from the browser, and lists the account', async () => {
     const recorded = api();
 
     const { value, setCookies } = await signIn(ADD, 'vp.session.0=first');
@@ -65,6 +74,7 @@ describe('@vp/queries: sign-in', () => {
         body: { slot: 1, added: true },
         authorization: 'Bearer new-token-of-creator',
         forwardedFor: null,
+        userAgent: BROWSER,
       },
     ]);
     const listed = setCookies.find((set) => set.startsWith('vp.accounts=')) ?? '';
