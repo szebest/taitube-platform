@@ -20,18 +20,37 @@ export type AstCondition =
 
 const InValuesSchema = z.array(z.unknown());
 
+/**
+ * A resource field that is no column of the table, such as a seat resolved per caller, and the
+ * expression that stands for it in SQL.
+ */
+export type DerivedFields = Readonly<Record<string, SQL>>;
+
 export function getConditionSql<T extends TableConfig>(
   condition: AstCondition,
-  table: PgTableWithColumns<T>
+  table: PgTableWithColumns<T>,
+  derived: DerivedFields = {}
 ): SQL | undefined {
   switch (condition.type) {
-    case 'field':
-      return fieldSql(condition, resolveColumn(condition.field, table));
+    case 'field': {
+      const expression = derived[condition.field];
+      return expression
+        ? derivedSql(condition, expression)
+        : fieldSql(condition, resolveColumn(condition.field, table));
+    }
     case 'compound':
-      return compoundSql(condition, table);
+      return compoundSql(condition, table, derived);
     default:
       return assertNever(condition, 'AstCondition');
   }
+}
+
+/** A derived field is matched for equality alone: a seat either is the caller's or is not. */
+function derivedSql(condition: Extract<AstCondition, { type: 'field' }>, expression: SQL): SQL {
+  if (condition.operator !== 'eq') {
+    throw new Error(`Unsupported derived field operator: ${condition.operator}`);
+  }
+  return eq(expression, condition.value);
 }
 
 function fieldSql(condition: Extract<AstCondition, { type: 'field' }>, column: Column): SQL {
@@ -51,10 +70,11 @@ function fieldSql(condition: Extract<AstCondition, { type: 'field' }>, column: C
 
 function compoundSql<T extends TableConfig>(
   condition: Extract<AstCondition, { type: 'compound' }>,
-  table: PgTableWithColumns<T>
+  table: PgTableWithColumns<T>,
+  derived: DerivedFields
 ): SQL | undefined {
   const parts = condition.value
-    .map((part) => getConditionSql(part, table))
+    .map((part) => getConditionSql(part, table, derived))
     .filter((part): part is SQL => part !== undefined);
 
   switch (condition.operator) {

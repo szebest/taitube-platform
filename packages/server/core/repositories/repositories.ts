@@ -27,6 +27,8 @@ import type { LiveStreamRepositoryPort } from './live-stream-repository';
 import type { NotificationRepositoryPort } from './notification-repository';
 import type { OutboxRepository } from './outbox-repository';
 import type { PickRepositoryPort } from './pick-repository';
+import type { PlaylistActivityRepositoryPort } from './playlist-activity-repository';
+import type { PlaylistCollaboratorRepositoryPort } from './playlist-collaborator-repository';
 import type { PlaylistRepositoryPort } from './playlist-repository';
 import type { RecommendationFeedbackRepositoryPort } from './recommendation-feedback-repository';
 import type { RelatedVideosRepositoryPort } from './related-videos-repository';
@@ -96,6 +98,8 @@ export interface Repositories {
   trustedCommenters: TrustedCommenterRepositoryPort;
   savedReplies: SavedReplyRepositoryPort;
   playlists: PlaylistRepositoryPort;
+  playlistCollaborators: PlaylistCollaboratorRepositoryPort;
+  playlistActivity: PlaylistActivityRepositoryPort;
   watchHistory: WatchHistoryRepositoryPort;
   userPreferences: UserPreferencesRepositoryPort;
   notifications: NotificationRepositoryPort;

@@ -1,4 +1,5 @@
 import { videos } from '@vp/db';
+import { sql } from 'drizzle-orm';
 import { type AstCondition, getConditionSql } from '../condition-sql';
 import { sqlText } from './sql-text';
 
@@ -26,6 +27,14 @@ describe('adapters/postgres/scoping: condition compiler', () => {
     },
   ])('compiles a $name condition', ({ condition, sql }) => {
     expect(sqlText(getConditionSql(condition, videos))).toBe(sql);
+  });
+
+  it('compiles a field the table lacks through the expression that stands for it', () => {
+    const condition: AstCondition = { type: 'field', operator: 'eq', field: 'seat', value: 'usr-1' };
+
+    expect(sqlText(getConditionSql(condition, videos, { seat: sql`(select 1)` }))).toBe(
+      '(select 1) = $1'
+    );
   });
 
   it('rejects a condition on a column the table does not have', () => {

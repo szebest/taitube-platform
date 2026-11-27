@@ -10,6 +10,8 @@ export const NOTIFY_HEART = 'notify-heart';
 export const NOTIFY_PARTY_INVITE = 'notify-party-invite';
 export const NOTIFY_TEAM_INVITE = 'notify-team-invite';
 export const NOTIFY_MODERATION = 'notify-moderation';
+export const NOTIFY_PLAYLIST_INVITE = 'notify-playlist-invite';
+export const NOTIFY_PLAYLIST_UPDATE = 'notify-playlist-update';
 /** Not a notification row: tells each subscriber's open tabs, through `live.started`, right away. */
 export const ANNOUNCE_LIVE = 'announce-live';
 
@@ -80,6 +82,23 @@ export const NotifyModerationJob = z.object({
 });
 export type NotifyModerationJob = z.infer<typeof NotifyModerationJob>;
 
+export const NotifyPlaylistInviteJob = z.object({
+  inviteId: z.uuid(),
+  traceparent: z.string().optional(),
+  requestId: z.string().optional(),
+});
+export type NotifyPlaylistInviteJob = z.infer<typeof NotifyPlaylistInviteJob>;
+
+/** One per playlist and actor per hour: the owner's row groups the rest. */
+export const NotifyPlaylistUpdateJob = z.object({
+  playlistId: z.uuid(),
+  actorUserId: z.uuid(),
+  hour: z.string(),
+  traceparent: z.string().optional(),
+  requestId: z.string().optional(),
+});
+export type NotifyPlaylistUpdateJob = z.infer<typeof NotifyPlaylistUpdateJob>;
+
 export const AnnounceLiveJob = z.object({
   liveStreamId: z.uuid(),
   /** The last subscriber of the batch before this one; absent on the first. */
@@ -99,6 +118,9 @@ const notificationJobIds = {
   partyInvite: (inviteId: string) => `${inviteId}--${NOTIFY_PARTY_INVITE}`,
   teamInvite: (inviteId: string) => `${inviteId}--${NOTIFY_TEAM_INVITE}`,
   moderation: (eventId: string) => `${eventId}--${NOTIFY_MODERATION}`,
+  playlistInvite: (inviteId: string) => `${inviteId}--${NOTIFY_PLAYLIST_INVITE}`,
+  playlistUpdate: ({ playlistId, actorUserId, hour }: NotifyPlaylistUpdateJob) =>
+    `${playlistId}--${NOTIFY_PLAYLIST_UPDATE}--${actorUserId}--${hour}`,
   processing: (videoId: string, outcome: NotifyProcessingJob['outcome']) =>
     `${videoId}--${NOTIFY_PROCESSING}--${outcome}`,
 };
@@ -168,6 +190,20 @@ export const moderationOutbox = (job: NotifyModerationJob) =>
     name: NOTIFY_MODERATION,
     data: job,
     jobId: notificationJobIds.moderation(job.eventId),
+  });
+
+export const playlistInviteOutbox = (job: NotifyPlaylistInviteJob) =>
+  notificationOutbox({
+    name: NOTIFY_PLAYLIST_INVITE,
+    data: job,
+    jobId: notificationJobIds.playlistInvite(job.inviteId),
+  });
+
+export const playlistUpdateOutbox = (job: NotifyPlaylistUpdateJob) =>
+  notificationOutbox({
+    name: NOTIFY_PLAYLIST_UPDATE,
+    data: job,
+    jobId: notificationJobIds.playlistUpdate(job),
   });
 
 const processingOutbox = (job: NotifyProcessingJob) =>

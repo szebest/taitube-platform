@@ -1,7 +1,7 @@
 import { err, ok } from '@kit/result';
 import { expectErr, expectOk } from '@kit/testing/result';
 import { movePositions } from '@vp/domain';
-import { OTHER_OWNER_ID, VIDEO_IDS, publicVideo } from './fixtures';
+import { OTHER_OWNER_ID, OWNER_ID, VIDEO_IDS, publicVideo } from './fixtures';
 import {
   FIVE,
   OWNER,
@@ -37,7 +37,7 @@ export function describePlaylistItemsContract(ctx: PlaylistContractContext): voi
     it('answers a video already there as present, and writes nothing', async () => {
       await addAll(ctx, [VIDEO_IDS.a]);
 
-      const again = await ctx.playlists.addItem(P.mix, { id: P.other, videoId: VIDEO_IDS.a });
+      const again = await ctx.playlists.addItem(P.mix, { id: P.other, videoId: VIDEO_IDS.a, addedBy: OWNER_ID }, OWNER_ID);
 
       expect(expectOk(again)).toBe('present');
       expect(await orderOf(ctx)).toEqual([VIDEO_IDS.a]);
@@ -57,7 +57,7 @@ export function describePlaylistItemsContract(ctx: PlaylistContractContext): voi
         outcome: 'video-missing',
       },
     ])('reports $scenario as $outcome', async ({ playlistId, videoId, outcome }) => {
-      expect(expectOk(await ctx.playlists.addItem(playlistId, { id: P.other, videoId }))).toBe(
+      expect(expectOk(await ctx.playlists.addItem(playlistId, { id: P.other, videoId, addedBy: OWNER_ID }, OWNER_ID))).toBe(
         outcome
       );
     });
@@ -72,7 +72,7 @@ export function describePlaylistItemsContract(ctx: PlaylistContractContext): voi
 
       await Promise.all(
         ids.map((videoId, index) =>
-          ctx.playlists.addItem(P.mix, { id: numbered('04', index), videoId })
+          ctx.playlists.addItem(P.mix, { id: numbered('04', index), videoId, addedBy: OWNER_ID }, OWNER_ID)
         )
       );
 
@@ -114,8 +114,8 @@ export function describePlaylistItemsContract(ctx: PlaylistContractContext): voi
     it('removes a video and closes the gap it leaves', async () => {
       await addAll(ctx, FIVE);
 
-      expect(expectOk(await ctx.playlists.removeItem(P.mix, VIDEO_IDS.b))).toBe(true);
-      expect(expectOk(await ctx.playlists.removeItem(P.mix, VIDEO_IDS.b))).toBe(false);
+      expect(expectOk(await ctx.playlists.removeItem(P.mix, { by: 'video', videoId: VIDEO_IDS.b }, OWNER_ID))).toBe(true);
+      expect(expectOk(await ctx.playlists.removeItem(P.mix, { by: 'video', videoId: VIDEO_IDS.b }, OWNER_ID))).toBe(false);
 
       const detail = expectOk(await ctx.playlists.findDetail(P.mix, OWNER));
       expect(detail?.items.map((item) => [item.videoId, item.position])).toEqual([
@@ -179,7 +179,7 @@ export function describePlaylistItemsContract(ctx: PlaylistContractContext): voi
       const moved = itemIdFor(VIDEO_IDS.e);
 
       const [removed, reordered] = await Promise.all([
-        ctx.playlists.removeItem(P.mix, VIDEO_IDS.b),
+        ctx.playlists.removeItem(P.mix, { by: 'video', videoId: VIDEO_IDS.b }, OWNER_ID),
         ctx.playlists.reorder(P.mix, OWNER, (items) => ok(movePositions(items, moved, 0) ?? [])),
       ]);
 

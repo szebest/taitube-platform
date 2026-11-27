@@ -47,7 +47,7 @@ export function itemIdFor(videoId: string): string {
 
 export async function addAll(ctx: PlaylistContractContext, videoIds: readonly string[]) {
   for (const videoId of videoIds) {
-    expect(expectOk(await ctx.playlists.addItem(P.mix, { id: itemIdFor(videoId), videoId }))).toBe(
+    expect(expectOk(await ctx.playlists.addItem(P.mix, { id: itemIdFor(videoId), videoId, addedBy: OWNER_ID }, OWNER_ID))).toBe(
       'added'
     );
   }

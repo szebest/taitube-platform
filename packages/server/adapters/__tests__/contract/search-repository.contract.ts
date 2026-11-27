@@ -188,7 +188,7 @@ export function describeSearchRepositoryContract(makeSubject: MakeRepositoriesSu
         S.tricks,
       ].entries()) {
         const id = `00000000-0000-7000-8000-0000000047d${n}`;
-        expectOk(await playlists.addItem(S.essentials, { id, videoId }));
+        expectOk(await playlists.addItem(S.essentials, { id, videoId, addedBy: OWNER_ID }, OWNER_ID));
       }
     });
 

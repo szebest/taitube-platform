@@ -1,57 +1,45 @@
-import { type Result, isErr, ok, unwrapOr } from '@kit/result';
+import { type Result, isErr, ok } from '@kit/result';
 import type {
   AddPlaylistItemOutcome,
-  ListPublicPlaylistsOptions,
+  AppendItemOutcome,
   NewPlaylistItem,
+  NewPlaylistSection,
+  PlaylistItemTarget,
   PlaylistRepositoryPort,
   ReorderPlan,
+  RestoreItemOutcome,
+  TransferOutcome,
 } from '@vp/core/repositories';
 import {
   type NewPlaylistInput,
-  type OwnedPlaylist,
-  POSITION_GAP,
   type Playlist,
-  type PlaylistDetail,
-  type PlaylistEntry,
+  type PlaylistItemPatch,
+  type PlaylistItemSort,
   type PlaylistPatch,
-  type PositionWrite,
-  PLAYLIST_PREVIEW_THUMBNAILS,
-  type PublicPlaylist,
+  type RestorablePlaylistActivity,
+  type StoredPlaylistItem,
   WATCH_LATER_TITLE,
-  appendPosition,
   renumberPositions,
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { type UserContext, canReadPlaylist } from '@vp/permissions';
-import { byKeysetDesc, isKeysetBefore } from './keyset';
-import { type VideoLookups, primaryChannelCard, watchableVideo } from './watchable-video';
+import type { UserContext } from '@vp/permissions';
+import { uuidv7 } from 'uuidv7';
+import {
+  type NewRow,
+  SORT_ORDER,
+  compareSorted,
+  copyOf,
+  removedOf,
+  restoredRow,
+} from './in-memory-playlist-items';
+import { InMemoryPlaylistReads } from './in-memory-playlist-reads';
+import { watchableVideo } from './watchable-video';
 
-interface StoredItem {
-  id: string;
-  playlistId: string;
-  videoId: string;
-  position: number;
-  addedAt: Date;
-}
-
-function byPosition(a: StoredItem, b: StoredItem): number {
-  return a.position - b.position || a.id.localeCompare(b.id);
-}
-
-function newestFirst(a: Playlist, b: Playlist): number {
-  return (
-    Number(b.isSystem) - Number(a.isSystem) ||
-    b.updatedAt.getTime() - a.updatedAt.getTime() ||
-    b.id.localeCompare(a.id)
-  );
-}
-
-export class InMemoryPlaylistRepository implements PlaylistRepositoryPort {
-  private readonly playlists = new Map<string, Playlist>();
-  private readonly items = new Map<string, StoredItem>();
-
-  constructor(private readonly lookups: VideoLookups) {}
-
+/** Every write logs its change and tells the people on the playlist through the seats it was given. */
+export class InMemoryPlaylistRepository
+  extends InMemoryPlaylistReads
+  implements PlaylistRepositoryPort
+{
   async create(input: NewPlaylistInput): Promise<Result<Playlist, DatabaseUnavailable>> {
     const now = new Date();
     const playlist: Playlist = {
@@ -89,122 +77,18 @@ export class InMemoryPlaylistRepository implements PlaylistRepositoryPort {
     return ok();
   }
 
-  getAllPlaylists(): Playlist[] {
-    return Array.from(this.playlists.values());
-  }
-
-  async findById(id: string): Promise<Result<Playlist | null, DatabaseUnavailable>> {
-    return ok(this.playlists.get(id) ?? null);
-  }
-
-  async findDetail(
-    id: string,
-    viewer: UserContext | null
-  ): Promise<Result<PlaylistDetail | null, DatabaseUnavailable>> {
-    const playlist = this.playlists.get(id);
-    if (!(playlist && canReadPlaylist({ user: viewer, playlist }))) return ok(null);
-
-    const entries = await Promise.all(
-      this.itemsOf(id).map(async (item, position): Promise<PlaylistEntry | null> => {
-        const watchable = await watchableVideo(this.lookups, viewer, item.videoId);
-        return (
-          watchable && {
-            id: item.id,
-            videoId: item.videoId,
-            addedAt: item.addedAt,
-            position,
-            ...watchable,
-          }
-        );
-      })
-    );
-    return ok({
-      playlist: { ...playlist },
-      owner: await primaryChannelCard(this.lookups, playlist.ownerId),
-      items: entries.filter((entry): entry is PlaylistEntry => entry !== null),
-    });
-  }
-
-  async listOwned(
-    owner: UserContext,
-    videoId: string | null
-  ): Promise<Result<OwnedPlaylist[], DatabaseUnavailable>> {
-    const owned = [...this.playlists.values()]
-      .filter((playlist) => playlist.ownerId === owner.id)
-      .sort(newestFirst);
-    return ok(
-      await Promise.all(
-        owned.map(async (playlist) => {
-          const items = this.itemsOf(playlist.id);
-          const watchable = await Promise.all(
-            items.map((item) => watchableVideo(this.lookups, owner, item.videoId))
-          );
-          return {
-            ...playlist,
-            videoCount: watchable.filter(Boolean).length,
-            containsVideo: items.some((item) => item.videoId === videoId),
-          };
-        })
-      )
-    );
-  }
-
-  async listPublicByOwner(
-    ownerId: string,
-    { cursor, limit }: ListPublicPlaylistsOptions
-  ): Promise<Result<PublicPlaylist[], DatabaseUnavailable>> {
-    const keyOf = ({ updatedAt, id }: Playlist) => ({ sort: updatedAt, tie: id });
-    const listed = [...this.playlists.values()]
-      .filter(
-        (playlist) =>
-          playlist.ownerId === ownerId && playlist.visibility === 'public' && !playlist.isSystem
-      )
-      .sort((a, b) => byKeysetDesc(keyOf(a), keyOf(b)))
-      .filter((playlist) =>
-        isKeysetBefore(keyOf(playlist), cursor && { sort: cursor.updatedAt, tie: cursor.id })
-      )
-      .slice(0, limit + 1);
-
-    return ok(
-      await Promise.all(
-        listed.map(async (playlist) => {
-          const watchable = await Promise.all(
-            this.itemsOf(playlist.id).map((item) =>
-              watchableVideo(this.lookups, null, item.videoId)
-            )
-          );
-          const videos = watchable.filter((entry) => entry !== null).map(({ video }) => video);
-          return {
-            ...playlist,
-            videoCount: videos.length,
-            posterKeys: videos
-              .flatMap((video) => (video.posterKey ? [video.posterKey] : []))
-              .slice(0, PLAYLIST_PREVIEW_THUMBNAILS),
-          };
-        })
-      )
-    );
-  }
-
-  async listItemOwners(
-    playlistId: string
-  ): Promise<Result<{ id: string; ownerId: string }[], DatabaseUnavailable>> {
-    const videos = await Promise.all(
-      this.itemsOf(playlistId).map(async ({ videoId }) =>
-        unwrapOr(await this.lookups.videosRepo.findById(videoId), null)
-      )
-    );
-    return ok(videos.filter((video) => video !== null).map(({ id, ownerId }) => ({ id, ownerId })));
-  }
-
   async update(
     id: string,
-    patch: PlaylistPatch
+    patch: PlaylistPatch,
+    actorId: string
   ): Promise<Result<Playlist | null, DatabaseUnavailable>> {
     const playlist = this.playlists.get(id);
     if (!playlist) return ok(null);
     Object.assign(playlist, patch, { updatedAt: new Date() });
-    return ok({ ...playlist });
+    const logged = await this.log(id, actorId, [
+      { action: 'settings_changed', target: { fields: Object.keys(patch) } },
+    ]);
+    return isErr(logged) ? logged : ok({ ...playlist });
   }
 
   async remove(id: string): Promise<Result<boolean, DatabaseUnavailable>> {
@@ -212,34 +96,81 @@ export class InMemoryPlaylistRepository implements PlaylistRepositoryPort {
     if (!playlist || playlist.isSystem) return ok(false);
     this.playlists.delete(id);
     for (const item of this.itemsOf(id)) this.items.delete(item.id);
+    this.deps.seats().forget(id);
     return ok(true);
   }
 
   async addItem(
     playlistId: string,
-    item: NewPlaylistItem
+    item: NewPlaylistItem,
+    actorId: string
   ): Promise<Result<AddPlaylistItemOutcome, DatabaseUnavailable>> {
-    const video = unwrapOr(await this.lookups.videosRepo.findById(item.videoId), null);
-    if (!this.playlists.has(playlistId)) return ok('playlist-missing');
-    if (!video) return ok('video-missing');
-    const items = this.itemsOf(playlistId);
-    if (items.some((held) => held.videoId === item.videoId)) return ok('present');
+    const appended = await this.appendItems(playlistId, [item], actorId);
+    if (isErr(appended)) return appended;
+    return ok(appended.value ? (appended.value.get(item.id) ?? 'present') : 'playlist-missing');
+  }
 
-    const position = appendPosition(items.at(-1)?.position ?? null) ?? this.renumbered(items);
-    this.items.set(item.id, { ...item, playlistId, position, addedAt: new Date() });
-    this.touch(playlistId);
-    return ok('added');
+  async appendItems(
+    playlistId: string,
+    items: readonly NewPlaylistItem[],
+    actorId: string
+  ): Promise<Result<Map<string, AppendItemOutcome> | null, DatabaseUnavailable>> {
+    if (!this.playlists.has(playlistId)) return ok(null);
+    const outcomes = await this.appendRows(
+      playlistId,
+      items.map((item): NewRow => ({ kind: 'video', ...item }))
+    );
+    const added = items.filter((item) => outcomes.get(item.id) === 'added');
+    const logged = await this.log(
+      playlistId,
+      actorId,
+      added.map(({ id, videoId }) => ({ action: 'item_added', target: { itemId: id, videoId } }))
+    );
+    return isErr(logged) ? logged : ok(outcomes);
   }
 
   async removeItem(
     playlistId: string,
-    videoId: string
+    target: PlaylistItemTarget,
+    actorId: string
   ): Promise<Result<boolean, DatabaseUnavailable>> {
-    const item = this.itemsOf(playlistId).find((held) => held.videoId === videoId);
+    const item = this.itemsOf(playlistId).find((held) =>
+      target.by === 'item' ? held.id === target.itemId : held.videoId === target.videoId
+    );
     if (!item) return ok(false);
     this.items.delete(item.id);
-    this.touch(playlistId);
-    return ok(true);
+    const logged = await this.log(playlistId, actorId, [
+      { action: 'item_removed', target: removedOf(item) },
+    ]);
+    return isErr(logged) ? logged : ok(true);
+  }
+
+  async editItem(
+    playlistId: string,
+    itemId: string,
+    patch: PlaylistItemPatch,
+    actorId: string
+  ): Promise<Result<boolean, DatabaseUnavailable>> {
+    const item = this.items.get(itemId);
+    if (item?.playlistId !== playlistId) return ok(false);
+    this.items.set(itemId, { ...item, ...patch });
+    const logged = await this.log(playlistId, actorId, [
+      { action: 'note_edited', target: { itemId } },
+    ]);
+    return isErr(logged) ? logged : ok(true);
+  }
+
+  async addSection(
+    playlistId: string,
+    section: NewPlaylistSection,
+    actorId: string
+  ): Promise<Result<boolean, DatabaseUnavailable>> {
+    if (!this.playlists.has(playlistId)) return ok(false);
+    await this.appendRows(playlistId, [{ kind: 'section', ...section }]);
+    const logged = await this.log(playlistId, actorId, [
+      { action: 'section_added', target: { itemId: section.id, title: section.title } },
+    ]);
+    return isErr(logged) ? logged : ok(true);
   }
 
   async reorder<F>(
@@ -249,44 +180,92 @@ export class InMemoryPlaylistRepository implements PlaylistRepositoryPort {
   ): Promise<Result<boolean, DatabaseUnavailable | F>> {
     if (!this.playlists.has(playlistId)) return ok(false);
     const slots = await Promise.all(
-      this.itemsOf(playlistId).map(async ({ id, position, videoId }) => ({
+      this.itemsOf(playlistId).map(async ({ id, position, kind, videoId }) => ({
         id,
         position,
-        hidden: !(await watchableVideo(this.lookups, viewer, videoId)),
+        hidden: kind === 'video' && !(await watchableVideo(this.deps, viewer, videoId ?? '')),
       }))
     );
     const writes = plan(slots);
     if (isErr(writes)) return writes;
     this.write(writes.value);
-    this.touch(playlistId);
-    return ok(true);
+    const logged = await this.log(playlistId, viewer.id, [
+      { action: 'items_reordered', target: { count: writes.value.length } },
+    ]);
+    return isErr(logged) ? logged : ok(true);
   }
 
-  clear(): void {
-    this.playlists.clear();
-    this.items.clear();
+  async writeSort(
+    playlistId: string,
+    sort: Exclude<PlaylistItemSort, 'manual'>,
+    viewer: UserContext
+  ): Promise<Result<boolean, DatabaseUnavailable>> {
+    if (!this.playlists.has(playlistId)) return ok(false);
+    const order = SORT_ORDER[sort];
+    const videos = (await this.keyedVideos(playlistId, sort, viewer, false))
+      .sort((a, b) => compareSorted(a, b, order))
+      .map((row) => row.id);
+    const sections = this.itemsOf(playlistId)
+      .filter((item) => item.kind === 'section')
+      .map((item) => item.id);
+    const all = [...videos, ...sections];
+    this.write(renumberPositions(all));
+    const logged = await this.log(playlistId, viewer.id, [
+      { action: 'items_reordered', target: { count: all.length } },
+    ]);
+    return isErr(logged) ? logged : ok(true);
   }
 
-  private itemsOf(playlistId: string): StoredItem[] {
-    return [...this.items.values()]
-      .filter((item) => item.playlistId === playlistId)
-      .sort(byPosition);
-  }
+  async transfer(
+    sourceId: string,
+    targetId: string,
+    items: readonly StoredPlaylistItem[],
+    mode: 'move' | 'copy',
+    actorId: string
+  ): Promise<Result<TransferOutcome, DatabaseUnavailable>> {
+    if (!this.playlists.has(targetId)) return ok(null);
+    const held = new Set(this.itemsOf(sourceId).map((item) => item.id));
+    const moving = items.filter((item) => held.has(item.id));
+    const copies = new Map(moving.map((item) => [item.id, copyOf(item, actorId, uuidv7())]));
+    const appended = await this.appendRows(targetId, [...copies.values()]);
+    const outcomeOf = (item: StoredPlaylistItem) =>
+      appended.get(copies.get(item.id)?.id ?? '') ?? 'added';
 
-  private renumbered(items: readonly StoredItem[]): number {
-    this.write(renumberPositions(items.map((item) => item.id)));
-    return items.length * POSITION_GAP;
-  }
-
-  private write(writes: readonly PositionWrite[]): void {
-    for (const { id, position } of writes) {
-      const item = this.items.get(id);
-      if (item) item.position = position;
+    const added = moving.flatMap((item) => {
+      const copy = copies.get(item.id);
+      return outcomeOf(item) === 'added' && copy?.kind === 'video'
+        ? [{ action: 'item_added' as const, target: { itemId: copy.id, videoId: copy.videoId } }]
+        : [];
+    });
+    const loggedIn = await this.log(targetId, actorId, added);
+    if (isErr(loggedIn)) return loggedIn;
+    if (mode === 'move') {
+      const leaving = moving.filter((item) => outcomeOf(item) !== 'video-missing');
+      for (const item of leaving) this.items.delete(item.id);
+      const loggedOut = await this.log(
+        sourceId,
+        actorId,
+        leaving.map((item) => ({ action: 'item_removed' as const, target: removedOf(item) }))
+      );
+      if (isErr(loggedOut)) return loggedOut;
     }
+    return ok(
+      new Map(items.map((item) => [item.id, held.has(item.id) ? outcomeOf(item) : 'source-missing']))
+    );
   }
 
-  private touch(playlistId: string): void {
-    const playlist = this.playlists.get(playlistId);
-    if (playlist) playlist.updatedAt = new Date();
+  async restoreItem(
+    playlistId: string,
+    activity: RestorablePlaylistActivity,
+    actorId: string
+  ): Promise<Result<RestoreItemOutcome, DatabaseUnavailable>> {
+    if (!this.playlists.has(playlistId)) return ok('playlist-missing');
+    const row = restoredRow(activity.target, uuidv7());
+    const outcome = (await this.appendRows(playlistId, [row])).get(row.id) ?? 'added';
+    if (outcome !== 'added') return ok(outcome);
+    const logged = await this.log(playlistId, actorId, [
+      { action: 'restored', target: { activityId: activity.id, itemId: row.id } },
+    ]);
+    return isErr(logged) ? logged : ok('restored');
   }
 }

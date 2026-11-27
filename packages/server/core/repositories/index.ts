@@ -31,6 +31,8 @@ export * from './comment-settings-repository';
 export * from './channel-user-restriction-repository';
 export * from './saved-reply-repository';
 export * from './trusted-commenter-repository';
+export * from './playlist-activity-repository';
+export * from './playlist-collaborator-repository';
 export * from './playlist-repository';
 export * from './watch-history-repository';
 export * from './recommendation-feedback-repository';

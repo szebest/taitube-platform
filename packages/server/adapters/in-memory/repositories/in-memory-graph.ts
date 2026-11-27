@@ -12,7 +12,7 @@ import { InMemoryLiveStreamRepository } from './in-memory-live-stream-repository
 import { InMemoryNotificationRepository } from './in-memory-notification-repository';
 import { InMemoryOutboxRepository } from './in-memory-outbox-repository';
 import { InMemoryPickRepository } from './in-memory-pick-repository';
-import { InMemoryPlaylistRepository } from './in-memory-playlist-repository';
+import { providePlaylists } from './in-memory-playlist-providers';
 import { InMemoryRecommendationFeedbackRepository } from './in-memory-recommendation-feedback-repository';
 import { InMemoryRelatedVideosRepository } from './in-memory-related-videos-repository';
 import { InMemoryRenditionRepository } from './in-memory-rendition-repository';
@@ -42,7 +42,10 @@ import { InMemoryWebhookRepository } from './in-memory-webhook-repository';
 export function graph(now: Clock = realClock): Container {
   return provideCommentRepositories(
     provideChannels(
-      provideExports(provideScreening(provideVideoTools(new Container(), now)), now),
+      provideExports(
+        provideScreening(providePlaylists(provideVideoTools(new Container(), now), now)),
+        now
+      ),
       now
     )
       .provide(Repo.outbox, () => new InMemoryOutboxRepository(now))
@@ -98,14 +101,6 @@ export function graph(now: Clock = realClock): Container {
           new InMemoryVideoViewRepository(c.get(Repo.videos), {
             shareLinks: c.get(Repo.shareLinks),
             experiments: c.get(Repo.videoExperiments),
-          })
-      )
-      .provide(
-        Repo.playlists,
-        (c) =>
-          new InMemoryPlaylistRepository({
-            channelsRepo: c.get(Repo.channels),
-            videosRepo: c.get(Repo.videos),
           })
       )
       .provide(

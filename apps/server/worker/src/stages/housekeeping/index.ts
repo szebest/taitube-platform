@@ -29,6 +29,7 @@ import { runPurgeCommentModeration } from './purge-comment-moderation';
 import { runPurgeDeleted } from './purge-deleted';
 import { runPurgeExports } from './purge-exports';
 import { runPurgeGenerations } from './purge-generations';
+import { runPurgePlaylistActivity } from './purge-playlist-activity';
 import { runPurgeHandleHistory } from './purge-handle-history';
 import { runPurgeScreeningEvidence } from './purge-screening-evidence';
 import { runPurgeSearchHistory } from './purge-search-history';
@@ -56,6 +57,7 @@ export * from './purge-channel-images';
 export * from './purge-handle-history';
 export * from './purge-exports';
 export * from './purge-generations';
+export * from './purge-playlist-activity';
 export * from './prune-revisions';
 export * from './purge-search-history';
 
@@ -291,6 +293,9 @@ export function createHousekeepingProcessor(
           ...tasks.expire,
           logger,
         });
+
+      case 'purge-playlist-activity':
+        return await runPurgePlaylistActivity({ repositories, now, logger });
 
       default:
         return assertNever(data.task, 'createHousekeepingProcessor');
