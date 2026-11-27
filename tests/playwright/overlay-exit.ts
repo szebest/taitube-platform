@@ -9,33 +9,46 @@ export type ExitingOverlay = Readonly<{
   width?: number;
 }>;
 
-const EXIT_BUDGET_MS = 1000;
-
 type Exit = { closing: boolean; gone: boolean };
 
 /**
- * Watches `selector` in the page: `closing` once it is in the document with `data-state="closed"` at the end
- * of a task, `gone` once it left after that. A surface removed as it closes, with no exit, is never `closing`.
+ * Watches `selector` in the page and settles `window.overlayExit` once the surface has closed and its exit has
+ * run: `closing` when it was in the document with `data-state="closed"` at the end of a task, `gone` when it
+ * left the document two frames after its exit animations finished. A surface removed as it closes, with no
+ * exit, is never `closing`. The page's own animation clock ends the wait, so a busy main thread delays the
+ * close and its removal without failing the spec.
  */
 function watchExit(page: Page, selector: string) {
   return page.evaluate((watched) => {
-    const exit: Exit = { closing: false, gone: false };
-    Object.assign(window, { overlayExit: exit });
-    new MutationObserver(() => {
-      const surface = document.querySelector(watched);
-      if (surface?.getAttribute('data-state') === 'closed') exit.closing = true;
-      else if (!surface && exit.closing) exit.gone = true;
-    }).observe(document.documentElement, {
-      subtree: true,
-      childList: true,
-      attributes: true,
-      attributeFilter: ['data-state'],
+    const nextFrame = () => new Promise((resolve) => requestAnimationFrame(resolve));
+    const exit = new Promise<Exit>((resolve) => {
+      const observer = new MutationObserver(() => {
+        const surface = document.querySelector(watched);
+        if (!surface) {
+          observer.disconnect();
+          resolve({ closing: false, gone: true });
+          return;
+        }
+        if (surface.getAttribute('data-state') !== 'closed') return;
+        observer.disconnect();
+        Promise.all(surface.getAnimations().map((animation) => animation.finished))
+          .then(nextFrame)
+          .then(nextFrame)
+          .then(() => resolve({ closing: true, gone: !surface.isConnected }));
+      });
+      observer.observe(document.documentElement, {
+        subtree: true,
+        childList: true,
+        attributes: true,
+        attributeFilter: ['data-state'],
+      });
     });
+    Object.assign(window, { overlayExit: exit });
   }, selector);
 }
 
 const readExit = (page: Page) =>
-  page.evaluate(() => (window as unknown as { overlayExit: Exit }).overlayExit);
+  page.evaluate(() => (window as unknown as { overlayExit: Promise<Exit> }).overlayExit);
 
 /** An overlay animates out: it stays in the document, `data-state="closed"`, after the close and before it is gone. */
 export function describeOverlayExit(
@@ -56,9 +69,7 @@ export function describeOverlayExit(
 
         await overlay.close(page);
 
-        await expect
-          .poll(() => readExit(page), { timeout: EXIT_BUDGET_MS })
-          .toEqual({ closing: true, gone: true });
+        expect(await readExit(page)).toEqual({ closing: true, gone: true });
       });
     }
   });
