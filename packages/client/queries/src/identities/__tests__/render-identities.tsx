@@ -130,14 +130,12 @@ function answerAccounts(accounts: readonly TestAccount[]): IdentityApi {
   return {
     accountCalls,
     hold: (slot) => {
-      let release = () => undefined as void;
+      const { promise, resolve } = Promise.withResolvers<void>();
       held.set(
         slot,
-        new Promise<void>((resolve) => {
-          release = resolve;
-        }).then(() => delay(0))
+        promise.then(() => delay(0))
       );
-      return () => release();
+      return resolve;
     },
   };
 }

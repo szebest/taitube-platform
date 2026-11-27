@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { expectOk } from '@kit/testing/result';
-import type { FlowProducerPort, JobQueue } from '@vp/core/ports';
+import type { FlowProducerPort } from '../flow-producer';
+import type { JobQueue } from '../job-queue';
 
 export interface FlowProducerSubject {
   readonly producer: FlowProducerPort;

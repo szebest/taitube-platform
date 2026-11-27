@@ -72,16 +72,17 @@ the contract against itself:
   way, against the double in unit and the real service in integration
 
 A double that drifts from the real thing fails the shared contract assertion in its own spec. The contracts
-live in `@vp/adapters` rather than `@kit/testing`, because `@kit/testing` depending on `@vp/core` would make a
+of the app's own ports live in `@vp/adapters` rather than `@kit/testing`, because `@kit/testing` depending on `@vp/core` would make a
 workspace cycle (every package dev-depends on `@kit/testing`).
 
 **A platform package ships its contract.** A package under `packages/platform/` that defines a port or a registry
 exports `runXContract(makeImpl)` from a `./contract` entry (vitest is a peer dependency), so any app runs it against
 its own implementation. The repository's doubles and registries run it in their own specs. A contract is part of the
 package's surface: changing one needs the version bump and changelog entry
-([platform-packages.md](platform-packages.md)). No platform package exports one yet: the contracts above are the
-suites today, and they move with `@kit/ports`, which lands as the last step of ticket 170. Contracts for the app's own
-ports stay in `@vp/adapters`.
+([platform-packages.md](platform-packages.md)). `@kit/ports/contract` holds the cache client, job queue and flow
+producer suites, written with the vitest globals so they run under `vitest` and `bun test`; the subjects that make
+them (`redis-subjects.ts`, `bullmq-subjects.ts`, `in-memory-port-subjects.ts`) stay in `@vp/adapters`. Contracts for
+the app's own ports stay in `@vp/adapters`.
 
 Each Postgres spec file gets a PGlite of its own, loaded from one migrated snapshot the adapters project
 builds in its global setup (`__tests__/contract/pglite-snapshot.ts`): a fresh PGlite runs initdb, most of a
@@ -171,6 +172,8 @@ pnpm test:bun   # Bun, over apps/server/*, packages/universal and packages/serve
 ```
 
 No `Bun.*` API in source. Bun is a test runtime only; every repo script runs on `tsx`.
+
+The server tier's ES2025 level is proven on both runtimes by `packages/platform/server/testing/src/__tests__/es2025-runtime.test.ts`; see [runtime-baseline.md](runtime-baseline.md).
 
 `pnpm test:bun` leaves out `packages/client/`: those packages are browser-only, so no runtime parity is at
 stake, and their specs lean on what only Vitest offers (jsdom, `vi.mock(import(...))`). It also skips every

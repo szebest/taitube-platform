@@ -56,7 +56,7 @@ export function createFakePorts(options: FakePortOptions = {}): FakePorts {
     },
     runFfmpeg: async (args) => {
       ports.ffmpegCalls.push([...args]);
-      ports.written.add(args[args.length - 1] ?? '');
+      ports.written.add(args.at(-1) ?? '');
       return ok(undefined);
     },
     writeIdentities: async (rows) => {

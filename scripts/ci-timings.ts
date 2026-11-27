@@ -29,7 +29,7 @@ const seconds = (timed: Timed): number =>
   (Date.parse(timed.completedAt) - Date.parse(timed.startedAt)) / 1000;
 
 export function percentile(values: readonly number[], fraction: number): number {
-  const sorted = [...values].sort((a, b) => a - b);
+  const sorted = values.toSorted((a, b) => a - b);
   const index = Math.ceil(fraction * sorted.length) - 1;
   return sorted[Math.max(0, index)] ?? 0;
 }

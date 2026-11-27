@@ -128,7 +128,7 @@ export class S3MultipartStorage extends MultipartStorage {
     uploadId: string,
     parts: readonly StorageCompletePartInput[]
   ): Promise<Result<void, StorageUnavailable>> {
-    const sorted = [...parts].sort((a, b) => a.partNumber - b.partNumber);
+    const sorted = parts.toSorted((a, b) => a.partNumber - b.partNumber);
     const sent = await fromPromise(
       () =>
         this.client.send(

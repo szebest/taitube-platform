@@ -38,7 +38,7 @@ taitube-platform/
 │   ├── client/                     # @kit/components, forms, intl-react, query, security-headers, ui,
 │   │                               #   web-telemetry, web-testing
 │   └── server/                     # @kit/compose-autoscaler, composition, concurrency, config, dev-token, keyspace,
-│                                   #   logger, object-storage, observability, testing, vite-preset
+│                                   #   logger, object-storage, observability, ports, testing, vite-preset
 │
 ├── packages/universal/             # app packages that run in a browser AND on a server
 │   ├── api-contracts/              # @vp/api-contracts - every endpoint schema, one entry per route
@@ -246,7 +246,7 @@ The table lists the app packages and the platform packages of each tier.
 | Tier | Packages | May depend on |
 |---|---|---|
 | `universal` | `api-contracts`, `domain`, `domain-rules`, `errors`, `intl-formats`, `messages`, `permissions`, `validation`; platform: `appearance`, `design-tokens`, `di`, `errors`, `i18n`, `intl`, `machine`, `pagination`, `permissions`, `primitives`, `result`, `runtime`, `tsconfig`, `validation` | `universal` only — no `node:*`, no server SDK |
-| `server` | `adapters`, `core`, `db`, `env-schema`, `events`, `ffmpeg`, `fingerprint`, `gen-video`, `job-contracts`, `pipeline-metrics`, `storage`, `testing-fixtures`, `upload-client`, `whisper`; platform: `compose-autoscaler`, `composition`, `concurrency`, `config`, `dev-token`, `keyspace`, `logger`, `object-storage`, `observability`, `testing`, `vite-preset` | `universal` + `server` |
+| `server` | `adapters`, `core`, `db`, `env-schema`, `events`, `ffmpeg`, `fingerprint`, `gen-video`, `job-contracts`, `pipeline-metrics`, `storage`, `testing-fixtures`, `upload-client`, `whisper`; platform: `compose-autoscaler`, `composition`, `concurrency`, `config`, `dev-token`, `keyspace`, `logger`, `object-storage`, `observability`, `ports`, `testing`, `vite-preset` | `universal` + `server` |
 | `client` | `api-client`, `permissions-react`, `queries`, `web-testing`, `workbench`; platform: `components`, `forms`, `intl-react`, `query`, `security-headers`, `ui`, `web-telemetry`, `web-testing` | `universal` + `client` |
 
 Apps take their tier from their directory the same way: `apps/server/api` and `apps/server/worker` are `server`,
@@ -501,6 +501,8 @@ fails.
 | `quarantine.test.ts` | `tests/quarantine.json` holds at most five entries, each naming a tracked spec with an `owner`, a `reason`, an `expires` date not yet past and a `ticket`; CI skips a quarantined spec (`pnpm quarantine` prints its vitest `--exclude`, `tests/playwright/config.ts` ignores it) and `pnpm flake-hunt` fails the nightly hunt on a flaky spec the file does not list (the rules live in `scripts/quarantine/entries.ts`) | an entry with no owner, an expired one and a sixth fire, in `scripts/quarantine/__tests__/entries.test.ts` |
 | `unit-timings.test.ts` | `tests/timings/unit.json` lists every unit spec file (every tracked `*.test.ts(x)` outside the architecture, browser, e2e and integration suites) added more than 7 days ago, so the cost sequencer (`scripts/timings/sequencer.ts`) never shards a known spec by the median; `pnpm timings:update --run <id>` regenerates it from a green run | an untimed spec added 8 days ago fires; one added 6 days ago and a timed one do not |
 | `esm-specifiers.test.ts` | no relative import, re-export, dynamic `import()`, `require` or `vi.mock` in any tracked `.ts`/`.tsx`/`.mts` under `apps`, `packages`, `scripts` and `tests`, specs included, carries an extension (`.js`, `.mjs`, `.cjs`, `.jsx`, `.ts`, `.mts`, `.cts`, `.tsx`) (AST) | `import { ok } from './result.js';`, `vi.mock('./adapter.js', ...)` |
+| `ecmascript-baseline.test.ts` | every tracked `tsconfig*.json` resolves, through the TypeScript API, to its tier's `target` and ES `lib` from `ecmascript-baseline.ts` (server ES2025; universal and client ES2024 with DOM; the service worker ES2024 with WebWorker; the shared bases set neither), and a config outside every tier is named | a package `tsconfig.json` with `lib: ["ES2023", "DOM"]`, a preset left at ES2022 |
+| `runtime-versions.test.ts` | the Node major agrees across `Dockerfile` `NODE_IMAGE`, `engines.node` and `.nvmrc`, and the Bun minor across `Dockerfile` `BUN_IMAGE` and the `setup-bun` step of `.github/actions/setup-workspace/action.yml` | `.nvmrc` at `25.1` beside `node:24-slim` |
 | `build-tsbuildinfo.test.ts` | every tracked `tsconfig.build.json` under `apps` and `packages` lists `@kit/tsconfig/build.json` in `extends`, so a build and a typecheck keep separate `tsbuildinfo` files (TypeScript's JSONC reader) | `{ "extends": "./tsconfig.json" }` |
 | `core-barrels.test.ts` | regex: the `index.ts` barrels of `@vp/core` `ports/` and `repositories/`, `@vp/domain` and `@kit/pagination` `export *` only from `./`; no `*.port.ts` under `apps/` or `packages/` | none - reads the repo |
 | `no-domain-throw.test.ts` | regex over production source in `@vp/validation`, `@vp/domain-rules`, `@vp/core`, `apps/server/api/src/services/` and `apps/server/worker/src/stages/`: no `throw` except `throw assertNever`, no `*OrThrow(` helper, no capitalised `X.parse(` (a zod schema or `JSON.parse`) | `NotifyJob.parse({ videoId })`, `unwrapOrThrow(await repo.f())` |

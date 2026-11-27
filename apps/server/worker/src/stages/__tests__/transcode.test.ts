@@ -175,10 +175,7 @@ describe('apps/server/worker/stages: transcode', () => {
 
   it('waits for a renewal still in flight when FFmpeg finishes, and commits nothing if it failed', async () => {
     let refuse: () => void = () => {};
-    let requested: () => void = () => {};
-    const renewalRequested = new Promise<void>((resolve) => {
-      requested = resolve;
-    });
+    const { promise: renewalRequested, resolve: requested } = Promise.withResolvers<void>();
     vi.spyOn(repositories.steps, 'heartbeat').mockImplementation(() => {
       requested();
       return new Promise((resolve) => {

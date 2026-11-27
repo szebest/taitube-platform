@@ -9,7 +9,7 @@ export interface ClickPathSummary {
 }
 
 const median = (values: readonly number[]) => {
-  const sorted = [...values].sort((a, b) => a - b);
+  const sorted = values.toSorted((a, b) => a - b);
   return sorted[Math.floor(sorted.length / 2)] ?? 0;
 };
 

@@ -57,7 +57,7 @@ export class InMemoryEntityRevisionRepository extends EntityRevisionRepository {
 
   async prune(keep: number): Promise<Result<number, DatabaseUnavailable>> {
     const dropped = new Set<string>();
-    const newestFirst = [...this.rows].sort((a, b) => b.version - a.version);
+    const newestFirst = this.rows.toSorted((a, b) => b.version - a.version);
     const seen = new Map<string, number>();
     for (const row of newestFirst) {
       const history = `${row.entityType}:${row.entityId}`;

@@ -4,6 +4,7 @@ import {
   mkdirSync,
   mkdtempSync,
   readdirSync,
+  readFileSync,
   realpathSync,
   rmSync,
   symlinkSync,
@@ -76,6 +77,21 @@ describe('scripts: extractable sandbox', () => {
 
     expect(problems).toEqual([]);
     expect(lstatSync(join(root, PKG.dir, 'a.ts')).isSymbolicLink()).toBe(true);
+  });
+
+  it("hands the sandbox root the repository's browserslist", () => {
+    const repo = repoWith({});
+    write(
+      repo,
+      'package.json',
+      '{ "packageManager": "pnpm@12.10.1", "browserslist": ["safari >= 17.4"] }'
+    );
+    const { root } = createSandbox(repo, [PKG], 'spec-browserslist');
+    made.push(root);
+
+    expect(JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')).browserslist).toEqual([
+      'safari >= 17.4',
+    ]);
   });
 
   it('removes its directory when filling it throws', () => {

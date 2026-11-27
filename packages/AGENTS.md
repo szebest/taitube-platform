@@ -64,6 +64,10 @@ Apps sit outside `packages/` because they are deployables, not libraries, but th
 too: `apps/server/` (`api`, `worker`) or `apps/client/` (`web`, `studio`), held to the same table. No app is
 `universal`, and an app anywhere else has no tier and fails `pnpm boundaries`.
 
+A tier also fixes the ECMAScript level its code is written and typed against: `server` ES2025, `universal` and `client`
+ES2024, set by the tier's `@kit/tsconfig` preset and never by a package. The standard is
+[docs/standards/runtime-baseline.md](../docs/standards/runtime-baseline.md).
+
 ### What makes a package `universal`
 
 **A client consumer, not portability.** Plenty of code *could* run in a browser without any browser needing
@@ -148,6 +152,7 @@ document is stale — fix it.
 | `@vp/validation` | universal | `@vp/errors`, `@kit/result` |
 | `@kit/security-headers` | client | `@kit/result` |
 | `@kit/di` | universal | `@kit/result` |
+| `@kit/ports` | server | `@kit/errors`, `@kit/result`, `@kit/testing` |
 | `@kit/compose-autoscaler` | server | `@kit/logger` |
 | `@kit/dev-token` | server | `@kit/logger` |
 | `@vp/events` | server | `@kit/keyspace`, `@vp/errors`, `@kit/result` |
@@ -172,7 +177,7 @@ document is stale — fix it.
 | `@kit/composition` | server | `@kit/di`, `@kit/result` |
 | `@kit/ui` | client | `@kit/appearance`, `@kit/design-tokens`, `@kit/result` |
 | `@vp/permissions-react` | client | `@vp/permissions`, `@kit/result` |
-| `@vp/core` | server | `@vp/domain`, `@vp/errors`, `@vp/permissions`, `@kit/result` |
+| `@vp/core` | server | `@vp/domain`, `@vp/errors`, `@kit/ports`, `@vp/permissions`, `@kit/result` |
 | `@vp/db` | server | `@vp/domain`, `@vp/job-contracts`, `@kit/result`, `@vp/storage` |
 | `@vp/env-schema` | server | `@vp/domain`, `@kit/observability` (the `TraceSamplerName` type), `@kit/pagination`, `@kit/result` |
 | `@vp/pipeline-metrics` | server | `@kit/observability` |
@@ -187,7 +192,7 @@ document is stale — fix it.
 | `@kit/forms` | client | `@vp/errors`, `@kit/result` (T4 by design: above `@kit/ui` at T3, whose primitives its fields move onto) |
 | `@kit/intl-react` | client | `@kit/i18n`, `@kit/intl`, `@kit/result` |
 | `@kit/web-telemetry` | client | `@vp/api-contracts`, `@kit/result` |
-| `@vp/adapters` | server | `@kit/composition`, `@kit/concurrency`, `@vp/core`, `@vp/db`, `@kit/dev-token`, `@vp/domain`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/job-contracts`, `@kit/object-storage`, `@vp/permissions`, `@vp/pipeline-metrics`, `@kit/result`, `@vp/storage` |
+| `@vp/adapters` | server | `@kit/composition`, `@kit/concurrency`, `@vp/core`, `@vp/db`, `@kit/dev-token`, `@vp/domain`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/job-contracts`, `@kit/object-storage`, `@vp/permissions`, `@vp/pipeline-metrics`, `@kit/ports`, `@kit/result`, `@vp/storage` |
 | `@kit/config` | server | `@kit/composition`, `@kit/logger`, `@kit/result` |
 | `@vp/fingerprint` | server | `@vp/core`, `@vp/domain`, `@vp/errors`, `@vp/ffmpeg`, `@kit/result` |
 

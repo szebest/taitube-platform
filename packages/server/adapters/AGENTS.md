@@ -65,6 +65,8 @@ adapters and the composition module; the doubles are reached only through `@vp/a
 - The in-memory doubles return the **same** `Result` types as the real adapters, and the contract conformance
   suite asserts they agree on failures as well as on values - the `channels.handle` unique violation surfaces
   as `HANDLE_ALREADY_TAKEN` from both.
+- The cache, queue and flow producer suites are `@kit/ports/contract`; `__tests__/contract/` keeps the subjects that
+  make them (`redis-subjects.ts`, `bullmq-subjects.ts`, `in-memory-port-subjects.ts`) and the suites of the app's own ports.
 - **`fromPromise` takes a thunk.** An SDK builder chain runs synchronously up to its last call, so handing the
   finished promise over leaves everything before it outside the boundary.
 

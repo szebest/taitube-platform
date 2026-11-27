@@ -121,7 +121,7 @@ describe('@vp/domain: movePositions', () => {
   it('keeps an order stable through many moves into the same gap', () => {
     let items = spaced('a', 'b', 'c');
     for (let round = 0; round < 40; round++) {
-      const last = items[items.length - 1]?.id ?? '';
+      const last = items.at(-1)?.id ?? '';
       const writes = movePositions(items, last, 1) ?? [];
       const moved = new Map(writes.map((write) => [write.id, write.position]));
       items = items

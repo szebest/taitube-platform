@@ -94,7 +94,7 @@ export function describeDlqRepositoryContract(makeSubject: MakeRepositoriesSubje
       expect(idsOf(window)).toEqual([DLQ_IDS.second, DLQ_IDS.first]);
 
       const page = window.slice(0, 1);
-      const last = page[page.length - 1];
+      const last = page.at(-1);
       const next = expectOk(
         await dlq.list({
           limit: 1,

@@ -1,6 +1,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import ts from 'typescript';
+import { BROWSER } from '../tests/architecture/ecmascript-baseline';
 import { workspacePaths } from '../tests/architecture/program';
 import { productionSources, ROOT } from '../tests/architecture/repo-files';
 import { load, runsInBrowser } from './workspace-packages';
@@ -105,7 +106,7 @@ export function consumersByKey(
   usage: KeyUsage,
   packages: readonly { name: string; dir: string }[]
 ): Record<string, string[]> {
-  const byDepth = [...packages].sort((a, b) => b.dir.length - a.dir.length);
+  const byDepth = packages.toSorted((a, b) => b.dir.length - a.dir.length);
   const ownerOf = (file: string) =>
     byDepth.find(({ dir }) => file.startsWith(`${dir}/`))?.name ?? file;
   return Object.fromEntries(
@@ -118,8 +119,8 @@ export function consumersByKey(
 /** Full module resolution, React and the router included: a JSX prop is a key only through them. */
 function browserProgram(roots: readonly string[]): ts.Program {
   return ts.createProgram(roots, {
-    target: ts.ScriptTarget.ES2022,
-    lib: ['lib.es2023.d.ts', 'lib.dom.d.ts'],
+    target: BROWSER.target,
+    lib: [...BROWSER.lib],
     module: ts.ModuleKind.ESNext,
     moduleResolution: ts.ModuleResolutionKind.Bundler,
     jsx: ts.JsxEmit.ReactJSX,

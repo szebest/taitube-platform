@@ -27,16 +27,11 @@ function loggerTo(log: ReturnType<typeof captureLog>) {
 describe('apps/server/api: serve', () => {
   it('finishes a request that is in flight when shutdown begins', async () => {
     const composed = await composeApp({ config: config() });
-    let release = () => {};
-    let entered = () => {};
-    const handling = new Promise<void>((resolve) => {
-      entered = resolve;
-    });
+    const { promise: handling, resolve: entered } = Promise.withResolvers<void>();
+    const { promise: released, resolve: release } = Promise.withResolvers<void>();
     composed.app.get('/slow', async () => {
       entered();
-      await new Promise<void>((resolve) => {
-        release = resolve;
-      });
+      await released;
       return { done: true };
     });
     const api = await serve(composed, config(), TIMINGS);

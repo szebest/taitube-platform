@@ -1,5 +1,6 @@
 import ts from 'typescript';
 import { packageDir } from '../../scripts/workspace-packages';
+import { SERVER } from './ecmascript-baseline';
 import { read } from './repo-files';
 
 /** A label whose value is computed at run time rather than chosen from a fixed set. */
@@ -32,7 +33,7 @@ export function registeredMetrics(): RegisteredMetric[] {
 }
 
 function metricsDeclaredIn(module: string): RegisteredMetric[] {
-  const file = ts.createSourceFile(module, read(module), ts.ScriptTarget.ES2022, true);
+  const file = ts.createSourceFile(module, read(module), SERVER.target, true);
   const found: RegisteredMetric[] = [];
   const visit = (node: ts.Node): void => {
     if (

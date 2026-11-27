@@ -1,4 +1,4 @@
-import { CommonErrorCodes } from '@kit/errors';
+import { CommonErrorCodes, InfraErrorCodes } from '@kit/errors';
 import { FormatErrorCodes } from '@kit/intl';
 import { PaginationErrorCodes } from '@kit/pagination';
 
@@ -7,6 +7,9 @@ export const ApiErrorCodes = {
   ...CommonErrorCodes,
   ...PaginationErrorCodes,
   ...FormatErrorCodes,
+  DATABASE_UNAVAILABLE: InfraErrorCodes.DATABASE_UNAVAILABLE,
+  CACHE_UNAVAILABLE: InfraErrorCodes.CACHE_UNAVAILABLE,
+  QUEUE_UNAVAILABLE: InfraErrorCodes.QUEUE_UNAVAILABLE,
   UPLOAD_TOO_LARGE: 'UPLOAD_TOO_LARGE',
   UPLOAD_SIZE_MISMATCH: 'UPLOAD_SIZE_MISMATCH',
   UNSUPPORTED_CONTENT_TYPE: 'UNSUPPORTED_CONTENT_TYPE',
@@ -126,9 +129,6 @@ export const ApiErrorCodes = {
   WATCH_PARTY_CHAT_OFF: 'WATCH_PARTY_CHAT_OFF',
   WATCH_PARTY_TICKET_INVALID: 'WATCH_PARTY_TICKET_INVALID',
   WATCH_PARTY_CREDENTIAL_INVALID: 'WATCH_PARTY_CREDENTIAL_INVALID',
-  DATABASE_UNAVAILABLE: 'DATABASE_UNAVAILABLE',
-  CACHE_UNAVAILABLE: 'CACHE_UNAVAILABLE',
-  QUEUE_UNAVAILABLE: 'QUEUE_UNAVAILABLE',
 } as const;
 
 export type ApiErrorCode = (typeof ApiErrorCodes)[keyof typeof ApiErrorCodes];

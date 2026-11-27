@@ -4,7 +4,7 @@ import type { TimeRange } from './video-edits';
 import type { GenerationTimeline, TimedCorrection } from './video-generations';
 
 function shiftChapters(chapters: readonly Chapter[], trim: TimeRange): Chapter[] {
-  const sorted = [...chapters].sort((a, b) => a.startMs - b.startMs);
+  const sorted = chapters.toSorted((a, b) => a.startMs - b.startMs);
   const kept = sorted.filter(
     (chapter, index) =>
       chapter.startMs < trim.endMs &&

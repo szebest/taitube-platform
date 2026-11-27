@@ -87,7 +87,7 @@ export class Paginator {
   ): Page<TItem> {
     const hasMore = rows.length > limit;
     const pageRows = hasMore ? rows.slice(0, limit) : rows;
-    const last = pageRows[pageRows.length - 1];
+    const last = pageRows.at(-1);
 
     return {
       items: pageRows.map(options.toItem),
