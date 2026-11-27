@@ -1,12 +1,12 @@
 import { useAppForm } from '@kit/forms';
 import { isErr } from '@kit/result';
-import {
-  CHANNEL_IMAGE_CONTENT_TYPES,
-  type ChannelImageKind,
-  validateChannelImageDimensions,
-} from '@vp/validation';
+import { CHANNEL_IMAGE_CONTENT_TYPES, validateChannelImageDimensions } from '@vp/validation';
 import { useState } from 'react';
-import { ImageCropper, type ImageCropperStatus } from '#app/components/image/image-cropper';
+import {
+  ImageCropper,
+  type ImageCropperKind,
+  type ImageCropperStatus,
+} from '#app/components/image/image-cropper';
 import { validateChannelImageFile } from '#app/features/channel/forms/channel-field-validators';
 import {
   type ChannelImageJobStatus,
@@ -42,7 +42,7 @@ interface Chosen {
 }
 
 interface ChannelImageEditorProps {
-  kind: ChannelImageKind;
+  kind: ImageCropperKind;
   currentUrl: string | null;
 }
 

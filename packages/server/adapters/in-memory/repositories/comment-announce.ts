@@ -4,6 +4,7 @@ import { type CommentThread, commentCreated, commentHeld, type NewCommentInput }
 import type { DatabaseUnavailable } from '@vp/errors';
 import { commentHeldOutbox, commentOutbox } from '@vp/job-contracts';
 import { uuidv7 } from 'uuidv7';
+import type { TargetOwner } from './comment-targets';
 
 export interface AnnounceDeps {
   userEventsRepo: Pick<UserEventRepository, 'append'>;
@@ -12,33 +13,33 @@ export interface AnnounceDeps {
 
 interface Announcement {
   created: CommentThread;
-  video: { id: string; ownerId: string; title?: string | null } | null;
+  owner: TargetOwner | null;
   input: Pick<NewCommentInput, 'authorId' | 'moderation' | 'moderators'>;
   /** Whether the comment landed in the public count. */
   counted: boolean;
 }
 
 /**
- * What the transaction of a new comment tells people: a public one reaches the notification job
- * and the video owner, a held one reaches the moderators the service named.
+ * What the transaction of a new comment tells people: a public one on a video reaches the notification
+ * job and the video owner, a held one reaches the moderators the service named.
  */
 export async function announceCreated(
   deps: AnnounceDeps,
-  { created, video, input, counted }: Announcement
+  { created, owner, input, counted }: Announcement
 ): Promise<Result<void, DatabaseUnavailable>> {
-  if (counted) {
+  if (counted && owner?.type === 'video') {
     const enqueued = await deps.outboxRepo.enqueue(
-      commentOutbox({ videoId: created.videoId, commentId: created.id })
+      commentOutbox({ videoId: owner.id, commentId: created.id })
     );
     if (isErr(enqueued)) return enqueued;
-  }
 
-  if (counted && video && video.ownerId !== input.authorId) {
-    const announced = await deps.userEventsRepo.append({
-      userId: video.ownerId,
-      ...commentCreated(created, { id: video.id, title: video.title ?? '' }),
-    });
-    if (isErr(announced)) return announced;
+    if (owner.ownerId !== input.authorId) {
+      const announced = await deps.userEventsRepo.append({
+        userId: owner.ownerId,
+        ...commentCreated(created, { id: owner.id, title: owner.title }),
+      });
+      if (isErr(announced)) return announced;
+    }
   }
 
   if (input.moderation?.moderationState === 'held') {
@@ -62,7 +63,8 @@ export async function announceHeld(
     const told = await userEventsRepo.append({ userId, ...commentHeld(held) });
     if (isErr(told)) return told;
   }
-  const job = { holdId: uuidv7(), commentId: held.id, videoId: held.videoId, recipients };
+  if (held.target.type !== 'video') return ok();
+  const job = { holdId: uuidv7(), commentId: held.id, videoId: held.target.id, recipients };
   const enqueued = await outboxRepo.enqueue(commentHeldOutbox(job));
   return isErr(enqueued) ? enqueued : ok();
 }

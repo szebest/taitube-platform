@@ -44,6 +44,9 @@ export const errors = {
   exportNotFound: dt('This export does not exist or was deleted.'),
   exportInProgress: dt('An export of this channel is already running. Wait for it to finish.'),
   exportDailyLimit: dt('This channel has requested as many exports as it can today.'),
+  postNotFound: dt('This post does not exist or was deleted.'),
+  postShareNotPublic: dt('Only a public video or playlist can be shared in a post.'),
+  postDailyLimit: dt('This channel has published as many posts as it can today.'),
   exportTooLarge: dt('The export is too large. Choose a shorter range.'),
   apiTokenNotFound: dt('This token does not exist or was already revoked.'),
   apiTokenLimitReached: dt(

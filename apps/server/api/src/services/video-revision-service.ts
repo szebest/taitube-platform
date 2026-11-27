@@ -9,6 +9,7 @@ import {
   ENTITY_REVISION_KEEP,
   type EntityRevision,
   type Video,
+  type VideoMetadataSnapshot,
   videoMetadataSnapshot,
 } from '@vp/domain';
 import {
@@ -37,7 +38,7 @@ export interface VideoRevisionServiceDeps {
 export interface RevisionView {
   id: string;
   version: number;
-  snapshot: EntityRevision['snapshot'];
+  snapshot: VideoMetadataSnapshot;
   authorUserId: string | null;
   restoredFromVersion: number | null;
   createdAt: string;
@@ -49,7 +50,7 @@ export type RestoreRevisionFailure =
   | UpdateVideoServiceFailure
   | ListRevisionsFailure;
 
-function toRevisionView(revision: EntityRevision): RevisionView {
+function toRevisionView(revision: EntityRevision<'video_metadata'>): RevisionView {
   const { id, version, snapshot, authorUserId, restoredFromVersion, createdAt } = revision;
   return {
     id,

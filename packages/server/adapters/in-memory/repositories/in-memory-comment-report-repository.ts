@@ -16,7 +16,7 @@ export interface CommentLookup {
   peek(
     id: string
   ):
-    | { id: string; videoId: string; authorId: string; content: string; removed: boolean }
+    | { id: string; videoId: string | null; authorId: string; content: string; removed: boolean }
     | undefined;
 }
 

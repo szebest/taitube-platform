@@ -9,6 +9,7 @@ import {
   OWNER,
   START,
   VIDEO_ID,
+  VIDEO_TARGET,
   VIEWER,
   OTHER,
   setUpCommentCreate,
@@ -52,7 +53,7 @@ describe('apps/server/api/services: create comment', () => {
         commentCreateDeps(h.repositories, h.now),
         OTHER,
         h.acting(OTHER),
-        MISSING_ID,
+        { type: 'video', id: MISSING_ID },
         { content: 'hi' }
       )
     );
@@ -85,7 +86,7 @@ describe('apps/server/api/services: create comment', () => {
         commentCreateDeps(h.repositories, h.now),
         VIEWER,
         h.acting(OTHER),
-        VIDEO_ID,
+        VIDEO_TARGET,
         { content: 'hi' }
       )
     );
@@ -94,15 +95,19 @@ describe('apps/server/api/services: create comment', () => {
   });
 
   it.each([
-    { scenario: 'a video that is not there', videoId: MISSING_ID, parentId: undefined },
-    { scenario: 'a parent that is not there', videoId: VIDEO_ID, parentId: MISSING_ID },
-  ])('refuses $scenario', async ({ videoId, parentId }) => {
+    {
+      scenario: 'a video that is not there',
+      target: { type: 'video', id: MISSING_ID },
+      parentId: undefined,
+    },
+    { scenario: 'a parent that is not there', target: VIDEO_TARGET, parentId: MISSING_ID },
+  ] as const)('refuses $scenario', async ({ target, parentId }) => {
     const failure = expectErr(
       await createComment(
         commentCreateDeps(h.repositories, h.now),
         VIEWER,
         h.acting(VIEWER),
-        videoId,
+        target,
         {
           content: 'hi',
           parentId,
@@ -169,7 +174,7 @@ describe('apps/server/api/services: create comment', () => {
 
         expect(failure).toMatchObject({ code, ...payload });
         expect(
-          expectOk(await h.repositories.comments.listOwnNonPublic(VIDEO_ID, author.id))
+          expectOk(await h.repositories.comments.listOwnNonPublic(VIDEO_TARGET, author.id))
         ).toEqual([]);
       }
     );

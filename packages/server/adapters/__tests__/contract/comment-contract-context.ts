@@ -1,7 +1,14 @@
 import { expectOk } from '@kit/testing/result';
 import type { CommentRepositoryPort, CommentWindow } from '@vp/core/repositories';
-import type { CommentThread, NewCommentModeration } from '@vp/domain';
-import { HOUR_MS, VIDEO_IDS, primaryChannelOf } from './fixtures';
+import type { CommentThread, CreatorInboxFilter, NewCommentModeration } from '@vp/domain';
+import {
+  HOUR_MS,
+  OWNER_CHANNEL_ID,
+  OWNER_ID,
+  VIDEO_IDS,
+  primaryChannelOf,
+  videoTarget,
+} from './fixtures';
 import type { RepositoriesSubject } from './subjects';
 
 export interface CommentContractContext {
@@ -49,10 +56,14 @@ export async function seedComment(
     moderation?: NewCommentModeration;
   } = {}
 ): Promise<void> {
+  const videoId = options.videoId ?? VIDEO_IDS.a;
+  const channelId = expectOk(await ctx.subject.repositories.videos.findById(videoId))?.channelId;
+  if (!channelId) throw new Error(`seedComment found no video ${videoId}`);
   expectOk(
     await ctx.comments.create({
       id,
-      videoId: options.videoId ?? VIDEO_IDS.a,
+      target: videoTarget(videoId),
+      channelId,
       authorId: ctx.authorId,
       authorChannelId: primaryChannelOf(ctx.authorId),
       parentId: options.parentId ?? null,
@@ -72,4 +83,19 @@ export async function seedThreads(ctx: CommentContractContext): Promise<void> {
   await seedComment(ctx, C.fresh, { hoursAgo: 1 });
   await seedComment(ctx, C.reply1, { parentId: C.liked, hoursAgo: 0.5 });
   await seedComment(ctx, C.reply2, { parentId: C.liked, hoursAgo: 0.25 });
+}
+
+export async function creatorInbox(
+  ctx: CommentContractContext,
+  filter: CreatorInboxFilter = 'all',
+  limit = 10
+) {
+  return expectOk(
+    await ctx.comments.listForOwner(OWNER_ID, {
+      channelId: OWNER_CHANNEL_ID,
+      filter,
+      cursor: null,
+      limit,
+    })
+  );
 }

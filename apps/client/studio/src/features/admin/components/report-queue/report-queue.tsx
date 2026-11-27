@@ -39,7 +39,7 @@ function ReportActions({ report, onRemove }: ReportActionsProps) {
   const resolve = useResolveReport();
   const { comment } = report;
   const canResolve = useCan(canDeleteComment, {
-    comment: { id: comment.id, authorId: comment.authorId, videoId: comment.videoId },
+    comment: { id: comment.id, authorId: comment.authorId, videoId: comment.videoId ?? undefined },
     videoOwnerId: '',
     videoChannelId: '',
   });

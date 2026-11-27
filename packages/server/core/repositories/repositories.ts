@@ -9,6 +9,7 @@ import type { ChannelImageRepositoryPort } from './channel-image-repository';
 import type { ChannelInviteRepositoryPort } from './channel-invite-repository';
 import type { ChannelMemberRepositoryPort } from './channel-member-repository';
 import type { ChannelPageRepositoryPort } from './channel-page-repository';
+import type { ChannelPostRepositoryPort } from './channel-post-repository';
 import type { ChannelRepositoryPort } from './channel-repository';
 import type { ChannelUserRestrictionRepositoryPort } from './channel-user-restriction-repository';
 import type { ClipRepositoryPort } from './clip-repository';
@@ -119,6 +120,7 @@ export interface Repositories {
   channelHandleHistory: ChannelHandleHistoryRepositoryPort;
   channelImages: ChannelImageRepositoryPort;
   channelPages: ChannelPageRepositoryPort;
+  channelPosts: ChannelPostRepositoryPort;
   picks: PickRepositoryPort;
   webhooks: WebhookRepositoryPort;
   liveStreams: LiveStreamRepositoryPort;

@@ -36,6 +36,18 @@ describe('apps/client/web: notificationTarget', () => {
       },
     },
     {
+      case: 'a post opens its channel',
+      overrides: { kind: 'post' as const, videoId: null },
+      count: 1,
+      target: { to: '/channel/$channelId', params: { channelId: CHANNEL_ID } },
+    },
+    {
+      case: 'a post with no channel opens nothing',
+      overrides: { kind: 'post' as const, videoId: null, actorChannelId: null },
+      count: 1,
+      target: undefined,
+    },
+    {
       case: 'a team invite has no video to open',
       overrides: { kind: 'team_invite' as const, videoId: null },
       count: 1,

@@ -30,6 +30,8 @@ export * from './comments/question-markers';
 export * from './comments/report-note';
 export * from './playlists/failures';
 export * from './playlists/details';
+export * from './posts/failures';
+export * from './posts/payload';
 export * from './search/query';
 export * from './captions/failures';
 export * from './captions/language';

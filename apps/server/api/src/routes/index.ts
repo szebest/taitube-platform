@@ -42,6 +42,7 @@ import { notificationsRoutes } from './notifications';
 import { oembedRoutes } from './oembed';
 import { picksRoutes } from './picks';
 import { playlistsRoutes } from './playlists';
+import { postsRoutes } from './posts';
 import { preferencesRoutes } from './preferences';
 import { reactionsRoutes } from './reactions';
 import { recommendationFeedbackRoutes } from './recommendation-feedback';
@@ -88,6 +89,7 @@ const ROUTES: readonly FastifyPluginAsync[] = [
   videoExperimentsRoutes,
   videoPipelineRoutes,
   commentsRoutes,
+  postsRoutes,
   commentReportsRoutes,
   creatorCommentsRoutes,
   feedRoutes,

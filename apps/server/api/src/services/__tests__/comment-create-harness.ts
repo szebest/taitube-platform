@@ -1,6 +1,11 @@
 import { expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
-import { type ActingChannel, type CommentSettings, DEFAULT_COMMENT_SETTINGS } from '@vp/domain';
+import {
+  type ActingChannel,
+  type CommentSettings,
+  type CommentTarget,
+  DEFAULT_COMMENT_SETTINGS,
+} from '@vp/domain';
 import type { UserContext } from '@vp/permissions';
 import { createComment } from '../comment-create';
 import { commentCreateDeps, saveSettings } from './comment-deps';
@@ -9,6 +14,7 @@ export const OWNER: UserContext = { id: '11111111-1111-7111-8111-111111111111', 
 export const VIEWER: UserContext = { id: '22222222-2222-7222-8222-222222222222', role: 'USER' };
 export const OTHER: UserContext = { id: '55555555-5555-7555-8555-555555555555', role: 'USER' };
 export const VIDEO_ID = '33333333-3333-7333-8333-333333333333';
+export const VIDEO_TARGET: CommentTarget = { type: 'video', id: VIDEO_ID };
 export const MISSING_ID = '44444444-4444-7444-8444-444444444444';
 export const START = Date.UTC(2030, 0, 1);
 
@@ -66,7 +72,7 @@ export async function setUpCommentCreate() {
       harness.clock = at;
     },
     create: (author: UserContext, content = 'hi', parentId?: string) =>
-      createComment(commentCreateDeps(repositories, now), author, acting(author), VIDEO_ID, {
+      createComment(commentCreateDeps(repositories, now), author, acting(author), VIDEO_TARGET, {
         content,
         parentId,
       }),

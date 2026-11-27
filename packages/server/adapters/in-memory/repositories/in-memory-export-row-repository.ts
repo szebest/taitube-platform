@@ -4,12 +4,14 @@ import {
   type ChannelAnalyticsExportRow,
   type CommentExportRow,
   type ExportRowPage,
+  type PostExportRow,
   type VideoAnalyticsExportRow,
   type VideoExportRow,
   viewDateOf,
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { InMemoryCategoryRepository } from './in-memory-category-repository';
+import type { InMemoryChannelPostRepository } from './in-memory-channel-post-repository';
 import type { InMemoryChannelRepository } from './in-memory-channel-repository';
 import type { InMemoryCommentRepository } from './in-memory-comment-repository';
 import type { InMemorySubscriptionRepository } from './in-memory-subscription-repository';
@@ -23,6 +25,7 @@ export interface InMemoryExportRowRepositoryOptions {
   channels: Pick<InMemoryChannelRepository, 'getAllChannels'>;
   subscriptions: Pick<InMemorySubscriptionRepository, 'subscriptionEvents'>;
   categories: Pick<InMemoryCategoryRepository, 'findAll'>;
+  posts: Pick<InMemoryChannelPostRepository, 'posts'>;
 }
 
 type Page<Row> = Promise<Result<ExportRowPage<Row>, DatabaseUnavailable>>;
@@ -134,7 +137,8 @@ export class InMemoryExportRowRepository implements ExportRowRepositoryPort {
       .filter(
         (comment) =>
           comment.deletedAt === null &&
-          videos.has(comment.videoId) &&
+          comment.target.type === 'video' &&
+          videos.has(comment.target.id) &&
           onDays(viewDateOf(comment.createdAt), scope.range)
       )
       .sort(byCreated)
@@ -142,8 +146,8 @@ export class InMemoryExportRowRepository implements ExportRowRepositoryPort {
         const author = channels.get(comment.authorChannelId);
         return {
           commentId: comment.id,
-          videoId: comment.videoId,
-          videoTitle: videos.get(comment.videoId)?.title ?? '',
+          videoId: comment.target.id,
+          videoTitle: videos.get(comment.target.id)?.title ?? '',
           parentId: comment.parentId,
           authorHandle: author?.handle ?? null,
           authorDisplayName: author?.displayName ?? null,
@@ -181,6 +185,28 @@ export class InMemoryExportRowRepository implements ExportRowRepositoryPort {
         comments: video.commentsCount ?? 0,
         createdAt: video.createdAt.toISOString(),
         readyAt: video.readyAt?.toISOString() ?? null,
+      }));
+    return ok(pageOf(rows, after, limit));
+  }
+
+  async posts(scope: ExportScope, after: string | null, limit: number): Page<PostExportRow> {
+    const rows = [...this.deps.posts.posts.values()]
+      .filter(
+        (post) =>
+          post.channelId === scope.channelId && onDays(viewDateOf(post.createdAt), scope.range)
+      )
+      .sort(byCreated)
+      .map((post) => ({
+        postId: post.id,
+        kind: post.payload.kind,
+        status: post.status,
+        payload: JSON.stringify(post.payload),
+        commentsEnabled: post.commentsEnabled,
+        likeCount: post.likeCount,
+        commentsCount: post.commentsCount,
+        publishedAt: post.publishedAt?.toISOString() ?? null,
+        createdAt: post.createdAt.toISOString(),
+        editedAt: post.editedAt?.toISOString() ?? null,
       }));
     return ok(pageOf(rows, after, limit));
   }

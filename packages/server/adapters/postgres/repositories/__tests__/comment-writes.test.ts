@@ -4,13 +4,14 @@ import { drizzle } from 'drizzle-orm/pglite';
 import {
   OTHER_OWNER_CHANNEL_ID,
   OTHER_OWNER_ID,
-  OWNER_ID,
+  OWNER_CHANNEL_ID,
   publicVideo,
   seedOwners,
   VIDEO_IDS,
+  videoTarget,
 } from '../../../__tests__/contract/fixtures';
 import { migratedPglite } from '../../../__tests__/contract/pglite-snapshot';
-import { insertComment, isLive, lockVideo } from '../comment-writes';
+import { insertComment, isLive } from '../comment-writes';
 import { PostgresRepositories } from '../postgres-repositories';
 
 const ROOT_ID = '00000000-0000-7000-8000-0000000005a1';
@@ -28,7 +29,8 @@ async function seeded() {
 
 const comment = (id: string, parentId: string | null) => ({
   id,
-  videoId: VIDEO_IDS.a,
+  target: videoTarget(VIDEO_IDS.a),
+  channelId: OWNER_CHANNEL_ID,
   authorId: OTHER_OWNER_ID,
   authorChannelId: OTHER_OWNER_CHANNEL_ID,
   parentId,
@@ -36,14 +38,6 @@ const comment = (id: string, parentId: string | null) => ({
 });
 
 describe('adapters/postgres: comment writes', () => {
-  it('locks the video and answers its owner, or nothing for a missing one', async () => {
-    const { db, engine } = await seeded();
-
-    expect(await lockVideo(db, VIDEO_IDS.a)).toMatchObject({ ownerId: OWNER_ID });
-    expect(await lockVideo(db, VIDEO_IDS.b)).toBeUndefined();
-    await engine.close();
-  });
-
   it('inserts a comment, counts it and refuses a reply to a parent that is not there', async () => {
     const { db, engine, repositories } = await seeded();
 

@@ -2,7 +2,9 @@ import type {
   CaptionTrack,
   Category,
   Channel,
+  ChannelPost,
   Comment,
+  CommentHost,
   CommentReport,
   EditorPick,
   LiveStream,
@@ -11,6 +13,10 @@ import type {
   Video,
 } from '@vp/domain';
 import type { UserContext } from '@vp/permissions';
+
+export function videoHost(video: Video): CommentHost {
+  return { type: 'video', video };
+}
 
 export const OWNER: UserContext = { id: 'owner-1', role: 'CREATOR' };
 export const STRANGER: UserContext = { id: 'stranger-1', role: 'USER' };
@@ -92,7 +98,8 @@ export const MODERATOR: UserContext = { id: 'moderator-1', role: 'MODERATOR' };
 export function aComment(overrides: Partial<Comment> = {}): Comment {
   return {
     id: 'comment-1',
-    videoId: 'video-1',
+    target: { type: 'video', id: 'video-1' },
+    channelId: 'channel-1',
     authorId: AUTHOR.id,
     authorChannelId: 'author-channel-1',
     parentId: null,
@@ -214,6 +221,26 @@ export function aLiveStream(overrides: Partial<LiveStream> = {}): LiveStream {
     videoId: null,
     createdAt: new Date('2026-01-01T00:00:00.000Z'),
     updatedAt: new Date('2026-01-01T00:00:00.000Z'),
+    ...overrides,
+  };
+}
+
+export function aPost(overrides: Partial<ChannelPost> = {}): ChannelPost {
+  return {
+    id: 'post-1',
+    channelId: 'channel-1',
+    authorUserId: OWNER.id,
+    payload: { kind: 'text', text: 'Hello' },
+    status: 'published',
+    publishAt: null,
+    publishedAt: new Date('2026-01-01T00:00:00.000Z'),
+    pinnedAt: null,
+    commentsEnabled: true,
+    editedAt: null,
+    likeCount: 0,
+    commentsCount: 0,
+    version: 1,
+    createdAt: new Date('2026-01-01T00:00:00.000Z'),
     ...overrides,
   };
 }

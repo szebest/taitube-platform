@@ -1,7 +1,7 @@
 import type { AnyFailure } from '@kit/errors';
 import { type Result, isErr, ok } from '@kit/result';
 import type { BulkActionBody, BulkResultView, CommentActionBody } from '@vp/api-contracts';
-import type { CommentRepositoryPort, VideoRepository } from '@vp/core/repositories';
+import type { ChannelRepositoryPort, CommentRepositoryPort } from '@vp/core/repositories';
 import type { ActingChannel } from '@vp/domain';
 import { commentNotFound } from '@vp/domain-rules';
 import type { ErrorCode } from '@vp/errors';
@@ -11,7 +11,7 @@ import type { CommentModerationService } from './comment-moderation-service';
 
 export interface CommentBulkServiceDeps {
   comments: Pick<CommentRepositoryPort, 'findById'>;
-  videos: Pick<VideoRepository, 'findById'>;
+  channels: Pick<ChannelRepositoryPort, 'findById'>;
   moderation: Pick<CommentModerationService, 'moderate'>;
   restrictions: Pick<ChannelRestrictionService, 'restrict' | 'lift'>;
 }
@@ -85,7 +85,9 @@ export class CommentBulkService {
     const comment = await this.deps.comments.findById(commentId);
     if (isErr(comment) || !comment.value) return null;
 
-    const video = await this.deps.videos.findById(comment.value.videoId);
-    return !isErr(video) && video.value?.ownerId === acting.ownerId ? comment.value.authorId : null;
+    const channel = await this.deps.channels.findById(comment.value.channelId);
+    return !isErr(channel) && channel.value?.userId === acting.ownerId
+      ? comment.value.authorId
+      : null;
   }
 }

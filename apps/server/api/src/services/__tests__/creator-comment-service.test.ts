@@ -34,7 +34,8 @@ describe('CreatorCommentService', () => {
     for (const content of ['one', 'two', 'three']) {
       await repositories.comments.create({
         id: crypto.randomUUID(),
-        videoId: VIDEO_ID,
+        target: { type: 'video', id: VIDEO_ID },
+        channelId: ACTING.channelId,
         authorId: FAN,
         authorChannelId: await seedPrimaryChannel(repositories, FAN),
         parentId: null,

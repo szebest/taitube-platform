@@ -13,18 +13,21 @@ import {
   SavedReplyService,
   TrustedCommenterService,
 } from '../services/index';
+import { registerPostServices } from './post.module';
 import { Services } from './service-tokens';
 
 export function registerCommentServices(c: Container): Container {
   const repositories = () => c.get(Adapters.Repositories);
 
-  return c
+  return registerPostServices(c)
     .provide(
       Services.CommentService,
       (c) =>
         new CommentService({
           comments: repositories().comments,
           videos: repositories().videos,
+          posts: repositories().channelPosts,
+          channels: repositories().channels,
           members: repositories().channelMembers,
           settings: repositories().commentSettings,
           restrictions: repositories().channelUserRestrictions,
@@ -60,7 +63,7 @@ export function registerCommentServices(c: Container): Container {
       (c) =>
         new CommentBulkService({
           comments: repositories().comments,
-          videos: repositories().videos,
+          channels: repositories().channels,
           moderation: c.get(Services.CommentModerationService),
           restrictions: c.get(Services.ChannelRestrictionService),
         })
@@ -71,6 +74,8 @@ export function registerCommentServices(c: Container): Container {
         new CommentModerationService({
           comments: repositories().comments,
           videos: repositories().videos,
+          posts: repositories().channelPosts,
+          channels: repositories().channels,
           settings: repositories().commentSettings,
           moderation: repositories().commentModeration,
           notifications: repositories().notifications,
@@ -110,6 +115,8 @@ export function registerCommentServices(c: Container): Container {
         new CommentReportService({
           comments: repositories().comments,
           videos: repositories().videos,
+          posts: repositories().channelPosts,
+          channels: repositories().channels,
           reports: repositories().commentReports,
           commentService: c.get(Services.CommentService),
           paginator: c.get(Services.Paginator),

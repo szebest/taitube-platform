@@ -2,15 +2,15 @@ import type { ListAuthoredCommentsOptions, ListCreatorInboxOptions } from '@vp/c
 import * as schema from '@vp/db';
 import type { AuthoredComment } from '@vp/domain';
 import type { UserContext } from '@vp/permissions';
-import { eq, ne } from 'drizzle-orm';
+import { and, eq, ne, or } from 'drizzle-orm';
 import { drizzleWhere, notDeletedScope, watchableVideoScope } from '../scopes/index';
 import { creatorInboxColumns, creatorInboxFilterScope } from './comment-inbox-query';
 import { commentInboxCursorScope, commentInboxOrderBy } from './comment-thread-query';
 import type { PostgresDatabase } from './types';
 
-const { videoComments: c, channels: ch, videos: v } = schema;
+const { comments: c, channels: ch, videos: v, channelPosts: p } = schema;
 
-/** Live comments on the channel's videos that its owner did not write, one row more than a page. */
+/** Live comments on the channel's videos and posts that its owner did not write, one row more than a page. */
 export function creatorInboxQuery(
   db: PostgresDatabase,
   ownerId: string,
@@ -19,14 +19,15 @@ export function creatorInboxQuery(
   return db
     .select(creatorInboxColumns)
     .from(c)
-    .innerJoin(v, eq(v.id, c.videoId))
+    .leftJoin(v, and(eq(c.targetType, 'video'), eq(v.id, c.targetId)))
+    .leftJoin(p, and(eq(c.targetType, 'post'), eq(p.id, c.targetId)))
     .leftJoin(ch, eq(ch.id, c.authorChannelId))
     .where(
       drizzleWhere(
-        eq(v.channelId, channelId),
+        eq(c.channelId, channelId),
         ne(c.authorId, ownerId),
         notDeletedScope(c),
-        notDeletedScope(v),
+        or(ne(c.targetType, 'video'), notDeletedScope(v)),
         creatorInboxFilterScope(filter, ownerId),
         authorId === undefined ? undefined : eq(c.authorId, authorId),
         commentInboxCursorScope(cursor)
@@ -53,7 +54,7 @@ export function authoredCommentsQuery(
       videoTitle: v.title,
     })
     .from(c)
-    .innerJoin(v, eq(v.id, c.videoId))
+    .innerJoin(v, and(eq(c.targetType, 'video'), eq(v.id, c.targetId)))
     .where(
       drizzleWhere(
         eq(c.authorId, viewer.id),

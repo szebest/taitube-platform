@@ -20,7 +20,10 @@ const NotificationPayloadSchema = z.object({
     .nullable()
     .describe('The newest actor: the channel that published, or whoever commented'),
   videoTitle: z.string().nullable(),
-  excerpt: z.string().nullable().describe('The start of the comment, for comment kinds'),
+  excerpt: z
+    .string()
+    .nullable()
+    .describe('The start of the comment, or of the post text, caption or share comment'),
   outcome: z
     .enum(['ready', 'failed', 'held', 'approved', 'rejected'])
     .nullable()
@@ -38,6 +41,7 @@ const NotificationPayloadSchema = z.object({
     .nullable()
     .describe('The party a party_invite points at, with who was watching when it was sent'),
   inviteId: z.uuid().optional().describe('The channel team invite a `team_invite` opens'),
+  postId: z.uuid().optional().describe('The newest post of a `post` notification'),
   moderation: z
     .object({
       action: z.enum(['hold', 'hide', 'remove', 'ban']),

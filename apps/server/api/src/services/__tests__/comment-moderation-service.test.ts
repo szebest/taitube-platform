@@ -18,6 +18,8 @@ describe('apps/server/api/services: comment moderation', () => {
     new CommentModerationService({
       comments: repositories.comments,
       videos: repositories.videos,
+      posts: repositories.channelPosts,
+      channels: repositories.channels,
       settings: repositories.commentSettings,
       moderation: repositories.commentModeration,
       notifications: repositories.notifications,
@@ -49,7 +51,8 @@ describe('apps/server/api/services: comment moderation', () => {
     expectOk(
       await repositories.comments.create({
         id: COMMENT,
-        videoId: VIDEO,
+        target: { type: 'video', id: VIDEO },
+        channelId: await seedPrimaryChannel(repositories, OWNER.id),
         authorId: AUTHOR,
         authorChannelId: await seedPrimaryChannel(repositories, AUTHOR),
         parentId: null,

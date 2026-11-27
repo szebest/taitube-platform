@@ -38,7 +38,8 @@ describe('apps/server/worker/stages: notify-heart', () => {
     expectOk(
       await repositories.comments.create({
         id: COMMENT,
-        videoId: VIDEO,
+        target: { type: 'video', id: VIDEO },
+        channelId: CHANNEL_ID,
         authorId: options.author ?? FAN,
         authorChannelId: channelOf(options.author ?? FAN),
         parentId: null,
@@ -49,7 +50,12 @@ describe('apps/server/worker/stages: notify-heart', () => {
   };
 
   const heart = async () =>
-    expectOk(await repositories.comments.setHearted({ id: COMMENT, videoId: VIDEO }, true));
+    expectOk(
+      await repositories.comments.setHearted(
+        { id: COMMENT, target: { type: 'video', id: VIDEO } },
+        true
+      )
+    );
 
   const notify = async () => {
     const job: QueueJob<NotifyHeartJob> = {

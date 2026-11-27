@@ -8,15 +8,17 @@ import type {
   OutboxRepository,
   UserEventRepository,
 } from '@vp/core/repositories';
-import { type CommentRemoval, commentCreated } from '@vp/domain';
+import { type CommentRemoval, type CommentTarget, commentCreated } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { commentOutbox } from '@vp/job-contracts';
 import { recordModeration } from './comment-moderation-record';
 import { toThreadOf } from './comment-projections';
 import { isVisibleTo, publicScopeOf } from './comment-public-scope';
 import { recountAuthored } from './comment-recount';
+import { moveCommentsCount, ownerOf, sameTarget } from './comment-targets';
 import { repliesOf, standing, type StoredComment } from './comment-visibility';
 import type { InMemoryChannelAuditRepository } from './in-memory-channel-audit-repository';
+import type { InMemoryChannelPostRepository } from './in-memory-channel-post-repository';
 import type { InMemoryChannelRepository } from './in-memory-channel-repository';
 import type { InMemoryChannelUserRestrictionRepository } from './in-memory-channel-user-restriction-repository';
 import type { InMemoryCommentRepository } from './in-memory-comment-repository';
@@ -26,6 +28,7 @@ import { byKeysetDesc, isKeysetBefore } from './keyset';
 export interface InMemoryCommentModerationRepositoryOptions {
   commentsRepo: Pick<InMemoryCommentRepository, 'comments' | 'removals'>;
   videosRepo: InMemoryVideoRepository;
+  postsRepo: Pick<InMemoryChannelPostRepository, 'posts'>;
   channelsRepo: InMemoryChannelRepository;
   restrictionsRepo: Pick<InMemoryChannelUserRestrictionRepository, 'shadowedUserIds'>;
   auditRepo: Pick<InMemoryChannelAuditRepository, 'append'>;
@@ -46,15 +49,14 @@ export class InMemoryCommentModerationRepository implements CommentModerationRep
   }: CommentModerationWrite): Promise<Result<CommentModerationWritten, DatabaseUnavailable>> {
     const { comments } = this.deps.commentsRepo;
     const stored = standing(comments.values()).find(
-      (row) => row.id === target.id && row.videoId === target.videoId
+      (row) => row.id === target.id && sameTarget(row.target, target.target)
     );
-    const video = unwrapOr(await this.deps.videosRepo.findById(target.videoId), null);
-    if (!(stored && video)) return ok({ type: 'missing' });
+    const owner = await ownerOf(this.deps, target.target);
+    if (!(stored && owner)) return ok({ type: 'missing' });
     if (stored.moderationState !== from)
       return ok({ type: 'stale', state: stored.moderationState });
 
-    const scope = await publicScopeOf(comments, [target.videoId], {
-      videos: this.deps.videosRepo,
+    const scope = publicScopeOf(comments, [stored.channelId], {
       restrictions: this.deps.restrictionsRepo,
     });
     const subtree = (): StoredComment[] =>
@@ -75,7 +77,7 @@ export class InMemoryCommentModerationRepository implements CommentModerationRep
       heldReason: null,
       ...(outcome.state === 'published' ? {} : { isPinned: false }),
     });
-    video.commentsCount = (video.commentsCount ?? 0) + counted() - before;
+    await moveCommentsCount(this.deps, stored.target, counted() - before);
 
     const recorded = await recordModeration(this.deps, { audit, ...(notice && { notice }) });
     if (isErr(recorded)) return recorded;
@@ -83,15 +85,15 @@ export class InMemoryCommentModerationRepository implements CommentModerationRep
     const channel = unwrapOr(await this.deps.channelsRepo.findById(stored.authorChannelId), null);
     const thread = toThreadOf(stored, channel, repliesOf(comments.values(), stored.id).length);
     const firstPublication = outcome.state === 'published' && from === 'held' && heldBefore;
-    if (firstPublication) {
+    if (firstPublication && owner.type === 'video') {
       const queued = await this.deps.outboxRepo.enqueue(
-        commentOutbox({ videoId: stored.videoId, commentId: stored.id })
+        commentOutbox({ videoId: owner.id, commentId: stored.id })
       );
       if (isErr(queued)) return queued;
-      if (video.ownerId !== stored.authorId) {
+      if (owner.ownerId !== stored.authorId) {
         const told = await this.deps.userEventsRepo.append({
-          userId: video.ownerId,
-          ...commentCreated(thread, { id: video.id, title: video.title ?? '' }),
+          userId: owner.ownerId,
+          ...commentCreated(thread, { id: owner.id, title: owner.title }),
         });
         if (isErr(told)) return told;
       }
@@ -99,21 +101,13 @@ export class InMemoryCommentModerationRepository implements CommentModerationRep
     return ok({ type: 'applied', thread, firstPublication });
   }
 
-  /** What a restriction runs after it changes: the channel's videos the user commented on, counted again. */
-  async recount(channelId: string, userId: string): Promise<string[]> {
+  /** What a restriction runs after it changes: the channel's targets the user commented on, counted again. */
+  async recount(channelId: string, userId: string): Promise<CommentTarget[]> {
     const { comments } = this.deps.commentsRepo;
-    const videos = this.deps.videosRepo
-      .getAllVideos()
-      .filter((video) => video.channelId === channelId && !video.deletedAt);
-    const scope = await publicScopeOf(
-      comments,
-      videos.map(({ id }) => id),
-      {
-        videos: this.deps.videosRepo,
-        restrictions: this.deps.restrictionsRepo,
-      }
-    );
-    return recountAuthored(comments, videos, userId, scope);
+    const scope = publicScopeOf(comments, [channelId], {
+      restrictions: this.deps.restrictionsRepo,
+    });
+    return recountAuthored(this.deps, comments, channelId, userId, scope);
   }
 
   async threadIds(target: CommentLocator): Promise<Result<string[], DatabaseUnavailable>> {
@@ -121,7 +115,8 @@ export class InMemoryCommentModerationRepository implements CommentModerationRep
       standing(this.deps.commentsRepo.comments.values())
         .filter(
           (row) =>
-            row.videoId === target.videoId && (row.id === target.id || row.parentId === target.id)
+            sameTarget(row.target, target.target) &&
+            (row.id === target.id || row.parentId === target.id)
         )
         .map(({ id }) => id)
     );
@@ -129,17 +124,17 @@ export class InMemoryCommentModerationRepository implements CommentModerationRep
 
   async idsByAuthor(
     authorId: string,
-    videoOwnerId: string
+    ownerId: string
   ): Promise<Result<string[], DatabaseUnavailable>> {
     const owned = new Set(
-      this.deps.videosRepo
-        .getAllVideos()
-        .filter((video) => video.ownerId === videoOwnerId)
+      this.deps.channelsRepo
+        .getAllChannels()
+        .filter((channel) => channel.userId === ownerId)
         .map(({ id }) => id)
     );
     return ok(
       standing(this.deps.commentsRepo.comments.values())
-        .filter((row) => row.authorId === authorId && owned.has(row.videoId))
+        .filter((row) => row.authorId === authorId && owned.has(row.channelId))
         .map(({ id }) => id)
     );
   }

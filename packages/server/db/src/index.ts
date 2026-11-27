@@ -1,6 +1,7 @@
 export * from './schema';
 export * from './social-schema';
 export * from './comments-schema';
+export * from './posts-schema';
 export * from './comment-reports-schema';
 export * from './comment-moderation-schema';
 export * from './view-schema';

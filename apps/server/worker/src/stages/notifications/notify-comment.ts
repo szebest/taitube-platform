@@ -24,7 +24,7 @@ export interface NotifyCommentResult {
 }
 
 const GROUP_KEYS = {
-  comment: (comment: Comment) => `comment:${comment.videoId}`,
+  comment: (comment: Comment) => `comment:${comment.target.id}`,
   reply: (comment: Comment) => `reply:${comment.parentId}`,
   mention: (comment: Comment) => `mention:${comment.id}`,
 } as const;

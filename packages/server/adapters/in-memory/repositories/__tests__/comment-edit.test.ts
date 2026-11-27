@@ -1,11 +1,16 @@
 import { ok } from '@kit/result';
-import type { CommentThread, Video } from '@vp/domain';
+import type { ChannelPost, CommentTarget, CommentThread, Video } from '@vp/domain';
 import { editStored } from '../comment-edit';
 import type { StoredComment } from '../comment-visibility';
 
-const stored = (id: string, parentId: string | null = null): StoredComment => ({
+const stored = (
+  id: string,
+  parentId: string | null = null,
+  target: CommentTarget = { type: 'video', id: 'video' }
+): StoredComment => ({
   id,
-  videoId: 'video',
+  target,
+  channelId: 'channel',
   authorId: 'author',
   authorChannelId: 'channel-author',
   parentId,
@@ -27,14 +32,19 @@ const stored = (id: string, parentId: string | null = null): StoredComment => ({
   deletedAt: null,
 });
 
-const THREAD = { id: 'root' } as CommentThread;
+const THREAD = { id: 'root', target: { type: 'video', id: 'video' } } as CommentThread;
 
-function setUp({ withVideo = true } = {}) {
-  const root = stored('root');
-  const reply = stored('reply', 'root');
+function setUp({
+  withVideo = true,
+  target = { type: 'video', id: 'video' } as CommentTarget,
+} = {}) {
+  const root = stored('root', null, target);
+  const reply = stored('reply', 'root', target);
   const comments = new Map([root, reply].map((row) => [row.id, row]));
   const video = withVideo ? { id: 'video', commentsCount: 2 } : null;
   const videos = { findById: async () => ok(video as Video | null) };
+  const post = { id: 'post', commentsCount: 2 };
+  const posts = new Map([[post.id, post as ChannelPost]]);
   const told: unknown[] = [];
   const events = {
     append: async (event: unknown) => {
@@ -51,15 +61,21 @@ function setUp({ withVideo = true } = {}) {
   };
   const edit = (changes: Parameters<typeof editStored>[5], content = 'new') =>
     editStored(
-      { videosRepo: videos, userEventsRepo: events, outboxRepo: outbox },
+      {
+        videosRepo: videos,
+        postsRepo: { posts },
+        channelsRepo: { findById: async () => ok(null) },
+        userEventsRepo: events,
+        outboxRepo: outbox,
+      },
       root,
       [reply],
       { shadowed: new Map(), comments },
       content,
       changes,
-      async () => THREAD
+      async () => ({ ...THREAD, target })
     );
-  return { root, reply, video, told, queued, edit };
+  return { root, reply, video, post, told, queued, edit };
 }
 
 describe('in-memory: editStored', () => {
@@ -110,5 +126,18 @@ describe('in-memory: editStored', () => {
     await edit({ looksLikeQuestion: false }, 'again');
 
     expect(root.content).toBe('again');
+  });
+
+  it('moves the count of a post, not of a video', async () => {
+    const { video, post, told, queued, edit } = setUp({ target: { type: 'post', id: 'post' } });
+
+    await edit({
+      looksLikeQuestion: false,
+      hold: { reason: 'link', disclosure: 'visible', moderators: ['owner'] },
+    });
+
+    expect([video?.commentsCount, post.commentsCount]).toEqual([2, 0]);
+    expect(told).toMatchObject([{ userId: 'owner', type: 'comment.held' }]);
+    expect(queued).toEqual([]);
   });
 });

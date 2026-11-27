@@ -12,6 +12,7 @@ import { defineCommentRules } from './rules/comment.rules';
 import { defineLiveStreamRules } from './rules/live-stream.rules';
 import { defineNotificationRules } from './rules/notification.rules';
 import { definePlaylistRules } from './rules/playlist.rules';
+import { definePostRules } from './rules/post.rules';
 import { definePreferencesRules } from './rules/preferences.rules';
 import { defineQueueRules } from './rules/queue.rules';
 import { defineRecommendationFeedbackRules } from './rules/recommendation-feedback.rules';
@@ -47,6 +48,7 @@ const buildAbility = createAbilityFactory<AppAction, AppSubjects, AbilityContext
   forUser(defineUploadRules),
   forUser(defineAnalyticsRules),
   forUser(definePlaylistRules),
+  forUser(definePostRules),
   forUser(definePreferencesRules),
   forUser(defineCaptionRules),
   forUser(defineNotificationRules),

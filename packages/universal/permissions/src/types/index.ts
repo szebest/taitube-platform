@@ -6,6 +6,7 @@ export * from './channel';
 export * from './upload';
 export * from './category';
 export * from './playlist';
+export * from './post';
 export * from './ability';
 export * from './analytics';
 export * from './preferences';

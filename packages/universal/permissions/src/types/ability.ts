@@ -16,6 +16,7 @@ import type { ChannelUserResource, CommentSettingsResource } from './comment-mod
 import type { LiveStreamResource } from './live-stream';
 import type { NotificationResource } from './notification';
 import type { PlaylistResource } from './playlist';
+import type { PostResource } from './post';
 import type { PreferencesResource } from './preferences';
 import type { RecommendationFeedbackResource } from './recommendation-feedback';
 import type { UploadResource } from './upload';
@@ -58,6 +59,8 @@ export type AppSubjects =
       | (AnalyticsResource & ForcedSubject<'Analytics'>)
       | (VideoStatsResource & ForcedSubject<'VideoStats'>)
       | (PlaylistResource & ForcedSubject<'Playlist'>)
+      | (PostResource & ForcedSubject<'Post'>)
+      | (PostResource & ForcedSubject<'PostStats'>)
       | (PreferencesResource & ForcedSubject<'Preferences'>)
       | (CaptionResource & ForcedSubject<'Caption'>)
       | (NotificationResource & ForcedSubject<'Notification'>)
@@ -79,6 +82,8 @@ export type AppSubjects =
   | 'Channel'
   | 'Category'
   | 'Playlist'
+  | 'Post'
+  | 'PostStats'
   | 'Queue'
   | 'Analytics'
   | 'VideoStats'
