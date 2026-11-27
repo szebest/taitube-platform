@@ -13,6 +13,7 @@ describe('createChannelRepositories', () => {
       'channelInvites',
       'channelMembers',
       'channelPages',
+      'channelPosts',
       'channels',
     ]);
   });
