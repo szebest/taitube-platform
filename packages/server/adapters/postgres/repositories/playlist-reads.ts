@@ -7,8 +7,13 @@ import { channelCardColumns, toChannelCard } from './channel-card-query';
 import { rowsOf, toDetailItems, toPlaylist } from './playlist-query';
 import type { PostgresDatabase } from './types';
 
-const { playlists: p, playlistItems: pi, playlistCollaborators: pc, videos: v, channels: ch } =
-  schema;
+const {
+  playlists: p,
+  playlistItems: pi,
+  playlistCollaborators: pc,
+  videos: v,
+  channels: ch,
+} = schema;
 
 /** The playlist with `userId`'s seat resolved on it, whoever may read it. */
 export async function seatedOf(

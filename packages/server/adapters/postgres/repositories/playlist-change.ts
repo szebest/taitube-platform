@@ -63,7 +63,10 @@ export async function recordPlaylistChange(
 
   const [playlist] = await tx.select({ ownerId: p.ownerId }).from(p).where(eq(p.id, playlistId));
   if (!playlist) return;
-  const seats = await tx.select({ userId: pc.userId }).from(pc).where(eq(pc.playlistId, playlistId));
+  const seats = await tx
+    .select({ userId: pc.userId })
+    .from(pc)
+    .where(eq(pc.playlistId, playlistId));
   const audience = playlistAudience(
     playlist.ownerId,
     seats.map((seat) => seat.userId),

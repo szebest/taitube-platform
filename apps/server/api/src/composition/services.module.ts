@@ -10,7 +10,6 @@ import {
   AnalyticsService,
   CategoryService,
   DlqService,
-  PlaylistService,
   PreferencesService,
   QueueService,
   ReactionService,
@@ -191,17 +190,6 @@ export function registerServices(c: Container): Container {
           videoViews: repositories().videoViews,
           subscriptions: repositories().subscriptions,
           now: Date.now,
-        })
-    )
-    .provide(
-      Services.PlaylistService,
-      (c) =>
-        new PlaylistService({
-          playlists: repositories().playlists,
-          videos: repositories().videos,
-          viewerProgress: c.get(Services.ViewerProgress),
-          cdn: config().cdn,
-          sprite: config().sprite,
         })
     )
     .provide(

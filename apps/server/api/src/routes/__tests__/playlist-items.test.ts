@@ -60,13 +60,17 @@ describe('playlist item routes', () => {
     await add('owner', TIMED);
     const { id } = await itemOf(TIMED);
 
-    const saved = await ctx.call('owner', 'PATCH', `${base}/items/${id}`, {
+    const saved = await ctx.call('owner', 'PATCH', `${base}/items/${id}/annotation`, {
       note: ' From the proof ',
       startMs: 10_000,
       endMs: 20_000,
     });
-    const past = await ctx.call('owner', 'PATCH', `${base}/items/${id}`, { endMs: 90_000 });
-    const short = await ctx.call('owner', 'PATCH', `${base}/items/${id}`, { endMs: 10_500 });
+    const past = await ctx.call('owner', 'PATCH', `${base}/items/${id}/annotation`, {
+      endMs: 90_000,
+    });
+    const short = await ctx.call('owner', 'PATCH', `${base}/items/${id}/annotation`, {
+      endMs: 10_500,
+    });
 
     expect(saved.statusCode).toBe(204);
     expect(await itemOf(TIMED)).toMatchObject({
@@ -107,14 +111,19 @@ describe('playlist item routes', () => {
     const others = await ctx.call(
       'contributor',
       'PATCH',
-      `${base}/items/${(await itemOf(V0)).id}`,
+      `${base}/items/${(await itemOf(V0)).id}/annotation`,
       {
         note: 'mine now',
       }
     );
-    const own = await ctx.call('contributor', 'PATCH', `${base}/items/${(await itemOf(V1)).id}`, {
-      note: 'my pick',
-    });
+    const own = await ctx.call(
+      'contributor',
+      'PATCH',
+      `${base}/items/${(await itemOf(V1)).id}/annotation`,
+      {
+        note: 'my pick',
+      }
+    );
 
     expect([others.statusCode, own.statusCode]).toEqual([403, 204]);
   });
@@ -162,7 +171,9 @@ describe('playlist item routes', () => {
   it('lets the owner restore a removed item from the log, once', async () => {
     await seat('editor', EDITOR, 'editor');
     await add('editor', V0);
-    await ctx.call('editor', 'PATCH', `${base}/items/${(await itemOf(V0)).id}`, { note: 'keep' });
+    await ctx.call('editor', 'PATCH', `${base}/items/${(await itemOf(V0)).id}/annotation`, {
+      note: 'keep',
+    });
     await ctx.call('editor', 'DELETE', `${base}/items/${V0}`);
     const removal = (await activity()).find((entry) => entry.action === 'item_removed');
     const restore = (who: Who) => ctx.call(who, 'POST', `${base}/activity/${removal?.id}/restore`);

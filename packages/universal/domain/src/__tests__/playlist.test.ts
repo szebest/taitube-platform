@@ -1,4 +1,9 @@
-import { PLAYLIST_VISIBILITIES, WATCH_LATER_TITLE, clampSegment } from '../playlist';
+import {
+  PLAYLIST_VISIBILITIES,
+  WATCH_LATER_TITLE,
+  clampSegment,
+  unwatchedFirstKey,
+} from '../playlist';
 
 describe('@vp/domain: playlist', () => {
   it('offers the three visibilities a video has', () => {
@@ -32,5 +37,16 @@ describe('@vp/domain: playlist', () => {
     },
   ])('clamps a segment $scenario to a 10 second video', ({ segment, clamped }) => {
     expect(clampSegment(segment, 10_000)).toEqual(clamped);
+  });
+
+  it('sorts every unwatched item before every watched one, each run in playlist order', () => {
+    const keys = [
+      unwatchedFirstKey(true, 0),
+      unwatchedFirstKey(false, 7),
+      unwatchedFirstKey(false, 2),
+      unwatchedFirstKey(true, 1),
+    ];
+
+    expect([...keys].sort((a, b) => a - b)).toEqual([keys[2], keys[1], keys[0], keys[3]]);
   });
 });

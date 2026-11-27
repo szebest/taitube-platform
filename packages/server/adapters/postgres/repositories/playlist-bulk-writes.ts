@@ -9,7 +9,13 @@ import type { RestorablePlaylistActivity, StoredPlaylistItem } from '@vp/domain'
 import { and, eq, inArray } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
 import { recordPlaylistChange } from './playlist-change';
-import { type NewRow, appendRows, lockPlaylist, removedOf, touchPlaylist } from './playlist-item-writes';
+import {
+  type NewRow,
+  appendRows,
+  lockPlaylist,
+  removedOf,
+  touchPlaylist,
+} from './playlist-item-writes';
 import type { PostgresDatabase } from './types';
 
 const { playlistItems: pi } = schema;
@@ -71,7 +77,15 @@ async function heldIn(
   const rows = await tx
     .select({ id: pi.id })
     .from(pi)
-    .where(and(eq(pi.playlistId, playlistId), inArray(pi.id, items.map((item) => item.id))));
+    .where(
+      and(
+        eq(pi.playlistId, playlistId),
+        inArray(
+          pi.id,
+          items.map((item) => item.id)
+        )
+      )
+    );
   return new Set(rows.map((row) => row.id));
 }
 
@@ -113,7 +127,12 @@ export async function transferRows(
     );
   }
   if (mode === 'move') {
-    await moveOut(tx, sourceId, moving.filter((item) => outcomeOf(item) !== 'video-missing'), actorId);
+    await moveOut(
+      tx,
+      sourceId,
+      moving.filter((item) => outcomeOf(item) !== 'video-missing'),
+      actorId
+    );
   }
   return new Map(
     items.map((item) => [item.id, held.has(item.id) ? outcomeOf(item) : 'source-missing'])
@@ -127,9 +146,15 @@ async function moveOut(
   actorId: string
 ): Promise<void> {
   if (leaving.length === 0) return;
-  await tx
-    .delete(pi)
-    .where(and(eq(pi.playlistId, sourceId), inArray(pi.id, leaving.map((item) => item.id))));
+  await tx.delete(pi).where(
+    and(
+      eq(pi.playlistId, sourceId),
+      inArray(
+        pi.id,
+        leaving.map((item) => item.id)
+      )
+    )
+  );
   await touchPlaylist(tx, sourceId);
   await recordPlaylistChange(
     tx,

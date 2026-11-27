@@ -17,7 +17,7 @@ export const PLAYLIST_ACTIVITY_ACTIONS = [
 export type PlaylistActivityAction = (typeof PLAYLIST_ACTIVITY_ACTIONS)[number];
 
 export const PLAYLIST_ACTIVITY_RETENTION_DAYS = 180;
-export const PLAYLIST_REORDER_COALESCE_MS = 5 * MS_PER_MINUTE;
+const PLAYLIST_REORDER_COALESCE_MS = 5 * MS_PER_MINUTE;
 
 /** A removed item or section as it stood, so the owner can put it back from the log. */
 export interface RemovedPlaylistItem {

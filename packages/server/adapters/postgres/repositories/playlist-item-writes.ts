@@ -1,15 +1,7 @@
-import type {
-  AppendItemOutcome,
-  NewPlaylistItem,
-  PlaylistItemTarget,
-} from '@vp/core/repositories';
-import * as schema from '@vp/db';
-import {
-  type RemovedPlaylistItem,
-  type StoredPlaylistItem,
-  appendPositions,
-} from '@vp/domain';
 import { assertNever } from '@kit/result';
+import type { AppendItemOutcome, NewPlaylistItem, PlaylistItemTarget } from '@vp/core/repositories';
+import * as schema from '@vp/db';
+import { type RemovedPlaylistItem, type StoredPlaylistItem, appendPositions } from '@vp/domain';
 import { and, asc, eq, inArray, sql } from 'drizzle-orm';
 import { toStoredItem, writePositions } from './playlist-query';
 import type { PostgresDatabase } from './types';
@@ -29,11 +21,7 @@ export async function touchPlaylist(tx: PostgresDatabase, playlistId: string): P
 }
 
 /** Every row in playlist order, or only `itemIds` when given. */
-export function storedItems(
-  tx: PostgresDatabase,
-  playlistId: string,
-  itemIds?: readonly string[]
-) {
+export function storedItems(tx: PostgresDatabase, playlistId: string, itemIds?: readonly string[]) {
   return tx
     .select()
     .from(pi)
@@ -100,9 +88,9 @@ export async function appendRows(
   if (inserts.length === 0) return outcomes;
 
   const positions = await nextPositions(tx, playlistId, inserts.length);
-  await tx.insert(pi).values(
-    inserts.map((row, index) => ({ ...row, playlistId, position: positions[index] ?? 0 }))
-  );
+  await tx
+    .insert(pi)
+    .values(inserts.map((row, index) => ({ ...row, playlistId, position: positions[index] ?? 0 })));
   return outcomes;
 }
 

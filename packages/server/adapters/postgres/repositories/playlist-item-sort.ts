@@ -1,8 +1,14 @@
-import * as schema from '@vp/db';
-import { SERIES_EPISODE_DONE_PERCENT, type PlaylistItemSort } from '@vp/domain';
-import type { UserContext } from '@vp/permissions';
 import { assertNever } from '@kit/result';
+import * as schema from '@vp/db';
+import {
+  PLAYLIST_POSITION_SORT_OFFSET,
+  PLAYLIST_WATCHED_SORT_SHIFT,
+  type PlaylistItemSort,
+  SERIES_EPISODE_DONE_PERCENT,
+} from '@vp/domain';
+import type { UserContext } from '@vp/permissions';
 import { type SQL, type SQLWrapper, and, asc, desc, eq, sql } from 'drizzle-orm';
+import { constant } from './sql-constant';
 import type { PostgresDatabase } from './types';
 
 const { playlistItems: pi, videos: v, channels: ch, watchHistory: wh } = schema;
@@ -24,9 +30,9 @@ function watched(viewer: UserContext | null): SQL {
 }
 
 /**
- * One scalar per sort, so a page boundary is a single `(key, id)` comparison; unwatched first packs
- * the watched flag above the position, which an int column keeps inside 32 bits. A number travels as
- * float8, exact this far below 2^53, so the cursor carries the very value the walk compares.
+ * One scalar per sort, so a page boundary is a single `(key, id)` comparison, `unwatched_first`
+ * packed as `unwatchedFirstKey` packs it. A number travels as float8, exact this far below 2^53, so
+ * the cursor carries the very value the walk compares.
  */
 export function sortKeyOf(
   sort: PlaylistItemSort,
@@ -47,7 +53,7 @@ export function sortKeyOf(
       return { key: sql`lower(coalesce(${ch.displayName}, ''))`, order: 'asc' };
     case 'unwatched_first':
       return {
-        key: sql`(${watched(viewer)} * 4294967296 + ${columns.position} + 2147483648)::float8`,
+        key: sql`(${watched(viewer)} * ${constant(PLAYLIST_WATCHED_SORT_SHIFT)} + ${columns.position} + ${constant(PLAYLIST_POSITION_SORT_OFFSET)})::float8`,
         order: 'asc',
       };
     default:

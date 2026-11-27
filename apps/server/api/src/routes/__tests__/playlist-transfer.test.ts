@@ -129,7 +129,7 @@ describe('playlist transfer, merge, import and export routes', () => {
     async (format) => {
       await fill(source, [V0, V1]);
       const [first] = await itemIdsOf(source);
-      await ctx.call('owner', 'PATCH', `/v1/playlists/${source}/items/${first}`, {
+      await ctx.call('owner', 'PATCH', `/v1/playlists/${source}/items/${first}/annotation`, {
         note: 'Opening, with "quotes", and a comma',
       });
 

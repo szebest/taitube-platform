@@ -5,6 +5,7 @@ import {
   type RemovedPlaylistItem,
   type StoredPlaylistItem,
   type Video,
+  unwatchedFirstKey,
 } from '@vp/domain';
 
 export interface StoredItem extends StoredPlaylistItem {
@@ -69,9 +70,6 @@ export interface SortFacts {
   watched: boolean;
 }
 
-const WATCHED_SHIFT = 4_294_967_296;
-const POSITION_SHIFT = 2_147_483_648;
-
 export const SORT_ORDER: Readonly<Record<PlaylistItemSort, 'asc' | 'desc'>> = {
   manual: 'asc',
   added: 'desc',
@@ -96,7 +94,7 @@ export function sortKeyOf(
     case 'channel':
       return facts.channelName.toLowerCase();
     case 'unwatched_first':
-      return (facts.watched ? WATCHED_SHIFT : 0) + item.position + POSITION_SHIFT;
+      return unwatchedFirstKey(facts.watched, item.position);
     default:
       return assertNever(sort, 'PlaylistItemSort');
   }

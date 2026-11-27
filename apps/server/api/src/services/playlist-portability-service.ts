@@ -1,6 +1,7 @@
-import { type Result, err, isErr, isOk, map, ok, unwrapOr } from '@kit/result';
+import { type Result, assertNever, err, isErr, isOk, map, ok, unwrapOr } from '@kit/result';
 import type { PlaylistImportLineView } from '@vp/api-contracts';
 import type {
+  AppendItemOutcome,
   NewPlaylistItem,
   PlaylistRepositoryPort,
   VideoRecord,
@@ -34,9 +35,18 @@ export interface PlaylistPortabilityServiceDeps {
   newId: () => string;
 }
 
-/** A line that names a watchable video, with the note and segment it may carry over. */
-type Resolved = { line: number; status: 'resolved'; item: NewPlaylistItem };
 type Settled = PlaylistImportLineView;
+
+/** A line that names a watchable video to append, or one whose answer is known already. */
+type Resolution =
+  | { kind: 'append'; line: number; item: NewPlaylistItem }
+  | { kind: 'settled'; view: Settled };
+
+const LINE_STATUS: Readonly<Record<AppendItemOutcome, Settled['status']>> = {
+  added: 'added',
+  present: 'duplicate',
+  'video-missing': 'not_found',
+};
 
 /**
  * A playlist out as a document and back in. An import resolves each line to a video of this site
@@ -84,13 +94,13 @@ export class PlaylistPortabilityService {
     const lines = readDocument(request.format, request.content);
     if (isErr(lines)) return lines;
 
-    const resolved: (Resolved | Settled)[] = [];
+    const resolved: Resolution[] = [];
     for (const [index, line] of lines.value.entries()) {
       const one = await this.resolve(actor, line, index + 1);
       if (isErr(one)) return one;
       resolved.push(one.value);
     }
-    const items = resolved.flatMap((line) => (line.status === 'resolved' ? [line.item] : []));
+    const items = resolved.flatMap((line) => (line.kind === 'append' ? [line.item] : []));
     const appended = await this.deps.playlists.appendItems(playlistId, items, actor.id);
     if (isErr(appended)) return appended;
     if (appended.value === null) return err(playlistNotFound(playlistId));
@@ -98,11 +108,18 @@ export class PlaylistPortabilityService {
 
     return ok({
       lines: resolved.map((line): Settled => {
-        if (line.status !== 'resolved') return line;
-        const outcome = outcomes.get(line.item.id);
-        const status =
-          outcome === 'added' ? 'added' : outcome === 'present' ? 'duplicate' : 'not_found';
-        return { line: line.line, status, videoId: line.item.videoId };
+        switch (line.kind) {
+          case 'settled':
+            return line.view;
+          case 'append':
+            return {
+              line: line.line,
+              status: LINE_STATUS[outcomes.get(line.item.id) ?? 'video-missing'],
+              videoId: line.item.videoId,
+            };
+          default:
+            return assertNever(line, 'Resolution');
+        }
       }),
     });
   }
@@ -111,10 +128,10 @@ export class PlaylistPortabilityService {
     actor: UserContext,
     line: ImportLine,
     number: number
-  ): Promise<Result<Resolved | Settled, DatabaseUnavailable>> {
+  ): Promise<Result<Resolution, DatabaseUnavailable>> {
     const target = resolvePlaylistImportLine(line.reference, this.deps.webUrl);
     if (target.type === 'unrecognised') {
-      return ok({ line: number, status: 'unrecognised', videoId: null });
+      return ok({ kind: 'settled', view: { line: number, status: 'unrecognised', videoId: null } });
     }
     const { videoId } = target;
     const found = await this.deps.videos.findById(videoId);
@@ -127,17 +144,17 @@ export class PlaylistPortabilityService {
     number: number,
     videoId: string,
     video: VideoRecord | null
-  ): Resolved | Settled {
+  ): Resolution {
     if (!isOk(decideVideoRead({ viewer: actor, video, videoId }))) {
-      return { line: number, status: 'not_found', videoId };
+      return { kind: 'settled', view: { line: number, status: 'not_found', videoId } };
     }
     const segment = checkPlaylistSegment(
       { startMs: line.startMs, endMs: line.endMs },
       video?.durationMs ?? null
     );
     return {
+      kind: 'append',
       line: number,
-      status: 'resolved',
       item: {
         id: this.deps.newId(),
         videoId,

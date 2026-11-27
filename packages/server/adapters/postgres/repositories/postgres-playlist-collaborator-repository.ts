@@ -1,14 +1,7 @@
 import { type Result, andThen, fromPromise, isErr, map, ok } from '@kit/result';
-import type {
-  AcceptInvitePlan,
-  PlaylistCollaboratorRepositoryPort,
-} from '@vp/core/repositories';
+import type { AcceptInvitePlan, PlaylistCollaboratorRepositoryPort } from '@vp/core/repositories';
 import * as schema from '@vp/db';
-import type {
-  PlaylistCollaborator,
-  PlaylistCollaboratorRole,
-  PlaylistInvite,
-} from '@vp/domain';
+import type { PlaylistCollaborator, PlaylistCollaboratorRole, PlaylistInvite } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { playlistInviteOutbox } from '@vp/job-contracts';
 import { and, asc, count, desc, eq, isNotNull, isNull, sql } from 'drizzle-orm';
@@ -162,7 +155,9 @@ export class PostgresPlaylistCollaboratorRepository implements PlaylistCollabora
           if (isErr(decided) || !invite) return decided;
 
           const { playlistId, role } = decided.value;
-          await tx.insert(pc).values({ playlistId, userId, role, addedBy: invite.invite.createdBy });
+          await tx
+            .insert(pc)
+            .values({ playlistId, userId, role, addedBy: invite.invite.createdBy });
           await tx
             .update(inv)
             .set({ useCount: sql`${inv.useCount} + 1` })

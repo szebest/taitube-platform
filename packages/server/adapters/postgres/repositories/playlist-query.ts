@@ -60,7 +60,7 @@ export function toPlaylist(row: typeof p.$inferSelect): Playlist {
 const adder = alias(ch, 'adder_channel');
 
 /** Every row with its 0-based place, sections and hidden videos counted. */
-export function rankedItems(db: PostgresDatabase, playlistId: string) {
+function rankedItems(db: PostgresDatabase, playlistId: string) {
   return db
     .select({
       ...getTableColumns(pi),
@@ -261,4 +261,3 @@ export async function sortedItems(
 function keyOf(value: unknown): string | number {
   return typeof value === 'number' || typeof value === 'string' ? value : 0;
 }
-

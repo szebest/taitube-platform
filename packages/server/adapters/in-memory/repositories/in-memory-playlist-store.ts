@@ -72,9 +72,9 @@ export class InMemoryPlaylistStore {
     }
     const { renumber, positions } = appendPositions(this.itemsOf(playlistId), inserts.length);
     this.write(renumber);
-    inserts.forEach((row, index) => {
+    for (const [index, row] of inserts.entries()) {
       this.items.set(row.id, storedRow(row, playlistId, positions[index] ?? 0));
-    });
+    }
     return outcomes;
   }
 
@@ -119,7 +119,11 @@ export class InMemoryPlaylistStore {
         const video = unwrapOr(await this.deps.videosRepo.findById(item.videoId), null);
         if (!video || (scoped && !entry)) return null;
         const channel = await channelCard(this.deps, video.channelId);
-        const facts = { video, channelName: channel?.displayName ?? '', watched: watched.has(video.id) };
+        const facts = {
+          video,
+          channelName: channel?.displayName ?? '',
+          watched: watched.has(video.id),
+        };
         return { id: item.id, key: sortKeyOf(sort, item, facts), entry };
       })
     );

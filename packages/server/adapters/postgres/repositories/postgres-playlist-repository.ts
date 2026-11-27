@@ -2,36 +2,29 @@ import { type Result, andThen, err, fromPromise, isErr, map, ok } from '@kit/res
 import type {
   AddPlaylistItemOutcome,
   AppendItemOutcome,
-  ListPlaylistItemsOptions,
-  ListPublicPlaylistsOptions,
   NewPlaylistItem,
   NewPlaylistSection,
   PlaylistItemTarget,
   PlaylistRepositoryPort,
   ReorderPlan,
   RestoreItemOutcome,
-  SortedPlaylistEntry,
   TransferOutcome,
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import {
   type NewPlaylistInput,
-  type OwnedPlaylist,
   type Playlist,
-  type PlaylistDetail,
   type PlaylistItemPatch,
   type PlaylistItemSort,
   type PlaylistPatch,
-  type PublicPlaylist,
   type RestorablePlaylistActivity,
-  type SeatedPlaylist,
   type StoredPlaylistItem,
   WATCH_LATER_TITLE,
   renumberPositions,
 } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { and, eq, inArray, sql } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { appendLogged, logReorder, restoreRow, transferRows } from './playlist-bulk-writes';
 import { recordPlaylistChange } from './playlist-change';
 import { sortedOrder } from './playlist-item-sort';
@@ -40,25 +33,17 @@ import {
   deleteRow,
   lockPlaylist,
   removedOf,
-  storedItems,
   touchPlaylist,
 } from './playlist-item-writes';
-import {
-  publicPlaylistsOf,
-  reorderSlots,
-  sortedItems,
-  toPlaylist,
-  toStoredItem,
-  writePositions,
-} from './playlist-query';
-import { detailOf, ownedBy, seatedOf } from './playlist-reads';
-import type { PostgresDatabase } from './types';
+import { reorderSlots, toPlaylist, writePositions } from './playlist-query';
+import { PostgresPlaylistReads } from './postgres-playlist-reads';
 
-const { playlists: p, playlistItems: pi, videos: v } = schema;
+const { playlists: p, playlistItems: pi } = schema;
 
-export class PostgresPlaylistRepository implements PlaylistRepositoryPort {
-  constructor(private readonly db: PostgresDatabase) {}
-
+export class PostgresPlaylistRepository
+  extends PostgresPlaylistReads
+  implements PlaylistRepositoryPort
+{
   async create(input: NewPlaylistInput): Promise<Result<Playlist, DatabaseUnavailable>> {
     const rows = await fromPromise(
       () => this.db.insert(p).values(input).returning(),
@@ -82,90 +67,6 @@ export class PostgresPlaylistRepository implements PlaylistRepositoryPort {
       databaseUnavailable.during('provisionWatchLater')
     );
     return map(inserted, () => undefined);
-  }
-
-  async findById(id: string): Promise<Result<Playlist | null, DatabaseUnavailable>> {
-    const rows = await fromPromise(
-      () => this.db.select().from(p).where(eq(p.id, id)),
-      databaseUnavailable.during('findPlaylist')
-    );
-    return map(rows, ([row]) => (row ? toPlaylist(row) : null));
-  }
-
-  async findSeated(
-    id: string,
-    userId: string | null
-  ): Promise<Result<SeatedPlaylist | null, DatabaseUnavailable>> {
-    return await fromPromise(
-      () => seatedOf(this.db, id, userId),
-      databaseUnavailable.during('findSeatedPlaylist')
-    );
-  }
-
-  async findDetail(
-    id: string,
-    viewer: UserContext | null
-  ): Promise<Result<PlaylistDetail | null, DatabaseUnavailable>> {
-    return await fromPromise(
-      () => detailOf(this.db, id, viewer),
-      databaseUnavailable.during('findPlaylist')
-    );
-  }
-
-  async listOwned(
-    owner: UserContext,
-    videoId: string | null
-  ): Promise<Result<OwnedPlaylist[], DatabaseUnavailable>> {
-    return await fromPromise(
-      () => ownedBy(this.db, owner, videoId),
-      databaseUnavailable.during('listOwnedPlaylists')
-    );
-  }
-
-  async listPublicByOwner(
-    ownerId: string,
-    options: ListPublicPlaylistsOptions
-  ): Promise<Result<PublicPlaylist[], DatabaseUnavailable>> {
-    return await fromPromise(
-      () => publicPlaylistsOf(this.db, ownerId, options),
-      databaseUnavailable.during('listPublicPlaylists')
-    );
-  }
-
-  async listItemOwners(
-    playlistId: string
-  ): Promise<Result<{ id: string; ownerId: string }[], DatabaseUnavailable>> {
-    return await fromPromise(
-      () =>
-        this.db
-          .select({ id: v.id, ownerId: v.ownerId })
-          .from(pi)
-          .innerJoin(v, eq(v.id, pi.videoId))
-          .where(eq(pi.playlistId, playlistId)),
-      databaseUnavailable.during('listPlaylistItemOwners')
-    );
-  }
-
-  async listItems(
-    playlistId: string,
-    viewer: UserContext | null,
-    options: ListPlaylistItemsOptions
-  ): Promise<Result<SortedPlaylistEntry[], DatabaseUnavailable>> {
-    return await fromPromise(
-      () => sortedItems(this.db, playlistId, viewer, options),
-      databaseUnavailable.during('listSortedPlaylistItems')
-    );
-  }
-
-  async findItems(
-    playlistId: string,
-    itemIds?: readonly string[]
-  ): Promise<Result<StoredPlaylistItem[], DatabaseUnavailable>> {
-    const rows = await fromPromise(
-      () => storedItems(this.db, playlistId, itemIds),
-      databaseUnavailable.during('findPlaylistItems')
-    );
-    return map(rows, (found) => found.map(toStoredItem));
   }
 
   async update(
@@ -209,7 +110,9 @@ export class PostgresPlaylistRepository implements PlaylistRepositoryPort {
     actorId: string
   ): Promise<Result<AddPlaylistItemOutcome, DatabaseUnavailable>> {
     const appended = await this.appendItems(playlistId, [item], actorId);
-    return map(appended, (outcomes) => (outcomes ? (outcomes.get(item.id) ?? 'present') : 'playlist-missing'));
+    return map(appended, (outcomes) =>
+      outcomes ? (outcomes.get(item.id) ?? 'present') : 'playlist-missing'
+    );
   }
 
   async appendItems(

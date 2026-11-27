@@ -6,17 +6,29 @@ import {
   PlaylistCollaborationService,
   PlaylistItemService,
   PlaylistPortabilityService,
+  PlaylistService,
   PlaylistTransferService,
 } from '../services/index';
 import { Services } from './service-tokens';
 
-/** Invite tokens come from the share-link generator, so both kinds of link read alike. */
+/** A playlist and the people on it. Invite tokens come from the share-link generator. */
 export function registerPlaylistServices(c: Container): Container {
   const config = () => c.get(Adapters.Config);
   const repositories = () => c.get(Adapters.Repositories);
   const newId = () => uuidv7();
 
   return c
+    .provide(
+      Services.PlaylistService,
+      (c) =>
+        new PlaylistService({
+          playlists: repositories().playlists,
+          videos: repositories().videos,
+          viewerProgress: c.get(Services.ViewerProgress),
+          cdn: config().cdn,
+          sprite: config().sprite,
+        })
+    )
     .provide(
       Services.PlaylistCollaborationService,
       (c) =>

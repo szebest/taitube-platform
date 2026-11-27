@@ -47,7 +47,7 @@ const MsSchema = z.number().int().nonnegative();
 
 export const editPlaylistItem = defineEndpoint({
   method: 'PATCH',
-  path: '/v1/playlists/:id/items/:itemId',
+  path: '/v1/playlists/:id/items/:itemId/annotation',
   tag: 'Playlists',
   summary: 'Annotate an item',
   description: `A video item takes a note and a segment, a section its title. A segment lasts at least ${PLAYLIST_SEGMENT_MIN_MS} ms and falls inside the video; null clears a field. An editor edits any item, a contributor only their own.`,

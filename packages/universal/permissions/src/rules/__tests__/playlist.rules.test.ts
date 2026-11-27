@@ -180,7 +180,7 @@ describe('rules/playlist.rules: who may read and curate a playlist', () => {
       expected: false,
     },
     { scenario: 'a contributor renames', role: 'contributor', action: 'update', expected: false },
-  ])('$scenario: $expected', ({ role, action, fields, field, expected }) => {
+  ])('with a seat, $scenario: $expected', ({ role, action, fields, field, expected }) => {
     expect(
       buildAbility(definePlaylistRules, standardUser).can(action, seated(role, fields), field)
     ).toBe(expected);

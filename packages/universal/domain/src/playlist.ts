@@ -33,6 +33,17 @@ export const PLAYLIST_ITEM_SORTS = [
 ] as const;
 export type PlaylistItemSort = (typeof PLAYLIST_ITEM_SORTS)[number];
 
+/**
+ * `unwatched_first` sorts on one scalar: the watched flag above the position, which an int column
+ * keeps inside 32 bits, so both adapters compare the very value a cursor carries.
+ */
+export const PLAYLIST_WATCHED_SORT_SHIFT = 2 ** 32;
+export const PLAYLIST_POSITION_SORT_OFFSET = 2 ** 31;
+
+export function unwatchedFirstKey(watched: boolean, position: number): number {
+  return (watched ? PLAYLIST_WATCHED_SORT_SHIFT : 0) + position + PLAYLIST_POSITION_SORT_OFFSET;
+}
+
 export const PLAYLIST_TRANSFER_MAX_ITEMS = 100;
 export const PLAYLIST_MERGE_MAX_SOURCES = 5;
 export const PLAYLIST_IMPORT_MAX_LINES = 500;
@@ -55,7 +66,7 @@ export interface Playlist {
 }
 
 /** Who put an item in, with the channel the list shows as their avatar. */
-export interface PlaylistItemAdder {
+interface PlaylistItemAdder {
   userId: string;
   channel: ChannelCard | null;
 }
