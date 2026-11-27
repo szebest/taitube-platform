@@ -19,7 +19,7 @@ const { dt, defineCatalogue, createI18n } = engine;
 |---|---|
 | `defineEngine({ kinds, presets, params })` | the bound `{ dt, defineCatalogue, createI18n }`, typed by those three (`src/engine.ts`) |
 | `defineKind({ name, config, arg, options, render })` | a placeholder kind; `number`, `date`, `list`, `plural`, `enum` are written with it (`src/kinds/`) |
-| `definePresets({ <kind>: { <name>: { default, <locale>... } } })` | named option sets, resolved per locale (`src/presets.ts`) |
+| `definePresets({ <kind>: { <name>: { default, <locale>... } } })` | named option sets, resolved per locale; lives in `@kit/intl` (`src/presets.ts`), which the engine and a server render share |
 | `defineParams([...] as const)` | the closed vocabulary of placeholder names (`src/params.ts`) |
 | `createI18n<AppCatalogue>()` | `createTranslator`, `fromRegistry`, `providers`, typed by the catalogue the app registers |
 | `DisjointNamespaces<[typeof web, typeof shared]>` | an app's catalogues merged, `NamespaceCollision` when two share a namespace |

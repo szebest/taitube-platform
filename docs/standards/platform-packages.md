@@ -100,13 +100,22 @@ No platform package holds copy: no catalogue, no `dt(` call, no user-facing Engl
 
 ## Contract suites
 
-A platform package that defines a port or a registry exports a `./contract` suite, `runXContract(makeImpl)`, with
-vitest as a peer dependency. The repository's own implementations (the in-memory doubles, the app's registries) run
+A platform package that defines a port or a registry exports a `./contract` suite, `describeXContract(makeSubject)`,
+with vitest as a peer dependency. The repository's own implementations (the in-memory doubles, the app's registries) run
 it against themselves, and so does any other app against its own. Changing a suite is a change of the surface, so it
-needs the version bump and the changelog entry. `@kit/ports/contract` exports the first three, for the cache client, the
-job queue and the flow producer, and the adapters' in-memory doubles and Redis and BullMQ adapters run them. The suites
-of the app's own ports stay in `packages/server/adapters/__tests__/contract/` (layout in [testing.md](testing.md),
-section 2).
+needs the version bump and the changelog entry.
+
+| Package | Suite | Run by |
+|---|---|---|
+| `@kit/ports` | cache client, job queue, flow producer | the adapters' in-memory doubles, Redis and BullMQ adapters, the second app |
+| `@kit/di` | `describeProviderContract` | its `Registry`, `@kit/composition`'s `Container`, the api and worker containers |
+| `@kit/errors` | `describeErrorCodeSetContract` | its fixture set, `@vp/errors`' `errorCodeRegistry` |
+| `@kit/i18n` | `describeI18nContract` | its fixture, `@vp/shared-messages`, the web and studio catalogues |
+| `@kit/keyspace` | `describeKeyspaceContract` | its fixture, `@vp/events`' `CacheKeys` |
+| `@kit/permissions` | `describeAbilityFactoryContract` | its fixture, `@vp/permissions`' `getUserPermissions` |
+
+The suites of the app's own ports stay in `packages/server/adapters/__tests__/contract/` (layout in
+[testing.md](testing.md), section 2).
 
 ## Extractable, and the second app
 
@@ -117,9 +126,9 @@ directory outside the repository, installs offline and frozen from the repositor
 closure, builds it and runs the package's own `typecheck` and `test` there. It fails on a `@vp/` reference, on a path
 that leaves the package folder, and on a link or compiled file that resolves outside the temporary directory.
 
-`second-app` installs `tests/fixtures/second-app/` (outside the workspace globs) from packed tarballs. It
-registers its own error codes, `fi-FI` and right to left `ar-EG`, another cookie prefix, key namespace, metric prefix
-and dev-token issuer, builds its registry and runs its spec, and the check fails when an installed package's code
+`second-app` installs `tests/fixtures/second-app/` (outside the workspace globs) from packed tarballs of every
+platform package, each exercised by one of its specs. It registers its own error codes, `fi-FI` and right to
+left `ar-EG`, another cookie prefix, key namespace, metric prefix and dev-token issuer, builds its registry and runs its spec, and the check fails when an installed package's code
 holds a value of this product. After changing the second app's dependencies, run
 `pnpm check:extractable second-app --refresh-lockfile`. CI runs the check as the `extractable` job, one shard per
 platform package plus `second-app`, inside the budgets of [testing.md](testing.md), section 9.

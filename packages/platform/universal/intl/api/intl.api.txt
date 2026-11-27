@@ -119,6 +119,12 @@ export interface PercentValue {
     readonly value: number;
     readonly options?: PercentOptions;
 }
+export type Preset<Options> = {
+    readonly default: Options;
+} & {
+    readonly [locale: string]: Options;
+};
+export type PresetTable = Readonly<Record<string, Readonly<Record<string, Preset<unknown>>>>>;
 export interface RelativeValue {
     readonly type: 'relative';
     readonly value: string;
@@ -165,6 +171,7 @@ export function dateFormatOptions(options?: DateOptions): Intl.DateTimeFormatOpt
 export const dateRange: Formatter<DateRangeValue>
 export const dateTime: Formatter<DateTimeValue>
 export function defineLocales<const Tag extends string, Details extends LocaleDetails>({ source, details, }: LocalesDefinition<Tag, Details>): Locales<Tag, Details>
+export function definePresets<const Presets extends PresetTable>(presets: Presets): Presets
 export function displayName(value: DisplayNameValue, context: FormatContext): Result<string, FormatFailure>
 export const duration: Formatter<DurationValue>
 export function formatValue(value: FormatValue, context: FormatContext): Result<string, FormatFailure>
@@ -178,6 +185,7 @@ export const percent: Formatter<PercentValue>
 export function pluralCategory(count: number, context: FormatContext, type?: Intl.PluralRuleType): Result<Intl.LDMLPluralRule, FormatFailure>
 export const relative: Formatter<RelativeValue>
 export function resolveCurrency(formatter: string, requested: string | User | undefined, context: FormatContext): Result<string, FormatFailure>
+export function resolveEntry(presets: PresetTable, kind: string, entry: unknown, chain: readonly string[]): Resolved
 export function scale<U extends string>(value: number, step: number, units: readonly [U, ...U[]]): Scaled<U>
 export const time: Formatter<TimeValue>
 export function truncate(text: string, maxGraphemes: number, context: FormatContext): Result<string, FormatFailure>

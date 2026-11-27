@@ -1,5 +1,5 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
-import { basename, dirname, join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { type BundleRules, bundleGuard, type FlaggedDir } from '@kit/vite-preset/bundle-guard';
 import { type ReactCompiler, reactPlugins } from '@kit/vite-preset/react-plugins';
@@ -10,14 +10,6 @@ import { type Alias, defineConfig, loadEnv, type PluginOption, type SSROptions }
 // relative import between two of its source files: the bundle guard and the React plugins are reached
 // by their package subpaths.
 
-function packagesDirAbove(file: string): string {
-  const parent = dirname(file);
-  if (parent === file)
-    throw new Error('@kit/vite-preset is not inside the workspace packages/ directory');
-  return basename(parent) === 'packages' ? parent : packagesDirAbove(parent);
-}
-
-const PACKAGES_DIR = packagesDirAbove(fileURLToPath(import.meta.url));
 const BROWSER_TIERS = ['universal', 'client'].flatMap((tier) => [tier, `platform/${tier}`]);
 
 type ExportTarget = string | { import?: string };
@@ -85,7 +77,7 @@ function toAlias({ specifier, source }: SourceExport): SourceAlias {
  * `src` is one the app does not use: an image build installs from every app's pruned manifests but
  * copies only this app's sources.
  */
-export function workspaceSourceAliases(packagesDir: string = PACKAGES_DIR): SourceAlias[] {
+export function workspaceSourceAliases(packagesDir: string): SourceAlias[] {
   const exports = BROWSER_TIERS.filter((tier) => existsSync(join(packagesDir, tier))).flatMap(
     (tier) =>
       readdirSync(join(packagesDir, tier))
@@ -99,13 +91,15 @@ export function workspaceSourceAliases(packagesDir: string = PACKAGES_DIR): Sour
 }
 
 /** The workspace sources are aliased in, so the dev server's dependency scan reads them too and bundles their packages before the first load, not after it. */
-const WORKSPACE_ENTRIES = [
-  ...BROWSER_TIERS.map(
-    (tier) => `${PACKAGES_DIR.replaceAll('\\', '/')}/${tier}/*/src/**/*.{ts,tsx}`
-  ),
-  '!**/__tests__/**',
-  '!**/__stories__/**',
-];
+function workspaceEntries(packagesDir: string): string[] {
+  return [
+    ...BROWSER_TIERS.map(
+      (tier) => `${packagesDir.replaceAll('\\', '/')}/${tier}/*/src/**/*.{ts,tsx}`
+    ),
+    '!**/__tests__/**',
+    '!**/__stories__/**',
+  ];
+}
 
 const VENDOR_CHUNKS = {
   react: /[\\/]node_modules[\\/](react|react-dom|scheduler|react-compiler-runtime)[\\/]/,
@@ -139,6 +133,8 @@ export type ClientAppOptions = Omit<BundleRules, 'flaggedDirs'> & {
   /** The `import.meta.url` of the app's `vite.config.ts`. */
   configUrl: string;
   port: number;
+  /** The directory holding the workspace's `universal/`, `client/` and `platform/` tiers, whose browser packages resolve from source; one with none of them aliases nothing. */
+  packagesDir: string;
   /** Plugins the app adds after the preset's own, such as its service worker's, given the esbuild target the client build compiles to, from the `browserslist` above the app; never called under test. */
   plugins?: (target: string[]) => PluginOption[] | Promise<PluginOption[]>;
   compiler?: ReactCompiler;
@@ -178,6 +174,7 @@ async function appPlugins(
 export function clientAppConfig({
   configUrl,
   port,
+  packagesDir,
   plugins = () => [],
   prerender = [],
   compiler,
@@ -203,7 +200,7 @@ export function clientAppConfig({
       })),
     };
     return {
-      resolve: { alias: workspaceSourceAliases() },
+      resolve: { alias: workspaceSourceAliases(packagesDir) },
       ssr,
       css: {
         preprocessorOptions: {
@@ -212,7 +209,7 @@ export function clientAppConfig({
       },
       environments: {
         client: {
-          optimizeDeps: { entries: WORKSPACE_ENTRIES },
+          optimizeDeps: { entries: workspaceEntries(packagesDir) },
           build: {
             target,
             rolldownOptions: {

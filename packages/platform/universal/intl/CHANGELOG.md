@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.0
+
+- `Preset`, `PresetTable`, `definePresets` and `resolveEntry`, moved from `@kit/i18n`.
+
 ## 0.3.0
 
 - Breaking: `SUPPORTED_LOCALES` and `FALLBACK_LOCALE` are removed; the app registers its locales with the new

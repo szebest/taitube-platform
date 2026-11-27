@@ -1,5 +1,5 @@
 import { type AnyProvider, provide, type Registry, type MissingProvider } from '@kit/di';
-import type { IntlBinding } from '@kit/intl';
+import type { IntlBinding, PresetTable } from '@kit/intl';
 import { andThen, map, type Result } from '@kit/result';
 import type { CatalogueSet, CatalogueShape, Translation } from './catalogue';
 import type {
@@ -15,7 +15,6 @@ import type {
 } from './engine-types';
 import type { Kind } from './kind';
 import type { AnyMessage, Message, MessageConfig } from './message';
-import type { PresetTable } from './presets';
 import type { ParseTemplate } from './template';
 import { Catalogues, FormatPresets, ParamVocabulary } from './tokens';
 import { createTranslator, type Translator } from './translator';

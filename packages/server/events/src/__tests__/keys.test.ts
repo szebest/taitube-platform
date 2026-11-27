@@ -1,4 +1,7 @@
+import { describeKeyspaceContract } from '@kit/keyspace/contract';
 import { CacheKeys } from '../keys';
+
+describeKeyspaceContract(() => CacheKeys);
 
 describe('@vp/events cache keys', () => {
   it.each([

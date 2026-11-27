@@ -1,8 +1,10 @@
-import { type FormatFailure, unrenderable } from '@kit/intl';
 import { err, ok, type Result } from '@kit/result';
-import { isRecord } from './kind';
+import { type FormatFailure, unrenderable } from './failures';
 
-/** One named option set: `default`, and any locale (`pl`, `pl-PL`) that needs its own. */
+/**
+ * One named option set: `default`, and any locale (`pl`, `pl-PL`) that needs its own.
+ * @public
+ */
 export type Preset<Options> = { readonly default: Options } & {
   readonly [locale: string]: Options;
 };
@@ -12,13 +14,17 @@ export type PresetTable = Readonly<Record<string, Readonly<Record<string, Preset
 
 /**
  * Named option sets, per kind: `definePresets({ number: { compact: { default: {...}, pl: {...} } } })`.
- * The engine checks each against its kind's options, and the app registers them through `FormatPresets`.
+ * An app registers the table once; the message engine and a server render resolve it the same way.
  */
 export function definePresets<const Presets extends PresetTable>(presets: Presets): Presets {
   return Object.freeze(presets);
 }
 
 type Resolved = Result<unknown, FormatFailure>;
+
+function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
 
 function presetOptions(
   presets: PresetTable,

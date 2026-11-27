@@ -7,12 +7,13 @@ export type ClientAppOptions = Omit<BundleRules, 'flaggedDirs'> & {
     prerender?: readonly string[];
     configUrl: string;
     port: number;
+    packagesDir: string;
     plugins?: (target: string[]) => PluginOption[] | Promise<PluginOption[]>;
     compiler?: ReactCompiler;
 };
-export function clientAppConfig({ configUrl, port, plugins, prerender, compiler, flaggedDirs, ...rules }: ClientAppOptions): UserConfigFnPromise
+export function clientAppConfig({ configUrl, port, packagesDir, plugins, prerender, compiler, flaggedDirs, ...rules }: ClientAppOptions): UserConfigFnPromise
 export function vendorChunkOf(moduleId: string): string | null
-export function workspaceSourceAliases(packagesDir?: string): SourceAlias[]
+export function workspaceSourceAliases(packagesDir: string): SourceAlias[]
 
 ## @kit/vite-preset/bundle-guard
 export type BundleRules = {

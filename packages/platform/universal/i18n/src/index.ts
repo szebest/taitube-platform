@@ -5,7 +5,6 @@ export * from './kind';
 export * from './kinds';
 export * from './message';
 export * from './params';
-export * from './presets';
 export * from './template';
 export * from './tokens';
 export * from './translator';

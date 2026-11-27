@@ -16,8 +16,21 @@ It brings its own:
 | Metric prefix | `src/metrics.ts` | `quill_` |
 | Dev-token issuer | `src/dev-token.ts` | `quill-local` |
 | Registry | `src/registry.ts` | its error codes and the node runtime |
+| Messages | `src/messages.ts` | its own engine, `fi-FI` source, an `ar-EG` translation, a `tally` preset |
+| Rules | `src/shop-rules.ts` | its abilities, order machine and field failures |
+| Cache | `src/shelf-cache.ts` | a `CacheClient` that runs the `@kit/ports/contract` suite |
+| UI copy | `src/shop-ui.tsx` | its Finnish words for the `UiCopy` the platform UI asks for |
 
-`src/__tests__/` is its spec.
+It depends on every package under `packages/platform/`, and each is imported and exercised by a spec in
+`src/__tests__/`: `universal` (result, primitives, machine, validation, pagination, permissions, appearance,
+design-tokens), `server` (config, logger, composition, concurrency, object-storage, compose-autoscaler,
+testing, the ports contract), `messages` (i18n, intl), `react-ui` and `react-intl` (ui, components, forms,
+intl-react), `web-runtime` (query, security-headers, web-telemetry, web-testing) and `tooling` (tsconfig,
+vite-preset). `tsconfig.json` extends `@kit/tsconfig/client.json`.
+
+`@kit/vite-preset` is consumed through its `./bundle-guard` subpath: its root entry resolves the workspace
+`packages/` directory when it loads, which an app outside a workspace does not have, and `./react-plugins`
+imports `@rolldown/plugin-babel`, which its manifest does not declare.
 
 ## How the check runs it
 
@@ -37,7 +50,7 @@ The packages ship extensionless relative imports, written for a bundler, so `vit
 
 ## Changing it
 
-- A new platform dependency: add it to `package.json` as `file:tarballs/kit-<name>.tgz`; the check lists
+- A new platform dependency, or a third-party peer one of them asks for: add it to `package.json` as `file:tarballs/kit-<name>.tgz`; the check lists
   the overrides `pnpm-workspace.yaml` then needs.
 - Any dependency change: `pnpm check:extractable second-app --refresh-lockfile`. It resolves offline,
   seeded from the repository's lockfile, so every version is one CI's store already holds, and writes

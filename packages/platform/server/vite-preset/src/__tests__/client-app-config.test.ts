@@ -1,4 +1,6 @@
 import { readFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import browserslistToEsbuild from 'browserslist-to-esbuild';
 import type { PluginOption } from 'vite';
@@ -24,13 +26,23 @@ describe('@kit/vite-preset: vendor chunks', () => {
 
 const ROOT = new URL('../../../../../../', import.meta.url);
 const APP = new URL('apps/client/web/', ROOT);
+const PACKAGES_DIR = fileURLToPath(new URL('packages', ROOT));
 
 function resolveConfig(
   port: number,
   command: 'serve' | 'build' = 'serve',
-  { mode = 'test', plugins }: { mode?: string; plugins?: (target: string[]) => PluginOption[] } = {}
+  {
+    mode = 'test',
+    plugins,
+    packagesDir = PACKAGES_DIR,
+  }: { mode?: string; plugins?: (target: string[]) => PluginOption[]; packagesDir?: string } = {}
 ) {
-  const config = clientAppConfig({ configUrl: new URL('vite.config.ts', APP).href, port, plugins });
+  const config = clientAppConfig({
+    configUrl: new URL('vite.config.ts', APP).href,
+    port,
+    packagesDir,
+    plugins,
+  });
   return config({ command, mode });
 }
 
@@ -53,6 +65,22 @@ describe('@kit/vite-preset: client app config', () => {
       expect.stringMatching(/\/packages\/platform\/universal\/\*\/src\/\*\*\/\*\.\{ts,tsx\}$/),
       expect.stringMatching(/\/packages\/client\/\*\/src\/\*\*\/\*\.\{ts,tsx\}$/),
       expect.stringMatching(/\/packages\/platform\/client\/\*\/src\/\*\*\/\*\.\{ts,tsx\}$/),
+      '!**/__tests__/**',
+      '!**/__stories__/**',
+    ]);
+  });
+
+  it('derives the dependency scan and the aliases from the packages directory the app names', async () => {
+    const packagesDir = join(tmpdir(), 'no-such-workspace', 'packages');
+
+    const config = await resolveConfig(5174, 'serve', { packagesDir });
+
+    expect(config.resolve?.alias).toEqual([]);
+    expect(config.environments?.client?.optimizeDeps?.entries).toEqual([
+      `${packagesDir}/universal/*/src/**/*.{ts,tsx}`,
+      `${packagesDir}/platform/universal/*/src/**/*.{ts,tsx}`,
+      `${packagesDir}/client/*/src/**/*.{ts,tsx}`,
+      `${packagesDir}/platform/client/*/src/**/*.{ts,tsx}`,
       '!**/__tests__/**',
       '!**/__stories__/**',
     ]);

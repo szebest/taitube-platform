@@ -4,6 +4,7 @@ import { act, type RenderOptions, render } from '@testing-library/react';
 import type { ReactElement, ReactNode } from 'react';
 import { renderToStaticMarkup, renderToString } from 'react-dom/server';
 import { Format } from '../format';
+import { IntlProvider } from '../intl-provider';
 import { useFormat } from '../use-format';
 import { SpecIntl, type SpecIntlProps } from './spec-intl';
 
@@ -75,6 +76,19 @@ describe('@kit/intl-react: IntlProvider', () => {
     renderIntl(<Page />, props, { container, hydrate: true });
 
     expect(reported).not.toHaveBeenCalled();
+  });
+
+  it('measures relative times from the fake clock it is handed, not the system time', () => {
+    const clock = { now: vi.fn(() => Date.parse(NOW)) };
+
+    const { container } = render(
+      <IntlProvider locale="en" timeZone="UTC" clock={clock}>
+        <Format value={{ type: 'relative', value: '2026-09-19T18:30:00.000Z' }} />
+      </IntlProvider>
+    );
+
+    expect(container.textContent).toBe('3 days ago');
+    expect(clock.now).toHaveBeenCalled();
   });
 
   it('keeps relative times current by ticking its clock when no now is pinned', () => {

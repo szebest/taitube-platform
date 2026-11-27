@@ -151,12 +151,6 @@ export interface Placeholder {
     readonly kind: string | undefined;
 }
 export type PlaceholderInBranch<Token extends string> = `PlaceholderInBranch<'${Token}'>`;
-export type Preset<Options> = {
-    readonly default: Options;
-} & {
-    readonly [locale: string]: Options;
-};
-export type PresetTable = Readonly<Record<string, Readonly<Record<string, Preset<unknown>>>>>;
 export type PresetsFor<Presets, Kinds extends readonly Kind[]> = {
     readonly [K in keyof Presets]: K extends Kinds[number]['name'] ? {
         readonly [N in keyof Presets[K]]: {
@@ -194,7 +188,6 @@ export const dateKind: Kind<"date", "optional", string, DateOptions>
 export function defineEngine<const Kinds extends readonly Kind[], const Presets extends PresetTable, const Params extends readonly string[]>(definition: EngineDefinition<Kinds, Presets & NoInfer<PresetsFor<Presets, Kinds>>, Params>): Engine<EngineOf<Kinds, Presets, Params>>
 export function defineKind<const Name extends string, const Need extends Requirement, Arg, Options>(definition: KindDefinition<Name, Need, Arg, Options>): Kind<Name, Need, Arg, Options>
 export function defineParams<const Names extends readonly string[]>(names: Names & ValidNames<Names>): Names
-export function definePresets<const Presets extends PresetTable>(presets: Presets): Presets
 export function describeValue(value: unknown): string
 export const enumKind: Kind<"enum", "required", ConfigKey, Readonly<Record<string, string>>>
 export function findMessage(catalogue: LooseCatalogue | undefined, key: string): AnyMessage | undefined
@@ -204,4 +197,11 @@ export const listKind: Kind<"list", "optional", readonly string[], ListOptions>
 export const numberKind: Kind<"number", "optional", number, NumberOptions>
 export function placeholders(template: string): Located[]
 export const pluralKind: Kind<"plural", "required", number, Branches>
-export function resolveEntry(presets: PresetTable, kind: string, entry: unknown, chain: readonly string[]): Resolved
+
+## @kit/i18n/contract
+export interface I18nSubject {
+    readonly i18n: I18n<CatalogueShape>;
+    readonly catalogues: CatalogueSet<CatalogueShape>;
+}
+export type MakeI18nSubject = () => I18nSubject;
+export function describeI18nContract(makeSubject: MakeI18nSubject): void

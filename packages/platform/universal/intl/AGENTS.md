@@ -43,6 +43,9 @@ again on hydration. It depends on `@kit/result` only, and owns its four failure 
    tag down to its language only (`sv-FI`, `sv`); the caller appends its own source locale.
 8. **One file per formatter, a spec where it can break.** A new formatter goes in `src/formatters/`, gets a
    member in `TaggedValue`, a kind in `FORMAT_KINDS` and a case in `formatValue`.
+9. **Presets are data the app registers.** `definePresets` freezes a table of named option sets per kind and
+   `resolveEntry` resolves a name along the locale chain, then `default`, with `{ preset, ...overrides }` laid
+   over it. The message engine and a server render call the same function.
 
 ---
 

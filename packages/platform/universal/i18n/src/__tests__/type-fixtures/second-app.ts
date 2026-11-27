@@ -1,10 +1,9 @@
-import type { MoneyValue } from '@kit/intl';
+import { definePresets, type MoneyValue } from '@kit/intl';
 import { defineEngine } from '../../engine';
 import { defineKind, isRecord } from '../../kind';
 import { numberKind, pluralKind } from '../../kinds';
 import type { ParamsOf } from '../../message';
 import { defineParams } from '../../params';
-import { definePresets } from '../../presets';
 import { engine } from '../fixtures';
 
 type MoneyOptions = NonNullable<MoneyValue['options']>;

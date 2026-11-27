@@ -1,6 +1,7 @@
 import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { workspaceSourceAliases } from '../client-app-config';
 
 type Fixture = {
@@ -32,7 +33,9 @@ function packagesWith(
 const fixture = (exports: Record<string, string>, files: string[] = []) =>
   packagesWith({ name: '@acme/fixture', exports, files });
 
-function resolveSpecifier(packages: string | undefined, specifier: string): string | undefined {
+const REPO_PACKAGES = fileURLToPath(new URL('../../../../../', import.meta.url));
+
+function resolveSpecifier(packages: string, specifier: string): string | undefined {
   const alias = workspaceSourceAliases(packages).find(({ find }) => find.test(specifier));
   return alias && specifier.replace(alias.find, alias.replacement);
 }
@@ -44,7 +47,9 @@ type Resolution = Record<'label' | 'specifier' | 'source', string> & {
 
 describe('@kit/vite-preset: workspace source aliases', () => {
   it('resolves a package of this workspace to its source', () => {
-    expect(resolveSpecifier(undefined, '@kit/result')?.endsWith('/result/src/index.ts')).toBe(true);
+    expect(resolveSpecifier(REPO_PACKAGES, '@kit/result')?.endsWith('/result/src/index.ts')).toBe(
+      true
+    );
   });
 
   it('reads a browser-tier package under packages/platform/<tier>/ too', () => {
@@ -150,7 +155,7 @@ describe('@kit/vite-preset: workspace source aliases', () => {
     { label: 'a server package', specifier: '@kit/logger', inRepo: true },
   ])('leaves $label to the package exports', ({ specifier, inRepo }) => {
     const packages = inRepo
-      ? undefined
+      ? REPO_PACKAGES
       : fixture({ './tokens/*': './dist/tokens/*/index.js' }, ['src/tokens/color/index.ts']);
 
     expect(resolveSpecifier(packages, specifier)).toBeUndefined();

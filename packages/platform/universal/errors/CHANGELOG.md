@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.0
+
+- `./contract` exports `describeErrorCodeSetContract` and `MakeErrorCodeSet`; vitest is a peer.
+
 ## 0.3.0
 
 - `InfraErrorCodes` (`DATABASE_UNAVAILABLE`, `CACHE_UNAVAILABLE`, `QUEUE_UNAVAILABLE`, `STORAGE_UNAVAILABLE`), the

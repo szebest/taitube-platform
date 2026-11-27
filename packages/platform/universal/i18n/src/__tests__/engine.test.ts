@@ -1,9 +1,9 @@
 import { createRegistry } from '@kit/di';
+import { definePresets } from '@kit/intl';
 import { err, ok } from '@kit/result';
 import { defineEngine } from '../engine';
 import { defineKind } from '../kind';
 import { defineParams } from '../params';
-import { definePresets } from '../presets';
 import {
   catalogues,
   engine,

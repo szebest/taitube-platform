@@ -11,7 +11,7 @@ const presets = definePresets({
   },
 });
 
-describe('@kit/i18n: presets', () => {
+describe('@kit/intl: presets', () => {
   it.each([
     { chain: ['pl-PL', 'pl'], expected: { notation: 'compact', maximumFractionDigits: 2 } },
     { chain: ['pl'], expected: { notation: 'compact', maximumFractionDigits: 0 } },

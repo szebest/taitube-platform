@@ -81,8 +81,10 @@ its own implementation. The repository's doubles and registries run it in their 
 package's surface: changing one needs the version bump and changelog entry
 ([platform-packages.md](platform-packages.md)). `@kit/ports/contract` holds the cache client, job queue and flow
 producer suites, written with the vitest globals so they run under `vitest` and `bun test`; the subjects that make
-them (`redis-subjects.ts`, `bullmq-subjects.ts`, `in-memory-port-subjects.ts`) stay in `@vp/adapters`. Contracts for
-the app's own ports stay in `@vp/adapters`.
+them (`redis-subjects.ts`, `bullmq-subjects.ts`, `in-memory-port-subjects.ts`) stay in `@vp/adapters`. The registry
+packages (`@kit/di`, `@kit/errors`, `@kit/i18n`, `@kit/keyspace`, `@kit/permissions`) export theirs the same way, and
+the app's registries run them (the table in [platform-packages.md](platform-packages.md)). Contracts for the app's own
+ports stay in `@vp/adapters`.
 
 Each Postgres spec file gets a PGlite of its own, loaded from one migrated snapshot the adapters project
 builds in its global setup (`__tests__/contract/pglite-snapshot.ts`): a fresh PGlite runs initdb, most of a

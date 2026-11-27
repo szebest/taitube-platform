@@ -17,6 +17,16 @@ describe('@kit/keyspace: defineKeyspace', () => {
     expect(built).toBe(expected);
   });
 
+  it('lays the same keys under another namespace without sharing one with the first', () => {
+    const layout = (namespace: string) =>
+      defineKeyspace(namespace, (key) => ({ catalogue: key('cache', 'catalogue', 'v1') }));
+
+    expect([layout('acme').catalogue, layout('globex').catalogue]).toEqual([
+      'acme:cache:catalogue:v1',
+      'globex:cache:catalogue:v1',
+    ]);
+  });
+
   it('freezes the layout it returns', () => {
     expect(Object.isFrozen(Keys)).toBe(true);
   });

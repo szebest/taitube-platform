@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.0
+
+- `./contract` exports `describeKeyspaceContract`, `KeyLayout` and `MakeKeyspace`; vitest is an optional peer.
+
 ## 0.2.0
 
 - `defineKeyspace(namespace, define)` and `KeyNamespace`: a frozen key layout whose every key is built under the namespace.

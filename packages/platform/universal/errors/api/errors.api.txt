@@ -84,3 +84,7 @@ export function retryClass<C extends string>(set: ErrorCodeSet<C>, code: string)
 export const storageUnavailable: UnavailableFactory<"STORAGE_UNAVAILABLE">
 export function toPipelineError<C extends string>(set: ErrorCodeSet<C>, failure: AnyFailure): PermanentError | TransientError
 export function unavailable<C extends string>(code: C, message: string): UnavailableFactory<C>
+
+## @kit/errors/contract
+export type MakeErrorCodeSet = () => ErrorCodeSet<string>;
+export function describeErrorCodeSetContract(makeSet: MakeErrorCodeSet): void

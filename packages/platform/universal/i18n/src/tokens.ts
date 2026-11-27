@@ -1,6 +1,6 @@
 import { token } from '@kit/di';
+import type { PresetTable } from '@kit/intl';
 import type { LooseCatalogueSet } from './catalogue';
-import type { PresetTable } from './presets';
 
 /** The app's catalogues, the source locale's and its translations. */
 export const Catalogues = token<LooseCatalogueSet>('Catalogues');

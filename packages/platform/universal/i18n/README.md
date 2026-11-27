@@ -5,7 +5,8 @@ catalogues whose translations keep the source's params, and a `t` typed by the c
 no words and no locale data; the app brings both.
 
 ```ts
-import { builtInKinds, defineEngine, defineParams, definePresets } from '@kit/i18n';
+import { builtInKinds, defineEngine, defineParams } from '@kit/i18n';
+import { definePresets } from '@kit/intl';
 
 export const engine = defineEngine({
   kinds: builtInKinds,

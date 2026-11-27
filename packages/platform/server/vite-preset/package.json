@@ -1,6 +1,6 @@
 {
   "name": "@kit/vite-preset",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "type": "module",
   "sideEffects": false,
@@ -49,9 +49,12 @@
     "vitest": "catalog:"
   },
   "peerDependencies": {
+    "@babel/core": "^8.1.0",
+    "@rolldown/plugin-babel": "^0.3.0",
     "@tailwindcss/vite": "^4.3.3",
     "@tanstack/react-start": "^1.168.60",
     "@vitejs/plugin-react": "6.2.1",
+    "babel-plugin-react-compiler": "1.0.0",
     "browserslist": "^4.29.6",
     "browserslist-to-esbuild": "^2.1.1",
     "vite": "^8.3.4",
@@ -59,5 +62,16 @@
   },
   "vp": {
     "layer": 1
+  },
+  "peerDependenciesMeta": {
+    "@babel/core": {
+      "optional": true
+    },
+    "@rolldown/plugin-babel": {
+      "optional": true
+    },
+    "babel-plugin-react-compiler": {
+      "optional": true
+    }
   }
 }

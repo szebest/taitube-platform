@@ -8,7 +8,7 @@ allows across tiers (`BUILD_TOOLING`), and nothing of it reaches a bundle.
 
 ## What it holds
 
-`clientAppConfig({ configUrl, port, forbiddenDirs, flaggedDirs })`, which an app's `vite.config.ts` default-exports:
+`clientAppConfig({ configUrl, port, packagesDir, forbiddenDirs, flaggedDirs })`, which an app's `vite.config.ts` default-exports:
 
 - the TanStack Start plugin (file routes, `__tests__` ignored), React and Tailwind; a `test` mode loads React
   alone, so Vitest never starts the route crawler;
@@ -20,7 +20,7 @@ allows across tiers (`BUILD_TOOLING`), and nothing of it reaches a bundle.
   The compiler packages are exact versions: `oxc-transform-react` stays inside the range `@vitejs/plugin-react`
   declares (0.156.0 for 6.2.1). `clientAppTestConfig({ compiler: false, include })` builds the uncompiled
   project a differential spec runs in;
-- the workspace source aliases: every `packages/{universal,client}/*` package resolves from `src/index.ts`, so
+- the workspace source aliases, from the `packagesDir` the app passes (nothing is read at import time, and a directory without the tiers aliases nothing): every `{universal,client}/*` and `platform/{universal,client}/*` package under it resolves from `src/index.ts`, so
   an edit hot-reloads the app; a `"./x/*"` export pattern becomes one alias, its capture substituted into the
   source path, and its source directory must exist;
 - Sass `loadPaths` at the app's `src/`, and the dev and preview port, strict;
