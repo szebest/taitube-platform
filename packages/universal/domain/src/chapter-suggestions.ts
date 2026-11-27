@@ -105,7 +105,7 @@ function candidatesOf(
 function spaced(candidates: readonly Boundary[], durationMs: number): Boundary[] {
   const kept: Boundary[] = [];
   let last = 0;
-  for (const candidate of [...candidates].sort((a, b) => a.startMs - b.startMs)) {
+  for (const candidate of candidates.toSorted((a, b) => a.startMs - b.startMs)) {
     if (candidate.startMs - last < SUGGESTION_MIN_SPAN_MS) continue;
     if (durationMs - candidate.startMs < CHAPTER_MIN_GAP_MS) continue;
     kept.push(candidate);
@@ -124,7 +124,7 @@ export function suggestChapters(
   options: { durationMs: number; language: string | null }
 ): Chapter[] {
   const { durationMs, language } = options;
-  const ordered = [...cues].sort((a, b) => a.startMs - b.startMs);
+  const ordered = cues.toSorted((a, b) => a.startMs - b.startMs);
   if (ordered.length === 0 || durationMs <= 0) return [];
 
   const stop = stopWordsFor(language);

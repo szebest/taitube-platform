@@ -72,7 +72,7 @@ export function decideScreening(
   );
   if (invalid) return err(invalidScreeningFinding(invalid.reason, invalid.score));
 
-  const sorted = [...findings].sort(byReasonThenScore);
+  const sorted = findings.toSorted(byReasonThenScore);
   const reasons = sorted.filter((finding) => holds(finding, thresholds));
   const flags = sorted.filter((finding) => !holds(finding, thresholds));
   const outcome: ScreeningOutcome = reasons.length > 0 ? 'HOLD' : 'PASS';

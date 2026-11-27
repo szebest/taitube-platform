@@ -1,24 +1,16 @@
 import { boundedMap } from '../bounded-map';
 
-function deferred() {
-  let release: () => void = () => {};
-  const done = new Promise<void>((resolve) => {
-    release = resolve;
-  });
-  return { done, release };
-}
-
 describe('apps/server/api/services: boundedMap', () => {
   it('keeps the order of the items whatever order the calls finish in', async () => {
-    const gates = [deferred(), deferred(), deferred()];
+    const gates = Array.from({ length: 3 }, () => Promise.withResolvers<void>());
 
     const running = boundedMap([0, 1, 2], 3, async (index) => {
-      await gates[index]?.done;
+      await gates[index]?.promise;
       return index;
     });
-    gates[2]?.release();
-    gates[0]?.release();
-    gates[1]?.release();
+    gates[2]?.resolve();
+    gates[0]?.resolve();
+    gates[1]?.resolve();
 
     expect(await running).toEqual([0, 1, 2]);
   });

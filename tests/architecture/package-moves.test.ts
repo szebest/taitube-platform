@@ -13,8 +13,6 @@ interface Workspace {
   exportsOf: (specifier: string) => string[];
 }
 
-const sorted = (names: Iterable<string>) => [...names].sort();
-
 const difference = (left: readonly string[], right: readonly string[]) =>
   left.filter((name) => !right.includes(name));
 
@@ -91,7 +89,10 @@ function repoWorkspace(): Workspace {
     entriesOf: (name) => {
       const manifest = manifests.get(name);
       return (
-        manifest && sorted(Object.keys(manifest.exports ?? {}).filter((e) => !e.includes('*')))
+        manifest &&
+        Object.keys(manifest.exports ?? {})
+          .filter((e) => !e.includes('*'))
+          .toSorted()
       );
     },
     exportsOf: (specifier) => {
@@ -103,7 +104,12 @@ function repoWorkspace(): Workspace {
       );
       const source = resolvedModule && program.getSourceFile(resolvedModule.resolvedFileName);
       const symbol = source && checker.getSymbolAtLocation(source);
-      return symbol ? sorted(checker.getExportsOfModule(symbol).map((e) => e.name)) : [];
+      return symbol
+        ? checker
+            .getExportsOfModule(symbol)
+            .map((e) => e.name)
+            .toSorted()
+        : [];
     },
   };
 }

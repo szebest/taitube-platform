@@ -42,7 +42,7 @@ export const ENV_HOMES: readonly string[] = [
 ];
 
 function matcher(pattern: string): RegExp {
-  const escaped = pattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '[^/]*');
+  const escaped = pattern.split('*').map(RegExp.escape).join('[^/]*');
   return new RegExp(`^${escaped}$`);
 }
 

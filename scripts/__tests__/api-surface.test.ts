@@ -2,6 +2,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import ts from 'typescript';
+import { SERVER } from '../../tests/architecture/ecmascript-baseline';
 import { surfaceOf } from '../api-surface';
 
 const FILES: Record<string, string> = {
@@ -53,8 +54,8 @@ beforeAll(() => {
   mkdirSync(dir, { recursive: true });
   for (const [name, text] of Object.entries(FILES)) writeFileSync(entry(name), text);
   program = ts.createProgram(Object.keys(FILES).map(entry), {
-    target: ts.ScriptTarget.ES2022,
-    lib: ['lib.es2022.d.ts'],
+    target: SERVER.target,
+    lib: [...SERVER.lib],
     module: ts.ModuleKind.ESNext,
     moduleResolution: ts.ModuleResolutionKind.Bundler,
     strict: true,

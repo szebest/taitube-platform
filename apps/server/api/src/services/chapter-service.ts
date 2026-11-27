@@ -41,7 +41,7 @@ export class ChapterService {
     if (isErr(tracks)) return tracks;
 
     // The creator's own words win over the machine's, and a track without cues is not ready yet.
-    const preferred = [...tracks.value].sort(
+    const preferred = tracks.value.toSorted(
       (a, b) => Number(a.kind === 'auto') - Number(b.kind === 'auto')
     );
     for (const track of preferred) {

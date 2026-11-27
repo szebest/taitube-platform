@@ -5,12 +5,10 @@ export interface ReferenceRules {
   readonly dirMoves: Readonly<Record<string, string>>;
 }
 
-const escapeRegExp = (value: string): string => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
 const alternation = (names: readonly string[]): string =>
   [...names]
     .sort((a, b) => b.length - a.length)
-    .map(escapeRegExp)
+    .map(RegExp.escape)
     .join('|');
 
 const RELATIVE_TOKEN = /(?<=["'`(])(\.{1,2}\/[^"'`)\s]*)/g;

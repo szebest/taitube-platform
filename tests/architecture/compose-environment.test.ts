@@ -25,7 +25,7 @@ describe('architecture: the compose environment runs every stage the platform ha
     );
     const known = new Set([...Object.keys(AppEnvSchema.shape), 'WORKER_STAGE', 'TUNNEL_TOKEN']);
 
-    expect([...new Set(keys)].filter((key) => !known.has(key))).toEqual([]);
+    expect([...new Set(keys).difference(known)]).toEqual([]);
     expect(compose.services['api']?.image).toContain('/vp-api:');
     expect(compose.services['worker-probe']?.image).toContain('/vp-worker:');
   });

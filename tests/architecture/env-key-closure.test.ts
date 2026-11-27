@@ -67,7 +67,7 @@ const LOCAL_OVERRIDES: Record<string, string> = {
 
 function undeclared(keys: string[]): string[] {
   const declared = schemaKeys();
-  return [...new Set(keys)].filter((key) => !declared.has(key)).sort();
+  return [...new Set(keys).difference(declared)].sort();
 }
 
 describe('architecture: the environment schema is closed over what the platform reads and sets', () => {
@@ -120,7 +120,7 @@ describe('architecture: the environment schema is closed over what the platform 
   it('mirrors every declared key, uncommented, in .env.example', () => {
     const example = exampleKeys();
 
-    expect([...schemaKeys()].filter((key) => !example.has(key))).toEqual([]);
+    expect([...schemaKeys().difference(example)]).toEqual([]);
   });
 
   it('declares every key compose, the k8s base and overlays, CI and make hand to this code', () => {

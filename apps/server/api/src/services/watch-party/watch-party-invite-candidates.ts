@@ -111,7 +111,7 @@ async function gatherSources(
     selfId: userId,
     limit,
     prefix,
-    coWatchers: [...coWatchers.value].sort(
+    coWatchers: coWatchers.value.toSorted(
       (a, b) => (rank.get(a.userId) ?? 0) - (rank.get(b.userId) ?? 0)
     ),
     subscriptions: subscribed.value,

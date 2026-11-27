@@ -2,10 +2,7 @@ import { type Page, expect, test } from '../../../../tests/playwright/fixtures';
 
 /** Holds every API call of `slot` (all slots when none) until the returned function runs, as a network that does not answer. */
 async function holdApi(page: Page, slot?: string) {
-  let release = () => {};
-  const gate = new Promise<void>((resolve) => {
-    release = resolve;
-  });
+  const { promise: gate, resolve: release } = Promise.withResolvers<void>();
   await page.route('**/api/**', async (route) => {
     if (slot === undefined || route.request().headers()['x-account-slot'] === slot) await gate;
     await route.continue();

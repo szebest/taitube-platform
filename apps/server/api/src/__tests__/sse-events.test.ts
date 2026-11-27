@@ -207,10 +207,7 @@ describe('apps/server/api SSE video event streams', () => {
     );
 
     const streams = addresses.map((address) => {
-      let snapshotSeen = () => {};
-      const ready = new Promise<void>((resolve) => {
-        snapshotSeen = resolve;
-      });
+      const { promise: ready, resolve: snapshotSeen } = Promise.withResolvers<void>();
       const done = readSseUntil(`${address}/v1/videos/${PUBLIC_VIDEO_ID}/events`, {
         onText: (text) => {
           if (text.includes('event: snapshot')) snapshotSeen();

@@ -172,6 +172,8 @@ pnpm test:bun   # Bun, over apps/server/*, packages/universal and packages/serve
 
 No `Bun.*` API in source. Bun is a test runtime only; every repo script runs on `tsx`.
 
+The server tier's ES2025 level is proven on both runtimes by `packages/platform/server/testing/src/__tests__/es2025-runtime.test.ts`; see [runtime-baseline.md](runtime-baseline.md).
+
 `pnpm test:bun` leaves out `packages/client/`: those packages are browser-only, so no runtime parity is at
 stake, and their specs lean on what only Vitest offers (jsdom, `vi.mock(import(...))`). It also skips every
 `__tests__/integration/` folder, which a package's vitest config leaves to the `integration` job too: real

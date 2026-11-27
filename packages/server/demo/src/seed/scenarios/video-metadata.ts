@@ -7,7 +7,7 @@ import type { VideoSpec } from '../world-types';
 const MAX_CONFLICTS = 3;
 
 function sameTags(a: readonly string[] | undefined, b: readonly string[]): boolean {
-  return [...(a ?? [])].sort().join('\u0000') === [...b].sort().join('\u0000');
+  return (a ?? []).toSorted().join('\u0000') === b.toSorted().join('\u0000');
 }
 
 /** Sets title, description, category, tags and visibility the way the spec has them; false when nothing needed changing. */
